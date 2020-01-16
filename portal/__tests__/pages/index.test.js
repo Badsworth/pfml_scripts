@@ -1,4 +1,5 @@
-import Index from "./index";
+import Index from "../../pages/index";
+import React from "react";
 import { shallow } from "enzyme";
 
 describe("Homepage", () => {

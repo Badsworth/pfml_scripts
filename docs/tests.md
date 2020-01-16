@@ -46,7 +46,7 @@ describe("<UploadForm>", () => {
 
 ### Creating new test files
 
-A test file should be placed alongside the file it's meant to test. These test files should have the same name as the file they're testing, and have `.test.js` as the extension. For example, `Header/index.js` and `Header/index.test.js`.
+A test file should be placed in the appropriate `__tests__` directory (e.g. `portal/__tests__`) rather than alongside the file it tests. These test files should have the same name as the file they're testing, and have `.test.js` as the extension. For example, `pages/index.js` and `__tests__/pages/index.test.js`.
 
 ### Snapshot tests
 
