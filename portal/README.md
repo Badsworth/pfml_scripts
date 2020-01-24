@@ -15,6 +15,23 @@ npm install
 npm run dev
 ```
 
+## Export for static serving
+
+In deployed environments, this app is served as static pages. To build and export the site:
+```
+npm run build
+```
+
+Serve using your favorite static server (e.g. [serve](https://www.npmjs.com/package/serve)) by passing in the static file directory `out` and an optional port flag (it defaults to `5000`):
+```
+serve out -p 8000
+```
+
+Or navigating to that directory:
+```
+cd out && serve
+```
+
 ## Local commands
 
 ### `npm test`

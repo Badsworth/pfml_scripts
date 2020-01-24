@@ -1,8 +1,14 @@
+# AWS Config
+.aws-config/
+
 # Dependency directories
 node_modules/
 
 # Next.js build output
 .next/
+
+# Next.js static export
+out/
 
 # Mac filesystem file
 .DS_Store

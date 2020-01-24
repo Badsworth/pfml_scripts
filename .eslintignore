@@ -2,6 +2,7 @@
 __mocks__
 __snapshots__
 build
+out
 coverage
 examples
 node_modules
