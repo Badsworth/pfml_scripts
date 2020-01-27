@@ -1,6 +1,14 @@
+import Amplify, { Auth } from "aws-amplify";
 import Header from "../components/Header";
 import PropTypes from "prop-types";
 import React from "react";
+// TODO: Use process.env to load config
+import awsauth from "../.aws-config/awsauth";
+import awsconfig from "../.aws-config/awsconfig";
+import { withAuthenticator } from "aws-amplify-react";
+
+Amplify.configure(awsconfig);
+Auth.configure({ oauth: awsauth });
 
 /**
  * Overrides the default Next.js App so that we can persist common layout
@@ -30,4 +38,4 @@ PortalApp.propTypes = {
   pageProps: PropTypes.object
 };
 
-export default PortalApp;
+export default withAuthenticator(PortalApp);

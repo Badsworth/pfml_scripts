@@ -1,3 +1,4 @@
+import { Auth } from "aws-amplify";
 import PropTypes from "prop-types";
 import React from "react";
 
@@ -6,22 +7,20 @@ import React from "react";
  * @returns {React.Component}
  */
 const AuthNav = props => {
+  const handleSignOut = () => {
+    Auth.signOut();
+  };
+
   if (props.user) {
-    // TODO: Add logout link
-    // https://trello.com/c/eNrRdqBl
     return (
       <React.Fragment>
         Logged in as: {props.user.name}
         <nav>
-          <a href="#todo">Log out</a>
+          <button onClick={handleSignOut}>Log out</button>
         </nav>
       </React.Fragment>
     );
   }
-
-  // TODO: Set the correct login link
-  // https://trello.com/c/0Vpplf0d
-  return <a href="#todo">Log in</a>;
 };
 
 AuthNav.propTypes = {
