@@ -44,4 +44,28 @@ PortalApp.propTypes = {
   pageProps: PropTypes.object
 };
 
-export default withAuthenticator(PortalApp);
+const signUpConfig = {
+  hideAllDefaults: true,
+  signUpFields: [
+    {
+      label: "Email",
+      key: "username",
+      placeholder: "Email",
+      required: true,
+      type: "email",
+      displayOrder: 1
+    },
+    {
+      label: "Password",
+      key: "password",
+      placeholder: "Password",
+      required: true,
+      type: "password",
+      displayOrder: 2
+    }
+  ]
+};
+
+export default withAuthenticator(PortalApp, {
+  signUpConfig
+});
