@@ -12,3 +12,6 @@ out/
 
 # Mac filesystem file
 .DS_Store
+
+# terraform metadata
+.terraform/
