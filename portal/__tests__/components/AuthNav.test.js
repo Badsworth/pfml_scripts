@@ -13,7 +13,7 @@ describe("AuthNav", () => {
 
   describe("when a user is authenticated", () => {
     const user = {
-      name: "Foo Bar"
+      username: "Foo Bar"
     };
 
     it("renders the logged-in state", () => {
@@ -25,7 +25,7 @@ describe("AuthNav", () => {
     it("renders the user's name", () => {
       const wrapper = shallow(<AuthNav user={user} />);
 
-      expect(wrapper.text()).toMatch(user.name);
+      expect(wrapper.text()).toMatch(user.username);
     });
 
     it("renders a log out link", () => {

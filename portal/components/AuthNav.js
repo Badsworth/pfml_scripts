@@ -14,7 +14,7 @@ const AuthNav = props => {
   if (props.user) {
     return (
       <React.Fragment>
-        Logged in as: {props.user.name}
+        Logged in as: {props.user.username}
         <nav>
           <button onClick={handleSignOut}>Log out</button>
         </nav>
@@ -25,7 +25,7 @@ const AuthNav = props => {
 
 AuthNav.propTypes = {
   user: PropTypes.shape({
-    name: PropTypes.string
+    username: PropTypes.string
   })
 };
 

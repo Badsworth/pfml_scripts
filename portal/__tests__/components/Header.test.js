@@ -12,7 +12,7 @@ describe("Header", () => {
 
   it("passes the user into AuthNav", () => {
     const user = {
-      name: "Foo Bar"
+      username: "Foo Bar"
     };
 
     const wrapper = shallow(<Header user={user} />);

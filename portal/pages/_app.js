@@ -1,7 +1,7 @@
 import Amplify, { Auth } from "aws-amplify";
+import React, { useEffect, useState } from "react";
 import Header from "../components/Header";
 import PropTypes from "prop-types";
-import React from "react";
 // TODO: Use process.env to load config
 import awsauth from "../.aws-config/awsauth";
 import awsconfig from "../.aws-config/awsconfig";
@@ -17,9 +17,15 @@ Auth.configure({ oauth: awsauth });
  * @returns {React.Component}
  */
 const PortalApp = ({ Component, pageProps }) => {
-  // TODO: Get the user if they're authenticated
-  // https://trello.com/c/0Vpplf0d
-  const user = { name: "Dr. Cognito" };
+  const [user, setUser] = useState({});
+
+  useEffect(() => {
+    Auth.currentAuthenticatedUser()
+      .then(authUser => setUser({ username: authUser.attributes.email }))
+      .catch(() => console.error("Error retrieving currentAuthenticatedUser"));
+    // Passing this empty array causes this effect to be run only once upon mount. See:
+    // https://reactjs.org/docs/hooks-effect.html#tip-optimizing-performance-by-skipping-effects
+  }, []);
 
   return (
     <React.Fragment>
