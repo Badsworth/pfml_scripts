@@ -56,7 +56,7 @@ resource "aws_cognito_user_pool_client" "massgov_pfml_client" {
   allowed_oauth_scopes                 = ["phone", "email", "openid", "profile", "aws.cognito.signin.user.admin"]
 
   read_attributes  = ["email", "email_verified", "phone_number", "phone_number_verified", "updated_at"]
-  write_attributes = ["email", "email_verified", "updated_at"]
+  write_attributes = ["email", "updated_at"]
 }
 
 resource "aws_cognito_user_pool_domain" "massgov_pfml_domain" {

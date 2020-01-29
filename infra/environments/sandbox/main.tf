@@ -18,5 +18,6 @@ module "massgov_pfml" {
   env_name             = "sandbox-v2"
   cognito_redirect_url = "http://localhost:3000"
   cognito_logout_url   = "http://localhost:3000"
+  portal_s3_bucket_name = "mpfml-prototype"
 }
 
