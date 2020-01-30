@@ -1,12 +1,15 @@
 import { Auth } from "aws-amplify";
 import PropTypes from "prop-types";
 import React from "react";
+import { useTranslation } from "react-i18next";
 
 /**
  * Displays auth links and info about the user if they're logged in
  * @returns {React.Component}
  */
 const AuthNav = props => {
+  const { t } = useTranslation();
+
   const handleSignOut = () => {
     Auth.signOut();
   };
@@ -14,9 +17,11 @@ const AuthNav = props => {
   if (props.user) {
     return (
       <React.Fragment>
-        Logged in as: {props.user.username}
+        {t("components.authNav.loggedInUserLabel", { user: props.user })}
         <nav>
-          <button onClick={handleSignOut}>Log out</button>
+          <button onClick={handleSignOut}>
+            {t("components.authNav.logOutButtonText")}
+          </button>
         </nav>
       </React.Fragment>
     );

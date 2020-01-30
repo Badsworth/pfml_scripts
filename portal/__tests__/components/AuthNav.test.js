@@ -1,3 +1,4 @@
+import "../../i18n";
 import AuthNav from "../../components/AuthNav";
 import React from "react";
 import { shallow } from "enzyme";

@@ -1,3 +1,4 @@
+import "../../i18n";
 import Header from "../../components/Header";
 import React from "react";
 import { shallow } from "enzyme";

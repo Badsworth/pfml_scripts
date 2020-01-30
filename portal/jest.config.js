@@ -6,5 +6,9 @@ module.exports = {
   coverageReporters: ["text"],
   setupFilesAfterEnv: ["<rootDir>/jest.setup.js"],
   snapshotSerializers: ["enzyme-to-json/serializer"],
-  testPathIgnorePatterns: ["<rootDir>/.next/", "<rootDir>/node_modules/"]
+  testPathIgnorePatterns: [
+    "<rootDir>/.next/",
+    "<rootDir>/node_modules/",
+    "<rootDir>/config"
+  ]
 };

@@ -1,3 +1,4 @@
+import "../i18n";
 import Amplify, { Auth } from "aws-amplify";
 import React, { useEffect, useState } from "react";
 import Header from "../components/Header";
