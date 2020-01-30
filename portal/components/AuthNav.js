@@ -16,14 +16,23 @@ const AuthNav = props => {
 
   if (props.user) {
     return (
-      <React.Fragment>
-        {t("components.authNav.loggedInUserLabel", { user: props.user })}
-        <nav>
-          <button onClick={handleSignOut}>
-            {t("components.authNav.logOutButtonText")}
-          </button>
-        </nav>
-      </React.Fragment>
+      <div className="bg-primary font-body-sm text-white text-right">
+        <div className="grid-container">
+          <div className="grid-row">
+            <div className="grid-col-fill margin-y-1">
+              <span className="display-inline-block margin-right-1">
+                {props.user.username}
+              </span>
+              <button
+                className="usa-button usa-button--outline usa-button--inverse usa-button--unstyled width-auto"
+                onClick={handleSignOut}
+              >
+                {t("components.authNav.logOutButtonText")}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
     );
   }
 };

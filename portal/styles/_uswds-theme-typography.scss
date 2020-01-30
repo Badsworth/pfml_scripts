@@ -1,0 +1,50 @@
+/*
+--------------------------------------------------------------------------------
+U.S. Web Design System - Typgography overrides
+--------------------------------------------------------------------------------
+Read more about settings and USWDS style tokens in the documentation:
+https://designsystem.digital.gov/documentation/settings/#typography
+https://designsystem.digital.gov/design-tokens/typesetting/font-family/
+--------------------------------------------------------------------------------
+*/
+
+$theme-typeface-tokens: (
+  texta: (
+    display-name: "Texta",
+    cap-height: 295px
+  )
+);
+
+$theme-font-sans-custom-src: (
+  dir: "mayflower",
+  roman: (
+    100: false,
+    200: false,
+    300: "texta-light-webfont",
+    400: "texta-book-webfont",
+    500: false,
+    600: false,
+    700: "texta-bold-webfont",
+    800: false,
+    900: false
+  ),
+  italic: (
+    100: false,
+    200: false,
+    300: "texta-lightitalic-webfont",
+    400: "texta-bookitalic-webfont",
+    500: false,
+    600: false,
+    700: "texta-bolditalic-webfont",
+    800: false,
+    900: false
+  )
+);
+
+// Use Texta everywhere
+$theme-font-type-sans: "texta";
+$theme-font-sans-custom-stack: "Helvetica, sans-serif";
+
+$theme-font-role-heading: "sans";
+$theme-font-role-body: "sans";
+$theme-font-role-alt: "sans";

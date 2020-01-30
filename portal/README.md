@@ -49,3 +49,19 @@ Updates _all_ [Jest snapshots](../docs/tests.md#Snapshot%20tests), accepting any
 ### `npm run test:watch`
 
 Runs the project's test suite in watch mode. By default, this will attempt to identify which tests to run based on which files have changed in the current repository. After running, you can interact with the prompt to configure or filter which test files are ran.
+
+## Directory Structure
+
+Below is an abbreviated representation of our directory structure, pointing out some of the main files to get you started:
+
+```
+├── __tests__          Test suites
+├── components
+├── next.config.js     Build process config
+├── pages
+│   ├── _app.js        Main layout applied to all pages
+│   └── index.js       Homepage
+├── public             Static aseets
+└── styles
+    └── app.scss       Main stylesheet
+```

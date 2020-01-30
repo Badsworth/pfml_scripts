@@ -3,14 +3,31 @@
 exports[`AuthNav when a user is NOT authenticated doesn't render the logged-in state 1`] = `""`;
 
 exports[`AuthNav when a user is authenticated renders the logged-in state 1`] = `
-<Fragment>
-  Logged in as: Foo Bar
-  <nav>
-    <button
-      onClick={[Function]}
+<div
+  className="bg-primary font-body-sm text-white text-right"
+>
+  <div
+    className="grid-container"
+  >
+    <div
+      className="grid-row"
     >
-      Log out
-    </button>
-  </nav>
-</Fragment>
+      <div
+        className="grid-col-fill margin-y-1"
+      >
+        <span
+          className="display-inline-block margin-right-1"
+        >
+          Foo Bar
+        </span>
+        <button
+          className="usa-button usa-button--outline usa-button--inverse usa-button--unstyled width-auto"
+          onClick={[Function]}
+        >
+          Log out
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
 `;

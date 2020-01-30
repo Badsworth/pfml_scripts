@@ -1,4 +1,5 @@
 import "../i18n";
+import "../styles/app.scss";
 import Amplify, { Auth } from "aws-amplify";
 import React, { useEffect, useState } from "react";
 import Header from "../components/Header";
@@ -27,8 +28,12 @@ const PortalApp = ({ Component, pageProps }) => {
   return (
     <React.Fragment>
       <Header user={user} />
-      <main id="main">
-        <Component {...pageProps} />
+      <main id="main" className="grid-container margin-bottom-8">
+        <div className="grid-row">
+          <div className="grid-col-fill">
+            <Component {...pageProps} />
+          </div>
+        </div>
       </main>
     </React.Fragment>
   );

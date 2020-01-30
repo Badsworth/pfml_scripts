@@ -7,8 +7,10 @@ import React from "react";
  */
 const Index = () => (
   <React.Fragment>
-    <h2>Dashboard</h2>
-    <p>Thanks for logging in.</p>
+    <h2 className="font-heading-2xl">Dashboard</h2>
+    <div className="usa-prose">
+      <p>Thanks for logging in.</p>
+    </div>
   </React.Fragment>
 );
 

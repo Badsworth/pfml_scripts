@@ -9,8 +9,7 @@ const pages = {};
 
 const components = {
   authNav: {
-    logOutButtonText: "Log out",
-    loggedInUserLabel: "Logged in as: {{user.username}}"
+    logOutButtonText: "Log out"
   },
   header: {
     skipToContent: "Skip to main content",
