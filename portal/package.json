@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "next",
     "build": "next build && next export",
+    "build:test": "BUILD_ENV=test next build && next export",
     "start": "next start",
     "test": "jest --ci --coverage",
     "test:update-snapshots": "jest -u",

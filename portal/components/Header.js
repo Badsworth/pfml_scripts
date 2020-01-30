@@ -12,6 +12,7 @@ const Header = props => (
     <a href="#main">Skip to main content</a>
     <h1>Paid Family and Medical Leave</h1>
     <AuthNav user={props.user} />
+    <p>Built for Environment: {process.env.envName}</p>
   </header>
 );
 

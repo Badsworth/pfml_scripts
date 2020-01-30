@@ -7,6 +7,10 @@ and Medical Leave Portal.
 
 Node v10 (or greater)
 
+## Env Configuration
+
+Environment configuration is stored in local files by env (`dev`, `test`, etc.), not checked in. See [Portal Development Environment Configuration](../docs/portal-development.md#Developer%20One-time%20Setup) for how to set up your local environment.
+
 ## Run
 
 Run locally with:

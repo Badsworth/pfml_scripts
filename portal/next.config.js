@@ -1,10 +1,24 @@
+const dev = require("./config/dev");
+const test = require("./config/test");
+
+const envMaps = {
+  dev: dev,
+  test: test
+};
+
+const envVariables = envMaps[process.env.BUILD_ENV || "dev"];
+
 // The CSS workarounds are to solve conflicts between AWS Amplify CSS and `npm run dev` and `npm run build` commands.
 // See https://github.com/aws-amplify/amplify-js/issues/3854#issuecomment-554702182 for context and source of fix.
 
 const withCSS = require("@zeit/next-css");
 const resolve = require("resolve");
 global.navigator = () => null;
+
 module.exports = withCSS({
+  env: {
+    ...envVariables
+  },
   exportTrailingSlash: true,
   exportPathMap: async function() {
     const paths = {
