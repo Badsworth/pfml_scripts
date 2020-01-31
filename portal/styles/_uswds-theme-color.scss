@@ -1,0 +1,89 @@
+/*
+--------------------------------------------------------------------------------
+U.S. Web Design System - Color overrides
+--------------------------------------------------------------------------------
+Read more about settings and USWDS style tokens in the documentation:
+https://designsystem.digital.gov/documentation/settings/#color
+https://designsystem.digital.gov/design-tokens/color
+--------------------------------------------------------------------------------
+*/
+@import "mayflower/colors";
+
+/*
+----------------------------------------
+Theme palette colors
+----------------------------------------
+*/
+
+// Base colors
+$theme-color-base-lightest: $mayflower-gray-lightest;
+$theme-color-base-lighter: $mayflower-gray-lighter;
+$theme-color-base: $mayflower-gray;
+$theme-color-base-dark: $mayflower-gray-dark;
+$theme-color-base-darkest: $mayflower-gray-darkest;
+$theme-color-base-ink: $mayflower-gray-darkest;
+
+// Primary colors
+$theme-color-primary-lighter: $mayflower-bay-blue-lighter;
+$theme-color-primary-light: $mayflower-bay-blue-light;
+$theme-color-primary: $mayflower-bay-blue;
+$theme-color-primary-vivid: $mayflower-bay-blue-vivid;
+$theme-color-primary-dark: $mayflower-bay-blue-dark;
+$theme-color-primary-darker: $mayflower-bay-blue-darker;
+
+// Secondary colors
+$theme-color-secondary-lighter: $mayflower-berkshires-green-lighter;
+$theme-color-secondary-light: $mayflower-berkshires-green-light;
+$theme-color-secondary: $mayflower-berkshires-green;
+$theme-color-secondary-vivid: $mayflower-berkshires-green-vivid;
+$theme-color-secondary-dark: $mayflower-berkshires-green-dark;
+$theme-color-secondary-darker: $mayflower-berkshires-green-darker;
+
+/*
+----------------------------------------
+State palette colors
+TODO: Once USWDS 2.4.1 is released, these will be
+      themeable and can be uncommented.
+      https://github.com/uswds/uswds/pull/3289
+----------------------------------------
+*/
+
+// Error colors
+// $theme-color-error-lighter: $mayflower-error-red-lighter;
+// $theme-color-error-light: $mayflower-error-red-light;
+// $theme-color-error: $mayflower-error-red;
+// $theme-color-error-dark: $mayflower-error-red-dark;
+// $theme-color-error-darker: $mayflower-error-red-darker;
+
+// Warning colors
+// $theme-color-warning-lighter: $mayflower-duckling-yellow-lighter;
+// $theme-color-warning-light: $mayflower-duckling-yellow-light;
+// $theme-color-warning: $mayflower-duckling-yellow;
+
+// Success colors
+// $theme-color-success-lighter: $mayflower-berkshires-green-lighter;
+// $theme-color-success-light: $mayflower-berkshires-green-light;
+// $theme-color-success: $mayflower-berkshires-green;
+// $theme-color-success-dark: $mayflower-berkshires-green-dark;
+// $theme-color-success-darker: $mayflower-berkshires-green-darker;
+
+// Info colors
+// $theme-color-info-lighter: $mayflower-bay-blue-lighter;
+// $theme-color-info-light: $mayflower-bay-blue-light;
+// $theme-color-info: $mayflower-bay-blue;
+// $theme-color-info-dark: $mayflower-bay-blue-dark;
+// $theme-color-info-darker: $mayflower-bay-blue-darker;
+
+/*
+----------------------------------------
+General colors
+TODO: USWDS doesn't yet support themeing link colors (though they exist)
+      https://github.com/uswds/uswds/pull/3296
+----------------------------------------
+*/
+
+// Links
+// $theme-link-color: $mayflower-bay-blue;
+// $theme-link-visited-color: "violet-70v";
+// $theme-link-hover-color: $mayflower-bay-blue-dark;
+// $theme-link-active-color: $mayflower-bay-blue-darker;

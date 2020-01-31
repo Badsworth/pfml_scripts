@@ -24,7 +24,7 @@ const Header = props => {
           <div className="grid-row">
             <div className="grid-col-fill margin-left-0 margin-y-3 desktop:margin-y-4">
               <a
-                className="usa-logo__text font-heading-lg text-no-underline text-green"
+                className="usa-logo__text font-heading-lg text-no-underline text-secondary"
                 href="/"
                 title="Home"
                 aria-label="Home"
