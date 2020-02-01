@@ -3,7 +3,7 @@ provider "aws" {
 }
 
 terraform {
-  required_version = "~> 0.12.19"
+  required_version = "~> 0.12.20"
 
   backend "s3" {
     bucket         = "massgov-pfml-sandbox"
@@ -14,9 +14,9 @@ terraform {
 }
 
 module "massgov_pfml" {
-  source                = "../../template"
-  env_name              = "sandbox-v2"
-  cognito_redirect_url  = "http://localhost:3000"
-  cognito_logout_url    = "http://localhost:3000"
-  portal_s3_bucket_name = "mpfml-prototype"
+  source                      = "../../template"
+  env_name                    = "sandbox-v2"
+  cognito_extra_redirect_urls = ["http://localhost:3000"]
+  cognito_extra_logout_urls   = ["http://localhost:3000"]
+  portal_s3_bucket_name       = "mpfml-prototype"
 }

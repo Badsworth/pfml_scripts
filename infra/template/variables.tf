@@ -1,11 +1,13 @@
-variable "cognito_redirect_url" {
-  description = "URL for Cognito to redirect to after user authentication"
-  type        = string
+variable "cognito_extra_redirect_urls" {
+  description = "Additional list of valid URLs for Cognito to redirect to after user authentication"
+  type        = list(string)
+  default     = []
 }
 
-variable "cognito_logout_url" {
-  description = "URL for Cognito to redirect to after logout"
-  type        = string
+variable "cognito_extra_logout_urls" {
+  description = "Additional list of valid URLs for Cognito to redirect to after logout"
+  type        = list(string)
+  default     = []
 }
 
 variable "env_name" {
