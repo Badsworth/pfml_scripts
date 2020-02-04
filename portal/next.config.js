@@ -6,10 +6,8 @@ const withCSS = require("@zeit/next-css");
 // Portal uses Sass (and we import the U.S. Web Design System's Sass)
 const withSass = require("@zeit/next-sass");
 
-const dev = require("./config/dev");
-const test = require("./config/test");
-const envMaps = { dev, test };
-const envVariables = envMaps[process.env.BUILD_ENV || "dev"];
+const buildEnv = process.env.BUILD_ENV || "dev";
+const envVariables = require("./../infra/portal_config/" + buildEnv);
 
 global.navigator = () => null;
 

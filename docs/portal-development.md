@@ -4,7 +4,7 @@ This page covers development practices for working on the Mass PFML front-end po
 
 ## Configuration
 
-Configuration environment is selected with the `BUILD_ENV` variable in [`portal/next.config.js`](.../portal/next.config.js). Environment config files with variables are stored *locally* under `portal/config/`. `dev` configs are used by default.
+Configuration environment is selected with the `BUILD_ENV` variable in [`portal/next.config.js`](../portal/next.config.js). Environment config files with variables are checked in under [`infra/portal_config/`](../infra/portal_config/). `dev` configs are used by default.
 
 Use environment specific scripts to bundle builds with the correct configuration. See e.g. `build:test`, in [`portal/package.json`](../portal/package.json). Use `process.env.[ENV_VARIABLE_NAME]` to access config values.
 
@@ -12,26 +12,12 @@ Use environment specific scripts to bundle builds with the correct configuration
 
 There are currently two environments: `dev` and `test`. `dev` is meant for local development, and `test` is a stable pre-staging pre-production build.
 
-### Developer One-time Setup
-
-To get started with local environment configs:
-
-* Look in [`portal/next.config.js`](../portal/next.config.js) and make a new `.js` file for each environment listed in `envMaps`.
-* Copy the contents of `configs/env.example` into each file and replace the XXXX values with values from the shared 1Password vault. See [Adding an environment](#adding-an-environment).
-
 ### Adding an environment
 
 To add other environments (e.g. `staging` or `prod`):
 
-* Copy the contents of the `portal/config/env.example` file into a file named after the environment, e.g. `config/prod.js` and replace the XXXX values with real values.
-* Store the real values in a secure note in the shared eng vault as `MPFML Portal Config Dev` etc.
-* Add the new environment to the `envMaps` object in [`portal/next.config.js`](../portal/next.config.js).
-* Notify the Portal eng team so they can update their local configs.
-* Update these docs.
-
-### Adding a new variable
-
-When you add a new environment-dependent variable, add it to the `env.example` file and add the real values to the config files in the shared vault. Notify the Portal eng team so they can update their local configs.
+* Add the variables to a file named after the environment, e.g. `infra/portal_config/prod.js`.
+* Update the environment lists in these docs.
 
 ## Creating a page
 
