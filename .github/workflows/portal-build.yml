@@ -1,0 +1,48 @@
+name: Portal CI Build Check
+
+on:
+  pull_request:
+    paths:
+    - 'portal/**'
+
+env:
+  nodeVersion: 12.x
+
+jobs:
+  build_dev:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Use Node.js
+      uses: actions/setup-node@v1
+      with:
+        nodeVersion: ${{ env.nodeVersion }}
+
+    - name: install
+      run:
+        npm ci --prefix portal
+
+    - name: build
+      run:
+        npm run build --prefix portal
+
+  build_test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Use Node.js
+      uses: actions/setup-node@v1
+      with:
+        nodeVersion: ${{ env.nodeVersion }}
+
+    - name: install
+      run:
+        npm ci --prefix portal
+
+    - name: build
+      run:
+        npm run build:test --prefix portal
