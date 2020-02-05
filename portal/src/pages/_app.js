@@ -1,5 +1,5 @@
 import "../i18n";
-import "../styles/app.scss";
+import "../../styles/app.scss";
 import Amplify, { Auth } from "aws-amplify";
 import React, { useEffect, useState } from "react";
 import Header from "../components/Header";

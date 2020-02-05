@@ -1,6 +1,6 @@
-import "../../i18n";
+import "../../src/i18n";
 import { Auth } from "aws-amplify";
-import AuthNav from "../../components/AuthNav";
+import AuthNav from "../../src/components/AuthNav";
 import React from "react";
 import { shallow } from "enzyme";
 
