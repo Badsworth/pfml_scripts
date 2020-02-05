@@ -10,5 +10,13 @@ module.exports = {
     "<rootDir>/.next/",
     "<rootDir>/node_modules/",
     "<rootDir>/config"
-  ]
+  ],
+  coverageThreshold: {
+    global: {
+      branches: 90,
+      functions: 90,
+      lines: 90,
+      statments: 90
+    }
+  }
 };

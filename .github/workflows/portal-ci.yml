@@ -1,4 +1,4 @@
-  name: Portal Testing
+  name: Portal CI Testing
 
   on:
     pull_request:
@@ -44,5 +44,24 @@
           npm ci --prefix portal
 
       - name: test
+        run:
+          npm run test:no-coverage --prefix portal
+
+    test-cov:
+      runs-on: ubuntu-latest
+
+      steps:
+      - uses: actions/checkout@v2
+
+      - name: Use Node.js
+        uses: actions/setup-node@v1
+        with:
+          node-version: ${{ env.nodeVersion }}
+
+      - name: install
+        run:
+          npm ci --prefix portal
+
+      - name: test-cov
         run:
           npm test --prefix portal

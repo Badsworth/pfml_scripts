@@ -9,6 +9,7 @@
     "build:test": "BUILD_ENV=test next build && next export",
     "start": "next start",
     "test": "jest --ci --coverage",
+    "test:no-coverage": "jest --ci",
     "test:update-snapshots": "jest -u",
     "test:watch": "jest --watch"
   },
