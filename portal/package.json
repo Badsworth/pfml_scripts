@@ -4,6 +4,7 @@
   "description": "Mass PFML Portal",
   "main": "index.js",
   "scripts": {
+    "components": "start-storybook -p 6006 -s ./public",
     "dev": "next",
     "build": "next build && next export",
     "build:test": "BUILD_ENV=test next build && next export",
@@ -24,9 +25,13 @@
     "uswds": "^2.4.0"
   },
   "devDependencies": {
+    "@babel/core": "^7.8.4",
+    "@storybook/addon-knobs": "^5.3.12",
+    "@storybook/react": "^5.3.12",
     "@zeit/next-css": "^1.0.1",
     "@zeit/next-sass": "^1.0.1",
     "autoprefixer": "^9.7.4",
+    "babel-loader": "^8.0.6",
     "enzyme": "^3.10.0",
     "enzyme-adapter-react-16": "^1.15.1",
     "enzyme-to-json": "^3.4.3",

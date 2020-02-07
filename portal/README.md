@@ -38,6 +38,10 @@ cd out && serve
 
 ## Local commands
 
+### `npm run components`
+
+Run the UI component explorer sandbox, [Storybook](https://storybook.js.org/). A new browser window should automatically open with the explorer loaded once this script has completed running. It may take a minute or so to load on initial run.
+
 ### `npm test`
 
 Runs the project's [test suite](../docs/tests.md).
