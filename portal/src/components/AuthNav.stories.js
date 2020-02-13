@@ -1,16 +1,9 @@
-import { object as objectKnob, withKnobs } from "@storybook/addon-knobs";
 import AuthNav from "./AuthNav";
 import React from "react";
 
 export default {
   title: "AuthNav",
-  component: AuthNav,
-  decorators: [withKnobs]
+  component: AuthNav
 };
 
-export const WithUser = () => {
-  const defaultUser = { username: "Bud Baxter" };
-  const user = objectKnob("user", defaultUser);
-
-  return <AuthNav user={user} />;
-};
+export const WithUser = () => <AuthNav user={{ username: "Bud Baxter" }} />;

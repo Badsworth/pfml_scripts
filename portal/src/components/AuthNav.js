@@ -5,7 +5,6 @@ import { useTranslation } from "react-i18next";
 
 /**
  * Displays auth links and info about the user if they're logged in
- * @returns {React.Component}
  */
 const AuthNav = props => {
   const { t } = useTranslation();

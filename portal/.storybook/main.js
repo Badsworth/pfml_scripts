@@ -10,7 +10,7 @@ const path = require("path");
 const nextConfig = require("../next.config");
 
 module.exports = {
-  addons: ["@storybook/addon-knobs/register"],
+  addons: ["@storybook/addon-docs"],
   stories: ["../src/**/*.stories.js"],
   /**
    * Customize the Webpack configuration used by Storybook so it supports

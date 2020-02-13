@@ -5,8 +5,6 @@ import { useTranslation } from "react-i18next";
 
 /**
  * Global page header, displayed at the top of every page.
- * @param {object} props
- * @returns {React.Component}
  */
 const Header = props => {
   const { t } = useTranslation();
