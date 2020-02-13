@@ -16,3 +16,6 @@ out/
 
 # terraform metadata
 .terraform/
+
+# IDE-specific files
+.vscode/
