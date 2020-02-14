@@ -14,5 +14,7 @@ import i18n from "../src/i18n";
 
 // Internationalize strings in our stories
 addDecorator(storyFn => (
-  <I18nextProvider i18n={i18n}>{storyFn()}</I18nextProvider>
+  <I18nextProvider i18n={i18n}>
+    <div className="usa-prose">{storyFn()}</div>
+  </I18nextProvider>
 ));

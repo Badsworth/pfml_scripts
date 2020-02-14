@@ -11,6 +11,9 @@ const components = {
   authNav: {
     logOutButtonText: "Log out"
   },
+  form: {
+    optionalText: "(optional)"
+  },
   header: {
     skipToContent: "Skip to main content",
     appTitle: "Paid Family and Medical Leave"
