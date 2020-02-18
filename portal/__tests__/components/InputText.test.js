@@ -28,7 +28,7 @@ describe("InputText", () => {
     expect(field.prop("type")).toBe("text");
   });
 
-  it("accepts a name", () => {
+  it("sets the input's name", () => {
     const name = "foo";
     const { wrapper } = render({ name });
     const field = wrapper.find(".usa-input");
@@ -36,7 +36,7 @@ describe("InputText", () => {
     expect(field.prop("name")).toBe(name);
   });
 
-  it("accepts a value", () => {
+  it("sets the input's value", () => {
     const value = "Yay";
     const { wrapper } = render({ value });
     const field = wrapper.find(".usa-input");
