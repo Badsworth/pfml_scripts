@@ -14,7 +14,8 @@ function FormLabel({ component = "label", ...props }) {
   const hasError = !!props.errorMsg;
 
   const labelClasses = classnames("usa-label", {
-    "usa-label--error": hasError
+    "usa-label--error": hasError,
+    "usa-legend": component === "legend"
   });
 
   return (

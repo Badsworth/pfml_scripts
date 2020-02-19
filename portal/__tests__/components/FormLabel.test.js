@@ -19,13 +19,6 @@ function render(customProps = {}) {
 }
 
 describe("FormLabel", () => {
-  it("defaults to a label element", () => {
-    const { wrapper } = render();
-    const label = wrapper.find(".usa-label");
-
-    expect(label.is("label")).toBe(true);
-  });
-
   it("renders the component children as the label's text", () => {
     const text = "Foo Bar";
     const { wrapper } = render({ children: text });
@@ -42,12 +35,19 @@ describe("FormLabel", () => {
     expect(field.prop("htmlFor")).toBe(inputId);
   });
 
-  describe("when component prop is set to legend", () => {
-    it("renders a legend element", () => {
-      const { wrapper } = render({ component: "legend" });
-      const label = wrapper.find(".usa-label");
+  describe("when the type prop isn't set", () => {
+    it("renders label with expected classes", () => {
+      const { wrapper } = render();
 
-      expect(label.is("legend")).toBe(true);
+      expect(wrapper).toMatchSnapshot();
+    });
+  });
+
+  describe("when component prop is set to legend", () => {
+    it("renders legend with expected classes", () => {
+      const { wrapper } = render({ component: "legend" });
+
+      expect(wrapper).toMatchSnapshot();
     });
   });
 
