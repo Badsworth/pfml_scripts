@@ -3,6 +3,8 @@
 ## 🎫 Ticket
 
 > Add a link to the ticket this PR is associated with.
+>
+> [CP-X](https://lwd.atlassian.net/browse/CP-X)
 
 ## 🛠 Changes
 
