@@ -16,13 +16,17 @@ function InputText({ type = "text", ...props }) {
   const inputId = uniqueId("InputText");
   const hasError = !!props.errorMsg;
 
-  const fieldClasses = classnames("usa-input", {
+  const fieldClasses = classnames("usa-input", props.inputClassName, {
     "usa-input--error": hasError,
     [`usa-input--${props.width}`]: !!props.width
   });
-  const formGroupClasses = classnames("usa-form-group", {
-    "usa-form-group--error": hasError
-  });
+  const formGroupClasses = classnames(
+    "usa-form-group",
+    props.formGroupClassName,
+    {
+      "usa-form-group--error": hasError
+    }
+  );
 
   return (
     <div className={formGroupClasses}>
@@ -38,8 +42,10 @@ function InputText({ type = "text", ...props }) {
       <input
         className={fieldClasses}
         id={inputId}
+        inputMode={props.inputMode}
         name={props.name}
         onChange={props.onChange}
+        ref={props.inputRef}
         type={type}
         value={props.value}
       />
@@ -53,9 +59,25 @@ InputText.propTypes = {
    */
   errorMsg: PropTypes.node,
   /**
+   * Additional classes to include on the containing form group element
+   */
+  formGroupClassName: PropTypes.string,
+  /**
    * Localized hint text
    */
   hint: PropTypes.node,
+  /**
+   * Additional classes to include on the HTML input
+   */
+  inputClassName: PropTypes.string,
+  /**
+   * HTML input `inputmode` attribute
+   */
+  inputMode: PropTypes.string,
+  /**
+   * Add a `ref` to the input element
+   */
+  inputRef: PropTypes.object,
   /**
    * Localized field label
    */

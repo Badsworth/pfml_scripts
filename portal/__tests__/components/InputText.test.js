@@ -1,12 +1,13 @@
+import { mount, shallow } from "enzyme";
 import InputText from "../../src/components/InputText";
 import React from "react";
-import { shallow } from "enzyme";
 
-function render(customProps = {}) {
+function render(customProps = {}, mountComponent = false) {
   const props = Object.assign(
     {
       label: "Field Label",
-      name: "field-name"
+      name: "field-name",
+      onChange: jest.fn()
     },
     customProps
   );
@@ -15,7 +16,7 @@ function render(customProps = {}) {
 
   return {
     props,
-    wrapper: shallow(component)
+    wrapper: mountComponent ? mount(component) : shallow(component)
   };
 }
 
@@ -75,12 +76,49 @@ describe("InputText", () => {
     });
   });
 
+  describe("when formGroupClassName prop is set", () => {
+    it("includes the formGroupClassName on the containing element", () => {
+      const { wrapper } = render({ formGroupClassName: "custom-input-class" });
+
+      expect(wrapper.hasClass("custom-input-class")).toBe(true);
+    });
+  });
+
   describe("when hint prop is set", () => {
     it("passes the hint to FormLabel", () => {
       const { props, wrapper } = render({ hint: "123" });
       const label = wrapper.find("FormLabel");
 
       expect(label.prop("hint")).toBe(props.hint);
+    });
+  });
+
+  describe("when inputClassName prop is set", () => {
+    it("includes the inputClassName on the input field", () => {
+      const { wrapper } = render({ inputClassName: "custom-input-class" });
+      const input = wrapper.find("input");
+
+      expect(input.hasClass("custom-input-class")).toBe(true);
+    });
+  });
+
+  describe("when inputMode prop is set", () => {
+    it("includes the inputMode on the input field", () => {
+      const { wrapper } = render({ inputMode: "decimal" });
+      const input = wrapper.find("input");
+
+      expect(input.prop("inputMode")).toBe("decimal");
+    });
+  });
+
+  describe("when inputRef prop is set", () => {
+    it("sets the ref on the input field", () => {
+      const ref = React.createRef();
+      // We need to mount this component so we can access its ref
+      const mountComponent = true;
+      const { props } = render({ inputRef: ref, value: "abc" }, mountComponent);
+
+      expect(ref.current.value).toBe(props.value);
     });
   });
 

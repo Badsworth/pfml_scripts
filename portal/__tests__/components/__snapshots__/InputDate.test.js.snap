@@ -1,0 +1,58 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`InputDate renders a legend for the fieldset 1`] = `
+<FormLabel
+  component="legend"
+  hint="Legend hint"
+  optionalText="Optional"
+>
+  Legend text
+</FormLabel>
+`;
+
+exports[`InputDate renders separate fields for month / day / year 1`] = `
+Array [
+  <InputText
+    formGroupClassName="usa-form-group--month"
+    inputClassName="usa-input--inline"
+    inputMode="numeric"
+    inputRef={
+      Object {
+        "current": undefined,
+      }
+    }
+    label="Test Month"
+    name="test-date-field_month"
+    onChange={[Function]}
+    value=""
+  />,
+  <InputText
+    formGroupClassName="usa-form-group--day"
+    inputClassName="usa-input--inline"
+    inputMode="numeric"
+    inputRef={
+      Object {
+        "current": undefined,
+      }
+    }
+    label="Test Day"
+    name="test-date-field_day"
+    onChange={[Function]}
+    value=""
+  />,
+  <InputText
+    formGroupClassName="usa-form-group--year"
+    inputClassName="usa-input--inline"
+    inputMode="numeric"
+    inputRef={
+      Object {
+        "current": undefined,
+      }
+    }
+    label="Test Year"
+    name="test-date-field_year"
+    onChange={[Function]}
+    value=""
+  />,
+]
+`;
