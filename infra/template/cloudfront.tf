@@ -24,6 +24,8 @@ resource "aws_cloudfront_distribution" "portal_web_distribution" {
   origin {
     domain_name = aws_s3_bucket.portal_web.website_endpoint
     origin_id   = aws_s3_bucket.portal_web.id
+    # set as an environment variable during github workflow
+    origin_path = var.cloudfront_origin_path
 
     custom_origin_config {
       http_port  = 80

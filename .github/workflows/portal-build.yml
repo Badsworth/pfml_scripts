@@ -3,7 +3,7 @@ name: Portal CI Build Check
 on:
   pull_request:
     paths:
-    - 'portal/**'
+    - portal/**
 
 env:
   nodeVersion: 12.x

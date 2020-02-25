@@ -3,7 +3,7 @@
   on:
     pull_request:
       paths:
-      - 'portal/**'
+      - portal/**
 
   env:
     nodeVersion: 12.x

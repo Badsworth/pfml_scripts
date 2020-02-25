@@ -31,3 +31,8 @@ variable "domain" {
   type        = string
   default     = ""
 }
+
+variable "cloudfront_origin_path" {
+  description = "Path to latest portal release. Set through environment variable in Github worfklow."
+  type        = string
+}
