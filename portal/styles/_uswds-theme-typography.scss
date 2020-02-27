@@ -8,36 +8,17 @@ https://designsystem.digital.gov/design-tokens/typesetting/font-family/
 --------------------------------------------------------------------------------
 */
 
+/* Mayflower SCSS prefix url references to assets such as fonts and images with $assets-path.
+ Set $assets-path to form the correct url references in your project to the parent folder of the fonts/ folder, based on the location of the compiled css.
+*/
+$assets-path: '~@massds/mayflower-tokens/dist';
+@import '@massds/mayflower-tokens/dist/scss/fonts';
+
+
 $theme-typeface-tokens: (
   texta: (
     display-name: "Texta",
     cap-height: 300px
-  )
-);
-
-$theme-font-sans-custom-src: (
-  dir: "mayflower",
-  roman: (
-    100: false,
-    200: false,
-    300: "texta-light-webfont",
-    400: "texta-book-webfont",
-    500: false,
-    600: false,
-    700: "texta-bold-webfont",
-    800: false,
-    900: false
-  ),
-  italic: (
-    100: false,
-    200: false,
-    300: "texta-lightitalic-webfont",
-    400: "texta-bookitalic-webfont",
-    500: false,
-    600: false,
-    700: "texta-bolditalic-webfont",
-    800: false,
-    900: false
   )
 );
 
