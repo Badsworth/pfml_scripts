@@ -86,4 +86,12 @@ describe("FormLabel", () => {
       expect(label.hasClass("usa-label--error")).toBe(true);
     });
   });
+
+  describe("when hideLabel is set", () => {
+    it("does not show label in visual browsers", () => {
+      const { wrapper } = render({ hideLabel: true });
+      const label = wrapper.find(".usa-label");
+      expect(label.hasClass("usa-sr-only")).toBe(true);
+    });
+  });
 });

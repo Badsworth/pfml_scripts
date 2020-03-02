@@ -28,8 +28,7 @@ const Index = () => {
           {t("pages.index.eligibilityCheckInfoUseToDetermineEligibility")}
         </li>
       </ul>
-      {/* TODO Update link to "eligibility/form" */}
-      <Link href="/">
+      <Link href="/eligibility/employee-info">
         <a className="usa-button width-auto">
           {t("pages.index.startButtonText")}
         </a>

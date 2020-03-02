@@ -35,6 +35,7 @@ function InputText({ type = "text", ...props }) {
         inputId={inputId}
         hint={props.hint}
         optionalText={props.optionalText}
+        hideLabel={props.hideLabel}
       >
         {props.label}
       </FormLabel>
@@ -62,6 +63,10 @@ InputText.propTypes = {
    * Additional classes to include on the containing form group element
    */
   formGroupClassName: PropTypes.string,
+  /**
+   * Hides the input label from visual browsers. The hint and/or error message will still be visible.
+   */
+  hideLabel: PropTypes.bool,
   /**
    * Localized hint text
    */

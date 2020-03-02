@@ -36,7 +36,7 @@ exports[`Index renders the page 1`] = `
     </li>
   </ul>
   <Link
-    href="/"
+    href="/eligibility/employee-info"
   >
     <a
       className="usa-button width-auto"

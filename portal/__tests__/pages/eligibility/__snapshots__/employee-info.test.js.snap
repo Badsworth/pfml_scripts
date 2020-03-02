@@ -1,0 +1,66 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`EmployeeInfo renders the form 1`] = `
+<form
+  className="usa-form usa-form--large"
+  onSubmit={[Function]}
+>
+  <h1
+    className="font-sans-3xl line-height-sans-2"
+  >
+    Tell us about yourself
+  </h1>
+  <fieldset
+    className="usa-fieldset"
+  >
+    <FormLabel
+      component="legend"
+      hint="Fill out your name as it appears on official documents like your driver’s license or W-2."
+    >
+      What's your name?
+    </FormLabel>
+    <InputText
+      label="First name"
+      name="firstName"
+      onChange={[Function]}
+      value=""
+    />
+    <InputText
+      label="Middle name"
+      name="middleName"
+      onChange={[Function]}
+      optionalText="(optional)"
+      value=""
+    />
+    <InputText
+      label="Last name"
+      name="lastName"
+      onChange={[Function]}
+      value=""
+    />
+  </fieldset>
+  <fieldset
+    className="usa-fieldset margin-y-5"
+  >
+    <FormLabel
+      component="legend"
+      hint="Don’t have a Social Security Number? Use your Individual Taxpayer Identification Number."
+    >
+      What’s your Social Security Number?
+    </FormLabel>
+    <InputText
+      hideLabel={true}
+      label="What’s your Social Security Number?"
+      name="ssnOrItin"
+      onChange={[Function]}
+      value=""
+      width="medium"
+    />
+  </fieldset>
+  <input
+    className="usa-button"
+    type="submit"
+    value="Submit"
+  />
+</form>
+`;

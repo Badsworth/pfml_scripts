@@ -131,6 +131,15 @@ describe("InputText", () => {
     });
   });
 
+  describe("when hideLabel prop is set", () => {
+    it("passes the hideLabel to FormLabel", () => {
+      const { wrapper } = render({ hideLabel: true });
+      const label = wrapper.find("FormLabel");
+
+      expect(label.prop("hideLabel")).toBe(true);
+    });
+  });
+
   describe("when width prop is set", () => {
     it("adds width classes to input", () => {
       const mediumData = render({ width: "medium" });

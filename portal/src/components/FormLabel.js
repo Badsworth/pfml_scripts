@@ -15,7 +15,8 @@ function FormLabel({ component = "label", ...props }) {
 
   const labelClasses = classnames("usa-label", {
     "usa-label--error": hasError,
-    "usa-legend": component === "legend"
+    "usa-legend": component === "legend",
+    "usa-sr-only": props.hideLabel
   });
 
   return (
@@ -51,6 +52,10 @@ FormLabel.propTypes = {
    * Localized error message. Setting this enables the error state styling.
    */
   errorMsg: PropTypes.node,
+  /**
+   * Hides the input label from visual browsers. The hint and/or error message will still be visible.
+   */
+  hideLabel: PropTypes.bool,
   /**
    * Localized hint text
    */

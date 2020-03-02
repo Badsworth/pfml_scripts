@@ -6,6 +6,20 @@
  */
 
 const pages = {
+  eligibility: {
+    form: {
+      firstNameLabel: "First name",
+      lastNameLabel: "Last name",
+      middleNameLabel: "Middle name",
+      nameSectionHint:
+        "Fill out your name as it appears on official documents like your driver’s license or W-2.",
+      nameSectionLabel: "What's your name?",
+      ssnSectionHint:
+        "Don’t have a Social Security Number? Use your Individual Taxpayer Identification Number.",
+      ssnSectionLabel: "What’s your Social Security Number?",
+      title: "Tell us about yourself"
+    }
+  },
   index: {
     eligibilityCheckInfoHeader: "How it works",
     eligibilityCheckInfoNameAndNumber:
@@ -27,7 +41,8 @@ const components = {
     logOutButtonText: "Log out"
   },
   form: {
-    optionalText: "(optional)"
+    optionalText: "(optional)",
+    submitButtonText: "Submit"
   },
   header: {
     skipToContent: "Skip to main content",
