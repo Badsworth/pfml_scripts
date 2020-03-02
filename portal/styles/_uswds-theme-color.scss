@@ -7,82 +7,67 @@ https://designsystem.digital.gov/documentation/settings/#color
 https://designsystem.digital.gov/design-tokens/color
 --------------------------------------------------------------------------------
 */
+
+// Mayflower Sass variables
 @import "@massds/mayflower-tokens/dist/scss/index";
+
 /*
 ----------------------------------------
 Theme palette colors
 ----------------------------------------
 */
-
 // Base colors
-$theme-color-base-lightest:     $c-gray-lightest;
-$theme-color-base-lighter:      $c-gray-light;
-$theme-color-base:              $c-gray;
-$theme-color-base-dark:         $c-gray-dark;
-$theme-color-base-darkest:      $c-black;
-$theme-color-base-ink:          $c-black;
+$theme-color-base-lightest: $c-gray-lightest;
+$theme-color-base-lighter: $c-gray-light;
+$theme-color-base: $c-gray;
+$theme-color-base-dark: $c-gray-dark;
+$theme-color-base-darkest: $c-black;
+$theme-color-base-ink: $c-black;
 
 // Primary colors
-$theme-color-primary-lighter:   $c-bay-blue-lightest;
-$theme-color-primary-light:     $c-bay-blue-lighter;
-$theme-color-primary:           $c-bay-blue;
-$theme-color-primary-vivid:     false;
-$theme-color-primary-dark:      $c-bay-blue-darker;
-$theme-color-primary-darker:    $c-bay-blue-darkest;
+$theme-color-primary-lighter: $c-bay-blue-lightest;
+$theme-color-primary-light: $c-bay-blue-lighter;
+$theme-color-primary: $c-bay-blue;
+$theme-color-primary-vivid: false;
+$theme-color-primary-dark: $c-bay-blue-darker;
+$theme-color-primary-darker: $c-bay-blue-darkest;
 
 // Secondary colors
 $theme-color-secondary-lighter: $c-berkshires-green-lightest;
-$theme-color-secondary-light:   $c-berkshires-green-lighter;
-$theme-color-secondary:         $c-berkshires-green;
-$theme-color-secondary-vivid:   false;
-$theme-color-secondary-dark:    $c-berkshires-green-darker;
-$theme-color-secondary-darker:  $c-berkshires-green-darkest;
+$theme-color-secondary-light: $c-berkshires-green-lighter;
+$theme-color-secondary: $c-berkshires-green;
+$theme-color-secondary-vivid: false;
+$theme-color-secondary-dark: $c-berkshires-green-darker;
+$theme-color-secondary-darker: $c-berkshires-green-darkest;
 
 /*
 ----------------------------------------
 State palette colors
-TODO: Once USWDS 2.4.1 is released, these will be
-      themeable and can be uncommented.
-      https://github.com/uswds/uswds/pull/3289
 ----------------------------------------
 */
 
 // Error colors
-// $theme-color-error-lighter: $c-error-red-lightest;
-// $theme-color-error-light: $c-error-red-lighter;
-// $theme-color-error: $c-error-red;
-// $theme-color-error-dark: $c-error-red-darker;
-// $theme-color-error-darker: $c-error-red-darkest;
+$theme-color-error-lighter: $c-error-red-lightest;
+$theme-color-error-light: $c-error-red-lighter;
+$theme-color-error: $c-error-red;
+$theme-color-error-dark: $c-independence-cranberry-30-shade;
+$theme-color-error-darker: $c-independence-cranberry-50-shade;
 
 // Warning colors
-// $theme-color-warning-lighter: $c-duckling-yellow-lightest;
-// $theme-color-warning-light: $c-duckling-yellow-lighter;
-// $theme-color-warning: $c-duckling-yellow;
+$theme-color-warning-lighter: $c-duckling-yellow-lightest;
+$theme-color-warning-light: $c-duckling-yellow-lighter;
+$theme-color-warning: $c-duckling-yellow;
 
 // Success colors
-// $theme-color-success-lighter: $c-berkshires-green-lightest;
-// $theme-color-success-light: $c-berkshires-green-lighter;
-// $theme-color-success: $c-berkshires-green;
-// $theme-color-success-dark: $c-berkshires-green-darker;
-// $theme-color-success-darker: $c-berkshires-green-darkest;
+$theme-color-success-lighter: $c-berkshires-green-90-tint;
+$theme-color-success-light: $c-berkshires-green-lighter;
+$theme-color-success: $c-berkshires-green;
+$theme-color-success-dark: $c-berkshires-green-darker;
+$theme-color-success-darker: $c-berkshires-green-darkest;
 
 // Info colors
-// $theme-color-info-lighter: $c-bay-blue-lightest;
-// $theme-color-info-light: $c-bay-blue-lighter;
-// $theme-color-info: $c-bay-blue;
-// $theme-color-info-dark: $c-bay-blue-darker;
-// $theme-color-info-darker: $c-bay-blue-darkest;
-
-/*
-----------------------------------------
-General colors
-TODO: USWDS doesn't yet support themeing link colors (though they exist)
-      https://github.com/uswds/uswds/pull/3296
-----------------------------------------
-*/
-
-// Links
-// $theme-link-color: $c-bay-blue;
-// $theme-link-visited-color: "violet-70v";
-// $theme-link-hover-color: $c-bay-blue-darker;
-// $theme-link-active-color: $c-bay-blue-darker;
+$theme-color-info-lighter: $c-bay-blue-lightest;
+$theme-color-info-light: $c-bay-blue-lighter;
+$theme-color-info: $c-bay-blue;
+$theme-color-info-dark: $c-bay-blue-darker;
+$theme-color-info-darker: $c-bay-blue-darkest;
