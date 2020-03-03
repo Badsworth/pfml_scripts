@@ -18,6 +18,18 @@ const pages = {
         "Don’t have a Social Security Number? Use your Individual Taxpayer Identification Number.",
       ssnSectionLabel: "What’s your Social Security Number?",
       title: "Tell us about yourself"
+    },
+    wages: {
+      descriptionP1:
+        "According to our records, you've worked for $t(pages.eligibility.wages.employers, { 'count': {{totalEmployers}} }) in the last 12 months.",
+      descriptionP2:
+        "Your earnings are an estimate of what you earned before paying taxes.",
+      employers: "{{count}} employer",
+      employers_plural: "{{count}} employers",
+      title: "Verify your employment history",
+      wagesTableEarningsHeading: "Estimated earnings",
+      wagesTableEmployerHeading: "Employer",
+      wagesTableHeading: "Employment history from the past 12 months"
     }
   },
   index: {

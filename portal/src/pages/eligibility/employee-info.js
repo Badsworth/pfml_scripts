@@ -1,10 +1,12 @@
 import React, { useState } from "react";
 import FormLabel from "../../components/FormLabel";
 import InputText from "../../components/InputText";
+import { useRouter } from "next/router";
 import { useTranslation } from "react-i18next";
 
 const EmployeeInfo = () => {
   const { t } = useTranslation();
+  const router = useRouter();
   const [formData, setFormData] = useState({
     firstName: "",
     middleName: "",
@@ -19,6 +21,11 @@ const EmployeeInfo = () => {
 
   const handleSubmit = event => {
     event.preventDefault();
+    // the empoyeeId will ultimately be returned by API /employee endpoint
+    // TODO replace with POST request to API /employee to get employeeId
+    // https://lwd.atlassian.net/browse/CP-112
+    const employeeId = "b05cbd07-03ba-46e7-a2b8-f3466ca1139c";
+    router.push(`/eligibility/${employeeId}/wages`);
   };
 
   return (

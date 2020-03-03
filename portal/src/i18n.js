@@ -8,9 +8,9 @@ import englishLocale from "./locales/en_US";
 import i18n from "i18next";
 import { initReactI18next } from "react-i18next";
 
-const defaultLanguage = "en_US";
+const defaultLanguage = "en-US";
 const resources = {
-  en_US: englishLocale
+  "en-US": englishLocale
 };
 
 i18n

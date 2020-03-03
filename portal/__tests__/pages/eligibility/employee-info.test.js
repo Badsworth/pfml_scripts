@@ -1,4 +1,5 @@
 import "../../../src/i18n";
+import * as nextRouter from "next/router";
 import EmployeeInfo from "../../../src/pages/eligibility/employee-info";
 import React from "react";
 import { shallow } from "enzyme";
@@ -29,5 +30,21 @@ describe("EmployeeInfo", () => {
 
       expect(wrapper.find({ name: key }).prop("value")).toEqual(value);
     }
+  });
+
+  it("redirects to wages after submit", () => {
+    const useRouter = jest.spyOn(nextRouter, "useRouter");
+    const push = jest.fn();
+    useRouter.mockImplementation(() => ({ push }));
+
+    // recreate component using mocked router
+    wrapper = shallow(<EmployeeInfo />);
+
+    const event = { preventDefault: jest.fn() };
+    wrapper.find("form").simulate("submit", event);
+
+    expect(push).toHaveBeenCalledWith(
+      "/eligibility/b05cbd07-03ba-46e7-a2b8-f3466ca1139c/wages"
+    );
   });
 });
