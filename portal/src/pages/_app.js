@@ -14,7 +14,7 @@ Amplify.configure(process.env.awsConfig);
  * @see https://nextjs.org/docs/advanced-features/custom-app
  * @returns {React.Component}
  */
-const PortalApp = ({ Component, pageProps }) => {
+export const App = ({ Component, pageProps }) => {
   const [user, setUser] = useState({});
 
   useEffect(() => {
@@ -39,7 +39,7 @@ const PortalApp = ({ Component, pageProps }) => {
   );
 };
 
-PortalApp.propTypes = {
+App.propTypes = {
   // Next.js sets Component for us
   Component: PropTypes.elementType.isRequired,
   // Next.js sets pageProps for us
@@ -68,6 +68,6 @@ const signUpConfig = {
   ]
 };
 
-export default withAuthenticator(PortalApp, {
+export default withAuthenticator(App, {
   signUpConfig
 });

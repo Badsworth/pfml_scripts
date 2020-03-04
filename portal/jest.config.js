@@ -4,6 +4,9 @@
  */
 module.exports = {
   coverageReporters: ["text"],
+  moduleNameMapper: {
+    "\\.(css|scss)$": "<rootDir>/__mocks__/styleMock.js"
+  },
   setupFilesAfterEnv: ["<rootDir>/jest.setup.js"],
   snapshotSerializers: ["enzyme-to-json/serializer"],
   testPathIgnorePatterns: [
