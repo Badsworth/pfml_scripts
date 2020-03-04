@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import summarizeWages from "../../../utils/summarizeWages";
+import summarizeWages from "../../utils/summarizeWages";
 import { useRouter } from "next/router";
 import { useTranslation } from "react-i18next";
 

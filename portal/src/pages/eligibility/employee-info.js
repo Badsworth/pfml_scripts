@@ -11,21 +11,21 @@ const EmployeeInfo = () => {
     firstName: "",
     middleName: "",
     lastName: "",
-    ssnOrItin: ""
+    ssnOrItin: "",
   });
 
-  const handleChange = event => {
+  const handleChange = (event) => {
     const { name, value } = event.target;
     setFormData({ ...formData, [name]: value });
   };
 
-  const handleSubmit = event => {
+  const handleSubmit = (event) => {
     event.preventDefault();
     // the empoyeeId will ultimately be returned by API /employee endpoint
     // TODO replace with POST request to API /employee to get employeeId
     // https://lwd.atlassian.net/browse/CP-112
     const employeeId = "b05cbd07-03ba-46e7-a2b8-f3466ca1139c";
-    router.push(`/eligibility/${employeeId}/wages`);
+    router.push(`/eligibility/wages?employeeId=${employeeId}`);
   };
 
   return (

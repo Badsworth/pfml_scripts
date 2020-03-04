@@ -20,7 +20,7 @@ describe("EmployeeInfo", () => {
       firstName: "James",
       middleName: "AA",
       lastName: "Joyce",
-      ssnOrItin: "222222222"
+      ssnOrItin: "222222222",
     };
 
     for (const key in inputData) {
@@ -44,7 +44,7 @@ describe("EmployeeInfo", () => {
     wrapper.find("form").simulate("submit", event);
 
     expect(push).toHaveBeenCalledWith(
-      "/eligibility/b05cbd07-03ba-46e7-a2b8-f3466ca1139c/wages"
+      "/eligibility/wages?employeeId=b05cbd07-03ba-46e7-a2b8-f3466ca1139c"
     );
   });
 });
