@@ -8,7 +8,7 @@ import { useTranslation } from "react-i18next";
 const mockWage = (employeeId, employerId) => ({
   period_id: {
     year: 2019,
-    quarter: 1,
+    quarter: 1
   },
   employee_id: employeeId,
   employer_id: employerId,
@@ -19,16 +19,16 @@ const mockWage = (employeeId, employerId) => ({
   employer_medical_contribution: 2000,
   employee_medical_contribution: 975,
   employer_fam_contribution: 2000,
-  employee_fam_contribution: 975,
+  employee_fam_contribution: 975
 });
 
-const mockGetWageData = (id) => {
+const mockGetWageData = id => {
   const employer1 = "e4e3a70d-c9bf-4d1e-acf1-e3adefa20a32";
   const employer2 = "e72751a0-3ab4-4593-a08b-7f332c359fb4";
   return [
     mockWage(id, employer1),
     mockWage(id, employer1),
-    mockWage(id, employer2),
+    mockWage(id, employer2)
   ];
 };
 
@@ -38,7 +38,7 @@ const Wages = () => {
   const { t } = useTranslation();
   const [wagesSummary, setWagesSummary] = useState({
     totalEmployers: 0,
-    earningsByEmployer: [],
+    earningsByEmployer: []
   });
   const { totalEmployers, earningsByEmployer } = wagesSummary;
 

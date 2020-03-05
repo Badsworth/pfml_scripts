@@ -59,6 +59,9 @@ const components = {
   header: {
     skipToContent: "Skip to main content",
     appTitle: "Paid Family and Medical Leave"
+  },
+  spinner: {
+    label: "Loading"
   }
 };
 

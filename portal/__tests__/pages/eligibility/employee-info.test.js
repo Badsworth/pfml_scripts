@@ -20,7 +20,7 @@ describe("EmployeeInfo", () => {
       firstName: "James",
       middleName: "AA",
       lastName: "Joyce",
-      ssnOrItin: "222222222",
+      ssnOrItin: "222222222"
     };
 
     for (const key in inputData) {

@@ -4,6 +4,9 @@ import Amplify, { Auth } from "aws-amplify";
 import React, { useEffect, useState } from "react";
 import Header from "../components/Header";
 import PropTypes from "prop-types";
+import Router from "next/router";
+import Spinner from "../components/Spinner";
+import { useTranslation } from "react-i18next";
 import { withAuthenticator } from "aws-amplify-react";
 
 Amplify.configure(process.env.awsConfig);
@@ -15,14 +18,39 @@ Amplify.configure(process.env.awsConfig);
  * @returns {React.Component}
  */
 export const App = ({ Component, pageProps }) => {
+  const { t } = useTranslation();
+  const [ui, setUI] = useState({ isLoadingRoute: false });
   const [user, setUser] = useState({});
+
+  /**
+   * Event handler for when a page route transition has ended
+   * (either successfully or unsuccessfully)
+   */
+  const handleRouteChangeEnd = () => {
+    setUI({ ...ui, isLoadingRoute: false });
+  };
+
+  /**
+   * Event handler for when a page route is transitioning
+   */
+  const handleRouteChangeStart = () => {
+    setUI({ ...ui, isLoadingRoute: true });
+  };
 
   useEffect(() => {
     Auth.currentAuthenticatedUser()
       .then(authUser => setUser({ username: authUser.attributes.email }))
       .catch(() => console.error("Error retrieving currentAuthenticatedUser"));
+
+    // Track route events so we can provide a visual indicator when a page is loading
+    Router.events.on("routeChangeStart", handleRouteChangeStart);
+    Router.events.on("routeChangeComplete", handleRouteChangeEnd);
+    Router.events.on("routeChangeError", handleRouteChangeEnd);
+
     // Passing this empty array causes this effect to be run only once upon mount. See:
     // https://reactjs.org/docs/hooks-effect.html#tip-optimizing-performance-by-skipping-effects
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (
@@ -31,7 +59,13 @@ export const App = ({ Component, pageProps }) => {
       <main id="main" className="grid-container margin-bottom-8">
         <div className="grid-row">
           <div className="grid-col-fill">
-            <Component {...pageProps} />
+            {ui.isLoadingRoute ? (
+              <div className="margin-top-8 text-center">
+                <Spinner aria-valuetext={t("components.spinner.label")} />
+              </div>
+            ) : (
+              <Component {...pageProps} />
+            )}
           </div>
         </div>
       </main>

@@ -11,15 +11,15 @@ const EmployeeInfo = () => {
     firstName: "",
     middleName: "",
     lastName: "",
-    ssnOrItin: "",
+    ssnOrItin: ""
   });
 
-  const handleChange = (event) => {
+  const handleChange = event => {
     const { name, value } = event.target;
     setFormData({ ...formData, [name]: value });
   };
 
-  const handleSubmit = (event) => {
+  const handleSubmit = event => {
     event.preventDefault();
     // the empoyeeId will ultimately be returned by API /employee endpoint
     // TODO replace with POST request to API /employee to get employeeId
