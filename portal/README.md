@@ -3,6 +3,10 @@
 This is a [Next.js](https://nextjs.org/docs)-powered React app to bootstrap the Massachusetts Paid Family
 and Medical Leave Portal.
 
+## Environments
+
+- [Test](https://pfml-sandbox-v2.navateam.com/)
+
 ## Prerequisites
 
 Node v10 (or greater)
