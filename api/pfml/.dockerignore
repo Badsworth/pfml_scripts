@@ -1,0 +1,13 @@
+#
+# Files and directories ignored by `docker build` and are not copied into
+# images.
+#
+# See https://docs.docker.com/engine/reference/builder/#dockerignore-file
+#
+
+**/*.swp
+**/*.swo
+.dockerignore
+**/.DS_Store
+**/__pycache__
+.pytest_cache

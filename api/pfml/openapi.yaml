@@ -1,0 +1,65 @@
+openapi: 3.0.2
+info:
+  title: Mock API
+  description: A test API in OpenAPI format
+  version: "2020-01-29"
+
+servers:
+  - url: /v1
+    description: Development server
+
+paths:
+  /status:
+    get:
+      summary: Get the API status
+      responses:
+        "200":
+          description: A status object
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Status"
+
+  /split:
+    get:
+      summary: Split a string up
+      operationId: pfml.split.split_get
+      parameters:
+        - name: message
+          in: query
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 80
+          description: A string to split up
+          required: true
+      responses:
+        "200":
+          description: An array of words
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Words"
+
+components:
+  schemas:
+    Status:
+      type: object
+      properties:
+        status:
+          type: string
+        version:
+          type: string
+      example:
+        status: "ok"
+        version: "2020-01-29"
+
+    Words:
+      type: object
+      properties:
+        words:
+          type: array
+          items:
+            type: string
+      example:
+        words: ["hello", "world"]
