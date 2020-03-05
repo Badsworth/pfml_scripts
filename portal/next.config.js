@@ -19,14 +19,14 @@ module.exports = withSass(
     withFonts({
       enableSvg: true,
       env: {
-        ...envVariables,
+        ...envVariables
       },
       exportTrailingSlash: true,
       sassLoaderOptions: {
         includePaths: [
           path.resolve(__dirname, "node_modules/uswds/dist/scss"),
-          path.resolve(__dirname, "node_modules"),
-        ],
+          path.resolve(__dirname, "node_modules")
+        ]
       },
       webpack(config, options) {
         const { dir, isServer } = options;
@@ -54,7 +54,7 @@ module.exports = withSass(
           });
         }
         return config;
-      },
+      }
     })
   )
 );

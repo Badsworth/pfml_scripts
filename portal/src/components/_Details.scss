@@ -1,0 +1,20 @@
+// https://github.com/CMSgov/design-system/blob/master/packages/docs/src/styles/base/_details.scss
+.c-details {
+  summary {
+    display: block;
+    cursor: pointer;
+  }
+
+  summary::-webkit-details-marker {
+    display: none;
+  }
+
+  summary::before {
+    content: '\25B6';
+    padding-right: 0.5em;
+  }
+
+  &[open] > summary::before {
+    content: '\25BC';
+  }
+}
