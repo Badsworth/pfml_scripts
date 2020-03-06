@@ -1,4 +1,5 @@
 import { groupBy, map, sumBy, uniqBy } from "lodash";
+import convertPeriodToMonths from "./convertPeriodToMonths";
 
 const formatDollar = new Intl.NumberFormat("en-US", {
   style: "currency",
@@ -10,7 +11,7 @@ const formatDollar = new Intl.NumberFormat("en-US", {
 /**
  * Summarize wage data for review by employee
  * @param {{ employer_id: string, employer_qtr_id: number }[]} wages - Wages object returned by /wages API endpoint.
- * @returns {{ totalEmployers: number, earningsByEmployer: [ { employer: string, earnings: string } ] }}
+ * @returns {{ totalEmployers: number, earningsByEmployer: [{ employer: string, totalEarnings: string, wages: [{ quarter: string, earnings: string, employer: string }] } ] }}
  */
 const summarizeWages = wages => ({
   totalEmployers: uniqBy(wages, "employer_id").length,
@@ -23,8 +24,15 @@ const summarizeWages = wages => ({
     // for each key/value pair in object above
     // sum employer_qtr_wages and format as USD
     (employerWages, employerId) => ({
+      // TODO replace with employer name when it's returned from API
       employer: employerId,
-      earnings: formatDollar(
+      wages: employerWages.map(wage => ({
+        employer: employerId,
+        period_id: wage.period_id,
+        quarter: convertPeriodToMonths(wage.period_id),
+        earnings: formatDollar(wage.employer_qtr_wages.toFixed())
+      })),
+      totalEarnings: formatDollar(
         sumBy(employerWages, "employer_qtr_wages").toFixed()
       )
     })

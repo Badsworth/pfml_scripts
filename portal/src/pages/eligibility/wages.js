@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import Details from "../../components/Details";
 import summarizeWages from "../../utils/summarizeWages";
 import { useRouter } from "next/router";
 import { useTranslation } from "react-i18next";
@@ -6,10 +7,7 @@ import { useTranslation } from "react-i18next";
 // TODO: Integrate with api endpoint
 // https://lwd.atlassian.net/browse/CP-111
 const mockWage = (employeeId, employerId) => ({
-  period_id: {
-    year: 2019,
-    quarter: 1
-  },
+  period_id: "Q22020",
   employee_id: employeeId,
   employer_id: employerId,
   independent_contractor: false,
@@ -68,14 +66,50 @@ const Wages = () => {
             </tr>
           </thead>
           <tbody>
-            {earningsByEmployer.map(({ employer, earnings }) => (
-              <tr key={`${employer}`}>
+            {earningsByEmployer.map(({ employer, totalEarnings }) => (
+              <tr key={`${employer}-summary`}>
                 <th scope="row">{employer}</th>
-                <td>{earnings}</td>
+                <td>{totalEarnings}</td>
               </tr>
             ))}
           </tbody>
         </table>
+
+        <Details label={t("pages.eligibility.wages.detailsLabel")}>
+          {earningsByEmployer.map(({ employer, wages }) => (
+            <table className="usa-table" key={`${employer}-history`}>
+              <caption>
+                {t("pages.eligibility.wages.wagesHistoryTableCaption", {
+                  employer
+                })}
+              </caption>
+              <thead>
+                <tr>
+                  <th scope="col">
+                    {t("pages.eligibility.wages.wagesTablePeriodHeading")}
+                  </th>
+                  <th scope="col">
+                    {t("pages.eligibility.wages.wagesTableEarningsHeading")}
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {/**
+                  * TODO this only shows a row for quarters
+                  * where wages exist. We will need to show
+                  * $0.00 for empty quarters once we've integrated with
+                  * a mock endpoint
+                  */}
+                {wages.map(({ quarter, earnings, period_id }, i) => (
+                  <tr key={`${employer}-history-${period_id}-${i}`}>
+                    <th scope="row">{quarter}</th>
+                    <td>{earnings}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          ))}
+        </Details>
       </div>
     </React.Fragment>
   );

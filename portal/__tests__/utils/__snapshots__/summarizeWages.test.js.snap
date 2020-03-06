@@ -1,0 +1,35 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`summarizeWages returns wages for an employer with quarter and earnings 1`] = `
+Object {
+  "0": Object {
+    "earnings": "$15,000",
+    "employer": "e72751a0-3ab4-4593-a08b-7f332c359fb4",
+    "period_id": "Q12020",
+    "quarter": "October - December 2019",
+  },
+  "1": Object {
+    "earnings": "$20,000",
+    "employer": "e72751a0-3ab4-4593-a08b-7f332c359fb4",
+    "period_id": "Q22020",
+    "quarter": "January - March 2020",
+  },
+}
+`;
+
+exports[`summarizeWages returns wages for an employer with quarter and earnings 2`] = `
+Object {
+  "0": Object {
+    "earnings": "$1,000",
+    "employer": "e4e3a70d-c9bf-4d1e-acf1-e3adefa20a32",
+    "period_id": "Q32020",
+    "quarter": "April - June 2020",
+  },
+  "1": Object {
+    "earnings": "$3,000",
+    "employer": "e4e3a70d-c9bf-4d1e-acf1-e3adefa20a32",
+    "period_id": "Q42020",
+    "quarter": "July - September 2020",
+  },
+}
+`;

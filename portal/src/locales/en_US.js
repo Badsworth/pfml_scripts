@@ -24,12 +24,19 @@ const pages = {
         "According to our records, you've worked for $t(pages.eligibility.wages.employers, { 'count': {{totalEmployers}} }) in the last 12 months.",
       descriptionP2:
         "Your earnings are an estimate of what you earned before paying taxes.",
+      detailsLabel: "Show my full wage history",
       employers: "{{count}} employer",
       employers_plural: "{{count}} employers",
+      q1MonthRange: "October - December",
+      q2MonthRange: "January - March",
+      q3MonthRange: "April - June",
+      q4MonthRange: "July - September",
       title: "Verify your employment history",
+      wagesHistoryTableCaption: "Estimated earnings from {{employer}}",
       wagesTableEarningsHeading: "Estimated earnings",
       wagesTableEmployerHeading: "Employer",
-      wagesTableHeading: "Employment history from the past 12 months"
+      wagesTableHeading: "Employment history from the past 12 months",
+      wagesTablePeriodHeading: "Period"
     }
   },
   index: {

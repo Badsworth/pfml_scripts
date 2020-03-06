@@ -5,7 +5,7 @@ import { shallow } from "enzyme";
 function render(customProps = {}) {
   const props = Object.assign(
     {
-      children: "Expandable Content",
+      children: "Expandable Content"
     },
     customProps
   );
@@ -14,7 +14,7 @@ function render(customProps = {}) {
 
   return {
     props,
-    wrapper: shallow(component),
+    wrapper: shallow(component)
   };
 }
 
@@ -22,7 +22,7 @@ describe("Details", () => {
   it("renders children", () => {
     const text = "Child Text";
     const child = <span>{text}</span>;
-    const { wrapper } = render({ children: child });
+    const { wrapper } = render({ children: child, label: "Label" });
     const span = wrapper.find("span");
 
     expect(span.text()).toMatch(text);
