@@ -20,6 +20,7 @@ const pages = {
       title: "Tell us about yourself"
     },
     wages: {
+      dataIsCorrectLabel: "Does the employment history look correct to you?",
       descriptionP1:
         "According to our records, you've worked for $t(pages.eligibility.wages.employers, { 'count': {{totalEmployers}} }) in the last 12 months.",
       descriptionP2:

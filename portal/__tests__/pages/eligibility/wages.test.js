@@ -10,10 +10,28 @@ jest.mock("next/router", () => ({
 }));
 
 describe("Wages", () => {
-  it("renders the page", () => {
+  let wrapper;
+  beforeEach(() => {
     // mount because shallow does not evaluate useEffect
-    const wrapper = mount(<Wages />);
+    wrapper = mount(<Wages />);
+  });
 
+  it("renders the page", () => {
     expect(wrapper).toMatchSnapshot();
+  });
+
+  it("changes radio button with user input", async () => {
+    const event = { target: { name: "dataIsCorrect", value: "yes" } };
+    wrapper
+      .find("input")
+      .first()
+      .simulate("change", event);
+
+    expect(
+      wrapper
+        .find("InputChoice")
+        .first()
+        .prop("checked")
+    ).toEqual(true);
   });
 });

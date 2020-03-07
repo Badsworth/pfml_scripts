@@ -164,6 +164,106 @@ exports[`Wages renders the page 1`] = `
         </div>
       </details>
     </Details>
+    <form
+      className="usa-form usa-form--large margin-y-6"
+    >
+      <InputChoiceGroup
+        choices={
+          Array [
+            Object {
+              "checked": false,
+              "label": "Yes",
+              "value": "yes",
+            },
+            Object {
+              "checked": false,
+              "label": "No",
+              "value": "no",
+            },
+          ]
+        }
+        label="Does the employment history look correct to you?"
+        name="dataIsCorrect"
+        onChange={[Function]}
+        type="radio"
+      >
+        <fieldset
+          className="usa-fieldset usa-form-group"
+        >
+          <FormLabel
+            component="legend"
+          >
+            <legend
+              className="usa-label usa-legend"
+            >
+              Does the employment history look correct to you?
+            </legend>
+          </FormLabel>
+          <div
+            className="margin-top-3"
+          >
+            <InputChoice
+              checked={false}
+              key="yes"
+              label="Yes"
+              name="dataIsCorrect"
+              onChange={[Function]}
+              type="radio"
+              value="yes"
+            >
+              <div
+                className="usa-radio"
+              >
+                <input
+                  checked={false}
+                  className="usa-radio__input"
+                  id="InputChoice3"
+                  name="dataIsCorrect"
+                  onChange={[Function]}
+                  type="radio"
+                  value="yes"
+                />
+                <label
+                  className="usa-radio__label"
+                  htmlFor="InputChoice3"
+                >
+                  Yes
+                </label>
+              </div>
+            </InputChoice>
+            <InputChoice
+              checked={false}
+              key="no"
+              label="No"
+              name="dataIsCorrect"
+              onChange={[Function]}
+              type="radio"
+              value="no"
+            >
+              <div
+                className="usa-radio"
+              >
+                <input
+                  checked={false}
+                  className="usa-radio__input"
+                  id="InputChoice4"
+                  name="dataIsCorrect"
+                  onChange={[Function]}
+                  type="radio"
+                  value="no"
+                />
+                <label
+                  className="usa-radio__label"
+                  htmlFor="InputChoice4"
+                >
+                  No
+                </label>
+              </div>
+            </InputChoice>
+          </div>
+        </fieldset>
+      </InputChoiceGroup>
+    </form>
   </div>
 </Wages>
 `;

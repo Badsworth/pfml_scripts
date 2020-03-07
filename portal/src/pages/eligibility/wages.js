@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import Details from "../../components/Details";
+import InputChoiceGroup from "../../components/InputChoiceGroup";
 import summarizeWages from "../../utils/summarizeWages";
 import { useRouter } from "next/router";
 import { useTranslation } from "react-i18next";
@@ -34,11 +35,19 @@ const Wages = () => {
   const router = useRouter();
   const { employeeId } = router.query;
   const { t } = useTranslation();
+  const [formData, setFormData] = useState({
+    dataIsCorrect: null
+  });
   const [wagesSummary, setWagesSummary] = useState({
     totalEmployers: 0,
     earningsByEmployer: []
   });
   const { totalEmployers, earningsByEmployer } = wagesSummary;
+
+  const handleChange = event => {
+    const { name, value } = event.target;
+    setFormData({ ...formData, [name]: value });
+  };
 
   useEffect(() => {
     const wages = mockGetWageData(employeeId);
@@ -110,6 +119,27 @@ const Wages = () => {
             </table>
           ))}
         </Details>
+
+        <form className="usa-form usa-form--large margin-y-6">
+          <InputChoiceGroup
+            label={t("pages.eligibility.wages.dataIsCorrectLabel")}
+            type="radio"
+            name="dataIsCorrect"
+            onChange={handleChange}
+            choices={[
+              {
+                checked: formData.dataIsCorrect === "yes",
+                label: "Yes",
+                value: "yes"
+              },
+              {
+                checked: formData.dataIsCorrect === "no",
+                label: "No",
+                value: "no"
+              }
+            ]}
+          />
+        </form>
       </div>
     </React.Fragment>
   );
