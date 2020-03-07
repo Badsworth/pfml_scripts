@@ -1,5 +1,6 @@
 {
   "rules": {
-    "jsdoc/require-returns": "off"
+    "jsdoc/require-returns": "off",
+    "jsx-a11y/anchor-is-valid": "off"
   }
 }
