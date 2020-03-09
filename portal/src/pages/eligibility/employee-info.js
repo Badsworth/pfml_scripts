@@ -11,7 +11,7 @@ const EmployeeInfo = () => {
     firstName: "",
     middleName: "",
     lastName: "",
-    ssnOrItin: ""
+    ssnOrItin: "",
   });
 
   const handleChange = event => {

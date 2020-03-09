@@ -38,8 +38,8 @@ const AuthNav = props => {
 
 AuthNav.propTypes = {
   user: PropTypes.shape({
-    username: PropTypes.string
-  })
+    username: PropTypes.string,
+  }),
 };
 
 export default AuthNav;

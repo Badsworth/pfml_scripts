@@ -7,7 +7,7 @@ import summarizeWages from "../../src/utils/summarizeWages";
 const mockWage = (employerId, wages = 5000, periodId = "Q42020") => ({
   employer_id: employerId,
   period_id: periodId,
-  employer_qtr_wages: wages
+  employer_qtr_wages: wages,
 });
 
 describe("summarizeWages", () => {
@@ -21,7 +21,7 @@ describe("summarizeWages", () => {
       mockWage(employer1),
       mockWage(employer1),
       mockWage(employer2),
-      mockWage(employer2)
+      mockWage(employer2),
     ];
 
     const { totalEmployers } = summarizeWages(wages);
@@ -34,7 +34,7 @@ describe("summarizeWages", () => {
       mockWage(employer1, 15000.05),
       mockWage(employer1, 20000.01),
       mockWage(employer2, 999.51),
-      mockWage(employer2, 3000.02)
+      mockWage(employer2, 3000.02),
     ];
 
     const { earningsByEmployer } = summarizeWages(wages);
@@ -50,7 +50,7 @@ describe("summarizeWages", () => {
       mockWage(employer1, 15000.05, "Q12020"),
       mockWage(employer1, 20000.01, "Q22020"),
       mockWage(employer2, 999.51, "Q32020"),
-      mockWage(employer2, 3000.02, "Q42020")
+      mockWage(employer2, 3000.02, "Q42020"),
     ];
 
     const { earningsByEmployer } = summarizeWages(wages);
@@ -61,26 +61,26 @@ describe("summarizeWages", () => {
       {
         employer: employer1,
         earnings: "$15,000",
-        quarter: "October - December 2019"
+        quarter: "October - December 2019",
       },
       {
         employer: employer1,
         earnings: "$20,000",
-        quarter: "January - March 2020"
-      }
+        quarter: "January - March 2020",
+      },
     ]);
 
     expect(employer2Total.wages).toMatchSnapshot([
       {
         employer: employer2,
         earnings: "$1,000",
-        quarter: "April - June 2020"
+        quarter: "April - June 2020",
       },
       {
         employer: employer2,
         earnings: "$3,000",
-        quarter: "July - September 2020"
-      }
+        quarter: "July - September 2020",
+      },
     ]);
   });
 });

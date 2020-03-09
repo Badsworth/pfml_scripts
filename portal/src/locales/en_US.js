@@ -17,7 +17,7 @@ const pages = {
       ssnSectionHint:
         "Don’t have a Social Security Number? Use your Individual Taxpayer Identification Number.",
       ssnSectionLabel: "What’s your Social Security Number?",
-      title: "Tell us about yourself"
+      title: "Tell us about yourself",
     },
     wages: {
       dataIsCorrectLabel: "Does the employment history look correct to you?",
@@ -37,8 +37,8 @@ const pages = {
       wagesTableEarningsHeading: "Estimated earnings",
       wagesTableEmployerHeading: "Employer",
       wagesTableHeading: "Employment history from the past 12 months",
-      wagesTablePeriodHeading: "Period"
-    }
+      wagesTablePeriodHeading: "Period",
+    },
   },
   index: {
     eligibilityCheckInfoHeader: "How it works",
@@ -52,13 +52,13 @@ const pages = {
     financialRequirementStatement:
       "Before you can create a claim, we need to see if you meet the financial requirements to take paid leave.",
     pageHeader: "Checking your eligibility to take leave",
-    startButtonText: "Start"
-  }
+    startButtonText: "Start",
+  },
 };
 
 const components = {
   authNav: {
-    logOutButtonText: "Log out"
+    logOutButtonText: "Log out",
   },
   exemption: {
     contactEmployer:
@@ -66,23 +66,23 @@ const components = {
     employerHasExemption:
       "This plan meets or exceeds the benefits offered through the Commonwealth, so they do not participate in the Commonwealth's plan.",
     homeButtonText: "Back to Dashboard",
-    title: "Your employer has their own paid leave plan"
+    title: "Your employer has their own paid leave plan",
   },
   form: {
     optionalText: "(optional)",
-    submitButtonText: "Submit"
+    submitButtonText: "Submit",
   },
   header: {
     skipToContent: "Skip to main content",
-    appTitle: "Paid Family and Medical Leave"
+    appTitle: "Paid Family and Medical Leave",
   },
   spinner: {
-    label: "Loading"
-  }
+    label: "Loading",
+  },
 };
 
 const englishLocale = {
-  translation: Object.assign({}, { components, pages })
+  translation: Object.assign({}, { components, pages }),
 };
 
 export default englishLocale;

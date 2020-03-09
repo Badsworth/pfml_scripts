@@ -8,15 +8,15 @@ function render(customProps = {}) {
       choices: [
         {
           label: "Choice A",
-          value: "a"
+          value: "a",
         },
         {
           label: "Choice B",
-          value: "b"
-        }
+          value: "b",
+        },
       ],
       label: "Field label",
-      name: "field-name"
+      name: "field-name",
     },
     customProps
   );
@@ -25,7 +25,7 @@ function render(customProps = {}) {
 
   return {
     props,
-    wrapper: shallow(component)
+    wrapper: shallow(component),
   };
 }
 
@@ -40,7 +40,7 @@ describe("InputChoiceGroup", () => {
     const { wrapper } = render({
       errorMsg: "Error message",
       hint: "Hint text",
-      optionalText: "Optional"
+      optionalText: "Optional",
     });
 
     expect(wrapper.find("FormLabel")).toMatchSnapshot();
@@ -100,7 +100,7 @@ describe("InputChoiceGroup", () => {
   describe("when change event is triggered", () => {
     it("calls onChange", () => {
       const { props, wrapper } = render({
-        onChange: jest.fn()
+        onChange: jest.fn(),
       });
 
       wrapper

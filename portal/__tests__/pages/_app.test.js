@@ -8,8 +8,8 @@ jest.mock("next/router", () => ({
     on: (name, callback) => {
       mockRouterEvents.push({ name, callback });
     },
-    off: jest.fn()
-  }
+    off: jest.fn(),
+  },
 }));
 
 import { mount, shallow } from "enzyme";
@@ -22,7 +22,7 @@ function render(customProps = {}, mountComponent = false) {
   const props = Object.assign(
     {
       Component: () => <div />,
-      pageProps: {}
+      pageProps: {},
     },
     customProps
   );
@@ -31,7 +31,7 @@ function render(customProps = {}, mountComponent = false) {
 
   return {
     props,
-    wrapper: mountComponent ? mount(component) : shallow(component)
+    wrapper: mountComponent ? mount(component) : shallow(component),
   };
 }
 
@@ -44,8 +44,8 @@ describe("App", () => {
     it("renders the site header with the authenticated user's info", async () => {
       Auth.currentAuthenticatedUser.mockResolvedValueOnce({
         attributes: {
-          email: "mocked-header-user@example.com"
-        }
+          email: "mocked-header-user@example.com",
+        },
       });
 
       // We need to mount the component so that useEffect is called
@@ -107,8 +107,8 @@ describe("App", () => {
     const { wrapper } = render({
       Component: TestComponent,
       pageProps: {
-        title: "Test page"
-      }
+        title: "Test page",
+      },
     });
 
     const component = wrapper.find("TestComponent");
@@ -124,8 +124,8 @@ describe("App", () => {
     beforeEach(() => {
       Auth.currentAuthenticatedUser.mockResolvedValueOnce({
         attributes: {
-          email: "mocked-header-user@example.com"
-        }
+          email: "mocked-header-user@example.com",
+        },
       });
     });
 

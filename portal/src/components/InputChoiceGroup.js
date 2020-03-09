@@ -14,7 +14,7 @@ function InputChoiceGroup({ type = "checkbox", ...props }) {
   const hasError = !!props.errorMsg;
 
   const formGroupClasses = classnames("usa-fieldset", "usa-form-group", {
-    "usa-form-group--error": hasError
+    "usa-form-group--error": hasError,
   });
 
   return (
@@ -53,7 +53,7 @@ InputChoiceGroup.propTypes = {
       hint: PropTypes.node,
       label: PropTypes.node.isRequired,
       value: PropTypes.oneOfType([PropTypes.number, PropTypes.string])
-        .isRequired
+        .isRequired,
     })
   ).isRequired,
   /**
@@ -83,7 +83,7 @@ InputChoiceGroup.propTypes = {
   /**
    * HTML input `type` attribute applied to each choice in the list
    */
-  type: PropTypes.oneOf(["checkbox", "radio"])
+  type: PropTypes.oneOf(["checkbox", "radio"]),
 };
 
 export default InputChoiceGroup;

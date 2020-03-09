@@ -3,7 +3,7 @@ import React from "react";
 
 export default {
   title: "Forms|InputChoice",
-  component: InputChoice
+  component: InputChoice,
 };
 
 export const Default = () => {

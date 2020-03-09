@@ -15,7 +15,7 @@ describe("AuthNav", () => {
 
   describe("when a user is authenticated", () => {
     const user = {
-      username: "Foo Bar"
+      username: "Foo Bar",
     };
 
     it("renders the logged-in state", () => {

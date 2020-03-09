@@ -3,7 +3,7 @@ import React from "react";
 
 export default {
   title: "Exemption",
-  component: Exemption
+  component: Exemption,
 };
 
 export const Default = () => <Exemption />;

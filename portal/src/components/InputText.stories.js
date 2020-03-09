@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 
 export default {
   title: "Forms|InputText",
-  component: InputText
+  component: InputText,
 };
 
 export const ControlledField = () => {

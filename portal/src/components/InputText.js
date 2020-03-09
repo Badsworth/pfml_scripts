@@ -18,13 +18,13 @@ function InputText({ type = "text", ...props }) {
 
   const fieldClasses = classnames("usa-input", props.inputClassName, {
     "usa-input--error": hasError,
-    [`usa-input--${props.width}`]: !!props.width
+    [`usa-input--${props.width}`]: !!props.width,
   });
   const formGroupClasses = classnames(
     "usa-form-group",
     props.formGroupClassName,
     {
-      "usa-form-group--error": hasError
+      "usa-form-group--error": hasError,
     }
   );
 
@@ -111,7 +111,7 @@ InputText.propTypes = {
    * Sets the input's `value`. Use this in combination with `onChange`
    * for a controlled component.
    */
-  value: PropTypes.oneOfType([PropTypes.string, PropTypes.number])
+  value: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
 };
 
 export default InputText;

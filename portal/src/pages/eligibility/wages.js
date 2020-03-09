@@ -18,7 +18,7 @@ const mockWage = (employeeId, employerId) => ({
   employer_medical_contribution: 2000,
   employee_medical_contribution: 975,
   employer_fam_contribution: 2000,
-  employee_fam_contribution: 975
+  employee_fam_contribution: 975,
 });
 
 const mockGetWageData = id => {
@@ -27,7 +27,7 @@ const mockGetWageData = id => {
   return [
     mockWage(id, employer1),
     mockWage(id, employer1),
-    mockWage(id, employer2)
+    mockWage(id, employer2),
   ];
 };
 
@@ -36,11 +36,11 @@ const Wages = () => {
   const { employeeId } = router.query;
   const { t } = useTranslation();
   const [formData, setFormData] = useState({
-    dataIsCorrect: null
+    dataIsCorrect: null,
   });
   const [wagesSummary, setWagesSummary] = useState({
     totalEmployers: 0,
-    earningsByEmployer: []
+    earningsByEmployer: [],
   });
   const { totalEmployers, earningsByEmployer } = wagesSummary;
 
@@ -89,7 +89,7 @@ const Wages = () => {
             <table className="usa-table" key={`${employer}-history`}>
               <caption>
                 {t("pages.eligibility.wages.wagesHistoryTableCaption", {
-                  employer
+                  employer,
                 })}
               </caption>
               <thead>
@@ -130,13 +130,13 @@ const Wages = () => {
               {
                 checked: formData.dataIsCorrect === "yes",
                 label: "Yes",
-                value: "yes"
+                value: "yes",
               },
               {
                 checked: formData.dataIsCorrect === "no",
                 label: "No",
-                value: "no"
-              }
+                value: "no",
+              },
             ]}
           />
         </form>

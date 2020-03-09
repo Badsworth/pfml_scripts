@@ -68,7 +68,7 @@ InputChoice.propTypes = {
   /**
    * Sets the input's `value`
    */
-  value: PropTypes.oneOfType([PropTypes.number, PropTypes.string]).isRequired
+  value: PropTypes.oneOfType([PropTypes.number, PropTypes.string]).isRequired,
 };
 
 export default InputChoice;

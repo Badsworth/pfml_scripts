@@ -3,7 +3,7 @@ import InputChoiceGroup from "./InputChoiceGroup";
 
 export default {
   title: "Forms|InputChoiceGroup",
-  component: InputChoiceGroup
+  component: InputChoiceGroup,
 };
 
 export const Default = () => {
@@ -20,13 +20,13 @@ export const Default = () => {
           {
             checked: selectedValue === "a",
             label: "Choice A",
-            value: "a"
+            value: "a",
           },
           {
             checked: selectedValue === "b",
             label: "Choice B",
-            value: "b"
-          }
+            value: "b",
+          },
         ]}
         label="Question text"
         name="fieldName"
@@ -44,12 +44,12 @@ export const WithErrorAndMostOtherProps = () => {
         choices={[
           {
             label: "Choice A",
-            value: "a"
+            value: "a",
           },
           {
             label: "Choice B",
-            value: "b"
-          }
+            value: "b",
+          },
         ]}
         errorMsg="This field is required"
         hint="Question hint text"

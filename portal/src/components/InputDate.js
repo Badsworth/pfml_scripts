@@ -34,14 +34,14 @@ export function parseDateParts(value) {
     return {
       year: parts[0].trim(),
       month: parts.length >= 2 ? parts[1].replace(/^0+/, "").trim() : "",
-      day: parts.length >= 3 ? parts[2].replace(/^0+/, "").trim() : ""
+      day: parts.length >= 3 ? parts[2].replace(/^0+/, "").trim() : "",
     };
   }
 
   return {
     year: "",
     month: "",
-    day: ""
+    day: "",
   };
 }
 
@@ -57,25 +57,25 @@ function InputDate(props) {
   const values = parseDateParts(props.value);
   const inputClassNames = {
     month: classnames("usa-input--inline", {
-      "usa-input--error": props.monthInvalid
+      "usa-input--error": props.monthInvalid,
     }),
     day: classnames("usa-input--inline", {
-      "usa-input--error": props.dayInvalid
+      "usa-input--error": props.dayInvalid,
     }),
     year: classnames("usa-input--inline", {
-      "usa-input--error": props.yearInvalid
-    })
+      "usa-input--error": props.yearInvalid,
+    }),
   };
   // We need refs in order to access the individual field values
   // and return the formatted date string back to our parent
   const inputTextRefs = {
     month: useRef(),
     day: useRef(),
-    year: useRef()
+    year: useRef(),
   };
 
   const formGroupClasses = classnames("usa-fieldset", "usa-form-group", {
-    "usa-form-group--error": hasError
+    "usa-form-group--error": hasError,
   });
 
   /**
@@ -89,7 +89,7 @@ function InputDate(props) {
     const isoDate = formatFieldsAsISO8601({
       month: inputTextRefs.month.current.value,
       day: inputTextRefs.day.current.value,
-      year: inputTextRefs.year.current.value
+      year: inputTextRefs.year.current.value,
     });
 
     // We call onChange with an argument value in a shape resembling Event so
@@ -101,8 +101,8 @@ function InputDate(props) {
       target: {
         name: props.name,
         type: "text",
-        value: isoDate
-      }
+        value: isoDate,
+      },
     });
   };
 
@@ -211,7 +211,7 @@ InputDate.propTypes = {
   /**
    * Localized label for the year `input` field
    */
-  yearLabel: PropTypes.node.isRequired
+  yearLabel: PropTypes.node.isRequired,
 };
 
 export default InputDate;

@@ -77,7 +77,7 @@ App.propTypes = {
   // Next.js sets Component for us
   Component: PropTypes.elementType.isRequired,
   // Next.js sets pageProps for us
-  pageProps: PropTypes.object
+  pageProps: PropTypes.object,
 };
 
 const signUpConfig = {
@@ -89,7 +89,7 @@ const signUpConfig = {
       placeholder: "Email",
       required: true,
       type: "email",
-      displayOrder: 1
+      displayOrder: 1,
     },
     {
       label: "Password",
@@ -97,11 +97,11 @@ const signUpConfig = {
       placeholder: "Password",
       required: true,
       type: "password",
-      displayOrder: 2
-    }
-  ]
+      displayOrder: 2,
+    },
+  ],
 };
 
 export default withAuthenticator(App, {
-  signUpConfig
+  signUpConfig,
 });

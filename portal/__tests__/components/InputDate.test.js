@@ -1,6 +1,6 @@
 import InputDate, {
   formatFieldsAsISO8601,
-  parseDateParts
+  parseDateParts,
 } from "../../src/components/InputDate";
 import { mount, shallow } from "enzyme";
 import React from "react";
@@ -13,7 +13,7 @@ function render(customProps = {}, mountComponent = false) {
       monthLabel: "Month",
       name: "field-name",
       onChange: jest.fn(),
-      yearLabel: "Year"
+      yearLabel: "Year",
     },
     customProps
   );
@@ -22,7 +22,7 @@ function render(customProps = {}, mountComponent = false) {
 
   return {
     props,
-    wrapper: mountComponent ? mount(component) : shallow(component)
+    wrapper: mountComponent ? mount(component) : shallow(component),
   };
 }
 
@@ -32,7 +32,7 @@ describe("InputDate", () => {
       name: "test-date-field",
       dayLabel: "Test Day",
       monthLabel: "Test Month",
-      yearLabel: "Test Year"
+      yearLabel: "Test Year",
     });
     const fields = wrapper.find("InputText");
 
@@ -49,7 +49,7 @@ describe("InputDate", () => {
     const { wrapper } = render({
       label: "Legend text",
       hint: "Legend hint",
-      optionalText: "Optional"
+      optionalText: "Optional",
     });
 
     const legend = wrapper.find("FormLabel");
@@ -59,7 +59,7 @@ describe("InputDate", () => {
 
   it("breaks apart the full date value to set the month/day/year field values", () => {
     const { wrapper } = render({
-      value: "2020-10-04"
+      value: "2020-10-04",
     });
     const fields = wrapper.find("InputText");
 
@@ -80,7 +80,7 @@ describe("InputDate", () => {
         {
           name: "full-date-field",
           onChange: jest.fn(),
-          value: "2020-07-04"
+          value: "2020-07-04",
         },
         mountComponent
       );
@@ -152,7 +152,7 @@ describe("formatFieldsAsISO8601", () => {
     const result = formatFieldsAsISO8601({
       month: "12",
       day: "10",
-      year: "1985"
+      year: "1985",
     });
 
     expect(result).toBe("1985-12-10");
@@ -162,7 +162,7 @@ describe("formatFieldsAsISO8601", () => {
     const result = formatFieldsAsISO8601({
       month: "1",
       day: "2",
-      year: "1985"
+      year: "1985",
     });
 
     expect(result).toBe("1985-01-02");

@@ -16,7 +16,7 @@ function FormLabel({ component = "label", ...props }) {
   const labelClasses = classnames("usa-label", {
     "usa-label--error": hasError,
     "usa-legend": component === "legend",
-    "usa-sr-only": props.hideLabel
+    "usa-sr-only": props.hideLabel,
   });
 
   return (
@@ -69,7 +69,7 @@ FormLabel.propTypes = {
   /**
    * Localized text indicating this field is optional
    */
-  optionalText: PropTypes.node
+  optionalText: PropTypes.node,
 };
 
 export default FormLabel;

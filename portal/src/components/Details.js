@@ -21,7 +21,7 @@ Details.propTypes = {
   /**
    * Content to be expanded.
    */
-  children: PropTypes.node.isRequired
+  children: PropTypes.node.isRequired,
 };
 
 export default Details;

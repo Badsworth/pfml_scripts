@@ -5,7 +5,7 @@ import { shallow } from "enzyme";
 function render(customProps = {}) {
   const props = Object.assign(
     {
-      children: "Field Label"
+      children: "Field Label",
     },
     customProps
   );
@@ -14,7 +14,7 @@ function render(customProps = {}) {
 
   return {
     props,
-    wrapper: shallow(component)
+    wrapper: shallow(component),
   };
 }
 

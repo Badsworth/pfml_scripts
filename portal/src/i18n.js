@@ -10,7 +10,7 @@ import { initReactI18next } from "react-i18next";
 
 const defaultLanguage = "en-US";
 const resources = {
-  "en-US": englishLocale
+  "en-US": englishLocale,
 };
 
 i18n
@@ -19,10 +19,10 @@ i18n
     debug: process.env.NODE_ENV === "development",
     fallbackLng: defaultLanguage,
     interpolation: {
-      escapeValue: false // react already escapes values
+      escapeValue: false, // react already escapes values
     },
     lng: defaultLanguage,
-    resources
+    resources,
   });
 
 export default i18n;

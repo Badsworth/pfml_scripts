@@ -29,12 +29,12 @@ module.exports = {
         "css-loader",
         {
           loader: "sass-loader",
-          options: nextConfig.sassLoaderOptions
-        }
+          options: nextConfig.sassLoaderOptions,
+        },
       ],
-      include: path.resolve(__dirname, "../")
+      include: path.resolve(__dirname, "../"),
     });
 
     return config;
-  }
+  },
 };

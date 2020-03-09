@@ -7,7 +7,7 @@ function render(customProps = {}, mountComponent = false) {
     {
       label: "Field Label",
       name: "field-name",
-      onChange: jest.fn()
+      onChange: jest.fn(),
     },
     customProps
   );
@@ -16,7 +16,7 @@ function render(customProps = {}, mountComponent = false) {
 
   return {
     props,
-    wrapper: mountComponent ? mount(component) : shallow(component)
+    wrapper: mountComponent ? mount(component) : shallow(component),
   };
 }
 
@@ -172,7 +172,7 @@ describe("InputText", () => {
   describe("when change event is triggered", () => {
     it("calls onChange", () => {
       const { props, wrapper } = render({
-        onChange: jest.fn()
+        onChange: jest.fn(),
       });
 
       wrapper.find(".usa-input").simulate("change");

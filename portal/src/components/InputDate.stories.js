@@ -3,7 +3,7 @@ import InputDate from "./InputDate";
 
 export default {
   title: "Forms|InputDate",
-  component: InputDate
+  component: InputDate,
 };
 
 export const ControlledField = () => {

@@ -5,7 +5,7 @@ import { shallow } from "enzyme";
 function render(customProps = {}) {
   const props = Object.assign(
     {
-      children: "Expandable Content"
+      children: "Expandable Content",
     },
     customProps
   );
@@ -14,7 +14,7 @@ function render(customProps = {}) {
 
   return {
     props,
-    wrapper: shallow(component)
+    wrapper: shallow(component),
   };
 }
 

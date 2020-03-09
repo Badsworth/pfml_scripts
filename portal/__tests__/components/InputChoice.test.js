@@ -7,7 +7,7 @@ function render(customProps = {}) {
     {
       label: "Field Label",
       name: "field-name",
-      value: "field-value"
+      value: "field-value",
     },
     customProps
   );
@@ -16,7 +16,7 @@ function render(customProps = {}) {
 
   return {
     props,
-    wrapper: shallow(component)
+    wrapper: shallow(component),
   };
 }
 
@@ -102,7 +102,7 @@ describe("InputChoice", () => {
   describe("when change event is triggered", () => {
     it("calls onChange", () => {
       const { props, wrapper } = render({
-        onChange: jest.fn()
+        onChange: jest.fn(),
       });
 
       wrapper.find("input").simulate("change");

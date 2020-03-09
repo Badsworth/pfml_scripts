@@ -5,7 +5,7 @@ const formatDollar = new Intl.NumberFormat("en-US", {
   style: "currency",
   minimumFractionDigits: 0,
   maximumFractionDigits: 0,
-  currency: "USD"
+  currency: "USD",
 }).format;
 
 /**
@@ -30,13 +30,13 @@ const summarizeWages = wages => ({
         employer: employerId,
         period_id: wage.period_id,
         quarter: convertPeriodToMonths(wage.period_id),
-        earnings: formatDollar(wage.employer_qtr_wages.toFixed())
+        earnings: formatDollar(wage.employer_qtr_wages.toFixed()),
       })),
       totalEarnings: formatDollar(
         sumBy(employerWages, "employer_qtr_wages").toFixed()
-      )
+      ),
     })
-  )
+  ),
 });
 
 export default summarizeWages;

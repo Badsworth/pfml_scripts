@@ -16,7 +16,7 @@ export const Spinner = props => {
 
 Spinner.propTypes = {
   /** Text announced to screen readers */
-  "aria-valuetext": PropTypes.string.isRequired
+  "aria-valuetext": PropTypes.string.isRequired,
 };
 
 export default Spinner;
