@@ -3,6 +3,13 @@
 exports[`Wages renders the page 1`] = `
 <Wages>
   <Title>
+    <Head>
+      <Component
+        handleStateChange={null}
+        inAmpMode={false}
+        reduceComponentsToState={[Function]}
+      />
+    </Head>
     <h1
       className="font-heading-xl line-height-sans-2 margin-top-0 margin-bottom-2"
     >

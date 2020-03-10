@@ -3,32 +3,57 @@ import Title from "../../src/components/Title";
 import { shallow } from "enzyme";
 
 describe("Title", () => {
-  describe("when the component prop isn't set", () => {
+  describe("when the `component` prop isn't set", () => {
     it("renders an <h1>", () => {
       const wrapper = shallow(<Title>Hello world</Title>);
 
       expect(wrapper).toMatchInlineSnapshot(`
-        <h1
-          className="font-heading-xl line-height-sans-2 margin-top-0 margin-bottom-2"
-        >
-          Hello world
-        </h1>
+        <Fragment>
+          <Head>
+            <title>
+              Hello world
+            </title>
+          </Head>
+          <h1
+            className="font-heading-xl line-height-sans-2 margin-top-0 margin-bottom-2"
+          >
+            Hello world
+          </h1>
+        </Fragment>
       `);
     });
   });
 
-  describe("when the component prop is set to 'legend'", () => {
+  describe("when the `component` prop is set to 'legend'", () => {
     it("renders a <legend>", () => {
       const wrapper = shallow(<Title component="legend">Hello world</Title>);
 
-      expect(wrapper.hasClass("usa-legend")).toBe(true);
+      expect(wrapper.find("legend").hasClass("usa-legend")).toBe(true);
       expect(wrapper).toMatchInlineSnapshot(`
-        <legend
-          className="font-heading-xl line-height-sans-2 margin-top-0 margin-bottom-2 usa-legend"
-        >
-          Hello world
-        </legend>
+        <Fragment>
+          <Head>
+            <title>
+              Hello world
+            </title>
+          </Head>
+          <legend
+            className="font-heading-xl line-height-sans-2 margin-top-0 margin-bottom-2 usa-legend"
+          >
+            Hello world
+          </legend>
+        </Fragment>
       `);
+    });
+  });
+
+  describe("when the `seoTitle` prop is set", () => {
+    it("overrides the text used for the <title>", () => {
+      const wrapper = shallow(
+        <Title seoTitle="Custom title">Default title</Title>
+      );
+
+      expect(wrapper.find("title").text()).toBe("Custom title");
+      expect(wrapper.find("h1").text()).toBe("Default title");
     });
   });
 });
