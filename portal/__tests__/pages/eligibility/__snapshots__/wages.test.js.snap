@@ -2,268 +2,280 @@
 
 exports[`Wages renders the page 1`] = `
 <Wages>
-  <h1
-    className="font-sans-3xl line-height-sans-2"
-  >
-    Verify your employment history
-  </h1>
-  <div
-    className="usa-prose"
-  >
-    <p>
+  <Title>
+    <h1
+      className="font-heading-xl line-height-sans-2 margin-top-0 margin-bottom-2"
+    >
+      Verify your employment history
+    </h1>
+  </Title>
+  <Lead>
+    <p
+      className="usa-intro"
+    >
       According to our records, you've worked for 2 employers in the last 12 months.
     </p>
-    <p>
+  </Lead>
+  <Lead>
+    <p
+      className="usa-intro"
+    >
       Your earnings are an estimate of what you earned before paying taxes.
     </p>
-    <h2>
+  </Lead>
+  <Heading
+    level="2"
+  >
+    <h2
+      className="font-heading-lg text-bold"
+    >
       Employment history from the past 12 months
     </h2>
-    <table
-      className="usa-table"
-    >
-      <thead>
-        <tr>
-          <th
-            scope="col"
-          >
-            Employer
-          </th>
-          <th
-            scope="col"
-          >
-            Estimated earnings
-          </th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr
-          key="e4e3a70d-c9bf-4d1e-acf1-e3adefa20a32-summary"
+  </Heading>
+  <table
+    className="usa-table"
+  >
+    <thead>
+      <tr>
+        <th
+          scope="col"
         >
-          <th
-            scope="row"
-          >
-            e4e3a70d-c9bf-4d1e-acf1-e3adefa20a32
-          </th>
-          <td>
-            $10,000
-          </td>
-        </tr>
-        <tr
-          key="e72751a0-3ab4-4593-a08b-7f332c359fb4-summary"
+          Employer
+        </th>
+        <th
+          scope="col"
         >
-          <th
-            scope="row"
-          >
-            e72751a0-3ab4-4593-a08b-7f332c359fb4
-          </th>
-          <td>
-            $5,000
-          </td>
-        </tr>
-      </tbody>
-    </table>
-    <Details
-      label="Show my full wage history"
-    >
-      <details
-        className="c-details"
+          Estimated earnings
+        </th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr
+        key="e4e3a70d-c9bf-4d1e-acf1-e3adefa20a32-summary"
       >
-        <summary
-          className="text-primary font-ui-xs"
+        <th
+          scope="row"
         >
-          Show my full wage history
-        </summary>
+          e4e3a70d-c9bf-4d1e-acf1-e3adefa20a32
+        </th>
+        <td>
+          $10,000
+        </td>
+      </tr>
+      <tr
+        key="e72751a0-3ab4-4593-a08b-7f332c359fb4-summary"
+      >
+        <th
+          scope="row"
+        >
+          e72751a0-3ab4-4593-a08b-7f332c359fb4
+        </th>
+        <td>
+          $5,000
+        </td>
+      </tr>
+    </tbody>
+  </table>
+  <Details
+    label="Show my full wage history"
+  >
+    <details
+      className="c-details"
+    >
+      <summary
+        className="text-primary font-ui-xs"
+      >
+        Show my full wage history
+      </summary>
+      <div
+        className="margin-y-2"
+      >
+        <table
+          className="usa-table"
+          key="e4e3a70d-c9bf-4d1e-acf1-e3adefa20a32-history"
+        >
+          <caption>
+            Estimated earnings from e4e3a70d-c9bf-4d1e-acf1-e3adefa20a32
+          </caption>
+          <thead>
+            <tr>
+              <th
+                scope="col"
+              >
+                Period
+              </th>
+              <th
+                scope="col"
+              >
+                Estimated earnings
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr
+              key="e4e3a70d-c9bf-4d1e-acf1-e3adefa20a32-history-Q22020-0"
+            >
+              <th
+                scope="row"
+              >
+                January - March 2020
+              </th>
+              <td>
+                $5,000
+              </td>
+            </tr>
+            <tr
+              key="e4e3a70d-c9bf-4d1e-acf1-e3adefa20a32-history-Q22020-1"
+            >
+              <th
+                scope="row"
+              >
+                January - March 2020
+              </th>
+              <td>
+                $5,000
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <table
+          className="usa-table"
+          key="e72751a0-3ab4-4593-a08b-7f332c359fb4-history"
+        >
+          <caption>
+            Estimated earnings from e72751a0-3ab4-4593-a08b-7f332c359fb4
+          </caption>
+          <thead>
+            <tr>
+              <th
+                scope="col"
+              >
+                Period
+              </th>
+              <th
+                scope="col"
+              >
+                Estimated earnings
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr
+              key="e72751a0-3ab4-4593-a08b-7f332c359fb4-history-Q22020-0"
+            >
+              <th
+                scope="row"
+              >
+                January - March 2020
+              </th>
+              <td>
+                $5,000
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </details>
+  </Details>
+  <form
+    className="usa-form usa-form--large margin-y-6"
+  >
+    <InputChoiceGroup
+      choices={
+        Array [
+          Object {
+            "checked": false,
+            "label": "Yes",
+            "value": "yes",
+          },
+          Object {
+            "checked": false,
+            "label": "No",
+            "value": "no",
+          },
+        ]
+      }
+      label="Does the employment history look correct to you?"
+      name="dataIsCorrect"
+      onChange={[Function]}
+      type="radio"
+    >
+      <fieldset
+        className="usa-fieldset usa-form-group"
+      >
+        <FormLabel
+          component="legend"
+        >
+          <legend
+            className="usa-label usa-legend font-heading-md line-height-sans-3"
+          >
+            Does the employment history look correct to you?
+          </legend>
+        </FormLabel>
         <div
-          className="margin-y-2"
+          className="margin-top-3"
         >
-          <table
-            className="usa-table"
-            key="e4e3a70d-c9bf-4d1e-acf1-e3adefa20a32-history"
+          <InputChoice
+            checked={false}
+            key="yes"
+            label="Yes"
+            name="dataIsCorrect"
+            onChange={[Function]}
+            type="radio"
+            value="yes"
           >
-            <caption>
-              Estimated earnings from e4e3a70d-c9bf-4d1e-acf1-e3adefa20a32
-            </caption>
-            <thead>
-              <tr>
-                <th
-                  scope="col"
-                >
-                  Period
-                </th>
-                <th
-                  scope="col"
-                >
-                  Estimated earnings
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr
-                key="e4e3a70d-c9bf-4d1e-acf1-e3adefa20a32-history-Q22020-0"
+            <div
+              className="usa-radio"
+            >
+              <input
+                checked={false}
+                className="usa-radio__input"
+                id="InputChoice3"
+                name="dataIsCorrect"
+                onChange={[Function]}
+                type="radio"
+                value="yes"
+              />
+              <label
+                className="usa-radio__label"
+                htmlFor="InputChoice3"
               >
-                <th
-                  scope="row"
-                >
-                  January - March 2020
-                </th>
-                <td>
-                  $5,000
-                </td>
-              </tr>
-              <tr
-                key="e4e3a70d-c9bf-4d1e-acf1-e3adefa20a32-history-Q22020-1"
-              >
-                <th
-                  scope="row"
-                >
-                  January - March 2020
-                </th>
-                <td>
-                  $5,000
-                </td>
-              </tr>
-            </tbody>
-          </table>
-          <table
-            className="usa-table"
-            key="e72751a0-3ab4-4593-a08b-7f332c359fb4-history"
+                Yes
+              </label>
+            </div>
+          </InputChoice>
+          <InputChoice
+            checked={false}
+            key="no"
+            label="No"
+            name="dataIsCorrect"
+            onChange={[Function]}
+            type="radio"
+            value="no"
           >
-            <caption>
-              Estimated earnings from e72751a0-3ab4-4593-a08b-7f332c359fb4
-            </caption>
-            <thead>
-              <tr>
-                <th
-                  scope="col"
-                >
-                  Period
-                </th>
-                <th
-                  scope="col"
-                >
-                  Estimated earnings
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr
-                key="e72751a0-3ab4-4593-a08b-7f332c359fb4-history-Q22020-0"
+            <div
+              className="usa-radio"
+            >
+              <input
+                checked={false}
+                className="usa-radio__input"
+                id="InputChoice4"
+                name="dataIsCorrect"
+                onChange={[Function]}
+                type="radio"
+                value="no"
+              />
+              <label
+                className="usa-radio__label"
+                htmlFor="InputChoice4"
               >
-                <th
-                  scope="row"
-                >
-                  January - March 2020
-                </th>
-                <td>
-                  $5,000
-                </td>
-              </tr>
-            </tbody>
-          </table>
+                No
+              </label>
+            </div>
+          </InputChoice>
         </div>
-      </details>
-    </Details>
-    <form
-      className="usa-form usa-form--large margin-y-6"
-    >
-      <InputChoiceGroup
-        choices={
-          Array [
-            Object {
-              "checked": false,
-              "label": "Yes",
-              "value": "yes",
-            },
-            Object {
-              "checked": false,
-              "label": "No",
-              "value": "no",
-            },
-          ]
-        }
-        label="Does the employment history look correct to you?"
-        name="dataIsCorrect"
-        onChange={[Function]}
-        type="radio"
-      >
-        <fieldset
-          className="usa-fieldset usa-form-group"
-        >
-          <FormLabel
-            component="legend"
-          >
-            <legend
-              className="usa-label usa-legend"
-            >
-              Does the employment history look correct to you?
-            </legend>
-          </FormLabel>
-          <div
-            className="margin-top-3"
-          >
-            <InputChoice
-              checked={false}
-              key="yes"
-              label="Yes"
-              name="dataIsCorrect"
-              onChange={[Function]}
-              type="radio"
-              value="yes"
-            >
-              <div
-                className="usa-radio"
-              >
-                <input
-                  checked={false}
-                  className="usa-radio__input"
-                  id="InputChoice3"
-                  name="dataIsCorrect"
-                  onChange={[Function]}
-                  type="radio"
-                  value="yes"
-                />
-                <label
-                  className="usa-radio__label"
-                  htmlFor="InputChoice3"
-                >
-                  Yes
-                </label>
-              </div>
-            </InputChoice>
-            <InputChoice
-              checked={false}
-              key="no"
-              label="No"
-              name="dataIsCorrect"
-              onChange={[Function]}
-              type="radio"
-              value="no"
-            >
-              <div
-                className="usa-radio"
-              >
-                <input
-                  checked={false}
-                  className="usa-radio__input"
-                  id="InputChoice4"
-                  name="dataIsCorrect"
-                  onChange={[Function]}
-                  type="radio"
-                  value="no"
-                />
-                <label
-                  className="usa-radio__label"
-                  htmlFor="InputChoice4"
-                >
-                  No
-                </label>
-              </div>
-            </InputChoice>
-          </div>
-        </fieldset>
-      </InputChoiceGroup>
-    </form>
-  </div>
+      </fieldset>
+    </InputChoiceGroup>
+  </form>
 </Wages>
 `;

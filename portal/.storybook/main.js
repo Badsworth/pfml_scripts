@@ -11,7 +11,7 @@ const nextConfig = require("../next.config");
 
 module.exports = {
   addons: ["@storybook/addon-docs"],
-  stories: ["../src/**/*.stories.js"],
+  stories: ["../src/**/*.stories.js", "./stories/**/*.stories.js"],
   /**
    * Customize the Webpack configuration used by Storybook so it supports
    * Sass files.

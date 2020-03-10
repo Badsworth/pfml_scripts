@@ -5,9 +5,8 @@
 @import "uswds-theme-typography";
 @import "uswds";
 
-body {
-  font-family: family("body");
-}
+// Include default USWDS h1-h6 style (size, weight, spacing) rulesets
+@include usa-headings-styles;
 
 // Custom PFML components
 @import "../src/components/Details";

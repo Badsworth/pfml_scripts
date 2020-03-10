@@ -11,15 +11,14 @@ https://designsystem.digital.gov/design-tokens/typesetting/font-family/
 /* Mayflower SCSS prefix url references to assets such as fonts and images with $assets-path.
  Set $assets-path to form the correct url references in your project to the parent folder of the fonts/ folder, based on the location of the compiled css.
 */
-$assets-path: '~@massds/mayflower-tokens/dist';
-@import '@massds/mayflower-tokens/dist/scss/fonts';
-
+$assets-path: "~@massds/mayflower-tokens/dist";
+@import "@massds/mayflower-tokens/dist/scss/fonts";
 
 $theme-typeface-tokens: (
   texta: (
     display-name: "Texta",
-    cap-height: 300px
-  )
+    cap-height: 300px,
+  ),
 );
 
 // Use Texta everywhere
@@ -29,3 +28,13 @@ $theme-font-sans-custom-stack: "Helvetica, sans-serif";
 $theme-font-role-heading: "sans";
 $theme-font-role-body: "sans";
 $theme-font-role-alt: "sans";
+
+// Apply default type styles (family, size, line height) to the body element
+$theme-style-body-element: true;
+$theme-body-font-size: "xs";
+
+// Apply global <p> styling
+$theme-global-paragraph-styles: true;
+
+$theme-lead-font-size: "sm";
+$theme-lead-line-height: 5;

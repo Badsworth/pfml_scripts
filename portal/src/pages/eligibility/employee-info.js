@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import FormLabel from "../../components/FormLabel";
 import InputText from "../../components/InputText";
+import Title from "../../components/Title";
 import { useRouter } from "next/router";
 import { useTranslation } from "react-i18next";
 
@@ -30,9 +31,7 @@ const EmployeeInfo = () => {
 
   return (
     <form onSubmit={handleSubmit} className="usa-form usa-form--large">
-      <h1 className="font-sans-3xl line-height-sans-2">
-        {t("pages.eligibility.form.title")}
-      </h1>
+      <Title>{t("pages.eligibility.form.title")}</Title>
       <fieldset className="usa-fieldset">
         <FormLabel
           component="legend"

@@ -5,11 +5,9 @@ exports[`EmployeeInfo renders the form 1`] = `
   className="usa-form usa-form--large"
   onSubmit={[Function]}
 >
-  <h1
-    className="font-sans-3xl line-height-sans-2"
-  >
+  <Title>
     Tell us about yourself
-  </h1>
+  </Title>
   <fieldset
     className="usa-fieldset"
   >

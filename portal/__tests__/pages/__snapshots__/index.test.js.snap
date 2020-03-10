@@ -2,28 +2,22 @@
 
 exports[`Index renders the page 1`] = `
 <Fragment>
-  <h1
-    className="font-heading-xl"
-  >
+  <Title>
     Checking your eligibility to take leave
-  </h1>
-  <div
-    className="font-body-md"
-  >
-    <p>
-      Before you can create a claim, we need to see if you meet the financial requirements to take paid leave.
-    </p>
-    <p>
-      This should take less than 5 minutes.
-    </p>
-  </div>
-  <h3
-    className="font-heading-md"
+  </Title>
+  <Lead>
+    Before you can create a claim, we need to see if you meet the financial requirements to take paid leave.
+  </Lead>
+  <Lead>
+    This should take less than 5 minutes.
+  </Lead>
+  <Heading
+    level="2"
   >
     How it works
-  </h3>
+  </Heading>
   <ul
-    className="usa-list font-body-xs"
+    className="usa-list"
   >
     <li>
       We need your full legal name and Social Security Number or Individual Tax Identification Number to find you in our records.

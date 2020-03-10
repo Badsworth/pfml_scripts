@@ -15,7 +15,7 @@ function FormLabel({ component = "label", ...props }) {
 
   const labelClasses = classnames("usa-label", {
     "usa-label--error": hasError,
-    "usa-legend": component === "legend",
+    "usa-legend font-heading-md line-height-sans-3": component === "legend",
     "usa-sr-only": props.hideLabel,
   });
 
@@ -28,7 +28,9 @@ function FormLabel({ component = "label", ...props }) {
         )}
       </LabelElement>
 
-      {props.hint && <span className="usa-hint">{props.hint}</span>}
+      {props.hint && (
+        <span className="usa-hint line-height-sans-4">{props.hint}</span>
+      )}
 
       {hasError && (
         <span className="usa-error-message" id={errorMsgId} role="alert">

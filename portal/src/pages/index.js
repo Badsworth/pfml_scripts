@@ -1,5 +1,8 @@
+import Heading from "../components/Heading";
+import Lead from "../components/Lead";
 import Link from "next/link";
 import React from "react";
+import Title from "../components/Title";
 import { useTranslation } from "react-i18next";
 
 /**
@@ -12,16 +15,13 @@ const Index = () => {
 
   return (
     <React.Fragment>
-      <h1 className="font-heading-xl">{t("pages.index.pageHeader")}</h1>
-      <div className="font-body-md">
-        <p>{t("pages.index.financialRequirementStatement")}</p>
-        <p>{t("pages.index.eligibilityCheckTimeEstimation")}</p>
-      </div>
-      <h3 className="font-heading-md">
-        {t("pages.index.eligibilityCheckInfoHeader")}
-      </h3>
-      {/* TODO remove font class once it's included in default body styling. */}
-      <ul className="usa-list font-body-xs">
+      <Title>{t("pages.index.pageHeader")}</Title>
+      <Lead>{t("pages.index.financialRequirementStatement")}</Lead>
+      <Lead>{t("pages.index.eligibilityCheckTimeEstimation")}</Lead>
+
+      <Heading level="2">{t("pages.index.eligibilityCheckInfoHeader")}</Heading>
+
+      <ul className="usa-list">
         <li>{t("pages.index.eligibilityCheckInfoNameAndNumber")}</li>
         <li>{t("pages.index.eligibilityCheckInfoVerifyEmploymentEarnings")}</li>
         <li>

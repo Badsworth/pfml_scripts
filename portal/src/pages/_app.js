@@ -56,7 +56,7 @@ export const App = ({ Component, pageProps }) => {
   return (
     <React.Fragment>
       <Header user={user} />
-      <main id="main" className="grid-container margin-bottom-8">
+      <main id="main" className="grid-container margin-top-5 margin-bottom-8">
         <div className="grid-row">
           <div className="grid-col-fill">
             {ui.isLoadingRoute ? (
