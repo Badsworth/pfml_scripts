@@ -29,14 +29,10 @@ exports[`Index renders the page 1`] = `
       We'll use this information to determine if you're eligible for paid leave.
     </li>
   </ul>
-  <Link
+  <ButtonLink
     href="/eligibility/employee-info"
   >
-    <a
-      className="usa-button width-auto"
-    >
-      Start
-    </a>
-  </Link>
+    Start
+  </ButtonLink>
 </Fragment>
 `;

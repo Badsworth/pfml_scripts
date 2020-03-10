@@ -1,6 +1,6 @@
+import DashboardButton from "./DashboardButton";
 import Heading from "./Heading";
 import Lead from "./Lead";
-import Link from "next/link";
 import React from "react";
 import Title from "./Title";
 import { useTranslation } from "react-i18next";
@@ -34,12 +34,7 @@ const RecordNotFound = () => {
       </Heading>
       <p>{t("components.recordNotFound.contactPflcStatement")}</p>
 
-      {/* TODO Extract shared button code. */}
-      <Link href="/">
-        <a className="usa-button width-auto">
-          {t("components.exemption.homeButtonText")}
-        </a>
-      </Link>
+      <DashboardButton />
     </React.Fragment>
   );
 };

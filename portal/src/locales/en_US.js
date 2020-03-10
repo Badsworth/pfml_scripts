@@ -60,12 +60,14 @@ const components = {
   authNav: {
     logOutButtonText: "Log out",
   },
+  dashboardButton: {
+    text: "Back to Dashboard",
+  },
   exemption: {
     contactEmployer:
       "Please contact your employer to learn how to request paid leave.",
     employerHasExemption:
       "This plan meets or exceeds the benefits offered through the Commonwealth, so they do not participate in the Commonwealth's plan.",
-    homeButtonText: "Back to Dashboard",
     title: "Your employer has their own paid leave plan",
   },
   form: {

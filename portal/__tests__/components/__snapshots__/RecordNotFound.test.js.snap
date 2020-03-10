@@ -42,14 +42,6 @@ exports[`RecordNotFound renders RecordNotFound component 1`] = `
   <p>
     If you believe you are eligible for this program, call the Paid Family Leave Contact Center at (888) 888-8888. Then come back to create a claim.
   </p>
-  <Link
-    href="/"
-  >
-    <a
-      className="usa-button width-auto"
-    >
-      Back to Dashboard
-    </a>
-  </Link>
+  <DashboardButton />
 </Fragment>
 `;

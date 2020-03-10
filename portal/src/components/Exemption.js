@@ -1,5 +1,5 @@
+import DashboardButton from "./DashboardButton";
 import Lead from "./Lead";
-import Link from "next/link";
 import React from "react";
 import Title from "./Title";
 import { useTranslation } from "react-i18next";
@@ -15,12 +15,7 @@ const Exemption = () => {
       <Title>{t("components.exemption.title")}</Title>
       <Lead>{t("components.exemption.employerHasExemption")}</Lead>
       <Lead>{t("components.exemption.contactEmployer")}</Lead>
-
-      <Link href="/">
-        <a className="usa-button width-auto">
-          {t("components.exemption.homeButtonText")}
-        </a>
-      </Link>
+      <DashboardButton />
     </React.Fragment>
   );
 };

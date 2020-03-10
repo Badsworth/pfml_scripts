@@ -1,6 +1,6 @@
+import ButtonLink from "../components/ButtonLink";
 import Heading from "../components/Heading";
 import Lead from "../components/Lead";
-import Link from "next/link";
 import React from "react";
 import Title from "../components/Title";
 import { useTranslation } from "react-i18next";
@@ -28,11 +28,9 @@ const Index = () => {
           {t("pages.index.eligibilityCheckInfoUseToDetermineEligibility")}
         </li>
       </ul>
-      <Link href="/eligibility/employee-info">
-        <a className="usa-button width-auto">
-          {t("pages.index.startButtonText")}
-        </a>
-      </Link>
+      <ButtonLink href="/eligibility/employee-info">
+        {t("pages.index.startButtonText")}
+      </ButtonLink>
     </React.Fragment>
   );
 };

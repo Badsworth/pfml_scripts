@@ -11,14 +11,6 @@ exports[`Exemption renders Exemption component 1`] = `
   <Lead>
     Please contact your employer to learn how to request paid leave.
   </Lead>
-  <Link
-    href="/"
-  >
-    <a
-      className="usa-button width-auto"
-    >
-      Back to Dashboard
-    </a>
-  </Link>
+  <DashboardButton />
 </Fragment>
 `;
