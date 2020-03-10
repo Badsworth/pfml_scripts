@@ -76,6 +76,25 @@ const components = {
     skipToContent: "Skip to main content",
     appTitle: "Paid Family and Medical Leave",
   },
+  recordNotFound: {
+    contactPflcHeader: "Call the Paid Family Leave Center",
+    contactPflcStatement:
+      "If you believe you are eligible for this program, call the Paid Family Leave Contact Center at $t(components.recordNotFound.pflcPhone). Then come back to create a claim.",
+    mainTitle: "We couldn't find you in our records",
+    notContributingHeader: "You may not be contributing",
+    notContributingStatement:
+      "To be eligible for this program, you need to have payments into the paid leave fund. Your employer makes these payments for you every quarter. If there are no contributions, you won't show up in our records.",
+    notFoundStatement:
+      "We didn’t find your name and SSN together in our records. You’re not eligible to take paid leave without a matching record.",
+    optionsHeader: "What are my options?",
+    // TODO(CP-143) correct phone number
+    pflcPhone: "(888) 888-8888",
+    recordsIncorrectHeader:
+      "Your information in our records might be incorrect",
+    recordsIncorrectStatement:
+      "There could have been an issue when your employer entered your information, such as misspelling your name.",
+    whyHeader: "Why can't you find me?",
+  },
   spinner: {
     label: "Loading",
   },
