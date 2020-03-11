@@ -10,19 +10,6 @@ module.exports = {
       userPoolId: "us-east-1_s2X4okD8q",
       userPoolWebClientId: "66eoqh5el29kt5v3hcl80jta44",
       mandatorySignIn: false,
-      oauth: {
-        domain: "massgov-pfml-sandbox-v2.auth.us-east-1.amazoncognito.com",
-        scope: [
-          "phone",
-          "email",
-          "profile",
-          "openid",
-          "aws.cognito.signin.user.admin"
-        ],
-        redirectSignIn: "http://localhost:3000",
-        redirectSignOut: "http://localhost:3000",
-        responseType: "code"
-      }
-    }
-  }
+    },
+  },
 };
