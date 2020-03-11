@@ -9,57 +9,346 @@ servers:
     description: Development server
 
 paths:
-  /status:
-    get:
-      summary: Get the API status
+  /users:
+    post:
+      summary: This endpoint allows a user to create new account
+      operationId: pfml.users.users_post
       responses:
         "200":
-          description: A status object
+          description: A successful request returns a 200 status code and a user object
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Status"
+                $ref: "#/components/schemas/User"
+        "400":
+            $ref: '#/components/responses/BadRequest'
+      requestBody:
+        $ref: '#/components/requestBodies/UserToCreate'
 
-  /split:
+  /users/{user_id}:
     get:
-      summary: Split a string up
-      operationId: pfml.split.split_get
+      summary: This endpoint returns details about a user account
+      operationId: pfml.users.users_get
       parameters:
-        - name: message
-          in: query
+        - name: user_id
+          in: path
           schema:
             type: string
-            minLength: 1
-            maxLength: 80
-          description: A string to split up
+          description: The user id of the account to fetch
           required: true
       responses:
         "200":
-          description: An array of words
+          description: A successful request returns a 200 status code and a user object.
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Words"
+                $ref: "#/components/schemas/User"
+        "404":
+            $ref: '#/components/responses/NotFound'
+
+  /all-fake-employees:
+    get:
+      summary: FOR TEST PURPOSES ONLY. This endpoint provides all fake employees that were created at the start of the server.
+      operationId: pfml.employees.employees_get_all_fake
+      responses:
+        "200":
+          description: The endpoint returns a dictionary of existing employees. The keys are SSN/ITIN and the values are employee objects. You can use this endpoint to determine the employee ids.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Employee"
+
+  /employees/government-id:
+    get:
+      summary: This endpoint provides details about an employee and requires a header that contains a SSN/ITIN, and first and last name as query parameters.
+      operationId: pfml.employees.employees_get
+      parameters:
+        - name: first_name
+          in: query
+          schema:
+            type: string
+          description: Employee's first name
+          required: true
+        - name: last_name
+          in: query
+          schema:
+            type: string
+          description: Employee's last name
+          required: true
+        - name: ssn_or_itin
+          in: header
+          schema:
+            type: string
+            # minLength: 9
+            # maxLength: 9
+          description: Employee's ssn/itin
+          required: true
+      responses:
+        "200":
+          description: A successful request returns a 200 status code and an employee object.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Employee"
+        "404":
+            $ref: '#/components/responses/NotFound'
+
+  /employers/{employer_id}:
+    get:
+      summary: This endpoint provides details about an employer.
+      operationId: pfml.employers.employers_get
+      parameters:
+        - name: employer_id
+          in: path
+          schema:
+            type: string
+          description: Employer's id
+          required: true
+      responses:
+        "200":
+          description: A successful request returns a 200 status code and an employer object.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Employers"
+        "404":
+            $ref: '#/components/responses/NotFound'
+
+  /employees/{employee_id}:
+    patch:
+      summary: This endpoint allows updates to an employee record, for mutable properties.
+      operationId: pfml.employees.employees_patch
+      parameters:
+        - name: employee_id
+          in: path
+          schema:
+            type: string
+          description: Employee's id
+          required: true
+      responses:
+        "200":
+          description: A successful response returns a 200 status code and an employee object.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Employee"
+        "404":
+            $ref: '#/components/responses/NotFound'
+      requestBody:
+        $ref: '#/components/requestBodies/EmployeeToUpdate'
+
+  /wages:
+    get:
+      summary: This endpoint provides wages and contributions for an employee, and requires employee_id as a query parameter.
+      operationId: pfml.wages.wages_get
+      parameters:
+        - name: employee_id
+          in: query
+          schema:
+            type: string
+          description: An employee's id
+          required: true
+        - name: period_id
+          in: query
+          schema:
+            type: string
+          description: Quarter in which wages were earned
+          required: false
+      responses:
+        "200":
+          description: A successful request returns a 200 status code and an array of WagesAndContributions objects. An employee will have one WagesAndContributions object for one employer per quarter.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WagesContributionsList"
+        "404":
+            $ref: '#/components/responses/NotFound'
 
 components:
-  schemas:
-    Status:
-      type: object
-      properties:
-        status:
-          type: string
-        version:
-          type: string
-      example:
-        status: "ok"
-        version: "2020-01-29"
+  requestBodies:
+    UserToCreate:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/UserToCreate'
+      required: true
+    EmployeeToUpdate:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/EmployeeToUpdate'
+      required: true
 
-    Words:
+  responses:
+    NotFound:
+      description: The specified resource was not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    BadRequest:
+      description: There was a problem with your request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    ValidationError:
+      description: Error validating the object
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+
+  schemas:
+    UserToCreate:
       type: object
       properties:
-        words:
-          type: array
-          items:
-            type: string
-      example:
-        words: ["hello", "world"]
+        auth_id:
+          type: string
+          format: uuid
+          example: "009fa369-291b-403f-a85a-15e938c26f2f"
+        email:
+          type: string
+          format: email
+          example: "janedoe@example.com"
+      required: ['email', 'auth_id']
+
+    EmployeeToUpdate:
+      type: object
+      properties:
+        first_name:
+          type: string
+          example: "Jane"
+        middle_name:
+          type: string
+          example: "Alice"
+        last_name:
+          type: string
+          example: "Doe"
+        date_of_birth:
+          type: string
+          format: date
+          example: "1980-12-31"
+
+    User:
+      type: object
+      properties:
+        user_id:
+          type: string
+          example: "009fa369-291b-403f-a85a-15e938c26f2f"
+        auth_id:
+          type: string
+          format: uuid
+          example: "00000000-291b-403f-a85a-15e938c26f2f"
+        email:
+          type: string
+          format: email
+          example: "janedoe@example.com"
+        status: 
+          type: string
+          enum:
+            - unverified
+            - verified
+          default: unverified
+          example: unverified
+
+    Employee:
+      type: object
+      properties:
+        employee_id:
+          type: string
+          format: uuid
+          example: "009fa369-291b-403f-a85a-15e938c26a7b"
+        first_name:
+          type: string
+          example: "Jane"
+        middle_name:
+          type: string
+          example: "Alice"
+        last_name:
+          type: string
+          example: "Doe"
+        ssn_or_itin:
+          type: string
+          example: "123456789"
+        date_of_birth:
+          type: string
+          format: date
+          example: "1980-12-31"
+
+    Employers:
+      type: object
+      properties:
+        employer_id:
+          type: string
+          format: uuid
+          example: "009fa369-291b-403f-a85a-15e938c26f2f"
+        employer_fein:
+          type: string
+          example: "41-9904348"
+        employer_dba:
+          type: string
+          example: "The Super Store"
+
+    WagesContributions:
+      type: object
+      properties:
+        period_id:
+          type: string
+          example: "2019-03-31"
+        employee_id:
+          type: string
+          format: uuid
+          example: "009fa369-291b-403f-a85a-15e938c26f2f"
+        employer_id:
+          type: string
+          format: uuid
+          example: "009fa369-291b-403f-a85a-15e938c2c3f4"
+        independent_contractor:
+          type: boolean
+          example: true
+        opt_in:
+          type: boolean
+          example: true
+        employer_ytd_wages:
+          type: integer
+          minimum: 0
+          example: 25000
+        employer_qtr_wages:
+          type: number
+          example: 5000
+        employer_medical_contribution:
+          type: number
+          example: 2000
+        employee_medical_contribution:
+          type: number
+          example: 975
+        employer_fam_contribution:
+          type: number
+          example: 2000
+        employee_fam_contribution:
+          type: number
+          example: 975
+
+    WagesContributionsList:
+      type: array
+      items:
+        $ref: '#/components/schemas/WagesContributions'
+
+    Error:
+      type: object
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+          required: 
+            - code
+            - message

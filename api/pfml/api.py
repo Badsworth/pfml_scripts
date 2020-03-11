@@ -25,7 +25,16 @@ def self_test():
 
 def start_server():
     import pfml
+
     app = pfml.create_app()
+    create_fake_data()
     app.run(port=1550)
+
+def create_fake_data():
+    import pfml.generate_fake_data as fake
+
+    fake.build_fake_data_dictionaries()
+    return
+
 
 main()
