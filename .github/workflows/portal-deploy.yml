@@ -13,7 +13,7 @@ env:
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   bucketName: mpfml-prototype
   terraformVersion: 0.12.20
-  terraformDir: ./infra/environments/sandbox
+  terraformDir: ./infra/portal/environments/sandbox
 
 jobs:
   deploy:

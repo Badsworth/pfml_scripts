@@ -10,10 +10,11 @@ Each environment has a `.tfstate` file that is stored in S3 and synchronized usi
 ## Directory Structure
 
 ```
-└── portal_config   🚪  environment variables for configuring the Portal
-└── template        🏗  infrastructure template for a PFML environment
-└── environments
-    └── sandbox     ⛱  prototype env config
+└── portal
+    └── config          🚪 environment variables for configuring the Portal
+    └── template        🏗 infrastructure template for a PFML portal environment
+    └── environments
+        └── sandbox     ⛱  prototype env config
 ```
 
 ## Local Setup

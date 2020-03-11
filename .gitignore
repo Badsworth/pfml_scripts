@@ -1,7 +1,5 @@
-# Ignore all config files other than example
-**/config/*.js
+# Log files
 *.log
-.aws-config/
 
 # Dependency directories
 node_modules/

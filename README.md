@@ -33,4 +33,5 @@ TBD
 ```
 └── portal                  🚪 Claimant portal web app
 └── infra                   🌲 Infrastructure config
+└── docs                    🔖 Developer documentation
 ```

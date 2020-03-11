@@ -8,7 +8,7 @@ const withSass = require("@zeit/next-sass");
 const withFonts = require("next-fonts");
 
 const buildEnv = process.env.BUILD_ENV || "dev";
-const envVariables = require("./../infra/portal_config/" + buildEnv);
+const envVariables = require("./../infra/portal/config/" + buildEnv);
 
 global.navigator = () => null;
 

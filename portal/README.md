@@ -13,7 +13,7 @@ Node v10 (or greater)
 
 ## Env Configuration
 
-Non-secret environment configuration is stored in [infra/portal_config/](../infra/portal_config/) in files by env (`dev`, `test`, etc.). Variables shared across all environments are in [template](../infra/portal_config/template.js).
+Non-secret environment configuration is stored in [infra/portal/config/](../infra/portal/config/) in files by env (`dev`, `test`, etc.). Variables shared across all environments are in [template](../infra/portal_config/template.js).
 
 ## Run
 

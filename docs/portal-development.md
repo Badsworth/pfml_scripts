@@ -4,7 +4,7 @@ This page covers development practices for working on the Mass PFML front-end po
 
 ## Configuration
 
-Configuration environment is selected with the `BUILD_ENV` variable in [`portal/next.config.js`](../portal/next.config.js). Environment config files with variables are checked in under [`infra/portal_config/`](../infra/portal_config/). `dev` configs are used by default.
+Configuration environment is selected with the `BUILD_ENV` variable in [`portal/next.config.js`](../portal/next.config.js). Environment config files with variables are checked in under [`infra/portal/config/`](../infra/portal/config/). `dev` configs are used by default.
 
 Use environment specific scripts to bundle builds with the correct configuration. See e.g. `build:test`, in [`portal/package.json`](../portal/package.json). Use `process.env.[ENV_VARIABLE_NAME]` to access config values.
 
@@ -16,7 +16,7 @@ There are currently two environments: `dev` and `test`. `dev` is meant for local
 
 To add other environments (e.g. `staging` or `prod`):
 
-* Add the variables to a file named after the environment, e.g. `infra/portal_config/prod.js`.
+* Add the variables to a file named after the environment, e.g. `infra/portal/config/prod.js`.
 * Update the environment lists in these docs.
 
 ## Creating a page
