@@ -19,26 +19,6 @@ const pages = {
       ssnSectionLabel: "What’s your Social Security Number?",
       title: "Tell us about yourself",
     },
-    wages: {
-      dataIsCorrectLabel: "Does the employment history look correct to you?",
-      descriptionP1:
-        "According to our records, you've worked for $t(pages.eligibility.wages.employers, { 'count': {{totalEmployers}} }) in the last 12 months.",
-      descriptionP2:
-        "Your earnings are an estimate of what you earned before paying taxes.",
-      detailsLabel: "Show my full wage history",
-      employers: "{{count}} employer",
-      employers_plural: "{{count}} employers",
-      q1MonthRange: "October - December",
-      q2MonthRange: "January - March",
-      q3MonthRange: "April - June",
-      q4MonthRange: "July - September",
-      title: "Verify your employment history",
-      wagesHistoryTableCaption: "Estimated earnings from {{employer}}",
-      wagesTableEarningsHeading: "Estimated earnings",
-      wagesTableEmployerHeading: "Employer",
-      wagesTableHeading: "Employment history from the past 12 months",
-      wagesTablePeriodHeading: "Period",
-    },
   },
   index: {
     eligibilityCheckInfoHeader: "How it works",
@@ -63,6 +43,10 @@ const components = {
   dashboardButton: {
     text: "Back to Dashboard",
   },
+  eligible: {
+    dataIsCorrectLabel: "Does the employment history look correct to you?",
+    title: "Verify your employment history",
+  },
   exemption: {
     contactEmployer:
       "Please contact your employer to learn how to request paid leave.",
@@ -77,6 +61,16 @@ const components = {
   header: {
     skipToContent: "Skip to main content",
     appTitle: "Paid Family and Medical Leave",
+  },
+  ineligible: {
+    option1Description:
+      "If you believe you have earned at least $5,100 as a Massachussets employee in the past 12 months, call the Paid Family Leave Contact Center at (888) 888-888. Then come back to create a claim.",
+    option1Heading: "Call the Paid Family Leave Contact Center",
+    option2Description:
+      "If you need to begin tracking your claim right away, you cancreate a claim before you call the Contact Center.",
+    option2Heading: "Create a claim",
+    optionsHeading: "What are my options?",
+    title: "Based on our records, you're not eligible",
   },
   recordNotFound: {
     contactPflcHeader: "Call the Paid Family Leave Center",
@@ -99,6 +93,26 @@ const components = {
   },
   spinner: {
     label: "Loading",
+  },
+  wagesTable: {
+    detailsLabel: "Show my full wage history",
+    eligibleDescriptionP1:
+      "According to our records, you've worked for $t(components.wagesTable.employers, { 'count': {{totalEmployers}} }) in the last 12 months.",
+    eligibleDescriptionP2:
+      "Your earnings are an estimate of what you earned before paying taxes.",
+    employers: "{{count}} employer",
+    employers_plural: "{{count}} employers",
+    historyTableCaption: "Estimated earnings from {{employer}}",
+    historyTablePeriodHeading: "Period",
+    ineligibleDescription:
+      "You must have earned at least $5,100 in the last 12 months.",
+    q1MonthRange: "October - December",
+    q2MonthRange: "January - March",
+    q3MonthRange: "April - June",
+    q4MonthRange: "July - September",
+    tableEarningsHeading: "Estimated earnings",
+    tableEmployerHeading: "Employer",
+    tableHeading: "Employment history from the past 12 months",
   },
 };
 

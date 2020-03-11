@@ -44,7 +44,7 @@ describe("EmployeeInfo", () => {
     wrapper.find("form").simulate("submit", event);
 
     expect(push).toHaveBeenCalledWith(
-      "/eligibility/wages?employeeId=b05cbd07-03ba-46e7-a2b8-f3466ca1139c"
+      expect.stringMatching(/eligibility\/result.*/)
     );
   });
 });

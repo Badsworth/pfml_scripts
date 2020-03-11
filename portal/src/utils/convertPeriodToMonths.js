@@ -1,10 +1,10 @@
 import i18next from "i18next";
 
 const quarterMap = {
-  Q1: i18next.t("pages.eligibility.wages.q1MonthRange"),
-  Q2: i18next.t("pages.eligibility.wages.q2MonthRange"),
-  Q3: i18next.t("pages.eligibility.wages.q3MonthRange"),
-  Q4: i18next.t("pages.eligibility.wages.q4MonthRange"),
+  Q1: i18next.t("components.wagesTable.q1MonthRange"),
+  Q2: i18next.t("components.wagesTable.q2MonthRange"),
+  Q3: i18next.t("components.wagesTable.q3MonthRange"),
+  Q4: i18next.t("components.wagesTable.q4MonthRange"),
 };
 
 /**

@@ -26,7 +26,13 @@ const EmployeeInfo = () => {
     // TODO replace with POST request to API /employee to get employeeId
     // https://lwd.atlassian.net/browse/CP-112
     const employeeId = "b05cbd07-03ba-46e7-a2b8-f3466ca1139c";
-    router.push(`/eligibility/wages?employeeId=${employeeId}`);
+    // set a random eligibility result for mocking
+    const eligibility = ["eligible", "exempt", "ineligible", "notfound"][
+      Math.floor(Math.random() * 4)
+    ];
+    router.push(
+      `/eligibility/result?mockEligibility=${eligibility}&employeeId=${employeeId}`
+    );
   };
 
   return (

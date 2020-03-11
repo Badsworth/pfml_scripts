@@ -2,7 +2,7 @@ import Exemption from "./Exemption";
 import React from "react";
 
 export default {
-  title: "Exemption",
+  title: "Eligibility Result|Exemption",
   component: Exemption,
 };
 

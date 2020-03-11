@@ -1,0 +1,37 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Eligible renders Eligible component 1`] = `
+<Fragment>
+  <Title>
+    Verify your employment history
+  </Title>
+  <WagesTable
+    eligibility="eligible"
+    employeeId="1234"
+  />
+  <form
+    className="usa-form usa-form--large margin-y-6"
+  >
+    <InputChoiceGroup
+      choices={
+        Array [
+          Object {
+            "checked": false,
+            "label": "Yes",
+            "value": "yes",
+          },
+          Object {
+            "checked": false,
+            "label": "No",
+            "value": "no",
+          },
+        ]
+      }
+      label="Does the employment history look correct to you?"
+      name="dataIsCorrect"
+      onChange={[Function]}
+      type="radio"
+    />
+  </form>
+</Fragment>
+`;

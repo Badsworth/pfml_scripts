@@ -1,7 +1,0 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
-
-exports[`Result when the employer has an exemption renders the exemption information 1`] = `
-<Fragment>
-  <Exemption />
-</Fragment>
-`;

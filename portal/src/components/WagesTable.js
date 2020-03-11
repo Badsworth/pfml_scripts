@@ -1,11 +1,9 @@
 import React, { useEffect, useState } from "react";
-import Details from "../../components/Details";
-import Heading from "../../components/Heading";
-import InputChoiceGroup from "../../components/InputChoiceGroup";
-import Lead from "../../components/Lead";
-import Title from "../../components/Title";
-import summarizeWages from "../../utils/summarizeWages";
-import { useRouter } from "next/router";
+import Details from "./Details";
+import Heading from "./Heading";
+import Lead from "./Lead";
+import PropType from "prop-types";
+import summarizeWages from "../utils/summarizeWages";
 import { useTranslation } from "react-i18next";
 
 // TODO: Integrate with api endpoint
@@ -34,48 +32,53 @@ const mockGetWageData = id => {
   ];
 };
 
-const Wages = () => {
-  const router = useRouter();
-  const { employeeId } = router.query;
+/**
+ * A component that fetches wages for an employee and displays them in a table by employer.
+ */
+const WagesTable = props => {
   const { t } = useTranslation();
-  const [formData, setFormData] = useState({
-    dataIsCorrect: null,
-  });
   const [wagesSummary, setWagesSummary] = useState({
     totalEmployers: 0,
     earningsByEmployer: [],
   });
   const { totalEmployers, earningsByEmployer } = wagesSummary;
-
-  const handleChange = event => {
-    const { name, value } = event.target;
-    setFormData({ ...formData, [name]: value });
-  };
+  const isEligible = props.eligibility === "eligible";
 
   useEffect(() => {
-    const wages = mockGetWageData(employeeId);
+    const wages = mockGetWageData(props.employeeId);
     setWagesSummary(summarizeWages(wages));
-  }, [employeeId]);
+  }, [props.employeeId]);
+
+  const lead = () => {
+    if (isEligible) {
+      return (
+        <React.Fragment>
+          <Lead>
+            {t("components.wagesTable.eligibleDescriptionP1", {
+              totalEmployers,
+            })}
+          </Lead>
+          <Lead>{t("components.wagesTable.eligibleDescriptionP2")}</Lead>
+        </React.Fragment>
+      );
+    }
+
+    return <Lead>{t("components.wagesTable.ineligibleDescription")}</Lead>;
+  };
 
   return (
     <React.Fragment>
-      <Title>{t("pages.eligibility.wages.title")}</Title>
-      <Lead>
-        {t("pages.eligibility.wages.descriptionP1", { totalEmployers })}
-      </Lead>
-      <Lead>{t("pages.eligibility.wages.descriptionP2")}</Lead>
+      {lead()}
 
-      <Heading level="2">
-        {t("pages.eligibility.wages.wagesTableHeading")}
-      </Heading>
+      <Heading level="2">{t("components.wagesTable.tableHeading")}</Heading>
       <table className="usa-table">
         <thead>
           <tr>
             <th scope="col">
-              {t("pages.eligibility.wages.wagesTableEmployerHeading")}
+              {t("components.wagesTable.tableEmployerHeading")}
             </th>
             <th scope="col">
-              {t("pages.eligibility.wages.wagesTableEarningsHeading")}
+              {t("components.wagesTable.tableEarningsHeading")}
             </th>
           </tr>
         </thead>
@@ -89,21 +92,21 @@ const Wages = () => {
         </tbody>
       </table>
 
-      <Details label={t("pages.eligibility.wages.detailsLabel")}>
+      <Details label={t("components.wagesTable.detailsLabel")}>
         {earningsByEmployer.map(({ employer, wages }) => (
           <table className="usa-table" key={`${employer}-history`}>
             <caption>
-              {t("pages.eligibility.wages.wagesHistoryTableCaption", {
+              {t("components.wagesTable.historyTableCaption", {
                 employer,
               })}
             </caption>
             <thead>
               <tr>
                 <th scope="col">
-                  {t("pages.eligibility.wages.wagesTablePeriodHeading")}
+                  {t("components.wagesTable.historyTablePeriodHeading")}
                 </th>
                 <th scope="col">
-                  {t("pages.eligibility.wages.wagesTableEarningsHeading")}
+                  {t("components.wagesTable.tableEarningsHeading")}
                 </th>
               </tr>
             </thead>
@@ -124,29 +127,19 @@ const Wages = () => {
           </table>
         ))}
       </Details>
-
-      <form className="usa-form usa-form--large margin-y-6">
-        <InputChoiceGroup
-          label={t("pages.eligibility.wages.dataIsCorrectLabel")}
-          type="radio"
-          name="dataIsCorrect"
-          onChange={handleChange}
-          choices={[
-            {
-              checked: formData.dataIsCorrect === "yes",
-              label: "Yes",
-              value: "yes",
-            },
-            {
-              checked: formData.dataIsCorrect === "no",
-              label: "No",
-              value: "no",
-            },
-          ]}
-        />
-      </form>
     </React.Fragment>
   );
 };
 
-export default Wages;
+WagesTable.propTypes = {
+  /**
+   * Eligibility of employee. This determines the copy that is displayed.
+   */
+  eligibility: PropType.oneOf(["eligible", "ineligible"]).isRequired,
+  /**
+   * Id for employee whose wages will be displayed.
+   */
+  employeeId: PropType.string.isRequired,
+};
+
+export default WagesTable;

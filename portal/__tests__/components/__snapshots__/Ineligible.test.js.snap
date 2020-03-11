@@ -1,0 +1,34 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Ineligible renders Ineligible component 1`] = `
+<Fragment>
+  <Title>
+    Based on our records, you're not eligible
+  </Title>
+  <WagesTable
+    eligibility="ineligible"
+    employeeId="1234"
+  />
+  <Heading
+    level="2"
+  >
+    What are my options?
+  </Heading>
+  <Heading
+    level="3"
+  >
+    Call the Paid Family Leave Contact Center
+  </Heading>
+  <Lead>
+    If you believe you have earned at least $5,100 as a Massachussets employee in the past 12 months, call the Paid Family Leave Contact Center at (888) 888-888. Then come back to create a claim.
+  </Lead>
+  <Heading
+    level="3"
+  >
+    Create a claim
+  </Heading>
+  <Lead>
+    If you need to begin tracking your claim right away, you cancreate a claim before you call the Contact Center.
+  </Lead>
+</Fragment>
+`;
