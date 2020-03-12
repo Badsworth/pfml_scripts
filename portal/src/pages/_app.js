@@ -6,6 +6,7 @@ import Header from "../components/Header";
 import PropTypes from "prop-types";
 import Router from "next/router";
 import Spinner from "../components/Spinner";
+import theme from "../utils/amplifyTheme";
 import { useTranslation } from "react-i18next";
 import { withAuthenticator } from "aws-amplify-react";
 
@@ -86,7 +87,7 @@ const signUpConfig = {
     {
       label: "Email",
       key: "username",
-      placeholder: "Email",
+      placeholder: "",
       required: true,
       type: "email",
       displayOrder: 1,
@@ -94,7 +95,7 @@ const signUpConfig = {
     {
       label: "Password",
       key: "password",
-      placeholder: "Password",
+      placeholder: "",
       required: true,
       type: "password",
       displayOrder: 2,
@@ -104,4 +105,5 @@ const signUpConfig = {
 
 export default withAuthenticator(App, {
   signUpConfig,
+  theme,
 });

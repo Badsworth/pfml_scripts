@@ -8,6 +8,37 @@
 // Include default USWDS h1-h6 style (size, weight, spacing) rulesets
 @include usa-headings-styles;
 
+// Custom PFML Sass utilities
+@import "functions";
+
 // Custom PFML components
 @import "../src/components/Details";
 @import "../src/components/Spinner";
+
+// Share design token values with JS to support themeing of the Amplify auth screens.
+// See `styleTokens.js` for the JS that parses the tokens from the ruleset below.
+// This implementation allows the Sass variables to serve as the source of truth
+// for all design system tokens.
+// https://www.lullabot.com/articles/importing-css-breakpoints-into-javascript
+$exposed-tokens: (
+  body-font-size: size("body", $theme-body-font-size),
+  body-font-family: family("body"),
+  color-base: $theme-color-base,
+  color-base-dark: $theme-color-base-dark,
+  color-base-ink: $theme-color-base-ink,
+  color-info-darker: $theme-color-info-darker,
+  color-primary: $theme-color-primary,
+  color-secondary: $theme-color-secondary,
+  color-warning: $theme-color-warning,
+  h1-font-size: size("heading", $theme-h1-font-size),
+  input-line-height:
+    line-height($theme-form-font-family, $theme-input-line-height),
+  input-max-width: units($theme-input-max-width),
+  spacer-multiple: units(1),
+);
+
+html:after {
+  // `content` should be valid JSON:
+  content: "#{map_to_json($exposed-tokens)}";
+  display: none;
+}

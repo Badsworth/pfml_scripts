@@ -36,5 +36,13 @@ $theme-body-font-size: "xs";
 // Apply global <p> styling
 $theme-global-paragraph-styles: true;
 
+// Customize lead type styles
 $theme-lead-font-size: "sm";
 $theme-lead-line-height: 5;
+
+// Customize heading type styles
+$theme-h1-font-size: "xl";
+$theme-h2-font-size: "lg";
+$theme-h3-font-size: "md";
+$theme-h4-font-size: "sm";
+$theme-h5-font-size: "xs";

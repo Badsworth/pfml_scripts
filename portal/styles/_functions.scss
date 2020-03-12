@@ -1,0 +1,37 @@
+/*
+========================================
+Convert a Sass Map to a JSON string.
+
+Given a Sass Map:
+$tokens = (primary: "red", secondary: "blue");
+
+When this function is called:
+map_to_json($tokens)
+
+It outputs a string formatted as JSON:
+'{"primary":"red","secondary":"blue"}'
+----------------------------------------
+*/
+@function map_to_json($map) {
+  $length: length($map);
+  $index: 0;
+  $output: "{"; // open curly brackets
+
+  // add each property from Sass map
+  @each $propName, $propValue in $map {
+    // JSON property name
+    $output: $output + '"#{$propName}"' + ":"; // => ..."name":
+    // JSON property value
+    $output: $output + '"#{$propValue}"'; // => ..."value"
+
+    // Add comma if not the last item
+    $index: $index + 1;
+    @if ($index < $length) {
+      $output: $output + ","; // => ..."name": "value",
+    }
+  }
+
+  $output: $output + "}"; // close curly brackets
+
+  @return $output;
+}
