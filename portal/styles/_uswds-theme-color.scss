@@ -46,6 +46,9 @@ State palette colors
 ----------------------------------------
 */
 
+// Enable support for the state colors in all color-related utility classes (i.e .bg-success)
+$global-color-palettes: ("palette-color-default", "palette-color-state");
+
 // Error colors
 $theme-color-error-lighter: $c-error-red-lightest;
 $theme-color-error-light: $c-error-red-lighter;
