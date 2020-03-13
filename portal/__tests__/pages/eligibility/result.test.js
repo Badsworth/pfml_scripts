@@ -1,4 +1,3 @@
-import "../../../src/i18n";
 import * as nextRouter from "next/router";
 import React from "react";
 import Result from "../../../src/pages/eligibility/result";

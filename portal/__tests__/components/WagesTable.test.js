@@ -1,4 +1,3 @@
-import "../../src/i18n";
 import React from "react";
 import WagesTable from "../../src/components/WagesTable";
 import i18next from "i18next";

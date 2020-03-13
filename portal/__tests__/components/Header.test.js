@@ -1,4 +1,3 @@
-import "../../src/i18n";
 import Header from "../../src/components/Header";
 import React from "react";
 import { shallow } from "enzyme";

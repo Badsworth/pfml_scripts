@@ -1,6 +1,6 @@
 /**
  *
- * @file US English language file.
+ * @file US English language file for i18next-based i18n.
  * @see docs/internationalization.md
  *
  */

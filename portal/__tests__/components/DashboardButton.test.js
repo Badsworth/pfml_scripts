@@ -1,4 +1,3 @@
-import "../../src/i18n";
 import { mount, shallow } from "enzyme";
 import DashboardButton from "../../src/components/DashboardButton";
 import React from "react";

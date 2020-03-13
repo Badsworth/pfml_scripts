@@ -1,4 +1,3 @@
-import "../../src/i18n";
 import Eligible from "../../src/components/Eligible";
 import React from "react";
 import { shallow } from "enzyme";

@@ -1,4 +1,3 @@
-import "../../src/i18n";
 import { Auth } from "aws-amplify";
 import AuthNav from "../../src/components/AuthNav";
 import React from "react";

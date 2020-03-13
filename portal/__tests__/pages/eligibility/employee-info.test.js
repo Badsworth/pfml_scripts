@@ -1,4 +1,3 @@
-import "../../../src/i18n";
 import * as nextRouter from "next/router";
 import EmployeeInfo from "../../../src/pages/eligibility/employee-info";
 import React from "react";

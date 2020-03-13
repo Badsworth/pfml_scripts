@@ -1,4 +1,3 @@
-import "../../src/i18n";
 import React from "react";
 import RecordNotFound from "../../src/components/RecordNotFound";
 import { shallow } from "enzyme";

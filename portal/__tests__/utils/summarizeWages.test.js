@@ -1,4 +1,3 @@
-import "../../src/i18n";
 import { find } from "lodash";
 import summarizeWages from "../../src/utils/summarizeWages";
 

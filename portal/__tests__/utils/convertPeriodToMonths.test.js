@@ -1,4 +1,3 @@
-import "../../src/i18n";
 import convertPeriodToMonths from "../../src/utils/convertPeriodToMonths";
 
 describe("convertPeriodToMonths", () => {
