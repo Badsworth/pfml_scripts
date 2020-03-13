@@ -1,0 +1,31 @@
+[
+  {
+    "name": "{app_name}",
+    "image": "${docker_image}",
+    "cpu": ${cpu},
+    "memory": ${memory},
+    "networkMode": "awsvpc",
+    "essential": true,
+    "readonlyRootFilesystem": true,
+    "portMappings": [
+      {
+        "containerPort": 1550,
+        "hostPort": 1550
+      }
+    ],
+    "linuxParameters": {
+      "capabilities": {
+        "drop": ["ALL"]
+      },
+      "initProcessEnabled": true
+    },
+    "logConfiguration": {
+      "logDriver": "awslogs",
+      "options": {
+        "awslogs-group": "${cloudwatch_logs_group_name}",
+        "awslogs-region": "${aws_region}",
+        "awslogs-stream-prefix": "${environment_name}"
+      }
+    }
+  }
+]

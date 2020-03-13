@@ -5,16 +5,36 @@ Infrastructure
 
 This directory houses the configuration needed for maintaining PFML infrastructure. We use [Terraform](https://terraform.io) to manage our infra in a modular, concise, and reusable fashion.
 
-Each environment has a `.tfstate` file that is stored in S3 and synchronized using a DynamoDB lock table. Terraform relies on this state file for every command and must acquire the lock in order to use it, so only one person or system can run a terraform command at a time.
-
 ## Directory Structure
 
 ```
-└── portal
+└── portal              🏡 infrastructure for a PFML portal environment
     └── config          🚪 environment variables for configuring the Portal
-    └── template        🏗 infrastructure template for a PFML portal environment
+    └── template        🏗  shared template for portal env
     └── environments
         └── sandbox     ⛱  prototype env config
+
+└── api                 🏡 infrastructure for a PFML api environment
+    └── template        🏗  shared template for api env
+    └── environments
+        └── sandbox
+
+└── aws                 🏡 shared infrastructure for AWS e.g. ECS clusters, registries, VPC endpoints.
+```
+
+## tfstate files
+
+Each environment for a component has a `.tfstate` file that is stored in S3 and synchronized using a DynamoDB lock table. Terraform relies on this state file for every command and must acquire the lock in order to use it, so only one person or system can run a terraform command at a time.
+
+```
+S3
+└── massgov-pfml-global
+    └── terraform
+        └── aws.tfstate
+└── massgov-pfml-sandbox
+    └── terraform
+        └── terraform.tfstate  # should be portal.tfstate in the future
+        └── api.tfstate
 ```
 
 ## Local Setup
