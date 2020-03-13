@@ -1,15 +1,14 @@
-import json
-import flask
-import pfml
-import pfml.employees
-from pfml import generate_fake_data as fake
+import massgov.pfml.api
+import massgov.pfml.api.employees
+from massgov.pfml.api import generate_fake_data as fake
 
-app = pfml.create_app()
+app = massgov.pfml.api.create_app()
+
 
 def test_valid_patch():
     employee = fake.create_employee()
-    ssn_itin = employee.get('ssn_or_itin')
-    employee_id = employee.get('employee_id')
+    ssn_itin = employee.get("ssn_or_itin")
+    employee_id = employee.get("employee_id")
 
     # put employee into fake data dictionary
     fake.employees[ssn_itin] = employee
@@ -20,5 +19,5 @@ def test_valid_patch():
     assert response.status_code == 200
 
     updated_employee = fake.employees.get(ssn_itin)
-    assert updated_employee.get('first_name') == "James"
-    assert updated_employee.get('last_name') == "Brown"
+    assert updated_employee.get("first_name") == "James"
+    assert updated_employee.get("last_name") == "Brown"
