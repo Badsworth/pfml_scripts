@@ -1,6 +1,6 @@
 /*
 --------------------------------------------------------------------------------
-U.S. Web Design System - Typgography overrides
+U.S. Web Design System - Typography overrides
 --------------------------------------------------------------------------------
 Read more about settings and USWDS style tokens in the documentation:
 https://designsystem.digital.gov/documentation/settings/#typography
@@ -22,7 +22,7 @@ $theme-typeface-tokens: (
 );
 
 // Use Texta everywhere
-$theme-font-type-sans: "texta";
+$theme-font-type-sans: "texta"; // duplicated in amplifyTheme.js
 $theme-font-sans-custom-stack: "Helvetica, sans-serif";
 
 $theme-font-role-heading: "sans";
@@ -41,7 +41,7 @@ $theme-lead-font-size: "sm";
 $theme-lead-line-height: 5;
 
 // Customize heading type styles
-$theme-h1-font-size: "xl";
+$theme-h1-font-size: "xl"; // duplicated in amplifyTheme.js
 $theme-h2-font-size: "lg";
 $theme-h3-font-size: "md";
 $theme-h4-font-size: "sm";

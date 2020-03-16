@@ -1,7 +1,28 @@
 /* eslint sort-keys: "error" */
-import styleTokens from "../utils/styleTokens";
 
-const tokens = styleTokens();
+/**
+ * Design tokens (type, color, spacing). These are based on design tokens from
+ * our Mayflower-themed U.S. Web Design System implementation, which lives
+ * in our .scss files.
+ *
+ * TODO: I don't like this, but it's the least fragile option
+ * currently (see https://lwd.atlassian.net/browse/CP-146). In the future,
+ * we should strive to create a source of truth for these design tokens, rather
+ * than having some of them duplicated between our Sass files and this JS file.
+ */
+const tokens = {
+  "body-font-family": "Texta, Helvetica, sans-serif",
+  "body-font-size": "1.13rem",
+  "color-base": "#707070",
+  "color-base-dark": "#535353",
+  "color-base-ink": "#141414",
+  "color-info-darker": "#0A2B48",
+  "color-primary": "#14558f",
+  "color-warning": "#f6c51b",
+  "h1-font-size": "2.41rem",
+  "input-line-height": "1.1",
+  "spacer-multiple": "8px",
+};
 
 /**
  * A custom Amplify UI theme to match the look of the rest of our site
