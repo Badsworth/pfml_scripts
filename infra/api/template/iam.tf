@@ -79,7 +79,7 @@ data "aws_iam_policy_document" "task_executor" {
     ]
   }
 }
-ro
+
 # Link access policies to the ECS task execution role.
 resource "aws_iam_role_policy" "task_executor" {
   name   = "${local.app_name}-${var.environment_name}-task-execution-role-policy"

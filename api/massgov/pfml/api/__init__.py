@@ -7,6 +7,8 @@ import os
 import connexion
 import connexion.mock
 
+import massgov.pfml.api.reverse_proxy as reverse_proxy
+
 
 def create_app():
     # Enable mock responses for unimplemented paths.
@@ -18,5 +20,10 @@ def create_app():
     app.add_api(
         "openapi.yaml", resolver=resolver, strict_validation=True, validate_responses=True,
     )
+
+    # Set up middleware to allow the Swagger UI to use the correct URL
+    # when proxied behind the AWS API Gateway.
+    flask_app = app.app
+    flask_app.wsgi_app = reverse_proxy.ReverseProxied(flask_app.wsgi_app)
 
     return app

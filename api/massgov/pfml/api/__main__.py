@@ -19,9 +19,6 @@ logging.basicConfig(level=logging.INFO)
 
 
 def main():
-    self_test()
-    if "--test-only" in sys.argv:
-        return
     start_server()
 
 

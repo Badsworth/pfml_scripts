@@ -9,6 +9,23 @@ servers:
     description: Development server
 
 paths:
+  /status:
+    get:
+      summary: Get the API status
+      responses:
+        "200":
+          description: A status object
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                example:
+                  status: "ok"
+                
+    
   /users:
     post:
       summary: This endpoint allows a user to create new account
