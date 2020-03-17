@@ -22,7 +22,7 @@ module "api" {
 
   environment_name        = "sandbox"
   service_app_count       = 2
-  service_docker_tag      = var.service_docker_tag
+  service_docker_tag      = local.service_docker_tag
   service_ecs_cluster_arn = data.aws_ecs_cluster.sandbox.arn
   vpc_id                  = data.aws_vpc.nava_internal.id
   vpc_app_subnet_ids      = data.aws_subnet_ids.nava_internal_app.ids
