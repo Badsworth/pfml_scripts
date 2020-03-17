@@ -4,6 +4,7 @@
     pull_request:
       paths:
       - portal/**
+      - infra/portal/config/**
 
   env:
     nodeVersion: 12.x
