@@ -18,16 +18,11 @@ output "cloudfront_distribution_id" {
   description = "Cloudfront distribution id for portal environment. Used for cache invalidation in github workflow."
 }
 
-variable "cloudfront_origin_path" {
-  description = "Path to latest portal release. Set through environment variable in Github worfklow."
-  type        = string
-}
-
 module "massgov_pfml" {
   source                      = "../../template"
   env_name                    = "sandbox-v2"
   cognito_extra_redirect_urls = ["http://localhost:3000"]
   cognito_extra_logout_urls   = ["http://localhost:3000"]
   portal_s3_bucket_name       = "mpfml-prototype"
-  cloudfront_origin_path      = var.cloudfront_origin_path
+  cloudfront_origin_path      = local.cloudfront_origin_path
 }
