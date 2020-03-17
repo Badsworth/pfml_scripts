@@ -21,6 +21,18 @@ Alternatively, without install Python or Poetry, can use Docker:
 make docker-build
 ```
 
+## Tests
+
+``` sh
+make test
+```
+
+[pytest](https://docs.pytest.org) is our test runner, which is simple but
+powerful. If you are new to pytest, reading up on how [fixtures
+work](https://docs.pytest.org/en/latest/fixture.html) in particular might be
+helpful as it's one area that is a bit different than is common with other
+runners (and languages).
+
 ## Run
 
 ```sh
