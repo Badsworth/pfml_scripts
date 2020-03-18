@@ -2,7 +2,7 @@ import React from "react";
 import Title from "./Title";
 
 export default {
-  title: "Pages|Title",
+  title: "Components|Title",
   component: Title,
 };
 

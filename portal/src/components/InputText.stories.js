@@ -3,7 +3,7 @@ import InputText from "./InputText";
 import { useTranslation } from "react-i18next";
 
 export default {
-  title: "Forms|InputText",
+  title: "Components|Forms/InputText",
   component: InputText,
 };
 

@@ -2,7 +2,7 @@ import Lead from "./Lead";
 import React from "react";
 
 export default {
-  title: "Pages|Lead",
+  title: "Components|Lead",
   component: Lead,
 };
 

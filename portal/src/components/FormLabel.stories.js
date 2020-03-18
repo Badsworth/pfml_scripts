@@ -3,7 +3,7 @@ import React from "react";
 import { useTranslation } from "react-i18next";
 
 export default {
-  title: "Forms|FormLabel",
+  title: "Components|Forms/FormLabel",
   component: FormLabel,
 };
 

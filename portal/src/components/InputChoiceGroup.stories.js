@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import InputChoiceGroup from "./InputChoiceGroup";
 
 export default {
-  title: "Forms|InputChoiceGroup",
+  title: "Components|Forms/InputChoiceGroup",
   component: InputChoiceGroup,
 };
 

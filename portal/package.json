@@ -30,8 +30,8 @@
   },
   "devDependencies": {
     "@babel/core": "^7.8.4",
-    "@storybook/addon-docs": "^5.3.13",
-    "@storybook/react": "^5.3.13",
+    "@storybook/addon-docs": "^5.3.17",
+    "@storybook/react": "^5.3.17",
     "@zeit/next-css": "^1.0.1",
     "@zeit/next-sass": "^1.0.1",
     "autoprefixer": "^9.7.4",
@@ -42,6 +42,6 @@
     "jest": "^24.9.0",
     "next": "^9.1.8",
     "node-sass": "^4.13.1",
-    "react-is": "^16.12.0"
+    "react-is": "^16.13.0"
   }
 }
