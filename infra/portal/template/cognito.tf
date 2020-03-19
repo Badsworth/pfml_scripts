@@ -20,6 +20,10 @@ resource "aws_cognito_user_pool" "claimants_pool" {
     temporary_password_validity_days = 7
   }
 
+  username_configuration {
+    case_sensitive = false
+  }
+
   verification_message_template {
     default_email_option  = "CONFIRM_WITH_CODE"
     email_subject_by_link = "Activate your Paid Family and Medical Leave account"
@@ -60,6 +64,9 @@ resource "aws_cognito_user_pool_client" "massgov_pfml_client" {
   allowed_oauth_flows_user_pool_client = true
   allowed_oauth_flows                  = ["code"]
   allowed_oauth_scopes                 = ["phone", "email", "openid", "profile", "aws.cognito.signin.user.admin"]
+
+  # Avoid security issue where error messages indicate when a user doesn't exist
+  prevent_user_existence_errors = "ENABLED"
 
   read_attributes  = ["email", "email_verified", "phone_number", "phone_number_verified", "updated_at"]
   write_attributes = ["email", "updated_at"]

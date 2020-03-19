@@ -7,8 +7,8 @@ module.exports = {
   awsConfig: {
     Auth: {
       region: "us-east-1",
-      userPoolId: "us-east-1_GNTcmhyhe",
-      userPoolWebClientId: "6350hg4umjm2br8sqjl7urm5eb",
+      userPoolId: "us-east-1_WF0fMrnQ4",
+      userPoolWebClientId: "2lltjbpjeur6hcpshautn1e11f",
       mandatorySignIn: false,
     },
   },
