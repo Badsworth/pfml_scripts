@@ -8,16 +8,17 @@ packages = [
 ]
 
 [tool.poetry.dependencies]
-python = "^3.8"
 connexion = {extras = ["swagger-ui"], version = "^2.6.0"}
 faker = "^4.0.1"
+python = "^3.8"
 
 [tool.poetry.dev-dependencies]
 black = "^19.10b0"
-pytest = "^5.3.5"
+coverage = "^5.0.4"
 flake8 = "^3.7.9"
 flake8-bugbear = "^20.1.4"
 isort = "^4.3.21"
+pytest = "^5.3.5"
 
 [tool.black]
 line-length = 100
