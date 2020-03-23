@@ -53,8 +53,8 @@ $global-color-palettes: ("palette-color-default", "palette-color-state");
 $theme-color-error-lighter: $c-error-red-lightest;
 $theme-color-error-light: $c-error-red-lighter;
 $theme-color-error: $c-error-red;
-$theme-color-error-dark: $c-independence-cranberry-30-shade;
-$theme-color-error-darker: $c-independence-cranberry-50-shade;
+$theme-color-error-dark: darken($c-error-red, 5%);
+$theme-color-error-darker: $c-independence-cranberry-20-tint;
 
 // Warning colors
 $theme-color-warning-lighter: $c-duckling-yellow-lightest;

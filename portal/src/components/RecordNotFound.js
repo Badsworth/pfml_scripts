@@ -17,11 +17,11 @@ const RecordNotFound = () => {
       <Lead>{t("components.recordNotFound.notFoundStatement")}</Lead>
 
       <Heading level="2">{t("components.recordNotFound.whyHeader")}</Heading>
-      <Heading level="3">
+      <Heading level="3" size="4">
         {t("components.recordNotFound.notContributingHeader")}
       </Heading>
       <p>{t("components.recordNotFound.notContributingStatement")}</p>
-      <Heading level="3">
+      <Heading level="3" size="4">
         {t("components.recordNotFound.recordsIncorrectHeader")}
       </Heading>
       <p>{t("components.recordNotFound.recordsIncorrectStatement")}</p>
@@ -29,7 +29,7 @@ const RecordNotFound = () => {
       <Heading level="2">
         {t("components.recordNotFound.optionsHeader")}
       </Heading>
-      <Heading level="3">
+      <Heading level="3" size="4">
         {t("components.recordNotFound.contactPflcHeader")}
       </Heading>
       <p>{t("components.recordNotFound.contactPflcStatement")}</p>

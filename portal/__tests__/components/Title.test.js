@@ -15,7 +15,7 @@ describe("Title", () => {
             </title>
           </Head>
           <h1
-            className="font-heading-xl line-height-sans-2 margin-top-0 margin-bottom-2"
+            className="margin-top-0 margin-bottom-2 font-heading-lg line-height-sans-2"
           >
             Hello world
           </h1>
@@ -37,7 +37,7 @@ describe("Title", () => {
             </title>
           </Head>
           <legend
-            className="font-heading-xl line-height-sans-2 margin-top-0 margin-bottom-2 usa-legend"
+            className="margin-top-0 margin-bottom-2 font-heading-lg line-height-sans-2 usa-legend"
           >
             Hello world
           </legend>
@@ -54,6 +54,16 @@ describe("Title", () => {
 
       expect(wrapper.find("title").text()).toBe("Custom title");
       expect(wrapper.find("h1").text()).toBe("Default title");
+    });
+  });
+
+  describe("when `small` is true", () => {
+    it("adds classes for a smaller type size", () => {
+      const wrapper = shallow(<Title small>Hello world</Title>);
+
+      expect(wrapper.find("h1").prop("className")).toMatchInlineSnapshot(
+        `"margin-top-0 margin-bottom-2 font-heading-sm line-height-sans-3"`
+      );
     });
   });
 });

@@ -19,7 +19,7 @@ const tokens = {
   "color-info-darker": "#0A2B48",
   "color-primary": "#14558f",
   "color-warning": "#f6c51b",
-  "h1-font-size": "2.41rem",
+  "h1-font-size": "2.11rem",
   "input-line-height": "1.1",
   "spacer-multiple": "8px",
 };
@@ -37,6 +37,8 @@ const theme = {
   button: {
     backgroundColor: tokens["color-primary"],
     fontSize: tokens["body-font-size"],
+    fontWeight: "bold",
+    padding: "0.75rem 1.25rem",
     textTransform: "none",
   },
   formSection: {
@@ -66,6 +68,7 @@ const theme = {
   sectionHeaderContent: {
     color: tokens["color-base-ink"],
     fontSize: tokens["h1-font-size"],
+    fontWeight: "bold",
   },
   toast: {
     background: tokens["color-info-darker"],

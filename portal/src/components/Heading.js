@@ -12,12 +12,12 @@ const Heading = props => {
   const stylingLevel = props.size ? props.size : props.level;
 
   const classes = classnames(props.className, {
-    "font-heading-xl text-bold": stylingLevel === "1",
-    "font-heading-lg text-bold": stylingLevel === "2",
-    "font-heading-md text-bold": stylingLevel === "3",
-    "font-heading-sm text-bold": stylingLevel === "4",
-    "font-heading-xs text-normal": stylingLevel === "5",
-    "font-heading-2xs text-normal": stylingLevel === "6",
+    "font-heading-lg text-bold": stylingLevel === "1",
+    "font-heading-md text-bold": stylingLevel === "2",
+    "font-heading-sm text-bold": stylingLevel === "3",
+    "font-heading-xs text-bold": stylingLevel === "4",
+    "font-heading-2xs text-normal":
+      stylingLevel === "5" || stylingLevel === "6",
   });
 
   return <HeadingElement className={classes}>{props.children}</HeadingElement>;

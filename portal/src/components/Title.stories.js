@@ -8,6 +8,6 @@ export default {
 
 export const Default = () => <Title>Verify your employment history</Title>;
 
-export const Legend = () => (
+export const AsHTMLLegend = () => (
   <Title component="legend">Where do you receive mail?</Title>
 );

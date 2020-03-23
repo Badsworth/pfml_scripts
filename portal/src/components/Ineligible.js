@@ -1,5 +1,4 @@
 import Heading from "./Heading";
-import Lead from "./Lead";
 import PropType from "prop-types";
 import React from "react";
 import Title from "./Title";
@@ -19,11 +18,15 @@ const Ineligible = props => {
 
       <Heading level="2">{t("components.ineligible.optionsHeading")}</Heading>
 
-      <Heading level="3">{t("components.ineligible.option1Heading")}</Heading>
-      <Lead>{t("components.ineligible.option1Description")}</Lead>
+      <Heading level="3" size="4">
+        {t("components.ineligible.option1Heading")}
+      </Heading>
+      <p>{t("components.ineligible.option1Description")}</p>
 
-      <Heading level="3">{t("components.ineligible.option2Heading")}</Heading>
-      <Lead>{t("components.ineligible.option2Description")}</Lead>
+      <Heading level="3" size="4">
+        {t("components.ineligible.option2Heading")}
+      </Heading>
+      <p>{t("components.ineligible.option2Description")}</p>
     </React.Fragment>
   );
 };

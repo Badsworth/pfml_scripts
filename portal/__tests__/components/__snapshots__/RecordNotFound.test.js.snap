@@ -15,6 +15,7 @@ exports[`RecordNotFound renders RecordNotFound component 1`] = `
   </Heading>
   <Heading
     level="3"
+    size="4"
   >
     You may not be contributing
   </Heading>
@@ -23,6 +24,7 @@ exports[`RecordNotFound renders RecordNotFound component 1`] = `
   </p>
   <Heading
     level="3"
+    size="4"
   >
     Your information in our records might be incorrect
   </Heading>
@@ -36,6 +38,7 @@ exports[`RecordNotFound renders RecordNotFound component 1`] = `
   </Heading>
   <Heading
     level="3"
+    size="4"
   >
     Call the Paid Family Leave Center
   </Heading>

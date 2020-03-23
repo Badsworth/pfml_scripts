@@ -27,7 +27,7 @@ describe("Heading", () => {
 
         expect(wrapper).toMatchInlineSnapshot(`
           <h2
-            className="font-heading-lg text-bold"
+            className="font-heading-md text-bold"
           >
             Hello world
           </h2>
@@ -43,7 +43,7 @@ describe("Heading", () => {
 
         expect(wrapper).toMatchInlineSnapshot(`
           <h3
-            className="font-heading-md text-bold"
+            className="font-heading-sm text-bold"
           >
             Hello world
           </h3>
@@ -59,7 +59,7 @@ describe("Heading", () => {
 
         expect(wrapper).toMatchInlineSnapshot(`
           <h4
-            className="font-heading-sm text-bold"
+            className="font-heading-xs text-bold"
           >
             Hello world
           </h4>
@@ -75,7 +75,7 @@ describe("Heading", () => {
 
         expect(wrapper).toMatchInlineSnapshot(`
           <h5
-            className="font-heading-xs text-normal"
+            className="font-heading-2xs text-normal"
           >
             Hello world
           </h5>
@@ -128,7 +128,7 @@ describe("Heading", () => {
 
         expect(wrapper).toMatchInlineSnapshot(`
           <h2
-            className="font-heading-xl text-bold"
+            className="font-heading-lg text-bold"
           >
             Hello world
           </h2>
@@ -148,7 +148,7 @@ describe("Heading", () => {
 
         expect(wrapper).toMatchInlineSnapshot(`
           <h2
-            className="font-heading-lg text-bold"
+            className="font-heading-md text-bold"
           >
             Hello world
           </h2>
@@ -168,7 +168,7 @@ describe("Heading", () => {
 
         expect(wrapper).toMatchInlineSnapshot(`
           <h2
-            className="font-heading-md text-bold"
+            className="font-heading-sm text-bold"
           >
             Hello world
           </h2>
@@ -188,7 +188,7 @@ describe("Heading", () => {
 
         expect(wrapper).toMatchInlineSnapshot(`
           <h2
-            className="font-heading-sm text-bold"
+            className="font-heading-xs text-bold"
           >
             Hello world
           </h2>
@@ -208,7 +208,7 @@ describe("Heading", () => {
 
         expect(wrapper).toMatchInlineSnapshot(`
           <h2
-            className="font-heading-xs text-normal"
+            className="font-heading-2xs text-normal"
           >
             Hello world
           </h2>
