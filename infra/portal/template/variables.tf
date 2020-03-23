@@ -10,6 +10,16 @@ variable "cognito_extra_logout_urls" {
   default     = []
 }
 
+variable "cognito_use_ses_email" {
+  description = "Whether Cognito should use an SES email sender (true) or the default Cognito email sender which includes various throttles (false)"
+  type = bool
+}
+
+variable "cognito_sender_email" {
+  description = "Email address used to send Cognito emails. Note that in order to use it at production scale or to send to out-of-domain email addresses we'll need to manually request that the SES email be removed from the SES sandbox"
+  type        = string
+}
+
 variable "env_name" {
   description = "Name of the environment"
   type        = string

@@ -4,10 +4,22 @@ locals {
   hosted_domain = "https://${aws_route53_record.root_v6.fqdn}"
 }
 
+resource "aws_ses_email_identity" "cognito_sender_email" {
+  email = var.cognito_sender_email
+  // Only create this resource if we're using SES for sending emails
+  count = var.cognito_use_ses_email ? 1 : 0
+}
+
 resource "aws_cognito_user_pool" "claimants_pool" {
   name                     = "massgov-pfml-${var.env_name}"
   username_attributes      = ["email"]
   auto_verified_attributes = ["email"]
+
+  email_configuration {
+    // Use this SES email to send cognito emails. If we're not uses SES for emails then use null
+    source_arn            = var.cognito_use_ses_email ? aws_ses_email_identity.cognito_sender_email[0].arn : null
+    email_sending_account = var.cognito_use_ses_email ? "DEVELOPER" : "COGNITO_DEFAULT"
+  }
 
   sms_authentication_message = "Your authentication code is {####}. "
 
