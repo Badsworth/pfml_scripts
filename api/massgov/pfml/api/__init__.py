@@ -7,10 +7,17 @@ import os
 import connexion
 import connexion.mock
 
+import logging
 from .reverse_proxy import ReverseProxied
 
+import massgov.pfml.api.db as db
 
 def create_app():
+    logging.info("Starting API ...")
+
+    # DB
+    db.init_db()
+
     # Enable mock responses for unimplemented paths.
     resolver = connexion.mock.MockResolver(mock_all=False)
 

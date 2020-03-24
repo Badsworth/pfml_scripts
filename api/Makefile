@@ -12,13 +12,14 @@ clean-venv: ## Remove active poetry virtualenv
 deps: ## Install dependencies
 	poetry install --no-root
 
-DOCKER_TAG := massgov_pfml_api:latest
+build: ## Build container
+	docker build --tag mass-pfml-api .
 
-docker-build: ## Build container for `DOCKER_TAG`
-	docker build --tag=$(DOCKER_TAG) .
+run: ## Run docker-compose
+	docker-compose up --detach; docker logs --follow mass-pfml-api
 
-docker-run: ## Run `DOCKER_TAG`
-	docker run --tty --interactive --disable-content-trust --publish=1550:1550 --rm $(DOCKER_TAG)
+stop: ## Stop running containers
+	docker-compose down
 
 format: ## Format code
 	poetry run isort --atomic --apply
@@ -30,9 +31,6 @@ format-check: ## Check format of code
 
 lint: ## Run linting
 	poetry run flake8 .
-
-run-dev: ## Start development API server
-	poetry run python -m massgov.pfml.api
 
 test: ## Run tests
 	poetry run coverage run --branch --source=massgov -m pytest

@@ -31,9 +31,14 @@ def self_test():
 
 
 def start_server():
-    app = massgov.pfml.api.create_app()
-    create_fake_data()
-    app.run(port=1550)
+    try:
+        app = massgov.pfml.api.create_app()
+        create_fake_data()
+        app.run(port=1550)
+    except Exception as e:
+        error_msg = "Server NOT started because of exception: %s" % (e)
+        logging.error(error_msg);
+        raise
 
 
 def create_fake_data():

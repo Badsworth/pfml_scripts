@@ -14,4 +14,5 @@ RUN cd /tmp/myapp && poetry install --no-root
 COPY . ./
 RUN poetry install
 
+# run the server
 CMD poetry run python -m massgov.pfml.api

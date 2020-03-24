@@ -1,0 +1,43 @@
+version: '3.3'
+
+services:
+  mass-pfml-db:
+    image: postgres:11.6-alpine
+    container_name: 'mass-pfml-db'
+    ports:
+      - '5432:5432'
+    environment:
+      - POSTGRES_DB=pfml
+      - POSTGRES_USER=pfml
+      - POSTGRES_PASSWORD=secret123
+    volumes:
+      - ./data/postgres:/var/lib/postgresql/data
+    networks:
+      main:
+        aliases:
+          - mass-pfml-db
+  mass-pfml-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: 'mass-pfml-api'
+    container_name: 'mass-pfml-api'
+    links:
+      - mass-pfml-db
+    ports:
+      - '1550:1550'
+    environment:
+      - ENVIRONMENT=local
+      - DB_URL=mass-pfml-db
+      - DB_NAME=pfml
+      - DB_USERNAME=pfml
+      - DB_PASSWORD=secret123
+    networks:
+      main:
+        aliases:
+          - mass-pfml-api
+    depends_on:
+      - 'mass-pfml-db'
+
+networks:
+  main:
