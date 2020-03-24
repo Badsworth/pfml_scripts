@@ -8,15 +8,21 @@ import classnames from "classnames";
  *
  * [USWDS Reference ↗](https://designsystem.digital.gov/components/form-controls)
  */
-function FormLabel({ component = "label", ...props }) {
+function FormLabel({ component = "label", small = false, ...props }) {
   const LabelElement = component;
   const errorMsgId = props.inputId + "_error";
   const hasError = !!props.errorMsg;
 
-  const labelClasses = classnames("usa-label", {
+  const labelClasses = classnames("usa-label maxw-none", {
     "usa-label--error": hasError,
-    "usa-legend font-heading-md line-height-sans-3": component === "legend",
-    "usa-sr-only": props.hideLabel,
+    "usa-legend": component === "legend",
+    "font-heading-sm": component === "legend" && small,
+    "font-heading-lg line-height-sans-2 text-bold": !small,
+  });
+
+  const hintClasses = classnames("usa-hint display-block line-height-sans-5", {
+    // Add a bit more top margin between the label and hint when the label text is large
+    "margin-top-05": !small,
   });
 
   return (
@@ -24,13 +30,11 @@ function FormLabel({ component = "label", ...props }) {
       <LabelElement className={labelClasses} htmlFor={props.inputId}>
         {props.children}
         {props.optionalText && (
-          <span className="usa-hint"> {props.optionalText}</span>
+          <span className="usa-hint text-normal"> {props.optionalText}</span>
         )}
       </LabelElement>
 
-      {props.hint && (
-        <span className="usa-hint line-height-sans-4">{props.hint}</span>
-      )}
+      {props.hint && <span className={hintClasses}>{props.hint}</span>}
 
       {hasError && (
         <span className="usa-error-message" id={errorMsgId} role="alert">
@@ -55,10 +59,6 @@ FormLabel.propTypes = {
    */
   errorMsg: PropTypes.node,
   /**
-   * Hides the input label from visual browsers. The hint and/or error message will still be visible.
-   */
-  hideLabel: PropTypes.bool,
-  /**
    * Localized hint text
    */
   hint: PropTypes.node,
@@ -72,6 +72,11 @@ FormLabel.propTypes = {
    * Localized text indicating this field is optional
    */
   optionalText: PropTypes.node,
+  /**
+   * Enable the smaller variant, which is used when the field is
+   * already accompanied by larger question text (like a legend).
+   */
+  small: PropTypes.bool,
 };
 
 export default FormLabel;

@@ -52,20 +52,33 @@ describe("FormLabel", () => {
   });
 
   describe("when hint prop is set", () => {
-    it("renders the hint text", () => {
-      const { props, wrapper } = render({ hint: "123" });
-      const node = wrapper.find(".usa-hint").last();
+    it("renders the hint with expected classes", () => {
+      const { wrapper } = render({ hint: "Hint text" });
+      const hint = wrapper.find(".usa-hint").last();
 
-      expect(node.text()).toBe(props.hint);
+      expect(hint).toMatchInlineSnapshot(`
+        <span
+          className="usa-hint display-block line-height-sans-5 margin-top-05"
+        >
+          Hint text
+        </span>
+      `);
     });
   });
 
   describe("when optionalText prop is set", () => {
-    it("renders the optionalText", () => {
-      const { props, wrapper } = render({ optionalText: "(optional)" });
-      const node = wrapper.find(".usa-hint").first();
+    it("renders the optional text with expected classes", () => {
+      const { wrapper } = render({ optionalText: "(optional)" });
+      const node = wrapper.find(".usa-label .usa-hint").first();
 
-      expect(node.text()).toMatch(props.optionalText);
+      expect(node).toMatchInlineSnapshot(`
+        <span
+          className="usa-hint text-normal"
+        >
+           
+          (optional)
+        </span>
+      `);
     });
   });
 
@@ -87,11 +100,35 @@ describe("FormLabel", () => {
     });
   });
 
-  describe("when hideLabel is set", () => {
-    it("does not show label in visual browsers", () => {
-      const { wrapper } = render({ hideLabel: true });
+  describe("when `small` is true", () => {
+    it("adds classes for a smaller type size to the label", () => {
+      const { wrapper } = render({ small: true });
+
       const label = wrapper.find(".usa-label");
-      expect(label.hasClass("usa-sr-only")).toBe(true);
+
+      expect(label.prop("className")).toMatchInlineSnapshot(
+        `"usa-label maxw-none"`
+      );
+    });
+
+    it("adds classes for a smaller type size to the legend", () => {
+      const { wrapper } = render({ small: true, component: "legend" });
+
+      const label = wrapper.find(".usa-label");
+
+      expect(label.prop("className")).toMatchInlineSnapshot(
+        `"usa-label maxw-none usa-legend font-heading-sm"`
+      );
+    });
+
+    it("doesn't include a margin on hint text", () => {
+      const { wrapper } = render({ small: true, hint: "Hint text" });
+
+      const hint = wrapper.find(".usa-hint").last();
+
+      expect(hint.prop("className")).toMatchInlineSnapshot(
+        `"usa-hint display-block line-height-sans-5"`
+      );
     });
   });
 });

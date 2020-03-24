@@ -9,7 +9,6 @@ import classnames from "classnames";
 const ButtonLink = props => {
   const classes = classnames(
     "usa-button",
-    "width-auto",
     props.variation ? `usa-button--${props.variation}` : ""
   );
 

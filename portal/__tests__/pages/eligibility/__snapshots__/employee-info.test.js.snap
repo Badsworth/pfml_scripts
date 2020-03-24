@@ -5,7 +5,9 @@ exports[`EmployeeInfo renders the form 1`] = `
   className="usa-form usa-form--large"
   onSubmit={[Function]}
 >
-  <Title>
+  <Title
+    small={true}
+  >
     Tell us about yourself
   </Title>
   <fieldset
@@ -21,6 +23,7 @@ exports[`EmployeeInfo renders the form 1`] = `
       label="First name"
       name="firstName"
       onChange={[Function]}
+      smallLabel={true}
       value=""
     />
     <InputText
@@ -28,33 +31,29 @@ exports[`EmployeeInfo renders the form 1`] = `
       name="middleName"
       onChange={[Function]}
       optionalText="(optional)"
+      smallLabel={true}
       value=""
     />
     <InputText
       label="Last name"
       name="lastName"
       onChange={[Function]}
+      smallLabel={true}
       value=""
     />
   </fieldset>
-  <fieldset
-    className="usa-fieldset margin-y-5"
+  <div
+    className="margin-top-5"
   >
-    <FormLabel
-      component="legend"
-      hint="Don’t have a Social Security Number? Use your Individual Taxpayer Identification Number."
-    >
-      What’s your Social Security Number?
-    </FormLabel>
     <InputText
-      hideLabel={true}
+      hint="Don’t have a Social Security Number? Use your Individual Taxpayer Identification Number."
       label="What’s your Social Security Number?"
       name="ssnOrItin"
       onChange={[Function]}
       value=""
       width="medium"
     />
-  </fieldset>
+  </div>
   <input
     className="usa-button"
     type="submit"

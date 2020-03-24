@@ -37,7 +37,7 @@ const EmployeeInfo = () => {
 
   return (
     <form onSubmit={handleSubmit} className="usa-form usa-form--large">
-      <Title>{t("pages.eligibility.form.title")}</Title>
+      <Title small>{t("pages.eligibility.form.title")}</Title>
       <fieldset className="usa-fieldset">
         <FormLabel
           component="legend"
@@ -50,6 +50,7 @@ const EmployeeInfo = () => {
           value={formData.firstName}
           label={t("pages.eligibility.form.firstNameLabel")}
           onChange={handleChange}
+          smallLabel
         />
         <InputText
           name="middleName"
@@ -57,30 +58,26 @@ const EmployeeInfo = () => {
           label={t("pages.eligibility.form.middleNameLabel")}
           onChange={handleChange}
           optionalText={t("components.form.optionalText")}
+          smallLabel
         />
         <InputText
           name="lastName"
           value={formData.lastName}
           label={t("pages.eligibility.form.lastNameLabel")}
           onChange={handleChange}
+          smallLabel
         />
       </fieldset>
-      <fieldset className="usa-fieldset margin-y-5">
-        <FormLabel
-          component="legend"
-          hint={t("pages.eligibility.form.ssnSectionHint")}
-        >
-          {t("pages.eligibility.form.ssnSectionLabel")}
-        </FormLabel>
+      <div className="margin-top-5">
         <InputText
           name="ssnOrItin"
           value={formData.ssnOrItin}
           label={t("pages.eligibility.form.ssnSectionLabel")}
+          hint={t("pages.eligibility.form.ssnSectionHint")}
           onChange={handleChange}
           width="medium"
-          hideLabel
         />
-      </fieldset>
+      </div>
       <input
         className="usa-button"
         type="submit"

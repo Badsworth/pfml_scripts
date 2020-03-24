@@ -113,6 +113,7 @@ function InputDate(props) {
         errorMsg={props.errorMsg}
         hint={props.hint}
         optionalText={props.optionalText}
+        small={props.smallLabel}
       >
         {props.label}
       </FormLabel>
@@ -126,6 +127,7 @@ function InputDate(props) {
           label={props.monthLabel}
           name={`${props.name}_month`}
           onChange={handleChange}
+          smallLabel
           value={values.month}
         />
 
@@ -137,6 +139,7 @@ function InputDate(props) {
           label={props.dayLabel}
           name={`${props.name}_day`}
           onChange={handleChange}
+          smallLabel
           value={values.day}
         />
 
@@ -148,6 +151,7 @@ function InputDate(props) {
           label={props.yearLabel}
           name={`${props.name}_year`}
           onChange={handleChange}
+          smallLabel
           value={values.year}
         />
       </div>
@@ -198,6 +202,10 @@ InputDate.propTypes = {
    * Localized text indicating this field is optional
    */
   optionalText: PropTypes.node,
+  /**
+   * Enable the smaller label variant
+   */
+  smallLabel: PropTypes.bool,
   /**
    * The full ISO 8601 date (`YYYY-MM-DD`). If a date part is not yet set, leave
    * it blank (i.e `2019--10`). Use this prop in combination with `onChange`

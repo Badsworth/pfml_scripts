@@ -116,6 +116,15 @@ describe("InputDate", () => {
     });
   });
 
+  describe("when `smallLabel` is true", () => {
+    it("sets the FormLabel small prop to true", () => {
+      const { wrapper } = render({ smallLabel: true });
+      const label = wrapper.find("FormLabel");
+
+      expect(label.prop("small")).toBe(true);
+    });
+  });
+
   describe("when dayInvalid is true", () => {
     it("adds error class to the day input component", () => {
       const { wrapper } = render({ dayInvalid: true });

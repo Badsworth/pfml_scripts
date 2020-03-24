@@ -131,15 +131,6 @@ describe("InputText", () => {
     });
   });
 
-  describe("when hideLabel prop is set", () => {
-    it("passes the hideLabel to FormLabel", () => {
-      const { wrapper } = render({ hideLabel: true });
-      const label = wrapper.find("FormLabel");
-
-      expect(label.prop("hideLabel")).toBe(true);
-    });
-  });
-
   describe("when width prop is set", () => {
     it("adds width classes to input", () => {
       const mediumData = render({ width: "medium" });
@@ -166,6 +157,15 @@ describe("InputText", () => {
 
       expect(formGroup.hasClass("usa-form-group--error")).toBe(true);
       expect(field.hasClass("usa-input--error")).toBe(true);
+    });
+  });
+
+  describe("when `smallLabel` is true", () => {
+    it("sets the FormLabel small prop to true", () => {
+      const { wrapper } = render({ smallLabel: true });
+      const label = wrapper.find("FormLabel");
+
+      expect(label.prop("small")).toBe(true);
     });
   });
 

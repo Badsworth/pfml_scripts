@@ -3,7 +3,7 @@
 exports[`FormLabel when component prop is set to legend renders legend with expected classes 1`] = `
 <Fragment>
   <legend
-    className="usa-label usa-legend font-heading-md line-height-sans-3"
+    className="usa-label maxw-none usa-legend font-heading-lg line-height-sans-2 text-bold"
   >
     Field Label
   </legend>
@@ -13,7 +13,7 @@ exports[`FormLabel when component prop is set to legend renders legend with expe
 exports[`FormLabel when the type prop isn't set renders label with expected classes 1`] = `
 <Fragment>
   <label
-    className="usa-label"
+    className="usa-label maxw-none font-heading-lg line-height-sans-2 text-bold"
   >
     Field Label
   </label>

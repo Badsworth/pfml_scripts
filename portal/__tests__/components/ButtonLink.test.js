@@ -24,15 +24,15 @@ describe("ButtonLink", () => {
     const { wrapper } = render();
 
     expect(wrapper).toMatchInlineSnapshot(`
-    <Link
-      href="http://www.example.com"
-    >
-      <a
-        className="usa-button width-auto"
+      <Link
+        href="http://www.example.com"
       >
-        Button label
-      </a>
-    </Link>
+        <a
+          className="usa-button"
+        >
+          Button label
+        </a>
+      </Link>
     `);
   });
 
