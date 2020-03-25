@@ -37,7 +37,7 @@ def start_server():
         app.run(port=1550)
     except Exception as e:
         error_msg = "Server NOT started because of exception: %s" % (e)
-        logging.error(error_msg);
+        logging.error(error_msg)
         raise
 
 

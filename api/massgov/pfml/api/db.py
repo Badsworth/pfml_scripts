@@ -1,9 +1,10 @@
+import logging
+
 from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker
 
-import logging
-
 from massgov.pfml.api.config import config
+
 
 def init_db():
     url = config["db_url"]
@@ -21,6 +22,6 @@ def init_db():
         logging.info("connected to db")
         return db_session
     except Exception as e:
-        logging.error("Error trying to connect to db: %s", e);
+        logging.error("Error trying to connect to db: %s", e)
         # TODO throw exception when DB is full supported on non-local environments
         # raise Exception("Unable to connect to db")
