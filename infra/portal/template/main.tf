@@ -4,6 +4,7 @@ provider "aws" {
 
 terraform {
   required_providers {
-    aws = "~> 2.54"
+    aws   = "~> 2.54"
+    local = "~> 1.4"
   }
 }

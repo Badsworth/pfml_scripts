@@ -10,6 +10,10 @@ resource "aws_ses_email_identity" "cognito_sender_email" {
   count = var.cognito_use_ses_email ? 1 : 0
 }
 
+data "local_file" "cognito_verification_email_message" {
+  filename = "${path.module}/verification-email.html"
+}
+
 resource "aws_cognito_user_pool" "claimants_pool" {
   name                     = "massgov-pfml-${var.env_name}"
   username_attributes      = ["email"]
@@ -37,18 +41,10 @@ resource "aws_cognito_user_pool" "claimants_pool" {
   }
 
   verification_message_template {
-    default_email_option  = "CONFIRM_WITH_CODE"
-    email_subject_by_link = "Activate your Paid Family and Medical Leave account"
-    email_message_by_link = <<-EOT
-      To verify your email address and activate your Paid Family and Medical Leave account, please click the following link: {##Verify Email##}
-
-      This link is only valid for 24 hours.
-
-      This is an automatically generated message from the Commonwealth of Massachussets. Replies are not monitored or answered.
-      EOT
-    email_subject         = "massgov-pfml-${var.env_name}: Your verification code"
-    email_message         = "Your verification code is {####}."
-    sms_message           = "Your verification code is {####}."
+    default_email_option = "CONFIRM_WITH_CODE"
+    email_message        = data.local_file.cognito_verification_email_message.content
+    email_subject        = "Verify your Paid Family and Medical Leave account"
+    sms_message          = "Your verification code is {####}."
   }
 
   schema {
