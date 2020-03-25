@@ -1,3 +1,9 @@
+check: ## Run checks
+check: check-static test
+
+check-static: ## Run static code checks
+check-static: format-check lint
+
 clean: ## Remove intermediate, cache, or build artifacts
 	find . -type f -name '*.py[co]' -delete
 	find . -type d -name __pycache__ -exec rm -rv {} +
