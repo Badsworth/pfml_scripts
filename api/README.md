@@ -55,6 +55,27 @@ work](https://docs.pytest.org/en/latest/fixture.html) in particular might be
 helpful as it's one area that is a bit different than is common with other
 runners (and languages).
 
+### During Development
+
+While working on a part of the system, you may not be interested in running the
+entire test suite all the time. To just run the test impacted by the changes
+made since they last ran, you can use:
+
+``` sh
+make test-changed
+```
+
+Note that it will run the entire test suite the first time that command is run
+to collect which source files touch which tests, subsequent runs should only run
+the tests that need to run.
+
+And instead of running that command manually, you can kick off a process to
+automatically run the tests when files change with:
+
+``` sh
+make test-watch
+```
+
 ## Directory Structure
 
 ```

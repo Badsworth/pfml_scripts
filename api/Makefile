@@ -5,6 +5,7 @@ clean: ## Remove intermediate, cache, or build artifacts
 	rm -rf dist
 	-poetry run coverage erase # takes care of .coverage file
 	rm -rf .coverage_report
+	rm -f .testmondata
 
 clean-venv: ## Remove active poetry virtualenv
 	rm -rf $(shell poetry env info --path)
@@ -35,6 +36,12 @@ lint: ## Run linting
 test: ## Run tests
 	poetry run coverage run --branch --source=massgov -m pytest
 	poetry run coverage report
+
+test-changed: ## Run only tests that have changed
+	poetry run python -m pytest --testmon
+
+test-watch: ## Watch and run tests on file changes
+	poetry run pytest-watch --runner "make test-changed"
 
 # Get open command for Linux/Mac
 UNAME_S := $(shell uname -s)
