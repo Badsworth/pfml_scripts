@@ -1,5 +1,32 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`EmployeeInfo render connected component 1`] = `
+<ContextProvider
+  value={null}
+>
+  <EmployeeInfo
+    formData={
+      Object {
+        "firstName": "",
+        "lastName": "",
+        "middleName": "",
+        "ssnOrItin": "",
+      }
+    }
+    store={
+      Object {
+        "dispatch": [Function],
+        "getState": [Function],
+        "replaceReducer": [Function],
+        "subscribe": [Function],
+        Symbol(observable): [Function],
+      }
+    }
+    updateFieldFromEvent={[Function]}
+  />
+</ContextProvider>
+`;
+
 exports[`EmployeeInfo renders the form 1`] = `
 <form
   className="usa-form usa-form--large"
@@ -22,14 +49,14 @@ exports[`EmployeeInfo renders the form 1`] = `
     <InputText
       label="First name"
       name="firstName"
-      onChange={[Function]}
+      onChange={[MockFunction]}
       smallLabel={true}
       value=""
     />
     <InputText
       label="Middle name"
       name="middleName"
-      onChange={[Function]}
+      onChange={[MockFunction]}
       optionalText="(optional)"
       smallLabel={true}
       value=""
@@ -37,7 +64,7 @@ exports[`EmployeeInfo renders the form 1`] = `
     <InputText
       label="Last name"
       name="lastName"
-      onChange={[Function]}
+      onChange={[MockFunction]}
       smallLabel={true}
       value=""
     />
@@ -49,7 +76,7 @@ exports[`EmployeeInfo renders the form 1`] = `
       hint="Don’t have a Social Security Number? Use your Individual Taxpayer Identification Number."
       label="What’s your Social Security Number?"
       name="ssnOrItin"
-      onChange={[Function]}
+      onChange={[MockFunction]}
       value=""
       width="medium"
     />

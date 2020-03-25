@@ -1,24 +1,18 @@
-import React, { useState } from "react";
 import FormLabel from "../../components/FormLabel";
 import InputText from "../../components/InputText";
+import PropTypes from "prop-types";
+import React from "react";
 import Title from "../../components/Title";
+import { connect } from "react-redux";
+import { updateFieldFromEvent } from "../../actions";
 import { useRouter } from "next/router";
 import { useTranslation } from "react-i18next";
+import valueWithFallback from "../../utils/valueWithFallback";
 
-const EmployeeInfo = () => {
+export const EmployeeInfo = props => {
   const { t } = useTranslation();
   const router = useRouter();
-  const [formData, setFormData] = useState({
-    firstName: "",
-    middleName: "",
-    lastName: "",
-    ssnOrItin: "",
-  });
-
-  const handleChange = event => {
-    const { name, value } = event.target;
-    setFormData({ ...formData, [name]: value });
-  };
+  const formData = props.formData;
 
   const handleSubmit = event => {
     event.preventDefault();
@@ -47,34 +41,34 @@ const EmployeeInfo = () => {
         </FormLabel>
         <InputText
           name="firstName"
-          value={formData.firstName}
+          value={valueWithFallback(formData.firstName)}
           label={t("pages.eligibility.form.firstNameLabel")}
-          onChange={handleChange}
+          onChange={props.updateFieldFromEvent}
           smallLabel
         />
         <InputText
           name="middleName"
-          value={formData.middleName}
+          value={valueWithFallback(formData.middleName)}
           label={t("pages.eligibility.form.middleNameLabel")}
-          onChange={handleChange}
+          onChange={props.updateFieldFromEvent}
           optionalText={t("components.form.optionalText")}
           smallLabel
         />
         <InputText
           name="lastName"
-          value={formData.lastName}
+          value={valueWithFallback(formData.lastName)}
           label={t("pages.eligibility.form.lastNameLabel")}
-          onChange={handleChange}
+          onChange={props.updateFieldFromEvent}
           smallLabel
         />
       </fieldset>
       <div className="margin-top-5">
         <InputText
           name="ssnOrItin"
-          value={formData.ssnOrItin}
+          value={valueWithFallback(formData.ssnOrItin)}
           label={t("pages.eligibility.form.ssnSectionLabel")}
           hint={t("pages.eligibility.form.ssnSectionHint")}
-          onChange={handleChange}
+          onChange={props.updateFieldFromEvent}
           width="medium"
         />
       </div>
@@ -87,4 +81,22 @@ const EmployeeInfo = () => {
   );
 };
 
-export default EmployeeInfo;
+EmployeeInfo.propTypes = {
+  formData: PropTypes.shape({
+    firstName: PropTypes.string,
+    middleName: PropTypes.string,
+    lastName: PropTypes.string,
+    ssnOrItin: PropTypes.string,
+  }).isRequired,
+  updateFieldFromEvent: PropTypes.func.isRequired,
+};
+
+const mapStateToProps = state => ({
+  formData: state.form,
+});
+
+const mapDispatchToProps = dispatch => ({
+  updateFieldFromEvent: event => dispatch(updateFieldFromEvent(event)),
+});
+
+export default connect(mapStateToProps, mapDispatchToProps)(EmployeeInfo);

@@ -4,8 +4,10 @@ import Amplify, { Auth } from "aws-amplify";
 import React, { useEffect, useState } from "react";
 import Header from "../components/Header";
 import PropTypes from "prop-types";
+import { Provider } from "react-redux";
 import Router from "next/router";
 import Spinner from "../components/Spinner";
+import initializeStore from "../store";
 import theme from "../utils/amplifyTheme";
 import { useTranslation } from "react-i18next";
 import { withAuthenticator } from "aws-amplify-react";
@@ -55,7 +57,7 @@ export const App = ({ Component, pageProps }) => {
   }, []);
 
   return (
-    <React.Fragment>
+    <Provider store={initializeStore()}>
       <Header user={user} />
       <main id="main" className="grid-container margin-top-5 margin-bottom-8">
         <div className="grid-row">
@@ -70,7 +72,7 @@ export const App = ({ Component, pageProps }) => {
           </div>
         </div>
       </main>
-    </React.Fragment>
+    </Provider>
   );
 };
 

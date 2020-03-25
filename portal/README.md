@@ -66,12 +66,17 @@ Below is an abbreviated representation of our directory structure, pointing out 
 ├── __tests__           Test suites
 ├── public              Static assets
 ├── src                 Source code
+|   ├── actions
+|   |   └── index.js    Redux actions
 │   ├── components
 │   ├── locales         Localization files
+│   │   └── i18n.js     Internationalization setup
 |   ├── pages
 │   │   ├── _app.js     Main layout applied to all pages
 │   │   └── index.js    Homepage
-│   └── i18n.js         Internationalization setup
+|   ├── reducers        Redux reducers
+|   ├── utils           utility functions
+|   ├── store.js        Redux store initialization method
 ├── styles
 │   └── app.scss        Main stylesheet
 └── next.config.js      Build process config
