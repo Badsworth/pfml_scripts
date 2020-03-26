@@ -48,18 +48,6 @@ jobs:
     steps:
     - uses: actions/checkout@v2
 
-    # Create the data/postgres directory; this is a docker volume used to persist data on
-    # local dev machines whenever the psql docker container is rebuilt. Technically CI doesn't
-    # need to persist the data, but we keep it to simplify the docker-compose file setup.
-    #
-    # We do this here because Github Actions sometimes doesn't like it when Docker tries to
-    # create the directory on its own.
-    - name: Create postgres data directory
-      run:
-        mkdir -p data/postgres
-        chmod 777 data/postgres
-      working-directory: ${{ env.working-dir }}
-
     - name: build and test
       # Use -T to avoid making a pseudo-TTY, since docker-compose makes a real TTY by default.
       # -T is needed for Github Actions to work properly with its version of docker-compose.

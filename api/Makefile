@@ -13,6 +13,9 @@ clean: ## Remove intermediate, cache, or build artifacts
 	rm -rf .coverage_report
 	rm -f .testmondata
 
+clean-docker: ## Remove project docker artifacts
+	docker-compose down --remove-orphans --rmi all --volumes
+
 clean-venv: ## Remove active poetry virtualenv
 	rm -rf $(shell poetry env info --path)
 
