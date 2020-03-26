@@ -23,7 +23,16 @@ build: ## Build container
 	docker build --tag mass-pfml-api .
 
 run: ## Run docker-compose
-	docker-compose up --detach; docker logs --follow mass-pfml-api
+run: start logs
+
+logs: start ## View API logs
+	docker-compose logs --follow mass-pfml-api
+
+logs-db: start ## View DB logs
+	docker-compose logs --follow mass-pfml-db
+
+start: ## Start containers
+	docker-compose up --detach
 
 stop: ## Stop running containers
 	docker-compose down

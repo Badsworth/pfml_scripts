@@ -1,0 +1,70 @@
+# Run tests and linting for the Paid Leave API.
+#
+name: API CI Testing
+
+on:
+  pull_request:
+    paths:
+    - api/**
+
+env:
+  working-dir: ./api
+
+jobs:
+
+  # Check for formatting and linting issues.
+  lint:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+
+    # Setup python and dependencies without Docker
+    # since we're running static checks.
+    - uses: actions/setup-python@v1
+      with:
+        python-version: '3.8'
+
+    - name: Install poetry
+      run: pip install poetry
+
+    - name: Install dependencies
+      run: make deps
+      working-directory: ${{ env.working-dir }}
+
+    # Run checks
+    - name: format-check
+      run: make format-check
+      working-directory: ${{ env.working-dir }}
+
+    - name: lint
+      run: make lint
+      working-directory: ${{ env.working-dir }}
+
+  # Check for test failures.
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+
+    # Create the data/postgres directory; this is a docker volume used to persist data on
+    # local dev machines whenever the psql docker container is rebuilt. Technically CI doesn't
+    # need to persist the data, but we keep it to simplify the docker-compose file setup.
+    #
+    # We do this here because Github Actions sometimes doesn't like it when Docker tries to
+    # create the directory on its own.
+    - name: Create postgres data directory
+      run:
+        mkdir -p data/postgres
+        chmod 777 data/postgres
+      working-directory: ${{ env.working-dir }}
+
+    - name: build and test
+      # Use -T to avoid making a pseudo-TTY, since docker-compose makes a real TTY by default.
+      # -T is needed for Github Actions to work properly with its version of docker-compose.
+      run: >
+        docker-compose run -T --rm mass-pfml-api sh -c
+        "poetry run coverage run --branch --source=massgov -m pytest &&
+        poetry run coverage report"
+      working-directory: ${{ env.working-dir }}
