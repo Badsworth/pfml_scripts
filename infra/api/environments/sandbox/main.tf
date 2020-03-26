@@ -26,4 +26,5 @@ module "api" {
   service_ecs_cluster_arn = data.aws_ecs_cluster.sandbox.arn
   vpc_id                  = data.aws_vpc.nava_internal.id
   vpc_app_subnet_ids      = data.aws_subnet_ids.nava_internal_app.ids
+  postgres_version        = "11.6"
 }
