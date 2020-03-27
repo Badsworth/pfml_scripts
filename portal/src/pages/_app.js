@@ -1,7 +1,19 @@
 import "../locales/i18n";
 import "../../styles/app.scss";
 import Amplify, { Auth } from "aws-amplify";
+import {
+  ConfirmSignIn,
+  ConfirmSignUp,
+  ForgotPassword,
+  Loading,
+  RequireNewPassword,
+  SignIn,
+  TOTPSetup,
+  VerifyContact,
+  withAuthenticator,
+} from "aws-amplify-react";
 import React, { useEffect, useState } from "react";
+import CustomSignUp from "../components/CustomSignUp";
 import Header from "../components/Header";
 import PropTypes from "prop-types";
 import { Provider } from "react-redux";
@@ -10,7 +22,6 @@ import Spinner from "../components/Spinner";
 import initializeStore from "../store";
 import theme from "../utils/amplifyTheme";
 import { useTranslation } from "react-i18next";
-import { withAuthenticator } from "aws-amplify-react";
 
 Amplify.configure(process.env.awsConfig);
 
@@ -105,7 +116,24 @@ const signUpConfig = {
   ],
 };
 
+/* eslint-disable react/jsx-key */
+const authenticatorComponents = [
+  <SignIn />,
+  <ConfirmSignIn />,
+  <VerifyContact />,
+  // amplify does not pass custom components signUpConfig
+  // manually passing here
+  <CustomSignUp override="SignUp" signUpConfig={signUpConfig} />,
+  <ConfirmSignUp />,
+  <ForgotPassword />,
+  <RequireNewPassword />,
+  <TOTPSetup />,
+  <Loading />,
+];
+/* eslint-enable react/jsx-key */
+
 export default withAuthenticator(App, {
+  authenticatorComponents,
   signUpConfig,
   theme,
 });

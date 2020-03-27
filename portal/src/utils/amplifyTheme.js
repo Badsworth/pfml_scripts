@@ -32,6 +32,7 @@ const tokens = {
 const theme = {
   a: {
     color: tokens["color-primary"],
+    fontSize: "1.21rem",
     textDecoration: "underline",
   },
   button: {
@@ -42,7 +43,7 @@ const theme = {
     textTransform: "none",
   },
   formSection: {
-    maxWidth: 550, // provide a bit more breathing room on desktop
+    maxWidth: 460, // provide a bit more breathing room on desktop
   },
   hint: {
     color: tokens["color-base"],
@@ -55,6 +56,7 @@ const theme = {
     color: tokens["color-base-ink"],
     fontSize: tokens["body-font-size"],
     lineHeight: tokens["input-line-height"],
+    padding: "0.5rem",
   },
   inputLabel: {
     color: tokens["color-base-ink"],

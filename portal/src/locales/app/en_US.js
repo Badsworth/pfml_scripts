@@ -91,6 +91,13 @@ const components = {
       "There could have been an issue when your employer entered your information, such as misspelling your name.",
     whyHeader: "Why can't you find me?",
   },
+  signUp: {
+    createAccountButton: "Create Account",
+    haveAnAccountFooterLabel: "Have an account?",
+    passwordHelpText:
+      "Your password must be at least 8 characters long and include numbers and letters.",
+    signInFooterLink: "Sign in",
+  },
   spinner: {
     label: "Loading",
   },

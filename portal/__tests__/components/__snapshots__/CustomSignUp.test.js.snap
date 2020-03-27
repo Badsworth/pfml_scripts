@@ -1,0 +1,92 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`CustomSignUp when signUpConfig prop has signupFields defined and hideAllDefaults set to true renders signUpFields from signUpConfig 1`] = `
+<div
+  className="Form__formContainer___1GA3x"
+>
+  <div
+    className="Form__formSection___1PPvW"
+    style={
+      Object {
+        "maxWidth": 460,
+      }
+    }
+  >
+    <div
+      className="Section__sectionHeader___2djyg"
+    >
+      <Title>
+        Create a new account
+      </Title>
+    </div>
+    <form>
+      <div
+        className="Section__sectionBody___ihqqd"
+      >
+        <p>
+          Your password must be at least 8 characters long and include numbers and letters.
+        </p>
+        <InputText
+          key="username"
+          label="Email"
+          name="username"
+          onChange={[Function]}
+          smallLabel={true}
+          type="email"
+        />
+        <InputText
+          key="password"
+          label="Password"
+          name="password"
+          onChange={[Function]}
+          smallLabel={true}
+          type="password"
+        />
+      </div>
+      <div
+        className="Section__sectionFooter___1T54C"
+      >
+        <div
+          className="Section__sectionFooterPrimaryContent___2r9ZX"
+        >
+          <button
+            className="Button__button___vS7Mv"
+            onClick={[Function]}
+            style={
+              Object {
+                "backgroundColor": "#14558f",
+                "fontSize": "1.13rem",
+                "fontWeight": "bold",
+                "padding": "0.75rem 1.25rem",
+                "textTransform": "none",
+              }
+            }
+            type="submit"
+          >
+            Create Account
+          </button>
+        </div>
+        <div
+          className="Section__sectionFooterSecondaryContent___Nj41Q"
+          style={
+            Object {
+              "color": "#707070",
+              "fontSize": "1.13rem",
+              "fontWeight": "bold",
+            }
+          }
+        >
+          Have an account?
+           
+          <button
+            className="usa-button usa-button--unstyled font-sans-xs text-bold text-underline"
+            onClick={[Function]}
+          >
+            Sign in
+          </button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+`;
