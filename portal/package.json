@@ -4,6 +4,7 @@
   "description": "Mass PFML Portal",
   "main": "index.js",
   "scripts": {
+    "postinstall": "sh ./scripts/remove-amplify-css-in-js.sh",
     "components": "start-storybook -p 6006 -s ./public --docs",
     "dev": "next",
     "build": "next build && next export",
