@@ -19,14 +19,22 @@ clean-docker: ## Remove project docker artifacts
 clean-venv: ## Remove active poetry virtualenv
 	rm -rf $(shell poetry env info --path)
 
-deps: ## Install dependencies
-	poetry install --no-root
-
 build: ## Build container
 	docker build --tag mass-pfml-api .
 
-run: ## Run docker-compose
-run: start logs
+deps: ## Install dependencies
+	poetry install --no-root
+
+format: ## Format code
+	poetry run isort --atomic --apply
+	poetry run black .
+
+format-check: ## Check format of code
+	poetry run isort --atomic --check-only
+	poetry run black . --check
+
+lint: ## Run linting
+	poetry run flake8 .
 
 logs: start ## View API logs
 	docker-compose logs --follow mass-pfml-api
@@ -40,16 +48,8 @@ start: ## Start containers
 stop: ## Stop running containers
 	docker-compose down
 
-format: ## Format code
-	poetry run isort --atomic --apply
-	poetry run black .
-
-format-check: ## Check format of code
-	poetry run isort --atomic --check-only
-	poetry run black . --check
-
-lint: ## Run linting
-	poetry run flake8 .
+run: ## Run docker-compose
+run: start logs
 
 test: ## Run tests
 	poetry run coverage run --branch --source=massgov -m pytest
@@ -57,9 +57,6 @@ test: ## Run tests
 
 test-changed: ## Run only tests that have changed
 	poetry run python -m pytest --testmon
-
-test-watch: ## Watch and run tests on file changes
-	poetry run pytest-watch --runner "make test-changed"
 
 # Get open command for Linux/Mac
 UNAME_S := $(shell uname -s)
@@ -73,3 +70,6 @@ endif
 test-coverage-report: ## Open HTML test coverage report
 	poetry run coverage html --directory .coverage_report
 	$(OPEN_CMD) .coverage_report/index.html
+
+test-watch: ## Watch and run tests on file changes
+	poetry run pytest-watch --runner "make test-changed"
