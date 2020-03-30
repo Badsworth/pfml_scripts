@@ -4,7 +4,11 @@ provider "aws" {
 
 terraform {
   required_providers {
-    aws   = "~> 2.54"
-    local = "~> 1.4"
+    archive = "~> 1.3"
+    aws     = "~> 2.54"
   }
+}
+
+locals {
+  app_name = "pfml-${var.env_name}"
 }

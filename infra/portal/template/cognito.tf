@@ -10,10 +10,6 @@ resource "aws_ses_email_identity" "cognito_sender_email" {
   count = var.cognito_use_ses_email ? 1 : 0
 }
 
-data "local_file" "cognito_verification_email_message" {
-  filename = "${path.module}/verification-email.html"
-}
-
 resource "aws_cognito_user_pool" "claimants_pool" {
   name                     = "massgov-pfml-${var.env_name}"
   username_attributes      = ["email"]
@@ -26,6 +22,10 @@ resource "aws_cognito_user_pool" "claimants_pool" {
   }
 
   sms_authentication_message = "Your authentication code is {####}. "
+
+  lambda_config {
+    custom_message = aws_lambda_function.cognito_custom_message.arn
+  }
 
   password_policy {
     minimum_length                   = 8
@@ -42,9 +42,7 @@ resource "aws_cognito_user_pool" "claimants_pool" {
 
   verification_message_template {
     default_email_option = "CONFIRM_WITH_CODE"
-    email_message        = data.local_file.cognito_verification_email_message.content
-    email_subject        = "Verify your Paid Family and Medical Leave account"
-    sms_message          = "Your verification code is {####}."
+    sms_message          = "Your Paid Family and Medical Leave verification code is {####}"
   }
 
   schema {
@@ -83,4 +81,58 @@ resource "aws_cognito_user_pool_client" "massgov_pfml_client" {
 resource "aws_cognito_user_pool_domain" "massgov_pfml_domain" {
   domain       = "massgov-pfml-${var.env_name}"
   user_pool_id = aws_cognito_user_pool.claimants_pool.id
+}
+
+# Custom Cognito emails are sent by this Lambda function
+resource "aws_lambda_function" "cognito_custom_message" {
+  description      = "Customizes Cognito SMS and Email messages"
+  filename         = data.archive_file.cognito_custom_message.output_path
+  source_code_hash = data.archive_file.cognito_custom_message.output_base64sha256
+  function_name    = "${local.app_name}-cognito-custom-message"
+  handler          = "lambda.handler"
+  role             = aws_iam_role.cognito_lambda.arn
+  runtime          = "nodejs12.x"
+}
+
+data "archive_file" "cognito_custom_message" {
+  type        = "zip"
+  output_path = "${path.module}/.zip/cognito-message-handler.zip"
+
+  source {
+    filename = "lambda.js"
+    content  = file("${path.module}/cognito-message-handler.js")
+  }
+}
+
+# Allow the Lambda to be invoked by our user pool
+resource "aws_lambda_permission" "allow_cognito_custom_message" {
+  statement_id  = "AllowExecutionFromCognito"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.cognito_custom_message.function_name
+  principal     = "cognito-idp.amazonaws.com"
+  source_arn    = aws_cognito_user_pool.claimants_pool.arn
+}
+
+data "aws_iam_policy_document" "lambda_assume_role" {
+  statement {
+    actions = ["sts:AssumeRole"]
+
+    principals {
+      type = "Service"
+
+      identifiers = [
+        "lambda.amazonaws.com"
+      ]
+    }
+  }
+}
+
+resource "aws_iam_role" "cognito_lambda" {
+  name_prefix        = local.app_name
+  assume_role_policy = data.aws_iam_policy_document.lambda_assume_role.json
+}
+
+resource "aws_iam_role_policy_attachment" "cognito_lambda" {
+  role       = aws_iam_role.cognito_lambda.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
 }

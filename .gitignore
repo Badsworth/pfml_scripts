@@ -16,5 +16,8 @@ out/
 # terraform metadata
 .terraform/
 
+# Files generated with the "archive_file" Terraform resource
+infra/portal/template/.zip
+
 # IDE-specific files
 .vscode/
