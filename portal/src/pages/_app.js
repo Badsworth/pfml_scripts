@@ -6,7 +6,6 @@ import "@aws-amplify/ui/dist/style.css";
 import Amplify, { Auth } from "aws-amplify";
 import {
   ConfirmSignIn,
-  ConfirmSignUp,
   ForgotPassword,
   Loading,
   RequireNewPassword,
@@ -16,6 +15,7 @@ import {
   withAuthenticator,
 } from "aws-amplify-react";
 import React, { useEffect, useState } from "react";
+import CustomConfirmSignUp from "../components/CustomConfirmSignUp";
 import CustomSignUp from "../components/CustomSignUp";
 import Header from "../components/Header";
 import PropTypes from "prop-types";
@@ -127,7 +127,7 @@ const authenticatorComponents = [
   // amplify does not pass custom components signUpConfig
   // manually passing here
   <CustomSignUp override="SignUp" signUpConfig={signUpConfig} />,
-  <ConfirmSignUp />,
+  <CustomConfirmSignUp override="ConfirmSignUp" />,
   <ForgotPassword />,
   <RequireNewPassword />,
   <TOTPSetup />,

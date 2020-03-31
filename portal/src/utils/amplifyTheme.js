@@ -12,7 +12,7 @@
  */
 const tokens = {
   "body-font-family": "Texta, Helvetica, sans-serif",
-  "body-font-size": "1.13rem",
+  "body-font-size": "1.21rem",
   "color-base": "#707070",
   "color-base-dark": "#535353",
   "color-base-ink": "#141414",

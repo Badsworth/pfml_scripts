@@ -57,7 +57,9 @@ describe("CustomSignUp", () => {
   it("calls Auth signUp when user clicks sign up", () => {
     const wrapper = render();
     const signUp = jest.spyOn(wrapper.instance(), "signUp");
-    wrapper.find({ type: "submit" }).simulate("click");
+    wrapper
+      .find({ type: "submit" })
+      .simulate("click", { preventDefault: jest.fn() });
 
     expect(signUp).toHaveBeenCalled();
   });

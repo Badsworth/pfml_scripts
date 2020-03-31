@@ -40,6 +40,15 @@ const components = {
   authNav: {
     logOutButtonText: "Log out",
   },
+  confirmSignUp: {
+    codeLabel: "Six-digit code",
+    confirmButton: "Submit",
+    resendCodeLink: "Resend code",
+    signInFooterLink: "Back to log in",
+    title: "Verify your email address",
+    verifyHint:
+      "We sent a 6-digit verification code to {{emailAddress}}. Enter the code to verify your email.",
+  },
   dashboardButton: {
     text: "Back to Dashboard",
   },

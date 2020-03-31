@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`CustomSignUp when signUpConfig prop has signupFields defined and hideAllDefaults set to true renders signUpFields from signUpConfig 1`] = `
+exports[`CustomConfirmSignUp renders the page 1`] = `
 <div
   className="Form__formContainer___1GA3x"
 >
@@ -16,7 +16,7 @@ exports[`CustomSignUp when signUpConfig prop has signupFields defined and hideAl
       className="Section__sectionHeader___2djyg"
     >
       <Title>
-        Create a new account
+        Verify your email address
       </Title>
     </div>
     <form>
@@ -24,24 +24,21 @@ exports[`CustomSignUp when signUpConfig prop has signupFields defined and hideAl
         className="Section__sectionBody___ihqqd"
       >
         <p>
-          Your password must be at least 8 characters long and include numbers and letters.
+          We sent a 6-digit verification code to user_name@test.com. Enter the code to verify your email.
         </p>
         <InputText
-          key="username"
-          label="Email"
-          name="username"
+          label="Six-digit code"
+          name="code"
           onChange={[Function]}
           smallLabel={true}
-          type="email"
         />
-        <InputText
-          key="password"
-          label="Password"
-          name="password"
-          onChange={[Function]}
-          smallLabel={true}
-          type="password"
-        />
+        <button
+          className="usa-button usa-button--unstyled font-sans-xs text-underline margin-top-2"
+          name="resendCode"
+          onClick={[Function]}
+        >
+          Resend code
+        </button>
       </div>
       <div
         className="Section__sectionFooter___1T54C"
@@ -51,6 +48,7 @@ exports[`CustomSignUp when signUpConfig prop has signupFields defined and hideAl
         >
           <button
             className="Button__button___vS7Mv"
+            name="submit"
             onClick={[Function]}
             style={
               Object {
@@ -63,7 +61,7 @@ exports[`CustomSignUp when signUpConfig prop has signupFields defined and hideAl
             }
             type="submit"
           >
-            Create Account
+            Submit
           </button>
         </div>
         <div
@@ -76,13 +74,12 @@ exports[`CustomSignUp when signUpConfig prop has signupFields defined and hideAl
             }
           }
         >
-          Have an account?
-           
           <button
-            className="usa-button usa-button--unstyled font-sans-xs text-bold text-underline width-auto"
+            className="usa-button usa-button--unstyled font-sans-xs text-bold text-underline"
+            name="backToSignIn"
             onClick={[Function]}
           >
-            Sign in
+            Back to log in
           </button>
         </div>
       </div>

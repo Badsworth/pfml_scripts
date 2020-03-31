@@ -27,15 +27,15 @@ export default class CustomSignUp extends SignUp {
     }
   }
 
-  onSignUp = () => {
+  handleSignUp = event => {
     // when mocking SignUp.signUp, jest does not show the method
     // was called unless it's wrapped like this.
+    event.preventDefault();
     this.signUp();
   };
 
   showComponent() {
     const { theme } = this.props;
-
     return (
       <div className={AmplifyUI.formContainer}>
         <div className={AmplifyUI.formSection} style={theme.formSection}>
@@ -70,7 +70,7 @@ export default class CustomSignUp extends SignUp {
                   type="submit"
                   className={AmplifyUI.button}
                   style={theme.button}
-                  onClick={this.onSignUp}
+                  onClick={this.handleSignUp}
                 >
                   {i18next.t("components.signUp.createAccountButton")}
                 </button>
@@ -81,7 +81,7 @@ export default class CustomSignUp extends SignUp {
               >
                 {i18next.t("components.signUp.haveAnAccountFooterLabel")}&nbsp;
                 <button
-                  className="usa-button usa-button--unstyled font-sans-xs text-bold text-underline"
+                  className="usa-button usa-button--unstyled font-sans-xs text-bold text-underline width-auto"
                   onClick={() => this.changeState("signIn")}
                 >
                   {i18next.t("components.signUp.signInFooterLink")}
