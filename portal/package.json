@@ -22,7 +22,6 @@
     "classnames": "^2.2.6",
     "i18next": "^19.1.0",
     "lodash": "^4.17.15",
-    "next-fonts": "^1.0.3",
     "prop-types": "^15.7.2",
     "react": "^16.12.0",
     "react-dom": "^16.12.0",
@@ -35,16 +34,13 @@
     "@babel/core": "^7.8.4",
     "@storybook/addon-docs": "^6.0.0-alpha.29",
     "@storybook/react": "^6.0.0-alpha.29",
-    "@zeit/next-css": "^1.0.1",
-    "@zeit/next-sass": "^1.0.1",
-    "autoprefixer": "^9.7.4",
     "babel-loader": "^8.0.6",
     "enzyme": "^3.10.0",
     "enzyme-adapter-react-16": "^1.15.1",
     "enzyme-to-json": "^3.4.3",
     "jest": "^24.9.0",
-    "next": "^9.1.8",
-    "node-sass": "^4.13.1",
-    "react-is": "^16.13.0"
+    "next": "^9.3.3",
+    "react-is": "^16.13.0",
+    "sass": "^1.26.3"
   }
 }

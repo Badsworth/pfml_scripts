@@ -1,30 +1,19 @@
 const path = require("path");
-// The CSS workarounds are to solve conflicts between AWS Amplify CSS and `npm run dev` and `npm run build` commands.
-// See https://github.com/aws-amplify/amplify-js/issues/3854#issuecomment-554702182 for context and source of fix.
-const withCSS = require("@zeit/next-css");
-// Portal uses Sass (and we import the U.S. Web Design System's Sass)
-const withSass = require("@zeit/next-sass");
-const withFonts = require("next-fonts");
 
 const buildEnv = process.env.BUILD_ENV || "dev";
 const envVariables = require("./../infra/portal/config/" + buildEnv);
 
-module.exports = withSass(
-  withCSS(
-    // imported fonts are copied into .next/static/chunks/fonts
-    // See https://github.com/rohanray/next-fonts/blob/master/index.js
-    withFonts({
-      enableSvg: true,
-      env: {
-        ...envVariables,
-      },
-      exportTrailingSlash: true,
-      sassLoaderOptions: {
-        includePaths: [
-          path.resolve(__dirname, "node_modules/uswds/dist/scss"),
-          path.resolve(__dirname, "node_modules"),
-        ],
-      },
-    })
-  )
-);
+module.exports = {
+  env: {
+    ...envVariables,
+  },
+  exportTrailingSlash: true,
+  experimental: {
+    sassOptions: {
+      includePaths: [
+        path.resolve(__dirname, "node_modules/uswds/dist/scss"),
+        path.resolve(__dirname, "node_modules"),
+      ],
+    },
+  },
+};
