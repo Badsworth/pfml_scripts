@@ -1,4 +1,6 @@
-name: Portal CI Build Check
+# Build and export the Paid Leave website
+#
+name: Portal Website Build Check
 
 on:
   pull_request:

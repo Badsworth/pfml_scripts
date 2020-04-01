@@ -1,4 +1,6 @@
-  name: Portal CI Testing
+# Run tests and linting for the Paid Leave website
+#
+  name: Portal Website Testing
 
   on:
     pull_request:

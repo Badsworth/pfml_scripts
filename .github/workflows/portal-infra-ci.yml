@@ -1,0 +1,46 @@
+# Run tests and linting for the Paid Leave Portal Lambda functions
+#
+name: Portal Lambda Testing
+
+on:
+  pull_request:
+    paths:
+      - infra/portal/**/*.js
+
+env:
+  nodeVersion: 12.x
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Use Node.js
+        uses: actions/setup-node@v1
+        with:
+          node-version: ${{ env.nodeVersion }}
+
+      - name: install
+        run: npm ci
+
+      - name: lint
+        run: npm run lint
+
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Use Node.js
+        uses: actions/setup-node@v1
+        with:
+          node-version: ${{ env.nodeVersion }}
+
+      - name: install
+        run: npm ci --prefix infra
+
+      - name: test
+        run: npm test --prefix infra

@@ -70,7 +70,7 @@ describe("Cognito Message Handler", () => {
     });
 
     it("includes the codeParameter in the email message", () => {
-      const triggerSource = "CustomMessage_SignUp";
+      const triggerSource = "CustomMessage_ResendCode";
       const event = simulateEvent(triggerSource);
       const callback = jest.fn();
 
@@ -97,7 +97,7 @@ describe("Cognito Message Handler", () => {
     });
 
     it("includes the codeParameter in the email message", () => {
-      const triggerSource = "CustomMessage_SignUp";
+      const triggerSource = "CustomMessage_ForgotPassword";
       const event = simulateEvent(triggerSource);
       const callback = jest.fn();
 
