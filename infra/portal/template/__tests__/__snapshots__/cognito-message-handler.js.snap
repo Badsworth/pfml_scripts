@@ -1,0 +1,136 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Cognito Message Handler when triggerSource is CustomMessage_ForgotPassword sets a Password Reset email message and subject 1`] = `
+Object {
+  "emailMessage": "
+    <table align=\\"center\\" cellspacing=\\"0\\" style=\\"font-family: Helvetica, Arial, sans-serif; font-size: 16px; text-align: left; max-width: 800px;\\" width=\\"100%\\">
+      <tbody>
+        <tr>
+          <td style=\\"background: #388557; height: 24px;\\"></td>
+        </tr>
+        <tr>
+          <td style=\\"background: #14558F; color: #fff; font-size: 22px; font-weight: bold; padding: 16px 32px;\\">
+            Department of Family and Medical Leave
+          </td>
+        </tr>
+        <tr>
+          <td style=\\"padding: 32px;\\">
+            We received a request to reset your Paid Family and Medical Leave account password. Return to the Portal and enter this 6-digit code:
+          </td>
+        </tr>
+
+        <tr>
+          <td style=\\"text-align: center\\">
+            <strong style=\\"background: #14558F; color: #fff; display: inline-block; font-size: 22px; padding: 16px 32px;\\">{####}</strong>
+          </td>
+        </tr>
+
+        <tr>
+          <td style=\\"padding: 32px; text-align: center;\\">
+            This code is only valid for 24 hours. If you didn’t request a password reset, please ignore this email. Your password won’t be changed.
+          </td>
+        </tr>
+
+        <tr>
+          <td style=\\"background: #F2F2F2; color: #535353; font-size: 12px; font-style: italic; padding: 32px;\\">
+            This is an automatically generated message from Commonwealth of Massachusetts
+            <a href=\\"https://www.mass.gov/orgs/department-of-family-and-medical-leave\\">Department of Family and Medical Leave</a>.
+            Replies are not monitored or answered.
+          </td>
+        </tr>
+      </tbody>
+  </table>",
+  "emailSubject": "Reset your Paid Family and Medical Leave password",
+  "smsMessage": null,
+}
+`;
+
+exports[`Cognito Message Handler when triggerSource is CustomMessage_ResendCode sets a Account Verification email message and subject 1`] = `
+Object {
+  "emailMessage": "
+    <table align=\\"center\\" cellspacing=\\"0\\" style=\\"font-family: Helvetica, Arial, sans-serif; font-size: 16px; text-align: left; max-width: 800px;\\" width=\\"100%\\">
+      <tbody>
+        <tr>
+          <td style=\\"background: #388557; height: 24px;\\"></td>
+        </tr>
+        <tr>
+          <td style=\\"background: #14558F; color: #fff; font-size: 22px; font-weight: bold; padding: 16px 32px;\\">
+            Department of Family and Medical Leave
+          </td>
+        </tr>
+        <tr>
+          <td style=\\"padding: 32px;\\">
+            To activate your account, you need to verify your email address. Return to the Portal and enter this 6-digit code:
+          </td>
+        </tr>
+
+        <tr>
+          <td style=\\"text-align: center\\">
+            <strong style=\\"background: #14558F; color: #fff; display: inline-block; font-size: 22px; padding: 16px 32px;\\">{####}</strong>
+          </td>
+        </tr>
+
+        <tr>
+          <td style=\\"padding: 32px; text-align: center;\\">
+            This code is only valid for 24 hours.
+          </td>
+        </tr>
+
+        <tr>
+          <td style=\\"background: #F2F2F2; color: #535353; font-size: 12px; font-style: italic; padding: 32px;\\">
+            This is an automatically generated message from Commonwealth of Massachusetts
+            <a href=\\"https://www.mass.gov/orgs/department-of-family-and-medical-leave\\">Department of Family and Medical Leave</a>.
+            Replies are not monitored or answered.
+          </td>
+        </tr>
+      </tbody>
+  </table>",
+  "emailSubject": "Verify your Paid Family and Medical Leave account",
+  "smsMessage": null,
+}
+`;
+
+exports[`Cognito Message Handler when triggerSource is CustomMessage_SignUp sets a Account Verification email message and subject 1`] = `
+Object {
+  "emailMessage": "
+    <table align=\\"center\\" cellspacing=\\"0\\" style=\\"font-family: Helvetica, Arial, sans-serif; font-size: 16px; text-align: left; max-width: 800px;\\" width=\\"100%\\">
+      <tbody>
+        <tr>
+          <td style=\\"background: #388557; height: 24px;\\"></td>
+        </tr>
+        <tr>
+          <td style=\\"background: #14558F; color: #fff; font-size: 22px; font-weight: bold; padding: 16px 32px;\\">
+            Department of Family and Medical Leave
+          </td>
+        </tr>
+        <tr>
+          <td style=\\"padding: 32px;\\">
+            To activate your account, you need to verify your email address. Return to the Portal and enter this 6-digit code:
+          </td>
+        </tr>
+
+        <tr>
+          <td style=\\"text-align: center\\">
+            <strong style=\\"background: #14558F; color: #fff; display: inline-block; font-size: 22px; padding: 16px 32px;\\">{####}</strong>
+          </td>
+        </tr>
+
+        <tr>
+          <td style=\\"padding: 32px; text-align: center;\\">
+            This code is only valid for 24 hours.
+          </td>
+        </tr>
+
+        <tr>
+          <td style=\\"background: #F2F2F2; color: #535353; font-size: 12px; font-style: italic; padding: 32px;\\">
+            This is an automatically generated message from Commonwealth of Massachusetts
+            <a href=\\"https://www.mass.gov/orgs/department-of-family-and-medical-leave\\">Department of Family and Medical Leave</a>.
+            Replies are not monitored or answered.
+          </td>
+        </tr>
+      </tbody>
+  </table>",
+  "emailSubject": "Verify your Paid Family and Medical Leave account",
+  "smsMessage": null,
+}
+`;

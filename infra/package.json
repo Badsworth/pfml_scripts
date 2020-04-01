@@ -1,0 +1,14 @@
+{
+  "name": "mass-pfml-infra",
+  "description": "Mostly testing scripts for JS Lambdas managed in the infra/ directory",
+  "version": "1.0.0",
+  "scripts": {
+    "test": "jest --ci --coverage",
+    "test:no-coverage": "jest --ci",
+    "test:update-snapshots": "jest -u",
+    "test:watch": "jest --watch"
+  },
+  "devDependencies": {
+    "jest": "^25.2.4"
+  }
+}
