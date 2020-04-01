@@ -181,6 +181,35 @@ paths:
         "404":
             $ref: '#/components/responses/NotFound'
 
+  /eligibility/{employee_id}:
+    get:
+      summary: This endpoint determines whether an employee is elibible to receive PFML benefits.
+      operationId: massgov.pfml.api.eligibility.eligibility_get
+      parameters:
+        - name: employee_id
+          in: path
+          schema:
+            type: string
+          description: Employee's id
+          required: true
+        - name: leave_type
+          in: query
+          schema:
+            type: string
+          description: The type of leave an employee wishes to take. The only valid options for this mock are "fam" and "med" - for family and medical respectively. 
+          required: true
+      responses:
+        "200":
+          description: A successful request returns a 200 status code and a boolean.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EligibilityDetermination"
+        "404":
+            $ref: '#/components/responses/NotFound'
+        "400":
+            $ref: '#/components/responses/BadRequest'
+
 components:
   requestBodies:
     UserToCreate:
@@ -197,6 +226,12 @@ components:
       required: true
 
   responses:
+    EligibilityResponse:
+      description: A boolean indicating an employee's eligibility
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/EligibilityDetermination'
     NotFound:
       description: The specified resource was not found
       content:
@@ -358,6 +393,19 @@ components:
       type: array
       items:
         $ref: '#/components/schemas/WagesContributions'
+
+    EligibilityDetermination:
+      type: object
+      properties:
+        eligible:
+          type: boolean
+          default: false
+        family_exemption:
+          type: boolean
+          default: false
+        medical_exemption:
+          type: boolean
+          default: false
 
     Error:
       type: object

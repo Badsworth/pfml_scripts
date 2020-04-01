@@ -63,8 +63,8 @@ def create_wages(employee_id, employer_id, period_id=None):
     wages_object["opt_in"] = random.choice([True, False])
     wages_object["employer_ytd_wages"] = fake.random_int(min=0, max=150000, step=1)
     wages_object["employer_qtr_wages"] = fake.random_int(min=0, max=35000, step=1)
-    wages_object["employer_medical_contribution"] = fake.random_int(min=0, max=10000, step=1)
-    wages_object["employee_medical_contribution"] = fake.random_int(min=0, max=4000, step=1)
+    wages_object["employer_med_contribution"] = fake.random_int(min=0, max=10000, step=1)
+    wages_object["employee_med_contribution"] = fake.random_int(min=0, max=4000, step=1)
     wages_object["employer_fam_contribution"] = fake.random_int(min=0, max=10000, step=1)
     wages_object["employee_fam_contribution"] = fake.random_int(min=0, max=4000, step=1)
 
