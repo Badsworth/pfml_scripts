@@ -52,7 +52,9 @@ jobs:
       # Use -T to avoid making a pseudo-TTY, since docker-compose makes a real TTY by default.
       # -T is needed for Github Actions to work properly with its version of docker-compose.
       run: >
-        docker-compose run -T --rm mass-pfml-api sh -c
+        docker-compose build --build-arg RUN_USER=$USER --build-arg RUN_UID=$(id -u)
+
+        docker-compose run -T -u $USER --rm mass-pfml-api sh -c
         "poetry run coverage run --branch --source=massgov -m pytest &&
         poetry run coverage report"
       working-directory: ${{ env.working-dir }}

@@ -1,3 +1,25 @@
+# Docker user configuration
+#
+# Can be set by adding user=<username> and/ or uid=<id> to make command.
+#
+# If variables are not set explicitly: try looking up values from current
+# environment, otherwise fixed defaults.
+#
+# uid= defaults to 0 if user= set (which makes sense if user=root, otherwise you
+# probably want to set uid as well).
+#
+# Tested to work consistently on popular Linux flavors and Mac.
+ifeq ($(user),)
+RUN_USER ?= $(or $(strip $(USER)),nodummy)
+RUN_UID ?= $(or $(strip $(shell id -u)),4000)
+else
+RUN_USER = $(user)
+RUN_UID = $(or $(strip $(uid)),0)
+endif
+
+export RUN_USER
+export RUN_UID
+
 check: ## Run checks
 check: check-static test
 
@@ -20,7 +42,7 @@ clean-venv: ## Remove active poetry virtualenv
 	rm -rf $(shell poetry env info --path)
 
 build: ## Build container
-	docker build --tag mass-pfml-api .
+	docker-compose build
 
 deps: ## Install dependencies
 	poetry install --no-root
@@ -35,6 +57,9 @@ format-check: ## Check format of code
 
 lint: ## Run linting
 	poetry run flake8 .
+
+login: start ## Start shell in running container
+	docker exec -it mass-pfml-api sh
 
 logs: start ## View API logs
 	docker-compose logs --follow mass-pfml-api

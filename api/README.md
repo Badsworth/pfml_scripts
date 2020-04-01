@@ -16,7 +16,7 @@ Poetry is used to manage python library dependencies:
 
 ### Configuration
 
-Environment variables for the app are under `services.mass-pfml-api.environment` in the `dokcker-compose` file.
+Environment variables for the app are under `services.mass-pfml-api.environment` in the `docker-compose.yml` file.
 
 ### Run
 
@@ -82,11 +82,13 @@ make test-watch
 .
 ├── massgov
 │   └── pfml
-│       └── api      Application code
-├── mock             Mock data generators
+│       └── api         Application code
+├── mock                Mock data generators
 ├── tests
-│   └── api          Application tests
-├── openapi.yaml     API specification
-├── pyproject.toml   Python project configuration file
-└── setup.cfg        Python config for tools that don't support pyproject.toml yet
+│   └── api             Application tests
+├── Dockerfile          Multi-stage Docker build file for project
+├── docker-compose.yml  Config file for docker-compose tool, used for local development
+├── openapi.yaml        API specification
+├── pyproject.toml      Python project configuration file
+└── setup.cfg           Python config for tools that don't support pyproject.toml yet
 ```

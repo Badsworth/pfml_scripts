@@ -2,17 +2,36 @@
 # Dockerfile for PFML API.
 #
 
-FROM python:3.8-slim
+FROM python:3.8-slim as build
 
-# install just dependencies
+# core project tools
 RUN pip install poetry
-WORKDIR /tmp/myapp
-COPY pyproject.toml poetry.lock ./
-RUN cd /tmp/myapp && poetry install --no-root
+RUN apt-get update && apt-get install --no-install-recommends --yes make
 
-# copy in everything else and install app
+# setup user stuff
+ARG RUN_UID
+ARG RUN_USER
+
+RUN [ "${RUN_USER}" = "root" ] || \
+    (useradd -mU --home "/home/${RUN_USER}" --uid ${RUN_UID} "${RUN_USER}" \
+    && mkdir /app \
+    && chown -R ${RUN_UID} "/home/${RUN_USER}" /app)
+
+USER ${RUN_USER}
+
+FROM build as dev
+
+ARG RUN_USER
+USER ${RUN_USER}
+
+WORKDIR /app
+
+# install dependencies
+COPY pyproject.toml poetry.lock ./
+RUN poetry install --no-root
+
+# grab the application
 COPY . ./
-RUN poetry install
 
 # run the server
 CMD poetry run python -m massgov.pfml.api
