@@ -8,6 +8,7 @@
  */
 const path = require("path");
 const nextConfig = require("../next.config");
+const webpack = require("webpack");
 
 module.exports = {
   addons: ["@storybook/addon-docs"],
@@ -22,6 +23,9 @@ module.exports = {
    * @returns {Object} Altered Webpack config
    */
   webpackFinal: async (config, { configType }) => {
+    // Set our environment variables so things like Cognito integration works in the sandbox
+    config.plugins.push(new webpack.EnvironmentPlugin(nextConfig.env));
+
     config.module.rules.push({
       test: /\.scss$/,
       use: [

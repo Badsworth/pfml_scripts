@@ -10,6 +10,18 @@ describe("AuthNav", () => {
 
       expect(wrapper).toMatchSnapshot();
     });
+
+    it("doesn't render the user's name", () => {
+      const wrapper = shallow(<AuthNav />);
+
+      expect(wrapper.text()).toEqual("");
+    });
+
+    it("doesn't render a log out link", () => {
+      const wrapper = shallow(<AuthNav />);
+
+      expect(wrapper.exists("button")).toBe(false);
+    });
   });
 
   describe("when a user is authenticated", () => {

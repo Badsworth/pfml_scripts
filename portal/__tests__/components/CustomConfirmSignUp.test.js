@@ -1,3 +1,6 @@
+/* eslint-disable import/first */
+jest.unmock("aws-amplify-react");
+
 import CustomConfirmSignUp from "../../src/components/CustomConfirmSignUp";
 import React from "react";
 import { shallow } from "enzyme";

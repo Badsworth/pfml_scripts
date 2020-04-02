@@ -13,27 +13,31 @@ const AuthNav = props => {
     Auth.signOut();
   };
 
-  if (props.user) {
-    return (
-      <div className="bg-primary font-body-sm text-white text-right">
-        <div className="grid-container">
-          <div className="grid-row">
-            <div className="grid-col-fill margin-y-1">
-              <span className="display-inline-block margin-right-1">
-                {props.user.username}
-              </span>
-              <button
-                className="usa-button usa-button--outline usa-button--inverse usa-button--unstyled width-auto"
-                onClick={handleSignOut}
-              >
-                {t("components.authNav.logOutButtonText")}
-              </button>
-            </div>
+  const user = props.user || {};
+
+  return (
+    <div className="bg-primary font-body-sm text-white text-right">
+      <div className="grid-container">
+        <div className="grid-row">
+          <div className="grid-col-fill margin-y-1">
+            {user.username ? (
+              <React.Fragment>
+                <span className="display-inline-block margin-right-1">
+                  {user.username}
+                </span>
+                <button
+                  className="usa-button usa-button--outline usa-button--inverse usa-button--unstyled width-auto"
+                  onClick={handleSignOut}
+                >
+                  {t("components.authNav.logOutButtonText")}
+                </button>
+              </React.Fragment>
+            ) : null}
           </div>
         </div>
       </div>
-    );
-  }
+    </div>
+  );
 };
 
 AuthNav.propTypes = {

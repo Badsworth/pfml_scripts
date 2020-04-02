@@ -1,6 +1,4 @@
 /* eslint-disable import/first */
-jest.mock("aws-amplify");
-
 // We need to manually trigger Router events to test their side effects
 let mockRouterEvents = [];
 jest.mock("next/router", () => ({
@@ -14,7 +12,6 @@ jest.mock("next/router", () => ({
 
 import { mount, shallow } from "enzyme";
 import { App } from "../../src/pages/_app";
-import { Auth } from "aws-amplify";
 import React from "react";
 import { act } from "react-dom/test-utils";
 
@@ -23,6 +20,8 @@ function render(customProps = {}, mountComponent = false) {
     {
       Component: () => <div />,
       pageProps: {},
+      authState: "signedIn",
+      authData: { attributes: { email: "mocked-header-user@example.com" } },
     },
     customProps
   );
@@ -40,64 +39,35 @@ describe("App", () => {
     mockRouterEvents = [];
   });
 
-  describe("when a user is authenticated", () => {
-    it("renders the site header with the authenticated user's info", async () => {
-      Auth.currentAuthenticatedUser.mockResolvedValueOnce({
-        attributes: {
-          email: "mocked-header-user@example.com",
-        },
-      });
-
+  describe("when a user IS authenticated", () => {
+    it("renders the site header with the authenticated user's info", () => {
       // We need to mount the component so that useEffect is called
       const mountComponent = true;
       const { wrapper } = render({}, mountComponent);
-
-      // We need to wait a hot second for async authentication and state update
-      await act(async () => {
-        await new Promise(resolve => setTimeout(resolve, 0));
-        wrapper.update();
-      });
 
       const header = wrapper.find("Header");
 
       expect(header.exists()).toBe(true);
       expect(header.prop("user")).toMatchInlineSnapshot(`
-      Object {
-        "username": "mocked-header-user@example.com",
-      }
-    `);
+        Object {
+          "username": "mocked-header-user@example.com",
+        }
+      `);
     });
   });
 
-  describe("when currentAuthenticatedUser throws an error", () => {
-    beforeAll(() => {
-      // Don't show a scary error in our log when it's expected
-      jest.spyOn(console, "error").mockImplementation(() => null);
-    });
+  describe("when a user is NOT authenticated", () => {
+    const authState = "signIn";
+    const authData = undefined;
+    const authProps = { authState, authData };
 
-    afterAll(() => {
-      console.error.mockRestore();
-    });
-
-    it("renders the site header without a user", async () => {
-      Auth.currentAuthenticatedUser.mockRejectedValueOnce(
-        Error("Mocked rejection")
-      );
-
-      // We need to mount the component so that useEffect is called
-      const mountComponent = true;
-      const { wrapper } = render({}, mountComponent);
-
-      // We need to wait a hot second for async authentication and state update
-      await act(async () => {
-        await new Promise(resolve => setTimeout(resolve, 0));
-        wrapper.update();
-      });
+    it("renders the site header without a user", () => {
+      const { wrapper } = render(authProps);
 
       const header = wrapper.find("Header");
 
       expect(header.exists()).toBe(true);
-      expect(header.prop("user")).toEqual({});
+      expect(header.prop("user")).toBeUndefined();
     });
   });
 
@@ -121,14 +91,6 @@ describe("App", () => {
   });
 
   describe("Router events", () => {
-    beforeEach(() => {
-      Auth.currentAuthenticatedUser.mockResolvedValueOnce({
-        attributes: {
-          email: "mocked-header-user@example.com",
-        },
-      });
-    });
-
     it("displays the spinner when a route change starts", async () => {
       expect.assertions(2);
 
