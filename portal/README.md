@@ -1,7 +1,12 @@
 # Portal for Mass PFML
 
-This is a [Next.js](https://nextjs.org/docs)-powered React app to bootstrap the Massachusetts Paid Family
-and Medical Leave Portal.
+This is a [Next.js](https://nextjs.org/docs)-powered React app to bootstrap the Massachusetts Paid Family and Medical Leave Portal.
+
+**You may also be interested in:**
+
+- [Setting up project tooling](../README.md)
+- [Development practices](../docs/contributing.md)
+- [Additional Portal-specific documentation](../docs/portal/)
 
 ## Environments
 
@@ -13,24 +18,38 @@ Node v10 (or greater)
 
 ## Env Configuration
 
-Non-secret environment configuration is stored in [infra/portal/config/](../infra/portal/config/) in files by env (`dev`, `test`, etc.). Variables shared across all environments are in [template](../infra/portal_config/template.js).
+Non-secret environment configuration is stored in [infra/portal/config/](../infra/portal/config/) in files by env (`dev`, `test`, etc.)
 
-## Run
+## Local development
 
-Run locally with:
+Install dependencies:
+
 ```
 npm install
+```
+
+Run the development server with live reloading:
+
+```
 npm run dev
 ```
 
-## Export for static serving
+## Build and Export the static site
 
-In deployed environments, this app is served as static pages. To build and export the site:
+In deployed environments, this app is served as static pages.
+
+To build and export the site:
 ```
 npm run build
 ```
 
-Serve using your favorite static server (e.g. [serve](https://www.npmjs.com/package/serve)) by passing in the static file directory `out` and an optional port flag (it defaults to `5000`):
+To run the exported site:
+
+```
+npm start
+```
+
+Or serve using your favorite static server (e.g. [serve](https://www.npmjs.com/package/serve)) by passing in the static file directory `out` and an optional port flag (it defaults to `5000`):
 ```
 serve out -p 8000
 ```
@@ -40,19 +59,19 @@ Or navigating to that directory:
 cd out && serve
 ```
 
-## Local commands
+## Additional commands
 
-### `npm run components`
+### `npm run docs`
 
 Run the UI component explorer sandbox, [Storybook](https://storybook.js.org/). A new browser window should automatically open with the explorer loaded once this script has completed running. It may take a minute or so to load on initial run.
 
 ### `npm test`
 
-Runs the project's [test suite](../docs/tests.md).
+Runs the project's [test suite](../docs/portal/tests.md).
 
 ### `npm run test:update-snapshot`
 
-Updates _all_ [Jest snapshots](../docs/tests.md#Snapshot%20tests), accepting any updates as expected changes.
+Updates _all_ [Jest snapshots](../docs/portal/tests.md#Snapshot%20tests), accepting any updates as expected changes.
 
 ### `npm run test:watch`
 
