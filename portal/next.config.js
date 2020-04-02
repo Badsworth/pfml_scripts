@@ -16,4 +16,26 @@ module.exports = {
       ],
     },
   },
+  webpack: function (webpackConfig) {
+    // Include our polyfills before all other code
+    // See: https://github.com/zeit/next.js/tree/master/examples/with-polyfills
+    const originalEntry = webpackConfig.entry;
+
+    webpackConfig.entry = async () => {
+      const entries = await originalEntry();
+      const mainEntryFilename = "main.js";
+      const polyfillsPath = "./src/polyfills.js";
+
+      if (
+        entries[mainEntryFilename] &&
+        !entries[mainEntryFilename].includes(polyfillsPath)
+      ) {
+        entries[mainEntryFilename].unshift(polyfillsPath);
+      }
+
+      return entries;
+    };
+
+    return webpackConfig;
+  },
 };

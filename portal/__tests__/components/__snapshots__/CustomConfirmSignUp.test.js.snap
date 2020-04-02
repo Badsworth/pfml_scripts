@@ -53,6 +53,7 @@ exports[`CustomConfirmSignUp renders the page 1`] = `
             style={
               Object {
                 "backgroundColor": "#14558f",
+                "color": "#fff",
                 "fontSize": "1.21rem",
                 "fontWeight": "bold",
                 "padding": "0.75rem 1.25rem",

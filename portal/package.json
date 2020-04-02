@@ -20,6 +20,7 @@
     "aws-amplify": "^2.2.7",
     "aws-amplify-react": "^3.1.8",
     "classnames": "^2.2.6",
+    "core-js": "^3.6.4",
     "i18next": "^19.1.0",
     "lodash": "^4.17.15",
     "prop-types": "^15.7.2",

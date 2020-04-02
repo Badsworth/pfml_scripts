@@ -37,6 +37,7 @@ const theme = {
   },
   button: {
     backgroundColor: tokens["color-primary"],
+    color: "#fff",
     fontSize: tokens["body-font-size"],
     fontWeight: "bold",
     padding: "0.75rem 1.25rem",
