@@ -10,6 +10,13 @@ When initially setting up the project, install packages from the repo root to en
 npm install
 ```
 
+To ensure terraform (infra) files are linted, install terraform. The best way to manage terraform versions is with [Terraform Version Manager](https://github.com/tfutils/tfenv).
+
+```
+$ brew install tfenv
+$ tfenv install 0.12.20
+```
+
 ## Portal
 
 ### Prerequisites

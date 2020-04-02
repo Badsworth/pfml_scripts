@@ -65,12 +65,7 @@ export AWS_PROFILE=nava-internal
 
 ### Install Terraform
 
-You'll also need terraform 0.12.20+. The best way to manage terraform versions is with [Terraform Version Manager](https://github.com/tfutils/tfenv).
-
-```
-$ brew install tfenv
-$ tfenv install 0.12.20
-```
+Refer to the root-level [README](../README.md) for instructions on installing terraform.
 
 ### Optionally install NPM dependencies
 

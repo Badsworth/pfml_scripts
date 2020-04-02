@@ -5,7 +5,8 @@
   "scripts": {
     "lint:js": "eslint --ext .js",
     "lint:js:all": "npm run lint:js -- ./",
-    "lint": "npm run lint:js:all"
+    "lint:tf": "./bin/tf-fmt.sh",
+    "lint": "npm run lint:js:all && npm run lint:tf"
   },
   "devDependencies": {
     "babel-eslint": "^10.0.3",
@@ -31,6 +32,10 @@
     "*.{js,jsx}": [
       "prettier --write",
       "eslint --fix",
+      "git add"
+    ],
+    "*.{tf,tfvars}": [
+      "npm run lint:tf",
       "git add"
     ]
   }
