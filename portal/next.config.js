@@ -2,10 +2,14 @@ const path = require("path");
 
 const buildEnv = process.env.BUILD_ENV || "dev";
 const envVariables = require("./../infra/portal/config/" + buildEnv);
+const featureFlags = require("./config/featureFlags")(buildEnv);
 
 module.exports = {
+  // In our code, we can reference environment variables from process.env
+  // https://nextjs.org/docs/api-reference/next.config.js/environment-variables
   env: {
     ...envVariables,
+    featureFlags,
   },
   exportTrailingSlash: true,
   experimental: {

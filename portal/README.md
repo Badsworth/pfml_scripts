@@ -83,6 +83,8 @@ Below is an abbreviated representation of our directory structure, pointing out 
 
 ```
 ├── __tests__           Test suites
+├── config
+|   └── featureFlags.js Default feature flag values for each environment
 ├── public              Static assets
 ├── src                 Source code
 |   ├── actions
