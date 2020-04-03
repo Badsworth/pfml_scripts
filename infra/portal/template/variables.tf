@@ -12,7 +12,7 @@ variable "cognito_extra_logout_urls" {
 
 variable "cognito_use_ses_email" {
   description = "Whether Cognito should use an SES email sender (true) or the default Cognito email sender which includes various throttles (false)"
-  type = bool
+  type        = bool
 }
 
 variable "cognito_sender_email" {
