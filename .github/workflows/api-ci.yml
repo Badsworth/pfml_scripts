@@ -9,6 +9,7 @@ on:
 
 env:
   working-dir: ./api
+  CI: true
 
 jobs:
 
@@ -19,20 +20,12 @@ jobs:
     steps:
     - uses: actions/checkout@v2
 
-    # Setup python and dependencies without Docker
-    # since we're running static checks.
-    - uses: actions/setup-python@v1
-      with:
-        python-version: '3.8'
-
-    - name: Install poetry
-      run: pip install poetry
-
-    - name: Install dependencies
-      run: make deps
+    # for efficiency, spin up the container once and run commands in the same
+    # environment, instead of starting and stopping the container for each step
+    - name: build and start container
+      run: make start
       working-directory: ${{ env.working-dir }}
 
-    # Run checks
     - name: format-check
       run: make format-check
       working-directory: ${{ env.working-dir }}
@@ -48,13 +41,10 @@ jobs:
     steps:
     - uses: actions/checkout@v2
 
-    - name: build and test
-      # Use -T to avoid making a pseudo-TTY, since docker-compose makes a real TTY by default.
-      # -T is needed for Github Actions to work properly with its version of docker-compose.
-      run: >
-        docker-compose build --build-arg RUN_USER=$USER --build-arg RUN_UID=$(id -u)
+    - name: build and start container
+      run: make start
+      working-directory: ${{ env.working-dir }}
 
-        docker-compose run -T -u $USER --rm mass-pfml-api sh -c
-        "poetry run coverage run --branch --source=massgov -m pytest &&
-        poetry run coverage report"
+    - name: test
+      run: make test
       working-directory: ${{ env.working-dir }}

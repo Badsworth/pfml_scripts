@@ -1,3 +1,25 @@
+# Use -T to avoid making a pseudo-TTY, since docker-compose makes a real TTY by
+# default. -T is needed for Github Actions to work properly with its version of
+# docker-compose.
+ifdef CI
+	DOCKER_EXEC_ARGS := -T
+endif
+
+# For running Python things in the local environment (which could be when running inside a Docker container)
+PY_RUN_CMD_POETRY := poetry run
+# For running Python things in Docker, as one-off processes, starting container if needed
+PY_RUN_CMD_DOCKER_RUN := docker-compose run $(DOCKER_EXEC_ARGS) --rm mass-pfml-api poetry run
+# For running Python things in a running Docker container
+PY_RUN_CMD_DOCKER_EXEC := docker-compose exec $(DOCKER_EXEC_ARGS) mass-pfml-api poetry run
+
+ifdef CI
+	PY_RUN_CMD_OPT ?= DOCKER_EXEC
+else
+	PY_RUN_CMD_OPT ?= POETRY
+endif
+
+PY_RUN_CMD := $(PY_RUN_CMD_$(PY_RUN_CMD_OPT))
+
 # Docker user configuration
 #
 # Can be set by adding user=<username> and/ or uid=<id> to make command.
@@ -31,7 +53,7 @@ clean: ## Remove intermediate, cache, or build artifacts
 	find . -type d -name __pycache__ -exec rm -rv {} +
 	rm -rf massgov.egg-info
 	rm -rf dist
-	-poetry run coverage erase # takes care of .coverage file
+	-$(PY_RUN_CMD) coverage erase # takes care of .coverage file
 	rm -rf .coverage_report
 	rm -f .testmondata
 
@@ -48,15 +70,15 @@ deps: ## Install dependencies
 	poetry install --no-root
 
 format: ## Format code
-	poetry run isort --atomic --apply
-	poetry run black .
+	$(PY_RUN_CMD) isort --atomic --apply
+	$(PY_RUN_CMD) black .
 
 format-check: ## Check format of code
-	poetry run isort --atomic --check-only
-	poetry run black . --check
+	$(PY_RUN_CMD) isort --atomic --check-only
+	$(PY_RUN_CMD) black . --check
 
 lint: ## Run linting
-	poetry run flake8 .
+	$(PY_RUN_CMD) flake8 .
 
 login: start ## Start shell in running container
 	docker exec -it mass-pfml-api sh
@@ -77,11 +99,11 @@ run: ## Run docker-compose
 run: start logs
 
 test: ## Run tests
-	poetry run coverage run --branch --source=massgov -m pytest
-	poetry run coverage report
+	$(PY_RUN_CMD) coverage run --branch --source=massgov -m pytest
+	$(PY_RUN_CMD) coverage report
 
 test-changed: ## Run only tests that have changed
-	poetry run python -m pytest --testmon
+	$(PY_RUN_CMD) python -m pytest --testmon
 
 # Get open command for Linux/Mac
 UNAME_S := $(shell uname -s)
@@ -93,8 +115,8 @@ ifeq ($(UNAME_S),Darwin)
 endif
 
 test-coverage-report: ## Open HTML test coverage report
-	poetry run coverage html --directory .coverage_report
+	$(PY_RUN_CMD) coverage html --directory .coverage_report
 	$(OPEN_CMD) .coverage_report/index.html
 
 test-watch: ## Watch and run tests on file changes
-	poetry run pytest-watch --runner "make test-changed"
+	$(PY_RUN_CMD) pytest-watch --runner "make test-changed"

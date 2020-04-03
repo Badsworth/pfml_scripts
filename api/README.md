@@ -4,26 +4,38 @@ This is the API for the Massachusetts Paid Family and Medical Leave program.
 
 ## Setup
 
-Docker is used for local development environment.
+### Docker
 
-### Dependencies
+Docker can be used for a local development environment. It sets up Python,
+Poetry and installs development dependencies automatically.
 
-Poetry is used to manage python library dependencies:
-- Install at least Python 3.8.
-[pyenv](https://github.com/pyenv/pyenv#installation) is one popular option for installing Python.
-- After installing and activating the right version of Python, install
-[poetry](https://python-poetry.org/docs/#installation).
+#### Configuration
 
-### Configuration
+Environment variables for the app are under `services.mass-pfml-api.environment`
+in the `docker-compose.yml` file.
 
-Environment variables for the app are under `services.mass-pfml-api.environment` in the `docker-compose.yml` file.
+If you want to run various Python and development `make` commands (linting,
+tests, etc.) from the host, but have them run in the Docker environment, you
+should set `PY_RUN_CMD_OPT` to either `DOCKER_RUN` or `DOCKER_EXEC`, see the
+option descriptions in the `Makefile`.
 
-### Run
+If you intend to login to the Docker environment and run development `make`
+commands, you can leave `PY_RUN_CMD_OPT` on it's default of `POETRY`.
+
+If you will mix and match running things, well, you'll have to juggle
+`PY_RUN_CMD_OPT` yourself, e.g., `PY_RUN_CMD_OPT=POETRY make lint`. Might in the
+future add some auto-detection of if we are running inside the container or not.
+
+#### Run
 
 Start the API
-
 ```sh
-make run
+make start
+```
+
+Login to the container, where you can run development tools
+```sh
+make login
 ```
 
 Rebuild after code or dependency change
@@ -35,6 +47,22 @@ Stop running docker containers
 ```sh
 make stop
 ```
+
+### Native
+
+To setup a development environment outside of Docker requires installing a few
+things.
+
+#### Dependencies
+
+- Install at least Python 3.8.
+  [pyenv](https://github.com/pyenv/pyenv#installation) is one popular option for
+  installing Python.
+- After installing and activating the right version of Python, install
+  [poetry](https://python-poetry.org/docs/#installation).
+- Then run `make deps` to install Python dependencies and development tooling.
+
+You should now be set up to run things natively.
 
 ## Try it out
 
