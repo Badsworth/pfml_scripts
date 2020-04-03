@@ -8,12 +8,14 @@ const flagsConfig = {
   // Environments will fallback to these default values.
   defaults: {
     example: false,
+    enableCreateClaimFlow: false,
   },
   // Environments can optionally override a default feature flag below.
   // The environment keys should use the same envName defined in
   // environment config files.
   dev: {
     example: true,
+    enableCreateClaimFlow: true,
   },
   test: {},
 };

@@ -19,20 +19,32 @@ const pages = {
       ssnSectionLabel: "What’s your Social Security Number?",
       title: "Tell us about yourself",
     },
+    index: {
+      eligibilityCheckInfoHeader: "How it works",
+      eligibilityCheckInfoNameAndNumber:
+        "We need your full legal name and Social Security Number or Individual Tax Identification Number to find you in our records.",
+      eligibilityCheckInfoUseToDetermineEligibility:
+        "We'll use this information to determine if you're eligible for paid leave.",
+      eligibilityCheckInfoVerifyEmploymentEarnings:
+        "You will verify a summarized employment history and earnings from the past 12 months.",
+      eligibilityCheckTimeEstimation: "This should take less than 5 minutes.",
+      financialRequirementStatement:
+        "Before you can create a claim, we need to see if you meet the financial requirements to take paid leave.",
+      pageHeader: "Check your eligibility to take leave",
+      startButtonText: "Start",
+    },
   },
   index: {
-    eligibilityCheckInfoHeader: "How it works",
-    eligibilityCheckInfoNameAndNumber:
-      "We need your full legal name and Social Security Number or Individual Tax Identification Number to find you in our records.",
-    eligibilityCheckInfoUseToDetermineEligibility:
-      "We'll use this information to determine if you're eligible for paid leave.",
-    eligibilityCheckInfoVerifyEmploymentEarnings:
-      "You will verify a summarized employment history and earnings from the past 12 months.",
-    eligibilityCheckTimeEstimation: "This should take less than 5 minutes.",
-    financialRequirementStatement:
-      "Before you can create a claim, we need to see if you meet the financial requirements to take paid leave.",
-    pageHeader: "Checking your eligibility to take leave",
-    startButtonText: "Start",
+    claimChecklistContact: "Contact information",
+    claimChecklistDateOfLeave:
+      "When you are taking leave or planning to take leave",
+    claimChecklistEmployment: "Employment information",
+    claimChecklistHeader:
+      "To submit your claim, you will need to provide the following:",
+    claimChecklistReasonForLeave: "Why you are taking leave",
+    claimChecklistWhereToSendBenefits: "Where to send your benefits",
+    createClaimButtonText: "Create a claim",
+    pageHeader: "Get started",
   },
 };
 

@@ -39,6 +39,7 @@ npm run dev
 In deployed environments, this app is served as static pages.
 
 To build and export the site:
+
 ```
 npm run build
 ```
@@ -50,11 +51,13 @@ npm start
 ```
 
 Or serve using your favorite static server (e.g. [serve](https://www.npmjs.com/package/serve)) by passing in the static file directory `out` and an optional port flag (it defaults to `5000`):
+
 ```
 serve out -p 8000
 ```
 
 Or navigating to that directory:
+
 ```
 cd out && serve
 ```
@@ -69,7 +72,7 @@ Run the UI component explorer sandbox, [Storybook](https://storybook.js.org/). A
 
 Runs the project's [test suite](../docs/portal/tests.md).
 
-### `npm run test:update-snapshot`
+### `npm run test:update-snapshots`
 
 Updates _all_ [Jest snapshots](../docs/portal/tests.md#Snapshot%20tests), accepting any updates as expected changes.
 

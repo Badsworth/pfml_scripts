@@ -3,36 +3,31 @@
 exports[`Index renders the page 1`] = `
 <Fragment>
   <Title>
-    Checking your eligibility to take leave
+    Get started
   </Title>
-  <Lead>
-    Before you can create a claim, we need to see if you meet the financial requirements to take paid leave.
-  </Lead>
-  <Lead>
-    This should take less than 5 minutes.
-  </Lead>
   <Heading
-    level="2"
+    level="3"
   >
-    How it works
+    To submit your claim, you will need to provide the following:
   </Heading>
   <ul
     className="usa-list"
   >
     <li>
-      We need your full legal name and Social Security Number or Individual Tax Identification Number to find you in our records.
+      Contact information
     </li>
     <li>
-      You will verify a summarized employment history and earnings from the past 12 months.
+      Employment information
     </li>
     <li>
-      We'll use this information to determine if you're eligible for paid leave.
+      Why you are taking leave
+    </li>
+    <li>
+      When you are taking leave or planning to take leave
+    </li>
+    <li>
+      Where to send your benefits
     </li>
   </ul>
-  <ButtonLink
-    href="/eligibility/employee-info"
-  >
-    Start
-  </ButtonLink>
 </Fragment>
 `;

@@ -1,8 +1,8 @@
 import ButtonLink from "../components/ButtonLink";
 import Heading from "../components/Heading";
-import Lead from "../components/Lead";
 import React from "react";
 import Title from "../components/Title";
+import isFeatureEnabled from "../utils/isFeatureEnabled";
 import { useTranslation } from "react-i18next";
 
 /**
@@ -16,21 +16,22 @@ const Index = () => {
   return (
     <React.Fragment>
       <Title>{t("pages.index.pageHeader")}</Title>
-      <Lead>{t("pages.index.financialRequirementStatement")}</Lead>
-      <Lead>{t("pages.index.eligibilityCheckTimeEstimation")}</Lead>
 
-      <Heading level="2">{t("pages.index.eligibilityCheckInfoHeader")}</Heading>
+      <Heading level="3">{t("pages.index.claimChecklistHeader")}</Heading>
 
       <ul className="usa-list">
-        <li>{t("pages.index.eligibilityCheckInfoNameAndNumber")}</li>
-        <li>{t("pages.index.eligibilityCheckInfoVerifyEmploymentEarnings")}</li>
-        <li>
-          {t("pages.index.eligibilityCheckInfoUseToDetermineEligibility")}
-        </li>
+        <li>{t("pages.index.claimChecklistContact")}</li>
+        <li>{t("pages.index.claimChecklistEmployment")}</li>
+        <li>{t("pages.index.claimChecklistReasonForLeave")}</li>
+        <li>{t("pages.index.claimChecklistDateOfLeave")}</li>
+        <li>{t("pages.index.claimChecklistWhereToSendBenefits")}</li>
       </ul>
-      <ButtonLink href="/eligibility/employee-info">
-        {t("pages.index.startButtonText")}
-      </ButtonLink>
+      {isFeatureEnabled("enableCreateClaimFlow") && (
+        // TO-DO: Update the href link when the next claims flow page exist
+        <ButtonLink href="/eligibility/employee-info">
+          {t("pages.index.createClaimButtonText")}
+        </ButtonLink>
+      )}
     </React.Fragment>
   );
 };
