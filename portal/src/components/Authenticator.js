@@ -42,7 +42,7 @@ const signUpConfig = {
 /**
  * Wraps children components in an Amplify Authenticator so that children are only displayed when the user is logged in. If a user isn't logged in then they'll be presented with an Amplify sign-in/sign-up page.
  */
-const Authenticator = props => {
+const Authenticator = (props) => {
   // Embeds props.children inside an Amplify Authenticator component and only renders those children if the user is signed in (authState === 'signedIn')
   return (
     <AmplifyAuthenticator
@@ -91,7 +91,7 @@ Authenticator.propTypes = {
 /*
  * Internal component which conditionally renders when the user is authenticated
  */
-const AuthenticatedWrapper = props => {
+const AuthenticatedWrapper = (props) => {
   return (
     <React.Fragment>
       {props.authState === "signedIn" ? props.children : null}

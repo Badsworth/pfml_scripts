@@ -4,7 +4,6 @@
   "description": "Mass PFML Portal",
   "main": "index.js",
   "scripts": {
-    "postinstall": "sh ./scripts/remove-amplify-css-in-js.sh",
     "dev": "next",
     "docs": "start-storybook -p 6006 -s ./public --docs",
     "build": "next build && next export",
@@ -17,8 +16,8 @@
   },
   "dependencies": {
     "@massds/mayflower-tokens": "^1.4.2",
-    "aws-amplify": "^2.2.7",
-    "aws-amplify-react": "^3.1.8",
+    "aws-amplify": "^3.0.5",
+    "aws-amplify-react": "^4.1.3",
     "classnames": "^2.2.6",
     "core-js": "^3.6.4",
     "i18next": "^19.1.0",
