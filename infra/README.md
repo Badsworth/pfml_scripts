@@ -47,7 +47,11 @@ These steps are required before running terraform commands locally on your machi
 
 ### Configure AWS
 
-Since we manage AWS resources using Terraform, AWS credentials are needed to run terraform commands. You'll need a `~/.aws/credentials` file with the following stanza:
+Since we manage AWS resources using Terraform, AWS credentials are needed to run terraform commands. 
+
+#### Nava Sandbox
+
+For the Nava AWS sandbox, you'll need a `~/.aws/credentials` file with the following stanza:
 
 ```yml
 [nava-internal]
@@ -61,6 +65,91 @@ You'll also need to set your AWS_PROFILE environment variable to `nava-internal`
 
 ```
 export AWS_PROFILE=nava-internal
+```
+
+#### EOTSS/PFML AWS Account
+
+For the EOTSS-provided PFML account, access to the AWS CLI is federated by Centrify. To work with this, Centrify has a python CLI tool for logging in and generating AWS access keys.
+
+PFML has a wrapper command around this CLI tool. By default, we install it as `login-aws`, but you can provide your own when prompted.
+
+Install the CLI wrapper with the following script:
+
+```sh
+../bin/install-centrify-aws-cli.sh INSTALL_LOCATION
+```
+
+Since this pulls down a git repository, it is recommended that the installation location you provide is your general git home, if you have one. For example:
+
+```sh
+../bin/install-centrify-aws-cli.sh ~/code/git
+````
+
+Once it is installed, you can run the login-aws command to generate a 1-hour AWS access key:
+
+```sh
+login-aws
+```
+
+<details>
+<summary>Example login:</summary>
+<p>
+
+```
+Logfile - centrify-python-aws.log
+Please enter your username : kevin.yeh
+Password :
+OATH OTP Client :
+Select the aws app to login. Type 'quit' or 'q' to exit
+1 : EOLWD - PFML | aad65420-6a79-412a-9aa1-587c1091d194
+Calling app with key : aad65420-6a79-412a-9aa1-587c1091d194
+--------------------------------------------------------------------------------
+
+Select a role to login. Choose one role at a time. This
+selection might be displayed multiple times to facilitate
+multiple profile creations.
+Type 'q' to exit.
+
+Please choose the role you would like to assume -
+1: arn:aws:iam::498823821309:role/AWS-498823821309-CloudOps-Engineer
+Selecting above role.
+You Chose :  arn:aws:iam::498823821309:role/AWS-498823821309-CloudOps-Engineer
+Your SAML Provider :  arn:aws:iam::498823821309:saml-provider/Centrify
+home = /Users/kyeah
+Display Name : EOLWD - PFML
+
+--------------------------------------------------------------------------------
+Your profile is created. It will expire at 2020-04-03 15:30:35+00:00
+Use --profile AWS-498823821309-Infrastructure-Admin_profile for the commands
+Example -
+aws s3 ls --profile AWS-498823821309-Infrastructure-Admin_profile
+--------------------------------------------------------------------------------
+
+AWS_PROFILE is currently: default. Run the following command to set it:
+export AWS_PROFILE=AWS-498823821309-Infrastructure-Admin_profile
+```
+
+</p>
+</details>
+
+For convenience, it is recommended that you export AWS_PROFILE or set an alias 
+in your startup script to easily set/select the profile in any shell.
+
+```sh
+#.zshrc
+export AWS_PROFILE=AWS-498823821309-Infrastructure-Admin_profile
+```
+
+or
+
+```sh
+alias aws-eotss="export AWS_PROFILE=AWS-498823821309-Infrastructure-Admin_profile"
+```
+
+Note that this role will be different for full-access roles, e.g.
+
+```sh
+export AWS_PROFILE=AWS-498823821309-CloudOps-Engineer_profile
 ```
 
 ### Install Terraform
