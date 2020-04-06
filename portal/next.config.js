@@ -1,5 +1,3 @@
-const path = require("path");
-
 const buildEnv = process.env.BUILD_ENV || "dev";
 const envVariables = require("./../infra/portal/config/" + buildEnv);
 const featureFlags = require("./config/featureFlags")(buildEnv);
@@ -12,14 +10,6 @@ module.exports = {
     featureFlags,
   },
   exportTrailingSlash: true,
-  experimental: {
-    sassOptions: {
-      includePaths: [
-        path.resolve(__dirname, "node_modules/uswds/dist/scss"),
-        path.resolve(__dirname, "node_modules"),
-      ],
-    },
-  },
   webpack: function (webpackConfig) {
     // Include our polyfills before all other code
     // See: https://github.com/zeit/next.js/tree/master/examples/with-polyfills

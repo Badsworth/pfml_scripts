@@ -12,7 +12,7 @@ https://designsystem.digital.gov/design-tokens/typesetting/font-family/
  Set $assets-path to form the correct url references in your project to the parent folder of the fonts/ folder, based on the location of the compiled css.
 */
 $assets-path: "~@massds/mayflower-tokens/dist";
-@import "@massds/mayflower-tokens/dist/scss/fonts";
+@import "~@massds/mayflower-tokens/dist/scss/fonts";
 
 $theme-typeface-tokens: (
   texta: (

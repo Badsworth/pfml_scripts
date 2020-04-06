@@ -28,14 +28,7 @@ module.exports = {
 
     config.module.rules.push({
       test: /\.scss$/,
-      use: [
-        "style-loader",
-        "css-loader",
-        {
-          loader: "sass-loader",
-          options: nextConfig.sassLoaderOptions,
-        },
-      ],
+      use: ["style-loader", "css-loader", "sass-loader"],
       include: path.resolve(__dirname, "../"),
     });
 
