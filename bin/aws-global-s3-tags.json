@@ -1,0 +1,14 @@
+{
+   "TagSet": [
+     { "Key": "businessowner", "Value": "kevin@mass.gov" },
+     { "Key": "createdby", "Value": "kevin@mass.gov" },
+     { "Key": "itowner", "Value": "kevin@mass.gov" },
+     { "Key": "environment", "Value": "prod" },
+     { "Key": "agency", "Value": "itd" },
+     { "Key": "application", "Value": "coreinf" },
+     { "Key": "public", "Value": "no" },
+     { "Key": "secretariat", "Value": "eolwd" },
+     { "Key": "Name", "Value": "pfml-global" },
+     { "Key": "dataclassification", "Value": "na" }
+   ]
+}
