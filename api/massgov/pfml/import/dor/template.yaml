@@ -1,0 +1,15 @@
+AWSTemplateFormatVersion : '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Mass PFML - Import Department of Revenue Data
+
+Globals:
+  Function:
+    Timeout: 900
+
+Resources:
+  ImportFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: lambda/
+      Handler: import_dor.handler
+      Runtime: python3.8
