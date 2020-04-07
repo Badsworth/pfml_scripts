@@ -52,6 +52,9 @@ const components = {
   authNav: {
     logOutButtonText: "Log out",
   },
+  authenticator: {
+    errorHeading: "Please fix the following errors",
+  },
   confirmSignUp: {
     codeLabel: "Six-digit code",
     confirmButton: "Submit",

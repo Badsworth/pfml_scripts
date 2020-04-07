@@ -8,12 +8,14 @@ import {
   TOTPSetup,
   VerifyContact,
 } from "aws-amplify-react";
+import React, { useEffect, useRef, useState } from "react";
+import Alert from "./Alert";
 import Amplify from "aws-amplify";
 import CustomConfirmSignUp from "./CustomConfirmSignUp";
 import CustomSignUp from "./CustomSignUp";
 import PropTypes from "prop-types";
-import React from "react";
 import theme from "../utils/amplifyTheme";
+import { useTranslation } from "react-i18next";
 
 Amplify.configure(process.env.awsConfig);
 
@@ -40,18 +42,80 @@ const signUpConfig = {
 };
 
 /**
- * Wraps children components in an Amplify Authenticator so that children are only displayed when the user is logged in. If a user isn't logged in then they'll be presented with an Amplify sign-in/sign-up page.
+ * Wraps children components in an Amplify Authenticator so that children are
+ * only displayed when the user is logged in. If a user isn't logged in then
+ * they'll be presented with an Amplify sign-in/sign-up page.
  */
 const Authenticator = (props) => {
-  // Embeds props.children inside an Amplify Authenticator component and only renders those children if the user is signed in (authState === 'signedIn')
+  const [amplifyError, setAmplifyError] = useState();
+  const alertRef = useRef();
+  const { t } = useTranslation();
+
+  /**
+   * When an Amplify error is thrown, change the active focus to the error
+   * message element so that screen readers read its contents
+   */
+  useEffect(() => {
+    if (amplifyError) {
+      alertRef.current.focus();
+    }
+  }, [amplifyError]);
+
+  /**
+   * Custom Amplify error message handler. This allows us to internationalize
+   * the messages and display a custom (more accessible) alert component.
+   * @param {string} message - error message returned by Amplify/Cognito
+   * @returns {string} message displayed to the user, Amplify still requires this
+   * to function, even though we're hiding its implementation in the UI
+   */
+  const handleAmplifyError = (message) => {
+    // We create a new error object so that our useEffect identifies
+    // that the error has been triggered. This way, the alert is
+    // re-focused and re-read for screen readers even if the error
+    // message remained the same
+    setAmplifyError({ message });
+
+    return message;
+  };
+
+  /**
+   * AmplifyAuthenticator stateChange event handler
+   * @param {string} authState
+   * @param {object} authData
+   */
+  const handleAuthStateChange = (authState, authData) => {
+    // Clear any existing error messages when the screen changes
+    setAmplifyError();
+
+    if (props.handleAuthStateChange) {
+      // Pass the updated auth state back to our parent component
+      props.handleAuthStateChange(authState, authData);
+    }
+  };
+
+  // Embeds props.children inside an Amplify Authenticator component and only
+  // renders those children if the user is signed in (authState === 'signedIn')
   return (
     <AmplifyAuthenticator
-      onStateChange={props.handleAuthStateChange}
+      errorMessage={handleAmplifyError}
+      onStateChange={handleAuthStateChange}
       theme={theme}
       hideDefault
       authState={props.authState}
       authData={props.authData}
     >
+      {amplifyError ? (
+        <Alert
+          heading={t("components.authenticator.errorHeading")}
+          ref={alertRef}
+          role="alert"
+        >
+          {amplifyError.message}
+        </Alert>
+      ) : (
+        <React.Fragment />
+      )}
+
       <SignIn />
       <ConfirmSignIn />
       <VerifyContact />
@@ -63,6 +127,7 @@ const Authenticator = (props) => {
       <RequireNewPassword />
       <TOTPSetup />
       <Loading />
+
       <AuthenticatedWrapper children={props.children} />
     </AmplifyAuthenticator>
   );

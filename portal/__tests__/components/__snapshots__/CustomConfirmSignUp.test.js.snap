@@ -14,6 +14,7 @@ exports[`CustomConfirmSignUp renders the page 1`] = `
     className="Form__formSection___1PPvW"
     style={
       Object {
+        "background": "none",
         "boxShadow": "none",
         "maxWidth": 460,
         "paddingLeft": "0px",

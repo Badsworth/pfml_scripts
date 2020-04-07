@@ -5,10 +5,8 @@
  * our Mayflower-themed U.S. Web Design System implementation, which lives
  * in our .scss files.
  *
- * TODO: I don't like this, but it's the least fragile option
- * currently (see https://lwd.atlassian.net/browse/CP-146). In the future,
- * we should strive to create a source of truth for these design tokens, rather
- * than having some of them duplicated between our Sass files and this JS file.
+ * TODO: Override type and color styles by overriding Amplify CSS variables
+ * https://lwd.atlassian.net/browse/CP-247
  */
 const tokens = {
   "body-font-family": "Texta, Helvetica, sans-serif",
@@ -48,6 +46,7 @@ const theme = {
     textAlign: "left",
   },
   formSection: {
+    background: "none",
     boxShadow: "none",
     maxWidth: 460, // provide a bit more breathing room on desktop
     paddingLeft: "0px",
@@ -80,9 +79,10 @@ const theme = {
     fontWeight: "bold",
   },
   toast: {
-    background: tokens["color-info-darker"],
-    borderBottom: `${tokens["spacer-multiple"]} solid ${tokens["color-warning"]}`,
-    fontSize: tokens["body-font-size"],
+    // Toast component is used to display error messages, however its
+    // styling options are limited and its markup is inaccessible. We
+    // use our own error component, so we hide this component.
+    display: "none",
   },
 };
 
