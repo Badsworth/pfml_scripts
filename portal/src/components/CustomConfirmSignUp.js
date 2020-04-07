@@ -12,19 +12,19 @@ import i18next from "i18next";
 export default class CustomConfirmSignUp extends ConfirmSignUp {
   // when mocking instance methods, jest does not show the method
   // was called unless it's wrapped like this.
-  handleConfirm = event => {
+  handleConfirm = (event) => {
     event.preventDefault();
     this.confirm();
   };
 
-  handleResend = event => {
+  handleResend = (event) => {
     event.preventDefault();
     this.resend();
   };
 
   showComponent(theme) {
     return (
-      <div className={AmplifyUI.formContainer}>
+      <div className={AmplifyUI.formContainer} style={theme.formContainer}>
         <div className={AmplifyUI.formSection} style={theme.formSection}>
           <div className={AmplifyUI.sectionHeader}>
             <Title>{i18next.t("components.confirmSignUp.title")}</Title>

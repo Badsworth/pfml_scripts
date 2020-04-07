@@ -43,8 +43,14 @@ const theme = {
     padding: "0.75rem 1.25rem",
     textTransform: "none",
   },
+  formContainer: {
+    marginTop: "0px",
+    textAlign: "left",
+  },
   formSection: {
+    boxShadow: "none",
     maxWidth: 460, // provide a bit more breathing room on desktop
+    paddingLeft: "0px",
   },
   hint: {
     color: tokens["color-base"],

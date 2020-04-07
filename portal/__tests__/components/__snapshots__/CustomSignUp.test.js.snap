@@ -3,12 +3,20 @@
 exports[`CustomSignUp when signUpConfig prop has signupFields defined and hideAllDefaults set to true renders signUpFields from signUpConfig 1`] = `
 <div
   className="Form__formContainer___1GA3x"
+  style={
+    Object {
+      "marginTop": "0px",
+      "textAlign": "left",
+    }
+  }
 >
   <div
     className="Form__formSection___1PPvW"
     style={
       Object {
+        "boxShadow": "none",
         "maxWidth": 460,
+        "paddingLeft": "0px",
       }
     }
   >

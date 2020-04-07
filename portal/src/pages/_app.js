@@ -67,14 +67,14 @@ export const App = ({ Component, pageProps, authState, authData }) => {
   return (
     <Provider store={initializeStore()}>
       <Header user={user} />
-      <Authenticator
-        authState={authState}
-        authData={authData}
-        handleAuthStateChange={handleAuthStateChange}
-      >
-        <main id="main" className="grid-container margin-top-5 margin-bottom-8">
-          <div className="grid-row">
-            <div className="grid-col-fill">
+      <main id="main" className="grid-container margin-top-5 margin-bottom-8">
+        <div className="grid-row">
+          <div className="grid-col-fill">
+            <Authenticator
+              authState={authState}
+              authData={authData}
+              handleAuthStateChange={handleAuthStateChange}
+            >
               {ui.isLoadingRoute ? (
                 <div className="margin-top-8 text-center">
                   <Spinner aria-valuetext={t("components.spinner.label")} />
@@ -82,10 +82,10 @@ export const App = ({ Component, pageProps, authState, authData }) => {
               ) : (
                 <Component {...pageProps} />
               )}
-            </div>
+            </Authenticator>
           </div>
-        </main>
-      </Authenticator>
+        </div>
+      </main>
     </Provider>
   );
 };

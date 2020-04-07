@@ -27,7 +27,7 @@ export default class CustomSignUp extends SignUp {
     }
   }
 
-  handleSignUp = event => {
+  handleSignUp = (event) => {
     // when mocking SignUp.signUp, jest does not show the method
     // was called unless it's wrapped like this.
     event.preventDefault();
@@ -37,7 +37,7 @@ export default class CustomSignUp extends SignUp {
   showComponent() {
     const { theme } = this.props;
     return (
-      <div className={AmplifyUI.formContainer}>
+      <div className={AmplifyUI.formContainer} style={theme.formContainer}>
         <div className={AmplifyUI.formSection} style={theme.formSection}>
           <div className={AmplifyUI.sectionHeader}>
             <Title>{this.header}</Title>
