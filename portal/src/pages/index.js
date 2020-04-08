@@ -2,7 +2,6 @@ import ButtonLink from "../components/ButtonLink";
 import Heading from "../components/Heading";
 import React from "react";
 import Title from "../components/Title";
-import isFeatureEnabled from "../utils/isFeatureEnabled";
 import { useTranslation } from "react-i18next";
 
 /**
@@ -26,12 +25,11 @@ const Index = () => {
         <li>{t("pages.index.claimChecklistDateOfLeave")}</li>
         <li>{t("pages.index.claimChecklistWhereToSendBenefits")}</li>
       </ul>
-      {isFeatureEnabled("enableCreateClaimFlow") && (
-        // TO-DO: Update the href link when the next claims flow page exist
-        <ButtonLink href="/eligibility/employee-info">
-          {t("pages.index.createClaimButtonText")}
-        </ButtonLink>
-      )}
+
+      {/* TO-DO: Update the href link when the next claims flow page exist */}
+      <ButtonLink href="/eligibility/employee-info">
+        {t("pages.index.createClaimButtonText")}
+      </ButtonLink>
     </React.Fragment>
   );
 };

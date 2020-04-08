@@ -29,5 +29,10 @@ exports[`Index renders the page 1`] = `
       Where to send your benefits
     </li>
   </ul>
+  <ButtonLink
+    href="/eligibility/employee-info"
+  >
+    Create a claim
+  </ButtonLink>
 </Fragment>
 `;
