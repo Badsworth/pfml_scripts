@@ -5,6 +5,19 @@
  *
  */
 
+const errors = {
+  auth: {
+    emailAndPasswordRequired: "Enter your email address and password",
+    emailRequired: "Enter your email address",
+    incorrectEmailOrPassword: "Incorrect email or password",
+    invalidParametersFallback: "Please enter all required information",
+    invalidPhoneFormat: "Invalid phone number",
+    invalidVerificationCode: "Invalid verification code",
+    passwordRequired: "Enter your password",
+    verificationCodeRequired: "Enter the 6-digit code sent to your email",
+  },
+};
+
 const general = {
   // TODO(CP-143) correct phone number
   callCenterPhoneNumber: "(XXX) XXX-XXXX",
@@ -151,7 +164,7 @@ const components = {
 };
 
 const englishLocale = {
-  translation: Object.assign({}, { components, general, pages }),
+  translation: Object.assign({}, { components, errors, general, pages }),
 };
 
 export default englishLocale;

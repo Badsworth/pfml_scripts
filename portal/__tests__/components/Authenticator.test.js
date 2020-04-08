@@ -2,6 +2,9 @@ import { mount, shallow } from "enzyme";
 import Authenticator from "../../src/components/Authenticator";
 import React from "react";
 import { act } from "react-dom/test-utils";
+import customAmplifyErrorMessageKey from "../../src/utils/customAmplifyErrorMessageKey";
+
+jest.mock("../../src/utils/customAmplifyErrorMessageKey");
 
 const render = (props = {}, mountComponent = false) => {
   const App = <h1>App</h1>;
@@ -72,6 +75,34 @@ describe("Authenticator", () => {
 
       const alert = wrapper.find("Alert").getDOMNode();
       expect(document.activeElement).toBe(alert);
+    });
+
+    it("renders the customized Amplify error message", () => {
+      customAmplifyErrorMessageKey.mockReturnValueOnce(
+        "errors.auth.passwordRequired"
+      );
+      const wrapper = render();
+
+      const errorHandler = wrapper.prop("errorMessage");
+      errorHandler(
+        "customAmplifyErrorMessageKey is mocked so this string doesn't matter"
+      );
+
+      expect(wrapper.find("Alert").text()).toMatchInlineSnapshot(
+        `"Enter your password"`
+      );
+    });
+
+    it("falls back to the original Amplify error message", () => {
+      customAmplifyErrorMessageKey.mockReturnValueOnce(undefined);
+      const wrapper = render();
+
+      const errorHandler = wrapper.prop("errorMessage");
+      errorHandler("Original Amplify error message");
+
+      expect(wrapper.find("Alert").text()).toBe(
+        "Original Amplify error message"
+      );
     });
   });
 

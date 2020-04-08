@@ -14,6 +14,7 @@ import Amplify from "aws-amplify";
 import CustomConfirmSignUp from "./CustomConfirmSignUp";
 import CustomSignUp from "./CustomSignUp";
 import PropTypes from "prop-types";
+import customAmplifyErrorMessageKey from "../utils/customAmplifyErrorMessageKey";
 import theme from "../utils/amplifyTheme";
 import { useTranslation } from "react-i18next";
 
@@ -64,11 +65,18 @@ const Authenticator = (props) => {
   /**
    * Custom Amplify error message handler. This allows us to internationalize
    * the messages and display a custom (more accessible) alert component.
-   * @param {string} message - error message returned by Amplify/Cognito
+   * @param {string} message - user-facing error message returned by Amplify
    * @returns {string} message displayed to the user, Amplify still requires this
    * to function, even though we're hiding its implementation in the UI
    */
   const handleAmplifyError = (message) => {
+    const customMessageKey = customAmplifyErrorMessageKey(message);
+
+    // Fallback to the message Amplify/Cognito sent if we don't have a custom version.
+    // TODO: Track when a message isn't customized so we can catch when these change
+    // https://lwd.atlassian.net/browse/CP-261
+    message = customMessageKey ? t(customMessageKey) : message;
+
     // We create a new error object so that our useEffect identifies
     // that the error has been triggered. This way, the alert is
     // re-focused and re-read for screen readers even if the error
