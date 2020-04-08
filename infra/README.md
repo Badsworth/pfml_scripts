@@ -76,13 +76,13 @@ PFML has a wrapper command around this CLI tool. By default, we install it as `l
 Install the CLI wrapper with the following script:
 
 ```sh
-../bin/install-centrify-aws-cli.sh INSTALL_LOCATION
+../bin/centrify/install-centrify-aws-cli.sh INSTALL_LOCATION
 ```
 
 Since this pulls down a git repository, it is recommended that the installation location you provide is your general git home, if you have one. For example:
 
 ```sh
-../bin/install-centrify-aws-cli.sh ~/code/git
+../bin/centrify/install-centrify-aws-cli.sh ~/code/git
 ````
 
 Once it is installed, you can run the login-aws command to generate a 1-hour AWS access key:

@@ -15,7 +15,7 @@ set -euo pipefail
 USAGE="
 Usage: Sets up the Centrify AWS CLI script environment and creates a global login command.
 
-./install-centrify-aws-cli.sh [options] INSTALL_LOCATION
+./install-centrify-aws-cli.sh INSTALL_LOCATION
 
 args:
   INSTALL_LOCATION - The location to pull down the Centrify AWS CLI git repo and install the wrapper script.
