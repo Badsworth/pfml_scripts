@@ -73,6 +73,9 @@ const components = {
   authenticator: {
     errorHeading: "Please fix the following errors",
   },
+  backButton: {
+    label: "Back",
+  },
   confirmSignUp: {
     codeLabel: "Six-digit code",
     confirmButton: "Submit",
