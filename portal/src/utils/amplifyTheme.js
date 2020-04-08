@@ -68,6 +68,12 @@ const theme = {
     color: tokens["color-base-ink"],
     fontSize: tokens["body-font-size"],
   },
+  sectionFooter: {
+    flexDirection: "column",
+  },
+  sectionFooterPrimaryContent: {
+    margin: "0 0 16px",
+  },
   sectionFooterSecondaryContent: {
     color: tokens["color-base"],
     fontSize: tokens["body-font-size"],

@@ -50,8 +50,14 @@ export default class CustomConfirmSignUp extends ConfirmSignUp {
                 {i18next.t("components.confirmSignUp.resendCodeLink")}
               </button>
             </div>
-            <div className={AmplifyUI.sectionFooter}>
-              <div className={AmplifyUI.sectionFooterPrimaryContent}>
+            <div
+              className={AmplifyUI.sectionFooter}
+              style={theme.sectionFooter}
+            >
+              <div
+                className={AmplifyUI.sectionFooterPrimaryContent}
+                style={theme.sectionFooterPrimaryContent}
+              >
                 <button
                   name="submit"
                   type="submit"

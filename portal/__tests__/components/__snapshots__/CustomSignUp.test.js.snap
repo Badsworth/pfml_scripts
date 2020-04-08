@@ -54,9 +54,19 @@ exports[`CustomSignUp when signUpConfig prop has signupFields defined and hideAl
       </div>
       <div
         className="Section__sectionFooter___1T54C"
+        style={
+          Object {
+            "flexDirection": "column",
+          }
+        }
       >
         <div
           className="Section__sectionFooterPrimaryContent___2r9ZX"
+          style={
+            Object {
+              "margin": "0 0 16px",
+            }
+          }
         >
           <button
             className="Button__button___vS7Mv"
