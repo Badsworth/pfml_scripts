@@ -2,6 +2,9 @@ import connexion
 import flask
 
 import massgov.pfml.api.generate_fake_data as fake
+import massgov.pfml.util.logging
+
+logger = massgov.pfml.util.logging.get_logger(__name__)
 
 # since there is no DB connection, dictionary will hold all users
 users = {}
@@ -28,4 +31,5 @@ def users_post():
 
     # to simulate db, place user in dictionary so it can be fetched by id at GET /users
     users[user_id] = user
+    logger.info("created user", extra={"user_id": user_id})
     return user

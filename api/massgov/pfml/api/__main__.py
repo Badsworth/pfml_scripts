@@ -7,25 +7,26 @@
 #
 # https://docs.python.org/3/library/__main__.html
 
-import logging
 import sys
 
 import pytest
 
 import massgov.pfml.api
 import massgov.pfml.api.generate_fake_data as fake
+import massgov.pfml.util.logging
 
-logging.basicConfig(level=logging.INFO)
+logger = massgov.pfml.util.logging.get_logger(__package__)
 
 
 def main():
+    massgov.pfml.util.logging.init(__package__)
     start_server()
 
 
 def self_test():
-    logging.info("self test start")
+    logger.info("self test start")
     result = pytest.main(args=["--verbose"])
-    logging.info("self test done, result %r", result)
+    logger.info("self test done, result %r", result)
     if result != 0:
         sys.exit(result)
 
@@ -35,9 +36,8 @@ def start_server():
         app = massgov.pfml.api.create_app()
         create_fake_data()
         app.run(port=1550)
-    except Exception as e:
-        error_msg = "Server NOT started because of exception: %s" % (e)
-        logging.error(error_msg)
+    except Exception:
+        logger.exception("Server NOT started because of exception")
         raise
 
 

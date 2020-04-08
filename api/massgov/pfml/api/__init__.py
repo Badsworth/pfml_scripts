@@ -2,19 +2,21 @@
 # An API application using connexion.
 #
 
-import logging
 import os
 
 import connexion
 import connexion.mock
 
 import massgov.pfml.api.db as db
+import massgov.pfml.util.logging
 
 from .reverse_proxy import ReverseProxied
 
+logger = massgov.pfml.util.logging.get_logger(__name__)
+
 
 def create_app():
-    logging.info("Starting API ...")
+    logger.info("Starting API ...")
 
     # DB
     db.init_db()

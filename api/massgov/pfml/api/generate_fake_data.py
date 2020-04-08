@@ -3,6 +3,9 @@ import uuid
 
 from faker import Faker
 
+import massgov.pfml.util.logging
+
+logger = massgov.pfml.util.logging.get_logger(__name__)
 fake = Faker()
 
 # since there is no DB connection, using dictionaries to hold fake employee and wage data
@@ -132,4 +135,6 @@ def build_fake_data_dictionaries():
 
         wages[employee_id] = [fake_wages, fake_wages2, fake_wages3, fake_wages4]
 
-    return
+    logger.info(
+        "generated employers %i, employees %i, wages %i", len(employers), len(employees), len(wages)
+    )
