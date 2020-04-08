@@ -21,7 +21,7 @@ exports[`Ineligible renders Ineligible component 1`] = `
     Call the Paid Family Leave Contact Center
   </Heading>
   <p>
-    If you believe you have earned at least $5,100 as a Massachussets employee in the past 12 months, call the Paid Family Leave Contact Center at (888) 888-888. Then come back to create a claim.
+    If you believe you have earned at least $5,100 as a Massachusetts employee in the past 12 months, call the Paid Family Leave Contact Center at (XXX) XXX-XXXX. Then come back to create a claim.
   </p>
   <Heading
     level="3"
@@ -30,7 +30,7 @@ exports[`Ineligible renders Ineligible component 1`] = `
     Create a claim
   </Heading>
   <p>
-    If you need to begin tracking your claim right away, you cancreate a claim before you call the Contact Center.
+    If you need to begin tracking your claim right away, you can create a claim before you call the Contact Center.
   </p>
 </Fragment>
 `;

@@ -43,7 +43,7 @@ exports[`RecordNotFound renders RecordNotFound component 1`] = `
     Call the Paid Family Leave Center
   </Heading>
   <p>
-    If you believe you are eligible for this program, call the Paid Family Leave Contact Center at (888) 888-8888. Then come back to create a claim.
+    If you believe you are eligible for this program, call the Paid Family Leave Contact Center at (XXX) XXX-XXXX. Then come back to create a claim.
   </p>
   <DashboardButton />
 </Fragment>

@@ -5,6 +5,11 @@
  *
  */
 
+const general = {
+  // TODO(CP-143) correct phone number
+  callCenterPhoneNumber: "(XXX) XXX-XXXX",
+};
+
 const pages = {
   eligibility: {
     form: {
@@ -88,10 +93,10 @@ const components = {
   },
   ineligible: {
     option1Description:
-      "If you believe you have earned at least $5,100 as a Massachussets employee in the past 12 months, call the Paid Family Leave Contact Center at (888) 888-888. Then come back to create a claim.",
+      "If you believe you have earned at least $5,100 as a Massachusetts employee in the past 12 months, call the Paid Family Leave Contact Center at $t(general.callCenterPhoneNumber). Then come back to create a claim.",
     option1Heading: "Call the Paid Family Leave Contact Center",
     option2Description:
-      "If you need to begin tracking your claim right away, you cancreate a claim before you call the Contact Center.",
+      "If you need to begin tracking your claim right away, you can create a claim before you call the Contact Center.",
     option2Heading: "Create a claim",
     optionsHeading: "What are my options?",
     title: "Based on our records, you're not eligible",
@@ -99,7 +104,7 @@ const components = {
   recordNotFound: {
     contactPflcHeader: "Call the Paid Family Leave Center",
     contactPflcStatement:
-      "If you believe you are eligible for this program, call the Paid Family Leave Contact Center at $t(components.recordNotFound.pflcPhone). Then come back to create a claim.",
+      "If you believe you are eligible for this program, call the Paid Family Leave Contact Center at $t(general.callCenterPhoneNumber). Then come back to create a claim.",
     mainTitle: "We couldn't find you in our records",
     notContributingHeader: "You may not be contributing",
     notContributingStatement:
@@ -107,8 +112,6 @@ const components = {
     notFoundStatement:
       "We didn’t find your name and SSN together in our records. You’re not eligible to take paid leave without a matching record.",
     optionsHeader: "What are my options?",
-    // TODO(CP-143) correct phone number
-    pflcPhone: "(888) 888-8888",
     recordsIncorrectHeader:
       "Your information in our records might be incorrect",
     recordsIncorrectStatement:
@@ -148,7 +151,7 @@ const components = {
 };
 
 const englishLocale = {
-  translation: Object.assign({}, { components, pages }),
+  translation: Object.assign({}, { components, general, pages }),
 };
 
 export default englishLocale;
