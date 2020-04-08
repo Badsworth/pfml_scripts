@@ -1,10 +1,6 @@
-> As a PR creator, fill out the relevant sections below. Feel free to remove sections that you don't feel are relevant to this PR.
-
 ## 🎫 Ticket
 
-> Add a link to the ticket this PR is associated with.
->
-> [CP-X](https://lwd.atlassian.net/browse/CP-X)
+https://lwd.atlassian.net/browse/{TICKET NUMBER}
 
 ## 🛠 Changes
 
