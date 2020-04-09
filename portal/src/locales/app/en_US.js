@@ -100,6 +100,7 @@ const components = {
     title: "Your employer has their own paid leave plan",
   },
   form: {
+    continueButton: "Continue",
     optionalText: "(optional)",
     submitButtonText: "Submit",
   },

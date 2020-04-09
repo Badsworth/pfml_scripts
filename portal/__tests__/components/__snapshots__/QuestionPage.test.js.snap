@@ -1,0 +1,25 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`QuestionPage renders the form 1`] = `
+<Fragment>
+  <BackButton />
+  <form
+    className="usa-form usa-form--large"
+    onSubmit={[Function]}
+  >
+    <Title
+      small={true}
+    >
+      This is a question page
+    </Title>
+    <div>
+      Some stuff here
+    </div>
+    <input
+      className="usa-button"
+      type="submit"
+      value="Continue"
+    />
+  </form>
+</Fragment>
+`;
