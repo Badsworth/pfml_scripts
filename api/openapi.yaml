@@ -11,6 +11,8 @@ servers:
 paths:
   /status:
     get:
+      tags:
+      - Test Endpoints
       summary: Get the API status
       responses:
         "200":
@@ -25,9 +27,10 @@ paths:
                 example:
                   status: "ok"
                 
-    
   /users:
     post:
+      tags:
+      - Users
       summary: This endpoint allows a user to create new account
       operationId: massgov.pfml.api.users.users_post
       responses:
@@ -44,6 +47,8 @@ paths:
 
   /users/{user_id}:
     get:
+      tags:
+      - Users
       summary: This endpoint returns details about a user account
       operationId: massgov.pfml.api.users.users_get
       parameters:
@@ -65,6 +70,8 @@ paths:
 
   /all-fake-employees:
     get:
+      tags:
+      - Test Endpoints
       summary: FOR TEST PURPOSES ONLY. This endpoint provides all fake employees that were created at the start of the server.
       operationId: massgov.pfml.api.employees.employees_get_all_fake
       responses:
@@ -75,30 +82,18 @@ paths:
               schema:
                 $ref: "#/components/schemas/Employee"
 
-  /employees/government-id:
+  /employees/{employee_id}:
     get:
-      summary: This endpoint provides details about an employee and requires a header that contains a SSN/ITIN, and first and last name as query parameters.
+      tags:
+      - Employees
+      summary: This endpoint provides details about an employee.
       operationId: massgov.pfml.api.employees.employees_get
       parameters:
-        - name: first_name
-          in: query
+        - name: employee_id
+          in: path
           schema:
             type: string
-          description: Employee's first name
-          required: true
-        - name: last_name
-          in: query
-          schema:
-            type: string
-          description: Employee's last name
-          required: true
-        - name: ssn_or_itin
-          in: header
-          schema:
-            type: string
-            # minLength: 9
-            # maxLength: 9
-          description: Employee's ssn/itin
+          description: ID of an employee being fetched
           required: true
       responses:
         "200":
@@ -109,30 +104,9 @@ paths:
                 $ref: "#/components/schemas/Employee"
         "404":
             $ref: '#/components/responses/NotFound'
-
-  /employers/{employer_id}:
-    get:
-      summary: This endpoint provides details about an employer.
-      operationId: massgov.pfml.api.employers.employers_get
-      parameters:
-        - name: employer_id
-          in: path
-          schema:
-            type: string
-          description: Employer's id
-          required: true
-      responses:
-        "200":
-          description: A successful request returns a 200 status code and an employer object.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Employers"
-        "404":
-            $ref: '#/components/responses/NotFound'
-
-  /employees/{employee_id}:
     patch:
+      tags:
+      - Employees
       summary: This endpoint allows updates to an employee record, for mutable properties.
       operationId: massgov.pfml.api.employees.employees_patch
       parameters:
@@ -154,8 +128,52 @@ paths:
       requestBody:
         $ref: '#/components/requestBodies/EmployeeToUpdate'
 
+  /employees/search:
+    post:
+      tags:
+      - Employees
+      summary: This endpoint provides details about an employee and requires a request body that contains a SSN/ITIN, and first and last name.
+      operationId: massgov.pfml.api.employees.employees_search
+      responses:
+        "200":
+          description: A successful response returns a 200 status code and an employee object.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Employee"
+        "404":
+            $ref: '#/components/responses/NotFound'
+      requestBody:
+        $ref: '#/components/requestBodies/EmployeeToSearch'
+
+
+  /employers/{employer_id}:
+    get:
+      tags:
+      - Employers
+      summary: This endpoint provides details about an employer.
+      operationId: massgov.pfml.api.employers.employers_get
+      parameters:
+        - name: employer_id
+          in: path
+          schema:
+            type: string
+          description: Employer's id
+          required: true
+      responses:
+        "200":
+          description: A successful request returns a 200 status code and an employer object.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Employers"
+        "404":
+            $ref: '#/components/responses/NotFound'
+
   /wages:
     get:
+      tags:
+      - Wages
       summary: This endpoint provides wages and contributions for an employee, and requires employee_id as a query parameter.
       operationId: massgov.pfml.api.wages.wages_get
       parameters:
@@ -183,6 +201,8 @@ paths:
 
   /eligibility/{employee_id}:
     get:
+      tags:
+      - Eligibility
       summary: This endpoint determines whether an employee is elibible to receive PFML benefits.
       operationId: massgov.pfml.api.eligibility.eligibility_get
       parameters:
@@ -209,6 +229,13 @@ paths:
             $ref: '#/components/responses/NotFound'
         "400":
             $ref: '#/components/responses/BadRequest'
+tags:
+  - name: Test Endpoints
+  - name: Users
+  - name: Employees
+  - name: Employers
+  - name: Eligibility
+  - name: Wages
 
 components:
   requestBodies:
@@ -217,6 +244,12 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/UserToCreate'
+      required: true
+    EmployeeToSearch:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/EmployeeToSearch'
       required: true
     EmployeeToUpdate:
       content:
@@ -257,7 +290,6 @@ components:
           schema:
             $ref: '#/components/schemas/Error'
 
-
   schemas:
     UserToCreate:
       type: object
@@ -271,23 +303,6 @@ components:
           format: email
           example: "janedoe@example.com"
       required: ['email', 'auth_id']
-
-    EmployeeToUpdate:
-      type: object
-      properties:
-        first_name:
-          type: string
-          example: "Jane"
-        middle_name:
-          type: string
-          example: "Alice"
-        last_name:
-          type: string
-          example: "Doe"
-        date_of_birth:
-          type: string
-          format: date
-          example: "1980-12-31"
 
     User:
       type: object
@@ -311,6 +326,39 @@ components:
           default: unverified
           example: unverified
 
+    EmployeeToUpdate:
+      type: object
+      properties:
+        first_name:
+          type: string
+          example: "Jane"
+        middle_name:
+          type: string
+          example: "Alice"
+        last_name:
+          type: string
+          example: "Doe"
+        date_of_birth:
+          type: string
+          format: date
+          example: "1980-12-31"
+
+    EmployeeToSearch:
+      type: object
+      properties:
+        first_name:
+          type: string
+          example: "Jane"
+        middle_name:
+          type: string
+          example: "Alice"
+        last_name:
+          type: string
+          example: "Doe"
+        ssn_or_itin:
+          $ref: '#/components/schemas/SsnItin'
+      required: ['first_name', 'last_name', 'ssn_or_itin']
+
     Employee:
       type: object
       properties:
@@ -328,8 +376,7 @@ components:
           type: string
           example: "Doe"
         ssn_or_itin:
-          type: string
-          example: "123456789"
+          $ref: '#/components/schemas/SsnItin'
         date_of_birth:
           type: string
           format: date
@@ -417,3 +464,13 @@ components:
           required: 
             - code
             - message
+
+    SsnItin:
+      type: string
+      example: "000-00-0000"
+      pattern: '^\d{3}-\d{2}-\d{4}$'
+
+    Uuid:
+      type: string
+      example: "009fa369-291b-403f-a85a-15e938c26f2f"
+      format: uuid
