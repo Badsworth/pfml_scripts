@@ -10,5 +10,5 @@ terraform {
 }
 
 locals {
-  app_name = "pfml-${var.env_name}"
+  app_name = "pfml"
 }

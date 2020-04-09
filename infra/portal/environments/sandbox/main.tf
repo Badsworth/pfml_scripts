@@ -14,13 +14,12 @@ terraform {
 }
 
 output "cloudfront_distribution_id" {
-  value       = module.massgov_pfml.cloudfront_distribution_id
-  description = "Cloudfront distribution id for portal environment. Used for cache invalidation in github workflow."
+  value = module.massgov_pfml.cloudfront_distribution_id
 }
 
 module "massgov_pfml" {
   source                      = "../../template"
-  env_name                    = "sandbox-v2"
+  environment_name            = "sandbox-v2"
   cognito_extra_redirect_urls = ["http://localhost:3000"]
   cognito_extra_logout_urls   = ["http://localhost:3000"]
   cognito_sender_email        = null

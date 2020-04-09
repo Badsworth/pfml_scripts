@@ -20,7 +20,7 @@ variable "cognito_sender_email" {
   type        = string
 }
 
-variable "env_name" {
+variable "environment_name" {
   description = "Name of the environment"
   type        = string
 }
@@ -37,7 +37,7 @@ variable "tld" {
 }
 
 variable "domain" {
-  description = "Domain name to point to CloudFront distribution (including TLD), defaults to pfml-$(env_name).$(tld)"
+  description = "Domain name to point to CloudFront distribution (including TLD), defaults to $(app_name)-$(environment_name).$(tld)"
   type        = string
   default     = ""
 }

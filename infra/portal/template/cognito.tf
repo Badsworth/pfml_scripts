@@ -11,7 +11,7 @@ resource "aws_ses_email_identity" "cognito_sender_email" {
 }
 
 resource "aws_cognito_user_pool" "claimants_pool" {
-  name                     = "massgov-pfml-${var.env_name}"
+  name                     = "massgov-${local.app_name}-${var.environment_name}"
   username_attributes      = ["email"]
   auto_verified_attributes = ["email"]
 
@@ -59,7 +59,7 @@ resource "aws_cognito_user_pool" "claimants_pool" {
 }
 
 resource "aws_cognito_user_pool_client" "massgov_pfml_client" {
-  name         = "massgov-pfml-${var.env_name}"
+  name         = "massgov-${local.app_name}-${var.environment_name}"
   user_pool_id = aws_cognito_user_pool.claimants_pool.id
 
   callback_urls                = concat(var.cognito_extra_redirect_urls, [local.hosted_domain])
@@ -79,7 +79,7 @@ resource "aws_cognito_user_pool_client" "massgov_pfml_client" {
 }
 
 resource "aws_cognito_user_pool_domain" "massgov_pfml_domain" {
-  domain       = "massgov-pfml-${var.env_name}"
+  domain       = "massgov-${local.app_name}-${var.environment_name}"
   user_pool_id = aws_cognito_user_pool.claimants_pool.id
 }
 
@@ -88,9 +88,9 @@ resource "aws_lambda_function" "cognito_custom_message" {
   description      = "Customizes Cognito SMS and Email messages"
   filename         = data.archive_file.cognito_custom_message.output_path
   source_code_hash = data.archive_file.cognito_custom_message.output_base64sha256
-  function_name    = "${local.app_name}-cognito-custom-message"
+  function_name    = "${local.app_name}-${var.environment_name}-cognito-custom-message"
   handler          = "lambda.handler"
-  role             = aws_iam_role.cognito_lambda.arn
+  role             = aws_iam_role.lambda_basic_executor.arn
   runtime          = "nodejs12.x"
 }
 
@@ -111,28 +111,4 @@ resource "aws_lambda_permission" "allow_cognito_custom_message" {
   function_name = aws_lambda_function.cognito_custom_message.function_name
   principal     = "cognito-idp.amazonaws.com"
   source_arn    = aws_cognito_user_pool.claimants_pool.arn
-}
-
-data "aws_iam_policy_document" "lambda_assume_role" {
-  statement {
-    actions = ["sts:AssumeRole"]
-
-    principals {
-      type = "Service"
-
-      identifiers = [
-        "lambda.amazonaws.com"
-      ]
-    }
-  }
-}
-
-resource "aws_iam_role" "cognito_lambda" {
-  name_prefix        = local.app_name
-  assume_role_policy = data.aws_iam_policy_document.lambda_assume_role.json
-}
-
-resource "aws_iam_role_policy_attachment" "cognito_lambda" {
-  role       = aws_iam_role.cognito_lambda.name
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
 }

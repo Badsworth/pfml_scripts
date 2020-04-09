@@ -1,5 +1,5 @@
 locals {
-  domain = var.domain != "" ? var.domain : "pfml-${var.env_name}.${var.tld}"
+  domain = var.domain != "" ? var.domain : "pfml-${var.environment_name}.${var.tld}"
 }
 
 provider "aws" {
