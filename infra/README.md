@@ -8,12 +8,12 @@ This directory houses the configuration needed for maintaining PFML infrastructu
 ## Directory Structure
 
 ```
-└── aws                 🏡 infrastructure for AWS, shared across VPCs e.g. docker image registries.
+└── aws                 🏡 infrastructure for AWS, shared across envs e.g. developer IAM roles and docker image registries.
 
-└── vpc                 🏡 infrastructure for a VPC, shared across applications e.g. an S3 bucket, API Gateway and ECS cluster.
-    └── template        🏗  shared template for a VPC
+└── env-shared          🏡 infrastructure for an env, shared across applications e.g. an API Gateway and ECS cluster.
+    └── template        🏗  shared template for an env
     └── environments
-        └── sandbox     ⛱  prototype VPC
+        └── sandbox     ⛱  prototype env
 
 └── portal              🏡 infrastructure for a PFML portal environment
     └── config          🚪 environment variables for configuring the Portal
@@ -36,8 +36,8 @@ S3
         └── aws.tfstate
 └── massgov-pfml-sandbox
     └── terraform
-        └── vpc.tfstate
-        └── terraform.tfstate  # should be portal.tfstate in the future
+        └── vpc.tfstate        # will be env-shared.tfstate in the PFML AWS account
+        └── terraform.tfstate  # will be portal.tfstate in the PFML AWS account
         └── api.tfstate
 ```
 
