@@ -21,7 +21,7 @@
 #
 set -euo pipefail
 
-BUCKET_NAME=pfml-aws-account-mgmt
+BUCKET_NAME=massgov-pfml-aws-account-mgmt
 OUTPUT_DIR=infra/pfml-aws
 TERRAFORM_VERSION=0.12.20
 

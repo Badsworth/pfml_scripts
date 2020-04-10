@@ -176,6 +176,20 @@ To apply changes to infrastructure:
 $ terraform apply
 ```
 
+### Setting up a new environment
+
+The easiest way to set up resources in a new environment is using the templates in [/bin/bootstrap-env/](bin/bootstrap-env).
+
+The S3 bucket for holding tfstate files must be created first in [pfml-aws/s3.tf](infra/pfml-aws/s3.tf).
+
+Then, individual terraform components may be set up.
+
+```
+pfml$ bin/bootstrap-env/bootstrap-env.sh <new-env> env-shared
+pfml$ bin/bootstrap-env/bootstrap-env.sh <new-env> api
+pfml$ bin/bootstrap-env/bootstrap-env.sh <new-env> portal
+```
+
 ### Tests
 
 To run the [test suite](../docs/tests.md):
