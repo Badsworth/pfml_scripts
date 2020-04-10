@@ -7,10 +7,6 @@
 #
 # https://docs.python.org/3/library/__main__.html
 
-import sys
-
-import pytest
-
 import massgov.pfml.api
 import massgov.pfml.api.generate_fake_data as fake
 import massgov.pfml.util.logging
@@ -21,14 +17,6 @@ logger = massgov.pfml.util.logging.get_logger(__package__)
 def main():
     massgov.pfml.util.logging.init(__package__)
     start_server()
-
-
-def self_test():
-    logger.info("self test start")
-    result = pytest.main(args=["--verbose"])
-    logger.info("self test done, result %r", result)
-    if result != 0:
-        sys.exit(result)
 
 
 def start_server():

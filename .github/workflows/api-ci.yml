@@ -48,3 +48,14 @@ jobs:
     - name: test
       run: make test
       working-directory: ${{ env.working-dir }}
+
+  # Check we can build a release
+  build-release:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: build
+      run: make build-app
+      working-directory: ${{ env.working-dir }}

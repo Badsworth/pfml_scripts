@@ -20,6 +20,12 @@ endif
 
 PY_RUN_CMD := $(PY_RUN_CMD_$(PY_RUN_CMD_OPT))
 
+# BuildKit is a more efficient builder for Docker, so use it by default
+ifndef NO_BUILDKIT
+	export DOCKER_BUILDKIT=1
+	export COMPOSE_DOCKER_CLI_BUILD=1
+endif
+
 # Docker user configuration
 #
 # Can be set by adding user=<username> and/ or uid=<id> to make command.
@@ -42,6 +48,8 @@ endif
 export RUN_USER
 export RUN_UID
 
+RELEASE_TAG ?= latest
+
 check: ## Run checks
 check: check-static test
 
@@ -63,8 +71,19 @@ clean-docker: ## Remove project docker artifacts
 clean-venv: ## Remove active poetry virtualenv
 	rm -rf $(shell poetry env info --path)
 
-build: ## Build container
+build: ## Build development container
 	docker-compose build
+
+build-app: ## Build app container
+	docker build \
+		--tag mass-pfml-api:$(RELEASE_TAG) \
+		--target app \
+		--build-arg RUN_USER=$(RUN_USER) \
+		--build-arg RUN_UID=$(RUN_UID) \
+		.
+
+build-and-push-app: ## Build release container and push to ECR
+	./bin/build_and_push_to_ecr.sh
 
 deps: ## Install dependencies
 	poetry install --no-root

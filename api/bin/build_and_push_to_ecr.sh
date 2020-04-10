@@ -22,7 +22,9 @@ docker build --tag="$DOCKER_REPO:latest" \
              --tag="$DOCKER_REPO:$HASH" \
              --tag="$DOCKER_REGISTRY/$DOCKER_REPO:$INFO_TAG" \
              --tag="$DOCKER_REGISTRY/$DOCKER_REPO:$HASH" \
-             --stream \
+             --target app \
+             --build-arg RUN_USER=container \
+             --build-arg RUN_UID=30000 \
              .
 
 #
