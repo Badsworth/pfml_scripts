@@ -24,6 +24,19 @@ const general = {
 };
 
 const pages = {
+  claimsDateOfBirth: {
+    sectionLabel: "What's your birthdate?",
+    title: "Tell us about yourself",
+  },
+  claimsName: {
+    firstNameLabel: "First name",
+    lastNameLabel: "Last name",
+    middleNameLabel: "Middle name",
+    nameSectionHint:
+      "Fill out your name as it appears on official documents like your driver’s license or W-2.",
+    sectionLabel: "What's your name?",
+    title: "Tell us about yourself",
+  },
   eligibility: {
     form: {
       firstNameLabel: "First name",
@@ -101,6 +114,9 @@ const components = {
   },
   form: {
     continueButton: "Continue",
+    dateInputDayLabel: "Day",
+    dateInputMonthLabel: "Month",
+    dateInputYearLabel: "Year",
     optionalText: "(optional)",
     submitButtonText: "Submit",
   },

@@ -2,6 +2,7 @@ import ButtonLink from "../components/ButtonLink";
 import Heading from "../components/Heading";
 import React from "react";
 import Title from "../components/Title";
+import routes from "../routes";
 import { useTranslation } from "react-i18next";
 
 /**
@@ -26,8 +27,7 @@ const Index = () => {
         <li>{t("pages.index.claimChecklistWhereToSendBenefits")}</li>
       </ul>
 
-      {/* TO-DO: Update the href link when the next claims flow page exist */}
-      <ButtonLink href="/eligibility/employee-info">
+      <ButtonLink href={routes.claims.name}>
         {t("pages.index.createClaimButtonText")}
       </ButtonLink>
     </React.Fragment>

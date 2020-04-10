@@ -13,6 +13,13 @@ import initializeStore from "../store";
 import { useTranslation } from "react-i18next";
 
 /**
+ * Our one and only Redux store for the application. All state is stored here and remains even
+ * between pages pushed within the app. It gets wiped out on page load, for example if
+ * the user reloads or enters a new URL into the address bar.
+ */
+const store = initializeStore();
+
+/**
  * Overrides the default Next.js App so that we can persist common layout
  * across page changes, and other advanced features like injecting data into pages.
  * @see https://nextjs.org/docs/advanced-features/custom-app
@@ -65,7 +72,7 @@ export const App = ({ Component, pageProps, authState, authData }) => {
   }, []);
 
   return (
-    <Provider store={initializeStore()}>
+    <Provider store={store}>
       <Header user={user} />
       <main id="main" className="grid-container margin-top-5 margin-bottom-8">
         <div className="grid-row">

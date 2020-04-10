@@ -30,7 +30,7 @@ exports[`Index renders the page 1`] = `
     </li>
   </ul>
   <ButtonLink
-    href="/eligibility/employee-info"
+    href="/claims/name"
   >
     Create a claim
   </ButtonLink>
