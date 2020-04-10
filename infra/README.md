@@ -1,51 +1,20 @@
 Infrastructure
 ==========
 
-## Introduction
-
 This directory houses the configuration needed for maintaining PFML infrastructure. We use [Terraform](https://terraform.io) to manage our infra in a modular, concise, and reusable fashion.
 
-## Directory Structure
-
-```
-└── aws                 🏡 infrastructure for AWS, shared across envs e.g. developer IAM roles and docker image registries.
-
-└── env-shared          🏡 infrastructure for an env, shared across applications e.g. an API Gateway and ECS cluster.
-    └── template        🏗  shared template for an env
-    └── environments
-        └── sandbox     ⛱  prototype env
-
-└── portal              🏡 infrastructure for a PFML portal environment
-    └── config          🚪 environment variables for configuring the Portal
-    └── template        🏗  shared template for portal env
-    └── environments
-
-└── api                 🏡 infrastructure for a PFML api environment
-    └── template        🏗  shared template for api env
-    └── environments
-```
-
-## tfstate files
-
-Each environment for a component has a `.tfstate` file that is stored in S3 and synchronized using a DynamoDB lock table. Terraform relies on this state file for every command and must acquire the lock in order to use it, so only one person or system can run a terraform command at a time.
-
-```
-S3
-└── massgov-pfml-global
-    └── terraform
-        └── aws.tfstate
-└── massgov-pfml-sandbox
-    └── terraform
-        └── vpc.tfstate        # will be env-shared.tfstate in the PFML AWS account
-        └── terraform.tfstate  # will be portal.tfstate in the PFML AWS account
-        └── api.tfstate
-```
+* [Local Setup](#local-setup)
+* [Runbook](#runbook)
+* [Directory Structure](#directory-structure)
+* [tfstate files](#tfstate-files)
 
 ## Local Setup
 
-These steps are required before running terraform commands locally on your machine.
+These steps are required before running terraform or test commands locally on your machine.
 
-### Configure AWS
+<details>
+<summary><b>1. Configure AWS</b></summary>
+<p>
 
 Since we manage AWS resources using Terraform, AWS credentials are needed to run terraform commands. 
 
@@ -73,7 +42,23 @@ For the EOTSS-provided PFML account, access to the AWS CLI is federated by Centr
 
 PFML has a wrapper command around this CLI tool. By default, we install it as `login-aws`, but you can provide your own when prompted.
 
-Install the CLI wrapper with the following script:
+First, make sure you have some sort of python3 environment. If not, the easiest way to do this is with [pyenv](https://github.com/pyenv/pyenv) or [asdf](https://asdf-vm.com/#/).
+
+```
+# For OSX
+brew install pyenv
+echo 'eval "$(pyenv init -)"' >> ~/.bash_profile (or .zshrc, etc.)
+source ~/.bash_profile
+pyenv install 3.8.2
+```
+
+Install the required libraries:
+
+```
+pip install requests boto3 colorama
+```
+
+Then install PFML's CLI wrapper with the following script:
 
 ```sh
 ../bin/centrify/install-centrify-aws-cli.sh INSTALL_LOCATION
@@ -152,17 +137,30 @@ Note that this role will be different for full-access roles, e.g.
 export AWS_PROFILE=AWS-498823821309-CloudOps-Engineer_profile
 ```
 
-### Install Terraform
+</p>
+</details>
+
+<details>
+<summary><b>2. Install Terraform</b></summary>
+<p>
 
 Refer to the root-level [README](../README.md) for instructions on installing terraform.
 
-### Optionally install NPM dependencies
+</p>
+</details>
+
+<details>
+<summary><b>3. Optionally install NPM dependencies</b></summary>
+<p>
 
 To locally run tests, you'll also need to run the following with `infra/` as the working directory:
 
 ```
 npm install
 ```
+
+</p>
+</details>
 
 ## Runbook
 
@@ -199,3 +197,39 @@ npm run test:watch
 ```
 
 > By default, this will attempt to identify which tests to run based on which files have changed in the current repository. After running, you can interact with the prompt to configure or filter which test files are ran.
+
+## Directory Structure
+
+```
+└── aws                 🏡 infrastructure for AWS, shared across envs e.g. developer IAM roles and docker image registries.
+
+└── env-shared          🏡 infrastructure for an env, shared across applications e.g. an API Gateway and ECS cluster.
+    └── template        🏗  shared template for an env
+    └── environments
+        └── sandbox     ⛱  prototype env
+
+└── portal              🏡 infrastructure for a PFML portal environment
+    └── config          🚪 environment variables for configuring the Portal
+    └── template        🏗  shared template for portal env
+    └── environments
+
+└── api                 🏡 infrastructure for a PFML api environment
+    └── template        🏗  shared template for api env
+    └── environments
+```
+
+## tfstate files
+
+Each environment for a component has a `.tfstate` file that is stored in S3 and synchronized using a DynamoDB lock table. Terraform relies on this state file for every command and must acquire the lock in order to use it, so only one person or system can run a terraform command at a time.
+
+```
+S3
+└── massgov-pfml-global
+    └── terraform
+        └── aws.tfstate
+└── massgov-pfml-sandbox
+    └── terraform
+        └── vpc.tfstate        # will be env-shared.tfstate in the PFML AWS account
+        └── terraform.tfstate  # will be portal.tfstate in the PFML AWS account
+        └── api.tfstate
+```
