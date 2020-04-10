@@ -1,0 +1,11 @@
+# Automatically assign codeowners when changed files match
+#
+# - Each line is a file pattern followed by one or more owners.
+# - Order is important; the last matching pattern takes the most precedence
+#
+# See: https://help.github.com/en/github/creating-cloning-and-archiving-repositories/about-code-owners#example-of-a-codeowners-file
+# ProTip: https://help.github.com/en/github/setting-up-and-managing-organizations-and-teams/managing-code-review-assignment-for-your-team
+
+/portal/ @EOLWD/pfml-portal
+/docs/portal/ @EOLWD/pfml-portal
+/infra/portal/ @EOLWD/pfml-portal
