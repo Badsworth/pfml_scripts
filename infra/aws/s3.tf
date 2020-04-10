@@ -1,7 +1,7 @@
 # Set up a terraform bucket for applications within this VPC.
 #
 resource "aws_s3_bucket" "terraform" {
-  bucket = "massgov-pfml-${var.environment_name}"
+  bucket = "massgov-pfml-sandbox"
   acl    = "private"
 
   server_side_encryption_configuration {

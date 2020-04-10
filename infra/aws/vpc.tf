@@ -1,4 +1,4 @@
-# Lookup utilities for the VPC.
+# Lookup utilities for VPCs.
 #
 data "aws_vpc" "nava_internal" {
   tags = {

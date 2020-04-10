@@ -201,9 +201,10 @@ npm run test:watch
 ## Directory Structure
 
 ```
-└── aws                 🏡 infrastructure for AWS, shared across envs e.g. developer IAM roles and docker image registries.
+└── aws                 🏡 infrastructure for AWS and VPCs, shared across envs e.g. developer IAM roles, 
+                           docker registries, and network load balancers for each VPC.
 
-└── env-shared          🏡 infrastructure for an env, shared across applications e.g. an API Gateway and ECS cluster.
+└── env-shared          🏡 infrastructure for an environment, shared across applications e.g. an API Gateway and ECS cluster.
     └── template        🏗  shared template for an env
     └── environments
         └── sandbox     ⛱  prototype env

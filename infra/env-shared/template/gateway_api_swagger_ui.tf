@@ -44,8 +44,8 @@ resource "aws_api_gateway_integration" "integration_ui" {
   integration_http_method = "ANY"
   type                    = "HTTP_PROXY"
   connection_type         = "VPC_LINK"
-  connection_id           = aws_api_gateway_vpc_link.nlb_vpc_link.id
-  uri                     = "http://${aws_lb.nlb.dns_name}/v1/ui/"
+  connection_id           = data.aws_api_gateway_vpc_link.vpc_link.id
+  uri                     = "http://${data.aws_lb.nlb.dns_name}:${var.nlb_port}/v1/ui/"
 
   request_parameters = {
     "integration.request.header.X-Forwarded-Path" = "'/api/'"
@@ -59,8 +59,8 @@ resource "aws_api_gateway_integration" "integration_ui_proxy" {
   integration_http_method = "ANY"
   type                    = "HTTP_PROXY"
   connection_type         = "VPC_LINK"
-  connection_id           = aws_api_gateway_vpc_link.nlb_vpc_link.id
-  uri                     = "http://${aws_lb.nlb.dns_name}/v1/ui/{proxy}"
+  connection_id           = data.aws_api_gateway_vpc_link.vpc_link.id
+  uri                     = "http://${data.aws_lb.nlb.dns_name}:${var.nlb_port}/v1/ui/{proxy}"
 
   request_parameters = {
     "integration.request.path.proxy"              = "method.request.path.proxy"

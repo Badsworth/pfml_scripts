@@ -1,5 +1,5 @@
 locals {
-  domain = "${var.domain_name}.navateam.com"
+  domain = "pfml.navateam.com"
 }
 
 data "aws_acm_certificate" "domain" {
