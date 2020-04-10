@@ -29,7 +29,7 @@ exports[`Name renders the connected component 1`] = `
 exports[`Name renders the page 1`] = `
 <QuestionPage
   nextPage="/claims/date-of-birth"
-  title="Tell us about yourself"
+  title="Who is taking leave"
 >
   <FormLabel
     component="legend"

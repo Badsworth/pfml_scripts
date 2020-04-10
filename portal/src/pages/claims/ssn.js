@@ -1,4 +1,4 @@
-import InputDate from "../../components/InputDate";
+import InputText from "../../components/InputText";
 import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
@@ -8,31 +8,34 @@ import { updateFieldFromEvent } from "../../actions";
 import { useTranslation } from "react-i18next";
 import valueWithFallback from "../../utils/valueWithFallback";
 
-export const DateOfBirth = (props) => {
+/**
+ * A form page to capture the worker's SSN or ITIN.
+ */
+export const Ssn = (props) => {
   const { t } = useTranslation();
   const formData = props.formData;
 
   return (
     <QuestionPage
-      title={t("pages.claimsDateOfBirth.title")}
-      nextPage={routes.claims.ssn}
+      title={t("pages.claimsSsn.title")}
+      // TODO Route this to address or occupation page what that page is ready.
+      nextPage={routes.home}
     >
-      <InputDate
-        name="dateOfBirth"
-        label={t("pages.claimsDateOfBirth.sectionLabel")}
-        value={valueWithFallback(formData.dateOfBirth)}
-        dayLabel={t("components.form.dateInputDayLabel")}
-        monthLabel={t("components.form.dateInputMonthLabel")}
-        yearLabel={t("components.form.dateInputYearLabel")}
+      {/* TODO(CP-296) Use masked field component for SSN styling. */}
+      <InputText
+        name="ssn"
+        value={valueWithFallback(formData.ssn)}
+        label={t("pages.claimsSsn.sectionLabel")}
+        hint={t("pages.claimsSsn.sectionHint")}
         onChange={props.updateFieldFromEvent}
       />
     </QuestionPage>
   );
 };
 
-DateOfBirth.propTypes = {
+Ssn.propTypes = {
   formData: PropTypes.shape({
-    dateOfBirth: PropTypes.string,
+    ssn: PropTypes.string,
   }).isRequired,
   updateFieldFromEvent: PropTypes.func.isRequired,
 };
@@ -43,4 +46,4 @@ const mapStateToProps = (state) => ({
 
 const mapDispatchToProps = { updateFieldFromEvent };
 
-export default connect(mapStateToProps, mapDispatchToProps)(DateOfBirth);
+export default connect(mapStateToProps, mapDispatchToProps)(Ssn);

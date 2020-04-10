@@ -26,7 +26,10 @@ const general = {
 const pages = {
   claimsDateOfBirth: {
     sectionLabel: "What's your birthdate?",
-    title: "Tell us about yourself",
+    title: "$t(pages.claimsGeneral.takingLeaveTitle)",
+  },
+  claimsGeneral: {
+    takingLeaveTitle: "Who is taking leave",
   },
   claimsName: {
     firstNameLabel: "First name",
@@ -35,7 +38,13 @@ const pages = {
     nameSectionHint:
       "Fill out your name as it appears on official documents like your driver’s license or W-2.",
     sectionLabel: "What's your name?",
-    title: "Tell us about yourself",
+    title: "$t(pages.claimsGeneral.takingLeaveTitle)",
+  },
+  claimsSsn: {
+    sectionHint:
+      "Don't have an SSN? Use your Individual Taxpayer Identification Number (ITIN).",
+    sectionLabel: "What's your Social Security Number?",
+    title: "$t(pages.claimsGeneral.takingLeaveTitle)",
   },
   eligibility: {
     form: {

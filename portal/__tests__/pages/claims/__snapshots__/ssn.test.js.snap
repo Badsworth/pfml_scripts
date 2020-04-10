@@ -1,13 +1,13 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`DateOfBirth renders the connected component 1`] = `
+exports[`Ssn renders connected component 1`] = `
 <ContextProvider
   value={null}
 >
-  <DateOfBirth
+  <Ssn
     formData={
       Object {
-        "dateOfBirth": "02-12-1809",
+        "ssn": "",
       }
     }
     store={
@@ -24,19 +24,17 @@ exports[`DateOfBirth renders the connected component 1`] = `
 </ContextProvider>
 `;
 
-exports[`DateOfBirth renders the page 1`] = `
+exports[`Ssn renders the form 1`] = `
 <QuestionPage
-  nextPage="/claims/ssn"
+  nextPage="/"
   title="Who is taking leave"
 >
-  <InputDate
-    dayLabel="Day"
-    label="What's your birthdate?"
-    monthLabel="Month"
-    name="dateOfBirth"
+  <InputText
+    hint="Don't have an SSN? Use your Individual Taxpayer Identification Number (ITIN)."
+    label="What's your Social Security Number?"
+    name="ssn"
     onChange={[MockFunction]}
     value=""
-    yearLabel="Year"
   />
 </QuestionPage>
 `;
