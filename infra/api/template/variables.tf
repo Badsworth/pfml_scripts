@@ -32,3 +32,13 @@ variable "postgres_version" {
   description = "The version of the postgres database."
   type        = string
 }
+
+variable "nlb_name" {
+  description = "Name of the network load balancer to route from."
+  type        = string
+}
+
+variable "nlb_port" {
+  description = "Port of the network load balancer that has been reserved within the API Gateway."
+  type        = string
+}

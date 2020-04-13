@@ -27,4 +27,6 @@ module "api" {
   vpc_id                  = data.aws_vpc.nava_internal.id
   vpc_app_subnet_ids      = data.aws_subnet_ids.nava_internal_app.ids
   postgres_version        = "11.6"
+  nlb_name                = "sandbox-nlb"
+  nlb_port                = "80"
 }

@@ -34,7 +34,7 @@
       "eslint --fix",
       "git add"
     ],
-    "*.{tf,tfvars}": [
+    "!(bin)/**/*.{tf,tfvars}": [
       "npm run lint:tf",
       "git add"
     ]

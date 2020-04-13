@@ -1,10 +1,10 @@
 locals {
-  cloudformation_stack_name = "$ENV_NAME" == "prod" ? "pfml-prod" : "pfml-nonprod"
+  vpc = "$ENV_NAME" == "prod" ? "prod" : "nonprod"
 }
 
 data "aws_vpc" "vpc" {
   tags = {
-    "aws:cloudformation:stack-name" = local.cloudformation_stack_name
+    "aws:cloudformation:stack-name" = "pfml-${local.vpc}"
   }
 }
 

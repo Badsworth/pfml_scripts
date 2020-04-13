@@ -34,4 +34,6 @@ module "api" {
   vpc_id                  = data.aws_vpc.vpc.id
   vpc_app_subnet_ids      = data.aws_subnet_ids.vpc_app.ids
   postgres_version        = "11.6"
+  nlb_name                = "${local.vpc}-nlb"
+  nlb_port                = UNIQUE_NLB_PORT_RESERVED_IN_ENV_SHARED
 }
