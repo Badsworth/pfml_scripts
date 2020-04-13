@@ -1,4 +1,5 @@
 import {
+  removeField,
   updateField,
   updateFieldFromEvent,
   updateFields,
@@ -6,13 +7,12 @@ import {
 
 describe("Redux actions", () => {
   describe("updateField", () => {
-    it("creates a Update Field action", () => {
+    it("creates a UPDATE_FIELDS action", () => {
       const name = "field";
       const value = "value";
       const expectedAction = {
-        type: "UPDATE_FIELD",
-        name,
-        value,
+        type: "UPDATE_FIELDS",
+        values: { [name]: value },
       };
 
       expect(updateField(name, value)).toEqual(expectedAction);
@@ -20,7 +20,7 @@ describe("Redux actions", () => {
   });
 
   describe("updateFields", () => {
-    it("creates an Update Fields action", () => {
+    it("creates an UPDATE_FIELDS action", () => {
       const values = {
         name1: "value1",
         name2: "value2",
@@ -35,6 +35,19 @@ describe("Redux actions", () => {
     });
   });
 
+  describe("removeField", () => {
+    it("returns REMOVE_FIELD action with name property", () => {
+      const name = "fieldName";
+
+      const expectedAction = {
+        type: "REMOVE_FIELD",
+        name,
+      };
+
+      expect(removeField(name)).toEqual(expectedAction);
+    });
+  });
+
   describe("updateFieldFromEvent", () => {
     it("returns UPDATE_FIELD action with name and value properties", () => {
       const target = { name: "Foo", value: "Bar" };
@@ -42,18 +55,12 @@ describe("Redux actions", () => {
 
       expect(result).toMatchInlineSnapshot(`
       Object {
-        "name": "Foo",
-        "type": "UPDATE_FIELD",
-        "value": "Bar",
+        "type": "UPDATE_FIELDS",
+        "values": Object {
+          "Foo": "Bar",
+        },
       }
     `);
-    });
-
-    it("accepts 'type' property in the data argument, but doesn't include it in the action", () => {
-      const target = { name: "Foo", value: "bar", type: "radio" };
-      const result = updateFieldFromEvent({ target });
-
-      expect(result.type).toBe("UPDATE_FIELD");
     });
 
     describe("given field type is radio", () => {
@@ -66,7 +73,7 @@ describe("Redux actions", () => {
         };
         const result = updateFieldFromEvent({ target });
 
-        expect(result.value).toBe(true);
+        expect(result.values[target.name]).toBe(true);
       });
 
       it("converts 'false' string into a boolean", () => {
@@ -78,7 +85,7 @@ describe("Redux actions", () => {
         };
         const result = updateFieldFromEvent({ target });
 
-        expect(result.value).toBe(false);
+        expect(result.values[target.name]).toBe(false);
       });
     });
 
@@ -92,7 +99,7 @@ describe("Redux actions", () => {
         };
         const result = updateFieldFromEvent({ target });
 
-        expect(result.value).toBe(true);
+        expect(result.values[target.name]).toBe(true);
       });
 
       it("converts 'true' string into a `false` boolean, when field is unchecked", () => {
@@ -104,7 +111,7 @@ describe("Redux actions", () => {
         };
         const result = updateFieldFromEvent({ target });
 
-        expect(result.value).toBe(false);
+        expect(result.values[target.name]).toBe(false);
       });
 
       it("converts 'false' string into a `false` boolean, when field is checked", () => {
@@ -116,7 +123,7 @@ describe("Redux actions", () => {
         };
         const result = updateFieldFromEvent({ target });
 
-        expect(result.value).toBe(false);
+        expect(result.values[target.name]).toBe(false);
       });
 
       it("converts 'false' string into a `true` boolean, when field is unchecked", () => {
@@ -128,7 +135,7 @@ describe("Redux actions", () => {
         };
         const result = updateFieldFromEvent({ target });
 
-        expect(result.value).toBe(true);
+        expect(result.values[target.name]).toBe(true);
       });
     });
 
@@ -141,7 +148,7 @@ describe("Redux actions", () => {
         };
         const result = updateFieldFromEvent({ target });
 
-        expect(result.value).toBe("Bar ");
+        expect(result.values[target.name]).toBe("Bar ");
       });
 
       it("converts a blank string into undefined", () => {
@@ -152,7 +159,7 @@ describe("Redux actions", () => {
         };
         const result = updateFieldFromEvent({ target });
 
-        expect(result.value).toBeUndefined();
+        expect(result.values[target.name]).toBeUndefined();
       });
 
       it("doesn't attempt to trim an undefined value", () => {
@@ -163,7 +170,7 @@ describe("Redux actions", () => {
         };
         const result = updateFieldFromEvent({ target });
 
-        expect(result.value).toBeUndefined();
+        expect(result.values[target.name]).toBeUndefined();
       });
     });
   });

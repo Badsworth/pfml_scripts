@@ -26,7 +26,7 @@ exports[`DateOfBirth renders the connected component 1`] = `
 
 exports[`DateOfBirth renders the page 1`] = `
 <QuestionPage
-  nextPage="/claims/ssn"
+  nextPage="/claims/state-id"
   title="Who is taking leave"
 >
   <InputDate

@@ -46,6 +46,14 @@ const pages = {
     sectionLabel: "What's your Social Security Number?",
     title: "$t(pages.claimsGeneral.takingLeaveTitle)",
   },
+  claimsStateId: {
+    hasIdChoiceLabel:
+      "Do you have a Massachusetts driver's license or ID card?",
+    hasIdChoiceNo: "No",
+    hasIdChoiceYes: "Yes",
+    idLabel: "Enter your license or ID number",
+    title: "$t(pages.claimsGeneral.takingLeaveTitle)",
+  },
   eligibility: {
     form: {
       firstNameLabel: "First name",

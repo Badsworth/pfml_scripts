@@ -21,20 +21,26 @@
  * @param {*} value
  * @returns {object}
  */
-export const updateField = (name, value) => ({
-  type: "UPDATE_FIELD",
-  name,
-  value,
-});
+export const updateField = (name, value) => updateFields({ [name]: value });
 
 /**
  * Update multiple form fields
  * @param {object} values - An object of field names and values
  * @returns {object}
  */
-export const updateFields = values => ({
+export const updateFields = (values) => ({
   type: "UPDATE_FIELDS",
   values,
+});
+
+/**
+ * Remove field from form state
+ * @param {string} name - The name representing this field in our state
+ * @returns {object}
+ */
+export const removeField = (name) => ({
+  type: "REMOVE_FIELD",
+  name,
 });
 
 /**

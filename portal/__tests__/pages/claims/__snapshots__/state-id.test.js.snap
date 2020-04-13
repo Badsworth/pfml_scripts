@@ -1,0 +1,65 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`StateId initially renders the page without an id field 1`] = `
+<QuestionPage
+  nextPage="/claims/ssn"
+  title="Who is taking leave"
+>
+  <InputChoiceGroup
+    choices={
+      Array [
+        Object {
+          "checked": undefined,
+          "label": "Yes",
+          "value": "true",
+        },
+        Object {
+          "checked": false,
+          "label": "No",
+          "value": "false",
+        },
+      ]
+    }
+    label="Do you have a Massachusetts driver's license or ID card?"
+    name="hasStateId"
+    onChange={[MockFunction]}
+    type="radio"
+  />
+  <ConditionalContent
+    fieldNamesClearedWhenHidden={
+      Array [
+        "stateId",
+      ]
+    }
+    removeField={[MockFunction]}
+  >
+    <InputText
+      label="Enter your license or ID number"
+      name="stateId"
+      onChange={[MockFunction]}
+      value=""
+    />
+  </ConditionalContent>
+</QuestionPage>
+`;
+
+exports[`StateId renders the connected component 1`] = `
+<ContextProvider
+  value={null}
+>
+  <StateId
+    formData={Object {}}
+    removeField={[Function]}
+    store={
+      Object {
+        "dispatch": [Function],
+        "getState": [Function],
+        "replaceReducer": [Function],
+        "subscribe": [Function],
+        Symbol(observable): [Function],
+      }
+    }
+    updateFieldFromEvent={[Function]}
+  />
+</ContextProvider>
+`;

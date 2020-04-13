@@ -6,11 +6,11 @@
  */
 const formReducer = (state = {}, action) => {
   switch (action.type) {
-    case "UPDATE_FIELD":
-      return {
-        ...state,
-        [action.name]: action.value,
-      };
+    case "REMOVE_FIELD": {
+      const { [action.name]: name, ...rest } = state;
+
+      return rest;
+    }
     case "UPDATE_FIELDS":
       return {
         ...state,

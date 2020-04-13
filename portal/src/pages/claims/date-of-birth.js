@@ -15,7 +15,7 @@ export const DateOfBirth = (props) => {
   return (
     <QuestionPage
       title={t("pages.claimsDateOfBirth.title")}
-      nextPage={routes.claims.ssn}
+      nextPage={routes.claims.stateId}
     >
       <InputDate
         name="dateOfBirth"

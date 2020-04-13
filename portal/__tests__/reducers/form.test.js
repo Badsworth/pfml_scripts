@@ -1,22 +1,9 @@
-import { updateField, updateFields } from "../../src/actions";
+import { removeField, updateFields } from "../../src/actions";
 import formReducer from "../../src/reducers/form";
 
 describe("form reducer", () => {
-  describe("UPDATE_FIELD", () => {
-    it("updates a field value", () => {
-      const initialState = {};
-      const fieldName = "name";
-      const value = "value";
-      const action = updateField(fieldName, value);
-
-      expect(formReducer(initialState, action)).toEqual({
-        [fieldName]: value,
-      });
-    });
-  });
-
   describe("UPDATE_FIELDS", () => {
-    it("updates multiple fields", () => {
+    it("updates multiple fields without mutating state", () => {
       const initialState = { name0: "value0" };
       const values = {
         name1: "value1",
@@ -28,6 +15,18 @@ describe("form reducer", () => {
         name0: "value0",
         ...values,
       });
+      expect(initialState).toEqual({ name0: "value0" });
+    });
+  });
+
+  describe("REMOVE_FIELD", () => {
+    it("Removes field from state without mutating state", () => {
+      const initialState = { name: "value", name2: "value2" };
+      const fieldName = "name";
+      const action = removeField(fieldName);
+
+      expect(formReducer(initialState, action)).toEqual({ name2: "value2" });
+      expect(initialState).toEqual({ name: "value", name2: "value2" });
     });
   });
 });
