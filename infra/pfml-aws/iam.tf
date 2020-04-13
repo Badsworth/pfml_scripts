@@ -79,6 +79,18 @@ data "aws_iam_policy_document" "developers_access_policy" {
       "arn:aws:dynamodb:us-east-1:498823821309:table/terraform_locks"
     ]
   }
+
+  # Allow individuals to request direct support from AWS, e.g.
+  # for requesting new limits on services that our applications use.
+  statement {
+    actions = [
+      "support:*"
+    ]
+
+    resources = [
+      "*"
+    ]
+  }
 }
 
 data "aws_iam_policy_document" "developers_and_ci_iam_policy" {
