@@ -19,6 +19,10 @@ data "aws_iam_role" "developers" {
 data "aws_iam_policy_document" "developers_access_policy" {
   statement {
     actions = [
+      # Allow access the terraform_locks table in DynamoDB.
+      "dynamodb:GetItem",
+      "dynamodb:PutItem",
+
       # Allow domain certificate lookups.
       "acm:Describe*",
       "acm:Get*",
@@ -66,17 +70,6 @@ data "aws_iam_policy_document" "developers_access_policy" {
 
     resources = [
       "*"
-    ]
-  }
-
-  statement {
-    # Allow developers to access the terraform_locks table in DynamoDB.
-    actions = [
-      "dynamodb:*"
-    ]
-
-    resources = [
-      "arn:aws:dynamodb:us-east-1:498823821309:table/terraform_locks"
     ]
   }
 
