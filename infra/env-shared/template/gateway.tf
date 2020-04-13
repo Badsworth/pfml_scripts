@@ -24,7 +24,7 @@ resource "aws_api_gateway_deployment" "stage" {
 
 # Optional domain name setup, if we have one.
 resource "aws_api_gateway_base_path_mapping" "stage_mapping" {
-  count       = var.domain_name == "" ? 0 : 1
+  count       = var.domain_name == null ? 0 : 1
   stage_name  = var.environment_name
   api_id      = aws_api_gateway_rest_api.pfml.id
   domain_name = var.domain_name
