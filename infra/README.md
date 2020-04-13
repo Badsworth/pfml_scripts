@@ -176,20 +176,6 @@ To apply changes to infrastructure:
 $ terraform apply
 ```
 
-### Setting up a new environment
-
-The easiest way to set up resources in a new environment is using the templates in [/bin/bootstrap-env/](bin/bootstrap-env).
-
-The S3 bucket for holding tfstate files must be created first in [pfml-aws/s3.tf](infra/pfml-aws/s3.tf).
-
-Then, individual terraform components may be set up.
-
-```
-pfml$ bin/bootstrap-env/bootstrap-env.sh <new-env> env-shared
-pfml$ bin/bootstrap-env/bootstrap-env.sh <new-env> api
-pfml$ bin/bootstrap-env/bootstrap-env.sh <new-env> portal
-```
-
 ### Tests
 
 To run the [test suite](../docs/tests.md):
@@ -211,6 +197,54 @@ npm run test:watch
 ```
 
 > By default, this will attempt to identify which tests to run based on which files have changed in the current repository. After running, you can interact with the prompt to configure or filter which test files are ran.
+
+### Setting up a new environment
+
+The easiest way to set up resources in a new environment is using the templates in [/bin/bootstrap-env/](/bin/bootstrap-env).
+
+The S3 bucket for holding tfstate files must be created first in [pfml-aws/s3.tf](/infra/pfml-aws/s3.tf).
+
+Then, individual terraform components may be set up.
+
+```
+pfml$ bin/bootstrap-env/bootstrap-env.sh <new-env> env-shared
+pfml$ bin/bootstrap-env/bootstrap-env.sh <new-env> api
+pfml$ bin/bootstrap-env/bootstrap-env.sh <new-env> portal
+```
+
+### Testing Github Actions permissions
+
+Since Github Actions has different permissions than developers and admins, it's useful to test terraform configs using our CI/CD role so we know
+that they can be run on Github Actions with the right read/write permissions. This is recommended if you're adding a new service into our ecosystem.
+
+1. Ensure you have the AWS CLI: 
+   
+   ```
+   pip install awscli
+   ```
+
+2. Generate a session: 
+
+   ```
+   aws sts assume-role --role-arn arn:aws:iam::498823821309:role/ci-run-deploys --role-session-name <any-session-name>
+   ```
+
+3. Copy the access key, secret, and session token into your ~/.aws/credentials under a new profile so it looks like this:
+
+   ```
+   [ci-run-deploys]
+   aws_access_key_id = 123
+   aws_secret_access_key = 456
+   aws_session_token = 789
+   ```
+
+4. Use the profile: 
+   
+   ```
+   export AWS_PROFILE=ci-run-deploys
+   ```
+
+5. Run terraform as usual.
 
 ## Directory Structure
 

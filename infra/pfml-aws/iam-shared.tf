@@ -1,4 +1,4 @@
-# Sets up access policies for developers on the team.
+# Set up policies for deployments that are shared between developers and CI.
 #
 # We manage this through terraform to:
 # 1) allow developers to request access changes themselves.
@@ -12,16 +12,15 @@
 #   Once the changes are merged, you must run the changes
 #   manually with your elevated role.
 #
-data "aws_iam_role" "developers" {
-  name = "AWS-498823821309-Infrastructure-Admin"
-}
-
-data "aws_iam_policy_document" "developers_access_policy" {
+data "aws_iam_policy_document" "developers_and_ci_deploy_access_policy" {
+  # TODO: This is probably more wide-ranging than it needs to be,
+  #       and can be more granular in scope for certain services.
   statement {
     actions = [
       # Allow access the terraform_locks table in DynamoDB.
       "dynamodb:GetItem",
       "dynamodb:PutItem",
+      "dynamodb:DeleteItem",
 
       # Allow domain certificate lookups.
       "acm:Describe*",
@@ -32,9 +31,6 @@ data "aws_iam_policy_document" "developers_access_policy" {
       "cloudtrail:*",
       "cloudwatch:*",
       "logs:*",
-
-      # Allow teams to manage secrets in SSM Parameter Store.
-      "ssm:*",
 
       # Allow teams to look at IAM users and roles; additional (restricted)
       # write access is provided in a separate statement/policy.
@@ -66,18 +62,6 @@ data "aws_iam_policy_document" "developers_access_policy" {
       "elasticloadbalancing:*",
       "rds:*",
       "lambda:*"
-    ]
-
-    resources = [
-      "*"
-    ]
-  }
-
-  # Allow individuals to request direct support from AWS, e.g.
-  # for requesting new limits on services that our applications use.
-  statement {
-    actions = [
-      "support:*"
     ]
 
     resources = [
@@ -116,26 +100,14 @@ data "aws_iam_policy_document" "developers_and_ci_iam_policy" {
   }
 }
 
-resource "aws_iam_policy" "developers_access_policy" {
-  name        = "infrastructure-admin-access-policy"
-  description = "Write-centric access policies for infrastructure admins"
-  policy      = data.aws_iam_policy_document.developers_access_policy.json
+resource "aws_iam_policy" "developers_and_ci_deploy_access_policy" {
+  name        = "infrastructure-admin-and-ci-deploy-access-policy"
+  description = "Access policies for deploying PFML applications"
+  policy      = data.aws_iam_policy_document.developers_and_ci_deploy_access_policy.json
 }
 
 resource "aws_iam_policy" "developers_and_ci_iam_policy" {
-  name        = "infrastructure-admin-and-github-actions-iam-policy"
-  description = "Write-centric access policies for infrastructure admins and Github Actions"
+  name        = "infrastructure-admin-and-ci-iam-policy"
+  description = "IAM access policies for infrastructure admins and Github Actions"
   policy      = data.aws_iam_policy_document.developers_and_ci_iam_policy.json
-}
-
-resource "aws_iam_policy_attachment" "developers_access_policy_attachment" {
-  name       = "infrastructure-admin-access-policy-attachment"
-  roles      = [data.aws_iam_role.developers.id]
-  policy_arn = aws_iam_policy.developers_access_policy.arn
-}
-
-resource "aws_iam_policy_attachment" "developers_and_ci_iam_policy_attachment" {
-  name       = "infrastructure-admin-and-github-actions-iam-policy-attachment"
-  roles      = [data.aws_iam_role.developers.id]
-  policy_arn = aws_iam_policy.developers_and_ci_iam_policy.arn
 }
