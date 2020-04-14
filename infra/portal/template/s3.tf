@@ -9,8 +9,10 @@ resource "aws_s3_bucket" "portal_web" {
   # EOTSS AWS Tagging Standards
   tags = {
     secretariat = "eolwd"
-    agency      = "eol"
-    application = "pfml"
+    # TODO: Change to DFML once a value exists in the standards
+    agency = "eol"
+    # TODO: Change to PFML application once a value exists in the standards
+    application = "coreinf"
 
     environment = var.environment_name
     Name        = var.portal_s3_bucket_name
