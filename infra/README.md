@@ -16,7 +16,7 @@ These steps are required before running terraform or test commands locally on yo
 <summary><b>1. Configure AWS</b></summary>
 <p>
 
-Since we manage AWS resources using Terraform, AWS credentials are needed to run terraform commands. 
+Since we manage AWS resources using Terraform, AWS credentials are needed to run terraform commands.
 
 #### Nava Sandbox
 
@@ -117,7 +117,7 @@ export AWS_PROFILE=AWS-498823821309-Infrastructure-Admin_profile
 </p>
 </details>
 
-For convenience, it is recommended that you export AWS_PROFILE or set an alias 
+For convenience, it is recommended that you export AWS_PROFILE or set an alias
 in your startup script to easily set/select the profile in any shell.
 
 ```sh
@@ -176,6 +176,10 @@ To apply changes to infrastructure:
 $ terraform apply
 ```
 
+### Setting up a new environment
+
+🔗 See [docs/creating-environments.md](../docs/creating-environments.md) to learn how to create a new environment.
+
 ### Tests
 
 To run the [test suite](../docs/tests.md):
@@ -198,32 +202,18 @@ npm run test:watch
 
 > By default, this will attempt to identify which tests to run based on which files have changed in the current repository. After running, you can interact with the prompt to configure or filter which test files are ran.
 
-### Setting up a new environment
-
-The easiest way to set up resources in a new environment is using the templates in [/bin/bootstrap-env/](/bin/bootstrap-env).
-
-The S3 bucket for holding tfstate files must be created first in [pfml-aws/s3.tf](/infra/pfml-aws/s3.tf).
-
-Then, individual terraform components may be set up.
-
-```
-pfml$ bin/bootstrap-env/bootstrap-env.sh <new-env> env-shared
-pfml$ bin/bootstrap-env/bootstrap-env.sh <new-env> api
-pfml$ bin/bootstrap-env/bootstrap-env.sh <new-env> portal
-```
-
 ### Testing Github Actions permissions
 
 Since Github Actions has different permissions than developers and admins, it's useful to test terraform configs using our CI/CD role so we know
 that they can be run on Github Actions with the right read/write permissions. This is recommended if you're adding a new service into our ecosystem.
 
-1. Ensure you have the AWS CLI: 
-   
+1. Ensure you have the AWS CLI:
+
    ```
    pip install awscli
    ```
 
-2. Generate a session: 
+2. Generate a session:
 
    ```
    aws sts assume-role --role-arn arn:aws:iam::498823821309:role/ci-run-deploys --role-session-name <any-session-name>
@@ -238,8 +228,8 @@ that they can be run on Github Actions with the right read/write permissions. Th
    aws_session_token = 789
    ```
 
-4. Use the profile: 
-   
+4. Use the profile:
+
    ```
    export AWS_PROFILE=ci-run-deploys
    ```
@@ -249,7 +239,7 @@ that they can be run on Github Actions with the right read/write permissions. Th
 ## Directory Structure
 
 ```
-└── aws                 🏡 infrastructure for AWS and VPCs, shared across envs e.g. developer IAM roles, 
+└── aws                 🏡 infrastructure for AWS and VPCs, shared across envs e.g. developer IAM roles,
                            docker registries, and network load balancers for each VPC.
 
 └── env-shared          🏡 infrastructure for an environment, shared across applications e.g. an API Gateway and ECS cluster.

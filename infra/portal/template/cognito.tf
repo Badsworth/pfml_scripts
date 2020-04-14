@@ -50,8 +50,8 @@ resource "aws_cognito_user_pool_client" "massgov_pfml_client" {
   name         = "massgov-${local.app_name}-${var.environment_name}"
   user_pool_id = aws_cognito_user_pool.claimants_pool.id
 
-  callback_urls                = var.cognito_extra_redirect_urls
-  logout_urls                  = var.cognito_extra_logout_urls
+  callback_urls                = concat(var.cognito_extra_redirect_urls, ["https://${aws_cloudfront_distribution.portal_web_distribution.domain_name}"])
+  logout_urls                  = concat(var.cognito_extra_logout_urls, ["https://${aws_cloudfront_distribution.portal_web_distribution.domain_name}"])
   supported_identity_providers = ["COGNITO"]
   refresh_token_validity       = 30
 

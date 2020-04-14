@@ -1,6 +1,6 @@
 # This file was originally generated from the following command:
 #
-#   bin/bootstrap-env.sh $ENV_NAME portal
+#   bin/bootstrap-env.sh test portal
 #
 # If making changes, it's recommended to update the bootstrap
 # templates so there's less manual work in creating new envs.
@@ -30,7 +30,7 @@ data "terraform_remote_state" "current" {
   backend = "s3"
 
   config = {
-    bucket = "massgov-pfml-$ENV_NAME-env-mgmt"
+    bucket = "massgov-pfml-test-env-mgmt"
     key    = "terraform/portal.tfstate"
     region = "us-east-1"
   }

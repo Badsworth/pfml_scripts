@@ -23,7 +23,7 @@ resource "aws_s3_bucket" "portal_web" {
     # TODO: Change to mailing list once it exists
     createdby = "sawyer.q.hollenshead@mass.gov"
     # TODO: Change to mailing list once it exists
-    itowner = "vijay.rajagopalan2@mass.gov"
+    itowner = "sawyer.q.hollenshead@mass.gov"
   }
 }
 
