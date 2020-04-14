@@ -5,6 +5,24 @@ resource "aws_s3_bucket" "portal_web" {
     index_document = "index.html"
     error_document = "404.html"
   }
+
+  # EOTSS AWS Tagging Standards
+  tags = {
+    secretariat = "eolwd"
+    agency      = "eol"
+    application = "pfml"
+
+    environment = var.environment_name
+    Name        = var.portal_s3_bucket_name
+    public      = "yes"
+
+    # TODO: Change to business owner once we know
+    businessowner = "vijay.rajagopalan2@mass.gov"
+    # TODO: Change to mailing list once it exists
+    createdby = "sawyer.q.hollenshead@mass.gov"
+    # TODO: Change to mailing list once it exists
+    itowner = "vijay.rajagopalan2@mass.gov"
+  }
 }
 
 data "aws_iam_policy_document" "portal_web" {
