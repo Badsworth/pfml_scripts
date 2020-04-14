@@ -48,6 +48,9 @@ data "template_file" "container_definitions" {
     app_name                   = local.app_name
     cpu                        = "512"
     memory                     = "1024"
+    db_url                     = aws_db_instance.default.address
+    db_name                    = aws_db_instance.default.name
+    db_username                = aws_db_instance.default.username
     docker_image               = "${data.aws_ecr_repository.app.repository_url}:${var.service_docker_tag}"
     environment_name           = var.environment_name
     cloudwatch_logs_group_name = aws_cloudwatch_log_group.service_logs.name

@@ -26,6 +26,15 @@
         "awslogs-region": "${aws_region}",
         "awslogs-stream-prefix": "${environment_name}"
       }
-    }
+    },
+    "environment": [
+      { "name": "ENVIRONMENT", "value": "${environment_name}" },
+      { "name": "DB_URL", "valueFrom": "${db_url}" },
+      { "name": "DB_NAME", "valueFrom": "${db_name}" },
+      { "name": "DB_USERNAME", "valueFrom": "${db_username}" }
+    ],
+    "secrets": [
+      { "name": "DB_PASSWORD", "valueFrom": "/service/${app_name}/${environment_name}/db-password" }
+    ]
   }
 ]

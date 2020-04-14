@@ -1,0 +1,49 @@
+# Environment Variables
+
+We configure the application by using [environment variables](https://12factor.net/config).
+
+## Local Development
+
+During local development, we specify environment variables through [docker-compose.yml](/api/docker-compose.yml).
+
+```
+mass-pfml-api:
+  ...
+  environment:
+    - ENVIRONMENT=local
+    - DB_URL=mass-pfml-db
+    - DB_NAME=pfml
+    - DB_USERNAME=pfml
+    - DB_PASSWORD=secret123
+```
+
+When updating these variables, you'll need to run `make build` in order to rebuild your container and pick up the new values.
+
+## Deployed Environments
+
+In deployed environments, variables are pulled in through AWS Elastic Container Service (ECS) when we're [defining the container](/infra/api/template/container_definitions.json). Insensitive values are encoded into the definition when Terraform generates it:
+
+```
+"environment": [
+  { "name": "ENVIRONMENT", "value": "${environment_name}" },
+  { "name": "DB_URL", "valueFrom": "${db_url}" },
+  { "name": "DB_NAME", "valueFrom": "${db_name}" },
+  { "name": "DB_USERNAME", "valueFrom": "${db_username}" }
+]
+```
+
+and sensitive values are pulled in from AWS SSM Parameter Store when the container starts:
+
+```
+"secrets": [
+  { "name": "DB_PASSWORD", "valueFrom": "/service/${app_name}/${environment_name}/db-password" }
+]
+```
+
+To view or update insensitive values, pass them in through [service.tf](/infra/api/template/service.tf).
+
+To view or update sensitive values:
+  1. Go to the key in the [AWS Systems Manager/Parameter Store console](https://console.aws.amazon.com/systems-manager/parameters?region=us-east-1).
+  2. Create or update the sensitive string with the default KMS key, matching the `valueFrom` field that you specify in the container definition above.
+
+In both cases, the application will need to be redeployed before environment variables are picked up.
