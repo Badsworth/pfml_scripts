@@ -4,7 +4,7 @@ import React from "react";
 /**
  * Animated icon used for indicating a progress/loading state
  */
-export const Spinner = props => {
+export const Spinner = (props) => {
   return (
     <span
       className="c-spinner"

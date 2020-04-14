@@ -6,7 +6,7 @@ import classnames from "classnames";
 /**
  * Link styled as button.
  */
-const ButtonLink = props => {
+const ButtonLink = (props) => {
   const classes = classnames(
     "usa-button",
     props.variation ? `usa-button--${props.variation}` : ""

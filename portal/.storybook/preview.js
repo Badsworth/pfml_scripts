@@ -13,6 +13,6 @@ import { addDecorator } from "@storybook/react";
 import i18n from "../src/locales/i18n";
 
 // Internationalize strings in our stories
-addDecorator(storyFn => (
+addDecorator((storyFn) => (
   <I18nextProvider i18n={i18n.appI18n}>{storyFn()}</I18nextProvider>
 ));

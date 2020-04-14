@@ -8,7 +8,7 @@ const AmplifyReact = jest.genMockFromModule("aws-amplify-react");
  * authentication state. That authentication state is then passed into children
  * components similar to the real Authenticator.
  */
-const Authenticator = props => {
+const Authenticator = (props) => {
   const authState = props.authState || "signIn";
   const authData = props.authData;
 
@@ -24,7 +24,7 @@ const Authenticator = props => {
   }, []);
 
   // Clone authState and authData into children component props
-  return React.Children.map(props.children, child =>
+  return React.Children.map(props.children, (child) =>
     React.cloneElement(child, { authState, authData })
   );
 };
@@ -35,7 +35,7 @@ Authenticator.propTypes = {
   authData: PropTypes.object,
 };
 
-const SignIn = props => {
+const SignIn = (props) => {
   return props.authState !== "signedIn" ? <h1>You must sign in</h1> : null;
 };
 

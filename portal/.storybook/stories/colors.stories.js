@@ -81,7 +81,7 @@ export const Swatches = () => {
           <section key={family}>
             <h2 className="font-size-lg">{family}</h2>
             <div className="grid-row flex-wrap">
-              {tokens.map(token => (
+              {tokens.map((token) => (
                 <Swatch key={token} token={token} />
               ))}
             </div>

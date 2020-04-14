@@ -9,7 +9,7 @@ export default {
 export const ControlledField = () => {
   // Setup super simple state management for the change handler and this controlled form component
   const [value, setFieldValue] = useState("2019-01-29");
-  const handleOnChange = evt => {
+  const handleOnChange = (evt) => {
     setFieldValue(evt.target.value);
   };
 

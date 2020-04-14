@@ -6,7 +6,7 @@ import { useTranslation } from "react-i18next";
 /**
  * Displays auth links and info about the user if they're logged in
  */
-const AuthNav = props => {
+const AuthNav = (props) => {
   const { t } = useTranslation();
 
   const handleSignOut = () => {

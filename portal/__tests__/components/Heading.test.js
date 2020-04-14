@@ -105,7 +105,7 @@ describe("Heading", () => {
       // We'll generate the size by subtracting from the level
       const levels = [2, 3, 4, 5, 6];
 
-      levels.forEach(level => {
+      levels.forEach((level) => {
         const wrapper = shallow(
           <Heading level={`${level}`} size={`${level - 1}`}>
             Hello world

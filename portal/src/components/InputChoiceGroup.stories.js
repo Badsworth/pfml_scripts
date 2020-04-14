@@ -9,7 +9,7 @@ export default {
 export const Default = () => {
   // Setup super simple state management for the change handler and this controlled form component
   const [selectedValue, setSelectedValue] = useState("a");
-  const handleOnChange = evt => {
+  const handleOnChange = (evt) => {
     setSelectedValue(evt.target.value);
   };
 

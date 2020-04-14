@@ -13,7 +13,7 @@ const formatDollar = new Intl.NumberFormat("en-US", {
  * @param {{ employer_id: string, employer_qtr_id: number }[]} wages - Wages object returned by /wages API endpoint.
  * @returns {{ totalEmployers: number, earningsByEmployer: [{ employer: string, totalEarnings: string, wages: [{ quarter: string, earnings: string, employer: string }] } ] }}
  */
-const summarizeWages = wages => ({
+const summarizeWages = (wages) => ({
   totalEmployers: uniqBy(wages, "employer_id").length,
   // _.map allows us to loop through a js object and
   // return an array that contains an object for each key/value pair
@@ -26,7 +26,7 @@ const summarizeWages = wages => ({
     (employerWages, employerId) => ({
       // TODO replace with employer name when it's returned from API
       employer: employerId,
-      wages: employerWages.map(wage => ({
+      wages: employerWages.map((wage) => ({
         employer: employerId,
         period_id: wage.period_id,
         quarter: convertPeriodToMonths(wage.period_id),

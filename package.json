@@ -6,7 +6,8 @@
     "lint:js": "eslint --ext .js",
     "lint:js:all": "npm run lint:js -- ./",
     "lint:tf": "./bin/tf-fmt.sh",
-    "lint": "npm run lint:js:all && npm run lint:tf"
+    "lint": "npm run lint:js:all && npm run lint:tf",
+    "prettier": "prettier --write 'portal/**/*.js'"
   },
   "devDependencies": {
     "babel-eslint": "^10.0.3",

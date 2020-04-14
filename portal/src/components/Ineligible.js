@@ -8,7 +8,7 @@ import { useTranslation } from "react-i18next";
 /**
  * A view that is conditionally rendered on the Result page when the claimant is ineligible due to insufficient contributions.
  */
-const Ineligible = props => {
+const Ineligible = (props) => {
   const { t } = useTranslation();
 
   return (

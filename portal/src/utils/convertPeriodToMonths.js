@@ -12,7 +12,7 @@ const quarterMap = {
  * @param {string} periodId - periodId returned from wages input in format Q1YYYY
  * @returns {string}`${startMonth} - ${endMonth} ${year}`
  */
-const convertPeriodToMonths = periodId => {
+const convertPeriodToMonths = (periodId) => {
   const format = /Q[1-4]2\d\d\d/;
   const correctFormat = periodId.match(format) !== null;
 

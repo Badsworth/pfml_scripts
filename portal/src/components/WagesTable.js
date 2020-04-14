@@ -22,7 +22,7 @@ const mockWage = (employeeId, employerId) => ({
   employee_fam_contribution: 975,
 });
 
-const mockGetWageData = id => {
+const mockGetWageData = (id) => {
   const employer1 = "e4e3a70d-c9bf-4d1e-acf1-e3adefa20a32";
   const employer2 = "e72751a0-3ab4-4593-a08b-7f332c359fb4";
   return [
@@ -35,7 +35,7 @@ const mockGetWageData = id => {
 /**
  * A component that fetches wages for an employee and displays them in a table by employer.
  */
-const WagesTable = props => {
+const WagesTable = (props) => {
   const { t } = useTranslation();
   const [wagesSummary, setWagesSummary] = useState({
     totalEmployers: 0,

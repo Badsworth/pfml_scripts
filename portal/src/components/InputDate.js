@@ -85,7 +85,7 @@ function InputDate(props) {
    * us in the onChange prop.
    * @param {React.SyntheticEvent} evt
    */
-  const handleChange = evt => {
+  const handleChange = (evt) => {
     const isoDate = formatFieldsAsISO8601({
       month: inputTextRefs.month.current.value,
       day: inputTextRefs.day.current.value,

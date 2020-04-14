@@ -7,7 +7,7 @@ import classnames from "classnames";
  * expected USWDS utility classes for styling. For a page title, use the
  * `Title` component instead.
  */
-const Heading = props => {
+const Heading = (props) => {
   const HeadingElement = `h${props.level}`;
   const stylingLevel = props.size ? props.size : props.level;
 

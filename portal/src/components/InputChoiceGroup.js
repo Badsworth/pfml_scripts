@@ -29,7 +29,7 @@ function InputChoiceGroup({ type = "checkbox", ...props }) {
       </FormLabel>
 
       <div className="margin-top-3">
-        {props.choices.map(choice => (
+        {props.choices.map((choice) => (
           <InputChoice
             key={choice.value}
             name={props.name}

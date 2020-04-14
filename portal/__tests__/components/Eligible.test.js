@@ -13,17 +13,10 @@ describe("Eligible", () => {
     const event = { target: { name: "dataIsCorrect", value: "yes" } };
     const wrapper = shallow(<Eligible employeeId="1234" />);
 
-    wrapper
-      .find("InputChoiceGroup")
-      .first()
-      .simulate("change", event);
+    wrapper.find("InputChoiceGroup").first().simulate("change", event);
 
-    expect(
-      wrapper
-        .find("InputChoiceGroup")
-        .first()
-        .prop("choices")
-    ).toMatchInlineSnapshot(`
+    expect(wrapper.find("InputChoiceGroup").first().prop("choices"))
+      .toMatchInlineSnapshot(`
      Array [
        Object {
          "checked": true,

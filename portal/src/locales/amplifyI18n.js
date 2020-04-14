@@ -11,7 +11,7 @@ const authScreenLabels = {
  * @see https://aws-amplify.github.io/docs/js/i18n and docs/internationalization.md
  * @param {string} locale - language and region combination, e.g. 'pt_BR' for Portuguese of Brazil
  */
-const setAmplifyI18n = locale => {
+const setAmplifyI18n = (locale) => {
   I18n.putVocabularies(authScreenLabels);
   I18n.setLanguage(locale);
 };

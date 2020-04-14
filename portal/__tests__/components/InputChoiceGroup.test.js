@@ -103,10 +103,7 @@ describe("InputChoiceGroup", () => {
         onChange: jest.fn(),
       });
 
-      wrapper
-        .find("InputChoice")
-        .first()
-        .simulate("change");
+      wrapper.find("InputChoice").first().simulate("change");
 
       expect(props.onChange).toHaveBeenCalledTimes(1);
     });

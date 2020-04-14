@@ -9,12 +9,12 @@ import { useRouter } from "next/router";
 import { useTranslation } from "react-i18next";
 import valueWithFallback from "../../utils/valueWithFallback";
 
-export const EmployeeInfo = props => {
+export const EmployeeInfo = (props) => {
   const { t } = useTranslation();
   const router = useRouter();
   const formData = props.formData;
 
-  const handleSubmit = event => {
+  const handleSubmit = (event) => {
     event.preventDefault();
     // the empoyeeId will ultimately be returned by API /employee endpoint
     // TODO replace with POST request to API /employee to get employeeId
@@ -91,12 +91,12 @@ EmployeeInfo.propTypes = {
   updateFieldFromEvent: PropTypes.func.isRequired,
 };
 
-const mapStateToProps = state => ({
+const mapStateToProps = (state) => ({
   formData: state.form,
 });
 
-const mapDispatchToProps = dispatch => ({
-  updateFieldFromEvent: event => dispatch(updateFieldFromEvent(event)),
+const mapDispatchToProps = (dispatch) => ({
+  updateFieldFromEvent: (event) => dispatch(updateFieldFromEvent(event)),
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(EmployeeInfo);

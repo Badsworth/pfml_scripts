@@ -8,13 +8,13 @@ import { useTranslation } from "react-i18next";
 /**
  * A view that is conditionally rendered on the Result page when the claimant is eligible.
  */
-const Eligible = props => {
+const Eligible = (props) => {
   const { t } = useTranslation();
   const [formData, setFormData] = useState({
     dataIsCorrect: null,
   });
 
-  const handleChange = event => {
+  const handleChange = (event) => {
     const { name, value } = event.target;
     setFormData({ ...formData, [name]: value });
   };

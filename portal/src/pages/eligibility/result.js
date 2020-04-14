@@ -8,7 +8,7 @@ import { useRouter } from "next/router";
 import { useTranslation } from "react-i18next";
 
 // TODO replace with request to eligibility endpoint
-const mockEligibilityRequest = eligibility => eligibility;
+const mockEligibilityRequest = (eligibility) => eligibility;
 
 const Result = () => {
   const router = useRouter();

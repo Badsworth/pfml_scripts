@@ -24,12 +24,9 @@ describe("WagesTable", () => {
       const wrapper = mount(
         <WagesTable eligibility="eligible" employeeId="1234" />
       );
-      expect(
-        wrapper
-          .find("Lead")
-          .at(1)
-          .text()
-      ).toEqual(i18next.t("components.wagesTable.eligibleDescriptionP2"));
+      expect(wrapper.find("Lead").at(1).text()).toEqual(
+        i18next.t("components.wagesTable.eligibleDescriptionP2")
+      );
     });
   });
 });
