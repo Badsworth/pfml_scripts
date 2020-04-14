@@ -1,9 +1,3 @@
-resource "aws_ses_email_identity" "cognito_sender_email" {
-  email = var.cognito_sender_email
-  // Only create this resource if we're using SES for sending emails
-  count = var.cognito_use_ses_email ? 1 : 0
-}
-
 resource "aws_cognito_user_pool" "claimants_pool" {
   name                     = "massgov-${local.app_name}-${var.environment_name}"
   username_attributes      = ["email"]
