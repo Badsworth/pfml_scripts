@@ -1,9 +1,3 @@
-locals {
-  // Domain set up through Cloudfront and Route53.
-  // This will be used as Cognito's signin and logout redirect URLs.
-  hosted_domain = "https://${aws_route53_record.root_v6.fqdn}"
-}
-
 resource "aws_ses_email_identity" "cognito_sender_email" {
   email = var.cognito_sender_email
   // Only create this resource if we're using SES for sending emails
@@ -62,8 +56,8 @@ resource "aws_cognito_user_pool_client" "massgov_pfml_client" {
   name         = "massgov-${local.app_name}-${var.environment_name}"
   user_pool_id = aws_cognito_user_pool.claimants_pool.id
 
-  callback_urls                = concat(var.cognito_extra_redirect_urls, [local.hosted_domain])
-  logout_urls                  = concat(var.cognito_extra_logout_urls, [local.hosted_domain])
+  callback_urls                = var.cognito_extra_redirect_urls
+  logout_urls                  = var.cognito_extra_logout_urls
   supported_identity_providers = ["COGNITO"]
   refresh_token_validity       = 30
 

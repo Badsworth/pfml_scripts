@@ -13,15 +13,22 @@ terraform {
   }
 }
 
+locals {
+  domain = "pfml-sandbox-v2.navateam.com"
+  tld    = "navateam.com"
+}
+
 output "cloudfront_distribution_id" {
   value = module.massgov_pfml.cloudfront_distribution_id
 }
 
 module "massgov_pfml" {
   source                      = "../../template"
+  domain                      = local.domain
   environment_name            = "sandbox-v2"
-  cognito_extra_redirect_urls = ["http://localhost:3000"]
-  cognito_extra_logout_urls   = ["http://localhost:3000"]
+  cloudfront_certificate_arn  = data.aws_acm_certificate.domain.arn
+  cognito_extra_redirect_urls = ["http://localhost:3000", "https://${local.domain}"]
+  cognito_extra_logout_urls   = ["http://localhost:3000", "https://${local.domain}"]
   cognito_sender_email        = null
   cognito_use_ses_email       = false
   portal_s3_bucket_name       = "mpfml-prototype"

@@ -1,24 +1,7 @@
-locals {
-  domain = var.domain != "" ? var.domain : "pfml-${var.environment_name}.${var.tld}"
-}
-
 provider "aws" {
   region = "us-east-1"
   alias  = "us-east-1"
 }
-
-data "aws_acm_certificate" "domain" {
-  # ACM certs have to be in us-east-1 to be used with CloudFront
-  provider = aws.us-east-1
-
-  # you cannot lookup certs by a SAN, so we lookup based on the TLD with the
-  # assumption it also has a wildcard cert as a SAN
-  domain      = var.tld
-  statuses    = ["ISSUED"]
-  most_recent = true
-}
-
-# CDN
 
 resource "aws_cloudfront_distribution" "portal_web_distribution" {
   origin {
@@ -42,7 +25,7 @@ resource "aws_cloudfront_distribution" "portal_web_distribution" {
   is_ipv6_enabled     = true
   http_version        = "http2"
   default_root_object = "index.html"
-  aliases             = [local.domain]
+  aliases             = var.domain == "" ? [] : [var.domain]
   price_class         = "PriceClass_100"
   retain_on_delete    = true
 
@@ -74,7 +57,8 @@ resource "aws_cloudfront_distribution" "portal_web_distribution" {
   }
 
   viewer_certificate {
-    acm_certificate_arn = data.aws_acm_certificate.domain.arn
+    acm_certificate_arn            = var.cloudfront_certificate_arn
+    cloudfront_default_certificate = (var.cloudfront_certificate_arn == null)
 
     ssl_support_method = "sni-only"
     # TODO: we might need to use TLSv1.1_2016 for broader compatibility
@@ -85,37 +69,5 @@ resource "aws_cloudfront_distribution" "portal_web_distribution" {
     geo_restriction {
       restriction_type = "none"
     }
-  }
-}
-
-# DNS
-
-data "aws_route53_zone" "tld" {
-  name = var.tld
-}
-
-resource "aws_route53_record" "root_v4" {
-  zone_id = data.aws_route53_zone.tld.zone_id
-  name    = local.domain
-  type    = "A"
-
-  alias {
-    name    = aws_cloudfront_distribution.portal_web_distribution.domain_name
-    zone_id = aws_cloudfront_distribution.portal_web_distribution.hosted_zone_id
-
-    evaluate_target_health = false
-  }
-}
-
-resource "aws_route53_record" "root_v6" {
-  zone_id = data.aws_route53_zone.tld.zone_id
-  name    = local.domain
-  type    = "AAAA"
-
-  alias {
-    name    = aws_cloudfront_distribution.portal_web_distribution.domain_name
-    zone_id = aws_cloudfront_distribution.portal_web_distribution.hosted_zone_id
-
-    evaluate_target_health = false
   }
 }

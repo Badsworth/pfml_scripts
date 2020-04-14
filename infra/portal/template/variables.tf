@@ -1,3 +1,14 @@
+variable "cloudfront_certificate_arn" {
+  description = "Optional. ARN of a ACM Certificate used by Cloudfront."
+  type        = string
+  default     = null
+}
+
+variable "cloudfront_origin_path" {
+  description = "Path to latest portal release. Set through environment variable in Github worfklow."
+  type        = string
+}
+
 variable "cognito_extra_redirect_urls" {
   description = "Additional list of valid URLs for Cognito to redirect to after user authentication"
   type        = list(string)
@@ -20,6 +31,12 @@ variable "cognito_sender_email" {
   type        = string
 }
 
+variable "domain" {
+  description = "Domain name to point to CloudFront distribution (including TLD)"
+  type        = string
+  default     = ""
+}
+
 variable "environment_name" {
   description = "Name of the environment"
   type        = string
@@ -27,22 +44,5 @@ variable "environment_name" {
 
 variable "portal_s3_bucket_name" {
   description = "Name of the deploy bucket for Claimant Portal"
-  type        = string
-}
-
-variable "tld" {
-  description = "Top-level domain name (primarily for finding ACM cert and Route53 hosted zone)"
-  type        = string
-  default     = "navateam.com"
-}
-
-variable "domain" {
-  description = "Domain name to point to CloudFront distribution (including TLD), defaults to $(app_name)-$(environment_name).$(tld)"
-  type        = string
-  default     = ""
-}
-
-variable "cloudfront_origin_path" {
-  description = "Path to latest portal release. Set through environment variable in Github worfklow."
   type        = string
 }

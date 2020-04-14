@@ -5,7 +5,7 @@ provider "aws" {
 terraform {
   required_providers {
     archive = "~> 1.3"
-    aws     = "~> 2.54"
+    aws     = "~> 2.57"
   }
 }
 
