@@ -37,6 +37,14 @@ data "aws_iam_policy_document" "portal_web" {
       type        = "AWS"
       identifiers = ["*"]
     }
+
+    # only requests from Cloudfront with User-Agent set with this password
+    # will be accepted. see https://abridge2devnull.com/posts/2018/01/restricting-access-to-a-cloudfront-s3-website-origin/
+    condition {
+      test     = "StringEquals"
+      variable = "aws:UserAgent"
+      values   = ["${random_password.s3_user_agent_password.result}"]
+    }
   }
 }
 

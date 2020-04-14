@@ -3,12 +3,24 @@ provider "aws" {
   alias  = "us-east-1"
 }
 
+resource "random_password" "s3_user_agent_password" {
+  length           = 16
+  special          = true
+  override_special = "_%@"
+}
+
 resource "aws_cloudfront_distribution" "portal_web_distribution" {
   origin {
     domain_name = aws_s3_bucket.portal_web.website_endpoint
     origin_id   = aws_s3_bucket.portal_web.id
     # set as an environment variable during github workflow
     origin_path = var.cloudfront_origin_path
+
+    # see s3 bucket iam policy
+    custom_header {
+      name  = "User-Agent"
+      value = "${random_password.s3_user_agent_password.result}"
+    }
 
     custom_origin_config {
       http_port  = 80
@@ -28,6 +40,10 @@ resource "aws_cloudfront_distribution" "portal_web_distribution" {
   aliases             = var.domain == "" ? [] : [var.domain]
   price_class         = "PriceClass_100"
   retain_on_delete    = true
+  # Terraform will exit as soon as it’s made all the updates
+  # to AWS API objects and won’t poll for the distribution to become ready,
+  # which can take 15 to 20 minutes
+  wait_for_deployment = false
 
   default_cache_behavior {
     allowed_methods  = ["GET", "HEAD", "OPTIONS"]
