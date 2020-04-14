@@ -22,6 +22,20 @@ describe("StateId", () => {
     expect(wrapper.find("ConditionalContent").prop("visible")).toBeFalsy();
   });
 
+  it("will redirect to ssn page", () => {
+    const wrapper = shallow(
+      <StateId
+        updateFieldFromEvent={jest.fn()}
+        removeField={jest.fn()}
+        formData={{}}
+      />
+    );
+
+    expect(wrapper.find("QuestionPage").prop("nextPage")).toEqual(
+      routes.claims.ssn
+    );
+  });
+
   describe("when user indicates they have a state id", () => {
     const wrapper = shallow(
       <StateId
@@ -33,28 +47,6 @@ describe("StateId", () => {
 
     it("renders id field", () => {
       expect(wrapper.find("ConditionalContent").prop("visible")).toBeTruthy();
-    });
-
-    it("will redirect to home", () => {
-      expect(wrapper.find("QuestionPage").prop("nextPage")).toEqual(
-        routes.home
-      );
-    });
-  });
-
-  describe("when user indicates they do NOT have a state id", () => {
-    const wrapper = shallow(
-      <StateId
-        updateFieldFromEvent={jest.fn()}
-        removeField={jest.fn()}
-        formData={{ hasStateId: false }}
-      />
-    );
-
-    it("will redirect to ssn page", () => {
-      expect(wrapper.find("QuestionPage").prop("nextPage")).toEqual(
-        routes.claims.ssn
-      );
     });
   });
 });

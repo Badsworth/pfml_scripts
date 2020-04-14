@@ -17,8 +17,7 @@ export const StateId = (props) => {
   return (
     <QuestionPage
       title={t("pages.claimsStateId.title")}
-      // TODO change routes.home with address routes made for CP-215
-      nextPage={!hasStateId ? routes.claims.ssn : routes.home}
+      nextPage={routes.claims.ssn}
     >
       <InputChoiceGroup
         choices={[
