@@ -1,11 +1,11 @@
 # Sets up a user and access policy role for CI/CD.
 #
-# The "github-actions" user itself has no permissions, but can assume the ci-run-deploys role along
+# The "pfml-github-actions" user itself has no permissions, but can assume the ci-run-deploys role along
 # with PFML admins and developers. This allows us to easily test whether CI has all the read and write
-# permissions it needs without having the long-term github-actions user credentials on our machines.
+# permissions it needs without having the long-term pfml-github-actions user credentials on our machines.
 #
 # This is particularly important because developers receive full read-only access by default, and
-# github-actions does not.
+# pfml-github-actions does not.
 #
 # For PFML admins and developers that want to assume the role (i.e. pretend to be github actions),
 # see the infra/README.md for details.
@@ -17,7 +17,11 @@
 # Most of this access comes from iam-shared.tf.
 #
 resource "aws_iam_user" "github_actions" {
-  name = "github-actions"
+  name = "pfml-github-actions"
+
+  tags = {
+    repo = "EOLWD/pfml"
+  }
 }
 
 # 1. Generate a user access key that is exposed in the terraform state and should be set in Github Actions.
@@ -26,7 +30,7 @@ resource "aws_iam_access_key" "github_actions" {
   user = aws_iam_user.github_actions.name
 }
 
-# 2. Create a role that can be assumed by PFML developers, admins, and the github-actions user.
+# 2. Create a role that can be assumed by PFML developers, admins, and the pfml-github-actions user.
 #
 resource "aws_iam_role" "ci_run_deploys" {
   name               = "ci-run-deploys"
