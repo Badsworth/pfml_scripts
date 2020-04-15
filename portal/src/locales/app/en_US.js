@@ -28,8 +28,25 @@ const pages = {
     sectionLabel: "What's your birthdate?",
     title: "$t(pages.claimsGeneral.takingLeaveTitle)",
   },
+  claimsDuration: {
+    avgWeeklyHoursWorkedHint:
+      "Tell us how many hours you typically worked before going on leave. We need to know this so we can calculate your benefit amount.",
+    avgWeeklyHoursWorkedLabel:
+      "How many hours do you work in a week, on average?",
+    continuousHint: "(Continuous leave)",
+    continuousLabel: "Take off work completely",
+    hoursOffNeededHint:
+      "This can be an approximate. You can change this after your claim is approved.",
+    hoursOffNeededLabel: "How many hours do you need to take off each week?",
+    intermittentHint: "(Intermittent leave)",
+    intermittentLabel: "Work on a reduced schedule",
+    sectionLabel:
+      "Do you need to take off work completely or work on a reduced schedule?",
+    title: "$t(pages.claimsGeneral.leaveDurationTitle)",
+  },
   claimsGeneral: {
     takingLeaveTitle: "Who is taking leave",
+    leaveDurationTitle: "Leave duration",
   },
   claimsName: {
     firstNameLabel: "First name",

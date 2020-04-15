@@ -19,7 +19,7 @@ export const Ssn = (props) => {
     <QuestionPage
       title={t("pages.claimsSsn.title")}
       // TODO Route this to address or occupation page what that page is ready.
-      nextPage={routes.home}
+      nextPage={routes.claims.duration}
     >
       {/* TODO(CP-296) Use masked field component for SSN styling. */}
       <InputText

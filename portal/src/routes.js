@@ -7,6 +7,7 @@ const routes = {
   home: "/",
   claims: {
     dateOfBirth: "/claims/date-of-birth",
+    duration: "/claims/duration",
     name: "/claims/name",
     ssn: "/claims/ssn",
     stateId: "/claims/state-id",
