@@ -37,3 +37,13 @@ resource "aws_s3_bucket" "terraform" {
     Name          = "pfml-${each.key}-env-mgmt"
   }
 }
+
+resource "aws_s3_bucket_public_access_block" "terraform_block_public_access" {
+  for_each = aws_s3_bucket.terraform
+  bucket   = each.value.id
+
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+}
