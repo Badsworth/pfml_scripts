@@ -28,20 +28,17 @@ resource "aws_iam_policy" "developers_access_policy" {
   policy      = data.aws_iam_policy_document.developers_access_policy.json
 }
 
-resource "aws_iam_policy_attachment" "developers_access_policy_attachment" {
-  name       = "infrastructure-admin-access-policy-attachment"
-  roles      = [data.aws_iam_role.developers.id]
+resource "aws_iam_role_policy_attachment" "developers_access_policy_attachment" {
+  role       = data.aws_iam_role.developers.id
   policy_arn = aws_iam_policy.developers_access_policy.arn
 }
 
-resource "aws_iam_policy_attachment" "developers_deploy_access_policy_attachment" {
-  name       = "infrastructure-admin-deploy-access-policy-attachment"
-  roles      = [data.aws_iam_role.developers.id]
+resource "aws_iam_role_policy_attachment" "developers_deploy_access_policy_attachment" {
+  role       = data.aws_iam_role.developers.id
   policy_arn = aws_iam_policy.developers_and_ci_deploy_access_policy.arn
 }
 
-resource "aws_iam_policy_attachment" "developers_iam_policy_attachment" {
-  name       = "infrastructure-admin-iam-policy-attachment"
-  roles      = [data.aws_iam_role.developers.id]
+resource "aws_iam_role_policy_attachment" "developers_iam_policy_attachment" {
+  role       = data.aws_iam_role.developers.id
   policy_arn = aws_iam_policy.developers_and_ci_iam_policy.arn
 }

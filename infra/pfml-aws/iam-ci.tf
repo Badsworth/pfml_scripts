@@ -54,15 +54,13 @@ data "aws_iam_policy_document" "trust_assume_role_policy" {
 
 # 3. Setup deploy permissions that are shared between developers and CI.
 #
-resource "aws_iam_policy_attachment" "ci_deploy_access_policy_attachment" {
-  name       = "ci-deploy-access-policy-attachment"
-  roles      = [aws_iam_role.ci_run_deploys.id]
+resource "aws_iam_role_policy_attachment" "ci_deploy_access_policy_attachment" {
+  role       = aws_iam_role.ci_run_deploys.id
   policy_arn = aws_iam_policy.developers_and_ci_deploy_access_policy.arn
 }
 
-resource "aws_iam_policy_attachment" "ci_iam_policy_attachment" {
-  name       = "ci-iam-policy-attachment"
-  roles      = [aws_iam_role.ci_run_deploys.id]
+resource "aws_iam_role_policy_attachment" "ci_iam_policy_attachment" {
+  role       = aws_iam_role.ci_run_deploys.id
   policy_arn = aws_iam_policy.developers_and_ci_iam_policy.arn
 }
 
@@ -101,8 +99,7 @@ resource "aws_iam_policy" "ci_run_deploys_policy" {
   policy      = data.aws_iam_policy_document.ci_run_deploys_policy.json
 }
 
-resource "aws_iam_policy_attachment" "ci_run_deploys_policy_attachment" {
-  name       = "ci-run-deploys-policy-attachment"
-  roles      = [aws_iam_role.ci_run_deploys.id]
+resource "aws_iam_role_policy_attachment" "ci_run_deploys_policy_attachment" {
+  role       = aws_iam_role.ci_run_deploys.id
   policy_arn = aws_iam_policy.ci_run_deploys_policy.arn
 }
