@@ -72,6 +72,10 @@ data "aws_iam_policy_document" "ci_run_deploys_policy" {
   statement {
     sid = "PfmlAppsAccess"
     actions = [
+      # Allow CI to read VPCs and subnets.
+      "ec2:DescribeSubnets",
+      "ec2:DescribeVpc*",
+
       # Allow CI to configure VPC endpoints.
       "ec2:CreateVpcEndpointServiceConfiguration",
       "ec2:DeleteVpcEndpointServiceConfigurations",
