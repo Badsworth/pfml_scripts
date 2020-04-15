@@ -22,12 +22,12 @@ export const StateId = (props) => {
       <InputChoiceGroup
         choices={[
           {
-            checked: hasStateId,
+            checked: hasStateId === true,
             label: t("pages.claimsStateId.hasIdChoiceYes"),
             value: "true",
           },
           {
-            checked: !hasStateId && hasStateId !== undefined,
+            checked: hasStateId === false,
             label: t("pages.claimsStateId.hasIdChoiceNo"),
             value: "false",
           },

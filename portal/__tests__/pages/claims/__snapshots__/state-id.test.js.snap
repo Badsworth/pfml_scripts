@@ -9,7 +9,7 @@ exports[`StateId initially renders the page without an id field 1`] = `
     choices={
       Array [
         Object {
-          "checked": undefined,
+          "checked": false,
           "label": "Yes",
           "value": "true",
         },
