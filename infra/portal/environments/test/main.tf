@@ -25,11 +25,19 @@ output "cloudfront_distribution_id" {
   value       = module.massgov_pfml.cloudfront_distribution_id
 }
 
+output "cognito_user_pool_id" {
+  value = module.massgov_pfml.cognito_user_pool_id
+}
+
+output "cognito_user_pool_client_id" {
+  value = module.massgov_pfml.cognito_user_pool_client_id
+}
+
 module "massgov_pfml" {
   # Once you have a domain name, update the following variables:
   # domain = "pfml-test.eolwd.mass.gov"
-  cognito_extra_redirect_urls = []
-  cognito_extra_logout_urls   = []
+  cognito_extra_redirect_urls = ["http://localhost:3000"]
+  cognito_extra_logout_urls   = ["http://localhost:3000"]
 
   # Change the variables below if this environment should send Cognito emails through SES:
   cognito_sender_email  = null

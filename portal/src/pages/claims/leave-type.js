@@ -53,7 +53,7 @@ LeaveType.propTypes = {
       "activeDutyFamilyLeave",
       "medicalLeave",
       "parentalLeave",
-    ])
+    ]),
   }).isRequired,
   updateFieldFromEvent: PropTypes.func.isRequired,
 };

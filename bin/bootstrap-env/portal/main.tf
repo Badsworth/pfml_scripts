@@ -25,6 +25,14 @@ output "cloudfront_distribution_id" {
   value       = module.massgov_pfml.cloudfront_distribution_id
 }
 
+output "cognito_user_pool_id" {
+  value = module.massgov_pfml.cognito_user_pool_id
+}
+
+output "cognito_user_pool_client_id" {
+  value = module.massgov_pfml.cognito_user_pool_client_id
+}
+
 module "massgov_pfml" {
   # Once you have a domain name, update the following variables:
   # domain = "pfml-$ENV_NAME.eolwd.mass.gov"

@@ -7,7 +7,7 @@
     "dev": "next",
     "docs": "start-storybook -p 6006 -s ./public --docs",
     "build": "next build && next export",
-    "build:test": "BUILD_ENV=test next build && next export",
+    "build:test": "BUILD_ENV=test npm run build",
     "start": "next start",
     "test": "jest --ci --coverage",
     "test:no-coverage": "jest --ci",

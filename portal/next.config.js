@@ -2,6 +2,9 @@ const buildEnv = process.env.BUILD_ENV || "dev";
 const envVariables = require("./../infra/portal/config/" + buildEnv);
 const featureFlags = require("./config/featureFlags")(buildEnv);
 
+// eslint-disable-next-line no-console
+console.log(`📦 Using "${buildEnv}" environment variables to build the site.`);
+
 module.exports = {
   // In our code, we can reference environment variables from process.env
   // https://nextjs.org/docs/api-reference/next.config.js/environment-variables

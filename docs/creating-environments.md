@@ -20,12 +20,6 @@ The easiest way to set up resources in a new environment is using the templates 
     ```
     terraform init
     ```
-1. Depending on the component you're setting up, you may need to do a few more things outside of Terraform:
-
-    **Portal:**
-    - Confirm or configure the variables in `environments/<new-env>/main.tf`
-
-      By default, new environments are configured to NOT send emails through SES. This is fine for development, but for production-like environments, this should be changed. An email must be verified before it can be used by SES. If you configure an environment to use SES with an unverified email, when you first run `terraform apply` it will fail, and report that you need to verify the email address.
 1. Create the environment:
 
     **Portal:**
@@ -49,3 +43,6 @@ The easiest way to set up resources in a new environment is using the templates 
     ```
     terraform apply
     ```
+1. Follow additional steps specific to each component:
+
+    - [Additional steps for new Portal environments](portal/creating-environments.md)

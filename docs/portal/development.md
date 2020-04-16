@@ -8,17 +8,6 @@ Configuration environment is selected with the `BUILD_ENV` variable in [`portal/
 
 Use environment specific scripts to bundle builds with the correct configuration. See e.g. `build:test`, in [`portal/package.json`](../portal/package.json). Use `process.env.[ENV_VARIABLE_NAME]` to access config values.
 
-### All Environments
-
-There are currently two environments: `dev` and `test`. `dev` is meant for local development, and `test` is a stable pre-staging pre-production build.
-
-### Adding an environment
-
-To add other environments (e.g. `staging` or `prod`):
-
-- Add the variables to a file named after the environment, e.g. `infra/portal/config/prod.js`.
-- Update the environment lists in these docs.
-
 ## Creating a page
 
 All files in the `portal/pages/` directory are automatically available as routes based on their name, e.g. `about.js` is routed to `/about`. Files named `index.js` are routed to the root of the directory. See more at the Next.js docs on [routing](https://nextjs.org/docs/routing/introduction) and [pages](https://nextjs.org/docs/basic-features/pages).
