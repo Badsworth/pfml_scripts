@@ -461,9 +461,9 @@ components:
           type: string
         message:
           type: string
-          required: 
-            - code
-            - message
+      required:
+        - code
+        - message
 
     SsnItin:
       type: string
