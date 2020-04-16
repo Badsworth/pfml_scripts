@@ -20,7 +20,7 @@ variable "cloudfront_origin_path" {
 
 #  2. Read the output used from the last terraform state using "terraform_remote_state".
 data "terraform_remote_state" "current" {
-  count   = var.cloudfront_origin_path == null ? 0 : 1
+  count   = var.cloudfront_origin_path == null ? 1 : 0
   backend = "s3"
 
   config = {
