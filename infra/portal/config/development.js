@@ -1,10 +1,10 @@
 /**
- * Test environment's public environment variables.
+ * Local development environment's public environment variables.
  * WARNING: No secrets!
  * Only store non-secrets here. Everything in this file can be included in build artifacts.
  */
 module.exports = {
-  envName: "test",
+  envName: "development",
   awsConfig: {
     Auth: {
       region: "us-east-1",

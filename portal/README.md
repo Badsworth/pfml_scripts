@@ -10,7 +10,7 @@ This is a [Next.js](https://nextjs.org/docs)-powered React app to bootstrap the 
 
 ## Environments
 
-- [Test](https://pfml-sandbox-v2.navateam.com/)
+- [Test](https://d1ah9hpoapx4f1.cloudfront.net/)
 
 ## Prerequisites
 

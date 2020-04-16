@@ -1,4 +1,4 @@
-const buildEnv = process.env.BUILD_ENV || "dev";
+const buildEnv = process.env.BUILD_ENV || "development";
 const envVariables = require("./../infra/portal/config/" + buildEnv);
 const featureFlags = require("./config/featureFlags")(buildEnv);
 

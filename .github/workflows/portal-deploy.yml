@@ -14,9 +14,9 @@ env:
   nodeVersion: 12.x
   releaseHash: ${{ github.sha }}
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  bucketName: mpfml-prototype
+  bucketName: massgov-pfml-test-portal-site-builds
   terraformVersion: 0.12.20
-  terraformDir: ./infra/portal/environments/sandbox
+  terraformDir: ./infra/portal/environments/test
 
 jobs:
   deploy:
@@ -29,9 +29,11 @@ jobs:
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-access-key-id: ${{ secrets.PFML_AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.PFML_AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-1
+          role-duration-seconds: 3600
+          role-to-assume: ci-run-deploys
 
       - name: Use Node.js
         uses: actions/setup-node@v1
@@ -39,12 +41,10 @@ jobs:
           nodeVersion: ${{ env.nodeVersion }}
 
       - name: Install
-        run:
-          npm ci --prefix portal
+        run: npm ci --prefix portal
 
       - name: Build
-        run:
-          npm run build:test --prefix portal
+        run: npm run build:test --prefix portal
 
       - name: Sync S3 Bucket
         env:
@@ -67,9 +67,11 @@ jobs:
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-access-key-id: ${{ secrets.PFML_AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.PFML_AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-1
+          role-duration-seconds: 3600
+          role-to-assume: ci-run-deploys
 
       - name: Terraform Init
         id: terraform_init
@@ -89,7 +91,6 @@ jobs:
           tf_actions_comment: false
           tf_actions_working_dir: ${{ env.terraformDir }}
 
-
   invalidate-cloudfront:
     name: Invalidate Cloudfront Cache
     runs-on: ubuntu-latest
@@ -101,9 +102,11 @@ jobs:
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-access-key-id: ${{ secrets.PFML_AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.PFML_AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-1
+          role-duration-seconds: 3600
+          role-to-assume: ci-run-deploys
 
       - name: Terraform Init
         id: terraform_init

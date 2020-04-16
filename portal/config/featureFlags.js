@@ -16,11 +16,13 @@ const flagsConfig = {
   // Environments can optionally override a default feature flag below.
   // The environment keys should use the same envName defined in
   // environment config files.
-  dev: {
+  development: {
     example: true,
     unrestrictedClaimFlow: true,
   },
-  test: {},
+  test: {
+    unrestrictedClaimFlow: true,
+  },
 };
 
 /**
