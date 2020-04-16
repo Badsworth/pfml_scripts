@@ -19,7 +19,7 @@ resource "aws_cloudfront_distribution" "portal_web_distribution" {
     # see s3 bucket iam policy
     custom_header {
       name  = "User-Agent"
-      value = "${random_password.s3_user_agent_password.result}"
+      value = random_password.s3_user_agent_password.result
     }
 
     custom_origin_config {

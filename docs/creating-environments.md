@@ -29,14 +29,14 @@ The easiest way to set up resources in a new environment is using the templates 
 1. Create the environment:
 
     **Portal:**
-    - Note: When creating a new environment for the Portal, you'll need to set the `skip_cloudfront_origin_path_fetch` to `true`:
+    - Note: When creating a new environment for the Portal, you'll need to set `cloudfront_origin_path` since nothing will be deployed yet:
 
         ```sh
-        terraform plan -var='skip_cloudfront_origin_path_fetch=true'
+        terraform plan -var='cloudfront_origin_path='
         ```
 
         ```sh
-        terraform apply -var='skip_cloudfront_origin_path_fetch=true'
+        terraform apply -var='cloudfront_origin_path='
         ```
 
     **Other components:**
