@@ -8,6 +8,7 @@ const routes = {
   claims: {
     dateOfBirth: "/claims/date-of-birth",
     duration: "/claims/duration",
+    leaveType: "/claims/leave-type",
     name: "/claims/name",
     ssn: "/claims/ssn",
     stateId: "/claims/state-id",

@@ -1,0 +1,57 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`LeaveType renders the connected component 1`] = `
+<ContextProvider
+  value={null}
+>
+  <LeaveType
+    formData={Object {}}
+    store={
+      Object {
+        "dispatch": [Function],
+        "getState": [Function],
+        "replaceReducer": [Function],
+        "subscribe": [Function],
+        Symbol(observable): [Function],
+      }
+    }
+    updateFieldFromEvent={[Function]}
+  />
+</ContextProvider>
+`;
+
+exports[`LeaveType renders the page 1`] = `
+<QuestionPage
+  nextPage="/"
+  title="Leave type"
+>
+  <InputChoiceGroup
+    choices={
+      Array [
+        Object {
+          "checked": false,
+          "hint": "(Medical leave)",
+          "label": "I have a serious injury or illness",
+          "value": "medicalLeave",
+        },
+        Object {
+          "checked": true,
+          "hint": "(Can cover medical and family leave)",
+          "label": "I need to take parental leave",
+          "value": "parentalLeave",
+        },
+        Object {
+          "checked": false,
+          "hint": "(Family leave)",
+          "label": "I need to manage family affairs while a family member is on active duty in the armed forces",
+          "value": "activeDutyFamilyLeave",
+        },
+      ]
+    }
+    label="Why do you need to take time off?"
+    name="leaveType"
+    onChange={[MockFunction]}
+    type="radio"
+  />
+</QuestionPage>
+`;

@@ -45,8 +45,20 @@ const pages = {
     title: "$t(pages.claimsGeneral.leaveDurationTitle)",
   },
   claimsGeneral: {
-    takingLeaveTitle: "Who is taking leave",
     leaveDurationTitle: "Leave duration",
+    leaveTypeTitle: "Leave type",
+    takingLeaveTitle: "Who is taking leave",
+  },
+  claimsLeaveType: {
+    activeDutyFamilyLeaveHint: "(Family leave)",
+    activeDutyFamilyLeaveLabel:
+      "I need to manage family affairs while a family member is on active duty in the armed forces",
+    medicalLeaveHint: "(Medical leave)",
+    medicalLeaveLabel: "I have a serious injury or illness",
+    parentalLeaveHint: "(Can cover medical and family leave)",
+    parentalLeaveLabel: "I need to take parental leave",
+    sectionLabel: "Why do you need to take time off?",
+    title: "$t(pages.claimsGeneral.leaveTypeTitle)",
   },
   claimsName: {
     firstNameLabel: "First name",
