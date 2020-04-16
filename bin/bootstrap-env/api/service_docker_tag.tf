@@ -7,11 +7,15 @@
 variable "service_docker_tag" {
   description = "Docker tag of the API release to deploy."
   type        = string
-  default     = ""
+  default     = null
 }
 
 #  2. Read the output used from the last terraform state using "terraform_remote_state".
 data "terraform_remote_state" "current" {
+  # Don't do a lookup if service_docker_tag is provided explicitly.
+  # This saves some time and also allows us to do a first deploy,
+  # where the tfstate file does not yet exist.
+  count   = var.service_docker_tag == null ? 1 : 0
   backend = "s3"
 
   config = {
@@ -21,16 +25,15 @@ data "terraform_remote_state" "current" {
   }
 
   defaults = {
-    service_docker_tag = ""
+    service_docker_tag = null
   }
 }
 
 #  3. Prefer the optional docker_tag variable if provided, otherwise default to the docker_tag from last time.
 locals {
-  service_docker_tag = coalesce(
-    var.service_docker_tag,
-    data.terraform_remote_state.current.outputs.service_docker_tag
-  )
+  service_docker_tag = (var.service_docker_tag == null
+    ? data.terraform_remote_state.current[0].outputs.service_docker_tag
+    : var.service_docker_tag)
 }
 
 #  4. Store the final docker_tag used as a terraform output for next time.
