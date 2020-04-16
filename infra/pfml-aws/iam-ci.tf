@@ -40,7 +40,7 @@ resource "aws_iam_role" "ci_run_deploys" {
 data "aws_iam_policy_document" "trust_assume_role_policy" {
   statement {
     sid     = "PFMLDeveloperAssumeRole"
-    actions = ["sts:AssumeRole"]
+    actions = ["sts:AssumeRole", "sts:TagSession"]
     principals {
       type = "AWS"
       identifiers = [
