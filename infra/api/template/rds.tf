@@ -4,9 +4,19 @@
 # https://github.com/hashicorp/terraform/issues/16784
 # https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/CHAP_Limits.html#RDS_Limits.Constraints
 
-data "aws_ssm_parameter" "db_password" {
-  name            = "/service/${local.app_name}/${var.environment_name}/db-password"
-  with_decryption = true
+# Note: This password is stored in tfstate but not shown in regular terraform commands.
+#       Even if it was stored manually in SSM Parameter Store and pulled down,
+#       the secret value would be visible in the tfstate.
+resource "random_password" "rds_super_password" {
+  length      = 48
+  special     = true
+  min_special = 6
+}
+
+resource "aws_ssm_parameter" "db_password" {
+  name  = "/service/${local.app_name}/${var.environment_name}/db-password"
+  type  = "SecureString"
+  value = random_password.rds_super_password.result
 }
 
 resource "aws_db_subnet_group" "rds_postgres" {
@@ -26,7 +36,7 @@ resource "aws_db_instance" "default" {
 
   name     = "massgov_pfml_${var.environment_name}"
   username = "pfml"
-  password = data.aws_ssm_parameter.db_password.value
+  password = aws_ssm_parameter.db_password.value
   port     = "5432"
 
   auto_minor_version_upgrade  = false # disallow to avoid unexpected downtime
