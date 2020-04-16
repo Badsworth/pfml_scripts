@@ -7,7 +7,7 @@ import QuestionPage from "../../components/QuestionPage";
 import React from "react";
 import { connect } from "react-redux";
 import routes from "../../routes";
-import { useTranslation } from "react-i18next";
+import { useTranslation } from "../../locales/i18n";
 import valueWithFallback from "../../utils/valueWithFallback";
 
 export const StateId = (props) => {

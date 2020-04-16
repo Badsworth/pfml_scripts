@@ -1,5 +1,5 @@
 import React from "react";
-import { useTranslation } from "react-i18next";
+import { useTranslation } from "../locales/i18n";
 
 /**
  * Help users go back to the previous page in a multi-page transaction. The

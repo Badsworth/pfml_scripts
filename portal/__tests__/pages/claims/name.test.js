@@ -1,6 +1,6 @@
 import ConnectedNamePage, { Name } from "../../../src/pages/claims/name";
 import React from "react";
-import initializeStore from "../../../src/store";
+import { initializeStore } from "../../../src/store";
 import { shallow } from "enzyme";
 
 describe("Name", () => {

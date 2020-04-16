@@ -3,13 +3,13 @@ import { ConfirmSignUp } from "aws-amplify-react";
 import InputText from "./InputText";
 import React from "react";
 import Title from "./Title";
-import i18next from "i18next";
+import { withTranslation } from "../locales/i18n";
 
 /**
  * Custom extension of Amplify's Confirm Sign Up component
  * @see https://github.com/aws-amplify/amplify-js/blob/master/packages/aws-amplify-react/src/Auth/ConfirmSignUp.tsx
  */
-export default class CustomConfirmSignUp extends ConfirmSignUp {
+class CustomConfirmSignUp extends ConfirmSignUp {
   // when mocking instance methods, jest does not show the method
   // was called unless it's wrapped like this.
   handleConfirm = (event) => {
@@ -23,21 +23,22 @@ export default class CustomConfirmSignUp extends ConfirmSignUp {
   };
 
   showComponent(theme) {
+    const { t } = this.props;
     return (
       <div className={AmplifyUI.formContainer} style={theme.formContainer}>
         <div className={AmplifyUI.formSection} style={theme.formSection}>
           <div className={AmplifyUI.sectionHeader}>
-            <Title>{i18next.t("components.confirmSignUp.title")}</Title>
+            <Title>{t("components.confirmSignUp.title")}</Title>
           </div>
           <form>
             <div className={AmplifyUI.sectionBody}>
               <p>
-                {i18next.t("components.confirmSignUp.verifyHint", {
+                {t("components.confirmSignUp.verifyHint", {
                   emailAddress: this.usernameFromAuthData(),
                 })}
               </p>
               <InputText
-                label={i18next.t("components.confirmSignUp.codeLabel")}
+                label={t("components.confirmSignUp.codeLabel")}
                 name="code"
                 onChange={this.handleInputChange}
                 smallLabel
@@ -47,7 +48,7 @@ export default class CustomConfirmSignUp extends ConfirmSignUp {
                 className="usa-button usa-button--unstyled font-sans-xs text-underline margin-top-2"
                 onClick={this.handleResend}
               >
-                {i18next.t("components.confirmSignUp.resendCodeLink")}
+                {t("components.confirmSignUp.resendCodeLink")}
               </button>
             </div>
             <div
@@ -65,7 +66,7 @@ export default class CustomConfirmSignUp extends ConfirmSignUp {
                   style={theme.button}
                   onClick={this.handleConfirm}
                 >
-                  {i18next.t("components.confirmSignUp.confirmButton")}
+                  {t("components.confirmSignUp.confirmButton")}
                 </button>
               </div>
               <div
@@ -77,7 +78,7 @@ export default class CustomConfirmSignUp extends ConfirmSignUp {
                   className="usa-button usa-button--unstyled font-sans-xs text-bold text-underline"
                   onClick={() => this.changeState("signIn")}
                 >
-                  {i18next.t("components.confirmSignUp.signInFooterLink")}
+                  {t("components.confirmSignUp.signInFooterLink")}
                 </button>
               </div>
             </div>
@@ -87,3 +88,5 @@ export default class CustomConfirmSignUp extends ConfirmSignUp {
     );
   }
 }
+
+export default withTranslation()(CustomConfirmSignUp);

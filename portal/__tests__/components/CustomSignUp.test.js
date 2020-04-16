@@ -7,7 +7,9 @@ import { shallow } from "enzyme";
 import theme from "../../src/utils/amplifyTheme";
 
 const render = (props = {}) => {
-  return shallow(<CustomSignUp authState="signUp" theme={theme} {...props} />);
+  return shallow(
+    <CustomSignUp authState="signUp" theme={theme} {...props} />
+  ).dive();
 };
 
 describe("CustomSignUp", () => {

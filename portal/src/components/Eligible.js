@@ -3,7 +3,7 @@ import InputChoiceGroup from "./InputChoiceGroup";
 import PropType from "prop-types";
 import Title from "./Title";
 import WagesTable from "./WagesTable";
-import { useTranslation } from "react-i18next";
+import { useTranslation } from "../locales/i18n";
 
 /**
  * A view that is conditionally rendered on the Result page when the claimant is eligible.

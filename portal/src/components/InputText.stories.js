@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import InputText from "./InputText";
-import { useTranslation } from "react-i18next";
+import { useTranslation } from "../locales/i18n";
 
 export default {
   title: "Components|Forms/InputText",

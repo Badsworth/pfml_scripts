@@ -16,7 +16,7 @@ const render = (props = {}) => {
       }}
       {...props}
     />
-  );
+  ).dive();
 };
 
 describe("CustomConfirmSignUp", () => {

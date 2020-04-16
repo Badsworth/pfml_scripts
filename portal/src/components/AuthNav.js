@@ -1,7 +1,7 @@
 import { Auth } from "aws-amplify";
 import PropTypes from "prop-types";
 import React from "react";
-import { useTranslation } from "react-i18next";
+import { useTranslation } from "../locales/i18n";
 
 /**
  * Displays auth links and info about the user if they're logged in

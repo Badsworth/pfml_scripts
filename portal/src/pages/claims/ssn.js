@@ -5,7 +5,7 @@ import React from "react";
 import { connect } from "react-redux";
 import routes from "../../routes";
 import { updateFieldFromEvent } from "../../actions";
-import { useTranslation } from "react-i18next";
+import { useTranslation } from "../../locales/i18n";
 import valueWithFallback from "../../utils/valueWithFallback";
 
 /**

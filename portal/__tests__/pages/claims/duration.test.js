@@ -2,7 +2,7 @@ import ConnectedDuration, {
   Duration,
 } from "../../../src/pages/claims/duration";
 import React from "react";
-import initializeStore from "../../../src/store";
+import { initializeStore } from "../../../src/store";
 import routes from "../../../src/routes";
 import { shallow } from "enzyme";
 

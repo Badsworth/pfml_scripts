@@ -1,36 +1,28 @@
-import "../locales/i18n";
 import "../../styles/app.scss";
 // Import CSS required by the Amplify React components
 import "@aws-amplify/ui/dist/style.css";
 import React, { useEffect, useState } from "react";
+import { initializeI18n, useTranslation } from "../locales/i18n";
 import Authenticator from "../components/Authenticator";
 import Header from "../components/Header";
 import PropTypes from "prop-types";
 import { Provider } from "react-redux";
 import Router from "next/router";
 import Spinner from "../components/Spinner";
-import initializeStore from "../store";
-import { useTranslation } from "react-i18next";
+import { useStore } from "../store";
 
-/**
- * Our one and only Redux store for the application. All state is stored here and remains even
- * between pages pushed within the app. It gets wiped out on page load, for example if
- * the user reloads or enters a new URL into the address bar.
- */
-const store = initializeStore();
-
+initializeI18n();
 /**
  * Overrides the default Next.js App so that we can persist common layout
  * across page changes, and other advanced features like injecting data into pages.
  * @see https://nextjs.org/docs/advanced-features/custom-app
  * @returns {React.Component}
  */
-
 export const App = ({ Component, pageProps, authState, authData }) => {
   const { t } = useTranslation();
+  const store = useStore();
   const [ui, setUI] = useState({ isLoadingRoute: false });
   const [user, setUser] = useState();
-
   /**
    * Event handler for when a page route transition has ended
    * (either successfully or unsuccessfully)

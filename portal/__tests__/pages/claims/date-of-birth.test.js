@@ -2,7 +2,7 @@ import ConnectedDateOfBirthPage, {
   DateOfBirth,
 } from "../../../src/pages/claims/date-of-birth";
 import React from "react";
-import initializeStore from "../../../src/store";
+import { initializeStore } from "../../../src/store";
 import { shallow } from "enzyme";
 
 describe("DateOfBirth", () => {

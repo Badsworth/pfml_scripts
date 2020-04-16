@@ -1,6 +1,6 @@
 import FormLabel from "./FormLabel";
 import React from "react";
-import { useTranslation } from "react-i18next";
+import { useTranslation } from "../locales/i18n";
 
 export default {
   title: "Components|Forms/FormLabel",

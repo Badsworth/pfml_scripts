@@ -6,7 +6,7 @@ import Title from "../../components/Title";
 import { connect } from "react-redux";
 import { updateFieldFromEvent } from "../../actions";
 import { useRouter } from "next/router";
-import { useTranslation } from "react-i18next";
+import { useTranslation } from "../../locales/i18n";
 import valueWithFallback from "../../utils/valueWithFallback";
 
 export const EmployeeInfo = (props) => {

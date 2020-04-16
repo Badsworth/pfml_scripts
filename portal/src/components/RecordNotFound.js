@@ -3,7 +3,7 @@ import Heading from "./Heading";
 import Lead from "./Lead";
 import React from "react";
 import Title from "./Title";
-import { useTranslation } from "react-i18next";
+import { useTranslation } from "../locales/i18n";
 
 /**
  * A view that is conditionally rendered on the Wages page when the claimant is ineligible due to not being found in DOR records.

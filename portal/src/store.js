@@ -7,13 +7,22 @@ import reducers from "./reducers";
  * - Allows access to that state;
  * - Allows state to be updated via dispatch'ing actions
  * @see https://redux.js.org/basics/store
- * @returns {object}
+ * @param {object} initialState - initial state of redux store
+ * @returns {object} redux store
  */
-const initializeStore = (initialState = {}) =>
+export const initializeStore = (initialState = {}) =>
   createStore(
     reducers,
     initialState,
     global.__REDUX_DEVTOOLS_EXTENSION__ && global.__REDUX_DEVTOOLS_EXTENSION__()
   );
 
-export default initializeStore;
+let store;
+/**
+ * Initialize redux store inside functional component
+ * @returns {object} redux store
+ */
+export const useStore = (initialState = {}) => {
+  store = store || initializeStore(initialState);
+  return store;
+};

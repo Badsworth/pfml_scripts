@@ -1,7 +1,7 @@
 import ConnectedSsn, { Ssn } from "../../../src/pages/claims/ssn";
 import { mount, shallow } from "enzyme";
 import React from "react";
-import initializeStore from "../../../src/store";
+import { initializeStore } from "../../../src/store";
 
 describe("Ssn", () => {
   it("renders connected component", () => {

@@ -4,7 +4,7 @@ import ConnectedEmployeeInfo, {
 } from "../../../src/pages/eligibility/employee-info";
 import { mount, shallow } from "enzyme";
 import React from "react";
-import initializeStore from "../../../src/store";
+import { initializeStore } from "../../../src/store";
 
 describe("EmployeeInfo", () => {
   it("render connected component", () => {

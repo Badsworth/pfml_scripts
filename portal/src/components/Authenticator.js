@@ -16,7 +16,7 @@ import CustomSignUp from "./CustomSignUp";
 import PropTypes from "prop-types";
 import customAmplifyErrorMessageKey from "../utils/customAmplifyErrorMessageKey";
 import theme from "../utils/amplifyTheme";
-import { useTranslation } from "react-i18next";
+import { useTranslation } from "../locales/i18n";
 
 Amplify.configure(process.env.awsConfig);
 

@@ -4,7 +4,7 @@ import Heading from "./Heading";
 import Lead from "./Lead";
 import PropType from "prop-types";
 import summarizeWages from "../utils/summarizeWages";
-import { useTranslation } from "react-i18next";
+import { useTranslation } from "../locales/i18n";
 
 // TODO: Integrate with api endpoint
 // https://lwd.atlassian.net/browse/CP-111

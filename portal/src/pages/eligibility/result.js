@@ -5,7 +5,7 @@ import Ineligible from "../../components/Ineligible";
 import RecordNotFound from "../../components/RecordNotFound";
 import Spinner from "../../components/Spinner";
 import { useRouter } from "next/router";
-import { useTranslation } from "react-i18next";
+import { useTranslation } from "../../locales/i18n";
 
 // TODO replace with request to eligibility endpoint
 const mockEligibilityRequest = (eligibility) => eligibility;

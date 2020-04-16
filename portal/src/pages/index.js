@@ -3,7 +3,7 @@ import Heading from "../components/Heading";
 import React from "react";
 import Title from "../components/Title";
 import routes from "../routes";
-import { useTranslation } from "react-i18next";
+import { useTranslation } from "../locales/i18n";
 
 /**
  * The page a user is redirected to by default after

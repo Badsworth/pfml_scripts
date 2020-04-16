@@ -3,7 +3,7 @@ import PropTypes from "prop-types";
 import React from "react";
 import Title from "./Title";
 import { useRouter } from "next/router";
-import { useTranslation } from "react-i18next";
+import { useTranslation } from "../locales/i18n";
 
 /**
  * This is a page template for form questions, including back link and continue

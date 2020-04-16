@@ -2,7 +2,7 @@ import ConnectedLeaveType, {
   LeaveType,
 } from "../../../src/pages/claims/leave-type";
 import React from "react";
-import initializeStore from "../../../src/store";
+import { initializeStore } from "../../../src/store";
 import { shallow } from "enzyme";
 
 describe("LeaveType", () => {

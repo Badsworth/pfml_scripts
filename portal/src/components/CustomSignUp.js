@@ -3,13 +3,13 @@ import InputText from "./InputText";
 import React from "react";
 import { SignUp } from "aws-amplify-react";
 import Title from "./Title";
-import i18next from "i18next";
+import { withTranslation } from "../locales/i18n";
 
 /**
  * Custom extension of Amplify's Sign Up component
  * @see https://github.com/aws-amplify/amplify-js/blob/master/packages/aws-amplify-react/src/Auth/SignUp.tsx
  */
-export default class CustomSignUp extends SignUp {
+class CustomSignUp extends SignUp {
   constructor(props) {
     super(props);
     /**
@@ -35,7 +35,7 @@ export default class CustomSignUp extends SignUp {
   };
 
   showComponent() {
-    const { theme } = this.props;
+    const { theme, t } = this.props;
     return (
       <div className={AmplifyUI.formContainer} style={theme.formContainer}>
         <div className={AmplifyUI.formSection} style={theme.formSection}>
@@ -44,7 +44,7 @@ export default class CustomSignUp extends SignUp {
           </div>
           <form>
             <div className={AmplifyUI.sectionBody}>
-              <p>{i18next.t("components.signUp.passwordHelpText")}</p>
+              <p>{t("components.signUp.passwordHelpText")}</p>
               {/**
                 * uncontrolled form input
                 * input states are stored on the class property `inputs`
@@ -78,19 +78,19 @@ export default class CustomSignUp extends SignUp {
                   style={theme.button}
                   onClick={this.handleSignUp}
                 >
-                  {i18next.t("components.signUp.createAccountButton")}
+                  {t("components.signUp.createAccountButton")}
                 </button>
               </div>
               <div
                 className={AmplifyUI.sectionFooterSecondaryContent}
                 style={theme.sectionFooterSecondaryContent}
               >
-                {i18next.t("components.signUp.haveAnAccountFooterLabel")}&nbsp;
+                {t("components.signUp.haveAnAccountFooterLabel")}&nbsp;
                 <button
                   className="usa-button usa-button--unstyled font-sans-xs text-bold text-underline width-auto"
                   onClick={() => this.changeState("signIn")}
                 >
-                  {i18next.t("components.signUp.signInFooterLink")}
+                  {t("components.signUp.signInFooterLink")}
                 </button>
               </div>
             </div>
@@ -100,3 +100,5 @@ export default class CustomSignUp extends SignUp {
     );
   }
 }
+
+export default withTranslation()(CustomSignUp);
