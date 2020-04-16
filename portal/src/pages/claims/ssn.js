@@ -3,6 +3,7 @@ import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
 import { connect } from "react-redux";
+import isFeatureEnabled from "../../utils/isFeatureEnabled";
 import routes from "../../routes";
 import { updateFieldFromEvent } from "../../actions";
 import { useTranslation } from "../../locales/i18n";
@@ -14,13 +15,12 @@ import valueWithFallback from "../../utils/valueWithFallback";
 export const Ssn = (props) => {
   const { t } = useTranslation();
   const formData = props.formData;
+  const nextPage = isFeatureEnabled("unrestrictedClaimFlow")
+    ? routes.claims.leaveType
+    : routes.home;
 
   return (
-    <QuestionPage
-      title={t("pages.claimsSsn.title")}
-      // TODO Route this to address or occupation page what that page is ready.
-      nextPage={routes.claims.duration}
-    >
+    <QuestionPage title={t("pages.claimsSsn.title")} nextPage={nextPage}>
       {/* TODO(CP-296) Use masked field component for SSN styling. */}
       <InputText
         name="ssn"

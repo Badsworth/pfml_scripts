@@ -26,7 +26,7 @@ exports[`Ssn renders connected component 1`] = `
 
 exports[`Ssn renders the form 1`] = `
 <QuestionPage
-  nextPage="/claims/duration"
+  nextPage="/"
   title="Who is taking leave"
 >
   <InputText
