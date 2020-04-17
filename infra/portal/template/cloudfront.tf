@@ -76,9 +76,13 @@ resource "aws_cloudfront_distribution" "portal_web_distribution" {
     acm_certificate_arn            = var.cloudfront_certificate_arn
     cloudfront_default_certificate = (var.cloudfront_certificate_arn == null)
 
+    # SNI is recommended
+    # Associates alternate domain names with an IP address for each edge location
+    # See: https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/cnames-https-dedicated-ip-or-sni.html
     ssl_support_method = "sni-only"
-    # TODO: we might need to use TLSv1.1_2016 for broader compatibility
-    minimum_protocol_version = "TLSv1.2_2018"
+
+    # If we're using cloudfront_default_certificate, TLSv1 must be specified.
+    minimum_protocol_version = var.cloudfront_certificate_arn == null ? "TLSv1" : "TLSv1.2_2018"
   }
 
   restrictions {
