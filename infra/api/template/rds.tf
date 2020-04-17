@@ -8,9 +8,10 @@
 #       Even if it was stored manually in SSM Parameter Store and pulled down,
 #       the secret value would be visible in the tfstate.
 resource "random_password" "rds_super_password" {
-  length      = 48
-  special     = true
-  min_special = 6
+  length           = 48
+  special          = true
+  min_special      = 6
+  override_special = "/@"
 }
 
 resource "aws_ssm_parameter" "db_password" {
