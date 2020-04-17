@@ -11,10 +11,10 @@ set -euo pipefail
 USAGE="
 Usage: Bootstraps a component in a new environment.
 
-./bootstrap-env.sh ENV_NAME COMPONENT 
+./bootstrap-env.sh ENV_NAME COMPONENT
 
 args:
-  ENV_NAME  - The environment name, e.g. test, staging, prod.
+  ENV_NAME  - The environment name, e.g. test, stage, prod.
   COMPONENT - The component to bootstrap (portal|api|env-shared)
 
 example:

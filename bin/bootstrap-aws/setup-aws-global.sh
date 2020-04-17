@@ -9,7 +9,7 @@
 # - An S3 bucket that holds the terraform state. This file is shared between all developers/CI machines,
 #   and is required for terraform to know what has been created and what needs to be cleaned up.
 #
-#   This will not hold _all_ of our terraform state files. Each environment (test, staging, prod) will
+#   This will not hold _all_ of our terraform state files. Each environment (test, stage, prod) will
 #   have their own buckets for managing their own applications and resources.
 #
 # - A DynamoDB terraform_locks table, which is used to lock the terraform state files described above.
@@ -37,7 +37,7 @@ echo "- Recreate the file \"$OUTPUT_DIR/main.tf\"."
 echo
 read -p "Are you sure? " verify
 
-case "$verify" in 
+case "$verify" in
   y|Y|yes|Yes ) echo "continuing.";;
   * ) echo "exiting." && exit 1;;
 esac

@@ -4,7 +4,7 @@ locals {
   # When you need a new environment bucket, add your environment name here.
   # The for_each logic below will automagically define your S3 bucket, so you
   # can go straight to running terraform apply.
-  environments = ["test"]
+  environments = ["test", "stage"]
 }
 
 resource "aws_s3_bucket" "terraform" {
