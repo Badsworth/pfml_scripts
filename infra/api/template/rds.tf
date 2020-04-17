@@ -11,7 +11,7 @@ resource "random_password" "rds_super_password" {
   length           = 48
   special          = true
   min_special      = 6
-  override_special = "/@"
+  override_special = "!#$%&*()-_=+[]{}<>:?"
 }
 
 resource "aws_ssm_parameter" "db_password" {
