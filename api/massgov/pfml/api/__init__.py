@@ -7,8 +7,8 @@ import os
 import connexion
 import connexion.mock
 
-import massgov.pfml.api.db as db
 import massgov.pfml.util.logging
+from massgov.pfml.api import db
 
 from .reverse_proxy import ReverseProxied
 
@@ -17,9 +17,6 @@ logger = massgov.pfml.util.logging.get_logger(__name__)
 
 def create_app():
     logger.info("Starting API ...")
-
-    # DB
-    db.init_db()
 
     # Enable mock responses for unimplemented paths.
     resolver = connexion.mock.MockResolver(mock_all=False)
@@ -35,5 +32,8 @@ def create_app():
     # when proxied behind the AWS API Gateway.
     flask_app = app.app
     flask_app.wsgi_app = ReverseProxied(flask_app.wsgi_app)
+
+    logger.info("Initializing orm object with flask app context")
+    db.init(flask_app)
 
     return app
