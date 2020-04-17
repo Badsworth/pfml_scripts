@@ -1,4 +1,4 @@
-import flask
+from werkzeug.exceptions import NotFound
 
 import massgov.pfml.api.generate_fake_data as fake
 
@@ -9,17 +9,10 @@ def wages_get(employee_id, period_id=None):
     try:
         wages = wages_dict[employee_id]
     except KeyError:
-        not_found_status_code = flask.Response(status=404)
-        return not_found_status_code
+        raise NotFound()
 
-    if period_id and wages:
+    if period_id:
         # filter wages by quarter
-        filtered_wages = []
+        return [w for w in wages if w.period_id == str(period_id)]
 
-        for w in wages:
-            if w.get("period_id") == str(period_id):
-                filtered_wages.append(w)
-        return filtered_wages
-
-    if wages:
-        return wages
+    return wages

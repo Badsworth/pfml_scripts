@@ -1,4 +1,4 @@
-import flask
+from werkzeug.exceptions import BadRequest, NotFound
 
 import massgov.pfml.api.generate_fake_data as fake
 
@@ -14,15 +14,13 @@ def eligibility_get(employee_id, leave_type):
     valid_leave_types = ["fam", "med"]
 
     if leave_type.lower() not in valid_leave_types:
-        bad_request_code = flask.Response(status=400)
-        return bad_request_code
+        raise BadRequest()
 
     # grab wages and contribution for employee id. All wages are within the last 4 quarters.
     wages = wages_dict.get(employee_id)
 
     if not wages:
-        not_found_status_code = flask.Response(status=404)
-        return not_found_status_code
+        raise NotFound()
 
     sum_of_recent_wages = {}
     qtr_wages_key = "employer_qtr_wages"

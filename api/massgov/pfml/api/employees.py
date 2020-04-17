@@ -1,5 +1,5 @@
 import connexion
-import flask
+from werkzeug.exceptions import NotFound
 
 import massgov.pfml.api.generate_fake_data as fake
 
@@ -20,8 +20,7 @@ def employees_get(employee_id):
         if employee.get("employee_id") == employee_id:
             return employee
 
-    not_found_error = flask.Response(status=404)
-    return not_found_error
+    raise NotFound()
 
 
 def employees_patch(employee_id):
@@ -43,8 +42,7 @@ def employees_patch(employee_id):
                     employee[attr] = body.get(attr)
             return employee
 
-    not_found_error = flask.Response(status=404)
-    return not_found_error
+    raise NotFound()
 
 
 def employees_search():
@@ -57,8 +55,7 @@ def employees_search():
     try:
         employee = employees_dict[ssn_or_itin]
     except KeyError:
-        not_found_error = flask.Response(status=404)
-        return not_found_error
+        raise NotFound()
 
     same_first_name = employee["first_name"] == first_name
     same_last_name = employee["last_name"] == last_name
@@ -66,5 +63,6 @@ def employees_search():
     # if the ssn/itin, first name and last name match, return employee
     if employee and same_first_name and same_last_name:
         return employee
+
     # if ssn/itin exists but names don't match, return an error
-    return not_found_error
+    raise NotFound()

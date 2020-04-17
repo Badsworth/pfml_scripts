@@ -1,5 +1,5 @@
 import connexion
-import flask
+from werkzeug.exceptions import NotFound
 
 import massgov.pfml.api.generate_fake_data as fake
 import massgov.pfml.util.logging
@@ -14,8 +14,7 @@ def users_get(user_id):
     try:
         user = users[user_id]
     except KeyError:
-        not_found_error = flask.Response(status=404)
-        return not_found_error
+        raise NotFound()
 
     return user
 
