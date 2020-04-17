@@ -16,6 +16,10 @@
 #
 # Most of this access comes from iam-shared.tf.
 #
+# To set up Github Actions, you'll need to apply these changes and then go to the AWS console
+# and create credentials for the new user (access key ID and secret key). This should then
+# be sent to a Github repo admin who has access to pfml > Settings.
+#
 resource "aws_iam_user" "github_actions" {
   name = "pfml-github-actions"
 
@@ -24,13 +28,7 @@ resource "aws_iam_user" "github_actions" {
   }
 }
 
-# 1. Generate a user access key that is exposed in the terraform state and should be set in Github Actions.
-#
-resource "aws_iam_access_key" "github_actions" {
-  user = aws_iam_user.github_actions.name
-}
-
-# 2. Create a role that can be assumed by PFML developers, admins, and the pfml-github-actions user.
+# 1. Create a role that can be assumed by PFML developers, admins, and the pfml-github-actions user.
 #
 resource "aws_iam_role" "ci_run_deploys" {
   name               = "ci-run-deploys"
@@ -52,7 +50,7 @@ data "aws_iam_policy_document" "trust_assume_role_policy" {
   }
 }
 
-# 3. Setup deploy permissions that are shared between developers and CI.
+# 2. Setup deploy permissions that are shared between developers and CI.
 #
 resource "aws_iam_role_policy_attachment" "ci_deploy_access_policy_attachment" {
   role       = aws_iam_role.ci_run_deploys.id
@@ -64,7 +62,7 @@ resource "aws_iam_role_policy_attachment" "ci_iam_policy_attachment" {
   policy_arn = aws_iam_policy.developers_and_ci_iam_policy.arn
 }
 
-# 4. Setup additional permissions for CI to run deploys with some restrictions.
+# 3. Setup additional permissions for CI to run deploys with some restrictions.
 #
 data "aws_iam_policy_document" "ci_run_deploys_policy" {
   statement {
