@@ -104,6 +104,30 @@ automatically run the tests when files change with:
 make test-watch
 ```
 
+### Running Migrations
+
+Pre-requisite: Database needs to be up and running
+```
+$ make start
+```
+
+Auto-generate migration files from model changes:
+```
+$ docker-compose exec mass-pfml-api poetry run python manage_db.py db migrate -m "description of change"
+```
+
+Apply pending migrations to db
+```
+$ make db-upgrade
+```
+
+Rollback last migration to db:
+```
+$ make db-downgrade
+```
+
+
+
 ## Directory Structure
 
 ```

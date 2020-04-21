@@ -158,6 +158,17 @@ release-tag: ## Tag release image for registry
 run: ## Run docker-compose
 run: start logs
 
+# apply pending migrations to db
+db-upgrade:
+	$(PY_RUN_CMD_DOCKER_EXEC) python manage_db.py db upgrade
+
+# rollback last migration to db
+db-downgrade:
+	$(PY_RUN_CMD_DOCKER_EXEC) python manage_db.py db downgrade
+
+db-downgrade-all:
+	$(PY_RUN_CMD_DOCKER_EXEC) python manage_db.py db downgrade base
+
 test: ## Run tests
 	$(PY_RUN_CMD) coverage run --branch --source=massgov -m pytest
 	$(PY_RUN_CMD) coverage report
