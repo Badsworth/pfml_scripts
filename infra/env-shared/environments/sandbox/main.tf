@@ -19,6 +19,7 @@ module "pfml" {
 
   domain_name       = aws_api_gateway_domain_name.domain_name.domain_name
   environment_name  = "sandbox"
+  forwarded_path    = "'/api/'"
   nlb_name          = "sandbox-nlb"
   nlb_vpc_link_name = "sandbox-nlb-vpc-link"
   nlb_port          = "80"

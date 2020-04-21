@@ -26,4 +26,22 @@ resource "aws_security_group" "app" {
     to_port     = 443
     protocol    = "tcp"
   }
+
+  # Outgoing UDP/TCP to DHCP servers that are in peer VPCs.
+  #
+  # This is needed since EOTSS provides us with VPCs that have
+  # custom DHCP options, including custom dns servers.
+  egress {
+    cidr_blocks = ["10.0.0.0/8"]
+    from_port   = 53
+    to_port     = 53
+    protocol    = "tcp"
+  }
+
+  egress {
+    cidr_blocks = ["10.0.0.0/8"]
+    from_port   = 53
+    to_port     = 53
+    protocol    = "udp"
+  }
 }

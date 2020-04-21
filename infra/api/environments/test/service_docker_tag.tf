@@ -19,7 +19,7 @@ data "terraform_remote_state" "current" {
   backend = "s3"
 
   config = {
-    bucket = "massgov-pfml-$ENV_NAME-env-mgmt"
+    bucket = "massgov-pfml-test-env-mgmt"
     key    = "terraform/api.tfstate"
     region = "us-east-1"
   }
@@ -33,7 +33,7 @@ data "terraform_remote_state" "current" {
 locals {
   service_docker_tag = (var.service_docker_tag == null
     ? data.terraform_remote_state.current[0].outputs.service_docker_tag
-    : var.service_docker_tag)
+  : var.service_docker_tag)
 }
 
 #  4. Store the final docker_tag used as a terraform output for next time.

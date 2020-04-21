@@ -50,4 +50,18 @@ resource "aws_db_instance" "default" {
   lifecycle {
     prevent_destroy = true # disallow by default to avoid unexpected data loss
   }
+
+  tags = {
+    agency        = "eol"
+    application   = "coreinf"
+    businessowner = "kevin.yeh@mass.gov"
+    createdby     = "kevin.yeh@mass.gov"
+    environment   = var.environment_name
+    itowner       = "kevin.yeh@mass.gov"
+    secretariat   = "eolwd"
+    Name          = "massgov_pfml_${var.environment_name}"
+    backup        = "nonprod"
+    "Patch Group" = "nonprod-linux1"
+    schedulev2    = "0700_2400_weekdays"
+  }
 }

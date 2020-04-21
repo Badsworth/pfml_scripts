@@ -2,8 +2,8 @@ APP_NAME := mass-pfml-api
 
 export AWS_DEFAULT_REGION := us-east-1
 
-DOCKER_REPO := pfml-api
-DOCKER_REGISTRY := 302282571580.dkr.ecr.us-east-1.amazonaws.com
+DOCKER_REPO ?= pfml-api
+DOCKER_REGISTRY ?= 302282571580.dkr.ecr.us-east-1.amazonaws.com
 
 # Generate a unique tag based solely on the git hash.
 # This will be the identifier used for deployment via terraform.
