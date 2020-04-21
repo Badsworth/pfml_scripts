@@ -72,11 +72,10 @@ data "aws_iam_policy_document" "ci_run_deploys_policy" {
       "ec2:DescribeSubnets",
       "ec2:DescribeVpc*",
 
-      # Allow CI to configure VPC endpoints.
-      "ec2:CreateVpcEndpointServiceConfiguration",
-      "ec2:DeleteVpcEndpointServiceConfigurations",
-      "ec2:DescribeVpcEndpointServiceConfigurations",
-      "ec2:ModifyVpcEndpointServicePermissions",
+      # Allow CI to read security groups.
+      "ec2:DescribeSecurityGroups",
+      "ec2:DescribeSecurityGroupReferences",
+      "ec2:DescribeStaleSecurityGroups",
 
       # SSM is required to pull down database passwords, which are used
       # when generating the database itself or when updating the password

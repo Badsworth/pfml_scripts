@@ -43,6 +43,28 @@ data "aws_iam_policy_document" "developers_and_ci_deploy_access_policy" {
       # team to deploy the application to S3-hosted buckets.
       "s3:*",
 
+      # Allow teams to manage security groups.
+      "ec2:AuthorizeSecurityGroupEgress",
+      "ec2:AuthorizeSecurityGroupIngress",
+      "ec2:CreateSecurityGroup",
+      "ec2:DeleteSecurityGroup",
+      "ec2:RevokeSecurityGroupEgress",
+      "ec2:RevokeSecurityGroupIngress",
+
+      # Allow teams to configure VPC endpoints for network privacy.
+      "ec2:CreateVpcEndpoint",
+      "ec2:DeleteVpcEndpoints",
+      "ec2:DescribeVpcEndpoints",
+      "ec2:DescribeVpcEndpointServices",
+      "ec2:ModifyVpcEndpoint",
+      "ec2:DescribePrefixLists",
+
+      # Allow teams to configure VPC Links for network privacy.
+      "ec2:CreateVpcEndpointServiceConfiguration",
+      "ec2:DeleteVpcEndpointServiceConfigurations",
+      "ec2:DescribeVpcEndpointServiceConfigurations",
+      "ec2:ModifyVpcEndpointServicePermissions",
+
       # Allow the Portal team to set up the Portal application, including:
       # - Cloudfront distributions of the statically-built files.
       # - Cognito user authentication.
