@@ -2,7 +2,7 @@ import Eligible from "./Eligible";
 import React from "react";
 
 export default {
-  title: "Screens|Eligibility Result/Eligible",
+  title: "Screens/Eligibility Result/Eligible",
   component: Eligible,
 };
 

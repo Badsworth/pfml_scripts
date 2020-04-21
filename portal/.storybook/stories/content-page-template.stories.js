@@ -7,7 +7,7 @@ import Title from "../../src/components/Title";
 import React from "react";
 
 export default {
-  title: "Templates|Content page",
+  title: "Templates/Content page",
 };
 
 export const Basic = () => (

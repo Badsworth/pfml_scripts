@@ -2,7 +2,7 @@ import DashboardButton from "./DashboardButton";
 import React from "react";
 
 export default {
-  title: "Components|Buttons/DashboardButton",
+  title: "Components/Buttons/DashboardButton",
   component: DashboardButton,
 };
 

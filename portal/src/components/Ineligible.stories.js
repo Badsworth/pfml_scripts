@@ -2,7 +2,7 @@ import Ineligible from "./Ineligible";
 import React from "react";
 
 export default {
-  title: "Screens|Eligibility Result/Ineligible",
+  title: "Screens/Eligibility Result/Ineligible",
   component: Ineligible,
 };
 

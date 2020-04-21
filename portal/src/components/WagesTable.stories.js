@@ -2,7 +2,7 @@ import React from "react";
 import WagesTable from "./WagesTable";
 
 export default {
-  title: "WagesTable",
+  title: "Screens/Eligibility Result/WagesTable",
   component: WagesTable,
 };
 

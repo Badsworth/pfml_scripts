@@ -4,7 +4,7 @@ import InputChoiceGroup from "./InputChoiceGroup";
 import InputText from "./InputText";
 
 export default {
-  title: "Components|ConditionalContent",
+  title: "Components/ConditionalContent",
   component: ConditionalContent,
 };
 

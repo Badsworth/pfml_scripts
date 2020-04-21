@@ -3,7 +3,7 @@ import InputText from "./InputText";
 import { useTranslation } from "../locales/i18n";
 
 export default {
-  title: "Components|Forms/InputText",
+  title: "Components/Forms/InputText",
   component: InputText,
 };
 

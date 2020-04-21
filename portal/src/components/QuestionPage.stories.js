@@ -4,7 +4,7 @@ import QuestionPage from "./QuestionPage";
 import React from "react";
 
 export default {
-  title: "Templates|QuestionPage",
+  title: "Templates/QuestionPage",
   component: QuestionPage,
 };
 

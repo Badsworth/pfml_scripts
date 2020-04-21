@@ -2,7 +2,7 @@ import Details from "./Details";
 import React from "react";
 
 export default {
-  title: "Components|Details",
+  title: "Components/Details",
   component: Details,
 };
 

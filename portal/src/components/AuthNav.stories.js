@@ -2,7 +2,7 @@ import AuthNav from "./AuthNav";
 import React from "react";
 
 export default {
-  title: "Global|AuthNav",
+  title: "Global/AuthNav",
   component: AuthNav,
 };
 

@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import InputDate from "./InputDate";
 
 export default {
-  title: "Components|Forms/InputDate",
+  title: "Components/Forms/InputDate",
   component: InputDate,
 };
 

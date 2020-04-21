@@ -2,7 +2,7 @@ import React from "react";
 import RecordNotFound from "./RecordNotFound";
 
 export default {
-  title: "Screens|Eligibility Result/RecordNotFound",
+  title: "Screens/Eligibility Result/RecordNotFound",
   component: RecordNotFound,
 };
 

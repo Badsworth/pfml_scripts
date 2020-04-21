@@ -4,7 +4,7 @@ import Authenticator from "./Authenticator";
 import React from "react";
 
 export default {
-  title: "Global|Authenticator",
+  title: "Global/Authenticator",
   component: Authenticator,
 };
 

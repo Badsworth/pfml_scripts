@@ -2,7 +2,7 @@ import InputChoice from "./InputChoice";
 import React from "react";
 
 export default {
-  title: "Components|Forms/InputChoice",
+  title: "Components/Forms/InputChoice",
   component: InputChoice,
 };
 
