@@ -10,9 +10,11 @@ import "../styles/app.scss";
 import React from "react";
 import { I18nextProvider } from "react-i18next";
 import { addDecorator } from "@storybook/react";
-import i18n from "../src/locales/i18n";
+import { initializeI18n } from "../src/locales/i18n";
 
 // Internationalize strings in our stories
+const { appI18n } = initializeI18n();
+
 addDecorator((storyFn) => (
-  <I18nextProvider i18n={i18n.appI18n}>{storyFn()}</I18nextProvider>
+  <I18nextProvider i18n={appI18n}>{storyFn()}</I18nextProvider>
 ));
