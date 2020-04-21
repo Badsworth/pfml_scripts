@@ -1,32 +1,22 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`DateOfBirth renders the connected component 1`] = `
-<ContextProvider
-  value={null}
->
-  <DateOfBirth
-    formData={
-      Object {
-        "dateOfBirth": "02-12-1809",
-      }
-    }
-    store={
-      Object {
-        "dispatch": [Function],
-        "getState": [Function],
-        "replaceReducer": [Function],
-        "subscribe": [Function],
-        Symbol(observable): [Function],
-      }
-    }
-    updateFieldFromEvent={[Function]}
-  />
-</ContextProvider>
-`;
-
 exports[`DateOfBirth renders the page 1`] = `
 <QuestionPage
+  formState={
+    User {
+      "cognitoUserId": null,
+      "dateOfBirth": null,
+      "firstName": null,
+      "hasStateId": null,
+      "lastName": null,
+      "middleName": null,
+      "ssn": null,
+      "stateId": null,
+      "userId": null,
+    }
+  }
   nextPage="/claims/state-id"
+  onSave={[Function]}
   title="Who is taking leave"
 >
   <InputDate
@@ -34,7 +24,7 @@ exports[`DateOfBirth renders the page 1`] = `
     label="What's your birthdate?"
     monthLabel="Month"
     name="dateOfBirth"
-    onChange={[MockFunction]}
+    onChange={[Function]}
     value=""
     yearLabel="Year"
   />

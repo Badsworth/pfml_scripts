@@ -1,19 +1,35 @@
 import InputChoiceGroup from "../../components/InputChoiceGroup";
-import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
-import { connect } from "react-redux";
 import routes from "../../routes";
-import { updateFieldFromEvent } from "../../actions";
+import useFormState from "../../hooks/useFormState";
+import useHandleInputChange from "../../hooks/useHandleInputChange";
 import { useTranslation } from "react-i18next";
 
-export const LeaveType = (props) => {
+const LeaveType = (props) => {
   const { t } = useTranslation();
-  const { leaveType } = props.formData;
+
+  // TODO get current claim id from query parameter, then get current claim
+  // TODO initialState for form should come from current claim
+  // const { claimId } = props.query;
+  // const claim = props.claims.byId[claimId];
+  // const { formState, updateFields, removeField } = useFormState(claim);
+  // For now just initialize to empty formState
+  const { formState, updateFields } = useFormState();
+  const handleInputChange = useHandleInputChange(updateFields);
+  const { leaveType } = formState;
+
+  // TODO call API once API module is ready
+  // const handleSave = useHandleSave(api.patchClaim, props.setClaim);
+  // TODO save the API result to the claim once we have a `setClaim` function we can use
+  // For now just do nothing.
+  const handleSave = async () => {};
 
   return (
     <QuestionPage
+      formState={formState}
       title={t("pages.claimsLeaveType.title")}
+      onSave={handleSave}
       // TO-DO: Update route when the next page is created
       nextPage={routes.home}
     >
@@ -40,28 +56,11 @@ export const LeaveType = (props) => {
         ]}
         label={t("pages.claimsLeaveType.sectionLabel")}
         name="leaveType"
-        onChange={props.updateFieldFromEvent}
+        onChange={handleInputChange}
         type="radio"
       />
     </QuestionPage>
   );
 };
 
-LeaveType.propTypes = {
-  formData: PropTypes.shape({
-    leaveType: PropTypes.oneOf([
-      "activeDutyFamilyLeave",
-      "medicalLeave",
-      "parentalLeave",
-    ]),
-  }).isRequired,
-  updateFieldFromEvent: PropTypes.func.isRequired,
-};
-
-const mapStateToProps = (state) => ({
-  formData: state.form,
-});
-
-const mapDispatchToProps = { updateFieldFromEvent };
-
-export default connect(mapStateToProps, mapDispatchToProps)(LeaveType);
+export default LeaveType;

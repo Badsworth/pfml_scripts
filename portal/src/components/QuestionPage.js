@@ -16,10 +16,10 @@ export const QuestionPage = (props) => {
   const { t } = useTranslation();
   const router = useRouter();
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
+    await props.onSave(props.formState);
     router.push(props.nextPage);
-    // TODO handle submission of data to API
   };
 
   return (
@@ -40,6 +40,10 @@ export const QuestionPage = (props) => {
 
 QuestionPage.propTypes = {
   /**
+   * The state of the form.
+   */
+  formState: PropTypes.object,
+  /**
    * The contents of the form question page.
    */
   children: PropTypes.node.isRequired,
@@ -51,6 +55,15 @@ QuestionPage.propTypes = {
    * The text of the small title of the form.
    */
   title: PropTypes.node.isRequired,
+
+  /**
+   * Function that performs the save operation. Can be asynchronous.
+   */
+  onSave: PropTypes.func.isRequired,
+};
+
+QuestionPage.defaultProps = {
+  formState: {},
 };
 
 export default QuestionPage;

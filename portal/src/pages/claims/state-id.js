@@ -1,22 +1,41 @@
-import { removeField, updateFieldFromEvent } from "../../actions";
 import ConditionalContent from "../../components/ConditionalContent";
 import InputChoiceGroup from "../../components/InputChoiceGroup";
 import InputText from "../../components/InputText";
 import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
-import { connect } from "react-redux";
+import User from "../../models/User";
 import routes from "../../routes";
+import useFormState from "../../hooks/useFormState";
+import useHandleInputChange from "../../hooks/useHandleInputChange";
+import useHandleSave from "../../hooks/useHandleSave";
 import { useTranslation } from "../../locales/i18n";
 import valueWithFallback from "../../utils/valueWithFallback";
 
-export const StateId = (props) => {
+const StateId = (props) => {
   const { t } = useTranslation();
-  const { stateId, hasStateId } = props.formData;
+  const { formState, updateFields, removeField } = useFormState(props.user);
+  const { hasStateId, stateId } = formState;
+  const handleInputChange = useHandleInputChange(updateFields);
+
+  // TODO call API once API module is ready
+  // const handleSave = useHandleSave(api.patchUser, props.setUser);
+  // For now just save the form state back to the user state directly.
+  const handleSave = useHandleSave(
+    (formState) => new User(formState),
+    props.setUser
+  );
+
+  // Note that hasStateId can be null if user has never answered this question before.
+  // We should show this field if user already has a state id, and hide it either if
+  // indicated that they don't have a state id or if they had never answered the question.
+  const shouldShowStateIdField = !!hasStateId;
 
   return (
     <QuestionPage
+      formState={formState}
       title={t("pages.claimsStateId.title")}
+      onSave={handleSave}
       nextPage={routes.claims.ssn}
     >
       <InputChoiceGroup
@@ -34,20 +53,20 @@ export const StateId = (props) => {
         ]}
         label={t("pages.claimsStateId.hasIdChoiceLabel")}
         name="hasStateId"
-        onChange={props.updateFieldFromEvent}
+        onChange={handleInputChange}
         type="radio"
       />
 
       <ConditionalContent
         fieldNamesClearedWhenHidden={["stateId"]}
-        removeField={props.removeField}
-        visible={hasStateId}
+        removeField={removeField}
+        visible={shouldShowStateIdField}
       >
         <InputText
           name="stateId"
           label={t("pages.claimsStateId.idLabel")}
           value={valueWithFallback(stateId)}
-          onChange={props.updateFieldFromEvent}
+          onChange={handleInputChange}
         />
       </ConditionalContent>
     </QuestionPage>
@@ -55,18 +74,8 @@ export const StateId = (props) => {
 };
 
 StateId.propTypes = {
-  formData: PropTypes.shape({
-    hasStateId: PropTypes.bool,
-    stateId: PropTypes.string,
-  }).isRequired,
-  removeField: PropTypes.func.isRequired,
-  updateFieldFromEvent: PropTypes.func.isRequired,
+  user: PropTypes.instanceOf(User).isRequired,
+  setUser: PropTypes.func.isRequired,
 };
 
-const mapStateToProps = (state) => ({
-  formData: state.form,
-});
-
-const mapDispatchToProps = { updateFieldFromEvent, removeField };
-
-export default connect(mapStateToProps, mapDispatchToProps)(StateId);
+export default StateId;

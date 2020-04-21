@@ -1,6 +1,6 @@
-import * as nextRouter from "next/router";
 import QuestionPage from "../../src/components/QuestionPage";
 import React from "react";
+import { mockRouter } from "next/router";
 import { shallow } from "enzyme";
 
 describe("QuestionPage", () => {
@@ -9,26 +9,35 @@ describe("QuestionPage", () => {
 
   it("renders the form", () => {
     const wrapper = shallow(
-      <QuestionPage title={sampleTitle} nextPage={sampleRoute}>
+      <QuestionPage
+        title={sampleTitle}
+        onSave={jest.fn()}
+        nextPage={sampleRoute}
+      >
         <div>Some stuff here</div>
       </QuestionPage>
     );
     expect(wrapper).toMatchSnapshot();
   });
 
-  it("redirects to address after submit", () => {
-    const useRouter = jest.spyOn(nextRouter, "useRouter");
-    const push = jest.fn();
-    useRouter.mockImplementation(() => ({ push }));
+  it("calls onSave with formData and redirects to address after submit", async () => {
+    const handleSave = jest.fn();
+    const formState = { a: 1, b: 2 };
     const wrapper = shallow(
-      <QuestionPage title={sampleTitle} nextPage={sampleRoute}>
+      <QuestionPage
+        title={sampleTitle}
+        formState={formState}
+        onSave={handleSave}
+        nextPage={sampleRoute}
+      >
         <div>Some stuff here</div>
       </QuestionPage>
     );
     const event = { preventDefault: jest.fn() };
 
-    wrapper.find("form").simulate("submit", event);
+    await wrapper.find("form").simulate("submit", event);
 
-    expect(push).toHaveBeenCalledWith(sampleRoute);
+    expect(handleSave).toHaveBeenCalledWith(formState);
+    expect(mockRouter.push).toHaveBeenCalledWith(sampleRoute);
   });
 });

@@ -13,6 +13,7 @@ module.exports = {
     "<rootDir>/.next/",
     "<rootDir>/node_modules/",
     "<rootDir>/config",
+    "<rootDir>/__tests__/test-utils.js",
   ],
   coverageThreshold: {
     global: {

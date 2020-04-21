@@ -1,22 +1,37 @@
-import { removeField, updateFieldFromEvent } from "../../actions";
+import Collection from "../../models/Collection";
 import ConditionalContent from "../../components/ConditionalContent";
 import InputChoiceGroup from "../../components/InputChoiceGroup";
 import InputText from "../../components/InputText";
 import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
-import { connect } from "react-redux";
 import routes from "../../routes";
+import useFormState from "../../hooks/useFormState";
+import useHandleInputChange from "../../hooks/useHandleInputChange";
 import { useTranslation } from "react-i18next";
 import valueWithFallback from "../../utils/valueWithFallback";
 
-export const Duration = (props) => {
+const Duration = (props) => {
   const { t } = useTranslation();
-  const { avgWeeklyHoursWorked, durationType, hoursOffNeeded } = props.formData;
+
+  const { claimId } = props.query;
+  // TODO remove the `|| {}` fallback
+  const claim = props.claims.byId[claimId] || {};
+  const { formState, updateFields, removeField } = useFormState(claim);
+  const { avgWeeklyHoursWorked, durationType, hoursOffNeeded } = formState;
+  const handleInputChange = useHandleInputChange(updateFields);
+
+  // TODO call API once API module is ready
+  // const handleSave = useHandleSave(api.patchClaim, props.setClaim);
+  // TODO save the API result to the claim once we have a `setClaim` function we can use
+  // For now just do nothing.
+  const handleSave = async () => {};
 
   return (
     <QuestionPage
+      formState={formState}
       title={t("pages.claimsDuration.title")}
+      onSave={handleSave}
       // TODO update with correct next route re: pregnancy
       nextPage={routes.home}
     >
@@ -37,13 +52,13 @@ export const Duration = (props) => {
         ]}
         label={t("pages.claimsDuration.sectionLabel")}
         name="durationType"
-        onChange={props.updateFieldFromEvent}
+        onChange={handleInputChange}
         type="radio"
       />
 
       <ConditionalContent
         fieldNamesClearedWhenHidden={["avgWeeklyHoursWorked", "hoursOffNeeded"]}
-        removeField={props.removeField}
+        removeField={removeField}
         visible={durationType === "intermittent"}
       >
         <InputText
@@ -51,7 +66,7 @@ export const Duration = (props) => {
           hint={t("pages.claimsDuration.avgWeeklyHoursWorkedHint")}
           name="avgWeeklyHoursWorked"
           value={valueWithFallback(avgWeeklyHoursWorked)}
-          onChange={props.updateFieldFromEvent}
+          onChange={handleInputChange}
           width="small"
         />
         <InputText
@@ -59,7 +74,7 @@ export const Duration = (props) => {
           hint={t("pages.claimsDuration.hoursOffNeededHint")}
           name="hoursOffNeeded"
           value={valueWithFallback(hoursOffNeeded)}
-          onChange={props.updateFieldFromEvent}
+          onChange={handleInputChange}
           width="small"
         />
       </ConditionalContent>
@@ -68,19 +83,10 @@ export const Duration = (props) => {
 };
 
 Duration.propTypes = {
-  formData: PropTypes.shape({
-    avgWeeklyHoursWorked: PropTypes.string,
-    durationType: PropTypes.string,
-    hoursOffNeeded: PropTypes.string,
-  }).isRequired,
-  removeField: PropTypes.func.isRequired,
-  updateFieldFromEvent: PropTypes.func.isRequired,
+  claims: PropTypes.instanceOf(Collection).isRequired,
+  query: PropTypes.shape({
+    claimId: PropTypes.string,
+  }),
 };
 
-const mapStateToProps = (state) => ({
-  formData: state.form,
-});
-
-const mapDispatchToProps = { updateFieldFromEvent, removeField };
-
-export default connect(mapStateToProps, mapDispatchToProps)(Duration);
+export default Duration;

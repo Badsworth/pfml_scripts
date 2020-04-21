@@ -1,19 +1,8 @@
-/* eslint-disable import/first */
-// We need to manually trigger Router events to test their side effects
-let mockRouterEvents = [];
-jest.mock("next/router", () => ({
-  events: {
-    on: (name, callback) => {
-      mockRouterEvents.push({ name, callback });
-    },
-    off: jest.fn(),
-  },
-}));
-
 import { mount, shallow } from "enzyme";
 import { App } from "../../src/pages/_app";
 import React from "react";
 import { act } from "react-dom/test-utils";
+import { mockRouterEvents } from "next/router";
 
 function render(customProps = {}, mountComponent = false) {
   const props = Object.assign(
@@ -35,10 +24,6 @@ function render(customProps = {}, mountComponent = false) {
 }
 
 describe("App", () => {
-  afterEach(() => {
-    mockRouterEvents = [];
-  });
-
   describe("when a user IS authenticated", () => {
     it("renders the site header with the authenticated user's info", () => {
       // We need to mount the component so that useEffect is called
@@ -85,7 +70,29 @@ describe("App", () => {
 
     expect(component).toMatchInlineSnapshot(`
       <TestComponent
+        claims={
+          Collection {
+            "byId": Object {},
+            "idProperty": "claimId",
+            "ids": Array [],
+          }
+        }
+        query={Object {}}
+        setUser={[Function]}
         title="Test page"
+        user={
+          User {
+            "cognitoUserId": null,
+            "dateOfBirth": null,
+            "firstName": null,
+            "hasStateId": null,
+            "lastName": null,
+            "middleName": null,
+            "ssn": null,
+            "stateId": null,
+            "userId": null,
+          }
+        }
       />
     `);
   });

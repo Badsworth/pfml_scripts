@@ -2,48 +2,58 @@ import InputText from "../../components/InputText";
 import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
-import { connect } from "react-redux";
+import User from "../../models/User";
 import isFeatureEnabled from "../../utils/isFeatureEnabled";
 import routes from "../../routes";
-import { updateFieldFromEvent } from "../../actions";
+import useFormState from "../../hooks/useFormState";
+import useHandleInputChange from "../../hooks/useHandleInputChange";
+import useHandleSave from "../../hooks/useHandleSave";
 import { useTranslation } from "../../locales/i18n";
 import valueWithFallback from "../../utils/valueWithFallback";
 
 /**
  * A form page to capture the worker's SSN or ITIN.
  */
-export const Ssn = (props) => {
+const Ssn = (props) => {
   const { t } = useTranslation();
-  const formData = props.formData;
+  const { formState, updateFields } = useFormState(props.user);
+  const { ssn } = formState;
+  const handleInputChange = useHandleInputChange(updateFields);
+
+  // TODO call API once API module is ready
+  // const handleSave = useHandleSave(api.patchUser, props.setUser);
+  // For now just save the form state back to the user state directly.
+  const handleSave = useHandleSave(
+    (formState) => new User(formState),
+    props.setUser
+  );
+
   const nextPage = isFeatureEnabled("unrestrictedClaimFlow")
     ? routes.claims.leaveType
     : routes.home;
 
   return (
-    <QuestionPage title={t("pages.claimsSsn.title")} nextPage={nextPage}>
+    <QuestionPage
+      formState={formState}
+      title={t("pages.claimsSsn.title")}
+      onSave={handleSave}
+      nextPage={nextPage}
+    >
       {/* TODO(CP-296) Use masked field component for SSN styling. */}
       <InputText
         name="ssn"
-        value={valueWithFallback(formData.ssn)}
+        value={valueWithFallback(ssn)}
         label={t("pages.claimsSsn.sectionLabel")}
         hint={t("pages.claimsSsn.sectionHint")}
-        onChange={props.updateFieldFromEvent}
+        onChange={handleInputChange}
       />
     </QuestionPage>
   );
 };
 
 Ssn.propTypes = {
-  formData: PropTypes.shape({
-    ssn: PropTypes.string,
-  }).isRequired,
-  updateFieldFromEvent: PropTypes.func.isRequired,
+  user: PropTypes.instanceOf(User).isRequired,
+  setUser: PropTypes.func.isRequired,
 };
 
-const mapStateToProps = (state) => ({
-  formData: state.form,
-});
-
-const mapDispatchToProps = { updateFieldFromEvent };
-
-export default connect(mapStateToProps, mapDispatchToProps)(Ssn);
+export default Ssn;

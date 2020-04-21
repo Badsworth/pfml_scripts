@@ -1,39 +1,29 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`Ssn renders connected component 1`] = `
-<ContextProvider
-  value={null}
->
-  <Ssn
-    formData={
-      Object {
-        "ssn": "",
-      }
-    }
-    store={
-      Object {
-        "dispatch": [Function],
-        "getState": [Function],
-        "replaceReducer": [Function],
-        "subscribe": [Function],
-        Symbol(observable): [Function],
-      }
-    }
-    updateFieldFromEvent={[Function]}
-  />
-</ContextProvider>
-`;
-
 exports[`Ssn renders the form 1`] = `
 <QuestionPage
+  formState={
+    User {
+      "cognitoUserId": null,
+      "dateOfBirth": null,
+      "firstName": null,
+      "hasStateId": null,
+      "lastName": null,
+      "middleName": null,
+      "ssn": null,
+      "stateId": null,
+      "userId": null,
+    }
+  }
   nextPage="/"
+  onSave={[Function]}
   title="Who is taking leave"
 >
   <InputText
     hint="Don't have an SSN? Use your Individual Taxpayer Identification Number (ITIN)."
     label="What's your Social Security Number?"
     name="ssn"
-    onChange={[MockFunction]}
+    onChange={[Function]}
     value=""
   />
 </QuestionPage>

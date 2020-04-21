@@ -1,28 +1,10 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`LeaveType renders the connected component 1`] = `
-<ContextProvider
-  value={null}
->
-  <LeaveType
-    formData={Object {}}
-    store={
-      Object {
-        "dispatch": [Function],
-        "getState": [Function],
-        "replaceReducer": [Function],
-        "subscribe": [Function],
-        Symbol(observable): [Function],
-      }
-    }
-    updateFieldFromEvent={[Function]}
-  />
-</ContextProvider>
-`;
-
 exports[`LeaveType renders the page 1`] = `
 <QuestionPage
+  formState={Object {}}
   nextPage="/"
+  onSave={[Function]}
   title="Leave type"
 >
   <InputChoiceGroup
@@ -35,7 +17,7 @@ exports[`LeaveType renders the page 1`] = `
           "value": "medicalLeave",
         },
         Object {
-          "checked": true,
+          "checked": false,
           "hint": "(Can cover medical and family leave)",
           "label": "I need to take parental leave",
           "value": "parentalLeave",
@@ -50,7 +32,7 @@ exports[`LeaveType renders the page 1`] = `
     }
     label="Why do you need to take time off?"
     name="leaveType"
-    onChange={[MockFunction]}
+    onChange={[Function]}
     type="radio"
   />
 </QuestionPage>

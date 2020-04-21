@@ -4,12 +4,12 @@ import "@aws-amplify/ui/dist/style.css";
 import React, { useEffect, useState } from "react";
 import { initializeI18n, useTranslation } from "../locales/i18n";
 import Authenticator from "../components/Authenticator";
+import Collection from "../models/Collection";
 import Header from "../components/Header";
 import PropTypes from "prop-types";
-import { Provider } from "react-redux";
-import Router from "next/router";
 import Spinner from "../components/Spinner";
-import { useStore } from "../store";
+import User from "../models/User";
+import { useRouter } from "next/router";
 
 initializeI18n();
 /**
@@ -20,9 +20,25 @@ initializeI18n();
  */
 export const App = ({ Component, pageProps, authState, authData }) => {
   const { t } = useTranslation();
-  const store = useStore();
+  const router = useRouter();
+
+  // State representing the Portal's user object.
+  // Initialize to empty user but will be populated upon the first API call
+  // to fetch the user (or create the user on their first login)
+  const [user, setUser] = useState(new User());
+
+  // State representing the collection of claims for the current user.
+  // Initialize to empty collection, but will eventually store the claims
+  // state as API calls are made to fetch the user's claims and/or create
+  // new claims
+  const [claims] = useState(new Collection({ idProperty: "claimId" }));
+
   const [ui, setUI] = useState({ isLoadingRoute: false });
-  const [user, setUser] = useState();
+
+  // State representing the auth service's (Cognito) user object
+  // setAuthUser gets called when the user logs in to Cognito
+  const [authUser, setAuthUser] = useState();
+
   /**
    * Event handler for when a page route transition has ended
    * (either successfully or unsuccessfully)
@@ -45,17 +61,17 @@ export const App = ({ Component, pageProps, authState, authData }) => {
   const handleAuthStateChange = (authState, authData) => {
     const signedIn = authState === "signedIn";
     if (signedIn) {
-      setUser({ username: authData.attributes.email });
+      setAuthUser({ username: authData.attributes.email });
     } else {
-      setUser();
+      setAuthUser();
     }
   };
 
   useEffect(() => {
     // Track route events so we can provide a visual indicator when a page is loading
-    Router.events.on("routeChangeStart", handleRouteChangeStart);
-    Router.events.on("routeChangeComplete", handleRouteChangeEnd);
-    Router.events.on("routeChangeError", handleRouteChangeEnd);
+    router.events.on("routeChangeStart", handleRouteChangeStart);
+    router.events.on("routeChangeComplete", handleRouteChangeEnd);
+    router.events.on("routeChangeError", handleRouteChangeEnd);
 
     // Passing this empty array causes this effect to be run only once upon mount. See:
     // https://reactjs.org/docs/hooks-effect.html#tip-optimizing-performance-by-skipping-effects
@@ -64,8 +80,8 @@ export const App = ({ Component, pageProps, authState, authData }) => {
   }, []);
 
   return (
-    <Provider store={store}>
-      <Header user={user} />
+    <React.Fragment>
+      <Header user={authUser} />
       <main id="main" className="grid-container margin-top-5 margin-bottom-8">
         <div className="grid-row">
           <div className="grid-col-fill">
@@ -79,13 +95,19 @@ export const App = ({ Component, pageProps, authState, authData }) => {
                   <Spinner aria-valuetext={t("components.spinner.label")} />
                 </div>
               ) : (
-                <Component {...pageProps} />
+                <Component
+                  user={user}
+                  setUser={setUser}
+                  claims={claims}
+                  query={router.query}
+                  {...pageProps}
+                />
               )}
             </Authenticator>
           </div>
         </div>
       </main>
-    </Provider>
+    </React.Fragment>
   );
 };
 

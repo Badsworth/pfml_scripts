@@ -1,34 +1,22 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`Name renders the connected component 1`] = `
-<ContextProvider
-  value={null}
->
-  <Name
-    formData={
-      Object {
-        "firstName": "Aquib",
-        "lastName": "Khan",
-        "middleName": "cricketer",
-      }
-    }
-    store={
-      Object {
-        "dispatch": [Function],
-        "getState": [Function],
-        "replaceReducer": [Function],
-        "subscribe": [Function],
-        Symbol(observable): [Function],
-      }
-    }
-    updateFieldFromEvent={[Function]}
-  />
-</ContextProvider>
-`;
-
-exports[`Name renders the page 1`] = `
+exports[`Name renders the empty page 1`] = `
 <QuestionPage
+  formState={
+    User {
+      "cognitoUserId": null,
+      "dateOfBirth": null,
+      "firstName": null,
+      "hasStateId": null,
+      "lastName": null,
+      "middleName": null,
+      "ssn": null,
+      "stateId": null,
+      "userId": null,
+    }
+  }
   nextPage="/claims/date-of-birth"
+  onSave={[Function]}
   title="Who is taking leave"
 >
   <FormLabel
@@ -40,14 +28,14 @@ exports[`Name renders the page 1`] = `
   <InputText
     label="First name"
     name="firstName"
-    onChange={[MockFunction]}
+    onChange={[Function]}
     smallLabel={true}
     value=""
   />
   <InputText
     label="Middle name"
     name="middleName"
-    onChange={[MockFunction]}
+    onChange={[Function]}
     optionalText="(optional)"
     smallLabel={true}
     value=""
@@ -55,9 +43,59 @@ exports[`Name renders the page 1`] = `
   <InputText
     label="Last name"
     name="lastName"
-    onChange={[MockFunction]}
+    onChange={[Function]}
     smallLabel={true}
     value=""
+  />
+</QuestionPage>
+`;
+
+exports[`Name renders the page prefilled with user information 1`] = `
+<QuestionPage
+  formState={
+    User {
+      "cognitoUserId": null,
+      "dateOfBirth": null,
+      "firstName": "Aquib",
+      "hasStateId": null,
+      "lastName": "Khan",
+      "middleName": "cricketer",
+      "ssn": null,
+      "stateId": null,
+      "userId": null,
+    }
+  }
+  nextPage="/claims/date-of-birth"
+  onSave={[Function]}
+  title="Who is taking leave"
+>
+  <FormLabel
+    component="legend"
+    hint="Fill out your name as it appears on official documents like your driver’s license or W-2."
+  >
+    What's your name?
+  </FormLabel>
+  <InputText
+    label="First name"
+    name="firstName"
+    onChange={[Function]}
+    smallLabel={true}
+    value="Aquib"
+  />
+  <InputText
+    label="Middle name"
+    name="middleName"
+    onChange={[Function]}
+    optionalText="(optional)"
+    smallLabel={true}
+    value="cricketer"
+  />
+  <InputText
+    label="Last name"
+    name="lastName"
+    onChange={[Function]}
+    smallLabel={true}
+    value="Khan"
   />
 </QuestionPage>
 `;

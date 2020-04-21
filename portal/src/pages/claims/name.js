@@ -3,19 +3,33 @@ import InputText from "../../components/InputText";
 import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
-import { connect } from "react-redux";
+import User from "../../models/User";
 import routes from "../../routes";
-import { updateFieldFromEvent } from "../../actions";
+import useFormState from "../../hooks/useFormState";
+import useHandleInputChange from "../../hooks/useHandleInputChange";
+import useHandleSave from "../../hooks/useHandleSave";
 import { useTranslation } from "../../locales/i18n";
 import valueWithFallback from "../../utils/valueWithFallback";
 
-export const Name = (props) => {
+const Name = (props) => {
   const { t } = useTranslation();
-  const formData = props.formData;
+  const { formState, updateFields } = useFormState(props.user);
+  const { firstName, middleName, lastName } = formState;
+  const handleInputChange = useHandleInputChange(updateFields);
+
+  // TODO call API once API module is ready
+  // const handleSave = useHandleSave(api.patchUser, props.setUser);
+  // For now just save the form state back to the user state directly.
+  const handleSave = useHandleSave(
+    (formState) => new User(formState),
+    props.setUser
+  );
 
   return (
     <QuestionPage
+      formState={formState}
       title={t("pages.claimsName.title")}
+      onSave={handleSave}
       nextPage={routes.claims.dateOfBirth}
     >
       <FormLabel
@@ -26,24 +40,24 @@ export const Name = (props) => {
       </FormLabel>
       <InputText
         name="firstName"
-        value={valueWithFallback(formData.firstName)}
+        value={valueWithFallback(firstName)}
         label={t("pages.claimsName.firstNameLabel")}
-        onChange={props.updateFieldFromEvent}
+        onChange={handleInputChange}
         smallLabel
       />
       <InputText
         name="middleName"
-        value={valueWithFallback(formData.middleName)}
+        value={valueWithFallback(middleName)}
         label={t("pages.claimsName.middleNameLabel")}
-        onChange={props.updateFieldFromEvent}
         optionalText={t("components.form.optionalText")}
+        onChange={handleInputChange}
         smallLabel
       />
       <InputText
         name="lastName"
-        value={valueWithFallback(formData.lastName)}
+        value={valueWithFallback(lastName)}
         label={t("pages.claimsName.lastNameLabel")}
-        onChange={props.updateFieldFromEvent}
+        onChange={handleInputChange}
         smallLabel
       />
     </QuestionPage>
@@ -51,18 +65,8 @@ export const Name = (props) => {
 };
 
 Name.propTypes = {
-  formData: PropTypes.shape({
-    firstName: PropTypes.string,
-    middleName: PropTypes.string,
-    lastName: PropTypes.string,
-  }).isRequired,
-  updateFieldFromEvent: PropTypes.func.isRequired,
+  user: PropTypes.instanceOf(User).isRequired,
+  setUser: PropTypes.func.isRequired,
 };
 
-const mapStateToProps = (state) => ({
-  formData: state.form,
-});
-
-const mapDispatchToProps = { updateFieldFromEvent };
-
-export default connect(mapStateToProps, mapDispatchToProps)(Name);
+export default Name;

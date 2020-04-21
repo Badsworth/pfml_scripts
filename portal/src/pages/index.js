@@ -13,6 +13,11 @@ import { useTranslation } from "../locales/i18n";
 const Index = () => {
   const { t } = useTranslation();
 
+  // TODO As part of implementing "In progress claims" (see https://lwd.atlassian.net/browse/CP-251)
+  // we'll need to create a new claim when the user clicks "Create a New Claim"
+  // (eventually this will be an API call to POSTS /v1/claims or /v1/applications once that endpoint is ready)
+  // and add the claim to the claims state with `props.claims.add(claim)`
+
   return (
     <React.Fragment>
       <Title>{t("pages.index.pageHeader")}</Title>

@@ -1,28 +1,23 @@
-import ConnectedDateOfBirthPage, {
-  DateOfBirth,
-} from "../../../src/pages/claims/date-of-birth";
+import DateOfBirth from "../../../src/pages/claims/date-of-birth";
 import React from "react";
-import { initializeStore } from "../../../src/store";
+import User from "../../../src/models/User";
 import { shallow } from "enzyme";
 
 describe("DateOfBirth", () => {
-  it("renders the connected component", () => {
-    const wrapper = shallow(
-      <ConnectedDateOfBirthPage
-        store={initializeStore({
-          form: {
-            dateOfBirth: "02-12-1809",
-          },
-        })}
-      />
-    );
-    expect(wrapper).toMatchSnapshot();
+  let setUser, user, wrapper;
+
+  beforeEach(() => {
+    user = new User();
+    setUser = jest.fn();
+    wrapper = shallow(<DateOfBirth user={user} setUser={setUser} />);
   });
 
   it("renders the page", () => {
-    const wrapper = shallow(
-      <DateOfBirth updateFieldFromEvent={jest.fn()} formData={{}} />
-    );
     expect(wrapper).toMatchSnapshot();
+  });
+
+  it("sets user state after successful save", async () => {
+    await wrapper.find("QuestionPage").simulate("save");
+    expect(setUser).toHaveBeenCalled();
   });
 });

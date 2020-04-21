@@ -2,45 +2,51 @@ import InputDate from "../../components/InputDate";
 import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
-import { connect } from "react-redux";
+import User from "../../models/User";
 import routes from "../../routes";
-import { updateFieldFromEvent } from "../../actions";
+import useFormState from "../../hooks/useFormState";
+import useHandleInputChange from "../../hooks/useHandleInputChange";
+import useHandleSave from "../../hooks/useHandleSave";
 import { useTranslation } from "../../locales/i18n";
 import valueWithFallback from "../../utils/valueWithFallback";
 
 export const DateOfBirth = (props) => {
   const { t } = useTranslation();
-  const formData = props.formData;
+  const { formState, updateFields } = useFormState(props.user);
+  const { dateOfBirth } = formState;
+  const handleInputChange = useHandleInputChange(updateFields);
+
+  // TODO call API once API module is ready
+  // const handleSave = useHandleSave(api.patchUser, props.setUser);
+  // For now just save the form state back to the user state directly.
+  const handleSave = useHandleSave(
+    (formState) => new User(formState),
+    props.setUser
+  );
 
   return (
     <QuestionPage
+      formState={formState}
       title={t("pages.claimsDateOfBirth.title")}
+      onSave={handleSave}
       nextPage={routes.claims.stateId}
     >
       <InputDate
         name="dateOfBirth"
         label={t("pages.claimsDateOfBirth.sectionLabel")}
-        value={valueWithFallback(formData.dateOfBirth)}
+        value={valueWithFallback(dateOfBirth)}
         dayLabel={t("components.form.dateInputDayLabel")}
         monthLabel={t("components.form.dateInputMonthLabel")}
         yearLabel={t("components.form.dateInputYearLabel")}
-        onChange={props.updateFieldFromEvent}
+        onChange={handleInputChange}
       />
     </QuestionPage>
   );
 };
 
 DateOfBirth.propTypes = {
-  formData: PropTypes.shape({
-    dateOfBirth: PropTypes.string,
-  }).isRequired,
-  updateFieldFromEvent: PropTypes.func.isRequired,
+  user: PropTypes.instanceOf(User).isRequired,
+  setUser: PropTypes.func.isRequired,
 };
 
-const mapStateToProps = (state) => ({
-  formData: state.form,
-});
-
-const mapDispatchToProps = { updateFieldFromEvent };
-
-export default connect(mapStateToProps, mapDispatchToProps)(DateOfBirth);
+export default DateOfBirth;

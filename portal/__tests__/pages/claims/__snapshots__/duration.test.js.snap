@@ -1,8 +1,10 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`Duration initially renders the page without conditional fields 1`] = `
+exports[`Duration regardless of duration type initially renders the page without conditional fields 1`] = `
 <QuestionPage
+  formState={Object {}}
   nextPage="/"
+  onSave={[Function]}
   title="Leave duration"
 >
   <InputChoiceGroup
@@ -24,7 +26,7 @@ exports[`Duration initially renders the page without conditional fields 1`] = `
     }
     label="Do you need to take off work completely or work on a reduced schedule?"
     name="durationType"
-    onChange={[MockFunction]}
+    onChange={[Function]}
     type="radio"
   />
   <ConditionalContent
@@ -34,14 +36,14 @@ exports[`Duration initially renders the page without conditional fields 1`] = `
         "hoursOffNeeded",
       ]
     }
-    removeField={[MockFunction]}
+    removeField={[Function]}
     visible={false}
   >
     <InputText
       hint="Tell us how many hours you typically worked before going on leave. We need to know this so we can calculate your benefit amount."
       label="How many hours do you work in a week, on average?"
       name="avgWeeklyHoursWorked"
-      onChange={[MockFunction]}
+      onChange={[Function]}
       value=""
       width="small"
     />
@@ -49,31 +51,10 @@ exports[`Duration initially renders the page without conditional fields 1`] = `
       hint="This can be an approximate. You can change this after your claim is approved."
       label="How many hours do you need to take off each week?"
       name="hoursOffNeeded"
-      onChange={[MockFunction]}
+      onChange={[Function]}
       value=""
       width="small"
     />
   </ConditionalContent>
 </QuestionPage>
-`;
-
-exports[`Duration renders connected component 1`] = `
-<ContextProvider
-  value={null}
->
-  <Duration
-    formData={Object {}}
-    removeField={[Function]}
-    store={
-      Object {
-        "dispatch": [Function],
-        "getState": [Function],
-        "replaceReducer": [Function],
-        "subscribe": [Function],
-        Symbol(observable): [Function],
-      }
-    }
-    updateFieldFromEvent={[Function]}
-  />
-</ContextProvider>
 `;

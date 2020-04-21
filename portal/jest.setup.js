@@ -12,3 +12,8 @@ initializeI18n();
 Enzyme.configure({ adapter: new Adapter() });
 
 process.env.featureFlags = {};
+
+const currentProcessEnv = process.env;
+beforeEach(() => {
+  process.env = currentProcessEnv;
+});
