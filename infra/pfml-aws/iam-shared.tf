@@ -117,7 +117,8 @@ data "aws_iam_policy_document" "developers_and_ci_iam_policy" {
       "arn:aws:iam::498823821309:role/AWSCloudFormationStackSetExecutionRole",
       "arn:aws:iam::498823821309:role/lambda_s3_access",
       "arn:aws:iam::498823821309:role/idaptive-Admin",
-      "arn:aws:iam::498823821309:role/AWS_Events_Invoke_Event_Bus_*"
+      "arn:aws:iam::498823821309:role/AWS_Events_Invoke_Event_Bus_*",
+      "${aws_iam_role.ci_run_deploys.arn}"
     ]
   }
 }

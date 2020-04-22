@@ -20,6 +20,17 @@ data "aws_iam_policy_document" "developers_access_policy" {
       "*"
     ]
   }
+
+  statement {
+    sid = "CiIamRoleAccess"
+    actions = [
+      "iam:*",
+    ]
+
+    resources = [
+      "${aws_iam_role.ci_run_deploys.arn}"
+    ]
+  }
 }
 
 resource "aws_iam_policy" "developers_access_policy" {
