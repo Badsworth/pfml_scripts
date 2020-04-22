@@ -6,6 +6,7 @@ import { mount } from "enzyme";
  * which can only be called in the context of a functional component
  * @param {object} props React props
  * @param {Function} props.callback Function to run within the context of the TestHookComponent functional component
+ * @returns {null}
  */
 const TestHookComponent = (props) => {
   props.callback();
