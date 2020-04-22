@@ -80,8 +80,10 @@ data "aws_iam_policy_document" "ci_run_deploys_policy" {
       # SSM is required to pull down database passwords, which are used
       # when generating the database itself or when updating the password
       # through a rotation.
+      "ssm:DescribeParameters",
       "ssm:GetParameter",
-      "ssm:GetParameters"
+      "ssm:GetParameters",
+      "ssm:ListTagsForResource"
     ]
 
     resources = [
