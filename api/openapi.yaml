@@ -69,6 +69,24 @@ paths:
         "404":
             $ref: '#/components/responses/NotFound'
 
+  /users/current:
+    get:
+      tags:
+      - Users
+      summary: >
+        This endpoint returns details about the user account corresponding to
+        the currently authenticated user
+      operationId: massgov.pfml.api.users.users_current_get
+      responses:
+        "200":
+          description: A successful request returns a 200 status code and a user object.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "404":
+            $ref: '#/components/responses/NotFound'
+
   /all-fake-employees:
     get:
       tags:
