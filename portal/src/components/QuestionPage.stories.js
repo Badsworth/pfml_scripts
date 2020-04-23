@@ -12,7 +12,7 @@ const sampleRoute = "/create-claim/address";
 const sampleTitle = "Who is taking leave";
 
 export const WithLegend = () => (
-  <QuestionPage title={sampleTitle} nextPage={sampleRoute}>
+  <QuestionPage title={sampleTitle} nextPage={sampleRoute} onSave={() => {}}>
     <InputText
       name="ssn"
       label="What's your Social Security Number?"
@@ -22,7 +22,7 @@ export const WithLegend = () => (
 );
 
 export const WithFieldset = () => (
-  <QuestionPage title={sampleTitle} nextPage={sampleRoute}>
+  <QuestionPage title={sampleTitle} nextPage={sampleRoute} onSave={() => {}}>
     <fieldset className="usa-fieldset">
       <FormLabel component="legend" hint="Some text here about names">
         Input your name here
