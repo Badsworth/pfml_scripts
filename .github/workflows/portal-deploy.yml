@@ -6,25 +6,35 @@ on:
   push:
     branches:
       - master
+      - deploy/stage
+      - releases/**
     paths:
       - portal/**
       - infra/portal/config/**
 
 env:
   nodeVersion: 12.x
-  releaseHash: ${{ github.sha }}
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  bucketName: massgov-pfml-test-portal-site-builds
-  terraformVersion: 0.12.20
-  terraformDir: ./infra/portal/environments/test
+  terraformVersion: 0.12.24
+  terraformBaseDir: ./infra/portal/environments/
+  # map branch name to environment name
+  releases: prod
+  refs/heads/master: test
+  refs/heads/deploy/stage: stage
 
 jobs:
   deploy:
     name: Deploy
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v2
+      # see https://help.github.com/en/actions/reference/context-and-expression-syntax-for-github-actions#github-context
+      # github.ref will give the branch or tag reference that triggered the workflow
+      # e.g refs/heads/master or refs/heads/releases/v1.1.0
+      - if: contains(github.ref,'releases')
+        run: echo "::set-env name=portal_env::${{ env.releases }}"
+      - if: contains(github.ref,'releases') == false
+        run: echo "::set-env name=portal_env::${{ env[github.ref] }}"
 
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
@@ -44,15 +54,16 @@ jobs:
         run: npm ci --prefix portal
 
       - name: Build
-        run: npm run build:test --prefix portal
+        run: npm run build:${{ env.portal_env }} --prefix portal
 
       - name: Sync S3 Bucket
         env:
+          BUCKET_NAME: massgov-pfml-${{ env.portal_env }}-portal-site-builds
+          RELEASE_HASH: ${{ github.sha }}
           NEXT_OUTPUT_DIR: ./portal/out
-          S3_BUCKET: s3://${{ env.bucketName }}/${{ env.releaseHash }}/
-        run:
-          aws s3 sync $NEXT_OUTPUT_DIR $S3_BUCKET --exclude "*.html" --cache-control max-age=31536000,public &&
-          aws s3 sync $NEXT_OUTPUT_DIR $S3_BUCKET --exclude "*" --include "*.html" --cache-control s-maxage=86400,max-age=0,must-revalidate
+        run: |
+          aws s3 sync $NEXT_OUTPUT_DIR s3://$BUCKET_NAME/$RELEASE_HASH/ --exclude "*.html" --cache-control max-age=31536000,public &&
+          aws s3 sync $NEXT_OUTPUT_DIR s3://$BUCKET_NAME/$RELEASE_HASH/ --exclude "*" --include "*.html" --cache-control s-maxage=86400,max-age=0,must-revalidate
 
   release:
     name: Release
@@ -63,6 +74,10 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
+      - if: contains(github.ref,'releases')
+        run: echo "::set-env name=portal_env::${{ env.releases }}"
+      - if: contains(github.ref,'releases') == false
+        run: echo "::set-env name=portal_env::${{ env[github.ref] }}"
 
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
@@ -80,7 +95,7 @@ jobs:
           tf_actions_version: ${{ env.terraformVersion }}
           tf_actions_subcommand: init
           tf_actions_comment: false
-          tf_actions_working_dir: ${{ env.terraformDir }}
+          tf_actions_working_dir: ${{ env.terraformBaseDir }}${{ env.portal_env }}
 
       - name: Terraform Apply with new Cloudfront path
         id: terraform_apply
@@ -89,7 +104,7 @@ jobs:
           tf_actions_version: ${{ env.terraformVersion }}
           tf_actions_subcommand: apply
           tf_actions_comment: false
-          tf_actions_working_dir: ${{ env.terraformDir }}
+          tf_actions_working_dir: ${{ env.terraformBaseDir }}${{ env.portal_env }}
 
   invalidate-cloudfront:
     name: Invalidate Cloudfront Cache
@@ -98,6 +113,10 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
+      - if: contains(github.ref,'releases')
+        run: echo "::set-env name=portal_env::${{ env.releases }}"
+      - if: contains(github.ref,'releases') == false
+        run: echo "::set-env name=portal_env::${{ env[github.ref] }}"
 
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
@@ -115,7 +134,7 @@ jobs:
           tf_actions_version: ${{ env.terraformVersion }}
           tf_actions_subcommand: init
           tf_actions_comment: false
-          tf_actions_working_dir: ${{ env.terraformDir }}
+          tf_actions_working_dir: ${{ env.terraformBaseDir }}${{ env.portal_env }}
 
       - name: Terraform Output
         id: terraform
@@ -123,7 +142,7 @@ jobs:
         with:
           tf_actions_version: ${{ env.terraformVersion }}
           tf_actions_subcommand: output
-          tf_actions_working_dir: ${{ env.terraformDir }}
+          tf_actions_working_dir: ${{ env.terraformBaseDir }}${{ env.portal_env }}
 
       - name: Invalidate old Cloudfront cache
         env:

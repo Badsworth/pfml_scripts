@@ -15,7 +15,26 @@ Each environment should have its own build script in `portal/package.json` so th
 
 ## Update GitHub Actions
 
-This process is TBD, but once we have multiple environments, we'll want to make sure that our deploy process supports a deploy step to this new environment.
+Each environment will have its own github branch that will deploy when changes are pushed. Add your branch and environment configs to [`portal-deploy.yml`](../../.github/workflows/portal-deploy.yml) by adding a branch to the workflow trigger:
+
+```yml
+on:
+  push:
+    branches:
+      - master
+      - deploy/<<environment_name>>
+```
+
+and environment variables:
+
+```yml
+env:
+  # ...
+  # map branch name to environment name
+  releases: prod
+  refs/heads/master: test
+  refs/heads/deploy/<<environment_name>>: <<environment_name>>
+```
 
 ## Setup the SES sender email address
 
