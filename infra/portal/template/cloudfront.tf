@@ -7,6 +7,10 @@ resource "random_password" "s3_user_agent_password" {
   length           = 16
   special          = true
   override_special = "_%@"
+  keepers = {
+    # Update the date to generate a new password
+    date_generated = "2020-04-22"
+  }
 }
 
 resource "aws_cloudfront_distribution" "portal_web_distribution" {

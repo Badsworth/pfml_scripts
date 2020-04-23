@@ -10,7 +10,7 @@ data "aws_caller_identity" "current" {
 }
 
 terraform {
-  required_version = "0.12.20"
+  required_version = "0.12.24"
 }
 
 locals {

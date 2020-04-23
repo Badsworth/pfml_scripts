@@ -17,7 +17,7 @@ on:
 
 env:
   working-dir: ./api
-  terraform-version: 0.12.20
+  terraform-version: 0.12.24
 
 jobs:
   api-build:

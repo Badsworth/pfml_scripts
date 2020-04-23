@@ -3,7 +3,7 @@ provider "aws" {
 }
 
 terraform {
-  required_version = "0.12.20"
+  required_version = "0.12.24"
 
   backend "s3" {
     bucket         = "massgov-pfml-global"

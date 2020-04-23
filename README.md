@@ -14,7 +14,7 @@ To ensure terraform (infra) files are linted, install terraform. The best way to
 
 ```
 $ brew install tfenv
-$ tfenv install 0.12.20
+$ tfenv install 0.12.24
 ```
 
 ## Portal

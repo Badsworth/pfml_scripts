@@ -23,7 +23,6 @@ set -euo pipefail
 
 BUCKET_NAME=massgov-pfml-aws-account-mgmt
 OUTPUT_DIR=infra/pfml-aws
-TERRAFORM_VERSION=0.12.20
 
 ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
 AWS_REGION=$(aws configure get region)
@@ -113,7 +112,7 @@ provider "aws" {
 }
 
 terraform {
-  required_version = "0.12.20"
+  required_version = "0.12.24"
 
   backend "s3" {
     bucket         = "${BUCKET_NAME}"
