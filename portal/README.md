@@ -6,6 +6,7 @@ This is a [Next.js](https://nextjs.org/docs)-powered React app to bootstrap the 
 
 - [Setting up project tooling](../README.md)
 - [Development practices](../docs/contributing.md)
+- [Portal software architecture design](../docs/portal/software-architecture.md)
 - [Additional Portal-specific documentation](../docs/portal/)
 
 ## Environments
