@@ -58,6 +58,7 @@ resource "aws_db_instance" "default" {
   db_subnet_group_name = aws_db_subnet_group.rds_postgres.name
 
   monitoring_interval                   = 30
+  monitoring_role_arn                   = aws_iam_role.rds_enhanced_monitoring.arn
   performance_insights_enabled          = true
   performance_insights_retention_period = 7
 

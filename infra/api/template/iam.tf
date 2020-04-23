@@ -86,3 +86,31 @@ resource "aws_iam_role_policy" "task_executor" {
   role   = aws_iam_role.task_executor.id
   policy = data.aws_iam_policy_document.task_executor.json
 }
+
+# IAM role for allowing RDS instance to send monitoring insights to cloudwatch.
+# Pulled from https://github.com/terraform-aws-modules/terraform-aws-rds/
+#
+resource "aws_iam_role" "rds_enhanced_monitoring" {
+  name_prefix        = "rds-enhanced-monitoring-${var.environment_name}-"
+  assume_role_policy = data.aws_iam_policy_document.rds_enhanced_monitoring.json
+}
+
+resource "aws_iam_role_policy_attachment" "rds_enhanced_monitoring" {
+  role       = aws_iam_role.rds_enhanced_monitoring.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonRDSEnhancedMonitoringRole"
+}
+
+data "aws_iam_policy_document" "rds_enhanced_monitoring" {
+  statement {
+    actions = [
+      "sts:AssumeRole",
+    ]
+
+    effect = "Allow"
+
+    principals {
+      type        = "Service"
+      identifiers = ["monitoring.rds.amazonaws.com"]
+    }
+  }
+}
