@@ -12,7 +12,7 @@ on:
       - master
     paths:
       - api/**
-      - infra/api/templates/**
+      - infra/api/template/**
       - infra/api/environments/test/**
 
 env:
