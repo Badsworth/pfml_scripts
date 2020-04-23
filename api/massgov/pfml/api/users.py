@@ -1,8 +1,9 @@
 import connexion
 from werkzeug.exceptions import NotFound
 
-import massgov.pfml.api.generate_fake_data as fake
 import massgov.pfml.util.logging
+from massgov.pfml.api.db import orm
+from massgov.pfml.api.db.models import Status, User
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
 
@@ -11,24 +12,41 @@ users = {}
 
 
 def users_get(user_id):
-    try:
-        user = users[user_id]
-    except KeyError:
+    u = orm.session.query(User).get(user_id)
+    orm.session.commit()
+    if u is not None:
+        return (
+            {
+                "user_id": u.user_id,
+                "active_directory_id": u.active_directory_id,
+                "status": u.status.status_description,
+            },
+            200,
+        )
+    else:
         raise NotFound()
-
-    return user
 
 
 def users_post():
     body = connexion.request.json
-    email = body.get("email")
-    auth_id = body.get("auth_id")
+    u = User(
+        user_id=body.get("user_id"),
+        active_directory_id=body.get("active_directory_id"),
+        status=Status(status_description=body.get("status")),
+    )
 
-    # generate fake user
-    user = fake.create_user(email, auth_id)
-    user_id = user["user_id"]
-
-    # to simulate db, place user in dictionary so it can be fetched by id at GET /users
-    users[user_id] = user
-    logger.info("created user", extra={"user_id": user_id})
-    return user
+    try:
+        logger.info("creating user", extra={"user_id": u.user_id})
+        orm.session.add(u)
+        res = {
+            "user_id": u.user_id,
+            "active_directory_id": u.active_directory_id,
+            "status": u.status.status_description,
+        }
+        orm.session.commit()
+        logger.info("successfully created user")
+        return (res, 200)
+    except Exception as e:
+        logger.error(e)
+        orm.session.rollback()
+        raise e

@@ -56,6 +56,7 @@ paths:
           in: path
           schema:
             type: string
+            format: uuid
           description: The user id of the account to fetch
           required: true
       responses:
@@ -243,7 +244,7 @@ components:
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/UserToCreate'
+            $ref: '#/components/schemas/User'
       required: true
     EmployeeToSearch:
       content:
@@ -310,14 +311,10 @@ components:
         user_id:
           type: string
           example: "009fa369-291b-403f-a85a-15e938c26f2f"
-        auth_id:
+        active_directory_id:
           type: string
           format: uuid
           example: "00000000-291b-403f-a85a-15e938c26f2f"
-        email:
-          type: string
-          format: email
-          example: "janedoe@example.com"
         status: 
           type: string
           enum:

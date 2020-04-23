@@ -1,7 +1,7 @@
+# - overriding, model is being used by Migrate object
 from flask_migrate import Migrate, MigrateCommand
 from flask_script import Manager
 
-# - overriding, model is being used by Migrate object
 import massgov.pfml.api.db.models  # noqa: F401
 from massgov.pfml.api import create_app, db
 

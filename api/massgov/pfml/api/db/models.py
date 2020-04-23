@@ -218,9 +218,7 @@ class User(orm.Model):
     user_id = orm.Column(UUID(as_uuid=True), primary_key=True)
     active_directory_id = orm.Column(orm.String)
     status_type = orm.Column(orm.Integer, orm.ForeignKey("lk_status.status_type"))
-
-    def dump(self):
-        return dict([(k, v) for k, v in vars(self).items() if not k.startswith("_")])
+    status = orm.relationship("Status", backref="users")
 
 
 class UserRole(orm.Model):
