@@ -55,5 +55,6 @@ data "template_file" "container_definitions" {
     environment_name           = var.environment_name
     cloudwatch_logs_group_name = aws_cloudwatch_log_group.service_logs.name
     aws_region                 = data.aws_region.current.name
+    cors_origins               = join(",", var.cors_origins)
   }
 }

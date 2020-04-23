@@ -11,6 +11,13 @@ import pytest
 import massgov.pfml.api
 import massgov.pfml.api.employees
 import massgov.pfml.api.generate_fake_data as fake
+from massgov.pfml.api.config import config
+
+
+@pytest.fixture
+def app_cors(monkeypatch):
+    monkeypatch.setitem(config, "cors_origins", "http://example.com")
+    return massgov.pfml.api.create_app()
 
 
 @pytest.fixture

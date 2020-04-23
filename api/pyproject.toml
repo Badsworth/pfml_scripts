@@ -17,6 +17,8 @@ flask-script = "^2.0.6"
 psycopg2-binary = "^2.8.5"
 python = "^3.8"
 flask-sqlalchemy = "^2.4.1"
+flask_cors = "^3.0.8"
+flask_migrate = "^2.5.3"
 
 [tool.poetry.dev-dependencies]
 black = "^19.10b0"

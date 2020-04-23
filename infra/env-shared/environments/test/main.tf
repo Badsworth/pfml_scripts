@@ -36,4 +36,5 @@ module "pfml" {
   nlb_name          = "${local.vpc}-nlb"
   nlb_vpc_link_name = "${local.vpc}-nlb-vpc-link"
   nlb_port          = 80
+  cors_origins      = ["https://pfml-test.eolwd.mass.gov", "https://d1ah9hpoapx4f1.cloudfront.net", "https://pfml-api-test.eolwd.mass.gov", "https://67385ye4yb.execute-api.us-east-1.amazonaws.com" ]
 }

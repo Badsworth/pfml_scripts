@@ -79,3 +79,8 @@ variable "nlb_port" {
   description = "Port of the network load balancer that has been reserved within the API Gateway."
   type        = string
 }
+
+variable "cors_origins" {
+  description = "A list of origins to allow CORS requests from."
+  type        = list(string)
+}

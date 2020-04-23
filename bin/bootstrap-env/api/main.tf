@@ -36,4 +36,5 @@ module "api" {
   postgres_version        = "11.6"
   nlb_name                = "${local.vpc}-nlb"
   nlb_port                = UNIQUE_NLB_PORT_RESERVED_IN_ENV_SHARED
+  cors_origins            = [API_DOCS_DOMAIN, PORTAL_DOMAIN]
 }

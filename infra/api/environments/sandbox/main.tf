@@ -29,4 +29,5 @@ module "api" {
   postgres_version        = "11.6"
   nlb_name                = "sandbox-nlb"
   nlb_port                = "80"
+  cors_origins            = ["https://pfml.navateam.com", "https://pfml-sandbox-v2.navateam.com"]
 }
