@@ -177,8 +177,28 @@ describe("formatFieldsAsISO8601", () => {
     expect(result).toBe("1985-01-02");
   });
 
+  it("doesn't ever add a leading zero to the year", () => {
+    const result = formatFieldsAsISO8601({
+      month: "1",
+      day: "2",
+      year: "19",
+    });
+
+    expect(result).toBe("19-01-02");
+  });
+
   it("doesn't require each date part to be set", () => {
-    const result = formatFieldsAsISO8601({ month: null, day: "", year: "" });
+    const result = formatFieldsAsISO8601({ day: "", year: "" });
+
+    expect(result).toBe("--");
+  });
+
+  it("doesn't allow non-digits to be entered", () => {
+    const result = formatFieldsAsISO8601({
+      month: "a!",
+      day: "b_",
+      year: "c.",
+    });
 
     expect(result).toBe("--");
   });
@@ -208,14 +228,6 @@ describe("parseDateParts", () => {
       const result = parseDateParts("--");
 
       expect(result).toEqual({ month: "", day: "", year: "" });
-    });
-  });
-
-  describe("when the value is malformed", () => {
-    it("doesn't thrown an exception", () => {
-      const result = parseDateParts("Wrong format");
-
-      expect(result).toEqual({ month: "", day: "", year: "Wrong format" });
     });
   });
 

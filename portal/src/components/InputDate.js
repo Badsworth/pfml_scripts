@@ -5,6 +5,18 @@ import PropTypes from "prop-types";
 import classnames from "classnames";
 
 /**
+ * Add leading zeros if the numbers are less than 10
+ * @example addLeadingZero(1) => "01"
+ * @param {string|number} value
+ * @returns {string}
+ */
+function addLeadingZero(value = "") {
+  if (value.match(/^0/)) return value;
+
+  return value.toString().padStart(2, 0);
+}
+
+/**
  * Format the month/day/year fields as a single ISO 8601 date string
  * @param {object} date
  * @param {number|string} date.day
@@ -13,9 +25,10 @@ import classnames from "classnames";
  * @returns {string} ISO 8601 date string (YYYY-MM-DD)
  */
 export function formatFieldsAsISO8601({ month, day, year }) {
-  // Add leading zeros if the numbers are less than 10
-  day = day ? day.toString().padStart(2, 0) : ""; // 1 => "01"
-  month = month ? month.toString().padStart(2, 0) : "";
+  // Disallow anything other than numbers, and restrict invalid lengths
+  month = month ? addLeadingZero(month).replace(/\D/g, "") : ""; // "ab" => ""
+  day = day ? addLeadingZero(day).replace(/\D/g, "") : "";
+  year = year ? year.replace(/\D/g, "") : "";
 
   // It's okay if some of these date fields are empty (that will definitely happen).
   // A consuming project should worry about whether this string is valid or not as
@@ -24,8 +37,8 @@ export function formatFieldsAsISO8601({ month, day, year }) {
 }
 
 /**
- * Break apart the ISO 8601 date string into month/day/year parts
- * @param {string} value
+ * Break apart the ISO 8601 date string into month/day/year parts, for UI rendering
+ * @param {string} value - ISO 8601 date string
  * @returns {{ month: string, day: string, year: string }}
  */
 export function parseDateParts(value) {
@@ -33,8 +46,8 @@ export function parseDateParts(value) {
     const parts = value.split("-"); // "YYYY-MM-DD" => ["YYYY", "MM", "DD"]
     return {
       year: parts[0].trim(),
-      month: parts.length >= 2 ? parts[1].replace(/^0+/, "").trim() : "",
-      day: parts.length >= 3 ? parts[2].replace(/^0+/, "").trim() : "",
+      month: parts.length >= 2 ? parts[1].replace(/^0+/, "").trim() : "", // "01 " => "1"
+      day: parts.length >= 3 ? parts[2].replace(/^0+/, "").trim() : "", // "01 " => "1"
     };
   }
 
@@ -125,6 +138,7 @@ function InputDate(props) {
           inputMode="numeric"
           inputRef={inputTextRefs.month}
           label={props.monthLabel}
+          maxLength="2"
           name={`${props.name}_month`}
           onChange={handleChange}
           smallLabel
@@ -137,6 +151,7 @@ function InputDate(props) {
           inputMode="numeric"
           inputRef={inputTextRefs.day}
           label={props.dayLabel}
+          maxLength="2"
           name={`${props.name}_day`}
           onChange={handleChange}
           smallLabel
@@ -149,6 +164,7 @@ function InputDate(props) {
           inputMode="numeric"
           inputRef={inputTextRefs.year}
           label={props.yearLabel}
+          maxLength="4"
           name={`${props.name}_year`}
           onChange={handleChange}
           smallLabel

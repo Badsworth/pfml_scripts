@@ -122,6 +122,15 @@ describe("InputText", () => {
     });
   });
 
+  describe("when maxLength prop is set", () => {
+    it("includes the maxLength on the input field", () => {
+      const { wrapper } = render({ maxLength: "4" });
+      const input = wrapper.find("input");
+
+      expect(input.prop("maxLength")).toBe("4");
+    });
+  });
+
   describe("when optionalText prop is set", () => {
     it("passes the optionalText to FormLabel", () => {
       const { props, wrapper } = render({ optionalText: "(optional)" });

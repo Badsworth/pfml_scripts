@@ -44,6 +44,7 @@ function InputText({ type = "text", ...props }) {
         className={fieldClasses}
         id={inputId}
         inputMode={props.inputMode}
+        maxLength={props.maxLength}
         name={props.name}
         onChange={props.onChange}
         ref={props.inputRef}
@@ -83,6 +84,10 @@ InputText.propTypes = {
    * Localized field label
    */
   label: PropTypes.node.isRequired,
+  /**
+   * HTML input `maxlength` attribute
+   */
+  maxLength: PropTypes.string,
   /**
    * HTML input `name` attribute
    */

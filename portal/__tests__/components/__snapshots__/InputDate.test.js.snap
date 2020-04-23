@@ -22,6 +22,7 @@ Array [
       }
     }
     label="Test Month"
+    maxLength="2"
     name="test-date-field_month"
     onChange={[Function]}
     smallLabel={true}
@@ -37,6 +38,7 @@ Array [
       }
     }
     label="Test Day"
+    maxLength="2"
     name="test-date-field_day"
     onChange={[Function]}
     smallLabel={true}
@@ -52,6 +54,7 @@ Array [
       }
     }
     label="Test Year"
+    maxLength="4"
     name="test-date-field_year"
     onChange={[Function]}
     smallLabel={true}
