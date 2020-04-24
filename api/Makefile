@@ -158,20 +158,19 @@ release-tag: ## Tag release image for registry
 run: ## Run docker-compose
 run: start logs
 
-# apply pending migrations to db
-db-upgrade:
-	$(PY_RUN_CMD_DOCKER_EXEC) poetry run alembic -c ./massgov/pfml/db/alembic.ini upgrade head
+db-upgrade: ## Apply pending migrations to db
+	$(PY_RUN_CMD) alembic -c ./massgov/pfml/db/alembic.ini upgrade head
 
-# rollback last migration to db
-db-downgrade:
-	$(PY_RUN_CMD_DOCKER_EXEC) poetry run alembic -c ./massgov/pfml/db/alembic.ini downgrade -1
+db-downgrade: ## Rollback last migration in db
+	$(PY_RUN_CMD) alembic -c ./massgov/pfml/db/alembic.ini downgrade -1
 
-db-downgrade-all:
-	$(PY_RUN_CMD_DOCKER_EXEC) poetry run alembic -c ./massgov/pfml/db/alembic.ini downgrade base
+db-downgrade-all: ## Rollback all migrations
+	$(PY_RUN_CMD) alembic -c ./massgov/pfml/db/alembic.ini downgrade base
 
-test: db-upgrade ## Run tests
-	$(PY_RUN_CMD_DOCKER_EXEC) coverage run --branch --source=massgov -m pytest
-	$(PY_RUN_CMD_DOCKER_EXEC) coverage report
+test: ## Run tests
+test: db-upgrade
+	$(PY_RUN_CMD) coverage run --branch --source=massgov -m pytest
+	$(PY_RUN_CMD) coverage report
 
 test-changed: ## Run only tests that have changed
 	$(PY_RUN_CMD) python -m pytest --testmon
