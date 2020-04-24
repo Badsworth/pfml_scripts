@@ -20,6 +20,9 @@ logger = massgov.pfml.util.logging.get_logger(__name__)
 def create_app():
     logger.info("Starting API ...")
 
+    # Initialize the db
+    db.init()
+
     # Enable mock responses for unimplemented paths.
     resolver = connexion.mock.MockResolver(mock_all=False)
 
@@ -35,8 +38,5 @@ def create_app():
     # Set up middleware to allow the Swagger UI to use the correct URL
     # when proxied behind the AWS API Gateway.
     flask_app.wsgi_app = ReverseProxied(flask_app.wsgi_app)
-
-    logger.info("Initializing orm object with flask app context")
-    db.init(flask_app)
 
     return app

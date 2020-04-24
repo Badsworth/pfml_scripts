@@ -1,8 +1,8 @@
 import connexion
 from werkzeug.exceptions import NotFound
 
+import massgov.pfml.api.db as db
 import massgov.pfml.util.logging
-from massgov.pfml.api.db import orm
 from massgov.pfml.api.db.models import Status, User
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
@@ -12,8 +12,9 @@ users = {}
 
 
 def users_get(user_id):
-    u = orm.session.query(User).get(user_id)
-    orm.session.commit()
+    session = db.get_session()
+    u = session.query(User).get(user_id)
+    session.commit()
     if u is not None:
         return (
             {
@@ -35,18 +36,20 @@ def users_post():
         status=Status(status_description=body.get("status")),
     )
 
+    session = db.get_session()
+
     try:
         logger.info("creating user", extra={"user_id": u.user_id})
-        orm.session.add(u)
+        session.add(u)
+        session.commit()
         res = {
             "user_id": u.user_id,
             "active_directory_id": u.active_directory_id,
             "status": u.status.status_description,
         }
-        orm.session.commit()
         logger.info("successfully created user")
         return (res, 200)
     except Exception as e:
         logger.error(e)
-        orm.session.rollback()
+        session.rollback()
         raise e

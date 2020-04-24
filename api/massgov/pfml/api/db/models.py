@@ -1,243 +1,228 @@
+from sqlalchemy import Boolean, Column, Date, ForeignKey, Integer, Numeric, Text
 from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.orm import relationship
 
-from massgov.pfml.api.db import orm
+from .base import Base
 
 
-class AddressType(orm.Model):
+class AddressType(Base):
     __tablename__ = "lk_address_type"
-    address_type = orm.Column(orm.Integer, primary_key=True, autoincrement=True)
-    address_description = orm.Column(orm.String)
+    address_type = Column(Integer, primary_key=True, autoincrement=True)
+    address_description = Column(Text)
 
 
-class GeoState(orm.Model):
+class GeoState(Base):
     __tablename__ = "lk_geo_state"
-    state_type = orm.Column(orm.Integer, primary_key=True, autoincrement=True)
-    state_description = orm.Column(orm.String)
+    state_type = Column(Integer, primary_key=True, autoincrement=True)
+    state_description = Column(Text)
 
 
-class Country(orm.Model):
+class Country(Base):
     __tablename__ = "lk_country"
-    country_type = orm.Column(orm.Integer, primary_key=True, autoincrement=True)
-    country_description = orm.Column(orm.String)
+    country_type = Column(Integer, primary_key=True, autoincrement=True)
+    country_description = Column(Text)
 
 
-class ClaimType(orm.Model):
+class ClaimType(Base):
     __tablename__ = "lk_claim_type"
-    claim_type = orm.Column(orm.Integer, primary_key=True, autoincrement=True)
-    claim_type_description = orm.Column(orm.String)
+    claim_type = Column(Integer, primary_key=True, autoincrement=True)
+    claim_type_description = Column(Text)
 
 
-class Race(orm.Model):
+class Race(Base):
     __tablename__ = "lk_race"
-    race_type = orm.Column(orm.Integer, primary_key=True)
-    race_description = orm.Column(orm.String)
+    race_type = Column(Integer, primary_key=True)
+    race_description = Column(Text)
 
 
-class MaritalStatus(orm.Model):
+class MaritalStatus(Base):
     __tablename__ = "lk_marital_status"
-    marital_status_type = orm.Column(orm.Integer, primary_key=True, autoincrement=True)
-    marital_status_description = orm.Column(orm.String)
+    marital_status_type = Column(Integer, primary_key=True, autoincrement=True)
+    marital_status_description = Column(Text)
 
 
-class Gender(orm.Model):
+class Gender(Base):
     __tablename__ = "lk_gender"
-    gender_type = orm.Column(orm.Integer, primary_key=True, autoincrement=True)
-    gender_description = orm.Column(orm.String)
+    gender_type = Column(Integer, primary_key=True, autoincrement=True)
+    gender_description = Column(Text)
 
 
-class Occupation(orm.Model):
+class Occupation(Base):
     __tablename__ = "lk_occupation"
-    occupation_type = orm.Column(orm.Integer, primary_key=True)
-    occupation_description = orm.Column(orm.String)
+    occupation_type = Column(Integer, primary_key=True)
+    occupation_description = Column(Text)
 
 
-class EducationLevel(orm.Model):
+class EducationLevel(Base):
     __tablename__ = "lk_education_level"
-    education_level_type = orm.Column(orm.Integer, primary_key=True, autoincrement=True)
-    education_level_description = orm.Column(orm.String)
+    education_level_type = Column(Integer, primary_key=True, autoincrement=True)
+    education_level_description = Column(Text)
 
 
-class Role(orm.Model):
+class Role(Base):
     __tablename__ = "lk_role"
-    role_type = orm.Column(orm.Integer, primary_key=True, autoincrement=True)
-    role_description = orm.Column(orm.String)
+    role_type = Column(Integer, primary_key=True, autoincrement=True)
+    role_description = Column(Text)
 
 
-class PaymentType(orm.Model):
+class PaymentType(Base):
     __tablename__ = "lk_payment_type"
-    payment_type = orm.Column(orm.Integer, primary_key=True, autoincrement=True)
-    payment_type_description = orm.Column(orm.String)
+    payment_type = Column(Integer, primary_key=True, autoincrement=True)
+    payment_type_description = Column(Text)
 
 
-class Status(orm.Model):
+class Status(Base):
     __tablename__ = "lk_status"
-    status_type = orm.Column(orm.Integer, primary_key=True, autoincrement=True)
-    status_description = orm.Column(orm.String)
+    status_type = Column(Integer, primary_key=True, autoincrement=True)
+    status_description = Column(Text)
 
 
-class AuthorizedRepresentative(orm.Model):
+class AuthorizedRepresentative(Base):
     __tablename__ = "authorized_representative"
-    authorized_representative_id = orm.Column(UUID(as_uuid=True), primary_key=True)
-    first_name = orm.Column(orm.String)
-    last_name = orm.Column(orm.String)
-    employees = orm.relationship("AuthorizedRepEmployee", back_populates="authorized_rep")
+    authorized_representative_id = Column(UUID(as_uuid=True), primary_key=True)
+    first_name = Column(Text)
+    last_name = Column(Text)
+    employees = relationship("AuthorizedRepEmployee", back_populates="authorized_rep")
 
 
-class HealthCareProvider(orm.Model):
+class HealthCareProvider(Base):
     __tablename__ = "health_care_provider"
-    health_care_provider_id = orm.Column(UUID(as_uuid=True), primary_key=True)
-    provider_name = orm.Column(orm.String)
-    addresses = orm.relationship("HealthCareProviderAddress", back_populates="health_care_provider")
+    health_care_provider_id = Column(UUID(as_uuid=True), primary_key=True)
+    provider_name = Column(Text)
+    addresses = relationship("HealthCareProviderAddress", back_populates="health_care_provider")
 
 
-class Employer(orm.Model):
+class Employer(Base):
     __tablename__ = "employer"
-    employer_id = orm.Column(UUID(as_uuid=True), primary_key=True)
-    employer_fein = orm.Column(orm.Integer)
-    employer_dba = orm.Column(orm.String)
-    addresses = orm.relationship("EmployerAddress", back_populates="employers", lazy="dynamic")
+    employer_id = Column(UUID(as_uuid=True), primary_key=True)
+    employer_fein = Column(Integer)
+    employer_dba = Column(Text)
+    addresses = relationship("EmployerAddress", back_populates="employers", lazy="dynamic")
 
 
-class PaymentInformation(orm.Model):
+class PaymentInformation(Base):
     __tablename__ = "payment_information"
-    payment_info_id = orm.Column(UUID(as_uuid=True), primary_key=True)
-    payment_type = orm.Column(orm.Integer, orm.ForeignKey("lk_payment_type.payment_type"))
-    bank_routing_nbr = orm.Column(orm.Integer)
-    bank_account_nbr = orm.Column(orm.Integer)
-    gift_card_nbr = orm.Column(orm.Integer)
+    payment_info_id = Column(UUID(as_uuid=True), primary_key=True)
+    payment_type = Column(Integer, ForeignKey("lk_payment_type.payment_type"))
+    bank_routing_nbr = Column(Integer)
+    bank_account_nbr = Column(Integer)
+    gift_card_nbr = Column(Integer)
 
 
-class Employee(orm.Model):
+class Employee(Base):
     __tablename__ = "employee"
-    employee_id = orm.Column(UUID(as_uuid=True), primary_key=True)
-    tax_identifier_id = orm.Column(UUID(as_uuid=True))
-    first_name = orm.Column(orm.String)
-    middle_name = orm.Column(orm.String)
-    last_name = orm.Column(orm.String)
-    email_address = orm.Column(orm.String)
-    phone_number = orm.Column(orm.String)
-    preferred_comm_method_type = orm.Column(orm.String)
-    payment_info_id = orm.Column(
-        UUID(as_uuid=True), orm.ForeignKey("payment_information.payment_info_id")
-    )
-    date_of_birth = orm.Column(orm.Date)
-    race_type = orm.Column(orm.Integer, orm.ForeignKey("lk_race.race_type"))
-    marital_status_type = orm.Column(
-        orm.Integer, orm.ForeignKey("lk_marital_status.marital_status_type")
-    )
-    gender_type = orm.Column(orm.Integer, orm.ForeignKey("lk_gender.gender_type"))
-    occupation_type = orm.Column(orm.Integer, orm.ForeignKey("lk_occupation.occupation_type"))
-    education_level_type = orm.Column(
-        orm.Integer, orm.ForeignKey("lk_education_level.education_level_type")
-    )
-    authorized_reps = orm.relationship(
+    employee_id = Column(UUID(as_uuid=True), primary_key=True)
+    tax_identifier_id = Column(UUID(as_uuid=True))
+    first_name = Column(Text)
+    middle_name = Column(Text)
+    last_name = Column(Text)
+    other_name = Column(Text)
+    email_address = Column(Text)
+    phone_number = Column(Text)
+    preferred_comm_method_type = Column(Text)
+    payment_info_id = Column(UUID(as_uuid=True), ForeignKey("payment_information.payment_info_id"))
+    date_of_birth = Column(Date)
+    race_type = Column(Integer, ForeignKey("lk_race.race_type"))
+    marital_status_type = Column(Integer, ForeignKey("lk_marital_status.marital_status_type"))
+    gender_type = Column(Integer, ForeignKey("lk_gender.gender_type"))
+    occupation_type = Column(Integer, ForeignKey("lk_occupation.occupation_type"))
+    education_level_type = Column(Integer, ForeignKey("lk_education_level.education_level_type"))
+    authorized_reps = relationship(
         "AuthorizedRepEmployee", back_populates="employee", lazy="dynamic"
     )
-    addresses = orm.relationship("EmployeeAddress", back_populates="employees", lazy="dynamic")
+    addresses = relationship("EmployeeAddress", back_populates="employees", lazy="dynamic")
 
 
-class Claim(orm.Model):
+class Claim(Base):
     __tablename__ = "claim"
-    claim_id = orm.Column(UUID(as_uuid=True), primary_key=True)
-    employer_id = orm.Column(UUID(as_uuid=True))
-    authorized_representative_id = orm.Column(UUID(as_uuid=True))
-    claim_type = orm.Column(UUID(as_uuid=True))
-    benefit_amount = orm.Column(orm.Numeric(asdecimal=True))
-    benefit_days = orm.Column(orm.Integer)
+    claim_id = Column(UUID(as_uuid=True), primary_key=True)
+    employer_id = Column(UUID(as_uuid=True))
+    authorized_representative_id = Column(UUID(as_uuid=True))
+    claim_type = Column(UUID(as_uuid=True))
+    benefit_amount = Column(Numeric(asdecimal=True))
+    benefit_days = Column(Integer)
 
 
-class AuthorizedRepEmployee(orm.Model):
+class AuthorizedRepEmployee(Base):
     __tablename__ = "link_authorized_rep_employee"
-    authorized_representative_id = orm.Column(
+    authorized_representative_id = Column(
         UUID(as_uuid=True),
-        orm.ForeignKey("authorized_representative.authorized_representative_id"),
+        ForeignKey("authorized_representative.authorized_representative_id"),
         primary_key=True,
     )
-    employee_id = orm.Column(
-        UUID(as_uuid=True), orm.ForeignKey("employee.employee_id"), primary_key=True
-    )
-    authorized_rep = orm.relationship("AuthorizedRepresentative", back_populates="employees")
-    employee = orm.relationship("Employee", back_populates="authorized_reps")
+    employee_id = Column(UUID(as_uuid=True), ForeignKey("employee.employee_id"), primary_key=True)
+    authorized_rep = relationship("AuthorizedRepresentative", back_populates="employees")
+    employee = relationship("Employee", back_populates="authorized_reps")
 
 
-class Address(orm.Model):
+class Address(Base):
     __tablename__ = "address"
-    address_id = orm.Column(UUID(as_uuid=True), primary_key=True)
-    address_type = orm.Column(orm.Integer, orm.ForeignKey("lk_address_type.address_type"))
-    address_line_one = orm.Column(orm.String)
-    address_line_two = orm.Column(orm.String)
-    city = orm.Column(orm.String)
-    state_type = orm.Column(orm.Integer, orm.ForeignKey("lk_geo_state.state_type"))
-    zip_code = orm.Column(orm.String)
-    country_type = orm.Column(orm.Integer, orm.ForeignKey("lk_country.country_type"))
-    employees = orm.relationship("EmployeeAddress", back_populates="addresses", lazy="dynamic")
-    employers = orm.relationship("EmployerAddress", back_populates="addresses", lazy="dynamic")
-    health_care_providers = orm.relationship("HealthCareProviderAddress", back_populates="address")
+    address_id = Column(UUID(as_uuid=True), primary_key=True)
+    address_type = Column(Integer, ForeignKey("lk_address_type.address_type"))
+    address_line_one = Column(Text)
+    address_line_two = Column(Text)
+    city = Column(Text)
+    state_type = Column(Integer, ForeignKey("lk_geo_state.state_type"))
+    zip_code = Column(Text)
+    country_type = Column(Integer, ForeignKey("lk_country.country_type"))
+    employees = relationship("EmployeeAddress", back_populates="addresses", lazy="dynamic")
+    employers = relationship("EmployerAddress", back_populates="addresses", lazy="dynamic")
+    health_care_providers = relationship("HealthCareProviderAddress", back_populates="address")
 
 
-class EmployeeAddress(orm.Model):
+class EmployeeAddress(Base):
     __tablename__ = "link_employee_address"
-    employee_id = orm.Column(
-        UUID(as_uuid=True), orm.ForeignKey("employee.employee_id"), primary_key=True
-    )
-    address_id = orm.Column(
-        UUID(as_uuid=True), orm.ForeignKey("address.address_id"), primary_key=True
-    )
-    employees = orm.relationship("Employee", back_populates="addresses")
-    addresses = orm.relationship("Address", back_populates="employees")
+    employee_id = Column(UUID(as_uuid=True), ForeignKey("employee.employee_id"), primary_key=True)
+    address_id = Column(UUID(as_uuid=True), ForeignKey("address.address_id"), primary_key=True)
+    employees = relationship("Employee", back_populates="addresses")
+    addresses = relationship("Address", back_populates="employees")
 
 
-class EmployerAddress(orm.Model):
+class EmployerAddress(Base):
     __tablename__ = "link_employer_address"
-    employer_id = orm.Column(
-        UUID(as_uuid=True), orm.ForeignKey("employer.employer_id"), primary_key=True
-    )
-    address_id = orm.Column(
-        UUID(as_uuid=True), orm.ForeignKey("address.address_id"), primary_key=True
-    )
-    employers = orm.relationship("Employer", back_populates="addresses")
-    addresses = orm.relationship("Address", back_populates="employers")
+    employer_id = Column(UUID(as_uuid=True), ForeignKey("employer.employer_id"), primary_key=True)
+    address_id = Column(UUID(as_uuid=True), ForeignKey("address.address_id"), primary_key=True)
+    employers = relationship("Employer", back_populates="addresses")
+    addresses = relationship("Address", back_populates="employers")
 
 
-class HealthCareProviderAddress(orm.Model):
+class HealthCareProviderAddress(Base):
     __tablename__ = "link_health_care_provider_address"
-    health_care_provider_id = orm.Column(
+    health_care_provider_id = Column(
         UUID(as_uuid=True),
-        orm.ForeignKey("health_care_provider.health_care_provider_id"),
+        ForeignKey("health_care_provider.health_care_provider_id"),
         primary_key=True,
     )
-    address_id = orm.Column(
-        UUID(as_uuid=True), orm.ForeignKey("address.address_id"), primary_key=True
-    )
-    health_care_provider = orm.relationship("HealthCareProvider", back_populates="addresses")
-    address = orm.relationship("Address", back_populates="health_care_providers")
+    address_id = Column(UUID(as_uuid=True), ForeignKey("address.address_id"), primary_key=True)
+    health_care_provider = relationship("HealthCareProvider", back_populates="addresses")
+    address = relationship("Address", back_populates="health_care_providers")
 
 
-class User(orm.Model):
+class User(Base):
     __tablename__ = "user"
-    user_id = orm.Column(UUID(as_uuid=True), primary_key=True)
-    active_directory_id = orm.Column(orm.String)
-    status_type = orm.Column(orm.Integer, orm.ForeignKey("lk_status.status_type"))
-    status = orm.relationship("Status", backref="users")
+    user_id = Column(UUID(as_uuid=True), primary_key=True)
+    active_directory_id = Column(Text)
+    status_type = Column(Integer, ForeignKey("lk_status.status_type"))
+    status = relationship("Status", backref="users")
 
 
-class UserRole(orm.Model):
+class UserRole(Base):
     __tablename__ = "link_user_role"
-    user_id = orm.Column(UUID(as_uuid=True), orm.ForeignKey("user.user_id"), primary_key=True)
-    role_type = orm.Column(orm.Integer, orm.ForeignKey("lk_role.role_type"), primary_key=True)
-    related_role_id = orm.Column(UUID(as_uuid=True))
+    user_id = Column(UUID(as_uuid=True), ForeignKey("user.user_id"), primary_key=True)
+    role_type = Column(Integer, ForeignKey("lk_role.role_type"), primary_key=True)
+    related_role_id = Column(UUID(as_uuid=True))
 
 
-class WageAndContribution(orm.Model):
+class WageAndContribution(Base):
     __tablename__ = "wage_and_contribution_id"
-    wage_and_contribution_id = orm.Column(UUID(as_uuid=True), primary_key=True)
-    account_key = orm.Column(orm.String)
-    filing_period = orm.Column(orm.Date)
-    employee_id = orm.Column(UUID(as_uuid=True), orm.ForeignKey("employee.employee_id"))
-    employer_id = orm.Column(UUID(as_uuid=True), orm.ForeignKey("employer.employer_id"))
-    is_independent_contractor = orm.Column(orm.Boolean)
-    is_opted_in = orm.Column(orm.Boolean)
-    employer_ytd_wages = orm.Column(orm.Numeric(asdecimal=True), nullable=False)
-    employer_qtr_wages = orm.Column(orm.Numeric(asdecimal=True), nullable=False)
-    employer_med_contribution = orm.Column(orm.Numeric(asdecimal=True), nullable=False)
-    employer_fam_contribution = orm.Column(orm.Numeric(asdecimal=True), nullable=False)
+    wage_and_contribution_id = Column(UUID(as_uuid=True), primary_key=True)
+    account_key = Column(Text)
+    filing_period = Column(Date)
+    employee_id = Column(UUID(as_uuid=True), ForeignKey("employee.employee_id"))
+    employer_id = Column(UUID(as_uuid=True), ForeignKey("employer.employer_id"))
+    is_independent_contractor = Column(Boolean)
+    is_opted_in = Column(Boolean)
+    employer_ytd_wages = Column(Numeric(asdecimal=True), nullable=False)
+    employer_qtr_wages = Column(Numeric(asdecimal=True), nullable=False)
+    employer_med_contribution = Column(Numeric(asdecimal=True), nullable=False)
+    employer_fam_contribution = Column(Numeric(asdecimal=True), nullable=False)

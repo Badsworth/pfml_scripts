@@ -108,12 +108,12 @@ make test-watch
 
 Pre-requisite: Database needs to be up and running
 ```
-$ make start
+$ make run
 ```
 
 Auto-generate migration files from model changes:
 ```
-$ docker-compose exec mass-pfml-api poetry run python manage_db.py db migrate -m "description of change"
+$ docker-compose run --no-deps mass-pfml-api sh -c 'poetry run alembic -c ./massgov/pfml/db/alembic.ini revision --autogenerate -m "<brief description of change>"'
 ```
 
 Apply pending migrations to db
@@ -126,7 +126,10 @@ Rollback last migration to db:
 $ make db-downgrade
 ```
 
-
+Rollback all migrations to db:
+```
+$ make db-downgrade-all
+```
 
 ## Directory Structure
 

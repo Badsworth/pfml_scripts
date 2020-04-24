@@ -160,14 +160,14 @@ run: start logs
 
 # apply pending migrations to db
 db-upgrade:
-	$(PY_RUN_CMD_DOCKER_EXEC) python manage_db.py db upgrade
+	$(PY_RUN_CMD_DOCKER_EXEC) poetry run alembic -c ./massgov/pfml/db/alembic.ini upgrade head
 
 # rollback last migration to db
 db-downgrade:
-	$(PY_RUN_CMD_DOCKER_EXEC) python manage_db.py db downgrade
+	$(PY_RUN_CMD_DOCKER_EXEC) poetry run alembic -c ./massgov/pfml/db/alembic.ini downgrade -1
 
 db-downgrade-all:
-	$(PY_RUN_CMD_DOCKER_EXEC) python manage_db.py db downgrade base
+	$(PY_RUN_CMD_DOCKER_EXEC) poetry run alembic -c ./massgov/pfml/db/alembic.ini downgrade base
 
 test: db-upgrade ## Run tests
 	$(PY_RUN_CMD_DOCKER_EXEC) coverage run --branch --source=massgov -m pytest
