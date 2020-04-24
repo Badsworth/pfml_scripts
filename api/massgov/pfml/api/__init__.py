@@ -32,6 +32,7 @@ def create_app():
     app.add_api(
         "openapi.yaml", resolver=resolver, strict_validation=True, validate_responses=True,
     )
+
     flask_app = app.app
     flask_cors.CORS(flask_app, origins=config["cors_origins"], supports_credentials=True)
 
