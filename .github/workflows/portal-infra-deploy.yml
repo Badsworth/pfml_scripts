@@ -9,7 +9,11 @@ on:
 
 env:
   terraformVersion: 0.12.24
-  terraformDir: ./infra/portal/environments/sandbox
+  terraformBaseDir: ./infra/portal/environments/
+  # map branch name to environment name
+  releases: prod
+  refs/heads/master: test
+  refs/heads/deploy/stage: stage
 
 jobs:
   release:
@@ -22,9 +26,11 @@ jobs:
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-access-key-id: ${{ secrets.PFML_AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.PFML_AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-1
+          role-duration-seconds: 3600
+          role-to-assume: ci-run-deploys
 
       - name: Terraform Init
         id: terraform_init
@@ -33,7 +39,7 @@ jobs:
           tf_actions_version: ${{ env.terraformVersion }}
           tf_actions_subcommand: init
           tf_actions_comment: false
-          tf_actions_working_dir: ${{ env.terraformDir }}
+          tf_actions_working_dir: ${{ env.terraformBaseDir }}${{ env.portal_env }}
 
       - name: Terraform Apply
         id: terraform_apply
@@ -42,4 +48,4 @@ jobs:
           tf_actions_version: ${{ env.terraformVersion }}
           tf_actions_subcommand: apply
           tf_actions_comment: false
-          tf_actions_working_dir: ${{ env.terraformDir }}
+          tf_actions_working_dir: ${{ env.terraformBaseDir }}${{ env.portal_env }}

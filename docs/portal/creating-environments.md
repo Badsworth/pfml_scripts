@@ -15,7 +15,7 @@ Each environment should have its own build script in `portal/package.json` so th
 
 ## Update GitHub Actions
 
-Each environment will have its own github branch that will deploy when changes are pushed. Add your branch and environment configs to [`portal-deploy.yml`](../../.github/workflows/portal-deploy.yml) by adding a branch to the workflow trigger:
+Each environment will have its own GitHub branch that will deploy when changes are pushed. Add your branch and environment configs to [`portal-deploy.yml`](../../.github/workflows/portal-deploy.yml) _and_ [`portal-infra-deploy.yml`](../../.github/workflows/portal-infra-deploy.yml) by adding a branch to the workflow trigger:
 
 ```yml
 on:
