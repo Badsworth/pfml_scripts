@@ -46,6 +46,7 @@ function InputText({ type = "text", ...props }) {
         inputMode={props.inputMode}
         maxLength={props.maxLength}
         name={props.name}
+        onBlur={props.onBlur}
         onChange={props.onChange}
         ref={props.inputRef}
         type={type}
@@ -92,6 +93,10 @@ InputText.propTypes = {
    * HTML input `name` attribute
    */
   name: PropTypes.string.isRequired,
+  /**
+   * HTML input `onBlur` attribute
+   */
+  onBlur: PropTypes.func,
   /**
    * HTML input `onChange` attribute
    */

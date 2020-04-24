@@ -24,6 +24,7 @@ Array [
     label="Test Month"
     maxLength="2"
     name="test-date-field_month"
+    onBlur={[Function]}
     onChange={[Function]}
     smallLabel={true}
     value=""
@@ -40,6 +41,7 @@ Array [
     label="Test Day"
     maxLength="2"
     name="test-date-field_day"
+    onBlur={[Function]}
     onChange={[Function]}
     smallLabel={true}
     value=""
@@ -56,6 +58,7 @@ Array [
     label="Test Year"
     maxLength="4"
     name="test-date-field_year"
+    onBlur={[Function]}
     onChange={[Function]}
     smallLabel={true}
     value=""

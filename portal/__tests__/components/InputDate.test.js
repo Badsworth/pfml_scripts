@@ -66,12 +66,60 @@ describe("InputDate", () => {
     // Month
     expect(fields.at(0).prop("value")).toBe("10");
     // Day
-    expect(fields.at(1).prop("value")).toBe("4");
+    expect(fields.at(1).prop("value")).toBe("04");
     // Year
     expect(fields.at(2).prop("value")).toBe("2020");
   });
 
+  describe("when a month or day field is blurred", () => {
+    it("adds a leading zero to month and day and calls the onChange prop", () => {
+      // We need to mount the component so the input values can be accessed
+      const mountComponent = true;
+      const { props, wrapper } = render(
+        {
+          name: "full-date-field",
+          onChange: jest.fn(),
+          value: "2020--",
+        },
+        mountComponent
+      );
+      const monthInput = wrapper.find("input").at(0);
+      const dayInput = wrapper.find("input").at(1);
+
+      monthInput.getDOMNode().value = "1";
+      dayInput.getDOMNode().value = "2";
+      monthInput.simulate("blur");
+
+      expect(props.onChange).toHaveBeenCalledTimes(1);
+      // Read the event passed into the onChange function
+      expect(props.onChange.mock.calls[0][0].target.value).toBe("2020-01-02");
+    });
+  });
+
   describe("when change event is triggered", () => {
+    it("does not add a leading zero to month or days", () => {
+      // We need to mount the component so the input values can be accessed
+      const mountComponent = true;
+      const { props, wrapper } = render(
+        {
+          name: "full-date-field",
+          onChange: jest.fn(),
+          value: "2020-07-04",
+        },
+        mountComponent
+      );
+      const monthInput = wrapper.find("input").at(0);
+      const dayInput = wrapper.find("input").at(1);
+
+      monthInput.getDOMNode().value = "1";
+      dayInput.getDOMNode().value = "2";
+      monthInput.simulate("change");
+
+      expect(props.onChange).toHaveBeenCalledTimes(1);
+      // Read the event passed into the onChange function
+      expect(props.onChange.mock.calls[0][0].target.value).toBe("2020-1-2");
+    });
+
     it("combines the field values to return an event target representing the full date", () => {
       // We need to mount the component so the input values can be accessed
       const mountComponent = true;
@@ -91,6 +139,7 @@ describe("InputDate", () => {
         .simulate("change");
 
       expect(props.onChange).toHaveBeenCalledTimes(1);
+      // Read the event passed into the onChange function
       expect(props.onChange.mock.calls[0][0].target).toMatchInlineSnapshot(`
         Object {
           "name": "full-date-field",
@@ -177,6 +226,16 @@ describe("formatFieldsAsISO8601", () => {
     expect(result).toBe("1985-01-02");
   });
 
+  it("does not add a leading zero to month and day when their length is 0", () => {
+    const result = formatFieldsAsISO8601({
+      month: "",
+      day: "",
+      year: "1985",
+    });
+
+    expect(result).toBe("1985--");
+  });
+
   it("doesn't ever add a leading zero to the year", () => {
     const result = formatFieldsAsISO8601({
       month: "1",
@@ -211,10 +270,10 @@ describe("parseDateParts", () => {
     expect(result).toEqual({ month: "12", day: "10", year: "1985" });
   });
 
-  it("removes leading zeros from month and day", () => {
+  it("supports leading zeros from month and day", () => {
     const result = parseDateParts("1985-01-02");
 
-    expect(result).toEqual({ month: "1", day: "2", year: "1985" });
+    expect(result).toEqual({ month: "01", day: "02", year: "1985" });
   });
 
   it("removes whitespace from the date parts", () => {

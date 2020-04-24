@@ -189,4 +189,16 @@ describe("InputText", () => {
       expect(props.onChange).toHaveBeenCalledTimes(1);
     });
   });
+
+  describe("when blur event is triggered", () => {
+    it("calls onBlur", () => {
+      const { props, wrapper } = render({
+        onBlur: jest.fn(),
+      });
+
+      wrapper.find(".usa-input").simulate("blur");
+
+      expect(props.onBlur).toHaveBeenCalledTimes(1);
+    });
+  });
 });

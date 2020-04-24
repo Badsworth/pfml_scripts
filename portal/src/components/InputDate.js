@@ -10,8 +10,8 @@ import classnames from "classnames";
  * @param {string|number} value
  * @returns {string}
  */
-function addLeadingZero(value = "") {
-  if (value.match(/^0/)) return value;
+function addLeadingZero(value) {
+  if (!value || value.match(/^0/)) return value;
 
   return value.toString().padStart(2, 0);
 }
@@ -22,13 +22,20 @@ function addLeadingZero(value = "") {
  * @param {number|string} date.day
  * @param {number|string} date.month
  * @param {number|string} date.year
+ * @param {object} [options]
+ * @param {boolean} [options.skipLeadingZeros]
  * @returns {string} ISO 8601 date string (YYYY-MM-DD)
  */
-export function formatFieldsAsISO8601({ month, day, year }) {
+export function formatFieldsAsISO8601({ month, day, year }, options = {}) {
   // Disallow anything other than numbers, and restrict invalid lengths
-  month = month ? addLeadingZero(month).replace(/\D/g, "") : ""; // "ab" => ""
-  day = day ? addLeadingZero(day).replace(/\D/g, "") : "";
+  month = month ? month.replace(/\D/g, "") : ""; // "abc" => ""
+  day = day ? day.replace(/\D/g, "") : "";
   year = year ? year.replace(/\D/g, "") : "";
+
+  if (!options.skipLeadingZeros) {
+    month = addLeadingZero(month);
+    day = addLeadingZero(day);
+  }
 
   // It's okay if some of these date fields are empty (that will definitely happen).
   // A consuming project should worry about whether this string is valid or not as
@@ -46,8 +53,8 @@ export function parseDateParts(value) {
     const parts = value.split("-"); // "YYYY-MM-DD" => ["YYYY", "MM", "DD"]
     return {
       year: parts[0].trim(),
-      month: parts.length >= 2 ? parts[1].replace(/^0+/, "").trim() : "", // "01 " => "1"
-      day: parts.length >= 3 ? parts[2].replace(/^0+/, "").trim() : "", // "01 " => "1"
+      month: parts.length >= 2 ? parts[1].trim() : "", // "01 " => "1"
+      day: parts.length >= 3 ? parts[2].trim() : "", // "01 " => "1"
     };
   }
 
@@ -92,6 +99,23 @@ function InputDate(props) {
   });
 
   /**
+   * Blur event handler applied to each individual date field.
+   * This is responsible for formatting the full date and sending
+   * it back to our parent component via the function passed to
+   * us in the *onChange* prop.
+   * @param {React.SyntheticEvent} evt
+   */
+  const handleBlur = (evt) => {
+    const isoDate = formatFieldsAsISO8601({
+      month: inputTextRefs.month.current.value,
+      day: inputTextRefs.day.current.value,
+      year: inputTextRefs.year.current.value,
+    });
+
+    dispatchChange(isoDate, evt);
+  };
+
+  /**
    * Change event handler applied to each individual date field.
    * This is responsible for formatting the full date and sending
    * it back to our parent component via the function passed to
@@ -99,25 +123,41 @@ function InputDate(props) {
    * @param {React.SyntheticEvent} evt
    */
   const handleChange = (evt) => {
-    const isoDate = formatFieldsAsISO8601({
-      month: inputTextRefs.month.current.value,
-      day: inputTextRefs.day.current.value,
-      year: inputTextRefs.year.current.value,
-    });
+    const date = formatFieldsAsISO8601(
+      {
+        month: inputTextRefs.month.current.value,
+        day: inputTextRefs.day.current.value,
+        year: inputTextRefs.year.current.value,
+      },
+      // We skip adding leading zeros onChange so that we don't prevent
+      // a user from entering numbers with more than 1 digit. For instance,
+      // if we added leading zeros as part of the change handler, a zero
+      // would be immediately added once a user types a digit, and
+      // that would be...bad.
+      { skipLeadingZeros: true }
+    );
 
-    // We call onChange with an argument value in a shape resembling Event so
-    // that our form event handlers can manage this field's state just like
-    // it does with other fields like InputText. We also include the original
-    // event, but only for debugging purposes.
+    dispatchChange(date, evt);
+  };
+
+  /**
+   * Call props.onChange with an argument value in a shape resembling Event so
+   * that our form event handlers can manage this field's state just like
+   * it does with other fields like InputText. We also include the original
+   * event, but only for debugging purposes.
+   * @param {string} value - ISO 8601 date string
+   * @param {SyntheticEvent} originalEvent - Original event that triggered this change
+   */
+  function dispatchChange(value, originalEvent) {
     props.onChange({
-      _originalEvent: evt,
+      _originalEvent: originalEvent,
       target: {
         name: props.name,
         type: "text",
-        value: isoDate,
+        value,
       },
     });
-  };
+  }
 
   return (
     <fieldset className={formGroupClasses}>
@@ -140,6 +180,7 @@ function InputDate(props) {
           label={props.monthLabel}
           maxLength="2"
           name={`${props.name}_month`}
+          onBlur={handleBlur}
           onChange={handleChange}
           smallLabel
           value={values.month}
@@ -153,6 +194,7 @@ function InputDate(props) {
           label={props.dayLabel}
           maxLength="2"
           name={`${props.name}_day`}
+          onBlur={handleBlur}
           onChange={handleChange}
           smallLabel
           value={values.day}
@@ -166,6 +208,7 @@ function InputDate(props) {
           label={props.yearLabel}
           maxLength="4"
           name={`${props.name}_year`}
+          onBlur={handleBlur}
           onChange={handleChange}
           smallLabel
           value={values.year}
