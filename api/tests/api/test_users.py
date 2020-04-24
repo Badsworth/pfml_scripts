@@ -1,3 +1,8 @@
+import pytest
+
+pytestmark = pytest.mark.skip("not setup to test database stuff right now")
+
+
 def test_users_post(client, test_user):
     # body = {"user_id": "009fa369-291b-403f-a85a-15e938c26f2f", "email": "janedoe@example.com", "auth_id": "00000000-291b-403f-a85a-15e938c26f2f"}
     body = {
