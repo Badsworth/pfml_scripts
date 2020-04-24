@@ -71,8 +71,8 @@ check-static: format-check lint
 
 clean: ## Remove intermediate, cache, or build artifacts
 	find . -type f -name '*.py[co]' -delete
-	find . -type d -name __pycache__ -exec rm -rv {} +
-	rm -rf massgov.egg-info
+	find . -type d -name __pycache__ -print -exec rm -r {} +
+	find . -type d -name '*.egg-info' -print -exec rm -r {} +
 	rm -rf dist
 	-$(PY_RUN_CMD) coverage erase # takes care of .coverage file
 	rm -rf .coverage_report
