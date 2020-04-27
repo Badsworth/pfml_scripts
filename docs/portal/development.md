@@ -2,12 +2,6 @@
 
 This page covers development practices for working on the Mass PFML front-end portal. Please document liberally so that others may benefit from your learning.
 
-## Configuration
-
-Configuration environment is selected with the `BUILD_ENV` variable in [`portal/next.config.js`](../portal/next.config.js). Environment config files with variables are checked in under [/portal/config/`](../portal/config/). `development` configs are used by default.
-
-Use environment specific scripts to bundle builds with the correct configuration. See e.g. `build:test`, in [`portal/package.json`](../portal/package.json). Use `process.env.[ENV_VARIABLE_NAME]` to access config values.
-
 ## Creating a page
 
 All files in the `portal/pages/` directory are automatically available as routes based on their name, e.g. `about.js` is routed to `/about`. Files named `index.js` are routed to the root of the directory. See more at the Next.js docs on [routing](https://nextjs.org/docs/routing/introduction) and [pages](https://nextjs.org/docs/basic-features/pages).
