@@ -39,6 +39,7 @@ exports[`AuthNav when a user is authenticated renders the logged-in state 1`] = 
         <button
           className="usa-button usa-button--outline usa-button--inverse usa-button--unstyled width-auto"
           onClick={[Function]}
+          type="button"
         >
           Log out
         </button>

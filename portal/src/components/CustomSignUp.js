@@ -89,6 +89,7 @@ class CustomSignUp extends SignUp {
                 <button
                   className="usa-button usa-button--unstyled font-sans-xs text-bold text-underline width-auto"
                   onClick={() => this.changeState("signIn")}
+                  type="button"
                 >
                   {t("components.signUp.signInFooterLink")}
                 </button>

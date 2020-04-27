@@ -42,6 +42,7 @@
         "no-prototype-builtins": "off",
         "object-shorthand": ["error", "properties", { "avoidQuotes": true }],
         "promise/no-native": "off",
+        "react/button-has-type": "error",
         "react/jsx-handler-names": "off",
         "react/jsx-fragments": ["error", "element"],
         "react-hooks/rules-of-hooks": "error",

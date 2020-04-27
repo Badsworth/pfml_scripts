@@ -45,6 +45,7 @@ exports[`CustomConfirmSignUp renders the page 1`] = `
           className="usa-button usa-button--unstyled font-sans-xs text-underline margin-top-2"
           name="resendCode"
           onClick={[Function]}
+          type="button"
         >
           Resend code
         </button>
@@ -98,6 +99,7 @@ exports[`CustomConfirmSignUp renders the page 1`] = `
             className="usa-button usa-button--unstyled font-sans-xs text-bold text-underline"
             name="backToSignIn"
             onClick={[Function]}
+            type="button"
           >
             Back to log in
           </button>

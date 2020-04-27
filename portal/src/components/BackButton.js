@@ -17,6 +17,7 @@ function BackButton() {
     <button
       className="usa-button usa-button--unstyled margin-bottom-5"
       onClick={handleClick}
+      type="button"
     >
       <svg
         className="margin-right-05"

@@ -15,6 +15,8 @@ const handleSignOut = () => {
 export const WithUser = () => (
   <Authenticator>
     <h1>You are signed in!</h1>
-    <button onClick={handleSignOut}>Sign out!</button>
+    <button onClick={handleSignOut} type="button">
+      Sign out!
+    </button>
   </Authenticator>
 );

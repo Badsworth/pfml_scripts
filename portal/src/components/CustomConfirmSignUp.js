@@ -47,6 +47,7 @@ class CustomConfirmSignUp extends ConfirmSignUp {
                 name="resendCode"
                 className="usa-button usa-button--unstyled font-sans-xs text-underline margin-top-2"
                 onClick={this.handleResend}
+                type="button"
               >
                 {t("components.confirmSignUp.resendCodeLink")}
               </button>
@@ -77,6 +78,7 @@ class CustomConfirmSignUp extends ConfirmSignUp {
                   name="backToSignIn"
                   className="usa-button usa-button--unstyled font-sans-xs text-bold text-underline"
                   onClick={() => this.changeState("signIn")}
+                  type="button"
                 >
                   {t("components.confirmSignUp.signInFooterLink")}
                 </button>

@@ -101,6 +101,7 @@ exports[`CustomSignUp when signUpConfig prop has signupFields defined and hideAl
           <button
             className="usa-button usa-button--unstyled font-sans-xs text-bold text-underline width-auto"
             onClick={[Function]}
+            type="button"
           >
             Sign in
           </button>

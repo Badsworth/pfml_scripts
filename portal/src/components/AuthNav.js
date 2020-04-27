@@ -28,6 +28,7 @@ const AuthNav = (props) => {
                 <button
                   className="usa-button usa-button--outline usa-button--inverse usa-button--unstyled width-auto"
                   onClick={handleSignOut}
+                  type="button"
                 >
                   {t("components.authNav.logOutButtonText")}
                 </button>
