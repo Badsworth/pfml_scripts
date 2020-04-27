@@ -7,8 +7,11 @@ on:
     paths:
     - api/**
 
+defaults:
+  run:
+    working-directory: ./api
+
 env:
-  working-dir: ./api
   CI: true
 
 jobs:
@@ -24,15 +27,13 @@ jobs:
     # environment, instead of starting and stopping the container for each step
     - name: build and start container
       run: make start
-      working-directory: ${{ env.working-dir }}
+
 
     - name: format-check
       run: make format-check
-      working-directory: ${{ env.working-dir }}
 
     - name: lint
       run: make lint
-      working-directory: ${{ env.working-dir }}
 
   # Check for test failures.
   test:
@@ -43,11 +44,9 @@ jobs:
 
     - name: build and start container
       run: make start
-      working-directory: ${{ env.working-dir }}
 
     - name: test
       run: make test
-      working-directory: ${{ env.working-dir }}
 
   # Check we can build a release
   build-release:
@@ -58,4 +57,3 @@ jobs:
 
     - name: build
       run: make release-build
-      working-directory: ${{ env.working-dir }}
