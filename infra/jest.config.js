@@ -4,10 +4,7 @@
  */
 module.exports = {
   coverageReporters: ["text"],
-  testPathIgnorePatterns: [
-    "<rootDir>/node_modules/",
-    "<rootDir>/portal/config/test.js",
-  ],
+  testPathIgnorePatterns: ["<rootDir>/node_modules/"],
   coverageThreshold: {
     global: {
       branches: 90,

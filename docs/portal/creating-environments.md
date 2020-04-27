@@ -6,8 +6,9 @@ Before reading this, make sure you've already ran through the [steps to setup th
 
 ## Add environment variables
 
-1. Create a new config file for the environment in `infra/portal/config`, copying the properties from another environment.
+1. Create a new config file for the environment in [`portal/config`](../../portal/config), copying the properties from another environment.
 1. Update the variables for the environment. Primarily, you'll want to update the environment name and the Cognito IDs, which should have been output after you ran `terraform apply`
+1. Add an entry for the new environment to [`portal/config/index.js`](../../portal/config/index.js), copying the properties from another environment.
 
 ## Add a build script
 

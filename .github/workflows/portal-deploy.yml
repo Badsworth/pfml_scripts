@@ -10,7 +10,6 @@ on:
       - releases/**
     paths:
       - portal/**
-      - infra/portal/config/**
 
 env:
   nodeVersion: 12.x

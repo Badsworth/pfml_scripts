@@ -1,5 +1,5 @@
 const buildEnv = process.env.BUILD_ENV || "development";
-const envVariables = require("./../infra/portal/config/" + buildEnv);
+const envVariables = require("./config")[buildEnv];
 const featureFlags = require("./config/featureFlags")(buildEnv);
 
 // eslint-disable-next-line no-console

@@ -19,7 +19,7 @@ Node v10 (or greater)
 
 ## Env Configuration
 
-Non-secret environment configuration is stored in [infra/portal/config/](../infra/portal/config/) in files by env (`dev`, `test`, etc.)
+Non-secret environment configuration is stored in [config/](config/) in files by env (`stage`, `test`, etc.)
 
 ## Local development
 
