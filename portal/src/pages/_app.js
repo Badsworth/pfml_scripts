@@ -5,6 +5,7 @@ import React, { useEffect, useState } from "react";
 import { initializeI18n, useTranslation } from "../locales/i18n";
 import Authenticator from "../components/Authenticator";
 import Collection from "../models/Collection";
+import Head from "next/head";
 import Header from "../components/Header";
 import PropTypes from "prop-types";
 import Spinner from "../components/Spinner";
@@ -81,6 +82,11 @@ export const App = ({ Component, pageProps, authState, authData }) => {
 
   return (
     <React.Fragment>
+      <Head>
+        <link href="/favicon.png" rel="shortcut icon" type="image/png" />
+        <title>{t("general.siteTitle")}</title>
+        <meta name="description" content={t("general.siteDescription")} />
+      </Head>
       <Header user={authUser} />
       <main id="main" className="grid-container margin-top-5 margin-bottom-8">
         <div className="grid-row">
