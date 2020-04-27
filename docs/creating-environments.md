@@ -65,3 +65,5 @@ The easiest way to set up resources in a new environment is using the templates 
 1. Follow additional steps specific to each component:
 
     - [Additional steps for new Portal environments](portal/creating-environments.md)
+
+1. Add the new environment to the [CI build matrix](/.github/workflows/infra-validate.yml) so it can be validated when it's changed.
