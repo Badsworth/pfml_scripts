@@ -3,6 +3,9 @@ import StateId from "../../../src/pages/claims/state-id";
 import User from "../../../src/models/User";
 import routes from "../../../src/routes";
 import { shallow } from "enzyme";
+import usersApi from "../../../src/api/usersApi";
+
+jest.mock("../../../src/api/usersApi");
 
 describe("StateId", () => {
   let setUser, user, wrapper;
@@ -38,8 +41,14 @@ describe("StateId", () => {
     });
   });
 
-  it("sets user state after successful save", async () => {
-    await wrapper.find("QuestionPage").simulate("save");
-    expect(setUser).toHaveBeenCalled();
+  describe("when the form is successfully submitted", () => {
+    it("calls updateUser and updates the state", async () => {
+      expect.assertions();
+
+      await wrapper.find("QuestionPage").simulate("save");
+
+      expect(usersApi.updateUser).toHaveBeenCalledTimes(1);
+      expect(setUser).toHaveBeenCalledWith(expect.any(User));
+    });
   });
 });

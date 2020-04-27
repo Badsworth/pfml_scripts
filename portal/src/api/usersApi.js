@@ -1,24 +1,11 @@
 /* eslint-disable jsdoc/require-returns */
+import User from "../models/User";
 
 // Additional fields that would be returned by the API
 const apiResponseFields = {
   status: "unverified",
-  user_id: "009fa369-291b-403f-a85a-15e938c26f2f",
+  userId: "009fa369-291b-403f-a85a-15e938c26f2f",
 };
-
-/**
- * User object returned by the API
- * @todo Update this structure once we have integrated with the API
- * @typedef User
- * @property {string} email User's email address
- * @property {string} status Identity proofing status
- * @property {string} userId User's ID
- * @property {string} firstName First name
- * @property {string} middleName Middle name
- * @property {string} lastName Last name
- * @property {string} dateOfBirth Date of birth string in ISO-8601 format
- * @property {string} ssnOrItin User's SSN or ITIN
- */
 
 /**
  * Mock a POST /users request and return a "success" response
@@ -32,10 +19,10 @@ const apiResponseFields = {
 async function createUser(user) {
   // todo: make a POST request to the api
   // Merge in additional fields that the API would populate
-  const response = Object.assign({}, apiResponseFields, user);
+  const response = Object.assign({}, user, apiResponseFields);
   return Promise.resolve({
     success: true,
-    user: response,
+    user: new User(response),
   });
 }
 
@@ -53,10 +40,10 @@ async function createUser(user) {
 async function updateUser(user) {
   // todo: make a PATCH request to the api
   // Merge in additional fields that the API would populate
-  const response = Object.assign({}, apiResponseFields, user);
+  const response = Object.assign({}, user, apiResponseFields);
   return Promise.resolve({
     success: true,
-    user: response,
+    user: new User(response),
   });
 }
 

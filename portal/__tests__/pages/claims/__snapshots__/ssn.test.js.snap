@@ -12,6 +12,7 @@ exports[`Ssn renders the form 1`] = `
       "middleName": null,
       "ssn": null,
       "stateId": null,
+      "status": null,
       "userId": null,
     }
   }

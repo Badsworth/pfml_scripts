@@ -12,6 +12,7 @@ exports[`DateOfBirth renders the page 1`] = `
       "middleName": null,
       "ssn": null,
       "stateId": null,
+      "status": null,
       "userId": null,
     }
   }

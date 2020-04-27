@@ -3,6 +3,9 @@ import React from "react";
 import Ssn from "../../../src/pages/claims/ssn";
 import User from "../../../src/models/User";
 import routes from "../../../src/routes";
+import usersApi from "../../../src/api/usersApi";
+
+jest.mock("../../../src/api/usersApi");
 
 describe("Ssn", () => {
   let setUser, user, wrapper;
@@ -51,8 +54,14 @@ describe("Ssn", () => {
     }
   });
 
-  it("sets user state after successful save", async () => {
-    await wrapper.find("QuestionPage").simulate("save");
-    expect(setUser).toHaveBeenCalled();
+  describe("when the form is successfully submitted", () => {
+    it("calls updateUser and updates the state", async () => {
+      expect.assertions();
+
+      await wrapper.find("QuestionPage").simulate("save");
+
+      expect(usersApi.updateUser).toHaveBeenCalledTimes(1);
+      expect(setUser).toHaveBeenCalledWith(expect.any(User));
+    });
   });
 });

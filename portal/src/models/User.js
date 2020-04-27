@@ -11,6 +11,7 @@ class User extends BaseModel {
       dateOfBirth: null,
       hasStateId: null,
       stateId: null,
+      status: null,
       ssn: null,
     };
   }

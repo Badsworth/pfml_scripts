@@ -10,6 +10,7 @@ import useFormState from "../../hooks/useFormState";
 import useHandleInputChange from "../../hooks/useHandleInputChange";
 import useHandleSave from "../../hooks/useHandleSave";
 import { useTranslation } from "../../locales/i18n";
+import usersApi from "../../api/usersApi";
 import valueWithFallback from "../../utils/valueWithFallback";
 
 const StateId = (props) => {
@@ -18,12 +19,9 @@ const StateId = (props) => {
   const { hasStateId, stateId } = formState;
   const handleInputChange = useHandleInputChange(updateFields);
 
-  // TODO call API once API module is ready
-  // const handleSave = useHandleSave(api.patchUser, props.setUser);
-  // For now just save the form state back to the user state directly.
   const handleSave = useHandleSave(
-    (formState) => new User(formState),
-    props.setUser
+    (formState) => usersApi.updateUser(new User(formState)),
+    (result) => props.setUser(result.user)
   );
 
   // Note that hasStateId can be null if user has never answered this question before.

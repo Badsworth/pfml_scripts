@@ -1,28 +1,38 @@
+import User from "../../src/models/User";
 import usersApi from "../../src/api/usersApi";
 
 describe("users API", () => {
   describe("createUser", () => {
-    const user = {
-      date_of_birth: "02-02-2020",
-      first_name: "Fred",
-      last_name: "Johnson",
-    };
+    const user = new User({
+      dateOfBirth: "02-02-2020",
+      firstName: "Fred",
+      lastName: "Johnson",
+    });
 
     it("is successful", async () => {
       const response = await usersApi.createUser(user);
       expect(response.success).toBeTruthy();
     });
 
-    it("returns user data", async () => {
+    it("includes User in the response", async () => {
       const response = await usersApi.createUser(user);
-      expect(response.user).toMatchObject(user);
+
+      expect(response.user).toBeInstanceOf(User);
     });
 
-    it("adds status and user_id fields to the user", async () => {
+    it("adds user request parameters to the user", async () => {
+      const response = await usersApi.createUser(user);
+
+      expect(response.user.dateOfBirth).toBe(user.dateOfBirth);
+      expect(response.user.firstName).toBe(user.firstName);
+      expect(response.user.lastName).toBe(user.lastName);
+    });
+
+    it("adds status and userId fields to the user", async () => {
       const response = await usersApi.createUser(user);
 
       expect(response.user).toMatchObject({
-        user_id: expect.any(String),
+        userId: expect.any(String),
         status: expect.any(String),
       });
     });
@@ -30,9 +40,9 @@ describe("users API", () => {
 
   describe("updateUser", () => {
     const user = {
-      date_of_birth: "02-02-2020",
-      first_name: "Fred",
-      last_name: "Johnson",
+      dateOfBirth: "02-02-2020",
+      firstName: "Fred",
+      lastName: "Johnson",
     };
 
     it("is successful", async () => {
@@ -40,16 +50,23 @@ describe("users API", () => {
       expect(response.success).toBeTruthy();
     });
 
-    it("returns user data", async () => {
+    it("includes User in the response", async () => {
+      const response = await usersApi.createUser(user);
+
+      expect(response.user).toBeInstanceOf(User);
+    });
+
+    it("adds user request parameters to the user", async () => {
       const response = await usersApi.updateUser(user);
+
       expect(response.user).toMatchObject(user);
     });
 
-    it("adds status and user_id fields to the user", async () => {
+    it("adds status and userId fields to the user", async () => {
       const response = await usersApi.updateUser(user);
 
       expect(response.user).toMatchObject({
-        user_id: expect.any(String),
+        userId: expect.any(String),
         status: expect.any(String),
       });
     });

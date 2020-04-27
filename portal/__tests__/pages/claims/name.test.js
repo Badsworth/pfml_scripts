@@ -2,6 +2,9 @@ import Name from "../../../src/pages/claims/name";
 import React from "react";
 import User from "../../../src/models/User";
 import { shallow } from "enzyme";
+import usersApi from "../../../src/api/usersApi";
+
+jest.mock("../../../src/api/usersApi");
 
 describe("Name", () => {
   let setUser, user, wrapper;
@@ -26,8 +29,14 @@ describe("Name", () => {
     expect(wrapper).toMatchSnapshot();
   });
 
-  it("sets user state after successful save", async () => {
-    await wrapper.find("QuestionPage").simulate("save");
-    expect(setUser).toHaveBeenCalled();
+  describe("when the form is successfully submitted", () => {
+    it("calls updateUser and updates the state", async () => {
+      expect.assertions();
+
+      await wrapper.find("QuestionPage").simulate("save");
+
+      expect(usersApi.updateUser).toHaveBeenCalledTimes(1);
+      expect(setUser).toHaveBeenCalledWith(expect.any(User));
+    });
   });
 });

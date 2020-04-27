@@ -90,6 +90,7 @@ describe("App", () => {
             "middleName": null,
             "ssn": null,
             "stateId": null,
+            "status": null,
             "userId": null,
           }
         }

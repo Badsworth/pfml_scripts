@@ -12,6 +12,7 @@ exports[`Name renders the empty page 1`] = `
       "middleName": null,
       "ssn": null,
       "stateId": null,
+      "status": null,
       "userId": null,
     }
   }
@@ -62,6 +63,7 @@ exports[`Name renders the page prefilled with user information 1`] = `
       "middleName": "cricketer",
       "ssn": null,
       "stateId": null,
+      "status": null,
       "userId": null,
     }
   }
