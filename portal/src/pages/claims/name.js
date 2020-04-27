@@ -15,7 +15,7 @@ import valueWithFallback from "../../utils/valueWithFallback";
 const Name = (props) => {
   const { t } = useTranslation();
   const { formState, updateFields } = useFormState(props.user);
-  const { firstName, middleName, lastName } = formState;
+  const { first_name, middle_name, last_name } = formState;
   const handleInputChange = useHandleInputChange(updateFields);
 
   const handleSave = useHandleSave(
@@ -37,23 +37,23 @@ const Name = (props) => {
         {t("pages.claimsName.sectionLabel")}
       </FormLabel>
       <InputText
-        name="firstName"
-        value={valueWithFallback(firstName)}
+        name="first_name"
+        value={valueWithFallback(first_name)}
         label={t("pages.claimsName.firstNameLabel")}
         onChange={handleInputChange}
         smallLabel
       />
       <InputText
-        name="middleName"
-        value={valueWithFallback(middleName)}
+        name="middle_name"
+        value={valueWithFallback(middle_name)}
         label={t("pages.claimsName.middleNameLabel")}
         optionalText={t("components.form.optionalText")}
         onChange={handleInputChange}
         smallLabel
       />
       <InputText
-        name="lastName"
-        value={valueWithFallback(lastName)}
+        name="last_name"
+        value={valueWithFallback(last_name)}
         label={t("pages.claimsName.lastNameLabel")}
         onChange={handleInputChange}
         smallLabel

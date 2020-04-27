@@ -16,7 +16,7 @@ import valueWithFallback from "../../utils/valueWithFallback";
 const StateId = (props) => {
   const { t } = useTranslation();
   const { formState, updateFields, removeField } = useFormState(props.user);
-  const { hasStateId, stateId } = formState;
+  const { has_state_id, state_id } = formState;
   const handleInputChange = useHandleInputChange(updateFields);
 
   const handleSave = useHandleSave(
@@ -24,10 +24,10 @@ const StateId = (props) => {
     (result) => props.setUser(result.user)
   );
 
-  // Note that hasStateId can be null if user has never answered this question before.
+  // Note that has_state_id can be null if user has never answered this question before.
   // We should show this field if user already has a state id, and hide it either if
   // indicated that they don't have a state id or if they had never answered the question.
-  const shouldShowStateIdField = !!hasStateId;
+  const shouldShowStateIdField = !!has_state_id;
 
   return (
     <QuestionPage
@@ -39,31 +39,31 @@ const StateId = (props) => {
       <InputChoiceGroup
         choices={[
           {
-            checked: hasStateId === true,
+            checked: has_state_id === true,
             label: t("pages.claimsStateId.hasIdChoiceYes"),
             value: "true",
           },
           {
-            checked: hasStateId === false,
+            checked: has_state_id === false,
             label: t("pages.claimsStateId.hasIdChoiceNo"),
             value: "false",
           },
         ]}
         label={t("pages.claimsStateId.hasIdChoiceLabel")}
-        name="hasStateId"
+        name="has_state_id"
         onChange={handleInputChange}
         type="radio"
       />
 
       <ConditionalContent
-        fieldNamesClearedWhenHidden={["stateId"]}
+        fieldNamesClearedWhenHidden={["state_id"]}
         removeField={removeField}
         visible={shouldShowStateIdField}
       >
         <InputText
-          name="stateId"
+          name="state_id"
           label={t("pages.claimsStateId.idLabel")}
-          value={valueWithFallback(stateId)}
+          value={valueWithFallback(state_id)}
           onChange={handleInputChange}
         />
       </ConditionalContent>

@@ -4,16 +4,16 @@ exports[`Name renders the empty page 1`] = `
 <QuestionPage
   formState={
     User {
-      "cognitoUserId": null,
-      "dateOfBirth": null,
-      "firstName": null,
-      "hasStateId": null,
-      "lastName": null,
-      "middleName": null,
-      "ssn": null,
-      "stateId": null,
+      "cognito_user_id": null,
+      "date_of_birth": null,
+      "first_name": null,
+      "has_state_id": null,
+      "last_name": null,
+      "middle_name": null,
+      "ssn_or_itin": null,
+      "state_id": null,
       "status": null,
-      "userId": null,
+      "user_id": null,
     }
   }
   nextPage="/claims/date-of-birth"
@@ -28,14 +28,14 @@ exports[`Name renders the empty page 1`] = `
   </FormLabel>
   <InputText
     label="First name"
-    name="firstName"
+    name="first_name"
     onChange={[Function]}
     smallLabel={true}
     value=""
   />
   <InputText
     label="Middle name"
-    name="middleName"
+    name="middle_name"
     onChange={[Function]}
     optionalText="(optional)"
     smallLabel={true}
@@ -43,7 +43,7 @@ exports[`Name renders the empty page 1`] = `
   />
   <InputText
     label="Last name"
-    name="lastName"
+    name="last_name"
     onChange={[Function]}
     smallLabel={true}
     value=""
@@ -55,16 +55,16 @@ exports[`Name renders the page prefilled with user information 1`] = `
 <QuestionPage
   formState={
     User {
-      "cognitoUserId": null,
-      "dateOfBirth": null,
-      "firstName": "Aquib",
-      "hasStateId": null,
-      "lastName": "Khan",
-      "middleName": "cricketer",
-      "ssn": null,
-      "stateId": null,
+      "cognito_user_id": null,
+      "date_of_birth": null,
+      "first_name": "Aquib",
+      "has_state_id": null,
+      "last_name": "Khan",
+      "middle_name": "cricketer",
+      "ssn_or_itin": null,
+      "state_id": null,
       "status": null,
-      "userId": null,
+      "user_id": null,
     }
   }
   nextPage="/claims/date-of-birth"
@@ -79,14 +79,14 @@ exports[`Name renders the page prefilled with user information 1`] = `
   </FormLabel>
   <InputText
     label="First name"
-    name="firstName"
+    name="first_name"
     onChange={[Function]}
     smallLabel={true}
     value="Aquib"
   />
   <InputText
     label="Middle name"
-    name="middleName"
+    name="middle_name"
     onChange={[Function]}
     optionalText="(optional)"
     smallLabel={true}
@@ -94,7 +94,7 @@ exports[`Name renders the page prefilled with user information 1`] = `
   />
   <InputText
     label="Last name"
-    name="lastName"
+    name="last_name"
     onChange={[Function]}
     smallLabel={true}
     value="Khan"

@@ -3,16 +3,16 @@ import BaseModel from "./BaseModel";
 class User extends BaseModel {
   get defaults() {
     return {
-      userId: null,
-      cognitoUserId: null,
-      firstName: null,
-      middleName: null,
-      lastName: null,
-      dateOfBirth: null,
-      hasStateId: null,
-      stateId: null,
+      user_id: null,
+      cognito_user_id: null,
+      first_name: null,
+      middle_name: null,
+      last_name: null,
+      date_of_birth: null,
+      has_state_id: null,
+      state_id: null,
       status: null,
-      ssn: null,
+      ssn_or_itin: null,
     };
   }
 }

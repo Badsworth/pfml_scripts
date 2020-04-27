@@ -4,9 +4,9 @@ import usersApi from "../../src/api/usersApi";
 describe("users API", () => {
   describe("createUser", () => {
     const user = new User({
-      dateOfBirth: "02-02-2020",
-      firstName: "Fred",
-      lastName: "Johnson",
+      date_of_birth: "02-02-2020",
+      first_name: "Fred",
+      last_name: "Johnson",
     });
 
     it("is successful", async () => {
@@ -23,16 +23,16 @@ describe("users API", () => {
     it("adds user request parameters to the user", async () => {
       const response = await usersApi.createUser(user);
 
-      expect(response.user.dateOfBirth).toBe(user.dateOfBirth);
-      expect(response.user.firstName).toBe(user.firstName);
-      expect(response.user.lastName).toBe(user.lastName);
+      expect(response.user.date_of_birth).toBe(user.date_of_birth);
+      expect(response.user.first_name).toBe(user.first_name);
+      expect(response.user.last_name).toBe(user.last_name);
     });
 
-    it("adds status and userId fields to the user", async () => {
+    it("adds status and user_id fields to the user", async () => {
       const response = await usersApi.createUser(user);
 
       expect(response.user).toMatchObject({
-        userId: expect.any(String),
+        user_id: expect.any(String),
         status: expect.any(String),
       });
     });
@@ -40,9 +40,9 @@ describe("users API", () => {
 
   describe("updateUser", () => {
     const user = {
-      dateOfBirth: "02-02-2020",
-      firstName: "Fred",
-      lastName: "Johnson",
+      date_of_birth: "02-02-2020",
+      first_name: "Fred",
+      last_name: "Johnson",
     };
 
     it("is successful", async () => {
@@ -62,11 +62,11 @@ describe("users API", () => {
       expect(response.user).toMatchObject(user);
     });
 
-    it("adds status and userId fields to the user", async () => {
+    it("adds status and user_id fields to the user", async () => {
       const response = await usersApi.updateUser(user);
 
       expect(response.user).toMatchObject({
-        userId: expect.any(String),
+        user_id: expect.any(String),
         status: expect.any(String),
       });
     });

@@ -11,13 +11,13 @@ const LeaveType = (props) => {
 
   // TODO get current claim id from query parameter, then get current claim
   // TODO initialState for form should come from current claim
-  // const { claimId } = props.query;
-  // const claim = props.claims.byId[claimId];
+  // const { claim_id } = props.query;
+  // const claim = props.claims.byId[claim_id];
   // const { formState, updateFields, removeField } = useFormState(claim);
   // For now just initialize to empty formState
   const { formState, updateFields } = useFormState();
   const handleInputChange = useHandleInputChange(updateFields);
-  const { leaveType } = formState;
+  const { leave_type } = formState;
 
   // TODO call API once API module is ready
   // const handleSave = useHandleSave(api.patchClaim, props.setClaim);
@@ -36,26 +36,26 @@ const LeaveType = (props) => {
       <InputChoiceGroup
         choices={[
           {
-            checked: leaveType === "medicalLeave",
+            checked: leave_type === "medicalLeave",
             hint: t("pages.claimsLeaveType.medicalLeaveHint"),
             label: t("pages.claimsLeaveType.medicalLeaveLabel"),
             value: "medicalLeave",
           },
           {
-            checked: leaveType === "parentalLeave",
+            checked: leave_type === "parentalLeave",
             hint: t("pages.claimsLeaveType.parentalLeaveHint"),
             label: t("pages.claimsLeaveType.parentalLeaveLabel"),
             value: "parentalLeave",
           },
           {
-            checked: leaveType === "activeDutyFamilyLeave",
+            checked: leave_type === "activeDutyFamilyLeave",
             hint: t("pages.claimsLeaveType.activeDutyFamilyLeaveHint"),
             label: t("pages.claimsLeaveType.activeDutyFamilyLeaveLabel"),
             value: "activeDutyFamilyLeave",
           },
         ]}
         label={t("pages.claimsLeaveType.sectionLabel")}
-        name="leaveType"
+        name="leave_type"
         onChange={handleInputChange}
         type="radio"
       />

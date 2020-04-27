@@ -31,7 +31,7 @@ exports[`LeaveType renders the page 1`] = `
       ]
     }
     label="Why do you need to take time off?"
-    name="leaveType"
+    name="leave_type"
     onChange={[Function]}
     type="radio"
   />

@@ -25,15 +25,15 @@ exports[`Duration regardless of duration type initially renders the page without
       ]
     }
     label="Do you need to take off work completely or work on a reduced schedule?"
-    name="durationType"
+    name="duration_type"
     onChange={[Function]}
     type="radio"
   />
   <ConditionalContent
     fieldNamesClearedWhenHidden={
       Array [
-        "avgWeeklyHoursWorked",
-        "hoursOffNeeded",
+        "avg_weekly_hours_worked",
+        "hours_off_needed",
       ]
     }
     removeField={[Function]}
@@ -42,7 +42,7 @@ exports[`Duration regardless of duration type initially renders the page without
     <InputText
       hint="Tell us how many hours you typically worked before going on leave. We need to know this so we can calculate your benefit amount."
       label="How many hours do you work in a week, on average?"
-      name="avgWeeklyHoursWorked"
+      name="avg_weekly_hours_worked"
       onChange={[Function]}
       value=""
       width="small"
@@ -50,7 +50,7 @@ exports[`Duration regardless of duration type initially renders the page without
     <InputText
       hint="This can be an approximate. You can change this after your claim is approved."
       label="How many hours do you need to take off each week?"
-      name="hoursOffNeeded"
+      name="hours_off_needed"
       onChange={[Function]}
       value=""
       width="small"

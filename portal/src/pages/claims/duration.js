@@ -14,11 +14,15 @@ import valueWithFallback from "../../utils/valueWithFallback";
 const Duration = (props) => {
   const { t } = useTranslation();
 
-  const { claimId } = props.query;
+  const { claim_id } = props.query;
   // TODO remove the `|| {}` fallback
-  const claim = props.claims.byId[claimId] || {};
+  const claim = props.claims.byId[claim_id] || {};
   const { formState, updateFields, removeField } = useFormState(claim);
-  const { avgWeeklyHoursWorked, durationType, hoursOffNeeded } = formState;
+  const {
+    avg_weekly_hours_worked,
+    duration_type,
+    hours_off_needed,
+  } = formState;
   const handleInputChange = useHandleInputChange(updateFields);
 
   // TODO call API once API module is ready
@@ -38,42 +42,45 @@ const Duration = (props) => {
       <InputChoiceGroup
         choices={[
           {
-            checked: durationType === "continuous",
+            checked: duration_type === "continuous",
             label: t("pages.claimsDuration.continuousLabel"),
             hint: t("pages.claimsDuration.continuousHint"),
             value: "continuous",
           },
           {
-            checked: durationType === "intermittent",
+            checked: duration_type === "intermittent",
             hint: t("pages.claimsDuration.intermittentHint"),
             label: t("pages.claimsDuration.intermittentLabel"),
             value: "intermittent",
           },
         ]}
         label={t("pages.claimsDuration.sectionLabel")}
-        name="durationType"
+        name="duration_type"
         onChange={handleInputChange}
         type="radio"
       />
 
       <ConditionalContent
-        fieldNamesClearedWhenHidden={["avgWeeklyHoursWorked", "hoursOffNeeded"]}
+        fieldNamesClearedWhenHidden={[
+          "avg_weekly_hours_worked",
+          "hours_off_needed",
+        ]}
         removeField={removeField}
-        visible={durationType === "intermittent"}
+        visible={duration_type === "intermittent"}
       >
         <InputText
           label={t("pages.claimsDuration.avgWeeklyHoursWorkedLabel")}
           hint={t("pages.claimsDuration.avgWeeklyHoursWorkedHint")}
-          name="avgWeeklyHoursWorked"
-          value={valueWithFallback(avgWeeklyHoursWorked)}
+          name="avg_weekly_hours_worked"
+          value={valueWithFallback(avg_weekly_hours_worked)}
           onChange={handleInputChange}
           width="small"
         />
         <InputText
           label={t("pages.claimsDuration.hoursOffNeededLabel")}
           hint={t("pages.claimsDuration.hoursOffNeededHint")}
-          name="hoursOffNeeded"
-          value={valueWithFallback(hoursOffNeeded)}
+          name="hours_off_needed"
+          value={valueWithFallback(hours_off_needed)}
           onChange={handleInputChange}
           width="small"
         />
@@ -85,7 +92,7 @@ const Duration = (props) => {
 Duration.propTypes = {
   claims: PropTypes.instanceOf(Collection).isRequired,
   query: PropTypes.shape({
-    claimId: PropTypes.string,
+    claim_id: PropTypes.string,
   }),
 };
 

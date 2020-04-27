@@ -11,7 +11,7 @@ usersApi.updateUser = jest.fn(() =>
   Promise.resolve({
     success: true,
     user: new User({
-      firstName: "Mock",
+      first_name: "Mock",
     }),
   })
 );

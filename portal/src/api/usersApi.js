@@ -4,7 +4,7 @@ import User from "../models/User";
 // Additional fields that would be returned by the API
 const apiResponseFields = {
   status: "unverified",
-  userId: "009fa369-291b-403f-a85a-15e938c26f2f",
+  user_id: "009fa369-291b-403f-a85a-15e938c26f2f",
 };
 
 /**

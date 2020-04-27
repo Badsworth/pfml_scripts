@@ -3,11 +3,11 @@ import BaseModel from "./BaseModel";
 class Claim extends BaseModel {
   get defaults() {
     return {
-      claimId: null,
-      createdAt: null,
-      avgWeeklyHoursWorked: null,
-      durationType: null,
-      hoursOffNeeded: null,
+      claim_id: null,
+      created_at: null,
+      avg_weekly_hours_worked: null,
+      duration_type: null,
+      hours_off_needed: null,
     };
   }
 }

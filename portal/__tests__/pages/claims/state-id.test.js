@@ -30,8 +30,8 @@ describe("StateId", () => {
   describe("when user has a state id", () => {
     it("renders id field", () => {
       user = new User({
-        hasStateId: true,
-        stateId: "12345",
+        has_state_id: true,
+        state_id: "12345",
       });
       wrapper = shallow(<StateId user={user} setUser={setUser} />);
 

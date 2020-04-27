@@ -4,16 +4,16 @@ exports[`Ssn renders the form 1`] = `
 <QuestionPage
   formState={
     User {
-      "cognitoUserId": null,
-      "dateOfBirth": null,
-      "firstName": null,
-      "hasStateId": null,
-      "lastName": null,
-      "middleName": null,
-      "ssn": null,
-      "stateId": null,
+      "cognito_user_id": null,
+      "date_of_birth": null,
+      "first_name": null,
+      "has_state_id": null,
+      "last_name": null,
+      "middle_name": null,
+      "ssn_or_itin": null,
+      "state_id": null,
       "status": null,
-      "userId": null,
+      "user_id": null,
     }
   }
   nextPage="/"
@@ -23,7 +23,7 @@ exports[`Ssn renders the form 1`] = `
   <InputText
     hint="Don't have an SSN? Use your Individual Taxpayer Identification Number (ITIN)."
     label="What's your Social Security Number?"
-    name="ssn"
+    name="ssn_or_itin"
     onChange={[Function]}
     value=""
   />

@@ -14,7 +14,7 @@ import valueWithFallback from "../../utils/valueWithFallback";
 export const DateOfBirth = (props) => {
   const { t } = useTranslation();
   const { formState, updateFields } = useFormState(props.user);
-  const { dateOfBirth } = formState;
+  const { date_of_birth } = formState;
   const handleInputChange = useHandleInputChange(updateFields);
 
   const handleSave = useHandleSave(
@@ -30,9 +30,9 @@ export const DateOfBirth = (props) => {
       nextPage={routes.claims.stateId}
     >
       <InputDate
-        name="dateOfBirth"
+        name="date_of_birth"
         label={t("pages.claimsDateOfBirth.sectionLabel")}
-        value={valueWithFallback(dateOfBirth)}
+        value={valueWithFallback(date_of_birth)}
         dayLabel={t("components.form.dateInputDayLabel")}
         monthLabel={t("components.form.dateInputMonthLabel")}
         yearLabel={t("components.form.dateInputYearLabel")}

@@ -18,7 +18,7 @@ import valueWithFallback from "../../utils/valueWithFallback";
 const Ssn = (props) => {
   const { t } = useTranslation();
   const { formState, updateFields } = useFormState(props.user);
-  const { ssn } = formState;
+  const { ssn_or_itin } = formState;
   const handleInputChange = useHandleInputChange(updateFields);
 
   const handleSave = useHandleSave(
@@ -39,8 +39,8 @@ const Ssn = (props) => {
     >
       {/* TODO(CP-296) Use masked field component for SSN styling. */}
       <InputText
-        name="ssn"
-        value={valueWithFallback(ssn)}
+        name="ssn_or_itin"
+        value={valueWithFallback(ssn_or_itin)}
         label={t("pages.claimsSsn.sectionLabel")}
         hint={t("pages.claimsSsn.sectionHint")}
         onChange={handleInputChange}

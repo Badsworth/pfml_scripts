@@ -8,7 +8,7 @@ import { shallow } from "enzyme";
 describe("Duration", () => {
   let claims, wrapper;
   beforeEach(() => {
-    claims = new Collection({ idProperty: "claimId" });
+    claims = new Collection({ idProperty: "claim_id" });
   });
 
   describe("regardless of duration type", () => {
@@ -30,9 +30,9 @@ describe("Duration", () => {
 
   describe("when user indicates that leave is continuous", () => {
     beforeEach(() => {
-      claims.add(new Claim({ claimId: "12345", durationType: "continuous" }));
+      claims.add(new Claim({ claim_id: "12345", duration_type: "continuous" }));
       wrapper = shallow(
-        <Duration claims={claims} query={{ claimId: "12345" }} />
+        <Duration claims={claims} query={{ claim_id: "12345" }} />
       );
     });
 
@@ -43,9 +43,11 @@ describe("Duration", () => {
 
   describe("when user indicates that leave is intermittent", () => {
     beforeEach(() => {
-      claims.add(new Claim({ claimId: "12345", durationType: "intermittent" }));
+      claims.add(
+        new Claim({ claim_id: "12345", duration_type: "intermittent" })
+      );
       wrapper = shallow(
-        <Duration claims={claims} query={{ claimId: "12345" }} />
+        <Duration claims={claims} query={{ claim_id: "12345" }} />
       );
     });
 

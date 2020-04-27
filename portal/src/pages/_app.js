@@ -32,7 +32,7 @@ export const App = ({ Component, pageProps, authState, authData }) => {
   // Initialize to empty collection, but will eventually store the claims
   // state as API calls are made to fetch the user's claims and/or create
   // new claims
-  const [claims] = useState(new Collection({ idProperty: "claimId" }));
+  const [claims] = useState(new Collection({ idProperty: "claim_id" }));
 
   const [ui, setUI] = useState({ isLoadingRoute: false });
 

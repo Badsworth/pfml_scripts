@@ -41,7 +41,7 @@ describe("Ssn", () => {
   it("calls updateFieldFromEvent with user input", () => {
     wrapper = mount(<Ssn user={user} setUser={setUser} />);
     const inputData = {
-      ssn: "555-55-5555",
+      ssn_or_itin: "555-55-5555",
     };
 
     for (const key in inputData) {

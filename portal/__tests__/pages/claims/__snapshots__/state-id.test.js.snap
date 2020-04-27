@@ -4,16 +4,16 @@ exports[`StateId initially renders the page without an id field 1`] = `
 <QuestionPage
   formState={
     User {
-      "cognitoUserId": null,
-      "dateOfBirth": null,
-      "firstName": null,
-      "hasStateId": null,
-      "lastName": null,
-      "middleName": null,
-      "ssn": null,
-      "stateId": null,
+      "cognito_user_id": null,
+      "date_of_birth": null,
+      "first_name": null,
+      "has_state_id": null,
+      "last_name": null,
+      "middle_name": null,
+      "ssn_or_itin": null,
+      "state_id": null,
       "status": null,
-      "userId": null,
+      "user_id": null,
     }
   }
   nextPage="/claims/ssn"
@@ -36,14 +36,14 @@ exports[`StateId initially renders the page without an id field 1`] = `
       ]
     }
     label="Do you have a Massachusetts driver's license or ID card?"
-    name="hasStateId"
+    name="has_state_id"
     onChange={[Function]}
     type="radio"
   />
   <ConditionalContent
     fieldNamesClearedWhenHidden={
       Array [
-        "stateId",
+        "state_id",
       ]
     }
     removeField={[Function]}
@@ -51,7 +51,7 @@ exports[`StateId initially renders the page without an id field 1`] = `
   >
     <InputText
       label="Enter your license or ID number"
-      name="stateId"
+      name="state_id"
       onChange={[Function]}
       value=""
     />

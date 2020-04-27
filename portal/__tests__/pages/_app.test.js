@@ -73,7 +73,7 @@ describe("App", () => {
         claims={
           Collection {
             "byId": Object {},
-            "idProperty": "claimId",
+            "idProperty": "claim_id",
             "ids": Array [],
           }
         }
@@ -82,16 +82,16 @@ describe("App", () => {
         title="Test page"
         user={
           User {
-            "cognitoUserId": null,
-            "dateOfBirth": null,
-            "firstName": null,
-            "hasStateId": null,
-            "lastName": null,
-            "middleName": null,
-            "ssn": null,
-            "stateId": null,
+            "cognito_user_id": null,
+            "date_of_birth": null,
+            "first_name": null,
+            "has_state_id": null,
+            "last_name": null,
+            "middle_name": null,
+            "ssn_or_itin": null,
+            "state_id": null,
             "status": null,
-            "userId": null,
+            "user_id": null,
           }
         }
       />
