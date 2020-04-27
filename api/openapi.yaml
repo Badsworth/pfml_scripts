@@ -235,7 +235,7 @@ paths:
           in: query
           schema:
             type: string
-          description: The type of leave an employee wishes to take. The only valid options for this mock are "fam" and "med" - for family and medical respectively. 
+          description: The type of leave an employee wishes to take. The only valid options for this mock are "fam" and "med" - for family and medical respectively.
           required: true
       responses:
         "200":
@@ -262,7 +262,7 @@ components:
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/User'
+            $ref: '#/components/schemas/UserToCreate'
       required: true
     EmployeeToSearch:
       content:
@@ -329,7 +329,7 @@ components:
         user_id:
           type: string
           example: "009fa369-291b-403f-a85a-15e938c26f2f"
-        active_directory_id:
+        auth_id:
           type: string
           format: uuid
           example: "00000000-291b-403f-a85a-15e938c26f2f"

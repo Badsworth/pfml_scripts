@@ -1,3 +1,6 @@
+from dataclasses import dataclass
+from enum import Enum
+
 import connexion
 from werkzeug.exceptions import NotFound
 
@@ -7,52 +10,83 @@ from massgov.pfml.api.db.models import Status, User
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
 
-# since there is no DB connection, dictionary will hold all users
-users = {}
+
+##########################################
+# Handlers
+##########################################
 
 
 def users_get(user_id):
-    session = db.get_session()
-    u = session.query(User).get(user_id)
-    session.commit()
-    if u is not None:
-        return (
-            {
-                "user_id": u.user_id,
-                "active_directory_id": u.active_directory_id,
-                "status": u.status.status_description,
-                "email_address": u.email_address,
-            },
-            200,
-        )
-    else:
+    with db.session_scope() as db_session:
+        u = db_session.query(User).get(user_id)
+
+    if u is None:
         raise NotFound()
+
+    return user_response(u)
 
 
 def users_post():
-    body = connexion.request.json
-    u = User(
-        user_id=body.get("user_id"),
-        active_directory_id=body.get("active_directory_id"),
-        status=Status(status_description=body.get("status")),
-        email_address=body.get("email_address"),
+    body = UserCreateRequest(**connexion.request.json)
+
+    with db.session_scope() as db_session:
+        status = get_or_make_status(db_session, UserStatusDescription.unverified)
+
+        u = User(active_directory_id=body.auth_id, status=status, email_address=body.email_address)
+
+        logger.info("creating user", extra={"user_id": u.user_id})
+
+        db_session.add(u)
+
+    logger.info("successfully created user")
+    return user_response(u)
+
+
+##########################################
+# Data types and helpers
+##########################################
+
+
+@dataclass
+class UserCreateRequest:
+    auth_id: str
+    email_address: str
+
+
+@dataclass
+class UserResponse:
+    user_id: str
+    auth_id: str
+    status: str
+    email_address: str
+
+
+def user_response(user: User) -> UserResponse:
+    return UserResponse(
+        user_id=user.user_id,
+        auth_id=user.active_directory_id,
+        status=user.status.status_description,
+        email_address=user.email_address,
     )
 
-    session = db.get_session()
 
-    try:
-        logger.info("creating user", extra={"user_id": u.user_id})
-        session.add(u)
-        session.commit()
-        res = {
-            "user_id": u.user_id,
-            "active_directory_id": u.active_directory_id,
-            "status": u.status.status_description,
-            "email_address": u.email_address,
-        }
-        logger.info("successfully created user")
-        return (res, 200)
-    except Exception as e:
-        logger.error(e)
-        session.rollback()
-        raise e
+class UserStatusDescription(Enum):
+    unverified = "unverified"
+    verified = "verified"
+
+
+def get_or_make_status(db_session, status_description: UserStatusDescription) -> Status:
+    status = (
+        db_session.query(Status)
+        .filter(Status.status_description == status_description.value)
+        .one_or_none()
+    )
+
+    if status is None:
+        logger.info(
+            "creating missing status", extra={"status_description": status_description.value}
+        )
+        status = Status(status_description=status_description.value)
+        db_session.add(status)
+
+    return status

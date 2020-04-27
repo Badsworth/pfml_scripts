@@ -26,7 +26,7 @@ def create_user(email, auth_id):
 
     user["user_id"] = str(uuid.uuid4())
     user["auth_id"] = auth_id
-    user["email"] = email
+    user["email_address"] = email
     user["status"] = "unverified"
 
     return user

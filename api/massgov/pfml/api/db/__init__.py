@@ -1,3 +1,5 @@
+from contextlib import contextmanager
+
 from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker
 
@@ -27,6 +29,21 @@ def init():
 
 def get_session():
     return scoped_session(session_factory)
+
+
+@contextmanager
+def session_scope(close: bool = False):
+    """Provide a transactional scope around a series of operations."""
+    session = get_session()
+    try:
+        yield session
+        session.commit()
+    except Exception:
+        session.rollback()
+        raise
+    finally:
+        if close:
+            session.close()
 
 
 def get_uri():

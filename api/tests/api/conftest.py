@@ -53,9 +53,8 @@ def test_employer(monkeypatch):
 @pytest.fixture
 def test_user(monkeypatch):
     user = fake.create_user("johnsmith@example.com", "0000-111-2222")
-    user_id = user.get("user_id")
 
-    monkeypatch.setitem(massgov.pfml.api.users.users, user_id, user)
+    # TODO: insert user into database
 
     return user
 

@@ -1,8 +1,14 @@
+import uuid
+
 from sqlalchemy import Boolean, Column, Date, ForeignKey, Integer, Numeric, Text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 
 from .base import Base
+
+
+def uuid_gen():
+    return uuid.uuid4()
 
 
 class AddressType(Base):
@@ -79,7 +85,7 @@ class Status(Base):
 
 class AuthorizedRepresentative(Base):
     __tablename__ = "authorized_representative"
-    authorized_representative_id = Column(UUID(as_uuid=True), primary_key=True)
+    authorized_representative_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
     first_name = Column(Text)
     last_name = Column(Text)
     employees = relationship("AuthorizedRepEmployee", back_populates="authorized_rep")
@@ -87,14 +93,14 @@ class AuthorizedRepresentative(Base):
 
 class HealthCareProvider(Base):
     __tablename__ = "health_care_provider"
-    health_care_provider_id = Column(UUID(as_uuid=True), primary_key=True)
+    health_care_provider_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
     provider_name = Column(Text)
     addresses = relationship("HealthCareProviderAddress", back_populates="health_care_provider")
 
 
 class Employer(Base):
     __tablename__ = "employer"
-    employer_id = Column(UUID(as_uuid=True), primary_key=True)
+    employer_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
     employer_fein = Column(Integer)
     employer_dba = Column(Text)
     addresses = relationship("EmployerAddress", back_populates="employers", lazy="dynamic")
@@ -102,7 +108,7 @@ class Employer(Base):
 
 class PaymentInformation(Base):
     __tablename__ = "payment_information"
-    payment_info_id = Column(UUID(as_uuid=True), primary_key=True)
+    payment_info_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
     payment_type = Column(Integer, ForeignKey("lk_payment_type.payment_type"))
     bank_routing_nbr = Column(Integer)
     bank_account_nbr = Column(Integer)
@@ -111,7 +117,7 @@ class PaymentInformation(Base):
 
 class Employee(Base):
     __tablename__ = "employee"
-    employee_id = Column(UUID(as_uuid=True), primary_key=True)
+    employee_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
     tax_identifier_id = Column(UUID(as_uuid=True))
     first_name = Column(Text)
     middle_name = Column(Text)
@@ -135,7 +141,7 @@ class Employee(Base):
 
 class Claim(Base):
     __tablename__ = "claim"
-    claim_id = Column(UUID(as_uuid=True), primary_key=True)
+    claim_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
     employer_id = Column(UUID(as_uuid=True))
     authorized_representative_id = Column(UUID(as_uuid=True))
     claim_type = Column(UUID(as_uuid=True))
@@ -157,7 +163,7 @@ class AuthorizedRepEmployee(Base):
 
 class Address(Base):
     __tablename__ = "address"
-    address_id = Column(UUID(as_uuid=True), primary_key=True)
+    address_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
     address_type = Column(Integer, ForeignKey("lk_address_type.address_type"))
     address_line_one = Column(Text)
     address_line_two = Column(Text)
@@ -200,7 +206,7 @@ class HealthCareProviderAddress(Base):
 
 class User(Base):
     __tablename__ = "user"
-    user_id = Column(UUID(as_uuid=True), primary_key=True)
+    user_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
     active_directory_id = Column(Text)
     email_address = Column(Text)
     status_type = Column(Integer, ForeignKey("lk_status.status_type"))
@@ -216,7 +222,7 @@ class UserRole(Base):
 
 class WageAndContribution(Base):
     __tablename__ = "wage_and_contribution_id"
-    wage_and_contribution_id = Column(UUID(as_uuid=True), primary_key=True)
+    wage_and_contribution_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
     account_key = Column(Text)
     filing_period = Column(Date)
     employee_id = Column(UUID(as_uuid=True), ForeignKey("employee.employee_id"))
