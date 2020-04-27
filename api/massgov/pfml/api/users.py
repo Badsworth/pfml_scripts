@@ -21,6 +21,7 @@ def users_get(user_id):
                 "user_id": u.user_id,
                 "active_directory_id": u.active_directory_id,
                 "status": u.status.status_description,
+                "email_address": u.email_address,
             },
             200,
         )
@@ -34,6 +35,7 @@ def users_post():
         user_id=body.get("user_id"),
         active_directory_id=body.get("active_directory_id"),
         status=Status(status_description=body.get("status")),
+        email_address=body.get("email_address"),
     )
 
     session = db.get_session()
@@ -46,6 +48,7 @@ def users_post():
             "user_id": u.user_id,
             "active_directory_id": u.active_directory_id,
             "status": u.status.status_description,
+            "email_address": u.email_address,
         }
         logger.info("successfully created user")
         return (res, 200)

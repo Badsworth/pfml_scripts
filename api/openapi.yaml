@@ -317,11 +317,11 @@ components:
           type: string
           format: uuid
           example: "009fa369-291b-403f-a85a-15e938c26f2f"
-        email:
+        email_address:
           type: string
           format: email
           example: "janedoe@example.com"
-      required: ['email', 'auth_id']
+      required: ['email_address', 'auth_id']
 
     User:
       type: object
@@ -333,6 +333,10 @@ components:
           type: string
           format: uuid
           example: "00000000-291b-403f-a85a-15e938c26f2f"
+        email_address: 
+          type: string
+          format: email
+          example: "janedoe@example.com"
         status: 
           type: string
           enum:

@@ -202,6 +202,7 @@ class User(Base):
     __tablename__ = "user"
     user_id = Column(UUID(as_uuid=True), primary_key=True)
     active_directory_id = Column(Text)
+    email_address = Column(Text)
     status_type = Column(Integer, ForeignKey("lk_status.status_type"))
     status = relationship("Status", backref="users")
 
