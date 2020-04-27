@@ -4,7 +4,6 @@
   "version": "1.0.0",
   "scripts": {
     "test": "jest --ci --coverage",
-    "test:no-coverage": "jest --ci",
     "test:update-snapshots": "jest -u",
     "test:watch": "jest --watch"
   },

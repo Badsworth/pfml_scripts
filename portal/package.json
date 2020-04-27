@@ -12,7 +12,6 @@
     "build:stage": "BUILD_ENV=stage npm run build",
     "start": "next start",
     "test": "jest --ci --coverage",
-    "test:no-coverage": "jest --ci",
     "test:update-snapshots": "jest -u",
     "test:watch": "jest --watch"
   },
