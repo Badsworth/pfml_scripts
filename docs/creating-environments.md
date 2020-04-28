@@ -30,7 +30,7 @@ The easiest way to set up resources in a new environment is using the templates 
 
 1. Create the environment:
 
-    **Portal:**
+  **Portal:**
     - Note: When creating a new environment for the Portal, you'll need to set `cloudfront_origin_path` since nothing will be deployed yet:
 
         ```sh
@@ -41,7 +41,7 @@ The easiest way to set up resources in a new environment is using the templates 
         terraform apply -var='cloudfront_origin_path='
         ```
 
-    **Api:**
+  **Api:**
     - When applying changes, provide an initial application version to deploy. Since this requires a version that is built and pushed to ECR, it's easiest to use the latest version on master.
 
         ```sh
@@ -51,7 +51,7 @@ The easiest way to set up resources in a new environment is using the templates 
         $ terraform apply -var='service_docker_tag=82043ae1e04621251fb9e7896176b38c884f027e'
         ```
 
-    **Other components:**
+  **Other components:**
     ```
     terraform plan
     ```
