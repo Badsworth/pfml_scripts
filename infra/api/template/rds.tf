@@ -46,6 +46,8 @@ resource "aws_db_instance" "default" {
   password = aws_ssm_parameter.db_password.value
   port     = "5432"
 
+  vpc_security_group_ids = [aws_security_group.rds_postgresql.id]
+
   backup_retention_period   = 35
   skip_final_snapshot       = false
   final_snapshot_identifier = "massgov-pfml-${var.environment_name}-final-snapshot"
