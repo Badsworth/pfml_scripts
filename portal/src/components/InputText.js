@@ -1,4 +1,5 @@
 import FormLabel from "./FormLabel";
+import Mask from "./Mask";
 import PropTypes from "prop-types";
 import React from "react";
 import classnames from "classnames";
@@ -9,6 +10,7 @@ import uniqueId from "lodash/uniqueId";
  * supporting UI elements like label, hint text, and error message.
  *
  * [USWDS Reference ↗](https://designsystem.digital.gov/components/form-controls)
+ * Masked field functionality copied from [CMS design system](https://design.cms.gov/components/masked-field)
  */
 function InputText({ type = "text", ...props }) {
   // Generate a unique ID for associating field elements like the
@@ -28,6 +30,25 @@ function InputText({ type = "text", ...props }) {
     }
   );
 
+  const field = (
+    <input
+      className={fieldClasses}
+      id={inputId}
+      inputMode={props.inputMode}
+      maxLength={props.maxLength}
+      name={props.name}
+      onBlur={props.onBlur}
+      onChange={props.onChange}
+      ref={props.inputRef}
+      type={type}
+      value={props.value}
+    />
+  );
+
+  const fieldAndMask = (field) => {
+    return props.mask ? <Mask mask={props.mask}>{field}</Mask> : field;
+  };
+
   return (
     <div className={formGroupClasses}>
       <FormLabel
@@ -39,19 +60,7 @@ function InputText({ type = "text", ...props }) {
       >
         {props.label}
       </FormLabel>
-
-      <input
-        className={fieldClasses}
-        id={inputId}
-        inputMode={props.inputMode}
-        maxLength={props.maxLength}
-        name={props.name}
-        onBlur={props.onBlur}
-        onChange={props.onChange}
-        ref={props.inputRef}
-        type={type}
-        value={props.value}
-      />
+      {fieldAndMask(field)}
     </div>
   );
 }
@@ -85,6 +94,12 @@ InputText.propTypes = {
    * Localized field label
    */
   label: PropTypes.node.isRequired,
+  /**
+   * Apply formatting to the field that's unique to the value
+   * you expect to be entered. Depending on the mask, the
+   * field's appearance and functionality may be affected.
+   */
+  mask: PropTypes.oneOf(["ssn"]),
   /**
    * HTML input `maxlength` attribute
    */

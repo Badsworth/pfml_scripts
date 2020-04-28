@@ -37,8 +37,8 @@ const Ssn = (props) => {
       onSave={handleSave}
       nextPage={nextPage}
     >
-      {/* TODO(CP-296) Use masked field component for SSN styling. */}
       <InputText
+        mask="ssn"
         name="ssn_or_itin"
         value={valueWithFallback(ssn_or_itin)}
         label={t("pages.claimsSsn.sectionLabel")}

@@ -64,3 +64,22 @@ export const Widths = () => (
     />
   </form>
 );
+
+export const Masked = () => {
+  const [value, setFieldValue] = useState("123456789");
+  const handleOnChange = (evt) => {
+    setFieldValue(evt.target.value);
+  };
+
+  return (
+    <form className="usa-form">
+      <InputText
+        label="SSN"
+        name="ssn"
+        mask="ssn"
+        value={value}
+        onChange={handleOnChange}
+      />
+    </form>
+  );
+};

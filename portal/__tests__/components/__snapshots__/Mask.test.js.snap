@@ -1,0 +1,10 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Mask renders mask 1`] = `
+<input
+  inputMode="numeric"
+  name="foo"
+  onBlur={[Function]}
+  type="text"
+/>
+`;
