@@ -27,6 +27,15 @@ resource "aws_security_group" "app" {
     protocol    = "tcp"
   }
 
+  # Outgoing PostgreSQL to RDS.
+  egress {
+    description     = "PostgreSQL to RDS"
+    from_port       = 5432
+    to_port         = 5432
+    protocol        = "tcp"
+    security_groups = [aws_security_group.rds_postgresql.id]
+  }
+
   # Outgoing UDP/TCP to DHCP servers that are in peer VPCs.
   #
   # This is needed since EOTSS provides us with VPCs that have
