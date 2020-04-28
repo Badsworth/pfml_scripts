@@ -3,6 +3,7 @@
 #
 
 import os
+from typing import List
 
 import connexion
 import connexion.mock
@@ -26,11 +27,9 @@ def create_app():
     # Enable mock responses for unimplemented paths.
     resolver = connexion.mock.MockResolver(mock_all=False)
 
-    project_root_dir = os.path.join(os.path.dirname(__file__), "../../../")
-
-    app = connexion.FlaskApp(__name__, specification_dir=project_root_dir)
+    app = connexion.FlaskApp(__name__, specification_dir=get_project_root_dir())
     app.add_api(
-        "openapi.yaml", resolver=resolver, strict_validation=True, validate_responses=True,
+        openapi_filenames()[0], resolver=resolver, strict_validation=True, validate_responses=True,
     )
 
     flask_app = app.app
@@ -41,3 +40,11 @@ def create_app():
     flask_app.wsgi_app = ReverseProxied(flask_app.wsgi_app)
 
     return app
+
+
+def get_project_root_dir() -> str:
+    return os.path.join(os.path.dirname(__file__), "../../../")
+
+
+def openapi_filenames() -> List[str]:
+    return ["openapi.yaml"]

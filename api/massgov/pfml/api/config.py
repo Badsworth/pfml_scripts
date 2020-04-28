@@ -5,6 +5,7 @@ from massgov.pfml.util.strings import split_str
 config = {}
 
 config["environment"] = os.environ.get("ENVIRONMENT")
+config["port"] = os.environ.get("PORT", 1550)
 config["db_url"] = os.environ.get("DB_URL")
 config["db_name"] = os.environ.get("DB_NAME")
 config["db_username"] = os.environ.get("DB_USERNAME")
