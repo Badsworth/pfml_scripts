@@ -20,12 +20,12 @@ For practical instructions on getting set up locally, see the repo [README](../R
 
 Code reviews are intended to help all of us as a team grow as engineers and improve the quality of our results. These guidelines are meant to reinforce those two goals.
 
-### For requesters: 
+### For requesters:
 - Include the JIRA ticket number in the title if it exists. For example: `PFML-123: Implement API endpoint`
 
-- If it’s a work-in-progress or you are looking for specific feedback on things, tag it with [WIP] and state what you are looking for in the description.
+- If it’s a work-in-progress or you are looking for specific feedback on things, create a [Draft Pull Request](https://help.github.com/en/github/collaborating-with-issues-and-pull-requests/about-pull-requests#draft-pull-requests) and state what you are looking for in the description.
 
-Your PR should be small enough that a reviewer can reasonably respond within 1 business day. For larger changes, break them down into a series of PRs. If refactors are included in your changes, try to split them out as recommended below. 
+Your PR should be small enough that a reviewer can reasonably respond within 1 business day. For larger changes, break them down into a series of PRs. If refactors are included in your changes, try to split them out as recommended below.
 
 As a PR writer, you should consider your description and comments as documentation; current and future team members will refer to it to understand your design decisions. Include relevant context and business requirements, and add preemptive comments (in code or PR) for sections of code that may be confusing or worth debate.
 
@@ -42,7 +42,18 @@ Remember to highlight things that you like and appreciate while reading through 
 Don't be afraid to comment with a question, ask for clarification, or provide a suggestion if you don’t understand what is going on at first glance — or if you think an approach or decision can be improved. Code reviews give us a chance to learn from one another, and to reflect, iterate on, and document why certain decisions are made.
 
 Once you're ready to approve or request changes, err on the side of trust. Send a vote of approval if the PR looks ready except for small minor changes, and trust that the recipient will address your comments before merging by replying via comment or code to any asks. Use request changes sparingly unless there's a blocking issue or major refactors that should be done.
-.
+
+### Auto assignment
+
+Code review assignment can be setup to occur automatically when a Pull Request is created, through a combination of the [`CODEOWNERS` file](../.github/CODEOWNERS) and [GitHub teams](https://help.github.com/en/github/setting-up-and-managing-organizations-and-teams/organizing-members-into-teams).
+
+Teams exist for the API and Portal engineers:
+
+- API engineers: [`@pfml-api`](https://github.com/orgs/EOLWD/teams/pfml-api)
+- Portal engineers: [`@pfml-portal`](https://github.com/orgs/EOLWD/teams/pfml-portal)
+
+The Portal engineering team [is configured](https://github.com/orgs/EOLWD/teams/pfml-portal/edit/review_assignment) so that PR reviews are automatically assigned to a member of the team via a round robin algorithm, with the goal of equally distributing PR reviews across the team.
+
 ## Merge Commit Messages
 
 When merging a PR, use the PR description as a starting point. Copy it into the merge commit body and clean it up as desired.
