@@ -167,6 +167,14 @@ db-downgrade: ## Rollback last migration in db
 db-downgrade-all: ## Rollback all migrations
 	$(PY_RUN_CMD) alembic -c ./massgov/pfml/db/alembic.ini downgrade base
 
+db-migrate-create: check-migrate-msg ## Create a new migration based on model changes
+	$(PY_RUN_CMD) alembic -c ./massgov/pfml/db/alembic.ini revision --autogenerate -m "$(MIGRATE_MSG)"
+
+check-migrate-msg:
+ifndef MIGRATE_MSG
+	$(error MIGRATE_MSG is undefined)
+endif
+
 test: ## Run tests
 test: db-upgrade
 	$(PY_RUN_CMD) coverage run --branch --source=massgov -m pytest

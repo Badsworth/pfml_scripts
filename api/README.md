@@ -2,74 +2,143 @@
 
 This is the API for the Massachusetts Paid Family and Medical Leave program.
 
-## Setup
+* [Docker Developer Setup](#docker-developer-setup)
+* [Running the Application (Docker)](#running-the-application-docker)
+  * [Common commands](#common-commands)
+  * [Running migrations](#running-migrations)
+  * [Creating new migrations](#creating-new-migrations)
+* [Native Developer Setup](#native-developer-setup)
+* [Try it out](#try-it-out)
+* [Tests](#tests)
+* [Environment Configuration](#environment-configuration)
+* [Directory Structure](#directory-structure)
 
-### Docker
+## Docker Developer Setup
 
-Docker can be used for a local development environment. It sets up Python,
-Poetry and installs development dependencies automatically.
+Docker is heavily recommended for a local development environment. It sets up Python,
+Poetry and installs development dependencies automatically, and can create a full environment
+including the API application and a backing database.
 
-#### Configuration
+Follow instructions here to [install Docker](https://docs.docker.com/get-docker/) for your OS.
 
-Environment variables for the app are under `services.mass-pfml-api.environment`
-in the `docker-compose.yml` file.
+In a docker-centric environment, we support a couple different developer workflows:
 
-If you want to run various Python and development `make` commands (linting,
-tests, etc.) from the host, but have them run in the Docker environment, you
-should set `PY_RUN_CMD_OPT` to either `DOCKER_RUN` or `DOCKER_EXEC`, see the
-option descriptions in the `Makefile`.
+|Start command from:|Container Lifetime|PY\_RUN\_CMD\_OPT|
+|---|---|---|
+|your host 🙋‍♀️|Long-running|DOCKER_EXEC|
+|inside docker 🐳|Long-running|N/A|
+|your host 🙋‍♀️|Single-use|DOCKER_RUN|
+|Mixed|Mixed|Mixed|
 
-If you intend to login to the Docker environment and run development `make`
-commands, you can leave `PY_RUN_CMD_OPT` on it's default of `POETRY`.
+<details><summary>Send commands from your host to a long-running container</summary>
+<p>
+If you want to re-use a docker application for various Python and development
+ <code>make</code> commands (e.g. linting and testing), you should set
+ <code>PY_RUN_CMD_OPT</code> to <code>DOCKER_EXEC</code>.
 
-If you will mix and match running things, well, you'll have to juggle
-`PY_RUN_CMD_OPT` yourself, e.g., `PY_RUN_CMD_OPT=POETRY make lint`. Might in the
-future add some auto-detection of if we are running inside the container or not.
-
-#### Run
-
-Start the API
 ```sh
-make start
+$ export PY_RUN_CMD_OPT=DOCKER_EXEC
+$ make test
+```
+</p>
+</details>
+
+<details><summary>Log into a docker container to run commands</summary>
+<p>If you intend to start a Docker environment and log into it like a remote server,
+ you can leave <code>PY_RUN_CMD_OPT</code> alone and use <code>make login</code> instead.
+
+```sh
+$ make login
+> make test
+```
+</p>
+</details>
+
+<details><summary>Start a new docker container for every command</summary>
+<p>If you plan to run commands through temporary, single-use Docker containers, you
+ should set your <code>PY_RUN_CMD_OPT</code> to <code>DOCKER_RUN</code>:
+
+```sh
+$ export PY_RUN_CMD_OPT=DOCKER_RUN
+$ make test
 ```
 
-Login to the container, where you can run development tools
-```sh
-make login
+Note that this will require more manual Docker memory cleanup.
+</p>
+</details>
+
+<details><summary>Mix and Match</summary>
+ <p>If you plan to mix and match things, you'll have to juggle <code>PY_RUN_CMD_OPT</code> yourself.
+
+For example:
+
+- running static lints outside of Docker with the default: <code>make lint</code>
+- running tests inside of Docker after a <code>make start</code>: <code>PY_RUN_CMD_OPT=DOCKER_EXEC make test</code>
+
+In the future, we may add some auto-detection to check if we are running inside the 
+container or not.
+</p>
+</details>
+
+## Running the Application (Docker)
+
+#### Common commands
+
+```
+make start  # Start the API
+make logs   # View API logs
+make login  # Login to the container, where you can run development tools
+make build  # Rebuild container and pick up new environment variables
+make stop   # Stop all running containers
 ```
 
-Rebuild after code or dependency change
-```sh
-make build
+#### Running migrations
+
+When you're first setting up your environment, ensure that migrations are run against your db so it has all the required tables.
+
+```
+$ make db-upgrade       # Apply pending migrations to db
+$ make db-downgrade     # Rollback last migration to db
+$ make db-downgrade-all # Rollback all migrations
 ```
 
-Stop running docker containers
-```sh
-make stop
+#### Creating new migrations
+
+If you've changed a python object model, auto-generate a migration file for the database and run it:
+
+```
+$ make db-migrate-create MIGRATE_MSG="<brief description of change>"
+$ make db-upgrade
 ```
 
-### Native
+## Native Developer Setup
 
-To setup a development environment outside of Docker requires installing a few
-things.
+To setup a development environment outside of Docker, 
+you'll need to install a few things.
 
 #### Dependencies
 
 - Install at least Python 3.8.
   [pyenv](https://github.com/pyenv/pyenv#installation) is one popular option for
-  installing Python.
+  installing Python, or [asdf](https://asdf-vm.com/).
 - After installing and activating the right version of Python, install
   [poetry](https://python-poetry.org/docs/#installation).
 - Then run `make deps` to install Python dependencies and development tooling.
 
-You should now be set up to run things natively.
+You should now be set up to run developer tooling natively, like linting. To run 
+the application, set up a PostgreSQL database and see `docker-compose.yml` for 
+environment variables needed.
 
 ## Try it out
 
-A UI is available at http://localhost:1550/v1/ui/
+Once your application is running, a UI is available at:
 
-The spec is available at http://localhost:1550/v1/openapi.json (JSON) or
-http://localhost:1550/v1/openapi.yaml (YAML).
+- [http://localhost:1550/v1/ui/](http://localhost:1550/v1/ui/)
+
+The spec is available at:
+
+- [http://localhost:1550/v1/openapi.json](http://localhost:1550/v1/openapi.json) (JSON) or
+- [http://localhost:1550/v1/openapi.yaml](http://localhost:1550/v1/openapi.yaml) (YAML)
 
 ## Tests
 
@@ -104,31 +173,19 @@ automatically run the tests when files change with:
 make test-watch
 ```
 
-### Running Migrations
+## Environment Configuration
 
-Pre-requisite: Database needs to be up and running
-```
-$ make run
-```
+Environment variables for the local app in the `docker-compose.yml` file.
 
-Auto-generate migration files from model changes:
 ```
-$ docker-compose run --no-deps mass-pfml-api sh -c 'poetry run alembic -c ./massgov/pfml/db/alembic.ini revision --autogenerate -m "<brief description of change>"'
-```
-
-Apply pending migrations to db
-```
-$ make db-upgrade
-```
-
-Rollback last migration to db:
-```
-$ make db-downgrade
-```
-
-Rollback all migrations to db:
-```
-$ make db-downgrade-all
+services:
+  ...
+  mass-pfml-api:
+    ...
+    environment:
+    - ENVIRONMENT=local
+    - DB_URL=mass-pfml-db
+    - ...
 ```
 
 ## Directory Structure
@@ -137,8 +194,11 @@ $ make db-downgrade-all
 .
 ├── massgov
 │   └── pfml
-│       └── api         Application code
-├── mock                Mock data generators
+│       └── api                 Application code
+│       └── db                  Migrations config
+│       └── data-integrations
+│           └── */lambda        Data ingestion lambda for an agency
+│           └── */mock          Mock data generator for an agency
 ├── tests
 │   └── api             Application tests
 ├── Dockerfile          Multi-stage Docker build file for project
