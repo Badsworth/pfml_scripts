@@ -1,16 +1,16 @@
 # Terraform configuration for API Gateway --> Swagger UI.
 #
 # Usually this would be captured under the /api/ proxy integration.
-# However, connexion sets up the swagger UI under `/ui/` with a trailing slash,
+# However, connexion sets up the swagger UI under `/docs/` with a trailing slash,
 # and API Gateway implicitly removes trailing slashes from {proxy+} definitions.
 #
-# Instead, set up a resource for /api/ui/ and /api/ui/{proxy+}. The proxy resource
+# Instead, set up a resource for /api/docs/ and /api/docs/{proxy+}. The proxy resource
 # provides the Swagger UI with the required CSS and JS bundles.
 #
 resource "aws_api_gateway_resource" "ui" {
   rest_api_id = aws_api_gateway_rest_api.pfml.id
   parent_id   = aws_api_gateway_resource.api.id
-  path_part   = "ui"
+  path_part   = "docs"
 }
 
 resource "aws_api_gateway_resource" "ui_proxy" {
@@ -45,7 +45,7 @@ resource "aws_api_gateway_integration" "integration_ui" {
   type                    = "HTTP_PROXY"
   connection_type         = "VPC_LINK"
   connection_id           = data.aws_api_gateway_vpc_link.vpc_link.id
-  uri                     = "http://${data.aws_lb.nlb.dns_name}:${var.nlb_port}/v1/ui/"
+  uri                     = "http://${data.aws_lb.nlb.dns_name}:${var.nlb_port}/v1/docs/"
 
   request_parameters = {
     "integration.request.header.X-Forwarded-Path" = var.forwarded_path
@@ -60,7 +60,7 @@ resource "aws_api_gateway_integration" "integration_ui_proxy" {
   type                    = "HTTP_PROXY"
   connection_type         = "VPC_LINK"
   connection_id           = data.aws_api_gateway_vpc_link.vpc_link.id
-  uri                     = "http://${data.aws_lb.nlb.dns_name}:${var.nlb_port}/v1/ui/{proxy}"
+  uri                     = "http://${data.aws_lb.nlb.dns_name}:${var.nlb_port}/v1/docs/{proxy}"
 
   request_parameters = {
     "integration.request.path.proxy"              = "method.request.path.proxy"

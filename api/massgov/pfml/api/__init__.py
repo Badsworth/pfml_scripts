@@ -27,7 +27,8 @@ def create_app():
     # Enable mock responses for unimplemented paths.
     resolver = connexion.mock.MockResolver(mock_all=False)
 
-    app = connexion.FlaskApp(__name__, specification_dir=get_project_root_dir())
+    options = {"swagger_url": "/docs"}
+    app = connexion.FlaskApp(__name__, specification_dir=get_project_root_dir(), options=options)
     app.add_api(
         openapi_filenames()[0], resolver=resolver, strict_validation=True, validate_responses=True,
     )
