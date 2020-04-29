@@ -1,4 +1,4 @@
-# Build and export the Paid Leave website
+# Test building and exporting the Paid Leave website as part of continuous integration.
 #
 name: Portal Website Build Check
 

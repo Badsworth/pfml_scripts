@@ -1,4 +1,4 @@
-# Run tests and linting for the Paid Leave website
+# Run tests, linting, and storybook for the Paid Leave website as part of continuous integration.
 #
   name: Portal Website Testing
 
