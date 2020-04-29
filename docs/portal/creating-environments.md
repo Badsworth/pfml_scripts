@@ -32,10 +32,11 @@ and environment variables:
 env:
   # ...
   # map branch name to environment name
-  releases: prod
   refs/heads/master: test
   refs/heads/deploy/<<environment_name>>: <<environment_name>>
 ```
+
+Also update the [deploy](./deploy.md) doc with details about deploying to the new environment.
 
 ## Setup the SES sender email address
 

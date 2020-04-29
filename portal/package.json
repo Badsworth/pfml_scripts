@@ -10,6 +10,7 @@
     "build": "next build && next export",
     "build:test": "BUILD_ENV=test npm run build",
     "build:stage": "BUILD_ENV=stage npm run build",
+    "build:prod": "BUILD_ENV=prod npm run build",
     "start": "next start",
     "test": "jest --ci --coverage",
     "test:update-snapshots": "jest -u",
