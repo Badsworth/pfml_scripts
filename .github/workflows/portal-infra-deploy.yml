@@ -4,6 +4,8 @@ on:
   push:
     branches:
       - master
+      - deploy/stage
+      - deploy/prod
     paths:
       - infra/portal/template/**
 
