@@ -115,6 +115,8 @@ const pages = {
     },
   },
   index: {
+    activeClaimsHeading: "Active claims",
+    claimCardHeading: "Claim {{number}}",
     claimChecklistContact: "Contact information",
     claimChecklistDateOfLeave:
       "When you are taking leave or planning to take leave",
@@ -123,8 +125,11 @@ const pages = {
       "To submit your claim, you will need to provide the following:",
     claimChecklistReasonForLeave: "Why you are taking leave",
     claimChecklistWhereToSendBenefits: "Where to send your benefits",
-    createClaimButtonText: "Create a claim",
-    pageHeader: "Get started",
+    createClaimButtonText: "Start a new claim",
+    newClaimHeading: "Start a new claim",
+    resumeClaimButton: "Finish your claim",
+    tagInProgress: "In Progress",
+    title: "Dashboard",
   },
 };
 

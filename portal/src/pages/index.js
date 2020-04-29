@@ -1,27 +1,39 @@
 import ButtonLink from "../components/ButtonLink";
+import Collection from "../models/Collection";
+import DashboardClaimCard from "../components/DashboardClaimCard";
 import Heading from "../components/Heading";
+import PropTypes from "prop-types";
 import React from "react";
 import Title from "../components/Title";
 import routes from "../routes";
 import { useTranslation } from "../locales/i18n";
 
 /**
- * The page a user is redirected to by default after
- * successfully authenticating.
- * @returns {React.Component}
+ * "Dashboard" - Where a user is redirected to after successfully authenticating.
  */
-const Index = () => {
+const Index = ({ claims }) => {
   const { t } = useTranslation();
-
-  // TODO As part of implementing "In progress claims" (see https://lwd.atlassian.net/browse/CP-251)
-  // we'll need to create a new claim when the user clicks "Create a New Claim"
-  // (eventually this will be an API call to POSTS /v1/claims or /v1/applications once that endpoint is ready)
-  // and add the claim to the claims state with `props.claims.add(claim)`
 
   return (
     <React.Fragment>
-      <Title>{t("pages.index.pageHeader")}</Title>
+      <Title>{t("pages.index.title")}</Title>
 
+      {claims.ids.length ? (
+        <section className="border-bottom border-base-lighter padding-bottom-2 margin-bottom-5">
+          <Heading level="2">{t("pages.index.activeClaimsHeading")}</Heading>
+          {claims.ids.map((claim_id, index) => (
+            <DashboardClaimCard
+              key={claim_id}
+              claim={claims.byId[claim_id]}
+              number={index + 1}
+            />
+          ))}
+        </section>
+      ) : null}
+
+      <Heading className="margin-top-3" level="2">
+        {t("pages.index.newClaimHeading")}
+      </Heading>
       <Heading level="3">{t("pages.index.claimChecklistHeader")}</Heading>
 
       <ul className="usa-list">
@@ -32,11 +44,18 @@ const Index = () => {
         <li>{t("pages.index.claimChecklistWhereToSendBenefits")}</li>
       </ul>
 
-      <ButtonLink href={routes.claims.name}>
+      <ButtonLink
+        href={routes.claims.name}
+        variation={claims.ids.length ? "outline" : undefined}
+      >
         {t("pages.index.createClaimButtonText")}
       </ButtonLink>
     </React.Fragment>
   );
+};
+
+Index.propTypes = {
+  claims: PropTypes.instanceOf(Collection),
 };
 
 export default Index;

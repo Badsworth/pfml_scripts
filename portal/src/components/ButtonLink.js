@@ -9,6 +9,7 @@ import classnames from "classnames";
 const ButtonLink = (props) => {
   const classes = classnames(
     "usa-button",
+    props.className,
     props.variation ? `usa-button--${props.variation}` : ""
   );
 
@@ -24,6 +25,11 @@ ButtonLink.propTypes = {
    * Button text.
    */
   children: PropTypes.node.isRequired,
+  /**
+   * Additional classes to apply to the HTML element. Useful for adding
+   * utility classes to control spacing.
+   */
+  className: PropTypes.string,
   /**
    * Href for link.
    */

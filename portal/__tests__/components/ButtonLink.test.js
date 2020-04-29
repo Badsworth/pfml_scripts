@@ -38,8 +38,17 @@ describe("ButtonLink", () => {
 
   it("accepts a variation property", () => {
     const { wrapper } = render({ variation: "outline" });
-
     const anchor = wrapper.find("a");
+
     expect(anchor.hasClass("usa-button--outline")).toBe(true);
+  });
+
+  describe("when className is set", () => {
+    it("adds the className to the link", () => {
+      const { wrapper } = render({ className: "custom-class" });
+      const anchor = wrapper.find("a");
+
+      expect(anchor.hasClass("custom-class")).toBe(true);
+    });
   });
 });
