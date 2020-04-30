@@ -4,7 +4,8 @@ import React from "react";
 import classnames from "classnames";
 
 /**
- * Link styled as button.
+ * Next.js [`Link`](https://nextjs.org/docs/api-reference/next/link)
+ * styled as a button. Provides client-side transitions between routes.
  */
 const ButtonLink = (props) => {
   const classes = classnames(

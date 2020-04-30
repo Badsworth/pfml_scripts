@@ -6,8 +6,8 @@ describe("<BackButton>", () => {
   it("renders the back button", () => {
     const wrapper = shallow(<BackButton />);
 
-    expect(wrapper.type()).toBe("button");
-    expect(wrapper.text()).toBe("Back");
+    expect(wrapper.name()).toBe("Button");
+    expect(wrapper.dive().text()).toBe("Back");
   });
 
   describe("when clicked", () => {

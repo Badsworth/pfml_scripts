@@ -20,7 +20,7 @@ describe("AuthNav", () => {
     it("doesn't render a log out link", () => {
       const wrapper = shallow(<AuthNav />);
 
-      expect(wrapper.exists("button")).toBe(false);
+      expect(wrapper.exists("Button")).toBe(false);
     });
   });
 
@@ -44,7 +44,16 @@ describe("AuthNav", () => {
     it("renders a log out link", () => {
       const wrapper = shallow(<AuthNav user={user} />);
 
-      expect(wrapper.find("button").text()).toEqual("Log out");
+      expect(wrapper.find("Button")).toMatchInlineSnapshot(`
+        <Button
+          className="width-auto"
+          inversed={true}
+          onClick={[Function]}
+          variation="unstyled"
+        >
+          Log out
+        </Button>
+      `);
     });
 
     describe("when log out button is clicked", () => {
@@ -58,7 +67,7 @@ describe("AuthNav", () => {
 
       it("logs the user out", () => {
         const wrapper = shallow(<AuthNav user={user} />);
-        wrapper.find("button").simulate("click");
+        wrapper.find("Button").simulate("click");
 
         expect(Auth.signOut.mock.calls.length).toBe(1);
       });

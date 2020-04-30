@@ -41,14 +41,14 @@ exports[`CustomConfirmSignUp renders the page 1`] = `
           onChange={[Function]}
           smallLabel={true}
         />
-        <button
-          className="usa-button usa-button--unstyled font-sans-xs text-underline margin-top-2"
+        <Button
+          className="margin-top-2"
           name="resendCode"
           onClick={[Function]}
-          type="button"
+          variation="unstyled"
         >
           Resend code
-        </button>
+        </Button>
       </div>
       <div
         className="Section__sectionFooter___1T54C"
@@ -66,24 +66,13 @@ exports[`CustomConfirmSignUp renders the page 1`] = `
             }
           }
         >
-          <button
-            className="Button__button___vS7Mv"
+          <Button
             name="submit"
             onClick={[Function]}
-            style={
-              Object {
-                "backgroundColor": "#14558f",
-                "color": "#fff",
-                "fontSize": "1.21rem",
-                "fontWeight": "bold",
-                "padding": "0.75rem 1.25rem",
-                "textTransform": "none",
-              }
-            }
             type="submit"
           >
             Submit
-          </button>
+          </Button>
         </div>
         <div
           className="Section__sectionFooterSecondaryContent___Nj41Q"
@@ -95,14 +84,14 @@ exports[`CustomConfirmSignUp renders the page 1`] = `
             }
           }
         >
-          <button
-            className="usa-button usa-button--unstyled font-sans-xs text-bold text-underline"
+          <Button
+            className="text-bold"
             name="backToSignIn"
             onClick={[Function]}
-            type="button"
+            variation="unstyled"
           >
             Back to log in
-          </button>
+          </Button>
         </div>
       </div>
     </form>

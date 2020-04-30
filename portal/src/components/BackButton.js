@@ -1,3 +1,4 @@
+import Button from "./Button";
 import React from "react";
 import { useTranslation } from "../locales/i18n";
 
@@ -14,10 +15,10 @@ function BackButton() {
   };
 
   return (
-    <button
-      className="usa-button usa-button--unstyled margin-bottom-5"
+    <Button
+      className="margin-bottom-5"
       onClick={handleClick}
-      type="button"
+      variation="unstyled"
     >
       <svg
         className="margin-right-05"
@@ -32,7 +33,7 @@ function BackButton() {
         />
       </svg>
       {label}
-    </button>
+    </Button>
   );
 }
 

@@ -73,8 +73,8 @@ describe("CustomSignUp", () => {
     // mocks AuthPiece implementation: https://github.com/aws-amplify/amplify-js/blob/4bd5c7ebef0ad223d4c05a452e696242927a750f/packages/aws-amplify-react/src/Auth/AuthPiece.tsx#L180
     const onStateChange = jest.fn();
     const wrapper = render({ onStateChange });
-    // "Sign in" link
-    wrapper.find(".usa-button--unstyled").simulate("click");
+
+    wrapper.find("Button[name='signIn']").simulate("click");
 
     expect(onStateChange).toHaveBeenCalledWith("signIn", undefined);
   });

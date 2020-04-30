@@ -38,6 +38,7 @@ const theme = {
     color: "#fff",
     fontSize: tokens["body-font-size"],
     fontWeight: "bold",
+    lineHeight: "1",
     padding: "0.75rem 1.25rem",
     textTransform: "none",
   },

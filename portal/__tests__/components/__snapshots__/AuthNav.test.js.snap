@@ -36,13 +36,14 @@ exports[`AuthNav when a user is authenticated renders the logged-in state 1`] = 
         >
           Foo Bar
         </span>
-        <button
-          className="usa-button usa-button--outline usa-button--inverse usa-button--unstyled width-auto"
+        <Button
+          className="width-auto"
+          inversed={true}
           onClick={[Function]}
-          type="button"
+          variation="unstyled"
         >
           Log out
-        </button>
+        </Button>
       </div>
     </div>
   </div>

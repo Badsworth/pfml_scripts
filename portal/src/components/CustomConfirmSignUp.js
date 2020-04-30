@@ -1,4 +1,5 @@
 import * as AmplifyUI from "@aws-amplify/ui";
+import Button from "./Button";
 import { ConfirmSignUp } from "aws-amplify-react";
 import InputText from "./InputText";
 import React from "react";
@@ -43,14 +44,14 @@ class CustomConfirmSignUp extends ConfirmSignUp {
                 onChange={this.handleInputChange}
                 smallLabel
               />
-              <button
+              <Button
                 name="resendCode"
-                className="usa-button usa-button--unstyled font-sans-xs text-underline margin-top-2"
+                className="margin-top-2"
                 onClick={this.handleResend}
-                type="button"
+                variation="unstyled"
               >
                 {t("components.confirmSignUp.resendCodeLink")}
-              </button>
+              </Button>
             </div>
             <div
               className={AmplifyUI.sectionFooter}
@@ -60,28 +61,26 @@ class CustomConfirmSignUp extends ConfirmSignUp {
                 className={AmplifyUI.sectionFooterPrimaryContent}
                 style={theme.sectionFooterPrimaryContent}
               >
-                <button
+                <Button
                   name="submit"
-                  type="submit"
-                  className={AmplifyUI.button}
-                  style={theme.button}
                   onClick={this.handleConfirm}
+                  type="submit"
                 >
                   {t("components.confirmSignUp.confirmButton")}
-                </button>
+                </Button>
               </div>
               <div
                 className={AmplifyUI.sectionFooterSecondaryContent}
                 style={theme.sectionFooterSecondaryContent}
               >
-                <button
+                <Button
+                  className="text-bold"
                   name="backToSignIn"
-                  className="usa-button usa-button--unstyled font-sans-xs text-bold text-underline"
                   onClick={() => this.changeState("signIn")}
-                  type="button"
+                  variation="unstyled"
                 >
                   {t("components.confirmSignUp.signInFooterLink")}
-                </button>
+                </Button>
               </div>
             </div>
           </form>

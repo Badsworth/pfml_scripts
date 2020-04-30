@@ -1,4 +1,5 @@
 import { Auth } from "aws-amplify";
+import Button from "./Button";
 import PropTypes from "prop-types";
 import React from "react";
 import { useTranslation } from "../locales/i18n";
@@ -25,13 +26,14 @@ const AuthNav = (props) => {
                 <span className="display-inline-block margin-right-1">
                   {user.username}
                 </span>
-                <button
-                  className="usa-button usa-button--outline usa-button--inverse usa-button--unstyled width-auto"
+                <Button
+                  className="width-auto"
+                  inversed
                   onClick={handleSignOut}
-                  type="button"
+                  variation="unstyled"
                 >
                   {t("components.authNav.logOutButtonText")}
-                </button>
+                </Button>
               </React.Fragment>
             ) : null}
           </div>

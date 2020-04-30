@@ -1,4 +1,5 @@
 import * as AmplifyUI from "@aws-amplify/ui";
+import Button from "./Button";
 import InputText from "./InputText";
 import React from "react";
 import { SignUp } from "aws-amplify-react";
@@ -72,27 +73,23 @@ class CustomSignUp extends SignUp {
                 className={AmplifyUI.sectionFooterPrimaryContent}
                 style={theme.sectionFooterPrimaryContent}
               >
-                <button
-                  type="submit"
-                  className={AmplifyUI.button}
-                  style={theme.button}
-                  onClick={this.handleSignUp}
-                >
+                <Button onClick={this.handleSignUp} type="submit">
                   {t("components.signUp.createAccountButton")}
-                </button>
+                </Button>
               </div>
               <div
                 className={AmplifyUI.sectionFooterSecondaryContent}
                 style={theme.sectionFooterSecondaryContent}
               >
                 {t("components.signUp.haveAnAccountFooterLabel")}&nbsp;
-                <button
-                  className="usa-button usa-button--unstyled font-sans-xs text-bold text-underline width-auto"
+                <Button
+                  name="signIn"
+                  className="text-bold width-auto"
                   onClick={() => this.changeState("signIn")}
-                  type="button"
+                  variation="unstyled"
                 >
                   {t("components.signUp.signInFooterLink")}
-                </button>
+                </Button>
               </div>
             </div>
           </form>

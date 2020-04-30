@@ -68,23 +68,12 @@ exports[`CustomSignUp when signUpConfig prop has signupFields defined and hideAl
             }
           }
         >
-          <button
-            className="Button__button___vS7Mv"
+          <Button
             onClick={[Function]}
-            style={
-              Object {
-                "backgroundColor": "#14558f",
-                "color": "#fff",
-                "fontSize": "1.21rem",
-                "fontWeight": "bold",
-                "padding": "0.75rem 1.25rem",
-                "textTransform": "none",
-              }
-            }
             type="submit"
           >
             Create Account
-          </button>
+          </Button>
         </div>
         <div
           className="Section__sectionFooterSecondaryContent___Nj41Q"
@@ -98,13 +87,14 @@ exports[`CustomSignUp when signUpConfig prop has signupFields defined and hideAl
         >
           Have an account?
            
-          <button
-            className="usa-button usa-button--unstyled font-sans-xs text-bold text-underline width-auto"
+          <Button
+            className="text-bold width-auto"
+            name="signIn"
             onClick={[Function]}
-            type="button"
+            variation="unstyled"
           >
             Sign in
-          </button>
+          </Button>
         </div>
       </div>
     </form>
