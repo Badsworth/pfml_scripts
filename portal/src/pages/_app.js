@@ -42,10 +42,12 @@ export const App = ({ Component, pageProps, authState, authData }) => {
 
   /**
    * Event handler for when a page route transition has ended
-   * (either successfully or unsuccessfully)
+   * (either successfully or unsuccessfully).
+   * Scrolls the window to the top of the document upon route changes.
    */
   const handleRouteChangeEnd = () => {
     setUI({ ...ui, isLoadingRoute: false });
+    window.scrollTo(0, 0);
   };
 
   /**
@@ -56,8 +58,8 @@ export const App = ({ Component, pageProps, authState, authData }) => {
   };
 
   /**
-   * Event handler for when the authn state changes
-   * TODO: we should move state management to Redux
+   * Event handler for when the authn state changes.
+   * Scrolls the window to the top of the document.
    */
   const handleAuthStateChange = (authState, authData) => {
     const signedIn = authState === "signedIn";
@@ -66,6 +68,7 @@ export const App = ({ Component, pageProps, authState, authData }) => {
     } else {
       setAuthUser();
     }
+    window.scrollTo(0, 0);
   };
 
   useEffect(() => {

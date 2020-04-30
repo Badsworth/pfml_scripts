@@ -24,6 +24,9 @@ function render(customProps = {}, mountComponent = false) {
 }
 
 describe("App", () => {
+  const scrollToSpy = jest.fn();
+  global.scrollTo = scrollToSpy;
+
   describe("when a user IS authenticated", () => {
     it("renders the site header with the authenticated user's info", () => {
       // We need to mount the component so that useEffect is called
@@ -179,6 +182,35 @@ describe("App", () => {
       // Spinner hidden when route change ended
       expect(wrapper.find("Spinner").exists()).toBe(false);
       expect(wrapper.find("Component").exists()).toBe(true);
+    });
+
+    it("scrolls to the top of the window after a route change", async () => {
+      expect.assertions(1);
+
+      // Mount the component so that useEffect is called.
+      const mountComponent = true;
+      const { wrapper } = render({}, mountComponent);
+
+      const routeChangeStart = mockRouterEvents.find(
+        (evt) => evt.name === "routeChangeStart"
+      );
+      const routeChangeComplete = mockRouterEvents.find(
+        (evt) => evt.name === "routeChangeComplete"
+      );
+
+      await act(async () => {
+        // Wait for repaint
+        await new Promise((resolve) => setTimeout(resolve, 0));
+
+        // Trigger routeChangeStart
+        routeChangeStart.callback();
+        // Trigger routeChangeComplete
+        routeChangeComplete.callback();
+
+        wrapper.update();
+      });
+
+      expect(scrollToSpy).toHaveBeenCalled();
     });
   });
 });

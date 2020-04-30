@@ -3,6 +3,7 @@
  * @see https://jestjs.io/docs/en/cli
  */
 module.exports = {
+  clearMocks: true,
   coverageReporters: ["text"],
   moduleNameMapper: {
     "\\.(css|scss)$": "<rootDir>/__mocks__/styleMock.js",

@@ -1,4 +1,5 @@
 import AuthNav from "./AuthNav";
+import Link from "next/link";
 import PropTypes from "prop-types";
 import React from "react";
 import { useTranslation } from "../locales/i18n";
@@ -21,12 +22,11 @@ const Header = (props) => {
         <div className="grid-container">
           <div className="grid-row">
             <div className="grid-col-fill margin-left-0 margin-y-3 desktop:margin-y-4">
-              <a
-                className="usa-logo__text font-heading-lg text-no-underline text-secondary"
-                href="/"
-              >
-                {t("components.header.appTitle")}
-              </a>
+              <Link href="/">
+                <a className="usa-logo__text font-heading-lg text-no-underline text-secondary">
+                  {t("components.header.appTitle")}
+                </a>
+              </Link>
             </div>
           </div>
         </div>
