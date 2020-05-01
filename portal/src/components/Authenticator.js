@@ -102,6 +102,37 @@ const Authenticator = (props) => {
     }
   };
 
+  const renderAlert = () => {
+    // Show authentication errors
+    if (amplifyError) {
+      return (
+        <Alert
+          heading={t("components.authenticator.errorHeading")}
+          ref={alertRef}
+          role="alert"
+        >
+          {amplifyError.message}
+        </Alert>
+      );
+    }
+
+    // Show "Email verified" success message
+    if (props.authState === "signedUp") {
+      return (
+        <Alert
+          heading={t("components.authenticator.accountVerifiedHeading")}
+          state="success"
+        >
+          {t("components.authenticator.accountVerified")}
+        </Alert>
+      );
+    }
+
+    // Fallback to returning an empty component since AmplifyAuthenticator
+    // requires its children to not be null
+    return <React.Fragment />;
+  };
+
   // Embeds props.children inside an Amplify Authenticator component and only
   // renders those children if the user is signed in (authState === 'signedIn')
   return (
@@ -113,26 +144,7 @@ const Authenticator = (props) => {
       authState={props.authState}
       authData={props.authData}
     >
-      <React.Fragment>
-        {amplifyError && (
-          <Alert
-            heading={t("components.authenticator.errorHeading")}
-            ref={alertRef}
-            role="alert"
-          >
-            {amplifyError.message}
-          </Alert>
-        )}
-        {props.authState === "signedUp" && (
-          <Alert
-            heading={t("components.authenticator.accountVerifiedHeading")}
-            state="success"
-          >
-            {t("components.authenticator.accountVerified")}
-          </Alert>
-        )}
-      </React.Fragment>
-
+      {renderAlert()}
       <SignIn />
       <ConfirmSignIn />
       <VerifyContact />

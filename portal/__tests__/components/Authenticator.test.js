@@ -57,6 +57,23 @@ describe("Authenticator", () => {
       `);
     });
 
+    it("replaces the 'Email verified' success alert", () => {
+      const wrapper = render({ authState: "signedUp" });
+
+      const errorHandler = wrapper.prop("errorMessage");
+      errorHandler("Mock error message");
+
+      expect(wrapper.find("Alert")).toHaveLength(1);
+      expect(wrapper.find("Alert")).toMatchInlineSnapshot(`
+        <Alert
+          heading="Please fix the following errors"
+          role="alert"
+        >
+          Mock error message
+        </Alert>
+      `);
+    });
+
     it("focuses the Alert", async () => {
       expect.hasAssertions();
 
