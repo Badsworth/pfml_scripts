@@ -24,17 +24,17 @@ describe("Authenticator", () => {
       );
     });
 
-    it("sends auth state changes to handleAuthStateChange handler", () => {
+    it("sends auth state changes to onStateChange handler", () => {
       const authState = "signedIn";
       const authData = { attributes: { email: "barbara@email.com" } };
-      const handleAuthStateChange = jest.fn();
+      const onStateChange = jest.fn();
       const props = {
-        handleAuthStateChange,
+        onStateChange,
       };
       const wrapper = render(props);
       wrapper.simulate("stateChange", authState, authData);
 
-      expect(handleAuthStateChange).toBeCalledWith(authState, authData);
+      expect(onStateChange).toBeCalledWith(authState, authData);
     });
   });
 
@@ -124,6 +124,14 @@ describe("Authenticator", () => {
     });
   });
 
+  describe("when the authState is 'signedUp'", () => {
+    it("displays a Success alert indicating the email was verified", () => {
+      const wrapper = render({ authState: "signedUp" });
+
+      expect(wrapper.find("Alert")).toMatchSnapshot();
+    });
+  });
+
   describe("when a user IS authenticated", () => {
     const authState = "signedIn";
     const authData = { attributes: { email: "barbara@email.com" } };
@@ -137,18 +145,18 @@ describe("Authenticator", () => {
       expect(wrapper.html()).toMatchInlineSnapshot(`"<h1>App</h1>"`);
     });
 
-    it("sends auth state changes to handleAuthStateChange handler", () => {
+    it("sends auth state changes to onStateChange handler", () => {
       const newAuthState = "signIn";
-      const handleAuthStateChange = jest.fn();
+      const onStateChange = jest.fn();
       const props = {
         authState,
         authData,
-        handleAuthStateChange,
+        onStateChange,
       };
       const wrapper = render(props);
       wrapper.simulate("stateChange", newAuthState, null);
 
-      expect(handleAuthStateChange).toBeCalledWith(newAuthState, null);
+      expect(onStateChange).toBeCalledWith(newAuthState, null);
     });
   });
 });

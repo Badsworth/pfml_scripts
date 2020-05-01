@@ -140,6 +140,9 @@ const components = {
     logOutButtonText: "Log out",
   },
   authenticator: {
+    accountVerified:
+      "Thanks for verifying your email address. You may now log into your account.",
+    accountVerifiedHeading: "Email successfully verified",
     errorHeading: "Please fix the following errors",
   },
   backButton: {

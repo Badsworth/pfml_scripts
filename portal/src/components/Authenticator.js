@@ -87,17 +87,17 @@ const Authenticator = (props) => {
   };
 
   /**
-   * AmplifyAuthenticator stateChange event handler
-   * @param {string} authState
+   * Event handler called when a new Amplify screen is transitioned to on the client-side
+   * @param {string} newAuthState - i.e "signIn", "signedUp", "forgotPassword"
    * @param {object} authData
    */
-  const handleAuthStateChange = (authState, authData) => {
+  const handleAuthStateChange = (newAuthState, authData) => {
     // Clear any existing error messages when the screen changes
     setAmplifyError();
 
-    if (props.handleAuthStateChange) {
+    if (props.onStateChange) {
       // Pass the updated auth state back to our parent component
-      props.handleAuthStateChange(authState, authData);
+      props.onStateChange(newAuthState, authData);
     }
   };
 
@@ -112,17 +112,25 @@ const Authenticator = (props) => {
       authState={props.authState}
       authData={props.authData}
     >
-      {amplifyError ? (
-        <Alert
-          heading={t("components.authenticator.errorHeading")}
-          ref={alertRef}
-          role="alert"
-        >
-          {amplifyError.message}
-        </Alert>
-      ) : (
-        <React.Fragment />
-      )}
+      <React.Fragment>
+        {amplifyError && (
+          <Alert
+            heading={t("components.authenticator.errorHeading")}
+            ref={alertRef}
+            role="alert"
+          >
+            {amplifyError.message}
+          </Alert>
+        )}
+        {props.authState === "signedUp" && (
+          <Alert
+            heading={t("components.authenticator.accountVerifiedHeading")}
+            state="success"
+          >
+            {t("components.authenticator.accountVerified")}
+          </Alert>
+        )}
+      </React.Fragment>
 
       <SignIn />
       <ConfirmSignIn />
@@ -147,18 +155,19 @@ Authenticator.propTypes = {
    */
   children: PropTypes.node.isRequired,
   /**
-   * Function that will be called whenever the user's authn state changes.
-   * Passes in the new authState and authData.
-   */
-  handleAuthStateChange: PropTypes.func,
-  /**
-   * Initial authState passed to Amplify. Only added for unit tests
+   * Amplify authState value representing which auth content to display
+   * i.e. "signIn", "signedUp", "forgotPassword"
    */
   authState: PropTypes.string,
   /**
-   * Initial authData passed to Amplify. Only added for unit tests
+   * Initial authData passed to Amplify.
    */
   authData: PropTypes.object,
+  /**
+   * Function that will be called whenever the user's authn state changes.
+   * Passes in the new authState and authData.
+   */
+  onStateChange: PropTypes.func,
 };
 
 /*

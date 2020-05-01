@@ -19,7 +19,12 @@ initializeI18n();
  * @see https://nextjs.org/docs/advanced-features/custom-app
  * @returns {React.Component}
  */
-export const App = ({ Component, pageProps, authState, authData }) => {
+export const App = ({
+  Component,
+  initialAuthData,
+  initialAuthState,
+  pageProps,
+}) => {
   const { t } = useTranslation();
   const router = useRouter();
 
@@ -27,6 +32,10 @@ export const App = ({ Component, pageProps, authState, authData }) => {
   // Initialize to empty user but will be populated upon the first API call
   // to fetch the user (or create the user on their first login)
   const [user, setUser] = useState(new User());
+
+  // Track the authentication state, which controls which components
+  // are rendered by Authenticator
+  const [authState, setAuthState] = useState(initialAuthState);
 
   // State representing the collection of claims for the current user.
   // Initialize to empty collection, but will eventually store the claims
@@ -59,15 +68,16 @@ export const App = ({ Component, pageProps, authState, authData }) => {
 
   /**
    * Event handler for when the authn state changes.
-   * Scrolls the window to the top of the document.
    */
-  const handleAuthStateChange = (authState, authData) => {
-    const signedIn = authState === "signedIn";
-    if (signedIn) {
+  const handleAuthStateChange = (newAuthState, authData) => {
+    setAuthState(newAuthState);
+
+    if (newAuthState === "signedIn") {
       setAuthUser({ username: authData.attributes.email });
     } else {
       setAuthUser();
     }
+
     window.scrollTo(0, 0);
   };
 
@@ -96,8 +106,8 @@ export const App = ({ Component, pageProps, authState, authData }) => {
           <div className="grid-col-fill">
             <Authenticator
               authState={authState}
-              authData={authData}
-              handleAuthStateChange={handleAuthStateChange}
+              authData={initialAuthData}
+              onStateChange={handleAuthStateChange}
             >
               {ui.isLoadingRoute ? (
                 <div className="margin-top-8 text-center">
@@ -126,13 +136,14 @@ App.propTypes = {
   // Next.js sets pageProps for us
   pageProps: PropTypes.object,
   /**
-   * Initial authState passed to Amplify. Only added for unit tests
+   * Initial Amplify authState value representing which auth content to display
+   * i.e. "signIn", "signedUp", "forgotPassword"
    */
-  authState: PropTypes.string,
+  initialAuthState: PropTypes.string,
   /**
    * Initial authData passed to Amplify. Only added for unit tests
    */
-  authData: PropTypes.object,
+  initialAuthData: PropTypes.object,
 };
 
 export default App;

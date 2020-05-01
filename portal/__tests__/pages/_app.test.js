@@ -9,8 +9,10 @@ function render(customProps = {}, mountComponent = false) {
     {
       Component: () => <div />,
       pageProps: {},
-      authState: "signedIn",
-      authData: { attributes: { email: "mocked-header-user@example.com" } },
+      initialAuthState: "signedIn",
+      initialAuthData: {
+        attributes: { email: "mocked-header-user@example.com" },
+      },
     },
     customProps
   );
@@ -45,9 +47,9 @@ describe("App", () => {
   });
 
   describe("when a user is NOT authenticated", () => {
-    const authState = "signIn";
-    const authData = undefined;
-    const authProps = { authState, authData };
+    const initialAuthState = "signIn";
+    const initialAuthData = undefined;
+    const authProps = { initialAuthState, initialAuthData };
 
     it("renders the site header without a user", () => {
       const { wrapper } = render(authProps);
@@ -56,6 +58,52 @@ describe("App", () => {
 
       expect(header.exists()).toBe(true);
       expect(header.prop("user")).toBeUndefined();
+    });
+  });
+
+  describe("when the Authenticator authState changes", () => {
+    it("sets the authUser state when the new authState is 'signedIn'", () => {
+      const { wrapper } = render();
+      const authState = "signedIn";
+      const authData = { attributes: { email: "foo@example.com " } };
+
+      wrapper
+        .find("Authenticator")
+        .simulate("stateChange", authState, authData);
+
+      // There isn't a clear way in Enzyme to read the state from useState (yet)
+      // so we assert on the authData value that gets passed into Header
+      expect(wrapper.find("Header").prop("user")).toMatchInlineSnapshot(`
+        Object {
+          "username": "foo@example.com ",
+        }
+      `);
+    });
+
+    it("clears the authUser state when the new authState is NOT 'signedIn'", () => {
+      const { wrapper } = render();
+      const authState = "signIn";
+      const authData = {};
+
+      wrapper
+        .find("Authenticator")
+        .simulate("stateChange", authState, authData);
+
+      // There isn't a clear way in Enzyme to read the state from useState (yet)
+      // so we assert on the authData value that gets passed into Header
+      expect(wrapper.find("Header").prop("user")).toBeUndefined();
+    });
+
+    it("updates the authState prop on Authenticator", () => {
+      const { wrapper } = render();
+      const authState = "customAuthState";
+      const authData = {};
+
+      wrapper
+        .find("Authenticator")
+        .simulate("stateChange", authState, authData);
+
+      expect(wrapper.find("Authenticator").prop("authState")).toBe(authState);
     });
   });
 
