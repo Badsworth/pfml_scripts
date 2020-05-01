@@ -133,7 +133,7 @@ environment variables needed.
 
 Once your application is running, a UI is available at:
 
-- [http://localhost:1550/v1/ui/](http://localhost:1550/v1/ui/)
+- [http://localhost:1550/v1/docs/](http://localhost:1550/v1/docs/)
 
 The spec is available at:
 
