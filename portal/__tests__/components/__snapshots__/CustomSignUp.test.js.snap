@@ -25,16 +25,13 @@ exports[`CustomSignUp when signUpConfig prop has signupFields defined and hideAl
       className="Section__sectionHeader___2djyg"
     >
       <Title>
-        Create a new account
+        Create an account
       </Title>
     </div>
     <form>
       <div
         className="Section__sectionBody___ihqqd"
       >
-        <p>
-          Your password must be at least 8 characters long and include numbers and letters.
-        </p>
         <InputText
           key="username"
           label="Email"
@@ -44,6 +41,7 @@ exports[`CustomSignUp when signUpConfig prop has signupFields defined and hideAl
           type="email"
         />
         <InputText
+          hint="Password hint text"
           key="password"
           label="Password"
           name="password"
@@ -72,7 +70,7 @@ exports[`CustomSignUp when signUpConfig prop has signupFields defined and hideAl
             onClick={[Function]}
             type="submit"
           >
-            Create Account
+            Create account
           </Button>
         </div>
         <div
@@ -93,7 +91,7 @@ exports[`CustomSignUp when signUpConfig prop has signupFields defined and hideAl
             onClick={[Function]}
             variation="unstyled"
           >
-            Sign in
+            Log in
           </Button>
         </div>
       </div>

@@ -23,6 +23,9 @@ class CustomConfirmSignUp extends ConfirmSignUp {
     this.resend();
   };
 
+  /**
+   * Override the parent class's showComponent method, which is the equivalent to `render`
+   */
   showComponent(theme) {
     const { t } = this.props;
     return (
@@ -39,6 +42,7 @@ class CustomConfirmSignUp extends ConfirmSignUp {
                 })}
               </p>
               <InputText
+                autoComplete="off"
                 label={t("components.confirmSignUp.codeLabel")}
                 name="code"
                 onChange={this.handleInputChange}

@@ -26,6 +26,7 @@ describe("CustomSignUp", () => {
         },
         {
           label: "Password",
+          hint: "Password hint text",
           key: "password",
           placeholder: "",
           required: true,

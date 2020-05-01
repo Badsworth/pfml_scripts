@@ -67,6 +67,15 @@ describe("InputText", () => {
     expect(label.prop("children")).toBe(props.label);
   });
 
+  describe("when autoComplete prop is set", () => {
+    it("passes the autoComplete to input", () => {
+      const { props, wrapper } = render({ autoComplete: "off" });
+      const label = wrapper.find("input");
+
+      expect(label.prop("autoComplete")).toBe(props.autoComplete);
+    });
+  });
+
   describe("when type prop is set to password", () => {
     it("sets input type to password", () => {
       const { wrapper } = render({ type: "password" });

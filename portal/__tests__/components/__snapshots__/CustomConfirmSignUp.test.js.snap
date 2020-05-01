@@ -36,7 +36,8 @@ exports[`CustomConfirmSignUp renders the page 1`] = `
           We sent a 6-digit verification code to user_name@test.com. Enter the code to verify your email.
         </p>
         <InputText
-          label="Six-digit code"
+          autoComplete="off"
+          label="6-digit code"
           name="code"
           onChange={[Function]}
           smallLabel={true}
@@ -47,7 +48,7 @@ exports[`CustomConfirmSignUp renders the page 1`] = `
           onClick={[Function]}
           variation="unstyled"
         >
-          Resend code
+          Resend the code
         </Button>
       </div>
       <div

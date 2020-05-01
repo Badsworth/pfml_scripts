@@ -32,6 +32,7 @@ function InputText({ type = "text", ...props }) {
 
   const field = (
     <input
+      autoComplete={props.autoComplete}
       className={fieldClasses}
       id={inputId}
       inputMode={props.inputMode}
@@ -66,6 +67,10 @@ function InputText({ type = "text", ...props }) {
 }
 
 InputText.propTypes = {
+  /**
+   * HTML input `autocomplete` attribute
+   */
+  autoComplete: PropTypes.string,
   /**
    * Localized error message. Setting this enables the error state styling.
    */

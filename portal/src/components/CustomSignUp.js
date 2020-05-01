@@ -35,17 +35,19 @@ class CustomSignUp extends SignUp {
     this.signUp();
   };
 
+  /**
+   * Override the parent class's showComponent method, which is the equivalent to `render`
+   */
   showComponent() {
     const { theme, t } = this.props;
     return (
       <div className={AmplifyUI.formContainer} style={theme.formContainer}>
         <div className={AmplifyUI.formSection} style={theme.formSection}>
           <div className={AmplifyUI.sectionHeader}>
-            <Title>{this.header}</Title>
+            <Title>{t("components.signUp.title")}</Title>
           </div>
           <form>
             <div className={AmplifyUI.sectionBody}>
-              <p>{t("components.signUp.passwordHelpText")}</p>
               {/**
                 * uncontrolled form input
                 * input states are stored on the class property `inputs`
@@ -54,11 +56,12 @@ class CustomSignUp extends SignUp {
                 * @see field attributes https://aws-amplify.github.io/docs/js/react#signup-configuration
                 *
                 */}
-              {this.signUpFields.map((field, i) => (
+              {this.signUpFields.map((field) => (
                 <InputText
                   key={field.key}
                   name={field.key}
                   label={field.label}
+                  hint={field.hint}
                   type={field.type}
                   onChange={this.handleInputChange}
                   smallLabel

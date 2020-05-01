@@ -1,7 +1,6 @@
 import {
   Authenticator as AmplifyAuthenticator,
   ConfirmSignIn,
-  ForgotPassword,
   Loading,
   RequireNewPassword,
   SignIn,
@@ -12,6 +11,7 @@ import React, { useEffect, useRef, useState } from "react";
 import Alert from "./Alert";
 import Amplify from "aws-amplify";
 import CustomConfirmSignUp from "./CustomConfirmSignUp";
+import CustomForgotPassword from "./CustomForgotPassword";
 import CustomSignUp from "./CustomSignUp";
 import PropTypes from "prop-types";
 import customAmplifyErrorMessageKey from "../utils/customAmplifyErrorMessageKey";
@@ -19,28 +19,6 @@ import theme from "../utils/amplifyTheme";
 import { useTranslation } from "../locales/i18n";
 
 Amplify.configure(process.env.awsConfig);
-
-const signUpConfig = {
-  hideAllDefaults: true,
-  signUpFields: [
-    {
-      label: "Email",
-      key: "username",
-      placeholder: "",
-      required: true,
-      type: "email",
-      displayOrder: 1,
-    },
-    {
-      label: "Password",
-      key: "password",
-      placeholder: "",
-      required: true,
-      type: "password",
-      displayOrder: 2,
-    },
-  ],
-};
 
 /**
  * Wraps children components in an Amplify Authenticator so that children are
@@ -51,6 +29,29 @@ const Authenticator = (props) => {
   const [amplifyError, setAmplifyError] = useState();
   const alertRef = useRef();
   const { t } = useTranslation();
+
+  const signUpConfig = {
+    hideAllDefaults: true,
+    signUpFields: [
+      {
+        label: t("components.signUp.emailLabel"),
+        key: "username",
+        placeholder: "",
+        required: true,
+        type: "email",
+        displayOrder: 1,
+      },
+      {
+        label: t("components.signUp.passwordLabel"),
+        hint: t("components.signUp.passwordHint"),
+        key: "password",
+        placeholder: "",
+        required: true,
+        type: "password",
+        displayOrder: 2,
+      },
+    ],
+  };
 
   /**
    * When an Amplify error is thrown, change the active focus to the error
@@ -135,11 +136,10 @@ const Authenticator = (props) => {
       <SignIn />
       <ConfirmSignIn />
       <VerifyContact />
-      {/* amplify does not pass custom components signUpConfig
-      manually passing here */}
+      {/* Amplify does not pass custom components signUpConfig, so manually passing here */}
       <CustomSignUp override="SignUp" signUpConfig={signUpConfig} />
       <CustomConfirmSignUp override="ConfirmSignUp" />
-      <ForgotPassword />
+      <CustomForgotPassword override="ForgotPassword" />
       <RequireNewPassword />
       <TOTPSetup />
       <Loading />

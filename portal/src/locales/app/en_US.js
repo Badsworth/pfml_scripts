@@ -21,11 +21,19 @@ const errors = {
 };
 
 const general = {
-  // TODO(CP-143) correct phone number
+  // TODO: Correct phone number
+  // https://lwd.atlassian.net/browse/CP-143
   callCenterPhoneNumber: "(XXX) XXX-XXXX",
   siteDescription:
     "Paid Family and Medical Leave is a state-offered benefit for anyone who works in Massachusetts and is eligible to take up to 26 weeks of paid leave for medical or family reasons.",
   siteTitle: "Paid Family and Medical Leave (PFML) | Mass.gov",
+};
+
+// TODO: Combine shared and general keys
+// https://lwd.atlassian.net/browse/CP-299
+const shared = {
+  passwordHint:
+    "Your password must be at least 8 characters long and include numbers and letters.",
 };
 
 const pages = {
@@ -149,9 +157,9 @@ const components = {
     label: "Back",
   },
   confirmSignUp: {
-    codeLabel: "Six-digit code",
+    codeLabel: "6-digit code",
     confirmButton: "Submit",
-    resendCodeLink: "Resend code",
+    resendCodeLink: "Resend the code",
     signInFooterLink: "Back to log in",
     title: "Verify your email address",
     verifyHint:
@@ -170,6 +178,21 @@ const components = {
     employerHasExemption:
       "This plan meets or exceeds the benefits offered through the Commonwealth, so they do not participate in the Commonwealth's plan.",
     title: "Your employer has their own paid leave plan",
+  },
+  forgotPassword: {
+    codeLabel: "6-digit code",
+    leadCreatePasswordView:
+      "If an account exists for {{emailAddress}}, we emailed a 6-digit verification code to it. Enter the code below to confirm your email and reset your password.",
+    leadSendView:
+      "If an account exists for the email you provide, we will email a 6-digit verification code to it.",
+    passwordHint: "$t(shared.passwordHint)",
+    passwordLabel: "New password",
+    resendCodeLink: "Resend the code",
+    signInFooterLink: "Back to log in",
+    submitEmailButton: "Send code",
+    submitPasswordButton: "Set new password",
+    titleCreatePasswordView: "Create a new password",
+    titleSendView: "Forgot your password?",
   },
   form: {
     continueButton: "Continue",
@@ -211,11 +234,13 @@ const components = {
     whyHeader: "Why can't you find me?",
   },
   signUp: {
-    createAccountButton: "Create Account",
+    createAccountButton: "Create account",
+    emailLabel: "Email address",
     haveAnAccountFooterLabel: "Have an account?",
-    passwordHelpText:
-      "Your password must be at least 8 characters long and include numbers and letters.",
-    signInFooterLink: "Sign in",
+    passwordHint: "$t(shared.passwordHint)",
+    passwordLabel: "Password",
+    signInFooterLink: "Log in",
+    title: "Create an account",
   },
   spinner: {
     label: "Loading",
@@ -243,7 +268,10 @@ const components = {
 };
 
 const englishLocale = {
-  translation: Object.assign({}, { components, errors, general, pages }),
+  translation: Object.assign(
+    {},
+    { components, errors, general, pages, shared }
+  ),
 };
 
 export default englishLocale;
