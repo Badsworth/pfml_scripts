@@ -40,6 +40,15 @@ def create_app():
     # when proxied behind the AWS API Gateway.
     flask_app.wsgi_app = ReverseProxied(flask_app.wsgi_app)
 
+    @flask_app.teardown_request
+    def close_db(exception=None):
+        try:
+            logger.debug("Closing DB session")
+            db.get_session().remove()
+        except Exception:
+            logger.exception("Exception while closing DB session")
+            pass
+
     return app
 
 
