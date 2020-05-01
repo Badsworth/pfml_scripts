@@ -175,9 +175,8 @@ ifndef MIGRATE_MSG
 	$(error MIGRATE_MSG is undefined)
 endif
 
-test: ## Run tests
-test: db-upgrade
-	$(PY_RUN_CMD) coverage run --branch --source=massgov -m pytest
+test: ## Run tests, set `args` to pass flags to `pytest`
+	$(PY_RUN_CMD) coverage run --branch --source=massgov -m pytest $(args)
 	$(PY_RUN_CMD) coverage report
 
 test-changed: ## Run only tests that have changed

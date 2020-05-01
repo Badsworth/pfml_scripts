@@ -84,7 +84,7 @@ container or not.
 
 #### Common commands
 
-```
+``` sh
 make start  # Start the API
 make logs   # View API logs
 make login  # Login to the container, where you can run development tools
@@ -96,7 +96,7 @@ make stop   # Stop all running containers
 
 When you're first setting up your environment, ensure that migrations are run against your db so it has all the required tables.
 
-```
+``` sh
 $ make db-upgrade       # Apply pending migrations to db
 $ make db-downgrade     # Rollback last migration to db
 $ make db-downgrade-all # Rollback all migrations
@@ -106,7 +106,7 @@ $ make db-downgrade-all # Rollback all migrations
 
 If you've changed a python object model, auto-generate a migration file for the database and run it:
 
-```
+``` sh
 $ make db-migrate-create MIGRATE_MSG="<brief description of change>"
 $ make db-upgrade
 ```
@@ -152,6 +152,29 @@ work](https://docs.pytest.org/en/latest/fixture.html) in particular might be
 helpful as it's one area that is a bit different than is common with other
 runners (and languages).
 
+To pass arguments to `pytest` through `make test` you can set the `args`
+variable. For example, to run only the tests in `test_user.py`:
+
+``` sh
+make test args=tests/api/test_users.py
+```
+
+To run only a single test:
+
+``` sh
+make test args=tests/api/test_users.py::test_users_get
+```
+
+To pass multiple arguments:
+``` sh
+make test args="-x tests/api/test_users.py"
+```
+
+For a more complete description of the various ways you can select which test
+cases to run or various behaviors that can be turned on, [refer to the pytest
+docs](https://docs.pytest.org/en/latest/usage.html).
+
+
 ### During Development
 
 While working on a part of the system, you may not be interested in running the
@@ -177,7 +200,7 @@ make test-watch
 
 Environment variables for the local app in the `docker-compose.yml` file.
 
-```
+``` yaml
 services:
   ...
   mass-pfml-api:

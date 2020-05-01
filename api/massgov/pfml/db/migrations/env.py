@@ -1,15 +1,14 @@
-import os
 import sys
 from logging.config import fileConfig
 
 from alembic import context
-from sqlalchemy import engine_from_config, pool
 
 # Alembic cli seems to reset the path on load causing issues with local module imports.
 # Workaround is to force set the path to the current run directory (top level api folder)
 # See database migrations section in `api/README.md` for details about running migrations.
 sys.path.insert(0, ".")  # noqa: E402
 
+import massgov.pfml.api.db as db  # isort:skip
 from massgov.pfml.api.db.base import Base  # isort:skip
 
 # import models module to trigger loading of all modules into the Base
@@ -23,14 +22,10 @@ config = context.config
 # This line sets up loggers basically.
 fileConfig(config.config_file_name)
 
-url = os.environ.get("DB_URL")
-db_name = os.environ.get("DB_NAME")
-username = os.environ.get("DB_USERNAME")
-password = os.environ.get("DB_PASSWORD")
+if not config.get_main_option("sqlalchemy.url"):
+    uri = db.get_connection_uri()
 
-uri = f"postgresql://{username}:{password}@{url}/{db_name}"
-
-config.set_main_option("sqlalchemy.url", uri)
+    config.set_main_option("sqlalchemy.url", uri)
 
 # add your model's MetaData object here
 # for 'autogenerate' support
@@ -56,6 +51,7 @@ def run_migrations_offline():
     script output.
 
     """
+
     url = config.get_main_option("sqlalchemy.url")
     context.configure(
         url=url,
@@ -75,14 +71,14 @@ def run_migrations_online():
     and associate a connection with the context.
 
     """
-    connectable = engine_from_config(
-        config.get_section(config.config_ini_section),
-        prefix="sqlalchemy.",
-        poolclass=pool.NullPool,
-    )
+
+    url = config.get_main_option("sqlalchemy.url")
+    connectable = db.create_engine(url)
 
     with connectable.connect() as connection:
-        context.configure(connection=connection, target_metadata=target_metadata)
+        context.configure(
+            connection=connection, target_metadata=target_metadata,
+        )
 
         with context.begin_transaction():
             context.run_migrations()
