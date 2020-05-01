@@ -1,5 +1,5 @@
 """seed lookup tables
-Revision ID: a545d7713dad
+Revision ID: c55f558a528e
 Revises: 88d2159c082c
 Create Date: 2020-04-27 17:24:49.116239
 """
@@ -12,7 +12,7 @@ from sqlalchemy.sql import column, table
 
 # revision identifiers, used by Alembic.
 revision = "64d32bb8c9a8"
-down_revision = "a5a12d592f91"
+down_revision = "c55f558a528e"
 branch_labels = None
 depends_on = None
 

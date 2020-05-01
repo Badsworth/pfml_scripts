@@ -101,8 +101,15 @@ class HealthCareProvider(Base):
 class Employer(Base):
     __tablename__ = "employer"
     employer_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
-    employer_fein = Column(Integer)
+    account_key = Column(Text)
+    employer_fein = Column(Text)
+    employer_name = Column(Text)
     employer_dba = Column(Text)
+    family_exemption = Column(Boolean)
+    medical_exemption = Column(Boolean)
+    exemption_commence_date = Column(Date)
+    exemption_cease_date = Column(Date)
+    dor_updated_date = Column(Date)
     addresses = relationship("EmployerAddress", back_populates="employers", lazy="dynamic")
 
 
@@ -118,7 +125,7 @@ class PaymentInformation(Base):
 class Employee(Base):
     __tablename__ = "employee"
     employee_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
-    tax_identifier_id = Column(UUID(as_uuid=True))
+    tax_identifier = Column(Text)
     first_name = Column(Text)
     middle_name = Column(Text)
     last_name = Column(Text)
@@ -229,7 +236,9 @@ class WageAndContribution(Base):
     employer_id = Column(UUID(as_uuid=True), ForeignKey("employer.employer_id"))
     is_independent_contractor = Column(Boolean)
     is_opted_in = Column(Boolean)
-    employer_ytd_wages = Column(Numeric(asdecimal=True), nullable=False)
-    employer_qtr_wages = Column(Numeric(asdecimal=True), nullable=False)
+    employee_ytd_wages = Column(Numeric(asdecimal=True), nullable=False)
+    employee_qtr_wages = Column(Numeric(asdecimal=True), nullable=False)
+    employee_med_contribution = Column(Numeric(asdecimal=True), nullable=False)
     employer_med_contribution = Column(Numeric(asdecimal=True), nullable=False)
+    employee_fam_contribution = Column(Numeric(asdecimal=True), nullable=False)
     employer_fam_contribution = Column(Numeric(asdecimal=True), nullable=False)

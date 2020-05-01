@@ -4,23 +4,35 @@
 #
 
 import json
-import logging
 from dataclasses import asdict, dataclass, field
 from datetime import datetime
-from typing import List
+from decimal import Decimal
+from typing import Callable, List
 
 import boto3
+import massgov.pfml.util.logging as logging
 import pydash
+from massgov.pfml.api import db
+from massgov.pfml.api.db.models import (
+    Address,
+    AddressType,
+    Country,
+    Employee,
+    Employer,
+    EmployerAddress,
+    GeoState,
+    WageAndContribution,
+)
 
-FORMAT = "%(levelname)s %(asctime)s [%(funcName)s] %(message)s"
-logging.basicConfig(format=FORMAT, level=logging.INFO)
-logger = logging.getLogger()
-logger.setLevel(logging.INFO)
+logging.init(__name__)
+logger = logging.get_logger("massgov.pfml.dor_import")
+
 s3 = boto3.client("s3")
 s3Bucket = boto3.resource("s3")
 
-RECEIVED_FOLDER = "external-integrations/dor/daily_import/received/"
-PROCESSED_FOLDER = "external-integrations/dor/daily_import/processed/"
+# TODO get these from event
+RECEIVED_FOLDER = "mock_testing/received/"
+PROCESSED_FOLDER = "mock_testing/processed/"
 
 EMPLOYER_FILE_PREFIX = "DORDFMLEmp_"
 EMPLOYEE_FILE_PREFIX = "DORDFML_"
@@ -31,8 +43,13 @@ class ImportReport:
     start: datetime
     employer_file: str
     employee_file: str
-    employers_count: int = 0
-    employers_quarter_info_count: int = 0
+    parsed_employers_count: int = 0
+    parsed_employers_quarter_info_count: int = 0
+    parsed_employees_info_count: int = 0
+    created_employers_count: int = 0
+    updated_employers_count: int = 0
+    created_employees_count: int = 0
+    updated_employees_count: int = 0
     status: str = None
     end: datetime = None
 
@@ -48,53 +65,70 @@ class ImportRunReport:
 class FieldFormat:
     property_name: str
     length: int
-    trim: bool = False
+    conversion_function: Callable = None
+
+
+def parse_date(date_str):
+    return datetime.strptime(date_str, "%Y%m%d")
+
+
+def parse_datetime(datetime_str):
+    return datetime.strptime(datetime_str, "%Y%m%d%H%M%S")
+
+
+def parse_boolean(boolean_str):
+    # expected format is "1" or "0"
+    return boolean_str == "1"
+
+
+def parse_dollar_amount(dollar_amount_str):
+    return Decimal(dollar_amount_str)
 
 
 # File formats
 # See details in https://lwd.atlassian.net/wiki/spaces/API/pages/229539929/DOR+Import#Import-Process
 EMPLOYER_FILE_FORMAT = (
     FieldFormat("account_key", 11),
-    FieldFormat("employer_name", 255, True),
+    FieldFormat("employer_name", 255),
     FieldFormat("fein", 9),
-    FieldFormat("employer_address_street", 50, True),
-    FieldFormat("employer_address_city", 25, True),
+    FieldFormat("employer_address_street", 50),
+    FieldFormat("employer_address_city", 25),
     FieldFormat("employer_address_state", 2),
     FieldFormat("employer_address_zip", 9),
-    FieldFormat("employer_dba", 255, True),
-    FieldFormat("family_exemption", 1),
-    FieldFormat("medical_exemption", 1),
-    FieldFormat("exemption_commence_date", 8),
-    FieldFormat("exemption_cease_date", 8),
-    FieldFormat("updated_date", 14),
+    FieldFormat("employer_dba", 255),
+    FieldFormat("family_exemption", 1, parse_boolean),
+    FieldFormat("medical_exemption", 1, parse_boolean),
+    FieldFormat("exemption_commence_date", 8, parse_date),
+    FieldFormat("exemption_cease_date", 8, parse_date),
+    FieldFormat("updated_date", 14, parse_datetime),
 )
 
 EMPLOYER_QUARTER_INFO_FORMAT = (
     FieldFormat("record_type", 1),
     FieldFormat("account_key", 11),
     FieldFormat("filing_period", 8),
-    FieldFormat("employer_name", 255, True),
+    FieldFormat("employer_name", 255),
     FieldFormat("employer_fein", 9),
-    FieldFormat("amended_flag", 1),
-    FieldFormat("received_date", 8),
-    FieldFormat("updated_date", 14),
+    FieldFormat("amended_flag", 1, parse_boolean),
+    FieldFormat("received_date", 8, parse_date),
+    FieldFormat("updated_date", 14, parse_datetime),
 )
 
 EMPLOYEE_FORMAT = (
     FieldFormat("record_type", 1),
     FieldFormat("account_key", 11),
-    FieldFormat("filing_period", 8),
-    FieldFormat("employee_first_name", 255, True),
-    FieldFormat("employee_last_name", 255, True),
+    FieldFormat("filing_period", 8, parse_date),
+    FieldFormat("employee_first_name", 255),
+    FieldFormat("employee_last_name", 255),
     FieldFormat("employee_ssn", 9),
-    FieldFormat("independent_contractor", 1),
-    FieldFormat("opt_in", 1),
-    FieldFormat("employer_ytd_wages", 20, True),
-    FieldFormat("employer_qtr_wages", 20, True),
-    FieldFormat("employee_medical", 20, True),
-    FieldFormat("employee_medical", 20, True),
-    FieldFormat("employee_family", 20, True),
-    FieldFormat("employer_family", 20, True),
+    FieldFormat("independent_contractor", 1, parse_boolean),
+    FieldFormat("opt_in", 1, parse_boolean),
+    FieldFormat("employee_ytd_wages", 20, parse_dollar_amount),
+    FieldFormat("employee_qtr_wages", 20, parse_dollar_amount),
+    FieldFormat("employee_medical", 20, parse_dollar_amount),
+    FieldFormat("employer_medical", 20, parse_dollar_amount),
+    FieldFormat("employee_family", 20, parse_dollar_amount),
+    FieldFormat("employer_family", 20, parse_dollar_amount),
 )
 
 
@@ -176,17 +210,19 @@ def process_daily_import(bucket, employer_file, employee_file):
         employers = parse_employer_file(bucket, employer_file)
         employers_quarter_info, employees_info = parse_employee_file(bucket, employee_file)
 
-        employers_count = len(employers)
-        employers_quarter_info_count = len(employers_quarter_info)
-        employees_info_count = len(employees_info)
+        parsed_employers_count = len(employers)
+        parsed_employers_quarter_info_count = len(employers_quarter_info)
+        parsed_employees_info_count = len(employees_info)
+
+        logger.debug("finishing parsing files")
 
         # TODO
         import_to_db(employers, employers_quarter_info, employees_info, report)
 
         # finalize report
-        report.employers_count = employers_count
-        report.employers_quarter_info_count = employers_quarter_info_count
-        report.employees_info_count = employees_info_count
+        report.parsed_employers_count = parsed_employers_count
+        report.parsed_employers_quarter_info_count = parsed_employers_quarter_info_count
+        report.parsed_employees_info_count = parsed_employees_info_count
         report.status = "success"
         report.end = datetime.now().isoformat()
 
@@ -205,7 +241,158 @@ def process_daily_import(bucket, employer_file, employee_file):
 
 def import_to_db(employers, employers_quarter_info, employees_info, report):
     """Process through parsed objects and persist into database"""
-    # TODO
+    db.init()
+
+    with db.session_scope() as db_session:
+        account_key_to_employer_id_map = import_employers(db_session, employers, report)
+        import_employees_and_wage_data(
+            db_session,
+            account_key_to_employer_id_map,
+            employers_quarter_info,
+            employees_info,
+            report,
+        )
+
+
+def import_employers(db_session, employers, report):
+    # look through all employers
+    """Import employers into db"""
+    logger.info("Importing employers")
+
+    account_key_to_employer_id_map = {}
+
+    business_address_type = (
+        db_session.query(AddressType).filter(AddressType.address_description == "Business").first()
+    )
+    # TODO find the state by employee after lookup is fully populated
+    state = db_session.query(GeoState).filter(GeoState.state_description == "MA").first()
+    country = db_session.query(Country).filter(Country.country_description == "US").first()
+
+    created_employers_count = 0
+
+    for employer_info in employers:
+        fein = employer_info["fein"]
+        account_key = employer_info["account_key"]
+        existing_employer = (
+            db_session.query(Employer).filter(Employer.employer_fein == fein).first()
+        )
+
+        logger.debug("employer %s", fein)
+
+        if existing_employer is None:
+            exemption_commence_date = employer_info["exemption_commence_date"]
+
+            emp = Employer(
+                account_key=account_key,
+                employer_fein=fein,
+                employer_name=employer_info["employer_name"],
+                employer_dba=employer_info["employer_dba"],
+                family_exemption=employer_info["family_exemption"],
+                medical_exemption=employer_info["medical_exemption"],
+                exemption_commence_date=exemption_commence_date,
+                exemption_cease_date=employer_info["exemption_cease_date"],
+                dor_updated_date=employer_info["updated_date"],
+            )
+            db_session.add(emp)
+
+            address = Address(
+                address_type=business_address_type.address_type,
+                address_line_one=employer_info["employer_address_street"],
+                city=employer_info["employer_address_city"],
+                state_type=state.state_type,
+                zip_code=employer_info["employer_address_zip"],
+                country_type=country.country_type,
+            )
+            db_session.add(address)
+
+            db_session.flush()
+            db_session.refresh(emp)
+            db_session.refresh(address)
+
+            account_key_to_employer_id_map[account_key] = emp.employer_id
+
+            emp_address = EmployerAddress(
+                employer_id=emp.employer_id, address_id=address.address_id
+            )
+            db_session.add(emp_address)
+
+            created_employers_count = created_employers_count + 1
+        else:
+            # TODO update existing employee row
+            account_key_to_employer_id_map[account_key] = existing_employer.employer_id
+
+    report.created_employers_count = created_employers_count
+    return account_key_to_employer_id_map
+
+
+def import_employees_and_wage_data(
+    db_session, account_key_to_employer_id_map, employers_quarter_info, employees_info, report
+):
+    """Import employees and wage information"""
+    logger.info("Importing employee information")
+
+    created_employees_count = 0
+    employee_id_by_ssn = {}
+
+    for employee_info in employees_info:
+        ssn = employee_info["employee_ssn"]
+        existing_employee = (
+            db_session.query(Employee).filter(Employee.tax_identifier == ssn).first()
+        )
+
+        logger.debug("employee %s", ssn)
+
+        if existing_employee is None:
+            employee = Employee(
+                tax_identifier=ssn,
+                first_name=employee_info["employee_first_name"],
+                last_name=employee_info["employee_last_name"],
+            )
+            db_session.add(employee)
+
+            db_session.flush()
+            db_session.refresh(employee)
+            employee_id_by_ssn[ssn] = employee.employee_id
+
+            created_employees_count = created_employees_count + 1
+        else:
+            # TODO update existing employee row
+            employee_id_by_ssn[ssn] = existing_employee.employee_id
+
+    report.created_employees_count = created_employees_count
+
+    logger.info("Importing employee wage information")
+
+    # create wage information
+    for employee_info in employees_info:
+        account_key = employee_info["account_key"]
+        filing_period = employee_info["filing_period"]
+        ssn = employee_info["employee_ssn"]
+
+        logger.debug("wage: %s, %s, %s", ssn, account_key, filing_period)
+
+        # TODO handle existing wage - may need indexing on account_key and filing_period
+        # existing_wage = db_session.query(WageAndContribution).filter(WageAndContribution.account_key == account_key).filter(WageAndContribution.filing_period == filing_period).first()
+        existing_wage = None
+
+        if existing_wage is None:
+            wage = WageAndContribution(
+                account_key=account_key,
+                filing_period=filing_period,
+                employee_id=employee_id_by_ssn[ssn],
+                employer_id=account_key_to_employer_id_map[account_key],
+                is_independent_contractor=employee_info["independent_contractor"],
+                is_opted_in=employee_info["opt_in"],
+                employee_ytd_wages=employee_info["employee_ytd_wages"],
+                employee_qtr_wages=employee_info["employee_qtr_wages"],
+                employee_med_contribution=employee_info["employee_medical"],
+                employer_med_contribution=employee_info["employer_medical"],
+                employee_fam_contribution=employee_info["employee_family"],
+                employer_fam_contribution=employee_info["employer_family"],
+            )
+            db_session.add(wage)
+        # else: # TODO update wage if amended flag is set
+
     return None
 
 
@@ -243,13 +430,15 @@ def parse_row_to_object_by_format(row, row_format):
     start_index = 0
     for column_format in row_format:
         property_name = column_format.property_name
-        trim = column_format.trim
         end_index = start_index + column_format.length
 
-        column_value = row[start_index:end_index]
-        if trim is True:
-            column_value = column_value.strip()
-        object[property_name] = column_value
+        column_value = row[start_index:end_index].strip()
+
+        conversion_function = column_format.conversion_function
+        if conversion_function is None:
+            object[property_name] = column_value
+        else:
+            object[property_name] = conversion_function(column_value)
 
         start_index = end_index + 1  # account for space between columns
 

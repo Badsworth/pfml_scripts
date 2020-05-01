@@ -1,0 +1,28 @@
+{
+    "AWSTemplateFormatVersion": "2010-09-09",
+    "Transform": "AWS::Serverless-2016-10-31",
+    "Description": "Mass PFML - Import Department of Revenue Data",
+    "Globals": {
+        "Function": {
+            "Timeout": 900
+        }
+    },
+    "Resources": {
+        "ImportFunction": {
+            "Type": "AWS::Serverless::Function",
+            "Properties": {
+                "CodeUri": "s3://nava-pfml-lambda-poc-import/66e417eac8650d7117b14a14ff5cb0e7",
+                "Handler": "import_dor.handler",
+                "Runtime": "python3.8",
+                "Environment": {
+                    "Variables": {
+                        "DB_URL": "SET_IN_CONTAINER_ENV_VARS",
+                        "DB_NAME": "SET_IN_CONTAINER_ENV_VARS",
+                        "DB_USERNAME": "SET_IN_CONTAINER_ENV_VARS",
+                        "DB_PASSWORD": "SET_IN_CONTAINER_ENV_VARS"
+                    }
+                }
+            }
+        }
+    }
+}

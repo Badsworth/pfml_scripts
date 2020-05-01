@@ -1,0 +1,8 @@
+{
+  "ImportFunction": {
+    "DB_URL": "host.docker.internal",
+    "DB_NAME": "pfml",
+    "DB_USERNAME": "pfml",
+    "DB_PASSWORD": "secret123"
+  }
+}
