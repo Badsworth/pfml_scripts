@@ -9,6 +9,23 @@ function customAmplifyErrorMessageKey(amplifyMessage) {
   amplifyMessage = amplifyMessage.replace(/\.$/, "");
 
   /**
+   * Collection of password validation error messages returned by Cognito.
+   */
+  const passwordErrorMessages = [
+    "2 validation errors detected: Value at 'password' failed to satisfy constraint: Member must have length greater than or equal to 6; Value at 'password' failed to satisfy constraint: Member must satisfy regular expression pattern: ^[\\S]+.*[\\S]+$",
+    "1 validation error detected: Value at 'password' failed to satisfy constraint: Member must have length greater than or equal to 6",
+    "Password did not conform with policy: Password not long enough",
+    "Password did not conform with policy: Password must have lowercase characters",
+    "Password did not conform with policy: Password must have uppercase characters",
+    "Password did not conform with policy: Password must have numeric characters",
+  ];
+
+  // Use catch-all message for all password validation errors to prevent whack-a-mole errors.
+  amplifyMessage = passwordErrorMessages.includes(amplifyMessage)
+    ? "Password validation catchall"
+    : amplifyMessage;
+
+  /**
    * Mappings of Amplify error messages (minus any trailing period) to our internationalized string.
    * There's not a great way to identify what possible errors might be returned by Amplify,
    * since some of the errors are returned in the Cognito response. Some can be found here
@@ -32,6 +49,7 @@ function customAmplifyErrorMessageKey(amplifyMessage) {
     "The following fields need to be filled out: Password":
       "errors.auth.passwordRequired",
     "Username cannot be empty": "errors.auth.emailRequired",
+    "Password validation catchall": "errors.auth.passwordErrors",
   };
 
   return customMessageKeys[amplifyMessage];

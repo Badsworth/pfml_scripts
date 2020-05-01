@@ -13,6 +13,8 @@ const errors = {
     invalidParametersFallback: "Please enter all required information",
     invalidPhoneFormat: "Invalid phone number",
     invalidVerificationCode: "Invalid verification code",
+    passwordErrors:
+      "Your password does not meet the requirements. Please check the requirements and try again.",
     passwordRequired: "Enter your password",
     verificationCodeRequired: "Enter the 6-digit code sent to your email",
   },
