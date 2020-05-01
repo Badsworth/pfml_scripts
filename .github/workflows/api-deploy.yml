@@ -10,6 +10,7 @@ on:
   push:
     branches:
       - master
+      - deploy/stage
     paths:
       - api/**
       - infra/api/template/**
@@ -26,7 +27,7 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
-
+        
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
@@ -46,11 +47,29 @@ jobs:
     needs: api-build
 
     env:
-      terraform-dir: ./infra/api/environments/test
+      terraform-dir: ./infra/api/environments
       TF_VAR_service_docker_tag: ${{ github.sha }}
+
+      # Create a mapping of branches to environment names.
+      #
+      # The api-env step will grab the env name using github.ref, which
+      # will be the branch or tag reference that triggered this Github Actions workflow.
+      #
+      # We could specify this directly in the bash script below, but this will be cleaner
+      # to add and change items since bash doesn't have hashmaps/dicts.
+      refs/heads/master: test
+      refs/heads/deploy/stage: stage
+      refs/heads/deploy/prod: prod
 
     steps:
       - uses: actions/checkout@v2
+
+      - name: Set api-env Value
+        # see https://help.github.com/en/actions/reference/context-and-expression-syntax-for-github-actions#github-context
+        # github.ref will give the branch or tag reference that triggered the workflow
+        # e.g refs/heads/master or refs/heads/deploy/stage
+        run: |          
+          echo "::set-env name=api-env::${{ env[github.ref] }}"
 
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
@@ -68,7 +87,7 @@ jobs:
           tf_actions_version: ${{ env.terraform-version }}
           tf_actions_subcommand: init
           tf_actions_comment: false
-          tf_actions_working_dir: ${{ env.terraform-dir }}
+          tf_actions_working_dir: ${{ env.terraform-dir }}/${{ env.api-env }}
 
       - name: Terraform Plan with new docker image
         id: terraform_plan
@@ -77,7 +96,7 @@ jobs:
           tf_actions_version: ${{ env.terraform-version }}
           tf_actions_subcommand: plan
           tf_actions_comment: false
-          tf_actions_working_dir: ${{ env.terraform-dir }}
+          tf_actions_working_dir: ${{ env.terraform-dir }}/${{ env.api-env }}
           args: '-out=plan.tfplan'
 
       - name: Terraform Apply from execution plan
@@ -87,5 +106,5 @@ jobs:
           tf_actions_version: ${{ env.terraform-version }}
           tf_actions_subcommand: apply
           tf_actions_comment: false
-          tf_actions_working_dir: ${{ env.terraform-dir }}
+          tf_actions_working_dir: ${{ env.terraform-dir }}/${{ env.api-env }}
           args: 'plan.tfplan'

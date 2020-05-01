@@ -39,10 +39,10 @@ jobs:
       fail-fast: false
       matrix:
         component: ['portal', 'api', 'env-shared']
-        environment: ['test']
+        environment: ['test', 'stage']
         include:
           - component: 'portal'
-            environment: 'stage'
+            environment: 'prod'
 
     steps:
     - uses: actions/checkout@v2
