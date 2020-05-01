@@ -23,6 +23,147 @@ describe("Collection", () => {
         ids: [],
       });
     });
+
+    it("creates a populated collection when itemsById property is set", () => {
+      const itemsById = {
+        "123": {
+          [idProperty]: "123",
+        },
+      };
+
+      const collection = new Collection({ idProperty, itemsById });
+
+      expect(collection).toMatchInlineSnapshot(`
+        Collection {
+          "byId": Object {
+            "123": Object {
+              "testId": "123",
+            },
+          },
+          "idProperty": "testId",
+          "ids": Array [
+            "123",
+          ],
+        }
+        `);
+    });
+  });
+
+  describe("#addItem", () => {
+    it("creates a new collection with an additonal item", () => {
+      const initialCollection = new Collection({ idProperty });
+      const item = { [idProperty]: "123" };
+      const collection = Collection.addItem(initialCollection, item);
+
+      expect(collection).toMatchInlineSnapshot(`
+        Collection {
+          "byId": Object {
+            "123": Object {
+              "testId": "123",
+            },
+          },
+          "idProperty": "testId",
+          "ids": Array [
+            "123",
+          ],
+        }
+        `);
+
+      expect(initialCollection).toMatchInlineSnapshot(`
+        Collection {
+          "byId": Object {},
+          "idProperty": "testId",
+          "ids": Array [],
+        }
+       `);
+    });
+
+    describe("#updateItem", () => {
+      it("creates a new collection with changed item values", () => {
+        const item = { [idProperty]: "123", testProp: "testValue1" };
+        const updateItem = { [idProperty]: "123", testProp: "testValue2" };
+        const itemsById = {
+          "123": item,
+        };
+        const initialCollection = new Collection({ idProperty, itemsById });
+        const collection = Collection.updateItem(initialCollection, updateItem);
+
+        expect(initialCollection).toMatchInlineSnapshot(`
+          Collection {
+            "byId": Object {
+              "123": Object {
+                "testId": "123",
+                "testProp": "testValue1",
+              },
+            },
+            "idProperty": "testId",
+            "ids": Array [
+              "123",
+            ],
+          }
+          `);
+
+        expect(collection).toMatchInlineSnapshot(`
+          Collection {
+            "byId": Object {
+              "123": Object {
+                "testId": "123",
+                "testProp": "testValue2",
+              },
+            },
+            "idProperty": "testId",
+            "ids": Array [
+              "123",
+            ],
+          }
+          `);
+      });
+    });
+  });
+
+  describe("#removeItem", () => {
+    it("creates new collection with removed item", () => {
+      const item = { [idProperty]: "123" };
+      const item2 = { [idProperty]: "456" };
+      const itemsById = {
+        "123": item,
+        "456": item2,
+      };
+      const initialCollection = new Collection({ idProperty, itemsById });
+      const collection = Collection.removeItem(initialCollection, "456");
+
+      expect(initialCollection).toMatchInlineSnapshot(`
+        Collection {
+          "byId": Object {
+            "123": Object {
+              "testId": "123",
+            },
+            "456": Object {
+              "testId": "456",
+            },
+          },
+          "idProperty": "testId",
+          "ids": Array [
+            "123",
+            "456",
+          ],
+        }
+        `);
+
+      expect(collection).toMatchInlineSnapshot(`
+        Collection {
+          "byId": Object {
+            "123": Object {
+              "testId": "123",
+            },
+          },
+          "idProperty": "testId",
+          "ids": Array [
+            "123",
+          ],
+        }
+        `);
+    });
   });
 
   describe("#add(item)", () => {
