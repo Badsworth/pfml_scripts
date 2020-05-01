@@ -15,6 +15,7 @@ from datetime import datetime, timedelta
 import faker
 
 import pydash
+from massgov.pfml.util.datetime.quarter import Quarter
 
 FORMAT = "%(levelname)s %(asctime)s [%(funcName)s] %(message)s"
 logging.basicConfig(format=FORMAT, level=logging.INFO)
@@ -319,44 +320,7 @@ class Contribution:
         self.employee_family = (decimal.Decimal(0.0013 * 1.0) * qtr_wages).quantize(TWOPLACES)
 
 
-QUARTER_ENDS = [(3, 31), (6, 30), (8, 30), (12, 31)]
-
-
-class Quarter:
-    """Representation of a year / quarter (e.g. 2020-Q1)."""
-
-    def __init__(self, year, quarter):
-        if quarter not in (1, 2, 3, 4):
-            raise ValueError("Invalid quarter, must be 1-4")
-        self.year = year
-        self.quarter = quarter
-        end_date = QUARTER_ENDS[quarter - 1]
-        self.month = end_date[0]
-        self.day_of_month = end_date[1]
-
-    def series(self, count):
-        seq = []
-        year = self.year
-        quarter = self.quarter
-        for _i in range(count):
-            seq.append(Quarter(year, quarter))
-            quarter = quarter + 1
-            if quarter == 5:
-                year = year + 1
-                quarter = 1
-        return seq
-
-    def __repr__(self):
-        return "Quarter(%i, %i)" % (self.year, self.quarter)
-
-    def __str__(self):
-        return format_date(self.as_date())
-
-    def as_date(self):
-        return dt.date(self.year, self.month, self.day_of_month)
-
-
-QUARTERS = Quarter(2019, 2).series(4)
+QUARTERS = tuple(Quarter(2019, 2).series(4))
 
 if __name__ == "__main__":
     main()
