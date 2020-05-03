@@ -21,6 +21,7 @@ from massgov.pfml.api.db.models import (
     Employer,
     EmployerAddress,
     GeoState,
+    ImportLog,
     WageAndContribution,
 )
 
@@ -206,52 +207,51 @@ def process_daily_import(bucket, employer_file, employee_file):
         start=datetime.now().isoformat(), employer_file=employer_file, employee_file=employee_file
     )
 
-    try:
-        employers = parse_employer_file(bucket, employer_file)
-        employers_quarter_info, employees_info = parse_employee_file(bucket, employee_file)
-
-        parsed_employers_count = len(employers)
-        parsed_employers_quarter_info_count = len(employers_quarter_info)
-        parsed_employees_info_count = len(employees_info)
-
-        logger.debug("finishing parsing files")
-
-        # TODO
-        import_to_db(employers, employers_quarter_info, employees_info, report)
-
-        # finalize report
-        report.parsed_employers_count = parsed_employers_count
-        report.parsed_employers_quarter_info_count = parsed_employers_quarter_info_count
-        report.parsed_employees_info_count = parsed_employees_info_count
-        report.status = "success"
-        report.end = datetime.now().isoformat()
-
-        # move file to processed folder
-        # move_file_to_processed(bucket, file_for_import) # commented out during frequent tests
-
-    except Exception:
-        logger.exception("exception in file process")
-        report.status = "error"
-        report.end = datetime.now().isoformat()
-
-    # write report
-    # write_report(bucket, report)
-    return report
-
-
-def import_to_db(employers, employers_quarter_info, employees_info, report):
-    """Process through parsed objects and persist into database"""
     db.init()
 
     with db.session_scope() as db_session:
-        account_key_to_employer_id_map = import_employers(db_session, employers, report)
-        import_employees_and_wage_data(
-            db_session,
-            account_key_to_employer_id_map,
-            employers_quarter_info,
-            employees_info,
-            report,
-        )
+        try:
+            employers = parse_employer_file(bucket, employer_file)
+            employers_quarter_info, employees_info = parse_employee_file(bucket, employee_file)
+
+            parsed_employers_count = len(employers)
+            parsed_employers_quarter_info_count = len(employers_quarter_info)
+            parsed_employees_info_count = len(employees_info)
+
+            logger.debug("finshed parsing files")
+
+            import_to_db(db_session, employers, employers_quarter_info, employees_info, report)
+
+            # finalize report
+            report.parsed_employers_count = parsed_employers_count
+            report.parsed_employers_quarter_info_count = parsed_employers_quarter_info_count
+            report.parsed_employees_info_count = parsed_employees_info_count
+            report.status = "success"
+            report.end = datetime.now().isoformat()
+
+            # move file to processed folder
+            # move_file_to_processed(bucket, file_for_import) # TODO turn this on with invoke flag
+
+        except Exception:
+            logger.exception("exception in file process")
+            report.status = "error"
+            report.end = datetime.now().isoformat()
+
+        # write report
+        write_report_to_db(db_session, report)
+        # TODO determine if this is still necessary now that we have db logs
+        # write_report_to_s3(bucket, report)
+
+    return report
+
+
+def import_to_db(db_session, employers, employers_quarter_info, employees_info, report):
+    """Process through parsed objects and persist into database"""
+
+    account_key_to_employer_id_map = import_employers(db_session, employers, report)
+    import_employees_and_wage_data(
+        db_session, account_key_to_employer_id_map, employers_quarter_info, employees_info, report,
+    )
 
 
 def import_employers(db_session, employers, report):
@@ -467,7 +467,20 @@ def move_file_to_processed(bucket, file_to_copy):
     )
 
 
-def write_report(bucket, report):
+def write_report_to_db(db_session, report):
+    """Write report of import to database"""
+    import_log = ImportLog(
+        source="DOR",
+        import_type="Initial",  # Update this from invoke payload
+        status=report.status,
+        report=json.dumps(asdict(report), indent=2),
+        start=report.start,
+        end=report.end,
+    )
+    db_session.add(import_log)
+
+
+def write_report_to_s3(bucket, report):
     """Write report of import to s3"""
     report_str = json.dumps(asdict(report), indent=2)
     file_name = get_file_name(report.employee_file)

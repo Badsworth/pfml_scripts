@@ -1,6 +1,6 @@
 import uuid
 
-from sqlalchemy import Boolean, Column, Date, ForeignKey, Integer, Numeric, Text
+from sqlalchemy import Boolean, Column, Date, DateTime, ForeignKey, Integer, Numeric, Text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 
@@ -242,3 +242,14 @@ class WageAndContribution(Base):
     employer_med_contribution = Column(Numeric(asdecimal=True), nullable=False)
     employee_fam_contribution = Column(Numeric(asdecimal=True), nullable=False)
     employer_fam_contribution = Column(Numeric(asdecimal=True), nullable=False)
+
+
+class ImportLog(Base):
+    __tablename__ = "import_log"
+    import_log_id = Column(Integer, primary_key=True)
+    source = Column(Text)
+    import_type = Column(Text)
+    status = Column(Text)
+    report = Column(Text)
+    start = Column(DateTime)
+    end = Column(DateTime)

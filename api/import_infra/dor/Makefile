@@ -14,7 +14,10 @@ build:
 
 # invoke locally by passing environment variable file and test event
 local:
-	sam local invoke "ImportFunction" --env-vars local.json --event test_event.json
+	sam local invoke "ImportFunction" \
+		--env-vars local.json \
+		--log-file local-log.txt \
+		--event test_event.json
 
 # build and publish lambda function to AWS
 package:

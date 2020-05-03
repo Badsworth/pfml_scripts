@@ -1,2 +1,3 @@
 .aws-sam/
 dor-import-lambda-s3-package.json
+local-log.txt
