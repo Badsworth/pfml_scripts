@@ -26,7 +26,7 @@ data "aws_iam_policy_document" "dor_s3_access_policy" {
       test     = "StringEquals"
       variable = "s3:prefix"
       values = [
-        "dor",
+        "dor/",
         "dor/*"
       ]
     }
@@ -53,6 +53,7 @@ data "aws_iam_policy_document" "dor_s3_access_policy" {
     sid = "AllowS3WriteOnBucket"
     actions = [
       "s3:PutObject",
+      "s3:DeleteObject",
       "s3:AbortMultipartUpload"
     ]
 
@@ -71,6 +72,7 @@ data "aws_iam_policy_document" "dor_s3_access_policy" {
     ]
 
     resources = [
+      "${aws_s3_bucket.agency_transfer[each.key].arn}",
       "${aws_s3_bucket.agency_transfer[each.key].arn}/dor",
       "${aws_s3_bucket.agency_transfer[each.key].arn}/dor/*",
     ]
@@ -85,6 +87,7 @@ data "aws_iam_policy_document" "dor_s3_access_policy" {
     ]
 
     not_resources = [
+      "${aws_s3_bucket.agency_transfer[each.key].arn}",
       "${aws_s3_bucket.agency_transfer[each.key].arn}/dor",
       "${aws_s3_bucket.agency_transfer[each.key].arn}/dor/*",
     ]
