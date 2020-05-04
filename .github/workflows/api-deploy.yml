@@ -10,7 +10,7 @@ on:
   push:
     branches:
       - master
-      - deploy/stage
+      - deploy/api/stage
     paths:
       - api/**
       - infra/api/template/**
@@ -58,18 +58,19 @@ jobs:
       # We could specify this directly in the bash script below, but this will be cleaner
       # to add and change items since bash doesn't have hashmaps/dicts.
       refs/heads/master: test
-      refs/heads/deploy/stage: stage
-      refs/heads/deploy/prod: prod
+      refs/heads/deploy/api/stage: stage
+      refs/heads/deploy/api/prod: prod
 
     steps:
       - uses: actions/checkout@v2
 
+      # Map the github.ref (the branch or tag that triggered the workflow) to an environment name.
+      #   e.g refs/heads/master or refs/heads/deploy/api/stage
+      #
+      # For more info, see:
+      # https://help.github.com/en/actions/reference/context-and-expression-syntax-for-github-actions#github-context
       - name: Set api-env Value
-        # see https://help.github.com/en/actions/reference/context-and-expression-syntax-for-github-actions#github-context
-        # github.ref will give the branch or tag reference that triggered the workflow
-        # e.g refs/heads/master or refs/heads/deploy/stage
-        run: |          
-          echo "::set-env name=api-env::${{ env[github.ref] }}"
+        run: echo "::set-env name=api-env::${{ env[github.ref] }}"
 
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1

@@ -4,8 +4,8 @@ on:
   push:
     branches:
       - master
-      - deploy/stage
-      - deploy/prod
+      - deploy/portal/stage
+      - deploy/portal/prod
     paths:
       - infra/portal/template/**
 
@@ -14,8 +14,8 @@ env:
   terraformBaseDir: ./infra/portal/environments/
   # Map branch name to environment name. This is used to set the portal_env variable below in combination with git refs.
   refs/heads/master: test
-  refs/heads/deploy/stage: stage
-  refs/heads/deploy/prod: prod
+  refs/heads/deploy/portal/stage: stage
+  refs/heads/deploy/portal/prod: prod
 
 jobs:
   release:
@@ -28,7 +28,7 @@ jobs:
       - name: Set portal_env Value
         # see https://help.github.com/en/actions/reference/context-and-expression-syntax-for-github-actions#github-context
         # github.ref will give the branch or tag reference that triggered the workflow
-        # e.g refs/heads/master or refs/heads/deploy/stage
+        # e.g refs/heads/master or refs/heads/deploy/portal/stage
         run: echo "::set-env name=portal_env::${{ env[github.ref] }}"
 
       - name: Configure AWS Credentials
