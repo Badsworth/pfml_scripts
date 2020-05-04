@@ -117,11 +117,16 @@ lint: ## Run linting
 login: start ## Start shell in running container
 	docker exec -it $(APP_NAME) sh
 
+login-db: ## Start psql with project environment variables
+	PGPASSWORD=$$DB_PASSWORD psql --host=$$DB_URL --username=$$DB_USERNAME $$DB_NAME
+
 logs: start ## View API logs
 	docker-compose logs --follow $(APP_NAME)
 
 logs-db: start ## View DB logs
 	docker-compose logs --follow mass-pfml-db
+
+psql: login-db
 
 start: ## Start containers
 	docker-compose up --detach

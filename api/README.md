@@ -84,12 +84,13 @@ container or not.
 
 #### Common commands
 
-``` sh
-make start  # Start the API
-make logs   # View API logs
-make login  # Login to the container, where you can run development tools
-make build  # Rebuild container and pick up new environment variables
-make stop   # Stop all running containers
+```sh
+make start    # Start the API
+make logs     # View API logs
+make login    # Login to the container, where you can run development tools
+make login-db # Start a psql prompt in the container, where you can run SQL queries. requires make login.
+make build    # Rebuild container and pick up new environment variables
+make stop     # Stop all running containers
 ```
 
 #### Running migrations
