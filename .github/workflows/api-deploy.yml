@@ -11,6 +11,7 @@ on:
     branches:
       - master
       - deploy/api/stage
+      - deploy/api/prod
     paths:
       - api/**
       - infra/api/template/**
