@@ -26,7 +26,7 @@ paths:
                     type: string
                 example:
                   status: "ok"
-                
+
   /users:
     post:
       tags:
@@ -177,6 +177,7 @@ paths:
           in: path
           schema:
             type: string
+            format: uuid
           description: Employer's id
           required: true
       responses:
@@ -333,11 +334,11 @@ components:
           type: string
           format: uuid
           example: "00000000-291b-403f-a85a-15e938c26f2f"
-        email_address: 
+        email_address:
           type: string
           format: email
           example: "janedoe@example.com"
-        status: 
+        status:
           type: string
           enum:
             - unverified
@@ -418,7 +419,7 @@ components:
     WagesContributions:
       type: object
       properties:
-        period_id:
+        filing_period:
           type: string
           example: "2019-03-31"
         employee_id:
@@ -429,10 +430,10 @@ components:
           type: string
           format: uuid
           example: "009fa369-291b-403f-a85a-15e938c2c3f4"
-        independent_contractor:
+        is_independent_contractor:
           type: boolean
           example: true
-        opt_in:
+        is_opted_in:
           type: boolean
           example: true
         employer_ytd_wages:
@@ -442,18 +443,12 @@ components:
         employer_qtr_wages:
           type: number
           example: 5000
-        employer_medical_contribution:
+        employer_med_contribution:
           type: number
           example: 2000
-        employee_medical_contribution:
-          type: number
-          example: 975
         employer_fam_contribution:
           type: number
           example: 2000
-        employee_fam_contribution:
-          type: number
-          example: 975
 
     WagesContributionsList:
       type: array
