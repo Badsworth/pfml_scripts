@@ -83,7 +83,8 @@ data "aws_iam_policy_document" "ci_run_deploys_policy" {
       "ssm:DescribeParameters",
       "ssm:GetParameter",
       "ssm:GetParameters",
-      "ssm:ListTagsForResource"
+      "ssm:ListTagsForResource",
+      "ssm:PutParameter"
     ]
 
     resources = [
