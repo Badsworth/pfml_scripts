@@ -17,20 +17,23 @@ def init():
 
     logger.info("connecting to postgres db")
 
-    try:
-        engine = create_engine()
-        engine.connect()
-        logger.info("connected to db")
-        session_factory = scoped_session(sessionmaker(autocommit=False, bind=engine))
-    except Exception as e:
-        logger.error("Error trying to connect to db: %s", e)
+    engine = create_engine()
+    conn = engine.connect()
+
+    conn_info = conn.connection.connection.info
+    logger.info(
+        "connected to db %s, server version %s", conn_info.dbname, conn_info.server_version,
+    )
+    logger.info("connected to db")
+
+    session_factory = scoped_session(sessionmaker(autocommit=False, bind=engine))
 
 
 def create_engine(connection_uri: Optional[str] = None):
     if connection_uri is None:
         connection_uri = get_connection_uri()
 
-    return sqlalchemy.create_engine(connection_uri, convert_unicode=True)
+    return sqlalchemy.create_engine(connection_uri)
 
 
 def get_session():
