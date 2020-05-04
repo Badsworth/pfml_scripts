@@ -23,7 +23,7 @@ data "aws_iam_policy_document" "dor_s3_access_policy" {
     ]
 
     condition {
-      test     = "stringEquals"
+      test     = "StringEquals"
       variable = "s3:prefix"
       values = [
         "dor",
