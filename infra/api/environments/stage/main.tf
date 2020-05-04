@@ -37,9 +37,21 @@ module "api" {
   nlb_name                = "${local.vpc}-nlb"
   nlb_port                = 3500
   cors_origins = [
+    # Allow requests from the Portal and API Gateway (Swagger) staging environment.
     "https://pfml-stage.eolwd.mass.gov",
     "https://day1v30d2xgnf.cloudfront.net",
     "https://pfml-stage-test.eolwd.mass.gov",
-    "https://hxrjel1aeb.execute-api.us-east-1.amazonaws.com"
+    "https://hxrjel1aeb.execute-api.us-east-1.amazonaws.com",
+
+    # Since we're going to be pointing the Portal test environment to API staging
+    # as well, allow requests to come from that origin.
+    "https://pfml-test.eolwd.mass.gov",
+    "https://d1ah9hpoapx4f1.cloudfront.net",
+
+    # We're also going to allow requests from developer's machines for now, so they
+    # can test certain features without deploying to the test environment. This is not
+    # really that secure since anyone can spin up a local server on port 3000 and hit our
+    # API, but we're not heavily using the stage environment right now so it's fine.
+    "http://localhost:3000"
   ]
 }

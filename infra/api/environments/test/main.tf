@@ -37,6 +37,7 @@ module "api" {
   nlb_name                = "${local.vpc}-nlb"
   nlb_port                = 80
   cors_origins = [
+    # Allow requests from the Portal and API Gateway (Swagger) test environment.
     "https://pfml-test.eolwd.mass.gov",
     "https://d1ah9hpoapx4f1.cloudfront.net",
     "https://pfml-api-test.eolwd.mass.gov",
