@@ -77,8 +77,8 @@ resource "aws_db_instance" "default" {
     itowner       = "kevin.yeh@mass.gov"
     secretariat   = "eolwd"
     Name          = "massgov_pfml_${var.environment_name}"
-    backup        = "nonprod"
-    "Patch Group" = "nonprod-linux1"
-    schedulev2    = "0700_2400_weekdays"
+    backup        = var.environment_name == "prod" ? "prod" : "nonprod"
+    "Patch Group" = var.environment_name == "prod" ? "prod-linux1" : "nonprod-linux1"
+    schedulev2    = var.environment_name == "prod" ? "na" : "0700_2400_weekdays"
   }
 }
