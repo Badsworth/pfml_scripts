@@ -1,3 +1,4 @@
+import time
 import uuid
 
 from sqlalchemy import Boolean, Column, Date, DateTime, ForeignKey, Integer, Numeric, Text
@@ -6,9 +7,20 @@ from sqlalchemy.orm import relationship
 
 from .base import Base
 
+MASK_32_BITS = 0xFFFFFFFF
+MASK_96_BITS = 0xFFFFFFFFFFFFFFFFFFFFFFFF
 
-def uuid_gen():
-    return uuid.uuid4()
+
+def uuid_gen() -> uuid.UUID:
+    """Generate a custom UUID with 32 bits from Unix time and the remaining 96 bits random.
+
+    This may help improve database index performance as they are almost sequential.
+
+    See https://www.2ndquadrant.com/en/blog/sequential-uuid-generators/
+    """
+    now = int(time.time())
+    uuid4 = uuid.uuid4()
+    return uuid.UUID(int=(now & MASK_32_BITS) << 96 | uuid4.int & MASK_96_BITS)
 
 
 class AddressType(Base):
