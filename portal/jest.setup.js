@@ -11,8 +11,12 @@ initializeI18n();
 
 Enzyme.configure({ adapter: new Adapter() });
 
+// Mock the API URL to make sure requests don't actually go anywhere
+process.env.apiUrl = "http://localhost/jest-mock-api";
+
 process.env.featureFlags = {};
 
+// Reset our environment variables before each test run
 const currentProcessEnv = process.env;
 beforeEach(() => {
   process.env = currentProcessEnv;

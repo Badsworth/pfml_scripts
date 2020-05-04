@@ -5,6 +5,7 @@
  */
 module.exports = {
   envName: "test",
+  apiUrl: "https://67385ye4yb.execute-api.us-east-1.amazonaws.com/test/api/v1/",
   awsConfig: {
     Auth: {
       region: "us-east-1",

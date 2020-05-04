@@ -1,5 +1,8 @@
 import User from "../../src/models/User";
+import request from "../../src/api/request";
 import usersApi from "../../src/api/usersApi";
+
+jest.mock("../../src/api/request");
 
 describe("users API", () => {
   describe("createUser", () => {
@@ -34,6 +37,64 @@ describe("users API", () => {
       expect(response.user).toMatchObject({
         user_id: expect.any(String),
         status: expect.any(String),
+      });
+    });
+  });
+
+  describe("getCurrentUser", () => {
+    describe("when the request succeeds", () => {
+      beforeEach(() => {
+        request.mockResolvedValueOnce({
+          body: {
+            first_name: "Anton",
+            last_name: "Mock",
+          },
+          status: 200,
+          success: true,
+        });
+      });
+
+      it("reports success as true", async () => {
+        expect.assertions();
+
+        const response = await usersApi.getCurrentUser();
+
+        expect(response.success).toBe(true);
+      });
+
+      it("includes User in the response", async () => {
+        expect.assertions();
+
+        const response = await usersApi.getCurrentUser();
+
+        expect(response.user).toBeInstanceOf(User);
+        expect(response.user.first_name).toBe("Anton");
+      });
+    });
+
+    describe("when the request is unsuccessful", () => {
+      beforeEach(() => {
+        request.mockResolvedValueOnce({
+          body: {},
+          status: 400,
+          success: false,
+        });
+      });
+
+      it("reports success as false", async () => {
+        expect.assertions();
+
+        const response = await usersApi.getCurrentUser();
+
+        expect(response.success).toBe(false);
+      });
+
+      it("does not set the User in the response", async () => {
+        expect.assertions();
+
+        const response = await usersApi.getCurrentUser();
+
+        expect(response.user).toBeNull();
       });
     });
   });
