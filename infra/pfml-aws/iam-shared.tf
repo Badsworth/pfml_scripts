@@ -59,6 +59,11 @@ data "aws_iam_policy_document" "developers_and_ci_deploy_access_policy" {
       "ec2:ModifyVpcEndpoint",
       "ec2:DescribePrefixLists",
 
+      # Allow teams to configure Lambda ENIs.
+      "ec2:DeleteNetworkInterface",
+      "ec2:DescribeNetworkInterfaces",
+      "ec2:DetachNetworkInterface",
+
       # Allow teams to configure VPC Links for network privacy.
       "ec2:CreateVpcEndpointServiceConfiguration",
       "ec2:DeleteVpcEndpointServiceConfigurations",
