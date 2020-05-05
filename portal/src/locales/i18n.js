@@ -6,11 +6,11 @@ import i18next from "i18next";
 import setAmplifyI18n from "./amplifyI18n";
 import setAppI18n from "./appI18n";
 
-const defaultLocale = "en_US";
+const defaultLocale = "en-US";
 
 /**
  * Initialize I18n libraries for Amplify and the App
- * @param {string} locale - locale that matches localization file (e.g "en_us")
+ * @param {string} locale - locale that matches localization file (e.g "en-US")
  * @returns {object} - I18n instances for app (appI18n) and amplify (amplifyI18n)
  */
 export const initializeI18n = (locale = defaultLocale) => {

@@ -7,7 +7,7 @@ This page covers development practices for working on the Mass PFML front-end po
 All files in the `portal/pages/` directory are automatically available as routes based on their name, e.g. `about.js` is routed to `/about`. Files named `index.js` are routed to the root of the directory. See more at the Next.js docs on [routing](https://nextjs.org/docs/routing/introduction) and [pages](https://nextjs.org/docs/basic-features/pages).
 
 1. Each time you add a new page, add a new route to `src/routes.js`.
-2. Add content strings for the page to `src/locales/app/en_US.js`.
+2. Add content strings for the page to `src/locales/app/en-US.js`.
 3. Add a test file for the page (and for any new components) to `__tests__`
 
 ## Custom advanced behavior via `next.config.js`

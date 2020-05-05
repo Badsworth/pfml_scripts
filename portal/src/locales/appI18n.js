@@ -1,9 +1,9 @@
-import englishLocale from "./app/en_US";
+import englishLocale from "./app/en-US";
 import i18n from "i18next";
 import { initReactI18next } from "react-i18next";
 
 const resources = {
-  en_US: englishLocale,
+  "en-US": englishLocale,
 };
 
 /**

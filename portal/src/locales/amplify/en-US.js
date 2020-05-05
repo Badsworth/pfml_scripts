@@ -6,7 +6,7 @@
  *
  */
 
-const en_US = {
+const englishLocale = {
   // Note: to override a string, replace it with white space -- an empty string does not override the original.
   "Create account": "create an account", // on Log In screen
   "Enter your password": " ", // remove placeholder on Log In field
@@ -20,4 +20,4 @@ const en_US = {
   Username: "Email address", // Label used on Log In and Forgot Password screen
 };
 
-export default en_US;
+export default englishLocale;
