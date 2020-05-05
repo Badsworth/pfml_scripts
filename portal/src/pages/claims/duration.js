@@ -1,4 +1,4 @@
-import Collection from "../../models/Collection";
+import Claim from "../../models/Claim";
 import ConditionalContent from "../../components/ConditionalContent";
 import InputChoiceGroup from "../../components/InputChoiceGroup";
 import InputText from "../../components/InputText";
@@ -10,14 +10,11 @@ import useFormState from "../../hooks/useFormState";
 import useHandleInputChange from "../../hooks/useHandleInputChange";
 import { useTranslation } from "react-i18next";
 import valueWithFallback from "../../utils/valueWithFallback";
+import withClaim from "../../hoc/withClaim";
 
-const Duration = (props) => {
+export const Duration = (props) => {
   const { t } = useTranslation();
-
-  const { claim_id } = props.query;
-  // TODO remove the `|| {}` fallback
-  const claim = props.claims.byId[claim_id] || {};
-  const { formState, updateFields, removeField } = useFormState(claim);
+  const { formState, updateFields, removeField } = useFormState(props.claim);
   const {
     avg_weekly_hours_worked,
     duration_type,
@@ -90,10 +87,7 @@ const Duration = (props) => {
 };
 
 Duration.propTypes = {
-  claims: PropTypes.instanceOf(Collection).isRequired,
-  query: PropTypes.shape({
-    claim_id: PropTypes.string,
-  }),
+  claim: PropTypes.instanceOf(Claim),
 };
 
-export default Duration;
+export default withClaim(Duration);

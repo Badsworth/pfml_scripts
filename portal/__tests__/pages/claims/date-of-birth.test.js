@@ -8,11 +8,14 @@ jest.mock("../../../src/api/usersApi");
 
 describe("DateOfBirth", () => {
   let setUser, user, wrapper;
+  const claim_id = "12345";
 
   beforeEach(() => {
     user = new User();
     setUser = jest.fn();
-    wrapper = shallow(<DateOfBirth user={user} setUser={setUser} />);
+    wrapper = shallow(
+      <DateOfBirth user={user} setUser={setUser} query={{ claim_id }} />
+    );
   });
 
   it("renders the page", () => {

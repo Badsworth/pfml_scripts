@@ -121,6 +121,7 @@ describe("App", () => {
 
     expect(component).toMatchInlineSnapshot(`
       <TestComponent
+        addClaim={[Function]}
         claims={
           Collection {
             "byId": Object {},
@@ -129,8 +130,10 @@ describe("App", () => {
           }
         }
         query={Object {}}
+        removeClaim={[Function]}
         setUser={[Function]}
         title="Test page"
+        updateClaim={[Function]}
         user={
           User {
             "cognito_user_id": null,

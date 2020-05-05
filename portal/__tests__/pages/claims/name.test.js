@@ -8,11 +8,14 @@ jest.mock("../../../src/api/usersApi");
 
 describe("Name", () => {
   let setUser, user, wrapper;
+  const claim_id = "12345";
 
   beforeEach(() => {
     user = new User();
     setUser = jest.fn();
-    wrapper = shallow(<Name user={user} setUser={setUser} />);
+    wrapper = shallow(
+      <Name user={user} setUser={setUser} query={{ claim_id }} />
+    );
   });
 
   it("renders the empty page", () => {
@@ -25,7 +28,9 @@ describe("Name", () => {
       middle_name: "cricketer",
       last_name: "Khan",
     });
-    wrapper = shallow(<Name user={user} setUser={setUser} />);
+    wrapper = shallow(
+      <Name user={user} setUser={setUser} query={{ claim_id }} />
+    );
     expect(wrapper).toMatchSnapshot();
   });
 

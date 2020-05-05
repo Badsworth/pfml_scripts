@@ -8,6 +8,7 @@ class Claim extends BaseModel {
       avg_weekly_hours_worked: null,
       duration_type: null,
       hours_off_needed: null,
+      leave_type: null,
     };
   }
 }

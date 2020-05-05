@@ -10,6 +10,7 @@ import Header from "../components/Header";
 import PropTypes from "prop-types";
 import Spinner from "../components/Spinner";
 import User from "../models/User";
+import useCollectionState from "../hooks/useCollectionState";
 import { useRouter } from "next/router";
 
 initializeI18n();
@@ -41,7 +42,12 @@ export const App = ({
   // Initialize to empty collection, but will eventually store the claims
   // state as API calls are made to fetch the user's claims and/or create
   // new claims
-  const [claims] = useState(new Collection({ idProperty: "claim_id" }));
+  const {
+    collection: claims,
+    addItem: addClaim,
+    updateItem: updateClaim,
+    removeItem: removeClaim,
+  } = useCollectionState(new Collection({ idProperty: "claim_id" }));
 
   const [ui, setUI] = useState({ isLoadingRoute: false });
 
@@ -118,6 +124,9 @@ export const App = ({
                   user={user}
                   setUser={setUser}
                   claims={claims}
+                  addClaim={addClaim}
+                  updateClaim={updateClaim}
+                  removeClaim={removeClaim}
                   query={router.query}
                   {...pageProps}
                 />

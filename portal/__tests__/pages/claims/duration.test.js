@@ -1,19 +1,20 @@
 import Claim from "../../../src/models/Claim";
-import Collection from "../../../src/models/Collection";
-import Duration from "../../../src/pages/claims/duration";
+import { Duration } from "../../../src/pages/claims/duration";
 import React from "react";
 import routes from "../../../src/routes";
 import { shallow } from "enzyme";
 
 describe("Duration", () => {
-  let claims, wrapper;
+  let claim, wrapper;
+  const claim_id = "12345";
+
   beforeEach(() => {
-    claims = new Collection({ idProperty: "claim_id" });
+    claim = new Claim({ claim_id });
   });
 
   describe("regardless of duration type", () => {
     beforeEach(() => {
-      wrapper = shallow(<Duration claims={claims} query={{}} />);
+      wrapper = shallow(<Duration claim={claim} />);
     });
 
     it("initially renders the page without conditional fields", () => {
@@ -30,10 +31,9 @@ describe("Duration", () => {
 
   describe("when user indicates that leave is continuous", () => {
     beforeEach(() => {
-      claims.add(new Claim({ claim_id: "12345", duration_type: "continuous" }));
-      wrapper = shallow(
-        <Duration claims={claims} query={{ claim_id: "12345" }} />
-      );
+      claim = new Claim({ claim_id, duration_type: "continuous" });
+
+      wrapper = shallow(<Duration claim={claim} />);
     });
 
     it("doesn't render conditional fields", () => {
@@ -43,12 +43,9 @@ describe("Duration", () => {
 
   describe("when user indicates that leave is intermittent", () => {
     beforeEach(() => {
-      claims.add(
-        new Claim({ claim_id: "12345", duration_type: "intermittent" })
-      );
-      wrapper = shallow(
-        <Duration claims={claims} query={{ claim_id: "12345" }} />
-      );
+      claim = new Claim({ claim_id, duration_type: "intermittent" });
+
+      wrapper = shallow(<Duration claim={claim} />);
     });
 
     it("renders conditional field", () => {

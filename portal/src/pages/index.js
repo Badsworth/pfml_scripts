@@ -1,18 +1,36 @@
-import ButtonLink from "../components/ButtonLink";
+import Button from "../components/Button";
 import Collection from "../models/Collection";
 import DashboardClaimCard from "../components/DashboardClaimCard";
 import Heading from "../components/Heading";
 import PropTypes from "prop-types";
 import React from "react";
 import Title from "../components/Title";
-import routes from "../routes";
+import claimsApi from "../api/claimsApi";
+import routeWithParams from "../utils/routeWithParams";
+import useHandleSave from "../hooks/useHandleSave";
+
+import { useRouter } from "next/router";
 import { useTranslation } from "../locales/i18n";
 
 /**
  * "Dashboard" - Where a user is redirected to after successfully authenticating.
  */
-const Index = ({ claims }) => {
+
+const Index = ({ claims, addClaim }) => {
   const { t } = useTranslation();
+  const router = useRouter();
+
+  const handleClaimButtonClick = useHandleSave(
+    claimsApi.createClaim,
+    (result) => {
+      addClaim(result.claim);
+
+      const route = routeWithParams("claims.name", {
+        claim_id: result.claim.claim_id,
+      });
+      router.push(route);
+    }
+  );
 
   return (
     <React.Fragment>
@@ -24,7 +42,7 @@ const Index = ({ claims }) => {
           {claims.ids.map((claim_id, index) => (
             <DashboardClaimCard
               key={claim_id}
-              claim={claims.byId[claim_id]}
+              claim={claims.get(claim_id)}
               number={index + 1}
             />
           ))}
@@ -44,18 +62,19 @@ const Index = ({ claims }) => {
         <li>{t("pages.index.claimChecklistWhereToSendBenefits")}</li>
       </ul>
 
-      <ButtonLink
-        href={routes.claims.name}
+      <Button
+        onClick={handleClaimButtonClick}
         variation={claims.ids.length ? "outline" : undefined}
       >
         {t("pages.index.createClaimButtonText")}
-      </ButtonLink>
+      </Button>
     </React.Fragment>
   );
 };
 
 Index.propTypes = {
-  claims: PropTypes.instanceOf(Collection),
+  addClaim: PropTypes.func,
+  claims: PropTypes.instanceOf(Collection).isRequired,
 };
 
 export default Index;

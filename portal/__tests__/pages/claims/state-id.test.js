@@ -6,14 +6,25 @@ import { shallow } from "enzyme";
 import usersApi from "../../../src/api/usersApi";
 
 jest.mock("../../../src/api/usersApi");
+const claim_id = "12345";
+const render = (props = {}) => {
+  const allProps = {
+    user: new User(),
+    setUser: jest.fn(),
+    query: { claim_id },
+    ...props,
+  };
+  return {
+    props: allProps,
+    wrapper: shallow(<StateId {...allProps} />),
+  };
+};
 
 describe("StateId", () => {
-  let setUser, user, wrapper;
+  let wrapper;
 
   beforeEach(() => {
-    user = new User();
-    setUser = jest.fn();
-    wrapper = shallow(<StateId user={user} setUser={setUser} />);
+    ({ wrapper } = render());
   });
 
   it("initially renders the page without an id field", () => {
@@ -23,17 +34,17 @@ describe("StateId", () => {
 
   it("will redirect to ssn page", () => {
     expect(wrapper.find("QuestionPage").prop("nextPage")).toEqual(
-      routes.claims.ssn
+      `${routes.claims.ssn}?claim_id=${claim_id}`
     );
   });
 
   describe("when user has a state id", () => {
     it("renders id field", () => {
-      user = new User({
+      const user = new User({
         has_state_id: true,
         state_id: "12345",
       });
-      wrapper = shallow(<StateId user={user} setUser={setUser} />);
+      ({ wrapper } = render({ user }));
 
       expect(
         wrapper.update().find("ConditionalContent").prop("visible")
@@ -44,11 +55,12 @@ describe("StateId", () => {
   describe("when the form is successfully submitted", () => {
     it("calls updateUser and updates the state", async () => {
       expect.assertions();
+      const { props, wrapper: component } = render();
 
-      await wrapper.find("QuestionPage").simulate("save");
+      await component.find("QuestionPage").simulate("save");
 
       expect(usersApi.updateUser).toHaveBeenCalledTimes(1);
-      expect(setUser).toHaveBeenCalledWith(expect.any(User));
+      expect(props.setUser).toHaveBeenCalledWith(expect.any(User));
     });
   });
 });

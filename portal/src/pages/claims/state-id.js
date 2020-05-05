@@ -5,7 +5,7 @@ import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
 import User from "../../models/User";
-import routes from "../../routes";
+import routeWithParams from "../../utils/routeWithParams";
 import useFormState from "../../hooks/useFormState";
 import useHandleInputChange from "../../hooks/useHandleInputChange";
 import useHandleSave from "../../hooks/useHandleSave";
@@ -34,7 +34,7 @@ const StateId = (props) => {
       formState={formState}
       title={t("pages.claimsStateId.title")}
       onSave={handleSave}
-      nextPage={routes.claims.ssn}
+      nextPage={routeWithParams("claims.ssn", props.query)}
     >
       <InputChoiceGroup
         choices={[
@@ -74,6 +74,9 @@ const StateId = (props) => {
 StateId.propTypes = {
   user: PropTypes.instanceOf(User).isRequired,
   setUser: PropTypes.func.isRequired,
+  query: PropTypes.shape({
+    claim_id: PropTypes.string,
+  }),
 };
 
 export default StateId;

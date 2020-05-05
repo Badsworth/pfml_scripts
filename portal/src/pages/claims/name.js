@@ -4,7 +4,7 @@ import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
 import User from "../../models/User";
-import routes from "../../routes";
+import routeWithParams from "../../utils/routeWithParams";
 import useFormState from "../../hooks/useFormState";
 import useHandleInputChange from "../../hooks/useHandleInputChange";
 import useHandleSave from "../../hooks/useHandleSave";
@@ -28,7 +28,7 @@ const Name = (props) => {
       formState={formState}
       title={t("pages.claimsName.title")}
       onSave={handleSave}
-      nextPage={routes.claims.dateOfBirth}
+      nextPage={routeWithParams("claims.dateOfBirth", props.query)}
     >
       <FormLabel
         component="legend"
@@ -65,6 +65,9 @@ const Name = (props) => {
 Name.propTypes = {
   user: PropTypes.instanceOf(User).isRequired,
   setUser: PropTypes.func.isRequired,
+  query: PropTypes.shape({
+    claim_id: PropTypes.string,
+  }),
 };
 
 export default Name;

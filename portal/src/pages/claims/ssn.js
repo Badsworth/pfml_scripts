@@ -4,6 +4,7 @@ import QuestionPage from "../../components/QuestionPage";
 import React from "react";
 import User from "../../models/User";
 import isFeatureEnabled from "../../utils/isFeatureEnabled";
+import routeWithParams from "../../utils/routeWithParams";
 import routes from "../../routes";
 import useFormState from "../../hooks/useFormState";
 import useHandleInputChange from "../../hooks/useHandleInputChange";
@@ -27,7 +28,7 @@ const Ssn = (props) => {
   );
 
   const nextPage = isFeatureEnabled("unrestrictedClaimFlow")
-    ? routes.claims.leaveType
+    ? routeWithParams("claims.leaveType", props.query)
     : routes.home;
 
   return (
@@ -52,6 +53,9 @@ const Ssn = (props) => {
 Ssn.propTypes = {
   user: PropTypes.instanceOf(User).isRequired,
   setUser: PropTypes.func.isRequired,
+  query: PropTypes.shape({
+    claim_id: PropTypes.string,
+  }),
 };
 
 export default Ssn;

@@ -2,7 +2,16 @@
 
 exports[`Duration regardless of duration type initially renders the page without conditional fields 1`] = `
 <QuestionPage
-  formState={Object {}}
+  formState={
+    Claim {
+      "avg_weekly_hours_worked": null,
+      "claim_id": "12345",
+      "created_at": null,
+      "duration_type": null,
+      "hours_off_needed": null,
+      "leave_type": null,
+    }
+  }
   nextPage="/"
   onSave={[Function]}
   title="Leave duration"

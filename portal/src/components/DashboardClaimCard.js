@@ -3,7 +3,7 @@ import Claim from "../models/Claim";
 import Heading from "../components/Heading";
 import PropTypes from "prop-types";
 import React from "react";
-import routes from "../routes";
+import routeWithParams from "../utils/routeWithParams";
 import { useTranslation } from "../locales/i18n";
 
 /**
@@ -25,7 +25,7 @@ function DashboardClaimCard(props) {
 
       <ButtonLink
         className="margin-top-1"
-        href={`${routes.claims.name}?claim=${claim.claim_id}`}
+        href={routeWithParams("claims.name", { claim_id: claim.claim_id })}
       >
         {t("pages.index.resumeClaimButton")}
       </ButtonLink>

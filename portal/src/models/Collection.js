@@ -15,6 +15,15 @@ class Collection {
     this.ids = Object.keys(itemsById);
   }
 
+  /**
+   * Return a single item
+   * @param {string} itemId - item id
+   * @returns {BaseModel} item - instance of item
+   */
+  get(itemId) {
+    return this.byId[itemId];
+  }
+
   // TODO: remove class methods when _app.js is refactored to use static methods
   /**
    * Adds an item to the collection.
@@ -39,9 +48,7 @@ class Collection {
 
     const itemsById = {
       ...allItems,
-      [itemId]: {
-        ...item,
-      },
+      [itemId]: item,
     };
 
     return new Collection({ idProperty, itemsById });

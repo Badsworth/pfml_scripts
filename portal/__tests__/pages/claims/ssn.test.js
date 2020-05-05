@@ -6,14 +6,25 @@ import routes from "../../../src/routes";
 import usersApi from "../../../src/api/usersApi";
 
 jest.mock("../../../src/api/usersApi");
+const claim_id = "12345";
+
+const render = (props = {}, mountComponent) => {
+  const commonProps = {
+    user: new User(),
+    setUser: jest.fn(),
+    query: { claim_id },
+  };
+
+  const renderFn = mountComponent ? mount : shallow;
+
+  return renderFn(<Ssn {...commonProps} {...props} />);
+};
 
 describe("Ssn", () => {
-  let setUser, user, wrapper;
+  let wrapper;
 
   beforeEach(() => {
-    user = new User();
-    setUser = jest.fn();
-    wrapper = shallow(<Ssn user={user} setUser={setUser} />);
+    wrapper = render();
   });
 
   it("renders the form", () => {
@@ -31,15 +42,15 @@ describe("Ssn", () => {
         unrestrictedClaimFlow: true,
       },
     };
-    wrapper = shallow(<Ssn user={user} setUser={setUser} />);
+    wrapper = render();
 
     expect(wrapper.find("QuestionPage").prop("nextPage")).toEqual(
-      routes.claims.leaveType
+      `${routes.claims.leaveType}?claim_id=${claim_id}`
     );
   });
 
   it("calls updateFieldFromEvent with user input", () => {
-    wrapper = mount(<Ssn user={user} setUser={setUser} />);
+    wrapper = render({}, true);
     const inputData = {
       ssn_or_itin: "555-55-5555",
     };
@@ -57,6 +68,9 @@ describe("Ssn", () => {
   describe("when the form is successfully submitted", () => {
     it("calls updateUser and updates the state", async () => {
       expect.assertions();
+      const setUser = jest.fn();
+
+      wrapper = render({ setUser });
 
       await wrapper.find("QuestionPage").simulate("save");
 

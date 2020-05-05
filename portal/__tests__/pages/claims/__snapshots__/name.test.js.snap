@@ -16,7 +16,7 @@ exports[`Name renders the empty page 1`] = `
       "user_id": null,
     }
   }
-  nextPage="/claims/date-of-birth"
+  nextPage="/claims/date-of-birth?claim_id=12345"
   onSave={[Function]}
   title="Who is taking leave"
 >
@@ -67,7 +67,7 @@ exports[`Name renders the page prefilled with user information 1`] = `
       "user_id": null,
     }
   }
-  nextPage="/claims/date-of-birth"
+  nextPage="/claims/date-of-birth?claim_id=12345"
   onSave={[Function]}
   title="Who is taking leave"
 >

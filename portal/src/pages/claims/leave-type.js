@@ -1,29 +1,27 @@
+import Claim from "../../models/Claim";
 import InputChoiceGroup from "../../components/InputChoiceGroup";
+import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
+import claimsApi from "../../api/claimsApi";
 import routes from "../../routes";
 import useFormState from "../../hooks/useFormState";
 import useHandleInputChange from "../../hooks/useHandleInputChange";
+import useHandleSave from "../../hooks/useHandleSave";
 import { useTranslation } from "react-i18next";
+import withClaim from "../../hoc/withClaim";
 
-const LeaveType = (props) => {
+export const LeaveType = (props) => {
   const { t } = useTranslation();
+  const { formState, updateFields } = useFormState(props.claim);
 
-  // TODO get current claim id from query parameter, then get current claim
-  // TODO initialState for form should come from current claim
-  // const { claim_id } = props.query;
-  // const claim = props.claims.byId[claim_id];
-  // const { formState, updateFields, removeField } = useFormState(claim);
-  // For now just initialize to empty formState
-  const { formState, updateFields } = useFormState();
   const handleInputChange = useHandleInputChange(updateFields);
   const { leave_type } = formState;
 
-  // TODO call API once API module is ready
-  // const handleSave = useHandleSave(api.patchClaim, props.setClaim);
-  // TODO save the API result to the claim once we have a `setClaim` function we can use
-  // For now just do nothing.
-  const handleSave = async () => {};
+  const handleSave = useHandleSave(
+    (formState) => claimsApi.updateClaim(new Claim(formState)),
+    (result) => props.updateClaim(result.claim)
+  );
 
   return (
     <QuestionPage
@@ -63,4 +61,9 @@ const LeaveType = (props) => {
   );
 };
 
-export default LeaveType;
+LeaveType.propTypes = {
+  claim: PropTypes.instanceOf(Claim),
+  updateClaim: PropTypes.func,
+};
+
+export default withClaim(LeaveType);
