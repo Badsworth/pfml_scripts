@@ -24,3 +24,4 @@ infra/portal/template/.zip
 
 # IDE-specific files
 .vscode/
+.idea/

@@ -101,6 +101,20 @@ paths:
               schema:
                 $ref: "#/components/schemas/Employee"
 
+  /all-fake-applications:
+    get:
+      tags:
+        - Test Endpoints
+      summary: FOR TEST PURPOSES ONLY. This endpoint provides all fake applications that were created at the start of the server.
+      operationId: massgov.pfml.api.applications.applications_get_all_fake
+      responses:
+        "200":
+          description: The endpoint returns a dictionary of existing applications. The keys are application id and the values are application objects. You can use this endpoint to determine the applcation ids.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApplicationResponse"
+
   /employees/{employee_id}:
     get:
       tags:
@@ -249,6 +263,134 @@ paths:
             $ref: '#/components/responses/NotFound'
         "400":
             $ref: '#/components/responses/BadRequest'
+
+  /applications:
+    post:
+      tags:
+        - Applications
+      summary:  Signal the Integration Platform to create an application for the logged in user. It returns an application id.
+      operationId: massgov.pfml.api.applications.applications_start
+      parameters:
+        - name: user_id
+          in: header
+          schema:
+            type: string
+            format: uuid
+          description:  User id for current user logged into application.
+          required: true
+      responses:
+        "201":
+          $ref: "#/components/responses/ApplicationCreatedResponse"
+        "400":
+          $ref: '#/components/responses/BadRequest'
+
+    get:
+      tags:
+        - Applications
+      summary:  Fetch all applications in the Application data model for the logged in user.
+      operationId: massgov.pfml.api.applications.applications_get
+      parameters:
+        - name: user_id
+          in: header
+          schema:
+            type: string
+            format: uuid
+          description:  User id for current user logged into application.
+          required: true
+      responses:
+        "200":
+          $ref: "#/components/responses/ApplicationSearchResponse"
+
+  /applications/{application_id}:
+    get:
+      tags:
+        - Applications
+      summary:  Fetch the application in DRAFT status for the logged in user existing identified by the application id.
+      operationId: massgov.pfml.api.applications.application_get
+      parameters:
+        - name: user_id
+          in: header
+          schema:
+            type: string
+            format: uuid
+          description:  User id for current user logged into application.
+          required: true
+        - name: application_id
+          in: path
+          schema:
+            type: string
+            format: uuid
+          description:  Identifier for application to be fetched.
+          required: true
+      responses:
+        "200":
+          $ref: "#/components/responses/ApplicationResponse"
+        "404":
+          $ref: '#/components/responses/NotFound'
+
+    patch:
+      tags:
+        - Applications
+      summary:  Endpoint to submit the data as applicant fills the application. It is expected the Portal will call this endpoint multiple times and with incomplete data most of the time. The API will review the data provided and return any pertinent warnings or errors. It is up to the Portal when to show these warnings or errors.
+      operationId: massgov.pfml.api.applications.applications_update
+      parameters:
+        - name: user_id
+          in: header
+          schema:
+            type: string
+            format: uuid
+          description:  User id for current user logged into application.
+          required: true
+        - name: application_id
+          in: path
+          schema:
+            type: string
+            format: uuid
+          description:  Identifier for application to be updated.
+          required: true
+      responses:
+        "200":
+          description: Application updated without errors.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApplicationUpdateResponse"
+        "400":
+          $ref: "#/components/responses/ApplicationUpdateResponse"
+      requestBody:
+        $ref: '#/components/requestBodies/ApplicationRequestBody'
+
+  /applications/{application_id}/submit_application:
+    post:
+      tags:
+        - Applications
+      summary:  Signal the data entry is complete and application is ready to be submitted to FINEOS.
+      operationId: massgov.pfml.api.applications.applications_submit
+      parameters:
+        - name: user_id
+          in: header
+          schema:
+            type: string
+            format: uuid
+          description:  User id for current user logged into application.
+          required: true
+        - name: application_id
+          in: path
+          schema:
+            type: string
+            format: uuid
+          description:  Identifier for application to be marked completed.
+          required: true
+      responses:
+        "201":
+          description: Application completed without errors.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApplicationUpdateResponse"
+        "400":
+          $ref: '#/components/responses/ApplicationUpdateResponse'
+
 tags:
   - name: Test Endpoints
   - name: Users
@@ -256,6 +398,7 @@ tags:
   - name: Employers
   - name: Eligibility
   - name: Wages
+  - name: Applications
 
 components:
   requestBodies:
@@ -277,6 +420,12 @@ components:
           schema:
             $ref: '#/components/schemas/EmployeeToUpdate'
       required: true
+    ApplicationRequestBody:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApplicationRequestBody'
+      required: true
 
   responses:
     EligibilityResponse:
@@ -285,6 +434,30 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/EligibilityDetermination'
+    ApplicationUpdateResponse:
+      description: Application updated
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApplicationUpdateResponse'
+    ApplicationResponse:
+      description: Application found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApplicationResponse'
+    ApplicationCreatedResponse:
+      description: A new application successfully created
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApplicationCreated'
+    ApplicationSearchResponse:
+      description: Search successful
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApplicationSearchResults'
     NotFound:
       description: The specified resource was not found
       content:
@@ -468,6 +641,410 @@ components:
           type: boolean
           default: false
 
+    ApplicationCreated:
+      type: object
+      properties:
+        application_id:
+          type: string
+          format: uuid
+          example: "2a340cf8-6d2a-4f82-a075-73588d003f8f"
+
+    ApplicationRequestBody:
+      type: object
+      properties:
+        application_nickname:
+          type: string
+          example:  "My bonding leave request"
+        application_id:
+          type: string
+          format: uuid
+          example:  "2a340cf8-6d2a-4f82-a075-73588d003f8f"
+        employee_ssn:
+          $ref: '#/components/schemas/SsnItin'
+        employer_fein:
+          $ref: '#/components/schemas/Fein'
+        first_name:
+          type: string
+          example:  "John"
+        last_name:
+          type: string
+          example:  "Doe"
+        occupation:
+          type: string
+          enum:
+            - Sales Clerk
+            - Administrative
+            - Engineer
+            - Doctor
+          example:  "Sales Clerk"
+        leave_details:
+          $ref: "#/components/schemas/ApplicationLeaveDetails"
+        payment_preferences:
+          type: array
+          items:
+            $ref: "#/components/schemas/PaymentPreferences"
+
+    ApplicationResponse:
+      type: object
+      properties:
+        application_nickname:
+          type: string
+          example:  "My bonding leave request"
+        application_id:
+          type: string
+          format: uuid
+          example:  "2a340cf8-6d2a-4f82-a075-73588d003f8f"
+        employee_id:
+          type: string
+          format: uuid
+          example:  "8623c9f2-8275-417b-b5d7-4bb32fedb7a7"
+        employer_id:
+          type: string
+          format: uuid
+          example:  "2f0f58a0-fcad-465b-b474-ee6c961cd6e3"
+        first_name:
+          type: string
+          example:  "John"
+        last_name:
+          type: string
+          example:  "Doe"
+        occupation:
+          type: string
+          enum:
+            - Sales Clerk
+            - Administrative
+            - Engineer
+            - Doctor
+          example:  "Sales Clerk"
+        leave_details:
+          $ref: "#/components/schemas/ApplicationLeaveDetails"
+        payment_preferences:
+          type: array
+          items:
+            $ref: "#/components/schemas/PaymentPreferences"
+
+    ApplicationLeaveDetails:
+      type: object
+      properties:
+        reason:
+          type: string
+          enum:
+            - Care For A Family Member
+            - Pregnancy/Maternity
+            - Child Bonding
+            - Serious Health Condition - Employee
+          example:  "Care For A Family Member"
+        reason_qualifier1:
+          type: string
+          example:  "Serious Health Condition"
+        reason_qualifier2:
+          type: string
+        reduced_schedule_leave_periods:
+          type: array
+          items:
+            $ref: "#/components/schemas/ReducedScheduleLeavePeriods"
+        continuous_leave_periods:
+          type: array
+          items:
+            $ref: "#/components/schemas/ContinuousLeavePeriods"
+        intermittent_leave_periods:
+          type: array
+          items:
+            $ref: "#/components/schemas/IntermittentLeavePeriods"
+        primary_relationship:
+          type: string
+          enum:
+            - Parent
+            - Child
+            - Grandparent
+            - Grandchild
+            - Other Family Member
+            - Service Member
+            - Inlaw
+            - Sibling
+            - Other
+          example:  "Parent"
+        primary_rel_qualifier1:
+          type: string
+          enum:
+            - Adoptive
+            - Biological
+            - Foster
+            - Custodial Parent
+            - Legal Guardian
+            - Step Parent
+          example:  "Biological"
+        primary_rel_qualifier2:
+          type: string
+        secondary_relationship:
+          type: string
+          enum:
+            - Parent
+            - Child
+            - Grandparent
+            - Grandchild
+            - Other Family Member
+            - Service Member
+            - Inlaw
+            - Sibling
+            - Other
+        secondary_rel_qualifier1:
+          type: string
+          enum:
+            - Adoptive
+            - Biological
+            - Foster
+            - Custodial Parent
+            - Legal Guardian
+            - Step Parent
+        secondary_rel_qualifier2:
+          type: string
+        employer_notified:
+          type: boolean
+          example:  true
+        employer_notification_date:
+          type: string
+          format: date
+          example:  "2020-04-24"
+        employer_notification_method:
+          type: string
+          enum:
+            - In Writing
+            - In Person
+            - By Telephone
+            - Other
+          example:  "In Writing"
+
+    ReducedScheduleLeavePeriods:
+      type: object
+      properties:
+        start_date:
+          type: string
+          format: date
+          example:  "2020-06-08"
+        end_date:
+          type: string
+          format: date
+          example:  "2020-07-31"
+        status:
+          type: string
+          enum:
+            - Estimated
+            - Known
+          default: Estimated
+          example:  "Estimated"
+        thursday_off_hours:
+          type: integer
+          example:  4
+        thursday_off_minutes:
+          type: integer
+          example:  0
+        friday_off_hours:
+          type: integer
+          example:  4
+        friday_off_minutes:
+          type: integer
+          example:  30
+        saturday_off_hours:
+          type: integer
+          example:  0
+        saturday_off_minutes:
+          type: integer
+          example:  0
+        sunday_off_hours:
+          type: integer
+          example:  0
+        sunday_off_minutes:
+          type: integer
+          example:  0
+        monday_off_hours:
+          type: integer
+          example:  4
+        monday_off_minutes:
+          type: integer
+          example:  0
+        tuesday_off_hours:
+          type: integer
+          example:  4
+        tuesday_off_minutes:
+          type: integer
+          example:  0
+        wednesday_off_hours:
+          type: integer
+          example:  4
+        wednesday_off_minutes:
+          type: integer
+          example:  0
+
+    ContinuousLeavePeriods:
+      type: object
+      properties:
+        start_date:
+          type: string
+          format: date
+          example:  "2020-06-08"
+        end_date:
+          type: string
+          format: date
+          example:  "2020-07-31"
+        last_day_worked:
+          type: string
+          format: date
+          example:  "2020-06-05"
+        expected_return_to_work_date:
+          type: string
+          format: date
+          example:  "2020-08-03"
+        start_date_full_day:
+          type: boolean
+          example:  true
+        start_date_off_hours:
+          type: integer
+          example:  0
+        start_date_off_minutes:
+          type: integer
+          example:  0
+        end_date_off_hours:
+          type: integer
+          example:  0
+        end_date_off_minutes:
+          type: integer
+          example:  0
+        end_date_full_day:
+          type: boolean
+          example:  true
+        status:
+          type: string
+          enum:
+            - Estimated
+            - Known
+          default: Estimated
+          example:  "Known"
+
+    IntermittentLeavePeriods:
+      type: object
+      properties:
+        start_date:
+          type: string
+          format: date
+          example:  "2020-06-08"
+        end_date:
+          type: string
+          format: date
+          example:  "2020-07-31"
+        frequency:
+          type: integer
+          example:  4
+        frequency_interval:
+          type: integer
+          example:  2
+        frequency_interval_basis:
+          type: string
+          enum:
+            - Days
+            - Weeks
+            - Months
+          example:  "Weeks"
+        duration:
+          type: integer
+          example:  2
+        duration_basis:
+          type: string
+          enum:
+            - Minutes
+            - Hours
+            - Days
+          example:  "Days"
+
+    PaymentPreferences:
+      type: object
+      properties:
+        description:
+          type: string
+        payment_method:
+          type: string
+          enum:
+            - Elec Funds Transfer
+            - Check
+            - Gift Card
+          example: "Elec Funds Transfer"
+        is_default:
+          type: boolean
+        account_details:
+          $ref: "#/components/schemas/ApplicationPaymentAccountDetails"
+        cheque_details:
+          $ref: "#/components/schemas/ApplicationPaymentChequeDetails"
+
+    ApplicationPaymentAccountDetails:
+      type: object
+      properties:
+        account_no:
+          type: string
+          minLength: 6
+          maxLength: 17
+          example:  "1234567"
+        routing_number:
+          $ref: '#/components/schemas/RoutingNbr'
+        account_name:
+          type: string
+          example:  "My Checking"
+        account_type:
+          type: string
+          enum:
+            - Checking
+            - Savings
+          example:  "Checking"
+
+    ApplicationPaymentChequeDetails:
+      type: object
+      properties:
+        name_to_print_on_check:
+          type: string
+          example:  "John Doe"
+
+    ApplicationUpdateResponse:
+      type: object
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+        warnings:
+          type: array
+          items:
+            $ref: '#/components/schemas/WarningsAndErrors'
+        errors:
+          type: array
+          items:
+            $ref: '#/components/schemas/WarningsAndErrors'
+      required:
+        - code
+        - message
+
+    WarningsAndErrors:
+      type: object
+      properties:
+        message:
+          type: string
+        attribute:
+          type: string
+
+    ApplicationSearchResults:
+      type: array
+      items:
+        $ref: '#/components/schemas/ApplicationSearchResult'
+
+    ApplicationSearchResult:
+      type: object
+      properties:
+        application_id:
+          type: string
+          format: uuid
+          example:  "2a340cf8-6d2a-4f82-a075-73588d003f8f"
+        application_nickname:
+          type: string
+          example:  "My bonding leave request"
+
     Error:
       type: object
       properties:
@@ -483,6 +1060,16 @@ components:
       type: string
       example: "000-00-0000"
       pattern: '^\d{3}-\d{2}-\d{4}$'
+
+    Fein:
+      type: string
+      example: "00-0000000"
+      pattern: '^\d{2}-\d{7}$'
+
+    RoutingNbr:
+      type: string
+      example: "000000000"
+      pattern: '^((0[0-9])|(1[0-2])|(2[1-9])|(3[0-2])|(6[1-9])|(7[0-2])|80)([0-9]{7})$'
 
     Uuid:
       type: string
