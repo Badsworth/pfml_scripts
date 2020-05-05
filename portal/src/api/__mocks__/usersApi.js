@@ -7,12 +7,24 @@
 import User from "../../models/User";
 const usersApi = jest.genMockFromModule("../usersApi").default;
 
+const mockUser = new User({
+  user_id: "api-123",
+  auth_id: "cognito-123",
+  email_address: "mock-user@example.com",
+  first_name: "Mock",
+});
+
+usersApi.getCurrentUser = jest.fn(() =>
+  Promise.resolve({
+    success: true,
+    user: mockUser,
+  })
+);
+
 usersApi.updateUser = jest.fn(() =>
   Promise.resolve({
     success: true,
-    user: new User({
-      first_name: "Mock",
-    }),
+    user: mockUser,
   })
 );
 

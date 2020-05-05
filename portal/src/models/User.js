@@ -4,7 +4,8 @@ class User extends BaseModel {
   get defaults() {
     return {
       user_id: null,
-      cognito_user_id: null,
+      auth_id: null,
+      email_address: null,
       first_name: null,
       middle_name: null,
       last_name: null,

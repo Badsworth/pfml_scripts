@@ -12,6 +12,7 @@ import Spinner from "../components/Spinner";
 import User from "../models/User";
 import useCollectionState from "../hooks/useCollectionState";
 import { useRouter } from "next/router";
+import usersApi from "../api/usersApi";
 
 initializeI18n();
 /**
@@ -49,7 +50,7 @@ export const App = ({
     removeItem: removeClaim,
   } = useCollectionState(new Collection({ idProperty: "claim_id" }));
 
-  const [ui, setUI] = useState({ isLoadingRoute: false });
+  const [ui, setUI] = useState({ isLoading: false });
 
   // State representing the auth service's (Cognito) user object
   // setAuthUser gets called when the user logs in to Cognito
@@ -61,7 +62,7 @@ export const App = ({
    * Scrolls the window to the top of the document upon route changes.
    */
   const handleRouteChangeEnd = () => {
-    setUI({ ...ui, isLoadingRoute: false });
+    setUI({ ...ui, isLoading: false });
     window.scrollTo(0, 0);
   };
 
@@ -69,18 +70,42 @@ export const App = ({
    * Event handler for when a page route is transitioning
    */
   const handleRouteChangeStart = () => {
-    setUI({ ...ui, isLoadingRoute: true });
+    setUI({ ...ui, isLoading: true });
   };
 
   /**
-   * Event handler for when the authn state changes.
+   * Event handler for when the Authenticator mounts and anytime
+   * its authState value changes, such as when a user logs in,
+   * or navigates to a different auth screen
+   * @param {string} newAuthState - Amplify authState value representing which auth content to display (i.e "signedIn")
+   * @param {object} authData - additional data within newAuthState; when the state is signedIn, it will return a CognitoUser object.
+   *  Learn more about CognitoUser: https://github.com/aws-amplify/amplify-js/blob/77df5104398d38cd69a1ba4fa0e8fe51343f3f92/packages/amazon-cognito-identity-js/index.d.ts#L63
    */
-  const handleAuthStateChange = (newAuthState, authData) => {
+  const handleAuthStateChange = async (newAuthState, authData) => {
     setAuthState(newAuthState);
 
     if (newAuthState === "signedIn") {
+      // The user logged in, so fetch their profile from the API and store it locally
+      setUI({ ...ui, isLoading: true });
+      // TODO: Once the API endpoint returns the actual user's data, we should just
+      // access the authenticated user's email from the profile returned by the API
+      // rather than having two different user states (user and authUser).
+      // https://lwd.atlassian.net/browse/CP-371
       setAuthUser({ username: authData.attributes.email });
+
+      try {
+        const { user } = await usersApi.getCurrentUser();
+        setUser(user);
+      } catch (error) {
+        // TODO: Handle errors fetching the current user
+        // https://lwd.atlassian.net/browse/CP-335
+      }
+
+      setUI({ ...ui, isLoading: false });
     } else {
+      // TODO: Update this block to only trigger on the Log Out event, and
+      // clear all local state, possibly by just refreshing the browser
+      // https://lwd.atlassian.net/browse/CP-361
       setAuthUser();
     }
 
@@ -115,7 +140,7 @@ export const App = ({
               authData={initialAuthData}
               onStateChange={handleAuthStateChange}
             >
-              {ui.isLoadingRoute ? (
+              {ui.isLoading ? (
                 <div className="margin-top-8 text-center">
                   <Spinner aria-valuetext={t("components.spinner.label")} />
                 </div>

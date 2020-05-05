@@ -5,7 +5,8 @@
  */
 module.exports = {
   envName: "test",
-  apiUrl: "https://67385ye4yb.execute-api.us-east-1.amazonaws.com/test/api/v1/",
+  // API Stage environment (https://lwd.atlassian.net/wiki/spaces/DD/pages/246612440/Environments)
+  apiUrl: "https://hxrjel1aeb.execute-api.us-east-1.amazonaws.com/stage/api/v1",
   awsConfig: {
     Auth: {
       region: "us-east-1",

@@ -4,8 +4,9 @@ exports[`Name renders the empty page 1`] = `
 <QuestionPage
   formState={
     User {
-      "cognito_user_id": null,
+      "auth_id": null,
       "date_of_birth": null,
+      "email_address": null,
       "first_name": null,
       "has_state_id": null,
       "last_name": null,
@@ -55,8 +56,9 @@ exports[`Name renders the page prefilled with user information 1`] = `
 <QuestionPage
   formState={
     User {
-      "cognito_user_id": null,
+      "auth_id": null,
       "date_of_birth": null,
+      "email_address": null,
       "first_name": "Aquib",
       "has_state_id": null,
       "last_name": "Khan",

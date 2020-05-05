@@ -5,6 +5,8 @@
  */
 module.exports = {
   envName: "prod",
+  // API Production environment (https://lwd.atlassian.net/wiki/spaces/DD/pages/246612440/Environments)
+  apiUrl: "https://zi7eve1v85.execute-api.us-east-1.amazonaws.com/prod/api/v1",
   awsConfig: {
     Auth: {
       region: "us-east-1",
