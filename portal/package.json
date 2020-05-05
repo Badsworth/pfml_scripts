@@ -4,6 +4,7 @@
   "description": "Mass PFML Portal",
   "main": "index.js",
   "scripts": {
+    "analyze-bundle": "ANALYZE_BUNDLE=true next build",
     "dev": "next",
     "docs": "start-storybook -p 6006 -s ./public --docs",
     "docs:smoke-test": "npm run docs -- --ci --smoke-test --quiet",
@@ -32,6 +33,7 @@
   },
   "devDependencies": {
     "@babel/core": "^7.8.4",
+    "@next/bundle-analyzer": "^9.3.6",
     "@storybook/addon-docs": "^6.0.0-alpha.41",
     "@storybook/react": "^6.0.0-alpha.41",
     "babel-loader": "^8.0.6",

@@ -1,11 +1,14 @@
 const buildEnv = process.env.BUILD_ENV || "development";
 const envVariables = require("./config")[buildEnv];
 const featureFlags = require("./config/featureFlags")(buildEnv);
+const withBundleAnalyzer = require("@next/bundle-analyzer")({
+  enabled: process.env.ANALYZE_BUNDLE === "true",
+});
 
 // eslint-disable-next-line no-console
 console.log(`📦 Using "${buildEnv}" environment variables to build the site.`);
 
-module.exports = {
+const config = {
   // In our code, we can reference environment variables from process.env
   // https://nextjs.org/docs/api-reference/next.config.js/environment-variables
   env: {
@@ -36,3 +39,5 @@ module.exports = {
     return webpackConfig;
   },
 };
+
+module.exports = withBundleAnalyzer(config);
