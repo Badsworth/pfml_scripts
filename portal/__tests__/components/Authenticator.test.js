@@ -78,8 +78,17 @@ describe("Authenticator", () => {
     it("focuses the Alert", async () => {
       expect.hasAssertions();
 
+      // Hide warning about rendering in the body, since we need to for this test
+      jest.spyOn(console, "error").mockImplementationOnce(jest.fn());
+
       // Mount the component so useEffect is called
-      const wrapper = render({}, true);
+      // attachTo the body so document.activeElement works (https://github.com/enzymejs/enzyme/issues/2337#issuecomment-608984530)
+      const wrapper = mount(
+        <Authenticator>
+          <div />
+        </Authenticator>,
+        { attachTo: document.body }
+      );
 
       await act(async () => {
         const errorHandler = wrapper.children().first().prop("errorMessage");

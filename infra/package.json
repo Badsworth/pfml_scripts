@@ -8,6 +8,6 @@
     "test:watch": "jest --watch"
   },
   "devDependencies": {
-    "jest": "^25.2.4"
+    "jest": "^26.0.1"
   }
 }
