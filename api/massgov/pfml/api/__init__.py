@@ -10,9 +10,9 @@ import connexion.mock
 import flask_cors
 
 import massgov.pfml.util.logging
-from massgov.pfml.api import db
+from massgov.pfml import db
+from massgov.pfml.config import config
 
-from .config import config
 from .reverse_proxy import ReverseProxied
 
 logger = massgov.pfml.util.logging.get_logger(__name__)

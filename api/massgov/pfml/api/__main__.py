@@ -11,7 +11,7 @@ import os
 import massgov.pfml.api
 import massgov.pfml.api.generate_fake_data as fake
 import massgov.pfml.util.logging
-from massgov.pfml.api.config import config
+from massgov.pfml.config import config
 
 logger = massgov.pfml.util.logging.get_logger(__package__)
 

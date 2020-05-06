@@ -2,8 +2,8 @@ from dataclasses import dataclass
 
 from werkzeug.exceptions import NotFound
 
-import massgov.pfml.api.db as db
-from massgov.pfml.api.db.models import Employer
+import massgov.pfml.db as db
+from massgov.pfml.db.models import Employer
 
 
 def employers_get(employer_id):

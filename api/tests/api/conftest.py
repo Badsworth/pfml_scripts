@@ -14,7 +14,7 @@ import pytest
 import massgov.pfml.api
 import massgov.pfml.api.employees
 import massgov.pfml.api.generate_fake_data as fake
-from massgov.pfml.api.config import config
+from massgov.pfml.config import config
 
 
 @pytest.fixture
@@ -55,7 +55,7 @@ def test_employer(monkeypatch):
 
 @pytest.fixture
 def test_user(test_db_session):
-    from massgov.pfml.api.db.models import Status, User
+    from massgov.pfml.db.models import Status, User
 
     user = fake.create_user("johnsmith@example.com", "0000-111-2222")
 
@@ -94,7 +94,7 @@ def test_db_schema(monkeypatch):
 
     monkeypatch.setitem(config, "db_schema", schema_name)
 
-    import massgov.pfml.api.db as db
+    import massgov.pfml.db as db
 
     db_test_user = config["db_username"]
 
@@ -116,11 +116,11 @@ def test_db(test_db_schema):
     Creates a test schema, directly creating all tables with SQLAlchemy. Schema
     is dropped after the test completes.
     """
-    import massgov.pfml.api.db as db
-    from massgov.pfml.api.db.base import Base
+    import massgov.pfml.db as db
+    from massgov.pfml.db.models.base import Base
 
     # not used directly, but loads models into Base
-    import massgov.pfml.api.db.models as models  # noqa: F401
+    import massgov.pfml.db.models as models  # noqa: F401
 
     engine = db.create_engine()
 
@@ -146,7 +146,7 @@ def test_db_via_migrations(test_db_schema):
 
 @pytest.fixture
 def test_db_session(test_db):
-    import massgov.pfml.api.db as db
+    import massgov.pfml.db as db
 
     db_session = db.get_session()
 

@@ -4,9 +4,9 @@ from enum import Enum
 import connexion
 from werkzeug.exceptions import NotFound
 
-import massgov.pfml.api.db as db
+import massgov.pfml.db as db
 import massgov.pfml.util.logging
-from massgov.pfml.api.db.models import Status, User
+from massgov.pfml.db.models import Status, User
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
 

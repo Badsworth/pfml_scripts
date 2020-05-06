@@ -2,8 +2,8 @@ from dataclasses import dataclass
 
 from werkzeug.exceptions import NotFound
 
-import massgov.pfml.api.db as db
-from massgov.pfml.api.db.models import WageAndContribution
+import massgov.pfml.db as db
+from massgov.pfml.db.models import WageAndContribution
 
 # this isn't being imported properly so it defaults to the example. hence all the 200s
 

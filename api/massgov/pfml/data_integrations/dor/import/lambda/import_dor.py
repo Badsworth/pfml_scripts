@@ -12,8 +12,8 @@ from typing import Callable, List
 import boto3
 import massgov.pfml.util.logging as logging
 import pydash
-from massgov.pfml.api import db
-from massgov.pfml.api.db.models import (
+from massgov.pfml import db
+from massgov.pfml.db.models import (
     Address,
     AddressType,
     Country,

@@ -8,11 +8,11 @@ from alembic import context
 # See database migrations section in `api/README.md` for details about running migrations.
 sys.path.insert(0, ".")  # noqa: E402
 
-import massgov.pfml.api.db as db  # isort:skip
-from massgov.pfml.api.db.base import Base  # isort:skip
+import massgov.pfml.db as db  # isort:skip
+from massgov.pfml.db.models.base import Base  # isort:skip
 
 # import models module to trigger loading of all modules into the Base
-import massgov.pfml.api.db.models  # noqa: F401 isort:skip
+import massgov.pfml.db.models  # noqa: F401 isort:skip
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
