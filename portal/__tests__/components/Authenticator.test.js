@@ -1,5 +1,6 @@
 import { mount, shallow } from "enzyme";
 import Authenticator from "../../src/components/Authenticator";
+import { Hub } from "aws-amplify";
 import React from "react";
 import { act } from "react-dom/test-utils";
 import customAmplifyErrorMessageKey from "../../src/utils/customAmplifyErrorMessageKey";
@@ -120,6 +121,46 @@ describe("Authenticator", () => {
       expect(wrapper.find("Alert").text()).toBe(
         "Original Amplify error message"
       );
+    });
+  });
+
+  describe("when the forgotPassword auth event occurs", () => {
+    const forgotPasswordEvent = {
+      payload: {
+        event: "forgotPassword",
+      },
+    };
+
+    it("removes any displayed error alerts", () => {
+      // Mock Hub.listen() to just save the callback so we can call it ourselves
+      let forgotPasswordCallback;
+      jest.spyOn(Hub, "listen").mockImplementationOnce((channel, callback) => {
+        forgotPasswordCallback = callback;
+      });
+
+      customAmplifyErrorMessageKey.mockReturnValueOnce(
+        "errors.auth.passwordRequired"
+      );
+
+      const wrapper = render({}, true);
+      const authenticator = wrapper.childAt(0);
+      const errorHandler = authenticator.prop("errorMessage");
+
+      act(() => {
+        // Trigger an amplify error alert
+        errorHandler(
+          "customAmplifyErrorMessageKey is mocked so this string doesn't matter"
+        );
+      });
+      wrapper.update();
+      expect(wrapper.find("Alert")).toHaveLength(1);
+
+      act(() => {
+        // Trigger a forgotPassword event to clear the error
+        forgotPasswordCallback(forgotPasswordEvent);
+      });
+      wrapper.update();
+      expect(wrapper.find("Alert")).toHaveLength(0);
     });
   });
 

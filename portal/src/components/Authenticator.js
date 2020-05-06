@@ -1,3 +1,4 @@
+import Amplify, { Hub } from "aws-amplify";
 import {
   Authenticator as AmplifyAuthenticator,
   ConfirmSignIn,
@@ -9,7 +10,6 @@ import {
 } from "aws-amplify-react";
 import React, { useEffect, useRef, useState } from "react";
 import Alert from "./Alert";
-import Amplify from "aws-amplify";
 import CustomConfirmSignUp from "./CustomConfirmSignUp";
 import CustomForgotPassword from "./CustomForgotPassword";
 import CustomSignUp from "./CustomSignUp";
@@ -101,6 +101,33 @@ const Authenticator = (props) => {
       props.onStateChange(newAuthState, authData);
     }
   };
+
+  /**
+   * When a user enters their email address and initiates a password reset their
+   * screen will change to allow them to enter their verification code and new password.
+   * However, initiating the password reset doesn't cause an authState change.
+   * This means that without this method any errors which occurred while the
+   * user was trying to initiate a password reset (eg they didn't enter any email
+   * address) will stick around to the new screen.
+   * When the user initiates a password reset Amplify will send the `forgotPassword`
+   * auth event. We use this event to clear any error messages when we switch to
+   * the new screen where the user enters the verification code and new password.
+   *
+   * @param {object} payload Payload of the HubCapsule which contains data about the
+   * event that occurred. See more details at:
+   * https://aws-amplify.github.io/amplify-js/api/globals.html#hubcapsule
+   */
+  const resetForgotPasswordErrors = ({ payload }) => {
+    if (payload.event === "forgotPassword") {
+      setAmplifyError();
+    }
+  };
+
+  // Listen for auth events so we can reset old errors in the forgot password flow.
+  // This is only called the first time this component is rendered.
+  useEffect(() => {
+    Hub.listen("auth", resetForgotPasswordErrors);
+  }, []);
 
   const renderAlert = () => {
     // Show authentication errors
