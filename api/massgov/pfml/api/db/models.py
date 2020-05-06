@@ -102,9 +102,9 @@ class Employer(Base):
     __tablename__ = "employer"
     employer_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
     account_key = Column(Text)
-    employer_fein = Column(Text)
+    employer_fein = Column(Text, nullable=False)
     employer_name = Column(Text)
-    employer_dba = Column(Text)
+    employer_dba = Column(Text, nullable=False)
     family_exemption = Column(Boolean)
     medical_exemption = Column(Boolean)
     exemption_commence_date = Column(Date)
