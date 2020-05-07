@@ -3,9 +3,11 @@ DOR_IMPORT_LAMBDA_FOLDER := ../../massgov/pfml/data_integrations/dor/import
 clean:
 	rm -rf .aws-sam
 
+build-api:
+	cd ../..; poetry build
+
 # grab the latest pfml api code
 deps:
-	cd ../..; poetry build
 	cp ../../dist/massgov.pfml.api-0.1.0-py3-none-any.whl $(DOR_IMPORT_LAMBDA_FOLDER)/lambda/massgov.pfml.api-0.1.0-py3-none-any.whl
 
 # build the lambda within a SAM container

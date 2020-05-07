@@ -8,12 +8,12 @@ AWS CLI
 AWS SAM CLI
 Docker
 
-# Dependencies
+## Dependencies
 
 Run to get latest PFML API module as a dependency (whenever API code changes)
 
 ```
-make deps
+make build-api deps
 ```
 
 ## Local testing

@@ -47,12 +47,15 @@ jobs:
     name: Build lambda function for DOR import
     runs-on: ubuntu-latest
     env:
-      working-dir: ./api/import_infra/dor
+      infra-working-dir: ./api/import_infra/dor
     outputs:
       s3_key: ${{ steps.get_s3_key.outputs.s3_key }}
 
     steps:
       - uses: actions/checkout@v2
+      - uses: actions/setup-python@v1
+        with:
+          python-version: ${{ env.python-version }}
 
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
@@ -63,17 +66,26 @@ jobs:
           role-to-assume: ci-run-deploys
           role-duration-seconds: 3600
 
+      - name: Install API Package Dependencies
+        run: pip install wheel setuptools poetry
+        working-directory:  ${{ env.working-dir }}
+
+      - name: Build API package
+        run: poetry build
+        working-directory:  ${{ env.working-dir }}
+
       - name: Install Lambda CLI Dependencies
         run: pip install setuptools awscli aws-sam-cli
-        working-driectory:  ${{ env.working-dir }}
+        working-directory:  ${{ env.infra-working-dir }}
 
       - name: Lambda Build, Package and Upload to S3
         run: make upload-release
-        working-driectory:  ${{ env.working-dir }}
+        working-directory:  ${{ env.infra-working-dir }}
 
       - name: Get Package S3 Key
-        run: echo "::set-output name=s3_key::$(get-lambda-build.py)"
-        working-driectory:  ${{ env.working-dir }}
+        id: get_s3_key
+        run: echo "::set-output name=s3_key::$(python3 get-lambda-build.py)"
+        working-directory:  ${{ env.infra-working-dir }}
 
   api-release:
     name: Release
@@ -84,7 +96,7 @@ jobs:
       terraform-dir: ./infra/api/environments
       TF_VAR_service_docker_tag: ${{ github.sha }}
       TF_VAR_dor_lambda_artifact_s3_key: ${{ needs.dor-import-build.outputs.s3_key }}
-      
+
       # Create a mapping of branches to environment names.
       #
       # The api-env step will grab the env name using github.ref, which
@@ -98,9 +110,6 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/setup-python@v1
-        with:
-          python-version: ${{ env.python-version }}
 
       # Map the github.ref (the branch or tag that triggered the workflow) to an environment name.
       #   e.g refs/heads/master or refs/heads/deploy/api/stage
