@@ -27,7 +27,7 @@ terraform {
 module "pfml" {
   source = "../../template"
 
-  environment_name  = "$ENV_NAME"
+  environment_name = "$ENV_NAME"
   # TODO: This will revert back to '/api/' once we have a custom domain name.
   #       For now, we're relying on the API Gateway-provided URL which prepends
   #       the "$ENV_NAME" stage.

@@ -136,6 +136,8 @@ EMPLOYEE_FORMAT = (
 def handler(event, context):
     """Lambda handler function."""
 
+    logger.info("Starting import run")
+
     bucket = get_bucket(event)
 
     files_by_date = get_files_for_import_grouped_by_date(bucket)
@@ -151,7 +153,7 @@ def handler(event, context):
     for file_date_key in file_date_keys:
         files_for_import = files_by_date[file_date_key]
 
-        logger.info(files_for_import)
+        logger.info("importing files", extra={"files_for_import": files_for_import})
 
         employer_file = pydash.find(
             files_for_import, lambda f: get_file_name(f).startswith(EMPLOYER_FILE_PREFIX)
@@ -161,13 +163,19 @@ def handler(event, context):
         )
 
         logger.info(
-            "date: %s, employer: %s, employee: %s", file_date_key, employer_file, employee_file
+            "got file names",
+            extra={
+                "date": file_date_key,
+                "employer_file": employer_file,
+                "employee_file": employee_file,
+            },
         )
 
         import_report = process_daily_import(bucket, employer_file, employee_file)
         report.imports.append(import_report)
 
     report.end = datetime.now().isoformat()
+    logger.info("Finished import run")
     return {"status": "OK", "import_type": "daily", "report": asdict(report)}
 
 
@@ -202,7 +210,7 @@ def get_files_for_import_grouped_by_date(bucket):
 
 def process_daily_import(bucket, employer_file, employee_file):
     """Process s3 file by key"""
-    logger.info("processing employer file: %s, employee file: %s", employer_file, employee_file)
+    logger.info("Starting to process files")
     report = ImportReport(
         start=datetime.now().isoformat(), employer_file=employer_file, employee_file=employee_file
     )
@@ -218,7 +226,16 @@ def process_daily_import(bucket, employer_file, employee_file):
             parsed_employers_quarter_info_count = len(employers_quarter_info)
             parsed_employees_info_count = len(employees_info)
 
-            logger.debug("finshed parsing files")
+            logger.info(
+                "Finished parsing files",
+                extra={
+                    "employer_file": employer_file,
+                    "employee_file": employee_file,
+                    "parsed_employers_count": parsed_employers_count,
+                    "parsed_employers_quarter_info_count": parsed_employers_quarter_info_count,
+                    "parsed_employees_info_count": parsed_employees_info_count,
+                },
+            )
 
             import_to_db(db_session, employers, employers_quarter_info, employees_info, report)
 
@@ -233,7 +250,7 @@ def process_daily_import(bucket, employer_file, employee_file):
             # move_file_to_processed(bucket, file_for_import) # TODO turn this on with invoke flag
 
         except Exception:
-            logger.exception("exception in file process")
+            logger.exception("Exception while processing")
             report.status = "error"
             report.end = datetime.now().isoformat()
 
@@ -247,11 +264,14 @@ def process_daily_import(bucket, employer_file, employee_file):
 
 def import_to_db(db_session, employers, employers_quarter_info, employees_info, report):
     """Process through parsed objects and persist into database"""
+    logger.info("Starting import")
 
     account_key_to_employer_id_map = import_employers(db_session, employers, report)
     import_employees_and_wage_data(
         db_session, account_key_to_employer_id_map, employers_quarter_info, employees_info, report,
     )
+
+    logger.info("Finished import")
 
 
 def import_employers(db_session, employers, report):
@@ -322,6 +342,10 @@ def import_employers(db_session, employers, report):
             account_key_to_employer_id_map[account_key] = existing_employer.employer_id
 
     report.created_employers_count = created_employers_count
+
+    logger.info(
+        "Finished importing employers", extra={"created_employers_count": created_employers_count}
+    )
     return account_key_to_employer_id_map
 
 
@@ -339,8 +363,6 @@ def import_employees_and_wage_data(
         existing_employee = (
             db_session.query(Employee).filter(Employee.tax_identifier == ssn).first()
         )
-
-        logger.debug("employee %s", ssn)
 
         if existing_employee is None:
             employee = Employee(
@@ -360,6 +382,10 @@ def import_employees_and_wage_data(
             employee_id_by_ssn[ssn] = existing_employee.employee_id
 
     report.created_employees_count = created_employees_count
+    logger.info(
+        "Finished importing employee information",
+        extra={"created_employees_count": created_employees_count},
+    )
 
     logger.info("Importing employee wage information")
 
@@ -368,8 +394,6 @@ def import_employees_and_wage_data(
         account_key = employee_info["account_key"]
         filing_period = employee_info["filing_period"]
         ssn = employee_info["employee_ssn"]
-
-        logger.debug("wage: %s, %s, %s", ssn, account_key, filing_period)
 
         # TODO handle existing wage - may need indexing on account_key and filing_period
         # existing_wage = db_session.query(WageAndContribution).filter(WageAndContribution.account_key == account_key).filter(WageAndContribution.filing_period == filing_period).first()
@@ -393,10 +417,14 @@ def import_employees_and_wage_data(
             db_session.add(wage)
         # else: # TODO update wage if amended flag is set
 
+    logger.info("Finished importing employee wage information")
+
     return None
 
 
 def parse_employer_file(bucket, employer_file):
+    """Parse employer file"""
+    logger.info("Start parsing employer file", extra={"employer_file": employer_file})
     employers = []
 
     lines = read_file(bucket, employer_file)
@@ -405,10 +433,14 @@ def parse_employer_file(bucket, employer_file):
         employer = parse_row_to_object_by_format(row, EMPLOYER_FILE_FORMAT)
         employers.append(employer)
 
+    logger.info("Finished parsing employer file", extra={"employer_file": employer_file})
     return employers
 
 
 def parse_employee_file(bucket, employee_file):
+    """Parse employee file"""
+    logger.info("Start parsing employee file", extra={"employee_file": employee_file})
+
     employers_quarter_info = []
     employees_info = []
 
@@ -422,6 +454,7 @@ def parse_employee_file(bucket, employee_file):
             employee_info = parse_row_to_object_by_format(row, EMPLOYEE_FORMAT)
             employees_info.append(employee_info)
 
+    logger.info("Finished parsing employee file", extra={"employee_file": employee_file})
     return employers_quarter_info, employees_info
 
 
@@ -469,6 +502,7 @@ def move_file_to_processed(bucket, file_to_copy):
 
 def write_report_to_db(db_session, report):
     """Write report of import to database"""
+    logger.info("Saving import report in log")
     import_log = ImportLog(
         source="DOR",
         import_type="Initial",  # Update this from invoke payload
@@ -478,6 +512,7 @@ def write_report_to_db(db_session, report):
         end=report.end,
     )
     db_session.add(import_log)
+    logger.info("Finished saving import report in log")
 
 
 def write_report_to_s3(bucket, report):

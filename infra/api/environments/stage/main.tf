@@ -54,4 +54,5 @@ module "api" {
     # API, but we're not heavily using the stage environment right now so it's fine.
     "http://localhost:3000"
   ]
+  dor_import_lambda_build_s3_key = var.dor_lambda_artifact_s3_key
 }

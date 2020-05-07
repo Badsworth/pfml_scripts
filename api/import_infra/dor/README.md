@@ -36,14 +36,14 @@ Invoke the function
 make local
 ```
 
-## AWS Labmda (TODO - bring over from /massgov/pfml/data_integrations/dor/import)
+## Release
 
-<!-- Build and deploy
+Build and upload to S3
 ```
-$ make publish
+make upload-release
 ```
 
-Invoke the function
+Get the S3 key
 ```
-make invoke
-``` -->
+make get-key
+```

@@ -27,14 +27,15 @@ data "aws_ecs_cluster" "$ENV_NAME" {
 module "api" {
   source = "../../template"
 
-  environment_name        = "$ENV_NAME"
-  service_app_count       = 2
-  service_docker_tag      = local.service_docker_tag
-  service_ecs_cluster_arn = data.aws_ecs_cluster.$ENV_NAME.arn
-  vpc_id                  = data.aws_vpc.vpc.id
-  vpc_app_subnet_ids      = data.aws_subnet_ids.vpc_app.ids
-  postgres_version        = "11.6"
-  nlb_name                = "${local.vpc}-nlb"
-  nlb_port                = UNIQUE_NLB_PORT_RESERVED_IN_ENV_SHARED
-  cors_origins            = [API_DOCS_DOMAIN, PORTAL_DOMAIN]
+  environment_name                = "$ENV_NAME"
+  service_app_count               = 2
+  service_docker_tag              = local.service_docker_tag
+  service_ecs_cluster_arn         = data.aws_ecs_cluster.$ENV_NAME.arn
+  vpc_id                          = data.aws_vpc.vpc.id
+  vpc_app_subnet_ids              = data.aws_subnet_ids.vpc_app.ids
+  postgres_version                = "11.6"
+  nlb_name                        = "${local.vpc}-nlb"
+  nlb_port                        = UNIQUE_NLB_PORT_RESERVED_IN_ENV_SHARED
+  cors_origins                    = [API_DOCS_DOMAIN, PORTAL_DOMAIN]
+  dor_import_lambda_build_s3_key  = var.dor_lambda_artifact_s3_key
 }

@@ -98,3 +98,36 @@ resource "aws_s3_bucket_public_access_block" "agency_transfer_block_public_acces
   restrict_public_buckets = true
 }
 
+resource "aws_s3_bucket" "lambda_build" {
+  bucket = "massgov-pfml-api-lambda-builds"
+  acl    = "private"
+
+  server_side_encryption_configuration {
+    rule {
+      apply_server_side_encryption_by_default {
+        sse_algorithm = "AES256"
+      }
+    }
+  }
+
+  tags = {
+    agency        = "eol"
+    application   = "coreinf"
+    businessowner = "vijay.rajagopalan2@mass.gov"
+    createdby     = "ma-pfml-alerts@mass.gov"
+    environment   = "all"
+    itowner       = "ma-pfml-alerts@mass.gov"
+    public        = "no"
+    secretariat   = "eolwd"
+    Name          = "massgov-pfml-api-lambda-builds"
+  }
+}
+
+resource "aws_s3_bucket_public_access_block" "lambda_build_block_public_access" {
+  bucket = aws_s3_bucket.lambda_build.id
+
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+}

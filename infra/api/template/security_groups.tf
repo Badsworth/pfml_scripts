@@ -36,10 +36,10 @@ resource "aws_security_group" "app" {
     security_groups = [aws_security_group.rds_postgresql.id]
   }
 
-  # Outgoing UDP/TCP to DHCP servers that are in peer VPCs.
+  # Outgoing UDP/TCP to DNS servers that are in peer VPCs.
   #
   # This is needed since EOTSS provides us with VPCs that have
-  # custom DHCP options, including custom dns servers.
+  # custom DNS options, including custom dns servers.
   egress {
     cidr_blocks = ["10.0.0.0/8"]
     from_port   = 53
@@ -82,7 +82,7 @@ resource "aws_security_group_rule" "rds_postgresql_egress_none" {
   security_group_id = aws_security_group.rds_postgresql.id
 }
 
-# Allow access from the ECS applications.
+# Allow RDS access from the ECS applications.
 resource "aws_security_group_rule" "rds_postgresql_ingress_app" {
   type                     = "ingress"
   description              = "PostgreSQL from ECS applications"
@@ -91,4 +91,57 @@ resource "aws_security_group_rule" "rds_postgresql_ingress_app" {
   protocol                 = "tcp"
   source_security_group_id = aws_security_group.app.id
   security_group_id        = aws_security_group.rds_postgresql.id
+}
+
+# Allow RDS access from the Lambda functions.
+resource "aws_security_group_rule" "rds_postgresql_ingress_lambda" {
+  type                     = "ingress"
+  description              = "PostgreSQL from Lambda applications"
+  from_port                = 5432
+  to_port                  = 5432
+  protocol                 = "tcp"
+  source_security_group_id = aws_security_group.data_import.id
+  security_group_id        = aws_security_group.rds_postgresql.id
+}
+
+# Allow outgoing network traffic to RDS databases from data import lambdas
+resource "aws_security_group" "data_import" {
+  name        = "${local.app_name}-data-import-${var.environment_name}"
+  description = "Access to RDS from lambdas"
+  vpc_id      = data.aws_vpc.vpc.id
+
+  # Outgoing https to all destinations.
+  egress {
+    cidr_blocks = ["10.0.0.0/8"]
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
+  }
+
+  # Outgoing PostgreSQL to RDS.
+  egress {
+    description     = "PostgreSQL to RDS"
+    from_port       = 5432
+    to_port         = 5432
+    protocol        = "tcp"
+    security_groups = [aws_security_group.rds_postgresql.id]
+  }
+
+  # Outgoing UDP/TCP to DNS servers that are in peer VPCs.
+  #
+  # This is needed since EOTSS provides us with VPCs that have
+  # custom DNS options, including custom dns servers.
+  egress {
+    cidr_blocks = ["10.0.0.0/8"]
+    from_port   = 53
+    to_port     = 53
+    protocol    = "tcp"
+  }
+
+  egress {
+    cidr_blocks = ["10.0.0.0/8"]
+    from_port   = 53
+    to_port     = 53
+    protocol    = "udp"
+  }
 }

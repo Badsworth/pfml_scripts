@@ -20,14 +20,15 @@ data "aws_ecs_cluster" "sandbox" {
 module "api" {
   source = "../../template"
 
-  environment_name        = "sandbox"
-  service_app_count       = 2
-  service_docker_tag      = local.service_docker_tag
-  service_ecs_cluster_arn = data.aws_ecs_cluster.sandbox.arn
-  vpc_id                  = data.aws_vpc.nava_internal.id
-  vpc_app_subnet_ids      = data.aws_subnet_ids.nava_internal_app.ids
-  postgres_version        = "11.6"
-  nlb_name                = "sandbox-nlb"
-  nlb_port                = "80"
-  cors_origins            = ["https://pfml.navateam.com", "https://pfml-sandbox-v2.navateam.com"]
+  environment_name               = "sandbox"
+  service_app_count              = 2
+  service_docker_tag             = local.service_docker_tag
+  service_ecs_cluster_arn        = data.aws_ecs_cluster.sandbox.arn
+  vpc_id                         = data.aws_vpc.nava_internal.id
+  vpc_app_subnet_ids             = data.aws_subnet_ids.nava_internal_app.ids
+  postgres_version               = "11.6"
+  nlb_name                       = "sandbox-nlb"
+  nlb_port                       = "80"
+  cors_origins                   = ["https://pfml.navateam.com", "https://pfml-sandbox-v2.navateam.com"]
+  dor_import_lambda_build_s3_key = var.dor_lambda_artifact_s3_key
 }

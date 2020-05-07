@@ -84,3 +84,14 @@ variable "cors_origins" {
   description = "A list of origins to allow CORS requests from."
   type        = list(string)
 }
+
+variable "dor_import_lambda_build_s3_key" {
+  description = "The S3 object key of the DOR integration lambda artifact"
+  type        = string
+}
+
+variable "lambda_runtime" {
+  description = "The runtime environment (and version) of lambda functions"
+  type        = string
+  default     = "python3.8"
+}

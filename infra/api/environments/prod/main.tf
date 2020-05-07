@@ -49,4 +49,6 @@ module "api" {
     "https://pfml-api.eolwd.mass.gov",
     "https://zi7eve1v85.execute-api.us-east-1.amazonaws.com"
   ]
+
+  dor_import_lambda_build_s3_key = var.dor_lambda_artifact_s3_key
 }
