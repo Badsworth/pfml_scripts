@@ -22,9 +22,9 @@ describe("Duration", () => {
       expect(wrapper.find("ConditionalContent").prop("visible")).toBeFalsy();
     });
 
-    it("redirects to the home page", () => {
+    it("redirects to the Notified Employer page", () => {
       expect(wrapper.find("QuestionPage").prop("nextPage")).toEqual(
-        routes.home
+        routes.claims.notifiedEmployer
       );
     });
   });

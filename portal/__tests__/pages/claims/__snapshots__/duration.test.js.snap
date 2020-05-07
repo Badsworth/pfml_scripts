@@ -12,7 +12,7 @@ exports[`Duration regardless of duration type initially renders the page without
       "leave_type": null,
     }
   }
-  nextPage="/"
+  nextPage="/claims/notified-employer"
   onSave={[Function]}
   title="Leave duration"
 >

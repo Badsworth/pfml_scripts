@@ -9,6 +9,7 @@ const routes = {
     duration: "/claims/duration",
     leaveType: "/claims/leave-type",
     name: "/claims/name",
+    notifiedEmployer: "/claims/notified-employer",
     ssn: "/claims/ssn",
     stateId: "/claims/state-id",
   },

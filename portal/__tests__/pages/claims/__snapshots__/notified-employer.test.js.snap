@@ -1,0 +1,41 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`NotifiedEmployer renders the page 1`] = `
+<QuestionPage
+  formState={
+    Claim {
+      "avg_weekly_hours_worked": null,
+      "claim_id": "12345",
+      "created_at": null,
+      "duration_type": null,
+      "hours_off_needed": null,
+      "leave_type": null,
+    }
+  }
+  nextPage="/"
+  onSave={[Function]}
+  title="Medical Leave Application"
+>
+  <InputChoiceGroup
+    choices={
+      Array [
+        Object {
+          "checked": false,
+          "label": "Yes",
+          "value": "true",
+        },
+        Object {
+          "checked": false,
+          "label": "No",
+          "value": "false",
+        },
+      ]
+    }
+    hint="Notify your employer at least 30 days before the start of your leave if possible."
+    label="Have you notified your employer of your leave?"
+    name="notified"
+    onChange={[Function]}
+    type="radio"
+  />
+</QuestionPage>
+`;

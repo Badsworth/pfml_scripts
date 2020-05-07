@@ -32,6 +32,8 @@ const general = {
 // TODO: Combine shared and general keys
 // https://lwd.atlassian.net/browse/CP-299
 const shared = {
+  choiceNo: "No",
+  choiceYes: "Yes",
   passwordHint:
     "Your password must be at least 8 characters long and include numbers and letters.",
 };
@@ -82,6 +84,14 @@ const pages = {
     sectionLabel: "What's your name?",
     title: "$t(pages.claimsGeneral.takingLeaveTitle)",
   },
+  claimsNotifiedEmployer: {
+    choiceNo: "$t(shared.choiceNo)",
+    choiceYes: "$t(shared.choiceYes)",
+    hint:
+      "Notify your employer at least 30 days before the start of your leave if possible.",
+    label: "Have you notified your employer of your leave?",
+    title: "Medical Leave Application",
+  },
   claimsSsn: {
     sectionHint:
       "Don't have an SSN? Use your Individual Taxpayer Identification Number (ITIN).",
@@ -91,8 +101,8 @@ const pages = {
   claimsStateId: {
     hasIdChoiceLabel:
       "Do you have a Massachusetts driver's license or ID card?",
-    hasIdChoiceNo: "No",
-    hasIdChoiceYes: "Yes",
+    hasIdChoiceNo: "$t(shared.choiceNo)",
+    hasIdChoiceYes: "$t(shared.choiceYes)",
     idLabel: "Enter your license or ID number",
     title: "$t(pages.claimsGeneral.takingLeaveTitle)",
   },

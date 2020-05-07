@@ -34,7 +34,7 @@ export const Duration = (props) => {
       title={t("pages.claimsDuration.title")}
       onSave={handleSave}
       // TODO update with correct next route re: pregnancy
-      nextPage={routes.home}
+      nextPage={routes.claims.notifiedEmployer}
     >
       <InputChoiceGroup
         choices={[
