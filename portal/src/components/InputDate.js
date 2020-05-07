@@ -1,4 +1,5 @@
 import React, { useRef } from "react";
+import Fieldset from "./Fieldset";
 import FormLabel from "./FormLabel";
 import InputText from "./InputText";
 import PropTypes from "prop-types";
@@ -94,7 +95,7 @@ function InputDate(props) {
     year: useRef(),
   };
 
-  const formGroupClasses = classnames("usa-fieldset", "usa-form-group", {
+  const formGroupClasses = classnames("usa-form-group", {
     "usa-form-group--error": hasError,
   });
 
@@ -160,7 +161,7 @@ function InputDate(props) {
   }
 
   return (
-    <fieldset className={formGroupClasses}>
+    <Fieldset className={formGroupClasses}>
       <FormLabel
         component="legend"
         errorMsg={props.errorMsg}
@@ -214,7 +215,7 @@ function InputDate(props) {
           value={values.year}
         />
       </div>
-    </fieldset>
+    </Fieldset>
   );
 }
 

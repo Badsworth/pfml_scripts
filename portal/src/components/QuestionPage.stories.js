@@ -1,3 +1,4 @@
+import Fieldset from "./Fieldset";
 import FormLabel from "./FormLabel";
 import InputText from "./InputText";
 import QuestionPage from "./QuestionPage";
@@ -23,7 +24,7 @@ export const WithLegend = () => (
 
 export const WithFieldset = () => (
   <QuestionPage title={sampleTitle} nextPage={sampleRoute} onSave={() => {}}>
-    <fieldset className="usa-fieldset">
+    <Fieldset>
       <FormLabel component="legend" hint="Some text here about names">
         Input your name here
       </FormLabel>
@@ -34,6 +35,6 @@ export const WithFieldset = () => (
         optionalText="(optional)"
         smallLabel
       />
-    </fieldset>
+    </Fieldset>
   </QuestionPage>
 );

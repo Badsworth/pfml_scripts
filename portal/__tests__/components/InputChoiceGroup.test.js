@@ -30,10 +30,10 @@ function render(customProps = {}) {
 }
 
 describe("InputChoiceGroup", () => {
-  it("groups everything within a fieldset", () => {
+  it("groups everything within a Fieldset", () => {
     const { wrapper } = render();
 
-    expect(wrapper.is("fieldset")).toBe(true);
+    expect(wrapper.is("Fieldset")).toBe(true);
   });
 
   it("renders a legend", () => {

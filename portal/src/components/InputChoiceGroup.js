@@ -1,3 +1,4 @@
+import Fieldset from "./Fieldset";
 import FormLabel from "./FormLabel";
 import InputChoice from "./InputChoice";
 import PropTypes from "prop-types";
@@ -13,12 +14,12 @@ import classnames from "classnames";
 function InputChoiceGroup({ type = "checkbox", ...props }) {
   const hasError = !!props.errorMsg;
 
-  const formGroupClasses = classnames("usa-fieldset", "usa-form-group", {
+  const formGroupClasses = classnames("usa-form-group", {
     "usa-form-group--error": hasError,
   });
 
   return (
-    <fieldset className={formGroupClasses}>
+    <Fieldset className={formGroupClasses}>
       <FormLabel
         component="legend"
         errorMsg={props.errorMsg}
@@ -39,7 +40,7 @@ function InputChoiceGroup({ type = "checkbox", ...props }) {
           />
         ))}
       </div>
-    </fieldset>
+    </Fieldset>
   );
 }
 

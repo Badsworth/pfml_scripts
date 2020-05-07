@@ -39,10 +39,10 @@ describe("InputDate", () => {
     expect(fields).toMatchSnapshot();
   });
 
-  it("renders everything within a fieldset", () => {
+  it("renders everything within a Fieldset", () => {
     const { wrapper } = render();
 
-    expect(wrapper.is("fieldset")).toBe(true);
+    expect(wrapper.is("Fieldset")).toBe(true);
   });
 
   it("renders a legend for the fieldset", () => {
