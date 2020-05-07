@@ -123,7 +123,6 @@ def test_db(test_db_schema):
     import massgov.pfml.db.models as models  # noqa: F401
 
     engine = db.create_engine()
-
     Base.metadata.create_all(bind=engine)
 
 

@@ -26,7 +26,12 @@ def init():
     )
     logger.info("connected to db")
 
-    session_factory = scoped_session(sessionmaker(autocommit=False, bind=engine))
+    # Explicitly commit sessions — usually with session_scope.
+    # Also disable expiry on commit, as we don't need to be strict on consistency within our routes. Once
+    # we've retrieved data from the database, we shouldn't make any extra requests to the db when grabbing existing attributes.
+    session_factory = scoped_session(
+        sessionmaker(autocommit=False, expire_on_commit=False, bind=engine)
+    )
 
 
 def create_engine(connection_uri: Optional[str] = None):

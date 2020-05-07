@@ -16,6 +16,7 @@ psycopg2-binary = "^2.8.5"
 python = "^3.8"
 alembic = "^1.4.2"
 flask_cors = "^3.0.8"
+factory_boy = "^2.12.0"
 
 [tool.poetry.dev-dependencies]
 black = "^19.10b0"
