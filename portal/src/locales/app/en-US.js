@@ -182,6 +182,10 @@ const components = {
     dataIsCorrectLabel: "Does the employment history look correct to you?",
     title: "Verify your employment history",
   },
+  errorsSummary: {
+    genericHeading: "An error was encountered",
+    genericHeading_plural: "{{count}} errors were encountered",
+  },
   exemption: {
     contactEmployer:
       "Please contact your employer to learn how to request paid leave.",

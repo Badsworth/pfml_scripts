@@ -21,6 +21,7 @@ process.env.featureFlags = {};
  * Mock DOM APIs
  */
 global.fetch = jest.fn();
+global.scrollTo = jest.fn();
 
 /**
  * Cleanup & setup
