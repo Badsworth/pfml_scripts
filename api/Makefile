@@ -28,7 +28,7 @@ PY_RUN_CMD_DOCKER_RUN := docker-compose run $(DOCKER_EXEC_ARGS) --rm $(APP_NAME)
 PY_RUN_CMD_DOCKER_EXEC := docker-compose exec $(DOCKER_EXEC_ARGS) $(APP_NAME) poetry run
 
 ifdef CI
-	PY_RUN_CMD_OPT ?= DOCKER_EXEC
+	PY_RUN_CMD_OPT ?= DOCKER_RUN
 else
 	PY_RUN_CMD_OPT ?= POETRY
 endif

@@ -23,11 +23,8 @@ jobs:
     steps:
     - uses: actions/checkout@v2
 
-    # for efficiency, spin up the container once and run commands in the same
-    # environment, instead of starting and stopping the container for each step
-    - name: build and start container
-      run: make start
-
+    - name: build container
+      run: make build
 
     - name: format-check
       run: make format-check
@@ -42,8 +39,8 @@ jobs:
     steps:
     - uses: actions/checkout@v2
 
-    - name: build and start container
-      run: make start
+    - name: build container
+      run: make build
 
     - name: test
       run: make test
