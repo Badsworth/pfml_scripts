@@ -164,13 +164,13 @@ run: ## Run docker-compose
 run: start logs
 
 db-upgrade: ## Apply pending migrations to db
-	$(PY_RUN_CMD) alembic -c ./massgov/pfml/db/migrations/alembic.ini upgrade head
+	$(PY_RUN_CMD) db-migrate-up
 
 db-downgrade: ## Rollback last migration in db
-	$(PY_RUN_CMD) alembic -c ./massgov/pfml/db/migrations/alembic.ini downgrade -1
+	$(PY_RUN_CMD) db-migrate-down
 
 db-downgrade-all: ## Rollback all migrations
-	$(PY_RUN_CMD) alembic -c ./massgov/pfml/db/migrations/alembic.ini downgrade base
+	$(PY_RUN_CMD) db-migrate-down-all
 
 db-migrate-create: check-migrate-msg ## Create a new migration based on model changes
 	$(PY_RUN_CMD) alembic -c ./massgov/pfml/db/alembic.ini revision --autogenerate -m "$(MIGRATE_MSG)"
