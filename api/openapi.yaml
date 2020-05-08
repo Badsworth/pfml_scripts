@@ -1,8 +1,8 @@
 openapi: 3.0.2
 info:
-  title: Mock API
-  description: A test API in OpenAPI format
-  version: "2020-01-29"
+  title: Paid Leave API
+  description: An API for managing leave within Massachusetts Paid Family and Medical Leave.
+  version: "2020-05-08"
 
 servers:
   - url: /v1
