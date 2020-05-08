@@ -1,12 +1,12 @@
 import Claim from "../../../src/models/Claim";
-import { LeaveType } from "../../../src/pages/claims/leave-type";
+import { LeaveDates } from "../../../src/pages/claims/leave-dates";
 import React from "react";
 import { shallow } from "enzyme";
 
-describe("LeaveType", () => {
+describe("LeaveDates", () => {
   it("renders the page", () => {
     const wrapper = shallow(
-      <LeaveType claim={new Claim({ claim_id: "12345" })} />
+      <LeaveDates claim={new Claim({ claim_id: "12345" })} />
     );
     expect(wrapper).toMatchSnapshot();
   });

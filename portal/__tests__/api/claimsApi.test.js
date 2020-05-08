@@ -20,6 +20,8 @@ describe("claimsApi", () => {
           "created_at": null,
           "duration_type": "type",
           "hours_off_needed": null,
+          "leave_end_date": null,
+          "leave_start_date": null,
           "leave_type": null,
         }
       `);
@@ -44,6 +46,8 @@ describe("claimsApi", () => {
           "created_at": null,
           "duration_type": "type",
           "hours_off_needed": null,
+          "leave_end_date": null,
+          "leave_start_date": null,
           "leave_type": null,
         }
       `);

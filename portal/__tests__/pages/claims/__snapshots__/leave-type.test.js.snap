@@ -9,10 +9,12 @@ exports[`LeaveType renders the page 1`] = `
       "created_at": null,
       "duration_type": null,
       "hours_off_needed": null,
+      "leave_end_date": null,
+      "leave_start_date": null,
       "leave_type": null,
     }
   }
-  nextPage="/"
+  nextPage="/claims/leave-dates?"
   onSave={[Function]}
   title="Leave type"
 >

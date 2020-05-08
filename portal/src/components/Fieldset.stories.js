@@ -4,7 +4,7 @@ import InputText from "./InputText";
 import React from "react";
 
 export default {
-  title: "Fieldset",
+  title: "Components/Forms/Fieldset",
   component: Fieldset,
 };
 

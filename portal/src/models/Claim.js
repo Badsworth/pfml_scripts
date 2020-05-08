@@ -9,6 +9,8 @@ class Claim extends BaseModel {
       duration_type: null,
       hours_off_needed: null,
       leave_type: null,
+      leave_start_date: null,
+      leave_end_date: null,
     };
   }
 }

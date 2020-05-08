@@ -4,7 +4,7 @@ import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
 import claimsApi from "../../api/claimsApi";
-import routes from "../../routes";
+import routeWithParams from "../../utils/routeWithParams";
 import useFormState from "../../hooks/useFormState";
 import useHandleInputChange from "../../hooks/useHandleInputChange";
 import useHandleSave from "../../hooks/useHandleSave";
@@ -28,8 +28,7 @@ export const LeaveType = (props) => {
       formState={formState}
       title={t("pages.claimsLeaveType.title")}
       onSave={handleSave}
-      // TO-DO: Update route when the next page is created
-      nextPage={routes.home}
+      nextPage={routeWithParams("claims.leaveDates", props.query)}
     >
       <InputChoiceGroup
         choices={[
@@ -64,6 +63,9 @@ export const LeaveType = (props) => {
 LeaveType.propTypes = {
   claim: PropTypes.instanceOf(Claim),
   updateClaim: PropTypes.func,
+  query: PropTypes.shape({
+    claim_id: PropTypes.string,
+  }),
 };
 
 export default withClaim(LeaveType);

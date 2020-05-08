@@ -1,0 +1,41 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`LeaveDates renders the page 1`] = `
+<QuestionPage
+  formState={
+    Claim {
+      "avg_weekly_hours_worked": null,
+      "claim_id": "12345",
+      "created_at": null,
+      "duration_type": null,
+      "hours_off_needed": null,
+      "leave_end_date": null,
+      "leave_start_date": null,
+      "leave_type": null,
+    }
+  }
+  nextPage="/claims/duration"
+  onSave={[Function]}
+  title="Leave duration"
+>
+  <InputDate
+    dayLabel="Day"
+    hint="Your leave begins the day you stopped working."
+    label="When do you expect your leave to begin?"
+    monthLabel="Month"
+    name="leave_start_date"
+    onChange={[Function]}
+    value=""
+    yearLabel="Year"
+  />
+  <InputDate
+    dayLabel="Day"
+    label="When do you expect your leave will end?"
+    monthLabel="Month"
+    name="leave_end_date"
+    onChange={[Function]}
+    value=""
+    yearLabel="Year"
+  />
+</QuestionPage>
+`;

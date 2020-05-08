@@ -64,6 +64,11 @@ const pages = {
     leaveTypeTitle: "Leave type",
     takingLeaveTitle: "Who is taking leave",
   },
+  claimsLeaveDates: {
+    endDateLabel: "When do you expect your leave will end?",
+    startDateHint: "Your leave begins the day you stopped working.",
+    startDateLabel: "When do you expect your leave to begin?",
+  },
   claimsLeaveType: {
     activeDutyFamilyLeaveHint: "(Family leave)",
     activeDutyFamilyLeaveLabel:
