@@ -1,17 +1,22 @@
 import { mount, shallow } from "enzyme";
 import { App } from "../../src/pages/_app";
+import { NetworkError } from "../../src/errors";
 import React from "react";
-import User from "../../src/models/User";
 import { act } from "react-dom/test-utils";
 import { mockRouterEvents } from "next/router";
 import usersApi from "../../src/api/usersApi";
 
 jest.mock("../../src/api/usersApi");
+jest.mock("lodash/uniqueId", () => {
+  return jest.fn().mockReturnValue("mocked-for-snapshots");
+});
 
 function render(customProps = {}, mountComponent = false) {
+  const TestComponent = () => <div>Hello world</div>;
+
   const props = Object.assign(
     {
-      Component: () => <div />,
+      Component: TestComponent, // allows us to do .find("TestComponent")
       pageProps: {},
       initialAuthState: "signedIn",
       initialAuthData: {
@@ -34,28 +39,37 @@ describe("App", () => {
   global.scrollTo = scrollToSpy;
 
   describe("when a user IS authenticated", () => {
-    const initialAuthState = "signedIn";
-    const initialAuthData = {
-      attributes: { email: "mocked-header-user@example.com" },
-    };
-    const authProps = { initialAuthState, initialAuthData };
+    let wrapper;
 
-    it("renders the site header with the authenticated user's info", async () => {
-      expect.assertions();
-
+    beforeEach(async () => {
       // We need to mount the component so that useEffect is called
       const mountComponent = true;
-      let wrapper;
+      const props = {
+        initialAuthState: "signedIn",
+        initialAuthData: {
+          attributes: { email: "mocked-header-user@example.com" },
+        },
+        pageProps: {
+          title: "Test page",
+        },
+      };
 
       // Authenticator causes async state updates
       await act(async () => {
-        wrapper = render(authProps, mountComponent).wrapper;
+        wrapper = render(props, mountComponent).wrapper;
       });
 
       // Re-render after async effects
       wrapper.update();
+    });
 
+    it("fetches the user from the API", () => {
+      expect(usersApi.getCurrentUser).toHaveBeenCalledTimes(1);
+    });
+
+    it("renders the site header with the authenticated user's info", () => {
       const header = wrapper.find("Header");
+
       expect(header.exists()).toBe(true);
       expect(header.prop("user")).toMatchInlineSnapshot(`
         Object {
@@ -63,12 +77,77 @@ describe("App", () => {
         }
       `);
     });
+
+    it("renders the page component", () => {
+      const component = wrapper.find("TestComponent");
+
+      expect(component).toMatchSnapshot();
+    });
+  });
+
+  describe("when the authenticated user fails to be fetched from the API", () => {
+    const initialAuthProps = {
+      initialAuthState: "signedIn",
+      initialAuthData: {
+        attributes: { email: "mocked-header-user@example.com" },
+      },
+    };
+
+    beforeEach(() => {
+      // We expect console.error to be called in this scenario
+      jest.spyOn(console, "error").mockImplementationOnce(jest.fn());
+    });
+
+    it("does not render the page component", async () => {
+      expect.assertions();
+      usersApi.getCurrentUser.mockRejectedValueOnce(new NetworkError());
+
+      let wrapper;
+      await act(async () => {
+        wrapper = render(initialAuthProps, true).wrapper;
+      });
+      wrapper.update();
+
+      expect(wrapper.find("TestComponent").exists()).toBe(false);
+    });
+
+    it("displays error for NetworkError", async () => {
+      expect.assertions();
+      usersApi.getCurrentUser.mockRejectedValueOnce(new NetworkError());
+
+      let wrapper;
+      await act(async () => {
+        wrapper = render(initialAuthProps, true).wrapper;
+      });
+      wrapper.update();
+
+      expect(wrapper.find("ErrorsSummary").prop("errors")).toMatchSnapshot();
+    });
+
+    it("displays error for unsuccessful response", async () => {
+      expect.assertions();
+      usersApi.getCurrentUser.mockResolvedValueOnce({ success: false });
+
+      let wrapper;
+      await act(async () => {
+        wrapper = render(initialAuthProps, true).wrapper;
+      });
+      wrapper.update();
+
+      expect(wrapper.find("ErrorsSummary").prop("errors")).toMatchSnapshot();
+    });
   });
 
   describe("when a user is NOT authenticated", () => {
     const initialAuthState = "signIn";
     const initialAuthData = undefined;
     const authProps = { initialAuthState, initialAuthData };
+
+    it("does not attempt to fetch a user from the API", () => {
+      render(authProps);
+
+      expect(usersApi.getCurrentUser).toHaveBeenCalledTimes(0);
+    });
 
     it("renders the site header without a user", () => {
       const { wrapper } = render(authProps);
@@ -80,73 +159,7 @@ describe("App", () => {
     });
   });
 
-  describe("when the Authenticator authState changes", () => {
-    describe("new authState is 'signedIn'", () => {
-      const initialAuthState = "signIn";
-      const initialAuthData = undefined;
-      const initialAuthProps = { initialAuthState, initialAuthData };
-
-      it("fetches user data from the API and passes the user to our page component", async () => {
-        expect.assertions();
-
-        const mockUser = new User({ first_name: "Mock" });
-        usersApi.getCurrentUser.mockResolvedValueOnce({ user: mockUser });
-
-        const { wrapper } = render(initialAuthProps);
-        const authState = "signedIn";
-        const authData = { attributes: { email: "foo@example.com " } };
-
-        await act(async () => {
-          wrapper
-            .find("Authenticator")
-            .simulate("stateChange", authState, authData);
-        });
-
-        expect(usersApi.getCurrentUser).toHaveBeenCalledTimes(1);
-        expect(
-          wrapper.find("Authenticator Component").prop("user")
-        ).toStrictEqual(mockUser);
-      });
-
-      it("sets the authUser state", () => {
-        const { wrapper } = render(initialAuthProps);
-        const authState = "signedIn";
-        const authData = { attributes: { email: "foo@example.com " } };
-
-        act(() => {
-          wrapper
-            .find("Authenticator")
-            .simulate("stateChange", authState, authData);
-        });
-
-        // There isn't a clear way in Enzyme to read the state from useState (yet)
-        // so we assert on the authData value that gets passed into Header
-        expect(wrapper.find("Header").prop("user")).toMatchInlineSnapshot(`
-                  Object {
-                    "username": "foo@example.com ",
-                  }
-              `);
-      });
-    });
-
-    describe("new authState is NOT 'signedIn'", () => {
-      it("clears the authUser state when the new authState is NOT 'signedIn'", () => {
-        const { wrapper } = render();
-        const authState = "signIn";
-        const authData = {};
-
-        act(() => {
-          wrapper
-            .find("Authenticator")
-            .simulate("stateChange", authState, authData);
-        });
-
-        // There isn't a clear way in Enzyme to read the state from useState (yet)
-        // so we assert on the authData value that gets passed into Header
-        expect(wrapper.find("Header").prop("user")).toBeUndefined();
-      });
-    });
-
+  describe("when the Authenticator authState changes to something other than 'signedIn'", () => {
     it("updates the authState prop on Authenticator", () => {
       const { wrapper } = render();
       const authState = "customAuthState";
@@ -160,52 +173,44 @@ describe("App", () => {
 
       expect(wrapper.find("Authenticator").prop("authState")).toBe(authState);
     });
+
+    it("clears the authUser state", () => {
+      const { wrapper } = render();
+      const authState = "signIn";
+      const authData = {};
+
+      act(() => {
+        wrapper
+          .find("Authenticator")
+          .simulate("stateChange", authState, authData);
+      });
+
+      // There isn't a clear way in Enzyme to read the state from useState (yet)
+      // so we assert on the authData value that gets passed into Header
+      expect(wrapper.find("Header").prop("user")).toBeUndefined();
+    });
   });
 
-  it("renders the passed in Component with the given pageProps", () => {
-    const TestComponent = () => <div>Hello world</div>;
+  describe("when the Authenticator authState changes to 'signedIn'", () => {
+    const initialAuthState = "signIn";
+    const initialAuthData = undefined;
+    const initialAuthProps = { initialAuthState, initialAuthData };
+    const authState = "signedIn";
+    const authData = { attributes: { email: "foo@example.com " } };
 
-    const { wrapper } = render({
-      Component: TestComponent,
-      pageProps: {
-        title: "Test page",
-      },
+    it("fetches user from the API", async () => {
+      expect.assertions();
+
+      const { wrapper } = render(initialAuthProps);
+
+      await act(async () => {
+        wrapper
+          .find("Authenticator")
+          .simulate("stateChange", authState, authData);
+      });
+
+      expect(usersApi.getCurrentUser).toHaveBeenCalledTimes(1);
     });
-
-    const component = wrapper.find("TestComponent");
-
-    expect(component).toMatchInlineSnapshot(`
-      <TestComponent
-        addClaim={[Function]}
-        claims={
-          Collection {
-            "byId": Object {},
-            "idProperty": "claim_id",
-            "ids": Array [],
-          }
-        }
-        query={Object {}}
-        removeClaim={[Function]}
-        setUser={[Function]}
-        title="Test page"
-        updateClaim={[Function]}
-        user={
-          User {
-            "auth_id": null,
-            "date_of_birth": null,
-            "email_address": null,
-            "first_name": null,
-            "has_state_id": null,
-            "last_name": null,
-            "middle_name": null,
-            "ssn_or_itin": null,
-            "state_id": null,
-            "status": null,
-            "user_id": null,
-          }
-        }
-      />
-    `);
   });
 
   describe("Router events", () => {
@@ -229,7 +234,7 @@ describe("App", () => {
       wrapper.update();
 
       expect(wrapper.find("Spinner").exists()).toBe(true);
-      expect(wrapper.find("Authenticator Component").exists()).toBe(false);
+      expect(wrapper.find("TestComponent").exists()).toBe(false);
     });
 
     it("hides spinner when a route change completes", async () => {
@@ -259,7 +264,7 @@ describe("App", () => {
       });
 
       expect(wrapper.find("Spinner").exists()).toBe(false);
-      expect(wrapper.find("Authenticator Component").exists()).toBe(true);
+      expect(wrapper.find("TestComponent").exists()).toBe(true);
     });
 
     it("hides spinner when a route change throws an error", async () => {
@@ -289,7 +294,7 @@ describe("App", () => {
 
       // Spinner hidden when route change ended
       expect(wrapper.find("Spinner").exists()).toBe(false);
-      expect(wrapper.find("Authenticator Component").exists()).toBe(true);
+      expect(wrapper.find("TestComponent").exists()).toBe(true);
     });
 
     it("scrolls to the top of the window after a route change", async () => {

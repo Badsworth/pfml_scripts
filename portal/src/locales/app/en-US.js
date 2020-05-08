@@ -18,6 +18,12 @@ const errors = {
     passwordRequired: "Enter your password",
     verificationCodeRequired: "Enter the 6-digit code sent to your email",
   },
+  currentUser: {
+    failedToFind:
+      "Sorry, we were unable to retrieve your account. Please log out and try again. If this continues to happen, you may call the Paid Family Leave Contact Center at $t(general.callCenterPhoneNumber)",
+  },
+  network:
+    "Sorry, an error was encountered. This may occur for a variety of reasons, including temporarily losing an internet connection or an unexpected error in our system. If this continues to happen, you may call the Paid Family Leave Contact Center at $t(general.callCenterPhoneNumber)",
 };
 
 const general = {

@@ -1,0 +1,56 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`App when a user IS authenticated renders the page component 1`] = `
+<TestComponent
+  addClaim={[Function]}
+  claims={
+    Collection {
+      "byId": Object {},
+      "idProperty": "claim_id",
+      "ids": Array [],
+    }
+  }
+  query={Object {}}
+  removeClaim={[Function]}
+  setUser={[Function]}
+  title="Test page"
+  updateClaim={[Function]}
+  user={
+    User {
+      "auth_id": "cognito-123",
+      "date_of_birth": null,
+      "email_address": "mock-user@example.com",
+      "first_name": "Mock",
+      "has_state_id": null,
+      "last_name": null,
+      "middle_name": null,
+      "ssn_or_itin": null,
+      "state_id": null,
+      "status": null,
+      "user_id": "api-123",
+    }
+  }
+>
+  <div>
+    Hello world
+  </div>
+</TestComponent>
+`;
+
+exports[`App when the authenticated user fails to be fetched from the API displays error for NetworkError 1`] = `
+Array [
+  AppErrorInfo {
+    "key": "mocked-for-snapshots",
+    "message": "Sorry, an error was encountered. This may occur for a variety of reasons, including temporarily losing an internet connection or an unexpected error in our system. If this continues to happen, you may call the Paid Family Leave Contact Center at (XXX) XXX-XXXX",
+  },
+]
+`;
+
+exports[`App when the authenticated user fails to be fetched from the API displays error for unsuccessful response 1`] = `
+Array [
+  AppErrorInfo {
+    "key": "mocked-for-snapshots",
+    "message": "Sorry, we were unable to retrieve your account. Please log out and try again. If this continues to happen, you may call the Paid Family Leave Contact Center at (XXX) XXX-XXXX",
+  },
+]
+`;

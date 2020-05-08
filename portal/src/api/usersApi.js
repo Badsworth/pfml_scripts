@@ -3,10 +3,11 @@ import User from "../models/User";
 import request from "./request";
 
 /**
- * @typedef {{ success: boolean, user: User, errors: object[] }} UsersApiResult
+ * @typedef {{ apiErrors: object[], success: boolean, user: User }} UsersApiResult
+ * @property {object[]} [apiErrors] - If the request failed, this will contain errors returned by the API
+ * @property {number} status - Status code
  * @property {boolean} success - Did the request succeed or fail?
  * @property {User} [user] - If the request succeeded, this will contain the created user
- * @property {object[]} [errors] - If the request failed, this will contain errors returned by the API
  */
 
 // Additional fields that would be returned by the API
@@ -35,11 +36,11 @@ async function createUser(user) {
  * @returns {Promise<UsersApiResult>}
  */
 async function getCurrentUser() {
-  const { body, success } = await request("GET", "users/current");
+  const { body, ...response } = await request("GET", "users/current");
 
   return Promise.resolve({
-    success,
-    user: success ? new User(body) : null,
+    ...response,
+    user: response.success ? new User(body) : null,
   });
 }
 

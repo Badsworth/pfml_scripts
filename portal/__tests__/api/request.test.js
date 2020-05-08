@@ -1,3 +1,4 @@
+import { NetworkError } from "../../src/errors";
 import request from "../../src/api/request";
 
 describe("request", () => {
@@ -151,6 +152,7 @@ describe("request", () => {
 
       await expect(request("GET", "users")).resolves.toMatchInlineSnapshot(`
               Object {
+                "apiErrors": undefined,
                 "body": Object {
                   "mock_response": true,
                 },
@@ -162,36 +164,48 @@ describe("request", () => {
   });
 
   describe("when the request succeeds, but returns a status outside the 2xx range", () => {
-    it("resolves, but it's success property is set to false", async () => {
-      expect.assertions();
-
+    beforeEach(() => {
       global.fetch = jest.fn().mockResolvedValue({
         json: jest.fn().mockResolvedValue({ mock_response: true }),
         status: 400,
         ok: false,
       });
+    });
+
+    it("resolves, but it's success property is set to false", async () => {
+      expect.assertions();
 
       await expect(request("GET", "users")).resolves.toMatchInlineSnapshot(`
               Object {
-                "body": Object {
-                  "mock_response": true,
-                },
+                "apiErrors": undefined,
+                "body": undefined,
                 "status": 400,
                 "success": false,
               }
             `);
     });
+
+    it("does not set the body", async () => {
+      expect.assertions();
+
+      const response = await expect(request("GET", "users"));
+
+      expect(response.body).toBeUndefined();
+    });
   });
 
   describe("when the fetch request fails", () => {
-    it("rejects with the error returned by fetch", async () => {
+    beforeEach(() => {
+      // We expect console.error to be called in this scenario
+      jest.spyOn(console, "error").mockImplementationOnce(jest.fn());
+    });
+
+    it("throws NetworkError", async () => {
       expect.assertions();
 
-      global.fetch = jest.fn().mockRejectedValue(Error("Network failure"));
+      global.fetch = jest.fn().mockRejectedValue(TypeError("Network failure"));
 
-      await expect(
-        request("GET", "users")
-      ).rejects.toThrowErrorMatchingInlineSnapshot(`"Network failure"`);
+      await expect(request("GET", "users")).rejects.toThrow(NetworkError);
     });
   });
 });

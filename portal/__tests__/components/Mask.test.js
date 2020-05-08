@@ -47,7 +47,7 @@ describe("Mask", () => {
 
   it("does not mask if an invalid mask value is passed in", () => {
     //   Suppress the console.error that otherwise gets logged in the test.
-    jest.spyOn(console, "error").mockImplementation(() => null);
+    jest.spyOn(console, "error").mockImplementation(jest.fn());
     const { wrapper } = render({ mask: "foo" }, { value: "12345" });
     const input = wrapper.find("input");
 

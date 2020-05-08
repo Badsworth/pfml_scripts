@@ -54,21 +54,35 @@ describe("users API", () => {
         });
       });
 
-      it("reports success as true", async () => {
+      it("resolves with the response", async () => {
         expect.assertions();
 
         const response = await usersApi.getCurrentUser();
 
-        expect(response.success).toBe(true);
+        expect(response).toMatchInlineSnapshot(
+          {
+            user: expect.objectContaining({
+              first_name: "Anton",
+            }),
+          },
+          `
+          Object {
+            "status": 200,
+            "success": true,
+            "user": ObjectContaining {
+              "first_name": "Anton",
+            },
+          }
+        `
+        );
       });
 
-      it("includes User in the response", async () => {
+      it("includes instance of User in the response", async () => {
         expect.assertions();
 
         const response = await usersApi.getCurrentUser();
 
         expect(response.user).toBeInstanceOf(User);
-        expect(response.user.first_name).toBe("Anton");
       });
     });
 

@@ -1,3 +1,13 @@
+import { NetworkError } from "../errors";
+
+/**
+ * @typedef {Promise<{ body: object, apiErrors: object[], status: number, success: boolean }>} Response
+ * @property {object} body - API's JSON response
+ * @property {object[]} [apiErrors] - apiErrors returned by the API
+ * @property {number} status - Status code
+ * @property {boolean} success - Did the request succeed or fail?
+ */
+
 /**
  * Transform the request body into a format that fetch expects
  * @param {object|FormData} [payload] - request body
@@ -33,7 +43,8 @@ function createRequestUrl(apiPath) {
  * @param {string} method - i.e GET, POST, etc
  * @param {string} apiPath - relative path
  * @param {object|FormData} [payload] - request body
- * @returns {Promise<{ body: object, status: number, success: boolean }>} response - only rejects on network failure or if anything prevented the request from completing
+ * @returns {Response} response - only rejects on network failure or if anything prevented the request from completing
+ * @throws {Error|NetworkError}
  */
 async function request(method, apiPath, payload) {
   method = method.toUpperCase();
@@ -44,20 +55,48 @@ async function request(method, apiPath, payload) {
     );
   }
 
-  // Prepare the request
   const url = createRequestUrl(apiPath);
   const options = {
     body: createRequestBody(payload),
     method,
   };
 
-  // Send the request
-  const response = await fetch(url, options);
+  return sendRequest(url, options);
+}
 
-  // Parse and return the response
-  const body = await response.json();
+/**
+ * Send a request and handle the response
+ * @param {string} url
+ * @param {object} options - `fetch` options
+ * @returns {Response} response - only rejects on network failure or if anything prevented the request from completing
+ * @throws {NetworkError}
+ */
+async function sendRequest(url, options) {
+  let apiErrors, body, response;
+
+  try {
+    response = await fetch(url, options);
+
+    if (response.ok) {
+      body = await response.json();
+    } else {
+      // Request completed, but the response status code was outside the 2xx range
+      // TODO: Pull the errors from the response and set `apiErrors` (https://lwd.atlassian.net/browse/CP-345)
+      // TODO: Track the error (https://lwd.atlassian.net/browse/CP-378)
+    }
+  } catch (error) {
+    // Request failed to send or something failed while parsing the response
+    // TODO: Track the error (https://lwd.atlassian.net/browse/CP-378)
+
+    // Log the JS error to support troubleshooting
+    console.error(error);
+
+    throw new NetworkError(error.message);
+  }
+
   return {
     body,
+    apiErrors,
     status: response.status,
     success: response.ok, // Was the status in the 2xx range?
   };

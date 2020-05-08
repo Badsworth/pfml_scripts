@@ -3,13 +3,15 @@ import "../../styles/app.scss";
 import "@aws-amplify/ui/dist/style.css";
 import React, { useEffect, useState } from "react";
 import { initializeI18n, useTranslation } from "../locales/i18n";
+import AppErrorInfo from "../models/AppErrorInfo";
 import Authenticator from "../components/Authenticator";
 import Collection from "../models/Collection";
+import ErrorsSummary from "../components/ErrorsSummary";
 import Head from "next/head";
 import Header from "../components/Header";
+import { NetworkError } from "../errors";
 import PropTypes from "prop-types";
 import Spinner from "../components/Spinner";
-import User from "../models/User";
 import useCollectionState from "../hooks/useCollectionState";
 import { useRouter } from "next/router";
 import usersApi from "../api/usersApi";
@@ -30,10 +32,13 @@ export const App = ({
   const { t } = useTranslation();
   const router = useRouter();
 
+  // State representing currently visible errors
+  const [appErrors, setAppErrors] = useState();
+
   // State representing the Portal's user object.
   // Initialize to empty user but will be populated upon the first API call
   // to fetch the user (or create the user on their first login)
-  const [user, setUser] = useState(new User());
+  const [user, setUser] = useState();
 
   // Track the authentication state, which controls which components
   // are rendered by Authenticator
@@ -50,6 +55,7 @@ export const App = ({
     removeItem: removeClaim,
   } = useCollectionState(new Collection({ idProperty: "claim_id" }));
 
+  // Global UI state, such as whether to display the loading indicator
   const [ui, setUI] = useState({ isLoading: false });
 
   // State representing the auth service's (Cognito) user object
@@ -85,23 +91,7 @@ export const App = ({
     setAuthState(newAuthState);
 
     if (newAuthState === "signedIn") {
-      // The user logged in, so fetch their profile from the API and store it locally
-      setUI({ ...ui, isLoading: true });
-      // TODO: Once the API endpoint returns the actual user's data, we should just
-      // access the authenticated user's email from the profile returned by the API
-      // rather than having two different user states (user and authUser).
-      // https://lwd.atlassian.net/browse/CP-371
-      setAuthUser({ username: authData.attributes.email });
-
-      try {
-        const { user } = await usersApi.getCurrentUser();
-        setUser(user);
-      } catch (error) {
-        // TODO: Handle errors fetching the current user
-        // https://lwd.atlassian.net/browse/CP-335
-      }
-
-      setUI({ ...ui, isLoading: false });
+      await handleLogIn(authData);
     } else {
       // TODO: Update this block to only trigger on the Log Out event, and
       // clear all local state, possibly by just refreshing the browser
@@ -110,6 +100,43 @@ export const App = ({
     }
 
     window.scrollTo(0, 0);
+  };
+
+  /**
+   * Fetch an authenticated user's profile from the API and store it locally.
+   * Triggered when a user is first identified as being logged in.
+   * @param {object} authData - logged in user's data
+   * @returns {Promise}
+   */
+  const handleLogIn = async (authData) => {
+    setUI({ ...ui, isLoading: true });
+    // TODO: Once the API endpoint returns the actual user's data, we should just
+    // access the authenticated user's email from the profile returned by the API
+    // rather than having two different user states (user and authUser).
+    // https://lwd.atlassian.net/browse/CP-371
+    setAuthUser({ username: authData.attributes.email });
+
+    try {
+      const { success, user } = await usersApi.getCurrentUser();
+
+      if (success && user) {
+        setUser(user);
+      } else {
+        throw new Error("Current user wasn't received");
+      }
+    } catch (error) {
+      // Log the JS error to support troubleshooting
+      console.error(error);
+
+      const message =
+        error instanceof NetworkError
+          ? t("errors.network")
+          : t("errors.currentUser.failedToFind");
+
+      setAppErrors([new AppErrorInfo({ message })]);
+    }
+
+    setUI({ ...ui, isLoading: false });
   };
 
   useEffect(() => {
@@ -124,6 +151,37 @@ export const App = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  /**
+   * Render the page body based on the current state of the application
+   */
+  const renderPageContent = () => {
+    if (ui.isLoading) {
+      return (
+        <div className="margin-top-8 text-center">
+          <Spinner aria-valuetext={t("components.spinner.label")} />
+        </div>
+      );
+    }
+
+    // If we don't have the authenticated user's data, something likely
+    // went wrong and we shouldn't render the page. handleLogIn will
+    // render an error for us.
+    if (!user) return <React.Fragment />;
+
+    return (
+      <Component
+        user={user}
+        setUser={setUser}
+        claims={claims}
+        addClaim={addClaim}
+        updateClaim={updateClaim}
+        removeClaim={removeClaim}
+        query={router.query}
+        {...pageProps}
+      />
+    );
+  };
+
   return (
     <React.Fragment>
       <Head>
@@ -135,27 +193,13 @@ export const App = ({
       <main id="main" className="grid-container margin-top-5 margin-bottom-8">
         <div className="grid-row">
           <div className="grid-col-fill">
+            <ErrorsSummary errors={appErrors} />
             <Authenticator
               authState={authState}
               authData={initialAuthData}
               onStateChange={handleAuthStateChange}
             >
-              {ui.isLoading ? (
-                <div className="margin-top-8 text-center">
-                  <Spinner aria-valuetext={t("components.spinner.label")} />
-                </div>
-              ) : (
-                <Component
-                  user={user}
-                  setUser={setUser}
-                  claims={claims}
-                  addClaim={addClaim}
-                  updateClaim={updateClaim}
-                  removeClaim={removeClaim}
-                  query={router.query}
-                  {...pageProps}
-                />
-              )}
+              {renderPageContent()}
             </Authenticator>
           </div>
         </div>
