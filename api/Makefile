@@ -127,7 +127,7 @@ login: start ## Start shell in running container
 	docker exec -it $(APP_NAME) sh
 
 login-db: ## Start psql with project environment variables
-	PGPASSWORD=$$DB_PASSWORD psql --host=$$DB_URL --username=$$DB_USERNAME $$DB_NAME
+	PGPASSWORD=$$DB_PASSWORD psql --host=$$DB_HOST --username=$$DB_USERNAME $$DB_NAME
 
 logs: start ## View API logs
 	docker-compose logs --follow $(APP_NAME)

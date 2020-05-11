@@ -11,7 +11,7 @@ mass-pfml-api:
   ...
   environment:
     - ENVIRONMENT=local
-    - DB_URL=mass-pfml-db
+    - DB_HOST=mass-pfml-db
     - DB_NAME=pfml
     - DB_USERNAME=pfml
     - DB_PASSWORD=secret123
@@ -26,7 +26,7 @@ In deployed environments, variables are pulled in through AWS Elastic Container 
 ```
 "environment": [
   { "name": "ENVIRONMENT", "value": "${environment_name}" },
-  { "name": "DB_URL", "valueFrom": "${db_url}" },
+  { "name": "DB_HOST", "valueFrom": "${db_host}" },
   { "name": "DB_NAME", "valueFrom": "${db_name}" },
   { "name": "DB_USERNAME", "valueFrom": "${db_username}" }
 ]

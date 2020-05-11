@@ -208,7 +208,7 @@ services:
     ...
     environment:
     - ENVIRONMENT=local
-    - DB_URL=mass-pfml-db
+    - DB_HOST=mass-pfml-db
     - ...
 ```
 

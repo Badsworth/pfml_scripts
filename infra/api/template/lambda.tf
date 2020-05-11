@@ -27,7 +27,7 @@ resource "aws_lambda_function" "dor_import" {
 
   environment {
     variables = {
-      DB_URL      = aws_db_instance.default.address
+      DB_HOST     = aws_db_instance.default.address
       DB_NAME     = aws_db_instance.default.name
       DB_USERNAME = aws_db_instance.default.username
       DB_PASSWORD = aws_ssm_parameter.db_password.value

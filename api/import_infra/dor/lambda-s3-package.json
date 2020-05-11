@@ -16,7 +16,7 @@
                 "Runtime": "python3.8",
                 "Environment": {
                     "Variables": {
-                        "DB_URL": "SET_IN_CONTAINER_ENV_VARS",
+                        "DB_HOST": "SET_IN_CONTAINER_ENV_VARS",
                         "DB_NAME": "SET_IN_CONTAINER_ENV_VARS",
                         "DB_USERNAME": "SET_IN_CONTAINER_ENV_VARS",
                         "DB_PASSWORD": "SET_IN_CONTAINER_ENV_VARS"

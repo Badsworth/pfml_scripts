@@ -39,7 +39,7 @@ services:
       - .:/app:z
     environment:
       - ENVIRONMENT=local
-      - DB_URL=mass-pfml-db
+      - DB_HOST=mass-pfml-db
       - DB_NAME=pfml
       - DB_USERNAME=pfml
       - DB_PASSWORD=secret123

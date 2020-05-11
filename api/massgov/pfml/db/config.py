@@ -13,7 +13,7 @@ class DbConfig:
 
 def get_config() -> DbConfig:
     return DbConfig(
-        host=os.environ.get("DB_URL", "localhost"),
+        host=os.environ.get("DB_HOST", "localhost"),
         name=os.environ.get("DB_NAME", "pfml"),
         username=os.environ.get("DB_USERNAME", "pfml"),
         password=os.environ["DB_PASSWORD"],

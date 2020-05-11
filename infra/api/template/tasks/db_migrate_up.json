@@ -26,7 +26,7 @@
     },
     "environment": [
       { "name": "ENVIRONMENT", "value": "${environment_name}" },
-      { "name": "DB_URL", "value": "${db_url}" },
+      { "name": "DB_HOST", "value": "${db_host}" },
       { "name": "DB_NAME", "value": "${db_name}" },
       { "name": "DB_USERNAME", "value": "${db_username}" }
     ],

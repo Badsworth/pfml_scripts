@@ -16,7 +16,7 @@ data "template_file" "db_migrate_up_container_definitions" {
     app_name                   = local.app_name
     cpu                        = "512"
     memory                     = "1024"
-    db_url                     = aws_db_instance.default.address
+    db_host                    = aws_db_instance.default.address
     db_name                    = aws_db_instance.default.name
     db_username                = aws_db_instance.default.username
     docker_image               = "${data.aws_ecr_repository.app.repository_url}:${var.service_docker_tag}"
