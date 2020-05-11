@@ -1,6 +1,7 @@
 import sys
 from logging.config import fileConfig
 
+import sqlalchemy
 from alembic import context
 
 # Alembic cli seems to reset the path on load causing issues with local module imports.
@@ -9,6 +10,7 @@ from alembic import context
 sys.path.insert(0, ".")  # noqa: E402
 
 import massgov.pfml.db as db  # isort:skip
+import massgov.pfml.db.config as db_config  # isort:skip
 from massgov.pfml.db.models.base import Base  # isort:skip
 
 # import models module to trigger loading of all modules into the Base
@@ -23,7 +25,7 @@ config = context.config
 fileConfig(config.config_file_name)
 
 if not config.get_main_option("sqlalchemy.url"):
-    uri = db.get_connection_uri()
+    uri = db.make_connection_uri(db_config.get_config())
 
     config.set_main_option("sqlalchemy.url", uri)
 
@@ -75,7 +77,7 @@ def run_migrations_online():
     """
 
     url = config.get_main_option("sqlalchemy.url")
-    connectable = db.create_engine(url)
+    connectable = sqlalchemy.create_engine(url)
 
     with connectable.connect() as connection:
         context.configure(

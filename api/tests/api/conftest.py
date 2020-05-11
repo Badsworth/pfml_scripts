@@ -11,21 +11,20 @@ import uuid
 
 import pytest
 
-import massgov.pfml.api
+import massgov.pfml.api.app
 import massgov.pfml.api.employees
 import massgov.pfml.api.generate_fake_data as fake
-from massgov.pfml.config import config
 
 
 @pytest.fixture
 def app_cors(monkeypatch, test_db):
-    monkeypatch.setitem(config, "cors_origins", "http://example.com")
-    return massgov.pfml.api.create_app()
+    monkeypatch.setenv("CORS_ORIGINS", "http://example.com")
+    return massgov.pfml.api.app.create_app()
 
 
 @pytest.fixture
 def app(test_db):
-    return massgov.pfml.api.create_app()
+    return massgov.pfml.api.app.create_app()
 
 
 @pytest.fixture
@@ -92,14 +91,17 @@ def test_db_schema(monkeypatch):
     """
     schema_name = f"api_test_{uuid.uuid4().int}"
 
-    monkeypatch.setitem(config, "db_schema", schema_name)
+    monkeypatch.setenv("DB_SCHEMA", schema_name)
 
     import massgov.pfml.db as db
+    import massgov.pfml.db.config
 
-    db_test_user = config["db_username"]
+    db_config = massgov.pfml.db.config.get_config()
+
+    db_test_user = db_config.username
 
     def exec_sql(sql):
-        engine = db.create_engine()
+        engine = db.create_engine(db_config)
         with engine.connect() as connection:
             connection.execute(sql)
 

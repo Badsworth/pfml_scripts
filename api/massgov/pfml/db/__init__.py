@@ -5,19 +5,19 @@ import sqlalchemy
 from sqlalchemy.orm import scoped_session, sessionmaker
 
 import massgov.pfml.util.logging
-from massgov.pfml.config import config
+from massgov.pfml.db.config import DbConfig, get_config
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
 
 session_factory = None
 
 
-def init():
+def init(config: Optional[DbConfig] = None):
     global session_factory
 
     logger.info("connecting to postgres db")
 
-    engine = create_engine()
+    engine = create_engine(config)
     conn = engine.connect()
 
     conn_info = conn.connection.connection.info
@@ -34,9 +34,11 @@ def init():
     )
 
 
-def create_engine(connection_uri: Optional[str] = None):
-    if connection_uri is None:
-        connection_uri = get_connection_uri()
+def create_engine(config: Optional[DbConfig] = None):
+    if config is None:
+        config = get_config()
+
+    connection_uri = make_connection_uri(config)
 
     return sqlalchemy.create_engine(connection_uri)
 
@@ -62,18 +64,18 @@ def session_scope(close: bool = False):
             session.close()
 
 
-def get_connection_uri():
+def make_connection_uri(config: DbConfig) -> str:
     """Construct PostgreSQL connection URI
 
     More details at:
     https://www.postgresql.org/docs/current/libpq-connect.html#LIBPQ-CONNSTRING
     """
-    url = config["db_url"]
-    db_name = config["db_name"]
-    username = config["db_username"]
-    password = config["db_password"]
-    schema = config["db_schema"]
+    host = config.host
+    db_name = config.name
+    username = config.username
+    password = config.password
+    schema = config.schema
 
-    uri = f"postgresql://{username}:{password}@{url}/{db_name}?options=-csearch_path={schema}"
+    uri = f"postgresql://{username}:{password}@{host}/{db_name}?options=-csearch_path={schema}"
 
     return uri

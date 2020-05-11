@@ -8,10 +8,9 @@
 # https://docs.python.org/3/library/__main__.html
 import os
 
-import massgov.pfml.api
+import massgov.pfml.api.app as app
 import massgov.pfml.api.generate_fake_data as fake
 import massgov.pfml.util.logging
-from massgov.pfml.config import config
 
 logger = massgov.pfml.util.logging.get_logger(__package__)
 
@@ -23,15 +22,14 @@ def main():
 
 def start_server():
     try:
-        app = massgov.pfml.api.create_app()
+        connexion_app = app.create_app()
         create_fake_data()
 
-        enable_reloader = config["environment"] == "local" or config["environment"] == "dev"
+        app_config = app.get_app_config(connexion_app)
+
+        enable_reloader = app_config.environment == "local" or app_config.environment == "dev"
         openapi_files = list(
-            map(
-                lambda f: os.path.join(massgov.pfml.api.get_project_root_dir(), f),
-                massgov.pfml.api.openapi_filenames(),
-            )
+            map(lambda f: os.path.join(app.get_project_root_dir(), f), app.openapi_filenames())
         )
 
         # `use_reloader` enables a filesystem watcher which will restart the
@@ -41,7 +39,10 @@ def start_server():
         #
         # For more details:
         # https://werkzeug.palletsprojects.com/en/1.0.x/serving/?highlight=use_reloader#werkzeug.serving.run_simple
-        app.run(port=config["port"], use_reloader=enable_reloader, extra_files=openapi_files)
+        logger.info("Running API Application...")
+        connexion_app.run(
+            port=app_config.port, use_reloader=enable_reloader, extra_files=openapi_files
+        )
     except Exception:
         logger.exception("Server NOT started because of exception")
         raise
