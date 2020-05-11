@@ -2,7 +2,7 @@
 # Utility functions for configuring and interfacing with logging.
 #
 
-import logging.config
+import logging.config  # noqa: B1
 import os
 import platform
 import pwd

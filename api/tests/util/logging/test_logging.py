@@ -3,8 +3,8 @@
 #
 import collections
 import json
-import logging
-import logging.config
+import logging  # noqa: B1
+import logging.config  # noqa: B1
 import re
 
 import flask
@@ -14,8 +14,8 @@ import massgov.pfml.util.logging
 
 
 def test_init(caplog, monkeypatch):
-    caplog.set_level(logging.INFO)
-    monkeypatch.setattr(logging.config, "dictConfig", lambda config: None)
+    caplog.set_level(logging.INFO)  # noqa: B1
+    monkeypatch.setattr(logging.config, "dictConfig", lambda config: None)  # noqa: B1
 
     massgov.pfml.util.logging.init("test_logging_1234")
 
@@ -24,8 +24,8 @@ def test_init(caplog, monkeypatch):
     invoked_as_entry = caplog.record_tuples[1]
     assert start_entry[0] == "massgov.pfml.util.logging"
     assert invoked_as_entry[0] == "massgov.pfml.util.logging"
-    assert start_entry[1] == logging.INFO
-    assert invoked_as_entry[1] == logging.INFO
+    assert start_entry[1] == logging.INFO  # noqa: B1
+    assert invoked_as_entry[1] == logging.INFO  # noqa: B1
     assert start_entry[2].startswith("start test_logging_1234:")
     assert re.match(
         r"^start test_logging_1234: \w+ [0-9.]+ \w+, hostname \S+, pid \d+, user \d+\(\w+\)$",

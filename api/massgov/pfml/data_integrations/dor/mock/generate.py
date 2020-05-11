@@ -6,7 +6,6 @@
 import argparse
 import datetime as dt
 import decimal
-import logging
 import math
 import os
 import random
@@ -14,11 +13,12 @@ from datetime import datetime, timedelta
 
 import faker
 
+import massgov.pfml.util.logging
 import pydash
 from massgov.pfml.util.datetime.quarter import Quarter
 
-FORMAT = "%(levelname)s %(asctime)s [%(funcName)s] %(message)s"
-logging.basicConfig(format=FORMAT, level=logging.INFO)
+massgov.pfml.util.logging.init(__package__)
+logger = massgov.pfml.util.logging.get_logger("massgov.pfml.data_integrations.dor.mock.generate")
 random.seed(1111)
 fake = faker.Faker()
 fake.seed_instance(2222)
@@ -76,7 +76,7 @@ def main():
     employers = populate_employer_file(employer_count)
     populate_employee_file(employee_count, employers)
 
-    logging.info(
+    logger.info(
         "DONE: Please check files in generated_files folder: %s and %s",
         employer_file_name,
         employee_file_name,
@@ -117,7 +117,7 @@ def generate_employers(employer_count):
 
     count = 0
 
-    logging.info("Generating employer information ...")
+    logger.info("Generating employer information ...")
 
     for _i in range(employer_count):
         # employer details
@@ -149,7 +149,7 @@ def generate_employers(employer_count):
         updated_date = get_date_days_before(datetime.today(), random.randrange(1, 90))
 
         if count > 0 and (count % 1000) == 0:
-            logging.info("Generating employers, current count: %i", count)
+            logger.info("Generating employers, current count: %i", count)
 
         # Generate an employer row for each quarter
         # TODO randomize subset of quarters
@@ -173,7 +173,7 @@ def generate_employers(employer_count):
 
         count += 1
 
-    logging.info("Generated employers total: %i, Rows toal: %i", count, len(employers))
+    logger.info("Generated employers total: %i, Rows toal: %i", count, len(employers))
 
     return employers
 
@@ -227,7 +227,7 @@ def generate_employee_employer_quarterly_wage_rows(employee_count, employees):
     employers_by_ein = pydash.group_by(employees, "fein")
     employer_eins = employers_by_ein.keys()
 
-    logging.info("Generating employee rows ...")
+    logger.info("Generating employee rows ...")
 
     count = 0
 
@@ -243,7 +243,7 @@ def generate_employee_employer_quarterly_wage_rows(employee_count, employees):
         employer_eins_for_employee = random.sample(employer_eins, employer_count)
 
         if count > 0 and (count % 5000) == 0:
-            logging.info("Generating employee rows, current employee count: %i", count)
+            logger.info("Generating employee rows, current employee count: %i", count)
 
         count += 1
 
@@ -302,7 +302,7 @@ def generate_employee_employer_quarterly_wage_rows(employee_count, employees):
                 }
                 employee_rows.append(employee)
 
-    logging.info(
+    logger.info(
         "Generated employees info - Employee count: %i, Employee Rows: %i, Employer Rows: %i",
         count,
         len(employee_rows),

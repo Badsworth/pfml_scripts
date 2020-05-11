@@ -1,5 +1,4 @@
 import sys
-from logging.config import fileConfig
 
 import sqlalchemy
 from alembic import context
@@ -15,14 +14,14 @@ from massgov.pfml.db.models.base import Base  # isort:skip
 
 # import models module to trigger loading of all modules into the Base
 import massgov.pfml.db.models  # noqa: F401 isort:skip
+import massgov.pfml.util.logging  # isort:skip
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config
 
-# Interpret the config file for Python logging.
-# This line sets up loggers basically.
-fileConfig(config.config_file_name)
+# Initialize logging
+massgov.pfml.util.logging.init("migrations")
 
 if not config.get_main_option("sqlalchemy.url"):
     uri = db.make_connection_uri(db_config.get_config())

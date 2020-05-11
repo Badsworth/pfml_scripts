@@ -111,8 +111,17 @@ format-check: ## Check format of code
 	$(PY_RUN_CMD) isort --atomic --check-only
 	$(PY_RUN_CMD) black . --check
 
+# A flake8 output format that is compatible with GitHub Actions to annotate PRs. A full repository path must be output
+# so the path is prefixed with `api/`.
+# See https://help.github.com/en/actions/reference/workflow-commands-for-github-actions
+ifdef CI
+ FLAKE8_FORMAT := '::warning file=api/%(path)s,line=%(row)d,col=%(col)d::%(code)s %(text)s'
+else
+ FLAKE8_FORMAT := default
+endif
+
 lint: ## Run linting
-	$(PY_RUN_CMD) flake8 .
+	$(PY_RUN_CMD) flake8 --format=$(FLAKE8_FORMAT) massgov tests
 
 login: start ## Start shell in running container
 	docker exec -it $(APP_NAME) sh

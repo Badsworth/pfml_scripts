@@ -3,7 +3,7 @@
 #
 
 import json
-import logging
+import logging  # noqa: B1
 
 import flask
 
@@ -26,7 +26,7 @@ EXCLUDE_ATTRIBUTES = {
 MOST_COMPACT_JSON_SEPARATORS = (",", ":")
 
 
-class JsonFormatter(logging.Formatter):
+class JsonFormatter(logging.Formatter):  # noqa: B1
     """A logging formatter which formats each line as JSON."""
 
     def format(self, record):
