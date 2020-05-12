@@ -12,7 +12,7 @@ import { useTranslation } from "../../locales/i18n";
 import valueWithFallback from "../../utils/valueWithFallback";
 import withClaim from "../../hoc/withClaim";
 
-export const LeaveDates = (props) => {
+export const LeaveDates = props => {
   const { t } = useTranslation();
   const { formState, updateFields } = useFormState(props.claim);
 
@@ -21,8 +21,8 @@ export const LeaveDates = (props) => {
   const { leave_start_date, leave_end_date } = formState;
 
   const handleSave = useHandleSave(
-    (formState) => claimsApi.updateClaim(new Claim(formState)),
-    (result) => props.updateClaim(result.claim)
+    formState => claimsApi.updateClaim(new Claim(formState)),
+    result => props.updateClaim(result.claim)
   );
 
   return (

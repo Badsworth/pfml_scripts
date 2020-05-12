@@ -31,11 +31,11 @@ logger = logging.get_logger("massgov.pfml.dor_import")
 s3 = boto3.client("s3")
 s3Bucket = boto3.resource("s3")
 
-# TODO get these from event
-RECEIVED_FOLDER = "mock_testing/received/"
-PROCESSED_FOLDER = "mock_testing/processed/"
+# TODO get these from environment variables
+RECEIVED_FOLDER = "dor/received/"
+PROCESSED_FOLDER = "dor/processed/"
 
-EMPLOYER_FILE_PREFIX = "DORDFMLEmp_"
+EMPLOYER_FILE_PREFIX = "DORDFMLEMP_"
 EMPLOYEE_FILE_PREFIX = "DORDFML_"
 
 
@@ -79,7 +79,7 @@ def parse_datetime(datetime_str):
 
 def parse_boolean(boolean_str):
     # expected format is "1" or "0"
-    return boolean_str == "1"
+    return boolean_str == "T"
 
 
 def parse_dollar_amount(dollar_amount_str):
@@ -92,8 +92,8 @@ EMPLOYER_FILE_FORMAT = (
     FieldFormat("account_key", 11),
     FieldFormat("employer_name", 255),
     FieldFormat("fein", 9),
-    FieldFormat("employer_address_street", 50),
-    FieldFormat("employer_address_city", 25),
+    FieldFormat("employer_address_street", 255),
+    FieldFormat("employer_address_city", 30),
     FieldFormat("employer_address_state", 2),
     FieldFormat("employer_address_zip", 9),
     FieldFormat("employer_dba", 255),
@@ -107,7 +107,7 @@ EMPLOYER_FILE_FORMAT = (
 EMPLOYER_QUARTER_INFO_FORMAT = (
     FieldFormat("record_type", 1),
     FieldFormat("account_key", 11),
-    FieldFormat("filing_period", 8),
+    FieldFormat("filing_period", 8, parse_date),
     FieldFormat("employer_name", 255),
     FieldFormat("employer_fein", 9),
     FieldFormat("amended_flag", 1, parse_boolean),
@@ -181,6 +181,7 @@ def handler(event, context):
 
 def get_bucket(event):
     """Extract an S3 bucket from an event."""
+    # get bucket name from environment variable
     bucket_name = event["Records"][0]["s3"]["bucket"]["name"]
     bucket = s3Bucket.Bucket(bucket_name)
     return bucket
@@ -473,7 +474,7 @@ def parse_row_to_object_by_format(row, row_format):
         else:
             object[property_name] = conversion_function(column_value)
 
-        start_index = end_index + 1  # account for space between columns
+        start_index = end_index
 
     return object
 

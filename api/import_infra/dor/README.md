@@ -8,12 +8,24 @@ AWS CLI
 AWS SAM CLI
 Docker
 
+## Mock files
+
+Generate mock DOR export files
+```
+make generate
+```
+
+Generate with specific number of employees
+```
+make generate-count EMP_COUNT=15000
+```
+
 ## Dependencies
 
 Run to get latest PFML API module as a dependency (whenever API code changes)
 
 ```
-make build-api deps
+make build-api import-api-module
 ```
 
 ## Local testing
@@ -33,7 +45,17 @@ $ make build
 
 Invoke the function
 ```
-make local
+make invoke-local
+```
+
+Invoke the function after a full build including API
+```
+make build-invoke-local
+```
+
+Clean build artificats
+```
+make clean
 ```
 
 ## Release

@@ -9,24 +9,38 @@ import decimal
 import math
 import os
 import random
+import sys
 from datetime import datetime, timedelta
 
 import faker
 
-import massgov.pfml.util.logging
 import pydash
-from massgov.pfml.util.datetime.quarter import Quarter
 
-massgov.pfml.util.logging.init(__package__)
-logger = massgov.pfml.util.logging.get_logger("massgov.pfml.data_integrations.dor.mock.generate")
+# Running this module as a python command from the top level /api directory seems
+# to reset the path on load causing issues with local module imports.
+# Workaround is to force set the path to run directory (top level api folder)
+# See import_infra/dor/README.md for running details.
+sys.path.insert(0, ".")  # noqa: E402
+
+import massgov.pfml.util.logging as logging  # isort:skip
+from massgov.pfml.util.datetime.quarter import Quarter  # isort:skip
+
+logging.init(__package__)
+logger = logging.get_logger("massgov.pfml.data_integrations.dor.mock.generate")
+
 random.seed(1111)
+
 fake = faker.Faker()
 fake.seed_instance(2222)
+
 TWOPLACES = decimal.Decimal(10) ** -2
 
 parser = argparse.ArgumentParser(description="Generate fake DOR data")
 parser.add_argument(
     "--count", type=int, default=100, help="Number of individuals to generate data for"
+)
+parser.add_argument(
+    "--folder", type=str, default="generated_files", help="Output folder for generated files"
 )
 
 
@@ -52,12 +66,8 @@ def format_datetime(d):
 # generator
 
 file_extension = format_datetime(datetime.now())
-employer_file_name = "DORDFMLEmp_" + file_extension
+employer_file_name = "DORDFMLEMP_" + file_extension
 employee_file_name = "DORDFML_" + file_extension
-
-os.makedirs("generated_files", exist_ok=True)
-employers_file = open("generated_files/" + employer_file_name, "w")
-employees_file = open("generated_files/" + employee_file_name, "w")
 
 EMPLOYER_TO_EMPLOYEE_MULTIPLIER = 5
 
@@ -68,13 +78,18 @@ def main():
     args = parser.parse_args()
     employee_count = args.count
 
+    output_folder = args.folder
+    os.makedirs(output_folder, exist_ok=True)
+    employers_file = open("{}/{}".format(output_folder, employer_file_name), "w")
+    employees_file = open("{}/{}".format(output_folder, employee_file_name), "w")
+
     # minimum of 4 employers
     employer_count = math.ceil(employee_count / EMPLOYER_TO_EMPLOYEE_MULTIPLIER)
     if employer_count < 4:
         employer_count = 4
 
-    employers = populate_employer_file(employer_count)
-    populate_employee_file(employee_count, employers)
+    employers = populate_employer_file(employer_count, employers_file)
+    populate_employee_file(employee_count, employers, employees_file)
 
     logger.info(
         "DONE: Please check files in generated_files folder: %s and %s",
@@ -83,11 +98,11 @@ def main():
     )
 
 
-def populate_employer_file(employer_count):
+def populate_employer_file(employer_count, employers_file):
     """Generate employers, print rows to file"""
     employers = generate_employers(employer_count)
     for row in employers:
-        line = "{} {:255} {} {:50} {:25} {} {} {:255} {} {} {} {} {}\n".format(
+        line = "{}{:255}{}{:255}{:30}{}{}{:255}{}{}{}{}{}\n".format(
             row["account_key"],
             row["employer_name"],
             row["fein"],
@@ -133,12 +148,12 @@ def generate_employers(employer_count):
         employer_dba = employer_name
         if random.random() < 0.2:
             employer_dba = fake.company()
-        family_exemption = random.choice("01")
-        medical_exemption = random.choice("01")
+        family_exemption = random.choice("FT")
+        medical_exemption = random.choice("FT")
 
         exemption_commence_date = NO_EXEMPTION_DATE
         exemption_cease_date = NO_EXEMPTION_DATE
-        has_exemption = random.choice("01")
+        has_exemption = random.choice("FT")
         if has_exemption == "1":
             commence_days_before = random.randrange(1, 365)  # up to one year
             exemption_commence_date = get_date_days_before(datetime.today(), commence_days_before)
@@ -178,14 +193,14 @@ def generate_employers(employer_count):
     return employers
 
 
-def populate_employee_file(employee_count, employers):
+def populate_employee_file(employee_count, employers, employees_file):
     """Generate employees rows, print rows to file"""
     employer_rows, employee_rows = generate_employee_employer_quarterly_wage_rows(
         employee_count, employers
     )
 
     for employer_row in employer_rows:
-        line = "{} {} {!s} {:255} {} {} {} {}\n".format(
+        line = "{}{}{!s}{:255}{}{}{}{}\n".format(
             "A",
             employer_row["account_key"],
             employer_row["filing_period"],
@@ -198,7 +213,7 @@ def populate_employee_file(employee_count, employers):
         employees_file.write(line)
 
     for employee_row in employee_rows:
-        line = "{} {} {!s} {:255} {:255} {} {} {} {:20.2f} {:20.2f} {:20.2f} {:20.2f} {:20.2f} {:20.2f}\n".format(
+        line = "{}{}{!s}{:255}{:255}{}{}{}{:20.2f}{:20.2f}{:20.2f}{:20.2f}{:20.2f}{:20.2f}\n".format(
             "B",
             employee_row["account_key"],
             employee_row["filing_period"],
@@ -265,7 +280,7 @@ def generate_employee_employer_quarterly_wage_rows(employee_count, employees):
             for quarter in QUARTERS:
 
                 # is the quarter information amended
-                amended_flag = random.choice("01")
+                amended_flag = random.choice("FT")
 
                 received_date = get_date_days_after(quarter.as_date(), random.randrange(1, 90))
                 updated_date = get_date_days_before(datetime.today(), random.randrange(1, 90))
