@@ -1,6 +1,5 @@
 resource "aws_s3_bucket" "portal_web" {
-  bucket = var.portal_s3_bucket_name
-
+  bucket = "massgov-${local.app_name}-${var.environment_name}-portal-site-builds"
   website {
     index_document = "index.html"
     error_document = "404.html"
@@ -15,7 +14,7 @@ resource "aws_s3_bucket" "portal_web" {
     application = "coreinf"
 
     environment = var.environment_name
-    Name        = var.portal_s3_bucket_name
+    Name        = "massgov-${local.app_name}-${var.environment_name}-portal-site-builds"
     public      = "yes"
 
     # TODO: Change to business owner once we know

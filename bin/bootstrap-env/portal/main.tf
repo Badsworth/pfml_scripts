@@ -46,6 +46,5 @@ module "massgov_pfml" {
   # You probably don't need to change the variables below:
   source                 = "../../template"
   environment_name       = "$ENV_NAME"
-  portal_s3_bucket_name  = "massgov-pfml-$ENV_NAME-portal-site-builds"
   cloudfront_origin_path = local.cloudfront_origin_path
 }

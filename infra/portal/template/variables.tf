@@ -41,8 +41,3 @@ variable "environment_name" {
   description = "Name of the environment (dev, sandbox, test, uat, stage, prod)"
   type        = string
 }
-
-variable "portal_s3_bucket_name" {
-  description = "Name of the deploy bucket for Claimant Portal"
-  type        = string
-}
