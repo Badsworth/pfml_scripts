@@ -4,7 +4,7 @@ The root of the monorepo includes tools for code style formatting and linting. B
 
 ### Linting
 
-This project uses [ESLint](https://eslint.org/) for JavaScript code. To run linting outside of the pre-commit hook:
+This project uses [ESLint](https://eslint.org/) for JavaScript code.
 
 ```
 npm run lint

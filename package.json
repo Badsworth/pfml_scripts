@@ -3,10 +3,10 @@
   "version": "1.0.0",
   "description": "Tools and scripts for the Mass PFML project",
   "scripts": {
-    "lint:js": "eslint --ext .js",
-    "lint:js:all": "npm run lint:js -- ./",
+    "lint:ci": "npm run lint:js && npm run lint:tf",
+    "lint:js": "eslint --ext .js ./",
     "lint:tf": "./bin/tf-fmt.sh",
-    "lint": "npm run lint:js:all && npm run lint:tf",
+    "lint": "npm run lint:js -- --fix && npm run lint:tf",
     "prettier": "prettier --write 'portal/**/*.js'"
   },
   "devDependencies": {
@@ -32,7 +32,6 @@
   "lint-staged": {
     "*.{js,jsx}": [
       "prettier --write",
-      "eslint --fix",
       "git add"
     ],
     "!(bin)/**/*.{tf,tfvars}": [

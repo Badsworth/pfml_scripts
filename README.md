@@ -31,6 +31,26 @@ npm install --prefix portal
 npm run dev --prefix portal
 ```
 
+### Additional commands
+
+#### `npm run lint`
+
+Run all linters. Fixes any [auto-fixable ESLint errors](https://eslint.org/docs/user-guide/command-line-interface#fixing-problems) and formats the Terraform files.
+
+[Integrate ESLint into your IDE or a git hook](https://eslint.org/docs/user-guide/integrations) if you'd like to catch linting errors before it reaches the CI.
+
+#### `npm run lint:ci`
+
+Runs all linters and fails on errors. Does not attempt to auto-fix ESLint errors.
+
+#### `npm run lint:js`
+
+Lint JS files using [ESLint](https://eslint.org/).
+
+#### `npm run prettier`
+
+Automatically format files using [Prettier](https://prettier.io/).
+
 ## API
 
 TBD
@@ -38,7 +58,10 @@ TBD
 ## Directory Structure
 
 ```
-└── portal                  🚪 Claimant portal web app
-└── infra                   🌲 Infrastructure config
+└── .github                 🗂 GitHub actions and templates
+└── api                     🔀 Integration API
+└── bin                     🤖 Developer scripts
 └── docs                    🔖 Developer documentation
+└── infra                   🌲 Infrastructure config
+└── portal                  🚪 Claimant portal web app
 ```
