@@ -182,7 +182,7 @@ db-downgrade-all: ## Rollback all migrations
 	$(PY_RUN_CMD) db-migrate-down-all
 
 db-migrate-create: check-migrate-msg ## Create a new migration based on model changes
-	$(PY_RUN_CMD) alembic -c ./massgov/pfml/db/alembic.ini revision --autogenerate -m "$(MIGRATE_MSG)"
+	$(PY_RUN_CMD) alembic -c ./massgov/pfml/db/migrations/alembic.ini revision --autogenerate -m "$(MIGRATE_MSG)"
 
 check-migrate-msg:
 ifndef MIGRATE_MSG

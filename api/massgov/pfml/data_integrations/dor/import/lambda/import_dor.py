@@ -22,7 +22,7 @@ from massgov.pfml.db.models import (
     EmployerAddress,
     GeoState,
     ImportLog,
-    WageAndContribution,
+    WagesAndContributions,
 )
 
 logging.init(__name__)
@@ -401,7 +401,7 @@ def import_employees_and_wage_data(
         existing_wage = None
 
         if existing_wage is None:
-            wage = WageAndContribution(
+            wage = WagesAndContributions(
                 account_key=account_key,
                 filing_period=filing_period,
                 employee_id=employee_id_by_ssn[ssn],

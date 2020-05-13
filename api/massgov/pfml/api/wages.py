@@ -3,14 +3,14 @@ from dataclasses import dataclass
 from werkzeug.exceptions import NotFound
 
 import massgov.pfml.db as db
-from massgov.pfml.db.models import WageAndContribution
+from massgov.pfml.db.models import WagesAndContributions
 
 # this isn't being imported properly so it defaults to the example. hence all the 200s
 
 
 def wages_get(employee_id, filing_period=None):
     with db.session_scope() as db_session:
-        wage = db_session.query(WageAndContribution).filter_by(employee_id=employee_id)
+        wage = db_session.query(WagesAndContributions).filter_by(employee_id=employee_id)
         if filing_period is not None:
             wage = wage.filter_by(filing_period=filing_period)
         results = wage.all()
@@ -26,21 +26,21 @@ class WageResponse:
     employer_id: str
     is_independent_contractor: bool
     is_opted_in: bool
-    employer_ytd_wages: int
-    employer_qtr_wages: int
+    employee_ytd_wages: int
+    employee_qtr_wages: int
     employer_med_contribution: int
     employer_fam_contribution: int
 
 
-def wage_and_comp_response(wage: WageAndContribution) -> WageResponse:
+def wage_and_comp_response(wage: WagesAndContributions) -> WageResponse:
     return WageResponse(
         filing_period=wage.filing_period,
         employee_id=wage.employee_id,
         employer_id=wage.employer_id,
         is_independent_contractor=wage.is_independent_contractor,
         is_opted_in=wage.is_opted_in,
-        employer_ytd_wages=wage.employer_ytd_wages,
-        employer_qtr_wages=wage.employer_qtr_wages,
+        employee_ytd_wages=wage.employee_ytd_wages,
+        employee_qtr_wages=wage.employee_qtr_wages,
         employer_med_contribution=wage.employer_med_contribution,
         employer_fam_contribution=wage.employer_fam_contribution,
     )

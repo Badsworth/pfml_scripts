@@ -229,7 +229,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/WagesContributionsList"
+                $ref: "#/components/schemas/WagesAndContributionsList"
         "404":
             $ref: '#/components/responses/NotFound'
 
@@ -589,7 +589,7 @@ components:
           type: string
           example: "The Super Store"
 
-    WagesContributions:
+    WagesAndContributions:
       type: object
       properties:
         filing_period:
@@ -623,10 +623,10 @@ components:
           type: number
           example: 2000
 
-    WagesContributionsList:
+    WagesAndContributionsList:
       type: array
       items:
-        $ref: '#/components/schemas/WagesContributions'
+        $ref: '#/components/schemas/WagesAndContributions'
 
     EligibilityDetermination:
       type: object
