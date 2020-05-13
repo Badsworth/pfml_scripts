@@ -20,17 +20,16 @@ const Index = ({ claims, addClaim }) => {
   const { t } = useTranslation();
   const router = useRouter();
 
-  const handleClaimButtonClick = useHandleSave(
-    claimsApi.createClaim,
-    (result) => {
-      addClaim(result.claim);
+  const createClaim = useHandleSave(claimsApi.createClaim, (result) => {
+    addClaim(result.claim);
 
-      const route = routeWithParams("claims.name", {
-        claim_id: result.claim.claim_id,
-      });
-      router.push(route);
-    }
-  );
+    const route = routeWithParams("claims.name", {
+      claim_id: result.claim.claim_id,
+    });
+    router.push(route);
+  });
+
+  const handleClaimButtonClick = () => createClaim();
 
   return (
     <React.Fragment>
