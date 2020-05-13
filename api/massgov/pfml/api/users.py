@@ -6,7 +6,7 @@ from werkzeug.exceptions import NotFound
 
 import massgov.pfml.api.app as app
 import massgov.pfml.util.logging
-from massgov.pfml.db.models import Status, User
+from massgov.pfml.db.models.employees import Status, User
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
 

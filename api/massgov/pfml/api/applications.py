@@ -68,4 +68,4 @@ def applications_submit(application_id):
         "errors": [],
     }
 
-    return success_response
+    return success_response, 201

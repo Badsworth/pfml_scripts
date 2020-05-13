@@ -81,7 +81,8 @@ def create_application(employee):
     leave_types = ["bonding", "medical", "accident"]
     occupations = ["Sales Clerk", "Administrative", "Engineer", "Doctor"]
 
-    wage_employers = wages.get(employee.get("employee_id"))
+    employee_id = employee.get("employee_id")
+    wage_employers = wages.get(employee_id)
     employer_id = wage_employers[0]["employer_id"]
 
     leave_type = random.choice(leave_types)
@@ -117,24 +118,23 @@ def create_leave_details(leave_type):
 
     if leave_type.find("bonding") > 0:
         leave_details["reason"] = "Child Bonding"
-        leave_details["reason_qualifier1"] = "Newborn"
+        leave_details["reason_qualifier"] = "Newborn"
         leave_period["status"] = random.choice(status)
         continuous_leave_period = create_continuous_leave_period(leave_period)
         leave_periods.append(continuous_leave_period)
         leave_details["continuous_leave_periods"] = leave_periods
-        leave_details["primary_relationship"] = "Parent"
-        leave_details["primary_rel_qualifier1"] = "Biological"
+        leave_details["relationship_to_caregiver"] = "Parent"
+        leave_details["relationship_qualifier"] = "Biological"
     elif leave_type.find("medical") > 0:
         leave_details["reason"] = "Care For A Family Member"
-        leave_details["reason_qualifier1"] = "Serious Health Condition"
+        leave_details["reason_qualifier"] = "Serious Health Condition"
         leave_period["status"] = random.choice(status)
         reduced_leave_period = create_reduced_leave_period(leave_period)
         leave_periods.append(reduced_leave_period)
         leave_details["reduced_schedule_leave_periods"] = leave_periods
     else:
         leave_details["reason"] = "Serious Health Condition - Employee"
-        leave_details["reason_qualifier1"] = "Work Related"
-        leave_details["reason_qualifier2"] = "Accident/Injury"
+        leave_details["reason_qualifier"] = "Work Related Accident/Injury"
         intermittent_leave_period = create_intermittent_leave_period(leave_period)
         leave_periods.append(intermittent_leave_period)
         leave_details["intermittent_leave_periods"] = leave_periods
@@ -153,6 +153,7 @@ def create_payment_preferences(first_name, last_name):
     payment_preference = {}
     payment_types = ["Elec Funds Transfer", "Check"]
     account_type = ["Checking", "Savings"]
+    routing_numbers = ["021202337", "021200025"]
 
     payment_type = random.choice(payment_types)
     payment_preference["payment_method"] = payment_type
@@ -162,7 +163,7 @@ def create_payment_preferences(first_name, last_name):
         account_details = {
             "account_name": fake.sentence(),
             "account_no": str(fake.random_number(digits=12)),
-            "routing_number": str(fake.random_number(digits=9)),
+            "routing_number": random.choice(routing_numbers),
             "account_type": random.choice(account_type),
         }
         payment_preference["account_details"] = account_details

@@ -15,7 +15,7 @@ import massgov.pfml.util.logging as logging
 import pydash
 from lib.decrypter import GpgDecrypter, Utf8Decrypter
 from massgov.pfml import db
-from massgov.pfml.db.models import (
+from massgov.pfml.db.models.employees import (
     Address,
     AddressType,
     Country,

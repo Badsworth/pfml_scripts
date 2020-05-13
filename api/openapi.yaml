@@ -734,11 +734,13 @@ components:
             - Child Bonding
             - Serious Health Condition - Employee
           example:  "Care For A Family Member"
-        reason_qualifier1:
+        reason_qualifier:
           type: string
+          enum:
+            - New Born
+            - Serious Health Condition
+            - Work Related Accident/Injury
           example:  "Serious Health Condition"
-        reason_qualifier2:
-          type: string
         reduced_schedule_leave_periods:
           type: array
           items:
@@ -751,7 +753,7 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/IntermittentLeavePeriods"
-        primary_relationship:
+        relationship_to_caregiver:
           type: string
           enum:
             - Parent
@@ -764,7 +766,7 @@ components:
             - Sibling
             - Other
           example:  "Parent"
-        primary_rel_qualifier1:
+        relationship_qualifier:
           type: string
           enum:
             - Adoptive
@@ -774,31 +776,6 @@ components:
             - Legal Guardian
             - Step Parent
           example:  "Biological"
-        primary_rel_qualifier2:
-          type: string
-        secondary_relationship:
-          type: string
-          enum:
-            - Parent
-            - Child
-            - Grandparent
-            - Grandchild
-            - Other Family Member
-            - Service Member
-            - Inlaw
-            - Sibling
-            - Other
-        secondary_rel_qualifier1:
-          type: string
-          enum:
-            - Adoptive
-            - Biological
-            - Foster
-            - Custodial Parent
-            - Legal Guardian
-            - Step Parent
-        secondary_rel_qualifier2:
-          type: string
         employer_notified:
           type: boolean
           example:  true

@@ -4,8 +4,8 @@
 import factory
 from sqlalchemy.orm import scoped_session
 
-import massgov.pfml.db as db
-import massgov.pfml.db.models as models
+import massgov.pfml.api.db as db
+import massgov.pfml.api.db.models.employees as models
 
 db_session = None
 

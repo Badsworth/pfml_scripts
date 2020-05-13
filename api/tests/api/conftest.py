@@ -54,7 +54,7 @@ def test_employer(monkeypatch):
 
 @pytest.fixture
 def test_user(test_db_session):
-    from massgov.pfml.db.models import Status, User
+    from massgov.pfml.db.models.employees import Status, User
 
     user = fake.create_user("johnsmith@example.com", "0000-111-2222")
 
@@ -80,7 +80,21 @@ def test_wages(test_employee, monkeypatch):
 
     monkeypatch.setitem(fake.wages, test_employee["employee_id"], [wages])
 
-    return (wages, test_employee)
+    return wages, test_employee
+
+
+@pytest.fixture
+def test_application(test_employee, monkeypatch):
+    employee_id = test_employee["employee_id"]
+    fake_wages = fake.create_wages(employee_id, "0000-0000-0000-0000")
+    fake.wages[employee_id] = [fake_wages]
+    created_application = fake.create_application(test_employee)
+
+    monkeypatch.setitem(
+        fake.applications, created_application["application_id"], created_application
+    )
+
+    return created_application
 
 
 @pytest.fixture
@@ -122,7 +136,8 @@ def test_db(test_db_schema):
     from massgov.pfml.db.models.base import Base
 
     # not used directly, but loads models into Base
-    import massgov.pfml.db.models as models  # noqa: F401
+    import massgov.pfml.db.models.employees as employees  # noqa: F401
+    import massgov.pfml.db.models.applications as applications  # noqa: F401
 
     engine = db.create_engine()
     Base.metadata.create_all(bind=engine)

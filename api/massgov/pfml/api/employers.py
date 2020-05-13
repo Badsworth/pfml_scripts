@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from werkzeug.exceptions import NotFound
 
 import massgov.pfml.api.app as app
-from massgov.pfml.db.models import Employer
+from massgov.pfml.db.models.employees import Employer
 
 
 def employers_get(employer_id):

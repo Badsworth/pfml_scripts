@@ -13,7 +13,8 @@ import massgov.pfml.db.config as db_config  # isort:skip
 from massgov.pfml.db.models.base import Base  # isort:skip
 
 # import models module to trigger loading of all modules into the Base
-import massgov.pfml.db.models  # noqa: F401 isort:skip
+import massgov.pfml.db.models.employees  # noqa: F401 isort:skip
+import massgov.pfml.db.models.applications  # noqa: F401 isort:skip
 import massgov.pfml.util.logging  # isort:skip
 
 # this is the Alembic Config object, which provides
