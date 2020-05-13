@@ -108,7 +108,7 @@ export const App = ({
    * @param {object} authData - logged in user's data
    * @returns {Promise}
    */
-  const handleLogIn = async authData => {
+  const handleLogIn = async (authData) => {
     setUI({ ...ui, isLoading: true });
     // TODO: Once the API endpoint returns the actual user's data, we should just
     // access the authenticated user's email from the profile returned by the API

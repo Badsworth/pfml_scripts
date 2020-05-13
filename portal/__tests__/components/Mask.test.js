@@ -19,7 +19,7 @@ function render(customProps = {}, inputProps = {}, mountComponent = false) {
 }
 
 describe("Mask", () => {
-  masks.forEach(mask => {
+  masks.forEach((mask) => {
     describe(`${mask} fallbacks`, () => {
       it("renders a blank field when value is empty", () => {
         const { wrapper } = render({ mask }, { value: "" });

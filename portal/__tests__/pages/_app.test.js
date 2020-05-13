@@ -222,11 +222,11 @@ describe("App", () => {
       const { wrapper } = render({}, mountComponent);
 
       const routeChangeStart = mockRouterEvents.find(
-        evt => evt.name === "routeChangeStart"
+        (evt) => evt.name === "routeChangeStart"
       );
       await act(async () => {
         // Wait for repaint
-        await new Promise(resolve => setTimeout(resolve, 0));
+        await new Promise((resolve) => setTimeout(resolve, 0));
         // Trigger routeChangeStart
         routeChangeStart.callback();
       });
@@ -245,15 +245,15 @@ describe("App", () => {
       const { wrapper } = render({}, mountComponent);
 
       const routeChangeStart = mockRouterEvents.find(
-        evt => evt.name === "routeChangeStart"
+        (evt) => evt.name === "routeChangeStart"
       );
       const routeChangeComplete = mockRouterEvents.find(
-        evt => evt.name === "routeChangeComplete"
+        (evt) => evt.name === "routeChangeComplete"
       );
 
       await act(async () => {
         // Wait for repaint
-        await new Promise(resolve => setTimeout(resolve, 0));
+        await new Promise((resolve) => setTimeout(resolve, 0));
 
         // Trigger routeChangeStart
         routeChangeStart.callback();
@@ -275,14 +275,14 @@ describe("App", () => {
       const { wrapper } = render({}, mountComponent);
 
       const routeChangeStart = mockRouterEvents.find(
-        evt => evt.name === "routeChangeStart"
+        (evt) => evt.name === "routeChangeStart"
       );
       const routeChangeError = mockRouterEvents.find(
-        evt => evt.name === "routeChangeError"
+        (evt) => evt.name === "routeChangeError"
       );
       await act(async () => {
         // Wait for repaint
-        await new Promise(resolve => setTimeout(resolve, 0));
+        await new Promise((resolve) => setTimeout(resolve, 0));
 
         // Trigger routeChangeStart
         routeChangeStart.callback();
@@ -305,15 +305,15 @@ describe("App", () => {
       const { wrapper } = render({}, mountComponent);
 
       const routeChangeStart = mockRouterEvents.find(
-        evt => evt.name === "routeChangeStart"
+        (evt) => evt.name === "routeChangeStart"
       );
       const routeChangeComplete = mockRouterEvents.find(
-        evt => evt.name === "routeChangeComplete"
+        (evt) => evt.name === "routeChangeComplete"
       );
 
       await act(async () => {
         // Wait for repaint
-        await new Promise(resolve => setTimeout(resolve, 0));
+        await new Promise((resolve) => setTimeout(resolve, 0));
 
         // Trigger routeChangeStart
         routeChangeStart.callback();

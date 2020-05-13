@@ -112,11 +112,11 @@ const WagesTable = (props) => {
             </thead>
             <tbody>
               {/**
-                * TODO this only shows a row for quarters
-                * where wages exist. We will need to show
-                * $0.00 for empty quarters once we've integrated with
-                * a mock endpoint
-                */}
+               * TODO this only shows a row for quarters
+               * where wages exist. We will need to show
+               * $0.00 for empty quarters once we've integrated with
+               * a mock endpoint
+               */}
               {wages.map(({ quarter, earnings, period_id }, i) => (
                 <tr key={`${employer}-history-${period_id}-${i}`}>
                   <th scope="row">{quarter}</th>

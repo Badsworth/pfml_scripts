@@ -11,7 +11,7 @@ import useHandleSave from "../../hooks/useHandleSave";
 import { useTranslation } from "react-i18next";
 import withClaim from "../../hoc/withClaim";
 
-export const LeaveType = props => {
+export const LeaveType = (props) => {
   const { t } = useTranslation();
   const { formState, updateFields } = useFormState(props.claim);
 
@@ -19,8 +19,8 @@ export const LeaveType = props => {
   const { leave_type } = formState;
 
   const handleSave = useHandleSave(
-    formState => claimsApi.updateClaim(new Claim(formState)),
-    result => props.updateClaim(result.claim)
+    (formState) => claimsApi.updateClaim(new Claim(formState)),
+    (result) => props.updateClaim(result.claim)
   );
 
   return (
