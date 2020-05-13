@@ -3,12 +3,13 @@
 #
 
 import os
+from contextlib import contextmanager
 from typing import List, Optional, Union
 
 import connexion
 import connexion.mock
 import flask_cors
-from flask import Flask, current_app
+from flask import Flask, current_app, g
 
 import massgov.pfml.util.logging
 from massgov.pfml import db
@@ -26,7 +27,7 @@ def create_app(config: Optional[AppConfig] = None) -> connexion.FlaskApp:
         config = get_config()
 
     # Initialize the db
-    db.init(config.db)
+    db_session_factory = db.init(config.db)
 
     # Enable mock responses for unimplemented paths.
     resolver = connexion.mock.MockResolver(mock_all=False)
@@ -46,11 +47,18 @@ def create_app(config: Optional[AppConfig] = None) -> connexion.FlaskApp:
     # when proxied behind the AWS API Gateway.
     flask_app.wsgi_app = ReverseProxied(flask_app.wsgi_app)
 
+    @flask_app.before_request
+    def push_db():
+        g.db = db_session_factory
+
     @flask_app.teardown_request
     def close_db(exception=None):
         try:
             logger.debug("Closing DB session")
-            db.get_session().remove()
+            db = g.pop("db", None)
+
+            if db is not None:
+                db.remove()
         except Exception:
             logger.exception("Exception while closing DB session")
             pass
@@ -67,6 +75,29 @@ def get_app_config(app: Optional[Union[connexion.FlaskApp, Flask]] = None) -> Ap
         app = app
 
     return app.config["app_config"]
+
+
+def db_session_raw():
+    """Get a plain SQLAlchemy Session."""
+    session = g.get("db")
+    if session is None:
+        raise Exception("No database session available in application context")
+
+    return session
+
+
+@contextmanager
+def db_session(close: bool = False):
+    """Get a SQLAlchemy Session wrapped in some transactional management.
+
+    This commits session when done, rolls back transaction on exceptions,
+    optionally closing the session (which disconnects any entities in the
+    session, so be sure closing is what you want).
+    """
+
+    session = db_session_raw()
+    with db.session_scope(session, close) as session_scoped:
+        yield session_scoped
 
 
 def get_project_root_dir() -> str:

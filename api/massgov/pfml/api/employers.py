@@ -2,12 +2,12 @@ from dataclasses import dataclass
 
 from werkzeug.exceptions import NotFound
 
-import massgov.pfml.db as db
+import massgov.pfml.api.app as app
 from massgov.pfml.db.models import Employer
 
 
 def employers_get(employer_id):
-    with db.session_scope() as db_session:
+    with app.db_session() as db_session:
         employer = db_session.query(Employer).get(employer_id)
 
     if employer is None:

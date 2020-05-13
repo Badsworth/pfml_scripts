@@ -9,12 +9,8 @@ from massgov.pfml.db.config import DbConfig, get_config
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
 
-session_factory = None
-
 
 def init(config: Optional[DbConfig] = None):
-    global session_factory
-
     logger.info("connecting to postgres db")
 
     engine = create_engine(config)
@@ -33,6 +29,8 @@ def init(config: Optional[DbConfig] = None):
         sessionmaker(autocommit=False, expire_on_commit=False, bind=engine)
     )
 
+    return session_factory
+
 
 def create_engine(config: Optional[DbConfig] = None):
     if config is None:
@@ -43,15 +41,12 @@ def create_engine(config: Optional[DbConfig] = None):
     return sqlalchemy.create_engine(connection_uri)
 
 
-def get_session():
-    return session_factory
-
-
 @contextmanager
-def session_scope(close: bool = False):
-    """Provide a transactional scope around a series of operations."""
+def session_scope(session, close: bool = False):
+    """Provide a transactional scope around a series of operations.
 
-    session = get_session()
+    See https://docs.sqlalchemy.org/en/13/orm/session_basics.html#when-do-i-construct-a-session-when-do-i-commit-it-and-when-do-i-close-it
+    """
 
     try:
         yield session

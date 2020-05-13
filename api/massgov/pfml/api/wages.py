@@ -2,14 +2,14 @@ from dataclasses import dataclass
 
 from werkzeug.exceptions import NotFound
 
-import massgov.pfml.db as db
+import massgov.pfml.api.app as app
 from massgov.pfml.db.models import WagesAndContributions
 
 # this isn't being imported properly so it defaults to the example. hence all the 200s
 
 
 def wages_get(employee_id, filing_period=None):
-    with db.session_scope() as db_session:
+    with app.db_session() as db_session:
         wage = db_session.query(WagesAndContributions).filter_by(employee_id=employee_id)
         if filing_period is not None:
             wage = wage.filter_by(filing_period=filing_period)

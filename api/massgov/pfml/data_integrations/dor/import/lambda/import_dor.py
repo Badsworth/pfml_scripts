@@ -237,9 +237,9 @@ def process_daily_import(bucket, employer_file, employee_file, decrypter):
         start=datetime.now().isoformat(), employer_file=employer_file, employee_file=employee_file
     )
 
-    db.init()
+    db_session_raw = db.init()
 
-    with db.session_scope() as db_session:
+    with db.session_scope(db_session_raw) as db_session:
         try:
             employers = parse_employer_file(bucket, employer_file, decrypter)
             employers_quarter_info, employees_info = parse_employee_file(

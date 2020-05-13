@@ -4,10 +4,22 @@
 import factory
 from sqlalchemy.orm import scoped_session
 
-import massgov.pfml.api.db as db
-import massgov.pfml.api.db.models as models
+import massgov.pfml.db as db
+import massgov.pfml.db.models as models
 
-Session = scoped_session(lambda: db.get_session(), scopefunc=lambda: db.get_session(),)
+db_session = None
+
+
+def get_db_session():
+    global db_session
+
+    if db_session is None:
+        db_session = db.init()
+
+    return db_session
+
+
+Session = scoped_session(lambda: get_db_session(), scopefunc=lambda: get_db_session())
 
 
 class Generators:
@@ -32,12 +44,13 @@ class UserFactory(BaseFactory):
     # Use iterator for now, to allow us to lazily load the status_type when needed.
     @factory.lazy_attribute
     def status_type(self):  # noqa: B902
-        with db.session_scope() as db_session:
-            active_status = (
-                db_session.query(models.Status).filter_by(status_description="Active").one()
-            )
+        active_status = (
+            UserFactory._meta.sqlalchemy_session.query(models.Status)
+            .filter_by(status_description="Active")
+            .one()
+        )
 
-        return [active_status.status_type]
+        return active_status.status_type
 
 
 class EmployerFactory(BaseFactory):

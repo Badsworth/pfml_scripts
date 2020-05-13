@@ -4,7 +4,7 @@ from enum import Enum
 import connexion
 from werkzeug.exceptions import NotFound
 
-import massgov.pfml.db as db
+import massgov.pfml.api.app as app
 import massgov.pfml.util.logging
 from massgov.pfml.db.models import Status, User
 
@@ -17,7 +17,7 @@ logger = massgov.pfml.util.logging.get_logger(__name__)
 
 
 def users_get(user_id):
-    with db.session_scope() as db_session:
+    with app.db_session() as db_session:
         u = db_session.query(User).get(user_id)
 
     if u is None:
@@ -29,7 +29,7 @@ def users_get(user_id):
 def users_post():
     body = UserCreateRequest(**connexion.request.json)
 
-    with db.session_scope() as db_session:
+    with app.db_session() as db_session:
         status = get_or_make_status(db_session, UserStatusDescription.unverified)
 
         u = User(active_directory_id=body.auth_id, status=status, email_address=body.email_address)

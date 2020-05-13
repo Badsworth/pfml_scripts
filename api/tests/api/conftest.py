@@ -149,7 +149,7 @@ def test_db_via_migrations(test_db_schema):
 def test_db_session(test_db):
     import massgov.pfml.db as db
 
-    db_session = db.get_session()
+    db_session = db.init()
 
     yield db_session
 
