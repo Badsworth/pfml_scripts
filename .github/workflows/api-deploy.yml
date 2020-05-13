@@ -19,8 +19,20 @@ on:
 
 env:
   working-dir: ./api
+  terraform-dir: ./infra/api/environments
   terraform-version: 0.12.24
   python-version: 3.8.2
+
+  # Create a mapping of branches to environment names.
+  #
+  # The api-env step will grab the env name using github.ref, which
+  # will be the branch or tag reference that triggered this Github Actions workflow.
+  #
+  # We could specify this directly in the bash script below, but this will be cleaner
+  # to add and change items since bash doesn't have hashmaps/dicts.
+  refs/heads/master: test
+  refs/heads/deploy/api/stage: stage
+  refs/heads/deploy/api/prod: prod
 
 jobs:
   api-build:
@@ -93,20 +105,8 @@ jobs:
     needs: [api-build, dor-import-build]
 
     env:
-      terraform-dir: ./infra/api/environments
       TF_VAR_service_docker_tag: ${{ github.sha }}
       TF_VAR_dor_lambda_artifact_s3_key: ${{ needs.dor-import-build.outputs.s3_key }}
-
-      # Create a mapping of branches to environment names.
-      #
-      # The api-env step will grab the env name using github.ref, which
-      # will be the branch or tag reference that triggered this Github Actions workflow.
-      #
-      # We could specify this directly in the bash script below, but this will be cleaner
-      # to add and change items since bash doesn't have hashmaps/dicts.
-      refs/heads/master: test
-      refs/heads/deploy/api/stage: stage
-      refs/heads/deploy/api/prod: prod
 
     steps:
       - uses: actions/checkout@v2
@@ -156,3 +156,38 @@ jobs:
           tf_actions_comment: false
           tf_actions_working_dir: ${{ env.terraform-dir }}/${{ env.api-env }}
           args: 'plan.tfplan'
+
+  api-db-migrate-up:
+    name: Run migrations
+    runs-on: ubuntu-latest
+    needs: api-release
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Set api-env Value
+        run: echo "::set-env name=api-env::${{ env[github.ref] }}"
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.PFML_AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.PFML_AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+          role-to-assume: ci-run-deploys
+          role-duration-seconds: 3600
+
+      # Initialize terraform config since we use the tfstate outputs
+      # for launching an ECS task.
+      - name: Terraform Init
+        id: terraform_init
+        uses: hashicorp/terraform-github-actions@master
+        with:
+          tf_actions_version: ${{ env.terraform-version }}
+          tf_actions_subcommand: init
+          tf_actions_comment: false
+          tf_actions_working_dir: ${{ env.terraform-dir }}/${{ env.api-env }}
+
+      - name: Start migration ECS task
+        run: make ecr-login && ../bin/api-migrate/migrate.sh ${{ env.api-env }}
+        working-directory: ${{ env.working-dir }}
