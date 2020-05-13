@@ -3,22 +3,28 @@ import InputChoiceGroup from "../../components/InputChoiceGroup";
 import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
+import claimsApi from "../../api/claimsApi";
 import routes from "../../routes";
 import useFormState from "../../hooks/useFormState";
 import useHandleInputChange from "../../hooks/useHandleInputChange";
+import useHandleSave from "../../hooks/useHandleSave";
 import { useTranslation } from "../../locales/i18n";
+import withClaim from "../../hoc/withClaim";
 
 /**
  * A form page to capture a user's attestation of having notified their employer.
  */
-const NotifiedEmployer = (props) => {
+export const NotifiedEmployer = (props) => {
   const { t } = useTranslation();
   const { formState, updateFields } = useFormState(props.claim);
-  const { notified } = formState;
+  // TODO: use nested fields
+  const { employer_notified } = formState;
   const handleInputChange = useHandleInputChange(updateFields);
 
-  // TODO call API
-  const handleSave = async () => {};
+  const handleSave = useHandleSave(
+    (formState) => claimsApi.updateClaim(new Claim(formState)),
+    (result) => props.updateClaim(result.claim)
+  );
 
   return (
     <QuestionPage
@@ -30,20 +36,19 @@ const NotifiedEmployer = (props) => {
       <InputChoiceGroup
         choices={[
           {
-            checked: notified === true,
+            checked: employer_notified === true,
             label: t("pages.claimsNotifiedEmployer.choiceYes"),
             value: "true",
           },
           {
-            checked: notified === false,
+            checked: employer_notified === false,
             label: t("pages.claimsNotifiedEmployer.choiceNo"),
             value: "false",
           },
         ]}
         label={t("pages.claimsNotifiedEmployer.label")}
         hint={t("pages.claimsNotifiedEmployer.hint")}
-        // TODO Align field name with API
-        name="notified"
+        name="employer_notified"
         onChange={handleInputChange}
         type="radio"
       />
@@ -53,6 +58,10 @@ const NotifiedEmployer = (props) => {
 
 NotifiedEmployer.propTypes = {
   claim: PropTypes.instanceOf(Claim),
+  updateClaim: PropTypes.func,
+  query: PropTypes.shape({
+    claim_id: PropTypes.string,
+  }),
 };
 
-export default NotifiedEmployer;
+export default withClaim(NotifiedEmployer);

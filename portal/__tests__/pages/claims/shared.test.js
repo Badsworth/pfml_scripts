@@ -3,13 +3,15 @@
  */
 
 import Claim from "../../../src/models/Claim";
+import { Duration } from "../../../src/pages/claims/duration";
 import { LeaveDates } from "../../../src/pages/claims/leave-dates";
 import { LeaveType } from "../../../src/pages/claims/leave-type";
+import { NotifiedEmployer } from "../../../src/pages/claims/notified-employer";
 import React from "react";
 import claimsApi from "../../../src/api/claimsApi";
 import { mount } from "enzyme";
 
-const testPages = [LeaveType, LeaveDates];
+const testPages = [LeaveType, LeaveDates, Duration, NotifiedEmployer];
 
 const render = (Component, props = {}) => {
   const claim_id = "12345";

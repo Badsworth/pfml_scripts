@@ -5,9 +5,11 @@ import InputText from "../../components/InputText";
 import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
-import routes from "../../routes";
+import claimsApi from "../../api/claimsApi";
+import routeWithParams from "../../utils/routeWithParams";
 import useFormState from "../../hooks/useFormState";
 import useHandleInputChange from "../../hooks/useHandleInputChange";
+import useHandleSave from "../../hooks/useHandleSave";
 import { useTranslation } from "react-i18next";
 import valueWithFallback from "../../utils/valueWithFallback";
 import withClaim from "../../hoc/withClaim";
@@ -15,6 +17,7 @@ import withClaim from "../../hoc/withClaim";
 export const Duration = (props) => {
   const { t } = useTranslation();
   const { formState, updateFields, removeField } = useFormState(props.claim);
+  // TODO: use nested fields
   const {
     avg_weekly_hours_worked,
     duration_type,
@@ -22,11 +25,10 @@ export const Duration = (props) => {
   } = formState;
   const handleInputChange = useHandleInputChange(updateFields);
 
-  // TODO call API once API module is ready
-  // const handleSave = useHandleSave(api.patchClaim, props.setClaim);
-  // TODO save the API result to the claim once we have a `setClaim` function we can use
-  // For now just do nothing.
-  const handleSave = async () => {};
+  const handleSave = useHandleSave(
+    (formState) => claimsApi.updateClaim(new Claim(formState)),
+    (result) => props.updateClaim(result.claim)
+  );
 
   return (
     <QuestionPage
@@ -34,7 +36,7 @@ export const Duration = (props) => {
       title={t("pages.claimsDuration.title")}
       onSave={handleSave}
       // TODO update with correct next route re: pregnancy
-      nextPage={routes.claims.notifiedEmployer}
+      nextPage={routeWithParams("claims.notifiedEmployer", props.query)}
     >
       <InputChoiceGroup
         choices={[
@@ -88,6 +90,10 @@ export const Duration = (props) => {
 
 Duration.propTypes = {
   claim: PropTypes.instanceOf(Claim),
+  updateClaim: PropTypes.func,
+  query: PropTypes.shape({
+    claim_id: PropTypes.string,
+  }),
 };
 
 export default withClaim(Duration);

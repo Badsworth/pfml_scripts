@@ -1,5 +1,5 @@
 import Claim from "../../../src/models/Claim";
-import NotifiedEmployer from "../../../src/pages/claims/notified-employer";
+import { NotifiedEmployer } from "../../../src/pages/claims/notified-employer";
 import React from "react";
 import routes from "../../../src/routes";
 import { shallow } from "enzyme";

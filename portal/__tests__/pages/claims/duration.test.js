@@ -23,7 +23,7 @@ describe("Duration", () => {
     });
 
     it("redirects to the Notified Employer page", () => {
-      expect(wrapper.find("QuestionPage").prop("nextPage")).toEqual(
+      expect(wrapper.find("QuestionPage").prop("nextPage")).toContain(
         routes.claims.notifiedEmployer
       );
     });

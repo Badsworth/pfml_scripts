@@ -8,13 +8,14 @@ exports[`Duration regardless of duration type initially renders the page without
       "claim_id": "12345",
       "created_at": null,
       "duration_type": null,
+      "employer_notified": null,
       "hours_off_needed": null,
       "leave_end_date": null,
       "leave_start_date": null,
       "leave_type": null,
     }
   }
-  nextPage="/claims/notified-employer"
+  nextPage="/claims/notified-employer?"
   onSave={[Function]}
   title="Leave duration"
 >

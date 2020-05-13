@@ -20,6 +20,7 @@ exports[`Index when a claim exists renders the In Progress dashboard state 1`] =
           "claim_id": "mock-claim-id",
           "created_at": null,
           "duration_type": null,
+          "employer_notified": null,
           "hours_off_needed": null,
           "leave_end_date": null,
           "leave_start_date": null,

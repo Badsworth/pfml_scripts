@@ -16,6 +16,7 @@ export const LeaveType = (props) => {
   const { formState, updateFields } = useFormState(props.claim);
 
   const handleInputChange = useHandleInputChange(updateFields);
+  // TODO: use nested field
   const { leave_type } = formState;
 
   const handleSave = useHandleSave(

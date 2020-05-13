@@ -4,7 +4,7 @@ import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
 import claimsApi from "../../api/claimsApi";
-import routes from "../../routes";
+import routeWithParams from "../../utils/routeWithParams";
 import useFormState from "../../hooks/useFormState";
 import useHandleInputChange from "../../hooks/useHandleInputChange";
 import useHandleSave from "../../hooks/useHandleSave";
@@ -30,7 +30,7 @@ export const LeaveDates = (props) => {
       formState={formState}
       title={t("pages.claimsGeneral.leaveDurationTitle")}
       onSave={handleSave}
-      nextPage={routes.claims.duration}
+      nextPage={routeWithParams("claims.duration", props.query)}
     >
       <InputDate
         name="leave_start_date"
@@ -58,6 +58,9 @@ export const LeaveDates = (props) => {
 LeaveDates.propTypes = {
   claim: PropTypes.instanceOf(Claim),
   updateClaim: PropTypes.func,
+  query: PropTypes.shape({
+    claim_id: PropTypes.string,
+  }),
 };
 
 export default withClaim(LeaveDates);
