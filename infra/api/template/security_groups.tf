@@ -112,7 +112,7 @@ resource "aws_security_group" "data_import" {
 
   # Outgoing https to all destinations.
   egress {
-    cidr_blocks = ["10.0.0.0/8"]
+    cidr_blocks = ["0.0.0.0/0"]
     from_port   = 443
     to_port     = 443
     protocol    = "tcp"

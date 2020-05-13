@@ -62,6 +62,7 @@ jobs:
       infra-working-dir: ./api/import_infra/dor
     outputs:
       s3_key: ${{ steps.get_s3_key.outputs.s3_key }}
+      dependencies_s3_key: ${{ steps.get_dependencies_s3_key.outputs.dependencies_s3_key }}
 
     steps:
       - uses: actions/checkout@v2
@@ -99,6 +100,11 @@ jobs:
         run: echo "::set-output name=s3_key::$(python3 get-lambda-build.py)"
         working-directory:  ${{ env.infra-working-dir }}
 
+      - name: Get Dependencies S3 Key
+        id: get_dependencies_s3_key
+        run: echo "::set-output name=dependencies_s3_key::$(python3 get-lambda-dependencies.py)"
+        working-directory:  ${{ env.infra-working-dir }}
+
   api-release:
     name: Release
     runs-on: ubuntu-latest
@@ -107,6 +113,7 @@ jobs:
     env:
       TF_VAR_service_docker_tag: ${{ github.sha }}
       TF_VAR_dor_lambda_artifact_s3_key: ${{ needs.dor-import-build.outputs.s3_key }}
+      TF_VAR_dor_import_lambda_dependencies_s3_key: ${{ needs.dor-import-build.outputs.dependencies_s3_key }}
 
     steps:
       - uses: actions/checkout@v2

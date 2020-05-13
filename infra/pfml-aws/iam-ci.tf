@@ -77,6 +77,8 @@ data "aws_iam_policy_document" "ci_run_deploys_policy" {
       "ec2:DescribeSecurityGroupReferences",
       "ec2:DescribeStaleSecurityGroups",
 
+      "iam:ListAttachedRolePolicies",
+
       # SSM is required to pull down database passwords, which are used
       # when generating the database itself or when updating the password
       # through a rotation.

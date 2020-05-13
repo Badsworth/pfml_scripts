@@ -25,8 +25,10 @@ locals {
   #
   #    ecr.dkr: Pulling app docker images from ECR. We do not need ecr.api because we're using Fargate.
   #    logs:    Sending app logs to cloudwatch.
+  #    ssm:     Pulling secrets from Parameter Store.
+  #    ec2messages: Required by SSM Parameter Store.
   #
-  service_names = ["ecr.dkr", "logs"]
+  service_names = ["ecr.dkr", "logs", "ssm", "ec2messages"]
 
   # 2. Create an object that looks like this:
   #    {

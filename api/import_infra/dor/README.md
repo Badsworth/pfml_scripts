@@ -28,6 +28,13 @@ Run to get latest PFML API module as a dependency (whenever API code changes)
 make build-api import-api-module
 ```
 
+For decrypting files, a GPG binary is also required. For now, this is required even for
+local development where decryption is off by default.
+
+```
+make deps
+```
+
 ## Local testing
 
 DOR Importer requires all migrations to be run and the database to be up. From the the `/api` directory:

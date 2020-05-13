@@ -7,7 +7,12 @@ MOCK_OUTPUT_FOLDER := import_infra/dor/mock_output
 ## Helpers
 
 clean:
-	rm -rf .aws-sam
+	rm -rf .aws-sam +
+	rm $(DOR_IMPORT_LAMBDA_FOLDER)/lambda/massgov.pfml.api-0.1.0-py3-none-any.whl +
+	rm -rf dependencies/ +
+	rm dependencies.zip +
+	rm local-log.txt +
+	rm response.json +
 
 # build massgov.pfml.api package
 build-api:
@@ -17,11 +22,16 @@ build-api:
 import-api-module:
 	cp $(API_FOLDER)/dist/massgov.pfml.api-0.1.0-py3-none-any.whl $(DOR_IMPORT_LAMBDA_FOLDER)/lambda/massgov.pfml.api-0.1.0-py3-none-any.whl
 
+deps:  ## Build binary dependencies
+	mkdir -p ./dependencies
+	docker run --rm -v "$(PWD)"/dependencies:/lambda/opt lambci/yumda:2 yum install -y gnupg
+	(cd dependencies && zip -yr ../dependencies.zip .)
+
 ## Import Lambda
 
 # build the DOR import lambda within a SAM container
 build:
-	sam build --template $(DOR_IMPORT_LAMBDA_FOLDER)/template.yaml --use-container
+	sam build --template template.yaml --use-container
 
 # invoke locally by passing environment variable file and test event
 
@@ -31,10 +41,10 @@ invoke-local:
 		--log-file local-log.txt \
 		--event test_event.json
 
-build-invoke-local: build-api import-api-module build invoke-local
+build-invoke-local: build-api import-api-module deps build invoke-local
 
 # build and publish lambda function to AWS
-upload-release: import-api-module build
+upload-release: import-api-module deps build
 	sam package \
 		--s3-bucket massgov-pfml-api-lambda-builds \
 		--s3-prefix dor-import \
@@ -44,6 +54,10 @@ upload-release: import-api-module build
 # get the S3 key of the most recently packaged release
 get-key:
 	python3 get-lambda-build.py
+
+# get the S3 key of the most recently packaged dependencies
+get-deps-key:
+	python3 get-lambda-dependencies.py
 
 ## Mock Generation
 

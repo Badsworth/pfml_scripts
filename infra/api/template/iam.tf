@@ -2,6 +2,10 @@
 # Terraform configuration for IAM roles.
 #
 
+locals {
+  ssm_arn_prefix = "arn:aws:ssm:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:parameter/service"
+}
+
 # Task execution role. This role is used by ECS to pull container images from
 # ECR and access secrets from Systems Manager Parameter Store before running the application.
 #
@@ -66,7 +70,7 @@ data "aws_iam_policy_document" "task_executor" {
     ]
 
     resources = [
-      "arn:aws:ssm:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:parameter/service/${local.app_name}/${var.environment_name}/*"
+      "${local.ssm_arn_prefix}/${local.app_name}/${var.environment_name}/*"
     ]
   }
 
@@ -76,7 +80,7 @@ data "aws_iam_policy_document" "task_executor" {
     ]
 
     resources = [
-      "arn:aws:ssm:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:parameter/service/${local.app_name}/${var.environment_name}"
+      "${local.ssm_arn_prefix}/${local.app_name}/${var.environment_name}"
     ]
   }
 }
@@ -175,7 +179,10 @@ data "aws_iam_policy_document" "iam_policy_lambda_execution" {
       "s3:GetObject",
       "s3:ListBucket"
     ]
-    resources = [data.aws_s3_bucket.agency_transfer.arn]
+    resources = [
+      data.aws_s3_bucket.agency_transfer.arn,
+      "${data.aws_s3_bucket.agency_transfer.arn}/*"
+    ]
   }
   statement {
     effect = "Allow"
@@ -186,6 +193,32 @@ data "aws_iam_policy_document" "iam_policy_lambda_execution" {
     ]
     resources = [
       "*"
+    ]
+  }
+  statement {
+    effect = "Allow"
+
+    actions = [
+      "ssm:GetParameter",
+      "ssm:GetParameters"
+    ]
+
+    resources = [
+      "${local.ssm_arn_prefix}/${local.app_name}/${var.environment_name}/*",
+      "${local.ssm_arn_prefix}/${local.app_name}-dor-import/${var.environment_name}/*"
+    ]
+  }
+
+  statement {
+    effect = "Allow"
+
+    actions = [
+      "ssm:GetParametersByPath"
+    ]
+
+    resources = [
+      "${local.ssm_arn_prefix}/${local.app_name}/${var.environment_name}",
+      "${local.ssm_arn_prefix}/${local.app_name}-dor-import/${var.environment_name}"
     ]
   }
 }
