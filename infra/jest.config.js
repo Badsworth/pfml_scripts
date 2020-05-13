@@ -10,7 +10,7 @@ module.exports = {
       branches: 90,
       functions: 90,
       lines: 90,
-      statments: 90,
+      statements: 90,
     },
   },
 };
