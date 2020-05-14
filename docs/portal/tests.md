@@ -1,4 +1,6 @@
-### Introduction
+# Tests
+
+## Introduction
 
 [Jest](https://jestjs.io/) is used as our JS test runner and is very similar to Jasmine.
 
@@ -18,7 +20,11 @@ describe("sum", () => {
 });
 ```
 
-### Testing React components
+## Creating new test files
+
+A test file should be placed in the appropriate `__tests__` directory (e.g. `portal/__tests__`) rather than alongside the file it tests. These test files should have the same name as the file they're testing, and have `.test.js` as the extension. For example, `pages/index.js` and `__tests__/pages/index.test.js`.
+
+## Unit tests
 
 [Enzyme](http://airbnb.io/enzyme/) is a test utility used alongside Jest to test React components. Read the [Enzyme documentation](http://airbnb.io/enzyme/) to learn how to Render React components and how to pull information from those React components in order to run test assertions against them.
 
@@ -43,10 +49,6 @@ describe("<UploadForm>", () => {
   });
 });
 ```
-
-### Creating new test files
-
-A test file should be placed in the appropriate `__tests__` directory (e.g. `portal/__tests__`) rather than alongside the file it tests. These test files should have the same name as the file they're testing, and have `.test.js` as the extension. For example, `pages/index.js` and `__tests__/pages/index.test.js`.
 
 ### Snapshot tests
 
@@ -101,3 +103,43 @@ You can also create a Mock function/spy using `jest.fn()`
 ### Test coverage
 
 Jest includes [built-in support for measuring test coverage](https://jestjs.io/docs/en/cli#coverage), using [Istanbul](https://istanbul.js.org/). The [`coverageReporters`](https://jestjs.io/docs/en/configuration#coveragereporters-array-string) Jest setting can be modified for more advanced test coverage use cases.
+
+## End-to-end tests
+
+End-to-end tests run in a headless Chromium browser, using [Puppeteer](https://developers.google.com/web/tools/puppeteer). We use [`jest-puppeteer`](https://github.com/smooth-code/jest-puppeteer) to run our tests using Jest & Puppeteer. This setup exposes Puppeteer's `browser` and `page` as global variables in our test files. In addition, it adds some specific [matchers](https://github.com/smooth-code/jest-puppeteer/blob/master/packages/expect-puppeteer/README.md#api) to make assertions on Puppeteer pages and elements.
+
+- [View the `puppeteer` API docs](https://pptr.dev/)
+- [View the `expect-puppeteer` API docs](https://github.com/smooth-code/jest-puppeteer/blob/master/packages/expect-puppeteer/README.md#api)
+
+Example:
+
+```js
+it("loads page with correct heading", async () => {
+  // Open the page. This assumes you're running the server already.
+  await page.goto('http://localhost:3000')
+
+  // (Optional) Wait for a specific element to render before proceeding:
+  await page.waitForSelector("#page");
+
+  // Find an element on the page
+  const heading = await page.$("h1");
+
+  // Assert the heading contains the given text
+  await expect(heading).toMatch("Welcome")
+})
+```
+
+### Puppeteer options
+
+The following environment variables can be set to modify the Puppeteer behavior:
+
+- `JEST_PUPPETEER_HEADLESS`
+- `JEST_PUPPETEER_SLOW_MO`
+
+View [`jest-puppeteer.config.js`](../../portal/jest-puppeteer.config.js) for more info about these options.
+
+Example:
+
+```
+JEST_PUPPETEER_HEADLESS=false JEST_PUPPETEER_SLOW_MO=200 npm run test:e2e
+```

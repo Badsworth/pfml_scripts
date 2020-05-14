@@ -184,16 +184,18 @@ export const App = ({
     if (!user) return <React.Fragment />;
 
     return (
-      <Component
-        user={user}
-        setUser={setUser}
-        claims={claims}
-        addClaim={addClaim}
-        updateClaim={updateClaim}
-        removeClaim={removeClaim}
-        query={router.query}
-        {...pageProps}
-      />
+      <section id="page">
+        <Component
+          user={user}
+          setUser={setUser}
+          claims={claims}
+          addClaim={addClaim}
+          updateClaim={updateClaim}
+          removeClaim={removeClaim}
+          query={router.query}
+          {...pageProps}
+        />
+      </section>
     );
   };
 

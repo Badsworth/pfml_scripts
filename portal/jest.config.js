@@ -1,5 +1,5 @@
 /**
- * @file Jest CLI options
+ * @file Jest CLI options for unit tests
  * @see https://jestjs.io/docs/en/cli
  */
 module.exports = {
@@ -14,6 +14,8 @@ module.exports = {
     "<rootDir>/.next/",
     "<rootDir>/node_modules/",
     "<rootDir>/config",
+    // Exclude E2E tests since those are part of a separate Jest config (jest-e2e.config.js)
+    "<rootDir>/__tests__/end-to-end",
     "<rootDir>/__tests__/test-utils.js",
   ],
   coverageThreshold: {

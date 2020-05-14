@@ -43,7 +43,7 @@
 
       - name: install
         run:
-          npm ci --prefix portal
+          PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true npm ci --prefix portal
 
       - name: test-cov
         run:
@@ -62,7 +62,7 @@
 
       - name: install
         run:
-          npm ci --prefix portal
+          PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true npm ci --prefix portal
 
       - name: Smoke test Storybook
         run: npm run docs:smoke-test --prefix portal

@@ -16,6 +16,10 @@
       "prettier/standard"
     ],
     "globals": {
+      // Puppeteer globals
+      "page": true,
+      "browser": true,
+      // Trackers loaded globally
       "newrelic": "readonly"
     },
     "parser": "babel-eslint",
