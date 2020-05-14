@@ -5,8 +5,8 @@
 Input and model field names should match the API field names, which means they should be formatted as snake case.
 
 | ✅ Like this | 🛑 Not like this |
-| ------------ | ----------------- |
-| `first_name` | `firstName` |
+| ------------ | ---------------- |
+| `first_name` | `firstName`      |
 
 Benefits
 

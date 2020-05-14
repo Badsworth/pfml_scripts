@@ -26,6 +26,7 @@ Node v10 (or greater)
 ### Run Instructions
 
 Run the web portal locally from the project root directory with the following commands:
+
 ```
 npm install --prefix portal
 npm run dev --prefix portal

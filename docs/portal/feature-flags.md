@@ -14,6 +14,6 @@ The `src/utils/isFeatureEnabled.js` function can be used to check if a feature f
 
 ```js
 if (isFeatureEnabled("showExample")) {
-  return "This is an example"
+  return "This is an example";
 }
 ```

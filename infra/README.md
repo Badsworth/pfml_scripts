@@ -1,12 +1,11 @@
-Infrastructure
-==========
+# Infrastructure
 
 This directory houses the configuration needed for maintaining PFML infrastructure. We use [Terraform](https://terraform.io) to manage our infra in a modular, concise, and reusable fashion.
 
-* [Local Setup](#local-setup)
-* [Runbook](#runbook)
-* [Directory Structure](#directory-structure)
-* [tfstate files](#tfstate-files)
+- [Local Setup](#local-setup)
+- [Runbook](#runbook)
+- [Directory Structure](#directory-structure)
+- [tfstate files](#tfstate-files)
 
 ## Local Setup
 
@@ -68,7 +67,7 @@ Since this pulls down a git repository, it is recommended that the installation 
 
 ```sh
 ../bin/centrify/install-centrify-aws-cli.sh ~/code/git
-````
+```
 
 Once it is installed, you can run the login-aws command to generate a 1-hour AWS access key:
 
@@ -172,6 +171,7 @@ $ terraform plan
 ```
 
 To apply changes to infrastructure:
+
 ```
 $ terraform apply
 ```

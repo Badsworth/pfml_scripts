@@ -45,7 +45,7 @@ describe("<UploadForm>", () => {
       wrapper.simulate("submit");
 
       expect(mockSubmit).toHaveBeenCalled();
-    })
+    });
   });
 });
 ```
@@ -74,7 +74,7 @@ it("renders the fields with the expected content and attributes", () => {
 
   // You can use inline snapshots if the output is fairly short:
   expect(output).toMatchInlineSnapshot();
-})
+});
 ```
 
 #### React snapshot example
@@ -85,7 +85,7 @@ it("renders the fields with the expected content and attributes", () => {
 
   // You can output the snapshot to a separate file if its output is verbose:
   expect(wrapper).toMatchSnapshot();
-})
+});
 ```
 
 ### Mocks
@@ -116,7 +116,7 @@ Example:
 ```js
 it("loads page with correct heading", async () => {
   // Open the page. This assumes you're running the server already.
-  await page.goto('http://localhost:3000')
+  await page.goto("http://localhost:3000");
 
   // (Optional) Wait for a specific element to render before proceeding:
   await page.waitForSelector("#page");
@@ -125,8 +125,8 @@ it("loads page with correct heading", async () => {
   const heading = await page.$("h1");
 
   // Assert the heading contains the given text
-  await expect(heading).toMatch("Welcome")
-})
+  await expect(heading).toMatch("Welcome");
+});
 ```
 
 ### Puppeteer options

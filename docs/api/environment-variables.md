@@ -43,7 +43,8 @@ and sensitive values are pulled in from AWS SSM Parameter Store when the contain
 To view or update insensitive values, pass them in through [service.tf](/infra/api/template/service.tf).
 
 To view or update sensitive values:
-  1. Go to the key in the [AWS Systems Manager/Parameter Store console](https://console.aws.amazon.com/systems-manager/parameters?region=us-east-1).
-  2. Create or update the sensitive string with the default KMS key, matching the `valueFrom` field that you specify in the container definition above.
+
+1. Go to the key in the [AWS Systems Manager/Parameter Store console](https://console.aws.amazon.com/systems-manager/parameters?region=us-east-1).
+2. Create or update the sensitive string with the default KMS key, matching the `valueFrom` field that you specify in the container definition above.
 
 In both cases, the application will need to be redeployed before environment variables are picked up.

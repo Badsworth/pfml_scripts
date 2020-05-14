@@ -21,6 +21,7 @@ For practical instructions on getting set up locally, see the repo [README](../R
 Code reviews are intended to help all of us as a team grow as engineers and improve the quality of our results. These guidelines are meant to reinforce those two goals.
 
 ### For requesters:
+
 - Include the JIRA ticket number in the title if it exists. For example: `PFML-123: Implement API endpoint`
 
 - If it’s a work-in-progress or you are looking for specific feedback on things, create a [Draft Pull Request](https://help.github.com/en/github/collaborating-with-issues-and-pull-requests/about-pull-requests#draft-pull-requests) and state what you are looking for in the description.

@@ -2,16 +2,16 @@
 
 This is the API for the Massachusetts Paid Family and Medical Leave program.
 
-* [Docker Developer Setup](#docker-developer-setup)
-* [Running the Application (Docker)](#running-the-application-docker)
-  * [Common commands](#common-commands)
-  * [Running migrations](#running-migrations)
-  * [Creating new migrations](#creating-new-migrations)
-* [Native Developer Setup](#native-developer-setup)
-* [Try it out](#try-it-out)
-* [Tests](#tests)
-* [Environment Configuration](#environment-configuration)
-* [Directory Structure](#directory-structure)
+- [Docker Developer Setup](#docker-developer-setup)
+- [Running the Application (Docker)](#running-the-application-docker)
+  - [Common commands](#common-commands)
+  - [Running migrations](#running-migrations)
+  - [Creating new migrations](#creating-new-migrations)
+- [Native Developer Setup](#native-developer-setup)
+- [Try it out](#try-it-out)
+- [Tests](#tests)
+- [Environment Configuration](#environment-configuration)
+- [Directory Structure](#directory-structure)
 
 ## Docker Developer Setup
 
@@ -23,12 +23,12 @@ Follow instructions here to [install Docker](https://docs.docker.com/get-docker/
 
 In a docker-centric environment, we support a couple different developer workflows:
 
-|Start command from:|Container Lifetime|PY\_RUN\_CMD\_OPT|
-|---|---|---|
-|your host 🙋‍♀️|Long-running|DOCKER_EXEC|
-|inside docker 🐳|Long-running|N/A|
-|your host 🙋‍♀️|Single-use|DOCKER_RUN|
-|Mixed|Mixed|Mixed|
+| Start command from: | Container Lifetime | PY_RUN_CMD_OPT |
+| ------------------- | ------------------ | -------------- |
+| your host 🙋‍♀️        | Long-running       | DOCKER_EXEC    |
+| inside docker 🐳    | Long-running       | N/A            |
+| your host 🙋‍♀️        | Single-use         | DOCKER_RUN     |
+| Mixed               | Mixed              | Mixed          |
 
 <details><summary>Send commands from your host to a long-running container</summary>
 <p>
@@ -40,6 +40,7 @@ If you want to re-use a docker application for various Python and development
 $ export PY_RUN_CMD_OPT=DOCKER_EXEC
 $ make test
 ```
+
 </p>
 </details>
 
@@ -51,6 +52,7 @@ $ make test
 $ make login
 > make test
 ```
+
 </p>
 </details>
 
@@ -64,6 +66,7 @@ $ make test
 ```
 
 Note that this will require more manual Docker memory cleanup.
+
 </p>
 </details>
 
@@ -75,8 +78,9 @@ For example:
 - running static lints outside of Docker with the default: <code>make lint</code>
 - running tests inside of Docker after a <code>make start</code>: <code>PY_RUN_CMD_OPT=DOCKER_EXEC make test</code>
 
-In the future, we may add some auto-detection to check if we are running inside the 
+In the future, we may add some auto-detection to check if we are running inside the
 container or not.
+
 </p>
 </details>
 
@@ -97,7 +101,7 @@ make stop     # Stop all running containers
 
 When you're first setting up your environment, ensure that migrations are run against your db so it has all the required tables.
 
-``` sh
+```sh
 $ make db-upgrade       # Apply pending migrations to db
 $ make db-downgrade     # Rollback last migration to db
 $ make db-downgrade-all # Rollback all migrations
@@ -107,14 +111,14 @@ $ make db-downgrade-all # Rollback all migrations
 
 If you've changed a python object model, auto-generate a migration file for the database and run it:
 
-``` sh
+```sh
 $ make db-migrate-create MIGRATE_MSG="<brief description of change>"
 $ make db-upgrade
 ```
 
 ## Native Developer Setup
 
-To setup a development environment outside of Docker, 
+To setup a development environment outside of Docker,
 you'll need to install a few things.
 
 #### Dependencies
@@ -126,8 +130,8 @@ you'll need to install a few things.
   [poetry](https://python-poetry.org/docs/#installation).
 - Then run `make deps` to install Python dependencies and development tooling.
 
-You should now be set up to run developer tooling natively, like linting. To run 
-the application, set up a PostgreSQL database and see `docker-compose.yml` for 
+You should now be set up to run developer tooling natively, like linting. To run
+the application, set up a PostgreSQL database and see `docker-compose.yml` for
 environment variables needed.
 
 ## Try it out
@@ -143,7 +147,7 @@ The spec is available at:
 
 ## Tests
 
-``` sh
+```sh
 make test
 ```
 
@@ -156,18 +160,19 @@ runners (and languages).
 To pass arguments to `pytest` through `make test` you can set the `args`
 variable. For example, to run only the tests in `test_user.py`:
 
-``` sh
+```sh
 make test args=tests/api/test_users.py
 ```
 
 To run only a single test:
 
-``` sh
+```sh
 make test args=tests/api/test_users.py::test_users_get
 ```
 
 To pass multiple arguments:
-``` sh
+
+```sh
 make test args="-x tests/api/test_users.py"
 ```
 
@@ -175,14 +180,13 @@ For a more complete description of the various ways you can select which test
 cases to run or various behaviors that can be turned on, [refer to the pytest
 docs](https://docs.pytest.org/en/latest/usage.html).
 
-
 ### During Development
 
 While working on a part of the system, you may not be interested in running the
 entire test suite all the time. To just run the test impacted by the changes
 made since they last ran, you can use:
 
-``` sh
+```sh
 make test-changed
 ```
 
@@ -193,7 +197,7 @@ the tests that need to run.
 And instead of running that command manually, you can kick off a process to
 automatically run the tests when files change with:
 
-``` sh
+```sh
 make test-watch
 ```
 
@@ -201,7 +205,7 @@ make test-watch
 
 Environment variables for the local app in the `docker-compose.yml` file.
 
-``` yaml
+```yaml
 services:
   ...
   mass-pfml-api:

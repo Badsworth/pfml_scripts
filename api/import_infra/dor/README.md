@@ -11,11 +11,13 @@ Docker
 ## Mock files
 
 Generate mock DOR export files
+
 ```
 make generate
 ```
 
 Generate with specific number of employees
+
 ```
 make generate-count EMP_COUNT=15000
 ```
@@ -38,6 +40,7 @@ make deps
 ## Local testing
 
 DOR Importer requires all migrations to be run and the database to be up. From the the `/api` directory:
+
 ```
 $ make db-upgrade
 $ make run
@@ -46,21 +49,25 @@ $ make run
 For testing against S3 you will need to be logged in to the PFML AWS. See documentation around `login-aws` in `/api/README.md`
 
 Build the function (whenever the importer code changes)
+
 ```
 $ make build
 ```
 
 Invoke the function
+
 ```
 make invoke-local
 ```
 
 Invoke the function after a full build including API
+
 ```
 make build-invoke-local
 ```
 
 Clean build artificats
+
 ```
 make clean
 ```
@@ -68,11 +75,13 @@ make clean
 ## Release
 
 Build and upload to S3
+
 ```
 make upload-release
 ```
 
 Get the S3 key
+
 ```
 make get-key
 ```

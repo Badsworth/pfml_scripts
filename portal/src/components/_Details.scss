@@ -10,11 +10,11 @@
   }
 
   summary::before {
-    content: '\25B6';
+    content: "\25B6";
     padding-right: 0.5em;
   }
 
   &[open] > summary::before {
-    content: '\25BC';
+    content: "\25BC";
   }
 }

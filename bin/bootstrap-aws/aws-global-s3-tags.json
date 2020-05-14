@@ -1,14 +1,14 @@
 {
-   "TagSet": [
-     { "Key": "businessowner", "Value": "kevin.yeh@mass.gov" },
-     { "Key": "createdby", "Value": "kevin.yeh@mass.gov" },
-     { "Key": "itowner", "Value": "kevin.yeh@mass.gov" },
-     { "Key": "environment", "Value": "prod" },
-     { "Key": "agency", "Value": "eol" },
-     { "Key": "application", "Value": "coreinf" },
-     { "Key": "public", "Value": "no" },
-     { "Key": "secretariat", "Value": "eolwd" },
-     { "Key": "Name", "Value": "pfml-aws-account-mgmt" },
-     { "Key": "dataclassification", "Value": "na" }
-   ]
+  "TagSet": [
+    { "Key": "businessowner", "Value": "kevin.yeh@mass.gov" },
+    { "Key": "createdby", "Value": "kevin.yeh@mass.gov" },
+    { "Key": "itowner", "Value": "kevin.yeh@mass.gov" },
+    { "Key": "environment", "Value": "prod" },
+    { "Key": "agency", "Value": "eol" },
+    { "Key": "application", "Value": "coreinf" },
+    { "Key": "public", "Value": "no" },
+    { "Key": "secretariat", "Value": "eolwd" },
+    { "Key": "Name", "Value": "pfml-aws-account-mgmt" },
+    { "Key": "dataclassification", "Value": "na" }
+  ]
 }
