@@ -1,8 +1,9 @@
 from contextlib import contextmanager
-from typing import Optional
+from typing import Generator, Optional
 
 import sqlalchemy
-from sqlalchemy.orm import scoped_session, sessionmaker
+from sqlalchemy.engine import Engine
+from sqlalchemy.orm import Session, scoped_session, sessionmaker
 
 import massgov.pfml.util.logging
 from massgov.pfml.db.config import DbConfig, get_config
@@ -10,7 +11,7 @@ from massgov.pfml.db.config import DbConfig, get_config
 logger = massgov.pfml.util.logging.get_logger(__name__)
 
 
-def init(config: Optional[DbConfig] = None):
+def init(config: Optional[DbConfig] = None) -> scoped_session:
     logger.info("connecting to postgres db")
 
     engine = create_engine(config)
@@ -32,7 +33,7 @@ def init(config: Optional[DbConfig] = None):
     return session_factory
 
 
-def create_engine(config: Optional[DbConfig] = None):
+def create_engine(config: Optional[DbConfig] = None) -> Engine:
     if config is None:
         config = get_config()
 
@@ -42,7 +43,7 @@ def create_engine(config: Optional[DbConfig] = None):
 
 
 @contextmanager
-def session_scope(session, close: bool = False):
+def session_scope(session: Session, close: bool = False) -> Generator[Session, None, None]:
     """Provide a transactional scope around a series of operations.
 
     See https://docs.sqlalchemy.org/en/13/orm/session_basics.html#when-do-i-construct-a-session-when-do-i-commit-it-and-when-do-i-close-it

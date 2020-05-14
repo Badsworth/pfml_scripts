@@ -4,7 +4,7 @@
 
 import os
 from contextlib import contextmanager
-from typing import List, Optional, Union
+from typing import Generator, List, Optional, Union
 
 import connexion
 import connexion.mock
@@ -77,7 +77,7 @@ def get_app_config(app: Optional[Union[connexion.FlaskApp, Flask]] = None) -> Ap
     return app.config["app_config"]
 
 
-def db_session_raw():
+def db_session_raw() -> db.Session:
     """Get a plain SQLAlchemy Session."""
     session = g.get("db")
     if session is None:
@@ -87,7 +87,7 @@ def db_session_raw():
 
 
 @contextmanager
-def db_session(close: bool = False):
+def db_session(close: bool = False) -> Generator[db.Session, None, None]:
     """Get a SQLAlchemy Session wrapped in some transactional management.
 
     This commits session when done, rolls back transaction on exceptions,

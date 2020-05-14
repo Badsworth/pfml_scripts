@@ -1,10 +1,12 @@
 from dataclasses import dataclass
 from enum import Enum
+from typing import Optional
 
 import connexion
 from werkzeug.exceptions import NotFound
 
 import massgov.pfml.api.app as app
+import massgov.pfml.db as db
 import massgov.pfml.util.logging
 from massgov.pfml.db.models.employees import Status, User
 
@@ -55,10 +57,10 @@ class UserCreateRequest:
 
 @dataclass
 class UserResponse:
-    user_id: str
-    auth_id: str
-    status: str
-    email_address: str
+    user_id: Optional[str]
+    auth_id: Optional[str]
+    status: Optional[str]
+    email_address: Optional[str]
 
 
 def user_response(user: User) -> UserResponse:
@@ -75,7 +77,7 @@ class UserStatusDescription(Enum):
     verified = "verified"
 
 
-def get_or_make_status(db_session, status_description: UserStatusDescription) -> Status:
+def get_or_make_status(db_session: db.Session, status_description: UserStatusDescription) -> Status:
     status = (
         db_session.query(Status)
         .filter(Status.status_description == status_description.value)

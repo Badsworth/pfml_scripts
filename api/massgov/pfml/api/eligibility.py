@@ -1,3 +1,5 @@
+from typing import Dict
+
 from werkzeug.exceptions import BadRequest, NotFound
 
 import massgov.pfml.api.generate_fake_data as fake
@@ -22,7 +24,7 @@ def eligibility_get(employee_id, leave_type):
     if not wages:
         raise NotFound()
 
-    sum_of_recent_wages = {}
+    sum_of_recent_wages: Dict[str, int] = {}
     qtr_wages_key = "employer_qtr_wages"
 
     # iterate through the wages and keep a running total of earnings per quarter,

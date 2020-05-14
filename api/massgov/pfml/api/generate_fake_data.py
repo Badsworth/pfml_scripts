@@ -1,6 +1,7 @@
 import random
 import uuid
 from datetime import timedelta
+from typing import Any, Dict
 
 from faker import Faker
 
@@ -10,7 +11,7 @@ logger = massgov.pfml.util.logging.get_logger(__name__)
 fake = Faker()
 
 # since there is no DB connection, using dictionaries to hold fake employee and wage data
-wages = {}
+wages: Dict[str, Any] = {}
 employees = {}
 employers = {}
 applications = {}
@@ -83,7 +84,8 @@ def create_application(employee):
 
     employee_id = employee.get("employee_id")
     wage_employers = wages.get(employee_id)
-    employer_id = wage_employers[0]["employer_id"]
+    if wage_employers:
+        employer_id = wage_employers[0]["employer_id"]
 
     leave_type = random.choice(leave_types)
 
@@ -104,7 +106,7 @@ def create_application(employee):
 
 
 def create_leave_details(leave_type):
-    leave_details = {}
+    leave_details: Dict[str, Any] = {}
     leave_periods = []
     leave_period = {}
     status = ["Known", "Estimated"]
@@ -150,7 +152,7 @@ def create_leave_details(leave_type):
 
 def create_payment_preferences(first_name, last_name):
     payment_preferences = []
-    payment_preference = {}
+    payment_preference: Dict[str, Any] = {}
     payment_types = ["Elec Funds Transfer", "Check"]
     account_type = ["Checking", "Savings"]
     routing_numbers = ["021202337", "021200025"]

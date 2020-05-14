@@ -73,6 +73,7 @@ clean: ## Remove intermediate, cache, or build artifacts
 	find . -type f -name '*.py[co]' -delete
 	find . -type d -name __pycache__ -print -exec rm -r {} +
 	find . -type d -name '*.egg-info' -print -exec rm -r {} +
+	find . -type d -name .mypy_cache -print -exec rm -r {} +
 	rm -rf dist
 	-$(PY_RUN_CMD) coverage erase # takes care of .coverage file
 	rm -rf .coverage_report
@@ -122,6 +123,7 @@ endif
 
 lint: ## Run linting
 	$(PY_RUN_CMD) flake8 --format=$(FLAKE8_FORMAT) massgov tests
+	$(PY_RUN_CMD) mypy massgov
 
 login: start ## Start shell in running container
 	docker exec -it $(APP_NAME) sh

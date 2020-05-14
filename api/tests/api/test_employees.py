@@ -34,5 +34,6 @@ def test_employees_patch(client, test_employee):
     assert response.status_code == 200
 
     updated_employee = fake.employees.get(test_employee["ssn_or_itin"])
+    assert updated_employee
     assert updated_employee.get("first_name") == "James"
     assert updated_employee.get("last_name") == "Brown"
