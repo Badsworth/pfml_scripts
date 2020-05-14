@@ -46,7 +46,7 @@ export const NotifiedEmployer = (props) => {
             value: "false",
           },
         ]}
-        label={t("pages.claimsNotifiedEmployer.label")}
+        label={t("pages.claimsNotifiedEmployer.sectionLabel")}
         hint={t("pages.claimsNotifiedEmployer.hint")}
         name="employer_notified"
         onChange={handleInputChange}

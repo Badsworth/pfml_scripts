@@ -40,16 +40,16 @@ const StateId = (props) => {
         choices={[
           {
             checked: has_state_id === true,
-            label: t("pages.claimsStateId.hasIdChoiceYes"),
+            label: t("pages.claimsStateId.choiceYes"),
             value: "true",
           },
           {
             checked: has_state_id === false,
-            label: t("pages.claimsStateId.hasIdChoiceNo"),
+            label: t("pages.claimsStateId.choiceNo"),
             value: "false",
           },
         ]}
-        label={t("pages.claimsStateId.hasIdChoiceLabel")}
+        label={t("pages.claimsStateId.hasStateIdLabel")}
         name="has_state_id"
         onChange={handleInputChange}
         type="radio"

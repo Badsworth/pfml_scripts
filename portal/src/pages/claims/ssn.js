@@ -43,7 +43,7 @@ const Ssn = (props) => {
         name="ssn_or_itin"
         value={valueWithFallback(ssn_or_itin)}
         label={t("pages.claimsSsn.sectionLabel")}
-        hint={t("pages.claimsSsn.sectionHint")}
+        hint={t("pages.claimsSsn.lead")}
         onChange={handleInputChange}
       />
     </QuestionPage>

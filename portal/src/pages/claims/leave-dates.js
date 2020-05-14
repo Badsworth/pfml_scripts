@@ -28,7 +28,7 @@ export const LeaveDates = (props) => {
   return (
     <QuestionPage
       formState={formState}
-      title={t("pages.claimsGeneral.leaveDurationTitle")}
+      title={t("pages.claimsLeaveDates.title")}
       onSave={handleSave}
       nextPage={routeWithParams("claims.duration", props.query)}
     >

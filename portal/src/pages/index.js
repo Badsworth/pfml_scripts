@@ -54,8 +54,8 @@ const Index = ({ claims, addClaim }) => {
       <Heading level="3">{t("pages.index.claimChecklistHeader")}</Heading>
 
       <ul className="usa-list">
-        <li>{t("pages.index.claimChecklistContact")}</li>
-        <li>{t("pages.index.claimChecklistEmployment")}</li>
+        <li>{t("pages.index.claimChecklistContactInformation")}</li>
+        <li>{t("pages.index.claimChecklistEmploymentInformation")}</li>
         <li>{t("pages.index.claimChecklistReasonForLeave")}</li>
         <li>{t("pages.index.claimChecklistDateOfLeave")}</li>
         <li>{t("pages.index.claimChecklistWhereToSendBenefits")}</li>

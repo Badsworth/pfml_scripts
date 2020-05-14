@@ -20,34 +20,33 @@ const errors = {
   },
   currentUser: {
     failedToFind:
-      "Sorry, we were unable to retrieve your account. Please log out and try again. If this continues to happen, you may call the Paid Family Leave Contact Center at $t(general.callCenterPhoneNumber)",
+      "Sorry, we were unable to retrieve your account. Please log out and try again. If this continues to happen, you may call the Paid Family Leave Contact Center at $t(shared.callCenterPhoneNumber)",
   },
   network:
-    "Sorry, an error was encountered. This may occur for a variety of reasons, including temporarily losing an internet connection or an unexpected error in our system. If this continues to happen, you may call the Paid Family Leave Contact Center at $t(general.callCenterPhoneNumber)",
+    "Sorry, an error was encountered. This may occur for a variety of reasons, including temporarily losing an internet connection or an unexpected error in our system. If this continues to happen, you may call the Paid Family Leave Contact Center at $t(shared.callCenterPhoneNumber)",
 };
 
-const general = {
+const shared = {
   // TODO: Correct phone number
   // https://lwd.atlassian.net/browse/CP-143
   callCenterPhoneNumber: "(XXX) XXX-XXXX",
-  siteDescription:
-    "Paid Family and Medical Leave is a state-offered benefit for anyone who works in Massachusetts and is eligible to take up to 26 weeks of paid leave for medical or family reasons.",
-  siteTitle: "Paid Family and Medical Leave (PFML) | Mass.gov",
-};
-
-// TODO: Combine shared and general keys
-// https://lwd.atlassian.net/browse/CP-299
-const shared = {
   choiceNo: "No",
   choiceYes: "Yes",
+  claimsLeaveDurationTitle: "Leave duration",
+  claimsTakingLeaveTitle: "Who is taking leave",
   passwordHint:
     "Your password must be at least 8 characters long and include numbers and letters.",
 };
 
 const pages = {
+  app: {
+    siteDescription:
+      "Paid Family and Medical Leave is a state-offered benefit for anyone who works in Massachusetts and is eligible to take up to 26 weeks of paid leave for medical or family reasons.",
+    siteTitle: "Paid Family and Medical Leave (PFML) | Mass.gov",
+  },
   claimsDateOfBirth: {
     sectionLabel: "What's your birthdate?",
-    title: "$t(pages.claimsGeneral.takingLeaveTitle)",
+    title: "$t(shared.claimsTakingLeaveTitle)",
   },
   claimsDuration: {
     avgWeeklyHoursWorkedHint:
@@ -63,17 +62,13 @@ const pages = {
     intermittentLabel: "Work on a reduced schedule",
     sectionLabel:
       "Do you need to take off work completely or work on a reduced schedule?",
-    title: "$t(pages.claimsGeneral.leaveDurationTitle)",
-  },
-  claimsGeneral: {
-    leaveDurationTitle: "Leave duration",
-    leaveTypeTitle: "Leave type",
-    takingLeaveTitle: "Who is taking leave",
+    title: "$t(shared.claimsLeaveDurationTitle)",
   },
   claimsLeaveDates: {
     endDateLabel: "When do you expect your leave will end?",
     startDateHint: "Your leave begins the day you stopped working.",
     startDateLabel: "When do you expect your leave to begin?",
+    title: "$t(shared.claimsLeaveDurationTitle)",
   },
   claimsLeaveType: {
     activeDutyFamilyLeaveHint: "(Family leave)",
@@ -84,46 +79,45 @@ const pages = {
     parentalLeaveHint: "(Can cover medical and family leave)",
     parentalLeaveLabel: "I need to take parental leave",
     sectionLabel: "Why do you need to take time off?",
-    title: "$t(pages.claimsGeneral.leaveTypeTitle)",
+    title: "Leave type",
   },
   claimsName: {
     firstNameLabel: "First name",
     lastNameLabel: "Last name",
-    middleNameLabel: "Middle name",
-    nameSectionHint:
+    lead:
       "Fill out your name as it appears on official documents like your driver’s license or W-2.",
+    middleNameLabel: "Middle name",
     sectionLabel: "What's your name?",
-    title: "$t(pages.claimsGeneral.takingLeaveTitle)",
+    title: "$t(shared.claimsTakingLeaveTitle)",
   },
   claimsNotifiedEmployer: {
     choiceNo: "$t(shared.choiceNo)",
     choiceYes: "$t(shared.choiceYes)",
     hint:
       "Notify your employer at least 30 days before the start of your leave if possible.",
-    label: "Have you notified your employer of your leave?",
+    sectionLabel: "Have you notified your employer of your leave?",
     title: "Medical Leave Application",
   },
   claimsSsn: {
-    sectionHint:
+    lead:
       "Don't have an SSN? Use your Individual Taxpayer Identification Number (ITIN).",
     sectionLabel: "What's your Social Security Number?",
-    title: "$t(pages.claimsGeneral.takingLeaveTitle)",
+    title: "$t(shared.claimsTakingLeaveTitle)",
   },
   claimsStateId: {
-    hasIdChoiceLabel:
-      "Do you have a Massachusetts driver's license or ID card?",
-    hasIdChoiceNo: "$t(shared.choiceNo)",
-    hasIdChoiceYes: "$t(shared.choiceYes)",
+    choiceNo: "$t(shared.choiceNo)",
+    choiceYes: "$t(shared.choiceYes)",
+    hasStateIdLabel: "Do you have a Massachusetts driver's license or ID card?",
     idLabel: "Enter your license or ID number",
-    title: "$t(pages.claimsGeneral.takingLeaveTitle)",
+    title: "$t(shared.claimsTakingLeaveTitle)",
   },
   index: {
     activeClaimsHeading: "Active claims",
     claimCardHeading: "Claim {{number}}",
-    claimChecklistContact: "Contact information",
+    claimChecklistContactInformation: "Contact information",
     claimChecklistDateOfLeave:
       "When you are taking leave or planning to take leave",
-    claimChecklistEmployment: "Employment information",
+    claimChecklistEmploymentInformation: "Employment information",
     claimChecklistHeader:
       "To submit your claim, you will need to provide the following:",
     claimChecklistReasonForLeave: "Why you are taking leave",
@@ -138,7 +132,7 @@ const pages = {
 
 const components = {
   authNav: {
-    logOutButtonText: "Log out",
+    logOutButton: "Log out",
   },
   authenticator: {
     accountVerified:
@@ -204,10 +198,7 @@ const components = {
 };
 
 const englishLocale = {
-  translation: Object.assign(
-    {},
-    { components, errors, general, pages, shared }
-  ),
+  translation: Object.assign({}, { components, errors, pages, shared }),
 };
 
 export default englishLocale;

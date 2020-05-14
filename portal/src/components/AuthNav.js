@@ -32,7 +32,7 @@ const AuthNav = (props) => {
                   onClick={handleSignOut}
                   variation="unstyled"
                 >
-                  {t("components.authNav.logOutButtonText")}
+                  {t("components.authNav.logOutButton")}
                 </Button>
               </React.Fragment>
             ) : null}

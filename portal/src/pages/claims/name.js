@@ -30,10 +30,7 @@ const Name = (props) => {
       onSave={handleSave}
       nextPage={routeWithParams("claims.dateOfBirth", props.query)}
     >
-      <FormLabel
-        component="legend"
-        hint={t("pages.claimsName.nameSectionHint")}
-      >
+      <FormLabel component="legend" hint={t("pages.claimsName.lead")}>
         {t("pages.claimsName.sectionLabel")}
       </FormLabel>
       <InputText

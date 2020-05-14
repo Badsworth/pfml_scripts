@@ -203,8 +203,8 @@ export const App = ({
     <React.Fragment>
       <Head>
         <link href="/favicon.png" rel="shortcut icon" type="image/png" />
-        <title>{t("general.siteTitle")}</title>
-        <meta name="description" content={t("general.siteDescription")} />
+        <title>{t("pages.app.siteTitle")}</title>
+        <meta name="description" content={t("pages.app.siteDescription")} />
       </Head>
       <Header user={authUser} />
       <main id="main" className="grid-container margin-top-5 margin-bottom-8">
