@@ -21,7 +21,7 @@ def init(config: Optional[DbConfig] = None) -> scoped_session:
     logger.info(
         "connected to db %s, server version %s", conn_info.dbname, conn_info.server_version,
     )
-    logger.info("connected to db")
+    verify_ssl(conn_info)
 
     # Explicitly commit sessions — usually with session_scope.
     # Also disable expiry on commit, as we don't need to be strict on consistency within our routes. Once
@@ -31,6 +31,22 @@ def init(config: Optional[DbConfig] = None) -> scoped_session:
     )
 
     return session_factory
+
+
+def verify_ssl(connection_info):
+    """Verify that the database connection is encrypted and log a warning if not.
+
+    TODO: raise a RuntimeError if not."""
+    if connection_info.ssl_in_use:
+        logger.info(
+            "database connection is using SSL: %s",
+            ", ".join(
+                name + " " + connection_info.ssl_attribute(name)
+                for name in connection_info.ssl_attribute_names
+            ),
+        )
+    else:
+        logger.warning("database connection is not using SSL")
 
 
 def create_engine(config: Optional[DbConfig] = None) -> Engine:
