@@ -7,3 +7,4 @@ node_modules
 # Web apps
 */public/**/*.css
 */public/**/*.js
+new-relic.js

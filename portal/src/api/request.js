@@ -82,15 +82,15 @@ async function sendRequest(url, options) {
     } else {
       // Request completed, but the response status code was outside the 2xx range
       // TODO: Pull the errors from the response and set `apiErrors` (https://lwd.atlassian.net/browse/CP-345)
-      // TODO: Track the error (https://lwd.atlassian.net/browse/CP-378)
+      newrelic.noticeError(
+        new Error(`Fetch request to ${url} returned status: ${response.status}`)
+      );
     }
   } catch (error) {
     // Request failed to send or something failed while parsing the response
-    // TODO: Track the error (https://lwd.atlassian.net/browse/CP-378)
-
     // Log the JS error to support troubleshooting
     console.error(error);
-
+    newrelic.noticeError(error);
     throw new NetworkError(error.message);
   }
 

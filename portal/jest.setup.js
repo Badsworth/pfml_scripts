@@ -24,6 +24,14 @@ global.fetch = jest.fn();
 global.scrollTo = jest.fn();
 
 /**
+ * Mock global libraries
+ */
+global.newrelic = {
+  noticeError: jest.fn(),
+  setCurrentRouteName: jest.fn(),
+};
+
+/**
  * Cleanup & setup
  */
 const initialProcessEnv = process.env;

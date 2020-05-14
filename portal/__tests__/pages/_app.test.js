@@ -237,12 +237,13 @@ describe("App", () => {
       expect(wrapper.find("TestComponent").exists()).toBe(false);
     });
 
-    it("hides spinner when a route change completes", async () => {
-      expect.assertions(2);
+    it("hides spinner and sets New Relic route name when a route change completes", async () => {
+      expect.assertions();
 
       // We need to mount the component so that useEffect is called
       const mountComponent = true;
       const { wrapper } = render({}, mountComponent);
+      const newUrl = "/claims?claim_id=123";
 
       const routeChangeStart = mockRouterEvents.find(
         (evt) => evt.name === "routeChangeStart"
@@ -256,15 +257,17 @@ describe("App", () => {
         await new Promise((resolve) => setTimeout(resolve, 0));
 
         // Trigger routeChangeStart
-        routeChangeStart.callback();
+        routeChangeStart.callback(newUrl);
         // Trigger routeChangeComplete
-        routeChangeComplete.callback();
+        routeChangeComplete.callback(newUrl);
 
         wrapper.update();
       });
 
       expect(wrapper.find("Spinner").exists()).toBe(false);
       expect(wrapper.find("TestComponent").exists()).toBe(true);
+      expect(newrelic.setCurrentRouteName).toHaveBeenCalledTimes(1);
+      expect(newrelic.setCurrentRouteName).toHaveBeenCalledWith("/claims");
     });
 
     it("hides spinner when a route change throws an error", async () => {

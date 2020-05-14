@@ -15,6 +15,9 @@
       "prettier",
       "prettier/standard"
     ],
+    "globals": {
+      "newrelic": "readonly"
+    },
     "parser": "babel-eslint",
     "parserOptions": {
       "ecmaVersion": 2018,

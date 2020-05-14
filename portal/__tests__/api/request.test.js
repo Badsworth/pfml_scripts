@@ -192,6 +192,14 @@ describe("request", () => {
 
       expect(response.body).toBeUndefined();
     });
+
+    it("sends error to New Relic", async () => {
+      expect.assertions();
+
+      await request("GET", "users");
+
+      expect(newrelic.noticeError).toHaveBeenCalledWith(expect.any(Error));
+    });
   });
 
   describe("when the fetch request fails", () => {
@@ -206,6 +214,18 @@ describe("request", () => {
       global.fetch = jest.fn().mockRejectedValue(TypeError("Network failure"));
 
       await expect(request("GET", "users")).rejects.toThrow(NetworkError);
+    });
+
+    it("sends error to New Relic", async () => {
+      expect.assertions();
+
+      global.fetch = jest.fn().mockRejectedValue(TypeError("Network failure"));
+
+      try {
+        await request("GET", "users");
+      } catch (error) {}
+
+      expect(newrelic.noticeError).toHaveBeenCalledWith(expect.any(Error));
     });
   });
 });

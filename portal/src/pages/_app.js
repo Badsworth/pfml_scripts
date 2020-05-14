@@ -80,6 +80,20 @@ export const App = ({
   };
 
   /**
+   * Fires when a route changed completely
+   * @param {string} url - New route URL
+   */
+  const handleRouteChangeComplete = (url = "") => {
+    handleRouteChangeEnd();
+
+    // Give SPA routes in New Relic more accurate names.
+    // Route names should represent a routing pattern rather than a specific resource.
+    // https://docs.newrelic.com/docs/browser/new-relic-browser/browser-agent-spa-api/spa-set-current-route-name
+    const routeName = url.split("?")[0];
+    newrelic.setCurrentRouteName(routeName);
+  };
+
+  /**
    * Event handler for when the Authenticator mounts and anytime
    * its authState value changes, such as when a user logs in,
    * or navigates to a different auth screen
@@ -134,6 +148,7 @@ export const App = ({
           : t("errors.currentUser.failedToFind");
 
       setAppErrors([new AppErrorInfo({ message })]);
+      newrelic.noticeError(error);
     }
 
     setUI({ ...ui, isLoading: false });
@@ -142,7 +157,7 @@ export const App = ({
   useEffect(() => {
     // Track route events so we can provide a visual indicator when a page is loading
     router.events.on("routeChangeStart", handleRouteChangeStart);
-    router.events.on("routeChangeComplete", handleRouteChangeEnd);
+    router.events.on("routeChangeComplete", handleRouteChangeComplete);
     router.events.on("routeChangeError", handleRouteChangeEnd);
 
     // Passing this empty array causes this effect to be run only once upon mount. See:

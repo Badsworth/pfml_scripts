@@ -35,6 +35,7 @@ const useHandleSave = (saveToApi, onSuccess) => {
     } catch (error) {
       // TODO: Handle rejected promise (i.e unexpected error when props.onSubmit was called)
       // setErrors(...)
+      newrelic.noticeError(error);
     }
   };
   return handleSave;

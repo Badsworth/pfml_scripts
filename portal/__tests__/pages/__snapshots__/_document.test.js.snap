@@ -1,0 +1,15 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Document renders the Document 1`] = `
+<Html>
+  <Head>
+    <script
+      src="/new-relic.js"
+    />
+  </Head>
+  <body>
+    <Main />
+    <NextScript />
+  </body>
+</Html>
+`;
