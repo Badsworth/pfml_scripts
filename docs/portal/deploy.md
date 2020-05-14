@@ -19,6 +19,9 @@ git checkout <<deploy_branch_name>>
 git reset --hard <<desired_branch>>
 git push origin <<deploy_branch_name>>
 ```
+⚠️ **Caution:** this means that an accidental push to the `deploy/portal/prod` branch will trigger a deploy to production.
+
+### Deploy master to staging
 
 To deploy the `master` branch to the stage environment, run
 
@@ -28,4 +31,12 @@ git reset --hard master
 git push origin deploy/portal/stage
 ```
 
-**Caution:** this means that an accidental push to the `deploy/portal/prod` branch will trigger a deploy to production.
+### Deploy staging to prod
+
+To deploy the code in the `staging` environment to the prod environment, run
+
+```sh
+git checkout deploy/portal/prod
+git reset --hard deploy/portal/stage
+git push origin deploy/portal/prod
+```
