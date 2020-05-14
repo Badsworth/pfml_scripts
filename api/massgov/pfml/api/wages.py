@@ -1,11 +1,7 @@
 from dataclasses import dataclass
 
-from werkzeug.exceptions import NotFound
-
 import massgov.pfml.api.app as app
 from massgov.pfml.db.models.employees import WagesAndContributions
-
-# this isn't being imported properly so it defaults to the example. hence all the 200s
 
 
 def wages_get(employee_id, filing_period=None):
@@ -14,26 +10,29 @@ def wages_get(employee_id, filing_period=None):
         if filing_period is not None:
             wage = wage.filter_by(filing_period=filing_period)
         results = wage.all()
-    if wage is None:
-        raise NotFound()
-    return [wage_and_comp_response(result) for result in results]
+
+    return list(map(wage_and_comp_response, results))
 
 
 @dataclass
 class WageResponse:
+    wage_and_contribution_id: str
     filing_period: str
     employee_id: str
     employer_id: str
     is_independent_contractor: bool
     is_opted_in: bool
-    employee_ytd_wages: int
-    employee_qtr_wages: int
-    employer_med_contribution: int
-    employer_fam_contribution: int
+    employee_ytd_wages: float
+    employee_qtr_wages: float
+    employee_med_contribution: float
+    employer_med_contribution: float
+    employee_fam_contribution: float
+    employer_fam_contribution: float
 
 
 def wage_and_comp_response(wage: WagesAndContributions) -> WageResponse:
     return WageResponse(
+        wage_and_contribution_id=wage.wage_and_contribution_id,
         filing_period=wage.filing_period,
         employee_id=wage.employee_id,
         employer_id=wage.employer_id,
@@ -41,6 +40,8 @@ def wage_and_comp_response(wage: WagesAndContributions) -> WageResponse:
         is_opted_in=wage.is_opted_in,
         employee_ytd_wages=wage.employee_ytd_wages,
         employee_qtr_wages=wage.employee_qtr_wages,
+        employee_med_contribution=wage.employee_med_contribution,
         employer_med_contribution=wage.employer_med_contribution,
+        employee_fam_contribution=wage.employee_fam_contribution,
         employer_fam_contribution=wage.employer_fam_contribution,
     )

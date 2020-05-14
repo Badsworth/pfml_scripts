@@ -17,14 +17,14 @@ def employers_get(employer_id):
 
 
 @dataclass
-class Response:
+class EmployerResponse:
     employer_id: str
     employer_fein: str
     employer_dba: str
 
 
-def emp_response(employer: Employer) -> Response:
-    return Response(
+def emp_response(employer: Employer) -> EmployerResponse:
+    return EmployerResponse(
         employer_id=employer.employer_id,
         employer_fein=employer.employer_fein,
         employer_dba=employer.employer_dba,

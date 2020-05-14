@@ -1,13 +1,18 @@
-import pytest
+from dataclasses import asdict
 
-pytestmark = pytest.mark.skip("not setup to test database stuff right now")
+from massgov.pfml.api.employers import emp_response
+from massgov.pfml.db.models.factories import EmployerFactory
 
 
-def test_employers_get(client, test_employer):
-    response = client.get("/v1/employers/{}".format(test_employer["employer_id"]))
+def test_get_employer_info(client):
+    employer = EmployerFactory.create()
+    EmployerFactory.create()
+
+    response = client.get(f"/v1/employers/{employer.employer_id}")
     assert response.status_code == 200
+    assert response.get_json() == asdict(emp_response(employer))
 
 
-def test_employers_get_404(client):
-    response = client.get("/v1/employers/0038386b-94dc-48c1-a674-f9a14f94e07b")
+def test_get_404(client):
+    response = client.get("/v1/employers/00000000-291b-403f-a85a-15e938c26f2f")
     assert response.status_code == 404

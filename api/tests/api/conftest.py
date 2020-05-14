@@ -23,7 +23,7 @@ def app_cors(monkeypatch, test_db):
 
 
 @pytest.fixture
-def app(test_db):
+def app(test_db, initialize_factories_session):
     return massgov.pfml.api.app.create_app()
 
 
@@ -40,16 +40,6 @@ def test_employee(monkeypatch):
     monkeypatch.setitem(fake.employees, ssn_or_itin, employee)
 
     return employee
-
-
-@pytest.fixture
-def test_employer(monkeypatch):
-    employer = fake.create_employer()
-    employer_id = employer.get("employer_id")
-
-    monkeypatch.setitem(fake.employers, employer_id, employer)
-
-    return employer
 
 
 @pytest.fixture
@@ -72,15 +62,6 @@ def test_user(test_db_session):
     test_db_session.commit()
 
     return user
-
-
-@pytest.fixture
-def test_wages(test_employee, monkeypatch):
-    wages = fake.create_wages(test_employee["employee_id"], "0000-0000-0000-0000")
-
-    monkeypatch.setitem(fake.wages, test_employee["employee_id"], [wages])
-
-    return wages, test_employee
 
 
 @pytest.fixture
@@ -141,6 +122,13 @@ def test_db(test_db_schema):
 
     engine = db.create_engine()
     Base.metadata.create_all(bind=engine)
+
+
+@pytest.fixture
+def initialize_factories_session(test_db_session):
+    import massgov.pfml.db.models.factories as factories
+
+    factories.db_session = test_db_session
 
 
 @pytest.fixture

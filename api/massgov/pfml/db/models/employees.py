@@ -1,3 +1,13 @@
+# ORM and serialization models for our employee data and API layers.
+#
+# A model's ORM representation should always match the database so we can
+# properly read and write data. If you make a change, follow the instructions
+# in the API README to generate an associated table migration.
+#
+# Generally, a model factory should be provided in the associated factories.py file.
+# This allows us to build mock data and insert them easily in the database for tests
+# and seeding.
+#
 import uuid
 
 from sqlalchemy import Boolean, Column, Date, DateTime, ForeignKey, Integer, Numeric, Text
@@ -110,6 +120,9 @@ class Employer(Base):
     exemption_commence_date = Column(Date)
     exemption_cease_date = Column(Date)
     dor_updated_date = Column(Date)
+    wages_and_contributions = relationship(
+        "WagesAndContributions", back_populates="employer", lazy="dynamic"
+    )
     addresses = relationship("EmployerAddress", back_populates="employers", lazy="dynamic")
 
 
@@ -142,6 +155,9 @@ class Employee(Base):
     education_level_type = Column(Integer, ForeignKey("lk_education_level.education_level_type"))
     authorized_reps = relationship(
         "AuthorizedRepEmployee", back_populates="employee", lazy="dynamic"
+    )
+    wages_and_contributions = relationship(
+        "WagesAndContributions", back_populates="employee", lazy="dynamic"
     )
     addresses = relationship("EmployeeAddress", back_populates="employees", lazy="dynamic")
 
@@ -234,6 +250,8 @@ class WagesAndContributions(Base):
     filing_period = Column(Date)
     employee_id = Column(UUID(as_uuid=True), ForeignKey("employee.employee_id"))
     employer_id = Column(UUID(as_uuid=True), ForeignKey("employer.employer_id"))
+    employee = relationship("Employee", back_populates="wages_and_contributions")
+    employer = relationship("Employer", back_populates="wages_and_contributions")
     is_independent_contractor = Column(Boolean)
     is_opted_in = Column(Boolean)
     employee_ytd_wages = Column(Numeric(asdecimal=True), nullable=False)
