@@ -1,9 +1,10 @@
 import tempfile
 
 import gnupg
+
 import massgov.pfml.util.logging as logging
 
-logger = logging.get_logger("massgov.pfml.dor_import.decrypter")
+logger = logging.get_logger(__name__)
 
 
 class GpgDecrypter:

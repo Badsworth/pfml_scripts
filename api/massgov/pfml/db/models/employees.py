@@ -119,7 +119,7 @@ class Employer(Base):
     medical_exemption = Column(Boolean)
     exemption_commence_date = Column(Date)
     exemption_cease_date = Column(Date)
-    dor_updated_date = Column(Date)
+    dor_updated_date = Column(DateTime)
     wages_and_contributions = relationship(
         "WagesAndContributions", back_populates="employer", lazy="dynamic"
     )

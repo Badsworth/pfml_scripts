@@ -2,3 +2,4 @@
 mock_output/
 dor-import-lambda-s3-package.json
 local-log.txt
+dependencies.zip

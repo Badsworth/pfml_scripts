@@ -1,18 +1,18 @@
 ## Constants
 API_FOLDER := ../..
-DOR_IMPORT_LAMBDA_FOLDER := ../../massgov/pfml/data_integrations/dor/import
-MOCK_GENERATOR := massgov/pfml/data_integrations/dor/mock/generate.py
+DOR_IMPORT_LAMBDA_FOLDER := ../../massgov/pfml/dor/importer
+MOCK_GENERATOR := massgov/pfml/dor/mock/generate.py
 MOCK_OUTPUT_FOLDER := import_infra/dor/mock_output
 
 ## Helpers
 
 clean:
 	rm -rf .aws-sam +
-	rm $(DOR_IMPORT_LAMBDA_FOLDER)/lambda/massgov.pfml.api-0.1.0-py3-none-any.whl +
+	rm -f $(DOR_IMPORT_LAMBDA_FOLDER)/massgov.pfml.api-0.1.0-py3-none-any.whl +
 	rm -rf dependencies/ +
-	rm dependencies.zip +
-	rm local-log.txt +
-	rm response.json +
+	rm -f dependencies.zip +
+	rm -f local-log.txt +
+	rm -f response.json +
 
 # build massgov.pfml.api package
 build-api:
@@ -20,7 +20,7 @@ build-api:
 
 # place the massgov.pfml.api package as a DOR import dependncy
 import-api-module:
-	cp $(API_FOLDER)/dist/massgov.pfml.api-0.1.0-py3-none-any.whl $(DOR_IMPORT_LAMBDA_FOLDER)/lambda/massgov.pfml.api-0.1.0-py3-none-any.whl
+	cp $(API_FOLDER)/dist/massgov.pfml.api-0.1.0-py3-none-any.whl $(DOR_IMPORT_LAMBDA_FOLDER)/massgov.pfml.api-0.1.0-py3-none-any.whl
 
 deps:  ## Build binary dependencies
 	mkdir -p ./dependencies
@@ -34,16 +34,17 @@ build:
 	sam build --template template.yaml --use-container
 
 # invoke locally by passing environment variable file and test event
-
 invoke-local:
 	sam local invoke "ImportFunction" \
 		--env-vars local.json \
 		--log-file local-log.txt \
 		--event test_event.json
 
+# full build before local invoke
 build-invoke-local: build-api import-api-module deps build invoke-local
 
 # build and publish lambda function to AWS
+#
 upload-release: import-api-module deps build
 	sam package \
 		--s3-bucket massgov-pfml-api-lambda-builds \

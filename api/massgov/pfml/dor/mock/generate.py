@@ -13,7 +13,6 @@ import sys
 from datetime import datetime, timedelta
 
 import faker
-
 import pydash
 
 # Running this module as a python command from the top level /api directory seems
@@ -26,7 +25,7 @@ import massgov.pfml.util.logging as logging  # isort:skip
 from massgov.pfml.util.datetime.quarter import Quarter  # isort:skip
 
 logging.init(__package__)
-logger = logging.get_logger("massgov.pfml.data_integrations.dor.mock.generate")
+logger = logging.get_logger("massgov.pfml.dor.mock.generate")
 
 random.seed(1111)
 

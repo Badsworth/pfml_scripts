@@ -10,7 +10,7 @@ Resources:
   ImportFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: ../../massgov/pfml/data_integrations/dor/import/lambda/
+      CodeUri: ../../massgov/pfml/dor/importer/
       Handler: import_dor.handler
       Runtime: python3.8
       Layers:

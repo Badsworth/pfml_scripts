@@ -8,12 +8,12 @@ import os
 from dataclasses import asdict, dataclass, field
 from datetime import datetime
 from decimal import Decimal
-from typing import Callable, List
+from typing import Callable, Dict, List, Optional, Union
 
 import boto3
-import massgov.pfml.util.logging as logging
 import pydash
-from lib.decrypter import GpgDecrypter, Utf8Decrypter
+
+import massgov.pfml.util.logging as logging
 from massgov.pfml import db
 from massgov.pfml.db.models.employees import (
     Address,
@@ -26,13 +26,13 @@ from massgov.pfml.db.models.employees import (
     ImportLog,
     WagesAndContributions,
 )
+from massgov.pfml.dor.importer.lib.decrypter import GpgDecrypter, Utf8Decrypter
 
-logging.init(__name__)
-logger = logging.get_logger("massgov.pfml.dor_import")
+logger = logging.get_logger("massgov.pfml.dor.importer.import_dor")
 
 s3 = boto3.client("s3")
 s3Bucket = boto3.resource("s3")
-aws_ssm = boto3.client("ssm")
+aws_ssm = boto3.client("ssm", region_name="us-east-1")
 
 
 def get_secret(client, key):
@@ -50,7 +50,7 @@ EMPLOYEE_FILE_PREFIX = "DORDFML_"
 
 @dataclass
 class ImportReport:
-    start: datetime
+    start: str
     employer_file: str
     employee_file: str
     parsed_employers_count: int = 0
@@ -60,22 +60,22 @@ class ImportReport:
     updated_employers_count: int = 0
     created_employees_count: int = 0
     updated_employees_count: int = 0
-    status: str = None
-    end: datetime = None
+    status: Optional[str] = None
+    end: Optional[str] = None
 
 
 @dataclass
 class ImportRunReport:
-    start: datetime
+    start: str
     imports: List[ImportReport] = field(default_factory=list)
-    end: datetime = None
+    end: Optional[str] = None
 
 
 @dataclass
 class FieldFormat:
     property_name: str
     length: int
-    conversion_function: Callable = None
+    conversion_function: Optional[Callable] = None
 
 
 def parse_date(date_str):
@@ -144,6 +144,10 @@ EMPLOYEE_FORMAT = (
 
 def handler(event, context):
     """Lambda handler function."""
+    logging.init(__name__)
+
+    decrypter: Union[Utf8Decrypter, GpgDecrypter]
+
     if os.getenv("DECRYPT") != "true":
         logger.info("Skipping GPG decrypter setup")
         decrypter = Utf8Decrypter()
@@ -177,12 +181,15 @@ def handler(event, context):
 
         logger.info("importing files", extra={"files_for_import": files_for_import})
 
-        employer_file = pydash.find(
-            files_for_import, lambda f: get_file_name(f).startswith(EMPLOYER_FILE_PREFIX)
-        )
-        employee_file = pydash.find(
-            files_for_import, lambda f: get_file_name(f).startswith(EMPLOYEE_FILE_PREFIX)
-        )
+        employer_file_filter = [
+            f for f in files_for_import if get_file_name(f).startswith(EMPLOYER_FILE_PREFIX)
+        ]
+        employer_file = None if len(employer_file_filter) == 0 else employer_file_filter[0]
+
+        employee_file_filter = [
+            f for f in files_for_import if get_file_name(f).startswith(EMPLOYEE_FILE_PREFIX)
+        ]
+        employee_file = None if len(employer_file_filter) == 0 else employee_file_filter[0]
 
         logger.info(
             "got file names",
@@ -216,7 +223,9 @@ def get_files_for_import_grouped_by_date(bucket):
     for s3_object in bucket.objects.filter(Prefix=RECEIVED_FOLDER):
         if s3_object.key != RECEIVED_FOLDER:  # skip the folder
             files_for_import.append(s3_object.key)
-    files_by_date = {}
+
+    files_by_date: Dict[str, List[str]] = {}
+
     files_for_import.sort()
     for file_key in files_for_import:
         date_start_index = file_key.rfind("_")
@@ -446,6 +455,7 @@ def import_employees_and_wage_data(
     return None
 
 
+# TODO turn return dataclasses list instead of object list
 def parse_employer_file(bucket, employer_file, decrypter):
     """Parse employer file"""
     logger.info("Start parsing employer file", extra={"employer_file": employer_file})
