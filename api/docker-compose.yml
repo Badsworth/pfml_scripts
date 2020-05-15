@@ -1,11 +1,11 @@
-version: '3.4'
+version: "3.4"
 
 services:
   mass-pfml-db:
     image: postgres:11.6-alpine
-    container_name: 'mass-pfml-db'
+    container_name: "mass-pfml-db"
     ports:
-      - '5432:5432'
+      - "5432:5432"
     environment:
       - POSTGRES_DB=pfml
       - POSTGRES_USER=pfml
@@ -28,7 +28,7 @@ services:
     links:
       - mass-pfml-db
     ports:
-      - '1550:1550'
+      - "1550:1550"
     # We set `:z` on the bind mounts to support Linux systems with SELinux, on
     # other platforms it has no effect.
     #
@@ -48,7 +48,7 @@ services:
         aliases:
           - mass-pfml-api
     depends_on:
-      - 'mass-pfml-db'
+      - "mass-pfml-db"
 
 networks:
   main:

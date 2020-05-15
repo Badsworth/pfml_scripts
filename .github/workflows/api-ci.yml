@@ -5,7 +5,7 @@ name: API CI Testing
 on:
   pull_request:
     paths:
-    - api/**
+      - api/**
 
 defaults:
   run:
@@ -15,42 +15,41 @@ env:
   CI: true
 
 jobs:
-
   # Check for formatting and linting issues.
   lint:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v2
+      - uses: actions/checkout@v2
 
-    - name: build container
-      run: make build
+      - name: build container
+        run: make build
 
-    - name: format-check
-      run: make format-check
+      - name: format-check
+        run: make format-check
 
-    - name: lint
-      run: make lint
+      - name: lint
+        run: make lint
 
   # Check for test failures.
   test:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v2
+      - uses: actions/checkout@v2
 
-    - name: build container
-      run: make build
+      - name: build container
+        run: make build
 
-    - name: test
-      run: make test
+      - name: test
+        run: make test
 
   # Check we can build a release
   build-release:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v2
+      - uses: actions/checkout@v2
 
-    - name: build
-      run: make release-build
+      - name: build
+        run: make release-build

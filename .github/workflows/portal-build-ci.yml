@@ -5,7 +5,7 @@ name: Portal Website Build Check
 on:
   pull_request:
     paths:
-    - portal/**
+      - portal/**
 
 env:
   nodeVersion: 12.x
@@ -15,36 +15,32 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v2
+      - uses: actions/checkout@v2
 
-    - name: Use Node.js
-      uses: actions/setup-node@v1
-      with:
-        nodeVersion: ${{ env.nodeVersion }}
+      - name: Use Node.js
+        uses: actions/setup-node@v1
+        with:
+          nodeVersion: ${{ env.nodeVersion }}
 
-    - name: install
-      run:
-        PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true npm ci --prefix portal
+      - name: install
+        run: PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true npm ci --prefix portal
 
-    - name: build
-      run:
-        npm run build --prefix portal
+      - name: build
+        run: npm run build --prefix portal
 
   build_test:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v2
+      - uses: actions/checkout@v2
 
-    - name: Use Node.js
-      uses: actions/setup-node@v1
-      with:
-        nodeVersion: ${{ env.nodeVersion }}
+      - name: Use Node.js
+        uses: actions/setup-node@v1
+        with:
+          nodeVersion: ${{ env.nodeVersion }}
 
-    - name: install
-      run:
-        PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true npm ci --prefix portal
+      - name: install
+        run: PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true npm ci --prefix portal
 
-    - name: build
-      run:
-        npm run build:test --prefix portal
+      - name: build
+        run: npm run build:test --prefix portal

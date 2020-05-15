@@ -81,29 +81,29 @@ jobs:
 
       - name: Install API Package Dependencies
         run: pip install wheel setuptools poetry
-        working-directory:  ${{ env.working-dir }}
+        working-directory: ${{ env.working-dir }}
 
       - name: Build API package
         run: poetry build
-        working-directory:  ${{ env.working-dir }}
+        working-directory: ${{ env.working-dir }}
 
       - name: Install Lambda CLI Dependencies
         run: pip install setuptools awscli aws-sam-cli
-        working-directory:  ${{ env.infra-working-dir }}
+        working-directory: ${{ env.infra-working-dir }}
 
       - name: Lambda Build, Package and Upload to S3
         run: make upload-release
-        working-directory:  ${{ env.infra-working-dir }}
+        working-directory: ${{ env.infra-working-dir }}
 
       - name: Get Package S3 Key
         id: get_s3_key
         run: echo "::set-output name=s3_key::$(python3 get-lambda-build.py)"
-        working-directory:  ${{ env.infra-working-dir }}
+        working-directory: ${{ env.infra-working-dir }}
 
       - name: Get Dependencies S3 Key
         id: get_dependencies_s3_key
         run: echo "::set-output name=dependencies_s3_key::$(python3 get-lambda-dependencies.py)"
-        working-directory:  ${{ env.infra-working-dir }}
+        working-directory: ${{ env.infra-working-dir }}
 
   api-release:
     name: Release
@@ -152,7 +152,7 @@ jobs:
           tf_actions_subcommand: plan
           tf_actions_comment: false
           tf_actions_working_dir: ${{ env.terraform-dir }}/${{ env.api-env }}
-          args: '-out=plan.tfplan'
+          args: "-out=plan.tfplan"
 
       - name: Terraform Apply from execution plan
         id: terraform_apply
@@ -162,7 +162,7 @@ jobs:
           tf_actions_subcommand: apply
           tf_actions_comment: false
           tf_actions_working_dir: ${{ env.terraform-dir }}/${{ env.api-env }}
-          args: 'plan.tfplan'
+          args: "plan.tfplan"
 
   api-db-migrate-up:
     name: Run migrations

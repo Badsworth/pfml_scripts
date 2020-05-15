@@ -5,7 +5,7 @@ name: Infra CI Validation
 on:
   pull_request:
     paths:
-    - infra/**/*.tf
+      - infra/**/*.tf
 
 env:
   working-dir: ./infra
@@ -13,21 +13,21 @@ env:
 
 jobs:
   tf-format:
-    name: 'tf format check'
+    name: "tf format check"
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
+      - uses: actions/checkout@v2
 
-    - name: tf-format-check
-      uses: hashicorp/terraform-github-actions@master
-      with:
-        tf_actions_version: ${{ env.tf-version }}
-        tf_actions_subcommand: 'fmt'
-        tf_actions_working_dir: ${{ env.working-dir }}
-        tf_actions_comment: false
+      - name: tf-format-check
+        uses: hashicorp/terraform-github-actions@master
+        with:
+          tf_actions_version: ${{ env.tf-version }}
+          tf_actions_subcommand: "fmt"
+          tf_actions_working_dir: ${{ env.working-dir }}
+          tf_actions_comment: false
 
   tf-validate:
-    name: 'tf validate'
+    name: "tf validate"
     runs-on: ubuntu-latest
 
     env:
@@ -38,55 +38,55 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        component: ['portal', 'api', 'env-shared']
-        environment: ['test', 'stage', 'prod']
+        component: ["portal", "api", "env-shared"]
+        environment: ["test", "stage", "prod"]
 
     steps:
-    - uses: actions/checkout@v2
+      - uses: actions/checkout@v2
 
-    - name: "Fetch status of remote ref"
-      run: |
-        git fetch --no-tags --prune --depth=1 origin +refs/heads/${{ env.baseref }}:refs/remotes/origin/${{ env.baseref }}
+      - name: "Fetch status of remote ref"
+        run: |
+          git fetch --no-tags --prune --depth=1 origin +refs/heads/${{ env.baseref }}:refs/remotes/origin/${{ env.baseref }}
 
-    - name: "Check for changes"
-      id: check-for-changes
-      # Check whether the config has changed within the PR.
-      # This is done by comparing the PR's base branch (usually master) against the current PR commit.
-      run: |
-        tf_dir=${{ env.working-dir }}/${{ matrix.component }}/environments/${{ matrix.environment }}
-        template_dir=${{ env.working-dir }}/${{ matrix.component }}/template
+      - name: "Check for changes"
+        id: check-for-changes
+        # Check whether the config has changed within the PR.
+        # This is done by comparing the PR's base branch (usually master) against the current PR commit.
+        run: |
+          tf_dir=${{ env.working-dir }}/${{ matrix.component }}/environments/${{ matrix.environment }}
+          template_dir=${{ env.working-dir }}/${{ matrix.component }}/template
 
-        if [ -n "$(git --no-pager diff --name-only origin/${{ env.baseref }} ${GITHUB_SHA} -- ${tf_dir})" ] ||
-           [ -n "$(git --no-pager diff --name-only origin/${{ env.baseref }} ${GITHUB_SHA} -- ${template_dir})" ]; then
-          echo "::set-output name=has-changes::true"
-        else
-          echo "::set-output name=has-changes::false"
-        fi
+          if [ -n "$(git --no-pager diff --name-only origin/${{ env.baseref }} ${GITHUB_SHA} -- ${tf_dir})" ] ||
+             [ -n "$(git --no-pager diff --name-only origin/${{ env.baseref }} ${GITHUB_SHA} -- ${template_dir})" ]; then
+            echo "::set-output name=has-changes::true"
+          else
+            echo "::set-output name=has-changes::false"
+          fi
 
-    - name: Configure AWS Credentials
-      if: steps.check-for-changes.outputs.has-changes == 'true'
-      uses: aws-actions/configure-aws-credentials@v1
-      with:
-        aws-access-key-id: ${{ secrets.PFML_AWS_ACCESS_KEY_ID }}
-        aws-secret-access-key: ${{ secrets.PFML_AWS_SECRET_ACCESS_KEY }}
-        aws-region: us-east-1
-        role-to-assume: ci-run-deploys
-        role-duration-seconds: 3600
+      - name: Configure AWS Credentials
+        if: steps.check-for-changes.outputs.has-changes == 'true'
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.PFML_AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.PFML_AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+          role-to-assume: ci-run-deploys
+          role-duration-seconds: 3600
 
-    - name: tf-init
-      if: steps.check-for-changes.outputs.has-changes == 'true'
-      uses: hashicorp/terraform-github-actions@master
-      with:
-        tf_actions_version: ${{ env.tf-version }}
-        tf_actions_subcommand: 'init'
-        tf_actions_working_dir: ${{ env.working-dir }}/${{ matrix.component }}/environments/${{ matrix.environment }}
-        tf_actions_comment: false
+      - name: tf-init
+        if: steps.check-for-changes.outputs.has-changes == 'true'
+        uses: hashicorp/terraform-github-actions@master
+        with:
+          tf_actions_version: ${{ env.tf-version }}
+          tf_actions_subcommand: "init"
+          tf_actions_working_dir: ${{ env.working-dir }}/${{ matrix.component }}/environments/${{ matrix.environment }}
+          tf_actions_comment: false
 
-    - name: tf-validate
-      if: steps.check-for-changes.outputs.has-changes == 'true'
-      uses: hashicorp/terraform-github-actions@master
-      with:
-        tf_actions_version: ${{ env.tf-version }}
-        tf_actions_subcommand: 'validate'
-        tf_actions_working_dir: ${{ env.working-dir }}/${{ matrix.component }}/environments/${{ matrix.environment }}
-        tf_actions_comment: false
+      - name: tf-validate
+        if: steps.check-for-changes.outputs.has-changes == 'true'
+        uses: hashicorp/terraform-github-actions@master
+        with:
+          tf_actions_version: ${{ env.tf-version }}
+          tf_actions_subcommand: "validate"
+          tf_actions_working_dir: ${{ env.working-dir }}/${{ matrix.component }}/environments/${{ matrix.environment }}
+          tf_actions_comment: false
