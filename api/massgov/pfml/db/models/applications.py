@@ -1,13 +1,7 @@
-import uuid
-
 from sqlalchemy import Boolean, Column, Date, DateTime, ForeignKey, Integer, Text
 from sqlalchemy.dialects.postgresql import UUID
 
-from .base import Base
-
-
-def uuid_gen():
-    return uuid.uuid4()
+from .base import Base, uuid_gen
 
 
 class LeaveReason(Base):

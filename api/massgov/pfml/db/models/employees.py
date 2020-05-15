@@ -8,17 +8,11 @@
 # This allows us to build mock data and insert them easily in the database for tests
 # and seeding.
 #
-import uuid
-
 from sqlalchemy import Boolean, Column, Date, DateTime, ForeignKey, Integer, Numeric, Text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 
-from .base import Base
-
-
-def uuid_gen():
-    return uuid.uuid4()
+from .base import Base, uuid_gen
 
 
 class AddressType(Base):
