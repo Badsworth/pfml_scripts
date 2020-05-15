@@ -238,7 +238,7 @@ class UserRole(Base):
 
 
 class WagesAndContributions(Base):
-    __tablename__ = "wage_and_contribution_id"
+    __tablename__ = "wages_and_contributions"
     wage_and_contribution_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
     account_key = Column(Text)
     filing_period = Column(Date)
