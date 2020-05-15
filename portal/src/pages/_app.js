@@ -12,11 +12,13 @@ import Header from "../components/Header";
 import { NetworkError } from "../errors";
 import PropTypes from "prop-types";
 import Spinner from "../components/Spinner";
+import tracker from "../services/tracker";
 import useCollectionState from "../hooks/useCollectionState";
 import { useRouter } from "next/router";
 import usersApi from "../api/usersApi";
 
 initializeI18n();
+
 /**
  * Overrides the default Next.js App so that we can persist common layout
  * across page changes, and other advanced features like injecting data into pages.
@@ -86,11 +88,8 @@ export const App = ({
   const handleRouteChangeComplete = (url = "") => {
     handleRouteChangeEnd();
 
-    // Give SPA routes in New Relic more accurate names.
-    // Route names should represent a routing pattern rather than a specific resource.
-    // https://docs.newrelic.com/docs/browser/new-relic-browser/browser-agent-spa-api/spa-set-current-route-name
     const routeName = url.split("?")[0];
-    newrelic.setCurrentRouteName(routeName);
+    tracker.setCurrentRouteName(routeName);
   };
 
   /**
@@ -148,7 +147,7 @@ export const App = ({
           : t("errors.currentUser.failedToFind");
 
       setAppErrors([new AppErrorInfo({ message })]);
-      newrelic.noticeError(error);
+      tracker.noticeError(error);
     }
 
     setUI({ ...ui, isLoading: false });

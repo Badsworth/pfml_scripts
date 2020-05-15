@@ -1,3 +1,5 @@
+import tracker from "../services/tracker";
+
 /**
  * @callback saveFunction
  * @param {object.<string, *>} formState Dictionary of form fields mapping names to values
@@ -35,7 +37,7 @@ const useHandleSave = (saveToApi, onSuccess) => {
     } catch (error) {
       // TODO: Handle rejected promise (i.e unexpected error when props.onSubmit was called)
       // setErrors(...)
-      newrelic.noticeError(error);
+      tracker.noticeError(error);
     }
   };
   return handleSave;

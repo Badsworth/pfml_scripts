@@ -1,6 +1,6 @@
 # Monitoring
 
-We use [New Relic Browser](https://newrelic.com/products/browser-monitoring) to monitor errors in our application. This works by including [a JS snippet](https://docs.newrelic.com/docs/browser/new-relic-browser/installation/install-new-relic-browser-agent#copy-paste-app) towards the top of our HTML. This snippet works out of the box by wrapping low-level browser APIs, and exposes [an API (`newrelic`) for explicitly tracking](https://docs.newrelic.com/docs/browser/new-relic-browser/browser-agent-spa-api) interactions and errors that the app catches itself.
+We use [New Relic Browser](https://newrelic.com/products/browser-monitoring) to monitor errors in our application. This works by including [a JS snippet](https://docs.newrelic.com/docs/browser/new-relic-browser/installation/install-new-relic-browser-agent#copy-paste-app) towards the top of our HTML. This snippet works out of the box by wrapping low-level browser APIs, and globally exposes [an API (`newrelic`) for explicitly tracking](https://docs.newrelic.com/docs/browser/new-relic-browser/browser-agent-spa-api) interactions and errors that the app catches itself.
 
 ## Environments
 

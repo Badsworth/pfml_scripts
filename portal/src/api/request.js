@@ -1,4 +1,5 @@
 import { NetworkError } from "../errors";
+import tracker from "../services/tracker";
 
 /**
  * @typedef {Promise<{ body: object, apiErrors: object[], status: number, success: boolean }>} Response
@@ -82,7 +83,7 @@ async function sendRequest(url, options) {
     } else {
       // Request completed, but the response status code was outside the 2xx range
       // TODO: Pull the errors from the response and set `apiErrors` (https://lwd.atlassian.net/browse/CP-345)
-      newrelic.noticeError(
+      tracker.noticeError(
         new Error(`Fetch request to ${url} returned status: ${response.status}`)
       );
     }
@@ -90,7 +91,7 @@ async function sendRequest(url, options) {
     // Request failed to send or something failed while parsing the response
     // Log the JS error to support troubleshooting
     console.error(error);
-    newrelic.noticeError(error);
+    tracker.noticeError(error);
     throw new NetworkError(error.message);
   }
 

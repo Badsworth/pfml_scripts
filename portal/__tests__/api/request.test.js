@@ -1,5 +1,8 @@
 import { NetworkError } from "../../src/errors";
 import request from "../../src/api/request";
+import tracker from "../../src/services/tracker";
+
+jest.mock("../../src/services/tracker");
 
 describe("request", () => {
   beforeEach(() => {
@@ -198,7 +201,7 @@ describe("request", () => {
 
       await request("GET", "users");
 
-      expect(newrelic.noticeError).toHaveBeenCalledWith(expect.any(Error));
+      expect(tracker.noticeError).toHaveBeenCalledWith(expect.any(Error));
     });
   });
 
@@ -225,7 +228,7 @@ describe("request", () => {
         await request("GET", "users");
       } catch (error) {}
 
-      expect(newrelic.noticeError).toHaveBeenCalledWith(expect.any(Error));
+      expect(tracker.noticeError).toHaveBeenCalledWith(expect.any(Error));
     });
   });
 });

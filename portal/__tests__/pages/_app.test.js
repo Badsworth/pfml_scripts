@@ -4,8 +4,10 @@ import { NetworkError } from "../../src/errors";
 import React from "react";
 import { act } from "react-dom/test-utils";
 import { mockRouterEvents } from "next/router";
+import tracker from "../../src/services/tracker";
 import usersApi from "../../src/api/usersApi";
 
+jest.mock("../../src/services/tracker");
 jest.mock("../../src/api/usersApi");
 jest.mock("lodash/uniqueId", () => {
   return jest.fn().mockReturnValue("mocked-for-snapshots");
@@ -266,8 +268,8 @@ describe("App", () => {
 
       expect(wrapper.find("Spinner").exists()).toBe(false);
       expect(wrapper.find("TestComponent").exists()).toBe(true);
-      expect(newrelic.setCurrentRouteName).toHaveBeenCalledTimes(1);
-      expect(newrelic.setCurrentRouteName).toHaveBeenCalledWith("/claims");
+      expect(tracker.setCurrentRouteName).toHaveBeenCalledTimes(1);
+      expect(tracker.setCurrentRouteName).toHaveBeenCalledWith("/claims");
     });
 
     it("hides spinner when a route change throws an error", async () => {
