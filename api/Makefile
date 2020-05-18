@@ -142,6 +142,9 @@ psql: login-db
 start: ## Start containers
 	docker-compose up --detach
 
+secure: ## Run security linting
+	$(PY_RUN_CMD) bandit -r . --number 3 --skip B101 -ll
+
 stop: ## Stop running containers
 	docker-compose down
 

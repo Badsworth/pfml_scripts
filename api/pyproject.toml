@@ -33,6 +33,7 @@ pytest = "^5.3.5"
 pytest-testmon = "^1.0.2"
 pytest-watch = "^4.2.0"
 sqlalchemy-stubs = "^0.3"
+bandit = "^1.6.2"
 
 [tool.poetry.scripts]
 massgov-pfml-api = "massgov.pfml.api.__main__:main"

@@ -31,6 +31,9 @@ jobs:
       - name: lint
         run: make lint
 
+      - name: security
+        run: make secure
+
   # Check for test failures.
   test:
     runs-on: ubuntu-latest
