@@ -15,6 +15,7 @@ import pydash
 
 import massgov.pfml.util.logging as logging
 from massgov.pfml import db
+from massgov.pfml.db.config import DbConfig
 from massgov.pfml.db.models.employees import (
     Address,
     AddressType,
@@ -246,7 +247,20 @@ def process_daily_import(bucket, employer_file, employee_file, decrypter):
         start=datetime.now().isoformat(), employer_file=employer_file, employee_file=employee_file
     )
 
-    db_session_raw = db.init()
+    if os.getenv("DB_PASSWORD") is None:
+        db_pass = get_secret(aws_ssm, os.environ["DB_PASSWORD_SSM_PATH"])
+    else:
+        db_pass = os.environ["DB_PASSWORD"]
+
+    config = DbConfig(
+        host=os.environ.get("DB_HOST", "localhost"),
+        name=os.environ.get("DB_NAME", "pfml"),
+        username=os.environ.get("DB_USERNAME", "pfml"),
+        password=db_pass,
+        schema=os.environ.get("DB_SCHEMA", "public"),
+    )
+
+    db_session_raw = db.init(config)
 
     with db.session_scope(db_session_raw) as db_session:
         try:

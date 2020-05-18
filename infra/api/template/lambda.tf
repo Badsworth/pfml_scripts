@@ -38,7 +38,7 @@ resource "aws_lambda_function" "dor_import" {
       DB_HOST                                = aws_db_instance.default.address
       DB_NAME                                = aws_db_instance.default.name
       DB_USERNAME                            = aws_db_instance.default.username
-      DB_PASSWORD                            = aws_ssm_parameter.db_password.value
+      DB_PASSWORD_SSM_PATH                   = "/service/${local.app_name}/${var.environment_name}/db-password"
       DECRYPT                                = "true"
       GPG_DECRYPTION_KEY_SSM_PATH            = "/service/${local.app_name}-dor-import/${var.environment_name}/gpg_decryption_key"
       GPG_DECRYPTION_KEY_PASSPHRASE_SSM_PATH = "/service/${local.app_name}-dor-import/${var.environment_name}/gpg_decryption_key_passphrase"
