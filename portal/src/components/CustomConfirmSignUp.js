@@ -11,6 +11,19 @@ import { withTranslation } from "../locales/i18n";
  * @see https://github.com/aws-amplify/amplify-js/blob/master/packages/aws-amplify-react/src/Auth/ConfirmSignUp.tsx
  */
 class CustomConfirmSignUp extends ConfirmSignUp {
+  /**
+   * Trim whitespace from the verification code before passing it to Amplify.
+   * Amplify doesn't trim whitespace, but we've observed users copy/pasting
+   * the code with trailing whitespace.
+   * @param {object} event
+   */
+  handleCodeChange = (event) => {
+    // This mutates the input value, but is the least fragile option to override
+    // the event that gets bubbled up to Amplify
+    event.target.value = event.target.value.trim();
+    this.handleInputChange(event);
+  };
+
   // when mocking instance methods, jest does not show the method
   // was called unless it's wrapped like this.
   handleConfirm = (event) => {
@@ -45,7 +58,7 @@ class CustomConfirmSignUp extends ConfirmSignUp {
                 autoComplete="off"
                 label={t("components.confirmSignUp.codeLabel")}
                 name="code"
-                onChange={this.handleInputChange}
+                onChange={this.handleCodeChange}
                 smallLabel
               />
               <Button

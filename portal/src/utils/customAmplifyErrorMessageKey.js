@@ -25,6 +25,13 @@ function customAmplifyErrorMessageKey(amplifyMessage) {
     ? "Password validation catchall"
     : amplifyMessage;
 
+  // Use Regex to catch error messages that are dynamic due to the inclusion of the value entered by the user
+  amplifyMessage = amplifyMessage.match(
+    /1 validation error detected: Value '.+' at 'confirmationCode' failed to satisfy constraint/
+  )
+    ? "Confirmation code validation catchall"
+    : amplifyMessage;
+
   /**
    * Mappings of Amplify error messages (minus any trailing period) to our internationalized string.
    * There's not a great way to identify what possible errors might be returned by Amplify,
@@ -33,6 +40,8 @@ function customAmplifyErrorMessageKey(amplifyMessage) {
    */
   const customMessageKeys = {
     "Confirmation code cannot be empty": "errors.auth.verificationCodeRequired",
+    "Confirmation code validation catchall":
+      "errors.auth.verificationCodeFormat",
     // This is crazy, but it's what's currently shown when Cognito returns InvalidParameterException
     // https://lwd.atlassian.net/browse/CP-259
     "Custom auth lambda trigger is not configured for the user pool":

@@ -82,6 +82,16 @@ describe("CustomForgotPassword", () => {
       Destination: "s***@n***.com",
     };
 
+    it("trims whitespace from the code field", () => {
+      const wrapper = render();
+      wrapper.setState({ delivery });
+
+      const event = { target: { value: " 123456 " } };
+      wrapper.find('InputText[name="code"]').simulate("change", event);
+
+      expect(event.target.value).toBe("123456");
+    });
+
     it("resends code when resend code button is clicked", () => {
       const wrapper = render();
       const spy = jest.spyOn(wrapper.instance(), "send").mockImplementation();

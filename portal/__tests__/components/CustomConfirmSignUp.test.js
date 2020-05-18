@@ -45,6 +45,15 @@ describe("CustomConfirmSignUp", () => {
     expect(resend).toHaveBeenCalled();
   });
 
+  it("trims whitespace from the code field", () => {
+    const wrapper = render();
+
+    const event = { target: { value: " 123456 " } };
+    wrapper.find('InputText[name="code"]').simulate("change", event);
+
+    expect(event.target.value).toBe("123456");
+  });
+
   it("changes to sign in state when user clicks back to sign in", () => {
     // mocks AuthPiece implementation: https://github.com/aws-amplify/amplify-js/blob/4bd5c7ebef0ad223d4c05a452e696242927a750f/packages/aws-amplify-react/src/Auth/AuthPiece.tsx#L180
     const onStateChange = jest.fn();

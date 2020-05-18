@@ -24,6 +24,19 @@ class CustomForgotPassword extends ForgotPassword {
   }
 
   /**
+   * Trim whitespace from the verification code before passing it to Amplify.
+   * Amplify doesn't trim whitespace, but we've observed users copy/pasting
+   * the code with trailing whitespace.
+   * @param {object} event
+   */
+  handleCodeChange = (event) => {
+    // This mutates the input value, but is the least fragile option to override
+    // the event that gets bubbled up to Amplify
+    event.target.value = event.target.value.trim();
+    this.handleInputChange(event);
+  };
+
+  /**
    * Fields displayed for a user to enter the verification code and their new password.
    * Displayed after they entered their email in the "sendView"
    */
@@ -36,7 +49,7 @@ class CustomForgotPassword extends ForgotPassword {
           autoComplete="off"
           label={t("components.forgotPassword.codeLabel")}
           name="code"
-          onChange={this.handleInputChange}
+          onChange={this.handleCodeChange}
           smallLabel
         />
         <Button

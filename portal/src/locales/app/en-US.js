@@ -16,6 +16,8 @@ const errors = {
     passwordErrors:
       "Your password does not meet the requirements. Please check the requirements and try again.",
     passwordRequired: "Enter your password",
+    verificationCodeFormat:
+      "Enter the 6-digit code sent to your email and ensure it does not include any spaces or punctuation.",
     verificationCodeRequired: "Enter the 6-digit code sent to your email",
   },
   currentUser: {
