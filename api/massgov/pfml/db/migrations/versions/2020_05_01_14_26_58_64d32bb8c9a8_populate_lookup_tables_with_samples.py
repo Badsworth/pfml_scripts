@@ -5,6 +5,7 @@ Create Date: 2020-04-27 17:24:49.116239
 """
 
 import csv
+import os
 
 from alembic import op
 from sqlalchemy import Integer, Text
@@ -33,8 +34,10 @@ tables = (
 
 lookup_table_to_data_map = {}
 for table_name in tables:
-    table_file = "massgov/pfml/db/seed/lookups/" + table_name + ".csv"
-    with open(table_file, newline="") as csvfile:
+    table_file = "../../seed/lookups/" + table_name + ".csv"
+    file_path = os.path.join(os.path.dirname(__file__), table_file)
+
+    with open(file_path, newline="") as csvfile:
         # read in the data
         reader = csv.DictReader(csvfile, delimiter=",")
 
