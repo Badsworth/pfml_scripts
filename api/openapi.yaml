@@ -547,9 +547,9 @@ components:
         last_name:
           type: string
           example: "Doe"
-        ssn_or_itin:
-          $ref: "#/components/schemas/SsnItin"
-      required: ["first_name", "last_name", "ssn_or_itin"]
+        tax_identifier:
+          $ref: '#/components/schemas/SsnItin'
+      required: ['first_name', 'last_name', 'tax_identifier']
 
     Employee:
       type: object
@@ -567,8 +567,8 @@ components:
         last_name:
           type: string
           example: "Doe"
-        ssn_or_itin:
-          $ref: "#/components/schemas/SsnItin"
+        tax_identifier:
+          $ref: '#/components/schemas/SsnItin'
         date_of_birth:
           type: string
           format: date

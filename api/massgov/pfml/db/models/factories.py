@@ -71,6 +71,13 @@ class EmployeeFactory(BaseFactory):
         model = models.Employee
 
     employee_id = factory.Faker("uuid4")
+    tax_identifier = Generators.Tin
+    first_name = factory.Faker("first_name")
+    middle_name = factory.Faker("first_name")
+    last_name = factory.Faker("last_name")
+    other_name = None
+    email_address = factory.Faker("email")
+    phone_number = "942-529-0727"
 
 
 class WagesAndContributionsFactory(BaseFactory):

@@ -1,68 +1,83 @@
+from dataclasses import dataclass
+from typing import Optional
+
 import connexion
 from werkzeug.exceptions import NotFound
 
-import massgov.pfml.api.generate_fake_data as fake
-
-employees_dict = fake.employees
-
-
-def employees_get_all_fake():
-    # this endpoint has been created for test purposes only. As fake employee data is automatically
-    # generated when the server starts, this endpoint is a mechanism to grab ids for the objects
-    # that have been mocked, and those ids can be used at the PATCH to /employees/{employee_id} and
-    # the GET to /wages which requires an employee_id param
-
-    return employees_dict
+import massgov.pfml.api.app as app
+from massgov.pfml.db.models.employees import Employee
 
 
 def employees_get(employee_id):
-    for employee in employees_dict.values():
-        if employee.get("employee_id") == employee_id:
-            return employee
+    with app.db_session() as db_session:
+        employee = db_session.query(Employee).get(employee_id)
 
-    raise NotFound()
+    if employee is None:
+        raise NotFound()
+
+    return employee_response(employee)
 
 
 def employees_patch(employee_id):
     """ this endpoint will allow an employee's personal information to be updated """
     body = connexion.request.json
-
-    # there are properties that a user should not be allowed to modify, for the purpose of
-    # this mock, only the following properties are mutable
-    mutable_properties = ["first_name", "middle_name", "last_name", "date_of_birth"]
-
-    # the following logic would not be necessary in real life, but because we are using dictionaries
-    # to simulate a db and the key to the employees dictionary is ssn/itin --as the arg here is employee id and not ssn--
-    # we'll need to iterate through the dictionary and find the record where the employee id matches
-    for employee in employees_dict.values():
-        if employee.get("employee_id") == employee_id:
-
-            for attr in body:
-                if attr in mutable_properties and attr != "employee_id":
-                    employee[attr] = body.get(attr)
-            return employee
-
-    raise NotFound()
+    with app.db_session() as db_session:
+        db_session.query(Employee).filter(Employee.employee_id == employee_id).update(body)
+        updated_employee = db_session.query(Employee).get(employee_id)
+    return employee_response(updated_employee)
 
 
 def employees_search():
     body = connexion.request.json
-    first_name = body.get("first_name")
-    last_name = body.get("last_name")
-    ssn_or_itin = body.get("ssn_or_itin")
-
-    # get employee from the dictionary whose ssn/itin is the same as the one in the header
-    try:
-        employee = employees_dict[ssn_or_itin]
-    except KeyError:
+    with app.db_session() as db_session:
+        employee = (
+            db_session.query(Employee)
+            .filter_by(
+                first_name=body["first_name"],
+                last_name=body["last_name"],
+                tax_identifier=body["tax_identifier"].replace("-", ""),
+            )
+            .first()
+        )
+    if employee is None:
         raise NotFound()
 
-    same_first_name = employee["first_name"] == first_name
-    same_last_name = employee["last_name"] == last_name
+    return employee_response(employee)
 
-    # if the ssn/itin, first name and last name match, return employee
-    if employee and same_first_name and same_last_name:
-        return employee
 
-    # if ssn/itin exists but names don't match, return an error
-    raise NotFound()
+@dataclass
+class EmployeeResponse:
+    employee_id: Optional[str]
+    tax_identifier: Optional[str]
+    first_name: Optional[str]
+    middle_name: Optional[str]
+    last_name: Optional[str]
+    other_name: Optional[str]
+    email_address: Optional[str]
+    phone_number: Optional[str]
+
+
+class EmployeeUpdateRequest:
+    first_name: str
+    middle_name: str
+    last_name: str
+
+
+def serialize_tax_identifier(tax_identifier: Optional[str]) -> Optional[str]:
+    if not tax_identifier:
+        return None
+
+    return "{}-{}-{}".format(tax_identifier[:3], tax_identifier[3:5], tax_identifier[5:])
+
+
+def employee_response(employee: Employee) -> EmployeeResponse:
+    return EmployeeResponse(
+        employee_id=employee.employee_id,
+        tax_identifier=serialize_tax_identifier(employee.tax_identifier),
+        first_name=employee.first_name,
+        middle_name=employee.middle_name,
+        last_name=employee.last_name,
+        other_name=employee.other_name,
+        email_address=employee.email_address,
+        phone_number=employee.phone_number,
+    )
