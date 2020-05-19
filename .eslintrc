@@ -19,6 +19,7 @@
       // Puppeteer globals
       "page": true,
       "browser": true,
+      "jestPuppeteer": true,
       // Trackers loaded globally
       "newrelic": "readonly"
     },

@@ -62,6 +62,7 @@ const Index = ({ claims, addClaim }) => {
       </ul>
 
       <Button
+        name="new-claim"
         onClick={handleClaimButtonClick}
         variation={claims.ids.length ? "outline" : undefined}
       >

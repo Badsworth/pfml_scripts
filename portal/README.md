@@ -95,7 +95,17 @@ Runs the project's [test suite](../docs/portal/tests.md), for unit tests on Reac
 
 ### `npm test:e2e`
 
-Runs the project's [test suite](../docs/portal/tests.md), for end-to-end tests in a headless browser.
+Runs the project's [test suite](../docs/portal/tests.md), for end-to-end tests in a headless browser. This expects the site to already be running at `localhost:3000`, so typically you will run `npm run build && npm start` before running these tests.
+
+This script doesn't build or run the site since oftentimes you will need to debug a test, and building and running the server as part of the test script would result in a lot of waiting. This also provides flexibility in how you run the site (i.e either in development or static HTML mode).
+
+### `npm test:e2e:ci`
+
+Builds and runs site, and then runs the `test:e2e` script. This is useful if you want to run the end-to-end test suite without running the site in a separate terminal tab.
+
+### `npm test:e2e:watch`
+
+Runs the `test:e2e` script in watch mode.
 
 ### `npm run test:update-snapshots`
 
