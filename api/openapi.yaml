@@ -563,6 +563,7 @@ components:
           example: "Jane"
         middle_name:
           type: string
+          nullable: true
           example: "Alice"
         last_name:
           type: string
