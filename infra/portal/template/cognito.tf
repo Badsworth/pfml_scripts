@@ -4,9 +4,11 @@ resource "aws_cognito_user_pool" "claimants_pool" {
   auto_verified_attributes = ["email"]
 
   email_configuration {
-    // Use this SES email to send cognito emails. If we're not uses SES for emails then use null
-    source_arn            = var.cognito_use_ses_email ? aws_ses_email_identity.cognito_sender_email[0].arn : null
-    email_sending_account = var.cognito_use_ses_email ? "DEVELOPER" : "COGNITO_DEFAULT"
+    # Use this SES email to send cognito emails. If we're not using SES for emails then use null
+    source_arn            = var.ses_email_address == "" ? null : "arn:aws:ses:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:identity/${var.ses_email_address}"
+    email_sending_account = var.ses_email_address == "" ? "COGNITO_DEFAULT" : "DEVELOPER"
+    # Customize the name that users see in the "From" section of their inbox, so that it's clearer who the email is from
+    from_email_address = var.ses_email_address == "" ? null : "Mass.gov <${var.ses_email_address}>"
   }
 
   sms_authentication_message = "Your authentication code is {####}. "

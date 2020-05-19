@@ -37,13 +37,3 @@ env:
 ```
 
 Also update the [deploy](./deploy.md) doc with details about deploying to the new environment.
-
-## Setup the SES sender email address
-
-By default, new environments send authentication emails using Cognito. However, production or production-like environments should use SES so it doesn't run into limitations.
-
-1. Ensure you have someone who can access the inbox of the email you'll be setting so they can verify it.
-1. Update the environments `main.tf` file with the email address it should use for sending Cognito emails, and change `cognito_use_ses_email` to `true`
-1. Run `terraform apply`, which will likely return an error indicating you need to verify the email address.
-1. Verify the email address by clicking the link in the verification email that should have been sent after the previous step.
-1. Run `terraform apply` again, which should be successful this time

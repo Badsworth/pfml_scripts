@@ -39,10 +39,6 @@ module "massgov_pfml" {
   cognito_extra_redirect_urls = []
   cognito_extra_logout_urls   = []
 
-  # Change the variables below if this environment should send Cognito emails through SES:
-  cognito_sender_email  = null
-  cognito_use_ses_email = false
-
   # You probably don't need to change the variables below:
   source                 = "../../template"
   environment_name       = "prod"

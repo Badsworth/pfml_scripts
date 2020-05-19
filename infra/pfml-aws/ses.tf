@@ -1,20 +1,16 @@
-# Setup SES to send authentication emails from Cognito
+# Setup SES to send emails
 
 # 1. Add the email we want to send from
-resource "aws_ses_email_identity" "cognito_sender_email" {
-  # Only create this resource if we're using SES for sending emails
-  count = var.cognito_use_ses_email ? 1 : 0
-  email = var.cognito_sender_email
+resource "aws_ses_email_identity" "noreply" {
+  email = "noreplypfml@mass.gov"
 }
 
 # 2. Create policy that only allows Cognito to send emails from the email address
 data "aws_iam_policy_document" "allow_cognito_ses_actions" {
-  count = var.cognito_use_ses_email ? 1 : 0
-
   statement {
     effect    = "Deny"
     actions   = ["ses:*"]
-    resources = [aws_ses_email_identity.cognito_sender_email[0].arn]
+    resources = [aws_ses_email_identity.noreply.arn]
 
     principals {
       type        = "AWS"
@@ -34,8 +30,7 @@ data "aws_iam_policy_document" "allow_cognito_ses_actions" {
 # 3. Set the SES Sending Authorization policy
 # See: https://docs.aws.amazon.com/ses/latest/DeveloperGuide/sending-authorization-policies.html
 resource "aws_ses_identity_policy" "allow_cognito_ses_actions" {
-  count    = var.cognito_use_ses_email ? 1 : 0
-  identity = aws_ses_email_identity.cognito_sender_email[0].arn
-  name     = "${local.app_name}-${var.environment_name}-allow-cognito-send-email"
-  policy   = data.aws_iam_policy_document.allow_cognito_ses_actions[0].json
+  identity = aws_ses_email_identity.noreply.arn
+  name     = "massgov-pfml-allow-cognito-send-email"
+  policy   = data.aws_iam_policy_document.allow_cognito_ses_actions.json
 }
