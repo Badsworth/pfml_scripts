@@ -35,3 +35,9 @@ export const Success = () => (
 export const Warning = () => (
   <Alert state="warning">You need to submit additional documents</Alert>
 );
+
+export const NoIcon = () => (
+  <Alert state="info" noIcon>
+    Here is some called-out information.
+  </Alert>
+);

@@ -1,6 +1,7 @@
 import Heading from "./Heading";
 import PropTypes from "prop-types";
 import React from "react";
+import classnames from "classnames";
 
 /**
  * An alert keeps users informed of important and sometimes time-sensitive changes.
@@ -9,8 +10,11 @@ import React from "react";
  */
 const Alert = React.forwardRef(
   ({ role = "region", state = "error", ...props }, ref) => {
+    const classes = classnames(`usa-alert usa-alert--${state}`, {
+      "usa-alert--no-icon": props.noIcon,
+    });
     return (
-      <div className={`usa-alert usa-alert--${state}`} ref={ref} tabIndex="-1">
+      <div className={classes} ref={ref} tabIndex="-1">
         <div className="usa-alert__body" role={role}>
           {props.heading && (
             <Heading level="2" className="usa-alert__heading">
@@ -27,6 +31,8 @@ const Alert = React.forwardRef(
 Alert.propTypes = {
   /** Error message */
   children: PropTypes.node.isRequired,
+  /** Sets the 'no-icon' style */
+  noIcon: PropTypes.bool,
   /** Optional heading */
   heading: PropTypes.node,
   /** ARIA `role` */

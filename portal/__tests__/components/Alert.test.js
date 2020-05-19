@@ -102,4 +102,14 @@ describe("Alert", () => {
 
     expect(wrapper.hasClass("usa-alert--warning")).toBe(true);
   });
+
+  it("renders with an icon when the noIcon prop is not set", () => {
+    const { wrapper } = render();
+    expect(wrapper.hasClass("usa-alert--no-icon")).toBe(false);
+  });
+
+  it("renders without an icon when the noIcon prop is set", () => {
+    const { wrapper } = render({ noIcon: true });
+    expect(wrapper.hasClass("usa-alert--no-icon")).toBe(true);
+  });
 });
