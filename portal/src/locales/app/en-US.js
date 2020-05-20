@@ -158,6 +158,9 @@ const components = {
     genericHeading: "An error was encountered",
     genericHeading_plural: "{{count}} errors were encountered",
   },
+  fileCard: {
+    removeButton: "Remove document",
+  },
   forgotPassword: {
     codeLabel: "6-digit code",
     leadCreatePasswordView:

@@ -1,0 +1,18 @@
+/*
+--------------------------------------------------------------------------------
+U.S. Web Design System - Utility overrides
+--------------------------------------------------------------------------------
+Read more about settings and USWDS style tokens in the documentation:
+https://designsystem.digital.gov/documentation/settings/#utilities
+https://designsystem.digital.gov/utilities/
+--------------------------------------------------------------------------------
+*/
+
+$color-settings: (
+  output: true,
+  responsive: false,
+  active: true,
+  focus: false,
+  hover: true,
+  visited: false
+);

@@ -4,6 +4,7 @@
 @import "uswds-theme-color";
 @import "uswds-theme-typography";
 @import "uswds-theme-components";
+@import "uswds-theme-utilities";
 @import "~uswds/dist/scss/uswds";
 
 // Include default USWDS h1-h6 style (size, weight, spacing) rulesets
@@ -11,4 +12,6 @@
 
 // Custom PFML components
 @import "../src/components/Details";
+@import "../src/components/FileCard";
 @import "../src/components/Spinner";
+@import "../src/components/Thumbnail";

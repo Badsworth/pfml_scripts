@@ -1,0 +1,19 @@
+@keyframes showFileCard {
+  from {
+    opacity: 0;
+    transform: translate3d(0, -20px, 0);
+  }
+
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+.c-file-card {
+  animation: showFileCard 350ms ease;
+}
+
+.c-file-card__content {
+  flex-grow: 1;
+}
