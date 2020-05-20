@@ -24,6 +24,9 @@ jobs:
 
       - name: build container
         run: make build
+      
+      - name: check dependencies
+        run: make deps-check
 
       - name: format-check
         run: make format-check

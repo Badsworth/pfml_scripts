@@ -100,6 +100,9 @@ build-app: ## Build app container
 deps: ## Install dependencies
 	poetry install --no-root
 
+deps-check:
+	$(PY_RUN_CMD) safety check --full-report
+
 ecr-login: ## Login to ECR for Docker
 	@echo "Authenticating Docker with ECR"
 	ecr_login_cmd="$$(aws ecr get-login --no-include-email)" && $$ecr_login_cmd
