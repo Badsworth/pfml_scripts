@@ -9,6 +9,8 @@ https://docs.pytest.org/en/latest/fixture.html#conftest-py-sharing-fixture-funct
 import os
 import uuid
 
+import boto3
+import moto
 import pytest
 
 import massgov.pfml.api.app
@@ -62,6 +64,28 @@ def test_user(test_db_session):
     test_db_session.commit()
 
     return user
+
+
+@pytest.fixture
+def test_fs_path(tmp_path):
+    file_name = "test.txt"
+    content = "line 1 text\nline 2 text\nline 3 text"
+
+    test_folder = tmp_path / "test_folder"
+    test_folder.mkdir()
+    test_file = test_folder / file_name
+    test_file.write_text(content)
+    test_file.touch()
+    return test_folder
+
+
+@pytest.fixture
+def mock_s3_bucket():
+    with moto.mock_s3():
+        s3 = boto3.resource("s3")
+        bucket_name = "test_bucket"
+        s3.create_bucket(Bucket=bucket_name)
+        yield bucket_name
 
 
 @pytest.fixture
