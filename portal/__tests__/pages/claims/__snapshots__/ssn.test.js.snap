@@ -17,7 +17,7 @@ exports[`Ssn renders the form 1`] = `
       "user_id": null,
     }
   }
-  nextPage="/"
+  nextPage="/claims/success"
   onSave={[Function]}
   title="Who is taking leave"
 >

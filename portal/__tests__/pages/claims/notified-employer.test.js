@@ -17,7 +17,9 @@ describe("NotifiedEmployer", () => {
     expect(wrapper).toMatchSnapshot();
   });
 
-  it("redirects to the home page", () => {
-    expect(wrapper.find("QuestionPage").prop("nextPage")).toEqual(routes.home);
+  it("redirects to the todo page for now", () => {
+    expect(wrapper.find("QuestionPage").prop("nextPage")).toEqual(
+      routes.claims.todo
+    );
   });
 });

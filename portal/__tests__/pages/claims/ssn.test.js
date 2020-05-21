@@ -31,8 +31,10 @@ describe("Ssn", () => {
     expect(wrapper).toMatchSnapshot();
   });
 
-  it("redirects to home if unrestrictedClaimFlow is not enabled", () => {
-    expect(wrapper.find("QuestionPage").prop("nextPage")).toEqual(routes.home);
+  it("redirects to success page if unrestrictedClaimFlow is not enabled", () => {
+    expect(wrapper.find("QuestionPage").prop("nextPage")).toEqual(
+      routes.claims.success
+    );
   });
 
   it("redirects to leaveType if unrestrictedClaimFlow is enabled", () => {

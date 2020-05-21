@@ -29,7 +29,7 @@ const Ssn = (props) => {
 
   const nextPage = isFeatureEnabled("unrestrictedClaimFlow")
     ? routeWithParams("claims.leaveType", props.query)
-    : routes.home;
+    : routes.claims.success;
 
   return (
     <QuestionPage

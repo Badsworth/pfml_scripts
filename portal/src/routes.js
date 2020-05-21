@@ -13,6 +13,11 @@ const routes = {
     notifiedEmployer: "/claims/notified-employer",
     ssn: "/claims/ssn",
     stateId: "/claims/state-id",
+    success: "/claims/success",
+    // For routes that don't have a page to point to yet, we can route them
+    // to a placeholder page. This allows us to search our code for routes.claims.todo,
+    // which is less confusing than seeing routes.claims.success
+    todo: "/claims/success",
   },
 };
 

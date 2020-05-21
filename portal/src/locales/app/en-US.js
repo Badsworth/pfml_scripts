@@ -113,6 +113,12 @@ const pages = {
     idLabel: "Enter your license or ID number",
     title: "$t(shared.claimsTakingLeaveTitle)",
   },
+  claimsSuccess: {
+    body:
+      "We are reviewing your application. You can check the status of your application anytime in the portal.",
+    dashboardLink: "Return to dashboard",
+    title: "Your leave application was submitted successfully",
+  },
   index: {
     activeClaimsHeading: "Active claims",
     claimCardHeading: "Claim {{number}}",
