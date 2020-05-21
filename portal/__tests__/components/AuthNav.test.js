@@ -57,19 +57,33 @@ describe("AuthNav", () => {
     });
 
     describe("when log out button is clicked", () => {
+      const originalLocation = window.location;
+
       beforeEach(() => {
+        delete window.location;
+        window.location = { assign: jest.fn() };
+
         jest.spyOn(Auth, "signOut").mockImplementation(() => {});
       });
 
       afterEach(() => {
+        window.location = originalLocation;
+
         jest.restoreAllMocks();
       });
 
-      it("logs the user out", () => {
+      it("logs the user out", async () => {
         const wrapper = shallow(<AuthNav user={user} />);
-        wrapper.find("Button").simulate("click");
+        await wrapper.find("Button").simulate("click");
 
         expect(Auth.signOut.mock.calls.length).toBe(1);
+      });
+
+      it("redirects to home page", async () => {
+        const wrapper = shallow(<AuthNav user={user} />);
+        await wrapper.find("Button").simulate("click");
+
+        expect(window.location.assign).toHaveBeenCalledWith("/");
       });
     });
   });
