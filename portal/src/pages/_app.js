@@ -204,6 +204,8 @@ export const App = ({
         <link href="/favicon.png" rel="shortcut icon" type="image/png" />
         <title>{t("pages.app.siteTitle")}</title>
         <meta name="description" content={t("pages.app.siteDescription")} />
+        {/* Block search engine indexing during development: https://lwd.atlassian.net/browse/CP-458 */}
+        <meta name="robots" content="noindex" />
       </Head>
       <Header user={authUser} />
       <main id="main" className="grid-container margin-top-5 margin-bottom-8">
