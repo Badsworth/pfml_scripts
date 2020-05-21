@@ -36,6 +36,11 @@ class CustomForgotPassword extends ForgotPassword {
     this.handleInputChange(event);
   };
 
+  handleBackToSignIn = (event) => {
+    this.setState({ delivery: null });
+    this.changeState("signIn");
+  };
+
   /**
    * Fields displayed for a user to enter the verification code and their new password.
    * Displayed after they entered their email in the "sendView"
@@ -139,7 +144,7 @@ class CustomForgotPassword extends ForgotPassword {
                 <Button
                   className="text-bold"
                   name="backToSignIn"
-                  onClick={() => this.changeState("signIn")}
+                  onClick={this.handleBackToSignIn}
                   variation="unstyled"
                 >
                   {t("components.forgotPassword.signInFooterLink")}

@@ -113,13 +113,15 @@ describe("CustomForgotPassword", () => {
 
       expect(spy).toHaveBeenCalledTimes(1);
     });
-  });
 
-  it("changes to sign in state when user clicks back to sign in", () => {
-    const onStateChange = jest.fn();
-    const wrapper = render({ onStateChange });
-    wrapper.find({ name: "backToSignIn" }).simulate("click");
+    it("changes to sign in state and clears delivery state when user clicks back to sign in", () => {
+      const onStateChange = jest.fn();
+      const wrapper = render({ onStateChange });
+      wrapper.setState({ delivery });
+      wrapper.find({ name: "backToSignIn" }).simulate("click");
 
-    expect(onStateChange).toHaveBeenCalledWith("signIn", undefined);
+      expect(onStateChange).toHaveBeenCalledWith("signIn", undefined);
+      expect(wrapper.state().delivery).toBeNull();
+    });
   });
 });
