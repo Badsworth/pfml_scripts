@@ -4,6 +4,10 @@ const featureFlags = require("./config/featureFlags")(buildEnv);
 const withBundleAnalyzer = require("@next/bundle-analyzer")({
   enabled: process.env.ANALYZE_BUNDLE === "true",
 });
+// TODO: Next.js will eventually provide production source maps out of the box,
+// so remove this plugin when that becomes available. Experimental support was
+// added in https://github.com/zeit/next.js/pull/13018
+const withSourceMaps = require("@zeit/next-source-maps");
 
 // eslint-disable-next-line no-console
 console.log(`📦 Using "${buildEnv}" environment variables to build the site.`);
@@ -40,4 +44,4 @@ const config = {
   },
 };
 
-module.exports = withBundleAnalyzer(config);
+module.exports = withBundleAnalyzer(withSourceMaps(config));

@@ -24,6 +24,7 @@
   },
   "dependencies": {
     "@massds/mayflower-tokens": "^9.47.0",
+    "@zeit/next-source-maps": "0.0.3",
     "aws-amplify": "^3.0.9",
     "aws-amplify-react": "^4.1.8",
     "classnames": "^2.2.6",
