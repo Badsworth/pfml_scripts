@@ -26,14 +26,14 @@ resource "aws_lb" "nlbs" {
   tags = {
     agency        = "eol"
     application   = "coreinf"
-    businessowner = "kevin.yeh@mass.gov"
-    createdby     = "kevin.yeh@mass.gov"
-    itowner       = "kevin.yeh@mass.gov"
+    businessowner = "ma-pfml-alerts@mass.gov"
+    createdby     = "ma-pfml-alerts@mass.gov"
+    itowner       = "ma-pfml-alerts@mass.gov"
     public        = "no"
     secretariat   = "eolwd"
     Name          = "${each.key}-nlb"
-    # nonprod is not a valid environment, so we use test here.
-    environment = each.key == "prod" ? "prod" : "test"
+    # nonprod is not a valid environment, so we use stage here.
+    environment = each.key == "prod" ? "prod" : "stage"
   }
 }
 

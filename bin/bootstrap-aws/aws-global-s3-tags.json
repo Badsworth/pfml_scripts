@@ -1,8 +1,8 @@
 {
   "TagSet": [
-    { "Key": "businessowner", "Value": "kevin.yeh@mass.gov" },
-    { "Key": "createdby", "Value": "kevin.yeh@mass.gov" },
-    { "Key": "itowner", "Value": "kevin.yeh@mass.gov" },
+    { "Key": "businessowner", "Value": "ma-pfml-alerts@mass.gov" },
+    { "Key": "createdby", "Value": "ma-pfml-alerts@mass.gov" },
+    { "Key": "itowner", "Value": "ma-pfml-alerts@mass.gov" },
     { "Key": "environment", "Value": "prod" },
     { "Key": "agency", "Value": "eol" },
     { "Key": "application", "Value": "coreinf" },

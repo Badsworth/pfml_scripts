@@ -71,10 +71,10 @@ resource "aws_db_instance" "default" {
   tags = {
     agency        = "eol"
     application   = "coreinf"
-    businessowner = "kevin.yeh@mass.gov"
-    createdby     = "kevin.yeh@mass.gov"
+    businessowner = "ma-pfml-alerts@mass.gov"
+    createdby     = "ma-pfml-alerts@mass.gov"
     environment   = var.environment_name
-    itowner       = "kevin.yeh@mass.gov"
+    itowner       = "ma-pfml-alerts@mass.gov"
     secretariat   = "eolwd"
     Name          = "massgov_pfml_${var.environment_name}"
     backup        = var.environment_name == "prod" ? "prod" : "nonprod"

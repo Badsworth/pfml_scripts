@@ -17,12 +17,9 @@ resource "aws_s3_bucket" "portal_web" {
     Name        = "massgov-${local.app_name}-${var.environment_name}-portal-site-builds"
     public      = "yes"
 
-    # TODO: Change to business owner once we know
-    businessowner = "vijay.rajagopalan2@mass.gov"
-    # TODO: Change to mailing list once it exists
-    createdby = "sawyer.q.hollenshead@mass.gov"
-    # TODO: Change to mailing list once it exists
-    itowner = "sawyer.q.hollenshead@mass.gov"
+    businessowner = "ma-pfml-alerts@mass.gov"
+    createdby     = "ma-pfml-alerts@mass.gov"
+    itowner       = "ma-pfml-alerts@mass.gov"
   }
 }
 

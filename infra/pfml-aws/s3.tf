@@ -28,10 +28,10 @@ resource "aws_s3_bucket" "terraform" {
   tags = {
     agency        = "eol"
     application   = "coreinf"
-    businessowner = "kevin.yeh@mass.gov"
-    createdby     = "kevin.yeh@mass.gov"
+    businessowner = "ma-pfml-alerts@mass.gov"
+    createdby     = "ma-pfml-alerts@mass.gov"
     environment   = each.key
-    itowner       = "kevin.yeh@mass.gov"
+    createdby     = "ma-pfml-alerts@mass.gov"
     public        = "no"
     secretariat   = "eolwd"
     Name          = "pfml-${each.key}-env-mgmt"
@@ -78,13 +78,13 @@ resource "aws_s3_bucket" "agency_transfer" {
   tags = {
     agency        = "eol"
     application   = "coreinf"
-    businessowner = "kevin.yeh@mass.gov"
-    createdby     = "kevin.yeh@mass.gov"
+    businessowner = "ma-pfml-alerts@mass.gov"
+    createdby     = "ma-pfml-alerts@mass.gov"
     environment   = each.key == "nonprod" ? "stage" : each.key
-    itowner       = "kevin.yeh@mass.gov"
+    createdby     = "ma-pfml-alerts@mass.gov"
     public        = "no"
     secretariat   = "eolwd"
-    Name          = "massgov-pfml-agency-transfer-dor-${each.key}"
+    Name          = "massgov-pfml-${each.key}-agency-transfer"
   }
 }
 
@@ -113,9 +113,9 @@ resource "aws_s3_bucket" "lambda_build" {
   tags = {
     agency        = "eol"
     application   = "coreinf"
-    businessowner = "vijay.rajagopalan2@mass.gov"
+    businessowner = "ma-pfml-alerts@mass.gov"
     createdby     = "ma-pfml-alerts@mass.gov"
-    environment   = "all"
+    environment   = "prod"
     itowner       = "ma-pfml-alerts@mass.gov"
     public        = "no"
     secretariat   = "eolwd"
