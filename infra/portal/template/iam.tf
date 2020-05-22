@@ -13,7 +13,7 @@ data "aws_iam_policy_document" "lambda_assume_role" {
       type = "Service"
 
       identifiers = [
-        "lambda.amazonaws.com"
+        "lambda.amazonaws.com", "edgelambda.amazonaws.com"
       ]
     }
   }

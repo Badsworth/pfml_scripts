@@ -68,6 +68,19 @@ resource "aws_cloudfront_distribution" "portal_web_distribution" {
     default_ttl            = 31536000
     max_ttl                = 31536000
     compress               = true
+
+    lambda_function_association {
+      # The function executes before CloudFront
+      # returns the requested object to the viewer.
+      # The function executes regardless of whether the
+      # object was already in the edge cache.
+      # If the origin returns an HTTP status code other than HTTP 200 (OK),
+      # the function doesn't execute.
+      event_type = "viewer-response"
+      # The Amazon Resource Name (ARN) identifying your Lambda Function Version
+      # when publish = true
+      lambda_arn = "${aws_lambda_function.edge_headers.qualified_arn}"
+    }
   }
 
   custom_error_response {

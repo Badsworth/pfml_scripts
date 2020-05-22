@@ -1,0 +1,42 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Lambda@Edge Headers Function sets correct headers 1`] = `
+Object {
+  "content-security-policy": Array [
+    Object {
+      "key": "Content-Security-Policy",
+      "value": "default-src 'self' https:; base-uri 'none'; form-action 'none'",
+    },
+  ],
+  "referrer-policy": Array [
+    Object {
+      "key": "Referrer-Policy",
+      "value": "strict-origin-when-cross-origin",
+    },
+  ],
+  "strict-transport-security": Array [
+    Object {
+      "key": "Strict-Transport-Security",
+      "value": "max-age=31536000",
+    },
+  ],
+  "x-content-type-options": Array [
+    Object {
+      "key": "X-Content-Type-Options",
+      "value": "nosniff",
+    },
+  ],
+  "x-frame-options": Array [
+    Object {
+      "key": "X-Frame-Options",
+      "value": "deny",
+    },
+  ],
+  "x-xss-protection": Array [
+    Object {
+      "key": "X-XSS-Protection",
+      "value": "1; mode=block",
+    },
+  ],
+}
+`;
