@@ -160,6 +160,11 @@ const components = {
     verifyHint:
       "We sent a 6-digit verification code to {{emailAddress}}. Enter the code to verify your email.",
   },
+  errorBoundary: {
+    message:
+      "Sorry, we encountered an unexpected error. If this continues to happen, you may call the Paid Family Leave Contact Center at $t(shared.callCenterPhoneNumber)",
+    reloadButton: "Reload this page",
+  },
   errorsSummary: {
     genericHeading: "An error was encountered",
     genericHeading_plural: "{{count}} errors were encountered",

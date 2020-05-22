@@ -6,6 +6,7 @@ import { initializeI18n, useTranslation } from "../locales/i18n";
 import AppErrorInfo from "../models/AppErrorInfo";
 import Authenticator from "../components/Authenticator";
 import Collection from "../models/Collection";
+import ErrorBoundary from "../components/ErrorBoundary";
 import ErrorsSummary from "../components/ErrorsSummary";
 import Head from "next/head";
 import Header from "../components/Header";
@@ -199,7 +200,7 @@ export const App = ({
   };
 
   return (
-    <React.Fragment>
+    <ErrorBoundary>
       <Head>
         <link href="/favicon.png" rel="shortcut icon" type="image/png" />
         <title>{t("pages.app.siteTitle")}</title>
@@ -211,18 +212,21 @@ export const App = ({
       <main id="main" className="grid-container margin-top-5 margin-bottom-8">
         <div className="grid-row">
           <div className="grid-col-fill">
-            <ErrorsSummary errors={appErrors} />
-            <Authenticator
-              authState={authState}
-              authData={initialAuthData}
-              onStateChange={handleAuthStateChange}
-            >
-              {renderPageContent()}
-            </Authenticator>
+            {/* Include a second ErrorBoundary here so that we still render a site header if we catch an error before it bubbles up any further */}
+            <ErrorBoundary>
+              <ErrorsSummary errors={appErrors} />
+              <Authenticator
+                authState={authState}
+                authData={initialAuthData}
+                onStateChange={handleAuthStateChange}
+              >
+                {renderPageContent()}
+              </Authenticator>
+            </ErrorBoundary>
           </div>
         </div>
       </main>
-    </React.Fragment>
+    </ErrorBoundary>
   );
 };
 

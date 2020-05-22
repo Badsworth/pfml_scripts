@@ -17,10 +17,11 @@ function newrelicReady() {
  * Track a JS error
  * @see https://docs.newrelic.com/docs/browser/new-relic-browser/browser-agent-spa-api/noticeerror-browser-agent-api
  * @param {Error} error
+ * @param {object} [customAttributes] - name/value pairs representing custom attributes
  */
-function noticeError(error) {
+function noticeError(error, customAttributes) {
   if (newrelicReady()) {
-    newrelic.noticeError(error);
+    newrelic.noticeError(error, customAttributes);
   }
 }
 
