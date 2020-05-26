@@ -31,7 +31,7 @@ resource "aws_s3_bucket" "terraform" {
     businessowner = "ma-pfml-alerts@mass.gov"
     createdby     = "ma-pfml-alerts@mass.gov"
     environment   = each.key
-    createdby     = "ma-pfml-alerts@mass.gov"
+    itowner       = "ma-pfml-alerts@mass.gov"
     public        = "no"
     secretariat   = "eolwd"
     Name          = "pfml-${each.key}-env-mgmt"
@@ -81,7 +81,7 @@ resource "aws_s3_bucket" "agency_transfer" {
     businessowner = "ma-pfml-alerts@mass.gov"
     createdby     = "ma-pfml-alerts@mass.gov"
     environment   = each.key == "nonprod" ? "stage" : each.key
-    createdby     = "ma-pfml-alerts@mass.gov"
+    itowner       = "ma-pfml-alerts@mass.gov"
     public        = "no"
     secretariat   = "eolwd"
     Name          = "massgov-pfml-${each.key}-agency-transfer"
