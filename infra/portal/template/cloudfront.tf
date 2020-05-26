@@ -86,7 +86,7 @@ resource "aws_cloudfront_distribution" "portal_web_distribution" {
   custom_error_response {
     error_code         = 404
     response_code      = 404
-    response_page_path = "/404.html"
+    response_page_path = "/404/index.html"
   }
 
   viewer_certificate {
