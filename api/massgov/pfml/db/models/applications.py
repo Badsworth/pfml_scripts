@@ -28,6 +28,12 @@ class RelationshipToCareGiver(Base):
     relationship_description = Column(Text)
 
 
+class RelationshipQualifier(Base):
+    __tablename__ = "lk_relationship_qualifier"
+    relationship_qualifier = Column(Integer, primary_key=True, autoincrement=True)
+    relationship_qualifier_description = Column(Text)
+
+
 class NotificationMethod(Base):
     __tablename__ = "lk_notification_method"
     notification_method = Column(Integer, primary_key=True, autoincrement=True)
@@ -54,6 +60,9 @@ class Application(Base):
     occupation_type = Column(Integer, ForeignKey("lk_occupation.occupation_type"))
     relationship_to_caregiver = Column(
         Integer, ForeignKey("lk_relationship_to_caregiver.relationship")
+    )
+    relationship_qualifier = Column(
+        Integer, ForeignKey("lk_relationship_qualifier.relationship_qualifier")
     )
     employer_notified = Column(Boolean)
     employer_notification_date = Column(Date)

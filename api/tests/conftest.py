@@ -67,6 +67,15 @@ def test_user(test_db_session):
 
 
 @pytest.fixture
+def test_wages(test_employee, monkeypatch):
+    wages = fake.create_wages(test_employee["employee_id"], str(uuid.uuid4()))
+
+    monkeypatch.setitem(fake.wages, test_employee["employee_id"], [wages])
+
+    return wages, test_employee
+
+
+@pytest.fixture
 def test_fs_path(tmp_path):
     file_name = "test.txt"
     content = "line 1 text\nline 2 text\nline 3 text"
@@ -89,17 +98,73 @@ def mock_s3_bucket():
 
 
 @pytest.fixture
-def test_application(test_employee, monkeypatch):
+def test_application(test_employee, test_db_session):
+    from massgov.pfml.db.models.applications import Application
+
     employee_id = test_employee["employee_id"]
-    fake_wages = fake.create_wages(employee_id, "0000-0000-0000-0000")
+    fake_wages = fake.create_wages(employee_id, str(uuid.uuid4()))
     fake.wages[employee_id] = [fake_wages]
     created_application = fake.create_application(test_employee)
 
-    monkeypatch.setitem(
-        fake.applications, created_application["application_id"], created_application
+    db_application = Application(
+        application_id=created_application["application_id"],
+        nickname=created_application["application_nickname"],
     )
 
+    test_db_session.add(db_application)
+    test_db_session.commit()
+
     return created_application
+
+
+@pytest.fixture
+def test_applications(test_employee, test_db_session):
+    from massgov.pfml.db.models.applications import Application
+
+    employee_id = test_employee["employee_id"]
+    fake_wages = fake.create_wages(employee_id, "0000-0000-0000-0000")
+    fake.wages[employee_id] = [fake_wages]
+    created_application1 = fake.create_application(test_employee)
+
+    db_application1 = Application(
+        application_id=created_application1["application_id"],
+        nickname=created_application1["application_nickname"],
+    )
+
+    created_application2 = fake.create_application(test_employee)
+
+    db_application2 = Application(
+        application_id=created_application2["application_id"],
+        nickname=created_application2["application_nickname"],
+    )
+
+    test_db_session.add(db_application1)
+    test_db_session.add(db_application2)
+    test_db_session.commit()
+
+    return [created_application1, created_application2]
+
+
+@pytest.fixture
+def create_app_statuses(test_db_session):
+    from massgov.pfml.db.models.employees import Status
+
+    draft_status = Status(status_description="Draft")
+    test_db_session.add(draft_status)
+    completed_status = Status(status_description="Completed")
+    test_db_session.add(completed_status)
+    test_db_session.commit()
+
+    return [
+        {
+            "status_type": draft_status.status_type,
+            "status_description": draft_status.status_description,
+        },
+        {
+            "status_type": completed_status.status_type,
+            "status_description": completed_status.status_description,
+        },
+    ]
 
 
 @pytest.fixture

@@ -80,7 +80,7 @@ def create_wages(employee_id, employer_id, period_id=None):
 def create_application(employee):
     application = {}
     leave_types = ["bonding", "medical", "accident"]
-    occupations = ["Sales Clerk", "Administrative", "Engineer", "Doctor"]
+    occupations = ["Sales Clerk", "Administrative", "Engineer", "Health Care"]
 
     employee_id = employee.get("employee_id")
     wage_employers = wages.get(employee_id)
@@ -153,7 +153,7 @@ def create_leave_details(leave_type):
 def create_payment_preferences(first_name, last_name):
     payment_preferences = []
     payment_preference: Dict[str, Any] = {}
-    payment_types = ["Elec Funds Transfer", "Check"]
+    payment_types = ["ACH", "Check"]
     account_type = ["Checking", "Savings"]
     routing_numbers = ["021202337", "021200025"]
 
@@ -161,7 +161,7 @@ def create_payment_preferences(first_name, last_name):
     payment_preference["payment_method"] = payment_type
     payment_preference["is_default"] = True
 
-    if payment_type == "Elec Funds Transfer":
+    if payment_type == "ACH":
         account_details = {
             "account_name": fake.sentence(),
             "account_no": str(fake.random_number(digits=12)),

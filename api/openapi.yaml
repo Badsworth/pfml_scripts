@@ -675,8 +675,8 @@ components:
             - Sales Clerk
             - Administrative
             - Engineer
-            - Doctor
-          example: "Sales Clerk"
+            - Health Care
+          example:  "Sales Clerk"
         leave_details:
           $ref: "#/components/schemas/ApplicationLeaveDetails"
         payment_preferences:
@@ -941,10 +941,10 @@ components:
         payment_method:
           type: string
           enum:
-            - Elec Funds Transfer
+            - ACH
             - Check
             - Gift Card
-          example: "Elec Funds Transfer"
+          example: "ACH"
         is_default:
           type: boolean
         account_details:
