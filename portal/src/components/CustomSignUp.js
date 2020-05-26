@@ -49,13 +49,13 @@ class CustomSignUp extends SignUp {
           <form>
             <div className={AmplifyUI.sectionBody}>
               {/**
-               * uncontrolled form input
-               * input states are stored on the class property `inputs`
-               * @see https://github.com/aws-amplify/amplify-js/blob/4bd5c7ebef0ad223d4c05a452e696242927a750f/packages/aws-amplify-react/src/Auth/AuthPiece.tsx#L198
-               *
-               * @see field attributes https://aws-amplify.github.io/docs/js/react#signup-configuration
-               *
-               */}
+                * uncontrolled form input
+                * input states are stored on the class property `inputs`
+                * @see https://github.com/aws-amplify/amplify-js/blob/4bd5c7ebef0ad223d4c05a452e696242927a750f/packages/aws-amplify-react/src/Auth/AuthPiece.tsx#L198
+                *
+                * @see field attributes https://aws-amplify.github.io/docs/js/react#signup-configuration
+                *
+                */}
               {this.signUpFields.map((field) => (
                 <InputText
                   key={field.key}
