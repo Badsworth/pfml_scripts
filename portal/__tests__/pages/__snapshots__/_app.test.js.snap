@@ -6,7 +6,7 @@ exports[`App when a user IS authenticated renders the page component 1`] = `
   claims={
     Collection {
       "byId": Object {},
-      "idProperty": "claim_id",
+      "idProperty": "application_id",
       "ids": Array [],
     }
   }

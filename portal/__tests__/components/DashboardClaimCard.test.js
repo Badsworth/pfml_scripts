@@ -7,7 +7,7 @@ describe("DashboardClaimCard", () => {
   it("renders a card for the given claim", () => {
     const wrapper = shallow(
       <DashboardClaimCard
-        claim={new Claim({ claim_id: "mock-claim-id" })}
+        claim={new Claim({ application_id: "mock-claim-id" })}
         number={2}
       />
     );

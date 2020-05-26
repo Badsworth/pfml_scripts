@@ -1,9 +1,9 @@
 import Claim from "../../models/Claim";
+import ClaimsApi from "../../api/ClaimsApi";
 import InputChoiceGroup from "../../components/InputChoiceGroup";
 import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
-import claimsApi from "../../api/claimsApi";
 import routeWithParams from "../../utils/routeWithParams";
 import useFormState from "../../hooks/useFormState";
 import useHandleInputChange from "../../hooks/useHandleInputChange";
@@ -18,9 +18,8 @@ export const LeaveType = (props) => {
   const handleInputChange = useHandleInputChange(updateFields);
   // TODO: use nested field
   const { leave_type } = formState;
-
   const handleSave = useHandleSave(
-    (formState) => claimsApi.updateClaim(new Claim(formState)),
+    (formState) => props.claimsApi.updateClaim(new Claim(formState)),
     (result) => props.updateClaim(result.claim)
   );
 
@@ -64,6 +63,7 @@ export const LeaveType = (props) => {
 LeaveType.propTypes = {
   claim: PropTypes.instanceOf(Claim),
   updateClaim: PropTypes.func,
+  claimsApi: PropTypes.instanceOf(ClaimsApi),
   query: PropTypes.shape({
     claim_id: PropTypes.string,
   }),

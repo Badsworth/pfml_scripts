@@ -1,9 +1,9 @@
 import Claim from "../../models/Claim";
+import ClaimsApi from "../../api/ClaimsApi";
 import InputChoiceGroup from "../../components/InputChoiceGroup";
 import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
-import claimsApi from "../../api/claimsApi";
 import routes from "../../routes";
 import useFormState from "../../hooks/useFormState";
 import useHandleInputChange from "../../hooks/useHandleInputChange";
@@ -22,7 +22,7 @@ export const NotifiedEmployer = (props) => {
   const handleInputChange = useHandleInputChange(updateFields);
 
   const handleSave = useHandleSave(
-    (formState) => claimsApi.updateClaim(new Claim(formState)),
+    (formState) => props.claimsApi.updateClaim(new Claim(formState)),
     (result) => props.updateClaim(result.claim)
   );
 
@@ -59,6 +59,7 @@ export const NotifiedEmployer = (props) => {
 NotifiedEmployer.propTypes = {
   claim: PropTypes.instanceOf(Claim),
   updateClaim: PropTypes.func,
+  claimsApi: PropTypes.instanceOf(ClaimsApi),
   query: PropTypes.shape({
     claim_id: PropTypes.string,
   }),

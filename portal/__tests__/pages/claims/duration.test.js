@@ -6,10 +6,10 @@ import { shallow } from "enzyme";
 
 describe("Duration", () => {
   let claim, wrapper;
-  const claim_id = "12345";
+  const application_id = "12345";
 
   beforeEach(() => {
-    claim = new Claim({ claim_id });
+    claim = new Claim({ application_id });
   });
 
   describe("regardless of duration type", () => {
@@ -31,7 +31,7 @@ describe("Duration", () => {
 
   describe("when user indicates that leave is continuous", () => {
     beforeEach(() => {
-      claim = new Claim({ claim_id, duration_type: "continuous" });
+      claim = new Claim({ application_id, duration_type: "continuous" });
 
       wrapper = shallow(<Duration claim={claim} />);
     });
@@ -43,7 +43,7 @@ describe("Duration", () => {
 
   describe("when user indicates that leave is intermittent", () => {
     beforeEach(() => {
-      claim = new Claim({ claim_id, duration_type: "intermittent" });
+      claim = new Claim({ application_id, duration_type: "intermittent" });
 
       wrapper = shallow(<Duration claim={claim} />);
     });

@@ -4,8 +4,8 @@ exports[`Duration regardless of duration type initially renders the page without
 <QuestionPage
   formState={
     Claim {
+      "application_id": "12345",
       "avg_weekly_hours_worked": null,
-      "claim_id": "12345",
       "created_at": null,
       "duration_type": null,
       "employer_notified": null,

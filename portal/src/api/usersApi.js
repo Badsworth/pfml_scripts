@@ -2,6 +2,8 @@
 import User from "../models/User";
 import request from "./request";
 
+// TODO: Convert userApi to class like ClaimsApi
+
 /**
  * @typedef {{ apiErrors: object[], success: boolean, user: User }} UsersApiResult
  * @property {object[]} [apiErrors] - If the request failed, this will contain errors returned by the API
@@ -36,6 +38,7 @@ async function createUser(user) {
  * @returns {Promise<UsersApiResult>}
  */
 async function getCurrentUser() {
+  // TODO: add api route to routes file and reference routes.api.currentUser
   const { body, ...response } = await request("GET", "users/current");
 
   return Promise.resolve({

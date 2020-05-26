@@ -3,7 +3,7 @@ import BaseModel from "./BaseModel";
 class Claim extends BaseModel {
   get defaults() {
     return {
-      claim_id: null,
+      application_id: null,
       created_at: null,
       avg_weekly_hours_worked: null,
       duration_type: null,

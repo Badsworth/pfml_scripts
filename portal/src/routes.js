@@ -4,6 +4,9 @@
  */
 const routes = {
   home: "/",
+  api: {
+    claims: "/applications",
+  },
   claims: {
     dateOfBirth: "/claims/date-of-birth",
     duration: "/claims/duration",

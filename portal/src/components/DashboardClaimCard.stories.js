@@ -11,7 +11,7 @@ export const Default = () => (
   <DashboardClaimCard
     claim={
       new Claim({
-        claim_id: "mock-claim-id",
+        application_id: "mock-claim-id",
       })
     }
     number={1}

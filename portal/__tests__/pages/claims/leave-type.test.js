@@ -6,7 +6,7 @@ import { shallow } from "enzyme";
 describe("LeaveType", () => {
   it("renders the page", () => {
     const wrapper = shallow(
-      <LeaveType claim={new Claim({ claim_id: "12345" })} />
+      <LeaveType claim={new Claim({ application_id: "12345" })} />
     );
     expect(wrapper).toMatchSnapshot();
   });

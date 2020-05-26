@@ -1,11 +1,11 @@
 import Claim from "../../models/Claim";
+import ClaimsApi from "../../api/ClaimsApi";
 import ConditionalContent from "../../components/ConditionalContent";
 import InputChoiceGroup from "../../components/InputChoiceGroup";
 import InputText from "../../components/InputText";
 import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
-import claimsApi from "../../api/claimsApi";
 import routeWithParams from "../../utils/routeWithParams";
 import useFormState from "../../hooks/useFormState";
 import useHandleInputChange from "../../hooks/useHandleInputChange";
@@ -26,7 +26,7 @@ export const Duration = (props) => {
   const handleInputChange = useHandleInputChange(updateFields);
 
   const handleSave = useHandleSave(
-    (formState) => claimsApi.updateClaim(new Claim(formState)),
+    (formState) => props.claimsApi.updateClaim(new Claim(formState)),
     (result) => props.updateClaim(result.claim)
   );
 
@@ -90,6 +90,7 @@ export const Duration = (props) => {
 
 Duration.propTypes = {
   claim: PropTypes.instanceOf(Claim),
+  claimsApi: PropTypes.instanceOf(ClaimsApi),
   updateClaim: PropTypes.func,
   query: PropTypes.shape({
     claim_id: PropTypes.string,

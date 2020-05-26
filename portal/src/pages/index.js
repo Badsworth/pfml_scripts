@@ -1,11 +1,12 @@
 import Button from "../components/Button";
+import ClaimsApi from "../api/ClaimsApi";
 import Collection from "../models/Collection";
 import DashboardClaimCard from "../components/DashboardClaimCard";
 import Heading from "../components/Heading";
 import PropTypes from "prop-types";
 import React from "react";
 import Title from "../components/Title";
-import claimsApi from "../api/claimsApi";
+import User from "../models/User";
 import routeWithParams from "../utils/routeWithParams";
 import useHandleSave from "../hooks/useHandleSave";
 
@@ -16,20 +17,24 @@ import { useTranslation } from "../locales/i18n";
  * "Dashboard" - Where a user is redirected to after successfully authenticating.
  */
 
-const Index = ({ claims, addClaim }) => {
+const Index = ({ claims, addClaim, user }) => {
   const { t } = useTranslation();
   const router = useRouter();
+  const claimsApi = new ClaimsApi({ user });
 
   const createClaim = useHandleSave(claimsApi.createClaim, (result) => {
     addClaim(result.claim);
 
     const route = routeWithParams("claims.name", {
-      claim_id: result.claim.claim_id,
+      claim_id: result.claim.application_id,
     });
     router.push(route);
   });
 
-  const handleClaimButtonClick = () => createClaim();
+  const handleSubmit = (event) => {
+    event.preventDefault();
+    createClaim();
+  };
 
   return (
     <React.Fragment>
@@ -60,14 +65,15 @@ const Index = ({ claims, addClaim }) => {
         <li>{t("pages.index.claimChecklistDateOfLeave")}</li>
         <li>{t("pages.index.claimChecklistWhereToSendBenefits")}</li>
       </ul>
-
-      <Button
-        name="new-claim"
-        onClick={handleClaimButtonClick}
-        variation={claims.ids.length ? "outline" : undefined}
-      >
-        {t("pages.index.createClaimButtonText")}
-      </Button>
+      <form onSubmit={handleSubmit}>
+        <Button
+          type="submit"
+          name="new-claim"
+          variation={claims.ids.length ? "outline" : undefined}
+        >
+          {t("pages.index.createClaimButtonText")}
+        </Button>
+      </form>
     </React.Fragment>
   );
 };
@@ -75,6 +81,7 @@ const Index = ({ claims, addClaim }) => {
 Index.propTypes = {
   addClaim: PropTypes.func,
   claims: PropTypes.instanceOf(Collection).isRequired,
+  user: PropTypes.instanceOf(User),
 };
 
 export default Index;

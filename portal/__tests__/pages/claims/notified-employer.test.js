@@ -6,10 +6,10 @@ import { shallow } from "enzyme";
 
 describe("NotifiedEmployer", () => {
   let claim, wrapper;
-  const claim_id = "12345";
+  const application_id = "12345";
 
   beforeEach(() => {
-    claim = new Claim({ claim_id });
+    claim = new Claim({ application_id });
     wrapper = shallow(<NotifiedEmployer claim={claim} />);
   });
 

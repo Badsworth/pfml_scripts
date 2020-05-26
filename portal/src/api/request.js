@@ -44,10 +44,11 @@ function createRequestUrl(apiPath) {
  * @param {string} method - i.e GET, POST, etc
  * @param {string} apiPath - relative path
  * @param {object|FormData} [payload] - request body
+ * @param {object} [headers] - request headers
  * @returns {Response} response - only rejects on network failure or if anything prevented the request from completing
  * @throws {Error|NetworkError}
  */
-async function request(method, apiPath, payload) {
+async function request(method, apiPath, payload, headers) {
   method = method.toUpperCase();
   const methods = ["DELETE", "GET", "PATCH", "POST", "PUT"];
   if (!methods.includes(method)) {
@@ -59,6 +60,7 @@ async function request(method, apiPath, payload) {
   const url = createRequestUrl(apiPath);
   const options = {
     body: createRequestBody(payload),
+    headers,
     method,
   };
 

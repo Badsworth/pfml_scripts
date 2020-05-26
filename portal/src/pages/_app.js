@@ -56,7 +56,7 @@ export const App = ({
     addItem: addClaim,
     updateItem: updateClaim,
     removeItem: removeClaim,
-  } = useCollectionState(new Collection({ idProperty: "claim_id" }));
+  } = useCollectionState(new Collection({ idProperty: "application_id" }));
 
   // Global UI state, such as whether to display the loading indicator
   const [ui, setUI] = useState({ isLoading: false });

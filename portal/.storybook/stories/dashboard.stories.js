@@ -9,12 +9,12 @@ export default {
 };
 
 export const InitialDashboard = () => (
-  <Dashboard claims={new Collection({ idProperty: "claim_id" })} />
+  <Dashboard claims={new Collection({ idProperty: "application_id" })} />
 );
 
 export const InProgressDashboard = () => {
-  const claims = new Collection({ idProperty: "claim_id" });
-  claims.add(new Claim({ claim_id: "abc" }));
+  const claims = new Collection({ idProperty: "application_id" });
+  claims.add(new Claim({ application_id: "abc" }));
 
   return <Dashboard claims={claims} />;
 };

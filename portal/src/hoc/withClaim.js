@@ -1,6 +1,8 @@
+import ClaimsApi from "../api/ClaimsApi";
 import Collection from "../models/Collection";
 import PropTypes from "prop-types";
 import React from "react";
+import User from "../models/User";
 
 /**
  * Higher order component that *MUST* be a child of App
@@ -11,12 +13,13 @@ import React from "react";
  */
 const withClaim = (Component) => {
   const componentWithClaim = (props) => {
-    const { query, claims } = props;
+    const { query, claims, user } = props;
     const claimId = query.claim_id;
 
     const claim = claims.get(claimId);
+    const claimsApi = new ClaimsApi({ user });
 
-    return <Component {...props} claim={claim} />;
+    return <Component {...props} claim={claim} claimsApi={claimsApi} />;
   };
 
   componentWithClaim.propTypes = {
@@ -24,6 +27,7 @@ const withClaim = (Component) => {
       claim_id: PropTypes.string,
     }).isRequired,
     claims: PropTypes.instanceOf(Collection).isRequired,
+    user: PropTypes.instanceOf(User).isRequired,
   };
 
   return componentWithClaim;
