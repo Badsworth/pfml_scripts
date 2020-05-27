@@ -3,8 +3,7 @@ import React from "react";
 
 /**
  * Overrides the default Next.js Document so that we can customize the
- * static HTML markup that is used on every page. We mainly do this so
- * that our New Relic script is loaded before any other JS.
+ * static HTML markup that is used on every page.
  *
  * The structure of this page is heavily dictated by Next.js.
  * This markup is only ever rendered during the initial export. Do not add
@@ -20,6 +19,11 @@ class MyDocument extends Document {
         <Head>
           {/* New Relic script must be towards the top of the <head> and before our other scripts */}
           <script src="/new-relic.js" />
+
+          <link href="/favicon.png" rel="shortcut icon" type="image/png" />
+
+          {/* Block search engine indexing during development: https://lwd.atlassian.net/browse/CP-458 */}
+          <meta name="robots" content="noindex" />
         </Head>
         <body>
           <Main />

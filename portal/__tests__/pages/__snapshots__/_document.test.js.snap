@@ -6,6 +6,15 @@ exports[`Document renders the Document 1`] = `
     <script
       src="/new-relic.js"
     />
+    <link
+      href="/favicon.png"
+      rel="shortcut icon"
+      type="image/png"
+    />
+    <meta
+      content="noindex"
+      name="robots"
+    />
   </Head>
   <body>
     <Main />
