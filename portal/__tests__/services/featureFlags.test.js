@@ -3,6 +3,9 @@ import {
   storeFeatureFlagsFromQuery,
 } from "../../src/services/featureFlags";
 import Cookies from "js-cookie";
+import tracker from "../../src/services/tracker";
+
+jest.mock("../../src/services/tracker");
 
 describe("isFeatureEnabled", () => {
   afterEach(() => {
@@ -57,6 +60,12 @@ describe("storeFeatureFlagsFromQuery", () => {
       storeFeatureFlagsFromQuery();
 
       expect(cookiesSet).not.toHaveBeenCalled();
+    });
+
+    it("doesn't track an event", () => {
+      storeFeatureFlagsFromQuery();
+
+      expect(tracker.trackEvent).not.toHaveBeenCalled();
     });
   });
 
@@ -117,6 +126,17 @@ describe("storeFeatureFlagsFromQuery", () => {
         }),
         expect.anything()
       );
+    });
+
+    it("tracks an event", () => {
+      process.env.featureFlags = { flagA: false, flagB: true };
+      const searchParams = new URLSearchParams("_ff=flagA:true");
+
+      storeFeatureFlagsFromQuery(searchParams);
+
+      expect(tracker.trackEvent).toHaveBeenCalledWith("manual_feature_flags", {
+        flags: [["flagA", "true"]],
+      });
     });
   });
 

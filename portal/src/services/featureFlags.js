@@ -2,6 +2,7 @@
  * @file Methods for checking and setting feature flags
  */
 import Cookies from "js-cookie";
+import tracker from "./tracker";
 
 const featureFlagsParamName = "_ff";
 
@@ -61,8 +62,6 @@ export function storeFeatureFlagsFromQuery(searchParams) {
   const paramValue = searchParams.get(featureFlagsParamName);
   if (!paramValue) return;
 
-  // TODO: Log the toggling of flags to New Relic to monitor for potential abuse
-
   // Convert the query string into array of key/value pairs
   // a:valA;b:valB => [ [a, valA], [b, valB] ]
   const flags = paramValue.split(";").map((value) => value.split(":"));
@@ -75,6 +74,9 @@ export function storeFeatureFlagsFromQuery(searchParams) {
     .forEach(([flagName, flagValue]) => {
       updateCookieWithFlag(flagName, flagValue);
     });
+
+  // Track when someone sets feature flag(s) through their browser
+  tracker.trackEvent("manual_feature_flags", { flags });
 }
 
 /**

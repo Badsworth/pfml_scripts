@@ -37,4 +37,17 @@ function setCurrentRouteName(routeName) {
   }
 }
 
-export default { noticeError, setCurrentRouteName };
+/**
+ * Track a page action or event
+ * @see https://docs.newrelic.com/docs/browser/new-relic-browser/browser-agent-spa-api/add-page-action
+ * @param {string} name - Name or category of the action
+ * @param {object} [customAttributes] - name/value pairs representing custom attributes
+ */
+function trackEvent(name, customAttributes) {
+  if (newrelicReady()) {
+    newrelic.addPageAction(name, customAttributes);
+  }
+  // TODO: Send the event to Google Analytics as well (https://lwd.atlassian.net/browse/CP-433)
+}
+
+export default { noticeError, setCurrentRouteName, trackEvent };
