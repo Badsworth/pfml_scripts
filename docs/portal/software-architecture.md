@@ -43,3 +43,14 @@ Examples of event hooks include [useHandleInputChange](/portal/src/hooks/useHand
 ## Dependencies
 
 To help prevent technical debt, when adding new modules, consider adding assertions to [dependencies.test.js](/portal/__tests__/dependencies.test.js) to restrict where the module is used, or what dependencies the new module is allowed to have.
+
+## Services
+
+Services expose functionality that offers a coherent feature / addresses a business need (e.g. `services/featureFlags.js`). A rule of thumb to use is that services are things that could conceptually be turned into separate microservices. In practice, some of these will actually be served by external services and others will not. Examples include caching, translation/localization, validation, authentication, and any APIs. For example, in our codebase we already have these services:
+
+- Error monitoring: uses external New Relic API, so this is an "actual" service
+- Feature flags: these don't use an external APIs in this implementation but instead just uses the browser APIs (cookies) to accomplish the task. We could conceivably refactor this module to rely on an external API though. For example [LaunchDarkly](https://launchdarkly.com/) is precisely a product that offers "feature flags as a service" but for now we're just using a homegrown "feature flags service")
+
+## Utilities
+
+Utilities (`utils`) on the other hand are lightweight functions that are useful but don't really offer any business value on their own. They often fall into the category of filling in gaps of the programming language like manipulating strings or other simple data structures that the language itself doesn't offer functions for, and for which we don't feel the need to introduce a separate library/dependency for. A rule of thumb to use for utilities is that they should be generally small and standalone i.e. they shouldn't have any non-trivial dependencies (like external APIs or large libraries).

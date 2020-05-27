@@ -117,25 +117,25 @@ Runs the project's test suite in watch mode. By default, this will attempt to id
 
 ## Directory Structure
 
-Below is an abbreviated representation of our directory structure, pointing out some of the main files to get you started:
+Below is an abbreviated representation of our directory structure, pointing out some of the main files to get you started. Refer to [`software-architecture.md`](../docs/portal/software-architecture.md) for more context.
 
 ```
+├── .storybook          Storybook configuration and general stories
+├── __mocks__           Dependency mocks used by test suites
 ├── __tests__           Test suites
-├── config
-|   └── featureFlags.js Default feature flag values for each environment
+├── config              Environment variables and feature flags
 ├── public              Static assets
 ├── src                 Source code
-|   ├── actions
-|   |   └── index.js    Redux actions
+│   ├── api             API request modules
 │   ├── components
+│   ├── hooks           Custom React hooks
 │   ├── locales         Localization files
-│   │   └── i18n.js     Internationalization setup
+│   ├── models          Data models
 |   ├── pages
 │   │   ├── _app.js     Main layout applied to all pages
 │   │   └── index.js    Homepage
-|   ├── reducers        Redux reducers
+|   ├── services
 |   ├── utils           utility functions
-|   ├── store.js        Redux store initialization method
 ├── styles
 │   └── app.scss        Main stylesheet
 └── next.config.js      Build process config
