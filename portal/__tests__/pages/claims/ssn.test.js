@@ -38,12 +38,7 @@ describe("Ssn", () => {
   });
 
   it("redirects to leaveType if unrestrictedClaimFlow is enabled", () => {
-    process.env = {
-      ...process.env,
-      featureFlags: {
-        unrestrictedClaimFlow: true,
-      },
-    };
+    process.env.featureFlags = { unrestrictedClaimFlow: true };
     wrapper = render();
 
     expect(wrapper.find("QuestionPage").prop("nextPage")).toEqual(

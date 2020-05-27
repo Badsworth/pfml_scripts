@@ -35,6 +35,11 @@ const dependencyRules = [
     description: "does not depend on any components or application logic",
     forbiddenDependencies: [
       {
+        moduleOrDirRelPath: "js-cookie",
+        reason:
+          "Models should not have any dependencies. Consider moving state management logic to the app level, or check for accidental dependencies.",
+      },
+      {
         moduleOrDirRelPath: "next/router",
         reason:
           "Models should not have any dependencies. Consider moving routing logic to the app or page level, or check for accidental dependencies.",

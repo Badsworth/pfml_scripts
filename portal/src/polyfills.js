@@ -11,4 +11,5 @@
 // a dependency of Amplify and breaks IE11 when not polyfilled
 import "core-js/features/typed-array/from";
 
+// URLSearchParams
 import "core-js/features/url-search-params";

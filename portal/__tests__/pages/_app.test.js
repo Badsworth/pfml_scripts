@@ -40,6 +40,29 @@ describe("App", () => {
   const scrollToSpy = jest.fn();
   global.scrollTo = scrollToSpy;
 
+  beforeEach(() => {
+    // Enable rendering of the site
+    process.env.featureFlags = {
+      pfmlTerriyay: true,
+    };
+  });
+
+  describe("when the 'pfmlTerriyay' feature flag is disabled", () => {
+    it("doesn't render the site", () => {
+      process.env.featureFlags = {
+        pfmlTerriyay: false,
+      };
+
+      const { wrapper } = render();
+
+      expect(wrapper).toMatchInlineSnapshot(`
+        <code>
+          Hello world (◕‿◕)
+        </code>
+      `);
+    });
+  });
+
   describe("when a user IS authenticated", () => {
     let wrapper;
 

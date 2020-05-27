@@ -8,6 +8,12 @@ const flagsConfig = {
   // Environments will fallback to these default values.
   defaults: {
     example: false,
+    // When this flag is enabled, the user can see the site.
+    // To immediately hide the site from people who previously overrode this
+    // flag in a cookie, you can rename this flag to something else (and also
+    // update the reference to it in _app.js), but try to keep it prefixed with pfml.
+    // https://lwd.atlassian.net/browse/CP-459
+    pfmlTerriyay: false,
     // When unrestrictedClaimFlow is enabled, a user can proceed through the
     // full claim flow. This is in place to prevent pilot users from going to
     // screens that we're not yet ready to pilot.
@@ -18,6 +24,7 @@ const flagsConfig = {
   // environment config files.
   development: {
     example: true,
+    pfmlTerriyay: true,
     unrestrictedClaimFlow: true,
   },
   test: {

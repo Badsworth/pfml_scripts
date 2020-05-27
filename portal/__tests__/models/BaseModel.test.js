@@ -37,7 +37,7 @@ describe("BaseModel", () => {
 
     describe("when in production", () => {
       beforeEach(() => {
-        process.env = { ...process.env, NODE_ENV: "production" };
+        process.env.NODE_ENV = "production";
       });
 
       it("ignores attributes that aren't defined in default attributes object", () => {
@@ -58,6 +58,10 @@ describe("BaseModel", () => {
     });
 
     describe("when in development", () => {
+      beforeEach(() => {
+        process.env.NODE_ENV = "development";
+      });
+
       it("throws an exception when calling constructor with attributes that aren't defined in default attributes object", () => {
         jest.spyOn(console, "warn").mockImplementationOnce(jest.fn());
 

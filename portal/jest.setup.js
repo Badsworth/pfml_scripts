@@ -34,7 +34,7 @@ global.newrelic = {
 /**
  * Cleanup & setup
  */
-const initialProcessEnv = process.env;
+const initialProcessEnv = Object.assign({}, process.env);
 
 beforeEach(() => {
   // Reset our environment variables before each test run

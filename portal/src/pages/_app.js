@@ -13,8 +13,10 @@ import Header from "../components/Header";
 import { NetworkError } from "../errors";
 import PropTypes from "prop-types";
 import Spinner from "../components/Spinner";
+import { isFeatureEnabled } from "../services/featureFlags";
 import tracker from "../services/tracker";
 import useCollectionState from "../hooks/useCollectionState";
+import useFeatureFlagsFromQueryEffect from "../hooks/useFeatureFlagsFromQueryEffect";
 import { useRouter } from "next/router";
 import usersApi from "../api/usersApi";
 
@@ -34,6 +36,7 @@ export const App = ({
 }) => {
   const { t } = useTranslation();
   const router = useRouter();
+  useFeatureFlagsFromQueryEffect();
 
   // State representing currently visible errors
   const [appErrors, setAppErrors] = useState();
@@ -198,6 +201,13 @@ export const App = ({
       </section>
     );
   };
+
+  // Prevent site from being rendered if this feature flag isn't enabled.
+  // We render a vague but recognizable message that serves as an indicator
+  // to folks who are aware, that the site is working as expected and they
+  // need to enable the feature flag.
+  // See: https://lwd.atlassian.net/browse/CP-459
+  if (!isFeatureEnabled("pfmlTerriyay")) return <code>Hello world (◕‿◕)</code>;
 
   return (
     <ErrorBoundary>

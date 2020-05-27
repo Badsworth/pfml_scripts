@@ -3,7 +3,7 @@ import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
 import User from "../../models/User";
-import isFeatureEnabled from "../../utils/isFeatureEnabled";
+import { isFeatureEnabled } from "../../services/featureFlags";
 import routeWithParams from "../../utils/routeWithParams";
 import routes from "../../routes";
 import useFormState from "../../hooks/useFormState";
