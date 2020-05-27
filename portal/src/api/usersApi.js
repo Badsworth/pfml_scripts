@@ -19,21 +19,6 @@ const mockApiResponseFields = {
 };
 
 /**
- * Mock a POST /users request and return a "success" response
- * @param {User} user User properties
- * @returns {Promise<UsersApiResult>}
- */
-async function createUser(user) {
-  // todo: make a POST request to the api
-  // Merge in additional fields that the API would populate
-  const response = Object.assign({}, user, mockApiResponseFields);
-  return Promise.resolve({
-    success: true,
-    user: new User(response),
-  });
-}
-
-/**
  * Get the currently authenticated user
  * @returns {Promise<UsersApiResult>}
  */
@@ -68,7 +53,6 @@ async function updateUser(user) {
 }
 
 export default {
-  createUser,
   getCurrentUser,
   updateUser,
 };
