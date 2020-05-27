@@ -133,9 +133,9 @@ class Employee(Base):
     __tablename__ = "employee"
     employee_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
     tax_identifier = Column(Text)
-    first_name = Column(Text)
+    first_name = Column(Text, nullable=False)
     middle_name = Column(Text)
-    last_name = Column(Text)
+    last_name = Column(Text, nullable=False)
     other_name = Column(Text)
     email_address = Column(Text)
     phone_number = Column(Text)

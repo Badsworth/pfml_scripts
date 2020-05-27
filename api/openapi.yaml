@@ -531,16 +531,24 @@ components:
         first_name:
           type: string
           example: "Jane"
+          nullable: false
+          minLength: 1
         middle_name:
           type: string
           example: "Alice"
+          nullable: false
+          minLength: 1
         last_name:
           type: string
           example: "Doe"
-        date_of_birth:
+          nullable: false
+          minLength: 1
+        email_address:
           type: string
-          format: date
-          example: "1980-12-31"
+          format: email
+          example: "j.a.doe@gmail.com"
+          nullable: false
+          minLength: 1
 
     EmployeeToSearch:
       type: object
@@ -572,15 +580,24 @@ components:
           type: string
           nullable: true
           example: "Alice"
+        other_name:
+          type: string
+          nullable: true
+          example: "Marie"
+        email_address:
+          type: string
+          format: email
+          nullable: true
+          example: "jdoe@gmail.com"
         last_name:
           type: string
           example: "Doe"
+        phone_number:
+          type: string
+          nullable: true
+          example: "123-456-7890"
         tax_identifier:
           $ref: '#/components/schemas/SsnItin'
-        date_of_birth:
-          type: string
-          format: date
-          example: "1980-12-31"
 
     Employers:
       type: object

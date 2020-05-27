@@ -22,7 +22,11 @@ def employees_patch(employee_id):
     """ this endpoint will allow an employee's personal information to be updated """
     body = connexion.request.json
     with app.db_session() as db_session:
-        db_session.query(Employee).filter(Employee.employee_id == employee_id).update(body)
+        updated_count = (
+            db_session.query(Employee).filter(Employee.employee_id == employee_id).update(body)
+        )
+        if updated_count == 0:
+            raise NotFound()
         updated_employee = db_session.query(Employee).get(employee_id)
     return employee_response(updated_employee)
 
