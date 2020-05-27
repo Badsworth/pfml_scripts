@@ -32,7 +32,7 @@ module "pfml" {
   #       For now, we're relying on the API Gateway-provided URL which prepends
   #       the "$ENV_NAME" stage.
   forwarded_path    = "'/$ENV_NAME/api/'"
-  nlb_name          = "${local.vpc}-nlb"
-  nlb_vpc_link_name = "${local.vpc}-nlb-vpc-link"
+  nlb_name          = "\${local.vpc}-nlb"
+  nlb_vpc_link_name = "\${local.vpc}-nlb-vpc-link"
   nlb_port          = CHOOSE_UNIQUE_PROXY_PORT_FOR_ENVIRONMENT
 }

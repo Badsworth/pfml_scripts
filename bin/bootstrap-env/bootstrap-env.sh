@@ -35,22 +35,23 @@ COMPONENT=$2
 
 SCRIPT=$(realpath "$0")
 SCRIPT_PATH=$(dirname "$SCRIPT")
-INFRA_PATH=$SCRIPT_PATH/../../infra/
+INFRA_PATH=$SCRIPT_PATH/../../infra
+
+source $SCRIPT_PATH/../shab
 
 # Updates the provided component by copying the template
 # into the appropriate infra/ directory and replacing $ENV_NAME.
 #
 update_component () {
     COMPONENT_TEMPLATE_PATH=$SCRIPT_PATH/$COMPONENT
-    COMPONENT_PATH=$INFRA_PATH/$COMPONENT/environments/$ENV_NAME/
+    COMPONENT_PATH=$INFRA_PATH/$COMPONENT/environments/$ENV_NAME
 
     if ! [ -d $COMPONENT_TEMPLATE_PATH ]; then
         echo "'$COMPONENT' template was not found in $SCRIPT_PATH; exiting."
         exit 1
     fi
 
-    cp -r $SCRIPT_PATH/$COMPONENT $COMPONENT_PATH
-    find $COMPONENT_PATH -type f -name "*.tf" -exec sed -i '' -e "s/\$ENV_NAME/$ENV_NAME/g" {} +
+    find "$SCRIPT_PATH/$COMPONENT" -type f -name "*.tf" | while read -r file; do shab "$file" > $COMPONENT_PATH/${file#"$SCRIPT_PATH/$COMPONENT"}; done
 }
 
 update_component

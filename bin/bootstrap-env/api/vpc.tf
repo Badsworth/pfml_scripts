@@ -1,10 +1,10 @@
 locals {
-  vpc = "$ENV_NAME" == "prod" ? "prod" : "nonprod"
+  vpc = $([ "$ENV_NAME" == "prod" ] && echo '"prod"' || echo '"nonprod"')
 }
 
 data "aws_vpc" "vpc" {
   tags = {
-    "aws:cloudformation:stack-name" = "pfml-${local.vpc}"
+    "aws:cloudformation:stack-name" = "pfml-\${local.vpc}"
   }
 }
 
