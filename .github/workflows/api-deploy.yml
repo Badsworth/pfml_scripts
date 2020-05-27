@@ -14,8 +14,7 @@ on:
       - deploy/api/prod
     paths:
       - api/**
-      - infra/api/template/**
-      - infra/api/environments/test/**
+      - infra/api/**
 
 env:
   working-dir: ./api

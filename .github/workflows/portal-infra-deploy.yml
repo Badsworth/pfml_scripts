@@ -7,7 +7,7 @@ on:
       - deploy/portal/stage
       - deploy/portal/prod
     paths:
-      - infra/portal/template/**
+      - infra/portal/**
 
 env:
   terraformVersion: 0.12.24
