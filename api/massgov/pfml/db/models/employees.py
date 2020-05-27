@@ -228,6 +228,7 @@ class User(Base):
     email_address = Column(Text)
     status_type = Column(Integer, ForeignKey("lk_status.status_type"))
     status = relationship("Status", backref="users")
+    consented_to_data_sharing = Column(Boolean, default=False, nullable=False)
 
 
 class UserRole(Base):

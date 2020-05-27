@@ -10,7 +10,11 @@ pytestmark = pytest.mark.integration
 
 @pytest.fixture
 def user_post_request_body():
-    return {"auth_id": str(uuid.uuid4()), "email_address": fake.fake.email()}
+    return {
+        "auth_id": str(uuid.uuid4()),
+        "email_address": fake.fake.email(),
+        "consented_to_data_sharing": True,
+    }
 
 
 def test_users_post(client, user_post_request_body):
@@ -25,6 +29,7 @@ def test_users_post(client, user_post_request_body):
         auth_id=user_post_request_body["auth_id"],
         email_address=user_post_request_body["email_address"],
         status="unverified",
+        consented_to_data_sharing=user_post_request_body["consented_to_data_sharing"],
     )
 
 

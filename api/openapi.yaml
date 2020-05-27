@@ -494,7 +494,10 @@ components:
           type: string
           format: email
           example: "janedoe@example.com"
-      required: ["email_address", "auth_id"]
+        consented_to_data_sharing:
+          type: boolean
+          example: true
+      required: ["email_address", "auth_id", "consented_to_data_sharing"]
 
     User:
       type: object
@@ -517,6 +520,10 @@ components:
             - verified
           default: unverified
           example: unverified
+        consented_to_data_sharing:
+          type: boolean
+          default: false
+          example: true
 
     EmployeeToUpdate:
       type: object

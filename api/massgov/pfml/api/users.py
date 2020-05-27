@@ -34,7 +34,12 @@ def users_post():
     with app.db_session() as db_session:
         status = get_or_make_status(db_session, UserStatusDescription.unverified)
 
-        u = User(active_directory_id=body.auth_id, status=status, email_address=body.email_address)
+        u = User(
+            active_directory_id=body.auth_id,
+            status=status,
+            email_address=body.email_address,
+            consented_to_data_sharing=body.consented_to_data_sharing,
+        )
 
         logger.info("creating user", extra={"user_id": u.user_id})
 
@@ -53,6 +58,7 @@ def users_post():
 class UserCreateRequest:
     auth_id: str
     email_address: str
+    consented_to_data_sharing: bool
 
 
 @dataclass
@@ -61,6 +67,7 @@ class UserResponse:
     auth_id: Optional[str]
     status: Optional[str]
     email_address: Optional[str]
+    consented_to_data_sharing: Optional[bool]
 
 
 def user_response(user: User) -> UserResponse:
@@ -69,6 +76,7 @@ def user_response(user: User) -> UserResponse:
         auth_id=user.active_directory_id,
         status=user.status.status_description,
         email_address=user.email_address,
+        consented_to_data_sharing=user.consented_to_data_sharing,
     )
 
 
