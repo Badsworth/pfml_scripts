@@ -5,7 +5,7 @@
 import os
 from urllib.parse import urlparse
 
-from smart_open import s3_iter_bucket, smart_open
+import smart_open
 
 
 def is_s3_path(path):
@@ -25,12 +25,12 @@ def list_files(path):
         prefix = parts.path.lstrip("/")
         files = []
 
-        for key, _content in s3_iter_bucket(bucket_name, prefix=prefix):
+        for key, _content in smart_open.s3_iter_bucket(bucket_name, prefix=prefix):
             files.append(get_file_name(key))
         return files
     return os.listdir(path)
 
 
 def read_file_lines(path):
-    stream = smart_open(path, "r", encoding="utf-8")
+    stream = smart_open.open(path, "r", encoding="utf-8")
     return map(lambda line: line.rstrip(), stream)
