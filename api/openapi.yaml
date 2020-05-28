@@ -199,7 +199,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Employers"
+                $ref: "#/components/schemas/EmployerResponse"
         "404":
           $ref: "#/components/responses/NotFound"
 
@@ -220,6 +220,7 @@ paths:
           in: query
           schema:
             type: string
+            format: date
           description: Quarter in which wages were earned
           required: false
       responses:
@@ -228,7 +229,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/WagesAndContributionsList"
+                $ref: "#/components/schemas/WagesAndContributionsResponseList"
         "404":
           $ref: "#/components/responses/NotFound"
 
@@ -599,7 +600,7 @@ components:
         tax_identifier:
           $ref: '#/components/schemas/SsnItin'
 
-    Employers:
+    EmployerResponse:
       type: object
       properties:
         employer_id:
@@ -612,12 +613,18 @@ components:
         employer_dba:
           type: string
           example: "The Super Store"
+      additionalProperties: false
+      required:
+        - employer_id
+        - employer_fein
+        - employer_dba
 
-    WagesAndContributions:
+    WagesAndContributionsResponse:
       type: object
       properties:
         filing_period:
           type: string
+          format: date
           example: "2019-03-31"
         employee_id:
           type: string
@@ -633,24 +640,48 @@ components:
         is_opted_in:
           type: boolean
           example: true
-        employer_ytd_wages:
-          type: integer
-          minimum: 0
-          example: 25000
-        employer_qtr_wages:
+        employee_ytd_wages:
           type: number
-          example: 5000
+          minimum: 0
+          example: 25000.12
+        employee_qtr_wages:
+          type: number
+          minimum: 0
+          example: 5000.12
+        employee_med_contribution:
+          type: number
+          minimum: 0
+          example: 2000.12
         employer_med_contribution:
           type: number
-          example: 2000
+          minimum: 0
+          example: 2000.12
+        employee_fam_contribution:
+          type: number
+          minimum: 0
+          example: 2000.12
         employer_fam_contribution:
           type: number
-          example: 2000
+          minimum: 0
+          example: 2000.12
+      additionalProperties: false
+      required:
+        - filing_period
+        - employee_id
+        - employer_id
+        - is_independent_contractor
+        - is_opted_in
+        - employee_ytd_wages
+        - employee_qtr_wages
+        - employee_med_contribution
+        - employer_med_contribution
+        - employee_fam_contribution
+        - employer_fam_contribution
 
-    WagesAndContributionsList:
+    WagesAndContributionsResponseList:
       type: array
       items:
-        $ref: "#/components/schemas/WagesAndContributions"
+        $ref: "#/components/schemas/WagesAndContributionsResponse"
 
     EligibilityDetermination:
       type: object

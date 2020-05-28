@@ -25,6 +25,7 @@ Session = scoped_session(lambda: get_db_session(), scopefunc=lambda: get_db_sess
 
 
 class Generators:
+    AccountKey = factory.Sequence(lambda n: "%011d" % n)
     Tin = factory.Sequence(lambda n: "000%06d" % n)
     Fein = Tin
     Money = factory.LazyFunction(lambda: round(random.uniform(0, 50000), 2))
@@ -85,6 +86,7 @@ class WagesAndContributionsFactory(BaseFactory):
         model = models.WagesAndContributions
 
     wage_and_contribution_id = factory.Faker("uuid4")
+    account_key = Generators.AccountKey
     filing_period = factory.Faker("date")
     is_independent_contractor = False
     is_opted_in = False
