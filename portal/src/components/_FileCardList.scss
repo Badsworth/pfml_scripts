@@ -1,0 +1,7 @@
+/* Set opacity:0 and move this input off screen. This is preferred over hidden or
+ * display:none because screen readers will still consider it interactive this way */
+.c-file-card-list__input {
+  opacity: 0;
+  position: absolute;
+  left: -9999px;
+}

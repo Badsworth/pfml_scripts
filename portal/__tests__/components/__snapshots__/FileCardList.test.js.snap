@@ -1,0 +1,51 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`FileCardList with no files selected renders an empty list 1`] = `
+<div>
+  <ul
+    className="usa-list usa-list--unstyled"
+  />
+  <label
+    className="usa-button usa-button--outline"
+  >
+    Choose a document
+    <input
+      accept="image/*,.pdf"
+      className="c-file-card-list__input"
+      multiple={true}
+      onChange={[Function]}
+      type="file"
+    />
+  </label>
+</div>
+`;
+
+exports[`FileCardList with previously-selected files renders a list of the files 1`] = `
+<div>
+  <ul
+    className="usa-list usa-list--unstyled"
+  >
+    <li
+      key="File1"
+    >
+      <FileCard
+        file={File {}}
+        heading="Document 1"
+        onRemoveClick={[Function]}
+      />
+    </li>
+  </ul>
+  <label
+    className="usa-button usa-button--outline"
+  >
+    Choose another document
+    <input
+      accept="image/*,.pdf"
+      className="c-file-card-list__input"
+      multiple={true}
+      onChange={[Function]}
+      type="file"
+    />
+  </label>
+</div>
+`;

@@ -19,7 +19,7 @@ exports[`FileCard renders 1`] = `
     <div
       className="c-file-card__name padding-bottom-2 margin-bottom-2 margin-top-0 border-bottom-2px border-base-lighter"
     >
-      foo.jpg
+      foo.png
     </div>
     <button
       className="usa-button usa-button--unstyled text-error hover:text-error-dark active:text-error-darker"

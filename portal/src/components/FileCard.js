@@ -10,6 +10,7 @@ import { useTranslation } from "../locales/i18n";
 const FileCard = (props) => {
   const { t } = useTranslation();
   const heading = props.heading;
+  const file = props.file;
   const removeButton = t("components.fileCard.removeButton");
 
   const cardClasses =
@@ -19,12 +20,12 @@ const FileCard = (props) => {
 
   return (
     <div className={cardClasses}>
-      <Thumbnail file={props.file} />
+      <Thumbnail file={file} />
       <div className="c-file-card__content">
         <Heading level="2" size="3">
           {heading}
         </Heading>
-        <div className={filenameClasses}>{props.filename}</div>
+        <div className={filenameClasses}>{file.name}</div>
         <button
           // a custom class to set the active color?
           className="usa-button usa-button--unstyled text-error hover:text-error-dark active:text-error-darker"
@@ -41,13 +42,16 @@ const FileCard = (props) => {
 FileCard.propTypes = {
   /** The heading displayed for this file */
   heading: PropTypes.string.isRequired,
-  /** The file's filename */
-  filename: PropTypes.string.isRequired,
   /**
-   * File object obtained from an input HTML element. We use a Blob here instead of File because
-   * File isn't support in IE. Read more: https://developer.mozilla.org/en-US/docs/Web/API/File
+   * Note that this should actually be a File instance. However the File class is a
+   * browser feature, not a Node.js feature, and so it isn't available for server-side
+   * rendering. For that reason we specify a custom shape here but in reality we expect
+   * a File. See [File docs]( https://developer.mozilla.org/en-US/docs/Web/API/File).
    */
-  file: PropTypes.instanceOf(Blob).isRequired,
+  file: PropTypes.shape({
+    name: PropTypes.string.isRequired,
+    type: PropTypes.string.isRequired,
+  }).isRequired,
   /** Event handler for when the "Remove" button is clicked. We'll pass it the `id` prop above. */
   onRemoveClick: PropTypes.func.isRequired,
 };
