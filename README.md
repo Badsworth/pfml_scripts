@@ -2,6 +2,11 @@
 
 This is the top level of the monorepo for the Mass PFML project, including web portal and API. View the `README` in each child directory for information specific to each system component.
 
+**You may also be interested in:**
+
+- [`docs/`](./docs/)
+- [Environments](https://lwd.atlassian.net/wiki/spaces/DD/pages/246612440/Environments)
+
 ## Installation
 
 When initially setting up the project, install packages from the repo root to enable git hooks and linting.

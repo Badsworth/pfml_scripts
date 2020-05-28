@@ -9,10 +9,6 @@ This is a [Next.js](https://nextjs.org/docs)-powered React app to bootstrap the 
 - [Portal software architecture design](../docs/portal/software-architecture.md)
 - [Additional Portal-specific documentation](../docs/portal/)
 
-## Environments
-
-- [Test](https://d1ah9hpoapx4f1.cloudfront.net/)
-
 ## Prerequisites
 
 Node v10 (or greater)
