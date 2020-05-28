@@ -37,6 +37,6 @@ module "api" {
   nlb_name                              = "\${local.vpc}-nlb"
   nlb_port                              = UNIQUE_NLB_PORT_RESERVED_IN_ENV_SHARED
   cors_origins                          = [API_DOCS_DOMAIN, PORTAL_DOMAIN]
-  dor_import_lambda_build_s3_key        = var.dor_lambda_artifact_s3_key
-  dor_import_lambda_dependencies_s3_key = var.dor_import_lambda_dependencies_s3_key
+  dor_import_lambda_build_s3_key        = local.dor_lambda_artifact_s3_key
+  dor_import_lambda_dependencies_s3_key = local.dor_import_lambda_dependencies_s3_key
 }
