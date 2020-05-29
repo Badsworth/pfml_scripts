@@ -85,6 +85,10 @@ Check out [this post](https://medium.com/webpack/webpack-bits-getting-the-most-o
 
 Run the UI component explorer sandbox, [Storybook](https://storybook.js.org/). A new browser window should automatically open with the explorer loaded once this script has completed running. It may take a minute or so to load on initial run.
 
+### `npm run docs:build`
+
+Exports the Storybook site as a static HTML site.
+
 ### `npm test`
 
 Runs the project's [test suite](../docs/portal/tests.md), for unit tests on React components and JS files.

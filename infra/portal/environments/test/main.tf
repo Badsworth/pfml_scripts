@@ -20,6 +20,11 @@ terraform {
   }
 }
 
+locals {
+  app_name         = "pfml"
+  environment_name = "test"
+}
+
 output "cloudfront_distribution_id" {
   description = "Cloudfront distribution id for portal environment. Used for cache invalidation in github workflow."
   value       = module.massgov_pfml.cloudfront_distribution_id
@@ -33,6 +38,10 @@ output "cognito_user_pool_client_id" {
   value = module.massgov_pfml.cognito_user_pool_client_id
 }
 
+output "storybook_url" {
+  value = aws_s3_bucket.storybook.website_endpoint
+}
+
 module "massgov_pfml" {
   # Once you have a domain name, update the following variables:
   # domain = "pfml-test.eolwd.mass.gov"
@@ -41,6 +50,6 @@ module "massgov_pfml" {
 
   # You probably don't need to change the variables below:
   source                 = "../../template"
-  environment_name       = "test"
+  environment_name       = local.environment_name
   cloudfront_origin_path = local.cloudfront_origin_path
 }

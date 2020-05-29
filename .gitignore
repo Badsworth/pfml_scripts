@@ -7,8 +7,9 @@ node_modules/
 # Next.js build output
 .next/
 
-# Next.js static export
+# Next.js and Storybook static export
 out/
+out-storybook/
 
 # Mac filesystem file
 .DS_Store

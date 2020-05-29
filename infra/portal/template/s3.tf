@@ -1,3 +1,7 @@
+#
+# S3 resources for hosting the Portal website
+#
+
 resource "aws_s3_bucket" "portal_web" {
   bucket = "massgov-${local.app_name}-${var.environment_name}-portal-site-builds"
   website {
