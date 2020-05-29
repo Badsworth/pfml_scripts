@@ -17,24 +17,6 @@ These steps are required before running terraform or test commands locally on yo
 
 Since we manage AWS resources using Terraform, AWS credentials are needed to run terraform commands.
 
-#### Nava Sandbox
-
-For the Nava AWS sandbox, you'll need a `~/.aws/credentials` file with the following stanza:
-
-```yml
-[nava-internal]
-aws_access_key_id = <access key>
-aws_secret_access_key = <secret key>
-```
-
-You can retrieve these credentials by going to the [AWS Console](https://console.aws.amazon.com/iam/home?#/security_credentials) and creating a new access key.
-
-You'll also need to set your AWS_PROFILE environment variable to `nava-internal`. This can be added to your `.bashrc`/`.zshrc` or done on a case-by-case basis with:
-
-```
-export AWS_PROFILE=nava-internal
-```
-
 #### EOTSS/PFML AWS Account
 
 For the EOTSS-provided PFML account, access to the AWS CLI is federated by Centrify. To work with this, Centrify has a python CLI tool for logging in and generating AWS access keys.
@@ -266,7 +248,9 @@ that they can be run on Github Actions with the right read/write permissions. Th
 └── env-shared          🏡 infrastructure for an environment, shared across applications e.g. an API Gateway and ECS cluster.
     └── template        🏗  shared template for an env
     └── environments
-        └── sandbox     ⛱  prototype env
+        └── test        ⛱  test env, deployed on every merged commit.
+        └── stage       ⛱  staging env, deployed on every push to deploy/api/stage
+        └── prod        ⛱  production env, deployed on every push to deploy/api/prod
 
 └── portal              🏡 infrastructure for a PFML portal environment
     └── config          🚪 environment variables for configuring the Portal
@@ -284,12 +268,12 @@ Each environment for a component has a `.tfstate` file that is stored in S3 and 
 
 ```
 S3
-└── massgov-pfml-global
+└── massgov-pfml-aws-account-mgmt
     └── terraform
         └── aws.tfstate
-└── massgov-pfml-sandbox
+└── massgov-pfml-test-env-mgmt
     └── terraform
-        └── vpc.tfstate        # will be env-shared.tfstate in the PFML AWS account
-        └── terraform.tfstate  # will be portal.tfstate in the PFML AWS account
+        └── env-shared.tfstate
+        └── portal.tfstate
         └── api.tfstate
 ```
