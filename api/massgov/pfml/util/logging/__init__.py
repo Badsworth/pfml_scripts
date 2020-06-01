@@ -12,13 +12,15 @@ from . import formatters
 
 LOGGING = {
     "version": 1,
-    "disable_existing_loggers": True,
+    "disable_existing_loggers": False,
     "formatters": {"json": {"()": formatters.JsonFormatter},},
-    "handlers": {
-        "console": {"level": "DEBUG", "class": "logging.StreamHandler", "formatter": "json"},
+    "handlers": {"console": {"class": "logging.StreamHandler", "formatter": "json"},},
+    "root": {"handlers": ["console"], "level": "WARN"},
+    "loggers": {
+        "alembic": {"handlers": ["console"], "level": "INFO", "propagate": False},
+        "massgov.pfml": {"handlers": ["console"], "level": "INFO", "propagate": False},
+        "werkzeug": {"handlers": ["console"], "level": "INFO", "propagate": False},
     },
-    "root": {"handlers": ["console"], "level": "INFO",},
-    "loggers": {"massgov.pfml": {"handlers": ["console"], "level": "INFO", "propagate": False,},},
 }
 
 
