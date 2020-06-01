@@ -17,8 +17,7 @@ import withClaim from "../../hoc/withClaim";
 export const NotifiedEmployer = (props) => {
   const { t } = useTranslation();
   const { formState, updateFields } = useFormState(props.claim);
-  // TODO: use nested fields
-  const { employer_notified } = formState;
+  const { leave_details } = formState;
   const handleInputChange = useHandleInputChange(updateFields);
 
   const handleSave = useHandleSave(
@@ -36,19 +35,19 @@ export const NotifiedEmployer = (props) => {
       <InputChoiceGroup
         choices={[
           {
-            checked: employer_notified === true,
+            checked: leave_details.employer_notified === true,
             label: t("pages.claimsNotifiedEmployer.choiceYes"),
             value: "true",
           },
           {
-            checked: employer_notified === false,
+            checked: leave_details.employer_notified === false,
             label: t("pages.claimsNotifiedEmployer.choiceNo"),
             value: "false",
           },
         ]}
         label={t("pages.claimsNotifiedEmployer.sectionLabel")}
         hint={t("pages.claimsNotifiedEmployer.hint")}
-        name="employer_notified"
+        name="leave_details.employer_notified"
         onChange={handleInputChange}
         type="radio"
       />

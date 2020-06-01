@@ -18,6 +18,7 @@ export const LeaveDates = (props) => {
 
   const handleInputChange = useHandleInputChange(updateFields);
   // TODO: use nested fields
+  // https://lwd.atlassian.net/browse/CP-480
   const { leave_start_date, leave_end_date } = formState;
 
   const handleSave = useHandleSave(

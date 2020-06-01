@@ -6,8 +6,12 @@ class Claim extends BaseModel {
       application_id: null,
       created_at: null,
       avg_weekly_hours_worked: null,
+      leave_details: {
+        employer_notified: null,
+      },
+      // TODO: Move these into the nested format the API expects
+      // https://lwd.atlassian.net/browse/CP-480
       duration_type: null,
-      employer_notified: null,
       hours_off_needed: null,
       leave_type: null,
       leave_start_date: null,

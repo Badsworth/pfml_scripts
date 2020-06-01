@@ -31,8 +31,10 @@ describe("ClaimsApi", () => {
               "avg_weekly_hours_worked": null,
               "created_at": null,
               "duration_type": null,
-              "employer_notified": null,
               "hours_off_needed": null,
+              "leave_details": Object {
+                "employer_notified": null,
+              },
               "leave_end_date": null,
               "leave_start_date": null,
               "leave_type": null,
@@ -80,8 +82,10 @@ describe("ClaimsApi", () => {
           "avg_weekly_hours_worked": null,
           "created_at": null,
           "duration_type": "type",
-          "employer_notified": null,
           "hours_off_needed": null,
+          "leave_details": Object {
+            "employer_notified": null,
+          },
           "leave_end_date": null,
           "leave_start_date": null,
           "leave_type": null,

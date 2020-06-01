@@ -18,6 +18,7 @@ export const Duration = (props) => {
   const { t } = useTranslation();
   const { formState, updateFields, removeField } = useFormState(props.claim);
   // TODO: use nested fields
+  // https://lwd.atlassian.net/browse/CP-480
   const {
     avg_weekly_hours_worked,
     duration_type,

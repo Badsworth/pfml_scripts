@@ -17,6 +17,7 @@ export const LeaveType = (props) => {
 
   const handleInputChange = useHandleInputChange(updateFields);
   // TODO: use nested field
+  // https://lwd.atlassian.net/browse/CP-480
   const { leave_type } = formState;
   const handleSave = useHandleSave(
     (formState) => props.claimsApi.updateClaim(new Claim(formState)),

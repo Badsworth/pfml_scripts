@@ -32,25 +32,39 @@ describe("useFormState", () => {
   });
 
   describe("updateFields", () => {
-    it("updates fields in formState", () => {
+    it("sets and updates nested fields using object paths", () => {
       const initialState = {
-        foo: "banana",
-        bar: "watermelon",
+        leave_details: {
+          employer_notification_method: "Unknown",
+        },
       };
       testHook(() => {
         ({ formState, updateFields } = useFormState(initialState));
       });
+
       act(() => {
         updateFields({
-          foo: "bananagrams",
-          cat: "some new field",
+          application_nickname: "Hip replacement",
+          "leave_details.employer_notification_method": "In writing",
+          "leave_details.employer_notified": true,
+          "payment_preferences[0].payment_method": "ACH",
         });
       });
-      expect(formState).toStrictEqual({
-        foo: "bananagrams",
-        bar: "watermelon",
-        cat: "some new field",
-      });
+
+      expect(formState).toMatchInlineSnapshot(`
+        Object {
+          "application_nickname": "Hip replacement",
+          "leave_details": Object {
+            "employer_notification_method": "In writing",
+            "employer_notified": true,
+          },
+          "payment_preferences": Array [
+            Object {
+              "payment_method": "ACH",
+            },
+          ],
+        }
+      `);
     });
   });
 
