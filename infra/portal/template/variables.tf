@@ -1,9 +1,3 @@
-variable "cloudfront_certificate_arn" {
-  description = "Optional. ARN of a ACM Certificate used by Cloudfront."
-  type        = string
-  default     = null
-}
-
 variable "cloudfront_origin_path" {
   description = "Path to latest portal release. Set through environment variable in Github worfklow."
   type        = string

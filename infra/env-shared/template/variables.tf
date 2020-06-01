@@ -1,16 +1,5 @@
-variable "domain_name" {
-  description = "Optional domain name for the API Gateway"
-  type        = string
-  default     = null
-}
-
 variable "environment_name" {
   description = "Name of the environment"
-  type        = string
-}
-
-variable "forwarded_path" {
-  description = "Forwarded path configured in the API Gateway."
   type        = string
 }
 

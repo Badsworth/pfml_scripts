@@ -27,11 +27,7 @@ terraform {
 module "pfml" {
   source = "../../template"
 
-  environment_name = "stage"
-  # TODO: This will revert back to '/api/' once we have a custom domain name.
-  #       For now, we're relying on the API Gateway-provided URL which prepends
-  #       the "stage" stage.
-  forwarded_path    = "'/stage/api/'"
+  environment_name  = "stage"
   nlb_name          = "${local.vpc}-nlb"
   nlb_vpc_link_name = "${local.vpc}-nlb-vpc-link"
   nlb_port          = 3500
