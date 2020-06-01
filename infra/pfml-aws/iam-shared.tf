@@ -32,6 +32,9 @@ data "aws_iam_policy_document" "developers_and_ci_deploy_access_policy" {
       "cloudwatch:*",
       "logs:*",
 
+      # Allow teams to read and set Cloudwatch event rules.
+      "events:*",
+
       # Allow teams to look at IAM users and roles; additional (restricted)
       # write access is provided in a separate statement/policy.
       "iam:Get*",
