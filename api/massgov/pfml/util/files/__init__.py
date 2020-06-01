@@ -23,6 +23,7 @@ def list_files(path):
         parts = urlparse(path)
         bucket_name = parts.netloc
         prefix = parts.path.lstrip("/")
+
         files = []
 
         for key, _content in smart_open.s3_iter_bucket(bucket_name, prefix=prefix):
@@ -31,6 +32,10 @@ def list_files(path):
     return os.listdir(path)
 
 
-def read_file_lines(path):
-    stream = smart_open.open(path, "r", encoding="utf-8")
+def read_file(path, mode="r"):
+    return smart_open.open(path, mode).read()
+
+
+def read_file_lines(path, mode="r"):
+    stream = smart_open.open(path, mode)
     return map(lambda line: line.rstrip(), stream)

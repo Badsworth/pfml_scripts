@@ -11,8 +11,8 @@ from decimal import Decimal
 from typing import Callable, Dict, List, Optional, Union
 
 import boto3
-import pydash
 
+import massgov.pfml.util.files as file_util
 import massgov.pfml.util.logging as logging
 from massgov.pfml import db
 from massgov.pfml.db.config import DbConfig
@@ -149,6 +149,8 @@ def handler(event, context):
 
     decrypter: Union[Utf8Decrypter, GpgDecrypter]
 
+    FOLDER_PATH = os.environ.get("FOLDER_PATH")
+
     if os.getenv("DECRYPT") != "true":
         logger.info("Skipping GPG decrypter setup")
         decrypter = Utf8Decrypter()
@@ -165,9 +167,7 @@ def handler(event, context):
 
     logger.info("Starting import run")
 
-    bucket = get_bucket(event)
-
-    files_by_date = get_files_for_import_grouped_by_date(bucket)
+    files_by_date = get_files_for_import_grouped_by_date(FOLDER_PATH)
     file_date_keys = sorted(files_by_date.keys())
 
     if len(file_date_keys) == 0:
@@ -201,7 +201,7 @@ def handler(event, context):
             },
         )
 
-        import_report = process_daily_import(bucket, employer_file, employee_file, decrypter)
+        import_report = process_daily_import(FOLDER_PATH, employer_file, employee_file, decrypter)
         report.imports.append(import_report)
 
     report.end = datetime.now().isoformat()
@@ -218,15 +218,11 @@ def get_bucket(event):
     return bucket
 
 
-def get_files_for_import_grouped_by_date(bucket):
+def get_files_for_import_grouped_by_date(path):
     """Get the paths (s3 keys) of files in the recieved folder of the bucket"""
-    files_for_import = []
-    for s3_object in bucket.objects.filter(Prefix=RECEIVED_FOLDER):
-        if s3_object.key != RECEIVED_FOLDER:  # skip the folder
-            files_for_import.append(s3_object.key)
 
     files_by_date: Dict[str, List[str]] = {}
-
+    files_for_import = file_util.list_files(path)
     files_for_import.sort()
     for file_key in files_for_import:
         date_start_index = file_key.rfind("_")
@@ -240,7 +236,7 @@ def get_files_for_import_grouped_by_date(bucket):
     return files_by_date
 
 
-def process_daily_import(bucket, employer_file, employee_file, decrypter):
+def process_daily_import(path, employer_file, employee_file, decrypter):
     """Process s3 file by key"""
     logger.info("Starting to process files")
     report = ImportReport(
@@ -264,9 +260,9 @@ def process_daily_import(bucket, employer_file, employee_file, decrypter):
 
     with db.session_scope(db_session_raw) as db_session:
         try:
-            employers = parse_employer_file(bucket, employer_file, decrypter)
+            employers = parse_employer_file(path, employer_file, decrypter)
             employers_quarter_info, employees_info = parse_employee_file(
-                bucket, employee_file, decrypter
+                path, employee_file, decrypter
             )
 
             parsed_employers_count = len(employers)
@@ -470,16 +466,20 @@ def import_employees_and_wage_data(
 
 
 # TODO turn return dataclasses list instead of object list
-def parse_employer_file(bucket, employer_file, decrypter):
+def parse_employer_file(path, employer_file, decrypter):
     """Parse employer file"""
     logger.info("Start parsing employer file", extra={"employer_file": employer_file})
     employers = []
 
-    file_bytes = read_file(bucket, employer_file)
+    full_path = "{}/{}".format(str(path), employer_file)
+    file_bytes = file_util.read_file(full_path, "rb")
     decrypted_str = decrypter.decrypt(file_bytes)
-    decrypted_lines = pydash.strings.lines(decrypted_str)
+    decrypted_lines = decrypted_str.split("\n")
 
     for row in decrypted_lines:
+        if not row:  # skip empty end of file lines
+            continue
+
         employer = parse_row_to_object_by_format(row, EMPLOYER_FILE_FORMAT)
         employers.append(employer)
 
@@ -487,17 +487,22 @@ def parse_employer_file(bucket, employer_file, decrypter):
     return employers
 
 
-def parse_employee_file(bucket, employee_file, decrypter):
+def parse_employee_file(path, employee_file, decrypter):
     """Parse employee file"""
     logger.info("Start parsing employee file", extra={"employee_file": employee_file})
 
     employers_quarter_info = []
     employees_info = []
 
-    file_bytes = read_file(bucket, employee_file)
+    full_path = "{}/{}".format(str(path), employee_file)
+    file_bytes = file_util.read_file(full_path, "rb")
     decrypted_str = decrypter.decrypt(file_bytes)
-    decrypted_lines = pydash.strings.lines(decrypted_str)
+    decrypted_lines = decrypted_str.split("\n")
+
     for row in decrypted_lines:
+        if not row:  # skip empty end of file lines
+            continue
+
         if row.startswith("A"):
             employer_quarter_info = parse_row_to_object_by_format(row, EMPLOYER_QUARTER_INFO_FORMAT)
             employers_quarter_info.append(employer_quarter_info)
@@ -517,7 +522,6 @@ def parse_row_to_object_by_format(row, row_format):
         end_index = start_index + column_format.length
 
         column_value = row[start_index:end_index].strip()
-
         conversion_function = column_format.conversion_function
         if conversion_function is None:
             object[property_name] = column_value

@@ -84,7 +84,6 @@ def test_fs_path(tmp_path):
     test_folder.mkdir()
     test_file = test_folder / file_name
     test_file.write_text(content)
-    test_file.touch()
     return test_folder
 
 

@@ -26,6 +26,7 @@ Resources:
           GPG_DECRYPTION_KEY_PASSPHRASE_SSM_PATH: "SET_IN_CONTAINER_ENV_VARS"
           LD_LIBRARY_PATH: "SET_IN_LOCAL_ENV_VARS"
           PATH: "SET_IN_LOCAL_ENV_VARS"
+          FOLDER_PATH: "SET_IN_LOCAL_ENV_VARS"
 
   DependenciesLayer:
     Type: AWS::Serverless::LayerVersion
