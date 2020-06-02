@@ -38,14 +38,14 @@ module "api" {
   nlb_port                = 3500
   cors_origins = [
     # Allow requests from the Portal and API Gateway (Swagger) staging environment.
-    "https://pfml-stage.eolwd.mass.gov",
+    "https://paidleave-stage.mass.gov",
     "https://day1v30d2xgnf.cloudfront.net",
-    "https://pfml-stage-test.eolwd.mass.gov",
+    "https://paidleave-api-stage.mass.gov",
     "https://hxrjel1aeb.execute-api.us-east-1.amazonaws.com",
 
     # Since we're going to be pointing the Portal test environment to API staging
     # as well, allow requests to come from that origin.
-    "https://pfml-test.eolwd.mass.gov",
+    "https://paidleave-test.mass.gov",
     "https://d1ah9hpoapx4f1.cloudfront.net",
 
     # We're also going to allow requests from developer's machines for now, so they

@@ -38,9 +38,9 @@ module "api" {
   nlb_port                = 80
   cors_origins = [
     # Allow requests from the Portal and API Gateway (Swagger) test environment.
-    "https://pfml-test.eolwd.mass.gov",
+    "https://paidleave-test.mass.gov",
     "https://d1ah9hpoapx4f1.cloudfront.net",
-    "https://pfml-api-test.eolwd.mass.gov",
+    "https://paidleave-api-test.mass.gov",
     "https://67385ye4yb.execute-api.us-east-1.amazonaws.com"
   ]
   dor_import_lambda_build_s3_key        = local.dor_lambda_artifact_s3_key

@@ -44,9 +44,9 @@ module "api" {
   nlb_port                 = 80
   cors_origins = [
     # Allow requests from the Portal and API Gateway (Swagger) production environment.
-    "https://pfml.eolwd.mass.gov",
+    "https://paidleave.mass.gov",
     "https://d2pc6g7x2eh1yn.cloudfront.net",
-    "https://pfml-api.eolwd.mass.gov",
+    "https://paidleave-api.mass.gov",
     "https://zi7eve1v85.execute-api.us-east-1.amazonaws.com"
   ]
 
