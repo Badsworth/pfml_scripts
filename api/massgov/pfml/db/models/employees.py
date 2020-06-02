@@ -203,8 +203,12 @@ class EmployeeAddress(Base):
 
 class EmployerAddress(Base):
     __tablename__ = "link_employer_address"
-    employer_id = Column(UUID(as_uuid=True), ForeignKey("employer.employer_id"), primary_key=True)
-    address_id = Column(UUID(as_uuid=True), ForeignKey("address.address_id"), primary_key=True)
+    employer_id = Column(
+        UUID(as_uuid=True), ForeignKey("employer.employer_id"), primary_key=True, unique=True
+    )
+    address_id = Column(
+        UUID(as_uuid=True), ForeignKey("address.address_id"), primary_key=True, unique=True
+    )
     employers = relationship("Employer", back_populates="addresses")
     addresses = relationship("Address", back_populates="employers")
 

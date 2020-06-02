@@ -9,24 +9,16 @@ from dataclasses import asdict, dataclass, field
 from datetime import datetime
 from decimal import Decimal
 from typing import Callable, Dict, List, Optional, Union
+from uuid import UUID
 
 import boto3
 
+import massgov.pfml.dor.importer.lib.dor_persistence_util as dor_persistence_util
 import massgov.pfml.util.files as file_util
 import massgov.pfml.util.logging as logging
 from massgov.pfml import db
 from massgov.pfml.db.config import DbConfig
-from massgov.pfml.db.models.employees import (
-    Address,
-    AddressType,
-    Country,
-    Employee,
-    Employer,
-    EmployerAddress,
-    GeoState,
-    ImportLog,
-    WagesAndContributions,
-)
+from massgov.pfml.db.models.employees import ImportLog
 from massgov.pfml.dor.importer.lib.decrypter import GpgDecrypter, Utf8Decrypter
 
 logger = logging.get_logger("massgov.pfml.dor.importer.import_dor")
@@ -51,18 +43,29 @@ EMPLOYEE_FILE_PREFIX = "DORDFML_"
 
 @dataclass
 class ImportReport:
-    start: str
-    employer_file: str
-    employee_file: str
+    start: str = datetime.now().isoformat()
+    employer_file: str = ""
+    employee_file: str = ""
     parsed_employers_count: int = 0
     parsed_employers_quarter_info_count: int = 0
     parsed_employees_info_count: int = 0
     created_employers_count: int = 0
     updated_employers_count: int = 0
+    unmodified_employers_count: int = 0
     created_employees_count: int = 0
     updated_employees_count: int = 0
+    unmodified_employees_count: int = 0
+    created_wages_and_contributions_count: int = 0
+    updated_wages_and_contributions_count: int = 0
+    unmodified_wages_and_contributions_count: int = 0
     status: Optional[str] = None
     end: Optional[str] = None
+    updated_employer_ids: List[UUID] = field(default_factory=list)
+    unmodified_employer_ids: List[UUID] = field(default_factory=list)
+    updated_employee_ids: List[UUID] = field(default_factory=list)
+    unmodified_employee_ids: List[UUID] = field(default_factory=list)
+    updated_wages_and_contributions_ids: List[UUID] = field(default_factory=list)
+    unmodified_wages_and_contributions_ids: List[UUID] = field(default_factory=list)
 
 
 @dataclass
@@ -324,71 +327,40 @@ def import_employers(db_session, employers, report):
 
     account_key_to_employer_id_map = {}
 
-    business_address_type = (
-        db_session.query(AddressType).filter(AddressType.address_description == "Business").first()
-    )
-    # TODO find the state by employee after lookup is fully populated
-    state = db_session.query(GeoState).filter(GeoState.state_description == "MA").first()
-    country = db_session.query(Country).filter(Country.country_description == "US").first()
-
-    created_employers_count = 0
-
     for employer_info in employers:
-        fein = employer_info["fein"]
         account_key = employer_info["account_key"]
-        existing_employer = (
-            db_session.query(Employer).filter(Employer.employer_fein == fein).first()
+        existing_employer = dor_persistence_util.get_employer_by_fein(
+            db_session, employer_info["fein"]
         )
 
-        logger.debug("employer %s", fein)
-
         if existing_employer is None:
-            exemption_commence_date = employer_info["exemption_commence_date"]
+            created_employer = dor_persistence_util.create_employer(db_session, employer_info)
 
-            emp = Employer(
-                account_key=account_key,
-                employer_fein=fein,
-                employer_name=employer_info["employer_name"],
-                employer_dba=employer_info["employer_dba"],
-                family_exemption=employer_info["family_exemption"],
-                medical_exemption=employer_info["medical_exemption"],
-                exemption_commence_date=exemption_commence_date,
-                exemption_cease_date=employer_info["exemption_cease_date"],
-                dor_updated_date=employer_info["updated_date"],
-            )
-            db_session.add(emp)
-
-            address = Address(
-                address_type=business_address_type.address_type,
-                address_line_one=employer_info["employer_address_street"],
-                city=employer_info["employer_address_city"],
-                state_type=state.state_type,
-                zip_code=employer_info["employer_address_zip"],
-                country_type=country.country_type,
-            )
-            db_session.add(address)
-
-            db_session.flush()
-            db_session.refresh(emp)
-            db_session.refresh(address)
-
-            account_key_to_employer_id_map[account_key] = emp.employer_id
-
-            emp_address = EmployerAddress(
-                employer_id=emp.employer_id, address_id=address.address_id
-            )
-            db_session.add(emp_address)
-
-            created_employers_count = created_employers_count + 1
+            account_key_to_employer_id_map[account_key] = created_employer.employer_id
+            report.created_employers_count = report.created_employers_count + 1
         else:
-            # TODO update existing employee row
+            updated_date = employer_info["updated_date"]
+            if updated_date > existing_employer.dor_updated_date:
+                dor_persistence_util.update_employer(db_session, existing_employer, employer_info)
+
+                report.updated_employer_ids.append(str(existing_employer.employer_id))
+            else:
+                report.unmodified_employer_ids.append(str(existing_employer.employer_id))
+
             account_key_to_employer_id_map[account_key] = existing_employer.employer_id
 
-    report.created_employers_count = created_employers_count
+    report.updated_employers_count = len(report.updated_employer_ids)
+    report.unmodified_employers_count = len(report.unmodified_employer_ids)
 
     logger.info(
-        "Finished importing employers", extra={"created_employers_count": created_employers_count}
+        "Finished importing employers",
+        extra={
+            "created_employers_count": report.created_employers_count,
+            "updated_employers_count": report.updated_employers_count,
+            "unmodified_employers_count": report.unmodified_employers_count,
+        },
     )
+
     return account_key_to_employer_id_map
 
 
@@ -398,71 +370,106 @@ def import_employees_and_wage_data(
     """Import employees and wage information"""
     logger.info("Importing employee information")
 
-    created_employees_count = 0
+    # create a reference map of amended flag for employee and wage data
+    employee_amended_flag_map = {}
+    wage_data_amended_flag_map = {}
+
+    for employer_quarter_info in employers_quarter_info:
+        account_key = employer_quarter_info["account_key"]
+        filing_period_str = employer_quarter_info["filing_period"].strftime("%Y%m%d")
+        composite_key = "{}-{}".format(account_key, filing_period_str)
+        amended_flag = employer_quarter_info["amended_flag"]
+
+        employee_amended_flag_map[account_key] = amended_flag
+        wage_data_amended_flag_map[composite_key] = amended_flag
+
+    # import employees
     employee_id_by_ssn = {}
 
     for employee_info in employees_info:
         ssn = employee_info["employee_ssn"]
-        existing_employee = (
-            db_session.query(Employee).filter(Employee.tax_identifier == ssn).first()
-        )
+        account_key = employee_info["account_key"]
+        existing_employee = dor_persistence_util.get_employee_by_ssn(db_session, ssn)
 
         if existing_employee is None:
-            employee = Employee(
-                tax_identifier=ssn,
-                first_name=employee_info["employee_first_name"],
-                last_name=employee_info["employee_last_name"],
-            )
-            db_session.add(employee)
+            created_employee = dor_persistence_util.create_employee(db_session, employee_info)
 
-            db_session.flush()
-            db_session.refresh(employee)
-            employee_id_by_ssn[ssn] = employee.employee_id
-
-            created_employees_count = created_employees_count + 1
+            employee_id_by_ssn[ssn] = created_employee.employee_id
+            report.created_employees_count = report.created_employees_count + 1
         else:
-            # TODO update existing employee row
+            if employee_amended_flag_map[account_key] is True:
+                dor_persistence_util.update_employee(db_session, existing_employee, employee_info)
+
+                report.updated_employee_ids.append(str(existing_employee.employee_id))
+            else:
+                report.unmodified_employee_ids.append(str(existing_employee.employee_id))
+
             employee_id_by_ssn[ssn] = existing_employee.employee_id
 
-    report.created_employees_count = created_employees_count
+    report.updated_employees_count = len(report.updated_employee_ids)
+    report.unmodified_employees_count = len(report.unmodified_employee_ids)
+
     logger.info(
         "Finished importing employee information",
-        extra={"created_employees_count": created_employees_count},
+        extra={
+            "created_employees_count": report.created_employees_count,
+            "updated_employees_count": report.updated_employees_count,
+            "unmodified_employee_ids": report.unmodified_employees_count,
+        },
     )
 
     logger.info("Importing employee wage information")
 
-    # create wage information
+    # imoport wage information
     for employee_info in employees_info:
         account_key = employee_info["account_key"]
         filing_period = employee_info["filing_period"]
         ssn = employee_info["employee_ssn"]
 
-        # TODO handle existing wage - may need indexing on account_key and filing_period
-        # existing_wage = db_session.query(WageAndContribution).filter(WageAndContribution.account_key == account_key).filter(WageAndContribution.filing_period == filing_period).first()
-        existing_wage = None
+        employee_id = employee_id_by_ssn[ssn]
+        employer_id = account_key_to_employer_id_map[account_key]
+
+        existing_wage = dor_persistence_util.get_wages_and_contributions_by_employee_id_and_filling_period(
+            db_session, employee_id, filing_period
+        )
 
         if existing_wage is None:
-            wage = WagesAndContributions(
-                account_key=account_key,
-                filing_period=filing_period,
-                employee_id=employee_id_by_ssn[ssn],
-                employer_id=account_key_to_employer_id_map[account_key],
-                is_independent_contractor=employee_info["independent_contractor"],
-                is_opted_in=employee_info["opt_in"],
-                employee_ytd_wages=employee_info["employee_ytd_wages"],
-                employee_qtr_wages=employee_info["employee_qtr_wages"],
-                employee_med_contribution=employee_info["employee_medical"],
-                employer_med_contribution=employee_info["employer_medical"],
-                employee_fam_contribution=employee_info["employee_family"],
-                employer_fam_contribution=employee_info["employer_family"],
+            dor_persistence_util.create_wages_and_contributions(
+                db_session, employee_info, employee_id, employer_id
             )
-            db_session.add(wage)
-        # else: # TODO update wage if amended flag is set
 
-    logger.info("Finished importing employee wage information")
+            report.created_wages_and_contributions_count = (
+                report.created_wages_and_contributions_count + 1
+            )
+        else:
+            ameneded_flag_key = "{}-{}".format(account_key, filing_period.strftime("%Y%m%d"))
+            if wage_data_amended_flag_map[ameneded_flag_key] is True:
+                dor_persistence_util.update_wages_and_contributions(
+                    db_session, existing_wage, employee_info
+                )
+                report.updated_wages_and_contributions_ids.append(
+                    str(existing_wage.wage_and_contribution_id)
+                )
+            else:
+                report.unmodified_wages_and_contributions_ids.append(
+                    str(existing_wage.wage_and_contribution_id)
+                )
 
-    return None
+    report.updated_wages_and_contributions_count = len(report.updated_wages_and_contributions_ids)
+    report.unmodified_wages_and_contributions_count = len(
+        report.unmodified_wages_and_contributions_ids
+    )
+
+    logger.info(
+        "Finished importing employee wage information",
+        extra={
+            "created_wages_and_contributions_count": report.created_wages_and_contributions_count,
+            "updated_wages_and_contributions_count": report.updated_wages_and_contributions_count,
+            "unmodified_wages_and_contributions_count": report.unmodified_wages_and_contributions_count,
+        },
+    )
+
+    return employee_id_by_ssn
 
 
 # TODO turn return dataclasses list instead of object list
