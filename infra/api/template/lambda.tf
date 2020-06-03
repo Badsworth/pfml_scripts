@@ -45,3 +45,9 @@ resource "aws_lambda_function" "dor_import" {
     }
   }
 }
+
+resource "aws_lambda_function_event_invoke_config" "dor_import_invoke_config" {
+  function_name                = "massgov-pfml-${var.environment_name}-dor-import"
+  maximum_event_age_in_seconds = 21600 # 6 hours
+  maximum_retry_attempts       = 2
+}
