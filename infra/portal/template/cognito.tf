@@ -14,7 +14,8 @@ resource "aws_cognito_user_pool" "claimants_pool" {
   sms_authentication_message = "Your authentication code is {####}. "
 
   lambda_config {
-    custom_message = aws_lambda_function.cognito_custom_message.arn
+    custom_message    = aws_lambda_function.cognito_custom_message.arn
+    post_confirmation = var.cognito_post_confirmation_lambda_arn
   }
 
   password_policy {

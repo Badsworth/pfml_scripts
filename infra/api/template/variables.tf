@@ -100,3 +100,14 @@ variable "lambda_runtime" {
   type        = string
   default     = "python3.8"
 }
+
+variable "cognito_user_pool_arn" {
+  description = "The ARN of the Cognito User Pool."
+  type        = string
+  default     = null
+}
+
+variable "cognito_post_confirmation_lambda_artifact_s3_key" {
+  description = "The S3 object key of the Cognito Post Confirmation hook Lambda artifact"
+  type        = string
+}

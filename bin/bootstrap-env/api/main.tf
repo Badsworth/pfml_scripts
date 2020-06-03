@@ -39,4 +39,7 @@ module "api" {
   cors_origins                          = [API_DOCS_DOMAIN, PORTAL_DOMAIN]
   dor_import_lambda_build_s3_key        = local.dor_lambda_artifact_s3_key
   dor_import_lambda_dependencies_s3_key = local.dor_import_lambda_dependencies_s3_key
+
+  cognito_user_pool_arn                            = null
+  cognito_post_confirmation_lambda_artifact_s3_key = local.cognito_post_confirmation_lambda_artifact_s3_key
 }

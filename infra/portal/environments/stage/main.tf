@@ -37,6 +37,9 @@ module "massgov_pfml" {
   cognito_extra_redirect_urls = []
   cognito_extra_logout_urls   = []
 
+  # Integrations
+  cognito_post_confirmation_lambda_arn = null
+
   # You probably don't need to change the variables below:
   source                 = "../../template"
   environment_name       = "stage"

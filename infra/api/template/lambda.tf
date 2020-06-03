@@ -51,3 +51,46 @@ resource "aws_lambda_function_event_invoke_config" "dor_import_invoke_config" {
   maximum_event_age_in_seconds = 21600 # 6 hours
   maximum_retry_attempts       = 2
 }
+
+resource "aws_lambda_function" "cognito_post_confirmation" {
+  s3_bucket = data.aws_s3_bucket.lambda_build.bucket
+  s3_key    = var.cognito_post_confirmation_lambda_artifact_s3_key
+
+  # This function is connected to Cognito in the Portal Terrafrom configs via
+  # this name, any changes to the function name should be done by deploying a
+  # new Lambda function with the updated name, updating the Portal config to
+  # point to new Lambda, then drop the old Lambda. Otherwise downtime is
+  # required/User creation is broken.
+  function_name = "massgov-pfml-${var.environment_name}-cognito_post_confirmation"
+  handler       = "handler.handler"
+  runtime       = var.lambda_runtime
+  publish       = "true"
+
+  # Cognito will only wait 5 seconds, so match that timeout here for
+  # consistency.
+  timeout = 5
+
+  role = aws_iam_role.lambda_role.arn
+
+  vpc_config {
+    subnet_ids         = var.vpc_app_subnet_ids
+    security_group_ids = [aws_security_group.data_import.id]
+  }
+
+  environment {
+    variables = {
+      DB_HOST              = aws_db_instance.default.address
+      DB_NAME              = aws_db_instance.default.name
+      DB_USERNAME          = aws_db_instance.default.username
+      DB_PASSWORD_SSM_PATH = "/service/${local.app_name}/${var.environment_name}/db-password"
+    }
+  }
+}
+
+resource "aws_lambda_permission" "allow_cognito_post_confirmation" {
+  statement_id  = "AllowExecutionFromCognito"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.cognito_post_confirmation.function_name
+  principal     = "cognito-idp.amazonaws.com"
+  source_arn    = var.cognito_user_pool_arn
+}

@@ -1,14 +1,13 @@
 from dataclasses import dataclass
-from enum import Enum
 from typing import Optional
 
 import connexion
 from werkzeug.exceptions import NotFound
 
 import massgov.pfml.api.app as app
-import massgov.pfml.db as db
 import massgov.pfml.util.logging
-from massgov.pfml.db.models.employees import Status, User
+from massgov.pfml.db.models.employees import User
+from massgov.pfml.db.status import UserStatusDescription, get_or_make_status
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
 
@@ -41,11 +40,11 @@ def users_post():
             consented_to_data_sharing=body.consented_to_data_sharing,
         )
 
-        logger.info("creating user", extra={"user_id": u.user_id})
+        logger.info("creating user", extra={"active_directory_id": u.active_directory_id})
 
         db_session.add(u)
 
-    logger.info("successfully created user")
+    logger.info("successfully created user", extra={"user_id": u.user_id})
     return user_response(u)
 
 
@@ -78,25 +77,3 @@ def user_response(user: User) -> UserResponse:
         email_address=user.email_address,
         consented_to_data_sharing=user.consented_to_data_sharing,
     )
-
-
-class UserStatusDescription(Enum):
-    unverified = "unverified"
-    verified = "verified"
-
-
-def get_or_make_status(db_session: db.Session, status_description: UserStatusDescription) -> Status:
-    status = (
-        db_session.query(Status)
-        .filter(Status.status_description == status_description.value)
-        .one_or_none()
-    )
-
-    if status is None:
-        logger.info(
-            "creating missing status", extra={"status_description": status_description.value}
-        )
-        status = Status(status_description=status_description.value)
-        db_session.add(status)
-
-    return status

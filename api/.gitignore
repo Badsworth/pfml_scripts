@@ -5,3 +5,10 @@ dist/
 .coverage*
 .testmondata
 .mypy_cache
+
+# Files generated for DOR import lambda deployments
+import_infra/**/dependencies
+*.zip
+
+.aws-sam/
+lambda-s3-package.json

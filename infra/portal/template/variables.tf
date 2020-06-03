@@ -31,3 +31,9 @@ variable "ses_email_address" {
   type        = string
   default     = "noreplypfml@mass.gov"
 }
+
+variable "cognito_post_confirmation_lambda_arn" {
+  description = "Optional. ARN of AWS Lambda to connect to the post-confirmation event on the Cognito User Pool."
+  type        = string
+  default     = null
+}

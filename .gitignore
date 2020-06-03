@@ -26,7 +26,3 @@ infra/portal/template/.zip
 # IDE-specific files
 .vscode/
 .idea/
-
-# Files generated for DOR import lambda deployments
-api/import_infra/**/dependencies
-api/massgov/**/*.zip

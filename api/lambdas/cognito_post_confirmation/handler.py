@@ -1,0 +1,1 @@
+from massgov.pfml.cognito_post_confirmation_lambda.main import handler

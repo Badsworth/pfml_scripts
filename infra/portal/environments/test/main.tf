@@ -46,6 +46,9 @@ module "massgov_pfml" {
   cognito_extra_redirect_urls = ["http://localhost:3000"]
   cognito_extra_logout_urls   = ["http://localhost:3000"]
 
+  # Integrations
+  cognito_post_confirmation_lambda_arn = null
+
   # You probably don't need to change the variables below:
   source                 = "../../template"
   environment_name       = local.environment_name

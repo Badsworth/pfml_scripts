@@ -6,6 +6,7 @@ hooks, load plugins, define new/override assert behavior, etc.).
 More info:
 https://docs.pytest.org/en/latest/fixture.html#conftest-py-sharing-fixture-functions
 """
+import logging.config  # noqa: B1
 import os
 import uuid
 
@@ -32,6 +33,16 @@ def app(test_db, initialize_factories_session):
 @pytest.fixture
 def client(app):
     return app.app.test_client()
+
+
+@pytest.fixture
+def logging_fix(monkeypatch):
+    """Disable the application custom logging setup
+
+    Needed if the code under test calls massgov.pfml.util.logging.init() so that
+    tests using the caplog fixture don't break.
+    """
+    monkeypatch.setattr(logging.config, "dictConfig", lambda config: None)  # noqa: B1
 
 
 @pytest.fixture

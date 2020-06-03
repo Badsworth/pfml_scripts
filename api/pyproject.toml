@@ -21,6 +21,7 @@ boto3 = "^1.13.7"
 pydash = "^4.7.6"
 python-gnupg = "^0.4.6"
 smart_open = "^2.0.0"
+pydantic = "^1.5.1"
 
 [tool.poetry.dev-dependencies]
 black = "^19.10b0"
