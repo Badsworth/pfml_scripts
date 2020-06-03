@@ -1,5 +1,14 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`App displaying errors displays errors that child pages set 1`] = `
+Array [
+  AppErrorInfo {
+    "key": "mocked-for-snapshots",
+    "message": "A test error happened",
+  },
+]
+`;
+
 exports[`App when a user IS authenticated renders the page component 1`] = `
 <TestComponent
   addClaim={[Function]}
@@ -12,6 +21,7 @@ exports[`App when a user IS authenticated renders the page component 1`] = `
   }
   query={Object {}}
   removeClaim={[Function]}
+  setAppErrors={[Function]}
   setUser={[Function]}
   title="Test page"
   updateClaim={[Function]}

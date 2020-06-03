@@ -189,13 +189,14 @@ export const App = ({
     return (
       <section id="page">
         <Component
-          user={user}
-          setUser={setUser}
-          claims={claims}
           addClaim={addClaim}
-          updateClaim={updateClaim}
-          removeClaim={removeClaim}
+          claims={claims}
           query={router.query}
+          removeClaim={removeClaim}
+          setAppErrors={setAppErrors}
+          setUser={setUser}
+          updateClaim={updateClaim}
+          user={user}
           {...pageProps}
         />
       </section>

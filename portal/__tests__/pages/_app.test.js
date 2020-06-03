@@ -1,7 +1,8 @@
+import React, { useEffect } from "react";
 import { mount, shallow } from "enzyme";
 import { App } from "../../src/pages/_app";
+import AppErrorInfo from "../../src/models/AppErrorInfo";
 import { NetworkError } from "../../src/errors";
-import React from "react";
 import { act } from "react-dom/test-utils";
 import { mockRouterEvents } from "next/router";
 import tracker from "../../src/services/tracker";
@@ -352,6 +353,29 @@ describe("App", () => {
       });
 
       expect(scrollToSpy).toHaveBeenCalled();
+    });
+  });
+
+  describe("displaying errors", () => {
+    it("displays errors that child pages set", async () => {
+      const ChildPage = (props) => {
+        const { setAppErrors } = props; // eslint-disable-line react/prop-types
+        useEffect(() => {
+          const message = "A test error happened";
+          setAppErrors([new AppErrorInfo({ message })]);
+        }, [setAppErrors]);
+        return <React.Fragment />;
+      };
+
+      let wrapper;
+
+      // Authenticator causes async state updates
+      await act(async () => {
+        wrapper = render({ Component: ChildPage }, true).wrapper;
+      });
+      wrapper.update();
+
+      expect(wrapper.find("ErrorsSummary").prop("errors")).toMatchSnapshot();
     });
   });
 });
