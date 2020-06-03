@@ -51,3 +51,18 @@ echo $RUN_TASK | jq .
 TASK_ARN=$(echo $RUN_TASK | jq '.tasks[0].taskArn' | sed -e 's/^"//' -e 's/"$//')
 
 aws ecs wait tasks-stopped --region us-east-1 --cluster $ENV_NAME --tasks $TASK_ARN
+
+EXIT_STATUS=$(aws ecs describe-tasks --cluster $ENV_NAME --task $TASK_ARN | jq -r '.tasks[].containers[].exitCode')
+
+if [ $EXIT_STATUS -ne 0 ]
+then
+
+  echo "Migration ran into an error. Please check cloudwatch logs." >&2
+  exit 1
+
+else
+
+  echo "Migration completed successfully."
+  exit 0
+
+fi
