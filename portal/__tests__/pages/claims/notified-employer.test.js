@@ -10,16 +10,17 @@ describe("NotifiedEmployer", () => {
 
   beforeEach(() => {
     claim = new Claim({ application_id });
-    wrapper = shallow(<NotifiedEmployer claim={claim} />);
+    const query = { claim_id: claim.application_id };
+    wrapper = shallow(<NotifiedEmployer claim={claim} query={query} />);
   });
 
   it("renders the page", () => {
     expect(wrapper).toMatchSnapshot();
   });
 
-  it("redirects to the todo page for now", () => {
+  it("redirects to the confirm and submit page", () => {
     expect(wrapper.find("QuestionPage").prop("nextPage")).toEqual(
-      routes.claims.todo
+      `${routes.claims.confirm}?claim_id=${claim.application_id}`
     );
   });
 });

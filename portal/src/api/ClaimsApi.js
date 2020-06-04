@@ -34,7 +34,7 @@ export default class ClaimsApi {
    * @returns {object} result The result of the API call
    * @returns {boolean} result.success Did the call succeed or fail?
    * @returns {string} result.status Server response status code
-   * @returns {Claim} result.claim If result.success === true this will contain the created user
+   * @returns {Claim} result.claim If result.success === true this will contain the created claim
    * @returns {Array} result.apiErrors If result.success === false this will contain errors returned by the API
    */
   createClaim = async (claim) => {
@@ -58,6 +58,30 @@ export default class ClaimsApi {
     return Promise.resolve({
       success: true,
       claim: new Claim(response),
+    });
+  };
+
+  /**
+   * Signal the data entry is complete and application is ready
+   * to be submitted to the payment processor.
+   *
+   * Corresponds to this API endpoint: /application/{application_id}/submit_application
+   * @todo Document the possible errors
+   * @todo This is a mock -- connect to the actual API when ready
+   * @param {Claim} claim claim properties
+   * @returns {object} result The result of the API call
+   * @returns {boolean} result.success Did the call succeed?
+   * @returns {string} result.status Server response status code
+   * @returns {Claim} result.claim If result.success === true this will contain the submitted claim information
+   * @returns {Array} result.apiErrors if result.success === false this will contain errors returned by the API
+   */
+  submitClaim = async (claim) => {
+    const response = Object.assign({}, claim, apiResponseFields);
+    return Promise.resolve({
+      success: true,
+      status: "201",
+      claim: new Claim(response),
+      apiErrors: [],
     });
   };
 }

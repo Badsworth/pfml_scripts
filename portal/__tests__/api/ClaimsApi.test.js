@@ -93,4 +93,37 @@ describe("ClaimsApi", () => {
       `);
     });
   });
+
+  describe("submitClaim", () => {
+    const claim = new Claim({ duration_type: "type" });
+
+    it("responds with success status", async () => {
+      const claimsApi = new ClaimsApi({ user });
+      const response = await claimsApi.submitClaim(claim);
+
+      expect(response.success).toBeTruthy();
+    });
+
+    it("responds with an instance of a Cliam with claim request parameters as properties", async () => {
+      const claimsApi = new ClaimsApi({ user });
+      const response = await claimsApi.submitClaim(claim);
+
+      expect(response.claim).toBeInstanceOf(Claim);
+      expect(response.claim).toMatchInlineSnapshot(`
+        Claim {
+          "application_id": null,
+          "avg_weekly_hours_worked": null,
+          "created_at": null,
+          "duration_type": "type",
+          "hours_off_needed": null,
+          "leave_details": Object {
+            "employer_notified": null,
+          },
+          "leave_end_date": null,
+          "leave_start_date": null,
+          "leave_type": null,
+        }
+      `);
+    });
+  });
 });

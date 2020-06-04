@@ -1,20 +1,24 @@
 import Alert from "../../components/Alert";
 import BackButton from "../../components/BackButton";
+import Claim from "../../models/Claim";
+import PropTypes from "prop-types";
 import React from "react";
 import Title from "../../components/Title";
 import routes from "../../routes";
+import useFormState from "../../hooks/useFormState";
 import { useRouter } from "next/router";
 import { useTranslation } from "../../locales/i18n";
+import withClaim from "../../hoc/withClaim";
 
-export const Confirm = () => {
+export const Confirm = (props) => {
   const { t } = useTranslation();
   const router = useRouter();
+  const nextPage = routes.claims.success;
+  const { formState } = useFormState(props.claim);
 
-  const nextPage = routes.home;
-
-  // TODO Update to submit application via API
   const handleSubmit = async (event) => {
     event.preventDefault();
+    await props.claimsApi.submitClaim(new Claim(formState));
     router.push(nextPage);
   };
 
@@ -38,4 +42,13 @@ export const Confirm = () => {
   );
 };
 
-export default Confirm;
+Confirm.propTypes = {
+  claim: PropTypes.instanceOf(Claim),
+  // TODO: This should be an instance of ClaimsApi but throws an error in tests with mocks.
+  claimsApi: PropTypes.object,
+  query: PropTypes.shape({
+    claim_id: PropTypes.string,
+  }),
+};
+
+export default withClaim(Confirm);

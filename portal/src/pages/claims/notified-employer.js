@@ -4,7 +4,7 @@ import InputChoiceGroup from "../../components/InputChoiceGroup";
 import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
-import routes from "../../routes";
+import routeWithParams from "../../utils/routeWithParams";
 import useFormState from "../../hooks/useFormState";
 import useHandleInputChange from "../../hooks/useHandleInputChange";
 import useHandleSave from "../../hooks/useHandleSave";
@@ -30,7 +30,7 @@ export const NotifiedEmployer = (props) => {
       formState={formState}
       title={t("pages.claimsNotifiedEmployer.title")}
       onSave={handleSave}
-      nextPage={routes.claims.todo}
+      nextPage={routeWithParams("claims.confirm", props.query)}
     >
       <InputChoiceGroup
         choices={[
