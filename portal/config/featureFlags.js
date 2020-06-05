@@ -17,7 +17,7 @@ const flagsConfig = {
     // When unrestrictedClaimFlow is enabled, a user can proceed through the
     // full claim flow. This is in place to prevent pilot users from going to
     // screens that we're not yet ready to pilot.
-    unrestrictedClaimFlow: false,
+    unrestrictedClaimFlow: true,
   },
   // Environments can optionally override a default feature flag below.
   // The environment keys should use the same envName defined in
@@ -25,10 +25,6 @@ const flagsConfig = {
   development: {
     example: true,
     pfmlTerriyay: true,
-    unrestrictedClaimFlow: true,
-  },
-  test: {
-    unrestrictedClaimFlow: true,
   },
 };
 
