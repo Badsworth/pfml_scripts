@@ -47,7 +47,7 @@ module "massgov_pfml" {
   cognito_extra_logout_urls   = ["http://localhost:3000"]
 
   # Integrations
-  cognito_post_confirmation_lambda_arn = null
+  cognito_post_confirmation_lambda_arn = "arn:aws:lambda:us-east-1:498823821309:function:massgov-pfml-test-cognito_post_confirmation"
 
   # You probably don't need to change the variables below:
   source                 = "../../template"
