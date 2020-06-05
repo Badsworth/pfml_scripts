@@ -24,7 +24,6 @@ sys.path.insert(0, ".")  # noqa: E402
 import massgov.pfml.util.logging as logging  # noqa: E402 isort:skip
 from massgov.pfml.util.datetime.quarter import Quarter  # noqa: E402 isort:skip
 
-logging.init(__package__)
 logger = logging.get_logger("massgov.pfml.dor.mock.generate")
 
 random.seed(1111)
@@ -41,6 +40,8 @@ parser.add_argument(
 parser.add_argument(
     "--folder", type=str, default="generated_files", help="Output folder for generated files"
 )
+
+EMPLOYER_COUNT_RANDOM_POOL = (1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 4)
 
 
 # helpers
@@ -62,6 +63,10 @@ def format_datetime(d):
     return d.strftime("%Y%m%d%H%M%S")
 
 
+def boolean_to_str(b):
+    return "T" if b else "F"
+
+
 # generator
 
 file_extension = format_datetime(datetime.now())
@@ -74,6 +79,9 @@ NO_EXEMPTION_DATE = dt.date(9999, 12, 31)
 
 
 def main():
+    """DOR Mock File Generator"""
+    logging.init(__name__)
+
     args = parser.parse_args()
     employee_count = args.count
 
@@ -87,8 +95,8 @@ def main():
     if employer_count < 4:
         employer_count = 4
 
-    employers = populate_employer_file(employer_count, employers_file)
-    populate_employee_file(employee_count, employers, employees_file)
+    employers = process_employer_file(employer_count, employers_file)
+    process_employee_file(employee_count, employers, employees_file)
 
     logger.info(
         "DONE: Please check files in generated_files folder: %s and %s",
@@ -97,9 +105,16 @@ def main():
     )
 
 
-def populate_employer_file(employer_count, employers_file):
+def process_employer_file(employer_count, employers_file):
     """Generate employers, print rows to file"""
     employers = generate_employers(employer_count)
+    populate_employer_file(employers, employers_file)
+    employers_file.close()
+
+    return employers
+
+
+def populate_employer_file(employers, employers_file):
     for row in employers:
         line = "{}{:255}{}{:255}{:30}{}{}{:255}{}{}{}{}{}\n".format(
             row["account_key"],
@@ -110,16 +125,13 @@ def populate_employer_file(employer_count, employers_file):
             row["employer_address_state"],
             row["employer_address_zip"],
             row["employer_dba"],
-            row["family_exemption"],
-            row["medical_exemption"],
+            boolean_to_str(row["family_exemption"]),
+            boolean_to_str(row["medical_exemption"]),
             format_date(row["exemption_commence_date"]),
             format_date(row["exemption_cease_date"]),
             format_datetime(row["updated_date"]),
         )
         employers_file.write(line)
-    employers_file.close()
-
-    return employers
 
 
 def generate_employers(employer_count):
@@ -147,13 +159,13 @@ def generate_employers(employer_count):
         employer_dba = employer_name
         if random.random() < 0.2:
             employer_dba = fake.company()
-        family_exemption = random.choice("FT")
-        medical_exemption = random.choice("FT")
+        family_exemption = random.choice((True, False))
+        medical_exemption = random.choice((True, False))
 
         exemption_commence_date = NO_EXEMPTION_DATE
         exemption_cease_date = NO_EXEMPTION_DATE
-        has_exemption = random.choice("FT")
-        if has_exemption == "1":
+        has_exemption = random.choice((True, False))
+        if has_exemption:
             commence_days_before = random.randrange(1, 365)  # up to one year
             exemption_commence_date = get_date_days_before(datetime.today(), commence_days_before)
             exemption_cease_date = get_date_days_after(
@@ -192,26 +204,30 @@ def generate_employers(employer_count):
     return employers
 
 
-def populate_employee_file(employee_count, employers, employees_file):
+def process_employee_file(employee_count, employers, employees_file):
     """Generate employees rows, print rows to file"""
-    employer_rows, employee_rows = generate_employee_employer_quarterly_wage_rows(
+    employer_wage_rows, employee_wage_rows = generate_employee_employer_quarterly_wage_rows(
         employee_count, employers
     )
+    employees_file.close()
 
-    for employer_row in employer_rows:
+
+def populate_employee_file(employer_wage_rows, employee_wage_rows, employers, employees_file):
+    for employer_row in employer_wage_rows:
         line = "{}{}{!s}{:255}{}{}{}{}\n".format(
             "A",
             employer_row["account_key"],
             employer_row["filing_period"],
             employer_row["employer_name"],
             employer_row["employer_fein"],
-            employer_row["amended_flag"],
+            boolean_to_str(employer_row["amended_flag"]),
             format_date(employer_row["received_date"]),
             format_datetime(employer_row["updated_date"]),
         )
+        print(line)
         employees_file.write(line)
 
-    for employee_row in employee_rows:
+    for employee_row in employee_wage_rows:
         line = "{}{}{!s}{:255}{:255}{}{}{}{:20.2f}{:20.2f}{:20.2f}{:20.2f}{:20.2f}{:20.2f}\n".format(
             "B",
             employee_row["account_key"],
@@ -219,26 +235,27 @@ def populate_employee_file(employee_count, employers, employees_file):
             employee_row["employee_first_name"],
             employee_row["employee_last_name"],
             employee_row["employee_ssn"],
-            employee_row["independent_contractor"],
-            employee_row["opt_in"],
-            employee_row["employer_ytd_wages"],
-            employee_row["employer_qtr_wages"],
+            boolean_to_str(employee_row["independent_contractor"]),
+            boolean_to_str(employee_row["opt_in"]),
+            employee_row["employee_ytd_wages"],
+            employee_row["employee_qtr_wages"],
             employee_row["employee_medical"],
             employee_row["employer_medical"],
             employee_row["employee_family"],
             employee_row["employer_family"],
         )
+        print(line)
         employees_file.write(line)
 
-    employees_file.close()
 
-
-def generate_employee_employer_quarterly_wage_rows(employee_count, employees):
+def generate_employee_employer_quarterly_wage_rows(
+    employee_count, employers, employer_count_random_pool=EMPLOYER_COUNT_RANDOM_POOL
+):
     """Generate employee and employer quarterly wage information rows"""
     employer_rows = []
     employee_rows = []
 
-    employers_by_ein = pydash.group_by(employees, "fein")
+    employers_by_ein = pydash.group_by(employers, "fein")
     employer_eins = employers_by_ein.keys()
 
     logger.info("Generating employee rows ...")
@@ -253,7 +270,7 @@ def generate_employee_employer_quarterly_wage_rows(employee_count, employees):
         ssn = fake.invalid_ssn().replace("-", "")
 
         # randomly pick employers by random count
-        employer_count = random.choice((1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 4))
+        employer_count = random.choice(employer_count_random_pool)
         employer_eins_for_employee = random.sample(employer_eins, employer_count)
 
         if count > 0 and (count % 5000) == 0:
@@ -268,8 +285,8 @@ def generate_employee_employer_quarterly_wage_rows(employee_count, employees):
             employer = employers_by_ein[ein][0]
 
             # information about the employees classification with this employer
-            independent_contractor = random.choice("YN")
-            opt_in = random.choice("YN")
+            independent_contractor = random.choice((True, False))
+            opt_in = random.choice((True, False))
 
             # random quarter wage information to be used by all quarters
             qtr_wages = decimal.Decimal(random.randrange(6000000)) / 100
@@ -279,7 +296,7 @@ def generate_employee_employer_quarterly_wage_rows(employee_count, employees):
             for quarter in QUARTERS:
 
                 # is the quarter information amended
-                amended_flag = random.choice("FT")
+                amended_flag = random.choice((True, False))
 
                 received_date = get_date_days_after(quarter.as_date(), random.randrange(1, 90))
                 updated_date = get_date_days_before(datetime.today(), random.randrange(1, 90))
@@ -307,8 +324,8 @@ def generate_employee_employer_quarterly_wage_rows(employee_count, employees):
                     "employee_ssn": ssn,
                     "independent_contractor": independent_contractor,
                     "opt_in": opt_in,
-                    "employer_ytd_wages": ytd_wages,
-                    "employer_qtr_wages": qtr_wages,
+                    "employee_ytd_wages": ytd_wages,
+                    "employee_qtr_wages": qtr_wages,
                     "employer_medical": contribution.employer_medical,
                     "employer_family": contribution.employer_family,
                     "employee_medical": contribution.employee_medical,

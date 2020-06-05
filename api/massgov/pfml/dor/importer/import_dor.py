@@ -7,8 +7,7 @@ import json
 import os
 from dataclasses import asdict, dataclass, field
 from datetime import datetime
-from decimal import Decimal
-from typing import Callable, Dict, List, Optional, Union
+from typing import Dict, List, Optional, Union
 from uuid import UUID
 
 import boto3
@@ -18,8 +17,14 @@ import massgov.pfml.util.files as file_util
 import massgov.pfml.util.logging as logging
 from massgov.pfml import db
 from massgov.pfml.db.models.employees import ImportLog
+from massgov.pfml.dor.importer.dor_file_formats import (
+    EMPLOYEE_FORMAT,
+    EMPLOYER_FILE_FORMAT,
+    EMPLOYER_QUARTER_INFO_FORMAT,
+)
 from massgov.pfml.dor.importer.lib.decrypter import GpgDecrypter, Utf8Decrypter
 from massgov.pfml.util.aws_ssm import get_secret
+from massgov.pfml.util.files.file_format import FileFormat
 
 logger = logging.get_logger("massgov.pfml.dor.importer.import_dor")
 
@@ -68,77 +73,6 @@ class ImportRunReport:
     start: str
     imports: List[ImportReport] = field(default_factory=list)
     end: Optional[str] = None
-
-
-@dataclass
-class FieldFormat:
-    property_name: str
-    length: int
-    conversion_function: Optional[Callable] = None
-
-
-def parse_date(date_str):
-    return datetime.strptime(date_str, "%Y%m%d")
-
-
-def parse_datetime(datetime_str):
-    return datetime.strptime(datetime_str, "%Y%m%d%H%M%S")
-
-
-def parse_boolean(boolean_str):
-    # expected format is "1" or "0"
-    return boolean_str == "T"
-
-
-def parse_dollar_amount(dollar_amount_str):
-    return Decimal(dollar_amount_str)
-
-
-# File formats
-# See details in https://lwd.atlassian.net/wiki/spaces/API/pages/229539929/DOR+Import#Import-Process
-EMPLOYER_FILE_FORMAT = (
-    FieldFormat("account_key", 11),
-    FieldFormat("employer_name", 255),
-    FieldFormat("fein", 9),
-    FieldFormat("employer_address_street", 255),
-    FieldFormat("employer_address_city", 30),
-    FieldFormat("employer_address_state", 2),
-    FieldFormat("employer_address_zip", 9),
-    FieldFormat("employer_dba", 255),
-    FieldFormat("family_exemption", 1, parse_boolean),
-    FieldFormat("medical_exemption", 1, parse_boolean),
-    FieldFormat("exemption_commence_date", 8, parse_date),
-    FieldFormat("exemption_cease_date", 8, parse_date),
-    FieldFormat("updated_date", 14, parse_datetime),
-)
-
-EMPLOYER_QUARTER_INFO_FORMAT = (
-    FieldFormat("record_type", 1),
-    FieldFormat("account_key", 11),
-    FieldFormat("filing_period", 8, parse_date),
-    FieldFormat("employer_name", 255),
-    FieldFormat("employer_fein", 9),
-    FieldFormat("amended_flag", 1, parse_boolean),
-    FieldFormat("received_date", 8, parse_date),
-    FieldFormat("updated_date", 14, parse_datetime),
-)
-
-EMPLOYEE_FORMAT = (
-    FieldFormat("record_type", 1),
-    FieldFormat("account_key", 11),
-    FieldFormat("filing_period", 8, parse_date),
-    FieldFormat("employee_first_name", 255),
-    FieldFormat("employee_last_name", 255),
-    FieldFormat("employee_ssn", 9),
-    FieldFormat("independent_contractor", 1, parse_boolean),
-    FieldFormat("opt_in", 1, parse_boolean),
-    FieldFormat("employee_ytd_wages", 20, parse_dollar_amount),
-    FieldFormat("employee_qtr_wages", 20, parse_dollar_amount),
-    FieldFormat("employee_medical", 20, parse_dollar_amount),
-    FieldFormat("employer_medical", 20, parse_dollar_amount),
-    FieldFormat("employee_family", 20, parse_dollar_amount),
-    FieldFormat("employer_family", 20, parse_dollar_amount),
-)
 
 
 def handler(event, context):
@@ -466,11 +400,12 @@ def parse_employer_file(path, employer_file, decrypter):
     decrypted_str = decrypter.decrypt(file_bytes)
     decrypted_lines = decrypted_str.split("\n")
 
+    employer_file_format = FileFormat(EMPLOYER_FILE_FORMAT)
     for row in decrypted_lines:
         if not row:  # skip empty end of file lines
             continue
 
-        employer = parse_row_to_object_by_format(row, EMPLOYER_FILE_FORMAT)
+        employer = employer_file_format.parse_line(row)
         employers.append(employer)
 
     logger.info("Finished parsing employer file", extra={"employer_file": employer_file})
@@ -489,38 +424,22 @@ def parse_employee_file(path, employee_file, decrypter):
     decrypted_str = decrypter.decrypt(file_bytes)
     decrypted_lines = decrypted_str.split("\n")
 
+    employer_quarter_info_file_format = FileFormat(EMPLOYER_QUARTER_INFO_FORMAT)
+    employee_wage_file_format = FileFormat(EMPLOYEE_FORMAT)
+
     for row in decrypted_lines:
         if not row:  # skip empty end of file lines
             continue
 
         if row.startswith("A"):
-            employer_quarter_info = parse_row_to_object_by_format(row, EMPLOYER_QUARTER_INFO_FORMAT)
+            employer_quarter_info = employer_quarter_info_file_format.parse_line(row)
             employers_quarter_info.append(employer_quarter_info)
         else:
-            employee_info = parse_row_to_object_by_format(row, EMPLOYEE_FORMAT)
+            employee_info = employee_wage_file_format.parse_line(row)
             employees_info.append(employee_info)
 
     logger.info("Finished parsing employee file", extra={"employee_file": employee_file})
     return employers_quarter_info, employees_info
-
-
-def parse_row_to_object_by_format(row, row_format):
-    object = {}
-    start_index = 0
-    for column_format in row_format:
-        property_name = column_format.property_name
-        end_index = start_index + column_format.length
-
-        column_value = row[start_index:end_index].strip()
-        conversion_function = column_format.conversion_function
-        if conversion_function is None:
-            object[property_name] = column_value
-        else:
-            object[property_name] = conversion_function(column_value)
-
-        start_index = end_index
-
-    return object
 
 
 def read_file(bucket, key):

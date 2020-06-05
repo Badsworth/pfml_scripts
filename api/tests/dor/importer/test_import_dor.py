@@ -1,6 +1,3 @@
-from datetime import datetime
-from decimal import Decimal
-
 import pytest
 
 import dor_test_data as test_data
@@ -20,10 +17,12 @@ employer_file = "DORDFMLEMP_20200519120622"
 @pytest.fixture
 def test_fs_path_for_s3(tmp_path):
     file_name1 = "DORDFML_20200519120622"
-    content1 = "A0000000000420200331Bell, Hunt and Weiss                                                                                                                                                                                                                                           673429455T2020062220200308120622\nB0000000000420200331Rachel                                                                                                                                                                                                                                                         Jones                                                                                                                                                                                                                                                          814700000NN            34689.35            34689.35               86.03              129.04               45.10                0.00"
+    employer_quarter_line = test_data.get_employer_quarter_line()
+    employee_quarter_line = test_data.get_employee_quarter_line()
+    content1 = "{}\n{}".format(employer_quarter_line, employee_quarter_line)
 
     file_name2 = "DORDFMLEMP_20200519120622"
-    content2 = "00000000001Anderson, Barber and Johnson                                                                                                                                                                                                                                   24467406564034 Angela Mews                                                                                                                                                                                                                                              North Kaylabury               NY935463801Anderson, Barber and Johnson                                                                                                                                                                                                                                   TF999912319999123120200322120622"
+    content2 = test_data.get_employer_info_line()
 
     test_folder = tmp_path / "test_folder"
     test_folder.mkdir()
@@ -301,33 +300,8 @@ def test_get_files_for_import_grouped_by_date(test_fs_path_for_s3):
 
 
 def test_parse_employee_file(test_fs_path_for_s3):
-    employee_wage_data = {
-        "record_type": "B",
-        "account_key": "00000000004",
-        "filing_period": datetime(2020, 3, 31, 0, 0),
-        "employee_first_name": "Rachel",
-        "employee_last_name": "Jones",
-        "employee_ssn": "814700000",
-        "independent_contractor": False,
-        "opt_in": False,
-        "employee_ytd_wages": Decimal("34689.35"),
-        "employee_qtr_wages": Decimal("34689.35"),
-        "employee_medical": Decimal("86.03"),
-        "employer_medical": Decimal("129.04"),
-        "employee_family": Decimal("45.10"),
-        "employer_family": Decimal("0.00"),
-    }
-
-    employer_quarter_info = {
-        "record_type": "A",
-        "account_key": "00000000004",
-        "filing_period": datetime(2020, 3, 31, 0, 0),
-        "employer_name": "Bell, Hunt and Weiss",
-        "employer_fein": "673429455",
-        "amended_flag": True,
-        "received_date": datetime(2020, 6, 22, 0, 0),
-        "updated_date": datetime(2020, 3, 8, 12, 6, 22),
-    }
+    employee_wage_data = test_data.get_new_employee_wage_data()
+    employer_quarter_info = test_data.get_employer_quarter_info()
 
     employers_info, employees_info = import_dor.parse_employee_file(
         str(test_fs_path_for_s3), employee_file, decrypter
@@ -337,21 +311,7 @@ def test_parse_employee_file(test_fs_path_for_s3):
 
 
 def test_parse_employer_file(test_fs_path_for_s3):
-    employer_quarter_info = {
-        "account_key": "00000000001",
-        "employer_name": "Anderson, Barber and Johnson",
-        "fein": "244674065",
-        "employer_address_street": "64034 Angela Mews",
-        "employer_address_city": "North Kaylabury",
-        "employer_address_state": "NY",
-        "employer_address_zip": "935463801",
-        "employer_dba": "Anderson, Barber and Johnson",
-        "family_exemption": True,
-        "medical_exemption": False,
-        "exemption_commence_date": datetime(9999, 12, 31, 0, 0),
-        "exemption_cease_date": datetime(9999, 12, 31, 0, 0),
-        "updated_date": datetime(2020, 3, 22, 12, 6, 22),
-    }
+    employer_quarter_info = test_data.get_new_employer()
 
     employers_info = import_dor.parse_employer_file(
         str(test_fs_path_for_s3), employer_file, decrypter
