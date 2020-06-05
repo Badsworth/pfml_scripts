@@ -3,9 +3,7 @@ import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
 import User from "../../models/User";
-import { isFeatureEnabled } from "../../services/featureFlags";
 import routeWithParams from "../../utils/routeWithParams";
-import routes from "../../routes";
 import useFormState from "../../hooks/useFormState";
 import useHandleInputChange from "../../hooks/useHandleInputChange";
 import useHandleSave from "../../hooks/useHandleSave";
@@ -27,9 +25,7 @@ const Ssn = (props) => {
     (result) => props.setUser(result.user)
   );
 
-  const nextPage = isFeatureEnabled("unrestrictedClaimFlow")
-    ? routeWithParams("claims.leaveType", props.query)
-    : routes.claims.success;
+  const nextPage = routeWithParams("claims.leaveType", props.query);
 
   return (
     <QuestionPage

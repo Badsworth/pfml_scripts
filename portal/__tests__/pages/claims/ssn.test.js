@@ -31,16 +31,7 @@ describe("Ssn", () => {
     expect(wrapper).toMatchSnapshot();
   });
 
-  it("redirects to success page if unrestrictedClaimFlow is not enabled", () => {
-    expect(wrapper.find("QuestionPage").prop("nextPage")).toEqual(
-      routes.claims.success
-    );
-  });
-
-  it("redirects to leaveType if unrestrictedClaimFlow is enabled", () => {
-    process.env.featureFlags = { unrestrictedClaimFlow: true };
-    wrapper = render();
-
+  it("redirects to leaveType", () => {
     expect(wrapper.find("QuestionPage").prop("nextPage")).toEqual(
       `${routes.claims.leaveType}?claim_id=${claim_id}`
     );
