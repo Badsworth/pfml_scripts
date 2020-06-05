@@ -21,8 +21,8 @@ import pydash
 # See import_infra/dor/README.md for running details.
 sys.path.insert(0, ".")  # noqa: E402
 
-import massgov.pfml.util.logging as logging  # isort:skip
-from massgov.pfml.util.datetime.quarter import Quarter  # isort:skip
+import massgov.pfml.util.logging as logging  # noqa: E402 isort:skip
+from massgov.pfml.util.datetime.quarter import Quarter  # noqa: E402 isort:skip
 
 logging.init(__package__)
 logger = logging.get_logger("massgov.pfml.dor.mock.generate")

@@ -1,8 +1,14 @@
+import json
 import uuid
-from dataclasses import asdict
 
-from massgov.pfml.api.wages import wage_and_comp_response
+from massgov.pfml.api.wages import WagesAndContributionsResponse
+from massgov.pfml.db.models.employees import WagesAndContributions
 from massgov.pfml.db.models.factories import EmployeeFactory, WagesAndContributionsFactory
+
+
+def build_json_response(wages: WagesAndContributions) -> WagesAndContributionsResponse:
+    """Build a JSON-serialized response object directly from a WagesAndContributions object."""
+    return json.loads(WagesAndContributionsResponse.from_orm(wages).json())
 
 
 def test_get_no_wages(client):
@@ -20,9 +26,8 @@ def test_get_single_wage_item(client):
     WagesAndContributionsFactory.create()
 
     response = client.get("/v1/wages", query_string={"employee_id": wages.employee_id})
-
     assert response.status_code == 200
-    assert response.get_json() == [asdict(wage_and_comp_response(wages))]
+    assert response.get_json() == [build_json_response(wages)]
 
 
 def test_get_multiple_wage_items(client):
@@ -34,7 +39,7 @@ def test_get_multiple_wage_items(client):
     response = client.get("/v1/wages", query_string={"employee_id": all_wages[0].employee_id})
 
     assert response.status_code == 200
-    assert response.get_json() == [asdict(wage_and_comp_response(wage)) for wage in all_wages]
+    assert response.get_json() == list(map(build_json_response, all_wages))
 
 
 def test_get_no_wages_with_wage_period(client):
@@ -62,11 +67,12 @@ def test_get_single_wage_with_wage_period(client):
     )
 
     assert response.status_code == 200
-    assert response.get_json() == [asdict(wage_and_comp_response(wages))]
+    assert response.get_json() == [build_json_response(wages)]
 
 
 def test_get_multiple_wages_with_wage_period(client):
     """Verify that multiple wages are returned for an employee in a filing period."""
+
     # Create multiple wages with the same employee and filing period,
     # but generate different employers.
     all_wages = WagesAndContributionsFactory.create_batch(
@@ -84,4 +90,4 @@ def test_get_multiple_wages_with_wage_period(client):
     )
 
     assert response.status_code == 200
-    assert response.get_json() == [asdict(wage_and_comp_response(wage)) for wage in all_wages]
+    assert response.get_json() == list(map(build_json_response, all_wages))
