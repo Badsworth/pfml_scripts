@@ -1,21 +1,29 @@
 # Monitoring
 
-We use [New Relic Browser](https://newrelic.com/products/browser-monitoring) to monitor errors in our application. This works by including [a JS snippet](https://docs.newrelic.com/docs/browser/new-relic-browser/installation/install-new-relic-browser-agent#copy-paste-app) towards the top of our HTML. This snippet works out of the box by wrapping low-level browser APIs, and globally exposes [an API (`newrelic`) for explicitly tracking](https://docs.newrelic.com/docs/browser/new-relic-browser/browser-agent-spa-api) interactions and errors that the app catches itself.
+We use [New Relic Browser](https://newrelic.com/products/browser-monitoring) to monitor errors in our application. This works by including [a JS snippet](https://docs.newrelic.com/docs/browser/new-relic-browser/installation/install-new-relic-browser-agent#copy-paste-app) towards the top of our HTML. This snippet, `new-relic.js`, works out of the box by wrapping low-level browser APIs, and globally exposes [an API (`newrelic`) for explicitly tracking](https://docs.newrelic.com/docs/browser/new-relic-browser/browser-agent-spa-api) interactions and errors that the app catches itself.
 
 ## New Relic
+
+### Configuration
+
+The New Relic snippet requires each environment to include a `newRelicAppId` environment variable with the New Relic Browser Application ID.
+
+We configure the New Relic snippet by setting the `window.NREUM` global variable, in `_document.js`, before loading the New Relic snippet.
+
+🚨 If we ever update the New Relic snippet, we should ensure that the configuration portion at the bottom is removed, so that we're not overwriting `window.NREUM.loader_config` or `window.NREUM.info`.
 
 ### JS Errors
 
 New Relic Browser is used for monitoring JS Errors. JS Errors are reported to New Relic in a variety of ways:
 
 1. When we add a `try/catch` statement, we _should_ call the `newrelic` API's `noticeError` method. For example:
-    ```js
-    try {
-      await doSomething();
-    } catch (error) {
-      tracker.noticeError(error);
-    }
-    ```
+   ```js
+   try {
+     await doSomething();
+   } catch (error) {
+     tracker.noticeError(error);
+   }
+   ```
 1. Our `ErrorBoundary` component catches any errors that bubble up from its descendant child components
 1. The New Relic snippet should automatically catch errors that our React app doesn't catch
 

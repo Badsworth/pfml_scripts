@@ -15,4 +15,5 @@ module.exports = {
       mandatorySignIn: false,
     },
   },
+  newRelicAppId: "706309942",
 };

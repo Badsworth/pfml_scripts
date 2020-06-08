@@ -15,4 +15,6 @@ module.exports = {
       mandatorySignIn: false,
     },
   },
+  // This is the same New Relic app as the Test environment
+  newRelicAppId: "706309942",
 };
