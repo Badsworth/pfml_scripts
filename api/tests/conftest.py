@@ -56,28 +56,6 @@ def test_employee(monkeypatch):
 
 
 @pytest.fixture
-def test_user(test_db_session):
-    from massgov.pfml.db.models.employees import Status, User
-
-    user = fake.create_user("johnsmith@example.com", "0000-111-2222")
-
-    status = Status(status_description="unverified")
-    test_db_session.add(status)
-
-    u = User(
-        user_id=user["user_id"],
-        active_directory_id=user["auth_id"],
-        email_address=user["email_address"],
-        status=status,
-    )
-
-    test_db_session.add(u)
-    test_db_session.commit()
-
-    return user
-
-
-@pytest.fixture
 def test_wages(test_employee, monkeypatch):
     wages = fake.create_wages(test_employee["employee_id"], str(uuid.uuid4()))
 

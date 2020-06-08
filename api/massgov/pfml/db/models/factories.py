@@ -46,17 +46,6 @@ class UserFactory(BaseFactory):
     active_directory_id = factory.Sequence(lambda n: n)
     email_address = factory.Faker("email")
 
-    # Use iterator for now, to allow us to lazily load the status_id when needed.
-    @factory.lazy_attribute
-    def status_id(self):  # noqa: B902
-        active_status = (
-            UserFactory._meta.sqlalchemy_session.query(models.Status)
-            .filter_by(status_description="Active")
-            .one()
-        )
-
-        return active_status.status_id
-
 
 class EmployerFactory(BaseFactory):
     class Meta:

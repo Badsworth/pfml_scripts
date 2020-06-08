@@ -27,24 +27,6 @@ paths:
                 example:
                   status: "ok"
 
-  /users:
-    post:
-      tags:
-        - Users
-      summary: This endpoint allows a user to create new account
-      operationId: massgov.pfml.api.users.users_post
-      responses:
-        "200":
-          description: A successful request returns a 200 status code and a user object
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/User"
-        "400":
-          $ref: "#/components/responses/BadRequest"
-      requestBody:
-        $ref: "#/components/requestBodies/UserToCreate"
-
   /users/{user_id}:
     get:
       tags:
@@ -65,7 +47,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/User"
+                $ref: "#/components/schemas/UserResponse"
         "404":
           $ref: "#/components/responses/NotFound"
 
@@ -83,7 +65,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/User"
+                $ref: "#/components/schemas/UserResponse"
         "404":
           $ref: "#/components/responses/NotFound"
 
@@ -402,12 +384,6 @@ tags:
 
 components:
   requestBodies:
-    UserToCreate:
-      content:
-        application/json:
-          schema:
-            $ref: "#/components/schemas/UserToCreate"
-      required: true
     EmployeeToSearch:
       content:
         application/json:
@@ -484,23 +460,7 @@ components:
             $ref: "#/components/schemas/Error"
 
   schemas:
-    UserToCreate:
-      type: object
-      properties:
-        auth_id:
-          type: string
-          format: uuid
-          example: "009fa369-291b-403f-a85a-15e938c26f2f"
-        email_address:
-          type: string
-          format: email
-          example: "janedoe@example.com"
-        consented_to_data_sharing:
-          type: boolean
-          example: true
-      required: ["email_address", "auth_id", "consented_to_data_sharing"]
-
-    User:
+    UserResponse:
       type: object
       properties:
         user_id:
@@ -514,13 +474,6 @@ components:
           type: string
           format: email
           example: "janedoe@example.com"
-        status:
-          type: string
-          enum:
-            - unverified
-            - verified
-          default: unverified
-          example: unverified
         consented_to_data_sharing:
           type: boolean
           default: false

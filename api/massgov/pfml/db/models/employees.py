@@ -230,8 +230,6 @@ class User(Base):
     user_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
     active_directory_id = Column(Text)
     email_address = Column(Text)
-    status_id = Column(Integer, ForeignKey("lk_status.status_id"))
-    status = relationship("Status", backref="users")
     consented_to_data_sharing = Column(Boolean, default=False, nullable=False)
 
 

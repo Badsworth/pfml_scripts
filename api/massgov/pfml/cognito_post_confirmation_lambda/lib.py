@@ -4,7 +4,6 @@ import massgov.pfml.db as db
 import massgov.pfml.util.aws_lambda as aws_lambda
 import massgov.pfml.util.logging
 from massgov.pfml.db.models.employees import User
-from massgov.pfml.db.status import UserStatusDescription, get_or_make_status
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
 
@@ -37,12 +36,8 @@ def handler(
 
     cognito_user_attrs = event.request.userAttributes
 
-    user_status = get_or_make_status(db_session, UserStatusDescription.unverified)
-
     user = User(
-        active_directory_id=cognito_user_attrs["sub"],
-        status=user_status,
-        email_address=cognito_user_attrs["email"],
+        active_directory_id=cognito_user_attrs["sub"], email_address=cognito_user_attrs["email"],
     )
 
     logger.info("creating user", extra={"active_directory_id": user.active_directory_id})
