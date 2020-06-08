@@ -11,6 +11,7 @@ logger = massgov.pfml.util.logging.get_logger(__name__)
 class UserStatusDescription(Enum):
     unverified = "unverified"
     verified = "verified"
+    completed = "Completed"
 
 
 StatusDescription = Union[UserStatusDescription]

@@ -9,6 +9,7 @@ from massgov.pfml.api.models.application_request import ApplicationRequest
 from massgov.pfml.api.models.application_response import ApplicationResponse
 from massgov.pfml.db.models.applications import Application
 from massgov.pfml.db.models.employees import Status
+from massgov.pfml.db.status import UserStatusDescription, get_or_make_status
 
 
 def applications_get_all_fake():
@@ -55,7 +56,7 @@ def applications_start():
             db_session.query(Status).filter(Status.status_description == "Draft").one_or_none()
         )
 
-        application.status = draft_status.status_type
+        application.status_id = draft_status.status_id
         db_session.add(application)
         db_session.flush()
         db_session.commit()
@@ -102,10 +103,8 @@ def applications_submit(application_id):
         if existing_application is None:
             raise NotFound
 
-        completed_status = (
-            db_session.query(Status).filter(Status.status_description == "Completed").one_or_none()
-        )
-        existing_application.status = completed_status.status_type
+        completed_status = get_or_make_status(db_session, UserStatusDescription.completed)
+        existing_application.status_id = completed_status.status_id
         existing_application.completed_time = datetime.now()
         db_session.add(existing_application)
         db_session.flush()

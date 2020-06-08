@@ -17,73 +17,73 @@ from .base import Base, uuid_gen
 
 class AddressType(Base):
     __tablename__ = "lk_address_type"
-    address_type = Column(Integer, primary_key=True, autoincrement=True)
+    address_type_id = Column(Integer, primary_key=True, autoincrement=True)
     address_description = Column(Text)
 
 
 class GeoState(Base):
     __tablename__ = "lk_geo_state"
-    state_type = Column(Integer, primary_key=True, autoincrement=True)
-    state_description = Column(Text)
+    geo_state_id = Column(Integer, primary_key=True, autoincrement=True)
+    geo_state_description = Column(Text)
 
 
 class Country(Base):
     __tablename__ = "lk_country"
-    country_type = Column(Integer, primary_key=True, autoincrement=True)
+    country_id = Column(Integer, primary_key=True, autoincrement=True)
     country_description = Column(Text)
 
 
 class ClaimType(Base):
     __tablename__ = "lk_claim_type"
-    claim_type = Column(Integer, primary_key=True, autoincrement=True)
+    claim_type_id = Column(Integer, primary_key=True, autoincrement=True)
     claim_type_description = Column(Text)
 
 
 class Race(Base):
     __tablename__ = "lk_race"
-    race_type = Column(Integer, primary_key=True)
+    race_id = Column(Integer, primary_key=True)
     race_description = Column(Text)
 
 
 class MaritalStatus(Base):
     __tablename__ = "lk_marital_status"
-    marital_status_type = Column(Integer, primary_key=True, autoincrement=True)
+    marital_status_id = Column(Integer, primary_key=True, autoincrement=True)
     marital_status_description = Column(Text)
 
 
 class Gender(Base):
     __tablename__ = "lk_gender"
-    gender_type = Column(Integer, primary_key=True, autoincrement=True)
+    gender_id = Column(Integer, primary_key=True, autoincrement=True)
     gender_description = Column(Text)
 
 
 class Occupation(Base):
     __tablename__ = "lk_occupation"
-    occupation_type = Column(Integer, primary_key=True)
+    occupation_id = Column(Integer, primary_key=True)
     occupation_description = Column(Text)
 
 
 class EducationLevel(Base):
     __tablename__ = "lk_education_level"
-    education_level_type = Column(Integer, primary_key=True, autoincrement=True)
+    education_level_id = Column(Integer, primary_key=True, autoincrement=True)
     education_level_description = Column(Text)
 
 
 class Role(Base):
     __tablename__ = "lk_role"
-    role_type = Column(Integer, primary_key=True, autoincrement=True)
+    role_id = Column(Integer, primary_key=True, autoincrement=True)
     role_description = Column(Text)
 
 
 class PaymentType(Base):
     __tablename__ = "lk_payment_type"
-    payment_type = Column(Integer, primary_key=True, autoincrement=True)
+    payment_type_id = Column(Integer, primary_key=True, autoincrement=True)
     payment_type_description = Column(Text)
 
 
 class Status(Base):
     __tablename__ = "lk_status"
-    status_type = Column(Integer, primary_key=True, autoincrement=True)
+    status_id = Column(Integer, primary_key=True, autoincrement=True)
     status_description = Column(Text)
 
 
@@ -123,7 +123,7 @@ class Employer(Base):
 class PaymentInformation(Base):
     __tablename__ = "payment_information"
     payment_info_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
-    payment_type = Column(Integer, ForeignKey("lk_payment_type.payment_type"))
+    payment_type_id = Column(Integer, ForeignKey("lk_payment_type.payment_type_id"))
     bank_routing_nbr = Column(Integer)
     bank_account_nbr = Column(Integer)
     gift_card_nbr = Column(Integer)
@@ -142,11 +142,11 @@ class Employee(Base):
     preferred_comm_method_type = Column(Text)
     payment_info_id = Column(UUID(as_uuid=True), ForeignKey("payment_information.payment_info_id"))
     date_of_birth = Column(Date)
-    race_type = Column(Integer, ForeignKey("lk_race.race_type"))
-    marital_status_type = Column(Integer, ForeignKey("lk_marital_status.marital_status_type"))
-    gender_type = Column(Integer, ForeignKey("lk_gender.gender_type"))
-    occupation_type = Column(Integer, ForeignKey("lk_occupation.occupation_type"))
-    education_level_type = Column(Integer, ForeignKey("lk_education_level.education_level_type"))
+    race_id = Column(Integer, ForeignKey("lk_race.race_id"))
+    marital_status_id = Column(Integer, ForeignKey("lk_marital_status.marital_status_id"))
+    gender_id = Column(Integer, ForeignKey("lk_gender.gender_id"))
+    occupation_id = Column(Integer, ForeignKey("lk_occupation.occupation_id"))
+    education_level_id = Column(Integer, ForeignKey("lk_education_level.education_level_id"))
     authorized_reps = relationship(
         "AuthorizedRepEmployee", back_populates="employee", lazy="dynamic"
     )
@@ -161,7 +161,7 @@ class Claim(Base):
     claim_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
     employer_id = Column(UUID(as_uuid=True))
     authorized_representative_id = Column(UUID(as_uuid=True))
-    claim_type = Column(UUID(as_uuid=True))
+    claim_type_id = Column(UUID(as_uuid=True))
     benefit_amount = Column(Numeric(asdecimal=True))
     benefit_days = Column(Integer)
 
@@ -181,13 +181,13 @@ class AuthorizedRepEmployee(Base):
 class Address(Base):
     __tablename__ = "address"
     address_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
-    address_type = Column(Integer, ForeignKey("lk_address_type.address_type"))
+    address_type_id = Column(Integer, ForeignKey("lk_address_type.address_type_id"))
     address_line_one = Column(Text)
     address_line_two = Column(Text)
     city = Column(Text)
-    state_type = Column(Integer, ForeignKey("lk_geo_state.state_type"))
+    geo_state_id = Column(Integer, ForeignKey("lk_geo_state.geo_state_id"))
     zip_code = Column(Text)
-    country_type = Column(Integer, ForeignKey("lk_country.country_type"))
+    country_id = Column(Integer, ForeignKey("lk_country.country_id"))
     employees = relationship("EmployeeAddress", back_populates="addresses", lazy="dynamic")
     employers = relationship("EmployerAddress", back_populates="addresses", lazy="dynamic")
     health_care_providers = relationship("HealthCareProviderAddress", back_populates="address")
@@ -230,7 +230,7 @@ class User(Base):
     user_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
     active_directory_id = Column(Text)
     email_address = Column(Text)
-    status_type = Column(Integer, ForeignKey("lk_status.status_type"))
+    status_id = Column(Integer, ForeignKey("lk_status.status_id"))
     status = relationship("Status", backref="users")
     consented_to_data_sharing = Column(Boolean, default=False, nullable=False)
 
@@ -238,7 +238,7 @@ class User(Base):
 class UserRole(Base):
     __tablename__ = "link_user_role"
     user_id = Column(UUID(as_uuid=True), ForeignKey("user.user_id"), primary_key=True)
-    role_type = Column(Integer, ForeignKey("lk_role.role_type"), primary_key=True)
+    role_id = Column(Integer, ForeignKey("lk_role.role_id"), primary_key=True)
     related_role_id = Column(UUID(as_uuid=True))
 
 

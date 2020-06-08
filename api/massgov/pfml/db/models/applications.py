@@ -1,49 +1,52 @@
 from sqlalchemy import Boolean, Column, Date, DateTime, ForeignKey, Integer, Text
 from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.orm import relationship
+
+from massgov.pfml.db.models.employees import Occupation, Status
 
 from .base import Base, uuid_gen
 
 
 class LeaveReason(Base):
     __tablename__ = "lk_leave_reason"
-    leave_reason = Column(Integer, primary_key=True, autoincrement=True)
-    reason_description = Column(Text)
+    leave_reason_id = Column(Integer, primary_key=True, autoincrement=True)
+    leave_reason_description = Column(Text)
 
 
 class LeaveReasonQualifier(Base):
     __tablename__ = "lk_leave_reason_qualifier"
-    leave_reason_qualifier = Column(Integer, primary_key=True, autoincrement=True)
-    reason_qualifier_description = Column(Text)
+    leave_reason_qualifier_id = Column(Integer, primary_key=True, autoincrement=True)
+    leave_reason_qualifier_description = Column(Text)
 
 
 class LeaveType(Base):
     __tablename__ = "lk_leave_type"
-    leave_type = Column(Integer, primary_key=True, autoincrement=True)
+    leave_type_id = Column(Integer, primary_key=True, autoincrement=True)
     leave_type_description = Column(Text)
 
 
 class RelationshipToCareGiver(Base):
     __tablename__ = "lk_relationship_to_caregiver"
-    relationship = Column(Integer, primary_key=True, autoincrement=True)
-    relationship_description = Column(Text)
+    relationship_to_caregiver_id = Column(Integer, primary_key=True, autoincrement=True)
+    relationship_to_caregiver_description = Column(Text)
 
 
 class RelationshipQualifier(Base):
     __tablename__ = "lk_relationship_qualifier"
-    relationship_qualifier = Column(Integer, primary_key=True, autoincrement=True)
+    relationship_qualifier_id = Column(Integer, primary_key=True, autoincrement=True)
     relationship_qualifier_description = Column(Text)
 
 
 class NotificationMethod(Base):
     __tablename__ = "lk_notification_method"
-    notification_method = Column(Integer, primary_key=True, autoincrement=True)
+    notification_method_id = Column(Integer, primary_key=True, autoincrement=True)
     notification_method_description = Column(Text)
 
 
 class FrequencyOrDuration(Base):
     __tablename__ = "lk_frequency_or_duration"
-    frequency_or_duration = Column(Integer, primary_key=True, autoincrement=True)
-    frequency_duration_description = Column(Text)
+    frequency_or_duration_id = Column(Integer, primary_key=True, autoincrement=True)
+    frequency_or_duration_description = Column(Text)
 
 
 class Application(Base):
@@ -57,24 +60,25 @@ class Application(Base):
     first_name = Column(Text)
     last_name = Column(Text)
     middle_initial = Column(Text)
-    occupation_type = Column(Integer, ForeignKey("lk_occupation.occupation_type"))
-    relationship_to_caregiver = Column(
-        Integer, ForeignKey("lk_relationship_to_caregiver.relationship")
+    occupation_id = Column(Integer, ForeignKey("lk_occupation.occupation_id"))
+    relationship_to_caregiver_id = Column(
+        Integer, ForeignKey("lk_relationship_to_caregiver.relationship_to_caregiver_id")
     )
-    relationship_qualifier = Column(
-        Integer, ForeignKey("lk_relationship_qualifier.relationship_qualifier")
+    relationship_qualifier_id = Column(
+        Integer, ForeignKey("lk_relationship_qualifier.relationship_qualifier_id")
     )
     employer_notified = Column(Boolean)
     employer_notification_date = Column(Date)
-    employer_notification_method = Column(
-        Integer, ForeignKey("lk_notification_method.notification_method")
+    employer_notification_method_id = Column(
+        Integer, ForeignKey("lk_notification_method.notification_method_id")
     )
-    leave_type = Column(Integer, ForeignKey("lk_leave_type.leave_type"))
-    leave_reason = Column(Integer, ForeignKey("lk_leave_reason.leave_reason"))
-    leave_reason_qualifier = Column(
-        Integer, ForeignKey("lk_leave_reason_qualifier.leave_reason_qualifier")
+    leave_type_id = Column(Integer, ForeignKey("lk_leave_type.leave_type_id"))
+    leave_type = relationship("LeaveType")
+    leave_reason_id = Column(Integer, ForeignKey("lk_leave_reason.leave_reason_id"))
+    leave_reason_qualifier_id = Column(
+        Integer, ForeignKey("lk_leave_reason_qualifier.leave_reason_qualifier_id")
     )
-    status = Column(Integer, ForeignKey("lk_status.status_type"))
+    status_id = Column(Integer, ForeignKey("lk_status.status_id"))
     start_time = Column(DateTime)
     updated_time = Column(DateTime)
     completed_time = Column(DateTime)
@@ -82,13 +86,22 @@ class Application(Base):
     fineos_absence_id = Column(Text)
     fineos_notification_case_id = Column(Text)
 
+    status = relationship(Status)
+    occupation = relationship(Occupation)
+    leave_type = relationship(LeaveType)
+    leave_reason = relationship(LeaveReason)
+    leave_reason_qualifier = relationship(LeaveReasonQualifier)
+    relationship_to_caregiver = relationship(RelationshipToCareGiver)
+    relationship_qualifier = relationship(RelationshipQualifier)
+    employer_notification_method = relationship(NotificationMethod)
+
 
 class ApplicationPaymentPreference(Base):
     __tablename__ = "application_payment_preference"
     payment_pref_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
     application_id = Column(UUID(as_uuid=True), ForeignKey("application.application_id"))
     description = Column(Text)
-    payment_type = Column(Integer, ForeignKey("lk_payment_type.payment_type"))
+    payment_type_id = Column(Integer, ForeignKey("lk_payment_type.payment_type_id"))
     is_default = Column(Boolean)
     account_name = Column(Text)
     account_number = Column(Text)
@@ -103,7 +116,7 @@ class ContinuousLeavePeriod(Base):
     application_id = Column(UUID(as_uuid=True), ForeignKey("application.application_id"))
     start_date = Column(Date)
     end_date = Column(Date)
-    status = Column(Integer, ForeignKey("lk_status.status_type"))
+    status_id = Column(Integer, ForeignKey("lk_status.status_id"))
     last_day_worked = Column(Date)
     expected_return_to_work_date = Column(Date)
     start_date_full_day = Column(Boolean)
@@ -133,7 +146,7 @@ class ReducedScheduleLeavePeriod(Base):
     application_id = Column(UUID(as_uuid=True), ForeignKey("application.application_id"))
     start_date = Column(Date)
     end_date = Column(Date)
-    status = Column(Integer, ForeignKey("lk_status.status_type"))
+    status_id = Column(Integer, ForeignKey("lk_status.status_id"))
     thursday_off_hours = Column(Integer)
     thursday_off_minutes = Column(Integer)
     friday_off_hours = Column(Integer)

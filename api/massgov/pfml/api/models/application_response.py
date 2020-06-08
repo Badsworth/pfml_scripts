@@ -21,20 +21,29 @@ class ApplicationResponse:
                 application_json, leave_details_schedule_json
             )
 
+        if self.application.leave_type_id:
+            application_json["leave_type"] = self.application.leave_type.leave_type_description
+
+        if self.application.status_id:
+            application_json["status"] = self.application.status.status_description
+
         # Remove DB attributes not in response or in other components.
-        application_json.pop("leave_reason", None)
-        application_json.pop("leave_reason_qualifier", None)
-        application_json.pop("relationship_to_caregiver", None)
-        application_json.pop("relationship_qualifier", None)
+        application_json.pop("leave_type_id", None)
+        application_json.pop("leave_reason_id", None)
+        application_json.pop("leave_reason_qualifier_id", None)
+        application_json.pop("status_id", None)
+        application_json.pop("relationship_to_caregiver_id", None)
+        application_json.pop("relationship_qualifier_id", None)
         application_json.pop("employer_notified", None)
         application_json.pop("employer_notification_date", None)
-        application_json.pop("employer_notification_method", None)
+        application_json.pop("employer_notification_method_id", None)
         application_json.pop("start_time", None)
         application_json.pop("updated_time", None)
         application_json.pop("completed_time", None)
         application_json.pop("submitted_time", None)
         application_json.pop("fineos_absence_id", None)
         application_json.pop("fineos_notification_case_id", None)
+        application_json.pop("occupation_id", None)
 
         if payment_prefs_json is not None:
             application_json["payment_preference"] = payment_prefs_json
@@ -50,23 +59,23 @@ class ApplicationResponse:
             leave_details_schedule_name = "reduced_schedule_leave_periods"
 
         leave_details_json = {}
-        if application_json["leave_reason"] is not None:
-            leave_details_json["leave_reason"] = application_json["leave_reason"]
+        if self.application.occupation_id is not None:
+            leave_details_json["leave_reason"] = self.application.occupation.occupation_description
 
-        if application_json["leave_reason_qualifier"] is not None:
-            leave_details_json["leave_reason_qualifier"] = application_json[
+        if self.application.leave_reason_qualifier_id is not None:
+            leave_details_json[
                 "leave_reason_qualifier"
-            ]
+            ] = self.application.leave_reason_qualifier.leave_reason_qualifier_description
 
-        if application_json["relationship_to_caregiver"] is not None:
-            leave_details_json["relationship_to_caregiver"] = application_json[
+        if self.application.relationship_to_caregiver_id is not None:
+            leave_details_json[
                 "relationship_to_caregiver"
-            ]
+            ] = self.application.relationship_to_caregiver.relationship_to_caregiver_description
 
-        if application_json["relationship_qualifier"] is not None:
-            leave_details_json["relationship_qualifier"] = application_json[
+        if self.application.relationship_qualifier_id is not None:
+            leave_details_json[
                 "relationship_qualifier"
-            ]
+            ] = self.application.relationship_qualifier.relationship_qualifier_description
 
         if application_json["employer_notified"] is not None:
             leave_details_json["employer_notified"] = application_json["employer_notified"]
@@ -76,10 +85,10 @@ class ApplicationResponse:
                 "employer_notification_date"
             ]
 
-        if application_json["employer_notification_method"] is not None:
-            leave_details_json["employer_notification_method"] = application_json[
+        if self.application.employer_notification_method_id is not None:
+            leave_details_json[
                 "employer_notification_method"
-            ]
+            ] = self.application.employer_notification_method.notification_method_description
 
         if leave_details_schedule_json is not None:
             leave_details_json[leave_details_schedule_name] = leave_details_schedule_json

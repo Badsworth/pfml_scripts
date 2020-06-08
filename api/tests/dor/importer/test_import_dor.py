@@ -41,7 +41,7 @@ def dor_employer_lookups(test_db_session):
     business_address_type = AddressType(address_description="Business")
     test_db_session.add(business_address_type)
 
-    state = GeoState(state_description="MA")
+    state = GeoState(geo_state_description="MA")
     test_db_session.add(state)
 
     country = Country(country_description="US")
@@ -286,12 +286,12 @@ def validate_employer_persistence(employer_payload, employer_row):
 def validate_employer_address_persistence(
     employer_payload, address_row, business_address_type, state, country
 ):
-    assert address_row.address_type == business_address_type.address_type
+    assert address_row.address_type_id == business_address_type.address_type_id
     assert address_row.address_line_one == employer_payload["employer_address_street"]
     assert address_row.city == employer_payload["employer_address_city"]
-    assert address_row.state_type == state.state_type
+    assert address_row.geo_state_id == state.geo_state_id
     assert address_row.zip_code == employer_payload["employer_address_zip"]
-    assert address_row.country_type == country.country_type
+    assert address_row.country_id == country.country_id
 
 
 def test_get_files_for_import_grouped_by_date(test_fs_path_for_s3):

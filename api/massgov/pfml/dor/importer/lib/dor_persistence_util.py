@@ -38,12 +38,12 @@ def create_employer(db_session, employer_info):
         raise ValueError("Error trying to find address lookup values")
 
     address = Address(
-        address_type=business_address_type.address_type,
+        address_type_id=business_address_type.address_type_id,
         address_line_one=employer_info["employer_address_street"],
         city=employer_info["employer_address_city"],
-        state_type=state.state_type,
+        geo_state_id=state.geo_state_id,
         zip_code=employer_info["employer_address_zip"],
-        country_type=country.country_type,
+        country_id=country.country_id,
     )
     db_session.add(address)
 
@@ -93,9 +93,9 @@ def update_employer(db_session, existing_employer, employer_info):
 
     existing_address.address_line_one = employer_info["employer_address_street"]
     existing_address.city = employer_info["employer_address_city"]
-    existing_address.state_type = state.state_type
+    existing_address.geo_state_id = state.geo_state_id
     existing_address.zip_code = employer_info["employer_address_zip"]
-    existing_address.country_type = country.country_type
+    existing_address.country_id = country.country_id
 
     return existing_employer
 
@@ -214,7 +214,7 @@ def get_business_address_type(db_session):
 
 # TODO find the state by state_name after lookup is fully populated
 def find_state(db_session, state_name):
-    state = db_session.query(GeoState).filter(GeoState.state_description == "MA").one()
+    state = db_session.query(GeoState).filter(GeoState.geo_state_description == "MA").one()
     return state
 
 

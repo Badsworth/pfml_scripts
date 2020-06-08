@@ -99,7 +99,7 @@ class ApplicationRequest:
                     .all()
                 )
                 if len(occupations) > 0:
-                    setattr(application, key + "_type", occupations[0].occupation_type)
+                    setattr(application, key + "_id", occupations[0].occupation_id)
                 continue
             if key == "application_nickname":
                 attr_name = "nickname"
@@ -133,35 +133,35 @@ class ApplicationRequest:
                 leave_reasons = (
                     app.db_session_raw()
                     .query(LeaveReason)
-                    .filter(LeaveReason.reason_description == value)
+                    .filter(LeaveReason.leave_reason_description == value)
                     .all()
                 )
                 if len(leave_reasons) > 0:
-                    setattr(application, "leave_" + key, leave_reasons[0].leave_reason)
+                    application["leave_reason_id"] = leave_reasons[0].leave_reason
                 continue
             if key == "reason_qualifier":
                 leave_reason_qualifiers = (
                     app.db_session_raw()
                     .query(LeaveReasonQualifier)
-                    .filter(LeaveReasonQualifier.reason_qualifier_description == value)
+                    .filter(LeaveReasonQualifier.leave_reason_qualifier_description == value)
                     .all()
                 )
                 if len(leave_reason_qualifiers) > 0:
-                    setattr(
-                        application,
-                        "leave_" + key,
-                        leave_reason_qualifiers[0].leave_reason_qualifier,
-                    )
+                    application["leave_reason_qualifier_id"] = leave_reason_qualifiers[
+                        0
+                    ].leave_reason_qualifier_id
                 continue
             if key == "relationship_to_caregiver":
                 relationship_to_caregiver = (
                     app.db_session_raw()
                     .query(RelationshipToCareGiver)
-                    .filter(RelationshipToCareGiver.relationship_description == value)
+                    .filter(RelationshipToCareGiver.relationship_to_caregiver_description == value)
                     .all()
                 )
                 if len(relationship_to_caregiver) > 0:
-                    setattr(application, key, relationship_to_caregiver[0].relationship)
+                    application["relationship_to_caregiver_id"] = relationship_to_caregiver[
+                        0
+                    ].relationship_to_caregiver_id
                 continue
             if key == "relationship_qualifier":
                 relationship_qualifier = (
@@ -171,7 +171,9 @@ class ApplicationRequest:
                     .all()
                 )
                 if len(relationship_qualifier) > 0:
-                    setattr(application, key, relationship_qualifier[0].relationship_qualifier)
+                    application["relationship_qualifier_id"] = relationship_qualifier[
+                        0
+                    ].relationship_qualifier_id
                 continue
             if key == "employer_notification_method":
                 notification_method = (
@@ -181,7 +183,9 @@ class ApplicationRequest:
                     .all()
                 )
                 if len(notification_method) > 0:
-                    setattr(application, key, notification_method[0].notification_method)
+                    application["employer_notification_method_id"] = notification_method[
+                        0
+                    ].notification_method
                 continue
             setattr(application, key, leave_details_json[key])
 
@@ -200,7 +204,7 @@ class ApplicationRequest:
                 .one_or_none()
             )
             if status is not None:
-                leave_schedule_item["status"] = status.status_type
+                leave_schedule_item["status_id"] = status.status_id
 
         if schedule_type == "continuous_leave_period":
             continuous_leave_period = ContinuousLeavePeriod()

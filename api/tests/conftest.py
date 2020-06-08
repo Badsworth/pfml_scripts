@@ -167,11 +167,11 @@ def create_app_statuses(test_db_session):
 
     return [
         {
-            "status_type": draft_status.status_type,
+            "status_id": draft_status.status_id,
             "status_description": draft_status.status_description,
         },
         {
-            "status_type": completed_status.status_type,
+            "status_id": completed_status.status_id,
             "status_description": completed_status.status_description,
         },
     ]

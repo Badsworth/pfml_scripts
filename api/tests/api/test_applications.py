@@ -117,9 +117,4 @@ def test_application_post_submit_app(client, test_application, create_app_status
     assert response.status_code == 200
 
     response_body = response.get_json()
-    status = int(response_body.get("status"))
-    app_status = list(filter(lambda x: x["status_type"] == status, create_app_statuses))
-    completed_status = list(
-        filter(lambda x: x["status_description"] == "Completed", create_app_statuses)
-    )
-    assert app_status[0]["status_type"] == completed_status[0]["status_type"]
+    assert response_body["status"] == "Completed"
