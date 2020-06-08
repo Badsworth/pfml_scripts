@@ -1,0 +1,51 @@
+import Heading from "./Heading";
+import PropTypes from "prop-types";
+import React from "react";
+
+/**
+ * The ReviewRow component encapsulates a single reviewable row of form data.
+ */
+const ReviewRow = (props) => {
+  return (
+    <div className="border-bottom-2px border-base-lighter margin-bottom-2 padding-bottom-2 display-flex flex-justify">
+      <div className="margin-right-2">
+        <Heading level="3" className="margin-bottom-1">
+          {props.heading}
+        </Heading>
+        {props.children}
+      </div>
+      {props.editHref && (
+        <a
+          className="usa-link"
+          href={props.editHref}
+          aria-label={`${props.editText}: ${props.heading}`}
+        >
+          {props.editText}
+        </a>
+      )}
+    </div>
+  );
+};
+
+ReviewRow.propTypes = {
+  /**
+   * The content you want the user to review
+   */
+  children: PropTypes.node.isRequired,
+  /**
+   * HTML `href` attribute for the edit link.
+   * If undefined, no edit link will be shown.
+   */
+  editHref: PropTypes.string,
+  /**
+   * Localized text for the edit link
+   */
+  editText: PropTypes.node,
+  /**
+   * Heading describing the content to be reviewed. This is also
+   * read to screen readers when they interact with the edit link.
+   */
+  heading: PropTypes.node.isRequired,
+};
+
+export default ReviewRow;

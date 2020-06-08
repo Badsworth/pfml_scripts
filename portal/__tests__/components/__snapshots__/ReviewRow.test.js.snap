@@ -1,0 +1,26 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`ReviewRow when editHref is defined renders with an edit link 1`] = `
+<div
+  className="border-bottom-2px border-base-lighter margin-bottom-2 padding-bottom-2 display-flex flex-justify"
+>
+  <div
+    className="margin-right-2"
+  >
+    <Heading
+      className="margin-bottom-1"
+      level="3"
+    >
+      Leave type
+    </Heading>
+    Medical
+  </div>
+  <a
+    aria-label="Edit name: Leave type"
+    className="usa-link"
+    href="/name"
+  >
+    Edit name
+  </a>
+</div>
+`;
