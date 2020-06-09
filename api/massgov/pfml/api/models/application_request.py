@@ -41,9 +41,11 @@ class ApplicationRequest:
         return errors_and_warnings
 
     def validate_leave_details(self):
-        errors_and_warnings = []
-        leave_details_json = self.json_dict["leave_details"]
-        leave_schedule_type = None
+        errors_and_warnings = []  # type: List[str]
+
+        leave_details_json = self.json_dict.get("leave_details")
+        if leave_details_json is None:
+            return errors_and_warnings
 
         for key, value in leave_details_json.items():
             if (
@@ -51,14 +53,9 @@ class ApplicationRequest:
                 or key == "intermittent_leave_periods"
                 or key == "reduced_schedule_leave_periods"
             ):
-                leave_schedule_type = key
-                continue
+                leave_schedule_msgs = self.validate_leave_schedule(key, leave_details_json[key])
+                errors_and_warnings.extend(leave_schedule_msgs)
             print("leave_details: " + key, value)
-
-        leave_schedule_msgs = self.validate_leave_schedule(
-            leave_schedule_type, leave_details_json[leave_schedule_type]
-        )
-        errors_and_warnings.extend(leave_schedule_msgs)
 
         return errors_and_warnings
 
@@ -66,19 +63,21 @@ class ApplicationRequest:
     def validate_leave_schedule(leave_schedule_type, leave_schedule):
         errors_and_warnings = []  # type: List[str]
 
-        # Assuming one schedule for now. To be improved.
-        for key, value in leave_schedule[0].items():
-            print(leave_schedule_type + ": " + key, value)
+        if len(leave_schedule) > 0:
+            # Assuming one schedule for now. To be improved.
+            for key, value in leave_schedule[0].items():
+                print(leave_schedule_type + ": " + key, value)
 
         return errors_and_warnings
 
     def validate_payment_preferences(self):
         errors_and_warnings = []  # type: List[str]
-        payment_preferences_json = self.json_dict["payment_preferences"]
+        payment_preferences_json = self.json_dict.get("payment_preferences")
 
-        # To be improved to deal with array
-        for key, value in payment_preferences_json[0].items():
-            print("payment_preference: " + key, value)
+        if payment_preferences_json:
+            # To be improved to deal with array
+            for key, value in payment_preferences_json[0].items():
+                print("payment_preference: " + key, value)
 
         return errors_and_warnings
 
@@ -113,13 +112,18 @@ class ApplicationRequest:
         application.updated_time = datetime.now()
 
         app.db_session_raw().add(application)
-        app.db_session_raw().add(leave_schedule)
-        app.db_session_raw().add(payment_preferences)
+        if leave_schedule:
+            app.db_session_raw().add(leave_schedule)
+        if payment_preferences:
+            app.db_session_raw().add(payment_preferences)
         app.db_session_raw().flush()
         app.db_session_raw().commit()
 
     def update_leave_details(self, application):
-        leave_details_json = self.json_dict["leave_details"]
+        leave_details_json = self.json_dict.get("leave_details")
+        if leave_details_json is None:
+            return application, None
+
         leave_schedule = None
 
         for key, value in leave_details_json.items():
@@ -194,6 +198,9 @@ class ApplicationRequest:
     @staticmethod
     def update_leave_schedule(schedule_type, leave_schedule):
         # To be improved in next iteration
+        if len(leave_schedule) == 0:
+            return None
+
         leave_schedule_item = leave_schedule[0]
         schedule_status = leave_schedule_item.pop("status", None)
         if schedule_status is not None:
@@ -225,7 +232,9 @@ class ApplicationRequest:
         return leave_period
 
     def update_payment_preferences(self):
-        payment_preferences_json = self.json_dict["payment_preferences"]
+        payment_preferences_json = self.json_dict.get("payment_preferences")
+        if payment_preferences_json is None:
+            return None
         payment_preference = ApplicationPaymentPreference()
 
         # To be improved to deal with array

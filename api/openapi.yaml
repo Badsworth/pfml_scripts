@@ -662,23 +662,29 @@ components:
       properties:
         application_nickname:
           type: string
+          nullable: true
           example: "My bonding leave request"
         application_id:
           type: string
           format: uuid
           example: "2a340cf8-6d2a-4f82-a075-73588d003f8f"
         employee_ssn:
+          nullable: true
           $ref: "#/components/schemas/SsnItin"
         employer_fein:
+          nullable: true
           $ref: "#/components/schemas/Fein"
         first_name:
           type: string
+          nullable: true
           example: "John"
         last_name:
           type: string
+          nullable: true
           example: "Doe"
         occupation:
           type: string
+          nullable: true
           enum:
             - Sales Clerk
             - Administrative
@@ -736,6 +742,7 @@ components:
       properties:
         reason:
           type: string
+          nullable: true
           enum:
             - Care For A Family Member
             - Pregnancy/Maternity
@@ -744,6 +751,7 @@ components:
           example: "Care For A Family Member"
         reason_qualifier:
           type: string
+          nullable: true
           enum:
             - New Born
             - Serious Health Condition
@@ -763,6 +771,7 @@ components:
             $ref: "#/components/schemas/IntermittentLeavePeriods"
         relationship_to_caregiver:
           type: string
+          nullable: true
           enum:
             - Parent
             - Child
@@ -776,6 +785,7 @@ components:
           example: "Parent"
         relationship_qualifier:
           type: string
+          nullable: true
           enum:
             - Adoptive
             - Biological
@@ -786,13 +796,16 @@ components:
           example: "Biological"
         employer_notified:
           type: boolean
+          nullable: true
           example: true
         employer_notification_date:
           type: string
+          nullable: true
           format: date
           example: "2020-04-24"
         employer_notification_method:
           type: string
+          nullable: true
           enum:
             - In Writing
             - In Person
@@ -805,14 +818,17 @@ components:
       properties:
         start_date:
           type: string
+          nullable: true
           format: date
           example: "2020-06-08"
         end_date:
           type: string
+          nullable: true
           format: date
           example: "2020-07-31"
         status:
           type: string
+          nullable: true
           enum:
             - Estimated
             - Known
@@ -820,45 +836,59 @@ components:
           example: "Estimated"
         thursday_off_hours:
           type: integer
+          nullable: true
           example: 4
         thursday_off_minutes:
           type: integer
+          nullable: true
           example: 0
         friday_off_hours:
           type: integer
+          nullable: true
           example: 4
         friday_off_minutes:
           type: integer
+          nullable: true
           example: 30
         saturday_off_hours:
           type: integer
+          nullable: true
           example: 0
         saturday_off_minutes:
           type: integer
+          nullable: true
           example: 0
         sunday_off_hours:
           type: integer
+          nullable: true
           example: 0
         sunday_off_minutes:
           type: integer
+          nullable: true
           example: 0
         monday_off_hours:
           type: integer
+          nullable: true
           example: 4
         monday_off_minutes:
           type: integer
+          nullable: true
           example: 0
         tuesday_off_hours:
           type: integer
+          nullable: true
           example: 4
         tuesday_off_minutes:
           type: integer
+          nullable: true
           example: 0
         wednesday_off_hours:
           type: integer
+          nullable: true
           example: 4
         wednesday_off_minutes:
           type: integer
+          nullable: true
           example: 0
 
     ContinuousLeavePeriods:
@@ -866,40 +896,51 @@ components:
       properties:
         start_date:
           type: string
+          nullable: true
           format: date
           example: "2020-06-08"
         end_date:
           type: string
+          nullable: true
           format: date
           example: "2020-07-31"
         last_day_worked:
           type: string
+          nullable: true
           format: date
           example: "2020-06-05"
         expected_return_to_work_date:
           type: string
+          nullable: true
           format: date
           example: "2020-08-03"
         start_date_full_day:
           type: boolean
+          nullable: true
           example: true
         start_date_off_hours:
           type: integer
+          nullable: true
           example: 0
         start_date_off_minutes:
           type: integer
+          nullable: true
           example: 0
         end_date_off_hours:
           type: integer
+          nullable: true
           example: 0
         end_date_off_minutes:
           type: integer
+          nullable: true
           example: 0
         end_date_full_day:
           type: boolean
+          nullable: true
           example: true
         status:
           type: string
+          nullable: true
           enum:
             - Estimated
             - Known
@@ -911,20 +952,25 @@ components:
       properties:
         start_date:
           type: string
+          nullable: true
           format: date
           example: "2020-06-08"
         end_date:
           type: string
+          nullable: true
           format: date
           example: "2020-07-31"
         frequency:
           type: integer
+          nullable: true
           example: 4
         frequency_interval:
           type: integer
+          nullable: true
           example: 2
         frequency_interval_basis:
           type: string
+          nullable: true
           enum:
             - Days
             - Weeks
@@ -932,9 +978,11 @@ components:
           example: "Weeks"
         duration:
           type: integer
+          nullable: true
           example: 2
         duration_basis:
           type: string
+          nullable: true
           enum:
             - Minutes
             - Hours
@@ -946,8 +994,10 @@ components:
       properties:
         description:
           type: string
+          nullable: true
         payment_method:
           type: string
+          nullable: true
           enum:
             - ACH
             - Check
@@ -955,6 +1005,7 @@ components:
           example: "ACH"
         is_default:
           type: boolean
+          nullable: true
         account_details:
           $ref: "#/components/schemas/ApplicationPaymentAccountDetails"
         cheque_details:
@@ -965,16 +1016,20 @@ components:
       properties:
         account_no:
           type: string
+          nullable: true
           minLength: 6
           maxLength: 17
           example: "1234567"
         routing_number:
+          nullable: true
           $ref: "#/components/schemas/RoutingNbr"
         account_name:
           type: string
+          nullable: true
           example: "My Checking"
         account_type:
           type: string
+          nullable: true
           enum:
             - Checking
             - Savings
@@ -985,6 +1040,7 @@ components:
       properties:
         name_to_print_on_check:
           type: string
+          nullable: true
           example: "John Doe"
 
     ApplicationUpdateResponse:

@@ -103,6 +103,29 @@ def test_application_patch(client, test_application):
     assert updated_last_name == "Perez"
 
 
+def test_application_patch_minimum_payload(client, test_application):
+    application_id = test_application.get("application_id")
+    update_json = {"first_name": "John"}
+
+    response = client.patch(
+        "/v1/applications/{}".format(application_id),
+        headers={"user_id": str(uuid.uuid4())},
+        json=update_json,
+    )
+    assert response.status_code == 200
+
+
+def test_application_patch_null_values(client, test_application):
+    application_id = test_application.get("application_id")
+
+    response = client.patch(
+        "/v1/applications/{}".format(application_id),
+        headers={"user_id": str(uuid.uuid4())},
+        json=null_request_body,
+    )
+    assert response.status_code == 200
+
+
 def test_application_post_submit_app(client, test_application, create_app_statuses):
     application_id = test_application["application_id"]
     response = client.post(
@@ -118,3 +141,84 @@ def test_application_post_submit_app(client, test_application, create_app_status
 
     response_body = response.get_json()
     assert response_body["status"] == "Completed"
+
+
+null_request_body = {
+    "application_id": "2a340cf8-6d2a-4f82-a075-73588d003f8f",
+    "application_nickname": None,
+    "employee_ssn": None,
+    "employer_fein": None,
+    "first_name": None,
+    "last_name": None,
+    "leave_details": {
+        "continuous_leave_periods": [
+            {
+                "end_date": None,
+                "end_date_full_day": None,
+                "end_date_off_hours": None,
+                "end_date_off_minutes": None,
+                "expected_return_to_work_date": None,
+                "last_day_worked": None,
+                "start_date": None,
+                "start_date_full_day": None,
+                "start_date_off_hours": None,
+                "start_date_off_minutes": None,
+                "status": None,
+            }
+        ],
+        "employer_notification_date": None,
+        "employer_notification_method": None,
+        "employer_notified": None,
+        "intermittent_leave_periods": [
+            {
+                "duration": None,
+                "duration_basis": None,
+                "end_date": None,
+                "frequency": None,
+                "frequency_interval": None,
+                "frequency_interval_basis": None,
+                "start_date": None,
+            }
+        ],
+        "reason": None,
+        "reason_qualifier": None,
+        "reduced_schedule_leave_periods": [
+            {
+                "end_date": None,
+                "friday_off_hours": None,
+                "friday_off_minutes": None,
+                "monday_off_hours": None,
+                "monday_off_minutes": None,
+                "saturday_off_hours": None,
+                "saturday_off_minutes": None,
+                "start_date": None,
+                "status": None,
+                "sunday_off_hours": None,
+                "sunday_off_minutes": None,
+                "thursday_off_hours": None,
+                "thursday_off_minutes": None,
+                "tuesday_off_hours": None,
+                "tuesday_off_minutes": None,
+                "wednesday_off_hours": None,
+                "wednesday_off_minutes": None,
+            }
+        ],
+        "relationship_qualifier": None,
+        "relationship_to_caregiver": None,
+    },
+    "occupation": None,
+    "payment_preferences": [
+        {
+            "account_details": {
+                "account_name": None,
+                "account_no": None,
+                "account_type": None,
+                "routing_number": None,
+            },
+            "cheque_details": {"name_to_print_on_check": None},
+            "description": None,
+            "is_default": None,
+            "payment_method": None,
+        }
+    ],
+}
