@@ -14,5 +14,10 @@ $color-settings: (
   active: true,
   focus: false,
   hover: true,
-  visited: false
+  visited: false,
 );
+
+// Output utility styles with !important. This means utilities will always
+// override existing component styles, regardless of the component's CSS specificity,
+// which more closely aligns with people's mental models of utility classes.
+$utilities-use-important: true;
