@@ -60,7 +60,10 @@ async function request(method, apiPath, payload, headers) {
   const url = createRequestUrl(apiPath);
   const options = {
     body: createRequestBody(payload),
-    headers,
+    headers: {
+      "Content-Type": "application/json",
+      ...headers,
+    },
     method,
   };
 

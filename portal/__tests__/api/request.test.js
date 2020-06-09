@@ -37,6 +37,9 @@ describe("request", () => {
       expect.objectContaining({
         body: JSON.stringify(body),
         method,
+        headers: expect.objectContaining({
+          "Content-Type": "application/json",
+        }),
       })
     );
   });
@@ -53,6 +56,9 @@ describe("request", () => {
       expect.objectContaining({
         body: JSON.stringify(body),
         method,
+        headers: expect.objectContaining({
+          "Content-Type": "application/json",
+        }),
       })
     );
   });
@@ -69,6 +75,9 @@ describe("request", () => {
       expect.objectContaining({
         body: JSON.stringify(body),
         method,
+        headers: expect.objectContaining({
+          "Content-Type": "application/json",
+        }),
       })
     );
   });
