@@ -1,6 +1,14 @@
 import tracker from "../../src/services/tracker";
 
 describe("tracker", () => {
+  describe("initialize", () => {
+    it("sets New Relic config", () => {
+      tracker.initialize();
+
+      expect(window.NREUM).toMatchSnapshot();
+    });
+  });
+
   // Tests below are generated! If you add another tracker method, add its name
   // here and in the mocked newrelic object below
   const newrelicMethods = [

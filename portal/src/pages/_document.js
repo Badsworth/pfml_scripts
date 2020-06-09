@@ -18,27 +18,6 @@ class MyDocument extends Document {
       <Html>
         <Head>
           {/* New Relic script must be towards the top of the <head> and before our other scripts */}
-          <script
-            dangerouslySetInnerHTML={{
-              __html: `
-              window.NREUM={};
-              window.NREUM.loader_config={
-                accountID:"1606654",
-                trustKey:"1606654",
-                agentID:"${process.env.newRelicAppId}",
-                licenseKey:"0c7a02d605",
-                applicationID:"${process.env.newRelicAppId}"
-              };
-              window.NREUM.info={
-                beacon:"bam.nr-data.net",
-                errorBeacon:"bam.nr-data.net",
-                licenseKey:"0c7a02d605",
-                applicationID:"${process.env.newRelicAppId}",
-                sa:1
-              };
-            `,
-            }}
-          />
           <script src="/new-relic.js" />
 
           <link href="/favicon.png" rel="shortcut icon" type="image/png" />

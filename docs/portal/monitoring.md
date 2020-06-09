@@ -8,7 +8,7 @@ We use [New Relic Browser](https://newrelic.com/products/browser-monitoring) to 
 
 In order for the New Relic snippet to send data to the correct New Relic Application, we need to set a `newRelicAppId` environment variable with the [New Relic Browser Application ID](https://docs.newrelic.com/docs/browser/new-relic-browser/configuration/copy-browser-monitoring-license-key-app-id).
 
-We then use the environment variable to configure the New Relic snippet by setting the `window.NREUM` global variable, in `_document.js`, before loading the New Relic snippet.
+We then use the environment variable to configure the New Relic snippet by setting the `window.NREUM` global variable, in `services/tracker.js`.
 
 🚨 If we ever update the New Relic snippet, we should ensure that the configuration portion at the bottom is removed, so that we're not overwriting `window.NREUM.loader_config` or `window.NREUM.info`.
 

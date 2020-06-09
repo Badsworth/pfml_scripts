@@ -20,6 +20,7 @@ import useFeatureFlagsFromQueryEffect from "../hooks/useFeatureFlagsFromQueryEff
 import { useRouter } from "next/router";
 import usersApi from "../api/usersApi";
 
+tracker.initialize();
 initializeI18n();
 
 /**

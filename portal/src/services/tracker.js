@@ -4,6 +4,31 @@
  */
 
 /**
+ * Configure our monitoring services with environment-specific key/ids
+ */
+function initialize() {
+  // Don't break when rendered in a non-browser environment
+  if (typeof window === "undefined") return;
+
+  // NREUM = New Relic
+  window.NREUM = window.NREUM || {};
+  window.NREUM.loader_config = {
+    agentID: `${process.env.newRelicAppId}`,
+    applicationID: `${process.env.newRelicAppId}`,
+    accountID: "1606654",
+    trustKey: "1606654",
+    licenseKey: "0c7a02d605",
+  };
+  window.NREUM.info = {
+    applicationID: `${process.env.newRelicAppId}`,
+    beacon: "bam.nr-data.net",
+    errorBeacon: "bam.nr-data.net",
+    licenseKey: "0c7a02d605",
+    sa: 1,
+  };
+}
+
+/**
  * Check if New Relic is loaded and ready for its API methods to be called.
  * `newrelic` is exposed as a global variable when the New Relic JS snippet
  * is loaded. See docs/portal/monitoring.md for details.
@@ -50,4 +75,9 @@ function trackEvent(name, customAttributes) {
   // TODO: Send the event to Google Analytics as well (https://lwd.atlassian.net/browse/CP-433)
 }
 
-export default { noticeError, setCurrentRouteName, trackEvent };
+export default {
+  initialize,
+  noticeError,
+  setCurrentRouteName,
+  trackEvent,
+};
