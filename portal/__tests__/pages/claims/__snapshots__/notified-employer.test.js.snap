@@ -17,7 +17,7 @@ exports[`NotifiedEmployer renders the page 1`] = `
       "leave_type": null,
     }
   }
-  nextPage="/claims/confirm?claim_id=12345"
+  nextPage="/claims/review?claim_id=12345"
   onSave={[Function]}
   title="Medical Leave Application"
 >

@@ -34,6 +34,8 @@ const shared = {
   callCenterPhoneNumber: "(XXX) XXX-XXXX",
   choiceNo: "No",
   choiceYes: "Yes",
+  claimDurationTypeContinuous: "Continuous leave",
+  claimDurationTypeIntermittent: "Intermittent leave",
   claimsLeaveDurationTitle: "Leave duration",
   claimsTakingLeaveTitle: "Who is taking leave",
   passwordHint:
@@ -65,12 +67,12 @@ const pages = {
       "Tell us how many hours you typically worked before going on leave. We need to know this so we can calculate your benefit amount.",
     avgWeeklyHoursWorkedLabel:
       "How many hours do you work in a week, on average?",
-    continuousHint: "(Continuous leave)",
+    continuousHint: "$t(shared.claimDurationTypeContinuous)",
     continuousLabel: "Take off work completely",
     hoursOffNeededHint:
       "This can be an approximate. You can change this after your claim is approved.",
     hoursOffNeededLabel: "How many hours do you need to take off each week?",
-    intermittentHint: "(Intermittent leave)",
+    intermittentHint: "$t(shared.claimDurationTypeIntermittent)",
     intermittentLabel: "Work on a reduced schedule",
     sectionLabel:
       "Do you need to take off work completely or work on a reduced schedule?",
@@ -109,6 +111,16 @@ const pages = {
       "Notify your employer at least 30 days before the start of your leave if possible.",
     sectionLabel: "Have you notified your employer of your leave?",
     title: "Medical Leave Application",
+  },
+  claimsReview: {
+    confirmationAction: "Confirm information is correct",
+    leaveDurationHeading: "Leave duration",
+    leaveDurationTypeHeading: "Leave duration type",
+    leaveDurationTypeValue_continuous: "$t(shared.claimDurationTypeContinuous)",
+    leaveDurationTypeValue_intermittent:
+      "$t(shared.claimDurationTypeIntermittent)",
+    leaveSectionHeading: "Leave details",
+    title: "Check your answers before sending your application",
   },
   claimsSsn: {
     lead:

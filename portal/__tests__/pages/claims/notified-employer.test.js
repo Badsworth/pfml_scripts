@@ -18,9 +18,9 @@ describe("NotifiedEmployer", () => {
     expect(wrapper).toMatchSnapshot();
   });
 
-  it("redirects to the confirm and submit page", () => {
+  it("redirects to the review page", () => {
     expect(wrapper.find("QuestionPage").prop("nextPage")).toEqual(
-      `${routes.claims.confirm}?claim_id=${claim.application_id}`
+      `${routes.claims.review}?claim_id=${claim.application_id}`
     );
   });
 });

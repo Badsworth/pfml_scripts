@@ -26,13 +26,13 @@ exports[`Duration regardless of duration type initially renders the page without
       Array [
         Object {
           "checked": false,
-          "hint": "(Continuous leave)",
+          "hint": "Continuous leave",
           "label": "Take off work completely",
           "value": "continuous",
         },
         Object {
           "checked": false,
-          "hint": "(Intermittent leave)",
+          "hint": "Intermittent leave",
           "label": "Work on a reduced schedule",
           "value": "intermittent",
         },

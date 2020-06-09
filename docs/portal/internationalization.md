@@ -6,17 +6,36 @@ The locale selection for both i18n systems is configured in `i18n.js` to allow l
 
 ## Application
 
-This app uses [i18next](https://i18next.com/) and its [react library](https://react.i18next.com/) for application localization. You can find i18next translation resources in `portal/locales/app/`. Each language has a file with a set of keys and values for every content string we need to localize for our site. The keys are how we will refer to these strings throughout our codebase, rather than hard coding the content strings.
+This app uses [i18next](https://i18next.com/) and its [React library](https://react.i18next.com/) for application localization. You can find i18next translation resources in `portal/locales/app/`. Each language has a file with a set of keys and values for every content string we need to localize for our site. The keys are how we will refer to these strings throughout our codebase, rather than hard coding the content strings.
+
+### i18next patterns
+
+Our application takes advantage of some advanced patterns supported by the `i18next` library. It can be useful to be aware of these while working in the codebase:
+
+- [Context](https://www.i18next.com/translation-function/context) allows us to have variations of a string based on the value of a `context` property:
+
+  ```js
+  t("haveIncome", { context: "married" }); // -> "Do you or your spouse have income sources?"
+  ```
+
+  ```json
+  {
+    "haveIncome": "Do you have income sources?",
+    "haveIncome_married": "Do you or your spouse have income sources?"
+  }
+  ```
+
+### Conventions
 
 Internationalization content can get messy and lead to hard-to-find bugs during translation. As such we strictly follow the below conventions to preserve readability, maintainability, and avoid errors.
 
-### Organization
+#### Organization
 
 - Keys are organized under four top-level objects by how they're used: `components`, `pages`, `errors` and `shared`.
 - `components` and `pages` define content used in specific components and pages, respectively. `errors` contains content used in error messages, which aren’t page or component specific. `shared` defines content shared between multiple components or pages.
 - Keys are limited to three levels deep, for example `pages.claimsDateOfBirth.title`. This makes the structure easier to navigate and the process of finding a specific element more consistent.
 
-### Naming
+#### Naming
 
 - Prioritize readability, and then brevity.
 - Try to be consistent with existing keys. For example the title content for each page should be under a key, `pages.<page-identifier>.title`.
@@ -26,7 +45,7 @@ Internationalization content can get messy and lead to hard-to-find bugs during 
 - Keys should be alphabetical so they're easier for others to find and update. We also considered sorting them by page-order where they occur but alphabetical is more easily enforced (with linting) and doesn’t require re-ordering even if content on a page is re-ordered.
 - Keys must be unique - there can't be two keys with the same name. This only applies to the entire key, for example having `pages.claimsName.sectionHint` and `pages.claimsSsn.sectionHint` is fine.
 
-#### Common page element terminology
+##### Common page element terminology
 
 The PFML pages follow a design system that uses common terms for various page elements. It's helpful to use these terms when defining content strings for both the developer experience (when implementing a page design this gives you tips on how to name content strings) and in tracing content from the page back to the i18n key. These terms may change over time so this will need to be updated when they do. Some common element terms include:
 
@@ -41,7 +60,7 @@ The PFML pages follow a design system that uses common terms for various page el
 
 For visual examples of different text elements on a page see the design team’s [page template](https://www.figma.com/file/v8LlmK8r1JmByqtNVMvqjS/PFML?node-id=938%3A0) designs.
 
-### Sharing content
+#### Sharing content
 
 All shared keys are located inside the `shared` object; this makes it obvious that when you're changing one of them your changes will impact multiple components/pages. This is meant to prevent accidental content changes if someone is only trying to update content in one place.
 
@@ -51,7 +70,7 @@ Sharing content should follow this pattern:
 - Each page or component that uses the shared content should define its own key and reference the shared key.
 - Shared keys, such as `shared.claimsPages.leaveTypeTitle`, shouldn't be referenced directly in application code.
 
-#### Example
+##### Example
 
 ```
 shared: {
@@ -73,7 +92,7 @@ pages: {
 
 ### Basic usage with hook
 
-```javascript
+```js
 import React from "react";
 import { useTranslation } from "react-i18next";
 

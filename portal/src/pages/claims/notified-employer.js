@@ -30,7 +30,7 @@ export const NotifiedEmployer = (props) => {
       formState={formState}
       title={t("pages.claimsNotifiedEmployer.title")}
       onSave={handleSave}
-      nextPage={routeWithParams("claims.confirm", props.query)}
+      nextPage={routeWithParams("claims.review", props.query)}
     >
       <InputChoiceGroup
         choices={[

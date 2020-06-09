@@ -15,6 +15,7 @@ const routes = {
     leaveType: "/claims/leave-type",
     name: "/claims/name",
     notifiedEmployer: "/claims/notified-employer",
+    review: "/claims/review",
     ssn: "/claims/ssn",
     stateId: "/claims/state-id",
     success: "/claims/success",
