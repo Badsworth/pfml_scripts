@@ -41,13 +41,16 @@ describe("ClaimsApi", () => {
                   "avg_weekly_hours_worked": null,
                   "created_at": null,
                   "duration_type": null,
+                  "first_name": null,
                   "hours_off_needed": null,
+                  "last_name": null,
                   "leave_details": Object {
                     "employer_notified": null,
                   },
                   "leave_end_date": null,
                   "leave_start_date": null,
                   "leave_type": null,
+                  "middle_name": null,
                 },
               },
               "idProperty": "application_id",
@@ -87,13 +90,16 @@ describe("ClaimsApi", () => {
               "avg_weekly_hours_worked": null,
               "created_at": null,
               "duration_type": null,
+              "first_name": null,
               "hours_off_needed": null,
+              "last_name": null,
               "leave_details": Object {
                 "employer_notified": null,
               },
               "leave_end_date": null,
               "leave_start_date": null,
               "leave_type": null,
+              "middle_name": null,
             },
             "status": 200,
             "success": true,
@@ -121,29 +127,46 @@ describe("ClaimsApi", () => {
   });
 
   describe("updateClaim", () => {
-    const claim = new Claim({ duration_type: "type" });
+    const claim = new Claim({
+      application_id: "mock-application_id",
+      duration_type: "type",
+    });
+
+    beforeEach(() => {
+      request.mockResolvedValueOnce({
+        body: {
+          application_id: "mock-application_id",
+          duration_type: "type",
+        },
+        status: 200,
+        success: true,
+      });
+    });
 
     it("responds with success status", async () => {
-      const response = await claimsApi.updateClaim(claim);
+      const response = await claimsApi.updateClaim(claim.application_id, claim);
       expect(response.success).toBeTruthy();
     });
 
     it("responds with an instance of a Claim with claim request parameters as properties", async () => {
-      const response = await claimsApi.updateClaim(claim);
+      const response = await claimsApi.updateClaim(claim.application_id, claim);
       expect(response.claim).toBeInstanceOf(Claim);
       expect(response.claim).toMatchInlineSnapshot(`
         Claim {
-          "application_id": null,
+          "application_id": "mock-application_id",
           "avg_weekly_hours_worked": null,
           "created_at": null,
           "duration_type": "type",
+          "first_name": null,
           "hours_off_needed": null,
+          "last_name": null,
           "leave_details": Object {
             "employer_notified": null,
           },
           "leave_end_date": null,
           "leave_start_date": null,
           "leave_type": null,
+          "middle_name": null,
         }
       `);
     });
@@ -170,13 +193,16 @@ describe("ClaimsApi", () => {
           "avg_weekly_hours_worked": null,
           "created_at": null,
           "duration_type": "type",
+          "first_name": null,
           "hours_off_needed": null,
+          "last_name": null,
           "leave_details": Object {
             "employer_notified": null,
           },
           "leave_end_date": null,
           "leave_start_date": null,
           "leave_type": null,
+          "middle_name": null,
         }
       `);
     });

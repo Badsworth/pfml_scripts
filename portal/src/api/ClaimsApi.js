@@ -37,10 +37,18 @@ export default class ClaimsApi {
    * @private
    * @param {string} method HTTP method
    * @param {object} body Request body
+   * @param {string} application_id ID of the claim
    * @param {object} additionalHeaders Additional headers to add to the request
    */
-  claimsRequest = async (method, body = null, additionalHeaders = {}) => {
-    const apiPath = routes.api.claims;
+  claimsRequest = async (
+    method,
+    body = null,
+    application_id = null,
+    additionalHeaders = {}
+  ) => {
+    const apiPath = application_id
+      ? `${routes.api.claims}/${application_id}`
+      : routes.api.claims;
     const baseHeaders = { user_id: this.user.user_id };
     const headers = {
       ...baseHeaders,
@@ -98,16 +106,38 @@ export default class ClaimsApi {
 
   /**
    * Update claim through a PATCH request to /applications.
-   * @todo This is a mock -- connect to the actual API when ready
-   * @param {Claim} claim Claim properties
+   * @param {string} application_id ID of the Claim
+   * @param {object} patchData Claim fields to update
    * @returns {Promise<ClaimsApiSingleResult>} The result of the API call
    */
-  updateClaim = async (claim) => {
-    const response = Object.assign({}, claim, apiResponseFields);
-    return Promise.resolve({
-      success: true,
-      claim: new Claim(response),
-    });
+  updateClaim = async (application_id, patchData) => {
+    // The API currently returns 500 errors if some fields are missing, so we need to always pass
+    // certain fields in the API request.
+    // See https://lwd.atlassian.net/browse/API-259, https://lwd.atlassian.net/browse/API-260, https://lwd.atlassian.net/browse/API-263
+    // TODO: Remove this workaround
+    const workaroundDefaultsForAPI = {
+      leave_details: {
+        continuous_leave_periods: [{ status: "Estimated" }],
+      },
+      payment_preferences: [{ description: "Test" }],
+    };
+    patchData = {
+      ...workaroundDefaultsForAPI,
+      ...patchData,
+    };
+
+    const { body, success, status, apiErrors } = await this.claimsRequest(
+      "PATCH",
+      patchData,
+      application_id
+    );
+
+    return {
+      success,
+      status,
+      apiErrors,
+      claim: success ? new Claim(body) : null,
+    };
   };
 
   /**

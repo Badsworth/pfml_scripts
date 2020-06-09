@@ -11,7 +11,6 @@ const mockUser = new User({
   user_id: "api-123",
   auth_id: "cognito-123",
   email_address: "mock-user@example.com",
-  first_name: "Mock",
 });
 
 usersApi.getCurrentUser = jest.fn(() =>

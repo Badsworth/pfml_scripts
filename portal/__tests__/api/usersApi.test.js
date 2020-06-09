@@ -10,8 +10,7 @@ describe("users API", () => {
       beforeEach(() => {
         request.mockResolvedValueOnce({
           body: {
-            first_name: "Anton",
-            last_name: "Mock",
+            email_address: "mock-user@example.com",
           },
           status: 200,
           success: true,
@@ -26,7 +25,7 @@ describe("users API", () => {
         expect(response).toMatchInlineSnapshot(
           {
             user: expect.objectContaining({
-              first_name: "Anton",
+              email_address: "mock-user@example.com",
             }),
           },
           `
@@ -34,7 +33,7 @@ describe("users API", () => {
             "status": 200,
             "success": true,
             "user": ObjectContaining {
-              "first_name": "Anton",
+              "email_address": "mock-user@example.com",
             },
           }
         `
@@ -80,8 +79,6 @@ describe("users API", () => {
   describe("updateUser", () => {
     const user = {
       date_of_birth: "02-02-2020",
-      first_name: "Fred",
-      last_name: "Johnson",
     };
 
     it("is successful", async () => {

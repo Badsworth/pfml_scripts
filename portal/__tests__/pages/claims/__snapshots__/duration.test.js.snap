@@ -8,13 +8,16 @@ exports[`Duration regardless of duration type initially renders the page without
       "avg_weekly_hours_worked": null,
       "created_at": null,
       "duration_type": null,
+      "first_name": null,
       "hours_off_needed": null,
+      "last_name": null,
       "leave_details": Object {
         "employer_notified": null,
       },
       "leave_end_date": null,
       "leave_start_date": null,
       "leave_type": null,
+      "middle_name": null,
     }
   }
   nextPage="/claims/notified-employer?"

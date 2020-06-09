@@ -1,26 +1,31 @@
+import Claim from "../../models/Claim";
+import ClaimsApi from "../../api/ClaimsApi";
 import FormLabel from "../../components/FormLabel";
 import InputText from "../../components/InputText";
 import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
-import User from "../../models/User";
+import { pick } from "lodash";
 import routeWithParams from "../../utils/routeWithParams";
 import useFormState from "../../hooks/useFormState";
 import useHandleInputChange from "../../hooks/useHandleInputChange";
 import useHandleSave from "../../hooks/useHandleSave";
 import { useTranslation } from "../../locales/i18n";
-import usersApi from "../../api/usersApi";
 import valueWithFallback from "../../utils/valueWithFallback";
+import withClaim from "../../hoc/withClaim";
 
-const Name = (props) => {
+export const fields = ["first_name", "middle_name", "last_name"];
+
+export const Name = (props) => {
+  const { claim, claimsApi, updateClaim } = props;
   const { t } = useTranslation();
-  const { formState, updateFields } = useFormState(props.user);
+  const { formState, updateFields } = useFormState(pick(claim, fields));
   const { first_name, middle_name, last_name } = formState;
   const handleInputChange = useHandleInputChange(updateFields);
 
   const handleSave = useHandleSave(
-    (formState) => usersApi.updateUser(new User(formState)),
-    (result) => props.setUser(result.user)
+    (formState) => claimsApi.updateClaim(claim.application_id, formState),
+    (result) => updateClaim(result.claim)
   );
 
   return (
@@ -60,11 +65,12 @@ const Name = (props) => {
 };
 
 Name.propTypes = {
-  user: PropTypes.instanceOf(User).isRequired,
-  setUser: PropTypes.func.isRequired,
+  claim: PropTypes.instanceOf(Claim),
+  claimsApi: PropTypes.instanceOf(ClaimsApi),
+  updateClaim: PropTypes.func.isRequired,
   query: PropTypes.shape({
     claim_id: PropTypes.string,
   }),
 };
 
-export default Name;
+export default withClaim(Name);

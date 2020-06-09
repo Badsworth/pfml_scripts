@@ -3,18 +3,10 @@
 exports[`Name renders the empty page 1`] = `
 <QuestionPage
   formState={
-    User {
-      "auth_id": null,
-      "date_of_birth": null,
-      "email_address": null,
+    Object {
       "first_name": null,
-      "has_state_id": null,
       "last_name": null,
       "middle_name": null,
-      "ssn_or_itin": null,
-      "state_id": null,
-      "status": null,
-      "user_id": null,
     }
   }
   nextPage="/claims/date-of-birth?claim_id=12345"
@@ -55,18 +47,10 @@ exports[`Name renders the empty page 1`] = `
 exports[`Name renders the page prefilled with user information 1`] = `
 <QuestionPage
   formState={
-    User {
-      "auth_id": null,
-      "date_of_birth": null,
-      "email_address": null,
+    Object {
       "first_name": "Aquib",
-      "has_state_id": null,
       "last_name": "Khan",
       "middle_name": "cricketer",
-      "ssn_or_itin": null,
-      "state_id": null,
-      "status": null,
-      "user_id": null,
     }
   }
   nextPage="/claims/date-of-birth?claim_id=12345"
