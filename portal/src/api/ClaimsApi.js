@@ -4,7 +4,11 @@ import Collection from "../models/Collection";
 import request from "./request";
 import routes from "../routes";
 
-const apiResponseFields = {};
+const apiResponseFields = {
+  success: true,
+  status: 201,
+  apiErrors: [],
+};
 
 /**
  * @typedef {{ apiErrors: object[], success: boolean, claim: Claim }} ClaimsApiSingleResult
@@ -151,12 +155,16 @@ export default class ClaimsApi {
    * @returns {Promise<ClaimsApiSingleResult>} The result of the API call
    */
   submitClaim = async (claim) => {
-    const response = Object.assign({}, claim, apiResponseFields);
+    const { body, status, success, apiErrors } = Object.assign(
+      {},
+      { body: claim },
+      apiResponseFields
+    );
     return Promise.resolve({
-      success: true,
-      status: "201",
-      claim: new Claim(response),
-      apiErrors: [],
+      success,
+      status,
+      claim: new Claim(body),
+      apiErrors,
     });
   };
 }
