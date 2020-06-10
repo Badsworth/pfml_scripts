@@ -112,21 +112,6 @@ export default class ClaimsApi {
    * @returns {Promise<ClaimsApiSingleResult>} The result of the API call
    */
   updateClaim = async (application_id, patchData) => {
-    // The API currently returns 500 errors if some fields are missing, so we need to always pass
-    // certain fields in the API request.
-    // See https://lwd.atlassian.net/browse/API-259, https://lwd.atlassian.net/browse/API-260, https://lwd.atlassian.net/browse/API-263
-    // TODO: Remove this workaround
-    const workaroundDefaultsForAPI = {
-      leave_details: {
-        continuous_leave_periods: [{ status: "Estimated" }],
-      },
-      payment_preferences: [{ description: "Test" }],
-    };
-    patchData = {
-      ...workaroundDefaultsForAPI,
-      ...patchData,
-    };
-
     const { body, success, status, apiErrors } = await this.claimsRequest(
       "PATCH",
       patchData,
