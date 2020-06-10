@@ -121,6 +121,11 @@ const pages = {
       "$t(shared.claimDurationTypeIntermittent)",
     leaveSectionHeading: "Leave details",
     title: "Check your answers before sending your application",
+    userDateOfBirthHeading: "Date of birth",
+    userNameHeading: "Full name",
+    userSectionHeading: "Who is taking leave?",
+    userSsnHeading: "Social security number",
+    userStateIdHeading: "Massachusetts drivers license or ID",
   },
   claimsSsn: {
     lead:

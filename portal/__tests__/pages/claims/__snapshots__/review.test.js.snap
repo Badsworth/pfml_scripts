@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`Review renders Review page 1`] = `
+exports[`Review when all data is empty does not render strings like 'null' or 'undefined' 1`] = `
 <div
   className="measure-6"
 >
@@ -11,14 +11,89 @@ exports[`Review renders Review page 1`] = `
   <Heading
     level="2"
   >
+    Who is taking leave?
+  </Heading>
+  <ReviewRow
+    heading="Full name"
+  >
+      
+  </ReviewRow>
+  <ReviewRow
+    heading="Date of birth"
+  >
+    **/**/****
+  </ReviewRow>
+  <ReviewRow
+    heading="Social security number"
+  >
+    *********
+  </ReviewRow>
+  <Heading
+    level="2"
+  >
     Leave details
   </Heading>
   <ReviewRow
     heading="Leave duration"
   >
-    2021-09-21
-    –
-    2021-12-30
+     – 
+  </ReviewRow>
+  <ReviewRow
+    heading="Leave duration type"
+  >
+    pages.claimsReview.leaveDurationTypeValue
+  </ReviewRow>
+  <ButtonLink
+    className="margin-top-3"
+    href="/claims/confirm?claim_id=mock-id"
+  >
+    Confirm information is correct
+  </ButtonLink>
+</div>
+`;
+
+exports[`Review when all data is present renders Review page with the field values 1`] = `
+<div
+  className="measure-6"
+>
+  <BackButton />
+  <Title>
+    Check your answers before sending your application
+  </Title>
+  <Heading
+    level="2"
+  >
+    Who is taking leave?
+  </Heading>
+  <ReviewRow
+    heading="Full name"
+  >
+    Bud Monstera Baxter
+  </ReviewRow>
+  <ReviewRow
+    heading="Date of birth"
+  >
+    **/**/****
+  </ReviewRow>
+  <ReviewRow
+    heading="Social security number"
+  >
+    *********
+  </ReviewRow>
+  <ReviewRow
+    heading="Massachusetts drivers license or ID"
+  >
+    *********
+  </ReviewRow>
+  <Heading
+    level="2"
+  >
+    Leave details
+  </Heading>
+  <ReviewRow
+    heading="Leave duration"
+  >
+    9/21/2021 – 12/30/2021
   </ReviewRow>
   <ReviewRow
     heading="Leave duration type"

@@ -1,0 +1,27 @@
+import formatDateRange from "../../src/utils/formatDateRange";
+
+describe("formatDateRange", () => {
+  describe("when start and date range are valid", () => {
+    it("returns formatted date range", () => {
+      const formattedDate = formatDateRange("1990-09-01", "1990-10-31");
+
+      expect(formattedDate).toBe("9/1/1990 – 10/31/1990");
+    });
+  });
+
+  describe("when start and end dates are invalid ISO 8601 strings", () => {
+    it("returns blank dates", () => {
+      const formattedDate = formatDateRange("1990--", "1990--31");
+
+      expect(formattedDate).toBe(" – ");
+    });
+  });
+
+  describe("when start and end dates are null", () => {
+    it("returns blank dates", () => {
+      const formattedDate = formatDateRange(null, null);
+
+      expect(formattedDate).toBe(" – ");
+    });
+  });
+});
