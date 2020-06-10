@@ -4,6 +4,7 @@ import InputText from "../../components/InputText";
 import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
+import { pick } from "lodash";
 import routeWithParams from "../../utils/routeWithParams";
 import useFormState from "../../hooks/useFormState";
 import useHandleInputChange from "../../hooks/useHandleInputChange";
@@ -12,22 +13,24 @@ import { useTranslation } from "../../locales/i18n";
 import valueWithFallback from "../../utils/valueWithFallback";
 import withClaim from "../../hoc/withClaim";
 
+export const fields = ["employee_ssn"];
+
 /**
  * A form page to capture the worker's SSN or ITIN.
  */
 export const Ssn = (props) => {
+  const { claim, claimsApi, query, updateClaim } = props;
   const { t } = useTranslation();
-  const { formState, updateFields } = useFormState(props.claim);
+  const { formState, updateFields } = useFormState(pick(claim, fields));
   const { employee_ssn } = formState;
   const handleInputChange = useHandleInputChange(updateFields);
 
   const handleSave = useHandleSave(
-    (formState) =>
-      props.claimsApi.updateClaim(props.claim.application_id, formState),
-    (result) => props.updateClaim(result.claim)
+    (formState) => claimsApi.updateClaim(claim.application_id, formState),
+    (result) => updateClaim(result.claim)
   );
 
-  const nextPage = routeWithParams("claims.leaveReason", props.query);
+  const nextPage = routeWithParams("claims.leaveReason", query);
 
   return (
     <QuestionPage

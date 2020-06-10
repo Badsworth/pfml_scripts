@@ -3,21 +3,8 @@
 exports[`Ssn renders the form 1`] = `
 <QuestionPage
   formState={
-    Claim {
-      "application_id": "12345",
-      "avg_weekly_hours_worked": null,
-      "created_at": null,
-      "duration_type": null,
+    Object {
       "employee_ssn": "123-123-1234",
-      "first_name": null,
-      "hours_off_needed": null,
-      "last_name": null,
-      "leave_details": Object {
-        "continuous_leave_periods": null,
-        "employer_notified": null,
-        "reason": null,
-      },
-      "middle_name": null,
     }
   }
   nextPage="/claims/leave-reason?claim_id=12345"

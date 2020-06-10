@@ -118,11 +118,17 @@ export default class ClaimsApi {
       application_id
     );
 
+    // Currently the API doesn't return the claim data in the response
+    // so we're manually constructing the body based on client data.
+    // TODO: Remove workaround
+    const workaroundBody = { ...body, ...patchData, application_id };
+    // </ end workaround >
+
     return {
       success,
       status,
       apiErrors,
-      claim: success ? new Claim(body) : null,
+      claim: success ? new Claim(workaroundBody) : null,
     };
   };
 
