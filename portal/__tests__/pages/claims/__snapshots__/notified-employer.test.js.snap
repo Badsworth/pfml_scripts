@@ -8,6 +8,7 @@ exports[`NotifiedEmployer renders the page 1`] = `
       "avg_weekly_hours_worked": null,
       "created_at": null,
       "duration_type": null,
+      "employee_ssn": null,
       "first_name": null,
       "hours_off_needed": null,
       "last_name": null,

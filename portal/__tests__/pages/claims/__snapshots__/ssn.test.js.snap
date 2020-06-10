@@ -3,15 +3,22 @@
 exports[`Ssn renders the form 1`] = `
 <QuestionPage
   formState={
-    User {
-      "auth_id": null,
-      "date_of_birth": null,
-      "email_address": null,
-      "has_state_id": null,
-      "ssn_or_itin": null,
-      "state_id": null,
-      "status": null,
-      "user_id": null,
+    Claim {
+      "application_id": "12345",
+      "avg_weekly_hours_worked": null,
+      "created_at": null,
+      "duration_type": null,
+      "employee_ssn": "123-123-1234",
+      "first_name": null,
+      "hours_off_needed": null,
+      "last_name": null,
+      "leave_details": Object {
+        "employer_notified": null,
+      },
+      "leave_end_date": null,
+      "leave_start_date": null,
+      "leave_type": null,
+      "middle_name": null,
     }
   }
   nextPage="/claims/leave-type?claim_id=12345"
@@ -22,9 +29,9 @@ exports[`Ssn renders the form 1`] = `
     hint="Don't have an SSN? Use your Individual Taxpayer Identification Number (ITIN)."
     label="What's your Social Security Number?"
     mask="ssn"
-    name="ssn_or_itin"
+    name="employee_ssn"
     onChange={[Function]}
-    value=""
+    value="123-123-1234"
   />
 </QuestionPage>
 `;

@@ -8,6 +8,7 @@ class Claim extends BaseModel {
       last_name: null,
       application_id: null,
       created_at: null,
+      employee_ssn: null,
       avg_weekly_hours_worked: null,
       leave_details: {
         employer_notified: null,

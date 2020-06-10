@@ -1,46 +1,69 @@
 import { mount, shallow } from "enzyme";
+import Claim from "../../../src/models/Claim";
+import ClaimsApi from "../../../src/api/ClaimsApi";
 import React from "react";
-import Ssn from "../../../src/pages/claims/ssn";
+import { Ssn } from "../../../src/pages/claims/ssn";
 import User from "../../../src/models/User";
 import routes from "../../../src/routes";
-import usersApi from "../../../src/api/usersApi";
 
-jest.mock("../../../src/api/usersApi");
 const claim_id = "12345";
 
-const render = (props = {}, mountComponent) => {
-  const commonProps = {
-    user: new User(),
-    setUser: jest.fn(),
-    query: { claim_id },
-  };
+const render = (customProps = {}, mountComponent) => {
+  const claimsApi = new ClaimsApi({ user: new User() });
+
+  jest
+    .spyOn(claimsApi, "updateClaim")
+    .mockImplementation((application_id, patchData) => {
+      const claim = new Claim(patchData);
+      return {
+        success: true,
+        status: 200,
+        apiErrors: [],
+        claim,
+      };
+    });
+
+  const props = Object.assign(
+    {
+      claim: new Claim({
+        application_id: claim_id,
+        employee_ssn: "123-123-1234",
+      }),
+      claimsApi,
+      updateClaim: jest.fn(),
+      query: { claim_id },
+    },
+    customProps
+  );
 
   const renderFn = mountComponent ? mount : shallow;
 
-  return renderFn(<Ssn {...commonProps} {...props} />);
+  return {
+    props,
+    wrapper: renderFn(<Ssn {...props} />),
+  };
 };
 
 describe("Ssn", () => {
-  let wrapper;
-
-  beforeEach(() => {
-    wrapper = render();
-  });
-
   it("renders the form", () => {
+    const { wrapper } = render();
+
     expect(wrapper).toMatchSnapshot();
   });
 
   it("redirects to leaveType", () => {
+    const { props, wrapper } = render();
+
     expect(wrapper.find("QuestionPage").prop("nextPage")).toEqual(
-      `${routes.claims.leaveType}?claim_id=${claim_id}`
+      `${routes.claims.leaveType}?claim_id=${props.query.claim_id}`
     );
   });
 
   it("calls updateFieldFromEvent with user input", () => {
-    wrapper = render({}, true);
+    const { wrapper } = render({}, true);
+
     const inputData = {
-      ssn_or_itin: "555-55-5555",
+      employee_ssn: "555-55-5555",
     };
 
     for (const key in inputData) {
@@ -56,14 +79,12 @@ describe("Ssn", () => {
   describe("when the form is successfully submitted", () => {
     it("calls updateUser and updates the state", async () => {
       expect.assertions();
-      const setUser = jest.fn();
-
-      wrapper = render({ setUser });
+      const { props, wrapper } = render();
 
       await wrapper.find("QuestionPage").simulate("save");
 
-      expect(usersApi.updateUser).toHaveBeenCalledTimes(1);
-      expect(setUser).toHaveBeenCalledWith(expect.any(User));
+      expect(props.claimsApi.updateClaim).toHaveBeenCalledTimes(1);
+      expect(props.updateClaim).toHaveBeenCalledWith(expect.any(Claim));
     });
   });
 });

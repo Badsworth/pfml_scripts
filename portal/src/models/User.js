@@ -10,7 +10,6 @@ class User extends BaseModel {
       has_state_id: null,
       state_id: null,
       status: null,
-      ssn_or_itin: null,
     };
   }
 }

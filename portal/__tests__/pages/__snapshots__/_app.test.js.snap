@@ -31,7 +31,6 @@ exports[`App when a user IS authenticated renders the page component 1`] = `
       "date_of_birth": null,
       "email_address": "mock-user@example.com",
       "has_state_id": null,
-      "ssn_or_itin": null,
       "state_id": null,
       "status": null,
       "user_id": "api-123",

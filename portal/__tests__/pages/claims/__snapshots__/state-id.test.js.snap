@@ -8,7 +8,6 @@ exports[`StateId initially renders the page without an id field 1`] = `
       "date_of_birth": null,
       "email_address": null,
       "has_state_id": null,
-      "ssn_or_itin": null,
       "state_id": null,
       "status": null,
       "user_id": null,
