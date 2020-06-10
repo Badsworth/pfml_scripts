@@ -1,22 +1,29 @@
 import Claim from "../../models/Claim";
-import ClaimsApi from "../../api/ClaimsApi";
 import ConditionalContent from "../../components/ConditionalContent";
 import InputChoiceGroup from "../../components/InputChoiceGroup";
 import InputText from "../../components/InputText";
 import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
+import { pick } from "lodash";
 import routeWithParams from "../../utils/routeWithParams";
 import useFormState from "../../hooks/useFormState";
 import useHandleInputChange from "../../hooks/useHandleInputChange";
-import useHandleSave from "../../hooks/useHandleSave";
 import { useTranslation } from "react-i18next";
 import valueWithFallback from "../../utils/valueWithFallback";
 import withClaim from "../../hoc/withClaim";
 
+export const fields = [
+  "avg_weekly_hours_worked",
+  "duration_type",
+  "hours_off_needed",
+];
+
 export const Duration = (props) => {
   const { t } = useTranslation();
-  const { formState, updateFields, removeField } = useFormState(props.claim);
+  const { formState, updateFields, removeField } = useFormState(
+    pick(props.claim, fields)
+  );
   // TODO: use nested fields
   // https://lwd.atlassian.net/browse/CP-480
   const {
@@ -26,10 +33,8 @@ export const Duration = (props) => {
   } = formState;
   const handleInputChange = useHandleInputChange(updateFields);
 
-  const handleSave = useHandleSave(
-    (formState) => props.claimsApi.updateClaim(new Claim(formState)),
-    (result) => props.updateClaim(result.claim)
-  );
+  const handleSave = (formState) =>
+    props.appLogic.updateClaim(props.claim.application_id, formState);
 
   return (
     <QuestionPage
@@ -91,8 +96,7 @@ export const Duration = (props) => {
 
 Duration.propTypes = {
   claim: PropTypes.instanceOf(Claim),
-  claimsApi: PropTypes.instanceOf(ClaimsApi),
-  updateClaim: PropTypes.func,
+  appLogic: PropTypes.object.isRequired,
   query: PropTypes.shape({
     claim_id: PropTypes.string,
   }),

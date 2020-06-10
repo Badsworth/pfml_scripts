@@ -19,6 +19,7 @@ export const QuestionPage = (props) => {
   const handleSubmit = async (event) => {
     event.preventDefault();
     await props.onSave(props.formState);
+    // TODO appLogic will handle routing after claim creation
     router.push(props.nextPage);
   };
 

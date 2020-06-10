@@ -11,7 +11,9 @@ describe("NotifiedEmployer", () => {
   beforeEach(() => {
     claim = new Claim({ application_id });
     const query = { claim_id: claim.application_id };
-    wrapper = shallow(<NotifiedEmployer claim={claim} query={query} />);
+    wrapper = shallow(
+      <NotifiedEmployer claim={claim} query={query} appLogic={{}} />
+    );
   });
 
   it("renders the page", () => {

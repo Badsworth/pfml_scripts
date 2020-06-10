@@ -1,30 +1,28 @@
 /**
  * @file test behavior and features common to all claims pages
  */
-
 import Claim from "../../../src/models/Claim";
-import ClaimsApi from "../../../src/api/ClaimsApi";
 import { Duration } from "../../../src/pages/claims/duration";
 import { LeaveDates } from "../../../src/pages/claims/leave-dates";
 import { LeaveReason } from "../../../src/pages/claims/leave-reason";
 import { NotifiedEmployer } from "../../../src/pages/claims/notified-employer";
 import React from "react";
-import User from "../../../src/models/User";
 import { mount } from "enzyme";
+import useAppLogic from "../../../src/hooks/useAppLogic";
+
+jest.mock("../../../src/hooks/useAppLogic");
 
 const testPages = [LeaveReason, LeaveDates, Duration, NotifiedEmployer];
 
 const render = (Component, _props = {}) => {
   const application_id = "12345";
   const claim = new Claim({ application_id });
-  const user = new User({ user_id: "mock-user-id" });
-  const claimsApi = new ClaimsApi({ user });
-  jest.spyOn(claimsApi, "updateClaim");
-  claimsApi.updateClaim.mockReturnValue({ success: true });
+  // eslint-disable-next-line react-hooks/rules-of-hooks
+  const appLogic = useAppLogic();
 
   const props = {
     claim,
-    claimsApi,
+    appLogic,
     ..._props,
   };
 
@@ -42,15 +40,10 @@ describe("Shared claims page behavior", () => {
         const event = { preventDefault: jest.fn() };
         wrapper.find("form").simulate("submit", event);
 
-        expect(props.claimsApi.updateClaim).toHaveBeenCalledTimes(1);
-      });
-
-      it("updates portal claim state", async () => {
-        const { props, wrapper } = render(Page, { updateClaim: jest.fn() });
-        const event = { preventDefault: jest.fn() };
-
-        await wrapper.find("form").simulate("submit", event);
-        expect(props.updateClaim).toHaveBeenCalledTimes(1);
+        expect(props.appLogic.updateClaim).toHaveBeenCalledWith(
+          expect.any(String),
+          expect.any(Object)
+        );
       });
     });
   }

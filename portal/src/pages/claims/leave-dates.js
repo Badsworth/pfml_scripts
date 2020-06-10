@@ -1,27 +1,26 @@
 import Claim from "../../models/Claim";
-import ClaimsApi from "../../api/ClaimsApi";
 import InputDate from "../../components/InputDate";
 import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
 import get from "lodash/get";
+import { pick } from "lodash";
 import routeWithParams from "../../utils/routeWithParams";
 import useFormState from "../../hooks/useFormState";
 import useHandleInputChange from "../../hooks/useHandleInputChange";
-import useHandleSave from "../../hooks/useHandleSave";
 import { useTranslation } from "../../locales/i18n";
 import valueWithFallback from "../../utils/valueWithFallback";
 import withClaim from "../../hoc/withClaim";
 
+export const fields = ["leave_details.continuous_leave_periods"];
+
 export const LeaveDates = (props) => {
   const { t } = useTranslation();
-  const { formState, updateFields } = useFormState(props.claim);
+  const { formState, updateFields } = useFormState(pick(props.claim, fields));
   const handleInputChange = useHandleInputChange(updateFields);
 
-  const handleSave = useHandleSave(
-    (formState) => props.claimsApi.updateClaim(new Claim(formState)),
-    (result) => props.updateClaim(result.claim)
-  );
+  const handleSave = (formState) =>
+    props.appLogic.updateClaim(props.claim.application_id, formState);
 
   return (
     <QuestionPage
@@ -59,8 +58,7 @@ export const LeaveDates = (props) => {
 
 LeaveDates.propTypes = {
   claim: PropTypes.instanceOf(Claim),
-  updateClaim: PropTypes.func,
-  claimsApi: PropTypes.instanceOf(ClaimsApi),
+  appLogic: PropTypes.object.isRequired,
   query: PropTypes.shape({
     claim_id: PropTypes.string,
   }),

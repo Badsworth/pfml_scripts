@@ -1,29 +1,28 @@
 import Claim from "../../models/Claim";
-import ClaimsApi from "../../api/ClaimsApi";
 import InputChoiceGroup from "../../components/InputChoiceGroup";
 import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
+import { pick } from "lodash";
 import routeWithParams from "../../utils/routeWithParams";
 import useFormState from "../../hooks/useFormState";
 import useHandleInputChange from "../../hooks/useHandleInputChange";
-import useHandleSave from "../../hooks/useHandleSave";
 import { useTranslation } from "../../locales/i18n";
 import withClaim from "../../hoc/withClaim";
+
+export const fields = ["leave_details.employer_notified"];
 
 /**
  * A form page to capture a user's attestation of having notified their employer.
  */
 export const NotifiedEmployer = (props) => {
   const { t } = useTranslation();
-  const { formState, updateFields } = useFormState(props.claim);
+  const { formState, updateFields } = useFormState(pick(props.claim, fields));
   const { leave_details } = formState;
   const handleInputChange = useHandleInputChange(updateFields);
 
-  const handleSave = useHandleSave(
-    (formState) => props.claimsApi.updateClaim(new Claim(formState)),
-    (result) => props.updateClaim(result.claim)
-  );
+  const handleSave = (formState) =>
+    props.appLogic.updateClaim(props.claim.application_id, formState);
 
   return (
     <QuestionPage
@@ -57,8 +56,7 @@ export const NotifiedEmployer = (props) => {
 
 NotifiedEmployer.propTypes = {
   claim: PropTypes.instanceOf(Claim),
-  updateClaim: PropTypes.func,
-  claimsApi: PropTypes.instanceOf(ClaimsApi),
+  appLogic: PropTypes.object.isRequired,
   query: PropTypes.shape({
     claim_id: PropTypes.string,
   }),

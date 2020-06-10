@@ -28,9 +28,9 @@ const apiResponseFields = {
 
 export default class ClaimsApi {
   constructor({ user }) {
-    if (!user) {
-      throw new Error("ClaimsApi expects an instance of a user.");
-    }
+    // if (!user) {
+    //   throw new Error("ClaimsApi expects an instance of a user.");
+    // }
 
     this.user = user;
   }

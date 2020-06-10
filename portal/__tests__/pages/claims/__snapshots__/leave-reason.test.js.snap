@@ -3,19 +3,10 @@
 exports[`LeaveReason renders the page 1`] = `
 <QuestionPage
   formState={
-    Claim {
-      "application_id": "12345",
-      "avg_weekly_hours_worked": null,
-      "created_at": null,
-      "duration_type": null,
-      "employee_ssn": null,
-      "first_name": null,
-      "hours_off_needed": null,
-      "last_name": null,
+    Object {
       "leave_details": Object {
         "reason": "Serious Health Condition - Employee",
       },
-      "middle_name": null,
     }
   }
   nextPage="/claims/leave-dates?"

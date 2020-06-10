@@ -1,5 +1,4 @@
 import Claim from "../../models/Claim";
-import ClaimsApi from "../../api/ClaimsApi";
 import InputText from "../../components/InputText";
 import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
@@ -8,7 +7,6 @@ import { pick } from "lodash";
 import routeWithParams from "../../utils/routeWithParams";
 import useFormState from "../../hooks/useFormState";
 import useHandleInputChange from "../../hooks/useHandleInputChange";
-import useHandleSave from "../../hooks/useHandleSave";
 import { useTranslation } from "../../locales/i18n";
 import valueWithFallback from "../../utils/valueWithFallback";
 import withClaim from "../../hoc/withClaim";
@@ -19,16 +17,14 @@ export const fields = ["employee_ssn"];
  * A form page to capture the worker's SSN or ITIN.
  */
 export const Ssn = (props) => {
-  const { claim, claimsApi, query, updateClaim } = props;
+  const { appLogic, claim, query } = props;
   const { t } = useTranslation();
   const { formState, updateFields } = useFormState(pick(claim, fields));
   const { employee_ssn } = formState;
   const handleInputChange = useHandleInputChange(updateFields);
 
-  const handleSave = useHandleSave(
-    (formState) => claimsApi.updateClaim(claim.application_id, formState),
-    (result) => updateClaim(result.claim)
-  );
+  const handleSave = (formState) =>
+    appLogic.updateClaim(claim.application_id, formState);
 
   const nextPage = routeWithParams("claims.leaveReason", query);
 
@@ -53,8 +49,7 @@ export const Ssn = (props) => {
 
 Ssn.propTypes = {
   claim: PropTypes.instanceOf(Claim),
-  claimsApi: PropTypes.instanceOf(ClaimsApi),
-  updateClaim: PropTypes.func.isRequired,
+  appLogic: PropTypes.object.isRequired,
   query: PropTypes.shape({
     claim_id: PropTypes.string,
   }),

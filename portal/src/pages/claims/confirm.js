@@ -18,7 +18,7 @@ export const Confirm = (props) => {
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-    await props.claimsApi.submitClaim(new Claim(formState));
+    await props.appLogic.submitClaim(formState);
     router.push(nextPage);
   };
 
@@ -44,8 +44,7 @@ export const Confirm = (props) => {
 
 Confirm.propTypes = {
   claim: PropTypes.instanceOf(Claim),
-  // TODO: This should be an instance of ClaimsApi but throws an error in tests with mocks.
-  claimsApi: PropTypes.object,
+  appLogic: PropTypes.object.isRequired,
   query: PropTypes.shape({
     claim_id: PropTypes.string,
   }),

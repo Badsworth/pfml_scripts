@@ -4,9 +4,9 @@ exports[`Name renders the empty page 1`] = `
 <QuestionPage
   formState={
     Object {
-      "first_name": null,
-      "last_name": null,
-      "middle_name": null,
+      "first_name": "Aquib",
+      "last_name": "Khan",
+      "middle_name": "cricketer",
     }
   }
   nextPage="/claims/date-of-birth?claim_id=12345"
@@ -24,7 +24,7 @@ exports[`Name renders the empty page 1`] = `
     name="first_name"
     onChange={[Function]}
     smallLabel={true}
-    value=""
+    value="Aquib"
   />
   <InputText
     label="Middle name"
@@ -32,14 +32,14 @@ exports[`Name renders the empty page 1`] = `
     onChange={[Function]}
     optionalText="(optional)"
     smallLabel={true}
-    value=""
+    value="cricketer"
   />
   <InputText
     label="Last name"
     name="last_name"
     onChange={[Function]}
     smallLabel={true}
-    value=""
+    value="Khan"
   />
 </QuestionPage>
 `;

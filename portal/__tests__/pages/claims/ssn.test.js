@@ -1,36 +1,23 @@
 import { mount, shallow } from "enzyme";
 import Claim from "../../../src/models/Claim";
-import ClaimsApi from "../../../src/api/ClaimsApi";
 import React from "react";
 import { Ssn } from "../../../src/pages/claims/ssn";
-import User from "../../../src/models/User";
 import routes from "../../../src/routes";
+import useAppLogic from "../../../src/hooks/useAppLogic";
+
+jest.mock("../../../src/hooks/useAppLogic");
 
 const claim_id = "12345";
 
 const render = (customProps = {}, mountComponent) => {
-  const claimsApi = new ClaimsApi({ user: new User() });
-
-  jest
-    .spyOn(claimsApi, "updateClaim")
-    .mockImplementation((application_id, patchData) => {
-      const claim = new Claim(patchData);
-      return {
-        success: true,
-        status: 200,
-        apiErrors: [],
-        claim,
-      };
-    });
-
   const props = Object.assign(
     {
       claim: new Claim({
         application_id: claim_id,
         employee_ssn: "123-123-1234",
       }),
-      claimsApi,
-      updateClaim: jest.fn(),
+      // eslint-disable-next-line react-hooks/rules-of-hooks
+      appLogic: useAppLogic(),
       query: { claim_id },
     },
     customProps
@@ -83,8 +70,7 @@ describe("Ssn", () => {
 
       await wrapper.find("QuestionPage").simulate("save");
 
-      expect(props.claimsApi.updateClaim).toHaveBeenCalledTimes(1);
-      expect(props.updateClaim).toHaveBeenCalledWith(expect.any(Claim));
+      expect(props.appLogic.updateClaim).toHaveBeenCalledTimes(1);
     });
   });
 });

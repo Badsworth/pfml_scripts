@@ -1,8 +1,6 @@
-import ClaimsApi from "../api/ClaimsApi";
-import Collection from "../models/Collection";
+import React, { useEffect } from "react";
 import PropTypes from "prop-types";
-import React from "react";
-import User from "../models/User";
+import Spinner from "../components/Spinner";
 
 /**
  * Higher order component that *MUST* be a child of App
@@ -12,25 +10,28 @@ import User from "../models/User";
  * @returns {React.Component} - Component with claim prop
  */
 const withClaim = (Component) => {
-  const componentWithClaim = (props) => {
-    const { query, claims, user } = props;
-    const claimId = query.claim_id;
+  const ComponentWithClaim = (props) => {
+    const { query, appLogic } = props;
 
-    const claim = claims.get(claimId);
-    const claimsApi = new ClaimsApi({ user });
+    const claim = appLogic.claims ? appLogic.claims.get(query.claim_id) : null;
 
-    return <Component {...props} claim={claim} claimsApi={claimsApi} />;
+    useEffect(() => {
+      appLogic.loadClaims();
+    }, [appLogic]);
+
+    if (!claim) return <Spinner aria-valuetext="Loading claims" />;
+
+    return <Component {...props} claim={claim} />;
   };
 
-  componentWithClaim.propTypes = {
+  ComponentWithClaim.propTypes = {
     query: PropTypes.shape({
       claim_id: PropTypes.string,
     }).isRequired,
-    claims: PropTypes.instanceOf(Collection).isRequired,
-    user: PropTypes.instanceOf(User).isRequired,
+    appLogic: PropTypes.object.isRequired,
   };
 
-  return componentWithClaim;
+  return ComponentWithClaim;
 };
 
 export default withClaim;

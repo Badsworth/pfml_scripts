@@ -14,7 +14,7 @@ describe("Duration", () => {
 
   describe("regardless of duration type", () => {
     beforeEach(() => {
-      wrapper = shallow(<Duration claim={claim} />);
+      wrapper = shallow(<Duration claim={claim} appLogic={{}} />);
     });
 
     it("initially renders the page without conditional fields", () => {
@@ -33,7 +33,7 @@ describe("Duration", () => {
     beforeEach(() => {
       claim = new Claim({ application_id, duration_type: "continuous" });
 
-      wrapper = shallow(<Duration claim={claim} />);
+      wrapper = shallow(<Duration claim={claim} appLogic={{}} />);
     });
 
     it("doesn't render conditional fields", () => {
@@ -45,7 +45,7 @@ describe("Duration", () => {
     beforeEach(() => {
       claim = new Claim({ application_id, duration_type: "intermittent" });
 
-      wrapper = shallow(<Duration claim={claim} />);
+      wrapper = shallow(<Duration claim={claim} appLogic={{}} />);
     });
 
     it("renders conditional field", () => {

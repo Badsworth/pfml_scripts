@@ -1,14 +1,11 @@
+import React, { useEffect } from "react";
 import Button from "../components/Button";
-import ClaimsApi from "../api/ClaimsApi";
-import Collection from "../models/Collection";
 import DashboardClaimCard from "../components/DashboardClaimCard";
 import Heading from "../components/Heading";
 import PropTypes from "prop-types";
-import React from "react";
 import Title from "../components/Title";
 import User from "../models/User";
 import routeWithParams from "../utils/routeWithParams";
-import useHandleSave from "../hooks/useHandleSave";
 
 import { useRouter } from "next/router";
 import { useTranslation } from "../locales/i18n";
@@ -16,34 +13,35 @@ import { useTranslation } from "../locales/i18n";
 /**
  * "Dashboard" - Where a user is redirected to after successfully authenticating.
  */
-
-const Index = ({ claims, addClaim, user }) => {
+const Index = ({ appLogic, user }) => {
   const { t } = useTranslation();
   const router = useRouter();
-  const claimsApi = new ClaimsApi({ user });
 
-  const createClaim = useHandleSave(claimsApi.createClaim, (result) => {
-    addClaim(result.claim);
-
-    const route = routeWithParams("claims.name", {
-      claim_id: result.claim.application_id,
-    });
-    router.push(route);
-  });
-
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
-    createClaim();
+
+    const claim = await appLogic.createClaim();
+
+    // TODO appLogic will handle routing after claim creation
+    const route = routeWithParams("claims.name", {
+      claim_id: claim.application_id,
+    });
+
+    router.push(route);
   };
+
+  useEffect(() => {
+    appLogic.loadClaims();
+  }, [appLogic]);
 
   return (
     <React.Fragment>
       <Title>{t("pages.index.title")}</Title>
 
-      {claims.items.length ? (
+      {appLogic.claims ? (
         <section className="border-bottom border-base-lighter padding-bottom-2 margin-bottom-5">
           <Heading level="2">{t("pages.index.activeClaimsHeading")}</Heading>
-          {claims.items.map((claim, index) => (
+          {appLogic.claims.items.map((claim, index) => (
             <DashboardClaimCard
               key={claim.application_id}
               claim={claim}
@@ -69,7 +67,7 @@ const Index = ({ claims, addClaim, user }) => {
         <Button
           type="submit"
           name="new-claim"
-          variation={claims.items.length ? "outline" : undefined}
+          variation={appLogic.claims ? "outline" : undefined}
         >
           {t("pages.index.createClaimButtonText")}
         </Button>
@@ -79,8 +77,7 @@ const Index = ({ claims, addClaim, user }) => {
 };
 
 Index.propTypes = {
-  addClaim: PropTypes.func,
-  claims: PropTypes.instanceOf(Collection).isRequired,
+  appLogic: PropTypes.object.isRequired,
   user: PropTypes.instanceOf(User),
 };
 

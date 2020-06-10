@@ -1,40 +1,26 @@
 import Claim from "../../../src/models/Claim";
-import ClaimsApi from "../../../src/api/ClaimsApi";
 import { Name } from "../../../src/pages/claims/name";
 import React from "react";
-import User from "../../../src/models/User";
 import { shallow } from "enzyme";
+import useAppLogic from "../../../src/hooks/useAppLogic";
+
+jest.mock("../../../src/hooks/useAppLogic");
 
 describe("Name", () => {
-  let claim, claimsApi, updateClaim, user, wrapper;
+  let appLogic, claim, wrapper;
   const claim_id = "12345";
 
   beforeEach(() => {
-    user = new User();
-    claim = new Claim();
-    claimsApi = new ClaimsApi({ user });
-    jest
-      .spyOn(claimsApi, "updateClaim")
-      .mockImplementation((application_id, patchData) => {
-        const success = true;
-        const status = 200;
-        const apiErrors = [];
-        const claim = new Claim(patchData);
-        return {
-          success,
-          status,
-          apiErrors,
-          claim,
-        };
-      });
-    updateClaim = jest.fn();
+    claim = new Claim({
+      application_id: claim_id,
+      first_name: "Aquib",
+      middle_name: "cricketer",
+      last_name: "Khan",
+    });
+    appLogic = useAppLogic();
+
     wrapper = shallow(
-      <Name
-        claim={claim}
-        claimsApi={claimsApi}
-        updateClaim={updateClaim}
-        query={{ claim_id }}
-      />
+      <Name claim={claim} appLogic={appLogic} query={{ claim_id }} />
     );
   });
 
@@ -49,26 +35,23 @@ describe("Name", () => {
       middle_name: "cricketer",
       last_name: "Khan",
     });
+    appLogic = useAppLogic();
     wrapper = shallow(
-      <Name
-        user={user}
-        claim={claim}
-        claimsApi={claimsApi}
-        updateClaim={updateClaim}
-        query={{ claim_id }}
-      />
+      <Name claim={claim} appLogic={appLogic} query={{ claim_id }} />
     );
     expect(wrapper).toMatchSnapshot();
   });
 
   describe("when the form is successfully submitted", () => {
-    it("calls updateUser and updates the state", async () => {
+    it("calls updateClaim", async () => {
       expect.assertions();
 
       await wrapper.find("QuestionPage").simulate("save");
-
-      expect(claimsApi.updateClaim).toHaveBeenCalledTimes(1);
-      expect(updateClaim).toHaveBeenCalledWith(expect.any(Claim));
+      // formState is undefined since we are not mounting the component
+      expect(appLogic.updateClaim).toHaveBeenCalledWith(
+        expect.any(String),
+        undefined
+      );
     });
   });
 });

@@ -1,5 +1,4 @@
 import Claim from "../../models/Claim";
-import ClaimsApi from "../../api/ClaimsApi";
 import FormLabel from "../../components/FormLabel";
 import InputText from "../../components/InputText";
 import PropTypes from "prop-types";
@@ -9,7 +8,6 @@ import { pick } from "lodash";
 import routeWithParams from "../../utils/routeWithParams";
 import useFormState from "../../hooks/useFormState";
 import useHandleInputChange from "../../hooks/useHandleInputChange";
-import useHandleSave from "../../hooks/useHandleSave";
 import { useTranslation } from "../../locales/i18n";
 import valueWithFallback from "../../utils/valueWithFallback";
 import withClaim from "../../hoc/withClaim";
@@ -17,16 +15,13 @@ import withClaim from "../../hoc/withClaim";
 export const fields = ["first_name", "middle_name", "last_name"];
 
 export const Name = (props) => {
-  const { claim, claimsApi, updateClaim } = props;
   const { t } = useTranslation();
-  const { formState, updateFields } = useFormState(pick(claim, fields));
+  const { formState, updateFields } = useFormState(pick(props.claim, fields));
   const { first_name, middle_name, last_name } = formState;
   const handleInputChange = useHandleInputChange(updateFields);
 
-  const handleSave = useHandleSave(
-    (formState) => claimsApi.updateClaim(claim.application_id, formState),
-    (result) => updateClaim(result.claim)
-  );
+  const handleSave = (formState) =>
+    props.appLogic.updateClaim(props.claim.application_id, formState);
 
   return (
     <QuestionPage
@@ -66,8 +61,7 @@ export const Name = (props) => {
 
 Name.propTypes = {
   claim: PropTypes.instanceOf(Claim),
-  claimsApi: PropTypes.instanceOf(ClaimsApi),
-  updateClaim: PropTypes.func.isRequired,
+  appLogic: PropTypes.object.isRequired,
   query: PropTypes.shape({
     claim_id: PropTypes.string,
   }),

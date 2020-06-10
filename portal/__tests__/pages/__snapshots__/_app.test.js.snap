@@ -11,18 +11,19 @@ Array [
 
 exports[`App when a user IS authenticated renders the page component 1`] = `
 <TestComponent
-  addClaim={[Function]}
-  claims={
-    ClaimCollection {
-      "items": Array [],
+  appLogic={
+    Object {
+      "claims": null,
+      "createClaim": [Function],
+      "loadClaims": [Function],
+      "submitClaim": [Function],
+      "updateClaim": [Function],
     }
   }
   query={Object {}}
-  removeClaim={[Function]}
   setAppErrors={[Function]}
   setUser={[Function]}
   title="Test page"
-  updateClaim={[Function]}
   user={
     User {
       "auth_id": "cognito-123",

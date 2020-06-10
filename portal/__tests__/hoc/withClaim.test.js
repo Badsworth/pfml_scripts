@@ -1,18 +1,38 @@
+import { mount, shallow } from "enzyme";
 import Claim from "../../src/models/Claim";
-import ClaimCollection from "../../src/models/ClaimCollection";
-import ClaimsApi from "../../src/api/ClaimsApi";
 import React from "react";
-import User from "../../src/models/User";
-import { shallow } from "enzyme";
+import useAppLogic from "../../src/hooks/useAppLogic";
 import withClaim from "../../src/hoc/withClaim";
 
+jest.mock("../../src/hooks/useAppLogic");
+
 describe("WithClaim", () => {
-  it("sets the 'claim' and 'claimsApi' prop on the passed component to the claim identified in the query", () => {
+  it("Shows spinner when claims are not loaded", () => {
+    const appLogic = useAppLogic();
+    appLogic.claims = null;
+
+    const PageComponent = (props) => <div />;
+
+    const WrappedComponent = withClaim(PageComponent);
+
+    const wrapper = shallow(
+      <WrappedComponent query={{ claim_id: "12345" }} appLogic={appLogic} />
+    );
+
+    expect(wrapper).toMatchInlineSnapshot(`
+      <Spinner
+        aria-valuetext="Loading claims"
+      />
+    `);
+  });
+
+  it("sets the 'claim' prop on the passed component to the claim identified in the query", () => {
     // Mock initial state of the app
     // these values would be passed from _app.js
     const id = "12345";
     const claim = new Claim({ application_id: id });
-    const claims = new ClaimCollection([claim]);
+    const appLogic = useAppLogic();
+    appLogic.claims = appLogic.claims.addItem(claim);
 
     // define component that needs a claim prop
     // eslint-disable-next-line react/prop-types
@@ -23,16 +43,13 @@ describe("WithClaim", () => {
 
     // Mock query parameter that would be provided by next/router
     const query = { claim_id: id };
-    const wrapper = shallow(
-      <WrappedComponent
-        query={query}
-        claims={claims}
-        user={new User({ user_id: "1234" })}
-      />
+
+    const wrapper = mount(
+      <WrappedComponent query={query} appLogic={appLogic} />
     );
 
     const pageComponent = wrapper.find("PageComponent");
     expect(pageComponent.prop("claim")).toEqual(claim);
-    expect(pageComponent.prop("claimsApi")).toBeInstanceOf(ClaimsApi);
+    expect(appLogic.loadClaims).toHaveBeenCalledTimes(1);
   });
 });

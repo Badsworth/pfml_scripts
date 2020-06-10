@@ -12,7 +12,7 @@ describe("LeaveReason", () => {
         reason: LeaveReasonEnums.medical,
       },
     });
-    const wrapper = shallow(<LeaveReason claim={claim} />);
+    const wrapper = shallow(<LeaveReason claim={claim} appLogic={{}} />);
     expect(wrapper).toMatchSnapshot();
   });
 });

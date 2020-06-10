@@ -5,7 +5,6 @@ import React, { useEffect, useState } from "react";
 import { initializeI18n, useTranslation } from "../locales/i18n";
 import AppErrorInfo from "../models/AppErrorInfo";
 import Authenticator from "../components/Authenticator";
-import ClaimCollection from "../models/ClaimCollection";
 import ErrorBoundary from "../components/ErrorBoundary";
 import ErrorsSummary from "../components/ErrorsSummary";
 import Head from "next/head";
@@ -15,7 +14,7 @@ import PropTypes from "prop-types";
 import Spinner from "../components/Spinner";
 import { isFeatureEnabled } from "../services/featureFlags";
 import tracker from "../services/tracker";
-import useCollectionState from "../hooks/useCollectionState";
+import useAppLogic from "../hooks/useAppLogic";
 import useFeatureFlagsFromQueryEffect from "../hooks/useFeatureFlagsFromQueryEffect";
 import { useRouter } from "next/router";
 import usersApi from "../api/usersApi";
@@ -51,16 +50,7 @@ export const App = ({
   // are rendered by Authenticator
   const [authState, setAuthState] = useState(initialAuthState);
 
-  // State representing the collection of claims for the current user.
-  // Initialize to empty collection, but will eventually store the claims
-  // state as API calls are made to fetch the user's claims and/or create
-  // new claims
-  const {
-    collection: claims,
-    addItem: addClaim,
-    updateItem: updateClaim,
-    removeItem: removeClaim,
-  } = useCollectionState(new ClaimCollection());
+  const appLogic = useAppLogic({ user });
 
   // Global UI state, such as whether to display the loading indicator
   const [ui, setUI] = useState({ isLoading: false });
@@ -190,13 +180,10 @@ export const App = ({
     return (
       <section id="page">
         <Component
-          addClaim={addClaim}
-          claims={claims}
+          appLogic={appLogic}
           query={router.query}
-          removeClaim={removeClaim}
           setAppErrors={setAppErrors}
           setUser={setUser}
-          updateClaim={updateClaim}
           user={user}
           {...pageProps}
         />

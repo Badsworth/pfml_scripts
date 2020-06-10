@@ -1,28 +1,28 @@
 import Claim from "../../models/Claim";
-import ClaimsApi from "../../api/ClaimsApi";
 import InputChoiceGroup from "../../components/InputChoiceGroup";
 import LeaveReasonEnums from "../../models/LeaveReason";
 import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
 import get from "lodash/get";
+import { pick } from "lodash";
 import routeWithParams from "../../utils/routeWithParams";
 import useFormState from "../../hooks/useFormState";
 import useHandleInputChange from "../../hooks/useHandleInputChange";
-import useHandleSave from "../../hooks/useHandleSave";
 import { useTranslation } from "react-i18next";
 import withClaim from "../../hoc/withClaim";
 
+export const fields = ["leave_details.reason"];
+
 export const LeaveReason = (props) => {
   const { t } = useTranslation();
-  const { formState, updateFields } = useFormState(props.claim);
+  const { formState, updateFields } = useFormState(pick(props.claim, fields));
   const reason = get(formState, "leave_details.reason");
 
   const handleInputChange = useHandleInputChange(updateFields);
-  const handleSave = useHandleSave(
-    (formState) => props.claimsApi.updateClaim(new Claim(formState)),
-    (result) => props.updateClaim(result.claim)
-  );
+
+  const handleSave = (formState) =>
+    props.appLogic.updateClaim(props.claim.application_id, formState);
 
   return (
     <QuestionPage
@@ -66,8 +66,7 @@ export const LeaveReason = (props) => {
 
 LeaveReason.propTypes = {
   claim: PropTypes.instanceOf(Claim),
-  updateClaim: PropTypes.func,
-  claimsApi: PropTypes.instanceOf(ClaimsApi),
+  appLogic: PropTypes.object.isRequired,
   query: PropTypes.shape({
     claim_id: PropTypes.string,
   }),
