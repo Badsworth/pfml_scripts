@@ -29,7 +29,9 @@ describe("Index", () => {
 
   describe("when a claim exists", () => {
     it("renders the In Progress dashboard state", () => {
-      claims.add(new Claim({ application_id: "mock-claim-id" }));
+      claims = new ClaimCollection([
+        new Claim({ application_id: "mock-claim-id" }),
+      ]);
 
       const wrapper = shallow(<Index claims={claims} />);
 

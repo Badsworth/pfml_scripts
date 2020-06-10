@@ -14,9 +14,7 @@ exports[`App when a user IS authenticated renders the page component 1`] = `
   addClaim={[Function]}
   claims={
     ClaimCollection {
-      "byId": Object {},
-      "idProperty": "application_id",
-      "ids": Array [],
+      "items": Array [],
     }
   }
   query={Object {}}

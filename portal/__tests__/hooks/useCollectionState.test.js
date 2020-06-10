@@ -5,7 +5,12 @@ import useCollectionState from "../../src/hooks/useCollectionState";
 
 describe("useCollectionState", () => {
   let addItem, collection, removeItem, setCollection, updateItem;
-  const idProperty = "testId";
+
+  class TestCollection extends Collection {
+    get idProperty() {
+      return "testId";
+    }
+  }
 
   describe("when no initial collection state is provided", () => {
     it("throws error indicating no initial collection was provided", () => {
@@ -20,46 +25,56 @@ describe("useCollectionState", () => {
 
       expect(render).toThrowError(/Collection/);
     });
+  });
 
-    describe("but Collection configurations are provided", () => {
-      beforeEach(() => {
-        testHook(() => {
-          ({
-            collection,
-            setCollection,
-            addItem,
-            updateItem,
-            removeItem,
-          } = useCollectionState(null, { idProperty }));
-        });
+  describe("when initial collection function is provided", () => {
+    beforeEach(() => {
+      testHook(() => {
+        ({
+          collection,
+          setCollection,
+          addItem,
+          updateItem,
+          removeItem,
+        } = useCollectionState(() => new TestCollection()));
       });
+    });
 
-      describe("addItem", () => {
-        it("adds item to collection", () => {
-          act(() => addItem({ [idProperty]: "1234" }));
-          expect(collection.ids).toEqual(["1234"]);
-        });
+    describe("addItem", () => {
+      it("adds item to collection", () => {
+        act(() => addItem({ testId: "1234" }));
+        expect(collection.items).toEqual([{ testId: "1234" }]);
       });
+    });
 
-      describe("updateItem", () => {
-        it("adds item to collection", () => {
-          act(() => addItem({ [idProperty]: "1234" }));
-          expect(collection.ids).toEqual(["1234"]);
-        });
+    describe("updateItem", () => {
+      it("throws error since item must already exist in collection", () => {
+        const render = () => {
+          act(() => updateItem({ testId: "1234" }));
+        };
+
+        expect(render).toThrowError();
+      });
+    });
+
+    describe("removeItem", () => {
+      it("throws error since item must already exist in collection", () => {
+        const render = () => {
+          act(() => removeItem({ testId: "1234" }));
+        };
+
+        expect(render).toThrowError();
       });
     });
   });
 
-  describe("when initialCollection is provided", () => {
+  describe("when initial collection instance is provided", () => {
     beforeEach(() => {
       testHook(() => {
-        const initialCollection = new Collection({
-          idProperty,
-          itemsById: {
-            "123": { [idProperty]: "123" },
-            "456": { [idProperty]: "456" },
-          },
-        });
+        const initialCollection = new TestCollection([
+          { testId: "123" },
+          { testId: "456" },
+        ]);
         ({
           collection,
           setCollection,
@@ -71,7 +86,7 @@ describe("useCollectionState", () => {
     });
 
     it("returns collection and callback functions", () => {
-      expect(collection.ids).toEqual(["123", "456"]);
+      expect(collection.items).toEqual([{ testId: "123" }, { testId: "456" }]);
       expect(typeof setCollection).toBe("function");
       expect(typeof addItem).toBe("function");
       expect(typeof updateItem).toBe("function");
@@ -80,16 +95,20 @@ describe("useCollectionState", () => {
 
     describe("addItem", () => {
       it("adds item to collection", () => {
-        act(() => addItem({ [idProperty]: "789" }));
-        expect(collection.ids).toEqual(["123", "456", "789"]);
+        act(() => addItem({ testId: "789" }));
+        expect(collection.items).toEqual([
+          { testId: "123" },
+          { testId: "456" },
+          { testId: "789" },
+        ]);
       });
     });
 
     describe("updateItem", () => {
       it("updates an item properties", () => {
-        act(() => updateItem({ [idProperty]: "123", testProp: "testValue" }));
-        expect(collection.byId["123"]).toEqual({
-          [idProperty]: "123",
+        act(() => updateItem({ testId: "123", testProp: "testValue" }));
+        expect(collection.get("123")).toEqual({
+          testId: "123",
           testProp: "testValue",
         });
       });
@@ -98,7 +117,7 @@ describe("useCollectionState", () => {
     describe("removeItem", () => {
       it("removes item from collection", () => {
         act(() => removeItem("123"));
-        expect(collection.ids).toEqual(["456"]);
+        expect(collection.items).toEqual([{ testId: "456" }]);
       });
     });
   });

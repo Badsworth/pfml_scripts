@@ -35,8 +35,8 @@ describe("ClaimsApi", () => {
           Object {
             "apiErrors": undefined,
             "claims": ClaimCollection {
-              "byId": Object {
-                "2a340cf8-6d2a-4f82-a075-73588d003f8f": Claim {
+              "items": Array [
+                Claim {
                   "application_id": "2a340cf8-6d2a-4f82-a075-73588d003f8f",
                   "avg_weekly_hours_worked": null,
                   "created_at": null,
@@ -52,10 +52,6 @@ describe("ClaimsApi", () => {
                   "leave_type": null,
                   "middle_name": null,
                 },
-              },
-              "idProperty": "application_id",
-              "ids": Array [
-                "2a340cf8-6d2a-4f82-a075-73588d003f8f",
               ],
             },
             "status": 200,

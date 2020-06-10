@@ -40,13 +40,13 @@ const Index = ({ claims, addClaim, user }) => {
     <React.Fragment>
       <Title>{t("pages.index.title")}</Title>
 
-      {claims.ids.length ? (
+      {claims.items.length ? (
         <section className="border-bottom border-base-lighter padding-bottom-2 margin-bottom-5">
           <Heading level="2">{t("pages.index.activeClaimsHeading")}</Heading>
-          {claims.ids.map((claim_id, index) => (
+          {claims.items.map((claim, index) => (
             <DashboardClaimCard
-              key={claim_id}
-              claim={claims.get(claim_id)}
+              key={claim.application_id}
+              claim={claim}
               number={index + 1}
             />
           ))}
@@ -69,7 +69,7 @@ const Index = ({ claims, addClaim, user }) => {
         <Button
           type="submit"
           name="new-claim"
-          variation={claims.ids.length ? "outline" : undefined}
+          variation={claims.items.length ? "outline" : undefined}
         >
           {t("pages.index.createClaimButtonText")}
         </Button>

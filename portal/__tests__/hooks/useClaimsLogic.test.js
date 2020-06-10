@@ -5,6 +5,7 @@ import {
   updateClaimMock,
 } from "../../src/api/ClaimsApi";
 import Claim from "../../src/models/Claim";
+import ClaimCollection from "../../src/models/ClaimCollection";
 import User from "../../src/models/User";
 import { act } from "react-dom/test-utils";
 import { testHook } from "../test-utils";
@@ -61,8 +62,7 @@ describe("useClaimsLogic", () => {
         await claimsLogic.createClaim();
       });
 
-      const id = claimsLogic.claims.ids[0];
-      const claim = claimsLogic.claims.get(id);
+      const claim = claimsLogic.claims.items[0];
 
       expect(claim).toMatchInlineSnapshot(`
         Claim {
@@ -86,71 +86,85 @@ describe("useClaimsLogic", () => {
     });
   });
 
-  describe("updateClaim", () => {
-    it("asynchronously updates claim with formState", async () => {
-      const patchData = {
-        leave_type: "medical",
-      };
-
-      await act(async () => {
-        await claimsLogic.updateClaim(applicationId, patchData);
+  describe("when claims have been loaded or a new claim was created", () => {
+    beforeEach(() => {
+      testHook(() => {
+        claimsLogic = useClaimsLogic({ user });
       });
 
-      const claim = claimsLogic.claims.get(applicationId);
-
-      expect(claim).toMatchInlineSnapshot(`
-        Claim {
-          "application_id": "mock-application-id",
-          "avg_weekly_hours_worked": null,
-          "created_at": null,
-          "duration_type": null,
-          "employee_ssn": null,
-          "first_name": null,
-          "hours_off_needed": null,
-          "last_name": null,
-          "leave_details": Object {
-            "continuous_leave_periods": null,
-            "employer_notified": null,
-          },
-          "leave_type": "medical",
-          "middle_name": null,
-        }
-      `);
-      expect(updateClaimMock).toHaveBeenCalled();
+      act(() => {
+        claimsLogic.setClaims(
+          new ClaimCollection([new Claim({ application_id: applicationId })])
+        );
+      });
     });
-  });
 
-  describe("submitClaim", () => {
-    it("asynchronously submits claim with formState", async () => {
-      const formState = {
-        application_id: applicationId,
-        leave_type: "medical",
-      };
+    describe("updateClaim", () => {
+      it("asynchronously updates claim with formState", async () => {
+        const patchData = {
+          leave_type: "medical",
+        };
 
-      await act(async () => {
-        await claimsLogic.submitClaim(formState);
+        await act(async () => {
+          await claimsLogic.updateClaim(applicationId, patchData);
+        });
+
+        const claim = claimsLogic.claims.get(applicationId);
+
+        expect(claim).toMatchInlineSnapshot(`
+          Claim {
+            "application_id": "mock-application-id",
+            "avg_weekly_hours_worked": null,
+            "created_at": null,
+            "duration_type": null,
+            "employee_ssn": null,
+            "first_name": null,
+            "hours_off_needed": null,
+            "last_name": null,
+            "leave_details": Object {
+              "continuous_leave_periods": null,
+              "employer_notified": null,
+            },
+            "leave_type": "medical",
+            "middle_name": null,
+          }
+        `);
+        expect(updateClaimMock).toHaveBeenCalled();
       });
+    });
 
-      const claim = claimsLogic.claims.get(applicationId);
-      expect(claim).toMatchInlineSnapshot(`
-        Claim {
-          "application_id": "mock-application-id",
-          "avg_weekly_hours_worked": null,
-          "created_at": null,
-          "duration_type": null,
-          "employee_ssn": null,
-          "first_name": null,
-          "hours_off_needed": null,
-          "last_name": null,
-          "leave_details": Object {
-            "continuous_leave_periods": null,
-            "employer_notified": null,
-          },
-          "leave_type": "medical",
-          "middle_name": null,
-        }
-      `);
-      expect(submitClaimMock).toHaveBeenCalled();
+    describe("submitClaim", () => {
+      it("asynchronously submits claim with formState", async () => {
+        const formState = {
+          application_id: applicationId,
+          leave_type: "medical",
+        };
+
+        await act(async () => {
+          await claimsLogic.submitClaim(formState);
+        });
+
+        const claim = claimsLogic.claims.get(applicationId);
+        expect(claim).toMatchInlineSnapshot(`
+          Claim {
+            "application_id": "mock-application-id",
+            "avg_weekly_hours_worked": null,
+            "created_at": null,
+            "duration_type": null,
+            "employee_ssn": null,
+            "first_name": null,
+            "hours_off_needed": null,
+            "last_name": null,
+            "leave_details": Object {
+              "continuous_leave_periods": null,
+              "employer_notified": null,
+            },
+            "leave_type": "medical",
+            "middle_name": null,
+          }
+        `);
+        expect(submitClaimMock).toHaveBeenCalled();
+      });
     });
   });
 });

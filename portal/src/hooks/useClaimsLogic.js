@@ -1,4 +1,5 @@
 import Claim from "../models/Claim";
+import ClaimCollection from "../models/ClaimCollection";
 import ClaimsApi from "../api/ClaimsApi";
 import useCollectionState from "./useCollectionState";
 import { useMemo } from "react";
@@ -13,7 +14,7 @@ const useClaimsLogic = ({ user }) => {
     addItem: addClaim,
     updateItem: setClaim,
     setCollection: setClaims,
-  } = useCollectionState(null, { idProperty: "application_id" });
+  } = useCollectionState(() => new ClaimCollection());
 
   const claimsApi = useMemo(() => new ClaimsApi({ user }), [user]);
 
@@ -83,6 +84,7 @@ const useClaimsLogic = ({ user }) => {
     createClaim,
     updateClaim,
     submitClaim,
+    setClaims,
   };
 };
 

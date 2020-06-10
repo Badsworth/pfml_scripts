@@ -1,18 +1,33 @@
+import { findIndex, keyBy } from "lodash";
+
 /**
  * Read only Class representing a collection of models
  */
 class Collection {
   /**
    * Create a new collection
-   * @param {object} properties
-   * @param {string} properties.idProperty - The name of the property containing the id for the model.
-   * @param {object} properties.itemsById - intitial map of items keyed by their id
+   * @param {BaseModel[]} [items] Optional list of items. If no list is provided an empty collection will be created.
    */
-  constructor({ idProperty, itemsById = {} }) {
+  constructor(items) {
     // TODO enforce properties as readonly after _app.js is refactored to use static methods
-    this.idProperty = idProperty;
-    this.byId = { ...itemsById };
-    this.ids = Object.keys(itemsById);
+    this.items = items || [];
+  }
+
+  /**
+   * @type {object.<string, *>}
+   * @readonly
+   */
+  get itemsById() {
+    return keyBy(this.items, this.idProperty);
+  }
+
+  /**
+   * The name of the id property for the items in the collection
+   * @type {string}
+   * @readonly
+   */
+  get idProperty() {
+    throw new Error("Not implemented");
   }
 
   /**
@@ -21,60 +36,59 @@ class Collection {
    * @returns {BaseModel} item - instance of item
    */
   get(itemId) {
-    return this.byId[itemId];
+    return this.itemsById[itemId];
   }
 
-  // TODO: remove class methods when _app.js is refactored to use static methods
   /**
-   * Adds an item to the collection.
+   * Adds an item to the collection. Returns a new collection with the item added.
+   * Does not change the original collection.
    * @param {BaseModel} item The item to add to the collection
+   * @returns {Collection}
    */
-  add(item) {
-    const idProperty = this.idProperty;
-    const id = item[idProperty];
-    this.byId[id] = item;
-    this.ids.push(id);
+  addItem(item) {
+    const itemId = item[this.idProperty];
+    if (this.get(itemId)) {
+      throw new Error(`Item with id ${itemId} already exists in collection`);
+    }
+    const newItems = this.items.concat(item);
+    return new this.constructor(newItems);
   }
 
   /**
-   * Adds an item to the collection
-   * @param {Collection} collection - the collection to be modified
-   * @param {BaseModel} item - the item to add to the collection
-   * @returns {Collection} - new instance of a collection with additional item
-   */
-  static addItem(collection, item) {
-    const { idProperty, byId: allItems } = collection;
-    const itemId = item[idProperty];
-
-    const itemsById = {
-      ...allItems,
-      [itemId]: item,
-    };
-
-    return new Collection({ idProperty, itemsById });
-  }
-
-  /**
-   * Updates an item in a collection
-   * @param {Collection} collection - the collection to be modified
+   * Updates an item in a collection. Returns a new collection with the item updated.
+   * Does not change the original collection.
    * @param {BaseModel} item - the item to update in the collection
    * @returns {Collection} - new instance of a collection with updated item
    */
-  static updateItem(collection, item) {
-    return Collection.addItem(collection, item);
+  updateItem(item) {
+    const items = this.items;
+    const itemId = item[this.idProperty];
+    const itemIndex = findIndex(items, { [this.idProperty]: itemId });
+    if (itemIndex === -1) {
+      throw new Error(`Item with id ${itemId} does not exist in collection`);
+    }
+    const newItems = items
+      .slice(0, itemIndex)
+      .concat([item])
+      .concat(items.slice(itemIndex + 1));
+    return new this.constructor(newItems);
   }
 
   /**
    * Removes an item to the collection
-   * @param {Collection} collection - the collection to be modified
    * @param {string} itemId - the item to remove from the collection
    * @returns {Collection} - new instance of a collection with item removed
    */
-  static removeItem(collection, itemId) {
-    const { idProperty, byId } = collection;
-    const { [itemId]: removedItem, ...itemsById } = byId;
-
-    return new Collection({ idProperty, itemsById });
+  removeItem(itemId) {
+    const items = this.items;
+    const itemIndex = findIndex(items, { [this.idProperty]: itemId });
+    if (itemIndex === -1) {
+      throw new Error(`Item with id ${itemId} does not exist in collection`);
+    }
+    const newItems = items
+      .slice(0, itemIndex)
+      .concat(items.slice(itemIndex + 1));
+    return new this.constructor(newItems);
   }
 }
 

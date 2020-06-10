@@ -3,41 +3,40 @@ import { useState } from "react";
 
 /**
  * React hook for creating a state for a Collection of objects
- * @param {Collection} initialCollection - initial collection state
- * @param {object} configs - if initializing collection state without a value, define Collection parameters
- * @param {string} configs.idProperty
+ * @param {Collection|Function} initialCollection - initial collection state
  * @returns {Array} - [collection, setCollection, addItem, updateItem, removeItem];
  */
-const useCollectionState = (initialCollection, configs) => {
-  if (!(initialCollection instanceof Collection) && !configs) {
+const useCollectionState = (initialCollection) => {
+  const initialCollectionIsInstance = initialCollection instanceof Collection;
+  const initialCollectionIsFunction = initialCollection instanceof Function;
+
+  if (!initialCollectionIsInstance && !initialCollectionIsFunction) {
     throw new Error(
-      "useCollectionState expected an instance of Collection or Collection configurations."
+      "useCollectionState expected an instance of Collection or a Function that returns a Collection"
     );
   }
 
-  const [collection, setCollection] = useState(initialCollection);
+  const [collection, setCollection] = useState(
+    initialCollectionIsInstance ? initialCollection : null
+  );
 
-  // Support adding and updating items in a collection when initial collection
+  // Support adding items in a collection when initial collection
   // is not defined
   const getCollection = (prevCollection) =>
-    prevCollection || new Collection(configs);
+    prevCollection || initialCollection();
 
   const addItem = (item) => {
     setCollection((prevCollection) =>
-      Collection.addItem(getCollection(prevCollection), item)
+      getCollection(prevCollection).addItem(item)
     );
   };
 
   const updateItem = (item) => {
-    setCollection((prevCollection) =>
-      Collection.updateItem(getCollection(prevCollection), item)
-    );
+    setCollection((prevCollection) => prevCollection.updateItem(item));
   };
 
   const removeItem = (itemId) => {
-    setCollection((prevCollection) =>
-      Collection.removeItem(prevCollection, itemId)
-    );
+    setCollection((prevCollection) => prevCollection.removeItem(itemId));
   };
 
   return { collection, setCollection, addItem, updateItem, removeItem };
