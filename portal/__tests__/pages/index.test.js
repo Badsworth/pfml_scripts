@@ -1,6 +1,6 @@
 import Claim from "../../src/models/Claim";
+import ClaimCollection from "../../src/models/ClaimCollection";
 import ClaimsApi from "../../src/api/ClaimsApi";
-import Collection from "../../src/models/Collection";
 import Index from "../../src/pages/index";
 import React from "react";
 import { mockRouter } from "next/router";
@@ -16,7 +16,7 @@ describe("Index", () => {
   }));
 
   beforeEach(() => {
-    claims = new Collection({ idProperty: "application_id" });
+    claims = new ClaimCollection();
   });
 
   describe("when no claims exist", () => {

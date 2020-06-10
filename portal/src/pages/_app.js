@@ -5,7 +5,7 @@ import React, { useEffect, useState } from "react";
 import { initializeI18n, useTranslation } from "../locales/i18n";
 import AppErrorInfo from "../models/AppErrorInfo";
 import Authenticator from "../components/Authenticator";
-import Collection from "../models/Collection";
+import ClaimCollection from "../models/ClaimCollection";
 import ErrorBoundary from "../components/ErrorBoundary";
 import ErrorsSummary from "../components/ErrorsSummary";
 import Head from "next/head";
@@ -60,7 +60,7 @@ export const App = ({
     addItem: addClaim,
     updateItem: updateClaim,
     removeItem: removeClaim,
-  } = useCollectionState(new Collection({ idProperty: "application_id" }));
+  } = useCollectionState(new ClaimCollection());
 
   // Global UI state, such as whether to display the loading indicator
   const [ui, setUI] = useState({ isLoading: false });

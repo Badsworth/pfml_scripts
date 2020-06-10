@@ -1,6 +1,6 @@
 import Claim from "../../src/models/Claim";
+import ClaimCollection from "../../src/models/ClaimCollection";
 import ClaimsApi from "../../src/api/ClaimsApi";
-import Collection from "../../src/models/Collection";
 import React from "react";
 import User from "../../src/models/User";
 import { shallow } from "enzyme";
@@ -8,19 +8,11 @@ import withClaim from "../../src/hoc/withClaim";
 
 describe("WithClaim", () => {
   it("sets the 'claim' and 'claimsApi' prop on the passed component to the claim identified in the query", () => {
-    const idProperty = "application_id";
-
     // Mock initial state of the app
     // these values would be passed from _app.js
     const id = "12345";
     const claim = new Claim({ application_id: id });
-    const itemsById = {
-      [id]: claim,
-    };
-    const claims = new Collection({
-      idProperty,
-      itemsById,
-    });
+    const claims = new ClaimCollection([claim]);
 
     // define component that needs a claim prop
     // eslint-disable-next-line react/prop-types

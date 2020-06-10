@@ -13,7 +13,7 @@ exports[`App when a user IS authenticated renders the page component 1`] = `
 <TestComponent
   addClaim={[Function]}
   claims={
-    Collection {
+    ClaimCollection {
       "byId": Object {},
       "idProperty": "application_id",
       "ids": Array [],

@@ -34,7 +34,7 @@ describe("ClaimsApi", () => {
         expect(result).toMatchInlineSnapshot(`
           Object {
             "apiErrors": undefined,
-            "claims": Collection {
+            "claims": ClaimCollection {
               "byId": Object {
                 "2a340cf8-6d2a-4f82-a075-73588d003f8f": Claim {
                   "application_id": "2a340cf8-6d2a-4f82-a075-73588d003f8f",

@@ -1,6 +1,6 @@
 /* eslint-disable jsdoc/require-returns */
 import Claim from "../models/Claim";
-import Collection from "../models/Collection";
+import ClaimCollection from "../models/ClaimCollection";
 import request from "./request";
 import routes from "../routes";
 
@@ -19,11 +19,11 @@ const apiResponseFields = {
  */
 
 /**
- * @typedef {{ apiErrors: object[], success: boolean, claims: Collection }} ClaimsApiListResult
+ * @typedef {{ apiErrors: object[], success: boolean, claims: ClaimCollection }} ClaimsApiListResult
  * @property {object[]} [apiErrors] - If the request failed, this will contain errors returned by the API
  * @property {number} status - Status code
  * @property {boolean} success - Did the request succeed or fail?
- * @property {Collection} [claims] - If the request succeeded, this will contain the created user
+ * @property {ClaimCollection} [claims] - If the request succeeded, this will contain the created user
  */
 
 export default class ClaimsApi {
@@ -73,11 +73,8 @@ export default class ClaimsApi {
 
     let claims = null;
     if (success) {
-      const itemsById = {};
-      for (const claimData of body) {
-        itemsById[claimData.application_id] = new Claim(claimData);
-      }
-      claims = new Collection({ idProperty: "application_id", itemsById });
+      claims = body.map((claimData) => new Claim(claimData));
+      claims = new ClaimCollection(claims);
     }
 
     return {
