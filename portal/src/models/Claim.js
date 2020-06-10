@@ -13,12 +13,12 @@ class Claim extends BaseModel {
       leave_details: {
         continuous_leave_periods: null,
         employer_notified: null,
+        reason: null,
       },
       // TODO: Move these into the nested format the API expects
       // https://lwd.atlassian.net/browse/CP-480
       duration_type: null,
       hours_off_needed: null,
-      leave_type: null,
     };
   }
 }

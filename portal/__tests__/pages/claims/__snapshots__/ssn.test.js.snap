@@ -15,12 +15,12 @@ exports[`Ssn renders the form 1`] = `
       "leave_details": Object {
         "continuous_leave_periods": null,
         "employer_notified": null,
+        "reason": null,
       },
-      "leave_type": null,
       "middle_name": null,
     }
   }
-  nextPage="/claims/leave-type?claim_id=12345"
+  nextPage="/claims/leave-reason?claim_id=12345"
   onSave={[Function]}
   title="Who is taking leave"
 >

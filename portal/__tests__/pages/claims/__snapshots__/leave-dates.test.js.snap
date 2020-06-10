@@ -20,7 +20,6 @@ exports[`LeaveDates renders the page 1`] = `
           },
         ],
       },
-      "leave_type": null,
       "middle_name": null,
     }
   }

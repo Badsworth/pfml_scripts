@@ -77,8 +77,8 @@ describe("useClaimsLogic", () => {
           "leave_details": Object {
             "continuous_leave_periods": null,
             "employer_notified": null,
+            "reason": null,
           },
-          "leave_type": null,
           "middle_name": null,
         }
       `);
@@ -102,7 +102,7 @@ describe("useClaimsLogic", () => {
     describe("updateClaim", () => {
       it("asynchronously updates claim with formState", async () => {
         const patchData = {
-          leave_type: "medical",
+          first_name: "Bud",
         };
 
         await act(async () => {
@@ -118,14 +118,14 @@ describe("useClaimsLogic", () => {
             "created_at": null,
             "duration_type": null,
             "employee_ssn": null,
-            "first_name": null,
+            "first_name": "Bud",
             "hours_off_needed": null,
             "last_name": null,
             "leave_details": Object {
               "continuous_leave_periods": null,
               "employer_notified": null,
+              "reason": null,
             },
-            "leave_type": "medical",
             "middle_name": null,
           }
         `);
@@ -137,7 +137,7 @@ describe("useClaimsLogic", () => {
       it("asynchronously submits claim with formState", async () => {
         const formState = {
           application_id: applicationId,
-          leave_type: "medical",
+          first_name: "Bud",
         };
 
         await act(async () => {
@@ -152,14 +152,14 @@ describe("useClaimsLogic", () => {
             "created_at": null,
             "duration_type": null,
             "employee_ssn": null,
-            "first_name": null,
+            "first_name": "Bud",
             "hours_off_needed": null,
             "last_name": null,
             "leave_details": Object {
               "continuous_leave_periods": null,
               "employer_notified": null,
+              "reason": null,
             },
-            "leave_type": "medical",
             "middle_name": null,
           }
         `);

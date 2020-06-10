@@ -51,11 +51,11 @@ describe("Ssn", () => {
     expect(wrapper).toMatchSnapshot();
   });
 
-  it("redirects to leaveType", () => {
+  it("redirects to leaveReason", () => {
     const { props, wrapper } = render();
 
     expect(wrapper.find("QuestionPage").prop("nextPage")).toEqual(
-      `${routes.claims.leaveType}?claim_id=${props.query.claim_id}`
+      `${routes.claims.leaveReason}?claim_id=${props.query.claim_id}`
     );
   });
 

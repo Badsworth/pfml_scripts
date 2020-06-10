@@ -6,13 +6,13 @@ import Claim from "../../../src/models/Claim";
 import ClaimsApi from "../../../src/api/ClaimsApi";
 import { Duration } from "../../../src/pages/claims/duration";
 import { LeaveDates } from "../../../src/pages/claims/leave-dates";
-import { LeaveType } from "../../../src/pages/claims/leave-type";
+import { LeaveReason } from "../../../src/pages/claims/leave-reason";
 import { NotifiedEmployer } from "../../../src/pages/claims/notified-employer";
 import React from "react";
 import User from "../../../src/models/User";
 import { mount } from "enzyme";
 
-const testPages = [LeaveType, LeaveDates, Duration, NotifiedEmployer];
+const testPages = [LeaveReason, LeaveDates, Duration, NotifiedEmployer];
 
 const render = (Component, _props = {}) => {
   const application_id = "12345";

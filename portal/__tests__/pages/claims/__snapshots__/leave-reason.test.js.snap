@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`LeaveType renders the page 1`] = `
+exports[`LeaveReason renders the page 1`] = `
 <QuestionPage
   formState={
     Claim {
@@ -13,10 +13,8 @@ exports[`LeaveType renders the page 1`] = `
       "hours_off_needed": null,
       "last_name": null,
       "leave_details": Object {
-        "continuous_leave_periods": null,
-        "employer_notified": null,
+        "reason": "Serious Health Condition - Employee",
       },
-      "leave_type": null,
       "middle_name": null,
     }
   }
@@ -28,27 +26,27 @@ exports[`LeaveType renders the page 1`] = `
     choices={
       Array [
         Object {
-          "checked": false,
+          "checked": true,
           "hint": "(Medical leave)",
           "label": "I have a serious injury or illness",
-          "value": "medicalLeave",
+          "value": "Serious Health Condition - Employee",
         },
         Object {
           "checked": false,
           "hint": "(Can cover medical and family leave)",
           "label": "I need to take parental leave",
-          "value": "parentalLeave",
+          "value": "Pregnancy/Maternity",
         },
         Object {
           "checked": false,
           "hint": "(Family leave)",
           "label": "I need to manage family affairs while a family member is on active duty in the armed forces",
-          "value": "activeDutyFamilyLeave",
+          "value": "Care For A Family Member",
         },
       ]
     }
     label="Why do you need to take time off?"
-    name="leave_type"
+    name="leave_details.reason"
     onChange={[Function]}
     type="radio"
   />

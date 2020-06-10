@@ -27,7 +27,7 @@ export const Ssn = (props) => {
     (result) => props.updateClaim(result.claim)
   );
 
-  const nextPage = routeWithParams("claims.leaveType", props.query);
+  const nextPage = routeWithParams("claims.leaveReason", props.query);
 
   return (
     <QuestionPage

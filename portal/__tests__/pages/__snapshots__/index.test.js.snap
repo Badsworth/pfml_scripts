@@ -27,8 +27,8 @@ exports[`Index when a claim exists renders the In Progress dashboard state 1`] =
           "leave_details": Object {
             "continuous_leave_periods": null,
             "employer_notified": null,
+            "reason": null,
           },
-          "leave_type": null,
           "middle_name": null,
         }
       }

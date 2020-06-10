@@ -48,8 +48,8 @@ describe("ClaimsApi", () => {
                   "leave_details": Object {
                     "continuous_leave_periods": null,
                     "employer_notified": null,
+                    "reason": null,
                   },
-                  "leave_type": null,
                   "middle_name": null,
                 },
               ],
@@ -93,8 +93,8 @@ describe("ClaimsApi", () => {
               "leave_details": Object {
                 "continuous_leave_periods": null,
                 "employer_notified": null,
+                "reason": null,
               },
-              "leave_type": null,
               "middle_name": null,
             },
             "status": 200,
@@ -160,8 +160,8 @@ describe("ClaimsApi", () => {
           "leave_details": Object {
             "continuous_leave_periods": null,
             "employer_notified": null,
+            "reason": null,
           },
-          "leave_type": null,
           "middle_name": null,
         }
       `);
@@ -196,8 +196,8 @@ describe("ClaimsApi", () => {
           "leave_details": Object {
             "continuous_leave_periods": null,
             "employer_notified": null,
+            "reason": null,
           },
-          "leave_type": null,
           "middle_name": null,
         }
       `);

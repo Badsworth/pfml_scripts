@@ -12,7 +12,7 @@ const routes = {
     dateOfBirth: "/claims/date-of-birth",
     duration: "/claims/duration",
     leaveDates: "/claims/leave-dates",
-    leaveType: "/claims/leave-type",
+    leaveReason: "/claims/leave-reason",
     name: "/claims/name",
     notifiedEmployer: "/claims/notified-employer",
     review: "/claims/review",

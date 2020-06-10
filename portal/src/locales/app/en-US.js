@@ -84,7 +84,7 @@ const pages = {
     startDateLabel: "When do you expect your leave to begin?",
     title: "$t(shared.claimsLeaveDurationTitle)",
   },
-  claimsLeaveType: {
+  claimsLeaveReason: {
     activeDutyFamilyLeaveHint: "(Family leave)",
     activeDutyFamilyLeaveLabel:
       "I need to manage family affairs while a family member is on active duty in the armed forces",
