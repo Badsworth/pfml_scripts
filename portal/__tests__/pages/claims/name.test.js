@@ -5,8 +5,6 @@ import React from "react";
 import User from "../../../src/models/User";
 import { shallow } from "enzyme";
 
-jest.mock("../../../src/api/ClaimsApi");
-
 describe("Name", () => {
   let claim, claimsApi, updateClaim, user, wrapper;
   const claim_id = "12345";
@@ -15,8 +13,8 @@ describe("Name", () => {
     user = new User();
     claim = new Claim();
     claimsApi = new ClaimsApi({ user });
-    claimsApi.updateClaim = jest
-      .fn()
+    jest
+      .spyOn(claimsApi, "updateClaim")
       .mockImplementation((application_id, patchData) => {
         const success = true;
         const status = 200;
