@@ -13,10 +13,13 @@ exports[`LeaveDates renders the page 1`] = `
       "hours_off_needed": null,
       "last_name": null,
       "leave_details": Object {
-        "employer_notified": null,
+        "continuous_leave_periods": Array [
+          Object {
+            "end_date": "2022-09-21",
+            "start_date": "2022-09-01",
+          },
+        ],
       },
-      "leave_end_date": null,
-      "leave_start_date": null,
       "leave_type": null,
       "middle_name": null,
     }
@@ -30,18 +33,18 @@ exports[`LeaveDates renders the page 1`] = `
     hint="Your leave begins the day you stopped working."
     label="When do you expect your leave to begin?"
     monthLabel="Month"
-    name="leave_start_date"
+    name="leave_details.continuous_leave_periods[0].start_date"
     onChange={[Function]}
-    value=""
+    value="2022-09-01"
     yearLabel="Year"
   />
   <InputDate
     dayLabel="Day"
     label="When do you expect your leave will end?"
     monthLabel="Month"
-    name="leave_end_date"
+    name="leave_details.continuous_leave_periods[0].end_date"
     onChange={[Function]}
-    value=""
+    value="2022-09-21"
     yearLabel="Year"
   />
 </QuestionPage>

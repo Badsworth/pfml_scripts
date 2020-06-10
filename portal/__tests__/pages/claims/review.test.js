@@ -8,8 +8,14 @@ describe("Review", () => {
     const claim = new Claim({
       application_id: "mock-id",
       duration_type: "continuous",
-      leave_start_date: "2021-09-01",
-      leave_end_date: "2021-12-30",
+      leave_details: {
+        continuous_leave_periods: [
+          {
+            end_date: "2021-12-30",
+            start_date: "2021-09-21",
+          },
+        ],
+      },
     });
     const query = { claim_id: claim.application_id };
 

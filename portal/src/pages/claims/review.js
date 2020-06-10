@@ -28,7 +28,9 @@ export const Review = (props) => {
       <Heading level="2">{t("pages.claimsReview.leaveSectionHeading")}</Heading>
 
       <ReviewRow heading={t("pages.claimsReview.leaveDurationHeading")}>
-        {get(claim, "leave_start_date")} &ndash; {get(claim, "leave_end_date")}
+        {get(claim, "leave_details.continuous_leave_periods[0].start_date")}
+        &ndash;
+        {get(claim, "leave_details.continuous_leave_periods[0].end_date")}
       </ReviewRow>
       <ReviewRow heading={t("pages.claimsReview.leaveDurationTypeHeading")}>
         {t("pages.claimsReview.leaveDurationTypeValue", {

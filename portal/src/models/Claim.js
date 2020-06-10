@@ -11,6 +11,7 @@ class Claim extends BaseModel {
       employee_ssn: null,
       avg_weekly_hours_worked: null,
       leave_details: {
+        continuous_leave_periods: null,
         employer_notified: null,
       },
       // TODO: Move these into the nested format the API expects
@@ -18,8 +19,6 @@ class Claim extends BaseModel {
       duration_type: null,
       hours_off_needed: null,
       leave_type: null,
-      leave_start_date: null,
-      leave_end_date: null,
     };
   }
 }

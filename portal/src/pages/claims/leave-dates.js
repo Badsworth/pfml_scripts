@@ -4,6 +4,7 @@ import InputDate from "../../components/InputDate";
 import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
+import get from "lodash/get";
 import routeWithParams from "../../utils/routeWithParams";
 import useFormState from "../../hooks/useFormState";
 import useHandleInputChange from "../../hooks/useHandleInputChange";
@@ -15,11 +16,7 @@ import withClaim from "../../hoc/withClaim";
 export const LeaveDates = (props) => {
   const { t } = useTranslation();
   const { formState, updateFields } = useFormState(props.claim);
-
   const handleInputChange = useHandleInputChange(updateFields);
-  // TODO: use nested fields
-  // https://lwd.atlassian.net/browse/CP-480
-  const { leave_start_date, leave_end_date } = formState;
 
   const handleSave = useHandleSave(
     (formState) => props.claimsApi.updateClaim(new Claim(formState)),
@@ -34,19 +31,23 @@ export const LeaveDates = (props) => {
       nextPage={routeWithParams("claims.duration", props.query)}
     >
       <InputDate
-        name="leave_start_date"
+        name="leave_details.continuous_leave_periods[0].start_date"
         label={t("pages.claimsLeaveDates.startDateLabel")}
         hint={t("pages.claimsLeaveDates.startDateHint")}
-        value={valueWithFallback(leave_start_date)}
+        value={valueWithFallback(
+          get(formState, "leave_details.continuous_leave_periods[0].start_date")
+        )}
         dayLabel={t("components.form.dateInputDayLabel")}
         monthLabel={t("components.form.dateInputMonthLabel")}
         yearLabel={t("components.form.dateInputYearLabel")}
         onChange={handleInputChange}
       />
       <InputDate
-        name="leave_end_date"
+        name="leave_details.continuous_leave_periods[0].end_date"
         label={t("pages.claimsLeaveDates.endDateLabel")}
-        value={valueWithFallback(leave_end_date)}
+        value={valueWithFallback(
+          get(formState, "leave_details.continuous_leave_periods[0].end_date")
+        )}
         dayLabel={t("components.form.dateInputDayLabel")}
         monthLabel={t("components.form.dateInputMonthLabel")}
         yearLabel={t("components.form.dateInputYearLabel")}

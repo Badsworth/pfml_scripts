@@ -46,10 +46,9 @@ describe("ClaimsApi", () => {
                   "hours_off_needed": null,
                   "last_name": null,
                   "leave_details": Object {
+                    "continuous_leave_periods": null,
                     "employer_notified": null,
                   },
-                  "leave_end_date": null,
-                  "leave_start_date": null,
                   "leave_type": null,
                   "middle_name": null,
                 },
@@ -96,10 +95,9 @@ describe("ClaimsApi", () => {
               "hours_off_needed": null,
               "last_name": null,
               "leave_details": Object {
+                "continuous_leave_periods": null,
                 "employer_notified": null,
               },
-              "leave_end_date": null,
-              "leave_start_date": null,
               "leave_type": null,
               "middle_name": null,
             },
@@ -164,10 +162,9 @@ describe("ClaimsApi", () => {
           "hours_off_needed": null,
           "last_name": null,
           "leave_details": Object {
+            "continuous_leave_periods": null,
             "employer_notified": null,
           },
-          "leave_end_date": null,
-          "leave_start_date": null,
           "leave_type": null,
           "middle_name": null,
         }
@@ -201,10 +198,9 @@ describe("ClaimsApi", () => {
           "hours_off_needed": null,
           "last_name": null,
           "leave_details": Object {
+            "continuous_leave_periods": null,
             "employer_notified": null,
           },
-          "leave_end_date": null,
-          "leave_start_date": null,
           "leave_type": null,
           "middle_name": null,
         }
