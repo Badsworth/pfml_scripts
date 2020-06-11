@@ -1,6 +1,6 @@
-import Collection from "./Collection";
+import BaseCollection from "./BaseCollection";
 
-export default class ClaimCollection extends Collection {
+export default class ClaimCollection extends BaseCollection {
   get idProperty() {
     return "application_id";
   }

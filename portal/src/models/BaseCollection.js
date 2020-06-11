@@ -3,7 +3,7 @@ import { findIndex, keyBy } from "lodash";
 /**
  * Read only Class representing a collection of models
  */
-class Collection {
+class BaseCollection {
   /**
    * Create a new collection
    * @param {BaseModel[]} [items] Optional list of items. If no list is provided an empty collection will be created.
@@ -43,7 +43,7 @@ class Collection {
    * Adds an item to the collection. Returns a new collection with the item added.
    * Does not change the original collection.
    * @param {BaseModel} item The item to add to the collection
-   * @returns {Collection}
+   * @returns {BaseCollection}
    */
   addItem(item) {
     const itemId = item[this.idProperty];
@@ -58,7 +58,7 @@ class Collection {
    * Updates an item in a collection. Returns a new collection with the item updated.
    * Does not change the original collection.
    * @param {BaseModel} item - the item to update in the collection
-   * @returns {Collection} - new instance of a collection with updated item
+   * @returns {BaseCollection} - new instance of a collection with updated item
    */
   updateItem(item) {
     const items = this.items;
@@ -77,7 +77,7 @@ class Collection {
   /**
    * Removes an item to the collection
    * @param {string} itemId - the item to remove from the collection
-   * @returns {Collection} - new instance of a collection with item removed
+   * @returns {BaseCollection} - new instance of a collection with item removed
    */
   removeItem(itemId) {
     const items = this.items;
@@ -92,4 +92,4 @@ class Collection {
   }
 }
 
-export default Collection;
+export default BaseCollection;

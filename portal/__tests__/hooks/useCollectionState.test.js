@@ -1,4 +1,4 @@
-import Collection from "../../src/models/Collection";
+import BaseCollection from "../../src/models/BaseCollection";
 import { act } from "react-dom/test-utils";
 import { testHook } from "../test-utils";
 import useCollectionState from "../../src/hooks/useCollectionState";
@@ -6,7 +6,7 @@ import useCollectionState from "../../src/hooks/useCollectionState";
 describe("useCollectionState", () => {
   let addItem, collection, removeItem, setCollection, updateItem;
 
-  class TestCollection extends Collection {
+  class TestCollection extends BaseCollection {
     get idProperty() {
       return "testId";
     }

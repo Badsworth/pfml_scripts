@@ -1,7 +1,7 @@
-import Collection from "../../src/models/Collection";
+import BaseCollection from "../../src/models/BaseCollection";
 
-describe("Collection", () => {
-  class TestCollection extends Collection {
+describe("BaseCollection", () => {
+  class TestCollection extends BaseCollection {
     get idProperty() {
       return "testId";
     }

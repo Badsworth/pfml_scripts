@@ -1,13 +1,14 @@
-import Collection from "../models/Collection";
+import BaseCollection from "../models/BaseCollection";
 import { useState } from "react";
 
 /**
  * React hook for creating a state for a Collection of objects
- * @param {Collection|Function} initialCollection - initial collection state
+ * @param {BaseCollection|Function} initialCollection - initial collection state
  * @returns {Array} - [collection, setCollection, addItem, updateItem, removeItem];
  */
 const useCollectionState = (initialCollection) => {
-  const initialCollectionIsInstance = initialCollection instanceof Collection;
+  const initialCollectionIsInstance =
+    initialCollection instanceof BaseCollection;
   const initialCollectionIsFunction = initialCollection instanceof Function;
 
   if (!initialCollectionIsInstance && !initialCollectionIsFunction) {
