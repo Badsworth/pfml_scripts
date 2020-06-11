@@ -133,6 +133,26 @@ def test_applications(test_employee, test_db_session):
     return [created_application1, created_application2]
 
 
+# TODO(kevin): This needs to be removed eventually once we have
+# a separate, flexible mechanism for syncing lookup tables.
+@pytest.fixture
+def create_leave_reasons(test_db_session):
+    from massgov.pfml.db.models.applications import LeaveReason
+
+    values = [
+        "Care For A Family Member",
+        "Pregnancy/Maternity",
+        "Child Bonding",
+        "Serious Health Condition - Employee",
+    ]
+
+    for value in values:
+        reason = LeaveReason(leave_reason_description=value)
+        test_db_session.add(reason)
+
+    test_db_session.commit()
+
+
 @pytest.fixture
 def create_app_statuses(test_db_session):
     from massgov.pfml.db.models.employees import Status

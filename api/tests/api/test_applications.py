@@ -103,6 +103,26 @@ def test_application_patch(client, test_application):
     assert updated_last_name == "Perez"
 
 
+def test_application_patch_leave_reason(client, test_application, create_leave_reasons):
+    application_id = test_application["application_id"]
+
+    response = client.patch(
+        "/v1/applications/{}".format(application_id),
+        headers={"user_id": str(uuid.uuid4())},
+        json={"leave_details": {"reason": "Serious Health Condition - Employee"}},
+    )
+    assert response.status_code == 200
+
+    response = client.get(
+        "/v1/applications/{}".format(application_id), headers={"user_id": str(uuid.uuid4())},
+    )
+    response_body = response.get_json()
+    print(response_body)
+    updated_leave_details = response_body.get("leave_details")
+    updated_leave_reason = updated_leave_details.get("reason")
+    assert updated_leave_reason == "Serious Health Condition - Employee"
+
+
 def test_application_patch_minimum_payload(client, test_application):
     application_id = test_application.get("application_id")
     update_json = {"first_name": "John"}

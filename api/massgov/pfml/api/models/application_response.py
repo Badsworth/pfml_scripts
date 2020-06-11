@@ -16,16 +16,18 @@ class ApplicationResponse:
         leave_details_schedule_json = json_to_obj.get_json_from_object(self.leave_details_schedule)
         payment_prefs_json = json_to_obj.get_json_from_object(self.payment_preferences)
 
-        if leave_details_schedule_json is not None:
-            application_json["leave_details"] = self.format_leave_details(
-                application_json, leave_details_schedule_json
-            )
+        application_json["leave_details"] = self.format_leave_details(
+            application_json, leave_details_schedule_json
+        )
 
         if self.application.leave_type_id:
             application_json["leave_type"] = self.application.leave_type.leave_type_description
 
         if self.application.status_id:
             application_json["status"] = self.application.status.status_description
+
+        if self.application.occupation_id is not None:
+            application_json["occupation"] = self.application.occupation.occupation_description
 
         # Remove DB attributes not in response or in other components.
         application_json.pop("leave_type_id", None)
@@ -51,20 +53,13 @@ class ApplicationResponse:
         return application_json
 
     def format_leave_details(self, application_json, leave_details_schedule_json):
-        if self.leave_details_schedule.__name__ == "ContinuousLeavePeriod":
-            leave_details_schedule_name = "continuous_leave_periods"
-        elif self.leave_details_schedule.__name__ == "IntermittentLeavePeriod":
-            leave_details_schedule_name = "intermittent_leave_periods"
-        else:
-            leave_details_schedule_name = "reduced_schedule_leave_periods"
-
         leave_details_json = {}
-        if self.application.occupation_id is not None:
-            leave_details_json["leave_reason"] = self.application.occupation.occupation_description
+        if self.application.leave_reason is not None:
+            leave_details_json["reason"] = self.application.leave_reason.leave_reason_description
 
         if self.application.leave_reason_qualifier_id is not None:
             leave_details_json[
-                "leave_reason_qualifier"
+                "reason_qualifier"
             ] = self.application.leave_reason_qualifier.leave_reason_qualifier_description
 
         if self.application.relationship_to_caregiver_id is not None:
@@ -77,10 +72,10 @@ class ApplicationResponse:
                 "relationship_qualifier"
             ] = self.application.relationship_qualifier.relationship_qualifier_description
 
-        if application_json["employer_notified"] is not None:
+        if application_json.get("employer_notified") is not None:
             leave_details_json["employer_notified"] = application_json["employer_notified"]
 
-        if application_json["employer_notification_date"] is not None:
+        if application_json.get("employer_notification_date") is not None:
             leave_details_json["employer_notification_date"] = application_json[
                 "employer_notification_date"
             ]
@@ -91,6 +86,13 @@ class ApplicationResponse:
             ] = self.application.employer_notification_method.notification_method_description
 
         if leave_details_schedule_json is not None:
+            if self.leave_details_schedule.__name__ == "ContinuousLeavePeriod":
+                leave_details_schedule_name = "continuous_leave_periods"
+            elif self.leave_details_schedule.__name__ == "IntermittentLeavePeriod":
+                leave_details_schedule_name = "intermittent_leave_periods"
+            else:
+                leave_details_schedule_name = "reduced_schedule_leave_periods"
+
             leave_details_json[leave_details_schedule_name] = leave_details_schedule_json
 
         return leave_details_json

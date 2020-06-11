@@ -140,8 +140,9 @@ class ApplicationRequest:
                     .filter(LeaveReason.leave_reason_description == value)
                     .all()
                 )
+
                 if len(leave_reasons) > 0:
-                    application["leave_reason_id"] = leave_reasons[0].leave_reason
+                    application.leave_reason_id = leave_reasons[0].leave_reason_id
                 continue
             if key == "reason_qualifier":
                 leave_reason_qualifiers = (
@@ -151,7 +152,7 @@ class ApplicationRequest:
                     .all()
                 )
                 if len(leave_reason_qualifiers) > 0:
-                    application["leave_reason_qualifier_id"] = leave_reason_qualifiers[
+                    application.leave_reason_qualifier_id = leave_reason_qualifiers[
                         0
                     ].leave_reason_qualifier_id
                 continue
@@ -163,7 +164,7 @@ class ApplicationRequest:
                     .all()
                 )
                 if len(relationship_to_caregiver) > 0:
-                    application["relationship_to_caregiver_id"] = relationship_to_caregiver[
+                    application.relationship_to_caregiver_id = relationship_to_caregiver[
                         0
                     ].relationship_to_caregiver_id
                 continue
@@ -175,7 +176,7 @@ class ApplicationRequest:
                     .all()
                 )
                 if len(relationship_qualifier) > 0:
-                    application["relationship_qualifier_id"] = relationship_qualifier[
+                    application.relationship_qualifier_id = relationship_qualifier[
                         0
                     ].relationship_qualifier_id
                 continue
@@ -187,9 +188,9 @@ class ApplicationRequest:
                     .all()
                 )
                 if len(notification_method) > 0:
-                    application["employer_notification_method_id"] = notification_method[
+                    application.employer_notification_method_id = notification_method[
                         0
-                    ].notification_method
+                    ].notification_method_id
                 continue
             setattr(application, key, leave_details_json[key])
 
