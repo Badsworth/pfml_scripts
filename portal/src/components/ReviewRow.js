@@ -9,7 +9,7 @@ const ReviewRow = (props) => {
   return (
     <div className="border-bottom-2px border-base-lighter margin-bottom-2 padding-bottom-2 display-flex flex-justify">
       <div className="margin-right-2">
-        <Heading level="3" className="margin-bottom-1">
+        <Heading level="3" size="4" className="margin-bottom-1">
           {props.heading}
         </Heading>
         {props.children}

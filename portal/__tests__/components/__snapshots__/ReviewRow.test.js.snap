@@ -10,6 +10,7 @@ exports[`ReviewRow when editHref is defined renders with an edit link 1`] = `
     <Heading
       className="margin-bottom-1"
       level="3"
+      size="4"
     >
       Leave type
     </Heading>
