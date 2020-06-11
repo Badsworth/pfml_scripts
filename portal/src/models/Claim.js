@@ -1,24 +1,25 @@
+/* eslint sort-keys: ["error", "asc"] */
 import BaseModel from "./BaseModel";
 
 class Claim extends BaseModel {
   get defaults() {
     return {
-      first_name: null,
-      middle_name: null,
-      last_name: null,
       application_id: null,
-      created_at: null,
-      employee_ssn: null,
+      // TODO: We'll map this to the correct API field once we get into Intermittent Leave work
       avg_weekly_hours_worked: null,
+      created_at: null,
+      duration_type: null,
+      employee_ssn: null,
+      first_name: null,
+      // TODO: We'll map this to the correct API field once we get into Intermittent Leave work
+      hours_off_needed: null,
+      last_name: null,
       leave_details: {
         continuous_leave_periods: null,
         employer_notified: null,
         reason: null,
       },
-      // TODO: Move these into the nested format the API expects
-      // https://lwd.atlassian.net/browse/CP-480
-      duration_type: null,
-      hours_off_needed: null,
+      middle_name: null,
     };
   }
 }
