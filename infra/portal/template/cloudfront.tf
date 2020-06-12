@@ -79,7 +79,7 @@ resource "aws_cloudfront_distribution" "portal_web_distribution" {
       event_type = "viewer-response"
       # The Amazon Resource Name (ARN) identifying your Lambda Function Version
       # when publish = true
-      lambda_arn = "${aws_lambda_function.edge_headers.qualified_arn}"
+      lambda_arn = aws_lambda_function.edge_headers.qualified_arn
     }
   }
 
