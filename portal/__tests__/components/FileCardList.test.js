@@ -3,11 +3,20 @@ import FileCardList from "../../src/components/FileCardList";
 import React from "react";
 import { shallow } from "enzyme";
 
-function makeFile() {
-  const id = uniqueId("File");
-  const file = new File([], `${id}.pdf`, { type: "application/pdf" });
+const makeFile = (attrs = {}) => {
+  const { id, type } = Object.assign(
+    {
+      id: uniqueId("File"),
+      type: "application/pdf",
+    },
+    attrs
+  );
+
+  const name = attrs.name || `${id}.pdf`;
+
+  const file = new File([], name, { type });
   return { id, file };
-}
+};
 
 function render(customProps = {}) {
   const props = Object.assign(
@@ -121,6 +130,59 @@ describe("FileCardList", () => {
       const expectedFiles = [...files, { id, file }, { id, file }];
       expect(setFiles).toHaveBeenCalled();
       expect(updatedFiles).toEqual(expectedFiles);
+    });
+
+    it("retrieves the selected files before resetting the input's value", () => {
+      // This tests a bug that occurs in the browser but not in unit tests. In a browser if
+      // event.target.value is reset (eg to "") in the onChange handler for a file input (eg
+      // <input type="file">) component then event.target.files gets reset to an empty array.
+      // This test ensures that event.target.value isn't reset until after we've retrieved
+      // event.target.files.
+
+      const wrapper = render();
+      const input = wrapper.find("input");
+
+      // setup to simulate the user selecting a single file
+      const newFile = new File([], "file.pdf", { type: "application/pdf" });
+
+      // Construct an event object which will allow us to test the order in which
+      // event.target.files and event.target.value are accessed in the onChange handler.
+      // We do this by defining explicit setters/getters for event.target.files and
+      // event.target.value which we can spy on
+      const getFilesSpy = jest.fn();
+      const setValueSpy = jest.fn();
+      const event = {
+        target: {
+          set files(files) {
+            this._files = files;
+          },
+          get files() {
+            getFilesSpy();
+            // event.target.value should not have been set when this is retrieved
+            expect(setValueSpy).not.toHaveBeenCalled();
+            return this._files;
+          },
+          set value(value) {
+            setValueSpy();
+            // event.target.files should have already been retrieved when this is set
+            this._value = value;
+            expect(getFilesSpy).toHaveBeenCalled();
+          },
+          get value() {
+            return this._value;
+          },
+        },
+      };
+
+      // We have to set the event's files now
+      event.target.files = [newFile];
+
+      // simulate the user selecting a single file
+      input.simulate("change", event);
+
+      expect(setValueSpy).toHaveBeenCalled();
+      // Make sure all of the assertions are executed
+      expect.assertions(3);
     });
 
     it("filters out invalid files", () => {

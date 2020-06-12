@@ -36,6 +36,7 @@ const shared = {
   choiceYes: "Yes",
   claimDurationTypeContinuous: "Continuous leave",
   claimDurationTypeIntermittent: "Intermittent leave",
+  claimsFileUploadTitle: "Verify your identity",
   claimsLeaveDurationTitle: "Leave duration",
   claimsTakingLeaveTitle: "Who is taking leave",
   passwordHint:
@@ -146,6 +147,25 @@ const pages = {
     dashboardLink: "Return to dashboard",
     title: "Your leave application was submitted successfully",
   },
+  claimsUploadOtherId: {
+    addAnotherFileButtonText: "Choose another file",
+    addFirstFileButtonText: "Choose a file",
+    // @todo: CP-496 update this with the real documents users can use to ID proof
+    documentList: ["Document 1", "Document 2, or", "Document 3"],
+    fileHeadingPrefix: "File",
+    lead: "Upload one of the following:",
+    sectionLabel: "Upload an identification document",
+    title: "$t(shared.claimsFileUploadTitle)",
+  },
+  claimsUploadStateId: {
+    addAnotherFileButtonText: "Choose another file",
+    addFirstFileButtonText: "Choose a file",
+    fileHeadingPrefix: "File",
+    lead:
+      "In order to verify your identity, upload a copy of both the front and the back of your ID card.",
+    sectionLabel: "Upload your Massachusett’s driver’s license or ID card",
+    title: "$t(shared.claimsFileUploadTitle)",
+  },
   index: {
     activeClaimsHeading: "Active claims",
     claimCardHeading: "Claim {{number}}",
@@ -197,7 +217,42 @@ const components = {
     genericHeading_plural: "{{count}} errors were encountered",
   },
   fileCard: {
-    removeButton: "Remove document",
+    removeButton: "Remove file",
+  },
+  fileUploadDetails: {
+    label: "Some tips for uploading documents and images",
+    sizeNotice:
+      "Files should be 22 MB or smaller. If your file is larger than 22 MB, try resizing it or splitting it into separate files.",
+    tips: [
+      {
+        listHeading: "This website only accepts:",
+        listItems: ["PDF documents", "Images (.jpg, .jpeg, .png, .gif, .webp)"],
+      },
+      {
+        listHeading:
+          "If your file is not in one of these formats, try one of the following:",
+        listItems: [
+          "Take a picture of the document",
+          "Take a screenshot of the document",
+          "Save the document as a PDF or image, and try uploading again",
+        ],
+      },
+      {
+        listHeading: "If you're taking a picture of your document:",
+        listItems: [
+          "Take a picture of each document page and upload the pictures individually",
+          "If you're uploading an ID card, upload separate pictures for both the front and back of the card",
+          "Make sure the picture is clear and readable",
+        ],
+      },
+      {
+        listHeading: "If your document is attached to an email:",
+        listItems: [
+          "Open the file on your computer or phone",
+          "Save it as a PDF or image, and try uploading again",
+        ],
+      },
+    ],
   },
   forgotPassword: {
     codeLabel: "6-digit code",

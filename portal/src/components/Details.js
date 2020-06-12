@@ -7,8 +7,10 @@ import React from "react";
 function Details(props) {
   return (
     <details className="c-details">
-      <summary className="text-primary font-ui-xs">{props.label}</summary>
-      <div className="margin-y-2">{props.children}</div>
+      <summary className="margin-bottom-2 text-primary text-underline font-ui-xs">
+        {props.label}
+      </summary>
+      <div className="margin-bottom-2">{props.children}</div>
     </details>
   );
 }

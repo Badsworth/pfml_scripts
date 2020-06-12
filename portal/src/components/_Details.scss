@@ -10,6 +10,8 @@
   }
 
   summary::before {
+    /* Disable text underlining for this content */
+    display:inline-block;
     content: "\25B6";
     padding-right: 0.5em;
   }

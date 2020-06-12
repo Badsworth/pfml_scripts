@@ -27,7 +27,6 @@ const FileCard = (props) => {
         </Heading>
         <div className={filenameClasses}>{file.name}</div>
         <button
-          // a custom class to set the active color?
           className="usa-button usa-button--unstyled text-error hover:text-error-dark active:text-error-darker"
           type="button"
           onClick={() => props.onRemoveClick()}

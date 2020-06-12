@@ -6,7 +6,7 @@ exports[`FileCardList with no files selected renders an empty list 1`] = `
     className="usa-list usa-list--unstyled"
   />
   <label
-    className="usa-button usa-button--outline"
+    className="margin-bottom-4 margin-top-2 usa-button usa-button--outline"
   >
     Choose a document
     <input
@@ -36,7 +36,7 @@ exports[`FileCardList with previously-selected files renders a list of the files
     </li>
   </ul>
   <label
-    className="usa-button usa-button--outline"
+    className="margin-bottom-4 margin-top-2 usa-button usa-button--outline"
   >
     Choose another document
     <input

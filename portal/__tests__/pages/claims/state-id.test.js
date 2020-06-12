@@ -32,9 +32,9 @@ describe("StateId", () => {
     expect(wrapper.find("ConditionalContent").prop("visible")).toBeFalsy();
   });
 
-  it("will redirect to ssn page", () => {
+  it("will redirect to the upload other ID page", () => {
     expect(wrapper.find("QuestionPage").prop("nextPage")).toEqual(
-      `${routes.claims.ssn}?claim_id=${claim_id}`
+      `${routes.claims.uploadOtherId}?claim_id=${claim_id}`
     );
   });
 
@@ -49,6 +49,18 @@ describe("StateId", () => {
       expect(
         wrapper.update().find("ConditionalContent").prop("visible")
       ).toBeTruthy();
+    });
+
+    it("will redirect to the upload state ID page", () => {
+      const user = new User({
+        has_state_id: true,
+        state_id: "12345",
+      });
+      ({ wrapper } = render({ user }));
+
+      expect(wrapper.find("QuestionPage").prop("nextPage")).toEqual(
+        `${routes.claims.uploadStateId}?claim_id=${claim_id}`
+      );
     });
   });
 

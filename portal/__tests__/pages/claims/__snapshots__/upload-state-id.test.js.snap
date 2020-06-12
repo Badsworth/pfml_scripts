@@ -1,0 +1,64 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`UploadStateId initially renders the page without any filecards 1`] = `
+<QuestionPage
+  formState={Object {}}
+  nextPage="/claims/ssn?claim_id=12345"
+  onSave={[Function]}
+  title="Verify your identity"
+>
+  <FormLabel>
+    Upload your Massachusett’s driver’s license or ID card
+  </FormLabel>
+  <Lead>
+    In order to verify your identity, upload a copy of both the front and the back of your ID card.
+  </Lead>
+  <FileUploadDetails />
+  <FileCardList
+    addAnotherFileButtonText="Choose another file"
+    addFirstFileButtonText="Choose a file"
+    fileHeadingPrefix="File"
+    files={Array []}
+    setFiles={[Function]}
+  />
+</QuestionPage>
+`;
+
+exports[`UploadStateId when the user uploads files renders filecards for the files 1`] = `
+<QuestionPage
+  formState={Object {}}
+  nextPage="/claims/ssn?claim_id=12345"
+  onSave={[Function]}
+  title="Verify your identity"
+>
+  <FormLabel>
+    Upload your Massachusett’s driver’s license or ID card
+  </FormLabel>
+  <Lead>
+    In order to verify your identity, upload a copy of both the front and the back of your ID card.
+  </Lead>
+  <FileUploadDetails />
+  <FileCardList
+    addAnotherFileButtonText="Choose another file"
+    addFirstFileButtonText="Choose a file"
+    fileHeadingPrefix="File"
+    files={
+      Array [
+        Object {
+          "file": File {},
+          "id": "File1",
+        },
+        Object {
+          "file": File {},
+          "id": "File2",
+        },
+        Object {
+          "file": File {},
+          "id": "File3",
+        },
+      ]
+    }
+    setFiles={[Function]}
+  />
+</QuestionPage>
+`;

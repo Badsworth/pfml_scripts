@@ -29,12 +29,15 @@ const StateId = (props) => {
   // indicated that they don't have a state id or if they had never answered the question.
   const shouldShowStateIdField = !!has_state_id;
 
+  const nextPage = has_state_id
+    ? routeWithParams("claims.uploadStateId", props.query)
+    : routeWithParams("claims.uploadOtherId", props.query);
   return (
     <QuestionPage
       formState={formState}
       title={t("pages.claimsStateId.title")}
       onSave={handleSave}
-      nextPage={routeWithParams("claims.ssn", props.query)}
+      nextPage={nextPage}
     >
       <InputChoiceGroup
         choices={[

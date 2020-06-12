@@ -23,6 +23,8 @@ const routes = {
     // to a placeholder page. This allows us to search our code for routes.claims.todo,
     // which is less confusing than seeing routes.claims.success
     todo: "/claims/success",
+    uploadOtherId: "/claims/upload-other-id",
+    uploadStateId: "/claims/upload-state-id",
   },
 };
 

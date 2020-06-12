@@ -32,18 +32,21 @@ function filterAllowedFiles(files, allowedFileTypes) {
  */
 function useChangeHandler(setFiles) {
   return (event) => {
+    // This will only have files selected this time, not previously selected files
+    // e.target.files is a FileList type which isn't an array, but we can turn it into one
+    // @see https://developer.mozilla.org/en-US/docs/Web/API/FileList
+    const files = Array.from(event.target.files);
+
     // Reset the input element's value. When a user selects a file which was already
     // selected it normally won't trigger the onChange event, but that's not what we want.
     // By resetting the value here we ensure that the onChange event occurs even if the
     // user just selects the same file(s). This is important eg if the user selected file 'A',
     // removed that file, and then selected file 'A' again. We tried using the onInput event
     // instead of onChange but it behaved the same way as onChange.
+    // Additionally, we do this step _after_ we've already retrieved the event's files because
+    // this step will reset event.target.files to an empty FileList.
     event.target.value = "";
 
-    // This will only have files selected this time, not previously selected files
-    // e.target.files is a FileList type which isn't an array, but we can turn it into one
-    // @see https://developer.mozilla.org/en-US/docs/Web/API/FileList
-    const files = Array.from(event.target.files);
     const [allowedFiles, disallowedFiles] = filterAllowedFiles(
       files,
       allowedFileTypes
@@ -119,7 +122,7 @@ const FileCardList = (props) => {
   return (
     <div>
       <ul className="usa-list usa-list--unstyled">{fileCards}</ul>
-      <label className="usa-button usa-button--outline">
+      <label className="margin-bottom-4 margin-top-2 usa-button usa-button--outline">
         {button}
         <input
           className="c-file-card-list__input"
