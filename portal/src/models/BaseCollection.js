@@ -1,39 +1,46 @@
 import { findIndex, keyBy } from "lodash";
 
 /**
- * Read only Class representing a collection of models
+ * Read only abstract class representing a collection of models. Subclass this class
+ * to create a specific collection class. Methods of BaseCollection returns new
+ * instances of the collection rather than modifying the original collection.
  */
 class BaseCollection {
   /**
-   * Create a new collection
+   * Create a new collection from an array of items
    * @param {BaseModel[]} [items] Optional list of items. If no list is provided an empty collection will be created.
    */
   constructor(items) {
-    // TODO enforce properties as readonly after _app.js is refactored to use static methods
+    /**
+     * Array of the items in the collection
+     * @type {BaseModel[]}
+     */
     this.items = items || [];
+
+    /**
+     * Object mapping item ids to items in the collection
+     * @type {object.<string, *>}
+     */
+    this.itemsById = keyBy(this.items, this.idProperty);
   }
 
   /**
-   * @type {object.<string, *>}
-   * @readonly
-   */
-  get itemsById() {
-    return keyBy(this.items, this.idProperty);
-  }
-
-  /**
-   * The name of the id property for the items in the collection
+   * The name of the id property for the items in the collection.
+   * This is an abstract method that must be implemented by subclasses of BaseCollection.
    * @type {string}
    * @readonly
+   * @abstract
    */
   get idProperty() {
     throw new Error("Not implemented");
   }
 
   /**
-   * Return a single item
+   * Return a single item from the id of the item or
+   * undefined if the item is not in the collection
+   * @todo Rename to getItem to be consistent with other methods
    * @param {string} itemId - item id
-   * @returns {BaseModel} item - instance of item
+   * @returns {BaseModel|undefined} item - instance of item
    */
   get(itemId) {
     return this.itemsById[itemId];
@@ -41,14 +48,19 @@ class BaseCollection {
 
   /**
    * Adds an item to the collection. Returns a new collection with the item added.
-   * Does not change the original collection.
+   * Does not modify the original collection.
    * @param {BaseModel} item The item to add to the collection
    * @returns {BaseCollection}
    */
   addItem(item) {
     const itemId = item[this.idProperty];
+    if (!itemId) {
+      throw new Error(`Item ${this.idProperty} is null or undefined`);
+    }
     if (this.get(itemId)) {
-      throw new Error(`Item with id ${itemId} already exists in collection`);
+      throw new Error(
+        `Item with ${this.idProperty} ${itemId} already exists in collection`
+      );
     }
     const newItems = this.items.concat(item);
     return new this.constructor(newItems);
@@ -56,16 +68,21 @@ class BaseCollection {
 
   /**
    * Updates an item in a collection. Returns a new collection with the item updated.
-   * Does not change the original collection.
+   * Does not modify the original collection.
    * @param {BaseModel} item - the item to update in the collection
    * @returns {BaseCollection} - new instance of a collection with updated item
    */
   updateItem(item) {
     const items = this.items;
     const itemId = item[this.idProperty];
+    if (!itemId) {
+      throw new Error(`Item ${this.idProperty} is null or undefined`);
+    }
     const itemIndex = findIndex(items, { [this.idProperty]: itemId });
     if (itemIndex === -1) {
-      throw new Error(`Item with id ${itemId} does not exist in collection`);
+      throw new Error(
+        `Cannot find item with ${this.idProperty} ${itemId} in collection`
+      );
     }
     const newItems = items
       .slice(0, itemIndex)
@@ -75,7 +92,8 @@ class BaseCollection {
   }
 
   /**
-   * Removes an item to the collection
+   * Removes an item from the collection. Returns a new collection with the item removed.
+   * Does not modify the original collection.
    * @param {string} itemId - the item to remove from the collection
    * @returns {BaseCollection} - new instance of a collection with item removed
    */
@@ -83,7 +101,9 @@ class BaseCollection {
     const items = this.items;
     const itemIndex = findIndex(items, { [this.idProperty]: itemId });
     if (itemIndex === -1) {
-      throw new Error(`Item with id ${itemId} does not exist in collection`);
+      throw new Error(
+        `Cannot find item with ${this.idProperty} ${itemId} in collection`
+      );
     }
     const newItems = items
       .slice(0, itemIndex)

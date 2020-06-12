@@ -7,105 +7,131 @@ describe("BaseCollection", () => {
     }
   }
 
-  describe("#constructor()", () => {
-    it("creates an empty collection", () => {
+  describe("#constructor", () => {
+    it("cannot instantiate BaseCollection directly", () => {
+      expect(() => {
+        return new BaseCollection();
+      }).toThrow();
+    });
+
+    it("creates an empty collection when no parameters are passed", () => {
       const collection = new TestCollection();
 
       expect(collection.items).toEqual([]);
     });
 
-    it("creates a populated collection when itemsById property is set", () => {
-      const collection = new TestCollection([
-        {
-          testId: "123",
-        },
-      ]);
+    it("creates a collection from an array of items", () => {
+      const items = [{ testId: "123" }];
+      const collection = new TestCollection(items);
+      expect(collection.items).toEqual(items);
+    });
+  });
 
-      expect(collection.items).toMatchInlineSnapshot(`
-        Array [
-          Object {
-            "testId": "123",
-          },
-        ]
-      `);
+  describe("#get", () => {
+    let collection, item1, item2;
+
+    beforeEach(() => {
+      item1 = { testId: "123" };
+      item2 = { testId: "456" };
+      collection = new TestCollection([item1, item2]);
+    });
+
+    it("gets an item by item id", () => {
+      expect(collection.get(item1.testId)).toEqual(item1);
+      expect(collection.get(item2.testId)).toEqual(item2);
+    });
+
+    it("returns undefined if item is not in collection", () => {
+      expect(collection.get("111")).toBe(undefined);
     });
   });
 
   describe("#addItem", () => {
-    it("creates a new collection with an additonal item", () => {
-      const initialCollection = new TestCollection();
-      const item = { testId: "123" };
-      const collection = initialCollection.addItem(item);
+    let initialCollection, item1, item2;
 
-      expect(collection.items).toMatchInlineSnapshot(`
-        Array [
-          Object {
-            "testId": "123",
-          },
-        ]
-      `);
-
-      expect(initialCollection.items).toMatchInlineSnapshot(`Array []`);
+    beforeEach(() => {
+      item1 = { testId: "123" };
+      item2 = { testId: "456" };
+      initialCollection = new TestCollection([item1]);
     });
 
-    describe("#updateItem", () => {
-      it("creates a new collection with changed item values", () => {
-        const initialCollection = new TestCollection([
-          {
-            testId: "123",
-            testProp: "testValue1",
-          },
-        ]);
-        const updateItem = { testId: "123", testProp: "testValue2" };
-        const collection = initialCollection.updateItem(updateItem);
+    it("creates a new collection with an additonal item", () => {
+      const collection = initialCollection.addItem(item2);
 
-        expect(initialCollection.items).toMatchInlineSnapshot(`
-          Array [
-            Object {
-              "testId": "123",
-              "testProp": "testValue1",
-            },
-          ]
-        `);
+      expect(initialCollection.items).toEqual([item1]);
+      expect(collection.items).toEqual([item1, item2]);
+    });
 
-        expect(collection.items).toMatchInlineSnapshot(`
-          Array [
-            Object {
-              "testId": "123",
-              "testProp": "testValue2",
-            },
-          ]
-        `);
-      });
+    it("throws if item is missing an id", () => {
+      expect(() => {
+        initialCollection.addItem({});
+      }).toThrow(/Item testId is null or undefined/);
+    });
+
+    it("throws if item is already in collection", () => {
+      expect(() => {
+        initialCollection.addItem(item1);
+      }).toThrow(/Item with testId 123 already exists/);
+    });
+  });
+
+  describe("#updateItem", () => {
+    let initialCollection, item1, item2, item3;
+
+    beforeEach(() => {
+      item1 = { testId: "123", testProp: "testValue1" };
+      item2 = { testId: "456", testProp: "testValue2" };
+      item3 = { testId: "789", testProp: "testValue3" };
+      initialCollection = new TestCollection([item1, item2, item3]);
+    });
+
+    it("creates a new collection with changed item values and preserves order", () => {
+      const updateItem = { testId: item2.testId, testProp: "newTestValue" };
+      const collection = initialCollection.updateItem(updateItem);
+
+      expect(initialCollection.items).toEqual([item1, item2, item3]);
+      expect(collection.items).toEqual([item1, updateItem, item3]);
+    });
+
+    it("throws if item is missing an id", () => {
+      expect(() => {
+        initialCollection.updateItem({
+          testProp: "newTestValue",
+        });
+      }).toThrow(/Item testId is null or undefined/);
+    });
+
+    it("throws if item is not in collection", () => {
+      expect(() => {
+        initialCollection.updateItem({
+          testId: "000",
+          testProp: "newTestValue",
+        });
+      }).toThrow(/Cannot find item with testId 000/);
     });
   });
 
   describe("#removeItem", () => {
-    it("creates new collection with removed item", () => {
-      const initialCollection = new TestCollection([
-        { testId: "123" },
-        { testId: "456" },
-      ]);
-      const collection = initialCollection.removeItem("456");
+    let initialCollection, item1, item2, item3;
 
-      expect(initialCollection.items).toMatchInlineSnapshot(`
-        Array [
-          Object {
-            "testId": "123",
-          },
-          Object {
-            "testId": "456",
-          },
-        ]
-      `);
+    beforeEach(() => {
+      item1 = { testId: "123", testProp: "testValue1" };
+      item2 = { testId: "456", testProp: "testValue2" };
+      item3 = { testId: "789", testProp: "testValue3" };
+      initialCollection = new TestCollection([item1, item2, item3]);
+    });
 
-      expect(collection.items).toMatchInlineSnapshot(`
-        Array [
-          Object {
-            "testId": "123",
-          },
-        ]
-      `);
+    it("creates new collection with removed item and preserves order", () => {
+      const collection = initialCollection.removeItem(item2.testId);
+
+      expect(initialCollection.items).toEqual([item1, item2, item3]);
+      expect(collection.items).toEqual([item1, item3]);
+    });
+
+    it("throws if item is not in collection", () => {
+      expect(() => {
+        initialCollection.removeItem("000");
+      }).toThrow(/Cannot find item with testId 000/);
     });
   });
 });

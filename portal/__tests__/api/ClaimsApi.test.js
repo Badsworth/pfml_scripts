@@ -1,4 +1,5 @@
 import Claim from "../../src/models/Claim";
+import ClaimCollection from "../../src/models/ClaimCollection";
 import ClaimsApi from "../../src/api/ClaimsApi";
 import User from "../../src/models/User";
 import request from "../../src/api/request";
@@ -31,33 +32,15 @@ describe("ClaimsApi", () => {
 
       it("resolves with success, status, and claim instance", async () => {
         const result = await claimsApi.getClaims(user.user_id);
-        expect(result).toMatchInlineSnapshot(`
-          Object {
-            "apiErrors": undefined,
-            "claims": ClaimCollection {
-              "items": Array [
-                Claim {
-                  "application_id": "2a340cf8-6d2a-4f82-a075-73588d003f8f",
-                  "avg_weekly_hours_worked": null,
-                  "created_at": null,
-                  "duration_type": null,
-                  "employee_ssn": null,
-                  "first_name": null,
-                  "hours_off_needed": null,
-                  "last_name": null,
-                  "leave_details": Object {
-                    "continuous_leave_periods": null,
-                    "employer_notified": null,
-                    "reason": null,
-                  },
-                  "middle_name": null,
-                },
-              ],
-            },
-            "status": 200,
-            "success": true,
-          }
-        `);
+        expect(result).toEqual({
+          apiErrors: undefined,
+          claims: expect.any(ClaimCollection),
+          status: 200,
+          success: true,
+        });
+        expect(result.claims.items).toEqual([
+          new Claim({ application_id: "2a340cf8-6d2a-4f82-a075-73588d003f8f" }),
+        ]);
       });
     });
   });

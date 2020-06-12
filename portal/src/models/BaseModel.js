@@ -36,9 +36,10 @@ export default class BaseModel {
   /**
    * Dictionary mapping properties to default values for those properties.
    * If a property has no default, use null as its default.
-   * All model subclasses should implement this method.
+   * This is an abstract method that must be implemented by all subclasses of BaseModel.
    * @type {object.<string, *>}
    * @readonly
+   * @abstract
    */
   get defaults() {
     throw new Error("Not implemented");
