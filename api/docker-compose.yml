@@ -43,6 +43,9 @@ services:
       - DB_NAME=pfml
       - DB_USERNAME=pfml
       - DB_PASSWORD=secret123
+      - TERM=${TERM:-xterm-256color}
+      - 'PS1=${DOCKER_PS1:-[docker] \w: }'
+      - 'LSCOLORS=${DOCKER_LSCOLORS:- }'
     networks:
       main:
         aliases:

@@ -26,8 +26,14 @@ USER ${RUN_USER}
 FROM build as dev
 
 ARG RUN_USER
-USER ${RUN_USER}
 
+# Set up friendly bash configuration
+USER root
+COPY ./local/bashrc /home/${RUN_USER}/.bashrc
+COPY ./local/inputrc /home/${RUN_USER}/.inputrc
+RUN rm /etc/bash.bashrc
+
+USER ${RUN_USER}
 WORKDIR /app
 
 # install dependencies

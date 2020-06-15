@@ -129,7 +129,7 @@ lint: ## Run linting
 	$(PY_RUN_CMD) mypy massgov
 
 login: start ## Start shell in running container
-	docker exec -it $(APP_NAME) sh
+	docker exec -it $(APP_NAME) bash
 
 login-db: ## Start psql with project environment variables
 	PGPASSWORD=$$DB_PASSWORD psql --host=$$DB_HOST --username=$$DB_USERNAME $$DB_NAME

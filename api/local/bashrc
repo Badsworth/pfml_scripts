@@ -1,0 +1,16 @@
+shopt -s nocaseglob  # Case-insensitive globbing (pathname expansion)
+shopt -s cdspell     # Auto-correct when using cd
+shopt -s dotglob
+shopt -s expand_aliases
+shopt -s extglob
+
+shopt -s cmdhist     # Combine multiline commands into one in history
+shopt -s histappend
+
+export HISTSIZE=1000
+
+# don't put duplicate lines or lines starting with space in the history.
+export HISTCONTROL=ignoreboth
+alias ls='ls --color=auto'
+alias l='ls -CF'
+alias ll='ls -l'
