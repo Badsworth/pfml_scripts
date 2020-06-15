@@ -2,11 +2,13 @@ import BackButton from "../../components/BackButton";
 import ButtonLink from "../../components/ButtonLink";
 import Claim from "../../models/Claim";
 import Heading from "../../components/Heading";
+import LeaveReason from "../../models/LeaveReason";
 import PropTypes from "prop-types";
 import React from "react";
 import ReviewRow from "../../components/ReviewRow";
 import Title from "../../components/Title";
 import User from "../../models/User";
+import findKeyByValue from "../../utils/findKeyByValue";
 import formatDateRange from "../../utils/formatDateRange";
 import get from "lodash/get";
 import routeWithParams from "../../utils/routeWithParams";
@@ -53,6 +55,14 @@ export const Review = (props) => {
 
       {/* LEAVE DETAILS */}
       <Heading level="2">{t("pages.claimsReview.leaveSectionHeading")}</Heading>
+      <ReviewRow heading={t("pages.claimsReview.leaveReasonHeading")}>
+        {t("pages.claimsReview.leaveReasonValue", {
+          context: findKeyByValue(
+            LeaveReason,
+            get(claim, "leave_details.reason")
+          ),
+        })}
+      </ReviewRow>
 
       <ReviewRow heading={t("pages.claimsReview.leaveDurationHeading")}>
         {formatDateRange(

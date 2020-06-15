@@ -1,4 +1,5 @@
 import Claim from "../../../src/models/Claim";
+import LeaveReason from "../../../src/models/LeaveReason";
 import React from "react";
 import { Review } from "../../../src/pages/claims/review";
 import User from "../../../src/models/User";
@@ -20,6 +21,7 @@ describe("Review", () => {
               start_date: "2021-09-21",
             },
           ],
+          reason: LeaveReason.medical,
         },
       });
       const query = { claim_id: claim.application_id };
@@ -36,10 +38,14 @@ describe("Review", () => {
     });
   });
 
-  describe("when all data is empty", () => {
+  describe("when data is empty", () => {
     it("does not render strings like 'null' or 'undefined'", () => {
       const claim = new Claim({
         application_id: "mock-id",
+        duration_type: "continuous",
+        leave_details: {
+          reason: LeaveReason.medical,
+        },
       });
       const query = { claim_id: claim.application_id };
       const user = new User({

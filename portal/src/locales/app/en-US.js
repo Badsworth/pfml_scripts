@@ -120,6 +120,11 @@ const pages = {
     leaveDurationTypeValue_continuous: "$t(shared.claimDurationTypeContinuous)",
     leaveDurationTypeValue_intermittent:
       "$t(shared.claimDurationTypeIntermittent)",
+    leaveReasonHeading: "Leave type",
+    leaveReasonValue_bonding: "Bonding leave",
+    leaveReasonValue_family: "Family leave",
+    leaveReasonValue_medical: "Medical leave",
+    leaveReasonValue_parental: "Parental leave",
     leaveSectionHeading: "Leave details",
     title: "Check your answers before sending your application",
     userDateOfBirthHeading: "Date of birth",

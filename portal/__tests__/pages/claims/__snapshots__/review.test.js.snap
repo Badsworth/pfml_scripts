@@ -1,57 +1,5 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`Review when all data is empty does not render strings like 'null' or 'undefined' 1`] = `
-<div
-  className="measure-6"
->
-  <BackButton />
-  <Title>
-    Check your answers before sending your application
-  </Title>
-  <Heading
-    level="2"
-  >
-    Who is taking leave?
-  </Heading>
-  <ReviewRow
-    heading="Full name"
-  >
-      
-  </ReviewRow>
-  <ReviewRow
-    heading="Date of birth"
-  >
-    **/**/****
-  </ReviewRow>
-  <ReviewRow
-    heading="Social security number"
-  >
-    *********
-  </ReviewRow>
-  <Heading
-    level="2"
-  >
-    Leave details
-  </Heading>
-  <ReviewRow
-    heading="Leave duration"
-  >
-     – 
-  </ReviewRow>
-  <ReviewRow
-    heading="Leave duration type"
-  >
-    pages.claimsReview.leaveDurationTypeValue
-  </ReviewRow>
-  <ButtonLink
-    className="margin-top-3"
-    href="/claims/confirm?claim_id=mock-id"
-  >
-    Confirm information is correct
-  </ButtonLink>
-</div>
-`;
-
 exports[`Review when all data is present renders Review page with the field values 1`] = `
 <div
   className="measure-6"
@@ -91,9 +39,71 @@ exports[`Review when all data is present renders Review page with the field valu
     Leave details
   </Heading>
   <ReviewRow
+    heading="Leave type"
+  >
+    Medical leave
+  </ReviewRow>
+  <ReviewRow
     heading="Leave duration"
   >
     9/21/2021 – 12/30/2021
+  </ReviewRow>
+  <ReviewRow
+    heading="Leave duration type"
+  >
+    Continuous leave
+  </ReviewRow>
+  <ButtonLink
+    className="margin-top-3"
+    href="/claims/confirm?claim_id=mock-id"
+  >
+    Confirm information is correct
+  </ButtonLink>
+</div>
+`;
+
+exports[`Review when data is empty does not render strings like 'null' or 'undefined' 1`] = `
+<div
+  className="measure-6"
+>
+  <BackButton />
+  <Title>
+    Check your answers before sending your application
+  </Title>
+  <Heading
+    level="2"
+  >
+    Who is taking leave?
+  </Heading>
+  <ReviewRow
+    heading="Full name"
+  >
+      
+  </ReviewRow>
+  <ReviewRow
+    heading="Date of birth"
+  >
+    **/**/****
+  </ReviewRow>
+  <ReviewRow
+    heading="Social security number"
+  >
+    *********
+  </ReviewRow>
+  <Heading
+    level="2"
+  >
+    Leave details
+  </Heading>
+  <ReviewRow
+    heading="Leave type"
+  >
+    Medical leave
+  </ReviewRow>
+  <ReviewRow
+    heading="Leave duration"
+  >
+     – 
   </ReviewRow>
   <ReviewRow
     heading="Leave duration type"
