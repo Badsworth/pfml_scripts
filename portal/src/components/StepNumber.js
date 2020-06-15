@@ -18,9 +18,16 @@ const StepNumber = (props) => {
     "tablet:font-sans-md",
   ];
 
-  const outlineClasses = ["border-2px", "border-base", "text-base"];
+  const outlineClasses = [
+    "border-2px",
+    // use line height to vertically center text
+    "line-height-sans-4",
+    "tablet:line-height-sans-5",
+    "border-base",
+    "text-base",
+  ];
 
-  const filledClasses = ["text-base-lightest", "padding-top-2px"];
+  const filledClasses = ["text-base-lightest", "line-height-sans-6"];
 
   const classNames = classnames(
     classes,
@@ -57,7 +64,8 @@ StepNumber.propTypes = {
   /**
    * Number to display. Currently only supports single digits.
    */
-  children: PropTypes.oneOf([PropTypes.string, PropTypes.number]).isRequired,
+  children: PropTypes.oneOfType([PropTypes.string, PropTypes.number])
+    .isRequired,
 };
 
 export default StepNumber;

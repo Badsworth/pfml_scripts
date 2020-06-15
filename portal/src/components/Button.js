@@ -27,6 +27,7 @@ function Button({ type = "button", ...props }) {
       name={props.name}
       onClick={props.onClick}
       type={type}
+      disabled={props.disabled}
     >
       {props.children}
     </button>
@@ -59,6 +60,10 @@ Button.propTypes = {
    * HTML `type` attribute
    */
   type: PropTypes.oneOf(["button", "submit"]),
+  /**
+   * Disable button click
+   */
+  disabled: PropTypes.bool,
   /**
    * Change the default button style
    */

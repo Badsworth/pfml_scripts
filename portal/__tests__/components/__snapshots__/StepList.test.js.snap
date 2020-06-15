@@ -1,0 +1,30 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`StepList renders component 1`] = `
+<div>
+  <Title>
+    Step List
+  </Title>
+  <Step
+    completedText="Completed"
+    editText="Edit"
+    key=".0"
+    number={1}
+    resumeText="Resume"
+    screenReaderNumberPrefix="Step"
+    startText="Start"
+    status="not_started"
+    stepHref="#"
+    title="Step 1"
+  >
+    Step Description
+  </Step>
+  <Button
+    className="margin-top-4"
+    name="submit-list"
+    onClick={[MockFunction]}
+  >
+    Submit
+  </Button>
+</div>
+`;

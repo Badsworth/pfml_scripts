@@ -11,7 +11,7 @@ exports[`Step renders component 1`] = `
     1
   </StepNumber>
   <div
-    className="flex-fill grid-row tablet:margin-top-1 margin-left-2"
+    className="flex-fill margin-left-2 grid-row tablet:margin-top-1"
   >
     <div
       className="tablet:grid-col-8"

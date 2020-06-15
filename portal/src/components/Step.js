@@ -56,31 +56,63 @@ const Step = (props) => {
     return startResumeButton;
   };
 
-  const rowClasses = classnames(
+  // classes for wrapping element
+  const classes = classnames(
+    // allow step number and collapsible column to be flex-box
     "display-flex",
     "border-bottom",
     "border-base-light",
     "padding-y-4"
   );
 
+  // parent column that contains a column
+  // for title/description and another for user action
+  const collapsibleColumnClasses = classnames(
+    // fill the remainder of the row left after the step number
+    "flex-fill",
+    // give a little space next to step number
+    "margin-left-2",
+    // make this column also a row
+    "grid-row",
+    // push column down to center of step number
+    // no extra space needed on screen sizes smaller than a tablet
+    "tablet:margin-top-1"
+  );
+
+  // column with the title and description
+  const titleDescriptionColumnClasses = "tablet:grid-col-8";
+
+  // lighten title color if step is disabled
+  const titleClasses = classnames({ "text-base": disabled });
+
+  // column with user action links/button (edit, start, or resume)
+  const actionColumnClasses = classnames(
+    // on mobile, this column appears below title/description
+    // so we need to add a little space
+    "margin-top-2",
+    // no margn needed on screen sizes larger than a tablet
+    "tablet:margin-top-0",
+    // align buttons and text to the right
+    "tablet:text-right",
+    "tablet:grid-col-4"
+  );
+
   return (
-    <div className={rowClasses}>
+    <div className={classes}>
       <StepNumber
         screenReaderPrefix={props.screenReaderNumberPrefix}
         state={props.status}
       >
         {props.number}
       </StepNumber>
-      <div className="flex-fill grid-row tablet:margin-top-1 margin-left-2">
-        <div className="tablet:grid-col-8">
-          <Heading level="2" className={disabled ? "text-base" : ""}>
+      <div className={collapsibleColumnClasses}>
+        <div className={titleDescriptionColumnClasses}>
+          <Heading level="2" className={titleClasses}>
             {props.title}
           </Heading>
           {active && <p>{props.children}</p>}
         </div>
-        <div className="margin-top-2 tablet:margin-top-0 tablet:text-right tablet:grid-col-4">
-          {actionColumn()}
-        </div>
+        <div className={actionColumnClasses}>{actionColumn()}</div>
       </div>
     </div>
   );
@@ -105,34 +137,40 @@ Step.propTypes = {
    */
   title: PropTypes.string.isRequired,
   /**
-   * Localized text for the start button.
-   */
-  startText: PropTypes.string.isRequired,
-  /**
-   * Localized text for the resume button.
-   */
-  resumeText: PropTypes.string.isRequired,
-  /**
-   * Localized text for the edit link.
-   */
-  editText: PropTypes.string.isRequired,
-  /**
-   * Localized text for the completed button.
-   */
-  completedText: PropTypes.string.isRequired,
-  /**
-   * The number of the step in the step list.
-   */
-  number: PropTypes.string.isRequired,
-  /**
-   * Label for the number announced to screen reader
-   * e.g instead of announcing "1", provide a value to announce "Step 1"
-   */
-  screenReaderNumberPrefix: PropTypes.string.isRequired,
-  /**
    * Description of the step
    */
   children: PropTypes.node,
+  /**
+   * Localized text for the start button.
+   * This can also be passed by parent StepList component.
+   */
+  startText: PropTypes.string,
+  /**
+   * Localized text for the resume button.
+   * This can also be passed by parent StepList component.
+   */
+  resumeText: PropTypes.string,
+  /**
+   * Localized text for the edit link.
+   * This can also be passed by parent StepList component.
+   */
+  editText: PropTypes.string,
+  /**
+   * Localized text for the completed button.
+   * This can also be passed by parent StepList component.
+   */
+  completedText: PropTypes.string,
+  /**
+   * The number of the step in the step list.
+   * This can also be passed by parent StepList component.
+   */
+  number: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+  /**
+   * Prefix for the number announced to screen reader
+   * e.g instead of announcing "1", provide a value to announce "Step 1"
+   * This can also be passed by parent StepList component.
+   */
+  screenReaderNumberPrefix: PropTypes.string,
 };
 
 export default Step;

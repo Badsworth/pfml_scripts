@@ -12,7 +12,7 @@ describe("StepNumber", () => {
 
     expect(wrapper).toMatchInlineSnapshot(`
       <div
-        className="radius-pill text-center height-3 width-3 tablet:height-5 tablet:width-5 font-sans-2xs tablet:font-sans-md border-2px border-base text-base"
+        className="radius-pill text-center height-3 width-3 tablet:height-5 tablet:width-5 font-sans-2xs tablet:font-sans-md border-2px line-height-sans-4 tablet:line-height-sans-5 border-base text-base"
       >
         <span
           className="usa-sr-only"
