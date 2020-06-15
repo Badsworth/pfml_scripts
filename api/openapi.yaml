@@ -69,34 +69,6 @@ paths:
         "404":
           $ref: "#/components/responses/NotFound"
 
-  /all-fake-employees:
-    get:
-      tags:
-        - Test Endpoints
-      summary: FOR TEST PURPOSES ONLY. This endpoint provides all fake employees that were created at the start of the server.
-      operationId: massgov.pfml.api.employees.employees_get_all_fake
-      responses:
-        "200":
-          description: The endpoint returns a dictionary of existing employees. The keys are SSN/ITIN and the values are employee objects. You can use this endpoint to determine the employee ids.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Employee"
-
-  /all-fake-applications:
-    get:
-      tags:
-        - Test Endpoints
-      summary: FOR TEST PURPOSES ONLY. This endpoint provides all fake applications that were created at the start of the server.
-      operationId: massgov.pfml.api.applications.applications_get_all_fake
-      responses:
-        "200":
-          description: The endpoint returns a dictionary of existing applications. The keys are application id and the values are application objects. You can use this endpoint to determine the applcation ids.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ApplicationResponse"
-
   /employees/{employee_id}:
     get:
       tags:

@@ -4,16 +4,11 @@ import connexion
 from werkzeug.exceptions import NotFound
 
 import massgov.pfml.api.app as app
-import massgov.pfml.api.generate_fake_data as fake
 from massgov.pfml.api.models.application_request import ApplicationRequest
 from massgov.pfml.api.models.application_response import ApplicationResponse
 from massgov.pfml.db.models.applications import Application
 from massgov.pfml.db.models.employees import Status
 from massgov.pfml.db.status import UserStatusDescription, get_or_make_status
-
-
-def applications_get_all_fake():
-    return fake.applications
 
 
 def application_get(application_id):
