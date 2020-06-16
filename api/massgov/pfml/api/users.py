@@ -7,6 +7,8 @@ import massgov.pfml.api.app as app
 import massgov.pfml.util.logging
 from massgov.pfml.db.models.employees import User
 
+# import massgov.pfml.api.authorization.flask as authz
+
 logger = massgov.pfml.util.logging.get_logger(__name__)
 
 
@@ -14,7 +16,7 @@ logger = massgov.pfml.util.logging.get_logger(__name__)
 # Handlers
 ##########################################
 
-
+# @authz.requires(authz.READ, "User")
 def users_get(user_id):
     with app.db_session() as db_session:
         u = db_session.query(User).get(user_id)
