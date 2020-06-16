@@ -1,11 +1,38 @@
-from dataclasses import dataclass
 from typing import Optional
 
 import connexion
+from pydantic import UUID4
 from werkzeug.exceptions import NotFound
 
 import massgov.pfml.api.app as app
 from massgov.pfml.db.models.employees import Employee
+from massgov.pfml.util.pydantic import PydanticBaseModel
+from massgov.pfml.util.pydantic.types import TaxIdFormattedStr, TaxIdUnformattedStr
+
+
+class EmployeeUpdateRequest(PydanticBaseModel):
+    first_name: Optional[str]
+    middle_name: Optional[str]
+    last_name: Optional[str]
+    email_address: Optional[str]
+
+
+class EmployeeSearchRequest(PydanticBaseModel):
+    first_name: str
+    middle_name: Optional[str]
+    last_name: str
+    tax_identifier: TaxIdUnformattedStr
+
+
+class EmployeeResponse(PydanticBaseModel):
+    employee_id: UUID4
+    tax_identifier: TaxIdFormattedStr
+    first_name: Optional[str]
+    middle_name: Optional[str]
+    last_name: Optional[str]
+    other_name: Optional[str]
+    email_address: Optional[str]
+    phone_number: Optional[str]
 
 
 def employees_get(employee_id):
@@ -15,73 +42,32 @@ def employees_get(employee_id):
     if employee is None:
         raise NotFound()
 
-    return employee_response(employee)
+    return EmployeeResponse.from_orm(employee).dict()
 
 
 def employees_patch(employee_id):
     """ this endpoint will allow an employee's personal information to be updated """
-    body = connexion.request.json
+    request = EmployeeUpdateRequest.parse_obj(connexion.request.json)
     with app.db_session() as db_session:
         updated_count = (
-            db_session.query(Employee).filter(Employee.employee_id == employee_id).update(body)
+            db_session.query(Employee)
+            .filter(Employee.employee_id == employee_id)
+            .update(request.dict(exclude_none=True))
         )
+
         if updated_count == 0:
             raise NotFound()
+
         updated_employee = db_session.query(Employee).get(employee_id)
-    return employee_response(updated_employee)
+
+    return EmployeeResponse.from_orm(updated_employee).dict()
 
 
 def employees_search():
-    body = connexion.request.json
+    request = EmployeeSearchRequest.parse_obj(connexion.request.json)
     with app.db_session() as db_session:
-        employee = (
-            db_session.query(Employee)
-            .filter_by(
-                first_name=body["first_name"],
-                last_name=body["last_name"],
-                tax_identifier=body["tax_identifier"].replace("-", ""),
-            )
-            .first()
-        )
+        employee = db_session.query(Employee).filter_by(**request.dict(exclude_none=True)).first()
     if employee is None:
         raise NotFound()
 
-    return employee_response(employee)
-
-
-@dataclass
-class EmployeeResponse:
-    employee_id: Optional[str]
-    tax_identifier: Optional[str]
-    first_name: Optional[str]
-    middle_name: Optional[str]
-    last_name: Optional[str]
-    other_name: Optional[str]
-    email_address: Optional[str]
-    phone_number: Optional[str]
-
-
-class EmployeeUpdateRequest:
-    first_name: str
-    middle_name: str
-    last_name: str
-
-
-def serialize_tax_identifier(tax_identifier: Optional[str]) -> Optional[str]:
-    if not tax_identifier:
-        return None
-
-    return "{}-{}-{}".format(tax_identifier[:3], tax_identifier[3:5], tax_identifier[5:])
-
-
-def employee_response(employee: Employee) -> EmployeeResponse:
-    return EmployeeResponse(
-        employee_id=employee.employee_id,
-        tax_identifier=serialize_tax_identifier(employee.tax_identifier),
-        first_name=employee.first_name,
-        middle_name=employee.middle_name,
-        last_name=employee.last_name,
-        other_name=employee.other_name,
-        email_address=employee.email_address,
-        phone_number=employee.phone_number,
-    )
+    return EmployeeResponse.from_orm(employee).dict()

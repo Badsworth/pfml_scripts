@@ -111,7 +111,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Employee"
+                $ref: "#/components/schemas/EmployeeResponse"
         "404":
           $ref: "#/components/responses/NotFound"
     patch:
@@ -132,11 +132,11 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Employee"
+                $ref: "#/components/schemas/EmployeeResponse"
         "404":
           $ref: "#/components/responses/NotFound"
       requestBody:
-        $ref: "#/components/requestBodies/EmployeeToUpdate"
+        $ref: "#/components/requestBodies/EmployeeUpdateRequest"
 
   /employees/search:
     post:
@@ -150,11 +150,11 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Employee"
+                $ref: "#/components/schemas/EmployeeResponse"
         "404":
           $ref: "#/components/responses/NotFound"
       requestBody:
-        $ref: "#/components/requestBodies/EmployeeToSearch"
+        $ref: "#/components/requestBodies/EmployeeSearchRequest"
 
   /employers/{employer_id}:
     get:
@@ -385,17 +385,17 @@ components:
           schema:
             $ref: "#/components/schemas/UserUpdateRequest"
       required: true
-    EmployeeToSearch:
+    EmployeeSearchRequest:
       content:
         application/json:
           schema:
-            $ref: "#/components/schemas/EmployeeToSearch"
+            $ref: "#/components/schemas/EmployeeSearchRequest"
       required: true
-    EmployeeToUpdate:
+    EmployeeUpdateRequest:
       content:
         application/json:
           schema:
-            $ref: "#/components/schemas/EmployeeToUpdate"
+            $ref: "#/components/schemas/EmployeeUpdateRequest"
       required: true
     ApplicationRequestBody:
       content:
@@ -488,7 +488,7 @@ components:
           example: true
       required: ['consented_to_data_sharing']
 
-    EmployeeToUpdate:
+    EmployeeUpdateRequest:
       type: object
       properties:
         first_name:
@@ -513,7 +513,7 @@ components:
           nullable: false
           minLength: 1
 
-    EmployeeToSearch:
+    EmployeeSearchRequest:
       type: object
       properties:
         first_name:
@@ -529,7 +529,7 @@ components:
           $ref: '#/components/schemas/SsnItin'
       required: ['first_name', 'last_name', 'tax_identifier']
 
-    Employee:
+    EmployeeResponse:
       type: object
       properties:
         employee_id:
@@ -561,6 +561,7 @@ components:
           example: "123-456-7890"
         tax_identifier:
           $ref: '#/components/schemas/SsnItin'
+      required: ['employee_id', 'tax_identifier']
 
     EmployerResponse:
       type: object
