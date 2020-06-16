@@ -21,6 +21,7 @@ describe("Review", () => {
               start_date: "2021-09-21",
             },
           ],
+          employer_notified: true,
           reason: LeaveReason.medical,
         },
       });

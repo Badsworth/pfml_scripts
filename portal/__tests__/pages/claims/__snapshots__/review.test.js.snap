@@ -53,6 +53,16 @@ exports[`Review when all data is present renders Review page with the field valu
   >
     Continuous leave
   </ReviewRow>
+  <Heading
+    level="2"
+  >
+    Employment information
+  </Heading>
+  <ReviewRow
+    heading="Notified employer"
+  >
+    Yes
+  </ReviewRow>
   <ButtonLink
     className="margin-top-3"
     href="/claims/confirm?claim_id=mock-id"
@@ -109,6 +119,16 @@ exports[`Review when data is empty does not render strings like 'null' or 'undef
     heading="Leave duration type"
   >
     Continuous leave
+  </ReviewRow>
+  <Heading
+    level="2"
+  >
+    Employment information
+  </Heading>
+  <ReviewRow
+    heading="Notified employer"
+  >
+    No
   </ReviewRow>
   <ButtonLink
     className="margin-top-3"

@@ -115,6 +115,10 @@ const pages = {
   },
   claimsReview: {
     confirmationAction: "Confirm information is correct",
+    employerNotifiedHeading: "Notified employer",
+    employerNotifiedValue: "No",
+    employerNotifiedValue_true: "Yes",
+    employmentSectionHeading: "Employment information",
     leaveDurationHeading: "Leave duration",
     leaveDurationTypeHeading: "Leave duration type",
     leaveDurationTypeValue_continuous: "$t(shared.claimDurationTypeContinuous)",

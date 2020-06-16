@@ -76,6 +76,17 @@ export const Review = (props) => {
         })}
       </ReviewRow>
 
+      {/* EMPLOYMENT INFO */}
+      <Heading level="2">
+        {t("pages.claimsReview.employmentSectionHeading")}
+      </Heading>
+
+      <ReviewRow heading={t("pages.claimsReview.employerNotifiedHeading")}>
+        {t("pages.claimsReview.employerNotifiedValue", {
+          context: (!!get(claim, "leave_details.employer_notified")).toString(),
+        })}
+      </ReviewRow>
+
       <ButtonLink
         className="margin-top-3"
         href={routeWithParams("claims.confirm", props.query)}
