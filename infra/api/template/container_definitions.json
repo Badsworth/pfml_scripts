@@ -29,6 +29,7 @@
     },
     "environment": [
       { "name": "ENVIRONMENT", "value": "${environment_name}" },
+      { "name": "ENABLE_FULL_ERROR_LOGS", "value": "${enable_full_error_logs}" },
       { "name": "DB_HOST", "value": "${db_host}" },
       { "name": "DB_NAME", "value": "${db_name}" },
       { "name": "DB_USERNAME", "value": "${db_username}" },

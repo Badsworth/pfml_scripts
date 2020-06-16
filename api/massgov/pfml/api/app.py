@@ -8,12 +8,14 @@ from typing import Generator, List, Optional, Union
 
 import connexion
 import connexion.mock
+import flask
 import flask_cors
 from flask import Flask, current_app, g
 
 import massgov.pfml.api.authorization.flask
 import massgov.pfml.api.authorization.rules
 import massgov.pfml.util.logging
+import massgov.pfml.util.logging.access
 from massgov.pfml import db
 from massgov.pfml.api.config import AppConfig, get_config
 
@@ -68,6 +70,13 @@ def create_app(config: Optional[AppConfig] = None) -> connexion.FlaskApp:
         except Exception:
             logger.exception("Exception while closing DB session")
             pass
+
+    @flask_app.after_request
+    def access_log(response):
+        massgov.pfml.util.logging.access.access_log(
+            flask.request, response, get_app_config().enable_full_error_logs
+        )
+        return response
 
     return app
 

@@ -36,6 +36,7 @@ module "api" {
   postgres_version        = "11.6"
   nlb_name                = "${local.vpc}-nlb"
   nlb_port                = 80
+  enable_full_error_logs  = "1"
   cors_origins = [
     # Allow requests from the Portal and API Gateway (Swagger) test environment.
     "https://paidleave-test.mass.gov",

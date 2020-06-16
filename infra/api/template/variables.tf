@@ -80,6 +80,12 @@ variable "nlb_port" {
   type        = string
 }
 
+variable "enable_full_error_logs" {
+  description = "Enable logging of full request and response on errors"
+  type        = string
+  default     = "0"
+}
+
 variable "cors_origins" {
   description = "A list of origins to allow CORS requests from."
   type        = list(string)

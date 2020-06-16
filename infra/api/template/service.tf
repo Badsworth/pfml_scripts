@@ -53,6 +53,7 @@ data "template_file" "container_definitions" {
     db_username                = aws_db_instance.default.username
     docker_image               = "${data.aws_ecr_repository.app.repository_url}:${var.service_docker_tag}"
     environment_name           = var.environment_name
+    enable_full_error_logs     = var.enable_full_error_logs
     cloudwatch_logs_group_name = aws_cloudwatch_log_group.service_logs.name
     aws_region                 = data.aws_region.current.name
     cors_origins               = join(",", var.cors_origins)

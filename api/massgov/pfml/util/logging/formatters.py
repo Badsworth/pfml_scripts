@@ -7,8 +7,8 @@ import logging  # noqa: B1
 
 import flask
 
-# Attributes of LogRecord to exclude from the JSON formatted lines. A blacklist approach is used
-# so that all "extra" attributes can be included in a line.
+# Attributes of LogRecord to exclude from the JSON formatted lines. An exclusion list approach is
+# used so that all "extra" attributes can be included in a line.
 EXCLUDE_ATTRIBUTES = {
     "args",
     "exc_info",

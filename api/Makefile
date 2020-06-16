@@ -35,6 +35,8 @@ endif
 
 PY_RUN_CMD := $(PY_RUN_CMD_$(PY_RUN_CMD_OPT))
 
+DECODE_LOG := 2>&1 | python3 massgov/pfml/util/logging/decodelog.py
+
 # BuildKit is a more efficient builder for Docker, so use it by default
 ifndef NO_BUILDKIT
 	export DOCKER_BUILDKIT=1
@@ -135,7 +137,7 @@ login-db: ## Start psql with project environment variables
 	PGPASSWORD=$$DB_PASSWORD psql --host=$$DB_HOST --username=$$DB_USERNAME $$DB_NAME
 
 logs: start ## View API logs
-	docker-compose logs --follow $(APP_NAME)
+	docker-compose logs --follow --no-color $(APP_NAME) $(DECODE_LOG)
 
 logs-db: start ## View DB logs
 	docker-compose logs --follow mass-pfml-db
@@ -181,13 +183,13 @@ run: ## Run docker-compose
 run: start logs
 
 db-upgrade: ## Apply pending migrations to db
-	$(PY_RUN_CMD) db-migrate-up
+	$(PY_RUN_CMD) db-migrate-up $(DECODE_LOG)
 
 db-downgrade: ## Rollback last migration in db
-	$(PY_RUN_CMD) db-migrate-down
+	$(PY_RUN_CMD) db-migrate-down $(DECODE_LOG)
 
 db-downgrade-all: ## Rollback all migrations
-	$(PY_RUN_CMD) db-migrate-down-all
+	$(PY_RUN_CMD) db-migrate-down-all $(DECODE_LOG)
 
 db-migrate-create: check-migrate-msg ## Create a new migration based on model changes
 	$(PY_RUN_CMD) alembic -c ./massgov/pfml/db/migrations/alembic.ini revision --autogenerate -m "$(MIGRATE_MSG)"

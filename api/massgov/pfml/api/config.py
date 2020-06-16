@@ -10,6 +10,7 @@ from massgov.pfml.util.strings import split_str
 class AppConfig:
     environment: str
     port: int
+    enable_full_error_logs: bool
     cors_origins: List[str]
     db: db_config.DbConfig
 
@@ -18,6 +19,7 @@ def get_config() -> AppConfig:
     return AppConfig(
         environment=os.environ["ENVIRONMENT"],
         port=int(os.environ.get("PORT", 1550)),
+        enable_full_error_logs=os.environ.get("ENABLE_FULL_ERROR_LOGS", "0") == "1",
         cors_origins=split_str(os.environ.get("CORS_ORIGINS")),
         db=db_config.get_config(),
     )

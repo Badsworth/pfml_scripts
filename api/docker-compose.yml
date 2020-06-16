@@ -40,6 +40,7 @@ services:
       - .:/app:z
     environment:
       - ENVIRONMENT=local
+      - ENABLE_FULL_ERROR_LOGS=1
       - DB_HOST=mass-pfml-db
       - DB_NAME=pfml
       - DB_USERNAME=pfml
