@@ -134,15 +134,8 @@ class ApplicationRequest:
             ):
                 leave_schedule = self.update_leave_schedule(key, value)
             if key == "reason":
-                leave_reasons = (
-                    app.db_session_raw()
-                    .query(LeaveReason)
-                    .filter(LeaveReason.leave_reason_description == value)
-                    .all()
-                )
-
-                if len(leave_reasons) > 0:
-                    application.leave_reason_id = leave_reasons[0].leave_reason_id
+                if value is not None:
+                    application.leave_reason_id = LeaveReason.get_id(value)
                 continue
             if key == "reason_qualifier":
                 leave_reason_qualifiers = (

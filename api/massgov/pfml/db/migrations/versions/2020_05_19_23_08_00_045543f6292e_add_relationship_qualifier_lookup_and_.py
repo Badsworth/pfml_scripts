@@ -22,7 +22,7 @@ depends_on = None
 
 tables = (
     "lk_frequency_or_duration",
-    "lk_leave_reason",
+    #    "lk_leave_reason",
     "lk_leave_reason_qualifier",
     "lk_leave_type",
     "lk_notification_method",

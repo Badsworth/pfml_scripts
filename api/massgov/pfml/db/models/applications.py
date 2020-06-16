@@ -4,13 +4,18 @@ from sqlalchemy.orm import relationship
 
 from massgov.pfml.db.models.employees import Occupation, Status
 
+from ..lookup import LookupTable
 from .base import Base, uuid_gen
 
 
-class LeaveReason(Base):
+class LkLeaveReason(Base):
     __tablename__ = "lk_leave_reason"
     leave_reason_id = Column(Integer, primary_key=True, autoincrement=True)
     leave_reason_description = Column(Text)
+
+    def __init__(self, leave_reason_id, leave_reason_description):
+        self.leave_reason_id = leave_reason_id
+        self.leave_reason_description = leave_reason_description
 
 
 class LeaveReasonQualifier(Base):
@@ -89,7 +94,7 @@ class Application(Base):
     status = relationship(Status)
     occupation = relationship(Occupation)
     leave_type = relationship(LeaveType)
-    leave_reason = relationship(LeaveReason)
+    leave_reason = relationship(LkLeaveReason)
     leave_reason_qualifier = relationship(LeaveReasonQualifier)
     relationship_to_caregiver = relationship(RelationshipToCareGiver)
     relationship_qualifier = relationship(RelationshipQualifier)
@@ -161,3 +166,19 @@ class ReducedScheduleLeavePeriod(Base):
     tuesday_off_minutes = Column(Integer)
     wednesday_off_hours = Column(Integer)
     wednesday_off_minutes = Column(Integer)
+
+
+class LeaveReason(LookupTable):
+    model = LkLeaveReason
+    column_names = ("leave_reason_id", "leave_reason_description")
+
+    CARE_FOR_A_FAMILY_MEMBER = LkLeaveReason(1, "Care for a family member")
+    PREGNANCY_MATERNITY = LkLeaveReason(2, "Pregnancy/Maternity")
+    CHILD_BONDING = LkLeaveReason(3, "Child Bonding")
+    SERIOUS_HEALTH_CONDITION_EMPLOYEE = LkLeaveReason(4, "Serious Health Condition - Employee")
+
+
+def sync_lookup_tables(db_session):
+    """Synchronize lookup tables to the database."""
+    LeaveReason.sync_to_database(db_session)
+    db_session.commit()

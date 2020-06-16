@@ -5,6 +5,7 @@ import sqlalchemy
 from sqlalchemy.engine import Engine
 from sqlalchemy.orm import Session, scoped_session, sessionmaker
 
+import massgov.pfml.db.models
 import massgov.pfml.util.logging
 from massgov.pfml.db.config import DbConfig, get_config
 
@@ -23,12 +24,15 @@ def init(config: Optional[DbConfig] = None) -> scoped_session:
     )
     verify_ssl(conn_info)
 
-    # Explicitly commit sessions — usually with session_scope.
-    # Also disable expiry on commit, as we don't need to be strict on consistency within our routes. Once
-    # we've retrieved data from the database, we shouldn't make any extra requests to the db when grabbing existing attributes.
+    # Explicitly commit sessions — usually with session_scope. Also disable expiry on commit,
+    # as we don't need to be strict on consistency within our routes. Once we've retrieved data
+    # from the database, we shouldn't make any extra requests to the db when grabbing existing
+    # attributes.
     session_factory = scoped_session(
         sessionmaker(autocommit=False, expire_on_commit=False, bind=engine)
     )
+
+    massgov.pfml.db.models.init_lookup_tables(session_factory)
 
     return session_factory
 

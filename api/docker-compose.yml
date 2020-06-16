@@ -6,6 +6,7 @@ services:
     container_name: "mass-pfml-db"
     ports:
       - "5432:5432"
+    command: -c "log_lock_waits=on"
     environment:
       - POSTGRES_DB=pfml
       - POSTGRES_USER=pfml

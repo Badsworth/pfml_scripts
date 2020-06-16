@@ -38,16 +38,13 @@ def test_fs_path_for_s3(tmp_path):
 def dor_employer_lookups(test_db_session):
 
     # setup employer expected lookup values
-    business_address_type = AddressType(address_description="Business")
-    test_db_session.add(business_address_type)
-
     state = GeoState(geo_state_description="MA")
     test_db_session.add(state)
 
     country = Country(country_description="US")
     test_db_session.add(country)
 
-    return (business_address_type, state, country)
+    return (state, country)
 
 
 def test_employer_import(test_db_session, dor_employer_lookups):
@@ -75,9 +72,9 @@ def test_employer_import(test_db_session, dor_employer_lookups):
     )
     assert persisted_address is not None
 
-    business_address_type, state, country = dor_employer_lookups
+    state, country = dor_employer_lookups
     validate_employer_address_persistence(
-        employer_payload, persisted_address, business_address_type, state, country
+        employer_payload, persisted_address, AddressType.BUSINESS, state, country
     )
 
     assert report.created_employers_count == 1
@@ -86,7 +83,6 @@ def test_employer_import(test_db_session, dor_employer_lookups):
 
 
 def test_employer_update(test_db_session, dor_employer_lookups):
-
     # perform initial import
     new_employer_payload = test_data.get_new_employer()
     report = import_dor.ImportReport()
@@ -128,9 +124,9 @@ def test_employer_update(test_db_session, dor_employer_lookups):
     )
     assert persisted_address is not None
 
-    business_address_type, state, country = dor_employer_lookups
+    state, country = dor_employer_lookups
     validate_employer_address_persistence(
-        updated_employer_payload, persisted_address, business_address_type, state, country
+        updated_employer_payload, persisted_address, AddressType.BUSINESS, state, country
     )
 
     assert report.updated_employers_count == 1

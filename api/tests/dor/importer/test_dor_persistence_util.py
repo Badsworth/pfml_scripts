@@ -42,11 +42,6 @@ def test_get_address(test_db_session):
         util.get_address(test_db_session, uuid.uuid4())
 
 
-def test_get_business_address_type(test_db_session):
-    with pytest.raises(NoResultFound):
-        util.get_business_address_type(test_db_session)
-
-
 def test_find_state(test_db_session):
     with pytest.raises(NoResultFound):
         util.find_state(test_db_session, "MA")

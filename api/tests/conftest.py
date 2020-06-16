@@ -17,6 +17,9 @@ import pytest
 import massgov.pfml.api.app
 import massgov.pfml.api.employees
 import massgov.pfml.api.generate_fake_data as fake
+import massgov.pfml.util.logging
+
+logger = massgov.pfml.util.logging.get_logger("massgov.pfml.api.tests.conftest")
 
 
 @pytest.fixture
@@ -133,26 +136,6 @@ def test_applications(test_employee, test_db_session):
     return [created_application1, created_application2]
 
 
-# TODO(kevin): This needs to be removed eventually once we have
-# a separate, flexible mechanism for syncing lookup tables.
-@pytest.fixture
-def create_leave_reasons(test_db_session):
-    from massgov.pfml.db.models.applications import LeaveReason
-
-    values = [
-        "Care For A Family Member",
-        "Pregnancy/Maternity",
-        "Child Bonding",
-        "Serious Health Condition - Employee",
-    ]
-
-    for value in values:
-        reason = LeaveReason(leave_reason_description=value)
-        test_db_session.add(reason)
-
-    test_db_session.commit()
-
-
 @pytest.fixture
 def create_app_statuses(test_db_session):
     from massgov.pfml.db.models.employees import Status
@@ -198,10 +181,12 @@ def test_db_schema(monkeypatch):
             connection.execute(sql)
 
     exec_sql(f"CREATE SCHEMA IF NOT EXISTS {schema_name} AUTHORIZATION {db_test_user};")
+    logger.info("create schema %s", schema_name)
 
     yield schema_name
 
     exec_sql(f"DROP SCHEMA {schema_name} CASCADE;")
+    logger.info("drop schema %s", schema_name)
 
 
 @pytest.fixture
@@ -247,6 +232,18 @@ def test_db_via_migrations(test_db_schema):
 
 @pytest.fixture
 def test_db_session(test_db):
+    import massgov.pfml.db as db
+
+    db_session = db.init()
+
+    yield db_session
+
+    db_session.close()
+    db_session.remove()
+
+
+@pytest.fixture
+def test_db_other_session(test_db):
     import massgov.pfml.db as db
 
     db_session = db.init()

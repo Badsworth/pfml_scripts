@@ -30,7 +30,6 @@ def create_employer(db_session, employer_info):
     db_session.add(emp)
 
     try:
-        business_address_type = get_business_address_type(db_session)
         state = find_state(db_session, employer_info["employer_address_state"])
         country = find_country(db_session, "US")
     except (NoResultFound, MultipleResultsFound) as e:
@@ -38,7 +37,7 @@ def create_employer(db_session, employer_info):
         raise ValueError("Error trying to find address lookup values")
 
     address = Address(
-        address_type_id=business_address_type.address_type_id,
+        address_type_id=AddressType.BUSINESS.address_type_id,
         address_line_one=employer_info["employer_address_street"],
         city=employer_info["employer_address_city"],
         geo_state_id=state.geo_state_id,
@@ -203,13 +202,6 @@ def get_employer_address(db_session, employer_id):
 def get_address(db_session, address_id):
     address_row = db_session.query(Address).filter(Address.address_id == address_id).one()
     return address_row
-
-
-def get_business_address_type(db_session):
-    business_address_type = (
-        db_session.query(AddressType).filter(AddressType.address_description == "Business").one()
-    )
-    return business_address_type
 
 
 # TODO find the state by state_name after lookup is fully populated

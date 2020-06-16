@@ -12,13 +12,18 @@ from sqlalchemy import Boolean, Column, Date, DateTime, ForeignKey, Integer, Num
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 
+from ..lookup import LookupTable
 from .base import Base, uuid_gen
 
 
-class AddressType(Base):
+class LkAddressType(Base):
     __tablename__ = "lk_address_type"
     address_type_id = Column(Integer, primary_key=True, autoincrement=True)
     address_description = Column(Text)
+
+    def __init__(self, address_type_id, address_description):
+        self.address_type_id = address_type_id
+        self.address_description = address_description
 
 
 class GeoState(Base):
@@ -188,6 +193,8 @@ class Address(Base):
     geo_state_id = Column(Integer, ForeignKey("lk_geo_state.geo_state_id"))
     zip_code = Column(Text)
     country_id = Column(Integer, ForeignKey("lk_country.country_id"))
+
+    address_type = relationship(LkAddressType)
     employees = relationship("EmployeeAddress", back_populates="addresses", lazy="dynamic")
     employers = relationship("EmployerAddress", back_populates="addresses", lazy="dynamic")
     health_care_providers = relationship("HealthCareProviderAddress", back_populates="address")
@@ -268,3 +275,22 @@ class ImportLog(Base):
     report = Column(Text)
     start = Column(DateTime)
     end = Column(DateTime)
+
+
+# lk_address_type = LookupTable(
+#     AddressType, ("address_type_id", "address_description"), ((1, "Home"), (2, "Business"))
+# )
+
+
+class AddressType(LookupTable):
+    model = LkAddressType
+    column_names = ("address_type_id", "address_description")
+
+    HOME = LkAddressType(1, "Home")
+    BUSINESS = LkAddressType(2, "Business")
+
+
+def sync_lookup_tables(db_session):
+    """Synchronize lookup tables to the database."""
+    AddressType.sync_to_database(db_session)
+    db_session.commit()

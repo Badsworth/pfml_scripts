@@ -103,7 +103,7 @@ def test_application_patch(client, test_application):
     assert updated_last_name == "Perez"
 
 
-def test_application_patch_leave_reason(client, test_application, create_leave_reasons):
+def test_application_patch_leave_reason(client, test_application):
     application_id = test_application["application_id"]
 
     response = client.patch(
