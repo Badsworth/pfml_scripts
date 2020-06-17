@@ -36,7 +36,8 @@ exports.handler = async (event, _context) => {
     [
       {
         key: "Content-Security-Policy",
-        value: "default-src 'self' https:; base-uri 'none'; form-action 'none'",
+        value:
+          "default-src 'self' https:; base-uri 'none'; form-action 'none'; img-src 'self' blob:",
       },
     ],
 
