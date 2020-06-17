@@ -16,7 +16,6 @@ import massgov.pfml.dor.importer.lib.dor_persistence_util as dor_persistence_uti
 import massgov.pfml.util.files as file_util
 import massgov.pfml.util.logging as logging
 from massgov.pfml import db
-from massgov.pfml.db.models.employees import ImportLog
 from massgov.pfml.dor.importer.dor_file_formats import (
     EMPLOYEE_FORMAT,
     EMPLOYER_FILE_FORMAT,
@@ -180,6 +179,7 @@ def process_daily_import(path, employer_file, employee_file, decrypter):
 
     with db.session_scope(db_session_raw) as db_session:
         try:
+            report_log_entry = dor_persistence_util.create_import_log_entry(db_session, report)
             employers = parse_employer_file(path, employer_file, decrypter)
             employers_quarter_info, employees_info = parse_employee_file(
                 path, employee_file, decrypter
@@ -200,7 +200,14 @@ def process_daily_import(path, employer_file, employee_file, decrypter):
                 },
             )
 
-            import_to_db(db_session, employers, employers_quarter_info, employees_info, report)
+            import_to_db(
+                db_session,
+                employers,
+                employers_quarter_info,
+                employees_info,
+                report,
+                report_log_entry.import_log_id,
+            )
 
             # finalize report
             report.parsed_employers_count = parsed_employers_count
@@ -216,28 +223,39 @@ def process_daily_import(path, employer_file, employee_file, decrypter):
             logger.exception("Exception while processing")
             report.status = "error"
             report.end = datetime.now().isoformat()
+        finally:
+            logger.info("Attempting to update existing import log entry with latest report")
+            dor_persistence_util.update_import_log_entry(db_session, report_log_entry, report)
+            logger.info("Import log entry successfully updated")
 
-        # write report
-        write_report_to_db(db_session, report)
         # TODO determine if this is still necessary now that we have db logs
         # write_report_to_s3(bucket, report)
 
     return report
 
 
-def import_to_db(db_session, employers, employers_quarter_info, employees_info, report):
+def import_to_db(
+    db_session, employers, employers_quarter_info, employees_info, report, import_log_entry_id
+):
     """Process through parsed objects and persist into database"""
     logger.info("Starting import")
 
-    account_key_to_employer_id_map = import_employers(db_session, employers, report)
+    account_key_to_employer_id_map = import_employers(
+        db_session, employers, report, import_log_entry_id
+    )
     import_employees_and_wage_data(
-        db_session, account_key_to_employer_id_map, employers_quarter_info, employees_info, report,
+        db_session,
+        account_key_to_employer_id_map,
+        employers_quarter_info,
+        employees_info,
+        report,
+        import_log_entry_id,
     )
 
     logger.info("Finished import")
 
 
-def import_employers(db_session, employers, report):
+def import_employers(db_session, employers, report, import_log_entry_id):
     # look through all employers
     """Import employers into db"""
     logger.info("Importing employers")
@@ -251,14 +269,18 @@ def import_employers(db_session, employers, report):
         )
 
         if existing_employer is None:
-            created_employer = dor_persistence_util.create_employer(db_session, employer_info)
+            created_employer = dor_persistence_util.create_employer(
+                db_session, employer_info, import_log_entry_id
+            )
 
             account_key_to_employer_id_map[account_key] = created_employer.employer_id
             report.created_employers_count = report.created_employers_count + 1
         else:
             updated_date = employer_info["updated_date"]
             if updated_date > existing_employer.dor_updated_date:
-                dor_persistence_util.update_employer(db_session, existing_employer, employer_info)
+                dor_persistence_util.update_employer(
+                    db_session, existing_employer, employer_info, import_log_entry_id
+                )
 
                 report.updated_employer_ids.append(str(existing_employer.employer_id))
             else:
@@ -282,7 +304,12 @@ def import_employers(db_session, employers, report):
 
 
 def import_employees_and_wage_data(
-    db_session, account_key_to_employer_id_map, employers_quarter_info, employees_info, report
+    db_session,
+    account_key_to_employer_id_map,
+    employers_quarter_info,
+    employees_info,
+    report,
+    import_log_entry_id,
 ):
     """Import employees and wage information"""
     logger.info("Importing employee information")
@@ -309,13 +336,17 @@ def import_employees_and_wage_data(
         existing_employee = dor_persistence_util.get_employee_by_ssn(db_session, ssn)
 
         if existing_employee is None:
-            created_employee = dor_persistence_util.create_employee(db_session, employee_info)
+            created_employee = dor_persistence_util.create_employee(
+                db_session, employee_info, import_log_entry_id
+            )
 
             employee_id_by_ssn[ssn] = created_employee.employee_id
             report.created_employees_count = report.created_employees_count + 1
         else:
             if employee_amended_flag_map[account_key] is True:
-                dor_persistence_util.update_employee(db_session, existing_employee, employee_info)
+                dor_persistence_util.update_employee(
+                    db_session, existing_employee, employee_info, import_log_entry_id
+                )
 
                 report.updated_employee_ids.append(str(existing_employee.employee_id))
             else:
@@ -352,7 +383,7 @@ def import_employees_and_wage_data(
 
         if existing_wage is None:
             dor_persistence_util.create_wages_and_contributions(
-                db_session, employee_info, employee_id, employer_id
+                db_session, employee_info, employee_id, employer_id, import_log_entry_id
             )
 
             report.created_wages_and_contributions_count = (
@@ -362,7 +393,7 @@ def import_employees_and_wage_data(
             ameneded_flag_key = "{}-{}".format(account_key, filing_period.strftime("%Y%m%d"))
             if wage_data_amended_flag_map[ameneded_flag_key] is True:
                 dor_persistence_util.update_wages_and_contributions(
-                    db_session, existing_wage, employee_info
+                    db_session, existing_wage, employee_info, import_log_entry_id
                 )
                 report.updated_wages_and_contributions_ids.append(
                     str(existing_wage.wage_and_contribution_id)
@@ -463,21 +494,6 @@ def move_file_to_processed(bucket, file_to_copy):
     s3.copy_object(
         Bucket=bucket_name, CopySource=copy_source, Key=copy_destination,
     )
-
-
-def write_report_to_db(db_session, report):
-    """Write report of import to database"""
-    logger.info("Saving import report in log")
-    import_log = ImportLog(
-        source="DOR",
-        import_type="Initial",  # Update this from invoke payload
-        status=report.status,
-        report=json.dumps(asdict(report), indent=2),
-        start=report.start,
-        end=report.end,
-    )
-    db_session.add(import_log)
-    logger.info("Finished saving import report in log")
 
 
 def write_report_to_s3(bucket, report):

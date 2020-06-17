@@ -123,6 +123,7 @@ class Employer(Base):
         "WagesAndContributions", back_populates="employer", lazy="dynamic"
     )
     addresses = relationship("EmployerAddress", back_populates="employers", lazy="dynamic")
+    latest_import_log_id = Column(Integer, ForeignKey("import_log.import_log_id"))
 
 
 class PaymentInformation(Base):
@@ -159,6 +160,7 @@ class Employee(Base):
         "WagesAndContributions", back_populates="employee", lazy="dynamic"
     )
     addresses = relationship("EmployeeAddress", back_populates="employees", lazy="dynamic")
+    latest_import_log_id = Column(Integer, ForeignKey("import_log.import_log_id"))
 
 
 class Claim(Base):
@@ -264,6 +266,7 @@ class WagesAndContributions(Base):
     employer_med_contribution = Column(Numeric(asdecimal=True), nullable=False)
     employee_fam_contribution = Column(Numeric(asdecimal=True), nullable=False)
     employer_fam_contribution = Column(Numeric(asdecimal=True), nullable=False)
+    latest_import_log_id = Column(Integer, ForeignKey("import_log.import_log_id"))
 
 
 class ImportLog(Base):

@@ -17,7 +17,7 @@ class AppConfig:
 
 def get_config() -> AppConfig:
     return AppConfig(
-        environment=os.environ["ENVIRONMENT"],
+        environment=str(os.environ.get("ENVIRONMENT")),
         port=int(os.environ.get("PORT", 1550)),
         enable_full_error_logs=os.environ.get("ENABLE_FULL_ERROR_LOGS", "0") == "1",
         cors_origins=split_str(os.environ.get("CORS_ORIGINS")),

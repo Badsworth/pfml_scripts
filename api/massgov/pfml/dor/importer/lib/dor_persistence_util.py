@@ -1,3 +1,6 @@
+import json
+from dataclasses import asdict
+
 from sqlalchemy.orm.exc import MultipleResultsFound, NoResultFound
 
 import massgov.pfml.util.logging as logging
@@ -9,13 +12,14 @@ from massgov.pfml.db.models.employees import (
     Employer,
     EmployerAddress,
     GeoState,
+    ImportLog,
     WagesAndContributions,
 )
 
 logger = logging.get_logger(__name__)
 
 
-def create_employer(db_session, employer_info):
+def create_employer(db_session, employer_info, import_log_entry_id):
     emp = Employer(
         account_key=employer_info["account_key"],
         employer_fein=employer_info["fein"],
@@ -26,6 +30,7 @@ def create_employer(db_session, employer_info):
         exemption_commence_date=employer_info["exemption_commence_date"],
         exemption_cease_date=employer_info["exemption_cease_date"],
         dor_updated_date=employer_info["updated_date"],
+        latest_import_log_id=import_log_entry_id,
     )
     db_session.add(emp)
 
@@ -56,7 +61,7 @@ def create_employer(db_session, employer_info):
     return emp
 
 
-def update_employer(db_session, existing_employer, employer_info):
+def update_employer(db_session, existing_employer, employer_info, import_log_entry_id):
     existing_employer.employer_name = employer_info["employer_name"]
     existing_employer.employer_dba = employer_info["employer_dba"]
     existing_employer.family_exemption = employer_info["family_exemption"]
@@ -64,6 +69,7 @@ def update_employer(db_session, existing_employer, employer_info):
     existing_employer.exemption_commence_date = employer_info["exemption_commence_date"]
     existing_employer.exemption_cease_date = employer_info["exemption_cease_date"]
     existing_employer.dor_updated_date = employer_info["updated_date"]
+    existing_employer.latest_import_log_id = import_log_entry_id
 
     try:
         existing_employer_address = get_employer_address(db_session, existing_employer.employer_id)
@@ -99,11 +105,12 @@ def update_employer(db_session, existing_employer, employer_info):
     return existing_employer
 
 
-def create_employee(db_session, employee_info):
+def create_employee(db_session, employee_info, import_log_entry_id):
     employee = Employee(
         tax_identifier=employee_info["employee_ssn"],
         first_name=employee_info["employee_first_name"],
         last_name=employee_info["employee_last_name"],
+        latest_import_log_id=import_log_entry_id,
     )
     db_session.add(employee)
 
@@ -113,14 +120,17 @@ def create_employee(db_session, employee_info):
     return employee
 
 
-def update_employee(db_session, existing_employee, employee_info):
+def update_employee(db_session, existing_employee, employee_info, import_log_entry_id):
     existing_employee.first_name = employee_info["employee_first_name"]
     existing_employee.last_name = employee_info["employee_last_name"]
+    existing_employee.latest_import_log_id = import_log_entry_id
 
     return existing_employee
 
 
-def create_wages_and_contributions(db_session, employee_wage_info, employee_id, employer_id):
+def create_wages_and_contributions(
+    db_session, employee_wage_info, employee_id, employer_id, import_log_entry_id
+):
     wage = WagesAndContributions(
         account_key=employee_wage_info["account_key"],
         filing_period=employee_wage_info["filing_period"],
@@ -134,6 +144,7 @@ def create_wages_and_contributions(db_session, employee_wage_info, employee_id, 
         employer_med_contribution=employee_wage_info["employer_medical"],
         employee_fam_contribution=employee_wage_info["employee_family"],
         employer_fam_contribution=employee_wage_info["employer_family"],
+        latest_import_log_id=import_log_entry_id,
     )
     db_session.add(wage)
 
@@ -141,7 +152,7 @@ def create_wages_and_contributions(db_session, employee_wage_info, employee_id, 
 
 
 def update_wages_and_contributions(
-    db_session, existing_wages_and_contributions, employee_wage_info
+    db_session, existing_wages_and_contributions, employee_wage_info, import_log_entry_id
 ):
     existing_wages_and_contributions.is_independent_contractor = employee_wage_info[
         "independent_contractor"
@@ -161,8 +172,41 @@ def update_wages_and_contributions(
     existing_wages_and_contributions.employer_fam_contribution = employee_wage_info[
         "employer_family"
     ]
+    existing_wages_and_contributions.latest_import_log_id = import_log_entry_id
 
     return existing_wages_and_contributions
+
+
+def create_import_log_entry(db_session, report):
+    """Creating a a report log entry in the database"""
+    logger.info("Adding report to import log")
+    import_log = ImportLog(
+        source="DOR",
+        import_type="Initial",
+        status=report.status,
+        report=json.dumps(asdict(report), indent=2),
+        start=report.start,
+        end=report.end,
+    )
+    db_session.add(import_log)
+    db_session.flush()
+    db_session.refresh(import_log)
+    logger.info("Added report to import log")
+    return import_log
+
+
+def update_import_log_entry(db_session, existing_import_log, report):
+    """Updating an existing import log entry with the supplied report"""
+    logger.info("Updating report in import log")
+    existing_import_log.status = report.status
+    existing_import_log.report = json.dumps(asdict(report), indent=2)
+    existing_import_log.start = report.start
+    existing_import_log.end = report.end
+    db_session.add(existing_import_log)
+    db_session.flush()
+    db_session.refresh(existing_import_log)
+    logger.info("Finished saving import report in log")
+    return existing_import_log
 
 
 # == Query Helpers ==
