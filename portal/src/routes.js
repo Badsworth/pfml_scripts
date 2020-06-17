@@ -8,7 +8,9 @@ const routes = {
     claims: "/applications",
   },
   claims: {
+    checklist: "/claims/checklist",
     confirm: "/claims/confirm",
+    dashboard: "/",
     dateOfBirth: "/claims/date-of-birth",
     duration: "/claims/duration",
     leaveDates: "/claims/leave-dates",

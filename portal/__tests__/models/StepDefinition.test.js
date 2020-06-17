@@ -38,4 +38,15 @@ describe("Step Model", () => {
       expect(stepDef.initialPage).toEqual("path/to/page/1");
     });
   });
+
+  it("throws error if dependsOn includes an object other than a StepDefinition", () => {
+    const test = () =>
+      new StepDefinition({
+        name,
+        pages,
+        dependsOn: [new StepDefinition(), {}],
+      });
+
+    expect(test).toThrowError();
+  });
 });

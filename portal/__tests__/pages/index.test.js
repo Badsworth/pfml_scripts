@@ -37,7 +37,7 @@ describe("Index", () => {
     });
   });
 
-  it("creates claim and redirects to claims.name", async () => {
+  it("creates claim and redirects to claims.checklist", async () => {
     const wrapper = shallow(<Index appLogic={appLogic} />);
 
     await wrapper
@@ -46,7 +46,7 @@ describe("Index", () => {
 
     expect(appLogic.createClaim).toHaveBeenCalled();
     expect(mockRouter.push).toHaveBeenCalledWith(
-      expect.stringContaining(`${routes.claims.name}?claim_id=`)
+      expect.stringContaining(`${routes.claims.checklist}?claim_id=`)
     );
   });
 });

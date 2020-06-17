@@ -7,6 +7,18 @@ import BaseModel from "./BaseModel";
  * @returns {StepDefinition}
  */
 class StepDefinition extends BaseModel {
+  constructor(properties) {
+    super(properties);
+
+    this.dependsOn.forEach((stepDefinition) => {
+      if (!(stepDefinition instanceof StepDefinition)) {
+        throw new Error(
+          "StepDefinition.dependsOn must be an array of StepDefinitions"
+        );
+      }
+    });
+  }
+
   get defaults() {
     return {
       // array of StepDefinitions this StepDefinition depends on

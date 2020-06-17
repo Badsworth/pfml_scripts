@@ -74,18 +74,5 @@ export const stepDefinitions = [
 ];
 
 export const createSteps = (claim, warnings) => {
-  // Store newly created steps in memory so they can
-  // be referenced in subsequent steps' `dependsOn` property
-  const stepMap = stepDefinitions.reduce((result, stepDefinition) => {
-    result[stepDefinition.name] = new Step({
-      stepDefinition,
-      claim,
-      warnings,
-      dependsOn: stepDefinition.dependsOn.map(
-        (dependedOn) => result[dependedOn.name]
-      ),
-    });
-  }, {});
-
-  return Object.values(stepMap);
+  return Step.createStepsFromDefinitions(stepDefinitions, claim, warnings);
 };

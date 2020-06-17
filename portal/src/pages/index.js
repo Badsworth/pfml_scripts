@@ -23,7 +23,7 @@ const Index = ({ appLogic, user }) => {
     const claim = await appLogic.createClaim();
 
     // TODO appLogic will handle routing after claim creation
-    const route = routeWithParams("claims.name", {
+    const route = routeWithParams("claims.checklist", {
       claim_id: claim.application_id,
     });
 

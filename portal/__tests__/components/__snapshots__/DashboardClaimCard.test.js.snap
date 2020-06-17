@@ -17,7 +17,7 @@ exports[`DashboardClaimCard renders a card for the given claim 1`] = `
   </Heading>
   <ButtonLink
     className="margin-top-1"
-    href="/claims/name?claim_id=mock-claim-id"
+    href="/claims/checklist?claim_id=mock-claim-id"
   >
     Finish your claim
   </ButtonLink>

@@ -49,6 +49,31 @@ const pages = {
       "Paid Family and Medical Leave is a state-offered benefit for anyone who works in Massachusetts and is eligible to take up to 26 weeks of paid leave for medical or family reasons.",
     siteTitle: "Paid Family and Medical Leave (PFML) | Mass.gov",
   },
+  claimsChecklist: {
+    backButtonLabel: "Back to Dashboard",
+    completedText: "Completed",
+    editText: "Edit",
+    resumeText: "Resume",
+    screenReaderNumberPrefix: "Step",
+    startText: "Start",
+    stepHTMLDescription_employerInformation:
+      "We’ll ask you for:<ul class='usa-list'><li>The date you told your employer you were taking leave.</li></ul>",
+    stepHTMLDescription_leaveDetails:
+      "You will need:<ul class='usa-list'><li>A completed Healthcare Provider Form if you are taking medical leave because you can’t work due to an injury, illness, or pregnancy.</li></ul>",
+    stepHTMLDescription_otherLeave:
+      "We’ll ask you for:<ul class='usa-list'><li>Time off for qualifying condition since January 1, 2021.</li><li>If you have or will receive Unemployment Insurance or Worker’s Compensation.</li><li>If you have or will file under the Family and Medical Leave Act (FMLA).</li></ul>",
+    stepHTMLDescription_payment:
+      "You will need:<ul class='usa-list'><li>Your bank account information, if you want to be paid through Direct Deposit.</li></ul>",
+    stepHTMLDescription_verifyId:
+      "You will need:<ul class='usa-list'><li>Proof of your identity, like a driver’s license. See the full list of accepted identity documents.</li><li>Proof of your identity, like a driver’s license. See the full list of accepted identity documents.</li><ul>",
+    stepListTitle: "Create a new application",
+    stepTitle_employerInformation: "Enter employment information",
+    stepTitle_leaveDetails: "Enter leave details",
+    stepTitle_otherLeave: "Report other leave and benefits",
+    stepTitle_payment: "Add payment information",
+    stepTitle_verifyId: "Verify your identity",
+    submitButtonText: "Review and submit application",
+  },
   claimsConfirm: {
     explanation1:
       "We use this application to determine the leave time and benefit amount you will receive.",

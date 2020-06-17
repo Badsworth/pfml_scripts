@@ -1,4 +1,5 @@
 import BaseModel from "./BaseModel";
+import { createRouteWithQuery } from "../utils/routeWithParams";
 import { get } from "lodash";
 
 const fieldHasValue = (fieldPath, formState) => {
@@ -36,7 +37,9 @@ export default class Step extends BaseModel {
 
   // page user is navigated to when clicking into step
   get href() {
-    return this.stepDefinition.initialPage;
+    return createRouteWithQuery(this.stepDefinition.initialPage, {
+      claim_id: this.claim.application_id,
+    });
   }
 
   get status() {
@@ -71,8 +74,37 @@ export default class Step extends BaseModel {
   get isDisabled() {
     if (!this.dependsOn.length) return false;
 
-    return this.stepDefinition.dependsOn.some(
-      (dependedOnStep) => !dependedOnStep.isComplete
-    );
+    return this.dependsOn.some((dependedOnStep) => !dependedOnStep.isComplete);
   }
+
+  /**
+   * Create an array of Steps from their definitions
+   * @param {StepDefinition[]} stepDefinitions - array of stepDefinitions in the correct order
+   * @param {Claim} claim - a claim
+   * @param {Array} warnings - array of validation warnings returned from API
+   * @returns {Step[]}
+   */
+  static createStepsFromDefinitions = (stepDefinitions, claim, warnings) => {
+    // Store newly created steps in memory so they can
+    // be referenced in subsequent steps' `dependsOn` property
+    const stepMap = stepDefinitions.reduce((result, stepDefinition) => {
+      result[stepDefinition.name] = new Step({
+        stepDefinition,
+        claim,
+        warnings,
+        dependsOn: stepDefinition.dependsOn.map((dependedOn) => {
+          const dependedOnStep = result[dependedOn.name];
+          if (!dependedOnStep)
+            throw new Error(
+              `Could not find ${dependedOn.name} step in provided StepDefinitions. Make sure it is defined before ${stepDefinition.name} in your array.`
+            );
+          return dependedOnStep;
+        }),
+      });
+
+      return result;
+    }, {});
+
+    return Object.values(stepMap);
+  };
 }

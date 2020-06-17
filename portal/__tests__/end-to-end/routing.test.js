@@ -46,7 +46,7 @@ describe("E2E: Routing", () => {
         await newClaimButton.click();
         await page.waitForNavigation();
 
-        await expect(page.url()).toMatch(`${rootUrl}/claims/name`);
+        await expect(page.url()).toMatch(`${rootUrl}/claims/checklist`);
       });
     });
   });

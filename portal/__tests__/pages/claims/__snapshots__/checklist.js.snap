@@ -1,0 +1,94 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Checklist renders component 1`] = `
+<div
+  className="measure-6"
+>
+  <BackButton
+    href="/"
+    label="Back to Dashboard"
+  />
+  <StepList
+    completedText="Completed"
+    editText="Edit"
+    resumeText="Resume"
+    screenReaderNumberPrefix="Step"
+    startText="Start"
+    submitButtonText="Review and submit application"
+    submitPage="/claims/review?claim_id=mock-application-id"
+    submitPageDisabled={false}
+    title="Create a new application"
+  >
+    <Step
+      key="verifyId"
+      status="completed"
+      stepHref="/claims/name?claim_id=mock-application-id"
+      title="Verify your identity"
+    >
+      <span
+        dangerouslySetInnerHTML={
+          Object {
+            "__html": "You will need:<ul class='usa-list'><li>Proof of your identity, like a driver’s license. See the full list of accepted identity documents.</li><li>Proof of your identity, like a driver’s license. See the full list of accepted identity documents.</li><ul>",
+          }
+        }
+      />
+    </Step>
+    <Step
+      key="leaveDetails"
+      status="completed"
+      stepHref="/claims/leave-reason?claim_id=mock-application-id"
+      title="Enter leave details"
+    >
+      <span
+        dangerouslySetInnerHTML={
+          Object {
+            "__html": "You will need:<ul class='usa-list'><li>A completed Healthcare Provider Form if you are taking medical leave because you can’t work due to an injury, illness, or pregnancy.</li></ul>",
+          }
+        }
+      />
+    </Step>
+    <Step
+      key="employerInformation"
+      status="completed"
+      stepHref="/claims/notified-employer?claim_id=mock-application-id"
+      title="Enter employment information"
+    >
+      <span
+        dangerouslySetInnerHTML={
+          Object {
+            "__html": "We’ll ask you for:<ul class='usa-list'><li>The date you told your employer you were taking leave.</li></ul>",
+          }
+        }
+      />
+    </Step>
+    <Step
+      key="otherLeave"
+      status="completed"
+      stepHref="#?claim_id=mock-application-id"
+      title="Report other leave and benefits"
+    >
+      <span
+        dangerouslySetInnerHTML={
+          Object {
+            "__html": "We’ll ask you for:<ul class='usa-list'><li>Time off for qualifying condition since January 1, 2021.</li><li>If you have or will receive Unemployment Insurance or Worker’s Compensation.</li><li>If you have or will file under the Family and Medical Leave Act (FMLA).</li></ul>",
+          }
+        }
+      />
+    </Step>
+    <Step
+      key="payment"
+      status="completed"
+      stepHref="#?claim_id=mock-application-id"
+      title="Add payment information"
+    >
+      <span
+        dangerouslySetInnerHTML={
+          Object {
+            "__html": "You will need:<ul class='usa-list'><li>Your bank account information, if you want to be paid through Direct Deposit.</li></ul>",
+          }
+        }
+      />
+    </Step>
+  </StepList>
+</div>
+`;

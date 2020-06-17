@@ -1,5 +1,5 @@
 import React, { Children, cloneElement } from "react";
-import Button from "./Button";
+import ButtonLink from "./ButtonLink";
 import PropTypes from "prop-types";
 import Step from "./Step";
 import Title from "./Title";
@@ -32,14 +32,14 @@ const StepList = (props) => {
     <div>
       <Title>{props.title}</Title>
       {children}
-      <Button
+      <ButtonLink
         className="margin-top-4"
-        onClick={props.onSubmit}
-        disabled={props.submitDisabled}
+        href={props.submitPage}
+        disabled={props.submitPageDisabled}
         name="submit-list"
       >
         {props.submitButtonText}
-      </Button>
+      </ButtonLink>
     </div>
   );
 };
@@ -54,14 +54,13 @@ StepList.propTypes = {
    */
   submitButtonText: PropTypes.string.isRequired,
   /**
-   * If true, button is disabled and onSubmit callback is not
-   * called when the button is clicked.
+   * Disable ability for user to click through to submit page
    */
-  submitDisabled: PropTypes.bool,
+  submitPageDisabled: PropTypes.bool,
   /**
-   * Handler for submit button click.
+   * Route to page where user can review / submit data.
    */
-  onSubmit: PropTypes.func.isRequired,
+  submitPage: PropTypes.string.isRequired,
   /**
    * A single Step element or an array of Step elements
    */

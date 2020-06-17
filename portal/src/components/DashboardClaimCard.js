@@ -25,7 +25,7 @@ function DashboardClaimCard(props) {
 
       <ButtonLink
         className="margin-top-1"
-        href={routeWithParams("claims.name", {
+        href={routeWithParams("claims.checklist", {
           claim_id: claim.application_id,
         })}
       >

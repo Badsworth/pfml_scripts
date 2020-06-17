@@ -19,12 +19,12 @@ exports[`StepList renders component 1`] = `
   >
     Step Description
   </Step>
-  <Button
+  <ButtonLink
     className="margin-top-4"
+    href="path/to/submit/page"
     name="submit-list"
-    onClick={[MockFunction]}
   >
     Submit
-  </Button>
+  </ButtonLink>
 </div>
 `;

@@ -1,7 +1,7 @@
-import { mount, shallow } from "enzyme";
 import React from "react";
 import Step from "../../src/components/Step";
 import StepList from "../../src/components/StepList";
+import { shallow } from "enzyme";
 
 describe("StepList", () => {
   let props;
@@ -10,7 +10,7 @@ describe("StepList", () => {
     props = {
       title: "Step List",
       submitButtonText: "Submit",
-      onSubmit: jest.fn(),
+      submitPage: "path/to/submit/page",
       startText: "Start",
       resumeText: "Resume",
       completedText: "Completed",
@@ -64,35 +64,19 @@ describe("StepList", () => {
     expect(steps.get(1).props.editText).toEqual(props.editText);
   });
 
-  it("handles submit", () => {
-    const wrapper = shallow(
-      <StepList {...props}>
-        <Step title="Step 1" stepHref="#" status="not_started">
-          Step Description
-        </Step>
-      </StepList>
-    );
-
-    wrapper.find({ name: "submit-list" }).simulate("click");
-
-    expect(props.onSubmit).toHaveBeenCalled();
-  });
-
   describe("when submitDisabled is true", () => {
-    it("does not call onSubmit", () => {
+    it("disables button link", () => {
       // must mount so disabled attribute
       // can be passed to actual button element
-      const wrapper = mount(
-        <StepList {...props} submitDisabled>
+      const wrapper = shallow(
+        <StepList {...props} submitPageDisabled>
           <Step title="Step 1" stepHref="#" status="not_started">
             Step Description
           </Step>
         </StepList>
       );
 
-      wrapper.find("button[name='submit-list']").simulate("click");
-
-      expect(props.onSubmit).toHaveBeenCalledTimes(0);
+      expect(wrapper.find("ButtonLink").prop("disabled")).toBe(true);
     });
   });
 });
