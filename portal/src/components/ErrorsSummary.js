@@ -45,6 +45,7 @@ function ErrorsSummary(props) {
 
   return (
     <Alert
+      className="margin-bottom-3"
       heading={t("components.errorsSummary.genericHeading", {
         count: errors.length,
       })}

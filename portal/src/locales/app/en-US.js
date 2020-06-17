@@ -193,6 +193,14 @@ const pages = {
     tagInProgress: "In Progress",
     title: "Dashboard",
   },
+  login: {
+    createAccountLink: "create an account",
+    forgotPasswordLink: "Forgot your password?",
+    loginButton: "Log in",
+    passwordLabel: "Password",
+    title: "Log in to get started",
+    usernameLabel: "Email address",
+  },
 };
 
 const components = {

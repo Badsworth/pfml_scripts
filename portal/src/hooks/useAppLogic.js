@@ -1,6 +1,7 @@
+import useAuthLogic from "./useAuthLogic";
 import useClaimsLogic from "./useClaimsLogic";
 
-const useAppLogic = ({ user }) => {
+const useAppLogic = ({ user, setAppErrors }) => {
   // State representing the current page's url.
   // This should be updated on route changes
   // TODO write method for nextPage based on current page
@@ -22,9 +23,12 @@ const useAppLogic = ({ user }) => {
     submitClaim,
   } = useClaimsLogic({ user });
 
+  const { login } = useAuthLogic({ setAppErrors });
+
   return {
     claims,
     loadClaims,
+    login,
     createClaim,
     updateClaim,
     submitClaim,

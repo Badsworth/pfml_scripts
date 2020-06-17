@@ -4,7 +4,7 @@ import useAppLogic from "../../src/hooks/useAppLogic";
 
 describe("useAppLogic", () => {
   it("returns app state and getter and setter methods", () => {
-    let claims, createClaim, loadClaims, rest, submitClaim, updateClaim;
+    let claims, createClaim, loadClaims, login, rest, submitClaim, updateClaim;
     const user = new User();
 
     testHook(() => {
@@ -12,6 +12,7 @@ describe("useAppLogic", () => {
         claims,
         createClaim,
         loadClaims,
+        login,
         submitClaim,
         updateClaim,
         ...rest
@@ -20,6 +21,7 @@ describe("useAppLogic", () => {
 
     expect(claims).toBeNull();
     expect(loadClaims).toBeInstanceOf(Function);
+    expect(login).toBeInstanceOf(Function);
     expect(createClaim).toBeInstanceOf(Function);
     expect(updateClaim).toBeInstanceOf(Function);
     expect(submitClaim).toBeInstanceOf(Function);

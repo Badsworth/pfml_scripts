@@ -26,6 +26,11 @@ const routes = {
     uploadOtherId: "/claims/upload-other-id",
     uploadStateId: "/claims/upload-state-id",
   },
+  login: "/login",
+  createAccount: "/create-account",
+  forgotPassword: "/forgot-password",
+  resetPassword: "/reset-password",
+  verifyAccount: "/verify-account",
 };
 
 export default routes;

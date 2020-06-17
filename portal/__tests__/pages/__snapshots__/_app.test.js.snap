@@ -16,6 +16,7 @@ exports[`App when a user IS authenticated renders the page component 1`] = `
       "claims": null,
       "createClaim": [Function],
       "loadClaims": [Function],
+      "login": [Function],
       "submitClaim": [Function],
       "updateClaim": [Function],
     }

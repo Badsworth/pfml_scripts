@@ -50,7 +50,7 @@ export const App = ({
   // are rendered by Authenticator
   const [authState, setAuthState] = useState(initialAuthState);
 
-  const appLogic = useAppLogic({ user });
+  const appLogic = useAppLogic({ user, setAppErrors });
 
   // Global UI state, such as whether to display the loading indicator
   const [ui, setUI] = useState({ isLoading: false });
@@ -73,6 +73,7 @@ export const App = ({
    * Event handler for when a page route is transitioning
    */
   const handleRouteChangeStart = () => {
+    setAppErrors([]);
     setUI({ ...ui, isLoading: true });
   };
 

@@ -10,9 +10,13 @@ import classnames from "classnames";
  */
 const Alert = React.forwardRef(
   ({ role = "region", state = "error", ...props }, ref) => {
-    const classes = classnames(`usa-alert usa-alert--${state}`, {
-      "usa-alert--no-icon": props.noIcon,
-    });
+    const classes = classnames(
+      `usa-alert usa-alert--${state}`,
+      {
+        "usa-alert--no-icon": props.noIcon,
+      },
+      props.className
+    );
     return (
       <div className={classes} ref={ref} tabIndex="-1">
         <div className="usa-alert__body" role={role}>
@@ -29,6 +33,8 @@ const Alert = React.forwardRef(
 );
 
 Alert.propTypes = {
+  /** Additional classNames to add */
+  className: PropTypes.string,
   /** Error message */
   children: PropTypes.node.isRequired,
   /** Sets the 'no-icon' style */

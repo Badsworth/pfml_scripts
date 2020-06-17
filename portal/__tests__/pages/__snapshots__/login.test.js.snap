@@ -1,0 +1,57 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Login renders the empty page 1`] = `
+<form
+  className="usa-form usa-form--large"
+  onSubmit={[Function]}
+>
+  <Title>
+    Log in to get started
+  </Title>
+  <InputText
+    label="Email address"
+    name="username"
+    onChange={[Function]}
+    smallLabel={true}
+    type="email"
+    value=""
+  />
+  <InputText
+    label="Password"
+    name="password"
+    onChange={[Function]}
+    smallLabel={true}
+    type="password"
+    value=""
+  />
+  <div
+    className="margin-top-1"
+  >
+    <Link
+      href="/forgot-password"
+    >
+      <a>
+        Forgot your password?
+      </a>
+    </Link>
+  </div>
+  <Button
+    type="submit"
+  >
+    Log in
+  </Button>
+  <div
+    className="margin-top-1"
+  >
+    <Link
+      href="/create-account"
+    >
+      <a
+        className="text-bold"
+      >
+        create an account
+      </a>
+    </Link>
+  </div>
+</form>
+`;

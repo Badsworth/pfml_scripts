@@ -36,6 +36,7 @@ describe("ErrorsSummary", () => {
 
       expect(wrapper).toMatchInlineSnapshot(`
         <Alert
+          className="margin-bottom-3"
           heading="An error was encountered"
           role="alert"
         >
