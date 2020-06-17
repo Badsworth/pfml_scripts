@@ -51,4 +51,13 @@ describe("ButtonLink", () => {
       expect(anchor.hasClass("custom-class")).toBe(true);
     });
   });
+
+  describe("when disabled is true", () => {
+    it("does not render a Link and adds disabled style", () => {
+      const { wrapper } = render({ disabled: true });
+
+      expect(wrapper.find("span")).toHaveLength(1);
+      expect(wrapper.find("a").hasClass("disabled")).toBe(true);
+    });
+  });
 });

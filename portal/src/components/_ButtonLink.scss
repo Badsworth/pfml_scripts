@@ -1,0 +1,4 @@
+.usa-button.disabled {
+  // see https://github.com/uswds/uswds/blob/44a9e68cf397fc1a8c9f46361dfe2c470a5c7309/src/stylesheets/elements/_buttons.scss#L50
+  @include button-disabled;
+}

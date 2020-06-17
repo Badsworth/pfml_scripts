@@ -21,4 +21,24 @@ describe("<BackButton>", () => {
       expect(spy).toHaveBeenCalledTimes(1);
     });
   });
+
+  describe("when label prop is defined", () => {
+    it("sets back button label", () => {
+      const label = "Back to Dashboard";
+      const wrapper = shallow(<BackButton label={label} />);
+
+      expect(wrapper.dive().text()).toEqual(label);
+    });
+  });
+
+  describe("when href prop is defined", () => {
+    it("renders button link", () => {
+      const wrapper = shallow(<BackButton href="#" />);
+
+      expect(wrapper.name()).toBe("ButtonLink");
+      const link = wrapper.dive().dive();
+      expect(link.text()).toBe("Back");
+      expect(link.prop("href")).toEqual("#");
+    });
+  });
 });

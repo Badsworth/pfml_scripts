@@ -11,6 +11,7 @@
 @include usa-headings-styles;
 
 // Custom PFML components
+@import "../src/components/ButtonLink";
 @import "../src/components/Details";
 @import "../src/components/FileCard";
 @import "../src/components/FileCardList";

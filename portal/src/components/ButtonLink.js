@@ -11,17 +11,24 @@ const ButtonLink = (props) => {
   const classes = classnames(
     "usa-button",
     props.className,
-    props.variation ? `usa-button--${props.variation}` : ""
+    props.variation ? `usa-button--${props.variation}` : "",
+    { disabled: props.disabled }
   );
 
+  const Component = props.disabled ? "span" : Link;
+
   return (
-    <Link href={props.href}>
+    <Component href={props.href}>
       <a className={classes}>{props.children}</a>
-    </Link>
+    </Component>
   );
 };
 
 ButtonLink.propTypes = {
+  /**
+   * Disable button click
+   */
+  disabled: PropTypes.bool,
   /**
    * Button text.
    */
@@ -38,7 +45,12 @@ ButtonLink.propTypes = {
   /**
    * If present, determines button style variation.
    */
-  variation: PropTypes.oneOf(["outline", "secondary", "accent-cool"]),
+  variation: PropTypes.oneOf([
+    "outline",
+    "secondary",
+    "accent-cool",
+    "unstyled",
+  ]),
 };
 
 export default ButtonLink;

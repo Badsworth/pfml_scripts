@@ -35,3 +35,11 @@ export const AccentCool = () => {
     </ButtonLink>
   );
 };
+
+export const Disabled = () => {
+  return (
+    <ButtonLink href={href} disabled>
+      Click here
+    </ButtonLink>
+  );
+};

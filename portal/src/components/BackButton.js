@@ -1,4 +1,6 @@
 import Button from "./Button";
+import ButtonLink from "./ButtonLink";
+import PropTypes from "prop-types";
 import React from "react";
 import { useTranslation } from "../locales/i18n";
 
@@ -6,18 +8,32 @@ import { useTranslation } from "../locales/i18n";
  * Help users go back to the previous page in a multi-page transaction. The
  * intention is to alleviate concerns that going back will result in lost data.
  */
-function BackButton() {
+function BackButton(props) {
   const { t } = useTranslation();
-  const label = t("components.backButton.label");
+  const label = props.label || t("components.backButton.label");
 
   const handleClick = () => {
     window.history.back();
   };
 
+  let Component, componentProps;
+
+  if (props.href) {
+    Component = ButtonLink;
+    componentProps = {
+      href: props.href,
+    };
+  } else {
+    Component = Button;
+    componentProps = {
+      onClick: handleClick,
+    };
+  }
+
   return (
-    <Button
+    <Component
+      {...componentProps}
       className="margin-bottom-5"
-      onClick={handleClick}
       variation="unstyled"
     >
       <svg
@@ -33,8 +49,13 @@ function BackButton() {
         />
       </svg>
       {label}
-    </Button>
+    </Component>
   );
 }
+
+BackButton.propTypes = {
+  label: PropTypes.string,
+  href: PropTypes.string,
+};
 
 export default BackButton;

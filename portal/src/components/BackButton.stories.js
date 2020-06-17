@@ -22,3 +22,10 @@ export const SpacingBetweenSmallTitle = () => (
     <Title small>Page title</Title>
   </React.Fragment>
 );
+
+export const CustomLabelAndLink = () => (
+  <React.Fragment>
+    <BackButton label="Custom Label" href="#" />
+    <Title small>Page title</Title>
+  </React.Fragment>
+);

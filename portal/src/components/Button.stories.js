@@ -13,6 +13,16 @@ export const Default = () => {
   return <Button onClick={handleClick}>Submit</Button>;
 };
 
+export const Disabled = () => {
+  const handleClick = () => alert("Clicked!");
+
+  return (
+    <Button onClick={handleClick} disabled>
+      Submit
+    </Button>
+  );
+};
+
 export const Variations = () => {
   const handleClick = () => alert("Clicked!");
 
