@@ -16,6 +16,7 @@ import CustomSignUp from "./CustomSignUp";
 import PropTypes from "prop-types";
 import customAmplifyErrorMessageKey from "../utils/customAmplifyErrorMessageKey";
 import theme from "../utils/amplifyTheme";
+import { useRouter } from "next/router";
 import { useTranslation } from "../locales/i18n";
 
 Amplify.configure(process.env.awsConfig);
@@ -29,6 +30,7 @@ const Authenticator = (props) => {
   const [amplifyError, setAmplifyError] = useState();
   const alertRef = useRef();
   const { t } = useTranslation();
+  const router = useRouter();
 
   const signUpConfig = {
     hideAllDefaults: true,
@@ -159,6 +161,21 @@ const Authenticator = (props) => {
     // requires its children to not be null
     return <React.Fragment />;
   };
+
+  // As described in the tech spec: "Authentication without Amplify's React Components"
+  // we are moving off of the Amplify React library. The first step in that process
+  // is to create separate account pages that are not wrapped by AmplifyAuthenticator
+  // https://lwd.atlassian.net/wiki/spaces/CP/pages/376309445/Tech+Spec+Authentication+without+Amplify+s+React+Components
+  const accountPagesWithoutAmplifyReact = [
+    "/login",
+    "/create-account",
+    "/verify-account",
+    "/forgot-password",
+    "/reset-password",
+  ];
+  if (accountPagesWithoutAmplifyReact.includes(router.pathname)) {
+    return props.children;
+  }
 
   // Embeds props.children inside an Amplify Authenticator component and only
   // renders those children if the user is signed in (authState === 'signedIn')

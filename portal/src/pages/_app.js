@@ -172,11 +172,6 @@ export const App = ({
       );
     }
 
-    // If we don't have the authenticated user's data, something likely
-    // went wrong and we shouldn't render the page. handleLogIn will
-    // render an error for us.
-    if (!user) return <React.Fragment />;
-
     return (
       <section id="page">
         <Component
