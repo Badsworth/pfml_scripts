@@ -2,22 +2,31 @@ import { get } from "lodash";
 import routes from "../routes";
 
 /**
- * Convenience method for interpolating a key/value store of params
- * to a query string for a route
- * @param {string} routeName - nested name of path from `routes.js` object (e.g. claims.ssn)
- * @param {object} params - object of query string
+ * Append a query string params to the given route
+ * @param {string} route - url path
+ * @param {object|string} params - object of query string params
  * @returns {string} - route with query string "e.g. /claims/ssn?claim_id=12345"
  */
-const routeWithParams = (routeName, params) => {
-  const route = get(routes, routeName);
+export const createRouteWithQuery = (route, params) => {
+  const queryString = new URLSearchParams(params).toString();
+  return `${route}?${queryString}`;
+};
+
+/**
+ * Find a route at the given path and append the query string params to it.
+ * @param {string} routePath - nested name of path from `routes.js` object (e.g. claims.ssn)
+ * @param {object} params - object of query string params
+ * @returns {string} - route with query string "e.g. /claims/ssn?claim_id=12345"
+ */
+const routeWithParams = (routePath, params) => {
+  const route = get(routes, routePath);
   if (!route) {
     throw new Error(
-      `routeWithParams: missing key ${routeName} in src/routes.js`
+      `routeWithParams: missing key ${routePath} in src/routes.js`
     );
   }
 
-  const queryString = new URLSearchParams(params).toString();
-  return `${route}?${queryString}`;
+  return createRouteWithQuery(route, params);
 };
 
 export default routeWithParams;

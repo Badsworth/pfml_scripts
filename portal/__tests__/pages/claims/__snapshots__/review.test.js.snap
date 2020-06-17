@@ -8,58 +8,61 @@ exports[`Review when all data is present renders Review page with the field valu
   <Title>
     Check your answers before sending your application
   </Title>
-  <Heading
-    level="2"
+  <ReviewHeading
+    editHref="/claims/name?claim_id=mock-id"
+    editText="Edit"
   >
     Who is taking leave?
-  </Heading>
+  </ReviewHeading>
   <ReviewRow
-    heading="Full name"
+    label="Full name"
   >
     Bud Monstera Baxter
   </ReviewRow>
   <ReviewRow
-    heading="Date of birth"
+    label="Date of birth"
   >
     **/**/****
   </ReviewRow>
   <ReviewRow
-    heading="Social security number"
+    label="Social security number"
   >
     *********
   </ReviewRow>
   <ReviewRow
-    heading="Massachusetts drivers license or ID"
+    label="Massachusetts drivers license or ID"
   >
     *********
   </ReviewRow>
-  <Heading
-    level="2"
+  <ReviewHeading
+    editHref="/claims/leave-reason?claim_id=mock-id"
+    editText="Edit"
   >
     Leave details
-  </Heading>
+  </ReviewHeading>
   <ReviewRow
-    heading="Leave type"
+    label="Leave type"
   >
     Medical leave
   </ReviewRow>
   <ReviewRow
-    heading="Leave duration"
+    label="Leave duration"
   >
     9/21/2021 – 12/30/2021
   </ReviewRow>
   <ReviewRow
-    heading="Leave duration type"
+    label="Leave duration type"
   >
     Continuous leave
   </ReviewRow>
-  <Heading
-    level="2"
+  <ReviewHeading
+    editHref="/claims/notified-employer?claim_id=mock-id"
+    editText="Edit"
   >
     Employment information
-  </Heading>
+  </ReviewHeading>
   <ReviewRow
-    heading="Notified employer"
+    label="Notified employer"
   >
     Yes
   </ReviewRow>
@@ -80,53 +83,56 @@ exports[`Review when data is empty does not render strings like 'null' or 'undef
   <Title>
     Check your answers before sending your application
   </Title>
-  <Heading
-    level="2"
+  <ReviewHeading
+    editHref="/claims/name?claim_id=mock-id"
+    editText="Edit"
   >
     Who is taking leave?
-  </Heading>
+  </ReviewHeading>
   <ReviewRow
-    heading="Full name"
+    label="Full name"
   >
       
   </ReviewRow>
   <ReviewRow
-    heading="Date of birth"
+    label="Date of birth"
   >
     **/**/****
   </ReviewRow>
   <ReviewRow
-    heading="Social security number"
+    label="Social security number"
   >
     *********
   </ReviewRow>
-  <Heading
-    level="2"
+  <ReviewHeading
+    editHref="/claims/leave-reason?claim_id=mock-id"
+    editText="Edit"
   >
     Leave details
-  </Heading>
+  </ReviewHeading>
   <ReviewRow
-    heading="Leave type"
+    label="Leave type"
   >
     Medical leave
   </ReviewRow>
   <ReviewRow
-    heading="Leave duration"
+    label="Leave duration"
   >
      – 
   </ReviewRow>
   <ReviewRow
-    heading="Leave duration type"
+    label="Leave duration type"
   >
     Continuous leave
   </ReviewRow>
-  <Heading
-    level="2"
+  <ReviewHeading
+    editHref="/claims/notified-employer?claim_id=mock-id"
+    editText="Edit"
   >
     Employment information
-  </Heading>
+  </ReviewHeading>
   <ReviewRow
-    heading="Notified employer"
+    label="Notified employer"
   >
     No
   </ReviewRow>

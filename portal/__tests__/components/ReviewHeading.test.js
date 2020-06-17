@@ -1,16 +1,15 @@
 import React from "react";
-import ReviewRow from "../../src/components/ReviewRow";
+import ReviewHeading from "../../src/components/ReviewHeading";
 import { shallow } from "enzyme";
 
 function render(customProps = {}) {
   const props = Object.assign(
     {
-      children: "Medical",
-      label: "Leave type",
+      children: "Who is taking leave?",
     },
     customProps
   );
-  const component = <ReviewRow {...props} />;
+  const component = <ReviewHeading {...props} />;
 
   return {
     props: customProps,
@@ -18,28 +17,18 @@ function render(customProps = {}) {
   };
 }
 
-describe("ReviewRow", () => {
-  it("accepts a string as children", () => {
-    const { wrapper } = render({
-      children: "Medical",
-    });
+describe("ReviewHeading", () => {
+  it("renders a Heading", () => {
+    const { wrapper } = render();
 
-    expect(wrapper.text()).toMatch("Medical");
-  });
-
-  it("accepts HTML as children", () => {
-    const { wrapper } = render({
-      children: <p className="test-html">Medical</p>,
-    });
-
-    expect(wrapper.find(".test-html")).toHaveLength(1);
+    expect(wrapper).toMatchSnapshot();
   });
 
   describe("when editHref is defined", () => {
     it("renders with an edit link", () => {
       const { wrapper } = render({
         editHref: "/name",
-        editText: "Edit name",
+        editText: "Edit",
       });
 
       expect(wrapper).toMatchSnapshot();

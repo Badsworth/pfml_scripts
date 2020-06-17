@@ -41,16 +41,18 @@ const leaveDetails = new StepDefinition({
       route: routes.claims.duration,
       fields: durationFields,
     },
-    {
-      route: routes.claims.notifiedEmployer,
-      fields: notifiedEmployerFields,
-    },
   ],
 });
 
 const employerInformation = new StepDefinition({
   name: "employerInformation",
   dependsOn: [verifyId, leaveDetails],
+  pages: [
+    {
+      route: routes.claims.notifiedEmployer,
+      fields: notifiedEmployerFields,
+    },
+  ],
 });
 
 const otherLeave = new StepDefinition({

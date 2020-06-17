@@ -10,7 +10,7 @@ const ReviewRow = (props) => {
     <div className="border-bottom-2px border-base-lighter margin-bottom-2 padding-bottom-2 display-flex flex-justify">
       <div className="margin-right-2">
         <Heading level="3" size="4" className="margin-bottom-1">
-          {props.heading}
+          {props.label}
         </Heading>
         {props.children}
       </div>
@@ -18,7 +18,7 @@ const ReviewRow = (props) => {
         <a
           className="usa-link"
           href={props.editHref}
-          aria-label={`${props.editText}: ${props.heading}`}
+          aria-label={`${props.editText}: ${props.label}`}
         >
           {props.editText}
         </a>
@@ -42,10 +42,10 @@ ReviewRow.propTypes = {
    */
   editText: PropTypes.node,
   /**
-   * Heading describing the content to be reviewed. This is also
+   * Label describing the content to be reviewed. This is also
    * read to screen readers when they interact with the edit link.
    */
-  heading: PropTypes.node.isRequired,
+  label: PropTypes.node.isRequired,
 };
 
 export default ReviewRow;

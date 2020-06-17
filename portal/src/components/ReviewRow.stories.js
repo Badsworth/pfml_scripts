@@ -1,5 +1,5 @@
-import Heading from "./Heading";
 import React from "react";
+import ReviewHeading from "./ReviewHeading";
 import ReviewRow from "./ReviewRow";
 
 export default {
@@ -8,25 +8,27 @@ export default {
 };
 
 export const Default = () => (
-  <ReviewRow heading="Leave duration" editText="Edit" editHref="#duration">
+  <ReviewRow label="Leave duration" editText="Edit" editHref="#duration">
     04/12/2021 – 05/01/2021
     <br />
     Continuous
   </ReviewRow>
 );
 
-export const WithSurroundingMarkup = () => (
+export const WithHeadings = () => (
   <React.Fragment>
-    <Heading level="2">Verify your identity</Heading>
-    <ReviewRow heading="Name" editText="Edit" editHref="#name">
-      Bud Baxter
-    </ReviewRow>
+    <ReviewHeading editText="Edit" editHref="#name">
+      Verify your identity
+    </ReviewHeading>
 
-    <Heading level="2">Leave details</Heading>
-    <ReviewRow heading="Leave type" editText="Edit" editHref="#medical">
-      Medical
-    </ReviewRow>
-    <ReviewRow heading="Leave duration" editText="Edit" editHref="#duration">
+    <ReviewRow label="Name">Bud Baxter</ReviewRow>
+
+    <ReviewHeading editText="Edit" editHref="#medical">
+      Leave details
+    </ReviewHeading>
+
+    <ReviewRow label="Leave type">Medical</ReviewRow>
+    <ReviewRow label="Leave duration">
       04/12/2021 – 05/01/2021
       <br />
       Continuous

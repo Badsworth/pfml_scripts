@@ -1,17 +1,20 @@
+import routeWithParams, {
+  createRouteWithQuery,
+} from "../../utils/routeWithParams";
 import BackButton from "../../components/BackButton";
 import ButtonLink from "../../components/ButtonLink";
 import Claim from "../../models/Claim";
-import Heading from "../../components/Heading";
 import LeaveReason from "../../models/LeaveReason";
 import PropTypes from "prop-types";
 import React from "react";
+import ReviewHeading from "../../components/ReviewHeading";
 import ReviewRow from "../../components/ReviewRow";
 import Title from "../../components/Title";
 import User from "../../models/User";
 import findKeyByValue from "../../utils/findKeyByValue";
 import formatDateRange from "../../utils/formatDateRange";
 import get from "lodash/get";
-import routeWithParams from "../../utils/routeWithParams";
+import { stepDefinitions } from "../../flows/leave-application";
 import { useTranslation } from "../../locales/i18n";
 import withClaim from "../../hoc/withClaim";
 
@@ -23,15 +26,27 @@ export const Review = (props) => {
   const { t } = useTranslation();
   const { claim, user } = props;
 
+  const routeForStepDefinition = (name) => {
+    const stepDefinition = stepDefinitions.find((s) => s.name === name);
+
+    if (stepDefinition && stepDefinition.pages.length)
+      return createRouteWithQuery(stepDefinition.pages[0].route, props.query);
+  };
+
   return (
     <div className="measure-6">
       <BackButton />
       <Title>{t("pages.claimsReview.title")}</Title>
 
       {/* EMPLOYEE IDENTITY */}
-      <Heading level="2">{t("pages.claimsReview.userSectionHeading")}</Heading>
+      <ReviewHeading
+        editHref={routeForStepDefinition("verifyId")}
+        editText={t("pages.claimsReview.editLink")}
+      >
+        {t("pages.claimsReview.userSectionHeading")}
+      </ReviewHeading>
 
-      <ReviewRow heading={t("pages.claimsReview.userNameHeading")}>
+      <ReviewRow label={t("pages.claimsReview.userNameLabel")}>
         {[
           get(claim, "first_name"),
           get(claim, "middle_name"),
@@ -40,22 +55,27 @@ export const Review = (props) => {
       </ReviewRow>
 
       {/* TODO: Use the API response for the PII fields */}
-      <ReviewRow heading={t("pages.claimsReview.userDateOfBirthHeading")}>
+      <ReviewRow label={t("pages.claimsReview.userDateOfBirthLabel")}>
         **/**/****
       </ReviewRow>
-      <ReviewRow heading={t("pages.claimsReview.userSsnHeading")}>
+      <ReviewRow label={t("pages.claimsReview.userSsnLabel")}>
         *********
       </ReviewRow>
 
       {user.has_state_id && (
-        <ReviewRow heading={t("pages.claimsReview.userStateIdHeading")}>
+        <ReviewRow label={t("pages.claimsReview.userStateIdLabel")}>
           *********
         </ReviewRow>
       )}
 
       {/* LEAVE DETAILS */}
-      <Heading level="2">{t("pages.claimsReview.leaveSectionHeading")}</Heading>
-      <ReviewRow heading={t("pages.claimsReview.leaveReasonHeading")}>
+      <ReviewHeading
+        editHref={routeForStepDefinition("leaveDetails")}
+        editText={t("pages.claimsReview.editLink")}
+      >
+        {t("pages.claimsReview.leaveSectionHeading")}
+      </ReviewHeading>
+      <ReviewRow label={t("pages.claimsReview.leaveReasonLabel")}>
         {t("pages.claimsReview.leaveReasonValue", {
           context: findKeyByValue(
             LeaveReason,
@@ -64,24 +84,27 @@ export const Review = (props) => {
         })}
       </ReviewRow>
 
-      <ReviewRow heading={t("pages.claimsReview.leaveDurationHeading")}>
+      <ReviewRow label={t("pages.claimsReview.leaveDurationLabel")}>
         {formatDateRange(
           get(claim, "leave_details.continuous_leave_periods[0].start_date"),
           get(claim, "leave_details.continuous_leave_periods[0].end_date")
         )}
       </ReviewRow>
-      <ReviewRow heading={t("pages.claimsReview.leaveDurationTypeHeading")}>
+      <ReviewRow label={t("pages.claimsReview.leaveDurationTypeLabel")}>
         {t("pages.claimsReview.leaveDurationTypeValue", {
           context: get(claim, "duration_type"),
         })}
       </ReviewRow>
 
       {/* EMPLOYMENT INFO */}
-      <Heading level="2">
+      <ReviewHeading
+        editHref={routeForStepDefinition("employerInformation")}
+        editText={t("pages.claimsReview.editLink")}
+      >
         {t("pages.claimsReview.employmentSectionHeading")}
-      </Heading>
+      </ReviewHeading>
 
-      <ReviewRow heading={t("pages.claimsReview.employerNotifiedHeading")}>
+      <ReviewRow label={t("pages.claimsReview.employerNotifiedLabel")}>
         {t("pages.claimsReview.employerNotifiedValue", {
           context: (!!get(claim, "leave_details.employer_notified")).toString(),
         })}
