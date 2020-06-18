@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`Lambda@Edge Headers Function sets correct headers 1`] = `
+exports[`Cloudfront Lambda@Edge Function when eventType is viewer-response sets security headers 1`] = `
 Object {
   "content-security-policy": Array [
     Object {

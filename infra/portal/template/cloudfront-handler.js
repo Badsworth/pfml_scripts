@@ -1,3 +1,5 @@
+const path = require("path");
+
 /**
  * Lambda@Edge function to set headers on requests
  * This Lambda function is intended to be hooked up to a response event from
@@ -15,15 +17,26 @@
  * @param {object} event.Records[].cf.response
  * @param {object} event.Records[].cf.response.headers - headers for response
  * @param {*} _context - not used
- * @param {Function} callback - we need to call this with the mutated event
- *
+ * @returns {Promise<object>} mutated request/response
  */
-
-"use strict";
-
 exports.handler = async (event, _context) => {
   // https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/lambda-event-structure.html#lambda-event-structure-response
-  const response = event.Records[0].cf.response;
+  const data = event.Records[0].cf;
+  const { eventType } = data.config;
+
+  if (eventType === "viewer-response") {
+    return addSecurityHeadersToResponse(data.response);
+  } else if (eventType === "origin-request") {
+    return addTrailingSlashToRequest(data.request);
+  }
+};
+
+/**
+ * Add additional headers to the response to enforce tighter security
+ * @param {object} response
+ * @returns {object} updated response
+ */
+function addSecurityHeadersToResponse(response) {
   const headers = response.headers;
 
   // the headers have to be in this weird list of object format for CloudFront
@@ -99,4 +112,23 @@ exports.handler = async (event, _context) => {
   }
 
   return response;
-};
+}
+
+/**
+ * Add trailing slashes to origin requests so that S3 doesn't return a 302 redirect,
+ * which results in unexpected 404 behavior (https://lwd.atlassian.net/browse/CP-144)
+ * @param {object} request
+ * @returns {object} updated request
+ */
+function addTrailingSlashToRequest(request) {
+  const { uri } = request;
+
+  // Don't add a slash if there's already a slash, or if the
+  // URI includes a file extension
+  if (uri.endsWith("/") || path.extname(uri)) {
+    return request;
+  }
+
+  request.uri = `${uri}/`;
+  return request;
+}

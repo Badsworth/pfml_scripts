@@ -70,16 +70,22 @@ resource "aws_cloudfront_distribution" "portal_web_distribution" {
     compress               = true
 
     lambda_function_association {
-      # The function executes before CloudFront
-      # returns the requested object to the viewer.
-      # The function executes regardless of whether the
-      # object was already in the edge cache.
-      # If the origin returns an HTTP status code other than HTTP 200 (OK),
-      # the function doesn't execute.
+      # Executes only when CloudFront forwards a request to S3. When the requested
+      # object is in the CloudFront cache, the function doesn’t execute.
+      event_type = "origin-request"
+      # The Amazon Resource Name (ARN) identifying your Lambda Function Version
+      # when publish = true
+      lambda_arn = aws_lambda_function.cloudfront_handler.qualified_arn
+    }
+
+    lambda_function_association {
+      # The function executes before CloudFront returns the requested object to the viewer.
+      # The function executes regardless of whether the object was already in the edge cache.
+      # If the origin returns an HTTP status code other than HTTP 200 (OK), the function doesn't execute.
       event_type = "viewer-response"
       # The Amazon Resource Name (ARN) identifying your Lambda Function Version
       # when publish = true
-      lambda_arn = aws_lambda_function.edge_headers.qualified_arn
+      lambda_arn = aws_lambda_function.cloudfront_handler.qualified_arn
     }
   }
 
