@@ -117,3 +117,9 @@ variable "cognito_post_confirmation_lambda_artifact_s3_key" {
   description = "The S3 object key of the Cognito Post Confirmation hook Lambda artifact"
   type        = string
 }
+
+variable "cognito_user_pool_keys_url" {
+  description = "The URL to fetch the Cognito User Pool's JSON Web Key Set from."
+  type        = string
+  default     = null
+}

@@ -9,6 +9,7 @@
 import os
 
 import massgov.pfml.api.app as app
+import massgov.pfml.api.authentication as authentication
 import massgov.pfml.api.generate_fake_data as fake
 import massgov.pfml.util.logging
 
@@ -26,6 +27,7 @@ def start_server():
         create_fake_data()
 
         app_config = app.get_app_config(connexion_app)
+        authentication.get_public_keys(app_config.cognito_user_pool_keys_url)
 
         enable_reloader = app_config.environment == "local" or app_config.environment == "dev"
         openapi_files = list(

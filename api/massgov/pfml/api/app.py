@@ -84,6 +84,7 @@ def create_app(config: Optional[AppConfig] = None) -> connexion.FlaskApp:
 def get_app_config(app: Optional[Union[connexion.FlaskApp, Flask]] = None) -> AppConfig:
     if app is None:
         app = current_app
+
     elif isinstance(app, connexion.FlaskApp):
         app = app.app
     else:

@@ -8,6 +8,10 @@ servers:
   - url: /v1
     description: Development server
 
+security:
+  - jwt: [] # JWT authentication option
+  - {} # no authentication option
+
 paths:
   /status:
     get:
@@ -315,6 +319,13 @@ tags:
   - name: Applications
 
 components:
+  securitySchemes:
+    jwt:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      x-bearerInfoFunc: massgov.pfml.api.authentication.decode_cognito_token
+
   requestBodies:
     UserUpdateRequest:
       content:

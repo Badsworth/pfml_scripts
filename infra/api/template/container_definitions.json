@@ -33,7 +33,8 @@
       { "name": "DB_HOST", "value": "${db_host}" },
       { "name": "DB_NAME", "value": "${db_name}" },
       { "name": "DB_USERNAME", "value": "${db_username}" },
-      { "name": "CORS_ORIGINS", "value": "${cors_origins}" }
+      { "name": "CORS_ORIGINS", "value": "${cors_origins}" },
+      { "name": "COGNITO_USER_POOL_KEYS_URL", "value": "${cognito_user_pool_keys_url}"}
     ],
     "secrets": [
       { "name": "DB_PASSWORD", "valueFrom": "/service/${app_name}/${environment_name}/db-password" }
