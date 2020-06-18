@@ -6,8 +6,8 @@
   "scripts": {
     "analyze-bundle": "ANALYZE_BUNDLE=true next build",
     "dev": "next",
-    "docs": "start-storybook -p 6006 -s ./public --docs",
-    "docs:build": "build-storybook -s ./public -o out-storybook --docs",
+    "docs": "start-storybook -p 6006 -c ./storybook -s ./public --docs",
+    "docs:build": "build-storybook -c ./storybook -s ./public -o out-storybook --docs",
     "docs:smoke-test": "npm run docs -- --ci --smoke-test --quiet",
     "build": "next build && next export",
     "build:test": "BUILD_ENV=test npm run build",

@@ -120,7 +120,6 @@ Runs the project's test suite in watch mode. By default, this will attempt to id
 Below is an abbreviated representation of our directory structure, pointing out some of the main files to get you started. Refer to [`software-architecture.md`](../docs/portal/software-architecture.md) for more context.
 
 ```
-├── .storybook          Storybook configuration and general stories
 ├── __mocks__           Dependency mocks used by test suites
 ├── __tests__           Test suites
 ├── config              Environment variables and feature flags
@@ -136,6 +135,7 @@ Below is an abbreviated representation of our directory structure, pointing out 
 │   │   └── index.js    Homepage
 |   ├── services
 |   ├── utils           utility functions
+├── storybook           Storybook site config and stories
 ├── styles
 │   └── app.scss        Main stylesheet
 └── next.config.js      Build process config
