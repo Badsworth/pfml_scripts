@@ -43,7 +43,7 @@ class UserFactory(BaseFactory):
         model = models.User
 
     user_id = factory.Faker("uuid4")
-    active_directory_id = factory.Sequence(lambda n: n)
+    active_directory_id = factory.Faker("uuid4")
     email_address = factory.Faker("email")
 
 

@@ -2,16 +2,8 @@ import uuid
 
 import pytest
 
-from massgov.pfml.db.models.factories import UserFactory
-
 # every test in here requires real resources
 pytestmark = pytest.mark.integration
-
-
-@pytest.fixture
-def user():
-    user = UserFactory.create()
-    return user
 
 
 def test_users_get(client, user):

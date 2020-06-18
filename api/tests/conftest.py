@@ -18,6 +18,7 @@ import massgov.pfml.api.app
 import massgov.pfml.api.employees
 import massgov.pfml.api.generate_fake_data as fake
 import massgov.pfml.util.logging
+from massgov.pfml.db.models.factories import UserFactory
 
 logger = massgov.pfml.util.logging.get_logger("massgov.pfml.api.tests.conftest")
 
@@ -46,6 +47,12 @@ def logging_fix(monkeypatch):
     tests using the caplog fixture don't break.
     """
     monkeypatch.setattr(logging.config, "dictConfig", lambda config: None)  # noqa: B1
+
+
+@pytest.fixture
+def user(initialize_factories_session):
+    user = UserFactory.create()
+    return user
 
 
 @pytest.fixture
