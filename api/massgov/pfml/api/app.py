@@ -117,7 +117,7 @@ def db_session(close: bool = False) -> Generator[db.Session, None, None]:
 
 
 def get_project_root_dir() -> str:
-    return os.path.join(os.path.dirname(__file__), "../../../")
+    return os.path.join(os.path.dirname(__file__), "../../..")
 
 
 def openapi_filenames() -> List[str]:

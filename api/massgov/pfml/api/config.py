@@ -23,5 +23,5 @@ def get_config() -> AppConfig:
         enable_full_error_logs=os.environ.get("ENABLE_FULL_ERROR_LOGS", "0") == "1",
         cors_origins=split_str(os.environ.get("CORS_ORIGINS")),
         db=db_config.get_config(),
-        cognito_user_pool_keys_url=(os.environ["COGNITO_USER_POOL_KEYS_URL"]),
+        cognito_user_pool_keys_url=os.environ["COGNITO_USER_POOL_KEYS_URL"],
     )

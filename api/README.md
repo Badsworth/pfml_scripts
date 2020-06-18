@@ -145,6 +145,60 @@ The spec is available at:
 - [http://localhost:1550/v1/openapi.json](http://localhost:1550/v1/openapi.json) (JSON) or
 - [http://localhost:1550/v1/openapi.yaml](http://localhost:1550/v1/openapi.yaml) (YAML)
 
+### Getting local authentication credentials
+
+In order to make requests to the API, an authentication token must be included.
+Currently this is a JWT set in the `Authorization` HTTP header. A JWT signed by
+a locally generated JWK can be created for a user via:
+
+```sh
+make jwt auth_id=<active_directory_id of a user record>
+```
+
+Currently the JWT expires after a day, but we may tweak the lifetime for
+convenience at some point.
+
+If a user doesn't already exist, can create a random user in the database with:
+
+```sh
+make create-user
+```
+
+Which will print something like:
+
+```
+{'user_id': '548c9e28-3d72-4c5c-96e7-4a77f3c37041',
+ 'active_directory_id': '33f965ad-0150-4c5b-a3a6-86bbd5df1a26',
+ 'email_address': 'gfarmer@lewis.com',
+ 'consented_to_data_sharing': False}
+```
+
+The `active_directory_id` field is what is needed to generate a JWT. For the
+example above, it would be:
+
+```sh
+make jwt auth_id=33f965ad-0150-4c5b-a3a6-86bbd5df1a26
+```
+
+Which will print something like:
+
+```
+eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE1OTI0OTQxOTIsInN1YiI6IjMzZjk2NWFkLTAxNTAtNGM1Yi1hM2E2LTg2YmJkNWRmMWEyNiJ9.KMze0GfJ9cQ10e9G27vcOgn3nBiqhXxxtCBZYIgScFo
+```
+
+That value should be included as a bearer token in the `Authorization` header of
+requests.
+
+On the documentation pages mentioned in the section above, click the "Authorize"
+button and paste the above value. After that every request sent from the docs
+page will be authenticated with that token.
+
+For individual requests via `curl` or similar:
+
+```sh
+curl -v --header "Authorization: Bearer <big jwt string above>" http://localhost:1550/v1/users/current
+```
+
 ## Tests
 
 ```sh

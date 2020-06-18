@@ -45,10 +45,10 @@ services:
       - DB_NAME=pfml
       - DB_USERNAME=pfml
       - DB_PASSWORD=secret123
+      - COGNITO_USER_POOL_KEYS_URL=file:///app/jwks.json
       - TERM=${TERM:-xterm-256color}
       - 'PS1=${DOCKER_PS1:-[docker] \w: }'
       - 'LSCOLORS=${DOCKER_LSCOLORS:- }'
-      - COGNITO_USER_POOL_KEYS_URL=https://cognito-idp.us-east-1.amazonaws.com/us-east-1_HhQSLYSIe/.well-known/jwks.json
     networks:
       main:
         aliases:

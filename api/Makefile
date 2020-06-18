@@ -99,6 +99,9 @@ build-app: ## Build app container
 		--build-arg RUN_UID=$(RUN_UID) \
 		.
 
+create-user: ## Create local API User
+	PYTHONPATH=$$PYTHONPATH:. $(PY_RUN_CMD) python bin/create-user.py
+
 deps: ## Install dependencies
 	poetry install --no-root
 
@@ -117,6 +120,13 @@ format-check: ## Check format of code
 	$(PY_RUN_CMD) isort --atomic --check-only
 	$(PY_RUN_CMD) black . --check
 
+jwks.json: ## Generate a local JSON Web Key Set to use for local API Authentication
+	$(PY_RUN_CMD) bin/create-jwks.py > $@
+
+jwt: ## Generate a JSON Web Token for $auth_id signed by locally generated JWKS
+jwt: jwks.json
+	$(PY_RUN_CMD) bin/create-jwt.py ./jwks.json $(auth_id)
+
 # A flake8 output format that is compatible with GitHub Actions to annotate PRs. A full repository path must be output
 # so the path is prefixed with `api/`.
 # See https://help.github.com/en/actions/reference/workflow-commands-for-github-actions
@@ -127,8 +137,8 @@ else
 endif
 
 lint: ## Run linting
-	$(PY_RUN_CMD) flake8 --format=$(FLAKE8_FORMAT) massgov tests
-	$(PY_RUN_CMD) mypy massgov
+	$(PY_RUN_CMD) flake8 --format=$(FLAKE8_FORMAT) massgov tests bin
+	$(PY_RUN_CMD) mypy massgov bin
 
 login: start ## Start shell in running container
 	docker exec -it $(APP_NAME) bash
@@ -180,6 +190,7 @@ release-tag: ## Tag release image for registry
 	docker tag $(APP_NAME):$(RELEASE_TAG) $(DOCKER_REGISTRY)/$(DOCKER_REPO):$(INFO_TAG)
 
 run: ## Run docker-compose
+run: jwks.json
 run: start logs
 
 db-upgrade: ## Apply pending migrations to db

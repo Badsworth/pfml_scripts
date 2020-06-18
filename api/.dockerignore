@@ -13,3 +13,4 @@
 .pytest_cache
 dist
 *.egg-info
+jwks.json

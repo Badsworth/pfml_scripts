@@ -12,3 +12,5 @@ import_infra/**/dependencies
 
 .aws-sam/
 lambda-s3-package.json
+
+jwks.json
