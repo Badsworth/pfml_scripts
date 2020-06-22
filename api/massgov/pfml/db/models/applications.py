@@ -172,7 +172,7 @@ class LeaveReason(LookupTable):
     model = LkLeaveReason
     column_names = ("leave_reason_id", "leave_reason_description")
 
-    CARE_FOR_A_FAMILY_MEMBER = LkLeaveReason(1, "Care for a family member")
+    CARE_FOR_A_FAMILY_MEMBER = LkLeaveReason(1, "Care For A Family Member")
     PREGNANCY_MATERNITY = LkLeaveReason(2, "Pregnancy/Maternity")
     CHILD_BONDING = LkLeaveReason(3, "Child Bonding")
     SERIOUS_HEALTH_CONDITION_EMPLOYEE = LkLeaveReason(4, "Serious Health Condition - Employee")
