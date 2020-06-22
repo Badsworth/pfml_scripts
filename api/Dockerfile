@@ -6,7 +6,7 @@ FROM python:3.8-slim as build
 
 # core project tools
 RUN pip install poetry
-RUN apt-get update && apt-get install --no-install-recommends --yes make postgresql
+RUN apt-get update && apt-get install --no-install-recommends --yes make postgresql build-essential
 
 # setup user stuff
 ARG RUN_UID

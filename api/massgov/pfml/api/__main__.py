@@ -29,8 +29,6 @@ def start_server():
         app_config = app.get_app_config(connexion_app)
         authentication.get_public_keys(app_config.cognito_user_pool_keys_url)
 
-        authentication.get_public_keys(app_config.cognito_user_pool_keys_url)
-
         enable_reloader = app_config.environment == "local" or app_config.environment == "dev"
         openapi_files = list(
             map(lambda f: os.path.join(app.get_project_root_dir(), f), app.openapi_filenames())
