@@ -35,7 +35,7 @@ paths:
     get:
       tags:
         - Users
-      summary: This endpoint returns details about a user account
+      summary: Retrieve a User account
       operationId: massgov.pfml.api.users.users_get
       parameters:
         - name: user_id
@@ -43,7 +43,7 @@ paths:
           schema:
             type: string
             format: uuid
-          description: The user id of the account to fetch
+          description: ID of User to update
           required: true
       responses:
         "200":
@@ -57,14 +57,14 @@ paths:
     patch:
       tags:
         - Users
-      summary: This endpoint adds information to the currently authenticated user.
+      summary: Update a User account
       operationId: massgov.pfml.api.users.users_patch
       parameters:
         - name: user_id
           in: path
           schema:
             type: string
-          description: User id
+          description: ID of User to update
           required: true
       responses:
         "200":
@@ -83,8 +83,8 @@ paths:
       tags:
         - Users
       summary: >
-        This endpoint returns details about the user account corresponding to
-        the currently authenticated user
+        Retrieve the User account corresponding to the currently authenticated
+        user
       operationId: massgov.pfml.api.users.users_current_get
       responses:
         "200":
@@ -100,14 +100,14 @@ paths:
     get:
       tags:
         - Employees
-      summary: This endpoint provides details about an employee.
+      summary: Retrieve an Employee record
       operationId: massgov.pfml.api.employees.employees_get
       parameters:
         - name: employee_id
           in: path
           schema:
             type: string
-          description: ID of an employee being fetched
+          description: ID of Employee to retrieve
           required: true
       responses:
         "200":
@@ -121,14 +121,14 @@ paths:
     patch:
       tags:
         - Employees
-      summary: This endpoint allows updates to an employee record, for mutable properties.
+      summary: Update an Employee record, for mutable properties
       operationId: massgov.pfml.api.employees.employees_patch
       parameters:
         - name: employee_id
           in: path
           schema:
             type: string
-          description: Employee's id
+          description: ID of Employee to update
           required: true
       responses:
         "200":
@@ -146,7 +146,7 @@ paths:
     post:
       tags:
         - Employees
-      summary: This endpoint provides details about an employee and requires a request body that contains a SSN/ITIN, and first and last name.
+      summary: Lookup an Employee by SSN/ITIN and name
       operationId: massgov.pfml.api.employees.employees_search
       responses:
         "200":
@@ -164,7 +164,7 @@ paths:
     get:
       tags:
         - Employers
-      summary: This endpoint provides details about an employer.
+      summary: Retrieve an Employer record
       operationId: massgov.pfml.api.employers.employers_get
       parameters:
         - name: employer_id
@@ -172,7 +172,7 @@ paths:
           schema:
             type: string
             format: uuid
-          description: Employer's id
+          description: ID of Employer to retrieve
           required: true
       responses:
         "200":
@@ -188,7 +188,7 @@ paths:
     post:
       tags:
         - Applications
-      summary: Signal the Integration Platform to create an application for the logged in user. It returns an application id.
+      summary: Create an Application
       operationId: massgov.pfml.api.applications.applications_start
       parameters:
         - name: user_id
@@ -196,7 +196,7 @@ paths:
           schema:
             type: string
             format: uuid
-          description: User id for current user logged into application.
+          description: ID of User the Application belongs to
           required: true
       responses:
         "201":
@@ -207,7 +207,7 @@ paths:
     get:
       tags:
         - Applications
-      summary: Fetch all applications in the Application data model for the logged in user.
+      summary: Retrieve all Applications for the specified user
       operationId: massgov.pfml.api.applications.applications_get
       parameters:
         - name: user_id
@@ -215,7 +215,7 @@ paths:
           schema:
             type: string
             format: uuid
-          description: User id for current user logged into application.
+          description: ID of User the Application belongs to
           required: true
       responses:
         "200":
@@ -225,7 +225,7 @@ paths:
     get:
       tags:
         - Applications
-      summary: Fetch the application in DRAFT status for the logged in user existing identified by the application id.
+      summary: Retrieve an Application identified by the application id
       operationId: massgov.pfml.api.applications.application_get
       parameters:
         - name: user_id
@@ -233,14 +233,14 @@ paths:
           schema:
             type: string
             format: uuid
-          description: User id for current user logged into application.
+          description: ID of User the Application belongs to
           required: true
         - name: application_id
           in: path
           schema:
             type: string
             format: uuid
-          description: Identifier for application to be fetched.
+          description: ID of Application to retrieve
           required: true
       responses:
         "200":
@@ -251,7 +251,14 @@ paths:
     patch:
       tags:
         - Applications
-      summary: Endpoint to submit the data as applicant fills the application. It is expected the Portal will call this endpoint multiple times and with incomplete data most of the time. The API will review the data provided and return any pertinent warnings or errors. It is up to the Portal when to show these warnings or errors.
+      summary: Update an Application
+      description: >
+        Supports partial update of an Application record.
+
+        It is expected clients will call this endpoint multiple times and with
+        incomplete data as individual pieces of information is collected from
+        the user. The API will review the data provided and return any pertinent
+        warnings or errors.
       operationId: massgov.pfml.api.applications.applications_update
       parameters:
         - name: user_id
@@ -259,14 +266,14 @@ paths:
           schema:
             type: string
             format: uuid
-          description: User id for current user logged into application.
+          description: ID of User the Application belongs to
           required: true
         - name: application_id
           in: path
           schema:
             type: string
             format: uuid
-          description: Identifier for application to be updated.
+          description: ID of Application to update
           required: true
       responses:
         "200":
@@ -284,7 +291,9 @@ paths:
     post:
       tags:
         - Applications
-      summary: Signal the data entry is complete and application is ready to be submitted to FINEOS.
+      summary: >
+        Signal the data entry is complete and the application is ready to be
+        submitted to the Claims Processing System.
       operationId: massgov.pfml.api.applications.applications_submit
       parameters:
         - name: user_id
@@ -292,14 +301,14 @@ paths:
           schema:
             type: string
             format: uuid
-          description: User id for current user logged into application.
+          description: ID of User the Application belongs to
           required: true
         - name: application_id
           in: path
           schema:
             type: string
             format: uuid
-          description: Identifier for application to be marked completed.
+          description: ID of Application to update
           required: true
       responses:
         "201":
