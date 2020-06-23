@@ -10,8 +10,9 @@ module.exports = {
   awsConfig: {
     Auth: {
       region: "us-east-1",
-      userPoolId: "us-east-1_HhQSLYSIe",
-      userPoolWebClientId: "7sjb96tvg8251lrq5vdk7de9",
+      // Cognito Stage environment (must match whatever API environment we're targeting)
+      userPoolId: "us-east-1_HpL4XslLg",
+      userPoolWebClientId: "10rjcp71r8bnk4459c67bn18t8",
       mandatorySignIn: false,
     },
   },

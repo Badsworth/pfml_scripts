@@ -3,6 +3,7 @@ import "../../styles/app.scss";
 import "@aws-amplify/ui/dist/style.css";
 import React, { useEffect, useState } from "react";
 import { initializeI18n, useTranslation } from "../locales/i18n";
+import Amplify from "aws-amplify";
 import AppErrorInfo from "../models/AppErrorInfo";
 import Authenticator from "../components/Authenticator";
 import ErrorBoundary from "../components/ErrorBoundary";
@@ -18,6 +19,9 @@ import useAppLogic from "../hooks/useAppLogic";
 import useFeatureFlagsFromQueryEffect from "../hooks/useFeatureFlagsFromQueryEffect";
 import { useRouter } from "next/router";
 import usersApi from "../api/usersApi";
+
+// Configure Amplify for Auth behavior throughout the app
+Amplify.configure(process.env.awsConfig);
 
 tracker.initialize();
 initializeI18n();

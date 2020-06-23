@@ -1,3 +1,4 @@
+import { Auth } from "aws-amplify";
 import { NetworkError } from "../errors";
 import tracker from "../services/tracker";
 
@@ -38,7 +39,7 @@ function createRequestUrl(apiPath) {
 }
 
 /**
- * Send an API request.
+ * Send an authenticated API request.
  * @example const response = await request("GET", "users/current");
  *
  * @param {string} method - i.e GET, POST, etc
@@ -58,9 +59,11 @@ async function request(method, apiPath, payload, headers) {
   }
 
   const url = createRequestUrl(apiPath);
+  const { accessToken } = await Auth.currentSession();
   const options = {
     body: createRequestBody(payload),
     headers: {
+      Authorization: `Bearer ${accessToken.jwtToken}`,
       "Content-Type": "application/json",
       ...headers,
     },

@@ -1,14 +1,39 @@
+import { Auth } from "aws-amplify";
 import { NetworkError } from "../../src/errors";
 import request from "../../src/api/request";
 import tracker from "../../src/services/tracker";
 
+jest.mock("aws-amplify");
 jest.mock("../../src/services/tracker");
 
 describe("request", () => {
+  const accessTokenJwt =
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoiQnVkIn0.YDRecdsqG_plEwM0H8rK7t2z0R3XRNESJB5ZXk-FRN8";
+
   beforeEach(() => {
+    jest.spyOn(Auth, "currentSession").mockImplementation(() =>
+      Promise.resolve({
+        accessToken: { jwtToken: accessTokenJwt },
+      })
+    );
+
     global.fetch = jest.fn().mockResolvedValueOnce({
       json: jest.fn(),
     });
+  });
+
+  it("includes an Authorization header with the user's JWT", async () => {
+    expect.assertions();
+    await request("GET", "users");
+
+    expect(fetch).toHaveBeenCalledWith(
+      expect.any(String),
+      expect.objectContaining({
+        headers: expect.objectContaining({
+          Authorization: `Bearer ${accessTokenJwt}`,
+        }),
+      })
+    );
   });
 
   it("sends a GET request to the API", async () => {

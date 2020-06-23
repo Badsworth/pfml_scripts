@@ -1,4 +1,3 @@
-import Amplify, { Hub } from "aws-amplify";
 import {
   Authenticator as AmplifyAuthenticator,
   ConfirmSignIn,
@@ -13,13 +12,12 @@ import Alert from "./Alert";
 import CustomConfirmSignUp from "./CustomConfirmSignUp";
 import CustomForgotPassword from "./CustomForgotPassword";
 import CustomSignUp from "./CustomSignUp";
+import { Hub } from "aws-amplify";
 import PropTypes from "prop-types";
 import customAmplifyErrorMessageKey from "../utils/customAmplifyErrorMessageKey";
 import theme from "../utils/amplifyTheme";
 import { useRouter } from "next/router";
 import { useTranslation } from "../locales/i18n";
-
-Amplify.configure(process.env.awsConfig);
 
 /**
  * Wraps children components in an Amplify Authenticator so that children are
