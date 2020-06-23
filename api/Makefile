@@ -140,6 +140,9 @@ lint: ## Run linting
 	$(PY_RUN_CMD) flake8 --format=$(FLAKE8_FORMAT) massgov tests bin
 	$(PY_RUN_CMD) mypy massgov bin
 
+lint-security: ## Run security linting
+	$(PY_RUN_CMD) bandit -r . --number 3 --skip B101 -ll
+
 login: start ## Start shell in running container
 	docker exec -it $(APP_NAME) bash
 
@@ -156,9 +159,6 @@ psql: login-db
 
 start: ## Start containers
 	docker-compose up --detach
-
-secure: ## Run security linting
-	$(PY_RUN_CMD) bandit -r . --number 3 --skip B101 -ll
 
 stop: ## Stop running containers
 	docker-compose down

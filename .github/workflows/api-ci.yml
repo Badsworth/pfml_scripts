@@ -35,7 +35,7 @@ jobs:
         run: make lint
 
       - name: security
-        run: make secure
+        run: make lint-security
 
   # Check for test failures.
   test:
