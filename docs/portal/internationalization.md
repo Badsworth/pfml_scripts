@@ -76,7 +76,7 @@ Sharing content should follow this pattern:
 shared: {
   claimsPages:
     // Define the shared key here -- anyone changing this will know it affects multiple pages
-    takingLeaveTitle: "Who is taking leave?",
+    takingLeaveTitle: "Verify your identity",
   },
 }
 

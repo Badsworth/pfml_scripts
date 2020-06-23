@@ -38,7 +38,7 @@ const shared = {
   claimDurationTypeIntermittent: "Intermittent leave",
   claimsFileUploadTitle: "Verify your identity",
   claimsLeaveDurationTitle: "Leave duration",
-  claimsTakingLeaveTitle: "Who is taking leave",
+  claimsTakingLeaveTitle: "Verify your identity",
   passwordHint:
     "Your password must be at least 8 characters long and include numbers and letters.",
 };
@@ -159,7 +159,7 @@ const pages = {
     title: "Check your answers before sending your application",
     userDateOfBirthLabel: "Date of birth",
     userNameLabel: "Full name",
-    userSectionHeading: "Who is taking leave?",
+    userSectionHeading: "Verify your identity",
     userSsnLabel: "Social security number",
     userStateIdLabel: "Massachusetts drivers license or ID",
   },

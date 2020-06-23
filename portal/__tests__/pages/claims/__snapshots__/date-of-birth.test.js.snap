@@ -15,7 +15,7 @@ exports[`DateOfBirth renders the page 1`] = `
   }
   nextPage="/claims/state-id?claim_id=12345"
   onSave={[Function]}
-  title="Who is taking leave"
+  title="Verify your identity"
 >
   <InputDate
     dayLabel="Day"

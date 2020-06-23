@@ -12,7 +12,7 @@ exports[`Review when all data is present renders Review page with the field valu
     editHref="/claims/name?claim_id=mock-id"
     editText="Edit"
   >
-    Who is taking leave?
+    Verify your identity
   </ReviewHeading>
   <ReviewRow
     label="Full name"
@@ -87,7 +87,7 @@ exports[`Review when data is empty does not render strings like 'null' or 'undef
     editHref="/claims/name?claim_id=mock-id"
     editText="Edit"
   >
-    Who is taking leave?
+    Verify your identity
   </ReviewHeading>
   <ReviewRow
     label="Full name"

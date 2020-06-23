@@ -9,7 +9,7 @@ exports[`Ssn renders the form 1`] = `
   }
   nextPage="/claims/leave-reason?claim_id=12345"
   onSave={[Function]}
-  title="Who is taking leave"
+  title="Verify your identity"
 >
   <InputText
     hint="Don't have an SSN? Use your Individual Taxpayer Identification Number (ITIN)."

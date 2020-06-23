@@ -10,7 +10,7 @@ export default {
 };
 
 const sampleRoute = "/create-claim/address";
-const sampleTitle = "Who is taking leave";
+const sampleTitle = "Verify your identity";
 
 export const WithLegend = () => (
   <QuestionPage title={sampleTitle} nextPage={sampleRoute} onSave={() => {}}>
