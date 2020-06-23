@@ -18,6 +18,8 @@ export function useRouter() {
 }
 
 afterEach(() => {
+  mockRouter.pathname = "";
+
   // Clear mock router events
   mockRouterEvents.length = 0;
 });

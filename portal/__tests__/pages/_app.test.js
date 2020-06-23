@@ -1,10 +1,11 @@
 import React, { useEffect } from "react";
+import { mockRouter, mockRouterEvents } from "next/router";
 import { mount, shallow } from "enzyme";
 import { App } from "../../src/pages/_app";
 import AppErrorInfo from "../../src/models/AppErrorInfo";
 import { NetworkError } from "../../src/errors";
+import User from "../../src/models/User";
 import { act } from "react-dom/test-utils";
-import { mockRouterEvents } from "next/router";
 import tracker from "../../src/services/tracker";
 import usersApi from "../../src/api/usersApi";
 
@@ -20,7 +21,9 @@ function render(customProps = {}, mountComponent = false) {
   const props = Object.assign(
     {
       Component: TestComponent, // allows us to do .find("TestComponent")
-      pageProps: {},
+      pageProps: {
+        title: "Test page",
+      },
       initialAuthState: "signedIn",
       initialAuthData: {
         attributes: { email: "mocked-header-user@example.com" },
@@ -75,9 +78,6 @@ describe("App", () => {
         initialAuthData: {
           attributes: { email: "mocked-header-user@example.com" },
         },
-        pageProps: {
-          title: "Test page",
-        },
       };
 
       // Authenticator causes async state updates
@@ -103,11 +103,73 @@ describe("App", () => {
         }
       `);
     });
+  });
+
+  describe("when authenticated user consented to data sharing", () => {
+    let wrapper;
+
+    beforeEach(async () => {
+      usersApi.getCurrentUser.mockResolvedValueOnce({
+        success: true,
+        user: new User({
+          auth_id: "mock-auth-id",
+          consented_to_data_sharing: true,
+          user_id: "mock-user-id",
+          email_address: "mock@example.com",
+        }),
+      });
+
+      // We need to mount the component so that useEffect is called
+      const mountComponent = true;
+      // Authenticator causes async state updates
+      await act(async () => {
+        wrapper = render({}, mountComponent).wrapper;
+      });
+
+      // Re-render after async effects
+      wrapper.update();
+    });
 
     it("renders the page component", () => {
       const component = wrapper.find("TestComponent");
 
       expect(component).toMatchSnapshot();
+    });
+
+    it("doesn't redirect to the consent page", () => {
+      expect(mockRouter.push).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("when authenticated user hasn't consented to data sharing", () => {
+    let wrapper;
+
+    beforeEach(async () => {
+      usersApi.getCurrentUser.mockResolvedValueOnce({
+        success: true,
+        user: new User({
+          auth_id: "mock-auth-id",
+          consented_to_data_sharing: false,
+          user_id: "mock-user-id",
+          email_address: "mock@example.com",
+        }),
+      });
+
+      // We need to mount the component so that useEffect is called
+      const mountComponent = true;
+      // Authenticator causes async state updates
+      await act(async () => {
+        wrapper = render({}, mountComponent).wrapper;
+      });
+
+      // Re-render after async effects
+      wrapper.update();
+    });
+
+    it("redirects to the consent page", () => {
+      expect(mockRouter.push).toHaveBeenCalledWith(
+        "/user/consent-to-data-sharing"
+      );
     });
   });
 

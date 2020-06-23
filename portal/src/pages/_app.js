@@ -124,12 +124,13 @@ export const App = ({
     // rather than having two different user states (user and authUser).
     // https://lwd.atlassian.net/browse/CP-371
     setAuthUser({ username: authData.attributes.email });
+    let userResponse;
 
     try {
-      const { success, user } = await usersApi.getCurrentUser();
+      userResponse = await usersApi.getCurrentUser();
 
-      if (success && user) {
-        setUser(user);
+      if (userResponse.success && userResponse.user) {
+        setUser(userResponse.user);
       } else {
         throw new Error("Current user wasn't received");
       }
@@ -149,6 +150,9 @@ export const App = ({
     setUI({ ...ui, isLoading: false });
   };
 
+  /**
+   * Attach route change event handlers
+   */
   useEffect(() => {
     // Track route events so we can provide a visual indicator when a page is loading
     router.events.on("routeChangeStart", handleRouteChangeStart);
@@ -160,6 +164,18 @@ export const App = ({
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  /**
+   * Enforce data sharing consent before rendering a page
+   */
+  useEffect(() => {
+    if (user) {
+      appLogic.requireUserConsentToDataAgreement();
+    }
+    // Only trigger this effect when the user is set/updated
+    // or when the user attempts to navigate to another page
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, router.pathname]);
 
   /**
    * Render the page body based on the current state of the application

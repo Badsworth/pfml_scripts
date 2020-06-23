@@ -8,9 +8,10 @@ import User from "../../models/User";
 const usersApi = jest.genMockFromModule("../usersApi").default;
 
 const mockUser = new User({
-  user_id: "api-123",
   auth_id: "cognito-123",
+  consented_to_data_sharing: true,
   email_address: "mock-user@example.com",
+  user_id: "api-123",
 });
 
 usersApi.getCurrentUser = jest.fn(() =>

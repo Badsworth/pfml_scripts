@@ -1,9 +1,18 @@
 import AppErrorInfo from "../models/AppErrorInfo";
 import { Auth } from "aws-amplify";
+import routes from "../routes";
+import { useRouter } from "next/router";
 import { useTranslation } from "../locales/i18n";
 
-const useAuthLogic = ({ setAppErrors }) => {
+/**
+ * @param {object} params
+ * @param {Function} params.setAppErrors
+ * @param {User} params.user
+ * @returns {object}
+ */
+const useAuthLogic = ({ setAppErrors, user }) => {
   const { t } = useTranslation();
+  const router = useRouter();
 
   /**
    * Log in to Portal with the given username (email) and password.
@@ -32,8 +41,22 @@ const useAuthLogic = ({ setAppErrors }) => {
     }
   };
 
+  /**
+   * Redirect user to data agreement consent page if
+   * they have not yet consented to the agreement.
+   */
+  const requireUserConsentToDataAgreement = () => {
+    if (
+      !user.consented_to_data_sharing &&
+      !router.pathname.match(routes.user.consentToDataSharing)
+    ) {
+      router.push(routes.user.consentToDataSharing);
+    }
+  };
+
   return {
     login,
+    requireUserConsentToDataAgreement,
   };
 };
 

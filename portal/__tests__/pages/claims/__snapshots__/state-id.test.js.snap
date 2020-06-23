@@ -5,6 +5,7 @@ exports[`StateId initially renders the page without an id field 1`] = `
   formState={
     User {
       "auth_id": null,
+      "consented_to_data_sharing": null,
       "date_of_birth": null,
       "email_address": null,
       "has_state_id": null,

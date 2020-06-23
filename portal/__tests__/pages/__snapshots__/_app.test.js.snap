@@ -9,7 +9,7 @@ Array [
 ]
 `;
 
-exports[`App when a user IS authenticated renders the page component 1`] = `
+exports[`App when authenticated user consented to data sharing renders the page component 1`] = `
 <TestComponent
   appLogic={
     Object {
@@ -17,6 +17,7 @@ exports[`App when a user IS authenticated renders the page component 1`] = `
       "createClaim": [Function],
       "loadClaims": [Function],
       "login": [Function],
+      "requireUserConsentToDataAgreement": [Function],
       "submitClaim": [Function],
       "updateClaim": [Function],
     }
@@ -27,13 +28,14 @@ exports[`App when a user IS authenticated renders the page component 1`] = `
   title="Test page"
   user={
     User {
-      "auth_id": "cognito-123",
+      "auth_id": "mock-auth-id",
+      "consented_to_data_sharing": true,
       "date_of_birth": null,
-      "email_address": "mock-user@example.com",
+      "email_address": "mock@example.com",
       "has_state_id": null,
       "state_id": null,
       "status": null,
-      "user_id": "api-123",
+      "user_id": "mock-user-id",
     }
   }
 >

@@ -28,6 +28,9 @@ const routes = {
     uploadOtherId: "/claims/upload-other-id",
     uploadStateId: "/claims/upload-state-id",
   },
+  user: {
+    consentToDataSharing: "/user/consent-to-data-sharing",
+  },
   login: "/login",
   createAccount: "/create-account",
   forgotPassword: "/forgot-password",

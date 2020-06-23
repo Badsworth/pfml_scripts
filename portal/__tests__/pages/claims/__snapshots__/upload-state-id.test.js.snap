@@ -8,7 +8,7 @@ exports[`UploadStateId initially renders the page without any filecards 1`] = `
   title="Verify your identity"
 >
   <FormLabel>
-    Upload your Massachusett’s driver’s license or ID card
+    Upload your Massachusetts driver’s license or ID card
   </FormLabel>
   <Lead>
     In order to verify your identity, upload a copy of both the front and the back of your ID card.
@@ -32,7 +32,7 @@ exports[`UploadStateId when the user uploads files renders filecards for the fil
   title="Verify your identity"
 >
   <FormLabel>
-    Upload your Massachusett’s driver’s license or ID card
+    Upload your Massachusetts driver’s license or ID card
   </FormLabel>
   <Lead>
     In order to verify your identity, upload a copy of both the front and the back of your ID card.

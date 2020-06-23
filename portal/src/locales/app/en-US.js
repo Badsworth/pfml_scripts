@@ -161,7 +161,7 @@ const pages = {
     userNameLabel: "Full name",
     userSectionHeading: "Verify your identity",
     userSsnLabel: "Social security number",
-    userStateIdLabel: "Massachusetts drivers license or ID",
+    userStateIdLabel: "Massachusetts driver's license or ID",
   },
   claimsSsn: {
     lead:
@@ -198,7 +198,7 @@ const pages = {
     fileHeadingPrefix: "File",
     lead:
       "In order to verify your identity, upload a copy of both the front and the back of your ID card.",
-    sectionLabel: "Upload your Massachusett’s driver’s license or ID card",
+    sectionLabel: "Upload your Massachusetts driver’s license or ID card",
     title: "$t(shared.claimsFileUploadTitle)",
   },
   index: {
@@ -225,6 +225,28 @@ const pages = {
     passwordLabel: "Password",
     title: "Log in to get started",
     usernameLabel: "Email address",
+  },
+  userConsentToDataSharing: {
+    agreementBody:
+      "By continuing, I am indicating that I have read and understood the above user agreements. I give the DFML permission to collect, share, and use my information consistent with the terms of the agreements linked above.",
+    applicationUsage: "",
+    applicationUsageHeading: "Applying for PFML",
+    applicationUsageIntro: "We need this information to:",
+    applicationUsageList: [
+      "Check your eligibility for coverage",
+      "Determine your benefit amount",
+      "Give you the best service possible",
+    ],
+    continueButton: "Agree and Continue",
+    dataUsageBody:
+      "We’ll keep your information private as required by law. As a part of the application process, we may check the information you give with other state agencies. We may share information related to your claim with your employer, health care provider(s), and contracted private partners.",
+    dataUsageHeading: "How we use your data",
+    fullUserAgreementBody:
+      "To find out more about how the Commonwealth might use the information you share with DFML, please read the DFML Informed Consent Agreement and the <a href='https://www.mass.gov/privacypolicy'>Privacy Policy for Mass.gov</a>.",
+    fullUserAgreementHeading: "Full user agreements",
+    intro:
+      "The information you provide on this website will be used to administer the Department of Family and Medical Leave (DFML) program.",
+    title: "How this website uses your information",
   },
 };
 

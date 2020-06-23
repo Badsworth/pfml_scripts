@@ -30,7 +30,7 @@ exports[`Review when all data is present renders Review page with the field valu
     *********
   </ReviewRow>
   <ReviewRow
-    label="Massachusetts drivers license or ID"
+    label="Massachusetts driver's license or ID"
   >
     *********
   </ReviewRow>

@@ -1,0 +1,74 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`ConsentToDataSharing renders the page 1`] = `
+<form
+  className="usa-form measure-5"
+  onSubmit={[Function]}
+>
+  <Title>
+    How this website uses your information
+  </Title>
+  <p
+    className="margin-bottom-2"
+  >
+    The information you provide on this website will be used to administer the Department of Family and Medical Leave (DFML) program.
+  </p>
+  <Accordion>
+    <AccordionItem
+      heading="Applying for PFML"
+    >
+      <p>
+        We need this information to:
+      </p>
+      <ul
+        className="usa-list"
+      >
+        <li
+          key="0"
+        >
+          Check your eligibility for coverage
+        </li>
+        <li
+          key="1"
+        >
+          Determine your benefit amount
+        </li>
+        <li
+          key="2"
+        >
+          Give you the best service possible
+        </li>
+      </ul>
+    </AccordionItem>
+    <AccordionItem
+      heading="How we use your data"
+    >
+      <p>
+        We’ll keep your information private as required by law. As a part of the application process, we may check the information you give with other state agencies. We may share information related to your claim with your employer, health care provider(s), and contracted private partners.
+      </p>
+    </AccordionItem>
+    <AccordionItem
+      heading="Full user agreements"
+    >
+      <p
+        dangerouslySetInnerHTML={
+          Object {
+            "__html": "To find out more about how the Commonwealth might use the information you share with DFML, please read the DFML Informed Consent Agreement and the <a href='https://www.mass.gov/privacypolicy'>Privacy Policy for Mass.gov</a>.",
+          }
+        }
+      />
+    </AccordionItem>
+  </Accordion>
+  <Alert
+    noIcon={true}
+    state="info"
+  >
+    By continuing, I am indicating that I have read and understood the above user agreements. I give the DFML permission to collect, share, and use my information consistent with the terms of the agreements linked above.
+  </Alert>
+  <Button
+    type="submit"
+  >
+    Agree and Continue
+  </Button>
+</form>
+`;

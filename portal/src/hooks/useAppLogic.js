@@ -1,3 +1,4 @@
+/* eslint sort-keys: ["error", "asc"] */
 import useAuthLogic from "./useAuthLogic";
 import useClaimsLogic from "./useClaimsLogic";
 
@@ -23,15 +24,19 @@ const useAppLogic = ({ user, setAppErrors }) => {
     submitClaim,
   } = useClaimsLogic({ user });
 
-  const { login } = useAuthLogic({ setAppErrors });
+  const { login, requireUserConsentToDataAgreement } = useAuthLogic({
+    setAppErrors,
+    user,
+  });
 
   return {
     claims,
+    createClaim,
     loadClaims,
     login,
-    createClaim,
-    updateClaim,
+    requireUserConsentToDataAgreement,
     submitClaim,
+    updateClaim,
   };
 };
 
