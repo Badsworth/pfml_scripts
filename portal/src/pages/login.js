@@ -14,7 +14,8 @@ export const Login = (props) => {
   const { appLogic } = props;
   const { t } = useTranslation();
   const { formState, updateFields } = useFormState({});
-  const { username, password } = formState;
+  const username = valueWithFallback(formState.username);
+  const password = valueWithFallback(formState.password);
   const handleInputChange = useHandleInputChange(updateFields);
 
   const handleSubmit = (event) => {
@@ -28,7 +29,7 @@ export const Login = (props) => {
       <InputText
         type="email"
         name="username"
-        value={valueWithFallback(username)}
+        value={username}
         label={t("pages.login.usernameLabel")}
         onChange={handleInputChange}
         smallLabel
@@ -36,7 +37,7 @@ export const Login = (props) => {
       <InputText
         type="password"
         name="password"
-        value={valueWithFallback(password)}
+        value={password}
         label={t("pages.login.passwordLabel")}
         onChange={handleInputChange}
         smallLabel

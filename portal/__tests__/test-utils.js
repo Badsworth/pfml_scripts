@@ -1,4 +1,5 @@
 import React from "react";
+import { act } from "react-dom/test-utils";
 import { mount } from "enzyme";
 
 /**
@@ -28,4 +29,50 @@ const TestHookComponent = (props) => {
  */
 export const testHook = (callback) => {
   mount(<TestHookComponent callback={callback} />);
+};
+
+/**
+ * Export convenience functions to simulate events like typing
+ * into input fields and submitting forms, and run the simulated
+ * events in Enzyme's `act` function to ensure any re-rendering
+ * logic is run.
+ * @example
+ * let wrapper;
+ * act(() => {
+ *   wrapper = shallow(<Component />);
+ * });
+ * const { input, submit } = simulateEvents(wrapper);
+ *
+ * changeField("username", "jane.doe@test.com");
+ * changeField("password", "P@ssw0rd");
+ * submitForm();
+ * @param {React.Component} wrapper React wrapper component
+ * @returns {{ changeField: Function, submitForm: Function }}
+ */
+export const simulateEvents = (wrapper) => {
+  /**
+   * Simulate typing into an input field that lives within a component
+   * @param {string} name Name of input field
+   * @param {strign} value Value for input field
+   */
+  function changeField(name, value) {
+    act(() => {
+      wrapper.find({ name }).simulate("change", {
+        target: { name, value },
+      });
+    });
+  }
+
+  /**
+   * Simulate submitting a form contained within a component
+   */
+  function submitForm() {
+    act(() => {
+      wrapper.find("form").simulate("submit", {
+        preventDefault: jest.fn(),
+      });
+    });
+  }
+
+  return { changeField, submitForm };
 };
