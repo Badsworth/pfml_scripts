@@ -1,5 +1,6 @@
-# Script to run migrations within an environment through an ECS task.
-#
+# Script to create an RDS IAM user in the database.
+# This only needs to be run whenever a new RDS database is created.
+# 
 # This relies on resources and outputs created in infra/api, which should
 # be updated prior to running this script.
 #
@@ -16,8 +17,8 @@ else
 fi
 
 if [ -z "$ENV_NAME" ] || [ -z "$AUTHOR" ]; then
-    echo "Usage: ./migrate.sh ENV_NAME [AUTHOR]"
-    echo "ex: ./migrate.sh test first_name.last_name"
+    echo "Usage: ./rds_user.sh ENV_NAME [AUTHOR]"
+    echo "ex: ./rds_user.sh test first_name.last_name"
     exit 1
 fi
 
@@ -32,7 +33,7 @@ NETWORK_CONFIG=$(jq \
      .awsvpcConfiguration.securityGroups=$SECURITY_GROUPS' \
     $DIR/network_config.json.tpl)
 
-TASK_DEFINITION=$(echo $TF_OUTPUTS | jq .migrate_up_task_arn.value | cut -d'/' -f2 | sed -e 's/^"//' -e 's/"$//')
+TASK_DEFINITION=$(echo $TF_OUTPUTS | jq .create_rds_user_task_arn.value | cut -d'/' -f2 | sed -e 's/^"//' -e 's/"$//')
 
 echo "Running $TASK_DEFINITION..."
 
@@ -57,12 +58,12 @@ EXIT_STATUS=$(aws ecs describe-tasks --cluster $ENV_NAME --task $TASK_ARN | jq -
 if [ $EXIT_STATUS -ne 0 ]
 then
 
-  echo "Migration ran into an error. Please check cloudwatch logs." >&2
+  echo "User Creation ran into an error. Please check cloudwatch logs." >&2
   exit 1
 
 else
 
-  echo "Migration completed successfully."
+  echo "User Creation completed successfully."
   exit 0
 
 fi

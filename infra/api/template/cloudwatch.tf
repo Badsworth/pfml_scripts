@@ -8,6 +8,11 @@ resource "aws_cloudwatch_log_group" "db_migrate_logs" {
   name = "service/${local.app_name}-${var.environment_name}/db-migrate"
 }
 
+# Cloudwatch log group for rds 
+resource "aws_cloudwatch_log_group" "create_rds_user_logs" {
+  name = "service/${local.app_name}-${var.environment_name}/create-rds-user"
+}
+
 resource "aws_cloudwatch_event_target" "trigger_dor_import_lambda_daily_at_11_pm" {
   rule      = aws_cloudwatch_event_rule.daily_11pm_et.name
   arn       = aws_lambda_function.dor_import.arn

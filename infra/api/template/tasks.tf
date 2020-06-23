@@ -25,3 +25,32 @@ data "template_file" "db_migrate_up_container_definitions" {
     aws_region                 = data.aws_region.current.name
   }
 }
+
+resource "aws_ecs_task_definition" "create_rds_user" {
+  // creates user and assigns role
+  family                = "${local.app_name}-create-rds-user"
+  execution_role_arn    = aws_iam_role.task_executor.arn
+  container_definitions = data.template_file.use_IAM_container_definitions.rendered
+
+  cpu                      = "512"
+  memory                   = "1024"
+  requires_compatibilities = ["FARGATE"]
+  network_mode             = "awsvpc"
+}
+
+data "template_file" "use_IAM_container_definitions" {
+  template = file("${path.module}/tasks/create_rds_user.json")
+
+  vars = {
+    app_name                   = local.app_name
+    cpu                        = "512"
+    memory                     = "1024"
+    db_host                    = aws_db_instance.default.address
+    db_name                    = aws_db_instance.default.name
+    db_username                = aws_db_instance.default.username
+    docker_image               = "${data.aws_ecr_repository.app.repository_url}:${var.service_docker_tag}"
+    environment_name           = var.environment_name
+    cloudwatch_logs_group_name = aws_cloudwatch_log_group.create_rds_user_logs.name
+    aws_region                 = data.aws_region.current.name
+  }
+}

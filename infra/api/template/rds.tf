@@ -31,15 +31,16 @@ resource "aws_db_subnet_group" "rds_postgres" {
 resource "aws_db_instance" "default" {
   identifier = "massgov-pfml-${var.environment_name}"
 
-  engine                = "postgres"
-  engine_version        = var.postgres_version
-  instance_class        = var.db_instance_class
-  allocated_storage     = var.db_allocated_storage
-  max_allocated_storage = var.db_max_allocated_storage
-  storage_type          = var.db_storage_type
-  iops                  = var.db_iops
-  storage_encrypted     = true
-  multi_az              = var.db_multi_az
+  engine                              = "postgres"
+  engine_version                      = var.postgres_version
+  instance_class                      = var.db_instance_class
+  allocated_storage                   = var.db_allocated_storage
+  max_allocated_storage               = var.db_max_allocated_storage
+  storage_type                        = var.db_storage_type
+  iops                                = var.db_iops
+  storage_encrypted                   = true
+  multi_az                            = var.db_multi_az
+  iam_database_authentication_enabled = true
 
   name     = "massgov_pfml_${var.environment_name}"
   username = "pfml"

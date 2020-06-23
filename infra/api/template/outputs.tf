@@ -9,3 +9,7 @@ output "migrate_up_task_arn" {
 output "cognito_post_confirmation_lambda_arn" {
   value = aws_lambda_function.cognito_post_confirmation.arn
 }
+
+output "create_rds_user_task_arn" {
+  value = aws_ecs_task_definition.create_rds_user.arn
+}
