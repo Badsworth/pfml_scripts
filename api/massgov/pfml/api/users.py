@@ -29,6 +29,17 @@ def users_get(user_id):
     return user_response(u)
 
 
+def users_current_get():
+    """Return the currently authenticated user"""
+    current_user = app.current_user()
+
+    # this should not ever be the case once authentication is required
+    if current_user is None:
+        raise NotFound
+
+    return user_response(current_user)
+
+
 def users_patch(user_id):
     """This endpoint modifies the user specified by the user_id"""
     body = UserUpdateRequest.parse_obj(connexion.request.json)

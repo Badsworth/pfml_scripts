@@ -9,12 +9,15 @@ https://docs.pytest.org/en/latest/fixture.html#conftest-py-sharing-fixture-funct
 import logging.config  # noqa: B1
 import os
 import uuid
+from datetime import datetime, timedelta
 
 import boto3
 import moto
 import pytest
+from jose import jwt
 
 import massgov.pfml.api.app
+import massgov.pfml.api.authentication as authentication
 import massgov.pfml.api.employees
 import massgov.pfml.api.generate_fake_data as fake
 import massgov.pfml.util.logging
@@ -30,7 +33,7 @@ def app_cors(monkeypatch, test_db):
 
 
 @pytest.fixture
-def app(test_db, initialize_factories_session):
+def app(test_db, initialize_factories_session, set_auth_public_keys):
     return massgov.pfml.api.app.create_app()
 
 
@@ -72,6 +75,42 @@ def test_wages(test_employee, monkeypatch):
     monkeypatch.setitem(fake.wages, test_employee["employee_id"], [wages])
 
     return wages, test_employee
+
+
+@pytest.fixture
+def set_auth_public_keys(monkeypatch, auth_key):
+    monkeypatch.setattr(authentication, "public_keys", auth_key)
+
+
+@pytest.fixture
+def auth_claims(user):
+    claims = {
+        "a": "b",
+        "exp": datetime.now() + timedelta(days=1),
+        "sub": str(user.active_directory_id),
+    }
+
+    return claims
+
+
+@pytest.fixture
+def auth_key():
+    hmac_key = {
+        "kty": "oct",
+        "kid": "018c0ae5-4d9b-471b-bfd6-eef314bc7037",
+        "use": "sig",
+        "alg": "HS256",
+        "k": "hJtXIZ2uSN5kbQfbtTNWbpdmhkV8FJG-Onbc6mxCcYg",
+    }
+
+    return hmac_key
+
+
+@pytest.fixture
+def auth_token(auth_claims, auth_key):
+
+    encoded = jwt.encode(auth_claims, auth_key)
+    return encoded
 
 
 @pytest.fixture

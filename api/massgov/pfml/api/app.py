@@ -18,6 +18,7 @@ import massgov.pfml.util.logging
 import massgov.pfml.util.logging.access
 from massgov.pfml import db
 from massgov.pfml.api.config import AppConfig, get_config
+from massgov.pfml.db.models.employees import User
 
 from .reverse_proxy import ReverseProxied
 
@@ -114,6 +115,10 @@ def db_session(close: bool = False) -> Generator[db.Session, None, None]:
     session = db_session_raw()
     with db.session_scope(session, close) as session_scoped:
         yield session_scoped
+
+
+def current_user() -> Optional[User]:
+    return g.get("current_user")
 
 
 def get_project_root_dir() -> str:

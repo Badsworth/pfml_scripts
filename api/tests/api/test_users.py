@@ -19,14 +19,18 @@ def test_users_get_404(client):
     assert response.status_code == 404
 
 
-# technically an integration test as client -> app -> create db, though the
-# actual handler is a mock
-def test_users_get_current(client):
-    response = client.get("/v1/users/current")
+def test_users_get_current(client, user, auth_token):
+    response = client.get("/v1/users/current", headers={"Authorization": f"Bearer {auth_token}"})
     response_body = response.get_json()
 
     assert response.status_code == 200
-    assert response_body["user_id"] == "009fa369-291b-403f-a85a-15e938c26f2f"
+    assert response_body["user_id"] == user.user_id
+
+
+def test_users_get_current_404(client):
+    response = client.get("/v1/users/current")
+
+    assert response.status_code == 404
 
 
 def test_users_patch(client, user):
