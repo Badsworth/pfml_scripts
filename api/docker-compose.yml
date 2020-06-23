@@ -41,6 +41,7 @@ services:
     environment:
       - ENVIRONMENT=local
       - ENABLE_FULL_ERROR_LOGS=1
+      - PYTHONPATH=/app/
       - DB_HOST=mass-pfml-db
       - DB_NAME=pfml
       - DB_USERNAME=pfml
