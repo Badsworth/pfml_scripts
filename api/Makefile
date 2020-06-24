@@ -158,6 +158,7 @@ logs-db: start ## View DB logs
 psql: login-db
 
 start: ## Start containers
+start: jwks.json
 	docker-compose up --detach
 
 stop: ## Stop running containers
@@ -190,7 +191,6 @@ release-tag: ## Tag release image for registry
 	docker tag $(APP_NAME):$(RELEASE_TAG) $(DOCKER_REGISTRY)/$(DOCKER_REPO):$(INFO_TAG)
 
 run: ## Run docker-compose
-run: jwks.json
 run: start logs
 
 db-upgrade: ## Apply pending migrations to db
