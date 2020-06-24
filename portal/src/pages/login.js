@@ -20,7 +20,7 @@ export const Login = (props) => {
 
   const handleSubmit = (event) => {
     event.preventDefault();
-    appLogic.login(username, password);
+    appLogic.auth.login(username, password);
   };
 
   return (
@@ -59,7 +59,9 @@ export const Login = (props) => {
 
 Login.propTypes = {
   appLogic: PropTypes.shape({
-    login: PropTypes.func.isRequired,
+    auth: PropTypes.shape({
+      login: PropTypes.func.isRequired,
+    }).isRequired,
   }).isRequired,
 };
 

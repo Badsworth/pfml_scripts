@@ -174,7 +174,7 @@ export const App = ({
    */
   useEffect(() => {
     if (user) {
-      appLogic.requireUserConsentToDataAgreement();
+      appLogic.auth.requireUserConsentToDataAgreement();
     }
     // Only trigger this effect when the user is set/updated
     // or when the user attempts to navigate to another page

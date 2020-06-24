@@ -30,29 +30,29 @@ describe("Login", () => {
       changeField("username", email);
       changeField("password", password);
       submitForm();
-      expect(appLogic.login).toHaveBeenCalledWith(email, password);
+      expect(appLogic.auth.login).toHaveBeenCalledWith(email, password);
     });
 
     it("calls login with empty string when username is undefined", () => {
       const password = "TestP@ssw0rd!";
 
       submitForm();
-      expect(appLogic.login).toHaveBeenCalledWith("", "");
+      expect(appLogic.auth.login).toHaveBeenCalledWith("", "");
 
       changeField("password", password);
       submitForm();
-      expect(appLogic.login).toHaveBeenCalledWith("", password);
+      expect(appLogic.auth.login).toHaveBeenCalledWith("", password);
     });
 
     it("calls login with empty string when password is undefined", () => {
       const email = "email@test.com";
 
       submitForm();
-      expect(appLogic.login).toHaveBeenCalledWith("", "");
+      expect(appLogic.auth.login).toHaveBeenCalledWith("", "");
 
       changeField("username", email);
       submitForm();
-      expect(appLogic.login).toHaveBeenCalledWith(email, "");
+      expect(appLogic.auth.login).toHaveBeenCalledWith(email, "");
     });
   });
 });

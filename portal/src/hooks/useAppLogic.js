@@ -24,17 +24,16 @@ const useAppLogic = ({ user, setAppErrors }) => {
     submitClaim,
   } = useClaimsLogic({ user });
 
-  const { login, requireUserConsentToDataAgreement } = useAuthLogic({
+  const auth = useAuthLogic({
     setAppErrors,
     user,
   });
 
   return {
+    auth,
     claims,
     createClaim,
     loadClaims,
-    login,
-    requireUserConsentToDataAgreement,
     submitClaim,
     updateClaim,
   };

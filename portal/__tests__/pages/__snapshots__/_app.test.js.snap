@@ -13,11 +13,13 @@ exports[`App when authenticated user consented to data sharing renders the page 
 <TestComponent
   appLogic={
     Object {
+      "auth": Object {
+        "login": [Function],
+        "requireUserConsentToDataAgreement": [Function],
+      },
       "claims": null,
       "createClaim": [Function],
       "loadClaims": [Function],
-      "login": [Function],
-      "requireUserConsentToDataAgreement": [Function],
       "submitClaim": [Function],
       "updateClaim": [Function],
     }
