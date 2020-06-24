@@ -969,6 +969,7 @@ components:
         application_nickname:
           type: string
           example: "My bonding leave request"
+          nullable: true
 
     Error:
       type: object

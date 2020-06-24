@@ -11,10 +11,14 @@ logger = massgov.pfml.util.logging.get_logger(__name__)
 class UserStatusDescription(Enum):
     unverified = "unverified"
     verified = "verified"
+
+
+class ApplicationStatusDescription(Enum):
+    draft = "Draft"
     completed = "Completed"
 
 
-StatusDescription = Union[UserStatusDescription]
+StatusDescription = Union[UserStatusDescription, ApplicationStatusDescription]
 
 
 def get_or_make_status(db_session: db.Session, status_description: StatusDescription) -> Status:

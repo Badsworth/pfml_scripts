@@ -1,14 +1,16 @@
 from datetime import datetime
+from typing import Optional
 
 import connexion
+from pydantic import UUID4
 from werkzeug.exceptions import NotFound
 
 import massgov.pfml.api.app as app
 from massgov.pfml.api.models.application_request import ApplicationRequest
 from massgov.pfml.api.models.application_response import ApplicationResponse
 from massgov.pfml.db.models.applications import Application
-from massgov.pfml.db.models.employees import Status
-from massgov.pfml.db.status import UserStatusDescription, get_or_make_status
+from massgov.pfml.db.status import ApplicationStatusDescription, get_or_make_status
+from massgov.pfml.util.pydantic import PydanticBaseModel
 
 
 def application_get(application_id):
@@ -26,20 +28,25 @@ def application_get(application_id):
         return application_response.create_full_response()
 
 
+class ApplicationSearchResult(PydanticBaseModel):
+    application_id: UUID4
+    application_nickname: Optional[str]
+
+
 def applications_get():
     applications = []
 
     with app.db_session() as db_session:
-        existing_applications = db_session.query(Application).all()
+        applications = db_session.query(
+            Application.application_id, Application.nickname.label("application_nickname")
+        ).all()
 
-    for application in existing_applications:
-        short_application = {
-            "application_id": application.application_id,
-            "application_nickname": str(application.nickname or ""),
-        }
-        applications.append(short_application)
-
-    return applications
+    return list(
+        map(
+            lambda query_result: ApplicationSearchResult.construct(**query_result._asdict()).dict(),
+            applications,
+        )
+    )
 
 
 def applications_start():
@@ -47,14 +54,10 @@ def applications_start():
     application.start_time = datetime.now()
 
     with app.db_session() as db_session:
-        draft_status = (
-            db_session.query(Status).filter(Status.status_description == "Draft").one_or_none()
-        )
+        draft_status = get_or_make_status(db_session, ApplicationStatusDescription.draft)
 
         application.status_id = draft_status.status_id
         db_session.add(application)
-        db_session.flush()
-        db_session.commit()
 
     return {"application_id": application.application_id}, 201
 
@@ -98,13 +101,10 @@ def applications_submit(application_id):
         if existing_application is None:
             raise NotFound
 
-        completed_status = get_or_make_status(db_session, UserStatusDescription.completed)
+        completed_status = get_or_make_status(db_session, ApplicationStatusDescription.completed)
         existing_application.status_id = completed_status.status_id
         existing_application.completed_time = datetime.now()
         db_session.add(existing_application)
-        db_session.flush()
-        db_session.refresh(existing_application)
-        db_session.commit()
 
     success_response = {
         "code": "201",
