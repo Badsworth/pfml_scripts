@@ -116,6 +116,42 @@ $ make db-migrate-create MIGRATE_MSG="<brief description of change>"
 $ make db-upgrade
 ```
 
+#### Multi-head situations
+
+Alembic migrations form an ordered history, with each migration having at least
+one parent migration as specified by the `down_revision` variable. This can be
+visualized by:
+
+```sh
+make db-migrate-history
+```
+
+When multiple migrations are created that point to the same `down_revision` a
+branch is created, with the tip of each branch being a "head". The above history
+command will show this, but a list of just the heads can been retrieved with:
+
+```sh
+make db-migrate-heads
+```
+
+CI/CD runs migrations to reach the "head". When there are multiple, Alembic
+can't resolve which migrations need to be run. If you run into this error,
+you'll need to fix the migration branches/heads before merging to `master`.
+
+If the migrations don't depend on each other, which is likely if they've
+branched, then you can just run:
+
+``` sh
+make db-migrate-merge-heads
+```
+
+Which will create a new migration pointing to all current "head"s, effectively
+pulling them all together.
+
+When branched migrations do need to happen in a defined order, then manually
+update the `down_revision` of one that should happen second to reference to the
+migration that should happen first.
+
 ## Native Developer Setup
 
 To setup a development environment outside of Docker,

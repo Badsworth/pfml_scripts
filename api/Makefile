@@ -202,8 +202,27 @@ db-downgrade: ## Rollback last migration in db
 db-downgrade-all: ## Rollback all migrations
 	$(PY_RUN_CMD) db-migrate-down-all $(DECODE_LOG)
 
+alembic_config := ./massgov/pfml/db/migrations/alembic.ini
+alembic_cmd := $(PY_RUN_CMD) alembic --config $(alembic_config)
+
 db-migrate-create: check-migrate-msg ## Create a new migration based on model changes
-	$(PY_RUN_CMD) alembic -c ./massgov/pfml/db/migrations/alembic.ini revision --autogenerate -m "$(MIGRATE_MSG)"
+	$(alembic_cmd) revision --autogenerate -m "$(MIGRATE_MSG)"
+
+db-migrate-current: ## Show current revision for a database
+	$(alembic_cmd) current $(args)
+
+db-migrate-history: ## Show migration history
+	$(alembic_cmd) history $(args)
+
+db-migrate-heads: ## Show migrations marked as a head
+	$(alembic_cmd) heads $(args)
+
+MIGRATE_MERGE_MSG := Merge multiple heads
+db-migrate-merge-heads: ## Create a new migration that depends on all existing `head`s
+	$(alembic_cmd) merge heads -m "$(MIGRATE_MERGE_MSG)" $(args)
+
+db-migrate-run: ## Run alembic with $args
+	$(alembic_cmd) $(args)
 
 check-migrate-msg:
 ifndef MIGRATE_MSG
