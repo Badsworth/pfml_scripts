@@ -2,7 +2,7 @@ from sqlalchemy import Boolean, Column, Date, DateTime, ForeignKey, Integer, Tex
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 
-from massgov.pfml.db.models.employees import Occupation, Status
+from massgov.pfml.db.models.employees import Employee, Employer, Occupation, Status, User
 
 from ..lookup import LookupTable
 from .base import Base, uuid_gen
@@ -91,6 +91,9 @@ class Application(Base):
     fineos_absence_id = Column(Text)
     fineos_notification_case_id = Column(Text)
 
+    user = relationship(User)
+    employer = relationship(Employer)
+    employee = relationship(Employee)
     status = relationship(Status)
     occupation = relationship(Occupation)
     leave_type = relationship(LeaveType)

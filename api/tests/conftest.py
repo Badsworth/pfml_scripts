@@ -135,54 +135,6 @@ def mock_s3_bucket():
 
 
 @pytest.fixture
-def test_application(test_employee, test_db_session):
-    from massgov.pfml.db.models.applications import Application
-
-    employee_id = test_employee["employee_id"]
-    fake_wages = fake.create_wages(employee_id, str(uuid.uuid4()))
-    fake.wages[employee_id] = [fake_wages]
-    created_application = fake.create_application(test_employee)
-
-    db_application = Application(
-        application_id=created_application["application_id"],
-        nickname=created_application["application_nickname"],
-    )
-
-    test_db_session.add(db_application)
-    test_db_session.commit()
-
-    return created_application
-
-
-@pytest.fixture
-def test_applications(test_employee, test_db_session):
-    from massgov.pfml.db.models.applications import Application
-
-    employee_id = test_employee["employee_id"]
-    fake_wages = fake.create_wages(employee_id, "0000-0000-0000-0000")
-    fake.wages[employee_id] = [fake_wages]
-    created_application1 = fake.create_application(test_employee)
-
-    db_application1 = Application(
-        application_id=created_application1["application_id"],
-        nickname=created_application1["application_nickname"],
-    )
-
-    created_application2 = fake.create_application(test_employee)
-
-    db_application2 = Application(
-        application_id=created_application2["application_id"],
-        nickname=created_application2["application_nickname"],
-    )
-
-    test_db_session.add(db_application1)
-    test_db_session.add(db_application2)
-    test_db_session.commit()
-
-    return [created_application1, created_application2]
-
-
-@pytest.fixture
 def create_app_statuses(test_db_session):
     from massgov.pfml.db.models.employees import Status
 
