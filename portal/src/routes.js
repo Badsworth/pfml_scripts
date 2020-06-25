@@ -1,12 +1,13 @@
+/* eslint sort-keys: ["error", "asc"] */
 /**
  * @file Routes to various pages in the application are defined here rather than being
  * hard-coded into various files.
  */
 const routes = {
-  home: "/",
   api: {
     claims: "/applications",
   },
+  applications: "/applications",
   claims: {
     checklist: "/claims/checklist",
     confirm: "/claims/confirm",
@@ -28,13 +29,14 @@ const routes = {
     uploadOtherId: "/claims/upload-other-id",
     uploadStateId: "/claims/upload-state-id",
   },
+  createAccount: "/create-account",
+  forgotPassword: "/forgot-password",
+  home: "/",
+  login: "/login",
+  resetPassword: "/reset-password",
   user: {
     consentToDataSharing: "/user/consent-to-data-sharing",
   },
-  login: "/login",
-  createAccount: "/create-account",
-  forgotPassword: "/forgot-password",
-  resetPassword: "/reset-password",
   verifyAccount: "/verify-account",
 };
 

@@ -272,6 +272,10 @@ const components = {
     verifyHint:
       "We sent a 6-digit verification code to {{emailAddress}}. Enter the code to verify your email.",
   },
+  dashboardNavigation: {
+    applicationsLink: "View your applications",
+    createApplicationLink: "Create an application",
+  },
   errorBoundary: {
     message:
       "Sorry, we encountered an unexpected error. If this continues to happen, you may call the Paid Family Leave Contact Center at $t(shared.callCenterPhoneNumber)",
