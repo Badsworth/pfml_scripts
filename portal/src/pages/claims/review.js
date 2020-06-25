@@ -4,6 +4,7 @@ import routeWithParams, {
 import BackButton from "../../components/BackButton";
 import ButtonLink from "../../components/ButtonLink";
 import Claim from "../../models/Claim";
+import { DateTime } from "luxon";
 import LeaveReason from "../../models/LeaveReason";
 import PropTypes from "prop-types";
 import React from "react";
@@ -107,6 +108,9 @@ export const Review = (props) => {
       <ReviewRow label={t("pages.claimsReview.employerNotifiedLabel")}>
         {t("pages.claimsReview.employerNotifiedValue", {
           context: (!!get(claim, "leave_details.employer_notified")).toString(),
+          date: DateTime.fromISO(
+            get(claim, "leave_details.employer_notification_date")
+          ).toLocaleString(),
         })}
       </ReviewRow>
 

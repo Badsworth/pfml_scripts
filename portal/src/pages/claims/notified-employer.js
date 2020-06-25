@@ -1,5 +1,8 @@
+import Alert from "../../components/Alert";
 import Claim from "../../models/Claim";
+import ConditionalContent from "../../components/ConditionalContent";
 import InputChoiceGroup from "../../components/InputChoiceGroup";
+import InputDate from "../../components/InputDate";
 import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
@@ -8,28 +11,36 @@ import routeWithParams from "../../utils/routeWithParams";
 import useFormState from "../../hooks/useFormState";
 import useHandleInputChange from "../../hooks/useHandleInputChange";
 import { useTranslation } from "../../locales/i18n";
+import valueWithFallback from "../../utils/valueWithFallback";
 import withClaim from "../../hoc/withClaim";
 
-export const fields = ["leave_details.employer_notified"];
+export const fields = [
+  "leave_details.employer_notified",
+  "leave_details.employer_notification_date",
+];
 
 /**
  * A form page to capture a user's attestation of having notified their employer.
  */
 export const NotifiedEmployer = (props) => {
   const { t } = useTranslation();
-  const { formState, updateFields } = useFormState(pick(props.claim, fields));
+  const { appLogic, claim, query } = props;
+  const { formState, updateFields, removeField } = useFormState(
+    pick(claim, fields)
+  );
   const { leave_details } = formState;
   const handleInputChange = useHandleInputChange(updateFields);
 
-  const handleSave = (formState) =>
-    props.appLogic.updateClaim(props.claim.application_id, formState);
+  const handleSave = () => {
+    appLogic.updateClaim(claim.application_id, formState);
+  };
 
   return (
     <QuestionPage
       formState={formState}
       title={t("pages.claimsNotifiedEmployer.title")}
       onSave={handleSave}
-      nextPage={routeWithParams("claims.review", props.query)}
+      nextPage={routeWithParams("claims.review", query)}
     >
       <InputChoiceGroup
         choices={[
@@ -50,6 +61,29 @@ export const NotifiedEmployer = (props) => {
         onChange={handleInputChange}
         type="radio"
       />
+      <ConditionalContent
+        fieldNamesClearedWhenHidden={[
+          "leave_details.employer_notification_date",
+        ]}
+        removeField={removeField}
+        visible={leave_details.employer_notified === true}
+      >
+        <InputDate
+          name="leave_details.employer_notification_date"
+          label={t("pages.claimsNotifiedEmployer.employerNotificationLabel")}
+          value={valueWithFallback(leave_details.employer_notification_date)}
+          hint={t("pages.claimsNotifiedEmployer.employerNotificationDateHint")}
+          dayLabel={t("components.form.dateInputDayLabel")}
+          monthLabel={t("components.form.dateInputMonthLabel")}
+          yearLabel={t("components.form.dateInputYearLabel")}
+          onChange={handleInputChange}
+        />
+      </ConditionalContent>
+      <ConditionalContent visible={leave_details.employer_notified === false}>
+        <Alert state="warning" role="alert">
+          {t("pages.claimsNotifiedEmployer.mustNotifyEmployerWarning")}
+        </Alert>
+      </ConditionalContent>
     </QuestionPage>
   );
 };

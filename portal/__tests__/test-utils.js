@@ -53,14 +53,25 @@ export const simulateEvents = (wrapper) => {
   /**
    * Simulate typing into an input field that lives within a component
    * @param {string} name Name of input field
-   * @param {strign} value Value for input field
+   * @param {string} value Value for input field
+   * @param {string?} [type] Type of form field
+   * @param {boolean?} [checked] Whether the radio option / checkbox is selected
    */
-  function changeField(name, value) {
+  function changeField(name, value, type, checked) {
     act(() => {
       wrapper.find({ name }).simulate("change", {
-        target: { name, value },
+        target: { checked, name, type, value },
       });
     });
+  }
+
+  /**
+   * Simulate typing into an input field that lives within a component
+   * @param {string} name Name of input field
+   * @param {strign} value Value for input field
+   */
+  function changeRadioGroup(name, value) {
+    changeField(name, value, "radio", true);
   }
 
   /**
@@ -74,5 +85,5 @@ export const simulateEvents = (wrapper) => {
     });
   }
 
-  return { changeField, submitForm };
+  return { changeField, changeRadioGroup, submitForm };
 };

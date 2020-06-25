@@ -76,6 +76,7 @@ describe("useClaimsLogic", () => {
           "last_name": null,
           "leave_details": Object {
             "continuous_leave_periods": null,
+            "employer_notification_date": null,
             "employer_notified": null,
             "reason": null,
           },
@@ -123,6 +124,7 @@ describe("useClaimsLogic", () => {
             "last_name": null,
             "leave_details": Object {
               "continuous_leave_periods": null,
+              "employer_notification_date": null,
               "employer_notified": null,
               "reason": null,
             },
@@ -157,6 +159,7 @@ describe("useClaimsLogic", () => {
             "last_name": null,
             "leave_details": Object {
               "continuous_leave_periods": null,
+              "employer_notification_date": null,
               "employer_notified": null,
               "reason": null,
             },

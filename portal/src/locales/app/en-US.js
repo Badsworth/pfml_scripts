@@ -139,8 +139,12 @@ const pages = {
   claimsNotifiedEmployer: {
     choiceNo: "$t(shared.choiceNo)",
     choiceYes: "$t(shared.choiceYes)",
+    employerNotificationDateHint: "This can be an approximate date.",
+    employerNotificationLabel: "When did you tell them?",
     hint:
       "Notify your employer at least 30 days before the start of your leave if possible.",
+    mustNotifyEmployerWarning:
+      "Before you can submit an application, you must tell your employer that you're taking leave.",
     sectionLabel: "Have you notified your employer of your leave?",
     title: "Medical Leave Application",
   },
@@ -149,7 +153,7 @@ const pages = {
     editLink: "Edit",
     employerNotifiedLabel: "Notified employer",
     employerNotifiedValue: "No",
-    employerNotifiedValue_true: "Yes",
+    employerNotifiedValue_true: "Notified employer on {{date}}",
     employmentSectionHeading: "Employment information",
     leaveDurationLabel: "Leave duration",
     leaveDurationTypeLabel: "Leave duration type",

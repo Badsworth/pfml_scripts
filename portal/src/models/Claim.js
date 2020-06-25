@@ -16,6 +16,7 @@ class Claim extends BaseModel {
       last_name: null,
       leave_details: {
         continuous_leave_periods: null,
+        employer_notification_date: null,
         employer_notified: null,
         reason: null,
       },

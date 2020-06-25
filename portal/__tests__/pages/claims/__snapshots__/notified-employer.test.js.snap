@@ -5,6 +5,7 @@ exports[`NotifiedEmployer renders the page 1`] = `
   formState={
     Object {
       "leave_details": Object {
+        "employer_notification_date": null,
         "employer_notified": null,
       },
     }
@@ -34,5 +35,35 @@ exports[`NotifiedEmployer renders the page 1`] = `
     onChange={[Function]}
     type="radio"
   />
+  <ConditionalContent
+    fieldNamesClearedWhenHidden={
+      Array [
+        "leave_details.employer_notification_date",
+      ]
+    }
+    removeField={[Function]}
+    visible={false}
+  >
+    <InputDate
+      dayLabel="Day"
+      hint="This can be an approximate date."
+      label="When did you tell them?"
+      monthLabel="Month"
+      name="leave_details.employer_notification_date"
+      onChange={[Function]}
+      value=""
+      yearLabel="Year"
+    />
+  </ConditionalContent>
+  <ConditionalContent
+    visible={false}
+  >
+    <Alert
+      role="alert"
+      state="warning"
+    >
+      Before you can submit an application, you must tell your employer that you're taking leave.
+    </Alert>
+  </ConditionalContent>
 </QuestionPage>
 `;

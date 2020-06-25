@@ -28,7 +28,8 @@ ConditionalContent.propTypes = {
   children: PropTypes.node.isRequired,
   /**
    * Field names, individually passed into `removeField` when the
-   * content is hidden and this component unmounts
+   * content is hidden and this component unmounts. If you include
+   * this prop, then remember to also pass in the `removeField` prop.
    */
   fieldNamesClearedWhenHidden: PropTypes.arrayOf(PropTypes.string),
   /**
@@ -36,7 +37,7 @@ ConditionalContent.propTypes = {
    * In Redux, this is your bound action creator (meaning, calling this method
    * dispatches it).
    */
-  removeField: PropTypes.func.isRequired,
+  removeField: PropTypes.func,
   /** Should this component's children be visible? */
   visible: PropTypes.bool,
 };

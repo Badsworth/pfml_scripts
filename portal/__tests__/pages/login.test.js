@@ -1,8 +1,8 @@
+import { simulateEvents, testHook } from "../test-utils";
 import Login from "../../src/pages/login";
 import React from "react";
 import { act } from "react-dom/test-utils";
 import { shallow } from "enzyme";
-import { simulateEvents } from "../test-utils";
 import useAppLogic from "../../src/hooks/useAppLogic";
 
 jest.mock("../../src/hooks/useAppLogic");
@@ -11,7 +11,9 @@ describe("Login", () => {
   let appLogic, changeField, submitForm, wrapper;
 
   beforeEach(() => {
-    appLogic = useAppLogic();
+    testHook(() => {
+      appLogic = useAppLogic();
+    });
     act(() => {
       wrapper = shallow(<Login appLogic={appLogic} />);
     });
