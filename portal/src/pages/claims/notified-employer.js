@@ -6,7 +6,8 @@ import InputDate from "../../components/InputDate";
 import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
-import { pick } from "lodash";
+import get from "lodash/get";
+import pick from "lodash/pick";
 import routeWithParams from "../../utils/routeWithParams";
 import useFormState from "../../hooks/useFormState";
 import useHandleInputChange from "../../hooks/useHandleInputChange";
@@ -45,12 +46,12 @@ export const NotifiedEmployer = (props) => {
       <InputChoiceGroup
         choices={[
           {
-            checked: leave_details.employer_notified === true,
+            checked: get(leave_details, "employer_notified") === true,
             label: t("pages.claimsNotifiedEmployer.choiceYes"),
             value: "true",
           },
           {
-            checked: leave_details.employer_notified === false,
+            checked: get(leave_details, "employer_notified") === false,
             label: t("pages.claimsNotifiedEmployer.choiceNo"),
             value: "false",
           },

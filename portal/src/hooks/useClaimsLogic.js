@@ -41,7 +41,17 @@ const useClaimsLogic = ({ user }) => {
    */
   const updateClaim = async (application_id, patchData) => {
     try {
-      const { claim } = await claimsApi.updateClaim(application_id, patchData);
+      let { claim } = await claimsApi.updateClaim(application_id, patchData);
+
+      // Currently the API doesn't return the claim data in the response
+      // so we're manually constructing the body based on client data.
+      // TODO: Remove workaround
+      claim = new Claim({
+        ...claims.get(application_id),
+        ...patchData,
+      });
+      // </ end workaround >
+
       setClaim(claim);
     } catch (error) {
       // TODO setAppErrors
