@@ -17,10 +17,10 @@ function DashboardClaimCard(props) {
   return (
     <article className="maxw-mobile-lg border border-base-lighter margin-bottom-3 padding-3">
       <span className="usa-tag bg-primary-lighter display-inline-block margin-bottom-1 text-bold text-primary text-no-uppercase">
-        {t("pages.index.tagInProgress")}
+        {t("components.dashboardClaimCard.tagInProgress")}
       </span>
       <Heading className="margin-top-05 margin-bottom-2" level="3">
-        {t("pages.index.claimCardHeading", { number })}
+        {t("components.dashboardClaimCard.heading", { number })}
       </Heading>
 
       <ButtonLink
@@ -29,7 +29,7 @@ function DashboardClaimCard(props) {
           claim_id: claim.application_id,
         })}
       >
-        {t("pages.index.resumeClaimButton")}
+        {t("components.dashboardClaimCard.resumeClaimButton")}
       </ButtonLink>
     </article>
   );

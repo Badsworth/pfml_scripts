@@ -30,7 +30,7 @@ function DashboardNavigation(props) {
   const isActive = (link) => props.activeHref === link.href;
 
   return (
-    <nav className="border-bottom border-base-lighter margin-bottom-3 display-flex">
+    <nav className="border-bottom border-base-lighter margin-bottom-5 display-flex">
       {links.map((link, index) => (
         <Link key={link.href} href={link.href}>
           <a

@@ -49,6 +49,9 @@ const pages = {
       "Paid Family and Medical Leave is a state-offered benefit for anyone who works in Massachusetts and is eligible to take up to 26 weeks of paid leave for medical or family reasons.",
     siteTitle: "Paid Family and Medical Leave (PFML) | Mass.gov",
   },
+  applications: {
+    title: "In-progress applications",
+  },
   claimsChecklist: {
     backButtonLabel: "Back to Dashboard",
     completedText: "Completed",
@@ -202,21 +205,29 @@ const pages = {
     title: "$t(shared.claimsFileUploadTitle)",
   },
   index: {
-    activeClaimsHeading: "Active claims",
-    claimCardHeading: "Claim {{number}}",
-    claimChecklistContactInformation: "Contact information",
-    claimChecklistDateOfLeave:
-      "When you are taking leave or planning to take leave",
-    claimChecklistEmploymentInformation: "Employment information",
-    claimChecklistHeader:
-      "To submit your claim, you will need to provide the following:",
-    claimChecklistReasonForLeave: "Why you are taking leave",
-    claimChecklistWhereToSendBenefits: "Where to send your benefits",
-    createClaimButtonText: "Start a new claim",
-    newClaimHeading: "Start a new claim",
-    resumeClaimButton: "Finish your claim",
-    tagInProgress: "In Progress",
-    title: "Dashboard",
+    afterApplyingHeading: "What to expect after you apply",
+    afterApplyingIntro:
+      "After you complete and submit your application, Paid Family and Medical Leave staff will review it to:",
+    afterApplyingList: [
+      "Make sure you have worked enough hours to qualify",
+      "Record the length of leave that your medical provider has certified for your own medical leave",
+      "Determine how much the Commonwealth should pay you during your leave",
+    ],
+    afterApplyingOutro:
+      "If your application is approved, you will receive weekly payments while you’re on leave.",
+    applicationTimeEstimate: "Applying takes around 10 minutes.",
+    createClaimButtonText: "Create an application",
+    needForApplyingHeading: "What you need to apply",
+    needForApplyingList: [
+      "Proof of your identity, like a driver’s license.",
+      "Your Social Security Number or Individual Taxpayer Identification Number.",
+      "Why you are taking leave",
+      "Your Healthcare Provider Form, which your healthcare provider has completed",
+      "Your employer FEIN",
+      "When you are planning to take leave or when you started on leave",
+      "Your bank account information",
+    ],
+    title: "Create an application",
   },
   login: {
     createAccountLink: "create an account",
@@ -271,6 +282,11 @@ const components = {
     title: "Verify your email address",
     verifyHint:
       "We sent a 6-digit verification code to {{emailAddress}}. Enter the code to verify your email.",
+  },
+  dashboardClaimCard: {
+    heading: "Claim {{number}}",
+    resumeClaimButton: "Finish your claim",
+    tagInProgress: "In Progress",
   },
   dashboardNavigation: {
     applicationsLink: "View your applications",

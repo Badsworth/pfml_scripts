@@ -2,7 +2,7 @@
 
 exports[`DashboardNavigation renders dashboard links 1`] = `
 <nav
-  className="border-bottom border-base-lighter margin-bottom-3 display-flex"
+  className="border-bottom border-base-lighter margin-bottom-5 display-flex"
 >
   <Link
     href="/"
