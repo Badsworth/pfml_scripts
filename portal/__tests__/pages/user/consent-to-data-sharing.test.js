@@ -12,7 +12,7 @@ describe("ConsentToDataSharing", () => {
   let setUser, user, wrapper;
 
   beforeEach(() => {
-    user = new User();
+    user = new User({ user_id: "mock-user-id" });
     setUser = jest.fn();
     wrapper = shallow(<ConsentToDataSharing user={user} setUser={setUser} />);
   });
@@ -31,9 +31,9 @@ describe("ConsentToDataSharing", () => {
     });
 
     it("sets user's consented_to_data_sharing field to true", () => {
-      expect(usersApi.updateUser).toHaveBeenCalledWith(
-        expect.objectContaining({ consented_to_data_sharing: true })
-      );
+      expect(usersApi.updateUser).toHaveBeenCalledWith(user.user_id, {
+        consented_to_data_sharing: true,
+      });
       expect(setUser).toHaveBeenCalledWith(expect.any(User));
     });
 

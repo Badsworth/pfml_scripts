@@ -77,34 +77,42 @@ describe("users API", () => {
   });
 
   describe("updateUser", () => {
-    const user = {
-      date_of_birth: "02-02-2020",
-    };
+    const user = new User({
+      user_id: "mock-user_id",
+      consented_to_data_sharing: true,
+    });
 
-    it("is successful", async () => {
-      const response = await usersApi.updateUser(user);
+    beforeEach(() => {
+      request.mockResolvedValueOnce({
+        body: {
+          user_id: "mock-user_id",
+          consented_to_data_sharing: true,
+        },
+        status: 200,
+        success: true,
+      });
+    });
+
+    it("responds with success status", async () => {
+      const response = await usersApi.updateUser(user.user_id, user);
       expect(response.success).toBeTruthy();
     });
 
-    it("includes User in the response", async () => {
-      const response = await usersApi.updateUser(user);
-
+    it("responds with an instance of a User", async () => {
+      const response = await usersApi.updateUser(user.user_id, user);
       expect(response.user).toBeInstanceOf(User);
-    });
-
-    it("adds user request parameters to the user", async () => {
-      const response = await usersApi.updateUser(user);
-
-      expect(response.user).toMatchObject(user);
-    });
-
-    it("adds status and user_id fields to the user", async () => {
-      const response = await usersApi.updateUser(user);
-
-      expect(response.user).toMatchObject({
-        user_id: expect.any(String),
-        status: expect.any(String),
-      });
+      expect(response.user).toMatchInlineSnapshot(`
+        User {
+          "auth_id": null,
+          "consented_to_data_sharing": true,
+          "date_of_birth": null,
+          "email_address": null,
+          "has_state_id": null,
+          "state_id": null,
+          "status": null,
+          "user_id": "mock-user_id",
+        }
+      `);
     });
   });
 });

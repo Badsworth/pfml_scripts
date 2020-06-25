@@ -20,7 +20,8 @@ const StateId = (props) => {
   const handleInputChange = useHandleInputChange(updateFields);
 
   const handleSave = useHandleSave(
-    (formState) => usersApi.updateUser(new User(formState)),
+    // TODO: Save this field to the appropriate API models once the fields exist
+    (formState) => usersApi.updateUser(props.user.user_id, new User(formState)),
     (result) => props.setUser(result.user)
   );
 

@@ -12,7 +12,7 @@ import tracker from "../services/tracker";
  * functions as parameters and returns an onSave handler that can be used to handle things like the QuestionPage
  * onSave event. Eventually this function will also handle errors that can happen during save.
  *
- * @example const save = useHandleSave((formState) => api.updateUser(formState), (result) => setUser(result.user))
+ * @example const save = useHandleSave((formState) => api.updateUser(user_id, formState), (result) => setUser(result.user))
  *          const updatedUser = await save({ first_name: "Anton" });
  *
  * @param {saveFunction} saveToApi - Asynchronous function that saves the form state to the API

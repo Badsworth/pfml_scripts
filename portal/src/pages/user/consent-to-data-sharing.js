@@ -17,7 +17,10 @@ const ConsentToDataSharing = (props) => {
   const router = useRouter();
 
   const handleSave = useHandleSave(
-    () => usersApi.updateUser(new User({ consented_to_data_sharing: true })),
+    () =>
+      usersApi.updateUser(props.user.user_id, {
+        consented_to_data_sharing: true,
+      }),
     (result) => props.setUser(result.user)
   );
 
@@ -75,6 +78,7 @@ const ConsentToDataSharing = (props) => {
 };
 
 ConsentToDataSharing.propTypes = {
+  user: PropTypes.instanceOf(User).isRequired,
   setUser: PropTypes.func.isRequired,
 };
 

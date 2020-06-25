@@ -12,12 +12,6 @@ import request from "./request";
  * @property {User} [user] - If the request succeeded, this will contain the created user
  */
 
-// Additional fields that would be returned by the API
-const mockApiResponseFields = {
-  status: "unverified",
-  user_id: "009fa369-291b-403f-a85a-15e938c26f2f",
-};
-
 /**
  * Get the currently authenticated user
  * @returns {Promise<UsersApiResult>}
@@ -33,23 +27,24 @@ async function getCurrentUser() {
 }
 
 /**
- * Mock a PATCH /users request and return a "success" user response
- * Leaving this as a separate method in case we want to add some update
- * -specific behavior later
- * @todo Document the structure of error responses once we know what it looks like
- * @param {User} user User properties to update
+ * Update a user
+ * @param {object} user_id - ID of user being updated
+ * @param {object} patchData - User fields to update
  * @returns {Promise<UsersApiResult>}
  */
-async function updateUser(user) {
-  // todo: make a PATCH request to the api
-  // const { body, success } = await request("PATCH", `users/${user.user_id}`, user);
+async function updateUser(user_id, patchData) {
+  const { body, success, status, apiErrors } = await request(
+    "PATCH",
+    `users/${user_id}`,
+    patchData
+  );
 
-  // Merge in additional fields that the API would populate
-  const response = Object.assign({}, user, mockApiResponseFields);
-  return Promise.resolve({
-    success: true,
-    user: new User(response),
-  });
+  return {
+    success,
+    status,
+    apiErrors,
+    user: success ? new User(body) : null,
+  };
 }
 
 export default {
