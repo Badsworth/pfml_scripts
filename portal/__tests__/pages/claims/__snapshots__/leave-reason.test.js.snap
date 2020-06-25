@@ -18,21 +18,27 @@ exports[`LeaveReason renders the page 1`] = `
       Array [
         Object {
           "checked": true,
-          "hint": "(Medical leave)",
-          "label": "I have a serious injury or illness",
+          "hint": "Medical leave",
+          "label": "I can’t work due to an illness, injury, or pregnancy.",
           "value": "Serious Health Condition - Employee",
         },
         Object {
           "checked": false,
-          "hint": "(Can cover medical and family leave)",
-          "label": "I need to take parental leave",
-          "value": "Pregnancy/Maternity",
+          "hint": "Family leave",
+          "label": "I need to bond with my child after birth or placement.",
+          "value": "Child Bonding",
         },
         Object {
           "checked": false,
-          "hint": "(Family leave)",
-          "label": "I need to manage family affairs while a family member is on active duty in the armed forces",
+          "hint": "Family leave",
+          "label": "I need to manage family affairs while a family member is on active duty in the armed forces.",
           "value": "Care For A Family Member",
+        },
+        Object {
+          "checked": false,
+          "hint": "Family leave",
+          "label": "I need to care for a family member who serves in the armed forces.",
+          "value": "Pregnancy/Maternity",
         },
       ]
     }

@@ -114,14 +114,17 @@ const pages = {
     title: "$t(shared.claimsLeaveDurationTitle)",
   },
   claimsLeaveReason: {
-    activeDutyFamilyLeaveHint: "(Family leave)",
+    activeDutyFamilyLeaveHint: "Family leave",
     activeDutyFamilyLeaveLabel:
-      "I need to manage family affairs while a family member is on active duty in the armed forces",
-    medicalLeaveHint: "(Medical leave)",
-    medicalLeaveLabel: "I have a serious injury or illness",
-    parentalLeaveHint: "(Can cover medical and family leave)",
-    parentalLeaveLabel: "I need to take parental leave",
+      "I need to manage family affairs while a family member is on active duty in the armed forces.",
+    bondingLeaveHint: "Family leave",
+    bondingLeaveLabel: "I need to bond with my child after birth or placement.",
+    medicalLeaveHint: "Medical leave",
+    medicalLeaveLabel: "I can’t work due to an illness, injury, or pregnancy.",
     sectionLabel: "Why do you need to take time off?",
+    serviceMemberFamilyLeaveHint: "Family leave",
+    serviceMemberFamilyLeaveLabel:
+      "I need to care for a family member who serves in the armed forces.",
     title: "Leave type",
   },
   claimsName: {
@@ -154,10 +157,10 @@ const pages = {
     leaveDurationTypeValue_intermittent:
       "$t(shared.claimDurationTypeIntermittent)",
     leaveReasonLabel: "Leave type",
+    leaveReasonValue_activeDutyFamily: "Active duty",
     leaveReasonValue_bonding: "Bonding leave",
-    leaveReasonValue_family: "Family leave",
     leaveReasonValue_medical: "Medical leave",
-    leaveReasonValue_parental: "Parental leave",
+    leaveReasonValue_serviceMemberFamily: "Military family",
     leaveSectionHeading: "Leave details",
     title: "Check your answers before sending your application",
     userDateOfBirthLabel: "Date of birth",

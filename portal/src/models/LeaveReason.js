@@ -2,8 +2,11 @@
  * Enums for the Application's `leave_details.reason` field
  */
 export default {
+  // TODO: We need to map some of these to the correct API fields,
+  // once those enum values exist within the API
+  // https://lwd.atlassian.net/browse/CP-515
   bonding: "Child Bonding",
-  family: "Care For A Family Member",
+  activeDutyFamily: "Care For A Family Member",
   medical: "Serious Health Condition - Employee",
-  parental: "Pregnancy/Maternity",
+  serviceMemberFamily: "Pregnancy/Maternity",
 };

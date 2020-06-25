@@ -40,19 +40,28 @@ export const LeaveReason = (props) => {
             value: LeaveReasonEnums.medical,
           },
           {
-            checked: reason === LeaveReasonEnums.parental,
-            hint: t("pages.claimsLeaveReason.parentalLeaveHint"),
-            label: t("pages.claimsLeaveReason.parentalLeaveLabel"),
-            value: LeaveReasonEnums.parental,
+            checked: reason === LeaveReasonEnums.bonding,
+            hint: t("pages.claimsLeaveReason.bondingLeaveHint"),
+            label: t("pages.claimsLeaveReason.bondingLeaveLabel"),
+            value: LeaveReasonEnums.bonding,
           },
           {
             // TODO: We need to more accurately map this Family Leave option to signify that
             // this is active duty family leave, as opposed to another family leave type.
             // https://lwd.atlassian.net/browse/CP-515
-            checked: reason === LeaveReasonEnums.family,
+            checked: reason === LeaveReasonEnums.activeDutyFamily,
             hint: t("pages.claimsLeaveReason.activeDutyFamilyLeaveHint"),
             label: t("pages.claimsLeaveReason.activeDutyFamilyLeaveLabel"),
-            value: LeaveReasonEnums.family,
+            value: LeaveReasonEnums.activeDutyFamily,
+          },
+          {
+            // TODO: We need to more accurately map this Family Leave option to signify that
+            // this is family leave to care for a service member, as opposed to another family leave type.
+            // https://lwd.atlassian.net/browse/CP-515
+            checked: reason === LeaveReasonEnums.serviceMemberFamily,
+            hint: t("pages.claimsLeaveReason.serviceMemberFamilyLeaveHint"),
+            label: t("pages.claimsLeaveReason.serviceMemberFamilyLeaveLabel"),
+            value: LeaveReasonEnums.serviceMemberFamily,
           },
         ]}
         label={t("pages.claimsLeaveReason.sectionLabel")}
