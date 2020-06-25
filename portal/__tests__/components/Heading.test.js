@@ -18,6 +18,27 @@ describe("Heading", () => {
     });
   });
 
+  describe("when weight prop is set", () => {
+    it("overrides default heading weight", () => {
+      const boldWrapper = shallow(
+        <Heading level="2" weight="bold">
+          Hello world
+        </Heading>
+      );
+      const normalWrapper = shallow(
+        <Heading level="2" weight="normal">
+          Hello world
+        </Heading>
+      );
+
+      expect(boldWrapper.hasClass("text-bold")).toBe(true);
+      expect(boldWrapper.hasClass("text-normal")).toBe(false);
+
+      expect(normalWrapper.hasClass("text-bold")).toBe(false);
+      expect(normalWrapper.hasClass("text-normal")).toBe(true);
+    });
+  });
+
   describe("when only the level prop is set", () => {
     describe("given level is 2", () => {
       it("renders h2 with Level 2 class names", () => {

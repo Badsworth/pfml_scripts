@@ -13,13 +13,18 @@ import { DateTime } from "luxon";
 function formatDateRange(startIsoDate, endIsoDate) {
   const startDate = DateTime.fromISO(startIsoDate);
   const endDate = DateTime.fromISO(endIsoDate);
+  let deliminator = "";
 
   const formattedStartDate = startDate.isValid
     ? startDate.toLocaleString()
     : "";
   const formattedEndDate = endDate.isValid ? endDate.toLocaleString() : "";
 
-  return `${formattedStartDate} – ${formattedEndDate}`;
+  if (formattedStartDate && formattedEndDate) {
+    deliminator = " – ";
+  }
+
+  return `${formattedStartDate}${deliminator}${formattedEndDate}`;
 }
 
 export default formatDateRange;

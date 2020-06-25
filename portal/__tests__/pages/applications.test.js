@@ -26,13 +26,15 @@ describe("Applications", () => {
     // Not taking a snapshot of the entire page in order to avoid
     // the snapshot changing every time the Claim model changes
     expect(wrapper.find("Title")).toMatchInlineSnapshot(`
-      <Title>
+      <Title
+        marginBottom="4"
+      >
         In-progress applications
       </Title>
     `);
   });
 
   it("renders list of Applications", () => {
-    expect(wrapper.find("DashboardClaimCard")).toHaveLength(1);
+    expect(wrapper.find("ApplicationCard")).toHaveLength(1);
   });
 });

@@ -24,6 +24,21 @@ describe("Title", () => {
     });
   });
 
+  describe("when the `bottomMargin` prop is set", () => {
+    it("overrides the default bottom margin", () => {
+      const defaultBottomMargin = shallow(<Title>Hello world</Title>).find(
+        "h1"
+      );
+      const withBottomMargin = shallow(
+        <Title marginBottom="4">Hello world</Title>
+      ).find("h1");
+
+      expect(defaultBottomMargin.hasClass("margin-bottom-2")).toBe(true);
+      expect(withBottomMargin.hasClass("margin-bottom-2")).toBe(false);
+      expect(withBottomMargin.hasClass("margin-bottom-4")).toBe(true);
+    });
+  });
+
   describe("when the `component` prop is set to 'legend'", () => {
     it("renders a <legend>", () => {
       const wrapper = shallow(<Title component="legend">Hello world</Title>);

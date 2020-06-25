@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import DashboardClaimCard from "../components/DashboardClaimCard";
+import ApplicationCard from "../components/ApplicationCard";
 import DashboardNavigation from "../components/DashboardNavigation";
 import PropTypes from "prop-types";
 import Spinner from "../components/Spinner";
@@ -22,11 +22,11 @@ const Applications = (props) => {
   return (
     <React.Fragment>
       <DashboardNavigation activeHref={router.route} />
-      <Title>{t("pages.applications.title")}</Title>
+      <Title marginBottom="4">{t("pages.applications.title")}</Title>
 
       {appLogic.claims ? (
         appLogic.claims.items.map((claim, index) => (
-          <DashboardClaimCard
+          <ApplicationCard
             key={claim.application_id}
             claim={claim}
             number={index + 1}

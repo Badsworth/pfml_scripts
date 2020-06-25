@@ -1,0 +1,25 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`ApplicationCard renders a card for the given application 1`] = `
+<article
+  className="maxw-mobile-lg border border-base-lighter margin-bottom-3 padding-3"
+>
+  <Heading
+    className="text-normal margin-bottom-05 margin-top-0"
+    level="2"
+    weight="normal"
+  >
+    Application 2
+  </Heading>
+  <div
+    className="border-top border-base-lighter padding-top-2 margin-top-2"
+  >
+    <ButtonLink
+      className="display-block margin-top-0"
+      href="/claims/checklist?claim_id=mock-claim-id"
+    >
+      Complete your application
+    </ButtonLink>
+  </div>
+</article>
+`;

@@ -8,16 +8,18 @@ import classnames from "classnames";
  * `Title` component instead.
  */
 const Heading = (props) => {
-  const HeadingElement = `h${props.level}`;
-  const stylingLevel = props.size ? props.size : props.level;
+  const { level, size, weight } = props;
+  const HeadingElement = `h${level}`;
+  const stylingLevel = size ? parseInt(size) : parseInt(level);
 
   const classes = classnames(props.className, {
-    "font-heading-lg text-bold": stylingLevel === "1",
-    "font-heading-md text-bold": stylingLevel === "2",
-    "font-heading-sm text-bold": stylingLevel === "3",
-    "font-heading-xs text-bold": stylingLevel === "4",
-    "font-heading-2xs text-normal":
-      stylingLevel === "5" || stylingLevel === "6",
+    "font-heading-lg": stylingLevel === 1,
+    "font-heading-md": stylingLevel === 2,
+    "font-heading-sm": stylingLevel === 3,
+    "font-heading-xs": stylingLevel === 4,
+    "font-heading-2xs": stylingLevel >= 5,
+    "text-bold": weight === "bold" || (!weight && stylingLevel < 5),
+    "text-normal": weight === "normal" || (!weight && stylingLevel >= 5),
   });
 
   return <HeadingElement className={classes}>{props.children}</HeadingElement>;
@@ -45,6 +47,8 @@ Heading.propTypes = {
    * you can override the styling by defining a `size`.
    */
   size: PropTypes.oneOf(["1", "2", "3", "4", "5", "6"]),
+  /** Override the default heading font weight */
+  weight: PropTypes.oneOf(["bold", "normal"]),
 };
 
 export default Heading;

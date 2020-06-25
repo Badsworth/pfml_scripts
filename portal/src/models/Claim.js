@@ -10,6 +10,7 @@ class Claim extends BaseModel {
       created_at: null,
       duration_type: null,
       employee_ssn: null,
+      employer_fein: null,
       first_name: null,
       // TODO: We'll map this to the correct API field once we get into Intermittent Leave work
       hours_off_needed: null,

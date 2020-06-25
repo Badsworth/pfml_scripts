@@ -9,7 +9,9 @@ import classnames from "classnames";
  */
 const Title = ({ component = "h1", small = false, ...props }) => {
   const TitleElement = component;
-  const classes = classnames("margin-top-0 margin-bottom-2", {
+  const marginBottom = props.marginBottom ? props.marginBottom : "2";
+
+  const classes = classnames(`margin-top-0 margin-bottom-${marginBottom}`, {
     "font-heading-lg line-height-sans-2": !small,
     "font-heading-sm line-height-sans-3": small,
     "usa-legend": component === "legend",
@@ -35,6 +37,8 @@ Title.propTypes = {
    * HTML element used to render the page title
    */
   component: PropTypes.oneOf(["h1", "legend"]),
+  /** Override default bottom margin */
+  marginBottom: PropTypes.oneOf(["1", "2", "3", "4", "5", "6", "7", "8"]),
   /**
    * By default, the text you pass in is also used for the title displayed
    * in search engines and the browser tab. This can be overridden by setting

@@ -117,9 +117,7 @@ exports[`Review when data is empty does not render strings like 'null' or 'undef
   </ReviewRow>
   <ReviewRow
     label="Leave duration"
-  >
-     – 
-  </ReviewRow>
+  />
   <ReviewRow
     label="Leave duration type"
   >

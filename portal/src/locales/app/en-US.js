@@ -39,6 +39,10 @@ const shared = {
   claimsFileUploadTitle: "Verify your identity",
   claimsLeaveDurationTitle: "Leave duration",
   claimsTakingLeaveTitle: "Verify your identity",
+  leaveReasonActiveDutyFamily: "Active duty",
+  leaveReasonBonding: "Bonding leave",
+  leaveReasonMedical: "Medical leave",
+  leaveReasonServiceMemberFamily: "Military family",
   passwordHint:
     "Your password must be at least 8 characters long and include numbers and letters.",
 };
@@ -161,10 +165,11 @@ const pages = {
     leaveDurationTypeValue_intermittent:
       "$t(shared.claimDurationTypeIntermittent)",
     leaveReasonLabel: "Leave type",
-    leaveReasonValue_activeDutyFamily: "Active duty",
-    leaveReasonValue_bonding: "Bonding leave",
-    leaveReasonValue_medical: "Medical leave",
-    leaveReasonValue_serviceMemberFamily: "Military family",
+    leaveReasonValue_activeDutyFamily: "$t(shared.leaveReasonActiveDutyFamily)",
+    leaveReasonValue_bonding: "$t(shared.leaveReasonBonding)",
+    leaveReasonValue_medical: "$t(shared.leaveReasonMedical)",
+    leaveReasonValue_serviceMemberFamily:
+      "$t(shared.leaveReasonServiceMemberFamily)",
     leaveSectionHeading: "Leave details",
     title: "Check your answers before sending your application",
     userDateOfBirthLabel: "Date of birth",
@@ -269,6 +274,17 @@ const pages = {
 };
 
 const components = {
+  applicationCard: {
+    feinHeading: "Employer FEIN",
+    heading: "Application {{number}}",
+    leaveDurationHeading: "Leave duration",
+    leaveReasonValue_activeDutyFamily: "$t(shared.leaveReasonActiveDutyFamily)",
+    leaveReasonValue_bonding: "$t(shared.leaveReasonBonding)",
+    leaveReasonValue_medical: "$t(shared.leaveReasonMedical)",
+    leaveReasonValue_serviceMemberFamily:
+      "$t(shared.leaveReasonServiceMemberFamily)",
+    resumeClaimButton: "Complete your application",
+  },
   authNav: {
     logOutButton: "Log out",
   },
@@ -289,11 +305,6 @@ const components = {
     title: "Verify your email address",
     verifyHint:
       "We sent a 6-digit verification code to {{emailAddress}}. Enter the code to verify your email.",
-  },
-  dashboardClaimCard: {
-    heading: "Claim {{number}}",
-    resumeClaimButton: "Finish your claim",
-    tagInProgress: "In Progress",
   },
   dashboardNavigation: {
     applicationsLink: "View your applications",
