@@ -7,6 +7,8 @@
 
 const errors = {
   auth: {
+    codeDeliveryFailure:
+      "We encountered an error while sending the verification code. Try again.",
     emailAndPasswordRequired: "Enter your email address and password",
     emailRequired: "Enter your email address",
     incorrectEmailOrPassword: "Incorrect email or password",
@@ -16,6 +18,7 @@ const errors = {
     passwordErrors:
       "Your password does not meet the requirements. Please check the requirements and try again.",
     passwordRequired: "Enter your password",
+    userNotFound: "Incorrect email",
     usernameExists: "An account with the given email already exists",
     verificationCodeFormat:
       "Enter the 6-digit code sent to your email and ensure it does not include any spaces or punctuation.",
@@ -46,6 +49,7 @@ const shared = {
   leaveReasonServiceMemberFamily: "Military family",
   passwordHint:
     "Your password must be at least 8 characters long and include numbers and letters.",
+  usernameLabel: "Email address",
 };
 
 const pages = {
@@ -64,7 +68,7 @@ const pages = {
     passwordHint: "$t(shared.passwordHint)",
     passwordLabel: "Password",
     title: "Create an account",
-    usernameLabel: "Email address",
+    usernameLabel: "$t(shared.usernameLabel)",
   },
   claimsChecklist: {
     backButtonLabel: "Back to Dashboard",
@@ -226,6 +230,16 @@ const pages = {
     sectionLabel: "Upload your Massachusetts driver’s license or ID card",
     title: "$t(shared.claimsFileUploadTitle)",
   },
+  forgotPassword: {
+    codeLabel: "6-digit code",
+    lead:
+      "If an account exists for the email you provide, we will email a 6-digit verification code to it.",
+    logInLink: "Back to log in",
+    resendCodeLink: "Resend the code",
+    submitButton: "Send code",
+    title: "Forgot your password?",
+    usernameLabel: "$t(shared.usernameLabel)",
+  },
   index: {
     afterApplyingHeading: "What to expect after you apply",
     afterApplyingIntro:
@@ -284,6 +298,23 @@ const pages = {
 };
 
 const components = {
+  amplifyForgotPassword: {
+    // TODO: Remove these after the CustomForgotPassword component is obsolete
+    // https://lwd.atlassian.net/browse/CP-485
+    codeLabel: "6-digit code",
+    leadCreatePasswordView:
+      "If an account exists for {{emailAddress}}, we emailed a 6-digit verification code to it. Enter the code below to confirm your email and reset your password.",
+    leadSendView:
+      "If an account exists for the email you provide, we will email a 6-digit verification code to it.",
+    passwordHint: "$t(shared.passwordHint)",
+    passwordLabel: "New password",
+    resendCodeLink: "Resend the code",
+    signInFooterLink: "Back to log in",
+    submitEmailButton: "Send code",
+    submitPasswordButton: "Set new password",
+    titleCreatePasswordView: "Create a new password",
+    titleSendView: "Forgot your password?",
+  },
   applicationCard: {
     feinHeading: "Employer FEIN",
     heading: "Application {{number}}",
@@ -367,21 +398,6 @@ const components = {
       },
     ],
   },
-  forgotPassword: {
-    codeLabel: "6-digit code",
-    leadCreatePasswordView:
-      "If an account exists for {{emailAddress}}, we emailed a 6-digit verification code to it. Enter the code below to confirm your email and reset your password.",
-    leadSendView:
-      "If an account exists for the email you provide, we will email a 6-digit verification code to it.",
-    passwordHint: "$t(shared.passwordHint)",
-    passwordLabel: "New password",
-    resendCodeLink: "Resend the code",
-    signInFooterLink: "Back to log in",
-    submitEmailButton: "Send code",
-    submitPasswordButton: "Set new password",
-    titleCreatePasswordView: "Create a new password",
-    titleSendView: "Forgot your password?",
-  },
   form: {
     continueButton: "Continue",
     dateInputDayLabel: "Day",
@@ -396,12 +412,12 @@ const components = {
   },
   signUp: {
     createAccountButton: "Create account",
-    emailLabel: "Email address",
     haveAnAccountFooterLabel: "Have an account?",
     passwordHint: "$t(shared.passwordHint)",
     passwordLabel: "Password",
     signInFooterLink: "Log in",
     title: "Create an account",
+    usernameLabel: "Email address",
   },
   spinner: {
     label: "Loading",

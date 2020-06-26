@@ -16,6 +16,33 @@ const useAuthLogic = ({ appErrorsLogic, user }) => {
   const router = useRouter();
 
   /**
+   * Initiate the Forgot Password flow, sending a verification code when user exists.
+   * If there are any errors, sets app errors on the page.
+   * @param {string} username Email address that is used as the username
+   */
+  const forgotPassword = async (username) => {
+    appErrorsLogic.clearErrors();
+    username = username.trim();
+
+    if (!username) {
+      const validationErrors = [
+        new AppErrorInfo({ message: t("errors.auth.emailRequired") }),
+      ];
+      appErrorsLogic.setAppErrors(new AppErrorInfoCollection(validationErrors));
+      return;
+    }
+
+    try {
+      await Auth.forgotPassword(username);
+    } catch (error) {
+      const appErrors = getForgotPasswordErrorInfo(error, t);
+      appErrorsLogic.setAppErrors(appErrors);
+    }
+
+    router.push(routes.auth.resetPassword);
+  };
+
+  /**
    * Log in to Portal with the given username (email) and password.
    * If there are any errors, set app errors on the page.
    * @param {string} username Email address that is used as the username
@@ -84,6 +111,7 @@ const useAuthLogic = ({ appErrorsLogic, user }) => {
 
   return {
     createAccount,
+    forgotPassword,
     login,
     requireUserConsentToDataAgreement,
   };
@@ -112,7 +140,33 @@ function validateUsernamePassword(username, password, t) {
  * https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_SignUp.html#API_SignUp_Errors
  * @param {object} error Error object that was thrown by Amplify's Auth.signIn method
  * @param {Function} t Localization method
- * @returns {AppErrorInfo[]} Array of AppErrorInfo objects
+ * @returns {AppErrorInfoCollection}
+ */
+function getForgotPasswordErrorInfo(error, t) {
+  let message;
+
+  if (error.code === "CodeDeliveryFailureException") {
+    message = t("errors.auth.codeDeliveryFailure");
+  } else if (error.code === "InvalidParameterException") {
+    message = t("errors.auth.invalidParametersFallback");
+  } else if (error.code === "UserNotFoundException") {
+    message = t("errors.auth.userNotFound");
+  } else {
+    message = t("errors.network");
+  }
+
+  const validationErrors = [new AppErrorInfo({ message })];
+  return new AppErrorInfoCollection(validationErrors);
+}
+
+/**
+ * Converts an error thrown by the Amplify library's Auth.signIn method into
+ * AppErrorInfo objects to be rendered by the page.
+ * For a list of possible exceptions, see
+ * https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_ForgotPassword.html#API_ForgotPassword_Errors
+ * @param {object} error Error object that was thrown by Amplify
+ * @param {Function} t Localization method
+ * @returns {AppErrorInfoCollection}
  */
 function getLoginErrorInfo(error, t) {
   let message;
@@ -141,7 +195,7 @@ function getLoginErrorInfo(error, t) {
  * https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_SignUp.html#API_SignUp_Errors
  * @param {object} error Error object that was thrown by Amplify's Auth.signUp method
  * @param {Function} t Localization method
- * @returns {AppErrorInfo[]} Array of AppErrorInfo objects
+ * @returns {AppErrorInfoCollection}
  */
 function getCreateAccountErrorInfo(error, t) {
   let message;

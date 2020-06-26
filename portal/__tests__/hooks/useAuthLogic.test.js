@@ -9,7 +9,14 @@ import useAuthLogic from "../../src/hooks/useAuthLogic";
 jest.mock("aws-amplify");
 
 describe("useAuthLogic", () => {
-  let appErrors, createAccount, login, password, setAppErrors, username;
+  let appErrors,
+    createAccount,
+    forgotPassword,
+    login,
+    password,
+    setAppErrors,
+    username;
+
   beforeEach(() => {
     jest.resetAllMocks();
     username = "test@email.com";
@@ -17,7 +24,97 @@ describe("useAuthLogic", () => {
     testHook(() => {
       const appErrorsLogic = useAppErrorsLogic();
       ({ appErrors, setAppErrors } = appErrorsLogic);
-      ({ login, createAccount } = useAuthLogic({ appErrorsLogic }));
+      ({ forgotPassword, login, createAccount } = useAuthLogic({
+        appErrorsLogic,
+      }));
+    });
+  });
+
+  describe("forgotPassword", () => {
+    it("calls Auth.forgotPassword", () => {
+      act(() => {
+        forgotPassword(username);
+      });
+      expect(Auth.forgotPassword).toHaveBeenCalledWith(username);
+    });
+
+    it("trims whitespace from username", () => {
+      act(() => {
+        forgotPassword(`  ${username} `);
+      });
+      expect(Auth.forgotPassword).toHaveBeenCalledWith(username);
+    });
+
+    it("sets app errors when username is empty", () => {
+      username = "";
+      act(() => {
+        forgotPassword(username);
+      });
+      expect(appErrors.items).toHaveLength(1);
+      expect(appErrors.items[0].message).toMatchInlineSnapshot(
+        `"Enter your email address"`
+      );
+      expect(Auth.forgotPassword).not.toHaveBeenCalled();
+    });
+
+    it("sets app errors when an account isn't found", () => {
+      jest.spyOn(Auth, "forgotPassword").mockImplementation(() => {
+        // Ignore lint rule since AWS Auth class actually throws an object literal
+        // eslint-disable-next-line no-throw-literal
+        throw {
+          code: "UserNotFoundException",
+          message: "An account with the given email does not exist.",
+          name: "UserNotFoundException",
+        };
+      });
+      act(() => {
+        forgotPassword(username);
+      });
+      expect(appErrors.items).toHaveLength(1);
+      expect(appErrors.items[0].message).toMatchInlineSnapshot(
+        `"Incorrect email"`
+      );
+    });
+
+    it("sets app errors when Auth.forgotPassword throws InvalidParameterException", () => {
+      jest.spyOn(Auth, "forgotPassword").mockImplementation(() => {
+        // Ignore lint rule since AWS Auth class actually throws an object literal
+        // eslint-disable-next-line no-throw-literal
+        throw {
+          code: "InvalidParameterException",
+          message:
+            "1 validation error detected: Value at 'email' failed to satisfy constraint",
+          name: "InvalidParameterException",
+        };
+      });
+      act(() => {
+        forgotPassword(username);
+      });
+      expect(appErrors.items).toHaveLength(1);
+      expect(appErrors.items[0].message).toMatchInlineSnapshot(
+        `"Please enter all required information"`
+      );
+    });
+
+    it("sets system error message when Auth.forgotPassword throws unanticipated error", () => {
+      jest.spyOn(Auth, "forgotPassword").mockImplementation(() => {
+        throw new Error("Some unknown error");
+      });
+      act(() => {
+        forgotPassword(username);
+      });
+      expect(appErrors.items).toHaveLength(1);
+      expect(appErrors.items[0].message).toMatchInlineSnapshot(
+        `"Sorry, an error was encountered. This may occur for a variety of reasons, including temporarily losing an internet connection or an unexpected error in our system. If this continues to happen, you may call the Paid Family Leave Contact Center at (XXX) XXX-XXXX"`
+      );
+    });
+
+    it("clears existing errors", () => {
+      act(() => {
+        setAppErrors([{ message: "Pre-existing error" }]);
+        forgotPassword(username);
+      });
+      expect(appErrors).toBeNull();
     });
   });
 
@@ -226,7 +323,7 @@ describe("useAuthLogic", () => {
       );
     });
 
-    it("sets app errors when Auth.signIn throws InvalidParameterException", () => {
+    it("sets app errors when Auth.signUp throws InvalidParameterException", () => {
       jest.spyOn(Auth, "signUp").mockImplementation(() => {
         // Ignore lint rule since AWS Auth class actually throws an object literal
         // eslint-disable-next-line no-throw-literal
@@ -246,7 +343,7 @@ describe("useAuthLogic", () => {
       );
     });
 
-    it("sets app errors when Auth.signIn throws InvalidPasswordException", () => {
+    it("sets app errors when Auth.signUp throws InvalidPasswordException", () => {
       const invalidPasswordErrorMessages = [
         "Password did not conform with policy: Password not long enough",
         "Password did not conform with policy: Password must have uppercase characters",
@@ -281,7 +378,7 @@ describe("useAuthLogic", () => {
       }
     });
 
-    it("sets system error message when Auth.signIn throws unanticipated error", () => {
+    it("sets system error message when Auth.signUp throws unanticipated error", () => {
       jest.spyOn(Auth, "signUp").mockImplementation(() => {
         throw new Error("Some unknown error");
       });
@@ -297,7 +394,7 @@ describe("useAuthLogic", () => {
     it("clears existing errors", () => {
       act(() => {
         setAppErrors([{ message: "Pre-existing error" }]);
-        login(username, password);
+        createAccount(username, password);
       });
       expect(appErrors).toEqual(null);
     });

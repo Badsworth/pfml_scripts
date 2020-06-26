@@ -28,6 +28,7 @@ exports[`App when authenticated user consented to data sharing renders the page 
       "appErrors": null,
       "auth": Object {
         "createAccount": [Function],
+        "forgotPassword": [Function],
         "login": [Function],
         "requireUserConsentToDataAgreement": [Function],
       },

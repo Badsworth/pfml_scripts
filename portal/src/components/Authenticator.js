@@ -34,7 +34,7 @@ const Authenticator = (props) => {
     hideAllDefaults: true,
     signUpFields: [
       {
-        label: t("components.signUp.emailLabel"),
+        label: t("components.signUp.usernameLabel"),
         key: "username",
         placeholder: "",
         required: true,

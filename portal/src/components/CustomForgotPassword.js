@@ -52,7 +52,7 @@ class CustomForgotPassword extends ForgotPassword {
       <React.Fragment>
         <InputText
           autoComplete="off"
-          label={t("components.forgotPassword.codeLabel")}
+          label={t("components.amplifyForgotPassword.codeLabel")}
           name="code"
           onChange={this.handleCodeChange}
           smallLabel
@@ -63,13 +63,13 @@ class CustomForgotPassword extends ForgotPassword {
           onClick={this.send}
           variation="unstyled"
         >
-          {t("components.forgotPassword.resendCodeLink")}
+          {t("components.amplifyForgotPassword.resendCodeLink")}
         </Button>
 
         <InputText
           autoComplete="new-password"
-          label={t("components.forgotPassword.passwordLabel")}
-          hint={t("components.forgotPassword.passwordHint")}
+          label={t("components.amplifyForgotPassword.passwordLabel")}
+          hint={t("components.amplifyForgotPassword.passwordHint")}
           type="password"
           name="password"
           onChange={this.handleInputChange}
@@ -92,16 +92,16 @@ class CustomForgotPassword extends ForgotPassword {
 
     const viewModeStrings = {
       createPasswordView: {
-        lead: t("components.forgotPassword.leadCreatePasswordView", {
+        lead: t("components.amplifyForgotPassword.leadCreatePasswordView", {
           emailAddress: this.email(),
         }),
-        submit: t("components.forgotPassword.submitPasswordButton"),
-        title: t("components.forgotPassword.titleCreatePasswordView"),
+        submit: t("components.amplifyForgotPassword.submitPasswordButton"),
+        title: t("components.amplifyForgotPassword.titleCreatePasswordView"),
       },
       sendView: {
-        lead: t("components.forgotPassword.leadSendView"),
-        submit: t("components.forgotPassword.submitEmailButton"),
-        title: t("components.forgotPassword.titleSendView"),
+        lead: t("components.amplifyForgotPassword.leadSendView"),
+        submit: t("components.amplifyForgotPassword.submitEmailButton"),
+        title: t("components.amplifyForgotPassword.titleSendView"),
       },
     };
 
@@ -147,7 +147,7 @@ class CustomForgotPassword extends ForgotPassword {
                   onClick={this.handleBackToSignIn}
                   variation="unstyled"
                 >
-                  {t("components.forgotPassword.signInFooterLink")}
+                  {t("components.amplifyForgotPassword.signInFooterLink")}
                 </Button>
               </div>
             </div>

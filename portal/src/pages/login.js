@@ -47,8 +47,10 @@ export const Login = (props) => {
           <a>{t("pages.login.forgotPasswordLink")}</a>
         </Link>
       </div>
+
       <Button type="submit">{t("pages.login.loginButton")}</Button>
-      <div className="margin-top-1">
+
+      <div className="margin-top-2">
         <Link href={routes.auth.createAccount}>
           <a className="text-bold">{t("pages.login.createAccountLink")}</a>
         </Link>
