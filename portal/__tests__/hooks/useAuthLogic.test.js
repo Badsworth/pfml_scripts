@@ -3,8 +3,8 @@ import User from "../../src/models/User";
 import { act } from "react-dom/test-utils";
 import { mockRouter } from "next/router";
 import { testHook } from "../test-utils";
+import useAppErrorsLogic from "../../src/hooks/useAppErrorsLogic";
 import useAuthLogic from "../../src/hooks/useAuthLogic";
-import { useState } from "react";
 
 jest.mock("aws-amplify");
 
@@ -15,8 +15,9 @@ describe("useAuthLogic", () => {
     username = "test@email.com";
     password = "TestP@ssw0rd!";
     testHook(() => {
-      [appErrors, setAppErrors] = useState([]);
-      ({ createAccount, login } = useAuthLogic({ setAppErrors }));
+      const appErrorsLogic = useAppErrorsLogic();
+      ({ appErrors, setAppErrors } = appErrorsLogic);
+      ({ login, createAccount } = useAuthLogic({ appErrorsLogic }));
     });
   });
 
@@ -41,8 +42,8 @@ describe("useAuthLogic", () => {
       act(() => {
         login(username, password);
       });
-      expect(appErrors).toHaveLength(1);
-      expect(appErrors[0].message).toMatchInlineSnapshot(
+      expect(appErrors.items).toHaveLength(1);
+      expect(appErrors.items[0].message).toMatchInlineSnapshot(
         `"Enter your email address and password"`
       );
       expect(Auth.signIn).not.toHaveBeenCalled();
@@ -53,8 +54,8 @@ describe("useAuthLogic", () => {
       act(() => {
         login(username, password);
       });
-      expect(appErrors).toHaveLength(1);
-      expect(appErrors[0].message).toMatchInlineSnapshot(
+      expect(appErrors.items).toHaveLength(1);
+      expect(appErrors.items[0].message).toMatchInlineSnapshot(
         `"Enter your email address"`
       );
       expect(Auth.signIn).not.toHaveBeenCalled();
@@ -65,8 +66,8 @@ describe("useAuthLogic", () => {
       act(() => {
         login(username, password);
       });
-      expect(appErrors).toHaveLength(1);
-      expect(appErrors[0].message).toMatchInlineSnapshot(
+      expect(appErrors.items).toHaveLength(1);
+      expect(appErrors.items[0].message).toMatchInlineSnapshot(
         `"Enter your password"`
       );
       expect(Auth.signIn).not.toHaveBeenCalled();
@@ -85,8 +86,8 @@ describe("useAuthLogic", () => {
       act(() => {
         login(username, password);
       });
-      expect(appErrors).toHaveLength(1);
-      expect(appErrors[0].message).toMatchInlineSnapshot(
+      expect(appErrors.items).toHaveLength(1);
+      expect(appErrors.items[0].message).toMatchInlineSnapshot(
         `"Incorrect email or password"`
       );
     });
@@ -105,8 +106,8 @@ describe("useAuthLogic", () => {
       act(() => {
         login(username, password);
       });
-      expect(appErrors).toHaveLength(1);
-      expect(appErrors[0].message).toMatchInlineSnapshot(
+      expect(appErrors.items).toHaveLength(1);
+      expect(appErrors.items[0].message).toMatchInlineSnapshot(
         `"Please enter all required information"`
       );
     });
@@ -126,8 +127,8 @@ describe("useAuthLogic", () => {
       act(() => {
         login(username, password);
       });
-      expect(appErrors).toHaveLength(1);
-      expect(appErrors[0].message).toMatchInlineSnapshot(
+      expect(appErrors.items).toHaveLength(1);
+      expect(appErrors.items[0].message).toMatchInlineSnapshot(
         `"Please enter all required information"`
       );
     });
@@ -139,8 +140,8 @@ describe("useAuthLogic", () => {
       act(() => {
         login(username, password);
       });
-      expect(appErrors).toHaveLength(1);
-      expect(appErrors[0].message).toMatchInlineSnapshot(
+      expect(appErrors.items).toHaveLength(1);
+      expect(appErrors.items[0].message).toMatchInlineSnapshot(
         `"Sorry, an error was encountered. This may occur for a variety of reasons, including temporarily losing an internet connection or an unexpected error in our system. If this continues to happen, you may call the Paid Family Leave Contact Center at (XXX) XXX-XXXX"`
       );
     });
@@ -150,7 +151,7 @@ describe("useAuthLogic", () => {
         setAppErrors([{ message: "Pre-existing error" }]);
         login(username, password);
       });
-      expect(appErrors).toEqual([]);
+      expect(appErrors).toBeNull();
     });
   });
 
@@ -175,8 +176,8 @@ describe("useAuthLogic", () => {
       act(() => {
         createAccount(username, password);
       });
-      expect(appErrors).toHaveLength(1);
-      expect(appErrors[0].message).toMatchInlineSnapshot(
+      expect(appErrors.items).toHaveLength(1);
+      expect(appErrors.items[0].message).toMatchInlineSnapshot(
         `"Enter your email address and password"`
       );
       expect(Auth.signUp).not.toHaveBeenCalled();
@@ -187,8 +188,8 @@ describe("useAuthLogic", () => {
       act(() => {
         createAccount(username, password);
       });
-      expect(appErrors).toHaveLength(1);
-      expect(appErrors[0].message).toMatchInlineSnapshot(
+      expect(appErrors.items).toHaveLength(1);
+      expect(appErrors.items[0].message).toMatchInlineSnapshot(
         `"Enter your email address"`
       );
       expect(Auth.signUp).not.toHaveBeenCalled();
@@ -199,8 +200,8 @@ describe("useAuthLogic", () => {
       act(() => {
         createAccount(username, password);
       });
-      expect(appErrors).toHaveLength(1);
-      expect(appErrors[0].message).toMatchInlineSnapshot(
+      expect(appErrors.items).toHaveLength(1);
+      expect(appErrors.items[0].message).toMatchInlineSnapshot(
         `"Enter your password"`
       );
       expect(Auth.signUp).not.toHaveBeenCalled();
@@ -219,8 +220,8 @@ describe("useAuthLogic", () => {
       act(() => {
         createAccount(username, password);
       });
-      expect(appErrors).toHaveLength(1);
-      expect(appErrors[0].message).toMatchInlineSnapshot(
+      expect(appErrors.items).toHaveLength(1);
+      expect(appErrors.items[0].message).toMatchInlineSnapshot(
         `"An account with the given email already exists"`
       );
     });
@@ -239,8 +240,8 @@ describe("useAuthLogic", () => {
       act(() => {
         createAccount(username, password);
       });
-      expect(appErrors).toHaveLength(1);
-      expect(appErrors[0].message).toMatchInlineSnapshot(
+      expect(appErrors.items).toHaveLength(1);
+      expect(appErrors.items[0].message).toMatchInlineSnapshot(
         `"Your password does not meet the requirements. Please check the requirements and try again."`
       );
     });
@@ -273,8 +274,8 @@ describe("useAuthLogic", () => {
         act(() => {
           createAccount(username, password);
         });
-        expect(appErrors).toHaveLength(1);
-        expect(appErrors[0].message).toMatchInlineSnapshot(
+        expect(appErrors.items).toHaveLength(1);
+        expect(appErrors.items[0].message).toMatchInlineSnapshot(
           `"Your password does not meet the requirements. Please check the requirements and try again."`
         );
       }
@@ -287,8 +288,8 @@ describe("useAuthLogic", () => {
       act(() => {
         createAccount(username, password);
       });
-      expect(appErrors).toHaveLength(1);
-      expect(appErrors[0].message).toMatchInlineSnapshot(
+      expect(appErrors.items).toHaveLength(1);
+      expect(appErrors.items[0].message).toMatchInlineSnapshot(
         `"Sorry, an error was encountered. This may occur for a variety of reasons, including temporarily losing an internet connection or an unexpected error in our system. If this continues to happen, you may call the Paid Family Leave Contact Center at (XXX) XXX-XXXX"`
       );
     });
@@ -298,7 +299,7 @@ describe("useAuthLogic", () => {
         setAppErrors([{ message: "Pre-existing error" }]);
         login(username, password);
       });
-      expect(appErrors).toEqual([]);
+      expect(appErrors).toEqual(null);
     });
   });
 

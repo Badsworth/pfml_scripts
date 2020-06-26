@@ -3,6 +3,7 @@ import { mockRouter, mockRouterEvents } from "next/router";
 import { mount, shallow } from "enzyme";
 import { App } from "../../src/pages/_app";
 import AppErrorInfo from "../../src/models/AppErrorInfo";
+import AppErrorInfoCollection from "../../src/models/AppErrorInfoCollection";
 import { NetworkError } from "../../src/errors";
 import User from "../../src/models/User";
 import { act } from "react-dom/test-utils";
@@ -408,10 +409,14 @@ describe("App", () => {
   describe("displaying errors", () => {
     it("displays errors that child pages set", async () => {
       const ChildPage = (props) => {
-        const { setAppErrors } = props; // eslint-disable-line react/prop-types
+        const {
+          appLogic: { setAppErrors }, // eslint-disable-line react/prop-types
+        } = props;
         useEffect(() => {
           const message = "A test error happened";
-          setAppErrors([new AppErrorInfo({ message })]);
+          setAppErrors(
+            new AppErrorInfoCollection([new AppErrorInfo({ message })])
+          );
         }, [setAppErrors]);
         return <React.Fragment />;
       };

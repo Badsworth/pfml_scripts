@@ -5,6 +5,7 @@ import React, { useEffect, useState } from "react";
 import { initializeI18n, useTranslation } from "../locales/i18n";
 import Amplify from "aws-amplify";
 import AppErrorInfo from "../models/AppErrorInfo";
+import AppErrorInfoCollection from "../models/AppErrorInfoCollection";
 import Authenticator from "../components/Authenticator";
 import ErrorBoundary from "../components/ErrorBoundary";
 import ErrorsSummary from "../components/ErrorsSummary";
@@ -42,9 +43,6 @@ export const App = ({
   const router = useRouter();
   useFeatureFlagsFromQueryEffect();
 
-  // State representing currently visible errors
-  const [appErrors, setAppErrors] = useState();
-
   // State representing the Portal's user object.
   // Initialize to empty user but will be populated upon the first API call
   // to fetch the user (or create the user on their first login)
@@ -54,7 +52,7 @@ export const App = ({
   // are rendered by Authenticator
   const [authState, setAuthState] = useState(initialAuthState);
 
-  const appLogic = useAppLogic({ user, setAppErrors });
+  const appLogic = useAppLogic({ user });
 
   // Global UI state, such as whether to display the loading indicator
   const [ui, setUI] = useState({ isLoading: false });
@@ -77,7 +75,7 @@ export const App = ({
    * Event handler for when a page route is transitioning
    */
   const handleRouteChangeStart = () => {
-    setAppErrors([]);
+    appLogic.clearErrors();
     setUI({ ...ui, isLoading: true });
   };
 
@@ -147,7 +145,9 @@ export const App = ({
           ? t("errors.network")
           : t("errors.currentUser.failedToFind");
 
-      setAppErrors([new AppErrorInfo({ message })]);
+      appLogic.setAppErrors(
+        new AppErrorInfoCollection([new AppErrorInfo({ message })])
+      );
       tracker.noticeError(error);
     }
 
@@ -198,7 +198,6 @@ export const App = ({
         <Component
           appLogic={appLogic}
           query={router.query}
-          setAppErrors={setAppErrors}
           setUser={setUser}
           user={user}
           {...pageProps}
@@ -226,7 +225,7 @@ export const App = ({
           <div className="grid-col-fill">
             {/* Include a second ErrorBoundary here so that we still render a site header if we catch an error before it bubbles up any further */}
             <ErrorBoundary>
-              <ErrorsSummary errors={appErrors} />
+              <ErrorsSummary errors={appLogic.appErrors} />
               <Authenticator
                 authState={authState}
                 authData={initialAuthData}

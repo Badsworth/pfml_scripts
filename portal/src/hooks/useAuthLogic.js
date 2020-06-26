@@ -1,4 +1,5 @@
 import AppErrorInfo from "../models/AppErrorInfo";
+import AppErrorInfoCollection from "../models/AppErrorInfoCollection";
 import { Auth } from "aws-amplify";
 import routes from "../routes";
 import { useRouter } from "next/router";
@@ -10,7 +11,7 @@ import { useTranslation } from "../locales/i18n";
  * @param {User} params.user
  * @returns {object}
  */
-const useAuthLogic = ({ setAppErrors, user }) => {
+const useAuthLogic = ({ appErrorsLogic, user }) => {
   const { t } = useTranslation();
   const router = useRouter();
 
@@ -21,12 +22,12 @@ const useAuthLogic = ({ setAppErrors, user }) => {
    * @param {string} password Password
    */
   const login = async (username, password) => {
-    setAppErrors([]);
+    appErrorsLogic.clearErrors();
     username = username.trim();
 
     const validationErrors = validateUsernamePassword(username, password, t);
-    if (validationErrors.length > 0) {
-      setAppErrors(validationErrors);
+    if (validationErrors) {
+      appErrorsLogic.setAppErrors(validationErrors);
       return;
     }
 
@@ -36,8 +37,8 @@ const useAuthLogic = ({ setAppErrors, user }) => {
       // TODO: Route to dashboard
       // setPage(routes.home);
     } catch (error) {
-      const appErrors = getLoginErrorInfo(error, t);
-      setAppErrors(appErrors);
+      const loginErrors = getLoginErrorInfo(error, t);
+      appErrorsLogic.setAppErrors(loginErrors);
     }
   };
 
@@ -48,12 +49,12 @@ const useAuthLogic = ({ setAppErrors, user }) => {
    * @param {string} password Password
    */
   const createAccount = async (username, password) => {
-    setAppErrors([]);
+    appErrorsLogic.clearErrors();
     username = username.trim();
 
     const validationErrors = validateUsernamePassword(username, password, t);
-    if (validationErrors.length > 0) {
-      setAppErrors(validationErrors);
+    if (validationErrors) {
+      appErrorsLogic.setAppErrors(validationErrors);
       return;
     }
 
@@ -64,7 +65,7 @@ const useAuthLogic = ({ setAppErrors, user }) => {
       router.push(routes.auth.verifyAccount);
     } catch (error) {
       const appErrors = getCreateAccountErrorInfo(error, t);
-      setAppErrors(appErrors);
+      appErrorsLogic.setAppErrors(appErrors);
     }
   };
 
@@ -98,8 +99,10 @@ function validateUsernamePassword(username, password, t) {
     message = t("errors.auth.passwordRequired");
   }
 
-  const validationErrors = message ? [new AppErrorInfo({ message })] : [];
-  return validationErrors;
+  if (!message) return;
+
+  const validationErrors = [new AppErrorInfo({ message })];
+  return new AppErrorInfoCollection(validationErrors);
 }
 
 /**
@@ -127,7 +130,8 @@ function getLoginErrorInfo(error, t) {
     message = t("errors.network");
   }
 
-  return [new AppErrorInfo({ message })];
+  const appErrorInfo = new AppErrorInfo({ message });
+  return new AppErrorInfoCollection([appErrorInfo]);
 }
 
 /**
@@ -174,7 +178,7 @@ function getCreateAccountErrorInfo(error, t) {
     message = t("errors.network");
   }
 
-  return [new AppErrorInfo({ message })];
+  return new AppErrorInfoCollection([new AppErrorInfo({ message })]);
 }
 
 export default useAuthLogic;

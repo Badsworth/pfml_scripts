@@ -1,32 +1,46 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`App displaying errors displays errors that child pages set 1`] = `
-Array [
-  AppErrorInfo {
-    "key": "mocked-for-snapshots",
-    "message": "A test error happened",
+AppErrorInfoCollection {
+  "items": Array [
+    AppErrorInfo {
+      "field": null,
+      "key": "mocked-for-snapshots",
+      "message": "A test error happened",
+      "type": null,
+    },
+  ],
+  "itemsById": Object {
+    "mocked-for-snapshots": AppErrorInfo {
+      "field": null,
+      "key": "mocked-for-snapshots",
+      "message": "A test error happened",
+      "type": null,
+    },
   },
-]
+}
 `;
 
 exports[`App when authenticated user consented to data sharing renders the page component 1`] = `
 <TestComponent
   appLogic={
     Object {
+      "appErrors": null,
       "auth": Object {
         "createAccount": [Function],
         "login": [Function],
         "requireUserConsentToDataAgreement": [Function],
       },
       "claims": null,
+      "clearErrors": [Function],
       "createClaim": [Function],
       "loadClaims": [Function],
+      "setAppErrors": [Function],
       "submitClaim": [Function],
       "updateClaim": [Function],
     }
   }
   query={Object {}}
-  setAppErrors={[Function]}
   setUser={[Function]}
   title="Test page"
   user={
@@ -49,19 +63,43 @@ exports[`App when authenticated user consented to data sharing renders the page 
 `;
 
 exports[`App when the authenticated user fails to be fetched from the API displays error for NetworkError 1`] = `
-Array [
-  AppErrorInfo {
-    "key": "mocked-for-snapshots",
-    "message": "Sorry, an error was encountered. This may occur for a variety of reasons, including temporarily losing an internet connection or an unexpected error in our system. If this continues to happen, you may call the Paid Family Leave Contact Center at (XXX) XXX-XXXX",
+AppErrorInfoCollection {
+  "items": Array [
+    AppErrorInfo {
+      "field": null,
+      "key": "mocked-for-snapshots",
+      "message": "Sorry, an error was encountered. This may occur for a variety of reasons, including temporarily losing an internet connection or an unexpected error in our system. If this continues to happen, you may call the Paid Family Leave Contact Center at (XXX) XXX-XXXX",
+      "type": null,
+    },
+  ],
+  "itemsById": Object {
+    "mocked-for-snapshots": AppErrorInfo {
+      "field": null,
+      "key": "mocked-for-snapshots",
+      "message": "Sorry, an error was encountered. This may occur for a variety of reasons, including temporarily losing an internet connection or an unexpected error in our system. If this continues to happen, you may call the Paid Family Leave Contact Center at (XXX) XXX-XXXX",
+      "type": null,
+    },
   },
-]
+}
 `;
 
 exports[`App when the authenticated user fails to be fetched from the API displays error for unsuccessful response 1`] = `
-Array [
-  AppErrorInfo {
-    "key": "mocked-for-snapshots",
-    "message": "Sorry, we were unable to retrieve your account. Please log out and try again. If this continues to happen, you may call the Paid Family Leave Contact Center at (XXX) XXX-XXXX",
+AppErrorInfoCollection {
+  "items": Array [
+    AppErrorInfo {
+      "field": null,
+      "key": "mocked-for-snapshots",
+      "message": "Sorry, we were unable to retrieve your account. Please log out and try again. If this continues to happen, you may call the Paid Family Leave Contact Center at (XXX) XXX-XXXX",
+      "type": null,
+    },
+  ],
+  "itemsById": Object {
+    "mocked-for-snapshots": AppErrorInfo {
+      "field": null,
+      "key": "mocked-for-snapshots",
+      "message": "Sorry, we were unable to retrieve your account. Please log out and try again. If this continues to happen, you may call the Paid Family Leave Contact Center at (XXX) XXX-XXXX",
+      "type": null,
+    },
   },
-]
+}
 `;

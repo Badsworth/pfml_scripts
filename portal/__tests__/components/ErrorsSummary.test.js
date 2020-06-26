@@ -1,5 +1,6 @@
 import { mount, shallow } from "enzyme";
 import AppErrorInfo from "../../src/models/AppErrorInfo";
+import AppErrorInfoCollection from "../../src/models/AppErrorInfoCollection";
 import ErrorsSummary from "../../src/components/ErrorsSummary";
 import React from "react";
 import { act } from "react-dom/test-utils";
@@ -7,7 +8,9 @@ import { act } from "react-dom/test-utils";
 function render(customProps = {}, mountComponent = false) {
   const props = Object.assign(
     {
-      errors: [new AppErrorInfo({ message: "Mock error message" })],
+      errors: new AppErrorInfoCollection([
+        new AppErrorInfo({ message: "Mock error message" }),
+      ]),
     },
     customProps
   );
@@ -31,7 +34,9 @@ describe("ErrorsSummary", () => {
 
   describe("when only one error exists", () => {
     it("renders the singular heading and error message", () => {
-      const errors = [new AppErrorInfo({ message: "Mock error message" })];
+      const errors = new AppErrorInfoCollection([
+        new AppErrorInfo({ message: "Mock error message" }),
+      ]);
       const { wrapper } = render({ errors });
 
       expect(wrapper).toMatchInlineSnapshot(`
@@ -50,10 +55,10 @@ describe("ErrorsSummary", () => {
 
   describe("when more than one error exists", () => {
     it("renders the plural heading and list of error messages", () => {
-      const errors = [
+      const errors = new AppErrorInfoCollection([
         new AppErrorInfo({ message: "Mock error message #1" }),
         new AppErrorInfo({ message: "Mock error message #2" }),
-      ];
+      ]);
       const { wrapper } = render({ errors });
 
       // Not taking a full snapshot since the IDs of the list items
@@ -74,7 +79,11 @@ describe("ErrorsSummary", () => {
       // attachTo the body so document.activeElement works (https://github.com/enzymejs/enzyme/issues/2337#issuecomment-608984530)
       const wrapper = mount(
         <ErrorsSummary
-          errors={[new AppErrorInfo({ message: "Mock error message" })]}
+          errors={
+            new AppErrorInfoCollection([
+              new AppErrorInfo({ message: "Mock error message" }),
+            ])
+          }
         />,
         { attachTo: document.body }
       );
@@ -99,7 +108,9 @@ describe("ErrorsSummary", () => {
 
       act(() => {
         wrapper.setProps({
-          errors: [new AppErrorInfo({ message: "New error" })],
+          errors: new AppErrorInfoCollection([
+            new AppErrorInfo({ message: "New error" }),
+          ]),
         });
       });
 

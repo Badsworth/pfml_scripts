@@ -1,6 +1,5 @@
 import React, { useEffect, useRef } from "react";
 import Alert from "./Alert";
-import AppErrorInfo from "../models/AppErrorInfo";
 import PropTypes from "prop-types";
 import { useTranslation } from "../locales/i18n";
 
@@ -19,7 +18,7 @@ function ErrorsSummary(props) {
    * Make sure the user sees the errors summary anytime the list of errors changes
    */
   useEffect(() => {
-    if (errors && errors.length) {
+    if (errors) {
       window.scrollTo(0, 0);
       // Move focus to the alert so screen readers immediately announce that there are errors
       alertRef.current.focus();
@@ -27,16 +26,16 @@ function ErrorsSummary(props) {
   }, [errors]);
 
   // Don't render anything if there are no errors present
-  if (!errors || !errors.length) {
+  if (!errors) {
     return null;
   }
 
   const errorMessages = () => {
-    if (errors.length === 1) return <p>{errors[0].message}</p>;
+    if (errors.items.length === 1) return <p>{errors.items[0].message}</p>;
 
     return (
       <ul className="usa-list">
-        {errors.map((error) => (
+        {errors.items.map((error) => (
           <li key={error.key}>{error.message}</li>
         ))}
       </ul>
@@ -47,7 +46,7 @@ function ErrorsSummary(props) {
     <Alert
       className="margin-bottom-3"
       heading={t("components.errorsSummary.genericHeading", {
-        count: errors.length,
+        count: errors.items.length,
       })}
       ref={alertRef}
       role="alert"
@@ -58,7 +57,10 @@ function ErrorsSummary(props) {
 }
 
 ErrorsSummary.propTypes = {
-  errors: PropTypes.arrayOf(PropTypes.instanceOf(AppErrorInfo)),
+  errors: PropTypes.shape({
+    items: PropTypes.array,
+    itemsById: PropTypes.object,
+  }),
 };
 
 export default ErrorsSummary;

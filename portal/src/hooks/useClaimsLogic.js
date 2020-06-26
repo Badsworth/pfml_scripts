@@ -4,7 +4,7 @@ import ClaimsApi from "../api/ClaimsApi";
 import useCollectionState from "./useCollectionState";
 import { useMemo } from "react";
 
-const useClaimsLogic = ({ user }) => {
+const useClaimsLogic = ({ appErrorsLogic, user }) => {
   // State representing the collection of claims for the current user.
   // Initialize to empty collection, but will eventually store the claims
   // state as API calls are made to fetch the user's claims and/or create
@@ -25,12 +25,18 @@ const useClaimsLogic = ({ user }) => {
   const loadClaims = async () => {
     if (claims) return;
 
-    try {
-      const { claims } = await claimsApi.getClaims();
+    appErrorsLogic.clearErrors();
 
-      setClaims(claims);
+    try {
+      const { claims, errors } = await claimsApi.getClaims();
+
+      if (errors) {
+        appErrorsLogic.setAppErrors(errors);
+      } else {
+        setClaims(claims);
+      }
     } catch (error) {
-      // TODO setAppErrors here
+      appErrorsLogic.catchError(error);
     }
   };
 
@@ -40,23 +46,32 @@ const useClaimsLogic = ({ user }) => {
    * @param {object} patchData - subset of claim data that will be updated
    */
   const updateClaim = async (application_id, patchData) => {
+    appErrorsLogic.clearErrors();
+
     try {
-      let { claim } = await claimsApi.updateClaim(application_id, patchData);
+      let { claim, apiErrors } = await claimsApi.updateClaim(
+        application_id,
+        patchData
+      );
 
-      // Currently the API doesn't return the claim data in the response
-      // so we're manually constructing the body based on client data.
-      // We will change the PATCH applications endpoint to return the full
-      // application in this ticket: https://lwd.atlassian.net/browse/API-247
-      // TODO: Remove workaround once above ticket is complete: https://lwd.atlassian.net/browse/CP-577
-      claim = new Claim({
-        ...claims.get(application_id),
-        ...patchData,
-      });
-      // </ end workaround >
+      if (apiErrors) {
+        appErrorsLogic.setAppErrors(apiErrors);
+      } else {
+        // Currently the API doesn't return the claim data in the response
+        // so we're manually constructing the body based on client data.
+        // We will change the PATCH applications endpoint to return the full
+        // application in this ticket: https://lwd.atlassian.net/browse/API-247
+        // TODO: Remove workaround once above ticket is complete: https://lwd.atlassian.net/browse/CP-577
+        claim = new Claim({
+          ...claims.get(application_id),
+          ...patchData,
+        });
+        // </ end workaround >
 
-      setClaim(claim);
+        setClaim(claim);
+      }
     } catch (error) {
-      // TODO setAppErrors
+      appErrorsLogic.catchError(error);
     }
   };
 
@@ -65,15 +80,15 @@ const useClaimsLogic = ({ user }) => {
    * @returns {Claim} newly created claim
    */
   const createClaim = async () => {
+    appErrorsLogic.clearErrors();
+
     try {
       const { claim } = await claimsApi.createClaim();
       addClaim(claim);
 
       return claim;
     } catch (error) {
-      // TODO setAppErrors
-
-      return null;
+      appErrorsLogic.catchError(error);
     }
   };
 
@@ -82,11 +97,20 @@ const useClaimsLogic = ({ user }) => {
    * @param {object} formState - formState representing entier claim
    */
   const submitClaim = async (formState) => {
+    appErrorsLogic.clearErrors();
+
     try {
-      const { claim } = await claimsApi.submitClaim(new Claim(formState));
-      setClaim(claim);
+      const { claim, apiErrors } = await claimsApi.submitClaim(
+        new Claim(formState)
+      );
+
+      if (apiErrors) {
+        appErrorsLogic.setAppErrors(apiErrors);
+      } else {
+        setClaim(claim);
+      }
     } catch (error) {
-      // TODO setAppErrors
+      appErrorsLogic.catchError(error);
     }
   };
 

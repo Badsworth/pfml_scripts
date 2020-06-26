@@ -9,22 +9,27 @@ import ClaimCollection from "../../src/models/ClaimCollection";
 import User from "../../src/models/User";
 import { act } from "react-dom/test-utils";
 import { testHook } from "../test-utils";
+import useAppErrorsLogic from "../../src/hooks/useAppErrorsLogic";
 import useClaimsLogic from "../../src/hooks/useClaimsLogic";
 
 jest.mock("../../src/api/ClaimsApi");
+jest.mock("../../src/hooks/useAppErrorsLogic");
 
+// TODO add tests for api returning errors and warnings
 describe("useClaimsLogic", () => {
   const applicationId = "mock-application-id";
   const user = new User({ user_id: "mock-user-id" });
-  let claimsLogic;
+  let appErrorsLogic, claimsLogic;
 
   beforeEach(() => {
     testHook(() => {
-      claimsLogic = useClaimsLogic({ user });
+      appErrorsLogic = useAppErrorsLogic();
+      claimsLogic = useClaimsLogic({ appErrorsLogic, user });
     });
   });
 
   afterEach(() => {
+    appErrorsLogic = null;
     claimsLogic = null;
   });
 
@@ -53,6 +58,20 @@ describe("useClaimsLogic", () => {
       const claims = claimsLogic.claims;
       expect(claims[0]).toBeInstanceOf(Claim);
       expect(getClaimsMock).toHaveBeenCalledTimes(1);
+    });
+
+    describe("when request errors", () => {
+      it("catches the error", async () => {
+        getClaimsMock.mockImplementationOnce(() => {
+          throw new Error();
+        });
+
+        await act(async () => {
+          await claimsLogic.loadClaims();
+        });
+
+        expect(appErrorsLogic.catchError).toHaveBeenCalled();
+      });
     });
   });
 
@@ -86,12 +105,27 @@ describe("useClaimsLogic", () => {
       `);
       expect(createClaimMock).toHaveBeenCalled();
     });
+
+    describe("when request errors", () => {
+      it("catches the error", async () => {
+        createClaimMock.mockImplementationOnce(() => {
+          throw new Error();
+        });
+
+        await act(async () => {
+          await claimsLogic.createClaim();
+        });
+
+        expect(appErrorsLogic.catchError).toHaveBeenCalled();
+      });
+    });
   });
 
   describe("when claims have been loaded or a new claim was created", () => {
     beforeEach(() => {
       testHook(() => {
-        claimsLogic = useClaimsLogic({ user });
+        appErrorsLogic = useAppErrorsLogic();
+        claimsLogic = useClaimsLogic({ user, appErrorsLogic });
       });
 
       act(() => {
@@ -135,6 +169,24 @@ describe("useClaimsLogic", () => {
         `);
         expect(updateClaimMock).toHaveBeenCalled();
       });
+
+      describe("when request errors", () => {
+        it("catches the error", async () => {
+          updateClaimMock.mockImplementationOnce(() => {
+            throw new Error();
+          });
+
+          const patchData = {
+            first_name: "Bud",
+          };
+
+          await act(async () => {
+            await claimsLogic.updateClaim(applicationId, patchData);
+          });
+
+          expect(appErrorsLogic.catchError).toHaveBeenCalled();
+        });
+      });
     });
 
     describe("submitClaim", () => {
@@ -170,6 +222,25 @@ describe("useClaimsLogic", () => {
           }
         `);
         expect(submitClaimMock).toHaveBeenCalled();
+      });
+
+      describe("when request errors", () => {
+        it("catches the error", async () => {
+          submitClaimMock.mockImplementationOnce(() => {
+            throw new Error();
+          });
+
+          const formState = {
+            application_id: applicationId,
+            first_name: "Bud",
+          };
+
+          await act(async () => {
+            await claimsLogic.submitClaim(formState);
+          });
+
+          expect(appErrorsLogic.catchError).toHaveBeenCalled();
+        });
       });
     });
   });
