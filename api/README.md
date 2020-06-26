@@ -30,6 +30,15 @@ In a docker-centric environment, we support a couple different developer workflo
 | your host 🙋‍♀️        | Single-use         | DOCKER_RUN     |
 | Mixed               | Mixed              | Mixed          |
 
+The default is `DOCKER_RUN` and should always just work™. But this spins up a
+new container for every command, which can be slow. If you are working on the
+API a lot, you may want to consider one of the alternative setups below and/or
+the [Native Developer Setup](#native-developer-setup).
+
+Some tasks will usually need to be run with `DOCKER_RUN` regardless of the
+workflow used otherwise. Examples include generating an initial local JWKS
+(`make jwks.json`) or running migrations (`make db-upgrade`).
+
 <details><summary>Send commands from your host to a long-running container</summary>
 <p>
 If you want to re-use a docker application for various Python and development
@@ -65,7 +74,7 @@ $ export PY_RUN_CMD_OPT=DOCKER_RUN
 $ make test
 ```
 
-Note that this will require more manual Docker memory cleanup.
+Note this is the default setting.
 
 </p>
 </details>
@@ -75,11 +84,8 @@ Note that this will require more manual Docker memory cleanup.
 
 For example:
 
-- running static lints outside of Docker with the default: <code>make lint</code>
+- running static lints outside of Docker with native developer setup: <code>PY_RUN_CMD_OPT=POETRY make lint</code>
 - running tests inside of Docker after a <code>make start</code>: <code>PY_RUN_CMD_OPT=DOCKER_EXEC make test</code>
-
-In the future, we may add some auto-detection to check if we are running inside the
-container or not.
 
 </p>
 </details>
@@ -154,8 +160,8 @@ migration that should happen first.
 
 ## Native Developer Setup
 
-To setup a development environment outside of Docker,
-you'll need to install a few things.
+To setup a development environment outside of Docker, you'll need to install a
+few things.
 
 #### Dependencies
 
@@ -164,6 +170,7 @@ you'll need to install a few things.
   installing Python, or [asdf](https://asdf-vm.com/).
 - After installing and activating the right version of Python, install
   [poetry](https://python-poetry.org/docs/#installation).
+- Then set `PY_RUN_CMD_OPT` to `POETRY` in your development environment.
 - Then run `make deps` to install Python dependencies and development tooling.
 
 You should now be set up to run developer tooling natively, like linting. To run

@@ -50,6 +50,7 @@ services:
       - TERM=${TERM:-xterm-256color}
       - 'PS1=${DOCKER_PS1:-[docker] \w: }'
       - 'LSCOLORS=${DOCKER_LSCOLORS:- }'
+      - PY_RUN_CMD_OPT=POETRY
     networks:
       main:
         aliases:

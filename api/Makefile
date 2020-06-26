@@ -27,13 +27,11 @@ PY_RUN_CMD_DOCKER_RUN := docker-compose run $(DOCKER_EXEC_ARGS) --rm $(APP_NAME)
 # For running Python things in a running Docker container
 PY_RUN_CMD_DOCKER_EXEC := docker-compose exec $(DOCKER_EXEC_ARGS) $(APP_NAME) poetry run
 
-ifdef CI
-	PY_RUN_CMD_OPT ?= DOCKER_RUN
-else
-	PY_RUN_CMD_OPT ?= POETRY
-endif
+PY_RUN_CMD_OPT ?= DOCKER_RUN
 
 PY_RUN_CMD := $(PY_RUN_CMD_$(PY_RUN_CMD_OPT))
+
+POETRY_CMD := $(subst poetry run,poetry,$(PY_RUN_CMD))
 
 DECODE_LOG := 2>&1 | python3 massgov/pfml/util/logging/decodelog.py
 
@@ -103,7 +101,7 @@ create-user: ## Create local API User
 	PYTHONPATH=$$PYTHONPATH:. $(PY_RUN_CMD) python bin/create-user.py
 
 deps: ## Install dependencies
-	poetry install --no-root
+	$(POETRY_CMD) install --no-root
 
 deps-check:
 	$(PY_RUN_CMD) safety check --full-report
