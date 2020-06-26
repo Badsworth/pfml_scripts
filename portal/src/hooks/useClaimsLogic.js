@@ -45,7 +45,9 @@ const useClaimsLogic = ({ user }) => {
 
       // Currently the API doesn't return the claim data in the response
       // so we're manually constructing the body based on client data.
-      // TODO: Remove workaround
+      // We will change the PATCH applications endpoint to return the full
+      // application in this ticket: https://lwd.atlassian.net/browse/API-247
+      // TODO: Remove workaround once above ticket is complete: https://lwd.atlassian.net/browse/CP-577
       claim = new Claim({
         ...claims.get(application_id),
         ...patchData,

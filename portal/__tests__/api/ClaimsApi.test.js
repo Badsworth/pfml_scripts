@@ -12,6 +12,7 @@ describe("ClaimsApi", () => {
   let claimsApi;
 
   beforeEach(() => {
+    jest.resetAllMocks();
     user = new User({ user_id: "mock-user-id" });
     claimsApi = new ClaimsApi({ user });
   });
@@ -25,6 +26,17 @@ describe("ClaimsApi", () => {
               application_id: "2a340cf8-6d2a-4f82-a075-73588d003f8f",
             },
           ],
+          status: 200,
+          success: true,
+        });
+
+        // Needed for workaround in claimsApi.getClaims
+        // This won't be needed once https://lwd.atlassian.net/browse/API-290 is complete
+        // TODO: Remove workaround once above ticket is complete: https://lwd.atlassian.net/browse/CP-577
+        request.mockResolvedValueOnce({
+          body: {
+            application_id: "2a340cf8-6d2a-4f82-a075-73588d003f8f",
+          },
           status: 200,
           success: true,
         });
