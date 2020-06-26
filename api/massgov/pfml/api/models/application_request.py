@@ -14,7 +14,7 @@ from massgov.pfml.db.models.applications import (
     RelationshipQualifier,
     RelationshipToCareGiver,
 )
-from massgov.pfml.db.models.employees import Occupation, Status
+from massgov.pfml.db.models.employees import Occupation
 from massgov.pfml.util.converters import json_to_obj
 
 
@@ -196,16 +196,6 @@ class ApplicationRequest:
             return None
 
         leave_schedule_item = leave_schedule[0]
-        schedule_status = leave_schedule_item.pop("status", None)
-        if schedule_status is not None:
-            status = (
-                app.db_session_raw()
-                .query(Status)
-                .filter(Status.status_description == schedule_status)
-                .one_or_none()
-            )
-            if status is not None:
-                leave_schedule_item["status_id"] = status.status_id
 
         if schedule_type == "continuous_leave_period":
             continuous_leave_period = ContinuousLeavePeriod()

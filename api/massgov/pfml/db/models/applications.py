@@ -2,7 +2,7 @@ from sqlalchemy import Boolean, Column, Date, DateTime, ForeignKey, Integer, Tex
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 
-from massgov.pfml.db.models.employees import Employee, Employer, Occupation, Status, User
+from massgov.pfml.db.models.employees import Employee, Employer, Occupation, User
 
 from ..lookup import LookupTable
 from .base import Base, uuid_gen
@@ -83,7 +83,6 @@ class Application(Base):
     leave_reason_qualifier_id = Column(
         Integer, ForeignKey("lk_leave_reason_qualifier.leave_reason_qualifier_id")
     )
-    status_id = Column(Integer, ForeignKey("lk_status.status_id"))
     start_time = Column(DateTime)
     updated_time = Column(DateTime)
     completed_time = Column(DateTime)
@@ -94,7 +93,6 @@ class Application(Base):
     user = relationship(User)
     employer = relationship(Employer)
     employee = relationship(Employee)
-    status = relationship(Status)
     occupation = relationship(Occupation)
     leave_type = relationship(LeaveType)
     leave_reason = relationship(LkLeaveReason)
@@ -124,7 +122,7 @@ class ContinuousLeavePeriod(Base):
     application_id = Column(UUID(as_uuid=True), ForeignKey("application.application_id"))
     start_date = Column(Date)
     end_date = Column(Date)
-    status_id = Column(Integer, ForeignKey("lk_status.status_id"))
+    is_estimated = Column(Boolean, default=True, nullable=False)
     last_day_worked = Column(Date)
     expected_return_to_work_date = Column(Date)
     start_date_full_day = Column(Boolean)
@@ -154,7 +152,7 @@ class ReducedScheduleLeavePeriod(Base):
     application_id = Column(UUID(as_uuid=True), ForeignKey("application.application_id"))
     start_date = Column(Date)
     end_date = Column(Date)
-    status_id = Column(Integer, ForeignKey("lk_status.status_id"))
+    is_estimated = Column(Boolean, default=True, nullable=False)
     thursday_off_hours = Column(Integer)
     thursday_off_minutes = Column(Integer)
     friday_off_hours = Column(Integer)

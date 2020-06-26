@@ -23,9 +23,6 @@ class ApplicationResponse:
         if self.application.leave_type_id:
             application_json["leave_type"] = self.application.leave_type.leave_type_description
 
-        if self.application.status_id:
-            application_json["status"] = self.application.status.status_description
-
         if self.application.occupation_id is not None:
             application_json["occupation"] = self.application.occupation.occupation_description
 
@@ -33,7 +30,6 @@ class ApplicationResponse:
         application_json.pop("leave_type_id", None)
         application_json.pop("leave_reason_id", None)
         application_json.pop("leave_reason_qualifier_id", None)
-        application_json.pop("status_id", None)
         application_json.pop("relationship_to_caregiver_id", None)
         application_json.pop("relationship_qualifier_id", None)
         application_json.pop("employer_notified", None)

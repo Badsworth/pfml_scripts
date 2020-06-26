@@ -44,7 +44,7 @@ def test_applications_get_all_for_user(client):
         assert application.nickname == app_response["application_nickname"]
 
 
-def test_applications_post_start_app(client, create_app_statuses):
+def test_applications_post_start_app(client):
     response = client.post("/v1/applications", headers={"user_id": str(uuid.uuid4())})
     response_body = response.get_json()
     application_id = response_body.get("application_id")
@@ -207,8 +207,10 @@ def test_application_patch_null_values(client):
     assert response.status_code == 200
 
 
-def test_application_post_submit_app(client, create_app_statuses):
+def test_application_post_submit_app(client, test_db_session):
     application = ApplicationFactory.create()
+    assert not application.completed_time
+
     response = client.post(
         "/v1/applications/{}/submit_application".format(application.application_id),
         headers={"user_id": str(uuid.uuid4())},
@@ -221,5 +223,5 @@ def test_application_post_submit_app(client, create_app_statuses):
     )
     assert response.status_code == 200
 
-    response_body = response.get_json()
-    assert response_body["status"] == "Completed"
+    test_db_session.refresh(application)
+    assert application.completed_time

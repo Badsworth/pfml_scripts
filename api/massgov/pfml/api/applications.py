@@ -9,7 +9,6 @@ import massgov.pfml.api.app as app
 from massgov.pfml.api.models.application_request import ApplicationRequest
 from massgov.pfml.api.models.application_response import ApplicationResponse
 from massgov.pfml.db.models.applications import Application
-from massgov.pfml.db.status import ApplicationStatusDescription, get_or_make_status
 from massgov.pfml.util.pydantic import PydanticBaseModel
 
 
@@ -54,9 +53,6 @@ def applications_start():
     application.start_time = datetime.now()
 
     with app.db_session() as db_session:
-        draft_status = get_or_make_status(db_session, ApplicationStatusDescription.draft)
-
-        application.status_id = draft_status.status_id
         db_session.add(application)
 
     return {"application_id": application.application_id}, 201
@@ -101,8 +97,6 @@ def applications_submit(application_id):
         if existing_application is None:
             raise NotFound
 
-        completed_status = get_or_make_status(db_session, ApplicationStatusDescription.completed)
-        existing_application.status_id = completed_status.status_id
         existing_application.completed_time = datetime.now()
         db_session.add(existing_application)
 

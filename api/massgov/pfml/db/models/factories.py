@@ -133,4 +133,3 @@ class ApplicationFactory(BaseFactory):
     leave_type_id = None
     leave_reason_id = application_models.LeaveReason.CARE_FOR_A_FAMILY_MEMBER.leave_reason_id
     leave_reason_qualifier_id = None
-    status_id = None

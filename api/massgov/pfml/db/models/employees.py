@@ -86,12 +86,6 @@ class PaymentType(Base):
     payment_type_description = Column(Text)
 
 
-class Status(Base):
-    __tablename__ = "lk_status"
-    status_id = Column(Integer, primary_key=True, autoincrement=True)
-    status_description = Column(Text)
-
-
 class AuthorizedRepresentative(Base):
     __tablename__ = "authorized_representative"
     authorized_representative_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)

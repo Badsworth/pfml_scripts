@@ -135,28 +135,6 @@ def mock_s3_bucket():
 
 
 @pytest.fixture
-def create_app_statuses(test_db_session):
-    from massgov.pfml.db.models.employees import Status
-
-    draft_status = Status(status_description="Draft")
-    test_db_session.add(draft_status)
-    completed_status = Status(status_description="Completed")
-    test_db_session.add(completed_status)
-    test_db_session.commit()
-
-    return [
-        {
-            "status_id": draft_status.status_id,
-            "status_description": draft_status.status_description,
-        },
-        {
-            "status_id": completed_status.status_id,
-            "status_description": completed_status.status_description,
-        },
-    ]
-
-
-@pytest.fixture
 def test_db_schema(monkeypatch):
     """
     Create a test schema, if it doesn't already exist, and drop it after the
