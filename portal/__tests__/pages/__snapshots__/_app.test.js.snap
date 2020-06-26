@@ -14,6 +14,7 @@ exports[`App when authenticated user consented to data sharing renders the page 
   appLogic={
     Object {
       "auth": Object {
+        "createAccount": [Function],
         "login": [Function],
         "requireUserConsentToDataAgreement": [Function],
       },

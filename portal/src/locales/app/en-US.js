@@ -16,6 +16,7 @@ const errors = {
     passwordErrors:
       "Your password does not meet the requirements. Please check the requirements and try again.",
     passwordRequired: "Enter your password",
+    usernameExists: "An account with the given email already exists",
     verificationCodeFormat:
       "Enter the 6-digit code sent to your email and ensure it does not include any spaces or punctuation.",
     verificationCodeRequired: "Enter the 6-digit code sent to your email",
@@ -55,6 +56,15 @@ const pages = {
   },
   applications: {
     title: "In-progress applications",
+  },
+  authCreateAccount: {
+    createAccountButton: "Create account",
+    haveAnAccountFooterLabel: "Have an account? ",
+    logInFooterLink: "Log in",
+    passwordHint: "$t(shared.passwordHint)",
+    passwordLabel: "Password",
+    title: "Create an account",
+    usernameLabel: "Email address",
   },
   claimsChecklist: {
     backButtonLabel: "Back to Dashboard",

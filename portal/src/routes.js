@@ -8,6 +8,13 @@ const routes = {
     claims: "/applications",
   },
   applications: "/applications",
+  auth: {
+    createAccount: "/create-account",
+    forgotPassword: "/forgot-password",
+    login: "/login",
+    resetPassword: "/reset-password",
+    verifyAccount: "/verify-account",
+  },
   claims: {
     checklist: "/claims/checklist",
     confirm: "/claims/confirm",
@@ -29,15 +36,10 @@ const routes = {
     uploadOtherId: "/claims/upload-other-id",
     uploadStateId: "/claims/upload-state-id",
   },
-  createAccount: "/create-account",
-  forgotPassword: "/forgot-password",
   home: "/",
-  login: "/login",
-  resetPassword: "/reset-password",
   user: {
     consentToDataSharing: "/user/consent-to-data-sharing",
   },
-  verifyAccount: "/verify-account",
 };
 
 export default routes;

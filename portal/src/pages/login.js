@@ -43,13 +43,13 @@ export const Login = (props) => {
         smallLabel
       />
       <div className="margin-top-1">
-        <Link href={routes.forgotPassword}>
+        <Link href={routes.auth.forgotPassword}>
           <a>{t("pages.login.forgotPasswordLink")}</a>
         </Link>
       </div>
       <Button type="submit">{t("pages.login.loginButton")}</Button>
       <div className="margin-top-1">
-        <Link href={routes.createAccount}>
+        <Link href={routes.auth.createAccount}>
           <a className="text-bold">{t("pages.login.createAccountLink")}</a>
         </Link>
       </div>

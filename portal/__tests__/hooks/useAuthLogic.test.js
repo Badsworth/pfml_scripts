@@ -9,21 +9,18 @@ import { useState } from "react";
 jest.mock("aws-amplify");
 
 describe("useAuthLogic", () => {
+  let appErrors, createAccount, login, password, setAppErrors, username;
   beforeEach(() => {
     jest.resetAllMocks();
+    username = "test@email.com";
+    password = "TestP@ssw0rd!";
+    testHook(() => {
+      [appErrors, setAppErrors] = useState([]);
+      ({ createAccount, login } = useAuthLogic({ setAppErrors }));
+    });
   });
 
   describe("login", () => {
-    let appErrors, login, password, setAppErrors, username;
-    beforeEach(() => {
-      username = "test@email.com";
-      password = "TestP@ssw0rd!";
-      testHook(() => {
-        [appErrors, setAppErrors] = useState([]);
-        ({ login } = useAuthLogic({ setAppErrors }));
-      });
-    });
-
     it("calls Auth.signIn", () => {
       act(() => {
         login(username, password);
@@ -141,6 +138,154 @@ describe("useAuthLogic", () => {
       });
       act(() => {
         login(username, password);
+      });
+      expect(appErrors).toHaveLength(1);
+      expect(appErrors[0].message).toMatchInlineSnapshot(
+        `"Sorry, an error was encountered. This may occur for a variety of reasons, including temporarily losing an internet connection or an unexpected error in our system. If this continues to happen, you may call the Paid Family Leave Contact Center at (XXX) XXX-XXXX"`
+      );
+    });
+
+    it("clears existing errors", () => {
+      act(() => {
+        setAppErrors([{ message: "Pre-existing error" }]);
+        login(username, password);
+      });
+      expect(appErrors).toEqual([]);
+    });
+  });
+
+  describe("createAccount", () => {
+    it("calls Auth.signUp", () => {
+      act(() => {
+        createAccount(username, password);
+      });
+      expect(Auth.signUp).toHaveBeenCalledWith({ username, password });
+    });
+
+    it("trims whitespace from username", () => {
+      act(() => {
+        createAccount(`  ${username} `, password);
+      });
+      expect(Auth.signUp).toHaveBeenCalledWith({ username, password });
+    });
+
+    it("sets app errors when username and password are empty", () => {
+      username = "";
+      password = "";
+      act(() => {
+        createAccount(username, password);
+      });
+      expect(appErrors).toHaveLength(1);
+      expect(appErrors[0].message).toMatchInlineSnapshot(
+        `"Enter your email address and password"`
+      );
+      expect(Auth.signUp).not.toHaveBeenCalled();
+    });
+
+    it("sets app errors when username is empty", () => {
+      username = "";
+      act(() => {
+        createAccount(username, password);
+      });
+      expect(appErrors).toHaveLength(1);
+      expect(appErrors[0].message).toMatchInlineSnapshot(
+        `"Enter your email address"`
+      );
+      expect(Auth.signUp).not.toHaveBeenCalled();
+    });
+
+    it("sets app errors when password is empty", () => {
+      const password = "";
+      act(() => {
+        createAccount(username, password);
+      });
+      expect(appErrors).toHaveLength(1);
+      expect(appErrors[0].message).toMatchInlineSnapshot(
+        `"Enter your password"`
+      );
+      expect(Auth.signUp).not.toHaveBeenCalled();
+    });
+
+    it("sets app errors when an account with the username already exists", () => {
+      jest.spyOn(Auth, "signUp").mockImplementation(() => {
+        // Ignore lint rule since AWS Auth class actually throws an object literal
+        // eslint-disable-next-line no-throw-literal
+        throw {
+          code: "UsernameExistsException",
+          message: "An account with the given email already exists.",
+          name: "UsernameExistsException",
+        };
+      });
+      act(() => {
+        createAccount(username, password);
+      });
+      expect(appErrors).toHaveLength(1);
+      expect(appErrors[0].message).toMatchInlineSnapshot(
+        `"An account with the given email already exists"`
+      );
+    });
+
+    it("sets app errors when Auth.signIn throws InvalidParameterException", () => {
+      jest.spyOn(Auth, "signUp").mockImplementation(() => {
+        // Ignore lint rule since AWS Auth class actually throws an object literal
+        // eslint-disable-next-line no-throw-literal
+        throw {
+          code: "InvalidParameterException",
+          message:
+            "1 validation error detected: Value at 'password' failed to satisfy constraint: Member must have length greater than or equal to 6",
+          name: "InvalidParameterException",
+        };
+      });
+      act(() => {
+        createAccount(username, password);
+      });
+      expect(appErrors).toHaveLength(1);
+      expect(appErrors[0].message).toMatchInlineSnapshot(
+        `"Your password does not meet the requirements. Please check the requirements and try again."`
+      );
+    });
+
+    it("sets app errors when Auth.signIn throws InvalidPasswordException", () => {
+      const invalidPasswordErrorMessages = [
+        "Password did not conform with policy: Password not long enough",
+        "Password did not conform with policy: Password must have uppercase characters",
+        "Password did not conform with policy: Password must have lowercase characters",
+        "Password did not conform with policy: Password must have numeric characters",
+      ];
+
+      const cognitoErrors = invalidPasswordErrorMessages.map((message) => {
+        return {
+          code: "InvalidParameterException",
+          message,
+          name: "InvalidParameterException",
+        };
+      });
+
+      expect.assertions(cognitoErrors.length * 2);
+
+      for (const cognitoError of cognitoErrors) {
+        jest.resetAllMocks();
+        jest.spyOn(Auth, "signUp").mockImplementation(() => {
+          // Ignore lint rule since AWS Auth class actually throws an object literal
+          // eslint-disable-next-line no-throw-literal
+          throw cognitoError;
+        });
+        act(() => {
+          createAccount(username, password);
+        });
+        expect(appErrors).toHaveLength(1);
+        expect(appErrors[0].message).toMatchInlineSnapshot(
+          `"Your password does not meet the requirements. Please check the requirements and try again."`
+        );
+      }
+    });
+
+    it("sets system error message when Auth.signIn throws unanticipated error", () => {
+      jest.spyOn(Auth, "signUp").mockImplementation(() => {
+        throw new Error("Some unknown error");
+      });
+      act(() => {
+        createAccount(username, password);
       });
       expect(appErrors).toHaveLength(1);
       expect(appErrors[0].message).toMatchInlineSnapshot(

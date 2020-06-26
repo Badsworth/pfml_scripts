@@ -1,0 +1,46 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`CreateAccount renders the empty page 1`] = `
+<form
+  className="usa-form usa-form--large"
+  onSubmit={[Function]}
+>
+  <Title>
+    Create an account
+  </Title>
+  <InputText
+    label="Email address"
+    name="username"
+    onChange={[Function]}
+    smallLabel={true}
+    type="email"
+    value=""
+  />
+  <InputText
+    hint="Your password must be at least 8 characters long and include numbers and letters."
+    label="Password"
+    name="password"
+    onChange={[Function]}
+    smallLabel={true}
+    type="password"
+    value=""
+  />
+  <Button
+    type="submit"
+  >
+    Create account
+  </Button>
+  <div
+    className="margin-top-2 text-base text-bold"
+  >
+    Have an account? 
+    <Link
+      href="/login"
+    >
+      <a>
+        Log in
+      </a>
+    </Link>
+  </div>
+</form>
+`;

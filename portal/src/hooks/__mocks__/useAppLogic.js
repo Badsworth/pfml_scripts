@@ -4,6 +4,7 @@ import { uniqueId } from "lodash";
 
 export default jest.fn(() => ({
   auth: {
+    createAccount: jest.fn(),
     login: jest.fn(),
   },
   claims: new ClaimCollection(),
