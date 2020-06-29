@@ -43,11 +43,17 @@ def users_current_get():
 def users_patch(user_id):
     """This endpoint modifies the user specified by the user_id"""
     body = UserUpdateRequest.parse_obj(connexion.request.json)
+
     with app.db_session() as db_session:
-        updated_count = db_session.query(User).filter(User.user_id == user_id).update(body)
-        if updated_count == 0:
-            raise NotFound()
         updated_user = db_session.query(User).get(user_id)
+
+        if updated_user is None:
+            raise NotFound()
+
+        for key in body.__fields_set__:
+            value = getattr(body, key)
+            setattr(updated_user, key, value)
+
     return user_response(updated_user)
 
 

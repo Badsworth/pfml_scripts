@@ -33,7 +33,7 @@ def test_users_get_current_404(client):
     assert response.status_code == 404
 
 
-def test_users_patch(client, user):
+def test_users_patch(client, user, test_db_session):
     assert user.consented_to_data_sharing is False
 
     body = {"consented_to_data_sharing": True}
@@ -41,6 +41,26 @@ def test_users_patch(client, user):
     response_body = response.get_json()
     assert response.status_code == 200
     assert response_body["consented_to_data_sharing"] is True
+
+    test_db_session.refresh(user)
+    assert user.consented_to_data_sharing is True
+
+
+def test_users_patch_authenticated_user(client, user, auth_token, test_db_session):
+    assert user.consented_to_data_sharing is False
+
+    body = {"consented_to_data_sharing": True}
+    response = client.patch(
+        "v1/users/{}".format(user.user_id),
+        json=body,
+        headers={"Authorization": f"Bearer {auth_token}"},
+    )
+    response_body = response.get_json()
+    assert response.status_code == 200
+    assert response_body["consented_to_data_sharing"] is True
+
+    test_db_session.refresh(user)
+    assert user.consented_to_data_sharing is True
 
 
 @pytest.mark.parametrize(
