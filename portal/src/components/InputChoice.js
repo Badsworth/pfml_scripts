@@ -1,6 +1,6 @@
 import PropTypes from "prop-types";
 import React from "react";
-import uniqueId from "lodash/uniqueId";
+import useUniqueId from "../hooks/useUniqueId";
 
 /**
  * A checkbox or radio field. In most cases, you shouldn't use this
@@ -10,9 +10,7 @@ import uniqueId from "lodash/uniqueId";
  * [USWDS Reference ↗](https://designsystem.digital.gov/components/form-controls)
  */
 function InputChoice({ type = "checkbox", ...props }) {
-  // Generate a unique ID for associating the field with the label.
-  // This is important for a11y.
-  const inputId = uniqueId("InputChoice");
+  const inputId = useUniqueId("InputChoice");
 
   return (
     <div className={`usa-${type}`}>

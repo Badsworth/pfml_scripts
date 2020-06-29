@@ -3,7 +3,7 @@ import Mask from "./Mask";
 import PropTypes from "prop-types";
 import React from "react";
 import classnames from "classnames";
-import uniqueId from "lodash/uniqueId";
+import useUniqueId from "../hooks/useUniqueId";
 
 /**
  * Text [input](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input) field. Also renders
@@ -13,9 +13,7 @@ import uniqueId from "lodash/uniqueId";
  * Masked field functionality copied from [CMS design system](https://design.cms.gov/components/masked-field)
  */
 function InputText({ type = "text", ...props }) {
-  // Generate a unique ID for associating field elements like the
-  // input, label, and error message. This is important for a11y.
-  const inputId = uniqueId("InputText");
+  const inputId = useUniqueId("InputText");
   const hasError = !!props.errorMsg;
 
   const fieldClasses = classnames("usa-input", props.inputClassName, {

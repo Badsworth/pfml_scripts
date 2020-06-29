@@ -5,6 +5,7 @@ import { readdirSync, statSync } from "fs";
  * An object describing a forbidden dependency and the reason why it's forbidden.
  * @typedef {object} ForbiddenDependency
  * @property {string} moduleOrDirRelPath Relative path to the module or directory of modules
+ * @property {string[]} allowedDependencies Skip forbidding of these module file names
  * @property {string} reason Reason why this dependency is forbidden. This reason will show up in the test's error message if this dependency is imported.
  */
 
@@ -56,12 +57,6 @@ export const testDependencies = (dependencyRules, rootDir) => {
       });
 
       for (const modulePath of getModulePaths(moduleOrDirRelPath, rootDir)) {
-        // skip stories files
-        // TODO: move stories to their own top level directory
-        if (modulePath.endsWith(".stories.js")) {
-          continue;
-        }
-
         const moduleName = basename(modulePath, ".js");
         it(`${moduleName} ${description}`, () => {
           const importModule = () => require(modulePath);
@@ -107,8 +102,19 @@ function getModulePaths(moduleOrDirRelPath, rootDir) {
  * @param {string} rootDir The root directory to which paths are relative
  */
 function mockForbiddenDependenciesToThrow(forbiddenDependencies, rootDir) {
-  for (const { moduleOrDirRelPath, reason } of forbiddenDependencies) {
+  for (const {
+    moduleOrDirRelPath,
+    reason,
+    allowedDependencies,
+  } of forbiddenDependencies) {
     for (const modulePath of getModulePaths(moduleOrDirRelPath, rootDir)) {
+      if (allowedDependencies) {
+        const allowModule = allowedDependencies.some(
+          (filename) => !!modulePath.match(filename)
+        );
+        if (allowModule) return;
+      }
+
       jest.doMock(modulePath, () => {
         throw new Error(`${modulePath} is a forbidden dependency. ${reason}`);
       });

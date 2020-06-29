@@ -1,13 +1,13 @@
 import React, { useState } from "react";
 import PropTypes from "prop-types";
-import uniqueId from "lodash/uniqueId";
+import useUniqueId from "../hooks/useUniqueId";
 
 /**
  * An accordion is a list of headers that hide or reveal additional content when selected.
  * [USWDS Reference ↗](https://designsystem.digital.gov/components/accordion/)
  */
 function AccordionItem(props) {
-  const [id] = useState(uniqueId("accordion"));
+  const id = useUniqueId("accordion");
   const [isExpanded, setExpanded] = useState(false);
 
   function handleClick() {

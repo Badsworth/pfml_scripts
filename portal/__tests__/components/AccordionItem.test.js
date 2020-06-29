@@ -1,22 +1,21 @@
 import AccordionItem from "../../src/components/AccordionItem";
 import React from "react";
 import { shallow } from "enzyme";
-import uniqueId from "lodash/uniqueId";
 
-jest.mock("lodash/uniqueId");
+jest.mock("../../src/hooks/useUniqueId");
 
 describe("AccordionItem", () => {
   it("generates id", () => {
-    uniqueId.mockReturnValueOnce("mock-id");
-
     const wrapper = shallow(
       <AccordionItem heading="Test">Hello world</AccordionItem>
     );
 
     expect(wrapper.find(".usa-accordion__button").prop("aria-controls")).toBe(
-      "mock-id"
+      "mock-unique-id"
     );
-    expect(wrapper.find(".usa-accordion__content").prop("id")).toBe("mock-id");
+    expect(wrapper.find(".usa-accordion__content").prop("id")).toBe(
+      "mock-unique-id"
+    );
   });
 
   it("is collapsed by default", () => {
