@@ -118,18 +118,28 @@ const useAuthLogic = ({ appErrorsLogic, user }) => {
 };
 
 function validateUsernamePassword(username, password, t) {
-  let message = null;
-  if (!username && !password) {
-    message = t("errors.auth.emailAndPasswordRequired");
-  } else if (!username) {
-    message = t("errors.auth.emailRequired");
-  } else if (!password) {
-    message = t("errors.auth.passwordRequired");
+  const validationErrors = [];
+
+  if (!username) {
+    validationErrors.push(
+      new AppErrorInfo({
+        field: "username",
+        message: t("errors.auth.emailRequired"),
+      })
+    );
   }
 
-  if (!message) return;
+  if (!password) {
+    validationErrors.push(
+      new AppErrorInfo({
+        field: "password",
+        message: t("errors.auth.passwordRequired"),
+      })
+    );
+  }
 
-  const validationErrors = [new AppErrorInfo({ message })];
+  if (!validationErrors.length) return;
+
   return new AppErrorInfoCollection(validationErrors);
 }
 

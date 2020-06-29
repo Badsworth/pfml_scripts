@@ -9,7 +9,6 @@ const errors = {
   auth: {
     codeDeliveryFailure:
       "We encountered an error while sending the verification code. Try again.",
-    emailAndPasswordRequired: "Enter your email address and password",
     emailRequired: "Enter your email address",
     incorrectEmailOrPassword: "Incorrect email or password",
     invalidParametersFallback: "Please enter all required information",

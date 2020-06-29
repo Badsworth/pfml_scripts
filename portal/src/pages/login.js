@@ -1,3 +1,4 @@
+import AppErrorInfoCollection from "../models/AppErrorInfoCollection";
 import Button from "../components/Button";
 import InputText from "../components/InputText";
 import Link from "next/link";
@@ -11,7 +12,7 @@ import { useTranslation } from "../locales/i18n";
 import valueWithFallback from "../utils/valueWithFallback";
 
 export const Login = (props) => {
-  const { appLogic } = props;
+  const { appErrors, auth } = props.appLogic;
   const { t } = useTranslation();
   const { formState, updateFields } = useFormState({});
   const username = valueWithFallback(formState.username);
@@ -20,7 +21,7 @@ export const Login = (props) => {
 
   const handleSubmit = (event) => {
     event.preventDefault();
-    appLogic.auth.login(username, password);
+    auth.login(username, password);
   };
 
   return (
@@ -31,6 +32,7 @@ export const Login = (props) => {
         name="username"
         value={username}
         label={t("pages.login.usernameLabel")}
+        errorMsg={appErrors && appErrors.fieldErrorMessage("username")}
         onChange={handleInputChange}
         smallLabel
       />
@@ -39,6 +41,7 @@ export const Login = (props) => {
         name="password"
         value={password}
         label={t("pages.login.passwordLabel")}
+        errorMsg={appErrors && appErrors.fieldErrorMessage("password")}
         onChange={handleInputChange}
         smallLabel
       />
@@ -61,6 +64,7 @@ export const Login = (props) => {
 
 Login.propTypes = {
   appLogic: PropTypes.shape({
+    appErrors: PropTypes.instanceOf(AppErrorInfoCollection),
     auth: PropTypes.shape({
       login: PropTypes.func.isRequired,
     }).isRequired,

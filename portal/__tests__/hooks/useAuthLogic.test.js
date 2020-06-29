@@ -133,40 +133,20 @@ describe("useAuthLogic", () => {
       expect(Auth.signIn).toHaveBeenCalledWith(username, password);
     });
 
-    it("sets app errors when username and password are empty", () => {
+    it("requires fields to not be empty", () => {
       username = "";
       password = "";
       act(() => {
         login(username, password);
       });
-      expect(appErrors.items).toHaveLength(1);
-      expect(appErrors.items[0].message).toMatchInlineSnapshot(
-        `"Enter your email address and password"`
-      );
-      expect(Auth.signIn).not.toHaveBeenCalled();
-    });
 
-    it("sets app errors when username is empty", () => {
-      username = "";
-      act(() => {
-        login(username, password);
-      });
-      expect(appErrors.items).toHaveLength(1);
-      expect(appErrors.items[0].message).toMatchInlineSnapshot(
-        `"Enter your email address"`
-      );
-      expect(Auth.signIn).not.toHaveBeenCalled();
-    });
-
-    it("sets app errors when password is empty", () => {
-      const password = "";
-      act(() => {
-        login(username, password);
-      });
-      expect(appErrors.items).toHaveLength(1);
-      expect(appErrors.items[0].message).toMatchInlineSnapshot(
-        `"Enter your password"`
-      );
+      expect(appErrors.items).toHaveLength(2);
+      expect(appErrors.items.map((e) => e.message)).toMatchInlineSnapshot(`
+        Array [
+          "Enter your email address",
+          "Enter your password",
+        ]
+      `);
       expect(Auth.signIn).not.toHaveBeenCalled();
     });
 
@@ -267,40 +247,30 @@ describe("useAuthLogic", () => {
       expect(Auth.signUp).toHaveBeenCalledWith({ username, password });
     });
 
-    it("sets app errors when username and password are empty", () => {
+    it("requires fields to not be empty", () => {
       username = "";
       password = "";
       act(() => {
         createAccount(username, password);
       });
-      expect(appErrors.items).toHaveLength(1);
-      expect(appErrors.items[0].message).toMatchInlineSnapshot(
-        `"Enter your email address and password"`
-      );
+
+      expect(appErrors.items).toHaveLength(2);
+      expect(appErrors.items.map((e) => e.message)).toMatchInlineSnapshot(`
+        Array [
+          "Enter your email address",
+          "Enter your password",
+        ]
+      `);
       expect(Auth.signUp).not.toHaveBeenCalled();
     });
 
-    it("sets app errors when username is empty", () => {
+    it("sets individual app errors when username and password are empty", () => {
       username = "";
+      password = "";
       act(() => {
         createAccount(username, password);
       });
-      expect(appErrors.items).toHaveLength(1);
-      expect(appErrors.items[0].message).toMatchInlineSnapshot(
-        `"Enter your email address"`
-      );
-      expect(Auth.signUp).not.toHaveBeenCalled();
-    });
-
-    it("sets app errors when password is empty", () => {
-      const password = "";
-      act(() => {
-        createAccount(username, password);
-      });
-      expect(appErrors.items).toHaveLength(1);
-      expect(appErrors.items[0].message).toMatchInlineSnapshot(
-        `"Enter your password"`
-      );
+      expect(appErrors.items).toHaveLength(2);
       expect(Auth.signUp).not.toHaveBeenCalled();
     });
 

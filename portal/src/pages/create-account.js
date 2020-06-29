@@ -1,3 +1,4 @@
+import AppErrorInfoCollection from "../models/AppErrorInfoCollection";
 import Button from "../components/Button";
 import InputText from "../components/InputText";
 import Link from "next/link";
@@ -11,7 +12,7 @@ import { useTranslation } from "../locales/i18n";
 import valueWithFallback from "../utils/valueWithFallback";
 
 export const CreateAccount = (props) => {
-  const { appLogic } = props;
+  const { appErrors, auth } = props.appLogic;
   const { t } = useTranslation();
   const { formState, updateFields } = useFormState({});
   const username = valueWithFallback(formState.username);
@@ -20,7 +21,7 @@ export const CreateAccount = (props) => {
 
   const handleSubmit = (event) => {
     event.preventDefault();
-    appLogic.auth.createAccount(username, password);
+    auth.createAccount(username, password);
   };
 
   return (
@@ -31,6 +32,7 @@ export const CreateAccount = (props) => {
         name="username"
         value={username}
         label={t("pages.authCreateAccount.usernameLabel")}
+        errorMsg={appErrors && appErrors.fieldErrorMessage("username")}
         onChange={handleInputChange}
         smallLabel
       />
@@ -40,6 +42,7 @@ export const CreateAccount = (props) => {
         value={password}
         hint={t("pages.authCreateAccount.passwordHint")}
         label={t("pages.authCreateAccount.passwordLabel")}
+        errorMsg={appErrors && appErrors.fieldErrorMessage("password")}
         onChange={handleInputChange}
         smallLabel
       />
@@ -58,6 +61,7 @@ export const CreateAccount = (props) => {
 
 CreateAccount.propTypes = {
   appLogic: PropTypes.shape({
+    appErrors: PropTypes.instanceOf(AppErrorInfoCollection),
     auth: PropTypes.shape({
       createAccount: PropTypes.func.isRequired,
     }).isRequired,
