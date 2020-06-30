@@ -187,6 +187,19 @@ describe("App", () => {
       jest.spyOn(console, "error").mockImplementationOnce(jest.fn());
     });
 
+    it("does not render the page component", async () => {
+      expect.assertions();
+      usersApi.getCurrentUser.mockRejectedValueOnce(new NetworkError());
+
+      let wrapper;
+      await act(async () => {
+        wrapper = render(initialAuthProps, true).wrapper;
+      });
+      wrapper.update();
+
+      expect(wrapper.find("TestComponent").exists()).toBe(false);
+    });
+
     it("displays error for NetworkError", async () => {
       expect.assertions();
       usersApi.getCurrentUser.mockRejectedValueOnce(new NetworkError());

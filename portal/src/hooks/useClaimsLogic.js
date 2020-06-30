@@ -28,13 +28,8 @@ const useClaimsLogic = ({ appErrorsLogic, user }) => {
     appErrorsLogic.clearErrors();
 
     try {
-      const { claims, errors } = await claimsApi.getClaims();
-
-      if (errors) {
-        appErrorsLogic.setAppErrors(errors);
-      } else {
-        setClaims(claims);
-      }
+      const { claims } = await claimsApi.getClaims();
+      setClaims(claims);
     } catch (error) {
       appErrorsLogic.catchError(error);
     }
@@ -49,27 +44,20 @@ const useClaimsLogic = ({ appErrorsLogic, user }) => {
     appErrorsLogic.clearErrors();
 
     try {
-      let { claim, apiErrors } = await claimsApi.updateClaim(
-        application_id,
-        patchData
-      );
+      let { claim } = await claimsApi.updateClaim(application_id, patchData);
 
-      if (apiErrors) {
-        appErrorsLogic.setAppErrors(apiErrors);
-      } else {
-        // Currently the API doesn't return the claim data in the response
-        // so we're manually constructing the body based on client data.
-        // We will change the PATCH applications endpoint to return the full
-        // application in this ticket: https://lwd.atlassian.net/browse/API-247
-        // TODO: Remove workaround once above ticket is complete: https://lwd.atlassian.net/browse/CP-577
-        claim = new Claim({
-          ...claims.get(application_id),
-          ...patchData,
-        });
-        // </ end workaround >
+      // Currently the API doesn't return the claim data in the response
+      // so we're manually constructing the body based on client data.
+      // We will change the PATCH applications endpoint to return the full
+      // application in this ticket: https://lwd.atlassian.net/browse/API-247
+      // TODO: Remove workaround once above ticket is complete: https://lwd.atlassian.net/browse/CP-577
+      claim = new Claim({
+        ...claims.get(application_id),
+        ...patchData,
+      });
+      // </ end workaround >
 
-        setClaim(claim);
-      }
+      setClaim(claim);
     } catch (error) {
       appErrorsLogic.catchError(error);
     }
@@ -100,15 +88,8 @@ const useClaimsLogic = ({ appErrorsLogic, user }) => {
     appErrorsLogic.clearErrors();
 
     try {
-      const { claim, apiErrors } = await claimsApi.submitClaim(
-        new Claim(formState)
-      );
-
-      if (apiErrors) {
-        appErrorsLogic.setAppErrors(apiErrors);
-      } else {
-        setClaim(claim);
-      }
+      const { claim } = await claimsApi.submitClaim(new Claim(formState));
+      setClaim(claim);
     } catch (error) {
       appErrorsLogic.catchError(error);
     }
