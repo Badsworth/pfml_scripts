@@ -36,7 +36,6 @@ class ApplicationResponse:
         application_json.pop("employer_notification_date", None)
         application_json.pop("employer_notification_method_id", None)
         application_json.pop("start_time", None)
-        application_json.pop("updated_time", None)
         application_json.pop("completed_time", None)
         application_json.pop("submitted_time", None)
         application_json.pop("fineos_absence_id", None)

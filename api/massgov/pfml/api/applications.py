@@ -51,6 +51,7 @@ def applications_get():
 def applications_start():
     application = Application()
     application.start_time = datetime.now()
+    application.updated_time = datetime.now()
 
     with app.db_session() as db_session:
         db_session.add(application)

@@ -1,5 +1,7 @@
 import uuid
 
+from freezegun import freeze_time
+
 from massgov.pfml.db.models.factories import ApplicationFactory
 
 
@@ -13,6 +15,7 @@ def test_applications_get_invalid(client):
     assert response.status_code == 404
 
 
+@freeze_time("2020-01-01")
 def test_applications_get_valid(client):
     application = ApplicationFactory.create()
 
@@ -24,6 +27,7 @@ def test_applications_get_valid(client):
     assert response.status_code == 200
     response_body = response.get_json()
     assert response_body.get("application_id") == application.application_id
+    assert response_body.get("updated_time") == "2020-01-01T00:00:00Z"
 
 
 def test_applications_get_no_userid(client):
@@ -52,6 +56,7 @@ def test_applications_post_start_app(client):
     assert response.status_code == 201
 
 
+@freeze_time("2020-01-01")
 def test_application_patch(client):
     application = ApplicationFactory.create()
 
@@ -71,6 +76,7 @@ def test_application_patch(client):
     response_body = response.get_json()
     updated_last_name = response_body.get("last_name")
     assert updated_last_name == "Perez"
+    assert response_body.get("updated_time") == "2020-01-01T00:00:00Z"
 
 
 def test_application_patch_leave_reason(client):
