@@ -2,7 +2,7 @@ from sqlalchemy import Boolean, Column, Date, DateTime, ForeignKey, Integer, Tex
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 
-from massgov.pfml.db.models.employees import Employee, Employer, Occupation, User
+from massgov.pfml.db.models.employees import Employee, Employer, Occupation, PaymentType, User
 
 from ..lookup import LookupTable
 from .base import Base, uuid_gen
@@ -78,7 +78,6 @@ class Application(Base):
         Integer, ForeignKey("lk_notification_method.notification_method_id")
     )
     leave_type_id = Column(Integer, ForeignKey("lk_leave_type.leave_type_id"))
-    leave_type = relationship("LeaveType")
     leave_reason_id = Column(Integer, ForeignKey("lk_leave_reason.leave_reason_id"))
     leave_reason_qualifier_id = Column(
         Integer, ForeignKey("lk_leave_reason_qualifier.leave_reason_qualifier_id")
@@ -101,6 +100,23 @@ class Application(Base):
     relationship_qualifier = relationship(RelationshipQualifier)
     employer_notification_method = relationship(NotificationMethod)
 
+    # `uselist` default is True, but for mypy need to state it explicitly so it
+    # detects the relationship as many-to-one
+    #
+    # https://github.com/dropbox/sqlalchemy-stubs/issues/152
+    payment_preferences = relationship(
+        "ApplicationPaymentPreference", back_populates="application", uselist=True
+    )
+    continuous_leave_periods = relationship(
+        "ContinuousLeavePeriod", back_populates="application", uselist=True
+    )
+    intermittent_leave_periods = relationship(
+        "IntermittentLeavePeriod", back_populates="application", uselist=True
+    )
+    reduced_schedule_leave_periods = relationship(
+        "ReducedScheduleLeavePeriod", back_populates="application", uselist=True
+    )
+
 
 class ApplicationPaymentPreference(Base):
     __tablename__ = "application_payment_preference"
@@ -114,6 +130,9 @@ class ApplicationPaymentPreference(Base):
     routing_number = Column(Text)
     type_of_account = Column(Text)
     name_in_check = Column(Text)
+
+    application = relationship(Application, back_populates="payment_preferences")
+    payment_type = relationship(PaymentType)
 
 
 class ContinuousLeavePeriod(Base):
@@ -132,6 +151,8 @@ class ContinuousLeavePeriod(Base):
     end_date_off_hours = Column(Integer)
     end_date_off_minutes = Column(Integer)
 
+    application = relationship(Application, back_populates="continuous_leave_periods")
+
 
 class IntermittentLeavePeriod(Base):
     __tablename__ = "intermittent_leave_period"
@@ -144,6 +165,8 @@ class IntermittentLeavePeriod(Base):
     frequency_interval_basis = Column(Text)
     duration = Column(Integer)
     duration_basis = Column(Text)
+
+    application = relationship(Application, back_populates="intermittent_leave_periods")
 
 
 class ReducedScheduleLeavePeriod(Base):
@@ -167,6 +190,8 @@ class ReducedScheduleLeavePeriod(Base):
     tuesday_off_minutes = Column(Integer)
     wednesday_off_hours = Column(Integer)
     wednesday_off_minutes = Column(Integer)
+
+    application = relationship(Application, back_populates="reduced_schedule_leave_periods")
 
 
 class LeaveReason(LookupTable):

@@ -6,8 +6,12 @@ from pydantic import UUID4
 from werkzeug.exceptions import NotFound
 
 import massgov.pfml.api.app as app
-from massgov.pfml.api.models.application_request import ApplicationRequest
-from massgov.pfml.api.models.application_response import ApplicationResponse
+import massgov.pfml.api.models.applications.requests as application_request_model
+import massgov.pfml.api.services.applications as applications_service
+from massgov.pfml.api.models.applications.responses import (
+    ApplicationResponse,
+    ApplicationUpdateResponse,
+)
 from massgov.pfml.db.models.applications import Application
 from massgov.pfml.util.pydantic import PydanticBaseModel
 
@@ -20,11 +24,12 @@ def application_get(application_id):
             .one_or_none()
         )
 
-    if existing_application is None:
-        raise NotFound()
-    else:
-        application_response = ApplicationResponse(existing_application)
-        return application_response.create_full_response()
+        if existing_application is None:
+            raise NotFound()
+
+        application_response = ApplicationResponse.from_orm(existing_application)
+
+    return application_response.dict()
 
 
 class ApplicationSearchResult(PydanticBaseModel):
@@ -72,17 +77,25 @@ def applications_update(application_id):
     if existing_application is None:
         raise NotFound
 
-    application_request = ApplicationRequest(body, existing_application)
-    errors_and_warnings = application_request.validate()
+    (application_request, errors_and_warnings) = application_request_model.validate(body)
 
-    if len(errors_and_warnings) == 0:
-        application_request.update()
+    if application_request is not None and len(errors_and_warnings) == 0:
+        with app.db_session() as db_session:
+            applications_service.update_from_request(
+                db_session, application_request, existing_application
+            )
 
-    if len(errors_and_warnings) == 0:
-        return {"code": "200", "message": "Application updated without errors."}, 200
+        return (
+            ApplicationUpdateResponse(
+                code="200", message="Application updated without errors."
+            ).dict(exclude_none=True),
+            200,
+        )
     else:
         return (
-            {"code": "400", "message": "Application has errors", "errors": errors_and_warnings},
+            ApplicationUpdateResponse(
+                code="400", message="Application has errors", errors=errors_and_warnings
+            ).dict(exclude_none=True),
             400,
         )
 

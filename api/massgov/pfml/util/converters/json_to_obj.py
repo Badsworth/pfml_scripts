@@ -1,9 +1,21 @@
-def set_object_from_json(json_str, object_instance):
+from typing import Any, Dict, Mapping, Optional, TypeVar
+
+_T = TypeVar("_T")
+
+
+def set_object_from_json(json_str: Optional[Any], object_instance: Optional[_T]) -> Optional[_T]:
     if json_str is None:
         return None
 
-    for key in json_str:
-        setattr(object_instance, key, json_str[key])
+    if isinstance(json_str, Mapping):
+        iterable = json_str.items()
+    elif hasattr(json_str, "__dict__"):
+        iterable = json_str.__dict__.items()
+    else:
+        raise Exception("Unknown object type")
+
+    for key, val in iterable:
+        setattr(object_instance, key, val)
 
     if object_instance is None or vars(object_instance).__len__() == 1:
         return None
@@ -11,7 +23,7 @@ def set_object_from_json(json_str, object_instance):
     return object_instance
 
 
-def get_json_from_object(object_instance):
+def get_json_from_object(object_instance: Optional[Any]) -> Optional[Dict[str, Any]]:
     if object_instance is None:
         return None
 

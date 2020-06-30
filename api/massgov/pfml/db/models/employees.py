@@ -91,6 +91,7 @@ class AuthorizedRepresentative(Base):
     authorized_representative_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
     first_name = Column(Text)
     last_name = Column(Text)
+
     employees = relationship("AuthorizedRepEmployee", back_populates="authorized_rep")
 
 
@@ -98,6 +99,7 @@ class HealthCareProvider(Base):
     __tablename__ = "health_care_provider"
     health_care_provider_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
     provider_name = Column(Text)
+
     addresses = relationship("HealthCareProviderAddress", back_populates="health_care_provider")
 
 
@@ -113,11 +115,12 @@ class Employer(Base):
     exemption_commence_date = Column(Date)
     exemption_cease_date = Column(Date)
     dor_updated_date = Column(DateTime)
+    latest_import_log_id = Column(Integer, ForeignKey("import_log.import_log_id"))
+
     wages_and_contributions = relationship(
         "WagesAndContributions", back_populates="employer", lazy="dynamic"
     )
     addresses = relationship("EmployerAddress", back_populates="employers", lazy="dynamic")
-    latest_import_log_id = Column(Integer, ForeignKey("import_log.import_log_id"))
 
 
 class PaymentInformation(Base):
@@ -147,6 +150,8 @@ class Employee(Base):
     gender_id = Column(Integer, ForeignKey("lk_gender.gender_id"))
     occupation_id = Column(Integer, ForeignKey("lk_occupation.occupation_id"))
     education_level_id = Column(Integer, ForeignKey("lk_education_level.education_level_id"))
+    latest_import_log_id = Column(Integer, ForeignKey("import_log.import_log_id"))
+
     authorized_reps = relationship(
         "AuthorizedRepEmployee", back_populates="employee", lazy="dynamic"
     )
@@ -154,7 +159,6 @@ class Employee(Base):
         "WagesAndContributions", back_populates="employee", lazy="dynamic"
     )
     addresses = relationship("EmployeeAddress", back_populates="employees", lazy="dynamic")
-    latest_import_log_id = Column(Integer, ForeignKey("import_log.import_log_id"))
 
 
 class Claim(Base):
@@ -175,6 +179,7 @@ class AuthorizedRepEmployee(Base):
         primary_key=True,
     )
     employee_id = Column(UUID(as_uuid=True), ForeignKey("employee.employee_id"), primary_key=True)
+
     authorized_rep = relationship("AuthorizedRepresentative", back_populates="employees")
     employee = relationship("Employee", back_populates="authorized_reps")
 
@@ -200,6 +205,7 @@ class EmployeeAddress(Base):
     __tablename__ = "link_employee_address"
     employee_id = Column(UUID(as_uuid=True), ForeignKey("employee.employee_id"), primary_key=True)
     address_id = Column(UUID(as_uuid=True), ForeignKey("address.address_id"), primary_key=True)
+
     employees = relationship("Employee", back_populates="addresses")
     addresses = relationship("Address", back_populates="employees")
 
@@ -212,6 +218,7 @@ class EmployerAddress(Base):
     address_id = Column(
         UUID(as_uuid=True), ForeignKey("address.address_id"), primary_key=True, unique=True
     )
+
     employers = relationship("Employer", back_populates="addresses")
     addresses = relationship("Address", back_populates="employers")
 
@@ -224,6 +231,7 @@ class HealthCareProviderAddress(Base):
         primary_key=True,
     )
     address_id = Column(UUID(as_uuid=True), ForeignKey("address.address_id"), primary_key=True)
+
     health_care_provider = relationship("HealthCareProvider", back_populates="addresses")
     address = relationship("Address", back_populates="health_care_providers")
 
@@ -250,8 +258,6 @@ class WagesAndContributions(Base):
     filing_period = Column(Date, nullable=False)
     employee_id = Column(UUID(as_uuid=True), ForeignKey("employee.employee_id"), nullable=False)
     employer_id = Column(UUID(as_uuid=True), ForeignKey("employer.employer_id"), nullable=False)
-    employee = relationship("Employee", back_populates="wages_and_contributions")
-    employer = relationship("Employer", back_populates="wages_and_contributions")
     is_independent_contractor = Column(Boolean, nullable=False)
     is_opted_in = Column(Boolean, nullable=False)
     employee_ytd_wages = Column(Numeric(asdecimal=True), nullable=False)
@@ -261,6 +267,9 @@ class WagesAndContributions(Base):
     employee_fam_contribution = Column(Numeric(asdecimal=True), nullable=False)
     employer_fam_contribution = Column(Numeric(asdecimal=True), nullable=False)
     latest_import_log_id = Column(Integer, ForeignKey("import_log.import_log_id"))
+
+    employee = relationship("Employee", back_populates="wages_and_contributions")
+    employer = relationship("Employer", back_populates="wages_and_contributions")
 
 
 class ImportLog(Base):
@@ -272,11 +281,6 @@ class ImportLog(Base):
     report = Column(Text)
     start = Column(DateTime)
     end = Column(DateTime)
-
-
-# lk_address_type = LookupTable(
-#     AddressType, ("address_type_id", "address_description"), ((1, "Home"), (2, "Business"))
-# )
 
 
 class AddressType(LookupTable):

@@ -548,10 +548,6 @@ components:
           type: string
           nullable: true
           example: "My bonding leave request"
-        application_id:
-          type: string
-          format: uuid
-          example: "2a340cf8-6d2a-4f82-a075-73588d003f8f"
         employee_ssn:
           nullable: true
           $ref: "#/components/schemas/SsnItin"
@@ -588,6 +584,7 @@ components:
         application_nickname:
           type: string
           example: "My bonding leave request"
+          nullable: true
         application_id:
           type: string
           format: uuid
@@ -596,16 +593,20 @@ components:
           type: string
           format: uuid
           example: "8623c9f2-8275-417b-b5d7-4bb32fedb7a7"
+          nullable: true
         employer_id:
           type: string
           format: uuid
           example: "2f0f58a0-fcad-465b-b474-ee6c961cd6e3"
+          nullable: true
         first_name:
           type: string
           example: "John"
+          nullable: true
         last_name:
           type: string
           example: "Doe"
+          nullable: true
         occupation:
           type: string
           enum:
@@ -614,12 +615,15 @@ components:
             - Engineer
             - Doctor
           example: "Sales Clerk"
+          nullable: true
         leave_details:
           $ref: "#/components/schemas/ApplicationLeaveDetails"
+          nullable: true
         payment_preferences:
           type: array
           items:
             $ref: "#/components/schemas/PaymentPreferences"
+          nullable: true
         updated_time:
           type: string
           format: date-time
@@ -705,6 +709,10 @@ components:
     ReducedScheduleLeavePeriods:
       type: object
       properties:
+        leave_period_id:
+          type: string
+          format: uuid
+          nullable: true
         start_date:
           type: string
           nullable: true
@@ -780,6 +788,10 @@ components:
     ContinuousLeavePeriods:
       type: object
       properties:
+        leave_period_id:
+          type: string
+          format: uuid
+          nullable: true
         start_date:
           type: string
           nullable: true
@@ -833,6 +845,10 @@ components:
     IntermittentLeavePeriods:
       type: object
       properties:
+        leave_period_id:
+          type: string
+          format: uuid
+          nullable: true
         start_date:
           type: string
           nullable: true
@@ -875,6 +891,10 @@ components:
     PaymentPreferences:
       type: object
       properties:
+        payment_preference_id:
+          type: string
+          format: uuid
+          nullable: true
         description:
           type: string
           nullable: true
@@ -897,7 +917,7 @@ components:
     ApplicationPaymentAccountDetails:
       type: object
       properties:
-        account_no:
+        account_number:
           type: string
           nullable: true
           minLength: 6

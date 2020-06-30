@@ -164,7 +164,7 @@ def create_payment_preferences(first_name, last_name):
     if payment_type == "ACH":
         account_details = {
             "account_name": fake.sentence(),
-            "account_no": str(fake.random_number(digits=12)),
+            "account_number": str(fake.random_number(digits=12)),
             "routing_number": random.choice(routing_numbers),
             "account_type": random.choice(account_type),
         }
