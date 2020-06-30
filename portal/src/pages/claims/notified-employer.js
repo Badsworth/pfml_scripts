@@ -30,6 +30,7 @@ export const NotifiedEmployer = (props) => {
     pick(claim, fields)
   );
   const { leave_details } = formState;
+  const employer_notified = get(leave_details, "employer_notified");
   const handleInputChange = useHandleInputChange(updateFields);
 
   const handleSave = () => {
@@ -46,12 +47,12 @@ export const NotifiedEmployer = (props) => {
       <InputChoiceGroup
         choices={[
           {
-            checked: get(leave_details, "employer_notified") === true,
+            checked: employer_notified === true,
             label: t("pages.claimsNotifiedEmployer.choiceYes"),
             value: "true",
           },
           {
-            checked: get(leave_details, "employer_notified") === false,
+            checked: employer_notified === false,
             label: t("pages.claimsNotifiedEmployer.choiceNo"),
             value: "false",
           },
@@ -67,12 +68,14 @@ export const NotifiedEmployer = (props) => {
           "leave_details.employer_notification_date",
         ]}
         removeField={removeField}
-        visible={leave_details.employer_notified === true}
+        visible={employer_notified === true}
       >
         <InputDate
           name="leave_details.employer_notification_date"
           label={t("pages.claimsNotifiedEmployer.employerNotificationLabel")}
-          value={valueWithFallback(leave_details.employer_notification_date)}
+          value={valueWithFallback(
+            get(leave_details, "employer_notification_date")
+          )}
           hint={t("pages.claimsNotifiedEmployer.employerNotificationDateHint")}
           dayLabel={t("components.form.dateInputDayLabel")}
           monthLabel={t("components.form.dateInputMonthLabel")}
@@ -80,7 +83,7 @@ export const NotifiedEmployer = (props) => {
           onChange={handleInputChange}
         />
       </ConditionalContent>
-      <ConditionalContent visible={leave_details.employer_notified === false}>
+      <ConditionalContent visible={employer_notified === false}>
         <Alert state="warning" role="alert">
           {t("pages.claimsNotifiedEmployer.mustNotifyEmployerWarning")}
         </Alert>
