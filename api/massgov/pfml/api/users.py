@@ -6,10 +6,9 @@ from werkzeug.exceptions import NotFound
 
 import massgov.pfml.api.app as app
 import massgov.pfml.util.logging
+from massgov.pfml.api.authorization.flask import EDIT, READ, ensure
 from massgov.pfml.db.models.employees import User
 from massgov.pfml.util.pydantic import PydanticBaseModel
-
-# import massgov.pfml.api.authorization.flask as authz
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
 
@@ -18,7 +17,7 @@ logger = massgov.pfml.util.logging.get_logger(__name__)
 # Handlers
 ##########################################
 
-# @authz.requires(authz.READ, "User")
+
 def users_get(user_id):
     with app.db_session() as db_session:
         u = db_session.query(User).get(user_id)
@@ -26,6 +25,7 @@ def users_get(user_id):
     if u is None:
         raise NotFound()
 
+    ensure(READ, u)
     return user_response(u)
 
 
@@ -37,6 +37,7 @@ def users_current_get():
     if current_user is None:
         raise NotFound
 
+    ensure(READ, current_user)
     return user_response(current_user)
 
 
@@ -50,6 +51,7 @@ def users_patch(user_id):
         if updated_user is None:
             raise NotFound()
 
+        ensure(EDIT, updated_user)
         for key in body.__fields_set__:
             value = getattr(body, key)
             setattr(updated_user, key, value)
