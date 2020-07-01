@@ -1,10 +1,10 @@
 /// Entry point for all of our app's global styles
 
-@import "uswds-theme-general";
-@import "uswds-theme-color";
-@import "uswds-theme-typography";
-@import "uswds-theme-components";
-@import "uswds-theme-utilities";
+@use "uswds-theme-general" as *;
+@use "uswds-theme-color" as *;
+@use "uswds-theme-typography" as *;
+@use "uswds-theme-components" as *;
+@use "uswds-theme-utilities" as *;
 @import "~uswds/dist/scss/uswds";
 
 // Include default USWDS h1-h6 style (size, weight, spacing) rulesets

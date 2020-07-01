@@ -11,8 +11,10 @@ https://designsystem.digital.gov/design-tokens/typesetting/font-family/
 /* Mayflower SCSS prefix url references to assets such as fonts and images with $assets-path.
  Set $assets-path to form the correct url references in your project to the parent folder of the fonts/ folder, based on the location of the compiled css.
 */
-$assets-path: "~@massds/mayflower-tokens/dist";
-@import "~@massds/mayflower-tokens/dist/scss/fonts";
+
+@use "~@massds/mayflower-assets/scss/00-base/_fonts.scss" as * with (
+  $assets-path: "~@massds/mayflower-assets/static"
+);
 
 $theme-typeface-tokens: (
   texta: (

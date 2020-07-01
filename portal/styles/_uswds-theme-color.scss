@@ -9,7 +9,7 @@ https://designsystem.digital.gov/design-tokens/color
 */
 
 // Mayflower Sass variables
-@import "~@massds/mayflower-tokens/dist/scss/index";
+@use "~@massds/mayflower-assets/scss/00-base/_color-tokens.scss" as *;
 
 /*
 ----------------------------------------
