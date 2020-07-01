@@ -66,21 +66,64 @@ describe("useFormState", () => {
         }
       `);
     });
+
+    it("remains stable across renders", () => {
+      const updateFields1 = updateFields;
+      act(() => {
+        updateFields1({ field1: "aaa" });
+      });
+      const updateFields2 = updateFields;
+      expect(updateFields2).toBe(updateFields1);
+    });
+
+    it("handles multiple calls to updateFields in same render call", () => {
+      act(() => {
+        updateFields({ f1: "aaa" });
+        updateFields({ f2: "bbb" });
+      });
+      expect(formState).toEqual({
+        f1: "aaa",
+        f2: "bbb",
+      });
+    });
   });
 
   describe("removeField", () => {
-    it("removes field from formState", () => {
+    beforeEach(() => {
       const initialState = {
         foo: "banana",
         bar: "watermelon",
+        cat: "pineapple",
       };
       testHook(() => {
         ({ formState, removeField } = useFormState(initialState));
       });
+    });
+    it("removes field from formState", () => {
       act(() => {
-        removeField("foo");
+        removeField("bar");
       });
       expect(formState).toStrictEqual({
+        foo: "banana",
+        cat: "pineapple",
+      });
+    });
+
+    it("remains stable across renders", () => {
+      const removeField1 = removeField;
+      act(() => {
+        removeField1("bar");
+      });
+      const removeField2 = removeField;
+      expect(removeField2).toBe(removeField1);
+    });
+
+    it("handles multiple calls to removeField in same render call", () => {
+      act(() => {
+        removeField("cat");
+        removeField("foo");
+      });
+      expect(formState).toEqual({
         bar: "watermelon",
       });
     });
