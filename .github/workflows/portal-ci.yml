@@ -1,6 +1,6 @@
-# Run tests, linting, and storybook for the Paid Leave website as part of continuous integration.
+# Run tests and linting for the Portal
 #
-name: Portal Website Testing
+name: Portal CI
 
 on:
   pull_request:
@@ -12,6 +12,7 @@ env:
 
 jobs:
   lint:
+    name: Lint
     runs-on: ubuntu-latest
 
     steps:
@@ -43,7 +44,7 @@ jobs:
       - name: install
         run: PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true npm ci --prefix portal
 
-      - name: test-cov
+      - name: test
         run: npm test --prefix portal
 
   test-e2e:
@@ -63,20 +64,3 @@ jobs:
 
       - name: Headless browser tests
         run: npm run test:e2e:ci --prefix portal
-
-  storybook:
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v2
-
-      - name: Use Node.js
-        uses: actions/setup-node@v1
-        with:
-          node-version: ${{ env.nodeVersion }}
-
-      - name: install
-        run: PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true npm ci --prefix portal
-
-      - name: Smoke test Storybook
-        run: npm run docs:smoke-test --prefix portal

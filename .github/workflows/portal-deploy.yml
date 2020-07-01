@@ -1,6 +1,6 @@
 # Build and export the Paid Leave static website, and deploy to S3/Cloudfront
 #
-name: Portal Website Deploy
+name: Portal deploy
 
 on:
   push:

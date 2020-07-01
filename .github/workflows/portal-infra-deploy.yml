@@ -1,4 +1,4 @@
-name: Portal Infrastructure CI Deploy
+name: Portal infra deploy
 
 on:
   push:

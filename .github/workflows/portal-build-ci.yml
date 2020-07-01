@@ -1,6 +1,6 @@
-# Test building and exporting the Paid Leave website as part of continuous integration.
+# Verify Portal and Storybook site builds complete successfully
 #
-name: Portal Website Build Check
+name: Portal build check
 
 on:
   pull_request:
@@ -11,24 +11,8 @@ env:
   nodeVersion: 12.x
 
 jobs:
-  build_dev:
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v2
-
-      - name: Use Node.js
-        uses: actions/setup-node@v1
-        with:
-          nodeVersion: ${{ env.nodeVersion }}
-
-      - name: install
-        run: PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true npm ci --prefix portal
-
-      - name: build
-        run: npm run build --prefix portal
-
   build_test:
+    name: Build Portal test env
     runs-on: ubuntu-latest
 
     steps:
@@ -44,3 +28,21 @@ jobs:
 
       - name: build
         run: npm run build:test --prefix portal
+
+  storybook:
+    name: Build Storybook
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Use Node.js
+        uses: actions/setup-node@v1
+        with:
+          node-version: ${{ env.nodeVersion }}
+
+      - name: install
+        run: PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true npm ci --prefix portal
+
+      - name: Smoke test Storybook
+        run: npm run docs:smoke-test --prefix portal

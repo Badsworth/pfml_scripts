@@ -1,6 +1,6 @@
 # Run tests and linting for the Paid Leave Portal Lambda functions
 #
-name: Portal Lambda Testing
+name: Portal infra CI
 
 on:
   pull_request:
