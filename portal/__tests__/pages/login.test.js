@@ -8,20 +8,39 @@ import useAppLogic from "../../src/hooks/useAppLogic";
 jest.mock("../../src/hooks/useAppLogic");
 
 describe("Login", () => {
-  let appLogic, changeField, submitForm, wrapper;
+  let appLogic, changeField, query, submitForm, wrapper;
+
+  function render(customProps = {}) {
+    act(() => {
+      wrapper = shallow(<Login appLogic={appLogic} query={query} />);
+    });
+    ({ changeField, submitForm } = simulateEvents(wrapper));
+  }
 
   beforeEach(() => {
+    query = {};
     testHook(() => {
       appLogic = useAppLogic();
     });
-    act(() => {
-      wrapper = shallow(<Login appLogic={appLogic} />);
-    });
-    ({ changeField, submitForm } = simulateEvents(wrapper));
+    render();
   });
 
   it("renders the empty page", () => {
     expect(wrapper).toMatchSnapshot();
+  });
+
+  describe("when account-verified query param is true", () => {
+    it("displays verification success message", () => {
+      query = {
+        "account-verified": "true",
+      };
+      render();
+      const accountVerifiedMessageWrapper = wrapper.find({
+        name: "account-verified-message",
+      });
+      expect(accountVerifiedMessageWrapper).toHaveLength(1);
+      expect(accountVerifiedMessageWrapper).toMatchSnapshot();
+    });
   });
 
   describe("when the form is submitted", () => {

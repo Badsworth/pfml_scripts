@@ -1,57 +1,64 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`Login renders the empty page 1`] = `
-<form
-  className="usa-form usa-form--large"
-  onSubmit={[Function]}
->
-  <Title>
-    Log in to get started
-  </Title>
-  <InputText
-    label="Email address"
-    name="username"
-    onChange={[Function]}
-    smallLabel={true}
-    type="email"
-    value=""
-  />
-  <InputText
-    label="Password"
-    name="password"
-    onChange={[Function]}
-    smallLabel={true}
-    type="password"
-    value=""
-  />
-  <div
-    className="margin-top-1"
+<Fragment>
+  <form
+    className="usa-form usa-form--large"
+    onSubmit={[Function]}
   >
-    <Link
-      href="/forgot-password"
-    >
-      <a>
-        Forgot your password?
-      </a>
-    </Link>
-  </div>
-  <Button
-    type="submit"
-  >
-    Log in
-  </Button>
-  <div
-    className="margin-top-2"
-  >
+    <Title>
+      Log in to get started
+    </Title>
     <Link
       href="/create-account"
     >
-      <a
-        className="text-bold"
-      >
-        create an account
+      <a>
+        Or create an account
       </a>
     </Link>
-  </div>
-</form>
+    <InputText
+      label="Email address"
+      name="username"
+      onChange={[Function]}
+      smallLabel={true}
+      type="email"
+      value=""
+    />
+    <InputText
+      label="Password"
+      name="password"
+      onChange={[Function]}
+      smallLabel={true}
+      type="password"
+      value=""
+    />
+    <div
+      className="margin-top-1"
+    >
+      <Link
+        href="/forgot-password"
+      >
+        <a>
+          Forgot your password?
+        </a>
+      </Link>
+    </div>
+    <Button
+      type="submit"
+    >
+      Log in
+    </Button>
+  </form>
+</Fragment>
+`;
+
+exports[`Login when account-verified query param is true displays verification success message 1`] = `
+<Alert
+  className="margin-bottom-3"
+  heading="Email successfully verified"
+  name="account-verified-message"
+  state="success"
+>
+  Thanks for verifying your email address. You may now log into your account.
+</Alert>
 `;

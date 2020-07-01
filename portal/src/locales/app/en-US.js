@@ -17,6 +17,8 @@ const errors = {
       "Invalid verification code. Make sure the code matches the code emailed to you.",
     codeRequired: "Enter the 6-digit code sent to your email",
     emailRequired: "Enter your email address",
+    expiredVerificationCode:
+      "Invalid verification code. Please request a new code.",
     incorrectEmailOrPassword: "Incorrect email or password",
     invalidParametersFallback: "Please enter all required information",
     invalidParametersIncludingMaybePassword:
@@ -93,6 +95,17 @@ const pages = {
     logInLink: "$t(shared.backToLoginLink)",
     submitButton: "Send code",
     title: "Forgot your password?",
+    usernameLabel: "$t(shared.usernameLabel)",
+  },
+  authLogin: {
+    accountVerified:
+      "Thanks for verifying your email address. You may now log into your account.",
+    accountVerifiedHeading: "Email successfully verified",
+    createAccountLink: "Or create an account",
+    forgotPasswordLink: "Forgot your password?",
+    loginButton: "Log in",
+    passwordLabel: "$t(shared.passwordLabel)",
+    title: "Log in to get started",
     usernameLabel: "$t(shared.usernameLabel)",
   },
   authResetPassword: {
@@ -305,14 +318,6 @@ const pages = {
       "Your bank account information",
     ],
     title: "Create an application",
-  },
-  login: {
-    createAccountLink: "create an account",
-    forgotPasswordLink: "Forgot your password?",
-    loginButton: "Log in",
-    passwordLabel: "$t(shared.passwordLabel)",
-    title: "Log in to get started",
-    usernameLabel: "$t(shared.usernameLabel)",
   },
   userConsentToDataSharing: {
     agreementBody:

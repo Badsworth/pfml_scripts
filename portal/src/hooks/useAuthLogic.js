@@ -1,6 +1,7 @@
 import AppErrorInfo from "../models/AppErrorInfo";
 import AppErrorInfoCollection from "../models/AppErrorInfoCollection";
 import { Auth } from "aws-amplify";
+import { createRouteWithQuery } from "../utils/routeWithParams";
 import routes from "../routes";
 import { useRouter } from "next/router";
 import { useState } from "react";
@@ -183,8 +184,12 @@ const useAuthLogic = ({ appErrorsLogic, user }) => {
     try {
       await Auth.forgotPasswordSubmit(username, code, password);
 
-      // TODO: Move page routing logic to AppLogic https://lwd.atlassian.net/browse/CP-525
-      router.push(routes.auth.login);
+      // TODO: Move page routing logic to AppLogic
+      router.push(
+        createRouteWithQuery(routes.auth.login, {
+          "account-verified": true,
+        })
+      );
     } catch (error) {
       const appErrors = getResetPasswordErrorInfo(error, t);
       appErrorsLogic.setAppErrors(appErrors);
@@ -217,7 +222,7 @@ const useAuthLogic = ({ appErrorsLogic, user }) => {
     try {
       await Auth.confirmSignUp(username, code);
 
-      // TODO: Move page routing logic to AppLogic
+      // TODO: Move page routing logic to AppLogic https://lwd.atlassian.net/browse/CP-525
       router.push(routes.auth.login);
     } catch (error) {
       const appErrors = getVerifyAccountErrorInfo(error, t);

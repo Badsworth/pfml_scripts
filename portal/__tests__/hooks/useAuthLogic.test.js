@@ -513,12 +513,14 @@ describe("useAuthLogic", () => {
       );
     });
 
-    it("routes to login page", async () => {
+    it("routes to login page with account verified success message", async () => {
       await act(async () => {
         await resetPassword(username, verificationCode, password);
       });
 
-      expect(mockRouter.push).toHaveBeenCalledWith("/login");
+      expect(mockRouter.push).toHaveBeenCalledWith(
+        "/login?account-verified=true"
+      );
     });
 
     it("requires all fields to not be empty", () => {
