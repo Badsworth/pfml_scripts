@@ -1,5 +1,5 @@
+import { ForbiddenError, NetworkError } from "../../src/errors";
 import { Auth } from "aws-amplify";
-import { NetworkError } from "../../src/errors";
 import request from "../../src/api/request";
 import tracker from "../../src/services/tracker";
 
@@ -245,24 +245,43 @@ describe("request", () => {
       jest.spyOn(console, "error").mockImplementationOnce(jest.fn());
     });
 
-    it("throws NetworkError", async () => {
-      expect.assertions();
+    describe("due to a 403 status", () => {
+      it("throws ForbiddenError", async () => {
+        expect.assertions();
 
-      global.fetch = jest.fn().mockRejectedValue(TypeError("Network failure"));
+        global.fetch = jest.fn().mockResolvedValue({
+          ok: false,
+          status: 403,
+        });
 
-      await expect(request("GET", "users")).rejects.toThrow(NetworkError);
+        await expect(request("GET", "users")).rejects.toThrow(ForbiddenError);
+      });
     });
 
-    it("sends error to New Relic", async () => {
-      expect.assertions();
+    describe("due to a network issue", () => {
+      it("throws NetworkError", async () => {
+        expect.assertions();
 
-      global.fetch = jest.fn().mockRejectedValue(TypeError("Network failure"));
+        global.fetch = jest
+          .fn()
+          .mockRejectedValue(TypeError("Network failure"));
 
-      try {
-        await request("GET", "users");
-      } catch (error) {}
+        await expect(request("GET", "users")).rejects.toThrow(NetworkError);
+      });
 
-      expect(tracker.noticeError).toHaveBeenCalledWith(expect.any(Error));
+      it("sends error to New Relic", async () => {
+        expect.assertions();
+
+        global.fetch = jest
+          .fn()
+          .mockRejectedValue(TypeError("Network failure"));
+
+        try {
+          await request("GET", "users");
+        } catch (error) {}
+
+        expect(tracker.noticeError).toHaveBeenCalledWith(expect.any(Error));
+      });
     });
   });
 });

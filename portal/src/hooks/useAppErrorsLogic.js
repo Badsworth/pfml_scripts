@@ -25,8 +25,7 @@ const useAppErrorsLogic = () => {
 
     const appError = new AppErrorInfo({
       type: error.name,
-      message:
-        error.name === "NetworkError" ? t("errors.network") : error.message,
+      message: t("errors.caughtError", { context: error.name }),
     });
 
     setAppErrors(new AppErrorInfoCollection([appError]));

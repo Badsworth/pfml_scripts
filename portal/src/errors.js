@@ -3,6 +3,18 @@
  */
 
 /**
+ * A response returned a 403 status code, indicating an issue with the authorization of the request.
+ * Examples of a ForbiddenError could be the user's browser prevented the session cookie from
+ * being created, or the user hasn't consented to the data sharing agreement.
+ */
+export class ForbiddenError extends Error {
+  constructor(...params) {
+    super(...params);
+    this.name = "ForbiddenError";
+  }
+}
+
+/**
  * A fetch request failed due to a network error. The error wasn't the fault of the user,
  * and an issue was encountered while setting up or sending a request, or parsing the response.
  * Examples of a NetworkError could be the user's device lost internet connection, a CORS issue,

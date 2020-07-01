@@ -1,5 +1,5 @@
+import { ForbiddenError, NetworkError } from "../errors";
 import { Auth } from "aws-amplify";
-import { NetworkError } from "../errors";
 import tracker from "../services/tracker";
 
 /**
@@ -102,6 +102,8 @@ async function sendRequest(url, options) {
     tracker.noticeError(error);
     throw new NetworkError(error.message);
   }
+
+  if (response.status === 403) throw new ForbiddenError();
 
   return {
     body,

@@ -1,3 +1,4 @@
+import { ForbiddenError, NetworkError } from "../../src/errors";
 import AppErrorInfo from "../../src/models/AppErrorInfo";
 import AppErrorInfoCollection from "../../src/models/AppErrorInfoCollection";
 import { act } from "react-dom/test-utils";
@@ -36,6 +37,42 @@ describe("useAppErrorsLogic", () => {
 
       expect(appErrorsLogic.appErrors.items[0].type).toEqual("Error");
       expect(tracker.noticeError).toHaveBeenCalledTimes(1);
+    });
+
+    describe("when generic Error is thrown", () => {
+      it("displays an internationalized message", () => {
+        act(() => {
+          appErrorsLogic.catchError(new Error("Default error message"));
+        });
+
+        expect(appErrorsLogic.appErrors.items[0].message).toMatchInlineSnapshot(
+          `"Sorry, an unexpected error in our system was encountered. If this continues to happen, you may call the Paid Family Leave Contact Center at (XXX) XXX-XXXX"`
+        );
+      });
+    });
+
+    describe("when ForbiddenError is thrown", () => {
+      it("displays an internationalized message", () => {
+        act(() => {
+          appErrorsLogic.catchError(new ForbiddenError());
+        });
+
+        expect(appErrorsLogic.appErrors.items[0].message).toMatchInlineSnapshot(
+          `"Sorry, an authorization error was encountered. Please log out and then log in to try again."`
+        );
+      });
+    });
+
+    describe("when NetworkError is thrown", () => {
+      it("displays an internationalized message", () => {
+        act(() => {
+          appErrorsLogic.catchError(new NetworkError());
+        });
+
+        expect(appErrorsLogic.appErrors.items[0].message).toMatchInlineSnapshot(
+          `"Sorry, an error was encountered. This may occur for a variety of reasons, including temporarily losing an internet connection or an unexpected error in our system. If this continues to happen, you may call the Paid Family Leave Contact Center at (XXX) XXX-XXXX"`
+        );
+      });
     });
   });
 
