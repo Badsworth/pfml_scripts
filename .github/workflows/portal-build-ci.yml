@@ -21,7 +21,7 @@ jobs:
       - name: Use Node.js
         uses: actions/setup-node@v1
         with:
-          nodeVersion: ${{ env.nodeVersion }}
+          node-version: ${{ env.nodeVersion }}
 
       - name: install
         run: PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true npm ci --prefix portal
