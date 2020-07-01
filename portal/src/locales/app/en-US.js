@@ -9,19 +9,26 @@ const errors = {
   auth: {
     codeDeliveryFailure:
       "We encountered an error while sending the verification code. Try again.",
+    codeExpired:
+      "Sorry, your verification code has expired or has already been used.",
+    codeFormat:
+      "Enter the 6-digit code sent to your email and ensure it does not include any punctuation.",
+    codeMismatchException:
+      "Invalid verification code. Make sure the code matches the code emailed to you.",
+    codeRequired: "Enter the 6-digit code sent to your email",
     emailRequired: "Enter your email address",
     incorrectEmailOrPassword: "Incorrect email or password",
     invalidParametersFallback: "Please enter all required information",
+    invalidParametersIncludingMaybePassword:
+      "Please check the requirements and try again. Ensure all required information is entered and the password meets the requirements.",
     invalidPhoneFormat: "Invalid phone number",
-    invalidVerificationCode: "Invalid verification code",
     passwordErrors:
       "Your password does not meet the requirements. Please check the requirements and try again.",
     passwordRequired: "Enter your password",
+    userNotConfirmed:
+      "Please first confirm your account by following the instructions in the verification email sent to your inbox.",
     userNotFound: "Incorrect email",
     usernameExists: "An account with the given email already exists",
-    verificationCodeFormat:
-      "Enter the 6-digit code sent to your email and ensure it does not include any spaces or punctuation.",
-    verificationCodeRequired: "Enter the 6-digit code sent to your email",
   },
   currentUser: {
     failedToFind:
@@ -32,6 +39,7 @@ const errors = {
 };
 
 const shared = {
+  backToLoginLink: "Back to log in",
   // TODO: Correct phone number
   // https://lwd.atlassian.net/browse/CP-143
   callCenterPhoneNumber: "(XXX) XXX-XXXX",
@@ -48,7 +56,10 @@ const shared = {
   leaveReasonServiceMemberFamily: "Military family",
   passwordHint:
     "Your password must be at least 8 characters long and include numbers and letters.",
+  passwordLabel: "Password",
+  resendVerificationCodeLink: "Resend the code",
   usernameLabel: "Email address",
+  verificationCodeLabel: "6-digit code",
 };
 
 const pages = {
@@ -65,8 +76,31 @@ const pages = {
     haveAnAccountFooterLabel: "Have an account? ",
     logInFooterLink: "Log in",
     passwordHint: "$t(shared.passwordHint)",
-    passwordLabel: "Password",
+    passwordLabel: "$t(shared.passwordLabel)",
     title: "Create an account",
+    usernameLabel: "$t(shared.usernameLabel)",
+  },
+  authForgotPassword: {
+    codeLabel: "$t(shared.verificationCodeLabel)",
+    lead:
+      "If an account exists for the email you provide, we will email a 6-digit verification code to it.",
+    logInLink: "$t(shared.backToLoginLink)",
+    submitButton: "Send code",
+    title: "Forgot your password?",
+    usernameLabel: "$t(shared.usernameLabel)",
+  },
+  authResetPassword: {
+    codeLabel: "$t(shared.verificationCodeLabel)",
+    lead:
+      "If an account exists for the email you provide, we emailed a 6-digit verification code to it. Enter the code below to confirm your email and reset your password.",
+    lead_email:
+      "If an account exists for {{emailAddress}}, we emailed a 6-digit verification code to it. Enter the code below to confirm your email and reset your password.",
+    logInLink: "$t(shared.backToLoginLink)",
+    passwordHint: "$t(shared.passwordHint)",
+    passwordLabel: "New password",
+    resendCodeLink: "$t(shared.resendVerificationCodeLink)",
+    submitButton: "Set new password",
+    title: "Create a new password",
     usernameLabel: "$t(shared.usernameLabel)",
   },
   claimsChecklist: {
@@ -229,16 +263,6 @@ const pages = {
     sectionLabel: "Upload your Massachusetts driver’s license or ID card",
     title: "$t(shared.claimsFileUploadTitle)",
   },
-  forgotPassword: {
-    codeLabel: "6-digit code",
-    lead:
-      "If an account exists for the email you provide, we will email a 6-digit verification code to it.",
-    logInLink: "Back to log in",
-    resendCodeLink: "Resend the code",
-    submitButton: "Send code",
-    title: "Forgot your password?",
-    usernameLabel: "$t(shared.usernameLabel)",
-  },
   index: {
     afterApplyingHeading: "What to expect after you apply",
     afterApplyingIntro:
@@ -268,9 +292,9 @@ const pages = {
     createAccountLink: "create an account",
     forgotPasswordLink: "Forgot your password?",
     loginButton: "Log in",
-    passwordLabel: "Password",
+    passwordLabel: "$t(shared.passwordLabel)",
     title: "Log in to get started",
-    usernameLabel: "Email address",
+    usernameLabel: "$t(shared.usernameLabel)",
   },
   userConsentToDataSharing: {
     agreementBody:
@@ -300,15 +324,15 @@ const components = {
   amplifyForgotPassword: {
     // TODO: Remove these after the CustomForgotPassword component is obsolete
     // https://lwd.atlassian.net/browse/CP-485
-    codeLabel: "6-digit code",
+    codeLabel: "$t(shared.verificationCodeLabel)",
     leadCreatePasswordView:
       "If an account exists for {{emailAddress}}, we emailed a 6-digit verification code to it. Enter the code below to confirm your email and reset your password.",
     leadSendView:
       "If an account exists for the email you provide, we will email a 6-digit verification code to it.",
     passwordHint: "$t(shared.passwordHint)",
     passwordLabel: "New password",
-    resendCodeLink: "Resend the code",
-    signInFooterLink: "Back to log in",
+    resendCodeLink: "$t(shared.resendVerificationCodeLink)",
+    signInFooterLink: "$t(shared.backToLoginLink)",
     submitEmailButton: "Send code",
     submitPasswordButton: "Set new password",
     titleCreatePasswordView: "Create a new password",
@@ -338,10 +362,10 @@ const components = {
     label: "Back",
   },
   confirmSignUp: {
-    codeLabel: "6-digit code",
+    codeLabel: "$t(shared.verificationCodeLabel)",
     confirmButton: "Submit",
-    resendCodeLink: "Resend the code",
-    signInFooterLink: "Back to log in",
+    resendCodeLink: "$t(shared.resendVerificationCodeLink)",
+    signInFooterLink: "$t(shared.backToLoginLink)",
     title: "Verify your email address",
     verifyHint:
       "We sent a 6-digit verification code to {{emailAddress}}. Enter the code to verify your email.",
@@ -413,10 +437,10 @@ const components = {
     createAccountButton: "Create account",
     haveAnAccountFooterLabel: "Have an account?",
     passwordHint: "$t(shared.passwordHint)",
-    passwordLabel: "Password",
+    passwordLabel: "$t(shared.passwordLabel)",
     signInFooterLink: "Log in",
     title: "Create an account",
-    usernameLabel: "Email address",
+    usernameLabel: "$t(shared.usernameLabel)",
   },
   spinner: {
     label: "Loading",

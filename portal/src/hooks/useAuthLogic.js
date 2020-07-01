@@ -3,6 +3,7 @@ import AppErrorInfoCollection from "../models/AppErrorInfoCollection";
 import { Auth } from "aws-amplify";
 import routes from "../routes";
 import { useRouter } from "next/router";
+import { useState } from "react";
 import { useTranslation } from "../locales/i18n";
 
 /**
@@ -14,6 +15,15 @@ import { useTranslation } from "../locales/i18n";
 const useAuthLogic = ({ appErrorsLogic, user }) => {
   const { t } = useTranslation();
   const router = useRouter();
+
+  /**
+   * Sometimes we need to persist information the user entered on
+   * one auth screen so it can be reused on a subsequent auth screen.
+   * For these cases we need to store this data in memory.
+   * @property {object} authData - data to store between page transitions
+   * @property {Function} setAuthData - updated the cached authentication info
+   */
+  const [authData, setAuthData] = useState({});
 
   /**
    * Initiate the Forgot Password flow, sending a verification code when user exists.
@@ -39,6 +49,8 @@ const useAuthLogic = ({ appErrorsLogic, user }) => {
       appErrorsLogic.setAppErrors(appErrors);
     }
 
+    // Store the username so the user doesn't need to reenter it on the Reset page
+    setAuthData({ resetPasswordUsername: username });
     router.push(routes.auth.resetPassword);
   };
 
@@ -52,7 +64,11 @@ const useAuthLogic = ({ appErrorsLogic, user }) => {
     appErrorsLogic.clearErrors();
     username = username.trim();
 
-    const validationErrors = validateUsernamePassword(username, password, t);
+    const validationErrors = combineErrorCollections([
+      validateUsername(username, t),
+      validatePassword(password, t),
+    ]);
+
     if (validationErrors) {
       appErrorsLogic.setAppErrors(validationErrors);
       return;
@@ -79,7 +95,11 @@ const useAuthLogic = ({ appErrorsLogic, user }) => {
     appErrorsLogic.clearErrors();
     username = username.trim();
 
-    const validationErrors = validateUsernamePassword(username, password, t);
+    const validationErrors = combineErrorCollections([
+      validateUsername(username, t),
+      validatePassword(password, t),
+    ]);
+
     if (validationErrors) {
       appErrorsLogic.setAppErrors(validationErrors);
       return;
@@ -109,31 +129,87 @@ const useAuthLogic = ({ appErrorsLogic, user }) => {
     }
   };
 
+  /**
+   * Use a verification code to confirm the user is who they say they are
+   * and allow them to reset their password
+   * @param {string} username - Email address that is used as the username
+   * @param {string} code - verification code
+   * @param {string} password - new password
+   */
+  const resetPassword = async (username = "", code = "", password = "") => {
+    appErrorsLogic.clearErrors();
+
+    username = username.trim();
+    code = code.trim();
+
+    const validationErrors = combineErrorCollections([
+      validateVerificationCode(code, t),
+      validateUsername(username, t),
+      validatePassword(password, t),
+    ]);
+
+    if (validationErrors) {
+      appErrorsLogic.setAppErrors(validationErrors);
+      return;
+    }
+
+    try {
+      await Auth.forgotPasswordSubmit(username, code, password);
+
+      // TODO: Move page routing logic to AppLogic https://lwd.atlassian.net/browse/CP-525
+      router.push(routes.auth.login);
+    } catch (error) {
+      const appErrors = getResetPasswordErrorInfo(error, t);
+      appErrorsLogic.setAppErrors(appErrors);
+    }
+  };
+
   return {
+    authData,
     createAccount,
     forgotPassword,
     login,
     requireUserConsentToDataAgreement,
+    resetPassword,
   };
 };
 
-function validateUsernamePassword(username, password, t) {
-  const validationErrors = [];
+/**
+ * Combines all AppErrorInfoCollection items into a single AppErrorInfoCollection
+ * @param {AppErrorInfoCollection[]} errorCollections - Array of optional AppErrorInfoCollection instances
+ * @returns {AppErrorInfoCollection} - If at least one collection is present, an AppErrorInfoCollection is returned
+ */
+function combineErrorCollections(errorCollections) {
+  // Remove undefined collections, which would occur if there were no errors
+  const collectionsWithItems = errorCollections.filter(
+    (errorCollection) => !!errorCollection
+  );
 
-  if (!username) {
-    validationErrors.push(
-      new AppErrorInfo({
-        field: "username",
-        message: t("errors.auth.emailRequired"),
-      })
+  if (collectionsWithItems.length) {
+    return collectionsWithItems.reduce(
+      (combinedCollection, currentCollection) =>
+        new AppErrorInfoCollection(
+          combinedCollection.items.concat(currentCollection.items)
+        )
     );
   }
+}
 
-  if (!password) {
+function validateVerificationCode(code, t) {
+  const validationErrors = [];
+
+  if (!code) {
     validationErrors.push(
       new AppErrorInfo({
-        field: "password",
-        message: t("errors.auth.passwordRequired"),
+        field: "code",
+        message: t("errors.auth.codeRequired"),
+      })
+    );
+  } else if (!code.match(/^\d{6}$/)) {
+    validationErrors.push(
+      new AppErrorInfo({
+        field: "code",
+        message: t("errors.auth.codeFormat"),
       })
     );
   }
@@ -141,6 +217,28 @@ function validateUsernamePassword(username, password, t) {
   if (!validationErrors.length) return;
 
   return new AppErrorInfoCollection(validationErrors);
+}
+
+function validatePassword(password, t) {
+  if (!password) {
+    return new AppErrorInfoCollection([
+      new AppErrorInfo({
+        field: "password",
+        message: t("errors.auth.passwordRequired"),
+      }),
+    ]);
+  }
+}
+
+function validateUsername(username, t) {
+  if (!username) {
+    return new AppErrorInfoCollection([
+      new AppErrorInfo({
+        field: "username",
+        message: t("errors.auth.emailRequired"),
+      }),
+    ]);
+  }
 }
 
 /**
@@ -243,6 +341,37 @@ function getCreateAccountErrorInfo(error, t) {
   }
 
   return new AppErrorInfoCollection([new AppErrorInfo({ message })]);
+}
+
+/**
+ * Converts an error thrown by the Amplify library's Auth.forgotPasswordSubmit method into
+ * AppErrorInfo objects to be rendered by the page.
+ * For a list of possible exceptions, see
+ * https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_ConfirmForgotPassword.html
+ * @param {object} error Error object that was thrown by Amplify
+ * @param {Function} t Localization method
+ * @returns {AppErrorInfoCollection}
+ */
+function getResetPasswordErrorInfo(error, t) {
+  let message;
+  if (error.code === "CodeMismatchException") {
+    message = t("errors.auth.codeMismatchException");
+  } else if (error.code === "ExpiredCodeException") {
+    message = t("errors.auth.codeExpired");
+  } else if (error.code === "InvalidParameterException") {
+    message = t("errors.auth.invalidParametersIncludingMaybePassword");
+  } else if (error.code === "InvalidPasswordException") {
+    message = t("errors.auth.passwordErrors");
+  } else if (error.code === "UserNotConfirmedException") {
+    message = t("errors.auth.userNotConfirmed");
+  } else if (error.code === "UserNotFoundException") {
+    message = t("errors.auth.userNotFound");
+  } else {
+    message = t("errors.network");
+  }
+
+  const appErrorInfo = new AppErrorInfo({ message });
+  return new AppErrorInfoCollection([appErrorInfo]);
 }
 
 export default useAuthLogic;

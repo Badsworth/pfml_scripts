@@ -39,9 +39,8 @@ function customAmplifyErrorMessageKey(amplifyMessage) {
    * github.com/aws-amplify/amplify-js/blob/8df8193c276031a0129cd98a0ec751cbff7a28c1/packages/aws-amplify-react/src/AmplifyI18n.tsx
    */
   const customMessageKeys = {
-    "Confirmation code cannot be empty": "errors.auth.verificationCodeRequired",
-    "Confirmation code validation catchall":
-      "errors.auth.verificationCodeFormat",
+    "Confirmation code cannot be empty": "errors.auth.codeRequired",
+    "Confirmation code validation catchall": "errors.auth.codeFormat",
     // This is crazy, but it's what's currently shown when Cognito returns InvalidParameterException
     // https://lwd.atlassian.net/browse/CP-259
     "Custom auth lambda trigger is not configured for the user pool":
@@ -49,7 +48,7 @@ function customAmplifyErrorMessageKey(amplifyMessage) {
     "Incorrect username or password": "errors.auth.incorrectEmailOrPassword",
     "Invalid phone number format": "errors.auth.invalidPhoneFormat",
     "Invalid verification code provided, please try again":
-      "errors.auth.invalidVerificationCode",
+      "errors.auth.codeMismatchException",
     "Password cannot be empty": "errors.auth.passwordRequired",
     "The following fields need to be filled out: Email":
       "errors.auth.emailRequired",

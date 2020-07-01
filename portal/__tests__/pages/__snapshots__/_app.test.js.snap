@@ -27,10 +27,12 @@ exports[`App when authenticated user consented to data sharing renders the page 
     Object {
       "appErrors": null,
       "auth": Object {
+        "authData": Object {},
         "createAccount": [Function],
         "forgotPassword": [Function],
         "login": [Function],
         "requireUserConsentToDataAgreement": [Function],
+        "resetPassword": [Function],
       },
       "claims": null,
       "clearErrors": [Function],

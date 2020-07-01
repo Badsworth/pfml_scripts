@@ -25,23 +25,25 @@ export const ForgotPassword = (props) => {
 
   return (
     <form className="usa-form usa-form--large" onSubmit={handleSubmit}>
-      <Title>{t("pages.forgotPassword.title")}</Title>
-      <Lead>{t("pages.forgotPassword.lead")}</Lead>
+      <Title>{t("pages.authForgotPassword.title")}</Title>
+      <Lead>{t("pages.authForgotPassword.lead")}</Lead>
 
       <InputText
         type="email"
         name="username"
         value={username}
-        label={t("pages.forgotPassword.usernameLabel")}
+        label={t("pages.authForgotPassword.usernameLabel")}
         onChange={handleInputChange}
         smallLabel
       />
 
-      <Button type="submit">{t("pages.forgotPassword.submitButton")}</Button>
+      <Button type="submit">
+        {t("pages.authForgotPassword.submitButton")}
+      </Button>
 
       <div className="margin-top-2">
         <Link href={routes.auth.login}>
-          <a className="text-bold">{t("pages.forgotPassword.logInLink")}</a>
+          <a className="text-bold">{t("pages.authForgotPassword.logInLink")}</a>
         </Link>
       </div>
     </form>
