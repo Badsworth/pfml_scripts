@@ -1,21 +1,10 @@
 import React from "react";
 import UploadOtherId from "../../../src/pages/claims/upload-other-id";
+import { makeFile } from "../../test-utils";
 import routes from "../../../src/routes";
 import { shallow } from "enzyme";
 
 const claim_id = "12345";
-
-const makeFile = (attrs = {}) => {
-  const { name, type } = Object.assign(
-    {
-      name: "file.pdf",
-      type: "application/pdf",
-    },
-    attrs
-  );
-
-  return new File([], name, { type });
-};
 
 const render = (props = {}) => {
   const allProps = {

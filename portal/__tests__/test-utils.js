@@ -32,6 +32,26 @@ export const testHook = (callback) => {
 };
 
 /**
+ * Make a File instance
+ * @see https://developer.mozilla.org/en-US/docs/Web/API/File
+ * @param {object} attrs File attributes
+ * @param {string} attrs.name The file's name
+ * @param {string} attrs.type The file's MIME type
+ * @returns {File}
+ */
+export const makeFile = (attrs = {}) => {
+  const { name, type } = Object.assign(
+    {
+      name: "file.pdf",
+      type: "application/pdf",
+    },
+    attrs
+  );
+
+  return new File([], name, { type });
+};
+
+/**
  * Export convenience functions to simulate events like typing
  * into input fields and submitting forms, and run the simulated
  * events in Enzyme's `act` function to ensure any re-rendering

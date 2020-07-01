@@ -1,9 +1,11 @@
+import React, { useState } from "react";
 import _, { uniqueId } from "lodash";
+import { makeFile, testHook } from "../test-utils";
 import FileCardList from "../../src/components/FileCardList";
-import React from "react";
+import { act } from "react-dom/test-utils";
 import { shallow } from "enzyme";
 
-const makeFile = (attrs = {}) => {
+const makeFileObject = (attrs = {}) => {
   const { id, type } = Object.assign(
     {
       id: uniqueId("File"),
@@ -14,7 +16,7 @@ const makeFile = (attrs = {}) => {
 
   const name = attrs.name || `${id}.pdf`;
 
-  const file = new File([], name, { type });
+  const file = makeFile({ name, type });
   return { id, file };
 };
 
@@ -52,7 +54,7 @@ describe("FileCardList", () => {
   });
 
   describe("with previously-selected files", () => {
-    const files = [makeFile()];
+    const files = [makeFileObject()];
 
     it("renders a list of the files", () => {
       const wrapper = render({ files });
@@ -69,18 +71,16 @@ describe("FileCardList", () => {
   });
 
   it("removes a file when the remove handler is called", () => {
-    const file = makeFile();
-    const files = [file];
-    let updatedFiles;
-    const setFiles = jest.fn((callback) => (updatedFiles = callback(files)));
-    const wrapper = render({ files, setFiles });
-    // Find the file card and dive() into its wrapper
-    const fileCard = wrapper.find("FileCard");
-    // Simulate the "Remove document" button being clicked
-    fileCard.simulate("removeClick");
-
-    expect(setFiles).toHaveBeenCalled();
-    expect(updatedFiles).toEqual([]);
+    const initialFiles = [makeFileObject()];
+    let files, setFiles;
+    testHook(() => {
+      [files, setFiles] = useState(initialFiles);
+    });
+    act(() => {
+      const wrapper = render({ files, setFiles });
+      wrapper.find("FileCard").simulate("removeClick");
+    });
+    expect(files).toEqual([]);
   });
 
   describe("when the user selects file(s)", () => {
@@ -88,48 +88,54 @@ describe("FileCardList", () => {
       jest.restoreAllMocks();
     });
 
-    it("adds a single file when the user selects a single file", () => {
-      const files = [makeFile()];
-      let updatedFiles;
-      const setFiles = jest.fn((callback) => (updatedFiles = callback(files)));
-      const wrapper = render({ files, setFiles });
-      const input = wrapper.find("input");
-
-      // simulate the user selecting a single file
-      const newFile = new File([], "file.pdf", { type: "application/pdf" });
-      const id = "File1";
+    it("adds a single file when the user selects a single file", async () => {
+      const initialFiles = [makeFileObject()];
+      const id = "FileX";
+      const newFile = makeFileObject({ id });
       jest.spyOn(_, "uniqueId").mockImplementationOnce(() => id);
-      input.simulate("change", {
-        target: {
-          files: [newFile],
-        },
+
+      let files, setFiles;
+      testHook(() => {
+        [files, setFiles] = useState(initialFiles);
       });
 
-      const expectedFiles = [...files, { id, file: newFile }];
-      expect(setFiles).toHaveBeenCalled();
-      expect(updatedFiles).toEqual(expectedFiles);
+      act(() => {
+        const wrapper = render({ files, setFiles });
+        // simulate the user selecting a single file
+        const input = wrapper.find("input");
+        input.simulate("change", {
+          target: {
+            files: [newFile.file],
+          },
+        });
+      });
+
+      expect(files).toEqual([...initialFiles, newFile]);
     });
 
     it("adds multiple files when the user selects multiple files", () => {
-      const files = [makeFile()];
-      let updatedFiles;
-      const setFiles = jest.fn((callback) => (updatedFiles = callback(files)));
-      const wrapper = render({ files, setFiles });
-      const input = wrapper.find("input");
-
-      // simulate the user selecting multiple files
-      const file = new File([], "file.pdf", { type: "application/pdf" });
-      const id = "File1";
+      const initialFiles = [makeFileObject()];
+      const id = "FileX";
+      const newFiles = [makeFileObject({ id }), makeFileObject({ id })];
       jest.spyOn(_, "uniqueId").mockImplementation(() => id);
-      input.simulate("change", {
-        target: {
-          files: [file, file],
-        },
+
+      let files, setFiles;
+      testHook(() => {
+        [files, setFiles] = useState(initialFiles);
       });
 
-      const expectedFiles = [...files, { id, file }, { id, file }];
-      expect(setFiles).toHaveBeenCalled();
-      expect(updatedFiles).toEqual(expectedFiles);
+      act(() => {
+        const wrapper = render({ files, setFiles });
+        // simulate the user selecting multiple files
+        const input = wrapper.find("input");
+        input.simulate("change", {
+          target: {
+            files: newFiles.map((file) => file.file),
+          },
+        });
+      });
+
+      expect(files).toEqual([...initialFiles, ...newFiles]);
     });
 
     it("retrieves the selected files before resetting the input's value", () => {
@@ -143,7 +149,7 @@ describe("FileCardList", () => {
       const input = wrapper.find("input");
 
       // setup to simulate the user selecting a single file
-      const newFile = new File([], "file.pdf", { type: "application/pdf" });
+      const newFile = makeFile();
 
       // Construct an event object which will allow us to test the order in which
       // event.target.files and event.target.value are accessed in the onChange handler.
@@ -186,27 +192,29 @@ describe("FileCardList", () => {
     });
 
     it("filters out invalid files", () => {
-      const files = [makeFile()];
-      let updatedFiles;
-      const setFiles = jest.fn((callback) => (updatedFiles = callback(files)));
-      const wrapper = render({ files, setFiles });
-      const input = wrapper.find("input");
-
-      // simulate the user selecting multiple files
-      const validFile = new File([], "file.pdf", { type: "application/pdf" });
-      const invalidFile = new File([], "file.exe", { type: "application/exe" });
-      const id = "File1";
+      const initialFiles = [makeFileObject()];
+      const id = "FileX";
+      const validFile = makeFileObject({ id });
+      const invalidFile = makeFileObject({ id, type: "application/exe" });
       jest.spyOn(_, "uniqueId").mockImplementation(() => id);
-      jest.spyOn(console, "error").mockImplementationOnce(jest.fn());
-      input.simulate("change", {
-        target: {
-          files: [validFile, invalidFile],
-        },
+
+      let files, setFiles, wrapper;
+      testHook(() => {
+        [files, setFiles] = useState(initialFiles);
       });
 
-      const expectedFiles = [...files, { id, file: validFile }];
-      expect(setFiles).toHaveBeenCalled();
-      expect(updatedFiles).toEqual(expectedFiles);
+      act(() => {
+        wrapper = render({ files, setFiles });
+        // simulate the user selecting files, including an invalid one
+        const input = wrapper.find("input");
+        input.simulate("change", {
+          target: {
+            files: [validFile.file, invalidFile.file],
+          },
+        });
+      });
+
+      expect(files).toEqual([...initialFiles, validFile]);
     });
   });
 
