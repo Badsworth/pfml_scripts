@@ -108,6 +108,8 @@ const useAuthLogic = ({ appErrorsLogic, user }) => {
     try {
       await Auth.signUp({ username, password });
 
+      // Store the username so the user doesn't need to reenter it on the Verify page
+      setAuthData({ createAccountUsername: username });
       // TODO: Move page routing logic to AppLogic https://lwd.atlassian.net/browse/CP-525
       router.push(routes.auth.verifyAccount);
     } catch (error) {
@@ -126,6 +128,31 @@ const useAuthLogic = ({ appErrorsLogic, user }) => {
       !router.pathname.match(routes.user.consentToDataSharing)
     ) {
       router.push(routes.user.consentToDataSharing);
+    }
+  };
+
+  const resendVerifyAccountCode = async (username) => {
+    appErrorsLogic.clearErrors();
+
+    username = username.trim();
+
+    const validationErrors = validateUsername(username, t);
+
+    if (validationErrors) {
+      appErrorsLogic.setAppErrors(validationErrors);
+      return;
+    }
+
+    try {
+      await Auth.resendSignUp(username);
+
+      // TODO: Show success message https://lwd.atlassian.net/browse/CP-600
+    } catch (error) {
+      const message = t("errors.network");
+      const appErrors = new AppErrorInfoCollection([
+        new AppErrorInfo({ message }),
+      ]);
+      appErrorsLogic.setAppErrors(appErrors);
     }
   };
 
@@ -164,13 +191,49 @@ const useAuthLogic = ({ appErrorsLogic, user }) => {
     }
   };
 
+  /**
+   * Verify Portal account with the one time verification code that
+   * was emailed to the user. If there are any errors, set app errors
+   * on the page.
+   * @param {string} username Email address that is used as the username
+   * @param {string} code Verification code that is emailed to the user
+   */
+  const verifyAccount = async (username, code) => {
+    appErrorsLogic.clearErrors();
+
+    username = username.trim();
+    code = code.trim();
+
+    const validationErrors = combineErrorCollections([
+      validateVerificationCode(code, t),
+      validateUsername(username, t),
+    ]);
+
+    if (validationErrors) {
+      appErrorsLogic.setAppErrors(validationErrors);
+      return;
+    }
+
+    try {
+      await Auth.confirmSignUp(username, code);
+
+      // TODO: Move page routing logic to AppLogic
+      router.push(routes.auth.login);
+    } catch (error) {
+      const appErrors = getVerifyAccountErrorInfo(error, t);
+      appErrorsLogic.setAppErrors(appErrors);
+    }
+  };
+
   return {
     authData,
     createAccount,
     forgotPassword,
     login,
     requireUserConsentToDataAgreement,
+    resendVerifyAccountCode,
     resetPassword,
+    verifyAccount,
   };
 };
 
@@ -366,6 +429,37 @@ function getResetPasswordErrorInfo(error, t) {
     message = t("errors.auth.userNotConfirmed");
   } else if (error.code === "UserNotFoundException") {
     message = t("errors.auth.userNotFound");
+  } else {
+    message = t("errors.network");
+  }
+
+  const appErrorInfo = new AppErrorInfo({ message });
+  return new AppErrorInfoCollection([appErrorInfo]);
+}
+
+/**
+ * Converts an error thrown by the Amplify library's Auth.confirmSignUp method into
+ * AppErrorInfo objects to be rendered by the page.
+ * For a list of possible exceptions, see
+ * https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_ConfirmSignUp.html
+ * @param {object} error Error object that was thrown by Amplify
+ * @param {Function} t Localization method
+ * @returns {AppErrorInfoCollection}
+ */
+function getVerifyAccountErrorInfo(error, t) {
+  let message;
+  if (error.code === "CodeMismatchException") {
+    // Cognito error message: "Invalid verification code provided, please try again."
+    message = t("errors.auth.codeMismatchException");
+  } else if (error.code === "ExpiredCodeException") {
+    // Cognito error message: "Invalid code provided, please request a code again."
+    message = t("errors.auth.codeExpired");
+  } else if (error.name === "AuthError") {
+    // This error triggers when username or code is empty
+    // Example message #1: Username cannot be empty
+    // Example message #2: Confirmation code cannot be empty
+    // This code should be unreachable if validation works properly
+    message = t("errors.network");
   } else {
     message = t("errors.network");
   }

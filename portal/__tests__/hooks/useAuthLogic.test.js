@@ -2,6 +2,7 @@ import { Auth } from "aws-amplify";
 import User from "../../src/models/User";
 import { act } from "react-dom/test-utils";
 import { mockRouter } from "next/router";
+import routes from "../../src/routes";
 import { testHook } from "../test-utils";
 import useAppErrorsLogic from "../../src/hooks/useAppErrorsLogic";
 import useAuthLogic from "../../src/hooks/useAuthLogic";
@@ -15,10 +16,12 @@ describe("useAuthLogic", () => {
     forgotPassword,
     login,
     password,
+    resendVerifyAccountCode,
     resetPassword,
     setAppErrors,
     username,
-    verificationCode;
+    verificationCode,
+    verifyAccount;
 
   beforeEach(() => {
     jest.resetAllMocks();
@@ -33,7 +36,9 @@ describe("useAuthLogic", () => {
         forgotPassword,
         login,
         createAccount,
+        resendVerifyAccountCode,
         resetPassword,
+        verifyAccount,
       } = useAuthLogic({
         appErrorsLogic,
       }));
@@ -252,16 +257,32 @@ describe("useAuthLogic", () => {
   });
 
   describe("createAccount", () => {
-    it("calls Auth.signUp", () => {
-      act(() => {
-        createAccount(username, password);
+    it("calls Auth.signUp", async () => {
+      await act(async () => {
+        await createAccount(username, password);
       });
       expect(Auth.signUp).toHaveBeenCalledWith({ username, password });
     });
 
-    it("trims whitespace from username", () => {
-      act(() => {
-        createAccount(`  ${username} `, password);
+    it("routes to Verify Account page", async () => {
+      await act(async () => {
+        await createAccount(username, password);
+      });
+
+      expect(mockRouter.push).toHaveBeenCalledWith(routes.auth.verifyAccount);
+    });
+
+    it("stores username in authData for Verify Account page", async () => {
+      await act(async () => {
+        await createAccount(username, password);
+      });
+
+      expect(authData.createAccountUsername).toBe(username);
+    });
+
+    it("trims whitespace from username", async () => {
+      await act(async () => {
+        await createAccount(`  ${username} `, password);
       });
       expect(Auth.signUp).toHaveBeenCalledWith({ username, password });
     });
@@ -380,10 +401,10 @@ describe("useAuthLogic", () => {
       );
     });
 
-    it("clears existing errors", () => {
-      act(() => {
+    it("clears existing errors", async () => {
+      await act(async () => {
         setAppErrors([{ message: "Pre-existing error" }]);
-        createAccount(username, password);
+        await createAccount(username, password);
       });
       expect(appErrors).toEqual(null);
     });
@@ -434,6 +455,48 @@ describe("useAuthLogic", () => {
 
         expect(mockRouter.push).not.toHaveBeenCalled();
       });
+    });
+  });
+
+  describe("resendVerifyAccountCode", () => {
+    it("calls Auth.resendSignUp", () => {
+      act(() => {
+        resendVerifyAccountCode(username);
+      });
+      expect(Auth.resendSignUp).toHaveBeenCalledWith(username);
+    });
+
+    it("sets app errors when username is empty", () => {
+      username = "";
+      act(() => {
+        resendVerifyAccountCode(username);
+      });
+      expect(appErrors.items).toHaveLength(1);
+      expect(appErrors.items[0].message).toMatchInlineSnapshot(
+        `"Enter your email address"`
+      );
+      expect(Auth.resendSignUp).not.toHaveBeenCalled();
+    });
+
+    it("sets system error message when Auth.resendSignUp throws unanticipated error", () => {
+      jest.spyOn(Auth, "resendSignUp").mockImplementation(() => {
+        throw new Error("Some unknown error");
+      });
+      act(() => {
+        resendVerifyAccountCode(username);
+      });
+      expect(appErrors.items).toHaveLength(1);
+      expect(appErrors.items[0].message).toMatchInlineSnapshot(
+        `"Sorry, an error was encountered. This may occur for a variety of reasons, including temporarily losing an internet connection or an unexpected error in our system. If this continues to happen, you may call the Paid Family Leave Contact Center at (XXX) XXX-XXXX"`
+      );
+    });
+
+    it("clears existing errors", () => {
+      act(() => {
+        setAppErrors([{ message: "Pre-existing error" }]);
+        resendVerifyAccountCode(username);
+      });
+      expect(appErrors).toBeNull();
     });
   });
 
@@ -612,6 +675,164 @@ describe("useAuthLogic", () => {
       });
 
       expect(appErrors).toEqual(null);
+    });
+  });
+
+  describe("verifyAccount", () => {
+    it("calls Auth.confirmSignUp", () => {
+      act(() => {
+        verifyAccount(username, verificationCode);
+      });
+      expect(Auth.confirmSignUp).toHaveBeenCalledWith(
+        username,
+        verificationCode
+      );
+    });
+
+    it("trims whitespace from code", () => {
+      act(() => {
+        verifyAccount(username, `  ${verificationCode} `);
+      });
+      expect(Auth.confirmSignUp).toHaveBeenCalledWith(
+        username,
+        verificationCode
+      );
+    });
+
+    it("sets app errors when username is empty", () => {
+      username = "";
+      act(() => {
+        verifyAccount(username, verificationCode);
+      });
+      expect(appErrors.items).toHaveLength(1);
+      expect(appErrors.items[0].message).toMatchInlineSnapshot(
+        `"Enter your email address"`
+      );
+      expect(Auth.confirmSignUp).not.toHaveBeenCalled();
+    });
+
+    it("sets app errors when verification code is empty", () => {
+      verificationCode = "";
+      act(() => {
+        verifyAccount(username, verificationCode);
+      });
+      expect(appErrors.items).toHaveLength(1);
+      expect(appErrors.items[0].message).toMatchInlineSnapshot(
+        `"Enter the 6-digit code sent to your email"`
+      );
+      expect(Auth.confirmSignUp).not.toHaveBeenCalled();
+    });
+
+    it("sets app errors when verification code is malformed", () => {
+      const malformedCodes = [
+        "12345", // too short,
+        "1234567", // too long,
+        "123A5", // has digits
+        "123.4", // has punctuation
+      ];
+      expect.assertions(malformedCodes.length * 3);
+      for (const code of malformedCodes) {
+        act(() => {
+          verifyAccount(username, code);
+        });
+        expect(appErrors.items).toHaveLength(1);
+        expect(appErrors.items[0].message).toEqual(
+          "Enter the 6-digit code sent to your email and ensure it does not include any punctuation."
+        );
+        expect(Auth.confirmSignUp).not.toHaveBeenCalled();
+      }
+    });
+
+    it("sets app errors when verification code is incorrect", () => {
+      jest.spyOn(Auth, "confirmSignUp").mockImplementation(() => {
+        // Ignore lint rule since AWS Auth class actually throws an object literal
+        // eslint-disable-next-line no-throw-literal
+        throw {
+          code: "CodeMismatchException",
+          message: "Invalid verification code provided, please try again.",
+          name: "CodeMismatchException",
+        };
+      });
+      act(() => {
+        verifyAccount(username, verificationCode);
+      });
+      expect(appErrors.items).toHaveLength(1);
+      expect(appErrors.items[0].message).toMatchInlineSnapshot(
+        `"Invalid verification code. Make sure the code matches the code emailed to you."`
+      );
+    });
+
+    it("sets app errors when verification code has expired", () => {
+      jest.spyOn(Auth, "confirmSignUp").mockImplementation(() => {
+        // Ignore lint rule since AWS Auth class actually throws an object literal
+        // eslint-disable-next-line no-throw-literal
+        throw {
+          code: "ExpiredCodeException",
+          message: "Invalid code provided, please request a code again.",
+          name: "ExpiredCodeException",
+        };
+      });
+      act(() => {
+        verifyAccount(username, verificationCode);
+      });
+      expect(appErrors.items).toHaveLength(1);
+      expect(appErrors.items[0].message).toMatchInlineSnapshot(
+        `"Sorry, your verification code has expired or has already been used."`
+      );
+    });
+
+    it("sets app errors when Auth.confirmSignIn throws AuthError", () => {
+      const authErrorMessages = [
+        "Username cannot be empty",
+        "Confirmation code cannot be empty",
+      ];
+
+      const cognitoErrors = authErrorMessages.map((message) => {
+        return {
+          code: "AuthError",
+          message,
+          name: "AuthError",
+        };
+      });
+
+      expect.assertions(cognitoErrors.length * 2);
+
+      for (const cognitoError of cognitoErrors) {
+        jest.resetAllMocks();
+        jest.spyOn(Auth, "confirmSignUp").mockImplementation(() => {
+          // Ignore lint rule since AWS Auth class actually throws an object literal
+          // eslint-disable-next-line no-throw-literal
+          throw cognitoError;
+        });
+        act(() => {
+          verifyAccount(username, verificationCode);
+        });
+        expect(appErrors.items).toHaveLength(1);
+        expect(appErrors.items[0].message).toMatchInlineSnapshot(
+          `"Sorry, an error was encountered. This may occur for a variety of reasons, including temporarily losing an internet connection or an unexpected error in our system. If this continues to happen, you may call the Paid Family Leave Contact Center at (XXX) XXX-XXXX"`
+        );
+      }
+    });
+
+    it("sets system error message when Auth.confirmSignUp throws unanticipated error", () => {
+      jest.spyOn(Auth, "confirmSignUp").mockImplementation(() => {
+        throw new Error("Some unknown error");
+      });
+      act(() => {
+        verifyAccount(username, verificationCode);
+      });
+      expect(appErrors.items).toHaveLength(1);
+      expect(appErrors.items[0].message).toMatchInlineSnapshot(
+        `"Sorry, an error was encountered. This may occur for a variety of reasons, including temporarily losing an internet connection or an unexpected error in our system. If this continues to happen, you may call the Paid Family Leave Contact Center at (XXX) XXX-XXXX"`
+      );
+    });
+
+    it("clears existing errors", () => {
+      act(() => {
+        setAppErrors([{ message: "Pre-existing error" }]);
+        verifyAccount(username, verificationCode);
+      });
+      expect(appErrors).toBeNull();
     });
   });
 });

@@ -1,4 +1,6 @@
 import { get } from "lodash";
+import isNil from "lodash/isNil";
+import omitBy from "lodash/omitBy";
 import routes from "../routes";
 
 /**
@@ -8,8 +10,14 @@ import routes from "../routes";
  * @returns {string} - route with query string "e.g. /claims/ssn?claim_id=12345"
  */
 export const createRouteWithQuery = (route, params) => {
+  // Remove null and undefined
+  params = omitBy(params, isNil);
   const queryString = new URLSearchParams(params).toString();
-  return `${route}?${queryString}`;
+  if (queryString) {
+    return `${route}?${queryString}`;
+  } else {
+    return route;
+  }
 };
 
 /**

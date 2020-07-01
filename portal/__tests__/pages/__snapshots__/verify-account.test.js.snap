@@ -1,0 +1,58 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`VerifyAccount renders the empty page 1`] = `
+<form
+  className="usa-form usa-form--large"
+  onSubmit={[Function]}
+>
+  <Title>
+    Verify your email address
+  </Title>
+  <Lead>
+    We sent a 6-digit verification code to your email address. Enter the code to verify your email.
+  </Lead>
+  <InputText
+    autoComplete="off"
+    inputMode="numeric"
+    label="6-digit code"
+    name="code"
+    onChange={[Function]}
+    smallLabel={true}
+    value=""
+  />
+  <InputText
+    label="Email address"
+    name="username"
+    onChange={[Function]}
+    smallLabel={true}
+    type="email"
+    value=""
+  />
+  <div>
+    <Button
+      className="margin-top-2"
+      name="resend-code-button"
+      onClick={[Function]}
+      variation="unstyled"
+    >
+      Send a new code
+    </Button>
+  </div>
+  <Button
+    type="submit"
+  >
+    Submit
+  </Button>
+  <div
+    className="margin-top-2 text-bold"
+  >
+    <Link
+      href="/login"
+    >
+      <a>
+        Back to log in
+      </a>
+    </Link>
+  </div>
+</form>
+`;

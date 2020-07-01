@@ -1,3 +1,4 @@
+import Claim from "../../src/models/Claim";
 import Step from "../../src/models/Step";
 import StepDefinition from "../../src/models/StepDefinition";
 
@@ -26,7 +27,7 @@ describe("Step Model", () => {
     it("returns href with claim id parameter set", () => {
       const step = new Step({
         stepDefinition,
-        claim: {},
+        claim: new Claim({ application_id: "12345" }),
       });
 
       expect(step.href).toEqual(expect.stringContaining("?claim_id="));

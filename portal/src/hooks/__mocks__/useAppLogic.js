@@ -7,6 +7,8 @@ export default jest.fn(() => ({
     createAccount: jest.fn(),
     forgotPassword: jest.fn(),
     login: jest.fn(),
+    resendVerifyAccountCode: jest.fn(),
+    verifyAccount: jest.fn(),
   },
   claims: new ClaimCollection(),
   createClaim: jest.fn(() => new Claim({ application_id: uniqueId() })),

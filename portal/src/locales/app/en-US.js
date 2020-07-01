@@ -109,6 +109,18 @@ const pages = {
     title: "Create a new password",
     usernameLabel: "$t(shared.usernameLabel)",
   },
+  authVerifyAccount: {
+    codeLabel: "$t(shared.verificationCodeLabel)",
+    confirmButton: "Submit",
+    lead:
+      "We sent a 6-digit verification code to your email address. Enter the code to verify your email.",
+    lead_email:
+      "We sent a 6-digit verification code to {{emailAddress}}. Enter the code to verify your email.",
+    logInFooterLink: "$t(shared.backToLoginLink)",
+    resendCodeLink: "Send a new code",
+    title: "Verify your email address",
+    usernameLabel: "$t(shared.usernameLabel)",
+  },
   claimsChecklist: {
     backButtonLabel: "Back to Dashboard",
     completedText: "Completed",

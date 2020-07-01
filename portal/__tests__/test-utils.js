@@ -95,6 +95,18 @@ export const simulateEvents = (wrapper) => {
   }
 
   /**
+   * Simulate clicking on an element, such as a button or link
+   * @param {*} enzymeSelector Enzym selector. See https://enzymejs.github.io/enzyme/docs/api/selector.html
+   */
+  function click(enzymeSelector) {
+    act(() => {
+      wrapper.find(enzymeSelector).simulate("click", {
+        preventDefault: jest.fn(),
+      });
+    });
+  }
+
+  /**
    * Simulate submitting a form contained within a component
    */
   function submitForm() {
@@ -105,5 +117,5 @@ export const simulateEvents = (wrapper) => {
     });
   }
 
-  return { changeField, changeRadioGroup, submitForm };
+  return { changeField, changeRadioGroup, click, submitForm };
 };
