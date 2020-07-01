@@ -4,7 +4,6 @@ import Heading from "../components/Heading";
 import PropTypes from "prop-types";
 import React from "react";
 import Title from "../components/Title";
-import routeWithParams from "../utils/routeWithParams";
 import { useRouter } from "next/router";
 import { useTranslation } from "../locales/i18n";
 
@@ -18,15 +17,7 @@ const Index = (props) => {
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-
-    const claim = await appLogic.createClaim();
-
-    // TODO appLogic will handle routing after claim creation
-    const route = routeWithParams("claims.checklist", {
-      claim_id: claim.application_id,
-    });
-
-    router.push(route);
+    await appLogic.createClaim();
   };
 
   return (

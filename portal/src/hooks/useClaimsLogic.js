@@ -1,8 +1,10 @@
 import Claim from "../models/Claim";
 import ClaimCollection from "../models/ClaimCollection";
 import ClaimsApi from "../api/ClaimsApi";
+import routeWithParams from "../utils/routeWithParams";
 import useCollectionState from "./useCollectionState";
 import { useMemo } from "react";
+import { useRouter } from "next/router";
 
 const useClaimsLogic = ({ appErrorsLogic, user }) => {
   // State representing the collection of claims for the current user.
@@ -17,6 +19,7 @@ const useClaimsLogic = ({ appErrorsLogic, user }) => {
   } = useCollectionState(() => new ClaimCollection());
 
   const claimsApi = useMemo(() => new ClaimsApi({ user }), [user]);
+  const router = useRouter();
 
   /**
    * Load all claims for user
@@ -64,17 +67,26 @@ const useClaimsLogic = ({ appErrorsLogic, user }) => {
   };
 
   /**
-   * Create the claim in the API and set application errors if any
-   * @returns {Claim} newly created claim
+   * Create the claim in the API. Handles errors and routing.
+   * @returns {Promise}
    */
   const createClaim = async () => {
     appErrorsLogic.clearErrors();
 
     try {
-      const { claim } = await claimsApi.createClaim();
-      addClaim(claim);
+      const { claim, success } = await claimsApi.createClaim();
 
-      return claim;
+      if (success) {
+        addClaim(claim);
+
+        // TODO appLogic will handle routing after claim creation
+        // https://lwd.atlassian.net/browse/CP-525
+        const route = routeWithParams("claims.checklist", {
+          claim_id: claim.application_id,
+        });
+
+        router.push(route);
+      }
     } catch (error) {
       appErrorsLogic.catchError(error);
     }

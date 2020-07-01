@@ -61,7 +61,7 @@ export const makeFile = (attrs = {}) => {
  * act(() => {
  *   wrapper = shallow(<Component />);
  * });
- * const { input, submit } = simulateEvents(wrapper);
+ * const { input, submitForm } = simulateEvents(wrapper);
  *
  * changeField("username", "jane.doe@test.com");
  * changeField("password", "P@ssw0rd");

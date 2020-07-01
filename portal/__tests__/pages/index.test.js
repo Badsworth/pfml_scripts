@@ -1,9 +1,7 @@
+import { simulateEvents, testHook } from "../test-utils";
 import Index from "../../src/pages/index";
 import React from "react";
-import { mockRouter } from "next/router";
-import routes from "../../src/routes";
 import { shallow } from "enzyme";
-import { testHook } from "../test-utils";
 import useAppLogic from "../../src/hooks/useAppLogic";
 
 jest.mock("../../src/hooks/useAppLogic");
@@ -24,15 +22,13 @@ describe("Index", () => {
   });
 
   describe("when Create Application form is submitted", () => {
-    it("creates claim and redirects to claims.checklist", async () => {
-      await wrapper
-        .find("form")
-        .simulate("submit", { preventDefault: jest.fn() });
+    it("creates a new claim", async () => {
+      jest.spyOn(appLogic, "createClaim").mockResolvedValueOnce();
+      const { submitForm } = simulateEvents(wrapper);
+
+      submitForm();
 
       expect(appLogic.createClaim).toHaveBeenCalled();
-      expect(mockRouter.push).toHaveBeenCalledWith(
-        expect.stringContaining(`${routes.claims.checklist}?claim_id=`)
-      );
     });
   });
 });

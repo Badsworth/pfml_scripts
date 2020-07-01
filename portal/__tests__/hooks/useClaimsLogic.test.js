@@ -8,6 +8,8 @@ import Claim from "../../src/models/Claim";
 import ClaimCollection from "../../src/models/ClaimCollection";
 import User from "../../src/models/User";
 import { act } from "react-dom/test-utils";
+import { mockRouter } from "next/router";
+import routes from "../../src/routes";
 import { testHook } from "../test-utils";
 import useAppErrorsLogic from "../../src/hooks/useAppErrorsLogic";
 import useClaimsLogic from "../../src/hooks/useClaimsLogic";
@@ -76,47 +78,91 @@ describe("useClaimsLogic", () => {
   });
 
   describe("createClaim", () => {
-    it("asynchronously creates claim with formState", async () => {
+    it("sends API request", async () => {
       await act(async () => {
         await claimsLogic.createClaim();
       });
 
-      const claim = claimsLogic.claims.items[0];
-
-      expect(claim).toMatchInlineSnapshot(`
-        Claim {
-          "application_id": "mock-created-claim-application-id-1",
-          "avg_weekly_hours_worked": null,
-          "created_at": null,
-          "duration_type": null,
-          "employee_ssn": null,
-          "employer_fein": null,
-          "first_name": null,
-          "hours_off_needed": null,
-          "last_name": null,
-          "leave_details": Object {
-            "continuous_leave_periods": null,
-            "employer_notification_date": null,
-            "employer_notified": null,
-            "reason": null,
-          },
-          "middle_name": null,
-        }
-      `);
       expect(createClaimMock).toHaveBeenCalled();
     });
 
-    describe("when request errors", () => {
-      it("catches the error", async () => {
-        createClaimMock.mockImplementationOnce(() => {
-          throw new Error();
+    describe("when the request succeeds", () => {
+      let claim;
+
+      beforeEach(() => {
+        claim = new Claim({ application_id: "12345" });
+
+        createClaimMock.mockResolvedValueOnce({
+          claim,
+          success: true,
+        });
+      });
+
+      it("stores the new claim", async () => {
+        await act(async () => {
+          await claimsLogic.createClaim();
         });
 
+        expect(claimsLogic.claims.items).toContain(claim);
+      });
+
+      it("routes to claim checklist page", async () => {
+        await act(async () => {
+          await claimsLogic.createClaim();
+        });
+
+        expect(mockRouter.push).toHaveBeenCalledWith(
+          expect.stringContaining(
+            `${routes.claims.checklist}?claim_id=${claim.application_id}`
+          )
+        );
+      });
+    });
+
+    describe("when the request is unsuccessful", () => {
+      beforeEach(() => {
+        createClaimMock.mockResolvedValueOnce({
+          claim: null,
+          success: false,
+        });
+      });
+
+      it("doesn't change the route", async () => {
+        await act(async () => {
+          await claimsLogic.createClaim();
+        });
+
+        expect(mockRouter.push).not.toHaveBeenCalled();
+      });
+
+      it("doesn't store a claim", async () => {
+        await act(async () => {
+          await claimsLogic.createClaim();
+        });
+
+        expect(claimsLogic.claims).toBeNull();
+      });
+    });
+
+    describe("when the request throws an error", () => {
+      beforeEach(() => {
+        createClaimMock.mockRejectedValueOnce(new Error());
+      });
+
+      it("catches the error", async () => {
         await act(async () => {
           await claimsLogic.createClaim();
         });
 
         expect(appErrorsLogic.catchError).toHaveBeenCalled();
+      });
+
+      it("doesn't change the route", async () => {
+        await act(async () => {
+          await claimsLogic.createClaim();
+        });
+
+        expect(mockRouter.push).not.toHaveBeenCalled();
       });
     });
   });
