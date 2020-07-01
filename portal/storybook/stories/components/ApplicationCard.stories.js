@@ -1,6 +1,5 @@
+import Claim, { LeaveReason } from "src/models/Claim";
 import ApplicationCard from "src/components/ApplicationCard";
-import Claim from "src/models/Claim";
-import LeaveReason from "src/models/LeaveReason";
 import React from "react";
 
 export default {

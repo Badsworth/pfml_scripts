@@ -4,7 +4,7 @@
 import Claim from "../../../src/models/Claim";
 import { Duration } from "../../../src/pages/claims/duration";
 import { LeaveDates } from "../../../src/pages/claims/leave-dates";
-import { LeaveReason } from "../../../src/pages/claims/leave-reason";
+import { LeaveReasonPage } from "../../../src/pages/claims/leave-reason";
 import { NotifiedEmployer } from "../../../src/pages/claims/notified-employer";
 import React from "react";
 import { mount } from "enzyme";
@@ -12,7 +12,7 @@ import useAppLogic from "../../../src/hooks/useAppLogic";
 
 jest.mock("../../../src/hooks/useAppLogic");
 
-const testPages = [LeaveReason, LeaveDates, Duration, NotifiedEmployer];
+const testPages = [LeaveReasonPage, LeaveDates, Duration, NotifiedEmployer];
 
 const render = (Component, _props = {}) => {
   const application_id = "12345";

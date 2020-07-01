@@ -1,6 +1,5 @@
-import Claim from "../../models/Claim";
+import Claim, { LeaveReason } from "../../models/Claim";
 import InputChoiceGroup from "../../components/InputChoiceGroup";
-import LeaveReasonEnums from "../../models/LeaveReason";
 import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
@@ -14,7 +13,7 @@ import withClaim from "../../hoc/withClaim";
 
 export const fields = ["leave_details.reason"];
 
-export const LeaveReason = (props) => {
+export const LeaveReasonPage = (props) => {
   const { t } = useTranslation();
   const { formState, updateFields } = useFormState(pick(props.claim, fields));
   const reason = get(formState, "leave_details.reason");
@@ -34,34 +33,34 @@ export const LeaveReason = (props) => {
       <InputChoiceGroup
         choices={[
           {
-            checked: reason === LeaveReasonEnums.medical,
+            checked: reason === LeaveReason.medical,
             hint: t("pages.claimsLeaveReason.medicalLeaveHint"),
             label: t("pages.claimsLeaveReason.medicalLeaveLabel"),
-            value: LeaveReasonEnums.medical,
+            value: LeaveReason.medical,
           },
           {
-            checked: reason === LeaveReasonEnums.bonding,
+            checked: reason === LeaveReason.bonding,
             hint: t("pages.claimsLeaveReason.bondingLeaveHint"),
             label: t("pages.claimsLeaveReason.bondingLeaveLabel"),
-            value: LeaveReasonEnums.bonding,
+            value: LeaveReason.bonding,
           },
           {
             // TODO: We need to more accurately map this Family Leave option to signify that
             // this is active duty family leave, as opposed to another family leave type.
             // https://lwd.atlassian.net/browse/CP-515
-            checked: reason === LeaveReasonEnums.activeDutyFamily,
+            checked: reason === LeaveReason.activeDutyFamily,
             hint: t("pages.claimsLeaveReason.activeDutyFamilyLeaveHint"),
             label: t("pages.claimsLeaveReason.activeDutyFamilyLeaveLabel"),
-            value: LeaveReasonEnums.activeDutyFamily,
+            value: LeaveReason.activeDutyFamily,
           },
           {
             // TODO: We need to more accurately map this Family Leave option to signify that
             // this is family leave to care for a service member, as opposed to another family leave type.
             // https://lwd.atlassian.net/browse/CP-515
-            checked: reason === LeaveReasonEnums.serviceMemberFamily,
+            checked: reason === LeaveReason.serviceMemberFamily,
             hint: t("pages.claimsLeaveReason.serviceMemberFamilyLeaveHint"),
             label: t("pages.claimsLeaveReason.serviceMemberFamilyLeaveLabel"),
-            value: LeaveReasonEnums.serviceMemberFamily,
+            value: LeaveReason.serviceMemberFamily,
           },
         ]}
         label={t("pages.claimsLeaveReason.sectionLabel")}
@@ -73,7 +72,7 @@ export const LeaveReason = (props) => {
   );
 };
 
-LeaveReason.propTypes = {
+LeaveReasonPage.propTypes = {
   claim: PropTypes.instanceOf(Claim),
   appLogic: PropTypes.object.isRequired,
   query: PropTypes.shape({
@@ -81,4 +80,4 @@ LeaveReason.propTypes = {
   }),
 };
 
-export default withClaim(LeaveReason);
+export default withClaim(LeaveReasonPage);

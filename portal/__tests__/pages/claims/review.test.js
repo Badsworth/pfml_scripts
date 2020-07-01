@@ -1,5 +1,4 @@
-import Claim from "../../../src/models/Claim";
-import LeaveReason from "../../../src/models/LeaveReason";
+import Claim, { LeaveReason } from "../../../src/models/Claim";
 import React from "react";
 import { Review } from "../../../src/pages/claims/review";
 import User from "../../../src/models/User";

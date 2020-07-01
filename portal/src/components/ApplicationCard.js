@@ -1,7 +1,6 @@
+import Claim, { LeaveReason } from "../models/Claim";
 import ButtonLink from "../components/ButtonLink";
-import Claim from "../models/Claim";
 import Heading from "../components/Heading";
-import LeaveReason from "../models/LeaveReason";
 import PropTypes from "prop-types";
 import React from "react";
 import findKeyByValue from "../utils/findKeyByValue";

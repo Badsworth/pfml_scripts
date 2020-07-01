@@ -1,11 +1,10 @@
+import Claim, { LeaveReason } from "../../models/Claim";
 import routeWithParams, {
   createRouteWithQuery,
 } from "../../utils/routeWithParams";
 import BackButton from "../../components/BackButton";
 import ButtonLink from "../../components/ButtonLink";
-import Claim from "../../models/Claim";
 import { DateTime } from "luxon";
-import LeaveReason from "../../models/LeaveReason";
 import PropTypes from "prop-types";
 import React from "react";
 import ReviewHeading from "../../components/ReviewHeading";

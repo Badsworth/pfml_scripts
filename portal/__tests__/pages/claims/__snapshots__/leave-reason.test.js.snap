@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`LeaveReason renders the page 1`] = `
+exports[`LeaveReasonPage renders the page 1`] = `
 <QuestionPage
   formState={
     Object {

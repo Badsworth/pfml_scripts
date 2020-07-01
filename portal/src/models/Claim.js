@@ -1,4 +1,7 @@
 /* eslint sort-keys: ["error", "asc"] */
+/**
+ * @file Benefits application model and enum values
+ */
 import BaseModel from "./BaseModel";
 
 class Claim extends BaseModel {
@@ -25,5 +28,19 @@ class Claim extends BaseModel {
     };
   }
 }
+
+/**
+ * Enums for the Application's `leave_details.reason` field
+ * @enum {string}
+ */
+export const LeaveReason = {
+  // TODO: We need to map some of these to the correct API fields,
+  // once those enum values exist within the API
+  // https://lwd.atlassian.net/browse/CP-515
+  activeDutyFamily: "Care For A Family Member",
+  bonding: "Child Bonding",
+  medical: "Serious Health Condition - Employee",
+  serviceMemberFamily: "Pregnancy/Maternity",
+};
 
 export default Claim;
