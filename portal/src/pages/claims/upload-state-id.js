@@ -27,6 +27,7 @@ const UploadStateId = (props) => {
       <FileCardList
         files={stateIdFiles}
         setFiles={setStateIdFiles}
+        setAppErrors={props.appLogic.setAppErrors}
         fileHeadingPrefix={t("pages.claimsUploadStateId.fileHeadingPrefix")}
         addFirstFileButtonText={t(
           "pages.claimsUploadStateId.addFirstFileButtonText"
@@ -43,6 +44,9 @@ UploadStateId.propTypes = {
   query: PropTypes.shape({
     claim_id: PropTypes.string,
   }),
+  appLogic: PropTypes.shape({
+    setAppErrors: PropTypes.func.isRequired,
+  }).isRequired,
 };
 
 export default UploadStateId;

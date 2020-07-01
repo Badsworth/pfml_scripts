@@ -38,6 +38,7 @@ const UploadOtherId = (props) => {
       <FileCardList
         files={otherIdFiles}
         setFiles={setOtherIdFiles}
+        setAppErrors={props.appLogic.setAppErrors}
         fileHeadingPrefix={t("pages.claimsUploadOtherId.fileHeadingPrefix")}
         addFirstFileButtonText={t(
           "pages.claimsUploadOtherId.addFirstFileButtonText"
@@ -54,6 +55,9 @@ UploadOtherId.propTypes = {
   query: PropTypes.shape({
     claim_id: PropTypes.string,
   }),
+  appLogic: PropTypes.shape({
+    setAppErrors: PropTypes.func.isRequired,
+  }).isRequired,
 };
 
 export default UploadOtherId;

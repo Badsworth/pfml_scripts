@@ -20,24 +20,26 @@ const makeFileObject = (attrs = {}) => {
   return { id, file };
 };
 
-function render(customProps = {}) {
-  const props = Object.assign(
-    {
-      files: [],
-      setFiles: jest.fn(),
-      fileHeadingPrefix: "Document",
-      addFirstFileButtonText: "Choose a document",
-      addAnotherFileButtonText: "Choose another document",
-    },
-    customProps
-  );
-
-  const fileCardList = <FileCardList {...props} />;
-
-  return shallow(fileCardList);
-}
-
 describe("FileCardList", () => {
+  function render(customProps = {}) {
+    const props = Object.assign(
+      {
+        files: [],
+        setFiles: jest.fn(),
+        appErrors: [],
+        setAppErrors: jest.fn(),
+        fileHeadingPrefix: "Document",
+        addFirstFileButtonText: "Choose a document",
+        addAnotherFileButtonText: "Choose another document",
+      },
+      customProps
+    );
+
+    const fileCardList = <FileCardList {...props} />;
+
+    return shallow(fileCardList);
+  }
+
   describe("with no files selected", () => {
     it("renders an empty list", () => {
       const wrapper = render();
@@ -215,6 +217,33 @@ describe("FileCardList", () => {
       });
 
       expect(files).toEqual([...initialFiles, validFile]);
+    });
+
+    it("sets page errors for each invalid file the user selects", () => {
+      const invalidFileName = "file.exe";
+      const invalidFile = makeFile({
+        name: invalidFileName,
+        type: "application/exe",
+      });
+
+      let appErrors, setAppErrors, wrapper;
+      testHook(() => {
+        [appErrors, setAppErrors] = useState([]);
+      });
+
+      act(() => {
+        wrapper = render({ appErrors, setAppErrors });
+        wrapper.find("input").simulate("change", {
+          target: {
+            files: [invalidFile],
+          },
+        });
+      });
+
+      expect(appErrors.items).toHaveLength(1);
+      expect(appErrors.items[0].message).toMatchInlineSnapshot(
+        `"Only PDF and image files may be uploaded. See the tips below for suggestions on how to convert them to an image file. These files that you selected will not be uploaded: ${invalidFileName}"`
+      );
     });
   });
 

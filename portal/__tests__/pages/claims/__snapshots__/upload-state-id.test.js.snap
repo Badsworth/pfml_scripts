@@ -19,6 +19,7 @@ exports[`UploadStateId initially renders the page without any filecards 1`] = `
     addFirstFileButtonText="Choose a file"
     fileHeadingPrefix="File"
     files={Array []}
+    setAppErrors={[MockFunction]}
     setFiles={[Function]}
   />
 </QuestionPage>
@@ -57,6 +58,21 @@ exports[`UploadStateId when the user uploads files renders filecards for the fil
           "id": "File3",
         },
       ]
+    }
+    setAppErrors={
+      [MockFunction] {
+        "calls": Array [
+          Array [
+            null,
+          ],
+        ],
+        "results": Array [
+          Object {
+            "type": "return",
+            "value": undefined,
+          },
+        ],
+      }
     }
     setFiles={[Function]}
   />

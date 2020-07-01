@@ -1,7 +1,10 @@
 import { partition, uniqueId } from "lodash";
+import AppErrorInfo from "../models/AppErrorInfo";
+import AppErrorInfoCollection from "../models/AppErrorInfoCollection";
 import FileCard from "./FileCard";
 import PropTypes from "prop-types";
 import React from "react";
+import { useTranslation } from "../locales/i18n";
 
 // Only image and pdf files are allowed to be uploaded
 // todo: (CP-396) limit the set of image types allowed to those supported by the API
@@ -30,7 +33,7 @@ function filterAllowedFiles(files, allowedFileTypes) {
  * @param {Function} setFiles a setter function for updating the files state
  * @returns {Function} onChange handler function
  */
-function useChangeHandler(setFiles) {
+function useChangeHandler(setFiles, setAppErrors, t) {
   return (event) => {
     // This will only have files selected this time, not previously selected files
     // e.target.files is a FileList type which isn't an array, but we can turn it into one
@@ -51,10 +54,16 @@ function useChangeHandler(setFiles) {
       files,
       allowedFileTypes
     );
-    // todo: (CP-463) create error alerts for disallowed files
-    disallowedFiles.forEach((file) =>
-      console.error(`File type ${file.type} not allowed for file ${file.name}`)
-    );
+
+    if (disallowedFiles.length > 0) {
+      const disallowedFileNames = disallowedFiles
+        .map((file) => file.name)
+        .join(", ");
+      const message = t("errors.invalidFileType", { disallowedFileNames });
+      setAppErrors(new AppErrorInfoCollection([new AppErrorInfo({ message })]));
+    } else {
+      setAppErrors(null);
+    }
 
     const newFiles = allowedFiles.map((file) => {
       return {
@@ -117,7 +126,9 @@ const FileCardList = (props) => {
     ? props.addAnotherFileButtonText
     : props.addFirstFileButtonText;
 
-  const handleChange = useChangeHandler(setFiles);
+  const { t } = useTranslation();
+  const setAppErrors = props.setAppErrors;
+  const handleChange = useChangeHandler(setFiles, setAppErrors, t);
 
   return (
     <div>
@@ -157,6 +168,8 @@ FileCardList.propTypes = {
       }).isRequired,
     })
   ).isRequired,
+  /** Errors setter function to use when there are errors in the file upload */
+  setAppErrors: PropTypes.func.isRequired,
   /** Setter to update the application's files state */
   setFiles: PropTypes.func.isRequired,
   /**

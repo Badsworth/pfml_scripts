@@ -13,6 +13,7 @@ export default jest.fn(() => ({
   claims: new ClaimCollection(),
   createClaim: jest.fn(() => new Claim({ application_id: uniqueId() })),
   loadClaims: jest.fn(),
+  setAppErrors: jest.fn(),
   submitClaim: jest.fn(),
   updateClaim: jest.fn(),
 }));

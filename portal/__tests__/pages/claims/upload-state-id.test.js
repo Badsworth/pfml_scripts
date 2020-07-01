@@ -1,28 +1,35 @@
+import { makeFile, testHook } from "../../test-utils";
 import React from "react";
 import UploadStateId from "../../../src/pages/claims/upload-state-id";
-import { makeFile } from "../../test-utils";
 import routes from "../../../src/routes";
 import { shallow } from "enzyme";
+import useAppLogic from "../../../src/hooks/useAppLogic";
+
+jest.mock("../../../src/hooks/useAppLogic");
 
 const claim_id = "12345";
 
-const render = (props = {}) => {
-  const allProps = {
-    query: { claim_id },
-    ...props,
-  };
-  return {
-    props: allProps,
-    wrapper: shallow(<UploadStateId {...allProps} />),
-  };
-};
-
 describe("UploadStateId", () => {
-  let wrapper;
+  let appLogic, wrapper;
 
   beforeEach(() => {
+    testHook(() => {
+      appLogic = useAppLogic({ user: {} });
+    });
     ({ wrapper } = render());
   });
+
+  const render = (props = {}) => {
+    const allProps = {
+      query: { claim_id },
+      appLogic,
+      ...props,
+    };
+    return {
+      props: allProps,
+      wrapper: shallow(<UploadStateId {...allProps} />),
+    };
+  };
 
   it("initially renders the page without any filecards", () => {
     expect(wrapper).toMatchSnapshot();
