@@ -1,4 +1,5 @@
 from datetime import datetime
+from enum import Enum
 from typing import List, Optional
 
 from pydantic import UUID4
@@ -15,6 +16,12 @@ from massgov.pfml.api.models.applications.common import (
 from massgov.pfml.api.models.common import WarningsAndErrors
 from massgov.pfml.db.models.applications import Application, ApplicationPaymentPreference
 from massgov.pfml.util.pydantic import PydanticBaseModel
+
+
+class ApplicationStatus(str, Enum):
+    Started = "Started"
+    Completed = "Completed"
+    Submitted = "Submitted"
 
 
 class ApplicationUpdateResponse(PydanticBaseModel):
@@ -35,6 +42,7 @@ class ApplicationResponse(PydanticBaseModel):
     leave_details: Optional[ApplicationLeaveDetails]
     payment_preferences: Optional[List[PaymentPreferences]]
     updated_time: datetime
+    status: Optional[ApplicationStatus]
 
     @classmethod
     def from_orm(cls, application: Application) -> "ApplicationResponse":
@@ -44,6 +52,14 @@ class ApplicationResponse(PydanticBaseModel):
         application_response.payment_preferences = list(
             map(build_payment_preference, application.payment_preferences)
         )
+
+        if application.submitted_time:
+            application_response.status = ApplicationStatus.Submitted
+        elif application.completed_time:
+            application_response.status = ApplicationStatus.Completed
+        else:
+            application_response.status = ApplicationStatus.Started
+
         return application_response
 
 

@@ -2,7 +2,7 @@
 # This should be used for seeding tables in development and testing.
 #
 import random
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import factory
 from sqlalchemy.orm import scoped_session
@@ -133,3 +133,6 @@ class ApplicationFactory(BaseFactory):
     leave_type_id = None
     leave_reason_id = application_models.LeaveReason.CARE_FOR_A_FAMILY_MEMBER.leave_reason_id
     leave_reason_qualifier_id = None
+
+    start_time = factory.Faker("date_time")
+    updated_time = factory.LazyAttribute(lambda a: a.start_time + timedelta(days=1))

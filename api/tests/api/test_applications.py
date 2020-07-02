@@ -1,9 +1,10 @@
 import uuid
-from datetime import date
+from datetime import date, datetime
 
 from freezegun import freeze_time
 from sqlalchemy import inspect
 
+from massgov.pfml.api.models.applications.responses import ApplicationStatus
 from massgov.pfml.db.models.applications import (
     ApplicationPaymentPreference,
     ContinuousLeavePeriod,
@@ -29,7 +30,7 @@ def test_applications_get_invalid(client):
 
 @freeze_time("2020-01-01")
 def test_applications_get_valid(client):
-    application = ApplicationFactory.create()
+    application = ApplicationFactory.create(updated_time=datetime.now())
 
     response = client.get(
         "/v1/applications/{}".format(application.application_id),
@@ -40,6 +41,7 @@ def test_applications_get_valid(client):
     response_body = response.get_json()
     assert response_body.get("application_id") == application.application_id
     assert response_body.get("updated_time") == "2020-01-01T00:00:00Z"
+    assert response_body.get("status") == ApplicationStatus.Started.value
 
 
 def test_applications_get_no_userid(client):
@@ -93,6 +95,7 @@ def test_applications_get_all_for_user(client):
 def test_applications_post_start_app(client):
     response = client.post("/v1/applications", headers={"user_id": str(uuid.uuid4())})
     response_body = response.get_json()
+
     application_id = response_body.get("application_id")
     assert uuid.UUID(application_id).version == 4
     assert response.status_code == 201
@@ -585,7 +588,7 @@ def test_application_patch_key_set_to_null_does_null_field(client, test_db_sessi
     assert response_body.get("first_name") is None
 
 
-def test_application_post_submit_app(client, test_db_session):
+def test_application_post_submit_app(client):
     application = ApplicationFactory.create()
     assert not application.completed_time
 
@@ -601,5 +604,6 @@ def test_application_post_submit_app(client, test_db_session):
     )
     assert response.status_code == 200
 
-    test_db_session.refresh(application)
-    assert application.completed_time
+    response_body = response.get_json()
+    status = response_body.get("status")
+    assert status == ApplicationStatus.Completed.value

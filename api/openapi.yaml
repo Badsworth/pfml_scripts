@@ -628,7 +628,19 @@ components:
           type: string
           format: date-time
           example: "2020-06-26T01:02:03.967736Z"
+        status:
+          type: string
+          description: |
+            The current application status.
 
+            * `Started` - is started and in progress.
+            * `Completed` - is marked complete and has been submitted by the user.
+            * `Submitted` - is successfully stored in the claims processing system.
+          enum:
+            - Started
+            - Completed
+            - Submitted
+          example: "Started"
 
     ApplicationLeaveDetails:
       type: object
