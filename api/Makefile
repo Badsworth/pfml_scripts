@@ -1,3 +1,5 @@
+.DEFAULT_GOAL := help
+
 APP_NAME := mass-pfml-api
 
 export AWS_DEFAULT_REGION := us-east-1
@@ -203,7 +205,8 @@ db-downgrade-all: ## Rollback all migrations
 alembic_config := ./massgov/pfml/db/migrations/alembic.ini
 alembic_cmd := $(PY_RUN_CMD) alembic --config $(alembic_config)
 
-db-migrate-create: check-migrate-msg ## Create a new migration based on model changes
+db-migrate-create: ## Create new migration based on model changes, requires $MIGRATE_MSG
+db-migrate-create: check-migrate-msg
 	$(alembic_cmd) revision --autogenerate -m "$(MIGRATE_MSG)"
 
 db-migrate-current: ## Show current revision for a database
@@ -227,7 +230,7 @@ ifndef MIGRATE_MSG
 	$(error MIGRATE_MSG is undefined)
 endif
 
-test: ## Run tests, set `args` to pass flags to `pytest`
+test: ## Run tests, set $args to pass flags to `pytest`
 	$(PY_RUN_CMD) coverage run --branch --source=massgov -m pytest $(args)
 	$(PY_RUN_CMD) coverage report
 
@@ -249,3 +252,16 @@ test-coverage-report: ## Open HTML test coverage report
 
 test-watch: ## Watch and run tests on file changes
 	$(PY_RUN_CMD) pytest-watch --runner "make test-changed"
+
+help: ## Displays this help screen
+	@grep -Eh '^[[:print:]]+:.*?##' $(MAKEFILE_LIST) | \
+	sort -d | \
+	awk -F':.*?## ' '{printf "\033[36m%s\033[0m\t%s\n", $$1, $$2}' | \
+	column -t -s "$$(printf '\t')"
+	@echo ""
+	@echo "APP_NAME=$(APP_NAME)"
+	@echo "INFO_TAG=$(INFO_TAG)"
+	@echo "PY_RUN_CMD_OPT=$(PY_RUN_CMD_OPT)"
+	@echo "RELEASE_TAG=$(RELEASE_TAG)"
+	@echo "RUN_UID=$(RUN_UID)"
+	@echo "RUN_USER=$(RUN_USER)"
