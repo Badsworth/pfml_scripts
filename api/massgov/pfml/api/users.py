@@ -9,6 +9,7 @@ import massgov.pfml.util.logging
 from massgov.pfml.api.authorization.flask import EDIT, READ, ensure
 from massgov.pfml.db.models.employees import User
 from massgov.pfml.util.pydantic import PydanticBaseModel
+from massgov.pfml.util.sqlalchemy import get_or_404
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
 
@@ -20,10 +21,7 @@ logger = massgov.pfml.util.logging.get_logger(__name__)
 
 def users_get(user_id):
     with app.db_session() as db_session:
-        u = db_session.query(User).get(user_id)
-
-    if u is None:
-        raise NotFound()
+        u = get_or_404(db_session, User, user_id)
 
     ensure(READ, u)
     return user_response(u)
@@ -46,10 +44,7 @@ def users_patch(user_id):
     body = UserUpdateRequest.parse_obj(connexion.request.json)
 
     with app.db_session() as db_session:
-        updated_user = db_session.query(User).get(user_id)
-
-        if updated_user is None:
-            raise NotFound()
+        updated_user = get_or_404(db_session, User, user_id)
 
         ensure(EDIT, updated_user)
         for key in body.__fields_set__:

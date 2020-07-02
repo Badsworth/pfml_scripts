@@ -8,6 +8,7 @@ import massgov.pfml.api.app as app
 from massgov.pfml.db.models.employees import Employee
 from massgov.pfml.util.pydantic import PydanticBaseModel
 from massgov.pfml.util.pydantic.types import TaxIdFormattedStr, TaxIdUnformattedStr
+from massgov.pfml.util.sqlalchemy import get_or_404
 
 
 class EmployeeUpdateRequest(PydanticBaseModel):
@@ -37,28 +38,21 @@ class EmployeeResponse(PydanticBaseModel):
 
 def employees_get(employee_id):
     with app.db_session() as db_session:
-        employee = db_session.query(Employee).get(employee_id)
-
-    if employee is None:
-        raise NotFound()
+        employee = get_or_404(db_session, Employee, employee_id)
 
     return EmployeeResponse.from_orm(employee).dict()
 
 
 def employees_patch(employee_id):
-    """ this endpoint will allow an employee's personal information to be updated """
+    """This endpoint updates an Employee record"""
     request = EmployeeUpdateRequest.parse_obj(connexion.request.json)
+
     with app.db_session() as db_session:
-        updated_count = (
-            db_session.query(Employee)
-            .filter(Employee.employee_id == employee_id)
-            .update(request.dict(exclude_none=True))
-        )
+        updated_employee = get_or_404(db_session, Employee, employee_id)
 
-        if updated_count == 0:
-            raise NotFound()
-
-        updated_employee = db_session.query(Employee).get(employee_id)
+        for key in request.__fields_set__:
+            value = getattr(request, key)
+            setattr(updated_employee, key, value)
 
     return EmployeeResponse.from_orm(updated_employee).dict()
 

@@ -1,9 +1,9 @@
 from pydantic import UUID4
-from werkzeug.exceptions import NotFound
 
 import massgov.pfml.api.app as app
 from massgov.pfml.db.models.employees import Employer
 from massgov.pfml.util.pydantic import PydanticBaseModel
+from massgov.pfml.util.sqlalchemy import get_or_404
 
 
 class EmployerResponse(PydanticBaseModel):
@@ -15,10 +15,7 @@ class EmployerResponse(PydanticBaseModel):
 
 def employers_get(employer_id):
     with app.db_session() as db_session:
-        employer = db_session.query(Employer).get(employer_id)
-
-    if employer is None:
-        raise NotFound()
+        employer = get_or_404(db_session, Employer, employer_id)
 
     response = EmployerResponse.from_orm(employer)
     return response.dict()

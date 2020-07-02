@@ -3,7 +3,6 @@ from typing import Optional
 
 import connexion
 from pydantic import UUID4
-from werkzeug.exceptions import NotFound
 
 import massgov.pfml.api.app as app
 import massgov.pfml.api.models.applications.requests as application_request_model
@@ -14,18 +13,12 @@ from massgov.pfml.api.models.applications.responses import (
 )
 from massgov.pfml.db.models.applications import Application
 from massgov.pfml.util.pydantic import PydanticBaseModel
+from massgov.pfml.util.sqlalchemy import get_or_404
 
 
 def application_get(application_id):
     with app.db_session() as db_session:
-        existing_application = (
-            db_session.query(Application)
-            .filter(Application.application_id == application_id)
-            .one_or_none()
-        )
-
-        if existing_application is None:
-            raise NotFound()
+        existing_application = get_or_404(db_session, Application, application_id)
 
         application_response = ApplicationResponse.from_orm(existing_application)
 
@@ -68,14 +61,7 @@ def applications_update(application_id):
     body = connexion.request.json
 
     with app.db_session() as db_session:
-        existing_application = (
-            db_session.query(Application)
-            .filter(Application.application_id == application_id)
-            .one_or_none()
-        )
-
-    if existing_application is None:
-        raise NotFound
+        existing_application = get_or_404(db_session, Application, application_id)
 
     (application_request, errors_and_warnings) = application_request_model.validate(body)
 
@@ -102,14 +88,7 @@ def applications_update(application_id):
 
 def applications_submit(application_id):
     with app.db_session() as db_session:
-        existing_application = (
-            db_session.query(Application)
-            .filter(Application.application_id == application_id)
-            .one_or_none()
-        )
-
-        if existing_application is None:
-            raise NotFound
+        existing_application = get_or_404(db_session, Application, application_id)
 
         existing_application.completed_time = datetime.now()
         db_session.add(existing_application)
