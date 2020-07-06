@@ -28,9 +28,9 @@ class Claim extends BaseModel {
         reason: null,
       },
       middle_name: null,
-      other_income: [],
+      other_incomes: [],
       pregnant_or_recent_birth: null,
-      previous_leave: [],
+      previous_leaves: [],
     };
   }
 }
