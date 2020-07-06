@@ -14,6 +14,8 @@ class Claim extends BaseModel {
       duration_type: null,
       employee_ssn: null,
       employer_fein: null,
+      // TODO: This field does not yet exist in the API: https://lwd.atlassian.net/browse/CP-574
+      employment_status: null,
       first_name: null,
       // TODO: We'll map this to the correct API field once we get into Intermittent Leave work
       hours_off_needed: null,
@@ -28,6 +30,16 @@ class Claim extends BaseModel {
     };
   }
 }
+
+/**
+ * Enums for the Application's `leave_details.employment_status` field
+ * @enum {string}
+ */
+export const EmploymentStatus = {
+  employed: "employed",
+  selfEmployed: "self-employed",
+  unemployed: "unemployed",
+};
 
 /**
  * Enums for the Application's `leave_details.reason` field

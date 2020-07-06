@@ -1,4 +1,4 @@
-import Claim, { LeaveReason } from "../../models/Claim";
+import Claim, { EmploymentStatus, LeaveReason } from "../../models/Claim";
 import routeWithParams, {
   createRouteWithQuery,
 } from "../../utils/routeWithParams";
@@ -104,14 +104,31 @@ export const Review = (props) => {
         {t("pages.claimsReview.employmentSectionHeading")}
       </ReviewHeading>
 
-      <ReviewRow label={t("pages.claimsReview.employerNotifiedLabel")}>
-        {t("pages.claimsReview.employerNotifiedValue", {
-          context: (!!get(claim, "leave_details.employer_notified")).toString(),
-          date: DateTime.fromISO(
-            get(claim, "leave_details.employer_notification_date")
-          ).toLocaleString(),
-        })}
-      </ReviewRow>
+      {get(claim, "leave_details.employment_status") && (
+        <ReviewRow label={t("pages.claimsReview.employmentStatusLabel")}>
+          {t("pages.claimsReview.employmentStatusValue", {
+            context: findKeyByValue(
+              EmploymentStatus,
+              get(claim, "leave_details.employment_status")
+            ),
+          })}
+        </ReviewRow>
+      )}
+
+      {get(claim, "leave_details.employment_status") === // only display this if the claimant is Employed
+        EmploymentStatus.employed && (
+        <ReviewRow label={t("pages.claimsReview.employerNotifiedLabel")}>
+          {t("pages.claimsReview.employerNotifiedValue", {
+            context: (!!get(
+              claim,
+              "leave_details.employer_notified"
+            )).toString(),
+            date: DateTime.fromISO(
+              get(claim, "leave_details.employer_notification_date")
+            ).toLocaleString(),
+          })}
+        </ReviewRow>
+      )}
 
       <ButtonLink
         className="margin-top-3"

@@ -1,0 +1,48 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`EmploymentStatusPage renders the page 1`] = `
+<QuestionPage
+  formState={Object {}}
+  nextPage="/claims/checklist?claim_id=12345"
+  onSave={[Function]}
+  title="Employment information"
+>
+  <Alert
+    state="info"
+  >
+    You need to complete a separate application for each employer you are taking leave from.
+  </Alert>
+  <InputChoiceGroup
+    choices={
+      Array [
+        Object {
+          "checked": false,
+          "label": "I'm employed in Massachusetts",
+          "value": "employed",
+        },
+        Object {
+          "checked": false,
+          "label": "I'm unemployed",
+          "value": "unemployed",
+        },
+        Object {
+          "checked": false,
+          "label": "I'm self-employed",
+          "value": "self-employed",
+        },
+      ]
+    }
+    hint={
+      <Details
+        label="What if I've been furloughed?"
+      >
+        If your hours have been cut or significantly reduced but you have not been laid off, select "I'm employed in Massachusetts"
+      </Details>
+    }
+    label="What is your employment status?"
+    name="leave_details.employment_status"
+    onChange={[Function]}
+    type="radio"
+  />
+</QuestionPage>
+`;

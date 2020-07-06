@@ -63,6 +63,8 @@ const shared = {
   leaveReasonBonding: "Bonding leave",
   leaveReasonMedical: "Medical leave",
   leaveReasonServiceMemberFamily: "Military family",
+  multipleEmployerAppAlert:
+    "You need to complete a separate application for each employer you are taking leave from.",
   networkError:
     "Sorry, an error was encountered. This may occur for a variety of reasons, including temporarily losing an internet connection or an unexpected error in our system. If this continues to happen, you may call the Paid Family Leave Contact Center at $t(shared.callCenterPhoneNumber)",
   passwordHint:
@@ -192,6 +194,17 @@ const pages = {
       "Do you need to take off work completely or work on a reduced schedule?",
     title: "$t(shared.claimsLeaveDurationTitle)",
   },
+  claimsEmploymentStatus: {
+    choiceLabel_employed: "I'm employed in Massachusetts",
+    choiceLabel_selfEmployed: "I'm self-employed",
+    choiceLabel_unemployed: "I'm unemployed",
+    furloughAnswer:
+      'If your hours have been cut or significantly reduced but you have not been laid off, select "$t(pages.claimsEmploymentStatus.choiceLabel_employed)"',
+    furloughQuestion: "What if I've been furloughed?",
+    multipleEmployerAppAlert: "$t(shared.multipleEmployerAppAlert)",
+    sectionLabel: "What is your employment status?",
+    title: "Employment information",
+  },
   claimsLeaveDates: {
     endDateLabel: "When do you expect your leave will end?",
     startDateHint: "Your leave begins the day you stopped working.",
@@ -231,7 +244,7 @@ const pages = {
     mustNotifyEmployerWarning:
       "Before you can submit an application, you must tell your employer that you're taking leave.",
     sectionLabel: "Have you notified your employer of your leave?",
-    title: "Medical Leave Application",
+    title: "Employment information",
   },
   claimsReview: {
     confirmationAction: "Confirm information is correct",
@@ -240,6 +253,10 @@ const pages = {
     employerNotifiedValue: "No",
     employerNotifiedValue_true: "Notified employer on {{date}}",
     employmentSectionHeading: "Employment information",
+    employmentStatusLabel: "Employment status",
+    employmentStatusValue_employed: "Currently employed",
+    employmentStatusValue_selfEmployed: "Self-employed",
+    employmentStatusValue_unemployed: "Unemployed",
     leaveDurationLabel: "Leave duration",
     leaveDurationTypeLabel: "Leave duration type",
     leaveDurationTypeValue_continuous: "$t(shared.claimDurationTypeContinuous)",

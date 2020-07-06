@@ -10,9 +10,9 @@ exports[`NotifiedEmployer renders the page 1`] = `
       },
     }
   }
-  nextPage="/claims/review?claim_id=12345"
+  nextPage="/claims/checklist?claim_id=12345"
   onSave={[Function]}
-  title="Medical Leave Application"
+  title="Employment information"
 >
   <InputChoiceGroup
     choices={

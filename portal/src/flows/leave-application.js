@@ -2,6 +2,7 @@ import Step from "../models/Step";
 import StepDefinition from "../models/StepDefinition";
 
 import { fields as durationFields } from "../pages/claims/duration";
+import { fields as employmentStatusFields } from "../pages/claims/employment-status";
 import { fields as leaveDatesFields } from "../pages/claims/leave-dates";
 import { fields as leaveReasonFields } from "../pages/claims/leave-reason";
 import { fields as nameFields } from "../pages/claims/name";
@@ -48,6 +49,10 @@ const employerInformation = new StepDefinition({
   name: "employerInformation",
   dependsOn: [verifyId, leaveDetails],
   pages: [
+    {
+      route: routes.claims.employmentStatus,
+      fields: employmentStatusFields,
+    },
     {
       route: routes.claims.notifiedEmployer,
       fields: notifiedEmployerFields,

@@ -9,7 +9,7 @@ exports[`Duration regardless of duration type initially renders the page without
       "hours_off_needed": null,
     }
   }
-  nextPage="/claims/notified-employer"
+  nextPage="/claims/employment-status"
   onSave={[Function]}
   title="Leave duration"
 >

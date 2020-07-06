@@ -50,7 +50,7 @@ exports[`Checklist renders component 1`] = `
     <Step
       key="employerInformation"
       status="completed"
-      stepHref="/claims/notified-employer?claim_id=mock-application-id"
+      stepHref="/claims/employment-status?claim_id=mock-application-id"
       title="Enter employment information"
     >
       <span

@@ -22,9 +22,9 @@ describe("Duration", () => {
       expect(wrapper.find("ConditionalContent").prop("visible")).toBeFalsy();
     });
 
-    it("redirects to the Notified Employer page", () => {
+    it("redirects to the Employment Status page", () => {
       expect(wrapper.find("QuestionPage").prop("nextPage")).toContain(
-        routes.claims.notifiedEmployer
+        routes.claims.employmentStatus
       );
     });
   });

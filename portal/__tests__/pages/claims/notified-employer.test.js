@@ -89,9 +89,9 @@ describe("NotifiedEmployer", () => {
       ).toBeTruthy();
     });
   });
-  it("redirects to the review page", () => {
+  it("redirects to the checklist page", () => {
     expect(wrapper.find("QuestionPage").prop("nextPage")).toEqual(
-      `${routes.claims.review}?claim_id=${claim.application_id}`
+      `${routes.claims.checklist}?claim_id=${claim.application_id}`
     );
   });
 });
