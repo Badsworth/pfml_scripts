@@ -13,6 +13,7 @@ class Claim extends BaseModel {
       created_at: null,
       duration_type: null,
       employee_ssn: null,
+      employer_benefits: [],
       employer_fein: null,
       // TODO: This field does not yet exist in the API: https://lwd.atlassian.net/browse/CP-574
       employment_status: null,
@@ -27,7 +28,9 @@ class Claim extends BaseModel {
         reason: null,
       },
       middle_name: null,
+      other_income: [],
       pregnant_or_recent_birth: null,
+      previous_leave: [],
     };
   }
 }

@@ -200,6 +200,7 @@ describe("useClaimsLogic", () => {
             "created_at": null,
             "duration_type": null,
             "employee_ssn": null,
+            "employer_benefits": Array [],
             "employer_fein": null,
             "employment_status": null,
             "first_name": "Bud",
@@ -212,7 +213,9 @@ describe("useClaimsLogic", () => {
               "reason": null,
             },
             "middle_name": null,
+            "other_income": Array [],
             "pregnant_or_recent_birth": null,
+            "previous_leave": Array [],
           }
         `);
         expect(updateClaimMock).toHaveBeenCalled();
@@ -256,6 +259,7 @@ describe("useClaimsLogic", () => {
             "created_at": null,
             "duration_type": null,
             "employee_ssn": null,
+            "employer_benefits": Array [],
             "employer_fein": null,
             "employment_status": null,
             "first_name": "Bud",
@@ -268,7 +272,9 @@ describe("useClaimsLogic", () => {
               "reason": null,
             },
             "middle_name": null,
+            "other_income": Array [],
             "pregnant_or_recent_birth": null,
+            "previous_leave": Array [],
           }
         `);
         expect(submitClaimMock).toHaveBeenCalled();

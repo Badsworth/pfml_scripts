@@ -82,6 +82,7 @@ describe("ClaimsApi", () => {
               "created_at": null,
               "duration_type": null,
               "employee_ssn": null,
+              "employer_benefits": Array [],
               "employer_fein": null,
               "employment_status": null,
               "first_name": null,
@@ -94,7 +95,9 @@ describe("ClaimsApi", () => {
                 "reason": null,
               },
               "middle_name": null,
+              "other_income": Array [],
               "pregnant_or_recent_birth": null,
+              "previous_leave": Array [],
             },
             "status": 200,
             "success": true,
@@ -153,6 +156,7 @@ describe("ClaimsApi", () => {
           "created_at": null,
           "duration_type": "type",
           "employee_ssn": null,
+          "employer_benefits": Array [],
           "employer_fein": null,
           "employment_status": null,
           "first_name": null,
@@ -165,7 +169,9 @@ describe("ClaimsApi", () => {
             "reason": null,
           },
           "middle_name": null,
+          "other_income": Array [],
           "pregnant_or_recent_birth": null,
+          "previous_leave": Array [],
         }
       `);
     });
@@ -193,6 +199,7 @@ describe("ClaimsApi", () => {
           "created_at": null,
           "duration_type": "type",
           "employee_ssn": null,
+          "employer_benefits": Array [],
           "employer_fein": null,
           "employment_status": null,
           "first_name": null,
@@ -205,7 +212,9 @@ describe("ClaimsApi", () => {
             "reason": null,
           },
           "middle_name": null,
+          "other_income": Array [],
           "pregnant_or_recent_birth": null,
+          "previous_leave": Array [],
         }
       `);
     });
