@@ -23,6 +23,9 @@ plan.out
 # Files generated with the "archive_file" Terraform resource
 infra/portal/template/.zip
 
+# Generated code coverage reports
+portal/coverage/
+
 # IDE-specific files
 .vscode/
 .idea/

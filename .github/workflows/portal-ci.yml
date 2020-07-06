@@ -45,7 +45,14 @@ jobs:
         run: PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true npm ci --prefix portal
 
       - name: test
-        run: npm test --prefix portal
+        run: npm run test:ci --prefix portal
+
+      - name: Coveralls
+        uses: coverallsapp/github-action@master
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path-to-lcov: "./portal/coverage/lcov.info"
+          base-path: "./portal"
 
   test-e2e:
     name: End-to-end tests

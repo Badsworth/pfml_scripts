@@ -15,6 +15,7 @@
     "build:prod": "BUILD_ENV=prod npm run build",
     "start": "next start",
     "test": "jest --ci --coverage",
+    "test:ci": "npm test --  --coverage-reporters=lcov --coverage-reporters=text",
     "test:e2e": "PORT=3000 jest --config jest-e2e.config.js",
     "pretest:e2e": "echo '🤖 Preparing end-to-end tests. This expects the site to be already be running on port 3000'",
     "test:e2e:ci": "JEST_PUPPETEER_CI=true npm run test:e2e",
