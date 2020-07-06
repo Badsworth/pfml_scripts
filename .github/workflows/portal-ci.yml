@@ -3,6 +3,11 @@
 name: Portal CI
 
 on:
+  push:
+    branches:
+      - master
+    paths:
+      - portal/**
   pull_request:
     paths:
       - portal/**
