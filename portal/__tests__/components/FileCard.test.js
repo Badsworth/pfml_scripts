@@ -30,7 +30,7 @@ describe("FileCard", () => {
 
   it("calls the onRemoveClick handler when the remove button is clicked", () => {
     const { props, wrapper } = render();
-    wrapper.find("button").simulate("click");
+    wrapper.find("Button").simulate("click");
 
     expect(props.onRemoveClick).toHaveBeenCalledTimes(1);
   });

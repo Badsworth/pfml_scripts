@@ -1,3 +1,4 @@
+import Button from "./Button";
 import Heading from "./Heading";
 import PropTypes from "prop-types";
 import React from "react";
@@ -26,13 +27,13 @@ const FileCard = (props) => {
           {heading}
         </Heading>
         <div className={filenameClasses}>{file.name}</div>
-        <button
-          className="usa-button usa-button--unstyled text-error hover:text-error-dark active:text-error-darker"
-          type="button"
+        <Button
+          className="text-error hover:text-error-dark active:text-error-darker"
           onClick={() => props.onRemoveClick()}
+          variation="unstyled"
         >
           {removeButton}
-        </button>
+        </Button>
       </div>
     </div>
   );

@@ -21,13 +21,13 @@ exports[`FileCard renders 1`] = `
     >
       foo.png
     </div>
-    <button
-      className="usa-button usa-button--unstyled text-error hover:text-error-dark active:text-error-darker"
+    <Button
+      className="text-error hover:text-error-dark active:text-error-darker"
       onClick={[Function]}
-      type="button"
+      variation="unstyled"
     >
       Remove file
-    </button>
+    </Button>
   </div>
 </div>
 `;
