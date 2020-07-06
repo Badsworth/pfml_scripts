@@ -26,6 +26,8 @@ export const Review = (props) => {
   const { t } = useTranslation();
   const { claim, user } = props;
 
+  const reason = get(claim, "leave_details.reason");
+
   const routeForStepDefinition = (name) => {
     const stepDefinition = stepDefinitions.find((s) => s.name === name);
 
@@ -83,6 +85,17 @@ export const Review = (props) => {
           ),
         })}
       </ReviewRow>
+      {reason === LeaveReason.medical && (
+        <React.Fragment>
+          <ReviewRow
+            label={t("pages.claimsReview.pregnancyOrRecentBirthLabel")}
+          >
+            {get(claim, "pregnant_or_recent_birth") === true
+              ? t("pages.claimsReview.pregnancyChoiceYes")
+              : t("pages.claimsReview.pregnancyChoiceNo")}
+          </ReviewRow>
+        </React.Fragment>
+      )}
 
       <ReviewRow label={t("pages.claimsReview.leaveDurationLabel")}>
         {formatDateRange(

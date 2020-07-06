@@ -23,12 +23,17 @@ export const LeaveReasonPage = (props) => {
   const handleSave = (formState) =>
     props.appLogic.updateClaim(props.claim.application_id, formState);
 
+  const nextPage =
+    reason === LeaveReason.medical
+      ? routeWithParams("claims.reasonPregnancy", props.query)
+      : routeWithParams("claims.duration", props.query);
+
   return (
     <QuestionPage
       formState={formState}
       title={t("pages.claimsLeaveReason.title")}
       onSave={handleSave}
-      nextPage={routeWithParams("claims.leaveDates", props.query)}
+      nextPage={nextPage}
     >
       <InputChoiceGroup
         choices={[

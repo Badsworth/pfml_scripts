@@ -9,7 +9,7 @@ exports[`LeaveReasonPage renders the page 1`] = `
       },
     }
   }
-  nextPage="/claims/leave-dates"
+  nextPage="/claims/reason-pregnancy"
   onSave={[Function]}
   title="Leave type"
 >

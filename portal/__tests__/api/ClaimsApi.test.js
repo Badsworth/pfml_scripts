@@ -94,6 +94,7 @@ describe("ClaimsApi", () => {
                 "reason": null,
               },
               "middle_name": null,
+              "pregnant_or_recent_birth": null,
             },
             "status": 200,
             "success": true,
@@ -164,6 +165,7 @@ describe("ClaimsApi", () => {
             "reason": null,
           },
           "middle_name": null,
+          "pregnant_or_recent_birth": null,
         }
       `);
     });
@@ -203,6 +205,7 @@ describe("ClaimsApi", () => {
             "reason": null,
           },
           "middle_name": null,
+          "pregnant_or_recent_birth": null,
         }
       `);
     });

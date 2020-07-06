@@ -57,6 +57,7 @@ const shared = {
   claimDurationTypeContinuous: "Continuous leave",
   claimDurationTypeIntermittent: "Intermittent leave",
   claimsFileUploadTitle: "Verify your identity",
+  claimsLeaveDetailsTitle: "Leave Details",
   claimsLeaveDurationTitle: "Leave duration",
   claimsTakingLeaveTitle: "Verify your identity",
   leaveReasonActiveDutyFamily: "Active duty",
@@ -70,6 +71,8 @@ const shared = {
   passwordHint:
     "Your password must be at least 8 characters long and include numbers and letters.",
   passwordLabel: "Password",
+  pregnancyOrRecentBirthLabel:
+    "Are you pregnant or have you recently given birth?",
   resendVerificationCodeLink: "Resend the code",
   usernameLabel: "Email address",
   verificationCodeLabel: "6-digit code",
@@ -246,6 +249,12 @@ const pages = {
     sectionLabel: "Have you notified your employer of your leave?",
     title: "Employment information",
   },
+  claimsReasonPregnancy: {
+    choiceNo: "$t(shared.choiceNo)",
+    choiceYes: "$t(shared.choiceYes)",
+    pregnancyOrRecentBirthLabel: "$t(shared.pregnancyOrRecentBirthLabel)",
+    title: "$t(shared.claimsLeaveDetailsTitle)",
+  },
   claimsReview: {
     confirmationAction: "Confirm information is correct",
     editLink: "Edit",
@@ -268,7 +277,10 @@ const pages = {
     leaveReasonValue_medical: "$t(shared.leaveReasonMedical)",
     leaveReasonValue_serviceMemberFamily:
       "$t(shared.leaveReasonServiceMemberFamily)",
-    leaveSectionHeading: "Leave details",
+    leaveSectionHeading: "$t(shared.claimsLeaveDetailsTitle)",
+    pregnancyChoiceNo: "$t(shared.choiceNo)",
+    pregnancyChoiceYes: "$t(shared.choiceYes)",
+    pregnancyOrRecentBirthLabel: "$t(shared.pregnancyOrRecentBirthLabel)",
     title: "Check your answers before sending your application",
     userDateOfBirthLabel: "Date of birth",
     userNameLabel: "Full name",

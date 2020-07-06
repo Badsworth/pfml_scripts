@@ -38,12 +38,17 @@ exports[`Review when all data is present renders Review page with the field valu
     editHref="/claims/leave-reason?claim_id=mock-id"
     editText="Edit"
   >
-    Leave details
+    Leave Details
   </ReviewHeading>
   <ReviewRow
     label="Leave type"
   >
     Medical leave
+  </ReviewRow>
+  <ReviewRow
+    label="Are you pregnant or have you recently given birth?"
+  >
+    No
   </ReviewRow>
   <ReviewRow
     label="Leave duration"
@@ -113,12 +118,17 @@ exports[`Review when data is empty does not render strings like 'null' or 'undef
     editHref="/claims/leave-reason?claim_id=mock-id"
     editText="Edit"
   >
-    Leave details
+    Leave Details
   </ReviewHeading>
   <ReviewRow
     label="Leave type"
   >
     Medical leave
+  </ReviewRow>
+  <ReviewRow
+    label="Are you pregnant or have you recently given birth?"
+  >
+    No
   </ReviewRow>
   <ReviewRow
     label="Leave duration"

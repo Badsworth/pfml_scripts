@@ -1,0 +1,35 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`ReasonPregnancy renders the page 1`] = `
+<QuestionPage
+  formState={
+    Object {
+      "pregnant_or_recent_birth": false,
+    }
+  }
+  nextPage="/claims/duration"
+  onSave={[Function]}
+  title="Leave Details"
+>
+  <InputChoiceGroup
+    choices={
+      Array [
+        Object {
+          "checked": false,
+          "label": "Yes",
+          "value": "true",
+        },
+        Object {
+          "checked": true,
+          "label": "No",
+          "value": "false",
+        },
+      ]
+    }
+    label="Are you pregnant or have you recently given birth?"
+    name="pregnant_or_recent_birth"
+    onChange={[Function]}
+    type="radio"
+  />
+</QuestionPage>
+`;

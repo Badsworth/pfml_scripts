@@ -27,6 +27,7 @@ class Claim extends BaseModel {
         reason: null,
       },
       middle_name: null,
+      pregnant_or_recent_birth: null,
     };
   }
 }

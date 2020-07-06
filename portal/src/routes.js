@@ -26,6 +26,7 @@ const routes = {
     leaveReason: "/claims/leave-reason",
     name: "/claims/name",
     notifiedEmployer: "/claims/notified-employer",
+    reasonPregnancy: "/claims/reason-pregnancy",
     review: "/claims/review",
     ssn: "/claims/ssn",
     stateId: "/claims/state-id",

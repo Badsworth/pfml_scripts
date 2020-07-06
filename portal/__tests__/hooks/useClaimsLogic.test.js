@@ -212,6 +212,7 @@ describe("useClaimsLogic", () => {
               "reason": null,
             },
             "middle_name": null,
+            "pregnant_or_recent_birth": null,
           }
         `);
         expect(updateClaimMock).toHaveBeenCalled();
@@ -267,6 +268,7 @@ describe("useClaimsLogic", () => {
               "reason": null,
             },
             "middle_name": null,
+            "pregnant_or_recent_birth": null,
           }
         `);
         expect(submitClaimMock).toHaveBeenCalled();
