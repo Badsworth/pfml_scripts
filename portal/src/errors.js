@@ -26,3 +26,14 @@ export class NetworkError extends Error {
     this.name = "NetworkError";
   }
 }
+
+/**
+ * A transition between the current route state to the next route failed most likely because
+ * a CONTINUE transition was not defined for the current route.
+ */
+export class RouteTransitionError extends Error {
+  constructor(...params) {
+    super(...params);
+    this.name = "RouteTransitionError";
+  }
+}

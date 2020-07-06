@@ -4,7 +4,8 @@ import PropTypes from "prop-types";
 import React from "react";
 import Step from "../../components/Step";
 import StepList from "../../components/StepList";
-import { createSteps } from "../../flows/leave-application";
+import StepModel from "../../models/Step";
+import machineConfigs from "../../routes/claim-flow-configs";
 import routeWithParams from "../../utils/routeWithParams";
 import routes from "../../routes";
 import { useTranslation } from "../../locales/i18n";
@@ -13,7 +14,12 @@ import withClaim from "../../hoc/withClaim";
 export const Checklist = (props) => {
   // TODO: add appErrors.warnings when API validations are in place
   // https://lwd.atlassian.net/browse/CP-509
-  const steps = createSteps(props.claim, null);
+  const steps = StepModel.createClaimStepsFromMachine(
+    machineConfigs,
+    props.claim,
+    null
+  );
+
   const allStepsComplete = steps.every((step) => step.isComplete);
   const { t } = useTranslation();
 

@@ -9,12 +9,13 @@ import PropTypes from "prop-types";
 import React from "react";
 import ReviewHeading from "../../components/ReviewHeading";
 import ReviewRow from "../../components/ReviewRow";
+import Step from "../../models/Step";
 import Title from "../../components/Title";
 import User from "../../models/User";
 import findKeyByValue from "../../utils/findKeyByValue";
 import formatDateRange from "../../utils/formatDateRange";
 import get from "lodash/get";
-import { stepDefinitions } from "../../flows/leave-application";
+import machineConfigs from "../../routes/claim-flow-configs";
 import { useTranslation } from "../../locales/i18n";
 import withClaim from "../../hoc/withClaim";
 
@@ -26,13 +27,18 @@ export const Review = (props) => {
   const { t } = useTranslation();
   const { claim, user } = props;
 
+  const steps = Step.createClaimStepsFromMachine(
+    machineConfigs,
+    props.claim,
+    null
+  );
+
   const reason = get(claim, "leave_details.reason");
 
   const routeForStepDefinition = (name) => {
-    const stepDefinition = stepDefinitions.find((s) => s.name === name);
+    const step = steps.find((s) => s.name === name);
 
-    if (stepDefinition && stepDefinition.pages.length)
-      return createRouteWithQuery(stepDefinition.pages[0].route, props.query);
+    if (step) return createRouteWithQuery(step.initialPage, props.query);
   };
 
   return (

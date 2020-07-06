@@ -1,6 +1,18 @@
+import { get, groupBy, map } from "lodash";
 import BaseModel from "./BaseModel";
 import { createRouteWithQuery } from "../utils/routeWithParams";
-import { get } from "lodash";
+
+/**
+ * Unique identifiers for steps in the portal application
+ * @enum {string}
+ */
+export const ClaimSteps = {
+  verifyId: "verifyId",
+  leaveDetails: "leaveDetails",
+  employerInformation: "employerInformation",
+  otherLeave: "otherLeave",
+  payment: "payment",
+};
 
 const fieldHasValue = (fieldPath, formState) => {
   const value = get(formState, fieldPath);
@@ -17,27 +29,51 @@ const fieldHasValue = (fieldPath, formState) => {
 export default class Step extends BaseModel {
   get defaults() {
     return {
-      // instance of {StepDefinition}
-      stepDefinition: null,
-      claim: null,
-      // array of Steps this step depends on
+      /**
+       * @type {string}
+       */
+      name: null,
+      /**
+       * @type {object[]}
+       * { route: "page/route", step: "verifyId", fields: ["first_name"] }
+       * object representing all pages in this step keyed by the page route
+       * @see ../routes/claim-flow-configs
+       */
+      pages: null,
+      /**
+       * @type {Step[]}
+       * Array of steps that must be completed before this step
+       */
       dependsOn: [],
-      // array of API validation warnings
+      /**
+       * @type {Claim}
+       */
+      claim: null,
+      /**
+       * @type {object[]}
+       * Array of validation warnings and errors from the API
+       */
       warnings: null,
     };
   }
 
-  get fields() {
-    return this.stepDefinition.fields;
+  // TODO remove when all steps are populated with pages
+  get _pages() {
+    return this.pages || [];
   }
 
-  get name() {
-    return this.stepDefinition.name;
+  get fields() {
+    return this._pages.flatMap((page) => page.fields);
+  }
+
+  get initialPage() {
+    // TODO remove when all steps are populated with pages
+    return (this._pages[0] || {}).route || "#";
   }
 
   // page user is navigated to when clicking into step
   get href() {
-    return createRouteWithQuery(this.stepDefinition.initialPage, {
+    return createRouteWithQuery(this.initialPage, {
       claim_id: this.claim.application_id,
     });
   }
@@ -78,33 +114,58 @@ export default class Step extends BaseModel {
   }
 
   /**
-   * Create an array of Steps from their definitions
-   * @param {StepDefinition[]} stepDefinitions - array of stepDefinitions in the correct order
+   * Create an array of Steps from routing machine configuration
+   * @see ../routes/claim-flow-configs
+   * @param {object} machineConfigs - configuration object for routing machine
    * @param {Claim} claim - a claim
    * @param {Array} warnings - array of validation warnings returned from API
    * @returns {Step[]}
    */
-  static createStepsFromDefinitions = (stepDefinitions, claim, warnings) => {
-    // Store newly created steps in memory so they can
-    // be referenced in subsequent steps' `dependsOn` property
-    const stepMap = stepDefinitions.reduce((result, stepDefinition) => {
-      result[stepDefinition.name] = new Step({
-        stepDefinition,
-        claim,
-        warnings,
-        dependsOn: stepDefinition.dependsOn.map((dependedOn) => {
-          const dependedOnStep = result[dependedOn.name];
-          if (!dependedOnStep)
-            throw new Error(
-              `Could not find ${dependedOn.name} step in provided StepDefinitions. Make sure it is defined before ${stepDefinition.name} in your array.`
-            );
-          return dependedOnStep;
-        }),
-      });
+  static createClaimStepsFromMachine = (machineConfigs, claim, warnings) => {
+    const pages = map(machineConfigs.states, (state, key) =>
+      Object.assign({ route: key }, state.meta)
+    );
+    const pagesByStep = groupBy(pages, "step");
 
-      return result;
-    }, {});
+    const verifyId = new Step({
+      name: ClaimSteps.verifyId,
+      pages: pagesByStep[ClaimSteps.verifyId],
+      claim,
+      warnings,
+    });
 
-    return Object.values(stepMap);
+    const leaveDetails = new Step({
+      name: ClaimSteps.leaveDetails,
+      pages: pagesByStep[ClaimSteps.leaveDetails],
+      dependsOn: [verifyId],
+      claim,
+      warnings,
+    });
+
+    const employerInformation = new Step({
+      name: ClaimSteps.employerInformation,
+      pages: pagesByStep[ClaimSteps.employerInformation],
+      dependsOn: [verifyId, leaveDetails],
+      claim,
+      warnings,
+    });
+
+    const otherLeave = new Step({
+      name: ClaimSteps.otherLeave,
+      pages: pagesByStep[ClaimSteps.otherLeave],
+      dependsOn: [verifyId, leaveDetails],
+      claim,
+      warnings,
+    });
+
+    const payment = new Step({
+      name: ClaimSteps.payment,
+      pages: pagesByStep[ClaimSteps.payment],
+      dependsOn: [verifyId, leaveDetails],
+      claim,
+      warnings,
+    });
+
+    return [verifyId, leaveDetails, employerInformation, otherLeave, payment];
   };
 }

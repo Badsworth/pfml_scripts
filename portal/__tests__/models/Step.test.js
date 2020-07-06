@@ -1,32 +1,28 @@
+import Step, { ClaimSteps } from "../../src/models/Step";
 import Claim from "../../src/models/Claim";
-import Step from "../../src/models/Step";
-import StepDefinition from "../../src/models/StepDefinition";
+import machineConfigs from "../../src/routes/claim-flow-configs";
+import { map } from "lodash";
 
 describe("Step Model", () => {
-  let stepDefinition;
-  const name = "step";
+  const step = "step";
   const pages = [
     {
+      step,
       route: "path/to/page/1",
       fields: ["field_a", "field_b", "field_c"],
     },
     {
-      route: "path/to/page/2",
+      step,
       fields: ["field_d", "field_e"],
+      nextPage: "path/to/page/1",
     },
   ];
-
-  beforeEach(() => {
-    stepDefinition = new StepDefinition({
-      name,
-      pages,
-    });
-  });
 
   describe("href", () => {
     it("returns href with claim id parameter set", () => {
       const step = new Step({
-        stepDefinition,
+        name,
+        pages,
         claim: new Claim({ application_id: "12345" }),
       });
 
@@ -36,38 +32,26 @@ describe("Step Model", () => {
 
   describe("status", () => {
     describe("when step depends on another step", () => {
-      let dependedOnStepDefinition;
-
-      beforeEach(() => {
-        dependedOnStepDefinition = new StepDefinition({
-          name: "dependedOnStep",
-          pages: [
-            {
-              route: "path/to/page/3",
-              fields: ["field_x", "field_y"],
-            },
-          ],
-        });
-      });
-
       describe("when step it depends on has warnings", () => {
         it("returns disabled", () => {
           const warnings = [{ field: "field_y" }];
 
           const dependedOnStep = new Step({
-            stepDefinition: dependedOnStepDefinition,
+            name: "dependedOnStep",
+            pages: [
+              {
+                step: "dependedOnStep",
+                route: "path/to/page/3",
+                fields: ["field_x", "field_y"],
+              },
+            ],
             claim: {},
             warnings,
           });
 
-          stepDefinition = new StepDefinition({
+          const step = new Step({
             name,
             pages,
-            dependsOn: [dependedOnStepDefinition],
-          });
-
-          const step = new Step({
-            stepDefinition,
             claim: {},
             warnings,
             dependsOn: [dependedOnStep],
@@ -82,19 +66,20 @@ describe("Step Model", () => {
           const warnings = [];
 
           const dependedOnStep = new Step({
-            stepDefinition: dependedOnStepDefinition,
-            claim: {},
+            name: "dependedOnStep",
+            pages: [
+              {
+                route: "path/to/page/3",
+                fields: ["field_x", "field_y"],
+                nextPage: "path/to/page/1",
+              },
+            ],
             warnings,
           });
 
-          stepDefinition = new StepDefinition({
+          const step = new Step({
             name,
             pages,
-            dependsOn: [dependedOnStepDefinition],
-          });
-
-          const step = new Step({
-            stepDefinition,
             claim: {},
             warnings,
             dependsOn: [dependedOnStep],
@@ -110,7 +95,8 @@ describe("Step Model", () => {
         const warnings = [];
 
         const step = new Step({
-          stepDefinition,
+          name,
+          pages,
           claim: {},
           warnings,
         });
@@ -131,7 +117,8 @@ describe("Step Model", () => {
         };
 
         const step = new Step({
-          stepDefinition,
+          name,
+          pages,
           claim,
           warnings,
         });
@@ -152,7 +139,8 @@ describe("Step Model", () => {
         };
 
         const step = new Step({
-          stepDefinition,
+          name,
+          pages,
           claim,
           warnings,
         });
@@ -162,45 +150,23 @@ describe("Step Model", () => {
     });
   });
 
-  describe("createStepsFromDefinitions", () => {
-    let stepDefinitions;
-    beforeEach(() => {
-      stepDefinitions = ["step1", "step2"].map(
-        (name, index) =>
-          new StepDefinition({
-            name,
-            pages: [
-              { routes: `path/to/${name}`, fields: [`field_${index + 1}`] },
-            ],
-          })
-      );
+  describe("createClaimSteps", () => {
+    it("creates portal steps from machineConfigs", () => {
+      const steps = Step.createClaimStepsFromMachine(machineConfigs, {}, []);
+      const machinePages = map(machineConfigs.states, (value, key) => ({
+        route: key,
+        ...value.meta,
+      }));
 
-      stepDefinitions[1].dependsOn = [stepDefinitions[0]];
-    });
-
-    it("creates an array of steps", () => {
-      const steps = Step.createStepsFromDefinitions(stepDefinitions, {}, []);
-
-      expect(steps.length).toEqual(2);
-      expect(steps[0]).toBeInstanceOf(Step);
-      expect(steps[1]).toBeInstanceOf(Step);
-    });
-
-    it("add newly created steps to dependsOn array", () => {
-      const steps = Step.createStepsFromDefinitions(stepDefinitions, {}, []);
-
-      expect(steps[1].dependsOn[0]).toEqual(steps[0]);
-    });
-
-    it("throws error if depended on step does not exist in array", () => {
-      const render = () => {
-        stepDefinitions[1].dependsOn = [
-          new StepDefinition({ name: "stepNotInArray" }),
-        ];
-        Step.createStepsFromDefinitions(stepDefinitions, {}, []);
-      };
-
-      expect(render).toThrowError(/stepNotInArray/);
+      expect(steps).toHaveLength(5);
+      expect(steps.map((s) => s.name)).toEqual(Object.keys(ClaimSteps));
+      steps.forEach((s) => {
+        expect(s).toBeInstanceOf(Step);
+        const expectedPages = machinePages.filter((p) => p.step === s.name);
+        expect(Object.values(s.pages || {})).toEqual(
+          expect.arrayContaining(expectedPages)
+        );
+      });
     });
   });
 });
