@@ -193,31 +193,8 @@ describe("useClaimsLogic", () => {
 
         const claim = claimsLogic.claims.get(applicationId);
 
-        expect(claim).toMatchInlineSnapshot(`
-          Claim {
-            "application_id": "mock-application-id",
-            "avg_weekly_hours_worked": null,
-            "created_at": null,
-            "duration_type": null,
-            "employee_ssn": null,
-            "employer_benefits": Array [],
-            "employer_fein": null,
-            "employment_status": null,
-            "first_name": "Bud",
-            "hours_off_needed": null,
-            "last_name": null,
-            "leave_details": Object {
-              "continuous_leave_periods": null,
-              "employer_notification_date": null,
-              "employer_notified": null,
-              "reason": null,
-            },
-            "middle_name": null,
-            "other_income": Array [],
-            "pregnant_or_recent_birth": null,
-            "previous_leave": Array [],
-          }
-        `);
+        expect(claim).toBeInstanceOf(Claim);
+        expect(claim.first_name).toBe("Bud");
         expect(updateClaimMock).toHaveBeenCalled();
       });
 
@@ -252,31 +229,7 @@ describe("useClaimsLogic", () => {
         });
 
         const claim = claimsLogic.claims.get(applicationId);
-        expect(claim).toMatchInlineSnapshot(`
-          Claim {
-            "application_id": "mock-application-id",
-            "avg_weekly_hours_worked": null,
-            "created_at": null,
-            "duration_type": null,
-            "employee_ssn": null,
-            "employer_benefits": Array [],
-            "employer_fein": null,
-            "employment_status": null,
-            "first_name": "Bud",
-            "hours_off_needed": null,
-            "last_name": null,
-            "leave_details": Object {
-              "continuous_leave_periods": null,
-              "employer_notification_date": null,
-              "employer_notified": null,
-              "reason": null,
-            },
-            "middle_name": null,
-            "other_income": Array [],
-            "pregnant_or_recent_birth": null,
-            "previous_leave": Array [],
-          }
-        `);
+        expect(claim).toBeInstanceOf(Claim);
         expect(submitClaimMock).toHaveBeenCalled();
       });
 

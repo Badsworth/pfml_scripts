@@ -58,9 +58,7 @@ describe("ClaimsApi", () => {
   });
 
   describe("createClaim", () => {
-    const claim = new Claim({ application_id: "1234", duration_type: "type" });
-
-    describe("succesful request", () => {
+    describe("successful request", () => {
       beforeEach(() => {
         request.mockResolvedValueOnce({
           body: {
@@ -72,33 +70,12 @@ describe("ClaimsApi", () => {
       });
 
       it("resolves with success, status, and claim instance", async () => {
-        const result = await claimsApi.createClaim(claim);
-        expect(result).toMatchInlineSnapshot(`
+        const { claim: claimResponse, ...rest } = await claimsApi.createClaim();
+
+        expect(claimResponse).toBeInstanceOf(Claim);
+        expect(rest).toMatchInlineSnapshot(`
           Object {
             "apiErrors": undefined,
-            "claim": Claim {
-              "application_id": "mock-application_id",
-              "avg_weekly_hours_worked": null,
-              "created_at": null,
-              "duration_type": null,
-              "employee_ssn": null,
-              "employer_benefits": Array [],
-              "employer_fein": null,
-              "employment_status": null,
-              "first_name": null,
-              "hours_off_needed": null,
-              "last_name": null,
-              "leave_details": Object {
-                "continuous_leave_periods": null,
-                "employer_notification_date": null,
-                "employer_notified": null,
-                "reason": null,
-              },
-              "middle_name": null,
-              "other_income": Array [],
-              "pregnant_or_recent_birth": null,
-              "previous_leave": Array [],
-            },
             "status": 200,
             "success": true,
           }
@@ -106,7 +83,7 @@ describe("ClaimsApi", () => {
       });
     });
 
-    describe("unsuccesful request", () => {
+    describe("unsuccessful request", () => {
       beforeEach(() => {
         request.mockResolvedValueOnce({
           body: null,
@@ -116,26 +93,35 @@ describe("ClaimsApi", () => {
       });
 
       it("resolves with success, status, and and no claim instance", async () => {
-        const result = await claimsApi.createClaim(claim);
-        expect(result.success).toBeFalsy();
-        expect(result.status).toEqual(400);
-        expect(result.claim).toBeNull();
+        const result = await claimsApi.createClaim();
+
+        expect(result).toMatchInlineSnapshot(`
+          Object {
+            "apiErrors": undefined,
+            "claim": null,
+            "status": 400,
+            "success": false,
+          }
+        `);
       });
     });
   });
 
   describe("updateClaim", () => {
+    let mockResponseBody;
     const claim = new Claim({
       application_id: "mock-application_id",
       duration_type: "type",
     });
 
     beforeEach(() => {
+      mockResponseBody = {
+        application_id: "mock-application_id",
+        duration_type: "type",
+      };
+
       request.mockResolvedValueOnce({
-        body: {
-          application_id: "mock-application_id",
-          duration_type: "type",
-        },
+        body: mockResponseBody,
         status: 200,
         success: true,
       });
@@ -148,32 +134,7 @@ describe("ClaimsApi", () => {
 
     it("responds with an instance of a Claim with claim request parameters as properties", async () => {
       const response = await claimsApi.updateClaim(claim.application_id, claim);
-      expect(response.claim).toBeInstanceOf(Claim);
-      expect(response.claim).toMatchInlineSnapshot(`
-        Claim {
-          "application_id": "mock-application_id",
-          "avg_weekly_hours_worked": null,
-          "created_at": null,
-          "duration_type": "type",
-          "employee_ssn": null,
-          "employer_benefits": Array [],
-          "employer_fein": null,
-          "employment_status": null,
-          "first_name": null,
-          "hours_off_needed": null,
-          "last_name": null,
-          "leave_details": Object {
-            "continuous_leave_periods": null,
-            "employer_notification_date": null,
-            "employer_notified": null,
-            "reason": null,
-          },
-          "middle_name": null,
-          "other_income": Array [],
-          "pregnant_or_recent_birth": null,
-          "previous_leave": Array [],
-        }
-      `);
+      expect(response.claim).toEqual(new Claim(mockResponseBody));
     });
   });
 
@@ -187,36 +148,11 @@ describe("ClaimsApi", () => {
       expect(response.success).toBeTruthy();
     });
 
-    it("responds with an instance of a Cliam with claim request parameters as properties", async () => {
+    it("responds with an instance of a Claim with claim request parameters as properties", async () => {
       const claimsApi = new ClaimsApi({ user });
       const response = await claimsApi.submitClaim(claim);
 
       expect(response.claim).toBeInstanceOf(Claim);
-      expect(response.claim).toMatchInlineSnapshot(`
-        Claim {
-          "application_id": null,
-          "avg_weekly_hours_worked": null,
-          "created_at": null,
-          "duration_type": "type",
-          "employee_ssn": null,
-          "employer_benefits": Array [],
-          "employer_fein": null,
-          "employment_status": null,
-          "first_name": null,
-          "hours_off_needed": null,
-          "last_name": null,
-          "leave_details": Object {
-            "continuous_leave_periods": null,
-            "employer_notification_date": null,
-            "employer_notified": null,
-            "reason": null,
-          },
-          "middle_name": null,
-          "other_income": Array [],
-          "pregnant_or_recent_birth": null,
-          "previous_leave": Array [],
-        }
-      `);
     });
   });
 });

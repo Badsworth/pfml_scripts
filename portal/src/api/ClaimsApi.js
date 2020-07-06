@@ -106,13 +106,11 @@ export default class ClaimsApi {
   /**
    * Create a new claim through a POST request to /applications
    * @todo Document the structure of error responses once we know what it looks like
-   * @param {Claim} claim Claim properties
    * @returns {Promise<ClaimsApiSingleResult>} The result of the API call
    */
-  createClaim = async (claim) => {
+  createClaim = async () => {
     const { body, success, status, apiErrors } = await this.claimsRequest(
-      "POST",
-      claim
+      "POST"
     );
 
     return {
