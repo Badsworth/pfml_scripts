@@ -5,6 +5,7 @@ from pydantic import UUID4
 from werkzeug.exceptions import NotFound
 
 import massgov.pfml.api.app as app
+from massgov.pfml.api.authorization.flask import EDIT, READ, ensure
 from massgov.pfml.db.models.employees import Employee
 from massgov.pfml.util.pydantic import PydanticBaseModel
 from massgov.pfml.util.pydantic.types import TaxIdFormattedStr, TaxIdUnformattedStr
@@ -40,6 +41,7 @@ def employees_get(employee_id):
     with app.db_session() as db_session:
         employee = get_or_404(db_session, Employee, employee_id)
 
+    ensure(READ, employee)
     return EmployeeResponse.from_orm(employee).dict()
     # TODO API-286
     # return response_util.success_response(
@@ -54,7 +56,7 @@ def employees_patch(employee_id):
 
     with app.db_session() as db_session:
         updated_employee = get_or_404(db_session, Employee, employee_id)
-
+        ensure(EDIT, updated_employee)
         for key in request.__fields_set__:
             value = getattr(request, key)
             setattr(updated_employee, key, value)
@@ -69,4 +71,5 @@ def employees_search():
     if employee is None:
         raise NotFound()
 
+    ensure(READ, employee)
     return EmployeeResponse.from_orm(employee).dict()

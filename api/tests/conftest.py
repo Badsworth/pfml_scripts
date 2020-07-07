@@ -94,6 +94,29 @@ def auth_claims(user):
 
 
 @pytest.fixture
+def consented_user(initialize_factories_session):
+    user = UserFactory.create(consented_to_data_sharing=True)
+    return user
+
+
+@pytest.fixture
+def disable_employee_endpoint(monkeypatch):
+    new_env = monkeypatch.setenv("ENABLE_EMPLOYEE_ENDPOINTS", "0")
+    return new_env
+
+
+@pytest.fixture
+def consented_user_claims(consented_user):
+    claims = {
+        "a": "b",
+        "exp": datetime.now() + timedelta(days=1),
+        "sub": str(consented_user.active_directory_id),
+    }
+
+    return claims
+
+
+@pytest.fixture
 def auth_key():
     hmac_key = {
         "kty": "oct",
@@ -104,6 +127,13 @@ def auth_key():
     }
 
     return hmac_key
+
+
+@pytest.fixture
+def consented_user_token(consented_user_claims, auth_key):
+
+    encoded = jwt.encode(consented_user_claims, auth_key)
+    return encoded
 
 
 @pytest.fixture

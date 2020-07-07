@@ -53,6 +53,7 @@ services:
       - 'PS1=${DOCKER_PS1:-[docker] \w: }'
       - 'LSCOLORS=${DOCKER_LSCOLORS:- }'
       - PY_RUN_CMD_OPT=POETRY
+      - ENABLE_EMPLOYEE_ENDPOINTS=1
     networks:
       main:
         aliases:

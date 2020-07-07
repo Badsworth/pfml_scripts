@@ -49,8 +49,11 @@ def create_app(config: Optional[AppConfig] = None) -> connexion.FlaskApp:
     flask_cors.CORS(flask_app, origins=config.cors_origins, supports_credentials=True)
 
     # Set up bouncer
+    authorization_path = massgov.pfml.api.authorization.rules.create_authorization(
+        config.enable_employee_endpoints
+    )
     bouncer = massgov.pfml.api.authorization.flask.Bouncer(flask_app)
-    bouncer.authorization_method(massgov.pfml.api.authorization.rules.define_authorization)
+    bouncer.authorization_method(authorization_path)
 
     # Set up middleware to allow the Swagger UI to use the correct URL
     # when proxied behind the AWS API Gateway.

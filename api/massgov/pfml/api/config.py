@@ -14,6 +14,7 @@ class AppConfig:
     cors_origins: List[str]
     db: db_config.DbConfig
     cognito_user_pool_keys_url: str
+    enable_employee_endpoints: bool
 
 
 def get_config() -> AppConfig:
@@ -24,4 +25,5 @@ def get_config() -> AppConfig:
         cors_origins=split_str(os.environ.get("CORS_ORIGINS")),
         db=db_config.get_config(),
         cognito_user_pool_keys_url=os.environ["COGNITO_USER_POOL_KEYS_URL"],
+        enable_employee_endpoints=os.environ.get("ENABLE_EMPLOYEE_ENDPOINTS", "0") == "1",
     )
