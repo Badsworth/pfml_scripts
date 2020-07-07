@@ -35,7 +35,7 @@ PY_RUN_CMD := $(PY_RUN_CMD_$(PY_RUN_CMD_OPT))
 
 POETRY_CMD := $(subst poetry run,poetry,$(PY_RUN_CMD))
 
-DECODE_LOG := 2>&1 | python3 massgov/pfml/util/logging/decodelog.py
+DECODE_LOG := 2>&1 | python3 -u massgov/pfml/util/logging/decodelog.py
 
 # BuildKit is a more efficient builder for Docker, so use it by default
 ifndef NO_BUILDKIT

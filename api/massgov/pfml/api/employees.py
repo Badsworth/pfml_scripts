@@ -41,6 +41,11 @@ def employees_get(employee_id):
         employee = get_or_404(db_session, Employee, employee_id)
 
     return EmployeeResponse.from_orm(employee).dict()
+    # TODO API-286
+    # return response_util.success_response(
+    #     "Successfully retrieved employee",
+    #     response_util.single_data_payload(EmployeeResponse.from_orm(employee).dict()),
+    # ).to_api_response()
 
 
 def employees_patch(employee_id):

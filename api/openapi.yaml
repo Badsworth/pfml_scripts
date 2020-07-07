@@ -115,9 +115,13 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/EmployeeResponse"
+                $ref: "#/components/schemas/EmployeeSuccessResponse"
         "404":
-          $ref: "#/components/responses/NotFound"
+          description: An unsuccessful request returns a 404 status code for employees that are not found.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EmployeeErrorResponse"
     patch:
       tags:
         - Employees
@@ -479,6 +483,21 @@ components:
         tax_identifier:
           $ref: '#/components/schemas/SsnItin'
       required: ['first_name', 'last_name', 'tax_identifier']
+
+    EmployeeErrorResponse:
+      type: object
+      
+    EmployeeSuccessResponse:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/EmployeeDataResponse'
+
+    EmployeeDataResponse:
+      type: object
+      properties:
+        item:
+          $ref: '#/components/schemas/EmployeeResponse'
 
     EmployeeResponse:
       type: object
