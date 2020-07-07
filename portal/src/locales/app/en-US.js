@@ -244,9 +244,10 @@ const pages = {
     employerNotificationLabel: "When did you tell them?",
     hint:
       "Notify your employer at least 30 days before the start of your leave if possible.",
+    multipleEmployerAppAlert: "$t(shared.multipleEmployerAppAlert)",
     mustNotifyEmployerWarning:
       "Before you can submit an application, you must tell your employer that you're taking leave.",
-    sectionLabel: "Have you notified your employer of your leave?",
+    sectionLabel: "Have you told your employer that you are taking leave?",
     title: "Employment information",
   },
   claimsReasonPregnancy: {

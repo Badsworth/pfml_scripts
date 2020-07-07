@@ -1,5 +1,4 @@
 import { simulateEvents, testHook } from "../../test-utils";
-import Alert from "../../../src/components/Alert";
 import Claim from "../../../src/models/Claim";
 import ConditionalContent from "../../../src/components/ConditionalContent";
 import { NotifiedEmployer } from "../../../src/pages/claims/notified-employer";
@@ -20,7 +19,7 @@ describe("NotifiedEmployer", () => {
   }
 
   function mustNotifyWarningWrapper() {
-    return wrapper.find(Alert);
+    return wrapper.find("Alert[state='warning']");
   }
 
   beforeEach(() => {

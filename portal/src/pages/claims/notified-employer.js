@@ -42,6 +42,10 @@ export const NotifiedEmployer = (props) => {
       title={t("pages.claimsNotifiedEmployer.title")}
       onSave={handleSave}
     >
+      <Alert state="info">
+        {t("pages.claimsNotifiedEmployer.multipleEmployerAppAlert")}
+      </Alert>
+
       <InputChoiceGroup
         choices={[
           {
