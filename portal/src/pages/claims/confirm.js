@@ -4,17 +4,16 @@ import Claim from "../../models/Claim";
 import PropTypes from "prop-types";
 import React from "react";
 import Title from "../../components/Title";
-import useFormState from "../../hooks/useFormState";
 import { useTranslation } from "../../locales/i18n";
 import withClaim from "../../hoc/withClaim";
 
 export const Confirm = (props) => {
+  const { claim } = props;
   const { t } = useTranslation();
-  const { formState } = useFormState(props.claim);
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-    await props.appLogic.submitClaim(formState);
+    await props.appLogic.submitClaim(claim.application_id);
   };
 
   return (
@@ -38,11 +37,8 @@ export const Confirm = (props) => {
 };
 
 Confirm.propTypes = {
-  claim: PropTypes.instanceOf(Claim),
   appLogic: PropTypes.object.isRequired,
-  query: PropTypes.shape({
-    claim_id: PropTypes.string,
-  }),
+  claim: PropTypes.instanceOf(Claim),
 };
 
 export default withClaim(Confirm);

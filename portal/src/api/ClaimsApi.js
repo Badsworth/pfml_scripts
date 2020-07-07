@@ -4,12 +4,6 @@ import ClaimCollection from "../models/ClaimCollection";
 import request from "./request";
 import routes from "../routes";
 
-const apiResponseFields = {
-  success: true,
-  status: 201,
-  apiErrors: [],
-};
-
 /**
  * @typedef {{ apiErrors: object[], success: boolean, claim: Claim }} ClaimsApiSingleResult
  * @property {object[]} [apiErrors] - If the request failed, this will contain errors returned by the API
@@ -40,19 +34,17 @@ export default class ClaimsApi {
    * related to the /applications resource.
    * @private
    * @param {string} method HTTP method
-   * @param {object} body Request body
-   * @param {string} application_id ID of the claim
-   * @param {object} additionalHeaders Additional headers to add to the request
+   * @param {string} [subPath] Sub-path of the /applications resource to use
+   * @param {object} [body] Request body
+   * @param {object} [additionalHeaders] Additional headers to add to the request
    */
   claimsRequest = async (
     method,
+    subPath = "",
     body = null,
-    application_id = null,
     additionalHeaders = {}
   ) => {
-    const apiPath = application_id
-      ? `${routes.api.claims}/${application_id}`
-      : routes.api.claims;
+    const apiPath = `${routes.api.claims}${subPath}`;
     const baseHeaders = { user_id: this.user.user_id };
     const headers = {
       ...baseHeaders,
@@ -63,10 +55,9 @@ export default class ClaimsApi {
 
   /**
    * Fetches the list of claims for a user
-   * @param {string} user_id The user's user id
    * @returns {Promise<ClaimsApiListResult>} The result of the API call
    */
-  getClaims = async (user_id) => {
+  getClaims = async () => {
     const { body, success, status, apiErrors } = await this.claimsRequest(
       "GET"
     );
@@ -84,7 +75,7 @@ export default class ClaimsApi {
       const application_ids = body.map((claimData) => claimData.application_id);
       const fullResponses = await Promise.all(
         application_ids.map((application_id) =>
-          this.claimsRequest("GET", null, application_id)
+          this.claimsRequest("GET", `/${application_id}`)
         )
       );
       claims = fullResponses.map(
@@ -130,14 +121,14 @@ export default class ClaimsApi {
   updateClaim = async (application_id, patchData) => {
     const { body, success, status, apiErrors } = await this.claimsRequest(
       "PATCH",
-      patchData,
-      application_id
+      `/${application_id}`,
+      patchData
     );
 
     // Currently the API doesn't return the claim data in the response
     // so we're manually constructing the body based on client data.
     // We will change the PATCH applications endpoint to return the full
-    // application in this ticket: https://lwd.atlassian.net/browse/API-247
+    // application in this ticket: https://lwd.atlassian.net/browse/API-276
     // TODO: Remove workaround once above ticket is complete: https://lwd.atlassian.net/browse/CP-577
     const workaroundBody = { ...body, ...patchData, application_id };
     // </ end workaround >
@@ -152,25 +143,31 @@ export default class ClaimsApi {
 
   /**
    * Signal the data entry is complete and application is ready
-   * to be submitted to the payment processor.
+   * to be submitted to the claims processing system.
    *
    * Corresponds to this API endpoint: /application/{application_id}/submit_application
    * @todo Document the possible errors
-   * @todo This is a mock -- connect to the actual API when ready
-   * @param {Claim} claim Claim properties
+   * @param {string} application_id ID of the Claim
    * @returns {Promise<ClaimsApiSingleResult>} The result of the API call
    */
-  submitClaim = async (claim) => {
-    const { body, status, success, apiErrors } = Object.assign(
-      {},
-      { body: claim },
-      apiResponseFields
+  submitClaim = async (application_id) => {
+    const { body, status, success, apiErrors } = await this.claimsRequest(
+      "POST",
+      `/${application_id}/submit_application`
     );
-    return Promise.resolve({
-      success,
-      status,
-      claim: new Claim(body),
+
+    // Currently the API doesn't return the claim data in the response.
+    // We will change the PATCH applications endpoint to return the full
+    // application in this ticket: https://lwd.atlassian.net/browse/API-276
+    // TODO: Remove workaround once above ticket is complete: https://lwd.atlassian.net/browse/CP-577
+    const workaroundBody = { ...body, application_id };
+    // </ end workaround >
+
+    return {
       apiErrors,
-    });
+      claim: success ? new Claim(workaroundBody) : null,
+      status,
+      success,
+    };
   };
 }

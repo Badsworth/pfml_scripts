@@ -42,8 +42,15 @@ describe("ClaimsApi", () => {
         });
       });
 
+      it("sends GET request to /applications", async () => {
+        await claimsApi.getClaims();
+        expect(request).toHaveBeenCalledWith("GET", "/applications", null, {
+          user_id: user.user_id,
+        });
+      });
+
       it("resolves with success, status, and claim instance", async () => {
-        const result = await claimsApi.getClaims(user.user_id);
+        const result = await claimsApi.getClaims();
         expect(result).toEqual({
           apiErrors: undefined,
           claims: expect.any(ClaimCollection),
@@ -66,6 +73,13 @@ describe("ClaimsApi", () => {
           },
           status: 200,
           success: true,
+        });
+      });
+
+      it("sends POST request to /applications", async () => {
+        await claimsApi.createClaim();
+        expect(request).toHaveBeenCalledWith("POST", "/applications", null, {
+          user_id: user.user_id,
         });
       });
 
@@ -127,6 +141,16 @@ describe("ClaimsApi", () => {
       });
     });
 
+    it("sends PATCH request to /applications/:application_id", async () => {
+      await claimsApi.updateClaim(claim.application_id, claim);
+      expect(request).toHaveBeenCalledWith(
+        "PATCH",
+        "/applications/mock-application_id",
+        claim,
+        { user_id: user.user_id }
+      );
+    });
+
     it("responds with success status", async () => {
       const response = await claimsApi.updateClaim(claim.application_id, claim);
       expect(response.success).toBeTruthy();
@@ -139,19 +163,42 @@ describe("ClaimsApi", () => {
   });
 
   describe("submitClaim", () => {
-    const claim = new Claim({ duration_type: "type" });
+    let mockResponseBody;
+    const claim = new Claim({
+      application_id: "mock-application_id",
+      duration_type: "type",
+    });
+
+    beforeEach(() => {
+      mockResponseBody = {
+        application_id: "mock-application_id",
+        duration_type: "type",
+      };
+
+      request.mockResolvedValueOnce({
+        body: mockResponseBody,
+        status: 200,
+        success: true,
+      });
+    });
+
+    it("sends POST request to /applications/:application_id/submit_application", async () => {
+      await claimsApi.submitClaim(claim.application_id);
+      expect(request).toHaveBeenCalledWith(
+        "POST",
+        "/applications/mock-application_id/submit_application",
+        null,
+        { user_id: user.user_id }
+      );
+    });
 
     it("responds with success status", async () => {
-      const claimsApi = new ClaimsApi({ user });
-      const response = await claimsApi.submitClaim(claim);
-
+      const response = await claimsApi.submitClaim(claim.application_id);
       expect(response.success).toBeTruthy();
     });
 
     it("responds with an instance of a Claim with claim request parameters as properties", async () => {
-      const claimsApi = new ClaimsApi({ user });
-      const response = await claimsApi.submitClaim(claim);
-
+      const response = await claimsApi.submitClaim(claim.application_id);
       expect(response.claim).toBeInstanceOf(Claim);
     });
   });

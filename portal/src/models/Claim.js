@@ -31,6 +31,7 @@ class Claim extends BaseModel {
       other_incomes: [],
       pregnant_or_recent_birth: null,
       previous_leaves: [],
+      status: null,
     };
   }
 }

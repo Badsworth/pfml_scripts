@@ -225,21 +225,12 @@ describe("useClaimsLogic", () => {
     });
 
     describe("submitClaim", () => {
-      it("submits claim with formState and redirects to success page", async () => {
-        const formState = {
-          application_id: applicationId,
-          first_name: "Bud",
-        };
-
+      it("asynchronously submits claim", async () => {
         await act(async () => {
-          await claimsLogic.submitClaim(formState);
+          await claimsLogic.submitClaim(applicationId);
         });
 
-        const claim = claimsLogic.claims.get(applicationId);
-
-        expect(claim).toEqual(expect.objectContaining(formState));
-        expect(submitClaimMock).toHaveBeenCalled();
-        expect(mockRouter.push).toHaveBeenCalled();
+        expect(submitClaimMock).toHaveBeenCalledWith(applicationId);
       });
 
       describe("when request errors", () => {
@@ -248,13 +239,8 @@ describe("useClaimsLogic", () => {
             throw new Error();
           });
 
-          const formState = {
-            application_id: applicationId,
-            first_name: "Bud",
-          };
-
           await act(async () => {
-            await claimsLogic.submitClaim(formState);
+            await claimsLogic.submitClaim(applicationId);
           });
 
           expect(appErrorsLogic.catchError).toHaveBeenCalled();

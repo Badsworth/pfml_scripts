@@ -49,7 +49,7 @@ const useClaimsLogic = ({ appErrorsLogic, portalFlow, user }) => {
       // Currently the API doesn't return the claim data in the response
       // so we're manually constructing the body based on client data.
       // We will change the PATCH applications endpoint to return the full
-      // application in this ticket: https://lwd.atlassian.net/browse/API-247
+      // application in this ticket: https://lwd.atlassian.net/browse/API-276
       // TODO: Remove workaround once above ticket is complete: https://lwd.atlassian.net/browse/CP-577
       claim = new Claim({
         ...claims.get(application_id),
@@ -90,18 +90,34 @@ const useClaimsLogic = ({ appErrorsLogic, portalFlow, user }) => {
 
   /**
    * Submit the claim in the API and set application errors if any
-   * @param {object} formState - formState representing entier claim
+   * @param {string} application_id - application id for claim
    */
-  const submitClaim = async (formState) => {
+  const submitClaim = async (application_id) => {
     appErrorsLogic.clearErrors();
 
     try {
-      const { claim } = await claimsApi.submitClaim(new Claim(formState));
-      setClaim(claim);
+      let { claim, success } = await claimsApi.submitClaim(application_id);
 
-      const context = { claim, user };
-      const params = { claim_id: claim.application_id };
-      portalFlow.goToNextPage(context, params);
+      if (success) {
+        // Currently the API doesn't return the claim data in the response
+        // so we're manually constructing the body based on client data.
+        // We will change the PATCH applications endpoint to return the full
+        // application in this ticket: https://lwd.atlassian.net/browse/API-276
+        // TODO: Remove workaround once above ticket is complete: https://lwd.atlassian.net/browse/CP-577
+        claim = new Claim({
+          ...claims.get(application_id),
+          ...{
+            status: "Completed",
+          },
+        });
+        // </ end workaround >
+
+        setClaim(claim);
+
+        const context = { claim, user };
+        const params = { claim_id: claim.application_id };
+        portalFlow.goToNextPage(context, params);
+      }
     } catch (error) {
       appErrorsLogic.catchError(error);
     }

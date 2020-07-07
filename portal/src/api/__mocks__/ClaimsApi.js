@@ -40,12 +40,15 @@ export const updateClaimMock = jest.fn(async (application_id, patchData) =>
   })
 );
 
-export const submitClaimMock = jest.fn(async (formState) =>
+export const submitClaimMock = jest.fn(async (application_id) =>
   Promise.resolve({
     success: true,
     status: 200,
     apiErrors: null,
-    claim: new Claim(formState),
+    claim: new Claim({
+      application_id,
+      status: "Completed",
+    }),
   })
 );
 
