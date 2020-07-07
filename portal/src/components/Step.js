@@ -1,5 +1,6 @@
 import ButtonLink from "./ButtonLink";
 import Heading from "./Heading";
+import Link from "next/link";
 import PropTypes from "prop-types";
 import React from "react";
 import StepNumber from "./StepNumber";
@@ -26,13 +27,15 @@ const Step = (props) => {
         {props.completedText}
       </div>
       <div className="margin-top-1">
-        <a
-          className="usa-link"
-          href={props.stepHref}
-          aria-label={`${props.editText}: ${props.title}`}
-        >
-          {props.editText}
-        </a>
+        <Link href={props.stepHref}>
+          <a
+            className="usa-link"
+            href={props.stepHref}
+            aria-label={`${props.editText}: ${props.title}`}
+          >
+            {props.editText}
+          </a>
+        </Link>
       </div>
     </React.Fragment>
   );
