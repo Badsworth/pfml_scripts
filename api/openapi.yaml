@@ -1007,19 +1007,7 @@ components:
     ApplicationSearchResults:
       type: array
       items:
-        $ref: "#/components/schemas/ApplicationSearchResult"
-
-    ApplicationSearchResult:
-      type: object
-      properties:
-        application_id:
-          type: string
-          format: uuid
-          example: "2a340cf8-6d2a-4f82-a075-73588d003f8f"
-        application_nickname:
-          type: string
-          example: "My bonding leave request"
-          nullable: true
+        $ref: "#/components/schemas/ApplicationResponse"
 
     Error:
       type: object

@@ -1,8 +1,6 @@
 from datetime import datetime
-from typing import Optional
 
 import connexion
-from pydantic import UUID4
 
 import massgov.pfml.api.app as app
 import massgov.pfml.api.models.applications.requests as application_request_model
@@ -12,7 +10,6 @@ from massgov.pfml.api.models.applications.responses import (
     ApplicationUpdateResponse,
 )
 from massgov.pfml.db.models.applications import Application
-from massgov.pfml.util.pydantic import PydanticBaseModel
 from massgov.pfml.util.sqlalchemy import get_or_404
 
 
@@ -25,24 +22,12 @@ def application_get(application_id):
     return application_response.dict()
 
 
-class ApplicationSearchResult(PydanticBaseModel):
-    application_id: UUID4
-    application_nickname: Optional[str]
-
-
 def applications_get():
-    applications = []
-
     with app.db_session() as db_session:
-        applications = db_session.query(
-            Application.application_id, Application.nickname.label("application_nickname")
-        ).all()
+        applications = db_session.query(Application).all()
 
     return list(
-        map(
-            lambda query_result: ApplicationSearchResult.construct(**query_result._asdict()).dict(),
-            applications,
-        )
+        map(lambda application: ApplicationResponse.from_orm(application).dict(), applications)
     )
 
 
