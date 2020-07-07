@@ -152,6 +152,14 @@ class Employee(Base):
     education_level_id = Column(Integer, ForeignKey("lk_education_level.education_level_id"))
     latest_import_log_id = Column(Integer, ForeignKey("import_log.import_log_id"))
 
+    payment_info = relationship(PaymentInformation)
+    race = relationship(Race)
+    marital_status = relationship(MaritalStatus)
+    gender = relationship(Gender)
+    occupation = relationship(Occupation)
+    education_level = relationship(EducationLevel)
+    latest_import_log = relationship("ImportLog")
+
     authorized_reps = relationship(
         "AuthorizedRepEmployee", back_populates="employee", lazy="dynamic"
     )
@@ -196,6 +204,8 @@ class Address(Base):
     country_id = Column(Integer, ForeignKey("lk_country.country_id"))
 
     address_type = relationship(LkAddressType)
+    geo_state = relationship(GeoState)
+    country = relationship(Country)
     employees = relationship("EmployeeAddress", back_populates="address", lazy="dynamic")
     employers = relationship("EmployerAddress", back_populates="address", lazy="dynamic")
     health_care_providers = relationship("HealthCareProviderAddress", back_populates="address")
