@@ -26,7 +26,7 @@ export const ReasonPregnancy = (props) => {
       formState={formState}
       title={t("pages.claimsReasonPregnancy.title")}
       onSave={handleSave}
-      nextPage={routeWithParams("claims.duration", props.query)}
+      nextPage={routeWithParams("claims.uploadHealthcareForm", props.query)}
     >
       <InputChoiceGroup
         choices={[

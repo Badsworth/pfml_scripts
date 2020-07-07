@@ -1,7 +1,8 @@
 import React, { useState } from "react";
 import FileCardList from "../../components/FileCardList";
 import FileUploadDetails from "../../components/FileUploadDetails";
-import FormLabel from "../../components/FormLabel";
+import Heading from "../../components/Heading";
+import Lead from "../../components/Lead";
 import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import routeWithParams from "../../utils/routeWithParams";
@@ -10,7 +11,6 @@ import { useTranslation } from "../../locales/i18n";
 const UploadOtherId = (props) => {
   const { t } = useTranslation();
   const [otherIdFiles, setOtherIdFiles] = useState([]);
-  const lead = t("pages.claimsUploadOtherId.lead");
   const documentList = t("pages.claimsUploadOtherId.documentList", {
     returnObjects: true,
   });
@@ -24,16 +24,15 @@ const UploadOtherId = (props) => {
       onSave={handleSave}
       nextPage={routeWithParams("claims.ssn", props.query)}
     >
-      <FormLabel>{t("pages.claimsUploadOtherId.sectionLabel")}</FormLabel>
-      {/* should we only use margin-bottom? */}
-      <div className="margin-top-2 usa-intro">
-        {lead}
-        <ul>
-          {documentList.map((listItem, index) => (
-            <li key={index}>{listItem}</li>
-          ))}
-        </ul>
-      </div>
+      <Heading level="2" size="1">
+        {t("pages.claimsUploadOtherId.sectionLabel")}
+      </Heading>
+      <Lead>{t("pages.claimsUploadOtherId.lead")}</Lead>
+      <ul className="usa-list">
+        {documentList.map((listItem, index) => (
+          <li key={index}>{listItem}</li>
+        ))}
+      </ul>
       <FileUploadDetails />
       <FileCardList
         files={otherIdFiles}

@@ -7,48 +7,49 @@ import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import routeWithParams from "../../utils/routeWithParams";
 import { useTranslation } from "../../locales/i18n";
+import withClaim from "../../hoc/withClaim";
 
-const UploadStateId = (props) => {
+export const UploadHealthcareForm = (props) => {
   const { t } = useTranslation();
-  const [stateIdFiles, setStateIdFiles] = useState([]);
+  const [files, setFiles] = useState([]);
 
   // @todo: CP-396 connect this page to the API file upload endpoint.
   const handleSave = () => {};
 
   return (
     <QuestionPage
-      title={t("pages.claimsUploadStateId.title")}
+      title={t("pages.claimsUploadHealthcareForm.title")}
       onSave={handleSave}
-      nextPage={routeWithParams("claims.ssn", props.query)}
+      nextPage={routeWithParams("claims.duration", props.query)}
     >
       <Heading level="2" size="1">
-        {t("pages.claimsUploadStateId.sectionLabel")}
+        {t("pages.claimsUploadHealthcareForm.sectionLabel")}
       </Heading>
-      <Lead>{t("pages.claimsUploadStateId.lead")}</Lead>
+      <Lead>{t("pages.claimsUploadHealthcareForm.lead")}</Lead>
       <FileUploadDetails />
       <FileCardList
-        files={stateIdFiles}
-        setFiles={setStateIdFiles}
+        files={files}
+        setFiles={setFiles}
         setAppErrors={props.appLogic.setAppErrors}
-        fileHeadingPrefix={t("pages.claimsUploadStateId.fileHeadingPrefix")}
+        fileHeadingPrefix={t(
+          "pages.claimsUploadHealthcareForm.fileHeadingPrefix"
+        )}
         addFirstFileButtonText={t(
-          "pages.claimsUploadStateId.addFirstFileButtonText"
+          "pages.claimsUploadHealthcareForm.addFirstFileButtonText"
         )}
         addAnotherFileButtonText={t(
-          "pages.claimsUploadStateId.addAnotherFileButtonText"
+          "pages.claimsUploadHealthcareForm.addAnotherFileButtonText"
         )}
       />
     </QuestionPage>
   );
 };
 
-UploadStateId.propTypes = {
+UploadHealthcareForm.propTypes = {
+  appLogic: PropTypes.object.isRequired,
   query: PropTypes.shape({
     claim_id: PropTypes.string,
   }),
-  appLogic: PropTypes.shape({
-    setAppErrors: PropTypes.func.isRequired,
-  }).isRequired,
 };
 
-export default UploadStateId;
+export default withClaim(UploadHealthcareForm);

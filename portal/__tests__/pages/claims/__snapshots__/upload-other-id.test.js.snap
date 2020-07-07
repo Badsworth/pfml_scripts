@@ -7,31 +7,34 @@ exports[`UploadOtherId initially renders the page without any filecards 1`] = `
   onSave={[Function]}
   title="Verify your identity"
 >
-  <FormLabel>
-    Upload an identification document
-  </FormLabel>
-  <div
-    className="margin-top-2 usa-intro"
+  <Heading
+    level="2"
+    size="1"
   >
+    Upload an identification document
+  </Heading>
+  <Lead>
     Upload one of the following:
-    <ul>
-      <li
-        key="0"
-      >
-        Document 1
-      </li>
-      <li
-        key="1"
-      >
-        Document 2, or
-      </li>
-      <li
-        key="2"
-      >
-        Document 3
-      </li>
-    </ul>
-  </div>
+  </Lead>
+  <ul
+    className="usa-list"
+  >
+    <li
+      key="0"
+    >
+      Document 1
+    </li>
+    <li
+      key="1"
+    >
+      Document 2, or
+    </li>
+    <li
+      key="2"
+    >
+      Document 3
+    </li>
+  </ul>
   <FileUploadDetails />
   <FileCardList
     addAnotherFileButtonText="Choose another file"
@@ -51,31 +54,34 @@ exports[`UploadOtherId when the user uploads files renders filecards for the fil
   onSave={[Function]}
   title="Verify your identity"
 >
-  <FormLabel>
-    Upload an identification document
-  </FormLabel>
-  <div
-    className="margin-top-2 usa-intro"
+  <Heading
+    level="2"
+    size="1"
   >
+    Upload an identification document
+  </Heading>
+  <Lead>
     Upload one of the following:
-    <ul>
-      <li
-        key="0"
-      >
-        Document 1
-      </li>
-      <li
-        key="1"
-      >
-        Document 2, or
-      </li>
-      <li
-        key="2"
-      >
-        Document 3
-      </li>
-    </ul>
-  </div>
+  </Lead>
+  <ul
+    className="usa-list"
+  >
+    <li
+      key="0"
+    >
+      Document 1
+    </li>
+    <li
+      key="1"
+    >
+      Document 2, or
+    </li>
+    <li
+      key="2"
+    >
+      Document 3
+    </li>
+  </ul>
   <FileUploadDetails />
   <FileCardList
     addAnotherFileButtonText="Choose another file"

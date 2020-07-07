@@ -307,6 +307,15 @@ const pages = {
     dashboardLink: "Return to dashboard",
     title: "Your leave application was submitted successfully",
   },
+  claimsUploadHealthcareForm: {
+    addAnotherFileButtonText: "Choose another file",
+    addFirstFileButtonText: "Choose a file",
+    fileHeadingPrefix: "File",
+    lead:
+      "You need to upload a copy of the PFML Healthcare Provider Form to prove that you need to take medical leave. You can upload a completed Family and Medical Leave Act (FMLA) form instead if your provider filled out.",
+    sectionLabel: "Upload your Healthcare Provider form",
+    title: "$t(shared.claimsLeaveDetailsTitle)",
+  },
   claimsUploadOtherId: {
     addAnotherFileButtonText: "Choose another file",
     addFirstFileButtonText: "Choose a file",

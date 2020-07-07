@@ -1,0 +1,29 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`UploadHealthcareForm initially renders the page without any file cards 1`] = `
+<QuestionPage
+  formState={Object {}}
+  nextPage="/claims/duration?claim_id=mock-claim-id"
+  onSave={[Function]}
+  title="Leave Details"
+>
+  <Heading
+    level="2"
+    size="1"
+  >
+    Upload your Healthcare Provider form
+  </Heading>
+  <Lead>
+    You need to upload a copy of the PFML Healthcare Provider Form to prove that you need to take medical leave. You can upload a completed Family and Medical Leave Act (FMLA) form instead if your provider filled out.
+  </Lead>
+  <FileUploadDetails />
+  <FileCardList
+    addAnotherFileButtonText="Choose another file"
+    addFirstFileButtonText="Choose a file"
+    fileHeadingPrefix="File"
+    files={Array []}
+    setAppErrors={[MockFunction]}
+    setFiles={[Function]}
+  />
+</QuestionPage>
+`;

@@ -7,9 +7,12 @@ exports[`UploadStateId initially renders the page without any filecards 1`] = `
   onSave={[Function]}
   title="Verify your identity"
 >
-  <FormLabel>
+  <Heading
+    level="2"
+    size="1"
+  >
     Upload your Massachusetts driver’s license or ID card
-  </FormLabel>
+  </Heading>
   <Lead>
     In order to verify your identity, upload a copy of both the front and the back of your ID card.
   </Lead>
@@ -32,9 +35,12 @@ exports[`UploadStateId when the user uploads files renders filecards for the fil
   onSave={[Function]}
   title="Verify your identity"
 >
-  <FormLabel>
+  <Heading
+    level="2"
+    size="1"
+  >
     Upload your Massachusetts driver’s license or ID card
-  </FormLabel>
+  </Heading>
   <Lead>
     In order to verify your identity, upload a copy of both the front and the back of your ID card.
   </Lead>
