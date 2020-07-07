@@ -120,7 +120,7 @@ class Employer(Base):
     wages_and_contributions = relationship(
         "WagesAndContributions", back_populates="employer", lazy="dynamic"
     )
-    addresses = relationship("EmployerAddress", back_populates="employers", lazy="dynamic")
+    addresses = relationship("EmployerAddress", back_populates="employer", lazy="dynamic")
 
 
 class PaymentInformation(Base):
@@ -158,7 +158,7 @@ class Employee(Base):
     wages_and_contributions = relationship(
         "WagesAndContributions", back_populates="employee", lazy="dynamic"
     )
-    addresses = relationship("EmployeeAddress", back_populates="employees", lazy="dynamic")
+    addresses = relationship("EmployeeAddress", back_populates="employee", lazy="dynamic")
 
 
 class Claim(Base):
@@ -196,8 +196,8 @@ class Address(Base):
     country_id = Column(Integer, ForeignKey("lk_country.country_id"))
 
     address_type = relationship(LkAddressType)
-    employees = relationship("EmployeeAddress", back_populates="addresses", lazy="dynamic")
-    employers = relationship("EmployerAddress", back_populates="addresses", lazy="dynamic")
+    employees = relationship("EmployeeAddress", back_populates="address", lazy="dynamic")
+    employers = relationship("EmployerAddress", back_populates="address", lazy="dynamic")
     health_care_providers = relationship("HealthCareProviderAddress", back_populates="address")
 
 
@@ -206,8 +206,8 @@ class EmployeeAddress(Base):
     employee_id = Column(UUID(as_uuid=True), ForeignKey("employee.employee_id"), primary_key=True)
     address_id = Column(UUID(as_uuid=True), ForeignKey("address.address_id"), primary_key=True)
 
-    employees = relationship("Employee", back_populates="addresses")
-    addresses = relationship("Address", back_populates="employees")
+    employee = relationship("Employee", back_populates="addresses")
+    address = relationship("Address", back_populates="employees")
 
 
 class EmployerAddress(Base):
@@ -219,8 +219,8 @@ class EmployerAddress(Base):
         UUID(as_uuid=True), ForeignKey("address.address_id"), primary_key=True, unique=True
     )
 
-    employers = relationship("Employer", back_populates="addresses")
-    addresses = relationship("Address", back_populates="employers")
+    employer = relationship("Employer", back_populates="addresses")
+    address = relationship("Address", back_populates="employers")
 
 
 class HealthCareProviderAddress(Base):
