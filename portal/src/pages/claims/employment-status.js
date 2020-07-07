@@ -7,7 +7,6 @@ import QuestionPage from "../../components/QuestionPage";
 import React from "react";
 import get from "lodash/get";
 import pick from "lodash/pick";
-import routeWithParams from "../../utils/routeWithParams";
 import useFormState from "../../hooks/useFormState";
 import useHandleInputChange from "../../hooks/useHandleInputChange";
 import { useTranslation } from "../../locales/i18n";
@@ -17,7 +16,7 @@ export const fields = ["leave_details.employment_status"];
 
 export const EmploymentStatusPage = (props) => {
   const { t } = useTranslation();
-  const { appLogic, claim, query } = props;
+  const { appLogic, claim } = props;
   const { formState, updateFields } = useFormState(pick(claim, fields));
   const employment_status = get(formState, "leave_details.employment_status");
   const handleInputChange = useHandleInputChange(updateFields);
@@ -26,17 +25,11 @@ export const EmploymentStatusPage = (props) => {
     appLogic.updateClaim(claim.application_id, formState);
   };
 
-  const nextPage =
-    employment_status === EmploymentStatus.employed
-      ? routeWithParams("claims.notifiedEmployer", query)
-      : routeWithParams("claims.checklist", query);
-
   return (
     <QuestionPage
       formState={formState}
       title={t("pages.claimsEmploymentStatus.title")}
       onSave={handleSave}
-      nextPage={nextPage}
     >
       <Alert state="info">
         {t("pages.claimsEmploymentStatus.multipleEmployerAppAlert")}

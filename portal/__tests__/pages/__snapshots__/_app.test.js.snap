@@ -39,6 +39,7 @@ exports[`App when authenticated user consented to data sharing renders the page 
       "claims": null,
       "clearErrors": [Function],
       "createClaim": [Function],
+      "goToNextPage": [Function],
       "loadClaims": [Function],
       "setAppErrors": [Function],
       "submitClaim": [Function],

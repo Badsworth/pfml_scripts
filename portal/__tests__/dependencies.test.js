@@ -13,7 +13,6 @@ const dependencyRules = [
     // TODO: reorganize components into subfolders for "core" reusable components and "pfml"-specific components
     // core components should additionally be forbidden from requiring anything PFML-specific, such as "./src/models"
     // TODO: refactor components to remove dependency on next/link, and add "next/link" to forbidden dependencies for all `components`
-    // TODO: Refactor QuestionPage to remove dependency on next/router, then add "next/router" to forbidden dependencies for all `components`
     moduleOrDirRelPath: "./src/components",
     description:
       "does not depend on framework or PFML-specific application logic",
@@ -28,6 +27,10 @@ const dependencyRules = [
         moduleOrDirRelPath: "./src/pages",
         reason:
           "Components should not depend on application code. Consider exposing events that clients handle.",
+      },
+      {
+        moduleOrDirRelPath: "next/router",
+        reason: "Components should not be responsibile for routing.",
       },
     ],
   },

@@ -4,22 +4,17 @@ import Claim from "../../models/Claim";
 import PropTypes from "prop-types";
 import React from "react";
 import Title from "../../components/Title";
-import routes from "../../routes";
 import useFormState from "../../hooks/useFormState";
-import { useRouter } from "next/router";
 import { useTranslation } from "../../locales/i18n";
 import withClaim from "../../hoc/withClaim";
 
 export const Confirm = (props) => {
   const { t } = useTranslation();
-  const router = useRouter();
-  const nextPage = routes.claims.success;
   const { formState } = useFormState(props.claim);
 
   const handleSubmit = async (event) => {
     event.preventDefault();
     await props.appLogic.submitClaim(formState);
-    router.push(nextPage);
   };
 
   return (

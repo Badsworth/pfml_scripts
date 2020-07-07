@@ -3,7 +3,6 @@
 exports[`EmploymentStatusPage renders the page 1`] = `
 <QuestionPage
   formState={Object {}}
-  nextPage="/claims/checklist?claim_id=12345"
   onSave={[Function]}
   title="Employment information"
 >

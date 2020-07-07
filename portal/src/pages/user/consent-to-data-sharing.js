@@ -21,7 +21,10 @@ const ConsentToDataSharing = (props) => {
       usersApi.updateUser(props.user.user_id, {
         consented_to_data_sharing: true,
       }),
-    (result) => props.setUser(result.user)
+    (result) => {
+      props.setUser(result.user);
+      props.appLogic.goToNextPage({ user: result.user });
+    }
   );
 
   const handleSubmit = async (event) => {
@@ -78,6 +81,7 @@ const ConsentToDataSharing = (props) => {
 };
 
 ConsentToDataSharing.propTypes = {
+  appLogic: PropTypes.object.isRequired,
   user: PropTypes.instanceOf(User).isRequired,
   setUser: PropTypes.func.isRequired,
 };

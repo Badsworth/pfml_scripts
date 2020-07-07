@@ -2,13 +2,11 @@
 import useAppErrorsLogic from "./useAppErrorsLogic";
 import useAuthLogic from "./useAuthLogic";
 import useClaimsLogic from "./useClaimsLogic";
+import usePortalFlow from "./usePortalFlow";
 
 const useAppLogic = ({ user }) => {
-  // State representing the current page's url.
-  // This should be updated on route changes
-  // TODO write method for nextPage based on current page
-  // see https://lwd.atlassian.net/wiki/spaces/CP/pages/304119860/Application+flow+logic
-  // const [page, updatePage] = useState(configs.page);
+  // utility to determine application flow
+  const portalFlow = usePortalFlow({ user });
 
   // State representing currently visible errors and warnings
   const { appErrors, ...appErrorsLogic } = useAppErrorsLogic();
@@ -22,7 +20,7 @@ const useAppLogic = ({ user }) => {
     createClaim,
     updateClaim,
     submitClaim,
-  } = useClaimsLogic({ appErrorsLogic, user });
+  } = useClaimsLogic({ appErrorsLogic, portalFlow, user });
 
   const auth = useAuthLogic({
     appErrorsLogic,
@@ -36,6 +34,8 @@ const useAppLogic = ({ user }) => {
     // TODO: remove once all API calls are behind appLogic
     clearErrors: appErrorsLogic.clearErrors,
     createClaim,
+    // TODO: remove once user api calls are behind appLogic
+    goToNextPage: portalFlow.goToNextPage,
     loadClaims,
     // TODO: remove once all API calls are behind appLogic
     setAppErrors: appErrorsLogic.setAppErrors,

@@ -5,7 +5,6 @@ import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
 import User from "../../models/User";
-import routeWithParams from "../../utils/routeWithParams";
 import useFormState from "../../hooks/useFormState";
 import useHandleInputChange from "../../hooks/useHandleInputChange";
 import useHandleSave from "../../hooks/useHandleSave";
@@ -22,7 +21,10 @@ const StateId = (props) => {
   const handleSave = useHandleSave(
     // TODO: Save this field to the appropriate API models once the fields exist
     (formState) => usersApi.updateUser(props.user.user_id, new User(formState)),
-    (result) => props.setUser(result.user)
+    (result) => {
+      props.setUser(result.user);
+      props.appLogic.goToNextPage({ user: result.user }, props.query);
+    }
   );
 
   // Note that has_state_id can be null if user has never answered this question before.
@@ -30,15 +32,11 @@ const StateId = (props) => {
   // indicated that they don't have a state id or if they had never answered the question.
   const shouldShowStateIdField = !!has_state_id;
 
-  const nextPage = has_state_id
-    ? routeWithParams("claims.uploadStateId", props.query)
-    : routeWithParams("claims.uploadOtherId", props.query);
   return (
     <QuestionPage
       formState={formState}
       title={t("pages.claimsStateId.title")}
       onSave={handleSave}
-      nextPage={nextPage}
     >
       <InputChoiceGroup
         choices={[
@@ -76,6 +74,7 @@ const StateId = (props) => {
 };
 
 StateId.propTypes = {
+  appLogic: PropTypes.object.isRequired,
   user: PropTypes.instanceOf(User).isRequired,
   setUser: PropTypes.func.isRequired,
   query: PropTypes.shape({

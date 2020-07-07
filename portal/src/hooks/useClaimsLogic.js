@@ -1,12 +1,10 @@
 import Claim from "../models/Claim";
 import ClaimCollection from "../models/ClaimCollection";
 import ClaimsApi from "../api/ClaimsApi";
-import routeWithParams from "../utils/routeWithParams";
 import useCollectionState from "./useCollectionState";
 import { useMemo } from "react";
-import { useRouter } from "next/router";
 
-const useClaimsLogic = ({ appErrorsLogic, user }) => {
+const useClaimsLogic = ({ appErrorsLogic, portalFlow, user }) => {
   // State representing the collection of claims for the current user.
   // Initialize to empty collection, but will eventually store the claims
   // state as API calls are made to fetch the user's claims and/or create
@@ -19,7 +17,6 @@ const useClaimsLogic = ({ appErrorsLogic, user }) => {
   } = useCollectionState(() => new ClaimCollection());
 
   const claimsApi = useMemo(() => new ClaimsApi({ user }), [user]);
-  const router = useRouter();
 
   /**
    * Load all claims for user
@@ -61,6 +58,9 @@ const useClaimsLogic = ({ appErrorsLogic, user }) => {
       // </ end workaround >
 
       setClaim(claim);
+
+      const params = { claim_id: claim.application_id };
+      portalFlow.goToNextPage({ claim, user }, params);
     } catch (error) {
       appErrorsLogic.catchError(error);
     }
@@ -79,13 +79,9 @@ const useClaimsLogic = ({ appErrorsLogic, user }) => {
       if (success) {
         addClaim(claim);
 
-        // TODO appLogic will handle routing after claim creation
-        // https://lwd.atlassian.net/browse/CP-525
-        const route = routeWithParams("claims.checklist", {
-          claim_id: claim.application_id,
-        });
-
-        router.push(route);
+        const context = { claim, user };
+        const params = { claim_id: claim.application_id };
+        portalFlow.goToPageFor("CREATE_CLAIM", context, params);
       }
     } catch (error) {
       appErrorsLogic.catchError(error);
@@ -102,6 +98,10 @@ const useClaimsLogic = ({ appErrorsLogic, user }) => {
     try {
       const { claim } = await claimsApi.submitClaim(new Claim(formState));
       setClaim(claim);
+
+      const context = { claim, user };
+      const params = { claim_id: claim.application_id };
+      portalFlow.goToNextPage(context, params);
     } catch (error) {
       appErrorsLogic.catchError(error);
     }

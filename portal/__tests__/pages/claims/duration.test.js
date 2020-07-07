@@ -1,7 +1,6 @@
 import Claim from "../../../src/models/Claim";
 import { Duration } from "../../../src/pages/claims/duration";
 import React from "react";
-import routes from "../../../src/routes";
 import { shallow } from "enzyme";
 
 describe("Duration", () => {
@@ -20,12 +19,6 @@ describe("Duration", () => {
     it("initially renders the page without conditional fields", () => {
       expect(wrapper).toMatchSnapshot();
       expect(wrapper.find("ConditionalContent").prop("visible")).toBeFalsy();
-    });
-
-    it("redirects to the Employment Status page", () => {
-      expect(wrapper.find("QuestionPage").prop("nextPage")).toContain(
-        routes.claims.employmentStatus
-      );
     });
   });
 

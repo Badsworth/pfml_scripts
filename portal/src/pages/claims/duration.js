@@ -6,7 +6,6 @@ import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
 import { pick } from "lodash";
-import routeWithParams from "../../utils/routeWithParams";
 import useFormState from "../../hooks/useFormState";
 import useHandleInputChange from "../../hooks/useHandleInputChange";
 import { useTranslation } from "react-i18next";
@@ -41,8 +40,6 @@ export const Duration = (props) => {
       formState={formState}
       title={t("pages.claimsDuration.title")}
       onSave={handleSave}
-      // TODO update with correct next route re: pregnancy
-      nextPage={routeWithParams("claims.employmentStatus", props.query)}
     >
       <InputChoiceGroup
         choices={[

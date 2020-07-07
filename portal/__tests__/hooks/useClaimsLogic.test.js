@@ -13,6 +13,7 @@ import routes from "../../src/routes";
 import { testHook } from "../test-utils";
 import useAppErrorsLogic from "../../src/hooks/useAppErrorsLogic";
 import useClaimsLogic from "../../src/hooks/useClaimsLogic";
+import usePortalFlow from "../../src/hooks/usePortalFlow";
 
 jest.mock("../../src/api/ClaimsApi");
 jest.mock("../../src/hooks/useAppErrorsLogic");
@@ -21,18 +22,20 @@ jest.mock("../../src/hooks/useAppErrorsLogic");
 describe("useClaimsLogic", () => {
   const applicationId = "mock-application-id";
   const user = new User({ user_id: "mock-user-id" });
-  let appErrorsLogic, claimsLogic;
+  let appErrorsLogic, claimsLogic, portalFlow;
 
   beforeEach(() => {
     testHook(() => {
       appErrorsLogic = useAppErrorsLogic();
-      claimsLogic = useClaimsLogic({ appErrorsLogic, user });
+      portalFlow = usePortalFlow({ user });
+      claimsLogic = useClaimsLogic({ appErrorsLogic, user, portalFlow });
     });
   });
 
   afterEach(() => {
     appErrorsLogic = null;
     claimsLogic = null;
+    portalFlow = null;
   });
 
   it("returns claims with null value", () => {
@@ -171,7 +174,8 @@ describe("useClaimsLogic", () => {
     beforeEach(() => {
       testHook(() => {
         appErrorsLogic = useAppErrorsLogic();
-        claimsLogic = useClaimsLogic({ user, appErrorsLogic });
+        portalFlow = usePortalFlow({ user });
+        claimsLogic = useClaimsLogic({ user, appErrorsLogic, portalFlow });
       });
 
       act(() => {
@@ -182,7 +186,7 @@ describe("useClaimsLogic", () => {
     });
 
     describe("updateClaim", () => {
-      it("asynchronously updates claim with formState", async () => {
+      it("updates claim with formState and redirects to nextPage", async () => {
         const patchData = {
           first_name: "Bud",
         };
@@ -194,8 +198,11 @@ describe("useClaimsLogic", () => {
         const claim = claimsLogic.claims.get(applicationId);
 
         expect(claim).toBeInstanceOf(Claim);
-        expect(claim.first_name).toBe("Bud");
+        expect(claim).toEqual(expect.objectContaining(patchData));
         expect(updateClaimMock).toHaveBeenCalled();
+        expect(mockRouter.push).toHaveBeenCalledWith(
+          expect.stringContaining(`?claim_id=${claim.application_id}`)
+        );
       });
 
       describe("when request errors", () => {
@@ -218,7 +225,7 @@ describe("useClaimsLogic", () => {
     });
 
     describe("submitClaim", () => {
-      it("asynchronously submits claim with formState", async () => {
+      it("submits claim with formState and redirects to success page", async () => {
         const formState = {
           application_id: applicationId,
           first_name: "Bud",
@@ -229,8 +236,10 @@ describe("useClaimsLogic", () => {
         });
 
         const claim = claimsLogic.claims.get(applicationId);
-        expect(claim).toBeInstanceOf(Claim);
+
+        expect(claim).toEqual(expect.objectContaining(formState));
         expect(submitClaimMock).toHaveBeenCalled();
+        expect(mockRouter.push).toHaveBeenCalled();
       });
 
       describe("when request errors", () => {
@@ -249,6 +258,7 @@ describe("useClaimsLogic", () => {
           });
 
           expect(appErrorsLogic.catchError).toHaveBeenCalled();
+          expect(mockRouter.push).not.toHaveBeenCalled();
         });
       });
     });

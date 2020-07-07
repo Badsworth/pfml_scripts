@@ -3,7 +3,6 @@
 exports[`UploadOtherId initially renders the page without any filecards 1`] = `
 <QuestionPage
   formState={Object {}}
-  nextPage="/claims/ssn?claim_id=12345"
   onSave={[Function]}
   title="Verify your identity"
 >
@@ -41,7 +40,7 @@ exports[`UploadOtherId initially renders the page without any filecards 1`] = `
     addFirstFileButtonText="Choose a file"
     fileHeadingPrefix="File"
     files={Array []}
-    setAppErrors={[MockFunction]}
+    setAppErrors={[Function]}
     setFiles={[Function]}
   />
 </QuestionPage>
@@ -50,7 +49,6 @@ exports[`UploadOtherId initially renders the page without any filecards 1`] = `
 exports[`UploadOtherId when the user uploads files renders filecards for the files 1`] = `
 <QuestionPage
   formState={Object {}}
-  nextPage="/claims/ssn?claim_id=12345"
   onSave={[Function]}
   title="Verify your identity"
 >
@@ -103,21 +101,7 @@ exports[`UploadOtherId when the user uploads files renders filecards for the fil
         },
       ]
     }
-    setAppErrors={
-      [MockFunction] {
-        "calls": Array [
-          Array [
-            null,
-          ],
-        ],
-        "results": Array [
-          Object {
-            "type": "return",
-            "value": undefined,
-          },
-        ],
-      }
-    }
+    setAppErrors={[Function]}
     setFiles={[Function]}
   />
 </QuestionPage>

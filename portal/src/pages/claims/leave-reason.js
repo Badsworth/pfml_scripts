@@ -5,7 +5,6 @@ import QuestionPage from "../../components/QuestionPage";
 import React from "react";
 import get from "lodash/get";
 import { pick } from "lodash";
-import routeWithParams from "../../utils/routeWithParams";
 import useFormState from "../../hooks/useFormState";
 import useHandleInputChange from "../../hooks/useHandleInputChange";
 import { useTranslation } from "react-i18next";
@@ -23,17 +22,11 @@ export const LeaveReasonPage = (props) => {
   const handleSave = (formState) =>
     props.appLogic.updateClaim(props.claim.application_id, formState);
 
-  const nextPage =
-    reason === LeaveReason.medical
-      ? routeWithParams("claims.reasonPregnancy", props.query)
-      : routeWithParams("claims.duration", props.query);
-
   return (
     <QuestionPage
       formState={formState}
       title={t("pages.claimsLeaveReason.title")}
       onSave={handleSave}
-      nextPage={nextPage}
     >
       <InputChoiceGroup
         choices={[

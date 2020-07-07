@@ -33,17 +33,30 @@ async function getCurrentUser() {
  * @returns {Promise<UsersApiResult>}
  */
 async function updateUser(user_id, patchData) {
+  // API does not accept these fields yet
+  // TODO remove once API accepts these fields
+  const {
+    has_state_id,
+    status: stat,
+    state_id,
+    email_address,
+    user_id: userId,
+    date_of_birth,
+    auth_id,
+    ...workaroundPatchData
+  } = patchData;
+
   const { body, success, status, apiErrors } = await request(
     "PATCH",
     `users/${user_id}`,
-    patchData
+    workaroundPatchData
   );
 
   return {
     success,
     status,
     apiErrors,
-    user: success ? new User(body) : null,
+    user: success ? new User({ ...patchData, ...body }) : null,
   };
 }
 

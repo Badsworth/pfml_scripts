@@ -5,7 +5,6 @@ import Heading from "../../components/Heading";
 import Lead from "../../components/Lead";
 import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
-import routeWithParams from "../../utils/routeWithParams";
 import { useTranslation } from "../../locales/i18n";
 import withClaim from "../../hoc/withClaim";
 
@@ -14,13 +13,14 @@ export const UploadHealthcareForm = (props) => {
   const [files, setFiles] = useState([]);
 
   // @todo: CP-396 connect this page to the API file upload endpoint.
-  const handleSave = () => {};
+  const handleSave = () => {
+    props.appLogic.goToNextPage(null, props.query);
+  };
 
   return (
     <QuestionPage
       title={t("pages.claimsUploadHealthcareForm.title")}
       onSave={handleSave}
-      nextPage={routeWithParams("claims.duration", props.query)}
     >
       <Heading level="2" size="1">
         {t("pages.claimsUploadHealthcareForm.sectionLabel")}

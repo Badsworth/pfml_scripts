@@ -9,7 +9,6 @@ exports[`Name renders the empty page 1`] = `
       "middle_name": "cricketer",
     }
   }
-  nextPage="/claims/date-of-birth?claim_id=12345"
   onSave={[Function]}
   title="Verify your identity"
 >
@@ -53,7 +52,6 @@ exports[`Name renders the page prefilled with user information 1`] = `
       "middle_name": "cricketer",
     }
   }
-  nextPage="/claims/date-of-birth?claim_id=12345"
   onSave={[Function]}
   title="Verify your identity"
 >

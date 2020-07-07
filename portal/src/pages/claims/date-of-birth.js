@@ -3,7 +3,6 @@ import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
 import User from "../../models/User";
-import routeWithParams from "../../utils/routeWithParams";
 import useFormState from "../../hooks/useFormState";
 import useHandleInputChange from "../../hooks/useHandleInputChange";
 import useHandleSave from "../../hooks/useHandleSave";
@@ -20,7 +19,10 @@ export const DateOfBirth = (props) => {
   const handleSave = useHandleSave(
     // TODO: Save this field to the appropriate API models once the fields exist
     (formState) => usersApi.updateUser(props.user.user_id, new User(formState)),
-    (result) => props.setUser(result.user)
+    (result) => {
+      props.setUser(result.user);
+      props.appLogic.goToNextPage({ user: result.user }, props.query);
+    }
   );
 
   return (
@@ -28,7 +30,6 @@ export const DateOfBirth = (props) => {
       formState={formState}
       title={t("pages.claimsDateOfBirth.title")}
       onSave={handleSave}
-      nextPage={routeWithParams("claims.stateId", props.query)}
     >
       <InputDate
         name="date_of_birth"
@@ -44,6 +45,9 @@ export const DateOfBirth = (props) => {
 };
 
 DateOfBirth.propTypes = {
+  appLogic: PropTypes.shape({
+    goToNextPage: PropTypes.func.isRequired,
+  }).isRequired,
   user: PropTypes.instanceOf(User).isRequired,
   setUser: PropTypes.func.isRequired,
   query: PropTypes.shape({

@@ -1,14 +1,38 @@
-import { Machine } from "xstate";
+import Claim, { EmploymentStatus, LeaveReason } from "../../src/models/Claim";
+import { Machine, assign } from "xstate";
+import { get, merge } from "lodash";
+import machineConfigs, { guards } from "../../src/routes/claim-flow-configs";
+import User from "../../src/models/User";
 import { createModel } from "@xstate/test";
-import machineConfigs from "../../src/routes/claim-flow-configs";
-import { merge } from "lodash";
 import routes from "../../src/routes/index";
 
-// in order to determine level of test coverage, each route
+// In order to determine level of test coverage, each route
 // needs a test function defined for meta
-// we do not currently have any assertions that need to be made
 const machineTests = {
+  [routes.claims.dashboard]: {
+    meta: {
+      test: () => {},
+    },
+    // When exiting dashboard state,
+    // add test data to the machine's context
+    exit: "assignTestDataToMachineContext",
+  },
+  [routes.user.consentToDataSharing]: {
+    meta: {
+      test: () => {},
+    },
+  },
   [routes.claims.checklist]: {
+    meta: {
+      test: () => {},
+    },
+  },
+  [routes.claims.confirm]: {
+    meta: {
+      test: () => {},
+    },
+  },
+  [routes.claims.success]: {
     meta: {
       test: () => {},
     },
@@ -16,6 +40,30 @@ const machineTests = {
   [routes.claims.name]: {
     meta: {
       test: () => {},
+    },
+  },
+  [routes.claims.dateOfBirth]: {
+    meta: {
+      test: () => {},
+    },
+  },
+  [routes.claims.stateId]: {
+    meta: {
+      test: () => {},
+    },
+  },
+  [routes.claims.uploadStateId]: {
+    meta: {
+      test: (_, event) => {
+        expect(get(event.context.user, "has_state_id")).toEqual(true);
+      },
+    },
+  },
+  [routes.claims.uploadOtherId]: {
+    meta: {
+      test: (_, event) => {
+        expect(get(event.context.user, "has_state_id")).toBeFalsy();
+      },
     },
   },
   [routes.claims.ssn]: {
@@ -28,12 +76,21 @@ const machineTests = {
       test: () => {},
     },
   },
-  [routes.claims.leaveDates]: {
+  [routes.claims.reasonPregnancy]: {
+    meta: {
+      test: (_, event) => {
+        expect(get(event.context.claim, "leave_details.reason")).toEqual(
+          LeaveReason.medical
+        );
+      },
+    },
+  },
+  [routes.claims.uploadHealthcareForm]: {
     meta: {
       test: () => {},
     },
   },
-  [routes.claims.reasonPregnancy]: {
+  [routes.claims.leaveDates]: {
     meta: {
       test: () => {},
     },
@@ -50,7 +107,11 @@ const machineTests = {
   },
   [routes.claims.notifiedEmployer]: {
     meta: {
-      test: () => {},
+      test: (_, event) => {
+        expect(
+          get(event.context.claim, "leave_details.employment_status")
+        ).toEqual(EmploymentStatus.employed);
+      },
     },
   },
 };
@@ -60,28 +121,53 @@ const machineConfigsWithTests = {
   states: merge(machineConfigs.states, machineTests),
 };
 
-/**
- * @see https://xstate.js.org/docs/packages/xstate-test/#quick-start
- * comments below are based on current understanding of @xstate/test
- * and may need to be corrected
- */
 describe("routingMachine", () => {
-  const routingMachine = Machine({
-    ...machineConfigsWithTests,
-    initial: routes.claims.checklist,
+  const context = {
+    claim: new Claim({ application_id: "mock-application-id" }),
+    user: new User({ user_id: "mock-user-id" }),
+  };
+
+  // Define various states a claim can be in that will result in
+  // different routing paths
+  const medicalClaim = { leave_details: { reason: LeaveReason.medical } };
+  const employed = {
+    leave_details: { employment_status: EmploymentStatus.employed },
+  };
+  const hasStateId = { has_state_id: true };
+  const testData = [
+    { claimData: medicalClaim, userData: hasStateId },
+    { claimData: employed, userData: {} },
+  ];
+
+  // Action that's fired when exiting dashboard state and creating a claim and
+  // adds test data to the current machine context
+  const assignTestDataToMachineContext = assign({
+    claim: (ctx, event) => new Claim({ ...ctx.claim, ...event.claimData }),
+    user: (ctx, event) => new User({ ...ctx.user, ...event.userData }),
   });
+
+  const routingMachine = Machine(
+    {
+      ...machineConfigsWithTests,
+      context,
+      initial: routes.claims.dashboard,
+    },
+    {
+      guards,
+      actions: { assignTestDataToMachineContext },
+    }
+  );
 
   // Create a model that simulates the routing behavior
   // of the portal application when tested.
   const testModel = createModel(routingMachine).withEvents({
-    // provide additional context for transition events,
-    // there are none currently
+    CREATE_CLAIM: { cases: testData },
     CONTINUE: {},
     VERIFY_ID: {},
     LEAVE_DETAILS: {},
     EMPLOYER_INFORMATION: {},
-    // TODO: remove once conditional routing for leaveReason exists
-    TEMP_TEST_PREGNANCY_PATH: {},
+    CONFIRM: {},
+    CONSENT_TO_DATA_SHARING: {},
   });
 
   // A testing plan represents a single routing path.

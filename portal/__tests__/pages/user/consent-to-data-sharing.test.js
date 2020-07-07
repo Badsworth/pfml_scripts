@@ -14,7 +14,9 @@ describe("ConsentToDataSharing", () => {
   beforeEach(() => {
     user = new User({ user_id: "mock-user-id" });
     setUser = jest.fn();
-    wrapper = shallow(<ConsentToDataSharing user={user} setUser={setUser} />);
+    wrapper = shallow(
+      <ConsentToDataSharing user={user} setUser={setUser} appLogic={{}} />
+    );
   });
 
   it("renders the page", () => {

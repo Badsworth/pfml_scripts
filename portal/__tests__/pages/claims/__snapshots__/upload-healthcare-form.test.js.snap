@@ -3,7 +3,6 @@
 exports[`UploadHealthcareForm initially renders the page without any file cards 1`] = `
 <QuestionPage
   formState={Object {}}
-  nextPage="/claims/duration?claim_id=mock-claim-id"
   onSave={[Function]}
   title="Leave Details"
 >

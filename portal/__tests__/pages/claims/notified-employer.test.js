@@ -6,7 +6,6 @@ import { NotifiedEmployer } from "../../../src/pages/claims/notified-employer";
 import QuestionPage from "../../../src/components/QuestionPage";
 import React from "react";
 import { act } from "react-dom/test-utils";
-import routes from "../../../src/routes";
 import { shallow } from "enzyme";
 import useAppLogic from "../../../src/hooks/useAppLogic";
 
@@ -88,10 +87,5 @@ describe("NotifiedEmployer", () => {
         mustNotifyWarningWrapper().parents(ConditionalContent).prop("visible")
       ).toBeTruthy();
     });
-  });
-  it("redirects to the checklist page", () => {
-    expect(wrapper.find("QuestionPage").prop("nextPage")).toEqual(
-      `${routes.claims.checklist}?claim_id=${claim.application_id}`
-    );
   });
 });

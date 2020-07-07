@@ -1,6 +1,5 @@
 import QuestionPage from "../../src/components/QuestionPage";
 import React from "react";
-import { mockRouter } from "next/router";
 import { shallow } from "enzyme";
 
 describe("QuestionPage", () => {
@@ -20,7 +19,7 @@ describe("QuestionPage", () => {
     expect(wrapper).toMatchSnapshot();
   });
 
-  it("calls onSave with formData and redirects to address after submit", async () => {
+  it("calls onSave with formData", async () => {
     const handleSave = jest.fn();
     const formState = { a: 1, b: 2 };
     const wrapper = shallow(
@@ -28,7 +27,6 @@ describe("QuestionPage", () => {
         title={sampleTitle}
         formState={formState}
         onSave={handleSave}
-        nextPage={sampleRoute}
       >
         <div>Some stuff here</div>
       </QuestionPage>
@@ -38,6 +36,5 @@ describe("QuestionPage", () => {
     await wrapper.find("form").simulate("submit", event);
 
     expect(handleSave).toHaveBeenCalledWith(formState);
-    expect(mockRouter.push).toHaveBeenCalledWith(sampleRoute);
   });
 });

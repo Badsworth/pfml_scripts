@@ -11,9 +11,11 @@
  * is complete, in progress, or not started
  * @see ../models/Step
  */
+import { EmploymentStatus, LeaveReason } from "../models/Claim";
 import { ClaimSteps } from "../models/Step";
 import { fields as durationFields } from "../pages/claims/duration";
 import { fields as employmentStatusFields } from "../pages/claims/employment-status";
+import { get } from "lodash";
 import { fields as leaveDatesFields } from "../pages/claims/leave-dates";
 import { fields as leaveReasonFields } from "../pages/claims/leave-reason";
 import { fields as nameFields } from "../pages/claims/name";
@@ -22,24 +24,111 @@ import { fields as reasonPregnancyFields } from "../pages/claims/reason-pregnanc
 import routes from "./index";
 import { fields as ssnFields } from "../pages/claims/ssn";
 
+/**
+ * @see https://xstate.js.org/docs/guides/guards.html
+ */
+export const guards = {
+  isMedicalClaim: ({ claim }) =>
+    get(claim, "leave_details.reason") === LeaveReason.medical,
+  isEmployed: ({ claim }) =>
+    get(claim, "leave_details.employment_status") === EmploymentStatus.employed,
+  hasStateId: ({ user }) => get(user, "has_state_id"),
+};
+
 export default {
-  id: "leave-application-routing",
-  initial: routes.claims.checklist,
+  id: "claim-flow",
+  initial: routes.claims.dashboard,
   states: {
+    [routes.claims.dashboard]: {
+      meta: {},
+      on: {
+        CREATE_CLAIM: routes.claims.checklist,
+        CONSENT_TO_DATA_SHARING: routes.user.consentToDataSharing,
+      },
+    },
+    [routes.user.consentToDataSharing]: {
+      meta: {},
+      on: {
+        CONTINUE: routes.claims.dashboard,
+      },
+    },
     [routes.claims.checklist]: {
       meta: {},
       on: {
         VERIFY_ID: routes.claims.name,
         LEAVE_DETAILS: routes.claims.leaveReason,
         EMPLOYER_INFORMATION: routes.claims.employmentStatus,
-        // TODO: remove once conditional routing for leaveReason exists
-        TEMP_TEST_PREGNANCY_PATH: routes.claims.reasonPregnancy,
+        CONFIRM: routes.claims.confirm,
+      },
+    },
+    [routes.claims.confirm]: {
+      meta: {},
+      on: {
+        CONTINUE: routes.claims.success,
+      },
+    },
+    [routes.claims.success]: {
+      meta: {},
+      on: {
+        CONTINUE: routes.claims.dashboard,
       },
     },
     [routes.claims.name]: {
       meta: {
         step: ClaimSteps.verifyId,
         fields: nameFields,
+      },
+      on: {
+        CONTINUE: routes.claims.dateOfBirth,
+      },
+    },
+    [routes.claims.dateOfBirth]: {
+      meta: {
+        step: ClaimSteps.verifyId,
+        // user fields are not currently evaluated
+        // when determining step completeness
+        fields: [],
+      },
+      on: {
+        CONTINUE: routes.claims.stateId,
+      },
+    },
+    [routes.claims.stateId]: {
+      meta: {
+        step: ClaimSteps.verifyId,
+        // user fields are not currently evaluated
+        // when determining step completeness
+        fields: [],
+      },
+      on: {
+        CONTINUE: [
+          {
+            target: routes.claims.uploadStateId,
+            cond: "hasStateId",
+          },
+          {
+            target: routes.claims.uploadOtherId,
+          },
+        ],
+      },
+    },
+    [routes.claims.uploadStateId]: {
+      meta: {
+        step: ClaimSteps.verifyId,
+        // user fields are not currently evaluated
+        // when determining step completeness
+        fields: [],
+      },
+      on: {
+        CONTINUE: routes.claims.ssn,
+      },
+    },
+    [routes.claims.uploadOtherId]: {
+      meta: {
+        step: ClaimSteps.verifyId,
+        // user fields are not currently evaluated
+        // when determining step completeness
+        fields: [],
       },
       on: {
         CONTINUE: routes.claims.ssn,
@@ -60,23 +149,30 @@ export default {
         fields: leaveReasonFields,
       },
       on: {
-        // TODO make conditional to reason-pregnancy if leave_details.reason is medical
-        CONTINUE: routes.claims.leaveDates,
-      },
-    },
-    [routes.claims.leaveDates]: {
-      meta: {
-        step: ClaimSteps.leaveDetails,
-        fields: leaveDatesFields,
-      },
-      on: {
-        CONTINUE: routes.claims.duration,
+        CONTINUE: [
+          {
+            target: routes.claims.reasonPregnancy,
+            cond: "isMedicalClaim",
+          },
+          {
+            target: routes.claims.checklist,
+          },
+        ],
       },
     },
     [routes.claims.reasonPregnancy]: {
       meta: {
         step: ClaimSteps.leaveDetails,
         fields: reasonPregnancyFields,
+      },
+      on: {
+        CONTINUE: routes.claims.uploadHealthcareForm,
+      },
+    },
+    [routes.claims.uploadHealthcareForm]: {
+      meta: {
+        step: ClaimSteps.leaveDetails,
+        fields: [],
       },
       on: {
         CONTINUE: routes.claims.duration,
@@ -88,6 +184,15 @@ export default {
         fields: durationFields,
       },
       on: {
+        CONTINUE: routes.claims.leaveDates,
+      },
+    },
+    [routes.claims.leaveDates]: {
+      meta: {
+        step: ClaimSteps.leaveDetails,
+        fields: leaveDatesFields,
+      },
+      on: {
         CONTINUE: routes.claims.checklist,
       },
     },
@@ -97,8 +202,15 @@ export default {
         fields: employmentStatusFields,
       },
       on: {
-        // TODO: Make conditional to checklist if employment_status is not employed
-        CONTINUE: routes.claims.notifiedEmployer,
+        CONTINUE: [
+          {
+            target: routes.claims.notifiedEmployer,
+            cond: "isEmployed",
+          },
+          {
+            target: routes.claims.checklist,
+          },
+        ],
       },
     },
     [routes.claims.notifiedEmployer]: {

@@ -5,7 +5,6 @@ import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
 import { pick } from "lodash";
-import routeWithParams from "../../utils/routeWithParams";
 import useFormState from "../../hooks/useFormState";
 import useHandleInputChange from "../../hooks/useHandleInputChange";
 import { useTranslation } from "../../locales/i18n";
@@ -28,7 +27,6 @@ export const Name = (props) => {
       formState={formState}
       title={t("pages.claimsName.title")}
       onSave={handleSave}
-      nextPage={routeWithParams("claims.dateOfBirth", props.query)}
     >
       <FormLabel component="legend" hint={t("pages.claimsName.lead")}>
         {t("pages.claimsName.sectionLabel")}

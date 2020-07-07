@@ -4,7 +4,6 @@ import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
 import { pick } from "lodash";
-import routeWithParams from "../../utils/routeWithParams";
 import useFormState from "../../hooks/useFormState";
 import useHandleInputChange from "../../hooks/useHandleInputChange";
 import { useTranslation } from "../../locales/i18n";
@@ -26,7 +25,6 @@ export const ReasonPregnancy = (props) => {
       formState={formState}
       title={t("pages.claimsReasonPregnancy.title")}
       onSave={handleSave}
-      nextPage={routeWithParams("claims.uploadHealthcareForm", props.query)}
     >
       <InputChoiceGroup
         choices={[

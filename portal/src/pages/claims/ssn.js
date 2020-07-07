@@ -4,7 +4,6 @@ import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
 import { pick } from "lodash";
-import routeWithParams from "../../utils/routeWithParams";
 import useFormState from "../../hooks/useFormState";
 import useHandleInputChange from "../../hooks/useHandleInputChange";
 import { useTranslation } from "../../locales/i18n";
@@ -17,7 +16,7 @@ export const fields = ["employee_ssn"];
  * A form page to capture the worker's SSN or ITIN.
  */
 export const Ssn = (props) => {
-  const { appLogic, claim, query } = props;
+  const { appLogic, claim } = props;
   const { t } = useTranslation();
   const { formState, updateFields } = useFormState(pick(claim, fields));
   const { employee_ssn } = formState;
@@ -26,14 +25,11 @@ export const Ssn = (props) => {
   const handleSave = (formState) =>
     appLogic.updateClaim(claim.application_id, formState);
 
-  const nextPage = routeWithParams("claims.leaveReason", query);
-
   return (
     <QuestionPage
       formState={formState}
       title={t("pages.claimsSsn.title")}
       onSave={handleSave}
-      nextPage={nextPage}
     >
       <InputText
         mask="ssn"

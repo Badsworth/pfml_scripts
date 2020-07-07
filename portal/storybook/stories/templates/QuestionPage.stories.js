@@ -9,11 +9,10 @@ export default {
   component: QuestionPage,
 };
 
-const sampleRoute = "/create-claim/address";
 const sampleTitle = "Verify your identity";
 
 export const WithLegend = () => (
-  <QuestionPage title={sampleTitle} nextPage={sampleRoute} onSave={() => {}}>
+  <QuestionPage title={sampleTitle} onSave={() => {}}>
     <InputText
       name="ssn"
       label="What's your Social Security Number?"
@@ -23,7 +22,7 @@ export const WithLegend = () => (
 );
 
 export const WithFieldset = () => (
-  <QuestionPage title={sampleTitle} nextPage={sampleRoute} onSave={() => {}}>
+  <QuestionPage title={sampleTitle} onSave={() => {}}>
     <Fieldset>
       <FormLabel component="legend" hint="Some text here about names">
         Input your name here

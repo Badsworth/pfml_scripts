@@ -9,6 +9,7 @@ describe("useAppLogic", () => {
       claims,
       clearErrors,
       createClaim,
+      goToNextPage,
       loadClaims,
       rest,
       setAppErrors,
@@ -23,6 +24,7 @@ describe("useAppLogic", () => {
         claims,
         clearErrors,
         createClaim,
+        goToNextPage,
         loadClaims,
         setAppErrors,
         submitClaim,
@@ -35,6 +37,7 @@ describe("useAppLogic", () => {
     expect(auth).toEqual(expect.anything());
     expect(claims).toBeNull();
     expect(clearErrors).toBeInstanceOf(Function);
+    expect(goToNextPage).toBeInstanceOf(Function);
     expect(loadClaims).toBeInstanceOf(Function);
     expect(createClaim).toBeInstanceOf(Function);
     expect(updateClaim).toBeInstanceOf(Function);

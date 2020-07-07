@@ -2,7 +2,6 @@ import { mount, shallow } from "enzyme";
 import Claim from "../../../src/models/Claim";
 import React from "react";
 import { Ssn } from "../../../src/pages/claims/ssn";
-import routes from "../../../src/routes";
 import useAppLogic from "../../../src/hooks/useAppLogic";
 
 jest.mock("../../../src/hooks/useAppLogic");
@@ -36,14 +35,6 @@ describe("Ssn", () => {
     const { wrapper } = render();
 
     expect(wrapper).toMatchSnapshot();
-  });
-
-  it("redirects to leaveReason", () => {
-    const { props, wrapper } = render();
-
-    expect(wrapper.find("QuestionPage").prop("nextPage")).toEqual(
-      `${routes.claims.leaveReason}?claim_id=${props.query.claim_id}`
-    );
   });
 
   it("calls updateFieldFromEvent with user input", () => {

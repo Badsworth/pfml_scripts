@@ -1,7 +1,6 @@
 import React from "react";
 import StateId from "../../../src/pages/claims/state-id";
 import User from "../../../src/models/User";
-import routes from "../../../src/routes";
 import { shallow } from "enzyme";
 import usersApi from "../../../src/api/usersApi";
 
@@ -11,6 +10,7 @@ const render = (props = {}) => {
   const allProps = {
     user: new User(),
     setUser: jest.fn(),
+    appLogic: {},
     query: { claim_id },
     ...props,
   };
@@ -32,12 +32,6 @@ describe("StateId", () => {
     expect(wrapper.find("ConditionalContent").prop("visible")).toBeFalsy();
   });
 
-  it("will redirect to the upload other ID page", () => {
-    expect(wrapper.find("QuestionPage").prop("nextPage")).toEqual(
-      `${routes.claims.uploadOtherId}?claim_id=${claim_id}`
-    );
-  });
-
   describe("when user has a state id", () => {
     it("renders id field", () => {
       const user = new User({
@@ -49,18 +43,6 @@ describe("StateId", () => {
       expect(
         wrapper.update().find("ConditionalContent").prop("visible")
       ).toBeTruthy();
-    });
-
-    it("will redirect to the upload state ID page", () => {
-      const user = new User({
-        has_state_id: true,
-        state_id: "12345",
-      });
-      ({ wrapper } = render({ user }));
-
-      expect(wrapper.find("QuestionPage").prop("nextPage")).toEqual(
-        `${routes.claims.uploadStateId}?claim_id=${claim_id}`
-      );
     });
   });
 

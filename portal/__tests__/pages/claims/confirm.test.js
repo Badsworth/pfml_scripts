@@ -1,8 +1,6 @@
 import Claim from "../../../src/models/Claim";
 import { Confirm } from "../../../src/pages/claims/confirm";
 import React from "react";
-import { mockRouter } from "next/router";
-import routes from "../../../src/routes";
 import { shallow } from "enzyme";
 import useAppLogic from "../../../src/hooks/useAppLogic";
 
@@ -20,13 +18,5 @@ describe("Confirm", () => {
 
   it("renders the page", () => {
     expect(wrapper).toMatchSnapshot();
-  });
-
-  it("redirects to success page", async () => {
-    await wrapper
-      .find("form")
-      .simulate("submit", { preventDefault: jest.fn() });
-
-    expect(mockRouter.push).toHaveBeenCalledWith(routes.claims.success);
   });
 });

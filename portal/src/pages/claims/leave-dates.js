@@ -5,7 +5,6 @@ import QuestionPage from "../../components/QuestionPage";
 import React from "react";
 import get from "lodash/get";
 import { pick } from "lodash";
-import routeWithParams from "../../utils/routeWithParams";
 import useFormState from "../../hooks/useFormState";
 import useHandleInputChange from "../../hooks/useHandleInputChange";
 import { useTranslation } from "../../locales/i18n";
@@ -27,7 +26,6 @@ export const LeaveDates = (props) => {
       formState={formState}
       title={t("pages.claimsLeaveDates.title")}
       onSave={handleSave}
-      nextPage={routeWithParams("claims.duration", props.query)}
     >
       <InputDate
         name="leave_details.continuous_leave_periods[0].start_date"

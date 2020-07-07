@@ -2,7 +2,6 @@ import BackButton from "./BackButton";
 import PropTypes from "prop-types";
 import React from "react";
 import Title from "./Title";
-import { useRouter } from "next/router";
 import { useTranslation } from "../locales/i18n";
 
 /**
@@ -14,13 +13,10 @@ import { useTranslation } from "../locales/i18n";
  */
 export const QuestionPage = (props) => {
   const { t } = useTranslation();
-  const router = useRouter();
 
   const handleSubmit = async (event) => {
     event.preventDefault();
     await props.onSave(props.formState);
-    // TODO appLogic will handle routing after claim creation
-    router.push(props.nextPage);
   };
 
   return (
@@ -48,10 +44,6 @@ QuestionPage.propTypes = {
    * The contents of the form question page.
    */
   children: PropTypes.node.isRequired,
-  /**
-   * The route for the next page in the form, relative to the portal root.
-   */
-  nextPage: PropTypes.string.isRequired,
   /**
    * The text of the small title of the form.
    */

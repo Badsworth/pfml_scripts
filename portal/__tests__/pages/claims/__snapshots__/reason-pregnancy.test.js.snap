@@ -7,7 +7,6 @@ exports[`ReasonPregnancy renders the page 1`] = `
       "pregnant_or_recent_birth": false,
     }
   }
-  nextPage="/claims/upload-healthcare-form"
   onSave={[Function]}
   title="Leave Details"
 >

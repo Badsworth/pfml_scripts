@@ -8,7 +8,6 @@ import QuestionPage from "../../components/QuestionPage";
 import React from "react";
 import get from "lodash/get";
 import pick from "lodash/pick";
-import routeWithParams from "../../utils/routeWithParams";
 import useFormState from "../../hooks/useFormState";
 import useHandleInputChange from "../../hooks/useHandleInputChange";
 import { useTranslation } from "../../locales/i18n";
@@ -25,7 +24,7 @@ export const fields = [
  */
 export const NotifiedEmployer = (props) => {
   const { t } = useTranslation();
-  const { appLogic, claim, query } = props;
+  const { appLogic, claim } = props;
   const { formState, updateFields, removeField } = useFormState(
     pick(claim, fields)
   );
@@ -42,7 +41,6 @@ export const NotifiedEmployer = (props) => {
       formState={formState}
       title={t("pages.claimsNotifiedEmployer.title")}
       onSave={handleSave}
-      nextPage={routeWithParams("claims.checklist", query)}
     >
       <InputChoiceGroup
         choices={[

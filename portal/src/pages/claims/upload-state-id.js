@@ -5,7 +5,6 @@ import Heading from "../../components/Heading";
 import Lead from "../../components/Lead";
 import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
-import routeWithParams from "../../utils/routeWithParams";
 import { useTranslation } from "../../locales/i18n";
 
 const UploadStateId = (props) => {
@@ -13,13 +12,14 @@ const UploadStateId = (props) => {
   const [stateIdFiles, setStateIdFiles] = useState([]);
 
   // @todo: CP-396 connect this page to the API file upload endpoint.
-  const handleSave = () => {};
+  const handleSave = () => {
+    props.appLogic.goToNextPage({}, props.query);
+  };
 
   return (
     <QuestionPage
       title={t("pages.claimsUploadStateId.title")}
       onSave={handleSave}
-      nextPage={routeWithParams("claims.ssn", props.query)}
     >
       <Heading level="2" size="1">
         {t("pages.claimsUploadStateId.sectionLabel")}
@@ -47,6 +47,7 @@ UploadStateId.propTypes = {
     claim_id: PropTypes.string,
   }),
   appLogic: PropTypes.shape({
+    goToNextPage: PropTypes.func.isRequired,
     setAppErrors: PropTypes.func.isRequired,
   }).isRequired,
 };
