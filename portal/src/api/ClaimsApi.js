@@ -65,24 +65,6 @@ export default class ClaimsApi {
     let claims = null;
     if (success) {
       claims = body.map((claimData) => new Claim(claimData));
-
-      // Workaround since GET /applications currently doesn't return the full
-      // application body, so we need to call GET /application/[app id] for each
-      // application.
-      // We will change the GET /applications endpoint to return full applications
-      // in this ticket https://lwd.atlassian.net/browse/API-290
-      // TODO: Remove workaround once above ticket is complete: https://lwd.atlassian.net/browse/CP-577
-      const application_ids = body.map((claimData) => claimData.application_id);
-      const fullResponses = await Promise.all(
-        application_ids.map((application_id) =>
-          this.claimsRequest("GET", `/${application_id}`)
-        )
-      );
-      claims = fullResponses.map(
-        (fullResponse) => new Claim(fullResponse.body)
-      );
-      // end workaround
-
       claims = new ClaimCollection(claims);
     }
 
