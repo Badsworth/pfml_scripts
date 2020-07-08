@@ -13,9 +13,13 @@ import valueWithFallback from "../../utils/valueWithFallback";
 import withClaim from "../../hoc/withClaim";
 
 export const fields = [
-  "claim.avg_weekly_hours_worked",
   "claim.duration_type",
-  "claim.hours_off_needed",
+  // TODO: These fields are moving to a different page,
+  // and excluding them from the exported fields allows this
+  // workaround around to work: https://lwd.atlassian.net/browse/CP-606
+  // See: https://lwd.atlassian.net/browse/CP-625
+  // "claim.avg_weekly_hours_worked",
+  // "claim.hours_off_needed",
 ];
 
 export const Duration = (props) => {

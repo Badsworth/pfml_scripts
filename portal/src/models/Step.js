@@ -1,4 +1,4 @@
-import { get, groupBy, isArray, map } from "lodash";
+import { get, groupBy, isEmpty, map } from "lodash";
 import BaseModel from "./BaseModel";
 import { createRouteWithQuery } from "../utils/routeWithParams";
 
@@ -17,11 +17,9 @@ export const ClaimSteps = {
 const fieldHasValue = (fieldPath, context) => {
   const value = get(context, fieldPath);
 
-  if (isArray(value)) {
-    return value.length > 0;
-  }
+  if (typeof value === "boolean") return true;
 
-  return !!value;
+  return !isEmpty(value);
 };
 
 /**
@@ -101,7 +99,21 @@ export default class Step extends BaseModel {
 
   get isComplete() {
     // TODO remove once api returns validations
-    if (!this.warnings) return true;
+    if (!this.warnings) {
+      return this.fields.every((field) => {
+        const hasValue = fieldHasValue(field, this.context);
+
+        if (process.env.NODE_ENV === "development" && !hasValue) {
+          // eslint-disable-next-line no-console
+          console.log(
+            `${field} missing value, received`,
+            get(this.context, field)
+          );
+        }
+
+        return hasValue;
+      });
+    }
 
     return !this.warnings.some((warning) =>
       this.fields.includes(warning.field)

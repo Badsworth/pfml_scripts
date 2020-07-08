@@ -6,7 +6,6 @@ exports[`Name renders the empty page 1`] = `
     Object {
       "first_name": "Aquib",
       "last_name": "Khan",
-      "middle_name": "cricketer",
     }
   }
   onSave={[Function]}
@@ -31,7 +30,7 @@ exports[`Name renders the empty page 1`] = `
     onChange={[Function]}
     optionalText="(optional)"
     smallLabel={true}
-    value="cricketer"
+    value=""
   />
   <InputText
     label="Last name"
@@ -49,7 +48,6 @@ exports[`Name renders the page prefilled with user information 1`] = `
     Object {
       "first_name": "Aquib",
       "last_name": "Khan",
-      "middle_name": "cricketer",
     }
   }
   onSave={[Function]}
@@ -74,7 +72,7 @@ exports[`Name renders the page prefilled with user information 1`] = `
     onChange={[Function]}
     optionalText="(optional)"
     smallLabel={true}
-    value="cricketer"
+    value=""
   />
   <InputText
     label="Last name"

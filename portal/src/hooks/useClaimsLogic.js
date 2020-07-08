@@ -1,6 +1,7 @@
 import Claim from "../models/Claim";
 import ClaimCollection from "../models/ClaimCollection";
 import ClaimsApi from "../api/ClaimsApi";
+import merge from "lodash/merge";
 import useCollectionState from "./useCollectionState";
 import { useMemo } from "react";
 
@@ -51,10 +52,7 @@ const useClaimsLogic = ({ appErrorsLogic, portalFlow, user }) => {
       // We will change the PATCH applications endpoint to return the full
       // application in this ticket: https://lwd.atlassian.net/browse/API-276
       // TODO: Remove workaround once above ticket is complete: https://lwd.atlassian.net/browse/CP-577
-      claim = new Claim({
-        ...claims.get(application_id),
-        ...patchData,
-      });
+      claim = new Claim(merge(claims.get(application_id), patchData));
       // </ end workaround >
 
       setClaim(claim);

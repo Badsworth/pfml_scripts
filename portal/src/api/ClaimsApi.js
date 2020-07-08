@@ -1,6 +1,7 @@
 /* eslint-disable jsdoc/require-returns */
 import Claim from "../models/Claim";
 import ClaimCollection from "../models/ClaimCollection";
+import merge from "lodash/merge";
 import request from "./request";
 import routes from "../routes";
 
@@ -112,7 +113,7 @@ export default class ClaimsApi {
     // We will change the PATCH applications endpoint to return the full
     // application in this ticket: https://lwd.atlassian.net/browse/API-276
     // TODO: Remove workaround once above ticket is complete: https://lwd.atlassian.net/browse/CP-577
-    const workaroundBody = { ...body, ...patchData, application_id };
+    const workaroundBody = merge({ ...body, application_id }, patchData);
     // </ end workaround >
 
     return {

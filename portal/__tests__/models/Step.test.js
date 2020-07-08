@@ -108,7 +108,7 @@ describe("Step Model", () => {
     });
 
     describe("when field has warnings and formState has some fields with values", () => {
-      it("returns in_progress", () => {
+      it("returns in_progress for field with string value", () => {
         const warnings = [{ field: "claim.field_e" }];
         const claim = {
           field_a: null,
@@ -127,13 +127,11 @@ describe("Step Model", () => {
 
         expect(step.status).toEqual("in_progress");
       });
-    });
 
-    describe("when field has warnings and formState has no fields with values", () => {
-      it("returns not_started", () => {
+      it("returns in_progress for field with boolean value", () => {
         const warnings = [{ field: "claim.field_e" }];
         const claim = {
-          field_a: null,
+          field_a: false,
           field_b: null,
           field_c: null,
           field_d: null,
@@ -147,30 +145,29 @@ describe("Step Model", () => {
           warnings,
         });
 
-        expect(step.status).toEqual("not_started");
+        expect(step.status).toEqual("in_progress");
       });
+    });
 
-      describe("when a field is an empty array", () => {
-        it("returns not_started", () => {
-          const warnings = [{ field: "claim.field_e" }];
+    describe("when field has warnings and formState has no fields with values", () => {
+      it("returns not_started", () => {
+        const warnings = [{ field: "claim.field_e" }];
+        const claim = {
+          field_a: null,
+          field_b: [],
+          field_c: {},
+          field_d: null,
+          field_e: null,
+        };
 
-          const claim = {
-            field_a: [],
-            field_b: null,
-            field_c: null,
-            field_d: null,
-            field_e: null,
-          };
-
-          const step = new Step({
-            name,
-            pages,
-            context: { claim },
-            warnings,
-          });
-
-          expect(step.status).toEqual("not_started");
+        const step = new Step({
+          name,
+          pages,
+          context: { claim },
+          warnings,
         });
+
+        expect(step.status).toEqual("not_started");
       });
     });
   });

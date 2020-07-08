@@ -11,7 +11,7 @@ import { useTranslation } from "../../locales/i18n";
 import valueWithFallback from "../../utils/valueWithFallback";
 import withClaim from "../../hoc/withClaim";
 
-export const fields = ["claim.leave_details.continuous_leave_periods"];
+export const fields = ["claim.leave_details.continuous_leave_periods[0]"];
 
 export const LeaveDates = (props) => {
   const { t } = useTranslation();

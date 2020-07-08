@@ -4,9 +4,7 @@ exports[`Duration regardless of duration type initially renders the page without
 <QuestionPage
   formState={
     Object {
-      "avg_weekly_hours_worked": null,
       "duration_type": null,
-      "hours_off_needed": null,
     }
   }
   onSave={[Function]}

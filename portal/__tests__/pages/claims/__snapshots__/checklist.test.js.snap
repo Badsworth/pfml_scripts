@@ -16,26 +16,26 @@ exports[`Checklist renders component 1`] = `
     startText="Start"
     submitButtonText="Review and submit application"
     submitPage="/claims/review?claim_id=mock-application-id"
-    submitPageDisabled={false}
+    submitPageDisabled={true}
     title="Create a new application"
   >
     <Step
       key="verifyId"
-      status="completed"
+      status="not_started"
       stepHref="/claims/name?claim_id=mock-application-id"
       title="Verify your identity"
     >
       <span
         dangerouslySetInnerHTML={
           Object {
-            "__html": "You will need:<ul class='usa-list'><li>Proof of your identity, like a driver’s license. See the full list of accepted identity documents.</li><li>Proof of your identity, like a driver’s license. See the full list of accepted identity documents.</li><ul>",
+            "__html": "You will need:<ul class='usa-list'><li>Proof of your identity, like a driver’s license. See the full list of accepted identity documents.</li><li>Your Social Security Number or Individual Taxpayer Identification Number.</li><ul>",
           }
         }
       />
     </Step>
     <Step
       key="leaveDetails"
-      status="completed"
+      status="disabled"
       stepHref="/claims/leave-reason?claim_id=mock-application-id"
       title="Enter leave details"
     >
@@ -49,7 +49,7 @@ exports[`Checklist renders component 1`] = `
     </Step>
     <Step
       key="employerInformation"
-      status="completed"
+      status="disabled"
       stepHref="/claims/employment-status?claim_id=mock-application-id"
       title="Enter employment information"
     >
@@ -63,7 +63,7 @@ exports[`Checklist renders component 1`] = `
     </Step>
     <Step
       key="otherLeave"
-      status="completed"
+      status="disabled"
       stepHref="#?claim_id=mock-application-id"
       title="Report other leave and benefits"
     >
@@ -77,7 +77,7 @@ exports[`Checklist renders component 1`] = `
     </Step>
     <Step
       key="payment"
-      status="completed"
+      status="disabled"
       stepHref="#?claim_id=mock-application-id"
       title="Add payment information"
     >
