@@ -201,6 +201,26 @@ jobs:
           tf_actions_working_dir: ${{ env.terraform-dir }}/${{ env.api-env }}
           args: "plan.tfplan"
 
+      - name: Terraform Output
+        id: terraform_output
+        uses: hashicorp/terraform-github-actions@master
+        with:
+          tf_actions_version: ${{ env.terraform-version }}
+          tf_actions_subcommand: output
+          tf_actions_working_dir: ${{ env.terraform-dir }}/${{ env.api-env }}
+
+      - name: Wait for stable ECS service
+        env:
+          TF_OUTPUT: ${{ steps.terraform_output.outputs.tf_actions_output }}
+        # Wait for ECS service to be stable, and run it twice to allow for
+        # abnormally long deploys (up to 20 minutes.)
+        run: |
+          sudo apt-get install jq
+          CLUSTER_ID=$(echo $TF_OUTPUT | jq -r '.ecs_cluster_arn.value')
+          SVC_ID=$(echo $TF_OUTPUT | jq -r '.ecs_service_id.value')
+          (aws ecs wait services-stable --cluster $CLUSTER_ID --services $SVC_ID ||
+           aws ecs wait services-stable --cluster $CLUSTER_ID --services $SVC_ID)
+
   api-db-migrate-up:
     name: Run migrations
     runs-on: ubuntu-latest

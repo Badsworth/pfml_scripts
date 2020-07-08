@@ -13,3 +13,7 @@ output "cognito_post_confirmation_lambda_arn" {
 output "create_rds_user_task_arn" {
   value = aws_ecs_task_definition.create_rds_user.arn
 }
+
+output "ecs_service_id" {
+  value = aws_ecs_service.app.id
+}

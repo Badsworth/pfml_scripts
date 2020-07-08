@@ -17,3 +17,11 @@ output "cognito_post_confirmation_lambda_arn" {
 output "create_rds_user_task_arn" {
   value = module.api.create_rds_user_task_arn
 }
+
+output "ecs_cluster_arn" {
+  value = data.aws_ecs_cluster.prod.arn
+}
+
+output "ecs_service_id" {
+  value = module.api.ecs_service_id
+}
