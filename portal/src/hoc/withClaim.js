@@ -11,13 +11,15 @@ import Spinner from "../components/Spinner";
  */
 const withClaim = (Component) => {
   const ComponentWithClaim = (props) => {
-    const { query, appLogic } = props;
+    const { query, appLogic, user } = props;
 
     const claim = appLogic.claims ? appLogic.claims.get(query.claim_id) : null;
 
     useEffect(() => {
-      appLogic.loadClaims();
-    }, [appLogic]);
+      if (user) {
+        appLogic.loadClaims();
+      }
+    }, [appLogic, user]);
 
     if (!claim) return <Spinner aria-valuetext="Loading claims" />;
 
@@ -28,6 +30,7 @@ const withClaim = (Component) => {
     query: PropTypes.shape({
       claim_id: PropTypes.string,
     }).isRequired,
+    user: PropTypes.object,
     appLogic: PropTypes.object.isRequired,
   };
 

@@ -16,6 +16,29 @@ describe("WithClaim", () => {
     const WrappedComponent = withClaim(PageComponent);
 
     const wrapper = shallow(
+      <WrappedComponent
+        query={{ claim_id: "12345" }}
+        appLogic={appLogic}
+        user={{}}
+      />
+    );
+
+    expect(wrapper).toMatchInlineSnapshot(`
+      <Spinner
+        aria-valuetext="Loading claims"
+      />
+    `);
+  });
+
+  it("Shows spinner when user is not loaded", () => {
+    const appLogic = useAppLogic();
+    appLogic.claims = null;
+
+    const PageComponent = (props) => <div />;
+
+    const WrappedComponent = withClaim(PageComponent);
+
+    const wrapper = shallow(
       <WrappedComponent query={{ claim_id: "12345" }} appLogic={appLogic} />
     );
 
@@ -45,7 +68,7 @@ describe("WithClaim", () => {
     const query = { claim_id: id };
 
     const wrapper = mount(
-      <WrappedComponent query={query} appLogic={appLogic} />
+      <WrappedComponent query={query} appLogic={appLogic} user={{}} />
     );
 
     const pageComponent = wrapper.find("PageComponent");

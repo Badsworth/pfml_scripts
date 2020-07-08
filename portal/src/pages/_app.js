@@ -185,10 +185,6 @@ export const App = ({
    * Render the page body based on the current state of the application
    */
   const renderPageContent = () => {
-    // Authenticator expects a child
-    // TODO return null once we no longer use Authenticator
-    if (!user) return <div />;
-
     if (ui.isLoading) {
       return (
         <div className="margin-top-8 text-center">
