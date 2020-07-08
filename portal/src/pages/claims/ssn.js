@@ -10,7 +10,7 @@ import { useTranslation } from "../../locales/i18n";
 import valueWithFallback from "../../utils/valueWithFallback";
 import withClaim from "../../hoc/withClaim";
 
-export const fields = ["employee_ssn"];
+export const fields = ["claim.employee_ssn"];
 
 /**
  * A form page to capture the worker's SSN or ITIN.
@@ -18,7 +18,7 @@ export const fields = ["employee_ssn"];
 export const Ssn = (props) => {
   const { appLogic, claim } = props;
   const { t } = useTranslation();
-  const { formState, updateFields } = useFormState(pick(claim, fields));
+  const { formState, updateFields } = useFormState(pick(props, fields).claim);
   const { employee_ssn } = formState;
   const handleInputChange = useHandleInputChange(updateFields);
 

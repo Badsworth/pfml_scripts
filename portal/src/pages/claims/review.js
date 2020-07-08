@@ -29,7 +29,7 @@ export const Review = (props) => {
 
   const steps = Step.createClaimStepsFromMachine(
     machineConfigs,
-    props.claim,
+    { claim: props.claim },
     null
   );
 

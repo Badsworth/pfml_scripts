@@ -1,4 +1,4 @@
-import { get, groupBy, map } from "lodash";
+import { get, groupBy, isArray, map } from "lodash";
 import BaseModel from "./BaseModel";
 import { createRouteWithQuery } from "../utils/routeWithParams";
 
@@ -14,8 +14,12 @@ export const ClaimSteps = {
   payment: "payment",
 };
 
-const fieldHasValue = (fieldPath, formState) => {
-  const value = get(formState, fieldPath);
+const fieldHasValue = (fieldPath, context) => {
+  const value = get(context, fieldPath);
+
+  if (isArray(value)) {
+    return value.length > 0;
+  }
 
   return !!value;
 };
@@ -46,9 +50,10 @@ export default class Step extends BaseModel {
        */
       dependsOn: [],
       /**
-       * @type {Claim}
+       * @type {object}
+       * Context used for evaluating a step's status
        */
-      claim: null,
+      context: null,
       /**
        * @type {object[]}
        * Array of validation warnings and errors from the API
@@ -74,7 +79,7 @@ export default class Step extends BaseModel {
   // page user is navigated to when clicking into step
   get href() {
     return createRouteWithQuery(this.initialPage, {
-      claim_id: this.claim.application_id,
+      claim_id: get(this.context, "claim.application_id"),
     });
   }
 
@@ -104,7 +109,7 @@ export default class Step extends BaseModel {
   }
 
   get isInProgress() {
-    return this.fields.some((field) => fieldHasValue(field, this.claim));
+    return this.fields.some((field) => fieldHasValue(field, this.context));
   }
 
   get isDisabled() {
@@ -117,11 +122,12 @@ export default class Step extends BaseModel {
    * Create an array of Steps from routing machine configuration
    * @see ../routes/claim-flow-configs
    * @param {object} machineConfigs - configuration object for routing machine
-   * @param {Claim} claim - a claim
-   * @param {Array} warnings - array of validation warnings returned from API
+   * @param {object} context - used for evaluating a step's status
+   * @param {object[]} [warnings] - array of validation warnings returned from API
    * @returns {Step[]}
+   * @example createClaimStepsFromMachine(claimFlowConfig, { claim: { first_name: "Bud" } })
    */
-  static createClaimStepsFromMachine = (machineConfigs, claim, warnings) => {
+  static createClaimStepsFromMachine = (machineConfigs, context, warnings) => {
     const pages = map(machineConfigs.states, (state, key) =>
       Object.assign({ route: key }, state.meta)
     );
@@ -130,7 +136,7 @@ export default class Step extends BaseModel {
     const verifyId = new Step({
       name: ClaimSteps.verifyId,
       pages: pagesByStep[ClaimSteps.verifyId],
-      claim,
+      context,
       warnings,
     });
 
@@ -138,7 +144,7 @@ export default class Step extends BaseModel {
       name: ClaimSteps.leaveDetails,
       pages: pagesByStep[ClaimSteps.leaveDetails],
       dependsOn: [verifyId],
-      claim,
+      context,
       warnings,
     });
 
@@ -146,7 +152,7 @@ export default class Step extends BaseModel {
       name: ClaimSteps.employerInformation,
       pages: pagesByStep[ClaimSteps.employerInformation],
       dependsOn: [verifyId, leaveDetails],
-      claim,
+      context,
       warnings,
     });
 
@@ -154,7 +160,7 @@ export default class Step extends BaseModel {
       name: ClaimSteps.otherLeave,
       pages: pagesByStep[ClaimSteps.otherLeave],
       dependsOn: [verifyId, leaveDetails],
-      claim,
+      context,
       warnings,
     });
 
@@ -162,7 +168,7 @@ export default class Step extends BaseModel {
       name: ClaimSteps.payment,
       pages: pagesByStep[ClaimSteps.payment],
       dependsOn: [verifyId, leaveDetails],
-      claim,
+      context,
       warnings,
     });
 

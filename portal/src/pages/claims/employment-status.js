@@ -12,12 +12,12 @@ import useHandleInputChange from "../../hooks/useHandleInputChange";
 import { useTranslation } from "../../locales/i18n";
 import withClaim from "../../hoc/withClaim";
 
-export const fields = ["leave_details.employment_status"];
+export const fields = ["claim.leave_details.employment_status"];
 
 export const EmploymentStatusPage = (props) => {
   const { t } = useTranslation();
   const { appLogic, claim } = props;
-  const { formState, updateFields } = useFormState(pick(claim, fields));
+  const { formState, updateFields } = useFormState(pick(props, fields).claim);
   const employment_status = get(formState, "leave_details.employment_status");
   const handleInputChange = useHandleInputChange(updateFields);
 

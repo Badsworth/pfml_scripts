@@ -13,15 +13,15 @@ import valueWithFallback from "../../utils/valueWithFallback";
 import withClaim from "../../hoc/withClaim";
 
 export const fields = [
-  "avg_weekly_hours_worked",
-  "duration_type",
-  "hours_off_needed",
+  "claim.avg_weekly_hours_worked",
+  "claim.duration_type",
+  "claim.hours_off_needed",
 ];
 
 export const Duration = (props) => {
   const { t } = useTranslation();
   const { formState, updateFields, removeField } = useFormState(
-    pick(props.claim, fields)
+    pick(props, fields).claim
   );
   // TODO: use nested fields
   // https://lwd.atlassian.net/browse/CP-480

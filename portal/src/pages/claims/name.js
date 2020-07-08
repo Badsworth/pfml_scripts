@@ -11,11 +11,15 @@ import { useTranslation } from "../../locales/i18n";
 import valueWithFallback from "../../utils/valueWithFallback";
 import withClaim from "../../hoc/withClaim";
 
-export const fields = ["first_name", "middle_name", "last_name"];
+export const fields = [
+  "claim.first_name",
+  "claim.middle_name",
+  "claim.last_name",
+];
 
 export const Name = (props) => {
   const { t } = useTranslation();
-  const { formState, updateFields } = useFormState(pick(props.claim, fields));
+  const { formState, updateFields } = useFormState(pick(props, fields).claim);
   const { first_name, middle_name, last_name } = formState;
   const handleInputChange = useHandleInputChange(updateFields);
 

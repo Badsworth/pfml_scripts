@@ -9,21 +9,23 @@ describe("Step Model", () => {
     {
       step,
       route: "path/to/page/1",
-      fields: ["field_a", "field_b", "field_c"],
+      fields: ["claim.field_a", "claim.field_b", "claim.field_c"],
     },
     {
       step,
-      fields: ["field_d", "field_e"],
+      fields: ["claim.field_d", "claim.field_e"],
       nextPage: "path/to/page/1",
     },
   ];
 
   describe("href", () => {
     it("returns href with claim id parameter set", () => {
+      const context = { claim: new Claim({ application_id: "12345" }) };
+
       const step = new Step({
         name,
         pages,
-        claim: new Claim({ application_id: "12345" }),
+        context,
       });
 
       expect(step.href).toEqual(expect.stringContaining("?claim_id="));
@@ -107,7 +109,7 @@ describe("Step Model", () => {
 
     describe("when field has warnings and formState has some fields with values", () => {
       it("returns in_progress", () => {
-        const warnings = [{ field: "field_e" }];
+        const warnings = [{ field: "claim.field_e" }];
         const claim = {
           field_a: null,
           field_b: null,
@@ -119,7 +121,7 @@ describe("Step Model", () => {
         const step = new Step({
           name,
           pages,
-          claim,
+          context: { claim },
           warnings,
         });
 
@@ -129,7 +131,7 @@ describe("Step Model", () => {
 
     describe("when field has warnings and formState has no fields with values", () => {
       it("returns not_started", () => {
-        const warnings = [{ field: "field_e" }];
+        const warnings = [{ field: "claim.field_e" }];
         const claim = {
           field_a: null,
           field_b: null,
@@ -141,11 +143,34 @@ describe("Step Model", () => {
         const step = new Step({
           name,
           pages,
-          claim,
+          context: { claim },
           warnings,
         });
 
         expect(step.status).toEqual("not_started");
+      });
+
+      describe("when a field is an empty array", () => {
+        it("returns not_started", () => {
+          const warnings = [{ field: "claim.field_e" }];
+
+          const claim = {
+            field_a: [],
+            field_b: null,
+            field_c: null,
+            field_d: null,
+            field_e: null,
+          };
+
+          const step = new Step({
+            name,
+            pages,
+            context: { claim },
+            warnings,
+          });
+
+          expect(step.status).toEqual("not_started");
+        });
       });
     });
   });

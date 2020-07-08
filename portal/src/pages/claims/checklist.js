@@ -5,6 +5,7 @@ import React from "react";
 import Step from "../../components/Step";
 import StepList from "../../components/StepList";
 import StepModel from "../../models/Step";
+import User from "../../models/User";
 import machineConfigs from "../../routes/claim-flow-configs";
 import routeWithParams from "../../utils/routeWithParams";
 import routes from "../../routes";
@@ -16,7 +17,7 @@ export const Checklist = (props) => {
   // https://lwd.atlassian.net/browse/CP-509
   const steps = StepModel.createClaimStepsFromMachine(
     machineConfigs,
-    props.claim,
+    { claim: props.claim, user: props.user },
     null
   );
 
@@ -66,7 +67,8 @@ export const Checklist = (props) => {
 };
 
 Checklist.propTypes = {
-  claim: PropTypes.instanceOf(Claim),
+  claim: PropTypes.instanceOf(Claim).isRequired,
+  user: PropTypes.instanceOf(User).isRequired,
 };
 
 export default withClaim(Checklist);

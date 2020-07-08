@@ -10,11 +10,11 @@ import useHandleInputChange from "../../hooks/useHandleInputChange";
 import { useTranslation } from "react-i18next";
 import withClaim from "../../hoc/withClaim";
 
-export const fields = ["leave_details.reason"];
+export const fields = ["claim.leave_details.reason"];
 
 export const LeaveReasonPage = (props) => {
   const { t } = useTranslation();
-  const { formState, updateFields } = useFormState(pick(props.claim, fields));
+  const { formState, updateFields } = useFormState(pick(props, fields).claim);
   const reason = get(formState, "leave_details.reason");
 
   const handleInputChange = useHandleInputChange(updateFields);

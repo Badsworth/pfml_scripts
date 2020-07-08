@@ -15,8 +15,8 @@ import valueWithFallback from "../../utils/valueWithFallback";
 import withClaim from "../../hoc/withClaim";
 
 export const fields = [
-  "leave_details.employer_notified",
-  "leave_details.employer_notification_date",
+  "claim.leave_details.employer_notified",
+  "claim.leave_details.employer_notification_date",
 ];
 
 /**
@@ -26,7 +26,7 @@ export const NotifiedEmployer = (props) => {
   const { t } = useTranslation();
   const { appLogic, claim } = props;
   const { formState, updateFields, removeField } = useFormState(
-    pick(claim, fields)
+    pick(props, fields).claim
   );
   const { leave_details } = formState;
   const employer_notified = get(leave_details, "employer_notified");

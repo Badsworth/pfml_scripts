@@ -11,11 +11,11 @@ import { useTranslation } from "../../locales/i18n";
 import valueWithFallback from "../../utils/valueWithFallback";
 import withClaim from "../../hoc/withClaim";
 
-export const fields = ["leave_details.continuous_leave_periods"];
+export const fields = ["claim.leave_details.continuous_leave_periods"];
 
 export const LeaveDates = (props) => {
   const { t } = useTranslation();
-  const { formState, updateFields } = useFormState(pick(props.claim, fields));
+  const { formState, updateFields } = useFormState(pick(props, fields).claim);
   const handleInputChange = useHandleInputChange(updateFields);
 
   const handleSave = (formState) =>

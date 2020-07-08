@@ -9,11 +9,11 @@ import useHandleInputChange from "../../hooks/useHandleInputChange";
 import { useTranslation } from "../../locales/i18n";
 import withClaim from "../../hoc/withClaim";
 
-export const fields = ["pregnant_or_recent_birth"];
+export const fields = ["claim.pregnant_or_recent_birth"];
 
 export const ReasonPregnancy = (props) => {
   const { t } = useTranslation();
-  const { formState, updateFields } = useFormState(pick(props.claim, fields));
+  const { formState, updateFields } = useFormState(pick(props, fields).claim);
   const handleInputChange = useHandleInputChange(updateFields);
   const { pregnant_or_recent_birth } = formState;
 
