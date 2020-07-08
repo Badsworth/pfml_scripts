@@ -61,6 +61,14 @@ describe("Title", () => {
     });
   });
 
+  describe("when the `hidden` prop is set to true", () => {
+    it("visually hides the heading", () => {
+      const heading = shallow(<Title hidden>Hello world</Title>).find("h1");
+
+      expect(heading.hasClass("usa-sr-only")).toBe(true);
+    });
+  });
+
   describe("when the `seoTitle` prop is set", () => {
     it("overrides the text used for the <title>", () => {
       const wrapper = shallow(

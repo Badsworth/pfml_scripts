@@ -1,6 +1,7 @@
 import React, { useEffect } from "react";
 import ApplicationCard from "../components/ApplicationCard";
 import DashboardNavigation from "../components/DashboardNavigation";
+import Heading from "../components/Heading";
 import PropTypes from "prop-types";
 import Spinner from "../components/Spinner";
 import Title from "../components/Title";
@@ -19,21 +20,51 @@ const Applications = (props) => {
     appLogic.loadClaims();
   }, [appLogic]);
 
+  const claimsLoaded = !!appLogic.claims;
+  const hasClaims = claimsLoaded && appLogic.claims.items.length > 0;
+  const hasInProgressClaims =
+    hasClaims && appLogic.claims.inProgress.length > 0;
+  const hasSubmittedClaims = hasClaims && appLogic.claims.submitted.length > 0;
+
   return (
     <React.Fragment>
       <DashboardNavigation activeHref={router.route} />
-      <Title marginBottom="4">{t("pages.applications.title")}</Title>
+      <Title hidden={hasClaims}>{t("pages.applications.title")}</Title>
 
-      {appLogic.claims ? (
-        appLogic.claims.items.map((claim, index) => (
-          <ApplicationCard
-            key={claim.application_id}
-            claim={claim}
-            number={index + 1}
-          />
-        ))
-      ) : (
+      {claimsLoaded && !hasClaims && <p>{t("pages.applications.noClaims")}</p>}
+
+      {!claimsLoaded && (
         <Spinner aria-valuetext={t("components.spinner.label")} />
+      )}
+
+      {hasInProgressClaims && (
+        <React.Fragment>
+          <Heading level="2" size="1">
+            {t("pages.applications.inProgressHeading")}
+          </Heading>
+          {appLogic.claims.inProgress.map((claim, index) => (
+            <ApplicationCard
+              key={claim.application_id}
+              claim={claim}
+              number={index + 1}
+            />
+          ))}
+        </React.Fragment>
+      )}
+
+      {hasSubmittedClaims && (
+        <React.Fragment>
+          <Heading level="2" size="1">
+            {t("pages.applications.submittedHeading")}
+          </Heading>
+          {appLogic.claims.submitted.map((claim, index) => (
+            <ApplicationCard
+              key={claim.application_id}
+              claim={claim}
+              number={appLogic.claims.inProgress.length + index + 1}
+            />
+          ))}
+        </React.Fragment>
       )}
     </React.Fragment>
   );

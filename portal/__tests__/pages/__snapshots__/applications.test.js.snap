@@ -1,0 +1,29 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Applications when claims haven't been loaded yet renders the loading page state 1`] = `
+<Fragment>
+  <DashboardNavigation />
+  <Title
+    hidden={false}
+  >
+    Your applications
+  </Title>
+  <Spinner
+    aria-valuetext="Loading"
+  />
+</Fragment>
+`;
+
+exports[`Applications when no claims exist renders the empty page state 1`] = `
+<Fragment>
+  <DashboardNavigation />
+  <Title
+    hidden={false}
+  >
+    Your applications
+  </Title>
+  <p>
+    You don't have any applications yet.
+  </p>
+</Fragment>
+`;

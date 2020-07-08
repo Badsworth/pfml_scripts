@@ -1,4 +1,4 @@
-import Claim, { LeaveReason } from "../models/Claim";
+import Claim, { ClaimStatus, LeaveReason } from "../models/Claim";
 import ButtonLink from "../components/ButtonLink";
 import Heading from "../components/Heading";
 import PropTypes from "prop-types";
@@ -70,14 +70,16 @@ function ApplicationCard(props) {
           </React.Fragment>
         )}
 
-        <ButtonLink
-          className="display-block margin-top-0"
-          href={routeWithParams("claims.checklist", {
-            claim_id: claim.application_id,
-          })}
-        >
-          {t("components.applicationCard.resumeClaimButton")}
-        </ButtonLink>
+        {claim.status === ClaimStatus.started && (
+          <ButtonLink
+            className="display-block margin-top-0"
+            href={routeWithParams("claims.checklist", {
+              claim_id: claim.application_id,
+            })}
+          >
+            {t("components.applicationCard.resumeClaimButton")}
+          </ButtonLink>
+        )}
       </div>
     </article>
   );

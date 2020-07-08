@@ -85,7 +85,10 @@ const pages = {
     siteTitle: "Paid Family and Medical Leave (PFML) | Mass.gov",
   },
   applications: {
-    title: "In-progress applications",
+    inProgressHeading: "In-progress applications",
+    noClaims: "You don't have any applications yet.",
+    submittedHeading: "Submitted applications",
+    title: "Your applications",
   },
   authCreateAccount: {
     createAccountButton: "Create account",

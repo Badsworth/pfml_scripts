@@ -37,6 +37,19 @@ class Claim extends BaseModel {
 }
 
 /**
+ * Enums for the Application's `status` field
+ * @enum {string}
+ */
+export const ClaimStatus = {
+  // Submitted by the user (Step 2)
+  completed: "Completed",
+  // AKA: In Progress (Step 1)
+  started: "Started",
+  // Stored in the claims processing system (Step 3)
+  submitted: "Submitted",
+};
+
+/**
  * Enums for the Application's `leave_details.employment_status` field
  * @enum {string}
  */

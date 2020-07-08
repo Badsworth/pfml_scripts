@@ -15,6 +15,7 @@ const Title = ({ component = "h1", small = false, ...props }) => {
     "font-heading-lg line-height-sans-2": !small,
     "font-heading-sm line-height-sans-3": small,
     "usa-legend": component === "legend",
+    "usa-sr-only": !!props.hidden,
   });
   const seoTitle = props.seoTitle ? props.seoTitle : props.children;
 
@@ -37,6 +38,8 @@ Title.propTypes = {
    * HTML element used to render the page title
    */
   component: PropTypes.oneOf(["h1", "legend"]),
+  /** Visually hide the title */
+  hidden: PropTypes.bool,
   /** Override default bottom margin */
   marginBottom: PropTypes.oneOf(["1", "2", "3", "4", "5", "6", "7", "8"]),
   /**

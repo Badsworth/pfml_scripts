@@ -18,7 +18,7 @@ describe("ClaimsApi", () => {
   });
 
   describe("getClaims", () => {
-    describe("succesful request", () => {
+    describe("successful request", () => {
       beforeEach(() => {
         request.mockResolvedValueOnce({
           body: [
