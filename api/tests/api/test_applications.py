@@ -39,7 +39,7 @@ def test_applications_get_valid(client):
 
     assert response.status_code == 200
     response_body = response.get_json()
-    assert response_body.get("application_id") == application.application_id
+    assert response_body.get("application_id") == str(application.application_id)
     assert response_body.get("updated_time") == "2020-01-01T00:00:00Z"
     assert response_body.get("status") == ApplicationStatus.Started.value
 
@@ -67,7 +67,7 @@ def test_applications_get_with_payment_preferences(client, test_db_session):
 
     assert response.status_code == 200
     response_body = response.get_json()
-    assert response_body.get("application_id") == application.application_id
+    assert response_body.get("application_id") == str(application.application_id)
 
     payment_preferences = response_body.get("payment_preferences")
     assert payment_preferences
@@ -88,7 +88,7 @@ def test_applications_get_all_for_user(client):
 
     response_body = response.get_json()
     for (application, app_response) in zip(applications, response_body):
-        assert application.application_id == app_response["application_id"]
+        assert str(application.application_id) == app_response["application_id"]
         assert application.nickname == app_response["application_nickname"]
 
 
@@ -263,7 +263,7 @@ def test_application_patch_update_leave_period_belonging_to_other_application_bl
 
     # assert existing leave period has not changed
     test_db_session.refresh(leave_period)
-    assert str(leave_period.application_id) == application_1.application_id
+    assert leave_period.application_id == application_1.application_id
     assert leave_period.start_date == date(2020, 6, 11)
 
     # assert other application does not have the leave period
@@ -384,7 +384,7 @@ def test_application_patch_update_payment_preference_belonging_to_other_applicat
 
     # assert existing leave period has not changed
     test_db_session.refresh(payment_preference)
-    assert str(payment_preference.application_id) == application_1.application_id
+    assert payment_preference.application_id == application_1.application_id
     assert payment_preference.description == "Foo"
 
     # assert other application does not have the leave period

@@ -73,7 +73,7 @@ def test_employees_patch(client, employee, consented_user_token):
     ).get_json()
     assert updated_employee["first_name"] == "James"
     assert updated_employee["last_name"] == "Brown"
-    assert updated_employee["employee_id"] == employee.employee_id
+    assert updated_employee["employee_id"] == str(employee.employee_id)
     assert updated_employee["middle_name"] == employee.middle_name
 
 

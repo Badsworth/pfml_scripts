@@ -15,7 +15,7 @@ def test_users_get(client, user, auth_token):
     response_body = response.get_json()
 
     assert response.status_code == 200
-    assert response_body["user_id"] == user.user_id
+    assert response_body["user_id"] == str(user.user_id)
 
 
 def test_users_unauthorized_get(client, user, auth_token):
@@ -38,7 +38,7 @@ def test_users_get_current(client, user, auth_token):
     response_body = response.get_json()
 
     assert response.status_code == 200
-    assert response_body["user_id"] == user.user_id
+    assert response_body["user_id"] == str(user.user_id)
 
 
 def test_users_get_current_404(client):

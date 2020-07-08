@@ -83,7 +83,7 @@ def test_current_user_is_set_successfully(client, app, user, auth_token):
         response_body = response.get_json()
 
         assert g.current_user.active_directory_id == user.active_directory_id
-        assert str(g.current_user.user_id) == user.user_id
+        assert g.current_user.user_id == user.user_id
         assert response.status_code == 200
         assert response_body["status"] == "ok"
 

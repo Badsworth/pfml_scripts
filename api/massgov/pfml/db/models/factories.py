@@ -3,6 +3,7 @@
 #
 import random
 from datetime import datetime, timedelta
+from decimal import Decimal
 
 import factory
 from sqlalchemy.orm import scoped_session
@@ -30,8 +31,9 @@ class Generators:
     AccountKey = factory.Sequence(lambda n: "%011d" % n)
     Tin = factory.Sequence(lambda n: "000%06d" % n)
     Fein = Tin
-    Money = factory.LazyFunction(lambda: round(random.uniform(0, 50000), 2))
+    Money = factory.LazyFunction(lambda: Decimal(round(random.uniform(0, 50000), 2)))
     Now = factory.LazyFunction(lambda: datetime.now())
+    UuidObj = factory.Faker("uuid4", cast_to=None)
 
 
 class BaseFactory(factory.alchemy.SQLAlchemyModelFactory):
@@ -45,7 +47,7 @@ class UserFactory(BaseFactory):
     class Meta:
         model = employee_models.User
 
-    user_id = factory.Faker("uuid4")
+    user_id = Generators.UuidObj
     active_directory_id = factory.Faker("uuid4")
     email_address = factory.Faker("email")
 
@@ -54,7 +56,7 @@ class EmployerFactory(BaseFactory):
     class Meta:
         model = employee_models.Employer
 
-    employer_id = factory.Faker("uuid4")
+    employer_id = Generators.UuidObj
     employer_fein = Generators.Fein
     employer_dba = factory.Faker("company")
 
@@ -63,7 +65,7 @@ class EmployeeFactory(BaseFactory):
     class Meta:
         model = employee_models.Employee
 
-    employee_id = factory.Faker("uuid4")
+    employee_id = Generators.UuidObj
     tax_identifier = Generators.Tin
     first_name = factory.Faker("first_name")
     middle_name = factory.Faker("first_name")
@@ -77,9 +79,9 @@ class WagesAndContributionsFactory(BaseFactory):
     class Meta:
         model = employee_models.WagesAndContributions
 
-    wage_and_contribution_id = factory.Faker("uuid4")
+    wage_and_contribution_id = Generators.UuidObj
     account_key = Generators.AccountKey
-    filing_period = factory.Faker("date")
+    filing_period = factory.Faker("date_obj")
     is_independent_contractor = False
     is_opted_in = False
     employee_ytd_wages = Generators.Money
@@ -100,7 +102,7 @@ class ApplicationFactory(BaseFactory):
     class Meta:
         model = application_models.Application
 
-    application_id = factory.Faker("uuid4")
+    application_id = Generators.UuidObj
     nickname = "My leave application"
     requestor = None
     first_name = factory.Faker("first_name")
