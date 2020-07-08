@@ -13,7 +13,7 @@ exports[`RepeatableFieldset renders a RepeatableFieldsetCard for each entry 1`] 
     }
     heading="Person 1"
     index={0}
-    key="0_0"
+    key="RepeatableFieldset1"
     onRemoveClick={[MockFunction]}
     removeButtonLabel="Remove"
     showRemoveButton={true}
@@ -33,7 +33,7 @@ exports[`RepeatableFieldset renders a RepeatableFieldsetCard for each entry 1`] 
     }
     heading="Person 2"
     index={1}
-    key="1_0"
+    key="RepeatableFieldset2"
     onRemoveClick={[MockFunction]}
     removeButtonLabel="Remove"
     showRemoveButton={true}
@@ -42,6 +42,26 @@ exports[`RepeatableFieldset renders a RepeatableFieldsetCard for each entry 1`] 
       Bud
        – 
       1
+    </p>
+  </RepeatableFieldsetCard>
+  <RepeatableFieldsetCard
+    className="js-repeated-fieldset-card"
+    entry={
+      Object {
+        "first_name": "Cat",
+      }
+    }
+    heading="Person 3"
+    index={2}
+    key="RepeatableFieldset3"
+    onRemoveClick={[MockFunction]}
+    removeButtonLabel="Remove"
+    showRemoveButton={true}
+  >
+    <p>
+      Cat
+       – 
+      2
     </p>
   </RepeatableFieldsetCard>
   <Button

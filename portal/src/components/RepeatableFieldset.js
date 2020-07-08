@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import Button from "./Button";
 import PropTypes from "prop-types";
 import RepeatableFieldsetCard from "./RepeatableFieldsetCard";
+import uniqueId from "lodash/uniqueId";
 import usePreviousValue from "../hooks/usePreviousValue";
 
 /**
@@ -10,13 +11,12 @@ import usePreviousValue from "../hooks/usePreviousValue";
  */
 const RepeatableFieldset = (props) => {
   const { entries } = props;
-  const previousEntriesLength = usePreviousValue(entries.length);
   const containerRef = React.createRef();
-  // See setKeyIncrement usage below for context
-  const [keyIncrement, setKeyIncrement] = useState(0);
+  const entriesAndIds = useEntryIds(entries);
+  const previousEntriesLength = usePreviousValue(entriesAndIds.length);
 
   useEffect(() => {
-    if (entries.length > previousEntriesLength) {
+    if (entriesAndIds.length > previousEntriesLength) {
       // When a new entry is added to the list, focus and scroll it into view.
       const lastEntry = containerRef.current.querySelector(
         ".js-repeated-fieldset-card:last-of-type"
@@ -26,21 +26,14 @@ const RepeatableFieldset = (props) => {
       );
 
       if (focusableElement) focusableElement.focus();
-    } else if (entries.length < previousEntriesLength) {
-      // When an entry is removed from the list, change keyIncrement so React
-      // identifies that the existing RepeatableFieldsetCards no longer correspond
-      // to their previous index position. This is avoids unexpected behavior
-      // and fixes issues where the Remove button would remain focused, potentially
-      // causing a confusing experience for screen readers.
-      setKeyIncrement(keyIncrement + 1);
     }
-  }, [containerRef, entries.length, keyIncrement, previousEntriesLength]);
+  }, [containerRef, entriesAndIds.length, previousEntriesLength]);
 
   return (
     <section className="margin-bottom--3" ref={containerRef}>
-      {entries.map((entry, index) => (
+      {entriesAndIds.map(([entry, id], index) => (
         <RepeatableFieldsetCard
-          key={`${index}_${keyIncrement}`}
+          key={id}
           className="js-repeated-fieldset-card"
           entry={entry}
           heading={`${props.headingPrefix} ${index + 1}`}
@@ -97,5 +90,44 @@ RepeatableFieldset.propTypes = {
    */
   onRemoveClick: PropTypes.func.isRequired,
 };
+
+/**
+ * Takes an array of entries, and pair each entry with a unique id.
+ * The entry-id mapping remains stable across re-renders.
+ * Returns an array of [entry, id] pairs.
+ * @param {Array} entries List of entries
+ * @returns {[*,string][]} List of entry, id pairs
+ */
+function useEntryIds(entries) {
+  const [entryIdMap, setEntryIdMap] = useState(createEntryIdMap(entries));
+  useEffect(() => {
+    setEntryIdMap(createEntryIdMap(entries, entryIdMap));
+
+    // No need to add entryIdMap to dependency list since entryIdMap
+    // only depends on entries and entries is already in the dependency list.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [entries]);
+  return Array.from(entryIdMap.entries());
+}
+
+/**
+ * Create a map from entries to ids.
+ * If the entry already existed previously, use the same id.
+ * Otherwise, create a new id.
+ * @param {Array} entries List of entries
+ * @param {Map<*,string>} [prevEntryIdMap] Previous map from entries to ids
+ */
+function createEntryIdMap(entries, prevEntryIdMap = new Map()) {
+  const entryIdMap = new Map();
+  for (const entry of entries) {
+    const entryId = prevEntryIdMap.get(entry);
+    if (entryId) {
+      entryIdMap.set(entry, entryId);
+    } else {
+      entryIdMap.set(entry, uniqueId("RepeatableFieldset"));
+    }
+  }
+  return entryIdMap;
+}
 
 export default RepeatableFieldset;

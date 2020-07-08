@@ -4,12 +4,16 @@ import RepeatableFieldset from "../../src/components/RepeatableFieldset";
 import { act } from "react-dom/test-utils";
 
 describe("RepeatableFieldset", () => {
-  let props;
+  let props, wrapper;
 
   beforeEach(() => {
     props = {
       addButtonLabel: "Remove",
-      entries: [{ first_name: "Anton" }, { first_name: "Bud" }],
+      entries: [
+        { first_name: "Anton" },
+        { first_name: "Bud" },
+        { first_name: "Cat" },
+      ],
       render: (entry, index) => (
         <p>
           {entry.first_name} – {index}
@@ -23,8 +27,9 @@ describe("RepeatableFieldset", () => {
   });
 
   it("renders a RepeatableFieldsetCard for each entry", () => {
-    const wrapper = shallow(<RepeatableFieldset {...props} />);
-
+    act(() => {
+      wrapper = shallow(<RepeatableFieldset {...props} />);
+    });
     expect(wrapper).toMatchSnapshot();
   });
 
@@ -32,7 +37,14 @@ describe("RepeatableFieldset", () => {
     it("does not show a Remove button", () => {
       props.entries = [{ first_name: "Bud" }];
 
-      const wrapper = shallow(<RepeatableFieldset {...props} />);
+      act(() => {
+        // useEffect doesn't work with enzyme's shallow function
+        // see https://github.com/enzymejs/enzyme/issues/2086 and https://github.com/enzymejs/enzyme/issues/2011
+        wrapper = mount(<RepeatableFieldset {...props} />);
+      });
+      // Need to call wrapper.update since updates were made outside
+      // of the act call as part of the useEffect callback
+      wrapper.update();
 
       expect(
         wrapper.find("RepeatableFieldsetCard").prop("showRemoveButton")
@@ -75,6 +87,9 @@ describe("RepeatableFieldset", () => {
         const newEntries = props.entries.concat([{ first_name: "Charles" }]);
         wrapper.setProps({ entries: newEntries });
       });
+      // Need to call wrapper.update since updates were made outside
+      // of the act call as part of the useEffect callback
+      wrapper.update();
 
       const label = wrapper.find(".test-label").last().getDOMNode();
 
@@ -83,28 +98,37 @@ describe("RepeatableFieldset", () => {
   });
 
   describe("when an entry is removed", () => {
-    it("changes the RepeatableFieldsetCard key", () => {
+    it("keeps RepeatableFieldsetCard keys stable", () => {
+      const { entries } = props;
       // Use `mount` so that useEffect works
-      const wrapper = mount(<RepeatableFieldset {...props} />);
-      const initialKey = wrapper.find("RepeatableFieldsetCard").first().key();
+      // see https://github.com/enzymejs/enzyme/issues/2086 and https://github.com/enzymejs/enzyme/issues/2011
+      act(() => {
+        wrapper = mount(<RepeatableFieldset {...props} />);
+      });
+      // Need to call wrapper.update since updates were made outside
+      // of the act call as part of the useEffect callback
+      wrapper.update();
+
+      const keys1 = wrapper
+        .find("RepeatableFieldsetCard")
+        .map((wrapper) => wrapper.key());
 
       act(() => {
-        const newEntries = [].concat(props.entries);
-        newEntries.pop();
+        // Remove element at index 1
+        const newEntries = entries.slice(0, 1).concat(entries.slice(2));
         wrapper.setProps({ entries: newEntries });
       });
+      // Need to call wrapper.update since updates were made outside
+      // of the act call as part of the useEffect callback
+      wrapper.update();
 
-      // Hack to wait for the setState to be called after the effect is triggered above
-      // Forces a re-render
-      act(() => {
-        wrapper.setProps({});
-      });
+      const keys2 = wrapper
+        .find("RepeatableFieldsetCard")
+        .map((wrapper) => wrapper.key());
 
-      const newKey = wrapper.find("RepeatableFieldsetCard").first().key();
-
-      expect(initialKey).toBeDefined();
-      expect(newKey).toBeDefined();
-      expect(newKey).not.toEqual(initialKey);
+      expect(keys2.length).toBe(keys1.length - 1);
+      expect(keys2[0]).toBe(keys1[0]);
+      expect(keys2.slice(1)).toEqual(keys1.slice(2));
     });
   });
 });
