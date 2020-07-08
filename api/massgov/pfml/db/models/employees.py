@@ -10,7 +10,7 @@
 #
 from sqlalchemy import Boolean, Column, Date, DateTime, ForeignKey, Integer, Numeric, Text
 from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import Query, dynamic_loader, relationship
 
 from ..lookup import LookupTable
 from .base import Base, uuid_gen
@@ -117,10 +117,12 @@ class Employer(Base):
     dor_updated_date = Column(DateTime)
     latest_import_log_id = Column(Integer, ForeignKey("import_log.import_log_id"))
 
-    wages_and_contributions = relationship(
-        "WagesAndContributions", back_populates="employer", lazy="dynamic"
+    wages_and_contributions: "Query[WagesAndContributions]" = dynamic_loader(
+        "WagesAndContributions", back_populates="employer"
     )
-    addresses = relationship("EmployerAddress", back_populates="employer", lazy="dynamic")
+    addresses: "Query[EmployerAddress]" = dynamic_loader(
+        "EmployerAddress", back_populates="employer"
+    )
 
 
 class PaymentInformation(Base):
@@ -160,13 +162,15 @@ class Employee(Base):
     education_level = relationship(EducationLevel)
     latest_import_log = relationship("ImportLog")
 
-    authorized_reps = relationship(
-        "AuthorizedRepEmployee", back_populates="employee", lazy="dynamic"
+    authorized_reps: "Query[AuthorizedRepEmployee]" = dynamic_loader(
+        "AuthorizedRepEmployee", back_populates="employee"
     )
-    wages_and_contributions = relationship(
-        "WagesAndContributions", back_populates="employee", lazy="dynamic"
+    wages_and_contributions: "Query[WagesAndContributions]" = dynamic_loader(
+        "WagesAndContributions", back_populates="employee"
     )
-    addresses = relationship("EmployeeAddress", back_populates="employee", lazy="dynamic")
+    addresses: "Query[EmployeeAddress]" = dynamic_loader(
+        "EmployeeAddress", back_populates="employee"
+    )
 
 
 class Claim(Base):
@@ -206,9 +210,15 @@ class Address(Base):
     address_type = relationship(LkAddressType)
     geo_state = relationship(GeoState)
     country = relationship(Country)
-    employees = relationship("EmployeeAddress", back_populates="address", lazy="dynamic")
-    employers = relationship("EmployerAddress", back_populates="address", lazy="dynamic")
-    health_care_providers = relationship("HealthCareProviderAddress", back_populates="address")
+    employees: "Query[EmployeeAddress]" = dynamic_loader(
+        "EmployeeAddress", back_populates="address"
+    )
+    employers: "Query[EmployerAddress]" = dynamic_loader(
+        "EmployerAddress", back_populates="address"
+    )
+    health_care_providers: "Query[HealthCareProviderAddress]" = dynamic_loader(
+        "HealthCareProviderAddress", back_populates="address"
+    )
 
 
 class EmployeeAddress(Base):

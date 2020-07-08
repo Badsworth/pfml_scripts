@@ -39,7 +39,7 @@ pytest = "^5.3.5"
 pytest-testmon = "^1.0.2"
 pytest-watch = "^4.2.0"
 safety = "^1.9.0"
-sqlalchemy-stubs = "^0.3"
+sqlalchemy-stubs = {git = "https://github.com/dropbox/sqlalchemy-stubs", rev = "55470ceab8149db983411d5c094c9fe16343c58b"}
 freezegun = "^0.3.15"
 
 [tool.poetry.scripts]
