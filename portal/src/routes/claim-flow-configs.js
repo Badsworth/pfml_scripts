@@ -14,6 +14,8 @@
 import { EmploymentStatus, LeaveReason } from "../models/Claim";
 import { ClaimSteps } from "../models/Step";
 import { fields as durationFields } from "../pages/claims/duration";
+import { fields as employerBenefitDetailsFields } from "../pages/claims/employer-benefit-details";
+import { fields as employerBenefitsFields } from "../pages/claims/employer-benefits";
 import { fields as employmentStatusFields } from "../pages/claims/employment-status";
 import { get } from "lodash";
 import { fields as leaveDatesFields } from "../pages/claims/leave-dates";
@@ -33,6 +35,7 @@ export const guards = {
   isEmployed: ({ claim }) =>
     get(claim, "leave_details.employment_status") === EmploymentStatus.employed,
   hasStateId: ({ user }) => get(user, "has_state_id"),
+  hasEmployerBenefits: ({ claim }) => claim.has_employer_benefits === true,
 };
 
 export default {
@@ -57,6 +60,7 @@ export default {
       on: {
         VERIFY_ID: routes.claims.name,
         LEAVE_DETAILS: routes.claims.leaveReason,
+        OTHER_LEAVE: routes.claims.employerBenefits,
         EMPLOYER_INFORMATION: routes.claims.employmentStatus,
         CONFIRM: routes.claims.confirm,
       },
@@ -193,6 +197,34 @@ export default {
         fields: leaveDatesFields,
       },
       on: {
+        CONTINUE: routes.claims.checklist,
+      },
+    },
+    [routes.claims.employerBenefits]: {
+      meta: {
+        step: ClaimSteps.otherLeave,
+        fields: employerBenefitsFields,
+      },
+      on: {
+        CONTINUE: [
+          {
+            target: routes.claims.employerBenefitDetails,
+            cond: "hasEmployerBenefits",
+          },
+          {
+            // todo: CP-564 route to the other-income page
+            target: routes.claims.checklist,
+          },
+        ],
+      },
+    },
+    [routes.claims.employerBenefitDetails]: {
+      meta: {
+        step: ClaimSteps.otherLeave,
+        fields: employerBenefitDetailsFields,
+      },
+      on: {
+        // todo: CP-564 route to the other-income page
         CONTINUE: routes.claims.checklist,
       },
     },

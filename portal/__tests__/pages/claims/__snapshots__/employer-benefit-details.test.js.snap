@@ -1,0 +1,34 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`EmployerBenefitDetails when the user's claim has employer benefits renders the page 1`] = `
+<QuestionPage
+  formState={Object {}}
+  onSave={[Function]}
+  title="Other income and benefits"
+>
+  <FormLabel
+    component="legend"
+  >
+    Tell us about benefits you will receive from your employer.
+  </FormLabel>
+  <RepeatableFieldset
+    addButtonLabel="Add another"
+    entries={
+      Array [
+        EmployerBenefit {
+          "benefit_amount_dollars": null,
+          "benefit_amount_frequency": null,
+          "benefit_end_date": null,
+          "benefit_start_date": null,
+          "benefit_type": "paidLeave",
+        },
+      ]
+    }
+    headingPrefix="Benefit"
+    onAddClick={[Function]}
+    onRemoveClick={[Function]}
+    removeButtonLabel="Remove"
+    render={[Function]}
+  />
+</QuestionPage>
+`;

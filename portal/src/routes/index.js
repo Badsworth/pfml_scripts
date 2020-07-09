@@ -21,6 +21,8 @@ const routes = {
     dashboard: "/",
     dateOfBirth: "/claims/date-of-birth",
     duration: "/claims/duration",
+    employerBenefitDetails: "/claims/employer-benefit-details",
+    employerBenefits: "/claims/employer-benefits",
     employmentStatus: "/claims/employment-status",
     leaveDates: "/claims/leave-dates",
     leaveReason: "/claims/leave-reason",

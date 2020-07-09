@@ -59,6 +59,7 @@ const shared = {
   claimsFileUploadTitle: "Verify your identity",
   claimsLeaveDetailsTitle: "Leave Details",
   claimsLeaveDurationTitle: "Leave duration",
+  claimsOtherLeaveTitle: "Other income and benefits",
   claimsTakingLeaveTitle: "Verify your identity",
   leaveReasonActiveDutyFamily: "Active duty",
   leaveReasonBonding: "Bonding leave",
@@ -199,6 +200,44 @@ const pages = {
     sectionLabel:
       "Do you need to take off work completely or work on a reduced schedule?",
     title: "$t(shared.claimsLeaveDurationTitle)",
+  },
+  claimsEmployerBenefitDetails: {
+    addButton: "Add another",
+    amountHint: "For example, $250 every month",
+    amountLabel: "How much will you receive?",
+    cardHeadingPrefix: "Benefit",
+    choiceHint_familyOrMedicalLeave:
+      "For example, a paid maternity leave policy",
+    choiceHint_paidLeave:
+      "For example, vacation time, sick leave, or personal time",
+    choiceHint_permanentDisability:
+      "Also known as a permanent disability policy",
+    choiceHint_shortTermDisability:
+      "Also known as temporary disability insurance",
+    choiceLabel_familyOrMedicalLeave: "Family or medical leave insurance",
+    choiceLabel_paidLeave: "Accrued paid Leave",
+    choiceLabel_permanentDisability: "Permanent disability insurance",
+    choiceLabel_shortTermDisability: "Short-term disability insurance",
+    endDateLabel: "When will you stop using the benefit?",
+    removeButton: "Remove",
+    sectionLabel: "Tell us about benefits you will receive from your employer.",
+    startDateLabel: "When will you start using the benefit?",
+    title: "$t(shared.claimsOtherLeaveTitle)",
+    typeLabel: "What kind of benefit is it?",
+  },
+  claimsEmployerBenefits: {
+    choiceNo: "$t(shared.choiceNo)",
+    choiceYes: "$t(shared.choiceYes)",
+    detailsHeader: "Employer-sponsored benefits you must report are:",
+    detailsList: [
+      "Accrued paid leave, such as vacation time, sick time, personal time, or other paid time off",
+      "Short-term disability insurance",
+      "Permanent disability insurance",
+      "Family or medical leave insurance, such as a maternity leave policy",
+    ],
+    sectionLabel:
+      "Will you use any employer-sponsored benefits during your leave?",
+    title: "$t(shared.claimsOtherLeaveTitle)",
   },
   claimsEmploymentStatus: {
     choiceLabel_employed: "I'm employed in Massachusetts",

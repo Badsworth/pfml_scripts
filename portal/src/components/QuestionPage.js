@@ -38,6 +38,7 @@ export const QuestionPage = (props) => {
 QuestionPage.propTypes = {
   /**
    * The state of the form.
+   * todo: remove this prop if it's no longer useful
    */
   formState: PropTypes.object,
   /**
@@ -48,7 +49,6 @@ QuestionPage.propTypes = {
    * The text of the small title of the form.
    */
   title: PropTypes.node.isRequired,
-
   /**
    * Function that performs the save operation. Can be asynchronous.
    */

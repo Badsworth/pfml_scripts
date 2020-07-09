@@ -22,10 +22,12 @@ class EmployerBenefit extends BaseModel {
  * TODO: (CP-567) make sure these enum strings match the API's values
  */
 export const EmployerBenefitType = {
-  familyOrMedicalLeave: "Family or Medical Leave",
+  // The ordering here defines the ordering of elements on the page so we override the linter rule
+  /* eslint-disable sort-keys */
   paidLeave: "Paid Leave",
-  permanentDisability: "Permanent Disability",
   shortTermDisability: "Short Term Disability",
+  permanentDisability: "Permanent Disability",
+  familyOrMedicalLeave: "Family or Medical Leave",
 };
 
 export default EmployerBenefit;

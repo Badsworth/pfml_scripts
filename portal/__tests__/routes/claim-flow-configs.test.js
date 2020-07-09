@@ -100,6 +100,18 @@ const machineTests = {
       test: () => {},
     },
   },
+  [routes.claims.employerBenefits]: {
+    meta: {
+      test: () => {},
+    },
+  },
+  [routes.claims.employerBenefitDetails]: {
+    meta: {
+      test: (_, event) => {
+        expect(get(event.context.claim, "has_employer_benefits")).toEqual(true);
+      },
+    },
+  },
   [routes.claims.employmentStatus]: {
     meta: {
       test: () => {},
@@ -133,10 +145,12 @@ describe("routingMachine", () => {
   const employed = {
     leave_details: { employment_status: EmploymentStatus.employed },
   };
+  const hasEmployerBenefits = { has_employer_benefits: true };
   const hasStateId = { has_state_id: true };
   const testData = [
     { claimData: medicalClaim, userData: hasStateId },
     { claimData: employed, userData: {} },
+    { claimData: hasEmployerBenefits, userData: {} },
   ];
 
   // Action that's fired when exiting dashboard state and creating a claim and
@@ -165,6 +179,7 @@ describe("routingMachine", () => {
     CONTINUE: {},
     VERIFY_ID: {},
     LEAVE_DETAILS: {},
+    OTHER_LEAVE: {},
     EMPLOYER_INFORMATION: {},
     CONFIRM: {},
     CONSENT_TO_DATA_SHARING: {},

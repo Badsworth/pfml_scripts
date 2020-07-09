@@ -25,6 +25,7 @@ function InputChoiceGroup({ type = "checkbox", ...props }) {
         errorMsg={props.errorMsg}
         hint={props.hint}
         optionalText={props.optionalText}
+        small={props.smallLabel}
       >
         {props.label}
       </FormLabel>
@@ -81,6 +82,10 @@ InputChoiceGroup.propTypes = {
    * HTML input `onChange` attribute applied to each choice in the list
    */
   onChange: PropTypes.func,
+  /**
+   * Enable the smaller label variant
+   */
+  smallLabel: PropTypes.bool,
   /**
    * HTML input `type` attribute applied to each choice in the list
    */

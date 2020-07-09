@@ -64,7 +64,7 @@ exports[`Checklist renders component 1`] = `
     <Step
       key="otherLeave"
       status="disabled"
-      stepHref="#?claim_id=mock-application-id"
+      stepHref="/claims/employer-benefits?claim_id=mock-application-id"
       title="Report other leave and benefits"
     >
       <span
