@@ -72,6 +72,11 @@ exports[`Review when all data is present renders Review page with the field valu
     Currently employed
   </ReviewRow>
   <ReviewRow
+    label="Employer's FEIN"
+  >
+    12-1234567
+  </ReviewRow>
+  <ReviewRow
     label="Notified employer"
   >
     Notified employer on 6/25/2020

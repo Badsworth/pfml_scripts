@@ -52,7 +52,7 @@ export const ClaimStatus = {
 };
 
 /**
- * Enums for the Application's `leave_details.employment_status` field
+ * Enums for the Application's `employment_status` field
  * @enum {string}
  */
 export const EmploymentStatus = {

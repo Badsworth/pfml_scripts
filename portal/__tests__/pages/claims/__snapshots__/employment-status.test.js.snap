@@ -2,7 +2,12 @@
 
 exports[`EmploymentStatusPage renders the page 1`] = `
 <QuestionPage
-  formState={Object {}}
+  formState={
+    Object {
+      "employer_fein": null,
+      "employment_status": null,
+    }
+  }
   onSave={[Function]}
   title="Employment information"
 >
@@ -39,9 +44,34 @@ exports[`EmploymentStatusPage renders the page 1`] = `
       </Details>
     }
     label="What is your employment status?"
-    name="leave_details.employment_status"
+    name="employment_status"
     onChange={[Function]}
     type="radio"
   />
+  <ConditionalContent
+    fieldNamesClearedWhenHidden={
+      Array [
+        "employer_fein",
+      ]
+    }
+    removeField={[Function]}
+    visible={false}
+  >
+    <InputText
+      hint={
+        <Details
+          label="Where can I find my employer's FEIN?"
+        >
+          You can find this number on all notices your employer sent about Paid Family and Medical Leave. You can also find it on your W-2 or 1099-MISC. Ask your employer if you need help getting this information.
+        </Details>
+      }
+      label="What is your employer's Federal Employer Identification Number (FEIN)?"
+      mask="fein"
+      name="employer_fein"
+      onChange={[Function]}
+      type="numeric"
+      value=""
+    />
+  </ConditionalContent>
 </QuestionPage>
 `;

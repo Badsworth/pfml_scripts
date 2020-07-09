@@ -165,4 +165,34 @@ describe("Mask", () => {
       });
     });
   });
+
+  describe("FEIN", () => {
+    it("accepts full FEINs", () => {
+      const originalValue = "121234567";
+      const output = maskValue(originalValue, "fein");
+
+      expect(output).toBe("12-1234567");
+    });
+
+    it("accepts an unexpectedly long value", () => {
+      const originalValue = "12123456789";
+      const output = maskValue(originalValue, "fein");
+
+      expect(output).toBe("12-123456789");
+    });
+
+    it("accepts spaces in value", () => {
+      const originalValue = "12 1234567";
+      const output = maskValue(originalValue, "fein");
+
+      expect(output).toBe("12-1234567");
+    });
+
+    it("accepts dashes in value", () => {
+      const originalValue = "12-1234567";
+      const output = maskValue(originalValue, "fein");
+
+      expect(output).toBe("12-1234567");
+    });
+  });
 });

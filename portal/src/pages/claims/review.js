@@ -123,19 +123,24 @@ export const Review = (props) => {
         {t("pages.claimsReview.employmentSectionHeading")}
       </ReviewHeading>
 
-      {get(claim, "leave_details.employment_status") && (
+      {get(claim, "employment_status") && (
         <ReviewRow label={t("pages.claimsReview.employmentStatusLabel")}>
           {t("pages.claimsReview.employmentStatusValue", {
             context: findKeyByValue(
               EmploymentStatus,
-              get(claim, "leave_details.employment_status")
+              get(claim, "employment_status")
             ),
           })}
         </ReviewRow>
       )}
 
-      {get(claim, "leave_details.employment_status") === // only display this if the claimant is Employed
-        EmploymentStatus.employed && (
+      {get(claim, "employment_status") === EmploymentStatus.employed && ( // only display this if the claimant is Employed
+        <ReviewRow label={t("pages.claimsReview.employerFeinLabel")}>
+          {get(claim, "employer_fein")}
+        </ReviewRow>
+      )}
+
+      {get(claim, "employment_status") === EmploymentStatus.employed && ( // only display this if the claimant is Employed
         <ReviewRow label={t("pages.claimsReview.employerNotifiedLabel")}>
           {t("pages.claimsReview.employerNotifiedValue", {
             context: (!!get(

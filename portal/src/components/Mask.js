@@ -4,6 +4,7 @@ import React from "react";
 // Deliminate chunks of integers
 const maskDeliminatedRegex = {
   ssn: /([*\d]{3})([*\d]{1,2})?([*\d]+)?/,
+  fein: /([*\d]{2})([*\d]+)?/,
 };
 
 /**

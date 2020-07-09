@@ -1,7 +1,9 @@
 import Claim, { EmploymentStatus } from "../../models/Claim";
 import Alert from "../../components/Alert";
+import ConditionalContent from "../../components/ConditionalContent";
 import Details from "../../components/Details";
 import InputChoiceGroup from "../../components/InputChoiceGroup";
+import InputText from "../../components/InputText";
 import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
@@ -10,15 +12,19 @@ import pick from "lodash/pick";
 import useFormState from "../../hooks/useFormState";
 import useHandleInputChange from "../../hooks/useHandleInputChange";
 import { useTranslation } from "../../locales/i18n";
+import valueWithFallback from "../../utils/valueWithFallback";
 import withClaim from "../../hoc/withClaim";
 
-export const fields = ["claim.leave_details.employment_status"];
+export const fields = ["claim.employment_status", "claim.employer_fein"];
 
 export const EmploymentStatusPage = (props) => {
   const { t } = useTranslation();
   const { appLogic, claim } = props;
-  const { formState, updateFields } = useFormState(pick(props, fields).claim);
-  const employment_status = get(formState, "leave_details.employment_status");
+  const { formState, updateFields, removeField } = useFormState(
+    pick(props, fields).claim
+  );
+  const employment_status = get(formState, "employment_status");
+  const employer_fein = get(formState, "employer_fein");
   const handleInputChange = useHandleInputChange(updateFields);
 
   const handleSave = () => {
@@ -49,10 +55,29 @@ export const EmploymentStatusPage = (props) => {
             {t("pages.claimsEmploymentStatus.furloughAnswer")}
           </Details>
         }
-        name="leave_details.employment_status"
+        name="employment_status"
         onChange={handleInputChange}
         type="radio"
       />
+      <ConditionalContent
+        fieldNamesClearedWhenHidden={["employer_fein"]}
+        removeField={removeField}
+        visible={employment_status === EmploymentStatus.employed}
+      >
+        <InputText
+          type="numeric"
+          name="employer_fein"
+          label={t("pages.claimsEmploymentStatus.feinLabel")}
+          mask="fein"
+          hint={
+            <Details label={t("pages.claimsEmploymentStatus.feinQuestion")}>
+              {t("pages.claimsEmploymentStatus.feinAnswer")}
+            </Details>
+          }
+          value={valueWithFallback(employer_fein)}
+          onChange={handleInputChange}
+        />
+      </ConditionalContent>
     </QuestionPage>
   );
 };

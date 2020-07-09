@@ -120,9 +120,9 @@ const machineTests = {
   [routes.claims.notifiedEmployer]: {
     meta: {
       test: (_, event) => {
-        expect(
-          get(event.context.claim, "leave_details.employment_status")
-        ).toEqual(EmploymentStatus.employed);
+        expect(get(event.context.claim, "employment_status")).toEqual(
+          EmploymentStatus.employed
+        );
       },
     },
   },
@@ -143,7 +143,7 @@ describe("routingMachine", () => {
   // different routing paths
   const medicalClaim = { leave_details: { reason: LeaveReason.medical } };
   const employed = {
-    leave_details: { employment_status: EmploymentStatus.employed },
+    employment_status: EmploymentStatus.employed,
   };
   const hasEmployerBenefits = { has_employer_benefits: true };
   const hasStateId = { has_state_id: true };

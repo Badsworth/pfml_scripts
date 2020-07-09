@@ -243,6 +243,11 @@ const pages = {
     choiceLabel_employed: "I'm employed in Massachusetts",
     choiceLabel_selfEmployed: "I'm self-employed",
     choiceLabel_unemployed: "I'm unemployed",
+    feinAnswer:
+      "You can find this number on all notices your employer sent about Paid Family and Medical Leave. You can also find it on your W-2 or 1099-MISC. Ask your employer if you need help getting this information.",
+    feinLabel:
+      "What is your employer's Federal Employer Identification Number (FEIN)?",
+    feinQuestion: "Where can I find my employer's FEIN?",
     furloughAnswer:
       'If your hours have been cut or significantly reduced but you have not been laid off, select "$t(pages.claimsEmploymentStatus.choiceLabel_employed)"',
     furloughQuestion: "What if I've been furloughed?",
@@ -301,6 +306,7 @@ const pages = {
   claimsReview: {
     confirmationAction: "Confirm information is correct",
     editLink: "Edit",
+    employerFeinLabel: "Employer's FEIN",
     employerNotifiedLabel: "Notified employer",
     employerNotifiedValue: "No",
     employerNotifiedValue_true: "Notified employer on {{date}}",

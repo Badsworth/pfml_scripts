@@ -33,7 +33,7 @@ export const guards = {
   isMedicalClaim: ({ claim }) =>
     get(claim, "leave_details.reason") === LeaveReason.medical,
   isEmployed: ({ claim }) =>
-    get(claim, "leave_details.employment_status") === EmploymentStatus.employed,
+    get(claim, "employment_status") === EmploymentStatus.employed,
   hasStateId: ({ user }) => get(user, "has_state_id"),
   hasEmployerBenefits: ({ claim }) => claim.has_employer_benefits === true,
 };

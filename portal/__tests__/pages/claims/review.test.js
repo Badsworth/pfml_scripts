@@ -17,6 +17,8 @@ function initFullClaim() {
     application_id: "mock-id",
     duration_type: "continuous",
     first_name: "Bud",
+    employment_status: EmploymentStatus.employed,
+    employer_fein: "12-1234567",
     middle_name: "Monstera",
     last_name: "Baxter",
     leave_details: {
@@ -28,7 +30,6 @@ function initFullClaim() {
       ],
       employer_notified: true,
       employer_notification_date: "2020-06-25",
-      employment_status: EmploymentStatus.employed,
       reason: LeaveReason.medical,
     },
   });
@@ -53,7 +54,7 @@ describe("Review", () => {
   });
 
   describe("when claimant is not Employed", () => {
-    it("does not render 'Notified employer' row", () => {
+    it("does not render 'Notified employer' row or FEIN row", () => {
       const claim = initFullClaim();
       const query = { claim_id: claim.application_id };
       const user = new User();
@@ -62,7 +63,8 @@ describe("Review", () => {
         <Review claim={claim} query={query} user={user} />
       );
 
-      expect(wrapper.text()).not.toMatch("Notified employer");
+      expect(wrapper.text()).not.toContain("Notified employer");
+      expect(wrapper.text()).not.toContain("Employer's FEIN");
     });
   });
 
