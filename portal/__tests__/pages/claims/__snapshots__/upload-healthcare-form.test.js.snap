@@ -13,7 +13,7 @@ exports[`UploadHealthcareForm initially renders the page without any file cards 
     Upload your Healthcare Provider form
   </Heading>
   <Lead>
-    You need to upload a copy of the PFML Healthcare Provider Form to prove that you need to take medical leave. You can upload a completed Family and Medical Leave Act (FMLA) form instead if your provider filled out.
+    You need to upload a copy of the PFML Healthcare Provider Form to prove that you need to take medical leave. You can upload a completed Family and Medical Leave Act (FMLA) form instead if your provider filled one out.
   </Lead>
   <FileUploadDetails />
   <FileCardList
