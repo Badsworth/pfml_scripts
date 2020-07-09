@@ -98,11 +98,7 @@ describe("App", () => {
       const header = wrapper.find("Header");
 
       expect(header.exists()).toBe(true);
-      expect(header.prop("user")).toMatchInlineSnapshot(`
-        Object {
-          "username": "mocked-header-user@example.com",
-        }
-      `);
+      expect(header.prop("user")).toBeInstanceOf(User);
     });
   });
 
@@ -248,22 +244,6 @@ describe("App", () => {
       });
 
       expect(wrapper.find("Authenticator").prop("authState")).toBe(authState);
-    });
-
-    it("clears the authUser state", () => {
-      const { wrapper } = render();
-      const authState = "signIn";
-      const authData = {};
-
-      act(() => {
-        wrapper
-          .find("Authenticator")
-          .simulate("stateChange", authState, authData);
-      });
-
-      // There isn't a clear way in Enzyme to read the state from useState (yet)
-      // so we assert on the authData value that gets passed into Header
-      expect(wrapper.find("Header").prop("user")).toBeUndefined();
     });
   });
 

@@ -1,6 +1,7 @@
 import { Auth } from "aws-amplify";
 import AuthNav from "../../src/components/AuthNav";
 import React from "react";
+import User from "../../src/models/User";
 import { shallow } from "enzyme";
 
 describe("AuthNav", () => {
@@ -25,9 +26,10 @@ describe("AuthNav", () => {
   });
 
   describe("when a user is authenticated", () => {
-    const user = {
-      username: "Foo Bar",
-    };
+    const user = new User({
+      email_address: "email@address.com",
+      user_id: "mock-user-id",
+    });
 
     it("renders the logged-in state", () => {
       const wrapper = shallow(<AuthNav user={user} />);
@@ -38,7 +40,7 @@ describe("AuthNav", () => {
     it("renders the user's name", () => {
       const wrapper = shallow(<AuthNav user={user} />);
 
-      expect(wrapper.text()).toMatch(user.username);
+      expect(wrapper.text()).toMatch(user.email_address);
     });
 
     it("renders a log out link", () => {

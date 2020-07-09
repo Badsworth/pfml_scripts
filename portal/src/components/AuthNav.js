@@ -25,10 +25,10 @@ const AuthNav = (props) => {
       <div className="grid-container">
         <div className="grid-row">
           <div className="grid-col-fill margin-y-1">
-            {user.username ? (
+            {user.email_address ? (
               <React.Fragment>
                 <span className="display-inline-block margin-right-1">
-                  {user.username}
+                  {user.email_address}
                 </span>
                 <Button
                   className="width-auto"

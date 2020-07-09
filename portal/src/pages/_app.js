@@ -57,10 +57,6 @@ export const App = ({
   // Global UI state, such as whether to display the loading indicator
   const [ui, setUI] = useState({ isLoading: false });
 
-  // State representing the auth service's (Cognito) user object
-  // setAuthUser gets called when the user logs in to Cognito
-  const [authUser, setAuthUser] = useState();
-
   /**
    * Event handler for when a page route transition has ended
    * (either successfully or unsuccessfully).
@@ -103,11 +99,6 @@ export const App = ({
 
     if (newAuthState === "signedIn") {
       await handleLogIn(authData);
-    } else {
-      // TODO: Update this block to only trigger on the Log Out event, and
-      // clear all local state, possibly by just refreshing the browser
-      // https://lwd.atlassian.net/browse/CP-361
-      setAuthUser();
     }
 
     window.scrollTo(0, 0);
@@ -121,11 +112,7 @@ export const App = ({
    */
   const handleLogIn = async (authData) => {
     setUI({ ...ui, isLoading: true });
-    // TODO: Once the API endpoint returns the actual user's data, we should just
-    // access the authenticated user's email from the profile returned by the API
-    // rather than having two different user states (user and authUser).
-    // https://lwd.atlassian.net/browse/CP-371
-    setAuthUser({ username: authData.attributes.email });
+
     let userResponse;
 
     try {
@@ -219,7 +206,7 @@ export const App = ({
         <title>{t("pages.app.siteTitle")}</title>
         <meta name="description" content={t("pages.app.siteDescription")} />
       </Head>
-      <Header user={authUser} />
+      <Header user={user} />
       <main id="main" className="grid-container margin-top-5 margin-bottom-8">
         <div className="grid-row">
           <div className="grid-col-fill">
