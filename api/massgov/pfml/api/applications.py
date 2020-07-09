@@ -1,6 +1,7 @@
 from datetime import datetime
 
 import connexion
+from werkzeug.exceptions import Unauthorized
 
 import massgov.pfml.api.app as app
 import massgov.pfml.api.models.applications.requests as application_request_model
@@ -33,8 +34,17 @@ def applications_get():
 
 def applications_start():
     application = Application()
-    application.start_time = datetime.now()
-    application.updated_time = datetime.now()
+
+    now = datetime.now()
+    application.start_time = now
+    application.updated_time = now
+
+    # this should always be the case at this point, but the type for
+    # current_user is still optional until we require authentication
+    if user := app.current_user():
+        application.user = user
+    else:
+        raise Unauthorized
 
     with app.db_session() as db_session:
         db_session.add(application)
