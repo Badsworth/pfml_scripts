@@ -5,26 +5,28 @@ import React from "react";
 export default {
   title: "Components/ApplicationCard",
   component: ApplicationCard,
+  args: {
+    claim: {
+      application_id: "mock-claim-id",
+      employer_fein: "00-0000000",
+      leave_details: {
+        continuous_leave_periods: [
+          {
+            end_date: "2021-12-30",
+            start_date: "2021-09-21",
+          },
+        ],
+        employer_notified: true,
+        reason: LeaveReason.medical,
+        status: ClaimStatus.started,
+      },
+    },
+    number: 1,
+  },
 };
 
-export const InProgressClaim = () => {
-  const claim = new Claim({
-    application_id: "mock-claim-id",
-    employer_fein: "00-0000000",
-    leave_details: {
-      continuous_leave_periods: [
-        {
-          end_date: "2021-12-30",
-          start_date: "2021-09-21",
-        },
-      ],
-      employer_notified: true,
-      reason: LeaveReason.medical,
-      status: ClaimStatus.started,
-    },
-  });
-
-  return <ApplicationCard claim={claim} number={1} />;
+export const InProgressClaim = ({ claim, ...args }) => {
+  return <ApplicationCard claim={new Claim(claim)} {...args} />;
 };
 
 export const EmptyClaim = () => (

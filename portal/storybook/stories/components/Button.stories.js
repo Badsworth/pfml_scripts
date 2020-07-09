@@ -5,12 +5,19 @@ import React from "react";
 export default {
   title: "Components/Buttons/Button",
   component: Button,
+  args: {
+    children: "Submit",
+  },
 };
 
-export const Default = () => {
+export const Default = ({ children, ...args }) => {
   const handleClick = () => alert("Clicked!");
 
-  return <Button onClick={handleClick}>Submit</Button>;
+  return (
+    <Button {...args} onClick={handleClick}>
+      {children}
+    </Button>
+  );
 };
 
 export const Disabled = () => {

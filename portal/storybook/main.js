@@ -12,7 +12,7 @@ const webpack = require("webpack");
 
 module.exports = {
   addons: ["@storybook/addon-docs"],
-  stories: ["./stories/**/*.stories.(js|mdx)"],
+  stories: ["./stories/**/*.stories.@(js|mdx)"],
   /**
    * Customize the Webpack configuration used by Storybook so it supports
    * Sass files and alias import paths.

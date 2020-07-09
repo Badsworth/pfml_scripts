@@ -45,8 +45,8 @@
   "devDependencies": {
     "@babel/core": "^7.8.4",
     "@next/bundle-analyzer": "^9.3.6",
-    "@storybook/addon-docs": "^6.0.0-alpha.41",
-    "@storybook/react": "^6.0.0-alpha.41",
+    "@storybook/addon-docs": "^6.0.0-rc.0",
+    "@storybook/react": "^6.0.0-rc.0",
     "@xstate/test": "^0.4.0",
     "babel-loader": "^8.0.6",
     "enzyme": "^3.11.0",
