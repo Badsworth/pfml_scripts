@@ -68,7 +68,9 @@ def applications_update(application_id):
 
         return (
             ApplicationUpdateResponse(
-                code="200", message="Application updated without errors."
+                code="200",
+                message="Application updated without errors.",
+                data=ApplicationResponse.from_orm(existing_application),
             ).dict(exclude_none=True),
             200,
         )
@@ -88,13 +90,13 @@ def applications_submit(application_id):
         existing_application.completed_time = datetime.now()
         db_session.add(existing_application)
 
-    success_response = {
-        "code": "201",
-        "message": "Application {} completed without errors".format(
-            existing_application.application_id
-        ),
-        "warnings": [],
-        "errors": [],
-    }
-
-    return success_response, 201
+    return (
+        ApplicationUpdateResponse(
+            code="201",
+            message="Application {} completed without errors".format(
+                existing_application.application_id
+            ),
+            data=ApplicationResponse.from_orm(existing_application),
+        ).dict(exclude_none=True),
+        201,
+    )

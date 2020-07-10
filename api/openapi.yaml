@@ -595,7 +595,7 @@ components:
             - Sales Clerk
             - Administrative
             - Engineer
-            - Doctor
+            - Health Care
           example: "Sales Clerk"
           nullable: true
         leave_details:
@@ -955,6 +955,8 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/WarningsAndErrors"
+        data:
+          $ref: "#/components/schemas/ApplicationResponse"
       required:
         - code
         - message

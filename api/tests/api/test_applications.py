@@ -125,13 +125,13 @@ def test_application_patch(client, test_db_session):
 
     assert response.status_code == 200
 
-    response = client.get("/v1/applications/{}".format(application.application_id))
-
     response_body = response.get_json()
-    assert response_body.get("last_name") == "Perez"
-    assert response_body.get("updated_time") == "2020-01-01T00:00:00Z"
-    assert response_body.get("occupation") == "Engineer"
-    assert response_body.get("leave_details").get("relationship_to_caregiver") == "Parent"
+    assert response_body.get("data").get("last_name") == "Perez"
+    assert response_body.get("data").get("updated_time") == "2020-01-01T00:00:00Z"
+    assert response_body.get("data").get("occupation") == "Engineer"
+    assert (
+        response_body.get("data").get("leave_details").get("relationship_to_caregiver") == "Parent"
+    )
 
 
 def test_application_patch_leave_reason(client, test_db_session):
@@ -148,9 +148,8 @@ def test_application_patch_leave_reason(client, test_db_session):
 
     assert response.status_code == 200
 
-    response = client.get("/v1/applications/{}".format(application.application_id))
     response_body = response.get_json()
-    updated_leave_details = response_body.get("leave_details")
+    updated_leave_details = response_body.get("data").get("leave_details")
     assert updated_leave_details
     updated_leave_reason = updated_leave_details.get("reason")
     assert updated_leave_reason == "Serious Health Condition - Employee"
@@ -166,9 +165,8 @@ def test_application_patch_add_leave_period(client):
 
     assert response.status_code == 200
 
-    response = client.get("/v1/applications/{}".format(application.application_id))
     response_body = response.get_json()
-    updated_leave_details = response_body.get("leave_details")
+    updated_leave_details = response_body.get("data").get("leave_details")
     assert updated_leave_details
 
     updated_leave_periods = updated_leave_details.get("continuous_leave_periods")
@@ -202,9 +200,8 @@ def test_application_patch_update_leave_period(client, test_db_session):
 
     assert response.status_code == 200
 
-    response = client.get("/v1/applications/{}".format(application.application_id))
     response_body = response.get_json()
-    updated_leave_details = response_body.get("leave_details")
+    updated_leave_details = response_body.get("data").get("leave_details")
     assert updated_leave_details
 
     updated_leave_periods = updated_leave_details.get("continuous_leave_periods")
@@ -280,9 +277,8 @@ def test_application_patch_add_payment_preferences(client, test_db_session):
 
     assert response.status_code == 200
 
-    response = client.get("/v1/applications/{}".format(application.application_id))
     response_body = response.get_json()
-    payment_preferences_response = response_body.get("payment_preferences")
+    payment_preferences_response = response_body.get("data").get("payment_preferences")
     assert len(payment_preferences_response) == 1
 
     payment_preference = payment_preferences_response[0]
@@ -312,9 +308,8 @@ def test_application_patch_update_payment_preferences(client, test_db_session):
 
     assert response.status_code == 200
 
-    response = client.get("/v1/applications/{}".format(application.application_id))
     response_body = response.get_json()
-    payment_preferences_response = response_body.get("payment_preferences")
+    payment_preferences_response = response_body.get("data").get("payment_preferences")
     assert len(payment_preferences_response) == 1
 
     payment_preference_response = payment_preferences_response[0]
@@ -365,11 +360,13 @@ def test_application_patch_update_payment_preference_belonging_to_other_applicat
 def test_application_patch_minimum_payload(client):
     application = ApplicationFactory.create()
 
-    response = client.patch("/v1/applications/{}".format(application.application_id), json={},)
+    response = client.patch("/v1/applications/{}".format(application.application_id), json={})
 
     assert response.status_code == 200
 
-    response = client.get("/v1/applications/{}".format(application.application_id))
+    response_body = response.get_json()
+    data = response_body.get("data")
+    assert application.nickname == data.get("application_nickname")
 
 
 def test_application_patch_null_values(client):
@@ -495,9 +492,8 @@ def test_application_patch_keys_not_in_body_retain_existing_value(client, test_d
     assert application.first_name == "Foo"
 
     # for extra measure
-    response = client.get("/v1/applications/{}".format(application.application_id))
     response_body = response.get_json()
-    assert response_body.get("first_name") == "Foo"
+    assert response_body.get("data").get("first_name") == "Foo"
 
 
 def test_application_patch_key_set_to_null_does_null_field(client, test_db_session):
@@ -522,9 +518,8 @@ def test_application_patch_key_set_to_null_does_null_field(client, test_db_sessi
     assert application.first_name is None
 
     # for extra measure
-    response = client.get("/v1/applications/{}".format(application.application_id))
     response_body = response.get_json()
-    assert response_body.get("first_name") is None
+    assert response_body.get("data").get("first_name") is None
 
 
 def test_application_post_submit_app(client):
@@ -536,9 +531,6 @@ def test_application_post_submit_app(client):
     )
     assert response.status_code == 201
 
-    response = client.get("/v1/applications/{}".format(application.application_id))
-    assert response.status_code == 200
-
     response_body = response.get_json()
-    status = response_body.get("status")
+    status = response_body.get("data").get("status")
     assert status == ApplicationStatus.Completed.value

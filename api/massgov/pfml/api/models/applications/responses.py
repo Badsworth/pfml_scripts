@@ -24,13 +24,6 @@ class ApplicationStatus(str, Enum):
     Submitted = "Submitted"
 
 
-class ApplicationUpdateResponse(PydanticBaseModel):
-    code: str
-    message: str
-    warnings: Optional[List[WarningsAndErrors]]
-    errors: Optional[List[WarningsAndErrors]]
-
-
 class ApplicationResponse(PydanticBaseModel):
     application_id: UUID4
     application_nickname: Optional[str]
@@ -61,6 +54,14 @@ class ApplicationResponse(PydanticBaseModel):
             application_response.status = ApplicationStatus.Started
 
         return application_response
+
+
+class ApplicationUpdateResponse(PydanticBaseModel):
+    code: str
+    message: str
+    warnings: Optional[List[WarningsAndErrors]]
+    errors: Optional[List[WarningsAndErrors]]
+    data: Optional[ApplicationResponse]
 
 
 def build_payment_preference(
