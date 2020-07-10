@@ -6,6 +6,8 @@ import React from "react";
 import { Review } from "../../../src/pages/claims/review";
 import User from "../../../src/models/User";
 import { shallow } from "enzyme";
+import { testHook } from "../../test-utils";
+import useAppLogic from "../../../src/hooks/useAppLogic";
 
 /**
  * Initialize a claim for an Employed claimant, with all required fields.
@@ -36,17 +38,25 @@ function initFullClaim() {
 }
 
 describe("Review", () => {
+  let appLogic;
+
+  beforeEach(() => {
+    testHook(() => {
+      appLogic = useAppLogic();
+    });
+  });
+
   describe("when all data is present", () => {
     it("renders Review page with the field values", () => {
       const claim = initFullClaim();
       const query = { claim_id: claim.application_id };
-      const user = new User({
+      appLogic.user = new User({
         user_id: "mock-id",
         has_state_id: true,
       });
 
       const wrapper = shallow(
-        <Review claim={claim} query={query} user={user} />
+        <Review claim={claim} query={query} appLogic={appLogic} />
       );
 
       expect(wrapper).toMatchSnapshot();
@@ -57,10 +67,10 @@ describe("Review", () => {
     it("does not render 'Notified employer' row or FEIN row", () => {
       const claim = initFullClaim();
       const query = { claim_id: claim.application_id };
-      const user = new User();
+      appLogic.user = new User();
 
       const wrapper = shallow(
-        <Review claim={claim} query={query} user={user} />
+        <Review claim={claim} query={query} appLogic={appLogic} />
       );
 
       expect(wrapper.text()).not.toContain("Notified employer");
@@ -78,12 +88,12 @@ describe("Review", () => {
         },
       });
       const query = { claim_id: claim.application_id };
-      const user = new User({
+      appLogic.user = new User({
         user_id: "mock-id",
       });
 
       const wrapper = shallow(
-        <Review claim={claim} query={query} user={user} />
+        <Review claim={claim} query={query} appLogic={appLogic} />
       );
 
       expect(wrapper).toMatchSnapshot();

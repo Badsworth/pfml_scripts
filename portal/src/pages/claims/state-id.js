@@ -7,25 +7,19 @@ import React from "react";
 import User from "../../models/User";
 import useFormState from "../../hooks/useFormState";
 import useHandleInputChange from "../../hooks/useHandleInputChange";
-import useHandleSave from "../../hooks/useHandleSave";
 import { useTranslation } from "../../locales/i18n";
-import usersApi from "../../api/usersApi";
 import valueWithFallback from "../../utils/valueWithFallback";
 
 const StateId = (props) => {
   const { t } = useTranslation();
-  const { formState, updateFields, removeField } = useFormState(props.user);
+  const { user, updateUser } = props.appLogic;
+  const { formState, updateFields, removeField } = useFormState(user);
   const { has_state_id, state_id } = formState;
   const handleInputChange = useHandleInputChange(updateFields);
 
-  const handleSave = useHandleSave(
-    // TODO: Save this field to the appropriate API models once the fields exist
-    (formState) => usersApi.updateUser(props.user.user_id, new User(formState)),
-    (result) => {
-      props.setUser(result.user);
-      props.appLogic.goToNextPage({ user: result.user }, props.query);
-    }
-  );
+  // TODO: Save this field to the appropriate API models once the fields exist
+  const handleSave = () =>
+    updateUser(user.user_id, new User(formState), props.claim);
 
   // Note that has_state_id can be null if user has never answered this question before.
   // We should show this field if user already has a state id, and hide it either if
@@ -75,8 +69,7 @@ const StateId = (props) => {
 
 StateId.propTypes = {
   appLogic: PropTypes.object.isRequired,
-  user: PropTypes.instanceOf(User).isRequired,
-  setUser: PropTypes.func.isRequired,
+  claim: PropTypes.object.isRequired,
   query: PropTypes.shape({
     claim_id: PropTypes.string,
   }),

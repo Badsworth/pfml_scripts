@@ -37,3 +37,23 @@ export class RouteTransitionError extends Error {
     this.name = "RouteTransitionError";
   }
 }
+
+/**
+ * users/current api resource did not return a user in its response
+ */
+export class UserNotReceivedError extends Error {
+  constructor(...params) {
+    super(...params);
+    this.name = "UserNotReceivedError";
+  }
+}
+
+/**
+ * There was an error when attempting to a request to the users/current api resource
+ */
+export class UserNotFoundError extends Error {
+  constructor(...params) {
+    super(...params);
+    this.name = "UserNotFoundError";
+  }
+}

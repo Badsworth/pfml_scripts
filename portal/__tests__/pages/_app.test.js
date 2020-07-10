@@ -7,11 +7,11 @@ import AppErrorInfoCollection from "../../src/models/AppErrorInfoCollection";
 import { NetworkError } from "../../src/errors";
 import User from "../../src/models/User";
 import { act } from "react-dom/test-utils";
+import { mockGetCurrentUser } from "../../src/api/UsersApi";
 import tracker from "../../src/services/tracker";
-import usersApi from "../../src/api/usersApi";
 
 jest.mock("../../src/services/tracker");
-jest.mock("../../src/api/usersApi");
+jest.mock("../../src/api/UsersApi");
 jest.mock("lodash/uniqueId", () => {
   return jest.fn().mockReturnValue("mocked-for-snapshots");
 });
@@ -91,7 +91,7 @@ describe("App", () => {
     });
 
     it("fetches the user from the API", () => {
-      expect(usersApi.getCurrentUser).toHaveBeenCalledTimes(1);
+      expect(mockGetCurrentUser).toHaveBeenCalledTimes(1);
     });
 
     it("renders the site header with the authenticated user's info", () => {
@@ -106,7 +106,7 @@ describe("App", () => {
     let wrapper;
 
     beforeEach(async () => {
-      usersApi.getCurrentUser.mockResolvedValueOnce({
+      mockGetCurrentUser.mockResolvedValueOnce({
         success: true,
         user: new User({
           auth_id: "mock-auth-id",
@@ -142,7 +142,7 @@ describe("App", () => {
     let wrapper;
 
     beforeEach(async () => {
-      usersApi.getCurrentUser.mockResolvedValueOnce({
+      mockGetCurrentUser.mockResolvedValueOnce({
         success: true,
         user: new User({
           auth_id: "mock-auth-id",
@@ -185,7 +185,7 @@ describe("App", () => {
 
     it("displays error for NetworkError", async () => {
       expect.assertions();
-      usersApi.getCurrentUser.mockRejectedValueOnce(new NetworkError());
+      mockGetCurrentUser.mockRejectedValueOnce(new NetworkError());
 
       let wrapper;
       await act(async () => {
@@ -198,7 +198,7 @@ describe("App", () => {
 
     it("displays error for unsuccessful response", async () => {
       expect.assertions();
-      usersApi.getCurrentUser.mockResolvedValueOnce({ success: false });
+      mockGetCurrentUser.mockResolvedValueOnce({ success: false });
 
       let wrapper;
       await act(async () => {
@@ -218,7 +218,7 @@ describe("App", () => {
     it("does not attempt to fetch a user from the API", () => {
       render(authProps);
 
-      expect(usersApi.getCurrentUser).toHaveBeenCalledTimes(0);
+      expect(mockGetCurrentUser).toHaveBeenCalledTimes(0);
     });
 
     it("renders the site header without a user", () => {
@@ -265,7 +265,7 @@ describe("App", () => {
           .simulate("stateChange", authState, authData);
       });
 
-      expect(usersApi.getCurrentUser).toHaveBeenCalledTimes(1);
+      expect(mockGetCurrentUser).toHaveBeenCalledTimes(1);
     });
   });
 

@@ -5,25 +5,19 @@ import React from "react";
 import User from "../../models/User";
 import useFormState from "../../hooks/useFormState";
 import useHandleInputChange from "../../hooks/useHandleInputChange";
-import useHandleSave from "../../hooks/useHandleSave";
 import { useTranslation } from "../../locales/i18n";
-import usersApi from "../../api/usersApi";
 import valueWithFallback from "../../utils/valueWithFallback";
 
 export const DateOfBirth = (props) => {
   const { t } = useTranslation();
-  const { formState, updateFields } = useFormState(props.user);
+  const { user, updateUser } = props.appLogic;
+  const { formState, updateFields } = useFormState(user);
   const { date_of_birth } = formState;
   const handleInputChange = useHandleInputChange(updateFields);
 
-  const handleSave = useHandleSave(
-    // TODO: Save this field to the appropriate API models once the fields exist
-    (formState) => usersApi.updateUser(props.user.user_id, new User(formState)),
-    (result) => {
-      props.setUser(result.user);
-      props.appLogic.goToNextPage({ user: result.user }, props.query);
-    }
-  );
+  // TODO: Save this field to the appropriate API models once the fields exist
+  const handleSave = () =>
+    updateUser(user.user_id, new User(formState), props.claim);
 
   return (
     <QuestionPage
@@ -45,11 +39,8 @@ export const DateOfBirth = (props) => {
 };
 
 DateOfBirth.propTypes = {
-  appLogic: PropTypes.shape({
-    goToNextPage: PropTypes.func.isRequired,
-  }).isRequired,
-  user: PropTypes.instanceOf(User).isRequired,
-  setUser: PropTypes.func.isRequired,
+  appLogic: PropTypes.object.isRequired,
+  claim: PropTypes.object.isRequired,
   query: PropTypes.shape({
     claim_id: PropTypes.string,
   }),

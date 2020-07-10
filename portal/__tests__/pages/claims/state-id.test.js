@@ -1,17 +1,28 @@
 import React from "react";
 import StateId from "../../../src/pages/claims/state-id";
 import User from "../../../src/models/User";
+import { act } from "react-dom/test-utils";
+import { mockUpdateUser } from "../../../src/api/UsersApi";
 import { shallow } from "enzyme";
-import usersApi from "../../../src/api/usersApi";
+import { testHook } from "../../test-utils";
+import useAppLogic from "../../../src/hooks/useAppLogic";
 
-jest.mock("../../../src/api/usersApi");
+jest.mock("../../../src/api/UsersApi");
+
 const claim_id = "12345";
 const render = (props = {}) => {
+  let appLogic;
+
+  testHook(() => {
+    appLogic = useAppLogic();
+  });
+
+  appLogic.user = props.user || new User();
+
   const allProps = {
-    user: new User(),
-    setUser: jest.fn(),
-    appLogic: {},
+    appLogic,
     query: { claim_id },
+    claim: {},
     ...props,
   };
   return {
@@ -49,12 +60,12 @@ describe("StateId", () => {
   describe("when the form is successfully submitted", () => {
     it("calls updateUser and updates the state", async () => {
       expect.assertions();
-      const { props, wrapper: component } = render();
+      const { wrapper: component } = render();
+      await act(async () => {
+        await component.find("QuestionPage").simulate("save");
+      });
 
-      await component.find("QuestionPage").simulate("save");
-
-      expect(usersApi.updateUser).toHaveBeenCalledTimes(1);
-      expect(props.setUser).toHaveBeenCalledWith(expect.any(User));
+      expect(mockUpdateUser).toHaveBeenCalledTimes(1);
     });
   });
 });

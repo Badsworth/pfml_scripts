@@ -41,26 +41,26 @@ exports[`App when authenticated user consented to data sharing renders the page 
       "createClaim": [Function],
       "goToNextPage": [Function],
       "loadClaims": [Function],
+      "loadUser": [Function],
       "setAppErrors": [Function],
+      "setUser": [Function],
       "submitClaim": [Function],
       "updateClaim": [Function],
+      "updateUser": [Function],
+      "user": User {
+        "auth_id": "mock-auth-id",
+        "consented_to_data_sharing": true,
+        "date_of_birth": null,
+        "email_address": "mock@example.com",
+        "has_state_id": null,
+        "state_id": null,
+        "status": null,
+        "user_id": "mock-user-id",
+      },
     }
   }
   query={Object {}}
-  setUser={[Function]}
   title="Test page"
-  user={
-    User {
-      "auth_id": "mock-auth-id",
-      "consented_to_data_sharing": true,
-      "date_of_birth": null,
-      "email_address": "mock@example.com",
-      "has_state_id": null,
-      "state_id": null,
-      "status": null,
-      "user_id": "mock-user-id",
-    }
-  }
 >
   <div>
     Hello world
@@ -75,7 +75,7 @@ AppErrorInfoCollection {
       "field": null,
       "key": "mocked-for-snapshots",
       "message": "Sorry, an error was encountered. This may occur for a variety of reasons, including temporarily losing an internet connection or an unexpected error in our system. If this continues to happen, you may call the Paid Family Leave Contact Center at (XXX) XXX-XXXX",
-      "type": null,
+      "type": "NetworkError",
     },
   ],
   "itemsById": Object {
@@ -83,7 +83,7 @@ AppErrorInfoCollection {
       "field": null,
       "key": "mocked-for-snapshots",
       "message": "Sorry, an error was encountered. This may occur for a variety of reasons, including temporarily losing an internet connection or an unexpected error in our system. If this continues to happen, you may call the Paid Family Leave Contact Center at (XXX) XXX-XXXX",
-      "type": null,
+      "type": "NetworkError",
     },
   },
 }
@@ -96,7 +96,7 @@ AppErrorInfoCollection {
       "field": null,
       "key": "mocked-for-snapshots",
       "message": "Sorry, we were unable to retrieve your account. Please log out and try again. If this continues to happen, you may call the Paid Family Leave Contact Center at (XXX) XXX-XXXX",
-      "type": null,
+      "type": "UserNotFoundError",
     },
   ],
   "itemsById": Object {
@@ -104,7 +104,7 @@ AppErrorInfoCollection {
       "field": null,
       "key": "mocked-for-snapshots",
       "message": "Sorry, we were unable to retrieve your account. Please log out and try again. If this continues to happen, you may call the Paid Family Leave Contact Center at (XXX) XXX-XXXX",
-      "type": null,
+      "type": "UserNotFoundError",
     },
   },
 }

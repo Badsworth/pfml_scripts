@@ -4,14 +4,11 @@ import "@aws-amplify/ui/dist/style.css";
 import React, { useEffect, useState } from "react";
 import { initializeI18n, useTranslation } from "../locales/i18n";
 import Amplify from "aws-amplify";
-import AppErrorInfo from "../models/AppErrorInfo";
-import AppErrorInfoCollection from "../models/AppErrorInfoCollection";
 import Authenticator from "../components/Authenticator";
 import ErrorBoundary from "../components/ErrorBoundary";
 import ErrorsSummary from "../components/ErrorsSummary";
 import Head from "next/head";
 import Header from "../components/Header";
-import { NetworkError } from "../errors";
 import PropTypes from "prop-types";
 import Spinner from "../components/Spinner";
 import { isFeatureEnabled } from "../services/featureFlags";
@@ -19,7 +16,6 @@ import tracker from "../services/tracker";
 import useAppLogic from "../hooks/useAppLogic";
 import useFeatureFlagsFromQueryEffect from "../hooks/useFeatureFlagsFromQueryEffect";
 import { useRouter } from "next/router";
-import usersApi from "../api/usersApi";
 
 // Configure Amplify for Auth behavior throughout the app
 Amplify.configure(process.env.awsConfig);
@@ -43,16 +39,11 @@ export const App = ({
   const router = useRouter();
   useFeatureFlagsFromQueryEffect();
 
-  // State representing the Portal's user object.
-  // Initialize to empty user but will be populated upon the first API call
-  // to fetch the user (or create the user on their first login)
-  const [user, setUser] = useState();
-
   // Track the authentication state, which controls which components
   // are rendered by Authenticator
   const [authState, setAuthState] = useState(initialAuthState);
 
-  const appLogic = useAppLogic({ user });
+  const appLogic = useAppLogic();
 
   // Global UI state, such as whether to display the loading indicator
   const [ui, setUI] = useState({ isLoading: false });
@@ -98,7 +89,7 @@ export const App = ({
     setAuthState(newAuthState);
 
     if (newAuthState === "signedIn") {
-      await handleLogIn(authData);
+      await handleLogIn();
     }
 
     window.scrollTo(0, 0);
@@ -107,37 +98,11 @@ export const App = ({
   /**
    * Fetch an authenticated user's profile from the API and store it locally.
    * Triggered when a user is first identified as being logged in.
-   * @param {object} authData - logged in user's data
    * @returns {Promise}
    */
-  const handleLogIn = async (authData) => {
+  const handleLogIn = async () => {
     setUI({ ...ui, isLoading: true });
-
-    let userResponse;
-
-    try {
-      userResponse = await usersApi.getCurrentUser();
-
-      if (userResponse.success && userResponse.user) {
-        setUser(userResponse.user);
-      } else {
-        throw new Error("Current user wasn't received");
-      }
-    } catch (error) {
-      // Log the JS error to support troubleshooting
-      console.error(error);
-
-      const message =
-        error instanceof NetworkError
-          ? t("errors.network")
-          : t("errors.currentUser.failedToFind");
-
-      appLogic.setAppErrors(
-        new AppErrorInfoCollection([new AppErrorInfo({ message })])
-      );
-      tracker.noticeError(error);
-    }
-
+    await appLogic.loadUser();
     setUI({ ...ui, isLoading: false });
   };
 
@@ -158,15 +123,16 @@ export const App = ({
 
   /**
    * Enforce data sharing consent before rendering a page
+   * TODO: Move to useAuth hook
    */
   useEffect(() => {
-    if (user) {
+    if (appLogic.user) {
       appLogic.auth.requireUserConsentToDataAgreement();
     }
     // Only trigger this effect when the user is set/updated
     // or when the user attempts to navigate to another page
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user, router.pathname]);
+  }, [appLogic.user, router.pathname]);
 
   /**
    * Render the page body based on the current state of the application
@@ -182,13 +148,7 @@ export const App = ({
 
     return (
       <section id="page">
-        <Component
-          appLogic={appLogic}
-          query={router.query}
-          setUser={setUser}
-          user={user}
-          {...pageProps}
-        />
+        <Component appLogic={appLogic} query={router.query} {...pageProps} />
       </section>
     );
   };
@@ -206,7 +166,7 @@ export const App = ({
         <title>{t("pages.app.siteTitle")}</title>
         <meta name="description" content={t("pages.app.siteDescription")} />
       </Head>
-      <Header user={user} />
+      <Header user={appLogic.user} />
       <main id="main" className="grid-container margin-top-5 margin-bottom-8">
         <div className="grid-row">
           <div className="grid-col-fill">

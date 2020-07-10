@@ -1,10 +1,16 @@
 import User from "../../src/models/User";
+import UsersApi from "../../src/api/UsersApi";
 import request from "../../src/api/request";
-import usersApi from "../../src/api/usersApi";
 
 jest.mock("../../src/api/request");
 
 describe("users API", () => {
+  let usersApi;
+
+  beforeEach(() => {
+    usersApi = new UsersApi();
+  });
+
   describe("getCurrentUser", () => {
     describe("when the request succeeds", () => {
       beforeEach(() => {
@@ -30,6 +36,7 @@ describe("users API", () => {
           },
           `
           Object {
+            "apiErrors": undefined,
             "status": 200,
             "success": true,
             "user": ObjectContaining {

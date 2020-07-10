@@ -5,32 +5,20 @@ import Button from "../../components/Button";
 import PropTypes from "prop-types";
 import React from "react";
 import Title from "../../components/Title";
-import User from "../../models/User";
-import routes from "../../routes";
-import useHandleSave from "../../hooks/useHandleSave";
-import { useRouter } from "next/router";
 import { useTranslation } from "../../locales/i18n";
-import usersApi from "../../api/usersApi";
 
 const ConsentToDataSharing = (props) => {
   const { t } = useTranslation();
-  const router = useRouter();
+  const { user, updateUser } = props.appLogic;
 
-  const handleSave = useHandleSave(
-    () =>
-      usersApi.updateUser(props.user.user_id, {
-        consented_to_data_sharing: true,
-      }),
-    (result) => {
-      props.setUser(result.user);
-      props.appLogic.goToNextPage({ user: result.user });
-    }
-  );
+  const handleSave = () =>
+    updateUser(user.user_id, {
+      consented_to_data_sharing: true,
+    });
 
   const handleSubmit = async (event) => {
     event.preventDefault();
     await handleSave();
-    router.push(routes.home);
   };
 
   return (
@@ -82,8 +70,6 @@ const ConsentToDataSharing = (props) => {
 
 ConsentToDataSharing.propTypes = {
   appLogic: PropTypes.object.isRequired,
-  user: PropTypes.instanceOf(User).isRequired,
-  setUser: PropTypes.func.isRequired,
 };
 
 export default ConsentToDataSharing;

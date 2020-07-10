@@ -6,6 +6,7 @@
 const routes = {
   api: {
     claims: "/applications",
+    users: "/users",
   },
   applications: "/applications",
   auth: {

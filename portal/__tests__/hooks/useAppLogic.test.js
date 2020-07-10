@@ -1,4 +1,3 @@
-import User from "../../src/models/User";
 import { testHook } from "../test-utils";
 import useAppLogic from "../../src/hooks/useAppLogic";
 
@@ -11,11 +10,14 @@ describe("useAppLogic", () => {
       createClaim,
       goToNextPage,
       loadClaims,
+      loadUser,
       rest,
       setAppErrors,
+      setUser,
       submitClaim,
-      updateClaim;
-    const user = new User();
+      updateClaim,
+      updateUser,
+      user;
 
     testHook(() => {
       ({
@@ -26,11 +28,15 @@ describe("useAppLogic", () => {
         createClaim,
         goToNextPage,
         loadClaims,
+        loadUser,
         setAppErrors,
+        setUser,
         submitClaim,
         updateClaim,
+        updateUser,
+        user,
         ...rest
-      } = useAppLogic({ user }));
+      } = useAppLogic());
     });
 
     expect(appErrors).toBeNull();
@@ -39,10 +45,14 @@ describe("useAppLogic", () => {
     expect(clearErrors).toBeInstanceOf(Function);
     expect(goToNextPage).toBeInstanceOf(Function);
     expect(loadClaims).toBeInstanceOf(Function);
+    expect(loadUser).toBeInstanceOf(Function);
     expect(createClaim).toBeInstanceOf(Function);
     expect(updateClaim).toBeInstanceOf(Function);
+    expect(updateUser).toBeInstanceOf(Function);
     expect(setAppErrors).toBeInstanceOf(Function);
+    expect(setUser).toBeInstanceOf(Function);
     expect(submitClaim).toBeInstanceOf(Function);
+    expect(user).toBeUndefined();
     // there should be no other properties;
     expect(rest).toEqual({});
   });

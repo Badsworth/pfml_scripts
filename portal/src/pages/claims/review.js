@@ -11,7 +11,6 @@ import ReviewHeading from "../../components/ReviewHeading";
 import ReviewRow from "../../components/ReviewRow";
 import Step from "../../models/Step";
 import Title from "../../components/Title";
-import User from "../../models/User";
 import findKeyByValue from "../../utils/findKeyByValue";
 import formatDateRange from "../../utils/formatDateRange";
 import get from "lodash/get";
@@ -25,7 +24,7 @@ import withClaim from "../../hoc/withClaim";
  */
 export const Review = (props) => {
   const { t } = useTranslation();
-  const { claim, user } = props;
+  const { claim, appLogic } = props;
 
   const steps = Step.createClaimStepsFromMachine(
     machineConfigs,
@@ -70,7 +69,7 @@ export const Review = (props) => {
         *********
       </ReviewRow>
 
-      {user.has_state_id && (
+      {appLogic.user.has_state_id && (
         <ReviewRow label={t("pages.claimsReview.userStateIdLabel")}>
           *********
         </ReviewRow>
@@ -166,10 +165,10 @@ export const Review = (props) => {
 
 Review.propTypes = {
   claim: PropTypes.instanceOf(Claim),
+  appLogic: PropTypes.object.isRequired,
   query: PropTypes.shape({
     claim_id: PropTypes.string,
   }),
-  user: PropTypes.instanceOf(User),
 };
 
 export default withClaim(Review);

@@ -37,10 +37,8 @@ const errors = {
   caughtError_ForbiddenError:
     "Sorry, an authorization error was encountered. Please log out and then log in to try again.",
   caughtError_NetworkError: "$t(shared.networkError)",
-  currentUser: {
-    failedToFind:
-      "Sorry, we were unable to retrieve your account. Please log out and try again. If this continues to happen, you may call the Paid Family Leave Contact Center at $t(shared.callCenterPhoneNumber)",
-  },
+  caughtError_UserNotFoundError:
+    "Sorry, we were unable to retrieve your account. Please log out and try again. If this continues to happen, you may call the Paid Family Leave Contact Center at $t(shared.callCenterPhoneNumber)",
   invalidFileType:
     "Only PDF and image files may be uploaded. See the tips below for suggestions on how to convert them to an image file. These files that you selected will not be uploaded: {{disallowedFileNames}}",
   network:
