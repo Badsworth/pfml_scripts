@@ -16,5 +16,10 @@ module.exports = {
       mandatorySignIn: false,
     },
   },
+  // Google Tag Manager Prod environment
+  gtmConfig: {
+    auth: "M4sQ_RNEqsKttKJFMho1Mg",
+    preview: "env-3",
+  },
   newRelicAppId: "747096155",
 };

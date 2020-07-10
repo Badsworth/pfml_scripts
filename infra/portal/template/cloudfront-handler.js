@@ -39,6 +39,24 @@ exports.handler = async (event, _context) => {
 function addSecurityHeadersToResponse(response) {
   const headers = response.headers;
 
+  // To generate these hashes, save the snippet into a file e.g. `gtm-snippet` and run
+  // $ cat gtm-snippet | openssl sha256 -binary | openssl base64
+  // Make sure not to include the <script> open or closing tags, and keep in mind that
+  // leading/trailing whitespace matters
+  const googleTagManagerSnippetHashes = [
+    "'sha256-6bOQFA12d94CECGI1FeXqgg7Dnk8aHUxum07Xs/GGbA='", // test
+    "'sha256-5lXWtIB9qW9mx6Adr1BrKsJYWjJTZnDhXuZyYJlqQzE='", // stage
+    "'sha256-kuMZ4LjimNmsionsNpKxrnz2EzMJj1y/pq75KgD0fzY='", // prod
+  ];
+
+  // Set content security policy to allow scripts from paidleave.mass.gov (self),
+  // Google Tag Manager, and Google Analytics. Also allow the inline scripts hashes
+  // that dynamically add Google Tag Manager.
+  // For more info about the allowed script directive, see https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Security-Policy/script-src
+  const allowedScriptSrc =
+    "'self' https://www.googletagmanager.com/ https://www.google-analytics.com/ " +
+    googleTagManagerSnippetHashes.join(" ");
+
   // the headers have to be in this weird list of object format for CloudFront
   // https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/lambda-examples.html
   const headersToAdd = [
@@ -49,8 +67,7 @@ function addSecurityHeadersToResponse(response) {
     [
       {
         key: "Content-Security-Policy",
-        value:
-          "default-src 'self' https:; base-uri 'none'; form-action 'none'; img-src 'self' blob:",
+        value: `default-src 'self' https:; script-src ${allowedScriptSrc}; base-uri 'none'; form-action 'none'; img-src 'self' https://www.google-analytics.com/ blob:`,
       },
     ],
 

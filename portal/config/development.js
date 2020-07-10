@@ -16,6 +16,15 @@ module.exports = {
       mandatorySignIn: false,
     },
   },
+  gtmConfig: {
+    // Google Tag Manager Stage environment
+    auth: "9Gb_47rccihIuwtcFdJy4w",
+    preview: "env-4",
+
+    // Google Tag Manager Test environment (for testing changes to GTM configuration)
+    // auth: "SiSVu0U7VjoUiceaFWQeqA",
+    // preview: "env-5",
+  },
   // This is the same New Relic app as the Test environment
   newRelicAppId: "706309942",
 };

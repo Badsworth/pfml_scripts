@@ -16,5 +16,10 @@ module.exports = {
       mandatorySignIn: false,
     },
   },
+  // Google Tag Manager Stage environment
+  gtmConfig: {
+    auth: "9Gb_47rccihIuwtcFdJy4w",
+    preview: "env-4",
+  },
   newRelicAppId: "706309942",
 };

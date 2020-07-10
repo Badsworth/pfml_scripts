@@ -5,7 +5,7 @@ Object {
   "content-security-policy": Array [
     Object {
       "key": "Content-Security-Policy",
-      "value": "default-src 'self' https:; base-uri 'none'; form-action 'none'; img-src 'self' blob:",
+      "value": "default-src 'self' https:; script-src 'self' https://www.googletagmanager.com/ https://www.google-analytics.com/ 'sha256-6bOQFA12d94CECGI1FeXqgg7Dnk8aHUxum07Xs/GGbA=' 'sha256-5lXWtIB9qW9mx6Adr1BrKsJYWjJTZnDhXuZyYJlqQzE=' 'sha256-kuMZ4LjimNmsionsNpKxrnz2EzMJj1y/pq75KgD0fzY='; base-uri 'none'; form-action 'none'; img-src 'self' https://www.google-analytics.com/ blob:",
     },
   ],
   "referrer-policy": Array [
