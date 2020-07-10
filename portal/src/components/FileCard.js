@@ -15,7 +15,7 @@ const FileCard = (props) => {
   const removeButton = t("components.fileCard.removeButton");
 
   const cardClasses =
-    "c-file-card usa-card__container padding-2 margin-bottom-3 border-1px border-base-lighter display-flex flex-wrap";
+    "c-file-card padding-2 margin-bottom-3 border-1px border-base-lighter display-flex flex-wrap";
   const filenameClasses =
     "c-file-card__name padding-bottom-2 margin-bottom-2 margin-top-0 border-bottom-2px border-base-lighter";
 

@@ -2,7 +2,7 @@
 
 exports[`FileCard renders 1`] = `
 <div
-  className="c-file-card usa-card__container padding-2 margin-bottom-3 border-1px border-base-lighter display-flex flex-wrap"
+  className="c-file-card padding-2 margin-bottom-3 border-1px border-base-lighter display-flex flex-wrap"
 >
   <Thumbnail
     file={File {}}
