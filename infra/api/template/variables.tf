@@ -123,3 +123,15 @@ variable "cognito_user_pool_keys_url" {
   type        = string
   default     = null
 }
+
+variable "rmv_client_base_url" {
+  description = "The base URL for the Registry of Motor Vehicles (RMV) API."
+  type        = "string"
+  default     = null
+}
+
+variable "rmv_client_certificate_binary_arn" {
+  description = "The secretsmanager ARN for the Registry of Motor Vehicles (RMV) certificate."
+  type        = "string"
+  default     = null
+}

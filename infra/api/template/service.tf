@@ -45,18 +45,20 @@ data "template_file" "container_definitions" {
   template = file("${path.module}/container_definitions.json")
 
   vars = {
-    app_name                   = local.app_name
-    cpu                        = "512"
-    memory                     = "1024"
-    db_host                    = aws_db_instance.default.address
-    db_name                    = aws_db_instance.default.name
-    db_username                = aws_db_instance.default.username
-    docker_image               = "${data.aws_ecr_repository.app.repository_url}:${var.service_docker_tag}"
-    environment_name           = var.environment_name
-    enable_full_error_logs     = var.enable_full_error_logs
-    cloudwatch_logs_group_name = aws_cloudwatch_log_group.service_logs.name
-    aws_region                 = data.aws_region.current.name
-    cors_origins               = join(",", var.cors_origins)
-    cognito_user_pool_keys_url = var.cognito_user_pool_keys_url
+    app_name                          = local.app_name
+    cpu                               = "512"
+    memory                            = "1024"
+    db_host                           = aws_db_instance.default.address
+    db_name                           = aws_db_instance.default.name
+    db_username                       = aws_db_instance.default.username
+    docker_image                      = "${data.aws_ecr_repository.app.repository_url}:${var.service_docker_tag}"
+    environment_name                  = var.environment_name
+    enable_full_error_logs            = var.enable_full_error_logs
+    cloudwatch_logs_group_name        = aws_cloudwatch_log_group.service_logs.name
+    aws_region                        = data.aws_region.current.name
+    cors_origins                      = join(",", var.cors_origins)
+    cognito_user_pool_keys_url        = var.cognito_user_pool_keys_url
+    rmv_client_certificate_binary_arn = var.rmv_client_certificate_binary_arn
+    rmv_client_base_url               = var.rmv_client_base_url
   }
 }

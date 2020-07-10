@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<wsdl:definitions xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/" xmlns:soap12="http://schemas.xmlsoap.org/wsdl/soap12/" xmlns:tns="https://fake-url.com/" xmlns:wsa10="http://www.w3.org/2005/08/addressing" xmlns:wsam="http://www.w3.org/2007/05/addressing/metadata" xmlns:xsd="http://www.w3.org/2001/XMLSchema" name="VendorLicenseInquiry" targetNamespace="https://fake-url.com/">
+    <wsdl:types>
+        <xsd:schema targetNamespace="https://fake-url.com/">
+            <xsd:element name="VendorLicenseInquiry">
+                <xsd:complexType>
+                    <xsd:sequence>
+                        <xsd:element minOccurs="0" name="FirstName" nillable="true" type="xsd:string" />
+                    </xsd:sequence>
+                </xsd:complexType>
+            </xsd:element>
+            <xsd:element name="VendorLicenseInquiryResponse">
+                <xsd:complexType>
+                    <xsd:sequence>
+                        <xsd:element minOccurs="0" name="Acknowledgement" nillable="true" type="xsd:string" />
+                    </xsd:sequence>
+                </xsd:complexType>
+            </xsd:element>
+        </xsd:schema>
+    </wsdl:types>
+    <wsdl:message name="VendorLicenseInquiry_Interface_VendorLicenseInquiry_InputMessage">
+        <wsdl:part name="parameters" element="tns:VendorLicenseInquiry" />
+    </wsdl:message>
+    <wsdl:message name="VendorLicenseInquiry_Interface_VendorLicenseInquiry_OutputMessage">
+        <wsdl:part name="parameters" element="tns:VendorLicenseInquiryResponse" />
+    </wsdl:message>
+    <wsdl:portType name="VendorLicenseInquiry_Interface">
+        <wsdl:operation name="VendorLicenseInquiry">
+            <wsdl:input wsam:Action="https://fake-url.com/VendorLicenseInquiry" message="tns:VendorLicenseInquiry_Interface_VendorLicenseInquiry_InputMessage" />
+            <wsdl:output wsam:Action="https://fake-url.com/VendorLicenseInquiry_Interface/VendorLicenseInquiryResponse" message="tns:VendorLicenseInquiry_Interface_VendorLicenseInquiry_OutputMessage" />
+        </wsdl:operation>
+    </wsdl:portType>
+    <wsdl:binding name="WSHttpBinding_VendorLicenseInquiry_Interface" type="tns:VendorLicenseInquiry_Interface">
+        <soap12:binding transport="http://schemas.xmlsoap.org/soap/http" />
+        <wsdl:operation name="VendorLicenseInquiry">
+            <soap12:operation soapAction="https://fake-url.com/VendorLicenseInquiry" style="document" />
+            <wsdl:input>
+                <soap12:body use="literal" />
+            </wsdl:input>
+            <wsdl:output>
+                <soap12:body use="literal" />
+            </wsdl:output>
+        </wsdl:operation>
+    </wsdl:binding>
+    <wsdl:service name="VendorLicenseInquiry">
+        <wsdl:port name="WSHttpBinding_VendorLicenseInquiry_Interface" binding="tns:WSHttpBinding_VendorLicenseInquiry_Interface">
+            <soap12:address location="https://staging.fake-url.com/fake/gateway/VendorLicenseInquiry/" />
+            <wsa10:EndpointReference>
+                <wsa10:Address>https://staging.fake-url.com/fake/gateway/VendorLicenseInquiry/</wsa10:Address>
+            </wsa10:EndpointReference>
+        </wsdl:port>
+    </wsdl:service>
+</wsdl:definitions>
