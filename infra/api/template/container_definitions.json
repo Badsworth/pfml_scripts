@@ -36,7 +36,7 @@
       { "name": "CORS_ORIGINS", "value": "${cors_origins}" },
       { "name": "COGNITO_USER_POOL_KEYS_URL", "value": "${cognito_user_pool_keys_url}"},
       { "name": "RMV_CLIENT_BASE_URL", "value": "${rmv_client_base_url}" },
-      { "name": "RMV_CLIENT_CERTIFICATE_BINARY_ARN", "value": "{rmv_client_certificate_binary_arn}" }
+      { "name": "RMV_CLIENT_CERTIFICATE_BINARY_ARN", "value": "${rmv_client_certificate_binary_arn}" }
     ],
     "secrets": [
       { "name": "DB_PASSWORD", "valueFrom": "/service/${app_name}/${environment_name}/db-password" },
