@@ -1,0 +1,120 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`OtherIncomeCard renders fields for an OtherIncome instance 1`] = `
+<Fragment>
+  <InputChoiceGroup
+    choices={
+      Array [
+        Object {
+          "checked": false,
+          "label": "Workers Compensation",
+          "value": "workersCompensation",
+        },
+        Object {
+          "checked": false,
+          "label": "Unemployment Insurance",
+          "value": "unemployment",
+        },
+        Object {
+          "checked": false,
+          "label": "Social Security Disability Insurance",
+          "value": "ssdi",
+        },
+        Object {
+          "checked": false,
+          "label": "Disability benefits under a governmental retirement plan",
+          "value": "retirementDisability",
+        },
+        Object {
+          "checked": false,
+          "label": "Jones Act benefits",
+          "value": "jonesAct",
+        },
+        Object {
+          "checked": false,
+          "label": "Railroad Retirement benefits",
+          "value": "railroadRetirement",
+        },
+        Object {
+          "checked": false,
+          "label": "Earnings from another employer",
+          "value": "otherEmployer",
+        },
+        Object {
+          "checked": false,
+          "label": "Earnings from self-employment",
+          "value": "selfEmployment",
+        },
+      ]
+    }
+    label="What kind of income is it?"
+    name="other_incomes[0].income_type"
+    onChange={[MockFunction]}
+    smallLabel={true}
+    type="radio"
+  />
+  <InputDate
+    dayLabel="Day"
+    label="When will you start receiving this income?"
+    monthLabel="Month"
+    name="other_incomes[0].income_start_date"
+    onChange={[MockFunction]}
+    smallLabel={true}
+    value=""
+    yearLabel="Year"
+  />
+  <InputDate
+    dayLabel="Day"
+    label="When will you stop receiving this income?"
+    monthLabel="Month"
+    name="other_incomes[0].income_end_date"
+    onChange={[MockFunction]}
+    smallLabel={true}
+    value=""
+    yearLabel="Year"
+  />
+  <InputText
+    hint="For example, $250 every month."
+    label="How much will you receive?"
+    name="other_incomes[0].income_amount_dollars"
+    onChange={[MockFunction]}
+    optionalText="(optional)"
+    smallLabel={true}
+    value=""
+  />
+</Fragment>
+`;
+
+exports[`OtherIncomesDetails when the user's claim has other income sources renders the page 1`] = `
+<QuestionPage
+  formState={Object {}}
+  onSave={[Function]}
+  title="Other income and benefits"
+>
+  <Heading
+    level="2"
+    size="1"
+  >
+    Tell us about your other sources of income.
+  </Heading>
+  <RepeatableFieldset
+    addButtonLabel="Add another income"
+    entries={
+      Array [
+        OtherIncome {
+          "income_amount_dollars": null,
+          "income_amount_frequency": null,
+          "income_end_date": null,
+          "income_start_date": null,
+          "income_type": null,
+        },
+      ]
+    }
+    headingPrefix="Income"
+    onAddClick={[Function]}
+    onRemoveClick={[Function]}
+    removeButtonLabel="Remove income"
+    render={[Function]}
+  />
+</QuestionPage>
+`;

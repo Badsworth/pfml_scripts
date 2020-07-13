@@ -30,6 +30,7 @@ const routes = {
     name: "/claims/name",
     notifiedEmployer: "/claims/notified-employer",
     otherIncomes: "/claims/other-incomes",
+    otherIncomesDetails: "/claims/other-incomes-details",
     reasonPregnancy: "/claims/reason-pregnancy",
     review: "/claims/review",
     ssn: "/claims/ssn",

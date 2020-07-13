@@ -118,18 +118,11 @@ describe("EmployerBenefitDetails", () => {
       ({ appLogic, wrapper } = renderWithAppLogic(EmployerBenefitDetails));
     });
 
-    describe("when user clicks continue", () => {
-      it("creates and saves a blank employer benefit object", () => {
-        act(() => {
-          wrapper.find("QuestionPage").simulate("save");
-        });
-        expect(appLogic.updateClaim).toHaveBeenCalledWith(
-          claim.application_id,
-          {
-            employer_benefits: [new EmployerBenefit()],
-          }
-        );
-      });
+    it("adds a blank entry so a card is rendered", () => {
+      const entries = wrapper.find("RepeatableFieldset").prop("entries");
+
+      expect(entries).toHaveLength(1);
+      expect(entries[0]).toEqual(new EmployerBenefit());
     });
   });
 });

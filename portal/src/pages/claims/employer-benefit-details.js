@@ -16,6 +16,7 @@ import pick from "lodash/pick";
 import useFormState from "../../hooks/useFormState";
 import useHandleInputChange from "../../hooks/useHandleInputChange";
 import { useTranslation } from "react-i18next";
+import valueWithFallback from "../../utils/valueWithFallback";
 import withClaim from "../../hoc/withClaim";
 
 export const fields = ["claim.employer_benefits"];
@@ -130,7 +131,7 @@ const EmployerBenefitCard = (props) => {
         label={t("pages.claimsEmployerBenefitDetails.startDateLabel")}
         name={`employer_benefits[${index}].benefit_start_date`}
         onChange={onInputChange}
-        value={benefit.benefit_start_date}
+        value={valueWithFallback(benefit.benefit_start_date)}
         dayLabel={t("components.form.dateInputDayLabel")}
         monthLabel={t("components.form.dateInputMonthLabel")}
         yearLabel={t("components.form.dateInputYearLabel")}
@@ -140,7 +141,7 @@ const EmployerBenefitCard = (props) => {
         label={t("pages.claimsEmployerBenefitDetails.endDateLabel")}
         name={`employer_benefits[${index}].benefit_end_date`}
         onChange={onInputChange}
-        value={benefit.benefit_end_date}
+        value={valueWithFallback(benefit.benefit_end_date)}
         dayLabel={t("components.form.dateInputDayLabel")}
         monthLabel={t("components.form.dateInputMonthLabel")}
         yearLabel={t("components.form.dateInputYearLabel")}
@@ -153,7 +154,7 @@ const EmployerBenefitCard = (props) => {
           name={`employer_benefits[${index}].benefit_amount`}
           onChange={onInputChange}
           optionalText={t("components.form.optionalText")}
-          value={benefit.benefit_amount || ""}
+          value={valueWithFallback(benefit.benefit_amount)}
           smallLabel
         />
       </ConditionalContent>

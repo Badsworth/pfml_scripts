@@ -22,6 +22,8 @@ import { fields as leaveDatesFields } from "../pages/claims/leave-dates";
 import { fields as leaveReasonFields } from "../pages/claims/leave-reason";
 import { fields as nameFields } from "../pages/claims/name";
 import { fields as notifiedEmployerFields } from "../pages/claims/notified-employer";
+import { fields as otherIncomesDetailsFields } from "../pages/claims/other-incomes-details";
+import { fields as otherIncomesFields } from "../pages/claims/other-incomes";
 import { fields as reasonPregnancyFields } from "../pages/claims/reason-pregnancy";
 import routes from "./index";
 import { fields as ssnFields } from "../pages/claims/ssn";
@@ -36,6 +38,7 @@ export const guards = {
     get(claim, "employment_status") === EmploymentStatus.employed,
   hasStateId: ({ user }) => get(user, "has_state_id"),
   hasEmployerBenefits: ({ claim }) => claim.has_employer_benefits === true,
+  hasOtherIncomes: ({ claim }) => claim.has_other_incomes === true,
 };
 
 export default {
@@ -212,8 +215,7 @@ export default {
             cond: "hasEmployerBenefits",
           },
           {
-            // todo: CP-564 route to the other-income page
-            target: routes.claims.checklist,
+            target: routes.claims.otherIncomes,
           },
         ],
       },
@@ -224,8 +226,35 @@ export default {
         fields: employerBenefitDetailsFields,
       },
       on: {
-        // todo: CP-564 route to the other-income page
-        CONTINUE: routes.claims.checklist,
+        CONTINUE: routes.claims.otherIncomes,
+      },
+    },
+    [routes.claims.otherIncomes]: {
+      meta: {
+        step: ClaimSteps.otherLeave,
+        fields: otherIncomesFields,
+      },
+      on: {
+        CONTINUE: [
+          {
+            target: routes.claims.otherIncomesDetails,
+            cond: "hasOtherIncomes",
+          },
+          {
+            // todo: CP-565 route to the other-leave page
+            target: routes.claims.todo,
+          },
+        ],
+      },
+    },
+    [routes.claims.otherIncomesDetails]: {
+      meta: {
+        step: ClaimSteps.otherLeave,
+        fields: otherIncomesDetailsFields,
+      },
+      on: {
+        // todo: CP-565 route to the other-leave page
+        CONTINUE: routes.claims.todo,
       },
     },
     [routes.claims.employmentStatus]: {
