@@ -6,6 +6,7 @@ import Lead from "../../components/Lead";
 import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import { useTranslation } from "../../locales/i18n";
+import withClaim from "../../hoc/withClaim";
 
 const UploadStateId = (props) => {
   const { t } = useTranslation();
@@ -52,4 +53,4 @@ UploadStateId.propTypes = {
   }).isRequired,
 };
 
-export default UploadStateId;
+export default withClaim(UploadStateId);

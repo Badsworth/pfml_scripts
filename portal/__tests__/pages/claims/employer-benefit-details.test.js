@@ -1,33 +1,25 @@
-import { mount, shallow } from "enzyme";
-import Claim from "../../../src/models/Claim";
 import EmployerBenefit from "../../../src/models/EmployerBenefit";
-import { EmployerBenefitDetails } from "../../../src/pages/claims/employer-benefit-details";
-import QuestionPage from "../../../src/components/QuestionPage";
-import React from "react";
-import RepeatableFieldset from "../../../src/components/RepeatableFieldset";
-import RepeatableFieldsetCard from "../../../src/components/RepeatableFieldsetCard";
+import EmployerBenefitDetails from "../../../src/pages/claims/employer-benefit-details";
 import { act } from "react-dom/test-utils";
-import { testHook } from "../../test-utils";
-import useAppLogic from "../../../src/hooks/useAppLogic";
+import { renderWithAppLogic } from "../../test-utils";
 
 jest.mock("../../../src/hooks/useAppLogic");
 
 describe("EmployerBenefitDetails", () => {
   let appLogic, claim, wrapper;
-  const application_id = "12345";
 
   describe("when the user's claim has employer benefits", () => {
     beforeEach(() => {
-      claim = new Claim({
-        application_id,
-        employer_benefits: [new EmployerBenefit({ benefit_type: "paidLeave" })],
-      });
-      testHook(() => {
-        appLogic = useAppLogic();
-      });
-      wrapper = shallow(
-        <EmployerBenefitDetails claim={claim} appLogic={appLogic} />
-      );
+      ({ appLogic, claim, wrapper } = renderWithAppLogic(
+        EmployerBenefitDetails,
+        {
+          claimAttrs: {
+            employer_benefits: [
+              new EmployerBenefit({ benefit_type: "paidLeave" }),
+            ],
+          },
+        }
+      ));
     });
 
     it("renders the page", () => {
@@ -37,26 +29,33 @@ describe("EmployerBenefitDetails", () => {
     describe("when user clicks continue", () => {
       it("calls updateClaim", () => {
         act(() => {
-          wrapper.find(QuestionPage).simulate("save");
+          wrapper.find("QuestionPage").simulate("save");
         });
-        expect(appLogic.updateClaim).toHaveBeenCalledWith(application_id, {
-          employer_benefits: claim.employer_benefits,
-        });
+
+        expect(appLogic.updateClaim).toHaveBeenCalledWith(
+          claim.application_id,
+          {
+            employer_benefits: claim.employer_benefits,
+          }
+        );
       });
     });
 
     describe("when the user clicks 'Add another'", () => {
       it("adds another benefit", () => {
         act(() => {
-          wrapper.find(RepeatableFieldset).simulate("addClick");
-          wrapper.find(QuestionPage).simulate("save");
+          wrapper.find("RepeatableFieldset").simulate("addClick");
+          wrapper.find("QuestionPage").simulate("save");
         });
-        expect(appLogic.updateClaim).toHaveBeenCalledWith(application_id, {
-          employer_benefits: [
-            ...claim.employer_benefits,
-            new EmployerBenefit(),
-          ],
-        });
+        expect(appLogic.updateClaim).toHaveBeenCalledWith(
+          claim.application_id,
+          {
+            employer_benefits: [
+              ...claim.employer_benefits,
+              new EmployerBenefit(),
+            ],
+          }
+        );
       });
     });
 
@@ -64,31 +63,38 @@ describe("EmployerBenefitDetails", () => {
       it("removes the benefit", () => {
         act(() => {
           wrapper
-            .find(RepeatableFieldset)
+            .find("RepeatableFieldset")
             .dive()
-            .find(RepeatableFieldsetCard)
+            .find("RepeatableFieldsetCard")
             .simulate("removeClick");
-          wrapper.find(QuestionPage).simulate("save");
+          wrapper.find("QuestionPage").simulate("save");
         });
-        expect(appLogic.updateClaim).toHaveBeenCalledWith(application_id, {
-          employer_benefits: [],
-        });
+        expect(appLogic.updateClaim).toHaveBeenCalledWith(
+          claim.application_id,
+          {
+            employer_benefits: [],
+          }
+        );
       });
     });
   });
 
   describe("when the user selects one of each benefit type", () => {
     beforeEach(() => {
-      claim = new Claim({
-        application_id,
-        employer_benefits: [
-          new EmployerBenefit({ benefit_type: "paidLeave" }),
-          new EmployerBenefit({ benefit_type: "shortTermDisability" }),
-          new EmployerBenefit({ benefit_type: "permanentDisability" }),
-          new EmployerBenefit({ benefit_type: "familyOrMedicalLeave" }),
-        ],
-      });
-      wrapper = mount(<EmployerBenefitDetails claim={claim} appLogic={{}} />);
+      ({ appLogic, claim, wrapper } = renderWithAppLogic(
+        EmployerBenefitDetails,
+        {
+          claimAttrs: {
+            employer_benefits: [
+              new EmployerBenefit({ benefit_type: "paidLeave" }),
+              new EmployerBenefit({ benefit_type: "shortTermDisability" }),
+              new EmployerBenefit({ benefit_type: "permanentDisability" }),
+              new EmployerBenefit({ benefit_type: "familyOrMedicalLeave" }),
+            ],
+          },
+          render: "mount",
+        }
+      ));
     });
 
     it("only renders the amount input text component for insurance benefit types", () => {
@@ -109,25 +115,20 @@ describe("EmployerBenefitDetails", () => {
 
   describe("when the user's claim does not have employer benefits", () => {
     beforeEach(() => {
-      claim = new Claim({
-        application_id,
-      });
-      testHook(() => {
-        appLogic = useAppLogic();
-      });
-      wrapper = shallow(
-        <EmployerBenefitDetails claim={claim} appLogic={appLogic} />
-      );
+      ({ appLogic, wrapper } = renderWithAppLogic(EmployerBenefitDetails));
     });
 
     describe("when user clicks continue", () => {
       it("creates and saves a blank employer benefit object", () => {
         act(() => {
-          wrapper.find(QuestionPage).simulate("save");
+          wrapper.find("QuestionPage").simulate("save");
         });
-        expect(appLogic.updateClaim).toHaveBeenCalledWith(application_id, {
-          employer_benefits: [new EmployerBenefit()],
-        });
+        expect(appLogic.updateClaim).toHaveBeenCalledWith(
+          claim.application_id,
+          {
+            employer_benefits: [new EmployerBenefit()],
+          }
+        );
       });
     });
   });

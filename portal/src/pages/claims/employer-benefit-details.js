@@ -20,7 +20,7 @@ import withClaim from "../../hoc/withClaim";
 
 export const fields = ["claim.employer_benefits"];
 
-export const EmployerBenefitDetails = (props) => {
+const EmployerBenefitDetails = (props) => {
   const { t } = useTranslation();
   const initialBenefits = pick(props, fields).claim;
   // If the claim doesn't have any employer benefits pre-populate the first one so that

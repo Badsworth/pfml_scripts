@@ -11,7 +11,7 @@ exports[`DateOfBirth renders the page 1`] = `
       "has_state_id": null,
       "state_id": null,
       "status": null,
-      "user_id": null,
+      "user_id": "mock_user_id",
     }
   }
   onSave={[Function]}

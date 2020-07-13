@@ -1,6 +1,59 @@
+import { mount, shallow } from "enzyme";
+import Claim from "../src/models/Claim";
+import ClaimCollection from "../src/models/ClaimCollection";
 import React from "react";
+import User from "../src/models/User";
 import { act } from "react-dom/test-utils";
-import { mount } from "enzyme";
+import merge from "lodash/merge";
+import useAppLogic from "../src/hooks/useAppLogic";
+
+/**
+ * Render a component, automatically setting its appLogic and query props
+ * @example const { appLogic, wrapper } = renderWithAppLogic(MyPage)
+ * @param {React.Component} PageComponent - the component you want to render
+ * @param {object} [options]
+ * @param {object} options.claimAttrs - Additional attributes to set on the Claim
+ * @param {object} options.props - Additional props to set on the PageComponent
+ * @param {"mount"|"shallow"} options.render - Enzyme render method. Shallow renders by default.
+ * @param {object} options.userAttrs - Additional attributes to set on the User
+ * @returns {{ appLogic: object, claim: Claim, wrapper: object }}
+ */
+export const renderWithAppLogic = (PageComponent, options = {}) => {
+  let appLogic, wrapper;
+  options = merge(
+    { claimAttrs: {}, props: {}, render: "shallow", userAttrs: {} },
+    options
+  );
+
+  // Add claim and user instances to appLogic
+  testHook(() => {
+    appLogic = useAppLogic();
+  });
+  const claim = new Claim({
+    application_id: "mock_application_id",
+    ...options.claimAttrs,
+  });
+  appLogic.claims = new ClaimCollection([claim]);
+  appLogic.user = new User({ user_id: "mock_user_id", ...options.userAttrs });
+
+  // Render the withClaim-wrapped page
+  const component = (
+    <PageComponent
+      appLogic={appLogic}
+      query={{ claim_id: claim.application_id }}
+      {...options.props}
+    />
+  );
+
+  // Go one level deep to get the component that was wrapped by withClaim
+  if (options.render === "shallow") {
+    wrapper = shallow(component).dive();
+  } else {
+    wrapper = mount(component).childAt(0);
+  }
+
+  return { appLogic, claim, wrapper };
+};
 
 /**
  * React functional component that is used to test React hooks,

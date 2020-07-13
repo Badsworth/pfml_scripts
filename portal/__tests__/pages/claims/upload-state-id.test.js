@@ -1,32 +1,12 @@
-import { makeFile, testHook } from "../../test-utils";
-import React from "react";
+import { makeFile, renderWithAppLogic } from "../../test-utils";
 import UploadStateId from "../../../src/pages/claims/upload-state-id";
-import { shallow } from "enzyme";
-import useAppLogic from "../../../src/hooks/useAppLogic";
-
-const claim_id = "12345";
 
 describe("UploadStateId", () => {
-  let appLogic, wrapper;
+  let wrapper;
 
   beforeEach(() => {
-    testHook(() => {
-      appLogic = useAppLogic({ user: {} });
-    });
-    ({ wrapper } = render());
+    ({ wrapper } = renderWithAppLogic(UploadStateId));
   });
-
-  const render = (props = {}) => {
-    const allProps = {
-      query: { claim_id },
-      appLogic,
-      ...props,
-    };
-    return {
-      props: allProps,
-      wrapper: shallow(<UploadStateId {...allProps} />),
-    };
-  };
 
   it("initially renders the page without any filecards", () => {
     expect(wrapper).toMatchSnapshot();
@@ -40,7 +20,7 @@ describe("UploadStateId", () => {
           files,
         },
       };
-      ({ wrapper } = render());
+
       const input = wrapper.find("FileCardList").dive().find("input");
       input.simulate("change", event);
 

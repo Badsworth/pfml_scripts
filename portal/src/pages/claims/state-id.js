@@ -9,6 +9,7 @@ import useFormState from "../../hooks/useFormState";
 import useHandleInputChange from "../../hooks/useHandleInputChange";
 import { useTranslation } from "../../locales/i18n";
 import valueWithFallback from "../../utils/valueWithFallback";
+import withClaim from "../../hoc/withClaim";
 
 const StateId = (props) => {
   const { t } = useTranslation();
@@ -75,4 +76,4 @@ StateId.propTypes = {
   }),
 };
 
-export default StateId;
+export default withClaim(StateId);

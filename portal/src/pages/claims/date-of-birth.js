@@ -7,6 +7,7 @@ import useFormState from "../../hooks/useFormState";
 import useHandleInputChange from "../../hooks/useHandleInputChange";
 import { useTranslation } from "../../locales/i18n";
 import valueWithFallback from "../../utils/valueWithFallback";
+import withClaim from "../../hoc/withClaim";
 
 export const DateOfBirth = (props) => {
   const { t } = useTranslation();
@@ -46,4 +47,4 @@ DateOfBirth.propTypes = {
   }),
 };
 
-export default DateOfBirth;
+export default withClaim(DateOfBirth);
