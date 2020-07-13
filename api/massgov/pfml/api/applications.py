@@ -6,6 +6,7 @@ from werkzeug.exceptions import Unauthorized
 import massgov.pfml.api.app as app
 import massgov.pfml.api.models.applications.requests as application_request_model
 import massgov.pfml.api.services.applications as applications_service
+from massgov.pfml.api.authorization.flask import CREATE, EDIT, READ, can, ensure
 from massgov.pfml.api.models.applications.responses import (
     ApplicationResponse,
     ApplicationUpdateResponse,
@@ -18,6 +19,7 @@ def application_get(application_id):
     with app.db_session() as db_session:
         existing_application = get_or_404(db_session, Application, application_id)
 
+        ensure(READ, existing_application)
         application_response = ApplicationResponse.from_orm(existing_application)
 
     return application_response.dict()
@@ -27,8 +29,13 @@ def applications_get():
     with app.db_session() as db_session:
         applications = db_session.query(Application).all()
 
+    filtered_applications = filter(lambda a: can(READ, a), applications)
+
     return list(
-        map(lambda application: ApplicationResponse.from_orm(application).dict(), applications)
+        map(
+            lambda application: ApplicationResponse.from_orm(application).dict(),
+            filtered_applications,
+        )
     )
 
 
@@ -38,6 +45,8 @@ def applications_start():
     now = datetime.now()
     application.start_time = now
     application.updated_time = now
+
+    ensure(CREATE, application)
 
     # this should always be the case at this point, but the type for
     # current_user is still optional until we require authentication
@@ -58,6 +67,7 @@ def applications_update(application_id):
     with app.db_session() as db_session:
         existing_application = get_or_404(db_session, Application, application_id)
 
+    ensure(EDIT, existing_application)
     (application_request, errors_and_warnings) = application_request_model.validate(body)
 
     if application_request is not None and len(errors_and_warnings) == 0:
@@ -87,6 +97,7 @@ def applications_submit(application_id):
     with app.db_session() as db_session:
         existing_application = get_or_404(db_session, Application, application_id)
 
+        ensure(EDIT, existing_application)
         existing_application.completed_time = datetime.now()
         db_session.add(existing_application)
 

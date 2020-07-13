@@ -10,6 +10,7 @@ from massgov.pfml.db.models.employees import User
 def create_authorization(enable_employees: bool) -> Callable[[User, Any], None]:
     def define_authorization(user: User, they: RuleList) -> None:
         users(user, they)
+        applications(user, they)
         if enable_employees:
             employees(user, they)
 
@@ -22,3 +23,8 @@ def employees(user: User, they: RuleList) -> None:
 
 def users(user: User, they: RuleList) -> None:
     they.can((EDIT, READ), "User", user_id=user.user_id)
+
+
+def applications(user: User, they: RuleList) -> None:
+    they.can(CREATE, "Application")
+    they.can((EDIT, READ), "Application", user_id=user.user_id)
