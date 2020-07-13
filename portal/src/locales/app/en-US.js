@@ -226,8 +226,8 @@ const pages = {
   claimsEmployerBenefits: {
     choiceNo: "$t(shared.choiceNo)",
     choiceYes: "$t(shared.choiceYes)",
-    detailsHeader: "Employer-sponsored benefits you must report are:",
-    detailsList: [
+    hintHeader: "Employer-sponsored benefits you must report are:",
+    hintList: [
       "Accrued paid leave, such as vacation time, sick time, personal time, or other paid time off",
       "Short-term disability insurance",
       "Permanent disability insurance",
@@ -294,6 +294,23 @@ const pages = {
       "Before you can submit an application, you must tell your employer that you're taking leave.",
     sectionLabel: "Have you told your employer that you are taking leave?",
     title: "Employment information",
+  },
+  claimsOtherIncomes: {
+    choiceNo: "$t(shared.choiceNo)",
+    choiceYes: "$t(shared.choiceYes)",
+    hintHeader: "Other sources of income you must report are:",
+    hintList: [
+      "Workers Compensation",
+      "Unemployment Insurance",
+      "Social Security Disability Insurance",
+      "Disability benefits under a governmental retirement plan such as STRS or PERS",
+      "Jones Act benefits",
+      "Railroad Retirement benefits",
+      "Earnings from another employer or through self-employment",
+    ],
+    sectionLabel:
+      "Will you receive income from any other sources during your leave?",
+    title: "$t(shared.claimsOtherLeaveTitle)",
   },
   claimsReasonPregnancy: {
     choiceNo: "$t(shared.choiceNo)",

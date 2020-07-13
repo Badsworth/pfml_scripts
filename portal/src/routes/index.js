@@ -29,6 +29,7 @@ const routes = {
     leaveReason: "/claims/leave-reason",
     name: "/claims/name",
     notifiedEmployer: "/claims/notified-employer",
+    otherIncomes: "/claims/other-incomes",
     reasonPregnancy: "/claims/reason-pregnancy",
     review: "/claims/review",
     ssn: "/claims/ssn",
@@ -36,8 +37,8 @@ const routes = {
     success: "/claims/success",
     // For routes that don't have a page to point to yet, we can route them
     // to a placeholder page. This allows us to search our code for routes.claims.todo,
-    // which is less confusing than seeing routes.claims.success
-    todo: "/claims/success",
+    // which is less confusing than seeing routes.claims.checklist
+    todo: "/claims/checklist",
     uploadHealthcareForm: "/claims/upload-healthcare-form",
     uploadOtherId: "/claims/upload-other-id",
     uploadStateId: "/claims/upload-state-id",

@@ -10,14 +10,14 @@ import useHandleInputChange from "../../hooks/useHandleInputChange";
 import { useTranslation } from "../../locales/i18n";
 import withClaim from "../../hoc/withClaim";
 
-export const fields = ["claim.has_employer_benefits"];
+export const fields = ["claim.has_other_incomes"];
 
-export const EmployerBenefits = (props) => {
+const OtherIncomes = (props) => {
   const { t } = useTranslation();
   const { formState, updateFields } = useFormState(pick(props, fields).claim);
-  const { has_employer_benefits } = formState;
+  const { has_other_incomes } = formState;
   const handleInputChange = useHandleInputChange(updateFields);
-  const hintList = t("pages.claimsEmployerBenefits.hintList", {
+  const hintList = t("pages.claimsOtherIncomes.hintList", {
     returnObjects: true,
   });
 
@@ -26,29 +26,29 @@ export const EmployerBenefits = (props) => {
 
   return (
     <QuestionPage
-      title={t("pages.claimsEmployerBenefits.title")}
+      title={t("pages.claimsOtherIncomes.title")}
       onSave={handleSave}
     >
       <InputChoiceGroup
         choices={[
           {
-            checked: has_employer_benefits === true,
-            label: t("pages.claimsEmployerBenefits.choiceYes"),
+            checked: has_other_incomes === true,
+            label: t("pages.claimsOtherIncomes.choiceYes"),
             value: "true",
           },
           {
-            checked: has_employer_benefits === false,
-            label: t("pages.claimsEmployerBenefits.choiceNo"),
+            checked: has_other_incomes === false,
+            label: t("pages.claimsOtherIncomes.choiceNo"),
             value: "false",
           },
         ]}
-        label={t("pages.claimsEmployerBenefits.sectionLabel")}
-        name="has_employer_benefits"
+        label={t("pages.claimsOtherIncomes.sectionLabel")}
+        name="has_other_incomes"
         onChange={handleInputChange}
         type="radio"
         hint={
           <React.Fragment>
-            <Lead>{t("pages.claimsEmployerBenefits.hintHeader")}</Lead>
+            <Lead>{t("pages.claimsOtherIncomes.hintHeader")}</Lead>
             <ul className="usa-list">
               {hintList.map((listItem, index) => (
                 <li key={index}>{listItem}</li>
@@ -61,7 +61,7 @@ export const EmployerBenefits = (props) => {
   );
 };
 
-EmployerBenefits.propTypes = {
+OtherIncomes.propTypes = {
   claim: PropTypes.instanceOf(Claim),
   query: PropTypes.shape({
     claim_id: PropTypes.string,
@@ -69,4 +69,4 @@ EmployerBenefits.propTypes = {
   appLogic: PropTypes.object.isRequired,
 };
 
-export default withClaim(EmployerBenefits);
+export default withClaim(OtherIncomes);

@@ -1,6 +1,5 @@
 import Claim from "../../../src/models/Claim";
 import { EmployerBenefits } from "../../../src/pages/claims/employer-benefits";
-import QuestionPage from "../../../src/components/QuestionPage";
 import React from "react";
 import { act } from "react-dom/test-utils";
 import { shallow } from "enzyme";
@@ -28,7 +27,7 @@ describe("EmployerBenefits", () => {
   describe("when user clicks continue", () => {
     it("calls updateClaim", () => {
       act(() => {
-        wrapper.find(QuestionPage).simulate("save");
+        wrapper.find("QuestionPage").simulate("save");
       });
       expect(appLogic.updateClaim).toHaveBeenCalledWith(application_id, {
         has_employer_benefits: claim.has_employer_benefits,

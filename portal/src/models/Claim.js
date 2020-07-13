@@ -18,8 +18,10 @@ class Claim extends BaseModel {
       // TODO: This field does not yet exist in the API: https://lwd.atlassian.net/browse/CP-574
       employment_status: null,
       first_name: null,
-      // TODO: this field doesn't exist in the API yet
+      // TODO: this field doesn't exist in the API yet: https://lwd.atlassian.net/browse/CP-567
       has_employer_benefits: null,
+      // TODO: this field doesn't exist in the API yet: https://lwd.atlassian.net/browse/CP-567
+      has_other_incomes: null,
       // TODO: We'll map this to the correct API field once we get into Intermittent Leave work
       hours_off_needed: null,
       last_name: null,
