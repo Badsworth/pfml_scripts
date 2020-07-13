@@ -1,4 +1,6 @@
 import { NetworkError, UserNotFoundError } from "../../src/errors";
+import AppErrorInfo from "../../src/models/AppErrorInfo";
+import AppErrorInfoCollection from "../../src/models/AppErrorInfoCollection";
 import Claim from "../../src/models/Claim";
 import User from "../../src/models/User";
 import UsersApi from "../../src/api/UsersApi";
@@ -48,6 +50,24 @@ describe("useUsersLogic", () => {
 
     it("goes to next page", () => {
       expect(mockRouter.push).toHaveBeenCalled();
+    });
+
+    describe("when errors exist", () => {
+      beforeEach(async () => {
+        act(() => {
+          appErrorsLogic.setAppErrors(
+            new AppErrorInfoCollection([new AppErrorInfo()])
+          );
+        });
+
+        await act(async () => {
+          await usersLogic.updateUser(user_id, patchData);
+        });
+      });
+
+      it("clears errors", () => {
+        expect(appErrorsLogic.appErrors).toBeNull();
+      });
     });
 
     describe("when a claim is passed", () => {

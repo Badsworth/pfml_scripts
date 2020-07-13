@@ -4,6 +4,8 @@ import {
   submitClaimMock,
   updateClaimMock,
 } from "../../src/api/ClaimsApi";
+import AppErrorInfo from "../../src/models/AppErrorInfo";
+import AppErrorInfoCollection from "../../src/models/AppErrorInfoCollection";
 import Claim from "../../src/models/Claim";
 import ClaimCollection from "../../src/models/ClaimCollection";
 import User from "../../src/models/User";
@@ -16,7 +18,6 @@ import useClaimsLogic from "../../src/hooks/useClaimsLogic";
 import usePortalFlow from "../../src/hooks/usePortalFlow";
 
 jest.mock("../../src/api/ClaimsApi");
-jest.mock("../../src/hooks/useAppErrorsLogic");
 
 // TODO add tests for api returning errors and warnings
 describe("useClaimsLogic", () => {
@@ -25,6 +26,8 @@ describe("useClaimsLogic", () => {
   let appErrorsLogic, claimsLogic, portalFlow;
 
   beforeEach(() => {
+    // remove error logs
+    jest.spyOn(console, "error").mockImplementationOnce(jest.fn());
     testHook(() => {
       appErrorsLogic = useAppErrorsLogic();
       portalFlow = usePortalFlow({ user });
@@ -75,7 +78,7 @@ describe("useClaimsLogic", () => {
           await claimsLogic.loadClaims();
         });
 
-        expect(appErrorsLogic.catchError).toHaveBeenCalled();
+        expect(appErrorsLogic.appErrors.items[0].type).toEqual("Error");
       });
     });
   });
@@ -92,28 +95,34 @@ describe("useClaimsLogic", () => {
     describe("when the request succeeds", () => {
       let claim;
 
-      beforeEach(() => {
+      beforeEach(async () => {
         claim = new Claim({ application_id: "12345" });
 
         createClaimMock.mockResolvedValueOnce({
           claim,
           success: true,
         });
-      });
 
-      it("stores the new claim", async () => {
+        act(() => {
+          appErrorsLogic.setAppErrors(
+            new AppErrorInfoCollection([new AppErrorInfo()])
+          );
+        });
+
         await act(async () => {
           await claimsLogic.createClaim();
         });
+      });
 
+      it("clears errors", () => {
+        expect(appErrorsLogic.appErrors).toBeNull();
+      });
+
+      it("stores the new claim", () => {
         expect(claimsLogic.claims.items).toContain(claim);
       });
 
-      it("routes to claim checklist page", async () => {
-        await act(async () => {
-          await claimsLogic.createClaim();
-        });
-
+      it("routes to claim checklist page", () => {
         expect(mockRouter.push).toHaveBeenCalledWith(
           expect.stringContaining(
             `${routes.claims.checklist}?claim_id=${claim.application_id}`
@@ -123,48 +132,39 @@ describe("useClaimsLogic", () => {
     });
 
     describe("when the request is unsuccessful", () => {
-      beforeEach(() => {
+      beforeEach(async () => {
         createClaimMock.mockResolvedValueOnce({
           claim: null,
           success: false,
         });
-      });
 
-      it("doesn't change the route", async () => {
         await act(async () => {
           await claimsLogic.createClaim();
         });
+      });
 
+      it("doesn't change the route", () => {
         expect(mockRouter.push).not.toHaveBeenCalled();
       });
 
-      it("doesn't store a claim", async () => {
-        await act(async () => {
-          await claimsLogic.createClaim();
-        });
-
+      it("doesn't store a claim", () => {
         expect(claimsLogic.claims).toBeNull();
       });
     });
 
     describe("when the request throws an error", () => {
-      beforeEach(() => {
+      beforeEach(async () => {
         createClaimMock.mockRejectedValueOnce(new Error());
-      });
-
-      it("catches the error", async () => {
         await act(async () => {
           await claimsLogic.createClaim();
         });
-
-        expect(appErrorsLogic.catchError).toHaveBeenCalled();
       });
 
-      it("doesn't change the route", async () => {
-        await act(async () => {
-          await claimsLogic.createClaim();
-        });
+      it("catches the error", () => {
+        expect(appErrorsLogic.appErrors.items[0].type).toEqual("Error");
+      });
 
+      it("doesn't change the route", () => {
         expect(mockRouter.push).not.toHaveBeenCalled();
       });
     });
@@ -219,7 +219,7 @@ describe("useClaimsLogic", () => {
             await claimsLogic.updateClaim(applicationId, patchData);
           });
 
-          expect(appErrorsLogic.catchError).toHaveBeenCalled();
+          expect(appErrorsLogic.appErrors.items[0].type).toEqual("Error");
         });
       });
     });
@@ -243,7 +243,7 @@ describe("useClaimsLogic", () => {
             await claimsLogic.submitClaim(applicationId);
           });
 
-          expect(appErrorsLogic.catchError).toHaveBeenCalled();
+          expect(appErrorsLogic.appErrors.items[0].type).toEqual("Error");
           expect(mockRouter.push).not.toHaveBeenCalled();
         });
       });

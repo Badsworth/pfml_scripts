@@ -34,6 +34,8 @@ const useUsersLogic = ({ appErrorsLogic, portalFlow }) => {
       const context = claim ? { claim, user } : { user };
       const params = claim ? { claim_id: claim.application_id } : null;
       portalFlow.goToNextPage(context, params);
+
+      appErrorsLogic.clearErrors();
     } catch (error) {
       appErrorsLogic.catchError(error);
     }
@@ -49,6 +51,7 @@ const useUsersLogic = ({ appErrorsLogic, portalFlow }) => {
 
       if (success && user) {
         setUser(user);
+        appErrorsLogic.clearErrors();
       } else {
         throw new UserNotReceivedError();
       }

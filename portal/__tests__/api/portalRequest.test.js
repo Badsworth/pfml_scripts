@@ -1,6 +1,15 @@
-import { ForbiddenError, NetworkError } from "../../src/errors";
+import {
+  ApiRequestError,
+  BadRequestError,
+  ForbiddenError,
+  InternalServerError,
+  NetworkError,
+  RequestTimeoutError,
+  ServiceUnavialableError,
+  UnauthorizedError,
+} from "../../src/errors";
 import { Auth } from "aws-amplify";
-import request from "../../src/api/request";
+import portalRequest from "../../src/api/portalRequest";
 import tracker from "../../src/services/tracker";
 
 jest.mock("aws-amplify");
@@ -19,12 +28,14 @@ describe("request", () => {
 
     global.fetch = jest.fn().mockResolvedValueOnce({
       json: jest.fn(),
+      ok: true,
+      status: 200,
     });
   });
 
   it("includes an Authorization header with the user's JWT", async () => {
     expect.assertions();
-    await request("GET", "users");
+    await portalRequest("GET", "users");
 
     expect(fetch).toHaveBeenCalledWith(
       expect.any(String),
@@ -40,7 +51,7 @@ describe("request", () => {
     expect.assertions();
     const method = "GET";
 
-    await request(method, "users");
+    await portalRequest(method, "users");
 
     expect(fetch).toHaveBeenCalledWith(
       `${process.env.apiUrl}/users`,
@@ -55,7 +66,7 @@ describe("request", () => {
     const method = "POST";
     const body = { first_name: "Anton" };
 
-    await request(method, "users", body);
+    await portalRequest(method, "users", body);
 
     expect(fetch).toHaveBeenCalledWith(
       `${process.env.apiUrl}/users`,
@@ -74,7 +85,7 @@ describe("request", () => {
     const method = "PATCH";
     const body = { first_name: "Anton" };
 
-    await request(method, "users", body);
+    await portalRequest(method, "users", body);
 
     expect(fetch).toHaveBeenCalledWith(
       `${process.env.apiUrl}/users`,
@@ -93,7 +104,7 @@ describe("request", () => {
     const method = "PUT";
     const body = { first_name: "Anton" };
 
-    await request(method, "users", body);
+    await portalRequest(method, "users", body);
 
     expect(fetch).toHaveBeenCalledWith(
       `${process.env.apiUrl}/users`,
@@ -111,7 +122,7 @@ describe("request", () => {
     expect.assertions();
     const method = "DELETE";
 
-    await request(method, "users");
+    await portalRequest(method, "users");
 
     expect(fetch).toHaveBeenCalledWith(
       `${process.env.apiUrl}/users`,
@@ -125,7 +136,7 @@ describe("request", () => {
     expect.assertions();
     const method = "get";
 
-    await request(method, "users");
+    await portalRequest(method, "users");
 
     expect(fetch).toHaveBeenCalledWith(
       expect.any(String),
@@ -140,7 +151,7 @@ describe("request", () => {
     const method = "GET";
     const path = "/users";
 
-    await request(method, path);
+    await portalRequest(method, path);
 
     expect(fetch).toHaveBeenCalledWith(
       expect.not.stringMatching("//users"),
@@ -155,7 +166,7 @@ describe("request", () => {
       const body = new FormData();
       body.append("first_name", "Anton");
 
-      await request(method, "users", body);
+      await portalRequest(method, "users", body);
 
       expect(fetch).toHaveBeenCalledWith(
         expect.any(String),
@@ -170,7 +181,7 @@ describe("request", () => {
       const method = "WRONG";
 
       await expect(
-        request(method, "users")
+        portalRequest(method, "users")
       ).rejects.toThrowErrorMatchingInlineSnapshot(
         `"Invalid method provided, expected one of: DELETE, GET, PATCH, POST, PUT"`
       );
@@ -187,7 +198,8 @@ describe("request", () => {
         ok: true,
       });
 
-      await expect(request("GET", "users")).resolves.toMatchInlineSnapshot(`
+      await expect(portalRequest("GET", "users")).resolves
+        .toMatchInlineSnapshot(`
               Object {
                 "apiErrors": undefined,
                 "body": Object {
@@ -200,61 +212,37 @@ describe("request", () => {
     });
   });
 
-  describe("when the request succeeds, but returns a status outside the 2xx range", () => {
-    beforeEach(() => {
-      global.fetch = jest.fn().mockResolvedValue({
-        json: jest.fn().mockResolvedValue({ mock_response: true }),
-        status: 400,
-        ok: false,
-      });
-    });
-
-    it("resolves, but it's success property is set to false", async () => {
-      expect.assertions();
-
-      await expect(request("GET", "users")).resolves.toMatchInlineSnapshot(`
-              Object {
-                "apiErrors": undefined,
-                "body": undefined,
-                "status": 400,
-                "success": false,
-              }
-            `);
-    });
-
-    it("does not set the body", async () => {
-      expect.assertions();
-
-      const response = await expect(request("GET", "users"));
-
-      expect(response.body).toBeUndefined();
-    });
-
-    it("sends error to New Relic", async () => {
-      expect.assertions();
-
-      await request("GET", "users");
-
-      expect(tracker.noticeError).toHaveBeenCalledWith(expect.any(Error));
-    });
-  });
-
   describe("when the fetch request fails", () => {
     beforeEach(() => {
       // We expect console.error to be called in this scenario
       jest.spyOn(console, "error").mockImplementationOnce(jest.fn());
     });
 
-    describe("due to a 403 status", () => {
-      it("throws ForbiddenError", async () => {
-        expect.assertions();
+    const errorCodes = [
+      [400, BadRequestError],
+      [401, UnauthorizedError],
+      [403, ForbiddenError],
+      [408, RequestTimeoutError],
+      [500, InternalServerError],
+      [503, ServiceUnavialableError],
+      [undefined, ApiRequestError],
+      [501, ApiRequestError],
+    ];
 
-        global.fetch = jest.fn().mockResolvedValue({
-          ok: false,
-          status: 403,
+    errorCodes.forEach(([code, errorClass]) => {
+      describe(`due to a ${code} status`, () => {
+        it(`throws ${errorClass.name}`, async () => {
+          expect.assertions();
+
+          global.fetch = jest.fn().mockResolvedValue({
+            ok: false,
+            status: code,
+          });
+
+          await expect(portalRequest("GET", "users")).rejects.toThrow(
+            errorClass
+          );
         });
-
-        await expect(request("GET", "users")).rejects.toThrow(ForbiddenError);
       });
     });
 
@@ -266,7 +254,9 @@ describe("request", () => {
           .fn()
           .mockRejectedValue(TypeError("Network failure"));
 
-        await expect(request("GET", "users")).rejects.toThrow(NetworkError);
+        await expect(portalRequest("GET", "users")).rejects.toThrow(
+          NetworkError
+        );
       });
 
       it("sends error to New Relic", async () => {
@@ -277,7 +267,7 @@ describe("request", () => {
           .mockRejectedValue(TypeError("Network failure"));
 
         try {
-          await request("GET", "users");
+          await portalRequest("GET", "users");
         } catch (error) {}
 
         expect(tracker.noticeError).toHaveBeenCalledWith(expect.any(Error));

@@ -2,7 +2,7 @@
 import Claim from "../models/Claim";
 import ClaimCollection from "../models/ClaimCollection";
 import merge from "lodash/merge";
-import request from "./request";
+import portalRequest from "./portalRequest";
 import routes from "../routes";
 
 /**
@@ -51,7 +51,8 @@ export default class ClaimsApi {
       ...baseHeaders,
       ...additionalHeaders,
     };
-    return request(method, apiPath, body, headers);
+
+    return portalRequest(method, apiPath, body, headers);
   };
 
   /**

@@ -1,8 +1,8 @@
 import User from "../../src/models/User";
 import UsersApi from "../../src/api/UsersApi";
-import request from "../../src/api/request";
+import portalRequest from "../../src/api/portalRequest";
 
-jest.mock("../../src/api/request");
+jest.mock("../../src/api/portalRequest");
 
 describe("users API", () => {
   let usersApi;
@@ -14,7 +14,7 @@ describe("users API", () => {
   describe("getCurrentUser", () => {
     describe("when the request succeeds", () => {
       beforeEach(() => {
-        request.mockResolvedValueOnce({
+        portalRequest.mockResolvedValueOnce({
           body: {
             email_address: "mock-user@example.com",
           },
@@ -58,7 +58,7 @@ describe("users API", () => {
 
     describe("when the request is unsuccessful", () => {
       beforeEach(() => {
-        request.mockResolvedValueOnce({
+        portalRequest.mockResolvedValueOnce({
           body: {},
           status: 400,
           success: false,
@@ -90,7 +90,7 @@ describe("users API", () => {
     });
 
     beforeEach(() => {
-      request.mockResolvedValueOnce({
+      portalRequest.mockResolvedValueOnce({
         body: {
           user_id: "mock-user_id",
           consented_to_data_sharing: true,

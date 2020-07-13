@@ -26,11 +26,10 @@ const useClaimsLogic = ({ appErrorsLogic, portalFlow, user }) => {
   const loadClaims = async () => {
     if (claims) return;
 
-    appErrorsLogic.clearErrors();
-
     try {
       const { claims } = await claimsApi.getClaims();
       setClaims(claims);
+      appErrorsLogic.clearErrors();
     } catch (error) {
       appErrorsLogic.catchError(error);
     }
@@ -42,8 +41,6 @@ const useClaimsLogic = ({ appErrorsLogic, portalFlow, user }) => {
    * @param {object} patchData - subset of claim data that will be updated
    */
   const updateClaim = async (application_id, patchData) => {
-    appErrorsLogic.clearErrors();
-
     try {
       let { claim } = await claimsApi.updateClaim(application_id, patchData);
 
@@ -56,9 +53,10 @@ const useClaimsLogic = ({ appErrorsLogic, portalFlow, user }) => {
       // </ end workaround >
 
       setClaim(claim);
-
       const params = { claim_id: claim.application_id };
       portalFlow.goToNextPage({ claim, user }, params);
+
+      appErrorsLogic.clearErrors();
     } catch (error) {
       appErrorsLogic.catchError(error);
     }

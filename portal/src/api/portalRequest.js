@@ -1,4 +1,13 @@
-import { ForbiddenError, NetworkError } from "../errors";
+import {
+  ApiRequestError,
+  BadRequestError,
+  ForbiddenError,
+  InternalServerError,
+  NetworkError,
+  RequestTimeoutError,
+  ServiceUnavialableError,
+  UnauthorizedError,
+} from "../errors";
 import { Auth } from "aws-amplify";
 import tracker from "../services/tracker";
 
@@ -40,16 +49,16 @@ function createRequestUrl(apiPath) {
 
 /**
  * Send an authenticated API request.
- * @example const response = await request("GET", "users/current");
+ * @example const response = await portalRequest("GET", "users/current");
  *
  * @param {string} method - i.e GET, POST, etc
  * @param {string} apiPath - relative path
  * @param {object|FormData} [payload] - request body
  * @param {object} [headers] - request headers
- * @returns {Response} response - only rejects on network failure or if anything prevented the request from completing
+ * @returns {Response} response - rejects on non-2xx status codes
  * @throws {Error|NetworkError}
  */
-async function request(method, apiPath, payload, headers) {
+async function portalRequest(method, apiPath, payload, headers) {
   method = method.toUpperCase();
   const methods = ["DELETE", "GET", "PATCH", "POST", "PUT"];
   if (!methods.includes(method)) {
@@ -103,7 +112,10 @@ async function sendRequest(url, options) {
     throw new NetworkError(error.message);
   }
 
-  if (response.status === 403) throw new ForbiddenError();
+  // TODO allow for 400 errors to pass once API validations are in place
+  if (!response.ok) {
+    throwError(response);
+  }
 
   return {
     body,
@@ -113,4 +125,24 @@ async function sendRequest(url, options) {
   };
 }
 
-export default request;
+const throwError = ({ status }) => {
+  switch (status) {
+    // TODO remove 400 case when API validation is in place
+    case 400:
+      throw new BadRequestError();
+    case 401:
+      throw new UnauthorizedError();
+    case 403:
+      throw new ForbiddenError();
+    case 408:
+      throw new RequestTimeoutError();
+    case 500:
+      throw new InternalServerError();
+    case 503:
+      throw new ServiceUnavialableError();
+    default:
+      throw new ApiRequestError();
+  }
+};
+
+export default portalRequest;

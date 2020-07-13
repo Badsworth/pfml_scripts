@@ -2,9 +2,9 @@ import Claim from "../../src/models/Claim";
 import ClaimCollection from "../../src/models/ClaimCollection";
 import ClaimsApi from "../../src/api/ClaimsApi";
 import User from "../../src/models/User";
-import request from "../../src/api/request";
+import portalRequest from "../../src/api/portalRequest";
 
-jest.mock("../../src/api/request");
+jest.mock("../../src/api/portalRequest");
 
 describe("ClaimsApi", () => {
   let user;
@@ -20,7 +20,7 @@ describe("ClaimsApi", () => {
   describe("getClaims", () => {
     describe("successful request", () => {
       beforeEach(() => {
-        request.mockResolvedValueOnce({
+        portalRequest.mockResolvedValueOnce({
           body: [
             {
               application_id: "2a340cf8-6d2a-4f82-a075-73588d003f8f",
@@ -33,7 +33,7 @@ describe("ClaimsApi", () => {
         // Needed for workaround in claimsApi.getClaims
         // This won't be needed once https://lwd.atlassian.net/browse/API-290 is complete
         // TODO: Remove workaround once above ticket is complete: https://lwd.atlassian.net/browse/CP-577
-        request.mockResolvedValueOnce({
+        portalRequest.mockResolvedValueOnce({
           body: {
             application_id: "2a340cf8-6d2a-4f82-a075-73588d003f8f",
           },
@@ -44,9 +44,14 @@ describe("ClaimsApi", () => {
 
       it("sends GET request to /applications", async () => {
         await claimsApi.getClaims();
-        expect(request).toHaveBeenCalledWith("GET", "/applications", null, {
-          user_id: user.user_id,
-        });
+        expect(portalRequest).toHaveBeenCalledWith(
+          "GET",
+          "/applications",
+          null,
+          {
+            user_id: user.user_id,
+          }
+        );
       });
 
       it("resolves with success, status, and claim instance", async () => {
@@ -67,7 +72,7 @@ describe("ClaimsApi", () => {
   describe("createClaim", () => {
     describe("successful request", () => {
       beforeEach(() => {
-        request.mockResolvedValueOnce({
+        portalRequest.mockResolvedValueOnce({
           body: {
             application_id: "mock-application_id",
           },
@@ -78,9 +83,14 @@ describe("ClaimsApi", () => {
 
       it("sends POST request to /applications", async () => {
         await claimsApi.createClaim();
-        expect(request).toHaveBeenCalledWith("POST", "/applications", null, {
-          user_id: user.user_id,
-        });
+        expect(portalRequest).toHaveBeenCalledWith(
+          "POST",
+          "/applications",
+          null,
+          {
+            user_id: user.user_id,
+          }
+        );
       });
 
       it("resolves with success, status, and claim instance", async () => {
@@ -99,7 +109,7 @@ describe("ClaimsApi", () => {
 
     describe("unsuccessful request", () => {
       beforeEach(() => {
-        request.mockResolvedValueOnce({
+        portalRequest.mockResolvedValueOnce({
           body: null,
           status: 400,
           success: false,
@@ -134,7 +144,7 @@ describe("ClaimsApi", () => {
         duration_type: "type",
       };
 
-      request.mockResolvedValueOnce({
+      portalRequest.mockResolvedValueOnce({
         body: mockResponseBody,
         status: 200,
         success: true,
@@ -143,7 +153,7 @@ describe("ClaimsApi", () => {
 
     it("sends PATCH request to /applications/:application_id", async () => {
       await claimsApi.updateClaim(claim.application_id, claim);
-      expect(request).toHaveBeenCalledWith(
+      expect(portalRequest).toHaveBeenCalledWith(
         "PATCH",
         "/applications/mock-application_id",
         claim,
@@ -175,7 +185,7 @@ describe("ClaimsApi", () => {
         duration_type: "type",
       };
 
-      request.mockResolvedValueOnce({
+      portalRequest.mockResolvedValueOnce({
         body: mockResponseBody,
         status: 200,
         success: true,
@@ -184,7 +194,7 @@ describe("ClaimsApi", () => {
 
     it("sends POST request to /applications/:application_id/submit_application", async () => {
       await claimsApi.submitClaim(claim.application_id);
-      expect(request).toHaveBeenCalledWith(
+      expect(portalRequest).toHaveBeenCalledWith(
         "POST",
         "/applications/mock-application_id/submit_application",
         null,

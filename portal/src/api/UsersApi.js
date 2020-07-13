@@ -1,6 +1,6 @@
 /* eslint-disable jsdoc/require-returns */
 import User from "../models/User";
-import request from "./request";
+import portalRequest from "./portalRequest";
 import routes from "../routes";
 
 /**
@@ -21,7 +21,7 @@ export default class UsersApi {
    * @returns {Promise<UsersApiResult>}
    */
   getCurrentUser = async () => {
-    const { body, success, status, apiErrors } = await request(
+    const { body, success, status, apiErrors } = await portalRequest(
       "GET",
       `${this.baseRoute}/current`
     );
@@ -54,7 +54,7 @@ export default class UsersApi {
       ...workaroundPatchData
     } = patchData;
 
-    const { body, success, status, apiErrors } = await request(
+    const { body, success, status, apiErrors } = await portalRequest(
       "PATCH",
       `${this.baseRoute}/${user_id}`,
       workaroundPatchData
