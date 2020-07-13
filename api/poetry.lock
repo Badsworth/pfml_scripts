@@ -22,6 +22,17 @@ version = "1.4.4"
 
 [[package]]
 category = "dev"
+description = "Bash tab completion for argparse"
+name = "argcomplete"
+optional = false
+python-versions = "*"
+version = "1.11.1"
+
+[package.extras]
+test = ["coverage", "flake8", "pexpect", "wheel"]
+
+[[package]]
+category = "dev"
 description = "Atomic file writes."
 marker = "sys_platform == \"win32\""
 name = "atomicwrites"
@@ -310,6 +321,38 @@ test = ["pytest (>=3.6.0,<3.9.0 || >3.9.0,<3.9.1 || >3.9.1,<3.9.2 || >3.9.2)", "
 
 [[package]]
 category = "dev"
+description = "Datamodel Code Generator"
+name = "datamodel-code-generator"
+optional = false
+python-versions = ">=3.6.1"
+version = "0.5.13"
+
+[package.dependencies]
+PySnooper = "0.4.1"
+argcomplete = "1.11.1"
+black = "19.10b0"
+genson = "1.2.1"
+inflect = "4.1.0"
+isort = "4.3.21"
+jinja2 = "2.11.2"
+openapi-spec-validator = "0.2.8"
+prance = "0.18.2"
+toml = "0.10.1"
+
+[package.dependencies.pydantic]
+extras = ["email"]
+version = "1.5.1"
+
+[package.extras]
+all = ["pytest-runner", "setuptools-scm", "pytest (>=4.6)", "pytest-benchmark", "pytest-cov", "pytest-mock", "mypy", "isort", "freezegun", "mkdocs", "mkdocs-material", "wheel", "twine", "codecov"]
+ci = ["codecov"]
+docs = ["mkdocs", "mkdocs-material"]
+setup = ["pytest-runner", "setuptools-scm"]
+test = ["pytest (>=4.6)", "pytest-benchmark", "pytest-cov", "pytest-mock", "mypy", "isort", "freezegun"]
+wheel = ["wheel", "twine"]
+
+[[package]]
+category = "dev"
 description = "Decorators for Humans"
 marker = "python_version >= \"3.5\""
 name = "decorator"
@@ -392,6 +435,14 @@ six = ">=1.9.0"
 [package.extras]
 gmpy = ["gmpy"]
 gmpy2 = ["gmpy2"]
+
+[[package]]
+category = "main"
+description = "XPath 1.0/2.0 parsers and selectors for ElementTree and lxml"
+name = "elementpath"
+optional = false
+python-versions = "*"
+version = "1.4.6"
 
 [[package]]
 category = "main"
@@ -518,6 +569,14 @@ version = "0.18.2"
 
 [[package]]
 category = "dev"
+description = "GenSON is a powerful, user-friendly JSON Schema generator."
+name = "genson"
+optional = false
+python-versions = "*"
+version = "1.2.1"
+
+[[package]]
+category = "dev"
 description = "Git Object Database"
 name = "gitdb"
 optional = false
@@ -560,6 +619,18 @@ zipp = ">=0.5"
 [package.extras]
 docs = ["sphinx", "rst.linker"]
 testing = ["packaging", "pep517", "importlib-resources (>=1.3)"]
+
+[[package]]
+category = "dev"
+description = "Correctly generate plurals, singular nouns, ordinals, indefinite articles; convert numbers to words"
+name = "inflect"
+optional = false
+python-versions = ">=3.6"
+version = "4.1.0"
+
+[package.extras]
+docs = ["sphinx", "jaraco.packaging (>=3.2)", "rst.linker (>=1.9)"]
+testing = ["pytest (>=3.5,<3.7.3 || >3.7.3)", "pytest-checkdocs (>=1.2.3)", "pytest-flake8", "pytest-black-multipy", "pytest-cov", "pygments"]
 
 [[package]]
 category = "main"
@@ -849,6 +920,19 @@ scipy = ["scipy"]
 
 [[package]]
 category = "main"
+description = "A generic, spec-compliant, thorough implementation of the OAuth request-signing logic"
+name = "oauthlib"
+optional = false
+python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
+version = "3.1.0"
+
+[package.extras]
+rsa = ["cryptography"]
+signals = ["blinker"]
+signedtoken = ["cryptography", "pyjwt (>=1.0.0)"]
+
+[[package]]
+category = "main"
 description = ""
 name = "openapi-spec-validator"
 optional = false
@@ -906,6 +990,29 @@ version = "0.13.1"
 
 [package.extras]
 dev = ["pre-commit", "tox"]
+
+[[package]]
+category = "dev"
+description = "Resolving Swagger/OpenAPI 2.0 and 3.0.0 Parser"
+name = "prance"
+optional = false
+python-versions = "*"
+version = "0.18.2"
+
+[package.dependencies]
+PyYAML = ">=5.3,<6.0"
+chardet = ">=3.0,<4.0"
+requests = ">=2.22,<3.0"
+semver = ">=2.9,<3.0"
+six = ">=1.14,<2.0"
+
+[package.extras]
+cli = ["click (>=7.0,<8.0)"]
+dev = ["tox (>=3.14)", "bumpversion (>=0.5)", "pytest (>=5.3,<5.3.4 || >5.3.4)", "pytest-cov (>=2.8)", "flake8 (>=3.7)", "pep8-naming (>=0.9)", "flake8-quotes (>=2.1)", "flake8-docstrings (>=1.5)", "sphinx (>=2.3)", "towncrier (>=19.2)"]
+flex = ["flex (>=6.13,<7.0)"]
+icu = ["PyICU (>=2.4,<3.0)"]
+osv = ["openapi-spec-validator (>=0.2.1)"]
+ssv = ["swagger-spec-validator (>=2.4,<3.0)"]
 
 [[package]]
 category = "main"
@@ -1025,6 +1132,17 @@ version = "0.16.0"
 
 [package.dependencies]
 six = "*"
+
+[[package]]
+category = "dev"
+description = "A poor man's debugger for Python."
+name = "pysnooper"
+optional = false
+python-versions = "*"
+version = "0.4.1"
+
+[package.extras]
+tests = ["pytest"]
 
 [[package]]
 category = "dev"
@@ -1177,6 +1295,21 @@ socks = ["PySocks (>=1.5.6,<1.5.7 || >1.5.7)", "win-inet-pton"]
 
 [[package]]
 category = "main"
+description = "OAuthlib authentication support for Requests."
+name = "requests-oauthlib"
+optional = false
+python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
+version = "1.3.0"
+
+[package.dependencies]
+oauthlib = ">=3.0.0"
+requests = ">=2.0.0"
+
+[package.extras]
+rsa = ["oauthlib (>=3.0.0)"]
+
+[[package]]
+category = "main"
 description = "Add PKCS#12 support to the requests library in a clean way, without monkey patching or temporary files"
 name = "requests-pkcs12"
 optional = false
@@ -1251,6 +1384,14 @@ requests = "*"
 setuptools = "*"
 
 [[package]]
+category = "dev"
+description = "Python helper for Semantic Versioning (http://semver.org/)"
+name = "semver"
+optional = false
+python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
+version = "2.10.2"
+
+[[package]]
 category = "main"
 description = "Python 2 and 3 compatibility utilities"
 name = "six"
@@ -1322,6 +1463,7 @@ typing-extensions = ">=3.7.4"
 reference = "55470ceab8149db983411d5c094c9fe16343c58b"
 type = "git"
 url = "https://github.com/dropbox/sqlalchemy-stubs"
+
 [[package]]
 category = "dev"
 description = "SSH public key parser"
@@ -1458,6 +1600,17 @@ python-versions = "*"
 version = "1.12.1"
 
 [[package]]
+category = "main"
+description = "An XML Schema validator and decoder"
+name = "xmlschema"
+optional = false
+python-versions = "*"
+version = "1.2.2"
+
+[package.dependencies]
+elementpath = ">=1.4,<2.0"
+
+[[package]]
 category = "dev"
 description = "Makes working with XML feel like you are working with JSON"
 name = "xmltodict"
@@ -1505,7 +1658,7 @@ docs = ["sphinx", "jaraco.packaging (>=3.2)", "rst.linker (>=1.9)"]
 testing = ["jaraco.itertools", "func-timeout"]
 
 [metadata]
-content-hash = "16042095c9d1412bcca21e3a668ed7a84ca84076006fc05484b3bace55d55b1e"
+content-hash = "2d6c5beb225f02cf131b625536955c420866bdb6766a00f0861ec36b2dbe2996"
 python-versions = "^3.8"
 
 [metadata.files]
@@ -1515,6 +1668,10 @@ alembic = [
 appdirs = [
     {file = "appdirs-1.4.4-py2.py3-none-any.whl", hash = "sha256:a841dacd6b99318a741b166adb07e19ee71a274450e68237b4650ca1055ab128"},
     {file = "appdirs-1.4.4.tar.gz", hash = "sha256:7d5d0167b2b1ba821647616af46a749d1c653740dd0d2415100fe26e27afdf41"},
+]
+argcomplete = [
+    {file = "argcomplete-1.11.1-py2.py3-none-any.whl", hash = "sha256:890bdd1fcbb973ed73db241763e78b6d958580e588c2910b508c770a59ef37d7"},
+    {file = "argcomplete-1.11.1.tar.gz", hash = "sha256:5ae7b601be17bf38a749ec06aa07fb04e7b6b5fc17906948dc1866e7facf3740"},
 ]
 atomicwrites = [
     {file = "atomicwrites-1.4.0-py2.py3-none-any.whl", hash = "sha256:6d1784dea7c0c8d4a5172b6c620f40b6e4cbfdf96d783691f2e1302a7b88e197"},
@@ -1678,6 +1835,10 @@ cryptography = [
     {file = "cryptography-2.9.2-cp38-cp38-win_amd64.whl", hash = "sha256:1dfa985f62b137909496e7fc182dac687206d8d089dd03eaeb28ae16eec8e7d5"},
     {file = "cryptography-2.9.2.tar.gz", hash = "sha256:a0c30272fb4ddda5f5ffc1089d7405b7a71b0b0f51993cb4e5dbb4590b2fc229"},
 ]
+datamodel-code-generator = [
+    {file = "datamodel-code-generator-0.5.13.tar.gz", hash = "sha256:7ac2aae1bf40eeed48287ac71e67fa4d78a35331b305ed74e843d9ffac6530a8"},
+    {file = "datamodel_code_generator-0.5.13-py3-none-any.whl", hash = "sha256:6d7eb382bbff32d4d046c4e34e8c1484a3a9ad5203e8a696d2dcfb1b5f7278e0"},
+]
 decorator = [
     {file = "decorator-4.4.2-py2.py3-none-any.whl", hash = "sha256:41fa54c2a0cc4ba648be4fd43cff00aedf5b9465c9bf18d64325bc225f08f760"},
     {file = "decorator-4.4.2.tar.gz", hash = "sha256:e3a62f0520172440ca0dcc823749319382e377f37f140a0b99ef45fecb84bfe7"},
@@ -1705,6 +1866,10 @@ dparse = [
 ecdsa = [
     {file = "ecdsa-0.15-py2.py3-none-any.whl", hash = "sha256:867ec9cf6df0b03addc8ef66b56359643cb5d0c1dc329df76ba7ecfe256c8061"},
     {file = "ecdsa-0.15.tar.gz", hash = "sha256:8f12ac317f8a1318efa75757ef0a651abe12e51fc1af8838fb91079445227277"},
+]
+elementpath = [
+    {file = "elementpath-1.4.6-py3-none-any.whl", hash = "sha256:c2cd54093877739e7a20e72629192b1a49fe4654fea69e422d9c13dfaf57f80c"},
+    {file = "elementpath-1.4.6.tar.gz", hash = "sha256:653b863cca106a8e45699f07f1b6eb47efcf4b37f9402849dc339f0e1fb1ecb8"},
 ]
 factory-boy = [
     {file = "factory_boy-2.12.0-py2.py3-none-any.whl", hash = "sha256:728df59b372c9588b83153facf26d3d28947fc750e8e3c95cefa9bed0e6394ee"},
@@ -1744,6 +1909,9 @@ freezegun = [
 future = [
     {file = "future-0.18.2.tar.gz", hash = "sha256:b1bead90b70cf6ec3f0710ae53a525360fa360d306a86583adc6bf83a4db537d"},
 ]
+genson = [
+    {file = "genson-1.2.1.tar.gz", hash = "sha256:40b8faa17f53240f224d683d7a302b5f7b35eb7ab2aba1c223a58a38b8d09c42"},
+]
 gitdb = [
     {file = "gitdb-4.0.5-py3-none-any.whl", hash = "sha256:91f36bfb1ab7949b3b40e23736db18231bf7593edada2ba5c3a174a7b23657ac"},
     {file = "gitdb-4.0.5.tar.gz", hash = "sha256:c9e1f2d0db7ddb9a704c2a0217be31214e91a4fe1dea1efad19ae42ba0c285c9"},
@@ -1759,6 +1927,10 @@ idna = [
 importlib-metadata = [
     {file = "importlib_metadata-1.7.0-py2.py3-none-any.whl", hash = "sha256:dc15b2969b4ce36305c51eebe62d418ac7791e9a157911d58bfb1f9ccd8e2070"},
     {file = "importlib_metadata-1.7.0.tar.gz", hash = "sha256:90bb658cdbbf6d1735b6341ce708fc7024a3e14e99ffdc5783edea9f9b077f83"},
+]
+inflect = [
+    {file = "inflect-4.1.0-py3-none-any.whl", hash = "sha256:053dabafaebc41375361cea2cbaea52f91c7d5bd30e079847ee4e4e49739d41b"},
+    {file = "inflect-4.1.0.tar.gz", hash = "sha256:def6f3791be9181f0c01e0bf5949304007ec6e04c6674fbef7cc49c657b8a9a5"},
 ]
 inflection = [
     {file = "inflection-0.5.0-py2.py3-none-any.whl", hash = "sha256:88b101b2668a1d81d6d72d4c2018e53bc6c7fc544c987849da1c7f77545c3bc9"},
@@ -1914,6 +2086,10 @@ networkx = [
     {file = "networkx-2.4-py3-none-any.whl", hash = "sha256:cdfbf698749a5014bf2ed9db4a07a5295df1d3a53bf80bf3cbd61edf9df05fa1"},
     {file = "networkx-2.4.tar.gz", hash = "sha256:f8f4ff0b6f96e4f9b16af6b84622597b5334bf9cae8cf9b2e42e7985d5c95c64"},
 ]
+oauthlib = [
+    {file = "oauthlib-3.1.0-py2.py3-none-any.whl", hash = "sha256:df884cd6cbe20e32633f1db1072e9356f53638e4361bef4e8b03c9127c9328ea"},
+    {file = "oauthlib-3.1.0.tar.gz", hash = "sha256:bee41cc35fcca6e988463cacc3bcb8a96224f470ca547e697b604cc697b2f889"},
+]
 openapi-spec-validator = [
     {file = "openapi-spec-validator-0.2.8.tar.gz", hash = "sha256:e489c7a273284bc78277ac22791482e8058d323b4a265015e9fcddf6a8045bcd"},
     {file = "openapi_spec_validator-0.2.8-py2-none-any.whl", hash = "sha256:d4da8aef72bf5be40cf0df444abd20009a41baf9048a8e03750c07a934f1bdd8"},
@@ -1937,6 +2113,10 @@ pbr = [
 pluggy = [
     {file = "pluggy-0.13.1-py2.py3-none-any.whl", hash = "sha256:966c145cd83c96502c3c3868f50408687b38434af77734af1e9ca461a4081d2d"},
     {file = "pluggy-0.13.1.tar.gz", hash = "sha256:15b2acde666561e1298d71b523007ed7364de07029219b604cf808bfa1c765b0"},
+]
+prance = [
+    {file = "prance-0.18.2-py2.py3-none-any.whl", hash = "sha256:1f88df76d8d642efac1243801d39d9348bbb7530311270adbd7305ec45e077ac"},
+    {file = "prance-0.18.2.tar.gz", hash = "sha256:e1ab67ec984c94b94e32bf17a2d6f35960db8b1ee248efea9f00ebaa1fcea1af"},
 ]
 psycopg2-binary = [
     {file = "psycopg2-binary-2.8.5.tar.gz", hash = "sha256:ccdc6a87f32b491129ada4b87a43b1895cf2c20fdb7f98ad979647506ffc41b6"},
@@ -2039,6 +2219,10 @@ pypiwin32 = [
 pyrsistent = [
     {file = "pyrsistent-0.16.0.tar.gz", hash = "sha256:28669905fe725965daa16184933676547c5bb40a5153055a8dee2a4bd7933ad3"},
 ]
+pysnooper = [
+    {file = "PySnooper-0.4.1-py2.py3-none-any.whl", hash = "sha256:c33b45d69c1e0108e964ea45ee3b7a10d7e7c25b8cd7b50781076a919bec777b"},
+    {file = "PySnooper-0.4.1.tar.gz", hash = "sha256:b441e0a852f836e15c5ae36ef57d1537f63b35d256d0da18e7d48f3e82a7cff6"},
+]
 pytest = [
     {file = "pytest-5.4.3-py3-none-any.whl", hash = "sha256:5c0db86b698e8f170ba4582a492248919255fcd4c79b1ee64ace34301fb589a1"},
     {file = "pytest-5.4.3.tar.gz", hash = "sha256:7979331bfcba207414f5e1263b5a0f8f521d0f457318836a7355531ed1a4c7d8"},
@@ -2127,6 +2311,11 @@ requests = [
     {file = "requests-2.24.0-py2.py3-none-any.whl", hash = "sha256:fe75cc94a9443b9246fc7049224f75604b113c36acb93f87b80ed42c44cbb898"},
     {file = "requests-2.24.0.tar.gz", hash = "sha256:b3559a131db72c33ee969480840fff4bb6dd111de7dd27c8ee1f820f4f00231b"},
 ]
+requests-oauthlib = [
+    {file = "requests-oauthlib-1.3.0.tar.gz", hash = "sha256:b4261601a71fd721a8bd6d7aa1cc1d6a8a93b4a9f5e96626f8e4d91e8beeaa6a"},
+    {file = "requests_oauthlib-1.3.0-py2.py3-none-any.whl", hash = "sha256:7f71572defaecd16372f9006f33c2ec8c077c3cfa6f5911a9a90202beb513f3d"},
+    {file = "requests_oauthlib-1.3.0-py3.7.egg", hash = "sha256:fa6c47b933f01060936d87ae9327fead68768b69c6c9ea2109c48be30f2d4dbc"},
+]
 requests-pkcs12 = [
     {file = "requests_pkcs12-1.7-py2.py3-none-any.whl", hash = "sha256:f920878202130df1e626225f9b1fe95b9a2796b66bbde72b725413fa5d5c638b"},
     {file = "requests_pkcs12-1.7.tar.gz", hash = "sha256:56076dd0486bd49f4740f93f201e7a9853f17423b2fc88f9c260f0b93d14c9ff"},
@@ -2150,6 +2339,10 @@ s3transfer = [
 safety = [
     {file = "safety-1.9.0-py2.py3-none-any.whl", hash = "sha256:86c1c4a031fe35bd624fce143fbe642a0234d29f7cbf7a9aa269f244a955b087"},
     {file = "safety-1.9.0.tar.gz", hash = "sha256:23bf20690d4400edc795836b0c983c2b4cbbb922233108ff925b7dd7750f00c9"},
+]
+semver = [
+    {file = "semver-2.10.2-py2.py3-none-any.whl", hash = "sha256:21e80ca738975ed513cba859db0a0d2faca2380aef1962f48272ebf9a8a44bd4"},
+    {file = "semver-2.10.2.tar.gz", hash = "sha256:c0a4a9d1e45557297a722ee9bac3de2ec2ea79016b6ffcaca609b0bc62cf4276"},
 ]
 six = [
     {file = "six-1.15.0-py2.py3-none-any.whl", hash = "sha256:8b74bedcbbbaca38ff6d7491d76f2b06b3592611af620f8426e82dddb04a5ced"},
@@ -2263,6 +2456,10 @@ werkzeug = [
 ]
 wrapt = [
     {file = "wrapt-1.12.1.tar.gz", hash = "sha256:b62ffa81fb85f4332a4f609cab4ac40709470da05643a082ec1eb88e6d9b97d7"},
+]
+xmlschema = [
+    {file = "xmlschema-1.2.2-py3-none-any.whl", hash = "sha256:4f19a75545b80829f27658df06110d93886151e0af897b0a85a09638a22248a1"},
+    {file = "xmlschema-1.2.2.tar.gz", hash = "sha256:3d194332cc6d4b56e59d510ece63a5aa78b58e6e332765d46ce5746cb2c3ef20"},
 ]
 xmltodict = [
     {file = "xmltodict-0.12.0-py2.py3-none-any.whl", hash = "sha256:8bbcb45cc982f48b2ca8fe7e7827c5d792f217ecf1792626f808bf41c3b86051"},
