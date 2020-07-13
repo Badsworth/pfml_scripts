@@ -1,6 +1,7 @@
 import { mount, shallow } from "enzyme";
 import Claim from "../../src/models/Claim";
 import React from "react";
+import User from "../../src/models/User";
 import useAppLogic from "../../src/hooks/useAppLogic";
 import withClaim from "../../src/hoc/withClaim";
 
@@ -16,11 +17,7 @@ describe("WithClaim", () => {
     const WrappedComponent = withClaim(PageComponent);
 
     const wrapper = shallow(
-      <WrappedComponent
-        query={{ claim_id: "12345" }}
-        appLogic={appLogic}
-        user={{}}
-      />
+      <WrappedComponent query={{ claim_id: "12345" }} appLogic={appLogic} />
     );
 
     expect(wrapper).toMatchInlineSnapshot(`
@@ -56,6 +53,7 @@ describe("WithClaim", () => {
     const claim = new Claim({ application_id: id });
     const appLogic = useAppLogic();
     appLogic.claims = appLogic.claims.addItem(claim);
+    appLogic.user = new User();
 
     // define component that needs a claim prop
     // eslint-disable-next-line react/prop-types
@@ -68,7 +66,7 @@ describe("WithClaim", () => {
     const query = { claim_id: id };
 
     const wrapper = mount(
-      <WrappedComponent query={query} appLogic={appLogic} user={{}} />
+      <WrappedComponent query={query} appLogic={appLogic} />
     );
 
     const pageComponent = wrapper.find("PageComponent");
