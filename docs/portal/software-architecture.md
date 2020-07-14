@@ -38,7 +38,7 @@ An example of a state hook is [useFormState](/portal/src/hooks/useFormState.js).
 
 Event hooks are modules that define functions to handle view events. These modules attach view events to the appropriate model update functions, and are the glue that allows us to keep "Model" and "View" decoupled from each other.
 
-Examples of event hooks include [useHandleInputChange](/portal/src/hooks/useHandleInputChange.js) and [useHandleSave](/portal/src/hooks/useHandleSave.js).
+Examples of event hooks include [useHandleInputChange](/portal/src/hooks/useHandleInputChange.js) and [useAppLogic](/portal/src/hooks/useAppLogic.js).
 
 ## Dependencies
 
