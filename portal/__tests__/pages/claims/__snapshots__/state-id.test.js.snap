@@ -2,18 +2,6 @@
 
 exports[`StateId initially renders the page without an id field 1`] = `
 <QuestionPage
-  formState={
-    User {
-      "auth_id": null,
-      "consented_to_data_sharing": null,
-      "date_of_birth": null,
-      "email_address": null,
-      "has_state_id": null,
-      "state_id": null,
-      "status": null,
-      "user_id": "mock_user_id",
-    }
-  }
   onSave={[Function]}
   title="Verify your identity"
 >

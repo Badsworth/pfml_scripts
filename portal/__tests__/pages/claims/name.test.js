@@ -1,6 +1,7 @@
 import Claim from "../../../src/models/Claim";
 import { Name } from "../../../src/pages/claims/name";
 import React from "react";
+import pick from "lodash/pick";
 import { shallow } from "enzyme";
 import useAppLogic from "../../../src/hooks/useAppLogic";
 
@@ -47,10 +48,9 @@ describe("Name", () => {
       expect.assertions();
 
       await wrapper.find("QuestionPage").simulate("save");
-      // formState is undefined since we are not mounting the component
       expect(appLogic.updateClaim).toHaveBeenCalledWith(
         expect.any(String),
-        undefined
+        pick(claim, ["first_name", "last_name"])
       );
     });
   });

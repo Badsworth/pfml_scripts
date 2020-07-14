@@ -28,11 +28,7 @@ const StateId = (props) => {
   const shouldShowStateIdField = !!has_state_id;
 
   return (
-    <QuestionPage
-      formState={formState}
-      title={t("pages.claimsStateId.title")}
-      onSave={handleSave}
-    >
+    <QuestionPage title={t("pages.claimsStateId.title")} onSave={handleSave}>
       <InputChoiceGroup
         choices={[
           {

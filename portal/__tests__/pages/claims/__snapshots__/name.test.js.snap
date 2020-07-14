@@ -2,12 +2,6 @@
 
 exports[`Name renders the empty page 1`] = `
 <QuestionPage
-  formState={
-    Object {
-      "first_name": "Aquib",
-      "last_name": "Khan",
-    }
-  }
   onSave={[Function]}
   title="Verify your identity"
 >
@@ -44,12 +38,6 @@ exports[`Name renders the empty page 1`] = `
 
 exports[`Name renders the page prefilled with user information 1`] = `
 <QuestionPage
-  formState={
-    Object {
-      "first_name": "Aquib",
-      "last_name": "Khan",
-    }
-  }
   onSave={[Function]}
   title="Verify your identity"
 >

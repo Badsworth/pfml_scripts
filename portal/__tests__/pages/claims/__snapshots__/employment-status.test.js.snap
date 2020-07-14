@@ -2,12 +2,6 @@
 
 exports[`EmploymentStatusPage renders the page 1`] = `
 <QuestionPage
-  formState={
-    Object {
-      "employer_fein": null,
-      "employment_status": null,
-    }
-  }
   onSave={[Function]}
   title="Employment information"
 >

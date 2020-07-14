@@ -2,13 +2,6 @@
 
 exports[`LeaveReasonPage renders the page 1`] = `
 <QuestionPage
-  formState={
-    Object {
-      "leave_details": Object {
-        "reason": "Serious Health Condition - Employee",
-      },
-    }
-  }
   onSave={[Function]}
   title="Leave type"
 >

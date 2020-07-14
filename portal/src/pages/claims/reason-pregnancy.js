@@ -17,12 +17,11 @@ export const ReasonPregnancy = (props) => {
   const handleInputChange = useHandleInputChange(updateFields);
   const { pregnant_or_recent_birth } = formState;
 
-  const handleSave = (formState) =>
+  const handleSave = () =>
     props.appLogic.updateClaim(props.claim.application_id, formState);
 
   return (
     <QuestionPage
-      formState={formState}
       title={t("pages.claimsReasonPregnancy.title")}
       onSave={handleSave}
     >

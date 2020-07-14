@@ -22,15 +22,11 @@ export const Ssn = (props) => {
   const { employee_ssn } = formState;
   const handleInputChange = useHandleInputChange(updateFields);
 
-  const handleSave = (formState) =>
+  const handleSave = () =>
     appLogic.updateClaim(claim.application_id, formState);
 
   return (
-    <QuestionPage
-      formState={formState}
-      title={t("pages.claimsSsn.title")}
-      onSave={handleSave}
-    >
+    <QuestionPage title={t("pages.claimsSsn.title")} onSave={handleSave}>
       <InputText
         mask="ssn"
         name="employee_ssn"

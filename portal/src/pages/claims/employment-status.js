@@ -33,7 +33,6 @@ export const EmploymentStatusPage = (props) => {
 
   return (
     <QuestionPage
-      formState={formState}
       title={t("pages.claimsEmploymentStatus.title")}
       onSave={handleSave}
     >

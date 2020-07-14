@@ -26,15 +26,11 @@ export const Name = (props) => {
   const { first_name, middle_name, last_name } = formState;
   const handleInputChange = useHandleInputChange(updateFields);
 
-  const handleSave = (formState) =>
+  const handleSave = () =>
     props.appLogic.updateClaim(props.claim.application_id, formState);
 
   return (
-    <QuestionPage
-      formState={formState}
-      title={t("pages.claimsName.title")}
-      onSave={handleSave}
-    >
+    <QuestionPage title={t("pages.claimsName.title")} onSave={handleSave}>
       <FormLabel component="legend" hint={t("pages.claimsName.lead")}>
         {t("pages.claimsName.sectionLabel")}
       </FormLabel>

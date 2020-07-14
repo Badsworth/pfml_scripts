@@ -2,7 +2,6 @@
 
 exports[`UploadHealthcareForm initially renders the page without any file cards 1`] = `
 <QuestionPage
-  formState={Object {}}
   onSave={[Function]}
   title="Leave Details"
 >

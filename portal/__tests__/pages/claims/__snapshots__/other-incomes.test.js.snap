@@ -2,7 +2,6 @@
 
 exports[`OtherIncomes renders the page 1`] = `
 <QuestionPage
-  formState={Object {}}
   onSave={[Function]}
   title="Other income and benefits"
 >

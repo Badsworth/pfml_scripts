@@ -38,7 +38,6 @@ export const NotifiedEmployer = (props) => {
 
   return (
     <QuestionPage
-      formState={formState}
       title={t("pages.claimsNotifiedEmployer.title")}
       onSave={handleSave}
     >

@@ -2,14 +2,6 @@
 
 exports[`NotifiedEmployer renders the page 1`] = `
 <QuestionPage
-  formState={
-    Object {
-      "leave_details": Object {
-        "employer_notification_date": null,
-        "employer_notified": null,
-      },
-    }
-  }
   onSave={[Function]}
   title="Employment information"
 >

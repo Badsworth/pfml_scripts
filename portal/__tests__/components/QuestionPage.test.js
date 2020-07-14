@@ -21,13 +21,8 @@ describe("QuestionPage", () => {
 
   it("calls onSave with formData", async () => {
     const handleSave = jest.fn();
-    const formState = { a: 1, b: 2 };
     const wrapper = shallow(
-      <QuestionPage
-        title={sampleTitle}
-        formState={formState}
-        onSave={handleSave}
-      >
+      <QuestionPage title={sampleTitle} onSave={handleSave}>
         <div>Some stuff here</div>
       </QuestionPage>
     );
@@ -35,6 +30,6 @@ describe("QuestionPage", () => {
 
     await wrapper.find("form").simulate("submit", event);
 
-    expect(handleSave).toHaveBeenCalledWith(formState);
+    expect(handleSave).toHaveBeenCalled();
   });
 });

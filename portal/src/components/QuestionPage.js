@@ -16,7 +16,7 @@ export const QuestionPage = (props) => {
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-    await props.onSave(props.formState);
+    await props.onSave();
   };
 
   return (
@@ -37,11 +37,6 @@ export const QuestionPage = (props) => {
 
 QuestionPage.propTypes = {
   /**
-   * The state of the form.
-   * todo: remove this prop if it's no longer useful
-   */
-  formState: PropTypes.object,
-  /**
    * The contents of the form question page.
    */
   children: PropTypes.node.isRequired,
@@ -53,10 +48,6 @@ QuestionPage.propTypes = {
    * Function that performs the save operation. Can be asynchronous.
    */
   onSave: PropTypes.func.isRequired,
-};
-
-QuestionPage.defaultProps = {
-  formState: {},
 };
 
 export default QuestionPage;

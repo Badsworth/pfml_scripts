@@ -22,7 +22,6 @@ export const DateOfBirth = (props) => {
 
   return (
     <QuestionPage
-      formState={formState}
       title={t("pages.claimsDateOfBirth.title")}
       onSave={handleSave}
     >

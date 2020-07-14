@@ -18,15 +18,11 @@ export const LeaveDates = (props) => {
   const { formState, updateFields } = useFormState(pick(props, fields).claim);
   const handleInputChange = useHandleInputChange(updateFields);
 
-  const handleSave = (formState) =>
+  const handleSave = () =>
     props.appLogic.updateClaim(props.claim.application_id, formState);
 
   return (
-    <QuestionPage
-      formState={formState}
-      title={t("pages.claimsLeaveDates.title")}
-      onSave={handleSave}
-    >
+    <QuestionPage title={t("pages.claimsLeaveDates.title")} onSave={handleSave}>
       <InputDate
         name="leave_details.continuous_leave_periods[0].start_date"
         label={t("pages.claimsLeaveDates.startDateLabel")}

@@ -2,11 +2,6 @@
 
 exports[`Duration regardless of duration type initially renders the page without conditional fields 1`] = `
 <QuestionPage
-  formState={
-    Object {
-      "duration_type": null,
-    }
-  }
   onSave={[Function]}
   title="Leave duration"
 >

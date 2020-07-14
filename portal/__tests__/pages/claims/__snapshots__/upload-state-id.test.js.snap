@@ -2,7 +2,6 @@
 
 exports[`UploadStateId initially renders the page without any filecards 1`] = `
 <QuestionPage
-  formState={Object {}}
   onSave={[Function]}
   title="Verify your identity"
 >
@@ -29,7 +28,6 @@ exports[`UploadStateId initially renders the page without any filecards 1`] = `
 
 exports[`UploadStateId when the user uploads files renders filecards for the files 1`] = `
 <QuestionPage
-  formState={Object {}}
   onSave={[Function]}
   title="Verify your identity"
 >

@@ -36,15 +36,11 @@ export const Duration = (props) => {
   } = formState;
   const handleInputChange = useHandleInputChange(updateFields);
 
-  const handleSave = (formState) =>
+  const handleSave = () =>
     props.appLogic.updateClaim(props.claim.application_id, formState);
 
   return (
-    <QuestionPage
-      formState={formState}
-      title={t("pages.claimsDuration.title")}
-      onSave={handleSave}
-    >
+    <QuestionPage title={t("pages.claimsDuration.title")} onSave={handleSave}>
       <InputChoiceGroup
         choices={[
           {

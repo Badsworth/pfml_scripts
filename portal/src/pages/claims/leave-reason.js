@@ -19,12 +19,11 @@ export const LeaveReasonPage = (props) => {
 
   const handleInputChange = useHandleInputChange(updateFields);
 
-  const handleSave = (formState) =>
+  const handleSave = () =>
     props.appLogic.updateClaim(props.claim.application_id, formState);
 
   return (
     <QuestionPage
-      formState={formState}
       title={t("pages.claimsLeaveReason.title")}
       onSave={handleSave}
     >

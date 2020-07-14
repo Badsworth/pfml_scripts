@@ -2,11 +2,6 @@
 
 exports[`Ssn renders the form 1`] = `
 <QuestionPage
-  formState={
-    Object {
-      "employee_ssn": "123-123-1234",
-    }
-  }
   onSave={[Function]}
   title="Verify your identity"
 >
