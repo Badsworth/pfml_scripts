@@ -106,6 +106,12 @@ def disable_employee_endpoint(monkeypatch):
 
 
 @pytest.fixture
+def disable_employer_endpoint(monkeypatch):
+    new_env = monkeypatch.setenv("ENABLE_EMPLOYER_ENDPOINTS", "0")
+    return new_env
+
+
+@pytest.fixture
 def consented_user_claims(consented_user):
     claims = {
         "a": "b",

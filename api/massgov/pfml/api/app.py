@@ -50,7 +50,7 @@ def create_app(config: Optional[AppConfig] = None) -> connexion.FlaskApp:
 
     # Set up bouncer
     authorization_path = massgov.pfml.api.authorization.rules.create_authorization(
-        config.enable_employee_endpoints
+        config.enable_employee_endpoints, config.enable_employer_endpoints
     )
     bouncer = massgov.pfml.api.authorization.flask.Bouncer(flask_app)
     bouncer.authorization_method(authorization_path)
