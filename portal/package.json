@@ -58,6 +58,7 @@
     "puppeteer": "^5.0.0",
     "react-is": "^16.13.1",
     "sass": "^1.26.10",
-    "sass-loader": "^9.0.2"
+    "sass-loader": "^9.0.2",
+    "state-machine-cat": "^7.0.6"
   }
 }
