@@ -1,4 +1,5 @@
 import Heading from "./Heading";
+import Link from "next/link";
 import PropTypes from "prop-types";
 import React from "react";
 
@@ -12,13 +13,14 @@ const ReviewHeading = (props) => {
         {props.children}
       </Heading>
       {props.editHref && (
-        <a
-          className="usa-link margin-0"
-          href={props.editHref}
-          aria-label={`${props.editText}: ${props.children}`}
-        >
-          {props.editText}
-        </a>
+        <Link href={props.editHref}>
+          <a
+            className="usa-link margin-0"
+            aria-label={`${props.editText}: ${props.children}`}
+          >
+            {props.editText}
+          </a>
+        </Link>
       )}
     </div>
   );

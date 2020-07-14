@@ -23,12 +23,15 @@ exports[`ReviewHeading when editHref is defined renders with an edit link 1`] = 
   >
     Who is taking leave?
   </Heading>
-  <a
-    aria-label="Edit: Who is taking leave?"
-    className="usa-link margin-0"
+  <Link
     href="/name"
   >
-    Edit
-  </a>
+    <a
+      aria-label="Edit: Who is taking leave?"
+      className="usa-link margin-0"
+    >
+      Edit
+    </a>
+  </Link>
 </div>
 `;

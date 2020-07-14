@@ -16,12 +16,15 @@ exports[`ReviewRow when editHref is defined renders with an edit link 1`] = `
     </Heading>
     Medical
   </div>
-  <a
-    aria-label="Edit name: Leave type"
-    className="usa-link"
+  <Link
     href="/name"
   >
-    Edit name
-  </a>
+    <a
+      aria-label="Edit name: Leave type"
+      className="usa-link"
+    >
+      Edit name
+    </a>
+  </Link>
 </div>
 `;

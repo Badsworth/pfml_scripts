@@ -30,7 +30,6 @@ const Step = (props) => {
         <Link href={props.stepHref}>
           <a
             className="usa-link"
-            href={props.stepHref}
             aria-label={`${props.editText}: ${props.title}`}
           >
             {props.editText}
