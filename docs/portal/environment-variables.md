@@ -2,25 +2,43 @@
 
 Environment variables include [feature flags](feature-flags.md), URLs and keys for external resources such as Cognito and the API.
 
-Each Portal environment has a configuration file in [`portal/config`](../portal/config/). An important piece to note here is that since the Portal is only served on the client-side, application configuration files do not include secrets.
+## Configuring environment variables
+
+Each environment has a corresponding configuration file in [`portal/config`](../../portal/config/).
+
+- **Portal environment variables should never include a secret!** Since the Portal is only served on the client-side, these environment variables will be publicly accessible.
+- Each time you add a new environment variable, ensure that you add it to each environment's config file, so that an environment is missing anything.
+
+## Referencing an environment variable
 
 Within our codebase, environment variables are referenced from `process.env`. For example:
 
-```
-Amplify.config(process.env.customKey)
-```
-
-During the build process, the target environment is set as the `BUILD_ENV`
-
-For example:
-
-```
-BUILD_ENV=test npm run build
+```js
+Amplify.config(process.env.myCustomKey);
 ```
 
-We use environment specific NPM scripts in [`portal/package.json`](../portal/package.json) to bundle builds with the correct configuration.
+## How it works
 
-The corresponding configuration file’s contents are assigned to the [Next.js `env` config option](https://nextjs.org/docs/api-reference/next.config.js/environment-variables) in [`portal/next.config.js`](../portal/next.config.js). Next.js replaces `process.env` references with their values at build time.
+We use environment specific NPM scripts in [`portal/package.json`](../../portal/package.json) to bundle builds with the correct configuration. For example `build:stage`.
+
+The target environment is set as the `BUILD_ENV`. For example:
+
+```
+BUILD_ENV=stage npm run build
+```
+
+When the build script is ran, the contents of the configuration file corresponding to `BUILD_ENV` are assigned to the [Next.js `env` config option](https://nextjs.org/docs/api-reference/next.config.js/environment-variables) in [`portal/next.config.js`](../../portal/next.config.js). Next.js replaces `process.env` references with their values at build time.
+
+### NODE_ENV
+
+The `NODE_ENV` environment variable is automatically set by Next.js during development and builds. For our test scripts, we manually set this in the test's NPM scripts.
+
+This variable determines whether our JS bundle includes the [production build of React or the dev build](https://reactjs.org/docs/optimizing-performance.html#use-the-production-build).
+
+- When our NPM scripts call `next dev`, `NODE_ENV` is automatically set to `development` and our JS bundle includes the React development build.
+- When our NPM scripts call `next build`, `NODE_ENV` is automatically set to `production` and our JS bundle includes the optimized React production build.
+
+The `NODE_ENV` variable is also exposed to our code for use, allowing us to conditionally enable behavior for an environment, like only logging warnings when in `development`.
 
 ## Related
 
