@@ -11,7 +11,7 @@ import routes from "../../routes";
 import { useTranslation } from "../../locales/i18n";
 import withClaim from "../../hoc/withClaim";
 
-export const Checklist = (props) => {
+const Checklist = (props) => {
   // TODO: add appErrors.warnings when API validations are in place
   // https://lwd.atlassian.net/browse/CP-509
   const steps = StepModel.createClaimStepsFromMachine(

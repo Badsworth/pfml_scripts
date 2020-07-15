@@ -1,16 +1,9 @@
-import { Checklist } from "../../../src/pages/claims/checklist";
-import Claim from "../../../src/models/Claim";
-import React from "react";
-import { shallow } from "enzyme";
+import Checklist from "../../../src/pages/claims/checklist";
+import { renderWithAppLogic } from "../../test-utils";
 
 describe("Checklist", () => {
-  it("renders component", () => {
-    const wrapper = shallow(
-      <Checklist
-        claim={new Claim({ application_id: "mock-application-id" })}
-        appLogic={{}}
-      />
-    );
+  it("renders page", () => {
+    const { wrapper } = renderWithAppLogic(Checklist);
 
     expect(wrapper).toMatchSnapshot();
   });

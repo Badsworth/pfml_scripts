@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`Checklist renders component 1`] = `
+exports[`Checklist renders page 1`] = `
 <div
   className="measure-6"
 >
@@ -15,14 +15,14 @@ exports[`Checklist renders component 1`] = `
     screenReaderNumberPrefix="Step"
     startText="Start"
     submitButtonText="Review and submit application"
-    submitPage="/claims/review?claim_id=mock-application-id"
+    submitPage="/claims/review?claim_id=mock_application_id"
     submitPageDisabled={true}
     title="Create a new application"
   >
     <Step
       key="verifyId"
       status="not_started"
-      stepHref="/claims/name?claim_id=mock-application-id"
+      stepHref="/claims/name?claim_id=mock_application_id"
       title="Verify your identity"
     >
       <span
@@ -36,7 +36,7 @@ exports[`Checklist renders component 1`] = `
     <Step
       key="leaveDetails"
       status="disabled"
-      stepHref="/claims/leave-reason?claim_id=mock-application-id"
+      stepHref="/claims/leave-reason?claim_id=mock_application_id"
       title="Enter leave details"
     >
       <span
@@ -50,7 +50,7 @@ exports[`Checklist renders component 1`] = `
     <Step
       key="employerInformation"
       status="disabled"
-      stepHref="/claims/employment-status?claim_id=mock-application-id"
+      stepHref="/claims/employment-status?claim_id=mock_application_id"
       title="Enter employment information"
     >
       <span
@@ -64,7 +64,7 @@ exports[`Checklist renders component 1`] = `
     <Step
       key="otherLeave"
       status="disabled"
-      stepHref="/claims/employer-benefits?claim_id=mock-application-id"
+      stepHref="/claims/employer-benefits?claim_id=mock_application_id"
       title="Report other leave and benefits"
     >
       <span
@@ -78,7 +78,7 @@ exports[`Checklist renders component 1`] = `
     <Step
       key="payment"
       status="disabled"
-      stepHref="#?claim_id=mock-application-id"
+      stepHref="#?claim_id=mock_application_id"
       title="Add payment information"
     >
       <span

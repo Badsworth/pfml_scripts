@@ -11,7 +11,7 @@ import withClaim from "../../hoc/withClaim";
 
 export const fields = ["claim.pregnant_or_recent_birth"];
 
-export const ReasonPregnancy = (props) => {
+const ReasonPregnancy = (props) => {
   const { t } = useTranslation();
   const { formState, updateFields } = useFormState(pick(props, fields).claim);
   const handleInputChange = useHandleInputChange(updateFields);

@@ -1,29 +1,13 @@
-import { makeFile, testHook } from "../../test-utils";
-import Claim from "../../../src/models/Claim";
-import React from "react";
-import { UploadHealthcareForm } from "../../../src/pages/claims/upload-healthcare-form";
-import { shallow } from "enzyme";
-import useAppLogic from "../../../src/hooks/useAppLogic";
+import { makeFile, renderWithAppLogic } from "../../test-utils";
+import UploadHealthcareForm from "../../../src/pages/claims/upload-healthcare-form";
 
 jest.mock("../../../src/hooks/useAppLogic");
 
 describe("UploadHealthcareForm", () => {
-  let appLogic, claim, wrapper;
+  let wrapper;
 
   beforeEach(() => {
-    claim = new Claim({ application_id: "mock-claim-id" });
-
-    testHook(() => {
-      appLogic = useAppLogic({ user: {} });
-    });
-
-    wrapper = shallow(
-      <UploadHealthcareForm
-        appLogic={appLogic}
-        claim={claim}
-        query={{ claim_id: claim.application_id }}
-      />
-    );
+    ({ wrapper } = renderWithAppLogic(UploadHealthcareForm));
   });
 
   it("initially renders the page without any file cards", () => {

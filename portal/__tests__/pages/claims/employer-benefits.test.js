@@ -1,23 +1,14 @@
-import Claim from "../../../src/models/Claim";
-import { EmployerBenefits } from "../../../src/pages/claims/employer-benefits";
-import React from "react";
+import EmployerBenefits from "../../../src/pages/claims/employer-benefits";
 import { act } from "react-dom/test-utils";
-import { shallow } from "enzyme";
-import { testHook } from "../../test-utils";
-import useAppLogic from "../../../src/hooks/useAppLogic";
+import { renderWithAppLogic } from "../../test-utils";
 
 jest.mock("../../../src/hooks/useAppLogic");
 
 describe("EmployerBenefits", () => {
   let appLogic, claim, wrapper;
-  const application_id = "12345";
 
   beforeEach(() => {
-    testHook(() => {
-      appLogic = useAppLogic();
-    });
-    claim = new Claim({ application_id });
-    wrapper = shallow(<EmployerBenefits claim={claim} appLogic={appLogic} />);
+    ({ appLogic, claim, wrapper } = renderWithAppLogic(EmployerBenefits));
   });
 
   it("renders the page", () => {
@@ -29,7 +20,7 @@ describe("EmployerBenefits", () => {
       act(() => {
         wrapper.find("QuestionPage").simulate("save");
       });
-      expect(appLogic.updateClaim).toHaveBeenCalledWith(application_id, {
+      expect(appLogic.updateClaim).toHaveBeenCalledWith(claim.application_id, {
         has_employer_benefits: claim.has_employer_benefits,
       });
     });

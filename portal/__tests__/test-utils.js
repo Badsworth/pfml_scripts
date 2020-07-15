@@ -45,12 +45,14 @@ export const renderWithAppLogic = (PageComponent, options = {}) => {
     />
   );
 
-  // Go one level deep to get the component that was wrapped by withClaim
-  if (options.render === "shallow") {
-    wrapper = shallow(component).dive();
-  } else {
-    wrapper = mount(component).childAt(0);
-  }
+  act(() => {
+    // Go one level deep to get the component that was wrapped by withClaim
+    if (options.render === "shallow") {
+      wrapper = shallow(component).dive();
+    } else {
+      wrapper = mount(component).childAt(0);
+    }
+  });
 
   return { appLogic, claim, wrapper };
 };

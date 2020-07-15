@@ -15,7 +15,7 @@ export const fields = ["claim.employee_ssn"];
 /**
  * A form page to capture the worker's SSN or ITIN.
  */
-export const Ssn = (props) => {
+const Ssn = (props) => {
   const { appLogic, claim } = props;
   const { t } = useTranslation();
   const { formState, updateFields } = useFormState(pick(props, fields).claim);

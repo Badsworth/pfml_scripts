@@ -22,7 +22,7 @@ import withClaim from "../../hoc/withClaim";
  * Application review page, allowing a user to review the info
  * they've entered before they submit it.
  */
-export const Review = (props) => {
+const Review = (props) => {
   const { t } = useTranslation();
   const { claim, appLogic } = props;
 

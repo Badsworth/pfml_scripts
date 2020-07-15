@@ -1,22 +1,14 @@
-import Claim, {
-  EmploymentStatus,
-  LeaveReason,
-} from "../../../src/models/Claim";
-import React from "react";
-import { Review } from "../../../src/pages/claims/review";
-import User from "../../../src/models/User";
-import { shallow } from "enzyme";
-import { testHook } from "../../test-utils";
-import useAppLogic from "../../../src/hooks/useAppLogic";
+import { EmploymentStatus, LeaveReason } from "../../../src/models/Claim";
+import Review from "../../../src/pages/claims/review";
+import { renderWithAppLogic } from "../../test-utils";
 
 /**
- * Initialize a claim for an Employed claimant, with all required fields.
+ * Get a claim for an Employed claimant, with all required fields.
  * Fields can be overridden in each unit test.
- * @returns {Claim}
+ * @returns {object}
  */
-function initFullClaim() {
-  return new Claim({
-    application_id: "mock-id",
+function fullClaimAttrs() {
+  return {
     duration_type: "continuous",
     first_name: "Bud",
     employment_status: EmploymentStatus.employed,
@@ -34,30 +26,16 @@ function initFullClaim() {
       employer_notification_date: "2020-06-25",
       reason: LeaveReason.medical,
     },
-  });
+  };
 }
 
 describe("Review", () => {
-  let appLogic;
-
-  beforeEach(() => {
-    testHook(() => {
-      appLogic = useAppLogic();
-    });
-  });
-
   describe("when all data is present", () => {
     it("renders Review page with the field values", () => {
-      const claim = initFullClaim();
-      const query = { claim_id: claim.application_id };
-      appLogic.user = new User({
-        user_id: "mock-id",
-        has_state_id: true,
+      const { wrapper } = renderWithAppLogic(Review, {
+        claimAttrs: fullClaimAttrs(),
+        userAttrs: { has_state_id: true },
       });
-
-      const wrapper = shallow(
-        <Review claim={claim} query={query} appLogic={appLogic} />
-      );
 
       expect(wrapper).toMatchSnapshot();
     });
@@ -65,13 +43,9 @@ describe("Review", () => {
 
   describe("when claimant is not Employed", () => {
     it("does not render 'Notified employer' row or FEIN row", () => {
-      const claim = initFullClaim();
-      const query = { claim_id: claim.application_id };
-      appLogic.user = new User();
-
-      const wrapper = shallow(
-        <Review claim={claim} query={query} appLogic={appLogic} />
-      );
+      const { wrapper } = renderWithAppLogic(Review, {
+        claimAttrs: fullClaimAttrs(),
+      });
 
       expect(wrapper.text()).not.toContain("Notified employer");
       expect(wrapper.text()).not.toContain("Employer's FEIN");
@@ -80,21 +54,14 @@ describe("Review", () => {
 
   describe("when data is empty", () => {
     it("does not render strings like 'null' or 'undefined'", () => {
-      const claim = new Claim({
-        application_id: "mock-id",
-        duration_type: "continuous",
-        leave_details: {
-          reason: LeaveReason.medical,
+      const { wrapper } = renderWithAppLogic(Review, {
+        claimAttrs: {
+          duration_type: "continuous",
+          leave_details: {
+            reason: LeaveReason.medical,
+          },
         },
       });
-      const query = { claim_id: claim.application_id };
-      appLogic.user = new User({
-        user_id: "mock-id",
-      });
-
-      const wrapper = shallow(
-        <Review claim={claim} query={query} appLogic={appLogic} />
-      );
 
       expect(wrapper).toMatchSnapshot();
     });

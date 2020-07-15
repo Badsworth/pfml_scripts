@@ -8,7 +8,7 @@ import QuestionPage from "../../components/QuestionPage";
 import { useTranslation } from "../../locales/i18n";
 import withClaim from "../../hoc/withClaim";
 
-export const UploadHealthcareForm = (props) => {
+const UploadHealthcareForm = (props) => {
   const { t } = useTranslation();
   const [files, setFiles] = useState([]);
 

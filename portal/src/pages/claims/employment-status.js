@@ -17,7 +17,7 @@ import withClaim from "../../hoc/withClaim";
 
 export const fields = ["claim.employment_status", "claim.employer_fein"];
 
-export const EmploymentStatusPage = (props) => {
+const EmploymentStatusPage = (props) => {
   const { t } = useTranslation();
   const { appLogic, claim } = props;
   const { formState, updateFields, removeField } = useFormState(

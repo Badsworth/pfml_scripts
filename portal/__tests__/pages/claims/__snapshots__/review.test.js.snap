@@ -9,7 +9,7 @@ exports[`Review when all data is present renders Review page with the field valu
     Check your answers before sending your application
   </Title>
   <ReviewHeading
-    editHref="/claims/name?claim_id=mock-id"
+    editHref="/claims/name?claim_id=mock_application_id"
     editText="Edit"
   >
     Verify your identity
@@ -35,7 +35,7 @@ exports[`Review when all data is present renders Review page with the field valu
     *********
   </ReviewRow>
   <ReviewHeading
-    editHref="/claims/leave-reason?claim_id=mock-id"
+    editHref="/claims/leave-reason?claim_id=mock_application_id"
     editText="Edit"
   >
     Leave Details
@@ -61,7 +61,7 @@ exports[`Review when all data is present renders Review page with the field valu
     Continuous leave
   </ReviewRow>
   <ReviewHeading
-    editHref="/claims/employment-status?claim_id=mock-id"
+    editHref="/claims/employment-status?claim_id=mock_application_id"
     editText="Edit"
   >
     Employment information
@@ -83,7 +83,7 @@ exports[`Review when all data is present renders Review page with the field valu
   </ReviewRow>
   <ButtonLink
     className="margin-top-3"
-    href="/claims/confirm?claim_id=mock-id"
+    href="/claims/confirm?claim_id=mock_application_id"
   >
     Confirm information is correct
   </ButtonLink>
@@ -99,7 +99,7 @@ exports[`Review when data is empty does not render strings like 'null' or 'undef
     Check your answers before sending your application
   </Title>
   <ReviewHeading
-    editHref="/claims/name?claim_id=mock-id"
+    editHref="/claims/name?claim_id=mock_application_id"
     editText="Edit"
   >
     Verify your identity
@@ -120,7 +120,7 @@ exports[`Review when data is empty does not render strings like 'null' or 'undef
     *********
   </ReviewRow>
   <ReviewHeading
-    editHref="/claims/leave-reason?claim_id=mock-id"
+    editHref="/claims/leave-reason?claim_id=mock_application_id"
     editText="Edit"
   >
     Leave Details
@@ -144,14 +144,14 @@ exports[`Review when data is empty does not render strings like 'null' or 'undef
     Continuous leave
   </ReviewRow>
   <ReviewHeading
-    editHref="/claims/employment-status?claim_id=mock-id"
+    editHref="/claims/employment-status?claim_id=mock_application_id"
     editText="Edit"
   >
     Employment information
   </ReviewHeading>
   <ButtonLink
     className="margin-top-3"
-    href="/claims/confirm?claim_id=mock-id"
+    href="/claims/confirm?claim_id=mock_application_id"
   >
     Confirm information is correct
   </ButtonLink>

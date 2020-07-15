@@ -20,7 +20,7 @@ export const fields = [
   "claim.last_name",
 ];
 
-export const Name = (props) => {
+const Name = (props) => {
   const { t } = useTranslation();
   const { formState, updateFields } = useFormState(pick(props, fields).claim);
   const { first_name, middle_name, last_name } = formState;

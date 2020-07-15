@@ -22,7 +22,7 @@ export const fields = [
   // "claim.hours_off_needed",
 ];
 
-export const Duration = (props) => {
+const Duration = (props) => {
   const { t } = useTranslation();
   const { formState, updateFields, removeField } = useFormState(
     pick(props, fields).claim

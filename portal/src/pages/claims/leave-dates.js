@@ -13,7 +13,7 @@ import withClaim from "../../hoc/withClaim";
 
 export const fields = ["claim.leave_details.continuous_leave_periods[0]"];
 
-export const LeaveDates = (props) => {
+const LeaveDates = (props) => {
   const { t } = useTranslation();
   const { formState, updateFields } = useFormState(pick(props, fields).claim);
   const handleInputChange = useHandleInputChange(updateFields);

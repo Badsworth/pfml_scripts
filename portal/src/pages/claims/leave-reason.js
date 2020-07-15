@@ -12,7 +12,7 @@ import withClaim from "../../hoc/withClaim";
 
 export const fields = ["claim.leave_details.reason"];
 
-export const LeaveReasonPage = (props) => {
+const LeaveReasonPage = (props) => {
   const { t } = useTranslation();
   const { formState, updateFields } = useFormState(pick(props, fields).claim);
   const reason = get(formState, "leave_details.reason");

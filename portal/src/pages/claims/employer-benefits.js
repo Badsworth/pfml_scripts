@@ -12,7 +12,7 @@ import withClaim from "../../hoc/withClaim";
 
 export const fields = ["claim.has_employer_benefits"];
 
-export const EmployerBenefits = (props) => {
+const EmployerBenefits = (props) => {
   const { t } = useTranslation();
   const { formState, updateFields } = useFormState(pick(props, fields).claim);
   const { has_employer_benefits } = formState;

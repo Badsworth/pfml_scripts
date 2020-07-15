@@ -1,23 +1,13 @@
-import Claim from "../../../src/models/Claim";
-import { Confirm } from "../../../src/pages/claims/confirm";
-import React from "react";
-import { act } from "react-dom/test-utils";
-import { shallow } from "enzyme";
-import { simulateEvents } from "../../test-utils";
-import useAppLogic from "../../../src/hooks/useAppLogic";
+import { renderWithAppLogic, simulateEvents } from "../../test-utils";
+import Confirm from "../../../src/pages/claims/confirm";
 
 jest.mock("../../../src/hooks/useAppLogic");
 
 describe("Confirm", () => {
   let appLogic, claim, submitForm, wrapper;
-  const application_id = "34567";
 
   beforeEach(() => {
-    appLogic = useAppLogic();
-    claim = new Claim({ application_id });
-    act(() => {
-      wrapper = shallow(<Confirm claim={claim} appLogic={appLogic} />);
-    });
+    ({ appLogic, claim, wrapper } = renderWithAppLogic(Confirm));
     ({ submitForm } = simulateEvents(wrapper));
   });
 

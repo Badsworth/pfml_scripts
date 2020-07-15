@@ -1,16 +1,10 @@
-import Claim from "../../../src/models/Claim";
-import { LeaveDates } from "../../../src/pages/claims/leave-dates";
-import React from "react";
-import { shallow } from "enzyme";
+import LeaveDates from "../../../src/pages/claims/leave-dates";
+import { renderWithAppLogic } from "../../test-utils";
 
 describe("LeaveDates", () => {
   it("renders the page", () => {
-    const wrapper = shallow(
-      <LeaveDates
-        claim={new Claim({ application_id: "12345" })}
-        appLogic={{}}
-      />
-    );
+    const { wrapper } = renderWithAppLogic(LeaveDates);
+
     expect(wrapper).toMatchSnapshot();
   });
 });
