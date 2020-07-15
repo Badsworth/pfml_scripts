@@ -15,17 +15,17 @@ export default class BaseModel {
     }
 
     for (const [property, value] of Object.entries(attrs)) {
-      // Ignore attributes that aren't part of the model class's defaults array
+      // Ignore top-level attributes that aren't part of the model class's defaults array
       if (!this.defaults.hasOwnProperty(property)) {
-        if (process.env.NODE_ENV === "development") {
-          // During development, log a warning since it might indicate a missing attribute in the model class
-          // eslint-disable-next-line no-console
-          console.warn(
-            `Received unexpected attributes. You may need to update your model to include a new field. Received: ${Object.keys(
-              attrs
-            )} but only expected: ${Object.keys(this.defaults)}`
-          );
-        }
+        // Log a warning since it might indicate a missing field on the model or API, indicating a potential bug.
+        // TODO: Don't log a warning when the field is a temporary field, in which case it's expected that this field doesn't exist in the API yet
+        // https://lwd.atlassian.net/browse/CP-694
+        // eslint-disable-next-line no-console
+        console.warn(
+          'Received unexpected attribute: "%s"\nThe model may need updated if this is a new field.',
+          property
+        );
+
         continue;
       }
 

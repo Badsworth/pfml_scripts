@@ -47,14 +47,14 @@ describe("Step Model", () => {
                 fields: ["field_x", "field_y"],
               },
             ],
-            claim: {},
+            context: {},
             warnings,
           });
 
           const step = new Step({
             name,
             pages,
-            claim: {},
+            context: {},
             warnings,
             dependsOn: [dependedOnStep],
           });
@@ -82,7 +82,7 @@ describe("Step Model", () => {
           const step = new Step({
             name,
             pages,
-            claim: {},
+            context: {},
             warnings,
             dependsOn: [dependedOnStep],
           });
@@ -99,7 +99,7 @@ describe("Step Model", () => {
         const step = new Step({
           name,
           pages,
-          claim: {},
+          context: {},
           warnings,
         });
 
