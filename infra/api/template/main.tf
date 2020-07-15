@@ -16,3 +16,8 @@ terraform {
 locals {
   app_name = "pfml-api"
 }
+
+module "constants" {
+  source = "../../constants"
+}
+

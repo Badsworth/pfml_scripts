@@ -25,17 +25,11 @@ resource "aws_s3_bucket" "terraform" {
     enabled = "true"
   }
 
-  tags = {
-    agency        = "eol"
-    application   = "coreinf"
-    businessowner = "ma-pfml-alerts@mass.gov"
-    createdby     = "ma-pfml-alerts@mass.gov"
-    environment   = each.key
-    itowner       = "ma-pfml-alerts@mass.gov"
-    public        = "no"
-    secretariat   = "eolwd"
-    Name          = "pfml-${each.key}-env-mgmt"
-  }
+  tags = merge(module.constants.common_tags, {
+    environment = each.key
+    public      = "no"
+    Name        = "pfml-${each.key}-env-mgmt"
+  })
 }
 
 resource "aws_s3_bucket_public_access_block" "terraform_block_public_access" {
@@ -75,17 +69,11 @@ resource "aws_s3_bucket" "agency_transfer" {
     }
   }
 
-  tags = {
-    agency        = "eol"
-    application   = "coreinf"
-    businessowner = "ma-pfml-alerts@mass.gov"
-    createdby     = "ma-pfml-alerts@mass.gov"
-    environment   = each.key == "nonprod" ? "stage" : each.key
-    itowner       = "ma-pfml-alerts@mass.gov"
-    public        = "no"
-    secretariat   = "eolwd"
-    Name          = "massgov-pfml-${each.key}-agency-transfer"
-  }
+  tags = merge(module.constants.common_tags, {
+    environment = each.key == "nonprod" ? "stage" : each.key
+    Name        = "massgov-pfml-${each.key}-agency-transfer"
+    public      = "no"
+  })
 }
 
 resource "aws_s3_bucket_public_access_block" "agency_transfer_block_public_access" {
@@ -110,17 +98,11 @@ resource "aws_s3_bucket" "lambda_build" {
     }
   }
 
-  tags = {
-    agency        = "eol"
-    application   = "coreinf"
-    businessowner = "ma-pfml-alerts@mass.gov"
-    createdby     = "ma-pfml-alerts@mass.gov"
-    environment   = "prod"
-    itowner       = "ma-pfml-alerts@mass.gov"
-    public        = "no"
-    secretariat   = "eolwd"
-    Name          = "massgov-pfml-api-lambda-builds"
-  }
+  tags = merge(module.constants.common_tags, {
+    environment = "prod"
+    public      = "no"
+    Name        = "massgov-pfml-api-lambda-builds"
+  })
 }
 
 resource "aws_s3_bucket_public_access_block" "lambda_build_block_public_access" {
@@ -157,17 +139,11 @@ resource "aws_s3_bucket" "fineos_transfer" {
     enabled = "true"
   }
 
-  tags = {
-    agency        = "eol"
-    application   = "coreinf"
-    businessowner = "ma-pfml-alerts@mass.gov"
-    createdby     = "ma-pfml-alerts@mass.gov"
-    environment   = each.key
-    itowner       = "ma-pfml-alerts@mass.gov"
-    public        = "no"
-    secretariat   = "eolwd"
-    Name          = "massgov-pfml-${each.key}-fineos-transfer"
-  }
+  tags = merge(module.constants.common_tags, {
+    environment = each.key
+    Name        = "massgov-pfml-${each.key}-fineos-transfer"
+    public      = "no"
+  })
 }
 
 resource "aws_s3_bucket_public_access_block" "fineos_transfer_block_public_access" {

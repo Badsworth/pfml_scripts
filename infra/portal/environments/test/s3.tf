@@ -10,21 +10,11 @@ resource "aws_s3_bucket" "storybook" {
   }
 
   # EOTSS AWS Tagging Standards
-  tags = {
-    secretariat = "eolwd"
-    # TODO: Change to DFML once a value exists in the standards
-    agency = "eol"
-    # TODO: Change to PFML application once a value exists in the standards
-    application = "coreinf"
-
+  tags = merge(module.constants.common_tags, {
     environment = local.environment_name
     Name        = "massgov-${local.app_name}-${local.environment_name}-storybook-builds"
     public      = "yes"
-
-    businessowner = "ma-pfml-alerts@mass.gov"
-    createdby     = "ma-pfml-alerts@mass.gov"
-    itowner       = "ma-pfml-alerts@mass.gov"
-  }
+  })
 }
 
 data "aws_iam_policy_document" "storybook" {

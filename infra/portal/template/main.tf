@@ -18,3 +18,7 @@ data "aws_caller_identity" "current" {
 locals {
   app_name = "pfml"
 }
+
+module "constants" {
+  source = "../../constants"
+}

@@ -69,17 +69,11 @@ resource "aws_db_instance" "default" {
     prevent_destroy = true # disallow by default to avoid unexpected data loss
   }
 
-  tags = {
-    agency        = "eol"
-    application   = "coreinf"
-    businessowner = "ma-pfml-alerts@mass.gov"
-    createdby     = "ma-pfml-alerts@mass.gov"
+  tags = merge(module.constants.common_tags, {
     environment   = var.environment_name
-    itowner       = "ma-pfml-alerts@mass.gov"
-    secretariat   = "eolwd"
     Name          = "massgov_pfml_${var.environment_name}"
     backup        = var.environment_name == "prod" ? "prod" : "nonprod"
     "Patch Group" = var.environment_name == "prod" ? "prod-linux1" : "nonprod-linux1"
     schedulev2    = var.environment_name == "prod" ? "na" : "0700_2400_weekdays"
-  }
+  })
 }

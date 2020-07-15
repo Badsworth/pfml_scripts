@@ -23,18 +23,12 @@ resource "aws_lb" "nlbs" {
   # cross zone load balancing is enabled.
   enable_cross_zone_load_balancing = true
 
-  tags = {
-    agency        = "eol"
-    application   = "coreinf"
-    businessowner = "ma-pfml-alerts@mass.gov"
-    createdby     = "ma-pfml-alerts@mass.gov"
-    itowner       = "ma-pfml-alerts@mass.gov"
-    public        = "no"
-    secretariat   = "eolwd"
-    Name          = "${each.key}-nlb"
+  tags = merge(module.constants.common_tags, {
+    public = "no"
+    Name   = "${each.key}-nlb"
     # nonprod is not a valid environment, so we use stage here.
     environment = each.key == "prod" ? "prod" : "stage"
-  }
+  })
 }
 
 # In theory, we could make the one allowed VPC link point to multiple NLBs.

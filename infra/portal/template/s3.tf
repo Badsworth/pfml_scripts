@@ -10,21 +10,11 @@ resource "aws_s3_bucket" "portal_web" {
   }
 
   # EOTSS AWS Tagging Standards
-  tags = {
-    secretariat = "eolwd"
-    # TODO: Change to DFML once a value exists in the standards
-    agency = "eol"
-    # TODO: Change to PFML application once a value exists in the standards
-    application = "coreinf"
-
+  tags = merge(module.constants.common_tags, {
     environment = var.environment_name
     Name        = "massgov-${local.app_name}-${var.environment_name}-portal-site-builds"
     public      = "yes"
-
-    businessowner = "ma-pfml-alerts@mass.gov"
-    createdby     = "ma-pfml-alerts@mass.gov"
-    itowner       = "ma-pfml-alerts@mass.gov"
-  }
+  })
 }
 
 data "aws_iam_policy_document" "portal_web" {

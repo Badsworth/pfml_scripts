@@ -54,3 +54,7 @@ module "massgov_pfml" {
   environment_name       = local.environment_name
   cloudfront_origin_path = local.cloudfront_origin_path
 }
+
+module "constants" {
+  source = "../../../constants"
+}
