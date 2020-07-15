@@ -544,6 +544,11 @@ components:
           type: string
           nullable: true
           example: "Doe"
+        date_of_birth:
+          type: string
+          nullable: true
+          format: date
+          example: "1970-06-01"
         employment_status:
           type: string
           nullable: true
@@ -597,6 +602,11 @@ components:
           type: string
           example: "Doe"
           nullable: true
+        date_of_birth:
+          type: string
+          nullable: true
+          format: date
+          example: "1970-06-01"
         employment_status:
           type: string
           enum:

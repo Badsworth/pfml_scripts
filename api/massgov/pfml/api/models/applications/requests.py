@@ -1,3 +1,4 @@
+from datetime import date
 from typing import Any, Dict, List, Optional, Tuple
 
 from pydantic import ValidationError
@@ -18,6 +19,7 @@ class ApplicationRequestBody(PydanticBaseModel):
     employer_fein: Optional[str]
     first_name: Optional[str]
     last_name: Optional[str]
+    date_of_birth: Optional[date]
     occupation: Optional[Occupation]
     employment_status: Optional[EmploymentStatus]
     leave_details: Optional[ApplicationLeaveDetails]

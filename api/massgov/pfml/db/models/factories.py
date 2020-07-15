@@ -108,6 +108,7 @@ class ApplicationFactory(BaseFactory):
     first_name = factory.Faker("first_name")
     last_name = factory.Faker("last_name")
     middle_initial = None
+    date_of_birth = factory.Faker("date_of_birth")
     employer_notified = False
     employer_notification_date = None
     start_time = Generators.Now

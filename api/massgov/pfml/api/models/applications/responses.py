@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import date, datetime
 from enum import Enum
 from typing import List, Optional
 
@@ -32,6 +32,7 @@ class ApplicationResponse(PydanticBaseModel):
     employer_id: Optional[UUID4]
     first_name: Optional[str]
     last_name: Optional[str]
+    date_of_birth: Optional[date]
     occupation: Optional[Occupation]
     employment_status: Optional[EmploymentStatus]
     leave_details: Optional[ApplicationLeaveDetails]

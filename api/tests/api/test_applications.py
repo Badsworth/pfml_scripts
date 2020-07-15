@@ -444,6 +444,23 @@ def test_application_patch_update_payment_preference_belonging_to_other_applicat
     assert len(payment_preferences_response) == 0
 
 
+def test_application_patch_date_of_birth(client, user, auth_token):
+    application = ApplicationFactory.create(user=user)
+
+    response = client.patch(
+        "/v1/applications/{}".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+        json={"date_of_birth": "1970-06-01"},
+    )
+
+    assert response.status_code == 200
+
+    response_body = response.get_json()
+    data = response_body.get("data")
+    dob = data.get("date_of_birth")
+    assert dob == "1970-06-01"
+
+
 def test_application_patch_minimum_payload(client, user, auth_token):
     application = ApplicationFactory.create(user=user)
 

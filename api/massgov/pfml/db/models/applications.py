@@ -75,6 +75,7 @@ class Application(Base):
     first_name = Column(Text)
     last_name = Column(Text)
     middle_initial = Column(Text)
+    date_of_birth = Column(Date)
     occupation_id = Column(Integer, ForeignKey("lk_occupation.occupation_id"))
     relationship_to_caregiver_id = Column(
         Integer, ForeignKey("lk_relationship_to_caregiver.relationship_to_caregiver_id")
