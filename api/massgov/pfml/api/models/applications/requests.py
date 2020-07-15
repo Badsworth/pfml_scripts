@@ -4,6 +4,7 @@ from pydantic import ValidationError
 
 from massgov.pfml.api.models.applications.common import (
     ApplicationLeaveDetails,
+    EmploymentStatus,
     Occupation,
     PaymentPreferences,
 )
@@ -18,6 +19,7 @@ class ApplicationRequestBody(PydanticBaseModel):
     first_name: Optional[str]
     last_name: Optional[str]
     occupation: Optional[Occupation]
+    employment_status: Optional[EmploymentStatus]
     leave_details: Optional[ApplicationLeaveDetails]
     payment_preferences: Optional[List[PaymentPreferences]]
 

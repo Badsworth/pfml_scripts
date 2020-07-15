@@ -544,6 +544,14 @@ components:
           type: string
           nullable: true
           example: "Doe"
+        employment_status:
+          type: string
+          nullable: true
+          enum:
+            - Employed
+            - Unemployed
+            - Self-Employed
+          example: "Employed"
         occupation:
           type: string
           nullable: true
@@ -588,6 +596,14 @@ components:
         last_name:
           type: string
           example: "Doe"
+          nullable: true
+        employment_status:
+          type: string
+          enum:
+            - Employed
+            - Unemployed
+            - Self-Employed
+          example: "Employed"
           nullable: true
         occupation:
           type: string

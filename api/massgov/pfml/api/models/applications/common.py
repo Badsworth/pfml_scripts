@@ -19,6 +19,16 @@ class Occupation(str, LookupEnum):
     health_care = "Health Care"
 
 
+class EmploymentStatus(str, LookupEnum):
+    employed = "Employed"
+    unemployed = "Unemployed"
+    self_employed = "Self-Employed"
+
+    @classmethod
+    def get_lookup_model(cls):
+        return db_application_models.LkEmploymentStatus
+
+
 class LeaveReason(str, LookupEnum):
     family_care = "Care For A Family Member"
     pregnancy = "Pregnancy/Maternity"

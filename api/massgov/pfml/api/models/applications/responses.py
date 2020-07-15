@@ -8,6 +8,7 @@ from massgov.pfml.api.models.applications.common import (
     ApplicationLeaveDetails,
     ApplicationPaymentAccountDetails,
     ApplicationPaymentChequeDetails,
+    EmploymentStatus,
     Occupation,
     PaymentAccountType,
     PaymentMethod,
@@ -32,6 +33,7 @@ class ApplicationResponse(PydanticBaseModel):
     first_name: Optional[str]
     last_name: Optional[str]
     occupation: Optional[Occupation]
+    employment_status: Optional[EmploymentStatus]
     leave_details: Optional[ApplicationLeaveDetails]
     payment_preferences: Optional[List[PaymentPreferences]]
     updated_time: datetime

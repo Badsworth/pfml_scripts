@@ -129,6 +129,7 @@ class ApplicationFactory(BaseFactory):
 
     # Lookups
     occupation_id = None
+    employment_status_id = None
     relationship_to_caregiver_id = None
     relationship_qualifier_id = None
     employer_notification_method_id = None

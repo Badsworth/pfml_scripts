@@ -190,6 +190,22 @@ def test_application_unauthorized_patch(client, user, auth_token, test_db_sessio
     assert application.last_name == "Smith"
 
 
+def test_application_patch_employment_status(client, user, auth_token, test_db_session):
+    application = ApplicationFactory.create(user=user)
+
+    response = client.patch(
+        "/v1/applications/{}".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+        json={"employment_status": "Employed"},
+    )
+
+    assert response.status_code == 200
+
+    response_body = response.get_json()
+    updated_employment_status = response_body.get("data").get("employment_status")
+    assert updated_employment_status == "Employed"
+
+
 def test_application_patch_leave_reason(client, user, auth_token, test_db_session):
     application = ApplicationFactory.create(user=user)
 
