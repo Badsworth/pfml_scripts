@@ -1,0 +1,320 @@
+import csv
+from datetime import date
+
+import pytest
+
+import massgov.pfml.fineos.eligibility_feed as ef
+from massgov.pfml.db.models.employees import EmployeeAddress, GeoState
+from massgov.pfml.db.models.factories import (
+    AddressFactory,
+    EmployeeFactory,
+    EmployerFactory,
+    WagesAndContributionsFactory,
+)
+
+
+@pytest.fixture
+def geo_state_lookup(test_db_session):
+    state = GeoState()
+    state.geo_state_id = 1
+    state.geo_state_description = "MA"
+    test_db_session.add(state)
+
+    return state
+
+
+@pytest.fixture
+def address_model(initialize_factories_session, geo_state_lookup):
+    return AddressFactory.create(geo_state=geo_state_lookup)
+
+
+def test_employee_to_eligibility_feed_record(initialize_factories_session):
+    wages_and_contributions = WagesAndContributionsFactory.create()
+    employee = wages_and_contributions.employee
+    employer = wages_and_contributions.employer
+
+    eligibility_feed_record = ef.employee_to_eligibility_feed_record(employee, employer)
+
+    # TODO: assert other fields?
+    assert eligibility_feed_record.employeeIdentifier == employee.employee_id
+    assert eligibility_feed_record.employeeFirstName == employee.first_name
+    assert eligibility_feed_record.employeeLastName == employee.last_name
+    assert (
+        eligibility_feed_record.employeeEffectiveFromDate == wages_and_contributions.filing_period
+    )
+    assert eligibility_feed_record.employeeSalary == wages_and_contributions.employee_ytd_wages
+    assert eligibility_feed_record.employeeEarningFrequency == ef.EarningFrequency.yearly
+    assert eligibility_feed_record.employeeDateOfBirth == ef.DEFAULT_DATE
+
+    assert eligibility_feed_record.employeeNationalID == employee.tax_identifier
+    assert eligibility_feed_record.employeeNationalIDType == ef.NationalIdType.ssn
+    assert eligibility_feed_record.employeeEmail == employee.email_address
+
+    if employee.phone_number:
+        assert eligibility_feed_record.telephoneIntCode == "1"
+        assert eligibility_feed_record.telephoneAreaCode == employee.phone_number[:3]
+        assert eligibility_feed_record.telephoneNumber == employee.phone_number[4:].replace("-", "")
+
+
+def test_employee_to_eligibility_feed_record_without_wages(initialize_factories_session):
+    employee = EmployeeFactory.create()
+    employer = EmployerFactory.create()
+
+    eligibility_feed_record = ef.employee_to_eligibility_feed_record(employee, employer)
+
+    assert eligibility_feed_record is None
+
+
+def test_employee_to_eligibility_feed_record_with_itin(initialize_factories_session):
+    wages_and_contributions = WagesAndContributionsFactory.create()
+    employee = wages_and_contributions.employee
+    employer = wages_and_contributions.employer
+
+    employee.tax_identifier = "999887777"
+
+    eligibility_feed_record = ef.employee_to_eligibility_feed_record(employee, employer)
+
+    assert eligibility_feed_record.employeeNationalIDType == ef.NationalIdType.itin
+
+
+def test_employee_to_eligibility_feed_record_with_date_of_birth(initialize_factories_session):
+    wages_and_contributions = WagesAndContributionsFactory.create()
+    employee = wages_and_contributions.employee
+    employer = wages_and_contributions.employer
+
+    employee.date_of_birth = date(2020, 7, 6)
+
+    eligibility_feed_record = ef.employee_to_eligibility_feed_record(employee, employer)
+
+    assert eligibility_feed_record.employeeDateOfBirth == employee.date_of_birth
+
+
+def test_employee_to_eligibility_feed_record_with_address(
+    initialize_factories_session, test_db_session, address_model
+):
+    wages_and_contributions = WagesAndContributionsFactory.create()
+    employee = wages_and_contributions.employee
+    employer = wages_and_contributions.employer
+
+    employee.addresses = [
+        EmployeeAddress(employee_id=employee.employee_id, address_id=address_model.address_id)
+    ]
+
+    eligibility_feed_record = ef.employee_to_eligibility_feed_record(employee, employer)
+
+    assert eligibility_feed_record.addressType == ef.AddressType.home
+    assert eligibility_feed_record.addressAddressLine1 == address_model.address_line_one
+    assert eligibility_feed_record.addressCity == address_model.city
+    assert eligibility_feed_record.addressState == address_model.geo_state.geo_state_description
+    assert eligibility_feed_record.addressZipCode == address_model.zip_code
+
+
+def create_csv_dict(updates=None):
+    csv_dict = {
+        # required fields
+        "employeeIdentifier": "",
+        "employeeFirstName": "",
+        "employeeLastName": "",
+        "employeeEffectiveFromDate": "",
+        "employeeSalary": "",
+        "employeeEarningFrequency": ef.EarningFrequency.yearly.value,
+        # required fields: with defaults though
+        "employeeDateOfBirth": ef.DEFAULT_DATE.strftime("%m/%d/%Y"),  # employee.date_of_birth,
+        "employeeJobTitle": "DEFAULT",
+        "employeeDateOfHire": ef.DEFAULT_DATE.strftime("%m/%d/%Y"),
+        "employmentStatus": "DEFAULT",
+        "employeeHoursWorkedPerWeek": "0",
+        # optional fields
+        "employeeTitle": "",
+        "employeeSecondName": "",
+        "employeeThirdName": "",
+        "employeeDateOfDeath": "",
+        "employeeGender": "",
+        "employeeMaritalStatus": "",
+        "employeeNationalID": "",
+        "employeeNationalIDType": "",
+        "spouseIdentifier": "",
+        "spouseReasonForChange": "",
+        "spouseDateOfChange": "",
+        "spouseTitle": "",
+        "spouseFirstName": "",
+        "spouseSecondName": "",
+        "spouseThirdName": "",
+        "spouseLastName": "",
+        "spouseDateOfBirth": "",
+        "spouseDateOfDeath": "",
+        "spouseGender": "",
+        "spouseNationalID": "",
+        "spouseNationalIDType": "",
+        "addressType": "",
+        "addressState": "",
+        "addressCity": "",
+        "addressAddressLine1": "",
+        "addressZipCode": "",
+        "addressEffectiveDate": "",
+        "addressCountry": "",
+        "addressAddressLine2": "",
+        "addressCounty": "",
+        "telephoneIntCode": "",
+        "telephoneAreaCode": "",
+        "telephoneNumber": "",
+        "cellIntCode": "",
+        "cellAreaCode": "",
+        "cellNumber": "",
+        "employeeEmail": "",
+        "employeeId": "",
+        "employeeClassification": "",
+        "employeeAdjustedDateOfHire": "",
+        "employeeEndDate": "",
+        "employmentStrength": "",
+        "employmentCategory": "",
+        "employmentType": "",
+        "employeeOrgUnitName": "",
+        "employeeCBACode": "",
+        "keyEmployee": "",
+        "employeeWorkAtHome": "",
+        "employeeDaysWorkedPerWeek": "",
+        "employeeHoursWorkedPerYear": "",
+        "employee50EmployeesWithin75Miles": "",
+        "employmentWorkState": "",
+        "managerIdentifier": "",
+        "occupationQualifier": "",
+        "employeeWorkSiteId": "",
+        "employeeEffectiveToDate": "",
+    }
+
+    if updates:
+        csv_dict.update(updates)
+
+    return csv_dict
+
+
+def test_write_employees_to_csv(
+    tmp_path, initialize_factories_session, test_db_session, address_model
+):
+    employer = EmployerFactory.create()
+    wages_for_single_employer_different_employees = WagesAndContributionsFactory.create_batch(
+        size=2, employer=employer
+    )
+
+    fineos_employer_id = employer.employer_id
+
+    employees = list(map(lambda w: w.employee, wages_for_single_employer_different_employees))
+
+    # remove phone number from record
+    employees[1].phone_number = None
+
+    # add an address
+    employees[1].addresses = [
+        EmployeeAddress(employee_id=employees[1].employee_id, address_id=address_model.address_id)
+    ]
+
+    test_db_session.commit()
+
+    number_of_employees = len(employees)
+
+    dest_file = tmp_path / "test.csv"
+
+    with open(dest_file, "w") as f:
+        ef.write_employees_to_csv(employer, fineos_employer_id, number_of_employees, employees, f)
+
+    with open(dest_file, "r") as f:
+        file_content = f.readlines()
+
+    assert file_content[0].strip() == f"EMPLOYER_ID:{fineos_employer_id}"
+    assert file_content[1].strip() == f"NUMBER_OF_RECORDS:{number_of_employees}"
+    assert file_content[2].strip() == "@DATABLOCK"
+
+    expected_rows = [
+        create_csv_dict(
+            {
+                # required fields
+                "employeeIdentifier": str(employees[0].employee_id),
+                "employeeFirstName": employees[0].first_name,
+                "employeeLastName": employees[0].last_name,
+                "employeeEffectiveFromDate": (
+                    employees[0].wages_and_contributions[0].filing_period.strftime("%m/%d/%Y")
+                ),
+                "employeeSalary": str(
+                    round(employees[0].wages_and_contributions[0].employee_ytd_wages, 6)
+                ),
+                "employeeEarningFrequency": ef.EarningFrequency.yearly.value,
+                # required fields: with defaults though
+                "employeeDateOfBirth": ef.DEFAULT_DATE.strftime(
+                    "%m/%d/%Y"
+                ),  # employee.date_of_birth,
+                # optional fields
+                "employeeTitle": "",
+                "employeeSecondName": employees[0].middle_name,
+                "employeeNationalID": employees[0].tax_identifier,
+                "employeeNationalIDType": ef.NationalIdType.ssn.value,
+                "telephoneIntCode": "1",
+                "telephoneAreaCode": employees[0].phone_number[:3],
+                "telephoneNumber": employees[0].phone_number[4:].replace("-", ""),
+                "employeeEmail": employees[0].email_address,
+            }
+        ),
+        create_csv_dict(
+            {
+                # required fields
+                "employeeIdentifier": str(employees[1].employee_id),
+                "employeeFirstName": employees[1].first_name,
+                "employeeLastName": employees[1].last_name,
+                "employeeEffectiveFromDate": (
+                    employees[1].wages_and_contributions[0].filing_period.strftime("%m/%d/%Y")
+                ),
+                "employeeSalary": str(
+                    round(employees[1].wages_and_contributions[0].employee_ytd_wages, 6)
+                ),
+                "employeeEarningFrequency": ef.EarningFrequency.yearly.value,
+                # required fields: with defaults though
+                "employeeDateOfBirth": ef.DEFAULT_DATE.strftime(
+                    "%m/%d/%Y"
+                ),  # employee.date_of_birth,
+                # optional fields
+                "employeeTitle": "",
+                "employeeSecondName": employees[1].middle_name,
+                "employeeNationalID": employees[1].tax_identifier,
+                "employeeNationalIDType": ef.NationalIdType.ssn.value,
+                "employeeEmail": employees[1].email_address,
+                "addressType": "Home",
+                "addressAddressLine1": employees[1].addresses[0].address.address_line_one,
+                "addressCity": employees[1].addresses[0].address.city,
+                "addressState": employees[1].addresses[0].address.geo_state.geo_state_description,
+                "addressZipCode": employees[1].addresses[0].address.zip_code,
+            }
+        ),
+    ]
+
+    with open(dest_file, "r") as f:
+        # skip header block in file
+        next(f)
+        next(f)
+        next(f)
+        # then start reading CSV
+        reader = csv.DictReader(f)
+        for (actual, expected) in zip(reader, expected_rows):
+            for (actual, expected) in zip(actual.items(), expected.items()):
+                assert actual == expected
+
+
+def test_process_updates_simple(test_db_session, tmp_path, initialize_factories_session):
+    WagesAndContributionsFactory.create()
+
+    process_results = ef.process_updates(test_db_session, tmp_path)
+
+    assert process_results.employers_total_count == 1
+    assert process_results.employee_and_employer_pairs_total_count == 1
+
+
+def test_process_updates_multiple(test_db_session, tmp_path, initialize_factories_session):
+    # wages_for_single_employee_different_employers
+    WagesAndContributionsFactory.create_batch(size=5, employee=EmployeeFactory.create())
+
+    # wages_for_single_employer_different_employees
+    WagesAndContributionsFactory.create_batch(size=5, employer=EmployerFactory.create())
+
+    process_results = ef.process_updates(test_db_session, tmp_path)
+
+    assert process_results.employers_total_count == 6
+    assert process_results.employee_and_employer_pairs_total_count == 10

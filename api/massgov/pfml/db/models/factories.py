@@ -5,7 +5,7 @@ import random
 from datetime import datetime, timedelta
 from decimal import Decimal
 
-import factory
+import factory  # this is from the factory_boy package
 from sqlalchemy.orm import scoped_session
 
 import massgov.pfml.db as db
@@ -29,7 +29,7 @@ Session = scoped_session(lambda: get_db_session(), scopefunc=lambda: get_db_sess
 
 class Generators:
     AccountKey = factory.Sequence(lambda n: "%011d" % n)
-    Tin = factory.Sequence(lambda n: "000%06d" % n)
+    Tin = factory.LazyFunction(lambda: factory.Faker("ssn").generate().replace("-", ""))
     Fein = Tin
     Money = factory.LazyFunction(lambda: Decimal(round(random.uniform(0, 50000), 2)))
     Now = factory.LazyFunction(lambda: datetime.now())
@@ -81,7 +81,7 @@ class WagesAndContributionsFactory(BaseFactory):
 
     wage_and_contribution_id = Generators.UuidObj
     account_key = Generators.AccountKey
-    filing_period = factory.Faker("date_obj")
+    filing_period = factory.Faker("date_object")
     is_independent_contractor = False
     is_opted_in = False
     employee_ytd_wages = Generators.Money
@@ -138,3 +138,13 @@ class ApplicationFactory(BaseFactory):
 
     start_time = factory.Faker("date_time")
     updated_time = factory.LazyAttribute(lambda a: a.start_time + timedelta(days=1))
+
+
+class AddressFactory(BaseFactory):
+    class Meta:
+        model = employee_models.Address
+
+    address_type_id = 1
+    address_line_one = factory.Faker("street_address")
+    city = factory.Faker("city")
+    zip_code = factory.Faker("postcode")
