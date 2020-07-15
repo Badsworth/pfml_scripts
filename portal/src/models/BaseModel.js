@@ -17,7 +17,7 @@ export default class BaseModel {
     for (const [property, value] of Object.entries(attrs)) {
       // Ignore attributes that aren't part of the model class's defaults array
       if (!this.defaults.hasOwnProperty(property)) {
-        if (process.env.NODE_ENV !== "production") {
+        if (process.env.NODE_ENV === "development") {
           // During development, log a warning since it might indicate a missing attribute in the model class
           // eslint-disable-next-line no-console
           console.warn(

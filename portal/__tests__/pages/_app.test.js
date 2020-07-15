@@ -180,7 +180,11 @@ describe("App", () => {
 
     beforeEach(() => {
       // We expect console.error to be called in this scenario
-      jest.spyOn(console, "error").mockImplementationOnce(jest.fn());
+      jest.spyOn(console, "error").mockImplementation(jest.fn());
+    });
+
+    afterEach(() => {
+      console.error.mockRestore();
     });
 
     it("displays error for NetworkError", async () => {
