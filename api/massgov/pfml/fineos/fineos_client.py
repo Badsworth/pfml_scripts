@@ -35,19 +35,18 @@ class FINEOSClient(client.AbstractFINEOSClient):
     request_count: int
     oauth_session: requests_oauthlib.OAuth2Session
 
-    def __init__(self, api_url, wscomposer_url, client_id, client_secret):
-        self.api_url = api_url
+    def __init__(self, customer_api_url, wscomposer_url, oauth2_url, client_id, client_secret):
+        self.customer_api_url = customer_api_url
         self.wscomposer_url = wscomposer_url
-        self.customer_api_url = urllib.parse.urljoin(api_url, "customer-services/")
+        self.oauth2_url = oauth2_url
         self.request_count = 0
-        logger.info("api_url %s, wscomposer_url %s", api_url, wscomposer_url)
-        self._init_oauth_session(client_id, client_secret)
+        logger.info("customer_api_url %s, wscomposer_url %s", customer_api_url, wscomposer_url)
+        self._init_oauth_session(oauth2_url, client_id, client_secret)
 
-    def _init_oauth_session(self, client_id, client_secret):
+    def _init_oauth_session(self, token_url, client_id, client_secret):
         """Set up an OAuth session and get a token."""
         backend = oauthlib.oauth2.BackendApplicationClient(client_id=client_id)
         session = requests_oauthlib.OAuth2Session(client=backend, scope="service-gateway/all")
-        token_url = urllib.parse.urljoin(self.api_url, "oauth2/token")
 
         try:
             token = session.fetch_token(

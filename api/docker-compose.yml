@@ -55,6 +55,12 @@ services:
       - PY_RUN_CMD_OPT=POETRY
       - ENABLE_EMPLOYEE_ENDPOINTS=1
       - ENABLE_EMPLOYER_ENDPOINTS=1
+      # Enable these variables to use a real FINEOS API instead of a mock:
+#      - FINEOS_CLIENT_CUSTOMER_API_URL=https://dt1-api.masspfml.fineos.com/customer-services/
+#      - FINEOS_CLIENT_WSCOMPOSER_API_URL=https://dt1-claims-webapp.masspfml.fineos.com/wscomposer/
+#      - FINEOS_CLIENT_OAUTH2_URL=https://dt1-api.masspfml.fineos.com/oauth2/token
+#      - FINEOS_CLIENT_OAUTH2_CLIENT_ID=4gjtcl7d0rca0jleujea0veqrg
+#      - FINEOS_CLIENT_OAUTH2_CLIENT_SECRET=...
     networks:
       main:
         aliases:

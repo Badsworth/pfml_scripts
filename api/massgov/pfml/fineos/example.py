@@ -30,8 +30,9 @@ def main():
 
     # Create the client.
     cps = massgov.pfml.fineos.FINEOSClient(
-        api_url="https://dt1-api.masspfml.fineos.com",
+        customer_api_url="https://dt1-api.masspfml.fineos.com/customer-services/",
         wscomposer_url="https://dt1-claims-webapp.masspfml.fineos.com/wscomposer/",
+        oauth2_url="https://dt1-api.masspfml.fineos.com/oauth2/token",
         client_id="4gjtcl7d0rca0jleujea0veqrg",
         client_secret="1pnhkt07uc6it0tlpp93m3s8o8i1aab7js2ha44q72od7tmga6pk",
     )
