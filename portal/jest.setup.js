@@ -15,6 +15,8 @@ Enzyme.configure({ adapter: new Adapter() });
  * Mock environment variables
  */
 process.env.apiUrl = "http://localhost/jest-mock-api";
+process.env.awsConfig = {};
+process.env.domain = "localhost";
 process.env.featureFlags = {};
 process.env.newRelicAppId = "mock-new-relic-id";
 process.env.gtmConfig = { auth: "mock-gtm-auth", preview: "mock-env" };

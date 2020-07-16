@@ -18,7 +18,24 @@ import useFeatureFlagsFromQueryEffect from "../hooks/useFeatureFlagsFromQueryEff
 import { useRouter } from "next/router";
 
 // Configure Amplify for Auth behavior throughout the app
-Amplify.configure(process.env.awsConfig);
+Amplify.configure({
+  Auth: {
+    cookieStorage: {
+      domain: process.env.domain,
+      // Require cookie transmission over a secure protocol (https) outside of local dev.
+      // We use env.domain instead of env.NODE_ENV here since our end-to-end test suite is
+      // ran against a production build on localhost.
+      secure: process.env.domain !== "localhost",
+      // Cookie expiration, in days (defaults to a year, which is wild)
+      expires: 1,
+      // path: '/', (optional)
+    },
+    mandatorySignIn: false,
+    region: process.env.awsConfig.cognitoRegion,
+    userPoolId: process.env.awsConfig.cognitoUserPoolId,
+    userPoolWebClientId: process.env.awsConfig.cognitoUserPoolWebClientId,
+  },
+});
 
 tracker.initialize();
 initializeI18n();
