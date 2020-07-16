@@ -145,6 +145,7 @@ def test_application_patch(client, user, auth_token, test_db_session):
     update_request_body["last_name"] = "Perez"
     update_request_body["occupation"] = "Engineer"
     update_request_body["leave_details"] = {"relationship_to_caregiver": "Parent"}
+    update_request_body["middle_name"] = "Mike"
 
     # Remove foreign keys as DB does not have all tables populated
     update_request_body.pop("employer_id", None)
@@ -169,6 +170,7 @@ def test_application_patch(client, user, auth_token, test_db_session):
     assert response_body.get("data").get("last_name") == "Perez"
     assert response_body.get("data").get("updated_time") == "2020-01-01T00:00:00Z"
     assert response_body.get("data").get("occupation") == "Engineer"
+    assert response_body.get("data").get("middle_name") == "Mike"
     assert (
         response_body.get("data").get("leave_details").get("relationship_to_caregiver") == "Parent"
     )

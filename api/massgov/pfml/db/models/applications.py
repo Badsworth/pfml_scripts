@@ -74,7 +74,7 @@ class Application(Base):
     employer_id = Column(UUID(as_uuid=True), ForeignKey("employer.employer_id"))
     first_name = Column(Text)
     last_name = Column(Text)
-    middle_initial = Column(Text)
+    middle_name = Column(Text, nullable=True)
     date_of_birth = Column(Date)
     occupation_id = Column(Integer, ForeignKey("lk_occupation.occupation_id"))
     relationship_to_caregiver_id = Column(

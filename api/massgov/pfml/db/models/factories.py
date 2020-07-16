@@ -107,7 +107,7 @@ class ApplicationFactory(BaseFactory):
     requestor = None
     first_name = factory.Faker("first_name")
     last_name = factory.Faker("last_name")
-    middle_initial = None
+    middle_name = None
     date_of_birth = factory.Faker("date_of_birth")
     employer_notified = False
     employer_notification_date = None

@@ -31,6 +31,7 @@ class ApplicationResponse(PydanticBaseModel):
     employee_id: Optional[UUID4]
     employer_id: Optional[UUID4]
     first_name: Optional[str]
+    middle_name: Optional[str]
     last_name: Optional[str]
     date_of_birth: Optional[date]
     occupation: Optional[Occupation]

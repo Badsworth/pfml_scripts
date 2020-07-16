@@ -18,6 +18,7 @@ class ApplicationRequestBody(PydanticBaseModel):
     employee_ssn: Optional[str]
     employer_fein: Optional[str]
     first_name: Optional[str]
+    middle_name: Optional[str]
     last_name: Optional[str]
     date_of_birth: Optional[date]
     occupation: Optional[Occupation]

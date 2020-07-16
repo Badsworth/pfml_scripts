@@ -540,6 +540,10 @@ components:
           type: string
           nullable: true
           example: "John"
+        middle_name:
+          type: string
+          nullable: true
+          example: "Jake"
         last_name:
           type: string
           nullable: true
@@ -597,6 +601,10 @@ components:
         first_name:
           type: string
           example: "John"
+          nullable: true
+        middle_name:
+          type: string
+          example: "Jake"
           nullable: true
         last_name:
           type: string
