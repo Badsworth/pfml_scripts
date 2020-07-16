@@ -1,0 +1,28 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Dropdown renders select field with list of options 1`] = `
+<select
+  className="usa-select"
+  id="Dropdown1"
+  name="field-name"
+  onChange={[MockFunction]}
+>
+  <option
+    value=""
+  >
+    Select an answer
+  </option>
+  <option
+    key="a"
+    value="a"
+  >
+    Apple
+  </option>
+  <option
+    key="b"
+    value="b"
+  >
+    Banana
+  </option>
+</select>
+`;

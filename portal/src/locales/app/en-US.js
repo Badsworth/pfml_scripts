@@ -540,6 +540,9 @@ const components = {
     applicationsLink: "View your applications",
     createApplicationLink: "Create an application",
   },
+  dropdown: {
+    emptyChoiceLabel: "- Select an answer -",
+  },
   errorBoundary: {
     message:
       "Sorry, we encountered an unexpected error. If this continues to happen, you may call the Paid Family Leave Contact Center at $t(shared.callCenterPhoneNumber)",
