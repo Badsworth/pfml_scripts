@@ -218,13 +218,14 @@ def get_employee_by_ssn(db_session, ssn):
 
 
 def get_wages_and_contributions_by_employee_id_and_filling_period(
-    db_session, employee_id, filing_period
+    db_session, employee_id, employer_id, filing_period
 ):
     wage_row = (
         db_session.query(WagesAndContributions)
         .filter(
-            WagesAndContributions.employee_id == employee_id
-            and WagesAndContributions.filing_period == filing_period
+            WagesAndContributions.employee_id == employee_id,
+            WagesAndContributions.employer_id == employer_id,
+            WagesAndContributions.filing_period == filing_period,
         )
         .one_or_none()
     )

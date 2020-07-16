@@ -62,8 +62,10 @@ get-deps-key:
 
 ## Mock Generation
 
-generate:
-	cd $(API_FOLDER); $(MOCK_GENERATOR) --folder $(MOCK_OUTPUT_FOLDER)
+EMPLOYER_COUNT := 100
 
-generate-count:
-	cd $(API_FOLDER); $(MOCK_GENERATOR) --folder $(MOCK_OUTPUT_FOLDER) --count $(EMP_COUNT)
+generate:
+	cd $(API_FOLDER); $(MOCK_GENERATOR) --folder $(MOCK_OUTPUT_FOLDER) --count $(EMPLOYER_COUNT)
+
+clean-mock:
+	rm -rf mock_output/*

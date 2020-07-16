@@ -3,6 +3,8 @@ import tempfile
 from datetime import date, datetime
 from decimal import Decimal
 
+import pytest
+
 import massgov.pfml.dor.mock.generate as generate
 from massgov.pfml.dor.importer.dor_file_formats import (
     EMPLOYEE_FORMAT,
@@ -16,84 +18,118 @@ QUARTERS = tuple(Quarter(2019, 2).series(4))
 
 
 def test_generate_employers():
-    employers = generate.generate_employers(1)
-    assert len(employers) == 1
+    employer_info_list = []
+    employer_wage_info_list = []
 
-    employer = employers[0]
-    validate_employer_object(employer)
+    def on_employer(employer_info, employer_wage_data):
+        employer_info_list.append(employer_info)
+        employer_wage_info_list.extend(employer_wage_data)
+
+    count = 200
+    generate.generate_employers(count, on_employer)
+    assert len(employer_info_list) == count
+    assert len(employer_wage_info_list) == count * 4  # one line for each quarter
+
+    validate_employer_object(employer_info_list[0])
+    validate_employer_wage(employer_wage_info_list[0], employer_info_list[0], QUARTERS[0])
+
+
+def test_employer_file_populate():
+    count = 200
+    employers_file = io.StringIO()
+    employer_wage_file = io.StringIO()
+    employer_account_keys = generate.process_employer_file(
+        count, employers_file, employer_wage_file
+    )
+
+    assert len(employer_account_keys) == count
+
+    # employee info
+    employers_file.seek(0)
+    employer_lines = employers_file.readlines()
+    assert len(employer_lines) == count
+
+    employer_line = employer_lines[0].rstrip()
+    employer_file_format = FileFormat(EMPLOYER_FILE_FORMAT)
+    assert len(employer_line) == employer_file_format.get_line_length()
+
+    parsed_employer_obj = employer_file_format.parse_line(employer_line)
+    validate_employer_object(parsed_employer_obj)
+
+    # employee wage info
+    employer_wage_file.seek(0)
+    employer_wage_lines = employer_wage_file.readlines()
+    assert len(employer_wage_lines) == count * 4  # one line for each quarter
+
+    employer_wage_line = employer_wage_lines[0].rstrip()
+    employer_quarter_info_file_format = FileFormat(EMPLOYER_QUARTER_INFO_FORMAT)
+    assert len(employer_wage_line) == employer_quarter_info_file_format.get_line_length()
+
+    parsed_employer_wage_obj = employer_quarter_info_file_format.parse_line(employer_wage_line)
+    validate_employer_wage(parsed_employer_wage_obj, parsed_employer_obj, QUARTERS[0].as_date())
 
 
 def test_generate_employee_employer_quarterly_wage_rows():
-    employers = generate.generate_employers(1)
-    employer = employers[0]
+    account_key = "00000000001"
 
-    (
-        employer_wage_rows,
-        employee_wage_rows,
-    ) = generate.generate_employee_employer_quarterly_wage_rows(1, employers, [1])
+    employees_wage_infos = []
 
-    assert len(employer_wage_rows) == 4
-    assert len(employee_wage_rows) == 4
+    def on_employee(employee_wage_info):
+        employees_wage_infos.append(employee_wage_info)
 
-    for i in range(4):
-        employer_wage = employer_wage_rows[i]
-        validate_employer_wage(employer_wage, employer, QUARTERS[i])
+    count = 200
+    generate.generate_employee_employer_quarterly_wage_rows(count, [account_key], on_employee, [1])
+    assert len(employees_wage_infos) == count * 4  # one line for each quarter
 
     for i in range(4):
-        employee_wage = employee_wage_rows[i]
-        validate_employee_wage(employee_wage, employer, QUARTERS[i])
+        employee_wage = employees_wage_infos[i]
+        validate_employee_wage(employee_wage, account_key, QUARTERS[i])
         assert (
             employee_wage["employee_ytd_wages"]
             == employee_wage["employee_qtr_wages"] * employee_wage["filing_period"].quarter
         )
 
 
-def test_file_populate(tmpdir):
-    # employer info
-    employers = generate.generate_employers(1)
+def test_employee_file_populate():
+    count = 200
+    employee_wage_file = io.StringIO()
 
-    employers_file = io.StringIO()
-    generate.populate_employer_file(employers, employers_file)
+    account_key = "00000000001"
+    employer_account_keys = [account_key]
+    generate.process_employee_file(count, employer_account_keys, employee_wage_file, [1])
 
-    employers_file.seek(0)
-    employer_lines = employers_file.readlines()
-    assert len(employer_lines) == 1
+    # employee info
+    employee_wage_file.seek(0)
+    employee_wage_lines = employee_wage_file.readlines()
+    assert len(employee_wage_lines) == count * 4  # one line for each quarter
 
-    employer_line = employer_lines[0].rstrip()
-    employer_file_format = FileFormat(EMPLOYER_FILE_FORMAT)
-    assert len(employer_line) == employer_file_format.get_line_length()
+    employee_wage_line = employee_wage_lines[0].rstrip()
+    employer_file_format = FileFormat(EMPLOYEE_FORMAT)
+    assert len(employee_wage_line) == employer_file_format.get_line_length()
 
-    parsed_employer_line = employer_file_format.parse_line(employer_line)
-    validate_employer_object(parsed_employer_line)
+    parsed_employee_wage_obj = employer_file_format.parse_line(employee_wage_line)
+    validate_employee_wage(parsed_employee_wage_obj, account_key, QUARTERS[0].as_date())
 
-    # employer and employee wage info
-    (
-        employer_wage_rows,
-        employee_wage_rows,
-    ) = generate.generate_employee_employer_quarterly_wage_rows(1, employers, [1])
 
-    employees_file = io.StringIO()
-    generate.populate_employee_file(
-        employer_wage_rows, employee_wage_rows, employers, employees_file
-    )
+@pytest.mark.timeout(5)
+def test_full_generate():
+    employer_count = 200
+    employee_count = employer_count * generate.EMPLOYER_TO_EMPLOYEE_RATIO
 
-    employees_file.seek(0)
-    employee_lines = employees_file.readlines()
-    assert len(employee_lines) == 8
+    employer_file = io.StringIO()
+    employer_employee_wage_file = io.StringIO()
 
-    employer_wage_line = employee_lines[0].rstrip()
-    employer_quarter_info_file_format = FileFormat(EMPLOYER_QUARTER_INFO_FORMAT)
-    assert len(employer_wage_line) == employer_quarter_info_file_format.get_line_length()
+    generate.process(employer_count, employer_file, employer_employee_wage_file, [1])
 
-    parsed_employer_wage_line = employer_quarter_info_file_format.parse_line(employer_wage_line)
-    validate_employer_wage(parsed_employer_wage_line, employers[0], QUARTERS[0].as_date())
+    employer_file.seek(0)
+    employer_file_lines = employer_file.readlines()
+    assert len(employer_file_lines) == employer_count
 
-    employee_wage_line = employee_lines[4].rstrip()
-    employee_wage_file_format = FileFormat(EMPLOYEE_FORMAT)
-    assert len(employee_wage_line) == employee_wage_file_format.get_line_length()
-
-    parsed_employee_wage_line = employee_wage_file_format.parse_line(employee_wage_line)
-    validate_employee_wage(parsed_employee_wage_line, employers[0], QUARTERS[0].as_date())
+    employer_employee_wage_file.seek(0)
+    employer_employee_wage_file_lines = employer_employee_wage_file.readlines()
+    assert len(employer_employee_wage_file_lines) == (employer_count * 4) + (
+        employee_count * 4
+    )  # one line for each quarter
 
 
 # validation utils
@@ -130,8 +166,8 @@ def validate_employer_wage(employer_wage, employer, quarter):
     assert isinstance(employer_wage["updated_date"], datetime)
 
 
-def validate_employee_wage(employee_wage, employer, quarter):
-    assert employee_wage["account_key"] == employer["account_key"]
+def validate_employee_wage(employee_wage, account_key, quarter):
+    assert employee_wage["account_key"] == account_key
     assert employee_wage["filing_period"] == quarter
     assert len(employee_wage["employee_first_name"]) > 0
     assert len(employee_wage["employee_last_name"]) > 0

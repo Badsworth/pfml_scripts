@@ -1,4 +1,5 @@
 import tempfile
+from abc import ABC
 
 import gnupg
 
@@ -7,7 +8,15 @@ import massgov.pfml.util.logging as logging
 logger = logging.get_logger(__name__)
 
 
-class GpgDecrypter:
+class Decrypter(ABC):
+    def decrypt(self, bval):
+        pass
+
+    def remove_keys(self):
+        pass
+
+
+class GpgDecrypter(Decrypter):
     def __init__(self, gpg_key, gpg_passphrase):
         """Set a different gnuhome so the key is not picked up by default in
            shared machine environments (i.e. on AWS)."""
@@ -46,7 +55,7 @@ class GpgDecrypter:
             logger.warn(res.stderr)
 
 
-class Utf8Decrypter:
+class Utf8Decrypter(Decrypter):
     def decrypt(self, bval):
         return bval.decode("utf8")
 

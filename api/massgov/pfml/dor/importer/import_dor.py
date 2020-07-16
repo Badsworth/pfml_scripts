@@ -7,10 +7,11 @@ import json
 import os
 from dataclasses import asdict, dataclass, field
 from datetime import datetime
-from typing import Dict, List, Optional, Union
+from typing import Dict, List, Optional
 from uuid import UUID
 
 import boto3
+from sqlalchemy.orm.session import Session
 
 import massgov.pfml.dor.importer.lib.dor_persistence_util as dor_persistence_util
 import massgov.pfml.util.files as file_util
@@ -21,7 +22,7 @@ from massgov.pfml.dor.importer.dor_file_formats import (
     EMPLOYER_FILE_FORMAT,
     EMPLOYER_QUARTER_INFO_FORMAT,
 )
-from massgov.pfml.dor.importer.lib.decrypter import GpgDecrypter, Utf8Decrypter
+from massgov.pfml.dor.importer.lib.decrypter import Decrypter, GpgDecrypter, Utf8Decrypter
 from massgov.pfml.util.aws_ssm import get_secret
 from massgov.pfml.util.files.file_format import FileFormat
 
@@ -78,9 +79,9 @@ def handler(event, context):
     """Lambda handler function."""
     logging.init(__name__)
 
-    decrypter: Union[Utf8Decrypter, GpgDecrypter]
+    decrypter: Decrypter
 
-    FOLDER_PATH = os.environ.get("FOLDER_PATH")
+    folder_path = os.environ.get("FOLDER_PATH")
 
     if os.getenv("DECRYPT") != "true":
         logger.info("Skipping GPG decrypter setup")
@@ -98,7 +99,7 @@ def handler(event, context):
 
     logger.info("Starting import run")
 
-    files_by_date = get_files_for_import_grouped_by_date(FOLDER_PATH)
+    files_by_date = get_files_for_import_grouped_by_date(folder_path)
     file_date_keys = sorted(files_by_date.keys())
 
     if len(file_date_keys) == 0:
@@ -127,26 +128,22 @@ def handler(event, context):
             "got file names",
             extra={
                 "date": file_date_key,
+                "folder_path": folder_path,
                 "employer_file": employer_file,
                 "employee_file": employee_file,
             },
         )
 
-        import_report = process_daily_import(FOLDER_PATH, employer_file, employee_file, decrypter)
+        employer_file_path = "{}/{}".format(str(folder_path), employer_file)
+        employee_file_path = "{}/{}".format(str(folder_path), employee_file)
+
+        import_report = process_daily_import(employer_file_path, employee_file_path, decrypter)
         report.imports.append(import_report)
 
     report.end = datetime.now().isoformat()
     logger.info("Finished import run")
     decrypter.remove_keys()
     return {"status": "OK", "import_type": "daily", "report": asdict(report)}
-
-
-def get_bucket(event):
-    """Extract an S3 bucket from an event."""
-    # get bucket name from environment variable
-    bucket_name = event["Records"][0]["s3"]["bucket"]["name"]
-    bucket = s3Bucket.Bucket(bucket_name)
-    return bucket
 
 
 def get_files_for_import_grouped_by_date(path):
@@ -167,66 +164,77 @@ def get_files_for_import_grouped_by_date(path):
     return files_by_date
 
 
-def process_daily_import(path, employer_file, employee_file, decrypter):
+def process_daily_import(
+    employer_file_path: str, employee_file_path: str, decrypter: Decrypter
+) -> ImportReport:
     """Process s3 file by key"""
-    logger.info("Starting to process files")
-    report = ImportReport(
-        start=datetime.now().isoformat(), employer_file=employer_file, employee_file=employee_file
-    )
-
     config = db.get_config(aws_ssm)
     db_session_raw = db.init(config)
 
     with db.session_scope(db_session_raw) as db_session:
-        try:
-            report_log_entry = dor_persistence_util.create_import_log_entry(db_session, report)
-            employers = parse_employer_file(path, employer_file, decrypter)
-            employers_quarter_info, employees_info = parse_employee_file(
-                path, employee_file, decrypter
-            )
+        report = process_daily_import_helper(
+            db_session, employer_file_path, employee_file_path, decrypter
+        )
+        return report
 
-            parsed_employers_count = len(employers)
-            parsed_employers_quarter_info_count = len(employers_quarter_info)
-            parsed_employees_info_count = len(employees_info)
 
-            logger.info(
-                "Finished parsing files",
-                extra={
-                    "employer_file": employer_file,
-                    "employee_file": employee_file,
-                    "parsed_employers_count": parsed_employers_count,
-                    "parsed_employers_quarter_info_count": parsed_employers_quarter_info_count,
-                    "parsed_employees_info_count": parsed_employees_info_count,
-                },
-            )
+def process_daily_import_helper(
+    db_session: Session, employer_file_path: str, employee_file_path: str, decrypter: Decrypter,
+) -> ImportReport:
+    logger.info("Starting to process files")
+    report = ImportReport(
+        start=datetime.now().isoformat(),
+        employer_file=employer_file_path,
+        employee_file=employee_file_path,
+    )
 
-            import_to_db(
-                db_session,
-                employers,
-                employers_quarter_info,
-                employees_info,
-                report,
-                report_log_entry.import_log_id,
-            )
+    try:
+        report_log_entry = dor_persistence_util.create_import_log_entry(db_session, report)
+        employers = parse_employer_file(employer_file_path, decrypter)
+        employers_quarter_info, employees_info = parse_employee_file(employee_file_path, decrypter)
 
-            # finalize report
-            report.parsed_employers_count = parsed_employers_count
-            report.parsed_employers_quarter_info_count = parsed_employers_quarter_info_count
-            report.parsed_employees_info_count = parsed_employees_info_count
-            report.status = "success"
-            report.end = datetime.now().isoformat()
+        parsed_employers_count = len(employers)
+        parsed_employers_quarter_info_count = len(employers_quarter_info)
+        parsed_employees_info_count = len(employees_info)
 
-            # move file to processed folder
-            # move_file_to_processed(bucket, file_for_import) # TODO turn this on with invoke flag
+        logger.info(
+            "Finished parsing files",
+            extra={
+                "employer_file": employer_file_path,
+                "employee_file": employee_file_path,
+                "parsed_employers_count": parsed_employers_count,
+                "parsed_employers_quarter_info_count": parsed_employers_quarter_info_count,
+                "parsed_employees_info_count": parsed_employees_info_count,
+            },
+        )
 
-        except Exception:
-            logger.exception("Exception while processing")
-            report.status = "error"
-            report.end = datetime.now().isoformat()
-        finally:
-            logger.info("Attempting to update existing import log entry with latest report")
-            dor_persistence_util.update_import_log_entry(db_session, report_log_entry, report)
-            logger.info("Import log entry successfully updated")
+        import_to_db(
+            db_session,
+            employers,
+            employers_quarter_info,
+            employees_info,
+            report,
+            report_log_entry.import_log_id,
+        )
+
+        # finalize report
+        report.parsed_employers_count = parsed_employers_count
+        report.parsed_employers_quarter_info_count = parsed_employers_quarter_info_count
+        report.parsed_employees_info_count = parsed_employees_info_count
+        report.status = "success"
+        report.end = datetime.now().isoformat()
+
+        # move file to processed folder
+        # move_file_to_processed(bucket, file_for_import) # TODO turn this on with invoke flag
+
+    except Exception:
+        logger.exception("Exception while processing")
+        report.status = "error"
+        report.end = datetime.now().isoformat()
+    finally:
+        logger.info("Attempting to update existing import log entry with latest report")
+        dor_persistence_util.update_import_log_entry(db_session, report_log_entry, report)
+        logger.info("Import log entry successfully updated")
 
         # TODO determine if this is still necessary now that we have db logs
         # write_report_to_s3(bucket, report)
@@ -262,7 +270,13 @@ def import_employers(db_session, employers, report, import_log_entry_id):
 
     account_key_to_employer_id_map = {}
 
+    count = 0
     for employer_info in employers:
+
+        count += 1
+        if count % 1000 == 0:
+            logger.info("Importing employer info, current %i", count)
+
         account_key = employer_info["account_key"]
         existing_employer = dor_persistence_util.get_employer_by_fein(
             db_session, employer_info["fein"]
@@ -312,13 +326,23 @@ def import_employees_and_wage_data(
     import_log_entry_id,
 ):
     """Import employees and wage information"""
-    logger.info("Importing employee information")
+    logger.info(
+        "Importing wage information - employer: %i, employee: %i",
+        len(employers_quarter_info),
+        len(employees_info),
+    )
 
     # create a reference map of amended flag for employee and wage data
     employee_amended_flag_map = {}
     wage_data_amended_flag_map = {}
 
+    count = 0
+
     for employer_quarter_info in employers_quarter_info:
+        count += 1
+        if count % 1000 == 0:
+            logger.info("Importing employer qaurter info, current %i", count)
+
         account_key = employer_quarter_info["account_key"]
         filing_period_str = employer_quarter_info["filing_period"].strftime("%Y%m%d")
         composite_key = "{}-{}".format(account_key, filing_period_str)
@@ -329,8 +353,15 @@ def import_employees_and_wage_data(
 
     # import employees
     employee_id_by_ssn = {}
+    employee_ids_created_in_current_run = set()
 
+    count = 0
     for employee_info in employees_info:
+
+        count += 1
+        if count % 1000 == 0:
+            logger.info("Importing employee info, current %i", count)
+
         ssn = employee_info["employee_ssn"]
         account_key = employee_info["account_key"]
         existing_employee = dor_persistence_util.get_employee_by_ssn(db_session, ssn)
@@ -341,8 +372,14 @@ def import_employees_and_wage_data(
             )
 
             employee_id_by_ssn[ssn] = created_employee.employee_id
+            employee_ids_created_in_current_run.add(created_employee.employee_id)
             report.created_employees_count = report.created_employees_count + 1
         else:
+            # There may be multiple employee and wage data rows for the same employee for each quarte or because of multiple employers.
+            # Skip if the employee was created in the current run.
+            if existing_employee.employee_id in employee_ids_created_in_current_run:
+                continue
+
             if employee_amended_flag_map[account_key] is True:
                 dor_persistence_util.update_employee(
                     db_session, existing_employee, employee_info, import_log_entry_id
@@ -369,7 +406,13 @@ def import_employees_and_wage_data(
     logger.info("Importing employee wage information")
 
     # imoport wage information
+    count = 0
     for employee_info in employees_info:
+
+        count += 1
+        if count % 1000 == 0:
+            logger.info("Importing employee qaurter wage info, current %i", count)
+
         account_key = employee_info["account_key"]
         filing_period = employee_info["filing_period"]
         ssn = employee_info["employee_ssn"]
@@ -378,7 +421,7 @@ def import_employees_and_wage_data(
         employer_id = account_key_to_employer_id_map[account_key]
 
         existing_wage = dor_persistence_util.get_wages_and_contributions_by_employee_id_and_filling_period(
-            db_session, employee_id, filing_period
+            db_session, employee_id, employer_id, filing_period
         )
 
         if existing_wage is None:
@@ -390,6 +433,8 @@ def import_employees_and_wage_data(
                 report.created_wages_and_contributions_count + 1
             )
         else:
+            # print("wage  ", employer_id, employee_id, account_key, filing_period, ssn)
+            # print("exists", existing_wage.employer_id, existing_wage.employee_id, existing_wage.account_key, existing_wage.filing_period)
             ameneded_flag_key = "{}-{}".format(account_key, filing_period.strftime("%Y%m%d"))
             if wage_data_amended_flag_map[ameneded_flag_key] is True:
                 dor_persistence_util.update_wages_and_contributions(
@@ -421,13 +466,12 @@ def import_employees_and_wage_data(
 
 
 # TODO turn return dataclasses list instead of object list
-def parse_employer_file(path, employer_file, decrypter):
+def parse_employer_file(employer_file_path, decrypter):
     """Parse employer file"""
-    logger.info("Start parsing employer file", extra={"employer_file": employer_file})
+    logger.info("Start parsing employer file", extra={"employer_file_path": employer_file_path})
     employers = []
 
-    full_path = "{}/{}".format(str(path), employer_file)
-    file_bytes = file_util.read_file(full_path, "rb")
+    file_bytes = file_util.read_file(employer_file_path, "rb")
     decrypted_str = decrypter.decrypt(file_bytes)
     decrypted_lines = decrypted_str.split("\n")
 
@@ -439,19 +483,18 @@ def parse_employer_file(path, employer_file, decrypter):
         employer = employer_file_format.parse_line(row)
         employers.append(employer)
 
-    logger.info("Finished parsing employer file", extra={"employer_file": employer_file})
+    logger.info("Finished parsing employer file", extra={"employer_file_path": employer_file_path})
     return employers
 
 
-def parse_employee_file(path, employee_file, decrypter):
+def parse_employee_file(employee_file_path, decrypter):
     """Parse employee file"""
-    logger.info("Start parsing employee file", extra={"employee_file": employee_file})
+    logger.info("Start parsing employee file", extra={"employee_file_path": employee_file_path})
 
     employers_quarter_info = []
     employees_info = []
 
-    full_path = "{}/{}".format(str(path), employee_file)
-    file_bytes = file_util.read_file(full_path, "rb")
+    file_bytes = file_util.read_file(employee_file_path, "rb")
     decrypted_str = decrypter.decrypt(file_bytes)
     decrypted_lines = decrypted_str.split("\n")
 
@@ -469,7 +512,7 @@ def parse_employee_file(path, employee_file, decrypter):
             employee_info = employee_wage_file_format.parse_line(row)
             employees_info.append(employee_info)
 
-    logger.info("Finished parsing employee file", extra={"employee_file": employee_file})
+    logger.info("Finished parsing employee file", extra={"employee_file_path": employee_file_path})
     return employers_quarter_info, employees_info
 
 

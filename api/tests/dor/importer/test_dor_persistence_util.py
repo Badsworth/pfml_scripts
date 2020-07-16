@@ -25,7 +25,7 @@ def test_get_employee_by_ssn(test_db_session):
 
 def test_get_wages_and_contributions_by_employee_id_and_filling_period(test_db_session):
     wage_row = util.get_wages_and_contributions_by_employee_id_and_filling_period(
-        test_db_session, uuid.uuid4(), date.today()
+        test_db_session, uuid.uuid4(), uuid.uuid4(), date.today()
     )
 
     assert wage_row is None

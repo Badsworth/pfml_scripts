@@ -1,8 +1,11 @@
+import tempfile
+
 import pytest
 
 import dor_test_data as test_data
 import massgov.pfml.dor.importer.import_dor as import_dor
 import massgov.pfml.dor.importer.lib.dor_persistence_util as dor_persistence_util
+import massgov.pfml.dor.mock.generate as generator
 from massgov.pfml.db.models.employees import AddressType, Country, Employee, Employer, GeoState
 from massgov.pfml.dor.importer.lib.decrypter import Utf8Decrypter
 
@@ -162,6 +165,7 @@ def test_employee_wage_data_create(test_db_session, dor_employer_lookups):
 
     # create employer dependency
     employer_payload = test_data.get_new_employer()
+    account_key = employer_payload["account_key"]
     employers = [employer_payload]
     account_key_to_employer_id_map = import_dor.import_employers(
         test_db_session, employers, report, report_log_entry.import_log_id
@@ -189,7 +193,10 @@ def test_employee_wage_data_create(test_db_session, dor_employer_lookups):
     )
 
     persisted_wage_info = dor_persistence_util.get_wages_and_contributions_by_employee_id_and_filling_period(
-        test_db_session, employee_id, employee_wage_data_payload["filing_period"]
+        test_db_session,
+        employee_id,
+        account_key_to_employer_id_map[account_key],
+        employee_wage_data_payload["filing_period"],
     )
 
     assert persisted_wage_info is not None
@@ -216,6 +223,7 @@ def test_employee_wage_data_update(test_db_session, dor_employer_lookups):
 
     # create employer dependency
     employer_payload = test_data.get_new_employer()
+    account_key = employer_payload["account_key"]
     employers = [employer_payload]
     account_key_to_employer_id_map = import_dor.import_employers(
         test_db_session, employers, report, report_log_entry.import_log_id
@@ -279,7 +287,10 @@ def test_employee_wage_data_update(test_db_session, dor_employer_lookups):
     )
 
     persisted_wage_info = dor_persistence_util.get_wages_and_contributions_by_employee_id_and_filling_period(
-        test_db_session, employee_id, updated_employee_wage_data_payload["filing_period"]
+        test_db_session,
+        employee_id,
+        account_key_to_employer_id_map[account_key],
+        updated_employee_wage_data_payload["filing_period"],
     )
 
     assert persisted_wage_info is not None
@@ -344,18 +355,55 @@ def test_get_files_for_import_grouped_by_date(test_fs_path_for_s3):
 def test_parse_employee_file(test_fs_path_for_s3):
     employee_wage_data = test_data.get_new_employee_wage_data()
     employer_quarter_info = test_data.get_employer_quarter_info()
-
-    employers_info, employees_info = import_dor.parse_employee_file(
-        str(test_fs_path_for_s3), employee_file, decrypter
-    )
+    employee_file_path = "{}/{}".format(str(test_fs_path_for_s3), employee_file)
+    employers_info, employees_info = import_dor.parse_employee_file(employee_file_path, decrypter)
     assert employers_info[0] == employer_quarter_info
     assert employees_info[0] == employee_wage_data
 
 
 def test_parse_employer_file(test_fs_path_for_s3):
     employer_quarter_info = test_data.get_new_employer()
-
-    employers_info = import_dor.parse_employer_file(
-        str(test_fs_path_for_s3), employer_file, decrypter
-    )
+    employer_file_path = "{}/{}".format(str(test_fs_path_for_s3), employer_file)
+    employers_info = import_dor.parse_employer_file(employer_file_path, decrypter)
     assert employers_info[0] == employer_quarter_info
+
+
+## == full import ==
+
+
+@pytest.mark.timeout(20)
+def test_e2e_parse_and_persist(test_db_session, dor_employer_lookups):
+    # generate files for import
+    employer_count = 20
+    employee_count = employer_count * generator.EMPLOYER_TO_EMPLOYEE_RATIO
+
+    employer_file_path = get_temp_file_path()
+    employee_file_path = get_temp_file_path()
+
+    employer_file = open(employer_file_path, "w")
+    employee_file = open(employee_file_path, "w")
+
+    generator.process(employer_count, employer_file, employee_file, [1])
+    employer_file.close()
+    employee_file.close()
+
+    employer_lines = open(employer_file_path, "r").readlines()
+    assert len(employer_lines) == employer_count
+
+    employee_lines = open(employee_file_path, "r").readlines()
+    assert len(employee_lines) == (employer_count * 4) + (
+        employee_count * 4
+    )  # 4 rows for each quarter for employee and employer
+
+    # import
+    report = import_dor.process_daily_import_helper(
+        test_db_session, employer_file_path, employee_file_path, decrypter
+    )
+    assert report.created_employers_count == employer_count
+    assert report.created_employees_count == employee_count
+    assert report.created_wages_and_contributions_count == employee_count * 4
+
+
+def get_temp_file_path():
+    handle, path = tempfile.mkstemp()
+    return path

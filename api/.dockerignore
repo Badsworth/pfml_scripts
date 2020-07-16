@@ -14,3 +14,4 @@
 dist
 *.egg-info
 jwks.json
+import_infra/dor/mock_output/*
