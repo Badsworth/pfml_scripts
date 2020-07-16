@@ -333,6 +333,23 @@ const pages = {
     typeChoiceLabel_workersCompensation: "Workers Compensation",
     typeLabel: "What kind of income is it?",
   },
+  claimsPreviousLeaves: {
+    choiceNo: "$t(shared.choiceNo)",
+    choiceYes: "$t(shared.choiceYes)",
+    detailsLabel: "What counts as a qualifying reason?",
+    hintHeader:
+      "The following are qualifying reasons for taking paid or unpaid leave:",
+    hintList: [
+      "You couldn’t work due to an illness, injury, or pregnancy.",
+      "You bonded with your child after birth or placement.",
+      "You needed to manage family affairs while a family member is on active duty in the armed forces.",
+      "You needed to care for a family member who serves in the armed forces.",
+      "You needed to care for a sick family member.",
+    ],
+    sectionLabel:
+      "Have you taken paid or unpaid leave since January 1, 2021 for a qualifying reason?",
+    title: "$t(shared.claimsOtherLeaveTitle)",
+  },
   claimsReasonPregnancy: {
     choiceNo: "$t(shared.choiceNo)",
     choiceYes: "$t(shared.choiceYes)",

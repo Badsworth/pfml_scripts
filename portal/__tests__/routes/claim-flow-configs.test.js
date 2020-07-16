@@ -124,6 +124,11 @@ const machineTests = {
       },
     },
   },
+  [routes.claims.previousLeaves]: {
+    meta: {
+      test: () => {},
+    },
+  },
   [routes.claims.employmentStatus]: {
     meta: {
       test: () => {},

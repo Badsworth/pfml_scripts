@@ -24,6 +24,7 @@ import { fields as nameFields } from "../pages/claims/name";
 import { fields as notifiedEmployerFields } from "../pages/claims/notified-employer";
 import { fields as otherIncomesDetailsFields } from "../pages/claims/other-incomes-details";
 import { fields as otherIncomesFields } from "../pages/claims/other-incomes";
+import { fields as previousLeavesFields } from "../pages/claims/previous-leaves";
 import { fields as reasonPregnancyFields } from "../pages/claims/reason-pregnancy";
 import routes from "./index";
 import { fields as ssnFields } from "../pages/claims/ssn";
@@ -241,8 +242,7 @@ export default {
             cond: "hasOtherIncomes",
           },
           {
-            // todo: CP-565 route to the other-leave page
-            target: routes.claims.todo,
+            target: routes.claims.previousLeaves,
           },
         ],
       },
@@ -253,7 +253,15 @@ export default {
         fields: otherIncomesDetailsFields,
       },
       on: {
-        // todo: CP-565 route to the other-leave page
+        CONTINUE: routes.claims.previousLeaves,
+      },
+    },
+    [routes.claims.previousLeaves]: {
+      meta: {
+        step: ClaimSteps.otherLeave,
+        fields: previousLeavesFields,
+      },
+      on: {
         CONTINUE: routes.claims.todo,
       },
     },

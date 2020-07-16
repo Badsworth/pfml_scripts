@@ -31,6 +31,7 @@ const routes = {
     notifiedEmployer: "/claims/notified-employer",
     otherIncomes: "/claims/other-incomes",
     otherIncomesDetails: "/claims/other-incomes-details",
+    previousLeaves: "/claims/previous-leaves",
     reasonPregnancy: "/claims/reason-pregnancy",
     review: "/claims/review",
     ssn: "/claims/ssn",
