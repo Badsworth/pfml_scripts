@@ -13,13 +13,11 @@ const withClaim = (Component) => {
   const ComponentWithClaim = (props) => {
     const { query, appLogic } = props;
 
-    const claim = appLogic.claims ? appLogic.claims.get(query.claim_id) : null;
-
     useEffect(() => {
-      if (appLogic.user) {
-        appLogic.loadClaims();
-      }
-    }, [appLogic]);
+      appLogic.loadClaims();
+    });
+
+    const claim = appLogic.claims ? appLogic.claims.get(query.claim_id) : null;
 
     if (!claim) return <Spinner aria-valuetext="Loading claims" />;
 

@@ -14,7 +14,7 @@ const useAppErrorsLogic = () => {
   const {
     collection: appErrors,
     setCollection: setAppErrors,
-  } = useCollectionState(() => new AppErrorInfoCollection());
+  } = useCollectionState(null);
 
   /**
    * Catch errors from generic try / catch blocks around API calls

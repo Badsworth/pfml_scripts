@@ -18,7 +18,7 @@ const Applications = (props) => {
 
   useEffect(() => {
     appLogic.loadClaims();
-  }, [appLogic]);
+  });
 
   const claimsLoaded = !!appLogic.claims;
   const hasClaims = claimsLoaded && appLogic.claims.items.length > 0;

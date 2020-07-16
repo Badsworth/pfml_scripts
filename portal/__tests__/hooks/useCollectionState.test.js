@@ -12,23 +12,13 @@ describe("useCollectionState", () => {
     }
   }
 
-  describe("when no initial collection state is provided", () => {
-    it("throws error indicating no initial collection was provided", () => {
-      // turn off console errors since we expect it
-      console.error = jest.fn();
-
-      const render = () => {
-        testHook(() => {
-          ({ collection } = useCollectionState());
-        });
-      };
-
-      expect(render).toThrowError(/Collection/);
-    });
+  beforeEach(() => {
+    jest.resetAllMocks();
   });
 
-  describe("when initial collection function is provided", () => {
+  describe("when no initial collection state is provided", () => {
     beforeEach(() => {
+      jest.spyOn(console, "error").mockImplementation();
       testHook(() => {
         ({
           collection,
@@ -36,34 +26,43 @@ describe("useCollectionState", () => {
           addItem,
           updateItem,
           removeItem,
-        } = useCollectionState(() => new TestCollection()));
+        } = useCollectionState(null));
       });
     });
 
     describe("addItem", () => {
-      it("adds item to collection", () => {
-        act(() => addItem({ testId: "1234" }));
-        expect(collection.items).toEqual([{ testId: "1234" }]);
+      it("throws null pointer error", () => {
+        const render = () => {
+          act(() => addItem({ testId: "1234" }));
+        };
+
+        expect(render).toThrow(
+          /Cannot read property 'addItem' of (null|undefined)/
+        );
       });
     });
 
     describe("updateItem", () => {
-      it("throws error since item must already exist in collection", () => {
+      it("throws null pointer error", () => {
         const render = () => {
           act(() => updateItem({ testId: "1234" }));
         };
 
-        expect(render).toThrowError();
+        expect(render).toThrow(
+          /Cannot read property 'updateItem' of (null|undefined)/
+        );
       });
     });
 
     describe("removeItem", () => {
-      it("throws error since item must already exist in collection", () => {
+      it("throws null pointer error", () => {
         const render = () => {
           act(() => removeItem({ testId: "1234" }));
         };
 
-        expect(render).toThrowError();
+        expect(render).toThrow(
+          /Cannot read property 'removeItem' of (null|undefined)/
+        );
       });
     });
   });

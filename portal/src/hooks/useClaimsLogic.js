@@ -1,5 +1,4 @@
 import Claim from "../models/Claim";
-import ClaimCollection from "../models/ClaimCollection";
 import ClaimsApi from "../api/ClaimsApi";
 import merge from "lodash/merge";
 import useCollectionState from "./useCollectionState";
@@ -12,19 +11,26 @@ const useClaimsLogic = ({ appErrorsLogic, portalFlow, user }) => {
   // new claims
   const {
     collection: claims,
-    addItem: addClaim,
+    // addItem: addClaim, // TODO: uncomment once the workaround in createClaim is removed: https://lwd.atlassian.net/browse/CP-701
     updateItem: setClaim,
     setCollection: setClaims,
-  } = useCollectionState(() => new ClaimCollection());
+  } = useCollectionState(null); // Set initial value to null to lazy load claims
 
   const claimsApi = useMemo(() => new ClaimsApi({ user }), [user]);
+
+  let isLoadingClaims = false;
 
   /**
    * Load all claims for user
    * This must be called before claims are available
+   * @param {boolean} [forceReload] Whether or not to force a reload of the claims from the API even if the claims have already been loaded. Defaults to false.
    */
-  const loadClaims = async () => {
-    if (claims) return;
+  const loadClaims = async (forceReload = false) => {
+    if (!user) return;
+    if (claims && !forceReload) return;
+    if (isLoadingClaims) return;
+
+    isLoadingClaims = true;
 
     try {
       const { claims } = await claimsApi.getClaims();
@@ -33,6 +39,8 @@ const useClaimsLogic = ({ appErrorsLogic, portalFlow, user }) => {
     } catch (error) {
       appErrorsLogic.catchError(error);
     }
+
+    isLoadingClaims = false;
   };
 
   /**
@@ -41,6 +49,7 @@ const useClaimsLogic = ({ appErrorsLogic, portalFlow, user }) => {
    * @param {object} patchData - subset of claim data that will be updated
    */
   const updateClaim = async (application_id, patchData) => {
+    if (!user) return;
     try {
       let { claim } = await claimsApi.updateClaim(application_id, patchData);
 
@@ -67,13 +76,21 @@ const useClaimsLogic = ({ appErrorsLogic, portalFlow, user }) => {
    * @returns {Promise}
    */
   const createClaim = async () => {
+    if (!user) return;
     appErrorsLogic.clearErrors();
 
     try {
       const { claim, success } = await claimsApi.createClaim();
 
       if (success) {
-        addClaim(claim);
+        if (!claims) {
+          await loadClaims();
+        } else {
+          // The API currently doesn't return the claim in POST /applications, so for now just reload all the claims
+          // TODO: Remove this workaround and use `addClaim(claim)` instead: https://lwd.atlassian.net/browse/CP-701
+          // addClaim(claim);
+          await loadClaims(true);
+        }
 
         const context = { claim, user };
         const params = { claim_id: claim.application_id };
@@ -89,6 +106,7 @@ const useClaimsLogic = ({ appErrorsLogic, portalFlow, user }) => {
    * @param {string} application_id - application id for claim
    */
   const submitClaim = async (application_id) => {
+    if (!user) return;
     appErrorsLogic.clearErrors();
 
     try {

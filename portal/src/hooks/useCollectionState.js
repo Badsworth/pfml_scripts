@@ -1,35 +1,17 @@
-import BaseCollection from "../models/BaseCollection";
 import { useState } from "react";
+
+/** @typedef {import('../models/BaseCollection')} BaseCollection */
 
 /**
  * React hook for creating a state for a Collection of objects
- * @param {BaseCollection|Function} initialCollection - initial collection state
+ * @param {BaseCollection} [initialCollection] - initial collection state
  * @returns {Array} - [collection, setCollection, addItem, updateItem, removeItem];
  */
 const useCollectionState = (initialCollection) => {
-  const initialCollectionIsInstance =
-    initialCollection instanceof BaseCollection;
-  const initialCollectionIsFunction = initialCollection instanceof Function;
-
-  if (!initialCollectionIsInstance && !initialCollectionIsFunction) {
-    throw new Error(
-      "useCollectionState expected an instance of Collection or a Function that returns a Collection"
-    );
-  }
-
-  const [collection, setCollection] = useState(
-    initialCollectionIsInstance ? initialCollection : null
-  );
-
-  // Support adding items in a collection when initial collection
-  // is not defined
-  const getCollection = (prevCollection) =>
-    prevCollection || initialCollection();
+  const [collection, setCollection] = useState(initialCollection);
 
   const addItem = (item) => {
-    setCollection((prevCollection) =>
-      getCollection(prevCollection).addItem(item)
-    );
+    setCollection((prevCollection) => prevCollection.addItem(item));
   };
 
   const updateItem = (item) => {

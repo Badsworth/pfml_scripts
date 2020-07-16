@@ -51,19 +51,28 @@ describe("useClaimsLogic", () => {
         await claimsLogic.loadClaims();
       });
 
-      const claims = claimsLogic.claims;
-
-      expect(claims[0]).toBeInstanceOf(Claim);
+      expect(claimsLogic.claims.items[0]).toBeInstanceOf(Claim);
       expect(getClaimsMock).toHaveBeenCalled();
     });
 
     it("only makes api request if claims have not been loaded", async () => {
       await act(async () => {
         await claimsLogic.loadClaims();
+        await claimsLogic.loadClaims();
       });
 
-      await claimsLogic.loadClaims();
-      const claims = claimsLogic.claims;
+      const claims = claimsLogic.claims.items;
+      expect(claims[0]).toBeInstanceOf(Claim);
+      expect(getClaimsMock).toHaveBeenCalledTimes(1);
+    });
+
+    it("only makes one api request at a time", async () => {
+      await act(async () => {
+        // call loadClaims twice in parallel
+        await Promise.all([claimsLogic.loadClaims(), claimsLogic.loadClaims()]);
+      });
+
+      const claims = claimsLogic.claims.items;
       expect(claims[0]).toBeInstanceOf(Claim);
       expect(getClaimsMock).toHaveBeenCalledTimes(1);
     });
@@ -71,6 +80,17 @@ describe("useClaimsLogic", () => {
     describe("when request errors", () => {
       it("catches the error", async () => {
         getClaimsMock.mockImplementationOnce(() => {
+          describe("forceReload parameter", () => {
+            it("forces a reload even after claims have been loaded", async () => {
+              await act(async () => {
+                await claimsLogic.loadClaims();
+                await claimsLogic.loadClaims(true);
+              });
+
+              expect(getClaimsMock).toHaveBeenCalledTimes(2);
+            });
+          });
+
           throw new Error();
         });
 
@@ -100,6 +120,18 @@ describe("useClaimsLogic", () => {
 
         createClaimMock.mockResolvedValueOnce({
           claim,
+          success: true,
+        });
+
+        // This mock is needed for the workaround of calling loadClaims
+        // after creating a claim in createClaims
+        // TODO: Remove this once the workaround is removed: https://lwd.atlassian.net/browse/CP-701
+        getClaimsMock.mockResolvedValueOnce({
+          claims: new ClaimCollection([
+            new Claim({ application_id: "mock-application-id-1" }),
+            new Claim({ application_id: "mock-application-id-2" }),
+            claim,
+          ]),
           success: true,
         });
 
@@ -166,6 +198,42 @@ describe("useClaimsLogic", () => {
 
       it("doesn't change the route", () => {
         expect(mockRouter.push).not.toHaveBeenCalled();
+      });
+    });
+
+    describe("when claims have previously been loaded", () => {
+      let claim;
+
+      beforeEach(async () => {
+        await act(async () => {
+          await claimsLogic.loadClaims();
+        });
+
+        claim = new Claim({ application_id: "12345" });
+        createClaimMock.mockResolvedValueOnce({
+          claim,
+          success: true,
+        });
+
+        // This mock is needed for the workaround of calling loadClaims
+        // after creating a claim in createClaims
+        // TODO: Remove this once the workaround is removed: https://lwd.atlassian.net/browse/CP-701
+        getClaimsMock.mockResolvedValueOnce({
+          claims: new ClaimCollection([
+            new Claim({ application_id: "mock-application-id-1" }),
+            new Claim({ application_id: "mock-application-id-2" }),
+            claim,
+          ]),
+          success: true,
+        });
+
+        await act(async () => {
+          await claimsLogic.createClaim();
+        });
+      });
+
+      it("stores the new claim", () => {
+        expect(claimsLogic.claims.items).toContain(claim);
       });
     });
   });

@@ -1,7 +1,6 @@
 import { simulateEvents, testHook } from "../test-utils";
 import React from "react";
 import ResetPassword from "../../src/pages/reset-password";
-import User from "../../src/models/User";
 import { act } from "react-dom/test-utils";
 import { shallow } from "enzyme";
 import useAppLogic from "../../src/hooks/useAppLogic";
@@ -13,7 +12,7 @@ describe("ResetPassword", () => {
 
   beforeEach(() => {
     testHook(() => {
-      appLogic = useAppLogic({ user: new User() });
+      appLogic = useAppLogic();
     });
   });
 

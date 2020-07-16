@@ -1,4 +1,5 @@
 import Claim from "../../../src/models/Claim";
+import ClaimCollection from "../../models/ClaimCollection";
 import { uniqueId } from "lodash";
 
 // Export mocked ClaimsApi functions so we can spy on them
@@ -21,10 +22,10 @@ export const getClaimsMock = jest.fn(async () =>
     success: true,
     status: 200,
     apiErrors: null,
-    claims: [
+    claims: new ClaimCollection([
       new Claim({ application_id: "mock-application-id-1" }),
       new Claim({ application_id: "mock-application-id-2" }),
-    ],
+    ]),
   })
 );
 
