@@ -24,9 +24,17 @@ function render(customProps = {}, mountComponent = false) {
 }
 
 describe("ErrorsSummary", () => {
-  describe("when no errors exist", () => {
+  describe("when errors is null", () => {
     it("does not render an alert", () => {
       const { wrapper } = render({ errors: null });
+
+      expect(wrapper.isEmptyRender()).toBeTruthy();
+    });
+  });
+
+  describe("when no errors exist", () => {
+    it("does not render an alert", () => {
+      const { wrapper } = render({ errors: new AppErrorInfoCollection() });
 
       expect(wrapper.isEmptyRender()).toBeTruthy();
     });

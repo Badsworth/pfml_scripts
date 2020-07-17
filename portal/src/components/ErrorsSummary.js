@@ -26,7 +26,7 @@ function ErrorsSummary(props) {
   }, [errors]);
 
   // Don't render anything if there are no errors present
-  if (!errors) {
+  if (!errors || errors.items.length <= 0) {
     return null;
   }
 
