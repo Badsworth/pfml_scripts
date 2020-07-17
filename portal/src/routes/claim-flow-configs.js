@@ -25,6 +25,7 @@ import { fields as notifiedEmployerFields } from "../pages/claims/notified-emplo
 import { fields as otherIncomesDetailsFields } from "../pages/claims/other-incomes-details";
 import { fields as otherIncomesFields } from "../pages/claims/other-incomes";
 import { fields as paymentMethodFields } from "../pages/claims/payment-method";
+import { fields as previousLeavesDetailsFields } from "../pages/claims/previous-leaves-details";
 import { fields as previousLeavesFields } from "../pages/claims/previous-leaves";
 import { fields as reasonPregnancyFields } from "../pages/claims/reason-pregnancy";
 import routes from "./index";
@@ -41,6 +42,7 @@ export const guards = {
   hasStateId: ({ user }) => get(user, "has_state_id"),
   hasEmployerBenefits: ({ claim }) => claim.has_employer_benefits === true,
   hasOtherIncomes: ({ claim }) => claim.has_other_incomes === true,
+  hasPreviousLeaves: ({ claim }) => claim.has_previous_leaves === true,
 };
 
 export default {
@@ -264,7 +266,24 @@ export default {
         fields: previousLeavesFields,
       },
       on: {
-        CONTINUE: routes.claims.todo,
+        CONTINUE: [
+          {
+            target: routes.claims.previousLeavesDetails,
+            cond: "hasPreviousLeaves",
+          },
+          {
+            target: routes.claims.checklist,
+          },
+        ],
+      },
+    },
+    [routes.claims.previousLeavesDetails]: {
+      meta: {
+        step: ClaimSteps.otherLeave,
+        fields: previousLeavesDetailsFields,
+      },
+      on: {
+        CONTINUE: routes.claims.checklist,
       },
     },
     [routes.claims.employmentStatus]: {

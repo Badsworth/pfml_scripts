@@ -33,6 +33,7 @@ const routes = {
     otherIncomesDetails: "/claims/other-incomes-details",
     paymentMethod: "/claims/payment-method",
     previousLeaves: "/claims/previous-leaves",
+    previousLeavesDetails: "/claims/previous-leaves-details",
     reasonPregnancy: "/claims/reason-pregnancy",
     review: "/claims/review",
     ssn: "/claims/ssn",

@@ -370,6 +370,15 @@ const pages = {
       "Have you taken paid or unpaid leave since January 1, 2021 for a qualifying reason?",
     title: "$t(shared.claimsOtherLeaveTitle)",
   },
+  claimsPreviousLeavesDetails: {
+    addButton: "Add another leave",
+    cardHeadingPrefix: "Previous leave",
+    endDateLabel: "When did your leave end?",
+    removeButton: "Remove leave",
+    sectionLabel: "Tell us about previous paid or unpaid leave",
+    startDateLabel: "When did your leave begin?",
+    title: "$t(shared.claimsOtherLeaveTitle)",
+  },
   claimsReasonPregnancy: {
     choiceNo: "$t(shared.choiceNo)",
     choiceYes: "$t(shared.choiceYes)",

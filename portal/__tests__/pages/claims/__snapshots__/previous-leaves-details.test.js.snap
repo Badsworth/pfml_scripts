@@ -1,0 +1,56 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`PreviousLeavesDetails when the user's claim has previous leaves PreviousLeaveCard renders fields for a PreviousLeave instance 1`] = `
+<Fragment>
+  <InputDate
+    dayLabel="Day"
+    label="When did your leave begin?"
+    monthLabel="Month"
+    name="previous_leaves[0].leave_start_date"
+    onChange={[MockFunction]}
+    smallLabel={true}
+    value=""
+    yearLabel="Year"
+  />
+  <InputDate
+    dayLabel="Day"
+    label="When did your leave end?"
+    monthLabel="Month"
+    name="previous_leaves[0].leave_end_date"
+    onChange={[MockFunction]}
+    smallLabel={true}
+    value=""
+    yearLabel="Year"
+  />
+</Fragment>
+`;
+
+exports[`PreviousLeavesDetails when the user's claim has previous leaves renders the page 1`] = `
+<QuestionPage
+  onSave={[Function]}
+  title="Other income and benefits"
+>
+  <Heading
+    level="2"
+    size="1"
+  >
+    Tell us about previous paid or unpaid leave
+  </Heading>
+  <RepeatableFieldset
+    addButtonLabel="Add another leave"
+    entries={
+      Array [
+        PreviousLeave {
+          "leave_end_date": null,
+          "leave_start_date": null,
+        },
+      ]
+    }
+    headingPrefix="Previous leave"
+    onAddClick={[Function]}
+    onRemoveClick={[Function]}
+    removeButtonLabel="Remove leave"
+    render={[Function]}
+  />
+</QuestionPage>
+`;

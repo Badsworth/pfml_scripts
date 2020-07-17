@@ -129,6 +129,13 @@ const machineTests = {
       test: () => {},
     },
   },
+  [routes.claims.previousLeavesDetails]: {
+    meta: {
+      test: (_, event) => {
+        expect(get(event.context.claim, "has_previous_leaves")).toEqual(true);
+      },
+    },
+  },
   [routes.claims.employmentStatus]: {
     meta: {
       test: () => {},
@@ -170,11 +177,13 @@ describe("routingMachine", () => {
   const hasEmployerBenefits = { has_employer_benefits: true };
   const hasOtherIncomes = { has_other_incomes: true };
   const hasStateId = { has_state_id: true };
+  const hasPreviousLeaves = { has_previous_leaves: true };
   const testData = [
     { claimData: medicalClaim, userData: hasStateId },
     { claimData: employed, userData: {} },
     { claimData: hasEmployerBenefits, userData: {} },
     { claimData: hasOtherIncomes, userData: {} },
+    { claimData: hasPreviousLeaves, userData: {} },
   ];
 
   // Action that's fired when exiting dashboard state and creating a claim and
