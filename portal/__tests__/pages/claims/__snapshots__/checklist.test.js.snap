@@ -56,7 +56,7 @@ exports[`Checklist renders page 1`] = `
       <span
         dangerouslySetInnerHTML={
           Object {
-            "__html": "We’ll ask you for:<ul class='usa-list'><li>The date you told your employer you were taking leave.</li></ul>",
+            "__html": "You will need to know:<ul class='usa-list'><li>Your employer's FEIN.</li><li>The date you told your employer you were taking leave.</li></ul>",
           }
         }
       />
@@ -70,7 +70,7 @@ exports[`Checklist renders page 1`] = `
       <span
         dangerouslySetInnerHTML={
           Object {
-            "__html": "We’ll ask you for:<ul class='usa-list'><li>Time off for qualifying condition since January 1, 2021.</li><li>If you have or will receive Unemployment Insurance or Worker’s Compensation.</li><li>If you have or will file under the Family and Medical Leave Act (FMLA).</li></ul>",
+            "__html": "You will need to know:<ul class='usa-list'><li>If you will use any employer-sponsored benefits during your leave.</li><li>If you will receive income from any other sources during your leave.</li><li>The dates for any paid or unpaid leave you’ve taken since January 1, 2021 for a qualifying condition.</li></ul>",
           }
         }
       />
@@ -84,7 +84,7 @@ exports[`Checklist renders page 1`] = `
       <span
         dangerouslySetInnerHTML={
           Object {
-            "__html": "You will need:<ul class='usa-list'><li>Your bank account information, if you want to be paid through Direct Deposit.</li></ul>",
+            "__html": "You will need to know:<ul class='usa-list'><li>Your bank account information, if you want to be paid through Direct Deposit.</li></ul>",
           }
         }
       />
