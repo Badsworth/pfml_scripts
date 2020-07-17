@@ -1,5 +1,6 @@
 import { makeFile, renderWithAppLogic } from "../../test-utils";
 import UploadOtherId from "../../../src/pages/claims/upload-other-id";
+import { act } from "react-dom/test-utils";
 
 describe("UploadOtherId", () => {
   let wrapper;
@@ -22,7 +23,9 @@ describe("UploadOtherId", () => {
       };
 
       const input = wrapper.find("FileCardList").dive().find("input");
-      input.simulate("change", event);
+      act(() => {
+        input.simulate("change", event);
+      });
 
       expect(wrapper).toMatchSnapshot();
     });

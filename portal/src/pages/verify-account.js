@@ -50,7 +50,7 @@ export const VerifyAccount = (props) => {
         inputMode="numeric"
         name="code"
         value={code}
-        errorMsg={appErrors && appErrors.fieldErrorMessage("code")}
+        errorMsg={appErrors.fieldErrorMessage("code")}
         label={t("pages.authVerifyAccount.codeLabel")}
         onChange={handleInputChange}
         smallLabel
@@ -62,7 +62,7 @@ export const VerifyAccount = (props) => {
           name="username"
           value={username}
           label={t("pages.authVerifyAccount.usernameLabel")}
-          errorMsg={appErrors && appErrors.fieldErrorMessage("username")}
+          errorMsg={appErrors.fieldErrorMessage("username")}
           onChange={handleInputChange}
           smallLabel
         />

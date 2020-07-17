@@ -147,7 +147,7 @@ describe("useClaimsLogic", () => {
       });
 
       it("clears errors", () => {
-        expect(appErrorsLogic.appErrors).toBeNull();
+        expect(appErrorsLogic.appErrors.items).toHaveLength(0);
       });
 
       it("stores the new claim", () => {

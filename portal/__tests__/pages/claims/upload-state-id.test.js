@@ -1,5 +1,6 @@
 import { makeFile, renderWithAppLogic } from "../../test-utils";
 import UploadStateId from "../../../src/pages/claims/upload-state-id";
+import { act } from "react-dom/test-utils";
 
 describe("UploadStateId", () => {
   let wrapper;
@@ -22,7 +23,9 @@ describe("UploadStateId", () => {
       };
 
       const input = wrapper.find("FileCardList").dive().find("input");
-      input.simulate("change", event);
+      act(() => {
+        input.simulate("change", event);
+      });
 
       expect(wrapper).toMatchSnapshot();
     });

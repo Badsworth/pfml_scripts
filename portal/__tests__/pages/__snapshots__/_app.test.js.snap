@@ -25,7 +25,10 @@ exports[`App when authenticated user consented to data sharing renders the page 
 <TestComponent
   appLogic={
     Object {
-      "appErrors": null,
+      "appErrors": AppErrorInfoCollection {
+        "items": Array [],
+        "itemsById": Object {},
+      },
       "auth": Object {
         "authData": Object {},
         "createAccount": [Function],

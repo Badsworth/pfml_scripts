@@ -1,3 +1,4 @@
+import AppErrorInfoCollection from "../../src/models/AppErrorInfoCollection";
 import { testHook } from "../test-utils";
 import useAppLogic from "../../src/hooks/useAppLogic";
 
@@ -39,7 +40,8 @@ describe("useAppLogic", () => {
       } = useAppLogic());
     });
 
-    expect(appErrors).toBeNull();
+    expect(appErrors).toBeInstanceOf(AppErrorInfoCollection);
+    expect(appErrors.items).toHaveLength(0);
     expect(auth).toEqual(expect.anything());
     expect(claims).toBeNull();
     expect(clearErrors).toBeInstanceOf(Function);

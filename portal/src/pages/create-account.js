@@ -32,7 +32,7 @@ export const CreateAccount = (props) => {
         name="username"
         value={username}
         label={t("pages.authCreateAccount.usernameLabel")}
-        errorMsg={appErrors && appErrors.fieldErrorMessage("username")}
+        errorMsg={appErrors.fieldErrorMessage("username")}
         onChange={handleInputChange}
         smallLabel
       />
@@ -42,7 +42,7 @@ export const CreateAccount = (props) => {
         value={password}
         hint={t("pages.authCreateAccount.passwordHint")}
         label={t("pages.authCreateAccount.passwordLabel")}
-        errorMsg={appErrors && appErrors.fieldErrorMessage("password")}
+        errorMsg={appErrors.fieldErrorMessage("password")}
         onChange={handleInputChange}
         smallLabel
       />

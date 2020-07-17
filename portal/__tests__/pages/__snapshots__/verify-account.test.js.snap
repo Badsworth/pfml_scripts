@@ -13,6 +13,7 @@ exports[`VerifyAccount renders the empty page 1`] = `
   </Lead>
   <InputText
     autoComplete="off"
+    errorMsg={null}
     inputMode="numeric"
     label="6-digit code"
     name="code"
@@ -21,6 +22,7 @@ exports[`VerifyAccount renders the empty page 1`] = `
     value=""
   />
   <InputText
+    errorMsg={null}
     label="Email address"
     name="username"
     onChange={[Function]}

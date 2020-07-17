@@ -42,7 +42,7 @@ export const ResetPassword = (props) => {
         autoComplete="off"
         inputMode="numeric"
         label={t("pages.authResetPassword.codeLabel")}
-        errorMsg={appErrors && appErrors.fieldErrorMessage("code")}
+        errorMsg={appErrors.fieldErrorMessage("code")}
         name="code"
         onChange={handleInputChange}
         smallLabel
@@ -55,7 +55,7 @@ export const ResetPassword = (props) => {
           name="username"
           value={valueWithFallback(formState.username)}
           label={t("pages.authResetPassword.usernameLabel")}
-          errorMsg={appErrors && appErrors.fieldErrorMessage("username")}
+          errorMsg={appErrors.fieldErrorMessage("username")}
           onChange={handleInputChange}
           smallLabel
         />
@@ -64,7 +64,7 @@ export const ResetPassword = (props) => {
       <InputText
         autoComplete="new-password"
         label={t("pages.authResetPassword.passwordLabel")}
-        errorMsg={appErrors && appErrors.fieldErrorMessage("password")}
+        errorMsg={appErrors.fieldErrorMessage("password")}
         hint={t("pages.authResetPassword.passwordHint")}
         type="password"
         name="password"

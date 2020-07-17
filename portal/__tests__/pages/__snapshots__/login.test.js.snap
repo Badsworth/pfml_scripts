@@ -17,6 +17,7 @@ exports[`Login renders the empty page 1`] = `
       </a>
     </Link>
     <InputText
+      errorMsg={null}
       label="Email address"
       name="username"
       onChange={[Function]}
@@ -25,6 +26,7 @@ exports[`Login renders the empty page 1`] = `
       value=""
     />
     <InputText
+      errorMsg={null}
       label="Password"
       name="password"
       onChange={[Function]}

@@ -1,8 +1,10 @@
+import AppErrorInfoCollection from "../../models/AppErrorInfoCollection";
 import Claim from "../../models/Claim";
 import ClaimCollection from "../../models/ClaimCollection";
 import { uniqueId } from "lodash";
 
 export default jest.fn(() => ({
+  appErrors: new AppErrorInfoCollection(),
   auth: {
     createAccount: jest.fn(),
     forgotPassword: jest.fn(),

@@ -3,14 +3,14 @@ import AppErrorInfoCollection from "../../src/models/AppErrorInfoCollection";
 
 describe("AppErrorInfoCollection", () => {
   describe("fieldErrorMessage", () => {
-    it("returns undefined result if there are no errors", () => {
+    it("returns null result if there are no errors", () => {
       const collection = new AppErrorInfoCollection();
       const result = collection.fieldErrorMessage("first_name");
 
-      expect(result).toBeUndefined();
+      expect(result).toBeNull();
     });
 
-    it("returns undefined if no errors match the given field's path", () => {
+    it("returns null if no errors match the given field's path", () => {
       const collection = new AppErrorInfoCollection([
         new AppErrorInfo({
           field: "foo",
@@ -21,7 +21,7 @@ describe("AppErrorInfoCollection", () => {
 
       const result = collection.fieldErrorMessage(field);
 
-      expect(result).toBeUndefined();
+      expect(result).toBeNull();
     });
 
     it("returns merged string if multiple errors match the given field's path", () => {

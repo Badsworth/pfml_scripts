@@ -137,7 +137,7 @@ describe("useAuthLogic", () => {
         setAppErrors([{ message: "Pre-existing error" }]);
         await forgotPassword(username);
       });
-      expect(appErrors).toBeNull();
+      expect(appErrors.items).toHaveLength(0);
     });
   });
 
@@ -252,7 +252,7 @@ describe("useAuthLogic", () => {
         setAppErrors([{ message: "Pre-existing error" }]);
         login(username, password);
       });
-      expect(appErrors).toBeNull();
+      expect(appErrors.items).toHaveLength(0);
     });
   });
 
@@ -406,7 +406,7 @@ describe("useAuthLogic", () => {
         setAppErrors([{ message: "Pre-existing error" }]);
         await createAccount(username, password);
       });
-      expect(appErrors).toEqual(null);
+      expect(appErrors.items).toHaveLength(0);
     });
   });
 
@@ -496,7 +496,7 @@ describe("useAuthLogic", () => {
         setAppErrors([{ message: "Pre-existing error" }]);
         resendVerifyAccountCode(username);
       });
-      expect(appErrors).toBeNull();
+      expect(appErrors.items).toHaveLength(0);
     });
   });
 
@@ -675,8 +675,7 @@ describe("useAuthLogic", () => {
         setAppErrors([{ message: "Pre-existing error" }]);
         resetPassword(username, verificationCode, password);
       });
-
-      expect(appErrors).toEqual(null);
+      expect(appErrors.items).toHaveLength(0);
     });
   });
 
@@ -834,7 +833,7 @@ describe("useAuthLogic", () => {
         setAppErrors([{ message: "Pre-existing error" }]);
         verifyAccount(username, verificationCode);
       });
-      expect(appErrors).toBeNull();
+      expect(appErrors.items).toHaveLength(0);
     });
   });
 });

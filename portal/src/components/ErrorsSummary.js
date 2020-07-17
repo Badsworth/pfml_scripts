@@ -18,7 +18,7 @@ function ErrorsSummary(props) {
    * Make sure the user sees the errors summary anytime the list of errors changes
    */
   useEffect(() => {
-    if (errors) {
+    if (errors && errors.items.length > 0) {
       window.scrollTo(0, 0);
       // Move focus to the alert so screen readers immediately announce that there are errors
       alertRef.current.focus();

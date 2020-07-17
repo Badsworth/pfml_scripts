@@ -49,7 +49,7 @@ export const Login = (props) => {
           name="username"
           value={username}
           label={t("pages.authLogin.usernameLabel")}
-          errorMsg={appErrors && appErrors.fieldErrorMessage("username")}
+          errorMsg={appErrors.fieldErrorMessage("username")}
           onChange={handleInputChange}
           smallLabel
         />
@@ -58,7 +58,7 @@ export const Login = (props) => {
           name="password"
           value={password}
           label={t("pages.authLogin.passwordLabel")}
-          errorMsg={appErrors && appErrors.fieldErrorMessage("password")}
+          errorMsg={appErrors.fieldErrorMessage("password")}
           onChange={handleInputChange}
           smallLabel
         />

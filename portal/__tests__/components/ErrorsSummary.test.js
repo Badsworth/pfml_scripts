@@ -99,6 +99,15 @@ describe("ErrorsSummary", () => {
 
       expect(global.scrollTo).toHaveBeenCalledWith(0, 0);
     });
+
+    it("does not scroll if there are no errors", () => {
+      // Mount the component so useEffect is called
+      const errors = new AppErrorInfoCollection();
+      const mountComponent = true;
+      render({ errors }, mountComponent);
+
+      expect(global.scrollTo).not.toHaveBeenCalled();
+    });
   });
 
   describe("when the errors change", () => {

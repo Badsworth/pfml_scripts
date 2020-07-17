@@ -62,7 +62,7 @@ function useChangeHandler(setFiles, setAppErrors, t) {
       const message = t("errors.invalidFileType", { disallowedFileNames });
       setAppErrors(new AppErrorInfoCollection([new AppErrorInfo({ message })]));
     } else {
-      setAppErrors(null);
+      setAppErrors(new AppErrorInfoCollection());
     }
 
     const newFiles = allowedFiles.map((file) => {

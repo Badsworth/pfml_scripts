@@ -21,13 +21,13 @@ describe("useAppErrorsLogic", () => {
     const { setAppErrors, appErrors } = appErrorsLogic;
 
     expect(setAppErrors).toBeInstanceOf(Function);
-    expect(appErrors).toBeNull();
+    expect(appErrors.items).toHaveLength(0);
   });
 
   describe("catchError", () => {
     beforeEach(() => {
       // We expect console.error to be called in this scenario
-      jest.spyOn(console, "error").mockImplementationOnce(jest.fn());
+      jest.spyOn(console, "error").mockImplementation(jest.fn());
     });
 
     it("sets app error with error info and tracks errors", () => {
@@ -37,6 +37,7 @@ describe("useAppErrorsLogic", () => {
 
       expect(appErrorsLogic.appErrors.items[0].type).toEqual("Error");
       expect(tracker.noticeError).toHaveBeenCalledTimes(1);
+      expect(console.error).toHaveBeenCalledTimes(1);
     });
 
     describe("when generic Error is thrown", () => {
@@ -74,6 +75,19 @@ describe("useAppErrorsLogic", () => {
         );
       });
     });
+
+    describe("when multiple errors are caught", () => {
+      it("adds adds all errors to the app errors list", () => {
+        act(() => {
+          appErrorsLogic.catchError(new Error("error 1"));
+          appErrorsLogic.catchError(new Error("error 2"));
+        });
+
+        expect(appErrorsLogic.appErrors.items).toHaveLength(2);
+        expect(tracker.noticeError).toHaveBeenCalledTimes(2);
+        expect(console.error).toHaveBeenCalledTimes(2);
+      });
+    });
   });
 
   describe("clearErrors", () => {
@@ -88,7 +102,7 @@ describe("useAppErrorsLogic", () => {
         appErrorsLogic.clearErrors();
       });
 
-      expect(appErrorsLogic.appErrors).toBeNull();
+      expect(appErrorsLogic.appErrors.items).toHaveLength(0);
     });
   });
 });
