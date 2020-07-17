@@ -5,6 +5,7 @@ import Button from "../../components/Button";
 import PropTypes from "prop-types";
 import React from "react";
 import Title from "../../components/Title";
+import routes from "../../routes";
 import { useTranslation } from "../../locales/i18n";
 
 const ConsentToDataSharing = (props) => {
@@ -49,9 +50,16 @@ const ConsentToDataSharing = (props) => {
         <AccordionItem
           heading={t("pages.userConsentToDataSharing.fullUserAgreementHeading")}
         >
+          {/* TODO CP-713: consider using i18n Trans component */}
           <p
             dangerouslySetInnerHTML={{
-              __html: t("pages.userConsentToDataSharing.fullUserAgreementBody"),
+              __html: t(
+                "pages.userConsentToDataSharing.fullUserAgreementBody",
+                {
+                  massPrivacyPolicyUrl: routes.external.massPrivacyPolicy,
+                  massInformedConsentUrl: routes.external.massInformedConsent,
+                }
+              ),
             }}
           />
         </AccordionItem>

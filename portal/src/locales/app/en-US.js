@@ -498,7 +498,7 @@ const pages = {
       "We’ll keep your information private as required by law. As a part of the application process, we may check the information you give with other state agencies. We may share information related to your claim with your employer, health care provider(s), and contracted private partners.",
     dataUsageHeading: "How we use your data",
     fullUserAgreementBody:
-      "To find out more about how the Commonwealth might use the information you share with DFML, please read the DFML Informed Consent Agreement and the <a href='https://www.mass.gov/privacypolicy'>Privacy Policy for Mass.gov</a>.",
+      "To find out more about how the Commonwealth might use the information you share with DFML, please read the <a href='{{massInformedConsentUrl}}'>DFML Informed Consent Agreement</a> and the <a href='{{massPrivacyPolicyUrl}}'>Privacy Policy for Mass.gov</a>.",
     fullUserAgreementHeading: "Full user agreements",
     intro:
       "The information you provide on this website will be used to administer the Department of Family and Medical Leave (DFML) program.",

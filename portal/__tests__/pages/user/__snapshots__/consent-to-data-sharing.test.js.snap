@@ -53,7 +53,7 @@ exports[`ConsentToDataSharing renders the page 1`] = `
       <p
         dangerouslySetInnerHTML={
           Object {
-            "__html": "To find out more about how the Commonwealth might use the information you share with DFML, please read the DFML Informed Consent Agreement and the <a href='https://www.mass.gov/privacypolicy'>Privacy Policy for Mass.gov</a>.",
+            "__html": "To find out more about how the Commonwealth might use the information you share with DFML, please read the <a href='https://www.mass.gov/paidleave-informedconsent'>DFML Informed Consent Agreement</a> and the <a href='https://www.mass.gov/privacypolicy'>Privacy Policy for Mass.gov</a>.",
           }
         }
       />

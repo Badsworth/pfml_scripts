@@ -46,6 +46,10 @@ const routes = {
     uploadOtherId: "/claims/upload-other-id",
     uploadStateId: "/claims/upload-state-id",
   },
+  external: {
+    massInformedConsent: "https://www.mass.gov/paidleave-informedconsent",
+    massPrivacyPolicy: "https://www.mass.gov/privacypolicy",
+  },
   home: "/",
   user: {
     consentToDataSharing: "/user/consent-to-data-sharing",
