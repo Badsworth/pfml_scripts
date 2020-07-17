@@ -38,6 +38,15 @@ class Claim extends BaseModel {
       pregnant_or_recent_birth: null,
       previous_leaves: [],
       status: null,
+      /**
+       * Fields within the `temp` object haven't been connected to the API yet, and
+       * should have a ticket in Jira related to eventually moving them out of
+       * this temporary space.
+       */
+      temp: {
+        // TODO: Connect payment preference entry fields to the API: https://lwd.atlassian.net/browse/CP-703
+        payment_preferences: [], // See the PaymentPreference class
+      },
     };
   }
 }
@@ -77,6 +86,42 @@ export const LeaveReason = {
   bonding: "Child Bonding",
   medical: "Serious Health Condition - Employee",
   serviceMemberFamily: "Pregnancy/Maternity",
+};
+
+/**
+ * Model for entries in the Application's `payment_preferences` array field
+ * TODO: Map these to new API fields https://lwd.atlassian.net/browse/CP-703
+ */
+export class PaymentPreference extends BaseModel {
+  get defaults() {
+    return {
+      // Fields for ACH details
+      account_details: {
+        account_number: null,
+        routing_number: null,
+      },
+      // Fields for where to send the debit card
+      destination_address: {
+        city: null,
+        line_1: null,
+        line_2: null,
+        state: null,
+        zip: null,
+      },
+      payment_method: null, // PaymentPreferenceMethod
+      payment_preference_id: null,
+    };
+  }
+}
+
+/**
+ * Enums for the Application's `payment_preferences[].payment_method` field
+ * @enum {string}
+ */
+export const PaymentPreferenceMethod = {
+  ach: "ACH",
+  // TODO: Map to a valid enum for debit https://lwd.atlassian.net/browse/CP-703
+  debit: "Debit",
 };
 
 export default Claim;

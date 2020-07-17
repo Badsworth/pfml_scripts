@@ -333,6 +333,26 @@ const pages = {
     typeChoiceLabel_workersCompensation: "Workers Compensation",
     typeLabel: "What kind of income is it?",
   },
+  claimsPaymentMethod: {
+    accountNumberLabel: "Account number",
+    achLead:
+      "We need this information so you can receive your weekly benefit through Direct Deposit. Contact your bank if you are having trouble finding this information.",
+    achSectionLabel: "Enter your bank account information",
+    addressCityLabel: "City",
+    addressLine1Label: "Street address 1",
+    addressLine2Label: "Street address 2",
+    addressStateLabel: "State",
+    addressZipLabel: "ZIP Code",
+    choiceAch: "Direct deposit",
+    choiceDebit: "Debit card",
+    choiceHintAch: "Requires a bank account",
+    debitSectionLabel: "Where should we send your debit card?",
+    routingNumberHint:
+      "This is the 9-digit number found on the lower left corner of a check.",
+    routingNumberLabel: "Routing number",
+    sectionLabel: "How do you want to get your weekly benefit?",
+    title: "Payment method",
+  },
   claimsPreviousLeaves: {
     choiceNo: "$t(shared.choiceNo)",
     choiceYes: "$t(shared.choiceYes)",

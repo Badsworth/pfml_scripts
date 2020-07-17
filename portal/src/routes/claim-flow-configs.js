@@ -24,6 +24,7 @@ import { fields as nameFields } from "../pages/claims/name";
 import { fields as notifiedEmployerFields } from "../pages/claims/notified-employer";
 import { fields as otherIncomesDetailsFields } from "../pages/claims/other-incomes-details";
 import { fields as otherIncomesFields } from "../pages/claims/other-incomes";
+import { fields as paymentMethodFields } from "../pages/claims/payment-method";
 import { fields as previousLeavesFields } from "../pages/claims/previous-leaves";
 import { fields as reasonPregnancyFields } from "../pages/claims/reason-pregnancy";
 import routes from "./index";
@@ -66,6 +67,7 @@ export default {
         LEAVE_DETAILS: routes.claims.leaveReason,
         OTHER_LEAVE: routes.claims.employerBenefits,
         EMPLOYER_INFORMATION: routes.claims.employmentStatus,
+        PAYMENT: routes.claims.paymentMethod,
         CONFIRM: routes.claims.confirm,
       },
     },
@@ -286,6 +288,15 @@ export default {
       meta: {
         step: ClaimSteps.employerInformation,
         fields: notifiedEmployerFields,
+      },
+      on: {
+        CONTINUE: routes.claims.checklist,
+      },
+    },
+    [routes.claims.paymentMethod]: {
+      meta: {
+        step: ClaimSteps.payment,
+        fields: paymentMethodFields,
       },
       on: {
         CONTINUE: routes.claims.checklist,

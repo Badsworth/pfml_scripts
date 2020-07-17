@@ -78,7 +78,7 @@ exports[`Checklist renders page 1`] = `
     <Step
       key="payment"
       status="disabled"
-      stepHref="#?claim_id=mock_application_id"
+      stepHref="/claims/payment-method?claim_id=mock_application_id"
       title="Add payment information"
     >
       <span

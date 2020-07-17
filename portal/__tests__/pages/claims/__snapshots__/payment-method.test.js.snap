@@ -1,0 +1,116 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`PaymentMethod renders the page 1`] = `
+<QuestionPage
+  onSave={[Function]}
+  title="Payment method"
+>
+  <InputChoiceGroup
+    choices={
+      Array [
+        Object {
+          "checked": false,
+          "hint": "Requires a bank account",
+          "label": "Direct deposit",
+          "value": "ACH",
+        },
+        Object {
+          "checked": false,
+          "label": "Debit card",
+          "value": "Debit",
+        },
+      ]
+    }
+    label="How do you want to get your weekly benefit?"
+    name="temp.payment_preferences[0].payment_method"
+    onChange={[Function]}
+    type="radio"
+  />
+  <ConditionalContent
+    visible={false}
+  >
+    <Fieldset>
+      <FormLabel
+        component="legend"
+      >
+        Enter your bank account information
+      </FormLabel>
+      <Lead>
+        We need this information so you can receive your weekly benefit through Direct Deposit. Contact your bank if you are having trouble finding this information.
+      </Lead>
+      <InputText
+        hint="This is the 9-digit number found on the lower left corner of a check."
+        inputMode="numeric"
+        label="Routing number"
+        name="temp.payment_preferences[0].account_details.routing_number"
+        onChange={[Function]}
+        smallLabel={true}
+        value=""
+        width="medium"
+      />
+      <InputText
+        inputMode="numeric"
+        label="Account number"
+        name="temp.payment_preferences[0].account_details.account_number"
+        onChange={[Function]}
+        smallLabel={true}
+        value=""
+      />
+    </Fieldset>
+  </ConditionalContent>
+  <ConditionalContent
+    visible={false}
+  >
+    <Fieldset>
+      <FormLabel
+        component="legend"
+      >
+        Where should we send your debit card?
+      </FormLabel>
+      <InputText
+        autoComplete="address-line1"
+        label="Street address 1"
+        name="temp.payment_preferences[0].destination_address.line_1"
+        onChange={[Function]}
+        smallLabel={true}
+        value=""
+      />
+      <InputText
+        autoComplete="address-line2"
+        label="Street address 2"
+        name="temp.payment_preferences[0].destination_address.line_2"
+        onChange={[Function]}
+        optionalText="(optional)"
+        smallLabel={true}
+        value=""
+      />
+      <InputText
+        autoComplete="address-level2"
+        label="City"
+        name="temp.payment_preferences[0].destination_address.city"
+        onChange={[Function]}
+        smallLabel={true}
+        value=""
+      />
+      <InputText
+        autoComplete="address-level1"
+        label="State"
+        name="temp.payment_preferences[0].destination_address.state"
+        onChange={[Function]}
+        smallLabel={true}
+        value=""
+      />
+      <InputText
+        autoComplete="postal-code"
+        inputMode="numeric"
+        label="ZIP Code"
+        name="temp.payment_preferences[0].destination_address.zip"
+        onChange={[Function]}
+        smallLabel={true}
+        value=""
+        width="medium"
+      />
+    </Fieldset>
+  </ConditionalContent>
+</QuestionPage>
+`;

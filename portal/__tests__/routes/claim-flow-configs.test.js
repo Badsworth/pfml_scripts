@@ -143,6 +143,11 @@ const machineTests = {
       },
     },
   },
+  [routes.claims.paymentMethod]: {
+    meta: {
+      test: () => {},
+    },
+  },
 };
 
 const machineConfigsWithTests = {
@@ -200,6 +205,7 @@ describe("routingMachine", () => {
     LEAVE_DETAILS: {},
     OTHER_LEAVE: {},
     EMPLOYER_INFORMATION: {},
+    PAYMENT: {},
     CONFIRM: {},
     CONSENT_TO_DATA_SHARING: {},
   });
