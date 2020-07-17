@@ -3,7 +3,7 @@ name: API Migration Conflict Check
 on:
   pull_request:
     paths:
-      - api/massgov/pfml/db/migrations/versions
+      - api/massgov/pfml/db/migrations/versions/**
 
 jobs:
   # Check for no conflicting Alembic migrations
