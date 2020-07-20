@@ -8,8 +8,6 @@ class Claim extends BaseModel {
   get defaults() {
     return {
       application_id: null,
-      // TODO: We'll map this to the correct API field once we get into Intermittent Leave work
-      avg_weekly_hours_worked: null,
       created_at: null,
       duration_type: null,
       employee_ssn: null,
@@ -44,6 +42,8 @@ class Claim extends BaseModel {
        * this temporary space.
        */
       temp: {
+        // TODO (CP-719): Connect intermittent leave fields to the API
+        avg_weekly_hours_worked: null,
         // TODO: Connect payment preference entry fields to the API: https://lwd.atlassian.net/browse/CP-703
         payment_preferences: [
           {

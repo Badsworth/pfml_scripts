@@ -113,11 +113,18 @@ const Review = (props) => {
           get(claim, "leave_details.continuous_leave_periods[0].end_date")
         )}
       </ReviewRow>
+
       <ReviewRow label={t("pages.claimsReview.leaveDurationTypeLabel")}>
         {t("pages.claimsReview.leaveDurationTypeValue", {
           context: get(claim, "duration_type"),
         })}
       </ReviewRow>
+
+      {get(claim, "temp.avg_weekly_hours_worked") && (
+        <ReviewRow label={t("pages.claimsReview.averageWorkHoursLabel")}>
+          {get(claim, "temp.avg_weekly_hours_worked")}
+        </ReviewRow>
+      )}
 
       {/* EMPLOYMENT INFO */}
       <ReviewHeading

@@ -146,6 +146,12 @@ const pages = {
     title: "Verify your email address",
     usernameLabel: "$t(shared.usernameLabel)",
   },
+  claimsAverageWorkHours: {
+    hint:
+      "We need to know this so we can calculate your benefit amount. If your hours vary from week to week, tell us the average over the past 12 months.",
+    sectionLabel: "How many hours do you work for your employer, on average?",
+    title: "$t(shared.claimsLeaveDetailsTitle)",
+  },
   claimsChecklist: {
     backButtonLabel: "Back to Dashboard",
     completedText: "Completed",
@@ -186,10 +192,6 @@ const pages = {
     title: "$t(shared.claimsTakingLeaveTitle)",
   },
   claimsDuration: {
-    avgWeeklyHoursWorkedHint:
-      "Tell us how many hours you typically worked before going on leave. We need to know this so we can calculate your benefit amount.",
-    avgWeeklyHoursWorkedLabel:
-      "How many hours do you work in a week, on average?",
     continuousHint: "$t(shared.claimDurationTypeContinuous)",
     continuousLabel: "Take off work completely",
     hoursOffNeededHint:
@@ -388,6 +390,7 @@ const pages = {
     title: "$t(shared.claimsLeaveDetailsTitle)",
   },
   claimsReview: {
+    averageWorkHoursLabel: "Average hours worked per week",
     confirmationAction: "Confirm information is correct",
     editLink: "Edit",
     employerFeinLabel: "Employer's FEIN",

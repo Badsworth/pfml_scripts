@@ -1,0 +1,17 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`AverageWorkHours renders the form 1`] = `
+<QuestionPage
+  onSave={[Function]}
+  title="Leave details"
+>
+  <InputText
+    hint="We need to know this so we can calculate your benefit amount. If your hours vary from week to week, tell us the average over the past 12 months."
+    label="How many hours do you work for your employer, on average?"
+    name="temp.avg_weekly_hours_worked"
+    onChange={[Function]}
+    value="40"
+    width="small"
+  />
+</QuestionPage>
+`;

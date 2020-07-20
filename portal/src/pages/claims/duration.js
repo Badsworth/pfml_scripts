@@ -18,7 +18,6 @@ export const fields = [
   // and excluding them from the exported fields allows this
   // workaround around to work: https://lwd.atlassian.net/browse/CP-606
   // See: https://lwd.atlassian.net/browse/CP-625
-  // "claim.avg_weekly_hours_worked",
   // "claim.hours_off_needed",
 ];
 
@@ -29,11 +28,7 @@ const Duration = (props) => {
   );
   // TODO: use nested fields
   // https://lwd.atlassian.net/browse/CP-480
-  const {
-    avg_weekly_hours_worked,
-    duration_type,
-    hours_off_needed,
-  } = formState;
+  const { duration_type, hours_off_needed } = formState;
   const handleInputChange = useHandleInputChange(updateFields);
 
   const handleSave = () =>
@@ -63,21 +58,10 @@ const Duration = (props) => {
       />
 
       <ConditionalContent
-        fieldNamesClearedWhenHidden={[
-          "avg_weekly_hours_worked",
-          "hours_off_needed",
-        ]}
+        fieldNamesClearedWhenHidden={["hours_off_needed"]}
         removeField={removeField}
         visible={duration_type === "intermittent"}
       >
-        <InputText
-          label={t("pages.claimsDuration.avgWeeklyHoursWorkedLabel")}
-          hint={t("pages.claimsDuration.avgWeeklyHoursWorkedHint")}
-          name="avg_weekly_hours_worked"
-          value={valueWithFallback(avg_weekly_hours_worked)}
-          onChange={handleInputChange}
-          width="small"
-        />
         <InputText
           label={t("pages.claimsDuration.hoursOffNeededLabel")}
           hint={t("pages.claimsDuration.hoursOffNeededHint")}

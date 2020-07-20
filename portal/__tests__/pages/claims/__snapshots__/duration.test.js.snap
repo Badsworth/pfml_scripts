@@ -30,21 +30,12 @@ exports[`Duration regardless of duration type initially renders the page without
   <ConditionalContent
     fieldNamesClearedWhenHidden={
       Array [
-        "avg_weekly_hours_worked",
         "hours_off_needed",
       ]
     }
     removeField={[Function]}
     visible={false}
   >
-    <InputText
-      hint="Tell us how many hours you typically worked before going on leave. We need to know this so we can calculate your benefit amount."
-      label="How many hours do you work in a week, on average?"
-      name="avg_weekly_hours_worked"
-      onChange={[Function]}
-      value=""
-      width="small"
-    />
     <InputText
       hint="This can be an approximate. You can change this after your claim is approved."
       label="How many hours do you need to take off each week?"

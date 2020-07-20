@@ -17,6 +17,7 @@ const routes = {
     verifyAccount: "/verify-account",
   },
   claims: {
+    averageWorkHours: "/claims/average-work-hours",
     checklist: "/claims/checklist",
     confirm: "/claims/confirm",
     dashboard: "/",

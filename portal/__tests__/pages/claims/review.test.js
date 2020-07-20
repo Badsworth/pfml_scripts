@@ -31,6 +31,7 @@ function fullClaimAttrs() {
       reason: LeaveReason.medical,
     },
     temp: {
+      avg_weekly_hours_worked: "20",
       payment_preferences: [{ payment_method: PaymentPreferenceMethod.ach }],
     },
   };

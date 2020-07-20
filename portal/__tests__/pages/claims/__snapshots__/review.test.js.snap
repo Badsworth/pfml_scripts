@@ -60,6 +60,11 @@ exports[`Review when all data is present renders Review page with the field valu
   >
     Continuous leave
   </ReviewRow>
+  <ReviewRow
+    label="Average hours worked per week"
+  >
+    20
+  </ReviewRow>
   <ReviewHeading
     editHref="/claims/employment-status?claim_id=mock_application_id"
     editText="Edit"
