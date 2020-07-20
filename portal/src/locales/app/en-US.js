@@ -55,7 +55,7 @@ const shared = {
   claimDurationTypeContinuous: "Continuous leave",
   claimDurationTypeIntermittent: "Intermittent leave",
   claimsFileUploadTitle: "Verify your identity",
-  claimsLeaveDetailsTitle: "Leave Details",
+  claimsLeaveDetailsTitle: "Leave details",
   claimsLeaveDurationTitle: "Leave duration",
   claimsOtherLeaveTitle: "Other income and benefits",
   claimsTakingLeaveTitle: "Verify your identity",
@@ -70,6 +70,8 @@ const shared = {
   passwordHint:
     "Your password must be at least 8 characters long and include numbers and letters.",
   passwordLabel: "Password",
+  paymentMethodAch: "Direct deposit",
+  paymentMethodDebit: "Debit card",
   pregnancyOrRecentBirthLabel:
     "Are you pregnant or have you recently given birth?",
   resendVerificationCodeLink: "Resend the code",
@@ -343,8 +345,8 @@ const pages = {
     addressLine2Label: "Street address 2",
     addressStateLabel: "State",
     addressZipLabel: "ZIP Code",
-    choiceAch: "Direct deposit",
-    choiceDebit: "Debit card",
+    choiceAch: "$t(shared.paymentMethodAch)",
+    choiceDebit: "$t(shared.paymentMethodDebit)",
     choiceHintAch: "Requires a bank account",
     debitSectionLabel: "Where should we send your debit card?",
     routingNumberHint:
@@ -409,6 +411,10 @@ const pages = {
     leaveReasonValue_serviceMemberFamily:
       "$t(shared.leaveReasonServiceMemberFamily)",
     leaveSectionHeading: "$t(shared.claimsLeaveDetailsTitle)",
+    paymentMethodLabel: "Payment method",
+    paymentMethodValue_ach: "$t(shared.paymentMethodAch)",
+    paymentMethodValue_debit: "$t(shared.paymentMethodDebit)",
+    paymentSectionHeading: "Payment information",
     pregnancyChoiceNo: "$t(shared.choiceNo)",
     pregnancyChoiceYes: "$t(shared.choiceYes)",
     pregnancyOrRecentBirthLabel: "$t(shared.pregnancyOrRecentBirthLabel)",

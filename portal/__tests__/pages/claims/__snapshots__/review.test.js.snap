@@ -38,7 +38,7 @@ exports[`Review when all data is present renders Review page with the field valu
     editHref="/claims/leave-reason?claim_id=mock_application_id"
     editText="Edit"
   >
-    Leave Details
+    Leave details
   </ReviewHeading>
   <ReviewRow
     label="Leave type"
@@ -80,6 +80,17 @@ exports[`Review when all data is present renders Review page with the field valu
     label="Notified employer"
   >
     Notified employer on 6/25/2020
+  </ReviewRow>
+  <ReviewHeading
+    editHref="/claims/payment-method?claim_id=mock_application_id"
+    editText="Edit"
+  >
+    Payment information
+  </ReviewHeading>
+  <ReviewRow
+    label="Payment method"
+  >
+    Direct deposit
   </ReviewRow>
   <ButtonLink
     className="margin-top-3"
@@ -123,7 +134,7 @@ exports[`Review when data is empty does not render strings like 'null' or 'undef
     editHref="/claims/leave-reason?claim_id=mock_application_id"
     editText="Edit"
   >
-    Leave Details
+    Leave details
   </ReviewHeading>
   <ReviewRow
     label="Leave type"
@@ -148,6 +159,12 @@ exports[`Review when data is empty does not render strings like 'null' or 'undef
     editText="Edit"
   >
     Employment information
+  </ReviewHeading>
+  <ReviewHeading
+    editHref="/claims/payment-method?claim_id=mock_application_id"
+    editText="Edit"
+  >
+    Payment information
   </ReviewHeading>
   <ButtonLink
     className="margin-top-3"

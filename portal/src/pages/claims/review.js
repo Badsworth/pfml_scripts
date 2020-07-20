@@ -1,4 +1,10 @@
-import Claim, { EmploymentStatus, LeaveReason } from "../../models/Claim";
+import Claim, {
+  EmploymentStatus,
+  LeaveReason,
+  PaymentPreference,
+  PaymentPreferenceMethod,
+} from "../../models/Claim";
+import Step, { ClaimSteps } from "../../models/Step";
 import routeWithParams, {
   createRouteWithQuery,
 } from "../../utils/routeWithParams";
@@ -9,7 +15,6 @@ import PropTypes from "prop-types";
 import React from "react";
 import ReviewHeading from "../../components/ReviewHeading";
 import ReviewRow from "../../components/ReviewRow";
-import Step from "../../models/Step";
 import Title from "../../components/Title";
 import findKeyByValue from "../../utils/findKeyByValue";
 import formatDateRange from "../../utils/formatDateRange";
@@ -26,15 +31,18 @@ const Review = (props) => {
   const { t } = useTranslation();
   const { claim, appLogic } = props;
 
+  const paymentPreference = new PaymentPreference(
+    get(claim, "temp.payment_preferences[0]")
+  );
+  const reason = get(claim, "leave_details.reason");
+
   const steps = Step.createClaimStepsFromMachine(
     machineConfigs,
     { claim: props.claim },
     null
   );
 
-  const reason = get(claim, "leave_details.reason");
-
-  const routeForStepDefinition = (name) => {
+  const routeForStep = (name) => {
     const step = steps.find((s) => s.name === name);
 
     if (step) return createRouteWithQuery(step.initialPage, props.query);
@@ -47,7 +55,7 @@ const Review = (props) => {
 
       {/* EMPLOYEE IDENTITY */}
       <ReviewHeading
-        editHref={routeForStepDefinition("verifyId")}
+        editHref={routeForStep(ClaimSteps.verifyId)}
         editText={t("pages.claimsReview.editLink")}
       >
         {t("pages.claimsReview.userSectionHeading")}
@@ -77,7 +85,7 @@ const Review = (props) => {
 
       {/* LEAVE DETAILS */}
       <ReviewHeading
-        editHref={routeForStepDefinition("leaveDetails")}
+        editHref={routeForStep(ClaimSteps.leaveDetails)}
         editText={t("pages.claimsReview.editLink")}
       >
         {t("pages.claimsReview.leaveSectionHeading")}
@@ -116,7 +124,7 @@ const Review = (props) => {
 
       {/* EMPLOYMENT INFO */}
       <ReviewHeading
-        editHref={routeForStepDefinition("employerInformation")}
+        editHref={routeForStep(ClaimSteps.employerInformation)}
         editText={t("pages.claimsReview.editLink")}
       >
         {t("pages.claimsReview.employmentSectionHeading")}
@@ -149,6 +157,25 @@ const Review = (props) => {
             date: DateTime.fromISO(
               get(claim, "leave_details.employer_notification_date")
             ).toLocaleString(),
+          })}
+        </ReviewRow>
+      )}
+
+      {/* PAYMENT METHOD */}
+      <ReviewHeading
+        editHref={routeForStep(ClaimSteps.payment)}
+        editText={t("pages.claimsReview.editLink")}
+      >
+        {t("pages.claimsReview.paymentSectionHeading")}
+      </ReviewHeading>
+
+      {paymentPreference.payment_method && (
+        <ReviewRow label={t("pages.claimsReview.paymentMethodLabel")}>
+          {t("pages.claimsReview.paymentMethodValue", {
+            context: findKeyByValue(
+              PaymentPreferenceMethod,
+              paymentPreference.payment_method
+            ),
           })}
         </ReviewRow>
       )}

@@ -1,4 +1,9 @@
-import { EmploymentStatus, LeaveReason } from "../../../src/models/Claim";
+import {
+  EmploymentStatus,
+  LeaveReason,
+  PaymentPreference,
+  PaymentPreferenceMethod,
+} from "../../../src/models/Claim";
 import Review from "../../../src/pages/claims/review";
 import { renderWithAppLogic } from "../../test-utils";
 
@@ -25,6 +30,11 @@ function fullClaimAttrs() {
       employer_notified: true,
       employer_notification_date: "2020-06-25",
       reason: LeaveReason.medical,
+    },
+    temp: {
+      payment_preferences: [
+        new PaymentPreference({ payment_method: PaymentPreferenceMethod.ach }),
+      ],
     },
   };
 }

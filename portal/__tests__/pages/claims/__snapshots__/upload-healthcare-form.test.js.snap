@@ -3,7 +3,7 @@
 exports[`UploadHealthcareForm initially renders the page without any file cards 1`] = `
 <QuestionPage
   onSave={[Function]}
-  title="Leave Details"
+  title="Leave details"
 >
   <Heading
     level="2"
