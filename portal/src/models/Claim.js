@@ -45,7 +45,25 @@ class Claim extends BaseModel {
        */
       temp: {
         // TODO: Connect payment preference entry fields to the API: https://lwd.atlassian.net/browse/CP-703
-        payment_preferences: [], // See the PaymentPreference class
+        payment_preferences: [
+          {
+            // Fields for ACH details
+            account_details: {
+              account_number: null,
+              routing_number: null,
+            },
+            // Fields for where to send the debit card
+            destination_address: {
+              city: null,
+              line_1: null,
+              line_2: null,
+              state: null,
+              zip: null,
+            },
+            payment_method: null, // PaymentPreferenceMethod
+            payment_preference_id: null,
+          },
+        ],
       },
     };
   }
@@ -87,32 +105,6 @@ export const LeaveReason = {
   medical: "Serious Health Condition - Employee",
   serviceMemberFamily: "Pregnancy/Maternity",
 };
-
-/**
- * Model for entries in the Application's `payment_preferences` array field
- * TODO: Map these to new API fields https://lwd.atlassian.net/browse/CP-703
- */
-export class PaymentPreference extends BaseModel {
-  get defaults() {
-    return {
-      // Fields for ACH details
-      account_details: {
-        account_number: null,
-        routing_number: null,
-      },
-      // Fields for where to send the debit card
-      destination_address: {
-        city: null,
-        line_1: null,
-        line_2: null,
-        state: null,
-        zip: null,
-      },
-      payment_method: null, // PaymentPreferenceMethod
-      payment_preference_id: null,
-    };
-  }
-}
 
 /**
  * Enums for the Application's `payment_preferences[].payment_method` field

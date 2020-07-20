@@ -1,7 +1,4 @@
-import Claim, {
-  PaymentPreference,
-  PaymentPreferenceMethod,
-} from "../../models/Claim";
+import Claim, { PaymentPreferenceMethod } from "../../models/Claim";
 import ConditionalContent from "../../components/ConditionalContent";
 import Fieldset from "../../components/Fieldset";
 import FormLabel from "../../components/FormLabel";
@@ -19,15 +16,15 @@ import { useTranslation } from "../../locales/i18n";
 import valueWithFallback from "../../utils/valueWithFallback";
 import withClaim from "../../hoc/withClaim";
 
-export const fields = ["claim.temp.payment_preferences[0]"];
+// TODO: Export full set of fields once Checklist no longer relies on
+// this array for determining which steps are completed
+export const fields = ["claim.temp.payment_preferences[0].payment_method"];
 
 const PaymentMethod = (props) => {
   const { t } = useTranslation();
   const { formState, updateFields } = useFormState(pick(props, fields).claim);
   const handleInputChange = useHandleInputChange(updateFields);
-  const paymentPreference = new PaymentPreference(
-    get(formState, "temp.payment_preferences[0]")
-  );
+  const paymentPreference = get(formState, "temp.payment_preferences[0]");
 
   const handleSave = () =>
     props.appLogic.updateClaim(props.claim.application_id, formState);
@@ -74,7 +71,7 @@ const PaymentMethod = (props) => {
           <InputText
             name="temp.payment_preferences[0].account_details.routing_number"
             value={valueWithFallback(
-              paymentPreference.account_details.routing_number
+              get(paymentPreference, "account_details.routing_number")
             )}
             label={t("pages.claimsPaymentMethod.routingNumberLabel")}
             hint={t("pages.claimsPaymentMethod.routingNumberHint")}
@@ -87,7 +84,7 @@ const PaymentMethod = (props) => {
           <InputText
             name="temp.payment_preferences[0].account_details.account_number"
             value={valueWithFallback(
-              paymentPreference.account_details.account_number
+              get(paymentPreference, "account_details.account_number")
             )}
             label={t("pages.claimsPaymentMethod.accountNumberLabel")}
             onChange={handleInputChange}
@@ -110,7 +107,7 @@ const PaymentMethod = (props) => {
           <InputText
             name="temp.payment_preferences[0].destination_address.line_1"
             value={valueWithFallback(
-              paymentPreference.destination_address.line_1
+              get(paymentPreference, "destination_address.line_1")
             )}
             label={t("pages.claimsPaymentMethod.addressLine1Label")}
             onChange={handleInputChange}
@@ -121,7 +118,7 @@ const PaymentMethod = (props) => {
           <InputText
             name="temp.payment_preferences[0].destination_address.line_2"
             value={valueWithFallback(
-              paymentPreference.destination_address.line_2
+              get(paymentPreference, "destination_address.line_2")
             )}
             label={t("pages.claimsPaymentMethod.addressLine2Label")}
             onChange={handleInputChange}
@@ -133,7 +130,7 @@ const PaymentMethod = (props) => {
           <InputText
             name="temp.payment_preferences[0].destination_address.city"
             value={valueWithFallback(
-              paymentPreference.destination_address.city
+              get(paymentPreference, "destination_address.city")
             )}
             label={t("pages.claimsPaymentMethod.addressCityLabel")}
             onChange={handleInputChange}
@@ -144,7 +141,7 @@ const PaymentMethod = (props) => {
           <InputText
             name="temp.payment_preferences[0].destination_address.state"
             value={valueWithFallback(
-              paymentPreference.destination_address.state
+              get(paymentPreference, "destination_address.state")
             )}
             label={t("pages.claimsPaymentMethod.addressStateLabel")}
             onChange={handleInputChange}
@@ -154,7 +151,9 @@ const PaymentMethod = (props) => {
 
           <InputText
             name="temp.payment_preferences[0].destination_address.zip"
-            value={valueWithFallback(paymentPreference.destination_address.zip)}
+            value={valueWithFallback(
+              get(paymentPreference, "destination_address.zip")
+            )}
             label={t("pages.claimsPaymentMethod.addressZipLabel")}
             onChange={handleInputChange}
             autoComplete="postal-code"

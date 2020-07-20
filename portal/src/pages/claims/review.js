@@ -1,7 +1,6 @@
 import Claim, {
   EmploymentStatus,
   LeaveReason,
-  PaymentPreference,
   PaymentPreferenceMethod,
 } from "../../models/Claim";
 import Step, { ClaimSteps } from "../../models/Step";
@@ -31,9 +30,7 @@ const Review = (props) => {
   const { t } = useTranslation();
   const { claim, appLogic } = props;
 
-  const paymentPreference = new PaymentPreference(
-    get(claim, "temp.payment_preferences[0]")
-  );
+  const paymentPreference = get(claim, "temp.payment_preferences[0]");
   const reason = get(claim, "leave_details.reason");
 
   const steps = Step.createClaimStepsFromMachine(

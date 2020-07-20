@@ -1,7 +1,6 @@
 import {
   EmploymentStatus,
   LeaveReason,
-  PaymentPreference,
   PaymentPreferenceMethod,
 } from "../../../src/models/Claim";
 import Review from "../../../src/pages/claims/review";
@@ -32,9 +31,7 @@ function fullClaimAttrs() {
       reason: LeaveReason.medical,
     },
     temp: {
-      payment_preferences: [
-        new PaymentPreference({ payment_method: PaymentPreferenceMethod.ach }),
-      ],
+      payment_preferences: [{ payment_method: PaymentPreferenceMethod.ach }],
     },
   };
 }
