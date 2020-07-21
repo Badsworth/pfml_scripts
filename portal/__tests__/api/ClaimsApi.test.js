@@ -163,6 +163,18 @@ describe("ClaimsApi", () => {
       );
     });
 
+    // TODO (CP-716): Remove this test once PII can be sent to the API
+    it("excludes employee_ssn field from PATCH request body", async () => {
+      await claimsApi.updateClaim(claim.application_id, {
+        employee_ssn: "123-12-3123",
+      });
+      const requestBody = portalRequest.mock.calls[0][2];
+
+      expect(requestBody).toEqual(
+        expect.not.objectContaining({ employee_ssn: expect.anything() })
+      );
+    });
+
     it("responds with success status", async () => {
       const response = await claimsApi.updateClaim(claim.application_id, claim);
       expect(response.success).toBeTruthy();
