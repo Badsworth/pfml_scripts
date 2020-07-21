@@ -24,7 +24,7 @@ exports[`Name renders the page 1`] = `
     onChange={[Function]}
     optionalText="(optional)"
     smallLabel={true}
-    value=""
+    value="cricketer"
   />
   <InputText
     label="Last name"

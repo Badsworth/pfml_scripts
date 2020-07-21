@@ -105,7 +105,7 @@ Mask.propTypes = {
   /**
    * The mask type to be applied.
    */
-  mask: PropTypes.oneOf(["ssn"]),
+  mask: PropTypes.oneOf(["fein", "ssn"]),
 };
 
 export default Mask;

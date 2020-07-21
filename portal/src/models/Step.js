@@ -98,12 +98,32 @@ export default class Step extends BaseModel {
   }
 
   get isComplete() {
-    // TODO remove once api returns validations
+    // TODO (CP-625): remove once api returns validations
+    // <WorkAround>
     if (!this.warnings) {
       return this.fields.every((field) => {
+        // Ignore optional and conditional questions for now,
+        // so that we can show a "Completed" checklist.
+        // Fields names can be partial, to ignore an array or object of fields.
+        const ignoredField = [
+          "claim.employer_benefits",
+          "claim.hours_off_needed",
+          "claim.leave_details.continuous_leave_periods",
+          "claim.middle_name",
+          "claim.other_incomes",
+          "claim.previous_leaves",
+          "claim.temp.avg_weekly_hours_worked",
+          "claim.temp.payment_preferences[0].account_details",
+          "claim.temp.payment_preferences[0].destination_address",
+        ].some((ignoredFieldName) => field.includes(ignoredFieldName));
+
         const hasValue = fieldHasValue(field, this.context);
 
-        if (process.env.NODE_ENV === "development" && !hasValue) {
+        if (
+          process.env.NODE_ENV === "development" &&
+          !hasValue &&
+          !ignoredField
+        ) {
           // eslint-disable-next-line no-console
           console.log(
             `${field} missing value, received`,
@@ -111,9 +131,10 @@ export default class Step extends BaseModel {
           );
         }
 
-        return hasValue;
+        return hasValue || ignoredField;
       });
     }
+    // </WorkAround>
 
     return !this.warnings.some((warning) =>
       this.fields.includes(warning.field)

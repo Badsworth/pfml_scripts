@@ -13,10 +13,7 @@ import withClaim from "../../hoc/withClaim";
 
 export const fields = [
   "claim.first_name",
-  // TODO: Uncomment this once validation is in place
-  // Disabled as part of the checklist workaround https://lwd.atlassian.net/browse/CP-606
-  // See: https://lwd.atlassian.net/browse/CP-625
-  // "claim.middle_name",
+  "claim.middle_name",
   "claim.last_name",
 ];
 
