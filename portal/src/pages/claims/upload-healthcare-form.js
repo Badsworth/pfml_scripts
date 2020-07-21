@@ -5,6 +5,8 @@ import Heading from "../../components/Heading";
 import Lead from "../../components/Lead";
 import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
+import { Trans } from "react-i18next";
+import routes from "../../routes";
 import { useTranslation } from "../../locales/i18n";
 import withClaim from "../../hoc/withClaim";
 
@@ -25,7 +27,16 @@ const UploadHealthcareForm = (props) => {
       <Heading level="2" size="1">
         {t("pages.claimsUploadHealthcareForm.sectionLabel")}
       </Heading>
-      <Lead>{t("pages.claimsUploadHealthcareForm.lead")}</Lead>
+      <Lead>
+        <Trans
+          i18nKey="pages.claimsUploadHealthcareForm.lead"
+          components={{
+            "healthcare-provider-form-link": (
+              <a href={routes.external.massgov.healthcareProviderForm} />
+            ),
+          }}
+        />
+      </Lead>
       <FileUploadDetails />
       <FileCardList
         files={files}

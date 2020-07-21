@@ -452,7 +452,7 @@ const pages = {
     addFirstFileButtonText: "Choose a file",
     fileHeadingPrefix: "File",
     lead:
-      "You need to upload a copy of the PFML Healthcare Provider Form to prove that you need to take medical leave. You can upload a completed Family and Medical Leave Act (FMLA) form instead if your provider filled one out.",
+      "You need to upload a copy of the <healthcare-provider-form-link>PFML Healthcare Provider Form</healthcare-provider-form-link> to prove that you need to take medical leave. You can upload a completed Family and Medical Leave Act (FMLA) form instead if your provider filled one out.",
     sectionLabel: "Upload your Healthcare Provider form",
     title: "$t(shared.claimsLeaveDetailsTitle)",
   },
@@ -489,15 +489,18 @@ const pages = {
     applicationTimeEstimate: "Applying takes around 10 minutes.",
     createClaimButtonText: "Create an application",
     needForApplyingHeading: "What you need to apply",
-    needForApplyingList: [
-      "Proof of your identity, like a driver’s license.",
-      "Your Social Security Number or Individual Taxpayer Identification Number.",
-      "Why you are taking leave",
-      "Your Healthcare Provider Form, which your healthcare provider has completed",
-      "Your employer FEIN",
-      "When you are planning to take leave or when you started on leave",
-      "Your bank account information",
-    ],
+    needForApplyingList: {
+      employerFein: "Your employer FEIN",
+      healthcareProviderForm:
+        "Your <healthcare-provider-form-link>Healthcare Provider Form</healthcare-provider-form-link>, which your healthcare provider has completed",
+      leaveDates:
+        "When you are planning to take leave or when you started on leave",
+      leaveReason: "Why you are taking leave",
+      paymentInformation: "Your bank account information",
+      proofOfIdentity: "Proof of your identity, like a driver’s license",
+      ssnItin:
+        "Your Social Security Number or Individual Taxpayer Identification Number",
+    },
     title: "Create an application",
   },
   userConsentToDataSharing: {

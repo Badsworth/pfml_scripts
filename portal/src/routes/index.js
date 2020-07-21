@@ -49,8 +49,12 @@ const routes = {
     uploadStateId: "/claims/upload-state-id",
   },
   external: {
-    massInformedConsent: "https://www.mass.gov/paidleave-informedconsent",
-    massPrivacyPolicy: "https://www.mass.gov/privacypolicy",
+    massgov: {
+      healthcareProviderForm:
+        "https://www.mass.gov/how-to/download-a-healthcare-provider-form",
+      informedConsent: "https://www.mass.gov/paidleave-informedconsent",
+      privacyPolicy: "https://www.mass.gov/privacypolicy",
+    },
   },
   home: "/",
   user: {

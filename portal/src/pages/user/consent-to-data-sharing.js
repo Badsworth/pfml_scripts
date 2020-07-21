@@ -56,8 +56,9 @@ const ConsentToDataSharing = (props) => {
               __html: t(
                 "pages.userConsentToDataSharing.fullUserAgreementBody",
                 {
-                  massPrivacyPolicyUrl: routes.external.massPrivacyPolicy,
-                  massInformedConsentUrl: routes.external.massInformedConsent,
+                  massPrivacyPolicyUrl: routes.external.massgov.privacyPolicy,
+                  massInformedConsentUrl:
+                    routes.external.massgov.informedConsent,
                 }
               ),
             }}

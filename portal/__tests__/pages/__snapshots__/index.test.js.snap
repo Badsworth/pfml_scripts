@@ -14,39 +14,34 @@ exports[`Index renders dashboard content 1`] = `
   <ul
     className="usa-list"
   >
-    <li
-      key="0"
-    >
-      Proof of your identity, like a driver’s license.
+    <li>
+      Proof of your identity, like a driver’s license
     </li>
-    <li
-      key="1"
-    >
-      Your Social Security Number or Individual Taxpayer Identification Number.
+    <li>
+      Your Social Security Number or Individual Taxpayer Identification Number
     </li>
-    <li
-      key="2"
-    >
+    <li>
       Why you are taking leave
     </li>
-    <li
-      key="3"
-    >
-      Your Healthcare Provider Form, which your healthcare provider has completed
+    <li>
+      <Trans
+        components={
+          Object {
+            "healthcare-provider-form-link": <a
+              href="https://www.mass.gov/how-to/download-a-healthcare-provider-form"
+            />,
+          }
+        }
+        i18nKey="pages.index.needForApplyingList.healthcareProviderForm"
+      />
     </li>
-    <li
-      key="4"
-    >
+    <li>
       Your employer FEIN
     </li>
-    <li
-      key="5"
-    >
+    <li>
       When you are planning to take leave or when you started on leave
     </li>
-    <li
-      key="6"
-    >
+    <li>
       Your bank account information
     </li>
   </ul>

@@ -25,6 +25,26 @@ Our application takes advantage of some advanced patterns supported by the `i18n
   }
   ```
 
+- The [Trans](https://react.i18next.com/latest/trans-component) component allows us to integrate html tags such as links (`<a>` tags) and text formatting tags (e.g. `<strong>` or `<em>`) into translated text:
+
+  ```jsx
+  <Trans
+    i18nKey="userAgreement"
+    components={{
+      "consent-link": <a href="https://www.mass.gov/paidleave-informedconsent" />,
+      "privacy-policy-link": <a href="https://www.mass.gov/privacypolicy" />,
+    }}
+  />
+  ```
+
+  ```json
+  {
+    "userAgreement": "To find out more about how the Commonwealth might use the information you share with DFML, please read the <consent-link>DFML Informed Consent Agreement</consent-link> and the <privacy-policy-link>Privacy Policy for Mass.gov</privacy-policy-link>.",
+  }
+  ```
+
+  Note that we are using the [alternative usage of Trans introduced in v11.6.0](https://react.i18next.com/latest/trans-component#alternative-usage-v-11-6-0) where components are passed in as props rather than as children of `Trans`. This method allows the use of named tags in locale strings rather than needing to refer to child components by their index.
+
 ### Conventions
 
 Internationalization content can get messy and lead to hard-to-find bugs during translation. As such we strictly follow the below conventions to preserve readability, maintainability, and avoid errors.
@@ -76,7 +96,7 @@ Sharing content should follow this pattern:
 shared: {
   claimsPages:
     // Define the shared key here -- anyone changing this will know it affects multiple pages
-    takingLeaveTitle: "Verify your identity",
+    takingLeaveTitle: "Who is taking leave?",
   },
 }
 

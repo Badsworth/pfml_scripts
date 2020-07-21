@@ -45,6 +45,7 @@
         "jsdoc/require-returns": "warn",
         "jsdoc/require-returns-description": "off",
         "jsdoc/no-undefined-types": "off",
+        "jsx-a11y/anchor-has-content": "off",
         "jsx-a11y/no-onchange": "off",
         "camelcase": "off",
         "no-console": ["error", { "allow": ["error"] }],
