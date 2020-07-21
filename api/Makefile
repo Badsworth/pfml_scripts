@@ -202,6 +202,9 @@ db-downgrade: ## Rollback last migration in db
 db-downgrade-all: ## Rollback all migrations
 	$(PY_RUN_CMD) db-migrate-down-all $(DECODE_LOG)
 
+db-dump-schema: ## Print current DB schema
+	PGPASSWORD=$$DB_PASSWORD pg_dump --host=$$DB_HOST --username=$$DB_USERNAME $$DB_NAME --schema-only $(args)
+
 alembic_config := ./massgov/pfml/db/migrations/alembic.ini
 alembic_cmd := $(PY_RUN_CMD) alembic --config $(alembic_config)
 
