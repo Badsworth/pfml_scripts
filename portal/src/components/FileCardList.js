@@ -133,7 +133,7 @@ const FileCardList = (props) => {
   return (
     <div>
       <ul className="usa-list usa-list--unstyled">{fileCards}</ul>
-      <label className="margin-bottom-4 margin-top-2 usa-button usa-button--outline">
+      <label className="margin-top-2 usa-button usa-button--outline">
         {button}
         <input
           className="c-file-card-list__input"

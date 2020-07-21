@@ -1,4 +1,5 @@
 import BackButton from "./BackButton";
+import Button from "./Button";
 import PropTypes from "prop-types";
 import React from "react";
 import Title from "./Title";
@@ -25,11 +26,9 @@ export const QuestionPage = (props) => {
       <form onSubmit={handleSubmit} className="usa-form usa-form--large">
         <Title small>{props.title}</Title>
         {props.children}
-        <input
-          className="usa-button"
-          type="submit"
-          value={t("components.form.continueButton")}
-        />
+        <Button className="margin-top-4" type="submit">
+          {t("components.form.continueButton")}
+        </Button>
       </form>
     </React.Fragment>
   );

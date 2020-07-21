@@ -15,11 +15,12 @@ exports[`QuestionPage renders the form 1`] = `
     <div>
       Some stuff here
     </div>
-    <input
-      className="usa-button"
+    <Button
+      className="margin-top-4"
       type="submit"
-      value="Continue"
-    />
+    >
+      Continue
+    </Button>
   </form>
 </Fragment>
 `;
