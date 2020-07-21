@@ -10,19 +10,16 @@ const StepNumber = (props) => {
   const classes = [
     "radius-pill",
     "text-center",
-    "height-3",
-    "width-3",
-    "tablet:height-5",
-    "tablet:width-5",
-    "font-sans-2xs",
-    "tablet:font-sans-md",
+    "height-5",
+    "width-5",
+    "margin-top-2px", // align baseline of number with step title
+    "font-sans-md",
   ];
 
   const outlineClasses = [
     "border-2px",
     // use line height to vertically center text
-    "line-height-sans-4",
-    "tablet:line-height-sans-5",
+    "line-height-sans-5",
     "border-base",
     "text-base",
   ];

@@ -47,10 +47,6 @@ const Step = (props) => {
   );
 
   const actionColumn = () => {
-    if (disabled) {
-      return;
-    }
-
     if (completed) {
       return editCompletedStep;
     }
@@ -64,7 +60,7 @@ const Step = (props) => {
     "display-flex",
     "border-bottom",
     "border-base-light",
-    "padding-y-4"
+    "padding-y-3"
   );
 
   // parent column that contains a column
@@ -77,8 +73,7 @@ const Step = (props) => {
     // make this column also a row
     "grid-row",
     // push column down to center of step number
-    // no extra space needed on screen sizes smaller than a tablet
-    "tablet:margin-top-1"
+    "margin-top-1"
   );
 
   // column with the title and description
@@ -114,7 +109,9 @@ const Step = (props) => {
           </Heading>
           {active && <p>{props.children}</p>}
         </div>
-        <div className={actionColumnClasses}>{actionColumn()}</div>
+        {!disabled && (
+          <div className={actionColumnClasses}>{actionColumn()}</div>
+        )}
       </div>
     </div>
   );

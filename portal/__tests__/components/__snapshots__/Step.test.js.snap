@@ -2,7 +2,7 @@
 
 exports[`Step renders component 1`] = `
 <div
-  className="display-flex border-bottom border-base-light padding-y-4"
+  className="display-flex border-bottom border-base-light padding-y-3"
 >
   <StepNumber
     screenReaderPrefix="Step"
@@ -11,7 +11,7 @@ exports[`Step renders component 1`] = `
     1
   </StepNumber>
   <div
-    className="flex-fill margin-left-2 grid-row tablet:margin-top-1"
+    className="flex-fill margin-left-2 grid-row margin-top-1"
   >
     <div
       className="tablet:grid-col-8"
