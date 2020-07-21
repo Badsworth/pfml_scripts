@@ -153,10 +153,12 @@ describe("ClaimsApi", () => {
 
     it("sends PATCH request to /applications/:application_id", async () => {
       await claimsApi.updateClaim(claim.application_id, claim);
+      const { employee_ssn, ...body } = claim;
+
       expect(portalRequest).toHaveBeenCalledWith(
         "PATCH",
         "/applications/mock-application_id",
-        claim,
+        body,
         { user_id: user.user_id }
       );
     });

@@ -103,10 +103,13 @@ export default class ClaimsApi {
    * @returns {Promise<ClaimsApiSingleResult>} The result of the API call
    */
   updateClaim = async (application_id, patchData) => {
+    // TODO (CP-716): Send SSN in the API payload once production can accept PII
+    const { employee_ssn, ...workaroundPatchData } = patchData;
+
     const { body, success, status, apiErrors } = await this.claimsRequest(
       "PATCH",
       `/${application_id}`,
-      patchData
+      workaroundPatchData
     );
 
     // Currently the API doesn't return the claim data in the response
