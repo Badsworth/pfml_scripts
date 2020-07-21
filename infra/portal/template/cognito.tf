@@ -8,7 +8,7 @@ resource "aws_cognito_user_pool" "claimants_pool" {
     source_arn            = var.ses_email_address == "" ? null : "arn:aws:ses:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:identity/${var.ses_email_address}"
     email_sending_account = var.ses_email_address == "" ? "COGNITO_DEFAULT" : "DEVELOPER"
     # Customize the name that users see in the "From" section of their inbox, so that it's clearer who the email is from
-    from_email_address = var.ses_email_address == "" ? null : "Mass.gov <${var.ses_email_address}>"
+    from_email_address = var.ses_email_address == "" ? null : "\"Mass.gov\" <${var.ses_email_address}>"
   }
 
   sms_authentication_message = "Your authentication code is {####}. "
@@ -56,7 +56,7 @@ resource "aws_cognito_user_pool_client" "massgov_pfml_client" {
   callback_urls                = concat(var.cognito_extra_redirect_urls, ["https://${aws_cloudfront_distribution.portal_web_distribution.domain_name}"])
   logout_urls                  = concat(var.cognito_extra_logout_urls, ["https://${aws_cloudfront_distribution.portal_web_distribution.domain_name}"])
   supported_identity_providers = ["COGNITO"]
-  refresh_token_validity       = 30
+  refresh_token_validity       = 1 # days
 
   allowed_oauth_flows_user_pool_client = true
   allowed_oauth_flows                  = ["code"]
