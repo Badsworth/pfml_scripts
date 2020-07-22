@@ -3,6 +3,7 @@
  * @file Benefits application model and enum values
  */
 import BaseModel from "./BaseModel";
+import { get } from "lodash";
 
 class Claim extends BaseModel {
   get defaults() {
@@ -29,6 +30,7 @@ class Claim extends BaseModel {
         continuous_leave_periods: null,
         employer_notification_date: null,
         employer_notified: null,
+        intermittent_leave_periods: [],
         reason: null,
       },
       middle_name: null,
@@ -44,6 +46,12 @@ class Claim extends BaseModel {
       temp: {
         // TODO (CP-719): Connect intermittent leave fields to the API
         avg_weekly_hours_worked: null,
+        leave_details: {
+          // TODO: connect with continuous schedule periods fields to the API: https://lwd.atlassian.net/browse/CP-720
+          continuous_leave_periods: [],
+          // TODO: connect with reduced schedule periods fields to the API: https://lwd.atlassian.net/browse/CP-714
+          reduced_schedule_leave_periods: [],
+        },
         // TODO: Connect payment preference entry fields to the API: https://lwd.atlassian.net/browse/CP-703
         payment_preferences: [
           {
@@ -66,6 +74,30 @@ class Claim extends BaseModel {
         ],
       },
     };
+  }
+
+  /*
+   * Determine if claim is a continuous leave claim
+   * @returns {boolean}
+   */
+  get isContinuous() {
+    return !!get(this, "temp.leave_details.continuous_leave_periods[0]");
+  }
+
+  /*
+   * Determine if claim is an intermittent leave claim
+   * @returns {boolean}
+   */
+  get isIntermittent() {
+    return !!get(this, "leave_details.intermittent_leave_periods[0]");
+  }
+
+  /*
+   * Determine if claim is a reduced schedule leave claim
+   * @returns {boolean}
+   */
+  get isReducedSchedule() {
+    return !!get(this, "temp.leave_details.reduced_schedule_leave_periods[0]");
   }
 }
 
@@ -105,6 +137,61 @@ export const LeaveReason = {
   medical: "Serious Health Condition - Employee",
   serviceMemberFamily: "Pregnancy/Maternity",
 };
+
+export class ContinuousLeavePeriod extends BaseModel {
+  get defaults() {
+    return {
+      weeks: null,
+    };
+  }
+}
+
+export class IntermittentLeavePeriod extends BaseModel {
+  get defaults() {
+    return {
+      // How many {days|hours} of work will you miss per absence?
+      duration: null,
+      // How long will an absence typically last?
+      duration_basis: null,
+      // Estimate how many absences {per week|per month|over the next 6 months}
+      frequency: null,
+      // Implied by input selection of "over the next 6 months"
+      // and can only ever be equal to 6
+      frequency_interval: null,
+      // How often might you need to be absent from work?
+      frequency_interval_basis: null,
+    };
+  }
+}
+
+/**
+ * Enums for the Application's `intermittent_leave_periods[].frequency_interval_basis` field
+ * @enum {string}
+ */
+export const FrequencyIntervalBasis = {
+  days: "Days",
+  months: "Months",
+  weeks: "Weeks",
+};
+
+/**
+ * Enums for the Application's `intermittent_leave_periods[].duration_basis` field
+ * @enum {string}
+ */
+export const DurationBasis = {
+  days: "Days",
+  hours: "Hours",
+  minutes: "Minutes",
+};
+
+export class ReducedScheduleLeavePeriod extends BaseModel {
+  get defaults() {
+    return {
+      hours_per_week: null,
+      weeks: null,
+    };
+  }
+}
 
 /**
  * Enums for the Application's `payment_preferences[].payment_method` field

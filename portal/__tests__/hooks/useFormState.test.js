@@ -94,6 +94,13 @@ describe("useFormState", () => {
         foo: "banana",
         bar: "watermelon",
         cat: "pineapple",
+        nested: {
+          human: "being",
+          farm: {
+            cow: "pig",
+            duck: "goose",
+          },
+        },
       };
       testHook(() => {
         ({ formState, removeField } = useFormState(initialState));
@@ -106,6 +113,13 @@ describe("useFormState", () => {
       expect(formState).toStrictEqual({
         foo: "banana",
         cat: "pineapple",
+        nested: {
+          human: "being",
+          farm: {
+            cow: "pig",
+            duck: "goose",
+          },
+        },
       });
     });
 
@@ -125,6 +139,30 @@ describe("useFormState", () => {
       });
       expect(formState).toEqual({
         bar: "watermelon",
+        nested: {
+          human: "being",
+          farm: {
+            cow: "pig",
+            duck: "goose",
+          },
+        },
+      });
+    });
+
+    it("removes nested states", () => {
+      act(() => {
+        removeField("nested.farm.duck");
+      });
+      expect(formState).toEqual({
+        foo: "banana",
+        bar: "watermelon",
+        cat: "pineapple",
+        nested: {
+          human: "being",
+          farm: {
+            cow: "pig",
+          },
+        },
       });
     });
   });

@@ -37,16 +37,19 @@ describe("InputChoice", () => {
     expect(field.prop("value")).toBe(value);
   });
 
-  it("generates a unique id", () => {
+  it("generates a unique id if none is provided", () => {
     const { wrapper: wrapper1 } = render({ name: "one" });
     const { wrapper: wrapper2 } = render({ name: "two" });
+    const { wrapper: wrapper3 } = render({ name: "three", id: "three" });
 
     const input1 = wrapper1.find("input");
     const label1 = wrapper1.find("label");
     const input2 = wrapper2.find("input");
+    const input3 = wrapper3.find("input");
 
     expect(input1.prop("id")).not.toBe(input2.prop("id"));
     expect(label1.prop("htmlFor")).toBe(input1.prop("id"));
+    expect(input3.prop("id")).toEqual("three");
   });
 
   it("renders a label", () => {

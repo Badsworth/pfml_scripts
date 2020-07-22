@@ -102,21 +102,21 @@ describe("InputText", () => {
     });
   });
 
-  describe("when inputClassName prop is set", () => {
-    it("includes the inputClassName on the input field", () => {
-      const { wrapper } = render({ inputClassName: "custom-input-class" });
-      const input = wrapper.find("input");
-
-      expect(input.hasClass("custom-input-class")).toBe(true);
-    });
-  });
-
   describe("when inputMode prop is set", () => {
     it("includes the inputMode on the input field", () => {
       const { wrapper } = render({ inputMode: "decimal" });
       const input = wrapper.find("input");
 
       expect(input.prop("inputMode")).toBe("decimal");
+    });
+  });
+
+  describe("when pattern prop is set", () => {
+    it("includes the pattern on the input field", () => {
+      const { wrapper } = render({ pattern: "[0-9]*" });
+      const input = wrapper.find("input");
+
+      expect(input.prop("pattern")).toBe("[0-9]*");
     });
   });
 

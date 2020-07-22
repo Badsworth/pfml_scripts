@@ -112,6 +112,68 @@ describe("getInputValueFromEvent", () => {
     });
   });
 
+  describe("given field inputmode is 'numeric' and field pattern is [0-9]*", () => {
+    it("converts string to number", () => {
+      const target = {
+        name: "Foo",
+        value: "44",
+        inputmode: "numeric",
+        pattern: "[0-9]*",
+      };
+      const value = getInputValueFromEvent({ target });
+
+      expect(value).toBe(44);
+    });
+
+    it("does not convert mixed strings/numbers", () => {
+      const target = {
+        name: "Foo",
+        value: "4hockey4",
+        inputmode: "numeric",
+        pattern: "[0-9]*",
+      };
+      const value = getInputValueFromEvent({ target });
+
+      expect(value).toBe("4hockey4");
+    });
+
+    it("converts empty string to undefined", () => {
+      const target = {
+        name: "Foo",
+        value: " ",
+        inputmode: "numeric",
+        pattern: "[0-9]*",
+      };
+      const value = getInputValueFromEvent({ target });
+
+      expect(value).toBe(undefined);
+    });
+
+    it("does not convert undefined", () => {
+      const target = {
+        name: "Foo",
+        value: undefined,
+        inputmode: "numeric",
+        pattern: "[0-9]*",
+      };
+      const value = getInputValueFromEvent({ target });
+
+      expect(value).toBe(undefined);
+    });
+
+    it("does not convert null to 0", () => {
+      const target = {
+        name: "Foo",
+        value: null,
+        inputmode: "numeric",
+        pattern: "[0-9]*",
+      };
+      const value = getInputValueFromEvent({ target });
+
+      expect(value).toBe(null);
+    });
+  });
+
   describe("bad input", () => {
     it("returns undefined if no parameter is passed", () => {
       const value = getInputValueFromEvent();

@@ -11,19 +11,20 @@ import useUniqueId from "../hooks/useUniqueId";
  */
 function InputChoice({ type = "checkbox", ...props }) {
   const inputId = useUniqueId("InputChoice");
+  const id = props.id || inputId;
 
   return (
     <div className={`usa-${type}`}>
       <input
         checked={props.checked}
         className={`usa-${type}__input`}
-        id={inputId}
+        id={id}
         name={props.name}
         onChange={props.onChange}
         type={type}
         value={props.value}
       />
-      <label className={`usa-${type}__label`} htmlFor={inputId}>
+      <label className={`usa-${type}__label`} htmlFor={id}>
         {props.label}
 
         {props.hint && (
@@ -43,6 +44,10 @@ InputChoice.propTypes = {
    * for a controlled component.
    */
   checked: PropTypes.bool,
+  /**
+   * Unique identifier for input
+   */
+  id: PropTypes.string,
   /**
    * Localized hint text
    */

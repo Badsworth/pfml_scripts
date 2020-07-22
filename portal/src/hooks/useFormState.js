@@ -1,5 +1,5 @@
+import { set, unset } from "lodash";
 import { useCallback, useState } from "react";
-import set from "lodash/set";
 
 /**
  * React hook that creates a formState object
@@ -44,8 +44,10 @@ const useFormState = (initialState = {}) => {
    */
   const removeField = useCallback((name) => {
     setFormState((prevFormState) => {
-      const { [name]: value, ...rest } = prevFormState;
-      setFormState(rest);
+      // Create mutable copy of the state
+      const draftFormState = { ...prevFormState };
+      unset(draftFormState, name);
+      return draftFormState;
     });
   }, []);
 

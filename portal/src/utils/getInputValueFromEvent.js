@@ -15,7 +15,7 @@ export default function getInputValueFromEvent(event) {
     return undefined;
   }
 
-  const { checked, type, value } = event.target;
+  const { checked, type, value, inputmode, pattern } = event.target;
   let result = value;
   if (type === "checkbox" || type === "radio") {
     // Convert boolean input string values into an actual boolean
@@ -26,6 +26,15 @@ export default function getInputValueFromEvent(event) {
       case "false":
         result = !checked;
         break;
+    }
+  } else if (
+    inputmode === "numeric" &&
+    pattern === "[0-9]*" &&
+    value &&
+    value.trim() !== ""
+  ) {
+    if (!isNaN(value)) {
+      result = Number(value);
     }
   } else if (typeof value === "string" && value.trim() === "") {
     // An empty or empty-looking string will be interpreted as valid

@@ -34,6 +34,7 @@ function InputText({ type = "text", ...props }) {
       className={fieldClasses}
       id={inputId}
       inputMode={props.inputMode}
+      pattern={props.pattern}
       maxLength={props.maxLength}
       name={props.name}
       onBlur={props.onBlur}
@@ -123,6 +124,10 @@ InputText.propTypes = {
    * Localized text indicating this field is optional
    */
   optionalText: PropTypes.node,
+  /**
+   * HTML input `pattern` attribute
+   */
+  pattern: PropTypes.string,
   /**
    * Enable the smaller label variant
    */

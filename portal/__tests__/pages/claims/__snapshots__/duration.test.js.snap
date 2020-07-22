@@ -3,7 +3,7 @@
 exports[`Duration regardless of duration type initially renders the page without conditional fields 1`] = `
 <QuestionPage
   onSave={[Function]}
-  title="Leave duration"
+  title="Leave details"
 >
   <InputChoiceGroup
     choices={
@@ -11,39 +11,209 @@ exports[`Duration regardless of duration type initially renders the page without
         Object {
           "checked": false,
           "hint": "Continuous leave",
-          "label": "Take off work completely",
-          "value": "continuous",
+          "key": "continuous",
+          "label": "I need to take off work completely for a period of time.",
+          "name": "duration_type_continuous",
+          "value": "true",
+        },
+        Object {
+          "checked": false,
+          "hint": "Reduced leave schedule",
+          "key": "reduced",
+          "label": "I need to work a reduced schedule for a period of time.",
+          "name": "duration_type_reduced",
+          "value": "true",
         },
         Object {
           "checked": false,
           "hint": "Intermittent leave",
-          "label": "Work on a reduced schedule",
-          "value": "intermittent",
+          "key": "intermittent",
+          "label": "I need to take off work at irregular intervals.",
+          "name": "duration_type_intermittent",
+          "value": "true",
         },
       ]
     }
-    label="Do you need to take off work completely or work on a reduced schedule?"
+    hint={
+      <React.Fragment>
+        <p>
+          Refer to Question 17 in the "Ability to work" section of the Healthcare Provider Form.
+        </p>
+        <p>
+          Select all that apply.
+        </p>
+      </React.Fragment>
+    }
+    label="Which of the following situations apply?"
     name="duration_type"
     onChange={[Function]}
-    type="radio"
+    type="checkbox"
   />
   <ConditionalContent
     fieldNamesClearedWhenHidden={
       Array [
-        "hours_off_needed",
+        "temp.leave_details.continuous_leave_periods[0]",
       ]
     }
+    name="continuous_section"
     removeField={[Function]}
     visible={false}
   >
     <InputText
-      hint="This can be an approximate. You can change this after your claim is approved."
-      label="How many hours do you need to take off each week?"
-      name="hours_off_needed"
+      hint="Refer to Question 24 in the \\"Estimated leave period\\" section of the Healthcare Provider Form."
+      inputMode="numeric"
+      label="For how many weeks will you need to take continuous leave from work?"
+      name="temp.leave_details.continuous_leave_periods[0].weeks"
       onChange={[Function]}
+      pattern="[0-9]*"
       value=""
       width="small"
     />
+  </ConditionalContent>
+  <ConditionalContent
+    fieldNamesClearedWhenHidden={
+      Array [
+        "temp.leave_details.reduced_schedule_leave_periods[0]",
+      ]
+    }
+    name="reduced_schedule_section"
+    removeField={[Function]}
+    visible={false}
+  >
+    <InputText
+      hint="Refer to Question 25 in the \\"Estimated leave period\\" section of the Healthcare Provider Form."
+      inputMode="numeric"
+      label="How many weeks of a reduced leave schedule do you need?"
+      name="temp.leave_details.reduced_schedule_leave_periods[0].weeks"
+      onChange={[Function]}
+      pattern="[0-9]*"
+      value=""
+      width="small"
+    />
+    <InputText
+      hint="Refer to Question 26 in the \\"Estimated leave period\\" section of the Healthcare Provider Form."
+      inputMode="numeric"
+      label="How many hours will your work schedule be reduced by each week?"
+      name="temp.leave_details.reduced_schedule_leave_periods[0].hours_per_week"
+      onChange={[Function]}
+      pattern="[0-9]*"
+      value=""
+      width="small"
+    />
+  </ConditionalContent>
+  <ConditionalContent
+    fieldNamesClearedWhenHidden={
+      Array [
+        "leave_details.intermittent_leave_periods[0]",
+      ]
+    }
+    name="intermittent_section"
+    removeField={[Function]}
+    visible={false}
+  >
+    <Heading
+      level="2"
+      size="1"
+    >
+      Tell us the estimated frequency and duration when taking intermittent leave.
+    </Heading>
+    <InputChoiceGroup
+      choices={
+        Array [
+          Object {
+            "checked": false,
+            "key": "per_week",
+            "label": "At least once a week",
+            "value": "Weeks",
+          },
+          Object {
+            "checked": false,
+            "key": "per_month",
+            "label": "At least once a month",
+            "value": "Months",
+          },
+          Object {
+            "checked": false,
+            "id": "every6months",
+            "key": "every6months",
+            "label": "Irregular over the next 6 months",
+            "value": "Months",
+          },
+        ]
+      }
+      label="How often might you need to be absent from work?"
+      name="leave_details.intermittent_leave_periods[0].frequency_interval_basis"
+      onChange={[Function]}
+      smallLabel={true}
+      type="radio"
+    />
+    <ConditionalContent
+      fieldNamesClearedWhenHidden={
+        Array [
+          "leave_details.intermittent_leave_periods[0].frequency",
+        ]
+      }
+      name="frequency_question"
+      removeField={[Function]}
+      visible={false}
+    >
+      <InputText
+        hint="Refer to Question 27 in the \\"Estimated leave period\\" section of the Healthcare Provider Form."
+        inputMode="numeric"
+        label=""
+        name="leave_details.intermittent_leave_periods[0].frequency"
+        onChange={[Function]}
+        pattern="[0-9]*"
+        smallLabel={true}
+        value=""
+        width="small"
+      />
+    </ConditionalContent>
+    <InputChoiceGroup
+      choices={
+        Array [
+          Object {
+            "checked": false,
+            "key": "days",
+            "label": "At least a day",
+            "value": "Days",
+          },
+          Object {
+            "checked": false,
+            "key": "hours",
+            "label": "Less than a full work day",
+            "value": "Hours",
+          },
+        ]
+      }
+      label="How long will an absence typically last?"
+      name="leave_details.intermittent_leave_periods[0].duration_basis"
+      onChange={[Function]}
+      smallLabel={true}
+      type="radio"
+    />
+    <ConditionalContent
+      fieldNamesClearedWhenHidden={
+        Array [
+          "leave_details.intermittent_leave_periods[0].duration",
+        ]
+      }
+      name="duration_question"
+      removeField={[Function]}
+      visible={false}
+    >
+      <InputText
+        hint="Refer to Question 28 in the \\"Estimated leave period\\" section of the Healthcare Provider Form."
+        inputMode="numeric"
+        label=""
+        name="leave_details.intermittent_leave_periods[0].duration"
+        onChange={[Function]}
+        pattern="[0-9]*"
+        smallLabel={true}
+        value=""
+        width="small"
+      />
+    </ConditionalContent>
   </ConditionalContent>
 </QuestionPage>
 `;

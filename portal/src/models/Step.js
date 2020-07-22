@@ -108,11 +108,14 @@ export default class Step extends BaseModel {
         const ignoredField = [
           "claim.employer_benefits",
           "claim.hours_off_needed",
+          "claim.leave_details.intermittent_leave_periods[0]",
           "claim.leave_details.continuous_leave_periods",
           "claim.middle_name",
           "claim.other_incomes",
           "claim.previous_leaves",
           "claim.temp.avg_weekly_hours_worked",
+          "claim.temp.leave_details.continuous_leave_periods[0]",
+          "claim.temp.leave_details.reduced_schedule_leave_periods[0]",
           "claim.temp.payment_preferences[0].account_details",
           "claim.temp.payment_preferences[0].destination_address",
         ].some((ignoredFieldName) => field.includes(ignoredFieldName));

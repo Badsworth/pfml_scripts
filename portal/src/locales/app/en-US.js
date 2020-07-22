@@ -192,16 +192,63 @@ const pages = {
     title: "$t(shared.claimsTakingLeaveTitle)",
   },
   claimsDuration: {
-    continuousHint: "$t(shared.claimDurationTypeContinuous)",
-    continuousLabel: "Take off work completely",
-    hoursOffNeededHint:
-      "This can be an approximate. You can change this after your claim is approved.",
-    hoursOffNeededLabel: "How many hours do you need to take off each week?",
-    intermittentHint: "$t(shared.claimDurationTypeIntermittent)",
-    intermittentLabel: "Work on a reduced schedule",
-    sectionLabel:
-      "Do you need to take off work completely or work on a reduced schedule?",
-    title: "$t(shared.claimsLeaveDurationTitle)",
+    continuousTypeHint: "Continuous leave",
+    continuousTypeLabel:
+      "I need to take off work completely for a period of time.",
+    continuousWeeksHint:
+      'Refer to Question 24 in the "Estimated leave period" section of the Healthcare Provider Form.',
+    continuousWeeksLabel:
+      "For how many weeks will you need to take continuous leave from work?",
+    durationTypeSectionHint:
+      'Refer to Question 17 in the "Ability to work" section of the Healthcare Provider Form.',
+    durationTypeSectionLabel: "Which of the following situations apply?",
+    durationTypeSelectAllHint: "Select all that apply.",
+    intermittentDurationBasisDaysLabel: "At least a day",
+    intermittentDurationBasisHint:
+      'Refer to Question 28 in the "Estimated leave period" section of the Healthcare Provider Form.',
+    intermittentDurationBasisHoursLabel: "Less than a full work day",
+    intermittentDurationBasisLabel: "How long will an absence typically last?",
+    intermittentDurationHint:
+      'Refer to Question 28 in the "Estimated leave period" section of the Healthcare Provider Form.',
+    intermittentDurationLabel: "",
+    intermittentDurationLabelBase:
+      "How many {{unit}} of work will you miss per absence?",
+    intermittentDurationLabel_Days:
+      '$t(pages.claimsDuration.intermittentDurationLabelBase, {"unit": "days"})',
+    intermittentDurationLabel_Hours:
+      '$t(pages.claimsDuration.intermittentDurationLabelBase, {"unit": "hours"})',
+    intermittentFrequencyBasisDaysLabel: "Irregular over the next 6 months",
+    intermittentFrequencyBasisHint:
+      'Refer to Question 27 in the "Estimated leave period" section of the Healthcare Provider Form.',
+    intermittentFrequencyBasisLabel:
+      "How often might you need to be absent from work?",
+    intermittentFrequencyBasisMonthsLabel: "At least once a month",
+    intermittentFrequencyBasisWeeksLabel: "At least once a week",
+    intermittentFrequencyHint:
+      'Refer to Question 27 in the "Estimated leave period" section of the Healthcare Provider Form.',
+    intermittentFrequencyLabel: "",
+    intermittentFrequencyLabelBase: "Estimate how many absences {{per}}.",
+    intermittentFrequencyLabel_Months:
+      '$t(pages.claimsDuration.intermittentFrequencyLabelBase, {"per": "per month"})',
+    intermittentFrequencyLabel_Weeks:
+      '$t(pages.claimsDuration.intermittentFrequencyLabelBase, {"per": "per week"})',
+    intermittentFrequencyLabel_every6months:
+      '$t(pages.claimsDuration.intermittentFrequencyLabelBase, {"per": "over the next 6 months"})',
+    intermittentSectionLabel:
+      "Tell us the estimated frequency and duration when taking intermittent leave.",
+    intermittentTypeHint: "Intermittent leave",
+    intermittentTypeLabel: "I need to take off work at irregular intervals.",
+    reducedHoursPerWeekHint:
+      'Refer to Question 26 in the "Estimated leave period" section of the Healthcare Provider Form.',
+    reducedHoursPerWeekLabel:
+      "How many hours will your work schedule be reduced by each week?",
+    reducedTypeHint: "Reduced leave schedule",
+    reducedTypeLabel: "I need to work a reduced schedule for a period of time.",
+    reducedWeeksHint:
+      'Refer to Question 25 in the "Estimated leave period" section of the Healthcare Provider Form.',
+    reducedWeeksLabel:
+      "How many weeks of a reduced leave schedule do you need?",
+    title: "$t(shared.claimsLeaveDetailsTitle)",
   },
   claimsEmployerBenefitDetails: {
     addButton: "Add another",
