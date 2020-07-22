@@ -28,6 +28,7 @@ export const DateOfBirth = (props) => {
       <InputDate
         name="date_of_birth"
         label={t("pages.claimsDateOfBirth.sectionLabel")}
+        hint={t("components.form.dateInputHint")}
         value={valueWithFallback(date_of_birth)}
         dayLabel={t("components.form.dateInputDayLabel")}
         monthLabel={t("components.form.dateInputMonthLabel")}

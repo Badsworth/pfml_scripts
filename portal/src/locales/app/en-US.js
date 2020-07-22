@@ -258,9 +258,9 @@ const pages = {
     title: "Employment information",
   },
   claimsLeaveDates: {
-    endDateLabel: "When do you expect your leave will end?",
+    endDateLabel: "When do you expect your leave will end?",
     startDateHint: "Your leave begins the day you stopped working.",
-    startDateLabel: "When do you expect your leave to begin?",
+    startDateLabel: "When do you expect your leave to begin?",
     title: "$t(shared.claimsLeaveDurationTitle)",
   },
   claimsLeaveReason: {
@@ -634,6 +634,7 @@ const components = {
   form: {
     continueButton: "Continue",
     dateInputDayLabel: "Day",
+    dateInputHint: "MM/DD/YYYY",
     dateInputMonthLabel: "Month",
     dateInputYearLabel: "Year",
     optionalText: "(optional)",

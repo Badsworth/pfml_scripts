@@ -42,7 +42,16 @@ exports[`NotifiedEmployer renders the page 1`] = `
   >
     <InputDate
       dayLabel="Day"
-      hint="This can be an approximate date."
+      hint={
+        <React.Fragment>
+          <p>
+            This can be an approximate date.
+          </p>
+          <p>
+            MM/DD/YYYY
+          </p>
+        </React.Fragment>
+      }
       label="When did you tell them?"
       monthLabel="Month"
       name="leave_details.employer_notification_date"

@@ -114,6 +114,7 @@ export const OtherIncomeCard = (props) => {
       />
       <InputDate
         label={t("pages.claimsOtherIncomesDetails.startDateLabel")}
+        hint={t("components.form.dateInputHint")}
         name={`other_incomes[${index}].income_start_date`}
         onChange={onInputChange}
         value={valueWithFallback(entry.income_start_date)}
@@ -124,6 +125,7 @@ export const OtherIncomeCard = (props) => {
       />
       <InputDate
         label={t("pages.claimsOtherIncomesDetails.endDateLabel")}
+        hint={t("components.form.dateInputHint")}
         name={`other_incomes[${index}].income_end_date`}
         onChange={onInputChange}
         value={valueWithFallback(entry.income_end_date)}

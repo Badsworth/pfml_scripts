@@ -94,6 +94,7 @@ export const PreviousLeaveCard = (props) => {
     <React.Fragment>
       <InputDate
         label={t("pages.claimsPreviousLeavesDetails.startDateLabel")}
+        hint={t("components.form.dateInputHint")}
         name={`previous_leaves[${index}].leave_start_date`}
         onChange={onInputChange}
         value={valueWithFallback(entry.leave_start_date)}
@@ -104,6 +105,7 @@ export const PreviousLeaveCard = (props) => {
       />
       <InputDate
         label={t("pages.claimsPreviousLeavesDetails.endDateLabel")}
+        hint={t("components.form.dateInputHint")}
         name={`previous_leaves[${index}].leave_end_date`}
         onChange={onInputChange}
         value={valueWithFallback(entry.leave_end_date)}

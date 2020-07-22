@@ -26,7 +26,12 @@ const LeaveDates = (props) => {
       <InputDate
         name="leave_details.continuous_leave_periods[0].start_date"
         label={t("pages.claimsLeaveDates.startDateLabel")}
-        hint={t("pages.claimsLeaveDates.startDateHint")}
+        hint={
+          <React.Fragment>
+            <p>{t("pages.claimsLeaveDates.startDateHint")}</p>
+            <p>{t("components.form.dateInputHint")}</p>
+          </React.Fragment>
+        }
         value={valueWithFallback(
           get(formState, "leave_details.continuous_leave_periods[0].start_date")
         )}
@@ -38,6 +43,7 @@ const LeaveDates = (props) => {
       <InputDate
         name="leave_details.continuous_leave_periods[0].end_date"
         label={t("pages.claimsLeaveDates.endDateLabel")}
+        hint={t("components.form.dateInputHint")}
         value={valueWithFallback(
           get(formState, "leave_details.continuous_leave_periods[0].end_date")
         )}

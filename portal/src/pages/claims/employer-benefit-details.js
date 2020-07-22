@@ -129,6 +129,7 @@ const EmployerBenefitCard = (props) => {
       />
       <InputDate
         label={t("pages.claimsEmployerBenefitDetails.startDateLabel")}
+        hint={t("components.form.dateInputHint")}
         name={`employer_benefits[${index}].benefit_start_date`}
         onChange={onInputChange}
         value={valueWithFallback(benefit.benefit_start_date)}
@@ -139,6 +140,7 @@ const EmployerBenefitCard = (props) => {
       />
       <InputDate
         label={t("pages.claimsEmployerBenefitDetails.endDateLabel")}
+        hint={t("components.form.dateInputHint")}
         name={`employer_benefits[${index}].benefit_end_date`}
         onChange={onInputChange}
         value={valueWithFallback(benefit.benefit_end_date)}

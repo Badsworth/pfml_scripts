@@ -7,8 +7,17 @@ exports[`LeaveDates renders the page 1`] = `
 >
   <InputDate
     dayLabel="Day"
-    hint="Your leave begins the day you stopped working."
-    label="When do you expect your leave to begin?"
+    hint={
+      <React.Fragment>
+        <p>
+          Your leave begins the day you stopped working.
+        </p>
+        <p>
+          MM/DD/YYYY
+        </p>
+      </React.Fragment>
+    }
+    label="When do you expect your leave to begin?"
     monthLabel="Month"
     name="leave_details.continuous_leave_periods[0].start_date"
     onChange={[Function]}
@@ -17,7 +26,8 @@ exports[`LeaveDates renders the page 1`] = `
   />
   <InputDate
     dayLabel="Day"
-    label="When do you expect your leave will end?"
+    hint="MM/DD/YYYY"
+    label="When do you expect your leave will end?"
     monthLabel="Month"
     name="leave_details.continuous_leave_periods[0].end_date"
     onChange={[Function]}

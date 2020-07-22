@@ -74,10 +74,17 @@ const NotifiedEmployer = (props) => {
         <InputDate
           name="leave_details.employer_notification_date"
           label={t("pages.claimsNotifiedEmployer.employerNotificationLabel")}
+          hint={
+            <React.Fragment>
+              <p>
+                {t("pages.claimsNotifiedEmployer.employerNotificationDateHint")}
+              </p>
+              <p>{t("components.form.dateInputHint")}</p>
+            </React.Fragment>
+          }
           value={valueWithFallback(
             get(leave_details, "employer_notification_date")
           )}
-          hint={t("pages.claimsNotifiedEmployer.employerNotificationDateHint")}
           dayLabel={t("components.form.dateInputDayLabel")}
           monthLabel={t("components.form.dateInputMonthLabel")}
           yearLabel={t("components.form.dateInputYearLabel")}
