@@ -3,6 +3,7 @@
 #
 
 import datetime
+import os.path
 import urllib.parse
 import xml.etree.ElementTree
 from typing import Any, Callable, Dict, List
@@ -19,10 +20,9 @@ from . import client, exception, models
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
 MILLISECOND = datetime.timedelta(milliseconds=1)
-SCHEMA_PATH = "massgov/pfml/fineos/wscomposer"
 
 employee_register_request_schema = xmlschema.XMLSchema(
-    f"{SCHEMA_PATH}/EmployeeRegisterService.Request.xsd"
+    os.path.join(os.path.dirname(__file__), "wscomposer", "EmployeeRegisterService.Request.xsd")
 )
 
 
