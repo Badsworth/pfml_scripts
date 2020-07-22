@@ -105,20 +105,20 @@ const EmployerBenefitCard = (props) => {
     EmployerBenefitType.shortTermDisability,
     EmployerBenefitType.permanentDisability,
     EmployerBenefitType.familyOrMedicalLeave,
-  ].includes(EmployerBenefitType[selectedType]);
+  ].includes(selectedType);
   return (
     <React.Fragment>
       <InputChoiceGroup
-        choices={Object.keys(EmployerBenefitType).map((type) => {
+        choices={Object.entries(EmployerBenefitType).map(([key, value]) => {
           return {
-            checked: selectedType === type,
+            checked: selectedType === value,
             label: t("pages.claimsEmployerBenefitDetails.choiceLabel", {
-              context: type,
+              context: key,
             }),
             hint: t("pages.claimsEmployerBenefitDetails.choiceHint", {
-              context: type,
+              context: key,
             }),
-            value: type,
+            value,
           };
         })}
         label={t("pages.claimsEmployerBenefitDetails.typeLabel")}
@@ -153,7 +153,7 @@ const EmployerBenefitCard = (props) => {
         <InputText
           label={t("pages.claimsEmployerBenefitDetails.amountLabel")}
           hint={t("pages.claimsEmployerBenefitDetails.amountHint")}
-          name={`employer_benefits[${index}].benefit_amount`}
+          name={`employer_benefits[${index}].benefit_amount_dollars`}
           onChange={onInputChange}
           optionalText={t("components.form.optionalText")}
           value={valueWithFallback(benefit.benefit_amount)}

@@ -97,13 +97,13 @@ export const OtherIncomeCard = (props) => {
   return (
     <React.Fragment>
       <InputChoiceGroup
-        choices={Object.keys(OtherIncomeType).map((type) => {
+        choices={Object.entries(OtherIncomeType).map(([key, value]) => {
           return {
-            checked: entry.income_type === type,
+            checked: entry.income_type === value,
             label: t("pages.claimsOtherIncomesDetails.typeChoiceLabel", {
-              context: type,
+              context: key,
             }),
-            value: type,
+            value,
           };
         })}
         label={t("pages.claimsOtherIncomesDetails.typeLabel")}

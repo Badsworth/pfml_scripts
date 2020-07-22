@@ -8,42 +8,42 @@ exports[`OtherIncomeCard renders fields for an OtherIncome instance 1`] = `
         Object {
           "checked": false,
           "label": "Workers Compensation",
-          "value": "workersCompensation",
+          "value": "Workers Comp",
         },
         Object {
           "checked": false,
           "label": "Unemployment Insurance",
-          "value": "unemployment",
+          "value": "Unemployment",
         },
         Object {
           "checked": false,
           "label": "Social Security Disability Insurance",
-          "value": "ssdi",
+          "value": "SSDI",
         },
         Object {
           "checked": false,
           "label": "Disability benefits under a governmental retirement plan",
-          "value": "retirementDisability",
+          "value": "Retirement Disability",
         },
         Object {
           "checked": false,
           "label": "Jones Act benefits",
-          "value": "jonesAct",
+          "value": "Jones Act",
         },
         Object {
           "checked": false,
           "label": "Railroad Retirement benefits",
-          "value": "railroadRetirement",
+          "value": "Railroad Retirement",
         },
         Object {
           "checked": false,
           "label": "Earnings from another employer",
-          "value": "otherEmployer",
+          "value": "Other Employer",
         },
         Object {
           "checked": false,
           "label": "Earnings from self-employment",
-          "value": "selfEmployment",
+          "value": "Self-Employment",
         },
       ]
     }

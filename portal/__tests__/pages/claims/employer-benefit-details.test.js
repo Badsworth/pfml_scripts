@@ -1,4 +1,6 @@
-import EmployerBenefit from "../../../src/models/EmployerBenefit";
+import EmployerBenefit, {
+  EmployerBenefitType,
+} from "../../../src/models/EmployerBenefit";
 import EmployerBenefitDetails from "../../../src/pages/claims/employer-benefit-details";
 import { act } from "react-dom/test-utils";
 import { renderWithAppLogic } from "../../test-utils";
@@ -86,10 +88,18 @@ describe("EmployerBenefitDetails", () => {
         {
           claimAttrs: {
             employer_benefits: [
-              new EmployerBenefit({ benefit_type: "paidLeave" }),
-              new EmployerBenefit({ benefit_type: "shortTermDisability" }),
-              new EmployerBenefit({ benefit_type: "permanentDisability" }),
-              new EmployerBenefit({ benefit_type: "familyOrMedicalLeave" }),
+              new EmployerBenefit({
+                benefit_type: EmployerBenefitType.paidLeave,
+              }),
+              new EmployerBenefit({
+                benefit_type: EmployerBenefitType.shortTermDisability,
+              }),
+              new EmployerBenefit({
+                benefit_type: EmployerBenefitType.permanentDisability,
+              }),
+              new EmployerBenefit({
+                benefit_type: EmployerBenefitType.familyOrMedicalLeave,
+              }),
             ],
           },
           render: "mount",
@@ -99,16 +109,24 @@ describe("EmployerBenefitDetails", () => {
 
     it("only renders the amount input text component for insurance benefit types", () => {
       expect(
-        wrapper.find('InputText[name="employer_benefits[0].benefit_amount"]')
+        wrapper.find(
+          'InputText[name="employer_benefits[0].benefit_amount_dollars"]'
+        )
       ).toHaveLength(0);
       expect(
-        wrapper.find('InputText[name="employer_benefits[1].benefit_amount"]')
+        wrapper.find(
+          'InputText[name="employer_benefits[1].benefit_amount_dollars"]'
+        )
       ).toHaveLength(1);
       expect(
-        wrapper.find('InputText[name="employer_benefits[2].benefit_amount"]')
+        wrapper.find(
+          'InputText[name="employer_benefits[2].benefit_amount_dollars"]'
+        )
       ).toHaveLength(1);
       expect(
-        wrapper.find('InputText[name="employer_benefits[3].benefit_amount"]')
+        wrapper.find(
+          'InputText[name="employer_benefits[3].benefit_amount_dollars"]'
+        )
       ).toHaveLength(1);
     });
   });
