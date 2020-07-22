@@ -1,0 +1,74 @@
+name: API Migration Conflict Monitor
+# Listens for pushes to master with updated migration files, and re-triggers Alembic conflict checks for any PR that originally needed to run them
+# Potential future refinements:
+#   - Extract step scripts to .sh files or rewrite in JS
+#   - Pagination for response bodies > 100 entities
+#   - Error handling for bad curl calls
+
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - api/massgov/pfml/db/migrations/versions/**
+
+jobs:
+  db-migration-monitor:
+    runs-on: ubuntu-latest
+
+    env:
+      github_api: "https://api.github.com/repos/EOLWD/pfml"
+      workflow_id: 1883048 # internal GitHub primary key for api-migration-validate.yml, only discoverable via api (GET repos/:owner/:repo/actions/workflows)
+      pfml_devops_token: ${{ secrets.PFML_DEVOPS_TOKEN }}
+
+    steps:
+      - name: get all branches with open PRs
+        run: |
+          PARAMS="state=open&base=master&sort=created&direction=desc&per_page=100"
+          curl -Ls GET "${{ env.github_api }}/pulls?$PARAMS" \
+          -H 'Authorization: Token ${{secrets.GITHUB_TOKEN}}' \
+          -H 'Accept: application/vnd.github.v3+json' | \
+          jq -c '.[] | select( .state == "open" ) | {"headref": .head.ref, "baseref": .base.ref, "url": .html_url}' > pr_branches.json
+          echo "Retrieved $(cat pr_branches.json | wc -l) open pull requests."
+          unset PARAMS
+
+      - name: get most recent migration checks
+        run: |
+          cat pr_branches.json | while read pr_branch; do
+            baseref=$(echo $pr_branch | jq -rc '.baseref')
+            headref=$(echo $pr_branch | jq -rc '.headref')
+            url=$(echo $pr_branch | jq -rc '.url')
+            echo "Searching for migration checks for $headref..."
+
+            MOST_RECENT_MIGRATION_CHECK=$(
+              PARAMS="status=completed&branch=$headref&per_page=100"
+              curl -Ls "${{ env.github_api }}/actions/runs?$PARAMS" \
+              -H 'Authorization: Token ${{secrets.GITHUB_TOKEN}}' \
+              -H 'Accept: application/vnd.github.v3+json' |
+              jq -c '[.workflow_runs[] | select( .workflow_id == ${{ env.workflow_id }})] | max_by(.run_number)'
+            )
+            
+            if [ "$MOST_RECENT_MIGRATION_CHECK" != "null" ]; then
+              echo "  $headref needs its Alembic check re-run."
+              echo "  (URL: $url)"
+              jq -nc --arg baseref $baseref --arg headref $headref \
+              '{ "ref": $headref , "inputs": { "baseref": $baseref, "headref": $headref } }' \
+              >> workflows_to_rerun.json
+            fi
+            
+            unset MOST_RECENT_MIGRATION_CHECK
+            unset PARAMS
+            echo
+          done
+          echo "Found $(cat workflows_to_rerun.json | wc -l) Alembic checks to re-run."
+
+      - name: trigger new migration checks
+        run: |
+          cat workflows_to_rerun.json | while read workflow; do
+            echo "Re-running migration check for $(echo $workflow | jq -rc '.ref')..."
+            curl -Ls -X POST "${{ env.github_api }}/actions/workflows/${{ env.workflow_id }}/dispatches" \
+              -H 'Authorization: Token ${{ env.pfml_devops_token }}' \
+              -H "Accept: application/vnd.github.v3+json" \
+              -d $workflow
+          done
+          echo "All done!"

@@ -4,6 +4,14 @@ on:
   pull_request:
     paths:
       - api/massgov/pfml/db/migrations/versions/**
+  workflow_dispatch: # Triggered from api-migration-monitor.yml
+    inputs:
+      baseref:
+        required: true
+        description: 'The base ref to diff against, typically HEAD/master'
+      headref:
+        required: true
+        description: 'The head ref to diff against, typically HEAD of a feature branch'
 
 jobs:
   # Check for no conflicting Alembic migrations
@@ -11,8 +19,8 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      baseref: ${{ github.base_ref }}
-      headref: ${{ github.head_ref }}
+      baseref: ${{ github.base_ref || github.event.inputs.baseref }}
+      headref: ${{ github.head_ref || github.event.inputs.headref }}
 
     steps:
       - uses: actions/checkout@v2

@@ -18,3 +18,9 @@ Workflows with the name patterns `<component>-ci.yml` or `<component>-validate.y
 These workflows automate the steps involved in cutting releases and rolling them out, triggered by `push` events.
 
 These have the name pattern `<component>-deploy.yml`.
+
+## Meta-automation
+
+These workflows take action on other GitHub workflows.
+
+These have the name pattern `<component>-monitor.yml`.
