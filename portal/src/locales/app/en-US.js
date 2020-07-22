@@ -148,8 +148,9 @@ const pages = {
   },
   claimsAverageWorkHours: {
     hint:
-      "We need to know this so we can calculate your benefit amount. If your hours vary from week to week, tell us the average over the past 12 months.",
-    sectionLabel: "How many hours do you work for your employer, on average?",
+      "We’ll confirm this information and use it to calculate your benefit amount. If your schedule varies, tell us the average number of hours you worked over the past 52 weeks.",
+    sectionLabel:
+      "On average, how many hours do you work for your employer each week?",
     title: "$t(shared.claimsLeaveDetailsTitle)",
   },
   claimsChecklist: {
