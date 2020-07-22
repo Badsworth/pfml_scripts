@@ -27,7 +27,6 @@ class Claim extends BaseModel {
       hours_off_needed: null,
       last_name: null,
       leave_details: {
-        continuous_leave_periods: null,
         employer_notification_date: null,
         employer_notified: null,
         intermittent_leave_periods: [],
@@ -44,13 +43,18 @@ class Claim extends BaseModel {
        * this temporary space.
        */
       temp: {
-        // TODO (CP-719): Connect intermittent leave fields to the API
-        avg_weekly_hours_worked: null,
         leave_details: {
+          avg_weekly_hours_worked: null,
           // TODO: connect with continuous schedule periods fields to the API: https://lwd.atlassian.net/browse/CP-720
           continuous_leave_periods: [],
+          // TODO (CP-724): Connect start and end date to API
+          end_date: null,
+          // TODO (CP-719): Connect intermittent leave fields to the API
+          intermittent_leave_periods: [],
           // TODO: connect with reduced schedule periods fields to the API: https://lwd.atlassian.net/browse/CP-714
           reduced_schedule_leave_periods: [],
+          // TODO (CP-724): Connect start and end date to API
+          start_date: null,
         },
         // TODO: Connect payment preference entry fields to the API: https://lwd.atlassian.net/browse/CP-703
         payment_preferences: [

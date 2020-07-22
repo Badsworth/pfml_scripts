@@ -1,5 +1,6 @@
 import Claim from "../../models/Claim";
 import InputDate from "../../components/InputDate";
+import Lead from "../../components/Lead";
 import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
@@ -11,7 +12,10 @@ import { useTranslation } from "../../locales/i18n";
 import valueWithFallback from "../../utils/valueWithFallback";
 import withClaim from "../../hoc/withClaim";
 
-export const fields = ["claim.leave_details.continuous_leave_periods[0]"];
+export const fields = [
+  "claim.temp.leave_details.start_date",
+  "claim.temp.leave_details.end_date",
+];
 
 const LeaveDates = (props) => {
   const { t } = useTranslation();
@@ -24,16 +28,17 @@ const LeaveDates = (props) => {
   return (
     <QuestionPage title={t("pages.claimsLeaveDates.title")} onSave={handleSave}>
       <InputDate
-        name="leave_details.continuous_leave_periods[0].start_date"
+        name="temp.leave_details.start_date"
         label={t("pages.claimsLeaveDates.startDateLabel")}
         hint={
           <React.Fragment>
+            <Lead>{t("pages.claimsLeaveDates.startDateLeadHint")}</Lead>
             <p>{t("pages.claimsLeaveDates.startDateHint")}</p>
             <p>{t("components.form.dateInputHint")}</p>
           </React.Fragment>
         }
         value={valueWithFallback(
-          get(formState, "leave_details.continuous_leave_periods[0].start_date")
+          get(formState, "temp.leave_details.start_date")
         )}
         dayLabel={t("components.form.dateInputDayLabel")}
         monthLabel={t("components.form.dateInputMonthLabel")}
@@ -41,12 +46,15 @@ const LeaveDates = (props) => {
         onChange={handleInputChange}
       />
       <InputDate
-        name="leave_details.continuous_leave_periods[0].end_date"
+        name="temp.leave_details.end_date"
         label={t("pages.claimsLeaveDates.endDateLabel")}
-        hint={t("components.form.dateInputHint")}
-        value={valueWithFallback(
-          get(formState, "leave_details.continuous_leave_periods[0].end_date")
-        )}
+        hint={
+          <React.Fragment>
+            <p>{t("pages.claimsLeaveDates.endDateHint")}</p>
+            <p>{t("components.form.dateInputHint")}</p>
+          </React.Fragment>
+        }
+        value={valueWithFallback(get(formState, "temp.leave_details.end_date"))}
         dayLabel={t("components.form.dateInputDayLabel")}
         monthLabel={t("components.form.dateInputMonthLabel")}
         yearLabel={t("components.form.dateInputYearLabel")}

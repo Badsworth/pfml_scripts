@@ -20,18 +20,16 @@ function fullClaimAttrs() {
     middle_name: "Monstera",
     last_name: "Baxter",
     leave_details: {
-      continuous_leave_periods: [
-        {
-          end_date: "2021-12-30",
-          start_date: "2021-09-21",
-        },
-      ],
       employer_notified: true,
       employer_notification_date: "2020-06-25",
       reason: LeaveReason.medical,
     },
     temp: {
-      avg_weekly_hours_worked: "20",
+      leave_details: {
+        avg_weekly_hours_worked: "20",
+        end_date: "2021-12-30",
+        start_date: "2021-09-21",
+      },
       payment_preferences: [{ payment_method: PaymentPreferenceMethod.ach }],
     },
   };

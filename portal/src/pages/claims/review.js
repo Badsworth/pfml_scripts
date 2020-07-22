@@ -109,8 +109,8 @@ const Review = (props) => {
 
       <ReviewRow label={t("pages.claimsReview.leaveDurationLabel")}>
         {formatDateRange(
-          get(claim, "leave_details.continuous_leave_periods[0].start_date"),
-          get(claim, "leave_details.continuous_leave_periods[0].end_date")
+          get(claim, "temp.leave_details.start_date"),
+          get(claim, "temp.leave_details.end_date")
         )}
       </ReviewRow>
 
@@ -120,9 +120,9 @@ const Review = (props) => {
         })}
       </ReviewRow>
 
-      {get(claim, "temp.avg_weekly_hours_worked") && (
+      {get(claim, "temp.leave_details.avg_weekly_hours_worked") && (
         <ReviewRow label={t("pages.claimsReview.averageWorkHoursLabel")}>
-          {get(claim, "temp.avg_weekly_hours_worked")}
+          {get(claim, "temp.leave_details.avg_weekly_hours_worked")}
         </ReviewRow>
       )}
 

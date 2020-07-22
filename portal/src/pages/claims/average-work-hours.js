@@ -11,7 +11,7 @@ import { useTranslation } from "../../locales/i18n";
 import valueWithFallback from "../../utils/valueWithFallback";
 import withClaim from "../../hoc/withClaim";
 
-export const fields = ["claim.temp.avg_weekly_hours_worked"];
+export const fields = ["claim.temp.leave_details.avg_weekly_hours_worked"];
 
 const AverageWorkHours = (props) => {
   const { t } = useTranslation();
@@ -28,12 +28,12 @@ const AverageWorkHours = (props) => {
     >
       <InputText
         label={t("pages.claimsAverageWorkHours.sectionLabel")}
-        name="temp.avg_weekly_hours_worked"
+        name="temp.leave_details.avg_weekly_hours_worked"
         onChange={handleInputChange}
         hint={t("pages.claimsAverageWorkHours.hint")}
         width="small"
         value={valueWithFallback(
-          get(formState, "temp.avg_weekly_hours_worked")
+          get(formState, "temp.leave_details.avg_weekly_hours_worked")
         )}
       />
     </QuestionPage>

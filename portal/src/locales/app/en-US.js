@@ -305,10 +305,15 @@ const pages = {
     title: "Employment information",
   },
   claimsLeaveDates: {
-    endDateLabel: "When do you expect your leave will end?",
-    startDateHint: "Your leave begins the day you stopped working.",
-    startDateLabel: "When do you expect your leave to begin?",
-    title: "$t(shared.claimsLeaveDurationTitle)",
+    endDateHint:
+      'Refer to Question 20 in the "Ability to work" section of the Healthcare Provider Form.',
+    endDateLabel: "When will your leave end or be re-evaluated?",
+    startDateHint:
+      'Refer to Question 19 in the "Ability to work" section of the Healthcare Provider Form.',
+    startDateLabel: "When will you first need to take leave?",
+    startDateLeadHint:
+      "If you have already taken some or all of your leave for this condition, when did you first miss work?",
+    title: "$t(shared.claimsLeaveDetailsTitle)",
   },
   claimsLeaveReason: {
     activeDutyFamilyLeaveHint: "Family leave",
