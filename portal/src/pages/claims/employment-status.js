@@ -68,11 +68,7 @@ const EmploymentStatusPage = (props) => {
           name="employer_fein"
           label={t("pages.claimsEmploymentStatus.feinLabel")}
           mask="fein"
-          hint={
-            <Details label={t("pages.claimsEmploymentStatus.feinQuestion")}>
-              {t("pages.claimsEmploymentStatus.feinAnswer")}
-            </Details>
-          }
+          hint={t("pages.claimsEmploymentStatus.feinHint")}
           value={valueWithFallback(employer_fein)}
           onChange={handleInputChange}
         />
