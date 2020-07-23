@@ -55,6 +55,9 @@ class FINEOSClient(client.AbstractFINEOSClient):
         except oauthlib.oauth2.OAuth2Error as ex:
             logger.error("POST %s => %r", token_url, ex)
             raise exception.FINEOSClientError(cause=ex)
+        except requests.exceptions.RequestException as ex:
+            logger.error("POST %s => %r", token_url, ex)
+            raise exception.FINEOSClientError(cause=ex)
 
         logger.info(
             "POST %s => type %s, expires %is (at %s)",

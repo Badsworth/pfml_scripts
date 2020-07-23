@@ -13,7 +13,7 @@ import massgov.pfml.fineos.fineos_client
 import massgov.pfml.fineos.models
 
 
-def fake_fetch_token(session, token_url, client_id, client_secret, timeout):
+def fake_fetch_token(_session, _token_url, _client_id, _client_secret, _timeout):
     return {"token_type": "Bearer", "expires_in": 3600, "expires_at": 1595434193.373}
 
 
@@ -79,7 +79,7 @@ def fineos_client_capture_requests(monkeypatch, fineos_client):
     fineos_client.fake_responses = [FakeResponse(200)]
     fineos_client.capture_count = 0
 
-    def fake_request(self, method, url, headers, **args):
+    def fake_request(_self, method, url, headers, **args):
         fineos_client.capture.append((method, url, headers, args))
         fineos_client.capture_count += 1
         return fineos_client.fake_responses[fineos_client.capture_count - 1]
@@ -90,7 +90,9 @@ def fineos_client_capture_requests(monkeypatch, fineos_client):
 
 
 class FakeResponse:
-    def __init__(self, status_code, text="TEST", json_data={}):
+    def __init__(self, status_code, text="TEST", json_data=None):
+        if json_data is None:
+            json_data = {}
         self.status_code = status_code
         self.content_length = 2048
         self.content_type = "application/json"
@@ -104,7 +106,7 @@ class FakeResponse:
 
 
 def test_request(fineos_client):
-    def request_function(method, url, **args):
+    def request_function(_method, _url, **_args):
         return FakeResponse(200)
 
     response = fineos_client._request(request_function, "GET", "https://test/url", {})
@@ -112,7 +114,7 @@ def test_request(fineos_client):
 
 
 def test_request_requests_exception(fineos_client):
-    def request_function(method, url, **args):
+    def request_function(_method, _url, **_args):
         raise requests.exceptions.ConnectTimeout()
 
     with pytest.raises(massgov.pfml.fineos.exception.FINEOSClientError, match="ConnectTimeout:"):
@@ -120,7 +122,7 @@ def test_request_requests_exception(fineos_client):
 
 
 def test_request_unexpected_response(fineos_client):
-    def request_function(method, url, **args):
+    def request_function(_method, _url, **_args):
         return FakeResponse(404)
 
     with pytest.raises(
@@ -213,14 +215,6 @@ def test_read_customer_details(fineos_client_capture_requests):
     )
 
 
-# def test_health_check():
-#     assert False
-#
-#
-# def test_read_customer_details():
-#     assert False
-#
-#
 # def test_start_absence():
 #     assert False
 #
