@@ -24,23 +24,23 @@ exports[`EmployerBenefits renders the page 1`] = `
       <React.Fragment>
         <Lead>
           Employer-sponsored benefits you must report are:
+          <ul
+            className="usa-list"
+          >
+            <li>
+              Accrued paid leave, such as vacation time, sick time, personal time, or other paid time off
+            </li>
+            <li>
+              Short-term disability insurance
+            </li>
+            <li>
+              Permanent disability insurance
+            </li>
+            <li>
+              Family or medical leave insurance, such as a maternity leave policy
+            </li>
+          </ul>
         </Lead>
-        <ul
-          className="usa-list"
-        >
-          <li>
-            Accrued paid leave, such as vacation time, sick time, personal time, or other paid time off
-          </li>
-          <li>
-            Short-term disability insurance
-          </li>
-          <li>
-            Permanent disability insurance
-          </li>
-          <li>
-            Family or medical leave insurance, such as a maternity leave policy
-          </li>
-        </ul>
       </React.Fragment>
     }
     label="Will you use any employer-sponsored benefits during your leave?"

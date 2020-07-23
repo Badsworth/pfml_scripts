@@ -252,7 +252,7 @@ const pages = {
     title: "$t(shared.claimsLeaveDetailsTitle)",
   },
   claimsEmployerBenefitDetails: {
-    addButton: "Add another",
+    addButton: "Add another benefit",
     amountHint: "For example, $250 every month",
     amountLabel: "How much will you receive?",
     cardHeadingPrefix: "Benefit",
@@ -269,7 +269,7 @@ const pages = {
     choiceLabel_permanentDisability: "Permanent disability insurance",
     choiceLabel_shortTermDisability: "Short-term disability insurance",
     endDateLabel: "When will you stop using the benefit?",
-    removeButton: "Remove",
+    removeButton: "Remove benefit",
     sectionLabel: "Tell us about benefits you will receive from your employer.",
     startDateLabel: "When will you start using the benefit?",
     title: "$t(shared.claimsOtherLeaveTitle)",

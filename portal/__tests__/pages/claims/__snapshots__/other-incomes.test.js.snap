@@ -24,32 +24,32 @@ exports[`OtherIncomes renders the page 1`] = `
       <React.Fragment>
         <Lead>
           Other sources of income you must report are:
+          <ul
+            className="usa-list"
+          >
+            <li>
+              Workers Compensation
+            </li>
+            <li>
+              Unemployment Insurance
+            </li>
+            <li>
+              Social Security Disability Insurance
+            </li>
+            <li>
+              Disability benefits under a governmental retirement plan such as STRS or PERS
+            </li>
+            <li>
+              Jones Act benefits
+            </li>
+            <li>
+              Railroad Retirement benefits
+            </li>
+            <li>
+              Earnings from another employer or through self-employment
+            </li>
+          </ul>
         </Lead>
-        <ul
-          className="usa-list"
-        >
-          <li>
-            Workers Compensation
-          </li>
-          <li>
-            Unemployment Insurance
-          </li>
-          <li>
-            Social Security Disability Insurance
-          </li>
-          <li>
-            Disability benefits under a governmental retirement plan such as STRS or PERS
-          </li>
-          <li>
-            Jones Act benefits
-          </li>
-          <li>
-            Railroad Retirement benefits
-          </li>
-          <li>
-            Earnings from another employer or through self-employment
-          </li>
-        </ul>
       </React.Fragment>
     }
     label="Will you receive income from any other sources during your leave?"

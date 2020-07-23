@@ -20,7 +20,9 @@ function FormLabel({ component = "label", small = false, ...props }) {
     "font-heading-lg line-height-sans-2 text-bold": !small,
   });
 
-  const hintClasses = classnames("usa-hint display-block line-height-sans-5", {
+  const hintClasses = classnames({
+    // Apply hint text styling if the hint is a plain string
+    "display-block line-height-sans-5 usa-hint": typeof props.hint === "string",
     // Add a bit more top margin between the label and hint when the label text is large
     "margin-top-05": !small,
   });
@@ -51,7 +53,7 @@ FormLabel.propTypes = {
    */
   children: PropTypes.node.isRequired,
   /**
-   * HTML element used to render the label
+   * HTML element used to render the label. Defaults to "label"
    */
   component: PropTypes.oneOf(["label", "legend"]),
   /**
@@ -75,6 +77,7 @@ FormLabel.propTypes = {
   /**
    * Enable the smaller variant, which is used when the field is
    * already accompanied by larger question text (like a legend).
+   * Defaults to false
    */
   small: PropTypes.bool,
 };

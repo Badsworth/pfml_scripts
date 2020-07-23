@@ -48,3 +48,19 @@ export const WithError = () => {
     </form>
   );
 };
+
+export const WithSmallLabel = () => {
+  return (
+    <form className="usa-form">
+      <InputDate
+        label="When is your birthday?"
+        name="birthday"
+        dayLabel="Day"
+        monthLabel="Month"
+        value="1990-20-01"
+        yearLabel="Year"
+        smallLabel
+      />
+    </form>
+  );
+};

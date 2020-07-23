@@ -52,17 +52,37 @@ describe("FormLabel", () => {
   });
 
   describe("when hint prop is set", () => {
-    it("renders the hint with expected classes", () => {
-      const { wrapper } = render({ hint: "Hint text" });
-      const hint = wrapper.find(".usa-hint").last();
+    describe("and the hint is a string", () => {
+      it("styles the hint text with hint classes", () => {
+        const { wrapper } = render({ hint: "Hint text" });
+        const hint = wrapper.find(".usa-hint").last();
 
-      expect(hint).toMatchInlineSnapshot(`
-        <span
-          className="usa-hint display-block line-height-sans-5 margin-top-05"
-        >
-          Hint text
-        </span>
-      `);
+        expect(hint).toMatchInlineSnapshot(`
+          <span
+            className="display-block line-height-sans-5 usa-hint margin-top-05"
+          >
+            Hint text
+          </span>
+        `);
+      });
+    });
+
+    describe("and the hint is not a string", () => {
+      it("does not style the hint", () => {
+        const hintElement = <p>Hint paragraph</p>;
+        const { wrapper } = render({ hint: hintElement });
+        const hint = wrapper.find("span").last();
+
+        expect(hint).toMatchInlineSnapshot(`
+          <span
+            className="margin-top-05"
+          >
+            <p>
+              Hint paragraph
+            </p>
+          </span>
+        `);
+      });
     });
   });
 
@@ -127,7 +147,7 @@ describe("FormLabel", () => {
       const hint = wrapper.find(".usa-hint").last();
 
       expect(hint.prop("className")).toMatchInlineSnapshot(
-        `"usa-hint display-block line-height-sans-5"`
+        `"display-block line-height-sans-5 usa-hint"`
       );
     });
   });

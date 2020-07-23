@@ -48,12 +48,14 @@ const OtherIncomes = (props) => {
         type="radio"
         hint={
           <React.Fragment>
-            <Lead>{t("pages.claimsOtherIncomes.hintHeader")}</Lead>
-            <ul className="usa-list">
-              {hintList.map((listItem, index) => (
-                <li key={index}>{listItem}</li>
-              ))}
-            </ul>
+            <Lead>
+              {t("pages.claimsOtherIncomes.hintHeader")}
+              <ul className="usa-list">
+                {hintList.map((listItem, index) => (
+                  <li key={index}>{listItem}</li>
+                ))}
+              </ul>
+            </Lead>
           </React.Fragment>
         }
       />

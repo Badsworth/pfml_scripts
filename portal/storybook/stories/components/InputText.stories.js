@@ -83,3 +83,22 @@ export const Masked = () => {
     </form>
   );
 };
+
+export const SmallLabel = () => {
+  const [value, setFieldValue] = useState("$500");
+  const handleOnChange = (evt) => {
+    setFieldValue(evt.target.value);
+  };
+
+  return (
+    <form className="usa-form">
+      <InputText
+        label="Weekly income"
+        name="weeklyIncome"
+        value={value}
+        onChange={handleOnChange}
+        smallLabel
+      />
+    </form>
+  );
+};

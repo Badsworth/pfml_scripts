@@ -3,7 +3,7 @@ import EmployerBenefit, {
 } from "../../models/EmployerBenefit";
 import Claim from "../../models/Claim";
 import ConditionalContent from "../../components/ConditionalContent";
-import FormLabel from "../../components/FormLabel";
+import Heading from "../../components/Heading";
 import InputChoiceGroup from "../../components/InputChoiceGroup";
 import InputDate from "../../components/InputDate";
 import InputText from "../../components/InputText";
@@ -51,25 +51,24 @@ const EmployerBenefitDetails = (props) => {
     updateFields({ employer_benefits: updatedBenefits });
   };
 
-  const render = (benefit, index) => {
+  const render = (entry, index) => {
     return (
       <EmployerBenefitCard
-        benefit={benefit}
+        entry={entry}
         index={index}
         onInputChange={handleInputChange}
       />
     );
   };
 
-  // todo: CP-563 fix spacing issue between section label and repeatablefieldset
   return (
     <QuestionPage
       title={t("pages.claimsEmployerBenefitDetails.title")}
       onSave={handleSave}
     >
-      <FormLabel component="legend">
+      <Heading level="2" size="1">
         {t("pages.claimsEmployerBenefitDetails.sectionLabel")}
-      </FormLabel>
+      </Heading>
       <RepeatableFieldset
         addButtonLabel={t("pages.claimsEmployerBenefitDetails.addButton")}
         entries={employer_benefits}
@@ -96,10 +95,10 @@ EmployerBenefitDetails.propTypes = {
 /**
  * Helper component for rendering employer benefit cards
  */
-const EmployerBenefitCard = (props) => {
+export const EmployerBenefitCard = (props) => {
   const { t } = useTranslation();
-  const { benefit, onInputChange, index } = props;
-  const selectedType = benefit.benefit_type;
+  const { entry, onInputChange, index } = props;
+  const selectedType = entry.benefit_type;
   // TODO: make sure that the amount gets removed if the input text is hidden
   const showAmountInputText = [
     EmployerBenefitType.shortTermDisability,
@@ -132,7 +131,7 @@ const EmployerBenefitCard = (props) => {
         hint={t("components.form.dateInputHint")}
         name={`employer_benefits[${index}].benefit_start_date`}
         onChange={onInputChange}
-        value={valueWithFallback(benefit.benefit_start_date)}
+        value={valueWithFallback(entry.benefit_start_date)}
         dayLabel={t("components.form.dateInputDayLabel")}
         monthLabel={t("components.form.dateInputMonthLabel")}
         yearLabel={t("components.form.dateInputYearLabel")}
@@ -143,7 +142,7 @@ const EmployerBenefitCard = (props) => {
         hint={t("components.form.dateInputHint")}
         name={`employer_benefits[${index}].benefit_end_date`}
         onChange={onInputChange}
-        value={valueWithFallback(benefit.benefit_end_date)}
+        value={valueWithFallback(entry.benefit_end_date)}
         dayLabel={t("components.form.dateInputDayLabel")}
         monthLabel={t("components.form.dateInputMonthLabel")}
         yearLabel={t("components.form.dateInputYearLabel")}
@@ -156,7 +155,7 @@ const EmployerBenefitCard = (props) => {
           name={`employer_benefits[${index}].benefit_amount_dollars`}
           onChange={onInputChange}
           optionalText={t("components.form.optionalText")}
-          value={valueWithFallback(benefit.benefit_amount)}
+          value={valueWithFallback(entry.benefit_amount_dollars)}
           smallLabel
         />
       </ConditionalContent>
@@ -166,7 +165,7 @@ const EmployerBenefitCard = (props) => {
 
 EmployerBenefitCard.propTypes = {
   index: PropTypes.number.isRequired,
-  benefit: PropTypes.instanceOf(EmployerBenefit).isRequired,
+  entry: PropTypes.instanceOf(EmployerBenefit).isRequired,
   onInputChange: PropTypes.func.isRequired,
 };
 

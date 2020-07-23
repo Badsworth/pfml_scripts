@@ -1,9 +1,13 @@
 import EmployerBenefit, {
   EmployerBenefitType,
 } from "../../../src/models/EmployerBenefit";
-import EmployerBenefitDetails from "../../../src/pages/claims/employer-benefit-details";
+import EmployerBenefitDetails, {
+  EmployerBenefitCard,
+} from "../../../src/pages/claims/employer-benefit-details";
+import React from "react";
 import { act } from "react-dom/test-utils";
 import { renderWithAppLogic } from "../../test-utils";
+import { shallow } from "enzyme";
 
 jest.mock("../../../src/hooks/useAppLogic");
 
@@ -142,5 +146,16 @@ describe("EmployerBenefitDetails", () => {
       expect(entries).toHaveLength(1);
       expect(entries[0]).toEqual(new EmployerBenefit());
     });
+  });
+});
+
+describe("EmployerBenefitCard", () => {
+  it("renders fields for an EmployerBenefit instance", () => {
+    const entry = new EmployerBenefit();
+    const wrapper = shallow(
+      <EmployerBenefitCard entry={entry} index={0} onInputChange={jest.fn()} />
+    );
+
+    expect(wrapper).toMatchSnapshot();
   });
 });
