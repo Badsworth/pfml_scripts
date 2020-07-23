@@ -8,11 +8,13 @@ import urllib.parse
 import xml.etree.ElementTree
 from typing import Any, Callable, Dict, List
 
+import defusedxml.ElementTree
 import oauthlib.oauth2
 import pydantic
 import requests
 import requests_oauthlib
 import xmlschema
+from werkzeug.exceptions import BadRequest, NotFound
 
 import massgov.pfml.util.logging
 
@@ -29,7 +31,6 @@ employee_register_request_schema = xmlschema.XMLSchema(
 class FINEOSClient(client.AbstractFINEOSClient):
     """FINEOS API client."""
 
-    api_url: str
     wscomposer_url: str
     customer_api_url: str
     request_count: int
@@ -101,7 +102,8 @@ class FINEOSClient(client.AbstractFINEOSClient):
         """Make a request to the Customer API."""
         url = urllib.parse.urljoin(self.customer_api_url, path)
         headers = {"userid": user_id, "Content-Type": "application/json"}
-        return self._request(self.oauth_session.request, method, url, headers, **args)
+        response = self._request(self.oauth_session.request, method, url, headers, **args)
+        return response
 
     def _wscomposer_request(self, method: str, path: str, xml_data: str) -> requests.Response:
         """Make a request to the Web Services Composer API."""
@@ -109,12 +111,25 @@ class FINEOSClient(client.AbstractFINEOSClient):
         headers = {"Content-Type": "application/xml"}
         return self._request(requests.request, method, url, headers, data=xml_data)
 
+    def find_employer(self, employer_fein: int) -> str:
+        response = self._wscomposer_request(
+            "GET", "ReadEmployer?userid=CONTENT&param_str_taxId={}".format(employer_fein), ""
+        )
+        root = defusedxml.ElementTree.fromstring(response.text)
+        if len(root) > 0:
+            customer_nbr = str(root[0].find("CustomerNo").text)
+            return customer_nbr
+        else:
+            raise NotFound("Employer not found.")
+
     def register_api_user(self, employee_registration: models.EmployeeRegistration) -> None:
         """Create the employee account registration."""
         xml_body = self._register_api_user_payload(employee_registration)
-        self._wscomposer_request(
+        response = self._wscomposer_request(
             "POST", "webservice?userid=CONTENT&config=EmployeeRegisterService", xml_body
         )
+        if response.status_code != 200:
+            raise BadRequest("Employee not registered: {}".format(response.reason))
 
     @staticmethod
     def _register_api_user_payload(employee_registration: models.EmployeeRegistration,) -> str:
@@ -124,14 +139,16 @@ class FINEOSClient(client.AbstractFINEOSClient):
             "update-data": {
                 "EmployeeRegistrationDTO": [
                     {
-                        "CustomerNumber": str(employee_registration.customer_number),
+                        "CustomerNumber": str(employee_registration.customer_number or ""),
                         "DateOfBirth": str(employee_registration.date_of_birth),
                         "Email": employee_registration.email,
                         "EmployeeExternalId": employee_registration.user_id,
                         "EmployerId": str(employee_registration.employer_id),
                         "FirstName": employee_registration.first_name,
                         "LastName": employee_registration.last_name,
-                        "NationalInsuranceNo": None,
+                        "NationalInsuranceNo": str(
+                            employee_registration.national_insurance_no or ""
+                        ),
                     }
                 ]
             },
@@ -205,6 +222,6 @@ class FINEOSClient(client.AbstractFINEOSClient):
             "POST",
             "customer/addPaymentPreference",
             user_id,
-            json=payment_preference.json(exclude_none=True),
+            data=payment_preference.json(exclude_none=True),
         )
         return models.customer_api.PaymentPreferenceResponse.parse_obj(response.json())

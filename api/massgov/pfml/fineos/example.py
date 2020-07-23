@@ -3,6 +3,7 @@
 #
 
 import datetime
+import uuid
 
 import requests.packages.urllib3.connection
 
@@ -30,26 +31,34 @@ def main():
 
     # Create the client.
     cps = massgov.pfml.fineos.FINEOSClient(
-        customer_api_url="https://dt1-api.masspfml.fineos.com/customer-services/",
-        wscomposer_url="https://dt1-claims-webapp.masspfml.fineos.com/wscomposer/",
-        oauth2_url="https://dt1-api.masspfml.fineos.com/oauth2/token",
-        client_id="4gjtcl7d0rca0jleujea0veqrg",
-        client_secret="1pnhkt07uc6it0tlpp93m3s8o8i1aab7js2ha44q72od7tmga6pk",
+        customer_api_url="https://dt2-api.masspfml.fineos.com/customerapi/",
+        wscomposer_url="https://dt2-claims-webapp.masspfml.fineos.com/wscomposer/",
+        oauth2_url="https://dt2-api.masspfml.fineos.com/oauth2/token",
+        client_id="1ral5e957i0l9shul52bhk0037",
+        client_secret="45qqfa12nl9gm8ts2gd6nl552o7vur83l7i34k3vv6f2l5077gg",
     )
 
     # Send some requests.
-    healthy = cps.health_check("hackathon_91")
-    logger.info("healthy %s", healthy)
+    # healthy = cps.health_check("hackathon_91")
+    # logger.info("healthy %s", healthy)
 
-    user_id = "example_91"
+    employer_fein = 179892886
+
+    employer_id = cps.find_employer(employer_fein)
+    logger.info("Employer ID is {}".format(employer_id))
+
+    user_id = "pfml_api_{}".format(str(uuid.uuid4()))
+    logger.info("FINEOS Web ID to register is {}".format(user_id))
+
     employee_registration = massgov.pfml.fineos.models.EmployeeRegistration(
         user_id=user_id,
-        customer_number=91,
-        date_of_birth=datetime.date(1960, 1, 24),
-        email="ville_j@mass.gov",
-        employer_id=21,
-        first_name="Jackson",
-        last_name="Ville",
+        customer_number=None,
+        date_of_birth=datetime.date(1753, 1, 1),
+        email=None,
+        employer_id=employer_id,
+        first_name=None,
+        last_name=None,
+        national_insurance_no=784569632,
     )
     cps.register_api_user(employee_registration)
 
@@ -84,13 +93,12 @@ def main():
         logger.info("absence %s %s %s", absence.absenceId, absence.reason, absence.startDate)
 
     payment_preference = massgov.pfml.fineos.models.customer_api.NewPaymentPreference(
-        description="Elec transfer test",
-        paymentMethod="Elec Funds Transfer",
-        accountDetails=massgov.pfml.fineos.models.customer_api.AccountDetails(
-            accountName="Test",
-            accountType="checking",
-            accountNo="123456789",
-            routingNumber="0456789",
+        description="Print Check",
+        paymentMethod="Check",
+        effectiveFrom=datetime.date(2020, 7, 16),
+        isDefault=True,
+        chequeDetails=massgov.pfml.fineos.models.customer_api.ChequeDetails(
+            nameToPrintOnCheck="Michelle Jones2"
         ),
     )
     cps.add_payment_preference(user_id, payment_preference)

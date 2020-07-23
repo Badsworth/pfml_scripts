@@ -12,6 +12,11 @@ class AbstractFINEOSClient(abc.ABC, metaclass=abc.ABCMeta):
     """Abstract base class for a FINEOS API client."""
 
     @abc.abstractmethod
+    def find_employer(self, employer_fein: int) -> str:
+        """Create the employee account registration."""
+        pass
+
+    @abc.abstractmethod
     def register_api_user(self, employee_registration: models.EmployeeRegistration) -> None:
         """Create the employee account registration."""
         pass

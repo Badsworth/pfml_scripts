@@ -9,6 +9,7 @@ import datetime
 import typing
 
 import faker
+from werkzeug.exceptions import BadRequest, NotFound
 
 import massgov.pfml.util.logging
 
@@ -25,8 +26,17 @@ def fake_date_of_birth(fake):
 class MockFINEOSClient(client.AbstractFINEOSClient):
     """Mock FINEOS API client that returns fake responses."""
 
+    def find_employer(self, employer_fein: int) -> str:
+        if employer_fein == 999999999:
+            raise NotFound("Employer not found.")
+        else:
+            return "15"
+
     def register_api_user(self, employee_registration: models.EmployeeRegistration) -> None:
-        pass
+        if employee_registration.national_insurance_no == 999999999:
+            raise BadRequest("Employee not registered: Fake error message from Mock Client")
+        else:
+            pass
 
     def health_check(self, user_id: str) -> bool:
         return True

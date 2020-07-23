@@ -3,15 +3,17 @@
 #
 
 import datetime
+from typing import Optional
 
 import pydantic
 
 
 class EmployeeRegistration(pydantic.BaseModel):
     user_id: str
-    customer_number: int
+    customer_number: Optional[int]
     employer_id: int
     date_of_birth: datetime.date
-    email: str
-    first_name: str
-    last_name: str
+    email: Optional[str]
+    first_name: Optional[str]
+    last_name: Optional[str]
+    national_insurance_no: int
