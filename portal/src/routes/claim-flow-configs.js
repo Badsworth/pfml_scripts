@@ -13,6 +13,7 @@
  */
 import { EmploymentStatus, LeaveReason } from "../models/Claim";
 import { ClaimSteps } from "../models/Step";
+import { fields as averageWorkHoursFields } from "../pages/claims/average-work-hours";
 import { fields as durationFields } from "../pages/claims/duration";
 import { fields as employerBenefitDetailsFields } from "../pages/claims/employer-benefit-details";
 import { fields as employerBenefitsFields } from "../pages/claims/employer-benefits";
@@ -39,10 +40,12 @@ export const guards = {
     get(claim, "leave_details.reason") === LeaveReason.medical,
   isEmployed: ({ claim }) =>
     get(claim, "employment_status") === EmploymentStatus.employed,
-  hasStateId: ({ user }) => get(user, "has_state_id"),
+  hasStateId: ({ user }) => user.has_state_id === true,
   hasEmployerBenefits: ({ claim }) => claim.has_employer_benefits === true,
   hasOtherIncomes: ({ claim }) => claim.has_other_incomes === true,
   hasPreviousLeaves: ({ claim }) => claim.has_previous_leaves === true,
+  isIntermittentOrReduced: ({ claim }) =>
+    claim.isIntermittent || claim.isReducedSchedule,
 };
 
 export default {
@@ -194,6 +197,23 @@ export default {
       meta: {
         step: ClaimSteps.leaveDetails,
         fields: durationFields,
+      },
+      on: {
+        CONTINUE: [
+          {
+            target: routes.claims.averageWorkHours,
+            cond: "isIntermittentOrReduced",
+          },
+          {
+            target: routes.claims.leaveDates,
+          },
+        ],
+      },
+    },
+    [routes.claims.averageWorkHours]: {
+      meta: {
+        step: ClaimSteps.leaveDetails,
+        fields: averageWorkHoursFields,
       },
       on: {
         CONTINUE: routes.claims.leaveDates,

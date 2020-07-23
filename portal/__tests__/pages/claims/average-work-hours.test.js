@@ -9,7 +9,7 @@ describe("AverageWorkHours", () => {
   beforeEach(() => {
     ({ appLogic, wrapper } = renderWithAppLogic(AverageWorkHours, {
       claimAttrs: {
-        temp: { leave_details: { avg_weekly_hours_worked: "40" } },
+        temp: { leave_details: { avg_weekly_work_hours: "40" } },
       },
     }));
   });

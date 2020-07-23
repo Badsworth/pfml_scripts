@@ -120,9 +120,9 @@ const Review = (props) => {
         })}
       </ReviewRow>
 
-      {get(claim, "temp.leave_details.avg_weekly_hours_worked") && (
+      {get(claim, "temp.leave_details.avg_weekly_work_hours") && (
         <ReviewRow label={t("pages.claimsReview.averageWorkHoursLabel")}>
-          {get(claim, "temp.leave_details.avg_weekly_hours_worked")}
+          {get(claim, "temp.leave_details.avg_weekly_work_hours")}
         </ReviewRow>
       )}
 

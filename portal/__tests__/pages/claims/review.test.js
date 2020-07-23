@@ -26,7 +26,7 @@ function fullClaimAttrs() {
     },
     temp: {
       leave_details: {
-        avg_weekly_hours_worked: "20",
+        avg_weekly_work_hours: "20",
         end_date: "2021-12-30",
         start_date: "2021-09-21",
       },

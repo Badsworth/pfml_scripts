@@ -1,4 +1,9 @@
-import Claim, { EmploymentStatus, LeaveReason } from "../../src/models/Claim";
+import Claim, {
+  EmploymentStatus,
+  IntermittentLeavePeriod,
+  LeaveReason,
+  ReducedScheduleLeavePeriod,
+} from "../../src/models/Claim";
 import { Machine, assign } from "xstate";
 import { get, merge } from "lodash";
 import machineConfigs, { guards } from "../../src/routes/claim-flow-configs";
@@ -90,12 +95,22 @@ const machineTests = {
       test: () => {},
     },
   },
-  [routes.claims.leaveDates]: {
+  [routes.claims.duration]: {
     meta: {
       test: () => {},
     },
   },
-  [routes.claims.duration]: {
+  [routes.claims.averageWorkHours]: {
+    meta: {
+      test: (_, event) => {
+        expect(
+          event.context.claim.isIntermittent ||
+            event.context.claim.isReducedSchedule
+        ).toBe(true);
+      },
+    },
+  },
+  [routes.claims.leaveDates]: {
     meta: {
       test: () => {},
     },
@@ -178,7 +193,21 @@ describe("routingMachine", () => {
   const hasOtherIncomes = { has_other_incomes: true };
   const hasStateId = { has_state_id: true };
   const hasPreviousLeaves = { has_previous_leaves: true };
+  const intermittentLeave = {
+    leave_details: {
+      intermittent_leave_periods: [new IntermittentLeavePeriod()],
+    },
+  };
+  const reducedSchedule = {
+    temp: {
+      leave_details: {
+        reduced_schedule_leave_periods: [new ReducedScheduleLeavePeriod()],
+      },
+    },
+  };
   const testData = [
+    { claimData: intermittentLeave, userData: {} },
+    { claimData: reducedSchedule, userData: {} },
     { claimData: medicalClaim, userData: hasStateId },
     { claimData: employed, userData: {} },
     { claimData: hasEmployerBenefits, userData: {} },

@@ -112,7 +112,7 @@ export default class Step extends BaseModel {
           "claim.middle_name",
           "claim.other_incomes",
           "claim.previous_leaves",
-          "claim.temp.leave_details.avg_weekly_hours_worked",
+          "claim.temp.leave_details.avg_weekly_work_hours",
           "claim.temp.leave_details.continuous_leave_periods[0]",
           "claim.temp.leave_details.end_date",
           "claim.temp.leave_details.start_date",
