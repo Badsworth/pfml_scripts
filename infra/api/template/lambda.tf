@@ -42,6 +42,7 @@ resource "aws_lambda_function" "dor_import" {
       DECRYPT                                = "true"
       GPG_DECRYPTION_KEY_SSM_PATH            = "/service/${local.app_name}-dor-import/${var.environment_name}/gpg_decryption_key"
       GPG_DECRYPTION_KEY_PASSPHRASE_SSM_PATH = "/service/${local.app_name}-dor-import/${var.environment_name}/gpg_decryption_key_passphrase"
+      FOLDER_PATH                            = "s3://massgov-pfml-${var.environment_name}-agency-transfer/dor/received"
     }
   }
 }

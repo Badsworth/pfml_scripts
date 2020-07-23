@@ -5,6 +5,7 @@
 import os
 from urllib.parse import urlparse
 
+import boto3
 import smart_open
 
 
@@ -26,9 +27,18 @@ def list_files(path):
 
         files = []
 
-        for key, _content in smart_open.s3_iter_bucket(bucket_name, prefix=prefix):
+        # TODO Use boto3 for now to address multithreading issue in lambda, revisit after pilot 2
+        # https://github.com/RaRe-Technologies/smart_open/issues/340
+        # for key, _content in smart_open.s3_iter_bucket(bucket_name, prefix=prefix, workers=1):
+        #     files.append(get_file_name(key))
+
+        s3 = boto3.client("s3")
+        for object in s3.list_objects(Bucket=bucket_name, Prefix=prefix)["Contents"]:
+            key = object["Key"]
             files.append(get_file_name(key))
+
         return files
+
     return os.listdir(path)
 
 
