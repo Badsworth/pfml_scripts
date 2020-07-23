@@ -15,7 +15,7 @@ export default function getInputValueFromEvent(event) {
     return undefined;
   }
 
-  const { checked, type, value, inputmode, pattern } = event.target;
+  const { checked, type, value, inputMode, pattern } = event.target;
   let result = value;
   if (type === "checkbox" || type === "radio") {
     // Convert boolean input string values into an actual boolean
@@ -28,7 +28,7 @@ export default function getInputValueFromEvent(event) {
         break;
     }
   } else if (
-    inputmode === "numeric" &&
+    inputMode === "numeric" &&
     pattern === "[0-9]*" &&
     value &&
     value.trim() !== ""

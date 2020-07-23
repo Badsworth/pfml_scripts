@@ -112,12 +112,12 @@ describe("getInputValueFromEvent", () => {
     });
   });
 
-  describe("given field inputmode is 'numeric' and field pattern is [0-9]*", () => {
+  describe("given field inputMode is 'numeric' and field pattern is [0-9]*", () => {
     it("converts string to number", () => {
       const target = {
         name: "Foo",
         value: "44",
-        inputmode: "numeric",
+        inputMode: "numeric",
         pattern: "[0-9]*",
       };
       const value = getInputValueFromEvent({ target });
@@ -129,7 +129,7 @@ describe("getInputValueFromEvent", () => {
       const target = {
         name: "Foo",
         value: "4hockey4",
-        inputmode: "numeric",
+        inputMode: "numeric",
         pattern: "[0-9]*",
       };
       const value = getInputValueFromEvent({ target });
@@ -141,7 +141,7 @@ describe("getInputValueFromEvent", () => {
       const target = {
         name: "Foo",
         value: " ",
-        inputmode: "numeric",
+        inputMode: "numeric",
         pattern: "[0-9]*",
       };
       const value = getInputValueFromEvent({ target });
@@ -153,7 +153,7 @@ describe("getInputValueFromEvent", () => {
       const target = {
         name: "Foo",
         value: undefined,
-        inputmode: "numeric",
+        inputMode: "numeric",
         pattern: "[0-9]*",
       };
       const value = getInputValueFromEvent({ target });
@@ -165,7 +165,7 @@ describe("getInputValueFromEvent", () => {
       const target = {
         name: "Foo",
         value: null,
-        inputmode: "numeric",
+        inputMode: "numeric",
         pattern: "[0-9]*",
       };
       const value = getInputValueFromEvent({ target });

@@ -37,7 +37,7 @@ exports[`Duration regardless of duration type initially renders the page without
     hint={
       <React.Fragment>
         <p>
-          Refer to Question 17 in the "Ability to work" section of the Healthcare Provider Form.
+          Refer to Question 18 in the "Ability to work" section of the Healthcare Provider Form.
         </p>
         <p>
           Select all that apply.

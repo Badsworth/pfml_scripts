@@ -201,7 +201,7 @@ const pages = {
     continuousWeeksLabel:
       "For how many weeks will you need to take continuous leave from work?",
     durationTypeSectionHint:
-      'Refer to Question 17 in the "Ability to work" section of the Healthcare Provider Form.',
+      'Refer to Question 18 in the "Ability to work" section of the Healthcare Provider Form.',
     durationTypeSectionLabel: "Which of the following situations apply?",
     durationTypeSelectAllHint: "Select all that apply.",
     intermittentDurationBasisDaysLabel: "At least a day",
