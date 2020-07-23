@@ -16,7 +16,7 @@ exports[`UploadHealthcareForm initially renders the page without any file cards 
       components={
         Object {
           "healthcare-provider-form-link": <a
-            href="https://www.mass.gov/how-to/download-a-healthcare-provider-form"
+            href="https://www.mass.gov/hcp-form"
           />,
         }
       }

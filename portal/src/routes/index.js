@@ -50,8 +50,7 @@ const routes = {
   },
   external: {
     massgov: {
-      healthcareProviderForm:
-        "https://www.mass.gov/how-to/download-a-healthcare-provider-form",
+      healthcareProviderForm: "https://www.mass.gov/hcp-form",
       informedConsent: "https://www.mass.gov/paidleave-informedconsent",
       privacyPolicy: "https://www.mass.gov/privacypolicy",
     },
