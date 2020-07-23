@@ -1,5 +1,4 @@
 import { Auth } from "aws-amplify";
-import User from "../../src/models/User";
 import { act } from "react-dom/test-utils";
 import { mockRouter } from "next/router";
 import routes from "../../src/routes";
@@ -407,54 +406,6 @@ describe("useAuthLogic", () => {
         await createAccount(username, password);
       });
       expect(appErrors.items).toHaveLength(0);
-    });
-  });
-
-  describe("requireUserConsentToDataAgreement", () => {
-    describe("when user consented to data sharing", () => {
-      it("doesn't redirect to the consent page", () => {
-        let requireUserConsentToDataAgreement;
-        const user = new User({ consented_to_data_sharing: true });
-
-        testHook(() => {
-          ({ requireUserConsentToDataAgreement } = useAuthLogic({ user }));
-        });
-
-        requireUserConsentToDataAgreement();
-
-        expect(mockRouter.push).not.toHaveBeenCalled();
-      });
-    });
-
-    describe("when user didn't consent to data sharing", () => {
-      it("redirects to consent page if user", () => {
-        let requireUserConsentToDataAgreement;
-        const user = new User({ consented_to_data_sharing: false });
-
-        testHook(() => {
-          ({ requireUserConsentToDataAgreement } = useAuthLogic({ user }));
-        });
-
-        requireUserConsentToDataAgreement();
-
-        expect(mockRouter.push).toHaveBeenCalledWith(
-          "/user/consent-to-data-sharing"
-        );
-      });
-
-      it("doesn't redirect if route is already set to consent page", () => {
-        let requireUserConsentToDataAgreement;
-        mockRouter.pathname = "/user/consent-to-data-sharing";
-        const user = new User({ consented_to_data_sharing: false });
-
-        testHook(() => {
-          ({ requireUserConsentToDataAgreement } = useAuthLogic({ user }));
-        });
-
-        requireUserConsentToDataAgreement();
-
-        expect(mockRouter.push).not.toHaveBeenCalled();
-      });
     });
   });
 

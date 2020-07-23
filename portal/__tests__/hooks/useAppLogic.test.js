@@ -11,14 +11,13 @@ describe("useAppLogic", () => {
       createClaim,
       goToNextPage,
       loadClaims,
-      loadUser,
       rest,
       setAppErrors,
-      setUser,
       submitClaim,
       updateClaim,
       updateUser,
-      user;
+      user,
+      users;
 
     testHook(() => {
       ({
@@ -29,13 +28,12 @@ describe("useAppLogic", () => {
         createClaim,
         goToNextPage,
         loadClaims,
-        loadUser,
         setAppErrors,
-        setUser,
         submitClaim,
         updateClaim,
         updateUser,
         user,
+        users,
         ...rest
       } = useAppLogic());
     });
@@ -47,14 +45,13 @@ describe("useAppLogic", () => {
     expect(clearErrors).toBeInstanceOf(Function);
     expect(goToNextPage).toBeInstanceOf(Function);
     expect(loadClaims).toBeInstanceOf(Function);
-    expect(loadUser).toBeInstanceOf(Function);
     expect(createClaim).toBeInstanceOf(Function);
     expect(updateClaim).toBeInstanceOf(Function);
     expect(updateUser).toBeInstanceOf(Function);
     expect(setAppErrors).toBeInstanceOf(Function);
-    expect(setUser).toBeInstanceOf(Function);
     expect(submitClaim).toBeInstanceOf(Function);
     expect(user).toBeUndefined();
+    expect(users).toEqual(expect.anything());
     // there should be no other properties;
     expect(rest).toEqual({});
   });

@@ -17,6 +17,14 @@ jest.mock("next/router");
 describe("useUsersLogic", () => {
   let appErrorsLogic, errorSpy, portalFlow, usersApi, usersLogic;
 
+  async function preloadUser(user) {
+    usersApi.getCurrentUser.mockResolvedValueOnce({
+      success: true,
+      user,
+    });
+    await usersLogic.loadUser();
+  }
+
   beforeEach(() => {
     // The mock of UsersApi returns an object with references to a singleton
     // of getCurrentUser and updateUser so this will reference the same
@@ -149,6 +157,47 @@ describe("useUsersLogic", () => {
         expect(appErrorsLogic.appErrors.items[0].type).toEqual(
           UserNotFoundError.name
         );
+      });
+    });
+  });
+
+  describe("requireUserConsentToDataAgreement", () => {
+    describe("when user is not loaded", () => {
+      it("throws error if user not loaded", () => {
+        expect(usersLogic.requireUserConsentToDataAgreement).toThrow(
+          /User not loaded/
+        );
+      });
+    });
+
+    describe("when user consented to data sharing", () => {
+      beforeEach(async () => {
+        await preloadUser(new User({ consented_to_data_sharing: true }));
+      });
+
+      it("doesn't redirect to the consent page", () => {
+        usersLogic.requireUserConsentToDataAgreement();
+        expect(mockRouter.push).not.toHaveBeenCalled();
+      });
+    });
+
+    describe("when user didn't consent to data sharing", () => {
+      beforeEach(async () => {
+        await preloadUser(new User({ consented_to_data_sharing: false }));
+      });
+
+      it("redirects to consent page if user isn't already there", () => {
+        usersLogic.requireUserConsentToDataAgreement();
+        expect(mockRouter.push).toHaveBeenCalledWith(
+          "/user/consent-to-data-sharing"
+        );
+      });
+
+      it("doesn't redirect if route is already set to consent page", () => {
+        mockRouter.pathname = "/user/consent-to-data-sharing";
+        usersLogic.requireUserConsentToDataAgreement();
+
+        expect(mockRouter.push).not.toHaveBeenCalled();
       });
     });
   });

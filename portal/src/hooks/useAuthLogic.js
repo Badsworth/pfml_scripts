@@ -13,7 +13,7 @@ import { useTranslation } from "../locales/i18n";
  * @param {User} params.user
  * @returns {object}
  */
-const useAuthLogic = ({ appErrorsLogic, user }) => {
+const useAuthLogic = ({ appErrorsLogic }) => {
   const { t } = useTranslation();
   const router = useRouter();
 
@@ -116,19 +116,6 @@ const useAuthLogic = ({ appErrorsLogic, user }) => {
     } catch (error) {
       const appErrors = getCreateAccountErrorInfo(error, t);
       appErrorsLogic.setAppErrors(appErrors);
-    }
-  };
-
-  /**
-   * Redirect user to data agreement consent page if
-   * they have not yet consented to the agreement.
-   */
-  const requireUserConsentToDataAgreement = () => {
-    if (
-      !user.consented_to_data_sharing &&
-      !router.pathname.match(routes.user.consentToDataSharing)
-    ) {
-      router.push(routes.user.consentToDataSharing);
     }
   };
 
@@ -235,7 +222,6 @@ const useAuthLogic = ({ appErrorsLogic, user }) => {
     createAccount,
     forgotPassword,
     login,
-    requireUserConsentToDataAgreement,
     resendVerifyAccountCode,
     resetPassword,
     verifyAccount,

@@ -5,6 +5,8 @@ import {
 } from "../errors";
 import { useMemo, useState } from "react";
 import UsersApi from "../api/UsersApi";
+import routes from "../routes";
+import { useRouter } from "next/router";
 
 /**
  * Hook that defines user state
@@ -18,6 +20,7 @@ import UsersApi from "../api/UsersApi";
 const useUsersLogic = ({ appErrorsLogic, portalFlow }) => {
   const usersApi = useMemo(() => new UsersApi(), []);
   const [user, setUser] = useState();
+  const router = useRouter();
 
   /**
    * Update user through a PATCH request to /users
@@ -70,7 +73,22 @@ const useUsersLogic = ({ appErrorsLogic, portalFlow }) => {
     }
   };
 
-  return { user, setUser, updateUser, loadUser };
+  /**
+   * Redirect user to data agreement consent page if
+   * they have not yet consented to the agreement.
+   */
+  const requireUserConsentToDataAgreement = () => {
+    if (!user) throw new Error("User not loaded");
+    if (
+      !user.consented_to_data_sharing &&
+      // TODO CP-732: Once we switch to using a custom router we can probably use portalFlow instead of directly checking the router pathname
+      !router.pathname.includes(routes.user.consentToDataSharing)
+    ) {
+      router.push(routes.user.consentToDataSharing);
+    }
+  };
+
+  return { user, updateUser, loadUser, requireUserConsentToDataAgreement };
 };
 
 export default useUsersLogic;

@@ -119,7 +119,7 @@ export const App = ({
    */
   const handleLogIn = async () => {
     setUI({ ...ui, isLoading: true });
-    await appLogic.loadUser();
+    await appLogic.users.loadUser();
     setUI({ ...ui, isLoading: false });
   };
 
@@ -143,8 +143,8 @@ export const App = ({
    * TODO: Move to useAuth hook
    */
   useEffect(() => {
-    if (appLogic.user) {
-      appLogic.auth.requireUserConsentToDataAgreement();
+    if (appLogic.users.user) {
+      appLogic.users.requireUserConsentToDataAgreement();
     }
     // Only trigger this effect when the user is set/updated
     // or when the user attempts to navigate to another page
