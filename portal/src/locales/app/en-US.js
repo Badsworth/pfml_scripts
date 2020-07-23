@@ -504,7 +504,7 @@ const pages = {
     addFirstFileButtonText: "Choose a file",
     fileHeadingPrefix: "File",
     lead:
-      "You need to upload a copy of the <healthcare-provider-form-link>PFML Healthcare Provider Form</healthcare-provider-form-link> to prove that you need to take medical leave. You can upload a completed Family and Medical Leave Act (FMLA) form instead if your provider filled one out.",
+      "You need to upload a copy of the <healthcare-provider-form-link>PFML Healthcare Provider Form (opens in new tab)</healthcare-provider-form-link> to prove that you need to take medical leave. You can upload a completed Family and Medical Leave Act (FMLA) form instead if your provider filled one out.",
     sectionLabel: "Upload your Healthcare Provider form",
     title: "$t(shared.claimsLeaveDetailsTitle)",
   },

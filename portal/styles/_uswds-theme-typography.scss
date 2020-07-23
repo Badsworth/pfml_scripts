@@ -40,6 +40,8 @@ $theme-type-scale-xs: 5;
 
 // Apply default type styles (family, size, line height) to the body element
 $theme-style-body-element: true;
+// Apply global styling to links, otherwise you have to apply .usa-link to every link
+$theme-global-link-styles: true;
 // Apply global <p> styling
 $theme-global-paragraph-styles: true;
 

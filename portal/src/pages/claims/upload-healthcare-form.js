@@ -32,7 +32,11 @@ const UploadHealthcareForm = (props) => {
           i18nKey="pages.claimsUploadHealthcareForm.lead"
           components={{
             "healthcare-provider-form-link": (
-              <a href={routes.external.massgov.healthcareProviderForm} />
+              <a
+                target="_blank"
+                rel="noopener"
+                href={routes.external.massgov.healthcareProviderForm}
+              />
             ),
           }}
         />

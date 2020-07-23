@@ -55,6 +55,7 @@
         "react/button-has-type": "error",
         "react/jsx-handler-names": "off",
         "react/jsx-fragments": ["error", "element"],
+        "react/jsx-no-target-blank": ["error", { "allowReferrer": true} ],
         "react-hooks/rules-of-hooks": "error",
         "react-hooks/exhaustive-deps": "warn",
         "sort-imports": "error",

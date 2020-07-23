@@ -17,6 +17,8 @@ exports[`UploadHealthcareForm initially renders the page without any file cards 
         Object {
           "healthcare-provider-form-link": <a
             href="https://www.mass.gov/hcp-form"
+            rel="noopener"
+            target="_blank"
           />,
         }
       }
