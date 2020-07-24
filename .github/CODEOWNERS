@@ -9,4 +9,4 @@
 /portal/ @EOLWD/pfml-portal
 /docs/portal/ @EOLWD/pfml-portal
 /infra/portal/ @EOLWD/pfml-portal
-/api/openapi.yaml @EOLWD/pfml-portal # Not an "Owner" but this provides visibility to Portal engineers
+/api/openapi.yaml @EOLWD/pfml-portal
