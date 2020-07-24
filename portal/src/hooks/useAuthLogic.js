@@ -17,6 +17,8 @@ const useAuthLogic = ({ appErrorsLogic }) => {
   const { t } = useTranslation();
   const router = useRouter();
 
+  let isLoadingAuthUser = false;
+
   /**
    * Sometimes we need to persist information the user entered on
    * one auth screen so it can be reused on a subsequent auth screen.
@@ -25,6 +27,7 @@ const useAuthLogic = ({ appErrorsLogic }) => {
    * @property {Function} setAuthData - updated the cached authentication info
    */
   const [authData, setAuthData] = useState({});
+  const [authUser, setAuthUser] = useState(null);
 
   /**
    * Initiate the Forgot Password flow, sending a verification code when user exists.
@@ -116,6 +119,38 @@ const useAuthLogic = ({ appErrorsLogic }) => {
     } catch (error) {
       const appErrors = getCreateAccountErrorInfo(error, t);
       appErrorsLogic.setAppErrors(appErrors);
+    }
+  };
+
+  /**
+   * Check current session for current user info. If user is logged in,
+   * set authUser to an object containing the current user's email.
+   * If the user is not logged in, redirect the user to the login page.
+   */
+  const requireLogin = async () => {
+    // TODO (CP-733): Update this comment once we move logout functionality into this module
+    // Note that although we don't yet have a logout function that sets authUser back to null,
+    // the logout (signOut) functionality in AuthNav.js forces a page reload which will
+    // reset React in-memory state
+    if (authUser) return;
+    if (isLoadingAuthUser) return;
+
+    try {
+      isLoadingAuthUser = true;
+      const cognitoUserInfo = await Auth.currentUserInfo();
+      if (cognitoUserInfo) {
+        const { email } = cognitoUserInfo.attributes;
+        setAuthUser({ email });
+        return;
+      }
+
+      if (!cognitoUserInfo && !router.pathname.match(routes.auth.login)) {
+        // TODO (CP-729): Eventually move routing logic to usePortalFlow
+        router.push(routes.auth.login);
+        return;
+      }
+    } finally {
+      isLoadingAuthUser = false;
     }
   };
 
@@ -219,9 +254,11 @@ const useAuthLogic = ({ appErrorsLogic }) => {
 
   return {
     authData,
+    authUser,
     createAccount,
     forgotPassword,
     login,
+    requireLogin,
     resendVerifyAccountCode,
     resetPassword,
     verifyAccount,

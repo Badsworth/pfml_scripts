@@ -11,10 +11,12 @@ jest.mock("aws-amplify");
 describe("useAuthLogic", () => {
   let appErrors,
     authData,
+    authUser,
     createAccount,
     forgotPassword,
     login,
     password,
+    requireLogin,
     resendVerifyAccountCode,
     resetPassword,
     setAppErrors,
@@ -32,9 +34,11 @@ describe("useAuthLogic", () => {
       ({ appErrors, setAppErrors } = appErrorsLogic);
       ({
         authData,
+        authUser,
         forgotPassword,
         login,
         createAccount,
+        requireLogin,
         resendVerifyAccountCode,
         resetPassword,
         verifyAccount,
@@ -406,6 +410,96 @@ describe("useAuthLogic", () => {
         await createAccount(username, password);
       });
       expect(appErrors.items).toHaveLength(0);
+    });
+  });
+
+  describe("requireLogin", () => {
+    describe("when user is logged in", () => {
+      beforeEach(() => {
+        Auth.currentUserInfo.mockResolvedValue({
+          attributes: {
+            email: username,
+          },
+        });
+      });
+
+      it("doesn't redirect to the login page", async () => {
+        await act(async () => {
+          await requireLogin();
+        });
+        expect(mockRouter.push).not.toHaveBeenCalled();
+      });
+
+      it("sets authUser", async () => {
+        await act(async () => {
+          await requireLogin();
+        });
+        expect(authUser).toEqual({ email: username });
+      });
+
+      it("only makes one api request at a time", async () => {
+        await act(async () => {
+          // call requireLogin twice in parallel
+          await Promise.all([requireLogin(), requireLogin()]);
+        });
+
+        expect(authUser).toEqual({ email: username });
+        expect(Auth.currentUserInfo).toHaveBeenCalledTimes(1);
+      });
+
+      it("does not make api request if authUser has already been set", async () => {
+        await act(async () => {
+          await requireLogin();
+          await requireLogin();
+        });
+
+        expect(authUser).toEqual({ email: username });
+        expect(Auth.currentUserInfo).toHaveBeenCalledTimes(1);
+      });
+
+      it("can recover and try again if Auth.currentUserInfo throws an error", async () => {
+        Auth.currentUserInfo
+          .mockReset()
+          .mockImplementationOnce(() => {
+            throw new Error();
+          })
+          .mockResolvedValueOnce({
+            attributes: {
+              email: username,
+            },
+          });
+        await act(async () => {
+          try {
+            await requireLogin();
+          } catch {
+            await requireLogin();
+          }
+        });
+
+        expect(authUser).toEqual({ email: username });
+        expect(Auth.currentUserInfo).toHaveBeenCalledTimes(2);
+      });
+    });
+
+    describe("when user is not logged in", () => {
+      beforeEach(() => {
+        Auth.currentUserInfo.mockResolvedValueOnce(null);
+      });
+
+      it("redirects to login page", async () => {
+        await act(async () => {
+          await requireLogin();
+        });
+        expect(mockRouter.push).toHaveBeenCalledWith(routes.auth.login);
+      });
+
+      it("doesn't redirect if route is already set to login page", async () => {
+        mockRouter.pathname = routes.auth.login;
+        await act(async () => {
+          await requireLogin();
+        });
+        expect(mockRouter.push).not.toHaveBeenCalled();
+      });
     });
   });
 
