@@ -3,6 +3,10 @@ import Claim, {
   LeaveReason,
   PaymentPreferenceMethod,
 } from "../../models/Claim";
+import EmployerBenefit, {
+  EmployerBenefitType,
+} from "../../models/EmployerBenefit";
+import OtherIncome, { OtherIncomeType } from "../../models/OtherIncome";
 import Step, { ClaimSteps } from "../../models/Step";
 import routeWithParams, {
   createRouteWithQuery,
@@ -10,6 +14,7 @@ import routeWithParams, {
 import BackButton from "../../components/BackButton";
 import ButtonLink from "../../components/ButtonLink";
 import { DateTime } from "luxon";
+import PreviousLeave from "../../models/PreviousLeave";
 import PropTypes from "prop-types";
 import React from "react";
 import ReviewHeading from "../../components/ReviewHeading";
@@ -165,6 +170,47 @@ const Review = (props) => {
         </ReviewRow>
       )}
 
+      {/* OTHER LEAVE */}
+      <ReviewHeading
+        editHref={routeForStep(ClaimSteps.otherLeave)}
+        editText={t("pages.claimsReview.editLink")}
+      >
+        {t("pages.claimsReview.otherLeaveSectionHeading")}
+      </ReviewHeading>
+
+      <ReviewRow label={t("pages.claimsReview.employerBenefitLabel")}>
+        {get(claim, "has_employer_benefits") === true
+          ? t("pages.claimsReview.otherLeaveChoiceYes")
+          : t("pages.claimsReview.otherLeaveChoiceNo")}
+      </ReviewRow>
+
+      {get(claim, "has_employer_benefits") && (
+        <EmployerBenefitList entries={get(claim, "employer_benefits")} />
+      )}
+
+      <ReviewRow label={t("pages.claimsReview.otherIncomeLabel")}>
+        {get(claim, "has_other_incomes") === true
+          ? t("pages.claimsReview.otherLeaveChoiceYes")
+          : t("pages.claimsReview.otherLeaveChoiceNo")}
+      </ReviewRow>
+
+      {get(claim, "has_other_incomes") && (
+        <OtherIncomeList entries={get(claim, "other_incomes")} />
+      )}
+
+      <ReviewRow
+        label={t("pages.claimsReview.previousLeaveLabel")}
+        editText={t("pages.claimsReview.editLink")}
+      >
+        {get(claim, "has_previous_leaves") === true
+          ? t("pages.claimsReview.otherLeaveChoiceYes")
+          : t("pages.claimsReview.otherLeaveChoiceNo")}
+      </ReviewRow>
+
+      {get(claim, "has_previous_leaves") && (
+        <PreviousLeaveList entries={get(claim, "previous_leaves")} />
+      )}
+
       {/* PAYMENT METHOD */}
       <ReviewHeading
         editHref={routeForStep(ClaimSteps.payment)}
@@ -200,6 +246,154 @@ Review.propTypes = {
   query: PropTypes.shape({
     claim_id: PropTypes.string,
   }),
+};
+
+/*
+ * Helper component for rendering an array of EmployerBenefit
+ * objects.
+ */
+export const EmployerBenefitList = (props) => {
+  const { t } = useTranslation();
+  const entries = props.entries;
+
+  return entries.map((entry, index) => {
+    const label = t("pages.claimsReview.employerBenefitEntryLabel", {
+      count: index + 1,
+    });
+    // TODO: CP-567 remove this ternary operator once we begin saving other leave to
+    // the API. We'll always have a type then
+    const type = entry.benefit_type
+      ? t("pages.claimsReview.employerBenefitType", {
+          context: findKeyByValue(EmployerBenefitType, entry.benefit_type),
+        })
+      : null;
+    const dates = formatDateRange(
+      entry.benefit_start_date,
+      entry.benefit_end_date
+    );
+    const amount =
+      entry.benefit_amount_dollars &&
+      t("pages.claimsReview.otherLeaveDollarAmount", {
+        amount: entry.benefit_amount_dollars,
+      });
+
+    return (
+      <OtherLeaveEntry
+        key={index}
+        label={label}
+        type={type}
+        dates={dates}
+        amount={amount}
+      />
+    );
+  });
+};
+
+EmployerBenefitList.propTypes = {
+  entries: PropTypes.arrayOf(PropTypes.instanceOf(EmployerBenefit)).isRequired,
+};
+
+/*
+ * Helper component for rendering an array of OtherIncome
+ * objects.
+ */
+export const OtherIncomeList = (props) => {
+  const { t } = useTranslation();
+  const entries = props.entries;
+
+  return entries.map((entry, index) => {
+    const label = t("pages.claimsReview.otherIncomeEntryLabel", {
+      count: index + 1,
+    });
+    // TODO: CP-567 remove this ternary operator once we begin saving other leave to
+    // the API. We'll always have a type then
+    const type = entry.income_type
+      ? t("pages.claimsReview.otherIncomeType", {
+          context: findKeyByValue(OtherIncomeType, entry.income_type),
+        })
+      : null;
+    const dates = formatDateRange(
+      entry.income_start_date,
+      entry.income_end_date
+    );
+    const amount =
+      entry.income_amount_dollars &&
+      t("pages.claimsReview.otherLeaveDollarAmount", {
+        amount: entry.income_amount_dollars,
+      });
+
+    return (
+      <OtherLeaveEntry
+        key={index}
+        label={label}
+        type={type}
+        dates={dates}
+        amount={amount}
+      />
+    );
+  });
+};
+
+OtherIncomeList.propTypes = {
+  entries: PropTypes.arrayOf(PropTypes.instanceOf(OtherIncome)).isRequired,
+};
+
+/*
+ * Helper component for rendering an array of PreviousLeave
+ * objects.
+ */
+export const PreviousLeaveList = (props) => {
+  const { t } = useTranslation();
+  const entries = props.entries;
+
+  return entries.map((entry, index) => {
+    const label = t("pages.claimsReview.previousLeaveEntryLabel", {
+      count: index + 1,
+    });
+    const dates = formatDateRange(entry.leave_start_date, entry.leave_end_date);
+
+    return <OtherLeaveEntry key={index} label={label} dates={dates} />;
+  });
+};
+
+PreviousLeaveList.propTypes = {
+  entries: PropTypes.arrayOf(PropTypes.instanceOf(PreviousLeave)).isRequired,
+};
+
+/*
+ * Helper component for rendering a single other leave entry. This will
+ * render a ReviewRow with the specified label, date string,
+ * and an optional type string and amount string
+ */
+export const OtherLeaveEntry = (props) => {
+  const { label, type, dates, amount } = props;
+
+  return (
+    <ReviewRow label={label}>
+      {type && (
+        <React.Fragment>
+          {type}
+          <br />
+        </React.Fragment>
+      )}
+      {/* TODO: CP-567 once we're saving other leave to the api then we can remove
+          the conditional rendering here and instead always render the date string */}
+      {dates && (
+        <React.Fragment>
+          {dates}
+          <br />
+        </React.Fragment>
+      )}
+      {amount}
+    </ReviewRow>
+  );
+};
+
+OtherLeaveEntry.propTypes = {
+  amount: PropTypes.string,
+  dates: PropTypes.string.isRequired,
+  label: PropTypes.string.isRequired,
+  type: PropTypes.string,
 };
 
 export default withClaim(Review);

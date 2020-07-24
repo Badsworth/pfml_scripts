@@ -59,6 +59,11 @@ const shared = {
   claimsLeaveDurationTitle: "Leave duration",
   claimsOtherLeaveTitle: "Other income and benefits",
   claimsTakingLeaveTitle: "Verify your identity",
+  employerBenefitEntryPrefix: "Benefit",
+  employerBenefitType_familyOrMedicalLeave: "Family or medical leave insurance",
+  employerBenefitType_paidLeave: "Accrued paid Leave",
+  employerBenefitType_permanentDisability: "Permanent disability insurance",
+  employerBenefitType_shortTermDisability: "Short-term disability insurance",
   leaveReasonActiveDutyFamily: "Active duty",
   leaveReasonBonding: "Bonding leave",
   leaveReasonMedical: "Medical leave",
@@ -67,6 +72,16 @@ const shared = {
     "You need to complete a separate application for each employer you are taking leave from.",
   networkError:
     "Sorry, an error was encountered. This may occur for a variety of reasons, including temporarily losing an internet connection or an unexpected error in our system. If this continues to happen, you may call the Paid Family Leave Contact Center at $t(shared.callCenterPhoneNumber)",
+  otherIncomeEntryPrefix: "Income",
+  otherIncomeType_jonesAct: "Jones Act benefits",
+  otherIncomeType_otherEmployer: "Earnings from another employer",
+  otherIncomeType_railroadRetirement: "Railroad Retirement benefits",
+  otherIncomeType_retirementDisability:
+    "Disability benefits under a governmental retirement plan",
+  otherIncomeType_selfEmployment: "Earnings from self-employment",
+  otherIncomeType_ssdi: "Social Security Disability Insurance",
+  otherIncomeType_unemployment: "Unemployment Insurance",
+  otherIncomeType_workersCompensation: "Workers Compensation",
   passwordHint:
     "Your password must be at least 8 characters long and include numbers and letters.",
   passwordLabel: "Password",
@@ -74,6 +89,7 @@ const shared = {
   paymentMethodDebit: "Debit card",
   pregnancyOrRecentBirthLabel:
     "Are you pregnant or have you recently given birth?",
+  previousLeaveEntryPrefix: "Previous leave",
   resendVerificationCodeLink: "Resend the code",
   usernameLabel: "Email address",
   verificationCodeLabel: "6-digit code",
@@ -255,7 +271,7 @@ const pages = {
     addButton: "Add another benefit",
     amountHint: "For example, $250 every month",
     amountLabel: "How much will you receive?",
-    cardHeadingPrefix: "Benefit",
+    cardHeadingPrefix: "$t(shared.employerBenefitEntryPrefix)",
     choiceHint_familyOrMedicalLeave:
       "For example, a paid maternity leave policy",
     choiceHint_paidLeave:
@@ -264,10 +280,13 @@ const pages = {
       "Also known as a permanent disability policy",
     choiceHint_shortTermDisability:
       "Also known as temporary disability insurance",
-    choiceLabel_familyOrMedicalLeave: "Family or medical leave insurance",
-    choiceLabel_paidLeave: "Accrued paid Leave",
-    choiceLabel_permanentDisability: "Permanent disability insurance",
-    choiceLabel_shortTermDisability: "Short-term disability insurance",
+    choiceLabel_familyOrMedicalLeave:
+      "$t(shared.employerBenefitType_familyOrMedicalLeave)",
+    choiceLabel_paidLeave: "$t(shared.employerBenefitType_paidLeave)",
+    choiceLabel_permanentDisability:
+      "$t(shared.employerBenefitType_permanentDisability)",
+    choiceLabel_shortTermDisability:
+      "$t(shared.employerBenefitType_shortTermDisability)",
     endDateLabel: "When will you stop using the benefit?",
     removeButton: "Remove benefit",
     sectionLabel: "Tell us about benefits you will receive from your employer.",
@@ -372,21 +391,23 @@ const pages = {
     addButton: "Add another income",
     amountHint: "For example, $250 every month.",
     amountLabel: "How much will you receive?",
-    cardHeadingPrefix: "Income",
+    cardHeadingPrefix: "$t(shared.otherIncomeEntryPrefix)",
     endDateLabel: "When will you stop receiving this income?",
     removeButton: "Remove income",
     sectionLabel: "Tell us about your other sources of income.",
     startDateLabel: "When will you start receiving this income?",
     title: "$t(shared.claimsOtherLeaveTitle)",
-    typeChoiceLabel_jonesAct: "Jones Act benefits",
-    typeChoiceLabel_otherEmployer: "Earnings from another employer",
-    typeChoiceLabel_railroadRetirement: "Railroad Retirement benefits",
+    typeChoiceLabel_jonesAct: "$t(shared.otherIncomeType_jonesAct)",
+    typeChoiceLabel_otherEmployer: "$t(shared.otherIncomeType_otherEmployer)",
+    typeChoiceLabel_railroadRetirement:
+      "$t(shared.otherIncomeType_railroadRetirement)",
     typeChoiceLabel_retirementDisability:
-      "Disability benefits under a governmental retirement plan",
-    typeChoiceLabel_selfEmployment: "Earnings from self-employment",
-    typeChoiceLabel_ssdi: "Social Security Disability Insurance",
-    typeChoiceLabel_unemployment: "Unemployment Insurance",
-    typeChoiceLabel_workersCompensation: "Workers Compensation",
+      "$t(shared.otherIncomeType_retirementDisability)",
+    typeChoiceLabel_selfEmployment: "$t(shared.otherIncomeType_selfEmployment)",
+    typeChoiceLabel_ssdi: "$t(shared.otherIncomeType_ssdi)",
+    typeChoiceLabel_unemployment: "$t(shared.otherIncomeType_unemployment)",
+    typeChoiceLabel_workersCompensation:
+      "$t(shared.otherIncomeType_workersCompensation)",
     typeLabel: "What kind of income is it?",
   },
   claimsPaymentMethod: {
@@ -428,7 +449,7 @@ const pages = {
   },
   claimsPreviousLeavesDetails: {
     addButton: "Add another leave",
-    cardHeadingPrefix: "Previous leave",
+    cardHeadingPrefix: "$t(shared.previousLeaveEntryPrefix)",
     endDateLabel: "When did your leave end?",
     removeButton: "Remove leave",
     sectionLabel: "Tell us about previous paid or unpaid leave",
@@ -445,6 +466,16 @@ const pages = {
     averageWorkHoursLabel: "Average hours worked per week",
     confirmationAction: "Confirm information is correct",
     editLink: "Edit",
+    employerBenefitEntryLabel:
+      "$t(shared.employerBenefitEntryPrefix) {{count}}",
+    employerBenefitLabel: "Employer-sponsored benefits?",
+    employerBenefitType_familyOrMedicalLeave:
+      "$t(shared.employerBenefitType_familyOrMedicalLeave)",
+    employerBenefitType_paidLeave: "$t(shared.employerBenefitType_paidLeave)",
+    employerBenefitType_permanentDisability:
+      "$t(shared.employerBenefitType_permanentDisability)",
+    employerBenefitType_shortTermDisability:
+      "$t(shared.employerBenefitType_shortTermDisability)",
     employerFeinLabel: "Employer's FEIN",
     employerNotifiedLabel: "Notified employer",
     employerNotifiedValue: "No",
@@ -466,6 +497,24 @@ const pages = {
     leaveReasonValue_serviceMemberFamily:
       "$t(shared.leaveReasonServiceMemberFamily)",
     leaveSectionHeading: "$t(shared.claimsLeaveDetailsTitle)",
+    otherIncomeEntryLabel: "$t(shared.otherIncomeEntryPrefix) {{count}}",
+    otherIncomeLabel: "Other sources of income?",
+    otherIncomeType_jonesAct: "$t(shared.otherIncomeType_jonesAct)",
+    otherIncomeType_otherEmployer: "$t(shared.otherIncomeType_otherEmployer)",
+    otherIncomeType_railroadRetirement:
+      "$t(shared.otherIncomeType_railroadRetirement)",
+    otherIncomeType_retirementDisability:
+      "$t(shared.otherIncomeType_retirementDisability)",
+    otherIncomeType_selfEmployment: "$t(shared.otherIncomeType_selfEmployment)",
+    otherIncomeType_ssdi: "$t(shared.otherIncomeType_ssdi)",
+    otherIncomeType_unemployment: "$t(shared.otherIncomeType_unemployment)",
+    otherIncomeType_workersCompensation:
+      "$t(shared.otherIncomeType_workersCompensation)",
+    otherLeaveChoiceNo: "$t(shared.choiceNo)",
+    otherLeaveChoiceYes: "$t(shared.choiceYes)",
+    // eslint-disable-next-line no-template-curly-in-string
+    otherLeaveDollarAmount: "${{amount}} every month",
+    otherLeaveSectionHeading: "$t(shared.claimsOtherLeaveTitle)",
     paymentMethodLabel: "Payment method",
     paymentMethodValue_ach: "$t(shared.paymentMethodAch)",
     paymentMethodValue_debit: "$t(shared.paymentMethodDebit)",
@@ -473,6 +522,8 @@ const pages = {
     pregnancyChoiceNo: "$t(shared.choiceNo)",
     pregnancyChoiceYes: "$t(shared.choiceYes)",
     pregnancyOrRecentBirthLabel: "$t(shared.pregnancyOrRecentBirthLabel)",
+    previousLeaveEntryLabel: "$t(shared.previousLeaveEntryPrefix) {{count}}",
+    previousLeaveLabel: "Previous paid or unpaid leave?",
     title: "Check your answers before sending your application",
     userDateOfBirthLabel: "Date of birth",
     userNameLabel: "Full name",

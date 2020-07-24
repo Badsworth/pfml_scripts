@@ -28,6 +28,7 @@ export const EmployerBenefitType = {
   shortTermDisability: "Short Term Disability",
   permanentDisability: "Permanent Disability",
   familyOrMedicalLeave: "Family or Medical Leave",
+  /* eslint-enable sort-keys */
 };
 
 export default EmployerBenefit;
