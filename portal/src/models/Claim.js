@@ -14,7 +14,6 @@ class Claim extends BaseModel {
       employee_ssn: null,
       employer_benefits: [],
       employer_fein: null,
-      // TODO: This field does not yet exist in the API: https://lwd.atlassian.net/browse/CP-574
       employment_status: null,
       first_name: null,
       // TODO: this field doesn't exist in the API yet: https://lwd.atlassian.net/browse/CP-567
@@ -23,8 +22,6 @@ class Claim extends BaseModel {
       has_other_incomes: null,
       // TODO: this field doesn't exist in the API yet: https://lwd.atlassian.net/browse/CP-567
       has_previous_leaves: null,
-      // TODO: We'll map this to the correct API field once we get into Intermittent Leave work
-      hours_off_needed: null,
       last_name: null,
       leave_details: {
         employer_notification_date: null,
@@ -122,9 +119,9 @@ export const ClaimStatus = {
  * @enum {string}
  */
 export const EmploymentStatus = {
-  employed: "employed",
-  selfEmployed: "self-employed",
-  unemployed: "unemployed",
+  employed: "Employed",
+  selfEmployed: "Self-Employed",
+  unemployed: "Unemployed",
 };
 
 /**

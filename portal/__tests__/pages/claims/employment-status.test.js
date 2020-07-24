@@ -1,4 +1,5 @@
 import { renderWithAppLogic, simulateEvents } from "../../test-utils";
+import { EmploymentStatus } from "../../../src/models/Claim";
 import EmploymentStatusPage from "../../../src/pages/claims/employment-status";
 import { act } from "react-dom/test-utils";
 
@@ -22,7 +23,7 @@ describe("EmploymentStatusPage", () => {
 
   describe("when user selects employed in MA as their employment status", () => {
     beforeEach(() => {
-      changeRadioGroup("employment_status", "employed");
+      changeRadioGroup("employment_status", EmploymentStatus.employed);
     });
 
     it("shows FEIN question", () => {
@@ -44,7 +45,7 @@ describe("EmploymentStatusPage", () => {
         expect(appLogic.updateClaim).toHaveBeenCalledWith(
           claim.application_id,
           {
-            employment_status: "employed",
+            employment_status: EmploymentStatus.employed,
             employer_fein: testFein,
           }
         );
@@ -54,7 +55,7 @@ describe("EmploymentStatusPage", () => {
 
   describe("when user selects self-employed as their employment status", () => {
     beforeEach(() => {
-      changeRadioGroup("employment_status", "self-employed");
+      changeRadioGroup("employment_status", EmploymentStatus.selfEmployed);
     });
 
     it("hides FEIN question", () => {
@@ -68,7 +69,7 @@ describe("EmploymentStatusPage", () => {
 
   describe("when user selects unemployed as their employment status", () => {
     beforeEach(() => {
-      changeRadioGroup("employment_status", "unemployed");
+      changeRadioGroup("employment_status", EmploymentStatus.unemployed);
     });
     it("hides FEIN question", () => {
       expect(

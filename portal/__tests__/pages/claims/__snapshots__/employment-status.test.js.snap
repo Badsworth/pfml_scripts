@@ -16,17 +16,17 @@ exports[`EmploymentStatusPage renders the page 1`] = `
         Object {
           "checked": false,
           "label": "I'm employed in Massachusetts",
-          "value": "employed",
+          "value": "Employed",
         },
         Object {
           "checked": false,
           "label": "I'm unemployed",
-          "value": "unemployed",
+          "value": "Unemployed",
         },
         Object {
           "checked": false,
           "label": "I'm self-employed",
-          "value": "self-employed",
+          "value": "Self-Employed",
         },
       ]
     }

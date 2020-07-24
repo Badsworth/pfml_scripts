@@ -1,4 +1,5 @@
 import Claim, { EmploymentStatus } from "../../models/Claim";
+import { get, pick } from "lodash";
 import Alert from "../../components/Alert";
 import ConditionalContent from "../../components/ConditionalContent";
 import Details from "../../components/Details";
@@ -7,8 +8,6 @@ import InputText from "../../components/InputText";
 import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
-import get from "lodash/get";
-import pick from "lodash/pick";
 import useFormState from "../../hooks/useFormState";
 import useHandleInputChange from "../../hooks/useHandleInputChange";
 import { useTranslation } from "../../locales/i18n";
