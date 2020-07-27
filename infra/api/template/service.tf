@@ -60,5 +60,9 @@ data "template_file" "container_definitions" {
     cognito_user_pool_keys_url        = var.cognito_user_pool_keys_url
     rmv_client_certificate_binary_arn = var.rmv_client_certificate_binary_arn
     rmv_client_base_url               = var.rmv_client_base_url
+    fineos_client_customer_api_url    = var.fineos_client_customer_api_url
+    fineos_client_wscomposer_api_url  = var.fineos_client_wscomposer_api_url
+    fineos_client_oauth2_url          = var.fineos_client_oauth2_url
+    fineos_client_oauth2_client_id    = var.fineos_client_oauth2_client_id
   }
 }

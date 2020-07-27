@@ -36,11 +36,16 @@
       { "name": "CORS_ORIGINS", "value": "${cors_origins}" },
       { "name": "COGNITO_USER_POOL_KEYS_URL", "value": "${cognito_user_pool_keys_url}"},
       { "name": "RMV_CLIENT_BASE_URL", "value": "${rmv_client_base_url}" },
-      { "name": "RMV_CLIENT_CERTIFICATE_BINARY_ARN", "value": "${rmv_client_certificate_binary_arn}" }
+      { "name": "RMV_CLIENT_CERTIFICATE_BINARY_ARN", "value": "${rmv_client_certificate_binary_arn}" },
+      { "name": "FINEOS_CLIENT_CUSTOMER_API_URL", "value": "${fineos_client_customer_api_url}" },
+      { "name": "FINEOS_CLIENT_WSCOMPOSER_API_URL", "value": "${fineos_client_wscomposer_api_url}" },
+      { "name": "FINEOS_CLIENT_OAUTH2_URL", "value": "${fineos_client_oauth2_url}" }
+      { "name": "FINEOS_CLIENT_OAUTH2_CLIENT_ID", "value": "${fineos_client_oauth2_client_id}" }
     ],
     "secrets": [
       { "name": "DB_PASSWORD", "valueFrom": "/service/${app_name}/${environment_name}/db-password" },
-      { "name": "RMV_CLIENT_CERTIFICATE_PASSWORD", "valueFrom": "/service/${app_name}/${environment_name}/rmv_client_certificate_password" }
+      { "name": "RMV_CLIENT_CERTIFICATE_PASSWORD", "valueFrom": "/service/${app_name}/${environment_name}/rmv_client_certificate_password" },
+      { "name": "FINEOS_CLIENT_OAUTH2_CLIENT_SECRET" , "valueFrom": "/service/${app_name}/${environment_name}/fineos_oauth2_client_secret" }
     ]
   }
 ]

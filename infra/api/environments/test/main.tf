@@ -52,4 +52,8 @@ module "api" {
   cognito_user_pool_keys_url                       = "https://cognito-idp.us-east-1.amazonaws.com/us-east-1_HhQSLYSIe/.well-known/jwks.json"
   rmv_client_base_url                              = "https://atlas-staging-gateway.massdot.state.ma.us"
   rmv_client_certificate_binary_arn                = "arn:aws:secretsmanager:us-east-1:498823821309:secret:/service/pfml-api-test/rmv_client_certificate-zWimpc"
+  fineos_client_customer_api_url                   = "https://dt2-api.masspfml.fineos.com/customer-services/"
+  fineos_client_wscomposer_api_url                 = "https://dt2-claims-webapp.masspfml.fineos.com/wscomposer/"
+  fineos_client_oauth2_url                         = "https://dt2-api.masspfml.fineos.com/oauth2/token"
+  fineos_client_oauth2_client_id                   = "1ral5e957i0l9shul52bhk0037"
 }
