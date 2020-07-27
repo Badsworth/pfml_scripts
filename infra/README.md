@@ -37,6 +37,7 @@ Install the required libraries:
 
 ```
 pip install requests boto3 colorama
+brew install coreutils
 ```
 
 Then install PFML's CLI wrapper with the following script:
