@@ -22,6 +22,8 @@ const useUsersLogic = ({ appErrorsLogic, portalFlow }) => {
   const [user, setUser] = useState();
   const router = useRouter();
 
+  let isLoadingUser = false;
+
   /**
    * Update user through a PATCH request to /users
    * @param {string} user_id - ID of user being updated
@@ -46,10 +48,17 @@ const useUsersLogic = ({ appErrorsLogic, portalFlow }) => {
 
   /**
    * Fetch the current user through a PATCH request to users/current
-   * and add user to applicaiton's state
+   * and add user to application's state
    */
   const loadUser = async () => {
+    // Caching logic: if user has already been loaded, just reuse the cached user
+    if (user) return;
+    // Locking logic: prevent simultaneous calls to the same API
+    // TODO (CP-757): Abstract out this pattern
+    if (isLoadingUser) return;
+
     try {
+      isLoadingUser = true;
       const { user, success } = await usersApi.getCurrentUser();
 
       if (success && user) {
@@ -70,6 +79,8 @@ const useUsersLogic = ({ appErrorsLogic, portalFlow }) => {
         console.error(error);
       }
       appErrorsLogic.catchError(errorToSet);
+    } finally {
+      isLoadingUser = false;
     }
   };
 

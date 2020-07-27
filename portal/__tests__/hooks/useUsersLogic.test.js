@@ -25,17 +25,21 @@ describe("useUsersLogic", () => {
     await usersLogic.loadUser();
   }
 
+  function renderHook() {
+    testHook(() => {
+      portalFlow = usePortalFlow();
+      appErrorsLogic = useAppErrorsLogic();
+      usersLogic = useUsersLogic({ appErrorsLogic, portalFlow });
+    });
+  }
+
   beforeEach(() => {
     // The mock of UsersApi returns an object with references to a singleton
     // of getCurrentUser and updateUser so this will reference the same
     // jest.fn mocks that are used in the hook.
     usersApi = new UsersApi();
     errorSpy = jest.spyOn(console, "error").mockImplementationOnce(jest.fn());
-    testHook(() => {
-      portalFlow = usePortalFlow();
-      appErrorsLogic = useAppErrorsLogic();
-      usersLogic = useUsersLogic({ appErrorsLogic, portalFlow });
-    });
+    renderHook();
   });
 
   describe("updateUser", () => {
@@ -113,21 +117,41 @@ describe("useUsersLogic", () => {
   });
 
   describe("loadUser", () => {
-    beforeEach(async () => {
+    it("fetches current user from api", async () => {
       await act(async () => {
         await usersLogic.loadUser();
       });
-    });
-
-    it("fetches current user from api", () => {
       expect(usersApi.getCurrentUser).toHaveBeenCalled();
     });
 
-    it("sets the current user", () => {
+    it("sets the current user", async () => {
+      await act(async () => {
+        await usersLogic.loadUser();
+      });
       expect(usersLogic.user).toBeInstanceOf(User);
     });
 
-    describe("when api does not return sucess", () => {
+    it("only makes api request if user has not been loaded", async () => {
+      await act(async () => {
+        await usersLogic.loadUser();
+        await usersLogic.loadUser();
+      });
+
+      expect(usersLogic.user).toBeInstanceOf(User);
+      expect(usersApi.getCurrentUser).toHaveBeenCalledTimes(1);
+    });
+
+    it("only makes one api request at a time", async () => {
+      await act(async () => {
+        // call loadUser twice in parallel
+        await Promise.all([usersLogic.loadUser(), usersLogic.loadUser()]);
+      });
+
+      expect(usersLogic.user).toBeInstanceOf(User);
+      expect(usersApi.getCurrentUser).toHaveBeenCalledTimes(1);
+    });
+
+    describe("when api does not return success", () => {
       beforeEach(async () => {
         usersApi.getCurrentUser.mockResolvedValueOnce({ success: false });
         await act(async () => {
