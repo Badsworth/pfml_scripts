@@ -206,7 +206,7 @@ exports[`Review when all data is present renders Review page with the field valu
   <ReviewRow
     label="Leave duration type"
   >
-    Continuous leave
+    Continuous leave, Reduced leave schedule, Intermittent leave
   </ReviewRow>
   <ReviewRow
     label="Average hours worked per week"
@@ -362,9 +362,7 @@ exports[`Review when data is empty does not render strings like 'null' or 'undef
   />
   <ReviewRow
     label="Leave duration type"
-  >
-    Continuous leave
-  </ReviewRow>
+  />
   <ReviewHeading
     editHref="/claims/employment-status?claim_id=mock_application_id"
     editText="Edit"

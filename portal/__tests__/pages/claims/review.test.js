@@ -1,11 +1,14 @@
+import {
+  ContinuousLeavePeriod,
+  EmploymentStatus,
+  IntermittentLeavePeriod,
+  LeaveReason,
+  PaymentPreferenceMethod,
+  ReducedScheduleLeavePeriod,
+} from "../../../src/models/Claim";
 import EmployerBenefit, {
   EmployerBenefitType,
 } from "../../../src/models/EmployerBenefit";
-import {
-  EmploymentStatus,
-  LeaveReason,
-  PaymentPreferenceMethod,
-} from "../../../src/models/Claim";
 import OtherIncome, { OtherIncomeType } from "../../../src/models/OtherIncome";
 import Review, {
   EmployerBenefitList,
@@ -50,7 +53,6 @@ function fullClaimAttrs() {
   ];
 
   return {
-    duration_type: "continuous",
     employer_benefits,
     employment_status: EmploymentStatus.employed,
     employer_fein: "12-1234567",
@@ -62,6 +64,7 @@ function fullClaimAttrs() {
     leave_details: {
       employer_notified: true,
       employer_notification_date: "2020-06-25",
+      intermittent_leave_periods: [new IntermittentLeavePeriod()],
       reason: LeaveReason.medical,
     },
     middle_name: "Monstera",
@@ -70,7 +73,9 @@ function fullClaimAttrs() {
     temp: {
       leave_details: {
         avg_weekly_work_hours: "20",
+        continuous_leave_periods: [new ContinuousLeavePeriod()],
         end_date: "2021-12-30",
+        reduced_schedule_leave_periods: [new ReducedScheduleLeavePeriod()],
         start_date: "2021-09-21",
       },
       payment_preferences: [{ payment_method: PaymentPreferenceMethod.ach }],
@@ -105,7 +110,6 @@ describe("Review", () => {
     it("does not render strings like 'null' or 'undefined'", () => {
       const { wrapper } = renderWithAppLogic(Review, {
         claimAttrs: {
-          duration_type: "continuous",
           leave_details: {
             reason: LeaveReason.medical,
           },
@@ -114,6 +118,51 @@ describe("Review", () => {
 
       expect(wrapper).toMatchSnapshot();
     });
+  });
+});
+
+describe("Duration type", () => {
+  it("lists only existing duration type", () => {
+    const intermittentClaim = {
+      leave_details: {
+        intermittent_leave_periods: [new IntermittentLeavePeriod()],
+      },
+    };
+
+    const continuousAndReducedClaim = {
+      temp: {
+        leave_details: {
+          continuous_leave_periods: [new ContinuousLeavePeriod()],
+          reduced_schedule_leave_periods: [new ReducedScheduleLeavePeriod()],
+        },
+        // TODO CP-744: remove once BaseModel merges properties
+        payment_preferences: [{}],
+      },
+    };
+
+    const { wrapper: intermittentWrapper } = renderWithAppLogic(Review, {
+      claimAttrs: intermittentClaim,
+    });
+    const { wrapper: contAndReducedWrapper } = renderWithAppLogic(Review, {
+      claimAttrs: continuousAndReducedClaim,
+    });
+
+    expect(intermittentWrapper.find({ label: "Leave duration type" }))
+      .toMatchInlineSnapshot(`
+      <ReviewRow
+        label="Leave duration type"
+      >
+        Intermittent leave
+      </ReviewRow>
+    `);
+    expect(contAndReducedWrapper.find({ label: "Leave duration type" }))
+      .toMatchInlineSnapshot(`
+      <ReviewRow
+        label="Leave duration type"
+      >
+        Continuous leave, Reduced leave schedule
+      </ReviewRow>
+    `);
   });
 });
 

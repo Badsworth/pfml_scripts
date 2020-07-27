@@ -54,6 +54,7 @@ const shared = {
   choiceYes: "Yes",
   claimDurationTypeContinuous: "Continuous leave",
   claimDurationTypeIntermittent: "Intermittent leave",
+  claimDurationTypeReducedSchedule: "Reduced leave schedule",
   claimsFileUploadTitle: "Verify your identity",
   claimsLeaveDetailsTitle: "Leave details",
   claimsLeaveDurationTitle: "Leave duration",
@@ -209,7 +210,7 @@ const pages = {
     title: "$t(shared.claimsTakingLeaveTitle)",
   },
   claimsDuration: {
-    continuousTypeHint: "Continuous leave",
+    continuousTypeHint: "$t(shared.claimDurationTypeContinuous)",
     continuousTypeLabel:
       "I need to take off work completely for a period of time.",
     continuousWeeksHint:
@@ -253,13 +254,13 @@ const pages = {
       '$t(pages.claimsDuration.intermittentFrequencyLabelBase, {"per": "over the next 6 months"})',
     intermittentSectionLabel:
       "Tell us the estimated frequency and duration when taking intermittent leave.",
-    intermittentTypeHint: "Intermittent leave",
+    intermittentTypeHint: "$t(shared.claimDurationTypeIntermittent)",
     intermittentTypeLabel: "I need to take off work at irregular intervals.",
     reducedHoursPerWeekHint:
       'Refer to Question 26 in the "Estimated leave period" section of the Healthcare Provider Form.',
     reducedHoursPerWeekLabel:
       "How many hours will your work schedule be reduced by each week?",
-    reducedTypeHint: "Reduced leave schedule",
+    reducedTypeHint: "$t(shared.claimDurationTypeReducedSchedule)",
     reducedTypeLabel: "I need to work a reduced schedule for a period of time.",
     reducedWeeksHint:
       'Refer to Question 25 in the "Estimated leave period" section of the Healthcare Provider Form.',
@@ -486,10 +487,11 @@ const pages = {
     employmentStatusValue_selfEmployed: "Self-employed",
     employmentStatusValue_unemployed: "Unemployed",
     leaveDurationLabel: "Leave duration",
+    leaveDurationTypeContinuous: "$t(shared.claimDurationTypeContinuous)",
+    leaveDurationTypeIntermittent: "$t(shared.claimDurationTypeIntermittent)",
     leaveDurationTypeLabel: "Leave duration type",
-    leaveDurationTypeValue_continuous: "$t(shared.claimDurationTypeContinuous)",
-    leaveDurationTypeValue_intermittent:
-      "$t(shared.claimDurationTypeIntermittent)",
+    leaveDurationTypeReducedSchedule:
+      "$t(shared.claimDurationTypeReducedSchedule)",
     leaveReasonLabel: "Leave type",
     leaveReasonValue_activeDutyFamily: "$t(shared.leaveReasonActiveDutyFamily)",
     leaveReasonValue_bonding: "$t(shared.leaveReasonBonding)",

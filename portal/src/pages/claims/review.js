@@ -8,6 +8,7 @@ import EmployerBenefit, {
 } from "../../models/EmployerBenefit";
 import OtherIncome, { OtherIncomeType } from "../../models/OtherIncome";
 import Step, { ClaimSteps } from "../../models/Step";
+import { compact, get } from "lodash";
 import routeWithParams, {
   createRouteWithQuery,
 } from "../../utils/routeWithParams";
@@ -22,7 +23,6 @@ import ReviewRow from "../../components/ReviewRow";
 import Title from "../../components/Title";
 import findKeyByValue from "../../utils/findKeyByValue";
 import formatDateRange from "../../utils/formatDateRange";
-import get from "lodash/get";
 import machineConfigs from "../../routes/claim-flow-configs";
 import { useTranslation } from "../../locales/i18n";
 import withClaim from "../../hoc/withClaim";
@@ -120,9 +120,17 @@ const Review = (props) => {
       </ReviewRow>
 
       <ReviewRow label={t("pages.claimsReview.leaveDurationTypeLabel")}>
-        {t("pages.claimsReview.leaveDurationTypeValue", {
-          context: get(claim, "duration_type"),
-        })}
+        {compact([
+          claim.isContinuous
+            ? t("pages.claimsReview.leaveDurationTypeContinuous")
+            : null,
+          claim.isReducedSchedule
+            ? t("pages.claimsReview.leaveDurationTypeReducedSchedule")
+            : null,
+          claim.isIntermittent
+            ? t("pages.claimsReview.leaveDurationTypeIntermittent")
+            : null,
+        ]).join(", ")}
       </ReviewRow>
 
       {get(claim, "temp.leave_details.avg_weekly_work_hours") && (
