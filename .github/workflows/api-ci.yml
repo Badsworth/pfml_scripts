@@ -3,6 +3,11 @@
 name: API CI Testing
 
 on:
+  push:
+    branches:
+      - master
+    paths:
+      - api/**
   pull_request:
     paths:
       - api/**
@@ -49,6 +54,19 @@ jobs:
 
       - name: test
         run: make test
+
+      - name: setup Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.x'
+
+      - name: install coveralls
+        run: pip install coverage[toml] coveralls[toml]
+
+      - name: upload to coveralls
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: coveralls
 
   # Check we can build a release
   build-release:
