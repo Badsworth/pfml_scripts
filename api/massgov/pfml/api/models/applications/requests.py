@@ -11,12 +11,13 @@ from massgov.pfml.api.models.applications.common import (
 )
 from massgov.pfml.api.models.common import WarningsAndErrors
 from massgov.pfml.util.pydantic import PydanticBaseModel
+from massgov.pfml.util.pydantic.types import FEINStr
 
 
 class ApplicationRequestBody(PydanticBaseModel):
     application_nickname: Optional[str]
     employee_ssn: Optional[str]
-    employer_fein: Optional[str]
+    employer_fein: Optional[FEINStr]
     first_name: Optional[str]
     middle_name: Optional[str]
     last_name: Optional[str]
