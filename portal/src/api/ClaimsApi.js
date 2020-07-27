@@ -1,6 +1,7 @@
 /* eslint-disable jsdoc/require-returns */
 import Claim from "../models/Claim";
 import ClaimCollection from "../models/ClaimCollection";
+import { isFeatureEnabled } from "../services/featureFlags";
 import merge from "lodash/merge";
 import portalRequest from "./portalRequest";
 import routes from "../routes";
@@ -104,12 +105,15 @@ export default class ClaimsApi {
    */
   updateClaim = async (application_id, patchData) => {
     // TODO (CP-716): Send SSN in the API payload once production can accept PII
-    const { employee_ssn, ...workaroundPatchData } = patchData;
+    const { employee_ssn, ...patchDataWithoutExcludedPii } = patchData;
+    const requestData = isFeatureEnabled("sendPii")
+      ? patchData
+      : patchDataWithoutExcludedPii;
 
     const { body, success, status, apiErrors } = await this.claimsRequest(
       "PATCH",
       `/${application_id}`,
-      workaroundPatchData
+      requestData
     );
 
     // Currently the API doesn't return the claim data in the response
