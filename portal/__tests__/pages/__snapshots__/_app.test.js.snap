@@ -52,7 +52,6 @@ exports[`App when authenticated user consented to data sharing renders the page 
       "user": User {
         "auth_id": "mock-auth-id",
         "consented_to_data_sharing": true,
-        "date_of_birth": null,
         "email_address": "mock@example.com",
         "has_state_id": null,
         "state_id": null,
@@ -66,7 +65,6 @@ exports[`App when authenticated user consented to data sharing renders the page 
         "user": User {
           "auth_id": "mock-auth-id",
           "consented_to_data_sharing": true,
-          "date_of_birth": null,
           "email_address": "mock@example.com",
           "has_state_id": null,
           "state_id": null,

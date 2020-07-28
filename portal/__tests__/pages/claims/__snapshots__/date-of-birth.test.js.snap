@@ -12,7 +12,7 @@ exports[`DateOfBirth renders the page 1`] = `
     monthLabel="Month"
     name="date_of_birth"
     onChange={[Function]}
-    value=""
+    value="2019-02-28"
     yearLabel="Year"
   />
 </QuestionPage>

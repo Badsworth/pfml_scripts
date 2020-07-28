@@ -2,23 +2,23 @@ import InputDate from "../../components/InputDate";
 import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
-import User from "../../models/User";
+import { pick } from "lodash";
 import useFormState from "../../hooks/useFormState";
 import useHandleInputChange from "../../hooks/useHandleInputChange";
 import { useTranslation } from "../../locales/i18n";
 import valueWithFallback from "../../utils/valueWithFallback";
 import withClaim from "../../hoc/withClaim";
 
+export const fields = ["claim.date_of_birth"];
+
 export const DateOfBirth = (props) => {
   const { t } = useTranslation();
-  const { user, updateUser } = props.appLogic;
-  const { formState, updateFields } = useFormState(user);
+  const { formState, updateFields } = useFormState(pick(props, fields).claim);
   const { date_of_birth } = formState;
   const handleInputChange = useHandleInputChange(updateFields);
 
-  // TODO: Save this field to the appropriate API models once the fields exist
   const handleSave = () =>
-    updateUser(user.user_id, new User(formState), props.claim);
+    props.appLogic.updateClaim(props.claim.application_id, formState);
 
   return (
     <QuestionPage

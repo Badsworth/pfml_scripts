@@ -10,6 +10,7 @@ class Claim extends BaseModel {
     return {
       application_id: null,
       created_at: null,
+      date_of_birth: null,
       employee_ssn: null,
       employer_benefits: [],
       employer_fein: null,

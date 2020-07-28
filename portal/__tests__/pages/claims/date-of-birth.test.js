@@ -1,15 +1,18 @@
 import DateOfBirth from "../../../src/pages/claims/date-of-birth";
-import { act } from "react-dom/test-utils";
-import { mockUpdateUser } from "../../../src/api/UsersApi";
+import pick from "lodash/pick";
 import { renderWithAppLogic } from "../../test-utils";
 
-jest.mock("../../../src/api/UsersApi");
+jest.mock("../../../src/hooks/useAppLogic");
 
 describe("DateOfBirth", () => {
-  let wrapper;
+  let appLogic, claim, wrapper;
 
   beforeEach(() => {
-    ({ wrapper } = renderWithAppLogic(DateOfBirth));
+    ({ appLogic, claim, wrapper } = renderWithAppLogic(DateOfBirth, {
+      claimAttrs: {
+        date_of_birth: "2019-02-28",
+      },
+    }));
   });
 
   it("renders the page", () => {
@@ -17,12 +20,13 @@ describe("DateOfBirth", () => {
   });
 
   describe("when the form is successfully submitted", () => {
-    it("calls updateUser and updates the state", async () => {
-      expect.assertions();
-      await act(async () => {
-        await wrapper.find("QuestionPage").simulate("save");
-      });
-      expect(mockUpdateUser).toHaveBeenCalledTimes(1);
+    it("calls updateClaim", () => {
+      wrapper.find("QuestionPage").simulate("save");
+
+      expect(appLogic.updateClaim).toHaveBeenCalledWith(
+        expect.any(String),
+        pick(claim, ["date_of_birth"])
+      );
     });
   });
 });

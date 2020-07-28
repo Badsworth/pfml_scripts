@@ -14,6 +14,7 @@
 import { EmploymentStatus, LeaveReason } from "../models/Claim";
 import { ClaimSteps } from "../models/Step";
 import { fields as averageWorkHoursFields } from "../pages/claims/average-work-hours";
+import { fields as dateOfBirthFields } from "../pages/claims/date-of-birth";
 import { fields as durationFields } from "../pages/claims/duration";
 import { fields as employerBenefitDetailsFields } from "../pages/claims/employer-benefit-details";
 import { fields as employerBenefitsFields } from "../pages/claims/employer-benefits";
@@ -100,9 +101,7 @@ export default {
     [routes.claims.dateOfBirth]: {
       meta: {
         step: ClaimSteps.verifyId,
-        // user fields are not currently evaluated
-        // when determining step completeness
-        fields: [],
+        fields: dateOfBirthFields,
       },
       on: {
         CONTINUE: routes.claims.stateId,
