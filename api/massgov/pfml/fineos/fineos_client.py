@@ -14,7 +14,6 @@ import pydantic
 import requests
 import requests_oauthlib
 import xmlschema
-from werkzeug.exceptions import BadRequest, NotFound
 
 import massgov.pfml.util.logging
 
@@ -120,16 +119,14 @@ class FINEOSClient(client.AbstractFINEOSClient):
             customer_nbr = str(root[0].find("CustomerNo").text)
             return customer_nbr
         else:
-            raise NotFound("Employer not found.")
+            raise exception.FINEOSNotFound("Employer not found.")
 
     def register_api_user(self, employee_registration: models.EmployeeRegistration) -> None:
         """Create the employee account registration."""
         xml_body = self._register_api_user_payload(employee_registration)
-        response = self._wscomposer_request(
+        self._wscomposer_request(
             "POST", "webservice?userid=CONTENT&config=EmployeeRegisterService", xml_body
         )
-        if response.status_code != 200:
-            raise BadRequest("Employee not registered: {}".format(response.reason))
 
     @staticmethod
     def _register_api_user_payload(employee_registration: models.EmployeeRegistration,) -> str:

@@ -13,25 +13,33 @@
 ###
 import datetime
 import uuid
-from typing import Optional
-
-from werkzeug.exceptions import BadRequest, NotFound
 
 import massgov.pfml.fineos.factory as fineos_factory
 import massgov.pfml.fineos.models
 import massgov.pfml.util.logging as logging
+from massgov.pfml.db.models.applications import FINEOSWebIdExt
 
 logger = logging.get_logger(__name__)
 
 
-def register_employee(employee_ssn: int, employer_fein: int) -> Optional[str]:
+def register_employee(employee_ssn: int, employer_fein: int, db_session):  # type: ignore
+    # If a FINEOS Id exists for SSN/FEIN return it.
+    fineos_web_id_ext = (
+        db_session.query(FINEOSWebIdExt)
+        .filter(
+            FINEOSWebIdExt.employee_tax_identifier == str(employee_ssn),
+            FINEOSWebIdExt.employer_fein == str(employer_fein),
+        )
+        .one_or_none()
+    )
+
+    if fineos_web_id_ext is not None:
+        return fineos_web_id_ext.fineos_web_id
+
     fineos_client = fineos_factory.create_client()
 
     # Find FINEOS employer id using employer FEIN
-    try:
-        employer_id = fineos_client.find_employer(employer_fein)
-    except NotFound:
-        return None
+    employer_id = fineos_client.find_employer(employer_fein)
 
     # Generate external id
     employee_external_id = "pfml_api_{}".format(str(uuid.uuid4()))
@@ -46,11 +54,14 @@ def register_employee(employee_ssn: int, employer_fein: int) -> Optional[str]:
         last_name=None,
         national_insurance_no=employee_ssn,
     )
-    try:
-        fineos_client.register_api_user(employee_registration)
-    except BadRequest:
-        return None
+
+    fineos_client.register_api_user(employee_registration)
 
     # If successful save ExternalIdentifier in the database
+    fineos_web_id_ext = FINEOSWebIdExt()
+    fineos_web_id_ext.employee_tax_identifier = employee_ssn
+    fineos_web_id_ext.employer_fein = employer_fein
+    fineos_web_id_ext.fineos_web_id = employee_external_id
+    db_session.add(fineos_web_id_ext)
 
     return employee_external_id

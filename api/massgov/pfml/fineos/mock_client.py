@@ -9,11 +9,11 @@ import datetime
 import typing
 
 import faker
-from werkzeug.exceptions import BadRequest, NotFound
+import requests
 
 import massgov.pfml.util.logging
 
-from . import client, models
+from . import client, exception, models
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
 
@@ -28,13 +28,13 @@ class MockFINEOSClient(client.AbstractFINEOSClient):
 
     def find_employer(self, employer_fein: int) -> str:
         if employer_fein == 999999999:
-            raise NotFound("Employer not found.")
+            raise exception.FINEOSNotFound("Employer not found.")
         else:
             return "15"
 
     def register_api_user(self, employee_registration: models.EmployeeRegistration) -> None:
         if employee_registration.national_insurance_no == 999999999:
-            raise BadRequest("Employee not registered: Fake error message from Mock Client")
+            raise exception.FINEOSClientBadResponse(requests.codes.ok, 400)
         else:
             pass
 

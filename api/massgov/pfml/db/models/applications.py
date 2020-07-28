@@ -227,6 +227,13 @@ class EmploymentStatus(LookupTable):
     SELF_EMPLOYED = LkEmploymentStatus(3, "Self-Employed")
 
 
+class FINEOSWebIdExt(Base):
+    __tablename__ = "link_fineos_web_id_ext"
+    employee_tax_identifier = Column(Text, primary_key=True)
+    employer_fein = Column(Text, primary_key=True)
+    fineos_web_id = Column(Text)
+
+
 def sync_lookup_tables(db_session):
     """Synchronize lookup tables to the database."""
     LeaveReason.sync_to_database(db_session)

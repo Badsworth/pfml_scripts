@@ -27,3 +27,14 @@ class FINEOSClientBadResponse(FINEOSClientError):
 
     def __str__(self) -> str:
         return "expected %s, but got %s" % (self.expected_status, self.response_status)
+
+
+class FINEOSNotFound(BaseException):
+
+    message: str
+
+    def __init__(self, message: str):
+        self.message = message
+
+    def __str__(self) -> str:
+        return self.message
