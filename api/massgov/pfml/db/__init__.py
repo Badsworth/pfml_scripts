@@ -89,7 +89,7 @@ def make_connection_uri(config: DbConfig) -> str:
     host = config.host
     db_name = config.name
     username = config.username
-    password = config.password.replace("%", "%%")
+    password = config.password
     schema = config.schema
 
     uri = f"postgresql://{username}:{password}@{host}/{db_name}?options=-csearch_path={schema}"

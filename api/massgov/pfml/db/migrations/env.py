@@ -27,7 +27,9 @@ massgov.pfml.util.logging.init("migrations")
 if not config.get_main_option("sqlalchemy.url"):
     uri = db.make_connection_uri(db_config.get_config())
 
-    config.set_main_option("sqlalchemy.url", uri)
+    # Escape percentage signs in the URI.
+    # https://alembic.sqlalchemy.org/en/latest/api/config.html#alembic.config.Config.set_main_option
+    config.set_main_option("sqlalchemy.url", uri.replace("%", "%%"))
 
 # add your model's MetaData object here
 # for 'autogenerate' support
