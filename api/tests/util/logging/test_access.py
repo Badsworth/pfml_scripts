@@ -21,12 +21,19 @@ class FakeRequest:
         self.full_path = path + "?"
         self.remote_addr = "4.5.6.7"
         self.headers = werkzeug.datastructures.Headers(
-            [("Content-Type", "text/plain"), ("User-Agent", user_agent)]
+            [
+                ("Authorization", "Bearer 10101010101010101010"),
+                ("Content-Type", "text/plain"),
+                ("User-Agent", user_agent),
+            ]
         )
         self.content_length = 64
         self.data = b'{"hello": "world"}'
         self.form = werkzeug.datastructures.ImmutableMultiDict()
         self.json = {"hello": "world"}
+
+    def get_json(self, silent=False):
+        return self.json
 
 
 class FakeResponse:
@@ -90,6 +97,31 @@ def test_full_request_data_logged_when_enabled(caplog):
         if 400 <= record.status_code:
             keys = set(vars(record).keys())
             assert {"request_data", "request_form", "request_json", "response_data"}.issubset(keys)
+
+
+def test_request_headers_logged_for_errors_only(caplog):
+    caplog.set_level(logging.INFO)  # noqa: B1
+
+    simulate_requests()
+
+    assert [(r.funcName, "request_headers" in set(vars(r).keys())) for r in caplog.records] == [
+        ("access_log_success", False),
+        ("access_log_error", True),
+        ("access_log_success", False),
+        ("access_log_error", True),
+        # Note: 5th request not logged as it's a successful load balancer health check.
+        ("access_log_error", True),
+    ]
+
+
+def test_request_authorization_header_not_logged(caplog):
+    caplog.set_level(logging.INFO)  # noqa: B1
+
+    simulate_requests()
+
+    for record in caplog.records:
+        if hasattr(record, "request_headers"):
+            assert "Authorization" not in record.request_headers
 
 
 def test_is_load_balancer_health_check():

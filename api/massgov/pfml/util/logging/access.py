@@ -2,6 +2,8 @@
 # Request access logging.
 #
 
+import werkzeug
+
 import massgov.pfml.util.logging
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
@@ -35,9 +37,11 @@ def access_log_success(request, response):
 
 def access_log_error(request, response, full_data=False):
     """Log data for a failed request. Full request and response data is logged for debugging."""
+    headers = werkzeug.datastructures.Headers(request.headers)
+    headers.remove("Authorization")
     extra = {
         "remote_addr": request.remote_addr,
-        "request_headers": request.headers,
+        "request_headers": headers,
         "request_length": request.content_length,
         "response_length": response.content_length,
         "response_type": response.content_type,
@@ -46,7 +50,7 @@ def access_log_error(request, response, full_data=False):
     if full_data:
         extra["request_data"] = request.data
         extra["request_form"] = request.form.to_dict(flat=False)
-        extra["request_json"] = request.json
+        extra["request_json"] = request.get_json(silent=True)
         extra["response_data"] = response.data
     logger.warning(
         "%s %s %s", response.status_code, request.method, request.full_path, extra=extra,
