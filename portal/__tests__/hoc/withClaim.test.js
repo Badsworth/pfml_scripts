@@ -21,9 +21,13 @@ describe("WithClaim", () => {
     );
 
     expect(wrapper).toMatchInlineSnapshot(`
-      <Spinner
-        aria-valuetext="Loading claims"
-      />
+      <div
+        className="margin-top-8 text-center"
+      >
+        <Spinner
+          aria-valuetext="Loading"
+        />
+      </div>
     `);
   });
 
@@ -40,9 +44,13 @@ describe("WithClaim", () => {
     );
 
     expect(wrapper).toMatchInlineSnapshot(`
-      <Spinner
-        aria-valuetext="Loading claims"
-      />
+      <div
+        className="margin-top-8 text-center"
+      >
+        <Spinner
+          aria-valuetext="Loading"
+        />
+      </div>
     `);
   });
 

@@ -34,7 +34,9 @@ const Applications = (props) => {
       {claimsLoaded && !hasClaims && <p>{t("pages.applications.noClaims")}</p>}
 
       {!claimsLoaded && (
-        <Spinner aria-valuetext={t("components.spinner.label")} />
+        <div className="margin-top-8 text-center">
+          <Spinner aria-valuetext={t("components.spinner.label")} />
+        </div>
       )}
 
       {hasInProgressClaims && (

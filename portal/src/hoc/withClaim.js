@@ -1,6 +1,7 @@
 import React, { useEffect } from "react";
 import PropTypes from "prop-types";
 import Spinner from "../components/Spinner";
+import { useTranslation } from "../locales/i18n";
 
 /**
  * Higher order component that *MUST* be a child of App
@@ -11,6 +12,7 @@ import Spinner from "../components/Spinner";
  */
 const withClaim = (Component) => {
   const ComponentWithClaim = (props) => {
+    const { t } = useTranslation();
     const { query, appLogic } = props;
 
     useEffect(() => {
@@ -19,7 +21,12 @@ const withClaim = (Component) => {
 
     const claim = appLogic.claims ? appLogic.claims.get(query.claim_id) : null;
 
-    if (!claim) return <Spinner aria-valuetext="Loading claims" />;
+    if (!claim)
+      return (
+        <div className="margin-top-8 text-center">
+          <Spinner aria-valuetext={t("components.spinner.label")} />
+        </div>
+      );
 
     return <Component {...props} claim={claim} />;
   };
