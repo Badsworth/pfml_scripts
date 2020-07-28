@@ -80,7 +80,7 @@ class ErrorIssue(Enum):
 # == helper factory functions ==
 
 
-def custom_issue(type, message) -> Issue:
+def custom_issue(type: str, message: str) -> Issue:
     return Issue(type=type, message=message)
 
 
@@ -123,10 +123,8 @@ def multiple_data_payload(list: List[dict]) -> DataPayload:
 
 
 def success_response(
-    message: str, data: DataPayload = None, warning: Optional[List[Issue]] = None,
-):
-    # meta = MetaData(resource=resource, method=method)
-    # meta=None
+    message: str, data: Optional[DataPayload] = None, warning: Optional[List[Issue]] = None,
+) -> Response:
     return Response(status_code=200, message=message, data=data, warning=warning)
 
 
@@ -136,7 +134,11 @@ def error_response(
     error: List[Issue],
     data: Optional[DataPayload] = None,
     warning: Optional[List[Issue]] = None,
-):
+) -> Response:
     return Response(
-        status_code=status_code.code, message=message, error=error, data=data, warning=warning
+        status_code=status_code.code or 400,
+        message=message,
+        error=error,
+        data=data,
+        warning=warning,
     )

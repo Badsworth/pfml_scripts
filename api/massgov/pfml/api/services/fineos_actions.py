@@ -13,6 +13,7 @@
 ###
 import datetime
 import uuid
+from typing import Optional
 
 from werkzeug.exceptions import BadRequest, NotFound
 
@@ -23,7 +24,7 @@ import massgov.pfml.util.logging as logging
 logger = logging.get_logger(__name__)
 
 
-def register_employee(employee_ssn: int, employer_fein: int):
+def register_employee(employee_ssn: int, employer_fein: int) -> Optional[str]:
     fineos_client = fineos_factory.create_client()
 
     # Find FINEOS employer id using employer FEIN
