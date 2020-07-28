@@ -11,9 +11,9 @@ jest.mock("aws-amplify");
 describe("useAuthLogic", () => {
   let appErrors,
     authData,
-    authUser,
     createAccount,
     forgotPassword,
+    isLoggedIn,
     login,
     password,
     requireLogin,
@@ -34,9 +34,9 @@ describe("useAuthLogic", () => {
       ({ appErrors, setAppErrors } = appErrorsLogic);
       ({
         authData,
-        authUser,
         forgotPassword,
         login,
+        isLoggedIn,
         createAccount,
         requireLogin,
         resendVerifyAccountCode,
@@ -430,30 +430,20 @@ describe("useAuthLogic", () => {
         expect(mockRouter.push).not.toHaveBeenCalled();
       });
 
-      it("sets authUser", async () => {
+      it("sets isLoggedIn", async () => {
         await act(async () => {
           await requireLogin();
         });
-        expect(authUser).toEqual({ email: username });
+        expect(isLoggedIn).toBe(true);
       });
 
-      it("only makes one api request at a time", async () => {
-        await act(async () => {
-          // call requireLogin twice in parallel
-          await Promise.all([requireLogin(), requireLogin()]);
-        });
-
-        expect(authUser).toEqual({ email: username });
-        expect(Auth.currentUserInfo).toHaveBeenCalledTimes(1);
-      });
-
-      it("does not make api request if authUser has already been set", async () => {
+      it("does check auth status if auth status is already set", async () => {
         await act(async () => {
           await requireLogin();
           await requireLogin();
         });
 
-        expect(authUser).toEqual({ email: username });
+        expect(isLoggedIn).toBe(true);
         expect(Auth.currentUserInfo).toHaveBeenCalledTimes(1);
       });
 
@@ -476,7 +466,7 @@ describe("useAuthLogic", () => {
           }
         });
 
-        expect(authUser).toEqual({ email: username });
+        expect(isLoggedIn).toBe(true);
         expect(Auth.currentUserInfo).toHaveBeenCalledTimes(2);
       });
     });

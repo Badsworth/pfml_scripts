@@ -31,9 +31,9 @@ exports[`App when authenticated user consented to data sharing renders the page 
       },
       "auth": Object {
         "authData": Object {},
-        "authUser": null,
         "createAccount": [Function],
         "forgotPassword": [Function],
+        "isLoggedIn": null,
         "login": [Function],
         "requireLogin": [Function],
         "resendVerifyAccountCode": [Function],

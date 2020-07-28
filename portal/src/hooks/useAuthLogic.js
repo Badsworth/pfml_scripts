@@ -1,6 +1,7 @@
 import AppErrorInfo from "../models/AppErrorInfo";
 import AppErrorInfoCollection from "../models/AppErrorInfoCollection";
 import { Auth } from "aws-amplify";
+import assert from "assert";
 import { createRouteWithQuery } from "../utils/routeWithParams";
 import routes from "../routes";
 import { useRouter } from "next/router";
@@ -17,8 +18,6 @@ const useAuthLogic = ({ appErrorsLogic }) => {
   const { t } = useTranslation();
   const router = useRouter();
 
-  let isLoadingAuthUser = false;
-
   /**
    * Sometimes we need to persist information the user entered on
    * one auth screen so it can be reused on a subsequent auth screen.
@@ -27,7 +26,12 @@ const useAuthLogic = ({ appErrorsLogic }) => {
    * @property {Function} setAuthData - updated the cached authentication info
    */
   const [authData, setAuthData] = useState({});
-  const [authUser, setAuthUser] = useState(null);
+
+  /**
+   * @property {?boolean} isLoggedIn - Whether the user is logged in or not, or null if logged in status has not been checked yet
+   * @property {Function} setIsLoggedIn - Set whether the user is logged in or not after the logged in status has been checked
+   */
+  const [isLoggedIn, setIsLoggedIn] = useState(null);
 
   /**
    * Initiate the Forgot Password flow, sending a verification code when user exists.
@@ -124,33 +128,29 @@ const useAuthLogic = ({ appErrorsLogic }) => {
 
   /**
    * Check current session for current user info. If user is logged in,
-   * set authUser to an object containing the current user's email.
+   * set isLoggedIn to true or false depending on whether the user is logged in.
    * If the user is not logged in, redirect the user to the login page.
    */
   const requireLogin = async () => {
-    // TODO (CP-733): Update this comment once we move logout functionality into this module
-    // Note that although we don't yet have a logout function that sets authUser back to null,
-    // the logout (signOut) functionality in AuthNav.js forces a page reload which will
-    // reset React in-memory state
-    if (authUser) return;
-    if (isLoadingAuthUser) return;
-
-    try {
-      isLoadingAuthUser = true;
+    let tempIsLoggedIn = isLoggedIn;
+    if (isLoggedIn === null) {
       const cognitoUserInfo = await Auth.currentUserInfo();
-      if (cognitoUserInfo) {
-        const { email } = cognitoUserInfo.attributes;
-        setAuthUser({ email });
-        return;
-      }
+      tempIsLoggedIn = !!cognitoUserInfo;
+      setIsLoggedIn(tempIsLoggedIn);
+    }
 
-      if (!cognitoUserInfo && !router.pathname.match(routes.auth.login)) {
-        // TODO (CP-729): Eventually move routing logic to usePortalFlow
-        router.push(routes.auth.login);
-        return;
-      }
-    } finally {
-      isLoadingAuthUser = false;
+    assert(tempIsLoggedIn !== null);
+
+    // TODO (CP-733): Update this comment once we move logout functionality into this module
+    // Note that although we don't yet have a logout function that sets isLoggedIn to false,
+    // the logout (signOut) functionality in AuthNav.js forces a page reload which will
+    // reset React in-memory state and set isLoggedIn back to null.
+
+    if (tempIsLoggedIn) return;
+
+    if (!tempIsLoggedIn && !router.pathname.match(routes.auth.login)) {
+      // TODO (CP-729): Eventually move routing logic to usePortalFlow
+      router.push(routes.auth.login);
     }
   };
 
@@ -254,10 +254,10 @@ const useAuthLogic = ({ appErrorsLogic }) => {
 
   return {
     authData,
-    authUser,
     createAccount,
     forgotPassword,
     login,
+    isLoggedIn,
     requireLogin,
     resendVerifyAccountCode,
     resetPassword,
