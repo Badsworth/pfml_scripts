@@ -5,7 +5,8 @@ import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
 import get from "lodash/get";
-import { pick } from "lodash";
+import pick from "lodash/pick";
+import set from "lodash/set";
 import useFormState from "../../hooks/useFormState";
 import useHandleInputChange from "../../hooks/useHandleInputChange";
 import { useTranslation } from "../../locales/i18n";
@@ -19,11 +20,41 @@ export const fields = [
 
 const LeaveDates = (props) => {
   const { t } = useTranslation();
+  /** @type {{ claim: Claim }} */
+  const { claim } = props;
   const { formState, updateFields } = useFormState(pick(props, fields).claim);
   const handleInputChange = useHandleInputChange(updateFields);
 
-  const handleSave = () =>
+  const handleSave = () => {
+    // TODO (CP-724): Look into updating the API interface to accept a single leave_details object rather than
+    // separate objects for continuous / intermittent / reduced schedule leave types.
+    const leave_details = get(formState, "temp.leave_details");
+    if (claim.isContinuous) {
+      set(
+        formState,
+        "leave_details.continuous_leave_periods[0]",
+        leave_details
+      );
+    }
+
+    if (claim.isIntermittent) {
+      set(
+        formState,
+        "leave_details.intermittent_leave_periods[0]",
+        leave_details
+      );
+    }
+
+    if (claim.isReducedSchedule) {
+      set(
+        formState,
+        "leave_details.reduced_schedule_leave_periods[0]",
+        leave_details
+      );
+    }
+
     props.appLogic.updateClaim(props.claim.application_id, formState);
+  };
 
   return (
     <QuestionPage title={t("pages.claimsLeaveDates.title")} onSave={handleSave}>

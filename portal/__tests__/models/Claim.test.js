@@ -1,41 +1,21 @@
-import Claim, {
-  ContinuousLeavePeriod,
-  IntermittentLeavePeriod,
-  ReducedScheduleLeavePeriod,
-} from "../../src/models/Claim";
+import { MockClaimBuilder } from "../test-utils";
 
 describe("Claim", () => {
-  const emptyClaim = new Claim();
-  const claimWithContinuousLeaveData = new Claim({
-    temp: {
-      leave_details: {
-        continuous_leave_periods: [new ContinuousLeavePeriod()],
-      },
-    },
-  });
-  const claimWithReducedLeaveData = new Claim({
-    temp: {
-      leave_details: {
-        reduced_schedule_leave_periods: [new ReducedScheduleLeavePeriod()],
-      },
-    },
-  });
-  const claimWithIntermittentLeaveData = new Claim({
-    leave_details: {
-      intermittent_leave_periods: [new IntermittentLeavePeriod()],
-    },
-  });
-  const claimWithMultipleLeaveDurationTypes = new Claim({
-    leave_details: {
-      intermittent_leave_periods: [new IntermittentLeavePeriod()],
-    },
-    temp: {
-      leave_details: {
-        reduced_schedule_leave_periods: [new ReducedScheduleLeavePeriod()],
-        continuous_leave_periods: [new ContinuousLeavePeriod()],
-      },
-    },
-  });
+  const emptyClaim = new MockClaimBuilder().create();
+  const claimWithContinuousLeaveData = new MockClaimBuilder()
+    .continuous()
+    .create();
+  const claimWithIntermittentLeaveData = new MockClaimBuilder()
+    .intermittent()
+    .create();
+  const claimWithReducedLeaveData = new MockClaimBuilder()
+    .reducedSchedule()
+    .create();
+  const claimWithMultipleLeaveDurationTypes = new MockClaimBuilder()
+    .continuous()
+    .intermittent()
+    .reducedSchedule()
+    .create();
 
   describe("#isContinuous", () => {
     it("returns true if and only if continuous leave data is set", () => {

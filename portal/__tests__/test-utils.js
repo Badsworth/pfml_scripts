@@ -1,11 +1,84 @@
+import Claim, {
+  ContinuousLeavePeriod,
+  IntermittentLeavePeriod,
+  ReducedScheduleLeavePeriod,
+} from "../src/models/Claim";
 import { mount, shallow } from "enzyme";
-import Claim from "../src/models/Claim";
 import ClaimCollection from "../src/models/ClaimCollection";
 import React from "react";
 import User from "../src/models/User";
 import { act } from "react-dom/test-utils";
 import merge from "lodash/merge";
+import set from "lodash/set";
 import useAppLogic from "../src/hooks/useAppLogic";
+
+/**
+ * A class that has chainable functions for conveniently creating mock claims
+ * with prefilled data. Chain together multiple function calls, then call
+ * the `create` function at the end to get the Claim object.
+ * @class
+ * @example
+ *  new MockClaimBuilder()
+ *    .continuous()
+ *    .intermittent()
+ *    .create();
+ */
+export class MockClaimBuilder {
+  constructor() {
+    this.claimAttrs = { application_id: "mock_application_id" };
+  }
+
+  /**
+   * @returns {MockClaimBuilder}
+   */
+  id(application_id) {
+    set(this.claimAttrs, "application_id", application_id);
+    return this;
+  }
+
+  /**
+   * @returns {MockClaimBuilder}
+   */
+  continuous() {
+    set(
+      this.claimAttrs,
+      "temp.leave_details.continuous_leave_periods[0]",
+      new ContinuousLeavePeriod()
+    );
+    return this;
+  }
+
+  /**
+   * @returns {MockClaimBuilder}
+   */
+  intermittent() {
+    set(
+      this.claimAttrs,
+      "leave_details.intermittent_leave_periods[0]",
+      new IntermittentLeavePeriod()
+    );
+    return this;
+  }
+
+  /**
+   * @returns {MockClaimBuilder}
+   */
+  reducedSchedule() {
+    set(
+      this.claimAttrs,
+      "temp.leave_details.reduced_schedule_leave_periods[0]",
+      new ReducedScheduleLeavePeriod()
+    );
+    return this;
+  }
+
+  /**
+   * @returns {Claim}
+   */
+  create() {
+    return new Claim(this.claimAttrs);
+  }
+}
 
 /**
  * Render a component, automatically setting its appLogic and query props

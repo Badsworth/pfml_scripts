@@ -23,10 +23,12 @@ class Claim extends BaseModel {
       has_previous_leaves: null,
       last_name: null,
       leave_details: {
+        continuous_leave_periods: [],
         employer_notification_date: null,
         employer_notified: null,
         intermittent_leave_periods: [],
         reason: null,
+        reduced_schedule_leave_periods: [],
       },
       middle_name: null,
       other_incomes: [],
@@ -75,7 +77,7 @@ class Claim extends BaseModel {
     };
   }
 
-  /*
+  /**
    * Determine if claim is a continuous leave claim
    * @returns {boolean}
    */
@@ -83,7 +85,7 @@ class Claim extends BaseModel {
     return !!get(this, "temp.leave_details.continuous_leave_periods[0]");
   }
 
-  /*
+  /**
    * Determine if claim is an intermittent leave claim
    * @returns {boolean}
    */
@@ -91,7 +93,7 @@ class Claim extends BaseModel {
     return !!get(this, "leave_details.intermittent_leave_periods[0]");
   }
 
-  /*
+  /**
    * Determine if claim is a reduced schedule leave claim
    * @returns {boolean}
    */
