@@ -22,7 +22,7 @@ if [ -z "$ENV_NAME" ] || [ -z "$AUTHOR" ]; then
 fi
 
 pushd $DIR/../../infra/api/environments/$ENV_NAME
-TF_OUTPUTS=$(terraform output -json)
+TF_OUTPUTS=$(terraform output -json || (terraform init && terraform output -json))
 popd
 
 NETWORK_CONFIG=$(jq \

@@ -31,8 +31,7 @@ COMPONENT=$1
 VAR_NAME=$2
 VAR_DESCRIPTION=$3
 
-SCRIPT=$(realpath "$0")
-SCRIPT_PATH=$(dirname "$SCRIPT")
+SCRIPT_PATH="$( cd "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
 
 source $SCRIPT_PATH/../shab
 

@@ -50,8 +50,7 @@ AWS_PROFILE=$(echo $profile | tr -d '[]')
 #
 # I know, this is hacky. pls don't judge me.
 #
-SCRIPT=$(readlink "$0")
-SCRIPT_PATH=$(dirname "$SCRIPT")
+SCRIPT_PATH="$( cd "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
 
 python3 -c "
 import os

@@ -48,8 +48,7 @@ CMD_NAME=${CMD_NAME:-login-aws}
 # Grab the absolute path of the companion script, login-aws-template.sh.
 # We'll need to copy this script later to a different directory.
 #
-SCRIPT=$(realpath "$0")
-SCRIPT_PATH=$(dirname "$SCRIPT")
+SCRIPT_PATH="$( cd "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
 LOGIN_AWS_SCRIPT_PATH=$SCRIPT_PATH/login-aws-template.sh
 
 # 1. Go to the install location.
@@ -57,7 +56,8 @@ pushd $INSTALL_LOCATION
 
 # 2. Download centrify-aws-cli-utilities.
 if ! [ -d "centrify-aws-cli-utilities" ]; then
-    git clone git@github.com:centrify/centrify-aws-cli-utilities.git
+    # Try with SSH first, then user/password over HTTPS.
+    git clone git@github.com:centrify/centrify-aws-cli-utilities.git || git clone https://github.com/centrify/centrify-aws-cli-utilities.git
 fi
 
 pushd centrify-aws-cli-utilities/Python-AWS

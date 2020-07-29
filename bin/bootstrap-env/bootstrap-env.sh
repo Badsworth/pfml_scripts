@@ -33,8 +33,7 @@ fi
 ENV_NAME=$1
 COMPONENT=$2
 
-SCRIPT=$(realpath "$0")
-SCRIPT_PATH=$(dirname "$SCRIPT")
+SCRIPT_PATH="$( cd "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
 INFRA_PATH=$SCRIPT_PATH/../../infra
 
 source $SCRIPT_PATH/../shab
