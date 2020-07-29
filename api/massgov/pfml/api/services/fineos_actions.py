@@ -88,8 +88,13 @@ def send_to_fineos(application: Application, db_session: massgov.pfml.db.Session
     fineos = massgov.pfml.fineos.create_client()
 
     try:
+        # TODO: remove this workaround after Portal starts sending SSN in prod
+        tax_identifier = "900990000"
+        if application.tax_identifier is not None:
+            tax_identifier = application.tax_identifier.tax_identifier
+
         fineos_user_id = register_employee(
-            fineos, application.tax_identifier.tax_identifier, application.employer_fein, db_session
+            fineos, tax_identifier, application.employer_fein, db_session
         )
 
         if fineos_user_id is None:
@@ -109,13 +114,17 @@ def send_to_fineos(application: Application, db_session: massgov.pfml.db.Session
 
 def build_customer_model(application):
     """Convert an application to a FINEOS API Customer model."""
+    # TODO: remove this workaround after Portal starts sending SSN in prod
+    tax_identifier = "900990000"
+    if application.tax_identifier is not None:
+        tax_identifier = application.tax_identifier.tax_identifier
     customer = massgov.pfml.fineos.models.customer_api.Customer(
         firstName=application.first_name,
         secondName=application.middle_name,
         lastName=application.last_name,
         dateOfBirth=application.date_of_birth,
         # We have to send back the SSN as FINEOS wipes it from the Customer otherwise.
-        idNumber=application.tax_identifier.tax_identifier,
+        idNumber=tax_identifier,
     )
     return customer
 
