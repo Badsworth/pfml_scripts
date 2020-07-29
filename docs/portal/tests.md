@@ -22,7 +22,7 @@ describe("sum", () => {
 
 ## Creating new test files
 
-A test file should be placed in the appropriate `__tests__` directory (e.g. `portal/__tests__`) rather than alongside the file it tests. These test files should have the same name as the file they're testing, and have `.test.js` as the extension. For example, `pages/index.js` and `__tests__/pages/index.test.js`.
+A test file should be placed in the appropriate `tests` directory (e.g. `portal/tests`) rather than alongside the file it tests. These test files should have the same name as the file they're testing, and have `.test.js` as the extension. For example, `pages/index.js` and `tests/pages/index.test.js`.
 
 ## Unit tests
 

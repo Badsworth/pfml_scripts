@@ -121,7 +121,7 @@ Below is an abbreviated representation of our directory structure, pointing out 
 
 ```
 ├── __mocks__           Dependency mocks used by test suites
-├── __tests__           Test suites
+├── tests               Test suites
 ├── config              Environment variables and feature flags
 ├── public              Static assets
 ├── src                 Source code

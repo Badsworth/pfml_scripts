@@ -6,6 +6,6 @@
 module.exports = {
   clearMocks: true,
   preset: "jest-puppeteer",
-  roots: ["<rootDir>/__tests__/end-to-end"],
+  roots: ["<rootDir>/tests/end-to-end"],
   setupFilesAfterEnv: ["<rootDir>/jest-e2e.setup.js"],
 };

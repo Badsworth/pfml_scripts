@@ -4,7 +4,7 @@
  */
 module.exports = {
   clearMocks: true,
-  coveragePathIgnorePatterns: ["/node_modules/", "<rootDir>/__tests__/lib/"],
+  coveragePathIgnorePatterns: ["/node_modules/", "<rootDir>/tests/lib/"],
   coverageReporters: ["text"],
   moduleNameMapper: {
     "\\.(css|scss)$": "<rootDir>/__mocks__/styleMock.js",
@@ -15,11 +15,12 @@ module.exports = {
     "<rootDir>/.next/",
     "<rootDir>/node_modules/",
     "<rootDir>/config",
-    "<rootDir>/__tests__/lib/",
+    "<rootDir>/tests/lib/",
     // Exclude E2E tests since those are part of a separate Jest config (jest-e2e.config.js)
-    "<rootDir>/__tests__/end-to-end",
-    "<rootDir>/__tests__/test-utils.js",
+    "<rootDir>/tests/end-to-end",
+    "<rootDir>/tests/test-utils.js",
   ],
+  testRegex: "(/tests/.*|(\\.|/)(test|spec))\\.[jt]sx?$",
   coverageThreshold: {
     global: {
       branches: 90,

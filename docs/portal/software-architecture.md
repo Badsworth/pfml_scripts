@@ -42,7 +42,7 @@ Examples of event hooks include [useHandleInputChange](/portal/src/hooks/useHand
 
 ## Dependencies
 
-To help prevent technical debt, when adding new modules, consider adding assertions to [dependencies.test.js](/portal/__tests__/dependencies.test.js) to restrict where the module is used, or what dependencies the new module is allowed to have.
+To help prevent technical debt, when adding new modules, consider adding assertions to [dependencies.test.js](/portal/tests/dependencies.test.js) to restrict where the module is used, or what dependencies the new module is allowed to have.
 
 ## Services
 
