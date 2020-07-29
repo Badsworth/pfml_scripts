@@ -25,14 +25,12 @@ def test_employees_get_invalid(client):
 def test_employees_search_valid(client, employee, consented_user_token):
     first_name = employee.first_name
     last_name = employee.last_name
-    tax_identifier = employee.tax_identifier
+    tax_identifier_last4 = employee.tax_identifier_last4
 
     body = {
         "first_name": first_name,
         "last_name": last_name,
-        "tax_identifier": "{}-{}-{}".format(
-            tax_identifier[:3], tax_identifier[3:5], tax_identifier[5:]
-        ),
+        "tax_identifier_last4": tax_identifier_last4,
     }
     response = client.post(
         "/v1/employees/search",
@@ -49,7 +47,7 @@ def test_employees_search_missing_param(client, employee):
 
 
 def test_employees_search_nonexisting_employee(client, consented_user_token):
-    body = {"first_name": "Damian", "last_name": "Wayne", "tax_identifier": "123-45-6789"}
+    body = {"first_name": "Damian", "last_name": "Wayne", "tax_identifier_last4": "6789"}
     response = client.post(
         "/v1/employees/search",
         json=body,

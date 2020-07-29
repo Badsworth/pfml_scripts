@@ -61,12 +61,22 @@ class EmployerFactory(BaseFactory):
     employer_dba = factory.Faker("company")
 
 
+class TaxIdentifierFactory(BaseFactory):
+    class Meta:
+        model = employee_models.TaxIdentifier
+
+    tax_identifier_id = Generators.UuidObj
+    tax_identifier = Generators.Tin
+
+
 class EmployeeFactory(BaseFactory):
     class Meta:
         model = employee_models.Employee
 
     employee_id = Generators.UuidObj
-    tax_identifier = Generators.Tin
+
+    tax_identifier = factory.SubFactory(TaxIdentifierFactory)
+    tax_identifier_id = factory.LazyAttribute(lambda t: t.tax_identifier.tax_identifier_id)
     first_name = factory.Faker("first_name")
     middle_name = factory.Faker("first_name")
     last_name = factory.Faker("last_name")
@@ -103,6 +113,7 @@ class ApplicationFactory(BaseFactory):
         model = application_models.Application
 
     application_id = Generators.UuidObj
+
     nickname = "My leave application"
     requestor = None
     first_name = factory.Faker("first_name")
@@ -124,6 +135,9 @@ class ApplicationFactory(BaseFactory):
 
     employer = factory.SubFactory(EmployerFactory)
     employer_id = factory.LazyAttribute(lambda a: a.employer.employer_id)
+
+    tax_identifier = factory.SubFactory(TaxIdentifierFactory)
+    tax_identifier_id = factory.LazyAttribute(lambda t: t.tax_identifier.tax_identifier_id)
 
     employee = factory.SubFactory(EmployeeFactory)
     employee_id = factory.LazyAttribute(lambda a: a.employee.employee_id)

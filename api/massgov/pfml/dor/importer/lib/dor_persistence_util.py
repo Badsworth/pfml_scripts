@@ -13,8 +13,10 @@ from massgov.pfml.db.models.employees import (
     EmployerAddress,
     GeoState,
     ImportLog,
+    TaxIdentifier,
     WagesAndContributions,
 )
+from massgov.pfml.util.pydantic.types import TaxIdUnformattedStr
 
 logger = logging.get_logger(__name__)
 
@@ -105,15 +107,29 @@ def update_employer(db_session, existing_employer, employer_info, import_log_ent
     return existing_employer
 
 
+def create_tax_id(db_session, tax_id):
+    formatted_tax_id = TaxIdUnformattedStr.validate_type(tax_id)
+    tax_identifier = TaxIdentifier(tax_identifier=formatted_tax_id)
+    db_session.add(tax_identifier)
+    db_session.flush()
+    db_session.refresh(tax_identifier)
+    return tax_identifier
+
+
 def create_employee(db_session, employee_info, import_log_entry_id):
     employee = Employee(
-        tax_identifier=employee_info["employee_ssn"],
         first_name=employee_info["employee_first_name"],
         last_name=employee_info["employee_last_name"],
         latest_import_log_id=import_log_entry_id,
     )
-    db_session.add(employee)
 
+    tax_id = get_tax_id(db_session, employee_info["employee_ssn"])
+    if tax_id is None:
+        tax_id = create_tax_id(db_session, employee_info["employee_ssn"])
+
+    employee.tax_identifier = tax_id
+
+    db_session.add(employee)
     db_session.flush()
     db_session.refresh(employee)
 
@@ -213,7 +229,18 @@ def update_import_log_entry(db_session, existing_import_log, report):
 
 
 def get_employee_by_ssn(db_session, ssn):
-    employee_row = db_session.query(Employee).filter(Employee.tax_identifier == ssn).one_or_none()
+    tax_id_row = (
+        db_session.query(TaxIdentifier)
+        .filter(TaxIdentifier.tax_identifier == TaxIdUnformattedStr.validate_type(ssn))
+        .one_or_none()
+    )
+    if tax_id_row is None:
+        return None
+    employee_row = (
+        db_session.query(Employee)
+        .filter(Employee.tax_identifier_id == tax_id_row.tax_identifier_id)
+        .one_or_none()
+    )
     return employee_row
 
 
@@ -230,6 +257,16 @@ def get_wages_and_contributions_by_employee_id_and_filling_period(
         .one_or_none()
     )
     return wage_row
+
+
+def get_tax_id(db_session, tax_id):
+    unformatted_tax_id = TaxIdUnformattedStr.validate_type(tax_id)
+    tax_id_row = (
+        db_session.query(TaxIdentifier)
+        .filter(TaxIdentifier.tax_identifier == unformatted_tax_id)
+        .one_or_none()
+    )
+    return tax_id_row
 
 
 def get_employer_by_fein(db_session, fein):

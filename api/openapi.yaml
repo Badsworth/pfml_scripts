@@ -445,9 +445,10 @@ components:
         last_name:
           type: string
           example: "Doe"
-        tax_identifier:
-          $ref: '#/components/schemas/SsnItin'
-      required: ['first_name', 'last_name', 'tax_identifier']
+        tax_identifier_last4:
+          type: string
+          example: "1234"
+      required: ['first_name', 'last_name', 'tax_identifier_last4']
 
     EmployeeErrorResponse:
       type: object
@@ -494,9 +495,10 @@ components:
           type: string
           nullable: true
           example: "123-456-7890"
-        tax_identifier:
-          $ref: '#/components/schemas/SsnItin'
-      required: ['employee_id', 'tax_identifier']
+        tax_identifier_last4:
+          type: string
+          example: "1234"
+      required: ['employee_id', 'tax_identifier_last4']
 
     EmployerResponse:
       type: object
@@ -590,10 +592,8 @@ components:
           type: string
           format: uuid
           example: "2a340cf8-6d2a-4f82-a075-73588d003f8f"
-        employee_id:
+        tax_identifier_last4:
           type: string
-          format: uuid
-          example: "8623c9f2-8275-417b-b5d7-4bb32fedb7a7"
           nullable: true
         employer_id:
           type: string

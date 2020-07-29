@@ -10,7 +10,9 @@
 #
 from sqlalchemy import Boolean, Column, Date, DateTime, ForeignKey, Integer, Numeric, Text
 from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import Query, dynamic_loader, relationship
+from sqlalchemy.sql.expression import func
 
 from ..lookup import LookupTable
 from .base import Base, uuid_gen
@@ -134,10 +136,17 @@ class PaymentInformation(Base):
     gift_card_nbr = Column(Integer)
 
 
+class TaxIdentifier(Base):
+    __tablename__ = "tax_identifier"
+    tax_identifier_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
+    tax_identifier = Column(Text, nullable=False, unique=True)
+    employee = relationship("Employee", back_populates="tax_identifier")
+
+
 class Employee(Base):
     __tablename__ = "employee"
     employee_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
-    tax_identifier = Column(Text)
+    tax_identifier_id = Column(UUID(as_uuid=True), ForeignKey("tax_identifier.tax_identifier_id"))
     first_name = Column(Text, nullable=False)
     middle_name = Column(Text)
     last_name = Column(Text, nullable=False)
@@ -161,6 +170,18 @@ class Employee(Base):
     occupation = relationship(Occupation)
     education_level = relationship(EducationLevel)
     latest_import_log = relationship("ImportLog")
+    tax_identifier = relationship("TaxIdentifier", back_populates="employee")
+
+    @hybrid_property
+    def tax_identifier_last4(self):
+        if self.tax_identifier:
+            return self.tax_identifier.tax_identifier[-4:]
+        else:
+            return None
+
+    @tax_identifier_last4.expression  # type: ignore
+    def tax_identifier_last4(self):
+        return func.right(TaxIdentifier.tax_identifier, 4)
 
     authorized_reps: "Query[AuthorizedRepEmployee]" = dynamic_loader(
         "AuthorizedRepEmployee", back_populates="employee"

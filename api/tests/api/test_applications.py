@@ -148,6 +148,7 @@ def test_application_patch(client, user, auth_token, test_db_session):
     update_request_body["occupation"] = "Engineer"
     update_request_body["leave_details"] = {"relationship_to_caregiver": "Parent"}
     update_request_body["middle_name"] = "Mike"
+    update_request_body["employee_ssn"] = "123-45-6789"
 
     # Remove foreign keys as DB does not have all tables populated
     update_request_body.pop("employer_id", None)
@@ -176,6 +177,8 @@ def test_application_patch(client, user, auth_token, test_db_session):
     assert (
         response_body.get("data").get("leave_details").get("relationship_to_caregiver") == "Parent"
     )
+    assert response_body.get("data").get("tax_identifier_last4") == "6789"
+    assert len(response_body.get("data").get("tax_identifier_last4")) == 4
 
 
 def test_application_unauthorized_patch(client, user, auth_token, test_db_session):

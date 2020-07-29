@@ -2,7 +2,14 @@ from sqlalchemy import Boolean, Column, Date, DateTime, ForeignKey, Integer, Tex
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 
-from massgov.pfml.db.models.employees import Employee, Employer, Occupation, PaymentType, User
+from massgov.pfml.db.models.employees import (
+    Employee,
+    Employer,
+    Occupation,
+    PaymentType,
+    TaxIdentifier,
+    User,
+)
 
 from ..lookup import LookupTable
 from .base import Base, uuid_gen
@@ -68,6 +75,7 @@ class Application(Base):
     __tablename__ = "application"
     application_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
     user_id = Column(UUID(as_uuid=True), ForeignKey("user.user_id"))
+    tax_identifier_id = Column(UUID(as_uuid=True), ForeignKey("tax_identifier.tax_identifier_id"))
     nickname = Column(Text)
     requestor = Column(Integer)
     employee_id = Column(UUID(as_uuid=True), ForeignKey("employee.employee_id"))
@@ -113,6 +121,11 @@ class Application(Base):
     relationship_to_caregiver = relationship(RelationshipToCareGiver)
     relationship_qualifier = relationship(RelationshipQualifier)
     employer_notification_method = relationship(NotificationMethod)
+    tax_identifier = relationship(TaxIdentifier)
+
+    @property
+    def tax_identifier_last4(self):
+        return self.tax_identifier.tax_identifier[-4:]
 
     # `uselist` default is True, but for mypy need to state it explicitly so it
     # detects the relationship as many-to-one

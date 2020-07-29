@@ -72,7 +72,7 @@ class NoneMeansDefault:
     # constructing the dataclass, __setattr__ works when attributes are set
     # after the fact as well
     #
-    # def __post_init__(self):
+    # def __post_init__(self):db_session
     #     for field in dataclasses.fields(self):
     #         if field.default is not None:
     #             field_val = getattr(self, field.name)
@@ -229,7 +229,12 @@ def process_updates(db_session: db.Session, output_dir_path: str) -> ProcessUpda
 
         with smart_open.open(output_file_path, "w") as output_file:
             write_employees_to_csv(
-                employer, employer.employer_id, number_of_employees, employees, output_file
+                db_session,
+                employer,
+                employer.employer_id,
+                number_of_employees,
+                employees,
+                output_file,
             )
 
     return ProcessUpdatesResult(
@@ -245,6 +250,7 @@ ELIGIBILITY_FEED_CSV_ENCODERS: csv_util.Encoders = {
 
 
 def write_employees_to_csv(
+    db_session: db.Session,
     employer: Employer,
     fineos_employer_id: str,
     number_of_employees: int,
@@ -348,10 +354,14 @@ def employee_to_eligibility_feed_record(
         # TODO: use Pydantic TaxIdUnformattedStr? Or otherwise create a type for
         # TaxId that can be formatted appropriately in the encoder?
         employeeNationalID=(
-            employee.tax_identifier.replace("-", "") if employee.tax_identifier else None
+            employee.tax_identifier.tax_identifier.replace("-", "")
+            if employee.tax_identifier.tax_identifier
+            else None
         ),
         employeeNationalIDType=(
-            determine_national_id_type(employee.tax_identifier) if employee.tax_identifier else None
+            determine_national_id_type(str(employee.tax_identifier.tax_identifier))
+            if employee.tax_identifier.tax_identifier
+            else None
         ),
         employeeEmail=employee.email_address,
     )

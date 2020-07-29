@@ -15,7 +15,9 @@ from massgov.pfml.db.models.applications import (
     ContinuousLeavePeriod,
     IntermittentLeavePeriod,
     ReducedScheduleLeavePeriod,
+    TaxIdentifier,
 )
+from massgov.pfml.util.pydantic.types import TaxIdUnformattedStr
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
 
@@ -30,7 +32,7 @@ def update_from_request(
     for key in body.__fields_set__:
         value = getattr(body, key)
 
-        if key == "leave_details" or key == "payment_preferences":
+        if key in ("leave_details", "payment_preferences", "employee_ssn"):
             continue
 
         if key == "application_nickname":
@@ -51,9 +53,11 @@ def update_from_request(
 
     leave_schedules = update_leave_details(db_session, body, application)
     payment_preferences = update_payment_preferences(db_session, body, application)
+    tax_id = get_or_add_tax_identifier(db_session, body)
+    if tax_id is not None:
+        application.tax_identifier = tax_id
 
     application.updated_time = datetime.now()
-
     db_session.add(application)
 
     for leave_schedule in leave_schedules:
@@ -241,3 +245,20 @@ def update_payment_preferences(
             setattr(payment_preference, key, value)
 
     return payment_preference
+
+
+def get_or_add_tax_identifier(
+    db_session: db.Session, body: ApplicationRequestBody
+) -> Optional[TaxIdentifier]:
+    if body.employee_ssn is None:
+        return None
+    unformatted_tax_id = TaxIdUnformattedStr.validate_type(body.employee_ssn)
+    tax_id = (
+        db_session.query(TaxIdentifier)
+        .filter(TaxIdentifier.tax_identifier == unformatted_tax_id)
+        .one_or_none()
+    )
+    if tax_id is None:
+        tax_id = TaxIdentifier(tax_identifier=unformatted_tax_id)
+        db_session.add(tax_id)
+    return tax_id

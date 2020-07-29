@@ -8,7 +8,6 @@ import massgov.pfml.api.app as app
 from massgov.pfml.api.authorization.flask import EDIT, READ, ensure
 from massgov.pfml.db.models.employees import Employee
 from massgov.pfml.util.pydantic import PydanticBaseModel
-from massgov.pfml.util.pydantic.types import TaxIdFormattedStr, TaxIdUnformattedStr
 from massgov.pfml.util.sqlalchemy import get_or_404
 
 
@@ -23,12 +22,12 @@ class EmployeeSearchRequest(PydanticBaseModel):
     first_name: str
     middle_name: Optional[str]
     last_name: str
-    tax_identifier: TaxIdUnformattedStr
+    tax_identifier_last4: str
 
 
 class EmployeeResponse(PydanticBaseModel):
     employee_id: UUID4
-    tax_identifier: TaxIdFormattedStr
+    tax_identifier_last4: Optional[str]
     first_name: Optional[str]
     middle_name: Optional[str]
     last_name: Optional[str]

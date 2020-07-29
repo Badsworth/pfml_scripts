@@ -28,7 +28,7 @@ class ApplicationStatus(str, Enum):
 class ApplicationResponse(PydanticBaseModel):
     application_id: UUID4
     application_nickname: Optional[str]
-    employee_id: Optional[UUID4]
+    tax_identifier_last4: Optional[str]
     employer_id: Optional[UUID4]
     first_name: Optional[str]
     middle_name: Optional[str]
