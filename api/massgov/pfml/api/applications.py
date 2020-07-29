@@ -6,13 +6,17 @@ from werkzeug.exceptions import Unauthorized
 import massgov.pfml.api.app as app
 import massgov.pfml.api.models.applications.requests as application_request_model
 import massgov.pfml.api.services.applications as applications_service
+import massgov.pfml.util.logging
 from massgov.pfml.api.authorization.flask import CREATE, EDIT, READ, can, ensure
 from massgov.pfml.api.models.applications.responses import (
     ApplicationResponse,
     ApplicationUpdateResponse,
 )
+from massgov.pfml.api.services.fineos_actions import send_to_fineos
 from massgov.pfml.db.models.applications import Application
 from massgov.pfml.util.sqlalchemy import get_or_404
+
+logger = massgov.pfml.util.logging.get_logger(__name__)
 
 
 def application_get(application_id):
@@ -98,8 +102,22 @@ def applications_submit(application_id):
         existing_application = get_or_404(db_session, Application, application_id)
 
         ensure(EDIT, existing_application)
-        existing_application.completed_time = datetime.now()
-        db_session.add(existing_application)
+
+        if send_to_fineos(existing_application, db_session):
+            existing_application.completed_time = datetime.now()
+            db_session.add(existing_application)
+
+        else:
+            return (
+                ApplicationUpdateResponse(
+                    code="503",
+                    message="Application {} could not be completed, try again later".format(
+                        existing_application.application_id
+                    ),
+                    data=ApplicationResponse.from_orm(existing_application),
+                ).dict(exclude_none=True),
+                503,
+            )
 
     return (
         ApplicationUpdateResponse(

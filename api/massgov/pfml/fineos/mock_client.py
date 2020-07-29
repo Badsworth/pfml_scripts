@@ -17,6 +17,9 @@ from . import client, exception, models
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
 
+# Capture calls for unit testing.
+_capture: typing.Optional[typing.List] = None
+
 
 def fake_date_of_birth(fake):
     """Generate a fake date of birth in a reproducible way."""
@@ -26,14 +29,18 @@ def fake_date_of_birth(fake):
 class MockFINEOSClient(client.AbstractFINEOSClient):
     """Mock FINEOS API client that returns fake responses."""
 
-    def find_employer(self, employer_fein: int) -> str:
-        if employer_fein == 999999999:
+    def find_employer(self, employer_fein: str) -> str:
+        _capture_call("find_employer", None, employer_fein=employer_fein)
+
+        if employer_fein == "999999999":
             raise exception.FINEOSNotFound("Employer not found.")
         else:
             return "15"
 
     def register_api_user(self, employee_registration: models.EmployeeRegistration) -> None:
-        if employee_registration.national_insurance_no == 999999999:
+        _capture_call("register_api_user", None, employee_registration=employee_registration)
+
+        if employee_registration.national_insurance_no == "999999999":
             raise exception.FINEOSClientBadResponse(requests.codes.ok, 400)
         else:
             pass
@@ -51,9 +58,14 @@ class MockFINEOSClient(client.AbstractFINEOSClient):
             dateOfBirth=date_of_birth, firstName=first_name, lastName=last_name
         )
 
+    def update_customer_details(self, user_id: str, customer: models.customer_api.Customer) -> None:
+        _capture_call("update_customer_details", user_id, customer=customer)
+
     def start_absence(
         self, user_id: str, absence_case: models.customer_api.AbsenceCase
     ) -> models.customer_api.AbsenceCaseSummary:
+        _capture_call("start_absence", user_id, absence_case=absence_case)
+
         absence_case_summary = models.customer_api.AbsenceCaseSummary(
             absenceId="NTN-259-ABS-01", notificationCaseId="NTN-259"
         )
@@ -69,6 +81,8 @@ class MockFINEOSClient(client.AbstractFINEOSClient):
     def complete_intake(
         self, user_id: str, notification_case_id: str
     ) -> models.customer_api.NotificationCaseSummary:
+        _capture_call("complete_intake", user_id, notification_case_id=notification_case_id)
+
         notification_case_summary = models.customer_api.NotificationCaseSummary(
             notificationCaseId=notification_case_id
         )
@@ -92,3 +106,22 @@ class MockFINEOSClient(client.AbstractFINEOSClient):
         return models.customer_api.PaymentPreferenceResponse(
             paymentMethod="Elec Funds Transfer", paymentPreferenceId="1201"
         )
+
+
+def start_capture():
+    """Start capturing API calls made via MockFINEOSClient."""
+    global _capture
+    _capture = []
+
+
+def _capture_call(method_name, user_id, **args):
+    """Record the name and arguments of an API call."""
+    global _capture
+    if _capture is not None:
+        _capture.append((method_name, user_id, args))
+
+
+def get_capture():
+    """Return the list of API calls captured since start_capture() was called."""
+    global _capture
+    return _capture

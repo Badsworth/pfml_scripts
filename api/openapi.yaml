@@ -286,6 +286,8 @@ paths:
                 $ref: "#/components/schemas/ApplicationUpdateResponse"
         "400":
           $ref: "#/components/responses/ApplicationUpdateResponse"
+        "503":
+          $ref: "#/components/responses/ApplicationUpdateResponse"
 
 tags:
   - name: Test Endpoints

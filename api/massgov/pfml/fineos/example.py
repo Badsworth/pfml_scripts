@@ -42,7 +42,7 @@ def main():
     # healthy = cps.health_check("hackathon_91")
     # logger.info("healthy %s", healthy)
 
-    employer_fein = 179892886
+    employer_fein = "179892886"
 
     employer_id = cps.find_employer(employer_fein)
     logger.info("Employer ID is {}".format(employer_id))

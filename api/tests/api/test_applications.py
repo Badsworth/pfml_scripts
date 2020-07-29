@@ -3,6 +3,8 @@ from datetime import date, datetime
 from freezegun import freeze_time
 from sqlalchemy import inspect
 
+import massgov.pfml.fineos.mock_client
+import massgov.pfml.fineos.models
 from massgov.pfml.api.models.applications.responses import ApplicationStatus
 from massgov.pfml.db.models.applications import (
     Application,
@@ -654,9 +656,13 @@ def test_application_patch_key_set_to_null_does_null_field(
     assert response_body.get("data").get("first_name") is None
 
 
-def test_application_post_submit_app(client, user, auth_token):
+def test_application_post_submit_app(client, user, auth_token, test_db_session):
     application = ApplicationFactory.create(user=user)
     assert not application.completed_time
+
+    # Applications must have an FEIN for submit to succeed.
+    application.employer_fein = "770007777"
+    test_db_session.commit()
 
     response = client.post(
         "/v1/applications/{}/submit_application".format(application.application_id),
@@ -668,3 +674,97 @@ def test_application_post_submit_app(client, user, auth_token):
     response_body = response.get_json()
     status = response_body.get("data").get("status")
     assert status == ApplicationStatus.Completed.value
+
+
+def test_application_post_submit_to_fineos(client, user, auth_token, test_db_session):
+    application = ApplicationFactory.create(user=user)
+
+    application.first_name = "First"
+    application.middle_name = "Middle"
+    application.last_name = "Last"
+    application.date_of_birth = date(1977, 7, 27)
+    application.employer_fein = "770000001"
+    application.employer_notified = True
+    application.employer_notification_date = date(2021, 1, 7)
+
+    leave_period = ContinuousLeavePeriod(
+        start_date=date(2021, 1, 15),
+        end_date=date(2021, 2, 9),
+        application_id=application.application_id,
+    )
+    test_db_session.add(leave_period)
+
+    test_db_session.commit()
+
+    massgov.pfml.fineos.mock_client.start_capture()
+
+    response = client.post(
+        "/v1/applications/{}/submit_application".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+    )
+
+    assert response.status_code == 201
+
+    response_body = response.get_json()
+    status = response_body.get("data").get("status")
+    assert status == ApplicationStatus.Completed.value
+
+    capture = massgov.pfml.fineos.mock_client.get_capture()
+    fineos_user_id = capture[2][1]  # This is generated randomly and changes each time.
+    assert capture == [
+        ("find_employer", None, {"employer_fein": "770000001"}),
+        (
+            "register_api_user",
+            None,
+            {
+                "employee_registration": massgov.pfml.fineos.models.EmployeeRegistration(
+                    user_id=fineos_user_id,
+                    employer_id="15",
+                    date_of_birth=date(1753, 1, 1),
+                    national_insurance_no="123456788",
+                )
+            },
+        ),
+        (
+            "update_customer_details",
+            fineos_user_id,
+            {
+                "customer": massgov.pfml.fineos.models.customer_api.Customer(
+                    firstName="First",
+                    lastName="Last",
+                    secondName="Middle",
+                    dateOfBirth=date(1977, 7, 27),
+                    idNumber="123456788",
+                )
+            },
+        ),
+        (
+            "start_absence",
+            fineos_user_id,
+            {
+                "absence_case": massgov.pfml.fineos.models.customer_api.AbsenceCase(
+                    additionalComments="PFML API " + str(application.application_id),
+                    intakeSource="Self-Service",
+                    notifiedBy="Employee",
+                    reason="Serious Health Condition - Employee",
+                    reasonQualifier1="Not Work Related",
+                    reasonQualifier2="Sickness",
+                    timeOffLeavePeriods=[
+                        massgov.pfml.fineos.models.customer_api.TimeOffLeavePeriod(
+                            startDate=date(2021, 1, 15),
+                            endDate=date(2021, 2, 9),
+                            lastDayWorked=date(2021, 1, 15),
+                            expectedReturnToWorkDate=date(2021, 2, 9),
+                            startDateFullDay=True,
+                            endDateFullDay=True,
+                            status="Known",
+                        )
+                    ],
+                    employerNotified=True,
+                    employerNotificationDate=date(2021, 1, 7),
+                    employerNotificationMethod=None,
+                )
+            },
+        ),
+        ("complete_intake", fineos_user_id, {"notification_case_id": "NTN-259"}),
+    ]

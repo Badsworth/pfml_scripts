@@ -110,7 +110,7 @@ class FINEOSClient(client.AbstractFINEOSClient):
         headers = {"Content-Type": "application/xml"}
         return self._request(requests.request, method, url, headers, data=xml_data)
 
-    def find_employer(self, employer_fein: int) -> str:
+    def find_employer(self, employer_fein: str) -> str:
         response = self._wscomposer_request(
             "GET", "ReadEmployer?userid=CONTENT&param_str_taxId={}".format(employer_fein), ""
         )
@@ -140,12 +140,10 @@ class FINEOSClient(client.AbstractFINEOSClient):
                         "DateOfBirth": str(employee_registration.date_of_birth),
                         "Email": employee_registration.email,
                         "EmployeeExternalId": employee_registration.user_id,
-                        "EmployerId": str(employee_registration.employer_id),
+                        "EmployerId": employee_registration.employer_id,
                         "FirstName": employee_registration.first_name,
                         "LastName": employee_registration.last_name,
-                        "NationalInsuranceNo": str(
-                            employee_registration.national_insurance_no or ""
-                        ),
+                        "NationalInsuranceNo": employee_registration.national_insurance_no,
                     }
                 ]
             },
@@ -163,9 +161,16 @@ class FINEOSClient(client.AbstractFINEOSClient):
         response = self._customer_api("GET", "customer/readCustomerDetails", user_id)
         return models.customer_api.Customer.parse_obj(response.json())
 
+    def update_customer_details(self, user_id: str, customer: models.customer_api.Customer) -> None:
+        """Update customer details."""
+        self._customer_api(
+            "POST", "customer/updateCustomerDetails", user_id, data=customer.json(exclude_none=True)
+        )
+
     def start_absence(
         self, user_id: str, absence_case: models.customer_api.AbsenceCase
     ) -> models.customer_api.AbsenceCaseSummary:
+        logger.info("absence_case %s", absence_case.json(exclude_none=True))
         response = self._customer_api(
             "POST",
             "customer/absence/startAbsence",

@@ -12,7 +12,7 @@ class AbstractFINEOSClient(abc.ABC, metaclass=abc.ABCMeta):
     """Abstract base class for a FINEOS API client."""
 
     @abc.abstractmethod
-    def find_employer(self, employer_fein: int) -> str:
+    def find_employer(self, employer_fein: str) -> str:
         """Create the employee account registration."""
         pass
 
@@ -29,6 +29,11 @@ class AbstractFINEOSClient(abc.ABC, metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def read_customer_details(self, user_id: str) -> models.customer_api.Customer:
         """Read customer details."""
+        pass
+
+    @abc.abstractmethod
+    def update_customer_details(self, user_id: str, customer: models.customer_api.Customer) -> None:
+        """Update customer details."""
         pass
 
     @abc.abstractmethod
