@@ -88,9 +88,8 @@ def send_to_fineos(application: Application, db_session: massgov.pfml.db.Session
     fineos = massgov.pfml.fineos.create_client()
 
     try:
-        # TODO: get ssn from application object once #639 is merged
         fineos_user_id = register_employee(
-            fineos, "123456788", application.employer_fein, db_session
+            fineos, application.tax_identifier.tax_identifier, application.employer_fein, db_session
         )
 
         if fineos_user_id is None:
@@ -116,7 +115,7 @@ def build_customer_model(application):
         lastName=application.last_name,
         dateOfBirth=application.date_of_birth,
         # We have to send back the SSN as FINEOS wipes it from the Customer otherwise.
-        idNumber="123456788",  # TODO: get ssn from application object once #639 is merged
+        idNumber=application.tax_identifier.tax_identifier,
     )
     return customer
 

@@ -12,7 +12,7 @@ from massgov.pfml.db.models.applications import (
     ContinuousLeavePeriod,
     RelationshipToCareGiver,
 )
-from massgov.pfml.db.models.employees import Occupation, PaymentType
+from massgov.pfml.db.models.employees import Occupation, PaymentType, TaxIdentifier
 from massgov.pfml.db.models.factories import ApplicationFactory, UserFactory
 
 
@@ -682,6 +682,7 @@ def test_application_post_submit_app(client, user, auth_token, test_db_session):
 def test_application_post_submit_to_fineos(client, user, auth_token, test_db_session):
     application = ApplicationFactory.create(user=user)
 
+    application.tax_identifier = TaxIdentifier(tax_identifier="999004444")
     application.first_name = "First"
     application.middle_name = "Middle"
     application.last_name = "Last"
@@ -724,7 +725,7 @@ def test_application_post_submit_to_fineos(client, user, auth_token, test_db_ses
                     user_id=fineos_user_id,
                     employer_id="15",
                     date_of_birth=date(1753, 1, 1),
-                    national_insurance_no="123456788",
+                    national_insurance_no="999004444",
                 )
             },
         ),
@@ -737,7 +738,7 @@ def test_application_post_submit_to_fineos(client, user, auth_token, test_db_ses
                     lastName="Last",
                     secondName="Middle",
                     dateOfBirth=date(1977, 7, 27),
-                    idNumber="123456788",
+                    idNumber="999004444",
                 )
             },
         ),

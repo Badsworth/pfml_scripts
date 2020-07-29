@@ -9,7 +9,6 @@ import sqlalchemy as sa
 from alembic import op
 from sqlalchemy.dialects import postgresql
 
-from massgov.pfml.db.models.base import uuid_gen
 from massgov.pfml.db.models.employees import TaxIdentifier  # noqa: F401
 
 # revision identifiers, used by Alembic.
@@ -41,21 +40,21 @@ def upgrade():
         None, "employee", "tax_identifier", ["tax_identifier_id"], ["tax_identifier_id"]
     )
 
-    bind = op.get_bind()
-    session = sa.orm.Session(bind=bind)
-
-    op.execute(
-        "INSERT INTO tax_identifier(tax_identifier) SELECT DISTINCT tax_identifier FROM employee"
-    )
-
-    for tax_id in session.query(TaxIdentifier):
-        tax_id.tax_identifier_id = uuid_gen()
-
-    session.commit()
-
-    op.execute(
-        "UPDATE employee SET tax_identifier_id = tax_identifier.tax_identifier_id FROM employee AS e JOIN tax_identifier ON e.tax_identifier = tax_identifier.tax_identifier"
-    )
+    # bind = op.get_bind()
+    # session = sa.orm.Session(bind=bind)
+    #
+    # op.execute(
+    #     "INSERT INTO tax_identifier(tax_identifier) SELECT DISTINCT tax_identifier FROM employee"
+    # )
+    #
+    # for tax_id in session.query(TaxIdentifier):
+    #     tax_id.tax_identifier_id = uuid_gen()
+    #
+    # session.commit()
+    #
+    # op.execute(
+    #     "UPDATE employee SET tax_identifier_id = tax_identifier.tax_identifier_id FROM employee AS e JOIN tax_identifier ON e.tax_identifier = tax_identifier.tax_identifier"
+    # )
 
     op.drop_column("employee", "tax_identifier")
     # ### end Alembic commands ###
