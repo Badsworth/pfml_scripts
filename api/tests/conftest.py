@@ -19,7 +19,6 @@ from jose import jwt
 import massgov.pfml.api.app
 import massgov.pfml.api.authentication as authentication
 import massgov.pfml.api.employees
-import massgov.pfml.api.generate_fake_data as fake
 import massgov.pfml.util.logging
 from massgov.pfml.db.models.factories import UserFactory
 
@@ -56,25 +55,6 @@ def logging_fix(monkeypatch):
 def user(initialize_factories_session):
     user = UserFactory.create()
     return user
-
-
-@pytest.fixture
-def test_employee(monkeypatch):
-    employee = fake.create_employee()
-    ssn_or_itin = employee.get("ssn_or_itin")
-
-    monkeypatch.setitem(fake.employees, ssn_or_itin, employee)
-
-    return employee
-
-
-@pytest.fixture
-def test_wages(test_employee, monkeypatch):
-    wages = fake.create_wages(test_employee["employee_id"], str(uuid.uuid4()))
-
-    monkeypatch.setitem(fake.wages, test_employee["employee_id"], [wages])
-
-    return wages, test_employee
 
 
 @pytest.fixture

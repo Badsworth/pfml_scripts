@@ -10,7 +10,6 @@ import os
 
 import massgov.pfml.api.app as app
 import massgov.pfml.api.authentication as authentication
-import massgov.pfml.api.generate_fake_data as fake
 import massgov.pfml.util.logging
 
 logger = massgov.pfml.util.logging.get_logger(__package__)
@@ -24,8 +23,6 @@ def main():
 def start_server():
     try:
         connexion_app = app.create_app()
-        create_fake_data()
-
         app_config = app.get_app_config(connexion_app)
         authentication.get_public_keys(app_config.cognito_user_pool_keys_url)
 
@@ -48,11 +45,6 @@ def start_server():
     except Exception:
         logger.exception("Server NOT started because of exception")
         raise
-
-
-def create_fake_data():
-    fake.build_fake_data_dictionaries()
-    return
 
 
 main()
