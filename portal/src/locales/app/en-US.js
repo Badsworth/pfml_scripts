@@ -216,7 +216,7 @@ const pages = {
     continuousWeeksHint:
       'Refer to Question 24 in the "Estimated leave period" section of the Healthcare Provider Form.',
     continuousWeeksLabel:
-      "For how many weeks will you need to take continuous leave from work?",
+      "How many weeks will you need to take continuous leave from work?",
     durationTypeSectionHint:
       'Refer to Question 18 in the "Ability to work" section of the Healthcare Provider Form.',
     durationTypeSectionLabel: "Which of the following situations apply?",
@@ -253,8 +253,8 @@ const pages = {
     intermittentFrequencyLabel_every6months:
       '$t(pages.claimsDuration.intermittentFrequencyLabelBase, {"per": "over the next 6 months"})',
     intermittentSectionLabel:
-      "Tell us the estimated frequency and duration when taking intermittent leave.",
-    intermittentTypeHint: "$t(shared.claimDurationTypeIntermittent)",
+      "Tell us the estimated frequency and duration of your intermittent leave.",
+    intermittentTypeHint: "Intermittent leave",
     intermittentTypeLabel: "I need to take off work at irregular intervals.",
     reducedHoursPerWeekHint:
       'Refer to Question 26 in the "Estimated leave period" section of the Healthcare Provider Form.',
@@ -739,7 +739,7 @@ const components = {
   form: {
     continueButton: "Continue",
     dateInputDayLabel: "Day",
-    dateInputHint: "MM/DD/YYYY",
+    dateInputHint: "For example: 04 / 28 / 1986",
     dateInputMonthLabel: "Month",
     dateInputYearLabel: "Year",
     optionalText: "(optional)",

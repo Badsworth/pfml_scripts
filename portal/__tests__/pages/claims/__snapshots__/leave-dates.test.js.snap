@@ -16,7 +16,7 @@ exports[`LeaveDates renders the page 1`] = `
           Refer to Question 19 in the "Ability to work" section of the Healthcare Provider Form.
         </p>
         <p>
-          MM/DD/YYYY
+          For example: 04 / 28 / 1986
         </p>
       </React.Fragment>
     }
@@ -35,7 +35,7 @@ exports[`LeaveDates renders the page 1`] = `
           Refer to Question 20 in the "Ability to work" section of the Healthcare Provider Form.
         </p>
         <p>
-          MM/DD/YYYY
+          For example: 04 / 28 / 1986
         </p>
       </React.Fragment>
     }

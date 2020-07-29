@@ -62,7 +62,7 @@ exports[`Duration regardless of duration type initially renders the page without
     <InputText
       hint="Refer to Question 24 in the \\"Estimated leave period\\" section of the Healthcare Provider Form."
       inputMode="numeric"
-      label="For how many weeks will you need to take continuous leave from work?"
+      label="How many weeks will you need to take continuous leave from work?"
       name="temp.leave_details.continuous_leave_periods[0].weeks"
       onChange={[Function]}
       pattern="[0-9]*"
@@ -115,7 +115,7 @@ exports[`Duration regardless of duration type initially renders the page without
       level="2"
       size="1"
     >
-      Tell us the estimated frequency and duration when taking intermittent leave.
+      Tell us the estimated frequency and duration of your intermittent leave.
     </Heading>
     <InputChoiceGroup
       choices={

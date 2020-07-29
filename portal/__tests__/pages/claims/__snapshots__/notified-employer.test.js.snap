@@ -48,7 +48,7 @@ exports[`NotifiedEmployer renders the page 1`] = `
             This can be an approximate date.
           </p>
           <p>
-            MM/DD/YYYY
+            For example: 04 / 28 / 1986
           </p>
         </React.Fragment>
       }
