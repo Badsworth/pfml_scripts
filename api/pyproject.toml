@@ -54,7 +54,7 @@ massgov-pfml-api = "massgov.pfml.api.__main__:main"
 db-migrate-up = "massgov.pfml.db.migrations.run:up"
 db-migrate-down = "massgov.pfml.db.migrations.run:down"
 db-migrate-down-all = "massgov.pfml.db.migrations.run:downall"
-db-admin-create-rds-user = "massgov.pfml.db.admin:create_user"
+db-admin-create-db-users = "massgov.pfml.db.admin:create_users"
 
 [tool.black]
 line-length = 100

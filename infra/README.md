@@ -253,13 +253,17 @@ that they can be run on Github Actions with the right read/write permissions. Th
         └── prod        ⛱  production env, deployed on every push to deploy/api/prod
 
 └── portal              🏡 infrastructure for a PFML portal environment
-    └── config          🚪 environment variables for configuring the Portal
     └── template        🏗  shared template for portal env
     └── environments
 
 └── api                 🏡 infrastructure for a PFML api environment
     └── template        🏗  shared template for api env
     └── environments
+
+└── ecs-tasks           🏡 infrastructure for adhoc PFML API ECS tasks
+    └── template        🏗  shared template for API ecs tasks
+    └── environments
+
 ```
 
 ## tfstate files
@@ -276,4 +280,5 @@ S3
         └── env-shared.tfstate
         └── portal.tfstate
         └── api.tfstate
+        └── ecs-tasks.tfstate
 ```

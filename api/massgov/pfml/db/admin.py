@@ -6,7 +6,7 @@
 from massgov.pfml.db import create_engine
 
 
-def create_user():
+def create_users():
     engine = create_engine()
     with engine.connect() as con:
         user = con.execute("CREATE USER pfmlwrite; GRANT rds_iam TO pfmlwrite;")
