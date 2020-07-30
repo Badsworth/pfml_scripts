@@ -7,16 +7,20 @@ import { Auth } from "@aws-amplify/auth";
 import Authenticator from "../components/Authenticator";
 import ErrorBoundary from "../components/ErrorBoundary";
 import ErrorsSummary from "../components/ErrorsSummary";
-import Footer from "../components/Footer";
 import Head from "next/head";
 import Header from "../components/Header";
 import PropTypes from "prop-types";
 import Spinner from "../components/Spinner";
+import dynamic from "next/dynamic";
 import { isFeatureEnabled } from "../services/featureFlags";
 import tracker from "../services/tracker";
 import useAppLogic from "../hooks/useAppLogic";
 import useFeatureFlagsFromQueryEffect from "../hooks/useFeatureFlagsFromQueryEffect";
 import { useRouter } from "next/router";
+
+// Lazy-loaded components
+// https://nextjs.org/docs/advanced-features/dynamic-import
+const Footer = dynamic(() => import("../components/Footer"));
 
 // Configure Amplify for Auth behavior throughout the app
 Auth.configure({
