@@ -1,34 +1,24 @@
-import os
-import urllib
-from dataclasses import dataclass
 from functools import cached_property
 from typing import Optional
 
-import boto3
-from requests import Session
-from requests_pkcs12 import Pkcs12Adapter
-from zeep import Client
-from zeep.transports import Transport
+import zeep.helpers as zeep_helpers
 
+import massgov.pfml.util.logging
+from massgov.pfml.rmv.caller import ApiCaller, LazyZeepApiCaller
+from massgov.pfml.rmv.errors import (
+    RmvMultipleCustomersError,
+    RmvNoCredentialError,
+    RmvUnexpectedResponseError,
+    RmvUnknownError,
+    RmvValidationError,
+)
+from massgov.pfml.rmv.models import (
+    RmvAcknowledgement,
+    VendorLicenseInquiryRequest,
+    VendorLicenseInquiryResponse,
+)
 
-@dataclass
-class RmvConfig:
-    base_url: str
-    pkcs12_data: bytes
-    pkcs12_pw: str
-
-    @classmethod
-    def from_env_and_secrets_manager(cls):
-        pkcs12_arn = os.environ["RMV_CLIENT_CERTIFICATE_BINARY_ARN"]
-
-        secrets_client = boto3.client("secretsmanager")
-        pkcs12_data = secrets_client.get_secret_value(SecretId=pkcs12_arn).get("SecretBinary")
-
-        return RmvConfig(
-            base_url=os.environ["RMV_CLIENT_BASE_URL"],
-            pkcs12_pw=os.environ["RMV_CLIENT_CERTIFICATE_PASSWORD"],
-            pkcs12_data=pkcs12_data,
-        )
+logger = massgov.pfml.util.logging.get_logger(__name__)
 
 
 class RmvClient:
@@ -36,26 +26,47 @@ class RmvClient:
     Client for accessing the Registry of Motor Vehicles (RMV) API.
     """
 
-    def __init__(self, config: Optional[RmvConfig] = None):
-        if config is None:
-            config = RmvConfig.from_env_and_secrets_manager()
+    def __init__(self, caller: Optional[ApiCaller] = None):
+        if caller is None:
+            caller = LazyZeepApiCaller()
 
-        self.base_url = config.base_url.rstrip("/")
-        self.pkcs12_data = config.pkcs12_data
-        self.pkcs12_pw = config.pkcs12_pw
-        self.init_session()
-
-    def init_session(self):
-        """
-        Initialize a persistent HTTPS session for connecting to the RMV API.
-        """
-        self.session = Session()
-        self.session.mount(
-            self.base_url,
-            Pkcs12Adapter(pkcs12_data=self.pkcs12_data, pkcs12_password=self.pkcs12_pw),
-        )
+        self._cached_caller = caller
 
     @cached_property
-    def client(self):
-        url = urllib.parse.urljoin(self.base_url, "/vs/gateway/VendorLicenseInquiry/?WSDL")
-        return Client(url, transport=Transport(session=self.session))
+    def _caller(self):
+        return self._cached_caller.get()
+
+    def vendor_license_inquiry(
+        self, request: VendorLicenseInquiryRequest
+    ) -> Optional[VendorLicenseInquiryResponse]:
+        """
+        Does a lookup for a valid license.
+
+        @returns a response if the license was found, or None if license was not found.
+
+        @raises RmvUnknownError - an unknown error occurred.
+                RmvValidationError - the request body had RMV-side validation errors.
+                RmvUnexpectedResponseError - the RMV API returned an unexpected acknowledgement response.
+        """
+        req_body = request.dict(by_alias=True)
+        req_body["DOB"] = req_body["DOB"].strftime("%Y%m%d")
+
+        try:
+            res = self._caller.VendorLicenseInquiry(**req_body)
+        except Exception as e:
+            logger.exception("Error making RMV VendorLicenseInquiry request")
+            raise RmvUnknownError(cause=e)
+
+        acknowledgement = res.Acknowledgement
+        if acknowledgement == RmvAcknowledgement.CUSTOMER_NOT_FOUND.value:
+            return None
+        elif acknowledgement == RmvAcknowledgement.REQUIRED_FIELDS_MISSING.value:
+            raise RmvValidationError()
+        elif acknowledgement == RmvAcknowledgement.MULTIPLE_CUSTOMERS_FOUND.value:
+            raise RmvMultipleCustomersError()
+        elif acknowledgement == RmvAcknowledgement.CREDENTIAL_NOT_FOUND.value:
+            raise RmvNoCredentialError()
+        elif acknowledgement:
+            raise RmvUnexpectedResponseError(acknowledgement)
+
+        return VendorLicenseInquiryResponse(**zeep_helpers.serialize_object(res))

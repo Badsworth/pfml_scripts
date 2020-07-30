@@ -1,85 +1,184 @@
-import os
+from collections import defaultdict
+from datetime import date
+from typing import NoReturn, Optional, Union
 
-import boto3
-import botocore
 import pytest
-from botocore.stub import Stubber
-from requests import Session
-from requests.exceptions import HTTPError
-from requests.models import Response
 
-from massgov.pfml.rmv.client import RmvClient, RmvConfig
+from massgov.pfml.rmv.caller import ApiCaller, LazyApiCaller
+from massgov.pfml.rmv.client import RmvAcknowledgement, RmvClient
+from massgov.pfml.rmv.errors import RmvUnexpectedResponseError, RmvUnknownError, RmvValidationError
+from massgov.pfml.rmv.models import VendorLicenseInquiryRequest
 
 
-def mock_response(status_code):
-    res = Response()
-    res.status_code = status_code
+class MockZeepCaller(LazyApiCaller[dict], ApiCaller[dict]):
+    """
+    Zeep caller object mock to track calls and provided arguments.
 
-    # Load fake minimal version of the RMV API WSDL.
-    wsdlpath = os.path.join(os.path.dirname(__file__), "./api.wsdl")
-    with open(wsdlpath, "rb") as file:
-        res._content = file.read()
+    Takes in an RmvAcknowledgement code and always returns a proper dict response with the
+    given acknowledgement.
+    """
 
-    def mock_get(*args, **kwargs):
-        return res
+    def __init__(
+        self,
+        acknowledgement: Optional[Union[str, RmvAcknowledgement]],
+        customer_inactive: bool = False,
+        cfl_sanctions: bool = False,
+        cfl_sanctions_active: bool = False,
+    ):
 
-    return mock_get
+        self.args = defaultdict(lambda: [])
+        self.calls = defaultdict(int)
+
+        if isinstance(acknowledgement, RmvAcknowledgement):
+            acknowledgement = acknowledgement.value
+
+        class AttrDict(dict):
+            def __init__(self, *args, **kwargs):
+                super(AttrDict, self).__init__(*args, **kwargs)
+                self.__dict__ = self
+
+        self.response = AttrDict(
+            **{
+                "CustomerKey": "12345",
+                "LicenseID": "ABC12345",
+                "License1ExpirationDate": "20210204",
+                "LicenseSSN": "12345678",
+                "CustomerInActive": customer_inactive,
+                "CFLSanctions": cfl_sanctions,
+                "CFLSanctionsActive": cfl_sanctions_active,
+                "OtherStuff": None,
+                "Acknowledgement": acknowledgement,
+            }
+        )
+
+    def get(self) -> ApiCaller[dict]:
+        return self
+
+    def VendorLicenseInquiry(self, **kwargs) -> dict:
+        self.args["VendorLicenseInquiry"].append(kwargs)
+        self.calls["VendorLicenseInquiry"] += 1
+        return self.response
+
+
+class RuntimeErrorZeepCaller(LazyApiCaller[None], ApiCaller[None]):
+    def __init__(self):
+        pass
+
+    def get(self):
+        return self
+
+    def VendorLicenseInquiry(self, **kwargs) -> NoReturn:
+        raise RuntimeError()
 
 
 @pytest.fixture
-def pkcs12_data():
-    # Load self-signed client certificate. This was generated for testing
-    # with no expiration using the following commands:
-    #
-    #   openssl req -x509 -newkey rsa:4096 -keyout key.pem -out cert.pem -days 0
-    #   openssl pkcs12 -export -out certificate.p12 -inkey key.pem -in cert.pem
-    #
-    certpath = os.path.join(os.path.dirname(__file__), "./certificate.p12")
-    with open(certpath, "rb") as file:
-        data = file.read()
-
-    return data
-
-
-def test_rmv_client_get_client_200(monkeypatch, pkcs12_data):
-    monkeypatch.setattr(Session, "get", mock_response(200))
-
-    client = RmvClient(
-        RmvConfig(base_url="https://fake-rmv-url.com", pkcs12_data=pkcs12_data, pkcs12_pw="abcd")
+def inquiry_request():
+    """
+    Returns a standard, re-usable inquiry request object.
+    """
+    return VendorLicenseInquiryRequest(
+        first_name="FirstNameTest",
+        last_name="LastNameTest",
+        date_of_birth=date(2020, 2, 3),
+        ssn_last_4="1443",
+        license_id="ABC12345",
     )
 
-    api_client = client.client
-    assert api_client.wsdl
+
+def test_rmv_client_vendor_license_inquiry_200_none_acknowledgement(inquiry_request):
+    expected_args = {
+        "FirstName": "FirstNameTest",
+        "LastName": "LastNameTest",
+        "DOB": "20200203",
+        "Last4SSN": "1443",
+        "LicenseID": "ABC12345",
+    }
+
+    caller = MockZeepCaller(None)
+    rmv_client = RmvClient(caller)
+
+    response = rmv_client.vendor_license_inquiry(inquiry_request)
+    assert caller.calls["VendorLicenseInquiry"] == 1
+    assert caller.args["VendorLicenseInquiry"][0] == expected_args
+
+    assert response.customer_key == caller.response["CustomerKey"]
+    assert response.license_id == caller.response["LicenseID"]
+    assert response.license1_expiration_date == date(2021, 2, 4)
+    assert response.cfl_sanctions is False
+    assert response.cfl_sanctions_active is False
+    assert response.is_customer_inactive is False
 
 
-def test_rmv_client_get_client_500(monkeypatch, pkcs12_data):
-    monkeypatch.setattr(Session, "get", mock_response(500))
+def test_rmv_client_vendor_license_inquiry_200_empty_str_acknowledgement(inquiry_request):
+    expected_args = {
+        "FirstName": "FirstNameTest",
+        "LastName": "LastNameTest",
+        "DOB": "20200203",
+        "Last4SSN": "1443",
+        "LicenseID": "ABC12345",
+    }
 
-    client = RmvClient(
-        RmvConfig(base_url="https://fake-rmv-url.com", pkcs12_data=pkcs12_data, pkcs12_pw="abcd")
-    )
+    caller = MockZeepCaller("")
+    rmv_client = RmvClient(caller)
 
-    with pytest.raises(HTTPError):
-        client.client
+    response = rmv_client.vendor_license_inquiry(inquiry_request)
+    assert caller.calls["VendorLicenseInquiry"] == 1
+    assert caller.args["VendorLicenseInquiry"][0] == expected_args
+
+    assert response.customer_key == caller.response["CustomerKey"]
+    assert response.license_id == caller.response["LicenseID"]
+    assert response.license1_expiration_date == date(2021, 2, 4)
+    assert response.cfl_sanctions is False
+    assert response.cfl_sanctions_active is False
+    assert response.is_customer_inactive is False
 
 
-def test_rmv_client_from_env_and_secrets_manager(monkeypatch):
-    monkeypatch.setenv("RMV_CLIENT_CERTIFICATE_BINARY_ARN", "arn")
-    monkeypatch.setenv("RMV_CLIENT_BASE_URL", "https://fake-rmv-url.com")
-    monkeypatch.setenv("RMV_CLIENT_CERTIFICATE_PASSWORD", "pw")
+def test_rmv_client_vendor_license_inquiry_cfl_sanctions_active(inquiry_request):
+    caller = MockZeepCaller(None, cfl_sanctions=True, cfl_sanctions_active=True)
 
-    client = botocore.session.get_session().create_client("secretsmanager", region_name="us-east-1")
-    monkeypatch.setattr(boto3, "client", lambda name: client)
+    rmv_client = RmvClient(caller)
+    response = rmv_client.vendor_license_inquiry(inquiry_request)
+    assert response.cfl_sanctions is True
+    assert response.cfl_sanctions_active is True
 
-    with Stubber(client) as stubber:
-        stubber.add_response(
-            "get_secret_value",
-            expected_params={"SecretId": "arn"},
-            service_response={"SecretBinary": str.encode("hello")},
-        )
 
-        config = RmvConfig.from_env_and_secrets_manager()
-        assert config.base_url == "https://fake-rmv-url.com"
-        assert config.pkcs12_pw == "pw"
-        assert config.pkcs12_data == str.encode("hello")
-        stubber.assert_no_pending_responses()
+def test_rmv_client_vendor_license_inquiry_customer_inactive(inquiry_request):
+    caller = MockZeepCaller(None, customer_inactive=True)
+    rmv_client = RmvClient(caller)
+
+    response = rmv_client.vendor_license_inquiry(inquiry_request)
+    assert response.is_customer_inactive is True
+
+
+def test_rmv_client_vendor_license_inquiry_200_validation_error(inquiry_request):
+    caller = MockZeepCaller(RmvAcknowledgement.REQUIRED_FIELDS_MISSING)
+    rmv_client = RmvClient(caller)
+
+    with pytest.raises(RmvValidationError):
+        rmv_client.vendor_license_inquiry(inquiry_request)
+
+
+def test_rmv_client_vendor_license_inquiry_200_not_found(inquiry_request):
+    caller = MockZeepCaller(RmvAcknowledgement.CUSTOMER_NOT_FOUND)
+    rmv_client = RmvClient(caller)
+
+    response = rmv_client.vendor_license_inquiry(inquiry_request)
+    assert response is None
+
+
+def test_rmv_client_vendor_license_inquiry_200_unexpected_acknowledgement(inquiry_request):
+    caller = MockZeepCaller("SOMETHING_BAD")
+    rmv_client = RmvClient(caller)
+
+    with pytest.raises(RmvUnexpectedResponseError) as e:
+        rmv_client.vendor_license_inquiry(inquiry_request)
+
+    assert "SOMETHING_BAD" in str(e)
+
+
+def test_rmv_client_vendor_license_inquiry_unknown_error(inquiry_request):
+    caller = RuntimeErrorZeepCaller()
+    rmv_client = RmvClient(caller)
+
+    with pytest.raises(RmvUnknownError):
+        rmv_client.vendor_license_inquiry(inquiry_request)

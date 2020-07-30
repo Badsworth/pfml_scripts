@@ -5,3 +5,7 @@ def split_str(val: Optional[str] = None, delim: str = ",") -> List[str]:
     if val is None or val.strip() == "":
         return []
     return val.split(delim)
+
+
+def snake_to_camel(string: str) -> str:
+    return "".join(word.capitalize() for word in string.split("_"))
