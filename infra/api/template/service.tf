@@ -33,6 +33,7 @@ resource "aws_ecs_service" "app" {
 resource "aws_ecs_task_definition" "app" {
   family                = local.app_name
   execution_role_arn    = aws_iam_role.task_executor.arn
+  task_role_arn         = aws_iam_role.api_service.arn
   container_definitions = data.template_file.container_definitions.rendered
 
   cpu                      = "1024"

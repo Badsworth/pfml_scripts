@@ -6,6 +6,22 @@ locals {
   ssm_arn_prefix = "arn:aws:ssm:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:parameter/service"
 }
 
+# Boilerplate policy to allow an IAM role to perform ECS tasks.
+data "aws_iam_policy_document" "ecs_tasks_assume_role_policy" {
+  statement {
+    actions = [
+      "sts:AssumeRole"
+    ]
+
+    effect = "Allow"
+
+    principals {
+      type        = "Service"
+      identifiers = ["ecs-tasks.amazonaws.com"]
+    }
+  }
+}
+
 # Task execution role. This role is used by ECS to pull container images from
 # ECR and access secrets from Systems Manager Parameter Store before running the application.
 #
@@ -13,21 +29,7 @@ locals {
 resource "aws_iam_role" "task_executor" {
   name = "${local.app_name}-${var.environment_name}-task-executor"
 
-  assume_role_policy = <<EOF
-  {
-    "Version": "2012-10-17",
-    "Statement": [
-      {
-        "Sid": "",
-        "Effect": "Allow",
-        "Principal": {
-          "Service": "ecs-tasks.amazonaws.com"
-        },
-        "Action": "sts:AssumeRole"
-      }
-    ]
-  }
-  EOF
+  assume_role_policy = data.aws_iam_policy_document.ecs_tasks_assume_role_policy.json
 }
 
 data "aws_iam_policy_document" "task_executor" {
@@ -157,10 +159,6 @@ resource "aws_iam_role_policy" "lambda_execution" {
   policy = data.aws_iam_policy_document.iam_policy_lambda_execution.json
 }
 
-data "aws_s3_bucket" "agency_transfer" {
-  bucket = "massgov-pfml-${var.environment_name}-agency-transfer"
-}
-
 data "aws_iam_policy_document" "iam_policy_lambda_execution" {
   statement {
     effect = "Allow"
@@ -222,4 +220,52 @@ data "aws_iam_policy_document" "iam_policy_lambda_execution" {
       "${local.ssm_arn_prefix}/${local.app_name}-dor-import/${var.environment_name}"
     ]
   }
+}
+
+# The role that the PFML API assumes to perform actions within AWS.
+resource "aws_iam_role" "api_service" {
+  name               = "${local.app_name}-${var.environment_name}-api-service"
+  assume_role_policy = data.aws_iam_policy_document.ecs_tasks_assume_role_policy.json
+}
+
+# IAM policy that defines access rights to the S3 document upload buckets.
+data "aws_iam_policy_document" "document_upload" {
+
+  statement {
+    sid = "AllowDocumentUploads"
+
+    effect = "Allow"
+
+    actions = [
+      "s3:ListBucket",
+      "s3:ListBuckets",
+      "s3:ListObjects",
+      "s3:ListObjectsV2",
+      "s3:GetObject",
+      "s3:PutObject",
+      "s3:CreateMultipartUpload",
+      "s3:UploadPart",
+      "s3:ListParts",
+      "s3:ListMultipartUploads",
+      "s3:AbortMultipartUpload",
+      "s3:CompleteMultipartUpload",
+      "s3:DeleteObject",
+      "s3:DeleteObjects"
+    ]
+
+    resources = [
+      "arn:aws:s3:::massgov-pfml-${var.environment_name}-document",
+      "arn:aws:s3:::massgov-pfml-${var.environment_name}-document/*"
+    ]
+
+    principals {
+      type        = "AWS"
+      identifiers = [aws_iam_role.api_service.arn]
+    }
+  }
+
+  # TODO: build an explicit deny policy, being mindful of admin rights
+  #  statement {
+  #    effect = "Deny"
+  #  }
 }
