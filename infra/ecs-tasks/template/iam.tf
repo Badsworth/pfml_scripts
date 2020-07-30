@@ -45,7 +45,7 @@ resource "aws_iam_policy" "db_user_pfml_api" {
 }
 
 resource "aws_iam_role_policy_attachment" "db_user_pfml_api_to_ecs_tasks_attachment" {
-  role       = aws_iam_role.api_service.name
+  role       = aws_iam_role.ecs_tasks.name
   policy_arn = aws_iam_policy.db_user_pfml_api.arn
 }
 

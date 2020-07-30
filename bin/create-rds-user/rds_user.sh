@@ -22,7 +22,7 @@ if [ -z "$ENV_NAME" ] || [ -z "$AUTHOR" ]; then
     exit 1
 fi
 
-pushd $DIR/../../infra/api/environments/$ENV_NAME
+pushd $DIR/../../infra/ecs-tasks/environments/$ENV_NAME
 TF_OUTPUTS=$(terraform output -json || (terraform init && terraform output -json))
 popd
 
@@ -33,7 +33,7 @@ NETWORK_CONFIG=$(jq \
      .awsvpcConfiguration.securityGroups=$SECURITY_GROUPS' \
     $DIR/network_config.json.tpl)
 
-TASK_DEFINITION=$(echo $TF_OUTPUTS | jq .create_rds_user_task_arn.value | cut -d'/' -f2 | sed -e 's/^"//' -e 's/"$//')
+TASK_DEFINITION=$(echo $TF_OUTPUTS | jq .create_db_users_task_arn.value | cut -d'/' -f2 | sed -e 's/^"//' -e 's/"$//')
 
 echo "Running $TASK_DEFINITION..."
 

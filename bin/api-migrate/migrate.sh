@@ -21,7 +21,7 @@ if [ -z "$ENV_NAME" ] || [ -z "$AUTHOR" ]; then
     exit 1
 fi
 
-pushd $DIR/../../infra/api/environments/$ENV_NAME
+pushd $DIR/../../infra/ecs-tasks/environments/$ENV_NAME
 TF_OUTPUTS=$(terraform output -json || (terraform init && terraform output -json))
 popd
 

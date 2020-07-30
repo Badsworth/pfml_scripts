@@ -44,8 +44,6 @@ data "aws_iam_policy_document" "task_executor" {
 
     resources = [
       aws_cloudwatch_log_group.service_logs.arn,
-      aws_cloudwatch_log_group.db_migrate_logs.arn,
-      aws_cloudwatch_log_group.create_rds_user_logs.arn
     ]
   }
 
