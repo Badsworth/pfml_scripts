@@ -62,7 +62,7 @@ def applications_start():
     with app.db_session() as db_session:
         db_session.add(application)
 
-    return {"application_id": application.application_id}, 201
+    return ApplicationResponse.from_orm(application).dict()
 
 
 def applications_update(application_id):

@@ -123,7 +123,7 @@ def test_applications_post_start_app(client, user, auth_token, test_db_session):
     response_body = response.get_json()
     application_id = response_body.get("application_id")
 
-    assert response.status_code == 201
+    assert response.status_code == 200
     assert application_id
 
     application = test_db_session.query(Application).get(application_id)

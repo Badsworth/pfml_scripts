@@ -195,7 +195,7 @@ paths:
       summary: Create an Application
       operationId: massgov.pfml.api.applications.applications_start
       responses:
-        "201":
+        "200":
           $ref: "#/components/responses/ApplicationCreatedResponse"
         "400":
           $ref: "#/components/responses/BadRequest"
@@ -348,7 +348,7 @@ components:
       content:
         application/json:
           schema:
-            $ref: "#/components/schemas/ApplicationCreated"
+            $ref: "#/components/schemas/ApplicationResponse"
     ApplicationSearchResponse:
       description: Search successful
       content:
@@ -518,14 +518,6 @@ components:
         - employer_id
         - employer_fein
         - employer_dba
-
-    ApplicationCreated:
-      type: object
-      properties:
-        application_id:
-          type: string
-          format: uuid
-          example: "2a340cf8-6d2a-4f82-a075-73588d003f8f"
 
     ApplicationRequestBody:
       type: object
