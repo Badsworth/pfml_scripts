@@ -237,20 +237,13 @@ data "aws_iam_policy_document" "document_upload" {
     effect = "Allow"
 
     actions = [
-      "s3:ListBucket",
-      "s3:ListBuckets",
-      "s3:ListObjects",
-      "s3:ListObjectsV2",
       "s3:GetObject",
+      "s3:ListBucket",
       "s3:PutObject",
-      "s3:CreateMultipartUpload",
-      "s3:UploadPart",
-      "s3:ListParts",
-      "s3:ListMultipartUploads",
       "s3:AbortMultipartUpload",
-      "s3:CompleteMultipartUpload",
-      "s3:DeleteObject",
-      "s3:DeleteObjects"
+      "s3:ListBucketMultipartUploads",
+      "s3:ListMultipartUploadParts",
+      "s3:DeleteObject"
     ]
 
     resources = [
