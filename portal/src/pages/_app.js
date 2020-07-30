@@ -3,7 +3,7 @@ import "../../styles/app.scss";
 import "@aws-amplify/ui/dist/style.css";
 import React, { useEffect, useState } from "react";
 import { initializeI18n, useTranslation } from "../locales/i18n";
-import Amplify from "aws-amplify";
+import { Auth } from "@aws-amplify/auth";
 import Authenticator from "../components/Authenticator";
 import ErrorBoundary from "../components/ErrorBoundary";
 import ErrorsSummary from "../components/ErrorsSummary";
@@ -18,23 +18,21 @@ import useFeatureFlagsFromQueryEffect from "../hooks/useFeatureFlagsFromQueryEff
 import { useRouter } from "next/router";
 
 // Configure Amplify for Auth behavior throughout the app
-Amplify.configure({
-  Auth: {
-    cookieStorage: {
-      domain: process.env.domain,
-      // Require cookie transmission over a secure protocol (https) outside of local dev.
-      // We use env.domain instead of env.NODE_ENV here since our end-to-end test suite is
-      // ran against a production build on localhost.
-      secure: process.env.domain !== "localhost",
-      // Cookie expiration, in days (defaults to a year, which is wild)
-      expires: 1,
-      // path: '/', (optional)
-    },
-    mandatorySignIn: false,
-    region: process.env.awsConfig.cognitoRegion,
-    userPoolId: process.env.awsConfig.cognitoUserPoolId,
-    userPoolWebClientId: process.env.awsConfig.cognitoUserPoolWebClientId,
+Auth.configure({
+  cookieStorage: {
+    domain: process.env.domain,
+    // Require cookie transmission over a secure protocol (https) outside of local dev.
+    // We use env.domain instead of env.NODE_ENV here since our end-to-end test suite is
+    // ran against a production build on localhost.
+    secure: process.env.domain !== "localhost",
+    // Cookie expiration, in days (defaults to a year, which is wild)
+    expires: 1,
+    // path: '/', (optional)
   },
+  mandatorySignIn: false,
+  region: process.env.awsConfig.cognitoRegion,
+  userPoolId: process.env.awsConfig.cognitoUserPoolId,
+  userPoolWebClientId: process.env.awsConfig.cognitoUserPoolWebClientId,
 });
 
 tracker.initialize();

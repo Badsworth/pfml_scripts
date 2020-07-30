@@ -33,12 +33,12 @@ describe("<BackButton>", () => {
 
   describe("when href prop is defined", () => {
     it("renders button link", () => {
-      const wrapper = shallow(<BackButton href="#" />);
+      const wrapper = shallow(<BackButton href="/prev" />);
 
       expect(wrapper.name()).toBe("ButtonLink");
       const link = wrapper.dive().dive();
       expect(link.text()).toBe("Back");
-      expect(link.prop("href")).toEqual("#");
+      expect(link.prop("href")).toEqual("/prev");
     });
   });
 });

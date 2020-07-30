@@ -25,9 +25,10 @@
     "test:watch": "jest --watch"
   },
   "dependencies": {
+    "@aws-amplify/auth": "^3.3.3",
     "@massds/mayflower-assets": "^0.2.1",
-    "aws-amplify": "^3.0.19",
-    "aws-amplify-react": "^4.1.18",
+    "aws-amplify": "^3.0.22",
+    "aws-amplify-react": "^4.1.21",
     "classnames": "^2.2.6",
     "core-js": "^3.6.5",
     "i18next": "^19.5.6",
@@ -43,7 +44,7 @@
   },
   "devDependencies": {
     "@babel/core": "^7.10.4",
-    "@next/bundle-analyzer": "^9.3.6",
+    "@next/bundle-analyzer": "^9.5.1",
     "@storybook/addon-docs": "^6.0.0-rc.0",
     "@storybook/react": "^6.0.0-rc.0",
     "@xstate/test": "^0.4.0",
@@ -54,7 +55,7 @@
     "enzyme-to-json": "^3.5.0",
     "jest": "^26.0.1",
     "jest-puppeteer": "^4.4.0",
-    "next": "^9.4.4",
+    "next": "^9.5.1",
     "puppeteer": "^5.0.0",
     "react-is": "^16.13.1",
     "sass": "^1.26.10",
