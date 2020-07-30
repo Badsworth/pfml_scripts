@@ -7,6 +7,7 @@ import { Auth } from "@aws-amplify/auth";
 import Authenticator from "../components/Authenticator";
 import ErrorBoundary from "../components/ErrorBoundary";
 import ErrorsSummary from "../components/ErrorsSummary";
+import Footer from "../components/Footer";
 import Head from "next/head";
 import Header from "../components/Header";
 import PropTypes from "prop-types";
@@ -181,24 +182,33 @@ export const App = ({
         <title>{t("pages.app.siteTitle")}</title>
         <meta name="description" content={t("pages.app.siteDescription")} />
       </Head>
-      <Header user={appLogic.user} />
-      <main id="main" className="grid-container margin-top-5 margin-bottom-8">
-        <div className="grid-row">
-          <div className="grid-col-fill">
-            {/* Include a second ErrorBoundary here so that we still render a site header if we catch an error before it bubbles up any further */}
-            <ErrorBoundary>
-              <ErrorsSummary errors={appLogic.appErrors} />
-              <Authenticator
-                authState={authState}
-                authData={initialAuthData}
-                onStateChange={handleAuthStateChange}
-              >
-                {renderPageContent()}
-              </Authenticator>
-            </ErrorBoundary>
-          </div>
+      <div className="l-container">
+        <div>
+          {/* Wrap header children in a div because its parent is a flex container */}
+          <Header user={appLogic.user} />
         </div>
-      </main>
+        <main
+          id="main"
+          className="l-main grid-container margin-top-5 margin-bottom-8"
+        >
+          <div className="grid-row">
+            <div className="grid-col-fill">
+              {/* Include a second ErrorBoundary here so that we still render a site header if we catch an error before it bubbles up any further */}
+              <ErrorBoundary>
+                <ErrorsSummary errors={appLogic.appErrors} />
+                <Authenticator
+                  authState={authState}
+                  authData={initialAuthData}
+                  onStateChange={handleAuthStateChange}
+                >
+                  {renderPageContent()}
+                </Authenticator>
+              </ErrorBoundary>
+            </div>
+          </div>
+        </main>
+        <Footer />
+      </div>
     </ErrorBoundary>
   );
 };

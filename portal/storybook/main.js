@@ -28,8 +28,19 @@ module.exports = {
 
     config.module.rules.push({
       test: /\.scss$/,
-      use: ["style-loader", "css-loader", "sass-loader"],
-      include: path.resolve(__dirname, "../styles"),
+      use: [
+        "style-loader",
+        "css-loader",
+        {
+          loader: "sass-loader",
+          options: {
+            sassOptions: {
+              includePaths: nextConfig.sassOptions.includePaths,
+            },
+          },
+        },
+      ],
+      include: [path.resolve(__dirname, "../styles")],
     });
 
     // Simplify import paths in our Story files

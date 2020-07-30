@@ -1,0 +1,13 @@
+/// Global layout styles, primarily responsible for sticking
+/// the footer to the bottom of the screen
+
+.l-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.l-main {
+  flex-grow: 1;
+  width: 100%;
+}

@@ -1,6 +1,8 @@
+const mayflowerAssets = require("@massds/mayflower-assets");
 const buildEnv = process.env.BUILD_ENV || "development";
 const envVariables = require("./config")[buildEnv];
 const featureFlags = require("./config/featureFlags")(buildEnv);
+const withImages = require("next-images");
 const withBundleAnalyzer = require("@next/bundle-analyzer")({
   enabled: process.env.ANALYZE_BUNDLE === "true",
 });
@@ -20,6 +22,10 @@ const config = {
     featureFlags,
   },
   exportTrailingSlash: true,
+  sassOptions: {
+    // Mayflowers requires us to expose its includePaths so its imports work
+    includePaths: mayflowerAssets.includePaths,
+  },
   webpack: function (webpackConfig) {
     // Include our polyfills before all other code
     // See: https://github.com/zeit/next.js/tree/master/examples/with-polyfills
@@ -44,4 +50,4 @@ const config = {
   },
 };
 
-module.exports = withBundleAnalyzer(withSourceMaps(config));
+module.exports = withBundleAnalyzer(withSourceMaps(withImages(config)));

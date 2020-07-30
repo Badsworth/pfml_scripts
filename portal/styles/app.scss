@@ -5,12 +5,21 @@
 @use "uswds-theme-typography" as *;
 @use "uswds-theme-components" as *;
 @use "uswds-theme-utilities" as *;
+
+// Mayflower design system global and component styles
+@import "~@massds/mayflower-assets/scss/00-base/elements";
+@import "~@massds/mayflower-assets/scss/03-organisms/footer-slim";
+
+// U.S. Web Design System global and component styles
+// !! Important !! This should come AFTER the Mayflower styles, otherwise
+// spacing styles we rely on are overridden
 @import "~uswds/dist/scss/uswds";
 
 // Include default USWDS h1-h6 style (size, weight, spacing) rulesets
 @include usa-headings-styles;
 
-// Custom PFML components
+// Custom PFML styles
+@import "./layout";
 @import "../src/components/ButtonLink";
 @import "../src/components/Details";
 @import "../src/components/FileCard";

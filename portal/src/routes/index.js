@@ -50,6 +50,7 @@ const routes = {
   },
   external: {
     massgov: {
+      dfml: "https://mass.gov/dfml",
       healthcareProviderForm: "https://www.mass.gov/hcp-form",
       informedConsent: "https://www.mass.gov/paidleave-informedconsent",
       privacyPolicy: "https://www.mass.gov/privacypolicy",

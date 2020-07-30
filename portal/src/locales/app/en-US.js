@@ -736,6 +736,16 @@ const components = {
       },
     ],
   },
+  footer: {
+    description:
+      "Paid Family and Medical Leave is a state-offered benefit for anyone who works in Massachusetts and is eligible to take up to 26 weeks of paid leave for medical or family reasons.",
+    // TODO (CP-698): correct address
+    orgAddress: "xxxx, Boston, MA 02210",
+    orgName: "Department of Family and Medical Leave (DFML)",
+    // TODO (CP-698): correct phone number
+    orgPhoneNumber: "(XXX) XXX-XXXX",
+    title: "Paid Family and Medical Leave (PFML)",
+  },
   form: {
     continueButton: "Continue",
     dateInputDayLabel: "Day",
@@ -757,6 +767,9 @@ const components = {
     signInFooterLink: "Log in",
     title: "Create an account",
     usernameLabel: "$t(shared.usernameLabel)",
+  },
+  siteLogo: {
+    alt: "Massachusetts state seal",
   },
   spinner: {
     label: "Loading",
