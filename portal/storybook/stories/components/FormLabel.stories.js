@@ -15,7 +15,7 @@ export const Default = () => {
       <FormLabel
         inputId="ssn"
         hint="Don’t have an Social Security Number? Use your Individual Taxpayer Identification Number."
-        optionalText={t("components.form.optionalText")}
+        optionalText={t("components.form.optional")}
       >
         What’s your Social Security Number?
       </FormLabel>

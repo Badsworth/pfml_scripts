@@ -41,10 +41,10 @@ const UploadOtherId = (props) => {
         setAppErrors={props.appLogic.setAppErrors}
         fileHeadingPrefix={t("pages.claimsUploadOtherId.fileHeadingPrefix")}
         addFirstFileButtonText={t(
-          "pages.claimsUploadOtherId.addFirstFileButtonText"
+          "pages.claimsUploadOtherId.addFirstFileButton"
         )}
         addAnotherFileButtonText={t(
-          "pages.claimsUploadOtherId.addAnotherFileButtonText"
+          "pages.claimsUploadOtherId.addAnotherFileButton"
         )}
       />
     </QuestionPage>

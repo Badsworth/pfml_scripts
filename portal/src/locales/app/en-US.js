@@ -172,11 +172,11 @@ const pages = {
   },
   claimsChecklist: {
     backButtonLabel: "Back to Dashboard",
-    completedText: "Completed",
-    editText: "Edit",
-    resumeText: "Resume",
+    completed: "Completed",
+    edit: "Edit",
+    resume: "Resume",
     screenReaderNumberPrefix: "Step",
-    startText: "Start",
+    start: "Start",
     stepHTMLDescription_employerInformation:
       "You will need to know:<ul class='usa-list'><li>Your employer's FEIN.</li><li>The date you told your employer you were taking leave.</li></ul>",
     stepHTMLDescription_leaveDetails:
@@ -193,7 +193,7 @@ const pages = {
     stepTitle_otherLeave: "Report other leave and benefits",
     stepTitle_payment: "Add payment information",
     stepTitle_verifyId: "Verify your identity",
-    submitButtonText: "Review and submit application",
+    submitButton: "Review and submit application",
   },
   claimsConfirm: {
     explanation1:
@@ -553,8 +553,8 @@ const pages = {
     title: "Your leave application was submitted successfully",
   },
   claimsUploadHealthcareForm: {
-    addAnotherFileButtonText: "Choose another file",
-    addFirstFileButtonText: "Choose a file",
+    addAnotherFileButton: "Choose another file",
+    addFirstFileButton: "Choose a file",
     fileHeadingPrefix: "File",
     lead:
       "You need to upload a copy of the <healthcare-provider-form-link>PFML Healthcare Provider Form (opens in new tab)</healthcare-provider-form-link> to prove that you need to take medical leave. You can upload a completed Family and Medical Leave Act (FMLA) form instead if your provider filled one out.",
@@ -562,8 +562,8 @@ const pages = {
     title: "$t(shared.claimsLeaveDetailsTitle)",
   },
   claimsUploadOtherId: {
-    addAnotherFileButtonText: "Choose another file",
-    addFirstFileButtonText: "Choose a file",
+    addAnotherFileButton: "Choose another file",
+    addFirstFileButton: "Choose a file",
     // @todo: CP-496 update this with the real documents users can use to ID proof
     documentList: ["Document 1", "Document 2, or", "Document 3"],
     fileHeadingPrefix: "File",
@@ -572,8 +572,8 @@ const pages = {
     title: "$t(shared.claimsFileUploadTitle)",
   },
   claimsUploadStateId: {
-    addAnotherFileButtonText: "Choose another file",
-    addFirstFileButtonText: "Choose a file",
+    addAnotherFileButton: "Choose another file",
+    addFirstFileButton: "Choose a file",
     fileHeadingPrefix: "File",
     lead:
       "In order to verify your identity, upload a copy of both the front and the back of your ID card.",
@@ -592,7 +592,7 @@ const pages = {
     afterApplyingOutro:
       "If your application is approved, you will receive weekly payments while you’re on leave.",
     applicationTimeEstimate: "Applying takes around 10 minutes.",
-    createClaimButtonText: "Create an application",
+    createClaimButton: "Create an application",
     needForApplyingHeading: "What you need to apply",
     needForApplyingList: {
       employerFein: "Your employer FEIN",
@@ -752,8 +752,7 @@ const components = {
     dateInputHint: "For example: 04 / 28 / 1986",
     dateInputMonthLabel: "Month",
     dateInputYearLabel: "Year",
-    optionalText: "(optional)",
-    submitButtonText: "Submit",
+    optional: "(optional)",
   },
   header: {
     skipToContent: "Skip to main content",

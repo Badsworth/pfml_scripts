@@ -42,7 +42,7 @@ const Name = (props) => {
         name="middle_name"
         value={valueWithFallback(middle_name)}
         label={t("pages.claimsName.middleNameLabel")}
-        optionalText={t("components.form.optionalText")}
+        optionalText={t("components.form.optional")}
         onChange={handleInputChange}
         smallLabel
       />

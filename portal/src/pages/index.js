@@ -52,7 +52,7 @@ const Index = (props) => {
 
       <form className="margin-bottom-8" onSubmit={handleSubmit}>
         <Button type="submit" name="new-claim">
-          {t("pages.index.createClaimButtonText")}
+          {t("pages.index.createClaimButton")}
         </Button>
       </form>
 

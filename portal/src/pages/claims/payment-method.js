@@ -122,7 +122,7 @@ const PaymentMethod = (props) => {
             )}
             label={t("pages.claimsPaymentMethod.addressLine2Label")}
             onChange={handleInputChange}
-            optionalText={t("components.form.optionalText")}
+            optionalText={t("components.form.optional")}
             autoComplete="address-line2"
             smallLabel
           />

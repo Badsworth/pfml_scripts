@@ -31,15 +31,15 @@ const Checklist = (props) => {
       />
       <StepList
         title={t("pages.claimsChecklist.stepListTitle")}
-        submitButtonText={t("pages.claimsChecklist.submitButtonText")}
+        submitButtonText={t("pages.claimsChecklist.submitButton")}
         submitPage={routeWithParams("claims.review", {
           claim_id: props.claim.application_id,
         })}
         submitPageDisabled={!allStepsComplete}
-        startText={t("pages.claimsChecklist.startText")}
-        resumeText={t("pages.claimsChecklist.resumeText")}
-        completedText={t("pages.claimsChecklist.completedText")}
-        editText={t("pages.claimsChecklist.editText")}
+        startText={t("pages.claimsChecklist.start")}
+        resumeText={t("pages.claimsChecklist.resume")}
+        completedText={t("pages.claimsChecklist.completed")}
+        editText={t("pages.claimsChecklist.edit")}
         screenReaderNumberPrefix={t(
           "pages.claimsChecklist.screenReaderNumberPrefix"
         )}

@@ -50,10 +50,10 @@ const UploadHealthcareForm = (props) => {
           "pages.claimsUploadHealthcareForm.fileHeadingPrefix"
         )}
         addFirstFileButtonText={t(
-          "pages.claimsUploadHealthcareForm.addFirstFileButtonText"
+          "pages.claimsUploadHealthcareForm.addFirstFileButton"
         )}
         addAnotherFileButtonText={t(
-          "pages.claimsUploadHealthcareForm.addAnotherFileButtonText"
+          "pages.claimsUploadHealthcareForm.addAnotherFileButton"
         )}
       />
     </QuestionPage>

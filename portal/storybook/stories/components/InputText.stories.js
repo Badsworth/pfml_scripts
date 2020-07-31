@@ -24,7 +24,7 @@ export const ControlledField = () => {
         hint="This is an example of a controlled field."
         name="fullName"
         onChange={handleOnChange}
-        optionalText={t("components.form.optionalText")}
+        optionalText={t("components.form.optional")}
         value={value}
       />
     </form>

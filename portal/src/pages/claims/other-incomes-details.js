@@ -139,7 +139,7 @@ export const OtherIncomeCard = (props) => {
         hint={t("pages.claimsOtherIncomesDetails.amountHint")}
         name={`other_incomes[${index}].income_amount_dollars`}
         onChange={onInputChange}
-        optionalText={t("components.form.optionalText")}
+        optionalText={t("components.form.optional")}
         value={valueWithFallback(entry.income_amount_dollars)}
         smallLabel
       />

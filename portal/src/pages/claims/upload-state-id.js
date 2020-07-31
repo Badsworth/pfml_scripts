@@ -33,10 +33,10 @@ const UploadStateId = (props) => {
         setAppErrors={props.appLogic.setAppErrors}
         fileHeadingPrefix={t("pages.claimsUploadStateId.fileHeadingPrefix")}
         addFirstFileButtonText={t(
-          "pages.claimsUploadStateId.addFirstFileButtonText"
+          "pages.claimsUploadStateId.addFirstFileButton"
         )}
         addAnotherFileButtonText={t(
-          "pages.claimsUploadStateId.addAnotherFileButtonText"
+          "pages.claimsUploadStateId.addAnotherFileButton"
         )}
       />
     </QuestionPage>
