@@ -1,6 +1,7 @@
 import AppErrorInfoCollection from "../../models/AppErrorInfoCollection";
 import Claim from "../../models/Claim";
 import ClaimCollection from "../../models/ClaimCollection";
+import User from "../../models/User";
 import { uniqueId } from "lodash";
 
 export default jest.fn(() => ({
@@ -8,7 +9,9 @@ export default jest.fn(() => ({
   auth: {
     createAccount: jest.fn(),
     forgotPassword: jest.fn(),
+    isLoggedIn: true,
     login: jest.fn(),
+    requireLogin: jest.fn(),
     resendVerifyAccountCode: jest.fn(),
     verifyAccount: jest.fn(),
   },
@@ -19,4 +22,15 @@ export default jest.fn(() => ({
   setAppErrors: jest.fn(),
   submitClaim: jest.fn(),
   updateClaim: jest.fn(),
+  updateUser: jest.fn(),
+  user: new User({ user_id: "mock_user_id", consented_to_data_sharing: true }),
+  users: {
+    loadUser: jest.fn(),
+    requireUserConsentToDataAgreement: jest.fn(),
+    updateUser: jest.fn(),
+    user: new User({
+      user_id: "mock_user_id",
+      consented_to_data_sharing: true,
+    }),
+  },
 }));

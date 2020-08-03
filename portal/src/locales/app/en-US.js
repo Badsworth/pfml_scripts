@@ -773,6 +773,9 @@ const components = {
   spinner: {
     label: "Loading",
   },
+  withUser: {
+    loadingLabel: "Loading account",
+  },
 };
 
 const englishLocale = {
