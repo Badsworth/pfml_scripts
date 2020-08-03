@@ -3,7 +3,7 @@ import { mount, shallow } from "enzyme";
 import React from "react";
 
 // Some tests are generated. When a new mask is added, add it here:
-const masks = ["ssn"];
+const masks = ["ssn", "fein", "currency"];
 
 function render(customProps = {}, inputProps = {}, mountComponent = false) {
   const component = (
@@ -193,6 +193,29 @@ describe("Mask", () => {
       const output = maskValue(originalValue, "fein");
 
       expect(output).toBe("12-1234567");
+    });
+  });
+
+  describe("currency", () => {
+    it("inserts commas", () => {
+      const originalValue = "12345.557";
+      const output = maskValue(originalValue, "currency");
+
+      expect(output).toBe("12,345.56");
+    });
+
+    it("rounds decimals", () => {
+      const originalValue = "12345.557";
+      const output = maskValue(originalValue, "currency");
+
+      expect(output).toBe("12,345.56");
+    });
+
+    it("allows only numbers and decimals", () => {
+      const originalValue = "abc12345.def557ghi";
+      const output = maskValue(originalValue, "currency");
+
+      expect(output).toBe("12,345.56");
     });
   });
 });

@@ -65,6 +65,7 @@ exports[`EmployerBenefitCard renders fields for an EmployerBenefit instance 1`] 
     <InputText
       hint="For example, $250 every month"
       label="How much will you receive?"
+      mask="currency"
       name="employer_benefits[0].benefit_amount_dollars"
       onChange={[MockFunction]}
       optionalText="(optional)"

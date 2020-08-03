@@ -153,6 +153,7 @@ export const EmployerBenefitCard = (props) => {
           label={t("pages.claimsEmployerBenefitDetails.amountLabel")}
           hint={t("pages.claimsEmployerBenefitDetails.amountHint")}
           name={`employer_benefits[${index}].benefit_amount_dollars`}
+          mask="currency"
           onChange={onInputChange}
           optionalText={t("components.form.optional")}
           value={valueWithFallback(entry.benefit_amount_dollars)}

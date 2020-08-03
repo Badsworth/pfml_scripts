@@ -1,0 +1,16 @@
+.c-inputtext-mask--currency {
+  position: relative;
+
+  .c-inputtext-mask__before--currency {
+    position: absolute;
+    line-height: 1.15;
+    top: 50%;
+    margin-top: -1ch;
+    left: 8px;
+    font-weight: 700;
+  }
+
+  .c-inputtext-field--currency {
+    padding-left: 20px;
+  }
+}

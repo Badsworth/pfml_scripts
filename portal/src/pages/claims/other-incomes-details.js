@@ -138,6 +138,7 @@ export const OtherIncomeCard = (props) => {
         label={t("pages.claimsOtherIncomesDetails.amountLabel")}
         hint={t("pages.claimsOtherIncomesDetails.amountHint")}
         name={`other_incomes[${index}].income_amount_dollars`}
+        mask="currency"
         onChange={onInputChange}
         optionalText={t("components.form.optional")}
         value={valueWithFallback(entry.income_amount_dollars)}

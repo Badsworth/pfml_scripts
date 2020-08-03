@@ -1,10 +1,16 @@
 import PropTypes from "prop-types";
 import React from "react";
+import classnames from "classnames";
 
 // Deliminate chunks of integers
 const maskDeliminatedRegex = {
   ssn: /([*\d]{3})([*\d]{1,2})?([*\d]+)?/,
   fein: /([*\d]{2})([*\d]+)?/,
+};
+
+// Overlays in specific contexts
+const maskOverlayContent = {
+  currency: "$",
 };
 
 /**
@@ -35,12 +41,63 @@ function toDigits(value) {
 }
 
 /**
+ * Format a string using fixed-point notation, similar to Number.prototype.toFixed
+ * though a decimal is only fixed if the string included a decimal already
+ * @param {string} value - A stringified number (i.e. "1234")
+ * @param {number} digits - The number of digits to appear after the decimal point
+ * @returns {string}
+ */
+function stringWithFixedDigits(value, digits = 2) {
+  const decimalRegex = /\.[\d]+$/;
+  // Check for existing decimal
+  const decimal = value.match(decimalRegex);
+
+  if (decimal) {
+    const fixedDecimal = parseFloat(decimal)
+      .toFixed(digits)
+      .match(decimalRegex)[0];
+
+    return value.replace(decimal, fixedDecimal);
+  }
+
+  return value;
+}
+
+/**
+ * Convert string into a number (positive or negative float or integer)
+ * @param {string} value
+ * @returns {number}
+ */
+function toNumber(value) {
+  const sign = value.charAt(0) === "-" ? -1 : 1;
+  const parts = value.split(".");
+  // This assumes if the user adds a "." it should be a float. If we want it to
+  // evaluate as an integer if there are no digits beyond the decimal, then we
+  // can change it.
+  const hasDecimal = parts[1] !== undefined;
+  if (hasDecimal) {
+    const a = toDigits(parts[0]);
+    const b = toDigits(parts[1]);
+    return sign * parseFloat(`${a}.${b}`);
+  } else {
+    return sign * parseInt(toDigits(parts[0]));
+  }
+}
+
+/**
  * Returns the value with additional masking characters
  * @param {string} value
  * @returns {string}
  */
 export function maskValue(value, mask) {
-  if (maskDeliminatedRegex[mask]) {
+  if (mask === "currency") {
+    // Format number with commas. If the number includes a decimal,
+    // ensure it includes two decimal points
+    const number = toNumber(value);
+    if (number !== undefined && !Number.isNaN(number)) {
+      value = stringWithFixedDigits(number.toLocaleString("en-US"));
+    }
+  } else if (maskDeliminatedRegex[mask]) {
     value = deliminateRegexGroups(value, maskDeliminatedRegex[mask]);
   }
   return value;
@@ -92,9 +149,28 @@ function Mask(props) {
     value: field.props.value,
     onBlur: handleBlur,
     onChange: field.props.onChange,
+    className: classnames(field.props.className, {
+      "c-inputtext-field--currency": props.mask === "currency",
+    }),
   });
 
-  return modifiedInputText;
+  // UI overlayed on top of a field to support certain masks
+  const maskOverlay = maskOverlayContent[props.mask] ? (
+    <div className={`c-inputtext-mask__before--${props.mask}`}>
+      {maskOverlayContent[props.mask]}
+    </div>
+  ) : null;
+
+  return (
+    <div
+      className={classnames({
+        "c-inputtext-mask--currency": props.mask === "currency",
+      })}
+    >
+      {maskOverlay}
+      {modifiedInputText}
+    </div>
+  );
 }
 
 Mask.propTypes = {
@@ -105,7 +181,7 @@ Mask.propTypes = {
   /**
    * The mask type to be applied.
    */
-  mask: PropTypes.oneOf(["fein", "ssn"]),
+  mask: PropTypes.oneOf(["currency", "fein", "ssn"]),
 };
 
 export default Mask;

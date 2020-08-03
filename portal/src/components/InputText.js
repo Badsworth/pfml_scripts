@@ -103,7 +103,7 @@ InputText.propTypes = {
    * you expect to be entered. Depending on the mask, the
    * field's appearance and functionality may be affected.
    */
-  mask: PropTypes.oneOf(["ssn", "fein"]),
+  mask: PropTypes.oneOf(["currency", "ssn", "fein"]),
   /**
    * HTML input `maxlength` attribute
    */
