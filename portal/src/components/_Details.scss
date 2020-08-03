@@ -10,13 +10,18 @@
   }
 
   summary::before {
+    content: "";
     /* Disable text underlining for this content */
-    display:inline-block;
-    content: "\25B6";
-    padding-right: 0.5em;
+    display: inline-block;
+    background: url("#{$theme-image-path}/arrow-right-primary.svg") no-repeat
+      center center;
+    background-size: units(1.5) units(1.5);
+    width: units(1.5);
+    height: units(1.5);
+    padding-right: units(1);
   }
 
   &[open] > summary::before {
-    content: "\25BC";
+    background-image: url("#{$theme-image-path}/arrow-down-primary.svg");
   }
 }
