@@ -143,10 +143,69 @@ jobs:
         id: get_s3_key
         run: echo "::set-output name=s3_key::$(make get-release-key)"
 
+  api-db-migrate-up:
+    name: Run migrations
+    runs-on: ubuntu-latest
+    # This step doesn't really depend on any steps except api-build,
+    # but for good measure we should make sure everything builds before
+    # we deploy any updates to ECS tasks or services.
+    needs: [api-build, dor-import-build, cognito-post-confirmation-build]
+
+    env:
+      TF_VAR_service_docker_tag: ${{ github.sha }}
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Set api-env Value
+        run: echo "::set-env name=api-env::${{ env[github.ref] || 'test' }}"
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.PFML_AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.PFML_AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+          role-to-assume: ci-run-deploys
+          role-duration-seconds: 3600
+
+      - name: Terraform Init
+        id: terraform_init
+        uses: hashicorp/terraform-github-actions@master
+        with:
+          tf_actions_version: ${{ env.terraform-version }}
+          tf_actions_subcommand: init
+          tf_actions_comment: false
+          tf_actions_working_dir: ${{ env.terraform-ecs-tasks-dir }}/${{ env.api-env }}
+
+      - name: Terraform Plan with new docker image
+        id: terraform_plan
+        uses: hashicorp/terraform-github-actions@master
+        with:
+          tf_actions_version: ${{ env.terraform-version }}
+          tf_actions_subcommand: plan
+          tf_actions_comment: false
+          tf_actions_working_dir: ${{ env.terraform-ecs-tasks-dir }}/${{ env.api-env }}
+          args: "-out=plan.tfplan"
+
+      - name: Terraform Apply from execution plan
+        id: terraform_apply
+        uses: hashicorp/terraform-github-actions@master
+        with:
+          tf_actions_version: ${{ env.terraform-version }}
+          tf_actions_subcommand: apply
+          tf_actions_comment: false
+          tf_actions_working_dir: ${{ env.terraform-ecs-tasks-dir }}/${{ env.api-env }}
+          args: "plan.tfplan"
+
+      - name: Start migration ECS task
+        run: make ecr-login && ../bin/api-migrate/migrate.sh ${{ env.api-env }}
+        working-directory: ${{ env.working-dir }}
+
   api-release:
     name: Release
     runs-on: ubuntu-latest
-    needs: [api-build, dor-import-build, cognito-post-confirmation-build]
+    needs: [api-build, dor-import-build, cognito-post-confirmation-build, api-db-migrate-up]
 
     env:
       TF_VAR_service_docker_tag: ${{ github.sha }}
@@ -222,59 +281,3 @@ jobs:
           SVC_ID=$(echo $TF_OUTPUT | jq -r '.ecs_service_id.value')
           (aws ecs wait services-stable --cluster $CLUSTER_ID --services $SVC_ID ||
            aws ecs wait services-stable --cluster $CLUSTER_ID --services $SVC_ID)
-
-  api-db-migrate-up:
-    name: Run migrations
-    runs-on: ubuntu-latest
-    needs: api-release
-
-    env:
-      TF_VAR_service_docker_tag: ${{ github.sha }}
-
-    steps:
-      - uses: actions/checkout@v2
-
-      - name: Set api-env Value
-        run: echo "::set-env name=api-env::${{ env[github.ref] || 'test' }}"
-
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v1
-        with:
-          aws-access-key-id: ${{ secrets.PFML_AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.PFML_AWS_SECRET_ACCESS_KEY }}
-          aws-region: us-east-1
-          role-to-assume: ci-run-deploys
-          role-duration-seconds: 3600
-
-      - name: Terraform Init
-        id: terraform_init
-        uses: hashicorp/terraform-github-actions@master
-        with:
-          tf_actions_version: ${{ env.terraform-version }}
-          tf_actions_subcommand: init
-          tf_actions_comment: false
-          tf_actions_working_dir: ${{ env.terraform-ecs-tasks-dir }}/${{ env.api-env }}
-
-      - name: Terraform Plan with new docker image
-        id: terraform_plan
-        uses: hashicorp/terraform-github-actions@master
-        with:
-          tf_actions_version: ${{ env.terraform-version }}
-          tf_actions_subcommand: plan
-          tf_actions_comment: false
-          tf_actions_working_dir: ${{ env.terraform-ecs-tasks-dir }}/${{ env.api-env }}
-          args: "-out=plan.tfplan"
-
-      - name: Terraform Apply from execution plan
-        id: terraform_apply
-        uses: hashicorp/terraform-github-actions@master
-        with:
-          tf_actions_version: ${{ env.terraform-version }}
-          tf_actions_subcommand: apply
-          tf_actions_comment: false
-          tf_actions_working_dir: ${{ env.terraform-ecs-tasks-dir }}/${{ env.api-env }}
-          args: "plan.tfplan"
-
-      - name: Start migration ECS task
-        run: make ecr-login && ../bin/api-migrate/migrate.sh ${{ env.api-env }}
-        working-directory: ${{ env.working-dir }}
