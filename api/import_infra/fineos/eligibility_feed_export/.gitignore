@@ -1,0 +1,4 @@
+.aws-sam/
+fineos-eligibility-feed-export-lambda-s3-package.json
+local-log.txt
+dependencies.zip
