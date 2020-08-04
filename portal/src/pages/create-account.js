@@ -37,6 +37,7 @@ export const CreateAccount = (props) => {
         smallLabel
       />
       <InputText
+        autoComplete="new-password"
         type="password"
         name="password"
         value={password}

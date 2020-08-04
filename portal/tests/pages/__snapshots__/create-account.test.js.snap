@@ -18,6 +18,7 @@ exports[`CreateAccount renders the empty page 1`] = `
     value=""
   />
   <InputText
+    autoComplete="new-password"
     errorMsg={null}
     hint="Your password must be at least 8 characters long and include numbers and letters."
     label="Password"
