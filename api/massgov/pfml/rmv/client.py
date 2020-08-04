@@ -4,7 +4,7 @@ from typing import Optional
 import zeep.helpers as zeep_helpers
 
 import massgov.pfml.util.logging
-from massgov.pfml.rmv.caller import ApiCaller, LazyZeepApiCaller
+from massgov.pfml.rmv.caller import ApiCaller, LazyApiCaller, LazyZeepApiCaller
 from massgov.pfml.rmv.errors import (
     RmvMultipleCustomersError,
     RmvNoCredentialError,
@@ -26,14 +26,11 @@ class RmvClient:
     Client for accessing the Registry of Motor Vehicles (RMV) API.
     """
 
-    def __init__(self, caller: Optional[ApiCaller] = None):
-        if caller is None:
-            caller = LazyZeepApiCaller()
-
-        self._cached_caller = caller
+    def __init__(self, caller: Optional[LazyApiCaller] = None):
+        self._cached_caller = caller or LazyZeepApiCaller()
 
     @cached_property
-    def _caller(self):
+    def _caller(self) -> ApiCaller:
         return self._cached_caller.get()
 
     def vendor_license_inquiry(

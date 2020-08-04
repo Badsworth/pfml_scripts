@@ -2,7 +2,7 @@ import abc
 import os
 import urllib
 from dataclasses import dataclass
-from typing import Generic, Optional, TypeVar
+from typing import Any, Generic, Optional, TypeVar
 
 import boto3
 import zeep
@@ -39,7 +39,7 @@ class ApiCaller(Generic[CallerResponse], abc.ABC, metaclass=abc.ABCMeta):
     """
 
     @abc.abstractmethod
-    def VendorLicenseInquiry(self, **kwargs) -> CallerResponse:
+    def VendorLicenseInquiry(self, **kwargs: Any) -> CallerResponse:
         pass
 
 

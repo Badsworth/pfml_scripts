@@ -12,28 +12,28 @@ class RmvUnknownError(RmvError):
         if self.cause:
             return "%s: %s" % (type(self.cause).__name__, self.cause)
         else:
-            return self.__name__
+            return self.__class__.__name__
 
 
 class RmvValidationError(RmvError):
     """An exception occurred due to serverside validation."""
 
     def __str__(self):
-        return f"{self.__name__}: Validation failed for RMV request"
+        return f"{self.__class__.__name__}: Validation failed for RMV request"
 
 
 class RmvMultipleCustomersError(RmvError):
     """An exception occurred due to multiple matching identities."""
 
     def __str__(self):
-        return f"{self.__name__}: Multiple customers found."
+        return f"{self.__class__.__name__}: Multiple customers found."
 
 
 class RmvNoCredentialError(RmvError):
     """An exception occurred due to multiple matching identities."""
 
     def __str__(self):
-        return f"{self.__name__}: No driver account or license/permit found."
+        return f"{self.__class__.__name__}: No driver account or license/permit found."
 
 
 class RmvUnexpectedResponseError(RmvError):
@@ -43,4 +43,4 @@ class RmvUnexpectedResponseError(RmvError):
         self.acknowledgement = acknowledgement
 
     def __str__(self):
-        return f"{self.__name__}: {self.acknowledgement}"
+        return f"{self.__class__.__name__}: {self.acknowledgement}"
