@@ -8,29 +8,22 @@ from requests import Session
 from requests.exceptions import HTTPError
 from requests.models import Response
 
+from certs import generate_x509_cert_and_key, p12_encoded_cert
 from massgov.pfml.rmv.caller import LazyZeepApiCaller, RmvConfig
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def pkcs12_data():
     """
-    Load self-signed client certificate. This was generated for testing
-    with no expiration using the following commands:
-
-      openssl req -x509 -newkey rsa:4096 -keyout key.pem -out cert.pem -days 0
-      openssl pkcs12 -export -out certificate.p12 -inkey key.pem -in cert.pem
+    Generate self-signed client certificate.
     """
-    certpath = os.path.join(os.path.dirname(__file__), "./certificate.p12")
-    with open(certpath, "rb") as file:
-        data = file.read()
-
-    return data
+    return p12_encoded_cert(generate_x509_cert_and_key()).export(passphrase="abcd".encode("utf-8"))
 
 
 @pytest.fixture
 def mock_wsdl_200(monkeypatch):
     """
-    Mock a succesful WSDL response from ./api.wsdl.
+    Mock a successful WSDL response from ./api.wsdl.
     """
     monkeypatch.setattr(Session, "get", mock_wsdl_response(200))
 

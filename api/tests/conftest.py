@@ -8,6 +8,7 @@ https://docs.pytest.org/en/latest/fixture.html#conftest-py-sharing-fixture-funct
 """
 import logging.config  # noqa: B1
 import os
+import sys
 import uuid
 from datetime import datetime, timedelta
 
@@ -21,6 +22,9 @@ import massgov.pfml.api.authentication as authentication
 import massgov.pfml.api.employees
 import massgov.pfml.util.logging
 from massgov.pfml.db.models.factories import UserFactory
+
+# add helpers directory to Python path, so tests modules can import them
+sys.path.append(os.path.join(os.path.dirname(__file__), "helpers"))
 
 logger = massgov.pfml.util.logging.get_logger("massgov.pfml.api.tests.conftest")
 
