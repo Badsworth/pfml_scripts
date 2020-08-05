@@ -24,6 +24,8 @@ Code reviews are intended to help all of us as a team grow as engineers and impr
 
 - Include the JIRA ticket number in the title if it exists. For example: `PFML-123: Implement API endpoint`
 
+- Include a [GitHub label](https://github.com/EOLWD/pfml/labels) if relevant. The `architecture` label should be used for changes to abstractions or interfaces that usually affect multiple existing files while the `pattern` label should be used for a new structure that will be reused later. This can be a helpful wayfinding and context building tool for engineers onboarding into the codebase. The `operations` label should be used for changes to eng operations such as dev set up or deployment. 
+
 - If it’s a work-in-progress or you are looking for specific feedback on things, create a [Draft Pull Request](https://help.github.com/en/github/collaborating-with-issues-and-pull-requests/about-pull-requests#draft-pull-requests) and state what you are looking for in the description.
 
 Your PR should be small enough that a reviewer can reasonably respond within 1 business day. For larger changes, break them down into a series of PRs. If refactors are included in your changes, try to split them out as recommended below.
