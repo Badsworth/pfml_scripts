@@ -63,15 +63,14 @@ data "aws_iam_policy_document" "task_executor" {
   # Allow ECS to log to Cloudwatch.
   statement {
     actions = [
-      "logs:CreateLogGroup",
       "logs:CreateLogStream",
       "logs:PutLogEvents",
       "logs:DescribeLogStreams"
     ]
 
     resources = [
-      aws_cloudwatch_log_group.db_migrate_logs.arn,
-      aws_cloudwatch_log_group.create_db_users_logs.arn
+      "${aws_cloudwatch_log_group.db_migrate_logs.arn}:*",
+      "${aws_cloudwatch_log_group.create_db_users_logs.arn}:*"
     ]
   }
 
