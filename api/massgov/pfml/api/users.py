@@ -5,6 +5,7 @@ from pydantic import UUID4, Field
 from werkzeug.exceptions import NotFound
 
 import massgov.pfml.api.app as app
+import massgov.pfml.api.util.response as response_util
 import massgov.pfml.util.logging
 from massgov.pfml.api.authorization.flask import EDIT, READ, ensure
 from massgov.pfml.db.models.employees import User
@@ -24,7 +25,9 @@ def users_get(user_id):
         u = get_or_404(db_session, User, user_id)
 
     ensure(READ, u)
-    return user_response(u)
+    return response_util.success_response(
+        message="Successfully retrieved user", data=user_response(u),
+    ).to_api_response()
 
 
 def users_current_get():
@@ -36,7 +39,9 @@ def users_current_get():
         raise NotFound
 
     ensure(READ, current_user)
-    return user_response(current_user)
+    return response_util.success_response(
+        message="Successfully retrieved current user", data=user_response(current_user),
+    ).to_api_response()
 
 
 def users_patch(user_id):
@@ -51,7 +56,9 @@ def users_patch(user_id):
             value = getattr(body, key)
             setattr(updated_user, key, value)
 
-    return user_response(updated_user)
+    return response_util.success_response(
+        message="Successfully updated user", data=user_response(updated_user),
+    ).to_api_response()
 
 
 ##########################################

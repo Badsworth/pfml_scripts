@@ -1,9 +1,10 @@
 from dataclasses import asdict, dataclass
-from enum import Enum
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional, Type, Union
 
 import flask
-from werkzeug.exceptions import HTTPException
+from werkzeug.exceptions import BadRequest, HTTPException, ServiceUnavailable
+
+from massgov.pfml.api.validation.exceptions import ValidationErrorDetail
 
 
 # == response data structures ==
@@ -27,14 +28,8 @@ class MetaData:
 class Issue:
     type: str
     message: str = ""
+    rule: Optional[Any] = None
     field: Optional[str] = None
-    extra: Optional[dict] = None
-
-
-@dataclass
-class DataPayload:
-    item: Optional[dict] = None
-    items: Optional[List[dict]] = None
 
 
 @dataclass
@@ -42,13 +37,12 @@ class Response:
     status_code: int
     message: str = ""
     meta: Optional[MetaData] = None
-    data: Optional[DataPayload] = None
-    warning: Optional[List[Issue]] = None
-    error: Optional[List[Issue]] = None
+    data: Union[None, Dict, List[Dict]] = None
+    warnings: Optional[List[Issue]] = None
+    errors: Optional[List[Issue]] = None
 
-    # ignore None values on nested objects other than data
     def to_dict(self) -> Dict[str, Any]:
-        return {k: v for k, v in asdict(self).items() if v}
+        return exclude_none(asdict(self))
 
     def to_api_response(self) -> flask.Response:
         if self.meta is None:
@@ -60,21 +54,21 @@ class Response:
         return flask.make_response(flask.jsonify(self.to_dict()), self.status_code)
 
 
-# == issue types ==
-@dataclass
-class KnownIssue:
-    type: str
-    message: str
-    extra_properties: Optional[List[str]] = None
+# == internal utilities ==
 
 
-class WarningIssue(Enum):
-    MISSING_FIELD = KnownIssue("required", "Missing Field")
-
-
-class ErrorIssue(Enum):
-    MISSING_FIELD = KnownIssue("required", "Missing Field")
-    MULTIPLE_OF = KnownIssue("multipleOf", "Value must be multiple of an integer", ["multiple_of"])
+def exclude_none(obj):
+    clean = {}
+    for k, v in obj.items():
+        if "data" == k:  # defer none exclusion of data payload to service layer
+            clean[k] = v
+        elif isinstance(v, dict):
+            nested = exclude_none(v)
+            if len(nested.keys()) > 0:
+                clean[k] = nested
+        elif v is not None:
+            clean[k] = v
+    return clean
 
 
 # == helper factory functions ==
@@ -84,61 +78,30 @@ def custom_issue(type: str, message: str) -> Issue:
     return Issue(type=type, message=message)
 
 
-def field_issue(
-    issueType: Union[WarningIssue, ErrorIssue], field_name: str, extra: Optional[dict] = None
-) -> Issue:
-
-    issue: KnownIssue = issueType.value
-
-    if issue.extra_properties:
-        # validate there is an extra field
-        if extra is None:
-            raise ValueError(
-                "Expected extra object with properties: {}".format(issue.extra_properties)
-            )
-
-        # validate the fields match
-        issue.extra_properties.sort()
-        keys = list(extra.keys())
-        keys.sort()
-        if keys != issue.extra_properties:
-            raise ValueError(
-                "Extra object properties do not match - expected: {}, got: {}".format(
-                    issue.extra_properties, keys
-                )
-            )
-
-    return Issue(type=issue.type, message=issue.message, field=field_name, extra=extra)
-
-
-def single_data_payload(object: dict) -> DataPayload:
-    return DataPayload(item=object)
-
-
-def multiple_data_payload(list: List[dict]) -> DataPayload:
-    return DataPayload(items=list)
+def validation_issue(exception: ValidationErrorDetail) -> Issue:
+    return Issue(
+        type=exception.type, message=exception.message, rule=exception.rule, field=exception.field
+    )
 
 
 # == response utilties ==
 
 
 def success_response(
-    message: str, data: Optional[DataPayload] = None, warning: Optional[List[Issue]] = None,
+    message: str,
+    data: Union[None, Dict, List[Dict]] = None,
+    warnings: Optional[List[Issue]] = None,
+    status_code: int = 200,
 ) -> Response:
-    return Response(status_code=200, message=message, data=data, warning=warning)
+    return Response(status_code=status_code, message=message, data=data, warnings=warnings)
 
 
 def error_response(
-    status_code: HTTPException,
+    status_code: Union[HTTPException, Type[BadRequest], Type[ServiceUnavailable]],
     message: str,
-    error: List[Issue],
-    data: Optional[DataPayload] = None,
-    warning: Optional[List[Issue]] = None,
+    errors: List[Issue],
+    data: Union[None, Dict, List[Dict]] = None,
+    warnings: Optional[List[Issue]] = None,
 ) -> Response:
-    return Response(
-        status_code=status_code.code or 400,
-        message=message,
-        error=error,
-        data=data,
-        warning=warning,
-    )
+    code = status_code.code if status_code.code is not None else 400
+    return Response(status_code=code, message=message, errors=errors, data=data, warnings=warnings)

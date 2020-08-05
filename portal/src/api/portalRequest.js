@@ -12,9 +12,10 @@ import { Auth } from "aws-amplify";
 import tracker from "../services/tracker";
 
 /**
- * @typedef {Promise<{ body: object, apiErrors: object[], status: number, success: boolean }>} Response
- * @property {object} body - API's JSON response
- * @property {object[]} [apiErrors] - apiErrors returned by the API
+ * @typedef {Promise<{ data: object, errors: ?Array, warnings: ?Array, status: number, success: boolean }>} Response
+ * @property {object} data - API's JSON response
+ * @property {Array} errors - API's request errors
+ * @property {Array} warnings - API's form validation warnings
  * @property {number} status - Status code
  * @property {boolean} success - Did the request succeed or fail?
  */
@@ -69,6 +70,7 @@ async function portalRequest(method, apiPath, payload, headers) {
 
   const url = createRequestUrl(apiPath);
   const { accessToken } = await Auth.currentSession();
+
   const options = {
     body: createRequestBody(payload),
     headers: {
@@ -90,16 +92,15 @@ async function portalRequest(method, apiPath, payload, headers) {
  * @throws {NetworkError}
  */
 async function sendRequest(url, options) {
-  let apiErrors, body, response;
+  let data, errors, response, warnings;
 
   try {
     response = await fetch(url, options);
 
     if (response.ok) {
-      body = await response.json();
+      ({ data, errors, warnings } = await response.json());
     } else {
       // Request completed, but the response status code was outside the 2xx range
-      // TODO: Pull the errors from the response and set `apiErrors` (https://lwd.atlassian.net/browse/CP-345)
       tracker.noticeError(
         new Error(`Fetch request to ${url} returned status: ${response.status}`)
       );
@@ -112,14 +113,14 @@ async function sendRequest(url, options) {
     throw new NetworkError(error.message);
   }
 
-  // TODO allow for 400 errors to pass once API validations are in place
   if (!response.ok) {
     throwError(response);
   }
 
   return {
-    body,
-    apiErrors,
+    data,
+    errors,
+    warnings,
     status: response.status,
     success: response.ok, // Was the status in the 2xx range?
   };
@@ -127,7 +128,6 @@ async function sendRequest(url, options) {
 
 const throwError = ({ status }) => {
   switch (status) {
-    // TODO remove 400 case when API validation is in place
     case 400:
       throw new BadRequestError();
     case 401:

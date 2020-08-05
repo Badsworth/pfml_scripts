@@ -27,7 +27,9 @@ describe("request", () => {
     );
 
     global.fetch = jest.fn().mockResolvedValueOnce({
-      json: jest.fn(),
+      json: jest
+        .fn()
+        .mockResolvedValueOnce({ data: [], errors: [], warnings: [] }),
       ok: true,
       status: 200,
     });
@@ -193,7 +195,7 @@ describe("request", () => {
       expect.assertions();
 
       global.fetch = jest.fn().mockResolvedValue({
-        json: jest.fn().mockResolvedValue({ mock_response: true }),
+        json: jest.fn().mockResolvedValue({ data: { mock_response: true } }),
         status: 200,
         ok: true,
       });
@@ -201,12 +203,13 @@ describe("request", () => {
       await expect(portalRequest("GET", "users")).resolves
         .toMatchInlineSnapshot(`
               Object {
-                "apiErrors": undefined,
-                "body": Object {
+                "data": Object {
                   "mock_response": true,
                 },
+                "errors": undefined,
                 "status": 200,
                 "success": true,
+                "warnings": undefined,
               }
             `);
     });

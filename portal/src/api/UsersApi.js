@@ -4,8 +4,7 @@ import portalRequest from "./portalRequest";
 import routes from "../routes";
 
 /**
- * @typedef {{ apiErrors: object[], success: boolean, user: User }} UsersApiResult
- * @property {object[]} [apiErrors] - If the request failed, this will contain errors returned by the API
+ * @typedef {{ success: boolean, user: User }} UsersApiResult
  * @property {number} status - Status code
  * @property {boolean} success - Did the request succeed or fail?
  * @property {User} [user] - If the request succeeded, this will contain the created user
@@ -21,16 +20,16 @@ export default class UsersApi {
    * @returns {Promise<UsersApiResult>}
    */
   getCurrentUser = async () => {
-    const { body, success, status, apiErrors } = await portalRequest(
+    const { data, success, status } = await portalRequest(
       "GET",
-      `${this.baseRoute}/current`
+      `${this.baseRoute}/current`,
+      null
     );
 
     return Promise.resolve({
       success,
       status,
-      apiErrors,
-      user: success ? new User(body) : null,
+      user: success ? new User(data) : null,
     });
   };
 
@@ -54,7 +53,7 @@ export default class UsersApi {
       ...workaroundPatchData
     } = patchData;
 
-    const { body, success, status, apiErrors } = await portalRequest(
+    const { data, success, status } = await portalRequest(
       "PATCH",
       `${this.baseRoute}/${user_id}`,
       workaroundPatchData
@@ -63,8 +62,7 @@ export default class UsersApi {
     return {
       success,
       status,
-      apiErrors,
-      user: success ? new User({ ...patchData, ...body }) : null,
+      user: success ? new User({ ...patchData, ...data }) : null,
     };
   };
 }

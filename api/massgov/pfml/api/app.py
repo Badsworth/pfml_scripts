@@ -18,6 +18,7 @@ import massgov.pfml.util.logging
 import massgov.pfml.util.logging.access
 from massgov.pfml import db
 from massgov.pfml.api.config import AppConfig, get_config
+from massgov.pfml.api.validation import add_error_handlers_to_app, get_custom_validator_map
 from massgov.pfml.db.models.employees import User
 
 from .reverse_proxy import ReverseProxied
@@ -38,9 +39,18 @@ def create_app(config: Optional[AppConfig] = None) -> connexion.FlaskApp:
     resolver = connexion.mock.MockResolver(mock_all=False)
 
     options = {"swagger_url": "/docs"}
+
+    validator_map = get_custom_validator_map()
+
     app = connexion.FlaskApp(__name__, specification_dir=get_project_root_dir(), options=options)
+    add_error_handlers_to_app(app)
+
     app.add_api(
-        openapi_filenames()[0], resolver=resolver, strict_validation=True, validate_responses=True,
+        openapi_filenames()[0],
+        resolver=resolver,
+        validator_map=validator_map,
+        strict_validation=True,
+        validate_responses=True,
     )
 
     flask_app = app.app

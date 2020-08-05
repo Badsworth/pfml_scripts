@@ -21,7 +21,7 @@ describe("ClaimsApi", () => {
     describe("successful request", () => {
       beforeEach(() => {
         portalRequest.mockResolvedValueOnce({
-          body: [
+          data: [
             {
               application_id: "2a340cf8-6d2a-4f82-a075-73588d003f8f",
             },
@@ -34,7 +34,7 @@ describe("ClaimsApi", () => {
         // This won't be needed once https://lwd.atlassian.net/browse/API-290 is complete
         // TODO: Remove workaround once above ticket is complete: https://lwd.atlassian.net/browse/CP-577
         portalRequest.mockResolvedValueOnce({
-          body: {
+          data: {
             application_id: "2a340cf8-6d2a-4f82-a075-73588d003f8f",
           },
           status: 200,
@@ -57,7 +57,6 @@ describe("ClaimsApi", () => {
       it("resolves with success, status, and claim instance", async () => {
         const result = await claimsApi.getClaims();
         expect(result).toEqual({
-          apiErrors: undefined,
           claims: expect.any(ClaimCollection),
           status: 200,
           success: true,
@@ -73,7 +72,7 @@ describe("ClaimsApi", () => {
     describe("successful request", () => {
       beforeEach(() => {
         portalRequest.mockResolvedValueOnce({
-          body: {
+          data: {
             application_id: "mock-application_id",
           },
           status: 200,
@@ -99,7 +98,6 @@ describe("ClaimsApi", () => {
         expect(claimResponse).toBeInstanceOf(Claim);
         expect(rest).toMatchInlineSnapshot(`
           Object {
-            "apiErrors": undefined,
             "status": 200,
             "success": true,
           }
@@ -110,7 +108,7 @@ describe("ClaimsApi", () => {
     describe("unsuccessful request", () => {
       beforeEach(() => {
         portalRequest.mockResolvedValueOnce({
-          body: null,
+          data: null,
           status: 400,
           success: false,
         });
@@ -121,7 +119,6 @@ describe("ClaimsApi", () => {
 
         expect(result).toMatchInlineSnapshot(`
           Object {
-            "apiErrors": undefined,
             "claim": null,
             "status": 400,
             "success": false,
@@ -132,20 +129,20 @@ describe("ClaimsApi", () => {
   });
 
   describe("updateClaim", () => {
-    let mockResponseBody;
+    let mockResponseData;
     const claim = new Claim({
       application_id: "mock-application_id",
       duration_type: "type",
     });
 
     beforeEach(() => {
-      mockResponseBody = {
+      mockResponseData = {
         application_id: "mock-application_id",
         duration_type: "type",
       };
 
       portalRequest.mockResolvedValueOnce({
-        body: mockResponseBody,
+        data: mockResponseData,
         status: 200,
         success: true,
       });
@@ -196,25 +193,25 @@ describe("ClaimsApi", () => {
 
     it("responds with an instance of a Claim with claim request parameters as properties", async () => {
       const response = await claimsApi.updateClaim(claim.application_id, claim);
-      expect(response.claim).toEqual(new Claim(mockResponseBody));
+      expect(response.claim).toEqual(new Claim(mockResponseData));
     });
   });
 
   describe("submitClaim", () => {
-    let mockResponseBody;
+    let mockResponseData;
     const claim = new Claim({
       application_id: "mock-application_id",
       duration_type: "type",
     });
 
     beforeEach(() => {
-      mockResponseBody = {
+      mockResponseData = {
         application_id: "mock-application_id",
         duration_type: "type",
       };
 
       portalRequest.mockResolvedValueOnce({
-        body: mockResponseBody,
+        data: mockResponseData,
         status: 200,
         success: true,
       });

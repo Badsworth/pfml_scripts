@@ -5,6 +5,7 @@ from pydantic import UUID4
 from werkzeug.exceptions import NotFound
 
 import massgov.pfml.api.app as app
+import massgov.pfml.api.util.response as response_util
 from massgov.pfml.api.authorization.flask import EDIT, READ, ensure
 from massgov.pfml.db.models.employees import Employee
 from massgov.pfml.util.pydantic import PydanticBaseModel
@@ -41,12 +42,9 @@ def employees_get(employee_id):
         employee = get_or_404(db_session, Employee, employee_id)
 
     ensure(READ, employee)
-    return EmployeeResponse.from_orm(employee).dict()
-    # TODO API-286
-    # return response_util.success_response(
-    #     "Successfully retrieved employee",
-    #     response_util.single_data_payload(EmployeeResponse.from_orm(employee).dict()),
-    # ).to_api_response()
+    return response_util.success_response(
+        message="Successfully retrieved employee", data=EmployeeResponse.from_orm(employee).dict(),
+    ).to_api_response()
 
 
 def employees_patch(employee_id):
@@ -60,7 +58,10 @@ def employees_patch(employee_id):
             value = getattr(request, key)
             setattr(updated_employee, key, value)
 
-    return EmployeeResponse.from_orm(updated_employee).dict()
+    return response_util.success_response(
+        message="Successfully updated employee",
+        data=EmployeeResponse.from_orm(updated_employee).dict(),
+    ).to_api_response()
 
 
 def employees_search():
@@ -71,4 +72,6 @@ def employees_search():
         raise NotFound()
 
     ensure(READ, employee)
-    return EmployeeResponse.from_orm(employee).dict()
+    return response_util.success_response(
+        message="Successfully found employee", data=EmployeeResponse.from_orm(employee).dict(),
+    ).to_api_response()

@@ -69,10 +69,12 @@ def test_employees_patch(client, employee, consented_user_token):
         "/v1/employees/{}".format(employee.employee_id),
         headers={"Authorization": "Bearer {}".format(consented_user_token)},
     ).get_json()
-    assert updated_employee["first_name"] == "James"
-    assert updated_employee["last_name"] == "Brown"
-    assert updated_employee["employee_id"] == str(employee.employee_id)
-    assert updated_employee["middle_name"] == employee.middle_name
+
+    updated_employee_item = updated_employee.get("data")
+    assert updated_employee_item["first_name"] == "James"
+    assert updated_employee_item["last_name"] == "Brown"
+    assert updated_employee_item["employee_id"] == str(employee.employee_id)
+    assert updated_employee_item["middle_name"] == employee.middle_name
 
 
 def test_employees_patch_empty(client, employee, consented_user_token):
@@ -82,14 +84,15 @@ def test_employees_patch_empty(client, employee, consented_user_token):
         json=body,
         headers={"Authorization": "Bearer {}".format(consented_user_token)},
     )
+    assert response.status_code == 400
+
     updated_employee = client.get(
         "/v1/employees/{}".format(employee.employee_id),
         headers={"Authorization": "Bearer {}".format(consented_user_token)},
     ).get_json()
 
     # This test should return a 400 because blank requests shouldn't be accepted.
-    assert response.status_code == 400
-    assert updated_employee["first_name"] == employee.first_name
+    assert updated_employee.get("data")["first_name"] == employee.first_name
 
 
 def test_employees_patch_404(client, consented_user_token):

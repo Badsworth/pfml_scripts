@@ -10,7 +10,6 @@ export const createClaimMock = jest.fn(async () =>
   Promise.resolve({
     success: true,
     status: 200,
-    apiErrors: null,
     claim: new Claim({
       application_id: `mock-created-claim-application-id-${uniqueId()}`,
     }),
@@ -21,7 +20,6 @@ export const getClaimsMock = jest.fn(async () =>
   Promise.resolve({
     success: true,
     status: 200,
-    apiErrors: null,
     claims: new ClaimCollection([
       new Claim({ application_id: "mock-application-id-1" }),
       new Claim({ application_id: "mock-application-id-2" }),
@@ -33,7 +31,6 @@ export const updateClaimMock = jest.fn(async (application_id, patchData) =>
   Promise.resolve({
     success: true,
     status: 200,
-    apiErrors: null,
     claim: new Claim({
       application_id,
       ...patchData,
@@ -45,7 +42,6 @@ export const submitClaimMock = jest.fn(async (application_id) =>
   Promise.resolve({
     success: true,
     status: 200,
-    apiErrors: null,
     claim: new Claim({
       application_id,
       status: "Completed",

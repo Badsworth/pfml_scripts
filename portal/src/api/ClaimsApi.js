@@ -7,16 +7,14 @@ import portalRequest from "./portalRequest";
 import routes from "../routes";
 
 /**
- * @typedef {{ apiErrors: object[], success: boolean, claim: Claim }} ClaimsApiSingleResult
- * @property {object[]} [apiErrors] - If the request failed, this will contain errors returned by the API
+ * @typedef {{ success: boolean, claim: Claim }} ClaimsApiSingleResult
  * @property {number} status - Status code
  * @property {boolean} success - Did the request succeed or fail?
  * @property {Claim} [claim] - If the request succeeded, this will contain the created claim
  */
 
 /**
- * @typedef {{ apiErrors: object[], success: boolean, claims: ClaimCollection }} ClaimsApiListResult
- * @property {object[]} [apiErrors] - If the request failed, this will contain errors returned by the API
+ * @typedef {{ success: boolean, claims: ClaimCollection }} ClaimsApiListResult
  * @property {number} status - Status code
  * @property {boolean} success - Did the request succeed or fail?
  * @property {ClaimCollection} [claims] - If the request succeeded, this will contain the created user
@@ -61,20 +59,17 @@ export default class ClaimsApi {
    * @returns {Promise<ClaimsApiListResult>} The result of the API call
    */
   getClaims = async () => {
-    const { body, success, status, apiErrors } = await this.claimsRequest(
-      "GET"
-    );
+    const { data, success, status } = await this.claimsRequest("GET");
 
     let claims = null;
     if (success) {
-      claims = body.map((claimData) => new Claim(claimData));
+      claims = data.map((claimData) => new Claim(claimData));
       claims = new ClaimCollection(claims);
     }
 
     return {
       success,
       status,
-      apiErrors,
       claims,
     };
   };
@@ -85,15 +80,12 @@ export default class ClaimsApi {
    * @returns {Promise<ClaimsApiSingleResult>} The result of the API call
    */
   createClaim = async () => {
-    const { body, success, status, apiErrors } = await this.claimsRequest(
-      "POST"
-    );
+    const { data, success, status } = await this.claimsRequest("POST");
 
     return {
       success,
       status,
-      apiErrors,
-      claim: success ? new Claim(body) : null,
+      claim: success ? new Claim(data) : null,
     };
   };
 
@@ -110,7 +102,7 @@ export default class ClaimsApi {
       ? patchData
       : patchDataWithoutExcludedPii;
 
-    const { body, success, status, apiErrors } = await this.claimsRequest(
+    const { data, success, status } = await this.claimsRequest(
       "PATCH",
       `/${application_id}`,
       requestData
@@ -121,14 +113,13 @@ export default class ClaimsApi {
     // We will change the PATCH applications endpoint to return the full
     // application in this ticket: https://lwd.atlassian.net/browse/API-276
     // TODO: Remove workaround once above ticket is complete: https://lwd.atlassian.net/browse/CP-577
-    const workaroundBody = merge({ ...body, application_id }, patchData);
+    const workaroundData = merge({ ...data, application_id }, patchData);
     // </ end workaround >
 
     return {
       success,
       status,
-      apiErrors,
-      claim: success ? new Claim(workaroundBody) : null,
+      claim: success ? new Claim(workaroundData) : null,
     };
   };
 
@@ -142,7 +133,7 @@ export default class ClaimsApi {
    * @returns {Promise<ClaimsApiSingleResult>} The result of the API call
    */
   submitClaim = async (application_id) => {
-    const { body, status, success, apiErrors } = await this.claimsRequest(
+    const { data, status, success } = await this.claimsRequest(
       "POST",
       `/${application_id}/submit_application`
     );
@@ -151,12 +142,11 @@ export default class ClaimsApi {
     // We will change the PATCH applications endpoint to return the full
     // application in this ticket: https://lwd.atlassian.net/browse/API-276
     // TODO: Remove workaround once above ticket is complete: https://lwd.atlassian.net/browse/CP-577
-    const workaroundBody = { ...body, application_id };
+    const workaroundData = { ...data, application_id };
     // </ end workaround >
 
     return {
-      apiErrors,
-      claim: success ? new Claim(workaroundBody) : null,
+      claim: success ? new Claim(workaroundData) : null,
       status,
       success,
     };

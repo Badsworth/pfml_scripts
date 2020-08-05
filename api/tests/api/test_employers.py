@@ -18,7 +18,8 @@ def test_get_employer_info(client, auth_token, employer):
         headers={"Authorization": "Bearer {}".format(auth_token)},
     )
     assert response.status_code == 200
-    assert response.get_json() == json.loads(EmployerResponse.from_orm(employer).json())
+    response_data = response.get_json().get("data")
+    assert response_data == json.loads(EmployerResponse.from_orm(employer).json())
 
 
 def test_get_404(client):

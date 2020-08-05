@@ -15,7 +15,7 @@ describe("users API", () => {
     describe("when the request succeeds", () => {
       beforeEach(() => {
         portalRequest.mockResolvedValueOnce({
-          body: {
+          data: {
             email_address: "mock-user@example.com",
           },
           status: 200,
@@ -36,7 +36,6 @@ describe("users API", () => {
           },
           `
           Object {
-            "apiErrors": undefined,
             "status": 200,
             "success": true,
             "user": ObjectContaining {
@@ -59,7 +58,7 @@ describe("users API", () => {
     describe("when the request is unsuccessful", () => {
       beforeEach(() => {
         portalRequest.mockResolvedValueOnce({
-          body: {},
+          data: {},
           status: 400,
           success: false,
         });
@@ -91,7 +90,7 @@ describe("users API", () => {
 
     beforeEach(() => {
       portalRequest.mockResolvedValueOnce({
-        body: {
+        data: {
           user_id: "mock-user_id",
           consented_to_data_sharing: true,
         },

@@ -40,7 +40,7 @@ def test_applications_get_valid(client, user, auth_token):
     )
 
     assert response.status_code == 200
-    response_body = response.get_json()
+    response_body = response.get_json().get("data")
     assert response_body.get("application_id") == str(application.application_id)
     assert response_body.get("updated_time") == "2020-01-01T00:00:00Z"
     assert response_body.get("status") == ApplicationStatus.Started.value
@@ -88,7 +88,7 @@ def test_applications_get_with_payment_preferences(client, user, auth_token, tes
 
     assert response.status_code == 200
 
-    response_body = response.get_json()
+    response_body = response.get_json().get("data")
     assert response_body.get("application_id") == str(application.application_id)
 
     payment_preferences = response_body.get("payment_preferences")
@@ -109,7 +109,7 @@ def test_applications_get_all_for_user(client, user, auth_token):
     response = client.get("/v1/applications", headers={"Authorization": f"Bearer {auth_token}"})
     assert response.status_code == 200
 
-    response_body = response.get_json()
+    response_body = response.get_json().get("data")
 
     for (application, app_response) in zip(applications, response_body):
         assert str(application.application_id) == app_response["application_id"]
@@ -120,10 +120,10 @@ def test_applications_get_all_for_user(client, user, auth_token):
 def test_applications_post_start_app(client, user, auth_token, test_db_session):
     response = client.post("/v1/applications", headers={"Authorization": f"Bearer {auth_token}"})
 
-    response_body = response.get_json()
+    response_body = response.get_json().get("data")
     application_id = response_body.get("application_id")
 
-    assert response.status_code == 200
+    assert response.status_code == 201
     assert application_id
 
     application = test_db_session.query(Application).get(application_id)
@@ -208,8 +208,8 @@ def test_application_patch_employment_status(client, user, auth_token, test_db_s
 
     assert response.status_code == 200
 
-    response_body = response.get_json()
-    updated_employment_status = response_body.get("data").get("employment_status")
+    response_body = response.get_json().get("data")
+    updated_employment_status = response_body.get("employment_status")
     assert updated_employment_status == "Employed"
 
 
@@ -244,8 +244,8 @@ def test_application_patch_leave_reason(client, user, auth_token, test_db_sessio
 
     assert response.status_code == 200
 
-    response_body = response.get_json()
-    updated_leave_details = response_body.get("data").get("leave_details")
+    response_body = response.get_json().get("data")
+    updated_leave_details = response_body.get("leave_details")
     assert updated_leave_details
     updated_leave_reason = updated_leave_details.get("reason")
     assert updated_leave_reason == "Serious Health Condition - Employee"
@@ -262,8 +262,8 @@ def test_application_patch_add_leave_period(client, user, auth_token):
 
     assert response.status_code == 200
 
-    response_body = response.get_json()
-    updated_leave_details = response_body.get("data").get("leave_details")
+    response_body = response.get_json().get("data")
+    updated_leave_details = response_body.get("leave_details")
     assert updated_leave_details
 
     updated_leave_periods = updated_leave_details.get("continuous_leave_periods")
@@ -298,8 +298,8 @@ def test_application_patch_update_leave_period(client, user, auth_token, test_db
 
     assert response.status_code == 200
 
-    response_body = response.get_json()
-    updated_leave_details = response_body.get("data").get("leave_details")
+    response_body = response.get_json().get("data")
+    updated_leave_details = response_body.get("leave_details")
     assert updated_leave_details
 
     updated_leave_periods = updated_leave_details.get("continuous_leave_periods")
@@ -348,7 +348,7 @@ def test_application_patch_update_leave_period_belonging_to_other_application_bl
         headers={"Authorization": f"Bearer {auth_token}"},
     )
 
-    response_body = response.get_json()
+    response_body = response.get_json().get("data")
     updated_leave_details = response_body.get("leave_details")
     assert updated_leave_details
 
@@ -381,8 +381,8 @@ def test_application_patch_add_payment_preferences(client, user, auth_token, tes
 
     assert response.status_code == 200
 
-    response_body = response.get_json()
-    payment_preferences_response = response_body.get("data").get("payment_preferences")
+    response_body = response.get_json().get("data")
+    payment_preferences_response = response_body.get("payment_preferences")
     assert len(payment_preferences_response) == 1
 
     payment_preference = payment_preferences_response[0]
@@ -413,8 +413,8 @@ def test_application_patch_update_payment_preferences(client, user, auth_token, 
 
     assert response.status_code == 200
 
-    response_body = response.get_json()
-    payment_preferences_response = response_body.get("data").get("payment_preferences")
+    response_body = response.get_json().get("data")
+    payment_preferences_response = response_body.get("payment_preferences")
     assert len(payment_preferences_response) == 1
 
     payment_preference_response = payment_preferences_response[0]
@@ -462,7 +462,7 @@ def test_application_patch_update_payment_preference_belonging_to_other_applicat
         headers={"Authorization": f"Bearer {auth_token}"},
     )
 
-    response_body = response.get_json()
+    response_body = response.get_json().get("data")
     payment_preferences_response = response_body.get("payment_preferences")
     assert len(payment_preferences_response) == 0
 
@@ -478,9 +478,8 @@ def test_application_patch_date_of_birth(client, user, auth_token):
 
     assert response.status_code == 200
 
-    response_body = response.get_json()
-    data = response_body.get("data")
-    dob = data.get("date_of_birth")
+    response_body = response.get_json().get("data")
+    dob = response_body.get("date_of_birth")
     assert dob == "1970-06-01"
 
 
@@ -495,8 +494,8 @@ def test_application_patch_minimum_payload(client, user, auth_token):
 
     assert response.status_code == 200
 
-    response_body = response.get_json()
-    data = response_body.get("data")
+    response_body = response.get_json().get("data")
+    data = response_body
     assert application.nickname == data.get("application_nickname")
 
 
@@ -618,7 +617,7 @@ def test_application_patch_keys_not_in_body_retain_existing_value(
         headers={"Authorization": f"Bearer {auth_token}"},
     )
 
-    response_body = response.get_json()
+    response_body = response.get_json().get("data")
 
     assert response_body.get("first_name") == "Foo"
 
@@ -636,8 +635,8 @@ def test_application_patch_keys_not_in_body_retain_existing_value(
     assert application.first_name == "Foo"
 
     # for extra measure
-    response_body = response.get_json()
-    assert response_body.get("data").get("first_name") == "Foo"
+    response_body = response.get_json().get("data")
+    assert response_body.get("first_name") == "Foo"
 
 
 def test_application_patch_key_set_to_null_does_null_field(
@@ -654,7 +653,7 @@ def test_application_patch_key_set_to_null_does_null_field(
         headers={"Authorization": f"Bearer {auth_token}"},
     )
 
-    response_body = response.get_json()
+    response_body = response.get_json().get("data")
     assert response_body.get("first_name") == "Foo"
 
     # null the field
@@ -671,8 +670,8 @@ def test_application_patch_key_set_to_null_does_null_field(
     assert application.first_name is None
 
     # for extra measure
-    response_body = response.get_json()
-    assert response_body.get("data").get("first_name") is None
+    response_body = response.get_json().get("data")
+    assert response_body.get("first_name") is None
 
 
 def test_application_post_submit_app(client, user, auth_token, test_db_session):
@@ -690,8 +689,8 @@ def test_application_post_submit_app(client, user, auth_token, test_db_session):
 
     assert response.status_code == 201
 
-    response_body = response.get_json()
-    status = response_body.get("data").get("status")
+    response_body = response.get_json().get("data")
+    status = response_body.get("status")
     assert status == ApplicationStatus.Completed.value
 
 

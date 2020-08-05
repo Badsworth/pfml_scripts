@@ -14,7 +14,6 @@ from massgov.pfml.api.models.applications.common import (
     PaymentMethod,
     PaymentPreferences,
 )
-from massgov.pfml.api.models.common import WarningsAndErrors
 from massgov.pfml.db.models.applications import Application, ApplicationPaymentPreference
 from massgov.pfml.util.pydantic import PydanticBaseModel
 
@@ -58,14 +57,6 @@ class ApplicationResponse(PydanticBaseModel):
             application_response.status = ApplicationStatus.Started
 
         return application_response
-
-
-class ApplicationUpdateResponse(PydanticBaseModel):
-    code: str
-    message: str
-    warnings: Optional[List[WarningsAndErrors]]
-    errors: Optional[List[WarningsAndErrors]]
-    data: Optional[ApplicationResponse]
 
 
 def build_payment_preference(

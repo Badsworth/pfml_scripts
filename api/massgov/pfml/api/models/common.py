@@ -1,13 +1,6 @@
 from enum import Enum
-from typing import Optional
 
 import massgov.pfml.db.models.applications as db_application_models
-from massgov.pfml.util.pydantic import PydanticBaseModel
-
-
-class WarningsAndErrors(PydanticBaseModel):
-    message: Optional[str]
-    attribute: Optional[str]
 
 
 class LookupEnum(Enum):
