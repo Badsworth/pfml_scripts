@@ -709,6 +709,10 @@ components:
             - Legal Guardian
             - Step Parent
           example: "Biological"
+        pregnant_or_recent_birth:
+          type: boolean
+          nullable: true
+          example: true
         employer_notified:
           type: boolean
           nullable: true

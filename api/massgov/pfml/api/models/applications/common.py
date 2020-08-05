@@ -149,6 +149,7 @@ class ApplicationLeaveDetails(PydanticBaseModel):
     intermittent_leave_periods: Optional[List[IntermittentLeavePeriods]]
     relationship_to_caregiver: Optional[RelationshipToCaregiver]
     relationship_qualifier: Optional[RelationshipQualifier]
+    pregnant_or_recent_birth: Optional[bool]
     employer_notified: Optional[bool]
     employer_notification_date: Optional[date]
     employer_notification_method: Optional[EmployerNotificationMethod]

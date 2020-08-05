@@ -92,6 +92,7 @@ class Application(Base):
     relationship_qualifier_id = Column(
         Integer, ForeignKey("lk_relationship_qualifier.relationship_qualifier_id")
     )
+    pregnant_or_recent_birth = Column(Boolean)
     employer_notified = Column(Boolean)
     employer_notification_date = Column(Date)
     employer_notification_method_id = Column(

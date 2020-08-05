@@ -213,6 +213,22 @@ def test_application_patch_employment_status(client, user, auth_token, test_db_s
     assert updated_employment_status == "Employed"
 
 
+def test_application_patch_pregnant_or_recent_birth(client, user, auth_token, test_db_session):
+    application = ApplicationFactory.create(user=user)
+
+    response = client.patch(
+        "/v1/applications/{}".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+        json={"leave_details": {"pregnant_or_recent_birth": True}},
+    )
+
+    assert response.status_code == 200
+
+    response_body = response.get_json()
+    updated_flag = response_body.get("data").get("leave_details").get("pregnant_or_recent_birth")
+    assert updated_flag is True
+
+
 def test_application_patch_leave_reason(client, user, auth_token, test_db_session):
     application = ApplicationFactory.create(user=user)
 
