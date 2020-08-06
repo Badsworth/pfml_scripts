@@ -48,7 +48,9 @@ exports[`EmploymentStatusPage renders the page 1`] = `
         "employer_fein",
       ]
     }
+    getField={[Function]}
     removeField={[Function]}
+    updateFields={[Function]}
     visible={false}
   >
     <InputText

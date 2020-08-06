@@ -55,8 +55,10 @@ exports[`Duration regardless of duration type initially renders the page without
         "temp.leave_details.continuous_leave_periods[0]",
       ]
     }
+    getField={[Function]}
     name="continuous_section"
     removeField={[Function]}
+    updateFields={[Function]}
     visible={false}
   >
     <InputText
@@ -76,8 +78,10 @@ exports[`Duration regardless of duration type initially renders the page without
         "temp.leave_details.reduced_schedule_leave_periods[0]",
       ]
     }
+    getField={[Function]}
     name="reduced_schedule_section"
     removeField={[Function]}
+    updateFields={[Function]}
     visible={false}
   >
     <InputText
@@ -107,8 +111,10 @@ exports[`Duration regardless of duration type initially renders the page without
         "leave_details.intermittent_leave_periods[0]",
       ]
     }
+    getField={[Function]}
     name="intermittent_section"
     removeField={[Function]}
+    updateFields={[Function]}
     visible={false}
   >
     <Heading
@@ -153,8 +159,10 @@ exports[`Duration regardless of duration type initially renders the page without
           "leave_details.intermittent_leave_periods[0].frequency",
         ]
       }
+      getfield={[Function]}
       name="frequency_question"
       removeField={[Function]}
+      updateFields={[Function]}
       visible={false}
     >
       <InputText
@@ -198,8 +206,10 @@ exports[`Duration regardless of duration type initially renders the page without
           "leave_details.intermittent_leave_periods[0].duration",
         ]
       }
+      getField={[Function]}
       name="duration_question"
       removeField={[Function]}
+      updateFields={[Function]}
       visible={false}
     >
       <InputText

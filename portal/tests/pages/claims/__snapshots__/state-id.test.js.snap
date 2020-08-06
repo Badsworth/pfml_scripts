@@ -31,7 +31,9 @@ exports[`StateId initially renders the page without an id field 1`] = `
         "state_id",
       ]
     }
+    getField={[Function]}
     removeField={[Function]}
+    updateFields={[Function]}
     visible={false}
   >
     <InputText

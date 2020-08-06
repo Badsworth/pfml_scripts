@@ -25,7 +25,7 @@ export const fields = [
 const NotifiedEmployer = (props) => {
   const { t } = useTranslation();
   const { appLogic, claim } = props;
-  const { formState, updateFields, removeField } = useFormState(
+  const { formState, getField, updateFields, removeField } = useFormState(
     pick(props, fields).claim
   );
   const { leave_details } = formState;
@@ -68,6 +68,8 @@ const NotifiedEmployer = (props) => {
         fieldNamesClearedWhenHidden={[
           "leave_details.employer_notification_date",
         ]}
+        getField={getField}
+        updateFields={updateFields}
         removeField={removeField}
         visible={employer_notified === true}
       >

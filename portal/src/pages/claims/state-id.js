@@ -14,7 +14,7 @@ import withClaim from "../../hoc/withClaim";
 const StateId = (props) => {
   const { t } = useTranslation();
   const { user, updateUser } = props.appLogic;
-  const { formState, updateFields, removeField } = useFormState(user);
+  const { formState, getField, updateFields, removeField } = useFormState(user);
   const { has_state_id, state_id } = formState;
   const handleInputChange = useHandleInputChange(updateFields);
 
@@ -50,7 +50,9 @@ const StateId = (props) => {
 
       <ConditionalContent
         fieldNamesClearedWhenHidden={["state_id"]}
+        getField={getField}
         removeField={removeField}
+        updateFields={updateFields}
         visible={shouldShowStateIdField}
       >
         <InputText

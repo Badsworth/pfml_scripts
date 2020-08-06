@@ -3,11 +3,11 @@ import { testHook } from "../test-utils";
 import useFormState from "../../src/hooks/useFormState";
 
 describe("useFormState", () => {
-  let formState, removeField, updateFields;
+  let formState, getField, removeField, updateFields;
 
   beforeEach(() => {
     testHook(() => {
-      ({ formState, updateFields, removeField } = useFormState());
+      ({ formState, getField, updateFields, removeField } = useFormState());
     });
   });
 
@@ -15,6 +15,7 @@ describe("useFormState", () => {
     expect(formState).toEqual({});
     expect(typeof updateFields).toBe("function");
     expect(typeof removeField).toBe("function");
+    expect(typeof getField).toBe("function");
   });
 
   describe("when called with initialState parameter", () => {
@@ -164,6 +165,68 @@ describe("useFormState", () => {
           },
         },
       });
+    });
+  });
+
+  describe("getField", () => {
+    beforeEach(() => {
+      const initialState = {
+        employment_status: "employed",
+        employer_fein: "12-1234567",
+        leave_details: {
+          employer_notification_method: "Email",
+        },
+      };
+      testHook(() => {
+        ({ formState, getField, updateFields } = useFormState(initialState));
+      });
+    });
+
+    it("gets field from formState", () => {
+      let employer_fein;
+      act(() => {
+        employer_fein = getField("employer_fein");
+      });
+      expect(employer_fein).toStrictEqual("12-1234567");
+    });
+
+    it("gets nested states", () => {
+      let employer_notification_method;
+      act(() => {
+        employer_notification_method = getField(
+          "leave_details.employer_notification_method"
+        );
+      });
+      expect(employer_notification_method).toEqual("Email");
+    });
+
+    it("gets new value on formState update", () => {
+      let employer_name;
+      act(() => {
+        updateFields({
+          employment_status: "employed",
+          employer_fein: "12-1234567",
+          employer_name: "Foo",
+          leave_details: {
+            employer_notification_method: "Email",
+          },
+        });
+      });
+
+      act(() => {
+        employer_name = getField("employer_name");
+      });
+
+      expect(employer_name).toStrictEqual("Foo");
+    });
+
+    it("remains stable across renders if formState does not change", () => {
+      const getField1 = getField;
+      act(() => {
+        getField1("employment_status");
+      });
+      const getField2 = getField;
+      expect(getField2).toBe(getField1);
     });
   });
 });

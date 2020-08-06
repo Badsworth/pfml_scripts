@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import ConditionalContent from "src/components/ConditionalContent";
 import InputChoiceGroup from "src/components/InputChoiceGroup";
 import InputText from "src/components/InputText";
+import { get } from "lodash";
 
 export default {
   title: "Components/ConditionalContent",
@@ -22,8 +23,17 @@ export const Example = () => {
     });
   };
 
+  const getField = (fieldName) => {
+    return get(formState, fieldName);
+  };
+
+  const updateFields = (fields) => {
+    updateFormState({ ...formState, ...fields });
+  };
+
   const removeField = (fieldName) => {
     updateFormState({
+      ...formState,
       [fieldName]: "",
     });
   };
@@ -52,8 +62,10 @@ export const Example = () => {
       />
 
       <ConditionalContent
-        fieldNamesClearedWhenHidden={["fullname"]}
+        fieldNamesClearedWhenHidden={["fullName"]}
+        getField={getField}
         removeField={removeField}
+        updateFields={updateFields}
         visible={formState.fileClaim === "yes"}
       >
         <InputText

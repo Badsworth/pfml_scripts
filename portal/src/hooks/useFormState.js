@@ -1,10 +1,10 @@
-import { set, unset } from "lodash";
+import { get, set, unset } from "lodash";
 import { useCallback, useState } from "react";
 
 /**
  * React hook that creates a formState object
  * @param {*} initialState Initial form state
- * @returns {{formState: object, updateFields: updateFieldsFunction, removeField: removeFieldFunction}}
+ * @returns {{formState: object, getField: getFieldFunction, updateFields: updateFieldsFunction, removeField: removeFieldFunction}}
  */
 const useFormState = (initialState = {}) => {
   const [formState, setFormState] = useState(initialState);
@@ -51,7 +51,19 @@ const useFormState = (initialState = {}) => {
     });
   }, []);
 
-  return { formState, updateFields, removeField };
+  /**
+   * Function that fetches the corresponding value of a field name
+   * @callback getFieldFunction
+   * @param {string} name Name of field to fetch
+   */
+  const getField = useCallback(
+    (name) => {
+      return get(formState, name);
+    },
+    [formState]
+  );
+
+  return { formState, getField, updateFields, removeField };
 };
 
 export default useFormState;

@@ -1,61 +1,88 @@
+import { mount, shallow } from "enzyme";
 import ConditionalContent from "../../src/components/ConditionalContent";
 import React from "react";
-import { shallow } from "enzyme";
+import { act } from "react-dom/test-utils";
 
 describe("<ConditionalContent>", () => {
+  function render(customProps = {}, mountComponent = false) {
+    const props = Object.assign(
+      {
+        children: <h1>Hello</h1>,
+        fieldNamesClearedWhenHidden: [],
+        removeField: jest.fn(),
+        getField: jest.fn(),
+        updateFields: jest.fn(),
+        visible: true,
+      },
+      customProps
+    );
+
+    const conditionalContent = <ConditionalContent {...props} />;
+
+    return {
+      props,
+      wrapper: mountComponent
+        ? mount(conditionalContent)
+        : shallow(conditionalContent),
+    };
+  }
+
   describe("given `visible` prop is set to true", () => {
     it("renders the children", () => {
-      const wrapper = shallow(
-        <ConditionalContent removeField={jest.fn()} visible>
-          <h1>Hello</h1>
-        </ConditionalContent>
-      );
-
+      const { wrapper } = render({ visible: true });
       expect(wrapper.exists("h1")).toBe(true);
     });
 
-    it("does not clear the fields when component unmounts", () => {
-      const removeField = jest.fn();
-      const wrapper = shallow(
-        <ConditionalContent
-          removeField={removeField}
-          fieldNamesClearedWhenHidden={["foo", "bar"]}
-          visible
-        >
-          <h1>Hello</h1>
-        </ConditionalContent>
+    it("restores previous data when prop `visible` changes from true -> false -> true", () => {
+      const getField = (name) => name + "_fetched";
+      const mountComponent = true;
+      const { wrapper, props } = render(
+        {
+          children: <h2 name="world">World</h2>,
+          fieldNamesClearedWhenHidden: ["world", "foo"],
+          visible: true,
+          getField,
+        },
+        mountComponent
       );
 
-      wrapper.unmount();
+      act(() => {
+        wrapper.setProps({ visible: false });
+      });
 
-      expect(removeField).toHaveBeenCalledTimes(0);
+      act(() => {
+        wrapper.setProps({ visible: true });
+      });
+
+      expect(props.updateFields).toHaveBeenNthCalledWith(1, {
+        world: "world_fetched",
+        foo: "foo_fetched",
+      });
     });
   });
 
   describe("given `visible` prop is set to false", () => {
     it("does not render anything", () => {
-      const wrapper = shallow(
-        <ConditionalContent removeField={jest.fn()} visible={false}>
-          <h1>Hello</h1>
-        </ConditionalContent>
-      );
+      const { wrapper } = render({ visible: false });
 
       expect(wrapper.isEmptyRender()).toBe(true);
     });
 
-    it("clears all fields when component unmounts", () => {
+    it("clears all fields when component is hidden", () => {
+      const mountComponent = true;
       const removeField = jest.fn();
-      const wrapper = shallow(
-        <ConditionalContent
-          removeField={removeField}
-          fieldNamesClearedWhenHidden={["foo", "bar"]}
-          visible={false}
-        >
-          <h1>Hello</h1>
-        </ConditionalContent>
+      const { wrapper } = render(
+        {
+          visible: true,
+          fieldNamesClearedWhenHidden: ["foo", "bar"],
+          removeField,
+        },
+        mountComponent
       );
 
-      wrapper.unmount();
+      act(() => {
+        wrapper.setProps({ visible: false });
+      });
 
       expect(removeField).toHaveBeenCalledTimes(2);
       expect(removeField).toHaveBeenNthCalledWith(1, "foo");
@@ -64,32 +91,30 @@ describe("<ConditionalContent>", () => {
 
     it("does not attempt clearing fields when component re-renders", () => {
       const removeField = jest.fn();
-      const wrapper = shallow(
-        <ConditionalContent
-          removeField={removeField}
-          fieldNamesClearedWhenHidden={["foo", "bar"]}
-          visible={false}
-        >
-          <h1>Hello</h1>
-        </ConditionalContent>
+      const mountComponent = true;
+      const { wrapper } = render(
+        {
+          visible: true,
+          removeField,
+          fieldNamesClearedWhenHidden: ["foo", "bar"],
+        },
+        mountComponent
       );
 
       wrapper.update();
-
       expect(removeField).toHaveBeenCalledTimes(0);
     });
   });
 
   describe("given fieldNamesClearedWhenHidden is not defined", () => {
-    it("does not attempting clearing fields when component unmounts", () => {
+    it("does not attempting clearing fields when component is hidden", () => {
       const removeField = jest.fn();
-      const wrapper = shallow(
-        <ConditionalContent removeField={removeField} visible={false}>
-          <h1>Hello</h1>
-        </ConditionalContent>
+      const mountComponent = true;
+      const { wrapper } = render(
+        { removeField, visible: false },
+        mountComponent
       );
-
-      wrapper.unmount();
+      wrapper.setProps({ visible: false });
 
       expect(removeField).toHaveBeenCalledTimes(0);
     });

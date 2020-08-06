@@ -1,27 +1,48 @@
+import { useEffect, useState } from "react";
 import PropTypes from "prop-types";
-import React from "react";
+import usePreviousValue from "../hooks/usePreviousValue";
+import zipObject from "lodash/zipObject";
 
 /**
  * Conditionally displays the content passed into it, and clears any
  * fields if they're hidden when the component unmounts. Based on
  * Vermont's Integrated Benefits `ConditionalContent` component.
  */
-class ConditionalContent extends React.PureComponent {
-  componentWillUnmount() {
-    // Ensure all of the field values are cleared if they're not
-    // visible when this component unmounts
-    if (!this.props.visible && this.props.fieldNamesClearedWhenHidden) {
-      this.props.fieldNamesClearedWhenHidden.forEach((name) => {
-        this.props.removeField(name);
-      });
-    }
-  }
+const ConditionalContent = (props) => {
+  const {
+    fieldNamesClearedWhenHidden,
+    removeField,
+    getField,
+    updateFields,
+    visible,
+    children,
+  } = props;
+  const previouslyVisible = usePreviousValue(visible);
+  const [hiddenFieldsValues, setHiddenFieldsValues] = useState({});
 
-  render() {
-    if (!this.props.visible) return null;
-    return this.props.children;
-  }
-}
+  useEffect(() => {
+    if (!fieldNamesClearedWhenHidden) return;
+
+    // Component changes from visible to hidden
+    if (previouslyVisible && visible === false) {
+      const dataToSave = zipObject(
+        fieldNamesClearedWhenHidden,
+        fieldNamesClearedWhenHidden.map(getField)
+      );
+      setHiddenFieldsValues(dataToSave);
+      fieldNamesClearedWhenHidden.forEach((field) => removeField(field));
+      // Creating an anon function because `forEach` passes in extra parameters (index, array) that removeField does not need
+    }
+    // Component changes from hidden to visible
+    else if (previouslyVisible === false && visible) {
+      updateFields(hiddenFieldsValues);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [visible]);
+
+  if (!visible) return null;
+  return children;
+};
 
 ConditionalContent.propTypes = {
   /** Fields and other markup to be conditionally displayed */
@@ -33,11 +54,17 @@ ConditionalContent.propTypes = {
    */
   fieldNamesClearedWhenHidden: PropTypes.arrayOf(PropTypes.string),
   /**
-   * Method called for each hidden field when the component unmounts.
-   * In Redux, this is your bound action creator (meaning, calling this method
-   * dispatches it).
+   * Method called to remove a field's value from your app's state.
    */
   removeField: PropTypes.func,
+  /**
+   * Method called to cache the value of each field listed in `fieldNamesClearedWhenHidden`
+   */
+  getField: PropTypes.func,
+  /**
+   * Method called to restore the previous values of all fields listed in `fieldNamesClearedWhenHidden`
+   */
+  updateFields: PropTypes.func,
   /** Should this component's children be visible? */
   visible: PropTypes.bool,
 };

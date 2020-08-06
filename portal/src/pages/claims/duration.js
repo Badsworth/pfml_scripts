@@ -29,7 +29,7 @@ export const every6monthsId = "every6months";
 
 const Duration = (props) => {
   const { t } = useTranslation();
-  const { formState, updateFields, removeField } = useFormState({
+  const { formState, getField, updateFields, removeField } = useFormState({
     ...pick(props, fields).claim,
     duration_type_continuous: props.claim.isContinuous,
     duration_type_reduced: props.claim.isReducedSchedule,
@@ -121,6 +121,8 @@ const Duration = (props) => {
         fieldNamesClearedWhenHidden={[
           "temp.leave_details.continuous_leave_periods[0]",
         ]}
+        getField={getField}
+        updateFields={updateFields}
         removeField={removeField}
         visible={duration_type_continuous}
         name="continuous_section"
@@ -141,6 +143,8 @@ const Duration = (props) => {
         fieldNamesClearedWhenHidden={[
           "temp.leave_details.reduced_schedule_leave_periods[0]",
         ]}
+        getField={getField}
+        updateFields={updateFields}
         removeField={removeField}
         visible={duration_type_reduced}
         name="reduced_schedule_section"
@@ -170,6 +174,8 @@ const Duration = (props) => {
         fieldNamesClearedWhenHidden={[
           "leave_details.intermittent_leave_periods[0]",
         ]}
+        getField={getField}
+        updateFields={updateFields}
         removeField={removeField}
         visible={duration_type_intermittent}
         name="intermittent_section"
@@ -224,6 +230,8 @@ const Duration = (props) => {
           fieldNamesClearedWhenHidden={[
             "leave_details.intermittent_leave_periods[0].frequency",
           ]}
+          getfield={getField}
+          updateFields={updateFields}
           removeField={removeField}
           visible={!!intermittentLeavePeriod.frequency_interval_basis}
           name="frequency_question"
@@ -277,6 +285,8 @@ const Duration = (props) => {
           fieldNamesClearedWhenHidden={[
             "leave_details.intermittent_leave_periods[0].duration",
           ]}
+          getField={getField}
+          updateFields={updateFields}
           removeField={removeField}
           visible={!!intermittentLeavePeriod.duration_basis}
           name="duration_question"

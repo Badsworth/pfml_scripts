@@ -37,7 +37,9 @@ exports[`NotifiedEmployer renders the page 1`] = `
         "leave_details.employer_notification_date",
       ]
     }
+    getField={[Function]}
     removeField={[Function]}
+    updateFields={[Function]}
     visible={false}
   >
     <InputDate
