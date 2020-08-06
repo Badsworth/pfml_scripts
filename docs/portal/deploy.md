@@ -10,7 +10,7 @@ Pushes to the following branches will trigger deploys to the associated environm
 | `deploy/portal/prod`  | prod        |
 
 The `master` branch is automatically deployed to `test` as pull requests are merged into it. 
-The remaining branches are generally pushed to as part of a release cycle, but they may also be triggered manually.
+The remaining branches are generally pushed to as part of a release cycle (TBD — this is the intended end state), but they may also be triggered manually (this is the current practice).
 
 ---
 

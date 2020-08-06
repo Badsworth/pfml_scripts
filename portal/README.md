@@ -120,23 +120,25 @@ Runs the project's test suite in watch mode. By default, this will attempt to id
 Below is an abbreviated representation of our directory structure, pointing out some of the main files to get you started. Refer to [`software-architecture.md`](../docs/portal/software-architecture.md) for more context.
 
 ```
-├── __mocks__           Dependency mocks used by test suites
-├── tests               Test suites
-├── config              Environment variables and feature flags
-├── public              Static assets
-├── src                 Source code
-│   ├── api             API request modules
+├── __mocks__               Dependency mocks used by test suites
+├── tests                   Test suites
+├── config                  Environment variables and feature flags
+├── public                  Static assets
+├── src                     Source code
+│   ├── api                 API request modules
 │   ├── components
-│   ├── hooks           Custom React hooks
-│   ├── locales         Localization files
-│   ├── models          Data models
+│   ├── hooks               Custom React hooks
+│   ├── locales             Localization files
+│   ├── models              Data models
 |   ├── pages
-│   │   ├── _app.js     Main layout applied to all pages
-│   │   └── index.js    Homepage
+│   │   ├── _app.js         Main layout applied to all pages
+│   │   └── index.js        Homepage for claimant portal
+|   |   ├── employers
+|   │       └── index.js    Homepage for employer portal
 |   ├── services
-|   ├── utils           utility functions
-├── storybook           Storybook site config and stories
+|   ├── utils               Utility functions
+├── storybook               Storybook site config and stories
 ├── styles
-│   └── app.scss        Main stylesheet
-└── next.config.js      Build process config
+│   └── app.scss            Main stylesheet
+└── next.config.js          Build process config
 ```

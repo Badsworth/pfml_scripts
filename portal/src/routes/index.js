@@ -48,6 +48,9 @@ const routes = {
     uploadOtherId: "/claims/upload-other-id",
     uploadStateId: "/claims/upload-state-id",
   },
+  employers: {
+    dashboard: "/",
+  },
   external: {
     massgov: {
       dfml: "https://mass.gov/dfml",

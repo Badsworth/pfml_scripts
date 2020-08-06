@@ -6,6 +6,7 @@ This page covers development practices for working on the Mass PFML Portal. Plea
 
 All files in the [`portal/srcs/pages`](../../portal/src/pages) directory are automatically available as routes based on their name, e.g. `about.js` is routed to `/about`. Files named `index.js` are routed to the root of the directory. See more at the Next.js docs on [routing](https://nextjs.org/docs/routing/introduction) and [pages](https://nextjs.org/docs/basic-features/pages).
 
+For Employer-specific pages, files will be nested in an [`/employers`](../../portal/src/pages/employers) subdirectory.
 
 1. Each time you add a new page, add a new route to [`src/routes/index.js`](../../portal/src/routes/index.js).
 1. Add content strings for the page to [`src/locales/app/en-US.js`](../../portal/src/locales/app/en-US.js).

@@ -55,7 +55,7 @@ Teams exist for the API and Portal engineers:
 - API engineers: [`@pfml-api`](https://github.com/orgs/EOLWD/teams/pfml-api)
 - Portal engineers: [`@pfml-portal`](https://github.com/orgs/EOLWD/teams/pfml-portal)
 
-The Portal engineering team [is configured](https://github.com/orgs/EOLWD/teams/pfml-portal/edit/review_assignment) so that PR reviews are automatically assigned to a member of the team via a round robin algorithm, with the goal of equally distributing PR reviews across the team.
+The Portal engineering team [is configured](https://github.com/orgs/EOLWD/teams/pfml-portal/edit/review_assignment) so that PR reviews are automatically assigned to a member of the team via a round robin algorithm, with the goal of equally distributing PR reviews across the team. Since the Portal engineering team includes those working on either the Claimant Portal or Employer Portal, PR reviews will be distributed between both groups. 
 
 ## Merge Commit Messages
 
