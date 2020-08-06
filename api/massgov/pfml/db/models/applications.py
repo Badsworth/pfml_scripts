@@ -248,8 +248,89 @@ class FINEOSWebIdExt(Base):
     fineos_web_id = Column(Text)
 
 
+class LkDocumentCategory(Base):
+    __tablename__ = "lk_document_category"
+    document_category_id = Column(Integer, primary_key=True, autoincrement=True)
+    document_category_description = Column(Text, nullable=False)
+
+    def __init__(self, document_category_id, document_category_description):
+        self.document_category_id = document_category_id
+        self.document_category_description = document_category_description
+
+
+class LkDocumentType(Base):
+    __tablename__ = "lk_document_type"
+    document_type_id = Column(Integer, primary_key=True, autoincrement=True)
+    document_type_description = Column(Text, nullable=False)
+
+    def __init__(self, document_type_id, document_type_description):
+        self.document_type_id = document_type_id
+        self.document_type_description = document_type_description
+
+
+class LkContentType(Base):
+    __tablename__ = "lk_content_type"
+    content_type_id = Column(Integer, primary_key=True, autoincrement=True)
+    content_type_description = Column(Text, nullable=False)
+
+    def __init__(self, content_type_id, content_type_description):
+        self.content_type_id = content_type_id
+        self.content_type_description = content_type_description
+
+
+class DocumentCategory(LookupTable):
+    model = LkDocumentCategory
+    column_names = ("document_category_id", "document_category_description")
+
+    IDENTITY_PROOFING = LkDocumentCategory(1, "Identity Proofing")
+    CERTIFICATION = LkDocumentCategory(2, "Certification")
+
+
+class DocumentType(LookupTable):
+    model = LkDocumentType
+    column_names = ("document_type_id", "document_type_description")
+
+    PASSPORT = LkDocumentType(1, "Passport")
+    DRIVERS_LICENSE_MASS = LkDocumentType(2, "Driver's License Mass")
+    DRIVERS_LICENSE_OTHER_STATE = LkDocumentType(3, "Driver's License Other State")
+
+
+class ContentType(LookupTable):
+    model = LkContentType
+    column_names = ("content_type_id", "content_type_description")
+
+    PDF = LkContentType(1, "application/pdf")
+    JPEG = LkContentType(2, "image/jpeg")
+    PNG = LkContentType(3, "image/png")
+    WEBP = LkContentType(4, "image/webp")
+    HEIC = LkContentType(5, "image/heic")
+
+
+class Document(Base):
+    __tablename__ = "document"
+    document_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
+    user_id = Column(UUID(as_uuid=True), ForeignKey("user.user_id"), nullable=False)
+    created_at = Column(DateTime, nullable=False)
+    updated_at = Column(DateTime, nullable=False)
+    document_category_id = Column(
+        Integer, ForeignKey("lk_document_category.document_category_id"), nullable=False
+    )
+    document_type_id = Column(
+        Integer, ForeignKey("lk_document_type.document_type_id"), nullable=False
+    )
+    content_type_id = Column(Integer, ForeignKey("lk_content_type.content_type_id"), nullable=False)
+    size_bytes = Column(Integer, nullable=False)
+    fineos_id = Column(Text, nullable=True)
+    is_stored_in_s3 = Column(Boolean, nullable=False)
+    name = Column(Text, nullable=False)
+    description = Column(Text, nullable=False)
+
+
 def sync_lookup_tables(db_session):
     """Synchronize lookup tables to the database."""
     LeaveReason.sync_to_database(db_session)
     EmploymentStatus.sync_to_database(db_session)
+    DocumentCategory.sync_to_database(db_session)
+    DocumentType.sync_to_database(db_session)
+    ContentType.sync_to_database(db_session)
     db_session.commit()
