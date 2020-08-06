@@ -1,0 +1,23 @@
+{
+  "compilerOptions": {
+    "strict": true,
+    // "baseUrl": "../node_modules",
+    "target": "es6",
+    "lib": ["es6", "dom"],
+    "types": ["cypress"],
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "allowJs": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "module": "esnext",
+    "moduleResolution": "node",
+    "resolveJsonModule": true,
+    "declaration": true,
+    "jsx": "react"
+
+  },
+  "include": [
+    "**/*.ts"
+  ]
+}

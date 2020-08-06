@@ -1,0 +1,26 @@
+# End to End testing CI processes.
+#
+name: End-to-End CI Testing
+
+on:
+  pull_request:
+    paths:
+      - e2e/**
+defaults:
+  run:
+    working-directory: e2e
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    env: { CYPRESS_INSTALL_BINARY: 0 }
+    steps:
+      - uses: actions/checkout@v2
+      - name: Setup Node
+        uses: actions/setup-node@v1
+        with: { node-version: 12.x }
+      - name: "Install Dependencies"
+        run: npm ci
+      - name: "Lint"
+        run: npm run lint:ci
