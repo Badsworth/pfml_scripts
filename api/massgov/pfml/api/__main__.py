@@ -1,4 +1,8 @@
 #!/usr/bin/env python3
+
+"""isort:skip_file"""
+# fmt: off
+
 #
 # A prototype API server.
 #
@@ -8,9 +12,19 @@
 # https://docs.python.org/3/library/__main__.html
 import os
 
+# Import and initialize the NewRelic Python agent.
+# This must be done as early as possible, even before other imports, and even if it makes style enforcement unhappy.
+# https://docs.newrelic.com/docs/agents/python-agent/python-agent-api/initialize
+import newrelic.agent
+newrelic.agent.initialize(
+    config_file=os.path.join(os.path.dirname(__file__), "../../..", "newrelic.ini"),
+    environment=os.environ.get("ENVIRONMENT", "local")
+)
+
 import massgov.pfml.api.app as app
 import massgov.pfml.api.authentication as authentication
 import massgov.pfml.util.logging
+# fmt: on
 
 logger = massgov.pfml.util.logging.get_logger(__package__)
 

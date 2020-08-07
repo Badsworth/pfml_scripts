@@ -313,6 +313,12 @@ services:
     - ...
 ```
 
+## Monitoring and Alerting
+
+The API is monitored with New Relic's Python agent.
+Config variables and env-specific settings for New Relic live inside `newrelic.ini` and `container_definitions.json`.
+See [environment-variables.md](/docs/api/environment-variables.md) for more about how env vars are pulled in at runtime.
+
 ## Directory Structure
 
 ```
@@ -330,5 +336,6 @@ services:
 ├── docker-compose.yml  Config file for docker-compose tool, used for local development
 ├── openapi.yaml        API specification
 ├── pyproject.toml      Python project configuration file
+├── newrelic.ini        New Relic configuration file
 └── setup.cfg           Python config for tools that don't support pyproject.toml yet
 ```

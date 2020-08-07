@@ -44,6 +44,7 @@
     ],
     "secrets": [
       { "name": "DB_PASSWORD", "valueFrom": "/service/${app_name}/${environment_name}/db-password" },
+      { "name": "NEW_RELIC_LICENSE_KEY", "valueFrom": "/service/${app_name}/common/newrelic-license-key"},
       { "name": "RMV_CLIENT_CERTIFICATE_PASSWORD", "valueFrom": "/service/${app_name}/${environment_name}/rmv_client_certificate_password" },
       { "name": "FINEOS_CLIENT_OAUTH2_CLIENT_SECRET" , "valueFrom": "/service/${app_name}/${environment_name}/fineos_oauth2_client_secret" }
     ]

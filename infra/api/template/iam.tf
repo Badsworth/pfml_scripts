@@ -70,17 +70,20 @@ data "aws_iam_policy_document" "task_executor" {
     ]
 
     resources = [
-      "${local.ssm_arn_prefix}/${local.app_name}/${var.environment_name}/*"
+      "${local.ssm_arn_prefix}/${local.app_name}/${var.environment_name}/*",
+      "${local.ssm_arn_prefix}/${local.app_name}/common/*"
     ]
   }
 
+  # Allow ECS to access secrets from parameter store in bulk.
   statement {
     actions = [
       "ssm:GetParametersByPath",
     ]
 
     resources = [
-      "${local.ssm_arn_prefix}/${local.app_name}/${var.environment_name}"
+      "${local.ssm_arn_prefix}/${local.app_name}/${var.environment_name}",
+      "${local.ssm_arn_prefix}/${local.app_name}/common"
     ]
   }
 }
