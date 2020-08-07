@@ -6,7 +6,7 @@ exports[`Ssn renders the form 1`] = `
   title="Verify your identity"
 >
   <InputText
-    hint="Don't have an SSN? Use your Individual Taxpayer Identification Number (ITIN)."
+    hint="It’s recommended that you enter your SSN. Don’t have an SSN? Use your Individual Taxpayer Identification Number (ITIN)."
     label="What's your Social Security Number?"
     mask="ssn"
     name="employee_ssn"

@@ -535,7 +535,7 @@ const pages = {
   },
   claimsSsn: {
     lead:
-      "Don't have an SSN? Use your Individual Taxpayer Identification Number (ITIN).",
+      "It’s recommended that you enter your SSN. Don’t have an SSN? Use your Individual Taxpayer Identification Number (ITIN).",
     sectionLabel: "What's your Social Security Number?",
     title: "$t(shared.claimsTakingLeaveTitle)",
   },
