@@ -49,7 +49,7 @@ const routes = {
     uploadStateId: "/claims/upload-state-id",
   },
   employers: {
-    dashboard: "/",
+    dashboard: "/employers",
   },
   external: {
     massgov: {
