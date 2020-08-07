@@ -100,6 +100,11 @@ const machineTests = {
       test: () => {},
     },
   },
+  [routes.claims.bonding.dateOfChild]: {
+    meta: {
+      test: () => {},
+    },
+  },
   [routes.claims.averageWorkHours]: {
     meta: {
       test: (_, event) => {
@@ -186,6 +191,7 @@ describe("routingMachine", () => {
   // Define various states a claim can be in that will result in
   // different routing paths
   const medicalClaim = { leave_details: { reason: LeaveReason.medical } };
+  const bondingClaim = { leave_details: { reason: LeaveReason.bonding } };
   const employed = {
     employment_status: EmploymentStatus.employed,
   };
@@ -213,6 +219,7 @@ describe("routingMachine", () => {
     { claimData: hasEmployerBenefits, userData: {} },
     { claimData: hasOtherIncomes, userData: {} },
     { claimData: hasPreviousLeaves, userData: {} },
+    { claimData: bondingClaim, userData: {} },
   ];
 
   // Action that's fired when exiting dashboard state and creating a claim and

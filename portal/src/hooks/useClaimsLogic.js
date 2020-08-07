@@ -60,7 +60,6 @@ const useClaimsLogic = ({ appErrorsLogic, portalFlow, user }) => {
       // TODO: Remove workaround once above ticket is complete: https://lwd.atlassian.net/browse/CP-577
       claim = new Claim(merge(claims.get(application_id), patchData));
       // </ end workaround >
-
       setClaim(claim);
       const params = { claim_id: claim.application_id };
       portalFlow.goToNextPage({ claim, user }, params);

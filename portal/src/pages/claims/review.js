@@ -111,6 +111,14 @@ const Review = (props) => {
           </ReviewRow>
         </React.Fragment>
       )}
+      {reason === LeaveReason.bonding && (
+        <React.Fragment>
+          {/* TODO: Use the API response for the PII fields */}
+          <ReviewRow label={t("pages.claimsReview.bondingLeaveLabel")}>
+            **/**/****
+          </ReviewRow>
+        </React.Fragment>
+      )}
 
       <ReviewRow label={t("pages.claimsReview.leaveDurationLabel")}>
         {formatDateRange(

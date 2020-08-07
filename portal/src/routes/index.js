@@ -18,6 +18,9 @@ const routes = {
   },
   claims: {
     averageWorkHours: "/claims/average-work-hours",
+    bonding: {
+      dateOfChild: "/claims/bonding/date-of-child",
+    },
     checklist: "/claims/checklist",
     confirm: "/claims/confirm",
     dashboard: "/",

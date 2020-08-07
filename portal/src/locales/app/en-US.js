@@ -170,6 +170,14 @@ const pages = {
       "On average, how many hours do you work for your employer each week?",
     title: "$t(shared.claimsLeaveDetailsTitle)",
   },
+  claimsBondingDateOfChild: {
+    hint:
+      "If your child is not born or placed yet, enter the expected date. You can update this date later.",
+    lead:
+      "You can take up to 12 weeks of family leave within the first year of your child's birth or placement.",
+    sectionLabel: "What is the date of birth or placement date of your child?",
+    title: "$t(shared.claimsLeaveDetailsTitle)",
+  },
   claimsChecklist: {
     backButtonLabel: "Back to Dashboard",
     completed: "Completed",
@@ -209,6 +217,7 @@ const pages = {
     sectionLabel: "What's your birthdate?",
     title: "$t(shared.claimsTakingLeaveTitle)",
   },
+
   claimsDuration: {
     continuousTypeHint: "$t(shared.claimDurationTypeContinuous)",
     continuousTypeLabel:
@@ -465,6 +474,7 @@ const pages = {
   },
   claimsReview: {
     averageWorkHoursLabel: "Average hours worked per week",
+    bondingLeaveLabel: "Child's date of birth or placement date",
     confirmationAction: "Confirm information is correct",
     editLink: "Edit",
     employerBenefitEntryLabel:

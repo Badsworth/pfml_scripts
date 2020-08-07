@@ -15,6 +15,7 @@ import { EmploymentStatus, LeaveReason } from "../models/Claim";
 import { ClaimSteps } from "../models/Step";
 import { fields as averageWorkHoursFields } from "../pages/claims/average-work-hours";
 import { fields as dateOfBirthFields } from "../pages/claims/date-of-birth";
+import { fields as dateOfChildFields } from "../pages/claims/bonding/date-of-child";
 import { fields as durationFields } from "../pages/claims/duration";
 import { fields as employerBenefitDetailsFields } from "../pages/claims/employer-benefit-details";
 import { fields as employerBenefitsFields } from "../pages/claims/employer-benefits";
@@ -39,6 +40,8 @@ import { fields as ssnFields } from "../pages/claims/ssn";
 export const guards = {
   isMedicalClaim: ({ claim }) =>
     get(claim, "leave_details.reason") === LeaveReason.medical,
+  isBondingClaim: ({ claim }) =>
+    get(claim, "leave_details.reason") === LeaveReason.bonding,
   isEmployed: ({ claim }) =>
     get(claim, "employment_status") === EmploymentStatus.employed,
   hasStateId: ({ user }) => user.has_state_id === true,
@@ -169,6 +172,10 @@ export default {
             cond: "isMedicalClaim",
           },
           {
+            target: routes.claims.bonding.dateOfChild,
+            cond: "isBondingClaim",
+          },
+          {
             target: routes.claims.checklist,
           },
         ],
@@ -207,6 +214,16 @@ export default {
             target: routes.claims.leaveDates,
           },
         ],
+      },
+    },
+    [routes.claims.bonding.dateOfChild]: {
+      meta: {
+        step: ClaimSteps.leaveDetails,
+        fields: dateOfChildFields,
+      },
+      on: {
+        // TODO (CP-801): Refactor to route to the Bonding Leave Certification page once it's created
+        CONTINUE: routes.claims.todo,
       },
     },
     [routes.claims.averageWorkHours]: {

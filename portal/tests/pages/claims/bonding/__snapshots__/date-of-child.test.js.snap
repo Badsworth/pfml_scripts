@@ -1,0 +1,28 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`DateOfChild renders the page 1`] = `
+<QuestionPage
+  onSave={[Function]}
+  title="Leave details"
+>
+  <InputDate
+    dayLabel="Day"
+    hint={
+      <React.Fragment>
+        <p>
+          If your child is not born or placed yet, enter the expected date. You can update this date later.
+        </p>
+        <p>
+          For example: 04 / 28 / 1986
+        </p>
+      </React.Fragment>
+    }
+    label="What is the date of birth or placement date of your child?"
+    monthLabel="Month"
+    name="temp.leave_details.bonding.date_of_child"
+    onChange={[Function]}
+    value="2020-08-01"
+    yearLabel="Year"
+  />
+</QuestionPage>
+`;

@@ -19,7 +19,6 @@ const Checklist = (props) => {
     { claim: props.claim, user: props.appLogic.user },
     null
   );
-
   const allStepsComplete = steps.every((step) => step.isComplete);
   const { t } = useTranslation();
 
