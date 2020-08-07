@@ -1,3 +1,4 @@
+.next
 __snapshots__
 build
 out
@@ -8,3 +9,5 @@ node_modules
 */public/**/*.css
 */public/**/*.js
 new-relic.js
+# Subdirectories with their own lint process
+e2e/
