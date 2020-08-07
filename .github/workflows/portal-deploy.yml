@@ -153,4 +153,4 @@ jobs:
         run: |
           sudo apt-get install jq
           DISTRIBUTION_ID=$(echo $TF_OUTPUT | jq -r '.cloudfront_distribution_id.value')
-          aws cloudfront create-invalidation --distribution-id $DISTRIBUTION_ID --paths "/index.html"
+          aws cloudfront create-invalidation --distribution-id $DISTRIBUTION_ID --paths "/*"
