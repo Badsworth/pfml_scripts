@@ -189,7 +189,7 @@ export const App = ({
       <div className="l-container">
         <div>
           {/* Wrap header children in a div because its parent is a flex container */}
-          <Header user={appLogic.user} />
+          <Header user={appLogic.user} onLogout={appLogic.auth.logout} />
         </div>
         <main
           id="main"

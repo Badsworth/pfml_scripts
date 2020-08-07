@@ -1,8 +1,6 @@
-import { Auth } from "aws-amplify";
 import Button from "./Button";
 import PropTypes from "prop-types";
 import React from "react";
-import routes from "../routes";
 import { useTranslation } from "../locales/i18n";
 
 /**
@@ -10,14 +8,6 @@ import { useTranslation } from "../locales/i18n";
  */
 const AuthNav = (props) => {
   const { t } = useTranslation();
-
-  const handleSignOut = async () => {
-    await Auth.signOut();
-
-    // Force a page reload so that any local app state is cleared
-    window.location.assign(routes.home);
-  };
-
   const user = props.user || {};
 
   return (
@@ -33,7 +23,7 @@ const AuthNav = (props) => {
                 <Button
                   className="width-auto"
                   inversed
-                  onClick={handleSignOut}
+                  onClick={props.onLogout}
                   variation="unstyled"
                 >
                   {t("components.authNav.logOutButton")}
@@ -51,6 +41,7 @@ AuthNav.propTypes = {
   user: PropTypes.shape({
     username: PropTypes.string,
   }),
+  onLogout: PropTypes.func.isRequired,
 };
 
 export default AuthNav;

@@ -16,7 +16,7 @@ const Header = (props) => {
         {t("components.header.skipToContent")}
       </a>
 
-      <AuthNav user={props.user} />
+      <AuthNav user={props.user} onLogout={props.onLogout} />
 
       <header className="bg-base-lightest">
         <div className="grid-container">
@@ -37,6 +37,7 @@ const Header = (props) => {
 
 Header.propTypes = {
   user: PropTypes.object,
+  onLogout: PropTypes.func.isRequired,
 };
 
 export default Header;

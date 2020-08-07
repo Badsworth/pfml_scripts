@@ -94,6 +94,15 @@ const useAuthLogic = ({ appErrorsLogic }) => {
   };
 
   /**
+   * Log out of the Portal
+   */
+  const logout = async () => {
+    await Auth.signOut();
+    // Force a page reload so that any local app state is cleared
+    window.location.assign(routes.home);
+  };
+
+  /**
    * Create Portal account with the given username (email) and password.
    * If there are any errors, set app errors on the page.
    * @param {string} username Email address that is used as the username
@@ -257,6 +266,7 @@ const useAuthLogic = ({ appErrorsLogic }) => {
     createAccount,
     forgotPassword,
     login,
+    logout,
     isLoggedIn,
     requireLogin,
     resendVerifyAccountCode,

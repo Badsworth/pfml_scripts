@@ -35,6 +35,7 @@ exports[`App when authenticated user consented to data sharing renders the page 
         "forgotPassword": [Function],
         "isLoggedIn": null,
         "login": [Function],
+        "logout": [Function],
         "requireLogin": [Function],
         "resendVerifyAccountCode": [Function],
         "resetPassword": [Function],

@@ -15,6 +15,7 @@ describe("useAuthLogic", () => {
     forgotPassword,
     isLoggedIn,
     login,
+    logout,
     password,
     requireLogin,
     resendVerifyAccountCode,
@@ -36,6 +37,7 @@ describe("useAuthLogic", () => {
         authData,
         forgotPassword,
         login,
+        logout,
         isLoggedIn,
         createAccount,
         requireLogin,
@@ -256,6 +258,29 @@ describe("useAuthLogic", () => {
         login(username, password);
       });
       expect(appErrors.items).toHaveLength(0);
+    });
+  });
+
+  describe("logout", () => {
+    it("calls Auth.signOut", () => {
+      act(() => {
+        logout();
+      });
+      expect(Auth.signOut).toHaveBeenCalledTimes(1);
+    });
+
+    it("redirects to home page", async () => {
+      const originalLocation = window.location;
+
+      delete window.location;
+      window.location = { assign: jest.fn() };
+      await act(async () => {
+        await logout();
+      });
+      expect(window.location.assign).toHaveBeenCalledWith("/");
+
+      window.location = originalLocation;
+      jest.restoreAllMocks();
     });
   });
 
