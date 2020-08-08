@@ -18,7 +18,7 @@ describe("Confirm", () => {
   describe("when user clicks agree and submit", () => {
     it("calls submitApplication", () => {
       submitForm();
-      expect(appLogic.submitClaim).toHaveBeenCalledWith(claim.application_id);
+      expect(appLogic.claims.submit).toHaveBeenCalledWith(claim.application_id);
     });
   });
 });

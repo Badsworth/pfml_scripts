@@ -16,7 +16,7 @@ const Checklist = (props) => {
   // https://lwd.atlassian.net/browse/CP-509
   const steps = StepModel.createClaimStepsFromMachine(
     machineConfigs,
-    { claim: props.claim, user: props.appLogic.user },
+    { claim: props.claim, user: props.appLogic.users.user },
     null
   );
   const allStepsComplete = steps.every((step) => step.isComplete);

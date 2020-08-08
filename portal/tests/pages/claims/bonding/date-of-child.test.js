@@ -26,10 +26,10 @@ describe("DateOfChild", () => {
   });
 
   describe("when the form is successfully submitted", () => {
-    it("calls updateClaim", () => {
+    it("calls claims.update", () => {
       wrapper.find("QuestionPage").simulate("save");
 
-      expect(appLogic.updateClaim).toHaveBeenCalledWith(
+      expect(appLogic.claims.update).toHaveBeenCalledWith(
         expect.any(String),
         pick(claim, ["temp.leave_details.bonding.date_of_child"])
       );

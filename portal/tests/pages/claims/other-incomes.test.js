@@ -18,13 +18,16 @@ describe("OtherIncomes", () => {
   });
 
   describe("when user clicks continue", () => {
-    it("calls updateClaim", () => {
+    it("calls claims.update", () => {
       act(() => {
         wrapper.find("QuestionPage").simulate("save");
       });
-      expect(appLogic.updateClaim).toHaveBeenCalledWith(claim.application_id, {
-        has_other_incomes: claim.has_other_incomes,
-      });
+      expect(appLogic.claims.update).toHaveBeenCalledWith(
+        claim.application_id,
+        {
+          has_other_incomes: claim.has_other_incomes,
+        }
+      );
     });
   });
 });

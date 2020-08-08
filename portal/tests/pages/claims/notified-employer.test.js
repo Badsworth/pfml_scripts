@@ -44,13 +44,13 @@ describe("NotifiedEmployer", () => {
     });
 
     describe("when user clicks continue", () => {
-      it("calls updateClaim", () => {
+      it("calls claims.update", () => {
         changeField("leave_details.employer_notification_date", "2020-06-25");
         act(() => {
           wrapper.find("QuestionPage").simulate("save");
         });
 
-        expect(appLogic.updateClaim).toHaveBeenCalledWith(
+        expect(appLogic.claims.update).toHaveBeenCalledWith(
           claim.application_id,
           {
             leave_details: {

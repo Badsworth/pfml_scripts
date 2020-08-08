@@ -48,7 +48,7 @@ describe("useClaimsLogic", () => {
   describe("loadClaims", () => {
     it("asynchronously fetches all claims and adds to claims collection", async () => {
       await act(async () => {
-        await claimsLogic.loadClaims();
+        await claimsLogic.load();
       });
 
       expect(claimsLogic.claims.items[0]).toBeInstanceOf(Claim);
@@ -57,8 +57,8 @@ describe("useClaimsLogic", () => {
 
     it("only makes api request if claims have not been loaded", async () => {
       await act(async () => {
-        await claimsLogic.loadClaims();
-        await claimsLogic.loadClaims();
+        await claimsLogic.load();
+        await claimsLogic.load();
       });
 
       const claims = claimsLogic.claims.items;
@@ -69,7 +69,7 @@ describe("useClaimsLogic", () => {
     it("only makes one api request at a time", async () => {
       await act(async () => {
         // call loadClaims twice in parallel
-        await Promise.all([claimsLogic.loadClaims(), claimsLogic.loadClaims()]);
+        await Promise.all([claimsLogic.load(), claimsLogic.load()]);
       });
 
       const claims = claimsLogic.claims.items;
@@ -83,8 +83,8 @@ describe("useClaimsLogic", () => {
           describe("forceReload parameter", () => {
             it("forces a reload even after claims have been loaded", async () => {
               await act(async () => {
-                await claimsLogic.loadClaims();
-                await claimsLogic.loadClaims(true);
+                await claimsLogic.load();
+                await claimsLogic.load(true);
               });
 
               expect(getClaimsMock).toHaveBeenCalledTimes(2);
@@ -95,7 +95,7 @@ describe("useClaimsLogic", () => {
         });
 
         await act(async () => {
-          await claimsLogic.loadClaims();
+          await claimsLogic.load();
         });
 
         expect(appErrorsLogic.appErrors.items[0].type).toEqual("Error");
@@ -106,7 +106,7 @@ describe("useClaimsLogic", () => {
   describe("createClaim", () => {
     it("sends API request", async () => {
       await act(async () => {
-        await claimsLogic.createClaim();
+        await claimsLogic.create();
       });
 
       expect(createClaimMock).toHaveBeenCalled();
@@ -142,7 +142,7 @@ describe("useClaimsLogic", () => {
         });
 
         await act(async () => {
-          await claimsLogic.createClaim();
+          await claimsLogic.create();
         });
       });
 
@@ -171,7 +171,7 @@ describe("useClaimsLogic", () => {
         });
 
         await act(async () => {
-          await claimsLogic.createClaim();
+          await claimsLogic.create();
         });
       });
 
@@ -188,7 +188,7 @@ describe("useClaimsLogic", () => {
       beforeEach(async () => {
         createClaimMock.mockRejectedValueOnce(new Error());
         await act(async () => {
-          await claimsLogic.createClaim();
+          await claimsLogic.create();
         });
       });
 
@@ -206,7 +206,7 @@ describe("useClaimsLogic", () => {
 
       beforeEach(async () => {
         await act(async () => {
-          await claimsLogic.loadClaims();
+          await claimsLogic.load();
         });
 
         claim = new Claim({ application_id: "12345" });
@@ -228,7 +228,7 @@ describe("useClaimsLogic", () => {
         });
 
         await act(async () => {
-          await claimsLogic.createClaim();
+          await claimsLogic.create();
         });
       });
 
@@ -260,7 +260,7 @@ describe("useClaimsLogic", () => {
         };
 
         await act(async () => {
-          await claimsLogic.updateClaim(applicationId, patchData);
+          await claimsLogic.update(applicationId, patchData);
         });
 
         const claim = claimsLogic.claims.get(applicationId);
@@ -284,7 +284,7 @@ describe("useClaimsLogic", () => {
           };
 
           await act(async () => {
-            await claimsLogic.updateClaim(applicationId, patchData);
+            await claimsLogic.update(applicationId, patchData);
           });
 
           expect(appErrorsLogic.appErrors.items[0].type).toEqual("Error");
@@ -295,7 +295,7 @@ describe("useClaimsLogic", () => {
     describe("submitClaim", () => {
       it("asynchronously submits claim", async () => {
         await act(async () => {
-          await claimsLogic.submitClaim(applicationId);
+          await claimsLogic.submit(applicationId);
         });
 
         expect(submitClaimMock).toHaveBeenCalledWith(applicationId);
@@ -308,7 +308,7 @@ describe("useClaimsLogic", () => {
           });
 
           await act(async () => {
-            await claimsLogic.submitClaim(applicationId);
+            await claimsLogic.submit(applicationId);
           });
 
           expect(appErrorsLogic.appErrors.items[0].type).toEqual("Error");

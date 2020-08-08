@@ -10,7 +10,9 @@ import { useTranslation } from "../../locales/i18n";
 
 const ConsentToDataSharing = (props) => {
   const { t } = useTranslation();
-  const { user, updateUser } = props.appLogic;
+  const {
+    users: { user, updateUser },
+  } = props.appLogic;
 
   const handleSave = () =>
     updateUser(user.user_id, {

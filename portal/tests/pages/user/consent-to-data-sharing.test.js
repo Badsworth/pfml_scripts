@@ -19,7 +19,7 @@ describe("ConsentToDataSharing", () => {
       appLogic = useAppLogic();
     });
 
-    appLogic.user = new User({ user_id });
+    appLogic.users.user = new User({ user_id });
 
     wrapper = shallow(<ConsentToDataSharing appLogic={appLogic} />);
   });

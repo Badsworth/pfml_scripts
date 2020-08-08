@@ -19,7 +19,7 @@ describe("Shared claims page behavior", () => {
         const event = { preventDefault: jest.fn() };
         wrapper.find("QuestionPage").simulate("save", event);
 
-        expect(appLogic.updateClaim).toHaveBeenCalledWith(
+        expect(appLogic.claims.update).toHaveBeenCalledWith(
           expect.any(String),
           expect.any(Object)
         );

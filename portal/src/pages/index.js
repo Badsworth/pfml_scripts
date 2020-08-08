@@ -19,7 +19,7 @@ const Index = (props) => {
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-    await appLogic.createClaim();
+    await appLogic.claims.create();
   };
 
   return (

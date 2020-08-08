@@ -33,7 +33,7 @@ const EmployerBenefitDetails = (props) => {
   const employer_benefits = get(formState, "employer_benefits");
 
   const handleSave = () => {
-    return props.appLogic.updateClaim(props.claim.application_id, formState);
+    return props.appLogic.claims.update(props.claim.application_id, formState);
   };
 
   const handleAddClick = () => {

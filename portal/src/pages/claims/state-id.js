@@ -13,8 +13,11 @@ import withClaim from "../../hoc/withClaim";
 
 const StateId = (props) => {
   const { t } = useTranslation();
-  const { user, updateUser } = props.appLogic;
+  const {
+    users: { user, updateUser },
+  } = props.appLogic;
   const { formState, getField, updateFields, removeField } = useFormState(user);
+
   const { has_state_id, state_id } = formState;
   const handleInputChange = useHandleInputChange(updateFields);
 

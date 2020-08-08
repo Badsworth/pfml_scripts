@@ -106,8 +106,11 @@ export const renderWithAppLogic = (PageComponent, options = {}) => {
     application_id: "mock_application_id",
     ...options.claimAttrs,
   });
-  appLogic.claims = new ClaimCollection([claim]);
-  appLogic.user = new User({ user_id: "mock_user_id", ...options.userAttrs });
+  appLogic.claims.claims = new ClaimCollection([claim]);
+  appLogic.users.user = new User({
+    user_id: "mock_user_id",
+    ...options.userAttrs,
+  });
 
   // Render the withClaim-wrapped page
   const component = (

@@ -79,14 +79,14 @@ describe("PaymentMethod", () => {
   });
 
   describe("when user clicks continue", () => {
-    it("calls updateClaim", () => {
+    it("calls claims.update", () => {
       ({ appLogic, claim, wrapper } = renderWithAppLogic(PaymentMethod));
 
       act(() => {
         wrapper.find("QuestionPage").simulate("save");
       });
 
-      expect(appLogic.updateClaim).toHaveBeenCalledWith(
+      expect(appLogic.claims.update).toHaveBeenCalledWith(
         claim.application_id,
         expect.any(Object)
       );

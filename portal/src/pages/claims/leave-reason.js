@@ -20,7 +20,7 @@ const LeaveReasonPage = (props) => {
   const handleInputChange = useHandleInputChange(updateFields);
 
   const handleSave = () =>
-    props.appLogic.updateClaim(props.claim.application_id, formState);
+    props.appLogic.claims.update(props.claim.application_id, formState);
 
   return (
     <QuestionPage

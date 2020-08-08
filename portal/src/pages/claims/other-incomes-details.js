@@ -30,7 +30,7 @@ export const OtherIncomesDetails = (props) => {
   const other_incomes = get(formState, "other_incomes");
 
   const handleSave = () => {
-    return props.appLogic.updateClaim(props.claim.application_id, formState);
+    return props.appLogic.claims.update(props.claim.application_id, formState);
   };
 
   const handleAddClick = () => {

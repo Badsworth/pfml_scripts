@@ -35,14 +35,14 @@ describe("EmploymentStatusPage", () => {
     });
 
     describe("when user clicks continue", () => {
-      it("calls updateClaim", () => {
+      it("calls claims.update", () => {
         const testFein = 987654;
         changeField("employer_fein", testFein);
         act(() => {
           wrapper.find("QuestionPage").simulate("save");
         });
 
-        expect(appLogic.updateClaim).toHaveBeenCalledWith(
+        expect(appLogic.claims.update).toHaveBeenCalledWith(
           claim.application_id,
           {
             employment_status: EmploymentStatus.employed,

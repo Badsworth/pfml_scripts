@@ -23,12 +23,12 @@ describe("Index", () => {
 
   describe("when Create Application form is submitted", () => {
     it("creates a new claim", async () => {
-      jest.spyOn(appLogic, "createClaim").mockResolvedValueOnce();
+      jest.spyOn(appLogic.claims, "create").mockResolvedValueOnce();
       const { submitForm } = simulateEvents(wrapper);
 
       submitForm();
 
-      expect(appLogic.createClaim).toHaveBeenCalled();
+      expect(appLogic.claims.create).toHaveBeenCalled();
     });
   });
 });

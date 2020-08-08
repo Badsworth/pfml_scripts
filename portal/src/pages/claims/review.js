@@ -79,7 +79,7 @@ const Review = (props) => {
         *********
       </ReviewRow>
 
-      {appLogic.user.has_state_id && (
+      {appLogic.users.user.has_state_id && (
         <ReviewRow label={t("pages.claimsReview.userStateIdLabel")}>
           *********
         </ReviewRow>

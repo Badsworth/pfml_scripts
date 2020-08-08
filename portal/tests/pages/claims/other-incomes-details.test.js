@@ -27,12 +27,12 @@ describe("OtherIncomesDetails", () => {
     });
 
     describe("when user clicks continue", () => {
-      it("calls updateClaim", () => {
+      it("calls claims.update", () => {
         act(() => {
           wrapper.find(QuestionPage).simulate("save");
         });
 
-        expect(appLogic.updateClaim).toHaveBeenCalledWith(
+        expect(appLogic.claims.update).toHaveBeenCalledWith(
           claim.application_id,
           {
             other_incomes: claim.other_incomes,
@@ -48,7 +48,7 @@ describe("OtherIncomesDetails", () => {
           wrapper.find(QuestionPage).simulate("save");
         });
 
-        expect(appLogic.updateClaim).toHaveBeenCalledWith(
+        expect(appLogic.claims.update).toHaveBeenCalledWith(
           claim.application_id,
           {
             other_incomes: [...claim.other_incomes, new OtherIncome()],
@@ -67,7 +67,7 @@ describe("OtherIncomesDetails", () => {
             .simulate("removeClick");
           wrapper.find(QuestionPage).simulate("save");
         });
-        expect(appLogic.updateClaim).toHaveBeenCalledWith(
+        expect(appLogic.claims.update).toHaveBeenCalledWith(
           claim.application_id,
           {
             other_incomes: [],

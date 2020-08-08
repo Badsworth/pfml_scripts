@@ -23,7 +23,7 @@ const Ssn = (props) => {
   const handleInputChange = useHandleInputChange(updateFields);
 
   const handleSave = () =>
-    appLogic.updateClaim(claim.application_id, formState);
+    appLogic.claims.update(claim.application_id, formState);
 
   return (
     <QuestionPage title={t("pages.claimsSsn.title")} onSave={handleSave}>

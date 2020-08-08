@@ -17,14 +17,15 @@ const Applications = (props) => {
   const router = useRouter();
 
   useEffect(() => {
-    appLogic.loadClaims();
+    appLogic.claims.load();
   });
 
-  const claimsLoaded = !!appLogic.claims;
-  const hasClaims = claimsLoaded && appLogic.claims.items.length > 0;
+  const claimsLoaded = !!appLogic.claims.claims;
+  const hasClaims = claimsLoaded && appLogic.claims.claims.items.length > 0;
   const hasInProgressClaims =
-    hasClaims && appLogic.claims.inProgress.length > 0;
-  const hasSubmittedClaims = hasClaims && appLogic.claims.submitted.length > 0;
+    hasClaims && appLogic.claims.claims.inProgress.length > 0;
+  const hasSubmittedClaims =
+    hasClaims && appLogic.claims.claims.submitted.length > 0;
 
   return (
     <React.Fragment>
@@ -44,7 +45,7 @@ const Applications = (props) => {
           <Heading level="2" size="1">
             {t("pages.applications.inProgressHeading")}
           </Heading>
-          {appLogic.claims.inProgress.map((claim, index) => (
+          {appLogic.claims.claims.inProgress.map((claim, index) => (
             <ApplicationCard
               key={claim.application_id}
               claim={claim}
@@ -59,11 +60,11 @@ const Applications = (props) => {
           <Heading level="2" size="1">
             {t("pages.applications.submittedHeading")}
           </Heading>
-          {appLogic.claims.submitted.map((claim, index) => (
+          {appLogic.claims.claims.submitted.map((claim, index) => (
             <ApplicationCard
               key={claim.application_id}
               claim={claim}
-              number={appLogic.claims.inProgress.length + index + 1}
+              number={appLogic.claims.claims.inProgress.length + index + 1}
             />
           ))}
         </React.Fragment>

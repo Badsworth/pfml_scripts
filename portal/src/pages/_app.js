@@ -152,7 +152,7 @@ export const App = ({
     // Only trigger this effect when the user is set/updated
     // or when the user attempts to navigate to another page
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [appLogic.user, router.pathname]);
+  }, [appLogic.users.user, router.pathname]);
 
   /**
    * Render the page body based on the current state of the application
@@ -189,7 +189,7 @@ export const App = ({
       <div className="l-container">
         <div>
           {/* Wrap header children in a div because its parent is a flex container */}
-          <Header user={appLogic.user} onLogout={appLogic.auth.logout} />
+          <Header user={appLogic.users.user} onLogout={appLogic.auth.logout} />
         </div>
         <main
           id="main"

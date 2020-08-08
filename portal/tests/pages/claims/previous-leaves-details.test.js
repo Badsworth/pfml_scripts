@@ -27,12 +27,12 @@ describe("PreviousLeavesDetails", () => {
     });
 
     describe("when user clicks continue", () => {
-      it("calls updateClaim", () => {
+      it("calls claims.update", () => {
         act(() => {
           wrapper.find(QuestionPage).simulate("save");
         });
 
-        expect(appLogic.updateClaim).toHaveBeenCalledWith(
+        expect(appLogic.claims.update).toHaveBeenCalledWith(
           claim.application_id,
           {
             previous_leaves: claim.previous_leaves,
@@ -48,7 +48,7 @@ describe("PreviousLeavesDetails", () => {
           wrapper.find(QuestionPage).simulate("save");
         });
 
-        expect(appLogic.updateClaim).toHaveBeenCalledWith(
+        expect(appLogic.claims.update).toHaveBeenCalledWith(
           claim.application_id,
           {
             previous_leaves: [...claim.previous_leaves, new PreviousLeave()],
@@ -67,7 +67,7 @@ describe("PreviousLeavesDetails", () => {
             .simulate("removeClick");
           wrapper.find(QuestionPage).simulate("save");
         });
-        expect(appLogic.updateClaim).toHaveBeenCalledWith(
+        expect(appLogic.claims.update).toHaveBeenCalledWith(
           claim.application_id,
           {
             previous_leaves: [],

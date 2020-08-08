@@ -27,7 +27,7 @@ const EmploymentStatusPage = (props) => {
   const handleInputChange = useHandleInputChange(updateFields);
 
   const handleSave = () => {
-    appLogic.updateClaim(claim.application_id, formState);
+    appLogic.claims.update(claim.application_id, formState);
   };
 
   return (
@@ -81,7 +81,9 @@ const EmploymentStatusPage = (props) => {
 EmploymentStatusPage.propTypes = {
   claim: PropTypes.instanceOf(Claim).isRequired,
   appLogic: PropTypes.shape({
-    updateClaim: PropTypes.func.isRequired,
+    claims: {
+      update: PropTypes.func.isRequired,
+    },
   }).isRequired,
   query: PropTypes.shape({
     claim_id: PropTypes.string,

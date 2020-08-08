@@ -33,7 +33,7 @@ const NotifiedEmployer = (props) => {
   const handleInputChange = useHandleInputChange(updateFields);
 
   const handleSave = () => {
-    appLogic.updateClaim(claim.application_id, formState);
+    appLogic.claims.update(claim.application_id, formState);
   };
 
   return (

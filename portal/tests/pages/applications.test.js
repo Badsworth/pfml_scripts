@@ -15,12 +15,12 @@ describe("Applications", () => {
       appLogic = useAppLogic({ user: new User() });
     });
 
-    jest.spyOn(appLogic, "loadClaims").mockResolvedValue();
+    jest.spyOn(appLogic.claims, "load").mockResolvedValue();
   });
 
   describe("when claims haven't been loaded yet", () => {
     beforeEach(() => {
-      appLogic.claims = null;
+      appLogic.claims.claims = null;
 
       wrapper = shallow(<Applications appLogic={appLogic} />);
     });
@@ -32,7 +32,7 @@ describe("Applications", () => {
 
   describe("when no claims exist", () => {
     beforeEach(() => {
-      appLogic.claims = new ClaimCollection([]);
+      appLogic.claims.claims = new ClaimCollection([]);
 
       wrapper = shallow(<Applications appLogic={appLogic} />);
     });
@@ -44,7 +44,7 @@ describe("Applications", () => {
 
   describe("when applications have been started", () => {
     beforeEach(() => {
-      appLogic.claims = new ClaimCollection([
+      appLogic.claims.claims = new ClaimCollection([
         new Claim({
           application_id: "mock_claim_id",
           status: ClaimStatus.started,
@@ -76,7 +76,7 @@ describe("Applications", () => {
 
   describe("when applications have been submitted", () => {
     beforeEach(() => {
-      appLogic.claims = new ClaimCollection([
+      appLogic.claims.claims = new ClaimCollection([
         new Claim({
           application_id: "mock_claim_id",
           status: ClaimStatus.submitted,
@@ -108,7 +108,7 @@ describe("Applications", () => {
 
   describe("when in progress and completed applications both exist", () => {
     beforeEach(() => {
-      appLogic.claims = new ClaimCollection([
+      appLogic.claims.claims = new ClaimCollection([
         new Claim({
           application_id: "mock_claim_id",
           status: ClaimStatus.started,

@@ -16,13 +16,16 @@ describe("PreviousLeaves", () => {
   });
 
   describe("when user clicks continue", () => {
-    it("calls updateClaim", () => {
+    it("calls claims.update", () => {
       act(() => {
         wrapper.find("QuestionPage").simulate("save");
       });
-      expect(appLogic.updateClaim).toHaveBeenCalledWith(claim.application_id, {
-        has_previous_leaves: claim.has_previous_leaves,
-      });
+      expect(appLogic.claims.update).toHaveBeenCalledWith(
+        claim.application_id,
+        {
+          has_previous_leaves: claim.has_previous_leaves,
+        }
+      );
     });
   });
 });

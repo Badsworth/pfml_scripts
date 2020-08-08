@@ -13,7 +13,7 @@ const Confirm = (props) => {
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-    await props.appLogic.submitClaim(claim.application_id);
+    await props.appLogic.claims.submit(claim.application_id);
   };
 
   return (

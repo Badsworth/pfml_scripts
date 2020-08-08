@@ -33,12 +33,12 @@ describe("EmployerBenefitDetails", () => {
     });
 
     describe("when user clicks continue", () => {
-      it("calls updateClaim", () => {
+      it("calls claims.update", () => {
         act(() => {
           wrapper.find("QuestionPage").simulate("save");
         });
 
-        expect(appLogic.updateClaim).toHaveBeenCalledWith(
+        expect(appLogic.claims.update).toHaveBeenCalledWith(
           claim.application_id,
           {
             employer_benefits: claim.employer_benefits,
@@ -53,7 +53,7 @@ describe("EmployerBenefitDetails", () => {
           wrapper.find("RepeatableFieldset").simulate("addClick");
           wrapper.find("QuestionPage").simulate("save");
         });
-        expect(appLogic.updateClaim).toHaveBeenCalledWith(
+        expect(appLogic.claims.update).toHaveBeenCalledWith(
           claim.application_id,
           {
             employer_benefits: [
@@ -75,7 +75,7 @@ describe("EmployerBenefitDetails", () => {
             .simulate("removeClick");
           wrapper.find("QuestionPage").simulate("save");
         });
-        expect(appLogic.updateClaim).toHaveBeenCalledWith(
+        expect(appLogic.claims.update).toHaveBeenCalledWith(
           claim.application_id,
           {
             employer_benefits: [],

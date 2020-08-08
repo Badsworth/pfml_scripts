@@ -19,10 +19,10 @@ describe("AverageWorkHours", () => {
   });
 
   describe("when the form is successfully submitted", () => {
-    it("calls updateClaim", () => {
+    it("calls claims.update", () => {
       wrapper.find("QuestionPage").simulate("save");
 
-      expect(appLogic.updateClaim).toHaveBeenCalledTimes(1);
+      expect(appLogic.claims.update).toHaveBeenCalledTimes(1);
     });
   });
 });

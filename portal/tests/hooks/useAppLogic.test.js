@@ -8,15 +8,9 @@ describe("useAppLogic", () => {
       auth,
       claims,
       clearErrors,
-      createClaim,
       goToNextPage,
-      loadClaims,
       rest,
       setAppErrors,
-      submitClaim,
-      updateClaim,
-      updateUser,
-      user,
       users;
 
     testHook(() => {
@@ -25,14 +19,8 @@ describe("useAppLogic", () => {
         auth,
         claims,
         clearErrors,
-        createClaim,
         goToNextPage,
-        loadClaims,
         setAppErrors,
-        submitClaim,
-        updateClaim,
-        updateUser,
-        user,
         users,
         ...rest
       } = useAppLogic());
@@ -41,16 +29,16 @@ describe("useAppLogic", () => {
     expect(appErrors).toBeInstanceOf(AppErrorInfoCollection);
     expect(appErrors.items).toHaveLength(0);
     expect(auth).toEqual(expect.anything());
-    expect(claims).toBeNull();
+    expect(claims.claims).toBeNull();
     expect(clearErrors).toBeInstanceOf(Function);
     expect(goToNextPage).toBeInstanceOf(Function);
-    expect(loadClaims).toBeInstanceOf(Function);
-    expect(createClaim).toBeInstanceOf(Function);
-    expect(updateClaim).toBeInstanceOf(Function);
-    expect(updateUser).toBeInstanceOf(Function);
+    expect(claims.load).toBeInstanceOf(Function);
+    expect(claims.create).toBeInstanceOf(Function);
+    expect(claims.update).toBeInstanceOf(Function);
+    expect(users.updateUser).toBeInstanceOf(Function);
     expect(setAppErrors).toBeInstanceOf(Function);
-    expect(submitClaim).toBeInstanceOf(Function);
-    expect(user).toBeUndefined();
+    expect(claims.submit).toBeInstanceOf(Function);
+    expect(users.user).toBeUndefined();
     expect(users).toEqual(expect.anything());
     // there should be no other properties;
     expect(rest).toEqual({});

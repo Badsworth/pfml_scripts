@@ -41,10 +41,15 @@ describe("LeaveDates", () => {
       render();
       fillFormAndSave();
 
-      expect(appLogic.updateClaim).toHaveBeenCalledWith(claim.application_id, {
-        leave_details: { continuous_leave_periods: [{ end_date, start_date }] },
-        temp: { leave_details: { end_date, start_date } },
-      });
+      expect(appLogic.claims.update).toHaveBeenCalledWith(
+        claim.application_id,
+        {
+          leave_details: {
+            continuous_leave_periods: [{ end_date, start_date }],
+          },
+          temp: { leave_details: { end_date, start_date } },
+        }
+      );
     });
 
     it("sends intermittent leave dates to the api", () => {
@@ -52,12 +57,15 @@ describe("LeaveDates", () => {
       render();
       fillFormAndSave();
 
-      expect(appLogic.updateClaim).toHaveBeenCalledWith(claim.application_id, {
-        leave_details: {
-          intermittent_leave_periods: [{ end_date, start_date }],
-        },
-        temp: { leave_details: { end_date, start_date } },
-      });
+      expect(appLogic.claims.update).toHaveBeenCalledWith(
+        claim.application_id,
+        {
+          leave_details: {
+            intermittent_leave_periods: [{ end_date, start_date }],
+          },
+          temp: { leave_details: { end_date, start_date } },
+        }
+      );
     });
 
     it("sends reduced schedule leave dates to the api", () => {
@@ -65,12 +73,15 @@ describe("LeaveDates", () => {
       render();
       fillFormAndSave();
 
-      expect(appLogic.updateClaim).toHaveBeenCalledWith(claim.application_id, {
-        leave_details: {
-          reduced_schedule_leave_periods: [{ end_date, start_date }],
-        },
-        temp: { leave_details: { end_date, start_date } },
-      });
+      expect(appLogic.claims.update).toHaveBeenCalledWith(
+        claim.application_id,
+        {
+          leave_details: {
+            reduced_schedule_leave_periods: [{ end_date, start_date }],
+          },
+          temp: { leave_details: { end_date, start_date } },
+        }
+      );
     });
 
     it("sends multiple leave schedule leave dates to the api", () => {
@@ -82,14 +93,17 @@ describe("LeaveDates", () => {
       render();
       fillFormAndSave();
 
-      expect(appLogic.updateClaim).toHaveBeenCalledWith(claim.application_id, {
-        leave_details: {
-          continuous_leave_periods: [{ end_date, start_date }],
-          intermittent_leave_periods: [{ end_date, start_date }],
-          reduced_schedule_leave_periods: [{ end_date, start_date }],
-        },
-        temp: { leave_details: { end_date, start_date } },
-      });
+      expect(appLogic.claims.update).toHaveBeenCalledWith(
+        claim.application_id,
+        {
+          leave_details: {
+            continuous_leave_periods: [{ end_date, start_date }],
+            intermittent_leave_periods: [{ end_date, start_date }],
+            reduced_schedule_leave_periods: [{ end_date, start_date }],
+          },
+          temp: { leave_details: { end_date, start_date } },
+        }
+      );
     });
   });
 });

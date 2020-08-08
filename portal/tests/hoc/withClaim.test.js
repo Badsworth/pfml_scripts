@@ -10,7 +10,7 @@ jest.mock("../../src/hooks/useAppLogic");
 describe("WithClaim", () => {
   it("Shows spinner when claims are not loaded", () => {
     const appLogic = useAppLogic();
-    appLogic.claims = null;
+    appLogic.claims.claims = null;
 
     const PageComponent = (props) => <div />;
 
@@ -33,7 +33,7 @@ describe("WithClaim", () => {
 
   it("Shows spinner when user is not loaded", () => {
     const appLogic = useAppLogic();
-    appLogic.claims = null;
+    appLogic.claims.claims = null;
 
     const PageComponent = (props) => <div />;
 
@@ -60,8 +60,8 @@ describe("WithClaim", () => {
     const id = "12345";
     const claim = new Claim({ application_id: id });
     const appLogic = useAppLogic();
-    appLogic.claims = appLogic.claims.addItem(claim);
-    appLogic.user = new User();
+    appLogic.claims.claims = appLogic.claims.claims.addItem(claim);
+    appLogic.users.user = new User();
 
     // define component that needs a claim prop
     // eslint-disable-next-line react/prop-types
@@ -79,6 +79,6 @@ describe("WithClaim", () => {
 
     const pageComponent = wrapper.find("PageComponent");
     expect(pageComponent.prop("claim")).toEqual(claim);
-    expect(appLogic.loadClaims).toHaveBeenCalledTimes(1);
+    expect(appLogic.claims.load).toHaveBeenCalledTimes(1);
   });
 });

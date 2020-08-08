@@ -78,7 +78,7 @@ describe("Duration", () => {
   });
 
   describe("when user clicks continue", () => {
-    it("calls updateClaim", () => {
+    it("calls claims.update", () => {
       const claimAttrs = {
         leave_details: {
           intermittent_leave_periods: [new IntermittentLeavePeriod()],
@@ -94,7 +94,7 @@ describe("Duration", () => {
       const { wrapper, appLogic, claim } = renderWithAppLogic(Duration, {
         claimAttrs,
       });
-      const updateClaimSpy = jest.spyOn(appLogic, "updateClaim");
+      const updateClaimSpy = jest.spyOn(appLogic.claims, "update");
 
       act(() => {
         wrapper.find("QuestionPage").simulate("save");

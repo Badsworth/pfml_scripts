@@ -25,7 +25,7 @@ const useClaimsLogic = ({ appErrorsLogic, portalFlow, user }) => {
    * This must be called before claims are available
    * @param {boolean} [forceReload] Whether or not to force a reload of the claims from the API even if the claims have already been loaded. Defaults to false.
    */
-  const loadClaims = async (forceReload = false) => {
+  const load = async (forceReload = false) => {
     if (!user) return;
     if (claims && !forceReload) return;
     if (isLoadingClaims) return;
@@ -48,7 +48,7 @@ const useClaimsLogic = ({ appErrorsLogic, portalFlow, user }) => {
    * @param {string} application_id - application id for claim
    * @param {object} patchData - subset of claim data that will be updated
    */
-  const updateClaim = async (application_id, patchData) => {
+  const update = async (application_id, patchData) => {
     if (!user) return;
     try {
       let { claim } = await claimsApi.updateClaim(application_id, patchData);
@@ -74,7 +74,7 @@ const useClaimsLogic = ({ appErrorsLogic, portalFlow, user }) => {
    * Create the claim in the API. Handles errors and routing.
    * @returns {Promise}
    */
-  const createClaim = async () => {
+  const create = async () => {
     if (!user) return;
     appErrorsLogic.clearErrors();
 
@@ -83,12 +83,12 @@ const useClaimsLogic = ({ appErrorsLogic, portalFlow, user }) => {
 
       if (success) {
         if (!claims) {
-          await loadClaims();
+          await load();
         } else {
           // The API currently doesn't return the claim in POST /applications, so for now just reload all the claims
           // TODO: Remove this workaround and use `addClaim(claim)` instead: https://lwd.atlassian.net/browse/CP-701
           // addClaim(claim);
-          await loadClaims(true);
+          await load(true);
         }
 
         const context = { claim, user };
@@ -104,7 +104,7 @@ const useClaimsLogic = ({ appErrorsLogic, portalFlow, user }) => {
    * Submit the claim in the API and set application errors if any
    * @param {string} application_id - application id for claim
    */
-  const submitClaim = async (application_id) => {
+  const submit = async (application_id) => {
     if (!user) return;
     appErrorsLogic.clearErrors();
 
@@ -138,10 +138,10 @@ const useClaimsLogic = ({ appErrorsLogic, portalFlow, user }) => {
 
   return {
     claims,
-    loadClaims,
-    createClaim,
-    updateClaim,
-    submitClaim,
+    load,
+    create,
+    update,
+    submit,
     setClaims,
   };
 };

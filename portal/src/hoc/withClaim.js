@@ -16,10 +16,12 @@ const withClaim = (Component) => {
     const { query, appLogic } = props;
 
     useEffect(() => {
-      appLogic.loadClaims();
+      appLogic.claims.load();
     });
 
-    const claim = appLogic.claims ? appLogic.claims.get(query.claim_id) : null;
+    const claim = appLogic.claims.claims
+      ? appLogic.claims.claims.get(query.claim_id)
+      : null;
 
     if (!claim)
       return (
