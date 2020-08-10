@@ -88,6 +88,56 @@ data "aws_iam_policy_document" "task_executor" {
   }
 }
 
+data "aws_iam_policy_document" "document_upload_kms_key" {
+  # Allow read/write with KMS key
+  statement {
+    sid = "AllowReadWriteForApiService"
+
+    actions = [
+      "kms:Encrypt",
+      "kms:GenerateDataKey*",
+      "kms:DescribeKey"
+    ]
+
+    effect    = "Allow"
+    resources = ["*"]
+
+    condition {
+      test     = "StringLike"
+      variable = "aws:userId"
+
+      values = [
+        "${aws_iam_role.api_service.unique_id}:*"
+      ]
+    }
+
+    principals {
+      type        = "AWS"
+      identifiers = ["*"]
+    }
+  }
+
+  statement {
+    sid = "AllowAllForAdmins"
+
+    actions = [
+      "kms:*",
+    ]
+
+    effect    = "Allow"
+    resources = ["*"]
+
+    principals {
+      type = "AWS"
+      identifiers = [
+        "arn:aws:iam::498823821309:role/AWS-498823821309-CloudOps-Engineer",
+        "arn:aws:iam::498823821309:role/AWS-498823821309-Infrastructure-Admin",
+        "arn:aws:iam::498823821309:role/ci-run-deploys",
+      ]
+    }
+  }
+
+}
 # Link access policies to the ECS task execution role.
 resource "aws_iam_role_policy" "task_executor" {
   name   = "${local.app_name}-${var.environment_name}-task-execution-role-policy"
@@ -254,6 +304,63 @@ data "aws_iam_policy_document" "document_upload" {
     principals {
       type        = "AWS"
       identifiers = [aws_iam_role.api_service.arn]
+    }
+  }
+
+  statement {
+    sid    = "DenyIncorrectEncryptionHeader"
+    effect = "Deny"
+
+    principals {
+      type        = "AWS"
+      identifiers = ["*"]
+    }
+
+    actions   = ["s3:PutObject"]
+    resources = ["arn:aws:s3:::massgov-pfml-${var.environment_name}-document/*"]
+
+    condition {
+      test     = "StringNotEquals"
+      variable = "s3:x-amz-server-side-encryption"
+      values   = ["aws:kms"]
+    }
+  }
+
+  statement {
+    sid    = "DenyIncorrectIdProofingKey"
+    effect = "Deny"
+
+    principals {
+      type        = "AWS"
+      identifiers = ["*"]
+    }
+
+    actions   = ["s3:PutObject"]
+    resources = ["arn:aws:s3:::massgov-pfml-${var.environment_name}-document/identity_proofing/*"]
+
+    condition {
+      test     = "StringNotLikeIfExists"
+      variable = "s3:x-amz-server-side-encryption-aws-kms-key-id"
+      values   = [aws_kms_key.id_proofing_document_upload_kms_key.arn]
+    }
+  }
+
+  statement {
+    sid    = "DenyIncorrectCertificationKey"
+    effect = "Deny"
+
+    principals {
+      type        = "AWS"
+      identifiers = ["*"]
+    }
+
+    actions   = ["s3:PutObject"]
+    resources = ["arn:aws:s3:::massgov-pfml-${var.environment_name}-document/certification/*"]
+
+    condition {
+      test     = "StringNotLikeIfExists"
+      variable = "s3:x-amz-server-side-encryption-aws-kms-key-id"
+      values   = [aws_kms_key.certification_document_upload_kms_key.arn]
     }
   }
 
