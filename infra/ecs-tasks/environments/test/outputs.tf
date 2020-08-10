@@ -6,10 +6,6 @@ output "security_groups" {
   value = module.tasks.security_groups
 }
 
-output "migrate_up_task_arn" {
-  value = module.tasks.migrate_up_task_arn
-}
-
-output "create_db_users_task_arn" {
-  value = module.tasks.create_db_users_task_arn
+output "ecs_task_arns" {
+  value = module.tasks.ecs_task_arns
 }

@@ -1,10 +1,8 @@
 [
   {
-    "name": "${app_name}-migrate-up",
+    "name": "${app_name}",
     "image": "${docker_image}",
-    "command": [
-      "db-migrate-up"
-    ],
+    "command": ${command},
     "cpu": ${cpu},
     "memory": ${memory},
     "networkMode": "awsvpc",

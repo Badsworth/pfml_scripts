@@ -8,16 +8,17 @@ set -eo pipefail
 DIR=$(dirname "${BASH_SOURCE[0]}")
 
 ENV_NAME=$1
+TASK_NAME=$2
 
 if ! [ -z "$CI" ]; then
     AUTHOR=github-actions
 else
-    AUTHOR=$2
+    AUTHOR=$3
 fi
 
-if [ -z "$ENV_NAME" ] || [ -z "$AUTHOR" ]; then
-    echo "Usage: ./migrate.sh ENV_NAME [AUTHOR]"
-    echo "ex: ./migrate.sh test first_name.last_name"
+if [ -z "$ENV_NAME" ] || [ -z "$TASK_NAME" ] || [ -z "$AUTHOR" ]; then
+    echo "Usage: ./run-task.sh ENV_NAME TASK_NAME [AUTHOR]"
+    echo "ex: ./run-task.sh test db-migrate-up first_name.last_name"
     exit 1
 fi
 
@@ -32,7 +33,7 @@ NETWORK_CONFIG=$(jq \
      .awsvpcConfiguration.securityGroups=$SECURITY_GROUPS' \
     $DIR/network_config.json.tpl)
 
-TASK_DEFINITION=$(echo $TF_OUTPUTS | jq .migrate_up_task_arn.value | cut -d'/' -f2 | sed -e 's/^"//' -e 's/"$//')
+TASK_DEFINITION=$(echo $TF_OUTPUTS | jq ".ecs_task_arns.value.\"pfml-api-$TASK_NAME\"" | cut -d'/' -f2 | sed -e 's/^"//' -e 's/"$//')
 
 echo "Running $TASK_DEFINITION..."
 
@@ -57,12 +58,12 @@ EXIT_STATUS=$(aws ecs describe-tasks --cluster $ENV_NAME --task $TASK_ARN | jq -
 if [ $EXIT_STATUS -ne 0 ]
 then
 
-  echo "Migration ran into an error. Please check cloudwatch logs." >&2
+  echo "ECS task ran into an error. Please check cloudwatch logs." >&2
   exit 1
 
 else
 
-  echo "Migration completed successfully."
+  echo "ECS task completed successfully."
   exit 0
 
 fi
