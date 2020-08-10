@@ -1,4 +1,5 @@
 import csv
+import os
 from datetime import date
 
 import pytest
@@ -29,10 +30,16 @@ def address_model(initialize_factories_session, geo_state_lookup):
     return AddressFactory.create(geo_state=geo_state_lookup)
 
 
-def test_employee_to_eligibility_feed_record(test_db_session, initialize_factories_session):
-    wages_and_contributions = WagesAndContributionsFactory.create()
-    employee = wages_and_contributions.employee
-    employer = wages_and_contributions.employer
+def test_employee_to_eligibility_feed_record(initialize_factories_session):
+    employee = EmployeeFactory.create()
+    employer = EmployerFactory.create()
+    wages_and_contributions = WagesAndContributionsFactory.create_batch(
+        size=5, employee=employee, employer=employer
+    )
+
+    most_recent_wages = sorted(
+        wages_and_contributions, key=lambda w: w.filing_period, reverse=True
+    )[0]
 
     eligibility_feed_record = ef.employee_to_eligibility_feed_record(employee, employer)
 
@@ -40,10 +47,8 @@ def test_employee_to_eligibility_feed_record(test_db_session, initialize_factori
     assert eligibility_feed_record.employeeIdentifier == employee.employee_id
     assert eligibility_feed_record.employeeFirstName == employee.first_name
     assert eligibility_feed_record.employeeLastName == employee.last_name
-    assert (
-        eligibility_feed_record.employeeEffectiveFromDate == wages_and_contributions.filing_period
-    )
-    assert eligibility_feed_record.employeeSalary == wages_and_contributions.employee_ytd_wages
+    assert eligibility_feed_record.employeeEffectiveFromDate == most_recent_wages.filing_period
+    assert eligibility_feed_record.employeeSalary == most_recent_wages.employee_ytd_wages
     assert eligibility_feed_record.employeeEarningFrequency == ef.EarningFrequency.yearly
     assert eligibility_feed_record.employeeDateOfBirth == ef.DEFAULT_DATE
 
@@ -312,6 +317,22 @@ def test_write_employees_to_csv(
                 assert actual == expected
 
 
+def assert_number_of_data_lines_in_file(f, num_data_lines):
+    number_of_lines = sum(1 for line in f)
+
+    # datablock lines + csv header line + data rows
+    expected_number_of_lines = 3 + 1 + num_data_lines
+
+    assert number_of_lines == expected_number_of_lines
+
+
+def assert_number_of_data_lines_in_each_file(directory, num_data_lines):
+    with os.scandir(directory) as dir_iterator:
+        for dir_entry in dir_iterator:
+            with open(dir_entry.path) as f:
+                assert_number_of_data_lines_in_file(f, num_data_lines)
+
+
 def test_process_updates_simple(test_db_session, tmp_path, initialize_factories_session):
     WagesAndContributionsFactory.create()
 
@@ -320,15 +341,48 @@ def test_process_updates_simple(test_db_session, tmp_path, initialize_factories_
     assert process_results.employers_total_count == 1
     assert process_results.employee_and_employer_pairs_total_count == 1
 
+    assert_number_of_data_lines_in_each_file(tmp_path, 1)
 
-def test_process_updates_multiple(test_db_session, tmp_path, initialize_factories_session):
+
+def test_process_updates_for_single_employee_different_employers(
+    test_db_session, tmp_path, initialize_factories_session
+):
     # wages_for_single_employee_different_employers
     WagesAndContributionsFactory.create_batch(size=5, employee=EmployeeFactory.create())
 
+    process_results = ef.process_updates(test_db_session, tmp_path)
+
+    assert process_results.employers_total_count == 5
+    assert process_results.employee_and_employer_pairs_total_count == 5
+
+    assert_number_of_data_lines_in_each_file(tmp_path, 1)
+
+
+def test_process_updates_for_single_employer_different_employees(
+    test_db_session, tmp_path, initialize_factories_session
+):
     # wages_for_single_employer_different_employees
     WagesAndContributionsFactory.create_batch(size=5, employer=EmployerFactory.create())
 
     process_results = ef.process_updates(test_db_session, tmp_path)
 
-    assert process_results.employers_total_count == 6
-    assert process_results.employee_and_employer_pairs_total_count == 10
+    assert process_results.employers_total_count == 1
+    assert process_results.employee_and_employer_pairs_total_count == 5
+
+    assert_number_of_data_lines_in_each_file(tmp_path, 5)
+
+
+def test_process_updates_for_multiple_wages_for_single_employee_employer_pair(
+    test_db_session, tmp_path, initialize_factories_session
+):
+    # multiple_wages_for_single_employee_employer_pair
+    WagesAndContributionsFactory.create_batch(
+        size=5, employee=EmployeeFactory.create(), employer=EmployerFactory.create()
+    )
+
+    process_results = ef.process_updates(test_db_session, tmp_path)
+
+    assert process_results.employers_total_count == 1
+    assert process_results.employee_and_employer_pairs_total_count == 1
+
+    assert_number_of_data_lines_in_each_file(tmp_path, 1)

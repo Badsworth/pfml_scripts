@@ -7,7 +7,6 @@ from enum import Enum
 from typing import Iterable, Optional, TextIO, TypeVar, Union
 
 import smart_open
-from sqlalchemy import func
 from sqlalchemy.orm import Query
 
 import massgov.pfml.db as db
@@ -187,6 +186,8 @@ def query_employees_for_employer(query: "Query[_T]", employer: Employer) -> "Que
         query.select_from(WagesAndContributions)
         .join(WagesAndContributions.employee)
         .filter(WagesAndContributions.employer_id == employer.employer_id)
+        .group_by(Employee.employee_id)
+        .distinct(Employee.employee_id)
     )
 
 
@@ -206,8 +207,8 @@ def process_updates(db_session: db.Session, output_dir_path: str) -> ProcessUpda
         employers_total_count += 1
 
         number_of_employees = query_employees_for_employer(
-            db_session.query(func.count(Employee.employee_id)), employer
-        ).scalar()
+            db_session.query(Employee.employee_id), employer
+        ).count()
 
         # TODO: use result of write_employees_to_csv instead?
         employee_and_employer_pairs_total_count += number_of_employees
