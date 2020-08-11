@@ -19,6 +19,7 @@ LOGGING = {
     "loggers": {
         "alembic": {"handlers": ["console"], "level": "INFO", "propagate": False},
         "massgov.pfml": {"handlers": ["console"], "level": "INFO", "propagate": False},
+        "massgov.pfml.fineos": {"handlers": ["console"], "level": "DEBUG", "propagate": False},
         "werkzeug": {"handlers": ["console"], "level": "WARN", "propagate": False},
     },
 }
