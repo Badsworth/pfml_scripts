@@ -34,6 +34,7 @@ function DashboardNavigation(props) {
       {links.map((link, index) => (
         <Link key={link.href} href={link.href}>
           <a
+            aria-current={isActive(link) ? "page" : undefined}
             className={classnames(
               "display-inline-block padding-y-2 margin-bottom-neg-1px text-no-underline",
               {
