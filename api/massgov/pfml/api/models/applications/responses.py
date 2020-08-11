@@ -16,6 +16,7 @@ from massgov.pfml.api.models.applications.common import (
 )
 from massgov.pfml.db.models.applications import Application, ApplicationPaymentPreference
 from massgov.pfml.util.pydantic import PydanticBaseModel
+from massgov.pfml.util.pydantic.types import MaskedMassIdStr
 
 
 class ApplicationStatus(str, Enum):
@@ -33,6 +34,8 @@ class ApplicationResponse(PydanticBaseModel):
     middle_name: Optional[str]
     last_name: Optional[str]
     date_of_birth: Optional[date]
+    has_state_id: Optional[bool]
+    mass_id: Optional[MaskedMassIdStr]
     occupation: Optional[Occupation]
     employment_status: Optional[EmploymentStatus]
     leave_details: Optional[ApplicationLeaveDetails]

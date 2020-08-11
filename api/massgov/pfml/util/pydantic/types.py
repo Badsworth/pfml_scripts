@@ -7,6 +7,7 @@ class Regexes:
     FEIN = re.compile(r"^\d{9}$")
     FEIN_FORMATTED = re.compile(r"^\d{2}-\d{7}$")
     STREET_NUMBER = re.compile(r"^\d+")
+    MASS_ID = re.compile(r"^\d{9}$")
 
 
 class TaxIdUnformattedStr(str):
@@ -105,3 +106,35 @@ class MaskedFinancialAcctNum(str):
             partial_acct_num = masked_digits + last_four
 
             return partial_acct_num
+
+
+class MassIdStr(str):
+    @classmethod
+    def __get_validators__(cls):
+        yield cls.validate_type
+
+    @classmethod
+    def validate_type(cls, val):
+        if not isinstance(val, str):
+            raise TypeError("is not a str")
+
+        elif Regexes.MASS_ID.match(val):
+            return val
+
+        raise ValueError(f"does not match: {Regexes.MASS_ID.pattern}")
+
+
+class MaskedMassIdStr(str):
+    @classmethod
+    def __get_validators__(cls):
+        yield cls.validate_type
+
+    @classmethod
+    def validate_type(cls, val):
+        if not isinstance(val, str):
+            raise TypeError("is not a str")
+
+        elif Regexes.MASS_ID.match(val):
+            return "*********"
+
+        raise ValueError(f"does not match: {Regexes.MASS_ID.pattern}")

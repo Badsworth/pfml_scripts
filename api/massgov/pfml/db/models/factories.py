@@ -120,6 +120,8 @@ class ApplicationFactory(BaseFactory):
     last_name = factory.Faker("last_name")
     middle_name = None
     date_of_birth = factory.Faker("date_of_birth")
+    has_state_id = None
+    mass_id = None
     pregnant_or_recent_birth = False
     employer_notified = False
     employer_notification_date = None

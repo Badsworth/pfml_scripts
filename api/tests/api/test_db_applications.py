@@ -64,6 +64,23 @@ def test_payment_preference(test_db_session):
     assert inserted_payment_pref.is_default is True
 
 
+def test_rmv_id_fields(test_db_session):
+    application = Application()
+    application_id = uuid.uuid4()
+    application.application_id = application_id
+    application.has_state_id = True
+    application.mass_id = "123456789"
+
+    test_db_session.add(application)
+    test_db_session.commit()
+
+    new_application = test_db_session.query(Application).get(application_id)
+
+    assert new_application.application_id == application_id
+    assert new_application.has_state_id is True
+    assert new_application.mass_id == "123456789"
+
+
 def test_pregnant_recent_birth_flag(test_db_session):
     application = Application()
     application_id = uuid.uuid4()

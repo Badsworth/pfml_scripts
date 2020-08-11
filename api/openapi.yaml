@@ -626,6 +626,13 @@ components:
           nullable: true
           format: date
           example: "1970-06-01"
+        has_state_id:
+          type: boolean
+          nullable: true
+          example: true
+        mass_id:
+          nullable: true
+          $ref: "#/components/schemas/MassId"
         employment_status:
           type: string
           nullable: true
@@ -686,6 +693,14 @@ components:
           nullable: true
           format: date
           example: "1970-06-01"
+        has_state_id:
+          type: boolean
+          nullable: true
+          example: true
+        mass_id:
+          type: string
+          nullable: true
+          example: "*********"
         employment_status:
           type: string
           enum:
@@ -1074,6 +1089,11 @@ components:
       type: string
       example: "00-0000000"
       pattern: '^\d{2}-\d{7}$'
+
+    MassId:
+      type: string
+      example: "000000000"
+      pattern: '^\d{9}$'
 
     RoutingNbr:
       type: string
