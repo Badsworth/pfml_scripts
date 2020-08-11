@@ -2,6 +2,14 @@
 
 Massachusetts uses [Google Analytics](https://analytics.google.com/) for cross-domain tracking on mass.gov properties. This works by including [a Google Tag Manager JS snippet](https://developers.google.com/tag-manager/quickstart) in the document head. [Google Tag Manager](https://tagmanager.google.com/) is configured to dynamically insert Google Analytics onto the page when the web page is initially loaded.
 
+## Viewing analytics
+
+Analytics for all of our environments are visible in the "mass.gov cross domain tracking" Google Analytics property. From within this property, you can filter results by the environment's domain you're interested in seeing. For example, to view real time traffic for all `paidleave` environments, you can [visit this page](https://analytics.google.com/analytics/web/?authuser=1#/realtime/rt-content/a12471675w181800649p192039415/filter.list=10~~=paidleave;/).
+
+## Custom metrics
+
+Single-page Application page views and custom event tracking should be setup through [Google Tag Manager triggers](https://support.google.com/tagmanager/topic/7679108). Using the Google Analytics `ga` function isn't recommended when using Google Tag Manager.
+
 ## Environment Configuration
 
 Each Portal environment should have a corresponding Google Tag Manager environment. Once a Google Tag Manager environment exists, we need to set the Portal `gtmConfig.auth` and `gtmConfig.preview` environment variables based on that Google Tag Manager environment's values. You can find these values through the Google Tag Manager website in the Admin section by navigating to the environment and looking at the JavaScript snippet for that environment. Look for a URL with `gtm_auth` and `gtm_preview` query parameters. The values for those query parameters should be set as the corresponding Portal environment variables.
@@ -36,6 +44,10 @@ myScript.textContent = "(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start
 "})(window,document,'script','dataLayer','GTM-MCLNNQC');";
 document.head.appendChild(myScript);
 ```
+
+### Publishing a new GTM version
+
+Once you've tested the changes in a Test environment, you can publish a new Google Tag Manager version to other environments. You can do this from the `Versions` tab, clicking the `...` icon, and then clicking "Publish to..."
 
 ### Account Set Up
 
