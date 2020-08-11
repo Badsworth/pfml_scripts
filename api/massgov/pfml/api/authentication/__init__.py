@@ -1,7 +1,9 @@
-import json
-import urllib.request
+#
+# Authentication using JWT tokens and AWS Cognito.
+#
 
-from flask import g
+import flask
+import requests
 from jose import JWTError, jwt
 from sqlalchemy.orm.exc import MultipleResultsFound, NoResultFound
 from werkzeug.exceptions import Unauthorized
@@ -18,12 +20,11 @@ public_keys = None
 def get_public_keys(userpool_keys_url):
     global public_keys
 
-    logger.info("Retrieving public keys")
-    with urllib.request.urlopen(userpool_keys_url, timeout=5) as f:  # nosec
-        response = f.read()
-        public_keys = json.loads(response.decode("utf-8"))["keys"]
+    logger.info("Retrieving public keys from %s", userpool_keys_url)
+    response = requests.get(userpool_keys_url, timeout=5)
+    public_keys = response.json()["keys"]
 
-        logger.info("Public keys successfully retrieved")
+    logger.info("Public keys successfully retrieved")
 
 
 def _decode_cognito_token(token):
@@ -41,7 +42,7 @@ def decode_cognito_token(token):
                 .one()
             )
 
-            g.current_user = user
+            flask.g.current_user = user
 
         logger.info("Auth token decode successful")
         return decoded_token

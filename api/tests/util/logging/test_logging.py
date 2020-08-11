@@ -1,6 +1,7 @@
 #
 # Tests for massgov.pfml.util.logging.
 #
+
 import collections
 import json
 import logging  # noqa: B1
@@ -11,6 +12,37 @@ import flask
 import pytest
 
 import massgov.pfml.util.logging
+
+
+@pytest.fixture(autouse=True)
+def reset_logging_for_pytest():
+    """Reset the logging library so that later tests using caplog work correctly.
+
+    Our logging initialization code massgov.pfml.util.logging.init(), which is used in many tests
+    in this file, conflicts with pytest's caplog fixture.
+
+    The result is that a test using caplog does not work if it runs after a test that uses
+    massgov.pfml.util.logging.init(). It fails to log with "ValueError: I/O operation on closed
+    file."
+
+    This fixture resets enough of the logging configuration to make it work again.
+    """
+
+    # Copy the handlers for each logger.
+    original_root_handlers = logging.root.handlers.copy()  # noqa: B1
+    original_handlers = {}
+    for name, logger in logging.root.manager.loggerDict.items():  # noqa: B1
+        if hasattr(logger, "handlers"):
+            original_handlers[name] = logger.handlers.copy()
+
+    yield
+
+    # Restore the handlers and enable log propagation for each logger.
+    logging.root.handlers = original_root_handlers  # noqa: B1
+    for name, logger in logging.root.manager.loggerDict.items():  # noqa: B1
+        if hasattr(logger, "handlers"):
+            logger.handlers = original_handlers.get(name, [])
+        logger.propagate = True
 
 
 def test_init(caplog, monkeypatch):

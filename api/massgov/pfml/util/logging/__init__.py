@@ -8,7 +8,7 @@ import platform
 import pwd
 import sys
 
-from . import formatters
+from . import formatters, network
 
 LOGGING = {
     "version": 1,
@@ -40,6 +40,8 @@ def init(program_name):
         extra={"hostname": platform.node()},
     )
     logger.info("invoked as: %s", " ".join(original_argv))
+
+    network.init()
 
 
 def get_logger(name):
