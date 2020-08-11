@@ -1,6 +1,7 @@
 # Infrastructure
 
-This directory houses the configuration needed for maintaining PFML infrastructure. We use [Terraform](https://terraform.io) to manage our infra in a modular, concise, and reusable fashion.
+This directory houses the configuration needed for maintaining PFML infrastructure.
+We use [Terraform](https://terraform.io) to manage our infra in a modular, concise, and reusable fashion.
 
 - [Local Setup](#local-setup)
 - [Runbook](#runbook)
@@ -19,11 +20,13 @@ Since we manage AWS resources using Terraform, AWS credentials are needed to run
 
 #### EOTSS/PFML AWS Account
 
-For the EOTSS-provided PFML account, access to the AWS CLI is federated by Centrify. To work with this, Centrify has a python CLI tool for logging in and generating AWS access keys.
+For the EOTSS-provided PFML account, access to the AWS CLI is federated by Centrify.
+To work with this, Centrify has a python CLI tool for logging in and generating AWS access keys.
 
 PFML has a wrapper command around this CLI tool. By default, we install it as `login-aws`, but you can provide your own when prompted.
 
-First, make sure you have some sort of python3 environment. If not, the easiest way to do this is with [pyenv](https://github.com/pyenv/pyenv) or [asdf](https://asdf-vm.com/#/).
+First, make sure you have some sort of python3 environment.
+If not, the easiest way to do this is with [pyenv](https://github.com/pyenv/pyenv) or [asdf](https://asdf-vm.com/#/).
 
 ```
 # For OSX
@@ -164,7 +167,8 @@ $ terraform apply
 
 ### Adding a new SES email address
 
-In order to send emails from an SES email address, the email must first be verified. Ensure you have someone who can access the inbox of the email you'll be setting so they can verify it.
+In order to send emails from an SES email address, the email must first be verified.
+Ensure you have someone who can access the inbox of the email you'll be setting, so they can verify it.
 
 #### Creating the email in Terraform
 
@@ -242,8 +246,15 @@ that they can be run on Github Actions with the right read/write permissions. Th
 ## Directory Structure
 
 ```
-└── aws                 🏡 infrastructure for AWS and VPCs, shared across envs e.g. developer IAM roles,
-                           docker registries, and network load balancers for each VPC.
+└── api                 🏡 infrastructure for a PFML api environment
+    └── template        🏗  shared template for api env
+    └── environments
+
+└── constants           🏡 infrastructure data shared across all applications and all environments, e.g. a common block of aws tags
+
+└── ecs-tasks           🏡 infrastructure for adhoc PFML API ECS tasks
+    └── template        🏗  shared template for API ecs tasks
+    └── environments
 
 └── env-shared          🏡 infrastructure for an environment, shared across applications e.g. an API Gateway and ECS cluster.
     └── template        🏗  shared template for an env
@@ -252,23 +263,19 @@ that they can be run on Github Actions with the right read/write permissions. Th
         └── stage       ⛱  staging env, deployed on every push to deploy/api/stage
         └── prod        ⛱  production env, deployed on every push to deploy/api/prod
 
+└── pfml-aws            🏡 infrastructure for AWS and VPCs, shared across envs e.g. developer IAM roles,
+                           docker registries, and network load balancers for each VPC.
+
 └── portal              🏡 infrastructure for a PFML portal environment
     └── template        🏗  shared template for portal env
-    └── environments
-
-└── api                 🏡 infrastructure for a PFML api environment
-    └── template        🏗  shared template for api env
-    └── environments
-
-└── ecs-tasks           🏡 infrastructure for adhoc PFML API ECS tasks
-    └── template        🏗  shared template for API ecs tasks
     └── environments
 
 ```
 
 ## tfstate files
 
-Each environment for a component has a `.tfstate` file that is stored in S3 and synchronized using a DynamoDB lock table. Terraform relies on this state file for every command and must acquire the lock in order to use it, so only one person or system can run a terraform command at a time.
+Each environment for a component has a `.tfstate` file that is stored in S3 and synchronized using a DynamoDB lock table.
+Terraform relies on this state file for every command and must acquire the lock in order to use it, so only one person or system can run a terraform command at a time.
 
 ```
 S3

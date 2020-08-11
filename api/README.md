@@ -103,6 +103,24 @@ make build    # Rebuild container and pick up new environment variables
 make stop     # Stop all running containers
 ```
 
+#### Managing the container environment
+
+Under most circumstances, a local copy of the API will run with `use_reloader=True`,
+a flag given to Connexion that automatically restarts the the API's Python process if any modules have changed.
+Most of the time, the `use_reloader` flag should take care of things for you, but there are 
+a few scenarios where you'll need to make a manual intervention in order to properly manage your container's state.
+
+If you're doing work on a local environment, please be aware that any changes to *environment variables* or *config files*
+will require a _rebuild_ of the API's Docker image. Do this with `make stop` followed by `make build.`
+
+If you're only changing application code, you won't need to rebuild anything,
+_unless_ you're changing code that runs before the `connexion_app.run` command in
+[__main__.py](https://github.com/EOLWD/pfml/blob/master/api/massgov/pfml/api/__main__.py#L57).
+In this case only, you'll need to restart the Docker containers with `make stop` followed by `make start`.
+
+These scenarios are most relevant to developers who habitually work in `DOCKER_EXEC` mode, 
+with long-lived application and DB containers.
+
 #### Running migrations
 
 When you're first setting up your environment, ensure that migrations are run against your db so it has all the required tables.
@@ -163,7 +181,7 @@ migration that should happen first.
 To setup a development environment outside of Docker, you'll need to install a
 few things.
 
-#### Dependencies
+### Dependencies
 
 - Install at least Python 3.8.
   [pyenv](https://github.com/pyenv/pyenv#installation) is one popular option for

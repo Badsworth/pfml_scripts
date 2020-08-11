@@ -25,14 +25,15 @@ make deps
 
 ## Local testing
 
-The eligibility feed export requires all migrations to be run and the database to be up. From the the `/api` directory:
+The eligibility feed export requires all migrations to be run and the database to be up. From the `/api` directory:
 
 ```
 $ make db-upgrade
 $ make run
 ```
 
-For testing against S3 you will need to be logged in to the PFML AWS. See documentation around `login-aws` in `/api/README.md`
+For testing against S3 you will need to be logged in to the PFML AWS account.
+See documentation around `login-aws` in `/api/README.md`.
 
 Build the function (whenever the importer code changes)
 
