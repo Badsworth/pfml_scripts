@@ -783,6 +783,9 @@ const components = {
   spinner: {
     label: "Loading",
   },
+  withClaims: {
+    loadingLabel: "Loading claims",
+  },
   withUser: {
     loadingLabel: "Loading account",
   },

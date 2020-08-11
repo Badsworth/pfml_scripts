@@ -28,6 +28,7 @@
     "@aws-amplify/auth": "^3.3.3",
     "@massds/mayflower-assets": "^0.2.1",
     "@massds/mayflower-react": "^10.0.0-alpha.2",
+    "assert": "^2.0.0",
     "aws-amplify": "^3.0.22",
     "aws-amplify-react": "^4.1.21",
     "classnames": "^2.2.6",

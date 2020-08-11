@@ -45,7 +45,7 @@ describe("useClaimsLogic", () => {
     expect(claimsLogic.claims).toBeNull();
   });
 
-  describe("loadClaims", () => {
+  describe("load", () => {
     it("asynchronously fetches all claims and adds to claims collection", async () => {
       await act(async () => {
         await claimsLogic.load();
@@ -68,7 +68,7 @@ describe("useClaimsLogic", () => {
 
     it("only makes one api request at a time", async () => {
       await act(async () => {
-        // call loadClaims twice in parallel
+        // call load twice in parallel
         await Promise.all([claimsLogic.load(), claimsLogic.load()]);
       });
 
@@ -123,7 +123,7 @@ describe("useClaimsLogic", () => {
           success: true,
         });
 
-        // This mock is needed for the workaround of calling loadClaims
+        // This mock is needed for the workaround of calling claimsLogic.load
         // after creating a claim in createClaims
         // TODO: Remove this once the workaround is removed: https://lwd.atlassian.net/browse/CP-701
         getClaimsMock.mockResolvedValueOnce({
@@ -215,8 +215,8 @@ describe("useClaimsLogic", () => {
           success: true,
         });
 
-        // This mock is needed for the workaround of calling loadClaims
-        // after creating a claim in createClaims
+        // This mock is needed for the workaround of calling claimsLogic.load
+        // after creating a claim in claimsLogic.create
         // TODO: Remove this once the workaround is removed: https://lwd.atlassian.net/browse/CP-701
         getClaimsMock.mockResolvedValueOnce({
           claims: new ClaimCollection([
