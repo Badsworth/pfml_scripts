@@ -39,23 +39,33 @@ export class MockClaimBuilder {
   /**
    * @returns {MockClaimBuilder}
    */
-  continuous() {
+  continuous(attrs = {}) {
     set(
       this.claimAttrs,
       "temp.leave_details.continuous_leave_periods[0]",
-      new ContinuousLeavePeriod()
+      new ContinuousLeavePeriod(attrs)
     );
+
+    // TODO (CP-720): These are the only fields currently available in the API
+    // remove once continuous leave is fully integrated with API
+    const { leave_period_id, start_date, end_date } = attrs;
+
+    set(this.claimAttrs, "leave_details.continuous_leave_periods[0]", {
+      leave_period_id,
+      start_date,
+      end_date,
+    });
     return this;
   }
 
   /**
    * @returns {MockClaimBuilder}
    */
-  intermittent() {
+  intermittent(attrs) {
     set(
       this.claimAttrs,
       "leave_details.intermittent_leave_periods[0]",
-      new IntermittentLeavePeriod()
+      new IntermittentLeavePeriod(attrs)
     );
     return this;
   }
@@ -63,12 +73,22 @@ export class MockClaimBuilder {
   /**
    * @returns {MockClaimBuilder}
    */
-  reducedSchedule() {
+  reducedSchedule(attrs = {}) {
     set(
       this.claimAttrs,
       "temp.leave_details.reduced_schedule_leave_periods[0]",
-      new ReducedScheduleLeavePeriod()
+      new ReducedScheduleLeavePeriod(attrs)
     );
+
+    // TODO (CP-714): These are the only fields currently available in the API
+    // remove once reduced leave is fully integrated with API
+    const { leave_period_id, start_date, end_date } = attrs;
+
+    set(this.claimAttrs, "leave_details.reduced_schedule_leave_periods[0]", {
+      leave_period_id,
+      start_date,
+      end_date,
+    });
     return this;
   }
 

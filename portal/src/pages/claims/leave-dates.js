@@ -5,6 +5,7 @@ import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
 import get from "lodash/get";
+import merge from "lodash/merge";
 import pick from "lodash/pick";
 import set from "lodash/set";
 import useFormState from "../../hooks/useFormState";
@@ -30,26 +31,41 @@ const LeaveDates = (props) => {
     // separate objects for continuous / intermittent / reduced schedule leave types.
     const leave_details = get(formState, "temp.leave_details");
     if (claim.isContinuous) {
+      // merge leave period data from API with formstate data
+      const leave_period = get(
+        claim,
+        "leave_details.continuous_leave_periods[0]"
+      );
       set(
         formState,
         "leave_details.continuous_leave_periods[0]",
-        leave_details
+        merge(leave_period, leave_details)
       );
     }
 
     if (claim.isIntermittent) {
+      // merge leave period data from API with formstate data
+      const leave_period = get(
+        claim,
+        "leave_details.intermittent_leave_periods[0]"
+      );
       set(
         formState,
         "leave_details.intermittent_leave_periods[0]",
-        leave_details
+        merge(leave_period, leave_details)
       );
     }
 
     if (claim.isReducedSchedule) {
+      // merge leave period data from API with formstate data
+      const leave_period = get(
+        claim,
+        "leave_details.reduced_schedule_leave_periods[0]"
+      );
       set(
         formState,
         "leave_details.reduced_schedule_leave_periods[0]",
-        leave_details
+        merge(leave_period, leave_details)
       );
     }
 

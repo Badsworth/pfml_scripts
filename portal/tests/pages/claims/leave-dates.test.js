@@ -36,8 +36,10 @@ describe("LeaveDates", () => {
   // TODO (CP-724): Look into updating the API interface to accept a single leave_details object rather than
   // separate objects for continuous / intermittent / reduced schedule leave types.
   describe("API integration", () => {
+    const leave_period_id = "mock-leave-period-id";
+
     it("sends continuous leave dates to the api", () => {
-      claim = new MockClaimBuilder().continuous().create();
+      claim = new MockClaimBuilder().continuous({ leave_period_id }).create();
       render();
       fillFormAndSave();
 
@@ -45,7 +47,9 @@ describe("LeaveDates", () => {
         claim.application_id,
         {
           leave_details: {
-            continuous_leave_periods: [{ end_date, start_date }],
+            continuous_leave_periods: [
+              { leave_period_id, end_date, start_date },
+            ],
           },
           temp: { leave_details: { end_date, start_date } },
         }
@@ -53,7 +57,7 @@ describe("LeaveDates", () => {
     });
 
     it("sends intermittent leave dates to the api", () => {
-      claim = new MockClaimBuilder().intermittent().create();
+      claim = new MockClaimBuilder().intermittent({ leave_period_id }).create();
       render();
       fillFormAndSave();
 
@@ -61,7 +65,13 @@ describe("LeaveDates", () => {
         claim.application_id,
         {
           leave_details: {
-            intermittent_leave_periods: [{ end_date, start_date }],
+            intermittent_leave_periods: [
+              expect.objectContaining({
+                leave_period_id,
+                end_date,
+                start_date,
+              }),
+            ],
           },
           temp: { leave_details: { end_date, start_date } },
         }
@@ -69,26 +79,8 @@ describe("LeaveDates", () => {
     });
 
     it("sends reduced schedule leave dates to the api", () => {
-      claim = new MockClaimBuilder().reducedSchedule().create();
-      render();
-      fillFormAndSave();
-
-      expect(appLogic.claims.update).toHaveBeenCalledWith(
-        claim.application_id,
-        {
-          leave_details: {
-            reduced_schedule_leave_periods: [{ end_date, start_date }],
-          },
-          temp: { leave_details: { end_date, start_date } },
-        }
-      );
-    });
-
-    it("sends multiple leave schedule leave dates to the api", () => {
       claim = new MockClaimBuilder()
-        .continuous()
-        .intermittent()
-        .reducedSchedule()
+        .reducedSchedule({ leave_period_id })
         .create();
       render();
       fillFormAndSave();
@@ -97,9 +89,41 @@ describe("LeaveDates", () => {
         claim.application_id,
         {
           leave_details: {
-            continuous_leave_periods: [{ end_date, start_date }],
-            intermittent_leave_periods: [{ end_date, start_date }],
-            reduced_schedule_leave_periods: [{ end_date, start_date }],
+            reduced_schedule_leave_periods: [
+              { leave_period_id, end_date, start_date },
+            ],
+          },
+          temp: { leave_details: { end_date, start_date } },
+        }
+      );
+    });
+
+    it("sends multiple leave schedule leave dates to the api", () => {
+      claim = new MockClaimBuilder()
+        .continuous({ leave_period_id })
+        .intermittent({ leave_period_id })
+        .reducedSchedule({ leave_period_id })
+        .create();
+      render();
+      fillFormAndSave();
+
+      expect(appLogic.claims.update).toHaveBeenCalledWith(
+        claim.application_id,
+        {
+          leave_details: {
+            continuous_leave_periods: [
+              { leave_period_id, end_date, start_date },
+            ],
+            intermittent_leave_periods: [
+              expect.objectContaining({
+                leave_period_id,
+                end_date,
+                start_date,
+              }),
+            ],
+            reduced_schedule_leave_periods: [
+              { leave_period_id, end_date, start_date },
+            ],
           },
           temp: { leave_details: { end_date, start_date } },
         }

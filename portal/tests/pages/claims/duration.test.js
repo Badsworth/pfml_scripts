@@ -11,6 +11,8 @@ import { random } from "lodash";
 import { renderWithAppLogic } from "../../test-utils";
 
 describe("Duration", () => {
+  const leave_period_id = "mock-leave-period-id";
+
   describe("regardless of duration type", () => {
     it("initially renders the page without conditional fields", () => {
       const { wrapper } = renderWithAppLogic(Duration);
@@ -32,7 +34,9 @@ describe("Duration", () => {
     const claimAttrs = {
       temp: {
         leave_details: {
-          continuous_leave_periods: [new ContinuousLeavePeriod()],
+          continuous_leave_periods: [
+            new ContinuousLeavePeriod({ leave_period_id }),
+          ],
         },
       },
     };
@@ -49,7 +53,9 @@ describe("Duration", () => {
     const claimAttrs = {
       temp: {
         leave_details: {
-          reduced_schedule_leave_periods: [new ReducedScheduleLeavePeriod()],
+          reduced_schedule_leave_periods: [
+            new ReducedScheduleLeavePeriod({ leave_period_id }),
+          ],
         },
       },
     };
@@ -65,7 +71,9 @@ describe("Duration", () => {
   describe("when claim has an intermittent leave entry", () => {
     const claimAttrs = {
       leave_details: {
-        intermittent_leave_periods: [new IntermittentLeavePeriod()],
+        intermittent_leave_periods: [
+          new IntermittentLeavePeriod({ leave_period_id }),
+        ],
       },
     };
 
@@ -81,12 +89,18 @@ describe("Duration", () => {
     it("calls claims.update", () => {
       const claimAttrs = {
         leave_details: {
-          intermittent_leave_periods: [new IntermittentLeavePeriod()],
+          intermittent_leave_periods: [
+            new IntermittentLeavePeriod({ leave_period_id }),
+          ],
         },
         temp: {
           leave_details: {
-            continuous_leave_periods: [new ContinuousLeavePeriod()],
-            reduced_schedule_leave_periods: [new ReducedScheduleLeavePeriod()],
+            continuous_leave_periods: [
+              new ContinuousLeavePeriod({ leave_period_id }),
+            ],
+            reduced_schedule_leave_periods: [
+              new ReducedScheduleLeavePeriod({ leave_period_id }),
+            ],
           },
         },
       };
@@ -110,7 +124,9 @@ describe("Duration", () => {
   describe("intermittent leave section", () => {
     const intermittentClaimAttrs = (attrs) => ({
       leave_details: {
-        intermittent_leave_periods: [new IntermittentLeavePeriod(attrs)],
+        intermittent_leave_periods: [
+          new IntermittentLeavePeriod({ ...attrs, leave_period_id }),
+        ],
       },
     });
     const frequencyBasisInputName =

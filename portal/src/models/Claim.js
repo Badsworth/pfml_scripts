@@ -87,7 +87,11 @@ class Claim extends BaseModel {
    * @returns {boolean}
    */
   get isContinuous() {
-    return !!get(this, "temp.leave_details.continuous_leave_periods[0]");
+    // TODO (CP-720): Remove once continuous leave is integrated with API
+    return (
+      !!get(this, "temp.leave_details.continuous_leave_periods[0]") ||
+      !!get(this, "leave_details.continuous_leave_periods[0]")
+    );
   }
 
   /**
@@ -103,7 +107,11 @@ class Claim extends BaseModel {
    * @returns {boolean}
    */
   get isReducedSchedule() {
-    return !!get(this, "temp.leave_details.reduced_schedule_leave_periods[0]");
+    // TODO (CP-714): Remove once reduced schedule is integrated with API
+    return (
+      !!get(this, "temp.leave_details.reduced_schedule_leave_periods[0]") ||
+      !!get(this, "leave_details.reduced_schedule_leave_periods[0]")
+    );
   }
 }
 
@@ -147,6 +155,7 @@ export const LeaveReason = {
 export class ContinuousLeavePeriod extends BaseModel {
   get defaults() {
     return {
+      leave_period_id: null,
       weeks: null,
     };
   }
@@ -166,6 +175,7 @@ export class IntermittentLeavePeriod extends BaseModel {
       frequency_interval: null,
       // How often might you need to be absent from work?
       frequency_interval_basis: null,
+      leave_period_id: null,
     };
   }
 }
@@ -194,6 +204,7 @@ export class ReducedScheduleLeavePeriod extends BaseModel {
   get defaults() {
     return {
       hours_per_week: null,
+      leave_period_id: null,
       weeks: null,
     };
   }
