@@ -10,7 +10,6 @@ secret = os.urandom(256 // 8)
 key = jwk.construct(secret, ALGORITHMS.HS256)
 
 raw_key = key.to_dict()
-raw_key["k"] = raw_key["k"].decode("utf-8")
 
 full_key = {**raw_key, **{"kid": str(uuid.uuid4()), "use": "sig"}}
 
