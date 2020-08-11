@@ -2,6 +2,8 @@
 # Authentication using JWT tokens and AWS Cognito.
 #
 
+import json
+
 import flask
 import requests
 from jose import JWTError, jwt
@@ -21,10 +23,19 @@ def get_public_keys(userpool_keys_url):
     global public_keys
 
     logger.info("Retrieving public keys from %s", userpool_keys_url)
-    response = requests.get(userpool_keys_url, timeout=5)
-    public_keys = response.json()["keys"]
-
+    data = get_url_as_json(userpool_keys_url)
+    public_keys = data["keys"]
     logger.info("Public keys successfully retrieved")
+
+
+def get_url_as_json(url):
+    """Retrieve the given URL (file or http[s]) as JSON data."""
+    if url.startswith("file://"):
+        path = url.partition("//")[-1]
+        return json.load(open(path))
+    else:
+        response = requests.get(url, timeout=5)
+        return response.json()
 
 
 def _decode_cognito_token(token):
