@@ -10,12 +10,11 @@
     "allowJs": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
-    "module": "esnext",
+    "module": "commonjs",
     "moduleResolution": "node",
     "resolveJsonModule": true,
     "declaration": true,
-    "jsx": "react"
-
+    "outDir": "./dist"
   },
   "include": [
     "**/*.ts"
