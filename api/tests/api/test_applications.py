@@ -71,6 +71,39 @@ def test_applications_unauthorized_get_with_user(client, user, auth_token):
     assert response.status_code == 403
 
 
+def test_applications_get_partially_displays_fin_acct_num(
+    client, user, auth_token, test_db_session
+):
+    application = ApplicationFactory.create(user=user)
+    application.payment_preferences = [
+        ApplicationPaymentPreference(
+            description="Test",
+            is_default=True,
+            account_name="Foo",
+            name_in_check="Bob",
+            account_number="123456789",
+            routing_number="000987654",
+        )
+    ]
+
+    test_db_session.commit()
+
+    response = client.get(
+        "/v1/applications/{}".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+    )
+
+    assert response.status_code == 200
+
+    response_body = response.get_json().get("data")
+
+    payment_preferences = response_body.get("payment_preferences")
+
+    payment_preference = payment_preferences[0]
+    assert payment_preference["account_details"]["account_number"] == "*****6789"
+    assert payment_preference["account_details"]["routing_number"] == "*****7654"
+
+
 def test_applications_get_with_payment_preferences(client, user, auth_token, test_db_session):
     application = ApplicationFactory.create(user=user)
     application.payment_preferences = [

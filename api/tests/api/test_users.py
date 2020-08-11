@@ -47,6 +47,17 @@ def test_users_get_current_404(client):
     assert response.status_code == 404
 
 
+def test_users_get_mask_email(client, user, auth_token):
+    response = client.get(
+        "/v1/users/{}".format(user.user_id), headers={"Authorization": f"Bearer {auth_token}"}
+    )
+    response_body = response.get_json()
+    email = response_body.get("data")["email_address"]
+
+    assert response.status_code == 200
+    assert "*****" in email
+
+
 def test_users_patch(client, user, auth_token, test_db_session):
     assert user.consented_to_data_sharing is False
     body = {"consented_to_data_sharing": True}

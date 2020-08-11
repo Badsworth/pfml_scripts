@@ -8,6 +8,7 @@ import massgov.pfml.db.models.applications as db_application_models
 import massgov.pfml.db.models.employees as db_employee_models
 from massgov.pfml.api.models.common import LookupEnum
 from massgov.pfml.util.pydantic import PydanticBaseModel
+from massgov.pfml.util.pydantic.types import MaskedFinancialAcctNum
 
 # Applications I/O types
 
@@ -204,8 +205,8 @@ class PaymentAccountType(str, Enum):
 
 class ApplicationPaymentAccountDetails(PydanticBaseModel):
     account_name: Optional[str]
-    account_number: Optional[str]
-    routing_number: Optional[str]
+    account_number: Optional[MaskedFinancialAcctNum]
+    routing_number: Optional[MaskedFinancialAcctNum]
     account_type: Optional[PaymentAccountType]
 
 
