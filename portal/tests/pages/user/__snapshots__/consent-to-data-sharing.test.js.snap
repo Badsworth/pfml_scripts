@@ -50,13 +50,21 @@ exports[`ConsentToDataSharing renders the page 1`] = `
     <AccordionItem
       heading="Full user agreements"
     >
-      <p
-        dangerouslySetInnerHTML={
-          Object {
-            "__html": "To find out more about how the Commonwealth might use the information you share with DFML, please read the <a href='https://www.mass.gov/paidleave-informedconsent'>DFML Informed Consent Agreement</a> and the <a href='https://www.mass.gov/privacypolicy'>Privacy Policy for Mass.gov</a>.",
+      <p>
+        <Trans
+          components={
+            Object {
+              "informed-consent-link": <a
+                href="https://www.mass.gov/paidleave-informedconsent"
+              />,
+              "privacy-policy-link": <a
+                href="https://www.mass.gov/privacypolicy"
+              />,
+            }
           }
-        }
-      />
+          i18nKey="pages.userConsentToDataSharing.fullUserAgreementBody"
+        />
+      </p>
     </AccordionItem>
   </Accordion>
   <Alert

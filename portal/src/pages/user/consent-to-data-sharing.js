@@ -5,6 +5,7 @@ import Button from "../../components/Button";
 import PropTypes from "prop-types";
 import React from "react";
 import Title from "../../components/Title";
+import { Trans } from "react-i18next";
 import routes from "../../routes";
 import { useTranslation } from "../../locales/i18n";
 
@@ -52,19 +53,23 @@ const ConsentToDataSharing = (props) => {
         <AccordionItem
           heading={t("pages.userConsentToDataSharing.fullUserAgreementHeading")}
         >
-          {/* TODO CP-713: consider using i18n Trans component */}
-          <p
-            dangerouslySetInnerHTML={{
-              __html: t(
-                "pages.userConsentToDataSharing.fullUserAgreementBody",
-                {
-                  massPrivacyPolicyUrl: routes.external.massgov.privacyPolicy,
-                  massInformedConsentUrl:
-                    routes.external.massgov.informedConsent,
-                }
-              ),
-            }}
-          />
+          <p>
+            <Trans
+              i18nKey="pages.userConsentToDataSharing.fullUserAgreementBody"
+              components={{
+                // Anchor tag content will be added by Trans component from locale file
+                // eslint-disable-next-line jsx-a11y/anchor-has-content
+                "informed-consent-link": (
+                  <a href={routes.external.massgov.informedConsent} />
+                ),
+                // Anchor tag content will be added by Trans component from locale file
+                // eslint-disable-next-line jsx-a11y/anchor-has-content
+                "privacy-policy-link": (
+                  <a href={routes.external.massgov.privacyPolicy} />
+                ),
+              }}
+            />
+          </p>
         </AccordionItem>
       </Accordion>
 
