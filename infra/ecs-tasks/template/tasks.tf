@@ -48,7 +48,8 @@ data "template_file" "task_container_definitions" {
   template = file("${path.module}/json/task_template.json")
 
   vars = {
-    app_name                   = each.key
+    app_name                   = local.app_name
+    task_name                  = each.key
     command                    = jsonencode(each.value.command)
     cpu                        = "512"
     memory                     = "1024"

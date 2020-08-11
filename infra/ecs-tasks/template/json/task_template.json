@@ -1,6 +1,6 @@
 [
   {
-    "name": "${app_name}",
+    "name": "${task_name}",
     "image": "${docker_image}",
     "command": ${command},
     "cpu": ${cpu},
