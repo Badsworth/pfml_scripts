@@ -18,8 +18,11 @@ def test_employees_get_valid(client, employee, consented_user_token):
     assert response.status_code == 200
 
 
-def test_employees_get_invalid(client):
-    response = client.get("/v1/employees/{}".format("9e243bae-3b1e-43a4-aafe-aca3c6517cf0"))
+def test_employees_get_invalid(client, consented_user_token):
+    response = client.get(
+        "/v1/employees/{}".format("9e243bae-3b1e-43a4-aafe-aca3c6517cf0"),
+        headers={"Authorization": "Bearer {}".format(consented_user_token)},
+    )
     assert response.status_code == 404
 
 
@@ -53,9 +56,13 @@ def test_employees_get_masked_email(client, consented_user_token):
     assert response_body.get("email_address") == "j*****@example.com"
 
 
-def test_employees_search_missing_param(client, employee):
+def test_employees_search_missing_param(client, consented_user_token):
     body = {"last_name": "Doe", "tax_identifier": "000-00-0000"}
-    response = client.post("/v1/employees/search", json=body)
+    response = client.post(
+        "/v1/employees/search",
+        json=body,
+        headers={"Authorization": "Bearer {}".format(consented_user_token)},
+    )
     assert response.status_code == 400
 
 

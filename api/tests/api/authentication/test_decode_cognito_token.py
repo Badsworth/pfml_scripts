@@ -76,22 +76,20 @@ def test_without_token(client, auth_token):
 
 
 def test_current_user_is_set_successfully(client, app, user, auth_token):
-    with app.app.test_request_context("/v1/status"):
+    with app.app.test_request_context("/v1/users/current"):
         response = client.get(
-            "/v1/status", headers={"Authorization": "Bearer {}".format(auth_token)}
+            "/v1/users/current", headers={"Authorization": f"Bearer {auth_token}"}
         )
-        response_body = response.get_json()
 
         assert g.current_user.active_directory_id == user.active_directory_id
         assert g.current_user.user_id == user.user_id
         assert response.status_code == 200
-        assert response_body["status"] == "ok"
 
 
 def test_claims_with_invalid_user_id(client, app, user, auth_token_invalid_user_id):
-    with app.app.test_request_context("/status"):
+    with app.app.test_request_context("/v1/users/current"):
         response = client.get(
-            "/v1/status", headers={"Authorization": "Bearer {}".format(auth_token_invalid_user_id)},
+            "/v1/users/current", headers={"Authorization": f"Bearer {auth_token_invalid_user_id}"}
         )
 
         assert not hasattr(g, "current_user")

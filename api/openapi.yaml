@@ -10,11 +10,12 @@ servers:
 
 security:
   - jwt: [] # JWT authentication option
-  - {} # no authentication option
 
 paths:
   /status:
     get:
+      security:
+        - {} # no authentication option
       tags:
         - Test Endpoints
       summary: Get the API status

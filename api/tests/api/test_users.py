@@ -28,8 +28,11 @@ def test_users_unauthorized_get(client, user, auth_token):
     assert response.status_code == 403
 
 
-def test_users_get_404(client):
-    response = client.get("/v1/users/{}".format("00000000-0000-0000-0000-000000000000"))
+def test_users_get_404(client, auth_token):
+    response = client.get(
+        "/v1/users/{}".format("00000000-0000-0000-0000-000000000000"),
+        headers={"Authorization": f"Bearer {auth_token}"},
+    )
     assert response.status_code == 404
 
 
@@ -39,12 +42,6 @@ def test_users_get_current(client, user, auth_token):
 
     assert response.status_code == 200
     assert response_body.get("data")["user_id"] == str(user.user_id)
-
-
-def test_users_get_current_404(client):
-    response = client.get("/v1/users/current")
-
-    assert response.status_code == 404
 
 
 def test_users_get_mask_email(client, user, auth_token):
@@ -107,15 +104,21 @@ def test_users_unauthorized_patch(client, user, auth_token, test_db_session):
         ),
     ],
 )
-def test_users_patch_invalid(client, user, request_body, expected_code):
-    response = client.patch("/v1/users/{}".format(user.user_id), json=request_body)
+def test_users_patch_invalid(client, user, auth_token, request_body, expected_code):
+    response = client.patch(
+        "/v1/users/{}".format(user.user_id),
+        json=request_body,
+        headers={"Authorization": f"Bearer {auth_token}"},
+    )
 
     assert response.status_code == expected_code
 
 
-def test_users_patch_404(client):
+def test_users_patch_404(client, auth_token):
     body = {"consented_to_data_sharing": True}
     response = client.patch(
-        "/v1/users/{}".format("00000000-0000-0000-0000-000000000000"), json=body
+        "/v1/users/{}".format("00000000-0000-0000-0000-000000000000"),
+        json=body,
+        headers={"Authorization": f"Bearer {auth_token}"},
     )
     assert response.status_code == 404
