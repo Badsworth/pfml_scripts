@@ -10,6 +10,7 @@ import User from "../src/models/User";
 import { act } from "react-dom/test-utils";
 import merge from "lodash/merge";
 import set from "lodash/set";
+import times from "lodash/times";
 import useAppLogic from "../src/hooks/useAppLogic";
 
 /**
@@ -105,16 +106,27 @@ export class MockClaimBuilder {
  * @example const { appLogic, wrapper } = renderWithAppLogic(MyPage)
  * @param {React.Component} PageComponent - the component you want to render
  * @param {object} [options]
- * @param {object} options.claimAttrs - Additional attributes to set on the Claim
- * @param {object} options.props - Additional props to set on the PageComponent
- * @param {"mount"|"shallow"} options.render - Enzyme render method. Shallow renders by default.
- * @param {object} options.userAttrs - Additional attributes to set on the User
+ * @param {object} [options.claimAttrs] - Additional attributes to set on the Claim
+ * @param {number} [options.diveLevels] - number of levels to dive before returning the enzyme wrapper.
+ *    This is needed to return the desired component when the component is wrapped in higher-order components.
+ *    Defaults to 3 since most claim pages are wrapped by `withUser(withClaims(withClaim(Page)))`.
+ * @param {object} [options.props] - Additional props to set on the PageComponent
+ * @param {"mount"|"shallow"} [options.render] - Enzyme render method. Shallow renders by default.
+ * @param {object} [options.userAttrs] - Additional attributes to set on the User
  * @returns {{ appLogic: object, claim: Claim, wrapper: object }}
  */
 export const renderWithAppLogic = (PageComponent, options = {}) => {
   let appLogic, wrapper;
   options = merge(
-    { claimAttrs: {}, props: {}, render: "shallow", userAttrs: {} },
+    {
+      claimAttrs: {},
+      diveLevels: 3,
+      props: {},
+
+      // whether to use shallow() or mount()
+      render: "shallow",
+      userAttrs: {},
+    },
     options
   );
 
@@ -127,7 +139,9 @@ export const renderWithAppLogic = (PageComponent, options = {}) => {
     ...options.claimAttrs,
   });
   appLogic.claims.claims = new ClaimCollection([claim]);
+  appLogic.auth.isLoggedIn = true;
   appLogic.users.user = new User({
+    consented_to_data_sharing: true,
     user_id: "mock_user_id",
     ...options.userAttrs,
   });
@@ -142,11 +156,17 @@ export const renderWithAppLogic = (PageComponent, options = {}) => {
   );
 
   act(() => {
-    // Go one level deep to get the component that was wrapped by withClaim
+    // Go two levels deep to get the component that was wrapped by withUser and withClaim
     if (options.render === "shallow") {
-      wrapper = shallow(component).dive();
+      wrapper = shallow(component);
+      times(options.diveLevels, () => {
+        wrapper = wrapper.dive();
+      });
     } else {
-      wrapper = mount(component).childAt(0);
+      wrapper = mount(component);
+      times(options.diveLevels, () => {
+        wrapper = wrapper.childAt(0);
+      });
     }
   });
 

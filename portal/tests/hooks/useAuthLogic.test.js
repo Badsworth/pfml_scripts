@@ -147,26 +147,33 @@ describe("useAuthLogic", () => {
   });
 
   describe("login", () => {
-    it("calls Auth.signIn", () => {
-      act(() => {
-        login(username, password);
+    it("calls Auth.signIn", async () => {
+      await act(async () => {
+        await login(username, password);
       });
       expect(Auth.signIn).toHaveBeenCalledWith(username, password);
     });
 
-    it("trims whitespace from username", () => {
-      act(() => {
-        login(`  ${username} `, password);
+    it("sets isLoggedIn to true", async () => {
+      await act(async () => {
+        await login(username, password);
+      });
+      expect(isLoggedIn).toBe(true);
+    });
+
+    it("trims whitespace from username", async () => {
+      await act(async () => {
+        await login(`  ${username} `, password);
       });
       expect(Auth.signIn).toHaveBeenCalledWith(username, password);
     });
 
-    it("requires fields to not be empty", () => {
+    it("requires fields to not be empty", async () => {
       username = "";
       password = "";
 
-      act(() => {
-        login(username, password);
+      await act(async () => {
+        await login(username, password);
       });
 
       expect(appErrors.items).toHaveLength(2);
@@ -179,7 +186,7 @@ describe("useAuthLogic", () => {
       expect(Auth.signIn).not.toHaveBeenCalled();
     });
 
-    it("sets app errors when username and password are incorrect", () => {
+    it("sets app errors when username and password are incorrect", async () => {
       jest.spyOn(Auth, "signIn").mockImplementation(() => {
         // Ignore lint rule since AWS Auth class actually throws an object literal
         // eslint-disable-next-line no-throw-literal
@@ -189,8 +196,8 @@ describe("useAuthLogic", () => {
           name: "NotAuthorizedException",
         };
       });
-      act(() => {
-        login(username, password);
+      await act(async () => {
+        await login(username, password);
       });
       expect(appErrors.items).toHaveLength(1);
       expect(appErrors.items[0].message).toMatchInlineSnapshot(
@@ -198,7 +205,7 @@ describe("useAuthLogic", () => {
       );
     });
 
-    it("sets app errors when Auth.signIn throws InvalidParameterException", () => {
+    it("sets app errors when Auth.signIn throws InvalidParameterException", async () => {
       jest.spyOn(Auth, "signIn").mockImplementation(() => {
         // Ignore lint rule since AWS Auth class actually throws an object literal
         // eslint-disable-next-line no-throw-literal
@@ -209,8 +216,8 @@ describe("useAuthLogic", () => {
           name: "InvalidParameterException",
         };
       });
-      act(() => {
-        login(username, password);
+      await act(async () => {
+        await login(username, password);
       });
       expect(appErrors.items).toHaveLength(1);
       expect(appErrors.items[0].message).toMatchInlineSnapshot(
@@ -218,7 +225,7 @@ describe("useAuthLogic", () => {
       );
     });
 
-    it("sets app errors when Auth.signIn throws AuthError", () => {
+    it("sets app errors when Auth.signIn throws AuthError", async () => {
       jest.spyOn(Auth, "signIn").mockImplementation(() => {
         // AWS Auth uses an AuthError class that is private, so we
         // are faking our own version of it for testing purposes
@@ -230,8 +237,8 @@ describe("useAuthLogic", () => {
         }
         throw new AuthError("Username cannot be empty");
       });
-      act(() => {
-        login(username, password);
+      await act(async () => {
+        await login(username, password);
       });
       expect(appErrors.items).toHaveLength(1);
       expect(appErrors.items[0].message).toMatchInlineSnapshot(
@@ -239,12 +246,12 @@ describe("useAuthLogic", () => {
       );
     });
 
-    it("sets system error message when Auth.signIn throws unanticipated error", () => {
+    it("sets system error message when Auth.signIn throws unanticipated error", async () => {
       jest.spyOn(Auth, "signIn").mockImplementation(() => {
         throw new Error("Some unknown error");
       });
-      act(() => {
-        login(username, password);
+      await act(async () => {
+        await login(username, password);
       });
       expect(appErrors.items).toHaveLength(1);
       expect(appErrors.items[0].message).toMatchInlineSnapshot(
@@ -252,16 +259,25 @@ describe("useAuthLogic", () => {
       );
     });
 
-    it("clears existing errors", () => {
-      act(() => {
+    it("clears existing errors", async () => {
+      await act(async () => {
         setAppErrors([{ message: "Pre-existing error" }]);
-        login(username, password);
+        await login(username, password);
       });
       expect(appErrors.items).toHaveLength(0);
     });
   });
 
   describe("logout", () => {
+    beforeEach(() => {
+      // Mock window.location.assign since browser navigation isn't available in unit tests
+      jest.spyOn(window, "location", "get").mockImplementationOnce(() => {
+        return {
+          assign: jest.fn(),
+        };
+      });
+    });
+
     it("calls Auth.signOut", () => {
       act(() => {
         logout();
@@ -277,7 +293,7 @@ describe("useAuthLogic", () => {
       await act(async () => {
         await logout();
       });
-      expect(window.location.assign).toHaveBeenCalledWith("/");
+      expect(window.location.assign).toHaveBeenCalledWith(routes.auth.login);
 
       window.location = originalLocation;
       jest.restoreAllMocks();

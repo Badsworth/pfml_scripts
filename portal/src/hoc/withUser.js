@@ -2,6 +2,7 @@ import React, { useEffect } from "react";
 import PropTypes from "prop-types";
 import Spinner from "../components/Spinner";
 import User from "../models/User";
+import routes from "../routes";
 import { useRouter } from "next/router";
 import { useTranslation } from "../locales/i18n";
 
@@ -45,7 +46,11 @@ const withUser = (Component) => {
     if (!users.user)
       return <Spinner aria-valuetext={t("components.withUser.loadingLabel")} />;
 
-    if (!users.user.consented_to_data_sharing) return null;
+    if (
+      !users.user.consented_to_data_sharing &&
+      router.pathname !== routes.user.consentToDataSharing
+    )
+      return null;
 
     return <Component {...props} user={users.user} />;
   };

@@ -15,7 +15,7 @@ jest.mock("../../src/api/UsersApi");
 jest.mock("next/router");
 
 describe("useUsersLogic", () => {
-  let appErrorsLogic, errorSpy, portalFlow, usersApi, usersLogic;
+  let appErrorsLogic, errorSpy, isLoggedIn, portalFlow, usersApi, usersLogic;
 
   async function preloadUser(user) {
     usersApi.getCurrentUser.mockResolvedValueOnce({
@@ -29,7 +29,7 @@ describe("useUsersLogic", () => {
     testHook(() => {
       portalFlow = usePortalFlow();
       appErrorsLogic = useAppErrorsLogic();
-      usersLogic = useUsersLogic({ appErrorsLogic, portalFlow });
+      usersLogic = useUsersLogic({ appErrorsLogic, isLoggedIn, portalFlow });
     });
   }
 
@@ -38,6 +38,7 @@ describe("useUsersLogic", () => {
     // of getCurrentUser and updateUser so this will reference the same
     // jest.fn mocks that are used in the hook.
     usersApi = new UsersApi();
+    isLoggedIn = true;
     errorSpy = jest.spyOn(console, "error").mockImplementationOnce(jest.fn());
     renderHook();
   });
@@ -149,6 +150,12 @@ describe("useUsersLogic", () => {
 
       expect(usersLogic.user).toBeInstanceOf(User);
       expect(usersApi.getCurrentUser).toHaveBeenCalledTimes(1);
+    });
+
+    it("throws an error if user is not logged in to Cognito", async () => {
+      isLoggedIn = false;
+      renderHook();
+      await expect(usersLogic.loadUser).rejects.toThrow(/Cannot load user/);
     });
 
     describe("when api does not return success", () => {

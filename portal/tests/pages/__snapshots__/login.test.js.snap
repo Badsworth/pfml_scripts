@@ -9,13 +9,16 @@ exports[`Login renders the empty page 1`] = `
     <Title>
       Log in to get started
     </Title>
-    <Link
-      href="/create-account"
-    >
-      <a>
-        Or create an account
-      </a>
-    </Link>
+    <Trans
+      components={
+        Object {
+          "create-account-link": <a
+            href="/create-account"
+          />,
+        }
+      }
+      i18nKey="pages.authLogin.createAccountLink"
+    />
     <InputText
       errorMsg={null}
       label="Email address"

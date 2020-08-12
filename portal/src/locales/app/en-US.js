@@ -130,7 +130,8 @@ const pages = {
     accountVerified:
       "Thanks for verifying your email address. You may now log into your account.",
     accountVerifiedHeading: "Email successfully verified",
-    createAccountLink: "Or create an account",
+    createAccountLink:
+      "Or <create-account-link>create an account</create-account-link>",
     forgotPasswordLink: "Forgot your password?",
     loginButton: "Log in",
     passwordLabel: "$t(shared.passwordLabel)",

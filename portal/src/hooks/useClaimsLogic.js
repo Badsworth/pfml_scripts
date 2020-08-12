@@ -26,21 +26,20 @@ const useClaimsLogic = ({ appErrorsLogic, portalFlow, user }) => {
    * @param {boolean} [forceReload] Whether or not to force a reload of the claims from the API even if the claims have already been loaded. Defaults to false.
    */
   const load = async (forceReload = false) => {
-    if (!user) return;
+    if (!user) throw new Error("Cannot load claims before user is loaded");
     if (claims && !forceReload) return;
     if (isLoadingClaims) return;
 
-    isLoadingClaims = true;
-
     try {
+      isLoadingClaims = true;
       const { claims } = await claimsApi.getClaims();
       setClaims(claims);
       appErrorsLogic.clearErrors();
     } catch (error) {
       appErrorsLogic.catchError(error);
+    } finally {
+      isLoadingClaims = false;
     }
-
-    isLoadingClaims = false;
   };
 
   /**

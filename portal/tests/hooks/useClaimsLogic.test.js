@@ -22,17 +22,21 @@ jest.mock("../../src/api/ClaimsApi");
 // TODO add tests for api returning errors and warnings
 describe("useClaimsLogic", () => {
   const applicationId = "mock-application-id";
-  const user = new User({ user_id: "mock-user-id" });
-  let appErrorsLogic, claimsLogic, portalFlow;
+  let appErrorsLogic, claimsLogic, portalFlow, user;
 
-  beforeEach(() => {
-    // remove error logs
-    jest.spyOn(console, "error").mockImplementationOnce(jest.fn());
+  function renderHook() {
     testHook(() => {
       appErrorsLogic = useAppErrorsLogic();
       portalFlow = usePortalFlow({ user });
       claimsLogic = useClaimsLogic({ appErrorsLogic, user, portalFlow });
     });
+  }
+
+  beforeEach(() => {
+    // remove error logs
+    jest.spyOn(console, "error").mockImplementationOnce(jest.fn());
+    user = new User({ user_id: "mock-user-id" });
+    renderHook();
   });
 
   afterEach(() => {
@@ -75,6 +79,12 @@ describe("useClaimsLogic", () => {
       const claims = claimsLogic.claims.items;
       expect(claims[0]).toBeInstanceOf(Claim);
       expect(getClaimsMock).toHaveBeenCalledTimes(1);
+    });
+
+    it("throws an error if user has not been loaded", async () => {
+      user = null;
+      renderHook();
+      await expect(claimsLogic.load).rejects.toThrow(/Cannot load claims/);
     });
 
     describe("when request errors", () => {

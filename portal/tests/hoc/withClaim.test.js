@@ -1,84 +1,54 @@
-import { mount, shallow } from "enzyme";
 import Claim from "../../src/models/Claim";
 import React from "react";
 import User from "../../src/models/User";
+import merge from "lodash/merge";
+import { renderWithAppLogic } from "../test-utils";
 import useAppLogic from "../../src/hooks/useAppLogic";
 import withClaim from "../../src/hoc/withClaim";
 
 jest.mock("../../src/hooks/useAppLogic");
 
-describe("WithClaim", () => {
-  it("Shows spinner when claims are not loaded", () => {
-    const appLogic = useAppLogic();
-    appLogic.claims.claims = null;
+describe("withClaim", () => {
+  let appLogic, claim_id, wrapper;
 
-    const PageComponent = (props) => <div />;
-
+  function render(options = {}) {
+    // define component that needs a claim prop
+    // eslint-disable-next-line react/prop-types
+    const PageComponent = (props) => <div>{props.claim.application_id}</div>;
     const WrappedComponent = withClaim(PageComponent);
+    // Go three levels deep to get to PageComponent since withClaim is also wrapped by withClaims which is wrapped by withUser
+    ({ wrapper } = renderWithAppLogic(
+      WrappedComponent,
+      merge(
+        {
+          diveLevels: 2,
+          props: {
+            appLogic,
+            query: { claim_id },
+          },
+        },
+        options
+      )
+    ));
+  }
 
-    const wrapper = shallow(
-      <WrappedComponent query={{ claim_id: "12345" }} appLogic={appLogic} />
-    );
-
-    expect(wrapper).toMatchInlineSnapshot(`
-      <div
-        className="margin-top-8 text-center"
-      >
-        <Spinner
-          aria-valuetext="Loading"
-        />
-      </div>
-    `);
-  });
-
-  it("Shows spinner when user is not loaded", () => {
-    const appLogic = useAppLogic();
-    appLogic.claims.claims = null;
-
-    const PageComponent = (props) => <div />;
-
-    const WrappedComponent = withClaim(PageComponent);
-
-    const wrapper = shallow(
-      <WrappedComponent query={{ claim_id: "12345" }} appLogic={appLogic} />
-    );
-
-    expect(wrapper).toMatchInlineSnapshot(`
-      <div
-        className="margin-top-8 text-center"
-      >
-        <Spinner
-          aria-valuetext="Loading"
-        />
-      </div>
-    `);
+  beforeEach(() => {
+    appLogic = useAppLogic();
+    claim_id = "12345";
   });
 
   it("sets the 'claim' prop on the passed component to the claim identified in the query", () => {
     // Mock initial state of the app
     // these values would be passed from _app.js
-    const id = "12345";
-    const claim = new Claim({ application_id: id });
-    const appLogic = useAppLogic();
+    const claim = new Claim({ application_id: claim_id });
     appLogic.claims.claims = appLogic.claims.claims.addItem(claim);
-    appLogic.users.user = new User();
+    appLogic.user = new User();
 
-    // define component that needs a claim prop
-    // eslint-disable-next-line react/prop-types
-    const PageComponent = (props) => <div>{props.claim.application_id}</div>;
+    render();
 
-    // Wrap PageComponent in HOC
-    const WrappedComponent = withClaim(PageComponent);
-
-    // Mock query parameter that would be provided by next/router
-    const query = { claim_id: id };
-
-    const wrapper = mount(
-      <WrappedComponent query={query} appLogic={appLogic} />
-    );
-
-    const pageComponent = wrapper.find("PageComponent");
-    expect(pageComponent.prop("claim")).toEqual(claim);
-    expect(appLogic.claims.load).toHaveBeenCalledTimes(1);
+    expect(wrapper.prop("claim")).toBeInstanceOf(Claim);
+    expect(wrapper.prop("claim")).toEqual(claim);
   });
+
+  it.todo("redirects to applications page if claim is not in claim collection");
 });

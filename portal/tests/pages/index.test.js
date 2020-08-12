@@ -14,7 +14,8 @@ describe("Index", () => {
       appLogic = useAppLogic();
     });
 
-    wrapper = shallow(<Index appLogic={appLogic} />);
+    // Dive once since Index is wrapped by withUser
+    wrapper = shallow(<Index appLogic={appLogic} />).dive();
   });
 
   it("renders dashboard content", () => {

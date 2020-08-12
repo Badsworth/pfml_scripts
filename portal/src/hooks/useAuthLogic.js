@@ -85,8 +85,9 @@ const useAuthLogic = ({ appErrorsLogic }) => {
     try {
       await Auth.signIn(username, password);
 
-      // TODO: Route to dashboard
-      // setPage(routes.home);
+      setIsLoggedIn(true);
+      // TODO: Move page routing logic to AppLogic https://lwd.atlassian.net/browse/CP-525
+      router.push(routes.home);
     } catch (error) {
       const loginErrors = getLoginErrorInfo(error, t);
       appErrorsLogic.setAppErrors(loginErrors);
@@ -99,7 +100,7 @@ const useAuthLogic = ({ appErrorsLogic }) => {
   const logout = async () => {
     await Auth.signOut();
     // Force a page reload so that any local app state is cleared
-    window.location.assign(routes.home);
+    window.location.assign(routes.auth.login);
   };
 
   /**

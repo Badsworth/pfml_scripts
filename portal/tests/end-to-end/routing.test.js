@@ -16,7 +16,7 @@ describe("E2E: Routing", () => {
   describe("when user is authenticated", () => {
     beforeAll(async () => {
       // Load log in page
-      const signInHeaderSelector = "[data-test='sign-in-header-section']";
+      const signInHeaderSelector = "form";
       await launch({ waitForSelector: signInHeaderSelector });
 
       const usernameField = await page.$('input[name="username"]');
@@ -26,12 +26,13 @@ describe("E2E: Routing", () => {
       await usernameField.type(cognitoUser.username);
       await passwordField.type(cognitoUser.password);
       await submitButton.click();
+      await page.waitForNavigation();
     });
 
     it("starts on dashboard page", async () => {
       expect.assertions();
 
-      await page.waitForSelector("#page");
+      await page.waitForSelector("h1");
       const title = await page.$("h1");
 
       await expect(page.url()).toBe(`${rootUrl}/`);

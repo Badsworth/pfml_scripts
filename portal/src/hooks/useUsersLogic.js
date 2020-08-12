@@ -17,7 +17,7 @@ import { useRouter } from "next/router";
  * @param {Function} props.portalFlow.goToNextPage - Navigate to next page in application
  * @returns {object} { user: User, loadUser: Function }
  */
-const useUsersLogic = ({ appErrorsLogic, portalFlow }) => {
+const useUsersLogic = ({ appErrorsLogic, isLoggedIn, portalFlow }) => {
   const usersApi = useMemo(() => new UsersApi(), []);
   const [user, setUser] = useState();
   const router = useRouter();
@@ -51,6 +51,9 @@ const useUsersLogic = ({ appErrorsLogic, portalFlow }) => {
    * and add user to application's state
    */
   const loadUser = async () => {
+    if (!isLoggedIn) {
+      throw new Error("Cannot load user before logging in to Cognito");
+    }
     // Caching logic: if user has already been loaded, just reuse the cached user
     if (user) return;
     // Locking logic: prevent simultaneous calls to the same API

@@ -1,46 +1,41 @@
-import React, { useEffect } from "react";
+import ClaimCollection from "../models/ClaimCollection";
 import PropTypes from "prop-types";
-import Spinner from "../components/Spinner";
-import { useTranslation } from "../locales/i18n";
+import React from "react";
+import assert from "assert";
+import routes from "../routes";
+import { useRouter } from "next/router";
+import withClaims from "./withClaims";
 
 /**
- * Higher order component that *MUST* be a child of App
- * and expects a Collection of claims as a prop
- * Adds a single claim to a component based on query parameters
+ * Higher order component that uses withClaims to load claims if they are not yet loaded
+ * then adds a single claim to the wrapped component based on query parameters
  * @param {React.Component} Component - Component to receive claim prop
  * @returns {React.Component} - Component with claim prop
  */
 const withClaim = (Component) => {
   const ComponentWithClaim = (props) => {
-    const { t } = useTranslation();
-    const { query, appLogic } = props;
+    const { claims, query } = props;
+    const router = useRouter();
 
-    useEffect(() => {
-      appLogic.claims.load();
-    });
+    assert(claims);
+    const claim = claims.get(query.claim_id);
 
-    const claim = appLogic.claims.claims
-      ? appLogic.claims.claims.get(query.claim_id)
-      : null;
-
-    if (!claim)
-      return (
-        <div className="margin-top-8 text-center">
-          <Spinner aria-valuetext={t("components.spinner.label")} />
-        </div>
-      );
-
-    return <Component {...props} claim={claim} />;
+    if (!claim) {
+      router.push(routes.applications);
+      return null;
+    } else {
+      return <Component {...props} claim={claim} />;
+    }
   };
 
   ComponentWithClaim.propTypes = {
+    claims: PropTypes.instanceOf(ClaimCollection).isRequired,
     query: PropTypes.shape({
-      claim_id: PropTypes.string,
+      claim_id: PropTypes.string.isRequired,
     }).isRequired,
-    appLogic: PropTypes.object.isRequired,
   };
 
-  return ComponentWithClaim;
+  return withClaims(ComponentWithClaim);
 };
 
 export default withClaim;

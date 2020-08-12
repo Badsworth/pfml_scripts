@@ -4,7 +4,6 @@ import "@aws-amplify/ui/dist/style.css";
 import React, { useEffect, useState } from "react";
 import { initializeI18n, useTranslation } from "../locales/i18n";
 import { Auth } from "@aws-amplify/auth";
-import Authenticator from "../components/Authenticator";
 import ErrorBoundary from "../components/ErrorBoundary";
 import ErrorsSummary from "../components/ErrorsSummary";
 import Head from "next/head";
@@ -49,19 +48,10 @@ initializeI18n();
  * @see https://nextjs.org/docs/advanced-features/custom-app
  * @returns {React.Component}
  */
-export const App = ({
-  Component,
-  initialAuthData,
-  initialAuthState,
-  pageProps,
-}) => {
+export const App = ({ Component, pageProps }) => {
   const { t } = useTranslation();
   const router = useRouter();
   useFeatureFlagsFromQueryEffect();
-
-  // Track the authentication state, which controls which components
-  // are rendered by Authenticator
-  const [authState, setAuthState] = useState(initialAuthState);
 
   const appLogic = useAppLogic();
 
@@ -98,35 +88,6 @@ export const App = ({
   };
 
   /**
-   * Event handler for when the Authenticator mounts and anytime
-   * its authState value changes, such as when a user logs in,
-   * or navigates to a different auth screen
-   * @param {string} newAuthState - Amplify authState value representing which auth content to display (i.e "signedIn")
-   * @param {object} authData - additional data within newAuthState; when the state is signedIn, it will return a CognitoUser object.
-   *  Learn more about CognitoUser: https://github.com/aws-amplify/amplify-js/blob/77df5104398d38cd69a1ba4fa0e8fe51343f3f92/packages/amazon-cognito-identity-js/index.d.ts#L63
-   */
-  const handleAuthStateChange = async (newAuthState, authData) => {
-    setAuthState(newAuthState);
-
-    if (newAuthState === "signedIn") {
-      await handleLogIn();
-    }
-
-    window.scrollTo(0, 0);
-  };
-
-  /**
-   * Fetch an authenticated user's profile from the API and store it locally.
-   * Triggered when a user is first identified as being logged in.
-   * @returns {Promise}
-   */
-  const handleLogIn = async () => {
-    setUI({ ...ui, isLoading: true });
-    await appLogic.users.loadUser();
-    setUI({ ...ui, isLoading: false });
-  };
-
-  /**
    * Attach route change event handlers
    */
   useEffect(() => {
@@ -140,19 +101,6 @@ export const App = ({
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  /**
-   * Enforce data sharing consent before rendering a page
-   * TODO: Move to useAuth hook
-   */
-  useEffect(() => {
-    if (appLogic.users.user) {
-      appLogic.users.requireUserConsentToDataAgreement();
-    }
-    // Only trigger this effect when the user is set/updated
-    // or when the user attempts to navigate to another page
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [appLogic.users.user, router.pathname]);
 
   /**
    * Render the page body based on the current state of the application
@@ -200,13 +148,7 @@ export const App = ({
               {/* Include a second ErrorBoundary here so that we still render a site header if we catch an error before it bubbles up any further */}
               <ErrorBoundary>
                 <ErrorsSummary errors={appLogic.appErrors} />
-                <Authenticator
-                  authState={authState}
-                  authData={initialAuthData}
-                  onStateChange={handleAuthStateChange}
-                >
-                  {renderPageContent()}
-                </Authenticator>
+                {renderPageContent()}
               </ErrorBoundary>
             </div>
           </div>
@@ -222,15 +164,6 @@ App.propTypes = {
   Component: PropTypes.elementType.isRequired,
   // Next.js sets pageProps for us
   pageProps: PropTypes.object,
-  /**
-   * Initial Amplify authState value representing which auth content to display
-   * i.e. "signIn", "signedUp", "forgotPassword"
-   */
-  initialAuthState: PropTypes.string,
-  /**
-   * Initial authData passed to Amplify. Only added for unit tests
-   */
-  initialAuthData: PropTypes.object,
 };
 
 export default App;

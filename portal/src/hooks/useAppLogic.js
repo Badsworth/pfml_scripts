@@ -11,11 +11,16 @@ const useAppLogic = () => {
 
   // State representing currently visible errors and warnings
   const { appErrors, ...appErrorsLogic } = useAppErrorsLogic();
+  const auth = useAuthLogic({ appErrorsLogic });
 
   // State representing the Portal's user object.
   // Initialize to empty user but will be populated upon the first API call
   // to fetch the user (or create the user on their first login)
-  const users = useUsersLogic({ appErrorsLogic, portalFlow });
+  const users = useUsersLogic({
+    appErrorsLogic,
+    isLoggedIn: auth.isLoggedIn,
+    portalFlow,
+  });
 
   // user will be eventually set through a `login` method
   // const [user, setUser] = useState();
@@ -25,8 +30,6 @@ const useAppLogic = () => {
     portalFlow,
     user: users.user,
   });
-
-  const auth = useAuthLogic({ appErrorsLogic });
 
   return {
     appErrors,

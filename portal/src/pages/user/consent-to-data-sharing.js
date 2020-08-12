@@ -6,14 +6,15 @@ import PropTypes from "prop-types";
 import React from "react";
 import Title from "../../components/Title";
 import { Trans } from "react-i18next";
+import User from "../../models/User";
 import routes from "../../routes";
 import { useTranslation } from "../../locales/i18n";
+import withUser from "../../hoc/withUser";
 
 const ConsentToDataSharing = (props) => {
   const { t } = useTranslation();
-  const {
-    users: { user, updateUser },
-  } = props.appLogic;
+  const { appLogic, user } = props;
+  const { updateUser } = appLogic.users;
 
   const handleSave = () =>
     updateUser(user.user_id, {
@@ -85,7 +86,12 @@ const ConsentToDataSharing = (props) => {
 };
 
 ConsentToDataSharing.propTypes = {
-  appLogic: PropTypes.object.isRequired,
+  appLogic: PropTypes.shape({
+    users: PropTypes.shape({
+      updateUser: PropTypes.func.isRequired,
+    }).isRequired,
+  }).isRequired,
+  user: PropTypes.instanceOf(User).isRequired,
 };
 
-export default ConsentToDataSharing;
+export default withUser(ConsentToDataSharing);

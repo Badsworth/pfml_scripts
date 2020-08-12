@@ -1,33 +1,30 @@
 import Claim, { ClaimStatus } from "../../src/models/Claim";
+import { renderWithAppLogic, testHook } from "../test-utils";
 import Applications from "../../src/pages/applications";
 import ClaimCollection from "../../src/models/ClaimCollection";
 import React from "react";
 import User from "../../src/models/User";
 import { shallow } from "enzyme";
-import { testHook } from "../test-utils";
 import useAppLogic from "../../src/hooks/useAppLogic";
 
 describe("Applications", () => {
   let appLogic, wrapper;
 
+  function render() {
+    // Dive two levels since Applications is wrapped by withClaims and withUser
+    ({ wrapper } = renderWithAppLogic(Applications, {
+      diveLevels: 2,
+      props: { appLogic },
+    }));
+  }
+
   beforeEach(() => {
     testHook(() => {
-      appLogic = useAppLogic({ user: new User() });
+      appLogic = useAppLogic();
+      appLogic.users.user = new User({ consented_to_data_sharing: true });
     });
 
     jest.spyOn(appLogic.claims, "load").mockResolvedValue();
-  });
-
-  describe("when claims haven't been loaded yet", () => {
-    beforeEach(() => {
-      appLogic.claims.claims = null;
-
-      wrapper = shallow(<Applications appLogic={appLogic} />);
-    });
-
-    it("renders the loading page state", () => {
-      expect(wrapper).toMatchSnapshot();
-    });
   });
 
   describe("when no claims exist", () => {
@@ -38,7 +35,8 @@ describe("Applications", () => {
     });
 
     it("renders the empty page state", () => {
-      expect(wrapper).toMatchSnapshot();
+      // Dive to get the child component of the withClaim higher order component
+      expect(wrapper.dive().dive()).toMatchSnapshot();
     });
   });
 
@@ -50,8 +48,7 @@ describe("Applications", () => {
           status: ClaimStatus.started,
         }),
       ]);
-
-      wrapper = shallow(<Applications appLogic={appLogic} />);
+      render();
     });
 
     it("visually hides the page title", () => {
@@ -82,8 +79,7 @@ describe("Applications", () => {
           status: ClaimStatus.submitted,
         }),
       ]);
-
-      wrapper = shallow(<Applications appLogic={appLogic} />);
+      render();
     });
 
     it("visually hides the page title", () => {
@@ -118,8 +114,7 @@ describe("Applications", () => {
           status: ClaimStatus.completed,
         }),
       ]);
-
-      wrapper = shallow(<Applications appLogic={appLogic} />);
+      render();
     });
 
     it("increments the submitted ApplicationCard numbers by the number of in progress claims", () => {

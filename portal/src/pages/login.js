@@ -6,6 +6,7 @@ import Link from "next/link";
 import PropTypes from "prop-types";
 import React from "react";
 import Title from "../components/Title";
+import { Trans } from "react-i18next";
 import routes from "../routes";
 import useFormState from "../hooks/useFormState";
 import useHandleInputChange from "../hooks/useHandleInputChange";
@@ -41,9 +42,14 @@ export const Login = (props) => {
       )}
       <form className="usa-form usa-form--large" onSubmit={handleSubmit}>
         <Title>{t("pages.authLogin.title")}</Title>
-        <Link href={routes.auth.createAccount}>
-          <a>{t("pages.authLogin.createAccountLink")}</a>
-        </Link>
+        <Trans
+          i18nKey="pages.authLogin.createAccountLink"
+          components={{
+            // Trans doesn't seem to work with the NextJS <Link> component so we'll
+            // use a regular link here
+            "create-account-link": <a href={routes.auth.createAccount} />,
+          }}
+        />
         <InputText
           type="email"
           name="username"

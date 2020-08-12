@@ -8,6 +8,7 @@ import { Trans } from "react-i18next";
 import routes from "../routes";
 import { useRouter } from "next/router";
 import { useTranslation } from "../locales/i18n";
+import withUser from "../hoc/withUser";
 
 /**
  * "Dashboard" - Where a user is redirected to after successfully authenticating.
@@ -74,4 +75,4 @@ Index.propTypes = {
   appLogic: PropTypes.object.isRequired,
 };
 
-export default Index;
+export default withUser(Index);
