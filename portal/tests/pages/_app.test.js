@@ -199,8 +199,7 @@ describe("App", () => {
 
       let wrapper;
 
-      // Authenticator causes async state updates
-      await act(async () => {
+      act(() => {
         wrapper = render({ Component: ChildPage }, true).wrapper;
       });
       wrapper.update();

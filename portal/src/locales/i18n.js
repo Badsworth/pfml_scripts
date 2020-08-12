@@ -2,25 +2,30 @@
  * @file Setup and configure all internationalization frameworks, including setting the same language.
  * @see docs/internationalization.md
  */
+import englishLocale from "./app/en-US";
 import i18next from "i18next";
-import setAmplifyI18n from "./amplifyI18n";
-import setAppI18n from "./appI18n";
+import { initReactI18next } from "react-i18next";
 
 const defaultLocale = "en-US";
 
 /**
- * Initialize I18n libraries for Amplify and the App
+ * Initialize I18n libraries for the App
  * @param {string} locale - locale that matches localization file (e.g "en-US")
- * @returns {object} - I18n instances for app (appI18n) and amplify (amplifyI18n)
  */
 export const initializeI18n = (locale = defaultLocale) => {
-  const appI18n = setAppI18n(locale);
-  const amplifyI18n = setAmplifyI18n(locale);
-
-  return {
-    appI18n,
-    amplifyI18n,
-  };
+  i18next
+    .use(initReactI18next) // passes the i18n instance to react-i18next which will make it available for all the components via the context api.
+    .init({
+      debug: process.env.NODE_ENV === "development",
+      fallbackLng: defaultLocale,
+      interpolation: {
+        escapeValue: false, // react already escapes values
+      },
+      lng: locale,
+      resources: {
+        "en-US": englishLocale,
+      },
+    });
 };
 
 /**

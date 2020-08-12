@@ -7,14 +7,7 @@
 // Apply global styling to our stories
 import "../styles/app.scss";
 
-import { I18nextProvider } from "react-i18next";
-import React from "react";
-import { addDecorator } from "@storybook/react";
 import { initializeI18n } from "../src/locales/i18n";
 
 // Internationalize strings in our stories
-const { appI18n } = initializeI18n();
-
-addDecorator((storyFn) => (
-  <I18nextProvider i18n={appI18n}>{storyFn()}</I18nextProvider>
-));
+initializeI18n();

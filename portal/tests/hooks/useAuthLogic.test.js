@@ -1,4 +1,4 @@
-import { Auth } from "aws-amplify";
+import { Auth } from "@aws-amplify/auth";
 import { act } from "react-dom/test-utils";
 import { mockRouter } from "next/router";
 import routes from "../../src/routes";
@@ -6,7 +6,7 @@ import { testHook } from "../test-utils";
 import useAppErrorsLogic from "../../src/hooks/useAppErrorsLogic";
 import useAuthLogic from "../../src/hooks/useAuthLogic";
 
-jest.mock("aws-amplify");
+jest.mock("@aws-amplify/auth");
 
 describe("useAuthLogic", () => {
   let appErrors,

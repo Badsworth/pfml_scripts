@@ -1,6 +1,6 @@
 import AppErrorInfo from "../models/AppErrorInfo";
 import AppErrorInfoCollection from "../models/AppErrorInfoCollection";
-import { Auth } from "aws-amplify";
+import { Auth } from "@aws-amplify/auth";
 import assert from "assert";
 import { createRouteWithQuery } from "../utils/routeWithParams";
 import routes from "../routes";

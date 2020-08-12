@@ -5,7 +5,7 @@ import { act } from "react-dom/test-utils";
 import { shallow } from "enzyme";
 import useAppLogic from "../../src/hooks/useAppLogic";
 
-jest.mock("aws-amplify");
+jest.mock("@aws-amplify/auth");
 
 describe("ResetPassword", () => {
   let appLogic;

@@ -1,6 +1,4 @@
 import "../../styles/app.scss";
-// Import CSS required by the Amplify React components
-import "@aws-amplify/ui/dist/style.css";
 import React, { useEffect, useState } from "react";
 import { initializeI18n, useTranslation } from "../locales/i18n";
 import { Auth } from "@aws-amplify/auth";

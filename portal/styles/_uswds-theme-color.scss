@@ -19,15 +19,15 @@ Theme palette colors
 // Base colors
 $theme-color-base-lightest: $c-gray-lightest;
 $theme-color-base-lighter: $c-gray-light;
-$theme-color-base: $c-gray; // duplicated in amplifyTheme.js
-$theme-color-base-dark: $c-gray-dark; // duplicated in amplifyTheme.js
+$theme-color-base: $c-gray;
+$theme-color-base-dark: $c-gray-dark;
 $theme-color-base-darkest: $c-black;
-$theme-color-base-ink: $c-black; // duplicated in amplifyTheme.js
+$theme-color-base-ink: $c-black;
 
 // Primary colors
 $theme-color-primary-lighter: $c-bay-blue-lightest;
 $theme-color-primary-light: $c-bay-blue-lighter;
-$theme-color-primary: $c-bay-blue; // duplicated in amplifyTheme.js
+$theme-color-primary: $c-bay-blue;
 $theme-color-primary-vivid: false;
 $theme-color-primary-dark: $c-bay-blue-darker;
 $theme-color-primary-darker: $c-bay-blue-darkest;
@@ -59,7 +59,7 @@ $theme-color-error-darker: $c-independence-cranberry-20-tint;
 // Warning colors
 $theme-color-warning-lighter: $c-duckling-yellow-lightest;
 $theme-color-warning-light: $c-duckling-yellow-lighter;
-$theme-color-warning: $c-duckling-yellow; // duplicated in amplifyTheme.js
+$theme-color-warning: $c-duckling-yellow;
 
 // Success colors
 $theme-color-success-lighter: $c-berkshires-green-90-tint;
@@ -73,4 +73,4 @@ $theme-color-info-lighter: $c-bay-blue-lightest;
 $theme-color-info-light: $c-bay-blue-lighter;
 $theme-color-info: $c-bay-blue;
 $theme-color-info-dark: $c-bay-blue-darker;
-$theme-color-info-darker: $c-bay-blue-darkest; // duplicated in amplifyTheme.js
+$theme-color-info-darker: $c-bay-blue-darkest;

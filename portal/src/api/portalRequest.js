@@ -8,7 +8,7 @@ import {
   ServiceUnavialableError,
   UnauthorizedError,
 } from "../errors";
-import { Auth } from "aws-amplify";
+import { Auth } from "@aws-amplify/auth";
 import tracker from "../services/tracker";
 
 /**

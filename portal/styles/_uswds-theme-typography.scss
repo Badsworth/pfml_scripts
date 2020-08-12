@@ -24,7 +24,7 @@ $theme-typeface-tokens: (
 );
 
 // Use Texta everywhere
-$theme-font-type-sans: "texta"; // duplicated in amplifyTheme.js
+$theme-font-type-sans: "texta";
 $theme-font-sans-custom-stack: "Helvetica, sans-serif";
 
 $theme-font-role-heading: "sans";
@@ -55,7 +55,7 @@ $theme-lead-line-height: 5;
 $theme-lead-measure: 6;
 
 // Customize heading type styles
-$theme-h1-font-size: "lg"; // duplicated in amplifyTheme.js
+$theme-h1-font-size: "lg";
 $theme-h2-font-size: "md";
 $theme-h3-font-size: "sm";
 $theme-h4-font-size: "xs";

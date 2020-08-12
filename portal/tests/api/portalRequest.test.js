@@ -8,11 +8,11 @@ import {
   ServiceUnavialableError,
   UnauthorizedError,
 } from "../../src/errors";
-import { Auth } from "aws-amplify";
+import { Auth } from "@aws-amplify/auth";
 import portalRequest from "../../src/api/portalRequest";
 import tracker from "../../src/services/tracker";
 
-jest.mock("aws-amplify");
+jest.mock("@aws-amplify/auth");
 jest.mock("../../src/services/tracker");
 
 describe("request", () => {

@@ -1,6 +1,6 @@
 # Internationalization
 
-All Portal internationalization (i18n) is configured in the `portal/src/locales/i18n.js` module. This includes both application and auth screen i18n; these systems are separate due to Amplify's restrictions on auth screen customization.
+All Portal internationalization (i18n) is configured in the `portal/src/locales/i18n.js` module.
 
 The locale selection for both i18n systems is configured in `i18n.js` to allow locale synchronization across the app.
 
@@ -122,7 +122,3 @@ export function MyComponent() {
   return <p>{t("translationResourceKey")}</p>;
 }
 ```
-
-## Auth screens
-
-To override the default language on Amplify auth screens, and provide i18n for other locales, we are using the [Amplify I18n](https://aws-amplify.github.io/docs/js/i18n) module. Their documentation is not the greatest, and to find the locale keys to override, you may need to find their references in the [corresponding Amplify React component](https://github.com/aws-amplify/amplify-js/tree/master/packages/aws-amplify-react/src/Auth) by searching the component file for `I18n.get`.

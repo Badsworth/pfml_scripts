@@ -644,23 +644,6 @@ const pages = {
 };
 
 const components = {
-  amplifyForgotPassword: {
-    // TODO: Remove these after the CustomForgotPassword component is obsolete
-    // https://lwd.atlassian.net/browse/CP-485
-    codeLabel: "$t(shared.verificationCodeLabel)",
-    leadCreatePasswordView:
-      "If an account exists for {{emailAddress}}, we emailed a 6-digit verification code to it. Enter the code below to confirm your email and reset your password.",
-    leadSendView:
-      "If an account exists for the email you provide, we will email a 6-digit verification code to it.",
-    passwordHint: "$t(shared.passwordHint)",
-    passwordLabel: "New password",
-    resendCodeLink: "$t(shared.resendVerificationCodeLink)",
-    signInFooterLink: "$t(shared.backToLoginLink)",
-    submitEmailButton: "Send code",
-    submitPasswordButton: "Set new password",
-    titleCreatePasswordView: "Create a new password",
-    titleSendView: "Forgot your password?",
-  },
   applicationCard: {
     feinHeading: "Employer FEIN",
     heading: "Application {{number}}",
@@ -674,12 +657,6 @@ const components = {
   },
   authNav: {
     logOutButton: "Log out",
-  },
-  authenticator: {
-    accountVerified:
-      "Thanks for verifying your email address. You may now log into your account.",
-    accountVerifiedHeading: "Email successfully verified",
-    errorHeading: "Please fix the following errors",
   },
   backButton: {
     label: "Back",
