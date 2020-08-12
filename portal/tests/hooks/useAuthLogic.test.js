@@ -269,13 +269,21 @@ describe("useAuthLogic", () => {
   });
 
   describe("logout", () => {
+    let assign;
+
     beforeEach(() => {
+      assign = jest.fn();
       // Mock window.location.assign since browser navigation isn't available in unit tests
-      jest.spyOn(window, "location", "get").mockImplementationOnce(() => {
-        return {
-          assign: jest.fn(),
-        };
+      jest.spyOn(window, "location", "get").mockImplementation(() => {
+        return { assign };
       });
+    });
+
+    afterEach(() => {
+      // To access the window.location getter function itself rather than the return value of the getter function
+      // we need to use Object.getOwnPropertyDescriptor.
+      // See https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/getOwnPropertyDescriptor
+      Object.getOwnPropertyDescriptor(window, "location").get.mockRestore();
     });
 
     it("calls Auth.signOut", () => {
@@ -286,17 +294,10 @@ describe("useAuthLogic", () => {
     });
 
     it("redirects to home page", async () => {
-      const originalLocation = window.location;
-
-      delete window.location;
-      window.location = { assign: jest.fn() };
       await act(async () => {
         await logout();
       });
       expect(window.location.assign).toHaveBeenCalledWith(routes.auth.login);
-
-      window.location = originalLocation;
-      jest.restoreAllMocks();
     });
   });
 
