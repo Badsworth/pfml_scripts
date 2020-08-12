@@ -12,14 +12,9 @@ describe("StepNumber", () => {
 
     expect(wrapper).toMatchInlineSnapshot(`
       <div
+        aria-label="Step 1"
         className="radius-pill text-center height-5 width-5 margin-top-2px font-sans-md border-2px line-height-sans-5 border-base text-base"
       >
-        <span
-          className="usa-sr-only"
-        >
-          Step
-        </span>
-         
         1
       </div>
     `);

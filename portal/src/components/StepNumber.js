@@ -36,8 +36,10 @@ const StepNumber = (props) => {
   );
 
   return (
-    <div className={classNames}>
-      <span className="usa-sr-only">{props.screenReaderPrefix}</span>{" "}
+    <div
+      className={classNames}
+      aria-label={`${props.screenReaderPrefix} ${props.children}`}
+    >
       {props.children}
     </div>
   );
