@@ -1,4 +1,5 @@
 """seed lookup tables
+
 Revision ID: c55f558a528e
 Revises: 88d2159c082c
 Create Date: 2020-04-27 17:24:49.116239
