@@ -90,7 +90,7 @@ const machineTests = {
       },
     },
   },
-  [routes.claims.uploadHealthcareForm]: {
+  [routes.claims.uploadCertification]: {
     meta: {
       test: () => {},
     },

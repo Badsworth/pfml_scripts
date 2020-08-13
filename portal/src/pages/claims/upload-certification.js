@@ -1,3 +1,4 @@
+import Claim, { LeaveReason } from "../../models/Claim";
 import React, { useState } from "react";
 import FileCardList from "../../components/FileCardList";
 import FileUploadDetails from "../../components/FileUploadDetails";
@@ -6,30 +7,35 @@ import Lead from "../../components/Lead";
 import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import { Trans } from "react-i18next";
+import findKeyByValue from "../../utils/findKeyByValue";
 import routes from "../../routes";
 import { useTranslation } from "../../locales/i18n";
 import withClaim from "../../hoc/withClaim";
 
-const UploadHealthcareForm = (props) => {
+const UploadCertification = (props) => {
+  const { appLogic, claim } = props;
   const { t } = useTranslation();
   const [files, setFiles] = useState([]);
+  const reasonKey = findKeyByValue(LeaveReason, claim.leave_details.reason);
 
-  // @todo: CP-396 connect this page to the API file upload endpoint.
+  // TODO (CP-396): connect this page to the API file upload endpoint.
   const handleSave = () => {
-    props.appLogic.goToNextPage(null, props.query);
+    appLogic.goToNextPage(null, props.query);
   };
 
   return (
     <QuestionPage
-      title={t("pages.claimsUploadHealthcareForm.title")}
+      title={t("pages.claimsUploadCertification.title")}
       onSave={handleSave}
     >
       <Heading level="2" size="1">
-        {t("pages.claimsUploadHealthcareForm.sectionLabel")}
+        {t("pages.claimsUploadCertification.sectionLabel", {
+          context: reasonKey,
+        })}
       </Heading>
       <Lead>
         <Trans
-          i18nKey="pages.claimsUploadHealthcareForm.lead"
+          i18nKey="pages.claimsUploadCertification.lead"
           components={{
             "healthcare-provider-form-link": (
               <a
@@ -39,32 +45,34 @@ const UploadHealthcareForm = (props) => {
               />
             ),
           }}
+          tOptions={{ context: reasonKey }}
         />
       </Lead>
       <FileUploadDetails />
       <FileCardList
         files={files}
         setFiles={setFiles}
-        setAppErrors={props.appLogic.setAppErrors}
+        setAppErrors={appLogic.setAppErrors}
         fileHeadingPrefix={t(
-          "pages.claimsUploadHealthcareForm.fileHeadingPrefix"
+          "pages.claimsUploadCertification.fileHeadingPrefix"
         )}
         addFirstFileButtonText={t(
-          "pages.claimsUploadHealthcareForm.addFirstFileButton"
+          "pages.claimsUploadCertification.addFirstFileButton"
         )}
         addAnotherFileButtonText={t(
-          "pages.claimsUploadHealthcareForm.addAnotherFileButton"
+          "pages.claimsUploadCertification.addAnotherFileButton"
         )}
       />
     </QuestionPage>
   );
 };
 
-UploadHealthcareForm.propTypes = {
+UploadCertification.propTypes = {
   appLogic: PropTypes.object.isRequired,
+  claim: PropTypes.instanceOf(Claim),
   query: PropTypes.shape({
     claim_id: PropTypes.string,
   }),
 };
 
-export default withClaim(UploadHealthcareForm);
+export default withClaim(UploadCertification);

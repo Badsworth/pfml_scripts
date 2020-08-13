@@ -47,7 +47,7 @@ const routes = {
     // to a placeholder page. This allows us to search our code for routes.claims.todo,
     // which is less confusing than seeing routes.claims.checklist
     todo: "/claims/checklist",
-    uploadHealthcareForm: "/claims/upload-healthcare-form",
+    uploadCertification: "/claims/upload-certification",
     uploadOtherId: "/claims/upload-other-id",
     uploadStateId: "/claims/upload-state-id",
   },

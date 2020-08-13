@@ -1,0 +1,47 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`UploadCertification initially renders an empty FileCardList 1`] = `
+<FileCardList
+  addAnotherFileButtonText="Choose another file"
+  addFirstFileButtonText="Choose a file"
+  fileHeadingPrefix="File"
+  files={Array []}
+  setAppErrors={[MockFunction]}
+  setFiles={[Function]}
+/>
+`;
+
+exports[`UploadCertification when leave reason is Bonding leave renders page with bonding leave content 1`] = `
+<Heading
+  level="2"
+  size="1"
+>
+  Upload your documentation
+</Heading>
+`;
+
+exports[`UploadCertification when leave reason is Bonding leave renders page with bonding leave content 2`] = `"You need to upload a document to confirm your child’s date of birth, due date, or date of placement."`;
+
+exports[`UploadCertification when leave reason is Medical leave renders page with medical leave content 1`] = `
+<Heading
+  level="2"
+  size="1"
+>
+  Upload your Healthcare Provider form
+</Heading>
+`;
+
+exports[`UploadCertification when leave reason is Medical leave renders page with medical leave content 2`] = `
+Array [
+  "You need to upload a copy of the ",
+  <a
+    href="https://www.mass.gov/hcp-form"
+    key="1"
+    rel="noopener"
+    target="_blank"
+  >
+    PFML Healthcare Provider Form (opens in new tab)
+  </a>,
+  " to prove that you need to take medical leave. You can upload a completed Family and Medical Leave Act (FMLA) form instead if your provider filled one out.",
+]
+`;

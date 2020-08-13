@@ -187,10 +187,10 @@ export default {
         fields: reasonPregnancyFields,
       },
       on: {
-        CONTINUE: routes.claims.uploadHealthcareForm,
+        CONTINUE: routes.claims.uploadCertification,
       },
     },
-    [routes.claims.uploadHealthcareForm]: {
+    [routes.claims.uploadCertification]: {
       meta: {
         step: ClaimSteps.leaveDetails,
         fields: [],
@@ -222,8 +222,7 @@ export default {
         fields: dateOfChildFields,
       },
       on: {
-        // TODO (CP-801): Refactor to route to the Bonding Leave Certification page once it's created
-        CONTINUE: routes.claims.todo,
+        CONTINUE: routes.claims.uploadCertification,
       },
     },
     [routes.claims.averageWorkHours]: {
