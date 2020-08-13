@@ -44,7 +44,7 @@ RUN poetry install --no-root
 COPY . ./
 
 # run the server
-CMD poetry run python -m massgov.pfml.api
+CMD ["poetry", "run", "python", "-m", "massgov.pfml.api"]
 
 #-------------------------------------------------------------------------------
 # Non-development build environment
@@ -83,4 +83,4 @@ COPY --from=app-build /app/.venv /app/.venv
 ENV PATH="/app/.venv/bin:$PATH"
 
 # run the application
-CMD massgov-pfml-api
+CMD ["massgov-pfml-api"]
