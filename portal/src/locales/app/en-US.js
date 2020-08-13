@@ -195,7 +195,7 @@ const pages = {
     stepHTMLDescription_payment:
       "You will need to know:<ul class='usa-list'><li>Your bank account information, if you want to be paid through Direct Deposit.</li></ul>",
     stepHTMLDescription_verifyId:
-      "You will need:<ul class='usa-list'><li>Proof of your identity, like a driver’s license. See the full list of accepted identity documents.</li><li>Your Social Security Number or Individual Taxpayer Identification Number.</li><ul>",
+      "You will need:<ul class='usa-list'><li>Proof of your identity, like a driver’s license. See the full list of accepted identity documents.</li><li>Your Social Security Number or Individual Taxpayer Identification Number.</li></ul>",
     stepListTitle: "Create a new application",
     stepTitle_employerInformation: "Enter employment information",
     stepTitle_leaveDetails: "Enter leave details",

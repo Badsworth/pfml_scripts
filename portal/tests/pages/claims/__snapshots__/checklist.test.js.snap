@@ -28,7 +28,7 @@ exports[`Checklist renders page 1`] = `
       <span
         dangerouslySetInnerHTML={
           Object {
-            "__html": "You will need:<ul class='usa-list'><li>Proof of your identity, like a driver’s license. See the full list of accepted identity documents.</li><li>Your Social Security Number or Individual Taxpayer Identification Number.</li><ul>",
+            "__html": "You will need:<ul class='usa-list'><li>Proof of your identity, like a driver’s license. See the full list of accepted identity documents.</li><li>Your Social Security Number or Individual Taxpayer Identification Number.</li></ul>",
           }
         }
       />
