@@ -43,24 +43,24 @@
     "xstate": "^4.11.0"
   },
   "devDependencies": {
-    "@babel/core": "^7.10.4",
-    "@next/bundle-analyzer": "^9.5.1",
-    "@storybook/addon-docs": "^6.0.0-rc.0",
-    "@storybook/react": "^6.0.0-rc.0",
+    "@babel/core": "^7.11.1",
+    "@next/bundle-analyzer": "^9.5.2",
+    "@storybook/addon-docs": "^6.0.7",
+    "@storybook/react": "^6.0.7",
     "@xstate/test": "^0.4.0",
     "@zeit/next-source-maps": "0.0.3",
-    "babel-loader": "^8.0.6",
+    "babel-loader": "^8.1.0",
     "enzyme": "^3.11.0",
-    "enzyme-adapter-react-16": "^1.15.2",
+    "enzyme-adapter-react-16": "^1.15.3",
     "enzyme-to-json": "^3.5.0",
-    "jest": "^26.0.1",
+    "jest": "^26.4.0",
     "jest-puppeteer": "^4.4.0",
-    "next": "^9.5.1",
+    "next": "^9.5.2",
     "next-images": "^1.4.1",
-    "puppeteer": "^5.0.0",
+    "puppeteer": "^5.2.1",
     "react-is": "^16.13.1",
     "sass": "^1.26.10",
-    "sass-loader": "^9.0.2",
-    "state-machine-cat": "^7.0.6"
+    "sass-loader": "^9.0.3",
+    "state-machine-cat": "^7.0.7"
   }
 }

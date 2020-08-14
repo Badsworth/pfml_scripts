@@ -21,11 +21,11 @@ const config = {
     ...envVariables,
     featureFlags,
   },
-  exportTrailingSlash: true,
   sassOptions: {
     // Mayflowers requires us to expose its includePaths so its imports work
     includePaths: mayflowerAssets.includePaths,
   },
+  trailingSlash: true,
   webpack: function (webpackConfig) {
     // Include our polyfills before all other code
     // See: https://github.com/zeit/next.js/tree/master/examples/with-polyfills
