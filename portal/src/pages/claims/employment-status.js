@@ -81,9 +81,9 @@ const EmploymentStatusPage = (props) => {
 EmploymentStatusPage.propTypes = {
   claim: PropTypes.instanceOf(Claim).isRequired,
   appLogic: PropTypes.shape({
-    claims: {
+    claims: PropTypes.shape({
       update: PropTypes.func.isRequired,
-    },
+    }),
   }).isRequired,
   query: PropTypes.shape({
     claim_id: PropTypes.string,

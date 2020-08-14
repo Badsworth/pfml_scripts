@@ -10,7 +10,7 @@ describe("ClaimsApi", () => {
   let claimsApi;
 
   beforeEach(() => {
-    jest.resetAllMocks();
+    portalRequest.mockReset();
     claimsApi = new ClaimsApi();
   });
 
@@ -123,13 +123,11 @@ describe("ClaimsApi", () => {
     let mockResponseData;
     const claim = new Claim({
       application_id: "mock-application_id",
-      duration_type: "type",
     });
 
     beforeEach(() => {
       mockResponseData = {
         application_id: "mock-application_id",
-        duration_type: "type",
       };
 
       portalRequest.mockResolvedValueOnce({
@@ -191,13 +189,11 @@ describe("ClaimsApi", () => {
     let mockResponseData;
     const claim = new Claim({
       application_id: "mock-application_id",
-      duration_type: "type",
     });
 
     beforeEach(() => {
       mockResponseData = {
         application_id: "mock-application_id",
-        duration_type: "type",
       };
 
       portalRequest.mockResolvedValueOnce({
