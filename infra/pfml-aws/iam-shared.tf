@@ -46,6 +46,9 @@ data "aws_iam_policy_document" "developers_and_ci_deploy_access_policy" {
       # team to deploy the application to S3-hosted buckets.
       "s3:*",
 
+      # Allow teams to manage SNS topics and subscriptions.
+      "sns:*",
+
       # Allow teams to manage security groups.
       "ec2:AuthorizeSecurityGroupEgress",
       "ec2:AuthorizeSecurityGroupIngress",
