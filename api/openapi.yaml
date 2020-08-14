@@ -420,14 +420,14 @@ components:
         data:
           oneOf:
             - type: array
-            - type: object        
+            - type: object
         warnings:
           type: array
           items:
-            $ref: "#/components/schemas/Issue"        
+            $ref: "#/components/schemas/Issue"
       required: ["status_code"]
       additionalProperties: false
-      
+
     Meta:
       type: object
       properties:
@@ -470,7 +470,7 @@ components:
           type: string
       required: ["type", "message"]
       additionalProperties: false
-    
+
     UserResponse:
       type: object
       properties:
@@ -806,6 +806,16 @@ components:
           type: boolean
           nullable: true
           example: true
+        child_birth_date:
+          type: string
+          nullable: true
+          format: date
+          example: "2020-04-24"
+        child_placement_date:
+          type: string
+          nullable: true
+          format: date
+          example: "2020-04-24"
         employer_notified:
           type: boolean
           nullable: true

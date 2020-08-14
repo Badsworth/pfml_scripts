@@ -123,6 +123,8 @@ class ApplicationFactory(BaseFactory):
     has_state_id = None
     mass_id = None
     pregnant_or_recent_birth = False
+    child_birth_date = None
+    child_placement_date = None
     employer_notified = False
     employer_notification_date = None
     start_time = Generators.Now

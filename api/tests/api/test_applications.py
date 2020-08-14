@@ -262,6 +262,38 @@ def test_application_patch_pregnant_or_recent_birth(client, user, auth_token, te
     assert updated_flag is True
 
 
+def test_application_patch_child_birth_date(client, user, auth_token, test_db_session):
+    application = ApplicationFactory.create(user=user)
+
+    response = client.patch(
+        "/v1/applications/{}".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+        json={"leave_details": {"child_birth_date": "2020-09-21"}},
+    )
+
+    assert response.status_code == 200
+
+    response_body = response.get_json()
+    child_dob = response_body.get("data").get("leave_details").get("child_birth_date")
+    assert child_dob == "2020-09-21"
+
+
+def test_application_patch_child_placement_date(client, user, auth_token, test_db_session):
+    application = ApplicationFactory.create(user=user)
+
+    response = client.patch(
+        "/v1/applications/{}".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+        json={"leave_details": {"child_placement_date": "2020-05-13"}},
+    )
+
+    assert response.status_code == 200
+
+    response_body = response.get_json()
+    child_dob = response_body.get("data").get("leave_details").get("child_placement_date")
+    assert child_dob == "2020-05-13"
+
+
 def test_application_patch_state_id_fields(client, user, auth_token, test_db_session):
     application = ApplicationFactory.create(user=user)
 
@@ -593,6 +625,8 @@ def test_application_patch_null_values(client, user, auth_token):
                     "status": None,
                 }
             ],
+            "child_birth_date": None,
+            "child_placement_date": None,
             "employer_notification_date": None,
             "employer_notification_method": None,
             "employer_notified": None,
