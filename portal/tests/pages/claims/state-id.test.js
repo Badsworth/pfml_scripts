@@ -1,9 +1,7 @@
 import StateId from "../../../src/pages/claims/state-id";
-import { act } from "react-dom/test-utils";
-import { mockUpdateUser } from "../../../src/api/UsersApi";
 import { renderWithAppLogic } from "../../test-utils";
 
-jest.mock("../../../src/api/UsersApi");
+jest.mock("../../../src/hooks/useAppLogic");
 
 describe("StateId", () => {
   it("initially renders the page without an id field", () => {
@@ -16,9 +14,8 @@ describe("StateId", () => {
   describe("when user has a state id", () => {
     it("renders id field", () => {
       const { wrapper } = renderWithAppLogic(StateId, {
-        userAttrs: {
+        claimAttrs: {
           has_state_id: true,
-          state_id: "12345",
         },
       });
 
@@ -29,15 +26,20 @@ describe("StateId", () => {
   });
 
   describe("when the form is successfully submitted", () => {
-    it("calls updateUser and updates the state", async () => {
-      expect.assertions();
-      const { wrapper } = renderWithAppLogic(StateId);
-
-      await act(async () => {
-        await wrapper.find("QuestionPage").simulate("save");
+    it("calls claims.update", () => {
+      const { appLogic, wrapper } = renderWithAppLogic(StateId, {
+        claimAttrs: {
+          has_state_id: true,
+          mass_id: "123456789",
+        },
       });
 
-      expect(mockUpdateUser).toHaveBeenCalledTimes(1);
+      wrapper.find("QuestionPage").simulate("save");
+
+      expect(appLogic.claims.update).toHaveBeenCalledWith(expect.any(String), {
+        has_state_id: true,
+        mass_id: "123456789",
+      });
     });
   });
 });

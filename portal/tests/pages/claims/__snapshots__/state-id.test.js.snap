@@ -28,7 +28,7 @@ exports[`StateId initially renders the page without an id field 1`] = `
   <ConditionalContent
     fieldNamesClearedWhenHidden={
       Array [
-        "state_id",
+        "mass_id",
       ]
     }
     getField={[Function]}
@@ -38,7 +38,7 @@ exports[`StateId initially renders the page without an id field 1`] = `
   >
     <InputText
       label="Enter your license or ID number"
-      name="state_id"
+      name="mass_id"
       onChange={[Function]}
       value=""
     />

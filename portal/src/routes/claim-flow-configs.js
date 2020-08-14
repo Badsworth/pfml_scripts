@@ -33,6 +33,7 @@ import { fields as previousLeavesFields } from "../pages/claims/previous-leaves"
 import { fields as reasonPregnancyFields } from "../pages/claims/reason-pregnancy";
 import routes from "./index";
 import { fields as ssnFields } from "../pages/claims/ssn";
+import { fields as stateIdFields } from "../pages/claims/state-id";
 
 /**
  * @see https://xstate.js.org/docs/guides/guards.html
@@ -44,7 +45,7 @@ export const guards = {
     get(claim, "leave_details.reason") === LeaveReason.bonding,
   isEmployed: ({ claim }) =>
     get(claim, "employment_status") === EmploymentStatus.employed,
-  hasStateId: ({ user }) => user.has_state_id === true,
+  hasStateId: ({ claim }) => claim.has_state_id === true,
   hasEmployerBenefits: ({ claim }) => claim.has_employer_benefits === true,
   hasOtherIncomes: ({ claim }) => claim.has_other_incomes === true,
   hasPreviousLeaves: ({ claim }) => claim.has_previous_leaves === true,
@@ -113,9 +114,7 @@ export default {
     [routes.claims.stateId]: {
       meta: {
         step: ClaimSteps.verifyId,
-        // user fields are not currently evaluated
-        // when determining step completeness
-        fields: [],
+        fields: stateIdFields,
       },
       on: {
         CONTINUE: [

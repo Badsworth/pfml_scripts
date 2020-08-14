@@ -60,6 +60,7 @@ function fullClaimAttrs() {
     has_employer_benefits: true,
     has_other_incomes: true,
     has_previous_leaves: true,
+    has_state_id: true,
     last_name: "Baxter",
     leave_details: {
       employer_notified: true,
@@ -67,6 +68,7 @@ function fullClaimAttrs() {
       intermittent_leave_periods: [new IntermittentLeavePeriod()],
       reason: LeaveReason.medical,
     },
+    mass_id: "*********",
     middle_name: "Monstera",
     other_incomes,
     previous_leaves,
@@ -88,7 +90,6 @@ describe("Review", () => {
     it("renders Review page with the field values", () => {
       const { wrapper } = renderWithAppLogic(Review, {
         claimAttrs: fullClaimAttrs(),
-        userAttrs: { has_state_id: true },
       });
 
       expect(wrapper).toMatchSnapshot();

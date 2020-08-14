@@ -60,14 +60,14 @@ const machineTests = {
   [routes.claims.uploadStateId]: {
     meta: {
       test: (_, event) => {
-        expect(get(event.context.user, "has_state_id")).toEqual(true);
+        expect(get(event.context.claim, "has_state_id")).toEqual(true);
       },
     },
   },
   [routes.claims.uploadOtherId]: {
     meta: {
       test: (_, event) => {
-        expect(get(event.context.user, "has_state_id")).toBeFalsy();
+        expect(get(event.context.claim, "has_state_id")).toBeFalsy();
       },
     },
   },
@@ -214,7 +214,8 @@ describe("routingMachine", () => {
   const testData = [
     { claimData: intermittentLeave, userData: {} },
     { claimData: reducedSchedule, userData: {} },
-    { claimData: medicalClaim, userData: hasStateId },
+    { claimData: hasStateId, userData: {} },
+    { claimData: medicalClaim, userData: {} },
     { claimData: employed, userData: {} },
     { claimData: hasEmployerBenefits, userData: {} },
     { claimData: hasOtherIncomes, userData: {} },

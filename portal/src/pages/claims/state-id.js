@@ -4,31 +4,24 @@ import InputText from "../../components/InputText";
 import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
-import User from "../../models/User";
+import { pick } from "lodash";
 import useFormState from "../../hooks/useFormState";
 import useHandleInputChange from "../../hooks/useHandleInputChange";
 import { useTranslation } from "../../locales/i18n";
 import valueWithFallback from "../../utils/valueWithFallback";
 import withClaim from "../../hoc/withClaim";
 
+export const fields = ["claim.has_state_id", "claim.mass_id"];
+
 const StateId = (props) => {
   const { t } = useTranslation();
-  const {
-    users: { user, updateUser },
-  } = props.appLogic;
-  const { formState, getField, updateFields, removeField } = useFormState(user);
-
-  const { has_state_id, state_id } = formState;
+  const { formState, getField, updateFields, removeField } = useFormState(
+    pick(props, fields).claim
+  );
+  const { has_state_id, mass_id } = formState;
   const handleInputChange = useHandleInputChange(updateFields);
-
-  // TODO: Save this field to the appropriate API models once the fields exist
   const handleSave = () =>
-    updateUser(user.user_id, new User(formState), props.claim);
-
-  // Note that has_state_id can be null if user has never answered this question before.
-  // We should show this field if user already has a state id, and hide it either if
-  // indicated that they don't have a state id or if they had never answered the question.
-  const shouldShowStateIdField = !!has_state_id;
+    props.appLogic.claims.update(props.claim.application_id, formState);
 
   return (
     <QuestionPage title={t("pages.claimsStateId.title")} onSave={handleSave}>
@@ -52,16 +45,16 @@ const StateId = (props) => {
       />
 
       <ConditionalContent
-        fieldNamesClearedWhenHidden={["state_id"]}
+        fieldNamesClearedWhenHidden={["mass_id"]}
         getField={getField}
         removeField={removeField}
         updateFields={updateFields}
-        visible={shouldShowStateIdField}
+        visible={has_state_id === true}
       >
         <InputText
-          name="state_id"
+          name="mass_id"
           label={t("pages.claimsStateId.idLabel")}
-          value={valueWithFallback(state_id)}
+          value={valueWithFallback(mass_id)}
           onChange={handleInputChange}
         />
       </ConditionalContent>

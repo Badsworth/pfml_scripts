@@ -22,6 +22,7 @@ class Claim extends BaseModel {
       has_other_incomes: null,
       // TODO: this field doesn't exist in the API yet: https://lwd.atlassian.net/browse/CP-567
       has_previous_leaves: null,
+      has_state_id: null,
       last_name: null,
       leave_details: {
         continuous_leave_periods: [],
@@ -31,6 +32,7 @@ class Claim extends BaseModel {
         reason: null,
         reduced_schedule_leave_periods: [],
       },
+      mass_id: null,
       middle_name: null,
       other_incomes: [],
       pregnant_or_recent_birth: null,

@@ -43,9 +43,7 @@ export default class UsersApi {
     // API does not accept these fields yet
     // TODO remove once API accepts these fields
     const {
-      has_state_id,
       status: stat,
-      state_id,
       email_address,
       user_id: userId,
       date_of_birth,

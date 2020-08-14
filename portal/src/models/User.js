@@ -7,8 +7,6 @@ class User extends BaseModel {
       auth_id: null,
       consented_to_data_sharing: null,
       email_address: null,
-      has_state_id: null,
-      state_id: null,
       status: null,
       user_id: null,
     };

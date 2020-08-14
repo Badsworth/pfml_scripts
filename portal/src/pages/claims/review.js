@@ -33,7 +33,7 @@ import withClaim from "../../hoc/withClaim";
  */
 const Review = (props) => {
   const { t } = useTranslation();
-  const { claim, appLogic } = props;
+  const { claim } = props;
 
   const paymentPreference = get(claim, "temp.payment_preferences[0]");
   const reason = get(claim, "leave_details.reason");
@@ -79,9 +79,9 @@ const Review = (props) => {
         *********
       </ReviewRow>
 
-      {appLogic.users.user.has_state_id && (
+      {claim.has_state_id && (
         <ReviewRow label={t("pages.claimsReview.userStateIdLabel")}>
-          *********
+          {claim.mass_id}
         </ReviewRow>
       )}
 
@@ -258,7 +258,6 @@ const Review = (props) => {
 
 Review.propTypes = {
   claim: PropTypes.instanceOf(Claim),
-  appLogic: PropTypes.object.isRequired,
   query: PropTypes.shape({
     claim_id: PropTypes.string,
   }),

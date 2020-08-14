@@ -112,8 +112,6 @@ describe("users API", () => {
           "auth_id": null,
           "consented_to_data_sharing": true,
           "email_address": null,
-          "has_state_id": null,
-          "state_id": null,
           "status": null,
           "user_id": "mock-user_id",
         }
