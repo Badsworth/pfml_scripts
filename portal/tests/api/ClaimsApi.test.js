@@ -1,20 +1,17 @@
 import Claim from "../../src/models/Claim";
 import ClaimCollection from "../../src/models/ClaimCollection";
 import ClaimsApi from "../../src/api/ClaimsApi";
-import User from "../../src/models/User";
 import portalRequest from "../../src/api/portalRequest";
 
 jest.mock("../../src/api/portalRequest");
 
 describe("ClaimsApi", () => {
-  let user;
   /** @type {ClaimsApi} */
   let claimsApi;
 
   beforeEach(() => {
     jest.resetAllMocks();
-    user = new User({ user_id: "mock-user-id" });
-    claimsApi = new ClaimsApi({ user });
+    claimsApi = new ClaimsApi();
   });
 
   describe("getClaims", () => {
@@ -47,10 +44,7 @@ describe("ClaimsApi", () => {
         expect(portalRequest).toHaveBeenCalledWith(
           "GET",
           "/applications",
-          null,
-          {
-            user_id: user.user_id,
-          }
+          null
         );
       });
 
@@ -85,10 +79,7 @@ describe("ClaimsApi", () => {
         expect(portalRequest).toHaveBeenCalledWith(
           "POST",
           "/applications",
-          null,
-          {
-            user_id: user.user_id,
-          }
+          null
         );
       });
 
@@ -155,8 +146,7 @@ describe("ClaimsApi", () => {
       expect(portalRequest).toHaveBeenCalledWith(
         "PATCH",
         "/applications/mock-application_id",
-        body,
-        { user_id: user.user_id }
+        body
       );
     });
 
@@ -222,8 +212,7 @@ describe("ClaimsApi", () => {
       expect(portalRequest).toHaveBeenCalledWith(
         "POST",
         "/applications/mock-application_id/submit_application",
-        null,
-        { user_id: user.user_id }
+        null
       );
     });
 

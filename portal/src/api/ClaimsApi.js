@@ -21,14 +21,6 @@ import routes from "../routes";
  */
 
 export default class ClaimsApi {
-  constructor({ user }) {
-    // if (!user) {
-    //   throw new Error("ClaimsApi expects an instance of a user.");
-    // }
-
-    this.user = user;
-  }
-
   /**
    * Private method used by other methods in this class to make REST API requests
    * related to the /applications resource.
@@ -36,22 +28,10 @@ export default class ClaimsApi {
    * @param {string} method HTTP method
    * @param {string} [subPath] Sub-path of the /applications resource to use
    * @param {object} [body] Request body
-   * @param {object} [additionalHeaders] Additional headers to add to the request
    */
-  claimsRequest = async (
-    method,
-    subPath = "",
-    body = null,
-    additionalHeaders = {}
-  ) => {
+  claimsRequest = async (method, subPath = "", body = null) => {
     const apiPath = `${routes.api.claims}${subPath}`;
-    const baseHeaders = { user_id: this.user.user_id };
-    const headers = {
-      ...baseHeaders,
-      ...additionalHeaders,
-    };
-
-    return portalRequest(method, apiPath, body, headers);
+    return portalRequest(method, apiPath, body);
   };
 
   /**
