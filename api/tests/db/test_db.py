@@ -5,6 +5,7 @@
 import logging  # noqa: B1
 
 import massgov.pfml.db
+from massgov.pfml.db import DbConfig, make_connection_uri
 
 
 class DummyConnectionInfo:
@@ -37,3 +38,33 @@ def test_verify_ssl_not_in_use(caplog):
 
     assert caplog.messages == ["database connection is not using SSL"]
     assert caplog.records[0].levelname == "WARNING"
+
+
+def test_make_connection_uri():
+    assert (
+        make_connection_uri(
+            DbConfig(
+                host="localhost",
+                name="dbname",
+                username="foo",
+                password="bar",
+                schema="public",
+                port="5432",
+            )
+        )
+        == "postgresql://foo:bar@localhost:5432/dbname?options=-csearch_path=public"
+    )
+
+    assert (
+        make_connection_uri(
+            DbConfig(
+                host="localhost",
+                name="dbname",
+                username="foo",
+                password=None,
+                schema="public",
+                port="5432",
+            )
+        )
+        == "postgresql://foo@localhost:5432/dbname?options=-csearch_path=public"
+    )

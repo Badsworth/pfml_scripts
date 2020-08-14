@@ -51,7 +51,7 @@ data "template_file" "container_definitions" {
     memory                            = "1024"
     db_host                           = aws_db_instance.default.address
     db_name                           = aws_db_instance.default.name
-    db_username                       = aws_db_instance.default.username
+    db_username                       = "pfml_api"
     docker_image                      = "${data.aws_ecr_repository.app.repository_url}:${var.service_docker_tag}"
     environment_name                  = var.environment_name
     enable_full_error_logs            = var.enable_full_error_logs

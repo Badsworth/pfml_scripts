@@ -1483,6 +1483,7 @@ typing-extensions = ">=3.7.4"
 reference = "55470ceab8149db983411d5c094c9fe16343c58b"
 type = "git"
 url = "https://github.com/dropbox/sqlalchemy-stubs"
+
 [[package]]
 category = "dev"
 description = "SSH public key parser"
@@ -1677,7 +1678,7 @@ docs = ["sphinx", "jaraco.packaging (>=3.2)", "rst.linker (>=1.9)"]
 testing = ["jaraco.itertools", "func-timeout"]
 
 [metadata]
-content-hash = "700d7b8bcb895445691571e1a950a369f03219507aa3440d3ce7c4c27180ef9b"
+content-hash = "d5c9c6d5cddb62294b8512f9e77b92d6dcc7ae842c7c2f550b56fc6e1a7d9319"
 python-versions = "^3.8"
 
 [metadata.files]

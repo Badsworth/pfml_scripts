@@ -3,7 +3,8 @@
 #
 
 locals {
-  ssm_arn_prefix = "arn:aws:ssm:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:parameter/service"
+  ssm_arn_prefix         = "arn:aws:ssm:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:parameter/service"
+  iam_db_user_arn_prefix = "arn:aws:rds-db:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:dbuser:${aws_db_instance.default.resource_id}"
 }
 
 # Boilerplate policy to allow an IAM role to perform ECS tasks.
@@ -368,4 +369,33 @@ data "aws_iam_policy_document" "document_upload" {
   #  statement {
   #    effect = "Deny"
   #  }
+}
+
+data "aws_iam_policy_document" "db_user_pfml_api" {
+  # Policy to allow connection to RDS via IAM database authentication as pfml_api user
+  # https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/UsingWithRDS.IAMDBAuth.IAMPolicy.html
+  statement {
+    actions = [
+      "rds-db:connect"
+    ]
+
+    resources = [
+      "${local.iam_db_user_arn_prefix}/pfml_api"
+    ]
+  }
+}
+
+resource "aws_iam_policy" "db_user_pfml_api" {
+  name   = "${local.app_name}-${var.environment_name}-db_user_pfml_api-policy"
+  policy = data.aws_iam_policy_document.db_user_pfml_api.json
+}
+
+resource "aws_iam_role_policy_attachment" "db_user_pfml_api_to_api_service_attachment" {
+  role       = aws_iam_role.api_service.name
+  policy_arn = aws_iam_policy.db_user_pfml_api.arn
+}
+
+resource "aws_iam_role_policy_attachment" "db_user_pfml_api_to_lambda_role_attachment" {
+  role       = aws_iam_role.lambda_role.name
+  policy_arn = aws_iam_policy.db_user_pfml_api.arn
 }

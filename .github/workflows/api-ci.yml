@@ -47,6 +47,18 @@ jobs:
       - name: build container
         run: make build
 
+      - name: test for multi-headed migration situation
+        run: make test args="-k test_only_single_head_revision_in_migrations"
+
+      - name: start db
+        run: docker-compose up --detach mass-pfml-db
+
+      - name: run migrations
+        run: make db-upgrade
+
+      - name: create database users
+        run: make db-create-users
+
       - name: test
         run: make test
 

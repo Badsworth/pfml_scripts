@@ -23,7 +23,7 @@ from massgov.pfml.dor.importer.dor_file_formats import (
     EMPLOYER_QUARTER_INFO_FORMAT,
 )
 from massgov.pfml.dor.importer.lib.decrypter import Decrypter, GpgDecrypter, Utf8Decrypter
-from massgov.pfml.util.aws_ssm import get_secret
+from massgov.pfml.util.config import get_secret_from_env
 from massgov.pfml.util.files.file_format import FileFormat
 
 logger = logging.get_logger("massgov.pfml.dor.importer.import_dor")
@@ -88,10 +88,8 @@ def handler(event, context):
         decrypter = Utf8Decrypter()
     else:
         logger.info("Setting up GPG")
-        gpg_decryption_key = get_secret(aws_ssm, os.environ["GPG_DECRYPTION_KEY_SSM_PATH"])
-        gpg_decryption_passphrase = get_secret(
-            aws_ssm, os.environ["GPG_DECRYPTION_KEY_PASSPHRASE_SSM_PATH"]
-        )
+        gpg_decryption_key = get_secret_from_env(aws_ssm, "GPG_DECRYPTION_KEY")
+        gpg_decryption_passphrase = get_secret_from_env(aws_ssm, "GPG_DECRYPTION_KEY_PASSPHRASE")
 
         decrypter = GpgDecrypter(gpg_decryption_key, gpg_decryption_passphrase)
 
@@ -168,7 +166,7 @@ def process_daily_import(
     employer_file_path: str, employee_file_path: str, decrypter: Decrypter
 ) -> ImportReport:
     """Process s3 file by key"""
-    config = db.get_config(aws_ssm)
+    config = db.get_config()
     db_session_raw = db.init(config)
 
     with db.session_scope(db_session_raw) as db_session:

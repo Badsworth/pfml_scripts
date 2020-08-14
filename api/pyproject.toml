@@ -34,6 +34,7 @@ zeep = "^3.4.0"
 [tool.poetry.dev-dependencies]
 bandit = "^1.6.2"
 black = "^19.10b0"
+click = "^7.1.2"
 coverage = "^5.0.4"
 datamodel-code-generator = "^0.5.13"
 flake8 = "^3.7.9"

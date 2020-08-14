@@ -9,7 +9,6 @@ from alembic import context
 sys.path.insert(0, ".")  # noqa: E402
 
 import massgov.pfml.db as db  # noqa: E402 isort:skip
-import massgov.pfml.db.config as db_config  # noqa: E402 isort:skip
 from massgov.pfml.db.models.base import Base  # noqa: E402 isort:skip
 
 # import models module to trigger loading of all modules into the Base
@@ -25,7 +24,7 @@ config = context.config
 massgov.pfml.util.logging.init("migrations")
 
 if not config.get_main_option("sqlalchemy.url"):
-    uri = db.make_connection_uri(db_config.get_config())
+    uri = db.make_connection_uri(db.get_config(prefer_admin=True))
 
     # Escape percentage signs in the URI.
     # https://alembic.sqlalchemy.org/en/latest/api/config.html#alembic.config.Config.set_main_option

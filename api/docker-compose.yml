@@ -46,7 +46,9 @@ services:
       - PYTHONPATH=/app/
       - DB_HOST=mass-pfml-db
       - DB_NAME=pfml
-      - DB_USERNAME=pfml
+      - DB_ADMIN_USERNAME=pfml
+      - DB_ADMIN_PASSWORD=secret123
+      - DB_USERNAME=pfml_api
       - DB_PASSWORD=secret123
       - CORS_ORIGINS=http://localhost:3000
       - COGNITO_USER_POOL_KEYS_URL=file:///app/jwks.json

@@ -176,6 +176,15 @@ When branched migrations do need to happen in a defined order, then manually
 update the `down_revision` of one that should happen second to reference to the
 migration that should happen first.
 
+#### Create application DB users
+
+The migrations set up the DB roles and permissions. After the migrations have
+been run, actual DB users need to be connected for the application to use.
+
+```sh
+make db-create-users
+```
+
 ## Native Developer Setup
 
 To setup a development environment outside of Docker, you'll need to install a

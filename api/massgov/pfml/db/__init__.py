@@ -1,8 +1,10 @@
+import os
+import urllib.parse
 from contextlib import contextmanager
-from typing import Generator, Optional
+from typing import Generator, List, Optional, Union
 
 import sqlalchemy
-from sqlalchemy.engine import Engine
+from sqlalchemy.engine import Connection, Engine
 from sqlalchemy.orm import Session, scoped_session, sessionmaker
 
 import massgov.pfml.db.models
@@ -20,7 +22,17 @@ def init(config: Optional[DbConfig] = None) -> scoped_session:
 
     conn_info = conn.connection.connection.info
     logger.info(
-        "connected to db %s, server version %s", conn_info.dbname, conn_info.server_version,
+        "connected to postgres db",
+        extra={
+            "dbname": conn_info.dbname,
+            "user": conn_info.user,
+            "host": conn_info.host,
+            "port": conn_info.port,
+            "options": conn_info.options,
+            "dsn_parameters": conn_info.dsn_parameters,
+            "protocol_version": conn_info.protocol_version,
+            "server_version": conn_info.server_version,
+        },
     )
     verify_ssl(conn_info)
 
@@ -59,7 +71,14 @@ def create_engine(config: Optional[DbConfig] = None) -> Engine:
 
     connection_uri = make_connection_uri(config)
 
-    return sqlalchemy.create_engine(connection_uri)
+    # TODO: make this configurable?
+    # https://lwd.atlassian.net/browse/API-188
+    connect_args = {}
+    if os.getenv("ENVIRONMENT") != "local":
+        # TODO: should this be one of the verify-{ca,full} options?
+        connect_args["sslmode"] = "require"
+
+    return sqlalchemy.create_engine(connection_uri, connect_args=connect_args)
 
 
 @contextmanager
@@ -89,9 +108,52 @@ def make_connection_uri(config: DbConfig) -> str:
     host = config.host
     db_name = config.name
     username = config.username
-    password = config.password
+    password = urllib.parse.quote(config.password) if config.password else None
     schema = config.schema
+    port = config.port
 
-    uri = f"postgresql://{username}:{password}@{host}/{db_name}?options=-csearch_path={schema}"
+    netloc_parts = []
+
+    if username and password:
+        netloc_parts.append(f"{username}:{password}@")
+    elif username:
+        netloc_parts.append(f"{username}@")
+    elif password:
+        netloc_parts.append(f":{password}@")
+
+    netloc_parts.append(host)
+
+    if port:
+        netloc_parts.append(f":{port}")
+
+    netloc = "".join(netloc_parts)
+
+    uri = f"postgresql://{netloc}/{db_name}?options=-csearch_path={schema}"
 
     return uri
+
+
+def create_user(
+    db_conn: Connection, username: str, password: Union[str, None], roles: List[str]
+) -> None:
+    logger.info(f"Creating '{username}' if they don't exist")
+    db_conn.execute(
+        f"""
+    DO $$
+    BEGIN
+        CREATE USER {username};
+        EXCEPTION WHEN DUPLICATE_OBJECT THEN
+        RAISE NOTICE 'not creating user {username} -- it already exists';
+    END
+    $$;
+    """
+    )
+
+    if password is not None:
+        logger.info(f"Setting password for '{username}'")
+        db_conn.execute(f"ALTER USER {username} PASSWORD '{password}'")
+
+    # TODO: revoke any roles not listed?
+    for role in roles:
+        logger.info(f"Granting '{role}' to '{username}'")
+        db_conn.execute(f"GRANT {role} TO {username};")

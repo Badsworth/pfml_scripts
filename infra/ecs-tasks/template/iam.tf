@@ -1,6 +1,5 @@
 locals {
-  ssm_arn_prefix         = "arn:aws:ssm:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:parameter/service"
-  iam_db_user_arn_prefix = "arn:aws:rds-db:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:dbuser:${data.aws_db_instance.default.resource_id}"
+  ssm_arn_prefix = "arn:aws:ssm:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:parameter/service"
 }
 
 data "aws_iam_policy_document" "ecs_tasks_assume_role_policy" {
@@ -23,30 +22,6 @@ resource "aws_iam_role" "ecs_tasks" {
   name = "${local.app_name}-${var.environment_name}-ecs-tasks"
 
   assume_role_policy = data.aws_iam_policy_document.ecs_tasks_assume_role_policy.json
-}
-
-data "aws_iam_policy_document" "db_user_pfml_api" {
-  # Policy to allow connection to RDS via IAM database authentication as pfml_api user
-  # https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/UsingWithRDS.IAMDBAuth.IAMPolicy.html
-  statement {
-    actions = [
-      "rds-db:connect"
-    ]
-
-    resources = [
-      "${local.iam_db_user_arn_prefix}/pfml_api"
-    ]
-  }
-}
-
-resource "aws_iam_policy" "db_user_pfml_api" {
-  name   = "${local.app_name}-${var.environment_name}-db_user_pfml_api-policy"
-  policy = data.aws_iam_policy_document.db_user_pfml_api.json
-}
-
-resource "aws_iam_role_policy_attachment" "db_user_pfml_api_to_ecs_tasks_attachment" {
-  role       = aws_iam_role.ecs_tasks.name
-  policy_arn = aws_iam_policy.db_user_pfml_api.arn
 }
 
 # Task execution role. This role is used by ECS during startup to pull container images from

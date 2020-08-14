@@ -167,21 +167,22 @@ def test_db_schema(monkeypatch):
     import massgov.pfml.db as db
     import massgov.pfml.db.config
 
-    db_config = massgov.pfml.db.config.get_config()
+    db_admin_config = massgov.pfml.db.config.get_config(prefer_admin=True)
 
+    db_config = massgov.pfml.db.config.get_config()
     db_test_user = db_config.username
 
-    def exec_sql(sql):
-        engine = db.create_engine(db_config)
+    def exec_sql_admin(sql):
+        engine = db.create_engine(db_admin_config)
         with engine.connect() as connection:
             connection.execute(sql)
 
-    exec_sql(f"CREATE SCHEMA IF NOT EXISTS {schema_name} AUTHORIZATION {db_test_user};")
+    exec_sql_admin(f"CREATE SCHEMA IF NOT EXISTS {schema_name} AUTHORIZATION {db_test_user};")
     logger.info("create schema %s", schema_name)
 
     yield schema_name
 
-    exec_sql(f"DROP SCHEMA {schema_name} CASCADE;")
+    exec_sql_admin(f"DROP SCHEMA {schema_name} CASCADE;")
     logger.info("drop schema %s", schema_name)
 
 

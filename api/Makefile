@@ -149,6 +149,9 @@ login: start ## Start shell in running container
 login-db: ## Start psql with project environment variables
 	PGPASSWORD=$$DB_PASSWORD psql --host=$$DB_HOST --username=$$DB_USERNAME $$DB_NAME
 
+login-db-admin: ## Start psql with project environment variables and admin user
+	PGPASSWORD=$$DB_ADMIN_PASSWORD psql --host=$$DB_HOST --username=$$DB_ADMIN_USERNAME $$DB_NAME
+
 logs: start ## View API logs
 	docker-compose logs --follow --no-color $(APP_NAME) $(DECODE_LOG)
 
@@ -192,6 +195,9 @@ release-tag: ## Tag release image for registry
 
 run: ## Run docker-compose
 run: start logs
+
+db-create-users: ## Create database users
+	$(PY_RUN_CMD) db-admin-create-db-users
 
 db-upgrade: ## Apply pending migrations to db
 	$(PY_RUN_CMD) db-migrate-up $(DECODE_LOG)

@@ -3,14 +3,10 @@
 # Lambda function to export eligibility feed to fineos.
 #
 
-import boto3
-
 import massgov.pfml.util.logging as logging
 from massgov.pfml import db
 
 logger = logging.get_logger("massgov.pfml.fineos.eligibility_feed_export")
-
-aws_ssm = boto3.client("ssm", region_name="us-east-1")
 
 
 def handler(event, context):
@@ -26,7 +22,7 @@ def handler(event, context):
 
 
 def get_raw_db_session():
-    config = db.get_config(aws_ssm)
+    config = db.get_config()
     db_session_raw = db.init(config)
 
     return db_session_raw
