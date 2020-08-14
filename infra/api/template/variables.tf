@@ -159,3 +159,7 @@ variable "fineos_client_oauth2_client_id" {
   type        = string
   default     = ""
 }
+variable "fineos_eligibility_transfer_lambda_build_s3_key" {
+  description = "The S3 object key of the FINEOS eligibility transfer lambda artifact"
+  type        = string
+}

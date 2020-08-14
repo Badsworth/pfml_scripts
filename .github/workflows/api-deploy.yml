@@ -106,6 +106,51 @@ jobs:
         run: echo "::set-output name=dependencies_s3_key::$(python3 get-lambda-dependencies.py)"
         working-directory: ${{ env.infra-working-dir }}
 
+  eligibility-feed-build:
+    name: Build lambda function for FINEOS eligibility feed
+    runs-on: ubuntu-latest
+    env:
+      infra-working-dir: ./api/import_infra/fineos/eligibility_feed_export
+    outputs:
+      s3_key: ${{ steps.get_s3_key.outputs.s3_key }}
+      dependencies_s3_key: ${{ steps.get_dependencies_s3_key.outputs.dependencies_s3_key }}
+
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v1
+        with:
+          python-version: ${{ env.python-version }}
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.PFML_AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.PFML_AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+          role-to-assume: ci-run-deploys
+          role-duration-seconds: 3600
+
+      - name: Install API Package Dependencies
+        run: pip install wheel setuptools poetry
+        working-directory: ${{ env.working-dir }}
+
+      - name: Build API package
+        run: poetry build
+        working-directory: ${{ env.working-dir }}
+
+      - name: Install Lambda CLI Dependencies
+        run: pip install setuptools awscli aws-sam-cli
+        working-directory: ${{ env.infra-working-dir }}
+
+      - name: Lambda Build, Package and Upload to S3
+        run: make upload-release
+        working-directory: ${{ env.infra-working-dir }}
+
+      - name: Get Package S3 Key
+        id: get_s3_key
+        run: echo "::set-output name=s3_key::$(python3 get-lambda-build.py)"
+        working-directory: ${{ env.infra-working-dir }}
+
   cognito-post-confirmation-build:
     name: Build and upload Lambda function for Cognito Post Confirmation hook
     runs-on: ubuntu-latest
@@ -149,7 +194,7 @@ jobs:
     # This step doesn't really depend on any steps except api-build,
     # but for good measure we should make sure everything builds before
     # we deploy any updates to ECS tasks or services.
-    needs: [api-build, dor-import-build, cognito-post-confirmation-build]
+    needs: [api-build, dor-import-build, cognito-post-confirmation-build, eligibility-feed-build]
 
     env:
       TF_VAR_service_docker_tag: ${{ github.sha }}
@@ -261,13 +306,14 @@ jobs:
   api-release:
     name: Release
     runs-on: ubuntu-latest
-    needs: [api-build, dor-import-build, cognito-post-confirmation-build, api-db-migrate-up]
+    needs: [api-build, dor-import-build, cognito-post-confirmation-build, eligibility-feed-build, api-db-migrate-up]
 
     env:
       TF_VAR_service_docker_tag: ${{ github.sha }}
       TF_VAR_dor_lambda_artifact_s3_key: ${{ needs.dor-import-build.outputs.s3_key }}
       TF_VAR_dor_import_lambda_dependencies_s3_key: ${{ needs.dor-import-build.outputs.dependencies_s3_key }}
       TF_VAR_cognito_post_confirmation_lambda_artifact_s3_key: ${{ needs.cognito-post-confirmation-build.outputs.s3_key }}
+      TF_VAR_fineos_eligibility_transfer_lambda_build_s3_key: ${{ needs.eligibility-feed-build.outputs.s3_key }}
 
     steps:
       - uses: actions/checkout@v2

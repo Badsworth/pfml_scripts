@@ -42,4 +42,5 @@ module "api" {
 
   cognito_user_pool_arn                            = null
   cognito_post_confirmation_lambda_artifact_s3_key = local.cognito_post_confirmation_lambda_artifact_s3_key
+  fineos_eligibility_transfer_lambda_build_s3_key  = local.fineos_eligibility_transfer_lambda_build_s3_key
 }

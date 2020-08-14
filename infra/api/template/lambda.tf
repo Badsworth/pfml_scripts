@@ -93,3 +93,34 @@ resource "aws_lambda_permission" "allow_cognito_post_confirmation" {
   principal     = "cognito-idp.amazonaws.com"
   source_arn    = var.cognito_user_pool_arn
 }
+
+resource "aws_lambda_function" "eligibility_feed" {
+  s3_bucket = data.aws_s3_bucket.lambda_build.bucket
+  s3_key    = "fineos-eligibility-feed-export/${var.fineos_eligibility_transfer_lambda_build_s3_key}"
+
+  function_name = "massgov-pfml-${var.environment_name}-eligibility-feed"
+  handler       = "eligibility_export.handler"
+
+  runtime = var.lambda_runtime
+  publish = "true"
+
+  timeout = 900
+
+  role = aws_iam_role.lambda_role.arn
+
+  vpc_config {
+    subnet_ids         = var.vpc_app_subnet_ids
+    security_group_ids = [aws_security_group.data_import.id]
+  }
+
+  environment {
+    variables = {
+      DB_HOST              = aws_db_instance.default.address
+      DB_NAME              = aws_db_instance.default.name
+      DB_USERNAME          = aws_db_instance.default.username
+      DB_PASSWORD_SSM_PATH = "/service/${local.app_name}/${var.environment_name}/db-password"
+      # need fineos s3 bucket
+      # FOLDER_PATH                            = "s3://massgov-pfml-${var.environment_name}-fineos-transfer"
+    }
+  }
+}
