@@ -8,50 +8,38 @@ import QuestionPage from "../../components/QuestionPage";
 import { useTranslation } from "../../locales/i18n";
 import withClaim from "../../hoc/withClaim";
 
-const UploadOtherId = (props) => {
+const UploadId = (props) => {
   const { t } = useTranslation();
-  const [otherIdFiles, setOtherIdFiles] = useState([]);
-  const documentList = t("pages.claimsUploadOtherId.documentList", {
-    returnObjects: true,
-  });
+  const [stateIdFiles, setStateIdFiles] = useState([]);
+  const i18nContext = props.claim.has_state_id ? "mass" : "other";
 
-  // @todo: CP-396 connect this page to the API file upload endpoint.
+  // TODO (CP-396): connect this page to the API file upload endpoint.
   const handleSave = () => {
     props.appLogic.goToNextPage({}, props.query);
   };
 
   return (
-    <QuestionPage
-      title={t("pages.claimsUploadOtherId.title")}
-      onSave={handleSave}
-    >
+    <QuestionPage title={t("pages.claimsUploadId.title")} onSave={handleSave}>
       <Heading level="2" size="1">
-        {t("pages.claimsUploadOtherId.sectionLabel")}
+        {t("pages.claimsUploadId.sectionLabel", { context: i18nContext })}
       </Heading>
-      <Lead>{t("pages.claimsUploadOtherId.lead")}</Lead>
-      <ul className="usa-list">
-        {documentList.map((listItem, index) => (
-          <li key={index}>{listItem}</li>
-        ))}
-      </ul>
+      <Lead>{t("pages.claimsUploadId.lead", { context: i18nContext })}</Lead>
       <FileUploadDetails />
       <FileCardList
-        files={otherIdFiles}
-        setFiles={setOtherIdFiles}
+        files={stateIdFiles}
+        setFiles={setStateIdFiles}
         setAppErrors={props.appLogic.setAppErrors}
-        fileHeadingPrefix={t("pages.claimsUploadOtherId.fileHeadingPrefix")}
-        addFirstFileButtonText={t(
-          "pages.claimsUploadOtherId.addFirstFileButton"
-        )}
+        fileHeadingPrefix={t("pages.claimsUploadId.fileHeadingPrefix")}
+        addFirstFileButtonText={t("pages.claimsUploadId.addFirstFileButton")}
         addAnotherFileButtonText={t(
-          "pages.claimsUploadOtherId.addAnotherFileButton"
+          "pages.claimsUploadId.addAnotherFileButton"
         )}
       />
     </QuestionPage>
   );
 };
 
-UploadOtherId.propTypes = {
+UploadId.propTypes = {
   query: PropTypes.shape({
     claim_id: PropTypes.string,
   }),
@@ -59,6 +47,7 @@ UploadOtherId.propTypes = {
     goToNextPage: PropTypes.func.isRequired,
     setAppErrors: PropTypes.func.isRequired,
   }).isRequired,
+  claim: PropTypes.object.isRequired,
 };
 
-export default withClaim(UploadOtherId);
+export default withClaim(UploadId);

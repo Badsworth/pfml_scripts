@@ -1,0 +1,111 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`UploadId when the user doesn't have a Mass ID renders the page with 'Other' ID content 1`] = `
+<QuestionPage
+  onSave={[Function]}
+  title="Verify your identity"
+>
+  <Heading
+    level="2"
+    size="1"
+  >
+    Upload an identification document
+  </Heading>
+  <Lead>
+    Upload one of the following: Document 1, Document 2, or Document 3.
+  </Lead>
+  <FileUploadDetails />
+  <FileCardList
+    addAnotherFileButtonText="Choose another file"
+    addFirstFileButtonText="Choose a file"
+    fileHeadingPrefix="File"
+    files={Array []}
+    setAppErrors={[MockFunction]}
+    setFiles={[Function]}
+  />
+</QuestionPage>
+`;
+
+exports[`UploadId when the user has a Mass ID renders the page with Mass ID content 1`] = `
+<QuestionPage
+  onSave={[Function]}
+  title="Verify your identity"
+>
+  <Heading
+    level="2"
+    size="1"
+  >
+    Upload your Massachusetts driver’s license or ID card
+  </Heading>
+  <Lead>
+    In order to verify your identity, upload a copy of both the front and the back of your ID card.
+  </Lead>
+  <FileUploadDetails />
+  <FileCardList
+    addAnotherFileButtonText="Choose another file"
+    addFirstFileButtonText="Choose a file"
+    fileHeadingPrefix="File"
+    files={Array []}
+    setAppErrors={[MockFunction]}
+    setFiles={[Function]}
+  />
+</QuestionPage>
+`;
+
+exports[`UploadId when the user uploads files renders filecards for the files 1`] = `
+<QuestionPage
+  onSave={[Function]}
+  title="Verify your identity"
+>
+  <Heading
+    level="2"
+    size="1"
+  >
+    Upload an identification document
+  </Heading>
+  <Lead>
+    Upload one of the following: Document 1, Document 2, or Document 3.
+  </Lead>
+  <FileUploadDetails />
+  <FileCardList
+    addAnotherFileButtonText="Choose another file"
+    addFirstFileButtonText="Choose a file"
+    fileHeadingPrefix="File"
+    files={
+      Array [
+        Object {
+          "file": File {},
+          "id": "File1",
+        },
+        Object {
+          "file": File {},
+          "id": "File2",
+        },
+        Object {
+          "file": File {},
+          "id": "File3",
+        },
+      ]
+    }
+    setAppErrors={
+      [MockFunction] {
+        "calls": Array [
+          Array [
+            AppErrorInfoCollection {
+              "items": Array [],
+              "itemsById": Object {},
+            },
+          ],
+        ],
+        "results": Array [
+          Object {
+            "type": "return",
+            "value": undefined,
+          },
+        ],
+      }
+    }
+    setFiles={[Function]}
+  />
+</QuestionPage>
+`;

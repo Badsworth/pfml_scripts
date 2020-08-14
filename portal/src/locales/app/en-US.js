@@ -55,11 +55,10 @@ const shared = {
   claimDurationTypeContinuous: "Continuous leave",
   claimDurationTypeIntermittent: "Intermittent leave",
   claimDurationTypeReducedSchedule: "Reduced leave schedule",
-  claimsFileUploadTitle: "Verify your identity",
   claimsLeaveDetailsTitle: "Leave details",
   claimsLeaveDurationTitle: "Leave duration",
   claimsOtherLeaveTitle: "Other income and benefits",
-  claimsTakingLeaveTitle: "Verify your identity",
+  claimsVerifyIdTitle: "Verify your identity",
   employerBenefitEntryPrefix: "Benefit",
   employerBenefitType_familyOrMedicalLeave: "Family or medical leave insurance",
   employerBenefitType_paidLeave: "Accrued paid Leave",
@@ -216,9 +215,8 @@ const pages = {
   },
   claimsDateOfBirth: {
     sectionLabel: "What's your birthdate?",
-    title: "$t(shared.claimsTakingLeaveTitle)",
+    title: "$t(shared.claimsVerifyIdTitle)",
   },
-
   claimsDuration: {
     continuousTypeHint: "$t(shared.claimDurationTypeContinuous)",
     continuousTypeLabel:
@@ -366,7 +364,7 @@ const pages = {
       "Fill out your name as it appears on official documents like your driver’s license or W-2.",
     middleNameLabel: "Middle name",
     sectionLabel: "What's your name?",
-    title: "$t(shared.claimsTakingLeaveTitle)",
+    title: "$t(shared.claimsVerifyIdTitle)",
   },
   claimsNotifiedEmployer: {
     choiceNo: "$t(shared.choiceNo)",
@@ -548,14 +546,14 @@ const pages = {
     lead:
       "It’s recommended that you enter your SSN. Don’t have an SSN? Use your Individual Taxpayer Identification Number (ITIN).",
     sectionLabel: "What's your Social Security Number?",
-    title: "$t(shared.claimsTakingLeaveTitle)",
+    title: "$t(shared.claimsVerifyIdTitle)",
   },
   claimsStateId: {
     choiceNo: "$t(shared.choiceNo)",
     choiceYes: "$t(shared.choiceYes)",
     hasStateIdLabel: "Do you have a Massachusetts driver's license or ID card?",
     idLabel: "Enter your license or ID number",
-    title: "$t(shared.claimsTakingLeaveTitle)",
+    title: "$t(shared.claimsVerifyIdTitle)",
   },
   claimsSuccess: {
     body:
@@ -575,24 +573,18 @@ const pages = {
     sectionLabel_medical: "Upload your Healthcare Provider form",
     title: "$t(shared.claimsLeaveDetailsTitle)",
   },
-  claimsUploadOtherId: {
-    addAnotherFileButton: "Choose another file",
-    addFirstFileButton: "Choose a file",
-    // @todo: CP-496 update this with the real documents users can use to ID proof
-    documentList: ["Document 1", "Document 2, or", "Document 3"],
-    fileHeadingPrefix: "File",
-    lead: "Upload one of the following:",
-    sectionLabel: "Upload an identification document",
-    title: "$t(shared.claimsFileUploadTitle)",
-  },
-  claimsUploadStateId: {
+  claimsUploadId: {
     addAnotherFileButton: "Choose another file",
     addFirstFileButton: "Choose a file",
     fileHeadingPrefix: "File",
-    lead:
+    lead_mass:
       "In order to verify your identity, upload a copy of both the front and the back of your ID card.",
-    sectionLabel: "Upload your Massachusetts driver’s license or ID card",
-    title: "$t(shared.claimsFileUploadTitle)",
+    // TODO (CP-496): update this with the real documents users can use to ID proof
+    lead_other:
+      "Upload one of the following: Document 1, Document 2, or Document 3.",
+    sectionLabel_mass: "Upload your Massachusetts driver’s license or ID card",
+    sectionLabel_other: "Upload an identification document",
+    title: "$t(shared.claimsVerifyIdTitle)",
   },
   index: {
     afterApplyingHeading: "What to expect after you apply",

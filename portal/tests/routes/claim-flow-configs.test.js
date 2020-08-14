@@ -57,18 +57,9 @@ const machineTests = {
       test: () => {},
     },
   },
-  [routes.claims.uploadStateId]: {
+  [routes.claims.uploadId]: {
     meta: {
-      test: (_, event) => {
-        expect(get(event.context.claim, "has_state_id")).toEqual(true);
-      },
-    },
-  },
-  [routes.claims.uploadOtherId]: {
-    meta: {
-      test: (_, event) => {
-        expect(get(event.context.claim, "has_state_id")).toBeFalsy();
-      },
+      test: () => {},
     },
   },
   [routes.claims.ssn]: {

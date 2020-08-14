@@ -117,29 +117,10 @@ export default {
         fields: stateIdFields,
       },
       on: {
-        CONTINUE: [
-          {
-            target: routes.claims.uploadStateId,
-            cond: "hasStateId",
-          },
-          {
-            target: routes.claims.uploadOtherId,
-          },
-        ],
+        CONTINUE: routes.claims.uploadId,
       },
     },
-    [routes.claims.uploadStateId]: {
-      meta: {
-        step: ClaimSteps.verifyId,
-        // user fields are not currently evaluated
-        // when determining step completeness
-        fields: [],
-      },
-      on: {
-        CONTINUE: routes.claims.ssn,
-      },
-    },
-    [routes.claims.uploadOtherId]: {
+    [routes.claims.uploadId]: {
       meta: {
         step: ClaimSteps.verifyId,
         // user fields are not currently evaluated
