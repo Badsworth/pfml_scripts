@@ -4,5 +4,6 @@ theme:
     name: 'material'
 
 markdown_extensions:
+  - admonition
   - codehilite
   - pymdownx.superfences
