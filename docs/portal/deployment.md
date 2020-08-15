@@ -1,4 +1,4 @@
-# Deploy
+# Deployment
 
 Deploys to test, stage, and prod environments are done with Github Actions workflows. 
 Pushes to the following branches will trigger deploys to the associated environments:
