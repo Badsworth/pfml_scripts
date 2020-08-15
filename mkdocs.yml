@@ -1,1 +1,8 @@
-site_name: 'PFML'
+site_name: PFML
+
+theme:
+    name: 'material'
+
+markdown_extensions:
+  - codehilite
+  - pymdownx.superfences
