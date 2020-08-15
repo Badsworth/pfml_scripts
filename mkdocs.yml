@@ -1,4 +1,6 @@
 site_name: PFML
+repo_name: EOLWD/pfml
+repo_url: "https://github.com/EOLWD/PFML/"
 
 theme:
     name: 'material'

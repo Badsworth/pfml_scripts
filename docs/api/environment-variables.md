@@ -6,7 +6,7 @@ We configure the application by using [environment variables](https://12factor.n
 
 During local development, we specify environment variables through [docker-compose.yml](/api/docker-compose.yml).
 
-```
+```yaml
 mass-pfml-api:
   ...
   environment:
@@ -24,9 +24,9 @@ in order to rebuild your container and pick up the new values.
 
 In deployed environments, variables are pulled in through AWS Elastic Container Service (ECS) 
 as listed in the [container definition](/infra/api/template/container_definitions.json). 
-Insensitive values are encoded into the definition when Terraform generates it:
+Non-sensitive values are encoded into the definition when Terraform generates it:
 
-```
+```json
 "environment": [
   { "name": "ENVIRONMENT", "value": "${environment_name}" },
   { "name": "DB_HOST", "value": "${db_host}" },
@@ -38,7 +38,7 @@ Insensitive values are encoded into the definition when Terraform generates it:
 
 ...and sensitive values are pulled in from AWS SSM Parameter Store when the container starts:
 
-```
+```json
 "secrets": [
   { "name": "DB_PASSWORD", "valueFrom": "/service/${app_name}/${environment_name}/db-password" },
   { "name": "NEW_RELIC_LICENSE_KEY", "valueFrom": "/service/${app_name}/common/newrelic-license-key" },
@@ -46,10 +46,11 @@ Insensitive values are encoded into the definition when Terraform generates it:
 ]
 ```
 
-To view or update insensitive values in the container definition file, 
+To view or update non-sensitive values in the container definition file, 
 set them in the `container_definitions` resource in [service.tf](/infra/api/template/service.tf).
 
-To recap, for insensitive values:
+To recap for non-sensitive values:
+
 1. If it's a variable that should be configured explicitly for each environment:
     1. Add new variable to the [API template
        variables.tf](/infra/api/template/variables.tf)
