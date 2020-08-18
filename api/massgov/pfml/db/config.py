@@ -2,8 +2,6 @@ import os
 from dataclasses import dataclass
 from typing import Optional, Union
 
-import boto3
-
 import massgov.pfml.util.logging
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
@@ -17,6 +15,7 @@ class DbConfig:
     password: Union[str, None]
     schema: str
     port: str
+    use_iam_auth: bool = False
 
 
 def get_config(prefer_admin: bool = False) -> DbConfig:
@@ -39,7 +38,7 @@ def get_config(prefer_admin: bool = False) -> DbConfig:
     )
 
     if os.getenv("ENVIRONMENT") != "local" and db_config.password is None:
-        db_config.password = get_iam_auth_token(db_config)
+        db_config.use_iam_auth = True
 
     logger.info(
         "Constructed database configuration",
@@ -50,16 +49,8 @@ def get_config(prefer_admin: bool = False) -> DbConfig:
             "password": "***" if db_config.password is not None else None,
             "schema": db_config.schema,
             "port": db_config.port,
+            "use_iam_auth": db_config.use_iam_auth,
         },
     )
 
     return db_config
-
-
-def get_iam_auth_token(config: DbConfig, region: str = "us-east-1") -> str:
-    logger.info("Generating IAM authentication token for RDS")
-
-    rds_client = boto3.client("rds", region_name=region)
-    return rds_client.generate_db_auth_token(
-        DBHostname=config.host, Port=config.port, DBUsername=config.username, Region=region
-    )

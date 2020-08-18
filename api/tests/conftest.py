@@ -249,3 +249,19 @@ def test_db_other_session(test_db):
 
     db_session.close()
     db_session.remove()
+
+
+@pytest.fixture
+def set_env_to_local(monkeypatch):
+    # this should always be the case for the tests, but the when testing
+    # behavior that depends on the ENVIRONMENT value, best set it explicitly, to
+    # be sure we test the correct behavior
+    monkeypatch.setenv("ENVIRONMENT", "local")
+
+
+@pytest.fixture
+def reset_aws_env_vars(monkeypatch):
+    monkeypatch.setenv("AWS_ACCESS_KEY_ID", "testing")
+    monkeypatch.setenv("AWS_SECRET_ACCESS_KEY", "testing")
+    monkeypatch.setenv("AWS_SECURITY_TOKEN", "testing")
+    monkeypatch.setenv("AWS_SESSION_TOKEN", "testing")

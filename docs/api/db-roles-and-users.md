@@ -60,4 +60,6 @@ High level implications of IAM auth:
 - IAM policy attached to service IAM roles/users allowing connection to DB as
   given user
 - Output of the RDS SDK `generate_db_auth_token()` function used as password
-  when connecting as user
+  when connecting as user. These tokens are only valid for 15 minutes, so this
+  function should be called to get a valid token any time a connection is to be
+  made.

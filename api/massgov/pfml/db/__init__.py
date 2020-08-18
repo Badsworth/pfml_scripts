@@ -1,9 +1,12 @@
 import os
 import urllib.parse
 from contextlib import contextmanager
-from typing import Generator, List, Optional, Union
+from typing import Any, Dict, Generator, List, Optional, Union
 
+import boto3
+import psycopg2
 import sqlalchemy
+import sqlalchemy.pool as pool
 from sqlalchemy.engine import Connection, Engine
 from sqlalchemy.orm import Session, scoped_session, sessionmaker
 
@@ -66,11 +69,28 @@ def verify_ssl(connection_info):
 
 
 def create_engine(config: Optional[DbConfig] = None) -> Engine:
-    if config is None:
-        config = get_config()
+    db_config: DbConfig = config if config is not None else get_config()
 
-    connection_uri = make_connection_uri(config)
+    # We want to be able to control the connection parameters for each
+    # connection because for IAM authentication with RDS, short-lived tokens are
+    # used as the password, and so we potentially need to generate a fresh token
+    # for each connection.
+    #
+    # For more details on building connection pools, see the docs:
+    # https://docs.sqlalchemy.org/en/13/core/pooling.html#constructing-a-pool
+    def get_conn():
+        return psycopg2.connect(**get_connection_parameters(db_config))
 
+    conn_pool = pool.QueuePool(get_conn, max_overflow=10, pool_size=5)
+
+    # The URL only needs to specify the dialect, since the connection pool
+    # handles the actual connections.
+    #
+    # (a SQLAlchemy Engine represents a Dialect+Pool)
+    return sqlalchemy.create_engine("postgresql://", pool=conn_pool)
+
+
+def get_connection_parameters(db_config: DbConfig) -> Dict[str, Any]:
     # TODO: make this configurable?
     # https://lwd.atlassian.net/browse/API-188
     connect_args = {}
@@ -78,7 +98,21 @@ def create_engine(config: Optional[DbConfig] = None) -> Engine:
         # TODO: should this be one of the verify-{ca,full} options?
         connect_args["sslmode"] = "require"
 
-    return sqlalchemy.create_engine(connection_uri, connect_args=connect_args)
+    password = None
+    if db_config.use_iam_auth:
+        password = get_iam_auth_token(db_config)
+    else:
+        password = db_config.password
+
+    return dict(
+        host=db_config.host,
+        dbname=db_config.name,
+        user=db_config.username,
+        password=password,
+        port=db_config.port,
+        options=f"-c search_path={db_config.schema}",
+        **connect_args,
+    )
 
 
 @contextmanager
@@ -131,6 +165,15 @@ def make_connection_uri(config: DbConfig) -> str:
     uri = f"postgresql://{netloc}/{db_name}?options=-csearch_path={schema}"
 
     return uri
+
+
+def get_iam_auth_token(config: DbConfig, region: str = "us-east-1") -> str:
+    logger.info("Generating IAM authentication token for RDS")
+
+    rds_client = boto3.client("rds", region_name=region)
+    return rds_client.generate_db_auth_token(
+        DBHostname=config.host, Port=config.port, DBUsername=config.username, Region=region
+    )
 
 
 def create_user(

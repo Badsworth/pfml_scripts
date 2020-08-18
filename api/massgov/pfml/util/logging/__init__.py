@@ -21,6 +21,11 @@ LOGGING = {
         "massgov.pfml": {"handlers": ["console"], "level": "INFO", "propagate": False},
         "massgov.pfml.fineos": {"handlers": ["console"], "level": "DEBUG", "propagate": False},
         "werkzeug": {"handlers": ["console"], "level": "WARN", "propagate": False},
+        # Log DB pool connection invalidations and recycle events. At DEBUG
+        # level includes all connection checkin/checkouts to the pool.
+        #
+        # https://docs.sqlalchemy.org/en/13/core/engines.html#configuring-logging
+        "sqlalchemy.pool": {"handlers": ["console"], "level": "INFO", "propagate": False,},
         # Log PostgreSQL NOTICE messages
         # https://docs.sqlalchemy.org/en/13/dialects/postgresql.html#notice-logging
         "sqlalchemy.dialects.postgresql": {
