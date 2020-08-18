@@ -28,6 +28,38 @@ resource "aws_db_subnet_group" "rds_postgres" {
   subnet_ids  = var.vpc_app_subnet_ids
 }
 
+resource "aws_db_parameter_group" "postgres11" {
+  name_prefix = "${local.app_name}-${var.environment_name}-postgres11-"
+  family      = "postgres11"
+  description = "PSQL 11 RDS parameters for ${local.app_name}-${var.environment_name}"
+
+  # Log all client connection details.
+  #
+  # This can help determine the source, username, frequency,
+  # and time of various connections.
+  parameter {
+    name  = "log_connections"
+    value = 1
+  }
+
+  # Log all client disconnection details.
+  #
+  # This can help to determine how long a client was connected.
+  parameter {
+    name  = "log_disconnections"
+    value = 1
+  }
+
+  # Log all DDL (schema-change-related) statements.
+  #
+  # This helps in identifying when changes were made,
+  # including any unexpected changes.
+  parameter {
+    name  = "log_statement"
+    value = "ddl"
+  }
+}
+
 resource "aws_db_instance" "default" {
   identifier = "massgov-pfml-${var.environment_name}"
 
@@ -59,6 +91,7 @@ resource "aws_db_instance" "default" {
   copy_tags_to_snapshot       = true  # not applicable right now, but useful in the future
 
   db_subnet_group_name = aws_db_subnet_group.rds_postgres.name
+  parameter_group_name = aws_db_parameter_group.postgres11.name
 
   monitoring_interval                   = 30
   monitoring_role_arn                   = aws_iam_role.rds_enhanced_monitoring.arn
