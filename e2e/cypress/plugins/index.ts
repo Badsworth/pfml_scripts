@@ -14,6 +14,7 @@ import GmailVerificationCodeFetcher from "./GmailVerificationCodeFetcher";
 import retry from "p-retry";
 import delay from "delay";
 import fillPDF from "./fillPDF";
+import webpackPreprocessor from "@cypress/webpack-preprocessor";
 
 export type FillPDFTaskOptions = {
   source: string;
@@ -66,6 +67,13 @@ export default function (on: Cypress.PluginEvents): Cypress.ConfigOptions {
       return fillPDF(options.source, options.data);
     },
   });
+
+  // @see https://github.com/TheBrainFamily/cypress-cucumber-webpack-typescript-example
+  // @see https://github.com/cypress-io/cypress-webpack-preprocessor
+  const options = {
+    webpackOptions: require("../../webpack.config.ts"),
+  };
+  on("file:preprocessor", webpackPreprocessor(options));
 
   return configOverrides;
 }

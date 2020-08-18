@@ -31,3 +31,12 @@ export function setFeatureFlags(): void {
     })
   );
 }
+
+export function catchStatusError(): void {
+  cy.on("uncaught:exception", (e) => {
+    // Suppress failures due to this error, which we can't do anything about.
+    if (e.message.indexOf(`Cannot set property 'status' of undefined`)) {
+      return false;
+    }
+  });
+}

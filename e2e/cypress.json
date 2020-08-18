@@ -6,6 +6,8 @@
   "videosFolder": "cypress/videos",
   "projectId": "wjoxhr",
   "env": {
-    "FINEOS_BASEURL": "https://idt-claims-webapp.masspfml.fineos.com"
-  }
+    "FINEOS_BASEURL": "https://idt-claims-webapp.masspfml.fineos.com",
+    "TAGS": "not @ignore"
+  },
+  "testFiles": "**/*.feature"
 }

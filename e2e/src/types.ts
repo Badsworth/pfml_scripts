@@ -170,3 +170,10 @@ type DebitCard = Payment & {
   destinationAddress: DestinationAddress;
 };
 export type PaymentInfo = DirectDeposit | DebitCard;
+
+// Used for Cucumber parameters.
+export const MedicalClaimTestTypes = [
+  "MedicalBasic",
+  "MedicalAddlBenefits",
+] as const;
+export type TestType = typeof MedicalClaimTestTypes[number];

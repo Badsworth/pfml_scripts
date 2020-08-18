@@ -1,7 +1,6 @@
 {
   "compilerOptions": {
     "strict": true,
-    // "baseUrl": "../node_modules",
     "target": "es6",
     "lib": ["es6", "dom"],
     "types": ["cypress"],
@@ -14,7 +13,13 @@
     "moduleResolution": "node",
     "resolveJsonModule": true,
     "declaration": true,
-    "outDir": "./dist"
+    "jsx": "react",
+    "noImplicitThis": false,
+    "outDir": "./dist",
+    "baseUrl": "src",
+    "paths": {
+      "@/*": ["*"]
+    }
   },
   "include": [
     "**/*.ts"

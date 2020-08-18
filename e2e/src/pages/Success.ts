@@ -5,7 +5,6 @@ export default class SuccessPage {
   }
 
   returnToDashboard(): this {
-    this.assertOnSuccess();
     cy.contains("Return to dashboard").click();
     cy.url().should("equal", `${Cypress.config().baseUrl}/`);
     return this;

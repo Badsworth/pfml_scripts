@@ -12,26 +12,36 @@ type Application = import('./src/types').Application;
 type FillPDFTaskOptions = import('./cypress/plugins/index').FillPDFTaskOptions
 
 declare namespace Cypress {
-    interface Cypress {
-      // Declare the runner, which is an internal Cypress property.
-      // We use it in stash/unstash to grab a unique ID for the run.
-      runner: Cypress.Runner
-    }
-    interface cy {
+  interface Cypress {
+    // Declare the runner, which is an internal Cypress property.
+    // We use it in stash/unstash to grab a unique ID for the run.
+    runner: Cypress.Runner
+  }
+  interface cy {}
+  interface Chainable<Subject = any> {
+    labelled(label: string): Chainable<Element>;
+    typeMasked(text: string, options?: Partial<Cypress.TypeOptions>): Chainable<Element>
+    generateIdVerification<App extends Pick<Application, firstName|lastName>>(application: App): Chainable<App & Pick<Application, idVerification>>
+    generateHCPForm<App extends Pick<Application, firstName|lastName>>(application: App): Chainable<App & Pick<Application, claim>>
+    stash(key: string, value: unknown): null
+    unstash(key: string): Chainable<unknown>
+    // Declare our custom tasks.
+    task(event: "getAuthVerification", mail: string): Chainable<string>;
+    task(event: "fillPDF", options: FillPDFTaskOptions): Chainable<string>;
+  }
+}
 
-    }
-    interface Chainable<Subject = any> {
-        labelled(label: string): Chainable<Element>;
-        typeMasked(text: string, options?: Partial<Cypress.TypeOptions>): Chainable<Element>
-        generateIdVerification<App extends Pick<Application, firstName|lastName>>(application: App): Chainable<App & Pick<Application, idVerification>>
-        generateHCPForm<App extends Pick<Application, firstName|lastName>>(application: App): Chainable<App & Pick<Application, claim>>
-        stash(key: string, value: unknown): null
-        unstash(key: string): Chainable<unknown>
-
-        // Declare our custom tasks.
-        task(event: "getAuthVerification", mail: string): Chainable<string>;
-        task(event: "fillPDF", options: FillPDFTaskOptions): Chainable<string>;
-
-    }
-
+// Override @cypress/webpack-preprocess to fix a typing error.
+// This is a recurrence of https://github.com/cypress-io/cypress-webpack-preprocessor/issues/76
+declare module "@cypress/webpack-preprocessor" {
+  namespace CypressWebpackPreProcessor {
+    export type Options = { webpackOptions: {} };
+    export type FilePreprocessor = (
+      file: Cypress.FileObject
+    ) => string | Promise<string>;
+  }
+  const CypressWebpackPreProcessor: (
+    options: CypressWebpackPreProcessor.Options
+  ) => CypressWebpackPreProcessor.FilePreprocessor;
+  export = CypressWebpackPreProcessor;
 }

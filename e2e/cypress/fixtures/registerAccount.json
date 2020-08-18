@@ -1,0 +1,39 @@
+{
+  "email": "PORTAL_EMAIL",
+  "password": "PORTAL_PASSWORD",
+  "firstName": "John",
+  "lastName": "Smith",
+  "dob": { "month": 3, "day": 31, "year": 1995 },
+  "massId": "123",
+  "ssn": "123-45-6789",
+  "claim": {
+    "type": "medical",
+    "dueToPregnancy": true,
+    "leave": {
+      "type": "continuous",
+      "typeBasedDetails": {
+        "weeks": 40
+      },
+      "start": { "month": 8, "day": 1, "year": 2020 },
+      "end": { "month": 9, "day": 1, "year": 2020 }
+    }
+  },
+  "employer": {
+    "type": "employed",
+    "fein": "04-2103545",
+    "employerNotified": true,
+    "employerNotificationDate": { "month": 7, "day": 7, "year": 2020 }
+  },
+  "otherBenefits": {
+    "willUseEmployerBenefits": false,
+    "willReceiveOtherIncome": false,
+    "tookLeaveForQualifyingReason": false
+  },
+  "paymentInfo": {
+    "type": "ach",
+    "accountDetails": {
+      "routingNumber": 123456789,
+      "accountNumber": 55555555
+    }
+  }
+}
