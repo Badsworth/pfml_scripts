@@ -316,24 +316,35 @@ paths:
 
   /eligibility:
     post:
-        tags:
-          - Eligibility
-        summary: Retrieve financial eligibility by SSN/FEIN effective date and employee status.
-        responses:
-          "200":
-            description: a successful response returns a 200 status code a financial_eligibility object.
-            content:
-              application/json:
-                schema:
-                  allOf:
-                    - $ref: "#/components/schemas/SuccessfulResponse"
-                    - properties:
-                        data:
-                          $ref: "#/components/schemas/EligibilityResponse"
-          "400":
-            $ref: "#/components/responses/BadRequest"
-        requestBody:
-          $ref: "#/components/requestBodies/EligibilityRequest"
+      security:
+        - {} # no authentication option
+      tags:
+        - Eligibility
+      summary: Retrieve financial eligibility by SSN/FEIN effective date and employee status.
+      responses:
+        "200":
+          description: a successful response returns a 200 status code a financial_eligibility object.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessfulResponse"
+                  - properties:
+                      data:
+                        $ref: "#/components/schemas/EligibilityResponse"
+                example:
+                  meta:
+                    method: "POST"
+                    resource: "/eligibility"
+                  status_code: 200
+                  message: "success"
+                  data:
+                    financial_eligibility: false
+                    reason_not_eligible: "test"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+      requestBody:
+        $ref: "#/components/requestBodies/EligibilityRequest"
 tags:
   - name: Test Endpoints
   - name: Users
@@ -809,7 +820,7 @@ components:
       type: object
       properties:
         financial_eligibility:
-          type: bool
+          type: boolean
           example: false
         reason_not_eligible:
           type: string
