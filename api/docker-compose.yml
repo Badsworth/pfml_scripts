@@ -1,4 +1,4 @@
-version: "3.4"
+version: "3.8"
 
 services:
   mass-pfml-db:
@@ -28,6 +28,7 @@ services:
         - RUN_USER=${RUN_USER:-nodummy}
     image: mass-pfml-api:dev
     container_name: mass-pfml-api
+    init: true
     links:
       - mass-pfml-db
     ports:
