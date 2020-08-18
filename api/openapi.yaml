@@ -704,6 +704,10 @@ components:
           format: uuid
           example: "2f0f58a0-fcad-465b-b474-ee6c961cd6e3"
           nullable: true
+        employer_fein:
+          type: string
+          nullable: true
+          example: "41-9904348"
         first_name:
           type: string
           example: "John"

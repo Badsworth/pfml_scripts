@@ -28,9 +28,11 @@ Session = scoped_session(lambda: get_db_session(), scopefunc=lambda: get_db_sess
 
 
 class Generators:
+    fein_unformatted = factory.Faker("ssn").generate().replace("-", "")
+
     AccountKey = factory.Sequence(lambda n: "%011d" % n)
     Tin = factory.LazyFunction(lambda: factory.Faker("ssn").generate().replace("-", ""))
-    Fein = Tin
+    Fein = fein_unformatted[:2] + "-" + fein_unformatted[2:]
     Money = factory.LazyFunction(lambda: Decimal(round(random.uniform(0, 50000), 2)))
     Now = factory.LazyFunction(lambda: datetime.now())
     UuidObj = factory.Faker("uuid4", cast_to=None)
@@ -146,6 +148,8 @@ class ApplicationFactory(BaseFactory):
 
     employee = factory.SubFactory(EmployeeFactory)
     employee_id = factory.LazyAttribute(lambda a: a.employee.employee_id)
+
+    employer_fein = factory.LazyAttribute(lambda w: w.employer.employer_fein)
 
     # Lookups
     occupation_id = None

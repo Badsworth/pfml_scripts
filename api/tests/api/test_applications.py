@@ -41,6 +41,8 @@ def test_applications_get_valid(client, user, auth_token):
 
     assert response.status_code == 200
     response_body = response.get_json().get("data")
+
+    assert response_body.get("employer_fein") is not None
     assert response_body.get("application_id") == str(application.application_id)
     assert response_body.get("updated_time") == "2020-01-01T00:00:00Z"
     assert response_body.get("status") == ApplicationStatus.Started.value
