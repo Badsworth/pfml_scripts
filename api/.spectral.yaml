@@ -1,0 +1,6 @@
+# Spectral rule file to use in Makefile. See: https://meta.stoplight.io/docs/spectral/docs/getting-started/rulesets.md
+extends: spectral:oas
+
+rules:
+  operation-description: off
+  no-$ref-siblings: info

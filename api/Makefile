@@ -22,6 +22,9 @@ ifdef CI
 	DOCKER_EXEC_ARGS := -T
 endif
 
+# Path to Open API file for spectral linting
+OPEN_API_PATH := openapi.yaml
+
 # For running Python things in the local environment (which could be when running inside a Docker container)
 PY_RUN_CMD_POETRY := poetry run
 # For running Python things in Docker, as one-off processes, starting container if needed
@@ -35,7 +38,12 @@ PY_RUN_CMD := $(PY_RUN_CMD_$(PY_RUN_CMD_OPT))
 
 POETRY_CMD := $(subst poetry run,poetry,$(PY_RUN_CMD))
 
+SPECTRAL_RULESET_PATH := .spectral.yaml
+
 DECODE_LOG := 2>&1 | python3 -u massgov/pfml/util/logging/decodelog.py
+
+# Command to run spectral Open API linting
+RUN_CMD_SPECTRAL := node ../node_modules/@stoplight/spectral/dist/cli/index lint $(OPEN_API_PATH) -r $(SPECTRAL_RULESET_PATH) 
 
 # BuildKit is a more efficient builder for Docker, so use it by default
 ifndef NO_BUILDKIT
@@ -112,6 +120,12 @@ ecr-login: ## Login to ECR for Docker
 	@echo "Authenticating Docker with ECR"
 	ecr_login_cmd="$$(aws ecr get-login --no-include-email)" && $$ecr_login_cmd
 
+install-spectral:
+	yarn add @stoplight/spectral@5.4.0 --dev
+
+run-spectral: install-spectral
+	$(RUN_CMD_SPECTRAL)
+
 format: ## Format code
 	$(PY_RUN_CMD) isort --atomic --apply
 	$(PY_RUN_CMD) black .
@@ -136,7 +150,7 @@ else
  FLAKE8_FORMAT := default
 endif
 
-lint: ## Run linting
+lint: run-spectral ## Run linting
 	$(PY_RUN_CMD) flake8 --format=$(FLAKE8_FORMAT) massgov tests bin
 	$(PY_RUN_CMD) mypy massgov bin
 
