@@ -117,7 +117,7 @@ paths:
             application/json:
               schema:
                 allOf:
-                  - $ref: '#/components/schemas/SuccessfulResponse'
+                  - $ref: "#/components/schemas/SuccessfulResponse"
                   - properties:
                       data:
                         $ref: "#/components/schemas/EmployeeResponse"
@@ -146,7 +146,7 @@ paths:
             application/json:
               schema:
                 allOf:
-                  - $ref: '#/components/schemas/SuccessfulResponse'
+                  - $ref: "#/components/schemas/SuccessfulResponse"
                   - properties:
                       data:
                         $ref: "#/components/schemas/EmployeeResponse"
@@ -168,7 +168,7 @@ paths:
             application/json:
               schema:
                 allOf:
-                  - $ref: '#/components/schemas/SuccessfulResponse'
+                  - $ref: "#/components/schemas/SuccessfulResponse"
                   - properties:
                       data:
                         $ref: "#/components/schemas/EmployeeResponse"
@@ -198,7 +198,7 @@ paths:
             application/json:
               schema:
                 allOf:
-                  - $ref: '#/components/schemas/SuccessfulResponse'
+                  - $ref: "#/components/schemas/SuccessfulResponse"
                   - properties:
                       data:
                         $ref: "#/components/schemas/EmployerResponse"
@@ -273,7 +273,7 @@ paths:
             application/json:
               schema:
                 allOf:
-                  - $ref: '#/components/schemas/SuccessfulResponse'
+                  - $ref: "#/components/schemas/SuccessfulResponse"
                   - properties:
                       data:
                         $ref: "#/components/schemas/ApplicationResponse"
@@ -305,7 +305,7 @@ paths:
             application/json:
               schema:
                 allOf:
-                  - $ref: '#/components/schemas/SuccessfulResponse'
+                  - $ref: "#/components/schemas/SuccessfulResponse"
                   - properties:
                       data:
                         $ref: "#/components/schemas/ApplicationResponse"
@@ -314,12 +314,33 @@ paths:
         "503":
           $ref: "#/components/responses/BadRequest"
 
+  /eligibility:
+    post:
+        tags:
+          - Eligibility
+        summary: Retrieve financial eligibility by SSN/FEIN effective date and employee status.
+        responses:
+          "200":
+            description: a successful response returns a 200 status code a financial_eligibility object.
+            content:
+              application/json:
+                schema:
+                  allOf:
+                    - $ref: "#/components/schemas/SuccessfulResponse"
+                    - properties:
+                        data:
+                          $ref: "#/components/schemas/EligibilityResponse"
+          "400":
+            $ref: "#/components/responses/BadRequest"
+        requestBody:
+          $ref: "#/components/requestBodies/EligibilityRequest"
 tags:
   - name: Test Endpoints
   - name: Users
   - name: Employees
   - name: Employers
   - name: Applications
+  - name: Eligibility
 
 components:
   securitySchemes:
@@ -354,7 +375,13 @@ components:
           schema:
             $ref: "#/components/schemas/ApplicationRequestBody"
       required: true
-
+    EligibilityRequest:
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/EligibilityRequest"
+      required: true
+ 
   responses:
     ApplicationResponse:
       description: Application found
@@ -368,7 +395,7 @@ components:
         application/json:
           schema:
             allOf:
-              - $ref: '#/components/schemas/SuccessfulResponse'
+              - $ref: "#/components/schemas/SuccessfulResponse"
               - properties:
                   data:
                     $ref: "#/components/schemas/ApplicationResponse"
@@ -378,7 +405,7 @@ components:
         application/json:
           schema:
             allOf:
-              - $ref: '#/components/schemas/SuccessfulResponse'
+              - $ref: "#/components/schemas/SuccessfulResponse"
               - properties:
                   data:
                     $ref: "#/components/schemas/ApplicationSearchResults"
@@ -496,7 +523,7 @@ components:
         consented_to_data_sharing:
           type: boolean
           example: true
-      required: ['consented_to_data_sharing']
+      required: ["consented_to_data_sharing"]
 
     EmployeeUpdateRequest:
       type: object
@@ -538,7 +565,7 @@ components:
         tax_identifier_last4:
           type: string
           example: "1234"
-      required: ['first_name', 'last_name', 'tax_identifier_last4']
+      required: ["first_name", "last_name", "tax_identifier_last4"]
 
     EmployeeErrorResponse:
       type: object
@@ -576,7 +603,7 @@ components:
         tax_identifier_last4:
           type: string
           example: "1234"
-      required: ['employee_id', 'tax_identifier_last4']
+      required: ["employee_id", "tax_identifier_last4"]
 
     EmployerResponse:
       type: object
@@ -744,6 +771,48 @@ components:
             - Completed
             - Submitted
           example: "Started"
+
+    EligibilityRequest:
+      type: object
+      properties:
+        tax_identifier:
+          nullable: false
+          required: true
+          $ref: "#/components/schemas/SsnItin"
+        employer_fein:
+          nullable: false
+          $ref: "#/components/schemas/Fein"
+        effective_date:
+          type: string
+          format: date
+          example: "1970-06-01"
+          nullable: false
+        employment_status:
+          type: string
+          enum:
+            - Employed
+            - Unemployed
+            - Self-Employed
+          example: "Employed"
+          nullable: false
+      required:
+        - tax_identifier
+        - employer_fein
+        - effective_date
+        - employment_status
+
+    EligibilityResponse:
+      type: object
+      properties:
+        financial_eligibility:
+          type: bool
+          example: false
+        reason_not_eligible:
+          type: string
+          example: "test"
+      required:
+        - financial_eligibility
+        - reason_not_eligible
 
     ApplicationLeaveDetails:
       type: object
