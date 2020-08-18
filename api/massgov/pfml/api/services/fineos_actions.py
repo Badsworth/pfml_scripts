@@ -103,6 +103,11 @@ def send_to_fineos(application: Application, db_session: massgov.pfml.db.Session
 
         fineos.update_customer_details(fineos_user_id, customer)
         new_case = fineos.start_absence(fineos_user_id, absence_case)
+
+        application.fineos_absence_id = new_case.absenceId
+        application.fineos_notification_case_id = new_case.notificationCaseId
+        db_session.commit()
+
         fineos.complete_intake(fineos_user_id, str(new_case.notificationCaseId))
 
     except massgov.pfml.fineos.FINEOSClientError:
