@@ -1,5 +1,6 @@
 import { stateMachineToSmcat, stateMachineToSvg } from "./stateMachineToSvg";
 import React from "react";
+import Step from "src/models/Step";
 import machineConfig from "src/routes/claim-flow-configs";
 
 export default {
@@ -51,4 +52,31 @@ export const Smcat = () => {
       </pre>
     </React.Fragment>
   );
+};
+
+export const ClaimFlowFields = () => {
+  const steps = Step.createClaimStepsFromMachine(machineConfig);
+
+  return steps.map((step) => {
+    return (
+      <section key={step.name}>
+        <h2>{step.name}</h2>
+        {step.pages.map((page) => {
+          return (
+            <article key={page.route}>
+              <h3>{page.route}</h3>
+              <ul>
+                {page.fields.map((field) => (
+                  <li key={field}>
+                    <code>{field}</code>
+                  </li>
+                ))}
+              </ul>
+            </article>
+          );
+        })}
+        <hr />
+      </section>
+    );
+  });
 };
