@@ -73,7 +73,7 @@ const Duration = (props) => {
       duration_type_reduced,
       ...patchData
     } = formState;
-    props.appLogic.claims.update(props.claim.application_id, patchData);
+    props.appLogic.claims.update(props.claim.application_id, patchData, fields);
   };
 
   return (

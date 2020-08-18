@@ -27,7 +27,8 @@ describe("Name", () => {
 
       expect(appLogic.claims.update).toHaveBeenCalledWith(
         expect.any(String),
-        pick(claim, ["first_name", "last_name", "middle_name"])
+        pick(claim, ["first_name", "last_name", "middle_name"]),
+        expect.any(Array)
       );
     });
   });

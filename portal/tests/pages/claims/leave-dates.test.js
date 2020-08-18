@@ -52,7 +52,8 @@ describe("LeaveDates", () => {
             ],
           },
           temp: { leave_details: { end_date, start_date } },
-        }
+        },
+        expect.any(Array)
       );
     });
 
@@ -74,7 +75,8 @@ describe("LeaveDates", () => {
             ],
           },
           temp: { leave_details: { end_date, start_date } },
-        }
+        },
+        expect.any(Array)
       );
     });
 
@@ -94,7 +96,8 @@ describe("LeaveDates", () => {
             ],
           },
           temp: { leave_details: { end_date, start_date } },
-        }
+        },
+        expect.any(Array)
       );
     });
 
@@ -126,7 +129,8 @@ describe("LeaveDates", () => {
             ],
           },
           temp: { leave_details: { end_date, start_date } },
-        }
+        },
+        expect.any(Array)
       );
     });
   });

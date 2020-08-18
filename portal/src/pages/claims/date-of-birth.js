@@ -18,7 +18,7 @@ export const DateOfBirth = (props) => {
   const handleInputChange = useHandleInputChange(updateFields);
 
   const handleSave = () =>
-    props.appLogic.claims.update(props.claim.application_id, formState);
+    props.appLogic.claims.update(props.claim.application_id, formState, fields);
 
   return (
     <QuestionPage

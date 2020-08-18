@@ -36,7 +36,8 @@ describe("PreviousLeavesDetails", () => {
           claim.application_id,
           {
             previous_leaves: claim.previous_leaves,
-          }
+          },
+          expect.any(Array)
         );
       });
     });
@@ -52,7 +53,8 @@ describe("PreviousLeavesDetails", () => {
           claim.application_id,
           {
             previous_leaves: [...claim.previous_leaves, new PreviousLeave()],
-          }
+          },
+          expect.any(Array)
         );
       });
     });
@@ -71,7 +73,8 @@ describe("PreviousLeavesDetails", () => {
           claim.application_id,
           {
             previous_leaves: [],
-          }
+          },
+          expect.any(Array)
         );
       });
     });

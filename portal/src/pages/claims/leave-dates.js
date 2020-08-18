@@ -69,7 +69,7 @@ const LeaveDates = (props) => {
       );
     }
 
-    props.appLogic.claims.update(props.claim.application_id, formState);
+    props.appLogic.claims.update(props.claim.application_id, formState, fields);
   };
 
   return (

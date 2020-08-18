@@ -29,9 +29,8 @@ export const OtherIncomesDetails = (props) => {
   const { formState, updateFields } = useFormState(initialEntries);
   const other_incomes = get(formState, "other_incomes");
 
-  const handleSave = () => {
-    return props.appLogic.claims.update(props.claim.application_id, formState);
-  };
+  const handleSave = () =>
+    props.appLogic.claims.update(props.claim.application_id, formState, fields);
 
   const handleAddClick = () => {
     // Add a new blank entry

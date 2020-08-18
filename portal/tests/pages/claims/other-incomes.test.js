@@ -26,7 +26,8 @@ describe("OtherIncomes", () => {
         claim.application_id,
         {
           has_other_incomes: claim.has_other_incomes,
-        }
+        },
+        expect.any(Array)
       );
     });
   });

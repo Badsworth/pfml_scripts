@@ -18,7 +18,7 @@ export const DateOfChild = (props) => {
   const { formState, updateFields } = useFormState(pick(props, fields).claim);
   const handleInputChange = useHandleInputChange(updateFields);
   const handleSave = () => {
-    props.appLogic.claims.update(props.claim.application_id, formState);
+    props.appLogic.claims.update(props.claim.application_id, formState, fields);
   };
 
   return (

@@ -21,7 +21,7 @@ const StateId = (props) => {
   const { has_state_id, mass_id } = formState;
   const handleInputChange = useHandleInputChange(updateFields);
   const handleSave = () =>
-    props.appLogic.claims.update(props.claim.application_id, formState);
+    props.appLogic.claims.update(props.claim.application_id, formState, fields);
 
   return (
     <QuestionPage title={t("pages.claimsStateId.title")} onSave={handleSave}>

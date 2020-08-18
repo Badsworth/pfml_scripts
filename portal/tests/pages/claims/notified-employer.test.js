@@ -57,7 +57,8 @@ describe("NotifiedEmployer", () => {
               employer_notified: true,
               employer_notification_date: "2020-06-25",
             },
-          }
+          },
+          expect.any(Array)
         );
       });
     });

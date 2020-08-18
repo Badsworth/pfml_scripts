@@ -24,7 +24,8 @@ describe("EmployerBenefits", () => {
         claim.application_id,
         {
           has_employer_benefits: claim.has_employer_benefits,
-        }
+        },
+        expect.any(Array)
       );
     });
   });

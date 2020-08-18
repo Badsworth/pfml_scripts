@@ -88,7 +88,8 @@ describe("PaymentMethod", () => {
 
       expect(appLogic.claims.update).toHaveBeenCalledWith(
         claim.application_id,
-        expect.any(Object)
+        expect.any(Object),
+        expect.any(Array)
       );
     });
   });

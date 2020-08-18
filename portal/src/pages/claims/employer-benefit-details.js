@@ -32,9 +32,8 @@ const EmployerBenefitDetails = (props) => {
   const { formState, updateFields } = useFormState(initialBenefits);
   const employer_benefits = get(formState, "employer_benefits");
 
-  const handleSave = () => {
-    return props.appLogic.claims.update(props.claim.application_id, formState);
-  };
+  const handleSave = () =>
+    props.appLogic.claims.update(props.claim.application_id, formState, fields);
 
   const handleAddClick = () => {
     // Add a new blank benefit
