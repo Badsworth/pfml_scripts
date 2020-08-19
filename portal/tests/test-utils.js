@@ -1,6 +1,7 @@
 import Claim, {
   ContinuousLeavePeriod,
   IntermittentLeavePeriod,
+  LeaveReason,
   ReducedScheduleLeavePeriod,
 } from "../src/models/Claim";
 import { mount, shallow } from "enzyme";
@@ -90,6 +91,16 @@ export class MockClaimBuilder {
       start_date,
       end_date,
     });
+    return this;
+  }
+
+  bondingLeaveReason() {
+    set(this.claimAttrs, "leave_details.reason", LeaveReason.bonding);
+    return this;
+  }
+
+  medicalLeaveReason() {
+    set(this.claimAttrs, "leave_details.reason", LeaveReason.medical);
     return this;
   }
 

@@ -9,9 +9,9 @@ exports[`LeaveDates renders the page 1`] = `
     dayLabel="Day"
     hint={
       <React.Fragment>
-        <Lead>
+        <p>
           If you have already taken some or all of your leave for this condition, when did you first miss work?
-        </Lead>
+        </p>
         <p>
           Refer to Question 19 in the "Ability to work" section of the Healthcare Provider Form.
         </p>
@@ -47,4 +47,51 @@ exports[`LeaveDates renders the page 1`] = `
     yearLabel="Year"
   />
 </QuestionPage>
+`;
+
+exports[`LeaveDates when leave type is bonding shows the bonding leave question text 1`] = `
+<InputDate
+  dayLabel="Day"
+  hint={
+    <React.Fragment>
+      <p>
+        If you have already taken some or all of your family leave, when did you first miss work to bond with your child?
+      </p>
+      <p>
+        You can take up to 12 weeks of family leave to bond with your child or children. You can take this leave at any point within the first year of your child’s birth, adoption, or placement. You do not need to take this leave all at once.
+      </p>
+      <p>
+        For example: 04 / 28 / 1986
+      </p>
+    </React.Fragment>
+  }
+  label="When will you first take leave?"
+  monthLabel="Month"
+  name="temp.leave_details.start_date"
+  onChange={[Function]}
+  value=""
+  yearLabel="Year"
+/>
+`;
+
+exports[`LeaveDates when leave type is bonding shows the bonding leave question text 2`] = `
+<InputDate
+  dayLabel="Day"
+  hint={
+    <React.Fragment>
+      <p>
+        If you have already returned to work, when was your last day of leave?
+      </p>
+      <p>
+        For example: 04 / 28 / 1986
+      </p>
+    </React.Fragment>
+  }
+  label="When will your leave end?"
+  monthLabel="Month"
+  name="temp.leave_details.end_date"
+  onChange={[Function]}
+  value=""
+  yearLabel="Year"
+/>
 `;

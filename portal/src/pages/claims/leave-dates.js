@@ -1,6 +1,5 @@
-import Claim from "../../models/Claim";
+import Claim, { LeaveReason } from "../../models/Claim";
 import InputDate from "../../components/InputDate";
-import Lead from "../../components/Lead";
 import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
@@ -72,15 +71,30 @@ const LeaveDates = (props) => {
     props.appLogic.claims.update(props.claim.application_id, formState, fields);
   };
 
+  const conditionalContext = {
+    [LeaveReason.bonding]: "bonding",
+    [LeaveReason.medical]: "medical",
+  };
+
   return (
     <QuestionPage title={t("pages.claimsLeaveDates.title")} onSave={handleSave}>
       <InputDate
         name="temp.leave_details.start_date"
-        label={t("pages.claimsLeaveDates.startDateLabel")}
+        label={t("pages.claimsLeaveDates.startDateLabel", {
+          context: conditionalContext[claim.leave_details.reason],
+        })}
         hint={
           <React.Fragment>
-            <Lead>{t("pages.claimsLeaveDates.startDateLeadHint")}</Lead>
-            <p>{t("pages.claimsLeaveDates.startDateHint")}</p>
+            <p>
+              {t("pages.claimsLeaveDates.startDateLeadHint", {
+                context: conditionalContext[claim.leave_details.reason],
+              })}
+            </p>
+            <p>
+              {t("pages.claimsLeaveDates.startDateHint", {
+                context: conditionalContext[claim.leave_details.reason],
+              })}
+            </p>
             <p>{t("components.form.dateInputHint")}</p>
           </React.Fragment>
         }
@@ -94,10 +108,16 @@ const LeaveDates = (props) => {
       />
       <InputDate
         name="temp.leave_details.end_date"
-        label={t("pages.claimsLeaveDates.endDateLabel")}
+        label={t("pages.claimsLeaveDates.endDateLabel", {
+          context: conditionalContext[claim.leave_details.reason],
+        })}
         hint={
           <React.Fragment>
-            <p>{t("pages.claimsLeaveDates.endDateHint")}</p>
+            <p>
+              {t("pages.claimsLeaveDates.endDateHint", {
+                context: conditionalContext[claim.leave_details.reason],
+              })}
+            </p>
             <p>{t("components.form.dateInputHint")}</p>
           </React.Fragment>
         }

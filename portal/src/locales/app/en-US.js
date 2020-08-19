@@ -333,13 +333,21 @@ const pages = {
     title: "Employment information",
   },
   claimsLeaveDates: {
-    endDateHint:
+    endDateHint_bonding:
+      "If you have already returned to work, when was your last day of leave?",
+    endDateHint_medical:
       'Refer to Question 20 in the "Ability to work" section of the Healthcare Provider Form.',
-    endDateLabel: "When will your leave end or be re-evaluated?",
-    startDateHint:
+    endDateLabel_bonding: "When will your leave end?",
+    endDateLabel_medical: "When will your leave end or be re-evaluated?",
+    startDateHint_bonding:
+      "You can take up to 12 weeks of family leave to bond with your child or children. You can take this leave at any point within the first year of your child’s birth, adoption, or placement. You do not need to take this leave all at once.",
+    startDateHint_medical:
       'Refer to Question 19 in the "Ability to work" section of the Healthcare Provider Form.',
-    startDateLabel: "When will you first need to take leave?",
-    startDateLeadHint:
+    startDateLabel_bonding: "When will you first take leave?",
+    startDateLabel_medical: "When will you first need to take leave?",
+    startDateLeadHint_bonding:
+      "If you have already taken some or all of your family leave, when did you first miss work to bond with your child?",
+    startDateLeadHint_medical:
       "If you have already taken some or all of your leave for this condition, when did you first miss work?",
     title: "$t(shared.claimsLeaveDetailsTitle)",
   },

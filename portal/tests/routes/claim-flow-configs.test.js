@@ -93,7 +93,11 @@ const machineTests = {
   },
   [routes.claims.bonding.dateOfChild]: {
     meta: {
-      test: () => {},
+      test: (_, event) => {
+        expect(get(event.context.claim, "leave_details.reason")).toEqual(
+          LeaveReason.bonding
+        );
+      },
     },
   },
   [routes.claims.averageWorkHours]: {

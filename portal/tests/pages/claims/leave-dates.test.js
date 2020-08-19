@@ -29,8 +29,22 @@ describe("LeaveDates", () => {
   }
 
   it("renders the page", () => {
+    claim = new MockClaimBuilder().medicalLeaveReason().create();
     render();
     expect(wrapper).toMatchSnapshot();
+  });
+
+  describe("when leave type is bonding", () => {
+    it("shows the bonding leave question text", () => {
+      claim = new MockClaimBuilder().bondingLeaveReason().create();
+      render();
+      expect(
+        wrapper.find({ name: "temp.leave_details.start_date" })
+      ).toMatchSnapshot();
+      expect(
+        wrapper.find({ name: "temp.leave_details.end_date" })
+      ).toMatchSnapshot();
+    });
   });
 
   // TODO (CP-724): Look into updating the API interface to accept a single leave_details object rather than
