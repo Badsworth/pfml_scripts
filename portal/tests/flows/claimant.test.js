@@ -5,11 +5,12 @@ import Claim, {
   ReducedScheduleLeavePeriod,
 } from "../../src/models/Claim";
 import { Machine, assign } from "xstate";
+import claimFlowStates, { guards } from "../../src/flows/claimant";
 import { get, merge } from "lodash";
-import machineConfigs, { guards } from "../../src/routes/claim-flow-configs";
 import User from "../../src/models/User";
 import { createModel } from "@xstate/test";
-import routes from "../../src/routes/index";
+import machineConfigs from "../../src/flows";
+import routes from "../../src/routes";
 
 // In order to determine level of test coverage, each route
 // needs a test function defined for meta
@@ -174,10 +175,10 @@ const machineTests = {
 
 const machineConfigsWithTests = {
   ...machineConfigs,
-  states: merge(machineConfigs.states, machineTests),
+  states: merge(claimFlowStates.states, machineTests),
 };
 
-describe("routingMachine", () => {
+describe("claimFlowConfigs", () => {
   const context = {
     claim: new Claim({ application_id: "mock-application-id" }),
     user: new User({ user_id: "mock-user-id" }),

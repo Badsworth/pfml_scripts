@@ -1,10 +1,10 @@
 import { stateMachineToSmcat, stateMachineToSvg } from "./stateMachineToSvg";
 import React from "react";
 import Step from "src/models/Step";
-import machineConfig from "src/routes/claim-flow-configs";
+import machineConfig from "src/flows";
 
 export default {
-  title: "Flows/Claim",
+  title: "Flows/Portal",
 };
 
 /**

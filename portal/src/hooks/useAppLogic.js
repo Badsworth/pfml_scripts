@@ -11,7 +11,7 @@ const useAppLogic = () => {
 
   // State representing currently visible errors and warnings
   const { appErrors, ...appErrorsLogic } = useAppErrorsLogic();
-  const auth = useAuthLogic({ appErrorsLogic });
+  const auth = useAuthLogic({ appErrorsLogic, portalFlow });
 
   // State representing the Portal's user object.
   // Initialize to empty user but will be populated upon the first API call

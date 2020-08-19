@@ -39,7 +39,7 @@ export default class Step extends BaseModel {
        * @type {object[]}
        * { route: "page/route", step: "verifyId", fields: ["first_name"] }
        * object representing all pages in this step keyed by the page route
-       * @see ../routes/claim-flow-configs
+       * @see ../flows
        */
       pages: null,
       /**
@@ -158,7 +158,7 @@ export default class Step extends BaseModel {
 
   /**
    * Create an array of Steps from routing machine configuration
-   * @see ../routes/claim-flow-configs
+   * @see ../flows/index.js
    * @param {object} machineConfigs - configuration object for routing machine
    * @param {object} context - used for evaluating a step's status
    * @param {object[]} [warnings] - array of validation warnings returned from API
@@ -170,7 +170,6 @@ export default class Step extends BaseModel {
       Object.assign({ route: key }, state.meta)
     );
     const pagesByStep = groupBy(pages, "step");
-
     const verifyId = new Step({
       name: ClaimSteps.verifyId,
       pages: pagesByStep[ClaimSteps.verifyId],

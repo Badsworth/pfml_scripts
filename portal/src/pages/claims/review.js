@@ -21,9 +21,9 @@ import React from "react";
 import ReviewHeading from "../../components/ReviewHeading";
 import ReviewRow from "../../components/ReviewRow";
 import Title from "../../components/Title";
+import claimantConfigs from "../../flows/claimant";
 import findKeyByValue from "../../utils/findKeyByValue";
 import formatDateRange from "../../utils/formatDateRange";
-import machineConfigs from "../../routes/claim-flow-configs";
 import { useTranslation } from "../../locales/i18n";
 import withClaim from "../../hoc/withClaim";
 
@@ -39,7 +39,7 @@ const Review = (props) => {
   const reason = get(claim, "leave_details.reason");
 
   const steps = Step.createClaimStepsFromMachine(
-    machineConfigs,
+    claimantConfigs,
     { claim: props.claim },
     null
   );

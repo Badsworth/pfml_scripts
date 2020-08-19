@@ -1,6 +1,6 @@
 import Step, { ClaimSteps } from "../../src/models/Step";
 import Claim from "../../src/models/Claim";
-import machineConfigs from "../../src/routes/claim-flow-configs";
+import claimantConfig from "../../src/flows/claimant";
 import { map } from "lodash";
 
 describe("Step Model", () => {
@@ -174,8 +174,8 @@ describe("Step Model", () => {
 
   describe("createClaimSteps", () => {
     it("creates portal steps from machineConfigs", () => {
-      const steps = Step.createClaimStepsFromMachine(machineConfigs, {}, []);
-      const machinePages = map(machineConfigs.states, (value, key) => ({
+      const steps = Step.createClaimStepsFromMachine(claimantConfig, {}, []);
+      const machinePages = map(claimantConfig.states, (value, key) => ({
         route: key,
         ...value.meta,
       }));

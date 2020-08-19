@@ -2,9 +2,7 @@ import AppErrorInfo from "../models/AppErrorInfo";
 import AppErrorInfoCollection from "../models/AppErrorInfoCollection";
 import { Auth } from "@aws-amplify/auth";
 import assert from "assert";
-import { createRouteWithQuery } from "../utils/routeWithParams";
 import routes from "../routes";
-import { useRouter } from "next/router";
 import { useState } from "react";
 import { useTranslation } from "../locales/i18n";
 
@@ -14,9 +12,8 @@ import { useTranslation } from "../locales/i18n";
  * @param {User} params.user
  * @returns {object}
  */
-const useAuthLogic = ({ appErrorsLogic }) => {
+const useAuthLogic = ({ appErrorsLogic, portalFlow }) => {
   const { t } = useTranslation();
-  const router = useRouter();
 
   /**
    * Sometimes we need to persist information the user entered on
@@ -59,7 +56,7 @@ const useAuthLogic = ({ appErrorsLogic }) => {
 
     // Store the username so the user doesn't need to reenter it on the Reset page
     setAuthData({ resetPasswordUsername: username });
-    router.push(routes.auth.resetPassword);
+    portalFlow.goToPageFor("SEND_CODE");
   };
 
   /**
@@ -86,8 +83,7 @@ const useAuthLogic = ({ appErrorsLogic }) => {
       await Auth.signIn(username, password);
 
       setIsLoggedIn(true);
-      // TODO: Move page routing logic to AppLogic https://lwd.atlassian.net/browse/CP-525
-      router.push(routes.home);
+      portalFlow.goToPageFor("LOG_IN");
     } catch (error) {
       const loginErrors = getLoginErrorInfo(error, t);
       appErrorsLogic.setAppErrors(loginErrors);
@@ -99,6 +95,7 @@ const useAuthLogic = ({ appErrorsLogic }) => {
    */
   const logout = async () => {
     await Auth.signOut();
+    setIsLoggedIn(false);
     // Force a page reload so that any local app state is cleared
     window.location.assign(routes.auth.login);
   };
@@ -122,14 +119,12 @@ const useAuthLogic = ({ appErrorsLogic }) => {
       appErrorsLogic.setAppErrors(validationErrors);
       return;
     }
-
     try {
       await Auth.signUp({ username, password });
 
       // Store the username so the user doesn't need to reenter it on the Verify page
       setAuthData({ createAccountUsername: username });
-      // TODO: Move page routing logic to AppLogic https://lwd.atlassian.net/browse/CP-525
-      router.push(routes.auth.verifyAccount);
+      portalFlow.goToPageFor("CREATE_ACCOUNT");
     } catch (error) {
       const appErrors = getCreateAccountErrorInfo(error, t);
       appErrorsLogic.setAppErrors(appErrors);
@@ -157,10 +152,8 @@ const useAuthLogic = ({ appErrorsLogic }) => {
     // reset React in-memory state and set isLoggedIn back to null.
 
     if (tempIsLoggedIn) return;
-
-    if (!tempIsLoggedIn && !router.pathname.match(routes.auth.login)) {
-      // TODO (CP-729): Eventually move routing logic to usePortalFlow
-      router.push(routes.auth.login);
+    if (!tempIsLoggedIn && !portalFlow.page.match(routes.auth.login)) {
+      portalFlow.goTo(routes.auth.login);
     }
   };
 
@@ -215,13 +208,7 @@ const useAuthLogic = ({ appErrorsLogic }) => {
 
     try {
       await Auth.forgotPasswordSubmit(username, code, password);
-
-      // TODO: Move page routing logic to AppLogic
-      router.push(
-        createRouteWithQuery(routes.auth.login, {
-          "account-verified": true,
-        })
-      );
+      portalFlow.goToPageFor("SET_NEW_PASSWORD");
     } catch (error) {
       const appErrors = getResetPasswordErrorInfo(error, t);
       appErrorsLogic.setAppErrors(appErrors);
@@ -253,9 +240,13 @@ const useAuthLogic = ({ appErrorsLogic }) => {
 
     try {
       await Auth.confirmSignUp(username, code);
-
-      // TODO: Move page routing logic to AppLogic https://lwd.atlassian.net/browse/CP-525
-      router.push(routes.auth.login);
+      portalFlow.goToPageFor(
+        "SUBMIT",
+        {},
+        {
+          "account-verified": true,
+        }
+      );
     } catch (error) {
       const appErrors = getVerifyAccountErrorInfo(error, t);
       appErrorsLogic.setAppErrors(appErrors);

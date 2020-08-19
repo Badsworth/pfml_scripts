@@ -1,10 +1,10 @@
 import { Auth } from "@aws-amplify/auth";
 import { act } from "react-dom/test-utils";
-import { mockRouter } from "next/router";
 import routes from "../../src/routes";
 import { testHook } from "../test-utils";
 import useAppErrorsLogic from "../../src/hooks/useAppErrorsLogic";
 import useAuthLogic from "../../src/hooks/useAuthLogic";
+import usePortalFlow from "../../src/hooks/usePortalFlow";
 
 jest.mock("@aws-amplify/auth");
 
@@ -17,6 +17,7 @@ describe("useAuthLogic", () => {
     login,
     logout,
     password,
+    portalFlow,
     requireLogin,
     resendVerifyAccountCode,
     resetPassword,
@@ -32,6 +33,7 @@ describe("useAuthLogic", () => {
     verificationCode = "123456";
     testHook(() => {
       const appErrorsLogic = useAppErrorsLogic();
+      portalFlow = usePortalFlow();
       ({ appErrors, setAppErrors } = appErrorsLogic);
       ({
         authData,
@@ -46,6 +48,7 @@ describe("useAuthLogic", () => {
         verifyAccount,
       } = useAuthLogic({
         appErrorsLogic,
+        portalFlow,
       }));
     });
   });
@@ -310,11 +313,13 @@ describe("useAuthLogic", () => {
     });
 
     it("routes to Verify Account page", async () => {
+      const spy = jest.spyOn(portalFlow, "goToPageFor");
       await act(async () => {
         await createAccount(username, password);
       });
 
-      expect(mockRouter.push).toHaveBeenCalledWith(routes.auth.verifyAccount);
+      expect(spy).toHaveBeenCalledWith("CREATE_ACCOUNT");
+      spy.mockRestore();
     });
 
     it("stores username in authData for Verify Account page", async () => {
@@ -341,11 +346,11 @@ describe("useAuthLogic", () => {
 
       expect(appErrors.items).toHaveLength(2);
       expect(appErrors.items.map((e) => e.message)).toMatchInlineSnapshot(`
-        Array [
-          "Enter your email address",
-          "Enter your password",
-        ]
-      `);
+          Array [
+            "Enter your email address",
+            "Enter your password",
+          ]
+        `);
       expect(Auth.signUp).not.toHaveBeenCalled();
     });
 
@@ -466,10 +471,12 @@ describe("useAuthLogic", () => {
       });
 
       it("doesn't redirect to the login page", async () => {
+        const spy = jest.spyOn(portalFlow, "goTo");
         await act(async () => {
           await requireLogin();
         });
-        expect(mockRouter.push).not.toHaveBeenCalled();
+        expect(spy).not.toHaveBeenCalled();
+        spy.mockRestore();
       });
 
       it("sets isLoggedIn", async () => {
@@ -514,23 +521,29 @@ describe("useAuthLogic", () => {
     });
 
     describe("when user is not logged in", () => {
+      let spy;
       beforeEach(() => {
+        spy = jest.spyOn(portalFlow, "goTo");
         Auth.currentUserInfo.mockResolvedValueOnce(null);
+      });
+
+      afterEach(() => {
+        spy.mockRestore();
       });
 
       it("redirects to login page", async () => {
         await act(async () => {
           await requireLogin();
         });
-        expect(mockRouter.push).toHaveBeenCalledWith(routes.auth.login);
+        expect(spy).toHaveBeenCalledWith(routes.auth.login);
       });
 
       it("doesn't redirect if route is already set to login page", async () => {
-        mockRouter.pathname = routes.auth.login;
+        portalFlow.page = routes.auth.login;
         await act(async () => {
           await requireLogin();
         });
-        expect(mockRouter.push).not.toHaveBeenCalled();
+        expect(spy).not.toHaveBeenCalled();
       });
     });
   });
@@ -590,14 +603,13 @@ describe("useAuthLogic", () => {
       );
     });
 
-    it("routes to login page with account verified success message", async () => {
+    it("routes to login page", async () => {
+      const spy = jest.spyOn(portalFlow, "goToPageFor");
       await act(async () => {
         await resetPassword(username, verificationCode, password);
       });
 
-      expect(mockRouter.push).toHaveBeenCalledWith(
-        "/login?account-verified=true"
-      );
+      expect(spy).toHaveBeenCalledWith("SET_NEW_PASSWORD");
     });
 
     it("requires all fields to not be empty", () => {
@@ -611,12 +623,12 @@ describe("useAuthLogic", () => {
 
       expect(appErrors.items).toHaveLength(3);
       expect(appErrors.items.map((e) => e.message)).toMatchInlineSnapshot(`
-        Array [
-          "Enter the 6-digit code sent to your email",
-          "Enter your email address",
-          "Enter your password",
-        ]
-      `);
+          Array [
+            "Enter the 6-digit code sent to your email",
+            "Enter your email address",
+            "Enter your password",
+          ]
+        `);
       expect(Auth.forgotPasswordSubmit).not.toHaveBeenCalled();
     });
 
@@ -911,6 +923,21 @@ describe("useAuthLogic", () => {
         verifyAccount(username, verificationCode);
       });
       expect(appErrors.items).toHaveLength(0);
+    });
+
+    it("routes to login page with account verified message", async () => {
+      const spy = jest.spyOn(portalFlow, "goToPageFor");
+      await act(async () => {
+        await verifyAccount(username, verificationCode);
+      });
+
+      expect(spy).toHaveBeenCalledWith(
+        "SUBMIT",
+        {},
+        {
+          "account-verified": true,
+        }
+      );
     });
   });
 });

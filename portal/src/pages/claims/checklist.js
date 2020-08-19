@@ -5,7 +5,7 @@ import React from "react";
 import Step from "../../components/Step";
 import StepList from "../../components/StepList";
 import StepModel from "../../models/Step";
-import machineConfigs from "../../routes/claim-flow-configs";
+import claimantConfig from "../../flows/claimant";
 import routeWithParams from "../../utils/routeWithParams";
 import routes from "../../routes";
 import { useTranslation } from "../../locales/i18n";
@@ -15,7 +15,7 @@ const Checklist = (props) => {
   // TODO: add appErrors.warnings when API validations are in place
   // https://lwd.atlassian.net/browse/CP-509
   const steps = StepModel.createClaimStepsFromMachine(
-    machineConfigs,
+    claimantConfig,
     { claim: props.claim, user: props.appLogic.users.user },
     null
   );

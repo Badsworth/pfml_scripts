@@ -1,5 +1,5 @@
 import RouteTransitionError from "../../src/errors";
-import machineConfigs from "../../src/routes/claim-flow-configs";
+import machineConfigs from "../../src/flows";
 import { mockRouter } from "next/router";
 import routes from "../../src/routes";
 import { testHook } from "../test-utils";

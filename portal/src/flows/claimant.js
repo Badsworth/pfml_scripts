@@ -5,12 +5,13 @@
  * page's url route. The CONTINUE transition represents the next page in the
  * the application flow.
  *
- * This configuration is also used to determine and group pages by
+ * This configuration is used to determine and group pages by
  * its step in the application process. The data provided in `meta`
  * is used to determine which step a page belongs to and whether that step
  * is complete, in progress, or not started
  * @see ../models/Step
  */
+
 import { EmploymentStatus, LeaveReason } from "../models/Claim";
 import { ClaimSteps } from "../models/Step";
 import { fields as averageWorkHoursFields } from "../pages/claims/average-work-hours";
@@ -31,7 +32,7 @@ import { fields as paymentMethodFields } from "../pages/claims/payment-method";
 import { fields as previousLeavesDetailsFields } from "../pages/claims/previous-leaves-details";
 import { fields as previousLeavesFields } from "../pages/claims/previous-leaves";
 import { fields as reasonPregnancyFields } from "../pages/claims/reason-pregnancy";
-import routes from "./index";
+import routes from "../routes";
 import { fields as ssnFields } from "../pages/claims/ssn";
 import { fields as stateIdFields } from "../pages/claims/state-id";
 
@@ -54,8 +55,6 @@ export const guards = {
 };
 
 export default {
-  id: "claim-flow",
-  initial: routes.claims.dashboard,
   states: {
     [routes.claims.dashboard]: {
       meta: {},
