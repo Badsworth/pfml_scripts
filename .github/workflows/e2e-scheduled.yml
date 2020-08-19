@@ -1,11 +1,10 @@
 name: End-to-End Test Suite (Nightly)
 
 on:
-  # @TODO: This is set up as a manual action until we can get the secrets in place.
   workflow_dispatch:
-#  schedule:
-    # Kick off a scheduled run at Midnight UTC.
-#    - cron: '0 0 * * *'
+    schedule:
+      Kick off a scheduled run at Midnight UTC.
+      - cron: '0 0 * * *'
 
 jobs:
   test:
