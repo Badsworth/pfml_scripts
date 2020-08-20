@@ -1,4 +1,8 @@
-import { ForbiddenError, NetworkError } from "../../src/errors";
+import {
+  ForbiddenError,
+  NetworkError,
+  ValidationError,
+} from "../../src/errors";
 import AppErrorInfo from "../../src/models/AppErrorInfo";
 import AppErrorInfoCollection from "../../src/models/AppErrorInfoCollection";
 import { act } from "react-dom/test-utils";
@@ -35,7 +39,7 @@ describe("useAppErrorsLogic", () => {
         appErrorsLogic.catchError(new Error());
       });
 
-      expect(appErrorsLogic.appErrors.items[0].type).toEqual("Error");
+      expect(appErrorsLogic.appErrors.items[0].name).toEqual("Error");
       expect(tracker.noticeError).toHaveBeenCalledTimes(1);
       expect(console.error).toHaveBeenCalledTimes(1);
     });
@@ -46,6 +50,7 @@ describe("useAppErrorsLogic", () => {
           appErrorsLogic.catchError(new Error("Default error message"));
         });
 
+        expect(appErrorsLogic.appErrors.items).toHaveLength(1);
         expect(appErrorsLogic.appErrors.items[0].message).toMatchInlineSnapshot(
           `"Sorry, an unexpected error in our system was encountered. If this continues to happen, you may call the Paid Family Leave Contact Center at (XXX) XXX-XXXX"`
         );
@@ -58,6 +63,7 @@ describe("useAppErrorsLogic", () => {
           appErrorsLogic.catchError(new ForbiddenError());
         });
 
+        expect(appErrorsLogic.appErrors.items).toHaveLength(1);
         expect(appErrorsLogic.appErrors.items[0].message).toMatchInlineSnapshot(
           `"Sorry, an authorization error was encountered. Please log out and then log in to try again."`
         );
@@ -70,9 +76,75 @@ describe("useAppErrorsLogic", () => {
           appErrorsLogic.catchError(new NetworkError());
         });
 
+        expect(appErrorsLogic.appErrors.items).toHaveLength(1);
         expect(appErrorsLogic.appErrors.items[0].message).toMatchInlineSnapshot(
           `"Sorry, an error was encountered. This may occur for a variety of reasons, including temporarily losing an internet connection or an unexpected error in our system. If this continues to happen, you may call the Paid Family Leave Contact Center at (XXX) XXX-XXXX"`
         );
+      });
+    });
+
+    describe("when ValidationError is thrown", () => {
+      let issues;
+
+      beforeEach(() => {
+        issues = [
+          {
+            field: "employee_ssn",
+            type: "pattern",
+            message: "This field should have a custom error message",
+            rule: "/d{9}",
+          },
+          {
+            field: "unknown_field",
+            type: "pattern",
+            message: "This validation should have a generic error message",
+            rule: "/d{9}",
+          },
+          {
+            field: "custom_field_validation",
+            type: "customValidation",
+            message: "This validation should show THIS message",
+            rule: "custom",
+          },
+          {
+            field: "validation_without_a_message",
+            type: "noMessage",
+          },
+        ];
+      });
+
+      it("displays an internationalized message for each issue", () => {
+        act(() => {
+          appErrorsLogic.catchError(new ValidationError(issues, "claims"));
+        });
+
+        expect(appErrorsLogic.appErrors.items).toHaveLength(4);
+        expect(appErrorsLogic.appErrors.items[0].field).toBe(issues[0].field);
+        expect(appErrorsLogic.appErrors.items[0].name).toBe("ValidationError");
+
+        // Compare the order of message fallbacks
+        expect(appErrorsLogic.appErrors.items[0].message).toMatchInlineSnapshot(
+          `"Please enter a 9-digit Social Security Number."`
+        );
+        expect(appErrorsLogic.appErrors.items[1].message).toMatchInlineSnapshot(
+          `"Field (unknown_field) didn't match expected format."`
+        );
+        expect(appErrorsLogic.appErrors.items[2].message).toMatchInlineSnapshot(
+          `"This validation should show THIS message"`
+        );
+        expect(appErrorsLogic.appErrors.items[3].message).toMatchInlineSnapshot(
+          `"Field (validation_without_a_message) has invalid value."`
+        );
+      });
+
+      it("tracks which issues were encountered", () => {
+        const error = new ValidationError(issues, "test");
+
+        act(() => {
+          appErrorsLogic.catchError(error);
+        });
+
+        expect(tracker.noticeError.mock.calls[0][1]).toMatchSnapshot();
       });
     });
 

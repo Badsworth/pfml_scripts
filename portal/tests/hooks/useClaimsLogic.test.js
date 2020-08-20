@@ -108,12 +108,12 @@ describe("useClaimsLogic", () => {
           await claimsLogic.load();
         });
 
-        expect(appErrorsLogic.appErrors.items[0].type).toEqual("Error");
+        expect(appErrorsLogic.appErrors.items[0].name).toEqual("Error");
       });
     });
   });
 
-  describe("createClaim", () => {
+  describe("create", () => {
     it("sends API request", async () => {
       await act(async () => {
         await claimsLogic.create();
@@ -203,7 +203,7 @@ describe("useClaimsLogic", () => {
       });
 
       it("catches the error", () => {
-        expect(appErrorsLogic.appErrors.items[0].type).toEqual("Error");
+        expect(appErrorsLogic.appErrors.items[0].name).toEqual("Error");
       });
 
       it("doesn't change the route", () => {
@@ -263,12 +263,13 @@ describe("useClaimsLogic", () => {
       });
     });
 
-    describe("updateClaim", () => {
-      it("updates claim with formState and redirects to nextPage", async () => {
-        const patchData = {
-          first_name: "Bud",
-        };
+    describe("update", () => {
+      const patchData = {
+        first_name: "Bud",
+        last_name: null,
+      };
 
+      it("updates claim and redirects to nextPage when successful", async () => {
         await act(async () => {
           await claimsLogic.update(applicationId, patchData);
         });
@@ -283,26 +284,68 @@ describe("useClaimsLogic", () => {
         );
       });
 
-      describe("when request errors", () => {
-        it("catches the error", async () => {
-          updateClaimMock.mockImplementationOnce(() => {
-            throw new Error();
+      describe("when request is unsuccessful", () => {
+        it("reports all errors in the response", async () => {
+          updateClaimMock.mockResolvedValueOnce({
+            errors: [
+              { field: "first_name", type: "format", rule: "string" },
+              { field: "employee_ssn", type: "pattern" },
+            ],
           });
-
-          const patchData = {
-            first_name: "Bud",
-          };
 
           await act(async () => {
             await claimsLogic.update(applicationId, patchData);
           });
 
-          expect(appErrorsLogic.appErrors.items[0].type).toEqual("Error");
+          const errors = appErrorsLogic.appErrors.items;
+
+          expect(errors).toHaveLength(2);
+          expect(errors[0]).toEqual(
+            expect.objectContaining({
+              field: "first_name",
+            })
+          );
+          expect(errors[1]).toEqual(
+            expect.objectContaining({
+              field: "employee_ssn",
+            })
+          );
+        });
+
+        it("reports all relevant warnings in the response", async () => {
+          updateClaimMock.mockResolvedValueOnce({
+            errors: [],
+            warnings: [
+              { field: "last_name", type: "required" },
+              { field: "date_of_birth", type: "required" },
+            ],
+          });
+
+          await act(async () => {
+            await claimsLogic.update(applicationId, patchData);
+          });
+
+          const errors = appErrorsLogic.appErrors.items;
+
+          expect(errors).toHaveLength(1);
+          expect(errors[0].field).toEqual("last_name");
+        });
+
+        it("catches exceptions thrown from the API module", async () => {
+          updateClaimMock.mockImplementationOnce(() => {
+            throw new Error();
+          });
+
+          await act(async () => {
+            await claimsLogic.update(applicationId, patchData);
+          });
+
+          expect(appErrorsLogic.appErrors.items[0].name).toEqual("Error");
         });
       });
     });
 
-    describe("submitClaim", () => {
+    describe("submit", () => {
       it("asynchronously submits claim", async () => {
         await act(async () => {
           await claimsLogic.submit(applicationId);
@@ -321,7 +364,7 @@ describe("useClaimsLogic", () => {
             await claimsLogic.submit(applicationId);
           });
 
-          expect(appErrorsLogic.appErrors.items[0].type).toEqual("Error");
+          expect(appErrorsLogic.appErrors.items[0].name).toEqual("Error");
           expect(mockRouter.push).not.toHaveBeenCalled();
         });
       });

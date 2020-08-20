@@ -39,10 +39,28 @@ const errors = {
   caughtError_NetworkError: "$t(shared.networkError)",
   caughtError_UserNotFoundError:
     "Sorry, we were unable to retrieve your account. Please log out and try again. If this continues to happen, you may call the Paid Family Leave Contact Center at $t(shared.callCenterPhoneNumber)",
+  claims: {
+    employee_ssn: {
+      pattern: "Please enter a 9-digit Social Security Number.",
+    },
+    employer_fein: {
+      pattern: "Please enter a 9-digit FEIN.",
+    },
+    mass_id: {
+      pattern: "Please enter your ID in the correct format.",
+    },
+  },
   invalidFileType:
     "Only PDF and image files may be uploaded. See the tips below for suggestions on how to convert them to an image file. These files that you selected will not be uploaded: {{disallowedFileNames}}",
   network:
     "Sorry, an error was encountered. This may occur for a variety of reasons, including temporarily losing an internet connection or an unexpected error in our system. If this continues to happen, you may call the Paid Family Leave Contact Center at $t(shared.callCenterPhoneNumber)",
+  // These fallbacks shouldn't normally render, but they may if a validation rule or
+  // field is introduced and we don't add a custom field-level error message for it.
+  validationFallback: {
+    invalid: "Field ({{field}}) has invalid value.",
+    // Field's value didn't match an expected regex pattern:
+    pattern: "Field ({{field}}) didn't match expected format.",
+  },
 };
 
 const shared = {

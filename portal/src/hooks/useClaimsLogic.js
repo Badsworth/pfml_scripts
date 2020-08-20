@@ -1,6 +1,8 @@
 import Claim from "../models/Claim";
 import ClaimsApi from "../api/ClaimsApi";
-import merge from "lodash/merge";
+import { ValidationError } from "../errors";
+import getRelevantIssues from "../utils/getRelevantIssues";
+import { merge } from "lodash";
 import useCollectionState from "./useCollectionState";
 import { useMemo } from "react";
 
@@ -45,25 +47,31 @@ const useClaimsLogic = ({ appErrorsLogic, portalFlow, user }) => {
   /**
    * Update the claim in the API and set application errors if any
    * @param {string} application_id - application id for claim
-   * @param {object} patchData - subset of claim data that will be updated
+   * @param {object} patchData - subset of claim data that will be updated, and
+   * used as the list of fields to filter validation warnings by
    */
   const update = async (application_id, patchData) => {
     if (!user) return;
-    try {
-      let { claim } = await claimsApi.updateClaim(application_id, patchData);
+    appErrorsLogic.clearErrors();
 
-      // Currently the API doesn't return the claim data in the response
-      // so we're manually constructing the body based on client data.
-      // We will change the PATCH applications endpoint to return the full
-      // application in this ticket: https://lwd.atlassian.net/browse/API-276
-      // TODO: Remove workaround once above ticket is complete: https://lwd.atlassian.net/browse/CP-577
+    try {
+      let { claim, errors, warnings } = await claimsApi.updateClaim(
+        application_id,
+        patchData
+      );
+      const issues = getRelevantIssues(errors, warnings, patchData);
+
+      if (issues.length) {
+        throw new ValidationError(issues, "claims");
+      }
+
+      // TODO (CP-676): Remove workaround once API returns all the fields in our application
       claim = new Claim(merge(claims.get(application_id), patchData));
       // </ end workaround >
+
       setClaim(claim);
       const params = { claim_id: claim.application_id };
       portalFlow.goToNextPage({ claim, user }, params);
-
-      appErrorsLogic.clearErrors();
     } catch (error) {
       appErrorsLogic.catchError(error);
     }

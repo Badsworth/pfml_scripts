@@ -1,0 +1,28 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`useAppErrorsLogic catchError when ValidationError is thrown tracks which issues were encountered 1`] = `
+Object {
+  "issues": Array [
+    Object {
+      "field": "employee_ssn",
+      "rule": "/d{9}",
+      "type": "pattern",
+    },
+    Object {
+      "field": "unknown_field",
+      "rule": "/d{9}",
+      "type": "pattern",
+    },
+    Object {
+      "field": "custom_field_validation",
+      "rule": "custom",
+      "type": "customValidation",
+    },
+    Object {
+      "field": "validation_without_a_message",
+      "rule": undefined,
+      "type": "noMessage",
+    },
+  ],
+}
+`;

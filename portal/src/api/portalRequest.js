@@ -15,7 +15,8 @@ import tracker from "../services/tracker";
  * @typedef {Promise<{ data: object, errors: ?Array, warnings: ?Array, status: number, success: boolean }>} Response
  * @property {object} data - API's JSON response
  * @property {Array} errors - API's request errors
- * @property {Array} warnings - API's form validation warnings
+ * @property {Array} warnings - API's validation warnings, such as missing required fields. These are "warnings"
+ *  because we expect some fields to be missing as the user proceeds page-by-page through the flow.
  * @property {number} status - Status code
  * @property {boolean} success - Did the request succeed or fail?
  */
@@ -96,15 +97,7 @@ async function sendRequest(url, options) {
 
   try {
     response = await fetch(url, options);
-
-    if (response.ok) {
-      ({ data, errors, warnings } = await response.json());
-    } else {
-      // Request completed, but the response status code was outside the 2xx range
-      tracker.noticeError(
-        new Error(`Fetch request to ${url} returned status: ${response.status}`)
-      );
-    }
+    ({ data, errors, warnings } = await response.json());
   } catch (error) {
     // Request failed to send or something failed while parsing the response
     // Log the JS error to support troubleshooting
@@ -114,7 +107,18 @@ async function sendRequest(url, options) {
   }
 
   if (!response.ok) {
-    throwError(response);
+    // Request completed, but the response status code was outside the 2xx range
+    // Log the error response to track trends and surges
+    tracker.noticeError(
+      new Error(`Fetch request to ${url} returned status: ${response.status}`)
+    );
+
+    if (!errors) {
+      // Response didn't include any errors that we could use to
+      // display user friendly error message(s) from, so throw
+      // an error based on the status code
+      throwError(response);
+    }
   }
 
   return {

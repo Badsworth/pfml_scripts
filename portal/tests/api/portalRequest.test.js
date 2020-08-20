@@ -240,6 +240,7 @@ describe("request", () => {
           global.fetch = jest.fn().mockResolvedValue({
             ok: false,
             status: code,
+            json: jest.fn().mockResolvedValue({}),
           });
 
           await expect(portalRequest("GET", "users")).rejects.toThrow(

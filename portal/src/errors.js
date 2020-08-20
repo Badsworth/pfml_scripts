@@ -58,7 +58,7 @@ export class ApiRequestError extends Error {
 }
 
 /**
- * An API response returned a 400 status code
+ * An API response returned a 400 status code and its JSON body didn't include any `errors`
  */
 export class BadRequestError extends ApiRequestError {
   constructor(...params) {
@@ -116,5 +116,22 @@ export class UnauthorizedError extends ApiRequestError {
   constructor(...params) {
     super(...params);
     this.name = "UnauthorizedError";
+  }
+}
+
+/**
+ * A request wasn't completed due to one or more validation issues
+ */
+export class ValidationError extends Error {
+  /**
+   * @param {{ field: string, message: string, type: string }[]} issues - List of validation issues returned by the API
+   * @param {string} i18nPrefix - Used in the i18n message keys, prefixed to the field name (e.g. `prefix.field_name`)
+   * @example new ValidationError([{ field: "employee_ssn", type: "pattern", message: "Field didn't match \d{9}" }], "claims")
+   */
+  constructor(issues, i18nPrefix, ...params) {
+    super(...params);
+    this.issues = issues;
+    this.i18nPrefix = i18nPrefix;
+    this.name = "ValidationError";
   }
 }

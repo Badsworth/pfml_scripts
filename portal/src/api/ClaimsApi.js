@@ -82,24 +82,24 @@ export default class ClaimsApi {
       ? patchData
       : patchDataWithoutExcludedPii;
 
-    const { data, success, status } = await this.claimsRequest(
-      "PATCH",
-      `/${application_id}`,
-      requestData
-    );
+    const {
+      data,
+      errors,
+      success,
+      status,
+      warnings,
+    } = await this.claimsRequest("PATCH", `/${application_id}`, requestData);
 
-    // Currently the API doesn't return the claim data in the response
-    // so we're manually constructing the body based on client data.
-    // We will change the PATCH applications endpoint to return the full
-    // application in this ticket: https://lwd.atlassian.net/browse/API-276
-    // TODO: Remove workaround once above ticket is complete: https://lwd.atlassian.net/browse/CP-577
+    // TODO (CP-676): Remove workaround once API returns all the fields in our application
     const workaroundData = merge({ ...data, application_id }, patchData);
     // </ end workaround >
 
     return {
+      claim: success ? new Claim(workaroundData) : null,
+      errors,
       success,
       status,
-      claim: success ? new Claim(workaroundData) : null,
+      warnings,
     };
   };
 

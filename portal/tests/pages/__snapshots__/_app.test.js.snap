@@ -7,7 +7,7 @@ AppErrorInfoCollection {
       "field": null,
       "key": "mocked-for-snapshots",
       "message": "A test error happened",
-      "type": null,
+      "name": null,
     },
   ],
   "itemsById": Object {
@@ -15,7 +15,7 @@ AppErrorInfoCollection {
       "field": null,
       "key": "mocked-for-snapshots",
       "message": "A test error happened",
-      "type": null,
+      "name": null,
     },
   },
 }

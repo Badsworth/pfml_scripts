@@ -110,7 +110,7 @@ describe("useUsersLogic", () => {
           await usersLogic.updateUser(user_id, patchData);
         });
 
-        expect(appErrorsLogic.appErrors.items[0].type).toEqual(
+        expect(appErrorsLogic.appErrors.items[0].name).toEqual(
           NetworkError.name
         );
       });
@@ -171,7 +171,7 @@ describe("useUsersLogic", () => {
       });
 
       it("sets UserNotFoundError error", () => {
-        expect(appErrorsLogic.appErrors.items[0].type).toEqual(
+        expect(appErrorsLogic.appErrors.items[0].name).toEqual(
           UserNotFoundError.name
         );
       });
@@ -185,7 +185,7 @@ describe("useUsersLogic", () => {
           await usersLogic.loadUser();
         });
 
-        expect(appErrorsLogic.appErrors.items[0].type).toEqual(
+        expect(appErrorsLogic.appErrors.items[0].name).toEqual(
           UserNotFoundError.name
         );
       });
