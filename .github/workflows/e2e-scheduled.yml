@@ -3,7 +3,7 @@ name: End-to-End Test Suite (Nightly)
 on:
   workflow_dispatch:
     schedule:
-      Kick off a scheduled run at Midnight UTC.
+      # Kick off a scheduled run at Midnight UTC.
       - cron: '0 0 * * *'
 
 jobs:
