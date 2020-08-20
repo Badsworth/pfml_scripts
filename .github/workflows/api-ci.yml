@@ -24,6 +24,9 @@ jobs:
 
       - name: build container
         run: make build
+
+      - name: install project dependencies not built into container
+        run: make deps
       
       - name: check dependencies
         run: make deps-check

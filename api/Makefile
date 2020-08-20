@@ -25,25 +25,21 @@ endif
 # Path to Open API file for spectral linting
 OPEN_API_PATH := openapi.yaml
 
-# For running Python things in the local environment (which could be when running inside a Docker container)
-PY_RUN_CMD_POETRY := poetry run
-# For running Python things in Docker, as one-off processes, starting container if needed
-PY_RUN_CMD_DOCKER_RUN := docker-compose run $(DOCKER_EXEC_ARGS) --rm $(APP_NAME) poetry run
-# For running Python things in a running Docker container
-PY_RUN_CMD_DOCKER_EXEC := docker-compose exec $(DOCKER_EXEC_ARGS) $(APP_NAME) poetry run
+# For running things in the local environment (which could be when running inside a Docker container)
+RUN_CMD_NATIVE :=
+# For running things in Docker, as one-off processes, starting container if needed
+RUN_CMD_DOCKER_RUN := docker-compose run $(DOCKER_EXEC_ARGS) --rm $(APP_NAME)
+# For running things in a running Docker container
+RUN_CMD_DOCKER_EXEC := docker-compose exec $(DOCKER_EXEC_ARGS) $(APP_NAME)
 
-PY_RUN_CMD_OPT ?= DOCKER_RUN
+RUN_CMD_OPT ?= DOCKER_RUN
+RUN_CMD := $(RUN_CMD_$(RUN_CMD_OPT))
 
-PY_RUN_CMD := $(PY_RUN_CMD_$(PY_RUN_CMD_OPT))
+PY_RUN_CMD := $(RUN_CMD) poetry run
 
-POETRY_CMD := $(subst poetry run,poetry,$(PY_RUN_CMD))
-
-SPECTRAL_RULESET_PATH := .spectral.yaml
+POETRY_CMD := $(RUN_CMD) poetry
 
 DECODE_LOG := 2>&1 | python3 -u massgov/pfml/util/logging/decodelog.py
-
-# Command to run spectral Open API linting
-RUN_CMD_SPECTRAL := node ../node_modules/@stoplight/spectral/dist/cli/index lint $(OPEN_API_PATH) -r $(SPECTRAL_RULESET_PATH) 
 
 # BuildKit is a more efficient builder for Docker, so use it by default
 ifndef NO_BUILDKIT
@@ -92,6 +88,9 @@ clean: ## Remove intermediate, cache, or build artifacts
 clean-docker: ## Remove project docker artifacts (which includes the DB)
 	docker-compose down --remove-orphans --rmi all --volumes
 
+clean-node: ## Remove project Node.js modules
+	rm -rf node_modules
+
 clean-venv: ## Remove active poetry virtualenv
 	rm -rf $(shell poetry env info --path)
 
@@ -112,19 +111,18 @@ create-user: ## Create local API User
 
 deps: ## Install dependencies
 	$(POETRY_CMD) install --no-root
+	$(RUN_CMD) npm install --only=dev
 
 deps-check:
 	$(PY_RUN_CMD) safety check --full-report
 
+distclean: ## Remove all artifacts that can be regenerated
+distclean: clean clean-node clean-venv
+	rm -f jwks.json
+
 ecr-login: ## Login to ECR for Docker
 	@echo "Authenticating Docker with ECR"
 	ecr_login_cmd="$$(aws ecr get-login --no-include-email)" && $$ecr_login_cmd
-
-install-spectral:
-	yarn add @stoplight/spectral@5.4.0 --dev
-
-run-spectral: install-spectral
-	$(RUN_CMD_SPECTRAL)
 
 format: ## Format code
 	$(PY_RUN_CMD) isort --atomic --apply
@@ -135,7 +133,7 @@ format-check: ## Check format of code
 	$(PY_RUN_CMD) black . --check
 
 init: ## Initialize project to run locally
-init: build start-db jwks.json db-upgrade db-create-users
+init: build deps start-db jwks.json db-upgrade db-create-users
 
 jwks.json: ## Generate a local JSON Web Key Set to use for local API Authentication
 	$(PY_RUN_CMD) bin/create-jwks.py > $@
@@ -153,12 +151,16 @@ else
  FLAKE8_FORMAT := default
 endif
 
-lint: run-spectral ## Run linting
+lint: ## Run linting
+lint: lint-spectral
 	$(PY_RUN_CMD) flake8 --format=$(FLAKE8_FORMAT) massgov tests bin
 	$(PY_RUN_CMD) mypy massgov bin
 
 lint-security: ## Run security linting
 	$(PY_RUN_CMD) bandit -r . --number 3 --skip B101 -ll
+
+lint-spectral: ## Run OpenAPI Spec linting
+	$(RUN_CMD) npx spectral lint $(OPEN_API_PATH) --ruleset .spectral.yaml
 
 login: start ## Start shell in running container
 	docker exec -it $(APP_NAME) bash
@@ -290,7 +292,7 @@ help: ## Displays this help screen
 	@echo ""
 	@echo "APP_NAME=$(APP_NAME)"
 	@echo "INFO_TAG=$(INFO_TAG)"
-	@echo "PY_RUN_CMD_OPT=$(PY_RUN_CMD_OPT)"
+	@echo "RUN_CMD_OPT=$(RUN_CMD_OPT)"
 	@echo "RELEASE_TAG=$(RELEASE_TAG)"
 	@echo "RUN_UID=$(RUN_UID)"
 	@echo "RUN_USER=$(RUN_USER)"

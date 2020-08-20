@@ -52,12 +52,12 @@ Follow instructions here to [install Docker](https://docs.docker.com/get-docker/
 
 In a docker-centric environment, we support a couple different developer workflows:
 
-| Start command from: | Container Lifetime | PY_RUN_CMD_OPT |
-| ------------------- | ------------------ | -------------- |
-| your host 🙋‍♀️        | Long-running       | DOCKER_EXEC    |
-| inside docker 🐳    | Long-running       | N/A            |
-| your host 🙋‍♀️        | Single-use         | DOCKER_RUN     |
-| Mixed               | Mixed              | Mixed          |
+| Start command from: | Container Lifetime | RUN_CMD_OPT |
+| ------------------- | ------------------ | ----------- |
+| your host 🙋‍♀️        | Long-running       | DOCKER_EXEC |
+| inside docker 🐳    | Long-running       | N/A         |
+| your host 🙋‍♀️        | Single-use         | DOCKER_RUN  |
+| Mixed               | Mixed              | Mixed       |
 
 The default is `DOCKER_RUN` and should always just work™. But this spins up a
 new container for every command, which can be slow. If you are working on the
@@ -72,10 +72,10 @@ workflow used otherwise. Examples include generating an initial local JWKS
 <p>
 If you want to re-use a docker application for various Python and development
  <code>make</code> commands (e.g. linting and testing), you should set
- <code>PY_RUN_CMD_OPT</code> to <code>DOCKER_EXEC</code>.
+ <code>RUN_CMD_OPT</code> to <code>DOCKER_EXEC</code>.
 
 ```sh
-$ export PY_RUN_CMD_OPT=DOCKER_EXEC
+$ export RUN_CMD_OPT=DOCKER_EXEC
 $ make test
 ```
 
@@ -84,7 +84,7 @@ $ make test
 
 <details><summary>Log into a docker container to run commands</summary>
 <p>If you intend to start a Docker environment and log into it like a remote server,
- you can leave <code>PY_RUN_CMD_OPT</code> alone and use <code>make login</code> instead.
+ you can leave <code>RUN_CMD_OPT</code> alone and use <code>make login</code> instead.
 
 ```sh
 $ make login
@@ -96,10 +96,10 @@ $ make login
 
 <details><summary>Start a new docker container for every command</summary>
 <p>If you plan to run commands through temporary, single-use Docker containers, you
- should set your <code>PY_RUN_CMD_OPT</code> to <code>DOCKER_RUN</code>:
+ should set your <code>RUN_CMD_OPT</code> to <code>DOCKER_RUN</code>:
 
 ```sh
-$ export PY_RUN_CMD_OPT=DOCKER_RUN
+$ export RUN_CMD_OPT=DOCKER_RUN
 $ make test
 ```
 
@@ -109,12 +109,12 @@ Note this is the default setting.
 </details>
 
 <details><summary>Mix and Match</summary>
- <p>If you plan to mix and match things, you'll have to juggle <code>PY_RUN_CMD_OPT</code> yourself.
+ <p>If you plan to mix and match things, you'll have to juggle <code>RUN_CMD_OPT</code> yourself.
 
 For example:
 
-- running static lints outside of Docker with native developer setup: <code>PY_RUN_CMD_OPT=POETRY make lint</code>
-- running tests inside of Docker after a <code>make start</code>: <code>PY_RUN_CMD_OPT=DOCKER_EXEC make test</code>
+- running static lints outside of Docker with native developer setup: <code>RUN_CMD_OPT=NATIVE make lint</code>
+- running tests inside of Docker after a <code>make start</code>: <code>RUN_CMD_OPT=DOCKER_EXEC make test</code>
 
 </p>
 </details>
@@ -129,7 +129,7 @@ few things.
   installing Python, or [asdf](https://asdf-vm.com/).
 2. After installing and activating the right version of Python, install
   [poetry](https://python-poetry.org/docs/#installation).
-3. Then set `PY_RUN_CMD_OPT` to `POETRY` in your development environment.
+3. Then set `RUN_CMD_OPT` to `NATIVE` in your development environment.
 4. Then run `make deps` to install Python dependencies and development tooling.
 
 You should now be set up to run developer tooling natively, like linting. To run

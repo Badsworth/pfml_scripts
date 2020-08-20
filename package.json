@@ -10,7 +10,6 @@
     "prettier": "prettier --write '**/*.{js,json,md,mdx,scss,yaml,yml}'"
   },
   "devDependencies": {
-    "@stoplight/spectral": "5.4.0",
     "babel-eslint": "^10.1.0",
     "eslint": "^6.8.0",
     "eslint-config-nava": "^9.0.0",
