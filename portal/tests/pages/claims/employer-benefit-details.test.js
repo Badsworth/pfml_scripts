@@ -42,8 +42,7 @@ describe("EmployerBenefitDetails", () => {
           claim.application_id,
           {
             employer_benefits: claim.employer_benefits,
-          },
-          expect.any(Array)
+          }
         );
       });
     });
@@ -61,8 +60,7 @@ describe("EmployerBenefitDetails", () => {
               ...claim.employer_benefits,
               new EmployerBenefit(),
             ],
-          },
-          expect.any(Array)
+          }
         );
       });
     });
@@ -81,8 +79,7 @@ describe("EmployerBenefitDetails", () => {
           claim.application_id,
           {
             employer_benefits: [],
-          },
-          expect.any(Array)
+          }
         );
       });
     });

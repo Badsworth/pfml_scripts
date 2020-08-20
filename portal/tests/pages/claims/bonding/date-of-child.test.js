@@ -31,8 +31,7 @@ describe("DateOfChild", () => {
 
       expect(appLogic.claims.update).toHaveBeenCalledWith(
         expect.any(String),
-        pick(claim, ["temp.leave_details.bonding.date_of_child"]),
-        expect.any(Array)
+        pick(claim, ["temp.leave_details.bonding.date_of_child"])
       );
     });
   });

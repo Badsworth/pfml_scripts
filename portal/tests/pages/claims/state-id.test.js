@@ -36,14 +36,10 @@ describe("StateId", () => {
 
       wrapper.find("QuestionPage").simulate("save");
 
-      expect(appLogic.claims.update).toHaveBeenCalledWith(
-        expect.any(String),
-        {
-          has_state_id: true,
-          mass_id: "123456789",
-        },
-        expect.any(Array)
-      );
+      expect(appLogic.claims.update).toHaveBeenCalledWith(expect.any(String), {
+        has_state_id: true,
+        mass_id: "123456789",
+      });
     });
   });
 });

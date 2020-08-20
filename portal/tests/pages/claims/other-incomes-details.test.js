@@ -36,8 +36,7 @@ describe("OtherIncomesDetails", () => {
           claim.application_id,
           {
             other_incomes: claim.other_incomes,
-          },
-          expect.any(Array)
+          }
         );
       });
     });
@@ -53,8 +52,7 @@ describe("OtherIncomesDetails", () => {
           claim.application_id,
           {
             other_incomes: [...claim.other_incomes, new OtherIncome()],
-          },
-          expect.any(Array)
+          }
         );
       });
     });
@@ -73,8 +71,7 @@ describe("OtherIncomesDetails", () => {
           claim.application_id,
           {
             other_incomes: [],
-          },
-          expect.any(Array)
+          }
         );
       });
     });

@@ -116,8 +116,7 @@ describe("Duration", () => {
 
       expect(updateClaimSpy).toHaveBeenCalledWith(
         claim.application_id,
-        expect.objectContaining(claimAttrs),
-        expect.any(Array)
+        expect.objectContaining(claimAttrs)
       );
     });
   });

@@ -21,8 +21,7 @@ describe("Shared claims page behavior", () => {
 
         expect(appLogic.claims.update).toHaveBeenCalledWith(
           expect.any(String),
-          expect.any(Object),
-          expect.any(Array)
+          expect.any(Object)
         );
       });
     });

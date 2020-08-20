@@ -24,8 +24,7 @@ describe("PreviousLeaves", () => {
         claim.application_id,
         {
           has_previous_leaves: claim.has_previous_leaves,
-        },
-        expect.any(Array)
+        }
       );
     });
   });

@@ -47,8 +47,7 @@ describe("EmploymentStatusPage", () => {
           {
             employment_status: EmploymentStatus.employed,
             employer_fein: testFein,
-          },
-          expect.any(Array)
+          }
         );
       });
     });

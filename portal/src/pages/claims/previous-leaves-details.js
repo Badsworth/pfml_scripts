@@ -27,8 +27,9 @@ export const PreviousLeavesDetails = (props) => {
   const { formState, updateFields } = useFormState(initialEntries);
   const previous_leaves = get(formState, "previous_leaves");
 
-  const handleSave = () =>
-    props.appLogic.claims.update(props.claim.application_id, formState, fields);
+  const handleSave = () => {
+    return props.appLogic.claims.update(props.claim.application_id, formState);
+  };
 
   const handleAddClick = () => {
     const updatedEntries = previous_leaves.concat([new PreviousLeave()]);

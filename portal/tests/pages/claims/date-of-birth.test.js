@@ -25,8 +25,7 @@ describe("DateOfBirth", () => {
 
       expect(appLogic.claims.update).toHaveBeenCalledWith(
         expect.any(String),
-        pick(claim, ["date_of_birth"]),
-        expect.any(Array)
+        pick(claim, ["date_of_birth"])
       );
     });
   });

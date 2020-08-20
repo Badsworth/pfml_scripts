@@ -18,7 +18,7 @@ const ReasonPregnancy = (props) => {
   const { pregnant_or_recent_birth } = formState;
 
   const handleSave = () =>
-    props.appLogic.claims.update(props.claim.application_id, formState, fields);
+    props.appLogic.claims.update(props.claim.application_id, formState);
 
   return (
     <QuestionPage

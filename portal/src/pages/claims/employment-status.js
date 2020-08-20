@@ -27,7 +27,7 @@ const EmploymentStatusPage = (props) => {
   const handleInputChange = useHandleInputChange(updateFields);
 
   const handleSave = () => {
-    appLogic.claims.update(claim.application_id, formState, fields);
+    appLogic.claims.update(claim.application_id, formState);
   };
 
   return (

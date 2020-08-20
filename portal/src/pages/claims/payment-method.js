@@ -27,7 +27,7 @@ const PaymentMethod = (props) => {
   const paymentPreference = get(formState, "temp.payment_preferences[0]");
 
   const handleSave = () =>
-    props.appLogic.claims.update(props.claim.application_id, formState, fields);
+    props.appLogic.claims.update(props.claim.application_id, formState);
 
   return (
     <QuestionPage
