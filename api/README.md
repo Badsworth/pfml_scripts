@@ -1,19 +1,48 @@
 # Massachusetts PFML API
 
-This is the API for the Massachusetts Paid Family and Medical Leave program.
+This is the API for the Massachusetts Paid Family and Medical Leave program. See [this Confluence page](https://lwd.atlassian.net/wiki/spaces/API/pages/227770663/Paid+Leave+API) for a technical overview.
 
-- [Docker Developer Setup](#docker-developer-setup)
-- [Running the Application (Docker)](#running-the-application-docker)
-  - [Common commands](#common-commands)
-  - [Running migrations](#running-migrations)
-  - [Creating new migrations](#creating-new-migrations)
-- [Native Developer Setup](#native-developer-setup)
-- [Try it out](#try-it-out)
-- [Tests](#tests)
-- [Environment Configuration](#environment-configuration)
-- [Directory Structure](#directory-structure)
+1. [Getting Started](#getting-started)
+    1. [Quickstart](#quickstart)
+    2. [Setup Your Development Environment](#setup-your-development-environment)
+        1. [(Preferred) Docker + GNU Make](#preferred-docker--gnu-make)
+        2. [Native Developer Setup](#native-developer-setup)
+    3. [Development Workflow](#development-workflow)
+2. [Running the Application (Docker)](#running-the-application-docker)
+    1. [Initializing dependencies](#initializing-dependencies)
+    2. [Common commands](#common-commands)
+    3. [Managing the container environment](#managing-the-container-environment)
+    4. [Running migrations](#running-migrations)
+    5. [Creating new migrations](#creating-new-migrations)
+    6. [Multi-head situations](#multi-head-situations)
+3. [Try it out](#try-it-out)
+    1. [Getting local authentication credentials](#getting-local-authentication-credentials)
+4. [Tests](#tests)
+    1. [During Development](#during-development)
+5. [Environment Configuration](#environment-configuration)
+6. [Monitoring and Alerting](#monitoring-and-alerting)
+7. [Directory Structure](#directory-structure)
 
-## Docker Developer Setup
+## Getting Started
+
+### Quickstart
+
+0. Install [Docker](https://docs.docker.com/get-docker)
+1. `cd pfml/api` (or otherwise move to this directory)
+2. `make init`
+3. `make start`
+4. Navigate to the Swagger UI at [http://localhost:1550/v1/docs/](http://localhost:1550/v1/docs/)
+5. [Setup local authentication](#getting-local-authentication-credentials)
+6. Review documentation in `/docs`, especially [CONTRIBUTING.md](/docs/contributing.md) for guidelines on how to contribute code
+
+### Setup Your Development Environment
+
+You can set up your development environment in one of the following ways:
+
+1. (Preferred) Docker + GNU Make
+2. Native developer setup: Install dependencies directly on your OS
+
+#### (Preferred) Docker + GNU Make
 
 Docker is heavily recommended for a local development environment. It sets up Python,
 Poetry and installs development dependencies automatically, and can create a full environment
@@ -35,7 +64,7 @@ new container for every command, which can be slow. If you are working on the
 API a lot, you may want to consider one of the alternative setups below and/or
 the [Native Developer Setup](#native-developer-setup).
 
-Some tasks will usually need to be run with `DOCKER_RUN` regardless of the
+**Note: Some tasks, including initial setup, will usually need to be run with `DOCKER_RUN`** regardless of the
 workflow used otherwise. Examples include generating an initial local JWKS
 (`make jwks.json`) or running migrations (`make db-upgrade`).
 
@@ -90,7 +119,44 @@ For example:
 </p>
 </details>
 
+#### Native Developer Setup
+
+To setup a development environment outside of Docker, you'll need to install a
+few things.
+
+1. Install at least Python 3.8.
+  [pyenv](https://github.com/pyenv/pyenv#installation) is one popular option for
+  installing Python, or [asdf](https://asdf-vm.com/).
+2. After installing and activating the right version of Python, install
+  [poetry](https://python-poetry.org/docs/#installation).
+3. Then set `PY_RUN_CMD_OPT` to `POETRY` in your development environment.
+4. Then run `make deps` to install Python dependencies and development tooling.
+
+You should now be set up to run developer tooling natively, like linting. To run
+the application, set up a PostgreSQL database and see `docker-compose.yml` for
+environment variables needed.
+
+### Development Workflow
+
+All mandatory checks are run as part of the Github CI pull request process. See
+the `api-*.yml` files in pfml/.github/workflows to see what gets run.
+
+You can run these checks on your local machine before the PR stage (such as
+befor each commit or before pushing to Github):
+
+- `make check` to run checks (e.g. linting, testing)
+- `make format` to fix any formatting issues
+
 ## Running the Application (Docker)
+
+#### Initializing dependencies
+
+The application requires a running database with some minimum level of
+migrations already run as well as database users created and various other
+things.
+
+`make init` will perform the prep tasks necessary to get the application off the
+ground.
 
 #### Common commands
 
@@ -107,7 +173,7 @@ make stop     # Stop all running containers
 
 Under most circumstances, a local copy of the API will run with `use_reloader=True`,
 a flag given to Connexion that automatically restarts the the API's Python process if any modules have changed.
-Most of the time, the `use_reloader` flag should take care of things for you, but there are 
+Most of the time, the `use_reloader` flag should take care of things for you, but there are
 a few scenarios where you'll need to make a manual intervention in order to properly manage your container's state.
 
 If you're doing work on a local environment, please be aware that any changes to *environment variables* or *config files*
@@ -118,7 +184,7 @@ _unless_ you're changing code that runs before the `connexion_app.run` command i
 [__main__.py](https://github.com/EOLWD/pfml/blob/master/api/massgov/pfml/api/__main__.py#L57).
 In this case only, you'll need to restart the Docker containers with `make stop` followed by `make start`.
 
-These scenarios are most relevant to developers who habitually work in `DOCKER_EXEC` mode, 
+These scenarios are most relevant to developers who habitually work in `DOCKER_EXEC` mode,
 with long-lived application and DB containers.
 
 #### Running migrations
@@ -185,25 +251,6 @@ been run, actual DB users need to be connected for the application to use.
 make db-create-users
 ```
 
-## Native Developer Setup
-
-To setup a development environment outside of Docker, you'll need to install a
-few things.
-
-### Dependencies
-
-- Install at least Python 3.8.
-  [pyenv](https://github.com/pyenv/pyenv#installation) is one popular option for
-  installing Python, or [asdf](https://asdf-vm.com/).
-- After installing and activating the right version of Python, install
-  [poetry](https://python-poetry.org/docs/#installation).
-- Then set `PY_RUN_CMD_OPT` to `POETRY` in your development environment.
-- Then run `make deps` to install Python dependencies and development tooling.
-
-You should now be set up to run developer tooling natively, like linting. To run
-the application, set up a PostgreSQL database and see `docker-compose.yml` for
-environment variables needed.
-
 ## Try it out
 
 Once your application is running, a UI is available at:
@@ -215,7 +262,7 @@ The spec is available at:
 - [http://localhost:1550/v1/openapi.json](http://localhost:1550/v1/openapi.json) (JSON) or
 - [http://localhost:1550/v1/openapi.yaml](http://localhost:1550/v1/openapi.yaml) (YAML)
 
-### Getting local authentication credentials
+## Getting local authentication credentials
 
 In order to make requests to the API, an authentication token must be included.
 Currently this is a JWT set in the `Authorization` HTTP header. A JWT signed by
@@ -327,7 +374,7 @@ make test-watch
 
 ## Environment Configuration
 
-Environment variables for the local app in the `docker-compose.yml` file.
+Environment variables for the local app are in the `docker-compose.yml` file.
 
 ```yaml
 services:
@@ -340,6 +387,8 @@ services:
     - ...
 ```
 
+Changes here will be picked up next time `make start` is run.
+
 ## Monitoring and Alerting
 
 The API is monitored with New Relic's Python agent.
@@ -350,13 +399,12 @@ See [environment-variables.md](/docs/api/environment-variables.md) for more abou
 
 ```
 .
-├── massgov
+├── massgov                     Python package directory
 │   └── pfml
 │       └── api                 Application code
-│       └── db                  Migrations config
-│       └── data-integrations
-│           └── */lambda        Data ingestion lambda for an agency
-│           └── */mock          Mock data generator for an agency
+│       └── db
+│           └── migrations      Migrations config
+│               └── versions    Migrations themselves
 ├── tests
 │   └── api             Application tests
 ├── Dockerfile          Multi-stage Docker build file for project

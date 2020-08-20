@@ -89,7 +89,7 @@ clean: ## Remove intermediate, cache, or build artifacts
 	rm -rf .coverage_report
 	rm -f .testmondata
 
-clean-docker: ## Remove project docker artifacts
+clean-docker: ## Remove project docker artifacts (which includes the DB)
 	docker-compose down --remove-orphans --rmi all --volumes
 
 clean-venv: ## Remove active poetry virtualenv
@@ -134,6 +134,9 @@ format-check: ## Check format of code
 	$(PY_RUN_CMD) isort --atomic --check-only
 	$(PY_RUN_CMD) black . --check
 
+init: ## Initialize project to run locally
+init: build start-db jwks.json db-upgrade db-create-users
+
 jwks.json: ## Generate a local JSON Web Key Set to use for local API Authentication
 	$(PY_RUN_CMD) bin/create-jwks.py > $@
 
@@ -174,11 +177,14 @@ logs-db: start ## View DB logs
 
 psql: login-db
 
-start: ## Start containers
+start: ## Start all containers
 start: jwks.json
 	docker-compose up --detach
 
-stop: ## Stop running containers
+start-db: ## Start DB container
+	docker-compose up --detach mass-pfml-db
+
+stop: ## Stop all running containers
 	docker-compose down
 
 release: ## Build and publish release image

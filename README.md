@@ -15,7 +15,7 @@ When initially setting up the project, install packages from the repo root to en
 npm install
 ```
 
-To ensure terraform (infra) files are linted, install terraform. The best way to manage terraform versions is with [Terraform Version Manager](https://github.com/tfutils/tfenv).
+To ensure Terraform (infra) files are linted, install Terraform. The best way to manage Terraform versions is with [Terraform Version Manager](https://github.com/tfutils/tfenv).
 
 ```
 $ brew install tfenv
@@ -59,7 +59,7 @@ Automatically format files using [Prettier](https://prettier.io/).
 
 ## API
 
-TBD
+See [api/README.md](/api/README.md).
 
 ## Directory Structure
 
@@ -68,6 +68,7 @@ TBD
 └── api                     🔀 Integration API
 └── bin                     🤖 Developer scripts
 └── docs                    🔖 Developer documentation
+└── e2e                     🏁 End-to-end & business simulation tests
 └── infra                   🌲 Infrastructure config
 └── portal                  🚪 Claimant portal web app
 ```
