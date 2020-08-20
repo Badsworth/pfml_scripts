@@ -159,7 +159,7 @@ exports[`Duration regardless of duration type initially renders the page without
           "leave_details.intermittent_leave_periods[0].frequency",
         ]
       }
-      getfield={[Function]}
+      getField={[Function]}
       name="frequency_question"
       removeField={[Function]}
       updateFields={[Function]}

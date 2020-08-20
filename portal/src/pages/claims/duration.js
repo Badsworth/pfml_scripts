@@ -230,7 +230,7 @@ const Duration = (props) => {
           fieldNamesClearedWhenHidden={[
             "leave_details.intermittent_leave_periods[0].frequency",
           ]}
-          getfield={getField}
+          getField={getField}
           updateFields={updateFields}
           removeField={removeField}
           visible={!!intermittentLeavePeriod.frequency_interval_basis}
