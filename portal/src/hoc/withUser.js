@@ -44,7 +44,11 @@ const withUser = (Component) => {
     }, [users.user, router.pathname]);
 
     if (!users.user)
-      return <Spinner aria-valuetext={t("components.withUser.loadingLabel")} />;
+      return (
+        <div className="margin-top-8 text-center">
+          <Spinner aria-valuetext={t("components.withUser.loadingLabel")} />
+        </div>
+      );
 
     if (
       !users.user.consented_to_data_sharing &&

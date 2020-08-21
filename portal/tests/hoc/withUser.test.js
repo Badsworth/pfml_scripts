@@ -30,9 +30,13 @@ describe("withUser", () => {
       wrapper = shallow(<WrappedComponent appLogic={appLogic} />);
     });
     expect(wrapper).toMatchInlineSnapshot(`
-      <Spinner
-        aria-valuetext="Loading account"
-      />
+      <div
+        className="margin-top-8 text-center"
+      >
+        <Spinner
+          aria-valuetext="Loading account"
+        />
+      </div>
     `);
   });
 

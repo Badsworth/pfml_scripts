@@ -30,9 +30,13 @@ describe("withClaims", () => {
       wrapper = shallow(<WrappedComponent appLogic={appLogic} />);
     });
     expect(wrapper.dive()).toMatchInlineSnapshot(`
-      <Spinner
-        aria-valuetext="Loading claims"
-      />
+      <div
+        className="margin-top-8 text-center"
+      >
+        <Spinner
+          aria-valuetext="Loading claims"
+        />
+      </div>
     `);
   });
 

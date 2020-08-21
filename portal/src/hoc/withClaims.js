@@ -28,7 +28,9 @@ const withClaims = (Component) => {
 
     if (!appLogic.claims.claims) {
       return (
-        <Spinner aria-valuetext={t("components.withClaims.loadingLabel")} />
+        <div className="margin-top-8 text-center">
+          <Spinner aria-valuetext={t("components.withClaims.loadingLabel")} />
+        </div>
       );
     } else {
       return <Component {...props} claims={appLogic.claims.claims} />;
