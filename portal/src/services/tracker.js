@@ -15,15 +15,15 @@ function initialize() {
   window.NREUM.loader_config = {
     agentID: `${process.env.newRelicAppId}`,
     applicationID: `${process.env.newRelicAppId}`,
-    accountID: "1606654",
+    accountID: "2837112",
     trustKey: "1606654",
-    licenseKey: "0c7a02d605",
+    licenseKey: "NRJS-9852fe81d192bbc09c5",
   };
   window.NREUM.info = {
     applicationID: `${process.env.newRelicAppId}`,
     beacon: "bam.nr-data.net",
     errorBeacon: "bam.nr-data.net",
-    licenseKey: "0c7a02d605",
+    licenseKey: "NRJS-9852fe81d192bbc09c5",
     sa: 1,
   };
 }
