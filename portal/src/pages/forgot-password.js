@@ -7,21 +7,27 @@ import React from "react";
 import Title from "../components/Title";
 import routes from "../routes";
 import useFormState from "../hooks/useFormState";
-import useHandleInputChange from "../hooks/useHandleInputChange";
+import useFunctionalInputProps from "../hooks/useFunctionalInputProps";
 import { useTranslation } from "../locales/i18n";
-import valueWithFallback from "../utils/valueWithFallback";
 
 export const ForgotPassword = (props) => {
   const { appLogic } = props;
   const { t } = useTranslation();
-  const { formState, updateFields } = useFormState({});
-  const username = valueWithFallback(formState.username);
-  const handleInputChange = useHandleInputChange(updateFields);
+
+  const { formState, updateFields } = useFormState({
+    username: "",
+  });
 
   const handleSubmit = (event) => {
     event.preventDefault();
-    appLogic.auth.forgotPassword(username);
+    appLogic.auth.forgotPassword(formState.username);
   };
+
+  const getFunctionalInputProps = useFunctionalInputProps({
+    appErrors: appLogic.appErrors,
+    formState,
+    updateFields,
+  });
 
   return (
     <form className="usa-form usa-form--large" onSubmit={handleSubmit}>
@@ -29,11 +35,9 @@ export const ForgotPassword = (props) => {
       <Lead>{t("pages.authForgotPassword.lead")}</Lead>
 
       <InputText
+        {...getFunctionalInputProps("username")}
         type="email"
-        name="username"
-        value={username}
         label={t("pages.authForgotPassword.usernameLabel")}
-        onChange={handleInputChange}
         smallLabel
       />
 
@@ -51,11 +55,7 @@ export const ForgotPassword = (props) => {
 };
 
 ForgotPassword.propTypes = {
-  appLogic: PropTypes.shape({
-    auth: PropTypes.shape({
-      forgotPassword: PropTypes.func.isRequired,
-    }).isRequired,
-  }).isRequired,
+  appLogic: PropTypes.object.isRequired,
 };
 
 export default ForgotPassword;

@@ -11,9 +11,8 @@ import React from "react";
 import get from "lodash/get";
 import pick from "lodash/pick";
 import useFormState from "../../hooks/useFormState";
-import useHandleInputChange from "../../hooks/useHandleInputChange";
+import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "../../locales/i18n";
-import valueWithFallback from "../../utils/valueWithFallback";
 import withClaim from "../../hoc/withClaim";
 
 // TODO: Export full set of fields once Checklist no longer relies on
@@ -21,13 +20,20 @@ import withClaim from "../../hoc/withClaim";
 export const fields = ["claim.temp.payment_preferences[0].payment_method"];
 
 const PaymentMethod = (props) => {
+  const { appLogic, claim } = props;
   const { t } = useTranslation();
+
   const { formState, updateFields } = useFormState(pick(props, fields).claim);
-  const handleInputChange = useHandleInputChange(updateFields);
   const paymentPreference = get(formState, "temp.payment_preferences[0]");
 
   const handleSave = () =>
-    props.appLogic.claims.update(props.claim.application_id, formState);
+    appLogic.claims.update(claim.application_id, formState);
+
+  const getFunctionalInputProps = useFunctionalInputProps({
+    appErrors: appLogic.appErrors,
+    formState,
+    updateFields,
+  });
 
   return (
     <QuestionPage
@@ -35,6 +41,9 @@ const PaymentMethod = (props) => {
       onSave={handleSave}
     >
       <InputChoiceGroup
+        {...getFunctionalInputProps(
+          "temp.payment_preferences[0].payment_method"
+        )}
         choices={[
           {
             checked:
@@ -52,8 +61,6 @@ const PaymentMethod = (props) => {
           },
         ]}
         label={t("pages.claimsPaymentMethod.sectionLabel")}
-        name="temp.payment_preferences[0].payment_method"
-        onChange={handleInputChange}
         type="radio"
       />
 
@@ -69,25 +76,21 @@ const PaymentMethod = (props) => {
           <Lead>{t("pages.claimsPaymentMethod.achLead")}</Lead>
 
           <InputText
-            name="temp.payment_preferences[0].account_details.routing_number"
-            value={valueWithFallback(
-              get(paymentPreference, "account_details.routing_number")
+            {...getFunctionalInputProps(
+              "temp.payment_preferences[0].account_details.routing_number"
             )}
             label={t("pages.claimsPaymentMethod.routingNumberLabel")}
             hint={t("pages.claimsPaymentMethod.routingNumberHint")}
-            onChange={handleInputChange}
             inputMode="numeric"
             smallLabel
             width="medium"
           />
 
           <InputText
-            name="temp.payment_preferences[0].account_details.account_number"
-            value={valueWithFallback(
-              get(paymentPreference, "account_details.account_number")
+            {...getFunctionalInputProps(
+              "temp.payment_preferences[0].account_details.account_number"
             )}
             label={t("pages.claimsPaymentMethod.accountNumberLabel")}
-            onChange={handleInputChange}
             inputMode="numeric"
             smallLabel
           />
@@ -105,57 +108,47 @@ const PaymentMethod = (props) => {
           </FormLabel>
 
           <InputText
-            name="temp.payment_preferences[0].destination_address.line_1"
-            value={valueWithFallback(
-              get(paymentPreference, "destination_address.line_1")
+            {...getFunctionalInputProps(
+              "temp.payment_preferences[0].destination_address.line_1"
             )}
             label={t("pages.claimsPaymentMethod.addressLine1Label")}
-            onChange={handleInputChange}
             autoComplete="address-line1"
             smallLabel
           />
 
           <InputText
-            name="temp.payment_preferences[0].destination_address.line_2"
-            value={valueWithFallback(
-              get(paymentPreference, "destination_address.line_2")
+            {...getFunctionalInputProps(
+              "temp.payment_preferences[0].destination_address.line_2"
             )}
             label={t("pages.claimsPaymentMethod.addressLine2Label")}
-            onChange={handleInputChange}
             optionalText={t("components.form.optional")}
             autoComplete="address-line2"
             smallLabel
           />
 
           <InputText
-            name="temp.payment_preferences[0].destination_address.city"
-            value={valueWithFallback(
-              get(paymentPreference, "destination_address.city")
+            {...getFunctionalInputProps(
+              "temp.payment_preferences[0].destination_address.city"
             )}
             label={t("pages.claimsPaymentMethod.addressCityLabel")}
-            onChange={handleInputChange}
             autoComplete="address-level2"
             smallLabel
           />
 
           <InputText
-            name="temp.payment_preferences[0].destination_address.state"
-            value={valueWithFallback(
-              get(paymentPreference, "destination_address.state")
+            {...getFunctionalInputProps(
+              "temp.payment_preferences[0].destination_address.state"
             )}
             label={t("pages.claimsPaymentMethod.addressStateLabel")}
-            onChange={handleInputChange}
             autoComplete="address-level1"
             smallLabel
           />
 
           <InputText
-            name="temp.payment_preferences[0].destination_address.zip"
-            value={valueWithFallback(
-              get(paymentPreference, "destination_address.zip")
+            {...getFunctionalInputProps(
+              "temp.payment_preferences[0].destination_address.zip"
             )}
             label={t("pages.claimsPaymentMethod.addressZipLabel")}
-            onChange={handleInputChange}
             autoComplete="postal-code"
             inputMode="numeric"
             smallLabel

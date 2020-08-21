@@ -9,26 +9,30 @@ import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
 import useFormState from "../../hooks/useFormState";
-import useHandleInputChange from "../../hooks/useHandleInputChange";
+import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "../../locales/i18n";
-import valueWithFallback from "../../utils/valueWithFallback";
 import withClaim from "../../hoc/withClaim";
 
 export const fields = ["claim.employment_status", "claim.employer_fein"];
 
 const EmploymentStatusPage = (props) => {
-  const { t } = useTranslation();
   const { appLogic, claim } = props;
+  const { t } = useTranslation();
+
   const { formState, getField, updateFields, removeField } = useFormState(
     pick(props, fields).claim
   );
   const employment_status = get(formState, "employment_status");
-  const employer_fein = get(formState, "employer_fein");
-  const handleInputChange = useHandleInputChange(updateFields);
 
   const handleSave = () => {
     appLogic.claims.update(claim.application_id, formState);
   };
+
+  const getFunctionalInputProps = useFunctionalInputProps({
+    appErrors: appLogic.appErrors,
+    formState,
+    updateFields,
+  });
 
   return (
     <QuestionPage
@@ -40,6 +44,7 @@ const EmploymentStatusPage = (props) => {
       </Alert>
 
       <InputChoiceGroup
+        {...getFunctionalInputProps("employment_status")}
         choices={["employed", "unemployed", "selfEmployed"].map((key) => ({
           checked: employment_status === EmploymentStatus[key],
           label: t("pages.claimsEmploymentStatus.choiceLabel", {
@@ -53,8 +58,6 @@ const EmploymentStatusPage = (props) => {
             {t("pages.claimsEmploymentStatus.furloughAnswer")}
           </Details>
         }
-        name="employment_status"
-        onChange={handleInputChange}
         type="radio"
       />
       <ConditionalContent
@@ -65,13 +68,11 @@ const EmploymentStatusPage = (props) => {
         visible={employment_status === EmploymentStatus.employed}
       >
         <InputText
+          {...getFunctionalInputProps("employer_fein")}
           type="numeric"
-          name="employer_fein"
           label={t("pages.claimsEmploymentStatus.feinLabel")}
           mask="fein"
           hint={t("pages.claimsEmploymentStatus.feinHint")}
-          value={valueWithFallback(employer_fein)}
-          onChange={handleInputChange}
         />
       </ConditionalContent>
     </QuestionPage>
@@ -79,12 +80,8 @@ const EmploymentStatusPage = (props) => {
 };
 
 EmploymentStatusPage.propTypes = {
+  appLogic: PropTypes.object.isRequired,
   claim: PropTypes.instanceOf(Claim).isRequired,
-  appLogic: PropTypes.shape({
-    claims: PropTypes.shape({
-      update: PropTypes.func.isRequired,
-    }),
-  }).isRequired,
   query: PropTypes.shape({
     claim_id: PropTypes.string,
   }).isRequired,

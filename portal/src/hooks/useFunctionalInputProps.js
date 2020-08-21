@@ -1,0 +1,45 @@
+import { get } from "lodash";
+import useHandleInputChange from "./useHandleInputChange";
+
+/** @typedef {import('../models/AppErrorInfoCollection').default} AppErrorInfoCollection */
+
+/**
+ * Create a function for generating common props that every form Input component
+ * needs in order to display and update state.
+ * @param {object} config
+ * @param {AppErrorInfoCollection} config.appErrors
+ * @param {object} config.formState - Form state where values for inputs can be retrieved
+ * @param {Function} config.updateFields - Function used for updating `formState`
+ * @returns {(fieldName: string) => { errorMsg: string, name: string, onChange: Function, value: boolean|number|string }}
+ */
+function useFunctionalInputProps({ appErrors, formState, updateFields }) {
+  const handleInputChange = useHandleInputChange(updateFields);
+
+  return function getFunctionalInputProps(fieldName) {
+    const errorMsg = appErrors.fieldErrorMessage(fieldName);
+
+    return {
+      errorMsg: errorMsg || undefined, // undefined prevents the prop from being added to the Component
+      name: fieldName,
+      onChange: handleInputChange,
+      // radio and checkbox inputs will just ignore this prop:
+      value: valueWithFallback(get(formState, fieldName)),
+    };
+  };
+}
+
+/**
+ * Use this to set React input values. Form inputs should only ever
+ * be controlled or uncontrolled, and not switch between the two.
+ * Setting a fallback value allows us to keep an input as "controlled"
+ * even when its value is null/undefined
+ * @see https://reactjs.org/docs/forms.html#controlled-components
+ * @param {boolean|number|string} [value]
+ * @returns {boolean|number|string}
+ */
+function valueWithFallback(value) {
+  const returnFallback = value === null || value === undefined;
+  return returnFallback ? "" : value;
+}
+
+export default useFunctionalInputProps;

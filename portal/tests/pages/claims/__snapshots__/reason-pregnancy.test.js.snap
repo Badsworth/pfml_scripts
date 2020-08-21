@@ -24,6 +24,7 @@ exports[`ReasonPregnancy renders the page 1`] = `
     name="pregnant_or_recent_birth"
     onChange={[Function]}
     type="radio"
+    value={false}
   />
 </QuestionPage>
 `;

@@ -32,27 +32,5 @@ describe("CreateAccount", () => {
       submitForm();
       expect(appLogic.auth.createAccount).toHaveBeenCalledWith(email, password);
     });
-
-    it("calls createAccount with empty string when username is undefined", () => {
-      const password = "TestP@ssw0rd!";
-
-      submitForm();
-      expect(appLogic.auth.createAccount).toHaveBeenCalledWith("", "");
-
-      changeField("password", password);
-      submitForm();
-      expect(appLogic.auth.createAccount).toHaveBeenCalledWith("", password);
-    });
-
-    it("calls createAccount with empty string when password is undefined", () => {
-      const email = "email@test.com";
-
-      submitForm();
-      expect(appLogic.auth.createAccount).toHaveBeenCalledWith("", "");
-
-      changeField("username", email);
-      submitForm();
-      expect(appLogic.auth.createAccount).toHaveBeenCalledWith(email, "");
-    });
   });
 });

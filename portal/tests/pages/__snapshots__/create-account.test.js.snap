@@ -9,7 +9,6 @@ exports[`CreateAccount renders the empty page 1`] = `
     Create an account
   </Title>
   <InputText
-    errorMsg={null}
     label="Email address"
     name="username"
     onChange={[Function]}
@@ -19,7 +18,6 @@ exports[`CreateAccount renders the empty page 1`] = `
   />
   <InputText
     autoComplete="new-password"
-    errorMsg={null}
     hint="Your password must be at least 8 characters long and include numbers and letters."
     label="Password"
     name="password"

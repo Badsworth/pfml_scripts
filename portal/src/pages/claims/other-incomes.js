@@ -6,23 +6,30 @@ import QuestionPage from "../../components/QuestionPage";
 import React from "react";
 import pick from "lodash/pick";
 import useFormState from "../../hooks/useFormState";
-import useHandleInputChange from "../../hooks/useHandleInputChange";
+import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "../../locales/i18n";
 import withClaim from "../../hoc/withClaim";
 
 export const fields = ["claim.has_other_incomes"];
 
 const OtherIncomes = (props) => {
+  const { appLogic, claim } = props;
   const { t } = useTranslation();
+
   const { formState, updateFields } = useFormState(pick(props, fields).claim);
   const { has_other_incomes } = formState;
-  const handleInputChange = useHandleInputChange(updateFields);
+
+  const handleSave = () =>
+    appLogic.claims.update(claim.application_id, formState);
+
+  const getFunctionalInputProps = useFunctionalInputProps({
+    appErrors: appLogic.appErrors,
+    formState,
+    updateFields,
+  });
   const hintList = t("pages.claimsOtherIncomes.hintList", {
     returnObjects: true,
   });
-
-  const handleSave = () =>
-    props.appLogic.claims.update(props.claim.application_id, formState);
 
   return (
     <QuestionPage
@@ -30,6 +37,7 @@ const OtherIncomes = (props) => {
       onSave={handleSave}
     >
       <InputChoiceGroup
+        {...getFunctionalInputProps("has_other_incomes")}
         choices={[
           {
             checked: has_other_incomes === true,
@@ -43,8 +51,6 @@ const OtherIncomes = (props) => {
           },
         ]}
         label={t("pages.claimsOtherIncomes.sectionLabel")}
-        name="has_other_incomes"
-        onChange={handleInputChange}
         type="radio"
         hint={
           <React.Fragment>

@@ -11,15 +11,16 @@ import RepeatableFieldset from "../../components/RepeatableFieldset";
 import get from "lodash/get";
 import pick from "lodash/pick";
 import useFormState from "../../hooks/useFormState";
-import useHandleInputChange from "../../hooks/useHandleInputChange";
+import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "react-i18next";
-import valueWithFallback from "../../utils/valueWithFallback";
 import withClaim from "../../hoc/withClaim";
 
 export const fields = ["claim.other_incomes"];
 
 export const OtherIncomesDetails = (props) => {
+  const { appLogic, claim } = props;
   const { t } = useTranslation();
+
   const initialEntries = pick(props, fields).claim;
   // If the claim doesn't have any relevant entries, pre-populate the first one
   // so that it renders in the RepeatableFieldset below
@@ -29,18 +30,14 @@ export const OtherIncomesDetails = (props) => {
   const { formState, updateFields } = useFormState(initialEntries);
   const other_incomes = get(formState, "other_incomes");
 
-  const handleSave = () => {
-    return props.appLogic.claims.update(props.claim.application_id, formState);
-  };
+  const handleSave = () =>
+    appLogic.claims.update(claim.application_id, formState);
 
   const handleAddClick = () => {
     // Add a new blank entry
     const updatedEntries = other_incomes.concat([new OtherIncome()]);
     updateFields({ other_incomes: updatedEntries });
   };
-
-  const handleInputChange = useHandleInputChange(updateFields);
-
   const handleRemoveClick = (entry, index) => {
     // Remove the specified entry
     const updatedEntries = [...other_incomes];
@@ -48,12 +45,18 @@ export const OtherIncomesDetails = (props) => {
     updateFields({ other_incomes: updatedEntries });
   };
 
+  const getFunctionalInputProps = useFunctionalInputProps({
+    appErrors: appLogic.appErrors,
+    formState,
+    updateFields,
+  });
+
   const render = (entry, index) => {
     return (
       <OtherIncomeCard
         entry={entry}
         index={index}
-        onInputChange={handleInputChange}
+        getFunctionalInputProps={getFunctionalInputProps}
       />
     );
   };
@@ -92,11 +95,12 @@ OtherIncomesDetails.propTypes = {
  */
 export const OtherIncomeCard = (props) => {
   const { t } = useTranslation();
-  const { entry, onInputChange, index } = props;
+  const { entry, getFunctionalInputProps, index } = props;
 
   return (
     <React.Fragment>
       <InputChoiceGroup
+        {...getFunctionalInputProps(`other_incomes[${index}].income_type`)}
         choices={Object.entries(OtherIncomeType).map(([key, value]) => {
           return {
             checked: entry.income_type === value,
@@ -107,41 +111,37 @@ export const OtherIncomeCard = (props) => {
           };
         })}
         label={t("pages.claimsOtherIncomesDetails.typeLabel")}
-        name={`other_incomes[${index}].income_type`}
-        onChange={onInputChange}
         type="radio"
         smallLabel
       />
       <InputDate
+        {...getFunctionalInputProps(
+          `other_incomes[${index}].income_start_date`
+        )}
         label={t("pages.claimsOtherIncomesDetails.startDateLabel")}
         hint={t("components.form.dateInputHint")}
-        name={`other_incomes[${index}].income_start_date`}
-        onChange={onInputChange}
-        value={valueWithFallback(entry.income_start_date)}
         dayLabel={t("components.form.dateInputDayLabel")}
         monthLabel={t("components.form.dateInputMonthLabel")}
         yearLabel={t("components.form.dateInputYearLabel")}
         smallLabel
       />
       <InputDate
+        {...getFunctionalInputProps(`other_incomes[${index}].income_end_date`)}
         label={t("pages.claimsOtherIncomesDetails.endDateLabel")}
         hint={t("components.form.dateInputHint")}
-        name={`other_incomes[${index}].income_end_date`}
-        onChange={onInputChange}
-        value={valueWithFallback(entry.income_end_date)}
         dayLabel={t("components.form.dateInputDayLabel")}
         monthLabel={t("components.form.dateInputMonthLabel")}
         yearLabel={t("components.form.dateInputYearLabel")}
         smallLabel
       />
       <InputText
+        {...getFunctionalInputProps(
+          `other_incomes[${index}].income_amount_dollars`
+        )}
         label={t("pages.claimsOtherIncomesDetails.amountLabel")}
         hint={t("pages.claimsOtherIncomesDetails.amountHint")}
-        name={`other_incomes[${index}].income_amount_dollars`}
         mask="currency"
-        onChange={onInputChange}
         optionalText={t("components.form.optional")}
-        value={valueWithFallback(entry.income_amount_dollars)}
         smallLabel
       />
     </React.Fragment>
@@ -151,7 +151,7 @@ export const OtherIncomeCard = (props) => {
 OtherIncomeCard.propTypes = {
   index: PropTypes.number.isRequired,
   entry: PropTypes.instanceOf(OtherIncome).isRequired,
-  onInputChange: PropTypes.func.isRequired,
+  getFunctionalInputProps: PropTypes.func.isRequired,
 };
 
 export default withClaim(OtherIncomesDetails);

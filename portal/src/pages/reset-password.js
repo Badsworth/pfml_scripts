@@ -1,4 +1,3 @@
-import AppErrorInfoCollection from "../models/AppErrorInfoCollection";
 import Button from "../components/Button";
 import InputText from "../components/InputText";
 import Lead from "../components/Lead";
@@ -9,24 +8,32 @@ import Title from "../components/Title";
 import get from "lodash/get";
 import routes from "../routes";
 import useFormState from "../hooks/useFormState";
-import useHandleInputChange from "../hooks/useHandleInputChange";
+import useFunctionalInputProps from "../hooks/useFunctionalInputProps";
 import { useTranslation } from "../locales/i18n";
-import valueWithFallback from "../utils/valueWithFallback";
 
 export const ResetPassword = (props) => {
-  const { appErrors, auth } = props.appLogic;
+  const { appLogic } = props;
+  const { auth } = appLogic;
   const { t } = useTranslation();
+
   const cachedEmail = get(auth, "authData.resetPasswordUsername", null);
   const { formState, updateFields } = useFormState({
+    code: "",
+    password: "",
     username: cachedEmail || "",
   });
 
-  const handleInputChange = useHandleInputChange(updateFields);
   const handleSubmit = (event) => {
     event.preventDefault();
     const { code, password, username } = formState;
     auth.resetPassword(username, code, password);
   };
+
+  const getFunctionalInputProps = useFunctionalInputProps({
+    appErrors: appLogic.appErrors,
+    formState,
+    updateFields,
+  });
 
   return (
     <form className="usa-form usa-form--large" onSubmit={handleSubmit}>
@@ -39,38 +46,29 @@ export const ResetPassword = (props) => {
       </Lead>
 
       <InputText
+        {...getFunctionalInputProps("code")}
         autoComplete="off"
         inputMode="numeric"
         label={t("pages.authResetPassword.codeLabel")}
-        errorMsg={appErrors.fieldErrorMessage("code")}
-        name="code"
-        onChange={handleInputChange}
         smallLabel
-        value={valueWithFallback(formState.code)}
       />
 
       {!cachedEmail && (
         <InputText
+          {...getFunctionalInputProps("username")}
           type="email"
-          name="username"
-          value={valueWithFallback(formState.username)}
           label={t("pages.authResetPassword.usernameLabel")}
-          errorMsg={appErrors.fieldErrorMessage("username")}
-          onChange={handleInputChange}
           smallLabel
         />
       )}
 
       <InputText
+        {...getFunctionalInputProps("password")}
         autoComplete="new-password"
         label={t("pages.authResetPassword.passwordLabel")}
-        errorMsg={appErrors.fieldErrorMessage("password")}
         hint={t("pages.authResetPassword.passwordHint")}
         type="password"
-        name="password"
-        onChange={handleInputChange}
         smallLabel
-        value={valueWithFallback(formState.password)}
       />
 
       <Button type="submit">{t("pages.authResetPassword.submitButton")}</Button>
@@ -85,13 +83,7 @@ export const ResetPassword = (props) => {
 };
 
 ResetPassword.propTypes = {
-  appLogic: PropTypes.shape({
-    appErrors: PropTypes.instanceOf(AppErrorInfoCollection),
-    auth: PropTypes.shape({
-      authData: PropTypes.shape({ resetPasswordUsername: PropTypes.string }),
-      resetPassword: PropTypes.func.isRequired,
-    }).isRequired,
-  }).isRequired,
+  appLogic: PropTypes.object.isRequired,
 };
 
 export default ResetPassword;

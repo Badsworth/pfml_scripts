@@ -54,6 +54,7 @@ exports[`PreviousLeaves renders the page 1`] = `
     name="has_previous_leaves"
     onChange={[Function]}
     type="radio"
+    value=""
   />
 </QuestionPage>
 `;

@@ -1,14 +1,16 @@
 import OtherIncomesDetails, {
   OtherIncomeCard,
 } from "../../../src/pages/claims/other-incomes-details";
+import { renderWithAppLogic, testHook } from "../../test-utils";
+import AppErrorInfoCollection from "../../../src/models/AppErrorInfoCollection";
 import OtherIncome from "../../../src/models/OtherIncome";
 import QuestionPage from "../../../src/components/QuestionPage";
 import React from "react";
 import RepeatableFieldset from "../../../src/components/RepeatableFieldset";
 import RepeatableFieldsetCard from "../../../src/components/RepeatableFieldsetCard";
 import { act } from "react-dom/test-utils";
-import { renderWithAppLogic } from "../../test-utils";
 import { shallow } from "enzyme";
+import useFunctionalInputProps from "../../../src/hooks/useFunctionalInputProps";
 
 jest.mock("../../../src/hooks/useAppLogic");
 
@@ -96,8 +98,22 @@ describe("OtherIncomesDetails", () => {
 describe("OtherIncomeCard", () => {
   it("renders fields for an OtherIncome instance", () => {
     const entry = new OtherIncome();
+    let getFunctionalInputProps;
+
+    testHook(() => {
+      getFunctionalInputProps = useFunctionalInputProps({
+        appErrors: new AppErrorInfoCollection(),
+        formState: {},
+        updateFields: jest.fn(),
+      });
+    });
+
     const wrapper = shallow(
-      <OtherIncomeCard entry={entry} index={0} onInputChange={jest.fn()} />
+      <OtherIncomeCard
+        entry={entry}
+        index={0}
+        getFunctionalInputProps={getFunctionalInputProps}
+      />
     );
 
     expect(wrapper).toMatchSnapshot();

@@ -32,10 +32,5 @@ describe("ForgotPassword", () => {
       submitForm();
       expect(appLogic.auth.forgotPassword).toHaveBeenCalledWith(email);
     });
-
-    it("calls forgotPassword with empty string when username is undefined", () => {
-      submitForm();
-      expect(appLogic.auth.forgotPassword).toHaveBeenCalledWith("");
-    });
   });
 });

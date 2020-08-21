@@ -7,23 +7,30 @@ import QuestionPage from "../../components/QuestionPage";
 import React from "react";
 import pick from "lodash/pick";
 import useFormState from "../../hooks/useFormState";
-import useHandleInputChange from "../../hooks/useHandleInputChange";
+import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "../../locales/i18n";
 import withClaim from "../../hoc/withClaim";
 
 export const fields = ["claim.has_previous_leaves"];
 
 const PreviousLeave = (props) => {
+  const { appLogic, claim } = props;
   const { t } = useTranslation();
+
   const { formState, updateFields } = useFormState(pick(props, fields).claim);
   const { has_previous_leaves } = formState;
-  const handleInputChange = useHandleInputChange(updateFields);
+
+  const handleSave = () =>
+    appLogic.claims.update(claim.application_id, formState);
+
+  const getFunctionalInputProps = useFunctionalInputProps({
+    appErrors: appLogic.appErrors,
+    formState,
+    updateFields,
+  });
   const hintList = t("pages.claimsPreviousLeaves.hintList", {
     returnObjects: true,
   });
-
-  const handleSave = () =>
-    props.appLogic.claims.update(props.claim.application_id, formState);
 
   return (
     <QuestionPage
@@ -31,6 +38,7 @@ const PreviousLeave = (props) => {
       onSave={handleSave}
     >
       <InputChoiceGroup
+        {...getFunctionalInputProps("has_previous_leaves")}
         choices={[
           {
             checked: has_previous_leaves === true,
@@ -44,8 +52,6 @@ const PreviousLeave = (props) => {
           },
         ]}
         label={t("pages.claimsPreviousLeaves.sectionLabel")}
-        name="has_previous_leaves"
-        onChange={handleInputChange}
         type="radio"
         hint={
           <Details label={t("pages.claimsPreviousLeaves.detailsLabel")}>

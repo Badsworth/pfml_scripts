@@ -6,21 +6,27 @@ import React from "react";
 import get from "lodash/get";
 import { pick } from "lodash";
 import useFormState from "../../hooks/useFormState";
-import useHandleInputChange from "../../hooks/useHandleInputChange";
+import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "react-i18next";
 import withClaim from "../../hoc/withClaim";
 
 export const fields = ["claim.leave_details.reason"];
 
 const LeaveReasonPage = (props) => {
+  const { appLogic, claim } = props;
   const { t } = useTranslation();
+
   const { formState, updateFields } = useFormState(pick(props, fields).claim);
   const reason = get(formState, "leave_details.reason");
 
-  const handleInputChange = useHandleInputChange(updateFields);
-
   const handleSave = () =>
-    props.appLogic.claims.update(props.claim.application_id, formState);
+    appLogic.claims.update(claim.application_id, formState);
+
+  const getFunctionalInputProps = useFunctionalInputProps({
+    appErrors: appLogic.appErrors,
+    formState,
+    updateFields,
+  });
 
   return (
     <QuestionPage
@@ -28,6 +34,7 @@ const LeaveReasonPage = (props) => {
       onSave={handleSave}
     >
       <InputChoiceGroup
+        {...getFunctionalInputProps("leave_details.reason")}
         choices={[
           {
             checked: reason === LeaveReason.medical,
@@ -61,8 +68,6 @@ const LeaveReasonPage = (props) => {
           },
         ]}
         label={t("pages.claimsLeaveReason.sectionLabel")}
-        name="leave_details.reason"
-        onChange={handleInputChange}
         type="radio"
       />
     </QuestionPage>

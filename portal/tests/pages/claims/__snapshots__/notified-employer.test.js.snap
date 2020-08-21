@@ -30,6 +30,7 @@ exports[`NotifiedEmployer renders the page 1`] = `
     name="leave_details.employer_notified"
     onChange={[Function]}
     type="radio"
+    value=""
   />
   <ConditionalContent
     fieldNamesClearedWhenHidden={

@@ -5,9 +5,8 @@ import QuestionPage from "../../components/QuestionPage";
 import React from "react";
 import { pick } from "lodash";
 import useFormState from "../../hooks/useFormState";
-import useHandleInputChange from "../../hooks/useHandleInputChange";
+import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "../../locales/i18n";
-import valueWithFallback from "../../utils/valueWithFallback";
 import withClaim from "../../hoc/withClaim";
 
 export const fields = ["claim.employee_ssn"];
@@ -18,22 +17,25 @@ export const fields = ["claim.employee_ssn"];
 const Ssn = (props) => {
   const { appLogic, claim } = props;
   const { t } = useTranslation();
+
   const { formState, updateFields } = useFormState(pick(props, fields).claim);
-  const { employee_ssn } = formState;
-  const handleInputChange = useHandleInputChange(updateFields);
 
   const handleSave = () =>
     appLogic.claims.update(claim.application_id, formState);
 
+  const getFunctionalInputProps = useFunctionalInputProps({
+    appErrors: appLogic.appErrors,
+    formState,
+    updateFields,
+  });
+
   return (
     <QuestionPage title={t("pages.claimsSsn.title")} onSave={handleSave}>
       <InputText
+        {...getFunctionalInputProps("employee_ssn")}
         mask="ssn"
-        name="employee_ssn"
-        value={valueWithFallback(employee_ssn)}
         label={t("pages.claimsSsn.sectionLabel")}
         hint={t("pages.claimsSsn.lead")}
-        onChange={handleInputChange}
       />
     </QuestionPage>
   );

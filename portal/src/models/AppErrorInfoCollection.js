@@ -8,7 +8,7 @@ export default class AppErrorInfoCollection extends BaseCollection {
   /**
    * Get a human readable error message for the given field, if an associated error exists.
    * @param {string} field - field name
-   * @returns {?string} Internationalized error message, or null if there is no associated error for the field.
+   * @returns {?string} Internationalized error message, or `null` if there is no associated error for the field.
    */
   fieldErrorMessage(field) {
     if (!this.items.length) return null;

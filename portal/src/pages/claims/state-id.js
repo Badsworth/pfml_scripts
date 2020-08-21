@@ -6,26 +6,34 @@ import QuestionPage from "../../components/QuestionPage";
 import React from "react";
 import { pick } from "lodash";
 import useFormState from "../../hooks/useFormState";
-import useHandleInputChange from "../../hooks/useHandleInputChange";
+import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "../../locales/i18n";
-import valueWithFallback from "../../utils/valueWithFallback";
 import withClaim from "../../hoc/withClaim";
 
 export const fields = ["claim.has_state_id", "claim.mass_id"];
 
 const StateId = (props) => {
+  const { appLogic, claim } = props;
   const { t } = useTranslation();
+
   const { formState, getField, updateFields, removeField } = useFormState(
     pick(props, fields).claim
   );
-  const { has_state_id, mass_id } = formState;
-  const handleInputChange = useHandleInputChange(updateFields);
+  const { has_state_id } = formState;
+
   const handleSave = () =>
-    props.appLogic.claims.update(props.claim.application_id, formState);
+    appLogic.claims.update(claim.application_id, formState);
+
+  const getFunctionalInputProps = useFunctionalInputProps({
+    appErrors: appLogic.appErrors,
+    formState,
+    updateFields,
+  });
 
   return (
     <QuestionPage title={t("pages.claimsStateId.title")} onSave={handleSave}>
       <InputChoiceGroup
+        {...getFunctionalInputProps("has_state_id")}
         choices={[
           {
             checked: has_state_id === true,
@@ -39,8 +47,6 @@ const StateId = (props) => {
           },
         ]}
         label={t("pages.claimsStateId.hasStateIdLabel")}
-        name="has_state_id"
-        onChange={handleInputChange}
         type="radio"
       />
 
@@ -52,10 +58,8 @@ const StateId = (props) => {
         visible={has_state_id === true}
       >
         <InputText
-          name="mass_id"
+          {...getFunctionalInputProps("mass_id")}
           label={t("pages.claimsStateId.idLabel")}
-          value={valueWithFallback(mass_id)}
-          onChange={handleInputChange}
         />
       </ConditionalContent>
     </QuestionPage>

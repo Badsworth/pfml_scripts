@@ -14,49 +14,52 @@ import RepeatableFieldset from "../../components/RepeatableFieldset";
 import get from "lodash/get";
 import pick from "lodash/pick";
 import useFormState from "../../hooks/useFormState";
-import useHandleInputChange from "../../hooks/useHandleInputChange";
+import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "react-i18next";
-import valueWithFallback from "../../utils/valueWithFallback";
 import withClaim from "../../hoc/withClaim";
 
 export const fields = ["claim.employer_benefits"];
 
 const EmployerBenefitDetails = (props) => {
+  const { appLogic, claim } = props;
   const { t } = useTranslation();
-  const initialBenefits = pick(props, fields).claim;
+
+  const initialEntries = pick(props, fields).claim;
   // If the claim doesn't have any employer benefits pre-populate the first one so that
   // it renders in the RepeatableFieldset below
-  if (initialBenefits.employer_benefits.length === 0) {
-    initialBenefits.employer_benefits = [new EmployerBenefit()];
+  if (initialEntries.employer_benefits.length === 0) {
+    initialEntries.employer_benefits = [new EmployerBenefit()];
   }
-  const { formState, updateFields } = useFormState(initialBenefits);
+  const { formState, updateFields } = useFormState(initialEntries);
   const employer_benefits = get(formState, "employer_benefits");
 
-  const handleSave = () => {
-    return props.appLogic.claims.update(props.claim.application_id, formState);
-  };
+  const handleSave = () =>
+    appLogic.claims.update(claim.application_id, formState);
 
   const handleAddClick = () => {
-    // Add a new blank benefit
-    const updatedBenefits = employer_benefits.concat([new EmployerBenefit()]);
-    updateFields({ employer_benefits: updatedBenefits });
+    // Add a new blank entry
+    const updatedEntries = employer_benefits.concat([new EmployerBenefit()]);
+    updateFields({ employer_benefits: updatedEntries });
   };
-
-  const handleInputChange = useHandleInputChange(updateFields);
-
   const handleRemoveClick = (entry, index) => {
     // Remove the specified benefit
-    const updatedBenefits = [...employer_benefits];
-    updatedBenefits.splice(index, 1);
-    updateFields({ employer_benefits: updatedBenefits });
+    const updatedEntries = [...employer_benefits];
+    updatedEntries.splice(index, 1);
+    updateFields({ employer_benefits: updatedEntries });
   };
+
+  const getFunctionalInputProps = useFunctionalInputProps({
+    appErrors: appLogic.appErrors,
+    formState,
+    updateFields,
+  });
 
   const render = (entry, index) => {
     return (
       <EmployerBenefitCard
         entry={entry}
+        getFunctionalInputProps={getFunctionalInputProps}
         index={index}
-        onInputChange={handleInputChange}
       />
     );
   };
@@ -97,7 +100,7 @@ EmployerBenefitDetails.propTypes = {
  */
 export const EmployerBenefitCard = (props) => {
   const { t } = useTranslation();
-  const { entry, onInputChange, index } = props;
+  const { entry, getFunctionalInputProps, index } = props;
   const selectedType = entry.benefit_type;
   // TODO: make sure that the amount gets removed if the input text is hidden
   const showAmountInputText = [
@@ -108,6 +111,7 @@ export const EmployerBenefitCard = (props) => {
   return (
     <React.Fragment>
       <InputChoiceGroup
+        {...getFunctionalInputProps(`employer_benefits[${index}].benefit_type`)}
         choices={Object.entries(EmployerBenefitType).map(([key, value]) => {
           return {
             checked: selectedType === value,
@@ -121,28 +125,26 @@ export const EmployerBenefitCard = (props) => {
           };
         })}
         label={t("pages.claimsEmployerBenefitDetails.typeLabel")}
-        name={`employer_benefits[${index}].benefit_type`}
-        onChange={onInputChange}
         type="radio"
         smallLabel
       />
       <InputDate
+        {...getFunctionalInputProps(
+          `employer_benefits[${index}].benefit_start_date`
+        )}
         label={t("pages.claimsEmployerBenefitDetails.startDateLabel")}
         hint={t("components.form.dateInputHint")}
-        name={`employer_benefits[${index}].benefit_start_date`}
-        onChange={onInputChange}
-        value={valueWithFallback(entry.benefit_start_date)}
         dayLabel={t("components.form.dateInputDayLabel")}
         monthLabel={t("components.form.dateInputMonthLabel")}
         yearLabel={t("components.form.dateInputYearLabel")}
         smallLabel
       />
       <InputDate
+        {...getFunctionalInputProps(
+          `employer_benefits[${index}].benefit_end_date`
+        )}
         label={t("pages.claimsEmployerBenefitDetails.endDateLabel")}
         hint={t("components.form.dateInputHint")}
-        name={`employer_benefits[${index}].benefit_end_date`}
-        onChange={onInputChange}
-        value={valueWithFallback(entry.benefit_end_date)}
         dayLabel={t("components.form.dateInputDayLabel")}
         monthLabel={t("components.form.dateInputMonthLabel")}
         yearLabel={t("components.form.dateInputYearLabel")}
@@ -150,13 +152,13 @@ export const EmployerBenefitCard = (props) => {
       />
       <ConditionalContent visible={showAmountInputText}>
         <InputText
+          {...getFunctionalInputProps(
+            `employer_benefits[${index}].benefit_amount_dollars`
+          )}
           label={t("pages.claimsEmployerBenefitDetails.amountLabel")}
           hint={t("pages.claimsEmployerBenefitDetails.amountHint")}
-          name={`employer_benefits[${index}].benefit_amount_dollars`}
           mask="currency"
-          onChange={onInputChange}
           optionalText={t("components.form.optional")}
-          value={valueWithFallback(entry.benefit_amount_dollars)}
           smallLabel
         />
       </ConditionalContent>
@@ -167,7 +169,7 @@ export const EmployerBenefitCard = (props) => {
 EmployerBenefitCard.propTypes = {
   index: PropTypes.number.isRequired,
   entry: PropTypes.instanceOf(EmployerBenefit).isRequired,
-  onInputChange: PropTypes.func.isRequired,
+  getFunctionalInputProps: PropTypes.func.isRequired,
 };
 
 export default withClaim(EmployerBenefitDetails);

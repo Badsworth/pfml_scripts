@@ -9,15 +9,16 @@ import RepeatableFieldset from "../../components/RepeatableFieldset";
 import get from "lodash/get";
 import pick from "lodash/pick";
 import useFormState from "../../hooks/useFormState";
-import useHandleInputChange from "../../hooks/useHandleInputChange";
+import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "react-i18next";
-import valueWithFallback from "../../utils/valueWithFallback";
 import withClaim from "../../hoc/withClaim";
 
 export const fields = ["claim.previous_leaves"];
 
 export const PreviousLeavesDetails = (props) => {
+  const { appLogic, claim } = props;
   const { t } = useTranslation();
+
   const initialEntries = pick(props, fields).claim;
   // If the claim doesn't have any relevant entries, pre-populate the first one
   // so that it renders in the RepeatableFieldset below
@@ -27,29 +28,30 @@ export const PreviousLeavesDetails = (props) => {
   const { formState, updateFields } = useFormState(initialEntries);
   const previous_leaves = get(formState, "previous_leaves");
 
-  const handleSave = () => {
-    return props.appLogic.claims.update(props.claim.application_id, formState);
-  };
+  const handleSave = () =>
+    appLogic.claims.update(claim.application_id, formState);
 
   const handleAddClick = () => {
     const updatedEntries = previous_leaves.concat([new PreviousLeave()]);
     updateFields({ previous_leaves: updatedEntries });
   };
-
-  const handleInputChange = useHandleInputChange(updateFields);
-
   const handleRemoveClick = (entry, index) => {
     const updatedEntries = [...previous_leaves];
     updatedEntries.splice(index, 1);
     updateFields({ previous_leaves: updatedEntries });
   };
 
+  const getFunctionalInputProps = useFunctionalInputProps({
+    appErrors: appLogic.appErrors,
+    formState,
+    updateFields,
+  });
+
   const render = (entry, index) => {
     return (
       <PreviousLeaveCard
-        entry={entry}
+        getFunctionalInputProps={getFunctionalInputProps}
         index={index}
-        onInputChange={handleInputChange}
       />
     );
   };
@@ -88,27 +90,25 @@ PreviousLeavesDetails.propTypes = {
  */
 export const PreviousLeaveCard = (props) => {
   const { t } = useTranslation();
-  const { entry, index, onInputChange } = props;
+  const { index, getFunctionalInputProps } = props;
 
   return (
     <React.Fragment>
       <InputDate
+        {...getFunctionalInputProps(
+          `previous_leaves[${index}].leave_start_date`
+        )}
         label={t("pages.claimsPreviousLeavesDetails.startDateLabel")}
         hint={t("components.form.dateInputHint")}
-        name={`previous_leaves[${index}].leave_start_date`}
-        onChange={onInputChange}
-        value={valueWithFallback(entry.leave_start_date)}
         dayLabel={t("components.form.dateInputDayLabel")}
         monthLabel={t("components.form.dateInputMonthLabel")}
         yearLabel={t("components.form.dateInputYearLabel")}
         smallLabel
       />
       <InputDate
+        {...getFunctionalInputProps(`previous_leaves[${index}].leave_end_date`)}
         label={t("pages.claimsPreviousLeavesDetails.endDateLabel")}
         hint={t("components.form.dateInputHint")}
-        name={`previous_leaves[${index}].leave_end_date`}
-        onChange={onInputChange}
-        value={valueWithFallback(entry.leave_end_date)}
         dayLabel={t("components.form.dateInputDayLabel")}
         monthLabel={t("components.form.dateInputMonthLabel")}
         yearLabel={t("components.form.dateInputYearLabel")}
@@ -120,8 +120,7 @@ export const PreviousLeaveCard = (props) => {
 
 PreviousLeaveCard.propTypes = {
   index: PropTypes.number.isRequired,
-  entry: PropTypes.instanceOf(PreviousLeave).isRequired,
-  onInputChange: PropTypes.func.isRequired,
+  getFunctionalInputProps: PropTypes.func.isRequired,
 };
 
 export default withClaim(PreviousLeavesDetails);

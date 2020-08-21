@@ -8,7 +8,7 @@ exports[`PreviousLeavesDetails when the user's claim has previous leaves Previou
     label="When did your leave begin?"
     monthLabel="Month"
     name="previous_leaves[0].leave_start_date"
-    onChange={[MockFunction]}
+    onChange={[Function]}
     smallLabel={true}
     value=""
     yearLabel="Year"
@@ -19,7 +19,7 @@ exports[`PreviousLeavesDetails when the user's claim has previous leaves Previou
     label="When did your leave end?"
     monthLabel="Month"
     name="previous_leaves[0].leave_end_date"
-    onChange={[MockFunction]}
+    onChange={[Function]}
     smallLabel={true}
     value=""
     yearLabel="Year"

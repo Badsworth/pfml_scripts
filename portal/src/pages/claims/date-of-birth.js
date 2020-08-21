@@ -4,21 +4,26 @@ import QuestionPage from "../../components/QuestionPage";
 import React from "react";
 import { pick } from "lodash";
 import useFormState from "../../hooks/useFormState";
-import useHandleInputChange from "../../hooks/useHandleInputChange";
+import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "../../locales/i18n";
-import valueWithFallback from "../../utils/valueWithFallback";
 import withClaim from "../../hoc/withClaim";
 
 export const fields = ["claim.date_of_birth"];
 
 export const DateOfBirth = (props) => {
+  const { appLogic, claim } = props;
   const { t } = useTranslation();
+
   const { formState, updateFields } = useFormState(pick(props, fields).claim);
-  const { date_of_birth } = formState;
-  const handleInputChange = useHandleInputChange(updateFields);
 
   const handleSave = () =>
-    props.appLogic.claims.update(props.claim.application_id, formState);
+    appLogic.claims.update(claim.application_id, formState);
+
+  const getFunctionalInputProps = useFunctionalInputProps({
+    appErrors: appLogic.appErrors,
+    formState,
+    updateFields,
+  });
 
   return (
     <QuestionPage
@@ -26,14 +31,12 @@ export const DateOfBirth = (props) => {
       onSave={handleSave}
     >
       <InputDate
-        name="date_of_birth"
+        {...getFunctionalInputProps("date_of_birth")}
         label={t("pages.claimsDateOfBirth.sectionLabel")}
         hint={t("components.form.dateInputHint")}
-        value={valueWithFallback(date_of_birth)}
         dayLabel={t("components.form.dateInputDayLabel")}
         monthLabel={t("components.form.dateInputMonthLabel")}
         yearLabel={t("components.form.dateInputYearLabel")}
-        onChange={handleInputChange}
       />
     </QuestionPage>
   );

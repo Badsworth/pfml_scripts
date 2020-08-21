@@ -4,10 +4,12 @@ import EmployerBenefit, {
 import EmployerBenefitDetails, {
   EmployerBenefitCard,
 } from "../../../src/pages/claims/employer-benefit-details";
+import { renderWithAppLogic, testHook } from "../../test-utils";
+import AppErrorInfoCollection from "../../../src/models/AppErrorInfoCollection";
 import React from "react";
 import { act } from "react-dom/test-utils";
-import { renderWithAppLogic } from "../../test-utils";
 import { shallow } from "enzyme";
+import useFunctionalInputProps from "../../../src/hooks/useFunctionalInputProps";
 
 jest.mock("../../../src/hooks/useAppLogic");
 
@@ -152,8 +154,22 @@ describe("EmployerBenefitDetails", () => {
 describe("EmployerBenefitCard", () => {
   it("renders fields for an EmployerBenefit instance", () => {
     const entry = new EmployerBenefit();
+    let getFunctionalInputProps;
+
+    testHook(() => {
+      getFunctionalInputProps = useFunctionalInputProps({
+        appErrors: new AppErrorInfoCollection(),
+        formState: {},
+        updateFields: jest.fn(),
+      });
+    });
+
     const wrapper = shallow(
-      <EmployerBenefitCard entry={entry} index={0} onInputChange={jest.fn()} />
+      <EmployerBenefitCard
+        entry={entry}
+        index={0}
+        getFunctionalInputProps={getFunctionalInputProps}
+      />
     );
 
     expect(wrapper).toMatchSnapshot();

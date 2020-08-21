@@ -25,6 +25,7 @@ exports[`PaymentMethod renders the page 1`] = `
     name="temp.payment_preferences[0].payment_method"
     onChange={[Function]}
     type="radio"
+    value=""
   />
   <ConditionalContent
     visible={false}

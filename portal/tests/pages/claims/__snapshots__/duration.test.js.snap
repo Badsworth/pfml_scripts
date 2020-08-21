@@ -48,6 +48,7 @@ exports[`Duration regardless of duration type initially renders the page without
     name="duration_type"
     onChange={[Function]}
     type="checkbox"
+    value=""
   />
   <ConditionalContent
     fieldNamesClearedWhenHidden={
@@ -152,6 +153,7 @@ exports[`Duration regardless of duration type initially renders the page without
       onChange={[Function]}
       smallLabel={true}
       type="radio"
+      value=""
     />
     <ConditionalContent
       fieldNamesClearedWhenHidden={
@@ -199,6 +201,7 @@ exports[`Duration regardless of duration type initially renders the page without
       onChange={[Function]}
       smallLabel={true}
       type="radio"
+      value=""
     />
     <ConditionalContent
       fieldNamesClearedWhenHidden={

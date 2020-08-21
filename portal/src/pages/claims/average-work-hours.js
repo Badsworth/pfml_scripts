@@ -3,23 +3,28 @@ import InputText from "../../components/InputText";
 import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
-import get from "lodash/get";
 import pick from "lodash/pick";
 import useFormState from "../../hooks/useFormState";
-import useHandleInputChange from "../../hooks/useHandleInputChange";
+import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "../../locales/i18n";
-import valueWithFallback from "../../utils/valueWithFallback";
 import withClaim from "../../hoc/withClaim";
 
 export const fields = ["claim.temp.leave_details.avg_weekly_work_hours"];
 
 const AverageWorkHours = (props) => {
+  const { appLogic, claim } = props;
   const { t } = useTranslation();
+
   const { formState, updateFields } = useFormState(pick(props, fields).claim);
-  const handleInputChange = useHandleInputChange(updateFields);
 
   const handleSave = () =>
-    props.appLogic.claims.update(props.claim.application_id, formState);
+    appLogic.claims.update(claim.application_id, formState);
+
+  const getFunctionalInputProps = useFunctionalInputProps({
+    appErrors: appLogic.appErrors,
+    formState,
+    updateFields,
+  });
 
   return (
     <QuestionPage
@@ -27,14 +32,10 @@ const AverageWorkHours = (props) => {
       onSave={handleSave}
     >
       <InputText
+        {...getFunctionalInputProps("temp.leave_details.avg_weekly_work_hours")}
         label={t("pages.claimsAverageWorkHours.sectionLabel")}
-        name="temp.leave_details.avg_weekly_work_hours"
-        onChange={handleInputChange}
         hint={t("pages.claimsAverageWorkHours.hint")}
         width="small"
-        value={valueWithFallback(
-          get(formState, "temp.leave_details.avg_weekly_work_hours")
-        )}
       />
     </QuestionPage>
   );

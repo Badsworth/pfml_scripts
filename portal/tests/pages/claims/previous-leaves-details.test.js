@@ -1,14 +1,16 @@
 import PreviousLeaveDetails, {
   PreviousLeaveCard,
 } from "../../../src/pages/claims/previous-leaves-details";
+import { renderWithAppLogic, testHook } from "../../test-utils";
+import AppErrorInfoCollection from "../../../src/models/AppErrorInfoCollection";
 import PreviousLeave from "../../../src/models/PreviousLeave";
 import QuestionPage from "../../../src/components/QuestionPage";
 import React from "react";
 import RepeatableFieldset from "../../../src/components/RepeatableFieldset";
 import RepeatableFieldsetCard from "../../../src/components/RepeatableFieldsetCard";
 import { act } from "react-dom/test-utils";
-import { renderWithAppLogic } from "../../test-utils";
 import { shallow } from "enzyme";
+import useFunctionalInputProps from "../../../src/hooks/useFunctionalInputProps";
 
 jest.mock("../../../src/hooks/useAppLogic");
 
@@ -96,12 +98,20 @@ describe("PreviousLeavesDetails", () => {
 
     describe("PreviousLeaveCard", () => {
       it("renders fields for a PreviousLeave instance", () => {
-        const entry = new PreviousLeave();
+        let getFunctionalInputProps;
+
+        testHook(() => {
+          getFunctionalInputProps = useFunctionalInputProps({
+            appErrors: new AppErrorInfoCollection(),
+            formState: {},
+            updateFields: jest.fn(),
+          });
+        });
+
         const wrapper = shallow(
           <PreviousLeaveCard
-            entry={entry}
             index={0}
-            onInputChange={jest.fn()}
+            getFunctionalInputProps={getFunctionalInputProps}
           />
         );
 

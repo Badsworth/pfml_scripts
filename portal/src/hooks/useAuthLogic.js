@@ -15,6 +15,9 @@ import { useTranslation } from "../locales/i18n";
 const useAuthLogic = ({ appErrorsLogic, portalFlow }) => {
   const { t } = useTranslation();
 
+  // TODO (CP-872): Rather than setting default values for authLogic methods,
+  // instead ensure they're always called with required string arguments
+
   /**
    * Sometimes we need to persist information the user entered on
    * one auth screen so it can be reused on a subsequent auth screen.
@@ -35,7 +38,7 @@ const useAuthLogic = ({ appErrorsLogic, portalFlow }) => {
    * If there are any errors, sets app errors on the page.
    * @param {string} username Email address that is used as the username
    */
-  const forgotPassword = async (username) => {
+  const forgotPassword = async (username = "") => {
     appErrorsLogic.clearErrors();
     username = username.trim();
 
@@ -65,7 +68,7 @@ const useAuthLogic = ({ appErrorsLogic, portalFlow }) => {
    * @param {string} username Email address that is used as the username
    * @param {string} password Password
    */
-  const login = async (username, password) => {
+  const login = async (username = "", password) => {
     appErrorsLogic.clearErrors();
     username = username.trim();
 
@@ -106,7 +109,7 @@ const useAuthLogic = ({ appErrorsLogic, portalFlow }) => {
    * @param {string} username Email address that is used as the username
    * @param {string} password Password
    */
-  const createAccount = async (username, password) => {
+  const createAccount = async (username = "", password) => {
     appErrorsLogic.clearErrors();
     username = username.trim();
 
@@ -157,9 +160,8 @@ const useAuthLogic = ({ appErrorsLogic, portalFlow }) => {
     }
   };
 
-  const resendVerifyAccountCode = async (username) => {
+  const resendVerifyAccountCode = async (username = "") => {
     appErrorsLogic.clearErrors();
-
     username = username.trim();
 
     const validationErrors = validateUsername(username, t);
@@ -222,7 +224,7 @@ const useAuthLogic = ({ appErrorsLogic, portalFlow }) => {
    * @param {string} username Email address that is used as the username
    * @param {string} code Verification code that is emailed to the user
    */
-  const verifyAccount = async (username, code) => {
+  const verifyAccount = async (username = "", code = "") => {
     appErrorsLogic.clearErrors();
 
     username = username.trim();

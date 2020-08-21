@@ -20,7 +20,6 @@ exports[`Login renders the empty page 1`] = `
       i18nKey="pages.authLogin.createAccountLink"
     />
     <InputText
-      errorMsg={null}
       label="Email address"
       name="username"
       onChange={[Function]}
@@ -29,7 +28,6 @@ exports[`Login renders the empty page 1`] = `
       value=""
     />
     <InputText
-      errorMsg={null}
       label="Password"
       name="password"
       onChange={[Function]}

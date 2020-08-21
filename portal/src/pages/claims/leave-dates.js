@@ -8,9 +8,8 @@ import merge from "lodash/merge";
 import pick from "lodash/pick";
 import set from "lodash/set";
 import useFormState from "../../hooks/useFormState";
-import useHandleInputChange from "../../hooks/useHandleInputChange";
+import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "../../locales/i18n";
-import valueWithFallback from "../../utils/valueWithFallback";
 import withClaim from "../../hoc/withClaim";
 
 export const fields = [
@@ -19,11 +18,9 @@ export const fields = [
 ];
 
 const LeaveDates = (props) => {
+  const { appLogic, claim } = props;
   const { t } = useTranslation();
-  /** @type {{ claim: Claim }} */
-  const { claim } = props;
   const { formState, updateFields } = useFormState(pick(props, fields).claim);
-  const handleInputChange = useHandleInputChange(updateFields);
 
   const handleSave = () => {
     // TODO (CP-724): Look into updating the API interface to accept a single leave_details object rather than
@@ -68,18 +65,23 @@ const LeaveDates = (props) => {
       );
     }
 
-    props.appLogic.claims.update(props.claim.application_id, formState);
+    appLogic.claims.update(claim.application_id, formState);
   };
 
   const conditionalContext = {
     [LeaveReason.bonding]: "bonding",
     [LeaveReason.medical]: "medical",
   };
+  const getFunctionalInputProps = useFunctionalInputProps({
+    appErrors: appLogic.appErrors,
+    formState,
+    updateFields,
+  });
 
   return (
     <QuestionPage title={t("pages.claimsLeaveDates.title")} onSave={handleSave}>
       <InputDate
-        name="temp.leave_details.start_date"
+        {...getFunctionalInputProps("temp.leave_details.start_date")}
         label={t("pages.claimsLeaveDates.startDateLabel", {
           context: conditionalContext[claim.leave_details.reason],
         })}
@@ -98,16 +100,12 @@ const LeaveDates = (props) => {
             <p>{t("components.form.dateInputHint")}</p>
           </React.Fragment>
         }
-        value={valueWithFallback(
-          get(formState, "temp.leave_details.start_date")
-        )}
         dayLabel={t("components.form.dateInputDayLabel")}
         monthLabel={t("components.form.dateInputMonthLabel")}
         yearLabel={t("components.form.dateInputYearLabel")}
-        onChange={handleInputChange}
       />
       <InputDate
-        name="temp.leave_details.end_date"
+        {...getFunctionalInputProps("temp.leave_details.end_date")}
         label={t("pages.claimsLeaveDates.endDateLabel", {
           context: conditionalContext[claim.leave_details.reason],
         })}
@@ -121,11 +119,9 @@ const LeaveDates = (props) => {
             <p>{t("components.form.dateInputHint")}</p>
           </React.Fragment>
         }
-        value={valueWithFallback(get(formState, "temp.leave_details.end_date"))}
         dayLabel={t("components.form.dateInputDayLabel")}
         monthLabel={t("components.form.dateInputMonthLabel")}
         yearLabel={t("components.form.dateInputYearLabel")}
-        onChange={handleInputChange}
       />
     </QuestionPage>
   );

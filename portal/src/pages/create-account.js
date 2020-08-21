@@ -7,44 +7,44 @@ import React from "react";
 import Title from "../components/Title";
 import routes from "../routes";
 import useFormState from "../hooks/useFormState";
-import useHandleInputChange from "../hooks/useHandleInputChange";
+import useFunctionalInputProps from "../hooks/useFunctionalInputProps";
 import { useTranslation } from "../locales/i18n";
-import valueWithFallback from "../utils/valueWithFallback";
 
 export const CreateAccount = (props) => {
-  const { appErrors, auth } = props.appLogic;
+  const { appLogic } = props;
   const { t } = useTranslation();
-  const { formState, updateFields } = useFormState({});
-  const username = valueWithFallback(formState.username);
-  const password = valueWithFallback(formState.password);
-  const handleInputChange = useHandleInputChange(updateFields);
+
+  const { formState, updateFields } = useFormState({
+    password: "",
+    username: "",
+  });
 
   const handleSubmit = (event) => {
     event.preventDefault();
-    auth.createAccount(username, password);
+    appLogic.auth.createAccount(formState.username, formState.password);
   };
+
+  const getFunctionalInputProps = useFunctionalInputProps({
+    appErrors: appLogic.appErrors,
+    formState,
+    updateFields,
+  });
 
   return (
     <form className="usa-form usa-form--large" onSubmit={handleSubmit}>
       <Title>{t("pages.authCreateAccount.title")}</Title>
       <InputText
+        {...getFunctionalInputProps("username")}
         type="email"
-        name="username"
-        value={username}
         label={t("pages.authCreateAccount.usernameLabel")}
-        errorMsg={appErrors.fieldErrorMessage("username")}
-        onChange={handleInputChange}
         smallLabel
       />
       <InputText
+        {...getFunctionalInputProps("password")}
         autoComplete="new-password"
         type="password"
-        name="password"
-        value={password}
         hint={t("pages.authCreateAccount.passwordHint")}
         label={t("pages.authCreateAccount.passwordLabel")}
-        errorMsg={appErrors.fieldErrorMessage("password")}
-        onChange={handleInputChange}
         smallLabel
       />
       <Button type="submit">

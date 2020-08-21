@@ -9,24 +9,29 @@ import Title from "../components/Title";
 import { Trans } from "react-i18next";
 import routes from "../routes";
 import useFormState from "../hooks/useFormState";
-import useHandleInputChange from "../hooks/useHandleInputChange";
+import useFunctionalInputProps from "../hooks/useFunctionalInputProps";
 import { useTranslation } from "../locales/i18n";
-import valueWithFallback from "../utils/valueWithFallback";
 
 export const Login = (props) => {
   const { appLogic, query } = props;
-  const { appErrors, auth } = appLogic;
   const { t } = useTranslation();
-  const { formState, updateFields } = useFormState({});
-  const username = valueWithFallback(formState.username);
-  const password = valueWithFallback(formState.password);
-  const handleInputChange = useHandleInputChange(updateFields);
-  const accountVerified = query["account-verified"] === "true";
+
+  const { formState, updateFields } = useFormState({
+    password: "",
+    username: "",
+  });
 
   const handleSubmit = (event) => {
     event.preventDefault();
-    auth.login(username, password);
+    appLogic.auth.login(formState.username, formState.password);
   };
+
+  const accountVerified = query["account-verified"] === "true";
+  const getFunctionalInputProps = useFunctionalInputProps({
+    appErrors: appLogic.appErrors,
+    formState,
+    updateFields,
+  });
 
   return (
     <React.Fragment>
@@ -51,21 +56,15 @@ export const Login = (props) => {
           }}
         />
         <InputText
+          {...getFunctionalInputProps("username")}
           type="email"
-          name="username"
-          value={username}
           label={t("pages.authLogin.usernameLabel")}
-          errorMsg={appErrors.fieldErrorMessage("username")}
-          onChange={handleInputChange}
           smallLabel
         />
         <InputText
+          {...getFunctionalInputProps("password")}
           type="password"
-          name="password"
-          value={password}
           label={t("pages.authLogin.passwordLabel")}
-          errorMsg={appErrors.fieldErrorMessage("password")}
-          onChange={handleInputChange}
           smallLabel
         />
         <div className="margin-top-1">

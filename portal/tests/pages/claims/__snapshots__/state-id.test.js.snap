@@ -24,6 +24,7 @@ exports[`StateId initially renders the page without an id field 1`] = `
     name="has_state_id"
     onChange={[Function]}
     type="radio"
+    value=""
   />
   <ConditionalContent
     fieldNamesClearedWhenHidden={

@@ -9,9 +9,8 @@ import React from "react";
 import get from "lodash/get";
 import pick from "lodash/pick";
 import useFormState from "../../hooks/useFormState";
-import useHandleInputChange from "../../hooks/useHandleInputChange";
+import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "../../locales/i18n";
-import valueWithFallback from "../../utils/valueWithFallback";
 import withClaim from "../../hoc/withClaim";
 
 export const fields = [
@@ -23,18 +22,23 @@ export const fields = [
  * A form page to capture a user's attestation of having notified their employer.
  */
 const NotifiedEmployer = (props) => {
-  const { t } = useTranslation();
   const { appLogic, claim } = props;
+  const { t } = useTranslation();
+
   const { formState, getField, updateFields, removeField } = useFormState(
     pick(props, fields).claim
   );
-  const { leave_details } = formState;
-  const employer_notified = get(leave_details, "employer_notified");
-  const handleInputChange = useHandleInputChange(updateFields);
+  const employer_notified = get(formState.leave_details, "employer_notified");
 
   const handleSave = () => {
     appLogic.claims.update(claim.application_id, formState);
   };
+
+  const getFunctionalInputProps = useFunctionalInputProps({
+    appErrors: appLogic.appErrors,
+    formState,
+    updateFields,
+  });
 
   return (
     <QuestionPage
@@ -46,6 +50,7 @@ const NotifiedEmployer = (props) => {
       </Alert>
 
       <InputChoiceGroup
+        {...getFunctionalInputProps("leave_details.employer_notified")}
         choices={[
           {
             checked: employer_notified === true,
@@ -60,8 +65,6 @@ const NotifiedEmployer = (props) => {
         ]}
         label={t("pages.claimsNotifiedEmployer.sectionLabel")}
         hint={t("pages.claimsNotifiedEmployer.hint")}
-        name="leave_details.employer_notified"
-        onChange={handleInputChange}
         type="radio"
       />
       <ConditionalContent
@@ -74,7 +77,9 @@ const NotifiedEmployer = (props) => {
         visible={employer_notified === true}
       >
         <InputDate
-          name="leave_details.employer_notification_date"
+          {...getFunctionalInputProps(
+            "leave_details.employer_notification_date"
+          )}
           label={t("pages.claimsNotifiedEmployer.employerNotificationLabel")}
           hint={
             <React.Fragment>
@@ -84,13 +89,9 @@ const NotifiedEmployer = (props) => {
               <p>{t("components.form.dateInputHint")}</p>
             </React.Fragment>
           }
-          value={valueWithFallback(
-            get(leave_details, "employer_notification_date")
-          )}
           dayLabel={t("components.form.dateInputDayLabel")}
           monthLabel={t("components.form.dateInputMonthLabel")}
           yearLabel={t("components.form.dateInputYearLabel")}
-          onChange={handleInputChange}
         />
       </ConditionalContent>
       <ConditionalContent visible={employer_notified === false}>

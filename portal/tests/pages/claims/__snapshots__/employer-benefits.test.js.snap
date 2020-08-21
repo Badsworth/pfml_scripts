@@ -47,6 +47,7 @@ exports[`EmployerBenefits renders the page 1`] = `
     name="has_employer_benefits"
     onChange={[Function]}
     type="radio"
+    value=""
   />
 </QuestionPage>
 `;

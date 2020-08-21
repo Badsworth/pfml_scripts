@@ -2,24 +2,29 @@ import InputDate from "../../../components/InputDate";
 import PropTypes from "prop-types";
 import QuestionPage from "../../../components/QuestionPage";
 import React from "react";
-import get from "lodash/get";
 import { pick } from "lodash";
 import useFormState from "../../../hooks/useFormState";
-import useHandleInputChange from "../../../hooks/useHandleInputChange";
+import useFunctionalInputProps from "../../../hooks/useFunctionalInputProps";
 import { useTranslation } from "../../../locales/i18n";
-import valueWithFallback from "../../../utils/valueWithFallback";
 import withClaim from "../../../hoc/withClaim";
 
-const tempBondingDateOfChildField = "temp.leave_details.bonding.date_of_child";
-export const fields = [`claim.${tempBondingDateOfChildField}`];
+export const fields = ["claim.temp.leave_details.bonding.date_of_child"];
 
 export const DateOfChild = (props) => {
+  const { appLogic, claim } = props;
   const { t } = useTranslation();
+
   const { formState, updateFields } = useFormState(pick(props, fields).claim);
-  const handleInputChange = useHandleInputChange(updateFields);
+
   const handleSave = () => {
-    props.appLogic.claims.update(props.claim.application_id, formState);
+    appLogic.claims.update(claim.application_id, formState);
   };
+
+  const getFunctionalInputProps = useFunctionalInputProps({
+    appErrors: appLogic.appErrors,
+    formState,
+    updateFields,
+  });
 
   return (
     <QuestionPage
@@ -27,7 +32,7 @@ export const DateOfChild = (props) => {
       onSave={handleSave}
     >
       <InputDate
-        name={tempBondingDateOfChildField}
+        {...getFunctionalInputProps("temp.leave_details.bonding.date_of_child")}
         label={t("pages.claimsBondingDateOfChild.sectionLabel")}
         hint={
           <React.Fragment>
@@ -35,11 +40,9 @@ export const DateOfChild = (props) => {
             <p>{t("components.form.dateInputHint")}</p>
           </React.Fragment>
         }
-        value={valueWithFallback(get(formState, tempBondingDateOfChildField))}
         dayLabel={t("components.form.dateInputDayLabel")}
         monthLabel={t("components.form.dateInputMonthLabel")}
         yearLabel={t("components.form.dateInputYearLabel")}
-        onChange={handleInputChange}
       />
     </QuestionPage>
   );

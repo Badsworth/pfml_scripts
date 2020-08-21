@@ -38,6 +38,7 @@ exports[`LeaveReasonPage renders the page 1`] = `
     name="leave_details.reason"
     onChange={[Function]}
     type="radio"
+    value="Serious Health Condition - Employee"
   />
 </QuestionPage>
 `;

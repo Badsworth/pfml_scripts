@@ -1,4 +1,3 @@
-import AppErrorInfoCollection from "../models/AppErrorInfoCollection";
 import Button from "../components/Button";
 import InputText from "../components/InputText";
 import Lead from "../components/Lead";
@@ -9,32 +8,34 @@ import Title from "../components/Title";
 import get from "lodash/get";
 import routes from "../routes";
 import useFormState from "../hooks/useFormState";
-import useHandleInputChange from "../hooks/useHandleInputChange";
+import useFunctionalInputProps from "../hooks/useFunctionalInputProps";
 import { useTranslation } from "../locales/i18n";
-import valueWithFallback from "../utils/valueWithFallback";
 
 export const VerifyAccount = (props) => {
   const { appLogic } = props;
+  const { auth } = appLogic;
   const { t } = useTranslation();
 
-  const { appErrors, auth } = appLogic;
   const createAccountUsername = get(auth, "authData.createAccountUsername");
   const { formState, updateFields } = useFormState({
+    code: "",
     username: createAccountUsername,
   });
-  const username = valueWithFallback(formState.username);
-  const code = valueWithFallback(formState.code);
 
-  const handleInputChange = useHandleInputChange(updateFields);
   const handleSubmit = (event) => {
     event.preventDefault();
-    auth.verifyAccount(username, code);
+    auth.verifyAccount(formState.username, formState.code);
   };
-
   const handleResendCodeClick = (event) => {
     event.preventDefault();
-    auth.resendVerifyAccountCode(username);
+    auth.resendVerifyAccountCode(formState.username);
   };
+
+  const getFunctionalInputProps = useFunctionalInputProps({
+    appErrors: appLogic.appErrors,
+    formState,
+    updateFields,
+  });
 
   return (
     <form className="usa-form usa-form--large" onSubmit={handleSubmit}>
@@ -46,24 +47,18 @@ export const VerifyAccount = (props) => {
         })}
       </Lead>
       <InputText
+        {...getFunctionalInputProps("code")}
         autoComplete="off"
         inputMode="numeric"
-        name="code"
-        value={code}
-        errorMsg={appErrors.fieldErrorMessage("code")}
         label={t("pages.authVerifyAccount.codeLabel")}
-        onChange={handleInputChange}
         smallLabel
       />
 
       {!createAccountUsername && (
         <InputText
+          {...getFunctionalInputProps("username")}
           type="email"
-          name="username"
-          value={username}
           label={t("pages.authVerifyAccount.usernameLabel")}
-          errorMsg={appErrors.fieldErrorMessage("username")}
-          onChange={handleInputChange}
           smallLabel
         />
       )}
@@ -93,13 +88,7 @@ export const VerifyAccount = (props) => {
 };
 
 VerifyAccount.propTypes = {
-  appLogic: PropTypes.shape({
-    appErrors: PropTypes.instanceOf(AppErrorInfoCollection),
-    auth: PropTypes.shape({
-      resendVerifyAccountCode: PropTypes.func.isRequired,
-      verifyAccount: PropTypes.func.isRequired,
-    }).isRequired,
-  }).isRequired,
+  appLogic: PropTypes.object.isRequired,
 };
 
 export default VerifyAccount;

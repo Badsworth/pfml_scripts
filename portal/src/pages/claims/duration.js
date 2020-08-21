@@ -1,9 +1,7 @@
 import Claim, {
-  ContinuousLeavePeriod,
   DurationBasis,
   FrequencyIntervalBasis,
   IntermittentLeavePeriod,
-  ReducedScheduleLeavePeriod,
 } from "../../models/Claim";
 import { get, pick } from "lodash";
 import ConditionalContent from "../../components/ConditionalContent";
@@ -14,9 +12,9 @@ import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
 import useFormState from "../../hooks/useFormState";
+import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import useHandleInputChange from "../../hooks/useHandleInputChange";
 import { useTranslation } from "react-i18next";
-import valueWithFallback from "../../utils/valueWithFallback";
 import withClaim from "../../hoc/withClaim";
 
 export const fields = [
@@ -28,25 +26,20 @@ export const fields = [
 export const every6monthsId = "every6months";
 
 const Duration = (props) => {
+  const { appLogic, claim } = props;
   const { t } = useTranslation();
+
   const { formState, getField, updateFields, removeField } = useFormState({
     ...pick(props, fields).claim,
-    duration_type_continuous: props.claim.isContinuous,
-    duration_type_reduced: props.claim.isReducedSchedule,
-    duration_type_intermittent: props.claim.isIntermittent,
+    duration_type_continuous: claim.isContinuous,
+    duration_type_reduced: claim.isReducedSchedule,
+    duration_type_intermittent: claim.isIntermittent,
   });
-
   const {
     duration_type_continuous,
     duration_type_intermittent,
     duration_type_reduced,
   } = formState;
-  const continuousLeavePeriod = new ContinuousLeavePeriod(
-    get(formState, "temp.leave_details.continuous_leave_periods[0]")
-  );
-  const reducedScheduleLeavePeriod = new ReducedScheduleLeavePeriod(
-    get(formState, "temp.leave_details.reduced_schedule_leave_periods[0]")
-  );
   const intermittentLeavePeriod = new IntermittentLeavePeriod(
     get(formState, "leave_details.intermittent_leave_periods[0]")
   );
@@ -73,12 +66,19 @@ const Duration = (props) => {
       duration_type_reduced,
       ...patchData
     } = formState;
-    props.appLogic.claims.update(props.claim.application_id, patchData);
+    appLogic.claims.update(claim.application_id, patchData);
   };
+
+  const getFunctionalInputProps = useFunctionalInputProps({
+    appErrors: appLogic.appErrors,
+    formState,
+    updateFields,
+  });
 
   return (
     <QuestionPage title={t("pages.claimsDuration.title")} onSave={handleSave}>
       <InputChoiceGroup
+        {...getFunctionalInputProps("duration_type")}
         choices={[
           {
             checked: duration_type_continuous,
@@ -112,8 +112,6 @@ const Duration = (props) => {
             <p>{t("pages.claimsDuration.durationTypeSelectAllHint")}</p>
           </React.Fragment>
         }
-        name="duration_type"
-        onChange={handleInputChange}
         type="checkbox"
       />
 
@@ -128,13 +126,13 @@ const Duration = (props) => {
         name="continuous_section"
       >
         <InputText
+          {...getFunctionalInputProps(
+            "temp.leave_details.continuous_leave_periods[0].weeks"
+          )}
           inputMode="numeric"
           pattern="[0-9]*"
           label={t("pages.claimsDuration.continuousWeeksLabel")}
           hint={t("pages.claimsDuration.continuousWeeksHint")}
-          name="temp.leave_details.continuous_leave_periods[0].weeks"
-          value={valueWithFallback(continuousLeavePeriod.weeks)}
-          onChange={handleInputChange}
           width="small"
         />
       </ConditionalContent>
@@ -150,23 +148,23 @@ const Duration = (props) => {
         name="reduced_schedule_section"
       >
         <InputText
+          {...getFunctionalInputProps(
+            "temp.leave_details.reduced_schedule_leave_periods[0].weeks"
+          )}
           inputMode="numeric"
           pattern="[0-9]*"
           label={t("pages.claimsDuration.reducedWeeksLabel")}
           hint={t("pages.claimsDuration.reducedWeeksHint")}
-          name="temp.leave_details.reduced_schedule_leave_periods[0].weeks"
-          value={valueWithFallback(reducedScheduleLeavePeriod.weeks)}
-          onChange={handleInputChange}
           width="small"
         />
         <InputText
+          {...getFunctionalInputProps(
+            "temp.leave_details.reduced_schedule_leave_periods[0].hours_per_week"
+          )}
           inputMode="numeric"
           pattern="[0-9]*"
           label={t("pages.claimsDuration.reducedHoursPerWeekLabel")}
           hint={t("pages.claimsDuration.reducedHoursPerWeekHint")}
-          name="temp.leave_details.reduced_schedule_leave_periods[0].hours_per_week"
-          value={valueWithFallback(reducedScheduleLeavePeriod.hours_per_week)}
-          onChange={handleInputChange}
           width="small"
         />
       </ConditionalContent>
@@ -184,6 +182,10 @@ const Duration = (props) => {
           {t("pages.claimsDuration.intermittentSectionLabel")}
         </Heading>
         <InputChoiceGroup
+          {...getFunctionalInputProps(
+            "leave_details.intermittent_leave_periods[0].frequency_interval_basis"
+          )}
+          onChange={handleFrequencyBasisChange}
           choices={[
             {
               checked:
@@ -220,8 +222,6 @@ const Duration = (props) => {
             },
           ]}
           label={t("pages.claimsDuration.intermittentFrequencyBasisLabel")}
-          name="leave_details.intermittent_leave_periods[0].frequency_interval_basis"
-          onChange={handleFrequencyBasisChange}
           type="radio"
           smallLabel
         />
@@ -237,6 +237,9 @@ const Duration = (props) => {
           name="frequency_question"
         >
           <InputText
+            {...getFunctionalInputProps(
+              "leave_details.intermittent_leave_periods[0].frequency"
+            )}
             inputMode="numeric"
             pattern="[0-9]*"
             label={t("pages.claimsDuration.intermittentFrequencyLabel", {
@@ -246,15 +249,15 @@ const Duration = (props) => {
                   : intermittentLeavePeriod.frequency_interval_basis,
             })}
             hint={t("pages.claimsDuration.intermittentFrequencyHint")}
-            name="leave_details.intermittent_leave_periods[0].frequency"
-            value={valueWithFallback(intermittentLeavePeriod.frequency)}
-            onChange={handleInputChange}
             width="small"
             smallLabel
           />
         </ConditionalContent>
 
         <InputChoiceGroup
+          {...getFunctionalInputProps(
+            "leave_details.intermittent_leave_periods[0].duration_basis"
+          )}
           choices={[
             {
               checked:
@@ -276,8 +279,6 @@ const Duration = (props) => {
             },
           ]}
           label={t("pages.claimsDuration.intermittentDurationBasisLabel")}
-          name="leave_details.intermittent_leave_periods[0].duration_basis"
-          onChange={handleInputChange}
           type="radio"
           smallLabel
         />
@@ -292,15 +293,15 @@ const Duration = (props) => {
           name="duration_question"
         >
           <InputText
+            {...getFunctionalInputProps(
+              "leave_details.intermittent_leave_periods[0].duration"
+            )}
             inputMode="numeric"
             pattern="[0-9]*"
             label={t("pages.claimsDuration.intermittentDurationLabel", {
               context: intermittentLeavePeriod.duration_basis,
             })}
             hint={t("pages.claimsDuration.intermittentDurationHint")}
-            name="leave_details.intermittent_leave_periods[0].duration"
-            value={valueWithFallback(intermittentLeavePeriod.duration)}
-            onChange={handleInputChange}
             width="small"
             smallLabel
           />

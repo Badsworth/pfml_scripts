@@ -6,23 +6,29 @@ import QuestionPage from "../../components/QuestionPage";
 import React from "react";
 import pick from "lodash/pick";
 import useFormState from "../../hooks/useFormState";
-import useHandleInputChange from "../../hooks/useHandleInputChange";
+import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "../../locales/i18n";
 import withClaim from "../../hoc/withClaim";
 
 export const fields = ["claim.has_employer_benefits"];
 
 const EmployerBenefits = (props) => {
+  const { appLogic, claim } = props;
   const { t } = useTranslation();
+
   const { formState, updateFields } = useFormState(pick(props, fields).claim);
-  const { has_employer_benefits } = formState;
-  const handleInputChange = useHandleInputChange(updateFields);
+
+  const handleSave = () =>
+    appLogic.claims.update(claim.application_id, formState);
+
+  const getFunctionalInputProps = useFunctionalInputProps({
+    appErrors: appLogic.appErrors,
+    formState,
+    updateFields,
+  });
   const hintList = t("pages.claimsEmployerBenefits.hintList", {
     returnObjects: true,
   });
-
-  const handleSave = () =>
-    props.appLogic.claims.update(props.claim.application_id, formState);
 
   return (
     <QuestionPage
@@ -30,21 +36,20 @@ const EmployerBenefits = (props) => {
       onSave={handleSave}
     >
       <InputChoiceGroup
+        {...getFunctionalInputProps("has_employer_benefits")}
         choices={[
           {
-            checked: has_employer_benefits === true,
+            checked: formState.has_employer_benefits === true,
             label: t("pages.claimsEmployerBenefits.choiceYes"),
             value: "true",
           },
           {
-            checked: has_employer_benefits === false,
+            checked: formState.has_employer_benefits === false,
             label: t("pages.claimsEmployerBenefits.choiceNo"),
             value: "false",
           },
         ]}
         label={t("pages.claimsEmployerBenefits.sectionLabel")}
-        name="has_employer_benefits"
-        onChange={handleInputChange}
         type="radio"
         hint={
           <React.Fragment>

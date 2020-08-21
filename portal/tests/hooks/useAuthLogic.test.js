@@ -172,11 +172,8 @@ describe("useAuthLogic", () => {
     });
 
     it("requires fields to not be empty", async () => {
-      username = "";
-      password = "";
-
       await act(async () => {
-        await login(username, password);
+        await login();
       });
 
       expect(appErrors.items).toHaveLength(2);
@@ -338,10 +335,8 @@ describe("useAuthLogic", () => {
     });
 
     it("requires fields to not be empty", () => {
-      username = "";
-      password = "";
       act(() => {
-        createAccount(username, password);
+        createAccount();
       });
 
       expect(appErrors.items).toHaveLength(2);
@@ -613,12 +608,8 @@ describe("useAuthLogic", () => {
     });
 
     it("requires all fields to not be empty", () => {
-      username = "";
-      password = "";
-      verificationCode = "";
-
       act(() => {
-        resetPassword(username, verificationCode, password);
+        resetPassword();
       });
 
       expect(appErrors.items).toHaveLength(3);

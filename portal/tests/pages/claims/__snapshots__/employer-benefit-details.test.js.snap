@@ -33,9 +33,10 @@ exports[`EmployerBenefitCard renders fields for an EmployerBenefit instance 1`] 
     }
     label="What kind of benefit is it?"
     name="employer_benefits[0].benefit_type"
-    onChange={[MockFunction]}
+    onChange={[Function]}
     smallLabel={true}
     type="radio"
+    value=""
   />
   <InputDate
     dayLabel="Day"
@@ -43,7 +44,7 @@ exports[`EmployerBenefitCard renders fields for an EmployerBenefit instance 1`] 
     label="When will you start using the benefit?"
     monthLabel="Month"
     name="employer_benefits[0].benefit_start_date"
-    onChange={[MockFunction]}
+    onChange={[Function]}
     smallLabel={true}
     value=""
     yearLabel="Year"
@@ -54,7 +55,7 @@ exports[`EmployerBenefitCard renders fields for an EmployerBenefit instance 1`] 
     label="When will you stop using the benefit?"
     monthLabel="Month"
     name="employer_benefits[0].benefit_end_date"
-    onChange={[MockFunction]}
+    onChange={[Function]}
     smallLabel={true}
     value=""
     yearLabel="Year"
@@ -67,7 +68,7 @@ exports[`EmployerBenefitCard renders fields for an EmployerBenefit instance 1`] 
       label="How much will you receive?"
       mask="currency"
       name="employer_benefits[0].benefit_amount_dollars"
-      onChange={[MockFunction]}
+      onChange={[Function]}
       optionalText="(optional)"
       smallLabel={true}
       value=""

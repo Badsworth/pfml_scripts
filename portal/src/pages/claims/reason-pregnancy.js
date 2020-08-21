@@ -5,20 +5,26 @@ import QuestionPage from "../../components/QuestionPage";
 import React from "react";
 import { pick } from "lodash";
 import useFormState from "../../hooks/useFormState";
-import useHandleInputChange from "../../hooks/useHandleInputChange";
+import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "../../locales/i18n";
 import withClaim from "../../hoc/withClaim";
 
 export const fields = ["claim.pregnant_or_recent_birth"];
 
 const ReasonPregnancy = (props) => {
+  const { appLogic, claim } = props;
   const { t } = useTranslation();
+
   const { formState, updateFields } = useFormState(pick(props, fields).claim);
-  const handleInputChange = useHandleInputChange(updateFields);
-  const { pregnant_or_recent_birth } = formState;
 
   const handleSave = () =>
-    props.appLogic.claims.update(props.claim.application_id, formState);
+    appLogic.claims.update(claim.application_id, formState);
+
+  const getFunctionalInputProps = useFunctionalInputProps({
+    appErrors: appLogic.appErrors,
+    formState,
+    updateFields,
+  });
 
   return (
     <QuestionPage
@@ -26,21 +32,20 @@ const ReasonPregnancy = (props) => {
       onSave={handleSave}
     >
       <InputChoiceGroup
+        {...getFunctionalInputProps("pregnant_or_recent_birth")}
         choices={[
           {
-            checked: pregnant_or_recent_birth === true,
+            checked: formState.pregnant_or_recent_birth === true,
             label: t("pages.claimsReasonPregnancy.choiceYes"),
             value: "true",
           },
           {
-            checked: pregnant_or_recent_birth === false,
+            checked: formState.pregnant_or_recent_birth === false,
             label: t("pages.claimsReasonPregnancy.choiceNo"),
             value: "false",
           },
         ]}
         label={t("pages.claimsReasonPregnancy.pregnancyOrRecentBirthLabel")}
-        name="pregnant_or_recent_birth"
-        onChange={handleInputChange}
         type="radio"
       />
     </QuestionPage>

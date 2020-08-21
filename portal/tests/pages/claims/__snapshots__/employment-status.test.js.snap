@@ -41,6 +41,7 @@ exports[`EmploymentStatusPage renders the page 1`] = `
     name="employment_status"
     onChange={[Function]}
     type="radio"
+    value=""
   />
   <ConditionalContent
     fieldNamesClearedWhenHidden={

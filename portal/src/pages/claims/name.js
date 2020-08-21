@@ -6,9 +6,8 @@ import QuestionPage from "../../components/QuestionPage";
 import React from "react";
 import { pick } from "lodash";
 import useFormState from "../../hooks/useFormState";
-import useHandleInputChange from "../../hooks/useHandleInputChange";
+import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "../../locales/i18n";
-import valueWithFallback from "../../utils/valueWithFallback";
 import withClaim from "../../hoc/withClaim";
 
 export const fields = [
@@ -18,13 +17,18 @@ export const fields = [
 ];
 
 const Name = (props) => {
+  const { appLogic, claim } = props;
   const { t } = useTranslation();
   const { formState, updateFields } = useFormState(pick(props, fields).claim);
-  const { first_name, middle_name, last_name } = formState;
-  const handleInputChange = useHandleInputChange(updateFields);
 
   const handleSave = () =>
-    props.appLogic.claims.update(props.claim.application_id, formState);
+    appLogic.claims.update(claim.application_id, formState);
+
+  const getFunctionalInputProps = useFunctionalInputProps({
+    appErrors: appLogic.appErrors,
+    formState,
+    updateFields,
+  });
 
   return (
     <QuestionPage title={t("pages.claimsName.title")} onSave={handleSave}>
@@ -32,25 +36,19 @@ const Name = (props) => {
         {t("pages.claimsName.sectionLabel")}
       </FormLabel>
       <InputText
-        name="first_name"
-        value={valueWithFallback(first_name)}
+        {...getFunctionalInputProps("first_name")}
         label={t("pages.claimsName.firstNameLabel")}
-        onChange={handleInputChange}
         smallLabel
       />
       <InputText
-        name="middle_name"
-        value={valueWithFallback(middle_name)}
+        {...getFunctionalInputProps("middle_name")}
         label={t("pages.claimsName.middleNameLabel")}
         optionalText={t("components.form.optional")}
-        onChange={handleInputChange}
         smallLabel
       />
       <InputText
-        name="last_name"
-        value={valueWithFallback(last_name)}
+        {...getFunctionalInputProps("last_name")}
         label={t("pages.claimsName.lastNameLabel")}
-        onChange={handleInputChange}
         smallLabel
       />
     </QuestionPage>
