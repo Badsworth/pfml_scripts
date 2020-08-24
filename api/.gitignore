@@ -7,7 +7,6 @@ dist/
 .mypy_cache
 
 # Files generated for DOR import lambda deployments
-import_infra/**/dependencies
 *.zip
 
 .aws-sam/

@@ -219,7 +219,7 @@ run: ## Run docker-compose
 run: start logs
 
 db-create-users: ## Create database users
-	$(PY_RUN_CMD) db-admin-create-db-users
+	$(PY_RUN_CMD) db-admin-create-db-users $(DECODE_LOG)
 
 db-upgrade: ## Apply pending migrations to db
 	$(PY_RUN_CMD) db-migrate-up $(DECODE_LOG)

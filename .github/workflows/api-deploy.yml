@@ -60,7 +60,7 @@ jobs:
     name: Build lambda function for DOR import
     runs-on: ubuntu-latest
     env:
-      infra-working-dir: ./api/import_infra/dor
+      infra-working-dir: ./api/lambdas/dor
     outputs:
       s3_key: ${{ steps.get_s3_key.outputs.s3_key }}
       dependencies_s3_key: ${{ steps.get_dependencies_s3_key.outputs.dependencies_s3_key }}
@@ -93,24 +93,24 @@ jobs:
         working-directory: ${{ env.infra-working-dir }}
 
       - name: Lambda Build, Package and Upload to S3
-        run: make upload-release
+        run: make release
         working-directory: ${{ env.infra-working-dir }}
 
       - name: Get Package S3 Key
         id: get_s3_key
-        run: echo "::set-output name=s3_key::$(python3 get-lambda-build.py)"
+        run: echo "::set-output name=s3_key::$(make get-release-key)"
         working-directory: ${{ env.infra-working-dir }}
 
       - name: Get Dependencies S3 Key
         id: get_dependencies_s3_key
-        run: echo "::set-output name=dependencies_s3_key::$(python3 get-lambda-dependencies.py)"
+        run: echo "::set-output name=dependencies_s3_key::$(make get-release-deps-key)"
         working-directory: ${{ env.infra-working-dir }}
 
   eligibility-feed-build:
     name: Build lambda function for FINEOS eligibility feed
     runs-on: ubuntu-latest
     env:
-      infra-working-dir: ./api/import_infra/fineos/eligibility_feed_export
+      infra-working-dir: ./api/lambdas/fineos/eligibility_export_feed
     outputs:
       s3_key: ${{ steps.get_s3_key.outputs.s3_key }}
       dependencies_s3_key: ${{ steps.get_dependencies_s3_key.outputs.dependencies_s3_key }}
@@ -143,12 +143,12 @@ jobs:
         working-directory: ${{ env.infra-working-dir }}
 
       - name: Lambda Build, Package and Upload to S3
-        run: make upload-release
+        run: make release
         working-directory: ${{ env.infra-working-dir }}
 
       - name: Get Package S3 Key
         id: get_s3_key
-        run: echo "::set-output name=s3_key::$(python3 get-lambda-build.py)"
+        run: echo "::set-output name=s3_key::$(make get-release-key)"
         working-directory: ${{ env.infra-working-dir }}
 
   cognito-post-confirmation-build:

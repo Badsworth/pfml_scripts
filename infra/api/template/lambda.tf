@@ -8,17 +8,17 @@ data "aws_s3_bucket" "lambda_build" {
 
 resource "aws_lambda_layer_version" "dependencies" {
   s3_bucket  = data.aws_s3_bucket.lambda_build.bucket
-  s3_key     = "dor-import/${var.dor_import_lambda_dependencies_s3_key}"
+  s3_key     = var.dor_import_lambda_dependencies_s3_key
   layer_name = "massgov-pfml-${var.environment_name}-dor-import-dependencies"
 }
 
 # The DOR Import Function
 resource "aws_lambda_function" "dor_import" {
   s3_bucket = data.aws_s3_bucket.lambda_build.bucket
-  s3_key    = "dor-import/${var.dor_import_lambda_build_s3_key}"
+  s3_key    = var.dor_import_lambda_build_s3_key
 
   function_name = "massgov-pfml-${var.environment_name}-dor-import"
-  handler       = "import_dor.handler"
+  handler       = "handler.handler"
   runtime       = var.lambda_runtime
   publish       = "true"
 
@@ -96,10 +96,10 @@ resource "aws_lambda_permission" "allow_cognito_post_confirmation" {
 
 resource "aws_lambda_function" "eligibility_feed" {
   s3_bucket = data.aws_s3_bucket.lambda_build.bucket
-  s3_key    = "fineos-eligibility-feed-export/${var.fineos_eligibility_transfer_lambda_build_s3_key}"
+  s3_key    = var.fineos_eligibility_transfer_lambda_build_s3_key
 
   function_name = "massgov-pfml-${var.environment_name}-eligibility-feed"
-  handler       = "eligibility_export.handler"
+  handler       = "handler.handler"
 
   runtime = var.lambda_runtime
   publish = "true"
@@ -120,7 +120,7 @@ resource "aws_lambda_function" "eligibility_feed" {
       DB_USERNAME          = aws_db_instance.default.username
       DB_PASSWORD_SSM_PATH = "/service/${local.app_name}/${var.environment_name}/db-password"
       # need fineos s3 bucket
-      # FOLDER_PATH                            = "s3://massgov-pfml-${var.environment_name}-fineos-transfer"
+      # EXPORT_FOLDER_PATH                            = "s3://"
     }
   }
 }

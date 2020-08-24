@@ -15,6 +15,7 @@ Resources:
       Runtime: python3.8
       Environment:
         Variables:
+          ENVIRONMENT: "SET_IN_CONTAINER_ENV_VARS"
           DB_HOST: "SET_BY_ENV_JSON"
           DB_NAME: "SET_BY_ENV_JSON"
           DB_USERNAME: "SET_BY_ENV_JSON"

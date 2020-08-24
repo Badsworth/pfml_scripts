@@ -16,7 +16,7 @@ import faker
 # Running this module as a python command from the top level /api directory seems
 # to reset the path on load causing issues with local module imports.
 # Workaround is to force set the path to run directory (top level api folder)
-# See import_infra/dor/README.md for running details.
+# See lambdas/dor/README.md for running details.
 sys.path.insert(0, ".")  # noqa: E402
 
 import massgov.pfml.util.logging as logging  # noqa: E402 isort:skip
