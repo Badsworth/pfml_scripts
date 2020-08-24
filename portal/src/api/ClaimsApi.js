@@ -28,10 +28,11 @@ export default class ClaimsApi {
    * @param {string} method HTTP method
    * @param {string} [subPath] Sub-path of the /applications resource to use
    * @param {object} [body] Request body
+   * @param {object} [headers] HTTP headers
    */
-  claimsRequest = async (method, subPath = "", body = null) => {
+  claimsRequest = async (method, subPath = "", body = null, headers) => {
     const apiPath = `${routes.api.claims}${subPath}`;
-    return portalRequest(method, apiPath, body);
+    return portalRequest(method, apiPath, body, headers);
   };
 
   /**
@@ -88,7 +89,9 @@ export default class ClaimsApi {
       success,
       status,
       warnings,
-    } = await this.claimsRequest("PATCH", `/${application_id}`, requestData);
+    } = await this.claimsRequest("PATCH", `/${application_id}`, requestData, {
+      "X-PFML-Warn-On-Missing-Required-Fields": true,
+    });
 
     // TODO (CP-676): Remove workaround once API returns all the fields in our application
     const workaroundData = merge({ ...data, application_id }, patchData);

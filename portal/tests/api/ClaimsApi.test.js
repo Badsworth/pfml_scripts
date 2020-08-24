@@ -44,7 +44,8 @@ describe("ClaimsApi", () => {
         expect(portalRequest).toHaveBeenCalledWith(
           "GET",
           "/applications",
-          null
+          null,
+          undefined
         );
       });
 
@@ -79,7 +80,8 @@ describe("ClaimsApi", () => {
         expect(portalRequest).toHaveBeenCalledWith(
           "POST",
           "/applications",
-          null
+          null,
+          undefined
         );
       });
 
@@ -144,7 +146,8 @@ describe("ClaimsApi", () => {
       expect(portalRequest).toHaveBeenCalledWith(
         "PATCH",
         "/applications/mock-application_id",
-        body
+        body,
+        { "X-PFML-Warn-On-Missing-Required-Fields": true }
       );
     });
 
@@ -208,7 +211,8 @@ describe("ClaimsApi", () => {
       expect(portalRequest).toHaveBeenCalledWith(
         "POST",
         "/applications/mock-application_id/submit_application",
-        null
+        null,
+        undefined
       );
     });
 
