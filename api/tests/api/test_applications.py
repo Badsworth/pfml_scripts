@@ -692,6 +692,8 @@ def test_application_patch_null_values(client, user, auth_token):
         json=null_request_body,
     )
 
+    # This will fail when required values are set in openapi.yaml
+    assert response.get_json().get("warnings", None) is None
     assert response.status_code == 200
 
 

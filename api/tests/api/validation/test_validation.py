@@ -8,11 +8,17 @@ from massgov.pfml.api.validation import add_error_handlers_to_app, get_custom_va
 TEST_FOLDER = pathlib.Path(__file__).parent
 INVALID_USER = {"first_name": 123, "interests": ["sports", "activity", "sports"]}
 VALID_USER = {"first_name": "Jane", "last_name": "Smith", "interests": ["sports", "sketching"]}
+MISSING_DATA_USER = {"first_name": "Foo"}
 
 
 def post_user():
     """handler for test api (see 'test.yml' file in this directory)"""
-    return success_response(message="Success", data=VALID_USER).to_api_response()
+    return success_response(message="Success", data=VALID_USER,).to_api_response()
+
+
+def get_user():
+    """handler for test api (see 'test.yml' file in this directory)"""
+    return success_response(message="Success", data=MISSING_DATA_USER).to_api_response()
 
 
 def post_user_invalid_response():
@@ -51,6 +57,30 @@ def test_request_response_validation():
     )
 
     success_response = client.post("/user", json=VALID_USER,).get_json()
+
+    request_validation_error_response_get_warnings = client.get(
+        "/user", json=MISSING_DATA_USER
+    ).get_json()
+    assert request_validation_error_response_get_warnings.get("warnings", None) is None
+
+    request_validation_error_response_no_warnings = client.post(
+        "/user", json=MISSING_DATA_USER
+    ).get_json()
+    assert request_validation_error_response_no_warnings.get("warnings", None) is None
+
+    request_validation_success_response_with_warnings = client.post(
+        "/user", headers={"X-PFML-Warn-On-Missing-Required-Fields": "true"}, json=MISSING_DATA_USER
+    ).get_json()
+
+    assert request_validation_success_response_with_warnings.get("warnings", None) is not None
+    assert request_validation_success_response_with_warnings["status_code"] == 200
+
+    request_validation_error_response_with_warnings = client.post(
+        "/user", headers={"X-PFML-Warn-On-Missing-Required-Fields": "true"}, json=INVALID_USER
+    ).get_json()
+
+    assert request_validation_error_response_with_warnings.get("warnings", None) is not None
+    assert request_validation_error_response_with_warnings["status_code"] == 400
 
     assert success_response["message"] == "Success"
     assert success_response["data"] is not None

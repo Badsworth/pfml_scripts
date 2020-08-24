@@ -6,6 +6,20 @@ info:
 
 paths:
   /user:
+    get:
+      summary: Test API
+      operationId: test_validation.get_user
+      responses:
+        200:
+          description: greeting response
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessfulResponse'
+                  - properties:
+                      data:
+                        $ref: "#/components/schemas/User"
     post:
       summary: Test API
       operationId: test_validation.post_user

@@ -278,7 +278,12 @@ paths:
                       data:
                         $ref: "#/components/schemas/ApplicationResponse"
         "400":
-          $ref: "#/components/responses/BadRequest"
+          description: An unsuccessful request returns a 400 status code if one or more errors occured, described in the error response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
       requestBody:
         $ref: "#/components/requestBodies/ApplicationRequestBody"
 
@@ -464,6 +469,30 @@ components:
           items:
             $ref: "#/components/schemas/Issue"
       required: ["status_code"]
+      additionalProperties: false
+
+    ErrorResponse:
+      type: object
+      properties:
+        status_code:
+          type: integer
+        message:
+          type: string
+        meta:
+          $ref: "#/components/schemas/Meta"
+        data:
+          oneOf:
+            - type: array
+            - type: object
+        warnings:
+          type: array
+          items:
+            $ref: "#/components/schemas/Issue"
+        errors:
+          type: array
+          items:
+            $ref: "#/components/schemas/Issue"
+      required: ["status_code", "errors"]
       additionalProperties: false
 
     Meta:

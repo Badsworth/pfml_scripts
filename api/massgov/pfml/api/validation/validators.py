@@ -2,6 +2,7 @@
 # Custom validation implementations to support custom API response formats
 #
 
+import flask
 import jsonschema
 from connexion.decorators.response import ResponseValidator
 from connexion.decorators.validation import RequestBodyValidator, ResponseBodyValidator
@@ -34,24 +35,40 @@ DefaultsEnforcingDraft4ResponseValidator = extend_with_set_default(Draft4Respons
 
 
 def validate_schema_util(validator_decorator, data, error_message):
+    # Should this header string be defined as a global constant? If so, where?
+    warn_on_required = flask.request.headers.get("X-PFML-Warn-On-Missing-Required-Fields", None)
+
     errors = list(validator_decorator.validator.iter_errors(data))
     if errors:
-        errorList = []
+        error_list = []
         for error in errors:
-            field_path = list(error.path)
-            errorList.append(
+            # Fix an error where items in error.path are ints. Convert to strings.
+            field_path = list(map(lambda x: str(x), list(error.path)))
+            error_list.append(
                 ValidationErrorDetail(
                     message=error.message,
                     type=error.validator,
                     rule=error.validator_value,
-                    field=".".join(field_path) if field_path else None,
+                    field=".".join(field_path) if field_path else "",
                 )
             )
 
-        invalid_data_payload = data.get("data", data)
-        raise ValidationException(
-            errors=errorList, message=error_message, data=invalid_data_payload
-        )
+        if warn_on_required:
+            warning_list = list(filter(lambda error: error.type == "required", error_list))
+            error_list = list(filter(lambda error: error.type != "required", error_list))
+
+            flask.request.warning_list = warning_list
+
+            if len(error_list) > 0:
+                invalid_data_payload = data.get("data", data)
+                raise ValidationException(
+                    errors=error_list, message=error_message, data=invalid_data_payload
+                )
+        else:
+            invalid_data_payload = data.get("data", data)
+            raise ValidationException(
+                errors=error_list, message=error_message, data=invalid_data_payload
+            )
 
 
 class CustomRequestBodyValidator(RequestBodyValidator):
@@ -89,6 +106,10 @@ class CustomResponseValidator(ResponseValidator):
 
     def validate_response(self, data, status_code, headers, url):
         response_body = self.operation.json_loads(data)
+
+        # Do not validate GET responses.
+        if flask.request.method == "GET":
+            return True
 
         if url.endswith("/status"):
             return True
