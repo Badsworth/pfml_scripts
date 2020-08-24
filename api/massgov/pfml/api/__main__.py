@@ -23,6 +23,7 @@ newrelic.agent.initialize(
 
 import massgov.pfml.api.app as app
 import massgov.pfml.api.authentication as authentication
+import massgov.pfml.util.logging.audit as audit_logging
 import massgov.pfml.util.logging
 # fmt: on
 
@@ -30,6 +31,7 @@ logger = massgov.pfml.util.logging.get_logger(__package__)
 
 
 def main():
+    audit_logging.init_security_logging()
     massgov.pfml.util.logging.init(__package__)
     start_server()
 
