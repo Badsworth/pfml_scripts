@@ -80,8 +80,6 @@ Then("I should find their claim in Fineos", function () {
       throw new Error("Invalid Claim ID from previous test.");
     }
     cy.get(`[title="PFML API ${claimId}"]`).click();
-    cy.contains('input[type="submit"]', "Open").click();
-    cy.contains(".TabStrip td", "Leave Details").click();
     // For now, we're stopping at asserting that the claim made it to Fineos.
   });
 });
