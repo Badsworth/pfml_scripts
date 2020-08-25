@@ -46,7 +46,9 @@ class LeaveReason(str, LookupEnum):
 
 
 class LeaveReasonQualifier(str, LookupEnum):
-    new_born = "New Born"
+    newborn = "Newborn"
+    adoption = "Adoption"
+    foster_care = "Foster Care"
     serious_health_condition = "Serious Health Condition"
     work_related_accident = "Work Related Accident/Injury"
 

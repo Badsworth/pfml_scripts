@@ -397,7 +397,7 @@ components:
           schema:
             $ref: "#/components/schemas/EligibilityRequest"
       required: true
- 
+
   responses:
     ApplicationResponse:
       description: Application found
@@ -868,7 +868,9 @@ components:
           type: string
           nullable: true
           enum:
-            - New Born
+            - Newborn
+            - Adoption
+            - Foster Care
             - Serious Health Condition
             - Work Related Accident/Injury
           example: "Serious Health Condition"

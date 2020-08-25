@@ -264,9 +264,11 @@ class LeaveReasonQualifier(LookupTable):
     model = LkLeaveReasonQualifier
     column_names = ("leave_reason_qualifier_id", "leave_reason_qualifier_description")
 
-    NEW_BORN = LkLeaveReasonQualifier(1, "New Born")
+    NEWBORN = LkLeaveReasonQualifier(1, "Newborn")
     SERIOUS_HEALTH_CONDITION = LkLeaveReasonQualifier(2, "Serious Health Condition")
     WORK_RELATED_ACCIDENT_INJURY = LkLeaveReasonQualifier(3, "Work Related Accident/Injury")
+    ADOPTION = LkLeaveReasonQualifier(4, "Adoption")
+    FOSTER_CARE = LkLeaveReasonQualifier(5, "Foster Care")
 
 
 class LeaveType(LookupTable):
