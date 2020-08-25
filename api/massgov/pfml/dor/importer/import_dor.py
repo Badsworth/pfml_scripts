@@ -22,8 +22,8 @@ from massgov.pfml.dor.importer.dor_file_formats import (
     EMPLOYER_FILE_FORMAT,
     EMPLOYER_QUARTER_INFO_FORMAT,
 )
-from massgov.pfml.dor.importer.lib.decrypter import Decrypter, GpgDecrypter, Utf8Decrypter
 from massgov.pfml.util.config import get_secret_from_env
+from massgov.pfml.util.encryption import Crypt, GpgCrypt, Utf8Crypt
 from massgov.pfml.util.files.file_format import FileFormat
 
 logger = logging.get_logger("massgov.pfml.dor.importer.import_dor")
@@ -39,6 +39,13 @@ PROCESSED_FOLDER = "dor/processed/"
 
 EMPLOYER_FILE_PREFIX = "DORDFMLEMP_"
 EMPLOYEE_FILE_PREFIX = "DORDFML_"
+
+
+@dataclass
+class ImportBatch:
+    upload_date: str
+    employer_file: str
+    employee_file: str
 
 
 @dataclass
@@ -73,112 +80,85 @@ class ImportRunReport:
     start: str
     imports: List[ImportReport] = field(default_factory=list)
     end: Optional[str] = None
+    message: str = ""
 
 
 def handler(event, context):
     """Lambda handler function."""
     logging.init(__name__)
 
-    decrypter: Decrypter
-
     folder_path = os.environ.get("FOLDER_PATH")
+    decrypt_files = os.getenv("DECRYPT") == "true"
 
-    if os.getenv("DECRYPT") != "true":
-        logger.info("Skipping GPG decrypter setup")
-        decrypter = Utf8Decrypter()
-    else:
-        logger.info("Setting up GPG")
-        gpg_decryption_key = get_secret_from_env(aws_ssm, "GPG_DECRYPTION_KEY")
-        gpg_decryption_passphrase = get_secret_from_env(aws_ssm, "GPG_DECRYPTION_KEY_PASSPHRASE")
+    logger.info(
+        "Starting import run", extra={"folder_path": folder_path, "decrypt_files": decrypt_files}
+    )
 
-        decrypter = GpgDecrypter(gpg_decryption_key, gpg_decryption_passphrase)
-
-    logger.info("Start import run")
-
-    logger.info("Starting import run")
-
-    files_by_date = get_files_for_import_grouped_by_date(folder_path)
-    file_date_keys = sorted(files_by_date.keys())
-
-    if len(file_date_keys) == 0:
-        # TODO need to capture some report for this
-        logger.info("no files to import")
-        return {"status": "OK", "msg": "no files to import"}
-
+    import_batches = get_files_to_process(folder_path)
     report = ImportRunReport(start=datetime.now().isoformat())
 
-    for file_date_key in file_date_keys:
-        files_for_import = files_by_date[file_date_key]
-
-        logger.info("importing files", extra={"files_for_import": files_for_import})
-
-        employer_file_filter = [
-            f for f in files_for_import if get_file_name(f).startswith(EMPLOYER_FILE_PREFIX)
-        ]
-        employer_file = None if len(employer_file_filter) == 0 else employer_file_filter[0]
-
-        employee_file_filter = [
-            f for f in files_for_import if get_file_name(f).startswith(EMPLOYEE_FILE_PREFIX)
-        ]
-        employee_file = None if len(employer_file_filter) == 0 else employee_file_filter[0]
-
-        logger.info(
-            "got file names",
-            extra={
-                "date": file_date_key,
-                "folder_path": folder_path,
-                "employer_file": employer_file,
-                "employee_file": employee_file,
-            },
-        )
-
-        employer_file_path = "{}/{}".format(str(folder_path), employer_file)
-        employee_file_path = "{}/{}".format(str(folder_path), employee_file)
-
-        import_report = process_daily_import(employer_file_path, employee_file_path, decrypter)
-        report.imports.append(import_report)
+    if not import_batches:
+        logger.info("no files found to import")
+        report.message = "no files found to import"
+    else:
+        import_reports = process_import_batches(import_batches, decrypt_files)
+        report.imports = import_reports
+        report.message = "files imported"
 
     report.end = datetime.now().isoformat()
     logger.info("Finished import run")
-    decrypter.remove_keys()
     return {"status": "OK", "import_type": "daily", "report": asdict(report)}
 
 
-def get_files_for_import_grouped_by_date(path):
-    """Get the paths (s3 keys) of files in the recieved folder of the bucket"""
+def process_import_batches(
+    import_batches: List[ImportBatch],
+    decrypt_files: bool,
+    optional_db_session: Optional[Session] = None,
+) -> List[ImportReport]:
+    import_reports: List[ImportReport] = []
 
-    files_by_date: Dict[str, List[str]] = {}
-    files_for_import = file_util.list_files(path)
-    files_for_import.sort()
-    for file_key in files_for_import:
-        date_start_index = file_key.rfind("_")
-        if date_start_index >= 0:
-            date_start_index = date_start_index + 1
-            date_end_index = date_start_index + 8  # only date part is relevant
-            file_date = file_key[date_start_index:date_end_index]
-            if files_by_date.get(file_date, None) is None:
-                files_by_date[file_date] = []
-            files_by_date[file_date].append(file_key)
-    return files_by_date
+    # Initialize the file decrypter
+    decrypter: Crypt
+
+    if decrypt_files:
+        logger.info("Setting up GPG")
+        gpg_decryption_key = get_secret_from_env(aws_ssm, "GPG_DECRYPTION_KEY")
+        gpg_decryption_passphrase = get_secret_from_env(aws_ssm, "GPG_DECRYPTION_KEY_PASSPHRASE")
+        decrypter = GpgCrypt(gpg_decryption_key, gpg_decryption_passphrase)
+    else:
+        logger.info("Skipping GPG decrypter setup")
+        decrypter = Utf8Crypt()
+
+    # Initialize the database
+    db_session_raw = optional_db_session
+    if not db_session_raw:
+        db_session_raw = db.init()
+
+    with db.session_scope(db_session_raw) as db_session:
+
+        # process each batch
+        for import_batch in import_batches:
+            logger.info(
+                "processing import patch",
+                extra={
+                    "date": import_batch.upload_date,
+                    "employer_file": import_batch.employer_file,
+                    "employee_file": import_batch.employee_file,
+                },
+            )
+
+            import_report = process_daily_import(
+                db_session, import_batch.employer_file, import_batch.employee_file, decrypter
+            )
+            import_reports.append(import_report)
+
+        return import_reports
 
 
 def process_daily_import(
-    employer_file_path: str, employee_file_path: str, decrypter: Decrypter
+    db_session: Session, employer_file_path: str, employee_file_path: str, decrypter: Crypt,
 ) -> ImportReport:
-    """Process s3 file by key"""
-    config = db.get_config()
-    db_session_raw = db.init(config)
 
-    with db.session_scope(db_session_raw) as db_session:
-        report = process_daily_import_helper(
-            db_session, employer_file_path, employee_file_path, decrypter
-        )
-        return report
-
-
-def process_daily_import_helper(
-    db_session: Session, employer_file_path: str, employee_file_path: str, decrypter: Decrypter,
-) -> ImportReport:
     logger.info("Starting to process files")
     report = ImportReport(
         start=datetime.now().isoformat(),
@@ -431,8 +411,6 @@ def import_employees_and_wage_data(
                 report.created_wages_and_contributions_count + 1
             )
         else:
-            # print("wage  ", employer_id, employee_id, account_key, filing_period, ssn)
-            # print("exists", existing_wage.employer_id, existing_wage.employee_id, existing_wage.account_key, existing_wage.filing_period)
             ameneded_flag_key = "{}-{}".format(account_key, filing_period.strftime("%Y%m%d"))
             if wage_data_amended_flag_map[ameneded_flag_key] is True:
                 dor_persistence_util.update_wages_and_contributions(
@@ -549,6 +527,65 @@ def write_report_to_s3(bucket, report):
         + "_report.json"
     )
     s3.put_object(Body=report_str, Bucket=bucket.name, Key=destination_key)
+
+
+def get_files_to_process(path: Optional[str]) -> List[ImportBatch]:
+    files_by_date = get_files_for_import_grouped_by_date(path)
+    file_date_keys = sorted(files_by_date.keys())
+
+    import_batches: List[ImportBatch] = []
+
+    if not file_date_keys:
+        return []
+
+    for file_date_key in file_date_keys:
+        files_for_import = files_by_date[file_date_key]
+
+        # logger.info("importing files", extra={"files_for_import": files_for_import})
+
+        employer_file_filter = [
+            f for f in files_for_import if get_file_name(f).startswith(EMPLOYER_FILE_PREFIX)
+        ]
+        if not employer_file_filter:
+            logger.info("Employer file not found for date", extra={"date": file_date_key})
+            continue
+
+        employer_file = employer_file_filter[0]
+
+        employee_file_filter = [
+            f for f in files_for_import if get_file_name(f).startswith(EMPLOYEE_FILE_PREFIX)
+        ]
+        if len(employee_file_filter) == 0:
+            logger.info("Employee file not found for date", extra={"date": file_date_key})
+            continue
+
+        employee_file = employee_file_filter[0]
+
+        import_batches.append(
+            ImportBatch(
+                upload_date=file_date_key, employer_file=employer_file, employee_file=employee_file
+            )
+        )
+
+    return import_batches
+
+
+def get_files_for_import_grouped_by_date(path):
+    """Get the paths (s3 keys) of files in the recieved folder of the bucket"""
+
+    files_by_date: Dict[str, List[str]] = {}
+    files_for_import = file_util.list_files(path)
+    files_for_import.sort()
+    for file_key in files_for_import:
+        date_start_index = file_key.rfind("_")
+        if date_start_index >= 0:
+            date_start_index = date_start_index + 1
+            date_end_index = date_start_index + 8  # only date part is relevant
+            file_date = file_key[date_start_index:date_end_index]
+            if files_by_date.get(file_date, None) is None:
+                files_by_date[file_date] = []
+            files_by_date[file_date].append("{}/{}".format(str(path), file_key))
+    return files_by_date
 
 
 def get_file_name(s3_file_key):

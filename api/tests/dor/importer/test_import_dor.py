@@ -1,3 +1,4 @@
+import pathlib
 import tempfile
 
 import pytest
@@ -7,14 +8,16 @@ import massgov.pfml.dor.importer.import_dor as import_dor
 import massgov.pfml.dor.importer.lib.dor_persistence_util as dor_persistence_util
 import massgov.pfml.dor.mock.generate as generator
 from massgov.pfml.db.models.employees import AddressType, Country, Employee, Employer, GeoState
-from massgov.pfml.dor.importer.lib.decrypter import Utf8Decrypter
+from massgov.pfml.util.encryption import GpgCrypt, Utf8Crypt
 
 # every test in here requires real resources
 pytestmark = pytest.mark.integration
 
-decrypter = Utf8Decrypter()
+decrypter = Utf8Crypt()
 employee_file = "DORDFML_20200519120622"
 employer_file = "DORDFMLEMP_20200519120622"
+
+TEST_FOLDER = pathlib.Path(__file__).parent
 
 
 @pytest.fixture
@@ -349,7 +352,12 @@ def validate_employer_address_persistence(
 
 def test_get_files_for_import_grouped_by_date(test_fs_path_for_s3):
     files_by_date = import_dor.get_files_for_import_grouped_by_date(str(test_fs_path_for_s3))
-    assert files_by_date == {"20200519": [employer_file, employee_file]}
+    assert files_by_date == {
+        "20200519": [
+            "{}/{}".format(str(test_fs_path_for_s3), employer_file),
+            "{}/{}".format(str(test_fs_path_for_s3), employee_file),
+        ]
+    }
 
 
 def test_parse_employee_file(test_fs_path_for_s3):
@@ -396,9 +404,46 @@ def test_e2e_parse_and_persist(test_db_session, dor_employer_lookups):
     )  # 4 rows for each quarter for employee and employer
 
     # import
-    report = import_dor.process_daily_import_helper(
-        test_db_session, employer_file_path, employee_file_path, decrypter
+    import_batches = [
+        import_dor.ImportBatch(
+            upload_date="20200805",
+            employer_file=employer_file_path,
+            employee_file=employee_file_path,
+        )
+    ]
+
+    reports = import_dor.process_import_batches(
+        import_batches=import_batches, decrypt_files=False, optional_db_session=test_db_session
     )
+
+    report = reports[0]
+    assert report.created_employers_count == employer_count
+    assert report.created_employees_count == employee_count
+    assert report.created_wages_and_contributions_count == employee_count * 4
+
+
+@pytest.mark.timeout(25)
+def test_decryption(test_db_session, dor_employer_lookups):
+
+    decryption_key = open(TEST_FOLDER / "encryption" / "test_private.key").read()
+    passphrase = "bb8d58fa-d781-11ea-87d0-0242ac130003"
+    test_email = "pfml-test@example.com"
+
+    decrypter = GpgCrypt(decryption_key, passphrase, test_email)
+
+    employer_file_path = TEST_FOLDER / "encryption" / "DORDFMLEMP_20200805220758"
+    employee_file_path = TEST_FOLDER / "encryption" / "DORDFML_20200805220758"
+
+    report = import_dor.process_daily_import(
+        employer_file_path=str(employer_file_path),
+        employee_file_path=str(employee_file_path),
+        decrypter=decrypter,
+        db_session=test_db_session,
+    )
+
+    employer_count = 20
+    employee_count = employer_count * generator.EMPLOYER_TO_EMPLOYEE_RATIO
+
     assert report.created_employers_count == employer_count
     assert report.created_employees_count == employee_count
     assert report.created_wages_and_contributions_count == employee_count * 4
