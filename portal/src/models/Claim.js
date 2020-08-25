@@ -2,6 +2,7 @@
 /**
  * @file Benefits application model and enum values
  */
+import Address from "./Address";
 import BaseModel from "./BaseModel";
 import { get } from "lodash";
 
@@ -69,17 +70,13 @@ class Claim extends BaseModel {
               routing_number: null,
             },
             // Fields for where to send the debit card
-            destination_address: {
-              city: null,
-              line_1: null,
-              line_2: null,
-              state: null,
-              zip: null,
-            },
+            destination_address: new Address(),
             payment_method: null, // PaymentPreferenceMethod
             payment_preference_id: null,
           },
         ],
+        // TODO (CP-841): Connect address to API
+        residential_address: new Address(),
       },
     };
   }
