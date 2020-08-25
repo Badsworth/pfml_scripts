@@ -690,10 +690,8 @@ components:
           nullable: true
           example: "Doe"
         date_of_birth:
-          type: string
           nullable: true
-          format: date
-          example: "1970-06-01"
+          $ref: "#/components/schemas/Date"
         has_state_id:
           type: boolean
           nullable: true
@@ -761,10 +759,8 @@ components:
           example: "Doe"
           nullable: true
         date_of_birth:
-          type: string
           nullable: true
-          format: date
-          example: "1970-06-01"
+          $ref: "#/components/schemas/Date"
         has_state_id:
           type: boolean
           nullable: true
@@ -827,10 +823,8 @@ components:
           nullable: false
           $ref: "#/components/schemas/Fein"
         effective_date:
-          type: string
-          format: date
-          example: "1970-06-01"
           nullable: false
+          $ref: "#/components/schemas/Date"
         employment_status:
           type: string
           enum:
@@ -920,24 +914,18 @@ components:
           nullable: true
           example: true
         child_birth_date:
-          type: string
           nullable: true
-          format: date
-          example: "2020-04-24"
+          $ref: "#/components/schemas/Date"
         child_placement_date:
-          type: string
           nullable: true
-          format: date
-          example: "2020-04-24"
+          $ref: "#/components/schemas/Date"
         employer_notified:
           type: boolean
           nullable: true
           example: true
         employer_notification_date:
-          type: string
           nullable: true
-          format: date
-          example: "2020-04-24"
+          $ref: "#/components/schemas/Date"
         employer_notification_method:
           type: string
           nullable: true
@@ -956,15 +944,11 @@ components:
           format: uuid
           nullable: true
         start_date:
-          type: string
           nullable: true
-          format: date
-          example: "2020-06-08"
+          $ref: "#/components/schemas/Date"
         end_date:
-          type: string
           nullable: true
-          format: date
-          example: "2020-07-31"
+          $ref: "#/components/schemas/Date"
         is_estimated:
           type: boolean
           nullable: true
@@ -1035,25 +1019,17 @@ components:
           format: uuid
           nullable: true
         start_date:
-          type: string
           nullable: true
-          format: date
-          example: "2020-06-08"
+          $ref: "#/components/schemas/Date"
         end_date:
-          type: string
           nullable: true
-          format: date
-          example: "2020-07-31"
+          $ref: "#/components/schemas/Date"
         last_day_worked:
-          type: string
           nullable: true
-          format: date
-          example: "2020-06-05"
+          $ref: "#/components/schemas/Date"
         expected_return_to_work_date:
-          type: string
           nullable: true
-          format: date
-          example: "2020-08-03"
+          $ref: "#/components/schemas/Date"
         start_date_full_day:
           type: boolean
           nullable: true
@@ -1092,15 +1068,11 @@ components:
           format: uuid
           nullable: true
         start_date:
-          type: string
           nullable: true
-          format: date
-          example: "2020-06-08"
+          $ref: "#/components/schemas/Date"
         end_date:
-          type: string
           nullable: true
-          format: date
-          example: "2020-07-31"
+          $ref: "#/components/schemas/Date"
         frequency:
           type: integer
           nullable: true
@@ -1228,3 +1200,8 @@ components:
       type: string
       example: "009fa369-291b-403f-a85a-15e938c26f2f"
       format: uuid
+
+    Date:
+      type: string
+      example: '1970-01-01'
+      pattern: '^\d{4}-\d{2}-\d{2}$'
