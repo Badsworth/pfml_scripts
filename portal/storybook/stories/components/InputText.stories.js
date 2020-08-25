@@ -7,7 +7,7 @@ export default {
   component: InputText,
 };
 
-export const ControlledField = () => {
+export const ControlledField = (args) => {
   const { t } = useTranslation();
 
   // Setup super simple state management for the change handler and this controlled form component
@@ -20,21 +20,27 @@ export const ControlledField = () => {
   return (
     <form className="usa-form">
       <InputText
-        label="Full name"
-        hint="This is an example of a controlled field."
-        name="fullName"
         onChange={handleOnChange}
         optionalText={t("components.form.optional")}
         value={value}
+        {...args}
       />
     </form>
   );
+};
+
+ControlledField.args = {
+  label: "Full name",
+  example: "For example, Bud Baxter",
+  hint: "This is an example of a controlled field.",
+  name: "fullName",
 };
 
 export const ErrorState = () => (
   <form className="usa-form">
     <InputText
       errorMsg="Please enter a value."
+      example="For example, when the user doesn't enter a value"
       hint="Example of an error message."
       label="Field label"
       name="foo"

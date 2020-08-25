@@ -55,6 +55,7 @@ function InputText({ type = "text", ...props }) {
         errorMsg={props.errorMsg}
         inputId={inputId}
         hint={props.hint}
+        example={props.example}
         optionalText={props.optionalText}
         small={props.smallLabel}
       >
@@ -74,6 +75,10 @@ InputText.propTypes = {
    * Localized error message. Setting this enables the error state styling.
    */
   errorMsg: PropTypes.node,
+  /**
+   * Localized example text
+   */
+  example: PropTypes.string,
   /**
    * Additional classes to include on the containing form group element
    */

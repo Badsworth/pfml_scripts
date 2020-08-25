@@ -56,7 +56,7 @@ exports[`OtherIncomeCard renders fields for an OtherIncome instance 1`] = `
   />
   <InputDate
     dayLabel="Day"
-    hint="For example: 04 / 28 / 1986"
+    example="For example: 04 / 28 / 1986"
     label="When will you start receiving this income?"
     monthLabel="Month"
     name="other_incomes[0].income_start_date"
@@ -67,7 +67,7 @@ exports[`OtherIncomeCard renders fields for an OtherIncome instance 1`] = `
   />
   <InputDate
     dayLabel="Day"
-    hint="For example: 04 / 28 / 1986"
+    example="For example: 04 / 28 / 1986"
     label="When will you stop receiving this income?"
     monthLabel="Month"
     name="other_incomes[0].income_end_date"
@@ -77,7 +77,7 @@ exports[`OtherIncomeCard renders fields for an OtherIncome instance 1`] = `
     yearLabel="Year"
   />
   <InputText
-    hint="For example, $250 every month."
+    example="For example, $250 every month."
     label="How much will you receive?"
     mask="currency"
     name="other_incomes[0].income_amount_dollars"

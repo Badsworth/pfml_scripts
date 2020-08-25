@@ -166,6 +166,7 @@ function InputDate(props) {
         component="legend"
         errorMsg={props.errorMsg}
         hint={props.hint}
+        example={props.example}
         optionalText={props.optionalText}
         small={props.smallLabel}
       >
@@ -232,6 +233,10 @@ InputDate.propTypes = {
    * Localized error message. Setting this enables the error state styling.
    */
   errorMsg: PropTypes.node,
+  /**
+   * Localized example text for the entire fieldset
+   */
+  example: PropTypes.string,
   /**
    * Localized hint text for the entire fieldset
    */

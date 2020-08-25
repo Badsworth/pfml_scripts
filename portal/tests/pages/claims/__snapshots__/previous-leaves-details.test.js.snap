@@ -4,7 +4,7 @@ exports[`PreviousLeavesDetails when the user's claim has previous leaves Previou
 <Fragment>
   <InputDate
     dayLabel="Day"
-    hint="For example: 04 / 28 / 1986"
+    example="For example: 04 / 28 / 1986"
     label="When did your leave begin?"
     monthLabel="Month"
     name="previous_leaves[0].leave_start_date"
@@ -15,7 +15,7 @@ exports[`PreviousLeavesDetails when the user's claim has previous leaves Previou
   />
   <InputDate
     dayLabel="Day"
-    hint="For example: 04 / 28 / 1986"
+    example="For example: 04 / 28 / 1986"
     label="When did your leave end?"
     monthLabel="Month"
     name="previous_leaves[0].leave_end_date"

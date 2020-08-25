@@ -296,7 +296,7 @@ const pages = {
   },
   claimsEmployerBenefitDetails: {
     addButton: "Add another benefit",
-    amountHint: "For example, $250 every month",
+    amountExample: "For example, $250 every month",
     amountLabel: "How much will you receive?",
     cardHeadingPrefix: "$t(shared.employerBenefitEntryPrefix)",
     choiceHint_familyOrMedicalLeave:
@@ -424,7 +424,7 @@ const pages = {
   },
   claimsOtherIncomesDetails: {
     addButton: "Add another income",
-    amountHint: "For example, $250 every month.",
+    amountExample: "For example, $250 every month.",
     amountLabel: "How much will you receive?",
     cardHeadingPrefix: "$t(shared.otherIncomeEntryPrefix)",
     endDateLabel: "When will you stop receiving this income?",
@@ -758,7 +758,7 @@ const components = {
   form: {
     continueButton: "Continue",
     dateInputDayLabel: "Day",
-    dateInputHint: "For example: 04 / 28 / 1986",
+    dateInputExample: "For example: 04 / 28 / 1986",
     dateInputMonthLabel: "Month",
     dateInputYearLabel: "Year",
     optional: "(optional)",

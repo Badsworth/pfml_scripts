@@ -85,6 +85,7 @@ const LeaveDates = (props) => {
         label={t("pages.claimsLeaveDates.startDateLabel", {
           context: conditionalContext[claim.leave_details.reason],
         })}
+        example={t("components.form.dateInputExample")}
         hint={
           <React.Fragment>
             <p>
@@ -97,7 +98,6 @@ const LeaveDates = (props) => {
                 context: conditionalContext[claim.leave_details.reason],
               })}
             </p>
-            <p>{t("components.form.dateInputHint")}</p>
           </React.Fragment>
         }
         dayLabel={t("components.form.dateInputDayLabel")}
@@ -109,16 +109,10 @@ const LeaveDates = (props) => {
         label={t("pages.claimsLeaveDates.endDateLabel", {
           context: conditionalContext[claim.leave_details.reason],
         })}
-        hint={
-          <React.Fragment>
-            <p>
-              {t("pages.claimsLeaveDates.endDateHint", {
-                context: conditionalContext[claim.leave_details.reason],
-              })}
-            </p>
-            <p>{t("components.form.dateInputHint")}</p>
-          </React.Fragment>
-        }
+        example={t("components.form.dateInputExample")}
+        hint={t("pages.claimsLeaveDates.endDateHint", {
+          context: conditionalContext[claim.leave_details.reason],
+        })}
         dayLabel={t("components.form.dateInputDayLabel")}
         monthLabel={t("components.form.dateInputMonthLabel")}
         yearLabel={t("components.form.dateInputYearLabel")}

@@ -99,7 +99,7 @@ export const PreviousLeaveCard = (props) => {
           `previous_leaves[${index}].leave_start_date`
         )}
         label={t("pages.claimsPreviousLeavesDetails.startDateLabel")}
-        hint={t("components.form.dateInputHint")}
+        example={t("components.form.dateInputExample")}
         dayLabel={t("components.form.dateInputDayLabel")}
         monthLabel={t("components.form.dateInputMonthLabel")}
         yearLabel={t("components.form.dateInputYearLabel")}
@@ -108,7 +108,7 @@ export const PreviousLeaveCard = (props) => {
       <InputDate
         {...getFunctionalInputProps(`previous_leaves[${index}].leave_end_date`)}
         label={t("pages.claimsPreviousLeavesDetails.endDateLabel")}
-        hint={t("components.form.dateInputHint")}
+        example={t("components.form.dateInputExample")}
         dayLabel={t("components.form.dateInputDayLabel")}
         monthLabel={t("components.form.dateInputMonthLabel")}
         yearLabel={t("components.form.dateInputYearLabel")}

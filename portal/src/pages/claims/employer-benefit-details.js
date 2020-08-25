@@ -133,7 +133,7 @@ export const EmployerBenefitCard = (props) => {
           `employer_benefits[${index}].benefit_start_date`
         )}
         label={t("pages.claimsEmployerBenefitDetails.startDateLabel")}
-        hint={t("components.form.dateInputHint")}
+        example={t("components.form.dateInputExample")}
         dayLabel={t("components.form.dateInputDayLabel")}
         monthLabel={t("components.form.dateInputMonthLabel")}
         yearLabel={t("components.form.dateInputYearLabel")}
@@ -144,7 +144,7 @@ export const EmployerBenefitCard = (props) => {
           `employer_benefits[${index}].benefit_end_date`
         )}
         label={t("pages.claimsEmployerBenefitDetails.endDateLabel")}
-        hint={t("components.form.dateInputHint")}
+        example={t("components.form.dateInputExample")}
         dayLabel={t("components.form.dateInputDayLabel")}
         monthLabel={t("components.form.dateInputMonthLabel")}
         yearLabel={t("components.form.dateInputYearLabel")}
@@ -156,7 +156,7 @@ export const EmployerBenefitCard = (props) => {
             `employer_benefits[${index}].benefit_amount_dollars`
           )}
           label={t("pages.claimsEmployerBenefitDetails.amountLabel")}
-          hint={t("pages.claimsEmployerBenefitDetails.amountHint")}
+          example={t("pages.claimsEmployerBenefitDetails.amountExample")}
           mask="currency"
           optionalText={t("components.form.optional")}
           smallLabel

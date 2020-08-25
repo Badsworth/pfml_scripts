@@ -3,6 +3,7 @@
 exports[`InputDate renders a legend for the fieldset 1`] = `
 <FormLabel
   component="legend"
+  example="Legend example"
   hint="Legend hint"
   optionalText="Optional"
 >

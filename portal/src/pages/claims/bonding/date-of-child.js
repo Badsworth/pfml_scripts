@@ -34,12 +34,8 @@ export const DateOfChild = (props) => {
       <InputDate
         {...getFunctionalInputProps("temp.leave_details.bonding.date_of_child")}
         label={t("pages.claimsBondingDateOfChild.sectionLabel")}
-        hint={
-          <React.Fragment>
-            <p>{t("pages.claimsBondingDateOfChild.hint")}</p>
-            <p>{t("components.form.dateInputHint")}</p>
-          </React.Fragment>
-        }
+        example={t("components.form.dateInputExample")}
+        hint={t("pages.claimsBondingDateOfChild.hint")}
         dayLabel={t("components.form.dateInputDayLabel")}
         monthLabel={t("components.form.dateInputMonthLabel")}
         yearLabel={t("components.form.dateInputYearLabel")}

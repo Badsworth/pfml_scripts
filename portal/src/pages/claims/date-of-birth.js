@@ -33,7 +33,7 @@ export const DateOfBirth = (props) => {
       <InputDate
         {...getFunctionalInputProps("date_of_birth")}
         label={t("pages.claimsDateOfBirth.sectionLabel")}
-        hint={t("components.form.dateInputHint")}
+        example={t("components.form.dateInputExample")}
         dayLabel={t("components.form.dateInputDayLabel")}
         monthLabel={t("components.form.dateInputMonthLabel")}
         yearLabel={t("components.form.dateInputYearLabel")}

@@ -119,7 +119,7 @@ export const OtherIncomeCard = (props) => {
           `other_incomes[${index}].income_start_date`
         )}
         label={t("pages.claimsOtherIncomesDetails.startDateLabel")}
-        hint={t("components.form.dateInputHint")}
+        example={t("components.form.dateInputExample")}
         dayLabel={t("components.form.dateInputDayLabel")}
         monthLabel={t("components.form.dateInputMonthLabel")}
         yearLabel={t("components.form.dateInputYearLabel")}
@@ -128,7 +128,7 @@ export const OtherIncomeCard = (props) => {
       <InputDate
         {...getFunctionalInputProps(`other_incomes[${index}].income_end_date`)}
         label={t("pages.claimsOtherIncomesDetails.endDateLabel")}
-        hint={t("components.form.dateInputHint")}
+        example={t("components.form.dateInputExample")}
         dayLabel={t("components.form.dateInputDayLabel")}
         monthLabel={t("components.form.dateInputMonthLabel")}
         yearLabel={t("components.form.dateInputYearLabel")}
@@ -139,7 +139,7 @@ export const OtherIncomeCard = (props) => {
           `other_incomes[${index}].income_amount_dollars`
         )}
         label={t("pages.claimsOtherIncomesDetails.amountLabel")}
-        hint={t("pages.claimsOtherIncomesDetails.amountHint")}
+        example={t("pages.claimsOtherIncomesDetails.amountExample")}
         mask="currency"
         optionalText={t("components.form.optional")}
         smallLabel

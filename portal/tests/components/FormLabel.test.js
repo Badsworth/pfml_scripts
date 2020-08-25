@@ -51,38 +51,56 @@ describe("FormLabel", () => {
     });
   });
 
+  describe("when component prop is set to label", () => {
+    it("renders label with expected classes", () => {
+      const { wrapper } = render({ component: "label" });
+
+      expect(wrapper).toMatchSnapshot();
+    });
+  });
+
   describe("when hint prop is set", () => {
-    describe("and the hint is a string", () => {
-      it("styles the hint text with hint classes", () => {
-        const { wrapper } = render({ hint: "Hint text" });
+    it("styles the hint as usa-intro", () => {
+      const { wrapper } = render({ hint: "Hint text" });
+      const hint = wrapper.find(".usa-intro").last();
+
+      expect(hint).toMatchInlineSnapshot(`
+        <span
+          className="display-block line-height-sans-5 margin-top-2 usa-intro"
+        >
+          Hint text
+        </span>
+      `);
+    });
+
+    describe("when the label is small", () => {
+      it("styles the hint text as usa-hint", () => {
+        const { wrapper } = render({ hint: "Hint text", small: true });
         const hint = wrapper.find(".usa-hint").last();
 
         expect(hint).toMatchInlineSnapshot(`
           <span
-            className="display-block line-height-sans-5 usa-hint margin-top-05"
+            className="display-block line-height-sans-5 margin-top-2 usa-hint"
           >
             Hint text
           </span>
         `);
       });
     });
+  });
 
-    describe("and the hint is not a string", () => {
-      it("does not style the hint", () => {
-        const hintElement = <p>Hint paragraph</p>;
-        const { wrapper } = render({ hint: hintElement });
-        const hint = wrapper.find("span").last();
+  describe("when example prop is set", () => {
+    it("it renders the example text with expected classes", () => {
+      const { wrapper } = render({ example: "Example text" });
+      const example = wrapper.find(".usa-hint").last();
 
-        expect(hint).toMatchInlineSnapshot(`
-          <span
-            className="margin-top-05"
-          >
-            <p>
-              Hint paragraph
-            </p>
-          </span>
-        `);
-      });
+      expect(example).toMatchInlineSnapshot(`
+        <span
+          className="display-block line-height-sans-5 margin-top-2 usa-hint"
+        >
+          Example text
+        </span>
+      `);
     });
   });
 
@@ -138,16 +156,6 @@ describe("FormLabel", () => {
 
       expect(label.prop("className")).toMatchInlineSnapshot(
         `"usa-label maxw-none usa-legend font-heading-sm"`
-      );
-    });
-
-    it("doesn't include a margin on hint text", () => {
-      const { wrapper } = render({ small: true, hint: "Hint text" });
-
-      const hint = wrapper.find(".usa-hint").last();
-
-      expect(hint.prop("className")).toMatchInlineSnapshot(
-        `"display-block line-height-sans-5 usa-hint"`
       );
     });
   });

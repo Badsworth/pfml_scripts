@@ -20,12 +20,18 @@ function FormLabel({ component = "label", small = false, ...props }) {
     "font-heading-lg line-height-sans-2 text-bold": !small,
   });
 
-  const hintClasses = classnames({
-    // Apply hint text styling if the hint is a plain string
-    "display-block line-height-sans-5 usa-hint": typeof props.hint === "string",
-    // Add a bit more top margin between the label and hint when the label text is large
-    "margin-top-05": !small,
-  });
+  const hintClasses = classnames(
+    "display-block line-height-sans-5 margin-top-2",
+    {
+      // Use hint styling for small labels
+      "usa-hint": small,
+      // Use lead styling for regular labels
+      "usa-intro": !small,
+    }
+  );
+
+  const exampleClasses =
+    "display-block line-height-sans-5 margin-top-2 usa-hint";
 
   return (
     <React.Fragment>
@@ -37,6 +43,8 @@ function FormLabel({ component = "label", small = false, ...props }) {
       </LabelElement>
 
       {props.hint && <span className={hintClasses}>{props.hint}</span>}
+
+      {props.example && <span className={exampleClasses}>{props.example}</span>}
 
       {hasError && (
         <span className="usa-error-message" id={errorMsgId} role="alert">
@@ -60,6 +68,10 @@ FormLabel.propTypes = {
    * Localized error message. Setting this enables the error state styling.
    */
   errorMsg: PropTypes.node,
+  /**
+   * Localized example text
+   */
+  example: PropTypes.string,
   /**
    * Localized hint text
    */

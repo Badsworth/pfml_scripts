@@ -81,14 +81,8 @@ const NotifiedEmployer = (props) => {
             "leave_details.employer_notification_date"
           )}
           label={t("pages.claimsNotifiedEmployer.employerNotificationLabel")}
-          hint={
-            <React.Fragment>
-              <p>
-                {t("pages.claimsNotifiedEmployer.employerNotificationDateHint")}
-              </p>
-              <p>{t("components.form.dateInputHint")}</p>
-            </React.Fragment>
-          }
+          hint={t("pages.claimsNotifiedEmployer.employerNotificationDateHint")}
+          example={t("components.form.dateInputExample")}
           dayLabel={t("components.form.dateInputDayLabel")}
           monthLabel={t("components.form.dateInputMonthLabel")}
           yearLabel={t("components.form.dateInputYearLabel")}

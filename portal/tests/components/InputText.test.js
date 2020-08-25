@@ -102,6 +102,15 @@ describe("InputText", () => {
     });
   });
 
+  describe("when example prop is set", () => {
+    it("passes the example to FormLabel", () => {
+      const { props, wrapper } = render({ example: "123" });
+      const label = wrapper.find("FormLabel");
+
+      expect(label.prop("example")).toBe(props.example);
+    });
+  });
+
   describe("when inputMode prop is set", () => {
     it("includes the inputMode on the input field", () => {
       const { wrapper } = render({ inputMode: "decimal" });

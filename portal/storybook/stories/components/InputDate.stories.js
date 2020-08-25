@@ -6,7 +6,7 @@ export default {
   component: InputDate,
 };
 
-export const ControlledField = () => {
+export const ControlledField = (args) => {
   // Setup super simple state management for the change handler and this controlled form component
   const [value, setFieldValue] = useState("2019-01-29");
   const handleOnChange = (evt) => {
@@ -16,20 +16,21 @@ export const ControlledField = () => {
   // Render the form component!
   return (
     <form className="usa-form">
-      <InputDate
-        hint="This is an example of a date field."
-        label="When is your birthday?"
-        name="birthday"
-        onChange={handleOnChange}
-        value={value}
-        dayLabel="Day"
-        monthLabel="Month"
-        yearLabel="Year"
-      />
+      <InputDate onChange={handleOnChange} value={value} {...args} />
 
       <code className="display-block margin-top-3">value: {value}</code>
     </form>
   );
+};
+
+ControlledField.args = {
+  example: "For example, 7 / 11 / 2020",
+  hint: "This is an example of a date field.",
+  label: "When is your birthday?",
+  name: "birthday",
+  dayLabel: "Day",
+  monthLabel: "Month",
+  yearLabel: "Year",
 };
 
 export const WithError = () => {
@@ -53,6 +54,8 @@ export const WithSmallLabel = () => {
   return (
     <form className="usa-form">
       <InputDate
+        example="For example, 12 / 25 / 1990"
+        hint="Enter it as it appears on your ID."
         label="When is your birthday?"
         name="birthday"
         dayLabel="Day"
