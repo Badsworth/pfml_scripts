@@ -44,11 +44,11 @@ def test_fs_path_for_s3(tmp_path):
 def dor_employer_lookups(test_db_session):
 
     # setup employer expected lookup values
-    state = GeoState(geo_state_description="MA")
-    test_db_session.add(state)
+    GeoState.sync_to_database(test_db_session)
+    state = GeoState.get_instance(test_db_session, template=GeoState.MA)
 
-    country = Country(country_description="US")
-    test_db_session.add(country)
+    Country.sync_to_database(test_db_session)
+    country = Country.get_instance(test_db_session, template=Country.US)
 
     return (state, country)
 

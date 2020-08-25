@@ -19,6 +19,10 @@ class Occupation(str, LookupEnum):
     engineer = "Engineer"
     health_care = "Health Care"
 
+    @classmethod
+    def get_lookup_model(cls):
+        return db_employee_models.LkOccupation
+
 
 class EmploymentStatus(str, LookupEnum):
     employed = "Employed"
@@ -60,7 +64,7 @@ class RelationshipToCaregiver(str, LookupEnum):
 
     @classmethod
     def get_lookup_model(cls):
-        return db_application_models.RelationshipToCareGiver
+        return db_application_models.LkRelationshipToCareGiver
 
 
 class RelationshipQualifier(str, LookupEnum):
@@ -197,7 +201,7 @@ class PaymentMethod(str, LookupEnum):
 
     @classmethod
     def get_lookup_model(cls):
-        return db_employee_models.PaymentType
+        return db_employee_models.LkPaymentType
 
 
 class PaymentAccountType(str, Enum):

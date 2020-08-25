@@ -17,12 +17,8 @@ from massgov.pfml.util.pydantic.types import TaxIdUnformattedStr
 
 @pytest.fixture
 def geo_state_lookup(test_db_session):
-    state = GeoState()
-    state.geo_state_id = 1
-    state.geo_state_description = "MA"
-    test_db_session.add(state)
-
-    return state
+    GeoState.sync_to_database(test_db_session)
+    return GeoState.get_instance(test_db_session, template=GeoState.MA)
 
 
 @pytest.fixture

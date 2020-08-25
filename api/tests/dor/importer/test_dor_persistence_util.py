@@ -49,12 +49,12 @@ def test_get_address(test_db_session):
 
 def test_find_state(test_db_session):
     with pytest.raises(NoResultFound):
-        util.find_state(test_db_session, "MA")
+        util.find_state(test_db_session, "XYZ")
 
 
 def test_find_country(test_db_session):
     with pytest.raises(NoResultFound):
-        util.find_country(test_db_session, "US")
+        util.find_country(test_db_session, "ZYX")
 
 
 def test_create_import_log_entry(test_db_session):

@@ -7,12 +7,12 @@ import massgov.pfml.util.logging as logging
 from massgov.pfml.db.models.employees import (
     Address,
     AddressType,
-    Country,
     Employee,
     Employer,
     EmployerAddress,
-    GeoState,
     ImportLog,
+    LkCountry,
+    LkGeoState,
     TaxIdentifier,
     WagesAndContributions,
 )
@@ -286,13 +286,15 @@ def get_address(db_session, address_id):
     return address_row
 
 
-# TODO find the state by state_name after lookup is fully populated
 def find_state(db_session, state_name):
-    state = db_session.query(GeoState).filter(GeoState.geo_state_description == "MA").one()
+    state = (
+        db_session.query(LkGeoState).filter(LkGeoState.geo_state_description == state_name).one()
+    )
     return state
 
 
-# TODO find the country by country_name after lookup is fully populated
 def find_country(db_session, country_name):
-    country = db_session.query(Country).filter(Country.country_description == "US").one()
+    country = (
+        db_session.query(LkCountry).filter(LkCountry.country_description == country_name).one()
+    )
     return country

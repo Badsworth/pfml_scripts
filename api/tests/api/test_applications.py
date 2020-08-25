@@ -10,9 +10,8 @@ from massgov.pfml.db.models.applications import (
     Application,
     ApplicationPaymentPreference,
     ContinuousLeavePeriod,
-    RelationshipToCareGiver,
 )
-from massgov.pfml.db.models.employees import Occupation, PaymentType, TaxIdentifier
+from massgov.pfml.db.models.employees import TaxIdentifier
 from massgov.pfml.db.models.factories import ApplicationFactory, UserFactory
 
 
@@ -180,21 +179,14 @@ def test_application_patch(client, user, auth_token, test_db_session):
     update_request_body = sqlalchemy_object_as_dict(application)
     # Change last name
     update_request_body["last_name"] = "Perez"
-    update_request_body["occupation"] = "Engineer"
     update_request_body["leave_details"] = {"relationship_to_caregiver": "Parent"}
     update_request_body["middle_name"] = "Mike"
     update_request_body["employee_ssn"] = "123-45-6789"
+    update_request_body["occupation"] = "Engineer"
 
     # Remove foreign keys as DB does not have all tables populated
     update_request_body.pop("employer_id", None)
     update_request_body.pop("employee_id", None)
-
-    # Seed lookup values until they are done automatically
-    occupation = Occupation(occupation_id=1, occupation_description="Engineer")
-    test_db_session.add(occupation)
-    relationship = RelationshipToCareGiver(relationship_to_caregiver_description="Parent")
-    test_db_session.add(relationship)
-    test_db_session.commit()
 
     response = client.patch(
         "/v1/applications/{}".format(application.application_id),
@@ -207,8 +199,8 @@ def test_application_patch(client, user, auth_token, test_db_session):
     response_body = response.get_json()
     assert response_body.get("data").get("last_name") == "Perez"
     assert response_body.get("data").get("updated_time") == "2020-01-01T00:00:00Z"
-    assert response_body.get("data").get("occupation") == "Engineer"
     assert response_body.get("data").get("middle_name") == "Mike"
+    assert response_body.get("data").get("occupation") == "Engineer"
     assert (
         response_body.get("data").get("leave_details").get("relationship_to_caregiver") == "Parent"
     )
@@ -460,11 +452,6 @@ def test_application_patch_update_leave_period_belonging_to_other_application_bl
 
 def test_application_patch_add_payment_preferences(client, user, auth_token, test_db_session):
     application = ApplicationFactory.create(user=user)
-
-    # seed lookup value we care about
-    payment_method = PaymentType(payment_type_description="Check")
-    test_db_session.add(payment_method)
-    test_db_session.commit()
 
     response = client.patch(
         "/v1/applications/{}".format(application.application_id),

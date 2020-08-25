@@ -29,11 +29,8 @@ def test_payment_preference(test_db_session):
 
     test_db_session.add(application)
 
-    payment_type = PaymentType()
-    payment_type.payment_type_id = 1
-    payment_type.payment_type_description = "ACH"
+    PaymentType.sync_to_database(test_db_session)
 
-    test_db_session.add(payment_type)
     test_db_session.commit()
 
     payment_preference = ApplicationPaymentPreference()

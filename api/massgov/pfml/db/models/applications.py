@@ -5,8 +5,8 @@ from sqlalchemy.orm import relationship
 from massgov.pfml.db.models.employees import (
     Employee,
     Employer,
-    Occupation,
-    PaymentType,
+    LkOccupation,
+    LkPaymentType,
     TaxIdentifier,
     User,
 )
@@ -35,40 +35,64 @@ class LkLeaveReason(Base):
         self.leave_reason_description = leave_reason_description
 
 
-class LeaveReasonQualifier(Base):
+class LkLeaveReasonQualifier(Base):
     __tablename__ = "lk_leave_reason_qualifier"
     leave_reason_qualifier_id = Column(Integer, primary_key=True, autoincrement=True)
     leave_reason_qualifier_description = Column(Text)
 
+    def __init__(self, leave_reason_qualifier_id, leave_reason_qualifier_description):
+        self.leave_reason_qualifier_id = leave_reason_qualifier_id
+        self.leave_reason_qualifier_description = leave_reason_qualifier_description
 
-class LeaveType(Base):
+
+class LkLeaveType(Base):
     __tablename__ = "lk_leave_type"
     leave_type_id = Column(Integer, primary_key=True, autoincrement=True)
     leave_type_description = Column(Text)
 
+    def __init__(self, leave_type_id, leave_type_description):
+        self.leave_type_id = leave_type_id
+        self.leave_type_description = leave_type_description
 
-class RelationshipToCareGiver(Base):
+
+class LkRelationshipToCareGiver(Base):
     __tablename__ = "lk_relationship_to_caregiver"
     relationship_to_caregiver_id = Column(Integer, primary_key=True, autoincrement=True)
     relationship_to_caregiver_description = Column(Text)
 
+    def __init__(self, relationship_to_caregiver_id, relationship_to_caregiver_description):
+        self.relationship_to_caregiver_id = relationship_to_caregiver_id
+        self.relationship_to_caregiver_description = relationship_to_caregiver_description
 
-class RelationshipQualifier(Base):
+
+class LkRelationshipQualifier(Base):
     __tablename__ = "lk_relationship_qualifier"
     relationship_qualifier_id = Column(Integer, primary_key=True, autoincrement=True)
     relationship_qualifier_description = Column(Text)
 
+    def __init__(self, relationship_qualifier_id, relationship_qualifier_description):
+        self.relationship_qualifier_id = relationship_qualifier_id
+        self.relationship_qualifier_description = relationship_qualifier_description
 
-class NotificationMethod(Base):
+
+class LkNotificationMethod(Base):
     __tablename__ = "lk_notification_method"
     notification_method_id = Column(Integer, primary_key=True, autoincrement=True)
     notification_method_description = Column(Text)
 
+    def __init__(self, notification_method_id, notification_method_description):
+        self.notification_method_id = notification_method_id
+        self.notification_method_description = notification_method_description
 
-class FrequencyOrDuration(Base):
+
+class LkFrequencyOrDuration(Base):
     __tablename__ = "lk_frequency_or_duration"
     frequency_or_duration_id = Column(Integer, primary_key=True, autoincrement=True)
     frequency_or_duration_description = Column(Text)
+
+    def __init__(self, frequency_or_duration_id, frequency_or_duration_description):
+        self.frequency_or_duration_id = frequency_or_duration_id
+        self.frequency_or_duration_description = frequency_or_duration_description
 
 
 class Application(Base):
@@ -118,14 +142,14 @@ class Application(Base):
     user = relationship(User)
     employer = relationship(Employer)
     employee = relationship(Employee)
-    occupation = relationship(Occupation)
-    leave_type = relationship(LeaveType)
+    occupation = relationship(LkOccupation)
+    leave_type = relationship(LkLeaveType)
     leave_reason = relationship(LkLeaveReason)
-    leave_reason_qualifier = relationship(LeaveReasonQualifier)
+    leave_reason_qualifier = relationship(LkLeaveReasonQualifier)
     employment_status = relationship(LkEmploymentStatus)
-    relationship_to_caregiver = relationship(RelationshipToCareGiver)
-    relationship_qualifier = relationship(RelationshipQualifier)
-    employer_notification_method = relationship(NotificationMethod)
+    relationship_to_caregiver = relationship(LkRelationshipToCareGiver)
+    relationship_qualifier = relationship(LkRelationshipQualifier)
+    employer_notification_method = relationship(LkNotificationMethod)
     tax_identifier = relationship(TaxIdentifier)
 
     @property
@@ -164,7 +188,7 @@ class ApplicationPaymentPreference(Base):
     name_in_check = Column(Text)
 
     application = relationship(Application, back_populates="payment_preferences")
-    payment_type = relationship(PaymentType)
+    payment_type = relationship(LkPaymentType)
 
 
 class ContinuousLeavePeriod(Base):
@@ -234,6 +258,73 @@ class LeaveReason(LookupTable):
     PREGNANCY_MATERNITY = LkLeaveReason(2, "Pregnancy/Maternity")
     CHILD_BONDING = LkLeaveReason(3, "Child Bonding")
     SERIOUS_HEALTH_CONDITION_EMPLOYEE = LkLeaveReason(4, "Serious Health Condition - Employee")
+
+
+class LeaveReasonQualifier(LookupTable):
+    model = LkLeaveReasonQualifier
+    column_names = ("leave_reason_qualifier_id", "leave_reason_qualifier_description")
+
+    NEW_BORN = LkLeaveReasonQualifier(1, "New Born")
+    SERIOUS_HEALTH_CONDITION = LkLeaveReasonQualifier(2, "Serious Health Condition")
+    WORK_RELATED_ACCIDENT_INJURY = LkLeaveReasonQualifier(3, "Work Related Accident/Injury")
+
+
+class LeaveType(LookupTable):
+    model = LkLeaveType
+    column_names = ("leave_type_id", "leave_type_description")
+
+    BONDING_LEAVE = LkLeaveType(1, "Bonding Leave")
+    MEDICAL_LEAVE = LkLeaveType(2, "Medical Leave")
+    ACCIDENT = LkLeaveType(3, "Accident")
+    MILITARY = LkLeaveType(4, "Military")
+
+
+class RelationshipToCareGiver(LookupTable):
+    model = LkRelationshipToCareGiver
+    column_names = ("relationship_to_caregiver_id", "relationship_to_caregiver_description")
+
+    PARENT = LkRelationshipToCareGiver(1, "Parent")
+    CHILD = LkRelationshipToCareGiver(2, "Child")
+    GRANDPARENT = LkRelationshipToCareGiver(3, "Grandparent")
+    GRANDCHILD = LkRelationshipToCareGiver(4, "Grandchild")
+    OTHER_FAMILY_MEMBER = LkRelationshipToCareGiver(5, "Other Family Member")
+    SERVICE_MEMBER = LkRelationshipToCareGiver(6, "Service Member")
+    INLAW = LkRelationshipToCareGiver(7, "Inlaw")
+    SIBLING = LkRelationshipToCareGiver(8, "Sibling")
+    OTHER = LkRelationshipToCareGiver(9, "Other")
+
+
+class RelationshipQualifier(LookupTable):
+    model = LkRelationshipQualifier
+    column_names = ("relationship_qualifier_id", "relationship_qualifier_description")
+
+    ADOPTIVE = LkRelationshipQualifier(1, "Adoptive")
+    BIOLGICAL = LkRelationshipQualifier(2, "Biological")
+    FOSTER = LkRelationshipQualifier(3, "Foster")
+    CUSTODIAL_PARENT = LkRelationshipQualifier(4, "Custodial Parent")
+    LEGAL_GAURDIAN = LkRelationshipQualifier(5, "Legal Guardian")
+    STEP_PARENT = LkRelationshipQualifier(6, "Step Parent")
+
+
+class NotificationMethod(LookupTable):
+    model = LkNotificationMethod
+    column_names = ("notification_method_id", "notification_method_description")
+
+    IN_WRITING = LkNotificationMethod(1, "In Writing")
+    IN_PERSON = LkNotificationMethod(2, "In Person")
+    BY_TELEPHONE = LkNotificationMethod(3, "By Telephone")
+    OTHER = LkNotificationMethod(4, "Other")
+
+
+class FrequencyOrDuration(LookupTable):
+    model = LkFrequencyOrDuration
+    column_names = ("frequency_or_duration_id", "frequency_or_duration_description")
+
+    DAYS = LkFrequencyOrDuration(1, "Days")
+    WEEKS = LkFrequencyOrDuration(2, "Weeks")
+    MONTHS = LkFrequencyOrDuration(3, "Months")
+    MINUTES = LkFrequencyOrDuration(4, "Minutes")
+    HOURS = LkFrequencyOrDuration(5, "Hours")
 
 
 class EmploymentStatus(LookupTable):
@@ -333,6 +424,12 @@ class Document(Base):
 def sync_lookup_tables(db_session):
     """Synchronize lookup tables to the database."""
     LeaveReason.sync_to_database(db_session)
+    LeaveReasonQualifier.sync_to_database(db_session)
+    LeaveType.sync_to_database(db_session)
+    RelationshipToCareGiver.sync_to_database(db_session)
+    RelationshipQualifier.sync_to_database(db_session)
+    NotificationMethod.sync_to_database(db_session)
+    FrequencyOrDuration.sync_to_database(db_session)
     EmploymentStatus.sync_to_database(db_session)
     DocumentCategory.sync_to_database(db_session)
     DocumentType.sync_to_database(db_session)

@@ -6,18 +6,25 @@ import massgov.pfml.db.models.applications as application_models
 
 def test_by_value(test_db_session):
     # setup
-    leave_reason = application_models.LeaveReasonQualifier(leave_reason_qualifier_description="Foo")
-    test_db_session.add(leave_reason)
-    test_db_session.commit()
+    application_models.LeaveReasonQualifier.sync_to_database(test_db_session)
+    leave_reason = application_models.LeaveReasonQualifier.get_instance(
+        test_db_session, template=application_models.LeaveReasonQualifier.NEW_BORN
+    )
 
     # test
-    lookup_model = lookups.by_value(test_db_session, application_models.LeaveReasonQualifier, "Foo")
+    lookup_model = lookups.by_value(
+        test_db_session,
+        application_models.LkLeaveReasonQualifier,
+        application_models.LeaveReasonQualifier.NEW_BORN.leave_reason_qualifier_description,
+    )
 
     assert lookup_model == leave_reason
 
 
 def test_by_value_none(test_db_session):
-    lookup_model = lookups.by_value(test_db_session, application_models.LeaveReasonQualifier, "Foo")
+    lookup_model = lookups.by_value(
+        test_db_session, application_models.LkLeaveReasonQualifier, "Foo"
+    )
 
     assert lookup_model is None
 

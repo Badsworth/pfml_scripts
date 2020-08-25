@@ -28,64 +28,104 @@ class LkAddressType(Base):
         self.address_description = address_description
 
 
-class GeoState(Base):
+class LkGeoState(Base):
     __tablename__ = "lk_geo_state"
     geo_state_id = Column(Integer, primary_key=True, autoincrement=True)
     geo_state_description = Column(Text)
 
+    def __init__(self, geo_state_id, geo_state_description):
+        self.geo_state_id = geo_state_id
+        self.geo_state_description = geo_state_description
 
-class Country(Base):
+
+class LkCountry(Base):
     __tablename__ = "lk_country"
     country_id = Column(Integer, primary_key=True, autoincrement=True)
     country_description = Column(Text)
 
+    def __init__(self, country_id, country_description):
+        self.country_id = country_id
+        self.country_description = country_description
 
-class ClaimType(Base):
+
+class LkClaimType(Base):
     __tablename__ = "lk_claim_type"
     claim_type_id = Column(Integer, primary_key=True, autoincrement=True)
     claim_type_description = Column(Text)
 
+    def __init__(self, claim_type_id, claim_type_description):
+        self.claim_type_id = claim_type_id
+        self.claim_type_description = claim_type_description
 
-class Race(Base):
+
+class LkRace(Base):
     __tablename__ = "lk_race"
     race_id = Column(Integer, primary_key=True)
     race_description = Column(Text)
 
+    def __init__(self, race_id, race_description):
+        self.race_id = race_id
+        self.race_description = race_description
 
-class MaritalStatus(Base):
+
+class LkMaritalStatus(Base):
     __tablename__ = "lk_marital_status"
     marital_status_id = Column(Integer, primary_key=True, autoincrement=True)
     marital_status_description = Column(Text)
 
+    def __init__(self, marital_status_id, marital_status_description):
+        self.marital_status_id = marital_status_id
+        self.marital_status_description = marital_status_description
 
-class Gender(Base):
+
+class LkGender(Base):
     __tablename__ = "lk_gender"
     gender_id = Column(Integer, primary_key=True, autoincrement=True)
     gender_description = Column(Text)
 
+    def __init__(self, gender_id, gender_description):
+        self.gender_id = gender_id
+        self.gender_description = gender_description
 
-class Occupation(Base):
+
+class LkOccupation(Base):
     __tablename__ = "lk_occupation"
     occupation_id = Column(Integer, primary_key=True)
     occupation_description = Column(Text)
 
+    def __init__(self, occupation_id, occupation_description):
+        self.occupation_id = occupation_id
+        self.occupation_description = occupation_description
 
-class EducationLevel(Base):
+
+class LkEducationLevel(Base):
     __tablename__ = "lk_education_level"
     education_level_id = Column(Integer, primary_key=True, autoincrement=True)
     education_level_description = Column(Text)
 
+    def __init__(self, education_level_id, education_level_description):
+        self.education_level_id = education_level_id
+        self.education_level_description = education_level_description
 
-class Role(Base):
+
+class LkRole(Base):
     __tablename__ = "lk_role"
     role_id = Column(Integer, primary_key=True, autoincrement=True)
     role_description = Column(Text)
 
+    def __init__(self, role_id, role_description):
+        self.role_id = role_id
+        self.role_description = role_description
 
-class PaymentType(Base):
+
+class LkPaymentType(Base):
     __tablename__ = "lk_payment_type"
     payment_type_id = Column(Integer, primary_key=True, autoincrement=True)
     payment_type_description = Column(Text)
+
+    def __init__(self, payment_type_id, payment_type_description):
+        self.payment_type_id = payment_type_id
+        self.payment_type_description = payment_type_description
 
 
 class AuthorizedRepresentative(Base):
@@ -164,11 +204,11 @@ class Employee(Base):
     latest_import_log_id = Column(Integer, ForeignKey("import_log.import_log_id"))
 
     payment_info = relationship(PaymentInformation)
-    race = relationship(Race)
-    marital_status = relationship(MaritalStatus)
-    gender = relationship(Gender)
-    occupation = relationship(Occupation)
-    education_level = relationship(EducationLevel)
+    race = relationship(LkRace)
+    marital_status = relationship(LkMaritalStatus)
+    gender = relationship(LkGender)
+    occupation = relationship(LkOccupation)
+    education_level = relationship(LkEducationLevel)
     latest_import_log = relationship("ImportLog")
     tax_identifier = relationship("TaxIdentifier", back_populates="employee")
 
@@ -229,8 +269,8 @@ class Address(Base):
     country_id = Column(Integer, ForeignKey("lk_country.country_id"))
 
     address_type = relationship(LkAddressType)
-    geo_state = relationship(GeoState)
-    country = relationship(Country)
+    geo_state = relationship(LkGeoState)
+    country = relationship(LkCountry)
     employees: "Query[EmployeeAddress]" = dynamic_loader(
         "EmployeeAddress", back_populates="address"
     )
@@ -332,7 +372,153 @@ class AddressType(LookupTable):
     BUSINESS = LkAddressType(2, "Business")
 
 
+class GeoState(LookupTable):
+    model = LkGeoState
+    column_names = ("geo_state_id", "geo_state_description")
+
+    MA = LkGeoState(1, "MA")
+    AL = LkGeoState(2, "AL")
+    AS = LkGeoState(3, "AS")
+    AZ = LkGeoState(4, "AZ")
+    AR = LkGeoState(5, "AR")
+    CA = LkGeoState(6, "CA")
+    CO = LkGeoState(7, "CO")
+    CT = LkGeoState(8, "CT")
+    DE = LkGeoState(9, "DE")
+    DC = LkGeoState(10, "DC")
+    FM = LkGeoState(11, "FM")
+    FL = LkGeoState(12, "FL")
+    GA = LkGeoState(13, "GA")
+    GU = LkGeoState(14, "GU")
+    HI = LkGeoState(15, "HI")
+    ID = LkGeoState(16, "ID")
+    IL = LkGeoState(17, "IL")
+    IN = LkGeoState(18, "IN")
+    IA = LkGeoState(19, "IA")
+    KS = LkGeoState(20, "KS")
+    KY = LkGeoState(21, "KY")
+    LA = LkGeoState(22, "LA")
+    ME = LkGeoState(23, "ME")
+    MH = LkGeoState(24, "MH")
+    MD = LkGeoState(25, "MD")
+    MI = LkGeoState(26, "MI")
+    MN = LkGeoState(27, "MN")
+    MS = LkGeoState(28, "MS")
+    MO = LkGeoState(29, "MO")
+    MT = LkGeoState(30, "MT")
+    NE = LkGeoState(31, "NE")
+    NV = LkGeoState(32, "NV")
+    NH = LkGeoState(33, "NH")
+    NJ = LkGeoState(34, "NJ")
+    NM = LkGeoState(35, "NM")
+    NY = LkGeoState(36, "NY")
+    NC = LkGeoState(37, "NC")
+    ND = LkGeoState(38, "ND")
+    MP = LkGeoState(39, "MP")
+    OH = LkGeoState(40, "OH")
+    OK = LkGeoState(41, "OK")
+    OR = LkGeoState(42, "OR")
+    PW = LkGeoState(43, "PW")
+    PA = LkGeoState(44, "PA")
+    PR = LkGeoState(45, "PR")
+    RI = LkGeoState(46, "RI")
+    SC = LkGeoState(47, "SC")
+    SD = LkGeoState(48, "SD")
+    TN = LkGeoState(49, "TN")
+    TX = LkGeoState(50, "TX")
+    UT = LkGeoState(51, "UT")
+    VT = LkGeoState(52, "VT")
+    VA = LkGeoState(53, "VA")
+    VI = LkGeoState(54, "VI")
+    WA = LkGeoState(55, "WA")
+    WV = LkGeoState(56, "WV")
+    WI = LkGeoState(57, "WI")
+    WY = LkGeoState(58, "WY")
+
+
+class Country(LookupTable):
+    model = LkCountry
+    column_names = ("country_id", "country_description")
+
+    US = LkCountry(1, "US")
+
+
+class ClaimType(LookupTable):
+    model = LkClaimType
+    column_names = ("claim_type_id", "claim_type_description")
+
+    FAMILY_LEAVE = LkClaimType(1, "Family Leave")
+
+
+class Race(LookupTable):
+    model = LkRace
+    column_names = ("race_id", "race_description")
+
+    BLACK = LkRace(1, "Black")
+    HISPANIC = LkRace(2, "Hispanic")
+    WHITE = LkRace(3, "White")
+
+
+class MaritalStatus(LookupTable):
+    model = LkMaritalStatus
+    column_names = ("marital_status_id", "marital_status_description")
+
+    SINGLE = LkMaritalStatus(1, "Single")
+    MARRIED = LkMaritalStatus(2, "Married")
+    DIVORCED = LkMaritalStatus(3, "Divorced")
+    WIDOWED = LkMaritalStatus(4, "Widowed")
+
+
+class Gender(LookupTable):
+    model = LkGender
+    column_names = ("gender_id", "gender_description")
+
+    FEMALE = LkGender(1, "Female")
+    MALE = LkGender(2, "Male")
+    OTHER = LkGender(3, "Other")
+
+
+class Occupation(LookupTable):
+    model = LkOccupation
+    column_names = ("occupation_id", "occupation_description")
+
+    HEALTH_CARE = LkOccupation(1, "Health Care")
+    SALES_CLERK = LkOccupation(2, "Sales Clerk")
+    ADMINISTRATIVE = LkOccupation(3, "Administrative")
+    ENGINEER = LkOccupation(4, "Engineer")
+
+
+class EducationLevel(LookupTable):
+    model = LkEducationLevel
+    column_names = ("education_level_id", "education_level_description")
+
+
+class Role(LookupTable):
+    model = LkRole
+    column_names = ("role_id", "role_description")
+
+    USER = LkRole(1, "User")
+
+
+class PaymentType(LookupTable):
+    model = LkPaymentType
+    column_names = ("payment_type_id", "payment_type_description")
+
+    ACH = LkPaymentType(1, "ACH")
+    CHECK = LkPaymentType(2, "Check")
+    GIFT_CARD = LkPaymentType(3, "Gift Card")
+
+
 def sync_lookup_tables(db_session):
     """Synchronize lookup tables to the database."""
     AddressType.sync_to_database(db_session)
+    GeoState.sync_to_database(db_session)
+    Country.sync_to_database(db_session)
+    ClaimType.sync_to_database(db_session)
+    Race.sync_to_database(db_session)
+    MaritalStatus.sync_to_database(db_session)
+    Gender.sync_to_database(db_session)
+    Occupation.sync_to_database(db_session)
+    Role.sync_to_database(db_session)
+    PaymentType.sync_to_database(db_session)
     db_session.commit()

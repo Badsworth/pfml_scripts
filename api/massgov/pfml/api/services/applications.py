@@ -40,6 +40,7 @@ def update_from_request(
 
         if isinstance(value, LookupEnum):
             lookup_model = db_lookups.by_value(db_session, value.get_lookup_model(), value)
+
             if lookup_model:
                 if key == "reason":
                     key = "leave_reason"
