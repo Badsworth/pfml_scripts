@@ -71,6 +71,16 @@ const Review = (props) => {
         ].join(" ")}
       </ReviewRow>
 
+      <ReviewRow label={t("pages.claimsReview.residentialAddressLabel")}>
+        {compact([
+          get(claim, "temp.residential_address.line_1"),
+          get(claim, "temp.residential_address.line_2"),
+          get(claim, "temp.residential_address.city"),
+          get(claim, "temp.residential_address.state"),
+        ]).join(", ")}{" "}
+        {get(claim, "temp.residential_address.zip")}
+      </ReviewRow>
+
       {/* TODO: Use the API response for the PII fields */}
       <ReviewRow label={t("pages.claimsReview.userDateOfBirthLabel")}>
         **/**/****

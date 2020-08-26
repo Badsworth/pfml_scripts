@@ -168,6 +168,13 @@ exports[`Review when all data is present renders Review page with the field valu
     Bud Monstera Baxter
   </ReviewRow>
   <ReviewRow
+    label="Residential address"
+  >
+    19 Staniford St, Suite 505, Boston, MA
+     
+    02114
+  </ReviewRow>
+  <ReviewRow
     label="Date of birth"
   >
     **/**/****
@@ -330,6 +337,11 @@ exports[`Review when data is empty does not render strings like 'null' or 'undef
     label="Full name"
   >
       
+  </ReviewRow>
+  <ReviewRow
+    label="Residential address"
+  >
+     
   </ReviewRow>
   <ReviewRow
     label="Date of birth"

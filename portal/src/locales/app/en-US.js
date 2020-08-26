@@ -575,6 +575,7 @@ const pages = {
     pregnancyOrRecentBirthLabel: "$t(shared.pregnancyOrRecentBirthLabel)",
     previousLeaveEntryLabel: "$t(shared.previousLeaveEntryPrefix) {{count}}",
     previousLeaveLabel: "Previous paid or unpaid leave?",
+    residentialAddressLabel: "Residential address",
     title: "Check your answers before sending your application",
     userDateOfBirthLabel: "Date of birth",
     userNameLabel: "Full name",

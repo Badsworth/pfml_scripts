@@ -81,6 +81,13 @@ function fullClaimAttrs() {
         start_date: "2021-09-21",
       },
       payment_preferences: [{ payment_method: PaymentPreferenceMethod.ach }],
+      residential_address: {
+        city: "Boston",
+        line_1: "19 Staniford St",
+        line_2: "Suite 505",
+        state: "MA",
+        zip: "02114",
+      },
     },
   };
 }
