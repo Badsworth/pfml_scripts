@@ -11,7 +11,7 @@ import withClaim from "../../hoc/withClaim";
 
 export const fields = ["claim.pregnant_or_recent_birth"];
 
-const ReasonPregnancy = (props) => {
+export const ReasonPregnancy = (props) => {
   const { appLogic, claim } = props;
   const { t } = useTranslation();
 

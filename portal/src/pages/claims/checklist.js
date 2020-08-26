@@ -5,18 +5,19 @@ import React from "react";
 import Step from "../../components/Step";
 import StepList from "../../components/StepList";
 import StepModel from "../../models/Step";
+import User from "../../models/User";
 import claimantConfig from "../../flows/claimant";
 import routeWithParams from "../../utils/routeWithParams";
 import routes from "../../routes";
 import { useTranslation } from "../../locales/i18n";
 import withClaim from "../../hoc/withClaim";
 
-const Checklist = (props) => {
+export const Checklist = (props) => {
   // TODO: add appErrors.warnings when API validations are in place
   // https://lwd.atlassian.net/browse/CP-509
   const steps = StepModel.createClaimStepsFromMachine(
     claimantConfig,
-    { claim: props.claim, user: props.appLogic.users.user },
+    { claim: props.claim, user: props.user },
     null
   );
   const allStepsComplete = steps.every((step) => step.isComplete);
@@ -66,8 +67,8 @@ const Checklist = (props) => {
 };
 
 Checklist.propTypes = {
-  appLogic: PropTypes.object.isRequired,
   claim: PropTypes.instanceOf(Claim).isRequired,
+  user: PropTypes.instanceOf(User).isRequired,
 };
 
 export default withClaim(Checklist);

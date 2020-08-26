@@ -21,7 +21,7 @@ export const fields = [
 /**
  * A form page to capture a user's attestation of having notified their employer.
  */
-const NotifiedEmployer = (props) => {
+export const NotifiedEmployer = (props) => {
   const { appLogic, claim } = props;
   const { t } = useTranslation();
 

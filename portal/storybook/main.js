@@ -43,6 +43,9 @@ module.exports = {
       include: [path.resolve(__dirname, "../styles")],
     });
 
+    // So that we can use the node.js __filename
+    config.node = { __filename: true };
+
     // Simplify import paths in our Story files
     // For example, we can do:
     // import Foo from "src/components/Foo"
@@ -51,6 +54,8 @@ module.exports = {
     config.resolve = config.resolve || {};
     config.resolve.alias = Object.assign(config.resolve.alias, {
       src: path.resolve(__dirname, "../src"),
+      storybook: path.resolve(__dirname),
+      tests: path.resolve(__dirname, "../tests"),
     });
 
     return config;

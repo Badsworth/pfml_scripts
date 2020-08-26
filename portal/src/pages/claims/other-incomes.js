@@ -12,7 +12,7 @@ import withClaim from "../../hoc/withClaim";
 
 export const fields = ["claim.has_other_incomes"];
 
-const OtherIncomes = (props) => {
+export const OtherIncomes = (props) => {
   const { appLogic, claim } = props;
   const { t } = useTranslation();
 

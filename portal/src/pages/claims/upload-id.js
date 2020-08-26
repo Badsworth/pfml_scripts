@@ -8,7 +8,7 @@ import QuestionPage from "../../components/QuestionPage";
 import { useTranslation } from "../../locales/i18n";
 import withClaim from "../../hoc/withClaim";
 
-const UploadId = (props) => {
+export const UploadId = (props) => {
   const { t } = useTranslation();
   const [stateIdFiles, setStateIdFiles] = useState([]);
   const i18nContext = props.claim.has_state_id ? "mass" : "other";

@@ -12,7 +12,7 @@ import routes from "../../routes";
 import { useTranslation } from "../../locales/i18n";
 import withClaim from "../../hoc/withClaim";
 
-const UploadCertification = (props) => {
+export const UploadCertification = (props) => {
   const { appLogic, claim } = props;
   const { t } = useTranslation();
   const [files, setFiles] = useState([]);

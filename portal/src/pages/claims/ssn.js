@@ -14,7 +14,7 @@ export const fields = ["claim.employee_ssn"];
 /**
  * A form page to capture the worker's SSN or ITIN.
  */
-const Ssn = (props) => {
+export const Ssn = (props) => {
   const { appLogic, claim } = props;
   const { t } = useTranslation();
 
@@ -42,11 +42,8 @@ const Ssn = (props) => {
 };
 
 Ssn.propTypes = {
-  claim: PropTypes.instanceOf(Claim),
+  claim: PropTypes.instanceOf(Claim).isRequired,
   appLogic: PropTypes.object.isRequired,
-  query: PropTypes.shape({
-    claim_id: PropTypes.string,
-  }),
 };
 
 export default withClaim(Ssn);

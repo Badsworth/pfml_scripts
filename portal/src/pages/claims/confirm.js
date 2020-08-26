@@ -7,7 +7,7 @@ import Title from "../../components/Title";
 import { useTranslation } from "../../locales/i18n";
 import withClaim from "../../hoc/withClaim";
 
-const Confirm = (props) => {
+export const Confirm = (props) => {
   const { claim } = props;
   const { t } = useTranslation();
 

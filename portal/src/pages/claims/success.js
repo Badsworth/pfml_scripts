@@ -8,7 +8,7 @@ import { useTranslation } from "../../locales/i18n";
 /**
  * Success page, shown when an application is successfully submitted.
  */
-const Success = () => {
+export const Success = () => {
   const { t } = useTranslation();
 
   return (

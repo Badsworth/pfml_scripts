@@ -17,7 +17,7 @@ export const fields = [
   "claim.temp.leave_details.end_date",
 ];
 
-const LeaveDates = (props) => {
+export const LeaveDates = (props) => {
   const { appLogic, claim } = props;
   const { t } = useTranslation();
   const { formState, updateFields } = useFormState(pick(props, fields).claim);

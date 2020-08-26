@@ -11,7 +11,7 @@ import withClaim from "../../hoc/withClaim";
 
 export const fields = ["claim.temp.leave_details.avg_weekly_work_hours"];
 
-const AverageWorkHours = (props) => {
+export const AverageWorkHours = (props) => {
   const { appLogic, claim } = props;
   const { t } = useTranslation();
 

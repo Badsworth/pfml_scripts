@@ -25,7 +25,7 @@ export const fields = [
 
 export const every6monthsId = "every6months";
 
-const Duration = (props) => {
+export const Duration = (props) => {
   const { appLogic, claim } = props;
   const { t } = useTranslation();
 

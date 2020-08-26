@@ -11,3 +11,12 @@ import { initializeI18n } from "../src/locales/i18n";
 
 // Internationalize strings in our stories
 initializeI18n();
+
+export const parameters = {
+  options: {
+    // Sort stories alphabetically
+    storySort: {
+      method: "alphabetical",
+    },
+  },
+};

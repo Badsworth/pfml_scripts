@@ -1,4 +1,6 @@
-import Claim, { EmploymentStatus } from "../../models/Claim";
+import Claim, {
+  EmploymentStatus as EmploymentStatusEnum,
+} from "../../models/Claim";
 import { get, pick } from "lodash";
 import Alert from "../../components/Alert";
 import ConditionalContent from "../../components/ConditionalContent";
@@ -15,7 +17,7 @@ import withClaim from "../../hoc/withClaim";
 
 export const fields = ["claim.employment_status", "claim.employer_fein"];
 
-const EmploymentStatusPage = (props) => {
+export const EmploymentStatus = (props) => {
   const { appLogic, claim } = props;
   const { t } = useTranslation();
 
@@ -46,11 +48,11 @@ const EmploymentStatusPage = (props) => {
       <InputChoiceGroup
         {...getFunctionalInputProps("employment_status")}
         choices={["employed", "unemployed", "selfEmployed"].map((key) => ({
-          checked: employment_status === EmploymentStatus[key],
+          checked: employment_status === EmploymentStatusEnum[key],
           label: t("pages.claimsEmploymentStatus.choiceLabel", {
             context: key,
           }),
-          value: EmploymentStatus[key],
+          value: EmploymentStatusEnum[key],
         }))}
         label={t("pages.claimsEmploymentStatus.sectionLabel")}
         hint={
@@ -65,7 +67,7 @@ const EmploymentStatusPage = (props) => {
         getField={getField}
         removeField={removeField}
         updateFields={updateFields}
-        visible={employment_status === EmploymentStatus.employed}
+        visible={employment_status === EmploymentStatusEnum.employed}
       >
         <InputText
           {...getFunctionalInputProps("employer_fein")}
@@ -79,12 +81,9 @@ const EmploymentStatusPage = (props) => {
   );
 };
 
-EmploymentStatusPage.propTypes = {
+EmploymentStatus.propTypes = {
   appLogic: PropTypes.object.isRequired,
   claim: PropTypes.instanceOf(Claim).isRequired,
-  query: PropTypes.shape({
-    claim_id: PropTypes.string,
-  }).isRequired,
 };
 
-export default withClaim(EmploymentStatusPage);
+export default withClaim(EmploymentStatus);

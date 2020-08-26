@@ -19,7 +19,7 @@ import withClaim from "../../hoc/withClaim";
 // this array for determining which steps are completed
 export const fields = ["claim.temp.payment_preferences[0].payment_method"];
 
-const PaymentMethod = (props) => {
+export const PaymentMethod = (props) => {
   const { appLogic, claim } = props;
   const { t } = useTranslation();
 

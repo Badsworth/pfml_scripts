@@ -13,7 +13,7 @@ import withClaim from "../../hoc/withClaim";
 
 export const fields = ["claim.has_previous_leaves"];
 
-const PreviousLeave = (props) => {
+export const PreviousLeaves = (props) => {
   const { appLogic, claim } = props;
   const { t } = useTranslation();
 
@@ -70,11 +70,11 @@ const PreviousLeave = (props) => {
   );
 };
 
-PreviousLeave.propTypes = {
+PreviousLeaves.propTypes = {
   claim: PropTypes.instanceOf(Claim),
   query: PropTypes.shape({
     claim_id: PropTypes.string,
   }),
   appLogic: PropTypes.object.isRequired,
 };
-export default withClaim(PreviousLeave);
+export default withClaim(PreviousLeaves);

@@ -2,6 +2,7 @@ import Claim, {
   ContinuousLeavePeriod,
   IntermittentLeavePeriod,
   LeaveReason,
+  PaymentPreferenceMethod,
   ReducedScheduleLeavePeriod,
 } from "../src/models/Claim";
 import { mount, shallow } from "enzyme";
@@ -63,6 +64,23 @@ export class MockClaimBuilder {
   /**
    * @returns {MockClaimBuilder}
    */
+  hasOtherId() {
+    set(this.claimAttrs, "has_state_id", false);
+    return this;
+  }
+
+  /**
+   * @returns {MockClaimBuilder}
+   */
+  hasStateId() {
+    set(this.claimAttrs, "has_state_id", true);
+    set(this.claimAttrs, "mass_id", "*********");
+    return this;
+  }
+
+  /**
+   * @returns {MockClaimBuilder}
+   */
   intermittent(attrs) {
     set(
       this.claimAttrs,
@@ -101,6 +119,43 @@ export class MockClaimBuilder {
 
   medicalLeaveReason() {
     set(this.claimAttrs, "leave_details.reason", LeaveReason.medical);
+    return this;
+  }
+
+  notifiedEmployer() {
+    set(this.claimAttrs, "leave_details.employer_notified", true);
+    set(
+      this.claimAttrs,
+      "leave_details.employer_notification_date",
+      "2020-08-26"
+    );
+    return this;
+  }
+
+  notNotifiedEmployer() {
+    set(this.claimAttrs, "leave_details.employer_notified", false);
+    return this;
+  }
+
+  complete() {
+    this.verifiedId();
+    this.medicalLeaveReason();
+    this.continuous();
+    set(
+      this.claimAttrs,
+      "temp.payment_preferences[0].payment_method",
+      PaymentPreferenceMethod.ach
+    );
+    return this;
+  }
+
+  verifiedId() {
+    set(this.claimAttrs, "first_name", "Jane");
+    set(this.claimAttrs, "middle_name", "");
+    set(this.claimAttrs, "last_name", "Doe");
+    set(this.claimAttrs, "date_of_birth", "1980-07-17");
+    set(this.claimAttrs, "employee_ssn", "***-**-****");
+    this.hasStateId();
     return this;
   }
 

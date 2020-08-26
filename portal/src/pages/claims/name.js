@@ -16,7 +16,7 @@ export const fields = [
   "claim.last_name",
 ];
 
-const Name = (props) => {
+export const Name = (props) => {
   const { appLogic, claim } = props;
   const { t } = useTranslation();
   const { formState, updateFields } = useFormState(pick(props, fields).claim);
@@ -56,11 +56,8 @@ const Name = (props) => {
 };
 
 Name.propTypes = {
-  claim: PropTypes.instanceOf(Claim),
   appLogic: PropTypes.object.isRequired,
-  query: PropTypes.shape({
-    claim_id: PropTypes.string,
-  }),
+  claim: PropTypes.instanceOf(Claim).isRequired,
 };
 
 export default withClaim(Name);
