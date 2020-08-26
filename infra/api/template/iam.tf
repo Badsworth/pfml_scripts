@@ -385,6 +385,43 @@ data "aws_iam_policy_document" "db_user_pfml_api" {
   }
 }
 
+data "aws_iam_policy_document" "cloudtrail_logging" {
+  statement {
+    sid = "WriteCloudtrailLogs"
+
+    effect = "Allow"
+    principals {
+      type        = "Service"
+      identifiers = ["cloudtrail.amazonaws.com"]
+    }
+    actions = [
+      "s3:PutObject"
+    ]
+    resources = [
+      "arn:aws:s3:::massgov-pfml-${var.environment_name}-cloudtrail-s3-logging/AWSLogs/${data.aws_caller_identity.current.account_id}/*"
+    ]
+    condition {
+      test     = "StringEquals"
+      variable = "s3:x-amz-acl"
+      values   = ["bucket-owner-full-control"]
+    }
+  }
+
+  statement {
+    sid = "CloudtrailAclCheck"
+
+    effect = "Allow"
+    principals {
+      type        = "Service"
+      identifiers = ["cloudtrail.amazonaws.com"]
+    }
+    actions = [
+      "s3:GetBucketAcl"
+    ]
+    resources = ["arn:aws:s3:::massgov-pfml-${var.environment_name}-cloudtrail-s3-logging"]
+  }
+}
+
 resource "aws_iam_policy" "db_user_pfml_api" {
   name   = "${local.app_name}-${var.environment_name}-db_user_pfml_api-policy"
   policy = data.aws_iam_policy_document.db_user_pfml_api.json
