@@ -707,6 +707,13 @@ const components = {
     genericHeading: "An error was encountered",
     genericHeading_plural: "{{count}} errors were encountered",
   },
+  fieldsetAddress: {
+    cityLabel: "City",
+    line1Label: "Street address 1",
+    line2Label: "Street address 2",
+    stateLabel: "State",
+    zipLabel: "ZIP",
+  },
   fileCard: {
     removeButton: "Remove file",
   },

@@ -107,6 +107,13 @@ describe("Dropdown", () => {
 
       expect(formGroup.hasClass("usa-form-group--error")).toBe(true);
     });
+
+    it("adds error classes to the field", () => {
+      const { wrapper } = render({ errorMsg: "Oh no." });
+      const formGroup = wrapper.find(".usa-select");
+
+      expect(formGroup.hasClass("usa-input--error")).toBe(true);
+    });
   });
 
   describe("when `smallLabel` is true", () => {

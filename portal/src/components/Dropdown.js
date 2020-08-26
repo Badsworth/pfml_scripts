@@ -14,6 +14,10 @@ function Dropdown(props) {
   const hasError = !!props.errorMsg;
   const inputId = useUniqueId("Dropdown");
 
+  const fieldClasses = classnames("usa-select", {
+    "usa-input--error": hasError,
+  });
+
   const formGroupClasses = classnames("usa-form-group", {
     "usa-form-group--error": hasError,
   });
@@ -31,7 +35,7 @@ function Dropdown(props) {
       </FormLabel>
 
       <select
-        className="usa-select"
+        className={fieldClasses}
         id={inputId}
         name={props.name}
         onChange={props.onChange}
