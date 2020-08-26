@@ -40,11 +40,25 @@ const errors = {
   caughtError_UserNotFoundError:
     "Sorry, we were unable to retrieve your account. Please log out and try again. If this continues to happen, you may call the Paid Family Leave Contact Center at $t(shared.callCenterPhoneNumber)",
   claims: {
+    child_birth_date: {
+      pattern: "Please enter a valid date of birth.",
+    },
+    child_placement_date: {
+      pattern: "Please enter a valid placement date.",
+    },
+    date_of_birth: {
+      pattern: "Please enter a valid date of birth.",
+    },
     employee_ssn: {
       pattern: "Please enter a 9-digit Social Security Number.",
     },
     employer_fein: {
       pattern: "Please enter a 9-digit FEIN.",
+    },
+    leave_details: {
+      employer_notification_date: {
+        pattern: "Please enter a valid notification date.",
+      },
     },
     mass_id: {
       pattern: "Please enter your ID in the correct format.",
