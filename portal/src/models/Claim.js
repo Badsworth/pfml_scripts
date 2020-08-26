@@ -13,6 +13,7 @@ class Claim extends BaseModel {
       created_at: null,
       date_of_birth: null,
       employee_ssn: null,
+      // array of EmployerBenefit objects. See the EmployerBenefit model
       employer_benefits: [],
       employer_fein: null,
       employment_status: null,
@@ -35,8 +36,10 @@ class Claim extends BaseModel {
       },
       mass_id: null,
       middle_name: null,
+      // array of OtherIncome objects. See the OtherIncome model
       other_incomes: [],
       pregnant_or_recent_birth: null,
+      // array of PreviousLeave objects. See the PreviousLeave model
       previous_leaves: [],
       status: null,
       /**
