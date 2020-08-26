@@ -73,7 +73,7 @@ resource "aws_lambda_function_event_invoke_config" "dor_import_invoke_config" {
 
 resource "aws_lambda_function" "cognito_post_confirmation" {
   s3_bucket = data.aws_s3_bucket.lambda_build.bucket
-  s3_key    = var.cognito_post_confirmation_lambda_artifact_s3_key
+  s3_key    = "cognito-post-confirmation/${var.cognito_post_confirmation_lambda_artifact_s3_key}"
 
   # This function is connected to Cognito in the Portal Terraform configs via
   # this name, any changes to the function name should be done by deploying a
