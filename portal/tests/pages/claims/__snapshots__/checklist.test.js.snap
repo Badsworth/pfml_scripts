@@ -76,6 +76,34 @@ exports[`Checklist renders page 1`] = `
       />
     </Step>
     <Step
+      key="uploadId"
+      status="disabled"
+      stepHref="/claims/upload-id?claim_id=mock_application_id"
+      title="Upload identity document"
+    >
+      <span
+        dangerouslySetInnerHTML={
+          Object {
+            "__html": "Upload proof of identity. If you entered a Massachusetts driver’s license or Mass ID number in step 1, upload the same ID.",
+          }
+        }
+      />
+    </Step>
+    <Step
+      key="uploadCertification"
+      status="disabled"
+      stepHref="/claims/upload-certification?claim_id=mock_application_id"
+      title="Upload leave certification"
+    >
+      <span
+        dangerouslySetInnerHTML={
+          Object {
+            "__html": "pages.claimsChecklist.stepHTMLDescription",
+          }
+        }
+      />
+    </Step>
+    <Step
       key="payment"
       status="disabled"
       stepHref="/claims/payment-method?claim_id=mock_application_id"

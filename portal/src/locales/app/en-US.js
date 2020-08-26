@@ -231,6 +231,8 @@ const pages = {
       "You will need to know:<ul class='usa-list'><li>If you will use any employer-sponsored benefits during your leave.</li><li>If you will receive income from any other sources during your leave.</li><li>The dates for any paid or unpaid leave you’ve taken since January 1, 2021 for a qualifying condition.</li></ul>",
     stepHTMLDescription_payment:
       "You will need to know:<ul class='usa-list'><li>Your bank account information, if you want to be paid through Direct Deposit.</li></ul>",
+    stepHTMLDescription_uploadId:
+      "Upload proof of identity. If you entered a Massachusetts driver’s license or Mass ID number in step 1, upload the same ID.",
     stepHTMLDescription_verifyId:
       "You will need:<ul class='usa-list'><li>Proof of your identity, like a driver’s license. See the full list of accepted identity documents.</li><li>Your Social Security Number or Individual Taxpayer Identification Number.</li></ul>",
     stepListTitle: "Create a new application",
@@ -238,6 +240,8 @@ const pages = {
     stepTitle_leaveDetails: "Enter leave details",
     stepTitle_otherLeave: "Report other leave and benefits",
     stepTitle_payment: "Add payment information",
+    stepTitle_uploadCertification: "Upload leave certification",
+    stepTitle_uploadId: "Upload identity document",
     stepTitle_verifyId: "Verify your identity",
     submitButton: "Review and submit application",
   },

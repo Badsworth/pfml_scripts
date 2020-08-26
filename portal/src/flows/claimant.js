@@ -77,6 +77,8 @@ export default {
         OTHER_LEAVE: routes.claims.employerBenefits,
         EMPLOYER_INFORMATION: routes.claims.employmentStatus,
         PAYMENT: routes.claims.paymentMethod,
+        UPLOAD_CERTIFICATION: routes.claims.uploadCertification,
+        UPLOAD_ID: routes.claims.uploadId,
         CONFIRM: routes.claims.confirm,
       },
     },
@@ -116,18 +118,18 @@ export default {
         fields: stateIdFields,
       },
       on: {
-        CONTINUE: routes.claims.uploadId,
+        CONTINUE: routes.claims.ssn,
       },
     },
     [routes.claims.uploadId]: {
       meta: {
-        step: ClaimSteps.verifyId,
+        step: ClaimSteps.uploadId,
         // user fields are not currently evaluated
         // when determining step completeness
         fields: [],
       },
       on: {
-        CONTINUE: routes.claims.ssn,
+        CONTINUE: routes.claims.checklist,
       },
     },
     [routes.claims.ssn]: {
@@ -166,16 +168,16 @@ export default {
         fields: reasonPregnancyFields,
       },
       on: {
-        CONTINUE: routes.claims.uploadCertification,
+        CONTINUE: routes.claims.duration,
       },
     },
     [routes.claims.uploadCertification]: {
       meta: {
-        step: ClaimSteps.leaveDetails,
+        step: ClaimSteps.uploadCertification,
         fields: [],
       },
       on: {
-        CONTINUE: routes.claims.duration,
+        CONTINUE: routes.claims.checklist,
       },
     },
     [routes.claims.duration]: {
@@ -201,7 +203,7 @@ export default {
         fields: dateOfChildFields,
       },
       on: {
-        CONTINUE: routes.claims.uploadCertification,
+        CONTINUE: routes.claims.duration,
       },
     },
     [routes.claims.averageWorkHours]: {

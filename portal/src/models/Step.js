@@ -11,6 +11,8 @@ export const ClaimSteps = {
   leaveDetails: "leaveDetails",
   employerInformation: "employerInformation",
   otherLeave: "otherLeave",
+  uploadId: "uploadId",
+  uploadCertification: "uploadCertification",
   payment: "payment",
 };
 
@@ -201,6 +203,22 @@ export default class Step extends BaseModel {
       warnings,
     });
 
+    const uploadId = new Step({
+      name: ClaimSteps.uploadId,
+      pages: pagesByStep[ClaimSteps.uploadId],
+      dependsOn: [verifyId, leaveDetails],
+      context,
+      warnings,
+    });
+
+    const uploadCertification = new Step({
+      name: ClaimSteps.uploadCertification,
+      pages: pagesByStep[ClaimSteps.uploadCertification],
+      dependsOn: [verifyId, leaveDetails],
+      context,
+      warnings,
+    });
+
     const payment = new Step({
       name: ClaimSteps.payment,
       pages: pagesByStep[ClaimSteps.payment],
@@ -209,6 +227,14 @@ export default class Step extends BaseModel {
       warnings,
     });
 
-    return [verifyId, leaveDetails, employerInformation, otherLeave, payment];
+    return [
+      verifyId,
+      leaveDetails,
+      employerInformation,
+      otherLeave,
+      uploadId,
+      uploadCertification,
+      payment,
+    ];
   };
 }

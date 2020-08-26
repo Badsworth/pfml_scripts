@@ -53,6 +53,7 @@ const Checklist = (props) => {
             <span
               dangerouslySetInnerHTML={{
                 __html: t("pages.claimsChecklist.stepHTMLDescription", {
+                  // TODO (CP-900): Render a conditional description for the "Upload certification" step
                   context: step.name,
                 }),
               }}

@@ -247,6 +247,8 @@ describe("claimFlowConfigs", () => {
     LEAVE_DETAILS: {},
     OTHER_LEAVE: {},
     EMPLOYER_INFORMATION: {},
+    UPLOAD_CERTIFICATION: {},
+    UPLOAD_ID: {},
     PAYMENT: {},
     CONFIRM: {},
     CONSENT_TO_DATA_SHARING: {},
@@ -278,7 +280,7 @@ describe("claimFlowConfigs", () => {
 
   /* eslint-disable jest/expect-expect */
   it("should have full coverage", () => {
-    // test that all routes `test` methods were evaluted at least once
+    // test that all routes `test` methods were evaluated at least once
     return testModel.testCoverage();
   });
   /* eslint-enable jest/expect-expect */

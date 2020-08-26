@@ -180,7 +180,7 @@ describe("Step Model", () => {
         ...value.meta,
       }));
 
-      expect(steps).toHaveLength(5);
+      expect(steps).toHaveLength(7);
       expect(steps.map((s) => s.name)).toEqual(Object.keys(ClaimSteps));
       steps.forEach((s) => {
         expect(s).toBeInstanceOf(Step);
