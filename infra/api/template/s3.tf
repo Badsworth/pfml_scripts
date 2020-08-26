@@ -99,7 +99,7 @@ resource "aws_s3_bucket_public_access_block" "cloudtrail_block_public_access" {
 }
 
 resource "aws_cloudtrail" "massgov_pfml_s3_logging" {
-  name           = "massgov-pfml-s3-logging"
+  name           = "massgov-pfml-${var.environment_name}-s3-logging"
   s3_bucket_name = aws_s3_bucket.cloudtrail_s3_logging_bucket.id
   depends_on     = [aws_s3_bucket.cloudtrail_s3_logging_bucket]
 
