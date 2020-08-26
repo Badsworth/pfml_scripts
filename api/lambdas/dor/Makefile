@@ -30,7 +30,7 @@ get-release-deps-url: ## Get S3 URL for uploaded release's dependent layer(s) fr
 	@jq -r '.Resources.DependenciesLayer.Properties.ContentUri' $(RELEASE_INFO_FILE)
 
 get-release-deps-key: ## Get just the S3 key (i.e., path without the bucket name) for uploaded release's dependent layer(s)
-	@jq -r '.Resources.DependenciesLayer.Properties.ContentUri' $(RELEASE_INFO_FILE) | sed "s|s3://${LAMBDA_BUILD_BUCKET}/||"
+	@jq -r '.Resources.DependenciesLayer.Properties.ContentUri' $(RELEASE_INFO_FILE) | sed "s|s3://${LAMBDA_BUILD_BUCKET}/${LAMBDA_BUILD_PREFIX}/||"
 
 ## Mock DOR file generation
 

@@ -1,3 +1,14 @@
+locals {
+  # This ARN describes a 3rd-party lambda layer sourced directly from New Relic. It is not managed with Terraform.
+  # This layer causes telemetry data to be generated and logged to CloudWatch as a side effect of lambda invocation.
+  newrelic_log_ingestion_layer = "arn:aws:lambda:us-east-1:451483290750:layer:NewRelicNodeJS12X:18"
+
+  # This ARN describes a 3rd-party lambda installed outside of Terraform thru the AWS Serverless Application Repository.
+  # This lambda ingests CloudWatch logs from several sources, and packages them for transmission to New Relic's servers.
+  # This lambda was modified post-installation to fix an apparent bug in the processing/packaging of its telemetry data.
+  newrelic_log_ingestion_lambda = "arn:aws:lambda:us-east-1:498823821309:function:newrelic-log-ingestion"
+}
+
 resource "aws_cognito_user_pool" "claimants_pool" {
   name                     = "massgov-${local.app_name}-${var.environment_name}"
   username_attributes      = ["email"]
@@ -80,9 +91,19 @@ resource "aws_lambda_function" "cognito_custom_message" {
   filename         = data.archive_file.cognito_custom_message.output_path
   source_code_hash = data.archive_file.cognito_custom_message.output_base64sha256
   function_name    = "${local.app_name}-${var.environment_name}-cognito-custom-message"
-  handler          = "lambda.handler"
+  handler          = "newrelic-lambda-wrapper.handler" # the entrypoint of the newrelic instrumentation layer
   role             = aws_iam_role.lambda_basic_executor.arn
+  layers           = [local.newrelic_log_ingestion_layer]
   runtime          = "nodejs12.x"
+
+  environment {
+    variables = {
+      NEW_RELIC_ACCOUNT_ID                  = "2837112"        # PFML account
+      NEW_RELIC_TRUSTED_ACCOUNT_KEY         = "1606654"        # EOLWD parent account
+      NEW_RELIC_LAMBDA_HANDLER              = "lambda.handler" # the actual lambda entrypoint
+      NEW_RELIC_DISTRIBUTED_TRACING_ENABLED = true
+    }
+  }
 }
 
 data "archive_file" "cognito_custom_message" {
@@ -102,4 +123,19 @@ resource "aws_lambda_permission" "allow_cognito_custom_message" {
   function_name = aws_lambda_function.cognito_custom_message.function_name
   principal     = "cognito-idp.amazonaws.com"
   source_arn    = aws_cognito_user_pool.claimants_pool.arn
+}
+
+resource "aws_cloudwatch_log_subscription_filter" "nr_lambda_cognito_custom_msg" {
+  name            = "nr_lambda_cognito_custom_msg"
+  log_group_name  = "/aws/lambda/${aws_lambda_function.cognito_custom_message.function_name}"
+  filter_pattern  = "?REPORT ?NR_LAMBDA_MONITORING ?\"Task timed out\""
+  destination_arn = local.newrelic_log_ingestion_lambda
+}
+
+resource "aws_lambda_permission" "nr_lambda_permission_cognito_custom_msg" {
+  statement_id  = "NRLambdaPermission_CognitoCustomMsg"
+  action        = "lambda:InvokeFunction"
+  function_name = local.newrelic_log_ingestion_lambda
+  principal     = "logs.us-east-1.amazonaws.com"
+  source_arn    = "arn:aws:logs:us-east-1:498823821309:log-group:/aws/lambda/${aws_lambda_function.cognito_custom_message.function_name}:*"
 }

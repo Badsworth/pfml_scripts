@@ -101,8 +101,8 @@ variable "dor_import_lambda_dependencies_s3_key" {
   type        = string
 }
 
-variable "lambda_runtime" {
-  description = "The runtime environment (and version) of lambda functions"
+variable "runtime_py" {
+  description = "Pointer to the Python runtime used by the PFML API lambdas"
   type        = string
   default     = "python3.8"
 }
