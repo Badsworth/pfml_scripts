@@ -214,34 +214,25 @@ jobs:
           role-to-assume: ci-run-deploys
           role-duration-seconds: 3600
 
+      - uses: hashicorp/setup-terraform@v1
+        with:
+          terraform_version: 0.12.24
+          terraform_wrapper: false
+
       - name: Terraform Init
         id: terraform_init
-        uses: hashicorp/terraform-github-actions@master
-        with:
-          tf_actions_version: ${{ env.terraform-version }}
-          tf_actions_subcommand: init
-          tf_actions_comment: false
-          tf_actions_working_dir: ${{ env.terraform-ecs-tasks-dir }}/${{ env.api-env }}
+        run: terraform init
+        working-directory: ${{ env.terraform-ecs-tasks-dir }}/${{ env.api-env }}
 
       - name: Terraform Plan with new docker image
         id: terraform_plan
-        uses: hashicorp/terraform-github-actions@master
-        with:
-          tf_actions_version: ${{ env.terraform-version }}
-          tf_actions_subcommand: plan
-          tf_actions_comment: false
-          tf_actions_working_dir: ${{ env.terraform-ecs-tasks-dir }}/${{ env.api-env }}
-          args: "-out=plan.tfplan"
+        run: terraform plan -out=plan.tfplan
+        working-directory: ${{ env.terraform-ecs-tasks-dir }}/${{ env.api-env }}
 
       - name: Terraform Apply from execution plan
         id: terraform_apply
-        uses: hashicorp/terraform-github-actions@master
-        with:
-          tf_actions_version: ${{ env.terraform-version }}
-          tf_actions_subcommand: apply
-          tf_actions_comment: false
-          tf_actions_working_dir: ${{ env.terraform-ecs-tasks-dir }}/${{ env.api-env }}
-          args: "plan.tfplan"
+        run: terraform apply plan.tfplan
+        working-directory: ${{ env.terraform-ecs-tasks-dir }}/${{ env.api-env }}
 
       - name: Start migration ECS task
         run: make ecr-login && ../bin/run-ecs-task/run-task.sh ${{ env.api-env }} db-migrate-up
@@ -270,34 +261,15 @@ jobs:
           role-to-assume: ci-run-deploys
           role-duration-seconds: 3600
 
+      - uses: hashicorp/setup-terraform@v1
+        with:
+          terraform_version: 0.12.24
+          terraform_wrapper: false
+
       - name: Terraform Init
         id: terraform_init
-        uses: hashicorp/terraform-github-actions@master
-        with:
-          tf_actions_version: ${{ env.terraform-version }}
-          tf_actions_subcommand: init
-          tf_actions_comment: false
-          tf_actions_working_dir: ${{ env.terraform-ecs-tasks-dir }}/${{ env.api-env }}
-
-      - name: Terraform Plan with new docker image
-        id: terraform_plan
-        uses: hashicorp/terraform-github-actions@master
-        with:
-          tf_actions_version: ${{ env.terraform-version }}
-          tf_actions_subcommand: plan
-          tf_actions_comment: false
-          tf_actions_working_dir: ${{ env.terraform-ecs-tasks-dir }}/${{ env.api-env }}
-          args: "-out=plan.tfplan"
-
-      - name: Terraform Apply from execution plan
-        id: terraform_apply
-        uses: hashicorp/terraform-github-actions@master
-        with:
-          tf_actions_version: ${{ env.terraform-version }}
-          tf_actions_subcommand: apply
-          tf_actions_comment: false
-          tf_actions_working_dir: ${{ env.terraform-ecs-tasks-dir }}/${{ env.api-env }}
-          args: "plan.tfplan"
+        run: terraform init
+        working-directory: ${{ env.terraform-ecs-tasks-dir }}/${{ env.api-env }}
 
       - name: Start DB user create ECS task
         run: make ecr-login && ../bin/run-ecs-task/run-task.sh ${{ env.api-env }} db-admin-create-db-users
