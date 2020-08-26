@@ -7,6 +7,8 @@ import { act } from "react-dom/test-utils";
 import { mockRouterEvents } from "next/router";
 import tracker from "../../src/services/tracker";
 
+// see https://github.com/vercel/next.js/issues/5416
+jest.mock("next/dynamic", () => () => (props) => null);
 jest.mock("../../src/services/tracker");
 jest.mock("../../src/api/UsersApi");
 jest.mock("lodash/uniqueId", () => {

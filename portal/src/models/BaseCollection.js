@@ -35,6 +35,10 @@ class BaseCollection {
     throw new Error("Not implemented");
   }
 
+  get isEmpty() {
+    return this.items.length === 0;
+  }
+
   /**
    * Return a single item from the id of the item or
    * undefined if the item is not in the collection

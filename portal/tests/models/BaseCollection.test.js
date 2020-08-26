@@ -46,6 +46,20 @@ describe("BaseCollection", () => {
     });
   });
 
+  describe("#isEmpty", () => {
+    const item1 = { testId: "123" };
+    const item2 = { testId: "456" };
+    const collectionWith2Items = new TestCollection([item1, item2]);
+    const collectionWith1Item = new TestCollection([item1]);
+    const collectionWithNoItems = new TestCollection();
+
+    it("evaluates if collection has any items", () => {
+      expect(collectionWith2Items.isEmpty).toBe(false);
+      expect(collectionWith1Item.isEmpty).toBe(false);
+      expect(collectionWithNoItems.isEmpty).toBe(true);
+    });
+  });
+
   describe("#addItem", () => {
     let initialCollection, item1, item2;
 

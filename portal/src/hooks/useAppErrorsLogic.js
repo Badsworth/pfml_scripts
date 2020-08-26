@@ -43,7 +43,7 @@ const useAppErrorsLogic = () => {
    * @callback clearErrorsFunction
    */
   const clearErrors = () => {
-    setAppErrors(new AppErrorInfoCollection());
+    setAppErrors(() => new AppErrorInfoCollection());
   };
 
   /**

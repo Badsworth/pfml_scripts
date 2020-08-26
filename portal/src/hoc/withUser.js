@@ -29,10 +29,12 @@ const withUser = (Component) => {
       // isn't yet defined, then it'll be defined on a subsequent render, so we won't be able to
       // use the value on this render even if we used `await`
       auth.requireLogin();
-      if (auth.isLoggedIn) {
+      if (auth.isLoggedIn && appLogic.appErrors.isEmpty) {
         users.loadUser();
       }
-    });
+
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [auth.isLoggedIn, appLogic.appErrors.isEmpty]);
 
     useEffect(() => {
       if (users.user) {
@@ -70,6 +72,7 @@ const withUser = (Component) => {
         requireUserConsentToDataAgreement: PropTypes.func.isRequired,
         user: PropTypes.instanceOf(User),
       }).isRequired,
+      appErrors: PropTypes.object.isRequired,
     }).isRequired,
   };
 

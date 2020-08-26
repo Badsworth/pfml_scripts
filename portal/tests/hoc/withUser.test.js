@@ -1,4 +1,6 @@
 import { mount, shallow } from "enzyme";
+import AppErrorInfo from "../../src/models/AppErrorInfo";
+import AppErrorInfoCollection from "../../src/models/AppErrorInfoCollection";
 import React from "react";
 import User from "../../src/models/User";
 import { act } from "react-dom/test-utils";
@@ -57,6 +59,12 @@ describe("withUser", () => {
   it("does not load user if logged in status has not been checked yet", () => {
     appLogic.auth.isLoggedIn = null;
     appLogic.users.user = null;
+    render();
+    expect(appLogic.users.loadUser).not.toHaveBeenCalled();
+  });
+
+  it("does not load user if there is an error", () => {
+    appLogic.appErrors = new AppErrorInfoCollection([new AppErrorInfo()]);
     render();
     expect(appLogic.users.loadUser).not.toHaveBeenCalled();
   });

@@ -23,8 +23,11 @@ const withClaims = (Component) => {
     assert(users.user);
 
     useEffect(() => {
-      appLogic.claims.load();
-    });
+      if (appLogic.appErrors.isEmpty) {
+        appLogic.claims.load();
+      }
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [appLogic.appErrors.isEmpty]);
 
     if (!appLogic.claims.claims) {
       return (
@@ -45,6 +48,7 @@ const withClaims = (Component) => {
       claims: PropTypes.shape({
         load: PropTypes.func.isRequired,
       }).isRequired,
+      appErrors: PropTypes.object.isRequired,
     }).isRequired,
   };
 

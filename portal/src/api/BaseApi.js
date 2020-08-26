@@ -5,10 +5,11 @@ import {
   InternalServerError,
   NetworkError,
   RequestTimeoutError,
-  ServiceUnavialableError,
+  ServiceUnavailableError,
   UnauthorizedError,
 } from "../errors";
 import { Auth } from "@aws-amplify/auth";
+import { compact } from "lodash";
 import tracker from "../services/tracker";
 
 /**
@@ -20,6 +21,85 @@ import tracker from "../services/tracker";
  * @property {number} status - Status code
  * @property {boolean} success - Did the request succeed or fail?
  */
+
+/**
+ * Class that implements the base interaction with API resources
+ */
+export default class BaseApi {
+  constructor() {
+    this.isLoading = false;
+  }
+
+  /**
+   * Root path of API resource without leading slash.
+   */
+  get basePath() {
+    throw new Error("Not implemented.");
+  }
+
+  /**
+   * Send an authenticated API request.
+   * @example const response = await this.request("GET", "users/current");
+   *
+   * @param {string} method - i.e GET, POST, etc
+   * @param {string} subPath - relative path without a leading forward slash
+   * @param {object|FormData} [body] - request body
+   * @param {object} [additionalHeaders] - request headers
+   * @returns {Response} response - rejects on non-2xx status codes
+   */
+  request = async (
+    method,
+    subPath = "",
+    body = null,
+    additionalHeaders = {}
+  ) => {
+    method = method.toUpperCase();
+    validateRequestMethod(method);
+
+    const url = createRequestUrl(this.basePath, subPath);
+    const { accessToken } = await Auth.currentSession();
+
+    const headers = {
+      Authorization: `Bearer ${accessToken.jwtToken}`,
+      "Content-Type": "application/json",
+      ...additionalHeaders,
+    };
+
+    if (this.isLoading) {
+      // We return an object for instances where
+      // requests are made in a React render block.
+      // This allows us to destructure the response value
+      // without throwing a null pointer error.
+      return {};
+    }
+
+    this.isLoading = true;
+
+    const response = await sendRequest(url, {
+      body: createRequestBody(body),
+      headers,
+      method,
+    });
+
+    this.isLoading = false;
+
+    return response;
+  };
+}
+
+/**
+ * Ensure that method is valid HTTP method
+ * @param {string} method - HTTP method
+ * @throws {Error} - if method is not valid
+ */
+function validateRequestMethod(method) {
+  const methods = ["DELETE", "GET", "PATCH", "POST", "PUT"];
+  if (!methods.includes(method)) {
+    throw Error(
+      `Invalid method provided, expected one of: ${methods.join(", ")}`
+    );
+  }
+}
 
 /**
  * Transform the request body into a format that fetch expects
@@ -37,52 +117,23 @@ function createRequestBody(payload) {
 }
 
 /**
- * Create the full URL for a given API path
- * @param {string} apiPath - relative path
- * @returns {string} url
+ * Remove leading slash
+ * @param {string} path - relative path
+ * @returns {string}
  */
-function createRequestUrl(apiPath) {
-  // Remove leading slash from apiPath if it has one
-  const cleanedPath = apiPath.replace(/^\//, "");
-  const apiUrl = process.env.apiUrl;
-
-  return `${apiUrl}/${cleanedPath}`;
+function removeLeadingSlash(path) {
+  return path.replace(/^\//, "");
 }
 
 /**
- * Send an authenticated API request.
- * @example const response = await portalRequest("GET", "users/current");
- *
- * @param {string} method - i.e GET, POST, etc
- * @param {string} apiPath - relative path
- * @param {object|FormData} [payload] - request body
- * @param {object} [headers] - request headers
- * @returns {Response} response - rejects on non-2xx status codes
- * @throws {Error|NetworkError}
+ * Create the full URL for a given API path
+ * @param {...string} paths - Relative api path
+ * @returns {string} url
  */
-async function portalRequest(method, apiPath, payload, headers) {
-  method = method.toUpperCase();
-  const methods = ["DELETE", "GET", "PATCH", "POST", "PUT"];
-  if (!methods.includes(method)) {
-    throw Error(
-      `Invalid method provided, expected one of: ${methods.join(", ")}`
-    );
-  }
-
-  const url = createRequestUrl(apiPath);
-  const { accessToken } = await Auth.currentSession();
-
-  const options = {
-    body: createRequestBody(payload),
-    headers: {
-      Authorization: `Bearer ${accessToken.jwtToken}`,
-      "Content-Type": "application/json",
-      ...headers,
-    },
-    method,
-  };
-
-  return sendRequest(url, options);
+function createRequestUrl(...paths) {
+  // Remove leading slash from apiPath if it has one
+  const cleanedPaths = compact(paths).map(removeLeadingSlash);
+  return [process.env.apiUrl, ...cleanedPaths].join("/");
 }
 
 /**
@@ -143,10 +194,8 @@ const throwError = ({ status }) => {
     case 500:
       throw new InternalServerError();
     case 503:
-      throw new ServiceUnavialableError();
+      throw new ServiceUnavailableError();
     default:
       throw new ApiRequestError();
   }
 };
-
-export default portalRequest;

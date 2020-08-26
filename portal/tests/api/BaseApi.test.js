@@ -5,17 +5,24 @@ import {
   InternalServerError,
   NetworkError,
   RequestTimeoutError,
-  ServiceUnavialableError,
+  ServiceUnavailableError,
   UnauthorizedError,
 } from "../../src/errors";
 import { Auth } from "@aws-amplify/auth";
-import portalRequest from "../../src/api/portalRequest";
+import BaseApi from "../../src/api/BaseApi";
 import tracker from "../../src/services/tracker";
 
 jest.mock("@aws-amplify/auth");
 jest.mock("../../src/services/tracker");
 
-describe("request", () => {
+describe("BaseApi", () => {
+  class TestsApi extends BaseApi {
+    get basePath() {
+      return "/api";
+    }
+  }
+
+  let testsApi;
   const accessTokenJwt =
     "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoiQnVkIn0.YDRecdsqG_plEwM0H8rK7t2z0R3XRNESJB5ZXk-FRN8";
 
@@ -33,11 +40,13 @@ describe("request", () => {
       ok: true,
       status: 200,
     });
+
+    testsApi = new TestsApi();
   });
 
   it("includes an Authorization header with the user's JWT", async () => {
     expect.assertions();
-    await portalRequest("GET", "users");
+    await testsApi.request("GET", "users");
 
     expect(fetch).toHaveBeenCalledWith(
       expect.any(String),
@@ -53,10 +62,10 @@ describe("request", () => {
     expect.assertions();
     const method = "GET";
 
-    await portalRequest(method, "users");
+    await testsApi.request(method, "users");
 
     expect(fetch).toHaveBeenCalledWith(
-      `${process.env.apiUrl}/users`,
+      `${process.env.apiUrl}/api/users`,
       expect.objectContaining({
         method,
       })
@@ -68,10 +77,10 @@ describe("request", () => {
     const method = "POST";
     const body = { first_name: "Anton" };
 
-    await portalRequest(method, "users", body);
+    await testsApi.request(method, "users", body);
 
     expect(fetch).toHaveBeenCalledWith(
-      `${process.env.apiUrl}/users`,
+      `${process.env.apiUrl}/api/users`,
       expect.objectContaining({
         body: JSON.stringify(body),
         method,
@@ -87,10 +96,10 @@ describe("request", () => {
     const method = "PATCH";
     const body = { first_name: "Anton" };
 
-    await portalRequest(method, "users", body);
+    await testsApi.request(method, "users", body);
 
     expect(fetch).toHaveBeenCalledWith(
-      `${process.env.apiUrl}/users`,
+      `${process.env.apiUrl}/api/users`,
       expect.objectContaining({
         body: JSON.stringify(body),
         method,
@@ -106,10 +115,10 @@ describe("request", () => {
     const method = "PUT";
     const body = { first_name: "Anton" };
 
-    await portalRequest(method, "users", body);
+    await testsApi.request(method, "users", body);
 
     expect(fetch).toHaveBeenCalledWith(
-      `${process.env.apiUrl}/users`,
+      `${process.env.apiUrl}/api/users`,
       expect.objectContaining({
         body: JSON.stringify(body),
         method,
@@ -124,21 +133,30 @@ describe("request", () => {
     expect.assertions();
     const method = "DELETE";
 
-    await portalRequest(method, "users");
+    await testsApi.request(method, "users");
 
     expect(fetch).toHaveBeenCalledWith(
-      `${process.env.apiUrl}/users`,
+      `${process.env.apiUrl}/api/users`,
       expect.objectContaining({
         method,
       })
     );
   });
 
+  it("only makes one api request at a time", async () => {
+    await Promise.all([
+      testsApi.request("GET", "users"),
+      testsApi.request("GET", "applications"),
+    ]);
+
+    expect(fetch).toHaveBeenCalledTimes(1);
+  });
+
   it("transforms the method to uppercase", async () => {
     expect.assertions();
     const method = "get";
 
-    await portalRequest(method, "users");
+    await testsApi.request(method, "users");
 
     expect(fetch).toHaveBeenCalledWith(
       expect.any(String),
@@ -153,7 +171,7 @@ describe("request", () => {
     const method = "GET";
     const path = "/users";
 
-    await portalRequest(method, path);
+    await testsApi.request(method, path);
 
     expect(fetch).toHaveBeenCalledWith(
       expect.not.stringMatching("//users"),
@@ -168,7 +186,7 @@ describe("request", () => {
       const body = new FormData();
       body.append("first_name", "Anton");
 
-      await portalRequest(method, "users", body);
+      await testsApi.request(method, "users", body);
 
       expect(fetch).toHaveBeenCalledWith(
         expect.any(String),
@@ -183,9 +201,28 @@ describe("request", () => {
       const method = "WRONG";
 
       await expect(
-        portalRequest(method, "users")
+        testsApi.request(method, "users")
       ).rejects.toThrowErrorMatchingInlineSnapshot(
         `"Invalid method provided, expected one of: DELETE, GET, PATCH, POST, PUT"`
+      );
+    });
+  });
+
+  describe("when additionalHeaders are passed", () => {
+    it("adds headers", async () => {
+      expect.assertions();
+      const method = "PUT";
+      const body = null;
+      const headers = { "X-Header": "X-Header-Value" };
+
+      await testsApi.request(method, "users", body, headers);
+
+      expect(fetch).toHaveBeenCalledWith(
+        expect.any(String),
+        expect.objectContaining({
+          body,
+          headers: expect.objectContaining(headers),
+        })
       );
     });
   });
@@ -200,7 +237,7 @@ describe("request", () => {
         ok: true,
       });
 
-      await expect(portalRequest("GET", "users")).resolves
+      await expect(testsApi.request("GET", "users")).resolves
         .toMatchInlineSnapshot(`
               Object {
                 "data": Object {
@@ -227,7 +264,7 @@ describe("request", () => {
       [403, ForbiddenError],
       [408, RequestTimeoutError],
       [500, InternalServerError],
-      [503, ServiceUnavialableError],
+      [503, ServiceUnavailableError],
       [undefined, ApiRequestError],
       [501, ApiRequestError],
     ];
@@ -243,7 +280,7 @@ describe("request", () => {
             json: jest.fn().mockResolvedValue({}),
           });
 
-          await expect(portalRequest("GET", "users")).rejects.toThrow(
+          await expect(testsApi.request("GET", "users")).rejects.toThrow(
             errorClass
           );
         });
@@ -258,7 +295,7 @@ describe("request", () => {
           .fn()
           .mockRejectedValue(TypeError("Network failure"));
 
-        await expect(portalRequest("GET", "users")).rejects.toThrow(
+        await expect(testsApi.request("GET", "users")).rejects.toThrow(
           NetworkError
         );
       });
@@ -271,7 +308,7 @@ describe("request", () => {
           .mockRejectedValue(TypeError("Network failure"));
 
         try {
-          await portalRequest("GET", "users");
+          await testsApi.request("GET", "users");
         } catch (error) {}
 
         expect(tracker.noticeError).toHaveBeenCalledWith(expect.any(Error));

@@ -18,7 +18,7 @@ function ErrorsSummary(props) {
    * Make sure the user sees the errors summary anytime the list of errors changes
    */
   useEffect(() => {
-    if (errors && errors.items.length > 0) {
+    if (!errors.isEmpty) {
       window.scrollTo(0, 0);
       // Move focus to the alert so screen readers immediately announce that there are errors
       alertRef.current.focus();
@@ -58,6 +58,7 @@ function ErrorsSummary(props) {
 
 ErrorsSummary.propTypes = {
   errors: PropTypes.shape({
+    isEmpty: PropTypes.bool,
     items: PropTypes.array,
     itemsById: PropTypes.object,
   }),

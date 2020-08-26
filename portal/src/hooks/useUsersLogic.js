@@ -22,8 +22,6 @@ const useUsersLogic = ({ appErrorsLogic, isLoggedIn, portalFlow }) => {
   const [user, setUser] = useState();
   const router = useRouter();
 
-  let isLoadingUser = false;
-
   /**
    * Update user through a PATCH request to /users
    * @param {string} user_id - ID of user being updated
@@ -31,16 +29,18 @@ const useUsersLogic = ({ appErrorsLogic, isLoggedIn, portalFlow }) => {
    * @param {Claim} [claim] - Update user in the context of a claim to determine the next page route.
    */
   const updateUser = async (user_id, patchData, claim) => {
+    appErrorsLogic.clearErrors();
+
     try {
-      const { user } = await usersApi.updateUser(user_id, patchData);
+      const { user, success } = await usersApi.updateUser(user_id, patchData);
 
-      setUser(user);
+      if (success) {
+        setUser(user);
 
-      const context = claim ? { claim, user } : { user };
-      const params = claim ? { claim_id: claim.application_id } : null;
-      portalFlow.goToNextPage(context, params);
-
-      appErrorsLogic.clearErrors();
+        const context = claim ? { claim, user } : { user };
+        const params = claim ? { claim_id: claim.application_id } : null;
+        portalFlow.goToNextPage(context, params);
+      }
     } catch (error) {
       appErrorsLogic.catchError(error);
     }
@@ -56,12 +56,8 @@ const useUsersLogic = ({ appErrorsLogic, isLoggedIn, portalFlow }) => {
     }
     // Caching logic: if user has already been loaded, just reuse the cached user
     if (user) return;
-    // Locking logic: prevent simultaneous calls to the same API
-    // TODO (CP-757): Abstract out this pattern
-    if (isLoadingUser) return;
 
     try {
-      isLoadingUser = true;
       const { user, success } = await usersApi.getCurrentUser();
 
       if (success && user) {
@@ -82,8 +78,6 @@ const useUsersLogic = ({ appErrorsLogic, isLoggedIn, portalFlow }) => {
         console.error(error);
       }
       appErrorsLogic.catchError(errorToSet);
-    } finally {
-      isLoadingUser = false;
     }
   };
 

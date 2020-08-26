@@ -142,16 +142,6 @@ describe("useUsersLogic", () => {
       expect(usersApi.getCurrentUser).toHaveBeenCalledTimes(1);
     });
 
-    it("only makes one api request at a time", async () => {
-      await act(async () => {
-        // call loadUser twice in parallel
-        await Promise.all([usersLogic.loadUser(), usersLogic.loadUser()]);
-      });
-
-      expect(usersLogic.user).toBeInstanceOf(User);
-      expect(usersApi.getCurrentUser).toHaveBeenCalledTimes(1);
-    });
-
     it("throws an error if user is not logged in to Cognito", async () => {
       isLoggedIn = false;
       renderHook();

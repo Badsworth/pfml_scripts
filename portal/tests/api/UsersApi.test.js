@@ -1,25 +1,47 @@
+import { Auth } from "@aws-amplify/auth";
 import User from "../../src/models/User";
 import UsersApi from "../../src/api/UsersApi";
-import portalRequest from "../../src/api/portalRequest";
 
-jest.mock("../../src/api/portalRequest");
+jest.mock("@aws-amplify/auth");
+
+const mockFetch = ({
+  response = { data: [], errors: [], warnings: [] },
+  ok = true,
+  status = 200,
+}) => {
+  return jest.fn().mockResolvedValueOnce({
+    json: jest.fn().mockResolvedValueOnce(response),
+    ok,
+    status,
+  });
+};
 
 describe("users API", () => {
   let usersApi;
+  const accessTokenJwt =
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoiQnVkIn0.YDRecdsqG_plEwM0H8rK7t2z0R3XRNESJB5ZXk-FRN8";
 
   beforeEach(() => {
+    jest.resetAllMocks();
+    jest.spyOn(Auth, "currentSession").mockImplementation(() =>
+      Promise.resolve({
+        accessToken: { jwtToken: accessTokenJwt },
+      })
+    );
     usersApi = new UsersApi();
   });
 
   describe("getCurrentUser", () => {
     describe("when the request succeeds", () => {
       beforeEach(() => {
-        portalRequest.mockResolvedValueOnce({
-          data: {
-            email_address: "mock-user@example.com",
+        global.fetch = mockFetch({
+          response: {
+            data: {
+              email_address: "mock-user@example.com",
+            },
           },
           status: 200,
-          success: true,
+          ok: true,
         });
       });
 
@@ -57,27 +79,15 @@ describe("users API", () => {
 
     describe("when the request is unsuccessful", () => {
       beforeEach(() => {
-        portalRequest.mockResolvedValueOnce({
-          data: {},
+        global.fetch = mockFetch({
+          response: { data: {} },
           status: 400,
-          success: false,
+          ok: false,
         });
       });
 
-      it("reports success as false", async () => {
-        expect.assertions();
-
-        const response = await usersApi.getCurrentUser();
-
-        expect(response.success).toBe(false);
-      });
-
-      it("does not set the User in the response", async () => {
-        expect.assertions();
-
-        const response = await usersApi.getCurrentUser();
-
-        expect(response.user).toBeNull();
+      it("throws error", async () => {
+        await expect(usersApi.getCurrentUser()).rejects.toThrow();
       });
     });
   });
@@ -89,13 +99,15 @@ describe("users API", () => {
     });
 
     beforeEach(() => {
-      portalRequest.mockResolvedValueOnce({
-        data: {
-          user_id: "mock-user_id",
-          consented_to_data_sharing: true,
+      global.fetch = mockFetch({
+        response: {
+          data: {
+            user_id: "mock-user_id",
+            consented_to_data_sharing: true,
+          },
         },
         status: 200,
-        success: true,
+        ok: true,
       });
     });
 

@@ -70,46 +70,35 @@ describe("useClaimsLogic", () => {
       expect(getClaimsMock).toHaveBeenCalledTimes(1);
     });
 
-    it("only makes one api request at a time", async () => {
-      await act(async () => {
-        // call load twice in parallel
-        await Promise.all([claimsLogic.load(), claimsLogic.load()]);
-      });
-
-      const claims = claimsLogic.claims.items;
-      expect(claims[0]).toBeInstanceOf(Claim);
-      expect(getClaimsMock).toHaveBeenCalledTimes(1);
-    });
-
     it("throws an error if user has not been loaded", async () => {
       user = null;
       renderHook();
       await expect(claimsLogic.load).rejects.toThrow(/Cannot load claims/);
     });
 
-    describe("when request errors", () => {
-      it("catches the error", async () => {
-        getClaimsMock.mockImplementationOnce(() => {
-          describe("forceReload parameter", () => {
-            it("forces a reload even after claims have been loaded", async () => {
-              await act(async () => {
-                await claimsLogic.load();
-                await claimsLogic.load(true);
-              });
-
-              expect(getClaimsMock).toHaveBeenCalledTimes(2);
-            });
-          });
-
-          throw new Error();
-        });
-
+    describe("forceReload parameter", () => {
+      it("forces a reload even after claims have been loaded", async () => {
         await act(async () => {
           await claimsLogic.load();
+          await claimsLogic.load(true);
         });
 
-        expect(appErrorsLogic.appErrors.items[0].name).toEqual("Error");
+        expect(getClaimsMock).toHaveBeenCalledTimes(2);
       });
+    });
+  });
+
+  describe("when request errors", () => {
+    it("catches the error", async () => {
+      getClaimsMock.mockImplementationOnce(() => {
+        throw new Error();
+      });
+
+      await act(async () => {
+        await claimsLogic.load();
+      });
+
+      expect(appErrorsLogic.appErrors.items[0].name).toEqual("Error");
     });
   });
 

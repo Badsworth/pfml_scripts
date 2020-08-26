@@ -20,8 +20,6 @@ const useClaimsLogic = ({ appErrorsLogic, portalFlow, user }) => {
 
   const claimsApi = useMemo(() => new ClaimsApi({ user }), [user]);
 
-  let isLoadingClaims = false;
-
   /**
    * Load all claims for user
    * This must be called before claims are available
@@ -30,17 +28,15 @@ const useClaimsLogic = ({ appErrorsLogic, portalFlow, user }) => {
   const load = async (forceReload = false) => {
     if (!user) throw new Error("Cannot load claims before user is loaded");
     if (claims && !forceReload) return;
-    if (isLoadingClaims) return;
 
     try {
-      isLoadingClaims = true;
-      const { claims } = await claimsApi.getClaims();
-      setClaims(claims);
-      appErrorsLogic.clearErrors();
+      const { claims, success } = await claimsApi.getClaims();
+      if (success) {
+        setClaims(claims);
+        appErrorsLogic.clearErrors();
+      }
     } catch (error) {
       appErrorsLogic.catchError(error);
-    } finally {
-      isLoadingClaims = false;
     }
   };
 
@@ -59,6 +55,7 @@ const useClaimsLogic = ({ appErrorsLogic, portalFlow, user }) => {
         application_id,
         patchData
       );
+
       const issues = getRelevantIssues(errors, warnings, patchData);
 
       if (issues.length) {

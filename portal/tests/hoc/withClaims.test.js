@@ -1,4 +1,6 @@
 import { mount, shallow } from "enzyme";
+import AppErrorInfo from "../../src/models/AppErrorInfo";
+import AppErrorInfoCollection from "../../src/models/AppErrorInfoCollection";
 import Claim from "../../src/models/Claim";
 import ClaimCollection from "../../src/models/ClaimCollection";
 import React from "react";
@@ -49,6 +51,12 @@ describe("withClaims", () => {
     appLogic.user = appLogic.users.user = null;
     render();
     wrapper.update();
+    expect(appLogic.claims.load).not.toHaveBeenCalled();
+  });
+
+  it("does not load claims if there is an error", () => {
+    appLogic.appErrors = new AppErrorInfoCollection([new AppErrorInfo()]);
+    render();
     expect(appLogic.claims.load).not.toHaveBeenCalled();
   });
 

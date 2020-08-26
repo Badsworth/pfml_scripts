@@ -1,6 +1,6 @@
 /* eslint-disable jsdoc/require-returns */
+import BaseApi from "./BaseApi";
 import User from "../models/User";
-import portalRequest from "./portalRequest";
 import routes from "../routes";
 
 /**
@@ -10,8 +10,8 @@ import routes from "../routes";
  * @property {User} [user] - If the request succeeded, this will contain the created user
  */
 
-export default class UsersApi {
-  get baseRoute() {
+export default class UsersApi extends BaseApi {
+  get basePath() {
     return routes.api.users;
   }
 
@@ -20,9 +20,9 @@ export default class UsersApi {
    * @returns {Promise<UsersApiResult>}
    */
   getCurrentUser = async () => {
-    const { data, success, status } = await portalRequest(
+    const { data, success, status } = await this.request(
       "GET",
-      `${this.baseRoute}/current`,
+      "current",
       null
     );
 
@@ -51,9 +51,9 @@ export default class UsersApi {
       ...workaroundPatchData
     } = patchData;
 
-    const { data, success, status } = await portalRequest(
+    const { data, success, status } = await this.request(
       "PATCH",
-      `${this.baseRoute}/${user_id}`,
+      user_id,
       workaroundPatchData
     );
 

@@ -102,10 +102,10 @@ export class RequestTimeoutError extends ApiRequestError {
 /**
  *  An API response returned a 503 status code
  */
-export class ServiceUnavialableError extends ApiRequestError {
+export class ServiceUnavailableError extends ApiRequestError {
   constructor(...params) {
     super(...params);
-    this.name = "ServiceUnavialableError";
+    this.name = "ServiceUnavailableError";
   }
 }
 

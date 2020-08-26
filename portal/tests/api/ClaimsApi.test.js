@@ -1,51 +1,88 @@
+import { Auth } from "@aws-amplify/auth";
 import Claim from "../../src/models/Claim";
 import ClaimCollection from "../../src/models/ClaimCollection";
 import ClaimsApi from "../../src/api/ClaimsApi";
-import portalRequest from "../../src/api/portalRequest";
 
-jest.mock("../../src/api/portalRequest");
+jest.mock("@aws-amplify/auth");
+
+const mockFetch = ({
+  response = { data: [], errors: [], warnings: [] },
+  ok = true,
+  status = 200,
+}) => {
+  return jest.fn().mockResolvedValueOnce({
+    json: jest.fn().mockResolvedValueOnce(response),
+    ok,
+    status,
+  });
+};
 
 describe("ClaimsApi", () => {
   /** @type {ClaimsApi} */
   let claimsApi;
+  const accessTokenJwt =
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoiQnVkIn0.YDRecdsqG_plEwM0H8rK7t2z0R3XRNESJB5ZXk-FRN8";
+  const headers = {
+    Authorization: `Bearer ${accessTokenJwt}`,
+    "Content-Type": "application/json",
+  };
 
   beforeEach(() => {
-    portalRequest.mockReset();
+    jest.resetAllMocks();
+    jest.spyOn(Auth, "currentSession").mockImplementation(() =>
+      Promise.resolve({
+        accessToken: { jwtToken: accessTokenJwt },
+      })
+    );
     claimsApi = new ClaimsApi();
+  });
+
+  beforeEach(() => {
+    jest.spyOn(Auth, "currentSession").mockImplementation(() =>
+      Promise.resolve({
+        accessToken: { jwtToken: accessTokenJwt },
+      })
+    );
   });
 
   describe("getClaims", () => {
     describe("successful request", () => {
       beforeEach(() => {
-        portalRequest.mockResolvedValueOnce({
-          data: [
-            {
-              application_id: "2a340cf8-6d2a-4f82-a075-73588d003f8f",
-            },
-          ],
+        global.fetch = mockFetch({
+          response: {
+            data: [
+              {
+                application_id: "2a340cf8-6d2a-4f82-a075-73588d003f8f",
+              },
+            ],
+          },
           status: 200,
-          success: true,
+          ok: true,
         });
 
         // Needed for workaround in claimsApi.getClaims
         // This won't be needed once https://lwd.atlassian.net/browse/API-290 is complete
         // TODO: Remove workaround once above ticket is complete: https://lwd.atlassian.net/browse/CP-577
-        portalRequest.mockResolvedValueOnce({
-          data: {
-            application_id: "2a340cf8-6d2a-4f82-a075-73588d003f8f",
-          },
+        global.fetch.mockResolvedValueOnce({
+          json: jest.fn().mockResolvedValueOnce({
+            data: {
+              application_id: "2a340cf8-6d2a-4f82-a075-73588d003f8f",
+            },
+          }),
           status: 200,
-          success: true,
+          ok: true,
         });
       });
 
       it("sends GET request to /applications", async () => {
         await claimsApi.getClaims();
-        expect(portalRequest).toHaveBeenCalledWith(
-          "GET",
-          "/applications",
-          null,
-          undefined
+        expect(fetch).toHaveBeenCalledWith(
+          `${process.env.apiUrl}/applications`,
+          {
+            body: null,
+            headers,
+            method: "GET",
+          }
         );
       });
 
@@ -66,22 +103,26 @@ describe("ClaimsApi", () => {
   describe("createClaim", () => {
     describe("successful request", () => {
       beforeEach(() => {
-        portalRequest.mockResolvedValueOnce({
-          data: {
-            application_id: "mock-application_id",
+        global.fetch = mockFetch({
+          response: {
+            data: {
+              application_id: "mock-application_id",
+            },
           },
           status: 200,
-          success: true,
+          ok: true,
         });
       });
 
       it("sends POST request to /applications", async () => {
         await claimsApi.createClaim();
-        expect(portalRequest).toHaveBeenCalledWith(
-          "POST",
-          "/applications",
-          null,
-          undefined
+        expect(fetch).toHaveBeenCalledWith(
+          `${process.env.apiUrl}/applications`,
+          {
+            body: null,
+            headers,
+            method: "POST",
+          }
         );
       });
 
@@ -100,23 +141,15 @@ describe("ClaimsApi", () => {
 
     describe("unsuccessful request", () => {
       beforeEach(() => {
-        portalRequest.mockResolvedValueOnce({
-          data: null,
+        global.fetch = mockFetch({
+          response: { data: null },
           status: 400,
-          success: false,
+          ok: false,
         });
       });
 
-      it("resolves with success, status, and and no claim instance", async () => {
-        const result = await claimsApi.createClaim();
-
-        expect(result).toMatchInlineSnapshot(`
-          Object {
-            "claim": null,
-            "status": 400,
-            "success": false,
-          }
-        `);
+      it("throws error", async () => {
+        await expect(claimsApi.createClaim()).rejects.toThrow();
       });
     });
   });
@@ -132,10 +165,10 @@ describe("ClaimsApi", () => {
         application_id: "mock-application_id",
       };
 
-      portalRequest.mockResolvedValueOnce({
-        data: mockResponseData,
+      global.fetch = mockFetch({
+        response: { data: mockResponseData },
         status: 200,
-        success: true,
+        ok: true,
       });
     });
 
@@ -143,11 +176,16 @@ describe("ClaimsApi", () => {
       await claimsApi.updateClaim(claim.application_id, claim);
       const { employee_ssn, ...body } = claim;
 
-      expect(portalRequest).toHaveBeenCalledWith(
-        "PATCH",
-        "/applications/mock-application_id",
-        body,
-        { "X-PFML-Warn-On-Missing-Required-Fields": true }
+      expect(fetch).toHaveBeenCalledWith(
+        `${process.env.apiUrl}/applications/${claim.application_id}`,
+        {
+          body: JSON.stringify(body),
+          headers: {
+            ...headers,
+            "X-PFML-Warn-On-Missing-Required-Fields": true,
+          },
+          method: "PATCH",
+        }
       );
     });
 
@@ -157,7 +195,7 @@ describe("ClaimsApi", () => {
       await claimsApi.updateClaim(claim.application_id, {
         employee_ssn: "123-12-3123",
       });
-      const requestBody = portalRequest.mock.calls[0][2];
+      const requestBody = JSON.parse(fetch.mock.calls[0][1].body);
 
       expect(requestBody).toEqual(
         expect.not.objectContaining({ employee_ssn: expect.anything() })
@@ -170,7 +208,7 @@ describe("ClaimsApi", () => {
       await claimsApi.updateClaim(claim.application_id, {
         employee_ssn: "123-12-3123",
       });
-      const requestBody = portalRequest.mock.calls[0][2];
+      const requestBody = JSON.parse(fetch.mock.calls[0][1].body);
 
       expect(requestBody).toEqual(
         expect.objectContaining({ employee_ssn: "123-12-3123" })
@@ -199,20 +237,22 @@ describe("ClaimsApi", () => {
         application_id: "mock-application_id",
       };
 
-      portalRequest.mockResolvedValueOnce({
-        data: mockResponseData,
+      global.fetch = mockFetch({
+        response: { data: mockResponseData },
         status: 200,
-        success: true,
+        ok: true,
       });
     });
 
     it("sends POST request to /applications/:application_id/submit_application", async () => {
       await claimsApi.submitClaim(claim.application_id);
-      expect(portalRequest).toHaveBeenCalledWith(
-        "POST",
-        "/applications/mock-application_id/submit_application",
-        null,
-        undefined
+      expect(fetch).toHaveBeenCalledWith(
+        `${process.env.apiUrl}/applications/${claim.application_id}/submit_application`,
+        {
+          body: null,
+          headers,
+          method: "POST",
+        }
       );
     });
 

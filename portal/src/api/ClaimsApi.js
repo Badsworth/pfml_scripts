@@ -1,9 +1,9 @@
 /* eslint-disable jsdoc/require-returns */
+import BaseApi from "./BaseApi";
 import Claim from "../models/Claim";
 import ClaimCollection from "../models/ClaimCollection";
 import { isFeatureEnabled } from "../services/featureFlags";
 import merge from "lodash/merge";
-import portalRequest from "./portalRequest";
 import routes from "../routes";
 
 /**
@@ -20,27 +20,17 @@ import routes from "../routes";
  * @property {ClaimCollection} [claims] - If the request succeeded, this will contain the created user
  */
 
-export default class ClaimsApi {
-  /**
-   * Private method used by other methods in this class to make REST API requests
-   * related to the /applications resource.
-   * @private
-   * @param {string} method HTTP method
-   * @param {string} [subPath] Sub-path of the /applications resource to use
-   * @param {object} [body] Request body
-   * @param {object} [headers] HTTP headers
-   */
-  claimsRequest = async (method, subPath = "", body = null, headers) => {
-    const apiPath = `${routes.api.claims}${subPath}`;
-    return portalRequest(method, apiPath, body, headers);
-  };
+export default class ClaimsApi extends BaseApi {
+  get basePath() {
+    return routes.api.claims;
+  }
 
   /**
    * Fetches the list of claims for a user
    * @returns {Promise<ClaimsApiListResult>} The result of the API call
    */
   getClaims = async () => {
-    const { data, success, status } = await this.claimsRequest("GET");
+    const { data, success, status } = await this.request("GET");
 
     let claims = null;
     if (success) {
@@ -61,7 +51,7 @@ export default class ClaimsApi {
    * @returns {Promise<ClaimsApiSingleResult>} The result of the API call
    */
   createClaim = async () => {
-    const { data, success, status } = await this.claimsRequest("POST");
+    const { data, success, status } = await this.request("POST");
 
     return {
       success,
@@ -83,15 +73,14 @@ export default class ClaimsApi {
       ? patchData
       : patchDataWithoutExcludedPii;
 
-    const {
-      data,
-      errors,
-      success,
-      status,
-      warnings,
-    } = await this.claimsRequest("PATCH", `/${application_id}`, requestData, {
-      "X-PFML-Warn-On-Missing-Required-Fields": true,
-    });
+    const { data, errors, success, status, warnings } = await this.request(
+      "PATCH",
+      application_id,
+      requestData,
+      {
+        "X-PFML-Warn-On-Missing-Required-Fields": true,
+      }
+    );
 
     // TODO (CP-676): Remove workaround once API returns all the fields in our application
     const workaroundData = merge({ ...data, application_id }, patchData);
@@ -116,9 +105,9 @@ export default class ClaimsApi {
    * @returns {Promise<ClaimsApiSingleResult>} The result of the API call
    */
   submitClaim = async (application_id) => {
-    const { data, status, success } = await this.claimsRequest(
+    const { data, status, success } = await this.request(
       "POST",
-      `/${application_id}/submit_application`
+      `${application_id}/submit_application`
     );
 
     // Currently the API doesn't return the claim data in the response.
