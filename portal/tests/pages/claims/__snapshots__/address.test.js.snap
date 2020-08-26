@@ -1,0 +1,30 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Address renders the page 1`] = `
+<QuestionPage
+  onSave={[Function]}
+  title="Verify your identity"
+>
+  <FieldsetAddress
+    appErrors={
+      AppErrorInfoCollection {
+        "items": Array [],
+        "itemsById": Object {},
+      }
+    }
+    hint="If you are part of an Address Confidentiality Program, please provide your substitute address."
+    label="What is your current residential address?"
+    name="temp.residential_address"
+    onChange={[Function]}
+    value={
+      Address {
+        "city": "Boston",
+        "line_1": "19 Staniford St",
+        "line_2": "Suite 505",
+        "state": "MA",
+        "zip": "02214",
+      }
+    }
+  />
+</QuestionPage>
+`;

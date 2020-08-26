@@ -195,6 +195,12 @@ const pages = {
     title: "Verify your email address",
     usernameLabel: "$t(shared.usernameLabel)",
   },
+  claimsAddress: {
+    hint:
+      "If you are part of an Address Confidentiality Program, please provide your substitute address.",
+    sectionLabel: "What is your current residential address?",
+    title: "$t(shared.claimsVerifyIdTitle)",
+  },
   claimsAverageWorkHours: {
     hint:
       "We’ll confirm this information and use it to calculate your benefit amount. If your schedule varies, tell us the average number of hours you worked over the past 52 weeks.",
