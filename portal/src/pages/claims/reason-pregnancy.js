@@ -3,13 +3,14 @@ import InputChoiceGroup from "../../components/InputChoiceGroup";
 import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
+import get from "lodash/get";
 import { pick } from "lodash";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "../../locales/i18n";
 import withClaim from "../../hoc/withClaim";
 
-export const fields = ["claim.pregnant_or_recent_birth"];
+export const fields = ["claim.leave_details.pregnant_or_recent_birth"];
 
 export const ReasonPregnancy = (props) => {
   const { appLogic, claim } = props;
@@ -26,21 +27,26 @@ export const ReasonPregnancy = (props) => {
     updateFields,
   });
 
+  const pregnancyOrRecentBirth = get(
+    formState,
+    "leave_details.pregnant_or_recent_birth"
+  );
+
   return (
     <QuestionPage
       title={t("pages.claimsReasonPregnancy.title")}
       onSave={handleSave}
     >
       <InputChoiceGroup
-        {...getFunctionalInputProps("pregnant_or_recent_birth")}
+        {...getFunctionalInputProps("leave_details.pregnant_or_recent_birth")}
         choices={[
           {
-            checked: formState.pregnant_or_recent_birth === true,
+            checked: pregnancyOrRecentBirth === true,
             label: t("pages.claimsReasonPregnancy.choiceYes"),
             value: "true",
           },
           {
-            checked: formState.pregnant_or_recent_birth === false,
+            checked: pregnancyOrRecentBirth === false,
             label: t("pages.claimsReasonPregnancy.choiceNo"),
             value: "false",
           },

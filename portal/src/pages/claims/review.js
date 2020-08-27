@@ -115,7 +115,7 @@ export const Review = (props) => {
           <ReviewRow
             label={t("pages.claimsReview.pregnancyOrRecentBirthLabel")}
           >
-            {get(claim, "pregnant_or_recent_birth") === true
+            {get(claim, "leave_details.pregnant_or_recent_birth") === true
               ? t("pages.claimsReview.pregnancyChoiceYes")
               : t("pages.claimsReview.pregnancyChoiceNo")}
           </ReviewRow>

@@ -31,6 +31,7 @@ class Claim extends BaseModel {
         employer_notification_date: null,
         employer_notified: null,
         intermittent_leave_periods: [],
+        pregnant_or_recent_birth: null,
         reason: null,
         reduced_schedule_leave_periods: [],
       },
@@ -38,7 +39,6 @@ class Claim extends BaseModel {
       middle_name: null,
       // array of OtherIncome objects. See the OtherIncome model
       other_incomes: [],
-      pregnant_or_recent_birth: null,
       // array of PreviousLeave objects. See the PreviousLeave model
       previous_leaves: [],
       status: null,
