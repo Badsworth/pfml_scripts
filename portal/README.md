@@ -83,7 +83,7 @@ Check out [this post](https://medium.com/webpack/webpack-bits-getting-the-most-o
 
 ### `npm run docs`
 
-Run the UI component explorer sandbox, [Storybook](https://storybook.js.org/). A new browser window should automatically open with the explorer loaded once this script has completed running. It may take a minute or so to load on initial run.
+Run the UI component explorer sandbox, [Storybook](https://storybook.js.org/). A new browser window should automatically open with the explorer loaded once this script has completed running. It may take a minute or so to load on initial run. [Read more about how we're using Storybook.](../docs/portal/storybook.md)
 
 ### `npm run docs:build`
 
