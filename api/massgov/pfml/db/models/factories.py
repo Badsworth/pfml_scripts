@@ -2,7 +2,7 @@
 # This should be used for seeding tables in development and testing.
 #
 import random
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 
 import factory  # this is from the factory_boy package
@@ -11,6 +11,7 @@ from sqlalchemy.orm import scoped_session
 import massgov.pfml.db as db
 import massgov.pfml.db.models.applications as application_models
 import massgov.pfml.db.models.employees as employee_models
+import massgov.pfml.db.models.verifications as verification_models
 
 db_session = None
 
@@ -35,7 +36,9 @@ class Generators:
     Fein = fein_unformatted[:2] + "-" + fein_unformatted[2:]
     Money = factory.LazyFunction(lambda: Decimal(round(random.uniform(0, 50000), 2)))
     Now = factory.LazyFunction(lambda: datetime.now())
+    UtcNow = factory.LazyFunction(lambda: datetime.utcnow().replace(tzinfo=timezone.utc))
     UuidObj = factory.Faker("uuid4", cast_to=None)
+    VerificationCode = factory.Faker("pystr", max_chars=6, min_chars=6)
 
 
 class BaseFactory(factory.alchemy.SQLAlchemyModelFactory):
@@ -85,6 +88,52 @@ class EmployeeFactory(BaseFactory):
     other_name = None
     email_address = factory.Faker("email")
     phone_number = "942-529-0727"
+
+
+class VerificationTypeFactory(BaseFactory):
+    class Meta:
+        model = verification_models.VerificationType
+
+    verification_type_id = factory.Sequence(lambda n: n)
+    verification_type_description = factory.Faker("pystr")
+
+
+class VerificationFactory(BaseFactory):
+    class Meta:
+        model = verification_models.Verification
+
+    verified_at = Generators.UtcNow
+    verification_code_id = Generators.UuidObj
+    verification_id = Generators.UuidObj
+    verification_type = factory.SubFactory(VerificationTypeFactory)
+    verification_type_id = factory.LazyAttribute(lambda a: a.verification_type.verification_type_id)
+
+
+class VerificationCodeFactory(BaseFactory):
+    class Meta:
+        model = verification_models.VerificationCode
+
+    verification_code_id = Generators.UuidObj
+
+    employer = factory.SubFactory(EmployerFactory)
+    employer_id = factory.LazyAttribute(lambda a: a.employer.employer_fein)
+    employer_fein = factory.LazyAttribute(lambda a: a.employer.employer_id)
+    verification_code = Generators.VerificationCode
+
+    issued_at = Generators.UtcNow
+    expires_at = factory.LazyAttribute(lambda a: a.issue_ts + timedelta(minutes=5))
+    remaining_uses = 1
+
+
+class VerificationCodeLogs(BaseFactory):
+    class Meta:
+        model = verification_models.VerificationCodeLogs
+
+    verification_code_log_id = Generators.UuidObj
+    verification_code_id = Generators.UuidObj
+    result = factory.Faker("sentence")
+    message = factory.Faker("paragraph")
+    created_at = Generators.UtcNow
 
 
 class WagesAndContributionsFactory(BaseFactory):
