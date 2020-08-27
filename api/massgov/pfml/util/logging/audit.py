@@ -14,7 +14,7 @@ def init_security_logging():
     sys.addaudithook(audit_hook)
 
 
-IGNORE_AUDIT_EVENTS = (
+IGNORE_AUDIT_EVENTS = {
     "builtins.id",
     "os.listdir",
     "os.scandir",
@@ -23,9 +23,11 @@ IGNORE_AUDIT_EVENTS = (
     "object.__getattr__",
     "object.__setattr__",
     "exec",
+    "socket.__new__",
+    "sys._current_frames",
     "sys._getframe",
     "sys.settrace",  # interferes with PyCharm debugger
-)
+}
 
 
 AUDIT_EVENT_TO_LEVEL = {"open": logging.INFO}  # noqa: B1
@@ -38,8 +40,5 @@ def audit_hook(event_name, args):
         return
 
     logger.log(
-        AUDIT_EVENT_TO_LEVEL.get(event_name, logging.INFO),  # noqa: B1
-        "pfml-audit-%s %r",
-        event_name,
-        args,
+        AUDIT_EVENT_TO_LEVEL.get(event_name, logging.INFO), "%s %r", event_name, args,  # noqa: B1
     )
