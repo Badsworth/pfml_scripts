@@ -57,7 +57,7 @@ resource "aws_lambda_function" "dor_import" {
       FOLDER_PATH                            = "s3://massgov-pfml-${var.environment_name}-agency-transfer/dor/received"
       NEW_RELIC_ACCOUNT_ID                   = local.newrelic_account_id
       NEW_RELIC_TRUSTED_ACCOUNT_KEY          = local.newrelic_trusted_account_key
-      NEW_RELIC_LAMBDA_HANDLER               = "import_dor.handler" # the actual lambda entrypoint
+      NEW_RELIC_LAMBDA_HANDLER               = "handler.handler" # the actual lambda entrypoint
       NEW_RELIC_DISTRIBUTED_TRACING_ENABLED  = true
     }
   }
@@ -148,7 +148,7 @@ resource "aws_lambda_function" "eligibility_feed" {
       DB_PASSWORD_SSM_PATH                  = "/service/${local.app_name}/${var.environment_name}/db-password"
       NEW_RELIC_ACCOUNT_ID                  = local.newrelic_account_id
       NEW_RELIC_TRUSTED_ACCOUNT_KEY         = local.newrelic_trusted_account_key
-      NEW_RELIC_LAMBDA_HANDLER              = "eligibility_export.handler" # the actual lambda entrypoint
+      NEW_RELIC_LAMBDA_HANDLER              = "handler.handler" # the actual lambda entrypoint
       NEW_RELIC_DISTRIBUTED_TRACING_ENABLED = true
       # need fineos s3 bucket
       # EXPORT_FOLDER_PATH                            = "s3://"

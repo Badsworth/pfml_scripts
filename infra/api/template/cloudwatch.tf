@@ -44,7 +44,7 @@ resource "aws_cloudwatch_log_subscription_filter" "nr_lambda_cognito_postconf" {
 }
 
 resource "aws_lambda_permission" "nr_lambda_permission_cognito_postconf" {
-  statement_id  = "NRLambdaPermission_CognitoPostConf"
+  statement_id  = "NRLambdaPermission_CognitoPostConf_${var.environment_name}"
   action        = "lambda:InvokeFunction"
   function_name = local.newrelic_log_ingestion_lambda
   principal     = "logs.us-east-1.amazonaws.com"
@@ -61,7 +61,7 @@ resource "aws_cloudwatch_log_subscription_filter" "nr_lambda_dor_import" {
 }
 
 resource "aws_lambda_permission" "nr_lambda_permission_dor_import" {
-  statement_id  = "NRLambdaPermission_DORImport"
+  statement_id  = "NRLambdaPermission_DORImport_${var.environment_name}"
   action        = "lambda:InvokeFunction"
   function_name = local.newrelic_log_ingestion_lambda
   principal     = "logs.us-east-1.amazonaws.com"
@@ -78,7 +78,7 @@ resource "aws_cloudwatch_log_subscription_filter" "nr_lambda_eligibility_feed" {
 }
 
 resource "aws_lambda_permission" "nr_lambda_permission_eligibility_feed" {
-  statement_id  = "NRLambdaPermission_EligibilityFeed"
+  statement_id  = "NRLambdaPermission_EligibilityFeed_${var.environment_name}"
   action        = "lambda:InvokeFunction"
   function_name = local.newrelic_log_ingestion_lambda
   principal     = "logs.us-east-1.amazonaws.com"
