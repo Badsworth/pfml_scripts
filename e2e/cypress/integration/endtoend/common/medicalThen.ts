@@ -1,13 +1,12 @@
 import { Then } from "cypress-cucumber-preprocessor/steps";
-import { SuccessPage } from "@/pages";
-import completeApplication from "./util";
 
 Then("I should see a success page confirming my claim submission", function () {
-  new SuccessPage().assertOnSuccess();
+  cy.url().should("include", "/claims/success");
 });
 
 Then("I should be able to return to the portal dashboard", function () {
-  new SuccessPage().returnToDashboard();
+  cy.contains("Return to dashboard").click();
+  cy.url().should("equal", `${Cypress.config().baseUrl}/`);
 });
 
 /**
@@ -41,8 +40,8 @@ Then("I should be able to finish submitting the claim", function (): void {
   cy.contains("Do you have a Massachusetts driver's license or ID card?");
   if (this.application.massId) {
     cy.contains("Yes").click();
-    cy.contains("Enter your license or ID number").type(
-      this.application.massId
+    cy.labelled("Enter your license or ID number").type(
+      `{selectall}{backspace}${this.application.massId}`
     );
   } else {
     cy.contains("No").click();
@@ -57,15 +56,16 @@ Then("I should be able to finish submitting the claim", function (): void {
     throw new Error("Missing ID verification. Did you forget to generate it?");
   }
 
-  cy.get('input[type="file"]')
-    .attachFile(this.application.idVerification.front)
-    .attachFile(this.application.idVerification.back);
-  cy.contains("button", "Continue").click();
+  // Input was removed from portal at some point
+  // cy.get('input[type="file"]')
+  //  .attachFile(this.application.idVerification.front)
+  //  .attachFile(this.application.idVerification.back);
+  // cy.contains("button", "Continue").click();
 
   cy.contains("What's your Social Security Number?").type(this.application.ssn);
   cy.contains("button", "Continue").click();
 
-  completeApplication(this.application);
+  /* Usually followed by - "I submit the claim"  */
 });
 
 /**
@@ -82,4 +82,26 @@ Then("I should find their claim in Fineos", function () {
     cy.get(`[title="PFML API ${claimId}"]`).click();
     // For now, we're stopping at asserting that the claim made it to Fineos.
   });
+});
+
+/* Review Page */
+Then("I should have confirmed that information is correct", function (): void {
+  // Usually preceeded by - "I am on the claims Review page"
+  cy.contains("Confirm information is correct").click();
+});
+
+/* Confirm Page */
+Then(
+  "I should have agreed and successfully submitted the claim",
+  function (): void {
+    // Usually preceeded by - "I am on the claims Confirm page"
+    cy.contains("Agree and Submit My Application").click();
+    cy.url({ timeout: 20000 }).should("include", "/claims/success");
+  }
+);
+
+/* Checklist Page's reviewAndSubmit */
+Then("I should review and submit the application", function (): void {
+  // Usually preceeded by - "I am on the claims Checklist page"
+  cy.contains("Review and submit application").click();
 });

@@ -1,12 +1,9 @@
-import { ChecklistPage, ReviewPage, ConfirmPage } from "@/pages";
-
-export default function completeApplication(application: Application): void {
-  new ChecklistPage()
-    .submitClaim(application)
-    .enterEmployerInfo(application)
-    .reportOtherBenefits(application)
-    .addPaymentInfo(application)
-    .reviewAndSubmit();
-  new ReviewPage().confirmInfo();
-  new ConfirmPage().agreeAndSubmit();
+export function lookup<M extends { [k: string]: unknown }, K extends keyof M>(
+  key: K,
+  map: M
+): M[K] {
+  if (key in map) {
+    return map[key];
+  }
+  throw new Error(`Unable to find ${key} in lookup map`);
 }

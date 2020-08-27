@@ -1,14 +1,16 @@
 import { Given } from "cypress-cucumber-preprocessor/steps";
 import { getFineosBaseUrl } from "@/index";
-import { LoginPage, ChecklistPage } from "@/pages";
 import { TestType } from "@/types";
 
 Given("I am logged in as a CSR on the Fineos homepage", function () {
   Cypress.config("baseUrl", getFineosBaseUrl());
 });
 
-Given("I am logged in as a claimant on the portal dashboard", function () {
-  new LoginPage().login(this.application);
+Given("I log in as a claimant on the portal dashboard", function () {
+  cy.visit("/");
+  cy.labelled("Email address").type(this.application.email);
+  cy.labelled("Password").typeMasked(this.application.password);
+  cy.contains("button", "Log in").click();
 });
 
 Given("I have a {testType} claim to submit", function (testType: TestType) {
@@ -35,5 +37,74 @@ Given("I create an application", function (): void {
         cy.stash("claimId", appId);
       }
     });
-  new ChecklistPage().verifyIdentity(this.application);
+  // Usually followed by - "I have my identity verified"
+});
+
+/* Confirm Page */
+Given("I am on the claims Confirm page", function (): void {
+  cy.url().should("include", "/claims/confirm");
+});
+
+/* Review Page */
+Given("I am on the claims Review page", function (): void {
+  cy.url().should("include", "/claims/review");
+});
+
+/* Checklist Page */
+Given("I am on the claims Checklist page", function (): void {
+  cy.url().should("include", "/claims/checklist");
+});
+
+/* Checklist Page */
+Given("I click on the checklist button called {string}", function (
+  label: string
+): void {
+  // @todo: Very brittle selector. Ask for a better one.
+  cy.contains(label)
+    .parentsUntil(".display-flex.border-bottom.border-base-light.padding-y-4")
+    .contains("a", "Start")
+    .click();
+});
+
+Given("I have my identity verified", function (): void {
+  const { application } = this;
+  // Preceeded by - "I am on the claims Checklist page";
+  // Preceeded by - "I click on the checklist button called {string}"
+  //                with the label "Verify your identity"
+  if (
+    !application.idVerification ||
+    !application.idVerification.front ||
+    !application.idVerification.back
+  ) {
+    throw new Error("Missing ID verification. Did you forget to generate it?");
+  }
+
+  cy.labelled("First name").type(application.firstName);
+  cy.labelled("Last name").type(application.lastName);
+  cy.contains("button", "Continue").click();
+
+  cy.contains("fieldset", "What's your birthdate?").within(() => {
+    cy.contains("Month").type(application.dob.month.toString());
+    cy.contains("Day").type(application.dob.day.toString());
+    cy.contains("Year").type(application.dob.year.toString());
+  });
+  cy.contains("button", "Continue").click();
+
+  cy.contains("Do you have a Massachusetts driver's license or ID card?");
+  if (application.massId) {
+    cy.contains("Yes").click();
+    cy.contains("Enter your license or ID number").type(application.massId);
+  } else {
+    cy.contains("No").click();
+  }
+  cy.contains("button", "Continue").click();
+
+  cy.contains("What's your Social Security Number?").type(application.ssn);
+  cy.contains("button", "Continue").click();
+
+  // Input was removed from portal at some point
+  // cy.get('input[type="file"]')
+  //  .attachFile(application.idVerification.front)
+  //  .attachFile(application.idVerification.back);
+  // cy.contains("button", "Continue").click();
 });

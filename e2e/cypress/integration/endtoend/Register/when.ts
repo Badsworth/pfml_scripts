@@ -1,6 +1,9 @@
 import { When } from "cypress-cucumber-preprocessor/steps";
-import { LoginPage } from "@/pages";
 
 When("I submit the account registration form", function () {
-  new LoginPage().registerAccount(this.application);
+  cy.visit("/");
+  cy.contains("a", "create an account").click();
+  cy.labelled("Email address").type(this.application.email);
+  cy.labelled("Password").type(this.application.password);
+  cy.contains("button", "Create account").click();
 });
