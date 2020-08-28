@@ -3,7 +3,7 @@
     "strict": true,
     "target": "es6",
     "lib": ["es6", "dom"],
-    "types": ["cypress"],
+    "types": ["cypress", "node"],
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
     "allowJs": true,
@@ -18,7 +18,8 @@
     "outDir": "./dist",
     "baseUrl": "src",
     "paths": {
-      "@/*": ["*"]
+      "@/*": ["*"],
+      "@test/*": ["../test/*"]
     }
   },
   "include": [

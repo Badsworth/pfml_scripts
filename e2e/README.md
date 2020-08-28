@@ -48,4 +48,58 @@ When writing tests, we will be aiming to focus on input (eg: entering a particul
 
 End-to-end tests are expensive. They are the slowest to run, easiest to break, and most difficult to write of any of the different types of tests available. We write them because they cover a lot of functionality at once, and because they are the closest thing we can get to proving the value of an application in the real world. With that in mind, end to end tests should only be written to validate primary business value, not to test for regressions.
 
+Business Simulation
+-------------------
+
+#### Generating Mock Employee Data
+
+Before running the bizSim - you may need to generate mock employee data in order to populate the employee pool.  The script provided will create a JSON file with however many employees you specify.  All files that are generated will be placed here: [./data/simulation/users](./data/simulation/users)
+
+To generate mock employee data:
+
+```
+# Generates mock data for <number> of employees
+npm run sim:generateUsers -- <number>
+
+# eg.
+npm run sim:generateUsers -- 500
+```
+
+The file name will contain a timestamp and the number of employees generated
+```
+yyyy-mm-ddThh:mm:ss--n-users.json
+````
+
+---
+
+#### Running the Business Simulation
+
+The business simulation code is kept in [./src/simulation](./src/simulation). Business simulation is run through a NodeJS CLI script that submits generated applications directly to the API. The simulation is broken down into scenarios, each of which has a given probability of running.
+
+##### Adding the employee pool info:
+
+In order to run the bizSim you will need to add the file name of the generated employee pool file.  You must use a ```-u``` or ```-users``` flag to import employee pool data.
+
+eg.
+```
+-u ./data/simulation/users/2020-08-20T00:31:46.322Z--10-users.json
+```
+
+To run the business simulation, we've created a couple handy commands:
+```
+# Run Pilot 3 simulation with default settings.
+npm run sim:pilot3 -- -u <filname>
+
+# Run HAP1 scenario from Pilot 3 simulation.
+npm run sim:pilot3 -u <filname> -s HAP1
+
+# Run HAP1 scenario from Pilot 3 20 times.
+npm run sim:pilot3 -u <filname> -s HAP1 -n 20
+```
+If you want to run the simulation w/o submitting the application to the API (for testing) then use ```-r``` or ```-dryrun``` flags.
+
+eg.
+```
+npm run sim:pilot3 -- -u <filname> -s HAP1 -r
+```
 

@@ -1,27 +1,57 @@
-// @todo: This type is incomplete. Fill it in more later on, or extract from OpenAPI
-export interface PortalApplicationSubmission {
-  application_id?: string;
-  date_of_birth: string;
-  employment_status: string;
-  first_name: string;
-  last_name: string;
-  leave_details: {
-    continuous_leave_periods: PortalContinuousLeavePeriod[];
-    employer_notification_date: string;
-    employer_notified: boolean;
-    intermittent_leave_periods: PortalIntermittentLeavePeriod[];
-    reason: string;
-    reduced_schedule_leave_periods: [];
-  };
-  payment_preferences: [];
-  status: string;
-  tax_identifier_last4: string;
+import { ApplicationRequestBody } from "../api";
+
+// Represents a single claim that will be issued to the system.
+export type SimulationClaim = {
+  claim: ApplicationRequestBody;
+  documents: ClaimDocument[];
+
+  // Flag to control validity of a mass ID #. Used in RMV file generation.
+  hasInvalidMassId?: boolean;
+  // Flag to control financial eligibility of claimant. Used when DOR file is generated.
+  financiallyIneligible?: boolean;
+  // Flag to control whether the claim is submitted to the API. Used to provide claims
+  // that have accompanying documents, but aren't actually in the system yet.
+  skipSubmitClaim?: boolean;
+};
+
+// Represents a document that may be uploaded during final submission, or may
+// be captured to a folder for "manual" delivery.
+export type ClaimDocument = {
+  // Type of document.
+  type: "HCP" | "ID-front" | "ID-back";
+  // Filesystem path to the document.
+  path: string;
+  // Flag to control whether the document should be uploaded (default), or "manually"
+  // submitted.
+  submittedManually?: boolean;
+};
+
+/**
+ * SimulationGenerator is a function that generates a single SimulationClaim.
+ *
+ * This is an interface, but it will actually be implemented by two functions that look a lot
+ * like scenario() and chance() do today. That is - which scenario we actually run will be
+ * determined by probability at the time the function is called.
+ */
+export type SimulationGeneratorOpts = {
+  documentDirectory: string;
+};
+export interface SimulationGenerator {
+  // The generator returns a promise of a SimulationClaim so that it can
+  // do asynchronous operations, like writing documents to the filesystem.
+  (opts: SimulationGeneratorOpts): Promise<SimulationClaim>;
 }
-interface PortalContinuousLeavePeriod {
-  start_date: string;
-  end_date: string;
-  is_estimated: boolean;
-}
-interface PortalIntermittentLeavePeriod {
-  is_estimated: boolean;
+
+/**
+ * SimulationExecutor is a function that executes a single SimulationClaim.
+ *
+ * Execution consists of:
+ *   * Creating the claim using the API client.
+ *   * Updating the claim using the API client.
+ *   * Uploading any documents that should be handled online.
+ *   * Moving any documents that should be handled offline to the proper directory.
+ *   * Final submission of the claim using the API client.
+ */
+export interface SimulationExecutor {
+  (claim: SimulationClaim): Promise<void>;
 }

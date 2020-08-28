@@ -9,9 +9,14 @@
  */
 import PortalSubmitter from "./PortalSubmitter";
 import { config as dotenv } from "dotenv";
-import { PortalApplicationSubmission } from "./types";
-import ScenarioSelector from "./ScenarioSelector";
-import generate from "./generate";
+import minimist from "minimist";
+import fs from "fs";
+import { Simulation } from "./simulate";
+import createExecutor from "./execute";
+import { pipeline } from "stream";
+import { promisify } from "util";
+import { createEmployeesStream, createEmployersStream } from "./dor";
+import employers from "./fixtures/employerPool";
 
 // Load variables from .env.
 dotenv();
@@ -32,29 +37,94 @@ const submitter = new PortalSubmitter({
   Password: config("PORTAL_PASSWORD"),
 });
 
-const selector = new ScenarioSelector()
-  .add(12, () => generate())
-  .add(12, () => generate())
-  .add(12, () => generate());
-
-async function* generateApplications(
-  total: number
-): AsyncGenerator<PortalApplicationSubmission> {
-  // @todo: Application generation loop goes here.
-  for (let i = 0; i < total; i++) {
-    yield selector.spin();
-  }
-}
-
-let count = 0;
 (async function () {
-  for await (const application of generateApplications(1)) {
-    await submitter.submit(application);
-    count++;
+  const opts = minimist(process.argv.slice(2), {
+    string: ["f", "s", "u", "d"],
+    boolean: ["r", "g"],
+    alias: {
+      f: "file",
+      s: "scenario",
+      d: "directory",
+      u: "users",
+      r: "dryrun",
+      g: "generate",
+    },
+    default: {
+      n: 1,
+    },
+  });
+  if (!opts.n || typeof opts.n !== "number") {
+    throw new Error("Invalid number of submissions");
   }
-  console.log(`Submitted ${count} applications.`);
+  if (!opts.f || typeof opts.f !== "string") {
+    throw new Error("Invalid scenario filename");
+  }
+  process.stdout.write(`Loading scenarios from ${opts.f}.\n`);
+
+  const path = require.resolve(opts.f, { paths: [process.cwd()] });
+  const { default: generator } = await import(path);
+
+  const sim = new Simulation(generator, createExecutor(submitter));
+
+  const directory = opts.d;
+  if (!directory || typeof directory !== "string") {
+    throw new Error(`Invalid directory passed`);
+  }
+  if (opts.g) {
+    // Trigger generate mode.
+    console.log("Generating claims");
+
+    // Create a promised version of the pipeline function.
+    const pipelineP = promisify(pipeline);
+
+    const filingPeriods = [3, 6, 9, 12].map((month) => {
+      const d = new Date();
+      d.setMonth(month);
+      d.setDate(1);
+      return d;
+    });
+
+    const claims = [];
+    await fs.promises.mkdir(`${directory}/documents`, { recursive: true });
+    for await (const claim of sim.generate({
+      count: opts.n,
+      documentDirectory: `${directory}/documents`,
+    })) {
+      claims.push(claim);
+    }
+    // Generate claims JSON file.
+    const claimsJSONPromise = fs.promises.writeFile(
+      `${directory}/claims.json`,
+      JSON.stringify(claims, null, 2)
+    );
+    // Generate the employers DOR file. This is done by "pipelining" a read stream into a write stream.
+    const dorEmployersPromise = pipelineP(
+      createEmployersStream(employers),
+      fs.createWriteStream(`${directory}/DOR-Employers.txt`)
+    );
+    // Generate the employees DOR file. This is done by "pipelining" a read stream into a write stream.
+    const dorEmployeesPromise = pipelineP(
+      createEmployeesStream(claims, employers, filingPeriods),
+      fs.createWriteStream(`${directory}/DOR-Employees.txt`)
+    );
+
+    // Finally wait for all of those files to finish generating.
+    await Promise.all([
+      claimsJSONPromise,
+      dorEmployeesPromise,
+      dorEmployersPromise,
+    ]);
+  } else {
+    console.log("Using claims");
+    const claims = await fs.promises
+      .readFile(`${directory}/claims.json`)
+      .then((data) => JSON.parse(data.toString("utf-8")));
+    await sim.execute(claims);
+  }
+
+  process.stdout.write(`Submitting ${submitter.count} applications.\n`);
 })().catch((reason) => {
-  console.error(`Failed after submitting ${count} applications`);
+  console.error(`Failed after submitting ${submitter.count} applications`);
   console.error(reason);
   process.exit(1);
 });
