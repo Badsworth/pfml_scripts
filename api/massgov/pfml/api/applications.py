@@ -99,13 +99,13 @@ def applications_submit(application_id):
         ensure(EDIT, existing_application)
 
         if send_to_fineos(existing_application, db_session):
-            existing_application.completed_time = datetime.now()
+            existing_application.submitted_time = datetime.now()
             db_session.add(existing_application)
 
         else:
             return response_util.error_response(
                 status_code=ServiceUnavailable,
-                message="Application {} could not be completed, try again later".format(
+                message="Application {} could not be submitted, try again later".format(
                     existing_application.application_id
                 ),
                 errors=[],
@@ -113,7 +113,7 @@ def applications_submit(application_id):
             )
 
     return response_util.success_response(
-        message="Application {} completed without errors".format(
+        message="Application {} submitted without errors".format(
             existing_application.application_id
         ),
         data=ApplicationResponse.from_orm(existing_application).dict(exclude_none=True),

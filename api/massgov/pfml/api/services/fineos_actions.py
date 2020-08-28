@@ -76,7 +76,7 @@ def register_employee(
 
 
 def send_to_fineos(application: Application, db_session: massgov.pfml.db.Session) -> bool:
-    """Send a completed application to FINEOS for processing."""
+    """Send an application to FINEOS for processing."""
 
     if application.employer_fein is None:
         raise ValueError("application.employer_fein is None")

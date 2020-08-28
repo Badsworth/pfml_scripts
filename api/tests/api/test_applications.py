@@ -807,7 +807,7 @@ def test_application_patch_key_set_to_null_does_null_field(
 
 def test_application_post_submit_app(client, user, auth_token, test_db_session):
     application = ApplicationFactory.create(user=user)
-    assert not application.completed_time
+    assert not application.submitted_time
 
     # Applications must have an FEIN for submit to succeed.
     application.employer_fein = "770007777"
@@ -822,7 +822,7 @@ def test_application_post_submit_app(client, user, auth_token, test_db_session):
 
     response_body = response.get_json().get("data")
     status = response_body.get("status")
-    assert status == ApplicationStatus.Completed.value
+    assert status == ApplicationStatus.Submitted.value
 
 
 def test_application_post_submit_to_fineos(client, user, auth_token, test_db_session):
@@ -857,7 +857,7 @@ def test_application_post_submit_to_fineos(client, user, auth_token, test_db_ses
 
     response_body = response.get_json()
     status = response_body.get("data").get("status")
-    assert status == ApplicationStatus.Completed.value
+    assert status == ApplicationStatus.Submitted.value
 
     capture = massgov.pfml.fineos.mock_client.get_capture()
     fineos_user_id = capture[2][1]  # This is generated randomly and changes each time.

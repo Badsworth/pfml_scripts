@@ -292,8 +292,7 @@ paths:
       tags:
         - Applications
       summary: >
-        Signal the data entry is complete and the application is ready to be
-        submitted to the Claims Processing System.
+        Submit the first part of the application to the Claims Processing System.
       operationId: massgov.pfml.api.applications.applications_submit
       parameters:
         - name: application_id
@@ -305,7 +304,7 @@ paths:
           required: true
       responses:
         "201":
-          description: Application completed without errors.
+          description: Application submitted without errors.
           content:
             application/json:
               schema:
@@ -822,12 +821,12 @@ components:
             The current application status.
 
             * `Started` - is started and in progress.
-            * `Completed` - is marked complete and has been submitted by the user.
             * `Submitted` - is successfully stored in the claims processing system.
+            * `Completed` - is marked complete and has been submitted by the user.
           enum:
             - Started
-            - Completed
             - Submitted
+            - Completed
           example: "Started"
 
     EligibilityRequest:

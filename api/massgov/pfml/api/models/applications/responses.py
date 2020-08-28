@@ -53,10 +53,10 @@ class ApplicationResponse(PydanticBaseModel):
             map(build_payment_preference, application.payment_preferences)
         )
 
-        if application.submitted_time:
-            application_response.status = ApplicationStatus.Submitted
-        elif application.completed_time:
+        if application.completed_time:
             application_response.status = ApplicationStatus.Completed
+        elif application.submitted_time:
+            application_response.status = ApplicationStatus.Submitted
         else:
             application_response.status = ApplicationStatus.Started
 
