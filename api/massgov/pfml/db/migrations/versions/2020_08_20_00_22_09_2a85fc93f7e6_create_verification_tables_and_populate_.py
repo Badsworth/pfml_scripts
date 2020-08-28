@@ -5,8 +5,6 @@ Revises: 89e55ef4d333
 Create Date: 2020-08-20 00:22:09.030280
 
 """
-import csv
-from pathlib import Path
 
 import sqlalchemy as sa
 from alembic import op
@@ -17,11 +15,6 @@ revision = "2a85fc93f7e6"
 down_revision = "89e55ef4d333"
 branch_labels = None
 depends_on = None
-
-with open(Path(__file__).parents[2] / "seed" / "lookups" / "lk_verification_type.csv") as csvfile:
-    # read in the data
-    reader = csv.DictReader(csvfile, delimiter=",")
-    verification_rows = [r for r in csv.DictReader(csvfile, delimiter=",")]
 
 
 def upgrade():
@@ -80,12 +73,6 @@ def upgrade():
         sa.PrimaryKeyConstraint("verification_code_log_id"),
     )
     # ### end Alembic commands ###
-    # Insert seed data for Verification Types
-    lk_id, lk_desc = verification_rows[0].keys()
-    table_handle = sa.sql.table(
-        "lk_verification_type", sa.sql.column(lk_id, sa.Integer), sa.sql.column(lk_desc, sa.Text)
-    )
-    op.bulk_insert(table_handle, verification_rows)
 
 
 def downgrade():
