@@ -152,10 +152,6 @@ class Application(Base):
     employer_notification_method = relationship(LkNotificationMethod)
     tax_identifier = relationship(TaxIdentifier)
 
-    @property
-    def tax_identifier_last4(self):
-        return self.tax_identifier.tax_identifier[-4:]
-
     # `uselist` default is True, but for mypy need to state it explicitly so it
     # detects the relationship as many-to-one
     #

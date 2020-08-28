@@ -27,14 +27,10 @@ def test_employees_get_invalid(client, consented_user_token):
 
 
 def test_employees_search_valid(client, employee, consented_user_token):
-    first_name = employee.first_name
-    last_name = employee.last_name
-    tax_identifier_last4 = employee.tax_identifier_last4
-
     body = {
-        "first_name": first_name,
-        "last_name": last_name,
-        "tax_identifier_last4": tax_identifier_last4,
+        "first_name": employee.first_name,
+        "last_name": employee.last_name,
+        "tax_identifier_last4": employee.tax_identifier.tax_identifier_last4,
     }
     response = client.post(
         "/v1/employees/search",
@@ -42,6 +38,34 @@ def test_employees_search_valid(client, employee, consented_user_token):
         headers={"Authorization": "Bearer {}".format(consented_user_token)},
     )
     assert response.status_code == 200
+
+
+def test_employees_search_valid_with_middle_name(client, employee, consented_user_token):
+    # create identical employee except for middle name
+    EmployeeFactory.create(
+        first_name=employee.first_name,
+        last_name=employee.last_name,
+        tax_identifier=employee.tax_identifier,
+    )
+
+    body = {
+        "first_name": employee.first_name,
+        "last_name": employee.last_name,
+        "middle_name": employee.middle_name,
+        "tax_identifier_last4": employee.tax_identifier.tax_identifier_last4,
+    }
+
+    response = client.post(
+        "/v1/employees/search",
+        json=body,
+        headers={"Authorization": "Bearer {}".format(consented_user_token)},
+    )
+
+    assert response.status_code == 200
+
+    response_data = response.get_json().get("data")
+
+    assert response_data.get("middle_name") == employee.middle_name
 
 
 def test_employees_get_masked_email(client, consented_user_token):
@@ -57,7 +81,7 @@ def test_employees_get_masked_email(client, consented_user_token):
 
 
 def test_employees_search_missing_param(client, consented_user_token):
-    body = {"last_name": "Doe", "tax_identifier": "000-00-0000"}
+    body = {"last_name": "Doe", "foo": "bar"}
     response = client.post(
         "/v1/employees/search",
         json=body,

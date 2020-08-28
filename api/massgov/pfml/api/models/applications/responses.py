@@ -16,7 +16,7 @@ from massgov.pfml.api.models.applications.common import (
 )
 from massgov.pfml.db.models.applications import Application, ApplicationPaymentPreference
 from massgov.pfml.util.pydantic import PydanticBaseModel
-from massgov.pfml.util.pydantic.types import FEINStr, MaskedMassIdStr
+from massgov.pfml.util.pydantic.types import FEINStr, MaskedMassIdStr, MaskedTaxIdFormattedStr
 
 
 class ApplicationStatus(str, Enum):
@@ -28,7 +28,7 @@ class ApplicationStatus(str, Enum):
 class ApplicationResponse(PydanticBaseModel):
     application_id: UUID4
     application_nickname: Optional[str]
-    tax_identifier_last4: Optional[str]
+    tax_identifier: Optional[MaskedTaxIdFormattedStr]
     employer_id: Optional[UUID4]
     employer_fein: Optional[FEINStr]
     first_name: Optional[str]

@@ -52,6 +52,19 @@ class TaxIdFormattedStr(str):
         )
 
 
+class MaskedTaxIdFormattedStr(str):
+    @classmethod
+    def __get_validators__(cls):
+        yield cls.validate_type
+
+    @classmethod
+    def validate_type(cls, val):
+        if val is None:
+            return None
+
+        return "***-**-****"
+
+
 class FEINStr(str):
     @classmethod
     def __get_validators__(cls):

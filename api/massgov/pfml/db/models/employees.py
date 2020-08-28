@@ -8,14 +8,22 @@
 # This allows us to build mock data and insert them easily in the database for tests
 # and seeding.
 #
+from typing import TYPE_CHECKING
+
 from sqlalchemy import Boolean, Column, Date, DateTime, ForeignKey, Integer, Numeric, Text
 from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import Query, dynamic_loader, relationship
 from sqlalchemy.sql.expression import func
 
 from ..lookup import LookupTable
 from .base import Base, uuid_gen
+
+# https://github.com/dropbox/sqlalchemy-stubs/issues/98
+if TYPE_CHECKING:
+    # Use this to make hybrid_property's have the same typing as a normal property until stubs are improved.
+    typed_hybrid_property = property
+else:
+    from sqlalchemy.ext.hybrid import hybrid_property as typed_hybrid_property
 
 
 class LkAddressType(Base):
@@ -180,7 +188,16 @@ class TaxIdentifier(Base):
     __tablename__ = "tax_identifier"
     tax_identifier_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
     tax_identifier = Column(Text, nullable=False, unique=True)
+
     employee = relationship("Employee", back_populates="tax_identifier")
+
+    @typed_hybrid_property
+    def tax_identifier_last4(self) -> str:
+        return self.tax_identifier[-4:]
+
+    @tax_identifier_last4.expression
+    def tax_identifier_last4(self):
+        return func.right(TaxIdentifier.tax_identifier, 4)
 
 
 class Employee(Base):
@@ -211,17 +228,6 @@ class Employee(Base):
     education_level = relationship(LkEducationLevel)
     latest_import_log = relationship("ImportLog")
     tax_identifier = relationship("TaxIdentifier", back_populates="employee")
-
-    @hybrid_property
-    def tax_identifier_last4(self):
-        if self.tax_identifier:
-            return self.tax_identifier.tax_identifier[-4:]
-        else:
-            return None
-
-    @tax_identifier_last4.expression  # type: ignore
-    def tax_identifier_last4(self):
-        return func.right(TaxIdentifier.tax_identifier, 4)
 
     authorized_reps: "Query[AuthorizedRepEmployee]" = dynamic_loader(
         "AuthorizedRepEmployee", back_populates="employee"

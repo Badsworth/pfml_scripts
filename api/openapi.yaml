@@ -665,63 +665,81 @@ components:
         - employer_dba
 
     ApplicationRequestBody:
-      type: object
-      properties:
-        application_nickname:
-          type: string
-          nullable: true
-          example: "My bonding leave request"
-        employee_ssn:
-          nullable: true
-          $ref: "#/components/schemas/SsnItin"
-        employer_fein:
-          nullable: true
-          $ref: "#/components/schemas/Fein"
-        first_name:
-          type: string
-          nullable: true
-          example: "John"
-        middle_name:
-          type: string
-          nullable: true
-          example: "Jake"
-        last_name:
-          type: string
-          nullable: true
-          example: "Doe"
-        date_of_birth:
-          nullable: true
-          $ref: "#/components/schemas/Date"
-        has_state_id:
-          type: boolean
-          nullable: true
-          example: true
-        mass_id:
-          nullable: true
-          $ref: "#/components/schemas/MassId"
-        employment_status:
-          type: string
-          nullable: true
-          enum:
-            - Employed
-            - Unemployed
-            - Self-Employed
-          example: "Employed"
-        occupation:
-          type: string
-          nullable: true
-          enum:
-            - Sales Clerk
-            - Administrative
-            - Engineer
-            - Health Care
-          example:  "Sales Clerk"
-        leave_details:
-          $ref: "#/components/schemas/ApplicationLeaveDetails"
-        payment_preferences:
-          type: array
-          items:
-            $ref: "#/components/schemas/PaymentPreferences"
+      allOf:
+        - type: object
+          properties:
+            application_nickname:
+              type: string
+              nullable: true
+              example: "My bonding leave request"
+            employee_ssn:
+              $ref: "#/components/schemas/SsnItin"
+              nullable: true
+            tax_identifier:
+              $ref: "#/components/schemas/SsnItin"
+              nullable: true
+            employer_fein:
+              $ref: "#/components/schemas/Fein"
+              nullable: true
+            first_name:
+              type: string
+              nullable: true
+              example: "John"
+            middle_name:
+              type: string
+              nullable: true
+              example: "Jake"
+            last_name:
+              type: string
+              nullable: true
+              example: "Doe"
+            date_of_birth:
+              $ref: "#/components/schemas/Date"
+              nullable: true
+            has_state_id:
+              type: boolean
+              nullable: true
+              example: true
+            mass_id:
+              $ref: "#/components/schemas/MassId"
+              nullable: true
+            employment_status:
+              type: string
+              nullable: true
+              enum:
+                - Employed
+                - Unemployed
+                - Self-Employed
+              example: "Employed"
+            occupation:
+              type: string
+              nullable: true
+              enum:
+                - Sales Clerk
+                - Administrative
+                - Engineer
+                - Health Care
+              example: "Sales Clerk"
+            leave_details:
+              $ref: "#/components/schemas/ApplicationLeaveDetails"
+            payment_preferences:
+              type: array
+              items:
+                $ref: "#/components/schemas/PaymentPreferences"
+        - type: object
+          properties:
+            employee_ssn:
+              deprecated: true
+              description: "`tax_identifier` is the preferred field for this information"
+              nullable: true
+            tax_identifier:
+              nullable: true
+            employer_fein:
+              nullable: true
+            date_of_birth:
+              nullable: true
+            mass_id:
+              nullable: true
 
     ApplicationResponse:
       type: object
@@ -734,8 +752,8 @@ components:
           type: string
           format: uuid
           example: "2a340cf8-6d2a-4f82-a075-73588d003f8f"
-        tax_identifier_last4:
-          type: string
+        tax_identifier:
+          $ref: "#/components/schemas/MaskedSsnItin"
           nullable: true
         employer_id:
           type: string
@@ -1182,6 +1200,11 @@ components:
       type: string
       example: "000-00-0000"
       pattern: '^\d{3}-\d{2}-\d{4}$'
+
+    MaskedSsnItin:
+      type: string
+      example: "***-**-****"
+      pattern: '^\*{3}-\*{2}-\*{4}$'
 
     Fein:
       type: string

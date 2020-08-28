@@ -181,7 +181,7 @@ def test_application_patch(client, user, auth_token, test_db_session):
     update_request_body["last_name"] = "Perez"
     update_request_body["leave_details"] = {"relationship_to_caregiver": "Parent"}
     update_request_body["middle_name"] = "Mike"
-    update_request_body["employee_ssn"] = "123-45-6789"
+    update_request_body["tax_identifier"] = "123-45-6789"
     update_request_body["occupation"] = "Engineer"
 
     # Remove foreign keys as DB does not have all tables populated
@@ -196,6 +196,10 @@ def test_application_patch(client, user, auth_token, test_db_session):
 
     assert response.status_code == 200
 
+    test_db_session.refresh(application)
+    assert application.tax_identifier
+    assert application.tax_identifier.tax_identifier == "123456789"
+
     response_body = response.get_json()
     assert response_body.get("data").get("last_name") == "Perez"
     assert response_body.get("data").get("updated_time") == "2020-01-01T00:00:00Z"
@@ -204,8 +208,7 @@ def test_application_patch(client, user, auth_token, test_db_session):
     assert (
         response_body.get("data").get("leave_details").get("relationship_to_caregiver") == "Parent"
     )
-    assert response_body.get("data").get("tax_identifier_last4") == "6789"
-    assert len(response_body.get("data").get("tax_identifier_last4")) == 4
+    assert response_body.get("data").get("tax_identifier") == "***-**-****"
 
 
 def test_application_unauthorized_patch(client, user, auth_token, test_db_session):
@@ -222,6 +225,41 @@ def test_application_unauthorized_patch(client, user, auth_token, test_db_sessio
 
     test_db_session.refresh(application)
     assert application.last_name == "Smith"
+
+
+def test_application_patch_employee_ssn(client, user, auth_token, test_db_session):
+    application = ApplicationFactory.create(user=user)
+    assert application.tax_identifier
+    assert application.tax_identifier.tax_identifier != "123-45-6789"
+
+    response = client.patch(
+        "/v1/applications/{}".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+        json={"employee_ssn": "123-45-6789"},
+    )
+
+    assert response.status_code == 200
+
+    test_db_session.refresh(application)
+    assert application.tax_identifier
+    assert application.tax_identifier.tax_identifier == "123456789"
+
+
+def test_application_patch_masked_tax_id_has_no_effect(client, user, auth_token, test_db_session):
+    application = ApplicationFactory.create(user=user)
+    tax_identifier_before = application.tax_identifier.tax_identifier
+
+    response = client.patch(
+        "/v1/applications/{}".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+        json={"employee_ssn": "***-**-****"},
+    )
+
+    assert response.status_code == 400
+
+    test_db_session.refresh(application)
+    assert application.tax_identifier
+    assert application.tax_identifier.tax_identifier == tax_identifier_before
 
 
 def test_application_patch_employment_status(client, user, auth_token, test_db_session):
@@ -594,7 +632,7 @@ def test_application_patch_null_values(client, user, auth_token):
     null_request_body = {
         "application_id": application.application_id,
         "application_nickname": None,
-        "employee_ssn": None,
+        "tax_identifier": None,
         "employer_fein": None,
         "first_name": None,
         "last_name": None,

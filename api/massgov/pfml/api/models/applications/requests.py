@@ -8,12 +8,13 @@ from massgov.pfml.api.models.applications.common import (
     PaymentPreferences,
 )
 from massgov.pfml.util.pydantic import PydanticBaseModel
-from massgov.pfml.util.pydantic.types import FEINStr, MassIdStr
+from massgov.pfml.util.pydantic.types import FEINStr, MassIdStr, TaxIdUnformattedStr
 
 
 class ApplicationRequestBody(PydanticBaseModel):
     application_nickname: Optional[str]
-    employee_ssn: Optional[str]
+    employee_ssn: Optional[TaxIdUnformattedStr]
+    tax_identifier: Optional[TaxIdUnformattedStr]
     employer_fein: Optional[FEINStr]
     first_name: Optional[str]
     middle_name: Optional[str]
