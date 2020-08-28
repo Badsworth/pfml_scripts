@@ -11,7 +11,7 @@ import withClaim from "../../hoc/withClaim";
 
 export const fields = ["claim.temp.residential_address"];
 
-const Name = (props) => {
+export const Address = (props) => {
   const { appLogic, claim } = props;
   const { t } = useTranslation();
   const { formState, updateFields } = useFormState(pick(props, fields).claim);
@@ -39,7 +39,7 @@ const Name = (props) => {
   );
 };
 
-Name.propTypes = {
+Address.propTypes = {
   claim: PropTypes.instanceOf(Claim),
   appLogic: PropTypes.object.isRequired,
   query: PropTypes.shape({
@@ -47,4 +47,4 @@ Name.propTypes = {
   }),
 };
 
-export default withClaim(Name);
+export default withClaim(Address);
