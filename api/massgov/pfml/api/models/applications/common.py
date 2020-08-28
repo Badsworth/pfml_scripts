@@ -52,6 +52,10 @@ class LeaveReasonQualifier(str, LookupEnum):
     serious_health_condition = "Serious Health Condition"
     work_related_accident = "Work Related Accident/Injury"
 
+    @classmethod
+    def get_lookup_model(cls):
+        return db_application_models.LkLeaveReasonQualifier
+
 
 class RelationshipToCaregiver(str, LookupEnum):
     parent = "Parent"
@@ -76,6 +80,10 @@ class RelationshipQualifier(str, LookupEnum):
     custodial_parent = "Custodial Parent"
     legal_guardian = "Legal Guardian"
     step_parent = "Step Parent"
+
+    @classmethod
+    def get_lookup_model(cls):
+        return db_application_models.LkRelationshipQualifier
 
 
 class EmployerNotificationMethod(str, LookupEnum):

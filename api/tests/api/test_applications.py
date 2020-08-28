@@ -383,6 +383,30 @@ def test_application_patch_leave_reason(client, user, auth_token, test_db_sessio
     assert updated_leave_reason == "Serious Health Condition - Employee"
 
 
+def test_application_patch_leave_reason_qualifier(client, user, auth_token, test_db_session):
+    application = ApplicationFactory.create(user=user)
+
+    # set to empty value
+    application.leave_reason = None
+    test_db_session.commit()
+
+    response = client.patch(
+        "/v1/applications/{}".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+        json={"leave_details": {"reason": "Child Bonding", "reason_qualifier": "Foster Care"}},
+    )
+
+    assert response.status_code == 200
+
+    response_body = response.get_json().get("data")
+    updated_leave_details = response_body.get("leave_details")
+    assert updated_leave_details
+    updated_leave_reason = updated_leave_details.get("reason")
+    assert updated_leave_reason == "Child Bonding"
+    updated_leave_reason_qualifier = updated_leave_details.get("reason_qualifier")
+    assert updated_leave_reason_qualifier == "Foster Care"
+
+
 def test_application_patch_add_leave_period(client, user, auth_token):
     application = ApplicationFactory.create(user=user)
 
