@@ -1,0 +1,14 @@
+.c-table.usa-table--borderless {
+  thead {
+    background-color: $theme-color-base-lightest;
+  }
+
+  tr {
+    @extend .border-bottom-2px;
+    @extend .border-base-lighter;
+  }
+
+  tr > th {
+    padding-left: units(2);
+  }
+}
