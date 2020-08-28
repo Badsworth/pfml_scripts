@@ -61,10 +61,6 @@ data "aws_s3_bucket" "agency_transfer" {
   bucket = "massgov-pfml-${var.environment_name}-agency-transfer"
 }
 
-data "aws_s3_bucket" "fineos_transfer" {
-  bucket = "massgov-pfml-${var.environment_name}-fineos-transfer"
-}
-
 data "aws_s3_bucket" "terraform" {
   bucket = "massgov-pfml-${var.environment_name}-env-mgmt"
 }
