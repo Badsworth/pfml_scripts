@@ -14,10 +14,6 @@ export const Default = () => (
     resumeText="Resume"
     completedText="Completed"
     editText="Edit"
-    submitButtonText="Submit the Steps"
-    submitDisabled
-    // eslint-disable-next-line no-alert
-    onSubmit={() => alert("how wow, a step submission")}
   >
     <Step title="Step Title 1" status="completed" stepHref="#">
       This is the step instructions and should not be visible.

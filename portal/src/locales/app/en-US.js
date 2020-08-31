@@ -79,9 +79,9 @@ const errors = {
 
 const shared = {
   backToLoginLink: "Back to log in",
-  // TODO: Correct phone number
-  // https://lwd.atlassian.net/browse/CP-143
-  callCenterPhoneNumber: "(XXX) XXX-XXXX",
+  // TODO (CP-143): Correct phone number, but preserve usage of non-breaking hyphens to avoid awkward text wrapping
+  // https://alignedonline.com/non%E2%80%91breaking-spaces
+  callCenterPhoneNumber: "XXX‑XXX‑XXXX",
   choiceNo: "No",
   choiceYes: "Yes",
   claimDurationTypeContinuous: "Continuous leave",
@@ -235,7 +235,21 @@ const pages = {
       "Upload proof of identity. If you entered a Massachusetts driver’s license or Mass ID number in step 1, upload the same ID.",
     stepHTMLDescription_verifyId:
       "You will need:<ul class='usa-list'><li>Proof of your identity, like a driver’s license. See the full list of accepted identity documents.</li><li>Your Social Security Number or Individual Taxpayer Identification Number.</li></ul>",
-    stepListTitle: "Create a new application",
+    stepListDescription_1:
+      "Your progress is automatically saved as you complete the application. You can edit any information you enter in Part 1 until step 5 is completed.",
+    stepListDescription_1_submitted:
+      "If you need to edit your information in Part 1, you’ll need to call the Contact Center at $t(shared.callCenterPhoneNumber).",
+    // TODO (CP-907): Add correct fax # and address
+    stepListDescription_2:
+      "Uploading documents online leads to faster processing, but you can also fax documents to NNN-NNN-NNNN, or mail them to 123 Address.",
+    stepListDescription_3:
+      "Entering payment information leads to faster processing, but you can also call $t(shared.callCenterPhoneNumber).",
+    stepListTitle_1:
+      "<part-number>Part {{number}}</part-number> Tell us about yourself and your leave",
+    stepListTitle_2:
+      "<part-number>Part {{number}}</part-number> Upload your documents",
+    stepListTitle_3:
+      "<part-number>Part {{number}}</part-number> Enter your payment information",
     stepTitle_employerInformation: "Enter employment information",
     stepTitle_leaveDetails: "Enter leave details",
     stepTitle_otherLeave: "Report other leave and benefits",
@@ -244,6 +258,7 @@ const pages = {
     stepTitle_uploadId: "Upload identity document",
     stepTitle_verifyId: "Verify your identity",
     submitButton: "Review and submit application",
+    title: "Checklist: Create a new application",
   },
   claimsConfirm: {
     explanation1:

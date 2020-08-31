@@ -40,6 +40,11 @@ export default class Step extends BaseModel {
        */
       name: null,
       /**
+       * @type {number}
+       * If this is a step within a list broken into multiple "parts" (e.g Part 2 of 3), which part is it in?
+       */
+      part: null,
+      /**
        * @type {object[]}
        * { route: "page/route", step: "verifyId", fields: ["first_name"] }
        * object representing all pages in this step keyed by the page route
@@ -177,6 +182,7 @@ export default class Step extends BaseModel {
     const pagesByStep = groupBy(pages, "step");
     const verifyId = new Step({
       name: ClaimSteps.verifyId,
+      part: 1,
       pages: pagesByStep[ClaimSteps.verifyId],
       context,
       warnings,
@@ -184,6 +190,7 @@ export default class Step extends BaseModel {
 
     const leaveDetails = new Step({
       name: ClaimSteps.leaveDetails,
+      part: 1,
       pages: pagesByStep[ClaimSteps.leaveDetails],
       dependsOn: [verifyId],
       context,
@@ -192,6 +199,7 @@ export default class Step extends BaseModel {
 
     const employerInformation = new Step({
       name: ClaimSteps.employerInformation,
+      part: 1,
       pages: pagesByStep[ClaimSteps.employerInformation],
       dependsOn: [verifyId, leaveDetails],
       context,
@@ -200,6 +208,7 @@ export default class Step extends BaseModel {
 
     const otherLeave = new Step({
       name: ClaimSteps.otherLeave,
+      part: 1,
       pages: pagesByStep[ClaimSteps.otherLeave],
       dependsOn: [verifyId, leaveDetails],
       context,
@@ -208,24 +217,30 @@ export default class Step extends BaseModel {
 
     const uploadId = new Step({
       name: ClaimSteps.uploadId,
+      part: 2,
       pages: pagesByStep[ClaimSteps.uploadId],
-      dependsOn: [verifyId, leaveDetails],
+      // TODO (CP-902): This step should depend on Part 1 being submitted, which will be a new step
+      dependsOn: [verifyId, leaveDetails, employerInformation, otherLeave],
       context,
       warnings,
     });
 
     const uploadCertification = new Step({
       name: ClaimSteps.uploadCertification,
+      part: 2,
       pages: pagesByStep[ClaimSteps.uploadCertification],
-      dependsOn: [verifyId, leaveDetails],
+      // TODO (CP-902): This step should depend on Part 1 being submitted, which will be a new step
+      dependsOn: [verifyId, leaveDetails, employerInformation, otherLeave],
       context,
       warnings,
     });
 
     const payment = new Step({
       name: ClaimSteps.payment,
+      part: 3,
       pages: pagesByStep[ClaimSteps.payment],
-      dependsOn: [verifyId, leaveDetails],
+      // TODO (CP-902): This step should depend on Part 1 being submitted, which will be a new step
+      dependsOn: [verifyId, leaveDetails, employerInformation, otherLeave],
       context,
       warnings,
     });

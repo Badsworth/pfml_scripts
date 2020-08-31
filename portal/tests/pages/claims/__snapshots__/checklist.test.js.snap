@@ -1,6 +1,12 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`Checklist renders page 1`] = `
+exports[`Checklist when Part 1 is submitted renders descriptions for Part 2 and 3 1`] = `"Uploading documents online leads to faster processing, but you can also fax documents to NNN-NNN-NNNN, or mail them to 123 Address."`;
+
+exports[`Checklist when Part 1 is submitted renders descriptions for Part 2 and 3 2`] = `"Entering payment information leads to faster processing, but you can also call XXX‑XXX‑XXXX."`;
+
+exports[`Checklist when Part 1 is submitted renders different description for Part 1 1`] = `"If you need to edit your information in Part 1, you’ll need to call the Contact Center at XXX‑XXX‑XXXX."`;
+
+exports[`Checklist when claim has not been started renders initial checklist state 1`] = `
 <div
   className="measure-6"
 >
@@ -8,16 +14,42 @@ exports[`Checklist renders page 1`] = `
     href="/"
     label="Back to Dashboard"
   />
+  <Title
+    hidden={true}
+  >
+    Checklist: Create a new application
+  </Title>
   <StepList
     completedText="Completed"
+    description="Your progress is automatically saved as you complete the application. You can edit any information you enter in Part 1 until step 5 is completed."
     editText="Edit"
+    key="1"
+    offset={0}
     resumeText="Resume"
     screenReaderNumberPrefix="Step"
     startText="Start"
-    submitButtonText="Review and submit application"
-    submitPage="/claims/review?claim_id=mock_application_id"
-    submitPageDisabled={true}
-    title="Create a new application"
+    title={
+      <Trans
+        components={
+          Object {
+            "part-number": <span
+              className="display-block font-heading-2xs margin-bottom-1 text-base-dark"
+            />,
+          }
+        }
+        i18nKey="pages.claimsChecklist.stepListTitle"
+        tOptions={
+          Object {
+            "context": "1",
+          }
+        }
+        values={
+          Object {
+            "number": "1",
+          }
+        }
+      />
+    }
   >
     <Step
       key="verifyId"
@@ -75,6 +107,39 @@ exports[`Checklist renders page 1`] = `
         }
       />
     </Step>
+  </StepList>
+  <StepList
+    completedText="Completed"
+    description={null}
+    editText="Edit"
+    key="2"
+    offset={4}
+    resumeText="Resume"
+    screenReaderNumberPrefix="Step"
+    startText="Start"
+    title={
+      <Trans
+        components={
+          Object {
+            "part-number": <span
+              className="display-block font-heading-2xs margin-bottom-1 text-base-dark"
+            />,
+          }
+        }
+        i18nKey="pages.claimsChecklist.stepListTitle"
+        tOptions={
+          Object {
+            "context": "2",
+          }
+        }
+        values={
+          Object {
+            "number": "2",
+          }
+        }
+      />
+    }
+  >
     <Step
       key="uploadId"
       status="disabled"
@@ -103,6 +168,39 @@ exports[`Checklist renders page 1`] = `
         }
       />
     </Step>
+  </StepList>
+  <StepList
+    completedText="Completed"
+    description={null}
+    editText="Edit"
+    key="3"
+    offset={6}
+    resumeText="Resume"
+    screenReaderNumberPrefix="Step"
+    startText="Start"
+    title={
+      <Trans
+        components={
+          Object {
+            "part-number": <span
+              className="display-block font-heading-2xs margin-bottom-1 text-base-dark"
+            />,
+          }
+        }
+        i18nKey="pages.claimsChecklist.stepListTitle"
+        tOptions={
+          Object {
+            "context": "3",
+          }
+        }
+        values={
+          Object {
+            "number": "3",
+          }
+        }
+      />
+    }
+  >
     <Step
       key="payment"
       status="disabled"
@@ -118,5 +216,12 @@ exports[`Checklist renders page 1`] = `
       />
     </Step>
   </StepList>
+  <ButtonLink
+    className="margin-bottom-8"
+    disabled={true}
+    href="/claims/review?claim_id=mock_application_id"
+  >
+    Review and submit application
+  </ButtonLink>
 </div>
 `;

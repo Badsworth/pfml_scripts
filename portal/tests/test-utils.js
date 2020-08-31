@@ -1,11 +1,14 @@
 import Claim, {
+  ClaimStatus,
   ContinuousLeavePeriod,
+  EmploymentStatus,
   IntermittentLeavePeriod,
   LeaveReason,
   PaymentPreferenceMethod,
   ReducedScheduleLeavePeriod,
 } from "../src/models/Claim";
 import { mount, shallow } from "enzyme";
+import Address from "../src/models/Address";
 import ClaimCollection from "../src/models/ClaimCollection";
 import React from "react";
 import User from "../src/models/User";
@@ -117,8 +120,26 @@ export class MockClaimBuilder {
     return this;
   }
 
+  employed() {
+    set(this.claimAttrs, "employment_status", EmploymentStatus.employed);
+    set(this.claimAttrs, "employer_fein", "*********");
+    set(this.claimAttrs, "leave_details.employer_notified", true);
+    set(
+      this.claimAttrs,
+      "leave_details.employer_notification_date",
+      "2021-01-01"
+    );
+  }
+
   medicalLeaveReason() {
     set(this.claimAttrs, "leave_details.reason", LeaveReason.medical);
+    return this;
+  }
+
+  noOtherLeave() {
+    set(this.claimAttrs, "has_employer_benefits", false);
+    set(this.claimAttrs, "has_other_incomes", false);
+    set(this.claimAttrs, "has_previous_leaves", false);
     return this;
   }
 
@@ -138,14 +159,40 @@ export class MockClaimBuilder {
   }
 
   complete() {
-    this.verifiedId();
-    this.medicalLeaveReason();
-    this.continuous();
+    this.submitted();
+
     set(
       this.claimAttrs,
       "temp.payment_preferences[0].payment_method",
       PaymentPreferenceMethod.ach
     );
+    return this;
+  }
+
+  /**
+   * Part 1 steps are complete and submitted to API
+   * @returns {MockClaimBuilder}
+   */
+  submitted() {
+    this.verifiedId();
+    this.medicalLeaveReason();
+    this.continuous();
+    this.employed();
+    this.noOtherLeave();
+
+    set(
+      this.claimAttrs,
+      "temp.residential_address",
+      new Address({
+        city: "Boston",
+        line_1: "1234 My St.",
+        line_2: null,
+        state: "MA",
+        zip: "00000",
+      })
+    );
+    set(this.claimAttrs, "status", ClaimStatus.submitted);
+
     return this;
   }
 

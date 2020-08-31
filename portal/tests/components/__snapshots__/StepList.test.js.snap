@@ -1,10 +1,15 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`StepList renders component 1`] = `
-<div>
-  <Title>
+<div
+  className="margin-bottom-8"
+>
+  <Heading
+    level="2"
+    size="1"
+  >
     Step List
-  </Title>
+  </Heading>
   <Step
     completedText="Completed"
     editText="Edit"
@@ -19,12 +24,5 @@ exports[`StepList renders component 1`] = `
   >
     Step Description
   </Step>
-  <ButtonLink
-    className="margin-top-4"
-    href="path/to/submit/page"
-    name="submit-list"
-  >
-    Submit
-  </ButtonLink>
 </div>
 `;
