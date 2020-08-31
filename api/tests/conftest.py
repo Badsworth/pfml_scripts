@@ -180,10 +180,11 @@ def test_db_schema(monkeypatch):
     exec_sql_admin(f"CREATE SCHEMA IF NOT EXISTS {schema_name} AUTHORIZATION {db_test_user};")
     logger.info("create schema %s", schema_name)
 
-    yield schema_name
-
-    exec_sql_admin(f"DROP SCHEMA {schema_name} CASCADE;")
-    logger.info("drop schema %s", schema_name)
+    try:
+        yield schema_name
+    finally:
+        exec_sql_admin(f"DROP SCHEMA {schema_name} CASCADE;")
+        logger.info("drop schema %s", schema_name)
 
 
 @pytest.fixture
