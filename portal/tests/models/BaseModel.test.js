@@ -1,12 +1,21 @@
 import BaseModel from "../../src/models/BaseModel";
 
 describe("BaseModel", () => {
+  class NestedModel extends BaseModel {
+    get defaults() {
+      return {
+        z: null,
+      };
+    }
+  }
+
   class TestModel extends BaseModel {
     get defaults() {
       return {
         a: null,
         b: "foo",
         c: [],
+        d: new NestedModel(),
       };
     }
   }
@@ -19,6 +28,7 @@ describe("BaseModel", () => {
         a: null,
         b: "foo",
         c: [],
+        d: new NestedModel(),
       });
     });
 
@@ -26,27 +36,29 @@ describe("BaseModel", () => {
       const testModel = new TestModel({
         b: "bar",
         c: [1, 2, 3],
+        d: new NestedModel({ z: "baz" }),
       });
 
       expect(testModel).toEqual({
         a: null,
         b: "bar",
         c: [1, 2, 3],
+        d: new NestedModel({ z: "baz" }),
       });
     });
 
     it("throws an exception when calling constructor with attributes that aren't defined in default attributes object", () => {
       jest.spyOn(console, "warn").mockImplementationOnce(jest.fn());
-
       const testModel = new TestModel({
         a: "cow",
-        d: "should be ignored",
+        e: "should be ignored",
       });
 
       expect(testModel).toEqual({
         a: "cow",
         b: "foo",
         c: [],
+        d: new NestedModel(),
       });
       expect(console.warn).toHaveBeenCalled(); // eslint-disable-line no-console
     });
@@ -58,5 +70,26 @@ describe("BaseModel", () => {
     expect(() => {
       new BadModel(); // eslint-disable-line no-new
     }).toThrow();
+  });
+
+  describe("#isDefault", () => {
+    it("returns true if every value is the default value", () => {
+      const testModel = new TestModel();
+      expect(testModel.isDefault()).toEqual(true);
+    });
+
+    it("returns false if any value is not the default value", () => {
+      let testModel = new TestModel({ a: "fiz" });
+      expect(testModel.isDefault()).toEqual(false);
+
+      testModel = new TestModel({ b: "fiz" });
+      expect(testModel.isDefault()).toEqual(false);
+
+      testModel = new TestModel({ c: [1] });
+      expect(testModel.isDefault()).toEqual(false);
+
+      testModel = new TestModel({ d: new NestedModel({ z: "fiz" }) });
+      expect(testModel.isDefault()).toEqual(false);
+    });
   });
 });

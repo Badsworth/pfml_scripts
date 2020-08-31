@@ -17,6 +17,7 @@ const routes = {
     verifyAccount: "/verify-account",
   },
   claims: {
+    address: "/claims/address",
     averageWorkHours: "/claims/average-work-hours",
     bonding: {
       dateOfChild: "/claims/bonding/date-of-child",

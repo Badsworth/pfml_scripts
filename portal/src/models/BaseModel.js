@@ -1,3 +1,5 @@
+import isEqual from "lodash/isEqual";
+
 /**
  * Class representing the base class for the application's models
  */
@@ -43,5 +45,13 @@ export default class BaseModel {
    */
   get defaults() {
     throw new Error("Not implemented");
+  }
+
+  /**
+   * Check to see if this object is set to the default values
+   * @returns {boolean} true if this object has default values and false otherwise
+   */
+  isDefault() {
+    return isEqual(this, new this.constructor());
   }
 }

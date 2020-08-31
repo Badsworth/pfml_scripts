@@ -14,6 +14,7 @@
 
 import { EmploymentStatus, LeaveReason } from "../models/Claim";
 import { ClaimSteps } from "../models/Step";
+import { fields as addressFields } from "../pages/claims/address";
 import { fields as averageWorkHoursFields } from "../pages/claims/average-work-hours";
 import { fields as dateOfBirthFields } from "../pages/claims/date-of-birth";
 import { fields as dateOfChildFields } from "../pages/claims/bonding/date-of-child";
@@ -98,6 +99,15 @@ export default {
       meta: {
         step: ClaimSteps.verifyId,
         fields: nameFields,
+      },
+      on: {
+        CONTINUE: routes.claims.address,
+      },
+    },
+    [routes.claims.address]: {
+      meta: {
+        step: ClaimSteps.verifyId,
+        fields: addressFields,
       },
       on: {
         CONTINUE: routes.claims.dateOfBirth,

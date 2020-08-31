@@ -48,6 +48,11 @@ const machineTests = {
       test: () => {},
     },
   },
+  [routes.claims.address]: {
+    meta: {
+      test: () => {},
+    },
+  },
   [routes.claims.dateOfBirth]: {
     meta: {
       test: () => {},
