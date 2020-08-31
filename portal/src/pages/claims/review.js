@@ -81,10 +81,11 @@ export const Review = (props) => {
         {get(claim, "temp.residential_address.zip")}
       </ReviewRow>
 
-      {/* TODO: Use the API response for the PII fields */}
+      {/* TODO (CP-891): Use the API response for the PII fields */}
       <ReviewRow label={t("pages.claimsReview.userDateOfBirthLabel")}>
         **/**/****
       </ReviewRow>
+      {/* TODO (CP-891): Use the API response for the PII fields */}
       <ReviewRow label={t("pages.claimsReview.userSsnLabel")}>
         *********
       </ReviewRow>
@@ -123,7 +124,7 @@ export const Review = (props) => {
       )}
       {reason === LeaveReason.bonding && (
         <React.Fragment>
-          {/* TODO: Use the API response for the PII fields */}
+          {/* TODO (CP-891): Use the API response for the PII fields */}
           <ReviewRow label={t("pages.claimsReview.bondingLeaveLabel")}>
             **/**/****
           </ReviewRow>
@@ -285,7 +286,7 @@ export const EmployerBenefitList = (props) => {
     const label = t("pages.claimsReview.employerBenefitEntryLabel", {
       count: index + 1,
     });
-    // TODO: CP-567 remove this ternary operator once we begin saving other leave to
+    // TODO (CP-567): remove this ternary operator once we begin saving other leave to
     // the API. We'll always have a type then
     const type = entry.benefit_type
       ? t("pages.claimsReview.employerBenefitType", {
@@ -330,7 +331,7 @@ export const OtherIncomeList = (props) => {
     const label = t("pages.claimsReview.otherIncomeEntryLabel", {
       count: index + 1,
     });
-    // TODO: CP-567 remove this ternary operator once we begin saving other leave to
+    // TODO (CP-567): remove this ternary operator once we begin saving other leave to
     // the API. We'll always have a type then
     const type = entry.income_type
       ? t("pages.claimsReview.otherIncomeType", {
@@ -401,7 +402,7 @@ export const OtherLeaveEntry = (props) => {
           <br />
         </React.Fragment>
       )}
-      {/* TODO: CP-567 once we're saving other leave to the api then we can remove
+      {/* TODO (CP-567): once we're saving other leave to the api then we can remove
           the conditional rendering here and instead always render the date string */}
       {dates && (
         <React.Fragment>

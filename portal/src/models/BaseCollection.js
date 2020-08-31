@@ -42,7 +42,7 @@ class BaseCollection {
   /**
    * Return a single item from the id of the item or
    * undefined if the item is not in the collection
-   * @todo Rename to getItem to be consistent with other methods
+   * TODO (CP-887): Rename to getItem to be consistent with other methods
    * @param {string} itemId - item id
    * @returns {BaseModel|undefined} item - instance of item
    */

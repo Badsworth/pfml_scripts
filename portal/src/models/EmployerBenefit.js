@@ -19,7 +19,7 @@ class EmployerBenefit extends BaseModel {
 /**
  * Enums for the EmployerBenefit `benefit_type` field
  * @enum {string}
- * TODO: (CP-567) make sure these enum strings match the API's values
+ * TODO (CP-567): make sure these enum strings match the API's values
  */
 export const EmployerBenefitType = {
   // The ordering here defines the ordering of elements on the page so we override the linter rule

@@ -6,7 +6,7 @@ const withImages = require("next-images");
 const withBundleAnalyzer = require("@next/bundle-analyzer")({
   enabled: process.env.ANALYZE_BUNDLE === "true",
 });
-// TODO: Next.js will eventually provide production source maps out of the box,
+// TODO (CP-884): Next.js will eventually provide production source maps out of the box,
 // so remove this plugin when that becomes available. Experimental support was
 // added in https://github.com/zeit/next.js/pull/13018
 const withSourceMaps = require("@zeit/next-source-maps");

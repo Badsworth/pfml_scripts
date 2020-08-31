@@ -40,21 +40,10 @@ export default class UsersApi extends BaseApi {
    * @returns {Promise<UsersApiResult>}
    */
   updateUser = async (user_id, patchData) => {
-    // API does not accept these fields yet
-    // TODO remove once API accepts these fields
-    const {
-      status: stat,
-      email_address,
-      user_id: userId,
-      date_of_birth,
-      auth_id,
-      ...workaroundPatchData
-    } = patchData;
-
     const { data, success, status } = await this.request(
       "PATCH",
       user_id,
-      workaroundPatchData
+      patchData
     );
 
     return {

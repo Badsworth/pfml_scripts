@@ -31,7 +31,7 @@
         "jsx": true
       }
     },
-    "plugins": ["jest", "jsdoc", "jsx-a11y", "react-hooks"],
+    "plugins": ["jest", "jsdoc", "jsx-a11y", "react-hooks", "todo-plz"],
     "rules": {
         "jest/consistent-test-it": ["error", { "fn": "it" }],
         "jest/no-try-expect": "off",
@@ -59,7 +59,8 @@
         "react-hooks/rules-of-hooks": "error",
         "react-hooks/exhaustive-deps": "warn",
         "sort-imports": "error",
-        "sort-vars": "error"
+        "sort-vars": "error",
+        "todo-plz/ticket-ref": ["error", { "pattern": "(API|CP|EMPLOYER)-[0-9]+", "terms": ["TODO"] }]
       },
     "settings": {
       "react": {

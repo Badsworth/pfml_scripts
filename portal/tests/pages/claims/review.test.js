@@ -143,7 +143,7 @@ describe("Duration type", () => {
           continuous_leave_periods: [new ContinuousLeavePeriod()],
           reduced_schedule_leave_periods: [new ReducedScheduleLeavePeriod()],
         },
-        // TODO CP-744: remove once BaseModel merges properties
+        // TODO (CP-744): remove once BaseModel merges properties
         payment_preferences: [{}],
       },
     };

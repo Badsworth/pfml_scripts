@@ -15,9 +15,11 @@ import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "../../locales/i18n";
 import withClaim from "../../hoc/withClaim";
 
-// TODO: Export full set of fields once Checklist no longer relies on
-// this array for determining which steps are completed
-export const fields = ["claim.temp.payment_preferences[0].payment_method"];
+export const fields = [
+  "claim.temp.payment_preferences[0].payment_method",
+  "claim.temp.payment_preferences[0].account_details",
+  "claim.temp.payment_preferences[0].destination_address",
+];
 
 export const PaymentMethod = (props) => {
   const { appLogic, claim } = props;

@@ -24,7 +24,7 @@ const useAppLogic = () => {
 
   // user will be eventually set through a `login` method
   // const [user, setUser] = useState();
-  // TODO: remove user from configs and write login method
+  // TODO (CP-885): remove user from configs and write login method
   const claims = useClaimsLogic({
     appErrorsLogic,
     portalFlow,
@@ -35,7 +35,7 @@ const useAppLogic = () => {
     appErrors,
     auth,
     claims,
-    // TODO: remove once all API calls are behind appLogic
+    // TODO (CP-886): remove once all API calls are behind appLogic
     clearErrors: appErrorsLogic.clearErrors,
     goToNextPage: portalFlow.goToNextPage,
     setAppErrors: appErrorsLogic.setAppErrors,

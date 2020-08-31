@@ -69,18 +69,12 @@ export default class Step extends BaseModel {
     };
   }
 
-  // TODO remove when all steps are populated with pages
-  get _pages() {
-    return this.pages || [];
-  }
-
   get fields() {
-    return this._pages.flatMap((page) => page.fields);
+    return this.pages.flatMap((page) => page.fields);
   }
 
   get initialPage() {
-    // TODO remove when all steps are populated with pages
-    return (this._pages[0] || {}).route || "#";
+    return this.pages[0].route;
   }
 
   // page user is navigated to when clicking into step

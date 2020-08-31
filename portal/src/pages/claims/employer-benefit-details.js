@@ -102,7 +102,7 @@ export const EmployerBenefitCard = (props) => {
   const { t } = useTranslation();
   const { entry, getFunctionalInputProps, index } = props;
   const selectedType = entry.benefit_type;
-  // TODO: make sure that the amount gets removed if the input text is hidden
+  // TODO (CP-890): make sure that the amount gets removed if the input text is hidden
   const showAmountInputText = [
     EmployerBenefitType.shortTermDisability,
     EmployerBenefitType.permanentDisability,

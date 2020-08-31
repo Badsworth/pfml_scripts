@@ -13,7 +13,8 @@ const useClaimsLogic = ({ appErrorsLogic, portalFlow, user }) => {
   // new claims
   const {
     collection: claims,
-    // addItem: addClaim, // TODO: uncomment once the workaround in createClaim is removed: https://lwd.atlassian.net/browse/CP-701
+    // TODO (CP-701): uncomment once the workaround in createClaim is removed
+    // addItem: addClaim,
     updateItem: setClaim,
     setCollection: setClaims,
   } = useCollectionState(null); // Set initial value to null to lazy load claims
@@ -90,7 +91,7 @@ const useClaimsLogic = ({ appErrorsLogic, portalFlow, user }) => {
           await load();
         } else {
           // The API currently doesn't return the claim in POST /applications, so for now just reload all the claims
-          // TODO: Remove this workaround and use `addClaim(claim)` instead: https://lwd.atlassian.net/browse/CP-701
+          // TODO (CP-701): Remove this workaround and use `addClaim(claim)` instead
           // addClaim(claim);
           await load(true);
         }
@@ -116,11 +117,7 @@ const useClaimsLogic = ({ appErrorsLogic, portalFlow, user }) => {
       let { claim, success } = await claimsApi.submitClaim(application_id);
 
       if (success) {
-        // Currently the API doesn't return the claim data in the response
-        // so we're manually constructing the body based on client data.
-        // We will change the PATCH applications endpoint to return the full
-        // application in this ticket: https://lwd.atlassian.net/browse/API-276
-        // TODO: Remove workaround once above ticket is complete: https://lwd.atlassian.net/browse/CP-577
+        // TODO (CP-676): Remove workaround once API returns all the fields in our application
         claim = new Claim({
           ...claims.get(application_id),
           ...{

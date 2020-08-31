@@ -19,7 +19,6 @@ import usePortalFlow from "../../src/hooks/usePortalFlow";
 
 jest.mock("../../src/api/ClaimsApi");
 
-// TODO add tests for api returning errors and warnings
 describe("useClaimsLogic", () => {
   const applicationId = "mock-application-id";
   let appErrorsLogic, claimsLogic, portalFlow, user;
@@ -124,7 +123,7 @@ describe("useClaimsLogic", () => {
 
         // This mock is needed for the workaround of calling claimsLogic.load
         // after creating a claim in createClaims
-        // TODO: Remove this once the workaround is removed: https://lwd.atlassian.net/browse/CP-701
+        // TODO (CP-701): Remove this once the workaround is removed
         getClaimsMock.mockResolvedValueOnce({
           claims: new ClaimCollection([
             new Claim({ application_id: "mock-application-id-1" }),
@@ -216,7 +215,7 @@ describe("useClaimsLogic", () => {
 
         // This mock is needed for the workaround of calling claimsLogic.load
         // after creating a claim in claimsLogic.create
-        // TODO: Remove this once the workaround is removed: https://lwd.atlassian.net/browse/CP-701
+        // TODO (CP-701): Remove this once the workaround is removed
         getClaimsMock.mockResolvedValueOnce({
           claims: new ClaimCollection([
             new Claim({ application_id: "mock-application-id-1" }),

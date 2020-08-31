@@ -18,11 +18,11 @@ class Claim extends BaseModel {
       employer_fein: null,
       employment_status: null,
       first_name: null,
-      // TODO: this field doesn't exist in the API yet: https://lwd.atlassian.net/browse/CP-567
+      // TODO (CP-567): this field doesn't exist in the API yet
       has_employer_benefits: null,
-      // TODO: this field doesn't exist in the API yet: https://lwd.atlassian.net/browse/CP-567
+      // TODO (CP-567): this field doesn't exist in the API yet
       has_other_incomes: null,
-      // TODO: this field doesn't exist in the API yet: https://lwd.atlassian.net/browse/CP-567
+      // TODO (CP-567): this field doesn't exist in the API yet
       has_previous_leaves: null,
       has_state_id: null,
       last_name: null,
@@ -51,20 +51,19 @@ class Claim extends BaseModel {
         leave_details: {
           // TODO (CP-719): Connect intermittent leave fields to the API
           avg_weekly_work_hours: null,
-          // TODO: create ticket for connecting bonding field to API
           bonding: {
             date_of_child: null,
           },
-          // TODO: connect with continuous schedule periods fields to the API: https://lwd.atlassian.net/browse/CP-720
+          // TODO (CP-720): connect with continuous schedule periods fields to the API
           continuous_leave_periods: [],
           // TODO (CP-724): Connect start and end date to API
           end_date: null,
-          // TODO: connect with reduced schedule periods fields to the API: https://lwd.atlassian.net/browse/CP-714
+          // TODO (CP-714): connect with reduced schedule periods fields to the API
           reduced_schedule_leave_periods: [],
           // TODO (CP-724): Connect start and end date to API
           start_date: null,
         },
-        // TODO: Connect payment preference entry fields to the API: https://lwd.atlassian.net/browse/CP-703
+        // TODO (CP-703): Connect payment preference entry fields to the API
         payment_preferences: [
           {
             // Fields for ACH details
@@ -145,9 +144,8 @@ export const EmploymentStatus = {
  * @enum {string}
  */
 export const LeaveReason = {
-  // TODO: We need to map some of these to the correct API fields,
+  // TODO (CP-515): We need to map some of these to the correct API fields,
   // once those enum values exist within the API
-  // https://lwd.atlassian.net/browse/CP-515
   activeDutyFamily: "Care For A Family Member",
   bonding: "Child Bonding",
   medical: "Serious Health Condition - Employee",
@@ -218,7 +216,7 @@ export class ReducedScheduleLeavePeriod extends BaseModel {
  */
 export const PaymentPreferenceMethod = {
   ach: "ACH",
-  // TODO: Map to a valid enum for debit https://lwd.atlassian.net/browse/CP-703
+  // TODO (CP-703): Map to a valid enum for debit
   debit: "Debit",
 };
 

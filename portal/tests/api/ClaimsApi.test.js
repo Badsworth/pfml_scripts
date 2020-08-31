@@ -62,7 +62,7 @@ describe("ClaimsApi", () => {
 
         // Needed for workaround in claimsApi.getClaims
         // This won't be needed once https://lwd.atlassian.net/browse/API-290 is complete
-        // TODO: Remove workaround once above ticket is complete: https://lwd.atlassian.net/browse/CP-577
+        // TODO (CP-577): Remove workaround once above ticket is complete
         global.fetch.mockResolvedValueOnce({
           json: jest.fn().mockResolvedValueOnce({
             data: {

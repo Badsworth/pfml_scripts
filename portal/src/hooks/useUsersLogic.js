@@ -20,6 +20,7 @@ import { useRouter } from "next/router";
 const useUsersLogic = ({ appErrorsLogic, isLoggedIn, portalFlow }) => {
   const usersApi = useMemo(() => new UsersApi(), []);
   const [user, setUser] = useState();
+  // TODO (CP-789): Remove dependency on next/router
   const router = useRouter();
 
   /**
@@ -89,7 +90,7 @@ const useUsersLogic = ({ appErrorsLogic, isLoggedIn, portalFlow }) => {
     if (!user) throw new Error("User not loaded");
     if (
       !user.consented_to_data_sharing &&
-      // TODO CP-732: Once we switch to using a custom router we can probably use portalFlow instead of directly checking the router pathname
+      // TODO (CP-732): Once we switch to using a custom router we can probably use portalFlow instead of directly checking the router pathname
       !router.pathname.includes(routes.user.consentToDataSharing)
     ) {
       router.push(routes.user.consentToDataSharing);

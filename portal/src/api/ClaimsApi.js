@@ -47,7 +47,6 @@ export default class ClaimsApi extends BaseApi {
 
   /**
    * Create a new claim through a POST request to /applications
-   * @todo Document the structure of error responses once we know what it looks like
    * @returns {Promise<ClaimsApiSingleResult>} The result of the API call
    */
   createClaim = async () => {
@@ -100,7 +99,6 @@ export default class ClaimsApi extends BaseApi {
    * to be submitted to the claims processing system.
    *
    * Corresponds to this API endpoint: /application/{application_id}/submit_application
-   * @todo Document the possible errors
    * @param {string} application_id ID of the Claim
    * @returns {Promise<ClaimsApiSingleResult>} The result of the API call
    */
@@ -110,10 +108,7 @@ export default class ClaimsApi extends BaseApi {
       `${application_id}/submit_application`
     );
 
-    // Currently the API doesn't return the claim data in the response.
-    // We will change the PATCH applications endpoint to return the full
-    // application in this ticket: https://lwd.atlassian.net/browse/API-276
-    // TODO: Remove workaround once above ticket is complete: https://lwd.atlassian.net/browse/CP-577
+    // TODO (CP-676): Remove workaround once API returns all the fields in our application
     const workaroundData = { ...data, application_id };
     // </ end workaround >
 

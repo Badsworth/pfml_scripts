@@ -49,18 +49,16 @@ const LeaveReason = (props) => {
             value: LeaveReasonEnum.bonding,
           },
           {
-            // TODO: We need to more accurately map this Family Leave option to signify that
+            // TODO (CP-515): We need to more accurately map this Family Leave option to signify that
             // this is active duty family leave, as opposed to another family leave type.
-            // https://lwd.atlassian.net/browse/CP-515
             checked: reason === LeaveReasonEnum.activeDutyFamily,
             hint: t("pages.claimsLeaveReason.activeDutyFamilyLeaveHint"),
             label: t("pages.claimsLeaveReason.activeDutyFamilyLeaveLabel"),
             value: LeaveReasonEnum.activeDutyFamily,
           },
           {
-            // TODO: We need to more accurately map this Family Leave option to signify that
+            // TODO (CP-515): We need to more accurately map this Family Leave option to signify that
             // this is family leave to care for a service member, as opposed to another family leave type.
-            // https://lwd.atlassian.net/browse/CP-515
             checked: reason === LeaveReasonEnum.serviceMemberFamily,
             hint: t("pages.claimsLeaveReason.serviceMemberFamilyLeaveHint"),
             label: t("pages.claimsLeaveReason.serviceMemberFamilyLeaveLabel"),

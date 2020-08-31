@@ -72,7 +72,7 @@ function trackEvent(name, customAttributes) {
   if (newrelicReady()) {
     newrelic.addPageAction(name, customAttributes);
   }
-  // TODO: Send the event to Google Analytics as well (https://lwd.atlassian.net/browse/CP-433)
+  // TODO (CP-433): Send the event to Google Analytics as well
 }
 
 export default {

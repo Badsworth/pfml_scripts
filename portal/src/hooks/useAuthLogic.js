@@ -174,7 +174,7 @@ const useAuthLogic = ({ appErrorsLogic, portalFlow }) => {
     try {
       await Auth.resendSignUp(username);
 
-      // TODO: Show success message https://lwd.atlassian.net/browse/CP-600
+      // TODO (CP-600): Show success message
     } catch (error) {
       const message = t("errors.network");
       const appErrors = new AppErrorInfoCollection([
@@ -429,7 +429,7 @@ function getCreateAccountErrorInfo(error, t) {
     // message: "Password did not conform with policy: Password must have numeric characters"
     message = t("errors.auth.passwordErrors");
   } else if (error.code === "UsernameExistsException") {
-    // TODO: Obfuscate the fact that the user exists https://lwd.atlassian.net/browse/CP-576
+    // TODO (CP-576): Obfuscate the fact that the user exists
     message = t("errors.auth.usernameExists");
   } else {
     message = t("errors.network");

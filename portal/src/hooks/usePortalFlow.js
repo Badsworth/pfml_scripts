@@ -11,7 +11,7 @@ import { useRouter } from "next/router";
  */
 const usePortalFlow = () => {
   const routingMachine = useMemo(() => Machine(machineConfigs, { guards }), []);
-  // TODO use custom useRouter: see https://github.com/EOLWD/pfml/pull/561/files#r448590332
+  // TODO (CP-732) use custom useRouter
   const router = useRouter();
   // State representing current page route
   const { pathname: page } = router;
