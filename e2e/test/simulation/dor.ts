@@ -36,7 +36,7 @@ describe("DOR Employer File Generator", function () {
   it("should generate a valid employer line", async function () {
     const contents = await extract(createEmployersStream([employer]));
     expect(contents).toMatchInlineSnapshot(
-      `"00001John Hancock                                                                                                                                                                                                                                                   1212315 123 Some Way                                                                                                                                                                                                                                                    Boston                         MA 01010                                                                                                                                                                                                                                                                 F F   20200820"`
+      `"00001John Hancock                                                                                                                                                                                                                                                   1212315123 Some Way                                                                                                                                                                                                                                                   Boston                        MA01010                                                                                                                                                                                                                                                               FF999912319999123120200820000000"`
     );
   });
 });
@@ -62,7 +62,7 @@ describe("DOR Employee File Generator", function () {
     );
 
     expect(contents).toMatchInlineSnapshot(`
-      "A0000120200630John Hancock                                                                                                                                                                                                                                                   1212315F2020063020200630
+      "A0000120200630John Hancock                                                                                                                                                                                                                                                   1212315F2020063020200630000000
       B0000120200630Dave                                                                                                                                                                                                                                                           Smith                                                                                                                                                                                                                                                          000000000FT             1276.00             1276.00                0.00                0.00                0.00                0.00
       "
     `);

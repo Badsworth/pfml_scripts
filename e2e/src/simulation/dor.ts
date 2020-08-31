@@ -3,6 +3,9 @@ import merge from "merge2";
 import util from "util";
 import { SimulationClaim } from "./types";
 
+// Date to fill in when no exemption is given.
+const NO_EXEMPTION_DATE = "99991231";
+
 export type Employer = {
   accountKey: string;
   name: string;
@@ -21,6 +24,11 @@ export type Employer = {
 
 function formatISODate(date: Date): string {
   return date.toISOString().split("T")[0].replace(/-/g, "");
+}
+export function formatISODatetime(date: Date): string {
+  const dt = formatISODate(date);
+  const hr = date.toISOString().split("T")[1].replace(/:/g, "").split(".")[0];
+  return dt + hr;
 }
 
 /**
@@ -43,7 +51,7 @@ function getEmployeeFilingRecords(
         employer.fein.replace(/-/g, ""),
         "F",
         formatISODate(period),
-        formatISODate(period)
+        formatISODatetime(period)
       )
     );
     return records.concat(thisEmployerRecords);
@@ -139,24 +147,24 @@ export function createEmployersStream(
     (function* () {
       for (const record of employers) {
         yield util.format(
-          "%s%s%s",
+          "%s%s%s%s%s%s%s%s%s%s%s%s%s",
           record.accountKey,
           record.name.padEnd(255),
           record.fein.replace(/-/g, ""),
           record.street.padEnd(255),
           record.city.padEnd(30),
           record.state,
-          record.zip,
+          record.zip.replace(/-/g, ""),
           record.dba.padEnd(255),
           record.family_exemption ? "T" : "F",
           record.medical_exemption ? "T" : "F",
           record.exemption_commence_date
             ? formatISODate(record.exemption_commence_date)
-            : "",
+            : NO_EXEMPTION_DATE,
           record.exemption_cease_date
             ? formatISODate(record.exemption_cease_date)
-            : "",
-          formatISODate(record.updated_date)
+            : NO_EXEMPTION_DATE,
+          formatISODatetime(record.updated_date)
         );
       }
     })()

@@ -15,7 +15,11 @@ import { Simulation } from "./simulate";
 import createExecutor from "./execute";
 import { pipeline } from "stream";
 import { promisify } from "util";
-import { createEmployeesStream, createEmployersStream } from "./dor";
+import {
+  createEmployeesStream,
+  createEmployersStream,
+  formatISODatetime,
+} from "./dor";
 import employers from "./fixtures/employerPool";
 
 // Load variables from .env.
@@ -97,15 +101,16 @@ const submitter = new PortalSubmitter({
       `${directory}/claims.json`,
       JSON.stringify(claims, null, 2)
     );
+    const now = new Date();
     // Generate the employers DOR file. This is done by "pipelining" a read stream into a write stream.
     const dorEmployersPromise = pipelineP(
       createEmployersStream(employers),
-      fs.createWriteStream(`${directory}/DOR-Employers.txt`)
+      fs.createWriteStream(`${directory}/DORDFMLEMP_${formatISODatetime(now)}`)
     );
     // Generate the employees DOR file. This is done by "pipelining" a read stream into a write stream.
     const dorEmployeesPromise = pipelineP(
       createEmployeesStream(claims, employers, filingPeriods),
-      fs.createWriteStream(`${directory}/DOR-Employees.txt`)
+      fs.createWriteStream(`${directory}/DORDFML_${formatISODatetime(now)}`)
     );
 
     // Finally wait for all of those files to finish generating.
