@@ -29,7 +29,7 @@ class FINEOSClientBadResponse(FINEOSClientError):
         return "expected %s, but got %s" % (self.expected_status, self.response_status)
 
 
-class FINEOSNotFound(BaseException):
+class FINEOSNotFound(FINEOSClientError):
 
     message: str
 

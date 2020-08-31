@@ -1,5 +1,6 @@
 from datetime import date, datetime
 
+import factory.random
 from freezegun import freeze_time
 from sqlalchemy import inspect
 
@@ -182,6 +183,7 @@ def test_application_patch(client, user, auth_token, test_db_session):
     update_request_body["leave_details"] = {"relationship_to_caregiver": "Parent"}
     update_request_body["middle_name"] = "Mike"
     update_request_body["tax_identifier"] = "123-45-6789"
+    update_request_body["employer_fein"] = "22-7777777"
     update_request_body["occupation"] = "Engineer"
 
     # Remove foreign keys as DB does not have all tables populated
@@ -830,6 +832,8 @@ def test_application_patch_key_set_to_null_does_null_field(
 
 
 def test_application_post_submit_app(client, user, auth_token, test_db_session):
+    factory.random.reseed_random(1)
+
     application = ApplicationFactory.create(user=user)
     assert not application.submitted_time
 
@@ -844,9 +848,137 @@ def test_application_post_submit_app(client, user, auth_token, test_db_session):
 
     assert response.status_code == 201
 
-    response_body = response.get_json().get("data")
-    status = response_body.get("status")
-    assert status == ApplicationStatus.Submitted.value
+    assert response.json == {
+        "data": {
+            "application_id": "cd613e30-d8f1-4adf-91b7-584a2265b1f5",
+            "application_nickname": "My leave application",
+            "date_of_birth": "1997-06-06",
+            "employer_fein": "770007777",
+            "employer_id": "a6cecc1b-78e5-4061-b311-d8a3c2ce6f44",
+            "first_name": "Kathryn",
+            "last_name": "Scott",
+            "leave_details": {
+                "continuous_leave_periods": [],
+                "employer_notified": False,
+                "intermittent_leave_periods": [],
+                "pregnant_or_recent_birth": False,
+                "reason": "Care For A Family Member",
+                "reduced_schedule_leave_periods": [],
+            },
+            "payment_preferences": [],
+            "status": "Submitted",
+            "tax_identifier": "***-**-****",
+            "updated_time": "2021-12-31T11:20:31Z",
+        },
+        "message": "Application cd613e30-d8f1-4adf-91b7-584a2265b1f5 submitted without errors",
+        "meta": {
+            "method": "POST",
+            "resource": "/v1/applications/cd613e30-d8f1-4adf-91b7-584a2265b1f5/submit_application",
+        },
+        "status_code": 201,
+    }
+
+
+def test_application_post_submit_app_fein_not_found(client, user, auth_token, test_db_session):
+    factory.random.reseed_random(2)
+
+    application = ApplicationFactory.create(user=user)
+    assert not application.completed_time
+
+    # A FEIN of 999999999 is simulated as not found in MockFINEOSClient.
+    application.employer_fein = "999999999"
+    test_db_session.commit()
+
+    response = client.post(
+        "/v1/applications/{}/submit_application".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+    )
+
+    # FINEOS errors are reported back as 503 Service Unavailable.
+    assert response.status_code == 503
+
+    assert response.json == {
+        "data": {
+            "application_id": "d95bafc8-f2a4-427b-9cf4-bb99f4bea973",
+            "application_nickname": "My leave application",
+            "date_of_birth": "1953-01-05",
+            "employer_fein": "999999999",
+            "employer_id": "da94e3e8-ab73-438f-8f18-22ffbc688778",
+            "first_name": "Brian",
+            "last_name": "Miller",
+            "leave_details": {
+                "continuous_leave_periods": [],
+                "employer_notified": False,
+                "intermittent_leave_periods": [],
+                "pregnant_or_recent_birth": False,
+                "reason": "Care For A Family Member",
+                "reduced_schedule_leave_periods": [],
+            },
+            "payment_preferences": [],
+            "status": "Started",
+            "tax_identifier": "***-**-****",
+            "updated_time": "2020-09-10T13:06:12Z",
+        },
+        "errors": [],
+        "message": "Application d95bafc8-f2a4-427b-9cf4-bb99f4bea973 could not be "
+        "submitted, try again later",
+        "meta": {
+            "method": "POST",
+            "resource": "/v1/applications/d95bafc8-f2a4-427b-9cf4-bb99f4bea973/submit_application",
+        },
+        "status_code": 503,
+    }
+
+
+def test_application_post_submit_app_ssn_not_found(client, user, auth_token, test_db_session):
+    factory.random.reseed_random(3)
+
+    application = ApplicationFactory.create(user=user)
+    assert not application.completed_time
+
+    # A tax identifier of 999999999 is simulated as not found in MockFINEOSClient.
+    application.tax_identifier = TaxIdentifier(tax_identifier="999999999")
+    test_db_session.commit()
+
+    response = client.post(
+        "/v1/applications/{}/submit_application".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+    )
+
+    # FINEOS errors are reported back as 503 Service Unavailable.
+    assert response.status_code == 503
+
+    assert response.json == {
+        "data": {
+            "application_id": "21636369-8b52-4b4a-97b7-50923ceb3ffd",
+            "application_nickname": "My leave application",
+            "date_of_birth": "2009-01-20",
+            "employer_fein": "858614250",
+            "employer_id": "e8a8529f-035e-4a25-9b08-923d10c67fd9",
+            "first_name": "Mitchell",
+            "last_name": "Munoz",
+            "leave_details": {
+                "continuous_leave_periods": [],
+                "employer_notified": False,
+                "intermittent_leave_periods": [],
+                "pregnant_or_recent_birth": False,
+                "reason": "Care For A Family Member",
+                "reduced_schedule_leave_periods": [],
+            },
+            "payment_preferences": [],
+            "status": "Started",
+            "tax_identifier": "***-**-****",
+            "updated_time": "2020-10-29T01:32:51Z",
+        },
+        "errors": [],
+        "message": "Application 21636369-8b52-4b4a-97b7-50923ceb3ffd could not be "
+        "submitted, try again later",
+        "meta": {
+            "method": "POST",
+            "resource": "/v1/applications/21636369-8b52-4b4a-97b7-50923ceb3ffd/submit_application",
+        },
+        "status_code": 503,
+    }
 
 
 def test_application_post_submit_to_fineos(client, user, auth_token, test_db_session):

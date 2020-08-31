@@ -1,8 +1,9 @@
 # Factories for generating mock data and inserting it into the database.
 # This should be used for seeding tables in development and testing.
 #
+
+import datetime
 import random
-from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 
 import factory  # this is from the factory_boy package
@@ -29,14 +30,28 @@ Session = scoped_session(lambda: get_db_session(), scopefunc=lambda: get_db_sess
 
 
 class Generators:
-    fein_unformatted = factory.Faker("ssn").generate().replace("-", "")
-
     AccountKey = factory.Sequence(lambda n: "%011d" % n)
+    # A reproducible date of birth (with factory.random.reseed_random(...)), unlike
+    # factory.Faker("date_of_birth") which is based on the current date.
+    DateOfBirth = factory.Faker(
+        "date_between_dates",
+        date_start=datetime.date(1930, 1, 1),
+        date_end=datetime.date(2010, 1, 1),
+    )
     Tin = factory.LazyFunction(lambda: factory.Faker("ssn").generate().replace("-", ""))
-    Fein = fein_unformatted[:2] + "-" + fein_unformatted[2:]
+    Fein = Tin
     Money = factory.LazyFunction(lambda: Decimal(round(random.uniform(0, 50000), 2)))
-    Now = factory.LazyFunction(lambda: datetime.now())
-    UtcNow = factory.LazyFunction(lambda: datetime.utcnow().replace(tzinfo=timezone.utc))
+    Now = factory.LazyFunction(lambda: datetime.datetime.now())
+    # A reproducible datetime that might represent a database creation, modification, or other
+    # transaction datetime.
+    TransactionDateTime = factory.Faker(
+        "date_time_between_dates",
+        datetime_start=datetime.datetime(2020, 1, 1),
+        datetime_end=datetime.datetime(2022, 1, 1),
+    )
+    UtcNow = factory.LazyFunction(
+        lambda: datetime.datetime.utcnow().replace(tzinfo=datetime.timezone.utc)
+    )
     UuidObj = factory.Faker("uuid4", cast_to=None)
     VerificationCode = factory.Faker("pystr", max_chars=6, min_chars=6)
 
@@ -121,7 +136,7 @@ class VerificationCodeFactory(BaseFactory):
     verification_code = Generators.VerificationCode
 
     issued_at = Generators.UtcNow
-    expires_at = factory.LazyAttribute(lambda a: a.issue_ts + timedelta(minutes=5))
+    expires_at = factory.LazyAttribute(lambda a: a.issue_ts + datetime.timedelta(minutes=5))
     remaining_uses = 1
 
 
@@ -170,7 +185,7 @@ class ApplicationFactory(BaseFactory):
     first_name = factory.Faker("first_name")
     last_name = factory.Faker("last_name")
     middle_name = None
-    date_of_birth = factory.Faker("date_of_birth")
+    date_of_birth = Generators.DateOfBirth
     has_state_id = None
     mass_id = None
     pregnant_or_recent_birth = False
@@ -178,8 +193,6 @@ class ApplicationFactory(BaseFactory):
     child_placement_date = None
     employer_notified = False
     employer_notification_date = None
-    start_time = Generators.Now
-    updated_time = Generators.Now
     completed_time = None
     submitted_time = None
     fineos_absence_id = None
@@ -210,8 +223,8 @@ class ApplicationFactory(BaseFactory):
     leave_reason_id = application_models.LeaveReason.CARE_FOR_A_FAMILY_MEMBER.leave_reason_id
     leave_reason_qualifier_id = None
 
-    start_time = factory.Faker("date_time")
-    updated_time = factory.LazyAttribute(lambda a: a.start_time + timedelta(days=1))
+    start_time = Generators.TransactionDateTime
+    updated_time = factory.LazyAttribute(lambda a: a.start_time + datetime.timedelta(days=1))
 
 
 class AddressFactory(BaseFactory):

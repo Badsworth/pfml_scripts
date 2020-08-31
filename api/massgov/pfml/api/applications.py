@@ -110,7 +110,7 @@ def applications_submit(application_id):
                 ),
                 errors=[],
                 data=ApplicationResponse.from_orm(existing_application).dict(exclude_none=True),
-            )
+            ).to_api_response()
 
     return response_util.success_response(
         message="Application {} submitted without errors".format(
