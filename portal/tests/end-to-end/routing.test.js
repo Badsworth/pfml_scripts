@@ -36,7 +36,7 @@ describe("E2E: Routing", () => {
       const title = await page.$("h1");
 
       await expect(page.url()).toBe(`${rootUrl}/`);
-      await expect(title).toMatch("Create an application");
+      await expect(title).toMatch("Get ready to apply");
     });
 
     describe("when user clicks Create Claim button", () => {

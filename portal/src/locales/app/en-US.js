@@ -653,32 +653,32 @@ const pages = {
     title: "$t(shared.claimsVerifyIdTitle)",
   },
   index: {
-    afterApplyingHeading: "What to expect after you apply",
-    afterApplyingIntro:
-      "After you complete and submit your application, Paid Family and Medical Leave staff will review it to:",
-    afterApplyingList: [
-      "Make sure you have worked enough hours to qualify",
-      "Record the length of leave that your medical provider has certified for your own medical leave",
-      "Determine how much the Commonwealth should pay you during your leave",
-    ],
-    afterApplyingOutro:
-      "If your application is approved, you will receive weekly payments while you’re on leave.",
-    applicationTimeEstimate: "Applying takes around 10 minutes.",
     createClaimButton: "Create an application",
-    needForApplyingHeading: "What you need to apply",
-    needForApplyingList: {
-      employerFein: "Your employer FEIN",
-      healthcareProviderForm:
-        "Your <healthcare-provider-form-link>Healthcare Provider Form</healthcare-provider-form-link>, which your healthcare provider has completed",
-      leaveDates:
-        "When you are planning to take leave or when you started on leave",
-      leaveReason: "Why you are taking leave",
-      paymentInformation: "Your bank account information",
-      proofOfIdentity: "Proof of your identity, like a driver’s license",
-      ssnItin:
-        "Your Social Security Number or Individual Taxpayer Identification Number",
-    },
-    title: "Create an application",
+    familyLeaveAfterAdoptionBody:
+      "You need to provide a statement that confirms the placement and the date of placement. This can come from the child's health care provider, the adoption or foster agency, or the Massachusetts Department of Children and Families.",
+    familyLeaveAfterAdoptionHeading:
+      "Family leave to bond with your child after adoption or foster placement",
+    familyLeaveAfterBirthBodyLine1:
+      "You need a document that confirms your child’s date of birth, such as a birth certificate or statement from a health care provider stating your child's birth date.",
+    familyLeaveAfterBirthBodyLine2:
+      "You can apply before your child is born. You will need to provide proof of birth in order for your application to be approved.",
+    familyLeaveAfterBirthHeading:
+      "Family leave to bond with your child after birth",
+    medicalLeaveBody:
+      "Your health care provider must complete the <healthcare-provider-form-link>PFML Health Care Provider Certification</healthcare-provider-form-link>",
+    medicalLeaveHeading: "Medical leave due to injury, illness, or pregnancy",
+    stepOneHeading:
+      "Step one: Tell your employer that you need to take Paid Family and Medical Leave. ",
+    stepOneLeadLine1:
+      "If you can, tell your employer at least 30 days before your leave begins. If you need to take leave right away, tell your employer as soon as possible.",
+    stepOneLeadLine2:
+      " Once you tell your employer, you have the right to apply and your job is protected. Keep a record of what date you notified your employer. You will need to provide this date in your leave application.",
+    stepThreeHeading: "Step three: Apply",
+    stepThreeLead:
+      "Applying takes around 15 minutes. Your information will save as you go, so you can finish your application later if you need to.",
+    stepTwoHeading:
+      "Step two: Get documentation that supports your leave request",
+    title: "Get ready to apply",
   },
   userConsentToDataSharing: {
     agreementBody:

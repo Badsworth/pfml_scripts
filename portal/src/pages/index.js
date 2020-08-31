@@ -1,3 +1,5 @@
+import Accordion from "../components/Accordion";
+import AccordionItem from "../components/AccordionItem";
 import Button from "../components/Button";
 import DashboardNavigation from "../components/DashboardNavigation";
 import Heading from "../components/Heading";
@@ -26,47 +28,51 @@ const Index = (props) => {
   return (
     <React.Fragment>
       <DashboardNavigation activeHref={router.route} />
-      <Title>{t("pages.index.title")}</Title>
+      <div className="measure-6">
+        <Title>{t("pages.index.title")}</Title>
 
-      <Heading level="2">{t("pages.index.needForApplyingHeading")}</Heading>
-      <ul className="usa-list">
-        <li>{t("pages.index.needForApplyingList.proofOfIdentity")}</li>
-        <li>{t("pages.index.needForApplyingList.ssnItin")}</li>
-        <li>{t("pages.index.needForApplyingList.leaveReason")}</li>
-        <li>
-          <Trans
-            i18nKey="pages.index.needForApplyingList.healthcareProviderForm"
-            components={{
-              "healthcare-provider-form-link": (
-                <a href={routes.external.massgov.healthcareProviderForm} />
-              ),
-            }}
-          />
-        </li>
-        <li>{t("pages.index.needForApplyingList.employerFein")}</li>
-        <li>{t("pages.index.needForApplyingList.leaveDates")}</li>
-        <li>{t("pages.index.needForApplyingList.paymentInformation")}</li>
-      </ul>
-      <p>
-        <strong>{t("pages.index.applicationTimeEstimate")}</strong>
-      </p>
+        <Heading level="2">{t("pages.index.stepOneHeading")}</Heading>
+        <p>{t("pages.index.stepOneLeadLine1")}</p>
+        <p>{t("pages.index.stepOneLeadLine2")}</p>
+        <Heading level="2">{t("pages.index.stepTwoHeading")}</Heading>
+        <div className="measure-4">
+          <Accordion>
+            <AccordionItem heading={t("pages.index.medicalLeaveHeading")}>
+              <p>
+                <Trans
+                  i18nKey="pages.index.medicalLeaveBody"
+                  components={{
+                    "healthcare-provider-form-link": (
+                      <a
+                        href={routes.external.massgov.healthcareProviderForm}
+                      />
+                    ),
+                  }}
+                />
+              </p>
+            </AccordionItem>
+            <AccordionItem
+              heading={t("pages.index.familyLeaveAfterBirthHeading")}
+            >
+              <p>{t("pages.index.familyLeaveAfterBirthBodyLine1")}</p>
+              <p>{t("pages.index.familyLeaveAfterBirthBodyLine2")}</p>
+            </AccordionItem>
+            <AccordionItem
+              heading={t("pages.index.familyLeaveAfterAdoptionHeading")}
+            >
+              <p>{t("pages.index.familyLeaveAfterAdoptionBody")}</p>
+            </AccordionItem>
+          </Accordion>
+        </div>
+        <Heading level="2">{t("pages.index.stepThreeHeading")}</Heading>
+        <p>{t("pages.index.stepThreeLead")}</p>
 
-      <form className="margin-bottom-8" onSubmit={handleSubmit}>
-        <Button type="submit" name="new-claim">
-          {t("pages.index.createClaimButton")}
-        </Button>
-      </form>
-
-      <Heading level="2">{t("pages.index.afterApplyingHeading")}</Heading>
-      <p>{t("pages.index.afterApplyingIntro")}</p>
-      <ul className="usa-list">
-        {t("pages.index.afterApplyingList", { returnObjects: true }).map(
-          (listItem, index) => (
-            <li key={index}>{listItem}</li>
-          )
-        )}
-      </ul>
-      <p>{t("pages.index.afterApplyingOutro")}</p>
+        <form className="margin-bottom-8" onSubmit={handleSubmit}>
+          <Button type="submit" name="new-claim">
+            {t("pages.index.createClaimButton")}
+          </Button>
+        </form>
+      </div>
     </React.Fragment>
   );
 };

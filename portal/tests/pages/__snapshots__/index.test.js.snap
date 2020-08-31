@@ -3,93 +3,86 @@
 exports[`Index renders dashboard content 1`] = `
 <Fragment>
   <DashboardNavigation />
-  <Title>
-    Create an application
-  </Title>
-  <Heading
-    level="2"
+  <div
+    className="measure-6"
   >
-    What you need to apply
-  </Heading>
-  <ul
-    className="usa-list"
-  >
-    <li>
-      Proof of your identity, like a driver’s license
-    </li>
-    <li>
-      Your Social Security Number or Individual Taxpayer Identification Number
-    </li>
-    <li>
-      Why you are taking leave
-    </li>
-    <li>
-      <Trans
-        components={
-          Object {
-            "healthcare-provider-form-link": <a
-              href="https://www.mass.gov/hcp-form"
-            />,
-          }
-        }
-        i18nKey="pages.index.needForApplyingList.healthcareProviderForm"
-      />
-    </li>
-    <li>
-      Your employer FEIN
-    </li>
-    <li>
-      When you are planning to take leave or when you started on leave
-    </li>
-    <li>
-      Your bank account information
-    </li>
-  </ul>
-  <p>
-    <strong>
-      Applying takes around 10 minutes.
-    </strong>
-  </p>
-  <form
-    className="margin-bottom-8"
-    onSubmit={[Function]}
-  >
-    <Button
-      name="new-claim"
-      type="submit"
+    <Title>
+      Get ready to apply
+    </Title>
+    <Heading
+      level="2"
     >
-      Create an application
-    </Button>
-  </form>
-  <Heading
-    level="2"
-  >
-    What to expect after you apply
-  </Heading>
-  <p>
-    After you complete and submit your application, Paid Family and Medical Leave staff will review it to:
-  </p>
-  <ul
-    className="usa-list"
-  >
-    <li
-      key="0"
+      Step one: Tell your employer that you need to take Paid Family and Medical Leave. 
+    </Heading>
+    <p>
+      If you can, tell your employer at least 30 days before your leave begins. If you need to take leave right away, tell your employer as soon as possible.
+    </p>
+    <p>
+       Once you tell your employer, you have the right to apply and your job is protected. Keep a record of what date you notified your employer. You will need to provide this date in your leave application.
+    </p>
+    <Heading
+      level="2"
     >
-      Make sure you have worked enough hours to qualify
-    </li>
-    <li
-      key="1"
+      Step two: Get documentation that supports your leave request
+    </Heading>
+    <div
+      className="measure-4"
     >
-      Record the length of leave that your medical provider has certified for your own medical leave
-    </li>
-    <li
-      key="2"
+      <Accordion>
+        <AccordionItem
+          heading="Medical leave due to injury, illness, or pregnancy"
+        >
+          <p>
+            <Trans
+              components={
+                Object {
+                  "healthcare-provider-form-link": <a
+                    href="https://www.mass.gov/hcp-form"
+                  />,
+                }
+              }
+              i18nKey="pages.index.medicalLeaveBody"
+            />
+          </p>
+        </AccordionItem>
+        <AccordionItem
+          heading="Family leave to bond with your child after birth"
+        >
+          <p>
+            You need a document that confirms your child’s date of birth, such as a birth certificate or statement from a health care provider stating your child's birth date.
+          </p>
+          <p>
+            You can apply before your child is born. You will need to provide proof of birth in order for your application to be approved.
+          </p>
+        </AccordionItem>
+        <AccordionItem
+          heading="Family leave to bond with your child after adoption or foster placement"
+        >
+          <p>
+            You need to provide a statement that confirms the placement and the date of placement. This can come from the child's health care provider, the adoption or foster agency, or the Massachusetts Department of Children and Families.
+          </p>
+        </AccordionItem>
+      </Accordion>
+    </div>
+    <Heading
+      level="2"
     >
-      Determine how much the Commonwealth should pay you during your leave
-    </li>
-  </ul>
-  <p>
-    If your application is approved, you will receive weekly payments while you’re on leave.
-  </p>
+      Step three: Apply
+    </Heading>
+    <p>
+      Applying takes around 15 minutes. Your information will save as you go, so you can finish your application later if you need to.
+    </p>
+    <form
+      className="margin-bottom-8"
+      onSubmit={[Function]}
+    >
+      <Button
+        name="new-claim"
+        type="submit"
+      >
+        Create an application
+      </Button>
+    </form>
+  </div>
 </Fragment>
 `;
