@@ -7,7 +7,7 @@ class Regexes:
     FEIN = re.compile(r"^\d{9}$")
     FEIN_FORMATTED = re.compile(r"^\d{2}-\d{7}$")
     STREET_NUMBER = re.compile(r"^\d+")
-    MASS_ID = re.compile(r"^\d{9}$")
+    MASS_ID = re.compile(r"^(\d{9}|S(\d{8}|A\d{7}))$")
 
 
 class TaxIdUnformattedStr(str):

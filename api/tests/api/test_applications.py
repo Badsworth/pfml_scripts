@@ -346,6 +346,26 @@ def test_application_patch_state_id_fields(client, user, auth_token, test_db_ses
     assert updated_state_id == "*********"
 
 
+def test_application_patch_state_id_fields_good_format(client, user, auth_token, test_db_session):
+    application = ApplicationFactory.create(user=user)
+
+    response = client.patch(
+        "/v1/applications/{}".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+        json={"has_state_id": True, "mass_id": "S12345678"},
+    )
+
+    assert response.status_code == 200
+
+    response = client.patch(
+        "/v1/applications/{}".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+        json={"has_state_id": True, "mass_id": "SA1234567"},
+    )
+
+    assert response.status_code == 200
+
+
 def test_application_patch_state_id_fields_bad_format(client, user, auth_token, test_db_session):
     application = ApplicationFactory.create(user=user)
 
@@ -360,7 +380,20 @@ def test_application_patch_state_id_fields_bad_format(client, user, auth_token, 
     response_body = response.get_json()
     error = response_body.get("errors")[0]
     assert error["field"] == "mass_id"
-    assert error["message"] == "'123456789000' does not match '^\\\\d{9}$'"
+    assert error["message"] == "'123456789000' does not match '^(\\\\d{9}|S(\\\\d{8}|A\\\\d{7}))$'"
+
+    response = client.patch(
+        "/v1/applications/{}".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+        json={"has_state_id": True, "mass_id": "C12345678"},
+    )
+
+    assert response.status_code == 400
+
+    response_body = response.get_json()
+    error = response_body.get("errors")[0]
+    assert error["field"] == "mass_id"
+    assert error["message"] == "'C12345678' does not match '^(\\\\d{9}|S(\\\\d{8}|A\\\\d{7}))$'"
 
 
 def test_application_patch_leave_reason(client, user, auth_token, test_db_session):

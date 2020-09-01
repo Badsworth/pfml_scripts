@@ -1221,7 +1221,7 @@ components:
     MassId:
       type: string
       example: "000000000"
-      pattern: '^\d{9}$'
+      pattern: '^(\d{9}|S(\d{8}|A\d{7}))$'
 
     RoutingNbr:
       type: string
