@@ -77,6 +77,7 @@ describe("Simulation Generator", () => {
       expect.stringMatching(/^\/tmp\/[\d-]+\.hcp\.pdf/)
     );
   });
+
   it("Should generate an License Front", async () => {
     const claim = await scenario({
       residence: "OOS",
@@ -95,6 +96,29 @@ describe("Simulation Generator", () => {
     expect(generateIDBack).toHaveBeenCalledWith(
       claim.claim,
       expect.stringMatching(/^\/tmp\/[\d-]+\.id-back\.pdf/)
+    );
+  });
+
+  it("Should not add HCP form to Documents", async () => {
+    const claim = await scenario({
+      residence: "MA-proofed",
+      missingDocs: ["HCP"],
+    })(opts);
+    claim.documents.forEach((doc) => {
+      expect(doc.type).not.toEqual("HCP");
+    });
+  });
+
+  it("HCP Form should be submitted Manually", async () => {
+    const claim = await scenario({
+      residence: "MA-proofed",
+      mailedDocs: ["HCP"],
+    })(opts);
+    expect(claim.documents).toContainEqual(
+      expect.objectContaining({
+        type: "HCP",
+        submittedManually: true,
+      })
     );
   });
 });

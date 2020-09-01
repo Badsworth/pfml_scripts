@@ -86,24 +86,37 @@ export function scenario(config: ScenarioOpts): SimulationGenerator {
     const hcpPath = `${claim.employee_ssn}.hcp.pdf`;
     const idFrontPath = `${claim.employee_ssn}.id-front.pdf`;
     const idBackPath = `${claim.employee_ssn}.id-back.pdf`;
-    await generateHCP(claim, path.join(opts.documentDirectory, hcpPath));
-    await generateIDFront(
-      claim,
-      path.join(opts.documentDirectory, idFrontPath)
-    );
-    await generateIDBack(claim, path.join(opts.documentDirectory, idBackPath));
-    documents.push({
-      type: "HCP",
-      path: hcpPath,
-    });
-    documents.push({
-      type: "ID-front",
-      path: idFrontPath,
-    });
-    documents.push({
-      type: "ID-back",
-      path: idBackPath,
-    });
+
+    // Flag for Missing Doc HCP
+    if (!config.missingDocs || !config.missingDocs.includes("HCP")) {
+      await generateHCP(claim, path.join(opts.documentDirectory, hcpPath));
+      documents.push({
+        type: "HCP",
+        path: hcpPath,
+        submittedManually:
+          config.mailedDocs && config.mailedDocs.includes("HCP") ? true : false,
+      });
+    }
+    // Flag for Missing Doc ID
+    if (!config.missingDocs || !config.missingDocs.includes("ID")) {
+      await generateIDFront(
+        claim,
+        path.join(opts.documentDirectory, idFrontPath)
+      );
+      await generateIDBack(
+        claim,
+        path.join(opts.documentDirectory, idBackPath)
+      );
+
+      documents.push({
+        type: "ID-front",
+        path: idFrontPath,
+      });
+      documents.push({
+        type: "ID-back",
+        path: idBackPath,
+      });
+    }
     return {
       claim,
       documents,

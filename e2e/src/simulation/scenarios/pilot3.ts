@@ -10,9 +10,12 @@ import { scenario, chance } from "../simulate";
  * @see chance()
  * @see generate()
  */
-// Happy path scenarios.
 
-// Simple claim, MA resident:
+/***** 
+  Happy Path Scenarios
+******/
+
+//Simple claim, MA resident:
 const HAP1 = scenario({
   residence: "MA-proofed",
 });
@@ -33,12 +36,48 @@ const HAP = chance([
   [1, HAP3],
 ]);
 
-// // Missing HCP, MA Resident
-// const GBR1 = scenario("GBR1", {
-//   residence: "MA-proofed",
-//   financiallyIneligible: true,
-//   missingDocs: ["HCP"],
-// });
+/***** 
+  Good But ... Scenarios
+******/
+
+// Missing HCP, MA Resident
+const GBR1 = scenario({
+  residence: "MA-proofed",
+  missingDocs: ["HCP"],
+});
+
+// Mailed HCP, MA Resident
+const GBM1 = scenario({
+  residence: "MA-proofed",
+  mailedDocs: ["HCP"],
+});
+
+// Missing HCP, Out of State Resident
+const GBR2 = scenario({
+  residence: "OOS",
+  missingDocs: ["HCP"],
+});
+
+// Mailed HCP, Out of State Resident
+const GBM2 = scenario({
+  residence: "OOS",
+  mailedDocs: ["HCP"],
+});
+
+//Combine Good but ... path scenarios into a single group:
+const GB = chance([
+  [1, GBR1],
+  [1, GBM1],
+  [1, GBR2],
+  [1, GBM2],
+]);
+
+// Chance Function for all combinations!
+export default chance([
+  [1, HAP],
+  [1, GB],
+]);
+
 // // Missing HCP, OOS Resident
 // const GBR2 = scenario("GBR2", {
 //   residence: "OOS",
@@ -58,13 +97,7 @@ const HAP = chance([
 //   missingDocs: ["HCP"],
 //   mailedDocs: ["HCP"],
 // });
-// // Mailed HCP, MA Resident
-// const GBM2 = scenario("GBM2", {
-//   residence: "OOS",
-//   financiallyIneligible: true,
-//   missingDocs: ["HCP"],
-//   mailedDocs: ["HCP"],
-// });
+
 // // Aggregated Good but... mail scenarios.
 // const GBM = chance("GBM", [
 //   [1, GBM1],
@@ -102,5 +135,3 @@ const HAP = chance([
 //   [1, UNH3],
 //   [1, UNH4],
 // ]);
-
-export default chance([[1, HAP]]);
