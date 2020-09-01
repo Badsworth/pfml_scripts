@@ -190,27 +190,67 @@ def test_application_patch(client, user, auth_token, test_db_session):
     update_request_body.pop("employer_id", None)
     update_request_body.pop("employee_id", None)
 
+    update_request_body["mailing_address"] = {
+        "city": "Springfield",
+        "state": "IL",
+        "line_1": "123 Foo St.",
+        "zip": "12345-1234",
+    }
+
     response = client.patch(
         "/v1/applications/{}".format(application.application_id),
         headers={"Authorization": f"Bearer {auth_token}"},
         json=update_request_body,
     )
 
+    response_body = response.get_json()
+
     assert response.status_code == 200
 
     test_db_session.refresh(application)
+
     assert application.tax_identifier
     assert application.tax_identifier.tax_identifier == "123456789"
 
-    response_body = response.get_json()
     assert response_body.get("data").get("last_name") == "Perez"
     assert response_body.get("data").get("updated_time") == "2020-01-01T00:00:00Z"
     assert response_body.get("data").get("middle_name") == "Mike"
     assert response_body.get("data").get("occupation") == "Engineer"
+    assert response_body.get("data").get("mailing_address")["city"] == "Springfield"
+
     assert (
         response_body.get("data").get("leave_details").get("relationship_to_caregiver") == "Parent"
     )
     assert response_body.get("data").get("tax_identifier") == "***-**-****"
+
+    update_request_body = sqlalchemy_object_as_dict(application)
+    update_request_body["mailing_address"] = {
+        "city": "Chicago",
+        "state": "IL",
+        "line_1": "123 Foo St.",
+        "zip": "12345-1234",
+    }
+
+    update_address_response = client.patch(
+        "/v1/applications/{}".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+        json=update_request_body,
+    )
+
+    update_address_response_body = update_address_response.get_json()
+    assert update_address_response_body.get("data").get("mailing_address")["city"] == "Chicago"
+
+    update_request_body = sqlalchemy_object_as_dict(application)
+    update_request_body["mailing_address"] = None
+
+    remove_address_response = client.patch(
+        "/v1/applications/{}".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+        json=update_request_body,
+    )
+
+    remove_address_response_body = remove_address_response.get_json()
+    assert remove_address_response_body.get("data").get("mailing_address", None) is None
 
 
 def test_application_unauthorized_patch(client, user, auth_token, test_db_session):

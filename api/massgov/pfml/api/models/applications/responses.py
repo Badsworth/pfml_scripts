@@ -5,6 +5,7 @@ from typing import List, Optional
 from pydantic import UUID4
 
 from massgov.pfml.api.models.applications.common import (
+    Address,
     ApplicationLeaveDetails,
     ApplicationPaymentAccountDetails,
     ApplicationPaymentChequeDetails,
@@ -43,11 +44,15 @@ class ApplicationResponse(PydanticBaseModel):
     payment_preferences: Optional[List[PaymentPreferences]]
     updated_time: datetime
     status: Optional[ApplicationStatus]
+    mailing_address: Optional[Address]
 
     @classmethod
     def from_orm(cls, application: Application) -> "ApplicationResponse":
         application_response = super().from_orm(application)
         application_response.application_nickname = application.nickname
+        if application.mailing_address is not None:
+            application_response.mailing_address = Address.from_orm(application.mailing_address)
+
         application_response.leave_details = ApplicationLeaveDetails.from_orm(application)
         application_response.payment_preferences = list(
             map(build_payment_preference, application.payment_preferences)

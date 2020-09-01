@@ -545,6 +545,26 @@ components:
       required: ["type", "message"]
       additionalProperties: false
 
+    Address:
+      type: object
+      properties:
+        city:
+          type: string
+          example: "Springfield"
+        line_1:
+          type: string
+          example: "742 Evergreen Terrace"
+        line_2:
+          type: string
+          example: ""
+        state:
+          type: string
+          example: "MA"
+        zip:
+          type: string
+          pattern: '^[0-9]{5}(?:-[0-9]{4})?$'
+      required: ["city", "line_1", "state", "zip"]
+
     UserResponse:
       type: object
       properties:
@@ -703,6 +723,9 @@ components:
             date_of_birth:
               $ref: "#/components/schemas/Date"
               nullable: true
+            mailing_address:
+              $ref: "#/components/schemas/Address"
+              nullable: true
             has_state_id:
               type: boolean
               nullable: true
@@ -790,6 +813,9 @@ components:
           type: boolean
           nullable: true
           example: true
+        mailing_address:
+          $ref: "#/components/schemas/Address"
+          nullable: true
         mass_id:
           type: string
           nullable: true

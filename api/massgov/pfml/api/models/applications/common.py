@@ -156,6 +156,24 @@ class IntermittentLeavePeriods(PydanticBaseModel):
     duration_basis: Optional[DurationBasis]
 
 
+class Address(PydanticBaseModel):
+    line_1: Optional[str]
+    line_2: Optional[str]
+    city: Optional[str]
+    state: Optional[str]
+    zip: Optional[str]
+
+    @classmethod
+    def from_orm(cls, address: db_employee_models.Address) -> "Address":
+        address_response = super().from_orm(address)
+        address_response.zip = address.zip_code
+        address_response.state = address.geo_state.geo_state_description
+        address_response.line_1 = address.address_line_one
+        address_response.line_2 = address.address_line_two
+
+        return address_response
+
+
 class ApplicationLeaveDetails(PydanticBaseModel):
     reason: Optional[LeaveReason]
     reason_qualifier: Optional[LeaveReasonQualifier]

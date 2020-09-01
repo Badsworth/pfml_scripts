@@ -2,6 +2,7 @@ from datetime import date
 from typing import List, Optional
 
 from massgov.pfml.api.models.applications.common import (
+    Address,
     ApplicationLeaveDetails,
     EmploymentStatus,
     Occupation,
@@ -26,3 +27,4 @@ class ApplicationRequestBody(PydanticBaseModel):
     employment_status: Optional[EmploymentStatus]
     leave_details: Optional[ApplicationLeaveDetails]
     payment_preferences: Optional[List[PaymentPreferences]]
+    mailing_address: Optional[Address]

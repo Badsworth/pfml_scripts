@@ -7,6 +7,7 @@ import massgov.pfml.api.models.applications.common as apps_common_io
 import massgov.pfml.db as db
 import massgov.pfml.db.lookups as db_lookups
 import massgov.pfml.util.logging
+from massgov.pfml.api.models.applications.common import Address as ApiAddress
 from massgov.pfml.api.models.applications.requests import ApplicationRequestBody
 from massgov.pfml.api.models.common import LookupEnum
 from massgov.pfml.db.models.applications import (
@@ -17,6 +18,7 @@ from massgov.pfml.db.models.applications import (
     ReducedScheduleLeavePeriod,
     TaxIdentifier,
 )
+from massgov.pfml.db.models.employees import Address, AddressType, LkAddressType, LkGeoState
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
 
@@ -28,10 +30,17 @@ def update_from_request(
 ) -> Application:
     # TODO: generalize this update functionality, considering only explicitly
     # set keys, LookupEnum handling, alias/map field names, etc.
+
     for key in body.__fields_set__:
         value = getattr(body, key)
 
-        if key in ("leave_details", "payment_preferences", "employee_ssn", "tax_identifier"):
+        if key in (
+            "leave_details",
+            "payment_preferences",
+            "employee_ssn",
+            "tax_identifier",
+            "mailing_address",
+        ):
             continue
 
         if key == "application_nickname":
@@ -58,6 +67,9 @@ def update_from_request(
     if tax_id is not None:
         db_session.add(tax_id)
         application.tax_identifier = tax_id
+
+    if body.mailing_address is not None or application.mailing_address_id is not None:
+        add_or_update_address(db_session, body.mailing_address, AddressType.MAILING, application)
 
     application.updated_time = datetime.now()
     db_session.add(application)
@@ -247,6 +259,69 @@ def update_payment_preferences(
             setattr(payment_preference, key, value)
 
     return payment_preference
+
+
+def add_or_update_address(
+    db_session: db.Session,
+    address: Optional[ApiAddress],
+    address_type: LkAddressType,
+    application: Application,
+) -> Optional[Address]:
+    # Add more checks here as we add more Address types
+    if address_type != AddressType.MAILING:
+        raise ValueError("Invalid address type")
+
+    state = None
+    address_to_update = None
+    if address is not None:
+        state = (
+            db_session.query(LkGeoState)
+            .filter(LkGeoState.geo_state_description == address.state)
+            .one_or_none()
+        )
+
+        if state is None:
+            raise ValueError("Invalid state code provided")
+        else:
+            address_to_update = Address(
+                address_line_one=address.line_1,
+                address_line_two=address.line_2,
+                city=address.city,
+                geo_state_id=state.geo_state_id,
+                zip_code=address.zip,
+            )
+
+    # Make room for more address types
+    if address_type == AddressType.MAILING:
+        if address_to_update is not None:
+            address_to_update.address_type_id = AddressType.MAILING.address_type_id
+
+        existing_mailing_address_id = application.mailing_address_id
+
+        # If an address exists, update with what we have
+        if existing_mailing_address_id is not None:
+            mailing_address = (
+                db_session.query(Address)
+                .filter(Address.address_id == existing_mailing_address_id)
+                .one_or_none()
+            )
+
+            # If we had an address and there's none in the request, remove the association.
+            if address is None:
+                application.mailing_address_id = None
+            elif mailing_address is not None and state is not None:
+                mailing_address.address_line_one = address.line_1
+                mailing_address.address_line_two = address.line_2
+                mailing_address.city = address.city
+                mailing_address.geo_state_id = state.geo_state_id
+                mailing_address.zip_code = address.zip
+
+        # If we don't have an existing address but have a body, add an address.
+        elif address_to_update is not None:
+            db_session.add(address_to_update)
+            application.mailing_address = address_to_update
+
+    return address_to_update
 
 
 def get_or_add_tax_identifier(
