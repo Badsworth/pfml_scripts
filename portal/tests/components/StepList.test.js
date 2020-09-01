@@ -76,10 +76,15 @@ describe("StepList", () => {
     expect(steps.get(1).props.editText).toEqual(props.editText);
   });
 
-  it("increases the Step number by the offset prop", () => {
+  it("does not override a Step number if one is defined", () => {
     const wrapper = shallow(
-      <StepList {...props} offset={3}>
-        <Step title="Upload documents" stepHref="#" status="not_started">
+      <StepList {...props}>
+        <Step
+          number={4}
+          title="Upload documents"
+          stepHref="#"
+          status="not_started"
+        >
           Step Description
         </Step>
       </StepList>

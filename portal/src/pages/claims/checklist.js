@@ -1,15 +1,16 @@
 import Claim, { ClaimStatus } from "../../models/Claim";
+import { filter, findIndex } from "lodash";
 import BackButton from "../../components/BackButton";
 import ButtonLink from "../../components/ButtonLink";
 import PropTypes from "prop-types";
 import React from "react";
 import Step from "../../components/Step";
+import StepGroup from "../../models/StepGroup";
 import StepList from "../../components/StepList";
 import StepModel from "../../models/Step";
 import Title from "../../components/Title";
 import { Trans } from "react-i18next";
 import claimantConfig from "../../flows/claimant";
-import { groupBy } from "lodash";
 import routeWithParams from "../../utils/routeWithParams";
 import routes from "../../routes";
 import { useTranslation } from "../../locales/i18n";
@@ -35,9 +36,17 @@ export const Checklist = (props) => {
   const allStepsComplete = allSteps.every((step) => step.isComplete);
 
   /**
-   * @type {Array<string, StepModel[]>}
+   * @type {StepGroup[]}
+   * Our checklist is broken into multiple "parts." This array includes
+   * all of those parts.
    */
-  const parts = Object.entries(groupBy(allSteps, "part"));
+  const stepGroups = [1, 2, 3].map(
+    (number) =>
+      new StepGroup({
+        number,
+        steps: filter(allSteps, { group: number }),
+      })
+  );
 
   const sharedStepListProps = {
     startText: t("pages.claimsChecklist.start"),
@@ -50,6 +59,16 @@ export const Checklist = (props) => {
   };
 
   /**
+   * Get the number of a Step for display in the checklist.
+   * @param {StepModel} step
+   * @returns {number}
+   */
+  function getStepNumber(step) {
+    const index = findIndex(allSteps, { name: step.name });
+    return index + 1;
+  }
+
+  /**
    * Helper method for rendering steps for one of the StepLists
    * @param {StepModel[]} steps
    * @returns {Step[]}
@@ -58,6 +77,7 @@ export const Checklist = (props) => {
     return steps.map((step) => (
       <Step
         key={step.name}
+        number={getStepNumber(step)}
         title={t("pages.claimsChecklist.stepTitle", { context: step.name })}
         status={step.status}
         stepHref={step.href}
@@ -76,37 +96,21 @@ export const Checklist = (props) => {
 
   /**
    * Conditionally output a description for each Part of the checklist
-   * @param {number} partNumber
-   * @param {StepModel[]} steps
+   * @param {StepGroup[]} stepGroup
    * @returns {string|null}
    */
-  function stepListDescription(partNumber, steps) {
-    // If the first step is disabled, then the entire list is disabled
-    const listIsEnabled = !steps[0].isDisabled;
-    if (!listIsEnabled) return null;
+  function stepListDescription(stepGroup) {
+    if (!stepGroup.isEnabled) return null;
 
-    let context = partNumber;
+    // context has to be a string
+    let context = String(stepGroup.number);
 
-    if (partNumber === "1" && claim.status === ClaimStatus.submitted) {
+    if (stepGroup.number === 1 && claim.status === ClaimStatus.submitted) {
       // Description for the first part changes after it's been confirmed
       context += "_submitted";
     }
 
     return t("pages.claimsChecklist.stepListDescription", { context });
-  }
-
-  /**
-   * @param {string} partNumber
-   * @returns {number} the step number to start from in this list
-   */
-  function stepListOffset(partNumber) {
-    if (partNumber === "1") return 0;
-    const number = Number(partNumber);
-
-    const priorLists = parts.slice(0, number);
-    return priorLists.reduce((previousValue, currentList) => {
-      return previousValue + currentList.length;
-    }, 0);
   }
 
   return (
@@ -117,11 +121,10 @@ export const Checklist = (props) => {
       />
       <Title hidden>{t("pages.claimsChecklist.title")}</Title>
 
-      {parts.map(([partNumber, steps]) => (
+      {stepGroups.map((stepGroup) => (
         <StepList
-          key={partNumber}
-          offset={stepListOffset(partNumber)}
-          description={stepListDescription(partNumber, steps)}
+          key={stepGroup.number}
+          description={stepListDescription(stepGroup)}
           title={
             <Trans
               i18nKey="pages.claimsChecklist.stepListTitle"
@@ -130,13 +133,13 @@ export const Checklist = (props) => {
                   <span className="display-block font-heading-2xs margin-bottom-1 text-base-dark" />
                 ),
               }}
-              tOptions={{ context: partNumber }}
-              values={{ number: partNumber }}
+              tOptions={{ context: String(stepGroup.number) }}
+              values={{ number: stepGroup.number }}
             />
           }
           {...sharedStepListProps}
         >
-          {renderSteps(steps)}
+          {renderSteps(stepGroup.steps)}
         </StepList>
       ))}
 

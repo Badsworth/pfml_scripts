@@ -24,7 +24,6 @@ exports[`Checklist when claim has not been started renders initial checklist sta
     description="Your progress is automatically saved as you complete the application. You can edit any information you enter in Part 1 until step 5 is completed."
     editText="Edit"
     key="1"
-    offset={0}
     resumeText="Resume"
     screenReaderNumberPrefix="Step"
     startText="Start"
@@ -45,7 +44,7 @@ exports[`Checklist when claim has not been started renders initial checklist sta
         }
         values={
           Object {
-            "number": "1",
+            "number": 1,
           }
         }
       />
@@ -53,6 +52,7 @@ exports[`Checklist when claim has not been started renders initial checklist sta
   >
     <Step
       key="verifyId"
+      number={1}
       status="not_started"
       stepHref="/claims/name?claim_id=mock_application_id"
       title="Verify your identity"
@@ -67,6 +67,7 @@ exports[`Checklist when claim has not been started renders initial checklist sta
     </Step>
     <Step
       key="leaveDetails"
+      number={2}
       status="disabled"
       stepHref="/claims/leave-reason?claim_id=mock_application_id"
       title="Enter leave details"
@@ -81,6 +82,7 @@ exports[`Checklist when claim has not been started renders initial checklist sta
     </Step>
     <Step
       key="employerInformation"
+      number={3}
       status="disabled"
       stepHref="/claims/employment-status?claim_id=mock_application_id"
       title="Enter employment information"
@@ -95,6 +97,7 @@ exports[`Checklist when claim has not been started renders initial checklist sta
     </Step>
     <Step
       key="otherLeave"
+      number={4}
       status="disabled"
       stepHref="/claims/employer-benefits?claim_id=mock_application_id"
       title="Report other leave and benefits"
@@ -113,7 +116,6 @@ exports[`Checklist when claim has not been started renders initial checklist sta
     description={null}
     editText="Edit"
     key="2"
-    offset={4}
     resumeText="Resume"
     screenReaderNumberPrefix="Step"
     startText="Start"
@@ -134,7 +136,7 @@ exports[`Checklist when claim has not been started renders initial checklist sta
         }
         values={
           Object {
-            "number": "2",
+            "number": 2,
           }
         }
       />
@@ -142,6 +144,7 @@ exports[`Checklist when claim has not been started renders initial checklist sta
   >
     <Step
       key="uploadId"
+      number={5}
       status="disabled"
       stepHref="/claims/upload-id?claim_id=mock_application_id"
       title="Upload identity document"
@@ -156,6 +159,7 @@ exports[`Checklist when claim has not been started renders initial checklist sta
     </Step>
     <Step
       key="uploadCertification"
+      number={6}
       status="disabled"
       stepHref="/claims/upload-certification?claim_id=mock_application_id"
       title="Upload leave certification"
@@ -174,7 +178,6 @@ exports[`Checklist when claim has not been started renders initial checklist sta
     description={null}
     editText="Edit"
     key="3"
-    offset={6}
     resumeText="Resume"
     screenReaderNumberPrefix="Step"
     startText="Start"
@@ -195,7 +198,7 @@ exports[`Checklist when claim has not been started renders initial checklist sta
         }
         values={
           Object {
-            "number": "3",
+            "number": 3,
           }
         }
       />
@@ -203,6 +206,7 @@ exports[`Checklist when claim has not been started renders initial checklist sta
   >
     <Step
       key="payment"
+      number={7}
       status="disabled"
       stepHref="/claims/payment-method?claim_id=mock_application_id"
       title="Add payment information"
