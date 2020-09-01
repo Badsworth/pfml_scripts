@@ -68,7 +68,7 @@ export const LeaveDates = (props) => {
     appLogic.claims.update(claim.application_id, formState);
   };
 
-  const conditionalContext = {
+  const contentContext = {
     [LeaveReason.bonding]: "bonding",
     [LeaveReason.medical]: "medical",
   };
@@ -83,19 +83,19 @@ export const LeaveDates = (props) => {
       <InputDate
         {...getFunctionalInputProps("temp.leave_details.start_date")}
         label={t("pages.claimsLeaveDates.startDateLabel", {
-          context: conditionalContext[claim.leave_details.reason],
+          context: contentContext[claim.leave_details.reason],
         })}
         example={t("components.form.dateInputExample")}
         hint={
           <React.Fragment>
             <p>
               {t("pages.claimsLeaveDates.startDateLeadHint", {
-                context: conditionalContext[claim.leave_details.reason],
+                context: contentContext[claim.leave_details.reason],
               })}
             </p>
             <p>
               {t("pages.claimsLeaveDates.startDateHint", {
-                context: conditionalContext[claim.leave_details.reason],
+                context: contentContext[claim.leave_details.reason],
               })}
             </p>
           </React.Fragment>
@@ -107,11 +107,11 @@ export const LeaveDates = (props) => {
       <InputDate
         {...getFunctionalInputProps("temp.leave_details.end_date")}
         label={t("pages.claimsLeaveDates.endDateLabel", {
-          context: conditionalContext[claim.leave_details.reason],
+          context: contentContext[claim.leave_details.reason],
         })}
         example={t("components.form.dateInputExample")}
         hint={t("pages.claimsLeaveDates.endDateHint", {
-          context: conditionalContext[claim.leave_details.reason],
+          context: contentContext[claim.leave_details.reason],
         })}
         dayLabel={t("components.form.dateInputDayLabel")}
         monthLabel={t("components.form.dateInputMonthLabel")}

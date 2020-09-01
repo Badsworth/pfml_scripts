@@ -3,19 +3,26 @@ import {
   DurationBasis,
   FrequencyIntervalBasis,
   IntermittentLeavePeriod,
+  LeaveReason,
   ReducedScheduleLeavePeriod,
 } from "../../../src/models/Claim";
 import Duration, { every6monthsId } from "../../../src/pages/claims/duration";
+import { MockClaimBuilder, renderWithAppLogic } from "../../test-utils";
 import { act } from "react-dom/test-utils";
 import { random } from "lodash";
-import { renderWithAppLogic } from "../../test-utils";
 
 describe("Duration", () => {
   const leave_period_id = "mock-leave-period-id";
 
   describe("regardless of duration type", () => {
     it("initially renders the page without conditional fields", () => {
-      const { wrapper } = renderWithAppLogic(Duration);
+      const { wrapper } = renderWithAppLogic(Duration, {
+        claimAttrs: {
+          leave_details: {
+            reason: LeaveReason.medical,
+          },
+        },
+      });
 
       expect(wrapper).toMatchSnapshot();
       expect(
@@ -27,6 +34,26 @@ describe("Duration", () => {
       expect(
         wrapper.find({ name: "intermittent_section" }).prop("visible")
       ).toBeFalsy();
+    });
+  });
+
+  describe("when claim is a bonding leave", () => {
+    it("renders the correct guidance text", () => {
+      const claim = new MockClaimBuilder().bondingLeaveReason().create();
+      const { wrapper } = renderWithAppLogic(Duration, {
+        claimAttrs: claim,
+      });
+      expect(wrapper.find({ name: "duration_type" }).prop("hint"))
+        .toMatchInlineSnapshot(`
+        <React.Fragment>
+          <p>
+            You can take up to 12 weeks of family leave within the first year of your child’s birth or placement. You do not need to take this leave all at once.
+          </p>
+          <p>
+            Select all that apply.
+          </p>
+        </React.Fragment>
+      `);
     });
   });
 
