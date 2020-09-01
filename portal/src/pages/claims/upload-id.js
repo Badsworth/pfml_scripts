@@ -11,7 +11,7 @@ import withClaim from "../../hoc/withClaim";
 export const UploadId = (props) => {
   const { t } = useTranslation();
   const [stateIdFiles, setStateIdFiles] = useState([]);
-  const i18nContext = props.claim.has_state_id ? "mass" : "other";
+  const contentContext = props.claim.has_state_id ? "mass" : "other";
 
   // TODO (CP-396): connect this page to the API file upload endpoint.
   const handleSave = () => {
@@ -21,9 +21,9 @@ export const UploadId = (props) => {
   return (
     <QuestionPage title={t("pages.claimsUploadId.title")} onSave={handleSave}>
       <Heading level="2" size="1">
-        {t("pages.claimsUploadId.sectionLabel", { context: i18nContext })}
+        {t("pages.claimsUploadId.sectionLabel", { context: contentContext })}
       </Heading>
-      <Lead>{t("pages.claimsUploadId.lead", { context: i18nContext })}</Lead>
+      <Lead>{t("pages.claimsUploadId.lead", { context: contentContext })}</Lead>
       <FileUploadDetails />
       <FileCardList
         files={stateIdFiles}
