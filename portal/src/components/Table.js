@@ -6,9 +6,12 @@ import React from "react";
  *
  * [USWDS Reference ↗](https://designsystem.digital.gov/components/table/)
  */
-export const Table = ({ className, ...props }) => (
+export const Table = ({ className = "", ...props }) => (
   <table
-    className={`usa-table usa-table--borderless c-table ${className}`}
+    className={
+      "usa-table usa-table--borderless c-table" +
+      `${className ? " " + className : ""}`
+    }
     {...props}
   />
 );

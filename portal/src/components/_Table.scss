@@ -1,4 +1,4 @@
-.c-table.usa-table--borderless {
+.c-table {
   thead {
     background-color: $theme-color-base-lightest;
   }
@@ -8,7 +8,7 @@
     @extend .border-base-lighter;
   }
 
-  tr > th {
+  th:first-child {
     padding-left: units(2);
   }
 }
