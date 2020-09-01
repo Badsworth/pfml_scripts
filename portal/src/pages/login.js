@@ -23,7 +23,11 @@ export const Login = (props) => {
 
   const handleSubmit = (event) => {
     event.preventDefault();
-    appLogic.auth.login(formState.username, formState.password);
+    if (query.next) {
+      appLogic.auth.login(formState.username, formState.password, query.next);
+    } else {
+      appLogic.auth.login(formState.username, formState.password);
+    }
   };
 
   const accountVerified = query["account-verified"] === "true";
@@ -88,6 +92,7 @@ Login.propTypes = {
   }).isRequired,
   query: PropTypes.shape({
     "account-verified": PropTypes.string,
+    next: PropTypes.string,
   }).isRequired,
 };
 

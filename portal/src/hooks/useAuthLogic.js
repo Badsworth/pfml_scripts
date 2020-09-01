@@ -67,8 +67,9 @@ const useAuthLogic = ({ appErrorsLogic, portalFlow }) => {
    * If there are any errors, set app errors on the page.
    * @param {string} username Email address that is used as the username
    * @param {string} password Password
+   * @param {string} [next] Redirect url after login
    */
-  const login = async (username = "", password) => {
+  const login = async (username = "", password, next = null) => {
     appErrorsLogic.clearErrors();
     username = username.trim();
 
@@ -86,7 +87,11 @@ const useAuthLogic = ({ appErrorsLogic, portalFlow }) => {
       await Auth.signIn(username, password);
 
       setIsLoggedIn(true);
-      portalFlow.goToPageFor("LOG_IN");
+      if (next) {
+        portalFlow.goTo(next);
+      } else {
+        portalFlow.goToPageFor("LOG_IN");
+      }
     } catch (error) {
       const loginErrors = getLoginErrorInfo(error, t);
       appErrorsLogic.setAppErrors(loginErrors);
@@ -156,7 +161,9 @@ const useAuthLogic = ({ appErrorsLogic, portalFlow }) => {
 
     if (tempIsLoggedIn) return;
     if (!tempIsLoggedIn && !portalFlow.page.match(routes.auth.login)) {
-      portalFlow.goTo(routes.auth.login);
+      const { pageWithParams } = portalFlow;
+
+      portalFlow.goTo(routes.auth.login, { next: pageWithParams });
     }
   };
 

@@ -266,6 +266,25 @@ describe("useAuthLogic", () => {
       });
       expect(appErrors.items).toHaveLength(0);
     });
+
+    it("redirects to the specific page while passing next param", async () => {
+      const next = "/applications";
+      const spy = jest.spyOn(portalFlow, "goTo");
+      await act(async () => {
+        await login(username, password, next);
+      });
+      expect(spy).toHaveBeenCalledWith(next);
+      spy.mockRestore();
+    });
+
+    it("calls goToPageFor func while no next param", async () => {
+      const spy = jest.spyOn(portalFlow, "goToPageFor");
+      await act(async () => {
+        await login(username, password);
+      });
+      expect(spy).toHaveBeenCalledWith("LOG_IN");
+      spy.mockRestore();
+    });
   });
 
   describe("logout", () => {
@@ -530,7 +549,7 @@ describe("useAuthLogic", () => {
         await act(async () => {
           await requireLogin();
         });
-        expect(spy).toHaveBeenCalledWith(routes.auth.login);
+        expect(spy).toHaveBeenCalledWith(routes.auth.login, { next: "" });
       });
 
       it("doesn't redirect if route is already set to login page", async () => {
@@ -539,6 +558,16 @@ describe("useAuthLogic", () => {
           await requireLogin();
         });
         expect(spy).not.toHaveBeenCalled();
+      });
+
+      it("redirects to login page with nextUrl", async () => {
+        portalFlow.pageWithParams = routes.claims.checklist;
+        await act(async () => {
+          await requireLogin();
+        });
+        expect(spy).toHaveBeenCalledWith(routes.auth.login, {
+          next: routes.claims.checklist,
+        });
       });
     });
   });

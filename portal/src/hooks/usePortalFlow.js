@@ -7,15 +7,14 @@ import { useRouter } from "next/router";
 
 /**
  * Hook that provides methods for convenient page routing
- * @returns {object} { goToNextPage: Function, goToPageFor: Function, goTo: Function, page: string }
+ * @returns {object} { goToNextPage: Function, goToPageFor: Function, goTo: Function, page: string, pageWithParams: string }
  */
 const usePortalFlow = () => {
   const routingMachine = useMemo(() => Machine(machineConfigs, { guards }), []);
   // TODO (CP-732) use custom useRouter
   const router = useRouter();
   // State representing current page route
-  const { pathname: page } = router;
-
+  const { pathname: page, asPath: pageWithParams } = router;
   /**
    * Navigate to a page route
    * @param {string} route - url
@@ -51,7 +50,7 @@ const usePortalFlow = () => {
     goToPageFor(event, context, params);
   };
 
-  return { page, goTo, goToNextPage, goToPageFor };
+  return { page, pageWithParams, goTo, goToNextPage, goToPageFor };
 };
 
 export default usePortalFlow;
