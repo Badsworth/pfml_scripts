@@ -14,3 +14,13 @@ Then("I should be able to register a new account", function (
     }
   );
 });
+
+Then("I should be able to log in", function (this: CypressStepThis) {
+  if (!this.credentials) {
+    throw new Error("Credentials not properly set");
+  }
+  cy.labelled("Email address").type(this.credentials.username);
+  cy.labelled("Password").typeMasked(this.credentials.password);
+  cy.contains("button", "Log in").click();
+  cy.contains("button", "Log out").should("be.visible");
+});

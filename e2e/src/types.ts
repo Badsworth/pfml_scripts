@@ -12,6 +12,11 @@ export type Application = {
   paymentInfo: PaymentInfo;
 };
 
+export type Credentials = {
+  username: string;
+  password: string;
+};
+
 /**
  * Special type to use to tell Typescript what properties `this` might contain on a Cypress
  * test step.
@@ -22,7 +27,7 @@ export type Application = {
  * @see https://www.typescriptlang.org/docs/handbook/functions.html#this-parameters
  */
 export type CypressStepThis = {
-  credentials?: { username: string; password: string };
+  credentials?: Credentials;
   application?: Application;
 };
 

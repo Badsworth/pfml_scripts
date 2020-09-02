@@ -10,11 +10,13 @@
 // ***********************************************************
 
 import { config as dotenv } from "dotenv";
-import GmailVerificationCodeFetcher from "./GmailVerificationCodeFetcher";
 import retry from "p-retry";
 import delay from "delay";
 import fillPDF from "./fillPDF";
 import webpackPreprocessor from "@cypress/webpack-preprocessor";
+import TestMailVerificationFetcher from "./TestMailVerificationFetcher";
+import { Credentials } from "@/types";
+import faker from "faker";
 
 export type FillPDFTaskOptions = {
   source: string;
@@ -44,18 +46,11 @@ export default function (on: Cypress.PluginEvents): Cypress.ConfigOptions {
     configOverrides.env = env.parsed;
   }
 
-  // Declare a client that we'll lazy-create in getAuthVerification().
-  let verificationClient: GmailVerificationCodeFetcher;
-
   // Declare tasks here.
   on("task", {
     getAuthVerification: (toAddress: string) => {
-      if (!verificationClient) {
-        verificationClient = createClientFromEnv();
-      }
-      const attempt = () => {
-        return verificationClient.getVerificationCodeForUser(toAddress);
-      };
+      const attempt = () =>
+        createClientFromEnv().getVerificationCodeForUser(toAddress);
       return retry(attempt, {
         retries: 5,
         onFailedAttempt: () => {
@@ -65,6 +60,14 @@ export default function (on: Cypress.PluginEvents): Cypress.ConfigOptions {
     },
     async fillPDF(options: FillPDFTaskOptions) {
       return fillPDF(options.source, options.data);
+    },
+    generateCredentials(): Credentials {
+      const { TESTMAIL_NAMESPACE } = process.env;
+      const tag = faker.random.alphaNumeric(8);
+      return {
+        username: `${TESTMAIL_NAMESPACE}.${tag}@inbox.testmail.app`,
+        password: faker.internet.password(10) + faker.random.number(999),
+      };
     },
   });
 
@@ -78,23 +81,12 @@ export default function (on: Cypress.PluginEvents): Cypress.ConfigOptions {
   return configOverrides;
 }
 
-export function createClientFromEnv(): GmailVerificationCodeFetcher {
-  let appCreds;
-  let personalCreds;
-  const { GMAIL_APP_CREDS, GMAIL_PERSONAL_CREDS } = process.env;
-  if (GMAIL_APP_CREDS) {
-    const tempCreds = JSON.parse(GMAIL_APP_CREDS);
-    appCreds = {
-      clientId: tempCreds.installed.client_id,
-      clientSecret: tempCreds.installed.client_secret,
-      redirectUri: tempCreds.installed.redirect_uris[0],
-    };
+export function createClientFromEnv(): TestMailVerificationFetcher {
+  const { TESTMAIL_APIKEY, TESTMAIL_NAMESPACE } = process.env;
+  if (!TESTMAIL_APIKEY || !TESTMAIL_NAMESPACE) {
+    throw new Error(
+      "Unable to create Test Mail API client due to missing environment variables."
+    );
   }
-  if (!appCreds) {
-    throw new Error("Unable to determine Gmail app creds from environment.");
-  }
-  if (GMAIL_PERSONAL_CREDS) {
-    personalCreds = JSON.parse(GMAIL_PERSONAL_CREDS);
-  }
-  return new GmailVerificationCodeFetcher(appCreds, personalCreds);
+  return new TestMailVerificationFetcher(TESTMAIL_APIKEY, TESTMAIL_NAMESPACE);
 }
