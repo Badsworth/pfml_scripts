@@ -1,29 +1,27 @@
 import { Given } from "cypress-cucumber-preprocessor/steps";
 import { getFineosBaseUrl } from "@/index";
-import { TestType } from "@/types";
+import { CypressStepThis, TestType } from "@/types";
 
 Given("I am logged in as a CSR on the Fineos homepage", function () {
   Cypress.config("baseUrl", getFineosBaseUrl());
 });
 
 Given("I log in as a claimant on the portal dashboard", function () {
+  const credentials: CypressStepThis["credentials"] = {
+    username: Cypress.env("PORTAL_USERNAME"),
+    password: Cypress.env("PORTAL_PASSWORD"),
+  };
+  // Alias the credentials for later use.
+  cy.wrap(credentials).as("credentials");
   cy.visit("/");
-  cy.labelled("Email address").type(this.application.email);
-  cy.labelled("Password").typeMasked(this.application.password);
+  cy.labelled("Email address").type(credentials.username);
+  cy.labelled("Password").typeMasked(credentials.password);
   cy.contains("button", "Log in").click();
 });
 
 Given("I have a {testType} claim to submit", function (testType: TestType) {
   // Get application.
-  cy.fixture(testType).then((application) => {
-    application.email = Cypress.env("PORTAL_USERNAME");
-    application.password = Cypress.env("PORTAL_PASSWORD");
-    cy.generateIdVerification(application).then((applicationWithIdentity) => {
-      cy.generateHCPForm(applicationWithIdentity).then((application) => {
-        cy.wrap(application).as("application");
-      });
-    });
-  });
+  cy.fixture(testType).wrap("application");
 });
 
 Given("I create an application", function (): void {
@@ -66,7 +64,10 @@ Given("I click on the checklist button called {string}", function (
     .click();
 });
 
-Given("I have my identity verified", function (): void {
+Given("I have my identity verified", function (this: CypressStepThis): void {
+  if (!this.application) {
+    throw new Error("Application has not been set");
+  }
   const { application } = this;
   // Preceeded by - "I am on the claims Checklist page";
   // Preceeded by - "I click on the checklist button called {string}"
@@ -103,6 +104,7 @@ Given("I have my identity verified", function (): void {
   cy.contains("button", "Continue").click();
 
   // Input was removed from portal at some point
+  // If it reappears, generate the PDF here and upload.
   // cy.get('input[type="file"]')
   //  .attachFile(application.idVerification.front)
   //  .attachFile(application.idVerification.back);

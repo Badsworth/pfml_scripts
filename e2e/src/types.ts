@@ -1,7 +1,5 @@
 type DateObj = { month: number; day: number; year: number };
 export type Application = {
-  email: string;
-  password: string;
   firstName: string;
   lastName: string;
   dob: DateObj;
@@ -12,6 +10,20 @@ export type Application = {
   employer: Employer;
   otherBenefits: OtherBenefits;
   paymentInfo: PaymentInfo;
+};
+
+/**
+ * Special type to use to tell Typescript what properties `this` might contain on a Cypress
+ * test step.
+ *
+ * Because we alias `credentials` and `application`, they can later be used by accessing `this.credentials`
+ * and `this.application`, respectively.
+ *
+ * @see https://www.typescriptlang.org/docs/handbook/functions.html#this-parameters
+ */
+export type CypressStepThis = {
+  credentials?: { username: string; password: string };
+  application?: Application;
 };
 
 export type Claim = MedicalClaim | FamilyClaim;

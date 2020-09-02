@@ -1,11 +1,10 @@
 import { When } from "cypress-cucumber-preprocessor/steps";
 import {
   TestType,
-  MedicalClaim,
   MedicalLeaveContinuous,
   MedicalLeaveReduced,
   MedicalLeaveIntermittent,
-  Application,
+  CypressStepThis,
 } from "@/types";
 import { lookup } from "./util";
 
@@ -53,11 +52,14 @@ When("I search for the {testType} application in Fineos", function (
 
 /* Checklist page */
 // submitClaim
-When("I start submitting the claim", function (): void {
+When("I start submitting the claim", function (this: CypressStepThis): void {
   // Preceeded by - "I am on the claims Checklist page";
   // Preceeded by - "I click on the checklist button called {string}"
   //                with the label "Enter leave details"
-  const { claim } = this.application as Application;
+  if (!this.application) {
+    throw new Error("Application has not been set");
+  }
+  const { claim } = this.application;
   const claimType = lookup(claim.type, {
     medical: "I can’t work due to an illness, injury, or pregnancy.",
     childBonding: "I need to bond with my child after birth or placement.",
@@ -76,13 +78,17 @@ When("I start submitting the claim", function (): void {
 });
 
 // submitMedical
-When("I finish submitting the claim based on its type", function () {
-  const claim = this.application.claim as MedicalClaim;
-  if (!claim.providerForm) {
-    throw new Error(
-      "Provider form was not specified. Did you forget to generate one in your test?"
-    );
+When("I finish submitting the claim based on its type", function (
+  this: CypressStepThis
+) {
+  if (!this.application) {
+    throw new Error("Application has not been set");
   }
+  const claim = this.application.claim;
+  if (claim.type !== "medical") {
+    throw new Error("Test");
+  }
+
   // Example of selecting a radio button pertaining to a particular question. Scopes the lookup
   // of the "yes" value so we don't select "yes" for the wrong question.
   cy.contains(
@@ -93,7 +99,12 @@ When("I finish submitting the claim based on its type", function () {
   });
   cy.contains("button", "Continue").click();
 
-  // Input was removed from portal at some point
+  // Input was removed from portal at some point. If it gets reinstated, generate it here and upload.
+  // if (!claim.providerForm) {
+  //   throw new Error(
+  //     "Provider form was not specified. Did you forget to generate one in your test?"
+  //   );
+  // }
   // cy.get('input[type="file"]').attachFile(claim.providerForm);
   // cy.contains("button", "Continue").click();
 
@@ -221,10 +232,13 @@ When("I finish submitting the claim based on its type", function () {
 });
 
 // enterEmployerInfo
-When("I enter employer info", function (): void {
+When("I enter employer info", function (this: CypressStepThis): void {
   // Preceeded by - "I am on the claims Checklist page";
   // Preceeded by - "I click on the checklist button called {string}"
   //                with the label "Enter employment information"
+  if (!this.application) {
+    throw new Error("Application has not been set");
+  }
   const { employer } = this.application;
   cy.contains("fieldset", "What is your employment status?").within(() => {
     const choice = lookup(employer.type, {
@@ -266,11 +280,14 @@ When("I enter employer info", function (): void {
 });
 
 // reportOtherBenefits
-When("I report other benefits", function (): void {
+When("I report other benefits", function (this: CypressStepThis): void {
   // Preceeded by - "I am on the claims Checklist page";
   // Preceeded by - "I click on the checklist button called {string}"
   //                with the label "Report other leave and benefits"
-  const application = this.application as Application;
+  if (!this.application) {
+    throw new Error("Application has not been set");
+  }
+  const application = this.application;
   const {
     willUseEmployerBenefits,
     employerBenefitsUsed = [],
@@ -372,11 +389,13 @@ When("I report other benefits", function (): void {
 });
 
 // addPaymentInfo
-When("I add payment info", function (): void {
+When("I add payment info", function (this: CypressStepThis): void {
   // Preceeded by - "I am on the claims Checklist page";
   // Preceeded by - "I click on the checklist button called {string}"
   //                with the label "Add payment information"
-
+  if (!this.application) {
+    throw new Error("Application has not been set");
+  }
   const { paymentInfo } = this.application;
 
   cy.contains("fieldset", "How do you want to get your weekly benefit?").within(

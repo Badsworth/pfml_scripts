@@ -1,4 +1,5 @@
 import { Then } from "cypress-cucumber-preprocessor/steps";
+import { CypressStepThis } from "@/types";
 
 Then("I should see a success page confirming my claim submission", function () {
   cy.url().should("include", "/claims/success");
@@ -12,7 +13,12 @@ Then("I should be able to return to the portal dashboard", function () {
 /**
  * Assert the data matches previously filled info
  */
-Then("I should see any previously entered data", function (): void {
+Then("I should see any previously entered data", function (
+  this: CypressStepThis
+): void {
+  if (!this.application) {
+    throw new Error("Application has not been set");
+  }
   cy.get('input[name="first_name"]').should(
     "have.value",
     this.application.firstName
@@ -36,7 +42,12 @@ Then("I should see any previously entered data", function (): void {
 /**
  * Continue Submitting claim where fields are empty
  */
-Then("I should be able to finish submitting the claim", function (): void {
+Then("I should be able to finish submitting the claim", function (
+  this: CypressStepThis
+): void {
+  if (!this.application) {
+    throw new Error("Application has not been set");
+  }
   cy.contains("Do you have a Massachusetts driver's license or ID card?");
   if (this.application.massId) {
     cy.contains("Yes").click();
