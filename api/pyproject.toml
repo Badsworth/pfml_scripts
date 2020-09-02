@@ -15,7 +15,7 @@ connexion = {extras = ["swagger-ui"], version = "^2.7.0"}
 factory_boy = "^2.12.0"
 faker = "^4.0.1"
 flask-bouncer = "^0.3.0"
-flask_cors = "^3.0.8"
+flask_cors = "^3.0.9"
 newrelic = "^5.14.1"
 psycopg2-binary = "^2.8.5"
 pydantic = "^1.5.1"
