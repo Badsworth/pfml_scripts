@@ -21,7 +21,13 @@ def upgrade():
     op.add_column(
         "application", sa.Column("mailing_address_id", postgresql.UUID(as_uuid=True), nullable=True)
     )
-    op.create_foreign_key("application_mailing_address_id_fkey", "application", "address", ["mailing_address_id"], ["address_id"])
+    op.create_foreign_key(
+        "application_mailing_address_id_fkey",
+        "application",
+        "address",
+        ["mailing_address_id"],
+        ["address_id"],
+    )
     # ### end Alembic commands ###
 
 

@@ -48,6 +48,7 @@ def init(config: Optional[DbConfig] = None) -> scoped_session:
     )
 
     massgov.pfml.db.models.init_lookup_tables(session_factory)
+    massgov.pfml.db.models.applications.sync_state_metrics(session_factory)
 
     return session_factory
 

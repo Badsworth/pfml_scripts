@@ -1,4 +1,7 @@
-from sqlalchemy import Boolean, Column, Date, DateTime, ForeignKey, Integer, Text
+from datetime import datetime
+from decimal import Decimal
+
+from sqlalchemy import Boolean, Column, Date, DateTime, ForeignKey, Integer, Numeric, Text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 
@@ -420,6 +423,36 @@ class Document(Base):
     is_stored_in_s3 = Column(Boolean, nullable=False)
     name = Column(Text, nullable=False)
     description = Column(Text, nullable=False)
+
+
+class StateMetric(Base):
+    __tablename__ = "state_metric"
+    state_metric_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
+    effective_date = Column(Date, unique=True)
+    unemployment_minimum_earnings = Column(Numeric)
+    average_weekly_wage = Column(Numeric)
+
+
+def sync_state_metrics(db_session):
+    state_metrics = [
+        StateMetric(
+            effective_date=datetime(2020, 10, 1),
+            unemployment_minimum_earnings=Decimal(5100),
+            average_weekly_wage=Decimal(1431.66),
+        )
+    ]
+
+    for metric in state_metrics:
+        existing = (
+            db_session.query(StateMetric)
+            .filter(StateMetric.effective_date == metric.effective_date)
+            .one_or_none()
+        )
+
+        if existing is None:
+            db_session.add(metric)
+
+    db_session.commit()
 
 
 def sync_lookup_tables(db_session):
