@@ -47,8 +47,8 @@ export function scenario(config: ScenarioOpts): SimulationGenerator {
   return async (opts) => {
     const hasMassId =
       config.residence === "MA-proofed" || config.residence === "MA-unproofed";
-    const endDate = soon(faker.random.number(365));
-    const startDate = faker.date.between(new Date(), endDate);
+    const endDate = soon(faker.random.number(365), "2021-02-01");
+    const startDate = faker.date.between(new Date(2021, 0), endDate);
     const notificationDate = faker.date.recent(60);
     // Pulls random FEIN from employerPool fixture.
     const employer_fein =

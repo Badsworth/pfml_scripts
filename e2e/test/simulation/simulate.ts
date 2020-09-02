@@ -121,6 +121,32 @@ describe("Simulation Generator", () => {
       })
     );
   });
+
+  it("Should have an application start date past 01/01/2021", async () => {
+    const { claim } = await scenario({
+      residence: "MA-proofed",
+    })(opts);
+    const targetDate: number = new Date(2021, 0).getTime();
+    claim.leave_details?.continuous_leave_periods?.forEach((period) => {
+      const claimStartDate: number = new Date(
+        String(period.start_date)
+      ).getTime();
+      expect(claimStartDate).toBeGreaterThan(targetDate);
+    });
+  });
+
+  it("Should have an application end date greater/later than start date", async () => {
+    const { claim } = await scenario({
+      residence: "MA-proofed",
+    })(opts);
+    claim.leave_details?.continuous_leave_periods?.forEach((period) => {
+      const claimStartDate: number = new Date(
+        String(period.start_date)
+      ).getTime();
+      const claimEndDate: number = new Date(String(period.end_date)).getTime();
+      expect(claimEndDate).toBeGreaterThan(claimStartDate);
+    });
+  });
 });
 
 describe("Chance Simulation Generator", () => {
