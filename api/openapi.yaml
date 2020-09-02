@@ -357,6 +357,45 @@ paths:
           $ref: "#/components/responses/BadRequest"
       requestBody:
         $ref: "#/components/requestBodies/EligibilityRequest"
+
+  /rmv-check:
+    post:
+      security:
+        - {} # no authentication while mocked
+      tags:
+        - ID Proofing
+      summary: Perform lookup and data matching for information on RMV-issued IDs
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RMVCheckRequest"
+      responses:
+        "200":
+          description: Summary of the check
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessfulResponse"
+                  - properties:
+                      data:
+                        $ref: "#/components/schemas/RMVCheckResponse"
+                example:
+                  meta:
+                    method: "POST"
+                    resource: "/rmv-check"
+                  status_code: 200
+                  message: "success"
+                  data:
+                    verified: true
+                    description: Verification check passed.
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        default:
+          $ref: "#/components/responses/UnexpectedError"
+
 tags:
   - name: Test Endpoints
   - name: Users
@@ -364,6 +403,7 @@ tags:
   - name: Employers
   - name: Applications
   - name: Eligibility
+  - name: ID Proofing
 
 components:
   securitySchemes:
@@ -452,6 +492,12 @@ components:
             $ref: "#/components/schemas/Error"
     ValidationError:
       description: Error validating the object
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    UnexpectedError:
+      description: Unexpected error
       content:
         application/json:
           schema:
@@ -1218,6 +1264,95 @@ components:
       items:
         $ref: "#/components/schemas/ApplicationResponse"
 
+    RMVCheckRequest:
+      allOf:
+        - type: object
+          additionalProperties: false
+          properties:
+            absence_case_id:
+              title: Absence Case ID
+              description:
+                FINEOS ID for the case the check is being performed for.
+              type: string
+            date_of_birth:
+              $ref: "#/components/schemas/Date"
+            first_name:
+              title: First Name
+              description:
+                This must match _exactly_ with what is on record with the RMV to
+                be verified. This might be relevant because the RMV uses a
+                restricted character set of `[a-zA-Z \-']` for names.
+              type: string
+              example: Jane
+            last_name:
+              title: Last Name
+              description:
+                This must match _exactly_ with what is on record with the RMV to
+                be verified. This might be relevant because the RMV uses a
+                restricted character set of `[a-zA-Z \-']` for names.
+              type: string
+              example: Doe
+            mass_id_number:
+              $ref: "#/components/schemas/MassId"
+            residential_address_city:
+              title: Residential Address - City
+              type: string
+              example: Boston
+            residential_address_line_1:
+              title: Residential Address - Line 1
+              type: string
+              example: 123 Main St.
+            residential_address_line_2:
+              title: Residential Address - Line 2
+              type: string
+              nullable: true
+              example: Apt. 123
+            residential_address_zip_code:
+              title: Residential Address - Zip Code
+              description:
+                Accepts ZIP and ZIP+4 formats. Only first five characters are
+                relevant for check.
+              type: string
+              pattern: ^\d{5}(-\d{4})?$
+              example: "12345"
+            ssn_last_4:
+              title: SSN Last 4
+              description:
+                Last four characters of a Social Security Number.
+              type: string
+              pattern: ^\d{4}$
+              example: "9999"
+          required:
+            - first_name
+            - last_name
+            - date_of_birth
+            - ssn_last_4
+            - mass_id_number
+            - residential_address_line_1
+            - residential_address_city
+            - residential_address_zip_code
+            - absence_case_id
+        - type: object
+          properties:
+            mass_id_number:
+              title: Massachusetts-issued ID number
+              description: The ID number of a Mass ID or Massachusetts driver's license.
+
+    RMVCheckResponse:
+      type: object
+      properties:
+        verified:
+          title: Verified
+          description: Indicates if all data points were successfully verified.
+          type: boolean
+        description:
+          title: Description
+          description: Human-readable description of the verification result.
+          type: string
+      required:
+        - verified
+        - description
+
     Error:
       type: object
       properties:
@@ -1246,7 +1381,7 @@ components:
 
     MassId:
       type: string
-      example: "000000000"
+      example: "S99988801"
       pattern: '^(\d{9}|S(\d{8}|A\d{7}))$'
 
     RoutingNbr:
