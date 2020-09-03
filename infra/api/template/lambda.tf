@@ -7,8 +7,6 @@ locals {
   # This layer causes telemetry data to be generated and logged to CloudWatch as a side effect of lambda invocation.
   # Lambda layers are also available for runtimes other than Python 3.8: see https://nr-layers.iopipe.com/.
   newrelic_log_ingestion_layer = "arn:aws:lambda:us-east-1:451483290750:layer:NewRelicPython38:16"
-  newrelic_account_id          = "2837112" # PFML's New Relic sub-account number
-  newrelic_trusted_account_key = "1606654" # EOLWD's New Relic parent account number
 }
 
 data "aws_s3_bucket" "lambda_build" {
