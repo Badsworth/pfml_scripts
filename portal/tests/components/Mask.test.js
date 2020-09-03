@@ -55,10 +55,9 @@ describe("Mask", () => {
   });
 
   it("calls onChange on the InputText on a blur event", () => {
-    const onBlur = jest.fn();
     const inputOnChange = jest.fn();
     const wrapper = render(
-      { mask: "ssn", onBlur },
+      { mask: "ssn" },
       { value: "12345678", onChange: inputOnChange }
     ).wrapper;
 
@@ -70,10 +69,9 @@ describe("Mask", () => {
   });
 
   it("masking is triggered by a blur event", () => {
-    const onBlur = jest.fn();
     const inputOnChange = jest.fn();
     const wrapper = render(
-      { mask: "ssn", onBlur },
+      { mask: "ssn" },
       { value: "123456789", onChange: inputOnChange }
     ).wrapper;
 
@@ -84,11 +82,24 @@ describe("Mask", () => {
     expect(inputOnChange.mock.calls[0][0].target.value).toBe("123-45-6789");
   });
 
-  it("masking is not triggered by a change event", () => {
-    const onBlur = jest.fn();
+  it("masking is triggered by keypress on Enter key", () => {
     const inputOnChange = jest.fn();
     const wrapper = render(
-      { mask: "ssn", onBlur },
+      { mask: "ssn" },
+      { value: "123456789", onChange: inputOnChange }
+    ).wrapper;
+
+    const input = wrapper.find("input");
+
+    input.simulate("keyDown", { key: "Enter", target: { value: "123456789" } });
+
+    expect(inputOnChange.mock.calls[0][0].target.value).toBe("123-45-6789");
+  });
+
+  it("masking is not triggered by a change event", () => {
+    const inputOnChange = jest.fn();
+    const wrapper = render(
+      { mask: "ssn" },
       { value: "12345678", onChange: inputOnChange }
     ).wrapper;
 

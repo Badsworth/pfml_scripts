@@ -118,9 +118,18 @@ function Mask(props) {
    * @param {object} evt
    */
   const handleBlur = (evt) => {
-    const maskedValue = maskValue(evt.target.value, props.mask);
+    maskAndDispatchChangeFromEvent(evt);
+  };
 
-    dispatchChange(maskedValue, evt);
+  /**
+   * To ensure we only submit the masked value, we need to
+   * mask the input when the Enter key is pressed
+   * @param {object} evt
+   */
+  const handleKeyDown = (evt) => {
+    if (evt.key === "Enter") {
+      maskAndDispatchChangeFromEvent(evt);
+    }
   };
 
   /**
@@ -142,6 +151,16 @@ function Mask(props) {
     });
   };
 
+  /**
+   * Apply the mask and update the field state
+   * @param {object} evt
+   */
+  const maskAndDispatchChangeFromEvent = (evt) => {
+    const maskedValue = maskValue(evt.target.value, props.mask);
+
+    dispatchChange(maskedValue, evt);
+  };
+
   const modifiedInputText = React.cloneElement(field, {
     defaultValue: undefined,
     inputMode: "numeric",
@@ -149,6 +168,7 @@ function Mask(props) {
     value: field.props.value,
     onBlur: handleBlur,
     onChange: field.props.onChange,
+    onKeyDown: handleKeyDown,
     className: classnames(field.props.className, {
       "c-inputtext-field--currency": props.mask === "currency",
     }),

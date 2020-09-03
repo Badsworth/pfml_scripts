@@ -9,6 +9,7 @@ exports[`Mask renders mask 1`] = `
     inputMode="numeric"
     name="foo"
     onBlur={[Function]}
+    onKeyDown={[Function]}
     type="text"
   />
 </div>
