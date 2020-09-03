@@ -211,7 +211,7 @@ class ApplicationFactory(BaseFactory):
     employee = factory.SubFactory(EmployeeFactory)
     employee_id = factory.LazyAttribute(lambda a: a.employee.employee_id)
 
-    employer_fein = factory.LazyAttribute(lambda w: w.employer.employer_fein)
+    employer_fein = "22-7777777"
 
     # Lookups
     occupation_id = None

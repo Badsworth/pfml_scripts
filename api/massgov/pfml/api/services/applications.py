@@ -18,7 +18,13 @@ from massgov.pfml.db.models.applications import (
     ReducedScheduleLeavePeriod,
     TaxIdentifier,
 )
-from massgov.pfml.db.models.employees import Address, AddressType, LkAddressType, LkGeoState
+from massgov.pfml.db.models.employees import (
+    Address,
+    AddressType,
+    GeoState,
+    LkAddressType,
+    LkGeoState,
+)
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
 
@@ -30,7 +36,6 @@ def update_from_request(
 ) -> Application:
     # TODO: generalize this update functionality, considering only explicitly
     # set keys, LookupEnum handling, alias/map field names, etc.
-
     for key in body.__fields_set__:
         value = getattr(body, key)
 
@@ -40,6 +45,7 @@ def update_from_request(
             "employee_ssn",
             "tax_identifier",
             "mailing_address",
+            "residential_address",
         ):
             continue
 
@@ -70,6 +76,10 @@ def update_from_request(
 
     if body.mailing_address is not None or application.mailing_address_id is not None:
         add_or_update_address(db_session, body.mailing_address, AddressType.MAILING, application)
+    if body.residential_address is not None or application.residential_address_id is not None:
+        add_or_update_address(
+            db_session, body.residential_address, AddressType.RESIDENTIAL, application
+        )
 
     application.updated_time = datetime.now()
     db_session.add(application)
@@ -268,58 +278,53 @@ def add_or_update_address(
     application: Application,
 ) -> Optional[Address]:
     # Add more checks here as we add more Address types
-    if address_type != AddressType.MAILING:
+    if address_type not in [AddressType.MAILING, AddressType.RESIDENTIAL]:
         raise ValueError("Invalid address type")
 
-    state = None
+    state_id = None
     address_to_update = None
     if address is not None:
-        state = (
-            db_session.query(LkGeoState)
-            .filter(LkGeoState.geo_state_description == address.state)
-            .one_or_none()
-        )
+        state_id = GeoState.get_id(address.state)
 
-        if state is None:
+        if state_id is None:
             raise ValueError("Invalid state code provided")
         else:
             address_to_update = Address(
                 address_line_one=address.line_1,
                 address_line_two=address.line_2,
                 city=address.city,
-                geo_state_id=state.geo_state_id,
+                geo_state_id=state_id,
                 zip_code=address.zip,
             )
 
-    # Make room for more address types
-    if address_type == AddressType.MAILING:
-        if address_to_update is not None:
-            address_to_update.address_type_id = AddressType.MAILING.address_type_id
+    address_field_name, address_id_field_name, address_type_id = address_type_mapping(address_type)
 
-        existing_mailing_address_id = application.mailing_address_id
+    if address_to_update is not None:
+        address_to_update.address_type_id = address_type_id
 
-        # If an address exists, update with what we have
-        if existing_mailing_address_id is not None:
-            mailing_address = (
-                db_session.query(Address)
-                .filter(Address.address_id == existing_mailing_address_id)
-                .one_or_none()
-            )
+    existing_address_id = getattr(application, address_id_field_name)
 
-            # If we had an address and there's none in the request, remove the association.
-            if address is None:
-                application.mailing_address_id = None
-            elif mailing_address is not None and state is not None:
-                mailing_address.address_line_one = address.line_1
-                mailing_address.address_line_two = address.line_2
-                mailing_address.city = address.city
-                mailing_address.geo_state_id = state.geo_state_id
-                mailing_address.zip_code = address.zip
+    # If an address exists, update with what we have
+    if existing_address_id is not None:
+        db_address = (
+            db_session.query(Address)
+            .filter(Address.address_id == existing_address_id)
+            .one_or_none()
+        )
 
-        # If we don't have an existing address but have a body, add an address.
-        elif address_to_update is not None:
-            db_session.add(address_to_update)
-            application.mailing_address = address_to_update
+        # If we had an address and there's none in the request, remove the association.
+        if address is None:
+            setattr(application, address_id_field_name, None)
+        elif db_address is not None and state_id is not None:
+            db_address.address_line_one = address.line_1
+            db_address.address_line_two = address.line_2
+            db_address.city = address.city
+            db_address.geo_state_id = state_id
+            db_address.zip_code = address.zip
+    # If we don't have an existing address but have a body, add an address.
+    elif address_to_update is not None:
+        db_session.add(address_to_update)
+        setattr(application, address_field_name, address_to_update)
 
     return address_to_update
 
@@ -342,3 +347,15 @@ def get_or_add_tax_identifier(
         tax_id = TaxIdentifier(tax_identifier=tax_identifier)
 
     return tax_id
+
+
+def address_type_mapping(address_type):
+    if address_type == AddressType.MAILING:
+        return ("mailing_address", "mailing_address_id", AddressType.MAILING.address_type_id)
+    elif address_type == AddressType.RESIDENTIAL:
+        return (
+            "residential_address",
+            "residential_address_id",
+            AddressType.RESIDENTIAL.address_type_id,
+        )
+

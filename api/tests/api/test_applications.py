@@ -223,34 +223,141 @@ def test_application_patch(client, user, auth_token, test_db_session):
     )
     assert response_body.get("data").get("tax_identifier") == "***-**-****"
 
-    update_request_body = sqlalchemy_object_as_dict(application)
-    update_request_body["mailing_address"] = {
-        "city": "Chicago",
-        "state": "IL",
-        "line_1": "123 Foo St.",
-        "zip": "12345-1234",
+
+def test_application_patch_mailing_address(client, user, auth_token, test_db_session):
+    application = ApplicationFactory.create(user=user)
+    assert application.mailing_address == None
+
+    # adding residential address
+    update_request_body = {
+        "mailing_address": {
+            "city": "Chicago",
+            "state": "IL",
+            "line_1": "123 Foo St.",
+            "zip": "12345-1234",
+        }
     }
 
-    update_address_response = client.patch(
+    response = client.patch(
         "/v1/applications/{}".format(application.application_id),
         headers={"Authorization": f"Bearer {auth_token}"},
         json=update_request_body,
     )
 
-    update_address_response_body = update_address_response.get_json()
-    assert update_address_response_body.get("data").get("mailing_address")["city"] == "Chicago"
+    test_db_session.refresh(application)
+    response_body = response.get_json()
+    assert response.status_code == 200
+    assert response_body.get("data").get("mailing_address")["city"] == "Chicago"
+    assert response_body.get("data").get("mailing_address")["line_1"] == "123 Foo St."
+    assert application.mailing_address.city == "Chicago"
+    assert application.mailing_address.address_line_one == "123 Foo St."
 
-    update_request_body = sqlalchemy_object_as_dict(application)
-    update_request_body["mailing_address"] = None
+    # updating mailing address
+    update_request_body = {
+        "mailing_address": {
+            "city": "Chicago",
+            "state": "IL",
+            "line_1": "123 Bar St.",
+            "zip": "12345-1234",
+        }
+    }
 
-    remove_address_response = client.patch(
+    response = client.patch(
         "/v1/applications/{}".format(application.application_id),
         headers={"Authorization": f"Bearer {auth_token}"},
         json=update_request_body,
     )
 
-    remove_address_response_body = remove_address_response.get_json()
-    assert remove_address_response_body.get("data").get("mailing_address", None) is None
+    test_db_session.refresh(application)
+    response_body = response.get_json()
+    assert response.status_code == 200
+    assert response_body.get("data").get("mailing_address")["city"] == "Chicago"
+    assert response_body.get("data").get("mailing_address")["line_1"] == "123 Bar St."
+    assert application.mailing_address.city == "Chicago"
+    assert application.mailing_address.address_line_one == "123 Bar St."
+
+    # removing mailing address
+    update_request_body = {"mailing_address": None}
+
+    response = client.patch(
+        "/v1/applications/{}".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+        json=update_request_body,
+    )
+
+    test_db_session.refresh(application)
+    response_body = response.get_json()
+    assert response.status_code == 200
+    assert response_body.get("data").get("mailing_address") == None
+    assert application.residential_address == None
+
+
+def test_application_patch_residential_address(client, user, auth_token, test_db_session):
+    application = ApplicationFactory.create(user=user)
+    assert application.residential_address == None
+
+    # adding residential address
+    update_request_body = {
+        "residential_address": {
+            "city": "Chicago",
+            "state": "IL",
+            "line_1": "123 Foo St.",
+            "zip": "12345-1234",
+        }
+    }
+
+    response = client.patch(
+        "/v1/applications/{}".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+        json=update_request_body,
+    )
+
+    test_db_session.refresh(application)
+    response_body = response.get_json()
+    assert response.status_code == 200
+    assert response_body.get("data").get("residential_address")["city"] == "Chicago"
+    assert response_body.get("data").get("residential_address")["line_1"] == "123 Foo St."
+    assert application.residential_address.city == "Chicago"
+    assert application.residential_address.address_line_one == "123 Foo St."
+
+    # updating residential address
+    update_request_body = {
+        "residential_address": {
+            "city": "Chicago",
+            "state": "IL",
+            "line_1": "123 Bar St.",
+            "zip": "12345-1234",
+        }
+    }
+
+    response = client.patch(
+        "/v1/applications/{}".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+        json=update_request_body,
+    )
+
+    test_db_session.refresh(application)
+    response_body = response.get_json()
+    assert response.status_code == 200
+    assert response_body.get("data").get("residential_address")["city"] == "Chicago"
+    assert response_body.get("data").get("residential_address")["line_1"] == "123 Bar St."
+    assert application.residential_address.city == "Chicago"
+    assert application.residential_address.address_line_one == "123 Bar St."
+
+    # removing residential address
+    update_request_body = {"residential_address": None}
+
+    response = client.patch(
+        "/v1/applications/{}".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+        json=update_request_body,
+    )
+
+    test_db_session.refresh(application)
+    response_body = response.get_json()
+    assert response.status_code == 200
+    assert response_body.get("data").get("residential_address") == None
+    assert application.residential_address == None
 
 
 def test_application_unauthorized_patch(client, user, auth_token, test_db_session):
@@ -1026,7 +1133,7 @@ def test_application_post_submit_app_ssn_not_found(client, user, auth_token, tes
             "application_id": "21636369-8b52-4b4a-97b7-50923ceb3ffd",
             "application_nickname": "My leave application",
             "date_of_birth": "2009-01-20",
-            "employer_fein": "858614250",
+            "employer_fein": "227777777",
             "employer_id": "e8a8529f-035e-4a25-9b08-923d10c67fd9",
             "first_name": "Mitchell",
             "last_name": "Munoz",

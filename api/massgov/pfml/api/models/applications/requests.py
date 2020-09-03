@@ -28,3 +28,4 @@ class ApplicationRequestBody(PydanticBaseModel):
     leave_details: Optional[ApplicationLeaveDetails]
     payment_preferences: Optional[List[PaymentPreferences]]
     mailing_address: Optional[Address]
+    residential_address: Optional[Address]

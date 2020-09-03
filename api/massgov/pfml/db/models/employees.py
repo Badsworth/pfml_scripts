@@ -377,6 +377,7 @@ class AddressType(LookupTable):
     HOME = LkAddressType(1, "Home")
     BUSINESS = LkAddressType(2, "Business")
     MAILING = LkAddressType(3, "Mailing")
+    RESIDENTIAL = LkAddressType(4, "Residential")
 
 
 class GeoState(LookupTable):

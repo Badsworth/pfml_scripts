@@ -109,6 +109,9 @@ class Application(Base):
     employee_id = Column(UUID(as_uuid=True), ForeignKey("employee.employee_id"))
     employer_id = Column(UUID(as_uuid=True), ForeignKey("employer.employer_id"))
     mailing_address_id = Column(UUID(as_uuid=True), ForeignKey("address.address_id"), nullable=True)
+    residential_address_id = Column(
+        UUID(as_uuid=True), ForeignKey("address.address_id"), nullable=True
+    )
     employer_fein = Column(Text)
     first_name = Column(Text)
     last_name = Column(Text)
@@ -156,7 +159,8 @@ class Application(Base):
     relationship_qualifier = relationship(LkRelationshipQualifier)
     employer_notification_method = relationship(LkNotificationMethod)
     tax_identifier = relationship(TaxIdentifier)
-    mailing_address = relationship(Address)
+    mailing_address = relationship(Address, foreign_keys=[mailing_address_id])
+    residential_address = relationship(Address, foreign_keys=[residential_address_id])
 
     # `uselist` default is True, but for mypy need to state it explicitly so it
     # detects the relationship as many-to-one

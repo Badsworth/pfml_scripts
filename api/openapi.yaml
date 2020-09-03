@@ -321,7 +321,7 @@ paths:
             application/json:
               schema:
                 allOf:
-                  - $ref: '#/components/schemas/ErrorResponse'
+                  - $ref: "#/components/schemas/ErrorResponse"
                   - properties:
                       data:
                         $ref: "#/components/schemas/ApplicationResponse"
@@ -580,12 +580,12 @@ components:
           type: string
         rule:
           oneOf:
-          - type: string
-          - type: number
-          - type: integer
-          - type: boolean
-          - type: array
-          - type: object
+            - type: string
+            - type: number
+            - type: integer
+            - type: boolean
+            - type: array
+            - type: object
         field:
           type: string
       required: ["type", "message"]
@@ -608,7 +608,7 @@ components:
           example: "MA"
         zip:
           type: string
-          pattern: '^[0-9]{5}(?:-[0-9]{4})?$'
+          pattern: "^[0-9]{5}(?:-[0-9]{4})?$"
       required: ["city", "line_1", "state", "zip"]
 
     UserResponse:
@@ -772,6 +772,9 @@ components:
             mailing_address:
               $ref: "#/components/schemas/Address"
               nullable: true
+            residential_address:
+              $ref: "#/components/schemas/Address"
+              nullable: true
             has_state_id:
               type: boolean
               nullable: true
@@ -860,6 +863,9 @@ components:
           nullable: true
           example: true
         mailing_address:
+          $ref: "#/components/schemas/Address"
+          nullable: true
+        residential_address:
           $ref: "#/components/schemas/Address"
           nullable: true
         mass_id:
@@ -1396,5 +1402,5 @@ components:
 
     Date:
       type: string
-      example: '1970-01-01'
+      example: "1970-01-01"
       pattern: '^\d{4}-\d{2}-\d{2}$'

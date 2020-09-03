@@ -45,6 +45,7 @@ class ApplicationResponse(PydanticBaseModel):
     updated_time: datetime
     status: Optional[ApplicationStatus]
     mailing_address: Optional[Address]
+    residential_address: Optional[Address]
 
     @classmethod
     def from_orm(cls, application: Application) -> "ApplicationResponse":
@@ -52,7 +53,10 @@ class ApplicationResponse(PydanticBaseModel):
         application_response.application_nickname = application.nickname
         if application.mailing_address is not None:
             application_response.mailing_address = Address.from_orm(application.mailing_address)
-
+        if application.residential_address is not None:
+            application_response.residential_address = Address.from_orm(
+                application.residential_address
+            )
         application_response.leave_details = ApplicationLeaveDetails.from_orm(application)
         application_response.payment_preferences = list(
             map(build_payment_preference, application.payment_preferences)
