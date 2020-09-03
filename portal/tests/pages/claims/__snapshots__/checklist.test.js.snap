@@ -2,7 +2,7 @@
 
 exports[`Checklist when Part 1 is submitted renders descriptions for Part 2 and 3 1`] = `"Uploading documents online leads to faster processing, but you can also fax documents to NNN-NNN-NNNN, or mail them to 123 Address."`;
 
-exports[`Checklist when Part 1 is submitted renders descriptions for Part 2 and 3 2`] = `"Entering payment information leads to faster processing, but you can also call XXX‑XXX‑XXXX."`;
+exports[`Checklist when Part 1 is submitted renders descriptions for Part 2 and 3 2`] = `"Entering payment information here leads to faster processing, but you can also call XXX‑XXX‑XXXX."`;
 
 exports[`Checklist when Part 1 is submitted renders different description for Part 1 1`] = `"If you need to edit your information in Part 1, you’ll need to call the Contact Center at XXX‑XXX‑XXXX."`;
 
@@ -60,7 +60,7 @@ exports[`Checklist when claim has not been started renders initial checklist sta
       <span
         dangerouslySetInnerHTML={
           Object {
-            "__html": "You will need:<ul class='usa-list'><li>Proof of your identity, like a driver’s license. See the full list of accepted identity documents.</li><li>Your Social Security Number or Individual Taxpayer Identification Number.</li></ul>",
+            "__html": "<p>You can use a variety of documents to verify your identity, but it’s easiest if you have a Massachusetts driver’s license or Mass ID.</p><p>You will need to provide:</p><ul class='usa-list'><li>Your name as it appears on your ID.</li><li>Your driver’s license number or Mass ID number, if you have one.</li><li>Your Social Security Number or Individual Taxpayer Identification Number.</li></ul>",
           }
         }
       />
@@ -75,7 +75,7 @@ exports[`Checklist when claim has not been started renders initial checklist sta
       <span
         dangerouslySetInnerHTML={
           Object {
-            "__html": "You will need:<ul class='usa-list'><li>A completed Healthcare Provider Form if you are taking medical leave because you can’t work due to an injury, illness, or pregnancy.</li></ul>",
+            "__html": "<p>If you are taking medical leave due to injury, illness, or pregnancy, you need to have your health care provider fill out the Certification. Some of the answers you will need for the online application will come from your health care provider’s answers on the certification form.</p><p>If you are taking leave to bond with a child, you will need to know:</p><ul class='usa-list'><li>The child's date of birth, due date, or the date they arrived in your home for adoption or foster care.</li><li>When you want your leave to begin and end.</li></ul>",
           }
         }
       />
@@ -90,7 +90,7 @@ exports[`Checklist when claim has not been started renders initial checklist sta
       <span
         dangerouslySetInnerHTML={
           Object {
-            "__html": "You will need to know:<ul class='usa-list'><li>Your employer's FEIN.</li><li>The date you told your employer you were taking leave.</li></ul>",
+            "__html": "You will need to know:<ul class='usa-list'><li>Your employer’s 9-digit federal employer identification number (FEIN or EIN). <br><b>Where to find this: </b>on your W-2 or 1099, or ask your employer’s finance department.</li><li>The date you told your employer you were taking leave.</li></ul>",
           }
         }
       />
@@ -105,7 +105,7 @@ exports[`Checklist when claim has not been started renders initial checklist sta
       <span
         dangerouslySetInnerHTML={
           Object {
-            "__html": "You will need to know:<ul class='usa-list'><li>If you will use any employer-sponsored benefits during your leave.</li><li>If you will receive income from any other sources during your leave.</li><li>The dates for any paid or unpaid leave you’ve taken since January 1, 2021 for a qualifying condition.</li></ul>",
+            "__html": "You will need to know:<ul class='usa-list'><li>If you will use any benefits from your employer because you are taking leave.</li><li>If you will receive income from any other sources during your leave.</li><li>The dates for any leave you’ve taken since January 1, 2021 for a condition that is covered by Paid Family and Medical Leave.</li></ul>",
           }
         }
       />
@@ -214,7 +214,7 @@ exports[`Checklist when claim has not been started renders initial checklist sta
       <span
         dangerouslySetInnerHTML={
           Object {
-            "__html": "You will need to know:<ul class='usa-list'><li>Your bank account information, if you want to be paid through Direct Deposit.</li></ul>",
+            "__html": "<p>Tell us how you want to receive payment.</p><p>If you want to receive payment by direct deposit, you will need to provide your bank account information, including a routing number and account number.</p>",
           }
         }
       />

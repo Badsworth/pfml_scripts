@@ -227,17 +227,17 @@ const pages = {
     screenReaderNumberPrefix: "Step",
     start: "Start",
     stepHTMLDescription_employerInformation:
-      "You will need to know:<ul class='usa-list'><li>Your employer's FEIN.</li><li>The date you told your employer you were taking leave.</li></ul>",
+      "You will need to know:<ul class='usa-list'><li>Your employer’s 9-digit federal employer identification number (FEIN or EIN). <br><b>Where to find this: </b>on your W-2 or 1099, or ask your employer’s finance department.</li><li>The date you told your employer you were taking leave.</li></ul>",
     stepHTMLDescription_leaveDetails:
-      "You will need:<ul class='usa-list'><li>A completed Healthcare Provider Form if you are taking medical leave because you can’t work due to an injury, illness, or pregnancy.</li></ul>",
+      "<p>If you are taking medical leave due to injury, illness, or pregnancy, you need to have your health care provider fill out the Certification. Some of the answers you will need for the online application will come from your health care provider’s answers on the certification form.</p><p>If you are taking leave to bond with a child, you will need to know:</p><ul class='usa-list'><li>The child's date of birth, due date, or the date they arrived in your home for adoption or foster care.</li><li>When you want your leave to begin and end.</li></ul>",
     stepHTMLDescription_otherLeave:
-      "You will need to know:<ul class='usa-list'><li>If you will use any employer-sponsored benefits during your leave.</li><li>If you will receive income from any other sources during your leave.</li><li>The dates for any paid or unpaid leave you’ve taken since January 1, 2021 for a qualifying condition.</li></ul>",
+      "You will need to know:<ul class='usa-list'><li>If you will use any benefits from your employer because you are taking leave.</li><li>If you will receive income from any other sources during your leave.</li><li>The dates for any leave you’ve taken since January 1, 2021 for a condition that is covered by Paid Family and Medical Leave.</li></ul>",
     stepHTMLDescription_payment:
-      "You will need to know:<ul class='usa-list'><li>Your bank account information, if you want to be paid through Direct Deposit.</li></ul>",
+      "<p>Tell us how you want to receive payment.</p><p>If you want to receive payment by direct deposit, you will need to provide your bank account information, including a routing number and account number.</p>",
     stepHTMLDescription_uploadId:
       "Upload proof of identity. If you entered a Massachusetts driver’s license or Mass ID number in step 1, upload the same ID.",
     stepHTMLDescription_verifyId:
-      "You will need:<ul class='usa-list'><li>Proof of your identity, like a driver’s license. See the full list of accepted identity documents.</li><li>Your Social Security Number or Individual Taxpayer Identification Number.</li></ul>",
+      "<p>You can use a variety of documents to verify your identity, but it’s easiest if you have a Massachusetts driver’s license or Mass ID.</p><p>You will need to provide:</p><ul class='usa-list'><li>Your name as it appears on your ID.</li><li>Your driver’s license number or Mass ID number, if you have one.</li><li>Your Social Security Number or Individual Taxpayer Identification Number.</li></ul>",
     stepListDescription_1:
       "Your progress is automatically saved as you complete the application. You can edit any information you enter in Part 1 until step 5 is completed.",
     stepListDescription_1_submitted:
@@ -246,7 +246,7 @@ const pages = {
     stepListDescription_2:
       "Uploading documents online leads to faster processing, but you can also fax documents to NNN-NNN-NNNN, or mail them to 123 Address.",
     stepListDescription_3:
-      "Entering payment information leads to faster processing, but you can also call $t(shared.callCenterPhoneNumber).",
+      "Entering payment information here leads to faster processing, but you can also call $t(shared.callCenterPhoneNumber).",
     stepListTitle_1:
       "<part-number>Part {{number}}</part-number> Tell us about yourself and your leave",
     stepListTitle_2:
