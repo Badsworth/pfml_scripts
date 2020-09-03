@@ -432,9 +432,9 @@ class Document(Base):
 class StateMetric(Base):
     __tablename__ = "state_metric"
     state_metric_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
-    effective_date = Column(Date, unique=True)
-    unemployment_minimum_earnings = Column(Numeric)
-    average_weekly_wage = Column(Numeric)
+    effective_date = Column(Date, unique=True, nullable=False)
+    unemployment_minimum_earnings = Column(Numeric, nullable=False)
+    average_weekly_wage = Column(Numeric, nullable=False)
 
 
 def sync_state_metrics(db_session):
