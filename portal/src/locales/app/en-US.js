@@ -736,11 +736,11 @@ const pages = {
       tableHeader_dateRange: "Date range",
       tableHeader_days: "Days",
     },
+    submitButton: "Done",
     supportingWorkDetails: {
       header: "Supporting work details",
       hoursWorkedLabel: "Weekly hours worked",
     },
-    submitButton: "Done",
     title: "Paid family and medical leave application review",
   },
   index: {
