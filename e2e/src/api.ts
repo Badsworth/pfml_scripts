@@ -143,9 +143,11 @@ export const http = {
             text = await res.text();
         }
         catch (err) { /* ok */ }
+
         if (!res.ok) {
             throw new HttpError(res.status, res.statusText, href, res.headers, text);
         }
+
         return {
             status: res.status,
             statusText: res.statusText,
@@ -310,10 +312,19 @@ export interface EmployerResponse {
 export interface GETEmployersByEmployerIdResponse extends SuccessfulResponse {
     data?: EmployerResponse;
 }
+export type MaskedSsnItin = string;
+export type Date = string;
+export interface Address {
+    city: string;
+    line_1: string;
+    line_2?: string;
+    state: string;
+    zip: string;
+}
 export interface ReducedScheduleLeavePeriods {
     leave_period_id?: string | null;
-    start_date?: string | null;
-    end_date?: string | null;
+    start_date?: Date | null;
+    end_date?: Date | null;
     is_estimated?: boolean | null;
     thursday_off_hours?: number | null;
     thursday_off_minutes?: number | null;
@@ -332,10 +343,10 @@ export interface ReducedScheduleLeavePeriods {
 }
 export interface ContinuousLeavePeriods {
     leave_period_id?: string | null;
-    start_date?: string | null;
-    end_date?: string | null;
-    last_day_worked?: string | null;
-    expected_return_to_work_date?: string | null;
+    start_date?: Date | null;
+    end_date?: Date | null;
+    last_day_worked?: Date | null;
+    expected_return_to_work_date?: Date | null;
     start_date_full_day?: boolean | null;
     start_date_off_hours?: number | null;
     start_date_off_minutes?: number | null;
@@ -346,8 +357,8 @@ export interface ContinuousLeavePeriods {
 }
 export interface IntermittentLeavePeriods {
     leave_period_id?: string | null;
-    start_date?: string | null;
-    end_date?: string | null;
+    start_date?: Date | null;
+    end_date?: Date | null;
     frequency?: number | null;
     frequency_interval?: number | null;
     frequency_interval_basis?: ("Days" | "Weeks" | "Months") | null;
@@ -356,15 +367,17 @@ export interface IntermittentLeavePeriods {
 }
 export interface ApplicationLeaveDetails {
     reason?: ("Care For A Family Member" | "Pregnancy/Maternity" | "Child Bonding" | "Serious Health Condition - Employee") | null;
-    reason_qualifier?: ("New Born" | "Serious Health Condition" | "Work Related Accident/Injury") | null;
+    reason_qualifier?: ("Newborn" | "Adoption" | "Foster Care" | "Serious Health Condition" | "Work Related Accident/Injury") | null;
     reduced_schedule_leave_periods?: ReducedScheduleLeavePeriods[];
     continuous_leave_periods?: ContinuousLeavePeriods[];
     intermittent_leave_periods?: IntermittentLeavePeriods[];
     relationship_to_caregiver?: ("Parent" | "Child" | "Grandparent" | "Grandchild" | "Other Family Member" | "Service Member" | "Inlaw" | "Sibling" | "Other") | null;
     relationship_qualifier?: ("Adoptive" | "Biological" | "Foster" | "Custodial Parent" | "Legal Guardian" | "Step Parent") | null;
     pregnant_or_recent_birth?: boolean | null;
+    child_birth_date?: Date | null;
+    child_placement_date?: Date | null;
     employer_notified?: boolean | null;
-    employer_notification_date?: string | null;
+    employer_notification_date?: Date | null;
     employer_notification_method?: ("In Writing" | "In Person" | "By Telephone" | "Other") | null;
 }
 export type RoutingNbr = string;
@@ -388,20 +401,22 @@ export interface PaymentPreferences {
 export interface ApplicationResponse {
     application_nickname?: string | null;
     application_id?: string;
-    tax_identifier_last4?: string | null;
+    tax_identifier?: MaskedSsnItin | null;
     employer_id?: string | null;
+    employer_fein?: string | null;
     first_name?: string | null;
     middle_name?: string | null;
     last_name?: string | null;
-    date_of_birth?: string | null;
+    date_of_birth?: Date | null;
     has_state_id?: boolean | null;
+    mailing_address?: Address | null;
     mass_id?: string | null;
     employment_status?: ("Employed" | "Unemployed" | "Self-Employed") | null;
     occupation?: ("Sales Clerk" | "Administrative" | "Engineer" | "Health Care") | null;
     leave_details?: ApplicationLeaveDetails | null;
     payment_preferences?: PaymentPreferences[] | null;
     updated_time?: string;
-    status?: "Started" | "Completed" | "Submitted";
+    status?: "Started" | "Submitted" | "Completed";
 }
 export interface POSTApplicationsResponse extends SuccessfulResponse {
     data?: ApplicationResponse;
@@ -416,11 +431,13 @@ export type MassId = string;
 export interface ApplicationRequestBody {
     application_nickname?: string | null;
     employee_ssn?: SsnItin | null;
+    tax_identifier?: SsnItin | null;
     employer_fein?: Fein | null;
     first_name?: string | null;
     middle_name?: string | null;
     last_name?: string | null;
-    date_of_birth?: string | null;
+    date_of_birth?: Date | null;
+    mailing_address?: Address | null;
     has_state_id?: boolean | null;
     mass_id?: MassId | null;
     employment_status?: ("Employed" | "Unemployed" | "Self-Employed") | null;
@@ -431,8 +448,51 @@ export interface ApplicationRequestBody {
 export interface PATCHApplicationsByApplicationIdResponse extends SuccessfulResponse {
     data?: ApplicationResponse;
 }
+export interface ErrorResponse {
+    status_code: number;
+    message?: string;
+    meta?: Meta;
+    data?: any | object;
+    warnings?: Issue[];
+    errors: Issue[];
+}
 export interface POSTApplicationsByApplicationIdSubmitApplicationResponse extends SuccessfulResponse {
     data?: ApplicationResponse;
+}
+export interface POSTApplicationsByApplicationIdSubmitApplicationResponse503 extends ErrorResponse {
+    data?: ApplicationResponse;
+}
+export interface EligibilityRequest {
+    tax_identifier: SsnItin;
+    employer_fein: Fein;
+    effective_date: Date;
+    employment_status: "Employed" | "Unemployed" | "Self-Employed";
+}
+export interface EligibilityResponse {
+    financial_eligibility: boolean;
+    reason_not_eligible: string;
+}
+export interface POSTEligibilityResponse extends SuccessfulResponse {
+    data?: EligibilityResponse;
+}
+export interface RMVCheckRequest {
+    absence_case_id: string;
+    date_of_birth: Date;
+    first_name: string;
+    last_name: string;
+    residential_address_city: string;
+    residential_address_line_1: string;
+    residential_address_line_2?: string | null;
+    residential_address_zip_code: string;
+    ssn_last_4: string;
+    mass_id_number?: any;
+}
+export interface RMVCheckResponse {
+    verified: boolean;
+    description: string;
+}
+export interface POSTRmvCheckResponse extends SuccessfulResponse {
+    data?: RMVCheckResponse;
 }
 /**
  * Get the API status
@@ -555,7 +615,7 @@ export async function patchApplicationsByApplicationId({ applicationId }: {
     }));
 }
 /**
- * Signal the data entry is complete and the application is ready to be submitted to the Claims Processing System.
+ * Submit the first part of the application to the Claims Processing System.
  *
  */
 export async function postApplicationsByApplicationIdSubmitApplication({ applicationId }: {
@@ -565,4 +625,24 @@ export async function postApplicationsByApplicationIdSubmitApplication({ applica
         ...options,
         method: "POST"
     });
+}
+/**
+ * Retrieve financial eligibility by SSN/FEIN effective date and employee status.
+ */
+export async function postEligibility(eligibilityRequest: EligibilityRequest, options?: RequestOptions): Promise<ApiResponse<POSTEligibilityResponse>> {
+    return await http.fetchJson("/eligibility", http.json({
+        ...options,
+        method: "POST",
+        body: eligibilityRequest
+    }));
+}
+/**
+ * Perform lookup and data matching for information on RMV-issued IDs
+ */
+export async function postRmvCheck(rmvCheckRequest: RMVCheckRequest, options?: RequestOptions): Promise<ApiResponse<POSTRmvCheckResponse>> {
+    return await http.fetchJson("/rmv-check", http.json({
+        ...options,
+        method: "POST",
+        body: rmvCheckRequest
+    }));
 }

@@ -64,6 +64,12 @@ export function scenario(config: ScenarioOpts): SimulationGenerator {
       date_of_birth: fmt(faker.date.past(45)),
       has_state_id: hasMassId,
       mass_id: hasMassId ? faker.phone.phoneNumber("#########") : null,
+      mailing_address: {
+        city: faker.address.city(),
+        line_1: faker.address.streetAddress(),
+        state: faker.address.stateAbbr(),
+        zip: faker.address.zipCode(),
+      },
       leave_details: {
         continuous_leave_periods: [
           {
