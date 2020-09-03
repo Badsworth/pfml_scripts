@@ -1,0 +1,43 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Feedback renders the component 1`] = `
+<Fragment>
+  <ReviewHeading>
+    Thanks for reviewing the application
+  </ReviewHeading>
+  <form
+    className="usa-form usa-form--large"
+    id="employer-feedback-form"
+    onSubmit={[Function]}
+  >
+    <InputChoiceGroup
+      choices={
+        Array [
+          Object {
+            "checked": true,
+            "id": "No",
+            "label": "No",
+            "value": "No",
+          },
+          Object {
+            "id": "Yes",
+            "label": "Yes",
+            "value": "Yes",
+          },
+        ]
+      }
+      label="Do you have any additional comments or concerns?"
+      name="employer-review-options"
+      onChange={[Function]}
+      smallLabel={true}
+      type="radio"
+    />
+    <Button
+      className="margin-top-4"
+      type="submit"
+    >
+      Done
+    </Button>
+  </form>
+</Fragment>
+`;

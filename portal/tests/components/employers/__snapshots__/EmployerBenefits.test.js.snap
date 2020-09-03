@@ -1,0 +1,105 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`EmployerBenefits renders the component 1`] = `
+<Fragment>
+  <ReviewHeading>
+    Employer benefits
+  </ReviewHeading>
+  <Table>
+    <thead>
+      <tr>
+        <th
+          scope="col"
+        >
+          Date range
+        </th>
+        <th
+          scope="col"
+        >
+          Benefit type
+        </th>
+        <th
+          colSpan="2"
+          scope="col"
+        >
+          Details
+        </th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr
+        key="0"
+      >
+        <th
+          scope="row"
+        >
+          N/A
+        </th>
+        <td>
+          Paid Leave
+        </td>
+        <td>
+          None
+        </td>
+        <td>
+          <AmendLink />
+        </td>
+      </tr>
+      <tr
+        key="1"
+      >
+        <th
+          scope="row"
+        >
+          2/1/2021 – 3/1/2021
+        </th>
+        <td>
+          Short Term Disability
+        </td>
+        <td>
+          1000
+        </td>
+        <td>
+          <AmendLink />
+        </td>
+      </tr>
+      <tr
+        key="2"
+      >
+        <th
+          scope="row"
+        >
+          N/A
+        </th>
+        <td>
+          Permanent Disability
+        </td>
+        <td>
+          None
+        </td>
+        <td>
+          <AmendLink />
+        </td>
+      </tr>
+      <tr
+        key="3"
+      >
+        <th
+          scope="row"
+        >
+          N/A
+        </th>
+        <td>
+          Family or Medical Leave
+        </td>
+        <td>
+          None
+        </td>
+        <td>
+          <AmendLink />
+        </td>
+      </tr>
+    </tbody>
+  </Table>
+</Fragment>
+`;

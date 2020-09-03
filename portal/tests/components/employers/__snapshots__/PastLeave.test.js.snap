@@ -1,0 +1,71 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`PastLeave renders the component 1`] = `
+<Fragment>
+  <ReviewHeading>
+    Past leave
+  </ReviewHeading>
+  <Table>
+    <thead>
+      <tr>
+        <th
+          scope="col"
+        >
+          Date range
+        </th>
+        <th
+          colSpan="2"
+          scope="col"
+        >
+          Days
+        </th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr
+        key="0"
+      >
+        <th
+          scope="row"
+        >
+          3/1/2020 – 3/6/2020
+        </th>
+        <td>
+          N/A
+        </td>
+        <td>
+          <AmendLink />
+        </td>
+      </tr>
+      <tr
+        key="1"
+      >
+        <th
+          scope="row"
+        >
+          3/1/2020 – 3/6/2020
+        </th>
+        <td>
+          N/A
+        </td>
+        <td>
+          <AmendLink />
+        </td>
+      </tr>
+      <tr>
+        <th
+          className="text-bold"
+          scope="row"
+        >
+          Total leave
+        </th>
+        <td
+          colSpan="2"
+        >
+          N/A
+        </td>
+      </tr>
+    </tbody>
+  </Table>
+</Fragment>
+`;

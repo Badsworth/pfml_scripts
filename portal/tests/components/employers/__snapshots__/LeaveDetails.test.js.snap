@@ -1,0 +1,30 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`LeaveDetails renders the component 1`] = `
+<Fragment>
+  <ReviewHeading>
+    Leave details
+  </ReviewHeading>
+  <ReviewRow
+    label="Nature of leave"
+  >
+    Serious Health Condition - Employee
+  </ReviewRow>
+  <ReviewRow
+    label="Application ID"
+  >
+    1
+  </ReviewRow>
+  <ReviewRow
+    action={<AmendLink />}
+    label="Employer notified"
+  >
+    1/1/2021
+  </ReviewRow>
+  <ReviewRow
+    label="Leave duration"
+  >
+    1/1/2021 – 6/1/2021
+  </ReviewRow>
+</Fragment>
+`;

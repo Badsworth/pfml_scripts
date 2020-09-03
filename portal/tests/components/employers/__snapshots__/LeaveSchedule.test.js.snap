@@ -1,0 +1,98 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`LeaveSchedule renders the component 1`] = `
+<Fragment>
+  <ReviewHeading>
+    Leave schedule
+  </ReviewHeading>
+  <Table>
+    <caption>
+      Leave schedule details table
+    </caption>
+    <thead>
+      <tr>
+        <th
+          scope="col"
+        >
+          Duration
+        </th>
+        <th
+          scope="col"
+        >
+          Frequency
+        </th>
+        <th
+          scope="col"
+        >
+          Details
+        </th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr
+        className="continuous"
+        key="1"
+      >
+        <th
+          scope="row"
+        >
+          12 weeks
+        </th>
+        <td>
+          Continuous leave
+        </td>
+        <td />
+      </tr>
+      <tr
+        className="reduced"
+        key="2"
+      >
+        <th
+          scope="row"
+        >
+          10 weeks
+        </th>
+        <td>
+          Reduced leave schedule
+        </td>
+        <td>
+          Reduced by # hours per week
+        </td>
+      </tr>
+      <tr
+        className="intermittent"
+        key="3"
+      >
+        <th
+          scope="row"
+        >
+          N/A
+        </th>
+        <td>
+          Intermittent leave
+        </td>
+        <td>
+          <div>
+            <strong>
+              At least once per month.
+            </strong>
+          </div>
+          <div>
+            Estimated 6 absences each lasting less than a full work day 3 hours.
+          </div>
+        </td>
+      </tr>
+    </tbody>
+  </Table>
+  <ReviewRow
+    label="Documentation"
+  >
+    <a
+      className="text-normal"
+      href="example-hcp-link.pdf"
+    >
+      Health care provider form
+    </a>
+  </ReviewRow>
+</Fragment>
+`;

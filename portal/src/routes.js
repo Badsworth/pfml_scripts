@@ -51,6 +51,7 @@ const routes = {
   },
   employers: {
     dashboard: "/employers",
+    review: "/employers/claims/review",
   },
   external: {
     massgov: {

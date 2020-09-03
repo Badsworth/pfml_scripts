@@ -1,0 +1,42 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`EmployeeInformation renders the component 1`] = `
+<Fragment>
+  <ReviewHeading>
+    Employee information
+  </ReviewHeading>
+  <ReviewRow
+    label="Employee name"
+  >
+    Jane
+     
+     
+    Doe
+  </ReviewRow>
+  <ReviewRow
+    label="Mailing address"
+  >
+    <span
+      className="residential-address"
+    >
+      1234 My St.
+      <br />
+      Boston
+      , 
+      MA
+       
+      00000
+    </span>
+  </ReviewRow>
+  <ReviewRow
+    label="Social Security number (SSN)"
+  >
+    ***-**-****
+  </ReviewRow>
+  <ReviewRow
+    label="Birthdate"
+  >
+    7/17/1980
+  </ReviewRow>
+</Fragment>
+`;

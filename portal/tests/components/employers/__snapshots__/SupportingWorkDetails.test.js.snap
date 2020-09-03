@@ -1,0 +1,20 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`SupportingWorkDetails renders the component 1`] = `
+<Fragment>
+  <ReviewHeading>
+    Supporting work details
+  </ReviewHeading>
+  <ReviewRow
+    action={<AmendLink />}
+    label="Weekly hours worked"
+  >
+    <p
+      className="margin-top-0"
+      key="0"
+    >
+      3
+    </p>
+  </ReviewRow>
+</Fragment>
+`;

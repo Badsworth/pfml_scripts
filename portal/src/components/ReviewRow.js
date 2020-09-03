@@ -25,6 +25,7 @@ const ReviewRow = (props) => {
           </a>
         </Link>
       )}
+      {props.action}
     </div>
   );
 };
@@ -48,6 +49,11 @@ ReviewRow.propTypes = {
    * read to screen readers when they interact with the edit link.
    */
   label: PropTypes.node.isRequired,
+  /**
+   * Renders an element (e.g. a button or link) which the user can interact with.
+   * If undefined, no element will be shown.
+   */
+  action: PropTypes.node,
 };
 
 export default ReviewRow;

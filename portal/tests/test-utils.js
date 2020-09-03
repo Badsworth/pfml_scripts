@@ -1,16 +1,22 @@
 import Claim, {
   ClaimStatus,
   ContinuousLeavePeriod,
+  DurationBasis,
   EmploymentStatus,
+  FrequencyIntervalBasis,
   IntermittentLeavePeriod,
   LeaveReason,
   PaymentPreferenceMethod,
   ReasonQualifier,
   ReducedScheduleLeavePeriod,
 } from "../src/models/Claim";
+import EmployerBenefit, {
+  EmployerBenefitType,
+} from "../src/models/EmployerBenefit";
 import { mount, shallow } from "enzyme";
 import Address from "../src/models/Address";
 import ClaimCollection from "../src/models/ClaimCollection";
+import PreviousLeave from "../src/models/PreviousLeave";
 import React from "react";
 import User from "../src/models/User";
 import { act } from "react-dom/test-utils";
@@ -140,6 +146,9 @@ export class MockClaimBuilder {
     return this;
   }
 
+  /**
+   * @returns {MockClaimBuilder}
+   */
   employed() {
     set(this.claimAttrs, "employment_status", EmploymentStatus.employed);
     set(this.claimAttrs, "employer_fein", "*********");
@@ -149,13 +158,20 @@ export class MockClaimBuilder {
       "leave_details.employer_notification_date",
       "2021-01-01"
     );
+    return this;
   }
 
+  /**
+   * @returns {MockClaimBuilder}
+   */
   medicalLeaveReason() {
     set(this.claimAttrs, "leave_details.reason", LeaveReason.medical);
     return this;
   }
 
+  /**
+   * @returns {MockClaimBuilder}
+   */
   noOtherLeave() {
     set(this.claimAttrs, "has_employer_benefits", false);
     set(this.claimAttrs, "has_other_incomes", false);
@@ -163,6 +179,9 @@ export class MockClaimBuilder {
     return this;
   }
 
+  /**
+   * @returns {MockClaimBuilder}
+   */
   notifiedEmployer() {
     set(this.claimAttrs, "leave_details.employer_notified", true);
     set(
@@ -173,11 +192,17 @@ export class MockClaimBuilder {
     return this;
   }
 
+  /**
+   * @returns {MockClaimBuilder}
+   */
   notNotifiedEmployer() {
     set(this.claimAttrs, "leave_details.employer_notified", false);
     return this;
   }
 
+  /**
+   * @returns {MockClaimBuilder}
+   */
   complete() {
     this.submitted();
 
@@ -199,23 +224,72 @@ export class MockClaimBuilder {
     this.continuous();
     this.employed();
     this.noOtherLeave();
-
-    set(
-      this.claimAttrs,
-      "temp.residential_address",
-      new Address({
-        city: "Boston",
-        line_1: "1234 My St.",
-        line_2: null,
-        state: "MA",
-        zip: "00000",
-      })
-    );
+    this.address();
+    this.leaveDuration();
     set(this.claimAttrs, "status", ClaimStatus.submitted);
 
     return this;
   }
 
+  /**
+   * @param {object} attrs Address object
+   * @returns {MockClaimBuilder}
+   */
+  address(attrs) {
+    set(
+      this.claimAttrs,
+      "temp.residential_address",
+      attrs
+        ? new Address(attrs)
+        : new Address({
+            city: "Boston",
+            line_1: "1234 My St.",
+            line_2: null,
+            state: "MA",
+            zip: "00000",
+          })
+    );
+    return this;
+  }
+
+  /**
+   * @returns {MockClaimBuilder}
+   */
+  leaveDuration() {
+    set(this.claimAttrs, "temp.start_date", "2021-01-01");
+    set(this.claimAttrs, "temp.end_date", "2021-06-01");
+    return this;
+  }
+
+  /**
+   * @param {Array} attrs List of PreviousLeave objects
+   * @returns {MockClaimBuilder}
+   */
+  previousLeave(attrs) {
+    set(
+      this.claimAttrs,
+      "previous_leaves",
+      attrs.map((attr) => new PreviousLeave(attr))
+    );
+    return this;
+  }
+
+  /**
+   * @param {Array} attrs List of EmployerBenefit objects
+   * @returns {MockClaimBuilder}
+   */
+  employerBenefit(attrs) {
+    set(
+      this.claimAttrs,
+      "employer_benefits",
+      attrs.map((attr) => new EmployerBenefit(attr))
+    );
+    return this;
+  }
+
+  /**
+   * @returns {MockClaimBuilder}
+   */
   verifiedId() {
     set(this.claimAttrs, "first_name", "Jane");
     set(this.claimAttrs, "middle_name", "");
@@ -233,6 +307,63 @@ export class MockClaimBuilder {
     return new Claim(this.claimAttrs);
   }
 }
+
+/**
+ * A complete mock claim (currently used for Employer Claim Review page & tests)
+ * @type {Claim}
+ */
+export const claim = new MockClaimBuilder()
+  .id(1)
+  .verifiedId()
+  .address()
+  .medicalLeaveReason()
+  .leaveDuration()
+  .employed()
+  .continuous({
+    leave_period_id: 1,
+    weeks: 12,
+  })
+  .intermittent({
+    leave_period_id: 3,
+    duration: 3,
+    duration_basis: DurationBasis.hours,
+    frequency: 6,
+    frequency_interval: 6,
+    frequency_interval_basis: FrequencyIntervalBasis.months,
+  })
+  .reducedSchedule({
+    leave_period_id: 2,
+    hours_per_week: 5,
+    weeks: 10,
+  })
+  .previousLeave([
+    {
+      leave_start_date: "2020-03-01",
+      leave_end_date: "2020-03-06",
+    },
+    {
+      leave_start_date: "2020-03-01",
+      leave_end_date: "2020-03-06",
+    },
+  ])
+  .employerBenefit([
+    {
+      benefit_type: EmployerBenefitType.paidLeave,
+    },
+    {
+      benefit_amount_dollars: 1000,
+      benefit_end_date: "2021-03-01",
+      benefit_start_date: "2021-02-01",
+      benefit_type: EmployerBenefitType.shortTermDisability,
+    },
+    {
+      benefit_type: EmployerBenefitType.permanentDisability,
+    },
+    {
+      benefit_type: EmployerBenefitType.familyOrMedicalLeave,
+    },
+  ])
+  .create();
 
 /**
  * Render a component, automatically setting its appLogic and query props
@@ -392,7 +523,7 @@ export const simulateEvents = (wrapper) => {
   /**
    * Simulate typing into an input field that lives within a component
    * @param {string} name Name of input field
-   * @param {strign} value Value for input field
+   * @param {string} value Value for input field
    */
   function changeRadioGroup(name, value) {
     changeField(name, value, "radio", true);

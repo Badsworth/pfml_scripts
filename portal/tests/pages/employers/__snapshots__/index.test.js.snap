@@ -2,6 +2,10 @@
 
 exports[`Index renders dashboard content 1`] = `
 <div>
-  Hello world!
+  <Link
+    href="/employers/claims/review"
+  >
+    Review claim
+  </Link>
 </div>
 `;
