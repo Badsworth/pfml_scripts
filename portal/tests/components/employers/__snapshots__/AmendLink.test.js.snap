@@ -7,7 +7,7 @@ exports[`AmendLink renders the component 1`] = `
 >
   <FontAwesomeIcon
     border={false}
-    className="margin-right-0.5"
+    className="fa-sm margin-right-0.5"
     fixedWidth={false}
     flip={null}
     icon={

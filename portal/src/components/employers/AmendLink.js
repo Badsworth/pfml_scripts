@@ -8,7 +8,7 @@ const AmendLink = () => {
 
   return (
     <a href="" className="text-primary font-heading-xs text-normal">
-      <FontAwesomeIcon icon={faEdit} className="margin-right-0.5" />
+      <FontAwesomeIcon icon={faEdit} className="fa-sm margin-right-0.5" />
       <span className="amend-text">
         {t("pages.employersClaimsReview.amend")}
       </span>
