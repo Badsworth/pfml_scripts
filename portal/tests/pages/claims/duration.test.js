@@ -37,6 +37,36 @@ describe("Duration", () => {
     });
   });
 
+  it("removes an entire leave period object if their content becomes hidden", () => {
+    const { wrapper } = renderWithAppLogic(Duration);
+
+    expect(
+      wrapper
+        .find({ name: "continuous_section" })
+        .prop("fieldNamesClearedWhenHidden")
+    ).toEqual(
+      expect.arrayContaining(["temp.leave_details.continuous_leave_periods"])
+    );
+
+    expect(
+      wrapper
+        .find({ name: "reduced_schedule_section" })
+        .prop("fieldNamesClearedWhenHidden")
+    ).toEqual(
+      expect.arrayContaining([
+        "temp.leave_details.reduced_schedule_leave_periods",
+      ])
+    );
+
+    expect(
+      wrapper
+        .find({ name: "intermittent_section" })
+        .prop("fieldNamesClearedWhenHidden")
+    ).toEqual(
+      expect.arrayContaining(["leave_details.intermittent_leave_periods"])
+    );
+  });
+
   describe("when claim is a bonding leave", () => {
     it("renders the correct guidance text", () => {
       const claim = new MockClaimBuilder()

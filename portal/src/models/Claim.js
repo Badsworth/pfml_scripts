@@ -28,14 +28,14 @@ class Claim extends BaseModel {
       leave_details: {
         child_birth_date: null,
         child_placement_date: null,
-        continuous_leave_periods: [],
+        continuous_leave_periods: null,
         employer_notification_date: null,
         employer_notified: null,
-        intermittent_leave_periods: [],
+        intermittent_leave_periods: null,
         pregnant_or_recent_birth: null,
         reason: null,
         reason_qualifier: null,
-        reduced_schedule_leave_periods: [],
+        reduced_schedule_leave_periods: null,
       },
       mass_id: null,
       middle_name: null,
@@ -55,11 +55,11 @@ class Claim extends BaseModel {
           // TODO (CP-719): Connect intermittent leave fields to the API
           avg_weekly_work_hours: null,
           // TODO (CP-720): connect with continuous schedule periods fields to the API
-          continuous_leave_periods: [],
+          continuous_leave_periods: null,
           // TODO (CP-724): Connect start and end date to API
           end_date: null,
           // TODO (CP-714): connect with reduced schedule periods fields to the API
-          reduced_schedule_leave_periods: [],
+          reduced_schedule_leave_periods: null,
           // TODO (CP-724): Connect start and end date to API
           start_date: null,
         },

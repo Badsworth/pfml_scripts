@@ -53,7 +53,7 @@ exports[`Duration regardless of duration type initially renders the page without
   <ConditionalContent
     fieldNamesClearedWhenHidden={
       Array [
-        "temp.leave_details.continuous_leave_periods[0]",
+        "temp.leave_details.continuous_leave_periods",
       ]
     }
     getField={[Function]}
@@ -76,7 +76,7 @@ exports[`Duration regardless of duration type initially renders the page without
   <ConditionalContent
     fieldNamesClearedWhenHidden={
       Array [
-        "temp.leave_details.reduced_schedule_leave_periods[0]",
+        "temp.leave_details.reduced_schedule_leave_periods",
       ]
     }
     getField={[Function]}
@@ -109,7 +109,7 @@ exports[`Duration regardless of duration type initially renders the page without
   <ConditionalContent
     fieldNamesClearedWhenHidden={
       Array [
-        "leave_details.intermittent_leave_periods[0]",
+        "leave_details.intermittent_leave_periods",
       ]
     }
     getField={[Function]}

@@ -125,7 +125,7 @@ export const Duration = (props) => {
 
       <ConditionalContent
         fieldNamesClearedWhenHidden={[
-          "temp.leave_details.continuous_leave_periods[0]",
+          "temp.leave_details.continuous_leave_periods",
         ]}
         getField={getField}
         updateFields={updateFields}
@@ -147,7 +147,7 @@ export const Duration = (props) => {
 
       <ConditionalContent
         fieldNamesClearedWhenHidden={[
-          "temp.leave_details.reduced_schedule_leave_periods[0]",
+          "temp.leave_details.reduced_schedule_leave_periods",
         ]}
         getField={getField}
         updateFields={updateFields}
@@ -178,7 +178,7 @@ export const Duration = (props) => {
       </ConditionalContent>
       <ConditionalContent
         fieldNamesClearedWhenHidden={[
-          "leave_details.intermittent_leave_periods[0]",
+          "leave_details.intermittent_leave_periods",
         ]}
         getField={getField}
         updateFields={updateFields}
