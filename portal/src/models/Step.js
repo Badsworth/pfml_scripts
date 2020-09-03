@@ -111,9 +111,12 @@ export default class Step extends BaseModel {
         const ignoredField = [
           "claim.employer_benefits",
           "claim.leave_details.intermittent_leave_periods[0]",
+          "claim.leave_details.reason_qualifier",
           "claim.mass_id",
           "claim.middle_name",
           "claim.other_incomes",
+          "claim.leave_details.child_birth_date",
+          "claim.leave_details.child_placement_date",
           "claim.leave_details.pregnant_or_recent_birth",
           "claim.previous_leaves",
           "claim.temp.leave_details.avg_weekly_work_hours",

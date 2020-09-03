@@ -1,5 +1,6 @@
-import Claim, { LeaveReason } from "../../models/Claim";
+import Claim, { LeaveReason, ReasonQualifier } from "../../models/Claim";
 import React, { useState } from "react";
+import ConditionalContent from "../../components/ConditionalContent";
 import FileCardList from "../../components/FileCardList";
 import FileUploadDetails from "../../components/FileUploadDetails";
 import Heading from "../../components/Heading";
@@ -16,7 +17,26 @@ export const UploadCertification = (props) => {
   const { appLogic, claim } = props;
   const { t } = useTranslation();
   const [files, setFiles] = useState([]);
-  const reasonKey = findKeyByValue(LeaveReason, claim.leave_details.reason);
+  const claimReason = claim.leave_details.reason;
+  const claimReasonQualifier = claim.leave_details.reason_qualifier;
+
+  const conditionalContext = {
+    [LeaveReason.bonding]: {
+      [ReasonQualifier.newBorn]: "bonding_newborn",
+      [ReasonQualifier.adoption]: "bonding_adopt_foster",
+      [ReasonQualifier.fosterCare]: "bonding_adopt_foster",
+    },
+    [LeaveReason.medical]: "medical",
+  };
+  let leadTextContext;
+  switch (claimReason) {
+    case LeaveReason.medical:
+      leadTextContext = conditionalContext[claimReason];
+      break;
+    case LeaveReason.bonding:
+      leadTextContext = conditionalContext[claimReason][claimReasonQualifier];
+      break;
+  }
 
   // TODO (CP-396): connect this page to the API file upload endpoint.
   const handleSave = () => {
@@ -30,7 +50,7 @@ export const UploadCertification = (props) => {
     >
       <Heading level="2" size="1">
         {t("pages.claimsUploadCertification.sectionLabel", {
-          context: reasonKey,
+          context: findKeyByValue(LeaveReason, claimReason),
         })}
       </Heading>
       <Lead>
@@ -45,9 +65,25 @@ export const UploadCertification = (props) => {
               />
             ),
           }}
-          tOptions={{ context: reasonKey }}
+          tOptions={{
+            context: leadTextContext,
+          }}
         />
       </Lead>
+      <ConditionalContent
+        visible={
+          claimReason === LeaveReason.bonding &&
+          claimReasonQualifier === ReasonQualifier.newBorn
+        }
+      >
+        <ul className="usa-list">
+          {t("pages.claimsUploadCertification.leadListNewborn", {
+            returnObjects: true,
+          }).map((listItem, index) => (
+            <li key={index}>{listItem}</li>
+          ))}
+        </ul>
+      </ConditionalContent>
       <FileUploadDetails />
       <FileCardList
         files={files}

@@ -39,7 +39,9 @@ describe("Duration", () => {
 
   describe("when claim is a bonding leave", () => {
     it("renders the correct guidance text", () => {
-      const claim = new MockClaimBuilder().bondingLeaveReason().create();
+      const claim = new MockClaimBuilder()
+        .bondingAdoptionLeaveReason()
+        .create();
       const { wrapper } = renderWithAppLogic(Duration, {
         claimAttrs: claim,
       });

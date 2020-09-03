@@ -97,7 +97,7 @@ const machineTests = {
       test: () => {},
     },
   },
-  [routes.claims.bonding.dateOfChild]: {
+  [routes.claims.dateOfChild]: {
     meta: {
       test: (_, event) => {
         expect(get(event.context.claim, "leave_details.reason")).toEqual(

@@ -2,6 +2,7 @@ import Claim, {
   EmploymentStatus,
   LeaveReason,
   PaymentPreferenceMethod,
+  ReasonQualifier,
 } from "../../models/Claim";
 import EmployerBenefit, {
   EmployerBenefitType,
@@ -37,6 +38,7 @@ export const Review = (props) => {
 
   const paymentPreference = get(claim, "temp.payment_preferences[0]");
   const reason = get(claim, "leave_details.reason");
+  const reasonQualifier = get(claim, "leave_details.reason_qualifier");
 
   const steps = Step.createClaimStepsFromMachine(
     claimantConfigs,
@@ -122,14 +124,25 @@ export const Review = (props) => {
           </ReviewRow>
         </React.Fragment>
       )}
-      {reason === LeaveReason.bonding && (
-        <React.Fragment>
-          {/* TODO (CP-891): Use the API response for the PII fields */}
-          <ReviewRow label={t("pages.claimsReview.bondingLeaveLabel")}>
-            **/**/****
-          </ReviewRow>
-        </React.Fragment>
-      )}
+      {reason === LeaveReason.bonding &&
+        reasonQualifier === ReasonQualifier.newBorn && (
+          <React.Fragment>
+            {/* TODO (POL-99): determine if date of placement is PII, if so need to adhere to CP-891 */}
+            <ReviewRow label={t("pages.claimsReview.childBirthDateLabel")}>
+              **/**/****
+            </ReviewRow>
+          </React.Fragment>
+        )}
+      {reason === LeaveReason.bonding &&
+        (reasonQualifier === ReasonQualifier.adoption ||
+          reasonQualifier === ReasonQualifier.fosterCare) && (
+          <React.Fragment>
+            {/* TODO (POL-99): determine if date of placement is PII if so need to adhere to CP-891 */}
+            <ReviewRow label={t("pages.claimsReview.childPlacementDateLabel")}>
+              **/**/****
+            </ReviewRow>
+          </React.Fragment>
+        )}
 
       <ReviewRow label={t("pages.claimsReview.leaveDurationLabel")}>
         {formatDateRange(

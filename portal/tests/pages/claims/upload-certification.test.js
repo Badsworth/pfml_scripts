@@ -1,28 +1,31 @@
-import { makeFile, renderWithAppLogic } from "../../test-utils";
-import { LeaveReason } from "../../../src/models/Claim";
+import {
+  MockClaimBuilder,
+  makeFile,
+  renderWithAppLogic,
+} from "../../test-utils";
 import UploadCertification from "../../../src/pages/claims/upload-certification";
 
 jest.mock("../../../src/hooks/useAppLogic");
 
-function render(reason = LeaveReason.medical) {
-  const { wrapper } = renderWithAppLogic(UploadCertification, {
-    claimAttrs: { leave_details: { reason } },
-  });
-
-  return wrapper;
-}
-
 describe("UploadCertification", () => {
-  it("initially renders an empty FileCardList", () => {
-    const wrapper = render();
+  let claim, wrapper;
 
+  function render() {
+    ({ wrapper } = renderWithAppLogic(UploadCertification, {
+      claimAttrs: claim,
+    }));
+  }
+
+  it("initially renders an empty FileCardList", () => {
+    claim = new MockClaimBuilder().medicalLeaveReason().create();
+    render();
     expect(wrapper.find("FileCardList")).toMatchSnapshot();
   });
 
   describe("when leave reason is Medical leave", () => {
     it("renders page with medical leave content", () => {
-      const wrapper = render(LeaveReason.medical);
-
+      claim = new MockClaimBuilder().medicalLeaveReason().create();
+      render();
       // Only take snapshots of the i18n content
       expect(wrapper.find("Heading")).toMatchSnapshot();
       expect(wrapper.find("Trans").dive()).toMatchSnapshot();
@@ -31,8 +34,8 @@ describe("UploadCertification", () => {
 
   describe("when leave reason is Bonding leave", () => {
     it("renders page with bonding leave content", () => {
-      const wrapper = render(LeaveReason.bonding);
-
+      claim = new MockClaimBuilder().bondingBirthLeaveReason().create();
+      render();
       // Only take snapshots of the i18n content
       expect(wrapper.find("Heading")).toMatchSnapshot();
       expect(wrapper.find("Trans").dive()).toMatchSnapshot();
@@ -41,7 +44,8 @@ describe("UploadCertification", () => {
 
   describe("when the user uploads files", () => {
     it("passes files to FileCardList", () => {
-      const wrapper = render();
+      claim = new MockClaimBuilder().medicalLeaveReason().create();
+      render();
       const files = [makeFile(), makeFile(), makeFile()];
       const event = {
         target: {

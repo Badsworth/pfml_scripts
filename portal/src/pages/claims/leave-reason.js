@@ -1,4 +1,8 @@
-import Claim, { LeaveReason as LeaveReasonEnum } from "../../models/Claim";
+import Claim, {
+  LeaveReason as LeaveReasonEnum,
+  ReasonQualifier as ReasonQualifierEnum,
+} from "../../models/Claim";
+import ConditionalContent from "../../components/ConditionalContent";
 import InputChoiceGroup from "../../components/InputChoiceGroup";
 import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
@@ -10,14 +14,19 @@ import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "react-i18next";
 import withClaim from "../../hoc/withClaim";
 
-export const fields = ["claim.leave_details.reason"];
+export const fields = [
+  "claim.leave_details.reason",
+  "claim.leave_details.reason_qualifier",
+];
 
 const LeaveReason = (props) => {
   const { appLogic, claim } = props;
   const { t } = useTranslation();
-
-  const { formState, updateFields } = useFormState(pick(props, fields).claim);
+  const { formState, getField, updateFields, removeField } = useFormState(
+    pick(props, fields).claim
+  );
   const reason = get(formState, "leave_details.reason");
+  const reason_qualifier = get(formState, "leave_details.reason_qualifier");
 
   const handleSave = () =>
     appLogic.claims.update(claim.application_id, formState);
@@ -66,8 +75,39 @@ const LeaveReason = (props) => {
           },
         ]}
         label={t("pages.claimsLeaveReason.sectionLabel")}
+        hint={t("pages.claimsLeaveReason.sectionHint")}
         type="radio"
       />
+      <ConditionalContent
+        fieldNamesClearedWhenHidden={["leave_details.reason_qualifier"]}
+        getField={getField}
+        removeField={removeField}
+        updateFields={updateFields}
+        visible={reason === LeaveReasonEnum.bonding}
+      >
+        <InputChoiceGroup
+          {...getFunctionalInputProps("leave_details.reason_qualifier")}
+          choices={[
+            {
+              checked: reason_qualifier === ReasonQualifierEnum.newBorn,
+              label: t("pages.claimsLeaveReason.bondingTypeNewbornLabel"),
+              value: ReasonQualifierEnum.newBorn,
+            },
+            {
+              checked: reason_qualifier === ReasonQualifierEnum.adoption,
+              label: t("pages.claimsLeaveReason.bondingTypeAdoptionLabel"),
+              value: ReasonQualifierEnum.adoption,
+            },
+            {
+              checked: reason_qualifier === ReasonQualifierEnum.fosterCare,
+              label: t("pages.claimsLeaveReason.bondingTypeFosterLabel"),
+              value: ReasonQualifierEnum.fosterCare,
+            },
+          ]}
+          label={t("pages.claimsLeaveReason.bondingTypeLabel")}
+          type="radio"
+        />
+      </ConditionalContent>
     </QuestionPage>
   );
 };

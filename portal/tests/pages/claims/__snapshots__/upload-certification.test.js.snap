@@ -20,7 +20,7 @@ exports[`UploadCertification when leave reason is Bonding leave renders page wit
 </Heading>
 `;
 
-exports[`UploadCertification when leave reason is Bonding leave renders page with bonding leave content 2`] = `"You need to upload a document to confirm your child’s date of birth, due date, or date of placement."`;
+exports[`UploadCertification when leave reason is Bonding leave renders page with bonding leave content 2`] = `"You need to upload one of the following documents to confirm your child’s date of birth:"`;
 
 exports[`UploadCertification when leave reason is Medical leave renders page with medical leave content 1`] = `
 <Heading

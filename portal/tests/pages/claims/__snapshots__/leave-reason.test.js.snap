@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`LeaveReasonPage renders the page 1`] = `
+exports[`LeaveReasonPage renders the page for medical leave and does not show reason qualifier followup 1`] = `
 <QuestionPage
   onSave={[Function]}
   title="Leave type"
@@ -17,7 +17,7 @@ exports[`LeaveReasonPage renders the page 1`] = `
         Object {
           "checked": false,
           "hint": "Family leave",
-          "label": "I need to bond with my child after birth or placement.",
+          "label": "I need to bond with my child after birth, adoption, or foster placement.",
           "value": "Child Bonding",
         },
         Object {
@@ -34,11 +34,50 @@ exports[`LeaveReasonPage renders the page 1`] = `
         },
       ]
     }
+    hint="You can only request one leave at a time."
     label="Why do you need to take time off?"
     name="leave_details.reason"
     onChange={[Function]}
     type="radio"
     value="Serious Health Condition - Employee"
   />
+  <ConditionalContent
+    fieldNamesClearedWhenHidden={
+      Array [
+        "leave_details.reason_qualifier",
+      ]
+    }
+    getField={[Function]}
+    removeField={[Function]}
+    updateFields={[Function]}
+    visible={false}
+  >
+    <InputChoiceGroup
+      choices={
+        Array [
+          Object {
+            "checked": false,
+            "label": "Birth",
+            "value": "Newborn",
+          },
+          Object {
+            "checked": false,
+            "label": "Adoption",
+            "value": "Adoption",
+          },
+          Object {
+            "checked": false,
+            "label": "Foster placement",
+            "value": "Foster Care",
+          },
+        ]
+      }
+      label="Will you take leave for a birth, an adoption, or a foster placement?"
+      name="leave_details.reason_qualifier"
+      onChange={[Function]}
+      type="radio"
+      value=""
+    />
+  </ConditionalContent>
 </QuestionPage>
 `;

@@ -209,11 +209,11 @@ const pages = {
     title: "$t(shared.claimsLeaveDetailsTitle)",
   },
   claimsBondingDateOfChild: {
-    hint:
-      "If your child is not born or placed yet, enter the expected date. You can update this date later.",
-    lead:
-      "You can take up to 12 weeks of family leave within the first year of your child's birth or placement.",
-    sectionLabel: "What is the date of birth or placement date of your child?",
+    birthHint:
+      "If your child has not been born yet, enter the expected due date.",
+    sectionLabel_adopt_foster:
+      "When did the child arrive in your home through foster care or adoption?",
+    sectionLabel_newborn: "When was your child born?",
     title: "$t(shared.claimsLeaveDetailsTitle)",
   },
   claimsChecklist: {
@@ -415,9 +415,16 @@ const pages = {
     activeDutyFamilyLeaveLabel:
       "I need to manage family affairs while a family member is on active duty in the armed forces.",
     bondingLeaveHint: "Family leave",
-    bondingLeaveLabel: "I need to bond with my child after birth or placement.",
+    bondingLeaveLabel:
+      "I need to bond with my child after birth, adoption, or foster placement.",
+    bondingTypeAdoptionLabel: "Adoption",
+    bondingTypeFosterLabel: "Foster placement",
+    bondingTypeLabel:
+      "Will you take leave for a birth, an adoption, or a foster placement?",
+    bondingTypeNewbornLabel: "Birth",
     medicalLeaveHint: "Medical leave",
     medicalLeaveLabel: "I can’t work due to an illness, injury, or pregnancy.",
+    sectionHint: "You can only request one leave at a time.",
     sectionLabel: "Why do you need to take time off?",
     serviceMemberFamilyLeaveHint: "Family leave",
     serviceMemberFamilyLeaveLabel:
@@ -540,7 +547,8 @@ const pages = {
   },
   claimsReview: {
     averageWorkHoursLabel: "Average hours worked per week",
-    bondingLeaveLabel: "Child's date of birth or placement date",
+    childBirthDateLabel: "Child's date of birth",
+    childPlacementDateLabel: "Child's placement date",
     confirmationAction: "Confirm information is correct",
     editLink: "Edit",
     employerBenefitEntryLabel:
@@ -633,11 +641,18 @@ const pages = {
     addAnotherFileButton: "Choose another file",
     addFirstFileButton: "Choose a file",
     fileHeadingPrefix: "File",
-    lead_bonding:
-      "You need to upload a document to confirm your child’s date of birth, due date, or date of placement.",
+    leadListNewborn: [
+      "Your child's birth certificate.",
+      "A note from your child's health care provider stating your child's birth date.",
+      "A note from the health care provider of the person who gave birth stating your child's birth date.",
+    ],
+    lead_bonding_adopt_foster:
+      "You need to upload a statement from your adoption or foster agency or from the Massachusetts Department of Children and Families to confirm the placement and the date of the placement.",
+    lead_bonding_newborn:
+      "You need to upload one of the following documents to confirm your child’s date of birth:",
     lead_medical:
       "You need to upload a copy of the <healthcare-provider-form-link>PFML Healthcare Provider Form (opens in new tab)</healthcare-provider-form-link> to prove that you need to take medical leave. You can upload a completed Family and Medical Leave Act (FMLA) form instead if your provider filled one out.",
-    sectionLabel: "Upload your documentation",
+    sectionLabel_bonding: "Upload your documentation",
     sectionLabel_medical: "Upload your Healthcare Provider form",
     title: "$t(shared.claimsLeaveDetailsTitle)",
   },

@@ -27,12 +27,15 @@ class Claim extends BaseModel {
       has_state_id: null,
       last_name: null,
       leave_details: {
+        child_birth_date: null,
+        child_placement_date: null,
         continuous_leave_periods: [],
         employer_notification_date: null,
         employer_notified: null,
         intermittent_leave_periods: [],
         pregnant_or_recent_birth: null,
         reason: null,
+        reason_qualifier: null,
         reduced_schedule_leave_periods: [],
       },
       mass_id: null,
@@ -51,9 +54,6 @@ class Claim extends BaseModel {
         leave_details: {
           // TODO (CP-719): Connect intermittent leave fields to the API
           avg_weekly_work_hours: null,
-          bonding: {
-            date_of_child: null,
-          },
           // TODO (CP-720): connect with continuous schedule periods fields to the API
           continuous_leave_periods: [],
           // TODO (CP-724): Connect start and end date to API
@@ -150,6 +150,16 @@ export const LeaveReason = {
   bonding: "Child Bonding",
   medical: "Serious Health Condition - Employee",
   serviceMemberFamily: "Pregnancy/Maternity",
+};
+
+/**
+ * Enums for the Application's `leave_details.reason_qualifier` field
+ * @enum {string}
+ */
+export const ReasonQualifier = {
+  adoption: "Adoption",
+  fosterCare: "Foster Care",
+  newBorn: "Newborn",
 };
 
 export class ContinuousLeavePeriod extends BaseModel {

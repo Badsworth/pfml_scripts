@@ -8,12 +8,12 @@ exports[`DateOfChild renders the page 1`] = `
   <InputDate
     dayLabel="Day"
     example="For example: 04 / 28 / 1986"
-    hint="If your child is not born or placed yet, enter the expected date. You can update this date later."
-    label="What is the date of birth or placement date of your child?"
+    hint={false}
+    label="pages.claimsBondingDateOfChild.sectionLabel"
     monthLabel="Month"
-    name="temp.leave_details.bonding.date_of_child"
+    name="leave_details.child_placement_date"
     onChange={[Function]}
-    value="2020-08-01"
+    value=""
     yearLabel="Year"
   />
 </QuestionPage>

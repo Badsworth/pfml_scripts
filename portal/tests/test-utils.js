@@ -5,6 +5,7 @@ import Claim, {
   IntermittentLeavePeriod,
   LeaveReason,
   PaymentPreferenceMethod,
+  ReasonQualifier,
   ReducedScheduleLeavePeriod,
 } from "../src/models/Claim";
 import { mount, shallow } from "enzyme";
@@ -115,8 +116,27 @@ export class MockClaimBuilder {
     return this;
   }
 
-  bondingLeaveReason() {
+  bondingBirthLeaveReason(attrs = { birthdate: "2012-02-12" }) {
+    const { birth_date } = attrs;
     set(this.claimAttrs, "leave_details.reason", LeaveReason.bonding);
+    set(
+      this.claimAttrs,
+      "leave_details.reason_qualifier",
+      ReasonQualifier.newBorn
+    );
+    set(this.claimAttrs, "leave_details.child_birth_date", birth_date);
+    return this;
+  }
+
+  bondingAdoptionLeaveReason(attrs = { birthdate: "2012-02-14" }) {
+    const { placement_date } = attrs;
+    set(this.claimAttrs, "leave_details.reason", LeaveReason.bonding);
+    set(
+      this.claimAttrs,
+      "leave_details.reason_qualifier",
+      ReasonQualifier.adoption
+    );
+    set(this.claimAttrs, "leave_details.child_placement_date", placement_date);
     return this;
   }
 

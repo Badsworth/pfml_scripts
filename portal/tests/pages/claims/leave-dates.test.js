@@ -36,7 +36,7 @@ describe("LeaveDates", () => {
 
   describe("when leave type is bonding", () => {
     it("shows the bonding leave question text", () => {
-      claim = new MockClaimBuilder().bondingLeaveReason().create();
+      claim = new MockClaimBuilder().bondingBirthLeaveReason().create();
       render();
       expect(
         wrapper.find({ name: "temp.leave_details.start_date" })

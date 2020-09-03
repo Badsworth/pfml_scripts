@@ -17,7 +17,7 @@ import { ClaimSteps } from "../models/Step";
 import { fields as addressFields } from "../pages/claims/address";
 import { fields as averageWorkHoursFields } from "../pages/claims/average-work-hours";
 import { fields as dateOfBirthFields } from "../pages/claims/date-of-birth";
-import { fields as dateOfChildFields } from "../pages/claims/bonding/date-of-child";
+import { fields as dateOfChildFields } from "../pages/claims/date-of-child";
 import { fields as durationFields } from "../pages/claims/duration";
 import { fields as employerBenefitDetailsFields } from "../pages/claims/employer-benefit-details";
 import { fields as employerBenefitsFields } from "../pages/claims/employer-benefits";
@@ -163,7 +163,7 @@ export default {
             cond: "isMedicalClaim",
           },
           {
-            target: routes.claims.bonding.dateOfChild,
+            target: routes.claims.dateOfChild,
             cond: "isBondingClaim",
           },
           {
@@ -207,7 +207,7 @@ export default {
         ],
       },
     },
-    [routes.claims.bonding.dateOfChild]: {
+    [routes.claims.dateOfChild]: {
       meta: {
         step: ClaimSteps.leaveDetails,
         fields: dateOfChildFields,

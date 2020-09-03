@@ -19,13 +19,11 @@ const routes = {
   claims: {
     address: "/claims/address",
     averageWorkHours: "/claims/average-work-hours",
-    bonding: {
-      dateOfChild: "/claims/bonding/date-of-child",
-    },
     checklist: "/claims/checklist",
     confirm: "/claims/confirm",
     dashboard: "/",
     dateOfBirth: "/claims/date-of-birth",
+    dateOfChild: "/claims/date-of-child",
     duration: "/claims/duration",
     employerBenefitDetails: "/claims/employer-benefit-details",
     employerBenefits: "/claims/employer-benefits",
