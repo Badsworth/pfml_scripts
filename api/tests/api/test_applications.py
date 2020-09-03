@@ -226,7 +226,7 @@ def test_application_patch(client, user, auth_token, test_db_session):
 
 def test_application_patch_mailing_address(client, user, auth_token, test_db_session):
     application = ApplicationFactory.create(user=user)
-    assert application.mailing_address == None
+    assert application.mailing_address is None
 
     # adding residential address
     update_request_body = {
@@ -288,13 +288,13 @@ def test_application_patch_mailing_address(client, user, auth_token, test_db_ses
     test_db_session.refresh(application)
     response_body = response.get_json()
     assert response.status_code == 200
-    assert response_body.get("data").get("mailing_address") == None
-    assert application.residential_address == None
+    assert response_body.get("data").get("mailing_address") is None
+    assert application.residential_address is None
 
 
 def test_application_patch_residential_address(client, user, auth_token, test_db_session):
     application = ApplicationFactory.create(user=user)
-    assert application.residential_address == None
+    assert application.residential_address is None
 
     # adding residential address
     update_request_body = {
@@ -356,8 +356,8 @@ def test_application_patch_residential_address(client, user, auth_token, test_db
     test_db_session.refresh(application)
     response_body = response.get_json()
     assert response.status_code == 200
-    assert response_body.get("data").get("residential_address") == None
-    assert application.residential_address == None
+    assert response_body.get("data").get("residential_address") is None
+    assert application.residential_address is None
 
 
 def test_application_unauthorized_patch(client, user, auth_token, test_db_session):

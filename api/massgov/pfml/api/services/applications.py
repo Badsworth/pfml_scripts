@@ -18,13 +18,7 @@ from massgov.pfml.db.models.applications import (
     ReducedScheduleLeavePeriod,
     TaxIdentifier,
 )
-from massgov.pfml.db.models.employees import (
-    Address,
-    AddressType,
-    GeoState,
-    LkAddressType,
-    LkGeoState,
-)
+from massgov.pfml.db.models.employees import Address, AddressType, GeoState, LkAddressType
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
 
@@ -358,4 +352,3 @@ def address_type_mapping(address_type):
             "residential_address_id",
             AddressType.RESIDENTIAL.address_type_id,
         )
-
