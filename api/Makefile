@@ -132,6 +132,9 @@ format-check: ## Check format of code
 	$(PY_RUN_CMD) isort --atomic --check-only
 	$(PY_RUN_CMD) black . --check
 
+generate-verification-codes: ## Generate verification codes
+	$(PY_RUN_CMD) python massgov/pfml/verification/generate_verification_codes.py --input=$(input) --output=$(output)
+
 init: ## Initialize project to run locally
 init: build deps start-db jwks.json db-upgrade db-create-users
 
