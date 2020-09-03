@@ -12,7 +12,6 @@ class Claim extends BaseModel {
       application_id: null,
       created_at: null,
       date_of_birth: null,
-      employee_ssn: null,
       // array of EmployerBenefit objects. See the EmployerBenefit model
       employer_benefits: [],
       employer_fein: null,
@@ -45,6 +44,7 @@ class Claim extends BaseModel {
       // array of PreviousLeave objects. See the PreviousLeave model
       previous_leaves: [],
       status: null,
+      tax_identifier: null,
       /**
        * Fields within the `temp` object haven't been connected to the API yet, and
        * should have a ticket in Jira related to eventually moving them out of

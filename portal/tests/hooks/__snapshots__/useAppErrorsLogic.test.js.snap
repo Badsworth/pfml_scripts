@@ -4,7 +4,7 @@ exports[`useAppErrorsLogic catchError when ValidationError is thrown tracks whic
 Object {
   "issues": Array [
     Object {
-      "field": "employee_ssn",
+      "field": "tax_identifier",
       "rule": "/d{9}",
       "type": "pattern",
     },

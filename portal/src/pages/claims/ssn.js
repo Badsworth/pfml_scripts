@@ -9,7 +9,7 @@ import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "../../locales/i18n";
 import withClaim from "../../hoc/withClaim";
 
-export const fields = ["claim.employee_ssn"];
+export const fields = ["claim.tax_identifier"];
 
 /**
  * A form page to capture the worker's SSN or ITIN.
@@ -32,7 +32,7 @@ export const Ssn = (props) => {
   return (
     <QuestionPage title={t("pages.claimsSsn.title")} onSave={handleSave}>
       <InputText
-        {...getFunctionalInputProps("employee_ssn")}
+        {...getFunctionalInputProps("tax_identifier")}
         mask="ssn"
         label={t("pages.claimsSsn.sectionLabel")}
         hint={t("pages.claimsSsn.lead")}

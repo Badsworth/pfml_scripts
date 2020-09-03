@@ -67,7 +67,7 @@ export default class ClaimsApi extends BaseApi {
    */
   updateClaim = async (application_id, patchData) => {
     // TODO (CP-716): Send SSN in the API payload once production can accept PII
-    const { employee_ssn, ...patchDataWithoutExcludedPii } = patchData;
+    const { tax_identifier, ...patchDataWithoutExcludedPii } = patchData;
     const requestData = isFeatureEnabled("sendPii")
       ? patchData
       : patchDataWithoutExcludedPii;

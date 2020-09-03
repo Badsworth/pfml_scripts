@@ -49,9 +49,6 @@ const errors = {
     date_of_birth: {
       pattern: "Please enter a valid date of birth.",
     },
-    employee_ssn: {
-      pattern: "Please enter a 9-digit Social Security Number.",
-    },
     employer_fein: {
       pattern: "Please enter a 9-digit FEIN.",
     },
@@ -62,6 +59,9 @@ const errors = {
     },
     mass_id: {
       pattern: "Please enter your ID in the correct format.",
+    },
+    tax_identifier: {
+      pattern: "Please enter a 9-digit number.",
     },
   },
   invalidFileType:

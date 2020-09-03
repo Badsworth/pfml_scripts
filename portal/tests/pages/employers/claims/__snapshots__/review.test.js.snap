@@ -33,7 +33,6 @@ exports[`Review renders page 1`] = `
         "application_id": 1,
         "created_at": null,
         "date_of_birth": "1980-07-17",
-        "employee_ssn": "***-**-****",
         "employer_benefits": Array [
           EmployerBenefit {
             "benefit_amount_dollars": null,
@@ -115,6 +114,7 @@ exports[`Review renders page 1`] = `
           },
         ],
         "status": null,
+        "tax_identifier": "***-**-****",
         "temp": Object {
           "end_date": "2021-06-01",
           "leave_details": Object {
@@ -150,7 +150,6 @@ exports[`Review renders page 1`] = `
         "application_id": 1,
         "created_at": null,
         "date_of_birth": "1980-07-17",
-        "employee_ssn": "***-**-****",
         "employer_benefits": Array [
           EmployerBenefit {
             "benefit_amount_dollars": null,
@@ -232,6 +231,7 @@ exports[`Review renders page 1`] = `
           },
         ],
         "status": null,
+        "tax_identifier": "***-**-****",
         "temp": Object {
           "end_date": "2021-06-01",
           "leave_details": Object {
@@ -267,7 +267,6 @@ exports[`Review renders page 1`] = `
         "application_id": 1,
         "created_at": null,
         "date_of_birth": "1980-07-17",
-        "employee_ssn": "***-**-****",
         "employer_benefits": Array [
           EmployerBenefit {
             "benefit_amount_dollars": null,
@@ -349,6 +348,7 @@ exports[`Review renders page 1`] = `
           },
         ],
         "status": null,
+        "tax_identifier": "***-**-****",
         "temp": Object {
           "end_date": "2021-06-01",
           "leave_details": Object {

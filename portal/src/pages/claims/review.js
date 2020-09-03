@@ -87,9 +87,8 @@ export const Review = (props) => {
       <ReviewRow label={t("pages.claimsReview.userDateOfBirthLabel")}>
         **/**/****
       </ReviewRow>
-      {/* TODO (CP-891): Use the API response for the PII fields */}
       <ReviewRow label={t("pages.claimsReview.userSsnLabel")}>
-        *********
+        {get(claim, "tax_identifier")}
       </ReviewRow>
 
       {claim.has_state_id && (

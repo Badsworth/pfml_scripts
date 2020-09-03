@@ -182,7 +182,7 @@ exports[`Review when all data is present renders Review page with the field valu
   <ReviewRow
     label="Social security number"
   >
-    *********
+    ***-**-****
   </ReviewRow>
   <ReviewRow
     label="Massachusetts driver's license or ID"
@@ -319,7 +319,7 @@ exports[`Review when all data is present renders Review page with the field valu
 </div>
 `;
 
-exports[`Review when data is empty does not render strings like 'null' or 'undefined' 1`] = `
+exports[`Review when conditional data is empty does not render strings like 'null' or 'undefined' 1`] = `
 <div
   className="measure-6"
 >
@@ -351,7 +351,7 @@ exports[`Review when data is empty does not render strings like 'null' or 'undef
   <ReviewRow
     label="Social security number"
   >
-    *********
+    ***-**-****
   </ReviewRow>
   <ReviewHeading
     editHref="/claims/leave-reason?claim_id=mock_application_id"

@@ -277,7 +277,7 @@ describe("useClaimsLogic", () => {
           updateClaimMock.mockResolvedValueOnce({
             errors: [
               { field: "first_name", type: "format", rule: "string" },
-              { field: "employee_ssn", type: "pattern" },
+              { field: "tax_identifier", type: "pattern" },
             ],
           });
 
@@ -295,7 +295,7 @@ describe("useClaimsLogic", () => {
           );
           expect(errors[1]).toEqual(
             expect.objectContaining({
-              field: "employee_ssn",
+              field: "tax_identifier",
             })
           );
         });

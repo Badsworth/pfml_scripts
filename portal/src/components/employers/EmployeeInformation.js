@@ -17,7 +17,7 @@ const EmployeeInformation = (props) => {
     last_name,
     middle_name,
     date_of_birth,
-    employee_ssn,
+    tax_identifier,
     temp: {
       residential_address: { city, line_1, line_2, state, zip },
     },
@@ -51,7 +51,7 @@ const EmployeeInformation = (props) => {
       <ReviewRow
         label={t("pages.employersClaimsReview.employeeInformation.ssnLabel")}
       >
-        {employee_ssn}
+        {tax_identifier}
       </ReviewRow>
       <ReviewRow
         label={t("pages.employersClaimsReview.employeeInformation.dobLabel")}

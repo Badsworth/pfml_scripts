@@ -126,7 +126,7 @@ export class ValidationError extends Error {
   /**
    * @param {{ field: string, message: string, type: string }[]} issues - List of validation issues returned by the API
    * @param {string} i18nPrefix - Used in the i18n message keys, prefixed to the field name (e.g. `prefix.field_name`)
-   * @example new ValidationError([{ field: "employee_ssn", type: "pattern", message: "Field didn't match \d{9}" }], "claims")
+   * @example new ValidationError([{ field: "tax_identifier", type: "pattern", message: "Field didn't match \d{9}" }], "claims")
    */
   constructor(issues, i18nPrefix, ...params) {
     super(...params);

@@ -89,7 +89,7 @@ describe("useAppErrorsLogic", () => {
       beforeEach(() => {
         issues = [
           {
-            field: "employee_ssn",
+            field: "tax_identifier",
             type: "pattern",
             message: "This field should have a custom error message",
             rule: "/d{9}",
@@ -124,7 +124,7 @@ describe("useAppErrorsLogic", () => {
 
         // Compare the order of message fallbacks
         expect(appErrorsLogic.appErrors.items[0].message).toMatchInlineSnapshot(
-          `"Please enter a 9-digit Social Security Number."`
+          `"Please enter a 9-digit number."`
         );
         expect(appErrorsLogic.appErrors.items[1].message).toMatchInlineSnapshot(
           `"Field (unknown_field) didn't match expected format."`

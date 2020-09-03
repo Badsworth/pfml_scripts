@@ -8,7 +8,7 @@ describe("Ssn", () => {
 
   beforeEach(() => {
     ({ appLogic, wrapper } = renderWithAppLogic(Ssn, {
-      claimAttrs: { employee_ssn: "123-123-1234" },
+      claimAttrs: { tax_identifier: "123-123-1234" },
     }));
   });
 

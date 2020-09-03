@@ -13,7 +13,7 @@ describe("errors", () => {
     it("creates a ValidationError", () => {
       const issues = [
         {
-          field: "employee_ssn",
+          field: "tax_identifier",
           type: "pattern",
           message: "Field didn't match regex pattern",
         },

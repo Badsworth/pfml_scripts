@@ -72,6 +72,7 @@ function fullClaimAttrs() {
     middle_name: "Monstera",
     other_incomes,
     previous_leaves,
+    tax_identifier: "***-**-****",
     temp: {
       leave_details: {
         avg_weekly_work_hours: "20",
@@ -114,13 +115,14 @@ describe("Review", () => {
     });
   });
 
-  describe("when data is empty", () => {
+  describe("when conditional data is empty", () => {
     it("does not render strings like 'null' or 'undefined'", () => {
       const { wrapper } = renderWithAppLogic(Review, {
         claimAttrs: {
           leave_details: {
             reason: LeaveReason.medical,
           },
+          tax_identifier: "***-**-****",
         },
       });
 
@@ -135,9 +137,11 @@ describe("Duration type", () => {
       leave_details: {
         intermittent_leave_periods: [new IntermittentLeavePeriod()],
       },
+      tax_identifier: "***-**-****",
     };
 
     const continuousAndReducedClaim = {
+      tax_identifier: "***-**-****",
       temp: {
         leave_details: {
           continuous_leave_periods: [new ContinuousLeavePeriod()],

@@ -174,7 +174,7 @@ describe("ClaimsApi", () => {
 
     it("sends PATCH request to /applications/:application_id", async () => {
       await claimsApi.updateClaim(claim.application_id, claim);
-      const { employee_ssn, ...body } = claim;
+      const { tax_identifier, ...body } = claim;
 
       expect(fetch).toHaveBeenCalledWith(
         `${process.env.apiUrl}/applications/${claim.application_id}`,
@@ -190,28 +190,28 @@ describe("ClaimsApi", () => {
     });
 
     // TODO (CP-716): Remove this test once PII can be sent to the API
-    it("excludes employee_ssn field when sendPii feature flag is not set", async () => {
+    it("excludes tax_identifier field when sendPii feature flag is not set", async () => {
       delete process.env.featureFlags.sendPii;
       await claimsApi.updateClaim(claim.application_id, {
-        employee_ssn: "123-12-3123",
+        tax_identifier: "123-12-3123",
       });
       const requestBody = JSON.parse(fetch.mock.calls[0][1].body);
 
       expect(requestBody).toEqual(
-        expect.not.objectContaining({ employee_ssn: expect.anything() })
+        expect.not.objectContaining({ tax_identifier: expect.anything() })
       );
     });
 
-    it("sends employee_ssn field when sendPii feature flag is not set", async () => {
+    it("sends tax_identifier field when sendPii feature flag is not set", async () => {
       process.env.featureFlags = { sendPii: true };
 
       await claimsApi.updateClaim(claim.application_id, {
-        employee_ssn: "123-12-3123",
+        tax_identifier: "123-12-3123",
       });
       const requestBody = JSON.parse(fetch.mock.calls[0][1].body);
 
       expect(requestBody).toEqual(
-        expect.objectContaining({ employee_ssn: "123-12-3123" })
+        expect.objectContaining({ tax_identifier: "123-12-3123" })
       );
     });
 

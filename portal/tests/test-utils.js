@@ -295,7 +295,7 @@ export class MockClaimBuilder {
     set(this.claimAttrs, "middle_name", "");
     set(this.claimAttrs, "last_name", "Doe");
     set(this.claimAttrs, "date_of_birth", "1980-07-17");
-    set(this.claimAttrs, "employee_ssn", "***-**-****");
+    set(this.claimAttrs, "tax_identifier", "***-**-****");
     this.hasStateId();
     return this;
   }
