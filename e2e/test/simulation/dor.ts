@@ -46,6 +46,7 @@ const filingPeriods = [new Date("2020-06-30")];
 describe("DOR Employee File Generator", function () {
   it("should generate a valid employee line", async function () {
     const claim = {
+      scenario: "TEST",
       claim: {
         employment_status: null,
         first_name: "Dave",

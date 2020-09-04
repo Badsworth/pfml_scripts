@@ -43,7 +43,10 @@ export type ScenarioOpts = {
   mailedDocs?: Doc[];
 };
 
-export function scenario(config: ScenarioOpts): SimulationGenerator {
+export function scenario(
+  name: string,
+  config: ScenarioOpts
+): SimulationGenerator {
   return async (opts) => {
     const hasMassId =
       config.residence === "MA-proofed" || config.residence === "MA-unproofed";
@@ -124,6 +127,7 @@ export function scenario(config: ScenarioOpts): SimulationGenerator {
       });
     }
     return {
+      scenario: name,
       claim,
       documents,
       financiallyIneligible: !!config.financiallyIneligible,

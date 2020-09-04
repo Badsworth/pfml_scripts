@@ -20,7 +20,8 @@ describe("Simulation Generator", () => {
   });
 
   it("Should have claim properties", async () => {
-    const claim = await scenario({ residence: "MA-proofed" })(opts);
+    const claim = await scenario("TEST", { residence: "MA-proofed" })(opts);
+    expect(claim.scenario).toEqual("TEST");
     expect(claim.claim).toMatchObject({
       employment_status: "Employed",
       first_name: expect.any(String),
@@ -32,35 +33,35 @@ describe("Simulation Generator", () => {
 
   it("Should pull an employer from the pool", async () => {
     const employerFeins = employerPool.map((e) => e.fein);
-    const claim = await scenario({ residence: "MA-proofed" })(opts);
+    const claim = await scenario("TEST", { residence: "MA-proofed" })(opts);
     expect(employerFeins).toContain(claim.claim.employer_fein);
   });
 
   it("Should populate the mass_id property for mass proofed claims", async () => {
-    const claim = await scenario({ residence: "MA-proofed" })(opts);
+    const claim = await scenario("TEST", { residence: "MA-proofed" })(opts);
     expect(claim.claim.mass_id).toBeTruthy();
     expect(claim.claim.has_state_id).toBe(true);
   });
 
   it("Should populate the mass_id property for mass unproofed claims", async () => {
-    const claim = await scenario({ residence: "MA-unproofed" })(opts);
+    const claim = await scenario("TEST", { residence: "MA-unproofed" })(opts);
     expect(claim.claim.mass_id).toBeTruthy();
     expect(claim.claim.has_state_id).toBe(true);
   });
 
   it("Should not populate the mass_id property for OOS claims", async () => {
-    const claim = await scenario({ residence: "OOS" })(opts);
+    const claim = await scenario("TEST", { residence: "OOS" })(opts);
     expect(claim.claim.mass_id).toBe(null);
     expect(claim.claim.has_state_id).toBe(false);
   });
 
   it("Should default to generating financially eligible claims", async () => {
-    const claim = await scenario({ residence: "OOS" })(opts);
+    const claim = await scenario("TEST", { residence: "OOS" })(opts);
     expect(claim.financiallyIneligible).toBe(false);
   });
 
   it("Should populate financial eligibility field.", async () => {
-    const claim = await scenario({
+    const claim = await scenario("TEST", {
       residence: "OOS",
       financiallyIneligible: true,
     })(opts);
@@ -68,7 +69,7 @@ describe("Simulation Generator", () => {
   });
 
   it("Should generate an HCP form", async () => {
-    const claim = await scenario({
+    const claim = await scenario("TEST", {
       residence: "OOS",
     })(opts);
 
@@ -79,7 +80,7 @@ describe("Simulation Generator", () => {
   });
 
   it("Should generate an License Front", async () => {
-    const claim = await scenario({
+    const claim = await scenario("TEST", {
       residence: "OOS",
     })(opts);
 
@@ -90,7 +91,7 @@ describe("Simulation Generator", () => {
   });
 
   it("Should generate a license back", async () => {
-    const claim = await scenario({
+    const claim = await scenario("TEST", {
       residence: "OOS",
     })(opts);
     expect(generateIDBack).toHaveBeenCalledWith(
@@ -100,7 +101,7 @@ describe("Simulation Generator", () => {
   });
 
   it("Should not add HCP form to Documents", async () => {
-    const claim = await scenario({
+    const claim = await scenario("TEST", {
       residence: "MA-proofed",
       missingDocs: ["HCP"],
     })(opts);
@@ -110,7 +111,7 @@ describe("Simulation Generator", () => {
   });
 
   it("HCP Form should be submitted Manually", async () => {
-    const claim = await scenario({
+    const claim = await scenario("TEST", {
       residence: "MA-proofed",
       mailedDocs: ["HCP"],
     })(opts);
@@ -123,7 +124,7 @@ describe("Simulation Generator", () => {
   });
 
   it("Should have an application start date past 01/01/2021", async () => {
-    const { claim } = await scenario({
+    const { claim } = await scenario("TEST", {
       residence: "MA-proofed",
     })(opts);
     const targetDate: number = new Date(2021, 0).getTime();
@@ -136,7 +137,7 @@ describe("Simulation Generator", () => {
   });
 
   it("Should have an application end date greater/later than start date", async () => {
-    const { claim } = await scenario({
+    const { claim } = await scenario("TEST", {
       residence: "MA-proofed",
     })(opts);
     claim.leave_details?.continuous_leave_periods?.forEach((period) => {

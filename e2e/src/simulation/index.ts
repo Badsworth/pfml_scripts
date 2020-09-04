@@ -21,6 +21,7 @@ import {
   formatISODatetime,
 } from "./dor";
 import employers from "./fixtures/employerPool";
+import createClaimIndexStream from "./claimIndex";
 
 // Load variables from .env.
 dotenv();
@@ -112,12 +113,18 @@ const submitter = new PortalSubmitter({
       createEmployeesStream(claims, employers, filingPeriods),
       fs.createWriteStream(`${directory}/DORDFML_${formatISODatetime(now)}`)
     );
+    // Generate the claim index, which will be used to cross-reference the claims and scenarios in Fineos.
+    const claimIndex = pipelineP(
+      createClaimIndexStream(claims),
+      fs.createWriteStream(`${directory}/index.csv`)
+    );
 
     // Finally wait for all of those files to finish generating.
     await Promise.all([
       claimsJSONPromise,
       dorEmployeesPromise,
       dorEmployersPromise,
+      claimIndex,
     ]);
   } else {
     console.log("Using claims");

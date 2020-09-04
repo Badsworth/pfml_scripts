@@ -11,20 +11,20 @@ import { scenario, chance } from "../simulate";
  * @see generate()
  */
 
-/***** 
+/*****
   Happy Path Scenarios
 ******/
 
 //Simple claim, MA resident:
-const HAP1 = scenario({
+const HAP1 = scenario("HAP1", {
   residence: "MA-proofed",
 });
 // Simple claim, OOS resident.
-const HAP2 = scenario({
+const HAP2 = scenario("HAP2", {
   residence: "OOS",
 });
 // Simple denial, MA resident.
-const HAP3 = scenario({
+const HAP3 = scenario("HAP3", {
   residence: "MA-proofed",
   financiallyIneligible: true,
 });
@@ -36,30 +36,30 @@ const HAP = chance([
   [1, HAP3],
 ]);
 
-/***** 
+/*****
   Good But ... Scenarios
 ******/
 
 // Missing HCP, MA Resident
-const GBR1 = scenario({
+const GBR1 = scenario("GBR1", {
   residence: "MA-proofed",
   missingDocs: ["HCP"],
 });
 
 // Mailed HCP, MA Resident
-const GBM1 = scenario({
+const GBM1 = scenario("GBM1", {
   residence: "MA-proofed",
   mailedDocs: ["HCP"],
 });
 
 // Missing HCP, Out of State Resident
-const GBR2 = scenario({
+const GBR2 = scenario("GBR2", {
   residence: "OOS",
   missingDocs: ["HCP"],
 });
 
 // Mailed HCP, Out of State Resident
-const GBM2 = scenario({
+const GBM2 = scenario("GBM2", {
   residence: "OOS",
   mailedDocs: ["HCP"],
 });

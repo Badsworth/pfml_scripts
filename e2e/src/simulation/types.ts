@@ -2,6 +2,7 @@ import { ApplicationRequestBody } from "../api";
 
 // Represents a single claim that will be issued to the system.
 export type SimulationClaim = {
+  scenario: string;
   claim: ApplicationRequestBody;
   documents: ClaimDocument[];
 
