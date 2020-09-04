@@ -74,17 +74,6 @@ describe("useClaimsLogic", () => {
       renderHook();
       await expect(claimsLogic.load).rejects.toThrow(/Cannot load claims/);
     });
-
-    describe("forceReload parameter", () => {
-      it("forces a reload even after claims have been loaded", async () => {
-        await act(async () => {
-          await claimsLogic.load();
-          await claimsLogic.load(true);
-        });
-
-        expect(getClaimsMock).toHaveBeenCalledTimes(2);
-      });
-    });
   });
 
   describe("when request errors", () => {
@@ -121,15 +110,8 @@ describe("useClaimsLogic", () => {
           success: true,
         });
 
-        // This mock is needed for the workaround of calling claimsLogic.load
-        // after creating a claim in createClaims
-        // TODO (CP-701): Remove this once the workaround is removed
         getClaimsMock.mockResolvedValueOnce({
-          claims: new ClaimCollection([
-            new Claim({ application_id: "mock-application-id-1" }),
-            new Claim({ application_id: "mock-application-id-2" }),
-            claim,
-          ]),
+          claims: new ClaimCollection([]),
           success: true,
         });
 
@@ -146,10 +128,6 @@ describe("useClaimsLogic", () => {
 
       it("clears errors", () => {
         expect(appErrorsLogic.appErrors.items).toHaveLength(0);
-      });
-
-      it("stores the new claim", () => {
-        expect(claimsLogic.claims.items).toContain(claim);
       });
 
       it("routes to claim checklist page", () => {
@@ -199,30 +177,21 @@ describe("useClaimsLogic", () => {
       });
     });
 
-    describe("when claims have previously been loaded", () => {
+    describe("when claims have not been previously loaded", () => {
       let claim;
 
       beforeEach(async () => {
-        await act(async () => {
-          await claimsLogic.load();
-        });
-
         claim = new Claim({ application_id: "12345" });
         createClaimMock.mockResolvedValueOnce({
           claim,
           success: true,
         });
 
-        // This mock is needed for the workaround of calling claimsLogic.load
-        // after creating a claim in claimsLogic.create
-        // TODO (CP-701): Remove this once the workaround is removed
-        getClaimsMock.mockResolvedValueOnce({
-          claims: new ClaimCollection([
-            new Claim({ application_id: "mock-application-id-1" }),
-            new Claim({ application_id: "mock-application-id-2" }),
-            claim,
-          ]),
-          success: true,
+        getClaimsMock.mockImplementationOnce(() => {
+          return {
+            success: true,
+            claims: new ClaimCollection([claim]),
+          };
         });
 
         await act(async () => {
@@ -230,8 +199,58 @@ describe("useClaimsLogic", () => {
         });
       });
 
+      it("calls claimsApi.getClaims", () => {
+        expect(getClaimsMock).toHaveBeenCalledTimes(1);
+      });
+
+      it("updates claimsLogic.claims with the new claim", () => {
+        expect(claimsLogic.claims.items).toContain(claim);
+      });
+    });
+
+    describe("when claims have previously been loaded", () => {
+      let claim, existingClaims;
+
+      beforeEach(async () => {
+        existingClaims = new ClaimCollection([
+          new Claim({ application_id: "1" }),
+          new Claim({ application_id: "2" }),
+        ]);
+
+        getClaimsMock.mockImplementationOnce(() => {
+          return {
+            success: true,
+            claims: existingClaims,
+          };
+        });
+
+        claim = new Claim({ application_id: "12345" });
+
+        createClaimMock.mockResolvedValueOnce({
+          claim,
+          success: true,
+        });
+
+        await act(async () => {
+          await claimsLogic.load();
+          getClaimsMock.mockClear(); // to clear the getClaimsMock calls
+          await claimsLogic.create();
+        });
+      });
+
+      it("should not call claimsApi.getClaims", () => {
+        expect(getClaimsMock).not.toHaveBeenCalled();
+      });
+
       it("stores the new claim", () => {
         expect(claimsLogic.claims.items).toContain(claim);
+      });
+
+      it("doesn't affect existing claims", () => {
+        expect.assertions(existingClaims.items.length);
+        existingClaims.items.forEach((existingClaim) => {
+          expect(claimsLogic.claims.items).toContain(existingClaim);
+        });
       });
     });
   });

@@ -13,8 +13,7 @@ const useClaimsLogic = ({ appErrorsLogic, portalFlow, user }) => {
   // new claims
   const {
     collection: claims,
-    // TODO (CP-701): uncomment once the workaround in createClaim is removed
-    // addItem: addClaim,
+    addItem: addClaim,
     updateItem: setClaim,
     setCollection: setClaims,
   } = useCollectionState(null); // Set initial value to null to lazy load claims
@@ -24,11 +23,10 @@ const useClaimsLogic = ({ appErrorsLogic, portalFlow, user }) => {
   /**
    * Load all claims for user
    * This must be called before claims are available
-   * @param {boolean} [forceReload] Whether or not to force a reload of the claims from the API even if the claims have already been loaded. Defaults to false.
    */
-  const load = async (forceReload = false) => {
+  const load = async () => {
     if (!user) throw new Error("Cannot load claims before user is loaded");
-    if (claims && !forceReload) return;
+    if (claims) return;
 
     try {
       const { claims, success } = await claimsApi.getClaims();
@@ -90,10 +88,7 @@ const useClaimsLogic = ({ appErrorsLogic, portalFlow, user }) => {
         if (!claims) {
           await load();
         } else {
-          // The API currently doesn't return the claim in POST /applications, so for now just reload all the claims
-          // TODO (CP-701): Remove this workaround and use `addClaim(claim)` instead
-          // addClaim(claim);
-          await load(true);
+          addClaim(claim);
         }
 
         const context = { claim, user };
