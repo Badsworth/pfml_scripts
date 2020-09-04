@@ -44,4 +44,39 @@ describe("Checklist", () => {
 
     expect(wrapper.find("ButtonLink").prop("disabled")).toBe(false);
   });
+
+  describe("Upload leave certification step", () => {
+    it("renders correctly if claim reason is medical", () => {
+      const claim = new MockClaimBuilder().submitted().create();
+      const { wrapper } = renderWithAppLogic(Checklist, {
+        claimAttrs: claim,
+      });
+      const uploadCertificationStep = wrapper.find("Step").at(5);
+      expect(uploadCertificationStep).toMatchSnapshot();
+    });
+
+    it("renders correctly if claim reason is newborn", () => {
+      const claim = new MockClaimBuilder()
+        .submitted()
+        .bondingBirthLeaveReason()
+        .create();
+      const { wrapper } = renderWithAppLogic(Checklist, {
+        claimAttrs: claim,
+      });
+      const uploadCertificationStep = wrapper.find("Step").at(5);
+      expect(uploadCertificationStep).toMatchSnapshot();
+    });
+
+    it("renders correctly if claim reason is adoption", () => {
+      const claim = new MockClaimBuilder()
+        .submitted()
+        .bondingAdoptionLeaveReason()
+        .create();
+      const { wrapper } = renderWithAppLogic(Checklist, {
+        claimAttrs: claim,
+      });
+      const uploadCertificationStep = wrapper.find("Step").at(5);
+      expect(uploadCertificationStep).toMatchSnapshot();
+    });
+  });
 });

@@ -1,5 +1,10 @@
-import Claim, { ClaimStatus } from "../../models/Claim";
-import { filter, findIndex } from "lodash";
+import Claim, {
+  ClaimStatus,
+  LeaveReason,
+  ReasonQualifier,
+} from "../../models/Claim";
+import StepModel, { ClaimSteps } from "../../models/Step";
+import { filter, findIndex, get } from "lodash";
 import BackButton from "../../components/BackButton";
 import ButtonLink from "../../components/ButtonLink";
 import PropTypes from "prop-types";
@@ -7,7 +12,6 @@ import React from "react";
 import Step from "../../components/Step";
 import StepGroup from "../../models/StepGroup";
 import StepList from "../../components/StepList";
-import StepModel from "../../models/Step";
 import Title from "../../components/Title";
 import { Trans } from "react-i18next";
 import claimantConfig from "../../flows/claimant";
@@ -74,24 +78,71 @@ export const Checklist = (props) => {
    * @returns {Step[]}
    */
   function renderSteps(steps) {
-    return steps.map((step) => (
-      <Step
-        key={step.name}
-        number={getStepNumber(step)}
-        title={t("pages.claimsChecklist.stepTitle", { context: step.name })}
-        status={step.status}
-        stepHref={step.href}
-      >
-        <span
-          dangerouslySetInnerHTML={{
-            __html: t("pages.claimsChecklist.stepHTMLDescription", {
-              // TODO (CP-900): Render a conditional description for the "Upload certification" step
-              context: step.name,
-            }),
-          }}
-        />
-      </Step>
-    ));
+    return steps.map((step) => {
+      const claimReason = get(claim, "leave_details.reason");
+      const claimReasonQualifier = get(claim, "leave_details.reason_qualifier");
+      const description = getStepDescrition(
+        step.name,
+        claimReason,
+        claimReasonQualifier
+      );
+
+      return (
+        <Step
+          key={step.name}
+          number={getStepNumber(step)}
+          title={t("pages.claimsChecklist.stepTitle", { context: step.name })}
+          status={step.status}
+          stepHref={step.href}
+        >
+          <Trans
+            i18nKey="pages.claimsChecklist.stepHTMLDescription"
+            components={{
+              "healthcare-provider-form-link": (
+                <a
+                  target="_blank"
+                  rel="noopener"
+                  href={routes.external.massgov.healthcareProviderForm}
+                />
+              ),
+              ul: <ul />,
+              li: <li />,
+            }}
+            tOptions={{
+              context: description,
+            }}
+          />
+        </Step>
+      );
+    });
+  }
+
+  /**
+   * Helper method for getting step description
+   * @param {ClaimSteps} stepName
+   * @param {LeaveReason} claimReason
+   * @param {ReasonQualifier|null} claimReasonQualifier
+   * @returns {string}
+   */
+  function getStepDescrition(stepName, claimReason, claimReasonQualifier) {
+    if (stepName !== ClaimSteps.uploadCertification) {
+      return stepName;
+    }
+    const conditionalContext = {
+      [LeaveReason.bonding]: {
+        [ReasonQualifier.newBorn]: "bondingNewborn",
+        [ReasonQualifier.adoption]: "bondingAdoptFoster",
+        [ReasonQualifier.fosterCare]: "bondingAdoptFoster",
+      },
+      [LeaveReason.medical]: "medical",
+    };
+
+    switch (claimReason) {
+      case LeaveReason.medical:
+        return conditionalContext[claimReason];
+      case LeaveReason.bonding:
+        return conditionalContext[claimReason][claimReasonQualifier];
+    }
   }
 
   /**

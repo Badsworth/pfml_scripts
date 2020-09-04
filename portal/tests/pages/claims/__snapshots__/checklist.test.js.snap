@@ -1,5 +1,95 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`Checklist Upload leave certification step renders correctly if claim reason is adoption 1`] = `
+<Step
+  key="uploadCertification"
+  number={6}
+  status="completed"
+  stepHref="/claims/upload-certification?claim_id=mock_application_id"
+  title="Upload leave certification documents"
+>
+  <Trans
+    components={
+      Object {
+        "healthcare-provider-form-link": <a
+          href="https://www.mass.gov/hcp-form"
+          rel="noopener"
+          target="_blank"
+        />,
+        "li": <li />,
+        "ul": <ul />,
+      }
+    }
+    i18nKey="pages.claimsChecklist.stepHTMLDescription"
+    tOptions={
+      Object {
+        "context": "bondingAdoptFoster",
+      }
+    }
+  />
+</Step>
+`;
+
+exports[`Checklist Upload leave certification step renders correctly if claim reason is medical 1`] = `
+<Step
+  key="uploadCertification"
+  number={6}
+  status="completed"
+  stepHref="/claims/upload-certification?claim_id=mock_application_id"
+  title="Upload leave certification documents"
+>
+  <Trans
+    components={
+      Object {
+        "healthcare-provider-form-link": <a
+          href="https://www.mass.gov/hcp-form"
+          rel="noopener"
+          target="_blank"
+        />,
+        "li": <li />,
+        "ul": <ul />,
+      }
+    }
+    i18nKey="pages.claimsChecklist.stepHTMLDescription"
+    tOptions={
+      Object {
+        "context": "medical",
+      }
+    }
+  />
+</Step>
+`;
+
+exports[`Checklist Upload leave certification step renders correctly if claim reason is newborn 1`] = `
+<Step
+  key="uploadCertification"
+  number={6}
+  status="completed"
+  stepHref="/claims/upload-certification?claim_id=mock_application_id"
+  title="Upload leave certification documents"
+>
+  <Trans
+    components={
+      Object {
+        "healthcare-provider-form-link": <a
+          href="https://www.mass.gov/hcp-form"
+          rel="noopener"
+          target="_blank"
+        />,
+        "li": <li />,
+        "ul": <ul />,
+      }
+    }
+    i18nKey="pages.claimsChecklist.stepHTMLDescription"
+    tOptions={
+      Object {
+        "context": "bondingNewborn",
+      }
+    }
+  />
+</Step>
+`;
+
 exports[`Checklist when Part 1 is submitted renders descriptions for Part 2 and 3 1`] = `"Uploading documents online leads to faster processing, but you can also fax documents to NNN-NNN-NNNN, or mail them to 123 Address."`;
 
 exports[`Checklist when Part 1 is submitted renders descriptions for Part 2 and 3 2`] = `"Entering payment information here leads to faster processing, but you can also call XXX‑XXX‑XXXX."`;
@@ -57,10 +147,22 @@ exports[`Checklist when claim has not been started renders initial checklist sta
       stepHref="/claims/name?claim_id=mock_application_id"
       title="Verify your identity"
     >
-      <span
-        dangerouslySetInnerHTML={
+      <Trans
+        components={
           Object {
-            "__html": "<p>You can use a variety of documents to verify your identity, but it’s easiest if you have a Massachusetts driver’s license or Mass ID.</p><p>You will need to provide:</p><ul class='usa-list'><li>Your name as it appears on your ID.</li><li>Your driver’s license number or Mass ID number, if you have one.</li><li>Your Social Security Number or Individual Taxpayer Identification Number.</li></ul>",
+            "healthcare-provider-form-link": <a
+              href="https://www.mass.gov/hcp-form"
+              rel="noopener"
+              target="_blank"
+            />,
+            "li": <li />,
+            "ul": <ul />,
+          }
+        }
+        i18nKey="pages.claimsChecklist.stepHTMLDescription"
+        tOptions={
+          Object {
+            "context": "verifyId",
           }
         }
       />
@@ -72,10 +174,22 @@ exports[`Checklist when claim has not been started renders initial checklist sta
       stepHref="/claims/leave-reason?claim_id=mock_application_id"
       title="Enter leave details"
     >
-      <span
-        dangerouslySetInnerHTML={
+      <Trans
+        components={
           Object {
-            "__html": "<p>If you are taking medical leave due to injury, illness, or pregnancy, you need to have your health care provider fill out the Certification. Some of the answers you will need for the online application will come from your health care provider’s answers on the certification form.</p><p>If you are taking leave to bond with a child, you will need to know:</p><ul class='usa-list'><li>The child's date of birth, due date, or the date they arrived in your home for adoption or foster care.</li><li>When you want your leave to begin and end.</li></ul>",
+            "healthcare-provider-form-link": <a
+              href="https://www.mass.gov/hcp-form"
+              rel="noopener"
+              target="_blank"
+            />,
+            "li": <li />,
+            "ul": <ul />,
+          }
+        }
+        i18nKey="pages.claimsChecklist.stepHTMLDescription"
+        tOptions={
+          Object {
+            "context": "leaveDetails",
           }
         }
       />
@@ -87,10 +201,22 @@ exports[`Checklist when claim has not been started renders initial checklist sta
       stepHref="/claims/employment-status?claim_id=mock_application_id"
       title="Enter employment information"
     >
-      <span
-        dangerouslySetInnerHTML={
+      <Trans
+        components={
           Object {
-            "__html": "You will need to know:<ul class='usa-list'><li>Your employer’s 9-digit federal employer identification number (FEIN or EIN). <br><b>Where to find this: </b>on your W-2 or 1099, or ask your employer’s finance department.</li><li>The date you told your employer you were taking leave.</li></ul>",
+            "healthcare-provider-form-link": <a
+              href="https://www.mass.gov/hcp-form"
+              rel="noopener"
+              target="_blank"
+            />,
+            "li": <li />,
+            "ul": <ul />,
+          }
+        }
+        i18nKey="pages.claimsChecklist.stepHTMLDescription"
+        tOptions={
+          Object {
+            "context": "employerInformation",
           }
         }
       />
@@ -102,10 +228,22 @@ exports[`Checklist when claim has not been started renders initial checklist sta
       stepHref="/claims/employer-benefits?claim_id=mock_application_id"
       title="Report other leave and benefits"
     >
-      <span
-        dangerouslySetInnerHTML={
+      <Trans
+        components={
           Object {
-            "__html": "You will need to know:<ul class='usa-list'><li>If you will use any benefits from your employer because you are taking leave.</li><li>If you will receive income from any other sources during your leave.</li><li>The dates for any leave you’ve taken since January 1, 2021 for a condition that is covered by Paid Family and Medical Leave.</li></ul>",
+            "healthcare-provider-form-link": <a
+              href="https://www.mass.gov/hcp-form"
+              rel="noopener"
+              target="_blank"
+            />,
+            "li": <li />,
+            "ul": <ul />,
+          }
+        }
+        i18nKey="pages.claimsChecklist.stepHTMLDescription"
+        tOptions={
+          Object {
+            "context": "otherLeave",
           }
         }
       />
@@ -149,10 +287,22 @@ exports[`Checklist when claim has not been started renders initial checklist sta
       stepHref="/claims/upload-id?claim_id=mock_application_id"
       title="Upload identity document"
     >
-      <span
-        dangerouslySetInnerHTML={
+      <Trans
+        components={
           Object {
-            "__html": "Upload proof of identity. If you entered a Massachusetts driver’s license or Mass ID number in step 1, upload the same ID.",
+            "healthcare-provider-form-link": <a
+              href="https://www.mass.gov/hcp-form"
+              rel="noopener"
+              target="_blank"
+            />,
+            "li": <li />,
+            "ul": <ul />,
+          }
+        }
+        i18nKey="pages.claimsChecklist.stepHTMLDescription"
+        tOptions={
+          Object {
+            "context": "uploadId",
           }
         }
       />
@@ -162,12 +312,24 @@ exports[`Checklist when claim has not been started renders initial checklist sta
       number={6}
       status="disabled"
       stepHref="/claims/upload-certification?claim_id=mock_application_id"
-      title="Upload leave certification"
+      title="Upload leave certification documents"
     >
-      <span
-        dangerouslySetInnerHTML={
+      <Trans
+        components={
           Object {
-            "__html": "pages.claimsChecklist.stepHTMLDescription",
+            "healthcare-provider-form-link": <a
+              href="https://www.mass.gov/hcp-form"
+              rel="noopener"
+              target="_blank"
+            />,
+            "li": <li />,
+            "ul": <ul />,
+          }
+        }
+        i18nKey="pages.claimsChecklist.stepHTMLDescription"
+        tOptions={
+          Object {
+            "context": undefined,
           }
         }
       />
@@ -211,10 +373,22 @@ exports[`Checklist when claim has not been started renders initial checklist sta
       stepHref="/claims/payment-method?claim_id=mock_application_id"
       title="Add payment information"
     >
-      <span
-        dangerouslySetInnerHTML={
+      <Trans
+        components={
           Object {
-            "__html": "<p>Tell us how you want to receive payment.</p><p>If you want to receive payment by direct deposit, you will need to provide your bank account information, including a routing number and account number.</p>",
+            "healthcare-provider-form-link": <a
+              href="https://www.mass.gov/hcp-form"
+              rel="noopener"
+              target="_blank"
+            />,
+            "li": <li />,
+            "ul": <ul />,
+          }
+        }
+        i18nKey="pages.claimsChecklist.stepHTMLDescription"
+        tOptions={
+          Object {
+            "context": "payment",
           }
         }
       />

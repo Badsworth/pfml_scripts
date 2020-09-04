@@ -226,10 +226,16 @@ const pages = {
     resume: "Resume",
     screenReaderNumberPrefix: "Step",
     start: "Start",
+    stepHTMLDescription_bondingAdoptFoster:
+      "You need to provide a statement confirming the placement and the date of placement.",
+    stepHTMLDescription_bondingNewborn:
+      "You need to provide your child's birth certificate or a document from a health care provider that shows the child’s birth date.",
     stepHTMLDescription_employerInformation:
-      "You will need to know:<ul class='usa-list'><li>Your employer’s 9-digit federal employer identification number (FEIN or EIN). <br><b>Where to find this: </b>on your W-2 or 1099, or ask your employer’s finance department.</li><li>The date you told your employer you were taking leave.</li></ul>",
+      "You will need to know:<ul class='usa-list'><li>Your employer’s 9-digit federal employer identification number (FEIN or EIN). <br><strong>Where to find this: </strong>on your W-2 or 1099, or ask your employer’s finance department.</li><li>The date you told your employer you were taking leave.</li></ul>",
     stepHTMLDescription_leaveDetails:
       "<p>If you are taking medical leave due to injury, illness, or pregnancy, you need to have your health care provider fill out the Certification. Some of the answers you will need for the online application will come from your health care provider’s answers on the certification form.</p><p>If you are taking leave to bond with a child, you will need to know:</p><ul class='usa-list'><li>The child's date of birth, due date, or the date they arrived in your home for adoption or foster care.</li><li>When you want your leave to begin and end.</li></ul>",
+    stepHTMLDescription_medical:
+      "You need to provide your completed <healthcare-provider-form-link>Health Care Provider Certification</healthcare-provider-form-link>. ",
     stepHTMLDescription_otherLeave:
       "You will need to know:<ul class='usa-list'><li>If you will use any benefits from your employer because you are taking leave.</li><li>If you will receive income from any other sources during your leave.</li><li>The dates for any leave you’ve taken since January 1, 2021 for a condition that is covered by Paid Family and Medical Leave.</li></ul>",
     stepHTMLDescription_payment:
@@ -257,7 +263,7 @@ const pages = {
     stepTitle_leaveDetails: "Enter leave details",
     stepTitle_otherLeave: "Report other leave and benefits",
     stepTitle_payment: "Add payment information",
-    stepTitle_uploadCertification: "Upload leave certification",
+    stepTitle_uploadCertification: "Upload leave certification documents",
     stepTitle_uploadId: "Upload identity document",
     stepTitle_verifyId: "Verify your identity",
     submitButton: "Review and submit application",
