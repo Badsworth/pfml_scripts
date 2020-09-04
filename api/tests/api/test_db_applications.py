@@ -4,10 +4,11 @@ from massgov.pfml.db.models.applications import Application, ApplicationPaymentP
 from massgov.pfml.db.models.employees import PaymentType
 
 
-def test_application(test_db_session):
+def test_application(test_db_session, user):
     application = Application()
     application_id = uuid.uuid4()
     application.application_id = application_id
+    application.user_id = user.user_id
     application.nickname = "My Leave Application"
     application.first_name = "John"
     application.last_name = "Doe"
@@ -23,9 +24,10 @@ def test_application(test_db_session):
     assert inserted_application.last_name == "Doe"
 
 
-def test_payment_preference(test_db_session):
+def test_payment_preference(test_db_session, user):
     application = Application()
     application.application_id = uuid.uuid4()
+    application.user_id = user.user_id
 
     test_db_session.add(application)
 
@@ -61,10 +63,11 @@ def test_payment_preference(test_db_session):
     assert inserted_payment_pref.is_default is True
 
 
-def test_rmv_id_fields(test_db_session):
+def test_rmv_id_fields(test_db_session, user):
     application = Application()
     application_id = uuid.uuid4()
     application.application_id = application_id
+    application.user_id = user.user_id
     application.has_state_id = True
     application.mass_id = "123456789"
 
@@ -78,10 +81,11 @@ def test_rmv_id_fields(test_db_session):
     assert new_application.mass_id == "123456789"
 
 
-def test_pregnant_recent_birth_flag(test_db_session):
+def test_pregnant_recent_birth_flag(test_db_session, user):
     application = Application()
     application_id = uuid.uuid4()
     application.application_id = application_id
+    application.user_id = user.user_id
     application.pregnant_or_recent_birth = True
 
     test_db_session.add(application)

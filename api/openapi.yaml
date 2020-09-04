@@ -326,6 +326,47 @@ paths:
                       data:
                         $ref: "#/components/schemas/ApplicationResponse"
 
+  /applications/{application_id}/documents:
+    post:          
+      summary: Upload Document
+      operationId: massgov.pfml.api.applications.document_upload
+      tags:
+        - Applications
+      parameters:
+        - name: application_id
+          in: path
+          schema:
+            type: string
+            format: uuid
+            example: 5f91c12b-4d49-4eb0-b5d9-7fa0ce13eb32
+          description: ID of Application to update
+          required: true
+      requestBody:
+        content:
+          multipart/form-data:    
+            schema:            
+              $ref: '#/components/schemas/DocumentUploadRequest'
+            encoding:
+              file:
+                contentType: application/pdf, image/jpeg, image/png, image/tiff, image/heic
+      responses:
+        "200":
+          description: A successful request returns a 200 status code.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessfulResponse'  
+                  - properties:
+                      data:
+                        $ref: "#/components/schemas/DocumentResponse"
+        "400":
+          description: An unsuccessful request returns a 400 status code if one or more errors occurred.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+                                    
   /eligibility:
     post:
       security:
@@ -914,6 +955,103 @@ components:
             - Submitted
             - Completed
           example: "Started"
+
+    DocumentUploadRequest:
+      type: object
+      properties:        
+        document_category:
+          type: string
+          enum:
+            - Identity Proofing
+            - Certification
+          example: "Identity Proofing"
+        document_type:
+          type: string
+          enum:
+            - Passport
+            - Driver's License Mass
+            - Driver's License Other State
+          example: "Passport"
+        name:
+          type: string
+          example: "passport.png"
+        description:
+          type: string
+          example: "Jane Smith Passport"
+        file:
+          type: string
+          format: binary
+          nullable: false
+      required:
+        - document_category
+        - document_type
+        - description
+        - file        
+      additionalProperties: false
+
+    DocumentResponse:
+      type: object
+      properties:      
+        document_id:
+          type: string
+          format: uuid
+          example: "642ad2f5-523c-49ca-8d0c-f1a0ec941e72"
+        user_id:
+          type: string
+          format: uuid
+          example: "fabd09ed-0ea9-4091-843e-2e37d2c61482"
+        application_id:
+          type: string
+          format: uuid
+          example: "fdc23456-c8fa-48bf-89a1-5c7c6a3af164"
+        created_at:
+          format: date
+          example: "1970-06-01"
+        updated_at:
+          format: date
+          example: "1970-06-01"
+        document_category:
+          type: string
+          enum:
+            - Identity Proofing
+            - Certification
+          example: "Identity Proofing"
+        document_type:
+          type: string
+          enum:
+            - Passport
+            - Driver's License Mass
+            - Driver's License Other State
+          example: "Passport"
+        content_type:
+          type: string
+          example: "image/png"
+        size_bytes:
+          type: integer
+          example: 10500
+        fineos_id:
+          type: string
+          example: "1234"
+        name:
+          type: string
+          example: "Jane Smith Passport"
+        description:
+          type: string
+          example: "Jane Smith Passport"
+      required:
+        - document_id
+        - user_id
+        - application_id
+        - created_at
+        - updated_at       
+        - document_category
+        - document_type
+        - content_type
+        - size_bytes
+        - fineos_id
+        - name
+        - description
+      additionalProperties: false
 
     EligibilityRequest:
       type: object

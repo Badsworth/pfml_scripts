@@ -165,3 +165,8 @@ def build_absence_case(
         employerNotificationDate=application.employer_notification_date,
     )
     return absence_case
+
+
+def upload_document(application: Application, file_content: bytes) -> str:
+    # TODO implement in API-310
+    return str(uuid.uuid4())

@@ -102,7 +102,7 @@ class LkFrequencyOrDuration(Base):
 class Application(Base):
     __tablename__ = "application"
     application_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
-    user_id = Column(UUID(as_uuid=True), ForeignKey("user.user_id"))
+    user_id = Column(UUID(as_uuid=True), ForeignKey("user.user_id"), nullable=False)
     tax_identifier_id = Column(UUID(as_uuid=True), ForeignKey("tax_identifier.tax_identifier_id"))
     nickname = Column(Text)
     requestor = Column(Integer)
@@ -405,7 +405,7 @@ class ContentType(LookupTable):
     PDF = LkContentType(1, "application/pdf")
     JPEG = LkContentType(2, "image/jpeg")
     PNG = LkContentType(3, "image/png")
-    WEBP = LkContentType(4, "image/webp")
+    TIFF = LkContentType(4, "image/tiff")
     HEIC = LkContentType(5, "image/heic")
 
 
@@ -413,6 +413,9 @@ class Document(Base):
     __tablename__ = "document"
     document_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
     user_id = Column(UUID(as_uuid=True), ForeignKey("user.user_id"), nullable=False)
+    application_id = Column(
+        UUID(as_uuid=True), ForeignKey("application.application_id"), nullable=False
+    )
     created_at = Column(DateTime, nullable=False)
     updated_at = Column(DateTime, nullable=False)
     document_category_id = Column(
@@ -427,6 +430,10 @@ class Document(Base):
     is_stored_in_s3 = Column(Boolean, nullable=False)
     name = Column(Text, nullable=False)
     description = Column(Text, nullable=False)
+
+    document_category_instance = relationship(LkDocumentCategory)
+    document_type_instance = relationship(LkDocumentType)
+    content_type_instance = relationship(LkContentType)
 
 
 class StateMetric(Base):

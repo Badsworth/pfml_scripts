@@ -9,6 +9,7 @@ import massgov.pfml.api.util.response as response_util
 import massgov.pfml.util.logging as logging
 from massgov.pfml.api.validation.exceptions import ValidationException
 from massgov.pfml.api.validation.validators import (
+    CustomParameterValidator,
     CustomRequestBodyValidator,
     CustomResponseValidator,
 )
@@ -34,5 +35,9 @@ def add_error_handlers_to_app(connexion_app):
 
 
 def get_custom_validator_map():
-    validator_map = {"body": CustomRequestBodyValidator, "response": CustomResponseValidator}
+    validator_map = {
+        "body": CustomRequestBodyValidator,
+        "response": CustomResponseValidator,
+        "parameter": CustomParameterValidator,
+    }
     return validator_map

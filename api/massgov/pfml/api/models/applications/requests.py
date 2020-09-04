@@ -4,6 +4,8 @@ from typing import List, Optional
 from massgov.pfml.api.models.applications.common import (
     Address,
     ApplicationLeaveDetails,
+    DocumentCategory,
+    DocumentType,
     EmploymentStatus,
     Occupation,
     PaymentPreferences,
@@ -29,3 +31,10 @@ class ApplicationRequestBody(PydanticBaseModel):
     payment_preferences: Optional[List[PaymentPreferences]]
     mailing_address: Optional[Address]
     residential_address: Optional[Address]
+
+
+class DocumentRequestBody(PydanticBaseModel):
+    document_category: DocumentCategory
+    document_type: DocumentType
+    name: Optional[str]
+    description: str

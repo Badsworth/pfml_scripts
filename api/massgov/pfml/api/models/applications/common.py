@@ -255,3 +255,37 @@ class PaymentPreferences(PydanticBaseModel):
     is_default: Optional[bool]
     account_details: Optional[ApplicationPaymentAccountDetails]
     cheque_details: Optional[ApplicationPaymentChequeDetails]
+
+
+# Document I/O Types
+
+
+class DocumentCategory(str, LookupEnum):
+    identity_proofing = "Identity Proofing"
+    certification = "Certification"
+
+    @classmethod
+    def get_lookup_model(cls):
+        return db_application_models.LkDocumentCategory
+
+
+class DocumentType(str, LookupEnum):
+    passport = "Passport"
+    drivers_license_mass = "Driver's License Mass"
+    drivers_license_other_state = "Driver's License Other State"
+
+    @classmethod
+    def get_lookup_model(cls):
+        return db_application_models.LkDocumentType
+
+
+class ContentType(str, LookupEnum):
+    pdf = "application/pdf"
+    jpeg = "image/jpeg"
+    png = "image/png"
+    webp = "image/tiff"
+    heic = "image/heic"
+
+    @classmethod
+    def get_lookup_model(cls):
+        return db_application_models.LkContentType

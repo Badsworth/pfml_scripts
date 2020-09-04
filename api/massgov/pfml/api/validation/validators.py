@@ -5,7 +5,11 @@
 import flask
 import jsonschema
 from connexion.decorators.response import ResponseValidator
-from connexion.decorators.validation import RequestBodyValidator, ResponseBodyValidator
+from connexion.decorators.validation import (
+    ParameterValidator,
+    RequestBodyValidator,
+    ResponseBodyValidator,
+)
 from connexion.json_schema import Draft4RequestValidator, Draft4ResponseValidator
 from connexion.utils import is_null
 
@@ -69,6 +73,22 @@ def validate_schema_util(validator_decorator, data, error_message):
             raise ValidationException(
                 errors=error_list, message=error_message, data=invalid_data_payload
             )
+
+
+class CustomParameterValidator(ParameterValidator):
+    def __init__(self, *args, **kwargs):
+        super(CustomParameterValidator, self).__init__(*args, **kwargs)
+
+    def validate_formdata_parameter_list(self, request):
+        # In multipart/form-data requests in the OpenAPI spec requestBody, the payload is sent as formBody elements. Connexion tries to validate these as parameters and will fail since those properties are included as part of the request body. Example: https://swagger.io/docs/specification/describing-request-body/multipart-requests/
+        # Below we check if the requestBody is multipart/form-data and skip parameter validation.The validation will be handled by RequestBodyValidator.validate_formdata_parameter_list (https://github.com/zalando/connexion/blob/master/connexion/decorators/validation.py#L125)
+        is_multi_part_form = request.headers.get("Content-Type") and request.headers.get(
+            "Content-Type"
+        ).startswith("multipart/form-data")
+        if is_multi_part_form:
+            return None
+
+        return ParameterValidator.validate_formdata_parameter_list(self, request)
 
 
 class CustomRequestBodyValidator(RequestBodyValidator):

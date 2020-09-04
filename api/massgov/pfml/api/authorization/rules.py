@@ -13,6 +13,7 @@ def create_authorization(
     def define_authorization(user: User, they: RuleList) -> None:
         users(user, they)
         applications(user, they)
+        documents(user, they)
         if enable_employees:
             employees(user, they)
         if enable_employers:
@@ -36,3 +37,11 @@ def employees(user: User, they: RuleList) -> None:
 def applications(user: User, they: RuleList) -> None:
     they.can(CREATE, "Application")
     they.can((EDIT, READ), "Application", user_id=user.user_id)
+
+
+def documents(user: User, they: RuleList) -> None:
+    they.can(
+        CREATE,
+        "Document",
+        lambda d: d.user_id == user.user_id and user.consented_to_data_sharing is True,
+    )
