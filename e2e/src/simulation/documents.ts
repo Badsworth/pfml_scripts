@@ -22,10 +22,12 @@ type PDFFormData = FillPDFTaskOptions["data"];
  *
  * @param claim
  * @param target
+ * @param invalidHCP
  */
 export function generateHCP(
   claim: ApplicationRequestBody,
-  target: string
+  target: string,
+  invalidHCP = false
 ): Promise<void> {
   if (!claim.first_name || !claim.last_name || !claim.date_of_birth) {
     throw new Error("Unable to generate document due to missing properties");
@@ -40,8 +42,8 @@ export function generateHCP(
     untitled50: `${claim.first_name} ${claim.last_name}`,
     untitled4: `${dobMonth}`,
     untitled5: `${dobDay}`,
-    untitled6: `${dobYear}`,
-    untitled3: `${claim.employee_ssn?.slice(7)}`,
+    untitled6: `${invalidHCP ? "" : dobYear}`,
+    untitled3: `${invalidHCP ? "" : claim.employee_ssn?.slice(7)}`,
     // Checkbox 12 - "Does the patient have a serious health condition that necessitates continuing care􏰗"
     untitled56: "Yes",
     // Checkbox 13 - "When did the condition begin􏰗"
@@ -108,10 +110,12 @@ export function generateHCP(
  *
  * @param claim
  * @param target
+ * @param unproofed
  */
 export function generateIDFront(
   claim: ApplicationRequestBody,
-  target: string
+  target: string,
+  unproofed?: boolean
 ): Promise<void> {
   if (!claim.first_name || !claim.last_name || !claim.date_of_birth) {
     throw new Error("Unable to generate document due to missing properties");
@@ -121,7 +125,7 @@ export function generateIDFront(
       "Name first": claim.first_name,
       "Name last": claim.last_name,
       "Date birth": claim.date_of_birth,
-      "License number": claim.mass_id,
+      "License number": unproofed ? "" : claim.mass_id,
       "Date issue": "2020-01-01",
       "Date expiration": "2028-01-01",
       "Address street": "123 Stub Toe Ln.",

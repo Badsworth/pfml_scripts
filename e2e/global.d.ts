@@ -47,3 +47,6 @@ declare module "@cypress/webpack-preprocessor" {
   ) => CypressWebpackPreProcessor.FilePreprocessor;
   export = CypressWebpackPreProcessor;
 }
+
+// @see https://www.npmjs.com/package/pdf2json
+declare module "pdf2json";

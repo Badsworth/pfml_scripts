@@ -15,7 +15,11 @@ export default function createExecutor(
     // * Moving any documents that should be handled offline to the proper directory.
     // console.log("herehrerhehre", claim.claim)
 
-    submitter.submit(claim.claim);
+    // Skips claim submission as needed based on test scenario.
+    if (!claim.skipSubmitClaim) {
+      submitter.submit(claim.claim);
+    }
+    // Increments claim count regardless of submission.
     submitter.count++;
   };
 }

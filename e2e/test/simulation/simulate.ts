@@ -1,5 +1,5 @@
 import { describe, it, expect, jest } from "@jest/globals";
-import { scenario, chance } from "../../src/simulation/simulate";
+import { scenario, chance, ScenarioOpts } from "../../src/simulation/simulate";
 import employerPool from "../../src/simulation/fixtures/employerPool";
 import type { SimulationClaim } from "@/simulation/types";
 import {
@@ -75,18 +75,32 @@ describe("Simulation Generator", () => {
 
     expect(generateHCP).toHaveBeenCalledWith(
       claim.claim,
-      expect.stringMatching(/^\/tmp\/[\d-]+\.hcp\.pdf/)
+      expect.stringMatching(/^\/tmp\/[\d-]+\.hcp\.pdf/),
+      false
+    );
+  });
+
+  it("Should generate an invalid HCP form", async () => {
+    const claim = await scenario("TEST", {
+      residence: "OOS",
+      invalidHCP: true,
+    })(opts);
+
+    expect(generateHCP).toHaveBeenCalledWith(
+      claim.claim,
+      expect.stringMatching(/^\/tmp\/[\d-]+\.hcp\.pdf/),
+      true
     );
   });
 
   it("Should generate an License Front", async () => {
-    const claim = await scenario("TEST", {
-      residence: "OOS",
-    })(opts);
+    const config = { residence: "OOS" } as ScenarioOpts;
+    const claim = await scenario("TEST", config)(opts);
 
     expect(generateIDFront).toHaveBeenCalledWith(
       claim.claim,
-      expect.stringMatching(/^\/tmp\/[\d-]+\.id-front\.pdf/)
+      expect.stringMatching(/^\/tmp\/[\d-]+\.id-front\.pdf/),
+      false
     );
   });
 
@@ -123,15 +137,42 @@ describe("Simulation Generator", () => {
     );
   });
 
+  it("Should not submit a claim nor generate an ID when an HCP was mailed before applying", async () => {
+    const claim = await scenario("TEST", {
+      residence: "MA-proofed",
+      mailedDocs: ["HCP"],
+      missingDocs: ["ID"],
+      skipSubmitClaim: true,
+    })(opts);
+    expect(claim.documents).toContainEqual(
+      expect.objectContaining({
+        type: "HCP",
+        submittedManually: true,
+      })
+    );
+    expect(claim.documents).not.toContainEqual(
+      expect.objectContaining({
+        type: "ID-front",
+      })
+    );
+    expect(claim.documents).not.toContainEqual(
+      expect.objectContaining({
+        type: "ID-back",
+      })
+    );
+    expect(claim.skipSubmitClaim).toBeTruthy();
+  });
+
   it("Should have an application start date past 01/01/2021", async () => {
     const { claim } = await scenario("TEST", {
       residence: "MA-proofed",
     })(opts);
     const targetDate: number = new Date(2021, 0).getTime();
     claim.leave_details?.continuous_leave_periods?.forEach((period) => {
-      const claimStartDate: number = new Date(
-        String(period.start_date)
-      ).getTime();
+      if (!period.start_date) {
+        throw new Error("No start date given");
+      }
+      const claimStartDate: number = new Date(period.start_date).getTime();
       expect(claimStartDate).toBeGreaterThan(targetDate);
     });
   });
@@ -141,11 +182,38 @@ describe("Simulation Generator", () => {
       residence: "MA-proofed",
     })(opts);
     claim.leave_details?.continuous_leave_periods?.forEach((period) => {
-      const claimStartDate: number = new Date(
-        String(period.start_date)
-      ).getTime();
-      const claimEndDate: number = new Date(String(period.end_date)).getTime();
+      if (!period.start_date) {
+        throw new Error("No start date given");
+      }
+      const claimStartDate: number = new Date(period.start_date).getTime();
+      if (!period.end_date) {
+        throw new Error("No end date given");
+      }
+      const claimEndDate: number = new Date(period.end_date).getTime();
       expect(claimEndDate).toBeGreaterThan(claimStartDate);
+    });
+  });
+
+  it("Should have a notification date that qualifies as short notice", async () => {
+    const { claim } = await scenario("TEST", {
+      residence: "MA-proofed",
+      shortNotice: true,
+    })(opts);
+    if (!claim.leave_details?.employer_notification_date) {
+      throw new Error("No notification date given");
+    }
+    const claimNotificationDate: number = new Date(
+      claim.leave_details.employer_notification_date
+    ).getTime();
+    claim.leave_details?.continuous_leave_periods?.forEach((period) => {
+      if (!period.start_date) {
+        throw new Error("No start date given");
+      }
+      const claimStartDate: number = new Date(period.start_date).getTime();
+      const diffInDays = Math.round(
+        Math.abs((claimStartDate - claimNotificationDate) / 86400000)
+      );
+      expect(diffInDays).toBeLessThan(30);
     });
   });
 });

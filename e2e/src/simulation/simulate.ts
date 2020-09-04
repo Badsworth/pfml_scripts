@@ -41,6 +41,8 @@ export type ScenarioOpts = {
   gaveAppropriateNotice?: boolean;
   missingDocs?: Doc[];
   mailedDocs?: Doc[];
+  skipSubmitClaim?: boolean;
+  shortNotice?: boolean;
 };
 
 export function scenario(
@@ -52,7 +54,13 @@ export function scenario(
       config.residence === "MA-proofed" || config.residence === "MA-unproofed";
     const endDate = soon(faker.random.number(365), "2021-02-01");
     const startDate = faker.date.between(new Date(2021, 0), endDate);
-    const notificationDate = faker.date.recent(60);
+    let notificationDate;
+    if (config.shortNotice) {
+      notificationDate = new Date(startDate);
+      notificationDate.setDate(notificationDate.getDate() - 1);
+    } else {
+      notificationDate = faker.date.recent(60);
+    }
     // Pulls random FEIN from employerPool fixture.
     const employer_fein =
       employers[Math.floor(Math.random() * employers.length)].fein;
@@ -98,7 +106,12 @@ export function scenario(
 
     // Flag for Missing Doc HCP
     if (!config.missingDocs || !config.missingDocs.includes("HCP")) {
-      await generateHCP(claim, path.join(opts.documentDirectory, hcpPath));
+      // Includes flag for invalid HCP in call to `generateHCP()`.
+      await generateHCP(
+        claim,
+        path.join(opts.documentDirectory, hcpPath),
+        !!config.invalidHCP
+      );
       documents.push({
         type: "HCP",
         path: hcpPath,
@@ -110,7 +123,9 @@ export function scenario(
     if (!config.missingDocs || !config.missingDocs.includes("ID")) {
       await generateIDFront(
         claim,
-        path.join(opts.documentDirectory, idFrontPath)
+        path.join(opts.documentDirectory, idFrontPath),
+        // Specifies UNH scn involving mismatched ID/SSN.
+        config.residence === "MA-unproofed"
       );
       await generateIDBack(
         claim,
@@ -126,11 +141,14 @@ export function scenario(
         path: idBackPath,
       });
     }
+
     return {
       scenario: name,
       claim,
       documents,
       financiallyIneligible: !!config.financiallyIneligible,
+      // Flag for skipSubmitClaim.
+      skipSubmitClaim: !!config.skipSubmitClaim,
     };
   };
 }

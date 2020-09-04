@@ -72,12 +72,6 @@ const GB = chance([
   [1, GBM2],
 ]);
 
-// Chance Function for all combinations!
-export default chance([
-  [1, HAP],
-  [1, GB],
-]);
-
 // // Missing HCP, OOS Resident
 // const GBR2 = scenario("GBR2", {
 //   residence: "OOS",
@@ -115,23 +109,37 @@ export default chance([
 //   residence: "MA-proofed",
 //   employerExempt: true,
 // });
-// // Invalid HCP
-// const UNH2 = scenario("UNH2", {
-//   residence: "OOS",
-//   invalidHCP: true,
-// });
-// // Mismatched ID/SSN
-// const UNH3 = scenario("UNH3", {
-//   residence: "MA-unproofed",
-// });
-// // Short Notice
-// const UNH4 = scenario("UNH4", {
-//   residence: "MA-proofed",
-//   gaveAppropriateNotice: false,
-// });
-// const UNH = chance("UNH", [
-//   [1, UNH1],
-//   [1, UNH2],
-//   [1, UNH3],
-//   [1, UNH4],
-// ]);
+// HCP sent before an application is started
+const UNH1 = scenario("UNH1", {
+  residence: "MA-proofed",
+  mailedDocs: ["HCP"],
+  missingDocs: ["ID"],
+  skipSubmitClaim: true,
+});
+// Invalid HCP
+const UNH2 = scenario("UNH2", {
+  residence: "OOS",
+  invalidHCP: true,
+});
+// Mismatched ID/SSN
+const UNH3 = scenario("UNH3", {
+  residence: "MA-unproofed",
+});
+// Short Notice
+const UNH4 = scenario("UNH4", {
+  residence: "MA-proofed",
+  shortNotice: true,
+});
+const UNH = chance([
+  [1, UNH1],
+  [1, UNH2],
+  [1, UNH3],
+  [1, UNH4],
+]);
+
+// Chance Function for all combinations!
+export default chance([
+  [1, HAP],
+  [1, GB],
+  [1, UNH],
+]);
