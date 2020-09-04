@@ -22,6 +22,7 @@ import {
 } from "./dor";
 import employers from "./fixtures/employerPool";
 import createClaimIndexStream from "./claimIndex";
+import quarters from "./quarters";
 
 // Load variables from .env.
 dotenv();
@@ -82,13 +83,6 @@ const submitter = new PortalSubmitter({
     // Create a promised version of the pipeline function.
     const pipelineP = promisify(pipeline);
 
-    const filingPeriods = [3, 6, 9, 12].map((month) => {
-      const d = new Date();
-      d.setMonth(month);
-      d.setDate(1);
-      return d;
-    });
-
     const claims = [];
     await fs.promises.mkdir(`${directory}/documents`, { recursive: true });
     for await (const claim of sim.generate({
@@ -110,7 +104,7 @@ const submitter = new PortalSubmitter({
     );
     // Generate the employees DOR file. This is done by "pipelining" a read stream into a write stream.
     const dorEmployeesPromise = pipelineP(
-      createEmployeesStream(claims, employers, filingPeriods),
+      createEmployeesStream(claims, employers, quarters()),
       fs.createWriteStream(`${directory}/DORDFML_${formatISODatetime(now)}`)
     );
     // Generate the claim index, which will be used to cross-reference the claims and scenarios in Fineos.

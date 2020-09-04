@@ -51,6 +51,7 @@
     "csv-stringify": "^5.5.1",
     "cypress": "^4.11.0",
     "cypress-file-upload": "^4.0.7",
+    "date-fns": "^2.16.1",
     "delay": "^4.3.0",
     "dotenv": "^8.2.0",
     "faker": "^4.1.0",

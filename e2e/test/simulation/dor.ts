@@ -2,7 +2,7 @@ import {
   createEmployeesStream,
   createEmployersStream,
 } from "../../src/simulation/dor";
-import { describe, expect } from "@jest/globals";
+import { describe, it, expect } from "@jest/globals";
 
 const employer = {
   accountKey: "00001",
