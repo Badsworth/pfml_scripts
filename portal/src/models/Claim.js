@@ -43,6 +43,7 @@ class Claim extends BaseModel {
       other_incomes: [],
       // array of PreviousLeave objects. See the PreviousLeave model
       previous_leaves: [],
+      residential_address: new Address(),
       status: null,
       tax_identifier: null,
       /**
@@ -77,8 +78,6 @@ class Claim extends BaseModel {
             payment_preference_id: null,
           },
         ],
-        // TODO (CP-841): Connect address to API
-        residential_address: new Address(),
       },
     };
   }

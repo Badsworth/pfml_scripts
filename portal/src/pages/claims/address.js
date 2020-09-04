@@ -9,7 +9,7 @@ import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "../../locales/i18n";
 import withClaim from "../../hoc/withClaim";
 
-export const fields = ["claim.temp.residential_address"];
+export const fields = ["claim.residential_address"];
 
 export const Address = (props) => {
   const { appLogic, claim } = props;
@@ -31,7 +31,7 @@ export const Address = (props) => {
         appErrors={appLogic.appErrors}
         label={t("pages.claimsAddress.sectionLabel")}
         hint={t("pages.claimsAddress.hint")}
-        {...getFunctionalInputProps("temp.residential_address")}
+        {...getFunctionalInputProps("residential_address")}
       />
       {/* TODO (CP-883): Collect the user's mailing address if it's different
       from their residential address */}

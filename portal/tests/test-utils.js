@@ -238,7 +238,7 @@ export class MockClaimBuilder {
   address(attrs) {
     set(
       this.claimAttrs,
-      "temp.residential_address",
+      "residential_address",
       attrs
         ? new Address(attrs)
         : new Address({

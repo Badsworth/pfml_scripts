@@ -14,7 +14,7 @@ exports[`Address renders the page 1`] = `
     }
     hint="If you are part of an Address Confidentiality Program, please provide your substitute address."
     label="What is your current residential address?"
-    name="temp.residential_address"
+    name="residential_address"
     onChange={[Function]}
     value={
       Address {

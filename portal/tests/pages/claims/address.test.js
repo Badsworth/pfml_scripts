@@ -19,9 +19,7 @@ describe("Address", () => {
 
     ({ appLogic, claim, wrapper } = renderWithAppLogic(Address, {
       claimAttrs: {
-        temp: {
-          residential_address: residentialAddress,
-        },
+        residential_address: residentialAddress,
       },
     }));
   });
@@ -36,7 +34,7 @@ describe("Address", () => {
 
       expect(appLogic.claims.update).toHaveBeenCalledWith(
         expect.any(String),
-        pick(claim, ["temp.residential_address"])
+        pick(claim, ["residential_address"])
       );
     });
   });

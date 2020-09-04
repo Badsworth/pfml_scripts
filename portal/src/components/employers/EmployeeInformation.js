@@ -18,9 +18,7 @@ const EmployeeInformation = (props) => {
     middle_name,
     date_of_birth,
     tax_identifier,
-    temp: {
-      residential_address: { city, line_1, line_2, state, zip },
-    },
+    residential_address: { city, line_1, line_2, state, zip },
   } = props.claim;
 
   return (
