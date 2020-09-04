@@ -17,6 +17,13 @@ data "aws_region" "current" {
 data "aws_caller_identity" "current" {
 }
 
+data "newrelic_entity" "pfml-api" {
+  # A reference to the API's top-level object in New Relic. Not managed by TF, but required by other Terraform objects.
+  name   = "${upper(local.app_name)}-${upper(var.environment_name)}"
+  domain = "APM"
+  type   = "APPLICATION"
+}
+
 terraform {
   required_version = "0.12.24"
 }

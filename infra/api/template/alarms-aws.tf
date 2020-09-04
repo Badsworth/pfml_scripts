@@ -1,4 +1,4 @@
-# Terraform configuration for all the alarms. All of them.
+# Terraform configuration for infrastructure-layer alarms. (host-specific metrics, e.g. CPU and RAM usage)
 
 # ----------------------------------------------------------------------------------------------------------------------
 
