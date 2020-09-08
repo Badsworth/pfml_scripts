@@ -1,3 +1,4 @@
+import Alert from "../../../components/Alert";
 import BackButton from "../../../components/BackButton";
 import EmployeeInformation from "../../../components/employers/EmployeeInformation";
 import EmployerBenefits from "../../../components/employers/EmployerBenefits";
@@ -9,32 +10,44 @@ import PropTypes from "prop-types";
 import React from "react";
 import SupportingWorkDetails from "../../../components/employers/SupportingWorkDetails";
 import Title from "../../../components/Title";
+import { Trans } from "react-i18next";
 import { claim } from "../../../../tests/test-utils";
 import formatDateRange from "../../../utils/formatDateRange";
 import { useTranslation } from "../../../locales/i18n";
+import withUser from "../../../hoc/withUser";
 
 const employerDueDate = formatDateRange("2020-09-28");
 
 const Review = (props) => {
   const { t } = useTranslation();
   const {
+    first_name,
     employer_fein,
+    last_name,
     leave_details: { intermittent_leave_periods },
+    middle_name,
     employer_benefits,
     previous_leaves,
   } = claim;
+  const name = `${first_name} ${middle_name} ${last_name}`
+    .split(/\s+/)
+    .join(" ");
 
   return (
     <React.Fragment>
       <BackButton />
-      <Title>{t("pages.employersClaimsReview.title")}</Title>
+      <Title>{t("pages.employersClaimsReview.title", { name })}</Title>
+      <Alert state="warning" noIcon>
+        <Trans
+          i18nKey="pages.employersClaimsReview.instructionsDueDate"
+          components={{
+            emphasized: <strong />,
+          }}
+          values={{ date: employerDueDate }}
+        />
+      </Alert>
       <p aria-labelledby="instructionsAmendment">
         {t("pages.employersClaimsReview.instructionsAmendment")}
-      </p>
-      <p aria-labelledby="instructionsDueDate">
-        {t("pages.employersClaimsReview.instructionsDueDate", {
-          date: employerDueDate,
-        })}
       </p>
       <p className="text-bold" aria-labelledby="employerIdentifierNumber">
         {t("pages.employersClaimsReview.employerIdentifierLabel")}
@@ -59,4 +72,4 @@ Review.propTypes = {
   appLogic: PropTypes.object.isRequired,
 };
 
-export default Review;
+export default withUser(Review);

@@ -73,9 +73,6 @@ const Feedback = (props) => {
 
   return (
     <React.Fragment>
-      <ReviewHeading>
-        {t("pages.employersClaimsReview.feedback.header")}
-      </ReviewHeading>
       <form
         onSubmit={handleSubmit}
         id="employer-feedback-form"
@@ -95,11 +92,15 @@ const Feedback = (props) => {
               id: t("pages.employersClaimsReview.feedback.choiceYes"),
             },
           ]}
-          label={t("pages.employersClaimsReview.feedback.instructionsLabel")}
+          label={
+            <ReviewHeading>
+              {t("pages.employersClaimsReview.feedback.header")}
+            </ReviewHeading>
+          }
+          hint={t("pages.employersClaimsReview.feedback.instructionsLabel")}
           name="employer-review-options"
           onChange={handleInputChange}
           type="radio"
-          smallLabel
         />
 
         {!isApplicationCorrect && (

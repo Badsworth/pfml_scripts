@@ -6,25 +6,28 @@ import LeaveSchedule from "../../../../src/components/employers/LeaveSchedule";
 import PastLeave from "../../../../src/components/employers/PastLeave";
 import React from "react";
 import Review from "../../../../src/pages/employers/claims/review";
+import Title from "../../../../src/components/Title";
 import { shallow } from "enzyme";
+import { testHook } from "../../../test-utils";
 import useAppLogic from "../../../../src/hooks/useAppLogic";
 
 jest.mock("../../../../src/hooks/useAppLogic");
 
 describe("Review", () => {
-  const appLogic = useAppLogic();
-  let wrapper;
+  let appLogic, wrapper;
 
   beforeEach(() => {
-    wrapper = shallow(<Review appLogic={appLogic} />);
+    testHook(() => {
+      appLogic = useAppLogic();
+    });
+
+    wrapper = shallow(<Review appLogic={appLogic} />).dive();
   });
 
-  it("renders page", () => {
-    expect(wrapper).toMatchSnapshot();
-  });
-
-  it("renders formatted employer due date", () => {
-    expect(wrapper.find("p").at(1).text()).toContain("9/28/2020");
+  it("displays the claimant's full name", () => {
+    expect(wrapper.find(Title).childAt(0).text()).toEqual(
+      "Review application for Jane Doe"
+    );
   });
 
   it("renders the following components", () => {

@@ -1,4 +1,5 @@
 import AmendLink from "./AmendLink";
+import Details from "../Details";
 import PropTypes from "prop-types";
 import React from "react";
 import ReviewHeading from "../ReviewHeading";
@@ -20,6 +21,12 @@ const PastLeave = (props) => {
       <ReviewHeading>
         {t("pages.employersClaimsReview.pastLeave.header")}
       </ReviewHeading>
+      <p>{t("pages.employersClaimsReview.pastLeave.explanation")}</p>
+      <Details label={t("pages.employersClaimsReview.pastLeave.detailsLabel")}>
+        <p>
+          {t("pages.employersClaimsReview.pastLeave.qualifyingReasonContent")}
+        </p>
+      </Details>
       <Table>
         <thead>
           <tr>
@@ -42,7 +49,11 @@ const PastLeave = (props) => {
                       leavePeriod.leave_end_date
                     )}
                   </th>
-                  <td>{t("pages.employersClaimsReview.notApplicable")}</td>
+                  <td>
+                    {t("pages.employersClaimsReview.durationBasis_days", {
+                      numOfDays: t("pages.employersClaimsReview.notApplicable"),
+                    })}
+                  </td>
                   <td>
                     <AmendLink />
                   </td>
@@ -56,7 +67,9 @@ const PastLeave = (props) => {
               )}
             </th>
             <td colSpan="2">
-              {t("pages.employersClaimsReview.notApplicable")}
+              {t("pages.employersClaimsReview.durationBasis_days", {
+                numOfDays: t("pages.employersClaimsReview.notApplicable"),
+              })}
             </td>
           </tr>
         </tbody>

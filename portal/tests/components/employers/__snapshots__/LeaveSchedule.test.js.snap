@@ -78,7 +78,21 @@ exports[`LeaveSchedule renders the component 1`] = `
             </strong>
           </div>
           <div>
-            Estimated 6 absences each lasting less than a full work day 3 hours.
+            <Trans
+              components={
+                Object {
+                  "emphasized": <strong />,
+                }
+              }
+              i18nKey="pages.employersClaimsReview.leaveSchedule.intermittentDetails_estimatedAbsences"
+              values={
+                Object {
+                  "duration": 3,
+                  "durationBasis": "hours",
+                  "frequency": 6,
+                }
+              }
+            />
           </div>
         </td>
       </tr>

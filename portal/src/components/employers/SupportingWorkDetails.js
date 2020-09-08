@@ -5,6 +5,8 @@ import ReviewHeading from "../ReviewHeading";
 import ReviewRow from "../ReviewRow";
 import { useTranslation } from "../../locales/i18n";
 
+const detailedWorkScheduleFile = "example-work-schedule-link.pdf";
+
 /**
  * Display weekly hours worked for intermittent leave
  * in the Leave Admin claim review page.
@@ -32,6 +34,13 @@ const SupportingWorkDetails = (props) => {
             </p>
           );
         })}
+      </ReviewRow>
+      <ReviewRow label={t("pages.employersClaimsReview.documentationLabel")}>
+        <a href={detailedWorkScheduleFile} className="text-normal">
+          {t(
+            "pages.employersClaimsReview.supportingWorkDetails.viewScheduleLink"
+          )}
+        </a>
       </ReviewRow>
     </React.Fragment>
   );

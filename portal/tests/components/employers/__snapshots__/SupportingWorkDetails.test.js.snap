@@ -16,5 +16,15 @@ exports[`SupportingWorkDetails renders the component 1`] = `
       3
     </p>
   </ReviewRow>
+  <ReviewRow
+    label="Documentation"
+  >
+    <a
+      className="text-normal"
+      href="example-work-schedule-link.pdf"
+    >
+      View detailed work schedule
+    </a>
+  </ReviewRow>
 </Fragment>
 `;

@@ -47,7 +47,9 @@ const EmployeeInformation = (props) => {
         </span>
       </ReviewRow>
       <ReviewRow
-        label={t("pages.employersClaimsReview.employeeInformation.ssnLabel")}
+        label={t(
+          "pages.employersClaimsReview.employeeInformation.ssnOrItinLabel"
+        )}
       >
         {tax_identifier}
       </ReviewRow>

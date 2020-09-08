@@ -6,6 +6,9 @@ exports[`EmployerBenefits renders the component 1`] = `
     Employer benefits
   </ReviewHeading>
   <Table>
+    <caption>
+      Employer-sponsored benefit details
+    </caption>
     <thead>
       <tr>
         <th

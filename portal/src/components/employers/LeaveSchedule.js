@@ -3,6 +3,7 @@ import React from "react";
 import ReviewHeading from "../ReviewHeading";
 import ReviewRow from "../ReviewRow";
 import Table from "../Table";
+import { Trans } from "react-i18next";
 import { useTranslation } from "../../locales/i18n";
 
 const healthCareProviderCertificationFile = "example-hcp-link.pdf";
@@ -61,8 +62,8 @@ const LeaveSchedule = (props) => {
               return (
                 <tr key={leavePeriod.leave_period_id} className="continuous">
                   <th scope="row">
-                    {t("pages.employersClaimsReview.leaveSchedule.weeks", {
-                      weeks: leavePeriod.weeks,
+                    {t("pages.employersClaimsReview.durationBasis_weeks", {
+                      numOfWeeks: leavePeriod.weeks,
                     })}
                   </th>
                   <td>
@@ -79,8 +80,8 @@ const LeaveSchedule = (props) => {
               return (
                 <tr key={leavePeriod.leave_period_id} className="reduced">
                   <th scope="row">
-                    {t("pages.employersClaimsReview.leaveSchedule.weeks", {
-                      weeks: leavePeriod.weeks,
+                    {t("pages.employersClaimsReview.durationBasis_weeks", {
+                      numOfWeeks: leavePeriod.weeks,
                     })}
                   </th>
                   <td>
@@ -117,14 +118,17 @@ const LeaveSchedule = (props) => {
                       </strong>
                     </div>
                     <div>
-                      {t(
-                        "pages.employersClaimsReview.leaveSchedule.intermittentDetails_estimatedAbsences",
-                        {
+                      <Trans
+                        i18nKey="pages.employersClaimsReview.leaveSchedule.intermittentDetails_estimatedAbsences"
+                        components={{
+                          emphasized: <strong />,
+                        }}
+                        values={{
                           frequency: leavePeriod.frequency,
                           duration: leavePeriod.duration,
                           durationBasis: leavePeriod.duration_basis.toLowerCase(),
-                        }
-                      )}
+                        }}
+                      />
                     </div>
                   </td>
                 </tr>
@@ -132,11 +136,7 @@ const LeaveSchedule = (props) => {
             })}
         </tbody>
       </Table>
-      <ReviewRow
-        label={t(
-          "pages.employersClaimsReview.leaveSchedule.documentationLabel"
-        )}
-      >
+      <ReviewRow label={t("pages.employersClaimsReview.documentationLabel")}>
         <a href={healthCareProviderCertificationFile} className="text-normal">
           {t(
             "pages.employersClaimsReview.leaveSchedule.healthCareProviderFormLink"

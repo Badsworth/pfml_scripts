@@ -2,9 +2,6 @@
 
 exports[`Feedback renders the component 1`] = `
 <Fragment>
-  <ReviewHeading>
-    Thanks for reviewing the application
-  </ReviewHeading>
   <form
     className="usa-form usa-form--large"
     id="employer-feedback-form"
@@ -26,10 +23,14 @@ exports[`Feedback renders the component 1`] = `
           },
         ]
       }
-      label="Do you have any additional comments or concerns?"
+      hint="Do you have any additional comments or concerns?"
+      label={
+        <ReviewHeading>
+          Thanks for reviewing the application
+        </ReviewHeading>
+      }
       name="employer-review-options"
       onChange={[Function]}
-      smallLabel={true}
       type="radio"
     />
     <Button

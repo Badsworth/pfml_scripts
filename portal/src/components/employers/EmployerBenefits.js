@@ -21,6 +21,9 @@ const EmployerBenefits = (props) => {
         {t("pages.employersClaimsReview.employerBenefits.header")}
       </ReviewHeading>
       <Table>
+        <caption>
+          {t("pages.employersClaimsReview.employerBenefits.tableName")}
+        </caption>
         <thead>
           <tr>
             <th scope="col">

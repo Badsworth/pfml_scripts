@@ -125,6 +125,7 @@ const shared = {
   pregnancyOrRecentBirthLabel:
     "Are you pregnant or have you recently given birth?",
   previousLeaveEntryPrefix: "Previous leave",
+  qualifyingReasonDetailsLabel: "What counts as a qualifying reason?",
   resendVerificationCodeLink: "Resend the code",
   usernameLabel: "Email address",
   verificationCodeLabel: "6-digit code",
@@ -525,7 +526,7 @@ const pages = {
   claimsPreviousLeaves: {
     choiceNo: "$t(shared.choiceNo)",
     choiceYes: "$t(shared.choiceYes)",
-    detailsLabel: "What counts as a qualifying reason?",
+    detailsLabel: "$t(shared.qualifyingReasonDetailsLabel)",
     hintHeader:
       "The following are qualifying reasons for taking paid or unpaid leave:",
     hintList: [
@@ -680,18 +681,23 @@ const pages = {
   },
   employersClaimsReview: {
     amend: "Amend",
+    documentationLabel: "Documentation",
+    durationBasis_days: "{{numOfDays}} days",
+    durationBasis_weeks: "{{numOfWeeks}} weeks",
     employeeInformation: {
       addressLabel: "Mailing address",
       dobLabel: "Birthdate",
       employeeNameLabel: "Employee name",
       header: "Employee information",
-      ssnLabel: "Social Security number (SSN)",
+      ssnOrItinLabel:
+        "Social Security Number or Individual Taxpayer Identification Number",
     },
     employerBenefits: {
       benefitTypeLabel: "Benefit type",
       dateRangeLabel: "Date range",
       detailsLabel: "Details",
       header: "Employer benefits",
+      tableName: "Employer-sponsored benefit details",
     },
     employerIdentifierLabel: "Employer ID number (EIN)",
     feedback: {
@@ -708,7 +714,8 @@ const pages = {
     },
     instructionsAmendment:
       "Please review the details of this application carefully. If anything seems incorrect, you can add an amendment within each section or include general comments at the end.",
-    instructionsDueDate: "You need to review and respond by {{date}}.",
+    instructionsDueDate:
+      "Review and respond by: <emphasized>{{date}}</emphasized>",
     leaveDetails: {
       applicationIdLabel: "Application ID",
       employerNotifiedLabel: "Employer notified",
@@ -718,11 +725,10 @@ const pages = {
       natureOfLeaveLabel: "Nature of leave",
     },
     leaveSchedule: {
-      documentationLabel: "Documentation",
       header: "Leave schedule",
       healthCareProviderFormLink: "Health care provider form",
       intermittentDetails_estimatedAbsences:
-        "Estimated {{frequency}} absences each lasting less than a full work day {{duration}} {{durationBasis}}.",
+        "Estimated <emphasized>{{frequency}}</emphasized> absences each lasting <emphasized>less than a full work day</emphasized> for <emphasized>{{duration}}</emphasized> {{durationBasis}}.",
       intermittentDetails_oncePerMonth: "At least once per month.",
       reducedDetails_reducedHours: "Reduced by # hours per week",
       tableHeader_details: "Details",
@@ -732,12 +738,15 @@ const pages = {
       type_continuous: "$t(shared.claimDurationTypeContinuous)",
       type_intermittent: "$t(shared.claimDurationTypeIntermittent)",
       type_reducedSchedule: "$t(shared.claimDurationTypeReducedSchedule)",
-      weeks: "{{weeks}} weeks",
     },
     none: "None",
     notApplicable: "N/A",
     pastLeave: {
+      detailsLabel: "$t(shared.qualifyingReasonDetailsLabel)",
+      explanation:
+        "Employees have listed when they took leave for qualifying reasons",
       header: "Past leave",
+      qualifyingReasonContent: "Some content here",
       tableFooter_totalLeave: "Total leave",
       tableHeader_dateRange: "Date range",
       tableHeader_days: "Days",
@@ -746,8 +755,9 @@ const pages = {
     supportingWorkDetails: {
       header: "Supporting work details",
       hoursWorkedLabel: "Weekly hours worked",
+      viewScheduleLink: "View detailed work schedule",
     },
-    title: "Paid family and medical leave application review",
+    title: "Review application for {{name}}",
   },
   index: {
     createClaimButton: "Create an application",

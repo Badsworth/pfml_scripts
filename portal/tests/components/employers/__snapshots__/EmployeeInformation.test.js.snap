@@ -29,7 +29,7 @@ exports[`EmployeeInformation renders the component 1`] = `
     </span>
   </ReviewRow>
   <ReviewRow
-    label="Social Security number (SSN)"
+    label="Social Security Number or Individual Taxpayer Identification Number"
   >
     ***-**-****
   </ReviewRow>
