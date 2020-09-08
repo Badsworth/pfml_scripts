@@ -128,10 +128,10 @@ export function generateIDFront(
       "License number": unproofed ? "" : claim.mass_id,
       "Date issue": "2020-01-01",
       "Date expiration": "2028-01-01",
-      "Address street": "123 Stub Toe Ln.",
-      "Address state": "MA",
-      "Address city": "Shamesbury",
-      "address ZIP": "01010",
+      "Address street": claim.mailing_address?.line_1 ?? "",
+      "Address state": claim.mailing_address?.state ?? "",
+      "Address city": claim.mailing_address?.city ?? "",
+      "address ZIP": claim.mailing_address?.zip ?? "",
     });
   } else {
     // @todo: Replace with OOS license when we have it.
@@ -142,10 +142,10 @@ export function generateIDFront(
       "License number": "XXX",
       "Date issue": "2020-01-01",
       "Date expiration": "2028-01-01",
-      "Address street": "123 Frying Pan Rd.",
-      "Address state": "CT",
-      "Address city": "Happyland",
-      "address ZIP": "01010",
+      "Address street": claim.mailing_address?.line_1 ?? "",
+      "Address state": claim.mailing_address?.state ?? "",
+      "Address city": claim.mailing_address?.city ?? "",
+      "address ZIP": claim.mailing_address?.zip ?? "",
     });
   }
 }
