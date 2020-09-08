@@ -24,6 +24,9 @@ import employers from "./fixtures/employerPool";
 import createClaimIndexStream from "./claimIndex";
 import quarters from "./quarters";
 
+// Create a promised version of the pipeline function.
+const pipelineP = promisify(pipeline);
+
 // Load variables from .env.
 dotenv();
 
@@ -70,21 +73,24 @@ const submitter = new PortalSubmitter({
   const path = require.resolve(opts.f, { paths: [process.cwd()] });
   const { default: generator } = await import(path);
 
-  const sim = new Simulation(generator, createExecutor(submitter));
-
   const directory = opts.d;
   if (!directory || typeof directory !== "string") {
     throw new Error(`Invalid directory passed`);
   }
+  const documentDirectory = `${directory}/documents`;
+  const mailDirectory = `${directory}/mail`;
+  const sim = new Simulation(
+    generator,
+    createExecutor(submitter, documentDirectory, mailDirectory)
+  );
+
   if (opts.g) {
     // Trigger generate mode.
     console.log("Generating claims");
 
-    // Create a promised version of the pipeline function.
-    const pipelineP = promisify(pipeline);
+    await fs.promises.mkdir(documentDirectory, { recursive: true });
 
     const claims = [];
-    await fs.promises.mkdir(`${directory}/documents`, { recursive: true });
     for await (const claim of sim.generate({
       count: opts.n,
       documentDirectory: `${directory}/documents`,

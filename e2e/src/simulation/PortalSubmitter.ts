@@ -68,10 +68,11 @@ export default class PortalSubmitter {
     };
   }
 
-  async submit(application: ApplicationRequestBody): Promise<void> {
+  async submit(application: ApplicationRequestBody): Promise<string> {
     const application_id = await this.createApplication();
     await this.updateApplication(application_id, application);
     await this.submitApplication(application_id);
+    return application_id;
   }
 
   private async createApplication(): Promise<string> {
