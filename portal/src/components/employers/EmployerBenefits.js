@@ -1,8 +1,10 @@
 import AmendLink from "./AmendLink";
+import { EmployerBenefitType } from "../../models/EmployerBenefit";
 import PropTypes from "prop-types";
 import React from "react";
 import ReviewHeading from "../ReviewHeading";
 import Table from "../Table";
+import findKeyByValue from "../../utils/findKeyByValue";
 import formatDateRange from "../../utils/formatDateRange";
 import { useTranslation } from "../../locales/i18n";
 
@@ -51,7 +53,17 @@ const EmployerBenefits = (props) => {
                       )
                     : t("pages.employersClaimsReview.notApplicable")}
                 </th>
-                <td>{benefit.benefit_type}</td>
+                <td>
+                  {t(
+                    "pages.employersClaimsReview.employerBenefits.employerBenefitType",
+                    {
+                      context: findKeyByValue(
+                        EmployerBenefitType,
+                        benefit.benefit_type
+                      ),
+                    }
+                  )}
+                </td>
                 <td>
                   {benefit.benefit_amount_dollars
                     ? benefit.benefit_amount_dollars

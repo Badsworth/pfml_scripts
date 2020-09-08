@@ -7,7 +7,7 @@ Array [
     dates="8/12/2021 – 12/30/2021"
     key="0"
     label="Benefit 1"
-    type="Accrued paid Leave"
+    type="Accrued paid leave"
   />,
   <OtherLeaveEntry
     amount="$250 every month"

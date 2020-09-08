@@ -39,7 +39,7 @@ exports[`EmployerBenefits renders the component 1`] = `
           N/A
         </th>
         <td>
-          Paid Leave
+          Accrued paid leave
         </td>
         <td>
           None
@@ -57,7 +57,7 @@ exports[`EmployerBenefits renders the component 1`] = `
           2/1/2021 – 3/1/2021
         </th>
         <td>
-          Short Term Disability
+          Short-term disability insurance
         </td>
         <td>
           1000
@@ -75,7 +75,7 @@ exports[`EmployerBenefits renders the component 1`] = `
           N/A
         </th>
         <td>
-          Permanent Disability
+          Permanent disability insurance
         </td>
         <td>
           None
@@ -93,7 +93,7 @@ exports[`EmployerBenefits renders the component 1`] = `
           N/A
         </th>
         <td>
-          Family or Medical Leave
+          Family or medical leave insurance
         </td>
         <td>
           None

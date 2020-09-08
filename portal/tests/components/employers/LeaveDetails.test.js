@@ -15,12 +15,9 @@ describe("LeaveDetails", () => {
     expect(wrapper).toMatchSnapshot();
   });
 
-  it("renders leave reason and application id", () => {
+  it("renders formatted leave reason as sentence case", () => {
     expect(wrapper.find(ReviewRow).first().children().first().text()).toEqual(
-      claim.leave_details.reason
-    );
-    expect(wrapper.find(ReviewRow).at(1).children().first().text()).toEqual(
-      claim.application_id.toString()
+      "Medical leave"
     );
   });
 

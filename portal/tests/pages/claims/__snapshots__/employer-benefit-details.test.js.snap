@@ -8,7 +8,7 @@ exports[`EmployerBenefitCard renders fields for an EmployerBenefit instance 1`] 
         Object {
           "checked": false,
           "hint": "For example, vacation time, sick leave, or personal time",
-          "label": "Accrued paid Leave",
+          "label": "Accrued paid leave",
           "value": "Paid Leave",
         },
         Object {

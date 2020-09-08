@@ -1,8 +1,10 @@
 import AmendLink from "./AmendLink";
+import { LeaveReason } from "../../models/Claim";
 import PropTypes from "prop-types";
 import React from "react";
 import ReviewHeading from "../ReviewHeading";
 import ReviewRow from "../ReviewRow";
+import findKeyByValue from "../../utils/findKeyByValue";
 import formatDateRange from "../../utils/formatDateRange";
 import { useTranslation } from "../../locales/i18n";
 
@@ -29,7 +31,9 @@ const LeaveDetails = (props) => {
       <ReviewRow
         label={t("pages.employersClaimsReview.leaveDetails.natureOfLeaveLabel")}
       >
-        {reason}
+        {t("pages.employersClaimsReview.leaveDetails.leaveReasonValue", {
+          context: findKeyByValue(LeaveReason, reason),
+        })}
       </ReviewRow>
       <ReviewRow
         label={t("pages.employersClaimsReview.leaveDetails.applicationIdLabel")}

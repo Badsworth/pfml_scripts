@@ -8,7 +8,7 @@ exports[`LeaveDetails renders the component 1`] = `
   <ReviewRow
     label="Nature of leave"
   >
-    Serious Health Condition - Employee
+    Medical leave
   </ReviewRow>
   <ReviewRow
     label="Application ID"

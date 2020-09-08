@@ -93,7 +93,7 @@ const shared = {
   claimsVerifyIdTitle: "Verify your identity",
   employerBenefitEntryPrefix: "Benefit",
   employerBenefitType_familyOrMedicalLeave: "Family or medical leave insurance",
-  employerBenefitType_paidLeave: "Accrued paid Leave",
+  employerBenefitType_paidLeave: "Accrued paid leave",
   employerBenefitType_permanentDisability: "Permanent disability insurance",
   employerBenefitType_shortTermDisability: "Short-term disability insurance",
   fileUpload_addAnotherFileButton: "Choose another file",
@@ -696,6 +696,13 @@ const pages = {
       benefitTypeLabel: "Benefit type",
       dateRangeLabel: "Date range",
       detailsLabel: "Details",
+      employerBenefitType_familyOrMedicalLeave:
+        "$t(shared.employerBenefitType_familyOrMedicalLeave)",
+      employerBenefitType_paidLeave: "$t(shared.employerBenefitType_paidLeave)",
+      employerBenefitType_permanentDisability:
+        "$t(shared.employerBenefitType_permanentDisability)",
+      employerBenefitType_shortTermDisability:
+        "$t(shared.employerBenefitType_shortTermDisability)",
       header: "Employer benefits",
       tableName: "Employer-sponsored benefit details",
     },
@@ -721,6 +728,12 @@ const pages = {
       employerNotifiedLabel: "Employer notified",
       header: "Leave details",
       leaveDurationLabel: "Leave duration",
+      leaveReasonValue_activeDutyFamily:
+        "$t(shared.leaveReasonActiveDutyFamily)",
+      leaveReasonValue_bonding: "$t(shared.leaveReasonBonding)",
+      leaveReasonValue_medical: "$t(shared.leaveReasonMedical)",
+      leaveReasonValue_serviceMemberFamily:
+        "$t(shared.leaveReasonServiceMemberFamily)",
       leaveTypeLabel: "Leave type",
       natureOfLeaveLabel: "Nature of leave",
     },
