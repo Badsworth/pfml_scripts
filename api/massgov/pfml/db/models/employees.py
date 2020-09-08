@@ -442,6 +442,7 @@ class GeoState(LookupTable):
     WV = LkGeoState(56, "WV")
     WI = LkGeoState(57, "WI")
     WY = LkGeoState(58, "WY")
+    AK = LkGeoState(59, "AK")
 
 
 class Country(LookupTable):
