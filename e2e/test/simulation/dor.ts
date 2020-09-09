@@ -34,9 +34,10 @@ function extract(stream: NodeJS.ReadableStream) {
 
 describe("DOR Employer File Generator", function () {
   it("should generate a valid employer line", async function () {
-    const contents = await extract(createEmployersStream([employer]));
+    const contents = await extract(createEmployersStream([employer, employer]));
     expect(contents).toMatchInlineSnapshot(`
       "00001John Hancock                                                                                                                                                                                                                                                   1212315123 Some Way                                                                                                                                                                                                                                                   Boston                        MA01010                                                                                                                                                                                                                                                               FF999912319999123120200820000000
+      00001John Hancock                                                                                                                                                                                                                                                   1212315123 Some Way                                                                                                                                                                                                                                                   Boston                        MA01010                                                                                                                                                                                                                                                               FF999912319999123120200820000000
       "
     `);
   });
@@ -60,11 +61,12 @@ describe("DOR Employee File Generator", function () {
       documents: [],
     };
     const contents = await extract(
-      createEmployeesStream([claim], [employer], filingPeriods)
+      createEmployeesStream([claim], [employer, employer], filingPeriods)
     );
 
     expect(contents).toMatchInlineSnapshot(`
       "A0000120200630John Hancock                                                                                                                                                                                                                                                   1212315F2020063020200630000000
+      A0000120200630John Hancock                                                                                                                                                                                                                                                   1212315F2020063020200630000000
       B0000120200630Dave                                                                                                                                                                                                                                                           Smith                                                                                                                                                                                                                                                          000000000FT             1276.00             1276.00                0.00                0.00                0.00                0.00
       "
     `);

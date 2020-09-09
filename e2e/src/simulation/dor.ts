@@ -83,9 +83,9 @@ function getEmployeeWageRecords(
     }
     // Passes in wages that correspond to a financially (in)eligibile status.
     const quarterWages = claim.financiallyIneligible ? 1275 : 1276;
-    const thisEmployeeRecords =
-      filingPeriods.map((period, index): string => {
-        return util.format(
+    const thisEmployeeRecords = filingPeriods.map((period, index): string => {
+      return (
+        util.format(
           "B%s%s%s%s%s%s%s%s%s%s%s%s%s",
           employer.accountKey,
           formatISODate(period),
@@ -103,8 +103,9 @@ function getEmployeeWageRecords(
           amt(0), //amt(record.employerMedical),
           amt(0), //amt(record.employeeFamily),
           amt(0) //amt(record.employerFamily)
-        );
-      }) + "\n";
+        ) + "\n"
+      );
+    });
     return records.concat(thisEmployeeRecords);
   }, [] as string[]);
 
