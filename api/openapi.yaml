@@ -19,18 +19,16 @@ paths:
       tags:
         - Test Endpoints
       summary: Get the API status
+      operationId: massgov.pfml.api.status.status_get
       responses:
         "200":
-          description: A status object
+          description: A successful request returns a 200 status code and a user object.
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  status:
-                    type: string
-                example:
-                  status: "ok"
+                $ref: "#/components/schemas/SuccessfulResponse"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailableError"
 
   /users/{user_id}:
     get:
@@ -533,6 +531,12 @@ components:
             $ref: "#/components/schemas/Error"
     ValidationError:
       description: Error validating the object
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    ServiceUnavailableError:
+      description: The service is not available
       content:
         application/json:
           schema:

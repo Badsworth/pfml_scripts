@@ -72,7 +72,7 @@ def test_without_token(client, auth_token):
     response_body = response.get_json()
 
     assert response.status_code == 200
-    assert response_body["status"] == "ok"
+    assert response_body["message"] == "Application healthy"
 
 
 def test_current_user_is_set_successfully(client, app, user, auth_token):
