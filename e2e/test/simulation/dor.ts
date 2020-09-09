@@ -35,9 +35,10 @@ function extract(stream: NodeJS.ReadableStream) {
 describe("DOR Employer File Generator", function () {
   it("should generate a valid employer line", async function () {
     const contents = await extract(createEmployersStream([employer]));
-    expect(contents).toMatchInlineSnapshot(
-      `"00001John Hancock                                                                                                                                                                                                                                                   1212315123 Some Way                                                                                                                                                                                                                                                   Boston                        MA01010                                                                                                                                                                                                                                                               FF999912319999123120200820000000"`
-    );
+    expect(contents).toMatchInlineSnapshot(`
+      "00001John Hancock                                                                                                                                                                                                                                                   1212315123 Some Way                                                                                                                                                                                                                                                   Boston                        MA01010                                                                                                                                                                                                                                                               FF999912319999123120200820000000
+      "
+    `);
   });
 });
 

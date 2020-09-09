@@ -165,7 +165,7 @@ export function createEmployersStream(
             ? formatISODate(record.exemption_cease_date)
             : NO_EXEMPTION_DATE,
           formatISODatetime(record.updated_date)
-        );
+        ) + "\n";
       }
     })()
   );
