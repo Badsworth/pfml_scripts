@@ -365,7 +365,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
                                     
-  /eligibility:
+  /financial-eligibility:
     post:
       security:
         - {} # no authentication option
@@ -386,12 +386,15 @@ paths:
                 example:
                   meta:
                     method: "POST"
-                    resource: "/eligibility"
+                    resource: "/financial-eligibility"
                   status_code: 200
                   message: "success"
                   data:
-                    financial_eligibility: false
-                    reason_not_eligible: "test"
+                    financially_eligible: true
+                    description: "Financially eligible"
+                    total_wages: 55000
+                    state_average_weekly_wage: 1431
+                    unemployment_minimum: 5100
         "400":
           $ref: "#/components/responses/BadRequest"
       requestBody:
@@ -441,7 +444,7 @@ tags:
   - name: Employees
   - name: Employers
   - name: Applications
-  - name: Eligibility
+  - name: Financial Eligibility
   - name: ID Proofing
 
 components:
@@ -1067,7 +1070,10 @@ components:
         employer_fein:
           nullable: false
           $ref: "#/components/schemas/Fein"
-        effective_date:
+        leave_start_date:
+          nullable: false
+          $ref: "#/components/schemas/Date"
+        application_submitted_date:
           nullable: false
           $ref: "#/components/schemas/Date"
         employment_status:
@@ -1081,21 +1087,28 @@ components:
       required:
         - tax_identifier
         - employer_fein
-        - effective_date
+        - leave_start_date
+        - application_submitted_date
         - employment_status
 
     EligibilityResponse:
       type: object
       properties:
-        financial_eligibility:
+        financially_eligible:
           type: boolean
           example: false
-        reason_not_eligible:
+        description:
           type: string
-          example: "test"
-      required:
-        - financial_eligibility
-        - reason_not_eligible
+          example: "Unemployment minimum not met"
+        total_wages:
+          type: integer
+          example: 75000
+        state_average_weekly_wage:
+          type: integer
+          example: 1431
+        unemployment_minimum:
+          type: integer
+          example: 5100
 
     ApplicationLeaveDetails:
       type: object
