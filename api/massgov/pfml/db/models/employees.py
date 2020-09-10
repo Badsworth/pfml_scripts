@@ -517,7 +517,7 @@ class PaymentType(LookupTable):
 
     ACH = LkPaymentType(1, "ACH")
     CHECK = LkPaymentType(2, "Check")
-    GIFT_CARD = LkPaymentType(3, "Gift Card")
+    DEBIT = LkPaymentType(3, "Debit")
 
 
 def sync_lookup_tables(db_session):

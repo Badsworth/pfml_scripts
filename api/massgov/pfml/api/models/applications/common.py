@@ -225,7 +225,7 @@ class ApplicationLeaveDetails(PydanticBaseModel):
 class PaymentMethod(str, LookupEnum):
     ach = "ACH"
     check = "Check"
-    gift_card = "Gift Card"
+    debit = "Debit"
 
     @classmethod
     def get_lookup_model(cls):

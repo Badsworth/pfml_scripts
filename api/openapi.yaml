@@ -1477,7 +1477,7 @@ components:
           enum:
             - ACH
             - Check
-            - Gift Card
+            - Debit
           example: "ACH"
         is_default:
           type: boolean
