@@ -1,6 +1,7 @@
 import Claim, { PaymentPreferenceMethod } from "../../models/Claim";
 import ConditionalContent from "../../components/ConditionalContent";
 import Fieldset from "../../components/Fieldset";
+import FieldsetAddress from "../../components/FieldsetAddress";
 import FormLabel from "../../components/FormLabel";
 import InputChoiceGroup from "../../components/InputChoiceGroup";
 import InputText from "../../components/InputText";
@@ -104,59 +105,13 @@ export const PaymentMethod = (props) => {
           paymentPreference.payment_method === PaymentPreferenceMethod.debit
         }
       >
-        <Fieldset>
-          <FormLabel component="legend">
-            {t("pages.claimsPaymentMethod.debitSectionLabel")}
-          </FormLabel>
-
-          <InputText
-            {...getFunctionalInputProps(
-              "temp.payment_preferences[0].destination_address.line_1"
-            )}
-            label={t("pages.claimsPaymentMethod.addressLine1Label")}
-            autoComplete="address-line1"
-            smallLabel
-          />
-
-          <InputText
-            {...getFunctionalInputProps(
-              "temp.payment_preferences[0].destination_address.line_2"
-            )}
-            label={t("pages.claimsPaymentMethod.addressLine2Label")}
-            optionalText={t("components.form.optional")}
-            autoComplete="address-line2"
-            smallLabel
-          />
-
-          <InputText
-            {...getFunctionalInputProps(
-              "temp.payment_preferences[0].destination_address.city"
-            )}
-            label={t("pages.claimsPaymentMethod.addressCityLabel")}
-            autoComplete="address-level2"
-            smallLabel
-          />
-
-          <InputText
-            {...getFunctionalInputProps(
-              "temp.payment_preferences[0].destination_address.state"
-            )}
-            label={t("pages.claimsPaymentMethod.addressStateLabel")}
-            autoComplete="address-level1"
-            smallLabel
-          />
-
-          <InputText
-            {...getFunctionalInputProps(
-              "temp.payment_preferences[0].destination_address.zip"
-            )}
-            label={t("pages.claimsPaymentMethod.addressZipLabel")}
-            autoComplete="postal-code"
-            inputMode="numeric"
-            smallLabel
-            width="medium"
-          />
-        </Fieldset>
+        <FieldsetAddress
+          appErrors={appLogic.appErrors}
+          label={t("pages.claimsPaymentMethod.debitSectionLabel")}
+          {...getFunctionalInputProps(
+            "temp.payment_preferences[0].destination_address"
+          )}
+        />
       </ConditionalContent>
     </QuestionPage>
   );

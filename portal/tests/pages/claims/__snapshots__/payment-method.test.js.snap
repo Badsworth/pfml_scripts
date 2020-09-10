@@ -62,56 +62,26 @@ exports[`PaymentMethod renders the page 1`] = `
   <ConditionalContent
     visible={false}
   >
-    <Fieldset>
-      <FormLabel
-        component="legend"
-      >
-        Where should we send your debit card?
-      </FormLabel>
-      <InputText
-        autoComplete="address-line1"
-        label="Street address 1"
-        name="temp.payment_preferences[0].destination_address.line_1"
-        onChange={[Function]}
-        smallLabel={true}
-        value=""
-      />
-      <InputText
-        autoComplete="address-line2"
-        label="Street address 2"
-        name="temp.payment_preferences[0].destination_address.line_2"
-        onChange={[Function]}
-        optionalText="(optional)"
-        smallLabel={true}
-        value=""
-      />
-      <InputText
-        autoComplete="address-level2"
-        label="City"
-        name="temp.payment_preferences[0].destination_address.city"
-        onChange={[Function]}
-        smallLabel={true}
-        value=""
-      />
-      <InputText
-        autoComplete="address-level1"
-        label="State"
-        name="temp.payment_preferences[0].destination_address.state"
-        onChange={[Function]}
-        smallLabel={true}
-        value=""
-      />
-      <InputText
-        autoComplete="postal-code"
-        inputMode="numeric"
-        label="ZIP Code"
-        name="temp.payment_preferences[0].destination_address.zip"
-        onChange={[Function]}
-        smallLabel={true}
-        value=""
-        width="medium"
-      />
-    </Fieldset>
+    <FieldsetAddress
+      appErrors={
+        AppErrorInfoCollection {
+          "items": Array [],
+          "itemsById": Object {},
+        }
+      }
+      label="Where should we send your debit card?"
+      name="temp.payment_preferences[0].destination_address"
+      onChange={[Function]}
+      value={
+        Address {
+          "city": null,
+          "line_1": null,
+          "line_2": null,
+          "state": null,
+          "zip": null,
+        }
+      }
+    />
   </ConditionalContent>
 </QuestionPage>
 `;

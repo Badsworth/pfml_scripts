@@ -20,7 +20,10 @@ describe("PaymentMethod", () => {
         claimAttrs: {
           temp: {
             payment_preferences: [
-              { payment_method: PaymentPreferenceMethod.ach },
+              {
+                payment_method: PaymentPreferenceMethod.ach,
+                destination_address: {},
+              },
             ],
           },
         },
@@ -38,7 +41,7 @@ describe("PaymentMethod", () => {
 
     it("does not show the Debit address fieldset", () => {
       const debitField = wrapper.find(
-        "[name='temp.payment_preferences[0].destination_address.line_1']"
+        "[name='temp.payment_preferences[0].destination_address']"
       );
       const conditionalContent = debitField.parents("ConditionalContent");
 
@@ -52,7 +55,10 @@ describe("PaymentMethod", () => {
         claimAttrs: {
           temp: {
             payment_preferences: [
-              { payment_method: PaymentPreferenceMethod.debit },
+              {
+                payment_method: PaymentPreferenceMethod.debit,
+                destination_address: {},
+              },
             ],
           },
         },
@@ -70,7 +76,7 @@ describe("PaymentMethod", () => {
 
     it("shows the Debit address fieldset", () => {
       const debitField = wrapper.find(
-        "[name='temp.payment_preferences[0].destination_address.line_1']"
+        "[name='temp.payment_preferences[0].destination_address']"
       );
       const conditionalContent = debitField.parents("ConditionalContent");
 
