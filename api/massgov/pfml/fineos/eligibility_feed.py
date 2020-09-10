@@ -356,12 +356,12 @@ def employee_to_eligibility_feed_record(
         # TaxId that can be formatted appropriately in the encoder?
         employeeNationalID=(
             employee.tax_identifier.tax_identifier.replace("-", "")
-            if employee.tax_identifier.tax_identifier
+            if employee.tax_identifier
             else None
         ),
         employeeNationalIDType=(
             determine_national_id_type(str(employee.tax_identifier.tax_identifier))
-            if employee.tax_identifier.tax_identifier
+            if employee.tax_identifier
             else None
         ),
         employeeEmail=employee.email_address,

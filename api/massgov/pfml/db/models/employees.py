@@ -8,7 +8,7 @@
 # This allows us to build mock data and insert them easily in the database for tests
 # and seeding.
 #
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional, cast
 
 from sqlalchemy import Boolean, Column, Date, DateTime, ForeignKey, Integer, Numeric, Text
 from sqlalchemy.dialects.postgresql import UUID
@@ -227,7 +227,9 @@ class Employee(Base):
     occupation = relationship(LkOccupation)
     education_level = relationship(LkEducationLevel)
     latest_import_log = relationship("ImportLog")
-    tax_identifier = relationship("TaxIdentifier", back_populates="employee")
+    tax_identifier = cast(
+        Optional[TaxIdentifier], relationship("TaxIdentifier", back_populates="employee")
+    )
 
     authorized_reps: "Query[AuthorizedRepEmployee]" = dynamic_loader(
         "AuthorizedRepEmployee", back_populates="employee"

@@ -117,6 +117,21 @@ def test_employee_to_eligibility_feed_record_with_address(
     assert eligibility_feed_record.addressZipCode == address_model.zip_code
 
 
+def test_employee_to_eligibility_feed_record_with_no_tax_identifier(
+    test_db_session, initialize_factories_session
+):
+    wages_and_contributions = WagesAndContributionsFactory.create()
+    employee = wages_and_contributions.employee
+    employer = wages_and_contributions.employer
+
+    employee.tax_identifier = None
+
+    eligibility_feed_record = ef.employee_to_eligibility_feed_record(employee, employer)
+
+    assert eligibility_feed_record.employeeNationalID is None
+    assert eligibility_feed_record.employeeNationalIDType is None
+
+
 def create_csv_dict(updates=None):
     csv_dict = {
         # required fields
