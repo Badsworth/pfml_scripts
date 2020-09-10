@@ -2,7 +2,7 @@ openapi: 3.0.2
 info:
   title: Paid Leave API
   description: An API for managing leave within Massachusetts Paid Family and Medical Leave.
-  version: "2020-07-29"
+  version: "2020-09-10"
 
 servers:
   - url: /v1
