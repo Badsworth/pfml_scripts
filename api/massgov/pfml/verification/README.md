@@ -12,6 +12,16 @@ For example:
 ```sh
 make generate-verification-codes input=massgov/pfml/verification/test.csv output=massgov/pfml/verification/output.csv
 ```
+### Running via ECS Tasks
+
+A new ECS task has been created to run this in AWS
+
+How to run this in test:
+1. Upload your source file to `s3://massgov-pfml-test-verification-codes/source.csv`
+2. Launch the task locally with `../../../../bin/run-ecs-task/run-task.sh test test-ad-hoc-verification firstname.lastname`
+3. Retrieve your output file from `s3://massgov-pfml-test-verification-codes/output.csv`
+
+Note that this will create verification codes in the database for the appropriate environment
 
 ## Configuring the database
 

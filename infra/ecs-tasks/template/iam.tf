@@ -93,3 +93,41 @@ resource "aws_iam_role_policy" "task_executor" {
   role   = aws_iam_role.task_executor.id
   policy = data.aws_iam_policy_document.task_executor.json
 }
+
+# ------------------------------------------------------------------------------------------------------
+# Adhoc Task Policy Stuff
+# ------------------------------------------------------------------------------------------------------
+
+
+data "aws_iam_policy_document" "task_adhoc_executor_s3_policy_doc" {
+  # Allow ECS Adhoc Verification task access S3 files
+  statement {
+    actions = [
+      "s3:PutObject",
+      "s3:GetObject",
+      "s3:ListBucket"
+    ]
+
+    resources = [
+      "arn:aws:s3:::massgov-pfml-${var.environment_name}-verification-codes",
+      "arn:aws:s3:::massgov-pfml-${var.environment_name}-verification-codes/*"
+    ]
+  }
+}
+
+resource "aws_iam_role" "task_adhoc_verification_task_role" {
+  name               = "${local.app_name}-${var.environment_name}-ecs-tasks-adhoc-verification-task-role"
+  assume_role_policy = data.aws_iam_policy_document.ecs_tasks_assume_role_policy.json
+}
+
+
+resource "aws_iam_policy" "task_adhoc_executor_s3_policy" {
+  name        = "${local.app_name}-${var.environment_name}-ecs-tasks-adhoc-verification-s3-policy"
+  description = "Policy for accessing S3 files for ECS Ad-Hoc Verification Tasks"
+  policy      = data.aws_iam_policy_document.task_adhoc_executor_s3_policy_doc.json
+}
+
+resource "aws_iam_role_policy_attachment" "task_adhoc_task_executor_s3_attachment" {
+  role       = aws_iam_role.task_adhoc_verification_task_role.name
+  policy_arn = aws_iam_policy.task_adhoc_executor_s3_policy.arn
+}

@@ -16,7 +16,7 @@ from massgov.pfml import db
 from massgov.pfml.db.models.employees import Employer
 from massgov.pfml.db.models.verifications import VerificationCode
 
-OUTPUT_CSV_FIELDS = ["fein", "verification_code", "uses", "expiration_date", "email"]
+OUTPUT_CSV_FIELDS = ["fein", "verification_code", "uses", "expiration_date", "contact", "email"]
 DEFAULT_CODE_LENGTH = 6
 DEFAULT_VALID_DAYS = 90
 
@@ -80,13 +80,14 @@ def process_file(db_session: db.Session, input_csv_filename: str, output_csv_fil
                     fein=row["fein"],
                     code_length=int(row.get("code_length") or DEFAULT_CODE_LENGTH),
                     valid_for=int(row.get("valid_for") or DEFAULT_VALID_DAYS),
-                    uses=int(row.get("uses")) or 1,
+                    uses=int(row.get("uses") or 1),
                 )
                 csv_output.writerow(
                     {
                         **row,
                         "verification_code": code.verification_code,
                         "expiration_date": code.expires_at,
+                        "uses": code.remaining_uses,
                     }
                 )
 
