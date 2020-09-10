@@ -64,13 +64,16 @@ export function scenario(
     // Pulls random FEIN from employerPool fixture.
     const employer_fein =
       employers[Math.floor(Math.random() * employers.length)].fein;
+    const first_name = faker.name.firstName();
+    const last_name = faker.name.lastName();
 
     const claim: ApplicationRequestBody = {
       // These fields are brought directly over from the employee record.
       employment_status: "Employed",
-      first_name: faker.name.firstName(),
-      last_name: faker.name.lastName(),
-      employee_ssn: faker.phone.phoneNumber("###-##-####"),
+      occupation: "Administrative",
+      first_name: first_name,
+      last_name: last_name,
+      tax_identifier: faker.phone.phoneNumber("###-##-####"),
       employer_fein,
       date_of_birth: fmt(faker.date.past(45)),
       has_state_id: hasMassId,
@@ -89,20 +92,28 @@ export function scenario(
             is_estimated: true,
           },
         ],
+        pregnant_or_recent_birth: false,
         employer_notification_date: fmt(notificationDate),
         employer_notified: true,
-        intermittent_leave_periods: [],
         reason: "Serious Health Condition - Employee",
-        reduced_schedule_leave_periods: [],
+        reason_qualifier: "Serious Health Condition",
       },
-      payment_preferences: [],
+      payment_preferences: [
+        {
+          payment_method: "Check",
+          is_default: true,
+          cheque_details: {
+            name_to_print_on_check: `${first_name} ${last_name}`,
+          },
+        },
+      ],
     };
 
     // Generate the necessary documents for the claim.
     const documents: ClaimDocument[] = [];
-    const hcpPath = `${claim.employee_ssn}.hcp.pdf`;
-    const idFrontPath = `${claim.employee_ssn}.id-front.pdf`;
-    const idBackPath = `${claim.employee_ssn}.id-back.pdf`;
+    const hcpPath = `${claim.tax_identifier}.hcp.pdf`;
+    const idFrontPath = `${claim.tax_identifier}.id-front.pdf`;
+    const idBackPath = `${claim.tax_identifier}.id-back.pdf`;
 
     // Flag for Missing Doc HCP
     if (!config.missingDocs || !config.missingDocs.includes("HCP")) {

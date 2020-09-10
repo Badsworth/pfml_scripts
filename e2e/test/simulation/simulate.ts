@@ -26,9 +26,23 @@ describe("Simulation Generator", () => {
       employment_status: "Employed",
       first_name: expect.any(String),
       last_name: expect.any(String),
-      employee_ssn: expect.stringMatching(/\d{3}-\d{2}-\d{4}/),
+      tax_identifier: expect.stringMatching(/\d{3}-\d{2}-\d{4}/),
       date_of_birth: expect.stringMatching(/\d{4}-\d{2}-\d{2}/),
     });
+  });
+
+  it("Should have payment information", async () => {
+    const claim = await scenario("TEST", { residence: "MA-proofed" })(opts);
+    const { payment_preferences } = claim.claim;
+    expect(payment_preferences).toHaveLength(1);
+    expect(payment_preferences).toContainEqual(
+      expect.objectContaining({
+        payment_method: "Check",
+        cheque_details: expect.objectContaining({
+          name_to_print_on_check: `${claim.claim.first_name} ${claim.claim.last_name}`,
+        }),
+      })
+    );
   });
 
   it("Should pull an employer from the pool", async () => {

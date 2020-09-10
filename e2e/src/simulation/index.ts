@@ -138,5 +138,8 @@ const submitter = new PortalSubmitter({
 })().catch((reason) => {
   console.error(`Failed after submitting ${submitter.count} applications`);
   console.error(reason);
+  if ("data" in reason && "errors" in reason.data) {
+    console.error("Reason given:", reason.data.errors);
+  }
   process.exit(1);
 });

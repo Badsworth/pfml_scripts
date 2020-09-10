@@ -82,7 +82,7 @@ function getEmployeeWageRecords(
       throw new Error(`Unable to find employer: ${employee.employer_fein}.`);
     }
     // Passes in wages that correspond to a financially (in)eligibile status.
-    const quarterWages = claim.financiallyIneligible ? 1275 : 1276;
+    const quarterWages = claim.financiallyIneligible ? 1200 : 1300;
     const thisEmployeeRecords = filingPeriods.map((period, index): string => {
       return (
         util.format(
