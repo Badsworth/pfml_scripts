@@ -6,7 +6,9 @@
 #
 
 import datetime
+import pathlib
 import typing
+from typing import List
 
 import faker
 import requests
@@ -24,6 +26,33 @@ _capture: typing.Optional[typing.List] = None
 def fake_date_of_birth(fake):
     """Generate a fake date of birth in a reproducible way."""
     return fake.date_between(datetime.date(1930, 1, 1), datetime.date(2010, 1, 1))
+
+
+def mock_document(
+    absence_id: str,
+    document_type: str = "ID Document",
+    file_name: str = "test.png",
+    description: str = "Mock File",
+) -> dict:
+    return {
+        "caseId": absence_id,
+        "rootCaseId": "NTN-111",
+        "documentId": 3011,
+        "name": document_type,
+        "type": "Document",
+        "fileExtension": pathlib.Path(file_name).suffix,
+        "fileName": "26e82dd7-dbfc-4e7b-9804-ea955627253d.png",
+        "originalFilename": file_name,
+        "receivedDate": "2020-09-01",
+        "effectiveFrom": "2020-09-02",
+        "effectiveTo": "2020-09-03",
+        "description": description,
+        "title": "",
+        "isRead": False,
+        "createdBy": "Roberto Carlos",
+        "dateCreated": "2020-09-01",
+        "extensionAttributes": [],
+    }
 
 
 class MockFINEOSClient(client.AbstractFINEOSClient):
@@ -106,6 +135,23 @@ class MockFINEOSClient(client.AbstractFINEOSClient):
         return models.customer_api.PaymentPreferenceResponse(
             paymentMethod="Elec Funds Transfer", paymentPreferenceId="1201"
         )
+
+    def upload_document(
+        self,
+        user_id: str,
+        absence_id: str,
+        document_type: str,
+        file_content: bytes,
+        file_name: str,
+        content_type: str,
+        description: str,
+    ) -> models.customer_api.Document:
+        document = mock_document(absence_id, document_type, file_name, description)
+        return models.customer_api.Document.parse_obj(document)
+
+    def get_documents(self, user_id: str, absence_id: str) -> List[models.customer_api.Document]:
+        document = mock_document(absence_id)
+        return [models.customer_api.Document.parse_obj(document)]
 
 
 def start_capture():

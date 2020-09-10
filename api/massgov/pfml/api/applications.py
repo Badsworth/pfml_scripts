@@ -16,7 +16,7 @@ from massgov.pfml.api.models.applications.requests import (
     DocumentRequestBody,
 )
 from massgov.pfml.api.models.applications.responses import ApplicationResponse, DocumentResponse
-from massgov.pfml.api.services.fineos_actions import send_to_fineos, upload_document
+from massgov.pfml.api.services.fineos_actions import get_documents, send_to_fineos, upload_document
 from massgov.pfml.api.validation.exceptions import ValidationErrorDetail, ValidationException
 from massgov.pfml.db.models.applications import (
     Application,
@@ -214,14 +214,30 @@ def document_upload(application_id, body, file):
 
         # Get additional file meta data
         file.seek(0)
-        file_name = document_details.name or file.filename
-        # TODO https://lwd.atlassian.net/browse/API-498
         file_content = file.read()
         file_size = len(file_content)
+        file_name = document_details.name or file.filename
         file_description = document_details.description
+        document_type = document_details.document_type.value
 
         # Upload document to fineos
-        fineos_document_id = upload_document(existing_application, file_content)
+        try:
+            fineos_document = upload_document(
+                existing_application,
+                document_type,
+                file_content,
+                file_name,
+                content_type,
+                file_description,
+                db_session,
+            ).dict()
+        except ValueError as ve:
+            return response_util.error_response(
+                status_code=BadRequest,
+                message=str(ve),
+                errors=[response_util.custom_issue("fineos_client", str(ve))],
+                data=document_details.dict(),
+            ).to_api_response()
 
         # Insert a document metadata row
         document = Document()
@@ -236,7 +252,7 @@ def document_upload(application_id, body, file):
         document.document_type_id = DocumentType.get_id(document_details.document_type.value)
         document.content_type_id = ContentType.get_id(content_type)
         document.size_bytes = file_size
-        document.fineos_id = fineos_document_id
+        document.fineos_id = fineos_document["documentId"]
         document.is_stored_in_s3 = False
         document.name = file_name
         document.description = file_description
@@ -252,4 +268,21 @@ def document_upload(application_id, body, file):
             message="Successfully uploaded document",
             data=DocumentResponse.from_orm(document).dict(),
             status_code=200,
+        ).to_api_response()
+
+
+def documents_get(application_id):
+    with app.db_session() as db_session:
+        # Get the referenced application or return 404
+        existing_application = get_or_404(db_session, Application, application_id)
+
+        # Check if user can read application
+        ensure(READ, existing_application)
+
+        documents = get_documents(existing_application, db_session)
+
+        documents_list = [doc.dict() for doc in documents]
+
+        return response_util.success_response(
+            message="Successfully retrieved documents", data=documents_list, status_code=200,
         ).to_api_response()

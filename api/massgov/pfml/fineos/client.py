@@ -61,3 +61,22 @@ class AbstractFINEOSClient(abc.ABC, metaclass=abc.ABCMeta):
         self, user_id: str, payment_preference: models.customer_api.NewPaymentPreference
     ) -> models.customer_api.PaymentPreferenceResponse:
         pass
+
+    @abc.abstractmethod
+    def upload_document(
+        self,
+        user_id: str,
+        absence_id: str,
+        document_type: str,
+        file_content: bytes,
+        file_name: str,
+        content_type: str,
+        description: str,
+    ) -> models.customer_api.Document:
+        pass
+
+    @abc.abstractmethod
+    def get_documents(
+        self, user_id: str, absence_id: str
+    ) -> typing.List[models.customer_api.Document]:
+        pass

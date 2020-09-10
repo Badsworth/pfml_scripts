@@ -81,8 +81,8 @@ def exclude_none(obj):
 # == helper factory functions ==
 
 
-def custom_issue(type: str, message: str) -> Issue:
-    return Issue(type=type, message=message)
+def custom_issue(type: str, message: str, rule: str = "", field: str = "") -> Issue:
+    return Issue(type=type, message=message, rule=rule, field=field)
 
 
 def validation_issue(exception: ValidationErrorDetail) -> Issue:

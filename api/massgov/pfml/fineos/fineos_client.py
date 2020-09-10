@@ -6,7 +6,7 @@ import datetime
 import os.path
 import urllib.parse
 import xml.etree.ElementTree
-from typing import Any, Callable, Dict, List
+from typing import Any, Callable, Dict, List, Optional
 
 import defusedxml.ElementTree
 import oauthlib.oauth2
@@ -25,6 +25,18 @@ MILLISECOND = datetime.timedelta(milliseconds=1)
 employee_register_request_schema = xmlschema.XMLSchema(
     os.path.join(os.path.dirname(__file__), "wscomposer", "EmployeeRegisterService.Request.xsd")
 )
+
+
+def client_response_json_to_document(response_json: dict) -> models.customer_api.Document:
+    # Document effectiveFrom and effectiveTo are empty and set to empty strings
+    # These fields are not set by the portal. Set to none to avoid validation errors.
+    if response_json["effectiveFrom"] == "":
+        response_json["effectiveFrom"] = None
+
+    if response_json["effectiveTo"] == "":
+        response_json["effectiveTo"] = None
+
+    return models.customer_api.Document.parse_obj(response_json)
 
 
 class FINEOSClient(client.AbstractFINEOSClient):
@@ -98,10 +110,20 @@ class FINEOSClient(client.AbstractFINEOSClient):
         )
         return response
 
-    def _customer_api(self, method: str, path: str, user_id: str, **args: Any) -> requests.Response:
+    def _customer_api(
+        self,
+        method: str,
+        path: str,
+        user_id: str,
+        header_content_type: Optional[str] = "application/json",
+        **args: Any,
+    ) -> requests.Response:
         """Make a request to the Customer API."""
         url = urllib.parse.urljoin(self.customer_api_url, path)
-        headers = {"userid": user_id, "Content-Type": "application/json"}
+        content_type_header = (
+            {} if header_content_type is None else {"Content-Type": header_content_type}
+        )
+        headers = dict({"userid": user_id}, **content_type_header)
         response = self._request(self.oauth_session.request, method, url, headers, **args)
         return response
 
@@ -228,3 +250,47 @@ class FINEOSClient(client.AbstractFINEOSClient):
             data=payment_preference.json(exclude_none=True),
         )
         return models.customer_api.PaymentPreferenceResponse.parse_obj(response.json())
+
+    def upload_document(
+        self,
+        user_id: str,
+        absence_id: str,
+        document_type: str,
+        file_content: bytes,
+        file_name: str,
+        content_type: str,
+        description: str,
+    ) -> models.customer_api.Document:
+        files = {"documentContents": (file_name, file_content, content_type)}
+
+        data = {"documentDescription": description}
+
+        # fineos upload endpoint returns errors when any Content-Type header value is set
+        header_content_type = None
+
+        response = self._customer_api(
+            "POST",
+            f"customer/cases/{absence_id}/documents/upload/{document_type}",
+            user_id,
+            header_content_type=header_content_type,
+            files=files,
+            data=data,
+        )
+
+        response_json = response.json()
+
+        return client_response_json_to_document(response_json)
+
+    def get_documents(self, user_id: str, absence_id: str) -> List[models.customer_api.Document]:
+        header_content_type = None
+
+        response = self._customer_api(
+            "GET",
+            f"customer/cases/{absence_id}/documents",
+            user_id,
+            header_content_type=header_content_type,
+        )
+
+        documents = response.json()
+
+        return [client_response_json_to_document(doc) for doc in documents]

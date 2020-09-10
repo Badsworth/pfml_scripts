@@ -14,7 +14,7 @@
 
 import datetime
 import uuid
-from typing import Optional
+from typing import List, Optional
 
 import massgov.pfml.db
 import massgov.pfml.fineos.models
@@ -22,6 +22,10 @@ import massgov.pfml.util.logging as logging
 from massgov.pfml.db.models.applications import Application, FINEOSWebIdExt
 
 logger = logging.get_logger(__name__)
+
+# TODO: remove this workaround after Portal starts sending SSN in prod
+# https://lwd.atlassian.net/browse/API-497
+TEST_TAX_IDENTIFIER = "900990000"
 
 
 def register_employee(
@@ -88,8 +92,7 @@ def send_to_fineos(application: Application, db_session: massgov.pfml.db.Session
     fineos = massgov.pfml.fineos.create_client()
 
     try:
-        # TODO: remove this workaround after Portal starts sending SSN in prod
-        tax_identifier = "900990000"
+        tax_identifier = TEST_TAX_IDENTIFIER
         if application.tax_identifier is not None:
             tax_identifier = application.tax_identifier.tax_identifier
 
@@ -119,8 +122,7 @@ def send_to_fineos(application: Application, db_session: massgov.pfml.db.Session
 
 def build_customer_model(application):
     """Convert an application to a FINEOS API Customer model."""
-    # TODO: remove this workaround after Portal starts sending SSN in prod
-    tax_identifier = "900990000"
+    tax_identifier = TEST_TAX_IDENTIFIER
     if application.tax_identifier is not None:
         tax_identifier = application.tax_identifier.tax_identifier
     customer = massgov.pfml.fineos.models.customer_api.Customer(
@@ -167,6 +169,81 @@ def build_absence_case(
     return absence_case
 
 
-def upload_document(application: Application, file_content: bytes) -> str:
-    # TODO implement in API-310
-    return str(uuid.uuid4())
+def upload_document(
+    application: Application,
+    document_type: str,
+    file_content: bytes,
+    file_name: str,
+    content_type: str,
+    description: str,
+    db_session: massgov.pfml.db.Session,
+) -> massgov.pfml.fineos.models.customer_api.Document:
+    try:
+        fineos = massgov.pfml.fineos.create_client()
+
+        tax_identifier = TEST_TAX_IDENTIFIER
+        if application.tax_identifier is not None:
+            tax_identifier = application.tax_identifier.tax_identifier
+
+        employer_fein = ""
+        if application.employer_fein is None:
+            raise ValueError("Missing employer fein")
+        employer_fein = application.employer_fein
+
+        fineos_user_id = register_employee(fineos, tax_identifier, employer_fein, db_session)
+
+        if fineos_user_id is None:
+            logger.error("register_employee did not find a match")
+            raise ValueError("register_employee did not find a match")
+
+        absence_id = ""
+        if application.fineos_absence_id is None:
+            raise ValueError("Missing absence id")
+        absence_id = application.fineos_absence_id
+
+        fineos_document = fineos.upload_document(
+            fineos_user_id,
+            absence_id,
+            document_type,
+            file_content,
+            file_name,
+            content_type,
+            description,
+        )
+        return fineos_document
+    except massgov.pfml.fineos.FINEOSClientError:
+        logger.exception("FINEOS Client Exception")
+        raise ValueError("FINEOS Client Exception")
+
+
+def get_documents(
+    application: Application, db_session: massgov.pfml.db.Session
+) -> List[massgov.pfml.fineos.models.customer_api.Document]:
+    try:
+        fineos = massgov.pfml.fineos.create_client()
+
+        tax_identifier = TEST_TAX_IDENTIFIER
+        if application.tax_identifier is not None:
+            tax_identifier = application.tax_identifier.tax_identifier
+
+        employer_fein = ""
+        if application.employer_fein is None:
+            raise ValueError("Missing employer fein")
+        employer_fein = application.employer_fein
+
+        fineos_user_id = register_employee(fineos, tax_identifier, employer_fein, db_session)
+
+        if fineos_user_id is None:
+            logger.error("register_employee did not find a match")
+            raise ValueError("register_employee did not find a match")
+
+        absence_id = ""
+        if application.fineos_absence_id is None:
+            raise ValueError("Missing absence id")
+        absence_id = application.fineos_absence_id
+
+        documents = fineos.get_documents(fineos_user_id, absence_id)
+        return documents
+    except massgov.pfml.fineos.FINEOSClientError:
+        logger.exception("FINEOS Client Exception")
+        raise ValueError("FINEOS Client Exception")

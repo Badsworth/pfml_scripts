@@ -33,7 +33,8 @@ def invalid_file():
 
 
 def document_upload_helper(client, user, auth_token, form_data):
-    application = ApplicationFactory.create(user=user)
+    absence_case_id = "NTN-111-ABS-01"
+    application = ApplicationFactory.create(user=user, fineos_absence_id=absence_case_id)
 
     response = client.post(
         "/v1/applications/{}/documents".format(application.application_id),
@@ -60,6 +61,16 @@ def test_document_upload_success(client, consented_user, consented_user_token, t
     )
 
     assert response["status_code"] == 200
+
+    response_data = response["data"]
+    assert response_data["content_type"] == "image/png"
+    assert response_data["description"] == "Passport"
+    assert response_data["document_category"] == "Certification"
+    assert response_data["document_type"] == "Passport"
+    assert response_data["fineos_id"] == "3011"  # See massgov/pfml/fineos/mock_client.py
+    assert response_data["name"] == "passport.png"
+    assert response_data["size_bytes"] == 6
+    assert response_data["user_id"] == str(consented_user.user_id)
 
 
 def test_document_upload_unauthorized_application_user(
@@ -153,3 +164,27 @@ def test_document_upload_defaults_for_name(
 
     assert response["status_code"] == 200
     assert response["data"]["name"] == "test.png"
+
+
+def test_documents_get(client, consented_user, consented_user_token, test_db_session):
+    absence_case_id = "NTN-111-ABS-01"
+    application = ApplicationFactory.create(user=consented_user, fineos_absence_id=absence_case_id)
+
+    response = client.get(
+        "/v1/applications/{}/documents".format(application.application_id),
+        headers={"Authorization": f"Bearer {consented_user_token}"},
+    ).get_json()
+
+    assert response["status_code"] == 200
+    response_data = response["data"][0]
+    response_data["caseId"] == absence_case_id
+
+    # See massgov/pfml/fineos/mock_client for the following values
+    assert response_data["rootCaseId"] == "NTN-111"
+    assert response_data["documentId"] == 3011
+    assert response_data["name"] == "ID Document"
+    assert response_data["type"] == "Document"
+    assert response_data["fileExtension"] == ".png"
+    assert response_data["originalFilename"] == "test.png"
+    assert response_data["description"] == "Mock File"
+    assert response_data["receivedDate"] is not None
