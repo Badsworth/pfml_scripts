@@ -55,7 +55,7 @@ export const Smcat = () => {
 };
 
 export const ClaimFlowFields = () => {
-  const steps = Step.createClaimStepsFromMachine(machineConfig);
+  const steps = Step.createClaimStepsFromMachine(machineConfig, { claim: {} });
 
   return steps.map((step) => {
     return (

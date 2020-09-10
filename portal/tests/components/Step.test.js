@@ -3,18 +3,21 @@ import Step from "../../src/components/Step";
 import { shallow } from "enzyme";
 
 describe("Step", () => {
-  const props = {
-    stepHref: "/path-to-step-question",
-    startText: "Start",
-    resumeText: "Resume",
-    completedText: "Completed",
-    editText: "Edit",
-    screenReaderNumberPrefix: "Step",
-    number: "1",
-    title: "Step Title",
-  };
-
+  let props;
   const Child = () => <div>Description of step</div>;
+
+  beforeEach(() => {
+    props = {
+      stepHref: "/path-to-step-question",
+      startText: "Start",
+      resumeText: "Resume",
+      completedText: "Completed",
+      editText: "Edit",
+      screenReaderNumberPrefix: "Step",
+      number: "1",
+      title: "Step Title",
+    };
+  });
 
   it("renders component", () => {
     const wrapper = shallow(
@@ -67,6 +70,18 @@ describe("Step", () => {
       expect(wrapper.find("Child")).toHaveLength(0);
 
       expect(wrapper.find(".usa-link")).toHaveLength(1);
+    });
+
+    it("hides edit link if stepHref is not present", () => {
+      delete props.stepHref;
+
+      const wrapper = shallow(
+        <Step {...props} status="completed">
+          <Child />
+        </Step>
+      );
+
+      expect(wrapper.find(".usa-link")).toHaveLength(0);
     });
   });
 

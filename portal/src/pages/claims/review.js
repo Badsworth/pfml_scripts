@@ -10,9 +10,6 @@ import EmployerBenefit, {
 import OtherIncome, { OtherIncomeType } from "../../models/OtherIncome";
 import Step, { ClaimSteps } from "../../models/Step";
 import { compact, get } from "lodash";
-import routeWithParams, {
-  createRouteWithQuery,
-} from "../../utils/routeWithParams";
 import BackButton from "../../components/BackButton";
 import ButtonLink from "../../components/ButtonLink";
 import { DateTime } from "luxon";
@@ -25,6 +22,7 @@ import Title from "../../components/Title";
 import claimantConfigs from "../../flows/claimant";
 import findKeyByValue from "../../utils/findKeyByValue";
 import formatDateRange from "../../utils/formatDateRange";
+import routeWithParams from "../../utils/routeWithParams";
 import { useTranslation } from "../../locales/i18n";
 import withClaim from "../../hoc/withClaim";
 
@@ -46,10 +44,10 @@ export const Review = (props) => {
     null
   );
 
-  const routeForStep = (name) => {
+  const getStepEditHref = (name) => {
     const step = steps.find((s) => s.name === name);
 
-    if (step) return createRouteWithQuery(step.initialPage, props.query);
+    if (step && step.editable) return step.href;
   };
 
   return (
@@ -59,7 +57,7 @@ export const Review = (props) => {
 
       {/* EMPLOYEE IDENTITY */}
       <ReviewHeading
-        editHref={routeForStep(ClaimSteps.verifyId)}
+        editHref={getStepEditHref(ClaimSteps.verifyId)}
         editText={t("pages.claimsReview.editLink")}
       >
         {t("pages.claimsReview.userSectionHeading")}
@@ -99,7 +97,7 @@ export const Review = (props) => {
 
       {/* LEAVE DETAILS */}
       <ReviewHeading
-        editHref={routeForStep(ClaimSteps.leaveDetails)}
+        editHref={getStepEditHref(ClaimSteps.leaveDetails)}
         editText={t("pages.claimsReview.editLink")}
       >
         {t("pages.claimsReview.leaveSectionHeading")}
@@ -172,7 +170,7 @@ export const Review = (props) => {
 
       {/* EMPLOYMENT INFO */}
       <ReviewHeading
-        editHref={routeForStep(ClaimSteps.employerInformation)}
+        editHref={getStepEditHref(ClaimSteps.employerInformation)}
         editText={t("pages.claimsReview.editLink")}
       >
         {t("pages.claimsReview.employmentSectionHeading")}
@@ -211,7 +209,7 @@ export const Review = (props) => {
 
       {/* OTHER LEAVE */}
       <ReviewHeading
-        editHref={routeForStep(ClaimSteps.otherLeave)}
+        editHref={getStepEditHref(ClaimSteps.otherLeave)}
         editText={t("pages.claimsReview.editLink")}
       >
         {t("pages.claimsReview.otherLeaveSectionHeading")}
@@ -252,7 +250,7 @@ export const Review = (props) => {
 
       {/* PAYMENT METHOD */}
       <ReviewHeading
-        editHref={routeForStep(ClaimSteps.payment)}
+        editHref={getStepEditHref(ClaimSteps.payment)}
         editText={t("pages.claimsReview.editLink")}
       >
         {t("pages.claimsReview.paymentSectionHeading")}

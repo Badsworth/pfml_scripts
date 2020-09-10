@@ -11,7 +11,6 @@ describe("StepList", () => {
       title: "Step List",
       startText: "Start",
       resumeText: "Resume",
-      completedText: "Completed",
       editText: "Edit",
       screenReaderNumberPrefix: "Step",
     };
@@ -20,7 +19,12 @@ describe("StepList", () => {
   it("renders component", () => {
     const wrapper = shallow(
       <StepList {...props}>
-        <Step title="Step 1" stepHref="#" status="not_started">
+        <Step
+          title="Step 1"
+          stepHref="#"
+          status="not_started"
+          completedText="Completed"
+        >
           Step Description
         </Step>
       </StepList>
@@ -34,7 +38,12 @@ describe("StepList", () => {
 
     const wrapper = shallow(
       <StepList {...props} description={description}>
-        <Step title="Step 1" stepHref="#" status="not_started">
+        <Step
+          title="Step 1"
+          stepHref="#"
+          status="not_started"
+          completedText="Completed"
+        >
           Step Description
         </Step>
       </StepList>
@@ -59,10 +68,20 @@ describe("StepList", () => {
   it("passes Step props to children", () => {
     const wrapper = shallow(
       <StepList {...props}>
-        <Step title="Step 1" stepHref="#" status="not_started">
+        <Step
+          title="Step 1"
+          stepHref="#"
+          status="not_started"
+          completedText="Completed"
+        >
           Step Description
         </Step>
-        <Step title="Step 2" stepHref="#" status="disabled">
+        <Step
+          title="Step 2"
+          stepHref="#"
+          status="disabled"
+          completedText="Completed"
+        >
           Step Description
         </Step>
       </StepList>
@@ -84,6 +103,7 @@ describe("StepList", () => {
           title="Upload documents"
           stepHref="#"
           status="not_started"
+          completedText="Completed"
         >
           Step Description
         </Step>

@@ -201,6 +201,8 @@ export class MockClaimBuilder {
   }
 
   /**
+   * All required data is present but the claim hasn't been marked
+   * as Completed yet in the API
    * @returns {MockClaimBuilder}
    */
   complete() {
@@ -211,6 +213,17 @@ export class MockClaimBuilder {
       "temp.payment_preferences[0].payment_method",
       PaymentPreferenceMethod.ach
     );
+    return this;
+  }
+
+  /**
+   * Claim has all required data and has been marked as completed in the API
+   * @returns {MockClaimBuilder}
+   */
+  completed() {
+    this.complete();
+    set(this.claimAttrs, "status", ClaimStatus.completed);
+
     return this;
   }
 
@@ -296,6 +309,7 @@ export class MockClaimBuilder {
     set(this.claimAttrs, "last_name", "Doe");
     set(this.claimAttrs, "date_of_birth", "1980-07-17");
     set(this.claimAttrs, "tax_identifier", "***-**-****");
+    this.address();
     this.hasStateId();
     return this;
   }

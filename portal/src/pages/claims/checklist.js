@@ -55,7 +55,6 @@ export const Checklist = (props) => {
   const sharedStepListProps = {
     startText: t("pages.claimsChecklist.start"),
     resumeText: t("pages.claimsChecklist.resume"),
-    completedText: t("pages.claimsChecklist.completed"),
     editText: t("pages.claimsChecklist.edit"),
     screenReaderNumberPrefix: t(
       "pages.claimsChecklist.screenReaderNumberPrefix"
@@ -81,7 +80,7 @@ export const Checklist = (props) => {
     return steps.map((step) => {
       const claimReason = get(claim, "leave_details.reason");
       const claimReasonQualifier = get(claim, "leave_details.reason_qualifier");
-      const description = getStepDescrition(
+      const description = getStepDescription(
         step.name,
         claimReason,
         claimReasonQualifier
@@ -89,11 +88,14 @@ export const Checklist = (props) => {
 
       return (
         <Step
+          completedText={t("pages.claimsChecklist.completed", {
+            context: step.editable ? "editable" : "uneditable",
+          })}
           key={step.name}
           number={getStepNumber(step)}
           title={t("pages.claimsChecklist.stepTitle", { context: step.name })}
           status={step.status}
-          stepHref={step.href}
+          stepHref={step.editable ? step.href : null}
         >
           <Trans
             i18nKey="pages.claimsChecklist.stepHTMLDescription"
@@ -105,7 +107,7 @@ export const Checklist = (props) => {
                   href={routes.external.massgov.healthcareProviderForm}
                 />
               ),
-              ul: <ul />,
+              ul: <ul className="usa-list" />,
               li: <li />,
             }}
             tOptions={{
@@ -124,7 +126,7 @@ export const Checklist = (props) => {
    * @param {ReasonQualifier|null} claimReasonQualifier
    * @returns {string}
    */
-  function getStepDescrition(stepName, claimReason, claimReasonQualifier) {
+  function getStepDescription(stepName, claimReason, claimReasonQualifier) {
     if (stepName !== ClaimSteps.uploadCertification) {
       return stepName;
     }

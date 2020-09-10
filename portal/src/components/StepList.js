@@ -54,10 +54,6 @@ StepList.propTypes = {
    */
   editText: PropTypes.string.isRequired,
   /**
-   * Localized text for each step's completed button.
-   */
-  completedText: PropTypes.string.isRequired,
-  /**
    * Prefix for each step's number announced to screen reader
    * e.g instead of announcing "1", provide a value to announce "Step 1"
    */

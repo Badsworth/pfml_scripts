@@ -83,6 +83,14 @@ class Claim extends BaseModel {
   }
 
   /**
+   * Check if Claim has been marked as completed yet.
+   * @returns {boolean}
+   */
+  get isCompleted() {
+    return this.status === ClaimStatus.completed;
+  }
+
+  /**
    * Determine if claim is a continuous leave claim
    * @returns {boolean}
    */
@@ -112,6 +120,15 @@ class Claim extends BaseModel {
       !!get(this, "temp.leave_details.reduced_schedule_leave_periods[0]") ||
       !!get(this, "leave_details.reduced_schedule_leave_periods[0]")
     );
+  }
+
+  /**
+   * Check if Claim has been submitted yet. This affects the editability
+   * of some fields, and as a result, the user experience.
+   * @returns {boolean}
+   */
+  get isSubmitted() {
+    return this.status === ClaimStatus.submitted;
   }
 }
 

@@ -26,25 +26,27 @@ const Step = (props) => {
         </span>
         {props.completedText}
       </div>
-      <div className="margin-top-1">
-        <Link href={props.stepHref}>
-          <a
-            className="usa-link"
-            aria-label={`${props.editText}: ${props.title}`}
-          >
-            {props.editText}
-          </a>
-        </Link>
-      </div>
+      {props.stepHref && (
+        <div className="margin-top-1">
+          <Link href={props.stepHref}>
+            <a
+              className="usa-link"
+              aria-label={`${props.editText}: ${props.title}`}
+            >
+              {props.editText}
+            </a>
+          </Link>
+        </div>
+      )}
     </React.Fragment>
   );
 
   const buttonText = not_started ? props.startText : props.resumeText;
-  const startResumeButton = (
+  const startResumeButton = props.stepHref ? (
     <ButtonLink href={props.stepHref} className="width-auto">
       {buttonText}
     </ButtonLink>
-  );
+  ) : null;
 
   const actionColumn = () => {
     if (completed) {
@@ -121,7 +123,7 @@ Step.propTypes = {
   /**
    * Href to question page.
    */
-  stepHref: PropTypes.string.isRequired,
+  stepHref: PropTypes.string,
   /**
    * Status of step.
    */
@@ -156,9 +158,8 @@ Step.propTypes = {
   editText: PropTypes.string,
   /**
    * Localized text for the completed button.
-   * This can also be passed by parent StepList component.
    */
-  completedText: PropTypes.string,
+  completedText: PropTypes.string.isRequired,
   /**
    * The number of the step in the step list.
    * This can also be passed by parent StepList component.

@@ -28,6 +28,7 @@ describe("EmployeeInformation", () => {
   it("renders two line breaks if second address line exists", () => {
     const secondAddressLine = "Apt 1";
     const claimWithUpdatedAddress = new MockClaimBuilder()
+      .verifiedId()
       .address({
         city: "Boston",
         line_1: "1234 My St.",
@@ -35,7 +36,6 @@ describe("EmployeeInformation", () => {
         state: "MA",
         zip: "00000",
       })
-      .verifiedId()
       .create();
 
     const wrapper = shallow(

@@ -57,6 +57,11 @@ export default class Step extends BaseModel {
        */
       dependsOn: [],
       /**
+       * @type {boolean}
+       * Allow/Disallow entry into this step to edit answers to its questions
+       */
+      editable: true,
+      /**
        * @type {object}
        * Context used for evaluating a step's status
        */
@@ -173,12 +178,15 @@ export default class Step extends BaseModel {
    * @example createClaimStepsFromMachine(claimFlowConfig, { claim: { first_name: "Bud" } })
    */
   static createClaimStepsFromMachine = (machineConfigs, context, warnings) => {
+    const { claim } = context;
     const pages = map(machineConfigs.states, (state, key) =>
       Object.assign({ route: key }, state.meta)
     );
     const pagesByStep = groupBy(pages, "step");
+
     const verifyId = new Step({
       name: ClaimSteps.verifyId,
+      editable: !claim.isSubmitted,
       group: 1,
       pages: pagesByStep[ClaimSteps.verifyId],
       context,
@@ -187,6 +195,7 @@ export default class Step extends BaseModel {
 
     const leaveDetails = new Step({
       name: ClaimSteps.leaveDetails,
+      editable: !claim.isSubmitted,
       group: 1,
       pages: pagesByStep[ClaimSteps.leaveDetails],
       dependsOn: [verifyId],
@@ -196,6 +205,7 @@ export default class Step extends BaseModel {
 
     const employerInformation = new Step({
       name: ClaimSteps.employerInformation,
+      editable: !claim.isSubmitted,
       group: 1,
       pages: pagesByStep[ClaimSteps.employerInformation],
       dependsOn: [verifyId, leaveDetails],
@@ -205,6 +215,7 @@ export default class Step extends BaseModel {
 
     const otherLeave = new Step({
       name: ClaimSteps.otherLeave,
+      editable: !claim.isSubmitted,
       group: 1,
       pages: pagesByStep[ClaimSteps.otherLeave],
       dependsOn: [verifyId, leaveDetails],

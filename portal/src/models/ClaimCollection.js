@@ -20,10 +20,6 @@ export default class ClaimCollection extends BaseCollection {
    * those that made it to the Claims Processing System
    */
   get submitted() {
-    return this.items.filter(
-      (item) =>
-        item.status === ClaimStatus.completed ||
-        item.status === ClaimStatus.submitted
-    );
+    return this.items.filter((item) => item.isCompleted || item.isSubmitted);
   }
 }

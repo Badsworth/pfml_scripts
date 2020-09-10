@@ -1,6 +1,7 @@
 import Step, { ClaimSteps } from "../../src/models/Step";
 import BaseModel from "../../src/models/BaseModel";
 import Claim from "../../src/models/Claim";
+import { MockClaimBuilder } from "../test-utils";
 import claimantConfig from "../../src/flows/claimant";
 import { map } from "lodash";
 
@@ -225,7 +226,11 @@ describe("Step Model", () => {
 
   describe("createClaimSteps", () => {
     it("creates portal steps from machineConfigs", () => {
-      const steps = Step.createClaimStepsFromMachine(claimantConfig, {}, []);
+      const steps = Step.createClaimStepsFromMachine(
+        claimantConfig,
+        { claim: new MockClaimBuilder().create() },
+        []
+      );
       const machinePages = map(claimantConfig.states, (value, key) => ({
         route: key,
         ...value.meta,
@@ -239,6 +244,19 @@ describe("Step Model", () => {
         expect(Object.values(s.pages || {})).toEqual(
           expect.arrayContaining(expectedPages)
         );
+      });
+    });
+
+    it("marks group 1 steps as uneditable when Claim is submitted", () => {
+      const steps = Step.createClaimStepsFromMachine(
+        claimantConfig,
+        { claim: new MockClaimBuilder().submitted().create() },
+        []
+      );
+
+      steps.forEach((step) => {
+        const expectedEditableValue = step.group !== 1;
+        expect(step.editable).toBe(expectedEditableValue);
       });
     });
   });
