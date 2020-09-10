@@ -59,6 +59,8 @@ db-migrate-up = "massgov.pfml.db.migrations.run:up"
 db-migrate-down = "massgov.pfml.db.migrations.run:down"
 db-migrate-down-all = "massgov.pfml.db.migrations.run:downall"
 db-admin-create-db-users = "massgov.pfml.db.admin:create_users"
+dor-generate = "massgov.pfml.dor.mock.generate:main"
+dor-import = "massgov.pfml.dor.importer.import_dor:handler"
 
 [tool.black]
 line-length = 100

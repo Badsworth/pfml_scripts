@@ -120,6 +120,12 @@ distclean: ## Remove all artifacts that can be regenerated
 distclean: clean clean-node clean-venv
 	rm -f jwks.json
 
+dor-generate: ## Generate fake DOR data
+	$(PY_RUN_CMD) dor-generate --folder dor_mock --count 100 $(DECODE_LOG)
+
+dor-import: ## Run a DOR import using fake data (see dor-generate)
+	FOLDER_PATH=dor_mock $(PY_RUN_CMD) dor-import $(DECODE_LOG)
+
 ecr-login: ## Login to ECR for Docker
 	@echo "Authenticating Docker with ECR"
 	ecr_login_cmd="$$(aws ecr get-login --no-include-email)" && $$ecr_login_cmd

@@ -83,7 +83,7 @@ class ImportRunReport:
     message: str = ""
 
 
-def handler(event, context):
+def handler(event=None, context=None):
     """Lambda handler function."""
     logging.init(__name__)
 
