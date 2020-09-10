@@ -1,6 +1,7 @@
 from datetime import datetime
 from typing import Any, List, Optional, Union
 
+import flask
 from werkzeug.exceptions import BadRequest, Forbidden
 
 import massgov.pfml.api.models.applications.common as apps_common_io
@@ -68,9 +69,9 @@ def update_from_request(
         db_session.add(tax_id)
         application.tax_identifier = tax_id
 
-    if body.mailing_address is not None or application.mailing_address_id is not None:
+    if "mailing_address" in flask.request.json:
         add_or_update_address(db_session, body.mailing_address, AddressType.MAILING, application)
-    if body.residential_address is not None or application.residential_address_id is not None:
+    if "residential_address" in flask.request.json:
         add_or_update_address(
             db_session, body.residential_address, AddressType.RESIDENTIAL, application
         )

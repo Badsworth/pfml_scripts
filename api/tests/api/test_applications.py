@@ -276,6 +276,20 @@ def test_application_patch_mailing_address(client, user, auth_token, test_db_ses
     assert application.mailing_address.city == "Chicago"
     assert application.mailing_address.address_line_one == "123 Bar St."
 
+    update_request_body_dob = {"date_of_birth": "1970-01-01"}
+
+    # patching another field and confirming mailing address still persists
+    response_new_update = client.patch(
+        "/v1/applications/{}".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+        json=update_request_body_dob,
+    )
+
+    test_db_session.refresh(application)
+    response_body_new_update = response_new_update.get_json()
+    assert response_body_new_update.get("data").get("mailing_address")["city"] == "Chicago"
+    assert response_body_new_update.get("data").get("mailing_address")["line_1"] == "123 Bar St."
+
     # removing mailing address
     update_request_body = {"mailing_address": None}
 
