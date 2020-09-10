@@ -418,6 +418,7 @@ export const renderWithAppLogic = (PageComponent, options = {}) => {
   });
   appLogic.claims.claims = new ClaimCollection([claim]);
   appLogic.auth.isLoggedIn = true;
+  appLogic.users.requireUserConsentToDataAgreement = jest.fn();
   appLogic.users.user = new User({
     consented_to_data_sharing: true,
     user_id: "mock_user_id",
