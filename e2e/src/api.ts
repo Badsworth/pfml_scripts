@@ -143,11 +143,9 @@ export const http = {
             text = await res.text();
         }
         catch (err) { /* ok */ }
-
         if (!res.ok) {
             throw new HttpError(res.status, res.statusText, href, res.headers, text);
         }
-
         return {
             status: res.status,
             statusText: res.statusText,
@@ -410,6 +408,7 @@ export interface ApplicationResponse {
     date_of_birth?: Date | null;
     has_state_id?: boolean | null;
     mailing_address?: Address | null;
+    residential_address?: Address | null;
     mass_id?: string | null;
     employment_status?: ("Employed" | "Unemployed" | "Self-Employed") | null;
     occupation?: ("Sales Clerk" | "Administrative" | "Engineer" | "Health Care") | null;
@@ -438,6 +437,7 @@ export interface ApplicationRequestBody {
     last_name?: string | null;
     date_of_birth?: Date | null;
     mailing_address?: Address | null;
+    residential_address?: Address | null;
     has_state_id?: boolean | null;
     mass_id?: MassId | null;
     employment_status?: ("Employed" | "Unemployed" | "Self-Employed") | null;
@@ -462,6 +462,30 @@ export interface POSTApplicationsByApplicationIdSubmitApplicationResponse extend
 export interface POSTApplicationsByApplicationIdSubmitApplicationResponse503 extends ErrorResponse {
     data?: ApplicationResponse;
 }
+export interface DocumentUploadRequest {
+    document_category: "Identity Proofing" | "Certification";
+    document_type: "Passport" | "Driver's License Mass" | "Driver's License Other State";
+    name?: string;
+    description: string;
+    file: Blob;
+}
+export interface DocumentResponse {
+    document_id: string;
+    user_id: string;
+    application_id: string;
+    created_at: any;
+    updated_at: any;
+    document_category: "Identity Proofing" | "Certification";
+    document_type: "Passport" | "Driver's License Mass" | "Driver's License Other State";
+    content_type: string;
+    size_bytes: number;
+    fineos_id: string;
+    name: string;
+    description: string;
+}
+export interface POSTApplicationsByApplicationIdDocumentsResponse extends SuccessfulResponse {
+    data?: DocumentResponse;
+}
 export interface EligibilityRequest {
     tax_identifier: SsnItin;
     employer_fein: Fein;
@@ -480,12 +504,12 @@ export interface RMVCheckRequest {
     date_of_birth: Date;
     first_name: string;
     last_name: string;
+    mass_id_number: MassId;
     residential_address_city: string;
     residential_address_line_1: string;
     residential_address_line_2?: string | null;
     residential_address_zip_code: string;
     ssn_last_4: string;
-    mass_id_number?: any;
 }
 export interface RMVCheckResponse {
     verified: boolean;
@@ -625,6 +649,18 @@ export async function postApplicationsByApplicationIdSubmitApplication({ applica
         ...options,
         method: "POST"
     });
+}
+/**
+ * Upload Document
+ */
+export async function postApplicationsByApplicationIdDocuments({ applicationId }: {
+    applicationId: string;
+}, documentUploadRequest: DocumentUploadRequest, options?: RequestOptions): Promise<ApiResponse<POSTApplicationsByApplicationIdDocumentsResponse>> {
+    return await http.fetchJson(`/applications/${applicationId}/documents`, http.multipart({
+        ...options,
+        method: "POST",
+        body: documentUploadRequest
+    }));
 }
 /**
  * Retrieve financial eligibility by SSN/FEIN effective date and employee status.

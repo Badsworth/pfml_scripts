@@ -1,16 +1,6 @@
+import { ApplicationRequestBody } from "./api";
+
 type DateObj = { month: number; day: number; year: number };
-export type Application = {
-  firstName: string;
-  lastName: string;
-  dob: DateObj;
-  massId?: string;
-  idVerification?: { front: string; back: string };
-  ssn: string;
-  claim: Claim;
-  employer: Employer;
-  otherBenefits: OtherBenefits;
-  paymentInfo: PaymentInfo;
-};
 
 export type Credentials = {
   username: string;
@@ -28,7 +18,7 @@ export type Credentials = {
  */
 export type CypressStepThis = {
   credentials?: Credentials;
-  application?: Application;
+  application?: ApplicationRequestBody;
 };
 
 export type Claim = MedicalClaim | FamilyClaim;
@@ -192,5 +182,6 @@ export type PaymentInfo = DirectDeposit | DebitCard;
 export const MedicalClaimTestTypes = [
   "MedicalBasic",
   "MedicalAddlBenefits",
+  "MedicalBasicNew",
 ] as const;
 export type TestType = typeof MedicalClaimTestTypes[number];

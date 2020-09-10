@@ -7,12 +7,12 @@ Feature: Start submittin a medical claim - Logout/Login - complete submission
     And I create an application
     And I am on the claims Checklist page
     And I click on the checklist button called "Verify your identity"
-    And I have my identity verified
+    And I have my identity verified "normal"
     When I log out
     And I log in as a claimant on the portal dashboard
     And I return to my previous application
     Then I should see any previously entered data
-    And I should be able to finish submitting the claim
+    And I have my identity verified "continued"
     Given I am on the claims Checklist page
     When I click on the checklist button called "Enter leave details"
     Then I start submitting the claim

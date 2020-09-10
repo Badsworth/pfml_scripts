@@ -4,7 +4,7 @@
 // https://on.cypress.io/custom-commands
 // ***********************************************
 
-import { Application } from "../../src/types";
+import { ApplicationRequestBody } from "../../src/api";
 
 /**
  * This command selects an input by the HTML label "for" value.
@@ -52,10 +52,10 @@ Cypress.Commands.add(
  */
 Cypress.Commands.add(
   "generateIdVerification",
-  (application: Pick<Application, "firstName" | "lastName">) => {
+  (application: Pick<ApplicationRequestBody, "first_name" | "last_name">) => {
     const fillData = {
-      "Given Name Text Box": application.firstName,
-      "Family Name Text Box": application.lastName,
+      "Given Name Text Box": application.first_name,
+      "Family Name Text Box": application.last_name,
     };
     return cy
       .task("fillPDF", { source: "form.pdf", data: fillData })
@@ -94,18 +94,18 @@ Cypress.Commands.add(
  *
  * The HCP form will be a generated PDF file.
  */
-Cypress.Commands.add("generateHCPForm", (application: Application) => {
-  const fillData = {
-    "Given Name Text Box": application.firstName,
-    "Family Name Text Box": application.lastName,
-  };
-  return cy
-    .task("fillPDF", { source: "form.pdf", data: fillData })
-    .then((providerForm) => {
-      return {
-        ...application,
-        claim: {
-          ...application.claim,
+Cypress.Commands.add(
+  "generateHCPForm",
+  (application: ApplicationRequestBody) => {
+    const fillData = {
+      "Given Name Text Box": application.first_name,
+      "Family Name Text Box": application.last_name,
+    };
+    return cy
+      .task("fillPDF", { source: "form.pdf", data: fillData })
+      .then((providerForm) => {
+        return {
+          ...application,
           providerForm: {
             fileContent: Cypress.Blob.binaryStringToBlob(
               (providerForm as unknown) as string
@@ -114,10 +114,10 @@ Cypress.Commands.add("generateHCPForm", (application: Application) => {
             mimeType: "application/pdf",
             encoding: "utf-8",
           },
-        },
-      };
-    });
-});
+        };
+      });
+  }
+);
 
 // Simple hash function (see: https://stackoverflow.com/a/8831937)
 function simpleHash(string: string) {

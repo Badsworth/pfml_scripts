@@ -7,7 +7,7 @@ Feature: Submit a medical claim
     And I create an application
     And I am on the claims Checklist page
     When I click on the checklist button called "Verify your identity"
-    Then I have my identity verified
+    Then I have my identity verified "normal"
     Given I am on the claims Checklist page
     When I click on the checklist button called "Enter leave details"
     Then I start submitting the claim

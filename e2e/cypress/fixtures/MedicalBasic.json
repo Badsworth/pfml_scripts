@@ -1,37 +1,40 @@
 {
-  "firstName": "Tim",
-  "lastName": "Cannon",
-  "dob": { "month": 3, "day": 31, "year": 1995 },
-  "massId": "999888010",
-  "ssn": "123-45-9999",
-  "claim": {
-    "type": "medical",
-    "dueToPregnancy": true,
-    "leave": {
-      "type": "continuous",
-      "typeBasedDetails": {
-        "weeks": 40
-      },
-      "start": { "month": 8, "day": 1, "year": 2020 },
-      "end": { "month": 9, "day": 1, "year": 2020 }
+  "employment_status": "Employed",
+  "first_name": "Tim",
+  "last_name": "Cannon",
+  "employee_ssn": "123-45-9999",
+  "employer_fein": "22-7777777",
+  "date_of_birth": "1995-03-31",
+  "has_state_id": true,
+  "mass_id": "999888010",
+  "mailing_address": {
+    "city": "West Gerry",
+    "line_1": "24747 Myles Inlet",
+    "state": "Massachusetts",
+    "zip": "29168-1183"
+  },
+  "leave_details": {
+    "continuous_leave_periods": [
+      {
+        "start_date": "2021-01-02",
+        "end_date": "2021-02-04",
+        "is_estimated": true
+      }
+    ],
+    "employer_notification_date": "2020-08-14",
+    "employer_notified": true,
+    "intermittent_leave_periods": [],
+    "reason": "Serious Health Condition - Employee",
+    "pregnant_or_recent_birth": true,
+    "reduced_schedule_leave_periods": []
+  },
+  "payment_preferences": [
+    {
+      "payment_method": "ACH",
+      "account_details": {
+        "account_number": "12345678",
+        "routing_number": "5555555555"
+      }
     }
-  },
-  "employer": {
-    "type": "employed",
-    "fein": "22-7777777",
-    "employerNotified": true,
-    "employerNotificationDate": { "month": 7, "day": 7, "year": 2020 }
-  },
-  "otherBenefits": {
-    "willUseEmployerBenefits": false,
-    "willReceiveOtherIncome": false,
-    "tookLeaveForQualifyingReason": false
-  },
-  "paymentInfo": {
-    "type": "ach",
-    "accountDetails": {
-      "routingNumber": 12345678,
-      "accountNumber": 5555555555
-    }
-  }
+  ]
 }
