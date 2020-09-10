@@ -1,7 +1,6 @@
 from datetime import datetime
 from typing import Any, List, Optional, Union
 
-import flask
 from werkzeug.exceptions import BadRequest, Forbidden
 
 import massgov.pfml.api.models.applications.common as apps_common_io
@@ -34,14 +33,19 @@ def update_from_request(
     for key in body.__fields_set__:
         value = getattr(body, key)
 
-        if key in (
-            "leave_details",
-            "payment_preferences",
-            "employee_ssn",
-            "tax_identifier",
-            "mailing_address",
-            "residential_address",
-        ):
+        if key in ("leave_details", "payment_preferences", "employee_ssn", "tax_identifier"):
+            continue
+
+        if key == "mailing_address":
+            add_or_update_address(
+                db_session, body.mailing_address, AddressType.MAILING, application
+            )
+            continue
+
+        if key == "residential_address":
+            add_or_update_address(
+                db_session, body.residential_address, AddressType.RESIDENTIAL, application
+            )
             continue
 
         if key == "application_nickname":
@@ -68,13 +72,6 @@ def update_from_request(
     if tax_id is not None:
         db_session.add(tax_id)
         application.tax_identifier = tax_id
-
-    if "mailing_address" in flask.request.json:
-        add_or_update_address(db_session, body.mailing_address, AddressType.MAILING, application)
-    if "residential_address" in flask.request.json:
-        add_or_update_address(
-            db_session, body.residential_address, AddressType.RESIDENTIAL, application
-        )
 
     application.updated_time = datetime.now()
     db_session.add(application)
