@@ -3,7 +3,7 @@
 exports[`Feedback renders the component 1`] = `
 <Fragment>
   <form
-    className="usa-form usa-form--large"
+    className="usa-form"
     id="employer-feedback-form"
     onSubmit={[Function]}
   >

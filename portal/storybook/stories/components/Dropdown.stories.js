@@ -14,7 +14,7 @@ export const Default = (args) => {
   };
 
   return (
-    <form className="usa-form usa-form--large">
+    <form className="usa-form">
       <Dropdown
         choices={[
           {
@@ -39,7 +39,7 @@ export const Default = (args) => {
 
 export const WithErrorAndMostOtherProps = () => {
   return (
-    <form className="usa-form usa-form--large">
+    <form className="usa-form">
       <Dropdown
         choices={[
           {

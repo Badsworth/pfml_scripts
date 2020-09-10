@@ -4,7 +4,7 @@ exports[`Confirm renders the page 1`] = `
 <Fragment>
   <BackButton />
   <form
-    className="usa-form usa-form--large"
+    className="usa-form"
     onSubmit={[Function]}
   >
     <Title>
@@ -17,6 +17,7 @@ exports[`Confirm renders the page 1`] = `
       We need true answers to every question so that we can manage this program the way the law requires. Please confirm that you have answered as truthfully as you can.
     </p>
     <Alert
+      className="measure-6"
       noIcon={true}
       state="info"
     >

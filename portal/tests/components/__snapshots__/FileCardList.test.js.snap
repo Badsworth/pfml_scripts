@@ -3,7 +3,7 @@
 exports[`FileCardList with no files selected renders an empty list 1`] = `
 <div>
   <ul
-    className="usa-list usa-list--unstyled"
+    className="usa-list usa-list--unstyled measure-5"
   />
   <label
     className="margin-top-2 usa-button usa-button--outline"
@@ -23,7 +23,7 @@ exports[`FileCardList with no files selected renders an empty list 1`] = `
 exports[`FileCardList with previously-selected files renders a list of the files 1`] = `
 <div>
   <ul
-    className="usa-list usa-list--unstyled"
+    className="usa-list usa-list--unstyled measure-5"
   >
     <li
       key="File1"

@@ -14,7 +14,7 @@ function Dropdown(props) {
   const hasError = !!props.errorMsg;
   const inputId = useUniqueId("Dropdown");
 
-  const fieldClasses = classnames("usa-select", {
+  const fieldClasses = classnames("usa-select maxw-mobile-lg", {
     "usa-input--error": hasError,
   });
 

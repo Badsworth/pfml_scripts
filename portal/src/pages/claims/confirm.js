@@ -19,11 +19,11 @@ export const Confirm = (props) => {
   return (
     <React.Fragment>
       <BackButton />
-      <form onSubmit={handleSubmit} className="usa-form usa-form--large">
+      <form onSubmit={handleSubmit} className="usa-form">
         <Title>{t("pages.claimsConfirm.title")}</Title>
         <p>{t("pages.claimsConfirm.explanation1")}</p>
         <p>{t("pages.claimsConfirm.explanation2")}</p>
-        <Alert state="info" noIcon>
+        <Alert className="measure-6" state="info" noIcon>
           {t("pages.claimsConfirm.truthAttestation")}
         </Alert>
         <input

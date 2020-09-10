@@ -13,25 +13,22 @@ function FormLabel({ component = "label", small = false, ...props }) {
   const errorMsgId = props.inputId + "_error";
   const hasError = !!props.errorMsg;
 
-  const labelClasses = classnames("usa-label maxw-none", {
+  const labelClasses = classnames("usa-label", {
     "usa-label--error": hasError,
     "usa-legend": component === "legend",
     "font-heading-sm": component === "legend" && small,
-    "font-heading-lg line-height-sans-2 text-bold": !small,
+    "measure-5": small,
+    "font-heading-lg line-height-sans-3 text-bold margin-bottom-1 maxw-tablet": !small,
   });
 
-  const hintClasses = classnames(
-    "display-block line-height-sans-5 margin-top-2",
-    {
-      // Use hint styling for small labels
-      "usa-hint": small,
-      // Use lead styling for regular labels
-      "usa-intro": !small,
-    }
-  );
+  const hintClasses = classnames("display-block line-height-sans-5 measure-5", {
+    // Use hint styling for small labels
+    "usa-hint": small,
+    // Use lead styling for regular labels
+    "usa-intro": !small,
+  });
 
-  const exampleClasses =
-    "display-block line-height-sans-5 margin-top-2 usa-hint";
+  const exampleClasses = "display-block line-height-sans-5 usa-hint measure-5";
 
   return (
     <React.Fragment>
@@ -47,7 +44,11 @@ function FormLabel({ component = "label", small = false, ...props }) {
       {props.example && <span className={exampleClasses}>{props.example}</span>}
 
       {hasError && (
-        <span className="usa-error-message" id={errorMsgId} role="alert">
+        <span
+          className="usa-error-message measure-5"
+          id={errorMsgId}
+          role="alert"
+        >
           {props.errorMsg}
         </span>
       )}

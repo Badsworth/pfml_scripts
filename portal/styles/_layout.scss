@@ -1,5 +1,7 @@
 /// Global layout styles, primarily responsible for sticking
-/// the footer to the bottom of the screen
+/// the footer to the bottom of the screen, and overriding
+/// some aspects of the U.S. Web Design System that can't
+/// be configured through a Sass variable.
 
 .l-container {
   display: flex;
@@ -10,4 +12,8 @@
 .l-main {
   flex-grow: 1;
   width: 100%;
+}
+
+.usa-form {
+  max-width: units("tablet-lg");
 }

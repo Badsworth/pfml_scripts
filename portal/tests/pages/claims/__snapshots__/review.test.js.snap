@@ -201,7 +201,7 @@ exports[`Review when all data is present renders Review page with the field valu
     Medical leave
   </ReviewRow>
   <ReviewRow
-    label="Are you pregnant or have you recently given birth?"
+    label="Are you pregnant or have you recently given birth?"
   >
     No
   </ReviewRow>
@@ -365,7 +365,7 @@ exports[`Review when conditional data is empty does not render strings like 'nul
     Medical leave
   </ReviewRow>
   <ReviewRow
-    label="Are you pregnant or have you recently given birth?"
+    label="Are you pregnant or have you recently given birth?"
   >
     No
   </ReviewRow>

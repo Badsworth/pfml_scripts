@@ -123,7 +123,7 @@ const shared = {
   paymentMethodAch: "Direct deposit",
   paymentMethodDebit: "Debit card",
   pregnancyOrRecentBirthLabel:
-    "Are you pregnant or have you recently given birth?",
+    "Are you pregnant or have you recently given birth?",
   previousLeaveEntryPrefix: "Previous leave",
   qualifyingReasonDetailsLabel: "What counts as a qualifying reason?",
   resendVerificationCodeLink: "Resend the code",
@@ -209,7 +209,7 @@ const pages = {
     hint:
       "We’ll confirm this information and use it to calculate your benefit amount. If your schedule varies, tell us the average number of hours you worked over the past 52 weeks.",
     sectionLabel:
-      "On average, how many hours do you work for your employer each week?",
+      "On average, how many hours do you work for your employer each week?",
     title: "$t(shared.claimsLeaveDetailsTitle)",
   },
   claimsBondingDateOfChild: {
@@ -296,7 +296,7 @@ const pages = {
     durationTypeSectionHint_bonding:
       "You can take up to 12 weeks of family leave within the first year of your child’s birth or placement. You do not need to take this leave all at once.",
     durationTypeSectionHint_medical:
-      'Refer to Question 18 in the "Ability to work" section of the Healthcare Provider Form.',
+      'Refer to Question 18 in the "Ability to work" section of the Healthcare Provider Form.',
     durationTypeSectionLabel: "Which of the following situations apply?",
     durationTypeSelectAllHint: "Select all that apply.",
     intermittentDurationBasisDaysLabel: "At least a day",
@@ -457,11 +457,11 @@ const pages = {
     employerNotificationDateHint: "This can be an approximate date.",
     employerNotificationLabel: "When did you tell them?",
     hint:
-      "Notify your employer at least 30 days before the start of your leave if possible.",
+      "Notify your employer at least 30 days before the start of your leave if possible.",
     multipleEmployerAppAlert: "$t(shared.multipleEmployerAppAlert)",
     mustNotifyEmployerWarning:
       "Before you can submit an application, you must tell your employer that you're taking leave.",
-    sectionLabel: "Have you told your employer that you are taking leave?",
+    sectionLabel: "Have you told your employer that you are taking leave?",
     title: "Employment information",
   },
   claimsOtherIncomes: {
@@ -644,7 +644,7 @@ const pages = {
   },
   claimsSuccess: {
     body:
-      "We are reviewing your application. You can check the status of your application anytime in the portal.",
+      "We are reviewing your application. You can check the status of your application anytime in the portal.",
     dashboardLink: "Return to dashboard",
     title: "Your leave application was submitted successfully",
   },

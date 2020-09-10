@@ -2,7 +2,7 @@
 
 exports[`CreateAccount renders the empty page 1`] = `
 <form
-  className="usa-form usa-form--large"
+  className="usa-form"
   onSubmit={[Function]}
 >
   <Title>

@@ -25,8 +25,8 @@ exports[`NotifiedEmployer renders the page 1`] = `
         },
       ]
     }
-    hint="Notify your employer at least 30 days before the start of your leave if possible."
-    label="Have you told your employer that you are taking leave?"
+    hint="Notify your employer at least 30 days before the start of your leave if possible."
+    label="Have you told your employer that you are taking leave?"
     name="leave_details.employer_notified"
     onChange={[Function]}
     type="radio"

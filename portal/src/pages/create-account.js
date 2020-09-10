@@ -31,7 +31,7 @@ export const CreateAccount = (props) => {
   });
 
   return (
-    <form className="usa-form usa-form--large" onSubmit={handleSubmit}>
+    <form className="usa-form" onSubmit={handleSubmit}>
       <Title>{t("pages.authCreateAccount.title")}</Title>
       <InputText
         {...getFunctionalInputProps("username")}

@@ -18,7 +18,7 @@ const RepeatableFieldsetCard = (props) => {
   return (
     <div
       key={id}
-      className={`margin-bottom-3 measure-6 padding-3 border-2px border-base-lighter ${props.className}`}
+      className={`margin-bottom-3 measure-5 padding-3 border-2px border-base-lighter ${props.className}`}
     >
       <fieldset className="usa-fieldset">
         <legend className="usa-legend font-heading-lg text-normal">

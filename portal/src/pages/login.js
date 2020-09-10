@@ -49,7 +49,7 @@ export const Login = (props) => {
           {t("pages.authLogin.accountVerified")}
         </Alert>
       )}
-      <form className="usa-form usa-form--large" onSubmit={handleSubmit}>
+      <form className="usa-form" onSubmit={handleSubmit}>
         <Title>{t("pages.authLogin.title")}</Title>
         <Trans
           i18nKey="pages.authLogin.createAccountLink"

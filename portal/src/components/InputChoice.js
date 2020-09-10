@@ -14,7 +14,7 @@ function InputChoice({ type = "checkbox", ...props }) {
   const id = props.id || inputId;
 
   return (
-    <div className={`usa-${type}`}>
+    <div className={`usa-${type} measure-5`}>
       <input
         checked={props.checked}
         className={`usa-${type}__input`}

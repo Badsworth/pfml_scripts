@@ -18,6 +18,7 @@ function InputText({ type = "text", ...props }) {
 
   const fieldClasses = classnames("usa-input", props.inputClassName, {
     "usa-input--error": hasError,
+    "maxw-mobile-lg": !props.width,
     [`usa-input--${props.width}`]: !!props.width,
   });
   const formGroupClasses = classnames(

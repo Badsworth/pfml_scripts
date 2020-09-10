@@ -8,7 +8,7 @@ export default {
 
 export const Default = (args) => {
   return (
-    <form className="usa-form usa-form--large">
+    <form className="usa-form">
       <FormLabel {...args} />
     </form>
   );
@@ -25,7 +25,7 @@ Default.args = {
 
 export const SmallLabel = () => {
   return (
-    <form className="usa-form usa-form--large">
+    <form className="usa-form">
       <FormLabel small hint="Enter it as it shows on your ID">
         First name
       </FormLabel>
@@ -35,7 +35,7 @@ export const SmallLabel = () => {
 
 export const Legend = () => {
   return (
-    <form className="usa-form usa-form--large">
+    <form className="usa-form">
       <fieldset className="usa-fieldset">
         <FormLabel
           component="legend"
@@ -51,7 +51,7 @@ export const Legend = () => {
 
 export const SmallLegend = () => {
   return (
-    <form className="usa-form usa-form--large">
+    <form className="usa-form">
       <fieldset className="usa-fieldset">
         <FormLabel
           component="legend"
@@ -68,7 +68,7 @@ export const SmallLegend = () => {
 
 export const ErrorState = () => {
   return (
-    <form className="usa-form usa-form--large">
+    <form className="usa-form">
       <FormLabel
         errorMsg="This field is required."
         inputId="input-id"
@@ -82,7 +82,7 @@ export const ErrorState = () => {
 
 export const LabelWithHTMLHint = () => {
   return (
-    <form className="usa-form usa-form--large">
+    <form className="usa-form">
       <FormLabel
         hint={
           <React.Fragment>

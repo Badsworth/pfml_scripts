@@ -66,7 +66,7 @@ describe("FormLabel", () => {
 
       expect(hint).toMatchInlineSnapshot(`
         <span
-          className="display-block line-height-sans-5 margin-top-2 usa-intro"
+          className="display-block line-height-sans-5 measure-5 usa-intro"
         >
           Hint text
         </span>
@@ -80,7 +80,7 @@ describe("FormLabel", () => {
 
         expect(hint).toMatchInlineSnapshot(`
           <span
-            className="display-block line-height-sans-5 margin-top-2 usa-hint"
+            className="display-block line-height-sans-5 measure-5 usa-hint"
           >
             Hint text
           </span>
@@ -96,7 +96,7 @@ describe("FormLabel", () => {
 
       expect(example).toMatchInlineSnapshot(`
         <span
-          className="display-block line-height-sans-5 margin-top-2 usa-hint"
+          className="display-block line-height-sans-5 usa-hint measure-5"
         >
           Example text
         </span>
@@ -145,7 +145,7 @@ describe("FormLabel", () => {
       const label = wrapper.find(".usa-label");
 
       expect(label.prop("className")).toMatchInlineSnapshot(
-        `"usa-label maxw-none"`
+        `"usa-label measure-5"`
       );
     });
 
@@ -155,7 +155,7 @@ describe("FormLabel", () => {
       const label = wrapper.find(".usa-label");
 
       expect(label.prop("className")).toMatchInlineSnapshot(
-        `"usa-label maxw-none usa-legend font-heading-sm"`
+        `"usa-label usa-legend font-heading-sm measure-5"`
       );
     });
   });

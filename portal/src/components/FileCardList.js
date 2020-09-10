@@ -132,7 +132,7 @@ const FileCardList = (props) => {
 
   return (
     <div>
-      <ul className="usa-list usa-list--unstyled">{fileCards}</ul>
+      <ul className="usa-list usa-list--unstyled measure-5">{fileCards}</ul>
       <label className="margin-top-2 usa-button usa-button--outline">
         {button}
         <input

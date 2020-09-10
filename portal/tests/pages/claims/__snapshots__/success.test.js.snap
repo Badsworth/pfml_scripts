@@ -6,7 +6,7 @@ exports[`Success renders Success page 1`] = `
     Your leave application was submitted successfully
   </Title>
   <Lead>
-    We are reviewing your application. You can check the status of your application anytime in the portal.
+    We are reviewing your application. You can check the status of your application anytime in the portal.
   </Lead>
   <ButtonLink
     href="/"

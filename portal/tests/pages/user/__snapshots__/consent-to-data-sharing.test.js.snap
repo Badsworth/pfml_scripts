@@ -2,7 +2,7 @@
 
 exports[`ConsentToDataSharing renders the page 1`] = `
 <form
-  className="usa-form measure-5"
+  className="usa-form"
   onSubmit={[Function]}
 >
   <Title>

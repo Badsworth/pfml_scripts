@@ -19,7 +19,7 @@ export const fields = [
   "claim.leave_details.reason_qualifier",
 ];
 
-const LeaveReason = (props) => {
+export const LeaveReason = (props) => {
   const { appLogic, claim } = props;
   const { t } = useTranslation();
   const { formState, getField, updateFields, removeField } = useFormState(

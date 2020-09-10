@@ -27,7 +27,7 @@ const ConsentToDataSharing = (props) => {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="usa-form measure-5">
+    <form onSubmit={handleSubmit} className="usa-form">
       <Title>{t("pages.userConsentToDataSharing.title")}</Title>
       <p className="margin-bottom-2">
         {t("pages.userConsentToDataSharing.intro")}

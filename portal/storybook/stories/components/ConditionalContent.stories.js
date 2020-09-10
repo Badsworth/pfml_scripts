@@ -40,7 +40,7 @@ export const Example = () => {
 
   // Render the form component!
   return (
-    <form className="usa-form usa-form--large">
+    <form className="usa-form">
       <InputChoiceGroup
         choices={[
           {

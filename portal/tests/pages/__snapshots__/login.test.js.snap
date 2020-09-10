@@ -3,7 +3,7 @@
 exports[`Login renders the empty page 1`] = `
 <Fragment>
   <form
-    className="usa-form usa-form--large"
+    className="usa-form"
     onSubmit={[Function]}
   >
     <Title>

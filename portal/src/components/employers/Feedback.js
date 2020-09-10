@@ -76,7 +76,7 @@ const Feedback = (props) => {
       <form
         onSubmit={handleSubmit}
         id="employer-feedback-form"
-        className="usa-form usa-form--large"
+        className="usa-form"
       >
         <InputChoiceGroup
           choices={[

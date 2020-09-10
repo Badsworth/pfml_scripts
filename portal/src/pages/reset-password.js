@@ -36,7 +36,7 @@ export const ResetPassword = (props) => {
   });
 
   return (
-    <form className="usa-form usa-form--large" onSubmit={handleSubmit}>
+    <form className="usa-form" onSubmit={handleSubmit}>
       <Title>{t("pages.authResetPassword.title")}</Title>
       <Lead>
         {t("pages.authResetPassword.lead", {

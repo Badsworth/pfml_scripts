@@ -4,7 +4,7 @@ exports[`QuestionPage renders the form 1`] = `
 <Fragment>
   <BackButton />
   <form
-    className="usa-form usa-form--large"
+    className="usa-form"
     onSubmit={[Function]}
   >
     <Title
