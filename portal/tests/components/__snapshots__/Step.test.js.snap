@@ -18,7 +18,7 @@ exports[`Step renders component 1`] = `
     >
       <Heading
         className=""
-        level="2"
+        level="3"
       >
         Step Title
       </Heading>

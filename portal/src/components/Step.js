@@ -104,7 +104,7 @@ const Step = (props) => {
       </StepNumber>
       <div className={collapsibleColumnClasses}>
         <div className={titleDescriptionColumnClasses}>
-          <Heading level="2" className={titleClasses}>
+          <Heading level="3" className={titleClasses}>
             {props.title}
           </Heading>
           {active && <p>{props.children}</p>}
