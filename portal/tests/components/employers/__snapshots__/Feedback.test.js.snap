@@ -25,7 +25,9 @@ exports[`Feedback renders the component 1`] = `
       }
       hint="Do you have any additional comments or concerns?"
       label={
-        <ReviewHeading>
+        <ReviewHeading
+          level="2"
+        >
           Thanks for reviewing the application
         </ReviewHeading>
       }

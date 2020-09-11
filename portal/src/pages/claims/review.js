@@ -1,4 +1,5 @@
 import Claim, {
+  ClaimStatus,
   EmploymentStatus,
   LeaveReason,
   PaymentPreferenceMethod,
@@ -11,8 +12,11 @@ import OtherIncome, { OtherIncomeType } from "../../models/OtherIncome";
 import Step, { ClaimSteps } from "../../models/Step";
 import { compact, get } from "lodash";
 import BackButton from "../../components/BackButton";
+import Button from "../../components/Button";
 import ButtonLink from "../../components/ButtonLink";
 import { DateTime } from "luxon";
+import Heading from "../../components/Heading";
+import Lead from "../../components/Lead";
 import PreviousLeave from "../../models/PreviousLeave";
 import PropTypes from "prop-types";
 import React from "react";
@@ -22,9 +26,28 @@ import Title from "../../components/Title";
 import claimantConfigs from "../../flows/claimant";
 import findKeyByValue from "../../utils/findKeyByValue";
 import formatDateRange from "../../utils/formatDateRange";
+import { isFeatureEnabled } from "../../services/featureFlags";
 import routeWithParams from "../../utils/routeWithParams";
 import { useTranslation } from "../../locales/i18n";
 import withClaim from "../../hoc/withClaim";
+
+/**
+ * Format an address onto a single line, or return undefined if the address
+ * is empty.
+ */
+function formatAddress(address) {
+  let formatted = compact([
+    get(address, "line_1"),
+    get(address, "line_2"),
+    get(address, "city"),
+    get(address, "state"),
+  ]).join(", ");
+
+  const zip = get(address, "zip");
+  if (zip) formatted += " " + zip;
+
+  return formatted;
+}
 
 /**
  * Application review page, allowing a user to review the info
@@ -32,7 +55,7 @@ import withClaim from "../../hoc/withClaim";
  */
 export const Review = (props) => {
   const { t } = useTranslation();
-  const { claim } = props;
+  const { appLogic, claim } = props;
 
   const paymentPreference = get(claim, "temp.payment_preferences[0]");
   const reason = get(claim, "leave_details.reason");
@@ -50,20 +73,53 @@ export const Review = (props) => {
     if (step && step.editable) return step.href;
   };
 
+  const handleSubmit = () => appLogic.claims.submit(claim.application_id);
+
+  const usePartOneReview =
+    isFeatureEnabled("enableProgressiveApp") &&
+    claim.status !== ClaimStatus.submitted;
+
+  // Adjust heading levels depending on if there's a "Part 1" heading at the top of the page or not
+  const reviewHeadingLevel = usePartOneReview ? "3" : "2";
+  const reviewRowLevel = usePartOneReview ? "4" : "3";
+
   return (
     <div className="measure-6">
       <BackButton />
-      <Title>{t("pages.claimsReview.title")}</Title>
+
+      {usePartOneReview ? (
+        <React.Fragment>
+          <Title hidden>{t("pages.claimsReview.titlePartOneReview")}</Title>
+
+          <Heading className="margin-top-0" level="2" size="1">
+            {/* This heading has two lines which are each styled differently */}
+            <span className="display-block font-heading-2xs margin-bottom-2 text-base-dark text-bold">
+              {t("pages.claimsReview.partHeading")}
+            </span>
+            {t("pages.claimsReview.pageHeading")}
+          </Heading>
+
+          <Lead>{t("pages.claimsReview.leadLine1")}</Lead>
+          <Lead>{t("pages.claimsReview.leadLine2")}</Lead>
+          <Lead>{t("pages.claimsReview.leadLine3")}</Lead>
+        </React.Fragment>
+      ) : (
+        <Title>{t("pages.claimsReview.titleFinalReview")}</Title>
+      )}
 
       {/* EMPLOYEE IDENTITY */}
       <ReviewHeading
         editHref={getStepEditHref(ClaimSteps.verifyId)}
         editText={t("pages.claimsReview.editLink")}
+        level={reviewHeadingLevel}
       >
-        {t("pages.claimsReview.userSectionHeading")}
+        {t("pages.claimsReview.verifyIdSectionHeading")}
       </ReviewHeading>
 
-      <ReviewRow label={t("pages.claimsReview.userNameLabel")}>
+      <ReviewRow
+        level={reviewRowLevel}
+        label={t("pages.claimsReview.userNameLabel")}
+      >
         {[
           get(claim, "first_name"),
           get(claim, "middle_name"),
@@ -71,38 +127,50 @@ export const Review = (props) => {
         ].join(" ")}
       </ReviewRow>
 
-      <ReviewRow label={t("pages.claimsReview.residentialAddressLabel")}>
-        {compact([
-          get(claim, "temp.residential_address.line_1"),
-          get(claim, "temp.residential_address.line_2"),
-          get(claim, "temp.residential_address.city"),
-          get(claim, "temp.residential_address.state"),
-        ]).join(", ")}{" "}
-        {get(claim, "temp.residential_address.zip")}
-      </ReviewRow>
-
-      {/* TODO (CP-891): Use the API response for the PII fields */}
-      <ReviewRow label={t("pages.claimsReview.userDateOfBirthLabel")}>
-        **/**/****
-      </ReviewRow>
-      <ReviewRow label={t("pages.claimsReview.userSsnLabel")}>
-        {get(claim, "tax_identifier")}
+      <ReviewRow
+        level={reviewRowLevel}
+        label={t("pages.claimsReview.residentialAddressLabel")}
+      >
+        {formatAddress(get(claim, "residential_address"))}
       </ReviewRow>
 
       {claim.has_state_id && (
-        <ReviewRow label={t("pages.claimsReview.userStateIdLabel")}>
+        <ReviewRow
+          level={reviewRowLevel}
+          label={t("pages.claimsReview.userStateIdLabel")}
+        >
           {claim.mass_id}
         </ReviewRow>
       )}
+
+      {/* TODO (CP-891): Use the API response for the PII fields */}
+      <ReviewRow
+        level={reviewRowLevel}
+        label={t("pages.claimsReview.userSsnLabel")}
+      >
+        {get(claim, "tax_identifier")}
+      </ReviewRow>
+      {/* TODO (CP-891): Use the API response for the PII fields */}
+      <ReviewRow
+        level={reviewRowLevel}
+        label={t("pages.claimsReview.userDateOfBirthLabel")}
+      >
+        **/**/****
+      </ReviewRow>
 
       {/* LEAVE DETAILS */}
       <ReviewHeading
         editHref={getStepEditHref(ClaimSteps.leaveDetails)}
         editText={t("pages.claimsReview.editLink")}
+        level={reviewHeadingLevel}
       >
-        {t("pages.claimsReview.leaveSectionHeading")}
+        {t("pages.claimsReview.leaveDetailsSectionHeading")}
       </ReviewHeading>
-      <ReviewRow label={t("pages.claimsReview.leaveReasonLabel")}>
+
+      <ReviewRow
+        level={reviewRowLevel}
+        label={t("pages.claimsReview.leaveReasonLabel")}
+      >
         {t("pages.claimsReview.leaveReasonValue", {
           context: findKeyByValue(
             LeaveReason,
@@ -110,9 +178,11 @@ export const Review = (props) => {
           ),
         })}
       </ReviewRow>
+
       {reason === LeaveReason.medical && (
         <React.Fragment>
           <ReviewRow
+            level={reviewRowLevel}
             label={t("pages.claimsReview.pregnancyOrRecentBirthLabel")}
           >
             {get(claim, "leave_details.pregnant_or_recent_birth") === true
@@ -121,34 +191,48 @@ export const Review = (props) => {
           </ReviewRow>
         </React.Fragment>
       )}
+
       {reason === LeaveReason.bonding &&
         reasonQualifier === ReasonQualifier.newBorn && (
           <React.Fragment>
             {/* TODO (POL-99): determine if date of placement is PII, if so need to adhere to CP-891 */}
-            <ReviewRow label={t("pages.claimsReview.childBirthDateLabel")}>
-              **/**/****
-            </ReviewRow>
-          </React.Fragment>
-        )}
-      {reason === LeaveReason.bonding &&
-        (reasonQualifier === ReasonQualifier.adoption ||
-          reasonQualifier === ReasonQualifier.fosterCare) && (
-          <React.Fragment>
-            {/* TODO (POL-99): determine if date of placement is PII if so need to adhere to CP-891 */}
-            <ReviewRow label={t("pages.claimsReview.childPlacementDateLabel")}>
+            <ReviewRow
+              level={reviewRowLevel}
+              label={t("pages.claimsReview.childBirthDateLabel")}
+            >
               **/**/****
             </ReviewRow>
           </React.Fragment>
         )}
 
-      <ReviewRow label={t("pages.claimsReview.leaveDurationLabel")}>
+      {reason === LeaveReason.bonding &&
+        (reasonQualifier === ReasonQualifier.adoption ||
+          reasonQualifier === ReasonQualifier.fosterCare) && (
+          <React.Fragment>
+            {/* TODO (POL-99): determine if date of placement is PII if so need to adhere to CP-891 */}
+            <ReviewRow
+              level={reviewRowLevel}
+              label={t("pages.claimsReview.childPlacementDateLabel")}
+            >
+              **/**/****
+            </ReviewRow>
+          </React.Fragment>
+        )}
+
+      <ReviewRow
+        level={reviewRowLevel}
+        label={t("pages.claimsReview.leaveDurationLabel")}
+      >
         {formatDateRange(
           get(claim, "temp.leave_details.start_date"),
           get(claim, "temp.leave_details.end_date")
         )}
       </ReviewRow>
 
-      <ReviewRow label={t("pages.claimsReview.leaveDurationTypeLabel")}>
+      <ReviewRow
+        level={reviewRowLevel}
+        label={t("pages.claimsReview.leaveDurationTypeLabel")}
+      >
         {compact([
           claim.isContinuous
             ? t("pages.claimsReview.leaveDurationTypeContinuous")
@@ -163,7 +247,10 @@ export const Review = (props) => {
       </ReviewRow>
 
       {get(claim, "temp.leave_details.avg_weekly_work_hours") && (
-        <ReviewRow label={t("pages.claimsReview.averageWorkHoursLabel")}>
+        <ReviewRow
+          level={reviewRowLevel}
+          label={t("pages.claimsReview.averageWorkHoursLabel")}
+        >
           {get(claim, "temp.leave_details.avg_weekly_work_hours")}
         </ReviewRow>
       )}
@@ -172,12 +259,16 @@ export const Review = (props) => {
       <ReviewHeading
         editHref={getStepEditHref(ClaimSteps.employerInformation)}
         editText={t("pages.claimsReview.editLink")}
+        level={reviewHeadingLevel}
       >
         {t("pages.claimsReview.employmentSectionHeading")}
       </ReviewHeading>
 
       {get(claim, "employment_status") && (
-        <ReviewRow label={t("pages.claimsReview.employmentStatusLabel")}>
+        <ReviewRow
+          level={reviewRowLevel}
+          label={t("pages.claimsReview.employmentStatusLabel")}
+        >
           {t("pages.claimsReview.employmentStatusValue", {
             context: findKeyByValue(
               EmploymentStatus,
@@ -188,13 +279,19 @@ export const Review = (props) => {
       )}
 
       {get(claim, "employment_status") === EmploymentStatus.employed && ( // only display this if the claimant is Employed
-        <ReviewRow label={t("pages.claimsReview.employerFeinLabel")}>
+        <ReviewRow
+          level={reviewRowLevel}
+          label={t("pages.claimsReview.employerFeinLabel")}
+        >
           {get(claim, "employer_fein")}
         </ReviewRow>
       )}
 
       {get(claim, "employment_status") === EmploymentStatus.employed && ( // only display this if the claimant is Employed
-        <ReviewRow label={t("pages.claimsReview.employerNotifiedLabel")}>
+        <ReviewRow
+          level={reviewRowLevel}
+          label={t("pages.claimsReview.employerNotifiedLabel")}
+        >
           {t("pages.claimsReview.employerNotifiedValue", {
             context: (!!get(
               claim,
@@ -211,31 +308,45 @@ export const Review = (props) => {
       <ReviewHeading
         editHref={getStepEditHref(ClaimSteps.otherLeave)}
         editText={t("pages.claimsReview.editLink")}
+        level={reviewHeadingLevel}
       >
         {t("pages.claimsReview.otherLeaveSectionHeading")}
       </ReviewHeading>
 
-      <ReviewRow label={t("pages.claimsReview.employerBenefitLabel")}>
+      <ReviewRow
+        level={reviewRowLevel}
+        label={t("pages.claimsReview.employerBenefitLabel")}
+      >
         {get(claim, "has_employer_benefits") === true
           ? t("pages.claimsReview.otherLeaveChoiceYes")
           : t("pages.claimsReview.otherLeaveChoiceNo")}
       </ReviewRow>
 
       {get(claim, "has_employer_benefits") && (
-        <EmployerBenefitList entries={get(claim, "employer_benefits")} />
+        <EmployerBenefitList
+          entries={get(claim, "employer_benefits")}
+          reviewRowLevel={reviewRowLevel}
+        />
       )}
 
-      <ReviewRow label={t("pages.claimsReview.otherIncomeLabel")}>
+      <ReviewRow
+        level={reviewRowLevel}
+        label={t("pages.claimsReview.otherIncomeLabel")}
+      >
         {get(claim, "has_other_incomes") === true
           ? t("pages.claimsReview.otherLeaveChoiceYes")
           : t("pages.claimsReview.otherLeaveChoiceNo")}
       </ReviewRow>
 
       {get(claim, "has_other_incomes") && (
-        <OtherIncomeList entries={get(claim, "other_incomes")} />
+        <OtherIncomeList
+          entries={get(claim, "other_incomes")}
+          reviewRowLevel={reviewRowLevel}
+        />
       )}
 
       <ReviewRow
+        level={reviewRowLevel}
         label={t("pages.claimsReview.previousLeaveLabel")}
         editText={t("pages.claimsReview.editLink")}
       >
@@ -245,39 +356,63 @@ export const Review = (props) => {
       </ReviewRow>
 
       {get(claim, "has_previous_leaves") && (
-        <PreviousLeaveList entries={get(claim, "previous_leaves")} />
+        <PreviousLeaveList
+          entries={get(claim, "previous_leaves")}
+          reviewRowLevel={reviewRowLevel}
+        />
       )}
 
-      {/* PAYMENT METHOD */}
-      <ReviewHeading
-        editHref={getStepEditHref(ClaimSteps.payment)}
-        editText={t("pages.claimsReview.editLink")}
-      >
-        {t("pages.claimsReview.paymentSectionHeading")}
-      </ReviewHeading>
+      {usePartOneReview ? (
+        <React.Fragment>
+          <p className="margin-top-9">{t("pages.claimsReview.leadLine1")}</p>
+          <p>{t("pages.claimsReview.leadLine2")}</p>
+          <p>{t("pages.claimsReview.leadLine3")}</p>
+        </React.Fragment>
+      ) : (
+        <React.Fragment>
+          {/* PAYMENT METHOD */}
+          <ReviewHeading
+            editHref={getStepEditHref(ClaimSteps.payment)}
+            editText={t("pages.claimsReview.editLink")}
+            level={reviewHeadingLevel}
+          >
+            {t("pages.claimsReview.paymentSectionHeading")}
+          </ReviewHeading>
 
-      {paymentPreference.payment_method && (
-        <ReviewRow label={t("pages.claimsReview.paymentMethodLabel")}>
-          {t("pages.claimsReview.paymentMethodValue", {
-            context: findKeyByValue(
-              PaymentPreferenceMethod,
-              paymentPreference.payment_method
-            ),
-          })}
-        </ReviewRow>
+          {paymentPreference.payment_method && (
+            <ReviewRow
+              label={t("pages.claimsReview.paymentMethodLabel")}
+              level={reviewRowLevel}
+            >
+              {t("pages.claimsReview.paymentMethodValue", {
+                context: findKeyByValue(
+                  PaymentPreferenceMethod,
+                  paymentPreference.payment_method
+                ),
+              })}
+            </ReviewRow>
+          )}
+        </React.Fragment>
       )}
 
-      <ButtonLink
-        className="margin-top-3"
-        href={routeWithParams("claims.confirm", props.query)}
-      >
-        {t("pages.claimsReview.confirmationAction")}
-      </ButtonLink>
+      {usePartOneReview ? (
+        <Button className="margin-top-3" onClick={handleSubmit} type="button">
+          {t("pages.claimsReview.submitPartOneButton")}
+        </Button>
+      ) : (
+        <ButtonLink
+          className="margin-top-3"
+          href={routeWithParams("claims.confirm", props.query)}
+        >
+          {t("pages.claimsReview.confirmationAction")}
+        </ButtonLink>
+      )}
     </div>
   );
 };
 
 Review.propTypes = {
+  appLogic: PropTypes.object.isRequired,
   claim: PropTypes.instanceOf(Claim),
   query: PropTypes.shape({
     claim_id: PropTypes.string,
@@ -290,7 +425,7 @@ Review.propTypes = {
  */
 export const EmployerBenefitList = (props) => {
   const { t } = useTranslation();
-  const entries = props.entries;
+  const { entries, reviewRowLevel } = props;
 
   return entries.map((entry, index) => {
     const label = t("pages.claimsReview.employerBenefitEntryLabel", {
@@ -320,6 +455,7 @@ export const EmployerBenefitList = (props) => {
         type={type}
         dates={dates}
         amount={amount}
+        reviewRowLevel={reviewRowLevel}
       />
     );
   });
@@ -327,6 +463,7 @@ export const EmployerBenefitList = (props) => {
 
 EmployerBenefitList.propTypes = {
   entries: PropTypes.arrayOf(PropTypes.instanceOf(EmployerBenefit)).isRequired,
+  reviewRowLevel: PropTypes.oneOf(["2", "3", "4", "5", "6"]).isRequired,
 };
 
 /*
@@ -335,7 +472,7 @@ EmployerBenefitList.propTypes = {
  */
 export const OtherIncomeList = (props) => {
   const { t } = useTranslation();
-  const entries = props.entries;
+  const { entries, reviewRowLevel } = props;
 
   return entries.map((entry, index) => {
     const label = t("pages.claimsReview.otherIncomeEntryLabel", {
@@ -365,6 +502,7 @@ export const OtherIncomeList = (props) => {
         type={type}
         dates={dates}
         amount={amount}
+        reviewRowLevel={reviewRowLevel}
       />
     );
   });
@@ -372,6 +510,7 @@ export const OtherIncomeList = (props) => {
 
 OtherIncomeList.propTypes = {
   entries: PropTypes.arrayOf(PropTypes.instanceOf(OtherIncome)).isRequired,
+  reviewRowLevel: PropTypes.oneOf(["2", "3", "4", "5", "6"]).isRequired,
 };
 
 /*
@@ -380,7 +519,7 @@ OtherIncomeList.propTypes = {
  */
 export const PreviousLeaveList = (props) => {
   const { t } = useTranslation();
-  const entries = props.entries;
+  const { entries, reviewRowLevel } = props;
 
   return entries.map((entry, index) => {
     const label = t("pages.claimsReview.previousLeaveEntryLabel", {
@@ -388,12 +527,20 @@ export const PreviousLeaveList = (props) => {
     });
     const dates = formatDateRange(entry.leave_start_date, entry.leave_end_date);
 
-    return <OtherLeaveEntry key={index} label={label} dates={dates} />;
+    return (
+      <OtherLeaveEntry
+        key={index}
+        label={label}
+        dates={dates}
+        reviewRowLevel={reviewRowLevel}
+      />
+    );
   });
 };
 
 PreviousLeaveList.propTypes = {
   entries: PropTypes.arrayOf(PropTypes.instanceOf(PreviousLeave)).isRequired,
+  reviewRowLevel: PropTypes.oneOf(["2", "3", "4", "5", "6"]).isRequired,
 };
 
 /*
@@ -402,10 +549,10 @@ PreviousLeaveList.propTypes = {
  * and an optional type string and amount string
  */
 export const OtherLeaveEntry = (props) => {
-  const { label, type, dates, amount } = props;
+  const { amount, dates, label, reviewRowLevel, type } = props;
 
   return (
-    <ReviewRow label={label}>
+    <ReviewRow level={reviewRowLevel} label={label}>
       {type && (
         <React.Fragment>
           {type}
@@ -429,6 +576,7 @@ OtherLeaveEntry.propTypes = {
   amount: PropTypes.string,
   dates: PropTypes.string.isRequired,
   label: PropTypes.string.isRequired,
+  reviewRowLevel: PropTypes.oneOf(["2", "3", "4", "5", "6"]).isRequired,
   type: PropTypes.string,
 };
 

@@ -18,7 +18,7 @@ const PastLeave = (props) => {
 
   return (
     <React.Fragment>
-      <ReviewHeading>
+      <ReviewHeading level="2">
         {t("pages.employersClaimsReview.pastLeave.header")}
       </ReviewHeading>
       <p>{t("pages.employersClaimsReview.pastLeave.explanation")}</p>

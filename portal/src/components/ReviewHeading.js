@@ -9,7 +9,11 @@ import React from "react";
 const ReviewHeading = (props) => {
   return (
     <div className="display-flex flex-align-end margin-top-6 margin-bottom-3">
-      <Heading className="flex-fill margin-right-1" level="2">
+      <Heading
+        className="flex-fill margin-right-1"
+        level={props.level}
+        size="2"
+      >
         {props.children}
       </Heading>
       {props.editHref && (
@@ -40,6 +44,10 @@ ReviewHeading.propTypes = {
    * Localized text for the edit link
    */
   editText: PropTypes.node,
+  /**
+   * The heading level to use
+   */
+  level: PropTypes.oneOf(["2", "3", "4", "5", "6"]).isRequired,
 };
 
 export default ReviewHeading;

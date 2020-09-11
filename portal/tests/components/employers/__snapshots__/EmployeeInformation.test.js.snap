@@ -2,11 +2,14 @@
 
 exports[`EmployeeInformation renders the component 1`] = `
 <Fragment>
-  <ReviewHeading>
+  <ReviewHeading
+    level="2"
+  >
     Employee information
   </ReviewHeading>
   <ReviewRow
     label="Employee name"
+    level="3"
   >
     Jane
      
@@ -15,6 +18,7 @@ exports[`EmployeeInformation renders the component 1`] = `
   </ReviewRow>
   <ReviewRow
     label="Mailing address"
+    level="3"
   >
     <span
       className="residential-address"
@@ -30,11 +34,13 @@ exports[`EmployeeInformation renders the component 1`] = `
   </ReviewRow>
   <ReviewRow
     label="Social Security Number or Individual Taxpayer Identification Number"
+    level="3"
   >
     ***-**-****
   </ReviewRow>
   <ReviewRow
     label="Birthdate"
+    level="3"
   >
     7/17/1980
   </ReviewRow>

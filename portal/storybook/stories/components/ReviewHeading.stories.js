@@ -7,11 +7,11 @@ export default {
 };
 
 export const Default = () => (
-  <ReviewHeading editText="Edit" editHref="#duration">
+  <ReviewHeading level="2" editText="Edit" editHref="#duration">
     Who is taking leave?
   </ReviewHeading>
 );
 
 export const NoEditLink = () => (
-  <ReviewHeading>Who is taking leave?</ReviewHeading>
+  <ReviewHeading level="2">Who is taking leave?</ReviewHeading>
 );

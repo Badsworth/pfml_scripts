@@ -7,6 +7,7 @@ exports[`ReviewHeading renders a Heading 1`] = `
   <Heading
     className="flex-fill margin-right-1"
     level="2"
+    size="2"
   >
     Who is taking leave?
   </Heading>
@@ -20,6 +21,7 @@ exports[`ReviewHeading when editHref is defined renders with an edit link 1`] = 
   <Heading
     className="flex-fill margin-right-1"
     level="2"
+    size="2"
   >
     Who is taking leave?
   </Heading>

@@ -93,7 +93,7 @@ const Feedback = (props) => {
             },
           ]}
           label={
-            <ReviewHeading>
+            <ReviewHeading level="2">
               {t("pages.employersClaimsReview.feedback.header")}
             </ReviewHeading>
           }

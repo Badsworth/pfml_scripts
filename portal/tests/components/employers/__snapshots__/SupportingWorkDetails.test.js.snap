@@ -2,12 +2,15 @@
 
 exports[`SupportingWorkDetails renders the component 1`] = `
 <Fragment>
-  <ReviewHeading>
+  <ReviewHeading
+    level="2"
+  >
     Supporting work details
   </ReviewHeading>
   <ReviewRow
     action={<AmendLink />}
     label="Weekly hours worked"
+    level="3"
   >
     <p
       className="margin-top-0"
@@ -18,6 +21,7 @@ exports[`SupportingWorkDetails renders the component 1`] = `
   </ReviewRow>
   <ReviewRow
     label="Documentation"
+    level="3"
   >
     <a
       className="text-normal"

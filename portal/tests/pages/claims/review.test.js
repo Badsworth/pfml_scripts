@@ -21,6 +21,8 @@ import React from "react";
 import { renderWithAppLogic } from "../../test-utils";
 import { shallow } from "enzyme";
 
+jest.mock("../../../src/hooks/useAppLogic");
+
 /**
  * Get a claim for an Employed claimant, with all required fields.
  * Fields can be overridden in each unit test.
@@ -72,6 +74,13 @@ function fullClaimAttrs() {
     middle_name: "Monstera",
     other_incomes,
     previous_leaves,
+    residential_address: {
+      city: "Boston",
+      line_1: "19 Staniford St",
+      line_2: "Suite 505",
+      state: "MA",
+      zip: "02114",
+    },
     tax_identifier: "***-**-****",
     temp: {
       leave_details: {
@@ -82,20 +91,27 @@ function fullClaimAttrs() {
         start_date: "2021-09-21",
       },
       payment_preferences: [{ payment_method: PaymentPreferenceMethod.ach }],
-      residential_address: {
-        city: "Boston",
-        line_1: "19 Staniford St",
-        line_2: "Suite 505",
-        state: "MA",
-        zip: "02114",
-      },
     },
   };
 }
 
-describe("Review", () => {
+describe("Part 1 Review Page", () => {
+  let oldFeatureFlags;
+
+  beforeEach(() => {
+    oldFeatureFlags = process.env.featureFlags;
+
+    process.env.featureFlags = {
+      enableProgressiveApp: true,
+    };
+  });
+
+  afterEach(() => {
+    process.env.featureFlags = oldFeatureFlags;
+  });
+
   describe("when all data is present", () => {
-    it("renders Review page with the field values", () => {
+    it("renders Review page with Part 1 content", () => {
       const { wrapper } = renderWithAppLogic(Review, {
         claimAttrs: fullClaimAttrs(),
       });
@@ -104,14 +120,43 @@ describe("Review", () => {
     });
   });
 
-  describe("when claimant is not Employed", () => {
-    it("does not render 'Notified employer' row or FEIN row", () => {
+  describe("when data is empty", () => {
+    it("does not render strings like 'null' or 'undefined'", () => {
+      const { wrapper } = renderWithAppLogic(Review, {
+        claimAttrs: {
+          tax_identifier: "***-**-****",
+          leave_details: {
+            reason: LeaveReason.medical,
+          },
+        },
+      });
+
+      expect(wrapper).toMatchSnapshot();
+    });
+
+    it("submits the application when the user clicks Submit", () => {
+      const claimAttrs = fullClaimAttrs();
+      claimAttrs.application_id = "testClaim";
+      const { appLogic, wrapper } = renderWithAppLogic(Review, {
+        claimAttrs,
+      });
+      wrapper.find("Button").simulate("click");
+
+      expect(appLogic.claims.submit).toHaveBeenCalledWith(
+        claimAttrs.application_id
+      );
+    });
+  });
+});
+
+describe("Final Review Page", () => {
+  describe("when all data is present", () => {
+    it("renders Review page with final review page content", () => {
       const { wrapper } = renderWithAppLogic(Review, {
         claimAttrs: fullClaimAttrs(),
       });
 
-      expect(wrapper.text()).not.toContain("Notified employer");
-      expect(wrapper.text()).not.toContain("Employer's FEIN");
+      expect(wrapper).toMatchSnapshot();
     });
   });
 
@@ -127,6 +172,19 @@ describe("Review", () => {
       });
 
       expect(wrapper).toMatchSnapshot();
+    });
+  });
+});
+
+describe("Employer info", () => {
+  describe("when claimant is not Employed", () => {
+    it("does not render 'Notified employer' row or FEIN row", () => {
+      const { wrapper } = renderWithAppLogic(Review, {
+        claimAttrs: fullClaimAttrs(),
+      });
+
+      expect(wrapper.text()).not.toContain("Notified employer");
+      expect(wrapper.text()).not.toContain("Employer's FEIN");
     });
   });
 });
@@ -163,6 +221,7 @@ describe("Duration type", () => {
       .toMatchInlineSnapshot(`
       <ReviewRow
         label="Leave duration type"
+        level="3"
       >
         Intermittent leave
       </ReviewRow>
@@ -171,6 +230,7 @@ describe("Duration type", () => {
       .toMatchInlineSnapshot(`
       <ReviewRow
         label="Leave duration type"
+        level="3"
       >
         Continuous leave, Reduced leave schedule
       </ReviewRow>
@@ -208,7 +268,9 @@ describe("EmployerBenefitList", () => {
 
   describe("when all data are present", () => {
     it("renders all data fields", () => {
-      const wrapper = shallow(<EmployerBenefitList entries={entries} />);
+      const wrapper = shallow(
+        <EmployerBenefitList entries={entries} reviewRowLevel="4" />
+      );
 
       expect(wrapper).toMatchSnapshot();
     });
@@ -217,7 +279,9 @@ describe("EmployerBenefitList", () => {
   describe("when data are missing", () => {
     it("doesn't render missing data", () => {
       const entries = [new EmployerBenefit()];
-      const wrapper = shallow(<EmployerBenefitList entries={entries} />);
+      const wrapper = shallow(
+        <EmployerBenefitList entries={entries} reviewRowLevel="4" />
+      );
 
       expect(wrapper).toMatchSnapshot();
     });
@@ -277,7 +341,9 @@ describe("OtherIncomeList", () => {
           income_type: OtherIncomeType.selfEmployment,
         }),
       ];
-      const wrapper = shallow(<OtherIncomeList entries={entries} />);
+      const wrapper = shallow(
+        <OtherIncomeList entries={entries} reviewRowLevel="4" />
+      );
 
       expect(wrapper).toMatchSnapshot();
     });
@@ -286,7 +352,9 @@ describe("OtherIncomeList", () => {
   describe("when data are missing", () => {
     it("doesn't render missing data", () => {
       const entries = [new OtherIncome()];
-      const wrapper = shallow(<OtherIncomeList entries={entries} />);
+      const wrapper = shallow(
+        <OtherIncomeList entries={entries} reviewRowLevel="4" />
+      );
 
       expect(wrapper).toMatchSnapshot();
     });
@@ -302,7 +370,9 @@ describe("PreviousLeaveList", () => {
           leave_start_date: "2021-08-12",
         }),
       ];
-      const wrapper = shallow(<PreviousLeaveList entries={entries} />);
+      const wrapper = shallow(
+        <PreviousLeaveList entries={entries} reviewRowLevel="4" />
+      );
 
       expect(wrapper).toMatchSnapshot();
     });
@@ -311,7 +381,9 @@ describe("PreviousLeaveList", () => {
   describe("when data are missing", () => {
     it("doesn't render missing data", () => {
       const entries = [new PreviousLeave()];
-      const wrapper = shallow(<PreviousLeaveList entries={entries} />);
+      const wrapper = shallow(
+        <PreviousLeaveList entries={entries} reviewRowLevel="4" />
+      );
 
       expect(wrapper).toMatchSnapshot();
     });
@@ -331,6 +403,7 @@ describe("OtherLeaveEntry", () => {
           type={type}
           dates={dates}
           amount={amount}
+          reviewRowLevel="4"
         />
       );
 
@@ -342,7 +415,13 @@ describe("OtherLeaveEntry", () => {
     it("doesn't render missing data", () => {
       const label = "Benefit 1";
       const wrapper = shallow(
-        <OtherLeaveEntry label={label} type={null} dates="" amount={null} />
+        <OtherLeaveEntry
+          label={label}
+          type={null}
+          dates=""
+          amount={null}
+          reviewRowLevel="4"
+        />
       );
 
       expect(wrapper).toMatchSnapshot();

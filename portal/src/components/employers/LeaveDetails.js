@@ -25,10 +25,11 @@ const LeaveDetails = (props) => {
 
   return (
     <React.Fragment>
-      <ReviewHeading>
+      <ReviewHeading level="2">
         {t("pages.employersClaimsReview.leaveDetails.header")}
       </ReviewHeading>
       <ReviewRow
+        level="3"
         label={t("pages.employersClaimsReview.leaveDetails.natureOfLeaveLabel")}
       >
         {t("pages.employersClaimsReview.leaveDetails.leaveReasonValue", {
@@ -36,11 +37,13 @@ const LeaveDetails = (props) => {
         })}
       </ReviewRow>
       <ReviewRow
+        level="3"
         label={t("pages.employersClaimsReview.leaveDetails.applicationIdLabel")}
       >
         {application_id}
       </ReviewRow>
       <ReviewRow
+        level="3"
         label={t(
           "pages.employersClaimsReview.leaveDetails.employerNotifiedLabel"
         )}
@@ -49,6 +52,7 @@ const LeaveDetails = (props) => {
         {formatDateRange(employer_notification_date)}
       </ReviewRow>
       <ReviewRow
+        level="3"
         label={t("pages.employersClaimsReview.leaveDetails.leaveDurationLabel")}
       >
         {formatDateRange(start_date, end_date)}

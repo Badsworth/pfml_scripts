@@ -8,7 +8,12 @@ export default {
 };
 
 export const Default = () => (
-  <ReviewRow label="Leave duration" editText="Edit" editHref="#duration">
+  <ReviewRow
+    level="3"
+    label="Leave duration"
+    editText="Edit"
+    editHref="#duration"
+  >
     04/12/2021 – 05/01/2021
     <br />
     Continuous
@@ -17,18 +22,22 @@ export const Default = () => (
 
 export const WithHeadings = () => (
   <React.Fragment>
-    <ReviewHeading editText="Edit" editHref="#name">
+    <ReviewHeading level="2" editText="Edit" editHref="#name">
       Verify your identity
     </ReviewHeading>
 
-    <ReviewRow label="Name">Bud Baxter</ReviewRow>
+    <ReviewRow level="3" label="Name">
+      Bud Baxter
+    </ReviewRow>
 
-    <ReviewHeading editText="Edit" editHref="#medical">
+    <ReviewHeading level="2" editText="Edit" editHref="#medical">
       Leave details
     </ReviewHeading>
 
-    <ReviewRow label="Leave type">Medical</ReviewRow>
-    <ReviewRow label="Leave duration">
+    <ReviewRow level="3" label="Leave type">
+      Medical
+    </ReviewRow>
+    <ReviewRow level="3" label="Leave duration">
       04/12/2021 – 05/01/2021
       <br />
       Continuous

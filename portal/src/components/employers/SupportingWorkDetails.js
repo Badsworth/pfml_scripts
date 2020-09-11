@@ -18,10 +18,11 @@ const SupportingWorkDetails = (props) => {
 
   return (
     <React.Fragment>
-      <ReviewHeading>
+      <ReviewHeading level="2">
         {t("pages.employersClaimsReview.supportingWorkDetails.header")}
       </ReviewHeading>
       <ReviewRow
+        level="3"
         label={t(
           "pages.employersClaimsReview.supportingWorkDetails.hoursWorkedLabel"
         )}
@@ -35,7 +36,10 @@ const SupportingWorkDetails = (props) => {
           );
         })}
       </ReviewRow>
-      <ReviewRow label={t("pages.employersClaimsReview.documentationLabel")}>
+      <ReviewRow
+        level="3"
+        label={t("pages.employersClaimsReview.documentationLabel")}
+      >
         <a href={detailedWorkScheduleFile} className="text-normal">
           {t(
             "pages.employersClaimsReview.supportingWorkDetails.viewScheduleLink"

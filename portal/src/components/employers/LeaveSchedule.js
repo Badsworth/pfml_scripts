@@ -30,7 +30,7 @@ const LeaveSchedule = (props) => {
 
   return (
     <React.Fragment>
-      <ReviewHeading>
+      <ReviewHeading level="2">
         {t("pages.employersClaimsReview.leaveSchedule.header")}
       </ReviewHeading>
       <Table>
@@ -136,7 +136,10 @@ const LeaveSchedule = (props) => {
             })}
         </tbody>
       </Table>
-      <ReviewRow label={t("pages.employersClaimsReview.documentationLabel")}>
+      <ReviewRow
+        level="3"
+        label={t("pages.employersClaimsReview.documentationLabel")}
+      >
         <a href={healthCareProviderCertificationFile} className="text-normal">
           {t(
             "pages.employersClaimsReview.leaveSchedule.healthCareProviderFormLink"

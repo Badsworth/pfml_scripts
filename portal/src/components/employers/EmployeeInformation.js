@@ -23,10 +23,11 @@ const EmployeeInformation = (props) => {
 
   return (
     <React.Fragment>
-      <ReviewHeading>
+      <ReviewHeading level="2">
         {t("pages.employersClaimsReview.employeeInformation.header")}
       </ReviewHeading>
       <ReviewRow
+        level="3"
         label={t(
           "pages.employersClaimsReview.employeeInformation.employeeNameLabel"
         )}
@@ -34,6 +35,7 @@ const EmployeeInformation = (props) => {
         {first_name} {middle_name} {last_name}
       </ReviewRow>
       <ReviewRow
+        level="3"
         label={t(
           "pages.employersClaimsReview.employeeInformation.addressLabel"
         )}
@@ -47,6 +49,7 @@ const EmployeeInformation = (props) => {
         </span>
       </ReviewRow>
       <ReviewRow
+        level="3"
         label={t(
           "pages.employersClaimsReview.employeeInformation.ssnOrItinLabel"
         )}
@@ -54,6 +57,7 @@ const EmployeeInformation = (props) => {
         {tax_identifier}
       </ReviewRow>
       <ReviewRow
+        level="3"
         label={t("pages.employersClaimsReview.employeeInformation.dobLabel")}
       >
         {formatDateRange(date_of_birth)}

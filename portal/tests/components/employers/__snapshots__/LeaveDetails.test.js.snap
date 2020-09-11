@@ -2,27 +2,33 @@
 
 exports[`LeaveDetails renders the component 1`] = `
 <Fragment>
-  <ReviewHeading>
+  <ReviewHeading
+    level="2"
+  >
     Leave details
   </ReviewHeading>
   <ReviewRow
     label="Nature of leave"
+    level="3"
   >
     Medical leave
   </ReviewRow>
   <ReviewRow
     label="Application ID"
+    level="3"
   >
     1
   </ReviewRow>
   <ReviewRow
     action={<AmendLink />}
     label="Employer notified"
+    level="3"
   >
     1/1/2021
   </ReviewRow>
   <ReviewRow
     label="Leave duration"
+    level="3"
   >
     1/1/2021 – 6/1/2021
   </ReviewRow>

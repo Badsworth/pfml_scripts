@@ -7,6 +7,7 @@ Array [
     dates="8/12/2021 – 12/30/2021"
     key="0"
     label="Benefit 1"
+    reviewRowLevel="4"
     type="Accrued paid leave"
   />,
   <OtherLeaveEntry
@@ -14,6 +15,7 @@ Array [
     dates="8/12/2021 – 12/30/2021"
     key="1"
     label="Benefit 2"
+    reviewRowLevel="4"
     type="Short-term disability insurance"
   />,
   <OtherLeaveEntry
@@ -21,6 +23,7 @@ Array [
     dates="8/12/2021 – 12/30/2021"
     key="2"
     label="Benefit 3"
+    reviewRowLevel="4"
     type="Permanent disability insurance"
   />,
   <OtherLeaveEntry
@@ -28,6 +31,7 @@ Array [
     dates="8/12/2021 – 12/30/2021"
     key="3"
     label="Benefit 4"
+    reviewRowLevel="4"
     type="Family or medical leave insurance"
   />,
 ]
@@ -39,116 +43,12 @@ exports[`EmployerBenefitList when data are missing doesn't render missing data 1
   dates=""
   key="0"
   label="Benefit 1"
+  reviewRowLevel="4"
   type={null}
 />
 `;
 
-exports[`OtherIncomeList when all data are present renders all data fields 1`] = `
-Array [
-  <OtherLeaveEntry
-    amount="$250 every month"
-    dates="8/12/2021 – 12/30/2021"
-    key="0"
-    label="Income 1"
-    type="Workers Compensation"
-  />,
-  <OtherLeaveEntry
-    amount="$250 every month"
-    dates="8/12/2021 – 12/30/2021"
-    key="1"
-    label="Income 2"
-    type="Unemployment Insurance"
-  />,
-  <OtherLeaveEntry
-    amount="$250 every month"
-    dates="8/12/2021 – 12/30/2021"
-    key="2"
-    label="Income 3"
-    type="Social Security Disability Insurance"
-  />,
-  <OtherLeaveEntry
-    amount="$250 every month"
-    dates="8/12/2021 – 12/30/2021"
-    key="3"
-    label="Income 4"
-    type="Disability benefits under a governmental retirement plan"
-  />,
-  <OtherLeaveEntry
-    amount="$250 every month"
-    dates="8/12/2021 – 12/30/2021"
-    key="4"
-    label="Income 5"
-    type="Jones Act benefits"
-  />,
-  <OtherLeaveEntry
-    amount="$250 every month"
-    dates="8/12/2021 – 12/30/2021"
-    key="5"
-    label="Income 6"
-    type="Railroad Retirement benefits"
-  />,
-  <OtherLeaveEntry
-    amount="$250 every month"
-    dates="8/12/2021 – 12/30/2021"
-    key="6"
-    label="Income 7"
-    type="Earnings from another employer"
-  />,
-  <OtherLeaveEntry
-    amount="$250 every month"
-    dates="8/12/2021 – 12/30/2021"
-    key="7"
-    label="Income 8"
-    type="Earnings from self-employment"
-  />,
-]
-`;
-
-exports[`OtherIncomeList when data are missing doesn't render missing data 1`] = `
-<OtherLeaveEntry
-  amount={null}
-  dates=""
-  key="0"
-  label="Income 1"
-  type={null}
-/>
-`;
-
-exports[`OtherLeaveEntry when all data are present renders all data fields 1`] = `
-<ReviewRow
-  label="Benefit 1"
->
-  Medical or family leave
-  <br />
-  07-22-2020 - 09-22-2020
-  <br />
-  $250 per month
-</ReviewRow>
-`;
-
-exports[`OtherLeaveEntry when data are missing doesn't render missing data 1`] = `
-<ReviewRow
-  label="Benefit 1"
-/>
-`;
-
-exports[`PreviousLeaveList when all data are present renders all data fields 1`] = `
-<OtherLeaveEntry
-  dates="8/12/2021 – 12/30/2021"
-  key="0"
-  label="Previous leave 1"
-/>
-`;
-
-exports[`PreviousLeaveList when data are missing doesn't render missing data 1`] = `
-<OtherLeaveEntry
-  dates=""
-  key="0"
-  label="Previous leave 1"
-/>
-`;
-
-exports[`Review when all data is present renders Review page with the field values 1`] = `
+exports[`Final Review Page when all data is present renders Review page with final review page content 1`] = `
 <div
   className="measure-6"
 >
@@ -159,96 +59,112 @@ exports[`Review when all data is present renders Review page with the field valu
   <ReviewHeading
     editHref="/claims/name?claim_id=mock_application_id"
     editText="Edit"
+    level="2"
   >
     Verify your identity
   </ReviewHeading>
   <ReviewRow
-    label="Full name"
+    label="Name"
+    level="3"
   >
     Bud Monstera Baxter
   </ReviewRow>
   <ReviewRow
     label="Residential address"
+    level="3"
   >
-    19 Staniford St, Suite 505, Boston, MA
-     
-    02114
+    19 Staniford St, Suite 505, Boston, MA 02114
   </ReviewRow>
   <ReviewRow
-    label="Date of birth"
+    label="Driver's License Number"
+    level="3"
   >
-    **/**/****
+    *********
   </ReviewRow>
   <ReviewRow
-    label="Social security number"
+    label="Social Security Number"
+    level="3"
   >
     ***-**-****
   </ReviewRow>
   <ReviewRow
-    label="Massachusetts driver's license or ID"
+    label="Date of birth"
+    level="3"
   >
-    *********
+    **/**/****
   </ReviewRow>
   <ReviewHeading
     editHref="/claims/leave-reason?claim_id=mock_application_id"
     editText="Edit"
+    level="2"
   >
-    Leave details
+    Enter leave details
   </ReviewHeading>
   <ReviewRow
     label="Leave type"
+    level="3"
   >
     Medical leave
   </ReviewRow>
   <ReviewRow
     label="Are you pregnant or have you recently given birth?"
+    level="3"
   >
     No
   </ReviewRow>
   <ReviewRow
     label="Leave duration"
+    level="3"
   >
     9/21/2021 – 12/30/2021
   </ReviewRow>
   <ReviewRow
     label="Leave duration type"
+    level="3"
   >
     Continuous leave, Reduced leave schedule, Intermittent leave
   </ReviewRow>
   <ReviewRow
     label="Average hours worked per week"
+    level="3"
   >
     20
   </ReviewRow>
   <ReviewHeading
     editHref="/claims/employment-status?claim_id=mock_application_id"
     editText="Edit"
+    level="2"
   >
-    Employment information
+    Enter employment information
   </ReviewHeading>
   <ReviewRow
     label="Employment status"
+    level="3"
   >
     Currently employed
   </ReviewRow>
   <ReviewRow
     label="Employer's FEIN"
+    level="3"
   >
     12-1234567
   </ReviewRow>
   <ReviewRow
     label="Notified employer"
+    level="3"
   >
     Notified employer on 6/25/2020
   </ReviewRow>
   <ReviewHeading
     editHref="/claims/employer-benefits?claim_id=mock_application_id"
     editText="Edit"
+    level="2"
   >
-    Other income and benefits
+    Report other leave and benefits
   </ReviewHeading>
   <ReviewRow
     label="Employer-sponsored benefits?"
+    level="3"
   >
     Yes
   </ReviewRow>
@@ -264,9 +180,11 @@ exports[`Review when all data is present renders Review page with the field valu
         },
       ]
     }
+    reviewRowLevel="3"
   />
   <ReviewRow
     label="Other sources of income?"
+    level="3"
   >
     Yes
   </ReviewRow>
@@ -282,10 +200,12 @@ exports[`Review when all data is present renders Review page with the field valu
         },
       ]
     }
+    reviewRowLevel="3"
   />
   <ReviewRow
     editText="Edit"
     label="Previous paid or unpaid leave?"
+    level="3"
   >
     Yes
   </ReviewRow>
@@ -298,15 +218,18 @@ exports[`Review when all data is present renders Review page with the field valu
         },
       ]
     }
+    reviewRowLevel="3"
   />
   <ReviewHeading
     editHref="/claims/payment-method?claim_id=mock_application_id"
     editText="Edit"
+    level="2"
   >
     Payment information
   </ReviewHeading>
   <ReviewRow
     label="Payment method"
+    level="3"
   >
     Direct deposit
   </ReviewRow>
@@ -319,7 +242,7 @@ exports[`Review when all data is present renders Review page with the field valu
 </div>
 `;
 
-exports[`Review when conditional data is empty does not render strings like 'null' or 'undefined' 1`] = `
+exports[`Final Review Page when conditional data is empty does not render strings like 'null' or 'undefined' 1`] = `
 <div
   className="measure-6"
 >
@@ -330,82 +253,96 @@ exports[`Review when conditional data is empty does not render strings like 'nul
   <ReviewHeading
     editHref="/claims/name?claim_id=mock_application_id"
     editText="Edit"
+    level="2"
   >
     Verify your identity
   </ReviewHeading>
   <ReviewRow
-    label="Full name"
+    label="Name"
+    level="3"
   >
       
   </ReviewRow>
   <ReviewRow
     label="Residential address"
+    level="3"
+  />
+  <ReviewRow
+    label="Social Security Number"
+    level="3"
   >
-     
+    ***-**-****
   </ReviewRow>
   <ReviewRow
     label="Date of birth"
+    level="3"
   >
     **/**/****
-  </ReviewRow>
-  <ReviewRow
-    label="Social security number"
-  >
-    ***-**-****
   </ReviewRow>
   <ReviewHeading
     editHref="/claims/leave-reason?claim_id=mock_application_id"
     editText="Edit"
+    level="2"
   >
-    Leave details
+    Enter leave details
   </ReviewHeading>
   <ReviewRow
     label="Leave type"
+    level="3"
   >
     Medical leave
   </ReviewRow>
   <ReviewRow
     label="Are you pregnant or have you recently given birth?"
+    level="3"
   >
     No
   </ReviewRow>
   <ReviewRow
     label="Leave duration"
+    level="3"
   />
   <ReviewRow
     label="Leave duration type"
+    level="3"
   />
   <ReviewHeading
     editHref="/claims/employment-status?claim_id=mock_application_id"
     editText="Edit"
+    level="2"
   >
-    Employment information
+    Enter employment information
   </ReviewHeading>
   <ReviewHeading
     editHref="/claims/employer-benefits?claim_id=mock_application_id"
     editText="Edit"
+    level="2"
   >
-    Other income and benefits
+    Report other leave and benefits
   </ReviewHeading>
   <ReviewRow
     label="Employer-sponsored benefits?"
+    level="3"
   >
     No
   </ReviewRow>
   <ReviewRow
     label="Other sources of income?"
+    level="3"
   >
     No
   </ReviewRow>
   <ReviewRow
     editText="Edit"
     label="Previous paid or unpaid leave?"
+    level="3"
   >
     No
   </ReviewRow>
   <ReviewHeading
     editHref="/claims/payment-method?claim_id=mock_application_id"
     editText="Edit"
+    level="2"
   >
     Payment information
   </ReviewHeading>
@@ -416,4 +353,479 @@ exports[`Review when conditional data is empty does not render strings like 'nul
     Confirm information is correct
   </ButtonLink>
 </div>
+`;
+
+exports[`OtherIncomeList when all data are present renders all data fields 1`] = `
+Array [
+  <OtherLeaveEntry
+    amount="$250 every month"
+    dates="8/12/2021 – 12/30/2021"
+    key="0"
+    label="Income 1"
+    reviewRowLevel="4"
+    type="Workers Compensation"
+  />,
+  <OtherLeaveEntry
+    amount="$250 every month"
+    dates="8/12/2021 – 12/30/2021"
+    key="1"
+    label="Income 2"
+    reviewRowLevel="4"
+    type="Unemployment Insurance"
+  />,
+  <OtherLeaveEntry
+    amount="$250 every month"
+    dates="8/12/2021 – 12/30/2021"
+    key="2"
+    label="Income 3"
+    reviewRowLevel="4"
+    type="Social Security Disability Insurance"
+  />,
+  <OtherLeaveEntry
+    amount="$250 every month"
+    dates="8/12/2021 – 12/30/2021"
+    key="3"
+    label="Income 4"
+    reviewRowLevel="4"
+    type="Disability benefits under a governmental retirement plan"
+  />,
+  <OtherLeaveEntry
+    amount="$250 every month"
+    dates="8/12/2021 – 12/30/2021"
+    key="4"
+    label="Income 5"
+    reviewRowLevel="4"
+    type="Jones Act benefits"
+  />,
+  <OtherLeaveEntry
+    amount="$250 every month"
+    dates="8/12/2021 – 12/30/2021"
+    key="5"
+    label="Income 6"
+    reviewRowLevel="4"
+    type="Railroad Retirement benefits"
+  />,
+  <OtherLeaveEntry
+    amount="$250 every month"
+    dates="8/12/2021 – 12/30/2021"
+    key="6"
+    label="Income 7"
+    reviewRowLevel="4"
+    type="Earnings from another employer"
+  />,
+  <OtherLeaveEntry
+    amount="$250 every month"
+    dates="8/12/2021 – 12/30/2021"
+    key="7"
+    label="Income 8"
+    reviewRowLevel="4"
+    type="Earnings from self-employment"
+  />,
+]
+`;
+
+exports[`OtherIncomeList when data are missing doesn't render missing data 1`] = `
+<OtherLeaveEntry
+  amount={null}
+  dates=""
+  key="0"
+  label="Income 1"
+  reviewRowLevel="4"
+  type={null}
+/>
+`;
+
+exports[`OtherLeaveEntry when all data are present renders all data fields 1`] = `
+<ReviewRow
+  label="Benefit 1"
+  level="4"
+>
+  Medical or family leave
+  <br />
+  07-22-2020 - 09-22-2020
+  <br />
+  $250 per month
+</ReviewRow>
+`;
+
+exports[`OtherLeaveEntry when data are missing doesn't render missing data 1`] = `
+<ReviewRow
+  label="Benefit 1"
+  level="4"
+/>
+`;
+
+exports[`Part 1 Review Page when all data is present renders Review page with Part 1 content 1`] = `
+<div
+  className="measure-6"
+>
+  <BackButton />
+  <Title
+    hidden={true}
+  >
+    Review and confirm Part 1
+  </Title>
+  <Heading
+    className="margin-top-0"
+    level="2"
+    size="1"
+  >
+    <span
+      className="display-block font-heading-2xs margin-bottom-2 text-base-dark text-bold"
+    >
+      Part 1
+    </span>
+    Review and confirm: Tell us about yourself and your leave
+  </Heading>
+  <Lead>
+    Once you review and confirm Part 1, your in-progress application will be viewable by our call center staff. If you need to make edits to Part 1, you’ll need to contact our call center at XXX‑XXX‑XXXX.
+  </Lead>
+  <Lead>
+    We’ll also notify your employer that you’ve started an application for paid family and medical leave.
+  </Lead>
+  <Lead>
+    Next, you’ll be able to work on Parts 2 and 3, and submit your application.
+  </Lead>
+  <ReviewHeading
+    editHref="/claims/name?claim_id=mock_application_id"
+    editText="Edit"
+    level="3"
+  >
+    Verify your identity
+  </ReviewHeading>
+  <ReviewRow
+    label="Name"
+    level="4"
+  >
+    Bud Monstera Baxter
+  </ReviewRow>
+  <ReviewRow
+    label="Residential address"
+    level="4"
+  >
+    19 Staniford St, Suite 505, Boston, MA 02114
+  </ReviewRow>
+  <ReviewRow
+    label="Driver's License Number"
+    level="4"
+  >
+    *********
+  </ReviewRow>
+  <ReviewRow
+    label="Social Security Number"
+    level="4"
+  >
+    ***-**-****
+  </ReviewRow>
+  <ReviewRow
+    label="Date of birth"
+    level="4"
+  >
+    **/**/****
+  </ReviewRow>
+  <ReviewHeading
+    editHref="/claims/leave-reason?claim_id=mock_application_id"
+    editText="Edit"
+    level="3"
+  >
+    Enter leave details
+  </ReviewHeading>
+  <ReviewRow
+    label="Leave type"
+    level="4"
+  >
+    Medical leave
+  </ReviewRow>
+  <ReviewRow
+    label="Are you pregnant or have you recently given birth?"
+    level="4"
+  >
+    No
+  </ReviewRow>
+  <ReviewRow
+    label="Leave duration"
+    level="4"
+  >
+    9/21/2021 – 12/30/2021
+  </ReviewRow>
+  <ReviewRow
+    label="Leave duration type"
+    level="4"
+  >
+    Continuous leave, Reduced leave schedule, Intermittent leave
+  </ReviewRow>
+  <ReviewRow
+    label="Average hours worked per week"
+    level="4"
+  >
+    20
+  </ReviewRow>
+  <ReviewHeading
+    editHref="/claims/employment-status?claim_id=mock_application_id"
+    editText="Edit"
+    level="3"
+  >
+    Enter employment information
+  </ReviewHeading>
+  <ReviewRow
+    label="Employment status"
+    level="4"
+  >
+    Currently employed
+  </ReviewRow>
+  <ReviewRow
+    label="Employer's FEIN"
+    level="4"
+  >
+    12-1234567
+  </ReviewRow>
+  <ReviewRow
+    label="Notified employer"
+    level="4"
+  >
+    Notified employer on 6/25/2020
+  </ReviewRow>
+  <ReviewHeading
+    editHref="/claims/employer-benefits?claim_id=mock_application_id"
+    editText="Edit"
+    level="3"
+  >
+    Report other leave and benefits
+  </ReviewHeading>
+  <ReviewRow
+    label="Employer-sponsored benefits?"
+    level="4"
+  >
+    Yes
+  </ReviewRow>
+  <EmployerBenefitList
+    entries={
+      Array [
+        EmployerBenefit {
+          "benefit_amount_dollars": "250",
+          "benefit_amount_frequency": null,
+          "benefit_end_date": "2021-12-30",
+          "benefit_start_date": "2021-08-12",
+          "benefit_type": "Paid Leave",
+        },
+      ]
+    }
+    reviewRowLevel="4"
+  />
+  <ReviewRow
+    label="Other sources of income?"
+    level="4"
+  >
+    Yes
+  </ReviewRow>
+  <OtherIncomeList
+    entries={
+      Array [
+        OtherIncome {
+          "income_amount_dollars": "250",
+          "income_amount_frequency": null,
+          "income_end_date": "2021-12-30",
+          "income_start_date": "2021-08-12",
+          "income_type": "Workers Comp",
+        },
+      ]
+    }
+    reviewRowLevel="4"
+  />
+  <ReviewRow
+    editText="Edit"
+    label="Previous paid or unpaid leave?"
+    level="4"
+  >
+    Yes
+  </ReviewRow>
+  <PreviousLeaveList
+    entries={
+      Array [
+        PreviousLeave {
+          "leave_end_date": "2021-12-30",
+          "leave_start_date": "2021-08-12",
+        },
+      ]
+    }
+    reviewRowLevel="4"
+  />
+  <p
+    className="margin-top-9"
+  >
+    Once you review and confirm Part 1, your in-progress application will be viewable by our call center staff. If you need to make edits to Part 1, you’ll need to contact our call center at XXX‑XXX‑XXXX.
+  </p>
+  <p>
+    We’ll also notify your employer that you’ve started an application for paid family and medical leave.
+  </p>
+  <p>
+    Next, you’ll be able to work on Parts 2 and 3, and submit your application.
+  </p>
+  <Button
+    className="margin-top-3"
+    onClick={[Function]}
+    type="button"
+  >
+    Submit Part 1
+  </Button>
+</div>
+`;
+
+exports[`Part 1 Review Page when data is empty does not render strings like 'null' or 'undefined' 1`] = `
+<div
+  className="measure-6"
+>
+  <BackButton />
+  <Title
+    hidden={true}
+  >
+    Review and confirm Part 1
+  </Title>
+  <Heading
+    className="margin-top-0"
+    level="2"
+    size="1"
+  >
+    <span
+      className="display-block font-heading-2xs margin-bottom-2 text-base-dark text-bold"
+    >
+      Part 1
+    </span>
+    Review and confirm: Tell us about yourself and your leave
+  </Heading>
+  <Lead>
+    Once you review and confirm Part 1, your in-progress application will be viewable by our call center staff. If you need to make edits to Part 1, you’ll need to contact our call center at XXX‑XXX‑XXXX.
+  </Lead>
+  <Lead>
+    We’ll also notify your employer that you’ve started an application for paid family and medical leave.
+  </Lead>
+  <Lead>
+    Next, you’ll be able to work on Parts 2 and 3, and submit your application.
+  </Lead>
+  <ReviewHeading
+    editHref="/claims/name?claim_id=mock_application_id"
+    editText="Edit"
+    level="3"
+  >
+    Verify your identity
+  </ReviewHeading>
+  <ReviewRow
+    label="Name"
+    level="4"
+  >
+      
+  </ReviewRow>
+  <ReviewRow
+    label="Residential address"
+    level="4"
+  />
+  <ReviewRow
+    label="Social Security Number"
+    level="4"
+  >
+    ***-**-****
+  </ReviewRow>
+  <ReviewRow
+    label="Date of birth"
+    level="4"
+  >
+    **/**/****
+  </ReviewRow>
+  <ReviewHeading
+    editHref="/claims/leave-reason?claim_id=mock_application_id"
+    editText="Edit"
+    level="3"
+  >
+    Enter leave details
+  </ReviewHeading>
+  <ReviewRow
+    label="Leave type"
+    level="4"
+  >
+    Medical leave
+  </ReviewRow>
+  <ReviewRow
+    label="Are you pregnant or have you recently given birth?"
+    level="4"
+  >
+    No
+  </ReviewRow>
+  <ReviewRow
+    label="Leave duration"
+    level="4"
+  />
+  <ReviewRow
+    label="Leave duration type"
+    level="4"
+  />
+  <ReviewHeading
+    editHref="/claims/employment-status?claim_id=mock_application_id"
+    editText="Edit"
+    level="3"
+  >
+    Enter employment information
+  </ReviewHeading>
+  <ReviewHeading
+    editHref="/claims/employer-benefits?claim_id=mock_application_id"
+    editText="Edit"
+    level="3"
+  >
+    Report other leave and benefits
+  </ReviewHeading>
+  <ReviewRow
+    label="Employer-sponsored benefits?"
+    level="4"
+  >
+    No
+  </ReviewRow>
+  <ReviewRow
+    label="Other sources of income?"
+    level="4"
+  >
+    No
+  </ReviewRow>
+  <ReviewRow
+    editText="Edit"
+    label="Previous paid or unpaid leave?"
+    level="4"
+  >
+    No
+  </ReviewRow>
+  <p
+    className="margin-top-9"
+  >
+    Once you review and confirm Part 1, your in-progress application will be viewable by our call center staff. If you need to make edits to Part 1, you’ll need to contact our call center at XXX‑XXX‑XXXX.
+  </p>
+  <p>
+    We’ll also notify your employer that you’ve started an application for paid family and medical leave.
+  </p>
+  <p>
+    Next, you’ll be able to work on Parts 2 and 3, and submit your application.
+  </p>
+  <Button
+    className="margin-top-3"
+    onClick={[Function]}
+    type="button"
+  >
+    Submit Part 1
+  </Button>
+</div>
+`;
+
+exports[`PreviousLeaveList when all data are present renders all data fields 1`] = `
+<OtherLeaveEntry
+  dates="8/12/2021 – 12/30/2021"
+  key="0"
+  label="Previous leave 1"
+  reviewRowLevel="4"
+/>
+`;
+
+exports[`PreviousLeaveList when data are missing doesn't render missing data 1`] = `
+<OtherLeaveEntry
+  dates=""
+  key="0"
+  label="Previous leave 1"
+  reviewRowLevel="4"
+/>
 `;

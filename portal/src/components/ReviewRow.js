@@ -10,7 +10,7 @@ const ReviewRow = (props) => {
   return (
     <div className="border-bottom-2px border-base-lighter margin-bottom-2 padding-bottom-2 display-flex flex-justify">
       <div className="margin-right-2">
-        <Heading level="3" size="4" className="margin-bottom-1">
+        <Heading level={props.level} size="4" className="margin-bottom-1">
           {props.label}
         </Heading>
         {props.children}
@@ -32,6 +32,11 @@ const ReviewRow = (props) => {
 
 ReviewRow.propTypes = {
   /**
+   * Renders an element (e.g. a button or link) which the user can interact with.
+   * If undefined, no element will be shown.
+   */
+  action: PropTypes.node,
+  /**
    * The content you want the user to review
    */
   children: PropTypes.node.isRequired,
@@ -50,10 +55,9 @@ ReviewRow.propTypes = {
    */
   label: PropTypes.node.isRequired,
   /**
-   * Renders an element (e.g. a button or link) which the user can interact with.
-   * If undefined, no element will be shown.
+   * The heading level to use for the label
    */
-  action: PropTypes.node,
+  level: PropTypes.oneOf(["2", "3", "4", "5", "6"]).isRequired,
 };
 
 export default ReviewRow;

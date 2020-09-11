@@ -19,7 +19,7 @@ const EmployerBenefits = (props) => {
 
   return (
     <React.Fragment>
-      <ReviewHeading>
+      <ReviewHeading level="2">
         {t("pages.employersClaimsReview.employerBenefits.header")}
       </ReviewHeading>
       <Table>

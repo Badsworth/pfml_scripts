@@ -8,6 +8,7 @@ const flagsConfig = {
   // Environments will fallback to these default values.
   defaults: {
     example: false,
+    enableProgressiveApp: false,
     // When this flag is enabled, the user can see the site.
     // To immediately hide the site from people who previously overrode this
     // flag in a cookie, you can rename this flag to something else (and also
@@ -21,6 +22,8 @@ const flagsConfig = {
   // environment config files.
   development: {
     example: true,
+    // Enable the new Part 1 review and confirm flow
+    enableProgressiveApp: true,
     pfmlTerriyay: true,
   },
   prod: {

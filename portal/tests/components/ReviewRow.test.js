@@ -7,13 +7,14 @@ function render(customProps = {}) {
     {
       children: "Medical",
       label: "Leave type",
+      level: "3",
     },
     customProps
   );
   const component = <ReviewRow {...props} />;
 
   return {
-    props: customProps,
+    props,
     wrapper: shallow(component),
   };
 }
