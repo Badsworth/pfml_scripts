@@ -128,7 +128,8 @@ resource "aws_lambda_function" "eligibility_feed" {
   runtime = var.runtime_py
   publish = "true"
 
-  timeout = 900
+  memory_size = 1024
+  timeout     = 900
 
   role   = aws_iam_role.lambda_role.arn
   layers = [local.newrelic_log_ingestion_layer]
@@ -142,15 +143,13 @@ resource "aws_lambda_function" "eligibility_feed" {
     variables = {
       DB_HOST                               = aws_db_instance.default.address
       DB_NAME                               = aws_db_instance.default.name
-      DB_USERNAME                           = aws_db_instance.default.username
-      DB_PASSWORD_SSM_PATH                  = "/service/${local.app_name}/${var.environment_name}/db-password"
+      DB_USERNAME                           = "pfml_api"
       NEW_RELIC_ACCOUNT_ID                  = local.newrelic_account_id
       NEW_RELIC_TRUSTED_ACCOUNT_KEY         = local.newrelic_trusted_account_key
       NEW_RELIC_LAMBDA_HANDLER              = "handler.handler" # the actual lambda entrypoint
       NEW_RELIC_DISTRIBUTED_TRACING_ENABLED = true
-      # need fineos s3 bucket
-      # EXPORT_FOLDER_PATH                            = "s3://"
-      # FOLDER_PATH                           = "s3://massgov-pfml-${var.environment_name}-fineos-transfer"
+      # TODO (API-300): TBD where exactly we will put the exports
+      # OUTPUT_DIRECTORY_PATH                 = "s3://massgov-pfml-${var.environment_name}-fineos-transfer"
     }
   }
 }

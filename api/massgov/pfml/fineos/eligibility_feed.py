@@ -201,6 +201,8 @@ def process_updates(db_session: db.Session, output_dir_path: str) -> ProcessUpda
     employers_total_count = 0
     employee_and_employer_pairs_total_count = 0
 
+    logger.info("Starting eligibility feeds generation")
+
     employers = db_session.query(Employer).yield_per(1000)
 
     for employer in employers:
@@ -237,6 +239,14 @@ def process_updates(db_session: db.Session, output_dir_path: str) -> ProcessUpda
                 employees,
                 output_file,
             )
+
+    logger.info(
+        "Finished writing all eligibility feeds",
+        extra={
+            "employers_total_count": employers_total_count,
+            "employee_and_employer_pairs_total_count": employee_and_employer_pairs_total_count,
+        },
+    )
 
     return ProcessUpdatesResult(
         employers_total_count=employers_total_count,
