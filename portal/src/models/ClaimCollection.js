@@ -9,10 +9,10 @@ export default class ClaimCollection extends BaseCollection {
   }
 
   /**
-   * @returns {Claim[]} Returns all claims with an "In progress" status
+   * @returns {Claim[]} Returns all claims with an "Started" or "Submitted" status
    */
   get inProgress() {
-    return this.items.filter((item) => item.status === ClaimStatus.started);
+    return this.items.filter((item) => item.status !== ClaimStatus.completed);
   }
 
   /**
@@ -20,6 +20,14 @@ export default class ClaimCollection extends BaseCollection {
    * those that made it to the Claims Processing System
    */
   get submitted() {
-    return this.items.filter((item) => item.isCompleted || item.isSubmitted);
+    return this.items.filter((item) => item.isSubmitted);
+  }
+
+  /**
+   * @returns {Claim[]} Returns all claims that have completed all parts of
+   the progressive application
+   */
+  get completed() {
+    return this.items.filter((item) => item.isCompleted);
   }
 }

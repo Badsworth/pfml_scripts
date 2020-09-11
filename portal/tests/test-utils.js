@@ -38,7 +38,10 @@ import useAppLogic from "../src/hooks/useAppLogic";
  */
 export class MockClaimBuilder {
   constructor() {
-    this.claimAttrs = { application_id: "mock_application_id" };
+    this.claimAttrs = {
+      application_id: "mock_application_id",
+      status: ClaimStatus.started,
+    };
   }
 
   /**

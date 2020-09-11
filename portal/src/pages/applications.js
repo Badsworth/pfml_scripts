@@ -19,7 +19,7 @@ const Applications = (props) => {
 
   const hasClaims = claims.items.length > 0;
   const hasInProgressClaims = hasClaims && claims.inProgress.length > 0;
-  const hasSubmittedClaims = hasClaims && claims.submitted.length > 0;
+  const hasCompletedClaims = hasClaims && claims.completed.length > 0;
 
   return (
     <React.Fragment>
@@ -43,12 +43,12 @@ const Applications = (props) => {
         </React.Fragment>
       )}
 
-      {hasSubmittedClaims && (
+      {hasCompletedClaims && (
         <React.Fragment>
           <Heading level="2" size="1">
             {t("pages.applications.submittedHeading")}
           </Heading>
-          {claims.submitted.map((claim, index) => (
+          {claims.completed.map((claim, index) => (
             <ApplicationCard
               key={claim.application_id}
               claim={claim}

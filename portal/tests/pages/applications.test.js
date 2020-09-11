@@ -1,5 +1,4 @@
-import Claim, { ClaimStatus } from "../../src/models/Claim";
-import { renderWithAppLogic, testHook } from "../test-utils";
+import { MockClaimBuilder, renderWithAppLogic, testHook } from "../test-utils";
 import Applications from "../../src/pages/applications";
 import ClaimCollection from "../../src/models/ClaimCollection";
 import React from "react";
@@ -40,13 +39,11 @@ describe("Applications", () => {
     });
   });
 
-  describe("when applications have been started", () => {
+  describe("when applications have been started or submitted", () => {
     beforeEach(() => {
       appLogic.claims.claims = new ClaimCollection([
-        new Claim({
-          application_id: "mock_claim_id",
-          status: ClaimStatus.started,
-        }),
+        new MockClaimBuilder().create(),
+        new MockClaimBuilder().submitted().create(),
       ]);
       render();
     });
@@ -66,18 +63,15 @@ describe("Applications", () => {
       `);
     });
 
-    it("renders list of started applications", () => {
-      expect(wrapper.find("ApplicationCard")).toHaveLength(1);
+    it("renders list of started and completed applications", () => {
+      expect(wrapper.find("ApplicationCard")).toHaveLength(2);
     });
   });
 
-  describe("when applications have been submitted", () => {
+  describe("when applications have been completed", () => {
     beforeEach(() => {
       appLogic.claims.claims = new ClaimCollection([
-        new Claim({
-          application_id: "mock_claim_id",
-          status: ClaimStatus.submitted,
-        }),
+        new MockClaimBuilder().completed().create(),
       ]);
       render();
     });
@@ -86,7 +80,7 @@ describe("Applications", () => {
       expect(wrapper.find("Title").prop("hidden")).toBe(true);
     });
 
-    it("renders a heading for the submitted applications", () => {
+    it("renders a heading for the completed applications", () => {
       expect(wrapper.find("Heading")).toMatchInlineSnapshot(`
         <Heading
           level="2"
@@ -97,28 +91,38 @@ describe("Applications", () => {
       `);
     });
 
-    it("renders list of submitted applications", () => {
+    it("renders list of completed applications", () => {
       expect(wrapper.find("ApplicationCard")).toHaveLength(1);
     });
   });
 
   describe("when in progress and completed applications both exist", () => {
+    let completedClaim, startedClaim, submittedClaim;
+
     beforeEach(() => {
+      startedClaim = new MockClaimBuilder().create();
+      submittedClaim = new MockClaimBuilder().submitted().create();
+      completedClaim = new MockClaimBuilder().completed().create();
       appLogic.claims.claims = new ClaimCollection([
-        new Claim({
-          application_id: "mock_claim_id",
-          status: ClaimStatus.started,
-        }),
-        new Claim({
-          application_id: "mock_claim_id",
-          status: ClaimStatus.completed,
-        }),
+        startedClaim,
+        submittedClaim,
+        completedClaim,
       ]);
       render();
     });
 
     it("increments the submitted ApplicationCard numbers by the number of in progress claims", () => {
-      expect(wrapper.find("ApplicationCard").last().prop("number")).toBe(2);
+      expect(wrapper.find("ApplicationCard").last().prop("number")).toBe(3);
+    });
+
+    it("separates completed claims into 'Submitted' section", () => {
+      const sections = wrapper.findWhere((el) =>
+        ["Heading", "ApplicationCard"].includes(el.name())
+      );
+
+      expect(sections.get(1).props.claim).toEqual(startedClaim);
+      expect(sections.get(2).props.claim).toEqual(submittedClaim);
+      expect(sections.get(4).props.claim).toEqual(completedClaim);
     });
   });
 });
