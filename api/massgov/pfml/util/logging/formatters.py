@@ -35,6 +35,7 @@ class JsonFormatter(logging.Formatter):  # noqa: B1
         if flask.has_request_context():
             record.method = flask.request.method
             record.path = flask.request.path
+            record.request_id = flask.request.headers.get("x-amzn-requestid", "")
         super(JsonFormatter, self).format(record)
         output = {
             key: str(value)

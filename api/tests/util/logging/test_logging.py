@@ -172,17 +172,18 @@ NameError: name 'non_existent_function' is not defined$""",
     assert last_line["message"] == "test exception"
 
 
-FakeRequest = collections.namedtuple("FakeRequest", ("method", "path"))
+FakeRequest = collections.namedtuple("FakeRequest", ("method", "path", "headers"))
 
 
 def test_log_message_with_flask_request_context(capsys, monkeypatch):
     massgov.pfml.util.logging.init("test_logging_1234")
     monkeypatch.setattr(flask, "has_request_context", lambda: True)
-    monkeypatch.setattr(flask, "request", FakeRequest("POST", "/test/path"))
+    monkeypatch.setattr(
+        flask, "request", FakeRequest("POST", "/test/path", headers={"x-amzn-requestid": "123"})
+    )
 
     logger = massgov.pfml.util.logging.get_logger("massgov.pfml.test.logging")
     logger.info("test request context")
-
     stderr = capsys.readouterr().err
     lines = stderr.split("\n")
     last_line = json.loads(lines[-2])
@@ -196,6 +197,7 @@ def test_log_message_with_flask_request_context(capsys, monkeypatch):
         "process",
         "method",
         "path",
+        "request_id",
         "message",
     }
     assert last_line["name"] == "massgov.pfml.test.logging"
@@ -204,4 +206,5 @@ def test_log_message_with_flask_request_context(capsys, monkeypatch):
     assert last_line["threadName"] == "MainThread"
     assert last_line["method"] == "POST"
     assert last_line["path"] == "/test/path"
+    assert last_line["request_id"] == "123"
     assert last_line["message"] == "test request context"
