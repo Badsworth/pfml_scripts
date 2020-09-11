@@ -10,6 +10,7 @@ import { Employer } from "./dor";
 import employers from "./fixtures/employerPool";
 import { ApplicationRequestBody } from "../api";
 import { generateHCP, generateIDFront, generateIDBack } from "./documents";
+import add from "date-fns/add";
 import path from "path";
 
 export function chance(
@@ -52,15 +53,13 @@ export function scenario(
   return async (opts) => {
     const hasMassId =
       config.residence === "MA-proofed" || config.residence === "MA-unproofed";
-    const endDate = soon(faker.random.number(365), "2021-02-01");
-    const startDate = faker.date.between(new Date(2021, 0), endDate);
-    let notificationDate;
-    if (config.shortNotice) {
-      notificationDate = new Date(startDate);
-      notificationDate.setDate(notificationDate.getDate() - 1);
-    } else {
-      notificationDate = faker.date.recent(60);
-    }
+
+    const [startDate, endDate] = generateLeaveDates();
+    const notificationDate = generateNotificationDate(
+      startDate,
+      !!config.shortNotice
+    );
+
     // Pulls random FEIN from employerPool fixture.
     const employer_fein =
       employers[Math.floor(Math.random() * employers.length)].fein;
@@ -162,6 +161,24 @@ export function scenario(
       skipSubmitClaim: !!config.skipSubmitClaim,
     };
   };
+}
+
+// Generate start and end dates for a leave request, not to exceed 20 weeks, and with a minimum
+// start date of 2021-01-01.
+function generateLeaveDates(): [Date, Date] {
+  const startDate = soon(182, "2021-01-01");
+  const endDate = add(startDate, {
+    weeks: faker.random.number({ min: 1, max: 19 }),
+  });
+  return [startDate, endDate];
+}
+
+// Generate an employer notification date based on the claim start date.
+// Optionally, generate a "short notice" date.
+function generateNotificationDate(startDate: Date, shortNotice: boolean) {
+  return add(startDate, {
+    days: shortNotice ? -1 : -60,
+  });
 }
 
 // Replacement for faker.date.soon(), which is slated to be released in the future.

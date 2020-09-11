@@ -177,35 +177,57 @@ describe("Simulation Generator", () => {
     expect(claim.skipSubmitClaim).toBeTruthy();
   });
 
+  function extractLeavePeriod(claim: SimulationClaim["claim"]): [Date, Date] {
+    const period = claim.leave_details?.continuous_leave_periods?.[0];
+    if (!period || !period.start_date || !period.end_date) {
+      throw new Error("No leave period given");
+    }
+    return [new Date(period.start_date), new Date(period.end_date)];
+  }
+
+  function extractNotificationDate(claim: SimulationClaim["claim"]): Date {
+    const str = claim.leave_details?.employer_notification_date;
+    if (!str) {
+      throw new Error("No notification date given");
+    }
+    return new Date(str);
+  }
+
   it("Should have an application start date past 01/01/2021", async () => {
     const { claim } = await scenario("TEST", {
       residence: "MA-proofed",
     })(opts);
-    const targetDate: number = new Date(2021, 0).getTime();
-    claim.leave_details?.continuous_leave_periods?.forEach((period) => {
-      if (!period.start_date) {
-        throw new Error("No start date given");
-      }
-      const claimStartDate: number = new Date(period.start_date).getTime();
-      expect(claimStartDate).toBeGreaterThan(targetDate);
-    });
+    const [start] = extractLeavePeriod(claim);
+    expect(start.getTime()).toBeGreaterThan(new Date(2021, 0).getTime());
   });
 
   it("Should have an application end date greater/later than start date", async () => {
     const { claim } = await scenario("TEST", {
       residence: "MA-proofed",
     })(opts);
-    claim.leave_details?.continuous_leave_periods?.forEach((period) => {
-      if (!period.start_date) {
-        throw new Error("No start date given");
-      }
-      const claimStartDate: number = new Date(period.start_date).getTime();
-      if (!period.end_date) {
-        throw new Error("No end date given");
-      }
-      const claimEndDate: number = new Date(period.end_date).getTime();
-      expect(claimEndDate).toBeGreaterThan(claimStartDate);
-    });
+    const [start, end] = extractLeavePeriod(claim);
+    expect(start.getTime()).toBeLessThan(end.getTime());
+  });
+
+  it("Should have an application end date within 20 weeks of the start date", async () => {
+    const { claim } = await scenario("TEST", {
+      residence: "MA-proofed",
+    })(opts);
+    const [start, end] = extractLeavePeriod(claim);
+    expect(end.getTime() - start.getTime()).toBeLessThan(
+      // 20 weeks worth of milliseconds...
+      86400 * 1000 * 7 * 20
+    );
+  });
+
+  it("Should have a notification date prior to the leave start date", async () => {
+    const { claim } = await scenario("TEST", {
+      residence: "MA-proofed",
+    })(opts);
+    const [start] = extractLeavePeriod(claim);
+    const notification = extractNotificationDate(claim);
+
+    expect(notification.getTime()).toBeLessThan(start.getTime());
   });
 
   it("Should have a notification date that qualifies as short notice", async () => {
@@ -213,22 +235,11 @@ describe("Simulation Generator", () => {
       residence: "MA-proofed",
       shortNotice: true,
     })(opts);
-    if (!claim.leave_details?.employer_notification_date) {
-      throw new Error("No notification date given");
-    }
-    const claimNotificationDate: number = new Date(
-      claim.leave_details.employer_notification_date
-    ).getTime();
-    claim.leave_details?.continuous_leave_periods?.forEach((period) => {
-      if (!period.start_date) {
-        throw new Error("No start date given");
-      }
-      const claimStartDate: number = new Date(period.start_date).getTime();
-      const diffInDays = Math.round(
-        Math.abs((claimStartDate - claimNotificationDate) / 86400000)
-      );
-      expect(diffInDays).toBeLessThan(30);
-    });
+    const [start] = extractLeavePeriod(claim);
+    const notification = extractNotificationDate(claim);
+    expect(notification.getTime()).toBeLessThanOrEqual(
+      start.getTime() - 86400 * 1000
+    );
   });
 });
 
