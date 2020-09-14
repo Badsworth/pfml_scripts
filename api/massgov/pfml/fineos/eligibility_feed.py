@@ -13,6 +13,7 @@ import massgov.pfml.db as db
 import massgov.pfml.util.csv as csv_util
 import massgov.pfml.util.logging
 from massgov.pfml.db.models.employees import Employee, Employer, WagesAndContributions
+from massgov.pfml.fineos.exception import FINEOSNotFound
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
 
@@ -197,7 +198,9 @@ class ProcessUpdatesResult:
     employee_and_employer_pairs_total_count: int
 
 
-def process_updates(db_session: db.Session, output_dir_path: str) -> ProcessUpdatesResult:
+def process_updates(
+    db_session: db.Session, fineos: massgov.pfml.fineos.AbstractFINEOSClient, output_dir_path: str
+) -> ProcessUpdatesResult:
     employers_total_count = 0
     employee_and_employer_pairs_total_count = 0
 
@@ -206,6 +209,16 @@ def process_updates(db_session: db.Session, output_dir_path: str) -> ProcessUpda
     employers = db_session.query(Employer).yield_per(1000)
 
     for employer in employers:
+        # Find FINEOS employer id using employer FEIN
+        try:
+            fineos_employer_id = fineos.find_employer(employer.employer_fein)
+        except FINEOSNotFound:
+            logger.info(
+                "Could not find employer FEIN in FINEOS. Continuing.",
+                extra={"employer_fein": employer.employer_fein},
+            )
+            continue
+
         employers_total_count += 1
 
         number_of_employees = query_employees_for_employer(
@@ -219,12 +232,15 @@ def process_updates(db_session: db.Session, output_dir_path: str) -> ProcessUpda
             1000
         )
 
-        output_file_path = f"{output_dir_path}/{datetime.now().strftime('%Y%m%dT%H%M%S')}_{employer.employer_id}.csv"
+        output_file_path = (
+            f"{output_dir_path}/{datetime.now().strftime('%Y%m%dT%H%M%S')}_{fineos_employer_id}.csv"
+        )
 
         logger.info(
             "Opening destination to write eligibility feed",
             extra={
-                "employer_id": employer.employer_id,
+                "internal_employer_id": employer.employer_id,
+                "fineos_employer_id": fineos_employer_id,
                 "number_of_employees": number_of_employees,
                 "output_file": output_file_path,
             },
@@ -234,7 +250,7 @@ def process_updates(db_session: db.Session, output_dir_path: str) -> ProcessUpda
             write_employees_to_csv(
                 db_session,
                 employer,
-                employer.employer_id,
+                fineos_employer_id,
                 number_of_employees,
                 employees,
                 output_file,

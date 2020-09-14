@@ -1219,7 +1219,7 @@ def test_application_post_submit_to_fineos(client, user, auth_token, test_db_ses
             {
                 "employee_registration": massgov.pfml.fineos.models.EmployeeRegistration(
                     user_id=fineos_user_id,
-                    employer_id="15",
+                    employer_id="7700000011000",
                     date_of_birth=date(1753, 1, 1),
                     national_insurance_no="999004444",
                 )

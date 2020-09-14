@@ -1,9 +1,11 @@
 import csv
 import os
 from datetime import date
+from pathlib import Path
 
 import pytest
 
+import massgov.pfml.fineos
 import massgov.pfml.fineos.eligibility_feed as ef
 from massgov.pfml.db.models.employees import EmployeeAddress, GeoState, TaxIdentifier
 from massgov.pfml.db.models.factories import (
@@ -344,10 +346,28 @@ def assert_number_of_data_lines_in_each_file(directory, num_data_lines):
                 assert_number_of_data_lines_in_file(f, num_data_lines)
 
 
+def employer_file_exists(directory, fineos_employer_id):
+    p = list(Path(directory).glob(f"*_{fineos_employer_id}.csv"))
+
+    if not p:
+        return False
+    return True
+
+
+def assert_employer_file_exists(directory, fineos_employer_id):
+    assert employer_file_exists(directory, fineos_employer_id)
+
+
+def assert_employer_file_does_not_exists(directory, fineos_employer_id):
+    assert not employer_file_exists(directory, fineos_employer_id)
+
+
 def test_process_updates_simple(test_db_session, tmp_path, initialize_factories_session):
     WagesAndContributionsFactory.create()
 
-    process_results = ef.process_updates(test_db_session, tmp_path)
+    process_results = ef.process_updates(
+        test_db_session, massgov.pfml.fineos.MockFINEOSClient(), tmp_path
+    )
 
     assert process_results.employers_total_count == 1
     assert process_results.employee_and_employer_pairs_total_count == 1
@@ -361,7 +381,9 @@ def test_process_updates_for_single_employee_different_employers(
     # wages_for_single_employee_different_employers
     WagesAndContributionsFactory.create_batch(size=5, employee=EmployeeFactory.create())
 
-    process_results = ef.process_updates(test_db_session, tmp_path)
+    process_results = ef.process_updates(
+        test_db_session, massgov.pfml.fineos.MockFINEOSClient(), tmp_path
+    )
 
     assert process_results.employers_total_count == 5
     assert process_results.employee_and_employer_pairs_total_count == 5
@@ -375,7 +397,9 @@ def test_process_updates_for_single_employer_different_employees(
     # wages_for_single_employer_different_employees
     WagesAndContributionsFactory.create_batch(size=5, employer=EmployerFactory.create())
 
-    process_results = ef.process_updates(test_db_session, tmp_path)
+    process_results = ef.process_updates(
+        test_db_session, massgov.pfml.fineos.MockFINEOSClient(), tmp_path
+    )
 
     assert process_results.employers_total_count == 1
     assert process_results.employee_and_employer_pairs_total_count == 5
@@ -391,9 +415,34 @@ def test_process_updates_for_multiple_wages_for_single_employee_employer_pair(
         size=5, employee=EmployeeFactory.create(), employer=EmployerFactory.create()
     )
 
-    process_results = ef.process_updates(test_db_session, tmp_path)
+    process_results = ef.process_updates(
+        test_db_session, massgov.pfml.fineos.MockFINEOSClient(), tmp_path
+    )
 
     assert process_results.employers_total_count == 1
     assert process_results.employee_and_employer_pairs_total_count == 1
 
     assert_number_of_data_lines_in_each_file(tmp_path, 1)
+
+
+def test_process_updates_skips_nonexistent_employer(
+    test_db_session, tmp_path, initialize_factories_session
+):
+    # Employer FEIN 999999999 will not be found by the mock FINEOS client and should be skipped
+    missing_employer_fein = "999999999"
+    WagesAndContributionsFactory.create_batch(
+        size=1, employer=EmployerFactory.create(employer_fein=missing_employer_fein)
+    )
+    # wages_for_single_employer_different_employees
+    employer = EmployerFactory.create()
+    WagesAndContributionsFactory.create_batch(size=5, employer=employer)
+
+    fineos_client = massgov.pfml.fineos.MockFINEOSClient()
+    process_results = ef.process_updates(test_db_session, fineos_client, tmp_path)
+
+    assert process_results.employers_total_count == 1
+    assert process_results.employee_and_employer_pairs_total_count == 5
+
+    # assert_employer_file_does_not_exists(tmp_path, missing_employer_fein)
+    assert_employer_file_exists(tmp_path, fineos_client.find_employer(employer.employer_fein))
+    assert_number_of_data_lines_in_each_file(tmp_path, 5)

@@ -64,7 +64,8 @@ class MockFINEOSClient(client.AbstractFINEOSClient):
         if employer_fein == "999999999":
             raise exception.FINEOSNotFound("Employer not found.")
         else:
-            return "15"
+            # TODO: Match the FINEOS employer id format
+            return employer_fein + "1000"
 
     def register_api_user(self, employee_registration: models.EmployeeRegistration) -> None:
         _capture_call("register_api_user", None, employee_registration=employee_registration)
