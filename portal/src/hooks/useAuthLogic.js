@@ -413,28 +413,7 @@ function getCreateAccountErrorInfo(error, t) {
     error.code === "InvalidParameterException" ||
     error.code === "InvalidPasswordException"
   ) {
-    // These are the specific Cognito errors that can occur:
-    //
-    // 1. When password is less than 6 characters long
-    // code: "InvalidParameterException"
-    // message: "1 validation error detected: Value at 'password' failed to satisfy constraint: Member must have length greater than or equal to 6"
-    //
-    // 2. When password is between 6 and 8 characters long
-    // code: "InvalidPasswordException"
-    // message: "Password did not conform with policy: Password not long enough"
-    //
-    // 3. When password does not have lower case characters
-    // code: "InvalidPasswordException"
-    // message: "Password did not conform with policy: Password must have uppercase characters"
-    //
-    // 4. When password does not have upper case characters
-    // code: "InvalidPasswordException"
-    // message: "Password did not conform with policy: Password must have lowercase characters"
-    //
-    // 5. When password has both upper and lower case characters but no digits
-    // code: "InvalidPasswordException"
-    // message: "Password did not conform with policy: Password must have numeric characters"
-    message = t("errors.auth.passwordErrors");
+    message = getInvalidPasswordExceptionMessage(error, t);
   } else if (error.code === "UsernameExistsException") {
     // TODO (CP-576): Obfuscate the fact that the user exists
     message = t("errors.auth.usernameExists");
@@ -463,7 +442,7 @@ function getResetPasswordErrorInfo(error, t) {
   } else if (error.code === "InvalidParameterException") {
     message = t("errors.auth.invalidParametersIncludingMaybePassword");
   } else if (error.code === "InvalidPasswordException") {
-    message = t("errors.auth.passwordErrors");
+    message = getInvalidPasswordExceptionMessage(error, t);
   } else if (error.code === "UserNotConfirmedException") {
     message = t("errors.auth.userNotConfirmed");
   } else if (error.code === "UserNotFoundException") {
@@ -474,6 +453,49 @@ function getResetPasswordErrorInfo(error, t) {
 
   const appErrorInfo = new AppErrorInfo({ message });
   return new AppErrorInfoCollection([appErrorInfo]);
+}
+
+/**
+ * InvalidPasswordException may occur for a variety of reasons,
+ * so our messaging needs to reflect this nuance.
+ * @param {object} error Error object that was thrown by Amplify
+ * @param {Function} t Localization method
+ * @returns {string}
+ */
+function getInvalidPasswordExceptionMessage(error, t) {
+  // These are the specific Cognito errors that can occur:
+  //
+  // 1. When password is less than 6 characters long
+  // code: "InvalidParameterException"
+  // message: "1 validation error detected: Value at 'password' failed to satisfy constraint: Member must have length greater than or equal to 6"
+  //
+  // 2. When password is between 6 and 8 characters long
+  // code: "InvalidPasswordException"
+  // message: "Password did not conform with policy: Password not long enough"
+  //
+  // 3. When password does not have lower case characters
+  // code: "InvalidPasswordException"
+  // message: "Password did not conform with policy: Password must have uppercase characters"
+  //
+  // 4. When password does not have upper case characters
+  // code: "InvalidPasswordException"
+  // message: "Password did not conform with policy: Password must have lowercase characters"
+  //
+  // 5. When password has both upper and lower case characters but no digits
+  // code: "InvalidPasswordException"
+  // message: "Password did not conform with policy: Password must have numeric characters"
+  //
+  // 6. When password is a commonly used or compromised credential
+  // code: "InvalidPasswordException"
+  // message: "Provided password cannot be used for security reasons."
+
+  if (error.message.match(/password cannot be used for security reasons/)) {
+    // For this case, a password may already conform to the password format
+    // requirements, so showing the password format error would be confusing
+    return t("errors.auth.insecurePassword");
+  }
+
+  return t("errors.auth.passwordErrors");
 }
 
 /**

@@ -417,7 +417,7 @@ describe("useAuthLogic", () => {
       );
     });
 
-    it("sets app errors when Auth.signUp throws InvalidPasswordException", () => {
+    it("sets app errors when Auth.signUp throws InvalidPasswordException due to non-conforming password", () => {
       const invalidPasswordErrorMessages = [
         "Password did not conform with policy: Password not long enough",
         "Password did not conform with policy: Password must have uppercase characters",
@@ -427,9 +427,9 @@ describe("useAuthLogic", () => {
 
       const cognitoErrors = invalidPasswordErrorMessages.map((message) => {
         return {
-          code: "InvalidParameterException",
+          code: "InvalidPasswordException",
           message,
-          name: "InvalidParameterException",
+          name: "InvalidPasswordException",
         };
       });
 
@@ -448,6 +448,38 @@ describe("useAuthLogic", () => {
         expect(appErrors.items).toHaveLength(1);
         expect(appErrors.items[0].message).toMatchInlineSnapshot(
           `"Your password does not meet the requirements. Please check the requirements and try again."`
+        );
+      }
+    });
+
+    it("sets app errors when Auth.signUp throws InvalidPasswordException due to insecure password", () => {
+      const invalidPasswordErrorMessages = [
+        "Provided password cannot be used for security reasons.",
+      ];
+
+      const cognitoErrors = invalidPasswordErrorMessages.map((message) => {
+        return {
+          code: "InvalidPasswordException",
+          message,
+          name: "InvalidPasswordException",
+        };
+      });
+
+      expect.assertions(cognitoErrors.length * 2);
+
+      for (const cognitoError of cognitoErrors) {
+        jest.resetAllMocks();
+        jest.spyOn(Auth, "signUp").mockImplementation(() => {
+          // Ignore lint rule since AWS Auth class actually throws an object literal
+          // eslint-disable-next-line no-throw-literal
+          throw cognitoError;
+        });
+        act(() => {
+          createAccount(username, password);
+        });
+        expect(appErrors.items).toHaveLength(1);
+        expect(appErrors.items[0].message).toMatchInlineSnapshot(
+          `"Please use a different password. Avoid commonly used passwords and avoid using the same password on multiple websites."`
         );
       }
     });
@@ -716,7 +748,7 @@ describe("useAuthLogic", () => {
       );
     });
 
-    it("sets app errors when InvalidPasswordException is thrown", () => {
+    it("sets app errors when InvalidPasswordException is thrown due to non-conforming password", () => {
       jest.spyOn(Auth, "forgotPasswordSubmit").mockImplementation(() => {
         // Ignore lint rule since AWS Auth class actually throws an object literal
         // eslint-disable-next-line no-throw-literal
@@ -734,6 +766,27 @@ describe("useAuthLogic", () => {
       expect(appErrors.items).toHaveLength(1);
       expect(appErrors.items[0].message).toMatchInlineSnapshot(
         `"Your password does not meet the requirements. Please check the requirements and try again."`
+      );
+    });
+
+    it("sets app errors when InvalidPasswordException is thrown due to insecure password", () => {
+      jest.spyOn(Auth, "forgotPasswordSubmit").mockImplementation(() => {
+        // Ignore lint rule since AWS Auth class actually throws an object literal
+        // eslint-disable-next-line no-throw-literal
+        throw {
+          code: "InvalidPasswordException",
+          message: "Provided password cannot be used for security reasons.",
+          name: "InvalidPasswordException",
+        };
+      });
+
+      act(() => {
+        resetPassword(username, verificationCode, password);
+      });
+
+      expect(appErrors.items).toHaveLength(1);
+      expect(appErrors.items[0].message).toMatchInlineSnapshot(
+        `"Please use a different password. Avoid commonly used passwords and avoid using the same password on multiple websites."`
       );
     });
 

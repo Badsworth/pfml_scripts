@@ -38,6 +38,10 @@ resource "aws_cognito_user_pool" "claimants_pool" {
     temporary_password_validity_days = 7
   }
 
+  user_pool_add_ons {
+    advanced_security_mode = "ENFORCED"
+  }
+
   username_configuration {
     case_sensitive = false
   }

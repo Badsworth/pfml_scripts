@@ -20,6 +20,8 @@ const errors = {
     expiredVerificationCode:
       "Invalid verification code. Please request a new code.",
     incorrectEmailOrPassword: "Incorrect email or password",
+    insecurePassword:
+      "Please use a different password. Avoid commonly used passwords and avoid using the same password on multiple websites.",
     invalidParametersFallback: "Please enter all required information",
     invalidParametersIncludingMaybePassword:
       "Please check the requirements and try again. Ensure all required information is entered and the password meets the requirements.",
