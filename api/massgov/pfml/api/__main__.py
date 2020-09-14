@@ -55,9 +55,11 @@ def start_server():
         # For more details:
         # https://werkzeug.palletsprojects.com/en/1.0.x/serving/?highlight=use_reloader#werkzeug.serving.run_simple
         logger.info("Running API Application...")
+
         connexion_app.run(
             port=app_config.port, use_reloader=enable_reloader, extra_files=openapi_files
         )
+
     except Exception:
         logger.exception("Server NOT started because of exception")
         raise
