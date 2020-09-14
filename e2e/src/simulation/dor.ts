@@ -91,7 +91,7 @@ function getEmployeeWageRecords(
           formatISODate(period),
           employee.first_name?.padEnd(255),
           employee.last_name?.padEnd(255),
-          employee.employee_ssn?.replace(/-/g, ""),
+          employee.tax_identifier?.replace(/-/g, ""),
           "F", // Independent contractor.
           "T", // Opt-in
           // @todo: Toggle wages & contributions depending on the settings of the employee.

@@ -53,7 +53,7 @@ describe("DOR Employee File Generator", function () {
         employment_status: null,
         first_name: "Dave",
         last_name: "Smith",
-        employee_ssn: "000-00-0000",
+        tax_identifier: "000-00-0000",
         employer_fein: employer.fein,
         date_of_birth: "2020-01-01",
         mass_id: "12345",
