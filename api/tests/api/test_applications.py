@@ -258,6 +258,7 @@ def test_application_patch_mailing_address(client, user, auth_token, test_db_ses
             "city": "Chicago",
             "state": "IL",
             "line_1": "123 Bar St.",
+            "line_2": None,
             "zip": "12345-1234",
         }
     }

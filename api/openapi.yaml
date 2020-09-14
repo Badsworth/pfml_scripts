@@ -685,6 +685,7 @@ components:
         line_2:
           type: string
           example: ""
+          nullable: true
         state:
           type: string
           example: "MA"
