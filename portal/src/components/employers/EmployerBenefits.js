@@ -1,4 +1,4 @@
-import AmendLink from "./AmendLink";
+import AmendButton from "./AmendButton";
 import { EmployerBenefitType } from "../../models/EmployerBenefit";
 import PropTypes from "prop-types";
 import React from "react";
@@ -70,7 +70,7 @@ const EmployerBenefits = (props) => {
                     : t("pages.employersClaimsReview.none")}
                 </td>
                 <td>
-                  <AmendLink />
+                  <AmendButton />
                 </td>
               </tr>
             );

@@ -1,4 +1,4 @@
-import AmendLink from "./AmendLink";
+import AmendButton from "./AmendButton";
 import Details from "../Details";
 import PropTypes from "prop-types";
 import React from "react";
@@ -55,7 +55,7 @@ const PastLeave = (props) => {
                     })}
                   </td>
                   <td>
-                    <AmendLink />
+                    <AmendButton />
                   </td>
                 </tr>
               );

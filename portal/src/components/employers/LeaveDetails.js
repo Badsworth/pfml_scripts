@@ -1,7 +1,9 @@
-import AmendLink from "./AmendLink";
+import React, { useState } from "react";
+import AmendButton from "./AmendButton";
+import AmendmentForm from "./AmendmentForm";
+import InputDate from "../InputDate";
 import { LeaveReason } from "../../models/Claim";
 import PropTypes from "prop-types";
-import React from "react";
 import ReviewHeading from "../ReviewHeading";
 import ReviewRow from "../ReviewRow";
 import findKeyByValue from "../../utils/findKeyByValue";
@@ -22,6 +24,14 @@ const LeaveDetails = (props) => {
       temp: { end_date, start_date },
     },
   } = props;
+
+  const [amendment, setAmendment] = useState(employer_notification_date);
+  const [isAmendmentFormDisplayed, setIsAmendmentFormDisplayed] = useState(
+    false
+  );
+  const amendDate = (event) => {
+    setAmendment(event.target.value);
+  };
 
   return (
     <React.Fragment>
@@ -47,9 +57,30 @@ const LeaveDetails = (props) => {
         label={t(
           "pages.employersClaimsReview.leaveDetails.employerNotifiedLabel"
         )}
-        action={<AmendLink />}
+        action={
+          <AmendButton onClick={() => setIsAmendmentFormDisplayed(true)} />
+        }
       >
         {formatDateRange(employer_notification_date)}
+        {isAmendmentFormDisplayed && (
+          <AmendmentForm
+            onCancel={() => {
+              setIsAmendmentFormDisplayed(false);
+              setAmendment(employer_notification_date);
+            }}
+          >
+            <InputDate
+              onChange={amendDate}
+              value={amendment}
+              label={t("components.amendmentForm.question_notificationDate")}
+              name="employer-notification-date-amendment"
+              dayLabel={t("components.form.dateInputDayLabel")}
+              monthLabel={t("components.form.dateInputMonthLabel")}
+              yearLabel={t("components.form.dateInputYearLabel")}
+              smallLabel
+            />
+          </AmendmentForm>
+        )}
       </ReviewRow>
       <ReviewRow
         level="3"

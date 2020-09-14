@@ -8,7 +8,7 @@ exports[`SupportingWorkDetails renders the component 1`] = `
     Supporting work details
   </ReviewHeading>
   <ReviewRow
-    action={<AmendLink />}
+    action={<AmendButton />}
     label="Weekly hours worked"
     level="3"
   >

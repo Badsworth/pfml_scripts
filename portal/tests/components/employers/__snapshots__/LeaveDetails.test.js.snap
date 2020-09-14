@@ -20,7 +20,11 @@ exports[`LeaveDetails renders the component 1`] = `
     1
   </ReviewRow>
   <ReviewRow
-    action={<AmendLink />}
+    action={
+      <AmendButton
+        onClick={[Function]}
+      />
+    }
     label="Employer notified"
     level="3"
   >

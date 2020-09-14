@@ -1,4 +1,4 @@
-import AmendLink from "./AmendLink";
+import AmendButton from "./AmendButton";
 import PropTypes from "prop-types";
 import React from "react";
 import ReviewHeading from "../ReviewHeading";
@@ -26,7 +26,7 @@ const SupportingWorkDetails = (props) => {
         label={t(
           "pages.employersClaimsReview.supportingWorkDetails.hoursWorkedLabel"
         )}
-        action={<AmendLink />}
+        action={<AmendButton />}
       >
         {intermittentLeavePeriods.map((leavePeriod, index) => {
           return (

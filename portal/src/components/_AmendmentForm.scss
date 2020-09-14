@@ -1,0 +1,9 @@
+.c-amendment-form {
+  legend {
+    @extend .font-heading-xs;
+  }
+
+  fieldset:first-child legend {
+    @extend .margin-top-0;
+  }
+}

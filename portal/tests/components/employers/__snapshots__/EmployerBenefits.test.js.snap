@@ -47,7 +47,7 @@ exports[`EmployerBenefits renders the component 1`] = `
           None
         </td>
         <td>
-          <AmendLink />
+          <AmendButton />
         </td>
       </tr>
       <tr
@@ -65,7 +65,7 @@ exports[`EmployerBenefits renders the component 1`] = `
           1000
         </td>
         <td>
-          <AmendLink />
+          <AmendButton />
         </td>
       </tr>
       <tr
@@ -83,7 +83,7 @@ exports[`EmployerBenefits renders the component 1`] = `
           None
         </td>
         <td>
-          <AmendLink />
+          <AmendButton />
         </td>
       </tr>
       <tr
@@ -101,7 +101,7 @@ exports[`EmployerBenefits renders the component 1`] = `
           None
         </td>
         <td>
-          <AmendLink />
+          <AmendButton />
         </td>
       </tr>
     </tbody>

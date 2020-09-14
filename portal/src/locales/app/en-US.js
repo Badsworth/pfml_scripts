@@ -840,6 +840,10 @@ const pages = {
 };
 
 const components = {
+  amendmentForm: {
+    cancel: "Cancel amendment",
+    question_notificationDate: "When did the employee give notice?",
+  },
   applicationCard: {
     feinHeading: "Employer FEIN",
     heading: "Application {{number}}",

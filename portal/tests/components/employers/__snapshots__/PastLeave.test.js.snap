@@ -46,7 +46,7 @@ exports[`PastLeave renders the component 1`] = `
           N/A days
         </td>
         <td>
-          <AmendLink />
+          <AmendButton />
         </td>
       </tr>
       <tr
@@ -61,7 +61,7 @@ exports[`PastLeave renders the component 1`] = `
           N/A days
         </td>
         <td>
-          <AmendLink />
+          <AmendButton />
         </td>
       </tr>
       <tr>
