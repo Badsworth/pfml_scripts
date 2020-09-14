@@ -254,17 +254,17 @@ const pages = {
       "Your progress is automatically saved as you complete the application. You can edit any information you enter in Part 1 until step 5 is completed.",
     stepListDescription_1_submitted:
       "If you need to edit your information in Part 1, you’ll need to call the Contact Center at $t(shared.callCenterPhoneNumber).",
-    // TODO (CP-907): Add correct fax # and address
     stepListDescription_2:
-      "Uploading documents online leads to faster processing, but you can also fax documents to NNN-NNN-NNNN, or mail them to 123 Address.",
-    stepListDescription_3:
       "Entering payment information here leads to faster processing, but you can also call $t(shared.callCenterPhoneNumber).",
+    // TODO (CP-907): Add correct fax # and address
+    stepListDescription_3:
+      "Uploading documents online leads to faster processing, but you can also fax documents to NNN-NNN-NNNN, or mail them to 123 Address.",
     stepListTitle_1:
       "<part-number>Part {{number}}</part-number> Tell us about yourself and your leave",
     stepListTitle_2:
-      "<part-number>Part {{number}}</part-number> Upload your documents",
-    stepListTitle_3:
       "<part-number>Part {{number}}</part-number> Enter your payment information",
+    stepListTitle_3:
+      "<part-number>Part {{number}}</part-number> Upload your documents",
     stepTitle_employerInformation: "$t(shared.employerInformationStepTitle)",
     stepTitle_leaveDetails: "$t(shared.leaveDetailsStepTitle)",
     stepTitle_otherLeave: "$t(shared.otherLeaveStepTitle)",

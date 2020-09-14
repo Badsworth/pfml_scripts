@@ -11,9 +11,9 @@ export const ClaimSteps = {
   leaveDetails: "leaveDetails",
   employerInformation: "employerInformation",
   otherLeave: "otherLeave",
+  payment: "payment",
   uploadId: "uploadId",
   uploadCertification: "uploadCertification",
-  payment: "payment",
 };
 
 const fieldHasValue = (fieldPath, context) => {
@@ -223,9 +223,19 @@ export default class Step extends BaseModel {
       warnings,
     });
 
+    const payment = new Step({
+      name: ClaimSteps.payment,
+      group: 2,
+      pages: pagesByStep[ClaimSteps.payment],
+      // TODO (CP-902): This step should depend on Part 1 being submitted, which will be a new step
+      dependsOn: [verifyId, leaveDetails, employerInformation, otherLeave],
+      context,
+      warnings,
+    });
+
     const uploadId = new Step({
       name: ClaimSteps.uploadId,
-      group: 2,
+      group: 3,
       pages: pagesByStep[ClaimSteps.uploadId],
       // TODO (CP-902): This step should depend on Part 1 being submitted, which will be a new step
       dependsOn: [verifyId, leaveDetails, employerInformation, otherLeave],
@@ -235,18 +245,8 @@ export default class Step extends BaseModel {
 
     const uploadCertification = new Step({
       name: ClaimSteps.uploadCertification,
-      group: 2,
-      pages: pagesByStep[ClaimSteps.uploadCertification],
-      // TODO (CP-902): This step should depend on Part 1 being submitted, which will be a new step
-      dependsOn: [verifyId, leaveDetails, employerInformation, otherLeave],
-      context,
-      warnings,
-    });
-
-    const payment = new Step({
-      name: ClaimSteps.payment,
       group: 3,
-      pages: pagesByStep[ClaimSteps.payment],
+      pages: pagesByStep[ClaimSteps.uploadCertification],
       // TODO (CP-902): This step should depend on Part 1 being submitted, which will be a new step
       dependsOn: [verifyId, leaveDetails, employerInformation, otherLeave],
       context,
@@ -258,9 +258,9 @@ export default class Step extends BaseModel {
       leaveDetails,
       employerInformation,
       otherLeave,
+      payment,
       uploadId,
       uploadCertification,
-      payment,
     ];
   };
 }

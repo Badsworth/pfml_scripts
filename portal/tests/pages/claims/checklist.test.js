@@ -51,7 +51,7 @@ describe("Checklist", () => {
       const { wrapper } = renderWithAppLogic(Checklist, {
         claimAttrs: claim,
       });
-      const uploadCertificationStep = wrapper.find("Step").at(5);
+      const uploadCertificationStep = wrapper.find("Step").at(6);
       expect(uploadCertificationStep).toMatchSnapshot();
     });
 
@@ -63,7 +63,7 @@ describe("Checklist", () => {
       const { wrapper } = renderWithAppLogic(Checklist, {
         claimAttrs: claim,
       });
-      const uploadCertificationStep = wrapper.find("Step").at(5);
+      const uploadCertificationStep = wrapper.find("Step").at(6);
       expect(uploadCertificationStep).toMatchSnapshot();
     });
 
@@ -75,7 +75,7 @@ describe("Checklist", () => {
       const { wrapper } = renderWithAppLogic(Checklist, {
         claimAttrs: claim,
       });
-      const uploadCertificationStep = wrapper.find("Step").at(5);
+      const uploadCertificationStep = wrapper.find("Step").at(6);
       expect(uploadCertificationStep).toMatchSnapshot();
     });
   });

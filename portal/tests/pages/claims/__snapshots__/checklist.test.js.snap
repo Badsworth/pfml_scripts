@@ -4,7 +4,7 @@ exports[`Checklist Upload leave certification step renders correctly if claim re
 <Step
   completedText="Completed"
   key="uploadCertification"
-  number={6}
+  number={7}
   status="completed"
   stepHref="/claims/upload-certification?claim_id=mock_application_id"
   title="Upload leave certification documents"
@@ -37,7 +37,7 @@ exports[`Checklist Upload leave certification step renders correctly if claim re
 <Step
   completedText="Completed"
   key="uploadCertification"
-  number={6}
+  number={7}
   status="completed"
   stepHref="/claims/upload-certification?claim_id=mock_application_id"
   title="Upload leave certification documents"
@@ -70,7 +70,7 @@ exports[`Checklist Upload leave certification step renders correctly if claim re
 <Step
   completedText="Completed"
   key="uploadCertification"
-  number={6}
+  number={7}
   status="completed"
   stepHref="/claims/upload-certification?claim_id=mock_application_id"
   title="Upload leave certification documents"
@@ -99,9 +99,9 @@ exports[`Checklist Upload leave certification step renders correctly if claim re
 </Step>
 `;
 
-exports[`Checklist when Part 1 is submitted renders descriptions for Part 2 and 3 1`] = `"Uploading documents online leads to faster processing, but you can also fax documents to NNN-NNN-NNNN, or mail them to 123 Address."`;
+exports[`Checklist when Part 1 is submitted renders descriptions for Part 2 and 3 1`] = `"Entering payment information here leads to faster processing, but you can also call XXX‑XXX‑XXXX."`;
 
-exports[`Checklist when Part 1 is submitted renders descriptions for Part 2 and 3 2`] = `"Entering payment information here leads to faster processing, but you can also call XXX‑XXX‑XXXX."`;
+exports[`Checklist when Part 1 is submitted renders descriptions for Part 2 and 3 2`] = `"Uploading documents online leads to faster processing, but you can also fax documents to NNN-NNN-NNNN, or mail them to 123 Address."`;
 
 exports[`Checklist when Part 1 is submitted renders different description for Part 1 1`] = `"If you need to edit your information in Part 1, you’ll need to call the Contact Center at XXX‑XXX‑XXXX."`;
 
@@ -301,11 +301,11 @@ exports[`Checklist when claim has not been started renders initial checklist sta
   >
     <Step
       completedText="Completed"
-      key="uploadId"
+      key="payment"
       number={5}
       status="disabled"
-      stepHref="/claims/upload-id?claim_id=mock_application_id"
-      title="Upload identity document"
+      stepHref="/claims/payment-method?claim_id=mock_application_id"
+      title="Add payment information"
     >
       <Trans
         components={
@@ -324,37 +324,7 @@ exports[`Checklist when claim has not been started renders initial checklist sta
         i18nKey="pages.claimsChecklist.stepHTMLDescription"
         tOptions={
           Object {
-            "context": "uploadId",
-          }
-        }
-      />
-    </Step>
-    <Step
-      completedText="Completed"
-      key="uploadCertification"
-      number={6}
-      status="disabled"
-      stepHref="/claims/upload-certification?claim_id=mock_application_id"
-      title="Upload leave certification documents"
-    >
-      <Trans
-        components={
-          Object {
-            "healthcare-provider-form-link": <a
-              href="https://www.mass.gov/hcp-form"
-              rel="noopener"
-              target="_blank"
-            />,
-            "li": <li />,
-            "ul": <ul
-              className="usa-list"
-            />,
-          }
-        }
-        i18nKey="pages.claimsChecklist.stepHTMLDescription"
-        tOptions={
-          Object {
-            "context": undefined,
+            "context": "payment",
           }
         }
       />
@@ -392,11 +362,11 @@ exports[`Checklist when claim has not been started renders initial checklist sta
   >
     <Step
       completedText="Completed"
-      key="payment"
-      number={7}
+      key="uploadId"
+      number={6}
       status="disabled"
-      stepHref="/claims/payment-method?claim_id=mock_application_id"
-      title="Add payment information"
+      stepHref="/claims/upload-id?claim_id=mock_application_id"
+      title="Upload identity document"
     >
       <Trans
         components={
@@ -415,7 +385,37 @@ exports[`Checklist when claim has not been started renders initial checklist sta
         i18nKey="pages.claimsChecklist.stepHTMLDescription"
         tOptions={
           Object {
-            "context": "payment",
+            "context": "uploadId",
+          }
+        }
+      />
+    </Step>
+    <Step
+      completedText="Completed"
+      key="uploadCertification"
+      number={7}
+      status="disabled"
+      stepHref="/claims/upload-certification?claim_id=mock_application_id"
+      title="Upload leave certification documents"
+    >
+      <Trans
+        components={
+          Object {
+            "healthcare-provider-form-link": <a
+              href="https://www.mass.gov/hcp-form"
+              rel="noopener"
+              target="_blank"
+            />,
+            "li": <li />,
+            "ul": <ul
+              className="usa-list"
+            />,
+          }
+        }
+        i18nKey="pages.claimsChecklist.stepHTMLDescription"
+        tOptions={
+          Object {
+            "context": undefined,
           }
         }
       />
