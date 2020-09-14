@@ -1,4 +1,5 @@
 import Claim, {
+  ClaimStatus,
   EmploymentStatus,
   IntermittentLeavePeriod,
   LeaveReason,
@@ -217,6 +218,9 @@ describe("claimFlowConfigs", () => {
       },
     },
   };
+  const completed = {
+    status: ClaimStatus.completed,
+  };
   const testData = [
     { claimData: intermittentLeave, userData: {} },
     { claimData: reducedSchedule, userData: {} },
@@ -227,6 +231,7 @@ describe("claimFlowConfigs", () => {
     { claimData: hasOtherIncomes, userData: {} },
     { claimData: hasPreviousLeaves, userData: {} },
     { claimData: bondingClaim, userData: {} },
+    { claimData: completed, userData: {} },
   ];
 
   // Action that's fired when exiting dashboard state and creating a claim and

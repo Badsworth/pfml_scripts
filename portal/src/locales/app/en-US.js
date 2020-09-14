@@ -246,6 +246,8 @@ const pages = {
       "You will need to know:<ul><li>If you will use any benefits from your employer because you are taking leave.</li><li>If you will receive income from any other sources during your leave.</li><li>The dates for any leave you’ve taken since January 1, 2021 for a condition that is covered by Paid Family and Medical Leave.</li></ul>",
     stepHTMLDescription_payment:
       "<p>Tell us how you want to receive payment.</p><p>If you want to receive payment by direct deposit, you will need to provide your bank account information, including a routing number and account number.</p>",
+    stepHTMLDescription_reviewAndConfirm:
+      "<p>Once you confirm your leave information, we’ll notify your employer. Your job will be protected. To complete your application, you will need to finish the last three steps and submit.</p><p>If you need to edit your information in Part 1 after completing this step, you’ll need to call the Contact Center at $t(shared.callCenterPhoneNumber).</p>",
     stepHTMLDescription_uploadId:
       "Upload proof of identity. If you entered a Massachusetts driver’s license or Mass ID number in step 1, upload the same ID.",
     stepHTMLDescription_verifyId:
@@ -269,6 +271,7 @@ const pages = {
     stepTitle_leaveDetails: "$t(shared.leaveDetailsStepTitle)",
     stepTitle_otherLeave: "$t(shared.otherLeaveStepTitle)",
     stepTitle_payment: "Add payment information",
+    stepTitle_reviewAndConfirm: "Review and confirm",
     stepTitle_uploadCertification: "Upload leave certification documents",
     stepTitle_uploadId: "Upload identity document",
     stepTitle_verifyId: "$t(shared.verifyIdStepTitle)",
@@ -605,7 +608,7 @@ const pages = {
     // eslint-disable-next-line no-template-curly-in-string
     otherLeaveDollarAmount: "${{amount}} every month",
     otherLeaveSectionHeading: "$t(shared.otherLeaveStepTitle)",
-    pageHeading: "Review and confirm: Tell us about yourself and your leave",
+    pageHeading: "Review and confirm: Tell us about yourself and your leave",
     partHeading: "Part 1",
     partOneNextStepsLine1:
       "Once you review and confirm Part 1, your in-progress application will be viewable by our call center staff. If you need to make edits to Part 1, you’ll need to contact our call center at $t(shared.callCenterPhoneNumber).",

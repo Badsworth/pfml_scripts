@@ -18,7 +18,8 @@ import withClaim from "../../hoc/withClaim";
 
 export const fields = [
   "claim.temp.payment_preferences[0].payment_method",
-  "claim.temp.payment_preferences[0].account_details",
+  "claim.temp.payment_preferences[0].account_details.account_number",
+  "claim.temp.payment_preferences[0].account_details.routing_number",
   "claim.temp.payment_preferences[0].destination_address",
 ];
 

@@ -22,9 +22,11 @@ exports[`Step renders component 1`] = `
       >
         Step Title
       </Heading>
-      <p>
+      <div
+        className="usa-prose"
+      >
         <Child />
-      </p>
+      </div>
     </div>
     <div
       className="margin-top-2 tablet:margin-top-0 tablet:text-right tablet:grid-col-4"

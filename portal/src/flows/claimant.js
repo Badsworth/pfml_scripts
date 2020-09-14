@@ -47,6 +47,7 @@ export const guards = {
     get(claim, "leave_details.reason") === LeaveReason.bonding,
   isEmployed: ({ claim }) =>
     get(claim, "employment_status") === EmploymentStatus.employed,
+  isCompleted: ({ claim }) => claim.isCompleted,
   hasStateId: ({ claim }) => claim.has_state_id === true,
   hasEmployerBenefits: ({ claim }) => claim.has_employer_benefits === true,
   hasOtherIncomes: ({ claim }) => claim.has_other_incomes === true,
@@ -79,6 +80,11 @@ export default {
     [routes.claims.checklist]: {
       meta: {},
       on: {
+        // These are aids for our unit tests to support
+        // navigating the full state machine. Each step
+        // in the checklist should have a transition
+        // that points to the expected route a user is
+        // directed to when they enter the Step.
         VERIFY_ID: routes.claims.name,
         LEAVE_DETAILS: routes.claims.leaveReason,
         OTHER_LEAVE: routes.claims.employerBenefits,
@@ -87,12 +93,6 @@ export default {
         REVIEW_AND_CONFIRM: routes.claims.review,
         UPLOAD_CERTIFICATION: routes.claims.uploadCertification,
         UPLOAD_ID: routes.claims.uploadId,
-      },
-    },
-    [routes.claims.review]: {
-      meta: {},
-      on: {
-        CONTINUE: routes.claims.success,
       },
     },
     [routes.claims.success]: {
@@ -351,6 +351,23 @@ export default {
       },
       on: {
         CONTINUE: routes.claims.checklist,
+      },
+    },
+    [routes.claims.review]: {
+      meta: {
+        step: ClaimSteps.reviewAndConfirm,
+        fields: [],
+      },
+      on: {
+        CONTINUE: [
+          {
+            target: routes.claims.success,
+            cond: "isCompleted",
+          },
+          {
+            target: routes.claims.checklist,
+          },
+        ],
       },
     },
   },

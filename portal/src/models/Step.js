@@ -11,6 +11,7 @@ export const ClaimSteps = {
   leaveDetails: "leaveDetails",
   employerInformation: "employerInformation",
   otherLeave: "otherLeave",
+  reviewAndConfirm: "reviewAndConfirm",
   payment: "payment",
   uploadId: "uploadId",
   uploadCertification: "uploadCertification",
@@ -56,6 +57,13 @@ export default class Step extends BaseModel {
        * Array of steps that must be completed before this step
        */
       dependsOn: [],
+      /**
+       * @type {Function}
+       * Optional method for evaluating whether a step is complete,
+       * based on the Step's `context`. This is useful if a Step
+       * has no form fields associated with it.
+       */
+      completeCond: null,
       /**
        * @type {boolean}
        * Allow/Disallow entry into this step to edit answers to its questions
@@ -106,6 +114,8 @@ export default class Step extends BaseModel {
   }
 
   get isComplete() {
+    if (this.completeCond) return this.completeCond(this.context);
+
     // TODO (CP-625): remove once api returns validations
     // <WorkAround>
     if (!this.warnings) {
@@ -223,12 +233,29 @@ export default class Step extends BaseModel {
       warnings,
     });
 
+    const reviewAndConfirm = new Step({
+      name: ClaimSteps.reviewAndConfirm,
+      completeCond: (context) =>
+        context.claim.isSubmitted || !context.enableProgressiveApp,
+      editable: !claim.isSubmitted,
+      group: 1,
+      pages: pagesByStep[ClaimSteps.reviewAndConfirm],
+      dependsOn: [verifyId, leaveDetails, employerInformation, otherLeave],
+      context,
+      warnings,
+    });
+
     const payment = new Step({
       name: ClaimSteps.payment,
       group: 2,
       pages: pagesByStep[ClaimSteps.payment],
-      // TODO (CP-902): This step should depend on Part 1 being submitted, which will be a new step
-      dependsOn: [verifyId, leaveDetails, employerInformation, otherLeave],
+      dependsOn: [
+        verifyId,
+        leaveDetails,
+        employerInformation,
+        otherLeave,
+        reviewAndConfirm,
+      ],
       context,
       warnings,
     });
@@ -237,8 +264,13 @@ export default class Step extends BaseModel {
       name: ClaimSteps.uploadId,
       group: 3,
       pages: pagesByStep[ClaimSteps.uploadId],
-      // TODO (CP-902): This step should depend on Part 1 being submitted, which will be a new step
-      dependsOn: [verifyId, leaveDetails, employerInformation, otherLeave],
+      dependsOn: [
+        verifyId,
+        leaveDetails,
+        employerInformation,
+        otherLeave,
+        reviewAndConfirm,
+      ],
       context,
       warnings,
     });
@@ -247,8 +279,13 @@ export default class Step extends BaseModel {
       name: ClaimSteps.uploadCertification,
       group: 3,
       pages: pagesByStep[ClaimSteps.uploadCertification],
-      // TODO (CP-902): This step should depend on Part 1 being submitted, which will be a new step
-      dependsOn: [verifyId, leaveDetails, employerInformation, otherLeave],
+      dependsOn: [
+        verifyId,
+        leaveDetails,
+        employerInformation,
+        otherLeave,
+        reviewAndConfirm,
+      ],
       context,
       warnings,
     });
@@ -258,6 +295,7 @@ export default class Step extends BaseModel {
       leaveDetails,
       employerInformation,
       otherLeave,
+      reviewAndConfirm,
       payment,
       uploadId,
       uploadCertification,

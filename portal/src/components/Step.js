@@ -109,7 +109,7 @@ const Step = (props) => {
           <Heading level="3" className={titleClasses}>
             {props.title}
           </Heading>
-          {active && <p>{props.children}</p>}
+          {active && <div className="usa-prose">{props.children}</div>}
         </div>
         {!disabled && (
           <div className={actionColumnClasses}>{actionColumn()}</div>

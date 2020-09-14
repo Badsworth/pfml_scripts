@@ -34,6 +34,40 @@ describe("Step Model", () => {
     });
   });
 
+  describe("isComplete", () => {
+    it("uses completeCond when present", () => {
+      const completeCond = (context) => context.username !== "";
+      const sharedStepProps = {
+        completeCond,
+        pages: [
+          {
+            route: "/a",
+          },
+        ],
+        warnings: [],
+      };
+
+      const incompleteStep = new Step({
+        ...sharedStepProps,
+        name: "incomplete",
+        context: {
+          username: "",
+        },
+      });
+
+      const completedStep = new Step({
+        ...sharedStepProps,
+        name: "completed",
+        context: {
+          username: "anton",
+        },
+      });
+
+      expect(incompleteStep.isComplete).toBe(false);
+      expect(completedStep.isComplete).toBe(true);
+    });
+  });
+
   describe("status", () => {
     describe("when step depends on another step", () => {
       describe("when step it depends on has warnings", () => {
@@ -236,7 +270,7 @@ describe("Step Model", () => {
         ...value.meta,
       }));
 
-      expect(steps).toHaveLength(7);
+      expect(steps).toHaveLength(8);
       expect(steps.map((s) => s.name)).toEqual(Object.keys(ClaimSteps));
       steps.forEach((s) => {
         expect(s).toBeInstanceOf(Step);

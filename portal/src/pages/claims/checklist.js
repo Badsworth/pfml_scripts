@@ -15,6 +15,7 @@ import StepList from "../../components/StepList";
 import Title from "../../components/Title";
 import { Trans } from "react-i18next";
 import claimantConfig from "../../flows/claimant";
+import { isFeatureEnabled } from "../../services/featureFlags";
 import routeWithParams from "../../utils/routeWithParams";
 import routes from "../../routes";
 import { useTranslation } from "../../locales/i18n";
@@ -29,7 +30,7 @@ export const Checklist = (props) => {
    */
   const allSteps = StepModel.createClaimStepsFromMachine(
     claimantConfig,
-    { claim },
+    { claim, enableProgressiveApp: isFeatureEnabled("enableProgressiveApp") },
     // TODO (CP-509): add appErrors.warnings when API validations are in place
     null
   );

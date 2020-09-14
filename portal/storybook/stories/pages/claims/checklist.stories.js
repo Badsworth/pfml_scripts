@@ -8,6 +8,12 @@ const mockClaims = {
     .verifiedId()
     .medicalLeaveReason()
     .create(),
+  "Part 1 ready for submit": new MockClaimBuilder()
+    .verifiedId()
+    .medicalLeaveReason()
+    .employed()
+    .noOtherLeave()
+    .create(),
   submitted: new MockClaimBuilder().submitted().create(),
   complete: new MockClaimBuilder().complete().create(),
 };

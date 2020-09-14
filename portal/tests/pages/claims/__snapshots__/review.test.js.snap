@@ -477,7 +477,7 @@ exports[`Part 1 Review Page when all data is present renders Review page with Pa
     >
       Part 1
     </span>
-    Review and confirm: Tell us about yourself and your leave
+    Review and confirm: Tell us about yourself and your leave
   </Heading>
   <ReviewHeading
     editHref="/claims/name?claim_id=mock_application_id"
@@ -684,7 +684,7 @@ exports[`Part 1 Review Page when data is empty does not render strings like 'nul
     >
       Part 1
     </span>
-    Review and confirm: Tell us about yourself and your leave
+    Review and confirm: Tell us about yourself and your leave
   </Heading>
   <ReviewHeading
     editHref="/claims/name?claim_id=mock_application_id"
