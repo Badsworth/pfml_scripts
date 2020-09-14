@@ -40,8 +40,14 @@ describe("E2E: Routing", () => {
     });
 
     describe("when user clicks Create Claim button", () => {
-      it("routes to /claim/name", async () => {
+      it("routes to /claim/checklist", async () => {
         expect.assertions();
+
+        const startButton = await page.$("a.usa-button");
+        await startButton.click();
+        await page.waitForNavigation();
+
+        await expect(page.url()).toMatch(`${rootUrl}/claims/start`);
 
         const newClaimButton = await page.$("button[name='new-claim']");
         await newClaimButton.click();

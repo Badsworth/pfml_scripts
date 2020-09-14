@@ -275,16 +275,6 @@ const pages = {
     submitButton: "Review and submit application",
     title: "Checklist: Create a new application",
   },
-  claimsConfirm: {
-    explanation1:
-      "We use this application to determine the leave time and benefit amount you will receive.",
-    explanation2:
-      "We need true answers to every question so that we can manage this program the way the law requires. Please confirm that you have answered as truthfully as you can.",
-    submitApplicationButton: "Agree and Submit My Application",
-    title: "Confirm and submit",
-    truthAttestation:
-      "I believe all the answers I have given are true. I understand that I need to give true answers to all questions in order to receive and keep my paid leave benefits and job protections. I understand false answers may forfeit my rights to paid leave.",
-  },
   claimsDateOfBirth: {
     sectionLabel: "What's your birthdate?",
     title: "$t(shared.claimsVerifyIdTitle)",
@@ -564,7 +554,6 @@ const pages = {
     averageWorkHoursLabel: "Average hours worked per week",
     childBirthDateLabel: "Child's date of birth",
     childPlacementDateLabel: "Child's placement date",
-    confirmationAction: "Confirm information is correct",
     editLink: "Edit",
     employerBenefitEntryLabel:
       "$t(shared.employerBenefitEntryPrefix) {{count}}",
@@ -634,7 +623,8 @@ const pages = {
     previousLeaveEntryLabel: "$t(shared.previousLeaveEntryPrefix) {{count}}",
     previousLeaveLabel: "Previous paid or unpaid leave?",
     residentialAddressLabel: "Residential address",
-    submitPartOneButton: "Submit Part 1",
+    submitAction_final: "Submit my application",
+    submitAction_part1: "Submit Part 1",
     titleFinalReview: "Check your answers before sending your application",
     titlePartOneReview: "Review and confirm Part 1",
     userDateOfBirthLabel: "Date of birth",
@@ -648,6 +638,16 @@ const pages = {
       "It’s recommended that you enter your SSN. Don’t have an SSN? Use your Individual Taxpayer Identification Number (ITIN).",
     sectionLabel: "What's your Social Security Number?",
     title: "$t(shared.claimsVerifyIdTitle)",
+  },
+  claimsStart: {
+    explanation1:
+      "We use this application to determine the leave time and benefit amount you will receive.",
+    explanation2:
+      "We need true answers to every question so that we can manage this program the way the law requires. Please confirm that you will answer as truthfully as you can.",
+    submitApplicationButton: "I understand and agree",
+    title: "Start your application",
+    truthAttestation:
+      "I understand that I need to give true answers to all questions in order to receive and keep my paid leave benefits and job protections. I understand false answers may forfeit my rights to paid leave.",
   },
   claimsStateId: {
     choiceNo: "$t(shared.choiceNo)",

@@ -60,8 +60,14 @@ export default {
     [routes.claims.dashboard]: {
       meta: {},
       on: {
-        CREATE_CLAIM: routes.claims.checklist,
+        START: routes.claims.start,
         CONSENT_TO_DATA_SHARING: routes.user.consentToDataSharing,
+      },
+    },
+    [routes.claims.start]: {
+      meta: {},
+      on: {
+        CREATE_CLAIM: routes.claims.checklist,
       },
     },
     [routes.user.consentToDataSharing]: {
@@ -78,12 +84,12 @@ export default {
         OTHER_LEAVE: routes.claims.employerBenefits,
         EMPLOYER_INFORMATION: routes.claims.employmentStatus,
         PAYMENT: routes.claims.paymentMethod,
+        REVIEW_AND_CONFIRM: routes.claims.review,
         UPLOAD_CERTIFICATION: routes.claims.uploadCertification,
         UPLOAD_ID: routes.claims.uploadId,
-        CONFIRM: routes.claims.confirm,
       },
     },
-    [routes.claims.confirm]: {
+    [routes.claims.review]: {
       meta: {},
       on: {
         CONTINUE: routes.claims.success,

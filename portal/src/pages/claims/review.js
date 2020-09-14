@@ -13,7 +13,6 @@ import Step, { ClaimSteps } from "../../models/Step";
 import { compact, get } from "lodash";
 import BackButton from "../../components/BackButton";
 import Button from "../../components/Button";
-import ButtonLink from "../../components/ButtonLink";
 import { DateTime } from "luxon";
 import Heading from "../../components/Heading";
 import Lead from "../../components/Lead";
@@ -27,7 +26,6 @@ import claimantConfigs from "../../flows/claimant";
 import findKeyByValue from "../../utils/findKeyByValue";
 import formatDateRange from "../../utils/formatDateRange";
 import { isFeatureEnabled } from "../../services/featureFlags";
-import routeWithParams from "../../utils/routeWithParams";
 import { useTranslation } from "../../locales/i18n";
 import withClaim from "../../hoc/withClaim";
 
@@ -395,18 +393,11 @@ export const Review = (props) => {
         </React.Fragment>
       )}
 
-      {usePartOneReview ? (
-        <Button className="margin-top-3" onClick={handleSubmit} type="button">
-          {t("pages.claimsReview.submitPartOneButton")}
-        </Button>
-      ) : (
-        <ButtonLink
-          className="margin-top-3"
-          href={routeWithParams("claims.confirm", props.query)}
-        >
-          {t("pages.claimsReview.confirmationAction")}
-        </ButtonLink>
-      )}
+      <Button className="margin-top-3" onClick={handleSubmit} type="button">
+        {t("pages.claimsReview.submitAction", {
+          context: usePartOneReview ? "part1" : "final",
+        })}
+      </Button>
     </div>
   );
 };

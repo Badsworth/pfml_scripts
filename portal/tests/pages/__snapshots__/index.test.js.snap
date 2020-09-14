@@ -72,17 +72,12 @@ exports[`Index renders dashboard content 1`] = `
     <p>
       Applying takes around 15 minutes. Your information will save as you go, so you can finish your application later if you need to.
     </p>
-    <form
+    <ButtonLink
       className="margin-bottom-8"
-      onSubmit={[Function]}
+      href="/claims/start"
     >
-      <Button
-        name="new-claim"
-        type="submit"
-      >
-        Create an application
-      </Button>
-    </form>
+      Create an application
+    </ButtonLink>
   </div>
 </Fragment>
 `;

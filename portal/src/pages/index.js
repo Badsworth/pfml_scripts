@@ -1,9 +1,8 @@
 import Accordion from "../components/Accordion";
 import AccordionItem from "../components/AccordionItem";
-import Button from "../components/Button";
+import ButtonLink from "../components/ButtonLink";
 import DashboardNavigation from "../components/DashboardNavigation";
 import Heading from "../components/Heading";
-import PropTypes from "prop-types";
 import React from "react";
 import Title from "../components/Title";
 import { Trans } from "react-i18next";
@@ -15,15 +14,9 @@ import withUser from "../hoc/withUser";
 /**
  * "Dashboard" - Where a user is redirected to after successfully authenticating.
  */
-const Index = (props) => {
-  const { appLogic } = props;
+const Index = () => {
   const { t } = useTranslation();
   const router = useRouter();
-
-  const handleSubmit = async (event) => {
-    event.preventDefault();
-    await appLogic.claims.create();
-  };
 
   return (
     <React.Fragment>
@@ -67,18 +60,12 @@ const Index = (props) => {
         <Heading level="2">{t("pages.index.stepThreeHeading")}</Heading>
         <p>{t("pages.index.stepThreeLead")}</p>
 
-        <form className="margin-bottom-8" onSubmit={handleSubmit}>
-          <Button type="submit" name="new-claim">
-            {t("pages.index.createClaimButton")}
-          </Button>
-        </form>
+        <ButtonLink className="margin-bottom-8" href={routes.claims.start}>
+          {t("pages.index.createClaimButton")}
+        </ButtonLink>
       </div>
     </React.Fragment>
   );
-};
-
-Index.propTypes = {
-  appLogic: PropTypes.object.isRequired,
 };
 
 export default withUser(Index);

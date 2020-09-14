@@ -103,6 +103,7 @@ describe("useClaimsLogic", () => {
       let claim;
 
       beforeEach(async () => {
+        mockRouter.pathname = routes.claims.start;
         claim = new Claim({ application_id: "12345" });
 
         createClaimMock.mockResolvedValueOnce({

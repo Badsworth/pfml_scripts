@@ -20,7 +20,6 @@ const routes = {
     address: "/claims/address",
     averageWorkHours: "/claims/average-work-hours",
     checklist: "/claims/checklist",
-    confirm: "/claims/confirm",
     dashboard: "/",
     dateOfBirth: "/claims/date-of-birth",
     dateOfChild: "/claims/date-of-child",
@@ -40,6 +39,7 @@ const routes = {
     reasonPregnancy: "/claims/reason-pregnancy",
     review: "/claims/review",
     ssn: "/claims/ssn",
+    start: "/claims/start",
     stateId: "/claims/state-id",
     success: "/claims/success",
     // For routes that don't have a page to point to yet, we can route them

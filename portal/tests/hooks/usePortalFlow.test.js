@@ -11,7 +11,7 @@ describe("usePortalFlow", () => {
   describe("goToPageFor", () => {
     let expectedRoute, portalFlow;
     beforeEach(() => {
-      mockRouter.pathname = "/";
+      mockRouter.pathname = routes.claims.start;
       expectedRoute =
         machineConfigs.states[mockRouter.pathname].on.CREATE_CLAIM;
       testHook(() => {

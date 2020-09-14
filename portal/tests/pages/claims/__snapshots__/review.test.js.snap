@@ -233,12 +233,13 @@ exports[`Final Review Page when all data is present renders Review page with fin
   >
     Direct deposit
   </ReviewRow>
-  <ButtonLink
+  <Button
     className="margin-top-3"
-    href="/claims/confirm?claim_id=mock_application_id"
+    onClick={[Function]}
+    type="button"
   >
-    Confirm information is correct
-  </ButtonLink>
+    Submit my application
+  </Button>
 </div>
 `;
 
@@ -346,12 +347,13 @@ exports[`Final Review Page when conditional data is empty does not render string
   >
     Payment information
   </ReviewHeading>
-  <ButtonLink
+  <Button
     className="margin-top-3"
-    href="/claims/confirm?claim_id=mock_application_id"
+    onClick={[Function]}
+    type="button"
   >
-    Confirm information is correct
-  </ButtonLink>
+    Submit my application
+  </Button>
 </div>
 `;
 

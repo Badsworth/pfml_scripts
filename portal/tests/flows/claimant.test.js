@@ -33,7 +33,7 @@ const machineTests = {
       test: () => {},
     },
   },
-  [routes.claims.confirm]: {
+  [routes.claims.start]: {
     meta: {
       test: () => {},
     },
@@ -176,6 +176,11 @@ const machineTests = {
       test: () => {},
     },
   },
+  [routes.claims.review]: {
+    meta: {
+      test: () => {},
+    },
+  },
 };
 
 const machineConfigsWithTests = {
@@ -246,17 +251,18 @@ describe("claimFlowConfigs", () => {
   // Create a model that simulates the routing behavior
   // of the portal application when tested.
   const testModel = createModel(routingMachine).withEvents({
-    CREATE_CLAIM: { cases: testData },
+    CONSENT_TO_DATA_SHARING: {},
     CONTINUE: {},
-    VERIFY_ID: {},
+    CREATE_CLAIM: {},
+    EMPLOYER_INFORMATION: {},
     LEAVE_DETAILS: {},
     OTHER_LEAVE: {},
-    EMPLOYER_INFORMATION: {},
+    PAYMENT: {},
+    REVIEW_AND_CONFIRM: {},
+    START: { cases: testData },
     UPLOAD_CERTIFICATION: {},
     UPLOAD_ID: {},
-    PAYMENT: {},
-    CONFIRM: {},
-    CONSENT_TO_DATA_SHARING: {},
+    VERIFY_ID: {},
   });
 
   // A testing plan represents a single routing path.
