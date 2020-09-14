@@ -574,12 +574,6 @@ const pages = {
     employmentStatusValue_employed: "Currently employed",
     employmentStatusValue_selfEmployed: "Self-employed",
     employmentStatusValue_unemployed: "Unemployed",
-    leadLine1:
-      "Once you review and confirm Part 1, your in-progress application will be viewable by our call center staff. If you need to make edits to Part 1, you’ll need to contact our call center at $t(shared.callCenterPhoneNumber).",
-    leadLine2:
-      "We’ll also notify your employer that you’ve started an application for paid family and medical leave.",
-    leadLine3:
-      "Next, you’ll be able to work on Parts 2 and 3, and submit your application.",
     leaveDetailsSectionHeading: "$t(shared.leaveDetailsStepTitle)",
     leaveDurationLabel: "Leave duration",
     leaveDurationTypeContinuous: "$t(shared.claimDurationTypeContinuous)",
@@ -613,6 +607,12 @@ const pages = {
     otherLeaveSectionHeading: "$t(shared.otherLeaveStepTitle)",
     pageHeading: "Review and confirm: Tell us about yourself and your leave",
     partHeading: "Part 1",
+    partOneNextStepsLine1:
+      "Once you review and confirm Part 1, your in-progress application will be viewable by our call center staff. If you need to make edits to Part 1, you’ll need to contact our call center at $t(shared.callCenterPhoneNumber).",
+    partOneNextStepsLine2:
+      "We’ll also notify your employer that you’ve started an application for paid family and medical leave.",
+    partOneNextStepsLine3:
+      "Next, you’ll be able to work on Parts 2 and 3, and submit your application.",
     paymentMethodLabel: "Payment method",
     paymentMethodValue_ach: "$t(shared.paymentMethodAch)",
     paymentMethodValue_debit: "$t(shared.paymentMethodDebit)",

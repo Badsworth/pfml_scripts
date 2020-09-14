@@ -15,7 +15,6 @@ import BackButton from "../../components/BackButton";
 import Button from "../../components/Button";
 import { DateTime } from "luxon";
 import Heading from "../../components/Heading";
-import Lead from "../../components/Lead";
 import PreviousLeave from "../../models/PreviousLeave";
 import PropTypes from "prop-types";
 import React from "react";
@@ -96,10 +95,6 @@ export const Review = (props) => {
             </span>
             {t("pages.claimsReview.pageHeading")}
           </Heading>
-
-          <Lead>{t("pages.claimsReview.leadLine1")}</Lead>
-          <Lead>{t("pages.claimsReview.leadLine2")}</Lead>
-          <Lead>{t("pages.claimsReview.leadLine3")}</Lead>
         </React.Fragment>
       ) : (
         <Title>{t("pages.claimsReview.titleFinalReview")}</Title>
@@ -362,9 +357,11 @@ export const Review = (props) => {
 
       {usePartOneReview ? (
         <React.Fragment>
-          <p className="margin-top-9">{t("pages.claimsReview.leadLine1")}</p>
-          <p>{t("pages.claimsReview.leadLine2")}</p>
-          <p>{t("pages.claimsReview.leadLine3")}</p>
+          <p className="margin-top-9">
+            {t("pages.claimsReview.partOneNextStepsLine1")}
+          </p>
+          <p>{t("pages.claimsReview.partOneNextStepsLine2")}</p>
+          <p>{t("pages.claimsReview.partOneNextStepsLine3")}</p>
         </React.Fragment>
       ) : (
         <React.Fragment>

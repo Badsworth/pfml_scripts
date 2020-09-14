@@ -479,15 +479,6 @@ exports[`Part 1 Review Page when all data is present renders Review page with Pa
     </span>
     Review and confirm: Tell us about yourself and your leave
   </Heading>
-  <Lead>
-    Once you review and confirm Part 1, your in-progress application will be viewable by our call center staff. If you need to make edits to Part 1, you’ll need to contact our call center at XXX‑XXX‑XXXX.
-  </Lead>
-  <Lead>
-    We’ll also notify your employer that you’ve started an application for paid family and medical leave.
-  </Lead>
-  <Lead>
-    Next, you’ll be able to work on Parts 2 and 3, and submit your application.
-  </Lead>
   <ReviewHeading
     editHref="/claims/name?claim_id=mock_application_id"
     editText="Edit"
@@ -695,15 +686,6 @@ exports[`Part 1 Review Page when data is empty does not render strings like 'nul
     </span>
     Review and confirm: Tell us about yourself and your leave
   </Heading>
-  <Lead>
-    Once you review and confirm Part 1, your in-progress application will be viewable by our call center staff. If you need to make edits to Part 1, you’ll need to contact our call center at XXX‑XXX‑XXXX.
-  </Lead>
-  <Lead>
-    We’ll also notify your employer that you’ve started an application for paid family and medical leave.
-  </Lead>
-  <Lead>
-    Next, you’ll be able to work on Parts 2 and 3, and submit your application.
-  </Lead>
   <ReviewHeading
     editHref="/claims/name?claim_id=mock_application_id"
     editText="Edit"
