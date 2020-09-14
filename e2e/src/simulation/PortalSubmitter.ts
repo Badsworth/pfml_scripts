@@ -1,5 +1,6 @@
 // Cross-fetch polyfill makes fetch available as a global.
 import "cross-fetch/polyfill";
+import FormData from "form-data";
 import {
   AuthenticationDetails,
   CognitoUser,
@@ -12,7 +13,14 @@ import {
   postApplicationsByApplicationIdSubmitApplication,
   ApplicationRequestBody,
   RequestOptions,
+  postApplicationsByApplicationIdDocuments,
+  DocumentUploadRequest,
 } from "../api";
+
+if (!global.FormData) {
+  // @ts-ignore
+  global.FormData = FormData;
+}
 
 type PortalSubmitterOpts = {
   UserPoolId: string;
@@ -68,11 +76,33 @@ export default class PortalSubmitter {
     };
   }
 
-  async submit(application: ApplicationRequestBody): Promise<string> {
+  async submit(
+    application: ApplicationRequestBody,
+    documents: DocumentUploadRequest[] = []
+  ): Promise<string> {
     const application_id = await this.createApplication();
     await this.updateApplication(application_id, application);
     await this.submitApplication(application_id);
+    for (const doc of documents) {
+      await this.uploadDocument(application_id, doc);
+    }
     return application_id;
+  }
+
+  private async uploadDocument(
+    applicationId: string,
+    doc: DocumentUploadRequest
+  ): Promise<void> {
+    try {
+      await postApplicationsByApplicationIdDocuments(
+        { applicationId },
+        doc,
+        await this.getOptions()
+      );
+    } catch (e) {
+      console.log(e.data);
+      throw e;
+    }
   }
 
   private async createApplication(): Promise<string> {
@@ -95,9 +125,17 @@ export default class PortalSubmitter {
   }
 
   private async submitApplication(applicationId: string): Promise<void> {
-    await postApplicationsByApplicationIdSubmitApplication(
-      { applicationId },
-      await this.getOptions()
-    );
+    try {
+      await postApplicationsByApplicationIdSubmitApplication(
+        { applicationId },
+        await this.getOptions()
+      );
+    } catch (e) {
+      // @todo: Do not catch and return once the issue with 503 on final submission is fixed.
+      if (e.data?.errors?.length == 0) {
+        return;
+      }
+      throw e;
+    }
   }
 }

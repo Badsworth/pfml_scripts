@@ -11,6 +11,7 @@ import {
   PDFName,
   PDFString,
 } from "pdf-lib";
+import formatDate from "date-fns/format";
 
 const readFile = promisify(fs.readFile);
 const writeFile = promisify(fs.writeFile);
@@ -120,14 +121,15 @@ export function generateIDFront(
   if (!claim.first_name || !claim.last_name || !claim.date_of_birth) {
     throw new Error("Unable to generate document due to missing properties");
   }
+  const dob = formatDate(new Date(claim.date_of_birth), "MM/dd/yyyy");
   if (claim.mass_id) {
     return fillPDF(`${__dirname}/../../forms/license-MA.pdf`, target, {
       "Name first": claim.first_name,
       "Name last": claim.last_name,
-      "Date birth": claim.date_of_birth,
+      "Date birth": dob,
       "License number": unproofed ? "" : claim.mass_id,
-      "Date issue": "2020-01-01",
-      "Date expiration": "2028-01-01",
+      "Date issue": "01/01/2020",
+      "Date expiration": "01/01/2028",
       "Address street": claim.mailing_address?.line_1 ?? "",
       "Address state": claim.mailing_address?.state ?? "",
       "Address city": claim.mailing_address?.city ?? "",
@@ -138,10 +140,10 @@ export function generateIDFront(
     return fillPDF(`${__dirname}/../../forms/license-CT.pdf`, target, {
       "Name first": claim.first_name,
       "Name last": claim.last_name,
-      "Date birth": claim.date_of_birth,
+      "Date birth": dob,
       "License number": "XXX",
-      "Date issue": "2020-01-01",
-      "Date expiration": "2028-01-01",
+      "Date issue": "01/01/2020",
+      "Date expiration": "01/01/2028",
       "Address street": claim.mailing_address?.line_1 ?? "",
       "Address state": claim.mailing_address?.state ?? "",
       "Address city": claim.mailing_address?.city ?? "",

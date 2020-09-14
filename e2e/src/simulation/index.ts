@@ -126,15 +126,14 @@ const submitter = new PortalSubmitter({
       dorEmployersPromise,
       claimIndex,
     ]);
+    process.stdout.write(`Generated ${claims.length} applications.\n`);
   } else {
-    console.log("Using claims");
     const claims = await fs.promises
       .readFile(`${directory}/claims.json`)
       .then((data) => JSON.parse(data.toString("utf-8")));
     await sim.execute(claims);
+    process.stdout.write(`Submitted ${submitter.count} applications.\n`);
   }
-
-  process.stdout.write(`Submitting ${submitter.count} applications.\n`);
 })().catch((reason) => {
   console.error(`Failed after submitting ${submitter.count} applications`);
   console.error(reason);

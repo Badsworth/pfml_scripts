@@ -230,22 +230,6 @@ export class HttpError extends Error {
 }
 /** Utility Type to extract returns type from a method. */
 export type ApiResult<Fn> = Fn extends (...args: any) => Promise<ApiResponse<infer T>> ? T : never;
-export interface GETStatusResponse {
-    status?: string;
-}
-export interface UserResponse {
-    user_id?: string;
-    auth_id?: string;
-    email_address?: string;
-    consented_to_data_sharing?: boolean;
-}
-export interface Error {
-    code: string;
-    message: string;
-}
-export interface UserUpdateRequest {
-    consented_to_data_sharing: boolean;
-}
 export interface Meta {
     resource: string;
     method: string;
@@ -269,6 +253,19 @@ export interface SuccessfulResponse {
     meta?: Meta;
     data?: any | object;
     warnings?: Issue[];
+}
+export interface Error {
+    code: string;
+    message: string;
+}
+export interface UserResponse {
+    user_id?: string;
+    auth_id?: string;
+    email_address?: string;
+    consented_to_data_sharing?: boolean;
+}
+export interface UserUpdateRequest {
+    consented_to_data_sharing: boolean;
 }
 export interface EmployeeResponse {
     employee_id: string;
@@ -391,7 +388,7 @@ export interface ApplicationPaymentChequeDetails {
 export interface PaymentPreferences {
     payment_preference_id?: string | null;
     description?: string | null;
-    payment_method?: ("ACH" | "Check" | "Gift Card") | null;
+    payment_method?: ("ACH" | "Check" | "Debit") | null;
     is_default?: boolean | null;
     account_details?: ApplicationPaymentAccountDetails;
     cheque_details?: ApplicationPaymentChequeDetails;
@@ -462,12 +459,31 @@ export interface POSTApplicationsByApplicationIdSubmitApplicationResponse extend
 export interface POSTApplicationsByApplicationIdSubmitApplicationResponse503 extends ErrorResponse {
     data?: ApplicationResponse;
 }
+export interface FineosDocumentResponse {
+    caseId?: string;
+    rootCaseId?: string;
+    documentId?: number;
+    name?: string;
+    "type"?: string;
+    fileExtension?: string;
+    fileName?: string;
+    originalFileName?: string;
+    receivedDate?: Date;
+    effectiveFrom?: Date | null;
+    effectiveTo?: Date | null;
+    description?: string;
+    isRead?: boolean;
+    extensionAttributes?: any;
+}
+export interface GETApplicationsByApplicationIdDocumentsResponse extends SuccessfulResponse {
+    data?: FineosDocumentResponse[];
+}
 export interface DocumentUploadRequest {
     document_category: "Identity Proofing" | "Certification";
     document_type: "Passport" | "Driver's License Mass" | "Driver's License Other State";
     name?: string;
     description: string;
-    file: Blob;
+    file: unknown;
 }
 export interface DocumentResponse {
     document_id: string;
@@ -489,14 +505,18 @@ export interface POSTApplicationsByApplicationIdDocumentsResponse extends Succes
 export interface EligibilityRequest {
     tax_identifier: SsnItin;
     employer_fein: Fein;
-    effective_date: Date;
+    leave_start_date: Date;
+    application_submitted_date: Date;
     employment_status: "Employed" | "Unemployed" | "Self-Employed";
 }
 export interface EligibilityResponse {
-    financial_eligibility: boolean;
-    reason_not_eligible: string;
+    financially_eligible?: boolean;
+    description?: string;
+    total_wages?: number;
+    state_average_weekly_wage?: number;
+    unemployment_minimum?: number;
 }
-export interface POSTEligibilityResponse extends SuccessfulResponse {
+export interface POSTFinancialEligibilityResponse extends SuccessfulResponse {
     data?: EligibilityResponse;
 }
 export interface RMVCheckRequest {
@@ -504,7 +524,7 @@ export interface RMVCheckRequest {
     date_of_birth: Date;
     first_name: string;
     last_name: string;
-    mass_id_number: MassId;
+    mass_id_number?: MassId;
     residential_address_city: string;
     residential_address_line_1: string;
     residential_address_line_2?: string | null;
@@ -521,7 +541,7 @@ export interface POSTRmvCheckResponse extends SuccessfulResponse {
 /**
  * Get the API status
  */
-export async function getStatus(options?: RequestOptions): Promise<ApiResponse<GETStatusResponse>> {
+export async function getStatus(options?: RequestOptions): Promise<ApiResponse<SuccessfulResponse>> {
     return await http.fetchJson("/status", {
         ...options
     });
@@ -651,6 +671,16 @@ export async function postApplicationsByApplicationIdSubmitApplication({ applica
     });
 }
 /**
+ * Get list of documents for a case
+ */
+export async function getApplicationsByApplicationIdDocuments({ applicationId }: {
+    applicationId: string;
+}, options?: RequestOptions): Promise<ApiResponse<GETApplicationsByApplicationIdDocumentsResponse>> {
+    return await http.fetchJson(`/applications/${applicationId}/documents`, {
+        ...options
+    });
+}
+/**
  * Upload Document
  */
 export async function postApplicationsByApplicationIdDocuments({ applicationId }: {
@@ -665,8 +695,8 @@ export async function postApplicationsByApplicationIdDocuments({ applicationId }
 /**
  * Retrieve financial eligibility by SSN/FEIN effective date and employee status.
  */
-export async function postEligibility(eligibilityRequest: EligibilityRequest, options?: RequestOptions): Promise<ApiResponse<POSTEligibilityResponse>> {
-    return await http.fetchJson("/eligibility", http.json({
+export async function postFinancialEligibility(eligibilityRequest: EligibilityRequest, options?: RequestOptions): Promise<ApiResponse<POSTFinancialEligibilityResponse>> {
+    return await http.fetchJson("/financial-eligibility", http.json({
         ...options,
         method: "POST",
         body: eligibilityRequest
