@@ -1,6 +1,7 @@
 from datetime import date, datetime
 
 import factory.random
+from dateutil.relativedelta import relativedelta
 from freezegun import freeze_time
 from sqlalchemy import inspect
 
@@ -815,20 +816,85 @@ def test_application_patch_update_payment_preference_belonging_to_other_applicat
     assert len(payment_preferences_response) == 0
 
 
-def test_application_patch_date_of_birth(client, user, auth_token):
+def test_application_patch_date_of_birth_after_1900_over_14(client, user, auth_token):
     application = ApplicationFactory.create(user=user)
+
+    now = datetime.now()
+    test_date = now - relativedelta(years=20)
+    test_date_str = test_date.strftime("%Y-%m-%d")
 
     response = client.patch(
         "/v1/applications/{}".format(application.application_id),
         headers={"Authorization": f"Bearer {auth_token}"},
-        json={"date_of_birth": "1970-06-01"},
+        json={"date_of_birth": test_date_str},
     )
 
     assert response.status_code == 200
 
     response_body = response.get_json().get("data")
     dob = response_body.get("date_of_birth")
-    assert dob == "1970-06-01"
+    assert dob == test_date_str
+
+
+def test_application_patch_date_of_birth_under_14(client, user, auth_token):
+    application = ApplicationFactory.create(user=user)
+
+    now = datetime.now()
+    test_date = now - relativedelta(years=14) + relativedelta(days=1)
+    test_date_string = test_date.strftime("%Y-%m-%d")
+
+    response = client.patch(
+        "/v1/applications/{}".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+        json={"date_of_birth": test_date_string},
+    )
+
+    assert response.status_code == 400
+
+    response_body = response.get_json()
+    errors = response_body.get("errors")
+    assert len(errors) == 1
+
+    error = errors[0]
+    field = error.get("field")
+    message = error.get("message")
+    rule = error.get("rule")
+    error_type = error.get("type")
+
+    assert field == "date_of_birth"
+    assert message == "The person taking leave must be at least 14 years old"
+    assert rule == "older_than_14"
+    assert error_type == "invalid_age"
+
+
+def test_application_patch_date_of_birth_before_1900(client, user, auth_token):
+    application = ApplicationFactory.create(user=user)
+
+    now = datetime.now()
+    test_date = now.replace(year=1899)
+
+    response = client.patch(
+        "/v1/applications/{}".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+        json={"date_of_birth": test_date.strftime("%Y-%m-%d")},
+    )
+
+    assert response.status_code == 400
+
+    response_body = response.get_json()
+    errors = response_body.get("errors")
+    assert len(errors) == 1
+
+    error = errors[0]
+    field = error.get("field")
+    message = error.get("message")
+    rule = error.get("rule")
+    error_type = error.get("type")
+
+    assert field == "date_of_birth"
+    assert message == "Date of birth must be within the past 100 years"
+    assert rule == "date_of_birth_within_past_100_years"
+    assert error_type == "invalid_year_range"
 
 
 def test_application_patch_minimum_payload(client, user, auth_token):
@@ -1028,21 +1094,19 @@ def test_application_patch_key_set_to_null_does_null_field(
 
 def test_application_post_submit_app(client, user, auth_token, test_db_session):
     factory.random.reseed_random(1)
-
     application = ApplicationFactory.create(user=user)
+    application.date_of_birth = "1997-06-06"
     assert not application.submitted_time
 
     # Applications must have an FEIN for submit to succeed.
     application.employer_fein = "770007777"
     test_db_session.commit()
-
     response = client.post(
         "/v1/applications/{}/submit_application".format(application.application_id),
         headers={"Authorization": f"Bearer {auth_token}"},
     )
 
     assert response.status_code == 201
-
     assert response.json == {
         "data": {
             "application_id": "cd613e30-d8f1-4adf-91b7-584a2265b1f5",
@@ -1078,6 +1142,7 @@ def test_application_post_submit_app_fein_not_found(client, user, auth_token, te
     factory.random.reseed_random(2)
 
     application = ApplicationFactory.create(user=user)
+    application.date_of_birth = "1953-01-05"
     assert not application.completed_time
 
     # A FEIN of 999999999 is simulated as not found in MockFINEOSClient.
@@ -1129,6 +1194,7 @@ def test_application_post_submit_app_ssn_not_found(client, user, auth_token, tes
     factory.random.reseed_random(3)
 
     application = ApplicationFactory.create(user=user)
+    application.date_of_birth = "2009-01-20"
     assert not application.completed_time
 
     # A tax identifier of 999999999 is simulated as not found in MockFINEOSClient.
@@ -1149,7 +1215,7 @@ def test_application_post_submit_app_ssn_not_found(client, user, auth_token, tes
             "application_nickname": "My leave application",
             "date_of_birth": "2009-01-20",
             "employer_fein": "227777777",
-            "employer_id": "e8a8529f-035e-4a25-9b08-923d10c67fd9",
+            "employer_id": "035efa25-9b08-423d-90c6-7fd994b2b8fd",
             "first_name": "Mitchell",
             "last_name": "Munoz",
             "leave_details": {

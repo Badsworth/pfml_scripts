@@ -92,6 +92,7 @@ def applications_update(application_id):
         existing_application = get_or_404(db_session, Application, application_id)
 
     ensure(EDIT, existing_application)
+
     application_request = ApplicationRequestBody.parse_obj(body)
 
     with app.db_session() as db_session:

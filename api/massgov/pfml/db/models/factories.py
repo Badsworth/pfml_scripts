@@ -31,13 +31,6 @@ Session = scoped_session(lambda: get_db_session(), scopefunc=lambda: get_db_sess
 
 class Generators:
     AccountKey = factory.Sequence(lambda n: "%011d" % n)
-    # A reproducible date of birth (with factory.random.reseed_random(...)), unlike
-    # factory.Faker("date_of_birth") which is based on the current date.
-    DateOfBirth = factory.Faker(
-        "date_between_dates",
-        date_start=datetime.date(1930, 1, 1),
-        date_end=datetime.date(2010, 1, 1),
-    )
     Tin = factory.LazyFunction(lambda: factory.Faker("ssn").generate().replace("-", ""))
     Fein = Tin
     Money = factory.LazyFunction(lambda: Decimal(round(random.uniform(0, 50000), 2)))
@@ -185,7 +178,8 @@ class ApplicationFactory(BaseFactory):
     first_name = factory.Faker("first_name")
     last_name = factory.Faker("last_name")
     middle_name = None
-    date_of_birth = Generators.DateOfBirth
+    date_of_birth = factory.Faker("date_of_birth", minimum_age=14, maximum_age=100)
+
     has_state_id = None
     mass_id = None
     pregnant_or_recent_birth = False

@@ -148,10 +148,10 @@ description = "The AWS SDK for Python"
 name = "boto3"
 optional = false
 python-versions = "*"
-version = "1.14.53"
+version = "1.14.55"
 
 [package.dependencies]
-botocore = ">=1.17.53,<1.18.0"
+botocore = ">=1.17.55,<1.18.0"
 jmespath = ">=0.7.1,<1.0.0"
 s3transfer = ">=0.3.0,<0.4.0"
 
@@ -161,7 +161,7 @@ description = "Low-level, data-driven core of boto 3."
 name = "botocore"
 optional = false
 python-versions = "*"
-version = "1.17.53"
+version = "1.17.55"
 
 [package.dependencies]
 docutils = ">=0.10,<0.16"
@@ -213,7 +213,7 @@ description = "Checks CloudFormation templates for practices and behaviour that 
 name = "cfn-lint"
 optional = false
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
-version = "0.35.0"
+version = "0.35.1"
 
 [package.dependencies]
 aws-sam-translator = ">=1.25.0"
@@ -332,7 +332,7 @@ description = "Datamodel Code Generator"
 name = "datamodel-code-generator"
 optional = false
 python-versions = ">=3.6.1"
-version = "0.5.29"
+version = "0.5.30"
 
 [package.dependencies]
 PySnooper = ">=0.4.1,<1.0.0"
@@ -443,7 +443,7 @@ description = "XPath 1.0/2.0 parsers and selectors for ElementTree and lxml"
 name = "elementpath"
 optional = false
 python-versions = "*"
-version = "2.0.1"
+version = "2.0.2"
 
 [[package]]
 category = "main"
@@ -593,7 +593,7 @@ description = "Python Git Library"
 name = "gitpython"
 optional = false
 python-versions = ">=3.4"
-version = "3.1.7"
+version = "3.1.8"
 
 [package.dependencies]
 gitdb = ">=4.0.1,<5"
@@ -1683,7 +1683,8 @@ docs = ["sphinx", "jaraco.packaging (>=3.2)", "rst.linker (>=1.9)"]
 testing = ["jaraco.itertools", "func-timeout"]
 
 [metadata]
-content-hash = "a324991428f59e0c446515d2e3b432ec6a1720e241765808a3eb5bba6467a2e8"
+content-hash = "fe770b786fa8d0f77c08a7b707d3494b337fd7022acd29ee9b550a309e0ac62e"
+lock-version = "1.0"
 python-versions = "^3.8"
 
 [metadata.files]
@@ -1735,12 +1736,12 @@ boto = [
     {file = "boto-2.49.0.tar.gz", hash = "sha256:ea0d3b40a2d852767be77ca343b58a9e3a4b00d9db440efb8da74b4e58025e5a"},
 ]
 boto3 = [
-    {file = "boto3-1.14.53-py2.py3-none-any.whl", hash = "sha256:defd1aa0bbc8eb9c3b6aefb5060972447f73a4f1c3ba995ba28d6f0b6b9059dd"},
-    {file = "boto3-1.14.53.tar.gz", hash = "sha256:b240ac281de363e25a8e1a4c862559d6a056d98dcb9f487fc94d73c6f6599dfc"},
+    {file = "boto3-1.14.55-py2.py3-none-any.whl", hash = "sha256:3ddc9c3b272d2351b69667974a1897538408b24b5427c87123a6f51933164d6d"},
+    {file = "boto3-1.14.55.tar.gz", hash = "sha256:bb3dfd837238a134094d430a0214f68597cb6fb4fcecf2f54690917c3dbcbb05"},
 ]
 botocore = [
-    {file = "botocore-1.17.53-py2.py3-none-any.whl", hash = "sha256:7e0272ceeb7747ed259a392e8d7b624cfd037085a8c59ef2b9f8916e7c556267"},
-    {file = "botocore-1.17.53.tar.gz", hash = "sha256:d37a83ac23257c85c48b74ab81173980234f8fc078e7a9d312d0ee7d057f90e6"},
+    {file = "botocore-1.17.55-py2.py3-none-any.whl", hash = "sha256:0c68c2f961d06980849078ba702645441fbc060de1fc9884e514838e90fd2a76"},
+    {file = "botocore-1.17.55.tar.gz", hash = "sha256:68458e5453af8ac97ecd5768d6193358889b578cefb33a1a22c7265380ae407f"},
 ]
 bouncer = [
     {file = "bouncer-0.1.12.tar.gz", hash = "sha256:9a7753bf9e6e39063595529334dffef5b00c8e7760b9ac357172717878614a10"},
@@ -1784,8 +1785,8 @@ cffi = [
     {file = "cffi-1.14.2.tar.gz", hash = "sha256:ae8f34d50af2c2154035984b8b5fc5d9ed63f32fe615646ab435b05b132ca91b"},
 ]
 cfn-lint = [
-    {file = "cfn-lint-0.35.0.tar.gz", hash = "sha256:42023d89520e3a29891ec2eb4c326eef9d1f7516fe9abee8b6c97ce064187b45"},
-    {file = "cfn_lint-0.35.0-py3-none-any.whl", hash = "sha256:8439925531fdd4c94e5b50974d067857b3af50b04b61254d3eae9b1e0ce20007"},
+    {file = "cfn-lint-0.35.1.tar.gz", hash = "sha256:98c7e2c2846df779f1a878e76f3eb7a3f40dd7b7dd316e5673c4923cf2ed121e"},
+    {file = "cfn_lint-0.35.1-py3-none-any.whl", hash = "sha256:cbf0ef2946c544db347874e36cf4c1a099c432280d62da9b9c739914668aec80"},
 ]
 chardet = [
     {file = "chardet-3.0.4-py2.py3-none-any.whl", hash = "sha256:fc323ffcaeaed0e0a02bf4d117757b98aed530d9ed4531e3e15460124c106691"},
@@ -1868,8 +1869,8 @@ cryptography = [
     {file = "cryptography-3.1.tar.gz", hash = "sha256:26409a473cc6278e4c90f782cd5968ebad04d3911ed1c402fc86908c17633e08"},
 ]
 datamodel-code-generator = [
-    {file = "datamodel-code-generator-0.5.29.tar.gz", hash = "sha256:14735b4f44fcca77e1909228aabcbdd2200e637eae92533eee3265387ccb9a98"},
-    {file = "datamodel_code_generator-0.5.29-py3-none-any.whl", hash = "sha256:d35c2b9bc3c183e5ebdb25dda7fda905b53b0f573fbde19fb94557bdcc039ad5"},
+    {file = "datamodel-code-generator-0.5.30.tar.gz", hash = "sha256:34072a80dae3e571616f3aa68d6c783565a47866ec9e132d1b8e76027456ccb4"},
+    {file = "datamodel_code_generator-0.5.30-py3-none-any.whl", hash = "sha256:dd67cd3aae0956f0c5535a9336872f0482ca6c2d5075449f2e758dcb05b1a83b"},
 ]
 decorator = [
     {file = "decorator-4.4.2-py2.py3-none-any.whl", hash = "sha256:41fa54c2a0cc4ba648be4fd43cff00aedf5b9465c9bf18d64325bc225f08f760"},
@@ -1900,8 +1901,8 @@ ecdsa = [
     {file = "ecdsa-0.14.1.tar.gz", hash = "sha256:64c613005f13efec6541bb0a33290d0d03c27abab5f15fbab20fb0ee162bdd8e"},
 ]
 elementpath = [
-    {file = "elementpath-2.0.1-py3-none-any.whl", hash = "sha256:2c8207772c4beb859cfbf9a6ac866349ce5d2ea49d94d4f6132f66fecbea7fd4"},
-    {file = "elementpath-2.0.1.tar.gz", hash = "sha256:be296a00a8ebbb858864c577b4c8cc8e2a72d8e6a94c58d725a2b64a1c6aa72f"},
+    {file = "elementpath-2.0.2-py3-none-any.whl", hash = "sha256:c2f5e1fb124f2ffc0b8a23db8e127b87ec9785baacec82c71aa95e0130cf59c5"},
+    {file = "elementpath-2.0.2.tar.gz", hash = "sha256:8ea6aefe90a3d7f968921789210cdfc1f6740b305dc5d7f70b1151c73d673d29"},
 ]
 factory-boy = [
     {file = "factory_boy-2.12.0-py2.py3-none-any.whl", hash = "sha256:728df59b372c9588b83153facf26d3d28947fc750e8e3c95cefa9bed0e6394ee"},
@@ -1949,8 +1950,8 @@ gitdb = [
     {file = "gitdb-4.0.5.tar.gz", hash = "sha256:c9e1f2d0db7ddb9a704c2a0217be31214e91a4fe1dea1efad19ae42ba0c285c9"},
 ]
 gitpython = [
-    {file = "GitPython-3.1.7-py3-none-any.whl", hash = "sha256:fa3b92da728a457dd75d62bb5f3eb2816d99a7fe6c67398e260637a40e3fafb5"},
-    {file = "GitPython-3.1.7.tar.gz", hash = "sha256:2db287d71a284e22e5c2846042d0602465c7434d910406990d5b74df4afb0858"},
+    {file = "GitPython-3.1.8-py3-none-any.whl", hash = "sha256:1858f4fd089abe92ae465f01d5aaaf55e937eca565fb2c1fce35a51b5f85c910"},
+    {file = "GitPython-3.1.8.tar.gz", hash = "sha256:080bf8e2cf1a2b907634761c2eaefbe83b69930c94c66ad11b65a8252959f912"},
 ]
 idna = [
     {file = "idna-2.8-py2.py3-none-any.whl", hash = "sha256:ea8b7f6188e6fa117537c3df7da9fc686d485087abf6ac197f9c46432f7e4a3c"},

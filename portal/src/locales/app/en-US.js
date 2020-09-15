@@ -49,6 +49,10 @@ const errors = {
       pattern: "Please enter a valid placement date.",
     },
     date_of_birth: {
+      invalid_age: "The person taking leave must be at least 14 years old.",
+      invalid_year_range: `Date of birth year is not in a valid range (on or after ${
+        new Date().getFullYear() - 100
+      }).`,
       pattern: "Please enter a valid date of birth.",
     },
     employer_fein: {
