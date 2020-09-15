@@ -370,27 +370,21 @@ export const claim = new MockClaimBuilder()
     {
       leave_start_date: "2020-03-01",
       leave_end_date: "2020-03-06",
+      id: 1,
     },
     {
       leave_start_date: "2020-03-01",
       leave_end_date: "2020-03-06",
+      id: 2,
     },
   ])
   .employerBenefit([
-    {
-      benefit_type: EmployerBenefitType.paidLeave,
-    },
     {
       benefit_amount_dollars: 1000,
       benefit_end_date: "2021-03-01",
       benefit_start_date: "2021-02-01",
       benefit_type: EmployerBenefitType.shortTermDisability,
-    },
-    {
-      benefit_type: EmployerBenefitType.permanentDisability,
-    },
-    {
-      benefit_type: EmployerBenefitType.familyOrMedicalLeave,
+      id: 1,
     },
   ])
   .create();

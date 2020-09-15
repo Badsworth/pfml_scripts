@@ -5,7 +5,7 @@ import EmployerBenefits from "../../../components/employers/EmployerBenefits";
 import Feedback from "../../../components/employers/Feedback";
 import LeaveDetails from "../../../components/employers/LeaveDetails";
 import LeaveSchedule from "../../../components/employers/LeaveSchedule";
-import PastLeave from "../../../components/employers/PastLeave";
+import PreviousLeaves from "../../../components/employers/PreviousLeaves";
 import PropTypes from "prop-types";
 import React from "react";
 import SupportingWorkDetails from "../../../components/employers/SupportingWorkDetails";
@@ -61,8 +61,8 @@ const Review = (props) => {
           intermittentLeavePeriods={intermittent_leave_periods}
         />
       )}
-      <EmployerBenefits employerBenefits={employer_benefits} />
-      <PastLeave previousLeaves={previous_leaves} />
+      <EmployerBenefits benefits={employer_benefits} />
+      <PreviousLeaves previousLeaves={previous_leaves} />
       <Feedback appLogic={props.appLogic} />
     </React.Fragment>
   );

@@ -1,28 +1,25 @@
-import AmendButton from "./AmendButton";
-import { EmployerBenefitType } from "../../models/EmployerBenefit";
+import EmployerBenefit from "./EmployerBenefit";
 import PropTypes from "prop-types";
 import React from "react";
 import ReviewHeading from "../ReviewHeading";
 import Table from "../Table";
-import findKeyByValue from "../../utils/findKeyByValue";
-import formatDateRange from "../../utils/formatDateRange";
 import { useTranslation } from "../../locales/i18n";
 
 /**
- * Display all employer benefits, regardless of whether the employee is using,
+ * Display all employer benefits
  * in the Leave Admin claim review page.
  */
 
 const EmployerBenefits = (props) => {
   const { t } = useTranslation();
-  const { employerBenefits } = props;
+  const { benefits } = props;
 
   return (
     <React.Fragment>
       <ReviewHeading level="2">
         {t("pages.employersClaimsReview.employerBenefits.header")}
       </ReviewHeading>
-      <Table>
+      <Table className="width-full">
         <caption>
           {t("pages.employersClaimsReview.employerBenefits.tableName")}
         </caption>
@@ -42,39 +39,18 @@ const EmployerBenefits = (props) => {
           </tr>
         </thead>
         <tbody>
-          {employerBenefits.map((benefit, index) => {
-            return (
-              <tr key={index}>
-                <th scope="row">
-                  {benefit.benefit_start_date && benefit.benefit_end_date
-                    ? formatDateRange(
-                        benefit.benefit_start_date,
-                        benefit.benefit_end_date
-                      )
-                    : t("pages.employersClaimsReview.notApplicable")}
-                </th>
-                <td>
-                  {t(
-                    "pages.employersClaimsReview.employerBenefits.employerBenefitType",
-                    {
-                      context: findKeyByValue(
-                        EmployerBenefitType,
-                        benefit.benefit_type
-                      ),
-                    }
-                  )}
-                </td>
-                <td>
-                  {benefit.benefit_amount_dollars
-                    ? benefit.benefit_amount_dollars
-                    : t("pages.employersClaimsReview.none")}
-                </td>
-                <td>
-                  <AmendButton />
-                </td>
-              </tr>
-            );
-          })}
+          {benefits.length ? (
+            benefits.map((benefit) => (
+              <EmployerBenefit benefit={benefit} key={benefit.id} />
+            ))
+          ) : (
+            <tr>
+              <th scope="row">
+                {t("pages.employersClaimsReview.noneReported")}
+              </th>
+              <td colSpan="2" />
+            </tr>
+          )}
         </tbody>
       </Table>
     </React.Fragment>
@@ -82,7 +58,7 @@ const EmployerBenefits = (props) => {
 };
 
 EmployerBenefits.propTypes = {
-  employerBenefits: PropTypes.array,
+  benefits: PropTypes.array,
 };
 
 export default EmployerBenefits;

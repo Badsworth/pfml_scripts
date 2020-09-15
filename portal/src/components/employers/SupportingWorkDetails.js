@@ -1,6 +1,8 @@
+import React, { useState } from "react";
 import AmendButton from "./AmendButton";
+import AmendmentForm from "./AmendmentForm";
+import InputText from "../InputText";
 import PropTypes from "prop-types";
-import React from "react";
 import ReviewHeading from "../ReviewHeading";
 import ReviewRow from "../ReviewRow";
 import { useTranslation } from "../../locales/i18n";
@@ -15,6 +17,14 @@ const detailedWorkScheduleFile = "example-work-schedule-link.pdf";
 const SupportingWorkDetails = (props) => {
   const { t } = useTranslation();
   const { intermittentLeavePeriods } = props;
+  const leavePeriod = intermittentLeavePeriods[0];
+  const [amendment, setAmendment] = useState(leavePeriod.duration);
+  const [isAmendmentFormDisplayed, setIsAmendmentFormDisplayed] = useState(
+    false
+  );
+  const amendDuration = (event) => {
+    setAmendment(event.target.value);
+  };
 
   return (
     <React.Fragment>
@@ -26,15 +36,33 @@ const SupportingWorkDetails = (props) => {
         label={t(
           "pages.employersClaimsReview.supportingWorkDetails.hoursWorkedLabel"
         )}
-        action={<AmendButton />}
+        action={
+          <AmendButton onClick={() => setIsAmendmentFormDisplayed(true)} />
+        }
       >
-        {intermittentLeavePeriods.map((leavePeriod, index) => {
-          return (
-            <p key={index} className="margin-top-0">
-              {leavePeriod.duration}
-            </p>
-          );
-        })}
+        <p className="margin-top-0">{leavePeriod.duration}</p>
+        {isAmendmentFormDisplayed && (
+          <AmendmentForm
+            onCancel={() => {
+              setIsAmendmentFormDisplayed(false);
+              setAmendment(leavePeriod.duration);
+            }}
+            className="input-text-first-child"
+          >
+            <InputText
+              onChange={amendDuration}
+              value={amendment}
+              label={t("components.amendmentForm.question_leavePeriodDuration")}
+              hint={t(
+                "components.amendmentForm.question_leavePeriodDuration_hint"
+              )}
+              name="supporting-work-detail-amendment"
+              type="number"
+              width="small"
+              smallLabel
+            />
+          </AmendmentForm>
+        )}
       </ReviewRow>
       <ReviewRow
         level="3"

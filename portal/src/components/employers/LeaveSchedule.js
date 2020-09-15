@@ -33,7 +33,7 @@ const LeaveSchedule = (props) => {
       <ReviewHeading level="2">
         {t("pages.employersClaimsReview.leaveSchedule.header")}
       </ReviewHeading>
-      <Table>
+      <Table className="width-full">
         <caption>
           {t("pages.employersClaimsReview.leaveSchedule.tableName")}
         </caption>
@@ -91,7 +91,10 @@ const LeaveSchedule = (props) => {
                   </td>
                   <td>
                     {t(
-                      "pages.employersClaimsReview.leaveSchedule.reducedDetails_reducedHours"
+                      "pages.employersClaimsReview.leaveSchedule.reducedDetails_reducedHours",
+                      {
+                        numOfHours: leavePeriod.hours_per_week,
+                      }
                     )}
                   </td>
                 </tr>

@@ -98,6 +98,7 @@ exports[`EmployerBenefitDetails when the user's claim has employer benefits rend
           "benefit_end_date": null,
           "benefit_start_date": null,
           "benefit_type": "paidLeave",
+          "id": null,
         },
       ]
     }

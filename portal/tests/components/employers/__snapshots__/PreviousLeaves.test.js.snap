@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`PastLeave renders the component 1`] = `
+exports[`PreviousLeaves renders the component 1`] = `
 <Fragment>
   <ReviewHeading
     level="2"
@@ -17,7 +17,9 @@ exports[`PastLeave renders the component 1`] = `
       Some content here
     </p>
   </Details>
-  <Table>
+  <Table
+    className="width-full"
+  >
     <thead>
       <tr>
         <th
@@ -34,36 +36,26 @@ exports[`PastLeave renders the component 1`] = `
       </tr>
     </thead>
     <tbody>
-      <tr
-        key="0"
-      >
-        <th
-          scope="row"
-        >
-          3/1/2020 – 3/6/2020
-        </th>
-        <td>
-          N/A days
-        </td>
-        <td>
-          <AmendButton />
-        </td>
-      </tr>
-      <tr
+      <PreviousLeave
         key="1"
-      >
-        <th
-          scope="row"
-        >
-          3/1/2020 – 3/6/2020
-        </th>
-        <td>
-          N/A days
-        </td>
-        <td>
-          <AmendButton />
-        </td>
-      </tr>
+        leavePeriod={
+          PreviousLeave {
+            "id": 1,
+            "leave_end_date": "2020-03-06",
+            "leave_start_date": "2020-03-01",
+          }
+        }
+      />
+      <PreviousLeave
+        key="2"
+        leavePeriod={
+          PreviousLeave {
+            "id": 2,
+            "leave_end_date": "2020-03-06",
+            "leave_start_date": "2020-03-01",
+          }
+        }
+      />
       <tr>
         <th
           className="text-bold"
@@ -74,7 +66,7 @@ exports[`PastLeave renders the component 1`] = `
         <td
           colSpan="2"
         >
-          N/A days
+          - days
         </td>
       </tr>
     </tbody>

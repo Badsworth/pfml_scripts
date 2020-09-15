@@ -7,7 +7,9 @@ exports[`EmployerBenefits renders the component 1`] = `
   >
     Employer benefits
   </ReviewHeading>
-  <Table>
+  <Table
+    className="width-full"
+  >
     <caption>
       Employer-sponsored benefit details
     </caption>
@@ -32,78 +34,19 @@ exports[`EmployerBenefits renders the component 1`] = `
       </tr>
     </thead>
     <tbody>
-      <tr
-        key="0"
-      >
-        <th
-          scope="row"
-        >
-          N/A
-        </th>
-        <td>
-          Accrued paid leave
-        </td>
-        <td>
-          None
-        </td>
-        <td>
-          <AmendButton />
-        </td>
-      </tr>
-      <tr
+      <EmployerBenefit
+        benefit={
+          EmployerBenefit {
+            "benefit_amount_dollars": 1000,
+            "benefit_amount_frequency": null,
+            "benefit_end_date": "2021-03-01",
+            "benefit_start_date": "2021-02-01",
+            "benefit_type": "Short Term Disability",
+            "id": 1,
+          }
+        }
         key="1"
-      >
-        <th
-          scope="row"
-        >
-          2/1/2021 – 3/1/2021
-        </th>
-        <td>
-          Short-term disability insurance
-        </td>
-        <td>
-          1000
-        </td>
-        <td>
-          <AmendButton />
-        </td>
-      </tr>
-      <tr
-        key="2"
-      >
-        <th
-          scope="row"
-        >
-          N/A
-        </th>
-        <td>
-          Permanent disability insurance
-        </td>
-        <td>
-          None
-        </td>
-        <td>
-          <AmendButton />
-        </td>
-      </tr>
-      <tr
-        key="3"
-      >
-        <th
-          scope="row"
-        >
-          N/A
-        </th>
-        <td>
-          Family or medical leave insurance
-        </td>
-        <td>
-          None
-        </td>
-        <td>
-          <AmendButton />
-        </td>
-      </tr>
+      />
     </tbody>
   </Table>
 </Fragment>

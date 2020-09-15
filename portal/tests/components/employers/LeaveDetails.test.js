@@ -21,9 +21,9 @@ describe("LeaveDetails", () => {
     );
   });
 
-  it("has a ReviewRow that takes an AmendLink as a prop", () => {
+  it("has a ReviewRow that takes an AmendButton as a prop", () => {
     expect(
-      wrapper.find(ReviewRow).at(2).render().find("span.amend-text").text()
+      wrapper.find(ReviewRow).at(2).render().find(".amend-text").text()
     ).toEqual("Amend");
   });
 

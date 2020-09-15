@@ -2,8 +2,7 @@
 
 exports[`AmendmentForm renders the component 1`] = `
 <form
-  className="usa-alert usa-alert--info usa-alert--no-icon c-amendment-form"
-  tabIndex="-1"
+  className="usa-alert usa-alert--info usa-alert--no-icon usa-form c-amendment-form"
 >
   <div
     className="usa-alert__body"

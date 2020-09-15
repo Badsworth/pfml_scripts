@@ -770,7 +770,7 @@ const pages = {
       intermittentDetails_estimatedAbsences:
         "Estimated <emphasized>{{frequency}}</emphasized> absences each lasting <emphasized>less than a full work day</emphasized> for <emphasized>{{duration}}</emphasized> {{durationBasis}}.",
       intermittentDetails_oncePerMonth: "At least once per month.",
-      reducedDetails_reducedHours: "Reduced by # hours per week",
+      reducedDetails_reducedHours: "Reduced by {{numOfHours}} hours per week",
       tableHeader_details: "Details",
       tableHeader_duration: "Duration",
       tableHeader_frequency: "Frequency",
@@ -779,9 +779,9 @@ const pages = {
       type_intermittent: "$t(shared.claimDurationTypeIntermittent)",
       type_reducedSchedule: "$t(shared.claimDurationTypeReducedSchedule)",
     },
-    none: "None",
-    notApplicable: "N/A",
-    pastLeave: {
+    noneReported: "None reported",
+    notApplicable: "-",
+    previousLeaves: {
       detailsLabel: "$t(shared.qualifyingReasonDetailsLabel)",
       explanation:
         "Employees have listed when they took leave for qualifying reasons",
@@ -854,7 +854,18 @@ const pages = {
 const components = {
   amendmentForm: {
     cancel: "Cancel amendment",
-    question_notificationDate: "When did the employee give notice?",
+    question_benefitAmount: "How much will they receive each month?",
+    question_benefitEndDate: "When will the employee stop using the benefit?",
+    question_benefitStartDate:
+      "When will the employee start using the benefit?",
+    question_leaveEndDate: "When did the leave end?",
+    question_leavePeriodDuration:
+      "On average, how many hours does the employee work each week?",
+    question_leavePeriodDuration_hint:
+      "If their schedule varies, tell us the average number of hours worked over the past 52 weeks.",
+    question_leaveStartDate: "When did the leave begin?",
+    question_notificationDate:
+      "When did the employee tell you about their expected leave?",
   },
   applicationCard: {
     feinHeading: "Employer FEIN",

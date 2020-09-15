@@ -18,9 +18,9 @@ describe("SupportingWorkDetails", () => {
     expect(wrapper).toMatchSnapshot();
   });
 
-  it("has a ReviewRow that takes in an AmendLink", () => {
+  it("has a ReviewRow that takes in an AmendButton", () => {
     expect(
-      wrapper.find(ReviewRow).first().render().find("span.amend-text").text()
+      wrapper.find(ReviewRow).first().render().find(".amend-text").text()
     ).toEqual("Amend");
   });
 

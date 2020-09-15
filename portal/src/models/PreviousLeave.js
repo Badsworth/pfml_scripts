@@ -7,6 +7,7 @@ import BaseModel from "./BaseModel";
 class PreviousLeave extends BaseModel {
   get defaults() {
     return {
+      id: null,
       leave_end_date: null,
       leave_start_date: null,
     };

@@ -3,7 +3,7 @@ import EmployerBenefits from "../../../../src/components/employers/EmployerBenef
 import Feedback from "../../../../src/components/employers/Feedback";
 import LeaveDetails from "../../../../src/components/employers/LeaveDetails";
 import LeaveSchedule from "../../../../src/components/employers/LeaveSchedule";
-import PastLeave from "../../../../src/components/employers/PastLeave";
+import PreviousLeaves from "../../../../src/components/employers/PreviousLeaves";
 import React from "react";
 import Review from "../../../../src/pages/employers/claims/review";
 import Title from "../../../../src/components/Title";
@@ -37,7 +37,7 @@ describe("Review", () => {
       Feedback,
       LeaveDetails,
       LeaveSchedule,
-      PastLeave,
+      PreviousLeaves,
     ];
     components.forEach((component) => {
       expect(wrapper.find(component).exists()).toEqual(true);

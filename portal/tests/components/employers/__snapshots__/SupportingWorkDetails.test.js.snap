@@ -8,13 +8,16 @@ exports[`SupportingWorkDetails renders the component 1`] = `
     Supporting work details
   </ReviewHeading>
   <ReviewRow
-    action={<AmendButton />}
+    action={
+      <AmendButton
+        onClick={[Function]}
+      />
+    }
     label="Weekly hours worked"
     level="3"
   >
     <p
       className="margin-top-0"
-      key="0"
     >
       3
     </p>

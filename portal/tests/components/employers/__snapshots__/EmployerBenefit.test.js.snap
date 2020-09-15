@@ -1,0 +1,24 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`EmployerBenefit renders the component 1`] = `
+<Fragment>
+  <tr>
+    <th
+      scope="row"
+    >
+      2/1/2021 – 3/1/2021
+    </th>
+    <td>
+      Short-term disability insurance
+    </td>
+    <td>
+      1000
+    </td>
+    <td>
+      <AmendButton
+        onClick={[Function]}
+      />
+    </td>
+  </tr>
+</Fragment>
+`;

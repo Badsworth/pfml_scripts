@@ -1,6 +1,7 @@
 import Button from "../Button";
 import PropTypes from "prop-types";
 import React from "react";
+import classnames from "classnames";
 import { t } from "../../locales/i18n";
 
 /**
@@ -8,21 +9,31 @@ import { t } from "../../locales/i18n";
  * in the Leave Admin claim review page.
  */
 
-export const AmendmentForm = ({ onCancel, children }) => (
-  <form
-    className="usa-alert usa-alert--info usa-alert--no-icon c-amendment-form"
-    tabIndex="-1"
-  >
-    <div className="usa-alert__body">
-      <div className="usa-alert__text">{children}</div>
-      <Button variation="unstyled" onClick={onCancel} className="margin-top-3">
-        {t("components.amendmentForm.cancel")}
-      </Button>
-    </div>
-  </form>
-);
+export const AmendmentForm = ({ className = "", onCancel, children }) => {
+  const classes = classnames(
+    `usa-alert usa-alert--info usa-alert--no-icon usa-form c-amendment-form`,
+    className
+  );
+
+  return (
+    <form className={classes}>
+      <div className="usa-alert__body">
+        <div className="usa-alert__text">{children}</div>
+        <Button
+          variation="unstyled"
+          onClick={onCancel}
+          className="margin-top-3"
+        >
+          {t("components.amendmentForm.cancel")}
+        </Button>
+      </div>
+    </form>
+  );
+};
 
 AmendmentForm.propTypes = {
+  /** Additional classNames to add */
+  className: PropTypes.string,
   /** Hides the amendment form */
   onCancel: PropTypes.func,
   children: PropTypes.node.isRequired,

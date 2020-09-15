@@ -7,7 +7,9 @@ exports[`LeaveSchedule renders the component 1`] = `
   >
     Leave schedule
   </ReviewHeading>
-  <Table>
+  <Table
+    className="width-full"
+  >
     <caption>
       Leave schedule details table
     </caption>
@@ -58,7 +60,7 @@ exports[`LeaveSchedule renders the component 1`] = `
           Reduced leave schedule
         </td>
         <td>
-          Reduced by # hours per week
+          Reduced by 5 hours per week
         </td>
       </tr>
       <tr
@@ -68,7 +70,7 @@ exports[`LeaveSchedule renders the component 1`] = `
         <th
           scope="row"
         >
-          N/A
+          -
         </th>
         <td>
           Intermittent leave

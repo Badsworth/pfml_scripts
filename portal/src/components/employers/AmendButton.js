@@ -15,11 +15,15 @@ const AmendButton = ({ onClick }) => {
 
   return (
     <span>
-      <Button variation="unstyled" onClick={onClick}>
+      <Button
+        variation="unstyled"
+        onClick={onClick}
+        className="display-flex flex-align-end"
+      >
         <FontAwesomeIcon icon={faEdit} className="margin-right-1" />
-        <span className="amend-text">
+        <div className="amend-text">
           {t("pages.employersClaimsReview.amend")}
-        </span>
+        </div>
       </Button>
     </span>
   );

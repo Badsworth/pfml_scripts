@@ -3,6 +3,7 @@
 exports[`AmendButton renders the component 1`] = `
 <span>
   <Button
+    className="display-flex flex-align-end"
     variation="unstyled"
   >
     <FontAwesomeIcon
@@ -36,11 +37,11 @@ exports[`AmendButton renders the component 1`] = `
       title=""
       transform={null}
     />
-    <span
+    <div
       className="amend-text"
     >
       Amend
-    </span>
+    </div>
   </Button>
 </span>
 `;

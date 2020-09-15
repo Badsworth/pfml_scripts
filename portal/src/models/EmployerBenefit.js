@@ -12,6 +12,7 @@ class EmployerBenefit extends BaseModel {
       benefit_end_date: null,
       benefit_start_date: null,
       benefit_type: null,
+      id: null,
     };
   }
 }

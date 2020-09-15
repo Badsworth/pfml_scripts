@@ -177,6 +177,7 @@ exports[`Final Review Page when all data is present renders Review page with fin
           "benefit_end_date": "2021-12-30",
           "benefit_start_date": "2021-08-12",
           "benefit_type": "Paid Leave",
+          "id": null,
         },
       ]
     }
@@ -213,6 +214,7 @@ exports[`Final Review Page when all data is present renders Review page with fin
     entries={
       Array [
         PreviousLeave {
+          "id": null,
           "leave_end_date": "2021-12-30",
           "leave_start_date": "2021-08-12",
         },
@@ -600,6 +602,7 @@ exports[`Part 1 Review Page when all data is present renders Review page with Pa
           "benefit_end_date": "2021-12-30",
           "benefit_start_date": "2021-08-12",
           "benefit_type": "Paid Leave",
+          "id": null,
         },
       ]
     }
@@ -636,6 +639,7 @@ exports[`Part 1 Review Page when all data is present renders Review page with Pa
     entries={
       Array [
         PreviousLeave {
+          "id": null,
           "leave_end_date": "2021-12-30",
           "leave_start_date": "2021-08-12",
         },

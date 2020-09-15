@@ -43,6 +43,7 @@ exports[`PreviousLeavesDetails when the user's claim has previous leaves renders
     entries={
       Array [
         PreviousLeave {
+          "id": null,
           "leave_end_date": null,
           "leave_start_date": null,
         },
