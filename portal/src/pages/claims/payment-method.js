@@ -1,7 +1,7 @@
 import Claim, { PaymentPreferenceMethod } from "../../models/Claim";
+import Alert from "../../components/Alert";
 import ConditionalContent from "../../components/ConditionalContent";
 import Fieldset from "../../components/Fieldset";
-import FieldsetAddress from "../../components/FieldsetAddress";
 import FormLabel from "../../components/FormLabel";
 import InputChoiceGroup from "../../components/InputChoiceGroup";
 import InputText from "../../components/InputText";
@@ -20,7 +20,6 @@ export const fields = [
   "claim.temp.payment_preferences[0].payment_method",
   "claim.temp.payment_preferences[0].account_details.account_number",
   "claim.temp.payment_preferences[0].account_details.routing_number",
-  "claim.temp.payment_preferences[0].destination_address",
 ];
 
 export const PaymentMethod = (props) => {
@@ -61,6 +60,7 @@ export const PaymentMethod = (props) => {
               paymentPreference.payment_method ===
               PaymentPreferenceMethod.debit,
             label: t("pages.claimsPaymentMethod.choiceDebit"),
+            hint: t("pages.claimsPaymentMethod.choiceHintDebit"),
             value: PaymentPreferenceMethod.debit,
           },
         ]}
@@ -106,13 +106,9 @@ export const PaymentMethod = (props) => {
           paymentPreference.payment_method === PaymentPreferenceMethod.debit
         }
       >
-        <FieldsetAddress
-          appErrors={appLogic.appErrors}
-          label={t("pages.claimsPaymentMethod.debitSectionLabel")}
-          {...getFunctionalInputProps(
-            "temp.payment_preferences[0].destination_address"
-          )}
-        />
+        <Alert state="info">
+          {t("pages.claimsPaymentMethod.debitDestinationInfo")}
+        </Alert>
       </ConditionalContent>
     </QuestionPage>
   );

@@ -130,7 +130,7 @@ const shared = {
     "Your password must be at least 8 characters long and include numbers and letters.",
   passwordLabel: "Password",
   paymentMethodAch: "Direct deposit",
-  paymentMethodDebit: "Debit card",
+  paymentMethodDebit: "MA PFML Prepaid Debit Card",
   pregnancyOrRecentBirthLabel:
     "Are you pregnant or have you recently given birth?",
   previousLeaveEntryPrefix: "Previous leave",
@@ -520,6 +520,9 @@ const pages = {
     choiceAch: "$t(shared.paymentMethodAch)",
     choiceDebit: "$t(shared.paymentMethodDebit)",
     choiceHintAch: "Requires a bank account",
+    choiceHintDebit: "Does not require a bank account",
+    debitDestinationInfo:
+      "You will receive the card in the mail at the address you listed as your mailing address.",
     debitSectionLabel: "Where should we send your debit card?",
     routingNumberHint:
       "This is the 9-digit number found on the lower left corner of a check.",

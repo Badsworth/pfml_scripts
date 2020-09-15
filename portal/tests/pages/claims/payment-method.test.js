@@ -22,7 +22,6 @@ describe("PaymentMethod", () => {
             payment_preferences: [
               {
                 payment_method: PaymentPreferenceMethod.ach,
-                destination_address: {},
               },
             ],
           },
@@ -39,12 +38,10 @@ describe("PaymentMethod", () => {
       expect(conditionalContent.prop("visible")).toBe(true);
     });
 
-    it("does not show the Debit address fieldset", () => {
-      const debitField = wrapper.find(
-        "[name='temp.payment_preferences[0].destination_address']"
-      );
-      const conditionalContent = debitField.parents("ConditionalContent");
-
+    it("hides the debit card destination info box", () => {
+      const conditionalContent = wrapper
+        .find("Alert")
+        .parents("ConditionalContent");
       expect(conditionalContent.prop("visible")).toBe(false);
     });
   });
@@ -57,7 +54,6 @@ describe("PaymentMethod", () => {
             payment_preferences: [
               {
                 payment_method: PaymentPreferenceMethod.debit,
-                destination_address: {},
               },
             ],
           },
@@ -74,12 +70,10 @@ describe("PaymentMethod", () => {
       expect(conditionalContent.prop("visible")).toBe(false);
     });
 
-    it("shows the Debit address fieldset", () => {
-      const debitField = wrapper.find(
-        "[name='temp.payment_preferences[0].destination_address']"
-      );
-      const conditionalContent = debitField.parents("ConditionalContent");
-
+    it("shows the debit card destination info box", () => {
+      const conditionalContent = wrapper
+        .find("Alert")
+        .parents("ConditionalContent");
       expect(conditionalContent.prop("visible")).toBe(true);
     });
   });

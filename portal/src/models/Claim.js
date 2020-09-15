@@ -72,8 +72,6 @@ class Claim extends BaseModel {
               account_number: null,
               routing_number: null,
             },
-            // Fields for where to send the debit card
-            destination_address: new Address(),
             payment_method: null, // PaymentPreferenceMethod
             payment_preference_id: null,
           },

@@ -75,6 +75,19 @@ export class MockClaimBuilder {
   }
 
   /**
+   * Sets payment method to debit card
+   * @returns {MockClaimBuilder}
+   */
+  debit() {
+    set(
+      this.claimAttrs,
+      "temp.payment_preferences[0].payment_method",
+      PaymentPreferenceMethod.debit
+    );
+    return this;
+  }
+
+  /**
    * @returns {MockClaimBuilder}
    */
   hasOtherId() {

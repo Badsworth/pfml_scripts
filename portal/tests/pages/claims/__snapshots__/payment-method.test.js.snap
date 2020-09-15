@@ -16,7 +16,8 @@ exports[`PaymentMethod renders the page 1`] = `
         },
         Object {
           "checked": false,
-          "label": "Debit card",
+          "hint": "Does not require a bank account",
+          "label": "MA PFML Prepaid Debit Card",
           "value": "Debit",
         },
       ]
@@ -62,26 +63,11 @@ exports[`PaymentMethod renders the page 1`] = `
   <ConditionalContent
     visible={false}
   >
-    <FieldsetAddress
-      appErrors={
-        AppErrorInfoCollection {
-          "items": Array [],
-          "itemsById": Object {},
-        }
-      }
-      label="Where should we send your debit card?"
-      name="temp.payment_preferences[0].destination_address"
-      onChange={[Function]}
-      value={
-        Address {
-          "city": null,
-          "line_1": null,
-          "line_2": null,
-          "state": null,
-          "zip": null,
-        }
-      }
-    />
+    <Alert
+      state="info"
+    >
+      You will receive the card in the mail at the address you listed as your mailing address.
+    </Alert>
   </ConditionalContent>
 </QuestionPage>
 `;

@@ -3,6 +3,7 @@ import generateClaimPageStory from "storybook/utils/generateClaimPageStory";
 
 const mockClaims = {
   complete: new MockClaimBuilder().complete().create(),
+  debit: new MockClaimBuilder().complete().debit().create(),
 };
 
 const { config, DefaultStory } = generateClaimPageStory("review", mockClaims);
