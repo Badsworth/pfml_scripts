@@ -38,9 +38,12 @@ export const UploadCertification = (props) => {
       break;
   }
 
-  // TODO (CP-396): connect this page to the API file upload endpoint.
-  const handleSave = () => {
-    appLogic.goToNextPage(null, props.query);
+  const handleSave = async () => {
+    await appLogic.claims.attachDocuments(
+      claim.application_id,
+      files,
+      "Certification" // TODO (CP-962): Replace with claim.leave_reason.reason
+    );
   };
 
   return (

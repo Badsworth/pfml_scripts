@@ -51,7 +51,8 @@ export default class BaseApi {
     method,
     subPath = "",
     body = null,
-    additionalHeaders = {}
+    additionalHeaders = {},
+    options = { multipartForm: false }
   ) => {
     method = method.toUpperCase();
     validateRequestMethod(method);
@@ -61,9 +62,19 @@ export default class BaseApi {
 
     const headers = {
       Authorization: `Bearer ${accessToken.jwtToken}`,
-      "Content-Type": "application/json",
       ...additionalHeaders,
     };
+
+    if (!options.multipartForm) {
+      // Normally we want "application/json", but when we upload files,
+      // we want the browser to automatically set the "Content-Type" to
+      // "multipart/form-data" (specifically, we want the browser to set
+      // a "multipart/form-data" with a "boundary" value as a delimiter to
+      // tell the API how to parse the body)
+      // https://stackoverflow.com/questions/3508338/what-is-the-boundary-in-multipart-form-data
+      // https://muffinman.io/uploading-files-using-fetch-multipart-form-data/
+      headers["Content-Type"] = "application/json";
+    }
 
     if (this.isLoading) {
       // We return an object for instances where

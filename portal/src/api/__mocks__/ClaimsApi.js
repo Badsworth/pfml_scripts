@@ -49,7 +49,16 @@ export const submitClaimMock = jest.fn(async (application_id) =>
   })
 );
 
+export const attachDocumentsMock = jest.fn(
+  async (application_id, files, documentCategory) =>
+    Promise.resolve({
+      success: true,
+      status: 200,
+    })
+);
+
 const claimsApi = jest.fn().mockImplementation(({ user }) => ({
+  attachDocuments: attachDocumentsMock,
   createClaim: createClaimMock,
   getClaims: getClaimsMock,
   updateClaim: updateClaimMock,

@@ -4,14 +4,15 @@ import {
   renderWithAppLogic,
 } from "../../test-utils";
 import UploadCertification from "../../../src/pages/claims/upload-certification";
+import { act } from "react-dom/test-utils";
 
 jest.mock("../../../src/hooks/useAppLogic");
 
 describe("UploadCertification", () => {
-  let claim, wrapper;
+  let appLogic, claim, wrapper;
 
   function render() {
-    ({ wrapper } = renderWithAppLogic(UploadCertification, {
+    ({ appLogic, wrapper } = renderWithAppLogic(UploadCertification, {
       claimAttrs: claim,
     }));
   }
@@ -60,6 +61,29 @@ describe("UploadCertification", () => {
   });
 
   describe("when the form is successfully submitted", () => {
-    it.todo("uploads the files to the API");
+    it("calls claimsLogic.attachDocuments", async () => {
+      claim = new MockClaimBuilder().medicalLeaveReason().create();
+      render();
+      const files = [makeFile(), makeFile(), makeFile()];
+      const formattedFiles = files.map((file) => {
+        return { id: expect.any(String), file };
+      });
+      const event = {
+        target: {
+          files,
+        },
+      };
+      const input = wrapper.find("FileCardList").dive().find("input");
+      input.simulate("change", event);
+      await act(async () => {
+        await wrapper.find("QuestionPage").simulate("save");
+      });
+
+      expect(appLogic.claims.attachDocuments).toHaveBeenCalledWith(
+        claim.application_id,
+        formattedFiles,
+        expect.any(String)
+      );
+    });
   });
 });

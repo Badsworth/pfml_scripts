@@ -118,4 +118,40 @@ export default class ClaimsApi extends BaseApi {
       success,
     };
   };
+
+  /**
+   * Submit documents one at a time
+   *
+   * Corresponds to this API endpoint: /application/{application_id}/documents
+   * @param {string} application_id ID of the Claim
+   * @param {FileList} files FileList object, an iterable collection of File objects
+   * @param {string} documentCategory category of documents
+   * @returns {Promise<ClaimsApiSingleResult>} The result of the API call
+   */
+  attachDocuments = async (application_id, files, documentCategory) => {
+    const formData = new FormData();
+    // TODO (CP-993): handle multiple file uploads
+    const file = files[0];
+    // TODO (CP-962): set document_category and document_type based on leave reason
+    formData.append("description", "testDescription");
+    formData.append("document_category", "Certification");
+    formData.append("document_type", "Passport");
+    formData.append("file", file.file);
+    formData.append("name", file.file.name);
+
+    const { status, success } = await this.request(
+      "POST",
+      `${application_id}/documents`,
+      formData,
+      null,
+      { multipartForm: true }
+    );
+
+    // TODO (CP-959): Update document store on successful response
+
+    return {
+      status,
+      success,
+    };
+  };
 }

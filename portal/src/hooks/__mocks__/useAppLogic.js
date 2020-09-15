@@ -16,6 +16,7 @@ export default jest.fn(() => ({
     verifyAccount: jest.fn(),
   },
   claims: {
+    attachDocuments: jest.fn(),
     claims: new ClaimCollection(),
     create: jest.fn(() => new Claim({ application_id: uniqueId() })),
     get: jest.fn(),
