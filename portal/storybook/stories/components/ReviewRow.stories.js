@@ -1,3 +1,5 @@
+/* eslint-disable no-alert */
+import AmendButton from "src/components/employers/AmendButton";
 import React from "react";
 import ReviewHeading from "src/components/ReviewHeading";
 import ReviewRow from "src/components/ReviewRow";
@@ -43,4 +45,18 @@ export const WithHeadings = () => (
       Continuous
     </ReviewRow>
   </React.Fragment>
+);
+
+export const WithAction = () => (
+  <ReviewRow
+    level="3"
+    label="Employer notification date"
+    action={
+      <AmendButton
+        onClick={() => alert("This function should open the Amendment Form!")}
+      />
+    }
+  >
+    01/01/2021
+  </ReviewRow>
 );
