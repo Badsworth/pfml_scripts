@@ -33,7 +33,7 @@ This is the API for the Massachusetts Paid Family and Medical Leave program. See
 3. `make start`
 4. Navigate to the Swagger UI at [http://localhost:1550/v1/docs/](http://localhost:1550/v1/docs/)
 5. [Setup local authentication](#getting-local-authentication-credentials)
-6. Review documentation in `/docs`, especially [CONTRIBUTING.md](/docs/contributing.md) for guidelines on how to contribute code
+6. Review documentation in `/docs`, especially [contributing.md](/docs/contributing.md) for guidelines on how to contribute code
 
 ### Setup Your Development Environment
 
