@@ -4,7 +4,10 @@
 import dataclasses
 import os
 
+import boto3
+
 import massgov.pfml.fineos.eligibility_feed as eligibility_feed
+import massgov.pfml.util.config as config
 import massgov.pfml.util.logging as logging
 from massgov.pfml import db, fineos
 
@@ -12,7 +15,13 @@ logging.init(__name__)
 logger = logging.get_logger(__name__)
 
 db_session_raw = db.init()
-fineos_client = fineos.create_client()
+
+fineos_client_config = fineos.factory.FINEOSClientConfig.from_env()
+if fineos_client_config is not None:
+    aws_ssm = boto3.client("ssm", region_name="us-east-1")
+    fineos_client_secret = config.get_secret_from_env(aws_ssm, "FINEOS_CLIENT_OAUTH2_CLIENT_SECRET")
+    fineos_client_config.oauth2_client_secret = fineos_client_secret
+fineos_client = fineos.create_client(fineos_client_config)
 
 
 def handler(_event, _context):
