@@ -4,7 +4,7 @@ This is the top level of the monorepo for the Mass PFML project, including web p
 
 **You may also be interested in:**
 
-- [`docs/`](./docs/)
+- [`docs/`](./docs/), specifically [contributing.md](./docs/contributing.md)
 - [Environments](https://lwd.atlassian.net/wiki/spaces/DD/pages/246612440/Environments)
 
 ## Installation

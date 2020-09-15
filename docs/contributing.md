@@ -1,6 +1,10 @@
 # Contributing
 
-## Local Development:
+## Delivery Workflow
+
+Please see the [Delivery Workflow](https://lwd.atlassian.net/wiki/spaces/DD/pages/306577409/Delivery+Workflow) Confluence page for guidance on how to pick up tickets, when to deploy, which environment to deploy to, etc.
+
+## Local Development
 
 For practical instructions on getting set up locally, see the repo [README](../README.md). Below are guidelines for working once you're ready.
 
@@ -20,11 +24,11 @@ For practical instructions on getting set up locally, see the repo [README](../R
 
 Code reviews are intended to help all of us as a team grow as engineers and improve the quality of our results. These guidelines are meant to reinforce those two goals.
 
-### For requesters:
+### For requesters
 
 - Include the JIRA ticket number in the title if it exists. For example: `PFML-123: Implement API endpoint`
 
-- Include a [GitHub label](https://github.com/EOLWD/pfml/labels) if relevant. The `architecture` label should be used for changes to abstractions or interfaces that usually affect multiple existing files while the `pattern` label should be used for a new structure that will be reused later. This can be a helpful wayfinding and context building tool for engineers onboarding into the codebase. The `operations` label should be used for changes to eng operations such as dev set up or deployment. 
+- Include a [GitHub label](https://github.com/EOLWD/pfml/labels) if relevant. The `architecture` label should be used for changes to abstractions or interfaces that usually affect multiple existing files while the `pattern` label should be used for a new structure that will be reused later. This can be a helpful wayfinding and context building tool for engineers onboarding into the codebase. The `operations` label should be used for changes to eng operations such as dev set up or deployment.
 
 - If it’s a work-in-progress or you are looking for specific feedback on things, create a [Draft Pull Request](https://help.github.com/en/github/collaborating-with-issues-and-pull-requests/about-pull-requests#draft-pull-requests) and state what you are looking for in the description.
 
@@ -55,7 +59,13 @@ Teams exist for the API and Portal engineers:
 - API engineers: [`@pfml-api`](https://github.com/orgs/EOLWD/teams/pfml-api)
 - Portal engineers: [`@pfml-portal`](https://github.com/orgs/EOLWD/teams/pfml-portal)
 
-The Portal engineering team [is configured](https://github.com/orgs/EOLWD/teams/pfml-portal/edit/review_assignment) so that PR reviews are automatically assigned to a member of the team via a round robin algorithm, with the goal of equally distributing PR reviews across the team. Since the Portal engineering team includes those working on either the Claimant Portal or Employer Portal, PR reviews will be distributed between both groups. 
+The Portal engineering team [is configured](https://github.com/orgs/EOLWD/teams/pfml-portal/edit/review_assignment) so that PR reviews are automatically assigned to a member of the team via a round robin algorithm, with the goal of equally distributing PR reviews across the team. Since the Portal engineering team includes those working on either the Claimant Portal or Employer Portal, PR reviews will be distributed between both groups.
+
+## Pull Request Titles
+
+Please title Pull Requests in GitHub as "API-nnn: summary", "CP-nnn: summary", etc. When making  a fix with no ticket, please use "API: summary" or "Portal: summary".
+
+This makes it easier to search for PRs and also links from JIRA tickets to GitHub PRs automatically.
 
 ## Merge Commit Messages
 
