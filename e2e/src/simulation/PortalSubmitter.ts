@@ -125,17 +125,9 @@ export default class PortalSubmitter {
   }
 
   private async submitApplication(applicationId: string): Promise<void> {
-    try {
-      await postApplicationsByApplicationIdSubmitApplication(
-        { applicationId },
-        await this.getOptions()
-      );
-    } catch (e) {
-      // @todo: Do not catch and return once the issue with 503 on final submission is fixed.
-      if (e.data?.errors?.length == 0) {
-        return;
-      }
-      throw e;
-    }
+    await postApplicationsByApplicationIdSubmitApplication(
+      { applicationId },
+      await this.getOptions()
+    );
   }
 }

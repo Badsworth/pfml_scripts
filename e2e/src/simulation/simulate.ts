@@ -242,9 +242,29 @@ export class Simulation {
   /**
    * Execute all claims in the passed iterable.
    */
-  async execute(claims: Iterable<SimulationClaim>): Promise<void> {
+  async execute(
+    claims: Iterable<SimulationClaim>
+  ): Promise<{ success: number; errors: unknown[] }> {
+    let success = 0;
+    const errors: unknown[] = [];
     for (const claim of claims) {
-      await this.executor(claim);
+      try {
+        await this.executor(claim);
+        console.log(
+          `Submitted ${claim.scenario} for ${claim.claim.employee_ssn}`
+        );
+        success++;
+      } catch (e) {
+        console.log(
+          `Failed on ${claim.scenario} for ${claim.claim.employee_ssn}`
+        );
+        console.log(e);
+        errors.push(e);
+      }
     }
+    return {
+      success,
+      errors,
+    };
   }
 }

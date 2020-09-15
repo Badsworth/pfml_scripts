@@ -49,7 +49,7 @@ export default function createExecutor(
     // Simulate mail by moving manually submitted docs to a `mail` folder.
     if (mailedDocuments.length > 0) {
       const claimMailDir = path.join(mailDirectory, claimId ?? "unknown");
-      await fs.promises.mkdir(claimMailDir);
+      await fs.promises.mkdir(claimMailDir, { recursive: true });
       for (const doc of mailedDocuments) {
         await fs.promises.copyFile(
           path.join(documentDirectory, doc.path),
@@ -68,8 +68,15 @@ function getDocumentType(
   claim: SimulationClaim
 ): DocumentUploadRequest["document_type"] {
   // @todo Remove hardcoded value once API issue is resolved.
-  // Currently, `Driver's License` values create unknown FINEOS error.
-  return "Passport";
+  // Currently, anything other than "Passport" throws an error when sent to Fineos.
+  switch (document.type) {
+    case "HCP":
+    case "ID-front":
+    case "ID-back":
+      return "Passport";
+    default:
+      throw new Error(`Unhandled document type: ${document.type}`);
+  }
   // switch (document.type) {
   // case "HCP":
   // Just do this for now, since we have no category for HCP.
@@ -86,10 +93,18 @@ function getDocumentCategory(
   document: ClaimDocument
 ): DocumentUploadRequest["document_category"] {
   switch (document.type) {
+    case "HCP":
     case "ID-front":
     case "ID-back":
-      return "Identity Proofing";
-    case "HCP":
       return "Certification";
+    default:
+      throw new Error(`Unhandled document type: ${document.type}`);
   }
+  // switch (document.type) {
+  //   case "ID-front":
+  //   case "ID-back":
+  //     return "Identity Proofing";
+  //   case "HCP":
+  //     return "Certification";
+  // }
 }

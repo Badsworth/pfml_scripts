@@ -131,8 +131,10 @@ const submitter = new PortalSubmitter({
     const claims = await fs.promises
       .readFile(`${directory}/claims.json`)
       .then((data) => JSON.parse(data.toString("utf-8")));
-    await sim.execute(claims);
-    process.stdout.write(`Submitted ${submitter.count} applications.\n`);
+    const { success, errors } = await sim.execute(claims);
+    process.stdout.write(
+      `Submitted ${success} applications, ${errors.length} failed.\n`
+    );
   }
 })().catch((reason) => {
   console.error(`Failed after submitting ${submitter.count} applications`);
