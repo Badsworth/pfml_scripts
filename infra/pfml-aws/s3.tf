@@ -113,3 +113,35 @@ resource "aws_s3_bucket_public_access_block" "lambda_build_block_public_access" 
   ignore_public_acls      = true
   restrict_public_buckets = true
 }
+
+
+# Create S3 buckets to store CSVs that will be linked in emails sent to
+# Third-Party Administrators (TPAs)
+
+resource "aws_s3_bucket" "tpa_csv_storage" {
+  bucket = "massgov-pfml-tpa-csv-storage"
+  acl    = "private"
+
+  server_side_encryption_configuration {
+    rule {
+      apply_server_side_encryption_by_default {
+        sse_algorithm = "AES256"
+      }
+    }
+  }
+
+  tags = merge(module.constants.common_tags, {
+    environment = "prod"
+    public      = "no"
+    Name        = "massgov-pfml-tpa-csv-storage"
+  })
+}
+
+resource "aws_s3_bucket_public_access_block" "tpa_csv_storage_block_public_access" {
+  bucket = aws_s3_bucket.tpa_csv_storage.id
+
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+}

@@ -186,6 +186,15 @@ logs: start ## View API logs
 logs-db: start ## View DB logs
 	docker-compose logs --follow mass-pfml-db
 
+process-tpa-csv: ## Creates mailable CSVs per email address in input file
+	$(PY_RUN_CMD) python bin/process-tpa-csv.py \
+		--aws-access-key-id=$(aws-access-key-id) \
+		--aws-secret-access-key=$(aws-secret-access-key) \
+		--aws-session-token=$(aws-session-token) \
+		--input=$(input) \
+		--output-dir=$(output-dir) \
+		--url-expiration-days=$(url-expiration-days)
+
 psql: login-db
 
 start: ## Start all containers
