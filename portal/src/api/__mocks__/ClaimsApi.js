@@ -44,7 +44,7 @@ export const submitClaimMock = jest.fn(async (application_id) =>
     status: 200,
     claim: new Claim({
       application_id,
-      status: "Completed",
+      status: "Submitted",
     }),
   })
 );

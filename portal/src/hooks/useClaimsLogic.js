@@ -115,9 +115,6 @@ const useClaimsLogic = ({ appErrorsLogic, portalFlow, user }) => {
         // TODO (CP-676): Remove workaround once API returns all the fields in our application
         claim = new Claim({
           ...claims.get(application_id),
-          ...{
-            status: "Completed",
-          },
         });
         // </ end workaround >
 
