@@ -31,6 +31,7 @@ exports[`VerifyAccount renders the empty page 1`] = `
   <div>
     <Button
       className="margin-top-2"
+      loading={false}
       name="resend-code-button"
       onClick={[Function]}
       variation="unstyled"
@@ -39,6 +40,7 @@ exports[`VerifyAccount renders the empty page 1`] = `
     </Button>
   </div>
   <Button
+    loading={false}
     type="submit"
   >
     Submit

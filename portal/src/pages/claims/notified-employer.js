@@ -30,9 +30,8 @@ export const NotifiedEmployer = (props) => {
   );
   const employer_notified = get(formState.leave_details, "employer_notified");
 
-  const handleSave = () => {
+  const handleSave = () =>
     appLogic.claims.update(claim.application_id, formState);
-  };
 
   const getFunctionalInputProps = useFunctionalInputProps({
     appErrors: appLogic.appErrors,

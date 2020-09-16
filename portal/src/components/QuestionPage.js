@@ -3,6 +3,7 @@ import Button from "./Button";
 import PropTypes from "prop-types";
 import React from "react";
 import Title from "./Title";
+import useThrottledHandler from "../hooks/useThrottledHandler";
 import { useTranslation } from "../locales/i18n";
 
 /**
@@ -15,10 +16,10 @@ import { useTranslation } from "../locales/i18n";
 export const QuestionPage = (props) => {
   const { t } = useTranslation();
 
-  const handleSubmit = async (event) => {
+  const handleSubmit = useThrottledHandler(async (event) => {
     event.preventDefault();
     await props.onSave();
-  };
+  });
 
   return (
     <React.Fragment>
@@ -26,7 +27,11 @@ export const QuestionPage = (props) => {
       <form onSubmit={handleSubmit} className="usa-form">
         <Title small>{props.title}</Title>
         {props.children}
-        <Button className="margin-top-4" type="submit">
+        <Button
+          className="margin-top-4"
+          type="submit"
+          loading={handleSubmit.isThrottled}
+        >
           {t("components.form.continueButton")}
         </Button>
       </form>

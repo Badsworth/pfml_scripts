@@ -17,6 +17,7 @@ exports[`QuestionPage renders the form 1`] = `
     </div>
     <Button
       className="margin-top-4"
+      loading={false}
       type="submit"
     >
       Continue

@@ -25,6 +25,7 @@ import claimantConfigs from "../../flows/claimant";
 import findKeyByValue from "../../utils/findKeyByValue";
 import formatDateRange from "../../utils/formatDateRange";
 import { isFeatureEnabled } from "../../services/featureFlags";
+import useThrottledHandler from "../../hooks/useThrottledHandler";
 import { useTranslation } from "../../locales/i18n";
 import withClaim from "../../hoc/withClaim";
 
@@ -70,7 +71,9 @@ export const Review = (props) => {
     if (step && step.editable) return step.href;
   };
 
-  const handleSubmit = () => appLogic.claims.submit(claim.application_id);
+  const handleSubmit = useThrottledHandler(() =>
+    appLogic.claims.submit(claim.application_id)
+  );
 
   const usePartOneReview =
     isFeatureEnabled("enableProgressiveApp") &&
@@ -390,7 +393,12 @@ export const Review = (props) => {
         </React.Fragment>
       )}
 
-      <Button className="margin-top-3" onClick={handleSubmit} type="button">
+      <Button
+        className="margin-top-3"
+        onClick={handleSubmit}
+        type="button"
+        loading={handleSubmit.isThrottled}
+      >
         {t("pages.claimsReview.submitAction", {
           context: usePartOneReview ? "part1" : "final",
         })}

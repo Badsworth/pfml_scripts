@@ -8,6 +8,7 @@ import Title from "../components/Title";
 import routes from "../routes";
 import useFormState from "../hooks/useFormState";
 import useFunctionalInputProps from "../hooks/useFunctionalInputProps";
+import useThrottledHandler from "../hooks/useThrottledHandler";
 import { useTranslation } from "../locales/i18n";
 
 export const ForgotPassword = (props) => {
@@ -18,10 +19,10 @@ export const ForgotPassword = (props) => {
     username: "",
   });
 
-  const handleSubmit = (event) => {
+  const handleSubmit = useThrottledHandler(async (event) => {
     event.preventDefault();
-    appLogic.auth.forgotPassword(formState.username);
-  };
+    await appLogic.auth.forgotPassword(formState.username);
+  });
 
   const getFunctionalInputProps = useFunctionalInputProps({
     appErrors: appLogic.appErrors,
@@ -41,7 +42,7 @@ export const ForgotPassword = (props) => {
         smallLabel
       />
 
-      <Button type="submit">
+      <Button type="submit" loading={handleSubmit.isThrottled}>
         {t("pages.authForgotPassword.submitButton")}
       </Button>
 

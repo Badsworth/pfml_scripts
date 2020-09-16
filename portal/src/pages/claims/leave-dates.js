@@ -22,7 +22,7 @@ export const LeaveDates = (props) => {
   const { t } = useTranslation();
   const { formState, updateFields } = useFormState(pick(props, fields).claim);
 
-  const handleSave = () => {
+  const handleSave = async () => {
     // TODO (CP-724): Look into updating the API interface to accept a single leave_details object rather than
     // separate objects for continuous / intermittent / reduced schedule leave types.
     const leave_details = get(formState, "temp.leave_details");
@@ -65,7 +65,7 @@ export const LeaveDates = (props) => {
       );
     }
 
-    appLogic.claims.update(claim.application_id, formState);
+    await appLogic.claims.update(claim.application_id, formState);
   };
 
   const contentContext = {

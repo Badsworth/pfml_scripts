@@ -22,7 +22,7 @@ exports[`ErrorBoundary when an error is thrown by a descendant component renders
           onClick={[Function]}
         >
           <button
-            className="usa-button"
+            className="usa-button position-relative"
             onClick={[Function]}
             type="button"
           >

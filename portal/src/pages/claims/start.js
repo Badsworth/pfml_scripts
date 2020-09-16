@@ -4,15 +4,16 @@ import Button from "../../components/Button";
 import PropTypes from "prop-types";
 import React from "react";
 import Title from "../../components/Title";
+import useThrottledHandler from "../../hooks/useThrottledHandler";
 import { useTranslation } from "../../locales/i18n";
 
 export const Start = (props) => {
   const { t } = useTranslation();
 
-  const handleSubmit = async (event) => {
+  const handleSubmit = useThrottledHandler(async (event) => {
     event.preventDefault();
     await props.appLogic.claims.create();
-  };
+  });
 
   return (
     <React.Fragment>
@@ -24,7 +25,11 @@ export const Start = (props) => {
         <Alert className="measure-6" state="info" noIcon>
           {t("pages.claimsStart.truthAttestation")}
         </Alert>
-        <Button type="submit" name="new-claim">
+        <Button
+          type="submit"
+          name="new-claim"
+          loading={handleSubmit.isThrottled}
+        >
           {t("pages.claimsStart.submitApplicationButton")}
         </Button>
       </form>

@@ -8,6 +8,7 @@ import Title from "../../components/Title";
 import { Trans } from "react-i18next";
 import User from "../../models/User";
 import routes from "../../routes";
+import useThrottledHandler from "../../hooks/useThrottledHandler";
 import { useTranslation } from "../../locales/i18n";
 import withUser from "../../hoc/withUser";
 
@@ -21,10 +22,10 @@ const ConsentToDataSharing = (props) => {
       consented_to_data_sharing: true,
     });
 
-  const handleSubmit = async (event) => {
+  const handleSubmit = useThrottledHandler(async (event) => {
     event.preventDefault();
     await handleSave();
-  };
+  });
 
   return (
     <form onSubmit={handleSubmit} className="usa-form">
@@ -78,7 +79,7 @@ const ConsentToDataSharing = (props) => {
         {t("pages.userConsentToDataSharing.agreementBody")}
       </Alert>
 
-      <Button type="submit">
+      <Button type="submit" loading={handleSubmit.isThrottled}>
         {t("pages.userConsentToDataSharing.continueButton")}
       </Button>
     </form>

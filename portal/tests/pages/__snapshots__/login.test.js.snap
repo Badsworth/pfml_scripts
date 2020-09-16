@@ -47,6 +47,7 @@ exports[`Login renders the empty page 1`] = `
       </Link>
     </div>
     <Button
+      loading={false}
       type="submit"
     >
       Log in

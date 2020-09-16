@@ -63,14 +63,15 @@ export const Duration = (props) => {
     handleInputChange(event);
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     const {
       duration_type_continuous,
       duration_type_intermittent,
       duration_type_reduced,
       ...patchData
     } = formState;
-    appLogic.claims.update(claim.application_id, patchData);
+
+    await appLogic.claims.update(claim.application_id, patchData);
   };
 
   const getFunctionalInputProps = useFunctionalInputProps({

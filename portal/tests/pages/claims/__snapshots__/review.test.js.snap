@@ -237,6 +237,7 @@ exports[`Final Review Page when all data is present renders Review page with fin
   </ReviewRow>
   <Button
     className="margin-top-3"
+    loading={false}
     onClick={[Function]}
     type="button"
   >
@@ -351,6 +352,7 @@ exports[`Final Review Page when conditional data is empty does not render string
   </ReviewHeading>
   <Button
     className="margin-top-3"
+    loading={false}
     onClick={[Function]}
     type="button"
   >
@@ -660,6 +662,7 @@ exports[`Part 1 Review Page when all data is present renders Review page with Pa
   </p>
   <Button
     className="margin-top-3"
+    loading={false}
     onClick={[Function]}
     type="button"
   >
@@ -792,6 +795,7 @@ exports[`Part 1 Review Page when data is empty does not render strings like 'nul
   </p>
   <Button
     className="margin-top-3"
+    loading={false}
     onClick={[Function]}
     type="button"
   >

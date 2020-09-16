@@ -27,6 +27,7 @@ exports[`CreateAccount renders the empty page 1`] = `
     value=""
   />
   <Button
+    loading={false}
     type="submit"
   >
     Create account

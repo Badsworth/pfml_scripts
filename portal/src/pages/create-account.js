@@ -8,6 +8,7 @@ import Title from "../components/Title";
 import routes from "../routes";
 import useFormState from "../hooks/useFormState";
 import useFunctionalInputProps from "../hooks/useFunctionalInputProps";
+import useThrottledHandler from "../hooks/useThrottledHandler";
 import { useTranslation } from "../locales/i18n";
 
 export const CreateAccount = (props) => {
@@ -19,10 +20,10 @@ export const CreateAccount = (props) => {
     username: "",
   });
 
-  const handleSubmit = (event) => {
+  const handleSubmit = useThrottledHandler(async (event) => {
     event.preventDefault();
-    appLogic.auth.createAccount(formState.username, formState.password);
-  };
+    await appLogic.auth.createAccount(formState.username, formState.password);
+  });
 
   const getFunctionalInputProps = useFunctionalInputProps({
     appErrors: appLogic.appErrors,
@@ -47,7 +48,7 @@ export const CreateAccount = (props) => {
         label={t("pages.authCreateAccount.passwordLabel")}
         smallLabel
       />
-      <Button type="submit">
+      <Button type="submit" loading={handleSubmit.isThrottled}>
         {t("pages.authCreateAccount.createAccountButton")}
       </Button>
       <div className="margin-top-2 text-base text-bold">

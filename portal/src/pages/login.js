@@ -10,6 +10,7 @@ import { Trans } from "react-i18next";
 import routes from "../routes";
 import useFormState from "../hooks/useFormState";
 import useFunctionalInputProps from "../hooks/useFunctionalInputProps";
+import useThrottledHandler from "../hooks/useThrottledHandler";
 import { useTranslation } from "../locales/i18n";
 
 export const Login = (props) => {
@@ -21,14 +22,18 @@ export const Login = (props) => {
     username: "",
   });
 
-  const handleSubmit = (event) => {
+  const handleSubmit = useThrottledHandler(async (event) => {
     event.preventDefault();
     if (query.next) {
-      appLogic.auth.login(formState.username, formState.password, query.next);
+      await appLogic.auth.login(
+        formState.username,
+        formState.password,
+        query.next
+      );
     } else {
-      appLogic.auth.login(formState.username, formState.password);
+      await appLogic.auth.login(formState.username, formState.password);
     }
-  };
+  });
 
   const accountVerified = query["account-verified"] === "true";
   const getFunctionalInputProps = useFunctionalInputProps({
@@ -77,7 +82,9 @@ export const Login = (props) => {
           </Link>
         </div>
 
-        <Button type="submit">{t("pages.authLogin.loginButton")}</Button>
+        <Button type="submit" loading={handleSubmit.isThrottled}>
+          {t("pages.authLogin.loginButton")}
+        </Button>
       </form>
     </React.Fragment>
   );

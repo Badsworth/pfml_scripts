@@ -9,6 +9,7 @@ import get from "lodash/get";
 import routes from "../routes";
 import useFormState from "../hooks/useFormState";
 import useFunctionalInputProps from "../hooks/useFunctionalInputProps";
+import useThrottledHandler from "../hooks/useThrottledHandler";
 import { useTranslation } from "../locales/i18n";
 
 export const VerifyAccount = (props) => {
@@ -22,14 +23,14 @@ export const VerifyAccount = (props) => {
     username: createAccountUsername,
   });
 
-  const handleSubmit = (event) => {
+  const handleSubmit = useThrottledHandler(async (event) => {
     event.preventDefault();
-    auth.verifyAccount(formState.username, formState.code);
-  };
-  const handleResendCodeClick = (event) => {
+    await auth.verifyAccount(formState.username, formState.code);
+  });
+  const handleResendCodeClick = useThrottledHandler(async (event) => {
     event.preventDefault();
-    auth.resendVerifyAccountCode(formState.username);
-  };
+    await auth.resendVerifyAccountCode(formState.username);
+  });
 
   const getFunctionalInputProps = useFunctionalInputProps({
     appErrors: appLogic.appErrors,
@@ -69,12 +70,13 @@ export const VerifyAccount = (props) => {
           name="resend-code-button"
           onClick={handleResendCodeClick}
           variation="unstyled"
+          loading={handleResendCodeClick.isThrottled}
         >
           {t("pages.authVerifyAccount.resendCodeLink")}
         </Button>
       </div>
 
-      <Button type="submit">
+      <Button type="submit" loading={handleSubmit.isThrottled}>
         {t("pages.authVerifyAccount.confirmButton")}
       </Button>
 

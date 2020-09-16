@@ -74,6 +74,7 @@ exports[`ConsentToDataSharing renders the page 1`] = `
     By continuing, I am indicating that I have read and understood the above user agreements. I give the DFML permission to collect, share, and use my information consistent with the terms of the agreements linked above.
   </Alert>
   <Button
+    loading={false}
     type="submit"
   >
     Agree and Continue

@@ -1,5 +1,6 @@
 import PropTypes from "prop-types";
 import React from "react";
+import Spinner from "./Spinner";
 import classnames from "classnames";
 
 /**
@@ -7,8 +8,21 @@ import classnames from "classnames";
  * [USWDS Reference ↗](https://designsystem.digital.gov/components/button/)
  */
 function Button({ type = "button", ...props }) {
+  const showLoading = props.loading && props.variation !== "unstyled";
+  // Maintain button width when in loading stae by hiding content
+  const children = showLoading ? (
+    <React.Fragment>
+      <span className="position-absolute width-full height-full left-0 top-1">
+        <Spinner small aria-valuetext="loading" />
+      </span>
+      <span className="opacity-0">{props.children}</span>
+    </React.Fragment>
+  ) : (
+    props.children
+  );
+
   const classes = classnames(
-    "usa-button",
+    "usa-button position-relative",
     props.className,
     props.variation ? `usa-button--${props.variation}` : "",
     {
@@ -27,9 +41,9 @@ function Button({ type = "button", ...props }) {
       name={props.name}
       onClick={props.onClick}
       type={type}
-      disabled={props.disabled}
+      disabled={props.disabled || showLoading}
     >
-      {props.children}
+      {children}
     </button>
   );
 }
@@ -44,6 +58,10 @@ Button.propTypes = {
    * utility classes to control spacing.
    */
   className: PropTypes.string,
+  /**
+   * Disable button and show loading indicator
+   */
+  loading: PropTypes.bool,
   /**
    * Apply the "inverse" style modifier
    */

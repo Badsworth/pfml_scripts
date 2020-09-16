@@ -34,9 +34,8 @@ export const DateOfChild = (props) => {
     [ReasonQualifier.fosterCare]: "adopt_foster",
   };
 
-  const handleSave = () => {
+  const handleSave = () =>
     appLogic.claims.update(claim.application_id, formState);
-  };
 
   const getFunctionalInputProps = useFunctionalInputProps({
     appErrors: appLogic.appErrors,

@@ -9,6 +9,7 @@ import get from "lodash/get";
 import routes from "../routes";
 import useFormState from "../hooks/useFormState";
 import useFunctionalInputProps from "../hooks/useFunctionalInputProps";
+import useThrottledHandler from "../hooks/useThrottledHandler";
 import { useTranslation } from "../locales/i18n";
 
 export const ResetPassword = (props) => {
@@ -23,11 +24,11 @@ export const ResetPassword = (props) => {
     username: cachedEmail || "",
   });
 
-  const handleSubmit = (event) => {
+  const handleSubmit = useThrottledHandler(async (event) => {
     event.preventDefault();
     const { code, password, username } = formState;
-    auth.resetPassword(username, code, password);
-  };
+    await auth.resetPassword(username, code, password);
+  });
 
   const getFunctionalInputProps = useFunctionalInputProps({
     appErrors: appLogic.appErrors,
@@ -71,7 +72,9 @@ export const ResetPassword = (props) => {
         smallLabel
       />
 
-      <Button type="submit">{t("pages.authResetPassword.submitButton")}</Button>
+      <Button type="submit" loading={handleSubmit.isThrottled}>
+        {t("pages.authResetPassword.submitButton")}
+      </Button>
 
       <div className="margin-top-2">
         <Link href={routes.auth.login}>
