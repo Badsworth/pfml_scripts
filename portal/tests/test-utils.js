@@ -386,6 +386,13 @@ export const claim = new MockClaimBuilder()
       benefit_type: EmployerBenefitType.shortTermDisability,
       id: 1,
     },
+    {
+      benefit_amount_dollars: 0,
+      benefit_end_date: "2021-02-01",
+      benefit_start_date: "2021-01-01",
+      benefit_type: EmployerBenefitType.paidLeave,
+      id: 2,
+    },
   ])
   .create();
 

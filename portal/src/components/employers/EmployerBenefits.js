@@ -1,4 +1,4 @@
-import EmployerBenefit from "./EmployerBenefit";
+import AmendableEmployerBenefit from "./AmendableEmployerBenefit";
 import PropTypes from "prop-types";
 import React from "react";
 import ReviewHeading from "../ReviewHeading";
@@ -41,7 +41,7 @@ const EmployerBenefits = (props) => {
         <tbody>
           {benefits.length ? (
             benefits.map((benefit) => (
-              <EmployerBenefit benefit={benefit} key={benefit.id} />
+              <AmendableEmployerBenefit benefit={benefit} key={benefit.id} />
             ))
           ) : (
             <tr>

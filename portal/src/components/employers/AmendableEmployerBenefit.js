@@ -27,8 +27,9 @@ const EmployerBenefit = ({ benefit }) => {
     });
   };
   const benefitType = findKeyByValue(EmployerBenefitType, benefit.benefit_type);
+  const isPaidLeave = benefit.benefit_type === EmployerBenefitType.paidLeave;
   const getBenefitAmountByType = () => {
-    return benefit.benefit_type === EmployerBenefitType.paidLeave
+    return isPaidLeave
       ? t("pages.employersClaimsReview.notApplicable")
       : benefit.benefit_amount_dollars;
   };
@@ -99,17 +100,19 @@ const EmployerBenefit = ({ benefit }) => {
                 yearLabel={t("components.form.dateInputYearLabel")}
                 smallLabel
               />
-              <InputText
-                onChange={(e) =>
-                  amendBenefit("benefit_amount_dollars", e.target.value)
-                }
-                name="benefit-amount-amendment"
-                value={amendment.benefit_amount_dollars}
-                label={t("components.amendmentForm.question_benefitAmount")}
-                type="number"
-                width="medium"
-                smallLabel
-              />
+              {!isPaidLeave && (
+                <InputText
+                  onChange={(e) =>
+                    amendBenefit("benefit_amount_dollars", e.target.value)
+                  }
+                  name="benefit-amount-amendment"
+                  value={amendment.benefit_amount_dollars}
+                  label={t("components.amendmentForm.question_benefitAmount")}
+                  type="number"
+                  width="medium"
+                  smallLabel
+                />
+              )}
             </AmendmentForm>
           </td>
           <td colSpan="2" />

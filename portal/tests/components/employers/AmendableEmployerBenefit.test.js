@@ -2,15 +2,15 @@ import EmployerBenefits, {
   EmployerBenefitType,
 } from "../../../src/models/EmployerBenefit";
 import AmendButton from "../../../src/components/employers/AmendButton";
+import AmendableEmployerBenefit from "../../../src/components/employers/AmendableEmployerBenefit";
 import AmendmentForm from "../../../src/components/employers/AmendmentForm";
-import EmployerBenefit from "../../../src/components/employers/EmployerBenefit";
 import InputDate from "../../../src/components/InputDate";
 import InputText from "../../../src/components/InputText";
 import React from "react";
 import { shallow } from "enzyme";
 
-describe("EmployerBenefit", () => {
-  const detailedEmployerBenefit = new EmployerBenefits({
+describe("AmendableEmployerBenefit", () => {
+  const shortTermDisability = new EmployerBenefits({
     benefit_amount_dollars: 1000,
     benefit_end_date: "2021-03-01",
     benefit_start_date: "2021-02-01",
@@ -19,7 +19,9 @@ describe("EmployerBenefit", () => {
   let wrapper;
 
   beforeEach(() => {
-    wrapper = shallow(<EmployerBenefit benefit={detailedEmployerBenefit} />);
+    wrapper = shallow(
+      <AmendableEmployerBenefit benefit={shortTermDisability} />
+    );
   });
 
   it("renders the component", () => {
@@ -49,5 +51,20 @@ describe("EmployerBenefit", () => {
 
     expect(wrapper.find(InputDate)).toHaveLength(2);
     expect(wrapper.find(InputText)).toHaveLength(1);
+  });
+
+  it("hides amount input field if the benefit is acrrued paid leave", () => {
+    const paidLeave = new EmployerBenefits({
+      benefit_amount_dollars: 0,
+      benefit_end_date: "2021-03-01",
+      benefit_start_date: "2021-02-01",
+      benefit_type: EmployerBenefitType.paidLeave,
+    });
+    const wrapper = shallow(<AmendableEmployerBenefit benefit={paidLeave} />);
+
+    wrapper.find(AmendButton).simulate("click");
+
+    expect(wrapper.find(InputDate)).toHaveLength(2);
+    expect(wrapper.find(InputText)).toHaveLength(0);
   });
 });

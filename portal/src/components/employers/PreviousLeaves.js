@@ -1,5 +1,5 @@
+import AmendablePreviousLeave from "./AmendablePreviousLeave";
 import Details from "../Details";
-import PreviousLeave from "./PreviousLeave";
 import PropTypes from "prop-types";
 import React from "react";
 import ReviewHeading from "../ReviewHeading";
@@ -48,7 +48,7 @@ const PreviousLeaves = (props) => {
             <React.Fragment>
               {previousLeaves.map((leavePeriod) => {
                 return (
-                  <PreviousLeave
+                  <AmendablePreviousLeave
                     leavePeriod={leavePeriod}
                     key={leavePeriod.id}
                   />

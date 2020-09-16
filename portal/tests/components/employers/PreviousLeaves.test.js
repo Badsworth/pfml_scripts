@@ -1,4 +1,4 @@
-import PreviousLeave from "../../../src/components/employers/PreviousLeave";
+import AmendablePreviousLeave from "../../../src/components/employers/AmendablePreviousLeave";
 import PreviousLeaves from "../../../src/components/employers/PreviousLeaves";
 import React from "react";
 import { claim } from "../../test-utils";
@@ -16,7 +16,7 @@ describe("PreviousLeaves", () => {
   it("displays 'None reported' if no leave periods are reported", () => {
     const wrapper = shallow(<PreviousLeaves previousLeaves={[]} />);
 
-    expect(wrapper.find(PreviousLeave).exists()).toEqual(false);
+    expect(wrapper.find(AmendablePreviousLeave).exists()).toEqual(false);
     expect(wrapper.find("th").last().text()).toEqual("None reported");
   });
 });

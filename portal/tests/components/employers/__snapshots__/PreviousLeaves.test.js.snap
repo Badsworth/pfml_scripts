@@ -36,7 +36,7 @@ exports[`PreviousLeaves renders the component 1`] = `
       </tr>
     </thead>
     <tbody>
-      <PreviousLeave
+      <AmendablePreviousLeave
         key="1"
         leavePeriod={
           PreviousLeave {
@@ -46,7 +46,7 @@ exports[`PreviousLeaves renders the component 1`] = `
           }
         }
       />
-      <PreviousLeave
+      <AmendablePreviousLeave
         key="2"
         leavePeriod={
           PreviousLeave {

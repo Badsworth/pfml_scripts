@@ -11,7 +11,7 @@ import { useTranslation } from "../../locales/i18n";
  * in the Leave Admin claim review page.
  */
 
-const PreviousLeave = ({ leavePeriod }) => {
+const AmendablePreviousLeave = ({ leavePeriod }) => {
   const { t } = useTranslation();
   const [amendment, setAmendment] = useState(leavePeriod);
   const [isAmendmentFormDisplayed, setIsAmendmentFormDisplayed] = useState(
@@ -84,8 +84,8 @@ const PreviousLeave = ({ leavePeriod }) => {
   );
 };
 
-PreviousLeave.propTypes = {
+AmendablePreviousLeave.propTypes = {
   leavePeriod: PropTypes.object.isRequired,
 };
 
-export default PreviousLeave;
+export default AmendablePreviousLeave;

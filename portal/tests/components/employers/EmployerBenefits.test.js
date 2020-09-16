@@ -1,5 +1,5 @@
 /* eslint-disable react/jsx-key */
-import EmployerBenefit from "../../../src/components/employers/EmployerBenefit";
+import AmendableEmployerBenefit from "../../../src/components/employers/AmendableEmployerBenefit";
 import EmployerBenefits from "../../../src/components/employers/EmployerBenefits";
 import React from "react";
 import { claim } from "../../test-utils";
@@ -17,7 +17,7 @@ describe("EmployerBenefits", () => {
   it("displays 'None reported' if no benefits are reported", () => {
     const wrapper = shallow(<EmployerBenefits benefits={[]} />);
 
-    expect(wrapper.find(EmployerBenefit).exists()).toEqual(false);
+    expect(wrapper.find(AmendableEmployerBenefit).exists()).toEqual(false);
     expect(wrapper.find("th").last().text()).toEqual("None reported");
   });
 });
