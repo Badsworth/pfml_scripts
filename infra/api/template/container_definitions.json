@@ -6,7 +6,7 @@
     "memory": ${memory},
     "networkMode": "awsvpc",
     "essential": true,
-    "readonlyRootFilesystem": true,
+    "readonlyRootFilesystem": false,
     "portMappings": [
       {
         "containerPort": 1550,
