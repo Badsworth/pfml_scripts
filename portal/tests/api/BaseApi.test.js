@@ -287,6 +287,27 @@ describe("BaseApi", () => {
       });
     });
 
+    it("doesn't prevent subsequent requests", async () => {
+      expect.assertions();
+
+      global.fetch = jest.fn().mockRejectedValue(TypeError("Network failure"));
+
+      await expect(testsApi.request("GET", "users")).rejects.toThrow(
+        NetworkError
+      );
+
+      const response = { data: [], errors: [], warnings: [] };
+      global.fetch = jest.fn().mockResolvedValueOnce({
+        json: jest.fn().mockResolvedValueOnce(response),
+        ok: true,
+        status: 200,
+      });
+
+      await expect(testsApi.request("GET", "users")).resolves.toEqual(
+        expect.objectContaining(response)
+      );
+    });
+
     describe("due to a network issue", () => {
       it("throws NetworkError", async () => {
         expect.assertions();

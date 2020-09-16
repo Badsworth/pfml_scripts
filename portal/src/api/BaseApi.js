@@ -86,13 +86,16 @@ export default class BaseApi {
 
     this.isLoading = true;
 
-    const response = await sendRequest(url, {
-      body: createRequestBody(body),
-      headers,
-      method,
-    });
-
-    this.isLoading = false;
+    let response;
+    try {
+      response = await sendRequest(url, {
+        body: createRequestBody(body),
+        headers,
+        method,
+      });
+    } finally {
+      this.isLoading = false;
+    }
 
     return response;
   };
