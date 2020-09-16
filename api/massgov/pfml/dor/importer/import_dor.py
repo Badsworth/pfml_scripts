@@ -5,6 +5,7 @@
 
 import json
 import os
+import uuid
 from dataclasses import asdict, dataclass, field
 from datetime import datetime
 from typing import Dict, List, Optional
@@ -246,42 +247,113 @@ def import_employers(db_session, employers, report, import_log_entry_id):
     """Import employers into db"""
     logger.info("Importing employers")
 
+    existing_employers = dor_persistence_util.get_all_employers_fein(db_session)
+
+    def search(fein):
+        for e in existing_employers:
+            if e[1] == fein:
+                return e
+
+    employer_list = list(filter(lambda employer: search(employer["fein"]) is None, employers))
+
+    fein_to_new_employer_id = {}
+    fein_to_new_address_id = {}
+    for emp in employers:
+        fein_to_new_employer_id[emp["fein"]] = uuid.uuid4()
+        fein_to_new_address_id[emp["fein"]] = uuid.uuid4()
+
+    employers_to_create = list(
+        map(
+            lambda employer_info: dor_persistence_util.dict_to_employer(
+                employer_info, import_log_entry_id, fein_to_new_employer_id[employer_info["fein"]]
+            ),
+            employer_list,
+        )
+    )
+    found_employers = list(filter(lambda employer: search(employer["fein"]) is not None, employers))
+
+    employers_to_update = list(
+        filter(
+            lambda employer: employer["updated_date"] > search(employer["fein"]).dor_updated_date,
+            found_employers,
+        )
+    )
+    emplyers_to_not_update = list(
+        filter(
+            lambda employer: employer["updated_date"] <= search(employer["fein"]).dor_updated_date,
+            found_employers,
+        )
+    )
+
+    logger.info("employers to create: %i", len(employers_to_create))
+    logger.info("employers to update: %i", len(employers_to_update))
+    logger.info("employers not being updated: %i", len(emplyers_to_not_update))
+
+    # Create employers
+    db_session.bulk_save_objects(employers_to_create)
+    db_session.commit()
+
+    # Create addresses
+    addresses_to_create = list(
+        map(
+            lambda employer_info: dor_persistence_util.dict_to_address(
+                db_session, employer_info, fein_to_new_address_id[employer_info["fein"]]
+            ),
+            employer_list,
+        )
+    )
+    db_session.bulk_save_objects(addresses_to_create, return_defaults=True)
+    db_session.commit()
+
+    # Build list of addresses to create
+    employer_addresses_assoc_to_create = []
+
+    for emp in employers_to_create:
+        employer_addresses_assoc_to_create.append(
+            dor_persistence_util.employer_id_address_id_to_model(
+                fein_to_new_employer_id[emp.employer_fein],
+                fein_to_new_address_id[emp.employer_fein],
+            )
+        )
+
+    logger.info(employer_addresses_assoc_to_create)
+
+    db_session.bulk_save_objects(employer_addresses_assoc_to_create)
+    db_session.commit()
+
     account_key_to_employer_id_map = {}
+    for e in employers_to_create:
+        account_key_to_employer_id_map[e.account_key] = fein_to_new_employer_id[e.employer_fein]
 
     count = 0
-    for employer_info in employers:
-
+    for employer_info in employers_to_update:
         count += 1
         if count % 1000 == 0:
-            logger.info("Importing employer info, current %i", count)
+            logger.info("Updating employer info, current %i", count)
 
         account_key = employer_info["account_key"]
         existing_employer = dor_persistence_util.get_employer_by_fein(
             db_session, employer_info["fein"]
         )
 
-        if existing_employer is None:
-            created_employer = dor_persistence_util.create_employer(
-                db_session, employer_info, import_log_entry_id
+        updated_date = employer_info["updated_date"]
+        if updated_date > existing_employer.dor_updated_date:
+            dor_persistence_util.update_employer(
+                db_session, existing_employer, employer_info, import_log_entry_id
             )
 
-            account_key_to_employer_id_map[account_key] = created_employer.employer_id
-            report.created_employers_count = report.created_employers_count + 1
+            report.updated_employer_ids.append(str(existing_employer.employer_id))
         else:
-            updated_date = employer_info["updated_date"]
-            if updated_date > existing_employer.dor_updated_date:
-                dor_persistence_util.update_employer(
-                    db_session, existing_employer, employer_info, import_log_entry_id
-                )
+            report.unmodified_employer_ids.append(str(existing_employer.employer_id))
 
-                report.updated_employer_ids.append(str(existing_employer.employer_id))
-            else:
-                report.unmodified_employer_ids.append(str(existing_employer.employer_id))
+        account_key_to_employer_id_map[account_key] = existing_employer.employer_id
 
-            account_key_to_employer_id_map[account_key] = existing_employer.employer_id
-
+    report.unmodified_employer_ids = list(
+        map(lambda employer: str(search(employer["fein"]).employer_id), emplyers_to_not_update)
+    )
+    report.created_employers_count = len(employers_to_create)
     report.updated_employers_count = len(report.updated_employer_ids)
-    report.unmodified_employers_count = len(report.unmodified_employer_ids)
+    report.unmodified_employers_count = len(emplyers_to_not_update)
 
     logger.info(
         "Finished importing employers",
@@ -330,15 +402,76 @@ def import_employees_and_wage_data(
         wage_data_amended_flag_map[composite_key] = amended_flag
 
     # import employees
-    employee_id_by_ssn = {}
+    ssn_to_new_employee_id = {}
     employee_ids_created_in_current_run = set()
 
     count = 0
-    for employee_info in employees_info:
+
+    # find all employees by ssn to see if create or update
+    ssns = list(map(lambda employee_info: employee_info["employee_ssn"], employees_info))
+    existing_employees, existing_employees_tax_ids = dor_persistence_util.get_employees_by_ssn(
+        db_session, ssns
+    )
+
+    ssn_to_employee_id = {}
+    for tax_id in existing_employees_tax_ids:
+        for employee in existing_employees:
+            if employee.tax_identifier_id == tax_id.tax_identifier_id:
+                ssn_to_employee_id[tax_id.tax_identifier] = employee.employee_id
+
+    employees_list = list(
+        filter(
+            lambda employee: ssn_to_employee_id.get(employee["employee_ssn"], None) is None,
+            employees_info,
+        )
+    )
+    ssn_to_new_tax_id = {}
+    for emp in employees_list:
+        ssn_to_new_employee_id[emp["employee_ssn"]] = uuid.uuid4()
+        ssn_to_new_tax_id[emp["employee_ssn"]] = uuid.uuid4()
+        employee_ids_created_in_current_run.add(ssn_to_new_employee_id[emp["employee_ssn"]])
+
+    tax_ids_to_create = []
+    for ssn in ssn_to_new_employee_id:
+        tax_ids_to_create.append(dor_persistence_util.tax_id_from_dict(ssn_to_new_tax_id[ssn], ssn))
+
+    db_session.bulk_save_objects(tax_ids_to_create)
+    db_session.commit()
+
+    employee_models = list(
+        map(
+            lambda employee_info: dor_persistence_util.dict_to_employee(
+                employee_info,
+                import_log_entry_id,
+                ssn_to_new_employee_id[employee_info["employee_ssn"]],
+                ssn_to_new_tax_id[employee_info["employee_ssn"]],
+            ),
+            employees_list,
+        )
+    )
+
+    employee_id_to_employee_record = {}
+    for emp in employee_models:
+        employee_id_to_employee_record[emp.employee_id] = emp
+
+    employees_to_create = employee_id_to_employee_record.values()
+
+    db_session.bulk_save_objects(employees_to_create)
+    db_session.commit()
+
+    employees_to_update = list(
+        filter(
+            lambda employee: ssn_to_employee_id.get(employee["employee_ssn"], None) is not None,
+            employees_info,
+        )
+    )
+
+    report.created_employees_count = report.created_employees_count + len(
+        list(set(employees_to_create))
+    )
+    for employee_info in employees_to_update:
 
         count += 1
-        if count % 1000 == 0:
-            logger.info("Importing employee info, current %i", count)
 
         ssn = employee_info["employee_ssn"]
         account_key = employee_info["account_key"]
@@ -349,7 +482,7 @@ def import_employees_and_wage_data(
                 db_session, employee_info, import_log_entry_id
             )
 
-            employee_id_by_ssn[ssn] = created_employee.employee_id
+            ssn_to_new_employee_id[ssn] = created_employee.employee_id
             employee_ids_created_in_current_run.add(created_employee.employee_id)
             report.created_employees_count = report.created_employees_count + 1
         else:
@@ -367,7 +500,7 @@ def import_employees_and_wage_data(
             else:
                 report.unmodified_employee_ids.append(str(existing_employee.employee_id))
 
-            employee_id_by_ssn[ssn] = existing_employee.employee_id
+            ssn_to_new_employee_id[ssn] = existing_employee.employee_id
 
     report.updated_employees_count = len(report.updated_employee_ids)
     report.unmodified_employees_count = len(report.unmodified_employee_ids)
@@ -383,9 +516,25 @@ def import_employees_and_wage_data(
 
     logger.info("Importing employee wage information")
 
-    # imoport wage information
+    wages_contributions_to_create = []
+    for employee_info in employees_list:
+        wages_contributions_to_create.append(
+            dor_persistence_util.dict_to_wages_and_contributions(
+                employee_info,
+                ssn_to_new_employee_id[employee_info["employee_ssn"]],
+                account_key_to_employer_id_map[employee_info["account_key"]],
+                import_log_entry_id,
+            )
+        )
+
+    report.created_wages_and_contributions_count = len(wages_contributions_to_create)
+
+    db_session.bulk_save_objects(wages_contributions_to_create)
+    db_session.commit()
+
+    # import wage information
     count = 0
-    for employee_info in employees_info:
+    for employee_info in employees_to_update:
 
         count += 1
         if count % 1000 == 0:
@@ -395,7 +544,7 @@ def import_employees_and_wage_data(
         filing_period = employee_info["filing_period"]
         ssn = employee_info["employee_ssn"]
 
-        employee_id = employee_id_by_ssn[ssn]
+        employee_id = ssn_to_new_employee_id[ssn]
         employer_id = account_key_to_employer_id_map[account_key]
 
         existing_wage = dor_persistence_util.get_wages_and_contributions_by_employee_id_and_filling_period(
@@ -438,7 +587,7 @@ def import_employees_and_wage_data(
         },
     )
 
-    return employee_id_by_ssn
+    return ssn_to_new_employee_id
 
 
 # TODO turn return dataclasses list instead of object list

@@ -1,4 +1,5 @@
 import json
+import uuid
 from dataclasses import asdict
 
 from sqlalchemy.orm.exc import MultipleResultsFound, NoResultFound
@@ -21,8 +22,46 @@ from massgov.pfml.util.pydantic.types import TaxIdUnformattedStr
 logger = logging.get_logger(__name__)
 
 
-def create_employer(db_session, employer_info, import_log_entry_id):
-    emp = Employer(
+def employer_id_address_id_to_model(employer_id, address_id):
+    return EmployerAddress(employer_id=employer_id, address_id=address_id)
+
+
+def dict_to_employee(employee_info, import_log_entry_id, uuid=uuid.uuid4, tax_identifier_id=None):
+    employee = Employee(
+        employee_id=uuid,
+        first_name=employee_info["employee_first_name"],
+        last_name=employee_info["employee_last_name"],
+        latest_import_log_id=import_log_entry_id,
+        tax_identifier_id=tax_identifier_id,
+    )
+
+    return employee
+
+
+def dict_to_wages_and_contributions(
+    employee_wage_info, employee_id, employer_id, import_log_entry_id
+):
+    wage = WagesAndContributions(
+        account_key=employee_wage_info["account_key"],
+        filing_period=employee_wage_info["filing_period"],
+        employee_id=employee_id,
+        employer_id=employer_id,
+        is_independent_contractor=employee_wage_info["independent_contractor"],
+        is_opted_in=employee_wage_info["opt_in"],
+        employee_ytd_wages=employee_wage_info["employee_ytd_wages"],
+        employee_qtr_wages=employee_wage_info["employee_qtr_wages"],
+        employee_med_contribution=employee_wage_info["employee_medical"],
+        employer_med_contribution=employee_wage_info["employer_medical"],
+        employee_fam_contribution=employee_wage_info["employee_family"],
+        employer_fam_contribution=employee_wage_info["employer_family"],
+        latest_import_log_id=import_log_entry_id,
+    )
+
+    return wage
+
+
+def dict_to_employer(employer_info, import_log_entry_id, uuid=uuid.uuid4):
+    return Employer(
         account_key=employer_info["account_key"],
         employer_fein=employer_info["fein"],
         employer_name=employer_info["employer_name"],
@@ -33,9 +72,12 @@ def create_employer(db_session, employer_info, import_log_entry_id):
         exemption_cease_date=employer_info["exemption_cease_date"],
         dor_updated_date=employer_info["updated_date"],
         latest_import_log_id=import_log_entry_id,
+        employer_id=uuid,
     )
-    db_session.add(emp)
 
+
+# TODO: state / country lookup move to caches?
+def dict_to_address(db_session, employer_info, uuid=uuid.uuid4):
     try:
         state = find_state(db_session, employer_info["employer_address_state"])
         country = find_country(db_session, "US")
@@ -43,24 +85,15 @@ def create_employer(db_session, employer_info, import_log_entry_id):
         logger.error("Error trying to find address lookup values", extra={"error": e})
         raise ValueError("Error trying to find address lookup values")
 
-    address = Address(
+    return Address(
         address_type_id=AddressType.BUSINESS.address_type_id,
         address_line_one=employer_info["employer_address_street"],
         city=employer_info["employer_address_city"],
         geo_state_id=state.geo_state_id,
         zip_code=employer_info["employer_address_zip"],
         country_id=country.country_id,
+        address_id=uuid,
     )
-    db_session.add(address)
-
-    db_session.flush()
-    db_session.refresh(emp)
-    db_session.refresh(address)
-
-    emp_address = EmployerAddress(employer_id=emp.employer_id, address_id=address.address_id)
-    db_session.add(emp_address)
-
-    return emp
 
 
 def update_employer(db_session, existing_employer, employer_info, import_log_entry_id):
@@ -107,6 +140,13 @@ def update_employer(db_session, existing_employer, employer_info, import_log_ent
     return existing_employer
 
 
+def tax_id_from_dict(employee_id, tax_identifier, uuid=uuid.uuid4):
+    formatted_tax_id = TaxIdUnformattedStr.validate_type(tax_identifier)
+    tax_identifier = TaxIdentifier(tax_identifier_id=employee_id, tax_identifier=formatted_tax_id,)
+
+    return tax_identifier
+
+
 def create_tax_id(db_session, tax_id):
     formatted_tax_id = TaxIdUnformattedStr.validate_type(tax_id)
     tax_identifier = TaxIdentifier(tax_identifier=formatted_tax_id)
@@ -147,20 +187,8 @@ def update_employee(db_session, existing_employee, employee_info, import_log_ent
 def create_wages_and_contributions(
     db_session, employee_wage_info, employee_id, employer_id, import_log_entry_id
 ):
-    wage = WagesAndContributions(
-        account_key=employee_wage_info["account_key"],
-        filing_period=employee_wage_info["filing_period"],
-        employee_id=employee_id,
-        employer_id=employer_id,
-        is_independent_contractor=employee_wage_info["independent_contractor"],
-        is_opted_in=employee_wage_info["opt_in"],
-        employee_ytd_wages=employee_wage_info["employee_ytd_wages"],
-        employee_qtr_wages=employee_wage_info["employee_qtr_wages"],
-        employee_med_contribution=employee_wage_info["employee_medical"],
-        employer_med_contribution=employee_wage_info["employer_medical"],
-        employee_fam_contribution=employee_wage_info["employee_family"],
-        employer_fam_contribution=employee_wage_info["employer_family"],
-        latest_import_log_id=import_log_entry_id,
+    wage = dict_to_wages_and_contributions(
+        employee_wage_info, employee_id, employer_id, import_log_entry_id
     )
     db_session.add(wage)
 
@@ -244,6 +272,17 @@ def get_employee_by_ssn(db_session, ssn):
     return employee_row
 
 
+def get_employees_by_ssn(db_session, ssns):
+    tax_id_rows = (
+        db_session.query(TaxIdentifier).filter(TaxIdentifier.tax_identifier.in_(ssns)).all()
+    )
+
+    tax_ids = map(lambda tax_id: tax_id.tax_identifier_id, tax_id_rows)
+
+    employee_rows = db_session.query(Employee).filter(Employee.tax_identifier_id.in_(tax_ids)).all()
+    return employee_rows, tax_id_rows
+
+
 def get_wages_and_contributions_by_employee_id_and_filling_period(
     db_session, employee_id, employer_id, filing_period
 ):
@@ -267,6 +306,15 @@ def get_tax_id(db_session, tax_id):
         .one_or_none()
     )
     return tax_id_row
+
+
+def get_all_employers_fein(db_session):
+    employer_rows = (
+        db_session.query(Employer)
+        .with_entities(Employer.employer_id, Employer.employer_fein, Employer.dor_updated_date)
+        .all()
+    )
+    return employer_rows
 
 
 def get_employer_by_fein(db_session, fein):
