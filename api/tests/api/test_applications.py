@@ -1333,5 +1333,58 @@ def test_application_post_submit_to_fineos(client, user, auth_token, test_db_ses
                 )
             },
         ),
+    ]
+
+
+def test_application_post_complete_app(client, user, auth_token, test_db_session):
+    application = ApplicationFactory.create(user=user)
+    application.tax_identifier = TaxIdentifier(tax_identifier="999004444")
+    application.employer_fein = "770000001"
+    application.fineos_notification_case_id = "NTN-259"
+
+    test_db_session.commit()
+
+    response = client.post(
+        "/v1/applications/{}/complete_application".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+    )
+
+    response_body = response.get_json()
+
+    assert response.status_code == 200
+    assert response_body.get("data").get("status") == ApplicationStatus.Completed.value
+
+
+def test_application_post_complete_to_fineos(client, user, auth_token, test_db_session):
+    application = ApplicationFactory.create(user=user)
+    application.tax_identifier = TaxIdentifier(tax_identifier="999004444")
+    application.employer_fein = "770000001"
+    application.fineos_notification_case_id = "NTN-259"
+
+    test_db_session.commit()
+
+    massgov.pfml.fineos.mock_client.start_capture()
+
+    client.post(
+        "/v1/applications/{}/complete_application".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+    )
+    capture = massgov.pfml.fineos.mock_client.get_capture()
+    fineos_user_id = capture[2][1]  # This is generated randomly and changes each time.
+
+    assert capture == [
+        ("find_employer", None, {"employer_fein": "770000001"}),
+        (
+            "register_api_user",
+            None,
+            {
+                "employee_registration": massgov.pfml.fineos.models.EmployeeRegistration(
+                    user_id=fineos_user_id,
+                    employer_id="7700000011000",
+                    date_of_birth=date(1753, 1, 1),
+                    national_insurance_no="999004444",
+                )
+            },
+        ),
         ("complete_intake", fineos_user_id, {"notification_case_id": "NTN-259"}),
     ]

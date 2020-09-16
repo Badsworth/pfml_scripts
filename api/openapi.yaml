@@ -297,7 +297,7 @@ paths:
           schema:
             type: string
             format: uuid
-          description: ID of Application to update
+          description: ID of Application to submit
           required: true
       responses:
         "201":
@@ -314,6 +314,45 @@ paths:
           $ref: "#/components/responses/BadRequest"
         "503":
           description: Application could not be submitted to Claims Processing System.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      data:
+                        $ref: "#/components/schemas/ApplicationResponse"
+  
+  /applications/{application_id}/complete_application:
+    post:
+      tags:
+        - Applications
+      summary: >
+        Complete intake of an application in the Claims Processing System.
+      operationId: massgov.pfml.api.applications.applications_complete
+      parameters:
+        - name: application_id
+          in: path
+          schema:
+            type: string
+            format: uuid
+          description: ID of Application to submit
+          required: true
+      responses:
+        "201":
+          description: Application completed without errors.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessfulResponse"
+                  - properties:
+                      data:
+                        $ref: "#/components/schemas/ApplicationResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "503":
+          description: Application could not be completed in Claims Processing System.
           content:
             application/json:
               schema:
@@ -691,6 +730,7 @@ components:
         zip:
           type: string
           pattern: "^[0-9]{5}(?:-[0-9]{4})?$"
+          example: "12345"
       required: ["city", "line_1", "state", "zip"]
 
     UserResponse:

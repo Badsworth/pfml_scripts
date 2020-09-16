@@ -16,7 +16,12 @@ from massgov.pfml.api.models.applications.requests import (
     DocumentRequestBody,
 )
 from massgov.pfml.api.models.applications.responses import ApplicationResponse, DocumentResponse
-from massgov.pfml.api.services.fineos_actions import get_documents, send_to_fineos, upload_document
+from massgov.pfml.api.services.fineos_actions import (
+    complete_intake,
+    get_documents,
+    send_to_fineos,
+    upload_document,
+)
 from massgov.pfml.api.validation.exceptions import ValidationErrorDetail, ValidationException
 from massgov.pfml.db.models.applications import (
     Application,
@@ -132,6 +137,35 @@ def applications_submit(application_id):
         ),
         data=ApplicationResponse.from_orm(existing_application).dict(exclude_none=True),
         status_code=201,
+    ).to_api_response()
+
+
+def applications_complete(application_id):
+    with app.db_session() as db_session:
+        existing_application = get_or_404(db_session, Application, application_id)
+
+        ensure(EDIT, existing_application)
+
+        if complete_intake(existing_application, db_session):
+            existing_application.completed_time = datetime.now()
+            db_session.add(existing_application)
+
+        else:
+            return response_util.error_response(
+                status_code=ServiceUnavailable,
+                message="Application {} could not be completed, try again later".format(
+                    existing_application.application_id
+                ),
+                errors=[],
+                data=ApplicationResponse.from_orm(existing_application).dict(exclude_none=True),
+            ).to_api_response()
+
+    return response_util.success_response(
+        message="Application {} completed without errors".format(
+            existing_application.application_id
+        ),
+        data=ApplicationResponse.from_orm(existing_application).dict(exclude_none=True),
+        status_code=200,
     ).to_api_response()
 
 

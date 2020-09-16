@@ -111,7 +111,39 @@ def send_to_fineos(application: Application, db_session: massgov.pfml.db.Session
         application.fineos_notification_case_id = new_case.notificationCaseId
         db_session.commit()
 
-        fineos.complete_intake(fineos_user_id, str(new_case.notificationCaseId))
+    except massgov.pfml.fineos.FINEOSClientError:
+        logger.exception("FINEOS API error")
+        return False
+
+    return True
+
+
+def complete_intake(application: Application, db_session: massgov.pfml.db.Session) -> bool:
+    """Send an application to FINEOS for completion."""
+
+    if application.employer_fein is None:
+        raise ValueError("application.employer_fein is None")
+
+    if application.fineos_notification_case_id is None:
+        raise ValueError("application.fineos_notification_case_id is None")
+
+    fineos = massgov.pfml.fineos.create_client()
+
+    try:
+        tax_identifier = TEST_TAX_IDENTIFIER
+        if application.tax_identifier is not None:
+            tax_identifier = application.tax_identifier.tax_identifier
+
+        fineos_user_id = register_employee(
+            fineos, tax_identifier, application.employer_fein, db_session
+        )
+
+        if fineos_user_id is None:
+            logger.warning("register_employee did not find a match")
+            return False
+
+        db_session.commit()
+        fineos.complete_intake(fineos_user_id, str(application.fineos_notification_case_id))
 
     except massgov.pfml.fineos.FINEOSClientError:
         logger.exception("FINEOS API error")
