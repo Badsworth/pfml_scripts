@@ -5,6 +5,8 @@ Feature: Submit a medical claim that involves additional benefits received
     Given I have a MedicalAddlBenefits claim to submit
     And I log in as a claimant on the portal dashboard
     And I create an application
+    And I am on the claims Start page
+    And I start an application
     And I am on the claims Checklist page
     When I click on the checklist button called "Verify your identity"
     Then I have my identity verified

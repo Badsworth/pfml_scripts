@@ -48,7 +48,7 @@ Then("I should find their claim in Fineos", function () {
 /* Review Page */
 Then("I should have confirmed that information is correct", function (): void {
   // Usually preceeded by - "I am on the claims Review page"
-  cy.contains("Confirm information is correct").click();
+  cy.contains("Submit my application").click();
 });
 
 /* Confirm Page */

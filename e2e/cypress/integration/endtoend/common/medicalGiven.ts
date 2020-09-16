@@ -28,7 +28,14 @@ Given("I have a {testType} claim to submit", function (testType: TestType) {
 });
 
 Given("I create an application", function (): void {
-  cy.contains("button", "Create an application").click();
+  cy.get('[href="/claims/start/"]').click();
+});
+
+Given("I start an application", function (): void {
+  cy.contains("button", "I understand and agree").click();
+});
+
+Given("I have a claim ID", function (): void {
   cy.url()
     .should("include", "claim_id")
     .then((url) => {
@@ -38,8 +45,9 @@ Given("I create an application", function (): void {
         cy.stash("claimId", appId);
       }
     });
-  // Usually followed by - "I have my identity verified"
 });
+
+// Usually followed by - "I have my identity verified"
 
 /* Confirm Page */
 Given("I am on the claims Confirm page", function (): void {
@@ -54,4 +62,9 @@ Given("I am on the claims Review page", function (): void {
 /* Checklist Page */
 Given("I am on the claims Checklist page", function (): void {
   cy.url().should("include", "/claims/checklist");
+});
+
+/* Start Page */
+Given("I am on the claims Start page", function (): void {
+  cy.url().should("include", "/claims/start");
 });

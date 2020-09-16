@@ -5,6 +5,8 @@ Feature: Start submittin a medical claim - Logout/Login - complete submission
     Given I have a MedicalBasic claim to submit
     And I log in as a claimant on the portal dashboard
     And I create an application
+    And I am on the claims Start page
+    And I start an application
     And I am on the claims Checklist page
     And I click on the checklist button called "Verify your identity"
     And I have my identity verified "normal"

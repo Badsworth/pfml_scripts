@@ -27,7 +27,7 @@ When("I click on the checklist button called {string}", function (
   // @todo: Very brittle selector. Ask for a better one.
   cy.contains(label)
     .parentsUntil(".display-flex.border-bottom.border-base-light.padding-y-4")
-    .contains("a", label === "Add payment information" ? "Resume" : "Start")
+    .contains("a", "Start")
     .click();
 });
 
