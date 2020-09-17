@@ -5,7 +5,7 @@
 import datetime
 import math
 
-QUARTER_ENDS = ((3, 31), (6, 30), (8, 30), (12, 31))
+QUARTER_ENDS = ((3, 31), (6, 30), (9, 30), (12, 31))
 
 
 class Quarter:

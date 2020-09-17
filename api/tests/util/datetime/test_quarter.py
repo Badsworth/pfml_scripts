@@ -29,6 +29,13 @@ def test_quarter_invalid_quarter():
         Quarter(2020, 7)
 
 
+def test_quarter_as_date():
+    assert Quarter(2022, 1).as_date() == datetime.date(2022, 3, 31)
+    assert Quarter(2033, 2).as_date() == datetime.date(2033, 6, 30)
+    assert Quarter(2044, 3).as_date() == datetime.date(2044, 9, 30)
+    assert Quarter(2055, 4).as_date() == datetime.date(2055, 12, 31)
+
+
 def test_quarter_from_date():
     assert Quarter.from_date(datetime.date(2020, 1, 1)) == Quarter(2020, 1)
     assert Quarter.from_date(datetime.date(2020, 3, 31)) == Quarter(2020, 1)
