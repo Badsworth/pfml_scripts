@@ -2,15 +2,94 @@
 # Tests for massgov.pfml.api.eligibility.wage.
 #
 
+import datetime
 import decimal
 import uuid
 
 from massgov.pfml.api.eligibility import wage
+from massgov.pfml.db.models import factories
+from massgov.pfml.db.models.employees import WagesAndContributions
 from massgov.pfml.util.datetime import quarter
 
 EMPL1 = uuid.UUID(int=1)
 EMPL2 = uuid.UUID(int=2)
 EMPL3 = uuid.UUID(int=3)
+
+
+def add_wage_row(employer, employee, filing_period, qtr_wage):
+    return WagesAndContributions(
+        account_key="000111",
+        employer=employer,
+        employee=employee,
+        filing_period=filing_period,
+        employee_qtr_wages=qtr_wage,
+        employee_ytd_wages=qtr_wage,
+        employee_med_contribution=0,
+        employer_med_contribution=0,
+        employee_fam_contribution=0,
+        employer_fam_contribution=0,
+        is_independent_contractor=False,
+        is_opted_in=False,
+    )
+
+
+def test_get_average_weekly_wage_one_row(test_db_session, initialize_factories_session):
+    employer = factories.EmployerFactory(employer_id=EMPL1)
+    employee = factories.EmployeeFactory()
+    add_wage_row(employer, employee, datetime.date(2022, 9, 30), 13000)
+    factories.WagesAndContributionsFactory.create_batch(size=100)
+
+    aww = wage.get_average_weekly_wage(
+        employee.employee_id, datetime.date(2022, 9, 16), test_db_session
+    )
+
+    assert aww == 1000
+
+
+def test_get_average_weekly_wage_multiple_rows(test_db_session, initialize_factories_session):
+    employer1 = factories.EmployerFactory(employer_id=EMPL1)
+    employer2 = factories.EmployerFactory(employer_id=EMPL2)
+    employee = factories.EmployeeFactory()
+    add_wage_row(employer1, employee, datetime.date(2022, 9, 30), 13000)  # Base p
+    add_wage_row(employer1, employee, datetime.date(2022, 6, 30), 12870)  # Base p
+    add_wage_row(employer1, employee, datetime.date(2022, 3, 31), 12688)  # Base p
+    add_wage_row(employer1, employee, datetime.date(2021, 12, 31), 13520)  # Base p
+    add_wage_row(employer1, employee, datetime.date(2021, 9, 30), 14040)
+    add_wage_row(employer2, employee, datetime.date(2022, 9, 30), 7800)  # Base p
+    add_wage_row(employer2, employee, datetime.date(2022, 6, 30), 7540)  # Base p
+    add_wage_row(employer2, employee, datetime.date(2022, 3, 31), 7280)  # Base p
+    add_wage_row(employer2, employee, datetime.date(2021, 12, 31), 7020)  # Base p
+    add_wage_row(employer2, employee, datetime.date(2021, 9, 30), 6760)
+    add_wage_row(employer2, employee, datetime.date(2021, 6, 30), 6500)
+    factories.WagesAndContributionsFactory.create_batch(size=200)
+
+    aww = wage.get_average_weekly_wage(
+        employee.employee_id, datetime.date(2022, 9, 16), test_db_session
+    )
+
+    assert aww == (13000 + 13520) / 26 + (7800 + 7540) / 26
+
+
+def test_query_employee_wages(test_db_session, initialize_factories_session):
+    employer1 = factories.EmployerFactory(employer_id=EMPL1)
+    employer2 = factories.EmployerFactory(employer_id=EMPL2)
+    employee1 = factories.EmployeeFactory()
+    employee2 = factories.EmployeeFactory()
+    # Insert 80 rows (2 employers * 2 employees * 20 dates)
+    for employer in (employer1, employer2):
+        for employee in (employee1, employee2):
+            for q in quarter.Quarter(2020, 1).series(20):
+                add_wage_row(employer, employee, q.as_date(), 13000)
+
+    rows = wage.query_employee_wages(
+        test_db_session, quarter.Quarter(2022, 2), employee1.employee_id
+    )
+
+    # Expect 12 rows (2 employers * 1 employee * 6 dates)
+    assert len(rows) == 12
+    for row in rows:
+        assert row.employee_id == employee1.employee_id
+        assert row.employer_id in (EMPL1, EMPL2)
 
 
 def test_average_weekly_wage_calculator_one_employer_current_quarter():
