@@ -1,3 +1,4 @@
+import Claim, { ClaimStatus } from "../../src/models/Claim";
 import {
   attachDocumentsMock,
   createClaimMock,
@@ -8,7 +9,6 @@ import {
 import { makeFile, testHook } from "../test-utils";
 import AppErrorInfo from "../../src/models/AppErrorInfo";
 import AppErrorInfoCollection from "../../src/models/AppErrorInfoCollection";
-import Claim from "../../src/models/Claim";
 import ClaimCollection from "../../src/models/ClaimCollection";
 import User from "../../src/models/User";
 import { act } from "react-dom/test-utils";
@@ -361,6 +361,16 @@ describe("useClaimsLogic", () => {
         });
 
         expect(submitClaimMock).toHaveBeenCalledWith(applicationId);
+      });
+
+      it("updates the claim's status", async () => {
+        await act(async () => {
+          await claimsLogic.submit(applicationId);
+        });
+
+        const claim = claimsLogic.claims.get(applicationId);
+
+        expect(claim.status).toBe(ClaimStatus.submitted);
       });
 
       describe("when request errors", () => {

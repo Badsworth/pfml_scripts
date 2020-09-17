@@ -96,7 +96,18 @@ export const Checklist = (props) => {
           number={getStepNumber(step)}
           title={t("pages.claimsChecklist.stepTitle", { context: step.name })}
           status={step.status}
-          stepHref={step.editable ? step.href : null}
+          // TODO (CP-676): Simplify the condition below to simply check if step.editable
+          // once the Checklist no longer checks local state to determine if steps are completed.
+          // The addition of those conditions is in place for now, since
+          // some steps may become incomplete when the browser is refreshed,
+          // because some fields are currently only stored in memory while
+          // we wait for them to be integrated with the API. Once all fields
+          // are retained across page loads, we would only need to check if step.editable
+          stepHref={
+            step.group > 1 || !step.isComplete || step.editable
+              ? step.href
+              : null
+          }
         >
           <Trans
             i18nKey="pages.claimsChecklist.stepHTMLDescription"

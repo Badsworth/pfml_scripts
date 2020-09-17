@@ -113,9 +113,9 @@ const useClaimsLogic = ({ appErrorsLogic, portalFlow, user }) => {
 
       if (success) {
         // TODO (CP-676): Remove workaround once API returns all the fields in our application
-        claim = new Claim({
-          ...claims.get(application_id),
-        });
+        claim = new Claim(
+          merge(claims.get(application_id), { status: claim.status })
+        );
         // </ end workaround >
 
         setClaim(claim);
@@ -132,7 +132,7 @@ const useClaimsLogic = ({ appErrorsLogic, portalFlow, user }) => {
   /**
    * Submit files to the API and set application errors if any
    * @param {string} application_id - application id for claim
-   * @param {array} files - array of objects {id: string, file: File object}
+   * @param {Array} files - array of objects {id: string, file: File object}
    * @param {string} documentType - category of documents
    */
   const attachDocuments = async (application_id, files, documentType) => {

@@ -20,14 +20,14 @@ describe("ApplicationCard", () => {
     expect(wrapper).toMatchSnapshot();
   });
 
-  describe("when the claim is in progress", () => {
+  describe("when the claim status is Submitted", () => {
     it("includes a link to edit the claim", () => {
       const wrapper = shallow(
         <ApplicationCard
           claim={
             new Claim({
               application_id: "mock-claim-id",
-              status: ClaimStatus.started,
+              status: ClaimStatus.submitted,
             })
           }
           number={2}
@@ -38,7 +38,7 @@ describe("ApplicationCard", () => {
     });
   });
 
-  describe("when the claim is completed", () => {
+  describe("when the claim status is Completed", () => {
     it("does not include a link to edit the claim", () => {
       const wrapper = shallow(
         <ApplicationCard

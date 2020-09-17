@@ -1,4 +1,4 @@
-import Claim, { ClaimStatus, LeaveReason } from "../models/Claim";
+import Claim, { LeaveReason } from "../models/Claim";
 import ButtonLink from "../components/ButtonLink";
 import Heading from "../components/Heading";
 import PropTypes from "prop-types";
@@ -70,7 +70,7 @@ function ApplicationCard(props) {
           </React.Fragment>
         )}
 
-        {claim.status === ClaimStatus.started && (
+        {!claim.isCompleted && (
           <ButtonLink
             className="display-block margin-top-0"
             href={routeWithParams("claims.checklist", {
