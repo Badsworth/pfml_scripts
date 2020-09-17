@@ -234,8 +234,7 @@ export default class Step extends BaseModel {
 
     const reviewAndConfirm = new Step({
       name: ClaimSteps.reviewAndConfirm,
-      completeCond: (context) =>
-        context.claim.isSubmitted || !context.enableProgressiveApp,
+      completeCond: (context) => context.claim.isSubmitted,
       editable: !claim.isSubmitted,
       group: 1,
       pages: pagesByStep[ClaimSteps.reviewAndConfirm],

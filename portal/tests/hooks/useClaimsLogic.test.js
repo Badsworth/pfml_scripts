@@ -1,6 +1,7 @@
 import Claim, { ClaimStatus } from "../../src/models/Claim";
 import {
   attachDocumentsMock,
+  completeClaimMock,
   createClaimMock,
   getClaimsMock,
   submitClaimMock,
@@ -269,6 +270,31 @@ describe("useClaimsLogic", () => {
         claimsLogic.setClaims(
           new ClaimCollection([new Claim({ application_id: applicationId })])
         );
+      });
+    });
+
+    describe("complete", () => {
+      it("asynchronously completes claim", async () => {
+        await act(async () => {
+          await claimsLogic.complete(applicationId);
+        });
+
+        expect(completeClaimMock).toHaveBeenCalledWith(applicationId);
+      });
+
+      describe("when request errors", () => {
+        it("catches the error", async () => {
+          completeClaimMock.mockImplementationOnce(() => {
+            throw new Error();
+          });
+
+          await act(async () => {
+            await claimsLogic.complete(applicationId);
+          });
+
+          expect(appErrorsLogic.appErrors.items[0].name).toEqual("Error");
+          expect(mockRouter.push).not.toHaveBeenCalled();
+        });
       });
     });
 

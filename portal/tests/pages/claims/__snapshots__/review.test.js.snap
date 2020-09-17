@@ -48,7 +48,7 @@ exports[`EmployerBenefitList when data are missing doesn't render missing data 1
 />
 `;
 
-exports[`Final Review Page when all data is present renders Review page with final review page content 1`] = `
+exports[`Final Review Page when all data is present renders Review page with final review page content and only edit links for Part 2/3 sections 1`] = `
 <div
   className="measure-6"
 >
@@ -57,7 +57,6 @@ exports[`Final Review Page when all data is present renders Review page with fin
     Check your answers before sending your application
   </Title>
   <ReviewHeading
-    editHref="/claims/name?claim_id=mock_application_id"
     editText="Edit"
     level="2"
   >
@@ -94,7 +93,6 @@ exports[`Final Review Page when all data is present renders Review page with fin
     **/**/****
   </ReviewRow>
   <ReviewHeading
-    editHref="/claims/leave-reason?claim_id=mock_application_id"
     editText="Edit"
     level="2"
   >
@@ -131,7 +129,6 @@ exports[`Final Review Page when all data is present renders Review page with fin
     20
   </ReviewRow>
   <ReviewHeading
-    editHref="/claims/employment-status?claim_id=mock_application_id"
     editText="Edit"
     level="2"
   >
@@ -156,7 +153,6 @@ exports[`Final Review Page when all data is present renders Review page with fin
     Notified employer on 6/25/2020
   </ReviewRow>
   <ReviewHeading
-    editHref="/claims/employer-benefits?claim_id=mock_application_id"
     editText="Edit"
     level="2"
   >
@@ -255,7 +251,6 @@ exports[`Final Review Page when conditional data is empty does not render string
     Check your answers before sending your application
   </Title>
   <ReviewHeading
-    editHref="/claims/name?claim_id=mock_application_id"
     editText="Edit"
     level="2"
   >
@@ -284,7 +279,6 @@ exports[`Final Review Page when conditional data is empty does not render string
     **/**/****
   </ReviewRow>
   <ReviewHeading
-    editHref="/claims/leave-reason?claim_id=mock_application_id"
     editText="Edit"
     level="2"
   >
@@ -311,14 +305,12 @@ exports[`Final Review Page when conditional data is empty does not render string
     level="3"
   />
   <ReviewHeading
-    editHref="/claims/employment-status?claim_id=mock_application_id"
     editText="Edit"
     level="2"
   >
     Enter employment information
   </ReviewHeading>
   <ReviewHeading
-    editHref="/claims/employer-benefits?claim_id=mock_application_id"
     editText="Edit"
     level="2"
   >
@@ -461,7 +453,7 @@ exports[`OtherLeaveEntry when data are missing doesn't render missing data 1`] =
 />
 `;
 
-exports[`Part 1 Review Page when all data is present renders Review page with Part 1 content 1`] = `
+exports[`Part 1 Review Page when all data is present renders Review page with Part 1 content and edit links 1`] = `
 <div
   className="measure-6"
 >

@@ -1,5 +1,4 @@
 import Claim, {
-  ClaimStatus,
   EmploymentStatus,
   LeaveReason,
   PaymentPreferenceMethod,
@@ -24,7 +23,6 @@ import Title from "../../components/Title";
 import claimantConfigs from "../../flows/claimant";
 import findKeyByValue from "../../utils/findKeyByValue";
 import formatDateRange from "../../utils/formatDateRange";
-import { isFeatureEnabled } from "../../services/featureFlags";
 import useThrottledHandler from "../../hooks/useThrottledHandler";
 import { useTranslation } from "../../locales/i18n";
 import withClaim from "../../hoc/withClaim";
@@ -65,19 +63,22 @@ export const Review = (props) => {
     null
   );
 
+  const usePartOneReview = !claim.isSubmitted;
+
   const getStepEditHref = (name) => {
     const step = steps.find((s) => s.name === name);
 
     if (step && step.editable) return step.href;
   };
 
-  const handleSubmit = useThrottledHandler(() =>
-    appLogic.claims.submit(claim.application_id)
-  );
+  const handleSubmit = useThrottledHandler(async () => {
+    if (usePartOneReview) {
+      await appLogic.claims.submit(claim.application_id);
+      return;
+    }
 
-  const usePartOneReview =
-    isFeatureEnabled("enableProgressiveApp") &&
-    claim.status !== ClaimStatus.submitted;
+    await appLogic.claims.complete(claim.application_id);
+  });
 
   // Adjust heading levels depending on if there's a "Part 1" heading at the top of the page or not
   const reviewHeadingLevel = usePartOneReview ? "3" : "2";

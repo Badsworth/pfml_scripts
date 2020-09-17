@@ -46,6 +46,26 @@ export default class ClaimsApi extends BaseApi {
   };
 
   /**
+   * Signal the data entry is complete and application is ready
+   * for intake to be marked as complete in the claims processing system.
+   *
+   * @param {string} application_id
+   * @returns {Promise<ClaimsApiSingleResult>} The result of the API call
+   */
+  completeClaim = async (application_id) => {
+    const { data, status, success } = await this.request(
+      "POST",
+      `${application_id}/complete_application`
+    );
+
+    return {
+      claim: success ? new Claim(data) : null,
+      status,
+      success,
+    };
+  };
+
+  /**
    * Create a new claim through a POST request to /applications
    * @returns {Promise<ClaimsApiSingleResult>} The result of the API call
    */
@@ -95,10 +115,9 @@ export default class ClaimsApi extends BaseApi {
   };
 
   /**
-   * Signal the data entry is complete and application is ready
+   * Signal data entry for Part 1 is complete and ready
    * to be submitted to the claims processing system.
    *
-   * Corresponds to this API endpoint: /application/{application_id}/submit_application
    * @param {string} application_id ID of the Claim
    * @returns {Promise<ClaimsApiSingleResult>} The result of the API call
    */

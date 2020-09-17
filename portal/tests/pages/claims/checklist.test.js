@@ -2,20 +2,6 @@ import { MockClaimBuilder, renderWithAppLogic } from "../../test-utils";
 import Checklist from "../../../src/pages/claims/checklist";
 
 describe("Checklist", () => {
-  let oldFeatureFlags;
-
-  beforeEach(() => {
-    oldFeatureFlags = process.env.featureFlags;
-
-    process.env.featureFlags = {
-      enableProgressiveApp: true,
-    };
-  });
-
-  afterEach(() => {
-    process.env.featureFlags = oldFeatureFlags;
-  });
-
   describe("when claim has not been started", () => {
     it("renders initial checklist state", () => {
       const { wrapper } = renderWithAppLogic(Checklist);

@@ -18,6 +18,7 @@ export default jest.fn(() => ({
   claims: {
     attachDocuments: jest.fn(),
     claims: new ClaimCollection(),
+    complete: jest.fn(),
     create: jest.fn(() => new Claim({ application_id: uniqueId() })),
     get: jest.fn(),
     load: jest.fn(),

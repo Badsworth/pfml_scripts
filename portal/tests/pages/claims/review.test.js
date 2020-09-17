@@ -1,4 +1,5 @@
 import {
+  ClaimStatus,
   ContinuousLeavePeriod,
   EmploymentStatus,
   IntermittentLeavePeriod,
@@ -96,22 +97,8 @@ function fullClaimAttrs() {
 }
 
 describe("Part 1 Review Page", () => {
-  let oldFeatureFlags;
-
-  beforeEach(() => {
-    oldFeatureFlags = process.env.featureFlags;
-
-    process.env.featureFlags = {
-      enableProgressiveApp: true,
-    };
-  });
-
-  afterEach(() => {
-    process.env.featureFlags = oldFeatureFlags;
-  });
-
   describe("when all data is present", () => {
-    it("renders Review page with Part 1 content", () => {
+    it("renders Review page with Part 1 content and edit links", () => {
       const { wrapper } = renderWithAppLogic(Review, {
         claimAttrs: fullClaimAttrs(),
       });
@@ -145,15 +132,19 @@ describe("Part 1 Review Page", () => {
       expect(appLogic.claims.submit).toHaveBeenCalledWith(
         claimAttrs.application_id
       );
+      expect(appLogic.claims.complete).not.toHaveBeenCalled();
     });
   });
 });
 
 describe("Final Review Page", () => {
   describe("when all data is present", () => {
-    it("renders Review page with final review page content", () => {
+    it("renders Review page with final review page content and only edit links for Part 2/3 sections", () => {
+      const claimAttrs = fullClaimAttrs();
+      claimAttrs.status = ClaimStatus.submitted;
+
       const { wrapper } = renderWithAppLogic(Review, {
-        claimAttrs: fullClaimAttrs(),
+        claimAttrs,
       });
 
       expect(wrapper).toMatchSnapshot();
@@ -167,6 +158,7 @@ describe("Final Review Page", () => {
           leave_details: {
             reason: LeaveReason.medical,
           },
+          status: ClaimStatus.submitted,
           tax_identifier: "***-**-****",
         },
       });
@@ -174,13 +166,32 @@ describe("Final Review Page", () => {
       expect(wrapper).toMatchSnapshot();
     });
   });
+
+  it("completes the application when the user clicks Submit", () => {
+    const claimAttrs = fullClaimAttrs();
+    claimAttrs.application_id = "testClaim";
+    claimAttrs.status = ClaimStatus.submitted;
+
+    const { appLogic, wrapper } = renderWithAppLogic(Review, {
+      claimAttrs,
+    });
+    wrapper.find("Button").simulate("click");
+
+    expect(appLogic.claims.submit).not.toHaveBeenCalled();
+    expect(appLogic.claims.complete).toHaveBeenCalledWith(
+      claimAttrs.application_id
+    );
+  });
 });
 
 describe("Employer info", () => {
   describe("when claimant is not Employed", () => {
     it("does not render 'Notified employer' row or FEIN row", () => {
+      const claimAttrs = fullClaimAttrs();
+      claimAttrs.status = ClaimStatus.submitted;
+
       const { wrapper } = renderWithAppLogic(Review, {
-        claimAttrs: fullClaimAttrs(),
+        claimAttrs,
       });
 
       expect(wrapper.text()).not.toContain("Notified employer");
@@ -221,7 +232,7 @@ describe("Duration type", () => {
       .toMatchInlineSnapshot(`
       <ReviewRow
         label="Leave duration type"
-        level="3"
+        level="4"
       >
         Intermittent leave
       </ReviewRow>
@@ -230,7 +241,7 @@ describe("Duration type", () => {
       .toMatchInlineSnapshot(`
       <ReviewRow
         label="Leave duration type"
-        level="3"
+        level="4"
       >
         Continuous leave, Reduced leave schedule
       </ReviewRow>

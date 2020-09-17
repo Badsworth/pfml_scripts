@@ -74,6 +74,28 @@ const useClaimsLogic = ({ appErrorsLogic, portalFlow, user }) => {
   };
 
   /**
+   * Complete the claim in the API
+   * @param {string} application_id
+   */
+  const complete = async (application_id) => {
+    if (!user) return;
+    appErrorsLogic.clearErrors();
+
+    try {
+      const { claim, success } = await claimsApi.completeClaim(application_id);
+
+      if (success) {
+        setClaim(claim);
+        const context = { claim, user };
+        const params = { claim_id: claim.application_id };
+        portalFlow.goToNextPage(context, params);
+      }
+    } catch (error) {
+      appErrorsLogic.catchError(error);
+    }
+  };
+
+  /**
    * Create the claim in the API. Handles errors and routing.
    * @returns {Promise}
    */
@@ -158,6 +180,7 @@ const useClaimsLogic = ({ appErrorsLogic, portalFlow, user }) => {
   return {
     attachDocuments,
     claims,
+    complete,
     load,
     create,
     update,

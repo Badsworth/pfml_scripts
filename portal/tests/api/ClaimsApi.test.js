@@ -154,6 +154,47 @@ describe("ClaimsApi", () => {
     });
   });
 
+  describe("completeClaim", () => {
+    let mockResponseData;
+    const claim = new Claim({
+      application_id: "mock-application_id",
+    });
+
+    beforeEach(() => {
+      mockResponseData = {
+        application_id: "mock-application_id",
+      };
+
+      global.fetch = mockFetch({
+        response: { data: mockResponseData },
+        status: 200,
+        ok: true,
+      });
+    });
+
+    it("sends POST request to /applications/:application_id/complete_application", async () => {
+      await claimsApi.completeClaim(claim.application_id);
+      expect(fetch).toHaveBeenCalledWith(
+        `${process.env.apiUrl}/applications/${claim.application_id}/complete_application`,
+        {
+          body: null,
+          headers,
+          method: "POST",
+        }
+      );
+    });
+
+    it("responds with success status", async () => {
+      const response = await claimsApi.completeClaim(claim.application_id);
+      expect(response.success).toBe(true);
+    });
+
+    it("responds with an instance of a Claim", async () => {
+      const response = await claimsApi.completeClaim(claim.application_id);
+      expect(response.claim).toBeInstanceOf(Claim);
+    });
+  });
+
   describe("updateClaim", () => {
     let mockResponseData;
     const claim = new Claim({
@@ -217,7 +258,7 @@ describe("ClaimsApi", () => {
 
     it("responds with success status", async () => {
       const response = await claimsApi.updateClaim(claim.application_id, claim);
-      expect(response.success).toBeTruthy();
+      expect(response.success).toBe(true);
     });
 
     it("responds with an instance of a Claim with claim request parameters as properties", async () => {
@@ -258,10 +299,10 @@ describe("ClaimsApi", () => {
 
     it("responds with success status", async () => {
       const response = await claimsApi.submitClaim(claim.application_id);
-      expect(response.success).toBeTruthy();
+      expect(response.success).toBe(true);
     });
 
-    it("responds with an instance of a Claim with claim request parameters as properties", async () => {
+    it("responds with an instance of a Claim", async () => {
       const response = await claimsApi.submitClaim(claim.application_id);
       expect(response.claim).toBeInstanceOf(Claim);
     });
