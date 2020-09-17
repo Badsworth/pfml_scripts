@@ -11,23 +11,24 @@ const path = require("path");
  * execution timeouts, memory limits, etc.
  * @see https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/lambda-event-structure.html#response-event-fields
  * @see https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/lambda-requirements-limits.html
+ * @see https://docs.aws.amazon.com/lambda/latest/dg/nodejs-handler.html#nodejs-handler-async
  * @param {object} event
  * @param {object[]} event.Records
  * @param {object} event.Records[].cf
  * @param {object} event.Records[].cf.response
  * @param {object} event.Records[].cf.response.headers - headers for response
  * @param {*} _context - not used
- * @returns {object} mutated request/response
+ * @returns {Promise<object>} mutated request/response
  */
-exports.handler = function (event, _context) {
+exports.handler = async function (event, _context) {
   // https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/lambda-event-structure.html#lambda-event-structure-response
   const data = event.Records[0].cf;
   const { eventType } = data.config;
 
   if (eventType === "viewer-response") {
-    return addSecurityHeadersToResponse(data.response);
+    return await addSecurityHeadersToResponse(data.response);
   } else if (eventType === "origin-request") {
-    return addTrailingSlashToRequest(data.request);
+    return await addTrailingSlashToRequest(data.request);
   }
 };
 
