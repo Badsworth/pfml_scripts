@@ -229,3 +229,13 @@ class AddressFactory(BaseFactory):
     address_line_one = factory.Faker("street_address")
     city = factory.Faker("city")
     zip_code = factory.Faker("postcode")
+
+
+class StateMetricFactory(BaseFactory):
+    class Meta:
+        model = application_models.StateMetric
+
+    state_metric_id = Generators.UuidObj
+    effective_date = datetime.datetime(2019, 10, 1)
+    unemployment_minimum_earnings = Decimal(5000)
+    average_weekly_wage = Decimal(1331.66)
