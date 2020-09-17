@@ -90,7 +90,7 @@ describe("FileCardList", () => {
       jest.restoreAllMocks();
     });
 
-    it("adds a single file when the user selects a single file", async () => {
+    it("adds a single file when the user selects a single file", () => {
       const initialFiles = [makeFileObject()];
       const id = "FileX";
       const newFile = makeFileObject({ id });

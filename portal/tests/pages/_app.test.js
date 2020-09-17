@@ -185,7 +185,7 @@ describe("App", () => {
   });
 
   describe("displaying errors", () => {
-    it("displays errors that child pages set", async () => {
+    it("displays errors that child pages set", () => {
       const ChildPage = (props) => {
         const {
           appLogic: { setAppErrors }, // eslint-disable-line react/prop-types

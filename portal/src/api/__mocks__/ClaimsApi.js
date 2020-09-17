@@ -6,7 +6,7 @@ import { uniqueId } from "lodash";
 // e.g.
 // import { createClaimMock } from "./src/api/ClaimsApi";
 // expect(createClaimMock).toHaveBeenCalled();
-export const createClaimMock = jest.fn(async () =>
+export const createClaimMock = jest.fn(() =>
   Promise.resolve({
     success: true,
     status: 200,
@@ -16,7 +16,7 @@ export const createClaimMock = jest.fn(async () =>
   })
 );
 
-export const getClaimsMock = jest.fn(async () =>
+export const getClaimsMock = jest.fn(() =>
   Promise.resolve({
     success: true,
     status: 200,
@@ -27,7 +27,7 @@ export const getClaimsMock = jest.fn(async () =>
   })
 );
 
-export const updateClaimMock = jest.fn(async (application_id, patchData) =>
+export const updateClaimMock = jest.fn((application_id, patchData) =>
   Promise.resolve({
     success: true,
     status: 200,
@@ -38,7 +38,7 @@ export const updateClaimMock = jest.fn(async (application_id, patchData) =>
   })
 );
 
-export const submitClaimMock = jest.fn(async (application_id) =>
+export const submitClaimMock = jest.fn((application_id) =>
   Promise.resolve({
     success: true,
     status: 200,
@@ -50,7 +50,7 @@ export const submitClaimMock = jest.fn(async (application_id) =>
 );
 
 export const attachDocumentsMock = jest.fn(
-  async (application_id, files, documentCategory) =>
+  (application_id, files, documentCategory) =>
     Promise.resolve({
       success: true,
       status: 200,

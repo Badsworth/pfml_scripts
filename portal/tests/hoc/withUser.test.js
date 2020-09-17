@@ -86,7 +86,7 @@ describe("withUser", () => {
   });
 
   describe("when authenticated user consented to data sharing", () => {
-    beforeEach(async () => {
+    beforeEach(() => {
       appLogic.users.user = new User({ consented_to_data_sharing: true });
       render();
     });
@@ -106,7 +106,7 @@ describe("withUser", () => {
   });
 
   describe("when authenticated user hasn't consented to data sharing", () => {
-    beforeEach(async () => {
+    beforeEach(() => {
       appLogic.users.user = new User({ consented_to_data_sharing: false });
       render();
     });

@@ -30,7 +30,7 @@ describe("ConsentToDataSharing", () => {
   });
 
   describe("when the user agrees and submits the form", () => {
-    beforeEach(async () => {
+    beforeEach(() => {
       const { submitForm } = simulateEvents(wrapper);
       submitForm();
     });

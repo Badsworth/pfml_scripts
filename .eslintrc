@@ -58,6 +58,7 @@
         "react/jsx-no-target-blank": ["error", { "allowReferrer": true} ],
         "react-hooks/rules-of-hooks": "error",
         "react-hooks/exhaustive-deps": "warn",
+        "require-await": "error",
         "sort-imports": "error",
         "sort-vars": "error",
         "todo-plz/ticket-ref": ["error", { "pattern": "(API|CP|EMPLOYER|POL)-[0-9]+", "terms": ["TODO"] }]

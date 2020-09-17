@@ -17,9 +17,9 @@ const path = require("path");
  * @param {object} event.Records[].cf.response
  * @param {object} event.Records[].cf.response.headers - headers for response
  * @param {*} _context - not used
- * @returns {Promise<object>} mutated request/response
+ * @returns {object} mutated request/response
  */
-exports.handler = async (event, _context) => {
+exports.handler = function (event, _context) {
   // https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/lambda-event-structure.html#lambda-event-structure-response
   const data = event.Records[0].cf;
   const { eventType } = data.config;

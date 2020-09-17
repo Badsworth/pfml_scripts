@@ -22,7 +22,7 @@ module.exports = {
    *  when building the static version of storybook.
    * @returns {object} Altered Webpack config
    */
-  webpackFinal: async (config, { configType }) => {
+  webpackFinal: (config, { configType }) => {
     // Set our environment variables so things like Cognito integration works in the sandbox
     config.plugins.push(new webpack.EnvironmentPlugin(nextConfig.env));
 

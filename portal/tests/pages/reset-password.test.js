@@ -44,7 +44,7 @@ describe("ResetPassword", () => {
     });
 
     describe("when the form is submitted", () => {
-      it("calls resetPassword", async () => {
+      it("calls resetPassword", () => {
         const spy = jest.spyOn(appLogic.auth, "resetPassword");
         const password = "abcdef12345678";
         const code = "123456";
@@ -76,7 +76,7 @@ describe("ResetPassword", () => {
     });
 
     describe("when the form is submitted", () => {
-      it("calls resetPassword", async () => {
+      it("calls resetPassword", () => {
         const spy = jest.spyOn(appLogic.auth, "resetPassword");
         const email = "email@test.com";
         const password = "abcdef12345678";

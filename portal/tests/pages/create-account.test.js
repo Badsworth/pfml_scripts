@@ -23,7 +23,7 @@ describe("CreateAccount", () => {
   });
 
   describe("when the form is submitted", () => {
-    it("calls createAccount", async () => {
+    it("calls createAccount", () => {
       const email = "email@test.com";
       const password = "TestP@ssw0rd!";
 

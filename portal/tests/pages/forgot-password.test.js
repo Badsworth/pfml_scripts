@@ -25,7 +25,7 @@ describe("ForgotPassword", () => {
   });
 
   describe("when the form is submitted", () => {
-    it("calls forgotPassword", async () => {
+    it("calls forgotPassword", () => {
       const email = "email@test.com";
 
       changeField("username", email);

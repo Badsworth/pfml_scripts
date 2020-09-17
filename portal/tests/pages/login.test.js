@@ -44,7 +44,7 @@ describe("Login", () => {
   });
 
   describe("when the form is submitted", () => {
-    it("calls login", async () => {
+    it("calls login", () => {
       const email = "email@test.com";
       const password = "TestP@ssw0rd!";
 

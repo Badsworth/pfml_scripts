@@ -42,7 +42,7 @@ describe("useThrottledHandler", () => {
 
   it("sets throttleHandler.isThrottled to true during call", async () => {
     await act(async () => {
-      wrapper.find("button").simulate("click");
+      await wrapper.find("button").simulate("click");
       expect(throttleHandler.isThrottled).toBe(true);
     });
   });

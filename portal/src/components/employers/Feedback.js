@@ -42,7 +42,7 @@ const Feedback = (props) => {
       }`,
     ];
 
-    printToConsole(submission.concat(getUploadedFiles()));
+    await printToConsole(submission.concat(getUploadedFiles()));
   };
 
   const getUploadedFiles = () => {
@@ -69,6 +69,7 @@ const Feedback = (props) => {
       console.log(string);
     });
     console.log(delimiter);
+    return Promise.resolve();
   };
 
   return (

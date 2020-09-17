@@ -45,7 +45,7 @@ describe("VerifyAccount", () => {
     });
 
     describe("when resend code button is clicked", () => {
-      it("calls resendVerifyAccountCode", async () => {
+      it("calls resendVerifyAccountCode", () => {
         click({ name: "resend-code-button" });
         expect(appLogic.auth.resendVerifyAccountCode).toHaveBeenCalledWith(
           username
@@ -54,7 +54,7 @@ describe("VerifyAccount", () => {
     });
 
     describe("when the form is submitted", () => {
-      it("calls verifyAccount", async () => {
+      it("calls verifyAccount", () => {
         changeField("code", verificationCode);
         submitForm();
         expect(appLogic.auth.verifyAccount).toHaveBeenCalledWith(
@@ -71,7 +71,7 @@ describe("VerifyAccount", () => {
     });
 
     describe("when resend code button is clicked", () => {
-      it("calls resendVerifyAccountCode", async () => {
+      it("calls resendVerifyAccountCode", () => {
         changeField("username", username);
         click({ name: "resend-code-button" });
         expect(appLogic.auth.resendVerifyAccountCode).toHaveBeenCalledWith(
@@ -81,7 +81,7 @@ describe("VerifyAccount", () => {
     });
 
     describe("when the form is submitted", () => {
-      it("calls verifyAccount", async () => {
+      it("calls verifyAccount", () => {
         changeField("username", username);
         changeField("code", verificationCode);
         submitForm();

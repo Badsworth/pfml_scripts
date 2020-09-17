@@ -34,7 +34,7 @@ describe("Thumbnail", () => {
   });
 
   describe("when selected file is a PDF", () => {
-    it("renders placeholder thumbnail", async () => {
+    it("renders placeholder thumbnail", () => {
       useEffect.mockImplementationOnce((didUpdate) => didUpdate());
       const pdfFile = new File(["foo"], "bar.pdf", { type: "application/pdf" });
 
@@ -45,7 +45,7 @@ describe("Thumbnail", () => {
   });
 
   describe("when selected file is an image", () => {
-    it("renders the img using a created URL", async () => {
+    it("renders the img using a created URL", () => {
       useEffect.mockImplementationOnce((f) => f());
       const createUrlSpy = jest.spyOn(URL, "createObjectURL");
 
@@ -59,7 +59,7 @@ describe("Thumbnail", () => {
       `);
     });
 
-    it("cleans up the created URL", async () => {
+    it("cleans up the created URL", () => {
       useEffect.mockImplementationOnce((f) => {
         const unmount = f();
         unmount();
