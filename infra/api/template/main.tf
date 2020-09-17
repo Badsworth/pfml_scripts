@@ -4,7 +4,7 @@ provider "aws" {
 }
 
 provider "newrelic" {
-  version       = "~> 2.0.0"
+  version       = "~> 2.7.1"
   region        = "US"
   account_id    = local.newrelic_account_id
   api_key       = data.aws_ssm_parameter.newrelic-api-key.value

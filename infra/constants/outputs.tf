@@ -10,3 +10,7 @@ output "common_tags" {
     secretariat   = "eolwd"
   }
 }
+
+output "newrelic_log_ingestion_arn" {
+  value = "arn:aws:lambda:us-east-1:498823821309:function:newrelic-log-ingestion"
+}

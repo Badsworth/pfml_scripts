@@ -6,7 +6,7 @@ locals {
   # This ARN describes a 3rd-party lambda installed outside of Terraform thru the AWS Serverless Application Repository.
   # This lambda ingests CloudWatch logs from several sources, and packages them for transmission to New Relic's servers.
   # This lambda was modified post-installation to fix an apparent bug in the processing/packaging of its telemetry data.
-  newrelic_log_ingestion_lambda = "arn:aws:lambda:us-east-1:498823821309:function:newrelic-log-ingestion"
+  newrelic_log_ingestion_lambda = module.constants.newrelic_log_ingestion_arn
 }
 
 resource "aws_cognito_user_pool" "claimants_pool" {

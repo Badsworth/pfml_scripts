@@ -80,3 +80,69 @@ resource "newrelic_alert_condition" "api_response_time" {
     threshold     = 2.5 # units: seconds
   }
 }
+
+////////////////
+// RDS Alerts //
+////////////////
+
+resource "newrelic_nrql_alert_condition" "rds_high_cpu_utilization" {
+  # WARN: CPU Utilization above 75% for at least 5 minutes
+  # CRIT: CPU Utilization above 90% for at least 5 minutes
+  policy_id      = newrelic_alert_policy.api_alerts.id
+  name           = "RDS CPU Utilization too high"
+  type           = "static"
+  value_function = "single_value"
+  enabled        = true
+
+  nrql {
+    query             = "SELECT percentile(`provider.cpuUtilization.total`, 99) from DatastoreSample where provider = 'RdsDbInstance' and displayName = '${aws_db_instance.default.identifier}'"
+    evaluation_offset = 3
+  }
+
+  violation_time_limit = "TWENTY_FOUR_HOURS"
+
+  warning {
+    threshold_duration    = 300
+    threshold             = 75
+    operator              = "above"
+    threshold_occurrences = "ALL"
+  }
+
+  critical {
+    threshold_duration    = 300
+    threshold             = 90
+    operator              = "above"
+    threshold_occurrences = "ALL"
+  }
+}
+
+resource "newrelic_nrql_alert_condition" "rds_low_storage_space" {
+  # WARN: RDS storage space is below 30% for at least 5 minutes
+  # CRIT: RDS storage space is below 20% for at least 5 minutes
+  policy_id      = newrelic_alert_policy.api_alerts.id
+  name           = "RDS instance has <= 20% free storage space"
+  type           = "static"
+  value_function = "single_value"
+  enabled        = true
+
+  nrql {
+    query             = "SELECT average(provider.freeStorageSpaceBytes.Maximum) / average(provider.allocatedStorageBytes ) * 100 FROM DatastoreSample where provider = 'RdsDbInstance' and displayName = '${aws_db_instance.default.identifier}'"
+    evaluation_offset = 3
+  }
+
+  violation_time_limit = "TWENTY_FOUR_HOURS"
+
+  warning {
+    threshold_duration    = 300
+    threshold             = 30
+    operator              = "below"
+    threshold_occurrences = "ALL"
+  }
+
+  critical {
+    threshold_duration    = 300
+    threshold             = 20
+    operator              = "below"
+    threshold_occurrences = "ALL"
+  }
+}
