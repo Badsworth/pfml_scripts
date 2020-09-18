@@ -37,6 +37,25 @@ def get_average_weekly_wage(
     return calculator.compute_average_weekly_wage()
 
 
+def get_total_wage(
+    employee_id: uuid.UUID, effective_date: datetime.date, db_session: massgov.pfml.db.Session
+) -> decimal.Decimal:
+    """Read DOR wage data from database and compute total wage for the given employee."""
+    effective_quarter = quarter.Quarter.from_date(effective_date)
+
+    calculator = AverageWeeklyWageCalculator()
+    calculator.set_effective_quarter(effective_quarter)
+
+    rows = query_employee_wages(db_session, effective_quarter, employee_id)
+
+    for row in rows:
+        calculator.set_quarter_wage(
+            row.employer_id, quarter.Quarter.from_date(row.filing_period), row.employee_qtr_wages
+        )
+
+    return round(calculator.compute_total_wage(), 2)
+
+
 def query_employee_wages(
     db_session: massgov.pfml.db.Session, effective_quarter: quarter.Quarter, employee_id: uuid.UUID
 ) -> List[Any]:
@@ -144,3 +163,31 @@ class AverageWeeklyWageCalculator:
 
         self.employer_average_weekly_wage[employer_id] = average_weekly_wage
         return average_weekly_wage
+
+    def compute_total_wage(self) -> decimal.Decimal:
+        """Compute the total wage, summed across all employers."""
+        logger.info(
+            "employers %i, total data rows %i",
+            len(self.employer_quarter_wage),
+            sum(len(value) for value in self.employer_quarter_wage.values()),
+        )
+
+        total_wage = decimal.Decimal("0")
+        for employer_id in self.employer_quarter_wage:
+            total_wage += self.compute_employer_total_wage(employer_id)
+        return total_wage
+
+    def compute_employer_total_wage(self, employer_id: uuid.UUID) -> decimal.Decimal:
+        """Compute total weekly wage for one employer."""
+        quarter_wages = self.employer_quarter_wage[employer_id]
+
+        base_period_quarters = base_period.compute_base_period(
+            self.effective_quarter, quarter_wages
+        )
+
+        total_wage = decimal.Decimal("0")
+        for reported_quarter, wage in quarter_wages.items():
+            if reported_quarter in base_period_quarters:
+                total_wage += wage
+
+        return total_wage

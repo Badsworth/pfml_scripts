@@ -442,8 +442,9 @@ paths:
       security:
         - {} # no authentication option
       tags:
-        - Financial Eligibility
-      summary: Retrieve financial eligibility by SSN/FEIN effective date and employee status.
+        - Eligibility
+      summary: Retrieve financial eligibility by SSN, FEIN, leave_start date, application submitted date and employee status.
+      operationId: massgov.pfml.api.eligibility.handler.eligibility_post
       responses:
         "200":
           description: a successful response returns a 200 status code a financial_eligibility object.
@@ -1247,7 +1248,7 @@ components:
           type: string
           example: "Unemployment minimum not met"
         total_wages:
-          type: integer
+          type: number
           example: 75000
         state_average_weekly_wage:
           type: integer

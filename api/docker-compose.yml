@@ -61,6 +61,7 @@ services:
       - COGNITO_USER_POOL_KEYS_URL=file:///app/jwks.json
       - ENABLE_EMPLOYEE_ENDPOINTS=1
       - ENABLE_EMPLOYER_ENDPOINTS=1
+      - FOLDER_PATH=dor_mock
       # Enable these variables to use a real FINEOS API instead of a mock:
       # - FINEOS_CLIENT_CUSTOMER_API_URL=https://idt-api.masspfml.fineos.com/customerapi/
       # - FINEOS_CLIENT_WSCOMPOSER_API_URL=https://idt-api.masspfml.fineos.com/wscomposer/

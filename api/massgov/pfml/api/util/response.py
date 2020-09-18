@@ -2,7 +2,7 @@ from dataclasses import asdict, dataclass
 from typing import Any, Dict, List, Optional, Type, Union
 
 import flask
-from werkzeug.exceptions import BadRequest, HTTPException, ServiceUnavailable
+from werkzeug.exceptions import BadRequest, HTTPException, NotFound, ServiceUnavailable
 
 from massgov.pfml.api.validation.exceptions import ValidationErrorDetail
 
@@ -104,7 +104,7 @@ def success_response(
 
 
 def error_response(
-    status_code: Union[HTTPException, Type[BadRequest], Type[ServiceUnavailable]],
+    status_code: Union[HTTPException, Type[BadRequest], Type[ServiceUnavailable], Type[NotFound]],
     message: str,
     errors: List[Issue],
     data: Union[None, Dict, List[Dict]] = None,
