@@ -720,8 +720,8 @@ def test_application_patch_add_payment_preferences(client, user, auth_token, tes
             "payment_preferences": [
                 {
                     "description": "Test",
-                    "payment_method": "Check",
-                    "account_details": {"account_type": "Checking"},
+                    "payment_method": "ACH",
+                    "account_details": {"account_type": "Checking", "routing_number": "000000000",},
                     "cheque_details": {"name_to_print_on_check": "Bob"},
                 }
             ]
@@ -736,8 +736,9 @@ def test_application_patch_add_payment_preferences(client, user, auth_token, tes
 
     payment_preference = payment_preferences_response[0]
     assert payment_preference.get("description") == "Test"
-    assert payment_preference.get("payment_method") == "Check"
+    assert payment_preference.get("payment_method") == "ACH"
     assert payment_preference.get("account_details").get("account_type") == "Checking"
+    assert payment_preference.get("account_details").get("routing_number") == "*****0000"
     assert payment_preference.get("cheque_details").get("name_to_print_on_check") == "Bob"
 
 
@@ -755,7 +756,11 @@ def test_application_patch_update_payment_preferences(client, user, auth_token, 
         headers={"Authorization": f"Bearer {auth_token}"},
         json={
             "payment_preferences": [
-                {"payment_preference_id": payment_preference.payment_pref_id, "description": "Bar",}
+                {
+                    "description": "Bar",
+                    "payment_preference_id": payment_preference.payment_pref_id,
+                    "account_details": {"routing_number": "121234567",},
+                }
             ]
         },
     )
@@ -771,6 +776,7 @@ def test_application_patch_update_payment_preferences(client, user, auth_token, 
         payment_preference.payment_pref_id
     )
     assert payment_preference_response["description"] == "Bar"
+    assert payment_preference_response["account_details"]["routing_number"] == "*****4567"
 
     test_db_session.refresh(payment_preference)
     assert payment_preference.description == "Bar"
