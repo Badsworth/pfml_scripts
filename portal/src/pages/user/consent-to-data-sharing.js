@@ -12,7 +12,7 @@ import useThrottledHandler from "../../hooks/useThrottledHandler";
 import { useTranslation } from "../../locales/i18n";
 import withUser from "../../hoc/withUser";
 
-const ConsentToDataSharing = (props) => {
+export const ConsentToDataSharing = (props) => {
   const { t } = useTranslation();
   const { appLogic, user } = props;
   const { updateUser } = appLogic.users;
