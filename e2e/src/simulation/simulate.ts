@@ -74,7 +74,7 @@ export function scenario(
       last_name: last_name,
       tax_identifier: faker.phone.phoneNumber("###-##-####"),
       employer_fein,
-      date_of_birth: fmt(faker.date.past(45)),
+      date_of_birth: fmt(generateBirthDate()),
       has_state_id: hasMassId,
       mass_id: hasMassId ? faker.phone.phoneNumber("#########") : null,
       mailing_address: {
@@ -179,6 +179,14 @@ function generateNotificationDate(startDate: Date, shortNotice: boolean) {
   return add(startDate, {
     days: shortNotice ? -1 : -60,
   });
+}
+
+// Generate a birthdate > 65 years ago and < 18 years ago.
+function generateBirthDate(): Date {
+  return faker.date.between(
+    add(new Date(), { years: -65 }),
+    add(new Date(), { years: -18 })
+  );
 }
 
 // Replacement for faker.date.soon(), which is slated to be released in the future.

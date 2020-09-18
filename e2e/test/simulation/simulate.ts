@@ -241,6 +241,22 @@ describe("Simulation Generator", () => {
       start.getTime() - 86400 * 1000
     );
   });
+
+  it("Should generate a birth date 18-65 years in the past.", async () => {
+    const { claim } = await scenario("TEST", { residence: "MA-proofed" })(opts);
+    const { date_of_birth } = claim;
+    if (typeof date_of_birth !== "string") {
+      throw new Error("Expected date_of_birth to be a string");
+    }
+    const date = new Date(date_of_birth);
+
+    expect(date.getFullYear()).toBeLessThanOrEqual(
+      new Date().getFullYear() - 18
+    );
+    expect(date.getFullYear()).toBeGreaterThanOrEqual(
+      new Date().getFullYear() - 65
+    );
+  });
 });
 
 describe("Chance Simulation Generator", () => {
