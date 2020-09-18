@@ -7,8 +7,13 @@ import React from "react";
 import { useTranslation } from "../locales/i18n";
 
 // Only image and pdf files are allowed to be uploaded
-// TODO (CP-396): limit the set of image types allowed to those supported by the API
-const allowedFileTypes = [/^image\//, "application/pdf"];
+const allowedFileTypes = [
+  "image/png",
+  "image/jpeg",
+  "image/tiff",
+  "image/heic",
+  "application/pdf",
+];
 
 /**
  * Partition a list of files into a set of allowed files and a set of disallowed files based on

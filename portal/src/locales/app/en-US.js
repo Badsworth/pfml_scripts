@@ -926,7 +926,10 @@ const components = {
     tips: [
       {
         listHeading: "This website only accepts:",
-        listItems: ["PDF documents", "Images (.jpg, .jpeg, .png, .gif, .webp)"],
+        listItems: [
+          "PDF documents",
+          "Images (.jpg, .jpeg, .png, .tiff, .heic)",
+        ],
       },
       {
         listHeading:
