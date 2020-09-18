@@ -220,26 +220,12 @@ exports[`Checklist renders multiple StepList components with list of Steps 1`] =
     screenReaderNumberPrefix="Step"
     startText="Start"
     title={
-      <Trans
-        components={
-          Object {
-            "part-number": <span
-              className="display-block font-heading-2xs margin-bottom-1 text-base-dark"
-            />,
-          }
-        }
-        i18nKey="pages.claimsChecklist.stepListTitle"
-        tOptions={
-          Object {
-            "context": "1",
-          }
-        }
-        values={
-          Object {
-            "number": 1,
-          }
-        }
-      />
+      <React.Fragment>
+        <HeadingPrefix>
+          Part 1
+        </HeadingPrefix>
+        Tell us about yourself and your leave
+      </React.Fragment>
     }
   >
     <Step
@@ -338,7 +324,7 @@ exports[`Checklist renders multiple StepList components with list of Steps 1`] =
       number={4}
       status="disabled"
       stepHref="/claims/employer-benefits?claim_id=mock_application_id"
-      title="Report other leave and benefits"
+      title="Report other leave, income, and benefits"
     >
       <Trans
         components={
@@ -401,26 +387,12 @@ exports[`Checklist renders multiple StepList components with list of Steps 1`] =
     screenReaderNumberPrefix="Step"
     startText="Start"
     title={
-      <Trans
-        components={
-          Object {
-            "part-number": <span
-              className="display-block font-heading-2xs margin-bottom-1 text-base-dark"
-            />,
-          }
-        }
-        i18nKey="pages.claimsChecklist.stepListTitle"
-        tOptions={
-          Object {
-            "context": "2",
-          }
-        }
-        values={
-          Object {
-            "number": 2,
-          }
-        }
-      />
+      <React.Fragment>
+        <HeadingPrefix>
+          Part 2
+        </HeadingPrefix>
+        Enter your payment information
+      </React.Fragment>
     }
   >
     <Step
@@ -462,26 +434,12 @@ exports[`Checklist renders multiple StepList components with list of Steps 1`] =
     screenReaderNumberPrefix="Step"
     startText="Start"
     title={
-      <Trans
-        components={
-          Object {
-            "part-number": <span
-              className="display-block font-heading-2xs margin-bottom-1 text-base-dark"
-            />,
-          }
-        }
-        i18nKey="pages.claimsChecklist.stepListTitle"
-        tOptions={
-          Object {
-            "context": "3",
-          }
-        }
-        values={
-          Object {
-            "number": 3,
-          }
-        }
-      />
+      <React.Fragment>
+        <HeadingPrefix>
+          Part 3
+        </HeadingPrefix>
+        Upload your documents
+      </React.Fragment>
     }
   >
     <Step

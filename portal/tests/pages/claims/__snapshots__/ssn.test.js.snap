@@ -3,7 +3,7 @@
 exports[`Ssn renders the form 1`] = `
 <QuestionPage
   onSave={[Function]}
-  title="Verify your identity"
+  title="Your identity"
 >
   <InputText
     clearInitialPii={true}

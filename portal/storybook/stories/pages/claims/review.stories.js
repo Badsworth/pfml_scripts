@@ -2,20 +2,21 @@ import { MockClaimBuilder } from "tests/test-utils";
 import generateClaimPageStory from "storybook/utils/generateClaimPageStory";
 
 const mockClaims = {
-  bondingAdoptionLeave: new MockClaimBuilder()
-    .complete()
+  "Part 1 (Medical)": new MockClaimBuilder().part1Complete().create(),
+  "Part 1 (Adoption)": new MockClaimBuilder()
+    .part1Complete()
     .bondingAdoptionLeaveReason()
     .create(),
-  bondingBirthLeave: new MockClaimBuilder()
-    .complete()
+  "Part 1 (Newborn)": new MockClaimBuilder()
+    .part1Complete()
     .bondingBirthLeaveReason()
     .create(),
-  bondingFosterCareLeave: new MockClaimBuilder()
-    .complete()
+  "Part 1 (Foster care)": new MockClaimBuilder()
+    .part1Complete()
     .bondingFosterCareLeaveReason()
     .create(),
-  complete: new MockClaimBuilder().complete().create(),
-  debit: new MockClaimBuilder().complete().debit().create(),
+  "Final (Debit)": new MockClaimBuilder().complete().create(),
+  "Final (Deposit)": new MockClaimBuilder().complete().directDeposit().create(),
 };
 
 const { config, DefaultStory } = generateClaimPageStory("review", mockClaims);

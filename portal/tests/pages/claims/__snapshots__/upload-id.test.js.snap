@@ -3,7 +3,7 @@
 exports[`UploadId when the user doesn't have a Mass ID renders the page with 'Other' ID content 1`] = `
 <QuestionPage
   onSave={[Function]}
-  title="Verify your identity"
+  title="Your identity"
 >
   <Heading
     level="2"
@@ -29,7 +29,7 @@ exports[`UploadId when the user doesn't have a Mass ID renders the page with 'Ot
 exports[`UploadId when the user has a Mass ID renders the page with Mass ID content 1`] = `
 <QuestionPage
   onSave={[Function]}
-  title="Verify your identity"
+  title="Your identity"
 >
   <Heading
     level="2"
@@ -55,7 +55,7 @@ exports[`UploadId when the user has a Mass ID renders the page with Mass ID cont
 exports[`UploadId when the user uploads files renders filecards for the files 1`] = `
 <QuestionPage
   onSave={[Function]}
-  title="Verify your identity"
+  title="Your identity"
 >
   <Heading
     level="2"

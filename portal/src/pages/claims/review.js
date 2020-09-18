@@ -14,6 +14,8 @@ import BackButton from "../../components/BackButton";
 import Button from "../../components/Button";
 import { DateTime } from "luxon";
 import Heading from "../../components/Heading";
+import HeadingPrefix from "../../components/HeadingPrefix";
+import Lead from "../../components/Lead";
 import PreviousLeave from "../../models/PreviousLeave";
 import PropTypes from "prop-types";
 import React from "react";
@@ -80,6 +82,7 @@ export const Review = (props) => {
     await appLogic.claims.complete(claim.application_id);
   });
 
+  const contentContext = usePartOneReview ? "part1" : "final";
   // Adjust heading levels depending on if there's a "Part 1" heading at the top of the page or not
   const reviewHeadingLevel = usePartOneReview ? "3" : "2";
   const reviewRowLevel = usePartOneReview ? "4" : "3";
@@ -88,20 +91,19 @@ export const Review = (props) => {
     <div className="measure-6">
       <BackButton />
 
-      {usePartOneReview ? (
-        <React.Fragment>
-          <Title hidden>{t("pages.claimsReview.titlePartOneReview")}</Title>
+      <Title hidden>{t("pages.claimsReview.title")}</Title>
 
-          <Heading className="margin-top-0" level="2" size="1">
-            {/* This heading has two lines which are each styled differently */}
-            <span className="display-block font-heading-2xs margin-bottom-2 text-base-dark text-bold">
-              {t("pages.claimsReview.partHeading")}
-            </span>
-            {t("pages.claimsReview.pageHeading")}
-          </Heading>
-        </React.Fragment>
-      ) : (
-        <Title>{t("pages.claimsReview.titleFinalReview")}</Title>
+      <Heading className="margin-top-0" level="2" size="1">
+        <HeadingPrefix>
+          {t("pages.claimsReview.partHeadingPrefix", { number: 1 })}
+        </HeadingPrefix>
+        {t("pages.claimsReview.partHeading", {
+          context: `${1}_${contentContext}`,
+        })}
+      </Heading>
+
+      {!usePartOneReview && (
+        <Lead>{t("pages.claimsReview.partDescription", { context: "1" })}</Lead>
       )}
 
       {/* EMPLOYEE IDENTITY */}
@@ -110,7 +112,7 @@ export const Review = (props) => {
         editText={t("pages.claimsReview.editLink")}
         level={reviewHeadingLevel}
       >
-        {t("pages.claimsReview.verifyIdSectionHeading")}
+        {t("pages.claimsReview.stepHeading", { context: "verifyId" })}
       </ReviewHeading>
 
       <ReviewRow
@@ -140,10 +142,9 @@ export const Review = (props) => {
         </ReviewRow>
       )}
 
-      {/* TODO (CP-891): Use the API response for the PII fields */}
       <ReviewRow
         level={reviewRowLevel}
-        label={t("pages.claimsReview.userSsnLabel")}
+        label={t("pages.claimsReview.userTaxIdLabel")}
       >
         {get(claim, "tax_identifier")}
       </ReviewRow>
@@ -161,7 +162,7 @@ export const Review = (props) => {
         editText={t("pages.claimsReview.editLink")}
         level={reviewHeadingLevel}
       >
-        {t("pages.claimsReview.leaveDetailsSectionHeading")}
+        {t("pages.claimsReview.stepHeading", { context: "leaveDetails" })}
       </ReviewHeading>
 
       <ReviewRow
@@ -181,9 +182,11 @@ export const Review = (props) => {
           level={reviewRowLevel}
           label={t("pages.claimsReview.pregnancyOrRecentBirthLabel")}
         >
-          {get(claim, "leave_details.pregnant_or_recent_birth") === true
-            ? t("pages.claimsReview.pregnancyChoiceYes")
-            : t("pages.claimsReview.pregnancyChoiceNo")}
+          {t("pages.claimsReview.pregnancyOrRecentBirth", {
+            context: get(claim, "leave_details.pregnant_or_recent_birth")
+              ? "yes"
+              : "no",
+          })}
         </ReviewRow>
       )}
 
@@ -200,24 +203,23 @@ export const Review = (props) => {
 
       {reason === LeaveReason.bonding &&
         reasonQualifier === ReasonQualifier.newBorn && (
-          /* TODO (POL-99): determine if date of placement is PII, if so need to adhere to CP-891 */
           <ReviewRow
             level={reviewRowLevel}
             label={t("pages.claimsReview.childBirthDateLabel")}
           >
-            **/**/****
+            {get(claim, "leave_details.child_birth_date")}
           </ReviewRow>
         )}
 
       {reason === LeaveReason.bonding &&
-        (reasonQualifier === ReasonQualifier.adoption ||
-          reasonQualifier === ReasonQualifier.fosterCare) && (
-          /* TODO (POL-99): determine if date of placement is PII if so need to adhere to CP-891 */
+        [ReasonQualifier.adoption, ReasonQualifier.fosterCare].includes(
+          reasonQualifier
+        ) && (
           <ReviewRow
             level={reviewRowLevel}
             label={t("pages.claimsReview.childPlacementDateLabel")}
           >
-            **/**/****
+            {get(claim, "leave_details.child_placement_date")}
           </ReviewRow>
         )}
 
@@ -263,7 +265,9 @@ export const Review = (props) => {
         editText={t("pages.claimsReview.editLink")}
         level={reviewHeadingLevel}
       >
-        {t("pages.claimsReview.employmentSectionHeading")}
+        {t("pages.claimsReview.stepHeading", {
+          context: "employerInformation",
+        })}
       </ReviewHeading>
 
       {get(claim, "employment_status") && (
@@ -312,7 +316,7 @@ export const Review = (props) => {
         editText={t("pages.claimsReview.editLink")}
         level={reviewHeadingLevel}
       >
-        {t("pages.claimsReview.otherLeaveSectionHeading")}
+        {t("pages.claimsReview.stepHeading", { context: "otherLeave" })}
       </ReviewHeading>
 
       <ReviewRow
@@ -365,22 +369,29 @@ export const Review = (props) => {
       )}
 
       {usePartOneReview ? (
-        <React.Fragment>
-          <p className="margin-top-9">
-            {t("pages.claimsReview.partOneNextStepsLine1")}
-          </p>
+        <div className="margin-top-6 margin-bottom-2">
+          <p>{t("pages.claimsReview.partOneNextStepsLine1")}</p>
           <p>{t("pages.claimsReview.partOneNextStepsLine2")}</p>
           <p>{t("pages.claimsReview.partOneNextStepsLine3")}</p>
-        </React.Fragment>
+        </div>
       ) : (
         <React.Fragment>
+          <Heading level="2" size="1">
+            <HeadingPrefix>
+              {t("pages.claimsReview.partHeadingPrefix", { number: 2 })}
+            </HeadingPrefix>
+            {t("pages.claimsReview.partHeading", {
+              context: "2",
+            })}
+          </Heading>
+
           {/* PAYMENT METHOD */}
           <ReviewHeading
             editHref={getStepEditHref(ClaimSteps.payment)}
             editText={t("pages.claimsReview.editLink")}
             level={reviewHeadingLevel}
           >
-            {t("pages.claimsReview.paymentSectionHeading")}
+            {t("pages.claimsReview.stepHeading", { context: "payment" })}
           </ReviewHeading>
 
           {paymentPreference.payment_method && (

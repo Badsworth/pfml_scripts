@@ -3,7 +3,7 @@
 exports[`Name renders the page 1`] = `
 <QuestionPage
   onSave={[Function]}
-  title="Verify your identity"
+  title="Your identity"
 >
   <FormLabel
     component="legend"

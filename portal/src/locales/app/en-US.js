@@ -93,20 +93,19 @@ const shared = {
   claimDurationTypeContinuous: "Continuous leave",
   claimDurationTypeIntermittent: "Intermittent leave",
   claimDurationTypeReducedSchedule: "Reduced leave schedule",
+  claimsEmploymentInfoTitle: "Employment information",
   claimsLeaveDetailsTitle: "Leave details",
   claimsLeaveDurationTitle: "Leave duration",
-  claimsOtherLeaveTitle: "Other income and benefits",
-  claimsVerifyIdTitle: "Verify your identity",
+  claimsOtherLeaveTitle: "Other leave, income, and benefits",
+  claimsVerifyIdTitle: "Your identity",
   employerBenefitEntryPrefix: "Benefit",
   employerBenefitType_familyOrMedicalLeave: "Family or medical leave insurance",
   employerBenefitType_paidLeave: "Accrued paid leave",
   employerBenefitType_permanentDisability: "Permanent disability insurance",
   employerBenefitType_shortTermDisability: "Short-term disability insurance",
-  employerInformationStepTitle: "Enter employment information",
   fileUpload_addAnotherFileButton: "Choose another file",
   fileUpload_addFirstFileButton: "Choose a file",
   fileUpload_fileHeadingPrefix: "File",
-  leaveDetailsStepTitle: "Enter leave details",
   leaveReasonActiveDutyFamily: "Active duty",
   leaveReasonBonding: "Bonding leave",
   leaveReasonMedical: "Medical leave",
@@ -125,7 +124,6 @@ const shared = {
   otherIncomeType_ssdi: "Social Security Disability Insurance",
   otherIncomeType_unemployment: "Unemployment Insurance",
   otherIncomeType_workersCompensation: "Workers Compensation",
-  otherLeaveStepTitle: "Report other leave and benefits",
   passwordHint:
     "Your password must be at least 8 characters long and include numbers and letters.",
   passwordLabel: "Password",
@@ -138,7 +136,6 @@ const shared = {
   resendVerificationCodeLink: "Resend the code",
   usernameLabel: "Email address",
   verificationCodeLabel: "6-digit code",
-  verifyIdStepTitle: "Verify your identity",
 };
 
 const pages = {
@@ -267,20 +264,18 @@ const pages = {
     // TODO (CP-907): Add correct fax # and address
     stepListDescription_3:
       "Uploading documents online leads to faster processing, but you can also fax documents to NNN-NNN-NNNN, or mail them to 123 Address.",
-    stepListTitle_1:
-      "<part-number>Part {{number}}</part-number> Tell us about yourself and your leave",
-    stepListTitle_2:
-      "<part-number>Part {{number}}</part-number> Enter your payment information",
-    stepListTitle_3:
-      "<part-number>Part {{number}}</part-number> Upload your documents",
-    stepTitle_employerInformation: "$t(shared.employerInformationStepTitle)",
-    stepTitle_leaveDetails: "$t(shared.leaveDetailsStepTitle)",
-    stepTitle_otherLeave: "$t(shared.otherLeaveStepTitle)",
+    stepListTitlePrefix: "Part {{number}}",
+    stepListTitle_1: "Tell us about yourself and your leave",
+    stepListTitle_2: "Enter your payment information",
+    stepListTitle_3: "Upload your documents",
+    stepTitle_employerInformation: "Enter employment information",
+    stepTitle_leaveDetails: "Enter leave details",
+    stepTitle_otherLeave: "Report other leave, income, and benefits",
     stepTitle_payment: "Add payment information",
     stepTitle_reviewAndConfirm: "Review and confirm",
     stepTitle_uploadCertification: "Upload leave certification documents",
     stepTitle_uploadId: "Upload identity document",
-    stepTitle_verifyId: "$t(shared.verifyIdStepTitle)",
+    stepTitle_verifyId: "Verify your identity",
     submitButton: "Review and submit application",
     title: "Checklist: Create a new application",
   },
@@ -403,7 +398,7 @@ const pages = {
     furloughQuestion: "What if I've been furloughed?",
     multipleEmployerAppAlert: "$t(shared.multipleEmployerAppAlert)",
     sectionLabel: "What is your employment status?",
-    title: "Employment information",
+    title: "$t(shared.claimsEmploymentInfoTitle)",
   },
   claimsLeaveDates: {
     endDateHint_bonding:
@@ -469,7 +464,7 @@ const pages = {
     mustNotifyEmployerWarning:
       "Before you can submit an application, you must tell your employer that you're taking leave.",
     sectionLabel: "Have you told your employer that you are taking leave?",
-    title: "Employment information",
+    title: "$t(shared.claimsEmploymentInfoTitle)",
   },
   claimsOtherIncomes: {
     choiceNo: "$t(shared.choiceNo)",
@@ -585,7 +580,6 @@ const pages = {
     employerNotifiedLabel: "Notified employer",
     employerNotifiedValue: "No",
     employerNotifiedValue_true: "Notified employer on {{date}}",
-    employmentSectionHeading: "$t(shared.employerInformationStepTitle)",
     employmentStatusLabel: "Employment status",
     employmentStatusValue_employed: "Currently employed",
     employmentStatusValue_selfEmployed: "Self-employed",
@@ -624,9 +618,13 @@ const pages = {
     otherLeaveChoiceYes: "$t(shared.choiceYes)",
     // eslint-disable-next-line no-template-curly-in-string
     otherLeaveDollarAmount: "${{amount}} every month",
-    otherLeaveSectionHeading: "$t(shared.otherLeaveStepTitle)",
-    pageHeading: "Review and confirm: Tell us about yourself and your leave",
-    partHeading: "Part 1",
+    partDescription_1:
+      "If you need to make edits to Part 1, you’ll need to contact our call center at $t(shared.callCenterPhoneNumber).",
+    partHeadingPrefix: "Part {{number}}",
+    partHeading_1_final: "Review: Tell us about yourself and your leave",
+    partHeading_1_part1:
+      "Review and confirm: Tell us about yourself and your leave",
+    partHeading_2: "Review: Your payment information",
     partOneNextStepsLine1:
       "Once you review and confirm Part 1, your in-progress application will be viewable by our call center staff. If you need to make edits to Part 1, you’ll need to contact our call center at $t(shared.callCenterPhoneNumber).",
     partOneNextStepsLine2:
@@ -636,22 +634,24 @@ const pages = {
     paymentMethodLabel: "Payment method",
     paymentMethodValue_ach: "$t(shared.paymentMethodAch)",
     paymentMethodValue_debit: "$t(shared.paymentMethodDebit)",
-    paymentSectionHeading: "Payment information",
-    pregnancyChoiceNo: "$t(shared.choiceNo)",
-    pregnancyChoiceYes: "$t(shared.choiceYes)",
     pregnancyOrRecentBirthLabel: "$t(shared.pregnancyOrRecentBirthLabel)",
+    pregnancyOrRecentBirth_no: "$t(shared.choiceNo)",
+    pregnancyOrRecentBirth_yes: "$t(shared.choiceYes)",
     previousLeaveEntryLabel: "$t(shared.previousLeaveEntryPrefix) {{count}}",
     previousLeaveLabel: "Previous paid or unpaid leave?",
     residentialAddressLabel: "Residential address",
-    submitAction_final: "Submit my application",
+    stepHeading_employerInformation: "$t(shared.claimsEmploymentInfoTitle)",
+    stepHeading_leaveDetails: "$t(shared.claimsLeaveDetailsTitle)",
+    stepHeading_otherLeave: "$t(shared.claimsOtherLeaveTitle)",
+    stepHeading_payment: "Payment information",
+    stepHeading_verifyId: "$t(shared.claimsVerifyIdTitle)",
+    submitAction_final: "Submit application",
     submitAction_part1: "Submit Part 1",
-    titleFinalReview: "Check your answers before sending your application",
-    titlePartOneReview: "Review and confirm Part 1",
+    title: "Check your answers before submitting your application.",
     userDateOfBirthLabel: "Date of birth",
     userNameLabel: "Name",
-    userSsnLabel: "Social Security Number",
     userStateIdLabel: "Driver's License Number",
-    verifyIdSectionHeading: "$t(shared.verifyIdStepTitle)",
+    userTaxIdLabel: "Social Security Number or ITIN",
   },
   claimsSsn: {
     lead:

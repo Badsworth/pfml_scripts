@@ -1,12 +1,3 @@
-import {
-  ClaimStatus,
-  ContinuousLeavePeriod,
-  EmploymentStatus,
-  IntermittentLeavePeriod,
-  LeaveReason,
-  PaymentPreferenceMethod,
-  ReducedScheduleLeavePeriod,
-} from "../../../src/models/Claim";
 import EmployerBenefit, {
   EmployerBenefitType,
 } from "../../../src/models/EmployerBenefit";
@@ -18,90 +9,18 @@ import Review, {
   OtherLeaveEntry,
   PreviousLeaveList,
 } from "../../../src/pages/claims/review";
+import { LeaveReason } from "../../../src/models/Claim";
 import PreviousLeave from "../../../src/models/PreviousLeave";
 import React from "react";
-
 import { shallow } from "enzyme";
 
 jest.mock("../../../src/hooks/useAppLogic");
-
-/**
- * Get a claim for an Employed claimant, with all required fields.
- * Fields can be overridden in each unit test.
- * @returns {object}
- */
-function fullClaimAttrs() {
-  const employer_benefits = [
-    new EmployerBenefit({
-      benefit_amount_dollars: "250",
-      benefit_end_date: "2021-12-30",
-      benefit_start_date: "2021-08-12",
-      benefit_type: EmployerBenefitType.paidLeave,
-    }),
-  ];
-
-  const other_incomes = [
-    new OtherIncome({
-      income_amount_dollars: "250",
-      income_end_date: "2021-12-30",
-      income_start_date: "2021-08-12",
-      income_type: OtherIncomeType.workersCompensation,
-    }),
-  ];
-
-  const previous_leaves = [
-    new PreviousLeave({
-      leave_end_date: "2021-12-30",
-      leave_start_date: "2021-08-12",
-    }),
-  ];
-
-  return {
-    employer_benefits,
-    employment_status: EmploymentStatus.employed,
-    employer_fein: "12-1234567",
-    first_name: "Bud",
-    has_employer_benefits: true,
-    has_other_incomes: true,
-    has_previous_leaves: true,
-    has_state_id: true,
-    last_name: "Baxter",
-    leave_details: {
-      employer_notified: true,
-      employer_notification_date: "2020-06-25",
-      intermittent_leave_periods: [new IntermittentLeavePeriod()],
-      reason: LeaveReason.medical,
-    },
-    mass_id: "*********",
-    middle_name: "Monstera",
-    other_incomes,
-    previous_leaves,
-    residential_address: {
-      city: "Boston",
-      line_1: "19 Staniford St",
-      line_2: "Suite 505",
-      state: "MA",
-      zip: "02114",
-    },
-    tax_identifier: "***-**-****",
-    temp: {
-      leave_details: {
-        avg_weekly_work_hours: "20",
-        continuous_leave_periods: [new ContinuousLeavePeriod()],
-        end_date: "2021-12-30",
-        reduced_schedule_leave_periods: [new ReducedScheduleLeavePeriod()],
-        start_date: "2021-09-21",
-      },
-      payment_preferences: [{ payment_method: PaymentPreferenceMethod.ach }],
-    },
-  };
-}
 
 describe("Part 1 Review Page", () => {
   describe("when all data is present", () => {
     it("renders Review page with Part 1 content and edit links", () => {
       const { wrapper } = renderWithAppLogic(Review, {
-        claimAttrs: fullClaimAttrs(),
+        claimAttrs: new MockClaimBuilder().part1Complete().create(),
       });
 
       expect(wrapper).toMatchSnapshot();
@@ -121,47 +40,24 @@ describe("Part 1 Review Page", () => {
 
       expect(wrapper).toMatchSnapshot();
     });
+  });
 
-    it("submits the application when the user clicks Submit", () => {
-      const claimAttrs = fullClaimAttrs();
-      claimAttrs.application_id = "testClaim";
-      const { appLogic, wrapper } = renderWithAppLogic(Review, {
-        claimAttrs,
-      });
-      wrapper.find("Button").simulate("click");
-
-      expect(appLogic.claims.submit).toHaveBeenCalledWith(
-        claimAttrs.application_id
-      );
-      expect(appLogic.claims.complete).not.toHaveBeenCalled();
+  it("submits the application when the user clicks Submit", () => {
+    const { appLogic, claim, wrapper } = renderWithAppLogic(Review, {
+      claimAttrs: new MockClaimBuilder().part1Complete().create(),
     });
+    wrapper.find("Button").simulate("click");
+
+    expect(appLogic.claims.submit).toHaveBeenCalledWith(claim.application_id);
+    expect(appLogic.claims.complete).not.toHaveBeenCalled();
   });
 });
 
 describe("Final Review Page", () => {
   describe("when all data is present", () => {
     it("renders Review page with final review page content and only edit links for Part 2/3 sections", () => {
-      const claimAttrs = fullClaimAttrs();
-      claimAttrs.status = ClaimStatus.submitted;
-
       const { wrapper } = renderWithAppLogic(Review, {
-        claimAttrs,
-      });
-
-      expect(wrapper).toMatchSnapshot();
-    });
-  });
-
-  describe("when conditional data is empty", () => {
-    it("does not render strings like 'null' or 'undefined'", () => {
-      const { wrapper } = renderWithAppLogic(Review, {
-        claimAttrs: {
-          leave_details: {
-            reason: LeaveReason.medical,
-          },
-          status: ClaimStatus.submitted,
-          tax_identifier: "***-**-****",
-        },
+        claimAttrs: new MockClaimBuilder().complete().create(),
       });
 
       expect(wrapper).toMatchSnapshot();
@@ -169,34 +65,21 @@ describe("Final Review Page", () => {
   });
 
   it("completes the application when the user clicks Submit", () => {
-    const claimAttrs = fullClaimAttrs();
-    claimAttrs.application_id = "testClaim";
-    claimAttrs.status = ClaimStatus.submitted;
-
-    const { appLogic, wrapper } = renderWithAppLogic(Review, {
-      claimAttrs,
+    const { appLogic, claim, wrapper } = renderWithAppLogic(Review, {
+      claimAttrs: new MockClaimBuilder().complete().create(),
     });
     wrapper.find("Button").simulate("click");
 
     expect(appLogic.claims.submit).not.toHaveBeenCalled();
-    expect(appLogic.claims.complete).toHaveBeenCalledWith(
-      claimAttrs.application_id
-    );
+    expect(appLogic.claims.complete).toHaveBeenCalledWith(claim.application_id);
   });
 });
 
 describe("Employer info", () => {
   describe("when claimant is not Employed", () => {
     it("does not render 'Notified employer' row or FEIN row", () => {
-      const claimAttrs = fullClaimAttrs();
-      claimAttrs.status = ClaimStatus.submitted;
-
       const { wrapper } = renderWithAppLogic(Review, {
-        claimAttrs: {
-          ...claimAttrs,
-          employment_status: EmploymentStatus.unemployed,
-        },
-        render: "mount",
+        claimAttrs: new MockClaimBuilder().complete().create(),
       });
 
       expect(wrapper.text()).not.toContain("Notified employer");
@@ -207,24 +90,19 @@ describe("Employer info", () => {
 
 describe("Duration type", () => {
   it("lists only existing duration type", () => {
-    const intermittentClaim = {
-      leave_details: {
-        intermittent_leave_periods: [new IntermittentLeavePeriod()],
-      },
-      tax_identifier: "***-**-****",
-    };
+    const intermittentClaim = new MockClaimBuilder()
+      .part1Complete()
+      .intermittent()
+      .create();
 
-    const continuousAndReducedClaim = {
-      tax_identifier: "***-**-****",
-      temp: {
-        leave_details: {
-          continuous_leave_periods: [new ContinuousLeavePeriod()],
-          reduced_schedule_leave_periods: [new ReducedScheduleLeavePeriod()],
-        },
-        // TODO (CP-744): remove once BaseModel merges properties
-        payment_preferences: [{}],
-      },
-    };
+    intermittentClaim.temp.leave_details.continuous_leave_periods = [];
+    intermittentClaim.leave_details.continuous_leave_periods = [];
+
+    const continuousAndReducedClaim = new MockClaimBuilder()
+      .part1Complete()
+      .continuous()
+      .reducedSchedule()
+      .create();
 
     const { wrapper: intermittentWrapper } = renderWithAppLogic(Review, {
       claimAttrs: intermittentClaim,
@@ -251,6 +129,39 @@ describe("Duration type", () => {
         Continuous leave, Reduced leave schedule
       </ReviewRow>
     `);
+  });
+});
+
+describe("Leave details", () => {
+  const pregnancyOrRecentBirthLabel =
+    "Are you pregnant or have you recently given birth?";
+  const familyLeaveTypeLabel = "Family leave type";
+
+  describe("When the reason is medical leave", () => {
+    it("renders pregnancyOrRecentBirthLabel row", () => {
+      const claim = new MockClaimBuilder().completed().create();
+      const { wrapper } = renderWithAppLogic(Review, {
+        claimAttrs: claim,
+        render: "mount",
+      });
+      expect(wrapper.text()).toContain(pregnancyOrRecentBirthLabel);
+      expect(wrapper.text()).not.toContain(familyLeaveTypeLabel);
+    });
+  });
+
+  describe("When the reason is bonding leave", () => {
+    it("renders family leave type row", () => {
+      const claim = new MockClaimBuilder()
+        .completed()
+        .bondingBirthLeaveReason()
+        .create();
+      const { wrapper } = renderWithAppLogic(Review, {
+        claimAttrs: claim,
+        render: "mount",
+      });
+      expect(wrapper.text()).not.toContain(pregnancyOrRecentBirthLabel);
+      expect(wrapper.text()).toContain(familyLeaveTypeLabel);
+    });
   });
 });
 
@@ -441,39 +352,6 @@ describe("OtherLeaveEntry", () => {
       );
 
       expect(wrapper).toMatchSnapshot();
-    });
-  });
-});
-
-describe("Leave details", () => {
-  const pregnancyOrRecentBirthLabel =
-    "Are you pregnant or have you recently given birth?";
-  const familyLeaveTypeLabel = "Family leave type";
-
-  describe("When the reason is medical leave", () => {
-    it("renders pregnancyOrRecentBirthLabel row", () => {
-      const claim = new MockClaimBuilder().completed().create();
-      const { wrapper } = renderWithAppLogic(Review, {
-        claimAttrs: claim,
-        render: "mount",
-      });
-      expect(wrapper.text()).toContain(pregnancyOrRecentBirthLabel);
-      expect(wrapper.text()).not.toContain(familyLeaveTypeLabel);
-    });
-  });
-
-  describe("When the reason is bonding leave", () => {
-    it("renders family leave type row", () => {
-      const claim = new MockClaimBuilder()
-        .completed()
-        .bondingBirthLeaveReason()
-        .create();
-      const { wrapper } = renderWithAppLogic(Review, {
-        claimAttrs: claim,
-        render: "mount",
-      });
-      expect(wrapper.text()).not.toContain(pregnancyOrRecentBirthLabel);
-      expect(wrapper.text()).toContain(familyLeaveTypeLabel);
     });
   });
 });

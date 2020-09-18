@@ -3,7 +3,10 @@ import generateClaimPageStory from "storybook/utils/generateClaimPageStory";
 
 const mockClaims = {
   medical: new MockClaimBuilder().continuous().medicalLeaveReason().create(),
-  bonding: new MockClaimBuilder().continuous().bondingLeaveReason().create(),
+  bonding: new MockClaimBuilder()
+    .continuous()
+    .bondingBirthLeaveReason()
+    .create(),
 };
 
 const { config, DefaultStory } = generateClaimPageStory(

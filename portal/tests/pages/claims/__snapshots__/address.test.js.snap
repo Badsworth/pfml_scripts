@@ -3,7 +3,7 @@
 exports[`Address renders the page 1`] = `
 <QuestionPage
   onSave={[Function]}
-  title="Verify your identity"
+  title="Your identity"
 >
   <FieldsetAddress
     appErrors={

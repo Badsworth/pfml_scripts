@@ -75,14 +75,24 @@ export class MockClaimBuilder {
   }
 
   /**
-   * Sets payment method to debit card
+   * Sets payment method to direct deposit
    * @returns {MockClaimBuilder}
    */
-  debit() {
+  directDeposit() {
     set(
       this.claimAttrs,
       "temp.payment_preferences[0].payment_method",
-      PaymentPreferenceMethod.debit
+      PaymentPreferenceMethod.ach
+    );
+    set(
+      this.claimAttrs,
+      "temp.payment_preferences[0].account_details.account_number",
+      "091000022"
+    );
+    set(
+      this.claimAttrs,
+      "temp.payment_preferences[0].account_details.routing_number",
+      "1234567890"
     );
     return this;
   }
@@ -138,39 +148,36 @@ export class MockClaimBuilder {
     return this;
   }
 
-  bondingBirthLeaveReason(attrs = { birthdate: "2012-02-12" }) {
-    const { birth_date } = attrs;
+  bondingBirthLeaveReason() {
     set(this.claimAttrs, "leave_details.reason", LeaveReason.bonding);
     set(
       this.claimAttrs,
       "leave_details.reason_qualifier",
       ReasonQualifier.newBorn
     );
-    set(this.claimAttrs, "leave_details.child_birth_date", birth_date);
+    set(this.claimAttrs, "leave_details.child_birth_date", "2012-02-12");
     return this;
   }
 
-  bondingAdoptionLeaveReason(attrs = { birthdate: "2012-02-14" }) {
-    const { placement_date } = attrs;
+  bondingAdoptionLeaveReason() {
     set(this.claimAttrs, "leave_details.reason", LeaveReason.bonding);
     set(
       this.claimAttrs,
       "leave_details.reason_qualifier",
       ReasonQualifier.adoption
     );
-    set(this.claimAttrs, "leave_details.child_placement_date", placement_date);
+    set(this.claimAttrs, "leave_details.child_placement_date", "2012-02-14");
     return this;
   }
 
-  bondingFosterCareLeaveReason(attrs = { birthdate: "2012-02-14" }) {
-    const { placement_date } = attrs;
+  bondingFosterCareLeaveReason() {
     set(this.claimAttrs, "leave_details.reason", LeaveReason.bonding);
     set(
       this.claimAttrs,
       "leave_details.reason_qualifier",
       ReasonQualifier.fosterCare
     );
-    set(this.claimAttrs, "leave_details.child_placement_date", placement_date);
+    set(this.claimAttrs, "leave_details.child_placement_date", "2012-02-14");
     return this;
   }
 
@@ -239,7 +246,7 @@ export class MockClaimBuilder {
     set(
       this.claimAttrs,
       "temp.payment_preferences[0].payment_method",
-      PaymentPreferenceMethod.ach
+      PaymentPreferenceMethod.debit
     );
     return this;
   }
@@ -256,10 +263,10 @@ export class MockClaimBuilder {
   }
 
   /**
-   * Part 1 steps are complete and submitted to API
+   * Part 1 steps are complete but not yet submitted to API
    * @returns {MockClaimBuilder}
    */
-  submitted() {
+  part1Complete() {
     this.verifiedId();
     this.medicalLeaveReason();
     this.continuous();
@@ -267,6 +274,16 @@ export class MockClaimBuilder {
     this.noOtherLeave();
     this.address();
     this.leaveDuration();
+
+    return this;
+  }
+
+  /**
+   * Part 1 steps are complete and submitted to API
+   * @returns {MockClaimBuilder}
+   */
+  submitted() {
+    this.part1Complete();
     set(this.claimAttrs, "fineos_absence_id", "NTN-111-ABS-01");
     set(this.claimAttrs, "status", ClaimStatus.submitted);
 

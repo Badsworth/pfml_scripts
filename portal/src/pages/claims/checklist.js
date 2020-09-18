@@ -7,6 +7,7 @@ import StepModel, { ClaimSteps } from "../../models/Step";
 import { filter, findIndex, get } from "lodash";
 import BackButton from "../../components/BackButton";
 import ButtonLink from "../../components/ButtonLink";
+import HeadingPrefix from "../../components/HeadingPrefix";
 import PropTypes from "prop-types";
 import React from "react";
 import Step from "../../components/Step";
@@ -196,16 +197,16 @@ export const Checklist = (props) => {
           key={stepGroup.number}
           description={stepListDescription(stepGroup)}
           title={
-            <Trans
-              i18nKey="pages.claimsChecklist.stepListTitle"
-              components={{
-                "part-number": (
-                  <span className="display-block font-heading-2xs margin-bottom-1 text-base-dark" />
-                ),
-              }}
-              tOptions={{ context: String(stepGroup.number) }}
-              values={{ number: stepGroup.number }}
-            />
+            <React.Fragment>
+              <HeadingPrefix>
+                {t("pages.claimsChecklist.stepListTitlePrefix", {
+                  number: stepGroup.number,
+                })}
+              </HeadingPrefix>
+              {t("pages.claimsChecklist.stepListTitle", {
+                context: String(stepGroup.number),
+              })}
+            </React.Fragment>
           }
           {...sharedStepListProps}
         >
