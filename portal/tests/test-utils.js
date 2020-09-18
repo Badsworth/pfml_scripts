@@ -162,6 +162,18 @@ export class MockClaimBuilder {
     return this;
   }
 
+  bondingFosterCareLeaveReason(attrs = { birthdate: "2012-02-14" }) {
+    const { placement_date } = attrs;
+    set(this.claimAttrs, "leave_details.reason", LeaveReason.bonding);
+    set(
+      this.claimAttrs,
+      "leave_details.reason_qualifier",
+      ReasonQualifier.fosterCare
+    );
+    set(this.claimAttrs, "leave_details.child_placement_date", placement_date);
+    return this;
+  }
+
   /**
    * @returns {MockClaimBuilder}
    */

@@ -10,6 +10,7 @@ import {
 import EmployerBenefit, {
   EmployerBenefitType,
 } from "../../../src/models/EmployerBenefit";
+import { MockClaimBuilder, renderWithAppLogic } from "../../test-utils";
 import OtherIncome, { OtherIncomeType } from "../../../src/models/OtherIncome";
 import Review, {
   EmployerBenefitList,
@@ -19,7 +20,7 @@ import Review, {
 } from "../../../src/pages/claims/review";
 import PreviousLeave from "../../../src/models/PreviousLeave";
 import React from "react";
-import { renderWithAppLogic } from "../../test-utils";
+
 import { shallow } from "enzyme";
 
 jest.mock("../../../src/hooks/useAppLogic");
@@ -191,7 +192,11 @@ describe("Employer info", () => {
       claimAttrs.status = ClaimStatus.submitted;
 
       const { wrapper } = renderWithAppLogic(Review, {
-        claimAttrs,
+        claimAttrs: {
+          ...claimAttrs,
+          employment_status: EmploymentStatus.unemployed,
+        },
+        render: "mount",
       });
 
       expect(wrapper.text()).not.toContain("Notified employer");
@@ -436,6 +441,39 @@ describe("OtherLeaveEntry", () => {
       );
 
       expect(wrapper).toMatchSnapshot();
+    });
+  });
+});
+
+describe("Leave details", () => {
+  const pregnancyOrRecentBirthLabel =
+    "Are you pregnant or have you recently given birth?";
+  const familyLeaveTypeLabel = "Family leave type";
+
+  describe("When the reason is medical leave", () => {
+    it("renders pregnancyOrRecentBirthLabel row", () => {
+      const claim = new MockClaimBuilder().completed().create();
+      const { wrapper } = renderWithAppLogic(Review, {
+        claimAttrs: claim,
+        render: "mount",
+      });
+      expect(wrapper.text()).toContain(pregnancyOrRecentBirthLabel);
+      expect(wrapper.text()).not.toContain(familyLeaveTypeLabel);
+    });
+  });
+
+  describe("When the reason is bonding leave", () => {
+    it("renders family leave type row", () => {
+      const claim = new MockClaimBuilder()
+        .completed()
+        .bondingBirthLeaveReason()
+        .create();
+      const { wrapper } = renderWithAppLogic(Review, {
+        claimAttrs: claim,
+        render: "mount",
+      });
+      expect(wrapper.text()).not.toContain(pregnancyOrRecentBirthLabel);
+      expect(wrapper.text()).toContain(familyLeaveTypeLabel);
     });
   });
 });

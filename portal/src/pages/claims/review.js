@@ -177,43 +177,48 @@ export const Review = (props) => {
       </ReviewRow>
 
       {reason === LeaveReason.medical && (
-        <React.Fragment>
-          <ReviewRow
-            level={reviewRowLevel}
-            label={t("pages.claimsReview.pregnancyOrRecentBirthLabel")}
-          >
-            {get(claim, "leave_details.pregnant_or_recent_birth") === true
-              ? t("pages.claimsReview.pregnancyChoiceYes")
-              : t("pages.claimsReview.pregnancyChoiceNo")}
-          </ReviewRow>
-        </React.Fragment>
+        <ReviewRow
+          level={reviewRowLevel}
+          label={t("pages.claimsReview.pregnancyOrRecentBirthLabel")}
+        >
+          {get(claim, "leave_details.pregnant_or_recent_birth") === true
+            ? t("pages.claimsReview.pregnancyChoiceYes")
+            : t("pages.claimsReview.pregnancyChoiceNo")}
+        </ReviewRow>
+      )}
+
+      {reason === LeaveReason.bonding && (
+        <ReviewRow
+          level={reviewRowLevel}
+          label={t("pages.claimsReview.familyLeaveTypeLabel")}
+        >
+          {t("pages.claimsReview.familyLeaveTypeValue", {
+            context: findKeyByValue(ReasonQualifier, reasonQualifier),
+          })}
+        </ReviewRow>
       )}
 
       {reason === LeaveReason.bonding &&
         reasonQualifier === ReasonQualifier.newBorn && (
-          <React.Fragment>
-            {/* TODO (POL-99): determine if date of placement is PII, if so need to adhere to CP-891 */}
-            <ReviewRow
-              level={reviewRowLevel}
-              label={t("pages.claimsReview.childBirthDateLabel")}
-            >
-              **/**/****
-            </ReviewRow>
-          </React.Fragment>
+          /* TODO (POL-99): determine if date of placement is PII, if so need to adhere to CP-891 */
+          <ReviewRow
+            level={reviewRowLevel}
+            label={t("pages.claimsReview.childBirthDateLabel")}
+          >
+            **/**/****
+          </ReviewRow>
         )}
 
       {reason === LeaveReason.bonding &&
         (reasonQualifier === ReasonQualifier.adoption ||
           reasonQualifier === ReasonQualifier.fosterCare) && (
-          <React.Fragment>
-            {/* TODO (POL-99): determine if date of placement is PII if so need to adhere to CP-891 */}
-            <ReviewRow
-              level={reviewRowLevel}
-              label={t("pages.claimsReview.childPlacementDateLabel")}
-            >
-              **/**/****
-            </ReviewRow>
-          </React.Fragment>
+          /* TODO (POL-99): determine if date of placement is PII if so need to adhere to CP-891 */
+          <ReviewRow
+            level={reviewRowLevel}
+            label={t("pages.claimsReview.childPlacementDateLabel")}
+          >
+            **/**/****
+          </ReviewRow>
         )}
 
       <ReviewRow
