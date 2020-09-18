@@ -84,6 +84,35 @@ resource "aws_cognito_user_pool_client" "massgov_pfml_client" {
   write_attributes = ["email", "updated_at"]
 }
 
+// Cognito sets defaults when it's created - most you can ignore but
+// access tokens expire in 60 mins.
+resource "aws_cognito_user_pool_client" "fineos_pfml_client" {
+  name         = "fineos-${local.app_name}-${var.environment_name}"
+  user_pool_id = aws_cognito_user_pool.claimants_pool.id
+
+  allowed_oauth_flows                  = ["client_credentials"]
+  generate_secret                      = true
+  allowed_oauth_scopes                 = ["machine/admin"]
+  allowed_oauth_flows_user_pool_client = true
+}
+
+// We don't use the scope yet to validate permissions. We just validate the authenticity
+// of the token generated.
+// Future machine-level clients can reference this same scope.
+// Note: You will have to run `terraform apply` twice to generate the resource first before
+// the client can reference it
+resource "aws_cognito_resource_server" "resource" {
+  identifier = "machine"
+  name       = "machine"
+
+  user_pool_id = aws_cognito_user_pool.claimants_pool.id
+
+  scope {
+    scope_name        = "admin"
+    scope_description = "Machine user admin permissions"
+  }
+}
+
 resource "aws_cognito_user_pool_domain" "massgov_pfml_domain" {
   domain       = "massgov-${local.app_name}-${var.environment_name}"
   user_pool_id = aws_cognito_user_pool.claimants_pool.id
