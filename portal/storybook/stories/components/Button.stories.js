@@ -30,6 +30,16 @@ export const Disabled = () => {
   );
 };
 
+export const Loading = () => {
+  const handleClick = () => alert("Clicked!");
+
+  return (
+    <Button onClick={handleClick} loading>
+      Loading
+    </Button>
+  );
+};
+
 export const Variations = () => {
   const handleClick = () => alert("Clicked!");
 
