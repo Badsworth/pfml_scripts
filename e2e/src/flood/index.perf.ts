@@ -12,8 +12,8 @@ import * as Portal from "./tests/api.perf";
 
 export const settings: TestSettings = {
   loopCount: 2,
-  actionDelay: 0,
-  stepDelay: 0,
+  actionDelay: 0.01,
+  stepDelay: 0.01,
   waitUntil: "visible",
   name: "PFML Load Test Bot",
   userAgent: "PFML Load Test Bot",

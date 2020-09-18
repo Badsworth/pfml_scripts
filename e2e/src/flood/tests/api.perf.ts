@@ -9,8 +9,8 @@ import {
 import { labelled, waitForElement } from "../helpers";
 
 export const settings: TestSettings = {
-  actionDelay: 0,
-  stepDelay: 0,
+  actionDelay: 0.01,
+  stepDelay: 0.01,
   loopCount: 1,
   waitUntil: "visible",
   userAgent: "PFML Load Test Bot",

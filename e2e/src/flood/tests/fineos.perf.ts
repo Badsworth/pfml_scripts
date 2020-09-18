@@ -5,8 +5,8 @@ import { labelled, waitForElement } from "../helpers";
 import assert from "assert";
 
 export const settings: TestSettings = {
-  actionDelay: 0,
-  stepDelay: 0,
+  actionDelay: 0.01,
+  stepDelay: 0.01,
   waitUntil: "visible",
   userAgent: "PFML Load Test Bot",
   description: "PFML Load Test Bot",
@@ -100,7 +100,7 @@ export const steps: StoredStep[] = [
       await notifDateInput.clear();
       await notifDateInput.type(formatDate(claim.leave_details.employer_notification_date));
       */
-      /* 
+      /*
       const notifiedBySelect = await labelled(browser, "Notified By");
       await browser.selectByText(notifiedBySelect, "Employee");
       */
