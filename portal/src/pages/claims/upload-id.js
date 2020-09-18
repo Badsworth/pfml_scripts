@@ -12,10 +12,14 @@ export const UploadId = (props) => {
   const { t } = useTranslation();
   const [stateIdFiles, setStateIdFiles] = useState([]);
   const contentContext = props.claim.has_state_id ? "mass" : "other";
+  const { appLogic, claim } = props;
 
-  // TODO (CP-396): connect this page to the API file upload endpoint.
-  const handleSave = () => {
-    props.appLogic.goToNextPage({}, props.query);
+  const handleSave = async () => {
+    await appLogic.claims.attachDocuments(
+      claim.application_id,
+      stateIdFiles,
+      "Identification" // TODO (CP-962): replace this with an enum value
+    );
   };
 
   return (
@@ -44,6 +48,7 @@ UploadId.propTypes = {
     claim_id: PropTypes.string,
   }),
   appLogic: PropTypes.shape({
+    claims: PropTypes.object.isRequired,
     goToNextPage: PropTypes.func.isRequired,
     setAppErrors: PropTypes.func.isRequired,
   }).isRequired,

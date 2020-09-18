@@ -42,7 +42,7 @@ export const UploadCertification = (props) => {
     await appLogic.claims.attachDocuments(
       claim.application_id,
       files,
-      "Certification" // TODO (CP-962): Replace with claim.leave_reason.reason
+      "Certification" // TODO (CP-962): replace this with an enum value
     );
   };
 
