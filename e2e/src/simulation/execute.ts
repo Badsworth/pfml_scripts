@@ -29,7 +29,7 @@ export default function createExecutor(
 
       return {
         document_category: getDocumentCategory(doc),
-        document_type: getDocumentType(doc, claim),
+        document_type: getDocumentType(doc),
         description: "Automated Upload",
         file: contents,
         name: `${doc.type}.pdf`,
@@ -64,8 +64,7 @@ export default function createExecutor(
 }
 
 function getDocumentType(
-  document: ClaimDocument,
-  claim: SimulationClaim
+  document: ClaimDocument
 ): DocumentUploadRequest["document_type"] {
   // @todo Remove hardcoded value once API issue is resolved.
   // Currently, anything other than "Passport" throws an error when sent to Fineos.

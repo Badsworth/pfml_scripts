@@ -312,7 +312,7 @@ export type Date = string;
 export interface Address {
     city: string;
     line_1: string;
-    line_2?: string;
+    line_2?: string | null;
     state: string;
     zip: string;
 }
@@ -459,6 +459,12 @@ export interface POSTApplicationsByApplicationIdSubmitApplicationResponse extend
 export interface POSTApplicationsByApplicationIdSubmitApplicationResponse503 extends ErrorResponse {
     data?: ApplicationResponse;
 }
+export interface POSTApplicationsByApplicationIdCompleteApplicationResponse extends SuccessfulResponse {
+    data?: ApplicationResponse;
+}
+export interface POSTApplicationsByApplicationIdCompleteApplicationResponse503 extends ErrorResponse {
+    data?: ApplicationResponse;
+}
 export interface FineosDocumentResponse {
     caseId?: string;
     rootCaseId?: string;
@@ -510,8 +516,8 @@ export interface EligibilityRequest {
     employment_status: "Employed" | "Unemployed" | "Self-Employed";
 }
 export interface EligibilityResponse {
-    financially_eligible?: boolean;
-    description?: string;
+    financially_eligible: boolean;
+    description: string;
     total_wages?: number;
     state_average_weekly_wage?: number;
     unemployment_minimum?: number;
@@ -666,6 +672,18 @@ export async function postApplicationsByApplicationIdSubmitApplication({ applica
     applicationId: string;
 }, options?: RequestOptions): Promise<ApiResponse<POSTApplicationsByApplicationIdSubmitApplicationResponse>> {
     return await http.fetchJson(`/applications/${applicationId}/submit_application`, {
+        ...options,
+        method: "POST"
+    });
+}
+/**
+ * Complete intake of an application in the Claims Processing System.
+ *
+ */
+export async function postApplicationsByApplicationIdCompleteApplication({ applicationId }: {
+    applicationId: string;
+}, options?: RequestOptions): Promise<ApiResponse<POSTApplicationsByApplicationIdCompleteApplicationResponse>> {
+    return await http.fetchJson(`/applications/${applicationId}/complete_application`, {
         ...options,
         method: "POST"
     });

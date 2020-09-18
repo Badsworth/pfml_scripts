@@ -15,6 +15,7 @@ import {
   RequestOptions,
   postApplicationsByApplicationIdDocuments,
   DocumentUploadRequest,
+  postApplicationsByApplicationIdCompleteApplication,
 } from "../api";
 
 if (!global.FormData) {
@@ -83,6 +84,7 @@ export default class PortalSubmitter {
     const application_id = await this.createApplication();
     await this.updateApplication(application_id, application);
     await this.submitApplication(application_id);
+    await this.completeApplication(application_id);
     for (const doc of documents) {
       await this.uploadDocument(application_id, doc);
     }
@@ -126,6 +128,13 @@ export default class PortalSubmitter {
 
   private async submitApplication(applicationId: string): Promise<void> {
     await postApplicationsByApplicationIdSubmitApplication(
+      { applicationId },
+      await this.getOptions()
+    );
+  }
+
+  private async completeApplication(applicationId: string): Promise<void> {
+    await postApplicationsByApplicationIdCompleteApplication(
       { applicationId },
       await this.getOptions()
     );
