@@ -77,7 +77,7 @@ exports[`ConsentToDataSharing renders the page 1`] = `
     loading={false}
     type="submit"
   >
-    Agree and Continue
+    Agree and continue
   </Button>
 </form>
 `;

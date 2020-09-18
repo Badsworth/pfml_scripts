@@ -20,7 +20,7 @@ exports[`QuestionPage renders the form 1`] = `
       loading={false}
       type="submit"
     >
-      Continue
+      Save and continue
     </Button>
   </form>
 </Fragment>

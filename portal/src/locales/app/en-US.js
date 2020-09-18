@@ -842,7 +842,7 @@ const pages = {
       "Determine your benefit amount",
       "Give you the best service possible",
     ],
-    continueButton: "Agree and Continue",
+    continueButton: "Agree and continue",
     dataUsageBody:
       "We’ll keep your information private as required by law. As a part of the application process, we may check the information you give with other state agencies. We may share information related to your claim with your employer, health care provider(s), and contracted private partners.",
     dataUsageHeading: "How we use your data",
@@ -972,7 +972,7 @@ const components = {
     title: "Paid Family and Medical Leave (PFML)",
   },
   form: {
-    continueButton: "Continue",
+    continueButton: "Save and continue",
     dateInputDayLabel: "Day",
     dateInputExample: "For example: 04 / 28 / 1986",
     dateInputMonthLabel: "Month",
