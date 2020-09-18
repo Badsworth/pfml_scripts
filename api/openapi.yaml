@@ -716,19 +716,23 @@ components:
       properties:
         city:
           type: string
+          nullable: true
           example: "Springfield"
         line_1:
           type: string
+          nullable: true
           example: "742 Evergreen Terrace"
         line_2:
           type: string
-          example: ""
           nullable: true
+          example: ""
         state:
           type: string
+          nullable: true
           example: "MA"
         zip:
           type: string
+          nullable: true
           pattern: "^[0-9]{5}(?:-[0-9]{4})?$"
           example: "12345"
       required: ["city", "line_1", "state", "zip"]
