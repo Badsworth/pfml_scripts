@@ -261,7 +261,7 @@ const pages = {
     stepListDescription_1:
       "Your progress is automatically saved as you complete the application. You can edit any information you enter in Part 1 until step 5 is completed.",
     stepListDescription_1_submitted:
-      "If you need to edit your information in Part 1, you’ll need to call the Contact Center at $t(shared.callCenterPhoneNumber).",
+      "If you need to edit your information in Part 1, you’ll need to call the Contact Center at $t(shared.callCenterPhoneNumber). Your application ID is <strong>{{absence_id}}</strong>.",
     stepListDescription_2:
       "Entering payment information here leads to faster processing, but you can also call $t(shared.callCenterPhoneNumber).",
     // TODO (CP-907): Add correct fax # and address

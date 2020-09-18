@@ -16,6 +16,7 @@ class Claim extends BaseModel {
       employer_benefits: [],
       employer_fein: null,
       employment_status: null,
+      fineos_absence_id: null,
       first_name: null,
       // TODO (CP-567): this field doesn't exist in the API yet
       has_employer_benefits: null,

@@ -2,21 +2,24 @@
 
 exports[`ApplicationCard renders a card for the given application 1`] = `
 <article
-  className="maxw-mobile-lg border border-base-lighter margin-bottom-3 padding-3"
+  className="maxw-mobile-lg border border-base-lighter margin-bottom-3"
 >
-  <Heading
-    className="text-normal margin-bottom-05 margin-top-0"
-    level="2"
-    weight="normal"
-  >
-    Application 2
-  </Heading>
   <div
-    className="border-top border-base-lighter padding-top-2 margin-top-2"
+    className="bg-base-lightest padding-3"
+  >
+    <Heading
+      className="margin-bottom-05 margin-top-0"
+      level="2"
+    >
+      Application 2
+    </Heading>
+  </div>
+  <div
+    className="padding-3"
   >
     <ButtonLink
       className="display-block margin-top-0"
-      href="/claims/checklist?claim_id=mock-claim-id"
+      href="/claims/checklist?claim_id=mock_application_id"
     >
       Complete your application
     </ButtonLink>

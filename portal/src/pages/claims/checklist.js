@@ -174,7 +174,13 @@ export const Checklist = (props) => {
       context += "_submitted";
     }
 
-    return t("pages.claimsChecklist.stepListDescription", { context });
+    return (
+      <Trans
+        i18nKey="pages.claimsChecklist.stepListDescription"
+        tOptions={{ context }}
+        values={{ absence_id: claim.fineos_absence_id }}
+      />
+    );
   }
 
   return (

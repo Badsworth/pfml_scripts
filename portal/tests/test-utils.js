@@ -167,7 +167,7 @@ export class MockClaimBuilder {
    */
   employed() {
     set(this.claimAttrs, "employment_status", EmploymentStatus.employed);
-    set(this.claimAttrs, "employer_fein", "*********");
+    set(this.claimAttrs, "employer_fein", "12-3456789");
     set(this.claimAttrs, "leave_details.employer_notified", true);
     set(
       this.claimAttrs,
@@ -255,6 +255,7 @@ export class MockClaimBuilder {
     this.noOtherLeave();
     this.address();
     this.leaveDuration();
+    set(this.claimAttrs, "fineos_absence_id", "NTN-111-ABS-01");
     set(this.claimAttrs, "status", ClaimStatus.submitted);
 
     return this;
@@ -285,8 +286,8 @@ export class MockClaimBuilder {
    * @returns {MockClaimBuilder}
    */
   leaveDuration() {
-    set(this.claimAttrs, "temp.start_date", "2021-01-01");
-    set(this.claimAttrs, "temp.end_date", "2021-06-01");
+    set(this.claimAttrs, "temp.leave_details.start_date", "2021-01-01");
+    set(this.claimAttrs, "temp.leave_details.end_date", "2021-06-01");
     return this;
   }
 

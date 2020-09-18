@@ -22,24 +22,23 @@ function ApplicationCard(props) {
   );
 
   return (
-    <article className="maxw-mobile-lg border border-base-lighter margin-bottom-3 padding-3">
-      <Heading
-        className="text-normal margin-bottom-05 margin-top-0"
-        level="2"
-        weight="normal"
-      >
-        {t("components.applicationCard.heading", { number })}
-      </Heading>
-
-      {leaveReason && (
-        <Heading className="margin-bottom-05 margin-top-0" size="2" level="3">
-          {t("components.applicationCard.leaveReasonValue", {
-            context: findKeyByValue(LeaveReason, leaveReason),
-          })}
+    <article className="maxw-mobile-lg border border-base-lighter margin-bottom-3">
+      <div className="bg-base-lightest padding-3">
+        <Heading className="margin-bottom-05 margin-top-0" level="2">
+          {claim.fineos_absence_id ||
+            t("components.applicationCard.heading", { number })}
         </Heading>
-      )}
 
-      <div className="border-top border-base-lighter padding-top-2 margin-top-2">
+        {leaveReason && (
+          <Heading className="margin-top-0" size="2" level="3" weight="normal">
+            {t("components.applicationCard.leaveReasonValue", {
+              context: findKeyByValue(LeaveReason, leaveReason),
+            })}
+          </Heading>
+        )}
+      </div>
+
+      <div className="padding-3">
         {leaveDurationRange && (
           <React.Fragment>
             <Heading

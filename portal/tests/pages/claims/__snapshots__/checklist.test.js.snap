@@ -199,7 +199,21 @@ exports[`Checklist renders multiple StepList components with list of Steps 1`] =
     Checklist: Create a new application
   </Title>
   <StepList
-    description="Your progress is automatically saved as you complete the application. You can edit any information you enter in Part 1 until step 5 is completed."
+    description={
+      <Trans
+        i18nKey="pages.claimsChecklist.stepListDescription"
+        tOptions={
+          Object {
+            "context": "1",
+          }
+        }
+        values={
+          Object {
+            "absence_id": null,
+          }
+        }
+      />
+    }
     editText="Edit"
     key="1"
     resumeText="Resume"
@@ -545,4 +559,14 @@ exports[`Checklist when Part 1 is submitted renders descriptions for Part 2 and 
 
 exports[`Checklist when Part 1 is submitted renders descriptions for Part 2 and 3 2`] = `"Uploading documents online leads to faster processing, but you can also fax documents to NNN-NNN-NNNN, or mail them to 123 Address."`;
 
-exports[`Checklist when Part 1 is submitted renders different description for Part 1 1`] = `"If you need to edit your information in Part 1, you’ll need to call the Contact Center at XXX‑XXX‑XXXX."`;
+exports[`Checklist when Part 1 is submitted renders different description for Part 1 1`] = `
+Array [
+  "If you need to edit your information in Part 1, you’ll need to call the Contact Center at XXX‑XXX‑XXXX. Your application ID is ",
+  <strong
+    key="strong-1"
+  >
+    NTN-111-ABS-01
+  </strong>,
+  ".",
+]
+`;

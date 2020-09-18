@@ -21,7 +21,9 @@ const LeaveDetails = (props) => {
     claim: {
       application_id,
       leave_details: { employer_notification_date, reason },
-      temp: { end_date, start_date },
+      temp: {
+        leave_details: { end_date, start_date },
+      },
     },
   } = props;
 

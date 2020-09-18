@@ -1,62 +1,35 @@
-import Claim, { ClaimStatus, LeaveReason } from "src/models/Claim";
 import ApplicationCard from "src/components/ApplicationCard";
+import Claim from "src/models/Claim";
+import { MockClaimBuilder } from "tests/test-utils";
 import React from "react";
 
 export default {
   title: "Components/ApplicationCard",
   component: ApplicationCard,
   args: {
+    number: 1,
+  },
+  argTypes: {
     claim: {
-      application_id: "mock-claim-id",
-      employer_fein: "00-0000000",
-      leave_details: {
-        continuous_leave_periods: [
-          {
-            end_date: "2021-12-30",
-            start_date: "2021-09-21",
-          },
-        ],
-        employer_notified: true,
-        reason: LeaveReason.medical,
-        status: ClaimStatus.started,
+      defaultValue: "Submitted",
+      control: {
+        type: "radio",
+        options: ["Started (Empty)", "Submitted", "Completed"],
       },
     },
-    number: 1,
   },
 };
 
-export const InProgressClaim = ({ claim, ...args }) => {
-  return <ApplicationCard claim={new Claim(claim)} {...args} />;
-};
+export const Story = ({ claim, ...args }) => {
+  let claimAttrs;
 
-export const EmptyClaim = () => (
-  <ApplicationCard
-    claim={
-      new Claim({
-        application_id: "mock-claim-id",
-        status: ClaimStatus.started,
-      })
-    }
-    number={1}
-  />
-);
+  if (claim === "Started (Empty)") {
+    claimAttrs = new MockClaimBuilder().create();
+  } else if (claim === "Submitted") {
+    claimAttrs = new MockClaimBuilder().submitted().create();
+  } else if (claim === "Completed") {
+    claimAttrs = new MockClaimBuilder().completed().create();
+  }
 
-export const CompletedClaim = () => {
-  const claim = new Claim({
-    application_id: "mock-claim-id",
-    employer_fein: "00-0000000",
-    leave_details: {
-      continuous_leave_periods: [
-        {
-          end_date: "2021-12-30",
-          start_date: "2021-09-21",
-        },
-      ],
-      employer_notified: true,
-      reason: LeaveReason.medical,
-      status: ClaimStatus.completed,
-    },
-  });
-
-  return <ApplicationCard claim={claim} number={1} />;
+  return <ApplicationCard claim={new Claim(claimAttrs)} {...args} />;
 };

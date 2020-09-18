@@ -1,6 +1,13 @@
 import { MockClaimBuilder, renderWithAppLogic } from "../../test-utils";
 import Checklist from "../../../src/pages/claims/checklist";
 
+function renderStepListDescription(stepListWrapper) {
+  return stepListWrapper
+    .dive()
+    .find(`Trans[i18nKey="pages.claimsChecklist.stepListDescription"]`)
+    .dive();
+}
+
 describe("Checklist", () => {
   it("renders multiple StepList components with list of Steps", () => {
     const { wrapper } = renderWithAppLogic(Checklist);
@@ -28,7 +35,7 @@ describe("Checklist", () => {
     const { wrapper } = renderWithAppLogic(Checklist);
     const part1List = wrapper.find("StepList").at(0);
 
-    expect(part1List.prop("description")).toMatchSnapshot();
+    expect(renderStepListDescription(part1List)).toMatchSnapshot();
   });
 
   describe("when Part 1 is submitted", () => {
@@ -42,17 +49,17 @@ describe("Checklist", () => {
     });
 
     it("renders different description for Part 1", () => {
-      const part1List = wrapper.find("StepList").first();
+      const part1List = wrapper.find("StepList").at(0);
 
-      expect(part1List.prop("description")).toMatchSnapshot();
+      expect(renderStepListDescription(part1List)).toMatchSnapshot();
     });
 
     it("renders descriptions for Part 2 and 3", () => {
       const part2List = wrapper.find("StepList").at(1);
       const part3List = wrapper.find("StepList").at(2);
 
-      expect(part2List.prop("description")).toMatchSnapshot();
-      expect(part3List.prop("description")).toMatchSnapshot();
+      expect(renderStepListDescription(part2List)).toMatchSnapshot();
+      expect(renderStepListDescription(part3List)).toMatchSnapshot();
     });
   });
 
