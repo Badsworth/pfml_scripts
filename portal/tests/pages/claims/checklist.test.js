@@ -2,12 +2,33 @@ import { MockClaimBuilder, renderWithAppLogic } from "../../test-utils";
 import Checklist from "../../../src/pages/claims/checklist";
 
 describe("Checklist", () => {
-  describe("when claim has not been started", () => {
-    it("renders initial checklist state", () => {
-      const { wrapper } = renderWithAppLogic(Checklist);
+  it("renders multiple StepList components with list of Steps", () => {
+    const { wrapper } = renderWithAppLogic(Checklist);
 
-      expect(wrapper).toMatchSnapshot();
+    expect(wrapper).toMatchSnapshot();
+  });
+
+  it("renders description for Step", () => {
+    expect.assertions(8);
+
+    const { wrapper } = renderWithAppLogic(Checklist, {
+      // Avoids a blank description for the Upload Certification step,
+      // which we have more unit tests for below to capture its other
+      // variations
+      claimAttrs: new MockClaimBuilder().bondingBirthLeaveReason().create(),
     });
+    const steps = wrapper.find("Step");
+
+    steps.forEach((step) => {
+      expect(step.find("Trans").dive()).toMatchSnapshot();
+    });
+  });
+
+  it("renders 'In progress' version of Part 1 StepList description when claim isn't yet submitted", () => {
+    const { wrapper } = renderWithAppLogic(Checklist);
+    const part1List = wrapper.find("StepList").at(0);
+
+    expect(part1List.prop("description")).toMatchSnapshot();
   });
 
   describe("when Part 1 is submitted", () => {
@@ -46,16 +67,17 @@ describe("Checklist", () => {
   });
 
   describe("Upload leave certification step", () => {
-    it("renders correctly if claim reason is medical", () => {
+    it("renders medical leave content if claim reason is medical", () => {
       const claim = new MockClaimBuilder().submitted().create();
       const { wrapper } = renderWithAppLogic(Checklist, {
         claimAttrs: claim,
       });
       const uploadCertificationStep = wrapper.find("Step").at(7);
-      expect(uploadCertificationStep).toMatchSnapshot();
+
+      expect(uploadCertificationStep.find("Trans").dive()).toMatchSnapshot();
     });
 
-    it("renders correctly if claim reason is newborn", () => {
+    it("renders newborn bonding leave content if claim reason is newborn", () => {
       const claim = new MockClaimBuilder()
         .submitted()
         .bondingBirthLeaveReason()
@@ -64,10 +86,11 @@ describe("Checklist", () => {
         claimAttrs: claim,
       });
       const uploadCertificationStep = wrapper.find("Step").at(7);
-      expect(uploadCertificationStep).toMatchSnapshot();
+
+      expect(uploadCertificationStep.find("Trans").dive()).toMatchSnapshot();
     });
 
-    it("renders correctly if claim reason is adoption", () => {
+    it("renders adoption bonding leave content if claim reason is adoption", () => {
       const claim = new MockClaimBuilder()
         .submitted()
         .bondingAdoptionLeaveReason()
@@ -76,7 +99,8 @@ describe("Checklist", () => {
         claimAttrs: claim,
       });
       const uploadCertificationStep = wrapper.find("Step").at(7);
-      expect(uploadCertificationStep).toMatchSnapshot();
+
+      expect(uploadCertificationStep.find("Trans").dive()).toMatchSnapshot();
     });
   });
 });

@@ -1,111 +1,191 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`Checklist Upload leave certification step renders correctly if claim reason is adoption 1`] = `
-<Step
-  completedText="Completed"
-  key="uploadCertification"
-  number={8}
-  status="completed"
-  stepHref="/claims/upload-certification?claim_id=mock_application_id"
-  title="Upload leave certification documents"
->
-  <Trans
-    components={
-      Object {
-        "healthcare-provider-form-link": <a
-          href="https://www.mass.gov/hcp-form"
-          rel="noopener"
-          target="_blank"
-        />,
-        "li": <li />,
-        "ul": <ul
-          className="usa-list"
-        />,
-      }
-    }
-    i18nKey="pages.claimsChecklist.stepHTMLDescription"
-    tOptions={
-      Object {
-        "context": "bondingAdoptFoster",
-      }
-    }
-  />
-</Step>
+exports[`Checklist Upload leave certification step renders adoption bonding leave content if claim reason is adoption 1`] = `"You need to provide a statement confirming the placement and the date of placement."`;
+
+exports[`Checklist Upload leave certification step renders medical leave content if claim reason is medical 1`] = `
+Array [
+  "You need to provide your completed ",
+  <a
+    href="https://www.mass.gov/hcp-form"
+    key="1"
+    rel="noopener"
+    target="_blank"
+  >
+    Health Care Provider Certification
+  </a>,
+  ". ",
+]
 `;
 
-exports[`Checklist Upload leave certification step renders correctly if claim reason is medical 1`] = `
-<Step
-  completedText="Completed"
-  key="uploadCertification"
-  number={8}
-  status="completed"
-  stepHref="/claims/upload-certification?claim_id=mock_application_id"
-  title="Upload leave certification documents"
->
-  <Trans
-    components={
-      Object {
-        "healthcare-provider-form-link": <a
-          href="https://www.mass.gov/hcp-form"
-          rel="noopener"
-          target="_blank"
-        />,
-        "li": <li />,
-        "ul": <ul
-          className="usa-list"
-        />,
-      }
-    }
-    i18nKey="pages.claimsChecklist.stepHTMLDescription"
-    tOptions={
-      Object {
-        "context": "medical",
-      }
-    }
-  />
-</Step>
+exports[`Checklist Upload leave certification step renders newborn bonding leave content if claim reason is newborn 1`] = `"You need to provide your child's birth certificate or a document from a health care provider that shows the child’s birth date."`;
+
+exports[`Checklist renders 'In progress' version of Part 1 StepList description when claim isn't yet submitted 1`] = `"Your progress is automatically saved as you complete the application. You can edit any information you enter in Part 1 until step 5 is completed."`;
+
+exports[`Checklist renders description for Step 1`] = `
+Array [
+  <p
+    key="p-0"
+  >
+    You can use a variety of documents to verify your identity, but it’s easiest if you have a Massachusetts driver’s license or Massachusetts Identification Card.
+  </p>,
+  <p
+    key="p-1"
+  >
+    You will need to provide:
+  </p>,
+  <ul
+    className="usa-list"
+    key="2"
+  >
+    <li
+      key="0"
+    >
+      Your name as it appears on your ID.
+    </li>
+    <li
+      key="1"
+    >
+      Your driver’s license number or Mass ID number, if you have one.
+    </li>
+    <li
+      key="2"
+    >
+      Your Social Security Number or Individual Taxpayer Identification Number.
+    </li>
+  </ul>,
+]
 `;
 
-exports[`Checklist Upload leave certification step renders correctly if claim reason is newborn 1`] = `
-<Step
-  completedText="Completed"
-  key="uploadCertification"
-  number={8}
-  status="completed"
-  stepHref="/claims/upload-certification?claim_id=mock_application_id"
-  title="Upload leave certification documents"
->
-  <Trans
-    components={
-      Object {
-        "healthcare-provider-form-link": <a
-          href="https://www.mass.gov/hcp-form"
-          rel="noopener"
-          target="_blank"
-        />,
-        "li": <li />,
-        "ul": <ul
-          className="usa-list"
-        />,
-      }
-    }
-    i18nKey="pages.claimsChecklist.stepHTMLDescription"
-    tOptions={
-      Object {
-        "context": "bondingNewborn",
-      }
-    }
-  />
-</Step>
+exports[`Checklist renders description for Step 2`] = `
+Array [
+  <p
+    key="p-0"
+  >
+    If you are taking medical leave due to injury, illness, or pregnancy, you need to have your health care provider fill out 
+    <a
+      href="https://www.mass.gov/hcp-form"
+      key="1"
+      rel="noopener"
+      target="_blank"
+    >
+      the certification form
+    </a>
+    . Some of the answers you will need for the online application will come from your health care provider’s answers on the certification form.
+  </p>,
+  <p
+    key="p-1"
+  >
+    If you are taking leave to bond with a child, you will need to know:
+  </p>,
+  <ul
+    className="usa-list"
+    key="2"
+  >
+    <li
+      key="0"
+    >
+      The child's date of birth, due date, or the date they arrived in your home for adoption or foster care.
+    </li>
+    <li
+      key="1"
+    >
+      When you want your leave to begin and end.
+    </li>
+  </ul>,
+]
 `;
 
-exports[`Checklist when Part 1 is submitted renders descriptions for Part 2 and 3 1`] = `"Entering payment information here leads to faster processing, but you can also call XXX‑XXX‑XXXX."`;
+exports[`Checklist renders description for Step 3`] = `
+Array [
+  "You will need to know:",
+  <ul
+    className="usa-list"
+    key="1"
+  >
+    <li
+      key="0"
+    >
+      Your employer’s 9-digit federal employer identification number (FEIN or EIN). 
+      <br
+        key="br-1"
+      />
+      <strong
+        key="strong-2"
+      >
+        Where to find this: 
+      </strong>
+      on your W-2 or 1099, or ask your employer’s finance department.
+    </li>
+    <li
+      key="1"
+    >
+      The date you told your employer you were taking leave.
+    </li>
+  </ul>,
+]
+`;
 
-exports[`Checklist when Part 1 is submitted renders descriptions for Part 2 and 3 2`] = `"Uploading documents online leads to faster processing, but you can also fax documents to NNN-NNN-NNNN, or mail them to 123 Address."`;
+exports[`Checklist renders description for Step 4`] = `
+Array [
+  "You will need to know:",
+  <ul
+    className="usa-list"
+    key="1"
+  >
+    <li
+      key="0"
+    >
+      If you will use any benefits from your employer because you are taking leave.
+    </li>
+    <li
+      key="1"
+    >
+      If you will receive income from any other sources during your leave.
+    </li>
+    <li
+      key="2"
+    >
+      The dates for any leave you’ve taken since January 1, 2021 for a condition that is covered by Paid Family and Medical Leave.
+    </li>
+  </ul>,
+]
+`;
 
-exports[`Checklist when Part 1 is submitted renders different description for Part 1 1`] = `"If you need to edit your information in Part 1, you’ll need to call the Contact Center at XXX‑XXX‑XXXX."`;
+exports[`Checklist renders description for Step 5`] = `
+Array [
+  <p
+    key="p-0"
+  >
+    Once you confirm your leave information, we’ll notify your employer. Your job will be protected. To complete your application, you will need to finish the last three steps and submit.
+  </p>,
+  <p
+    key="p-1"
+  >
+    If you need to edit your information in Part 1 after completing this step, you’ll need to call the Contact Center at XXX‑XXX‑XXXX.
+  </p>,
+]
+`;
 
-exports[`Checklist when claim has not been started renders initial checklist state 1`] = `
+exports[`Checklist renders description for Step 6`] = `
+Array [
+  <p
+    key="p-0"
+  >
+    Tell us how you want to receive payment.
+  </p>,
+  <p
+    key="p-1"
+  >
+    If you want to receive payment by direct deposit, you will need to provide your bank account information, including a routing number and account number.
+  </p>,
+]
+`;
+
+exports[`Checklist renders description for Step 7`] = `"Upload proof of identity. If you entered a Massachusetts driver’s license or Mass ID number in step 1, upload the same ID."`;
+
+exports[`Checklist renders description for Step 8`] = `"You need to provide your child's birth certificate or a document from a health care provider that shows the child’s birth date."`;
+
+exports[`Checklist renders multiple StepList components with list of Steps 1`] = `
 <div
   className="measure-6"
 >
@@ -460,3 +540,9 @@ exports[`Checklist when claim has not been started renders initial checklist sta
   </ButtonLink>
 </div>
 `;
+
+exports[`Checklist when Part 1 is submitted renders descriptions for Part 2 and 3 1`] = `"Entering payment information here leads to faster processing, but you can also call XXX‑XXX‑XXXX."`;
+
+exports[`Checklist when Part 1 is submitted renders descriptions for Part 2 and 3 2`] = `"Uploading documents online leads to faster processing, but you can also fax documents to NNN-NNN-NNNN, or mail them to 123 Address."`;
+
+exports[`Checklist when Part 1 is submitted renders different description for Part 1 1`] = `"If you need to edit your information in Part 1, you’ll need to call the Contact Center at XXX‑XXX‑XXXX."`;
