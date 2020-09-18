@@ -259,14 +259,18 @@ export class Simulation {
       try {
         await this.executor(claim);
         console.log(
-          `Submitted ${claim.scenario} for ${claim.claim.employee_ssn}`
+          `Submitted ${claim.scenario} for ${claim.claim.tax_identifier}`
         );
         success++;
       } catch (e) {
         console.log(
-          `Failed on ${claim.scenario} for ${claim.claim.employee_ssn}`
+          `Failed on ${claim.scenario} for ${claim.claim.tax_identifier}`
         );
-        console.log(e);
+        if ("data" in e && "errors" in e.data) {
+          console.error("Reason given:", e.data.errors);
+        } else {
+          console.error(e);
+        }
         errors.push(e);
       }
     }

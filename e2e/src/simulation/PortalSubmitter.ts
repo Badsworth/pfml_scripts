@@ -83,28 +83,23 @@ export default class PortalSubmitter {
   ): Promise<string> {
     const application_id = await this.createApplication();
     await this.updateApplication(application_id, application);
-    await this.submitApplication(application_id);
+    const fineos_id = await this.submitApplication(application_id);
     await this.completeApplication(application_id);
     for (const doc of documents) {
       await this.uploadDocument(application_id, doc);
     }
-    return application_id;
+    return fineos_id;
   }
 
   private async uploadDocument(
     applicationId: string,
     doc: DocumentUploadRequest
-  ): Promise<void> {
-    try {
-      await postApplicationsByApplicationIdDocuments(
-        { applicationId },
-        doc,
-        await this.getOptions()
-      );
-    } catch (e) {
-      console.log(e.data);
-      throw e;
-    }
+  ) {
+    return postApplicationsByApplicationIdDocuments(
+      { applicationId },
+      doc,
+      await this.getOptions()
+    );
   }
 
   private async createApplication(): Promise<string> {
@@ -118,25 +113,45 @@ export default class PortalSubmitter {
   private async updateApplication(
     applicationId: string,
     application: ApplicationRequestBody
-  ): Promise<void> {
-    await patchApplicationsByApplicationId(
+  ) {
+    return patchApplicationsByApplicationId(
       { applicationId },
       application,
       await this.getOptions()
     );
   }
 
-  private async submitApplication(applicationId: string): Promise<void> {
-    await postApplicationsByApplicationIdSubmitApplication(
+  private async submitApplication(applicationId: string) {
+    const response = await postApplicationsByApplicationIdSubmitApplication(
       { applicationId },
       await this.getOptions()
     );
+    if (response.data.data && "fineos_absence_id" in response.data.data) {
+      return (response.data.data as { fineos_absence_id: string })
+        .fineos_absence_id;
+    }
+    throw new Error("Unable to determine Fineos Absence ID.");
   }
 
-  private async completeApplication(applicationId: string): Promise<void> {
-    await postApplicationsByApplicationIdCompleteApplication(
-      { applicationId },
-      await this.getOptions()
-    );
+  private async completeApplication(applicationId: string) {
+    try {
+      return await postApplicationsByApplicationIdCompleteApplication(
+        { applicationId },
+        await this.getOptions()
+      );
+    } catch (e) {
+      // No-op.  Unfortunately, we're expecting the completion endpoint to throw
+      // a fatal error regularly due to timeouts.
+      if (
+        "data" in e &&
+        e.data.data &&
+        Array.isArray(e.data.data.errors) &&
+        e.data.data.errors.length === 0
+      ) {
+        console.log("Caught error - ignoring");
+        return;
+      }
+      throw e;
+    }
   }
 }

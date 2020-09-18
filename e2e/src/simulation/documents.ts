@@ -44,7 +44,7 @@ export function generateHCP(
     untitled4: `${dobMonth}`,
     untitled5: `${dobDay}`,
     untitled6: `${invalidHCP ? "" : dobYear}`,
-    untitled3: `${invalidHCP ? "" : claim.employee_ssn?.slice(7)}`,
+    untitled3: `${invalidHCP ? "" : claim.tax_identifier?.slice(7)}`,
     // Checkbox 12 - "Does the patient have a serious health condition that necessitates continuing care􏰗"
     untitled56: "Yes",
     // Checkbox 13 - "When did the condition begin􏰗"

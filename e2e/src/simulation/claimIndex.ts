@@ -9,12 +9,12 @@ export default function createClaimIndexStream(
     (function* () {
       for (const simulationClaim of claims) {
         const { scenario, claim } = simulationClaim;
-        const { first_name, last_name, employee_ssn, employer_fein } = claim;
+        const { first_name, last_name, tax_identifier, employer_fein } = claim;
         yield {
           scenario,
           first_name,
           last_name,
-          employee_ssn,
+          tax_identifier,
           employer_fein,
         };
       }
@@ -27,7 +27,7 @@ export default function createClaimIndexStream(
         scenario: "Scenario ID",
         first_name: "First Name",
         last_name: "Last Name",
-        employee_ssn: "SSN",
+        tax_identifier: "SSN",
         employer_fein: "Employer FEIN",
       },
     })
