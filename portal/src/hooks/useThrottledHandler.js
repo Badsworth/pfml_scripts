@@ -1,5 +1,5 @@
+import { useEffect, useRef, useState } from "react";
 import assert from "assert";
-import { useState } from "react";
 
 /**
  * @callback asyncHandler
@@ -14,6 +14,7 @@ import { useState } from "react";
  */
 const useThrottledHandler = (asyncHandler) => {
   const [isThrottled, setIsThrottled] = useState(false);
+  const hasCanceled = useRef(false);
 
   const throttledHandler = async (...args) => {
     if (isThrottled) return;
@@ -21,12 +22,23 @@ const useThrottledHandler = (asyncHandler) => {
     setIsThrottled(true);
     // eslint-disable-next-line standard/no-callback-literal
     const resultPromise = asyncHandler(...args);
+
     // enforce that handler must return a promise
     assert(resultPromise instanceof Promise);
     await resultPromise;
 
-    setIsThrottled(false);
+    if (!hasCanceled.current) {
+      setIsThrottled(false);
+    }
   };
+
+  useEffect(() => {
+    // cancel callback when component is unmounted
+    // to prevent setting isThrottled state
+    return function cancelCallback() {
+      hasCanceled.current = true;
+    };
+  }, []);
 
   throttledHandler.isThrottled = isThrottled;
 

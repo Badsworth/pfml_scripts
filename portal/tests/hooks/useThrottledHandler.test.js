@@ -1,24 +1,18 @@
+import { mount, shallow } from "enzyme";
 import React from "react";
 import { act } from "react-dom/test-utils";
-import { shallow } from "enzyme";
 import { testHook } from "../test-utils";
 import useThrottledHandler from "../../src/hooks/useThrottledHandler";
 
 describe("useThrottledHandler", () => {
-  let handler, throttleHandler, wrapper;
+  let Component, handler, throttleHandler, wrapper;
 
   beforeEach(() => {
     handler = jest.fn().mockResolvedValueOnce(null);
-    const Component = (props) => {
+    Component = (props) => {
       // eslint-disable-next-line react/prop-types
       throttleHandler = useThrottledHandler(props.handler);
-      return (
-        <button
-          type="button"
-          onClick={throttleHandler}
-          loading={throttleHandler.isThrottled}
-        />
-      );
+      return <button type="button" onClick={throttleHandler} />;
     };
 
     wrapper = shallow(
@@ -47,6 +41,32 @@ describe("useThrottledHandler", () => {
     });
   });
 
+  it("does not reset state if component is unmounted", async () => {
+    /* eslint-disable react/prop-types */
+    const HiddenComponent = (props) => {
+      return (
+        <div>
+          {!props.hide && (
+            <Component
+              handler={async () => {
+                await handler();
+              }}
+            />
+          )}
+        </div>
+      );
+    };
+    /* eslint-enable react/prop-types */
+
+    wrapper = mount(<HiddenComponent />);
+
+    await act(async () => {
+      await wrapper.find("button").simulate("click");
+      wrapper.setProps({ hide: true });
+      expect(throttleHandler.isThrottled).toBe(true);
+    });
+  });
+
   it("rejects handlers that do no return a promise", () => {
     let handler;
     testHook(() => {
@@ -54,6 +74,6 @@ describe("useThrottledHandler", () => {
       handler = useThrottledHandler(nonAsyncHandler);
     });
 
-    return expect(act(handler)).resolves.toThrow();
+    return expect(act(handler)).rejects.toThrow();
   });
 });
