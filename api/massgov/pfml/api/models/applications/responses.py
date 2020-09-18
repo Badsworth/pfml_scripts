@@ -32,6 +32,7 @@ class ApplicationResponse(PydanticBaseModel):
     tax_identifier: Optional[MaskedTaxIdFormattedStr]
     employer_id: Optional[UUID4]
     employer_fein: Optional[FEINStr]
+    fineos_absence_id: Optional[str]
     first_name: Optional[str]
     middle_name: Optional[str]
     last_name: Optional[str]

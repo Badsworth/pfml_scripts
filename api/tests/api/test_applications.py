@@ -1114,6 +1114,7 @@ def test_application_post_submit_app(client, user, auth_token, test_db_session):
             "date_of_birth": "1997-06-06",
             "employer_fein": "770007777",
             "employer_id": "a6cecc1b-78e5-4061-b311-d8a3c2ce6f44",
+            "fineos_absence_id": "NTN-259-ABS-01",
             "first_name": "Kathryn",
             "last_name": "Scott",
             "leave_details": {
