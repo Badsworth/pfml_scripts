@@ -76,14 +76,15 @@ check-static: ## Run static code checks
 check-static: format-check lint
 
 clean: ## Remove intermediate, cache, or build artifacts
-	find . -type f -name '*.py[co]' -delete
+	find . -type f -name '*.py[cod]' -delete
 	find . -type d -name __pycache__ -print -exec rm -r {} +
 	find . -type d -name '*.egg-info' -print -exec rm -r {} +
 	find . -type d -name .mypy_cache -print -exec rm -r {} +
+	find . -type d -name .pytest_cache -print -exec rm -r {} +
 	rm -rf dist
-	-$(PY_RUN_CMD) coverage erase # takes care of .coverage file
+	rm -f .coverage coverage.* .testmondata
 	rm -rf .coverage_report
-	rm -f .testmondata
+	find lambdas/ -type f -iname Makefile -exec sh -c '$(MAKE) -C $$(dirname {}) clean' \;
 
 clean-docker: ## Remove project docker artifacts (which includes the DB)
 	docker-compose down --remove-orphans --rmi all --volumes
@@ -119,6 +120,7 @@ deps-check:
 distclean: ## Remove all artifacts that can be regenerated
 distclean: clean clean-node clean-venv
 	rm -f jwks.json
+	rm -rf dor_mock/
 
 dor-generate: ## Generate fake DOR data
 	$(PY_RUN_CMD) dor-generate --folder dor_mock --count 100 $(DECODE_LOG)

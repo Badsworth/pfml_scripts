@@ -1,15 +1,32 @@
+# Python compiled/optimized files
 __pycache__/
+*.py[cod]
+*$py.class
+
+# Python packaging stuff
 dist/
 *.egg-info
-.env
+
+# Python testing stuff
 .coverage*
+coverage.*
 .testmondata
+.pytest_cache/
+
+# Python environments
+.env
+.venv
+
+# mypy
 .mypy_cache
 
-# Files generated for DOR import lambda deployments
-*.zip
-
+# Lambda build stuff
 .aws-sam/
 lambda-s3-package.json
+*.zip
 
+# generated mock DOR files
+dor_mock/
+
+# local authentication generated file
 jwks.json
