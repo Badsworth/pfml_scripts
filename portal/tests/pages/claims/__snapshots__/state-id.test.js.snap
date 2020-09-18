@@ -38,6 +38,7 @@ exports[`StateId initially renders the page without an id field 1`] = `
     visible={false}
   >
     <InputText
+      clearInitialPii={true}
       label="Enter your license or ID number"
       name="mass_id"
       onChange={[Function]}

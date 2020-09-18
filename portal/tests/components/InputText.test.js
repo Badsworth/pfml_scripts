@@ -219,4 +219,36 @@ describe("InputText", () => {
       expect(props.onBlur).toHaveBeenCalledTimes(1);
     });
   });
+
+  describe("when clearInitialPii prop is true", () => {
+    it("clears the initial value on focus", () => {
+      const { props, wrapper } = render({
+        value: "***_**_****",
+        clearInitialPii: true,
+      });
+
+      const input = wrapper.find("input");
+      input.simulate("focus");
+
+      expect(props.onChange).toHaveBeenCalledWith(
+        expect.objectContaining({
+          target: expect.objectContaining({ value: "" }),
+        })
+      );
+    });
+
+    it("does not clear field on subsequent focuses", () => {
+      const { props, wrapper } = render({
+        value: "***_**_****",
+        clearInitialPii: true,
+      });
+
+      const input = wrapper.find("input");
+
+      input.simulate("focus");
+      wrapper.update();
+      input.simulate("focus");
+      expect(props.onChange).toHaveBeenCalledTimes(1);
+    });
+  });
 });

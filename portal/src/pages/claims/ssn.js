@@ -34,6 +34,7 @@ export const Ssn = (props) => {
       <InputText
         {...getFunctionalInputProps("tax_identifier")}
         mask="ssn"
+        clearInitialPii
         label={t("pages.claimsSsn.sectionLabel")}
         hint={t("pages.claimsSsn.lead")}
       />

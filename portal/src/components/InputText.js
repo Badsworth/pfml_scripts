@@ -1,7 +1,7 @@
+import React, { useRef } from "react";
 import FormLabel from "./FormLabel";
 import Mask from "./Mask";
 import PropTypes from "prop-types";
-import React from "react";
 import classnames from "classnames";
 import useUniqueId from "../hooks/useUniqueId";
 
@@ -29,6 +29,31 @@ function InputText({ type = "text", ...props }) {
     }
   );
 
+  /**
+   * Clear the input onFocus when the initial value from the server is masked
+   */
+  const clearPiiVal = useRef(
+    props.clearInitialPii && props.value
+  );
+
+  /**
+   * Clear value on the first focus event
+   * @param {object} evt - react event
+   */
+  const handleFocus = (evt) => {
+    if (clearPiiVal.current) {
+      clearPiiVal.current = false;
+      props.onChange({
+        _originalEvent: evt,
+        target: {
+          name: field.props.name,
+          type: "text",
+          value: "",
+        },
+      });
+    }
+  };
+
   const field = (
     <input
       autoComplete={props.autoComplete}
@@ -39,6 +64,7 @@ function InputText({ type = "text", ...props }) {
       maxLength={props.maxLength}
       name={props.name}
       onBlur={props.onBlur}
+      onFocus={handleFocus}
       onChange={props.onChange}
       ref={props.inputRef}
       type={type}
@@ -110,6 +136,10 @@ InputText.propTypes = {
    * field's appearance and functionality may be affected.
    */
   mask: PropTypes.oneOf(["currency", "ssn", "fein"]),
+  /**
+   * Clears initial masked value sent from server
+   */
+  clearInitialPii: PropTypes.bool,
   /**
    * HTML input `maxlength` attribute
    */

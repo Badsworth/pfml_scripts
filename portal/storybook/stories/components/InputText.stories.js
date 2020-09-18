@@ -114,6 +114,25 @@ export const Masks = () => {
   );
 };
 
+export const ClearInitialPii = () => {
+  const [value, setFieldValue] = useState("***_**_****");
+  const handleOnChange = (evt) => {
+    setFieldValue(evt.target.value);
+  };
+
+  return (
+    <form className="usa-form">
+      <InputText
+        label="SSN"
+        name="ssn"
+        value={value}
+        onChange={handleOnChange}
+        clearInitialPii
+      />
+    </form>
+  );
+};
+
 export const SmallLabel = () => {
   const [value, setFieldValue] = useState("Bud");
   const handleOnChange = (evt) => {
