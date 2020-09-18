@@ -3,6 +3,7 @@ import Claim, {
   ReasonQualifier as ReasonQualifierEnum,
 } from "../../models/Claim";
 import ConditionalContent from "../../components/ConditionalContent";
+import Details from "../../components/Details";
 import InputChoiceGroup from "../../components/InputChoiceGroup";
 import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
@@ -87,6 +88,17 @@ export const LeaveReason = (props) => {
       >
         <InputChoiceGroup
           {...getFunctionalInputProps("leave_details.reason_qualifier")}
+          hint={
+            <Details
+              label={t(
+                "pages.claimsLeaveReason.bondingTypeMultipleBirthsDetailsLabel"
+              )}
+            >
+              {t(
+                "pages.claimsLeaveReason.bondingTypeMultipleBirthsDetailsSummary"
+              )}
+            </Details>
+          }
           choices={[
             {
               checked: reason_qualifier === ReasonQualifierEnum.newBorn,

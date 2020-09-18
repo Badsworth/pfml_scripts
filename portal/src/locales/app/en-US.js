@@ -435,6 +435,10 @@ const pages = {
     bondingTypeFosterLabel: "Foster placement",
     bondingTypeLabel:
       "Will you take leave for a birth, an adoption, or a foster placement?",
+    bondingTypeMultipleBirthsDetailsLabel:
+      "What if I've had multiple births or placements within one year?",
+    bondingTypeMultipleBirthsDetailsSummary:
+      "Leave is determined based on benefit year (365 days from the first day you take leave), not based on number of children. You have 1 year to take your bonding leave from the date of the birth/placement of the child (whichever is later). ",
     bondingTypeNewbornLabel: "Birth",
     medicalLeaveHint: "Medical leave",
     medicalLeaveLabel: "I can’t work due to an illness, injury, or pregnancy.",
