@@ -273,6 +273,8 @@ class DocumentType(str, LookupEnum):
     passport = "Passport"
     drivers_license_mass = "Driver's License Mass"
     drivers_license_other_state = "Driver's License Other State"
+    identification_proof = "Identification Proof"
+    state_managed_paid_leave_confirmation = "State Managed Paid Leave Confirmation"
 
     @classmethod
     def get_lookup_model(cls):

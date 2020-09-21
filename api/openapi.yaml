@@ -1060,6 +1060,8 @@ components:
             - Passport
             - Driver's License Mass
             - Driver's License Other State
+            - Identification Proof
+            - State Managed Paid Leave Confirmation
           example: "Passport"
         name:
           type: string
@@ -1111,6 +1113,8 @@ components:
             - Passport
             - Driver's License Mass
             - Driver's License Other State
+            - Identification Proof
+            - State Managed Paid Leave Confirmation
           example: "Passport"
         content_type:
           type: string

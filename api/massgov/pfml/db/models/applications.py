@@ -396,6 +396,10 @@ class DocumentType(LookupTable):
     PASSPORT = LkDocumentType(1, "Passport")
     DRIVERS_LICENSE_MASS = LkDocumentType(2, "Driver's License Mass")
     DRIVERS_LICENSE_OTHER_STATE = LkDocumentType(3, "Driver's License Other State")
+    IDENTIFICATION_PROOF = LkDocumentType(4, "Identification Proof")
+    STATE_MANAGED_PAID_LEAVE_CONFIRMATION = LkDocumentType(
+        5, "State Managed Paid Leave Confirmation"
+    )
 
 
 class ContentType(LookupTable):
