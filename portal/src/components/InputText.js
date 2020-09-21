@@ -1,8 +1,9 @@
-import React, { useRef } from "react";
 import FormLabel from "./FormLabel";
 import Mask from "./Mask";
 import PropTypes from "prop-types";
+import React from "react";
 import classnames from "classnames";
+import usePiiHandlers from "../hooks/usePiiHandlers";
 import useUniqueId from "../hooks/useUniqueId";
 
 /**
@@ -29,30 +30,7 @@ function InputText({ type = "text", ...props }) {
     }
   );
 
-  /**
-   * Clear the input onFocus when the initial value from the server is masked
-   */
-  const clearPiiVal = useRef(
-    props.clearInitialPii && props.value
-  );
-
-  /**
-   * Clear value on the first focus event
-   * @param {object} evt - react event
-   */
-  const handleFocus = (evt) => {
-    if (clearPiiVal.current) {
-      clearPiiVal.current = false;
-      props.onChange({
-        _originalEvent: evt,
-        target: {
-          name: field.props.name,
-          type: "text",
-          value: "",
-        },
-      });
-    }
-  };
+  const { handleFocus, handleBlur } = usePiiHandlers(props);
 
   const field = (
     <input
@@ -63,8 +41,8 @@ function InputText({ type = "text", ...props }) {
       pattern={props.pattern}
       maxLength={props.maxLength}
       name={props.name}
-      onBlur={props.onBlur}
-      onFocus={handleFocus}
+      onBlur={props.pii ? handleBlur : props.onBlur}
+      onFocus={props.pii ? handleFocus : props.onFocus}
       onChange={props.onChange}
       ref={props.inputRef}
       type={type}
@@ -137,9 +115,11 @@ InputText.propTypes = {
    */
   mask: PropTypes.oneOf(["currency", "ssn", "fein"]),
   /**
-   * Clears initial masked value sent from server
+   * Include functionality specific to Personally identifiable information (PII).
+   * This will clear initial masked values on focus and reset
+   * that value on blur if no change is made
    */
-  clearInitialPii: PropTypes.bool,
+  pii: PropTypes.bool,
   /**
    * HTML input `maxlength` attribute
    */
@@ -152,6 +132,10 @@ InputText.propTypes = {
    * HTML input `onBlur` attribute
    */
   onBlur: PropTypes.func,
+  /**
+   * HTML input `onFocus` attribute
+   */
+  onFocus: PropTypes.func,
   /**
    * HTML input `onChange` attribute
    */

@@ -114,8 +114,8 @@ export const Masks = () => {
   );
 };
 
-export const ClearInitialPii = () => {
-  const [value, setFieldValue] = useState("***_**_****");
+export const Pii = () => {
+  const [value, setFieldValue] = useState("***-**-***");
   const handleOnChange = (evt) => {
     setFieldValue(evt.target.value);
   };
@@ -127,7 +127,7 @@ export const ClearInitialPii = () => {
         name="ssn"
         value={value}
         onChange={handleOnChange}
-        clearInitialPii
+        pii
       />
     </form>
   );

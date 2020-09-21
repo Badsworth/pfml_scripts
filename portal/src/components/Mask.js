@@ -115,20 +115,28 @@ function Mask(props) {
    * To avoid a jarring experience for screen readers, we only
    * add/remove characters after the field has been blurred,
    * rather than when the user is typing in the field
-   * @param {object} evt
+   * @param {object} event
    */
-  const handleBlur = (evt) => {
-    maskAndDispatchChangeFromEvent(evt);
+  const handleBlur = (event) => {
+    maskAndDispatchChangeFromEvent(event);
+
+    if (field.props.onBlur) {
+      field.props.onBlur(event);
+    }
   };
 
   /**
    * To ensure we only submit the masked value, we need to
    * mask the input when the Enter key is pressed
-   * @param {object} evt
+   * @param {object} event
    */
-  const handleKeyDown = (evt) => {
-    if (evt.key === "Enter") {
-      maskAndDispatchChangeFromEvent(evt);
+  const handleKeyDown = (event) => {
+    if (event.key === "Enter") {
+      maskAndDispatchChangeFromEvent(event);
+    }
+
+    if (field.props.onKeyDown) {
+      field.props.onKeyDown(event);
     }
   };
 
@@ -153,12 +161,12 @@ function Mask(props) {
 
   /**
    * Apply the mask and update the field state
-   * @param {object} evt
+   * @param {object} event
    */
-  const maskAndDispatchChangeFromEvent = (evt) => {
-    const maskedValue = maskValue(evt.target.value, props.mask);
+  const maskAndDispatchChangeFromEvent = (event) => {
+    const maskedValue = maskValue(event.target.value, props.mask);
 
-    dispatchChange(maskedValue, evt);
+    dispatchChange(maskedValue, event);
   };
 
   const modifiedInputText = React.cloneElement(field, {

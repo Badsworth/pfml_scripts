@@ -41,22 +41,22 @@ exports[`PaymentMethod renders the page 1`] = `
         We need this information so you can receive your weekly benefit through Direct Deposit. Contact your bank if you are having trouble finding this information.
       </Lead>
       <InputText
-        clearInitialPii={true}
         hint="This is the 9-digit number found on the lower left corner of a check."
         inputMode="numeric"
         label="Routing number"
         name="temp.payment_preferences[0].account_details.routing_number"
         onChange={[Function]}
+        pii={true}
         smallLabel={true}
         value=""
         width="medium"
       />
       <InputText
-        clearInitialPii={true}
         inputMode="numeric"
         label="Account number"
         name="temp.payment_preferences[0].account_details.account_number"
         onChange={[Function]}
+        pii={true}
         smallLabel={true}
         value=""
       />

@@ -220,35 +220,17 @@ describe("InputText", () => {
     });
   });
 
-  describe("when clearInitialPii prop is true", () => {
-    it("clears the initial value on focus", () => {
+  describe("when pii prop is true", () => {
+    it("uses pii handleBlur and handleFocus", () => {
       const { props, wrapper } = render({
-        value: "***_**_****",
-        clearInitialPii: true,
+        pii: true,
+        onBlur: jest.fn(),
+        onFocus: jest.fn(),
       });
-
-      const input = wrapper.find("input");
-      input.simulate("focus");
-
-      expect(props.onChange).toHaveBeenCalledWith(
-        expect.objectContaining({
-          target: expect.objectContaining({ value: "" }),
-        })
-      );
-    });
-
-    it("does not clear field on subsequent focuses", () => {
-      const { props, wrapper } = render({
-        value: "***_**_****",
-        clearInitialPii: true,
-      });
-
-      const input = wrapper.find("input");
-
-      input.simulate("focus");
-      wrapper.update();
-      input.simulate("focus");
-      expect(props.onChange).toHaveBeenCalledTimes(1);
+      expect(wrapper.find("input").props().onBlur).toBeInstanceOf(Function);
+      expect(wrapper.find("input").props().onBlur).not.toEqual(props.onBlur);
+      expect(wrapper.find("input").props().onFocus).toBeInstanceOf(Function);
+      expect(wrapper.find("input").props().onFocus).not.toEqual(props.onFocus);
     });
   });
 });

@@ -19,7 +19,11 @@ const dependencyRules = [
     forbiddenDependencies: [
       {
         moduleOrDirRelPath: "./src/hooks",
-        allowedDependencies: ["usePreviousValue", "useUniqueId"],
+        allowedDependencies: [
+          "usePreviousValue",
+          "useUniqueId",
+          "usePiiHandlers",
+        ],
         reason:
           "Components should not depend on application code. Consider exposing events that clients handle.",
       },

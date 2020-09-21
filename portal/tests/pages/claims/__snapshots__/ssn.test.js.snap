@@ -6,12 +6,12 @@ exports[`Ssn renders the form 1`] = `
   title="Your identity"
 >
   <InputText
-    clearInitialPii={true}
     hint="It’s recommended that you enter your SSN. Don’t have an SSN? Use your Individual Taxpayer Identification Number (ITIN)."
     label="What's your Social Security Number?"
     mask="ssn"
     name="tax_identifier"
     onChange={[Function]}
+    pii={true}
     value="123-123-1234"
   />
 </QuestionPage>

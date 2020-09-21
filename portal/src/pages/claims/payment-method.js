@@ -88,7 +88,7 @@ export const PaymentMethod = (props) => {
             inputMode="numeric"
             smallLabel
             width="medium"
-            clearInitialPii
+            pii
           />
 
           <InputText
@@ -98,7 +98,7 @@ export const PaymentMethod = (props) => {
             label={t("pages.claimsPaymentMethod.accountNumberLabel")}
             inputMode="numeric"
             smallLabel
-            clearInitialPii
+            pii
           />
         </Fieldset>
       </ConditionalContent>

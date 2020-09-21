@@ -59,7 +59,7 @@ export const StateId = (props) => {
       >
         <InputText
           {...getFunctionalInputProps("mass_id")}
-          clearInitialPii
+          pii
           label={t("pages.claimsStateId.idLabel")}
         />
       </ConditionalContent>
