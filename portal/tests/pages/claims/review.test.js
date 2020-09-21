@@ -95,7 +95,6 @@ describe("Duration type", () => {
       .intermittent()
       .create();
 
-    intermittentClaim.temp.leave_details.continuous_leave_periods = [];
     intermittentClaim.leave_details.continuous_leave_periods = [];
 
     const continuousAndReducedClaim = new MockClaimBuilder()
