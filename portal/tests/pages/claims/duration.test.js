@@ -26,9 +26,6 @@ describe("Duration", () => {
 
       expect(wrapper).toMatchSnapshot();
       expect(
-        wrapper.find({ name: "continuous_section" }).prop("visible")
-      ).toBeFalsy();
-      expect(
         wrapper.find({ name: "reduced_schedule_section" }).prop("visible")
       ).toBeFalsy();
       expect(
@@ -39,14 +36,6 @@ describe("Duration", () => {
 
   it("removes an entire leave period object if their content becomes hidden", () => {
     const { wrapper } = renderWithAppLogic(Duration);
-
-    expect(
-      wrapper
-        .find({ name: "continuous_section" })
-        .prop("fieldNamesClearedWhenHidden")
-    ).toEqual(
-      expect.arrayContaining(["temp.leave_details.continuous_leave_periods"])
-    );
 
     expect(
       wrapper
@@ -86,25 +75,6 @@ describe("Duration", () => {
           </p>
         </React.Fragment>
       `);
-    });
-  });
-
-  describe("when claim has a continous leave entry", () => {
-    const claimAttrs = {
-      temp: {
-        leave_details: {
-          continuous_leave_periods: [
-            new ContinuousLeavePeriod({ leave_period_id }),
-          ],
-        },
-      },
-    };
-
-    it("it renders continuous leave section", () => {
-      const { wrapper } = renderWithAppLogic(Duration, { claimAttrs });
-      expect(wrapper.find({ name: "continuous_section" }).prop("visible")).toBe(
-        true
-      );
     });
   });
 

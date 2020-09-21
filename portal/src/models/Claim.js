@@ -181,7 +181,6 @@ export class ContinuousLeavePeriod extends BaseModel {
   get defaults() {
     return {
       leave_period_id: null,
-      weeks: null,
     };
   }
 }

@@ -34,20 +34,6 @@ exports[`LeaveSchedule renders the component 1`] = `
     </thead>
     <tbody>
       <tr
-        className="continuous"
-        key="1"
-      >
-        <th
-          scope="row"
-        >
-          12 weeks
-        </th>
-        <td>
-          Continuous leave
-        </td>
-        <td />
-      </tr>
-      <tr
         className="reduced"
         key="2"
       >

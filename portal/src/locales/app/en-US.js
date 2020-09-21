@@ -287,10 +287,6 @@ const pages = {
     continuousTypeHint: "$t(shared.claimDurationTypeContinuous)",
     continuousTypeLabel:
       "I need to take off work completely for a period of time.",
-    continuousWeeksHint:
-      'Refer to Question 24 in the "Estimated leave period" section of the Healthcare Provider Form.',
-    continuousWeeksLabel:
-      "How many weeks will you need to take continuous leave from work?",
     durationTypeSectionHint_bonding:
       "You can take up to 12 weeks of family leave within the first year of your child’s birth or placement. You do not need to take this leave all at once.",
     durationTypeSectionHint_medical:
@@ -783,7 +779,6 @@ const pages = {
       tableHeader_duration: "Duration",
       tableHeader_frequency: "Frequency",
       tableName: "Leave schedule details table",
-      type_continuous: "$t(shared.claimDurationTypeContinuous)",
       type_intermittent: "$t(shared.claimDurationTypeIntermittent)",
       type_reducedSchedule: "$t(shared.claimDurationTypeReducedSchedule)",
     },

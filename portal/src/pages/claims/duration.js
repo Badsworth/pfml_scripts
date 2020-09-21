@@ -126,28 +126,6 @@ export const Duration = (props) => {
 
       <ConditionalContent
         fieldNamesClearedWhenHidden={[
-          "temp.leave_details.continuous_leave_periods",
-        ]}
-        getField={getField}
-        updateFields={updateFields}
-        removeField={removeField}
-        visible={duration_type_continuous}
-        name="continuous_section"
-      >
-        <InputText
-          {...getFunctionalInputProps(
-            "temp.leave_details.continuous_leave_periods[0].weeks"
-          )}
-          inputMode="numeric"
-          pattern="[0-9]*"
-          label={t("pages.claimsDuration.continuousWeeksLabel")}
-          hint={t("pages.claimsDuration.continuousWeeksHint")}
-          width="small"
-        />
-      </ConditionalContent>
-
-      <ConditionalContent
-        fieldNamesClearedWhenHidden={[
           "temp.leave_details.reduced_schedule_leave_periods",
         ]}
         getField={getField}

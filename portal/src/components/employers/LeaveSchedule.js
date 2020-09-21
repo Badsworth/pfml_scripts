@@ -16,14 +16,10 @@ const healthCareProviderCertificationFile = "example-hcp-link.pdf";
 const LeaveSchedule = (props) => {
   const { t } = useTranslation();
   const {
-    isContinuous,
     isIntermittent,
     isReducedSchedule,
     temp: {
-      leave_details: {
-        continuous_leave_periods,
-        reduced_schedule_leave_periods,
-      },
+      leave_details: { reduced_schedule_leave_periods },
     },
     leave_details: { intermittent_leave_periods },
   } = props.claim;
@@ -57,24 +53,6 @@ const LeaveSchedule = (props) => {
           </tr>
         </thead>
         <tbody>
-          {isContinuous &&
-            continuous_leave_periods.map((leavePeriod) => {
-              return (
-                <tr key={leavePeriod.leave_period_id} className="continuous">
-                  <th scope="row">
-                    {t("pages.employersClaimsReview.durationBasis_weeks", {
-                      numOfWeeks: leavePeriod.weeks,
-                    })}
-                  </th>
-                  <td>
-                    {t(
-                      "pages.employersClaimsReview.leaveSchedule.type_continuous"
-                    )}
-                  </td>
-                  <td />
-                </tr>
-              );
-            })}
           {isReducedSchedule &&
             reduced_schedule_leave_periods.map((leavePeriod) => {
               return (

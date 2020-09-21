@@ -381,7 +381,6 @@ export const claim = new MockClaimBuilder()
   .employed()
   .continuous({
     leave_period_id: 1,
-    weeks: 12,
   })
   .intermittent({
     leave_period_id: 3,
