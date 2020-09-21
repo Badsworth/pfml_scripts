@@ -20,7 +20,7 @@ exports[`LeaveDates renders the page 1`] = `
     }
     label="When will you first need to take leave?"
     monthLabel="Month"
-    name="temp.leave_details.start_date"
+    name="leave_details.continuous_leave_periods[0].start_date"
     onChange={[Function]}
     value=""
     yearLabel="Year"
@@ -31,7 +31,7 @@ exports[`LeaveDates renders the page 1`] = `
     hint="Refer to Question 20 in the \\"Ability to work\\" section of the Healthcare Provider Form."
     label="When will your leave end or be re-evaluated?"
     monthLabel="Month"
-    name="temp.leave_details.end_date"
+    name="leave_details.continuous_leave_periods[0].end_date"
     onChange={[Function]}
     value=""
     yearLabel="Year"
@@ -55,7 +55,7 @@ exports[`LeaveDates when leave type is bonding shows the bonding leave question 
   }
   label="When will you first take leave?"
   monthLabel="Month"
-  name="temp.leave_details.start_date"
+  name="leave_details.continuous_leave_periods[0].start_date"
   onChange={[Function]}
   value=""
   yearLabel="Year"
@@ -69,7 +69,7 @@ exports[`LeaveDates when leave type is bonding shows the bonding leave question 
   hint="If you have already returned to work, when was your last day of leave?"
   label="When will your leave end?"
   monthLabel="Month"
-  name="temp.leave_details.end_date"
+  name="leave_details.continuous_leave_periods[0].end_date"
   onChange={[Function]}
   value=""
   yearLabel="Year"

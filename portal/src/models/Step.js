@@ -137,8 +137,6 @@ export default class Step extends BaseModel {
           "claim.temp.leave_details.avg_weekly_work_hours",
           "claim.temp.leave_details.continuous_leave_periods[0]",
           "claim.temp.leave_details.bonding.date_of_child",
-          "claim.temp.leave_details.end_date",
-          "claim.temp.leave_details.start_date",
           "claim.temp.leave_details.reduced_schedule_leave_periods[0]",
           "claim.temp.payment_preferences[0].account_details",
         ].some((ignoredFieldName) => field.includes(ignoredFieldName));

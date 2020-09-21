@@ -58,12 +58,8 @@ class Claim extends BaseModel {
           avg_weekly_work_hours: null,
           // TODO (CP-720): connect with continuous schedule periods fields to the API
           continuous_leave_periods: null,
-          // TODO (CP-724): Connect start and end date to API
-          end_date: null,
           // TODO (CP-714): connect with reduced schedule periods fields to the API
           reduced_schedule_leave_periods: null,
-          // TODO (CP-724): Connect start and end date to API
-          start_date: null,
         },
         // TODO (CP-703): Connect payment preference entry fields to the API
         payment_preferences: [
@@ -180,7 +176,9 @@ export const ReasonQualifier = {
 export class ContinuousLeavePeriod extends BaseModel {
   get defaults() {
     return {
+      end_date: null,
       leave_period_id: null,
+      start_date: null,
     };
   }
 }

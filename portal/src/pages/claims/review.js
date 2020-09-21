@@ -223,13 +223,14 @@ export const Review = (props) => {
           </ReviewRow>
         )}
 
+      {/* TODO (CP-984): Factor in dates for other leave period types */}
       <ReviewRow
         level={reviewRowLevel}
         label={t("pages.claimsReview.leaveDurationLabel")}
       >
         {formatDateRange(
-          get(claim, "temp.leave_details.start_date"),
-          get(claim, "temp.leave_details.end_date")
+          get(claim, "leave_details.continuous_leave_periods[0].start_date"),
+          get(claim, "leave_details.continuous_leave_periods[0].end_date")
         )}
       </ReviewRow>
 

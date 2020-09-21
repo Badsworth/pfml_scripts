@@ -8,6 +8,7 @@ import ReviewHeading from "../ReviewHeading";
 import ReviewRow from "../ReviewRow";
 import findKeyByValue from "../../utils/findKeyByValue";
 import formatDateRange from "../../utils/formatDateRange";
+import { get } from "lodash";
 import { useTranslation } from "../../locales/i18n";
 
 /**
@@ -21,11 +22,18 @@ const LeaveDetails = (props) => {
     claim: {
       application_id,
       leave_details: { employer_notification_date, reason },
-      temp: {
-        leave_details: { end_date, start_date },
-      },
     },
   } = props;
+
+  // TODO (CP-984): Factor in start and end dates for Reduced and Intermittent leaves
+  const start_date = get(
+    props.claim,
+    "leave_details.continuous_leave_periods[0].start_date"
+  );
+  const end_date = get(
+    props.claim,
+    "leave_details.continuous_leave_periods[0].end_date"
+  );
 
   const [amendment, setAmendment] = useState(employer_notification_date);
   const [isAmendmentFormDisplayed, setIsAmendmentFormDisplayed] = useState(

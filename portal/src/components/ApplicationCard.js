@@ -16,9 +16,11 @@ function ApplicationCard(props) {
   const { claim, number } = props;
   const { t } = useTranslation();
   const leaveReason = get(claim, "leave_details.reason");
+
+  // TODO (CP-984): Factor in dates for other leave period types
   const leaveDurationRange = formatDateRange(
-    get(claim, "temp.leave_details.start_date"),
-    get(claim, "temp.leave_details.end_date")
+    get(claim, "leave_details.continuous_leave_periods[0].start_date"),
+    get(claim, "leave_details.continuous_leave_periods[0].end_date")
   );
 
   return (
