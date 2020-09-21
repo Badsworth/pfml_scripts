@@ -2,7 +2,7 @@
 import argparse
 import csv
 import os
-from datetime import datetime, timedelta
+from datetime import timedelta
 from itertools import groupby
 from typing import Dict, List
 
@@ -90,7 +90,7 @@ def upload_to_s3(
 ) -> List[Dict]:
     """ Uploads a CSV file to S3, gets a signed S3 URL to the file and returns a list of email and URL pairs """
     emails_and_urls: List[Dict] = []
-    folder_name = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    folder_name = output_dir
     expiration_seconds = timedelta(days=int(expiration_days)).total_seconds()
     s3_client = boto3.client(
         "s3",
