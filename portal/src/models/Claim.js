@@ -45,6 +45,17 @@ class Claim extends BaseModel {
       // array of OtherIncome objects. See the OtherIncome model
       other_incomes: [],
       // array of PreviousLeave objects. See the PreviousLeave model
+      payment_preferences: [
+        {
+          // Fields for ACH details
+          account_details: {
+            account_number: null,
+            routing_number: null,
+          },
+          payment_method: null, // PaymentPreferenceMethod
+          payment_preference_id: null,
+        },
+      ],
       previous_leaves: [],
       residential_address: new Address(),
       status: null,
@@ -65,18 +76,6 @@ class Claim extends BaseModel {
           // TODO (CP-714): connect with reduced schedule periods fields to the API
           reduced_schedule_leave_periods: null,
         },
-        // TODO (CP-703): Connect payment preference entry fields to the API
-        payment_preferences: [
-          {
-            // Fields for ACH details
-            account_details: {
-              account_number: null,
-              routing_number: null,
-            },
-            payment_method: null, // PaymentPreferenceMethod
-            payment_preference_id: null,
-          },
-        ],
       },
     };
   }

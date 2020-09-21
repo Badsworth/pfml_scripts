@@ -206,7 +206,7 @@ exports[`Final Review Page when all data is present renders Review page with fin
     label="Payment method"
     level="3"
   >
-    MA PFML Prepaid Debit Card
+    Direct deposit
   </ReviewRow>
   <Button
     className="margin-top-3"

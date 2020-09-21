@@ -23,7 +23,7 @@ exports[`PaymentMethod renders the page 1`] = `
       ]
     }
     label="How do you want to get your weekly benefit?"
-    name="temp.payment_preferences[0].payment_method"
+    name="payment_preferences[0].payment_method"
     onChange={[Function]}
     type="radio"
     value=""
@@ -44,7 +44,7 @@ exports[`PaymentMethod renders the page 1`] = `
         hint="This is the 9-digit number found on the lower left corner of a check."
         inputMode="numeric"
         label="Routing number"
-        name="temp.payment_preferences[0].account_details.routing_number"
+        name="payment_preferences[0].account_details.routing_number"
         onChange={[Function]}
         pii={true}
         smallLabel={true}
@@ -54,7 +54,7 @@ exports[`PaymentMethod renders the page 1`] = `
       <InputText
         inputMode="numeric"
         label="Account number"
-        name="temp.payment_preferences[0].account_details.account_number"
+        name="payment_preferences[0].account_details.account_number"
         onChange={[Function]}
         pii={true}
         smallLabel={true}

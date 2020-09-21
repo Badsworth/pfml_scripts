@@ -50,7 +50,7 @@ const useClaimsLogic = ({ appErrorsLogic, portalFlow, user }) => {
     appErrorsLogic.clearErrors();
 
     try {
-      let { claim, errors, warnings } = await claimsApi.updateClaim(
+      const { claim, errors, warnings } = await claimsApi.updateClaim(
         application_id,
         patchData
       );
@@ -62,7 +62,9 @@ const useClaimsLogic = ({ appErrorsLogic, portalFlow, user }) => {
       }
 
       // TODO (CP-676): Remove workaround once API returns all the fields in our application
-      claim = new Claim(merge(claims.get(application_id), patchData));
+      if (patchData.temp) {
+        claim.temp = merge(claim.temp, patchData.temp);
+      }
       // </ end workaround >
 
       setClaim(claim);

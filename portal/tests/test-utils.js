@@ -69,24 +69,42 @@ export class MockClaimBuilder {
   }
 
   /**
+   * Sets payment method to debit card
+   * @returns {MockClaimBuilder}
+   */
+  debit() {
+    set(
+      this.claimAttrs,
+      "payment_preferences[0].payment_method",
+      PaymentPreferenceMethod.debit
+    );
+    return this;
+  }
+
+  /**
    * Sets payment method to direct deposit
    * @returns {MockClaimBuilder}
    */
   directDeposit() {
     set(
       this.claimAttrs,
-      "temp.payment_preferences[0].payment_method",
+      "payment_preferences[0].payment_method",
       PaymentPreferenceMethod.ach
     );
     set(
       this.claimAttrs,
-      "temp.payment_preferences[0].account_details.account_number",
+      "payment_preferences[0].account_details.account_number",
       "091000022"
     );
     set(
       this.claimAttrs,
-      "temp.payment_preferences[0].account_details.routing_number",
+      "payment_preferences[0].account_details.routing_number",
       "1234567890"
+    );
+    set(
+      this.claimAttrs,
+      "payment_preferences[0].payment_preference_id",
+      "mock-payment-preference-id"
     );
     return this;
   }
@@ -236,12 +254,7 @@ export class MockClaimBuilder {
    */
   complete() {
     this.submitted();
-
-    set(
-      this.claimAttrs,
-      "temp.payment_preferences[0].payment_method",
-      PaymentPreferenceMethod.debit
-    );
+    this.directDeposit();
     return this;
   }
 

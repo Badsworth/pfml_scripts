@@ -61,6 +61,14 @@ function generateConfig(claimsPageSubpath, Component) {
   };
 }
 
+/**
+ * Generate storybook story for the claim page component.
+ * Configurable with mock claims and possible validation errors.
+ * @param {React.Component} Component
+ * @param {Claim[]} mockClaims
+ * @param {ErrorInfo[]} possibleErrors
+ * @returns {React.Component} Storybook story component
+ */
 function generateDefaultStory(Component, mockClaims, possibleErrors) {
   if (!mockClaims) {
     mockClaims = {
@@ -72,15 +80,16 @@ function generateDefaultStory(Component, mockClaims, possibleErrors) {
   const defaultClaim = _.first(Object.entries(mockClaims))[0];
 
   const DefaultStory = (args) => {
-    const errors = args.errors || [];
+    const errorDisplayStrs = args.errors || [];
     const claim = mockClaims[args.claim || defaultClaim];
     const user = new User();
     const { t } = useTranslation();
     const appErrors = new AppErrorInfoCollection(
-      errors.map((error) => {
-        const field = error.substring(0, error.lastIndexOf("."));
+      errorDisplayStrs.map((displayStr) => {
+        const errorInfo = _.find(possibleErrors, { displayStr });
+        const { field, i18nKey } = errorInfo;
         return new AppErrorInfo({
-          message: t(`errors.claims.${error}`),
+          message: t(i18nKey),
           name: "ValidationError",
           field,
         });
@@ -106,7 +115,7 @@ function generateDefaultStory(Component, mockClaims, possibleErrors) {
     errors: {
       control: {
         type: "check",
-        options: possibleErrors,
+        options: _.map(possibleErrors, "displayStr"),
       },
     },
   };
@@ -114,14 +123,53 @@ function generateDefaultStory(Component, mockClaims, possibleErrors) {
   return DefaultStory;
 }
 
+/**
+ * Error info object
+ * @typedef {object} ErrorInfo
+ * @property {string} displayStr String used to display the storybook option
+ * @property {string} field Claim field
+ * @property {string} i18nKey I18n key for the error
+ * @property {string} type Error type
+ */
+
+/**
+ * Given a list of fields, returns a list of possible errors
+ * @param {string[]} fields Array of fields
+ * @param {*} translation Translation strings object
+ * @returns {ErrorInfo[]}
+ */
 function getPossibleErrors(fields, translation) {
-  const possibleErrors = [];
+  let possibleErrors = [];
   for (const field of fields) {
     const claimField = field.substring("claim.".length);
-    for (const type in _.get(translation.errors.claims, claimField)) {
-      possibleErrors.push(`${claimField}.${type}`);
-    }
+    possibleErrors = possibleErrors.concat(
+      getPossibleErrorsForField(claimField, translation)
+    );
   }
+  return possibleErrors;
+}
+
+/**
+ * Returns a list of possible errors for a given claim field
+ * @param {string} field Claim field path
+ * @param {*} translation Translation strings object
+ * @returns {ErrorInfo} I18n keys for the various error types that are associated with the field
+ */
+function getPossibleErrorsForField(field, translation) {
+  // Remove array indexes from the field since i18n keys don't depend on array indexes
+  // i.e. convert foo[0].bar[1].cat to foo.bar.cat
+  const claimFieldKey = field.replace(/\[(\d+)\]/g, "");
+  const errorTypes = Object.keys(
+    _.get(translation.errors.claims, claimFieldKey) || {}
+  );
+  const possibleErrors = errorTypes.map((type) => {
+    return {
+      displayStr: `${claimFieldKey}: ${type}`,
+      field,
+      i18nKey: `errors.claims.${claimFieldKey}.${type}`,
+      type,
+    };
+  });
   return possibleErrors;
 }
 

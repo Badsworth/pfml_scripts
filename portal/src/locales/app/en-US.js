@@ -66,6 +66,19 @@ const errors = {
     mass_id: {
       pattern: "Please enter your ID in the correct format.",
     },
+    payment_preferences: {
+      account_details: {
+        account_number: {
+          minLength:
+            "Account number too short: Account number must be at least 6 digits.",
+          maxLength:
+            "Account number too long: Account number must be 17 digits or fewer.",
+        },
+        routing_number: {
+          pattern: "Please enter a 9 digit routing number.",
+        },
+      },
+    },
     tax_identifier: {
       pattern: "Please enter a 9-digit number.",
     },

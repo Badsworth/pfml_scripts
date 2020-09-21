@@ -18,20 +18,18 @@ describe("PaymentMethod", () => {
     beforeEach(() => {
       ({ appLogic, claim, wrapper } = renderWithAppLogic(PaymentMethod, {
         claimAttrs: {
-          temp: {
-            payment_preferences: [
-              {
-                payment_method: PaymentPreferenceMethod.ach,
-              },
-            ],
-          },
+          payment_preferences: [
+            {
+              payment_method: PaymentPreferenceMethod.ach,
+            },
+          ],
         },
       }));
     });
 
     it("displays the ACH fieldset", () => {
       const achField = wrapper.find(
-        "[name='temp.payment_preferences[0].account_details.routing_number']"
+        "[name='payment_preferences[0].account_details.routing_number']"
       );
       const conditionalContent = achField.parents("ConditionalContent");
 
@@ -50,20 +48,18 @@ describe("PaymentMethod", () => {
     beforeEach(() => {
       ({ appLogic, claim, wrapper } = renderWithAppLogic(PaymentMethod, {
         claimAttrs: {
-          temp: {
-            payment_preferences: [
-              {
-                payment_method: PaymentPreferenceMethod.debit,
-              },
-            ],
-          },
+          payment_preferences: [
+            {
+              payment_method: PaymentPreferenceMethod.debit,
+            },
+          ],
         },
       }));
     });
 
     it("does not show the ACH fieldset", () => {
       const achField = wrapper.find(
-        "[name='temp.payment_preferences[0].account_details.routing_number']"
+        "[name='payment_preferences[0].account_details.routing_number']"
       );
       const conditionalContent = achField.parents("ConditionalContent");
 

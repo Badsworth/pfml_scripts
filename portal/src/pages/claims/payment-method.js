@@ -17,9 +17,10 @@ import { useTranslation } from "../../locales/i18n";
 import withClaim from "../../hoc/withClaim";
 
 export const fields = [
-  "claim.temp.payment_preferences[0].payment_method",
-  "claim.temp.payment_preferences[0].account_details.account_number",
-  "claim.temp.payment_preferences[0].account_details.routing_number",
+  "claim.payment_preferences[0].payment_method",
+  "claim.payment_preferences[0].account_details.account_number",
+  "claim.payment_preferences[0].account_details.routing_number",
+  "claim.payment_preferences[0].payment_preference_id",
 ];
 
 export const PaymentMethod = (props) => {
@@ -27,7 +28,10 @@ export const PaymentMethod = (props) => {
   const { t } = useTranslation();
 
   const { formState, updateFields } = useFormState(pick(props, fields).claim);
-  const paymentPreference = get(formState, "temp.payment_preferences[0]");
+  const payment_method = get(
+    formState,
+    "payment_preferences[0].payment_method"
+  );
 
   const handleSave = () =>
     appLogic.claims.update(claim.application_id, formState);
@@ -44,21 +48,16 @@ export const PaymentMethod = (props) => {
       onSave={handleSave}
     >
       <InputChoiceGroup
-        {...getFunctionalInputProps(
-          "temp.payment_preferences[0].payment_method"
-        )}
+        {...getFunctionalInputProps("payment_preferences[0].payment_method")}
         choices={[
           {
-            checked:
-              paymentPreference.payment_method === PaymentPreferenceMethod.ach,
+            checked: payment_method === PaymentPreferenceMethod.ach,
             label: t("pages.claimsPaymentMethod.choiceAch"),
             hint: t("pages.claimsPaymentMethod.choiceHintAch"),
             value: PaymentPreferenceMethod.ach,
           },
           {
-            checked:
-              paymentPreference.payment_method ===
-              PaymentPreferenceMethod.debit,
+            checked: payment_method === PaymentPreferenceMethod.debit,
             label: t("pages.claimsPaymentMethod.choiceDebit"),
             hint: t("pages.claimsPaymentMethod.choiceHintDebit"),
             value: PaymentPreferenceMethod.debit,
@@ -69,9 +68,7 @@ export const PaymentMethod = (props) => {
       />
 
       <ConditionalContent
-        visible={
-          paymentPreference.payment_method === PaymentPreferenceMethod.ach
-        }
+        visible={payment_method === PaymentPreferenceMethod.ach}
       >
         <Fieldset>
           <FormLabel component="legend">
@@ -81,7 +78,7 @@ export const PaymentMethod = (props) => {
 
           <InputText
             {...getFunctionalInputProps(
-              "temp.payment_preferences[0].account_details.routing_number"
+              "payment_preferences[0].account_details.routing_number"
             )}
             label={t("pages.claimsPaymentMethod.routingNumberLabel")}
             hint={t("pages.claimsPaymentMethod.routingNumberHint")}
@@ -93,7 +90,7 @@ export const PaymentMethod = (props) => {
 
           <InputText
             {...getFunctionalInputProps(
-              "temp.payment_preferences[0].account_details.account_number"
+              "payment_preferences[0].account_details.account_number"
             )}
             label={t("pages.claimsPaymentMethod.accountNumberLabel")}
             inputMode="numeric"
@@ -104,9 +101,7 @@ export const PaymentMethod = (props) => {
       </ConditionalContent>
 
       <ConditionalContent
-        visible={
-          paymentPreference.payment_method === PaymentPreferenceMethod.debit
-        }
+        visible={payment_method === PaymentPreferenceMethod.debit}
       >
         <Alert state="info">
           {t("pages.claimsPaymentMethod.debitDestinationInfo")}

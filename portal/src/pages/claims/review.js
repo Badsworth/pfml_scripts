@@ -55,7 +55,7 @@ export const Review = (props) => {
   const { t } = useTranslation();
   const { appLogic, claim } = props;
 
-  const paymentPreference = get(claim, "temp.payment_preferences[0]");
+  const payment_method = get(claim, "payment_preferences[0].payment_method");
   const reason = get(claim, "leave_details.reason");
   const reasonQualifier = get(claim, "leave_details.reason_qualifier");
 
@@ -395,7 +395,7 @@ export const Review = (props) => {
             {t("pages.claimsReview.stepHeading", { context: "payment" })}
           </ReviewHeading>
 
-          {paymentPreference.payment_method && (
+          {payment_method && (
             <ReviewRow
               label={t("pages.claimsReview.paymentMethodLabel")}
               level={reviewRowLevel}
@@ -403,7 +403,7 @@ export const Review = (props) => {
               {t("pages.claimsReview.paymentMethodValue", {
                 context: findKeyByValue(
                   PaymentPreferenceMethod,
-                  paymentPreference.payment_method
+                  payment_method
                 ),
               })}
             </ReviewRow>

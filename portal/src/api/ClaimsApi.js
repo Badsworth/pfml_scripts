@@ -3,7 +3,6 @@ import BaseApi from "./BaseApi";
 import Claim from "../models/Claim";
 import ClaimCollection from "../models/ClaimCollection";
 import { isFeatureEnabled } from "../services/featureFlags";
-import merge from "lodash/merge";
 import routes from "../routes";
 
 /**
@@ -102,11 +101,13 @@ export default class ClaimsApi extends BaseApi {
     );
 
     // TODO (CP-676): Remove workaround once API returns all the fields in our application
-    const workaroundData = merge({ ...data, application_id }, patchData);
+    if (patchData.temp) {
+      data.temp = patchData.temp;
+    }
     // </ end workaround >
 
     return {
-      claim: success ? new Claim(workaroundData) : null,
+      claim: success ? new Claim(data) : null,
       errors,
       success,
       status,
