@@ -442,8 +442,8 @@ paths:
       security:
         - {} # no authentication option
       tags:
-        - Eligibility
-      summary: Retrieve financial eligibility by SSN, FEIN, leave_start date, application submitted date and employee status.
+        - Financial Eligibility
+      summary: Retrieve financial eligibility by SSN/ITIN, FEIN, leave start date, application submitted date and employment status.
       operationId: massgov.pfml.api.eligibility.handler.eligibility_post
       responses:
         "200":

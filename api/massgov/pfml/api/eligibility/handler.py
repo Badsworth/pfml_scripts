@@ -59,18 +59,9 @@ def eligibility_post():
         employee = db_session.query(Employee).filter_by(tax_identifier=tax_record).first()
 
         if tax_record is None or employer is None or employee is None:
-            logger.error(
-                "Unable to find record. Tax_Identifier={}, Employee={}, Employer={}".format(
-                    tax_record, employee, employer
-                )
-            )
+            logger.error("Unable to find record. Tax record or employee or empoyer is None")
             return response_util.error_response(
-                status_code=NotFound,
-                message="Unable to find tax record for given tax_identifier={} and employer fein={}".format(
-                    tax_identifier, fein
-                ),
-                errors=[],
-                data={},
+                status_code=NotFound, message="Unable to find record", errors=[], data={},
             ).to_api_response()
 
         employee_id: UUID = UUID(str(employee.employee_id))
@@ -84,15 +75,12 @@ def eligibility_post():
         state_metric_data = eligibility_util.fetch_state_metric(db_session, _eligibility_date)
 
     if not wages_and_contribution:
-        logger.info("No wages found for employee {}".format(tax_identifier))
+        logger.info("No wages found for Employee_id={}".format(employee_id))
         no_wage_data_response = EligibilityResponse(
-            financially_eligible=False,
-            description="No wages found for employee {}".format(tax_identifier),
+            financially_eligible=False, description="No wages data found.",
         )
         return response_util.success_response(
-            message="Unable to find wage records for employee={} under employer={}".format(
-                tax_identifier, fein
-            ),
+            message="Unable to find wage records",
             data=EligibilityResponse.from_orm(no_wage_data_response).dict(exclude_none=True),
         ).to_api_response()
 
@@ -103,25 +91,17 @@ def eligibility_post():
         unemployment_minimum = state_metric_data.unemployment_minimum_earnings
         wage_data_response = EligibilityResponse(
             financially_eligible=True,
-            description="For employee={}, the total_wage={} and state_average_weekly_wage={} and the unemployment_minimum={}".format(
-                tax_identifier, total_wages, state_average_weekly_wage, unemployment_minimum
-            ),
+            description="Financially eligible",
             total_wages=total_wages,
             state_average_weekly_wage=state_average_weekly_wage,
             unemployment_minimum=unemployment_minimum,
         )
     else:
         wage_data_response = EligibilityResponse(
-            financially_eligible=True,
-            description="For employee={}, the total_wage={} and state_average_weekly_wage={} and the unemployment_minimum={}".format(
-                tax_identifier, total_wages, state_average_weekly_wage, unemployment_minimum
-            ),
-            total_wages=total_wages,
+            financially_eligible=True, description="Financially eligible", total_wages=total_wages,
         )
 
     return response_util.success_response(
-        message="Calculated total_wage and average_weekly_wage for employee={}".format(
-            tax_identifier
-        ),
+        message="Calculated total_wage and average_weekly_wage",
         data=EligibilityResponse.from_orm(wage_data_response).dict(exclude_none=True),
     ).to_api_response()
