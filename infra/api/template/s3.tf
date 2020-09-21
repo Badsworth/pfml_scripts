@@ -57,6 +57,10 @@ resource "aws_s3_bucket_policy" "document_upload_policy" {
   policy = data.aws_iam_policy_document.document_upload.json
 }
 
+data "aws_s3_bucket" "formstack_import" {
+  bucket = "massgov-pfml-${var.environment_name}-formstack-data"
+}
+
 data "aws_s3_bucket" "agency_transfer" {
   bucket = "massgov-pfml-${var.environment_name}-agency-transfer"
 }
@@ -108,6 +112,7 @@ resource "aws_cloudtrail" "massgov_pfml_s3_logging" {
       values = [
         "${aws_s3_bucket.document_upload.arn}/",
         "${data.aws_s3_bucket.agency_transfer.arn}/",
+        "${data.aws_s3_bucket.formstack_import.arn}/",
         "${data.aws_s3_bucket.lambda_build.arn}/",
         "${data.aws_s3_bucket.terraform.arn}/",
         "${data.aws_s3_bucket.mass_pfml_acct_mgmt.arn}/"

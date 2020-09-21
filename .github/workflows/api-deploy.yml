@@ -56,6 +56,50 @@ jobs:
         run: make release
         working-directory: ${{ env.working-dir }}
 
+  formstack-import-build:
+    name: Build lambda function for Formstack import
+    runs-on: ubuntu-latest
+    env:
+      infra-working-dir: ./api/lambdas/formstack_import
+    outputs:
+      s3_key: ${{ steps.get_s3_key.outputs.s3_key }}
+
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v1
+        with:
+          python-version: ${{ env.python-version }}
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.PFML_AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.PFML_AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+          role-to-assume: ci-run-deploys
+          role-duration-seconds: 3600
+
+      - name: Install API Package Dependencies
+        run: pip install wheel setuptools poetry
+        working-directory: ${{ env.working-dir }}
+
+      - name: Build API package
+        run: poetry build
+        working-directory: ${{ env.working-dir }}
+
+      - name: Install Lambda CLI Dependencies
+        run: pip install setuptools awscli aws-sam-cli
+        working-directory: ${{ env.infra-working-dir }}
+
+      - name: Lambda Build, Package and Upload to S3
+        run: make release
+        working-directory: ${{ env.infra-working-dir }}
+
+      - name: Get Package S3 Key
+        id: get_s3_key
+        run: echo "::set-output name=s3_key::$(make get-release-key)"
+        working-directory: ${{ env.infra-working-dir }}
+
   dor-import-build:
     name: Build lambda function for DOR import
     runs-on: ubuntu-latest
@@ -283,6 +327,7 @@ jobs:
     env:
       TF_VAR_service_docker_tag: ${{ github.sha }}
       TF_VAR_dor_lambda_artifact_s3_key: ${{ needs.dor-import-build.outputs.s3_key }}
+      TF_VAR_formstack_lambda_artifact_s3_key: ${{ needs.formstack-import-build.outputs.s3_key }}
       TF_VAR_dor_import_lambda_dependencies_s3_key: ${{ needs.dor-import-build.outputs.dependencies_s3_key }}
       TF_VAR_cognito_post_confirmation_lambda_artifact_s3_key: ${{ needs.cognito-post-confirmation-build.outputs.s3_key }}
       TF_VAR_fineos_eligibility_transfer_lambda_build_s3_key: ${{ needs.eligibility-feed-build.outputs.s3_key }}

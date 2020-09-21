@@ -1,13 +1,17 @@
+import json
 from typing import Callable, Dict, Generator, List, Optional
-from urllib.parse import urljoin
 
+import boto3
 import requests
+from requests_oauthlib import OAuth2Session
 
+from massgov.pfml.util.config import get_secret_from_env, put_secret_to_env
 from massgov.pfml.util.pydantic import PydanticBaseModel
 
 from .exception import FormstackBadResponse, FormstackClientError
 
 FORMSTACK_API_URL = "https://www.formstack.com/api/v2"
+aws_ssm = boto3.client("ssm", region_name="us-east-1")
 
 
 class SubmissionKeyValuePair(PydanticBaseModel):
@@ -64,14 +68,25 @@ class FormstackClient:
     Client for retrieving forms and form data via the Formstack API
     """
 
-    formstack_api_key: str
+    def __init__(self):
+        formstack_token = json.loads(get_secret_from_env(aws_ssm, "FORMSTACK_TOKEN") or "{}")
+        formstack_oauth_info = json.loads(
+            get_secret_from_env(aws_ssm, "FORMSTACK_OAUTH_INFO") or "{}"
+        )
 
-    def __init__(self, formstack_api_key):
-        self.session = requests.Session()
-        self.session.headers.update({"Authorization": f"Bearer {formstack_api_key}"})
+        self.session = OAuth2Session(
+            formstack_oauth_info["client_id"],
+            token=formstack_token,
+            auto_refresh_url=f"{FORMSTACK_API_URL}/api/v2/oauth2/token",
+            auto_refresh_kwargs=formstack_oauth_info,
+            token_updater=self.token_saver,
+        )
+
+    def token_saver(self, token):
+        put_secret_to_env(aws_ssm, "FORMSTACK_TOKEN", json.dumps(token))
 
     def _request(self, method: str, url: str, params: Optional[Dict] = None) -> requests.Response:
-        full_url = urljoin(FORMSTACK_API_URL, url)
+        full_url = f"{FORMSTACK_API_URL}{url}"
 
         try:
             response = self.session.request(method, full_url, params=params, timeout=10)

@@ -19,11 +19,26 @@ resource "aws_cloudwatch_event_target" "trigger_dor_import_lambda_daily_at_11_pm
   target_id = "dor_import_${var.environment_name}_lambda_event_target"
 }
 
+resource "aws_cloudwatch_event_target" "trigger_formstack_import_lambda_daily_at_11_pm" {
+  rule      = aws_cloudwatch_event_rule.daily_11pm_et.name
+  arn       = aws_lambda_function.formstack_import.arn
+  target_id = "formstack_import_${var.environment_name}_lambda_event_target"
+  input     = "{\"is_daily_lambda\":true}"
+}
+
 resource "aws_cloudwatch_event_rule" "daily_11pm_et" {
   name        = "daily-at-11-pm"
   description = "Fires once daily at 11pm US EDT/3am UTC"
   # The time of day can only be specified in UTC and will need to be updated when daylight savings changes occur, if the 2300 US ET is desired to be consistent.
   schedule_expression = "cron(0 03 * * ? *)"
+}
+
+resource "aws_lambda_permission" "allow_cloudwatch_to_call_formstack_import" {
+  statement_id  = "AllowExecutionFromCloudWatch"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.formstack_import.arn
+  principal     = "events.amazonaws.com"
+  source_arn    = aws_cloudwatch_event_rule.daily_11pm_et.arn
 }
 
 resource "aws_lambda_permission" "allow_cloudwatch_to_call_dor_import" {
@@ -66,6 +81,23 @@ resource "aws_lambda_permission" "nr_lambda_permission_dor_import" {
   function_name = local.newrelic_log_ingestion_lambda
   principal     = "logs.us-east-1.amazonaws.com"
   source_arn    = "arn:aws:logs:us-east-1:498823821309:log-group:/aws/lambda/massgov-pfml-${var.environment_name}-dor-import:*"
+}
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+resource "aws_cloudwatch_log_subscription_filter" "nr_lambda_formstack_import" {
+  name            = "nr_lambda_formstack_import"
+  log_group_name  = "/aws/lambda/massgov-pfml-${var.environment_name}-formstack-import"
+  filter_pattern  = "?REPORT ?NR_LAMBDA_MONITORING ?\"Task timed out\""
+  destination_arn = local.newrelic_log_ingestion_lambda
+}
+
+resource "aws_lambda_permission" "nr_lambda_permission_formstack_import" {
+  statement_id  = "NRLambdaPermission_FormstackImport_${var.environment_name}"
+  action        = "lambda:InvokeFunction"
+  function_name = local.newrelic_log_ingestion_lambda
+  principal     = "logs.us-east-1.amazonaws.com"
+  source_arn    = "arn:aws:logs:us-east-1:498823821309:log-group:/aws/lambda/massgov-pfml-${var.environment_name}-formstack-import:*"
 }
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

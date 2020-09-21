@@ -180,6 +180,13 @@ resource "aws_iam_role" "lambda_role" {
   assume_role_policy = data.aws_iam_policy_document.iam_policy_lambda_assumed_role.json
 }
 
+#IAM role for Formstack import lambda
+#name_prefix is highly abbreviated due to 32 character limit by Terraform
+resource "aws_iam_role" "formstack_import_lambda_role" {
+  name_prefix        = "massgov-pfml-${var.environment_name}-frmstk-role-"
+  assume_role_policy = data.aws_iam_policy_document.iam_policy_lambda_assumed_role.json
+}
+
 data "aws_iam_policy_document" "iam_policy_lambda_assumed_role" {
   statement {
     actions = [
@@ -197,6 +204,83 @@ data "aws_iam_policy_document" "iam_policy_lambda_assumed_role" {
 
   }
 }
+
+# Execution role policy for the Formstack import lambda.
+# Grants access to:
+# - Cloudwatch
+# - Specific s3 folders
+# - Ability to create EC2 network interfaces (ENI) to execute lambda within a VPC
+# - Has PutParameter access
+resource "aws_iam_role_policy" "formstack_import_lambda_execution" {
+  name   = "massgov-pfml-${var.environment_name}-formstack_import_lambda_execution_role"
+  role   = aws_iam_role.formstack_import_lambda_role.id
+  policy = data.aws_iam_policy_document.iam_policy_formstack_import_lambda_execution.json
+}
+
+data "aws_iam_policy_document" "iam_policy_formstack_import_lambda_execution" {
+  statement {
+    effect = "Allow"
+    actions = [
+      "logs:CreateLogGroup",
+      "logs:CreateLogStream",
+      "logs:PutLogEvents"
+    ]
+    resources = [
+      "arn:aws:logs:*:*:*"
+    ]
+  }
+  statement {
+    effect = "Allow"
+    actions = [
+      "s3:PutObject",
+      "s3:GetObject",
+      "s3:ListBucket"
+    ]
+    resources = [
+      data.aws_s3_bucket.formstack_import.arn,
+      "${data.aws_s3_bucket.formstack_import.arn}/*"
+    ]
+  }
+  statement {
+    effect = "Allow"
+    actions = [
+      "ec2:CreateNetworkInterface",
+      "ec2:DescribeNetworkInterfaces",
+      "ec2:DeleteNetworkInterface"
+    ]
+    resources = [
+      "*"
+    ]
+  }
+  statement {
+    effect = "Allow"
+
+    actions = [
+      "ssm:GetParameter",
+      "ssm:GetParameters",
+      "ssm:PutParameter",
+      "ssm:PutParameters"
+    ]
+
+    resources = [
+      "${local.ssm_arn_prefix}/${local.app_name}-formstack-import/*"
+    ]
+  }
+
+  statement {
+    effect = "Allow"
+
+    actions = [
+      "ssm:GetParametersByPath"
+    ]
+
+    resources = [
+      "${local.ssm_arn_prefix}/${local.app_name}-formstack-import/*"
+    ]
+  }
+}
+
+
 
 # Execution role policy for lambdas.
 # Grants access to:
@@ -268,7 +352,7 @@ data "aws_iam_policy_document" "iam_policy_lambda_execution" {
 
     resources = [
       "${local.ssm_arn_prefix}/${local.app_name}/${var.environment_name}",
-      "${local.ssm_arn_prefix}/${local.app_name}-dor-import/${var.environment_name}"
+      "${local.ssm_arn_prefix}/${local.app_name}-dor-import/${var.environment_name}",
     ]
   }
 }
@@ -434,5 +518,10 @@ resource "aws_iam_role_policy_attachment" "db_user_pfml_api_to_api_service_attac
 
 resource "aws_iam_role_policy_attachment" "db_user_pfml_api_to_lambda_role_attachment" {
   role       = aws_iam_role.lambda_role.name
+  policy_arn = aws_iam_policy.db_user_pfml_api.arn
+}
+
+resource "aws_iam_role_policy_attachment" "db_user_pfml_api_to_formstack_lambda_role_attachment" {
+  role       = aws_iam_role.formstack_import_lambda_role.name
   policy_arn = aws_iam_policy.db_user_pfml_api.arn
 }

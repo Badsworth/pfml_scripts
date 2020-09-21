@@ -32,7 +32,7 @@ class MockHeaders:
 
 
 class MockSession:
-    """ Mocks a requests.Session() """
+    """ Mocks a request_oauthlib.OAuth2Session() """
 
     def __init__(self, mock_request):
         self.mock_request = mock_request
@@ -40,6 +40,10 @@ class MockSession:
 
     def request(self, method, url, params, timeout):
         return self.mock_request(method=method, url=url, params=params, timeout=timeout)
+
+
+def mock_get_secret_from_env(*args):
+    return '{"client_id": "fake_id"}'
 
 
 def test_get_forms_success(monkeypatch):
@@ -50,11 +54,15 @@ def test_get_forms_success(monkeypatch):
             {"forms": [{"mock_key": "mock_response"}]}, requests.codes.ok
         )  # pylint: disable=no-member
 
-    def mock_session():
+    def mock_session(*args, **kwargs):
         return MockSession(mock_request)
 
-    monkeypatch.setattr(requests, "Session", mock_session)
-    client = FormstackClient("fake_api_key")
+    monkeypatch.setattr("massgov.pfml.formstack.formstack_client.OAuth2Session", mock_session)
+    monkeypatch.setattr(
+        "massgov.pfml.formstack.formstack_client.get_secret_from_env", mock_get_secret_from_env
+    )
+    client = FormstackClient()
+
     result = client.get_forms()
 
     assert result[0]["mock_key"] == "mock_response"
@@ -66,11 +74,14 @@ def test_get_forms_bad_resp(monkeypatch):
     def mock_request(*args, **kwargs):
         return MockResponse({}, requests.codes.server_error)  # pylint: disable=no-member
 
-    def mock_session():
+    def mock_session(*args, **kwargs):
         return MockSession(mock_request)
 
-    monkeypatch.setattr(requests, "Session", mock_session)
-    client = FormstackClient("fake_api_key")
+    monkeypatch.setattr("massgov.pfml.formstack.formstack_client.OAuth2Session", mock_session)
+    monkeypatch.setattr(
+        "massgov.pfml.formstack.formstack_client.get_secret_from_env", mock_get_secret_from_env
+    )
+    client = FormstackClient()
 
     with pytest.raises(FormstackBadResponse, match="expected 200, but got 500"):
         assert client.get_forms()
@@ -92,11 +103,14 @@ def test_get_submissions_success(monkeypatch):
         assert kwargs["params"]["expand_data"] == "false"
         return MockResponse(fake_submissions_resp, requests.codes.ok)  # pylint: disable=no-member
 
-    def mock_session():
+    def mock_session(*args, **kwargs):
         return MockSession(mock_request)
 
-    monkeypatch.setattr(requests, "Session", mock_session)
-    client = FormstackClient("fake_api_key")
+    monkeypatch.setattr("massgov.pfml.formstack.formstack_client.OAuth2Session", mock_session)
+    monkeypatch.setattr(
+        "massgov.pfml.formstack.formstack_client.get_secret_from_env", mock_get_secret_from_env
+    )
+    client = FormstackClient()
     result = client.get_submissions("fake_form_id")
 
     assert type(result) is SubmissionsData
@@ -118,11 +132,14 @@ def test_get_submissions_bad_resp(monkeypatch):
     def mock_request(*args, **kwargs):
         return MockResponse({}, requests.codes.server_error)  # pylint: disable=no-member
 
-    def mock_session():
+    def mock_session(*args, **kwargs):
         return MockSession(mock_request)
 
-    monkeypatch.setattr(requests, "Session", mock_session)
-    client = FormstackClient("fake_api_key")
+    monkeypatch.setattr("massgov.pfml.formstack.formstack_client.OAuth2Session", mock_session)
+    monkeypatch.setattr(
+        "massgov.pfml.formstack.formstack_client.get_secret_from_env", mock_get_secret_from_env
+    )
+    client = FormstackClient()
 
     result = client.get_submissions("fake_form_id")
     assert type(result) is SubmissionsData
@@ -142,11 +159,14 @@ def test_get_submission_success(monkeypatch):
         }
         return MockResponse(fake_submission_resp, requests.codes.ok)  # pylint: disable=no-member
 
-    def mock_session():
+    def mock_session(*args, **kwargs):
         return MockSession(mock_request)
 
-    monkeypatch.setattr(requests, "Session", mock_session)
-    client = FormstackClient("fake_api_key")
+    monkeypatch.setattr("massgov.pfml.formstack.formstack_client.OAuth2Session", mock_session)
+    monkeypatch.setattr(
+        "massgov.pfml.formstack.formstack_client.get_secret_from_env", mock_get_secret_from_env
+    )
+    client = FormstackClient()
     result = client.get_submission("fake_submission_id")
     assert type(result) is Submission
     result_dict = result.dict()
@@ -164,11 +184,14 @@ def test_get_submission_bad_resp(monkeypatch):
     def mock_request(*args, **kwargs):
         return MockResponse({}, requests.codes.server_error)  # pylint: disable=no-member
 
-    def mock_session():
+    def mock_session(*args, **kwargs):
         return MockSession(mock_request)
 
-    monkeypatch.setattr(requests, "Session", mock_session)
-    client = FormstackClient("fake_api_key")
+    monkeypatch.setattr("massgov.pfml.formstack.formstack_client.OAuth2Session", mock_session)
+    monkeypatch.setattr(
+        "massgov.pfml.formstack.formstack_client.get_secret_from_env", mock_get_secret_from_env
+    )
+    client = FormstackClient()
 
     with pytest.raises(FormstackBadResponse, match="expected 200, but got 500"):
         assert client.get_submission("fake_submission_id")
