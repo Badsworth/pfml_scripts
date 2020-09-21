@@ -78,6 +78,16 @@ def auth_claims(user):
 
 
 @pytest.fixture
+def oauth_claims(user):
+    claims = {
+        "exp": datetime.now() + timedelta(days=1),
+        "sub": str(user.active_directory_id),
+    }
+
+    return claims
+
+
+@pytest.fixture
 def consented_user(initialize_factories_session):
     user = UserFactory.create(consented_to_data_sharing=True)
     return user
@@ -130,6 +140,13 @@ def consented_user_token(consented_user_claims, auth_key):
 def auth_token(auth_claims, auth_key):
 
     encoded = jwt.encode(auth_claims, auth_key)
+    return encoded
+
+
+@pytest.fixture
+def oauth_auth_token(oauth_claims, auth_key):
+
+    encoded = jwt.encode(oauth_claims, auth_key)
     return encoded
 
 
