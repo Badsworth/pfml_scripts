@@ -18,7 +18,8 @@
     "flood:all": "element run src/flood/index.perf.ts",
     "flood:plan": "element plan src/flood/index.perf.ts",
     "flood:api": "element run src/flood/tests/api.perf.ts --no-headless",
-    "flood:fineos": "element run src/flood/tests/fineos.perf.ts --no-headless"
+    "flood:fineos": "element run src/flood/tests/fineos.perf.ts --no-headless",
+    "flood:fineosDeny": "element run src/flood/tests/fineosDeny.perf.ts --no-headless"
   },
   "author": "",
   "license": "ISC",
