@@ -70,22 +70,13 @@ function getDocumentType(
   // Currently, anything other than "Passport" throws an error when sent to Fineos.
   switch (document.type) {
     case "HCP":
+      return "State Managed Paid Leave Confirmation";
     case "ID-front":
     case "ID-back":
-      return "Passport";
+      return "Identification Proof";
     default:
       throw new Error(`Unhandled document type: ${document.type}`);
   }
-  // switch (document.type) {
-  // case "HCP":
-  // Just do this for now, since we have no category for HCP.
-  // return "Passport";
-  // case "ID-front":
-  // case "ID-back":
-  // return claim.claim.has_state_id
-  // ? "Driver's License Mass"
-  // : "Driver's License Other State";
-  // }
 }
 
 function getDocumentCategory(
@@ -93,17 +84,11 @@ function getDocumentCategory(
 ): DocumentUploadRequest["document_category"] {
   switch (document.type) {
     case "HCP":
+      return "Certification";
     case "ID-front":
     case "ID-back":
-      return "Certification";
+      return "Identity Proofing";
     default:
       throw new Error(`Unhandled document type: ${document.type}`);
   }
-  // switch (document.type) {
-  //   case "ID-front":
-  //   case "ID-back":
-  //     return "Identity Proofing";
-  //   case "HCP":
-  //     return "Certification";
-  // }
 }

@@ -144,9 +144,8 @@ export default class PortalSubmitter {
       // a fatal error regularly due to timeouts.
       if (
         "data" in e &&
-        e.data.data &&
-        Array.isArray(e.data.data.errors) &&
-        e.data.data.errors.length === 0
+        Array.isArray(e.data.errors) &&
+        e.data.errors.length === 0
       ) {
         console.log("Caught error - ignoring");
         return;

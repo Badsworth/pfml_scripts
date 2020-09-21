@@ -310,11 +310,11 @@ export interface GETEmployersByEmployerIdResponse extends SuccessfulResponse {
 export type MaskedSsnItin = string;
 export type Date = string;
 export interface Address {
-    city: string;
-    line_1: string;
+    city: string | null;
+    line_1: string | null;
     line_2?: string | null;
-    state: string;
-    zip: string;
+    state: string | null;
+    zip: string | null;
 }
 export interface ReducedScheduleLeavePeriods {
     leave_period_id?: string | null;
@@ -396,6 +396,7 @@ export interface PaymentPreferences {
 export interface ApplicationResponse {
     application_nickname?: string | null;
     application_id?: string;
+    fineos_absence_id?: string;
     tax_identifier?: MaskedSsnItin | null;
     employer_id?: string | null;
     employer_fein?: string | null;
@@ -486,7 +487,7 @@ export interface GETApplicationsByApplicationIdDocumentsResponse extends Success
 }
 export interface DocumentUploadRequest {
     document_category: "Identity Proofing" | "Certification";
-    document_type: "Passport" | "Driver's License Mass" | "Driver's License Other State";
+    document_type: "Passport" | "Driver's License Mass" | "Driver's License Other State" | "Identification Proof" | "State Managed Paid Leave Confirmation";
     name?: string;
     description: string;
     file: unknown;
@@ -498,7 +499,7 @@ export interface DocumentResponse {
     created_at: any;
     updated_at: any;
     document_category: "Identity Proofing" | "Certification";
-    document_type: "Passport" | "Driver's License Mass" | "Driver's License Other State";
+    document_type: "Passport" | "Driver's License Mass" | "Driver's License Other State" | "Identification Proof" | "State Managed Paid Leave Confirmation";
     content_type: string;
     size_bytes: number;
     fineos_id: string;
@@ -530,7 +531,7 @@ export interface RMVCheckRequest {
     date_of_birth: Date;
     first_name: string;
     last_name: string;
-    mass_id_number?: MassId;
+    mass_id_number: MassId;
     residential_address_city: string;
     residential_address_line_1: string;
     residential_address_line_2?: string | null;
@@ -711,7 +712,7 @@ export async function postApplicationsByApplicationIdDocuments({ applicationId }
     }));
 }
 /**
- * Retrieve financial eligibility by SSN/FEIN effective date and employee status.
+ * Retrieve financial eligibility by SSN/ITIN, FEIN, leave start date, application submitted date and employment status.
  */
 export async function postFinancialEligibility(eligibilityRequest: EligibilityRequest, options?: RequestOptions): Promise<ApiResponse<POSTFinancialEligibilityResponse>> {
     return await http.fetchJson("/financial-eligibility", http.json({

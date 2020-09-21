@@ -264,7 +264,9 @@ export class Simulation {
         success++;
       } catch (e) {
         console.log(
-          `Failed on ${claim.scenario} for ${claim.claim.tax_identifier}`
+          `Failed on ${claim.scenario} for ${
+            claim.claim.tax_identifier ?? claim.claim.employee_ssn
+          }`
         );
         if ("data" in e && "errors" in e.data) {
           console.error("Reason given:", e.data.errors);
