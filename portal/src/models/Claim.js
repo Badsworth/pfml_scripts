@@ -38,6 +38,8 @@ class Claim extends BaseModel {
         reason_qualifier: null,
         reduced_schedule_leave_periods: null,
       },
+      // address object. See Address model
+      mailing_address: null,
       mass_id: null,
       middle_name: null,
       // array of OtherIncome objects. See the OtherIncome model
@@ -53,6 +55,8 @@ class Claim extends BaseModel {
        * this temporary space.
        */
       temp: {
+        // TODO (CP-1019): Connect address preference to the API
+        has_mailing_address: null,
         leave_details: {
           // TODO (CP-719): Connect intermittent leave fields to the API
           avg_weekly_work_hours: null,

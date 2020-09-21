@@ -133,6 +133,7 @@ export default class Step extends BaseModel {
           "claim.leave_details.child_birth_date",
           "claim.leave_details.child_placement_date",
           "claim.leave_details.pregnant_or_recent_birth",
+          "claim.mailing_address",
           "claim.previous_leaves",
           "claim.temp.leave_details.avg_weekly_work_hours",
           "claim.temp.leave_details.continuous_leave_periods[0]",

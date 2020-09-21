@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`Address renders the page 1`] = `
+exports[`Address renders the page without any address info 1`] = `
 <QuestionPage
   onSave={[Function]}
   title="Your identity"
@@ -18,13 +18,67 @@ exports[`Address renders the page 1`] = `
     onChange={[Function]}
     value={
       Address {
-        "city": "Boston",
-        "line_1": "19 Staniford St",
-        "line_2": "Suite 505",
-        "state": "MA",
-        "zip": "02214",
+        "city": null,
+        "line_1": null,
+        "line_2": null,
+        "state": null,
+        "zip": null,
       }
     }
   />
+  <InputChoiceGroup
+    choices={
+      Array [
+        Object {
+          "checked": false,
+          "label": "Yes",
+          "value": "false",
+        },
+        Object {
+          "checked": false,
+          "label": "No",
+          "value": "true",
+        },
+      ]
+    }
+    hint="We may send notices to this address. If you choose to get your payments through a debit card, we will mail the card to this address."
+    label="Do you get your mail at this address?"
+    name="temp.has_mailing_address"
+    onChange={[Function]}
+    type="radio"
+    value=""
+  />
+  <ConditionalContent
+    fieldNamesClearedWhenHidden={
+      Array [
+        "mailing_address",
+      ]
+    }
+    getField={[Function]}
+    removeField={[Function]}
+    updateFields={[Function]}
+    visible={null}
+  >
+    <FieldsetAddress
+      appErrors={
+        AppErrorInfoCollection {
+          "items": Array [],
+          "itemsById": Object {},
+        }
+      }
+      label="What is your mailing address?"
+      name="mailing_address"
+      onChange={[Function]}
+      value={
+        Address {
+          "city": null,
+          "line_1": null,
+          "line_2": null,
+          "state": null,
+          "zip": null,
+        }
+      }
+    />
+  </ConditionalContent>
 </QuestionPage>
 `;

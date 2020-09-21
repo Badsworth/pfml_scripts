@@ -207,8 +207,14 @@ const pages = {
     usernameLabel: "$t(shared.usernameLabel)",
   },
   claimsAddress: {
+    choiceNo: "$t(shared.choiceNo)",
+    choiceYes: "$t(shared.choiceYes)",
+    hasMailingAddressHint:
+      "We may send notices to this address. If you choose to get your payments through a debit card, we will mail the card to this address.",
+    hasMailingAddressLabel: "Do you get your mail at this address?",
     hint:
       "If you are part of an Address Confidentiality Program, please provide your substitute address.",
+    mailingAddressLabel: "What is your mailing address?",
     sectionLabel: "What is your current residential address?",
     title: "$t(shared.claimsVerifyIdTitle)",
   },
@@ -507,11 +513,6 @@ const pages = {
     achLead:
       "We need this information so you can receive your weekly benefit through Direct Deposit. Contact your bank if you are having trouble finding this information.",
     achSectionLabel: "Enter your bank account information",
-    addressCityLabel: "City",
-    addressLine1Label: "Street address 1",
-    addressLine2Label: "Street address 2",
-    addressStateLabel: "State",
-    addressZipLabel: "ZIP Code",
     choiceAch: "$t(shared.paymentMethodAch)",
     choiceDebit: "$t(shared.paymentMethodDebit)",
     choiceHintAch: "Requires a bank account",
