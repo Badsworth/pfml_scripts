@@ -322,7 +322,7 @@ jobs:
   api-release:
     name: Release
     runs-on: ubuntu-latest
-    needs: [api-build, dor-import-build, cognito-post-confirmation-build, eligibility-feed-build, api-db-migrate-up]
+    needs: [api-build, dor-import-build, cognito-post-confirmation-build, eligibility-feed-build, api-db-migrate-up, formstack-import-build]
 
     env:
       TF_VAR_service_docker_tag: ${{ github.sha }}
