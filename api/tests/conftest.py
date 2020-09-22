@@ -20,6 +20,7 @@ from jose import jwt
 import massgov.pfml.api.app
 import massgov.pfml.api.authentication as authentication
 import massgov.pfml.api.employees
+import massgov.pfml.db.models.employees as employee_models
 import massgov.pfml.util.logging
 from massgov.pfml.db.models.factories import UserFactory
 
@@ -94,6 +95,12 @@ def consented_user(initialize_factories_session):
 
 
 @pytest.fixture
+def fineos_user(initialize_factories_session):
+    user = UserFactory.create(roles=[employee_models.Role.FINEOS])
+    return user
+
+
+@pytest.fixture
 def disable_employee_endpoint(monkeypatch):
     new_env = monkeypatch.setenv("ENABLE_EMPLOYEE_ENDPOINTS", "0")
     return new_env
@@ -117,6 +124,17 @@ def consented_user_claims(consented_user):
 
 
 @pytest.fixture
+def fineos_user_claims(fineos_user):
+    claims = {
+        "a": "b",
+        "exp": datetime.now() + timedelta(days=1),
+        "sub": str(fineos_user.active_directory_id),
+    }
+
+    return claims
+
+
+@pytest.fixture
 def auth_key():
     hmac_key = {
         "kty": "oct",
@@ -133,6 +151,13 @@ def auth_key():
 def consented_user_token(consented_user_claims, auth_key):
 
     encoded = jwt.encode(consented_user_claims, auth_key)
+    return encoded
+
+
+@pytest.fixture
+def fineos_user_token(fineos_user_claims, auth_key):
+
+    encoded = jwt.encode(fineos_user_claims, auth_key)
     return encoded
 
 

@@ -74,6 +74,17 @@ def test_applications_unauthorized_get_with_user(client, user, auth_token):
     assert response.status_code == 403
 
 
+def test_applications_get_fineos_forbidden(client, fineos_user, fineos_user_token):
+    # Fineos role cannot access this endpoint
+    application = ApplicationFactory.create(user=fineos_user, updated_time=datetime.now())
+    response = client.get(
+        "/v1/applications/{}".format(application.application_id),
+        headers={"Authorization": f"Bearer {fineos_user_token}"},
+    )
+
+    assert response.status_code == 403
+
+
 def test_applications_get_partially_displays_fin_acct_num(
     client, user, auth_token, test_db_session
 ):
@@ -173,6 +184,14 @@ def test_applications_post_start_app_unauthenticated(client):
     response = client.post("/v1/applications", headers={"Authorization": f"Bearer {''}"})
 
     assert response.status_code == 401
+
+
+def test_applications_post_fineos_forbidden(client, fineos_user_token):
+    # Fineos role cannot access this endpoint
+    response = client.post(
+        "/v1/applications", headers={"Authorization": f"Bearer {fineos_user_token}"}
+    )
+    assert response.status_code == 403
 
 
 @freeze_time("2020-01-01")
@@ -383,6 +402,25 @@ def test_application_unauthorized_patch(client, user, auth_token, test_db_sessio
     response = client.patch(
         "/v1/applications/{}".format(application.application_id),
         headers={"Authorization": f"Bearer {auth_token}"},
+        json={"last_name": "Perez"},
+    )
+
+    assert response.status_code == 403
+
+    test_db_session.refresh(application)
+    assert application.last_name == "Smith"
+
+
+def test_application_patch_fineos_forbidden(
+    client, fineos_user, fineos_user_token, test_db_session
+):
+    # Fineos role cannot access this endpoint
+    # A fineos user having an application doesn't make sense, but makes certain this fails due to the role.
+    application = ApplicationFactory.create(user=fineos_user, last_name="Smith")
+
+    response = client.patch(
+        "/v1/applications/{}".format(application.application_id),
+        headers={"Authorization": f"Bearer {fineos_user_token}"},
         json={"last_name": "Perez"},
     )
 
@@ -1145,6 +1183,16 @@ def test_application_post_submit_app(client, user, auth_token, test_db_session):
     }
 
 
+def test_application_post_submit_fineos_forbidden(client, fineos_user, fineos_user_token):
+    application = ApplicationFactory.create(user=fineos_user)
+    response = client.post(
+        "/v1/applications/{}/submit_application".format(application.application_id),
+        headers={"Authorization": f"Bearer {fineos_user_token}"},
+    )
+
+    assert response.status_code == 403
+
+
 def test_application_post_submit_app_fein_not_found(client, user, auth_token, test_db_session):
     factory.random.reseed_random(2)
 
@@ -1284,7 +1332,8 @@ def test_application_post_submit_to_fineos(client, user, auth_token, test_db_ses
     assert status == ApplicationStatus.Submitted.value
 
     capture = massgov.pfml.fineos.mock_client.get_capture()
-    fineos_user_id = capture[2][1]  # This is generated randomly and changes each time.
+    # This is generated randomly and changes each time.
+    fineos_user_id = capture[2][1]
     assert capture == [
         ("find_employer", None, {"employer_fein": "770000001"}),
         (
@@ -1377,7 +1426,8 @@ def test_application_post_complete_to_fineos(client, user, auth_token, test_db_s
         headers={"Authorization": f"Bearer {auth_token}"},
     )
     capture = massgov.pfml.fineos.mock_client.get_capture()
-    fineos_user_id = capture[2][1]  # This is generated randomly and changes each time.
+    # This is generated randomly and changes each time.
+    fineos_user_id = capture[2][1]
 
     assert capture == [
         ("find_employer", None, {"employer_fein": "770000001"}),

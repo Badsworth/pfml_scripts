@@ -332,12 +332,16 @@ class User(Base):
     email_address = Column(Text)
     consented_to_data_sharing = Column(Boolean, default=False, nullable=False)
 
+    roles = relationship("UserRole", back_populates="user", uselist=True)
+
 
 class UserRole(Base):
     __tablename__ = "link_user_role"
     user_id = Column(UUID(as_uuid=True), ForeignKey("user.user_id"), primary_key=True)
     role_id = Column(Integer, ForeignKey("lk_role.role_id"), primary_key=True)
-    related_role_id = Column(UUID(as_uuid=True))
+
+    user = relationship(User)
+    role = relationship(LkRole)
 
 
 class WagesAndContributions(Base):
@@ -509,6 +513,7 @@ class Role(LookupTable):
     column_names = ("role_id", "role_description")
 
     USER = LkRole(1, "User")
+    FINEOS = LkRole(2, "Fineos")
 
 
 class PaymentType(LookupTable):

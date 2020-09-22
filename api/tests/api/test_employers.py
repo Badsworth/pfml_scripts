@@ -30,6 +30,15 @@ def test_get_404(client, auth_token):
     assert response.status_code == 404
 
 
+def test_get_employer_fineos_user_forbidden(client, fineos_user_token, employer):
+    # Fineos role cannot access this endpoint
+    response = client.get(
+        f"/v1/employers/{employer.employer_id}",
+        headers={"Authorization": "Bearer {}".format(fineos_user_token)},
+    )
+    assert response.status_code == 403
+
+
 def test_employee_auth_get(disable_employer_endpoint, client, auth_token, employer):
     response = client.get(
         f"/v1/employers/{employer.employer_id}",

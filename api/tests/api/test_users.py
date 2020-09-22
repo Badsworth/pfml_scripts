@@ -36,12 +36,29 @@ def test_users_get_404(client, auth_token):
     assert response.status_code == 404
 
 
+def test_users_get_fineos_forbidden(client, fineos_user, fineos_user_token):
+    # Fineos role cannot access this endpoint
+    response = client.get(
+        "/v1/users/{}".format(fineos_user.user_id),
+        headers={"Authorization": f"Bearer {fineos_user_token}"},
+    )
+    assert response.status_code == 403
+
+
 def test_users_get_current(client, user, auth_token):
     response = client.get("/v1/users/current", headers={"Authorization": f"Bearer {auth_token}"})
     response_body = response.get_json()
 
     assert response.status_code == 200
     assert response_body.get("data")["user_id"] == str(user.user_id)
+
+
+def test_users_get_current_fineos_forbidden(client, fineos_user_token):
+    # Fineos role cannot access this endpoint
+    response = client.get(
+        "/v1/users/current", headers={"Authorization": f"Bearer {fineos_user_token}"}
+    )
+    assert response.status_code == 403
 
 
 def test_users_get_mask_email(client, user, auth_token):
@@ -122,3 +139,14 @@ def test_users_patch_404(client, auth_token):
         headers={"Authorization": f"Bearer {auth_token}"},
     )
     assert response.status_code == 404
+
+
+def test_users_patch_fineos_forbidden(client, fineos_user, fineos_user_token):
+    # Fineos role cannot access this endpoint
+    body = {"consented_to_data_sharing": True}
+    response = client.patch(
+        "v1/users/{}".format(fineos_user.user_id),
+        headers={"Authorization": f"Bearer {fineos_user_token}"},
+        json=body,
+    )
+    assert response.status_code == 403

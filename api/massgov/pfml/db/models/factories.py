@@ -64,6 +64,18 @@ class UserFactory(BaseFactory):
     active_directory_id = factory.Faker("uuid4")
     email_address = factory.Faker("email")
 
+    @factory.post_generation
+    def roles(self, create, extracted, **kwargs):
+        if not create:
+            return
+
+        if extracted:
+            for role in extracted:
+                lk_role = employee_models.Role.get_instance(db_session, template=role)
+                user_role = employee_models.UserRole(role=lk_role, user=self)
+                self.roles.append(user_role)
+                get_db_session().commit()
+
 
 class EmployerFactory(BaseFactory):
     class Meta:
