@@ -13,12 +13,14 @@
 ###
 
 import datetime
+import mimetypes
 import uuid
 from typing import List, Optional
 
 import massgov.pfml.db
 import massgov.pfml.fineos.models
 import massgov.pfml.util.logging as logging
+from massgov.pfml.api.models.applications.responses import DocumentResponse
 from massgov.pfml.db.models.applications import Application, FINEOSWebIdExt
 
 logger = logging.get_logger(__name__)
@@ -248,9 +250,35 @@ def upload_document(
         raise ValueError("FINEOS Client Exception")
 
 
+def fineos_document_response_to_document_response(
+    fineos_document_response: massgov.pfml.fineos.models.customer_api.Document,
+    application: Application,
+) -> DocumentResponse:
+    user_id = application.user_id
+    application_id = application.application_id
+    created_at = None
+    if fineos_document_response.receivedDate:
+        created_at = datetime.datetime.combine(
+            fineos_document_response.receivedDate, datetime.time.min
+        )
+    content_type, encoding = mimetypes.guess_type(fineos_document_response.originalFilename or "")
+
+    document_response = DocumentResponse(
+        user_id=user_id,
+        application_id=application_id,
+        created_at=created_at,
+        document_type=fineos_document_response.name,
+        content_type=content_type,
+        fineos_document_id=fineos_document_response.documentId,
+        name=fineos_document_response.originalFilename,
+        description=fineos_document_response.description,
+    )
+    return document_response
+
+
 def get_documents(
     application: Application, db_session: massgov.pfml.db.Session
-) -> List[massgov.pfml.fineos.models.customer_api.Document]:
+) -> List[DocumentResponse]:
     try:
         fineos = massgov.pfml.fineos.create_client()
 
@@ -274,8 +302,14 @@ def get_documents(
             raise ValueError("Missing absence id")
         absence_id = application.fineos_absence_id
 
-        documents = fineos.get_documents(fineos_user_id, absence_id)
-        return documents
+        fineos_documents = fineos.get_documents(fineos_user_id, absence_id)
+        document_responses = list(
+            map(
+                lambda fd: fineos_document_response_to_document_response(fd, application),
+                fineos_documents,
+            )
+        )
+        return document_responses
     except massgov.pfml.fineos.FINEOSClientError:
         logger.exception("FINEOS Client Exception")
         raise ValueError("FINEOS Client Exception")

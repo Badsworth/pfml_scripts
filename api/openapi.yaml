@@ -389,7 +389,7 @@ paths:
                       data:
                         type: array
                         items:
-                          $ref: "#/components/schemas/FineosDocumentResponse"
+                          $ref: "#/components/schemas/DocumentResponse"
         "400":
           description: An unsuccessful request returns a 400 status code if one or more errors occurred.
           content:
@@ -1090,11 +1090,7 @@ components:
 
     DocumentResponse:
       type: object
-      properties:      
-        document_id:
-          type: string
-          format: uuid
-          example: "642ad2f5-523c-49ca-8d0c-f1a0ec941e72"
+      properties:
         user_id:
           type: string
           format: uuid
@@ -1106,15 +1102,6 @@ components:
         created_at:
           format: date
           example: "1970-06-01"
-        updated_at:
-          format: date
-          example: "1970-06-01"
-        document_category:
-          type: string
-          enum:
-            - Identity Proofing
-            - Certification
-          example: "Identity Proofing"
         document_type:
           type: string
           enum:
@@ -1127,97 +1114,25 @@ components:
         content_type:
           type: string
           example: "image/png"
-        size_bytes:
-          type: integer
-          example: 10500
-        fineos_id:
+        fineos_document_id:
           type: string
           example: "1234"
         name:
           type: string
-          example: "Jane Smith Passport"
+          example: "passport.png"
         description:
           type: string
           example: "Jane Smith Passport"
       required:
-        - document_id
         - user_id
         - application_id
         - created_at
-        - updated_at       
-        - document_category
         - document_type
         - content_type
-        - size_bytes
-        - fineos_id
+        - fineos_document_id
         - name
         - description
-      additionalProperties: false
-
-    FineosDocumentResponse:
-      type: object
-      properties:
-        caseId:
-          type: string
-          example: "NTN-575-ABS-01"
-          description: "Fineos case id the document is attached."
-        rootCaseId:
-          type: string
-          description: "Fineos root case id."
-          example: "NTN-575"
-        documentId:
-          type: integer
-          description: "Fineos document id."
-          example: 1234
-        name:
-          type: string
-          description: "Document type defined in the fineos system."
-          example: "ID Document"
-        type:
-          type: string
-          description: "The form of the document e.g. image, email, document."
-          example: "Document"
-        fileExtension:
-          type: string
-          example: ".png"
-        fileName:
-          type: string
-          description: "Fineos generated file name."
-          example: "26e82dd7-dbfc-4e7b-9804-ea955627253d.png"
-        originalFileName:
-          type: string
-          description: "The original uploaded file name."
-          example: "test.png"
-        receivedDate:
-          $ref: "#/components/schemas/Date"
-          nullable: false
-          description: "Date document was recieved."
-          example: "1999-12-31"
-        effectiveFrom:
-          $ref: "#/components/schemas/Date"          
-          nullable: true
-          description: "Effective start date for document, currently unsued by PFML API."
-          example: "1999-12-31"
-        effectiveTo:
-          $ref: "#/components/schemas/Date"
-          nullable: true
-          description: "Effective end date for document, currently unsued by PFML API."
-          example: "1999-12-31"
-        description:
-          type: string
-          example: "ID Document"
-          description: "Document description sent as part of Fineos API call for upload."
-        isRead:
-          type: boolean
-          example: false          
-          # Unclear how this flag changed by Fineos.
-          # The fineos download API does not set this flag to true.
-          # No clear way of opening or downloading files in the Fineos UI.
-          description: "Flag for document read status."
-        extensionAttributes:
-          type: array
-          description: "Array of custom property and value pair objects for the document."
-          example: []
+      additionalProperties: false    
 
     EligibilityRequest:
       type: object

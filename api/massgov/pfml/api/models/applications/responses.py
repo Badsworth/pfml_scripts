@@ -109,25 +109,19 @@ def build_payment_preference(
 
 
 class DocumentResponse(PydanticBaseModel):
-    document_id: UUID4
     user_id: UUID4
     application_id: UUID4
-    created_at: datetime
-    updated_at: datetime
-    document_category: Optional[str]
+    created_at: Optional[datetime]
     document_type: Optional[str]
     content_type: Optional[str]
-    size_bytes: int
-    fineos_id: str
+    fineos_document_id: Optional[str]
     name: str
     description: str
 
     @classmethod
     def from_orm(cls, document: Document) -> "DocumentResponse":
         document_response = super().from_orm(document)
-        document_response.document_category = (
-            document.document_category_instance.document_category_description
-        )
+        document_response.fineos_document_id = str(document.fineos_id)
         document_response.document_type = document.document_type_instance.document_type_description
         document_response.content_type = document.content_type_instance.content_type_description
         return document_response
