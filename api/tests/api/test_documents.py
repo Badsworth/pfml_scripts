@@ -82,7 +82,8 @@ def test_document_upload_unauthorized_application_user(
         form_data=document_upload_payload_helper(VALID_FORM_DATA, valid_file()),
     )
 
-    assert response["status"] == 403
+    assert response["status_code"] == 403
+    assert response["errors"] is not None
 
 
 def test_document_upload_unauthorized_consented_user(client, user, auth_token, test_db_session):
@@ -93,7 +94,8 @@ def test_document_upload_unauthorized_consented_user(client, user, auth_token, t
         form_data=document_upload_payload_helper(VALID_FORM_DATA, valid_file()),
     )
 
-    assert response["status"] == 403
+    assert response["status_code"] == 403
+    assert response["errors"] is not None
 
 
 def test_document_upload_invalid_filename(

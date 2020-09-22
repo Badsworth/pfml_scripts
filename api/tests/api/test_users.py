@@ -2,6 +2,7 @@ import uuid
 
 import pytest
 
+import tests.api
 from massgov.pfml.db.models.factories import UserFactory
 
 # every test in here requires real resources
@@ -25,7 +26,7 @@ def test_users_unauthorized_get(client, user, auth_token):
         "/v1/users/{}".format(user_2.user_id), headers={"Authorization": f"Bearer {auth_token}"}
     )
 
-    assert response.status_code == 403
+    tests.api.validate_error_response(response, 403)
 
 
 def test_users_get_404(client, auth_token):
@@ -33,7 +34,7 @@ def test_users_get_404(client, auth_token):
         "/v1/users/{}".format("00000000-0000-0000-0000-000000000000"),
         headers={"Authorization": f"Bearer {auth_token}"},
     )
-    assert response.status_code == 404
+    tests.api.validate_error_response(response, 404)
 
 
 def test_users_get_fineos_forbidden(client, fineos_user, fineos_user_token):
@@ -99,7 +100,7 @@ def test_users_unauthorized_patch(client, user, auth_token, test_db_session):
         json=body,
     )
 
-    assert response.status_code == 403
+    tests.api.validate_error_response(response, 403)
 
     test_db_session.refresh(user_2)
     assert user_2.consented_to_data_sharing is False
@@ -138,7 +139,8 @@ def test_users_patch_404(client, auth_token):
         json=body,
         headers={"Authorization": f"Bearer {auth_token}"},
     )
-    assert response.status_code == 404
+
+    tests.api.validate_error_response(response, 404)
 
 
 def test_users_patch_fineos_forbidden(client, fineos_user, fineos_user_token):
@@ -149,4 +151,4 @@ def test_users_patch_fineos_forbidden(client, fineos_user, fineos_user_token):
         headers={"Authorization": f"Bearer {fineos_user_token}"},
         json=body,
     )
-    assert response.status_code == 403
+    tests.api.validate_error_response(response, 403)

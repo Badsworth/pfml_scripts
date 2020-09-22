@@ -7,6 +7,7 @@ from sqlalchemy import inspect
 
 import massgov.pfml.fineos.mock_client
 import massgov.pfml.fineos.models
+import tests.api
 from massgov.pfml.api.models.applications.responses import ApplicationStatus
 from massgov.pfml.db.models.applications import (
     Application,
@@ -28,7 +29,8 @@ def test_applications_get_invalid(client, user, auth_token):
         "/v1/applications/{}".format("b26aa854-dd50-4aed-906b-c72b062f0275"),
         headers={"Authorization": f"Bearer {auth_token}"},
     )
-    assert response.status_code == 404
+
+    tests.api.validate_error_response(response, 404)
 
 
 @freeze_time("2020-01-01")
@@ -58,7 +60,7 @@ def test_applications_unauthorized_get(client, user, auth_token):
         headers={"Authorization": f"Bearer {auth_token}"},
     )
 
-    assert response.status_code == 403
+    tests.api.validate_error_response(response, 403)
 
 
 def test_applications_unauthorized_get_with_user(client, user, auth_token):
@@ -71,7 +73,7 @@ def test_applications_unauthorized_get_with_user(client, user, auth_token):
         headers={"Authorization": f"Bearer {auth_token}"},
     )
 
-    assert response.status_code == 403
+    tests.api.validate_error_response(response, 403)
 
 
 def test_applications_get_fineos_forbidden(client, fineos_user, fineos_user_token):
@@ -183,7 +185,7 @@ def test_applications_post_start_app(client, user, auth_token, test_db_session):
 def test_applications_post_start_app_unauthenticated(client):
     response = client.post("/v1/applications", headers={"Authorization": f"Bearer {''}"})
 
-    assert response.status_code == 401
+    tests.api.validate_error_response(response, 401)
 
 
 def test_applications_post_fineos_forbidden(client, fineos_user_token):
@@ -405,7 +407,7 @@ def test_application_unauthorized_patch(client, user, auth_token, test_db_sessio
         json={"last_name": "Perez"},
     )
 
-    assert response.status_code == 403
+    tests.api.validate_error_response(response, 403)
 
     test_db_session.refresh(application)
     assert application.last_name == "Smith"
@@ -458,7 +460,7 @@ def test_application_patch_masked_tax_id_has_no_effect(client, user, auth_token,
         json={"employee_ssn": "***-**-****"},
     )
 
-    assert response.status_code == 400
+    tests.api.validate_error_response(response, 400)
 
     test_db_session.refresh(application)
     assert application.tax_identifier
@@ -727,7 +729,7 @@ def test_application_patch_update_leave_period_belonging_to_other_application_bl
         },
     )
 
-    assert response.status_code == 403
+    tests.api.validate_error_response(response, 403)
 
     # assert existing leave period has not changed
     test_db_session.refresh(leave_period)
@@ -842,7 +844,7 @@ def test_application_patch_update_payment_preference_belonging_to_other_applicat
         },
     )
 
-    assert response.status_code == 403
+    tests.api.validate_error_response(response, 403)
 
     # assert existing leave period has not changed
     test_db_session.refresh(payment_preference)
@@ -1062,7 +1064,7 @@ def test_application_patch_invalid_values(client, user, auth_token):
         json={"leave_details": {"reduced_schedule_leave_periods": {}}},
     )
 
-    assert response.status_code == 400
+    tests.api.validate_error_response(response, 400)
 
 
 def test_application_patch_keys_not_in_body_retain_existing_value(

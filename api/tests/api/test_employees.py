@@ -1,5 +1,6 @@
 import pytest
 
+import tests.api
 from massgov.pfml.db.models.factories import EmployeeFactory
 
 
@@ -23,7 +24,7 @@ def test_employees_get_invalid(client, consented_user_token):
         "/v1/employees/{}".format("9e243bae-3b1e-43a4-aafe-aca3c6517cf0"),
         headers={"Authorization": "Bearer {}".format(consented_user_token)},
     )
-    assert response.status_code == 404
+    tests.api.validate_error_response(response, 404)
 
 
 def test_employees_get_fineos_user_forbidden(client, employee, fineos_user_token):
@@ -97,7 +98,7 @@ def test_employees_search_missing_param(client, consented_user_token):
         json=body,
         headers={"Authorization": "Bearer {}".format(consented_user_token)},
     )
-    assert response.status_code == 400
+    tests.api.validate_error_response(response, 400)
 
 
 def test_employees_search_nonexisting_employee(client, consented_user_token):
@@ -107,7 +108,8 @@ def test_employees_search_nonexisting_employee(client, consented_user_token):
         json=body,
         headers={"Authorization": "Bearer {}".format(consented_user_token)},
     )
-    assert response.status_code == 404
+
+    tests.api.validate_error_response(response, 404)
 
 
 def test_employees_search_fineos_user_forbidden(client, employee, fineos_user_token):
@@ -153,7 +155,7 @@ def test_employees_patch_empty(client, employee, consented_user_token):
         json=body,
         headers={"Authorization": "Bearer {}".format(consented_user_token)},
     )
-    assert response.status_code == 400
+    tests.api.validate_error_response(response, 400)
 
     updated_employee = client.get(
         "/v1/employees/{}".format(employee.employee_id),
@@ -173,7 +175,7 @@ def test_employees_patch_404(client, consented_user_token):
         headers={"Authorization": "Bearer {}".format(consented_user_token)},
     )
 
-    assert response.status_code == 404
+    tests.api.validate_error_response(response, 404)
 
 
 def test_employee_auth_get(disable_employee_endpoint, client, employee, consented_user_token):
@@ -184,7 +186,7 @@ def test_employee_auth_get(disable_employee_endpoint, client, employee, consente
         headers={"Authorization": "Bearer {}".format(consented_user_token)},
     )
 
-    assert response.status_code == 403
+    tests.api.validate_error_response(response, 403)
 
 
 def test_employee_auth_patch(disable_employee_endpoint, client, employee, consented_user_token):
@@ -198,7 +200,7 @@ def test_employee_auth_patch(disable_employee_endpoint, client, employee, consen
         headers={"Authorization": "Bearer {}".format(consented_user_token)},
     )
 
-    assert response.status_code == 403
+    tests.api.validate_error_response(response, 403)
 
 
 def test_employee_patch_fineos_user_forbidden(client, employee, fineos_user_token):
@@ -209,4 +211,4 @@ def test_employee_patch_fineos_user_forbidden(client, employee, fineos_user_toke
         json=body,
         headers={"Authorization": "Bearer {}".format(fineos_user_token)},
     )
-    assert response.status_code == 403
+    tests.api.validate_error_response(response, 403)
