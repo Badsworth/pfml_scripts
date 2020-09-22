@@ -52,29 +52,20 @@ export const steps: StoredStep[] = [
     },
   },
   {
-    name: "Go to party's cases",
+    name: "Add new application",
     test: async (browser: Browser, data: unknown): Promise<void> => {
       const { claim } = data as SimulationClaim;
       assert(claim.employee_ssn, "employee_ssn is not defined");
-      // const resultsTable = await browser.findElement(By.visibleText(`xxxxx${claim.employee_ssn.slice(-4)}`));
-      // await resultsTable.click();
       const okButton = await waitForElement(
         browser,
         By.css('input[type="submit"][value="OK"]')
       );
       await okButton.click();
-      const casesTab = await waitForElement(browser, By.visibleText("Cases"));
-      await casesTab.click();
-    },
-  },
-  {
-    name: "Add new application",
-    test: async (browser: Browser): Promise<void> => {
-      const addButton = await waitForElement(
+      const addCaseTab = await waitForElement(
         browser,
-        By.css('.Button[type="submit"][value="Add"]')
+        By.visibleText("Add Case")
       );
-      await addButton.click();
+      await addCaseTab.click();
       const selectCase = await waitForElement(
         browser,
         By.css('[title="Absence Case"]')
