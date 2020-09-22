@@ -51,6 +51,7 @@ const routes = {
   },
   employers: {
     dashboard: "/employers",
+    login: "/employers/login",
     review: "/employers/claims/review",
   },
   external: {

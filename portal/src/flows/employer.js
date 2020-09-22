@@ -5,8 +5,10 @@
  * page's url route. The CONTINUE transition represents the next page in the
  * the application flow.
  */
+import routes from "../routes";
 
 export default {
-  // TODO (EMPLOYER-193): Upcoming work started in EMPLOYER-193 will move Employer portal pages into this app.
-  states: {},
+  states: {
+    [routes.employers.dashboard]: {},
+  },
 };

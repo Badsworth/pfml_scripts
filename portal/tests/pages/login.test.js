@@ -8,6 +8,8 @@ import useAppLogic from "../../src/hooks/useAppLogic";
 jest.mock("../../src/hooks/useAppLogic");
 
 describe("Login", () => {
+  const email = "email@test.com";
+  const password = "TestP@ssw0rd!";
   let appLogic, changeField, query, submitForm, wrapper;
 
   function render(customProps = {}) {
@@ -45,13 +47,30 @@ describe("Login", () => {
 
   describe("when the form is submitted", () => {
     it("calls login", () => {
-      const email = "email@test.com";
-      const password = "TestP@ssw0rd!";
-
       changeField("username", email);
       changeField("password", password);
+
       submitForm();
+
       expect(appLogic.auth.login).toHaveBeenCalledWith(email, password);
+    });
+
+    it("calls login with query param", () => {
+      const nextPage = "/next-page";
+      query = {
+        next: nextPage,
+      };
+      render();
+      changeField("username", email);
+      changeField("password", password);
+
+      submitForm();
+
+      expect(appLogic.auth.login).toHaveBeenCalledWith(
+        email,
+        password,
+        nextPage
+      );
     });
   });
 });
