@@ -4,7 +4,7 @@ import BaseCollection from "./BaseCollection";
 
 export default class DocumentCollection extends BaseCollection {
   get idProperty() {
-    return "document_id";
+    return "fineos_document_id";
   }
 
   /**

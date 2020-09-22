@@ -6,15 +6,15 @@ describe("DocumentCollection", () => {
     it("returns only Documents associated with the given application", () => {
       const applicationADocument1 = new Document({
         application_id: "a",
-        document_id: "a_1",
+        fineos_document_id: "a_1",
       });
       const applicationADocument2 = new Document({
         application_id: "a",
-        document_id: "a_2",
+        fineos_document_id: "a_2",
       });
       const applicationBDocument1 = new Document({
         application_id: "b",
-        document_id: "b_1",
+        fineos_document_id: "b_1",
       });
 
       const collection = new DocumentCollection([
