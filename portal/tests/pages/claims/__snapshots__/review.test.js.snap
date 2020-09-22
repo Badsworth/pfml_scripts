@@ -220,6 +220,12 @@ exports[`Final Review Page when all data is present renders Review page with fin
   >
     Direct deposit
   </ReviewRow>
+  <ReviewRow
+    label="Payment details"
+    level="3"
+  >
+    091000022
+  </ReviewRow>
   <Button
     className="margin-top-3"
     loading={false}

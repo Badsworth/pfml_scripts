@@ -641,6 +641,7 @@ const pages = {
       "We’ll also notify your employer that you’ve started an application for paid family and medical leave.",
     partOneNextStepsLine3:
       "Next, you’ll be able to work on Parts 2 and 3, and submit your application.",
+    paymentDetailsLabel: "Payment details",
     paymentMethodLabel: "Payment method",
     paymentMethodValue_ach: "$t(shared.paymentMethodAch)",
     paymentMethodValue_debit: "$t(shared.paymentMethodDebit)",

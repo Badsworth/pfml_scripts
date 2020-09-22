@@ -56,6 +56,10 @@ export const Review = (props) => {
   const { t } = useTranslation();
   const { appLogic, claim } = props;
 
+  const account_number = get(
+    claim,
+    "payment_preferences[0].account_details.account_number"
+  );
   const payment_method = get(claim, "payment_preferences[0].payment_method");
   const reason = get(claim, "leave_details.reason");
   const reasonQualifier = get(claim, "leave_details.reason_qualifier");
@@ -413,6 +417,14 @@ export const Review = (props) => {
                   payment_method
                 ),
               })}
+            </ReviewRow>
+          )}
+          {payment_method === PaymentPreferenceMethod.ach && (
+            <ReviewRow
+              label={t("pages.claimsReview.paymentDetailsLabel")}
+              level={reviewRowLevel}
+            >
+              {account_number}
             </ReviewRow>
           )}
         </React.Fragment>

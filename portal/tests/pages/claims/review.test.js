@@ -80,6 +80,17 @@ describe("Final Review Page", () => {
   });
 });
 
+describe("Payment Information", () => {
+  describe("When payment method is debit", () => {
+    it("does not render 'Payment details' row", () => {
+      const { wrapper } = renderWithAppLogic(Review, {
+        claimAttrs: new MockClaimBuilder().complete().debit().create(),
+      });
+      expect(wrapper.find({ label: "Payment details" })).toHaveLength(0);
+    });
+  });
+});
+
 describe("Employer info", () => {
   describe("when claimant is not Employed", () => {
     it("does not render 'Notified employer' row or FEIN row", () => {
