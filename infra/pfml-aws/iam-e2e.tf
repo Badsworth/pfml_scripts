@@ -1,18 +1,16 @@
-# The department of revenue (DOR) sends us data through an S3 bucket pushed from
-# their MoveIT instance. This sets up their user and S3 bucket.
-#
-# 1. Create a user for DOR data.
-#    After creating this user, generate an access key through the AWS console
-#    and share it to a DOR representative over Interchange.
-resource "aws_iam_user" "agency_department_of_revenue" {
-  for_each = toset(local.vpcs)
-  name     = "pfml-department-of-revenue-moveit-${each.key}"
+// This file creates a shared user for the E2E team to upload fake DOR data
+
+locals {
+  e2e_environments = ["test", "stage"]
 }
 
-// NOTE: If you change this policy, please also change the policy
-// in iam-e2e.tf
-data "aws_iam_policy_document" "dor_s3_access_policy" {
-  for_each = toset(local.vpcs)
+// One user to access both the test and stage bucket
+resource "aws_iam_user" "e2e_agency_transfer" {
+  name = "pfml-end-to-end-agency-transfer"
+}
+
+data "aws_iam_policy_document" "e2e_dor_s3_access_policy" {
+  for_each = toset(local.e2e_environments)
 
   statement {
     sid = "AllowDorListingOfBucket"
@@ -98,14 +96,14 @@ data "aws_iam_policy_document" "dor_s3_access_policy" {
   }
 }
 
-resource "aws_iam_policy" "dor_s3_access_policy" {
-  for_each = toset(local.vpcs)
-  name     = "dor-s3-access-policy-${each.key}"
-  policy   = data.aws_iam_policy_document.dor_s3_access_policy[each.key].json
+resource "aws_iam_policy" "e2e_dor_s3_access_policy" {
+  for_each = toset(local.e2e_environments)
+  name     = "e2e-dor-s3-access-policy-${each.key}"
+  policy   = data.aws_iam_policy_document.e2e_dor_s3_access_policy[each.key].json
 }
 
-resource "aws_iam_user_policy_attachment" "dor_policy_attachment" {
-  for_each   = toset(local.vpcs)
-  user       = aws_iam_user.agency_department_of_revenue[each.key].name
-  policy_arn = aws_iam_policy.dor_s3_access_policy[each.key].arn
+resource "aws_iam_user_policy_attachment" "e2e_dor_policy_attachment" {
+  for_each   = toset(local.e2e_environments)
+  user       = aws_iam_user.e2e_agency_transfer.name
+  policy_arn = aws_iam_policy.e2e_dor_s3_access_policy[each.key].arn
 }
