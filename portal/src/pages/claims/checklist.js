@@ -95,7 +95,15 @@ export const Checklist = (props) => {
           key={step.name}
           number={getStepNumber(step)}
           title={t("pages.claimsChecklist.stepTitle", { context: step.name })}
-          status={step.status}
+          // TODO (CP-676): Simplify the condition below to simply return step.status
+          // once the Checklist no longer checks local state to determine if steps are completed.
+          // The addition of the condition was made since some steps may become incomplete when
+          // the browser is refreshed, because some fields are currently only stored in memory while
+          // we wait for them to be integrated with the API. Once all fields
+          // are retained across page loads, we would only need to return step.status
+          status={
+            step.group === 1 && claim.isSubmitted ? "completed" : step.status
+          }
           // TODO (CP-676): Simplify the condition below to simply check if step.editable
           // once the Checklist no longer checks local state to determine if steps are completed.
           // The addition of those conditions is in place for now, since

@@ -10,14 +10,13 @@ import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "../../locales/i18n";
 import withClaim from "../../hoc/withClaim";
 
-export const fields = ["claim.has_other_incomes"];
+export const fields = ["claim.temp.has_other_incomes"];
 
 export const OtherIncomes = (props) => {
   const { appLogic, claim } = props;
   const { t } = useTranslation();
 
   const { formState, updateFields } = useFormState(pick(props, fields).claim);
-  const { has_other_incomes } = formState;
 
   const handleSave = () =>
     appLogic.claims.update(claim.application_id, formState);
@@ -37,15 +36,15 @@ export const OtherIncomes = (props) => {
       onSave={handleSave}
     >
       <InputChoiceGroup
-        {...getFunctionalInputProps("has_other_incomes")}
+        {...getFunctionalInputProps("temp.has_other_incomes")}
         choices={[
           {
-            checked: has_other_incomes === true,
+            checked: formState.temp.has_other_incomes === true,
             label: t("pages.claimsOtherIncomes.choiceYes"),
             value: "true",
           },
           {
-            checked: has_other_incomes === false,
+            checked: formState.temp.has_other_incomes === false,
             label: t("pages.claimsOtherIncomes.choiceNo"),
             value: "false",
           },

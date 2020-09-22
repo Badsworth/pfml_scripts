@@ -1,5 +1,6 @@
 import { get, groupBy, isEmpty, map } from "lodash";
 import BaseModel from "./BaseModel";
+import { ClaimStatus } from "./Claim";
 import { createRouteWithQuery } from "../utils/routeWithParams";
 
 /**
@@ -119,6 +120,13 @@ export default class Step extends BaseModel {
     // TODO (CP-625): remove once api returns validations
     // <WorkAround>
     if (!this.warnings) {
+      if (
+        this.group === 1 &&
+        this.context.claim.status === ClaimStatus.submitted
+      ) {
+        return true;
+      }
+
       return this.fields.every((field) => {
         // Ignore optional and conditional questions for now,
         // so that we can show a "Completed" checklist.

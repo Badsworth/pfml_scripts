@@ -10,7 +10,7 @@ import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "../../locales/i18n";
 import withClaim from "../../hoc/withClaim";
 
-export const fields = ["claim.has_employer_benefits"];
+export const fields = ["claim.temp.has_employer_benefits"];
 
 export const EmployerBenefits = (props) => {
   const { appLogic, claim } = props;
@@ -36,15 +36,15 @@ export const EmployerBenefits = (props) => {
       onSave={handleSave}
     >
       <InputChoiceGroup
-        {...getFunctionalInputProps("has_employer_benefits")}
+        {...getFunctionalInputProps("temp.has_employer_benefits")}
         choices={[
           {
-            checked: formState.has_employer_benefits === true,
+            checked: formState.temp.has_employer_benefits === true,
             label: t("pages.claimsEmployerBenefits.choiceYes"),
             value: "true",
           },
           {
-            checked: formState.has_employer_benefits === false,
+            checked: formState.temp.has_employer_benefits === false,
             label: t("pages.claimsEmployerBenefits.choiceNo"),
             value: "false",
           },

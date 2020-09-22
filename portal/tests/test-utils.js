@@ -220,9 +220,9 @@ export class MockClaimBuilder {
    * @returns {MockClaimBuilder}
    */
   noOtherLeave() {
-    set(this.claimAttrs, "has_employer_benefits", false);
-    set(this.claimAttrs, "has_other_incomes", false);
-    set(this.claimAttrs, "has_previous_leaves", false);
+    set(this.claimAttrs, "temp.has_employer_benefits", false);
+    set(this.claimAttrs, "temp.has_other_incomes", false);
+    set(this.claimAttrs, "temp.has_previous_leaves", false);
     return this;
   }
 

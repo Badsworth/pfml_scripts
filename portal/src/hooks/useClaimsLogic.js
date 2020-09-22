@@ -63,7 +63,8 @@ const useClaimsLogic = ({ appErrorsLogic, portalFlow, user }) => {
 
       // TODO (CP-676): Remove workaround once API returns all the fields in our application
       if (patchData.temp) {
-        claim.temp = merge(claim.temp, patchData.temp);
+        const { temp } = claims.get(claim.application_id);
+        claim.temp = merge(temp, patchData.temp);
       }
       // </ end workaround >
 

@@ -130,7 +130,9 @@ const machineTests = {
   [routes.claims.employerBenefitDetails]: {
     meta: {
       test: (_, event) => {
-        expect(get(event.context.claim, "has_employer_benefits")).toEqual(true);
+        expect(get(event.context.claim, "temp.has_employer_benefits")).toEqual(
+          true
+        );
       },
     },
   },
@@ -142,7 +144,9 @@ const machineTests = {
   [routes.claims.otherIncomesDetails]: {
     meta: {
       test: (_, event) => {
-        expect(get(event.context.claim, "has_other_incomes")).toEqual(true);
+        expect(get(event.context.claim, "temp.has_other_incomes")).toEqual(
+          true
+        );
       },
     },
   },
@@ -154,7 +158,9 @@ const machineTests = {
   [routes.claims.previousLeavesDetails]: {
     meta: {
       test: (_, event) => {
-        expect(get(event.context.claim, "has_previous_leaves")).toEqual(true);
+        expect(get(event.context.claim, "temp.has_previous_leaves")).toEqual(
+          true
+        );
       },
     },
   },
@@ -202,10 +208,10 @@ describe("claimFlowConfigs", () => {
   const employed = {
     employment_status: EmploymentStatus.employed,
   };
-  const hasEmployerBenefits = { has_employer_benefits: true };
-  const hasOtherIncomes = { has_other_incomes: true };
+  const hasEmployerBenefits = { temp: { has_employer_benefits: true } };
+  const hasOtherIncomes = { temp: { has_other_incomes: true } };
   const hasStateId = { has_state_id: true };
-  const hasPreviousLeaves = { has_previous_leaves: true };
+  const hasPreviousLeaves = { temp: { has_previous_leaves: true } };
   const intermittentLeave = {
     leave_details: {
       intermittent_leave_periods: [new IntermittentLeavePeriod()],

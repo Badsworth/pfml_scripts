@@ -9,7 +9,7 @@ describe("OtherIncomes", () => {
 
   beforeEach(() => {
     ({ appLogic, claim, wrapper } = renderWithAppLogic(OtherIncomes, {
-      claimAttrs: { has_other_incomes: true },
+      claimAttrs: { temp: { has_other_incomes: true } },
     }));
   });
 
@@ -25,7 +25,7 @@ describe("OtherIncomes", () => {
       expect(appLogic.claims.update).toHaveBeenCalledWith(
         claim.application_id,
         {
-          has_other_incomes: claim.has_other_incomes,
+          temp: { has_other_incomes: claim.temp.has_other_incomes },
         }
       );
     });

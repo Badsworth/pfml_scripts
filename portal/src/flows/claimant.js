@@ -49,9 +49,9 @@ export const guards = {
     get(claim, "employment_status") === EmploymentStatus.employed,
   isCompleted: ({ claim }) => claim.isCompleted,
   hasStateId: ({ claim }) => claim.has_state_id === true,
-  hasEmployerBenefits: ({ claim }) => claim.has_employer_benefits === true,
-  hasOtherIncomes: ({ claim }) => claim.has_other_incomes === true,
-  hasPreviousLeaves: ({ claim }) => claim.has_previous_leaves === true,
+  hasEmployerBenefits: ({ claim }) => claim.temp.has_employer_benefits === true,
+  hasOtherIncomes: ({ claim }) => claim.temp.has_other_incomes === true,
+  hasPreviousLeaves: ({ claim }) => claim.temp.has_previous_leaves === true,
   isIntermittentOrReduced: ({ claim }) =>
     claim.isIntermittent || claim.isReducedSchedule,
 };

@@ -324,12 +324,12 @@ export const Review = (props) => {
         level={reviewRowLevel}
         label={t("pages.claimsReview.employerBenefitLabel")}
       >
-        {get(claim, "has_employer_benefits") === true
+        {get(claim, "temp.has_employer_benefits") === true
           ? t("pages.claimsReview.otherLeaveChoiceYes")
           : t("pages.claimsReview.otherLeaveChoiceNo")}
       </ReviewRow>
 
-      {get(claim, "has_employer_benefits") && (
+      {get(claim, "temp.has_employer_benefits") && (
         <EmployerBenefitList
           entries={get(claim, "employer_benefits")}
           reviewRowLevel={reviewRowLevel}
@@ -340,12 +340,12 @@ export const Review = (props) => {
         level={reviewRowLevel}
         label={t("pages.claimsReview.otherIncomeLabel")}
       >
-        {get(claim, "has_other_incomes") === true
+        {get(claim, "temp.has_other_incomes") === true
           ? t("pages.claimsReview.otherLeaveChoiceYes")
           : t("pages.claimsReview.otherLeaveChoiceNo")}
       </ReviewRow>
 
-      {get(claim, "has_other_incomes") && (
+      {get(claim, "temp.has_other_incomes") && (
         <OtherIncomeList
           entries={get(claim, "other_incomes")}
           reviewRowLevel={reviewRowLevel}
@@ -357,12 +357,12 @@ export const Review = (props) => {
         label={t("pages.claimsReview.previousLeaveLabel")}
         editText={t("pages.claimsReview.editLink")}
       >
-        {get(claim, "has_previous_leaves") === true
+        {get(claim, "temp.has_previous_leaves") === true
           ? t("pages.claimsReview.otherLeaveChoiceYes")
           : t("pages.claimsReview.otherLeaveChoiceNo")}
       </ReviewRow>
 
-      {get(claim, "has_previous_leaves") && (
+      {get(claim, "temp.has_previous_leaves") && (
         <PreviousLeaveList
           entries={get(claim, "previous_leaves")}
           reviewRowLevel={reviewRowLevel}

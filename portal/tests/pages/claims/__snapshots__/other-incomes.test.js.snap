@@ -53,7 +53,7 @@ exports[`OtherIncomes renders the page 1`] = `
       </React.Fragment>
     }
     label="Will you receive income from any other sources during your leave?"
-    name="has_other_incomes"
+    name="temp.has_other_incomes"
     onChange={[Function]}
     type="radio"
     value={true}
