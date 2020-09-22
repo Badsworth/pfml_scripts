@@ -1,7 +1,18 @@
 from datetime import datetime
 from decimal import Decimal
+from enum import Enum
 
-from sqlalchemy import Boolean, Column, Date, DateTime, ForeignKey, Integer, Numeric, Text
+from sqlalchemy import (
+    TIMESTAMP,
+    Boolean,
+    Column,
+    Date,
+    DateTime,
+    ForeignKey,
+    Integer,
+    Numeric,
+    Text,
+)
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 
@@ -14,9 +25,11 @@ from massgov.pfml.db.models.employees import (
     TaxIdentifier,
     User,
 )
+from massgov.pfml.rmv.models import RmvAcknowledgement
 
 from ..lookup import LookupTable
-from .base import Base, uuid_gen
+from .base import Base, utc_timestamp_gen, uuid_gen
+from .common import StrEnum
 
 
 class LkEmploymentStatus(Base):
@@ -438,6 +451,52 @@ class Document(Base):
     document_category_instance = relationship(LkDocumentCategory)
     document_type_instance = relationship(LkDocumentType)
     content_type_instance = relationship(LkContentType)
+
+
+class RMVCheckApiErrorCode(Enum):
+    FAILED_TO_BUILD_REQUEST = "FAILED_TO_BUILD_REQUEST"
+    NETWORKING_ISSUES = "NETWORKING_ISSUES"
+    FAILED_TO_PARSE_RESPONSE = "FAILED_TO_PARSE_RESPONSE"
+    UNKNOWN_RMV_ISSUE = "UNKNOWN_RMV_ISSUE"
+
+
+class RMVCheck(Base):
+    __tablename__ = "rmv_check"
+    rmv_check_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
+
+    created_at = Column(TIMESTAMP(timezone=True), nullable=False, default=utc_timestamp_gen)
+    updated_at = Column(
+        TIMESTAMP(timezone=True),
+        nullable=False,
+        default=utc_timestamp_gen,
+        onupdate=utc_timestamp_gen,
+    )
+
+    request_to_rmv_started_at = Column(TIMESTAMP(timezone=True), nullable=True)
+    request_to_rmv_completed_at = Column(TIMESTAMP(timezone=True), nullable=True)
+
+    check_expiration = Column(Boolean, nullable=False, default=False, server_default="FALSE")
+    check_customer_inactive = Column(Boolean, nullable=False, default=False, server_default="FALSE")
+    check_active_fraudulent_activity = Column(
+        Boolean, nullable=False, default=False, server_default="FALSE"
+    )
+    check_mass_id_number = Column(Boolean, nullable=False, default=False, server_default="FALSE")
+    check_residential_address_line_1 = Column(
+        Boolean, nullable=False, default=False, server_default="FALSE"
+    )
+    check_residential_address_line_2 = Column(
+        Boolean, nullable=False, default=False, server_default="FALSE"
+    )
+    check_residential_city = Column(Boolean, nullable=False, default=False, server_default="FALSE")
+    check_residential_zip_code = Column(
+        Boolean, nullable=False, default=False, server_default="FALSE"
+    )
+
+    rmv_error_code = Column(StrEnum(RmvAcknowledgement), nullable=True)
+    api_error_code = Column(StrEnum(RMVCheckApiErrorCode), nullable=True)
+
+    absence_case_id = Column(Text, nullable=False)
+    rmv_customer_key = Column(Text, nullable=True)
 
 
 class StateMetric(Base):

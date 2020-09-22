@@ -2,8 +2,8 @@
 # This should be used for seeding tables in development and testing.
 #
 
-import datetime
 import random
+from datetime import datetime, timedelta
 from decimal import Decimal
 
 import factory  # this is from the factory_boy package
@@ -13,6 +13,7 @@ import massgov.pfml.db as db
 import massgov.pfml.db.models.applications as application_models
 import massgov.pfml.db.models.employees as employee_models
 import massgov.pfml.db.models.verifications as verification_models
+import massgov.pfml.util.datetime as datetime_util
 
 db_session = None
 
@@ -34,17 +35,15 @@ class Generators:
     Tin = factory.LazyFunction(lambda: factory.Faker("ssn").generate().replace("-", ""))
     Fein = Tin
     Money = factory.LazyFunction(lambda: Decimal(round(random.uniform(0, 50000), 2)))
-    Now = factory.LazyFunction(lambda: datetime.datetime.now())
+    Now = factory.LazyFunction(datetime.now)
     # A reproducible datetime that might represent a database creation, modification, or other
     # transaction datetime.
     TransactionDateTime = factory.Faker(
         "date_time_between_dates",
-        datetime_start=datetime.datetime(2020, 1, 1),
-        datetime_end=datetime.datetime(2022, 1, 1),
+        datetime_start=datetime(2020, 1, 1),
+        datetime_end=datetime(2022, 1, 1),
     )
-    UtcNow = factory.LazyFunction(
-        lambda: datetime.datetime.utcnow().replace(tzinfo=datetime.timezone.utc)
-    )
+    UtcNow = factory.LazyFunction(datetime_util.utcnow)
     UuidObj = factory.Faker("uuid4", cast_to=None)
     VerificationCode = factory.Faker("pystr", max_chars=6, min_chars=6)
 
@@ -141,7 +140,7 @@ class VerificationCodeFactory(BaseFactory):
     verification_code = Generators.VerificationCode
 
     issued_at = Generators.UtcNow
-    expires_at = factory.LazyAttribute(lambda a: a.issue_ts + datetime.timedelta(minutes=5))
+    expires_at = factory.LazyAttribute(lambda a: a.issue_ts + timedelta(minutes=5))
     remaining_uses = 1
 
 
@@ -230,7 +229,7 @@ class ApplicationFactory(BaseFactory):
     leave_reason_qualifier_id = None
 
     start_time = Generators.TransactionDateTime
-    updated_time = factory.LazyAttribute(lambda a: a.start_time + datetime.timedelta(days=1))
+    updated_time = factory.LazyAttribute(lambda a: a.start_time + timedelta(days=1))
 
 
 class AddressFactory(BaseFactory):
@@ -248,6 +247,6 @@ class StateMetricFactory(BaseFactory):
         model = application_models.StateMetric
 
     state_metric_id = Generators.UuidObj
-    effective_date = datetime.datetime(2019, 10, 1)
+    effective_date = datetime(2019, 10, 1)
     unemployment_minimum_earnings = Decimal(5000)
     average_weekly_wage = Decimal(1331.66)

@@ -36,11 +36,17 @@ class VendorLicenseInquiryRequest(PydanticBaseModel):
 class VendorLicenseInquiryResponse(PydanticBaseModel):
     customer_key: str
     license_id: str = Field(..., alias="LicenseID")
-    license1_expiration_date: date
+    license1_expiration_date: Optional[date]
     license2_expiration_date: Optional[date]
     cfl_sanctions: bool = Field(..., alias="CFLSanctions")
     cfl_sanctions_active: bool = Field(..., alias="CFLSanctionsActive")
     is_customer_inactive: bool = Field(..., alias="CustomerInActive")
+    street1: str
+    street2: Optional[str]
+    city: str
+    zip: str
+
+    acknowledgement: Optional[RmvAcknowledgement] = None
 
     _parse_license1 = validator("license1_expiration_date", pre=True, allow_reuse=True)(
         parse_date_YMD
