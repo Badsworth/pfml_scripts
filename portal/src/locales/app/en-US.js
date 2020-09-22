@@ -629,7 +629,7 @@ const pages = {
     // eslint-disable-next-line no-template-curly-in-string
     otherLeaveDollarAmount: "${{amount}} every month",
     partDescription_1:
-      "If you need to make edits to Part 1, you’ll need to contact our call center at $t(shared.callCenterPhoneNumber).",
+      "If you need to make edits to Part 1, you’ll need to contact our call center at $t(shared.callCenterPhoneNumber). Your application ID is <strong>{{absence_id}}</strong>",
     partHeadingPrefix: "Part {{number}}",
     partHeading_1_final: "Review: Tell us about yourself and your leave",
     partHeading_1_part1:

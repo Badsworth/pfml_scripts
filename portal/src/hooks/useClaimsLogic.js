@@ -1,4 +1,3 @@
-import Claim from "../models/Claim";
 import ClaimsApi from "../api/ClaimsApi";
 import { ValidationError } from "../errors";
 import getRelevantIssues from "../utils/getRelevantIssues";
@@ -134,13 +133,11 @@ const useClaimsLogic = ({ appErrorsLogic, portalFlow, user }) => {
     appErrorsLogic.clearErrors();
 
     try {
-      let { claim, success } = await claimsApi.submitClaim(application_id);
+      const { claim, success } = await claimsApi.submitClaim(application_id);
 
       if (success) {
         // TODO (CP-676): Remove workaround once API returns all the fields in our application
-        claim = new Claim(
-          merge(claims.get(application_id), { status: claim.status })
-        );
+        claim.temp = claims.get(claim.application_id).temp;
         // </ end workaround >
 
         setClaim(claim);

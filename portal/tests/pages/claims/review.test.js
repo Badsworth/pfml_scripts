@@ -61,6 +61,11 @@ describe("Final Review Page", () => {
       });
 
       expect(wrapper).toMatchSnapshot();
+      expect(
+        wrapper
+          .find("Trans[i18nKey='pages.claimsReview.partDescription']")
+          .dive()
+      ).toMatchSnapshot();
     });
   });
 

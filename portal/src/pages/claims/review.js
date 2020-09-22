@@ -22,6 +22,7 @@ import React from "react";
 import ReviewHeading from "../../components/ReviewHeading";
 import ReviewRow from "../../components/ReviewRow";
 import Title from "../../components/Title";
+import { Trans } from "react-i18next";
 import claimantConfigs from "../../flows/claimant";
 import findKeyByValue from "../../utils/findKeyByValue";
 import formatDateRange from "../../utils/formatDateRange";
@@ -103,7 +104,13 @@ export const Review = (props) => {
       </Heading>
 
       {!usePartOneReview && (
-        <Lead>{t("pages.claimsReview.partDescription", { context: "1" })}</Lead>
+        <Lead>
+          <Trans
+            i18nKey="pages.claimsReview.partDescription"
+            tOptions={{ context: "1" }}
+            values={{ absence_id: claim.fineos_absence_id }}
+          />
+        </Lead>
       )}
 
       {/* EMPLOYEE IDENTITY */}

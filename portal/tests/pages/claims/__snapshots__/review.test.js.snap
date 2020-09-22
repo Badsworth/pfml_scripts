@@ -69,7 +69,19 @@ exports[`Final Review Page when all data is present renders Review page with fin
     Review: Tell us about yourself and your leave
   </Heading>
   <Lead>
-    If you need to make edits to Part 1, you’ll need to contact our call center at XXX‑XXX‑XXXX.
+    <Trans
+      i18nKey="pages.claimsReview.partDescription"
+      tOptions={
+        Object {
+          "context": "1",
+        }
+      }
+      values={
+        Object {
+          "absence_id": "NTN-111-ABS-01",
+        }
+      }
+    />
   </Lead>
   <ReviewHeading
     editText="Edit"
@@ -217,6 +229,17 @@ exports[`Final Review Page when all data is present renders Review page with fin
     Submit application
   </Button>
 </div>
+`;
+
+exports[`Final Review Page when all data is present renders Review page with final review page content and only edit links for Part 2/3 sections 2`] = `
+Array [
+  "If you need to make edits to Part 1, you’ll need to contact our call center at XXX‑XXX‑XXXX. Your application ID is ",
+  <strong
+    key="strong-1"
+  >
+    NTN-111-ABS-01
+  </strong>,
+]
 `;
 
 exports[`OtherIncomeList when all data are present renders all data fields 1`] = `
