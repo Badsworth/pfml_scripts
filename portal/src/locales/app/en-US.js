@@ -63,6 +63,11 @@ const errors = {
         pattern: "Please enter a valid notification date.",
       },
     },
+    mailing_address: {
+      zip: {
+        pattern: "Please enter a 5- or 9-digit ZIP code.",
+      },
+    },
     mass_id: {
       pattern: "Please enter your ID in the correct format.",
     },
@@ -77,6 +82,11 @@ const errors = {
         routing_number: {
           pattern: "Please enter a 9 digit routing number.",
         },
+      },
+    },
+    residential_address: {
+      zip: {
+        pattern: "Please enter a 5- or 9-digit ZIP code.",
       },
     },
     tax_identifier: {

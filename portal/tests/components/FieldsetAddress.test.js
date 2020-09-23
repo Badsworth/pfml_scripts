@@ -44,6 +44,35 @@ describe("FieldsetAddress", () => {
     expect(wrapper).toMatchSnapshot();
   });
 
+  describe("when the zip is longer than 5 digits", () => {
+    it("formats numeric values as a ZIP+4 string", () => {
+      wrapper = shallow(<FieldsetAddress {...props} />);
+      wrapper
+        .find({ name: "address.zip" })
+        .dive()
+        .find("Mask")
+        .dive()
+        .find("input")
+        .simulate("blur", { target: { value: "205001234" } });
+
+      expect(props.onChange.mock.calls[0][0].target.value).toBe("20500-1234");
+    });
+
+    it("leaves ZIP+4 strings as they are", () => {
+      wrapper = shallow(<FieldsetAddress {...props} />);
+
+      wrapper
+        .find({ name: "address.zip" })
+        .dive()
+        .find("Mask")
+        .dive()
+        .find("input")
+        .simulate("blur", { target: { value: "20500-1234" } });
+
+      expect(props.onChange.mock.calls[0][0].target.value).toBe("20500-1234");
+    });
+  });
+
   describe("when there are errors", () => {
     it("display errors on the associated inputs", () => {
       props.appErrors = new AppErrorInfoCollection([

@@ -6,6 +6,7 @@ import classnames from "classnames";
 const maskDeliminatedRegex = {
   ssn: /([*\d]{3})([*\d]{1,2})?([*\d]+)?/,
   fein: /([*\d]{2})([*\d]+)?/,
+  zip: /([*\d]{5})([*\d]+)?/,
 };
 
 // Overlays in specific contexts
@@ -209,7 +210,7 @@ Mask.propTypes = {
   /**
    * The mask type to be applied.
    */
-  mask: PropTypes.oneOf(["currency", "fein", "ssn"]),
+  mask: PropTypes.oneOf(["currency", "fein", "ssn", "zip"]),
 };
 
 export default Mask;

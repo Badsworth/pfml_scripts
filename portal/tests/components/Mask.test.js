@@ -2,8 +2,7 @@ import Mask, { maskValue } from "../../src/components/Mask";
 import { mount, shallow } from "enzyme";
 import React from "react";
 
-// Some tests are generated. When a new mask is added, add it here:
-const masks = ["ssn", "fein", "currency"];
+const masks = ["currency", "fein", "ssn", "zip"];
 
 function render(customProps = {}, inputProps = {}, mountComponent = false) {
   const component = (

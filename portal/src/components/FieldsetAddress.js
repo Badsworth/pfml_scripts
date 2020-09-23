@@ -65,12 +65,13 @@ const FieldsetAddress = (props) => {
         autoComplete="postal-code"
         errorMsg={appErrors.fieldErrorMessage(`${name}.zip`)}
         inputMode="numeric"
-        width="medium"
         label={t("components.fieldsetAddress.zipLabel")}
+        mask="zip"
         name={`${name}.zip`}
         onChange={onChange}
         smallLabel
         value={value.zip || ""}
+        width="medium"
       />
     </Fieldset>
   );
