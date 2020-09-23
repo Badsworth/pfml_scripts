@@ -60,6 +60,28 @@ exports[`PaymentMethod renders the page 1`] = `
         smallLabel={true}
         value=""
       />
+      <InputChoiceGroup
+        choices={
+          Array [
+            Object {
+              "checked": false,
+              "label": "Checking",
+              "value": "Checking",
+            },
+            Object {
+              "checked": false,
+              "label": "Savings",
+              "value": "Savings",
+            },
+          ]
+        }
+        label="Account type"
+        name="payment_preferences[0].account_details.account_type"
+        onChange={[Function]}
+        smallLabel={true}
+        type="radio"
+        value=""
+      />
     </Fieldset>
   </ConditionalContent>
   <ConditionalContent

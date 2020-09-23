@@ -221,6 +221,12 @@ exports[`Final Review Page when all data is present renders Review page with fin
     Direct deposit
   </ReviewRow>
   <ReviewRow
+    label="Account type"
+    level="3"
+  >
+    Checking
+  </ReviewRow>
+  <ReviewRow
     label="Payment details"
     level="3"
   >

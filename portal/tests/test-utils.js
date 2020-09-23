@@ -6,6 +6,7 @@ import Claim, {
   FrequencyIntervalBasis,
   IntermittentLeavePeriod,
   LeaveReason,
+  PaymentAccountType,
   PaymentPreferenceMethod,
   ReasonQualifier,
   ReducedScheduleLeavePeriod,
@@ -95,6 +96,11 @@ export class MockClaimBuilder {
       this.claimAttrs,
       "payment_preferences[0].account_details.account_number",
       "091000022"
+    );
+    set(
+      this.claimAttrs,
+      "payment_preferences[0].account_details.account_type",
+      PaymentAccountType.checking
     );
     set(
       this.claimAttrs,

@@ -44,6 +44,7 @@ class Claim extends BaseModel {
           // Fields for ACH details
           account_details: {
             account_number: null,
+            account_type: null, // PaymentAccountType
             routing_number: null,
           },
           payment_method: null, // PaymentPreferenceMethod
@@ -236,12 +237,20 @@ export class ReducedScheduleLeavePeriod extends BaseModel {
 }
 
 /**
+ * Enums for the Application's `payment_preferences[].account_details.account_type` field
+ * @enum {string}
+ */
+export const PaymentAccountType = {
+  checking: "Checking",
+  savings: "Savings",
+};
+
+/**
  * Enums for the Application's `payment_preferences[].payment_method` field
  * @enum {string}
  */
 export const PaymentPreferenceMethod = {
   ach: "ACH",
-  // TODO (CP-703): Map to a valid enum for debit
   debit: "Debit",
 };
 

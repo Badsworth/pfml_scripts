@@ -1,4 +1,7 @@
-import Claim, { PaymentPreferenceMethod } from "../../models/Claim";
+import Claim, {
+  PaymentAccountType,
+  PaymentPreferenceMethod,
+} from "../../models/Claim";
 import Alert from "../../components/Alert";
 import ConditionalContent from "../../components/ConditionalContent";
 import Fieldset from "../../components/Fieldset";
@@ -19,6 +22,7 @@ import withClaim from "../../hoc/withClaim";
 export const fields = [
   "claim.payment_preferences[0].payment_method",
   "claim.payment_preferences[0].account_details.account_number",
+  "claim.payment_preferences[0].account_details.account_type",
   "claim.payment_preferences[0].account_details.routing_number",
   "claim.payment_preferences[0].payment_preference_id",
 ];
@@ -28,6 +32,11 @@ export const PaymentMethod = (props) => {
   const { t } = useTranslation();
 
   const { formState, updateFields } = useFormState(pick(props, fields).claim);
+
+  const account_type = get(
+    formState,
+    "payment_preferences[0].account_details.account_type"
+  );
   const payment_method = get(
     formState,
     "payment_preferences[0].payment_method"
@@ -96,6 +105,27 @@ export const PaymentMethod = (props) => {
             inputMode="numeric"
             smallLabel
             pii
+          />
+
+          <InputChoiceGroup
+            {...getFunctionalInputProps(
+              "payment_preferences[0].account_details.account_type"
+            )}
+            choices={[
+              {
+                checked: account_type === PaymentAccountType.checking,
+                label: t("pages.claimsPaymentMethod.achTypeChecking"),
+                value: PaymentAccountType.checking,
+              },
+              {
+                checked: account_type === PaymentAccountType.savings,
+                label: t("pages.claimsPaymentMethod.achTypeSavings"),
+                value: PaymentAccountType.savings,
+              },
+            ]}
+            label={t("pages.claimsPaymentMethod.achTypeLabel")}
+            type="radio"
+            smallLabel
           />
         </Fieldset>
       </ConditionalContent>

@@ -107,6 +107,8 @@ const errors = {
 };
 
 const shared = {
+  achTypeChecking: "Checking",
+  achTypeSavings: "Savings",
   backToLoginLink: "Back to log in",
   // TODO (CP-143): Correct phone number, but preserve usage of non-breaking hyphens to avoid awkward text wrapping
   // https://alignedonline.com/non%E2%80%91breaking-spaces
@@ -536,6 +538,9 @@ const pages = {
     achLead:
       "We need this information so you can receive your weekly benefit through Direct Deposit. Contact your bank if you are having trouble finding this information.",
     achSectionLabel: "Enter your bank account information",
+    achTypeChecking: "$t(shared.achTypeChecking)",
+    achTypeLabel: "Account type",
+    achTypeSavings: "$t(shared.achTypeSavings)",
     choiceAch: "$t(shared.paymentMethodAch)",
     choiceDebit: "$t(shared.paymentMethodDebit)",
     choiceHintAch: "Requires a bank account",
@@ -582,6 +587,9 @@ const pages = {
     title: "$t(shared.claimsLeaveDetailsTitle)",
   },
   claimsReview: {
+    achTypeLabel: "Account type",
+    achType_checking: "$t(shared.achTypeChecking)",
+    achType_savings: "$t(shared.achTypeSavings)",
     averageWorkHoursLabel: "Average hours worked per week",
     childBirthDateLabel: "Child's date of birth",
     childPlacementDateLabel: "Child's placement date",
