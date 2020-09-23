@@ -4,6 +4,6 @@
   "description": "Some dev tools for the Mass PFML API",
   "author": "",
   "devDependencies": {
-    "@stoplight/spectral": "^5.4.0"
+    "@stoplight/spectral": "^5.5.0"
   }
 }
