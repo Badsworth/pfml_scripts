@@ -24,6 +24,10 @@ export default class ClaimsApi extends BaseApi {
     return routes.api.claims;
   }
 
+  get i18nPrefix() {
+    return "claims";
+  }
+
   /**
    * Fetches the list of claims for a user
    * @returns {Promise<ClaimsApiListResult>} The result of the API call
@@ -38,9 +42,9 @@ export default class ClaimsApi extends BaseApi {
     }
 
     return {
+      claims,
       success,
       status,
-      claims,
     };
   };
 
@@ -72,9 +76,9 @@ export default class ClaimsApi extends BaseApi {
     const { data, success, status } = await this.request("POST");
 
     return {
+      claim: success ? new Claim(data) : null,
       success,
       status,
-      claim: success ? new Claim(data) : null,
     };
   };
 

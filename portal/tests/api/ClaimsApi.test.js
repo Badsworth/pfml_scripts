@@ -47,30 +47,18 @@ describe("ClaimsApi", () => {
 
   describe("getClaims", () => {
     describe("successful request", () => {
+      let claim;
+
       beforeEach(() => {
+        claim = new Claim({ application_id: "mock-application_id" });
         global.fetch = mockFetch({
           response: {
             data: [
               {
-                application_id: "2a340cf8-6d2a-4f82-a075-73588d003f8f",
+                ...claim,
               },
             ],
           },
-          status: 200,
-          ok: true,
-        });
-
-        // Needed for workaround in claimsApi.getClaims
-        // This won't be needed once https://lwd.atlassian.net/browse/API-290 is complete
-        // TODO (CP-577): Remove workaround once above ticket is complete
-        global.fetch.mockResolvedValueOnce({
-          json: jest.fn().mockResolvedValueOnce({
-            data: {
-              application_id: "2a340cf8-6d2a-4f82-a075-73588d003f8f",
-            },
-          }),
-          status: 200,
-          ok: true,
         });
       });
 
@@ -86,31 +74,35 @@ describe("ClaimsApi", () => {
         );
       });
 
-      it("resolves with success, status, and claim instance", async () => {
-        const result = await claimsApi.getClaims();
-        expect(result).toEqual({
-          claims: expect.any(ClaimCollection),
-          status: 200,
-          success: true,
-        });
-        expect(result.claims.items).toEqual([
-          new Claim({ application_id: "2a340cf8-6d2a-4f82-a075-73588d003f8f" }),
-        ]);
+      it("resolves with claims, success, status properties", async () => {
+        const { claims: claimsResponse, ...rest } = await claimsApi.getClaims();
+
+        expect(claimsResponse).toBeInstanceOf(ClaimCollection);
+        expect(claimsResponse.items).toEqual([claim]);
+        expect(rest).toMatchInlineSnapshot(`
+          Object {
+            "status": 200,
+            "success": true,
+          }
+        `);
       });
     });
   });
 
   describe("createClaim", () => {
     describe("successful request", () => {
+      let claim;
+
       beforeEach(() => {
+        claim = new Claim({ application_id: "mock-application_id" });
+
         global.fetch = mockFetch({
           response: {
             data: {
-              application_id: "mock-application_id",
+              ...claim,
             },
           },
-          status: 200,
-          ok: true,
+          status: 201,
         });
       });
 
@@ -126,13 +118,14 @@ describe("ClaimsApi", () => {
         );
       });
 
-      it("resolves with success, status, and claim instance", async () => {
+      it("resolves with claim, success, status properties", async () => {
         const { claim: claimResponse, ...rest } = await claimsApi.createClaim();
 
         expect(claimResponse).toBeInstanceOf(Claim);
+        expect(claimResponse).toEqual(claim);
         expect(rest).toMatchInlineSnapshot(`
           Object {
-            "status": 200,
+            "status": 201,
             "success": true,
           }
         `);
@@ -155,20 +148,15 @@ describe("ClaimsApi", () => {
   });
 
   describe("completeClaim", () => {
-    let mockResponseData;
-    const claim = new Claim({
-      application_id: "mock-application_id",
-    });
+    let claim;
 
     beforeEach(() => {
-      mockResponseData = {
+      claim = new Claim({
         application_id: "mock-application_id",
-      };
+      });
 
       global.fetch = mockFetch({
-        response: { data: mockResponseData },
-        status: 200,
-        ok: true,
+        response: { data: { ...claim } },
       });
     });
 
@@ -184,32 +172,32 @@ describe("ClaimsApi", () => {
       );
     });
 
-    it("responds with success status", async () => {
-      const response = await claimsApi.completeClaim(claim.application_id);
-      expect(response.success).toBe(true);
-    });
+    it("resolves with claim, success, status properties", async () => {
+      const { claim: claimResponse, ...rest } = await claimsApi.completeClaim(
+        claim.application_id
+      );
 
-    it("responds with an instance of a Claim", async () => {
-      const response = await claimsApi.completeClaim(claim.application_id);
-      expect(response.claim).toBeInstanceOf(Claim);
+      expect(claimResponse).toBeInstanceOf(Claim);
+      expect(claimResponse).toEqual(claim);
+      expect(rest).toMatchInlineSnapshot(`
+        Object {
+          "status": 200,
+          "success": true,
+        }
+      `);
     });
   });
 
   describe("updateClaim", () => {
-    let mockResponseData;
-    const claim = new Claim({
-      application_id: "mock-application_id",
-    });
+    let claim;
 
     beforeEach(() => {
-      mockResponseData = {
+      claim = new Claim({
         application_id: "mock-application_id",
-      };
+      });
 
       global.fetch = mockFetch({
-        response: { data: mockResponseData },
-        status: 200,
-        ok: true,
+        response: { data: { ...claim } },
       });
     });
 
@@ -256,32 +244,36 @@ describe("ClaimsApi", () => {
       );
     });
 
-    it("responds with success status", async () => {
-      const response = await claimsApi.updateClaim(claim.application_id, claim);
-      expect(response.success).toBe(true);
-    });
+    it("resolves with claim, errors, success, status, and warnings properties", async () => {
+      const { claim: claimResponse, ...rest } = await claimsApi.updateClaim(
+        claim.application_id,
+        claim
+      );
 
-    it("responds with an instance of a Claim with claim request parameters as properties", async () => {
-      const response = await claimsApi.updateClaim(claim.application_id, claim);
-      expect(response.claim).toEqual(new Claim(mockResponseData));
+      expect(claimResponse).toBeInstanceOf(Claim);
+      expect(claimResponse).toEqual(claim);
+      expect(rest).toMatchInlineSnapshot(`
+        Object {
+          "errors": undefined,
+          "status": 200,
+          "success": true,
+          "warnings": undefined,
+        }
+      `);
     });
   });
 
   describe("submitClaim", () => {
-    let mockResponseData;
-    const claim = new Claim({
-      application_id: "mock-application_id",
-    });
+    let claim;
 
     beforeEach(() => {
-      mockResponseData = {
+      claim = new Claim({
         application_id: "mock-application_id",
-      };
+      });
 
       global.fetch = mockFetch({
-        response: { data: mockResponseData },
-        status: 200,
-        ok: true,
+        response: { data: { ...claim } },
+        status: 201,
       });
     });
 
@@ -297,14 +289,19 @@ describe("ClaimsApi", () => {
       );
     });
 
-    it("responds with success status", async () => {
-      const response = await claimsApi.submitClaim(claim.application_id);
-      expect(response.success).toBe(true);
-    });
+    it("resolves with claim, success, status properties", async () => {
+      const { claim: claimResponse, ...rest } = await claimsApi.submitClaim(
+        claim.application_id
+      );
 
-    it("responds with an instance of a Claim", async () => {
-      const response = await claimsApi.submitClaim(claim.application_id);
-      expect(response.claim).toBeInstanceOf(Claim);
+      expect(claimResponse).toBeInstanceOf(Claim);
+      expect(claimResponse).toEqual(claim);
+      expect(rest).toMatchInlineSnapshot(`
+        Object {
+          "status": 201,
+          "success": true,
+        }
+      `);
     });
   });
 });

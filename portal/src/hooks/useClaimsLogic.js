@@ -26,12 +26,13 @@ const useClaimsLogic = ({ appErrorsLogic, portalFlow, user }) => {
   const load = async () => {
     if (!user) throw new Error("Cannot load claims before user is loaded");
     if (claims) return;
+    appErrorsLogic.clearErrors();
 
     try {
       const { claims, success } = await claimsApi.getClaims();
+
       if (success) {
         setClaims(claims);
-        appErrorsLogic.clearErrors();
       }
     } catch (error) {
       appErrorsLogic.catchError(error);

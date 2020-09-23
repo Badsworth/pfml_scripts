@@ -1,4 +1,4 @@
-import Claim, { ClaimStatus } from "../../../src/models/Claim";
+import Claim, { ClaimStatus } from "../../models/Claim";
 import ClaimCollection from "../../models/ClaimCollection";
 import { uniqueId } from "lodash";
 

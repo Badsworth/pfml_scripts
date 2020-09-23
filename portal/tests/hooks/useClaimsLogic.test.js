@@ -10,6 +10,7 @@ import {
 import { makeFile, testHook } from "../test-utils";
 import AppErrorInfo from "../../src/models/AppErrorInfo";
 import AppErrorInfoCollection from "../../src/models/AppErrorInfoCollection";
+import { BadRequestError } from "../../src/errors";
 import ClaimCollection from "../../src/models/ClaimCollection";
 import User from "../../src/models/User";
 import { act } from "react-dom/test-utils";
@@ -28,14 +29,12 @@ describe("useClaimsLogic", () => {
   function renderHook() {
     testHook(() => {
       appErrorsLogic = useAppErrorsLogic();
-      portalFlow = usePortalFlow({ user });
+      portalFlow = usePortalFlow();
       claimsLogic = useClaimsLogic({ appErrorsLogic, user, portalFlow });
     });
   }
 
   beforeEach(() => {
-    // remove error logs
-    jest.spyOn(console, "error").mockImplementationOnce(jest.fn());
     user = new User({ user_id: "mock-user-id" });
     renderHook();
   });
@@ -71,24 +70,45 @@ describe("useClaimsLogic", () => {
       expect(getClaimsMock).toHaveBeenCalledTimes(1);
     });
 
-    it("throws an error if user has not been loaded", async () => {
-      user = null;
-      renderHook();
-      await expect(claimsLogic.load).rejects.toThrow(/Cannot load claims/);
-    });
-  });
-
-  describe("when request errors", () => {
-    it("catches the error", async () => {
-      getClaimsMock.mockImplementationOnce(() => {
-        throw new Error();
+    it("clears prior errors", async () => {
+      act(() => {
+        appErrorsLogic.setAppErrors(
+          new AppErrorInfoCollection([new AppErrorInfo()])
+        );
       });
 
       await act(async () => {
         await claimsLogic.load();
       });
 
-      expect(appErrorsLogic.appErrors.items[0].name).toEqual("Error");
+      expect(appErrorsLogic.appErrors.items).toHaveLength(0);
+    });
+
+    describe("when request is unsuccessful", () => {
+      beforeEach(() => {
+        jest.spyOn(console, "error").mockImplementationOnce(jest.fn());
+      });
+
+      it("throws an error if user has not been loaded", async () => {
+        user = null;
+        renderHook();
+        await expect(claimsLogic.load).rejects.toThrow(/Cannot load claims/);
+      });
+
+      it("catches exceptions thrown from the API module", async () => {
+        getClaimsMock.mockImplementationOnce(() => {
+          throw new BadRequestError();
+        });
+
+        await act(async () => {
+          await claimsLogic.load();
+        });
+
+        expect(appErrorsLogic.appErrors.items[0].name).toEqual(
+          "BadRequestError"
+        );
+        expect(mockRouter.push).not.toHaveBeenCalled();
+      });
     });
   });
 
@@ -101,83 +121,49 @@ describe("useClaimsLogic", () => {
       expect(createClaimMock).toHaveBeenCalled();
     });
 
-    describe("when the request succeeds", () => {
-      let claim;
+    it("routes to claim checklist page when the request succeeds", async () => {
+      mockRouter.pathname = routes.claims.start;
 
-      beforeEach(async () => {
-        mockRouter.pathname = routes.claims.start;
-        claim = new Claim({ application_id: "12345" });
-
-        createClaimMock.mockResolvedValueOnce({
-          claim,
-          success: true,
-        });
-
-        getClaimsMock.mockResolvedValueOnce({
-          claims: new ClaimCollection([]),
-          success: true,
-        });
-
-        act(() => {
-          appErrorsLogic.setAppErrors(
-            new AppErrorInfoCollection([new AppErrorInfo()])
-          );
-        });
-
-        await act(async () => {
-          await claimsLogic.create();
-        });
+      act(() => {
+        appErrorsLogic.setAppErrors(new AppErrorInfoCollection([]));
       });
 
-      it("clears errors", () => {
-        expect(appErrorsLogic.appErrors.items).toHaveLength(0);
+      await act(async () => {
+        await claimsLogic.create();
       });
 
-      it("routes to claim checklist page", () => {
-        expect(mockRouter.push).toHaveBeenCalledWith(
-          expect.stringContaining(
-            `${routes.claims.checklist}?claim_id=${claim.application_id}`
-          )
+      expect(mockRouter.push).toHaveBeenCalledWith(
+        expect.stringContaining(`${routes.claims.checklist}?claim_id=mock`)
+      );
+    });
+
+    it("clears prior errors", async () => {
+      act(() => {
+        appErrorsLogic.setAppErrors(
+          new AppErrorInfoCollection([new AppErrorInfo()])
         );
       });
+
+      await act(async () => {
+        await claimsLogic.create();
+      });
+
+      expect(appErrorsLogic.appErrors.items).toHaveLength(0);
     });
 
-    describe("when the request is unsuccessful", () => {
-      beforeEach(async () => {
-        createClaimMock.mockResolvedValueOnce({
-          claim: null,
-          success: false,
-        });
+    it("catches exceptions thrown from the API module", async () => {
+      jest.spyOn(console, "error").mockImplementationOnce(jest.fn());
 
-        await act(async () => {
-          await claimsLogic.create();
-        });
+      createClaimMock.mockImplementationOnce(() => {
+        throw new BadRequestError();
       });
 
-      it("doesn't change the route", () => {
-        expect(mockRouter.push).not.toHaveBeenCalled();
+      await act(async () => {
+        await claimsLogic.create();
       });
 
-      it("doesn't store a claim", () => {
-        expect(claimsLogic.claims).toBeNull();
-      });
-    });
-
-    describe("when the request throws an error", () => {
-      beforeEach(async () => {
-        createClaimMock.mockRejectedValueOnce(new Error());
-        await act(async () => {
-          await claimsLogic.create();
-        });
-      });
-
-      it("catches the error", () => {
-        expect(appErrorsLogic.appErrors.items[0].name).toEqual("Error");
-      });
-
-      it("doesn't change the route", () => {
-        expect(mockRouter.push).not.toHaveBeenCalled();
-      });
+      expect(appErrorsLogic.appErrors.items[0].name).toEqual("BadRequestError");
+      expect(mockRouter.push).not.toHaveBeenCalled();
     });
 
     describe("when claims have not been previously loaded", () => {
@@ -274,27 +260,64 @@ describe("useClaimsLogic", () => {
     });
 
     describe("complete", () => {
-      it("asynchronously completes claim", async () => {
+      it("completes the claim", async () => {
         await act(async () => {
           await claimsLogic.complete(applicationId);
         });
 
+        const claim = claimsLogic.claims.get(applicationId);
+
         expect(completeClaimMock).toHaveBeenCalledWith(applicationId);
+        expect(claim.status).toBe(ClaimStatus.completed);
       });
 
-      describe("when request errors", () => {
-        it("catches the error", async () => {
-          completeClaimMock.mockImplementationOnce(() => {
-            throw new Error();
-          });
-
-          await act(async () => {
-            await claimsLogic.complete(applicationId);
-          });
-
-          expect(appErrorsLogic.appErrors.items[0].name).toEqual("Error");
-          expect(mockRouter.push).not.toHaveBeenCalled();
+      it("clears prior errors", async () => {
+        act(() => {
+          appErrorsLogic.setAppErrors(
+            new AppErrorInfoCollection([new AppErrorInfo()])
+          );
         });
+
+        await act(async () => {
+          await claimsLogic.complete(applicationId);
+        });
+
+        expect(appErrorsLogic.appErrors.items).toHaveLength(0);
+      });
+
+      it("routes to claim success page when the request succeeds", async () => {
+        mockRouter.pathname = routes.claims.review;
+
+        act(() => {
+          appErrorsLogic.setAppErrors(new AppErrorInfoCollection([]));
+        });
+
+        await act(async () => {
+          await claimsLogic.complete(applicationId);
+        });
+
+        expect(mockRouter.push).toHaveBeenCalledWith(
+          expect.stringContaining(
+            `${routes.claims.success}?claim_id=${applicationId}`
+          )
+        );
+      });
+
+      it("catches exceptions thrown from the API module", async () => {
+        jest.spyOn(console, "error").mockImplementationOnce(jest.fn());
+
+        completeClaimMock.mockImplementationOnce(() => {
+          throw new BadRequestError();
+        });
+
+        await act(async () => {
+          await claimsLogic.complete(applicationId);
+        });
+
+        expect(appErrorsLogic.appErrors.items[0].name).toEqual(
+          "BadRequestError"
+        );
+        expect(mockRouter.push).not.toHaveBeenCalled();
       });
     });
 
@@ -319,32 +342,23 @@ describe("useClaimsLogic", () => {
         );
       });
 
+      it("clears prior errors", async () => {
+        act(() => {
+          appErrorsLogic.setAppErrors(
+            new AppErrorInfoCollection([new AppErrorInfo()])
+          );
+        });
+
+        await act(async () => {
+          await claimsLogic.update(applicationId, patchData);
+        });
+
+        expect(appErrorsLogic.appErrors.items).toHaveLength(0);
+      });
+
       describe("when request is unsuccessful", () => {
-        it("reports all errors in the response", async () => {
-          updateClaimMock.mockResolvedValueOnce({
-            errors: [
-              { field: "first_name", type: "format", rule: "string" },
-              { field: "tax_identifier", type: "pattern" },
-            ],
-          });
-
-          await act(async () => {
-            await claimsLogic.update(applicationId, patchData);
-          });
-
-          const errors = appErrorsLogic.appErrors.items;
-
-          expect(errors).toHaveLength(2);
-          expect(errors[0]).toEqual(
-            expect.objectContaining({
-              field: "first_name",
-            })
-          );
-          expect(errors[1]).toEqual(
-            expect.objectContaining({
-              field: "tax_identifier",
-            })
-          );
+        beforeEach(() => {
+          jest.spyOn(console, "error").mockImplementationOnce(jest.fn());
         });
 
         it("reports all relevant warnings in the response", async () => {
@@ -354,6 +368,8 @@ describe("useClaimsLogic", () => {
               { field: "last_name", type: "required" },
               { field: "date_of_birth", type: "required" },
             ],
+            // Responses with only warnings receive a 200 status
+            success: true,
           });
 
           await act(async () => {
@@ -368,50 +384,79 @@ describe("useClaimsLogic", () => {
 
         it("catches exceptions thrown from the API module", async () => {
           updateClaimMock.mockImplementationOnce(() => {
-            throw new Error();
+            throw new BadRequestError();
           });
 
           await act(async () => {
             await claimsLogic.update(applicationId, patchData);
           });
 
-          expect(appErrorsLogic.appErrors.items[0].name).toEqual("Error");
+          expect(appErrorsLogic.appErrors.items[0].name).toEqual(
+            "BadRequestError"
+          );
+          expect(mockRouter.push).not.toHaveBeenCalled();
         });
       });
     });
 
     describe("submit", () => {
-      it("asynchronously submits claim", async () => {
-        await act(async () => {
-          await claimsLogic.submit(applicationId);
-        });
-
-        expect(submitClaimMock).toHaveBeenCalledWith(applicationId);
-      });
-
-      it("updates the claim's status", async () => {
+      it("submits the claim", async () => {
         await act(async () => {
           await claimsLogic.submit(applicationId);
         });
 
         const claim = claimsLogic.claims.get(applicationId);
 
+        expect(submitClaimMock).toHaveBeenCalledWith(applicationId);
         expect(claim.status).toBe(ClaimStatus.submitted);
       });
 
-      describe("when request errors", () => {
-        it("catches the error", async () => {
-          submitClaimMock.mockImplementationOnce(() => {
-            throw new Error();
-          });
-
-          await act(async () => {
-            await claimsLogic.submit(applicationId);
-          });
-
-          expect(appErrorsLogic.appErrors.items[0].name).toEqual("Error");
-          expect(mockRouter.push).not.toHaveBeenCalled();
+      it("clears prior errors", async () => {
+        act(() => {
+          appErrorsLogic.setAppErrors(
+            new AppErrorInfoCollection([new AppErrorInfo()])
+          );
         });
+
+        await act(async () => {
+          await claimsLogic.submit(applicationId);
+        });
+
+        expect(appErrorsLogic.appErrors.items).toHaveLength(0);
+      });
+
+      it("routes to claim checklist page when the request succeeds", async () => {
+        mockRouter.pathname = routes.claims.review;
+
+        act(() => {
+          appErrorsLogic.setAppErrors(new AppErrorInfoCollection([]));
+        });
+
+        await act(async () => {
+          await claimsLogic.submit(applicationId);
+        });
+
+        expect(mockRouter.push).toHaveBeenCalledWith(
+          expect.stringContaining(
+            `${routes.claims.checklist}?claim_id=${applicationId}`
+          )
+        );
+      });
+
+      it("catches exceptions thrown from the API module", async () => {
+        jest.spyOn(console, "error").mockImplementationOnce(jest.fn());
+        submitClaimMock.mockImplementationOnce(() => {
+          throw new BadRequestError();
+        });
+
+        await act(async () => {
+          await claimsLogic.submit(applicationId);
+        });
+
+        expect(appErrorsLogic.appErrors.items[0].name).toEqual(
+          "BadRequestError"
+        );
+        expect(mockRouter.push).not.toHaveBeenCalled();
       });
     });
 

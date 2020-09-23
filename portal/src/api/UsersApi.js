@@ -15,6 +15,10 @@ export default class UsersApi extends BaseApi {
     return routes.api.users;
   }
 
+  get i18nPrefix() {
+    return "users";
+  }
+
   /**
    * Get the currently authenticated user
    * @returns {Promise<UsersApiResult>}

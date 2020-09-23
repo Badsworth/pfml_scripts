@@ -7,6 +7,7 @@ import {
   RequestTimeoutError,
   ServiceUnavailableError,
   UnauthorizedError,
+  ValidationError,
 } from "../../src/errors";
 import { Auth } from "@aws-amplify/auth";
 import BaseApi from "../../src/api/BaseApi";
@@ -19,6 +20,10 @@ describe("BaseApi", () => {
   class TestsApi extends BaseApi {
     get basePath() {
       return "/api";
+    }
+
+    get i18nPrefix() {
+      return "testPrefix";
     }
   }
 
@@ -252,6 +257,16 @@ describe("BaseApi", () => {
     });
   });
 
+  it("throws an error if i18nPrefix isn't defined on the subclass", () => {
+    class MyApi extends BaseApi {
+      get basePath() {
+        return "/api";
+      }
+    }
+
+    expect(() => new MyApi()).toThrow();
+  });
+
   describe("when the fetch request fails", () => {
     beforeEach(() => {
       // We expect console.error to be called in this scenario
@@ -287,6 +302,46 @@ describe("BaseApi", () => {
       });
     });
 
+    it("throws ValidationError when the errors field in the response has entries", async () => {
+      expect.assertions();
+
+      global.fetch = jest.fn().mockResolvedValue({
+        ok: false,
+        status: 400,
+        json: jest.fn().mockResolvedValue({
+          errors: [
+            {
+              type: "minLength",
+              rule: "5",
+              field: "residential_address.zip",
+            },
+          ],
+        }),
+      });
+
+      try {
+        await testsApi.request("GET", "users");
+      } catch (error) {
+        expect(error).toBeInstanceOf(ValidationError);
+        expect(error.issues).toHaveLength(1);
+        expect(error.i18nPrefix).toBe("testPrefix");
+      }
+    });
+
+    it("throws an exception based on the status code when the errors field in the response is empty", async () => {
+      expect.assertions();
+
+      global.fetch = jest.fn().mockResolvedValue({
+        ok: false,
+        status: 400,
+        json: jest.fn().mockResolvedValue({ errors: [] }),
+      });
+
+      await expect(testsApi.request("GET", "users")).rejects.toThrow(
+        BadRequestError
+      );
+    });
+
     it("doesn't prevent subsequent requests", async () => {
       expect.assertions();
 
@@ -296,7 +351,7 @@ describe("BaseApi", () => {
         NetworkError
       );
 
-      const response = { data: [], errors: [], warnings: [] };
+      const response = { data: [] };
       global.fetch = jest.fn().mockResolvedValueOnce({
         json: jest.fn().mockResolvedValueOnce(response),
         ok: true,
