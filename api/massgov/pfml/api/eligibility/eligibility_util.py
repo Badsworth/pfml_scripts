@@ -1,15 +1,18 @@
 import datetime
 import decimal
-from typing import Optional
+
+from werkzeug.exceptions import NotFound
 
 import massgov.pfml.db
 from massgov.pfml.api.eligibility.benefit import calculate_weekly_benefit_amount
 from massgov.pfml.db.models.applications import StateMetric
 
+logger = massgov.pfml.util.logging.get_logger(__name__)
+
 
 def fetch_state_metric(
     db_session: massgov.pfml.db.Session, effective_date: datetime.date
-) -> Optional[StateMetric]:
+) -> StateMetric:
     """ The handler which will call all of the various computational functions to determine
     financial eligibility should call this function in order to pass in the unemployment_minimum_earnings
     to wages_gte_unemployment_min() and the average_weekly_wage to wages_gte_thirty_times_wba().
@@ -21,6 +24,10 @@ def fetch_state_metric(
         .order_by(StateMetric.effective_date.desc())
         .first()
     )
+
+    if state_metric is None:
+        logger.info("State metric data was not found for effective_date {}".format(effective_date))
+        raise NotFound()
 
     return state_metric
 

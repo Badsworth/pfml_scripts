@@ -7,17 +7,11 @@ import connexion
 from werkzeug.exceptions import NotFound
 
 import massgov.pfml.api.app as app
+import massgov.pfml.api.eligibility.eligibility as eligibility
 import massgov.pfml.api.util.response as response_util
 import massgov.pfml.util.logging
-from massgov.pfml.db.models.employees import (
-    Employee,
-    Employer,
-    TaxIdentifier,
-    WagesAndContributions,
-)
+from massgov.pfml.db.models.employees import Employee, Employer, TaxIdentifier
 from massgov.pfml.util.pydantic import PydanticBaseModel
-
-from . import eligibility_date, eligibility_util, wage
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
 
@@ -44,10 +38,7 @@ def eligibility_post():
     fein = request.employer_fein
     leave_start_date = request.leave_start_date
     application_submitted_date = request.application_submitted_date
-
-    _eligibility_date = eligibility_date.eligibility_date(
-        leave_start_date, application_submitted_date
-    )
+    employment_status = request.employment_status
 
     with app.db_session() as db_session:
         tax_record = (
@@ -59,49 +50,23 @@ def eligibility_post():
         employee = db_session.query(Employee).filter_by(tax_identifier=tax_record).first()
 
         if tax_record is None or employer is None or employee is None:
-            logger.error("Unable to find record. Tax record or employee or empoyer is None")
+            logger.error("Unable to find record. Tax record or employee or employer is None")
             return response_util.error_response(
                 status_code=NotFound, message="Unable to find record", errors=[], data={},
             ).to_api_response()
 
         employee_id: UUID = UUID(str(employee.employee_id))
-        employer_id = employer.employer_id
 
-        wages_and_contribution = (
-            db_session.query(WagesAndContributions)
-            .filter_by(employee_id=employee_id, employer_id=employer_id)
-            .all()
-        )
-        state_metric_data = eligibility_util.fetch_state_metric(db_session, _eligibility_date)
-
-    if not wages_and_contribution:
-        logger.info("No wages found for Employee_id={}".format(employee_id))
-        no_wage_data_response = EligibilityResponse(
-            financially_eligible=False, description="No wages data found.",
-        )
-        return response_util.success_response(
-            message="Unable to find wage records",
-            data=EligibilityResponse.from_orm(no_wage_data_response).dict(exclude_none=True),
-        ).to_api_response()
-
-    total_wages = wage.get_total_wage(employee_id, _eligibility_date, db_session)
-
-    if state_metric_data:
-        state_average_weekly_wage = state_metric_data.average_weekly_wage
-        unemployment_minimum = state_metric_data.unemployment_minimum_earnings
-        wage_data_response = EligibilityResponse(
-            financially_eligible=True,
-            description="Financially eligible",
-            total_wages=total_wages,
-            state_average_weekly_wage=state_average_weekly_wage,
-            unemployment_minimum=unemployment_minimum,
-        )
-    else:
-        wage_data_response = EligibilityResponse(
-            financially_eligible=True, description="Financially eligible", total_wages=total_wages,
-        )
+    wage_data_response = eligibility.compute_financial_eligibility(
+        db_session,
+        employee_id,
+        fein,
+        leave_start_date,
+        application_submitted_date,
+        employment_status,
+    )
 
     return response_util.success_response(
-        message="Calculated total_wage and average_weekly_wage",
+        message="Calculated financial eligibility",
         data=EligibilityResponse.from_orm(wage_data_response).dict(exclude_none=True),
     ).to_api_response()
