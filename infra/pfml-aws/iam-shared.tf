@@ -94,7 +94,11 @@ data "aws_iam_policy_document" "developers_and_ci_deploy_access_policy" {
       "ecs:*",
       "elasticloadbalancing:*",
       "rds:*",
-      "lambda:*"
+      "lambda:*",
+
+      # Allow API team to create and mount EFS volumes to
+      # ECS tasks, such as the DOR Import.
+      "elasticfilesystem:*"
     ]
 
     resources = [
