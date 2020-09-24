@@ -1,13 +1,45 @@
 import { get, set, unset } from "lodash";
-import { useCallback, useState } from "react";
+import { useRef, useState } from "react";
 
-/**
- * React hook that creates a formState object
- * @param {*} initialState Initial form state
- * @returns {{formState: object, getField: getFieldFunction, updateFields: updateFieldsFunction, removeField: removeFieldFunction}}
- */
-const useFormState = (initialState = {}) => {
-  const [formState, setFormState] = useState(initialState);
+export class FormState {
+  constructor(setState) {
+    /**
+     * Should not be modified except by useFormState hook
+     * @readonly
+     * @type {object}
+     */
+    this.formState = null;
+    /**
+     * @private
+     */
+    this.setState = setState;
+  }
+
+  /**
+   * Function that fetches the corresponding value of a field name.
+   * Similar to updateFields, this function identity is guaranteed to be stable
+   * and won’t change on re-renders.
+   * @param {string} name Name of field to fetch
+   * @returns {*}
+   */
+  getField = (name) => {
+    return get(this.formState, name);
+  };
+
+  /**
+   * Function that removes a field from the form state.
+   * Similar to updateFields, this function identity is guaranteed to be stable
+   * and won’t change on re-renders.
+   * @param {string} name Name of field to remove
+   */
+  removeField = (name) => {
+    this.setState((prevState) => {
+      // Create mutable copy of the state
+      const draftState = { ...prevState };
+      unset(draftState, name);
+      return draftState;
+    });
+  };
 
   /**
    * Function that updates form state with new field values.
@@ -17,53 +49,34 @@ const useFormState = (initialState = {}) => {
    * updateFields is often called as part of the onChange handler in controlled
    * form field components, which can be as often as every user keystroke in
    * the case of an input text field.
-   * @callback updateFieldsFunction
    * @param {object.<string, *>} fields - Dictionary of field names in object path syntax mapped to field values
-   * @example updateFields({ "leave_details.employer_notified": true })
+   * @example formState.updateFields({ "leave_details.employer_notified": true })
    */
-  const updateFields = useCallback((fields) => {
-    setFormState((prevFormstate) => {
+  updateFields = (fields) => {
+    this.setState((prevState) => {
       // Create mutable copy of the state
-      const draftFormState = { ...prevFormstate };
+      const draftState = { ...prevState };
 
       // Transform any object paths to their nested equivalents
       // For example: "leave_details.employer_notified" => { leave_details: { employer_notified: ... } }
       Object.entries(fields).forEach(([fieldPath, value]) =>
-        set(draftFormState, fieldPath, value)
+        set(draftState, fieldPath, value)
       );
-      return draftFormState;
+      return draftState;
     });
-  }, []);
+  };
+}
 
-  /**
-   * Function that removes a field from the form state.
-   * Similar to updateFields, this function identity is guaranteed to be stable
-   * and won’t change on re-renders.
-   * @callback removeFieldFunction
-   * @param {string} name Name of field to remove
-   */
-  const removeField = useCallback((name) => {
-    setFormState((prevFormState) => {
-      // Create mutable copy of the state
-      const draftFormState = { ...prevFormState };
-      unset(draftFormState, name);
-      return draftFormState;
-    });
-  }, []);
-
-  /**
-   * Function that fetches the corresponding value of a field name
-   * @callback getFieldFunction
-   * @param {string} name Name of field to fetch
-   */
-  const getField = useCallback(
-    (name) => {
-      return get(formState, name);
-    },
-    [formState]
-  );
-
-  return { formState, getField, updateFields, removeField };
+/**
+ * React hook that creates a formState object
+ * @param {object} [initialState] Initial form state
+ * @returns {FormState}
+ */
+const useFormState = (initialState = {}) => {
+  const [state, setState] = useState(initialState);
+  const formStateRef = useRef(new FormState(setState));
+  formStateRef.current.formState = state;
+  return formStateRef.current;
 };
 
 export default useFormState;
