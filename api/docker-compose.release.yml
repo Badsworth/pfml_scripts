@@ -1,0 +1,14 @@
+version: "3.8"
+
+services:
+  mass-pfml-api:
+    build:
+      context: .
+      target: app
+      args:
+        - RUN_UID=${RUN_UID:-4000}
+        - RUN_USER=${RUN_USER:-nodummy}
+    image: mass-pfml-api:release
+    container_name: mass-pfml-api
+    init: true
+    command: ["mass-pfml-api"]
