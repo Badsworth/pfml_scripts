@@ -60,6 +60,9 @@ export const Review = (props) => {
   const payment_method = get(claim, "payment_preferences[0].payment_method");
   const reason = get(claim, "leave_details.reason");
   const reasonQualifier = get(claim, "leave_details.reason_qualifier");
+  const mailing_address = get(claim, "has_mailing_address")
+    ? get(claim, "mailing_address")
+    : get(claim, "residential_address");
 
   const steps = Step.createClaimStepsFromMachine(
     claimantConfigs,
@@ -419,6 +422,24 @@ export const Review = (props) => {
           {payment_method === PaymentPreferenceMethod.ach && (
             <React.Fragment>
               <ReviewRow
+                label={t("pages.claimsReview.paymentRoutingNumLabel")}
+                level={reviewRowLevel}
+              >
+                {get(
+                  claim,
+                  "payment_preferences[0].account_details.routing_number"
+                )}
+              </ReviewRow>
+              <ReviewRow
+                label={t("pages.claimsReview.paymentAccountNumLabel")}
+                level={reviewRowLevel}
+              >
+                {get(
+                  claim,
+                  "payment_preferences[0].account_details.account_number"
+                )}
+              </ReviewRow>
+              <ReviewRow
                 label={t("pages.claimsReview.achTypeLabel")}
                 level={reviewRowLevel}
               >
@@ -432,16 +453,15 @@ export const Review = (props) => {
                   ),
                 })}
               </ReviewRow>
-              <ReviewRow
-                label={t("pages.claimsReview.paymentDetailsLabel")}
-                level={reviewRowLevel}
-              >
-                {get(
-                  claim,
-                  "payment_preferences[0].account_details.account_number"
-                )}
-              </ReviewRow>
             </React.Fragment>
+          )}
+          {payment_method === PaymentPreferenceMethod.debit && (
+            <ReviewRow
+              label={t("pages.claimsReview.paymentAddressLabel")}
+              level={reviewRowLevel}
+            >
+              {formatAddress(mailing_address)}
+            </ReviewRow>
           )}
         </React.Fragment>
       )}

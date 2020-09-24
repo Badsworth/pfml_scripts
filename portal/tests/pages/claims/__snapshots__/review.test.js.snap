@@ -221,16 +221,22 @@ exports[`Final Review Page when all data is present renders Review page with fin
     Direct deposit
   </ReviewRow>
   <ReviewRow
+    label="Routing number"
+    level="3"
+  >
+    1234567890
+  </ReviewRow>
+  <ReviewRow
+    label="Account number"
+    level="3"
+  >
+    091000022
+  </ReviewRow>
+  <ReviewRow
     label="Account type"
     level="3"
   >
     Checking
-  </ReviewRow>
-  <ReviewRow
-    label="Payment details"
-    level="3"
-  >
-    091000022
   </ReviewRow>
   <Button
     className="margin-top-3"
