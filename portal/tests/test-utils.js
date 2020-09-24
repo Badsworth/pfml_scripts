@@ -57,6 +57,7 @@ export class MockClaimBuilder {
    * @returns {MockClaimBuilder}
    */
   continuous() {
+    set(this.claimAttrs, "temp.has_continuous_leave_periods", true);
     set(
       this.claimAttrs,
       "leave_details.continuous_leave_periods[0]",
@@ -604,7 +605,7 @@ export const simulateEvents = (wrapper) => {
   }
 
   /**
-   * Simulate typing into an input field that lives within a component
+   * Simulate selecting an option that lives within a component
    * @param {string} name Name of input field
    * @param {string} value Value for input field
    */

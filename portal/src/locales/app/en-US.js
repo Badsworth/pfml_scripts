@@ -446,6 +446,19 @@ const pages = {
       "If you have already taken some or all of your leave for this condition, when did you first miss work?",
     title: "$t(shared.claimsLeaveDetailsTitle)",
   },
+  claimsLeavePeriodContinuous: {
+    choiceNo: "$t(shared.choiceNo)",
+    choiceYes: "$t(shared.choiceYes)",
+    datesLead_bonding:
+      "If you have already taken some or all of your family leave, tell us when you first missed work and your last day of leave.",
+    datesSectionLabel:
+      "Enter the start and end dates for your continuous leave.",
+    endDateLabel: "Last day of leave",
+    hasLeaveLabel:
+      "Do you need to take off work completely for a period of time (continuous leave)?",
+    startDateLabel: "First day of leave",
+    title: "$t(shared.claimsLeaveDetailsTitle)",
+  },
   claimsLeaveReason: {
     activeDutyFamilyLeaveHint: "Family leave",
     activeDutyFamilyLeaveLabel:

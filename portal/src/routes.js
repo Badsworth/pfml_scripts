@@ -28,6 +28,7 @@ const routes = {
     employerBenefits: "/claims/employer-benefits",
     employmentStatus: "/claims/employment-status",
     leaveDates: "/claims/leave-dates",
+    leavePeriodContinuous: "/claims/leave-period-continuous",
     leaveReason: "/claims/leave-reason",
     name: "/claims/name",
     notifiedEmployer: "/claims/notified-employer",

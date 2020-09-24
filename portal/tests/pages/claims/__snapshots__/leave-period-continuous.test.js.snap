@@ -1,0 +1,73 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`LeavePeriodContinuous renders the page with bonding leave content 1`] = `
+<QuestionPage
+  onSave={[Function]}
+  title="Leave details"
+>
+  <InputChoiceGroup
+    choices={
+      Array [
+        Object {
+          "checked": false,
+          "label": "Yes",
+          "value": "true",
+        },
+        Object {
+          "checked": false,
+          "label": "No",
+          "value": "false",
+        },
+      ]
+    }
+    label="Do you need to take off work completely for a period of time (continuous leave)?"
+    name="temp.has_continuous_leave_periods"
+    onChange={[Function]}
+    type="radio"
+    value=""
+  />
+  <ConditionalContent
+    fieldNamesClearedWhenHidden={
+      Array [
+        "claim.leave_details.continuous_leave_periods[0]",
+      ]
+    }
+    getField={[Function]}
+    removeField={[Function]}
+    updateFields={[Function]}
+    visible={null}
+  >
+    <Heading
+      level="2"
+      size="1"
+    >
+      Enter the start and end dates for your continuous leave.
+    </Heading>
+    <Lead>
+      If you have already taken some or all of your family leave, tell us when you first missed work and your last day of leave.
+    </Lead>
+    <InputDate
+      dayLabel="Day"
+      example="For example: 04 / 28 / 1986"
+      label="First day of leave"
+      monthLabel="Month"
+      name="leave_details.continuous_leave_periods[0].start_date"
+      onChange={[Function]}
+      smallLabel={true}
+      value=""
+      yearLabel="Year"
+    />
+    <InputDate
+      dayLabel="Day"
+      example="For example: 04 / 28 / 1986"
+      label="Last day of leave"
+      monthLabel="Month"
+      name="leave_details.continuous_leave_periods[0].end_date"
+      onChange={[Function]}
+      smallLabel={true}
+      value=""
+      yearLabel="Year"
+    />
+  </ConditionalContent>
+</QuestionPage>
+`;

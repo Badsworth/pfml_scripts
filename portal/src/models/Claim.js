@@ -61,6 +61,8 @@ class Claim extends BaseModel {
        * this temporary space.
        */
       temp: {
+        // TODO (CP-984): Connect to API
+        has_continuous_leave_periods: null,
         // TODO (CP-567): this field doesn't exist in the API yet
         has_employer_benefits: null,
         // TODO (CP-1019): Connect address preference to the API
