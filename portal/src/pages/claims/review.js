@@ -218,7 +218,7 @@ export const Review = (props) => {
             level={reviewRowLevel}
             label={t("pages.claimsReview.childBirthDateLabel")}
           >
-            {get(claim, "leave_details.child_birth_date")}
+            {formatDateRange(get(claim, "leave_details.child_birth_date"))}
           </ReviewRow>
         )}
 
@@ -230,7 +230,7 @@ export const Review = (props) => {
             level={reviewRowLevel}
             label={t("pages.claimsReview.childPlacementDateLabel")}
           >
-            {get(claim, "leave_details.child_placement_date")}
+            {formatDateRange(get(claim, "leave_details.child_placement_date"))}
           </ReviewRow>
         )}
 
