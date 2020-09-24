@@ -252,7 +252,9 @@ def document_upload(application_id, body, file):
         file_content = file.read()
         file_size = len(file_content)
         file_name = document_details.name or file.filename
-        file_description = document_details.description
+        file_description = ""
+        if document_details.description:
+            file_description = document_details.description
         document_type = document_details.document_type.value
 
         # Upload document to fineos

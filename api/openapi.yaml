@@ -1084,7 +1084,6 @@ components:
       required:
         - document_category
         - document_type
-        - description
         - file        
       additionalProperties: false
 

@@ -70,4 +70,4 @@ class DocumentRequestBody(PydanticBaseModel):
     document_category: DocumentCategory
     document_type: DocumentType
     name: Optional[str]
-    description: str
+    description: Optional[str]

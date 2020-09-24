@@ -18,7 +18,6 @@ VALID_MISSING_NAME_DESCRIPTION_FORM_DATA = {
 
 MISSING_DOCUMENT_CATEGORY_FORM_DATA = {
     "document_type": "Passport",
-    "description": "Passport",
 }
 
 FILE_WITH_NO_EXTENSION = (io.BytesIO(b"abcdef"), "test")
