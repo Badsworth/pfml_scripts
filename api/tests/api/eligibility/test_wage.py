@@ -39,9 +39,10 @@ def test_get_average_weekly_wage_one_row(test_db_session, initialize_factories_s
     add_wage_row(employer, employee, datetime.date(2022, 9, 30), 13000)
     factories.WagesAndContributionsFactory.create_batch(size=100)
 
-    aww = wage.get_average_weekly_wage(
+    wage_calculator = wage.get_wage_calculator(
         employee.employee_id, datetime.date(2022, 9, 16), test_db_session
     )
+    aww = wage_calculator.compute_average_weekly_wage()
 
     assert aww == 1000
 
@@ -63,9 +64,10 @@ def test_get_average_weekly_wage_multiple_rows(test_db_session, initialize_facto
     add_wage_row(employer2, employee, datetime.date(2021, 6, 30), 6500)
     factories.WagesAndContributionsFactory.create_batch(size=200)
 
-    aww = wage.get_average_weekly_wage(
+    wage_calculator = wage.get_wage_calculator(
         employee.employee_id, datetime.date(2022, 9, 16), test_db_session
     )
+    aww = wage_calculator.compute_average_weekly_wage()
 
     assert aww == (13000 + 13520) / 26 + (7800 + 7540) / 26
 
@@ -93,7 +95,7 @@ def test_query_employee_wages(test_db_session, initialize_factories_session):
 
 
 def test_average_weekly_wage_calculator_one_employer_current_quarter():
-    calculator = wage.AverageWeeklyWageCalculator()
+    calculator = wage.WageCalculator()
     calculator.set_effective_quarter(quarter.Quarter(2022, 3))
     calculator.set_quarter_wage(EMPL1, quarter.Quarter(2022, 3), decimal.Decimal(13000))  # Base p
     calculator.set_quarter_wage(EMPL1, quarter.Quarter(2022, 2), decimal.Decimal(12870))  # Base p
@@ -109,7 +111,7 @@ def test_average_weekly_wage_calculator_one_employer_current_quarter():
 
 
 def test_average_weekly_wage_calculator_one_employer_current_quarter_only():
-    calculator = wage.AverageWeeklyWageCalculator()
+    calculator = wage.WageCalculator()
     calculator.set_effective_quarter(quarter.Quarter(2022, 3))
     calculator.set_quarter_wage(EMPL1, quarter.Quarter(2022, 3), decimal.Decimal(20000))  # Base p
 
@@ -118,7 +120,7 @@ def test_average_weekly_wage_calculator_one_employer_current_quarter_only():
 
 
 def test_average_weekly_wage_calculator_one_employer_next_quarter():
-    calculator = wage.AverageWeeklyWageCalculator()
+    calculator = wage.WageCalculator()
     calculator.set_effective_quarter(quarter.Quarter(2022, 4))
     calculator.set_quarter_wage(EMPL1, quarter.Quarter(2022, 3), decimal.Decimal(13000))  # Base p
     calculator.set_quarter_wage(EMPL1, quarter.Quarter(2022, 2), decimal.Decimal(12870))  # Base p
@@ -134,7 +136,7 @@ def test_average_weekly_wage_calculator_one_employer_next_quarter():
 
 
 def test_average_weekly_wage_calculator_one_employer_3_quarters_later():
-    calculator = wage.AverageWeeklyWageCalculator()
+    calculator = wage.WageCalculator()
     calculator.set_effective_quarter(quarter.Quarter(2023, 2))
     calculator.set_quarter_wage(EMPL1, quarter.Quarter(2022, 3), decimal.Decimal(13000))  # Base p
     calculator.set_quarter_wage(EMPL1, quarter.Quarter(2022, 2), decimal.Decimal(12870))  # Base p
@@ -150,7 +152,7 @@ def test_average_weekly_wage_calculator_one_employer_3_quarters_later():
 
 
 def test_average_weekly_wage_calculator_one_employer_previous_quarter():
-    calculator = wage.AverageWeeklyWageCalculator()
+    calculator = wage.WageCalculator()
     calculator.set_effective_quarter(quarter.Quarter(2022, 2))
     calculator.set_quarter_wage(EMPL1, quarter.Quarter(2022, 3), decimal.Decimal(13000))
     calculator.set_quarter_wage(EMPL1, quarter.Quarter(2022, 2), decimal.Decimal(12870))  # Base p
@@ -166,7 +168,7 @@ def test_average_weekly_wage_calculator_one_employer_previous_quarter():
 
 
 def test_average_weekly_wage_calculator_three_employers_current_quarter():
-    calculator = wage.AverageWeeklyWageCalculator()
+    calculator = wage.WageCalculator()
     calculator.set_effective_quarter(quarter.Quarter(2022, 3))
 
     calculator.set_quarter_wage(EMPL1, quarter.Quarter(2022, 3), decimal.Decimal(13000))  # Base p
@@ -192,7 +194,7 @@ def test_average_weekly_wage_calculator_three_employers_current_quarter():
 
 
 def test_total_wage_calculator_one_employeer():
-    calculator = wage.AverageWeeklyWageCalculator()
+    calculator = wage.WageCalculator()
     calculator.set_effective_quarter(quarter.Quarter(2022, 3))
     calculator.set_quarter_wage(EMPL1, quarter.Quarter(2022, 3), decimal.Decimal(13000))  # Base p
     calculator.set_quarter_wage(EMPL1, quarter.Quarter(2022, 2), decimal.Decimal(12870))  # Base p
@@ -203,7 +205,7 @@ def test_total_wage_calculator_one_employeer():
 
 
 def test_total_wage_calculator_multiple_employeers():
-    calculator = wage.AverageWeeklyWageCalculator()
+    calculator = wage.WageCalculator()
     calculator.set_effective_quarter(quarter.Quarter(2022, 3))
     calculator.set_quarter_wage(EMPL1, quarter.Quarter(2022, 3), decimal.Decimal(13000))  # Base p
     calculator.set_quarter_wage(EMPL1, quarter.Quarter(2022, 2), decimal.Decimal(12870))  # Base p
@@ -219,3 +221,44 @@ def test_total_wage_calculator_multiple_employeers():
 
     total_wage = calculator.compute_total_wage()
     assert total_wage == (13000 + 12870 + 11700 + 7800 + 7540 + 7280)
+
+
+def test_total_quarterly_wage_calculator_one_employer():
+    calculator = wage.WageCalculator()
+    calculator.set_effective_quarter(quarter.Quarter(2022, 3))
+    calculator.set_quarter_wage(EMPL1, quarter.Quarter(2022, 3), decimal.Decimal(1000))  # Base p
+    calculator.set_quarter_wage(EMPL1, quarter.Quarter(2022, 2), decimal.Decimal(1000))  # Base p
+    calculator.set_quarter_wage(EMPL1, quarter.Quarter(2022, 1), decimal.Decimal(1000))  # Base p
+    calculator.set_quarter_wage(EMPL1, quarter.Quarter(2021, 4), decimal.Decimal(1000))  # Base p
+    calculator.set_quarter_wage(EMPL1, quarter.Quarter(2021, 3), decimal.Decimal(1000))
+    calculator.set_quarter_wage(EMPL1, quarter.Quarter(2021, 2), decimal.Decimal(1000))
+    calculator.set_quarter_wage(EMPL1, quarter.Quarter(2021, 1), decimal.Decimal(1000))
+    calculator.set_quarter_wage(EMPL1, quarter.Quarter(2020, 4), decimal.Decimal(1000))
+
+    total_quarterly_wages = calculator.compute_total_quarterly_wages()
+    assert len(total_quarterly_wages) == 4
+    assert total_quarterly_wages[quarter.Quarter(2022, 3)] == 1000
+    assert total_quarterly_wages[quarter.Quarter(2022, 2)] == 1000
+    assert total_quarterly_wages[quarter.Quarter(2022, 1)] == 1000
+    assert total_quarterly_wages[quarter.Quarter(2021, 4)] == 1000
+
+
+def test_total_quarterly_wage_calculator_multiple_employers():
+    calculator = wage.WageCalculator()
+    calculator.set_effective_quarter(quarter.Quarter(2022, 3))
+    calculator.set_quarter_wage(EMPL1, quarter.Quarter(2022, 3), decimal.Decimal(1000))  # Base p
+    calculator.set_quarter_wage(EMPL1, quarter.Quarter(2022, 2), decimal.Decimal(1000))  # Base p
+    calculator.set_quarter_wage(EMPL1, quarter.Quarter(2022, 1), decimal.Decimal(1000))  # Base p
+    calculator.set_quarter_wage(EMPL1, quarter.Quarter(2021, 4), decimal.Decimal(1000))  # Base p
+
+    calculator.set_quarter_wage(EMPL2, quarter.Quarter(2022, 3), decimal.Decimal(2000))  # Base p
+
+    calculator.set_quarter_wage(EMPL3, quarter.Quarter(2022, 3), decimal.Decimal(3000))  # Base p
+    calculator.set_quarter_wage(EMPL3, quarter.Quarter(2021, 4), decimal.Decimal(4000))  # Base p
+
+    total_quarterly_wages = calculator.compute_total_quarterly_wages()
+    assert len(total_quarterly_wages) == 4
+    assert total_quarterly_wages[quarter.Quarter(2022, 3)] == 6000  # three employers wages added
+    assert total_quarterly_wages[quarter.Quarter(2022, 2)] == 1000
+    assert total_quarterly_wages[quarter.Quarter(2022, 1)] == 1000
+    assert total_quarterly_wages[quarter.Quarter(2021, 4)] == 5000  # two employers wages added

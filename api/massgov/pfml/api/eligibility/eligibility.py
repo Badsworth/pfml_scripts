@@ -4,6 +4,7 @@ from typing import Optional
 import massgov.pfml.api.eligibility.eligibility_util as eligibility_util
 import massgov.pfml.api.eligibility.wage as wage
 from massgov.pfml.api.eligibility.eligibility_date import eligibility_date
+from massgov.pfml.api.models.applications.common import EmploymentStatus
 from massgov.pfml.util.pydantic import PydanticBaseModel
 
 
@@ -34,29 +35,35 @@ def compute_financial_eligibility(
     application_submitted_date,
     employment_status,
 ):
-
     effective_date = calculate_effective_date(leave_start_date, application_submitted_date)
     state_metric_data = eligibility_util.fetch_state_metric(db_session, effective_date)
     state_average_weekly_wage = state_metric_data.average_weekly_wage
     unemployment_minimum = state_metric_data.unemployment_minimum_earnings
-    total_wages = wage.get_total_wage(employee_id, effective_date, db_session)
-    individual_average_weekly_wage = wage.get_average_weekly_wage(
-        employee_id, effective_date, db_session
-    )
+
+    # Calculate various wages by fetching them from DOR
+    wage_calculator = wage.get_wage_calculator(employee_id, effective_date, db_session)
+    total_wages = wage_calculator.compute_total_wage()
+    individual_average_weekly_wage = wage_calculator.compute_average_weekly_wage()
+    quarterly_wages = wage_calculator.compute_total_quarterly_wages()
 
     unemployment_min_met = eligibility_util.wages_gte_unemployment_min(
         total_wages, unemployment_minimum
     )
 
-    if not unemployment_min_met:
-        description = "Unemployment minimum not met"
-
     gte_thirty_times_wba = eligibility_util.wages_gte_thirty_times_wba(
         total_wages, individual_average_weekly_wage, state_average_weekly_wage
     )
 
-    if not gte_thirty_times_wba:
+    # Check various financial eligibility thresholds, set the description accordingly
+    if not unemployment_min_met:
+        description = "Unemployment minimum not met"
+
+    elif not gte_thirty_times_wba:
         description = "Total wages below 30x weekly benefit"
+
+    elif employment_status == EmploymentStatus.self_employed and len(quarterly_wages) < 2:
+        description = "Does not meet the self-employment requirement to contribute in at least 2 of the last 4 quarters"
+
     else:
         description = "Financially eligible"
 

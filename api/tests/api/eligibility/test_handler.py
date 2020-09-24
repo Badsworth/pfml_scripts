@@ -37,6 +37,7 @@ def test_endpoint_with_employee_wages_data(client, test_db_session, initialize_f
     }
     response = client.post("/v1/financial-eligibility", json=body)
     assert response.status_code == 200
+    assert response.get_json().get("data").get("description") == "Financially eligible"
     assert response.get_json().get("data").get("total_wages") == float(
         round(
             wages_and_contribution1.employee_qtr_wages
@@ -61,6 +62,84 @@ def test_endpoint_no_employee_wage_data(client, test_db_session, initialize_fact
 
     assert response.status_code == 404
     assert response.get_json().get("data") == {}
+
+
+def test_self_employed_two_quarters(client, test_db_session, initialize_factories_session):
+    tax_id = TaxIdentifierFactory.create(tax_identifier="088574541")
+    employee = EmployeeFactory.create(tax_identifier=tax_id)
+    employer = EmployerFactory.create(employer_fein="716779225")
+
+    wages_and_contribution1 = WagesAndContributionsFactory.create(
+        employee=employee,
+        employer=employer,
+        filing_period=date(2020, 6, 30),
+        employee_qtr_wages=25000,
+    )
+    wages_and_contribution2 = WagesAndContributionsFactory.create(
+        employee=employee,
+        employer=employer,
+        filing_period=date(2020, 3, 1),
+        employee_qtr_wages=25000,
+    )
+
+    body = {
+        "application_submitted_date": "2020-12-30",
+        "employer_fein": "71-6779225",
+        "employment_status": "Self-Employed",
+        "leave_start_date": "2020-12-30",
+        "tax_identifier": "088-57-4541",
+    }
+    response = client.post("/v1/financial-eligibility", json=body)
+    assert response.status_code == 200
+    assert response.get_json().get("data").get("financially_eligible") is True
+    assert response.get_json().get("data").get("description") == "Financially eligible"
+    assert response.get_json().get("data").get("total_wages") == float(
+        round(
+            wages_and_contribution1.employee_qtr_wages + wages_and_contribution2.employee_qtr_wages,
+            2,
+        )
+    )
+
+
+def test_self_employed_one_quarter(client, test_db_session, initialize_factories_session):
+    tax_id = TaxIdentifierFactory.create(tax_identifier="088574541")
+    employee = EmployeeFactory.create(tax_identifier=tax_id)
+    employer = EmployerFactory.create(employer_fein="716779225")
+    employer2 = EmployerFactory.create(employer_fein="553897622")
+
+    wages_and_contribution1 = WagesAndContributionsFactory.create(
+        employee=employee,
+        employer=employer,
+        filing_period=date(2020, 6, 30),
+        employee_qtr_wages=25000,
+    )
+    wages_and_contribution2 = WagesAndContributionsFactory.create(
+        employee=employee,
+        employer=employer2,
+        filing_period=date(2020, 6, 30),
+        employee_qtr_wages=25000,
+    )
+
+    body = {
+        "application_submitted_date": "2020-12-30",
+        "employer_fein": "71-6779225",
+        "employment_status": "Self-Employed",
+        "leave_start_date": "2020-12-30",
+        "tax_identifier": "088-57-4541",
+    }
+    response = client.post("/v1/financial-eligibility", json=body)
+    assert response.status_code == 200
+    assert response.get_json().get("data").get("financially_eligible") is False
+    assert (
+        response.get_json().get("data").get("description")
+        == "Does not meet the self-employment requirement to contribute in at least 2 of the last 4 quarters"
+    )
+    assert response.get_json().get("data").get("total_wages") == float(
+        round(
+            wages_and_contribution1.employee_qtr_wages + wages_and_contribution2.employee_qtr_wages,
+            2,
+        )
+    )
 
 
 @pytest.fixture

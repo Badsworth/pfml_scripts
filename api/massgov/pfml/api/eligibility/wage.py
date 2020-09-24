@@ -18,44 +18,6 @@ from . import base_period
 logger = massgov.pfml.util.logging.get_logger(__name__)
 
 
-def get_average_weekly_wage(
-    employee_id: uuid.UUID, effective_date: datetime.date, db_session: massgov.pfml.db.Session
-) -> int:
-    """Read DOR wage data from database and compute average weekly wage for the given employee."""
-
-    effective_quarter = quarter.Quarter.from_date(effective_date)
-
-    calculator = AverageWeeklyWageCalculator()
-    calculator.set_effective_quarter(effective_quarter)
-
-    rows = query_employee_wages(db_session, effective_quarter, employee_id)
-    for row in rows:
-        calculator.set_quarter_wage(
-            row.employer_id, quarter.Quarter.from_date(row.filing_period), row.employee_qtr_wages
-        )
-
-    return calculator.compute_average_weekly_wage()
-
-
-def get_total_wage(
-    employee_id: uuid.UUID, effective_date: datetime.date, db_session: massgov.pfml.db.Session
-) -> decimal.Decimal:
-    """Read DOR wage data from database and compute total wage for the given employee."""
-    effective_quarter = quarter.Quarter.from_date(effective_date)
-
-    calculator = AverageWeeklyWageCalculator()
-    calculator.set_effective_quarter(effective_quarter)
-
-    rows = query_employee_wages(db_session, effective_quarter, employee_id)
-
-    for row in rows:
-        calculator.set_quarter_wage(
-            row.employer_id, quarter.Quarter.from_date(row.filing_period), row.employee_qtr_wages
-        )
-
-    return round(calculator.compute_total_wage(), 2)
-
-
 def query_employee_wages(
     db_session: massgov.pfml.db.Session, effective_quarter: quarter.Quarter, employee_id: uuid.UUID
 ) -> List[Any]:
@@ -83,8 +45,8 @@ def query_employee_wages(
     return rows
 
 
-class AverageWeeklyWageCalculator:
-    """Calculate average weekly wage for an employee.
+class WageCalculator:
+    """Calculate various wages for an employee.
 
     To calculate the average weekly wage:
 
@@ -107,6 +69,17 @@ class AverageWeeklyWageCalculator:
             Divide by 13
 
        3. If there are more than one employer, sum the total across employers.
+
+    To calculate the quarterly wage:
+
+      For each employer:
+
+        1. Determine the “Base Period”.  This is 4 consecutive quarters ending with the last reported
+          quarter with wage data (could include the quarter of the effective date), but not ending
+          prior to 2 quarters before the effective date.
+
+        2. For each quarter, if the quarter has no wages from other employers, initialize the quarterly
+           wage to that value, otherwise increment the quarterly wage.
     """
 
     employer_quarter_wage: Dict[uuid.UUID, Dict[quarter.Quarter, decimal.Decimal]]
@@ -191,3 +164,37 @@ class AverageWeeklyWageCalculator:
                 total_wage += wage
 
         return total_wage
+
+    def compute_total_quarterly_wages(self) -> Dict[quarter.Quarter, decimal.Decimal]:
+        total_quarterly_wages: Dict[quarter.Quarter, decimal.Decimal] = {}
+
+        for quarter_wages in self.employer_quarter_wage.values():
+            base_period_quarters = base_period.compute_base_period(
+                self.effective_quarter, quarter_wages
+            )
+
+            for reported_quarter, wage in quarter_wages.items():
+                if reported_quarter in base_period_quarters and wage > 0:
+                    total_quarterly_wages[reported_quarter] = (
+                        total_quarterly_wages.get(reported_quarter, 0) + wage
+                    )
+
+        return total_quarterly_wages
+
+
+def get_wage_calculator(
+    employee_id: uuid.UUID, effective_date: datetime.date, db_session: massgov.pfml.db.Session
+) -> WageCalculator:
+    """Read DOR wage data from database and setup a calculator for the given employee."""
+    effective_quarter = quarter.Quarter.from_date(effective_date)
+    calculator = WageCalculator()
+    calculator.set_effective_quarter(effective_quarter)
+
+    rows = query_employee_wages(db_session, effective_quarter, employee_id)
+
+    for row in rows:
+        calculator.set_quarter_wage(
+            row.employer_id, quarter.Quarter.from_date(row.filing_period), row.employee_qtr_wages
+        )
+
+    return calculator
