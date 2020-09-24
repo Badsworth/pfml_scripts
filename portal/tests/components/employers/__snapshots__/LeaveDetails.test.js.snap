@@ -17,7 +17,7 @@ exports[`LeaveDetails renders the component 1`] = `
     label="Application ID"
     level="3"
   >
-    1
+    NTN-111-ABS-01
   </ReviewRow>
   <ReviewRow
     action={

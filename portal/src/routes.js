@@ -54,12 +54,15 @@ const routes = {
     dashboard: "/employers",
     login: "/employers/login",
     review: "/employers/claims/review",
+    success: "/employers/claims/success",
   },
   external: {
     massgov: {
       dfml: "https://mass.gov/dfml",
       healthcareProviderForm: "https://www.mass.gov/hcp-form",
       informedConsent: "https://www.mass.gov/paidleave-informedconsent",
+      pfmlBenefitsGuide:
+        "https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-guide",
       privacyPolicy: "https://www.mass.gov/privacypolicy",
     },
   },

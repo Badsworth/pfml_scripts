@@ -396,7 +396,7 @@ export class MockClaimBuilder {
  * @type {Claim}
  */
 export const claim = new MockClaimBuilder()
-  .id(1)
+  .id()
   .verifiedId()
   .address()
   .medicalLeaveReason()
@@ -446,6 +446,7 @@ export const claim = new MockClaimBuilder()
       id: 2,
     },
   ])
+  .completed()
   .create();
 
 /**

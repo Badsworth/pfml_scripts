@@ -1,0 +1,42 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Success renders Success page 1`] = `
+<Fragment>
+  <Title>
+    Thanks for reviewing the application
+  </Title>
+  <Trans
+    components={
+      Object {
+        "emphasized": <strong />,
+      }
+    }
+    i18nKey="pages.employersClaimsReview.success.applicationIdLabel"
+    values={
+      Object {
+        "claimId": "test-claim-id",
+      }
+    }
+  />
+  <p>
+    We’ll begin processing this application soon, and your employee should hear from us within 14 calendar days.
+  </p>
+  <p>
+    Once a decision has been made, you’ll receive an email notification with a link to details about the decision.
+  </p>
+  <p>
+    <Trans
+      components={
+        Object {
+          "benefits-guide-link": <a
+            href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-guide"
+            rel="noopener"
+            target="_blank"
+          />,
+        }
+      }
+      i18nKey="pages.employersClaimsReview.success.instructions_benefitsGuide"
+    />
+  </p>
+</Fragment>
+`;

@@ -21,6 +21,7 @@ const employerDueDate = formatDateRange("2020-09-28");
 const Review = (props) => {
   const { t } = useTranslation();
   const {
+    fineos_absence_id,
     first_name,
     employer_fein,
     last_name,
@@ -63,7 +64,7 @@ const Review = (props) => {
       )}
       <EmployerBenefits benefits={employer_benefits} />
       <PreviousLeaves previousLeaves={previous_leaves} />
-      <Feedback appLogic={props.appLogic} />
+      <Feedback appLogic={props.appLogic} claimId={fineos_absence_id} />
     </React.Fragment>
   );
 };

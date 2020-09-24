@@ -792,7 +792,6 @@ const pages = {
       choiceNo: "$t(shared.choiceNo)",
       choiceYes: "$t(shared.choiceYes)",
       fileHeadingPrefix: "$t(shared.fileUpload_fileHeadingPrefix)",
-      header: "Thanks for reviewing the application",
       instructionsLabel: "Do you have any additional comments or concerns?",
       supportingDocumentationLabel:
         "If you have any supporting documentation, please attach it for review.",
@@ -842,7 +841,18 @@ const pages = {
       tableHeader_dateRange: "Date range",
       tableHeader_days: "Days",
     },
-    submitButton: "Done",
+    submitButton: "Submit",
+    success: {
+      applicationIdLabel:
+        "<emphasized>Application ID:</emphasized> {{claimId}}",
+      header: "Thanks for reviewing the application",
+      instructions_benefitsGuide:
+        "To learn more about how benefits are calculated, visit our <benefits-guide-link>PFML Benefits Guide</benefits-guide-link>.",
+      instructions_emailNotification:
+        "Once a decision has been made, you’ll receive an email notification with a link to details about the decision.",
+      instructions_processingApplication:
+        "We’ll begin processing this application soon, and your employee should hear from us within 14 calendar days.",
+    },
     supportingWorkDetails: {
       header: "Supporting work details",
       hoursWorkedLabel: "Weekly hours worked",

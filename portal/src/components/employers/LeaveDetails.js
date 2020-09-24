@@ -20,7 +20,7 @@ const LeaveDetails = (props) => {
   const { t } = useTranslation();
   const {
     claim: {
-      application_id,
+      fineos_absence_id,
       leave_details: { employer_notification_date, reason },
     },
   } = props;
@@ -60,7 +60,7 @@ const LeaveDetails = (props) => {
         level="3"
         label={t("pages.employersClaimsReview.leaveDetails.applicationIdLabel")}
       >
-        {application_id}
+        {fineos_absence_id}
       </ReviewRow>
       <ReviewRow
         level="3"

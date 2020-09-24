@@ -1,11 +1,12 @@
 /* eslint-disable no-console */
 import React, { useState } from "react";
-import Button from "../Button";
+import ButtonLink from "../ButtonLink";
 import FileCardList from "../FileCardList";
 import FormLabel from "../FormLabel";
 import InputChoiceGroup from "../InputChoiceGroup";
 import PropTypes from "prop-types";
 import ReviewHeading from "../ReviewHeading";
+import routeWithParams from "../../utils/routeWithParams";
 import { useTranslation } from "../../locales/i18n";
 
 /**
@@ -29,56 +30,9 @@ const Feedback = (props) => {
     }
   };
 
-  const handleSubmit = async (event) => {
-    event.preventDefault();
-    const e = event.currentTarget;
-    const submission = [
-      "User Submitted:",
-      `1. ${e["employer-review-options"].value}`,
-      `2. ${
-        e["employer-comment"] && e["employer-comment"].value
-          ? e["employer-comment"].value
-          : "No comment"
-      }`,
-    ];
-
-    await printToConsole(submission.concat(getUploadedFiles()));
-  };
-
-  const getUploadedFiles = () => {
-    const fileUpload = [];
-
-    if (employerReviewFiles.length > 0) {
-      fileUpload.push("3. Uploaded files:");
-      employerReviewFiles.forEach((reviewFile) => {
-        const { id, file } = reviewFile;
-        fileUpload.push(`${id}: ${file.name}`);
-      });
-    } else {
-      fileUpload.push("3. No uploaded files");
-    }
-
-    return fileUpload;
-  };
-
-  const printToConsole = (arr) => {
-    const delimiter = "===============";
-
-    console.log(delimiter);
-    arr.forEach((string) => {
-      console.log(string);
-    });
-    console.log(delimiter);
-    return Promise.resolve();
-  };
-
   return (
     <React.Fragment>
-      <form
-        onSubmit={handleSubmit}
-        id="employer-feedback-form"
-        className="usa-form"
-      >
+      <form id="employer-feedback-form">
         <InputChoiceGroup
           choices={[
             {
@@ -95,10 +49,9 @@ const Feedback = (props) => {
           ]}
           label={
             <ReviewHeading level="2">
-              {t("pages.employersClaimsReview.feedback.header")}
+              {t("pages.employersClaimsReview.feedback.instructionsLabel")}
             </ReviewHeading>
           }
-          hint={t("pages.employersClaimsReview.feedback.instructionsLabel")}
           name="employer-review-options"
           onChange={handleInputChange}
           type="radio"
@@ -135,10 +88,14 @@ const Feedback = (props) => {
             />
           </React.Fragment>
         )}
-
-        <Button className="margin-top-4" type="submit">
+        <ButtonLink
+          href={routeWithParams("employers.success", {
+            claim_id: props.claimId,
+          })}
+          className="margin-top-4"
+        >
           {t("pages.employersClaimsReview.submitButton")}
-        </Button>
+        </ButtonLink>
       </form>
     </React.Fragment>
   );
@@ -146,6 +103,7 @@ const Feedback = (props) => {
 
 Feedback.propTypes = {
   appLogic: PropTypes.object.isRequired,
+  claimId: PropTypes.string,
 };
 
 export default Feedback;

@@ -3,9 +3,7 @@
 exports[`Feedback renders the component 1`] = `
 <Fragment>
   <form
-    className="usa-form"
     id="employer-feedback-form"
-    onSubmit={[Function]}
   >
     <InputChoiceGroup
       choices={
@@ -23,24 +21,23 @@ exports[`Feedback renders the component 1`] = `
           },
         ]
       }
-      hint="Do you have any additional comments or concerns?"
       label={
         <ReviewHeading
           level="2"
         >
-          Thanks for reviewing the application
+          Do you have any additional comments or concerns?
         </ReviewHeading>
       }
       name="employer-review-options"
       onChange={[Function]}
       type="radio"
     />
-    <Button
+    <ButtonLink
       className="margin-top-4"
-      type="submit"
+      href="/employers/claims/success"
     >
-      Done
-    </Button>
+      Submit
+    </ButtonLink>
   </form>
 </Fragment>
 `;
