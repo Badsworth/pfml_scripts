@@ -344,6 +344,15 @@ class UserRole(Base):
     role = relationship(LkRole)
 
 
+class UserLeaveAdministrator(Base):
+    __tablename__ = "link_user_leave_administrator"
+    user_id = Column(UUID(as_uuid=True), ForeignKey("user.user_id"), primary_key=True)
+    employer_id = Column(UUID(as_uuid=True), ForeignKey("employer.employer_id"), primary_key=True)
+
+    user = relationship(User)
+    employer = relationship(Employer)
+
+
 class WagesAndContributions(Base):
     __tablename__ = "wages_and_contributions"
     wage_and_contribution_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
@@ -514,6 +523,7 @@ class Role(LookupTable):
 
     USER = LkRole(1, "User")
     FINEOS = LkRole(2, "Fineos")
+    EMPLOYER = LkRole(3, "Employer")
 
 
 class PaymentType(LookupTable):

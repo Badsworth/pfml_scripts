@@ -47,6 +47,7 @@ class Verification(Base):
         UUID(as_uuid=True), ForeignKey("verification_code.verification_code_id"), nullable=True
     )
     verified_at = Column(TIMESTAMP(timezone=True), default=utc_timestamp_gen)
+    email_address = Column(Text)
 
 
 class VerificationCode(Base):
