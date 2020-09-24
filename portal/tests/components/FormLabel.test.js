@@ -145,7 +145,7 @@ describe("FormLabel", () => {
       const label = wrapper.find(".usa-label");
 
       expect(label.prop("className")).toMatchInlineSnapshot(
-        `"usa-label measure-5"`
+        `"usa-label text-bold measure-5"`
       );
     });
 
@@ -155,8 +155,18 @@ describe("FormLabel", () => {
       const label = wrapper.find(".usa-label");
 
       expect(label.prop("className")).toMatchInlineSnapshot(
-        `"usa-label usa-legend font-heading-sm measure-5"`
+        `"usa-label text-bold usa-legend font-heading-sm measure-5"`
       );
+    });
+  });
+
+  describe("when weight prop is set to normal", () => {
+    it("renders label with text-normal class", () => {
+      const { wrapper } = render({ weight: "normal" });
+      const label = wrapper.find(".usa-label");
+
+      expect(label.hasClass("text-normal")).toBe(true);
+      expect(label.hasClass("text-bold")).toBe(false);
     });
   });
 });

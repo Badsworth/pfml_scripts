@@ -8,17 +8,22 @@ import classnames from "classnames";
  *
  * [USWDS Reference ↗](https://designsystem.digital.gov/components/form-controls)
  */
-function FormLabel({ component = "label", small = false, ...props }) {
+function FormLabel({
+  component = "label",
+  small = false,
+  weight = "bold",
+  ...props
+}) {
   const LabelElement = component;
   const errorMsgId = props.inputId + "_error";
   const hasError = !!props.errorMsg;
 
-  const labelClasses = classnames("usa-label", {
+  const labelClasses = classnames(`usa-label text-${weight}`, {
     "usa-label--error": hasError,
     "usa-legend": component === "legend",
     "font-heading-sm": component === "legend" && small,
     "measure-5": small,
-    "font-heading-lg line-height-sans-3 text-bold margin-bottom-1 maxw-tablet": !small,
+    "font-heading-lg line-height-sans-3 margin-bottom-1 maxw-tablet": !small,
   });
 
   const hintClasses = classnames("display-block line-height-sans-5 measure-5", {
@@ -93,6 +98,8 @@ FormLabel.propTypes = {
    * Defaults to false
    */
   small: PropTypes.bool,
+  /** Override the default label font weight */
+  weight: PropTypes.oneOf(["bold", "normal"]),
 };
 
 export default FormLabel;

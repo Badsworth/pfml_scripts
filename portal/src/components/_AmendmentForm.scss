@@ -3,18 +3,13 @@
     @extend .font-heading-xs;
   }
 
-
-  // TODO (CP-697): May change how spacing is applied to form comoponents
+  // TODO (CP-697): May change how spacing is applied to form components
   fieldset:first-child legend {
     @extend .margin-top-0;
   }
-
-  .usa-alert__body > .usa-alert__text > .usa-form-group > label {
-    @extend .text-bold;
-  }
 }
 
-// TODO (CP-697): May change how spacing is applied to form comoponents
+// TODO (CP-697): May change how spacing is applied to form components
 // Apply only if input text is first input
 .c-amendment-form.input-text-first-child {
   label:first-of-type {

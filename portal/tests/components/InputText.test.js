@@ -187,6 +187,15 @@ describe("InputText", () => {
     });
   });
 
+  describe("when `labelWeight` is set", () => {
+    it("sets the FormLabel weight prop", () => {
+      const { wrapper } = render({ labelWeight: "normal" });
+      const label = wrapper.find("FormLabel");
+
+      expect(label.prop("weight")).toBe("normal");
+    });
+  });
+
   describe("when `smallLabel` is true", () => {
     it("sets the FormLabel small prop to true", () => {
       const { wrapper } = render({ smallLabel: true });

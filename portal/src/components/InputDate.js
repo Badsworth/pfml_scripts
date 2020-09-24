@@ -180,6 +180,7 @@ function InputDate(props) {
           inputMode="numeric"
           inputRef={inputTextRefs.month}
           label={props.monthLabel}
+          labelWeight="normal"
           maxLength="2"
           name={`${props.name}_month`}
           onBlur={handleBlur}
@@ -194,6 +195,7 @@ function InputDate(props) {
           inputMode="numeric"
           inputRef={inputTextRefs.day}
           label={props.dayLabel}
+          labelWeight="normal"
           maxLength="2"
           name={`${props.name}_day`}
           onBlur={handleBlur}
@@ -208,6 +210,7 @@ function InputDate(props) {
           inputMode="numeric"
           inputRef={inputTextRefs.year}
           label={props.yearLabel}
+          labelWeight="normal"
           maxLength="4"
           name={`${props.name}_year`}
           onBlur={handleBlur}
