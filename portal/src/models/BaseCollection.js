@@ -71,6 +71,21 @@ class BaseCollection {
   }
 
   /**
+   * Adds items to the collection. Returns a new collection with the items added.
+   * Does not modify the original collection.
+   * @param {BaseModel[]} items The items to add to the collection
+   * @returns {BaseCollection}
+   */
+  addItems(items) {
+    if (!Array.isArray(items)) {
+      throw new Error(`Items must be an array`);
+    }
+    return items.reduce((collection, item) => {
+      return collection.addItem(item);
+    }, this);
+  }
+
+  /**
    * Updates an item in a collection. Returns a new collection with the item updated.
    * Does not modify the original collection.
    * @param {BaseModel} item - the item to update in the collection

@@ -23,6 +23,15 @@ const useCollectionState = (initialCollection) => {
   };
 
   /**
+   * Function that adds an item to the collection
+   * @callback addItemsFunction
+   * @param {BaseModel} items The items to add to the collection
+   */
+  const addItems = (items) => {
+    setCollection((prevCollection) => prevCollection.addItems(items));
+  };
+
+  /**
    * Function that updates an item within the collection
    * @callback updateItemFunction
    * @param {BaseModel} item The item to update
@@ -40,7 +49,14 @@ const useCollectionState = (initialCollection) => {
     setCollection((prevCollection) => prevCollection.removeItem(itemId));
   };
 
-  return { collection, setCollection, addItem, updateItem, removeItem };
+  return {
+    collection,
+    setCollection,
+    addItem,
+    addItems,
+    updateItem,
+    removeItem,
+  };
 };
 
 export default useCollectionState;

@@ -52,7 +52,7 @@ describe("UploadId", () => {
   });
 
   describe("when the form is successfully submitted", () => {
-    it("calls claimsLogic.attachDocuments", async () => {
+    it("calls claimsLogic.documents.attach", async () => {
       claim = new MockClaimBuilder().create();
       render();
       const files = [makeFile(), makeFile()];
@@ -70,7 +70,7 @@ describe("UploadId", () => {
         await wrapper.find("QuestionPage").simulate("save");
       });
 
-      expect(appLogic.claims.attachDocuments).toHaveBeenCalledWith(
+      expect(appLogic.documents.attach).toHaveBeenCalledWith(
         claim.application_id,
         formattedFiles,
         expect.any(String)

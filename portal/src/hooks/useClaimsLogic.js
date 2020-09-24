@@ -152,34 +152,7 @@ const useClaimsLogic = ({ appErrorsLogic, portalFlow, user }) => {
     }
   };
 
-  /**
-   * Submit files to the API and set application errors if any
-   * @param {string} application_id - application id for claim
-   * @param {Array} files - array of objects {id: string, file: File object}
-   * @param {string} documentType - category of documents
-   */
-  const attachDocuments = async (application_id, files, documentType) => {
-    if (!user) return;
-    appErrorsLogic.clearErrors();
-    try {
-      const { success } = await claimsApi.attachDocuments(
-        application_id,
-        files,
-        documentType
-      );
-
-      if (success) {
-        const context = { user };
-        const params = { claim_id: application_id };
-        portalFlow.goToNextPage(context, params);
-      }
-    } catch (error) {
-      appErrorsLogic.catchError(error);
-    }
-  };
-
   return {
-    attachDocuments,
     claims,
     complete,
     load,

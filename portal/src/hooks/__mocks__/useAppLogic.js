@@ -1,6 +1,7 @@
 import AppErrorInfoCollection from "../../models/AppErrorInfoCollection";
 import Claim from "../../models/Claim";
 import ClaimCollection from "../../models/ClaimCollection";
+import DocumentCollection from "../../models/DocumentCollection";
 import User from "../../models/User";
 import { uniqueId } from "lodash";
 
@@ -16,7 +17,6 @@ export default jest.fn(() => ({
     verifyAccount: jest.fn(),
   },
   claims: {
-    attachDocuments: jest.fn(),
     claims: new ClaimCollection(),
     complete: jest.fn(),
     create: jest.fn(() => new Claim({ application_id: uniqueId() })),
@@ -24,6 +24,11 @@ export default jest.fn(() => ({
     load: jest.fn(),
     submit: jest.fn(),
     update: jest.fn(),
+  },
+  documents: {
+    attach: jest.fn(() => new Document({ application_id: uniqueId() })),
+    documents: new DocumentCollection(),
+    load: jest.fn(),
   },
   goToNextPage: jest.fn(),
   setAppErrors: jest.fn(),

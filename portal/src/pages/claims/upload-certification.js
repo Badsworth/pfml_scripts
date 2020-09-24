@@ -39,10 +39,10 @@ export const UploadCertification = (props) => {
   }
 
   const handleSave = async () => {
-    await appLogic.claims.attachDocuments(
+    await appLogic.documents.attach(
       claim.application_id,
       files,
-      "Certification" // TODO (CP-962): replace this with an enum value
+      "State Managed Paid Leave Confirmation" // TODO (CP-962): replace this with an enum value, and set based on leaveReason
     );
   };
 

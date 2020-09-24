@@ -1,4 +1,5 @@
 import AppErrorInfoCollection from "../../src/models/AppErrorInfoCollection";
+import DocumentCollection from "../../src/models/DocumentCollection";
 import { testHook } from "../test-utils";
 import useAppLogic from "../../src/hooks/useAppLogic";
 
@@ -8,6 +9,7 @@ describe("useAppLogic", () => {
       auth,
       claims,
       clearErrors,
+      documents,
       goToNextPage,
       rest,
       setAppErrors,
@@ -18,6 +20,7 @@ describe("useAppLogic", () => {
         appErrors,
         auth,
         claims,
+        documents,
         clearErrors,
         goToNextPage,
         setAppErrors,
@@ -38,6 +41,9 @@ describe("useAppLogic", () => {
     expect(users.updateUser).toBeInstanceOf(Function);
     expect(setAppErrors).toBeInstanceOf(Function);
     expect(claims.submit).toBeInstanceOf(Function);
+    expect(documents.documents).toBeInstanceOf(DocumentCollection);
+    expect(documents.load).toBeInstanceOf(Function);
+    expect(documents.attach).toBeInstanceOf(Function);
     expect(users.user).toBeUndefined();
     expect(users).toEqual(expect.anything());
     // there should be no other properties;

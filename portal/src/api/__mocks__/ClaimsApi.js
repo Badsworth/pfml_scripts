@@ -69,16 +69,7 @@ export const submitClaimMock = jest.fn((application_id) =>
   })
 );
 
-export const attachDocumentsMock = jest.fn(
-  (application_id, files, documentCategory) =>
-    Promise.resolve({
-      success: true,
-      status: 200,
-    })
-);
-
 const claimsApi = jest.fn().mockImplementation(({ user }) => ({
-  attachDocuments: attachDocumentsMock,
   completeClaim: completeClaimMock,
   createClaim: createClaimMock,
   getClaims: getClaimsMock,

@@ -1,13 +1,11 @@
 import Claim, { ClaimStatus } from "../../src/models/Claim";
 import {
-  attachDocumentsMock,
   completeClaimMock,
   createClaimMock,
   getClaimsMock,
   submitClaimMock,
   updateClaimMock,
 } from "../../src/api/ClaimsApi";
-import { makeFile, testHook } from "../test-utils";
 import AppErrorInfo from "../../src/models/AppErrorInfo";
 import AppErrorInfoCollection from "../../src/models/AppErrorInfoCollection";
 import { BadRequestError } from "../../src/errors";
@@ -16,6 +14,7 @@ import User from "../../src/models/User";
 import { act } from "react-dom/test-utils";
 import { mockRouter } from "next/router";
 import routes from "../../src/routes";
+import { testHook } from "../test-utils";
 import useAppErrorsLogic from "../../src/hooks/useAppErrorsLogic";
 import useClaimsLogic from "../../src/hooks/useClaimsLogic";
 import usePortalFlow from "../../src/hooks/usePortalFlow";
@@ -457,22 +456,6 @@ describe("useClaimsLogic", () => {
           "BadRequestError"
         );
         expect(mockRouter.push).not.toHaveBeenCalled();
-      });
-    });
-
-    describe("attachDocuments", () => {
-      it("asynchronously submits documents", async () => {
-        const files = [makeFile(), makeFile(), makeFile()];
-        const mockCategory = "Medical Certification";
-        await act(async () => {
-          await claimsLogic.attachDocuments(applicationId, files, mockCategory);
-        });
-
-        expect(attachDocumentsMock).toHaveBeenCalledWith(
-          applicationId,
-          files,
-          mockCategory
-        );
       });
     });
   });

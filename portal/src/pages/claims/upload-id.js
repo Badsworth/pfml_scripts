@@ -15,10 +15,10 @@ export const UploadId = (props) => {
   const { appLogic, claim } = props;
 
   const handleSave = async () => {
-    await appLogic.claims.attachDocuments(
+    await appLogic.documents.attach(
       claim.application_id,
       stateIdFiles,
-      "Identification" // TODO (CP-962): replace this with an enum value
+      "Identification Proof" // TODO (CP-962): replace this with an enum value
     );
   };
 
@@ -49,6 +49,7 @@ UploadId.propTypes = {
   }),
   appLogic: PropTypes.shape({
     claims: PropTypes.object.isRequired,
+    documents: PropTypes.object.isRequired,
     goToNextPage: PropTypes.func.isRequired,
     setAppErrors: PropTypes.func.isRequired,
   }).isRequired,
