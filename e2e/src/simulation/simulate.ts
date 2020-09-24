@@ -1,11 +1,5 @@
 import faker from "faker";
-import {
-  SimulationClaim,
-  SimulationGenerator,
-  SimulationExecutor,
-  ClaimDocument,
-  SimulationGeneratorOpts,
-} from "./types";
+import { SimulationGenerator, ClaimDocument } from "./types";
 import { Employer } from "./dor";
 import employers from "./fixtures/employerPool";
 import { ApplicationRequestBody } from "../api";
@@ -212,73 +206,4 @@ function fmt(date: Date): string {
   return `${date.getFullYear()}-${(date.getMonth() + 1)
     .toString()
     .padStart(2, "0")}-${date.getDate().toString().padStart(2, "0")}`;
-}
-
-type GenerateOpts = SimulationGeneratorOpts & {
-  count: number;
-};
-
-/**
- * This is the top level object we interact with from CLI scripts.
- *
- * It knows how to generate a batch of claims as well as execute them. It will be created
- * in the pilot* files and loaded and invoked in our CLI scripts. The generate() output
- * will be captured into JSON, DOR, and RMV files, then we'll read the JSON file back in
- * in the CLI script and call execute() with the claims.
- */
-export class Simulation {
-  private generator: SimulationGenerator;
-  private executor: SimulationExecutor;
-
-  constructor(generator: SimulationGenerator, executor: SimulationExecutor) {
-    this.generator = generator;
-    this.executor = executor;
-  }
-
-  // Generate N claims, probably by invoking a SimulationGenerator. Return an iterable
-  // object containing SimulationClaim objects, which will be saved to JSON file on disk
-  // by the calling code.
-  generate(opts: GenerateOpts): AsyncIterable<SimulationClaim> {
-    const generator = this.generator;
-    return (async function* () {
-      for (let i = 0; i < opts.count; i++) {
-        yield generator(opts);
-      }
-    })();
-  }
-
-  /**
-   * Execute all claims in the passed iterable.
-   */
-  async execute(
-    claims: Iterable<SimulationClaim>
-  ): Promise<{ success: number; errors: unknown[] }> {
-    let success = 0;
-    const errors: unknown[] = [];
-    for (const claim of claims) {
-      try {
-        await this.executor(claim);
-        console.log(
-          `Submitted ${claim.scenario} for ${claim.claim.tax_identifier}`
-        );
-        success++;
-      } catch (e) {
-        console.log(
-          `Failed on ${claim.scenario} for ${
-            claim.claim.tax_identifier ?? claim.claim.employee_ssn
-          }`
-        );
-        if ("data" in e && "errors" in e.data) {
-          console.error("Reason given:", e.data.errors);
-        } else {
-          console.error(e);
-        }
-        errors.push(e);
-      }
-    }
-    return {
-      success,
-      errors,
-    };
-  }
 }

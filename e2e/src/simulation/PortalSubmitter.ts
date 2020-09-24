@@ -28,6 +28,7 @@ type PortalSubmitterOpts = {
   ClientId: string;
   Username: string;
   Password: string;
+  ApiBaseUrl: string;
 };
 
 export default class PortalSubmitter {
@@ -35,14 +36,12 @@ export default class PortalSubmitter {
   private pool: CognitoUserPool;
   private jwt?: string;
   private base: string;
-  count: number;
 
   constructor(opts: PortalSubmitterOpts) {
-    const { Username, Password, ClientId, UserPoolId } = opts;
+    const { Username, Password, ClientId, UserPoolId, ApiBaseUrl } = opts;
     this.pool = new CognitoUserPool({ ClientId, UserPoolId });
     this.details = new AuthenticationDetails({ Username, Password });
-    this.base = "https://paidleave-api-stage.mass.gov/api/v1";
-    this.count = 0;
+    this.base = ApiBaseUrl;
   }
 
   private async authenticate() {

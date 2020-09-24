@@ -42,17 +42,3 @@ export interface SimulationGenerator {
   // do asynchronous operations, like writing documents to the filesystem.
   (opts: SimulationGeneratorOpts): Promise<SimulationClaim>;
 }
-
-/**
- * SimulationExecutor is a function that executes a single SimulationClaim.
- *
- * Execution consists of:
- *   * Creating the claim using the API client.
- *   * Updating the claim using the API client.
- *   * Uploading any documents that should be handled online.
- *   * Moving any documents that should be handled offline to the proper directory.
- *   * Final submission of the claim using the API client.
- */
-export interface SimulationExecutor {
-  (claim: SimulationClaim): Promise<void>;
-}
