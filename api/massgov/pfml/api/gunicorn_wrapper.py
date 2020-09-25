@@ -31,12 +31,14 @@ class GunicornAppWrapper(gunicorn.app.base.BaseApplication):
             # Use the gthread class to enable multi-threading.
             "worker-class": "gthread",
             "log-level": "info",
-            # Instead of logging to a file, log directly to stdout/stderr.
-            "log-file": "-",
         }
 
         self.application = app
         super().__init__()
+
+        # Disable Gunicorn's own error log formatter which sends to stdout. We configure the
+        # "gunicorn.error" logger ourselves. See massgov/pfml/util/logging/__init__.py
+        self.cfg.set("errorlog", None)
 
     def load_config(self):
         config = {

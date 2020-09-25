@@ -18,8 +18,11 @@ LOGGING = {
     "root": {"handlers": ["console"], "level": "WARN"},
     "loggers": {
         "alembic": {"handlers": ["console"], "level": "INFO", "propagate": False},
+        "gunicorn.access": {"handlers": ["console"], "level": "INFO", "propagate": False},
+        "gunicorn.error": {"handlers": ["console"], "level": "INFO", "propagate": False},
         "massgov.pfml": {"handlers": ["console"], "level": "INFO", "propagate": False},
         "massgov.pfml.fineos": {"handlers": ["console"], "level": "DEBUG", "propagate": False},
+        "newrelic": {"handlers": ["console"], "level": "INFO", "propagate": False},
         "werkzeug": {"handlers": ["console"], "level": "WARN", "propagate": False},
         # Log DB pool connection invalidations and recycle events. At DEBUG
         # level includes all connection checkin/checkouts to the pool.
