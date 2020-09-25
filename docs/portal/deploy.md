@@ -1,6 +1,6 @@
 # Deploy
 
-Deploys to test, stage, and prod environments are done with Github Actions workflows. 
+Deploys to test, stage, and prod environments are done with Github Actions workflows.
 Pushes to the following branches will trigger deploys to the associated environments:
 
 | Branch                | Environment |
@@ -9,7 +9,7 @@ Pushes to the following branches will trigger deploys to the associated environm
 | `deploy/portal/stage` | stage       |
 | `deploy/portal/prod`  | prod        |
 
-The `master` branch is automatically deployed to `test` as pull requests are merged into it. 
+The `master` branch is automatically deployed to `test` as pull requests are merged into it.
 The remaining branches are generally pushed to as part of a release cycle (TBD — this is the intended end state), but they may also be triggered manually (this is the current practice).
 
 ---
@@ -29,7 +29,8 @@ Manual deployment of any branch to `test` is possible through the GitHub user in
 This is useful to, for example, test the functionality of a feature branch in a realistic environment
 before that branch has been merged.
 
-All you have to do to deploy the portal using this method is: 
+All you have to do to deploy the portal using this method is:
+
 - Visit [the portal deploy action homepage](https://github.com/EOLWD/pfml/actions?query=workflow%3A%22Portal+deploy%22) on GitHub.
 - Click the "Run workflow" button, and select the branch you wish to use. `master` is the default, but any branch can be selected.
 - Click the green "Run workflow" button. The `HEAD` of your chosen branch will be deployed to `test`, as in the git-based workflow.
@@ -38,7 +39,7 @@ All you have to do to deploy the portal using this method is:
 
 ### Deploying from the command line
 
-All you have to do to trigger a deploy to a specific environment is 
+All you have to do to trigger a deploy to a specific environment is
 to push your desired branch to the deploy branch for that environment from your computer. For example:
 
 ```sh
@@ -73,6 +74,12 @@ git push origin deploy/portal/prod
 
 ## Storybook
 
-The [Storybook site](http://massgov-pfml-test-storybook-builds.s3-website-us-east-1.amazonaws.com), 
-used for visualizing our components, is exported and deployed automatically when pull requests are merged 
+The [Storybook site](http://massgov-pfml-test-storybook-builds.s3-website-us-east-1.amazonaws.com),
+used for visualizing our components, is exported and deployed automatically when pull requests are merged
 into the `master` branch. Only one environment (`test`) exists for the Storybook site.
+
+## Playroom
+
+The [Playroom site](http://massgov-pfml-test-playroom-builds.s3-website-us-east-1.amazonaws.com),
+used for prototyping in the browser, is exported and deployed automatically when pull requests are merged
+into the `master` branch. Only one environment (`test`) exists for the Playroom site.

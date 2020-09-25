@@ -1,7 +1,7 @@
-# Build and deploy the Portal's Storybook documentation so non-engineers can view it
+# Build and deploy the Portal's Playroom environment so non-engineers can use it
 # Similar to portal-deploy.yml except without the Cloudfront dependency
 #
-name: Storybook Deploy
+name: Portal Playroom Deploy
 
 on:
   workflow_dispatch:
@@ -9,7 +9,10 @@ on:
     branches:
       - master
     paths:
-      - portal/**
+      - "portal/**"
+      - "!portal/__mocks__/**"
+      - "!portal/storybook/**"
+      - "!portal/tests/**"
 
 env:
   nodeVersion: 12.x
@@ -50,12 +53,12 @@ jobs:
         run: PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true npm ci --prefix portal
 
       - name: Build
-        run: npm run docs:build --prefix portal
+        run: npm run playroom:build --prefix portal
 
       - name: Sync S3 Bucket
         env:
-          BUCKET_NAME: massgov-pfml-${{ env.portal_env }}-storybook-builds
-          OUTPUT_DIR: ./portal/out-storybook
+          BUCKET_NAME: massgov-pfml-${{ env.portal_env }}-playroom-builds
+          OUTPUT_DIR: ./portal/builds/playroom
         run: |
           aws s3 sync $OUTPUT_DIR s3://$BUCKET_NAME/ --exclude "*.html" --cache-control max-age=31536000,public &&
           aws s3 sync $OUTPUT_DIR s3://$BUCKET_NAME/ --exclude "*" --include "*.html" --cache-control s-maxage=86400,max-age=0,must-revalidate

@@ -10,7 +10,11 @@ on:
       - deploy/portal/stage
       - deploy/portal/prod
     paths:
-      - portal/**
+      - "portal/**"
+      - "!portal/__mocks__/**"
+      - "!portal/playroom/**"
+      - "!portal/storybook/**"
+      - "!portal/tests/**"
 
 env:
   nodeVersion: 12.x
