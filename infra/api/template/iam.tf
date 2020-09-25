@@ -7,6 +7,10 @@ locals {
   iam_db_user_arn_prefix = "arn:aws:rds-db:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:dbuser:${aws_db_instance.default.resource_id}"
 }
 
+# ----------------------------------------------------------------------------------------------------------------------
+# IAM stuff for ECS
+# ----------------------------------------------------------------------------------------------------------------------
+
 # Boilerplate policy to allow an IAM role to perform ECS tasks.
 data "aws_iam_policy_document" "ecs_tasks_assume_role_policy" {
   statement {
@@ -89,6 +93,302 @@ data "aws_iam_policy_document" "task_executor" {
   }
 }
 
+# Link access policies to the ECS task execution role.
+resource "aws_iam_role_policy" "task_executor" {
+  name   = "${local.app_name}-${var.environment_name}-task-execution-role-policy"
+  role   = aws_iam_role.task_executor.id
+  policy = data.aws_iam_policy_document.task_executor.json
+}
+
+# The role that the PFML API assumes to perform actions within AWS.
+resource "aws_iam_role" "api_service" {
+  name               = "${local.app_name}-${var.environment_name}-api-service"
+  assume_role_policy = data.aws_iam_policy_document.ecs_tasks_assume_role_policy.json
+}
+
+resource "aws_iam_role_policy_attachment" "db_user_pfml_api_to_api_service_attachment" {
+  role       = aws_iam_role.api_service.name
+  policy_arn = aws_iam_policy.db_user_pfml_api.arn
+}
+
+# ----------------------------------------------------------------------------------------------------------------------
+# IAM stuff for Lambdas
+# ----------------------------------------------------------------------------------------------------------------------
+
+# Shared assume_role_policy doc for all Lambdas
+data "aws_iam_policy_document" "iam_policy_lambda_assumed_role" {
+  statement {
+    actions = [
+      "sts:AssumeRole"
+    ]
+
+    effect = "Allow"
+
+    principals {
+      type = "Service"
+      identifiers = [
+        "lambda.amazonaws.com"
+      ]
+    }
+
+  }
+}
+
+# ----------------------------------------------------------------------------------------------------------------------
+# IAM role and policies for DOR import Lambda
+
+resource "aws_iam_role" "dor_import_lambda_role" {
+  name_prefix        = "massgov-pfml-${var.environment_name}-dor-lmbd-"
+  assume_role_policy = data.aws_iam_policy_document.iam_policy_lambda_assumed_role.json
+}
+
+resource "aws_iam_role_policy_attachment" "dor_import_lambda_role_vpc_execution" {
+  role       = aws_iam_role.dor_import_lambda_role.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole"
+}
+
+resource "aws_iam_role_policy_attachment" "db_user_pfml_api_to_dor_import_lambda_role_attachment" {
+  role       = aws_iam_role.dor_import_lambda_role.name
+  policy_arn = aws_iam_policy.db_user_pfml_api.arn
+}
+
+resource "aws_iam_role_policy" "dor_import_lambda_execution" {
+  name   = "massgov-pfml-${var.environment_name}-dor_import_lambda_execution_role"
+  role   = aws_iam_role.dor_import_lambda_role.id
+  policy = data.aws_iam_policy_document.iam_policy_dor_import_lambda_execution.json
+}
+
+data "aws_iam_policy_document" "iam_policy_dor_import_lambda_execution" {
+  statement {
+    effect = "Allow"
+    actions = [
+      "s3:PutObject",
+      "s3:GetObject",
+      "s3:ListBucket"
+    ]
+    resources = [
+      data.aws_s3_bucket.agency_transfer.arn,
+      "${data.aws_s3_bucket.agency_transfer.arn}/*"
+    ]
+  }
+
+  statement {
+    effect = "Allow"
+
+    actions = [
+      "ssm:GetParameter",
+      "ssm:GetParameters"
+    ]
+
+    resources = [
+      "${local.ssm_arn_prefix}/${local.app_name}-dor-import/${var.environment_name}/*"
+    ]
+  }
+
+  statement {
+    effect = "Allow"
+
+    actions = [
+      "ssm:GetParametersByPath"
+    ]
+
+    resources = [
+      "${local.ssm_arn_prefix}/${local.app_name}-dor-import/${var.environment_name}",
+    ]
+  }
+}
+
+# ----------------------------------------------------------------------------------------------------------------------
+# IAM role and policies for the Cognito Post Confirmation Lambda
+
+resource "aws_iam_role" "cognito_post_confirmation_lambda_role" {
+  name_prefix        = "massgov-pfml-${var.environment_name}-cog-po-con-"
+  assume_role_policy = data.aws_iam_policy_document.iam_policy_lambda_assumed_role.json
+}
+
+resource "aws_iam_role_policy_attachment" "cognito_post_confirmation_lambda_role_vpc_execution" {
+  role       = aws_iam_role.cognito_post_confirmation_lambda_role.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole"
+}
+
+resource "aws_iam_role_policy_attachment" "db_user_pfml_api_to_cognito_post_confirmation_lambda_role_attachment" {
+  role       = aws_iam_role.cognito_post_confirmation_lambda_role.name
+  policy_arn = aws_iam_policy.db_user_pfml_api.arn
+}
+
+# ----------------------------------------------------------------------------------------------------------------------
+# IAM role and policies for the Formstack import Lambda
+
+# name_prefix is highly abbreviated due to 32 character limit by Terraform
+resource "aws_iam_role" "formstack_import_lambda_role" {
+  name_prefix        = "massgov-pfml-${var.environment_name}-frmstk-role-"
+  assume_role_policy = data.aws_iam_policy_document.iam_policy_lambda_assumed_role.json
+}
+
+resource "aws_iam_role_policy_attachment" "formstack_import_lambda_role_vpc_execution" {
+  role       = aws_iam_role.formstack_import_lambda_role.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole"
+}
+
+resource "aws_iam_role_policy_attachment" "db_user_pfml_api_to_formstack_lambda_role_attachment" {
+  role       = aws_iam_role.formstack_import_lambda_role.name
+  policy_arn = aws_iam_policy.db_user_pfml_api.arn
+}
+
+resource "aws_iam_role_policy" "formstack_import_lambda_execution" {
+  name   = "massgov-pfml-${var.environment_name}-formstack_import_lambda_execution_role"
+  role   = aws_iam_role.formstack_import_lambda_role.id
+  policy = data.aws_iam_policy_document.iam_policy_formstack_import_lambda_execution.json
+}
+
+data "aws_iam_policy_document" "iam_policy_formstack_import_lambda_execution" {
+  statement {
+    effect = "Allow"
+    actions = [
+      "s3:PutObject",
+      "s3:GetObject",
+      "s3:ListBucket"
+    ]
+    resources = [
+      data.aws_s3_bucket.formstack_import.arn,
+      "${data.aws_s3_bucket.formstack_import.arn}/*"
+    ]
+  }
+
+  statement {
+    effect = "Allow"
+
+    actions = [
+      "ssm:GetParameter",
+      "ssm:GetParameters",
+      "ssm:PutParameter",
+      "ssm:PutParameters"
+    ]
+
+    resources = [
+      "${local.ssm_arn_prefix}/${local.app_name}-formstack-import/*"
+    ]
+  }
+
+  statement {
+    effect = "Allow"
+
+    actions = [
+      "ssm:GetParametersByPath"
+    ]
+
+    resources = [
+      "${local.ssm_arn_prefix}/${local.app_name}-formstack-import/*"
+    ]
+  }
+}
+
+# ----------------------------------------------------------------------------------------------------------------------
+# IAM role and policies for FINEOS Eligibility Feed Lambda
+
+resource "aws_iam_role" "eligibility_feed_lambda_role" {
+  name_prefix        = "massgov-pfml-${var.environment_name}-ef-lmbd-role-"
+  assume_role_policy = data.aws_iam_policy_document.iam_policy_lambda_assumed_role.json
+}
+
+resource "aws_iam_role_policy_attachment" "eligibility_feed_lambda_role_vpc_execution" {
+  role       = aws_iam_role.eligibility_feed_lambda_role.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole"
+}
+
+resource "aws_iam_role_policy_attachment" "db_user_pfml_api_to_eligibility_feed_lambda_role_attachment" {
+  role       = aws_iam_role.eligibility_feed_lambda_role.name
+  policy_arn = aws_iam_policy.db_user_pfml_api.arn
+}
+
+resource "aws_iam_role_policy" "eligibility_feed_lambda_execution" {
+  name   = "massgov-pfml-${var.environment_name}-eligibility_feed_lambda_execution_role"
+  role   = aws_iam_role.eligibility_feed_lambda_role.id
+  policy = data.aws_iam_policy_document.iam_policy_eligibility_feed_lambda_execution.json
+}
+
+data "aws_iam_policy_document" "iam_policy_eligibility_feed_lambda_execution" {
+  statement {
+    effect = "Allow"
+
+    actions = [
+      "ssm:GetParameter",
+      "ssm:GetParameters"
+    ]
+
+    resources = [
+      "${local.ssm_arn_prefix}/${local.app_name}/${var.environment_name}/*",
+    ]
+  }
+
+  statement {
+    effect = "Allow"
+
+    actions = [
+      "ssm:GetParametersByPath"
+    ]
+
+    resources = [
+      "${local.ssm_arn_prefix}/${local.app_name}/${var.environment_name}",
+    ]
+  }
+}
+
+# ----------------------------------------------------------------------------------------------------------------------
+# IAM stuff for RDS
+# ----------------------------------------------------------------------------------------------------------------------
+
+# IAM role for allowing RDS instance to send monitoring insights to cloudwatch.
+# Pulled from https://github.com/terraform-aws-modules/terraform-aws-rds/
+#
+resource "aws_iam_role" "rds_enhanced_monitoring" {
+  name_prefix        = "rds-enhanced-monitoring-${var.environment_name}-"
+  assume_role_policy = data.aws_iam_policy_document.rds_enhanced_monitoring.json
+}
+
+resource "aws_iam_role_policy_attachment" "rds_enhanced_monitoring" {
+  role       = aws_iam_role.rds_enhanced_monitoring.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonRDSEnhancedMonitoringRole"
+}
+
+data "aws_iam_policy_document" "rds_enhanced_monitoring" {
+  statement {
+    actions = [
+      "sts:AssumeRole"
+    ]
+
+    effect = "Allow"
+
+    principals {
+      type        = "Service"
+      identifiers = ["monitoring.rds.amazonaws.com"]
+    }
+  }
+}
+
+data "aws_iam_policy_document" "db_user_pfml_api" {
+  # Policy to allow connection to RDS via IAM database authentication as pfml_api user
+  # https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/UsingWithRDS.IAMDBAuth.IAMPolicy.html
+  statement {
+    actions = [
+      "rds-db:connect"
+    ]
+
+    resources = [
+      "${local.iam_db_user_arn_prefix}/pfml_api"
+    ]
+  }
+}
+
+resource "aws_iam_policy" "db_user_pfml_api" {
+  name   = "${local.app_name}-${var.environment_name}-db_user_pfml_api-policy"
+  policy = data.aws_iam_policy_document.db_user_pfml_api.json
+}
+
+# ----------------------------------------------------------------------------------------------------------------------
+# IAM stuff for S3
+# ----------------------------------------------------------------------------------------------------------------------
+
 data "aws_iam_policy_document" "document_upload_kms_key" {
   # Allow read/write with KMS key
   statement {
@@ -138,229 +438,6 @@ data "aws_iam_policy_document" "document_upload_kms_key" {
     }
   }
 
-}
-# Link access policies to the ECS task execution role.
-resource "aws_iam_role_policy" "task_executor" {
-  name   = "${local.app_name}-${var.environment_name}-task-execution-role-policy"
-  role   = aws_iam_role.task_executor.id
-  policy = data.aws_iam_policy_document.task_executor.json
-}
-
-# IAM role for allowing RDS instance to send monitoring insights to cloudwatch.
-# Pulled from https://github.com/terraform-aws-modules/terraform-aws-rds/
-#
-resource "aws_iam_role" "rds_enhanced_monitoring" {
-  name_prefix        = "rds-enhanced-monitoring-${var.environment_name}-"
-  assume_role_policy = data.aws_iam_policy_document.rds_enhanced_monitoring.json
-}
-
-resource "aws_iam_role_policy_attachment" "rds_enhanced_monitoring" {
-  role       = aws_iam_role.rds_enhanced_monitoring.name
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonRDSEnhancedMonitoringRole"
-}
-
-data "aws_iam_policy_document" "rds_enhanced_monitoring" {
-  statement {
-    actions = [
-      "sts:AssumeRole"
-    ]
-
-    effect = "Allow"
-
-    principals {
-      type        = "Service"
-      identifiers = ["monitoring.rds.amazonaws.com"]
-    }
-  }
-}
-
-# IAM role for lambda functions.
-resource "aws_iam_role" "lambda_role" {
-  name_prefix        = "massgov-pfml-${var.environment_name}-lambda-role-"
-  assume_role_policy = data.aws_iam_policy_document.iam_policy_lambda_assumed_role.json
-}
-
-#IAM role for Formstack import lambda
-#name_prefix is highly abbreviated due to 32 character limit by Terraform
-resource "aws_iam_role" "formstack_import_lambda_role" {
-  name_prefix        = "massgov-pfml-${var.environment_name}-frmstk-role-"
-  assume_role_policy = data.aws_iam_policy_document.iam_policy_lambda_assumed_role.json
-}
-
-data "aws_iam_policy_document" "iam_policy_lambda_assumed_role" {
-  statement {
-    actions = [
-      "sts:AssumeRole"
-    ]
-
-    effect = "Allow"
-
-    principals {
-      type = "Service"
-      identifiers = [
-        "lambda.amazonaws.com"
-      ]
-    }
-
-  }
-}
-
-# Execution role policy for the Formstack import lambda.
-# Grants access to:
-# - Cloudwatch
-# - Specific s3 folders
-# - Ability to create EC2 network interfaces (ENI) to execute lambda within a VPC
-# - Has PutParameter access
-resource "aws_iam_role_policy" "formstack_import_lambda_execution" {
-  name   = "massgov-pfml-${var.environment_name}-formstack_import_lambda_execution_role"
-  role   = aws_iam_role.formstack_import_lambda_role.id
-  policy = data.aws_iam_policy_document.iam_policy_formstack_import_lambda_execution.json
-}
-
-data "aws_iam_policy_document" "iam_policy_formstack_import_lambda_execution" {
-  statement {
-    effect = "Allow"
-    actions = [
-      "logs:CreateLogGroup",
-      "logs:CreateLogStream",
-      "logs:PutLogEvents"
-    ]
-    resources = [
-      "arn:aws:logs:*:*:*"
-    ]
-  }
-  statement {
-    effect = "Allow"
-    actions = [
-      "s3:PutObject",
-      "s3:GetObject",
-      "s3:ListBucket"
-    ]
-    resources = [
-      data.aws_s3_bucket.formstack_import.arn,
-      "${data.aws_s3_bucket.formstack_import.arn}/*"
-    ]
-  }
-  statement {
-    effect = "Allow"
-    actions = [
-      "ec2:CreateNetworkInterface",
-      "ec2:DescribeNetworkInterfaces",
-      "ec2:DeleteNetworkInterface"
-    ]
-    resources = [
-      "*"
-    ]
-  }
-  statement {
-    effect = "Allow"
-
-    actions = [
-      "ssm:GetParameter",
-      "ssm:GetParameters",
-      "ssm:PutParameter",
-      "ssm:PutParameters"
-    ]
-
-    resources = [
-      "${local.ssm_arn_prefix}/${local.app_name}-formstack-import/*"
-    ]
-  }
-
-  statement {
-    effect = "Allow"
-
-    actions = [
-      "ssm:GetParametersByPath"
-    ]
-
-    resources = [
-      "${local.ssm_arn_prefix}/${local.app_name}-formstack-import/*"
-    ]
-  }
-}
-
-
-
-# Execution role policy for lambdas.
-# Grants access to:
-# - Cloudwatch
-# - Specific s3 folders
-# - Ability to create EC2 network interfaces (ENI) to execute lambda within a VPC
-#
-resource "aws_iam_role_policy" "lambda_execution" {
-  name   = "massgov-pfml-${var.environment_name}-lambda_execution_role"
-  role   = aws_iam_role.lambda_role.id
-  policy = data.aws_iam_policy_document.iam_policy_lambda_execution.json
-}
-
-data "aws_iam_policy_document" "iam_policy_lambda_execution" {
-  statement {
-    effect = "Allow"
-    actions = [
-      "logs:CreateLogGroup",
-      "logs:CreateLogStream",
-      "logs:PutLogEvents"
-    ]
-    resources = [
-      "arn:aws:logs:*:*:*"
-    ]
-  }
-  statement {
-    effect = "Allow"
-    actions = [
-      "s3:PutObject",
-      "s3:GetObject",
-      "s3:ListBucket"
-    ]
-    resources = [
-      data.aws_s3_bucket.agency_transfer.arn,
-      "${data.aws_s3_bucket.agency_transfer.arn}/*"
-    ]
-  }
-  statement {
-    effect = "Allow"
-    actions = [
-      "ec2:CreateNetworkInterface",
-      "ec2:DescribeNetworkInterfaces",
-      "ec2:DeleteNetworkInterface"
-    ]
-    resources = [
-      "*"
-    ]
-  }
-  statement {
-    effect = "Allow"
-
-    actions = [
-      "ssm:GetParameter",
-      "ssm:GetParameters"
-    ]
-
-    resources = [
-      "${local.ssm_arn_prefix}/${local.app_name}/${var.environment_name}/*",
-      "${local.ssm_arn_prefix}/${local.app_name}-dor-import/${var.environment_name}/*"
-    ]
-  }
-
-  statement {
-    effect = "Allow"
-
-    actions = [
-      "ssm:GetParametersByPath"
-    ]
-
-    resources = [
-      "${local.ssm_arn_prefix}/${local.app_name}/${var.environment_name}",
-      "${local.ssm_arn_prefix}/${local.app_name}-dor-import/${var.environment_name}",
-    ]
-  }
-}
-
-# The role that the PFML API assumes to perform actions within AWS.
-resource "aws_iam_role" "api_service" {
-  name               = "${local.app_name}-${var.environment_name}-api-service"
-  assume_role_policy = data.aws_iam_policy_document.ecs_tasks_assume_role_policy.json
 }
 
 # IAM policy that defines access rights to the S3 document upload buckets.
@@ -455,20 +532,6 @@ data "aws_iam_policy_document" "document_upload" {
   #  }
 }
 
-data "aws_iam_policy_document" "db_user_pfml_api" {
-  # Policy to allow connection to RDS via IAM database authentication as pfml_api user
-  # https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/UsingWithRDS.IAMDBAuth.IAMPolicy.html
-  statement {
-    actions = [
-      "rds-db:connect"
-    ]
-
-    resources = [
-      "${local.iam_db_user_arn_prefix}/pfml_api"
-    ]
-  }
-}
-
 data "aws_iam_policy_document" "cloudtrail_logging" {
   statement {
     sid = "WriteCloudtrailLogs"
@@ -504,24 +567,4 @@ data "aws_iam_policy_document" "cloudtrail_logging" {
     ]
     resources = ["arn:aws:s3:::massgov-pfml-${var.environment_name}-cloudtrail-s3-logging"]
   }
-}
-
-resource "aws_iam_policy" "db_user_pfml_api" {
-  name   = "${local.app_name}-${var.environment_name}-db_user_pfml_api-policy"
-  policy = data.aws_iam_policy_document.db_user_pfml_api.json
-}
-
-resource "aws_iam_role_policy_attachment" "db_user_pfml_api_to_api_service_attachment" {
-  role       = aws_iam_role.api_service.name
-  policy_arn = aws_iam_policy.db_user_pfml_api.arn
-}
-
-resource "aws_iam_role_policy_attachment" "db_user_pfml_api_to_lambda_role_attachment" {
-  role       = aws_iam_role.lambda_role.name
-  policy_arn = aws_iam_policy.db_user_pfml_api.arn
-}
-
-resource "aws_iam_role_policy_attachment" "db_user_pfml_api_to_formstack_lambda_role_attachment" {
-  role       = aws_iam_role.formstack_import_lambda_role.name
-  policy_arn = aws_iam_policy.db_user_pfml_api.arn
 }

@@ -13,54 +13,15 @@ data "aws_s3_bucket" "lambda_build" {
   bucket = "massgov-pfml-api-lambda-builds"
 }
 
+# ----------------------------------------------------------------------------------------------------------------------
+# The DOR Import Function
+
 resource "aws_lambda_layer_version" "dependencies" {
   s3_bucket  = data.aws_s3_bucket.lambda_build.bucket
   s3_key     = "dor-import/${var.dor_import_lambda_dependencies_s3_key}"
   layer_name = "massgov-pfml-${var.environment_name}-dor-import-dependencies"
 }
 
-# ----------------------------------------------------------------------------------------------------------------------
-
-resource "aws_lambda_function" "formstack_import" {
-  s3_bucket = data.aws_s3_bucket.lambda_build.bucket
-  s3_key    = "formstack-import/${var.formstack_import_lambda_build_s3_key}"
-
-  function_name = "massgov-pfml-${var.environment_name}-formstack-import"
-  handler       = "newrelic_lambda_wrapper.handler" # the entrypoint of the newrelic instrumentation layer
-  runtime       = var.runtime_py
-  publish       = "true"
-
-  timeout = 900
-
-  role = aws_iam_role.formstack_import_lambda_role.arn
-  layers = [
-    local.newrelic_log_ingestion_layer
-  ]
-
-  vpc_config {
-    subnet_ids         = var.vpc_app_subnet_ids
-    security_group_ids = [aws_security_group.data_import.id]
-  }
-
-  environment {
-    variables = {
-      DB_HOST                               = aws_db_instance.default.address
-      DB_NAME                               = aws_db_instance.default.name
-      DB_USERNAME                           = "pfml_api"
-      FORMSTACK_TOKEN_SSM_PATH              = "/service/${local.app_name}-formstack-import/formstack_token"
-      FORMSTACK_OAUTH_INFO_SSM_PATH         = "/service/${local.app_name}-formstack-import/formstack_oauth_info"
-      FORMSTACK_DATA_BUCKET_NAME            = "massgov-pfml-${var.environment_name}-formstack-data"
-      NEW_RELIC_ACCOUNT_ID                  = local.newrelic_account_id
-      NEW_RELIC_TRUSTED_ACCOUNT_KEY         = local.newrelic_trusted_account_key
-      NEW_RELIC_LAMBDA_HANDLER              = "handler.handler" # the actual lambda entrypoint
-      NEW_RELIC_DISTRIBUTED_TRACING_ENABLED = true
-    }
-  }
-}
-
-# ----------------------------------------------------------------------------------------------------------------------
-
-# The DOR Import Function
 resource "aws_lambda_function" "dor_import" {
   s3_bucket = data.aws_s3_bucket.lambda_build.bucket
   s3_key    = "dor-import/${var.dor_import_lambda_build_s3_key}"
@@ -72,7 +33,7 @@ resource "aws_lambda_function" "dor_import" {
 
   timeout = 900
 
-  role = aws_iam_role.lambda_role.arn
+  role = aws_iam_role.dor_import_lambda_role.arn
   layers = [
     local.newrelic_log_ingestion_layer,
     aws_lambda_layer_version.dependencies.arn
@@ -126,7 +87,7 @@ resource "aws_lambda_function" "cognito_post_confirmation" {
   # consistency.
   timeout = 5
 
-  role   = aws_iam_role.lambda_role.arn
+  role   = aws_iam_role.cognito_post_confirmation_lambda_role.arn
   layers = [local.newrelic_log_ingestion_layer]
 
   vpc_config {
@@ -157,6 +118,45 @@ resource "aws_lambda_permission" "allow_cognito_post_confirmation" {
 
 # ----------------------------------------------------------------------------------------------------------------------
 
+resource "aws_lambda_function" "formstack_import" {
+  s3_bucket = data.aws_s3_bucket.lambda_build.bucket
+  s3_key    = "formstack-import/${var.formstack_import_lambda_build_s3_key}"
+
+  function_name = "massgov-pfml-${var.environment_name}-formstack-import"
+  handler       = "newrelic_lambda_wrapper.handler" # the entrypoint of the newrelic instrumentation layer
+  runtime       = var.runtime_py
+  publish       = "true"
+
+  timeout = 900
+
+  role = aws_iam_role.formstack_import_lambda_role.arn
+  layers = [
+    local.newrelic_log_ingestion_layer
+  ]
+
+  vpc_config {
+    subnet_ids         = var.vpc_app_subnet_ids
+    security_group_ids = [aws_security_group.data_import.id]
+  }
+
+  environment {
+    variables = {
+      DB_HOST                               = aws_db_instance.default.address
+      DB_NAME                               = aws_db_instance.default.name
+      DB_USERNAME                           = "pfml_api"
+      FORMSTACK_TOKEN_SSM_PATH              = "/service/${local.app_name}-formstack-import/formstack_token"
+      FORMSTACK_OAUTH_INFO_SSM_PATH         = "/service/${local.app_name}-formstack-import/formstack_oauth_info"
+      FORMSTACK_DATA_BUCKET_NAME            = "massgov-pfml-${var.environment_name}-formstack-data"
+      NEW_RELIC_ACCOUNT_ID                  = local.newrelic_account_id
+      NEW_RELIC_TRUSTED_ACCOUNT_KEY         = local.newrelic_trusted_account_key
+      NEW_RELIC_LAMBDA_HANDLER              = "handler.handler" # the actual lambda entrypoint
+      NEW_RELIC_DISTRIBUTED_TRACING_ENABLED = true
+    }
+  }
+}
+
+# ----------------------------------------------------------------------------------------------------------------------
+
 resource "aws_lambda_function" "eligibility_feed" {
   s3_bucket = data.aws_s3_bucket.lambda_build.bucket
   s3_key    = "fineos-eligibility-feed-export/${var.fineos_eligibility_transfer_lambda_build_s3_key}"
@@ -170,7 +170,7 @@ resource "aws_lambda_function" "eligibility_feed" {
   memory_size = 1024
   timeout     = 900
 
-  role   = aws_iam_role.lambda_role.arn
+  role   = aws_iam_role.eligibility_feed_lambda_role.arn
   layers = [local.newrelic_log_ingestion_layer]
 
   vpc_config {
