@@ -20,7 +20,7 @@ resource "aws_cloudwatch_event_target" "trigger_dor_import_lambda_daily_at_11_pm
 }
 
 resource "aws_cloudwatch_event_target" "trigger_formstack_import_lambda_daily_at_11_pm" {
-  rule      = aws_cloudwatch_event_rule.daily_11pm_et.name
+  rule      = aws_cloudwatch_event_rule.formstack_lambda_daily_11pm_et.name
   arn       = aws_lambda_function.formstack_import.arn
   target_id = "formstack_import_${var.environment_name}_lambda_event_target"
   input     = "{\"is_daily_lambda\":true}"
@@ -33,12 +33,20 @@ resource "aws_cloudwatch_event_rule" "daily_11pm_et" {
   schedule_expression = "cron(0 03 * * ? *)"
 }
 
+# Cloudwatch rules can only be connected 5 targets, so create an identical one.
+resource "aws_cloudwatch_event_rule" "formstack_lambda_daily_11pm_et" {
+  name        = "formstack-lambda-daily-at-11-pm"
+  description = "Fires Formstack Lambda once daily at 11pm US EDT/3am UTC"
+  # The time of day can only be specified in UTC and will need to be updated when daylight savings changes occur, if the 2300 US ET is desired to be consistent.
+  schedule_expression = "cron(0 03 * * ? *)"
+}
+
 resource "aws_lambda_permission" "allow_cloudwatch_to_call_formstack_import" {
   statement_id  = "AllowExecutionFromCloudWatch"
   action        = "lambda:InvokeFunction"
   function_name = aws_lambda_function.formstack_import.arn
   principal     = "events.amazonaws.com"
-  source_arn    = aws_cloudwatch_event_rule.daily_11pm_et.arn
+  source_arn    = aws_cloudwatch_event_rule.formstack_lambda_daily_11pm_et.arn
 }
 
 resource "aws_lambda_permission" "allow_cloudwatch_to_call_dor_import" {
