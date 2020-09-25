@@ -34,9 +34,7 @@ module.exports = {
         {
           loader: "sass-loader",
           options: {
-            sassOptions: {
-              includePaths: nextConfig.sassOptions.includePaths,
-            },
+            sassOptions: nextConfig.sassOptions,
           },
         },
       ],
