@@ -799,8 +799,7 @@ const pages = {
     },
     instructionsAmendment:
       "Please review the details of this application carefully. If anything seems incorrect, you can add an amendment within each section or include general comments at the end.",
-    instructionsDueDate:
-      "Review and respond by: <emphasized>{{date}}</emphasized>",
+    instructionsDueDate: "Review and respond by: <strong>{{date}}</strong>",
     leaveDetails: {
       applicationIdLabel: "Application ID",
       employerNotifiedLabel: "Employer notified",
@@ -819,7 +818,7 @@ const pages = {
       header: "Leave schedule",
       healthCareProviderFormLink: "Health care provider form",
       intermittentDetails_estimatedAbsences:
-        "Estimated <emphasized>{{frequency}}</emphasized> absences each lasting <emphasized>less than a full work day</emphasized> for <emphasized>{{duration}}</emphasized> {{durationBasis}}.",
+        "Estimated <strong>{{frequency}}</strong> absences each lasting <strong>less than a full work day</strong> for <strong>{{duration}}</strong> {{durationBasis}}.",
       intermittentDetails_oncePerMonth: "At least once per month.",
       reducedDetails_reducedHours: "Reduced by {{numOfHours}} hours per week",
       tableHeader_details: "Details",
@@ -842,23 +841,22 @@ const pages = {
       tableHeader_days: "Days",
     },
     submitButton: "Submit",
-    success: {
-      applicationIdLabel:
-        "<emphasized>Application ID:</emphasized> {{claimId}}",
-      header: "Thanks for reviewing the application",
-      instructions_benefitsGuide:
-        "To learn more about how benefits are calculated, visit our <benefits-guide-link>PFML Benefits Guide</benefits-guide-link>.",
-      instructions_emailNotification:
-        "Once a decision has been made, you’ll receive an email notification with a link to details about the decision.",
-      instructions_processingApplication:
-        "We’ll begin processing this application soon, and your employee should hear from us within 14 calendar days.",
-    },
     supportingWorkDetails: {
       header: "Supporting work details",
       hoursWorkedLabel: "Weekly hours worked",
       viewScheduleLink: "View detailed work schedule",
     },
     title: "Review application for {{name}}",
+  },
+  employersClaimsSuccess: {
+    applicationIdLabel: "<strong>Application ID:</strong> {{absenceId}}",
+    instructions_benefitsGuide:
+      "To learn more about how benefits are calculated, visit our <benefits-guide-link>PFML Benefits Guide</benefits-guide-link>.",
+    instructions_emailNotification:
+      "Once a decision has been made, you’ll receive an email notification with a link to details about the decision.",
+    instructions_processingApplication:
+      "We’ll begin processing this application soon, and your employee should hear from us within 14 calendar days.",
+    title: "Thanks for reviewing the application",
   },
   index: {
     createClaimButton: "Create an application",

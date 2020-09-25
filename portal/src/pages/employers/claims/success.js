@@ -7,31 +7,22 @@ import { useTranslation } from "../../../locales/i18n";
 
 export const Success = (props) => {
   const { t } = useTranslation();
-  const { claim_id } = props.query;
+  const { absence_id } = props.query;
 
   return (
     <React.Fragment>
-      <Title>{t("pages.employersClaimsReview.success.header")}</Title>
+      <Title>{t("pages.employersClaimsSuccess.title")}</Title>
       <Trans
-        i18nKey="pages.employersClaimsReview.success.applicationIdLabel"
-        components={{
-          emphasized: <strong />,
-        }}
-        values={{ claimId: claim_id }}
+        i18nKey="pages.employersClaimsSuccess.applicationIdLabel"
+        values={{ absenceId: absence_id }}
       />
       <p>
-        {t(
-          "pages.employersClaimsReview.success.instructions_processingApplication"
-        )}
+        {t("pages.employersClaimsSuccess.instructions_processingApplication")}
       </p>
-      <p>
-        {t(
-          "pages.employersClaimsReview.success.instructions_emailNotification"
-        )}
-      </p>
+      <p>{t("pages.employersClaimsSuccess.instructions_emailNotification")}</p>
       <p>
         <Trans
-          i18nKey="pages.employersClaimsReview.success.instructions_benefitsGuide"
+          i18nKey="pages.employersClaimsSuccess.instructions_benefitsGuide"
           components={{
             "benefits-guide-link": (
               <a
@@ -49,7 +40,7 @@ export const Success = (props) => {
 
 Success.propTypes = {
   query: PropTypes.shape({
-    claim_id: PropTypes.string,
+    absence_id: PropTypes.string,
   }),
 };
 

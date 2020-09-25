@@ -6,15 +6,10 @@ exports[`Success renders Success page 1`] = `
     Thanks for reviewing the application
   </Title>
   <Trans
-    components={
-      Object {
-        "emphasized": <strong />,
-      }
-    }
-    i18nKey="pages.employersClaimsReview.success.applicationIdLabel"
+    i18nKey="pages.employersClaimsSuccess.applicationIdLabel"
     values={
       Object {
-        "claimId": "test-claim-id",
+        "absenceId": undefined,
       }
     }
   />
@@ -35,7 +30,7 @@ exports[`Success renders Success page 1`] = `
           />,
         }
       }
-      i18nKey="pages.employersClaimsReview.success.instructions_benefitsGuide"
+      i18nKey="pages.employersClaimsSuccess.instructions_benefitsGuide"
     />
   </p>
 </Fragment>

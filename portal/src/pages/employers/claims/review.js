@@ -41,9 +41,6 @@ const Review = (props) => {
       <Alert state="warning" noIcon>
         <Trans
           i18nKey="pages.employersClaimsReview.instructionsDueDate"
-          components={{
-            emphasized: <strong />,
-          }}
           values={{ date: employerDueDate }}
         />
       </Alert>
@@ -64,7 +61,7 @@ const Review = (props) => {
       )}
       <EmployerBenefits benefits={employer_benefits} />
       <PreviousLeaves previousLeaves={previous_leaves} />
-      <Feedback appLogic={props.appLogic} claimId={fineos_absence_id} />
+      <Feedback appLogic={props.appLogic} absenceId={fineos_absence_id} />
     </React.Fragment>
   );
 };

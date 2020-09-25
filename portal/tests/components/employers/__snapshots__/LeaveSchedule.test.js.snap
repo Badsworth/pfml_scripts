@@ -69,11 +69,6 @@ exports[`LeaveSchedule renders the component 1`] = `
           </div>
           <div>
             <Trans
-              components={
-                Object {
-                  "emphasized": <strong />,
-                }
-              }
               i18nKey="pages.employersClaimsReview.leaveSchedule.intermittentDetails_estimatedAbsences"
               values={
                 Object {

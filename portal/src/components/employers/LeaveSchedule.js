@@ -101,9 +101,6 @@ const LeaveSchedule = (props) => {
                     <div>
                       <Trans
                         i18nKey="pages.employersClaimsReview.leaveSchedule.intermittentDetails_estimatedAbsences"
-                        components={{
-                          emphasized: <strong />,
-                        }}
                         values={{
                           frequency: leavePeriod.frequency,
                           duration: leavePeriod.duration,

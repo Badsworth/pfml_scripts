@@ -90,7 +90,7 @@ const Feedback = (props) => {
         )}
         <ButtonLink
           href={routeWithParams("employers.success", {
-            claim_id: props.claimId,
+            absence_id: props.absenceId,
           })}
           className="margin-top-4"
         >
@@ -103,7 +103,7 @@ const Feedback = (props) => {
 
 Feedback.propTypes = {
   appLogic: PropTypes.object.isRequired,
-  claimId: PropTypes.string,
+  absenceId: PropTypes.string,
 };
 
 export default Feedback;
