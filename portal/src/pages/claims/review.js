@@ -58,7 +58,6 @@ export const Review = (props) => {
   const { appLogic, claim } = props;
 
   const payment_method = get(claim, "payment_preferences[0].payment_method");
-  const reason = get(claim, "leave_details.reason");
   const reasonQualifier = get(claim, "leave_details.reason_qualifier");
   const mailing_address = get(claim, "has_mailing_address")
     ? get(claim, "mailing_address")
@@ -188,7 +187,7 @@ export const Review = (props) => {
         })}
       </ReviewRow>
 
-      {reason === LeaveReason.medical && (
+      {claim.isMedicalLeave && (
         <ReviewRow
           level={reviewRowLevel}
           label={t("pages.claimsReview.pregnancyOrRecentBirthLabel")}
@@ -201,7 +200,7 @@ export const Review = (props) => {
         </ReviewRow>
       )}
 
-      {reason === LeaveReason.bonding && (
+      {claim.isBondingLeave && (
         <ReviewRow
           level={reviewRowLevel}
           label={t("pages.claimsReview.familyLeaveTypeLabel")}
@@ -212,17 +211,16 @@ export const Review = (props) => {
         </ReviewRow>
       )}
 
-      {reason === LeaveReason.bonding &&
-        reasonQualifier === ReasonQualifier.newBorn && (
-          <ReviewRow
-            level={reviewRowLevel}
-            label={t("pages.claimsReview.childBirthDateLabel")}
-          >
-            {formatDateRange(get(claim, "leave_details.child_birth_date"))}
-          </ReviewRow>
-        )}
+      {claim.isBondingLeave && reasonQualifier === ReasonQualifier.newBorn && (
+        <ReviewRow
+          level={reviewRowLevel}
+          label={t("pages.claimsReview.childBirthDateLabel")}
+        >
+          {formatDateRange(get(claim, "leave_details.child_birth_date"))}
+        </ReviewRow>
+      )}
 
-      {reason === LeaveReason.bonding &&
+      {claim.isBondingLeave &&
         [ReasonQualifier.adoption, ReasonQualifier.fosterCare].includes(
           reasonQualifier
         ) && (

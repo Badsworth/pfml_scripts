@@ -75,7 +75,7 @@ export const UploadCertification = (props) => {
       </Lead>
       <ConditionalContent
         visible={
-          claimReason === LeaveReason.bonding &&
+          claim.isBondingLeave &&
           claimReasonQualifier === ReasonQualifier.newBorn
         }
       >

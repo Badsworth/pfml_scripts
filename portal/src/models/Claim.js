@@ -80,6 +80,14 @@ class Claim extends BaseModel {
   }
 
   /**
+   * Determine if claim is a Bonding Leave claim
+   * @returns {boolean}
+   */
+  get isBondingLeave() {
+    return get(this, "leave_details.reason") === LeaveReason.bonding;
+  }
+
+  /**
    * Check if Claim has been marked as completed yet.
    * @returns {boolean}
    */
@@ -101,6 +109,14 @@ class Claim extends BaseModel {
    */
   get isIntermittent() {
     return !!get(this, "leave_details.intermittent_leave_periods[0]");
+  }
+
+  /**
+   * Determine if claim is a Medical Leave claim
+   * @returns {boolean}
+   */
+  get isMedicalLeave() {
+    return get(this, "leave_details.reason") === LeaveReason.medical;
   }
 
   /**

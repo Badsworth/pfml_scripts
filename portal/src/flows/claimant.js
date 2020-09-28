@@ -11,9 +11,8 @@
  * is complete, in progress, or not started
  * @see ../models/Step
  */
-
-import { EmploymentStatus, LeaveReason } from "../models/Claim";
 import { ClaimSteps } from "../models/Step";
+import { EmploymentStatus } from "../models/Claim";
 import { fields as addressFields } from "../pages/claims/address";
 import { fields as dateOfBirthFields } from "../pages/claims/date-of-birth";
 import { fields as dateOfChildFields } from "../pages/claims/date-of-child";
@@ -39,10 +38,8 @@ import { fields as stateIdFields } from "../pages/claims/state-id";
  * @see https://xstate.js.org/docs/guides/guards.html
  */
 export const guards = {
-  isMedicalClaim: ({ claim }) =>
-    get(claim, "leave_details.reason") === LeaveReason.medical,
-  isBondingClaim: ({ claim }) =>
-    get(claim, "leave_details.reason") === LeaveReason.bonding,
+  isMedicalLeave: ({ claim }) => claim.isMedicalLeave,
+  isBondingLeave: ({ claim }) => claim.isBondingLeave,
   isEmployed: ({ claim }) =>
     get(claim, "employment_status") === EmploymentStatus.employed,
   isCompleted: ({ claim }) => claim.isCompleted,
@@ -164,11 +161,11 @@ export default {
         CONTINUE: [
           {
             target: routes.claims.reasonPregnancy,
-            cond: "isMedicalClaim",
+            cond: "isMedicalLeave",
           },
           {
             target: routes.claims.dateOfChild,
-            cond: "isBondingClaim",
+            cond: "isBondingLeave",
           },
           {
             target: routes.claims.checklist,

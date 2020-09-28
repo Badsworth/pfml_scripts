@@ -21,7 +21,27 @@ describe("Claim", () => {
     });
   });
 
-  describe("leave type getters", () => {
+  it("#isBondingLeave returns true when the Claim reason is bonding", () => {
+    const blankClaim = new MockClaimBuilder().create();
+    const claimWithReason = new MockClaimBuilder()
+      .bondingBirthLeaveReason()
+      .create();
+
+    expect(blankClaim.isMedicalLeave).toBe(false);
+    expect(claimWithReason.isBondingLeave).toBe(true);
+  });
+
+  it("#isMedicalLeave returns true when the Claim reason is medical", () => {
+    const blankClaim = new MockClaimBuilder().create();
+    const claimWithReason = new MockClaimBuilder()
+      .medicalLeaveReason()
+      .create();
+
+    expect(blankClaim.isMedicalLeave).toBe(false);
+    expect(claimWithReason.isMedicalLeave).toBe(true);
+  });
+
+  describe("leave period getters", () => {
     const emptyClaim = new MockClaimBuilder().create();
     const claimWithContinuousLeaveData = new MockClaimBuilder()
       .continuous()

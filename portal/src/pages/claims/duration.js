@@ -2,7 +2,6 @@ import Claim, {
   DurationBasis,
   FrequencyIntervalBasis,
   IntermittentLeavePeriod,
-  LeaveReason,
 } from "../../models/Claim";
 import { get, pick } from "lodash";
 import ConditionalContent from "../../components/ConditionalContent";
@@ -45,9 +44,7 @@ export const Duration = (props) => {
   const intermittentLeavePeriod = new IntermittentLeavePeriod(
     get(formState, "leave_details.intermittent_leave_periods[0]")
   );
-  const leave_reason = get(claim, "leave_details.reason");
-  const contentContext =
-    leave_reason === LeaveReason.bonding ? "bonding" : "medical";
+  const contentContext = claim.isBondingLeave ? "bonding" : "medical";
 
   const handleInputChange = useHandleInputChange(updateFields);
 
