@@ -11,6 +11,7 @@ import withClaim from "../../hoc/withClaim";
 
 export const fields = ["claim.temp.leave_details.avg_weekly_work_hours"];
 
+// TODO (CP-1034): Add page back into the flow and connect fields to the API
 export const AverageWorkHours = (props) => {
   const { appLogic, claim } = props;
   const { t } = useTranslation();

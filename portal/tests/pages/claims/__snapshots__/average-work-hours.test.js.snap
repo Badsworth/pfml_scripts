@@ -7,7 +7,7 @@ exports[`AverageWorkHours renders the form 1`] = `
 >
   <InputText
     hint="We’ll confirm this information and use it to calculate your benefit amount. If your schedule varies, tell us the average number of hours you worked over the past 52 weeks."
-    label="On average, how many hours do you work for your employer each week?"
+    label="On average, how many hours do you work for your employer each week?"
     name="temp.leave_details.avg_weekly_work_hours"
     onChange={[Function]}
     value="40"

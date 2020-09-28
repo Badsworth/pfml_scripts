@@ -72,10 +72,6 @@ class Claim extends BaseModel {
         // TODO (CP-567): this field doesn't exist in the API yet
         has_previous_leaves: null,
         leave_details: {
-          // TODO (CP-719): Connect intermittent leave fields to the API
-          avg_weekly_work_hours: null,
-          // TODO (CP-720): connect with continuous schedule periods fields to the API
-          continuous_leave_periods: null,
           // TODO (CP-714): connect with reduced schedule periods fields to the API
           reduced_schedule_leave_periods: null,
         },
@@ -96,11 +92,7 @@ class Claim extends BaseModel {
    * @returns {boolean}
    */
   get isContinuous() {
-    // TODO (CP-720): Remove once continuous leave is integrated with API
-    return (
-      !!get(this, "temp.leave_details.continuous_leave_periods[0]") ||
-      !!get(this, "leave_details.continuous_leave_periods[0]")
-    );
+    return !!get(this, "leave_details.continuous_leave_periods[0]");
   }
 
   /**

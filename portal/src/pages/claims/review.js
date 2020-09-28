@@ -262,15 +262,6 @@ export const Review = (props) => {
         ]).join(", ")}
       </ReviewRow>
 
-      {get(claim, "temp.leave_details.avg_weekly_work_hours") && (
-        <ReviewRow
-          level={reviewRowLevel}
-          label={t("pages.claimsReview.averageWorkHoursLabel")}
-        >
-          {get(claim, "temp.leave_details.avg_weekly_work_hours")}
-        </ReviewRow>
-      )}
-
       {/* EMPLOYMENT INFO */}
       <ReviewHeading
         editHref={getStepEditHref(ClaimSteps.employerInformation)}

@@ -248,7 +248,7 @@ const pages = {
     hint:
       "We’ll confirm this information and use it to calculate your benefit amount. If your schedule varies, tell us the average number of hours you worked over the past 52 weeks.",
     sectionLabel:
-      "On average, how many hours do you work for your employer each week?",
+      "On average, how many hours do you work for your employer each week?",
     title: "$t(shared.claimsLeaveDetailsTitle)",
   },
   claimsBondingDateOfChild: {
@@ -428,30 +428,12 @@ const pages = {
     sectionLabel: "What is your employment status?",
     title: "$t(shared.claimsEmploymentInfoTitle)",
   },
-  claimsLeaveDates: {
-    endDateHint_bonding:
-      "If you have already returned to work, when was your last day of leave?",
-    endDateHint_medical:
-      'Refer to Question 20 in the "Ability to work" section of the Healthcare Provider Form.',
-    endDateLabel_bonding: "When will your leave end?",
-    endDateLabel_medical: "When will your leave end or be re-evaluated?",
-    startDateHint_bonding:
-      "You can take up to 12 weeks of family leave to bond with your child or children. You can take this leave at any point within the first year of your child’s birth, adoption, or placement. You do not need to take this leave all at once.",
-    startDateHint_medical:
-      'Refer to Question 19 in the "Ability to work" section of the Healthcare Provider Form.',
-    startDateLabel_bonding: "When will you first take leave?",
-    startDateLabel_medical: "When will you first need to take leave?",
-    startDateLeadHint_bonding:
-      "If you have already taken some or all of your family leave, when did you first miss work to bond with your child?",
-    startDateLeadHint_medical:
-      "If you have already taken some or all of your leave for this condition, when did you first miss work?",
-    title: "$t(shared.claimsLeaveDetailsTitle)",
-  },
   claimsLeavePeriodContinuous: {
     choiceNo: "$t(shared.choiceNo)",
     choiceYes: "$t(shared.choiceYes)",
     datesLead_bonding:
       "If you have already taken some or all of your family leave, tell us when you first missed work and your last day of leave.",
+    datesLead_medical: "",
     datesSectionLabel:
       "Enter the start and end dates for your continuous leave.",
     endDateLabel: "Last day of leave",
@@ -604,7 +586,6 @@ const pages = {
     achTypeLabel: "Account type",
     achType_checking: "$t(shared.achTypeChecking)",
     achType_savings: "$t(shared.achTypeSavings)",
-    averageWorkHoursLabel: "Average hours worked per week",
     childBirthDateLabel: "Child's date of birth",
     childPlacementDateLabel: "Child's placement date",
     editLink: "Edit",

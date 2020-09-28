@@ -93,11 +93,6 @@ const machineTests = {
       test: () => {},
     },
   },
-  [routes.claims.duration]: {
-    meta: {
-      test: () => {},
-    },
-  },
   [routes.claims.dateOfChild]: {
     meta: {
       test: (_, event) => {
@@ -107,17 +102,7 @@ const machineTests = {
       },
     },
   },
-  [routes.claims.averageWorkHours]: {
-    meta: {
-      test: (_, event) => {
-        expect(
-          event.context.claim.isIntermittent ||
-            event.context.claim.isReducedSchedule
-        ).toBe(true);
-      },
-    },
-  },
-  [routes.claims.leaveDates]: {
+  [routes.claims.leavePeriodContinuous]: {
     meta: {
       test: () => {},
     },

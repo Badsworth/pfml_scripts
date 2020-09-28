@@ -133,6 +133,7 @@ export default class Step extends BaseModel {
         // Fields names can be partial, to ignore an array or object of fields.
         const ignoredField = [
           "claim.employer_benefits",
+          "claim.leave_details.continuous_leave_periods[0]",
           "claim.leave_details.intermittent_leave_periods[0]",
           "claim.leave_details.reason_qualifier",
           "claim.mass_id",
@@ -145,8 +146,6 @@ export default class Step extends BaseModel {
           "claim.payment_preferences[0].account_details",
           "claim.previous_leaves",
           "claim.temp.has_mailing_address",
-          "claim.temp.leave_details.avg_weekly_work_hours",
-          "claim.temp.leave_details.continuous_leave_periods[0]",
           "claim.temp.leave_details.bonding.date_of_child",
           "claim.temp.leave_details.reduced_schedule_leave_periods[0]",
         ].some((ignoredFieldName) => field.includes(ignoredFieldName));

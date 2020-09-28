@@ -15,15 +15,13 @@
 import { EmploymentStatus, LeaveReason } from "../models/Claim";
 import { ClaimSteps } from "../models/Step";
 import { fields as addressFields } from "../pages/claims/address";
-import { fields as averageWorkHoursFields } from "../pages/claims/average-work-hours";
 import { fields as dateOfBirthFields } from "../pages/claims/date-of-birth";
 import { fields as dateOfChildFields } from "../pages/claims/date-of-child";
-import { fields as durationFields } from "../pages/claims/duration";
 import { fields as employerBenefitDetailsFields } from "../pages/claims/employer-benefit-details";
 import { fields as employerBenefitsFields } from "../pages/claims/employer-benefits";
 import { fields as employmentStatusFields } from "../pages/claims/employment-status";
 import { get } from "lodash";
-import { fields as leaveDatesFields } from "../pages/claims/leave-dates";
+import { fields as leavePeriodContinuousFields } from "../pages/claims/leave-period-continuous";
 import { fields as leaveReasonFields } from "../pages/claims/leave-reason";
 import { fields as nameFields } from "../pages/claims/name";
 import { fields as notifiedEmployerFields } from "../pages/claims/notified-employer";
@@ -184,7 +182,7 @@ export default {
         fields: reasonPregnancyFields,
       },
       on: {
-        CONTINUE: routes.claims.duration,
+        CONTINUE: routes.claims.leavePeriodContinuous,
       },
     },
     [routes.claims.uploadCertification]: {
@@ -196,47 +194,22 @@ export default {
         CONTINUE: routes.claims.checklist,
       },
     },
-    [routes.claims.duration]: {
-      meta: {
-        step: ClaimSteps.leaveDetails,
-        fields: durationFields,
-      },
-      on: {
-        CONTINUE: [
-          {
-            target: routes.claims.averageWorkHours,
-            cond: "isIntermittentOrReduced",
-          },
-          {
-            target: routes.claims.leaveDates,
-          },
-        ],
-      },
-    },
     [routes.claims.dateOfChild]: {
       meta: {
         step: ClaimSteps.leaveDetails,
         fields: dateOfChildFields,
       },
       on: {
-        CONTINUE: routes.claims.duration,
+        CONTINUE: routes.claims.leavePeriodContinuous,
       },
     },
-    [routes.claims.averageWorkHours]: {
+    [routes.claims.leavePeriodContinuous]: {
       meta: {
         step: ClaimSteps.leaveDetails,
-        fields: averageWorkHoursFields,
+        fields: leavePeriodContinuousFields,
       },
       on: {
-        CONTINUE: routes.claims.leaveDates,
-      },
-    },
-    [routes.claims.leaveDates]: {
-      meta: {
-        step: ClaimSteps.leaveDetails,
-        fields: leaveDatesFields,
-      },
-      on: {
+        // TODO (CP-984): Route to reduced schedule leave period page
         CONTINUE: routes.claims.checklist,
       },
     },

@@ -26,6 +26,7 @@ export const fields = [
 
 export const every6monthsId = "every6months";
 
+// TODO (CP-984): Remove this page upon completion of CP-984
 export const Duration = (props) => {
   const { appLogic, claim } = props;
   const { t } = useTranslation();
