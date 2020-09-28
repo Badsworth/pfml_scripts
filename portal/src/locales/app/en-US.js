@@ -69,7 +69,8 @@ const errors = {
       },
     },
     mass_id: {
-      pattern: "Please enter your ID in the correct format.",
+      pattern:
+        "Please enter your license or ID number. It should be a total of nine digits including letters and numbers.",
     },
     payment_preferences: {
       account_details: {
