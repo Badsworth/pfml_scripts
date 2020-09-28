@@ -7,6 +7,7 @@ import {
   generateIDBack,
   generateIDFront,
 } from "../../src/simulation/documents";
+import { ParseSSN } from "ssn";
 
 jest.mock("../../src/simulation/documents");
 
@@ -43,6 +44,11 @@ describe("Simulation Generator", () => {
         }),
       })
     );
+  });
+
+  it("Should generate a valid SSN", async () => {
+    const claim = await scenario("TEST", { residence: "MA-proofed" })(opts);
+    new ParseSSN((claim.claim.tax_identifier ?? "").replace(/-/g, ""));
   });
 
   it("Should pull an employer from the pool", async () => {

@@ -6,6 +6,7 @@ import { ApplicationRequestBody } from "../api";
 import { generateHCP, generateIDFront, generateIDBack } from "./documents";
 import add from "date-fns/add";
 import path from "path";
+import { RandomSSN } from "ssn";
 
 export function chance(
   config: [number, SimulationGenerator][]
@@ -66,7 +67,7 @@ export function scenario(
       occupation: "Administrative",
       first_name: first_name,
       last_name: last_name,
-      tax_identifier: faker.phone.phoneNumber("###-##-####"),
+      tax_identifier: new RandomSSN().value().toFormattedString(),
       employer_fein,
       date_of_birth: fmt(generateBirthDate()),
       has_state_id: hasMassId,
