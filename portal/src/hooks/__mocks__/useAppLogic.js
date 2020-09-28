@@ -27,6 +27,7 @@ export default jest.fn(() => ({
   },
   documents: {
     attach: jest.fn(() => new Document({ application_id: uniqueId() })),
+    hasLoadedClaimDocuments: jest.fn(),
     documents: new DocumentCollection(),
     load: jest.fn(),
   },

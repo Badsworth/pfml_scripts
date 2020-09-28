@@ -1,8 +1,8 @@
+import { useMemo, useState } from "react";
 import DocumentCollection from "../models/DocumentCollection";
 import DocumentsApi from "../api/DocumentsApi";
 import assert from "assert";
 import useCollectionState from "./useCollectionState";
-import { useMemo } from "react";
 
 const useDocumentsLogic = ({ appErrorsLogic, portalFlow }) => {
   /**
@@ -23,6 +23,15 @@ const useDocumentsLogic = ({ appErrorsLogic, portalFlow }) => {
   } = useCollectionState(new DocumentCollection());
 
   const documentsApi = useMemo(() => new DocumentsApi(), []);
+  const [documentsLoaded, setDocumentsLoaded] = useState([]);
+
+  /**
+   * Check if docs for this application have been loaded
+   * @param {string} application_id
+   * @returns {boolean}
+   */
+  const hasLoadedClaimDocuments = (application_id) =>
+    documentsLoaded.includes(application_id);
 
   /**
    * Load all documents for a user's claim
@@ -32,7 +41,7 @@ const useDocumentsLogic = ({ appErrorsLogic, portalFlow }) => {
   const load = async (application_id) => {
     assert(application_id);
     // if documents already contains docs for application_id, don't load again
-    if (documents.filterByApplication(application_id).length) {
+    if (hasLoadedClaimDocuments(application_id)) {
       return;
     }
     appErrorsLogic.clearErrors();
@@ -44,6 +53,10 @@ const useDocumentsLogic = ({ appErrorsLogic, portalFlow }) => {
       } = await documentsApi.getDocuments(application_id);
       if (success) {
         addDocuments(loadedDocuments.items);
+        setDocumentsLoaded((documentsLoaded) => [
+          ...documentsLoaded,
+          application_id,
+        ]);
       }
     } catch (error) {
       appErrorsLogic.catchError(error);
@@ -67,7 +80,7 @@ const useDocumentsLogic = ({ appErrorsLogic, portalFlow }) => {
         documentType
       );
       if (success) {
-        if (!documents.filterByApplication(application_id).length) {
+        if (!hasLoadedClaimDocuments(application_id)) {
           await load(application_id);
         } else {
           addDocument(document);
@@ -83,6 +96,7 @@ const useDocumentsLogic = ({ appErrorsLogic, portalFlow }) => {
 
   return {
     attach,
+    hasLoadedClaimDocuments,
     documents,
     load,
   };

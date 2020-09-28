@@ -408,4 +408,26 @@ describe("useDocumentsLogic", () => {
       ]);
     });
   });
+
+  describe("hasLoadedClaimDocuments", () => {
+    it("returns false for initial state", () => {
+      expect(documentsLogic.hasLoadedClaimDocuments(application_id)).toBe(
+        false
+      );
+    });
+
+    it("returns true after load successfully", async () => {
+      getDocumentsMock.mockResolvedValueOnce({
+        status: 200,
+        success: true,
+        documents: new DocumentCollection([]),
+      });
+
+      await act(async () => {
+        await documentsLogic.load(application_id);
+      });
+
+      expect(documentsLogic.hasLoadedClaimDocuments(application_id)).toBe(true);
+    });
+  });
 });
