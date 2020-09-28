@@ -30,6 +30,7 @@
     "@babel/preset-typescript": "^7.10.4",
     "@bahmutov/cypress-extends": "^1.0.0",
     "@cypress/webpack-preprocessor": "^5.4.2",
+    "@rckeller/cypress-unfetch": "^1.0.1",
     "@types/cypress-cucumber-preprocessor": "^1.14.1",
     "@types/faker": "^4.1.12",
     "@types/form-data": "^2.5.0",

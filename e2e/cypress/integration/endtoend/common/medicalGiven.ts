@@ -2,7 +2,7 @@ import { Given } from "cypress-cucumber-preprocessor/steps";
 import { getFineosBaseUrl } from "@/index";
 import { CypressStepThis, TestType } from "@/types";
 
-Given("I am logged in as a CSR on the Fineos homepage", function () {
+Given("I am logged in as a Savilinx CSR on the Fineos homepage", function () {
   Cypress.config("baseUrl", getFineosBaseUrl());
 });
 
@@ -36,35 +36,45 @@ Given("I start an application", function (): void {
 });
 
 Given("I have a claim ID", function (): void {
-  cy.url()
-    .should("include", "claim_id")
-    .then((url) => {
-      // Extract the Claim ID from the URL and stash it.
-      const appId = new URL(url).searchParams.get("claim_id");
-      if (appId) {
-        cy.stash("claimId", appId);
-      }
-    });
+  cy.url().should("include", "claim_id");
 });
 
 // Usually followed by - "I have my identity verified"
 
-/* Confirm Page */
-Given("I am on the claims Confirm page", function (): void {
-  cy.url().should("include", "/claims/confirm");
+Given("I am on the claims {string} page", function (pageName: string): void {
+  cy.url({ timeout: 20000 }).should("include", `/claims/${pageName}`);
 });
 
-/* Review Page */
-Given("I am on the claims Review page", function (): void {
-  cy.url().should("include", "/claims/review");
+/* Fineos Claim Case Page */
+Given("I am on the claim case page", function (): void {
+  cy.url().should(
+    "include",
+    "/sharedpages/casemanager/displaycase/displaycasepage"
+  );
 });
 
-/* Checklist Page */
-Given("I am on the claims Checklist page", function (): void {
-  cy.url().should("include", "/claims/checklist");
+/* Fineos Transfer to Dept Page */
+Given("I am on the Transfer to Dept page", function (): void {
+  cy.url().should("include", "/sharedpages/workmanager/transfertodeptpage");
 });
 
-/* Start Page */
-Given("I am on the claims Start page", function (): void {
-  cy.url().should("include", "/claims/start");
+Given("claim is financially ineligible", function (): void {
+  cy.get('td[title="Not Met"]');
+});
+
+Given("claim is rejected", function (): void {
+  cy.get('td[title="Rejected"]');
+});
+
+/* Fineos Claim Case Page */
+Given("I am on the claim case page", function (): void {
+  cy.url().should(
+    "include",
+    "/sharedpages/casemanager/displaycase/displaycasepage"
+  );
+});
+
+/* Paid Benefits Tab */
+Given("I am on the tab {string}", function (label: string): void {
+  cy.get('td[class="TabOff"]').contains(label).click().wait(2000);
 });

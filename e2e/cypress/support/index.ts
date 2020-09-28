@@ -16,6 +16,8 @@
 // Import commands.js using ES2015 syntax:
 import "./commands";
 import "cypress-file-upload";
+import "@rckeller/cypress-unfetch";
+import "@rckeller/cypress-unfetch/await";
 
 // Suppress a particular error message that is causing immediate failure due to a JS
 // error on the client side.
@@ -24,4 +26,8 @@ Cypress.on("uncaught:exception", (e) => {
   if (e.message.indexOf(`Cannot set property 'status' of undefined`)) {
     return false;
   }
+});
+
+afterEach(() => {
+  cy.await();
 });

@@ -1,9 +1,10 @@
 import { Then } from "cypress-cucumber-preprocessor/steps";
 import { CypressStepThis } from "@/types";
-import { lookup, getLeaveType, getWeeks } from "./util";
+import { lookup, getLeaveType } from "./util";
+import "@rckeller/cypress-unfetch/await";
 
 Then("I should see a success page confirming my claim submission", function () {
-  cy.url().should("include", "/claims/success");
+  cy.url({ timeout: 20000 }).should("include", "/claims/success");
 });
 
 Then("I should be able to return to the portal dashboard", function () {
@@ -26,7 +27,7 @@ Then("I should see any previously entered data", function (
     application.first_name
   );
   cy.get('input[name="last_name"]').should("have.value", application.last_name);
-  cy.contains("button", "Continue").click();
+  cy.contains("button", "Save and continue").click();
 });
 
 /**
@@ -34,13 +35,14 @@ Then("I should see any previously entered data", function (
  *
  * @param claimId The Claim ID, as reported from the portal.
  */
-Then("I should find their claim in Fineos", function () {
+Then("I should find their claim", function () {
   // Fetch the claimId from the previous step, then use it in submission to Fineos.
   cy.unstash("claimId").then((claimId) => {
     if (typeof claimId !== "string") {
       throw new Error("Invalid Claim ID from previous test.");
     }
-    cy.get(`[title="PFML API ${claimId}"]`).click();
+    // cy.get(`[title="PFML API ${claimId}"]`).click();
+    cy.get(`[title="Adjudication"]`).click();
     // For now, we're stopping at asserting that the claim made it to Fineos.
   });
 });
@@ -48,7 +50,13 @@ Then("I should find their claim in Fineos", function () {
 /* Review Page */
 Then("I should have confirmed that information is correct", function (): void {
   // Usually preceeded by - "I am on the claims Review page"
-  cy.contains("Submit my application").click();
+  cy.await();
+  cy.contains("Submit Part 1").click();
+
+  cy.wait("@submitClaimResponse").then((xhr) => {
+    const responseBody = xhr.response.body as Cypress.ObjectLike;
+    cy.stash("claimNumber", responseBody.data.fineos_absence_id);
+  });
 });
 
 /* Confirm Page */
@@ -56,7 +64,7 @@ Then(
   "I should have agreed and successfully submitted the claim",
   function (): void {
     // Usually preceeded by - "I am on the claims Confirm page"
-    cy.contains("Agree and Submit My Application").click();
+    cy.contains("Submit application").click();
     cy.url({ timeout: 20000 }).should("include", "/claims/success");
   }
 );
@@ -76,7 +84,6 @@ Then("I start submitting the claim", function (this: CypressStepThis): void {
   if (!this.application) {
     throw new Error("Application has not been set");
   }
-  // const { claim } = this.application;
   const { application } = this;
   const reason = application.leave_details && application.leave_details.reason;
   type ClaimTypePortal = {
@@ -92,9 +99,7 @@ Then("I start submitting the claim", function (this: CypressStepThis): void {
       "I need to care for a family member who serves in the armed forces.",
   };
   cy.contains(claimType[reason as string]).click();
-  cy.contains("button", "Continue").click();
-
-  // cy.stash("claimType", claim.type);
+  cy.contains("button", "Save and continue").click();
 
   // Submits data required by specific claim types.
   /* Usually followed by - "I finish submitting the claim based on its type" */
@@ -127,7 +132,7 @@ Then("I have my identity verified {string}", function (
   if (label === "normal") {
     cy.labelled("First name").type(application.first_name as string);
     cy.labelled("Last name").type(application.last_name as string);
-    cy.contains("button", "Continue").click();
+    cy.contains("button", "Save and continue").click();
   }
 
   cy.labelled("Street address 1").type(
@@ -146,7 +151,7 @@ Then("I have my identity verified {string}", function (
   cy.labelled("ZIP").type(
     (application.mailing_address && application.mailing_address.zip) as string
   );
-  cy.contains("button", "Continue").click();
+  cy.contains("button", "Save and continue").click();
 
   cy.contains("fieldset", "What's your birthdate?").within(() => {
     const DOB = new Date(application.date_of_birth as string);
@@ -155,7 +160,7 @@ Then("I have my identity verified {string}", function (
     cy.contains("Day").type(String(DOB.getUTCDate()) as string);
     cy.contains("Year").type(String(DOB.getUTCFullYear()) as string);
   });
-  cy.contains("button", "Continue").click();
+  cy.contains("button", "Save and continue").click();
 
   cy.contains("Do you have a Massachusetts driver's license or ID card?");
   if (application.has_state_id) {
@@ -166,19 +171,19 @@ Then("I have my identity verified {string}", function (
   } else {
     cy.contains("No").click();
   }
-  cy.contains("button", "Continue").click();
+  cy.contains("button", "Save and continue").click();
 
   cy.contains("What's your Social Security Number?").type(
-    `{selectall}{backspace}${application.employee_ssn}`
+    `{selectall}{backspace}${application.tax_identifier}`
   );
-  cy.contains("button", "Continue").click();
+  cy.contains("button", "Save and continue").click();
 
   // Input was removed from portal at some point
   // If it reappears, generate the PDF here and upload.
   // cy.get('input[type="file"]')
   //  .attachFile(application.idVerification.front)
   //  .attachFile(application.idVerification.back);
-  // cy.contains("button", "Continue").click();
+  // cy.contains("button", "Save and continue").click();
 });
 
 Then("I finish submitting the claim based on its type", function (
@@ -203,7 +208,7 @@ Then("I finish submitting the claim based on its type", function (
       application.leave_details?.pregnant_or_recent_birth ? "Yes" : "No"
     ).click();
   });
-  cy.contains("button", "Continue").click();
+  cy.contains("button", "Save and continue").click();
 
   // Input was removed from portal at some point. If it gets reinstated, generate it here and upload.
   // if (!claim.providerForm) {
@@ -212,7 +217,7 @@ Then("I finish submitting the claim based on its type", function (
   //   );
   // }
   // cy.get('input[type="file"]').attachFile(claim.providerForm);
-  // cy.contains("button", "Continue").click();
+  // cy.contains("button", "Save and continue").click();
 
   const leaveType = getLeaveType(application.leave_details);
 
@@ -235,21 +240,24 @@ Then("I finish submitting the claim based on its type", function (
       cy.contains(value).click();
     }
   );
+  cy.contains("button", "Save and continue").click();
+
   // Leave type-based questions.
   switch (leaveType) {
     /**
      * Continuous leave questions.
      */
     case "continuous":
-      const weeks = getWeeks(application.leave_details)?.toString();
-      // console.log("leave stuff", leave && leave[0].expected_return_to_work_date as ContinuousLeavePeriods)
       const startDate = new Date((leave && leave[0].start_date) as string);
       const endDate = new Date((leave && leave[0].end_date) as string);
 
-      cy.labelled(
-        "How many weeks will you need to take continuous leave from work?"
-      ).type(weeks as string);
-      cy.contains("button", "Continue").click();
+      /* Currently Been Removed from Portal
+        const weeks = getWeeks(application.leave_details)?.toString();
+        cy.labelled(
+          "How many weeks will you need to take continuous leave from work?"
+        ).type(weeks as string);
+        cy.contains("button", "Save and continue").click();
+      */
 
       // Continous Leave details section (continued).
       cy.contains("fieldset", "When will you first need to take leave?").within(
@@ -269,7 +277,7 @@ Then("I finish submitting the claim based on its type", function (
         cy.contains("Day").type(String(endDate.getUTCDate()) as string);
         cy.contains("Year").type(String(endDate.getUTCFullYear()) as string);
       });
-      cy.contains("button", "Continue").click();
+      cy.contains("button", "Save and continue").click();
       break;
 
     /**
@@ -282,13 +290,13 @@ Then("I finish submitting the claim based on its type", function (
     //   cy.labelled(
     //     "How many hours will your work schedule be reduced by each week?"
     //   ).type(leave.typeBasedDetails.hoursPerWeek.toString());
-    //   cy.contains("button", "Continue").click();
+    //   cy.contains("button", "Save and continue").click();
 
     // // Reduced leave questions continued ...
     //   cy.labelled(
     //     "On average, how many hours do you work for your employer each week?"
     //   ).type(leave.typeBasedDetails.averageWeeklyWorkHours.toString());
-    //   cy.contains("button", "Continue").click();
+    //   cy.contains("button", "Save and continue").click();
     //   break;
 
     /**
@@ -338,13 +346,13 @@ Then("I finish submitting the claim based on its type", function (
     //   cy.labelled(duration.inputLabel).type(
     //     leave.typeBasedDetails.duration.toString()
     //   );
-    //   cy.contains("button", "Continue").click();
+    //   cy.contains("button", "Save and continue").click();
 
     //   // Reduced leave questions continued ...
     //   cy.labelled(
     //     "On average, how many hours do you work for your employer each week?"
     //   ).type(leave.typeBasedDetails.averageWeeklyWorkHours.toString());
-    //   cy.contains("button", "Continue").click();
+    //   cy.contains("button", "Save and continue").click();
     //   break;
 
     default:
@@ -381,7 +389,7 @@ Then("I enter employer info", function (this: CypressStepThis): void {
       "What is your employer's Federal Employer Identification Number (FEIN)?"
     ).type(application.employer_fein as string);
   }
-  cy.contains("button", "Continue").click();
+  cy.contains("button", "Save and continue").click();
   if (application.employment_status === "Employed") {
     cy.contains(
       "fieldset",
@@ -408,7 +416,7 @@ Then("I enter employer info", function (this: CypressStepThis): void {
         );
       });
     }
-    cy.contains("button", "Continue").click();
+    cy.contains("button", "Save and continue").click();
   }
 });
 
@@ -425,19 +433,19 @@ Then("I report other benefits", function (this: CypressStepThis): void {
     "fieldset",
     "Will you use any employer-sponsored benefits during your leave?"
   ).within(() => cy.labelled("No").click());
-  cy.contains("button", "Continue").click();
+  cy.contains("button", "Save and continue").click();
 
   cy.contains(
     "fieldset",
     "Will you receive income from any other sources during your leave?"
   ).within(() => cy.labelled("No").click());
-  cy.contains("button", "Continue").click();
+  cy.contains("button", "Save and continue").click();
 
   cy.contains(
     "fieldset",
     "Have you taken paid or unpaid leave since"
   ).within(() => cy.labelled("No").click());
-  cy.contains("button", "Continue").click();
+  cy.contains("button", "Save and continue").click();
 
   // const { extract properties once added to ApplicationRequest } = application.;
 
@@ -475,7 +483,7 @@ Then("I report other benefits", function (this: CypressStepThis): void {
           cy.contains("button", "Add another benefit").click();
         }
       });
-      cy.contains("button", "Continue").click();
+      cy.contains("button", "Save and continue").click();
     }
   */
 
@@ -518,7 +526,7 @@ Then("I report other benefits", function (this: CypressStepThis): void {
           cy.contains("button", "Add another income").click();
         }
       });
-      cy.contains("button", "Continue").click();
+      cy.contains("button", "Save and continue").click();
     }
   */
 });
@@ -577,5 +585,110 @@ Then("I add payment info", function (this: CypressStepThis): void {
     default:
       throw new Error("Unknown payment method");
   }
-  cy.contains("button", "Continue").click();
+  cy.contains("button", "Save and continue").click();
+});
+
+Then("I should find the specified claim", function (): void {
+  /* For Testing (hard coded Claim Number)
+    cy.get("h2 > span").should("contain.text", "NTN-84-ABS-01");
+  */
+  cy.unstash("ClaimNumber").then((claimNumber) => {
+    cy.get("h2 > span").should("contain.text", claimNumber);
+  });
+});
+
+Then("I should add weekly wage", function (): void {
+  cy.labelled("Average weekly wage").type("{selectall}{backspace}1000");
+  cy.get('input[type="submit"][id="p9_un7_editPageSave"]').click();
+});
+
+Then("I should fufill availability request", function (): void {
+  cy.get('input[type="submit"][value="Prefill with Requested Absence Periods"]')
+    .click()
+    .wait(1000);
+  cy.get('input[type="submit"][value="Yes"]').click();
+  cy.get('input[type="submit"][id="p8_un180_editPageSave"]').click();
+});
+
+Then("I should confirm evidence is {string}", function (label: string): void {
+  cy.labelled("Evidence Receipt")
+    .get('select[id="manageEvidenceResultPopupWidget_un92_evidence-receipt"]')
+    .select(label === "valid" ? "Received" : "Not Received");
+  cy.labelled("Evidence Decision")
+    .get(
+      'select[id="manageEvidenceResultPopupWidget_un92_evidence-resulttype"]'
+    )
+    .select(label === "valid" ? "Satisfied" : "Pending");
+  cy.labelled("Evidence Decision Reason").type(
+    label === "valid" ? "Evidence is Approved" : "Missing HCP Form"
+  );
+  cy.get('input[type="button"][value="OK"]').click();
+  if (label === "invalid") {
+    cy.get("#p8_un180_editPageSave").click();
+  }
+});
+
+Then("I click Accept", function (): void {
+  cy.get('input[title="Accept Leave Plan"]').click();
+  cy.get('input[type="submit"][id="p10_un180_editPageSave"]').click();
+});
+
+Then("I should approve claim", function (): void {
+  cy.get('a[title="Approve the Pending Leaving Request"]').click().wait(5000);
+  cy.get("label").should("contain.text", "Future Leave");
+});
+
+Then("I should confirm HCP form is not present", function (): void {
+  cy.contains("No Records To Display");
+});
+
+Then("I check financial eligibility", function (): void {
+  cy.get('td[title="Not Met"]');
+});
+
+Then("I click Reject", function (): void {
+  cy.get('input[title="Reject Leave Plan"]').click();
+  cy.get("#footerButtonsBar").find('input[value="OK"]').dblclick();
+});
+
+Then("I should confirm task assigned to DFML Ops", function (): void {
+  cy.get("#PopupContainer").contains("Transferred to DFML Ops");
+  cy.get(".popup_buttons").find('input[value="OK"]').click();
+  cy.get("#BasicDetailsUsersDeptWidget_un16_Department").should(
+    "contain.text",
+    "DFML Ops"
+  );
+});
+
+Then("I add Financially Ineligible as reason in notes", function (): void {
+  cy.get('span[id="leaveRequestDenialDetailsWidget"]')
+    .find("textarea")
+    .type("This leave claim was denied due to financial ineligibility.");
+  cy.get("#leaveRequestDenialPopup_un63_okButtonBean").click();
+});
+
+Then("I click on Evidence Review", function (): void {
+  cy.get('td[title="Evidence Review"]').first().click();
+});
+
+Then("I should start transferring task to DMFL", function (): void {
+  cy.get('div[title="Transfer"]').dblclick();
+  cy.get('a[title="Transfer to Dept"]').dblclick({ force: true });
+});
+
+Then("I should finish transferring task to DMFL", function (): void {
+  cy.get(':nth-child(2) > [title="DFML Ops"]').first().click();
+  cy.contains("label", "Description")
+    .parentsUntil("tr")
+    .get("textarea")
+    .type("This claim is missing a Health Care Provider form.");
+  cy.get("#p12_un6_editPageSave").click();
+});
+
+Then("I should confirm claim has been completed", function (): void {
+  cy.get("#completedLeaveCardWidget").contains("Complete");
+});
+
+Then("I click Next", function () {
+  cy.get("#p10_un8_next").click();
 });

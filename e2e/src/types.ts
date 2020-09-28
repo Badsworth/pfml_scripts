@@ -183,5 +183,8 @@ export const MedicalClaimTestTypes = [
   "MedicalBasic",
   "MedicalAddlBenefits",
   "MedicalBasicNew",
+  "HAP1",
+  "GBR1",
+  "HAP3",
 ] as const;
 export type TestType = typeof MedicalClaimTestTypes[number];

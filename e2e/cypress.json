@@ -1,13 +1,14 @@
 {
   "baseUrl": "https://paidleave-stage.mass.gov",
   "watchForFileChanges": false,
-  "defaultCommandTimeout": 10000,
+  "defaultCommandTimeout": 20000,
   "video": true,
   "videosFolder": "cypress/videos",
   "projectId": "wjoxhr",
   "env": {
-    "FINEOS_BASEURL": "https://idt-claims-webapp.masspfml.fineos.com",
     "TAGS": "not @ignore"
   },
-  "testFiles": "**/*.feature"
+  "testFiles": "**/*.feature",
+  "viewportWidth": 2000,
+  "viewportHeight": 1320
 }
