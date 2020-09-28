@@ -14,23 +14,22 @@ type SimulateArgs = {
 } & SystemWideArgs;
 
 const cmd: CommandModule<SystemWideArgs, SimulateArgs> = {
-  command: "simulation run",
-  builder: (yargs) => {
-    return yargs.options({
-      directory: {
-        type: "string",
-        normalize: true,
-        demandOption: true,
-        requiresArg: true,
-        description: "Directory from which to load claims and documents",
-        alias: "d",
-      },
-      track: {
-        type: "boolean",
-        description: "Flag indicating whether to use submission tracking",
-        default: true,
-      },
-    });
+  command: "run",
+  describe: "Execute the simulation",
+  builder: {
+    directory: {
+      type: "string",
+      normalize: true,
+      demandOption: true,
+      requiresArg: true,
+      description: "Directory from which to load claims and documents",
+      alias: "d",
+    },
+    track: {
+      type: "boolean",
+      description: "Flag indicating whether to use submission tracking",
+      default: true,
+    },
   },
   async handler(args) {
     const storage = new SimulationStorage(args.directory);
@@ -71,5 +70,5 @@ function config(name: string): string {
   );
 }
 
-const { command, builder, handler } = cmd;
-export { command, builder, handler };
+const { command, describe, builder, handler } = cmd;
+export { command, describe, builder, handler };

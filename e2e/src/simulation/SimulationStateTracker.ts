@@ -37,8 +37,8 @@ export class SimulationStateFileTracker implements SimulationStateTracker {
     }
   }
 
-  private async flush() {
-    await fs.promises.writeFile(this.filename, JSON.stringify(this.records));
+  private async flush(records: ExecutionMap) {
+    await fs.promises.writeFile(this.filename, JSON.stringify(records));
   }
 
   async set(
@@ -50,7 +50,7 @@ export class SimulationStateFileTracker implements SimulationStateTracker {
       this.records = await this.init();
     }
     this.records[id] = { result, error: !!error };
-    await this.flush();
+    await this.flush(this.records);
   }
 
   async has(id: string): Promise<boolean> {
@@ -58,6 +58,21 @@ export class SimulationStateFileTracker implements SimulationStateTracker {
       this.records = await this.init();
     }
     return id in this.records;
+  }
+
+  async resetErrors(): Promise<void> {
+    const records = await this.init().then(
+      (records): ExecutionMap => {
+        return Object.entries(records).reduce((collected, [k, v]) => {
+          if (!v.error) {
+            return { ...collected, [k]: v };
+          }
+          return collected;
+        }, {} as ExecutionMap);
+      }
+    );
+    await this.flush(records);
+    this.records = records;
   }
 }
 

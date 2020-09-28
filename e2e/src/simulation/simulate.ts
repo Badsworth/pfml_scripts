@@ -70,7 +70,7 @@ export function scenario(
       employer_fein,
       date_of_birth: fmt(generateBirthDate()),
       has_state_id: hasMassId,
-      mass_id: hasMassId ? faker.phone.phoneNumber("#########") : null,
+      mass_id: hasMassId ? generateMassID() : null,
       mailing_address: {
         city: faker.address.city(),
         line_1: faker.address.streetAddress(),
@@ -155,6 +155,14 @@ export function scenario(
       skipSubmitClaim: !!config.skipSubmitClaim,
     };
   };
+}
+
+// Generate a Mass ID string.
+function generateMassID(): string {
+  return faker.random.arrayElement([
+    faker.phone.phoneNumber("S########"),
+    faker.phone.phoneNumber("SA#######"),
+  ]);
 }
 
 // Generate start and end dates for a leave request, not to exceed 20 weeks, and with a minimum

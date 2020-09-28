@@ -23,33 +23,32 @@ type GenerateArgs = {
 } & SystemWideArgs;
 
 const cmd: CommandModule<SystemWideArgs, GenerateArgs> = {
-  command: "simulation generate",
-  builder: (yargs) => {
-    return yargs.options({
-      filename: {
-        type: "string",
-        demandOption: true,
-        requiresArg: true,
-        normalize: true,
-        alias: "f",
-      },
-      count: {
-        type: "number",
-        number: true,
-        default: "1",
-        demandOption: true,
-        requiresArg: true,
-        alias: "n",
-      },
-      directory: {
-        type: "string",
-        description: "The directory to generate files in",
-        demandOption: true,
-        requiresArg: true,
-        normalize: true,
-        alias: "d",
-      },
-    });
+  command: "generate",
+  describe: "Generate a new business simulation",
+  builder: {
+    filename: {
+      type: "string",
+      demandOption: true,
+      requiresArg: true,
+      normalize: true,
+      alias: "f",
+    },
+    count: {
+      type: "number",
+      number: true,
+      default: "1",
+      demandOption: true,
+      requiresArg: true,
+      alias: "n",
+    },
+    directory: {
+      type: "string",
+      description: "The directory to generate files in",
+      demandOption: true,
+      requiresArg: true,
+      normalize: true,
+      alias: "d",
+    },
   },
   async handler(args) {
     args.logger.profile("generate");
@@ -111,6 +110,6 @@ const cmd: CommandModule<SystemWideArgs, GenerateArgs> = {
   },
 };
 
-const { command, builder, handler } = cmd;
+const { command, describe, builder, handler } = cmd;
 
-export { command, builder, handler };
+export { command, describe, builder, handler };

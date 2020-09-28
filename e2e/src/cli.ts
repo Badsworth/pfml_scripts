@@ -1,4 +1,4 @@
-import yargs from "yargs";
+import yargs, { Argv, CommandModule } from "yargs";
 import { config as dotenv } from "dotenv";
 import winston from "winston";
 
@@ -9,18 +9,27 @@ export type SystemWideArgs = {
   logger: winston.Logger;
 };
 
+const simulationCommand: CommandModule<SystemWideArgs, SystemWideArgs> = {
+  command: "simulation",
+  describe: "Manage business simulation",
+  builder: (yargs) => {
+    return yargs
+      .commandDir(`${__dirname}/simulation/commands`, {
+        extensions: ["js", "ts"],
+      })
+      .demandCommand();
+  },
+  async handler() {
+    // Expected no-op.
+  },
+};
+
 /**
  * This is the top level CLI script.
  *
  * Commands can be added here to be made available.
  */
-yargs
-  .commandDir(`${__dirname}/simulation/commands`, {
-    extensions: ["js", "ts"],
-  })
-  .option("verbose", {
-    type: "boolean",
-  })
+(yargs as Argv<SystemWideArgs>)
   .middleware((argv) => {
     // Add a logger, which we'll use in the commands.
     argv.logger = winston.createLogger({
@@ -32,4 +41,9 @@ yargs
       transports: new winston.transports.Console(),
     });
   })
-  .demandCommand().argv;
+  .command(simulationCommand)
+  .option("verbose", {
+    type: "boolean",
+  })
+  .demandCommand()
+  .help().argv;

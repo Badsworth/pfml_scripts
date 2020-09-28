@@ -50,12 +50,19 @@ export default class SimulationRunner {
           await this.tracker.set(
             claimId,
             {
+              ssn: claim.claim.tax_identifier,
+              first_name: claim.claim.first_name,
+              last_name: claim.claim.last_name,
               fineosId,
               scenario: claim.scenario,
             },
             false
           );
-          profiler.done({ message: "Submission complete", level: "debug" });
+          profiler.done({
+            message: "Submission complete",
+            level: "debug",
+            fineosId,
+          });
         } catch (e) {
           // Track that the claim failed.
           await this.tracker.set(claimId, e.toString(), true);
@@ -98,11 +105,30 @@ export default class SimulationRunner {
       );
     }
 
+    if (submittedDocuments.length) {
+      logger.debug(
+        `Moving ${submittedDocuments.length} documents to the submitted folder`
+      );
+      const claimSubmittedDir = path.join(
+        this.storage.directory,
+        "submitted",
+        claimId
+      );
+      await fs.promises.mkdir(claimSubmittedDir, { recursive: true });
+      await Promise.all(
+        submittedDocuments.map((doc) => {
+          return fs.promises.copyFile(
+            path.join(this.storage.documentDirectory, doc.path),
+            path.join(claimSubmittedDir, doc.path)
+          );
+        })
+      );
+    }
+
     // Simulate mail by moving manually submitted docs to a `mail` folder.
     if (mailedDocuments.length > 0) {
       logger.debug(
-        `Moving ${mailedDocuments.length} documents to the mail folder`,
-        { ssn: claim.claim.tax_identifier ?? claim.claim.employee_ssn }
+        `Moving ${mailedDocuments.length} documents to the mail folder`
       );
       const claimMailDir = path.join(this.storage.mailDirectory, claimId);
       await fs.promises.mkdir(claimMailDir, { recursive: true });

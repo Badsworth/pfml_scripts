@@ -44,7 +44,6 @@
     "eslint-config-prettier": "^6.11.0",
     "eslint-plugin-prettier": "^3.1.4",
     "jest": "^26.3.0",
-    "pdf2json": "^1.2.0",
     "prettier": "^2.0.5",
     "ts-node": "^8.10.2",
     "tsconfig-paths-webpack-plugin": "^3.3.0",
@@ -67,7 +66,7 @@
     "merge2": "^1.4.1",
     "node-fetch": "^2.6.1",
     "p-retry": "^4.2.0",
-    "pdf-lib": "^1.9.0",
+    "pdf-lib": "^1.11.1",
     "typescript": "^3.9.6",
     "winston": "^3.3.3",
     "yargs": "^16.0.3"

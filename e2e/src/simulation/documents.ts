@@ -2,16 +2,8 @@ import { ApplicationRequestBody } from "@/api";
 import { promisify } from "util";
 import fs from "fs";
 import { FillPDFTaskOptions } from "../../cypress/plugins";
-import {
-  PDFArray,
-  PDFBool,
-  PDFDict,
-  PDFDocument,
-  PDFHexString,
-  PDFName,
-  PDFString,
-} from "pdf-lib";
-import formatDate from "date-fns/format";
+import { PDFCheckBox, PDFDocument, PDFOptionList, PDFTextField } from "pdf-lib";
+import { parseISO, format, differenceInWeeks } from "date-fns";
 
 const readFile = promisify(fs.readFile);
 const writeFile = promisify(fs.writeFile);
@@ -34,17 +26,19 @@ export function generateHCP(
     throw new Error("Unable to generate document due to missing properties");
   }
   // Note: To debug this PDF's fields, follow this: https://stackoverflow.com/a/38257183
-  const [dobYear, dobMonth, dobDay] = claim.date_of_birth.split("-");
+  const dob = parseISO(claim.date_of_birth);
   const data: { [k: string]: string } = {
     untitled1: `${claim.first_name} ${claim.last_name}`,
     untitled46: `${claim.first_name} ${claim.last_name}`,
     untitled47: `${claim.first_name} ${claim.last_name}`,
     untitled48: `${claim.first_name} ${claim.last_name}`,
     untitled50: `${claim.first_name} ${claim.last_name}`,
-    untitled4: `${dobMonth}`,
-    untitled5: `${dobDay}`,
-    untitled6: `${invalidHCP ? "" : dobYear}`,
+    untitled4: format(dob, "MM"),
+    untitled5: format(dob, "dd"),
+    untitled6: invalidHCP ? "" : format(dob, "yyyy"),
     untitled3: `${invalidHCP ? "" : claim.tax_identifier?.slice(7)}`,
+    // Checkbox 5 - "I am taking leave because of my own serious health condition"
+    untitled51: "Yes",
     // Checkbox 12 - "Does the patient have a serious health condition that necessitates continuing care􏰗"
     untitled56: "Yes",
     // Checkbox 13 - "When did the condition begin􏰗"
@@ -83,24 +77,24 @@ export function generateHCP(
   };
 
   if (
-    claim.leave_details?.continuous_leave_periods &&
-    claim.leave_details?.continuous_leave_periods[0]
+    claim.leave_details?.continuous_leave_periods?.[0].start_date &&
+    claim.leave_details?.continuous_leave_periods?.[0].end_date
   ) {
-    const leave_period = claim.leave_details?.continuous_leave_periods[0];
-    if (leave_period.start_date) {
-      const [lsyear, lsmonth, lsday] = leave_period.start_date.split("-");
-      data["untitled21"] = lsmonth;
-      data["untitled22"] = lsday;
-      data["untitled23"] = lsyear;
-    }
-    if (leave_period.end_date) {
-      const [leyear, lemonth, leday] = leave_period.end_date.split("-");
-      data["untitled24"] = lemonth;
-      data["untitled25"] = leday;
-      data["untitled26"] = leyear;
-    }
-    // @todo: Weeks of leave.  Calculate based on diff between start and end.
-    data["untitled31"] = "2";
+    const start_date = parseISO(
+      claim.leave_details.continuous_leave_periods[0].start_date
+    );
+    const end_date = parseISO(
+      claim.leave_details.continuous_leave_periods[0].end_date
+    );
+    data["untitled21"] = format(start_date, "MM");
+    data["untitled22"] = format(start_date, "dd");
+    data["untitled23"] = format(start_date, "yyyy");
+
+    data["untitled24"] = format(end_date, "MM");
+    data["untitled25"] = format(end_date, "dd");
+    data["untitled26"] = format(end_date, "yyyy");
+
+    data["untitled31"] = differenceInWeeks(end_date, start_date).toString();
   }
 
   return fillPDF(`${__dirname}/../../forms/hcp-real.pdf`, target, data);
@@ -116,18 +110,18 @@ export function generateHCP(
 export function generateIDFront(
   claim: ApplicationRequestBody,
   target: string,
-  unproofed?: boolean
+  invalid?: boolean
 ): Promise<void> {
   if (!claim.first_name || !claim.last_name || !claim.date_of_birth) {
     throw new Error("Unable to generate document due to missing properties");
   }
-  const dob = formatDate(new Date(claim.date_of_birth), "MM/dd/yyyy");
+  const dob = format(parseISO(claim.date_of_birth), "MM/dd/yyyy");
   if (claim.mass_id) {
     return fillPDF(`${__dirname}/../../forms/license-MA.pdf`, target, {
       "Name first": claim.first_name,
       "Name last": claim.last_name,
       "Date birth": dob,
-      "License number": unproofed ? "" : claim.mass_id,
+      "License number": invalid ? "" : claim.mass_id,
       "Date issue": "01/01/2020",
       "Date expiration": "01/01/2028",
       "Address street": claim.mailing_address?.line_1 ?? "",
@@ -185,76 +179,28 @@ export default async function fillPDF(
 ): Promise<void> {
   const buf = await readFile(source);
   const doc = await PDFDocument.load(Uint8Array.from(buf));
-  const bytes = await fill(doc, data).save();
+  const bytes = await fill(doc, data).then((doc) => doc.save());
   await writeFile(target, bytes);
 }
 
-function fill(doc: PDFDocument, data: PDFFormData): PDFDocument {
-  const getForm = (): PDFDict => {
-    const acroForm = doc.context.lookup(
-      doc.catalog.get(PDFName.of("AcroForm"))
-    ) as PDFDict;
-    if (!acroForm) {
-      throw new Error("Unable to detect AcroForm from PDF");
-    }
-    return acroForm;
-  };
-  const getFields = (): PDFDict[] => {
-    const acroForm = getForm();
-    const acroFields = acroForm.context.lookup(
-      acroForm.get(PDFName.of("Fields")),
-      PDFArray
-    );
-    if (!acroFields) {
-      return [];
-    }
-    return acroFields.asArray().map((ref) => {
-      const field = acroForm.context.lookup(ref, PDFDict);
-      if (!field) {
-        throw new Error(`Unknown field by ref: ${ref}`);
-      }
-      return field;
-    });
-  };
-  const extractFieldName = (field: PDFDict): string => {
-    const fieldName = field.get(PDFName.of("T"));
-    if (!fieldName || !(fieldName instanceof PDFString)) {
-      throw new Error("Unable to extract name from field.");
-    }
-    return fieldName.asString();
-  };
-  const getField = (name: string): PDFDict => {
-    const fields = getFields();
-    const field = fields.find((field) => extractFieldName(field) === name);
-    if (!field) {
-      const names = fields.map(extractFieldName);
-      throw new Error(
-        `Unable to determine field for ${name}. Found: ${names.join(", ")}`
-      );
-    }
-    return field;
-  };
+async function fill(doc: PDFDocument, data: PDFFormData): Promise<PDFDocument> {
+  const form = doc.getForm();
 
-  // Debug block for filling every fillable field with its own name.
-  // const names = getFields().map(extractFieldName);
-  // for (const name of names) {
-  //   const field = getField(name);
-  //   field.set(PDFName.of("V"), PDFHexString.fromText(name));
-  //   field.delete(PDFName.of("AP"));
-  // }
-
-  for (const [k, v] of Object.entries(data)) {
-    const field = getField(k);
-    field.set(PDFName.of("V"), PDFHexString.fromText(v));
-    // Delete any appearance override that might be in place for this field.
-    field.delete(PDFName.of("AP"));
-    // Set readonly flag. @todo: This appears to break select boxes right now.
-    // field?.set(PDFName.of('Ff'), PDFNumber.of(
-    //   1 << 0 // Read Only
-    // ));
+  for (const [fieldName, fieldValue] of Object.entries(data)) {
+    const field = form.getField(fieldName);
+    if (field instanceof PDFTextField) {
+      field.setText(fieldValue);
+    } else if (field instanceof PDFCheckBox) {
+      if (fieldValue) field.check();
+      else field.uncheck();
+    } else if (field instanceof PDFOptionList) {
+      field.select(fieldValue);
+    } else {
+      throw new Error(`Unknown field type for ${fieldName}`);
+    }
+    // Necessary for checkboxes to show in Acrobat.
+    field.enableReadOnly();
   }
-  // Important - set the NeedAppearances flag so the PDF viewer provides
-  // the styling.
-  getForm().set(PDFName.of("NeedAppearances"), PDFBool.True);
+
   return doc;
 }

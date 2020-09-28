@@ -53,13 +53,13 @@ describe("Simulation Generator", () => {
 
   it("Should populate the mass_id property for mass proofed claims", async () => {
     const claim = await scenario("TEST", { residence: "MA-proofed" })(opts);
-    expect(claim.claim.mass_id).toBeTruthy();
+    expect(claim.claim.mass_id).toMatch(/^S(\d{8}|A\d{7})$/);
     expect(claim.claim.has_state_id).toBe(true);
   });
 
   it("Should populate the mass_id property for mass unproofed claims", async () => {
     const claim = await scenario("TEST", { residence: "MA-unproofed" })(opts);
-    expect(claim.claim.mass_id).toBeTruthy();
+    expect(claim.claim.mass_id).toMatch(/^S(\d{8}|A\d{7})$/);
     expect(claim.claim.has_state_id).toBe(true);
   });
 

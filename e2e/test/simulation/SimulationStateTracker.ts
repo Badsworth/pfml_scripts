@@ -25,4 +25,16 @@ describe("SimulationStateTracker", () => {
       true
     );
   });
+
+  it("Should be capable of resetting errors", async () => {
+    const t1 = new SimulationStateFileTracker(filename);
+    await t1.set("a", {}, true);
+    await t1.set("b", {}, false);
+    await t1.resetErrors();
+    expect(await t1.has("a")).toBe(false);
+    expect(await t1.has("b")).toBe(true);
+    const t2 = new SimulationStateFileTracker(filename);
+    expect(await t2.has("a")).toBe(false);
+    expect(await t2.has("b")).toBe(true);
+  });
 });
