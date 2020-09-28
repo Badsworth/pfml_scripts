@@ -37,7 +37,7 @@ resource "newrelic_alert_condition" "api_error_rate" {
 }
 
 resource "newrelic_alert_condition" "api_traffic_rate" {
-  # CRIT: traffic below 200 rpm (the approx. "no one is using the app" traffic baseline) for at least five minutes
+  # CRIT: traffic below 100 rpm (well below the "no one is using the app" traffic baseline) for at least five minutes
   policy_id       = newrelic_alert_policy.api_alerts.id
   name            = "API traffic below normal baseline"
   type            = "apm_app_metric"
@@ -50,7 +50,7 @@ resource "newrelic_alert_condition" "api_traffic_rate" {
     time_function = "all" # e.g. "for at least..."
     duration      = 5     # units: minutes
     operator      = "below"
-    threshold     = 200 # units: requests per minute
+    threshold     = 100 # units: requests per minute
   }
 }
 
