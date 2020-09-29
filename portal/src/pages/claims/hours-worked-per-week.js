@@ -9,10 +9,9 @@ import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "../../locales/i18n";
 import withClaim from "../../hoc/withClaim";
 
-export const fields = ["claim.temp.leave_details.avg_weekly_work_hours"];
+export const fields = ["claim.hours_worked_per_week"];
 
-// TODO (CP-1034): Add page back into the flow and connect fields to the API
-export const AverageWorkHours = (props) => {
+export const HoursWorkedPerWeek = (props) => {
   const { appLogic, claim } = props;
   const { t } = useTranslation();
 
@@ -29,20 +28,20 @@ export const AverageWorkHours = (props) => {
 
   return (
     <QuestionPage
-      title={t("pages.claimsAverageWorkHours.title")}
+      title={t("pages.claimsHoursWorkedPerWeek.title")}
       onSave={handleSave}
     >
       <InputText
-        {...getFunctionalInputProps("temp.leave_details.avg_weekly_work_hours")}
-        label={t("pages.claimsAverageWorkHours.sectionLabel")}
-        hint={t("pages.claimsAverageWorkHours.hint")}
+        {...getFunctionalInputProps("hours_worked_per_week")}
+        label={t("pages.claimsHoursWorkedPerWeek.sectionLabel")}
+        hint={t("pages.claimsHoursWorkedPerWeek.hint")}
         width="small"
       />
     </QuestionPage>
   );
 };
 
-AverageWorkHours.propTypes = {
+HoursWorkedPerWeek.propTypes = {
   claim: PropTypes.instanceOf(Claim),
   query: PropTypes.shape({
     claim_id: PropTypes.string,
@@ -50,4 +49,4 @@ AverageWorkHours.propTypes = {
   appLogic: PropTypes.object.isRequired,
 };
 
-export default withClaim(AverageWorkHours);
+export default withClaim(HoursWorkedPerWeek);

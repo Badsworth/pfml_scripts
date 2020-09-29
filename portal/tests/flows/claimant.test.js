@@ -154,6 +154,11 @@ const machineTests = {
       test: () => {},
     },
   },
+  [routes.claims.hoursWorkedPerWeek]: {
+    meta: {
+      test: () => {},
+    },
+  },
   [routes.claims.notifiedEmployer]: {
     meta: {
       test: (_, event) => {

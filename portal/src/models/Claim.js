@@ -19,6 +19,7 @@ class Claim extends BaseModel {
       fineos_absence_id: null,
       first_name: null,
       has_state_id: null,
+      hours_worked_per_week: null,
       last_name: null,
       leave_details: {
         child_birth_date: null,

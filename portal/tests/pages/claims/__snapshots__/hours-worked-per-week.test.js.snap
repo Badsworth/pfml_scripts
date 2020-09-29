@@ -1,16 +1,16 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`AverageWorkHours renders the form 1`] = `
+exports[`HoursWorkedPerWeek renders the form 1`] = `
 <QuestionPage
   onSave={[Function]}
-  title="Leave details"
+  title="Employment information"
 >
   <InputText
     hint="We’ll confirm this information and use it to calculate your benefit amount. If your schedule varies, tell us the average number of hours you worked over the past 52 weeks."
-    label="On average, how many hours do you work for your employer each week?"
-    name="temp.leave_details.avg_weekly_work_hours"
+    label="On average, how many hours do you work each week?"
+    name="hours_worked_per_week"
     onChange={[Function]}
-    value="40"
+    value={40.5}
     width="small"
   />
 </QuestionPage>

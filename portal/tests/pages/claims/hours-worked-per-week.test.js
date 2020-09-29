@@ -1,15 +1,15 @@
-import AverageWorkHours from "../../../src/pages/claims/average-work-hours";
+import HoursWorkedPerWeek from "../../../src/pages/claims/hours-worked-per-week";
 import { renderWithAppLogic } from "../../test-utils";
 
 jest.mock("../../../src/hooks/useAppLogic");
 
-describe("AverageWorkHours", () => {
+describe("HoursWorkedPerWeek", () => {
   let appLogic, wrapper;
 
   beforeEach(() => {
-    ({ appLogic, wrapper } = renderWithAppLogic(AverageWorkHours, {
+    ({ appLogic, wrapper } = renderWithAppLogic(HoursWorkedPerWeek, {
       claimAttrs: {
-        temp: { leave_details: { avg_weekly_work_hours: "40" } },
+        hours_worked_per_week: 40.5,
       },
     }));
   });

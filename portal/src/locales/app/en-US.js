@@ -246,13 +246,6 @@ const pages = {
     sectionLabel: "What is your current residential address?",
     title: "$t(shared.claimsVerifyIdTitle)",
   },
-  claimsAverageWorkHours: {
-    hint:
-      "We’ll confirm this information and use it to calculate your benefit amount. If your schedule varies, tell us the average number of hours you worked over the past 52 weeks.",
-    sectionLabel:
-      "On average, how many hours do you work for your employer each week?",
-    title: "$t(shared.claimsLeaveDetailsTitle)",
-  },
   claimsBondingDateOfChild: {
     birthHint:
       "If your child has not been born yet, enter the expected due date.",
@@ -428,6 +421,12 @@ const pages = {
     furloughQuestion: "What if I've been furloughed?",
     multipleEmployerAppAlert: "$t(shared.multipleEmployerAppAlert)",
     sectionLabel: "What is your employment status?",
+    title: "$t(shared.claimsEmploymentInfoTitle)",
+  },
+  claimsHoursWorkedPerWeek: {
+    hint:
+      "We’ll confirm this information and use it to calculate your benefit amount. If your schedule varies, tell us the average number of hours you worked over the past 52 weeks.",
+    sectionLabel: "On average, how many hours do you work each week?",
     title: "$t(shared.claimsEmploymentInfoTitle)",
   },
   claimsLeavePeriodContinuous: {

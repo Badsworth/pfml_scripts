@@ -20,6 +20,7 @@ import { fields as employerBenefitDetailsFields } from "../pages/claims/employer
 import { fields as employerBenefitsFields } from "../pages/claims/employer-benefits";
 import { fields as employmentStatusFields } from "../pages/claims/employment-status";
 import { get } from "lodash";
+import { fields as hoursWorkedPerWeekFields } from "../pages/claims/hours-worked-per-week";
 import { fields as leavePeriodContinuousFields } from "../pages/claims/leave-period-continuous";
 import { fields as leaveReasonFields } from "../pages/claims/leave-reason";
 import { fields as nameFields } from "../pages/claims/name";
@@ -292,6 +293,15 @@ export default {
       meta: {
         step: ClaimSteps.employerInformation,
         fields: employmentStatusFields,
+      },
+      on: {
+        CONTINUE: routes.claims.hoursWorkedPerWeek,
+      },
+    },
+    [routes.claims.hoursWorkedPerWeek]: {
+      meta: {
+        step: ClaimSteps.employerInformation,
+        fields: hoursWorkedPerWeekFields,
       },
       on: {
         CONTINUE: [
