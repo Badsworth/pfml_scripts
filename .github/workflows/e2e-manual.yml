@@ -18,10 +18,15 @@ jobs:
           working-directory: e2e
         env:
           CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
-          CYPRESS_PORTAL_USERNAME: ${{ secrets.CYPRESS_PORTAL_USERNAME }}
-          CYPRESS_PORTAL_PASSWORD: ${{ secrets.CYPRESS_PORTAL_PASSWORD }}
-          CYPRESS_FINEOS_USERNAME: ${{ secrets.CYPRESS_FINEOS_USERNAME }}
-          CYPRESS_FINEOS_PASSWORD: ${{ secrets.CYPRESS_FINEOS_PASSWORD }}
+          E2E_API_BASEURL: ${{ secrets.E2E_API_BASEURL }}
+          E2E_FINEOS_BASEURL: ${{ secrets.E2E_FINEOS_BASEURL }}
+          E2E_FINEOS_USERNAME: ${{ secrets.E2E_FINEOS_USERNAME }}
+          E2E_FINEOS_PASSWORD: ${{ secrets.E2E_FINEOS_PASSWORD }}
+          E2E_PORTAL_BASEURL: ${{ secrets.E2E_PORTAL_BASEURL }}
+          E2E_PORTAL_USERNAME: ${{ secrets.E2E_PORTAL_USERNAME }}
+          E2E_PORTAL_PASSWORD: ${{ secrets.E2E_PORTAL_PASSWORD }}
+          E2E_TESTMAIL_APIKEY: ${{ secrets.E2E_TESTMAIL_APIKEY }}
+          E2E_TESTMAIL_NAMESPACE: ${{ secrets.E2E_TESTMAIL_NAMESPACE }}
           # passing token to detect a build vs a re-run build
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       # Upload artifacts to capture the run as well.
