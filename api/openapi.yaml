@@ -322,7 +322,7 @@ paths:
                   - properties:
                       data:
                         $ref: "#/components/schemas/ApplicationResponse"
-  
+
   /applications/{application_id}/complete_application:
     post:
       tags:
@@ -384,7 +384,7 @@ paths:
             application/json:
               schema:
                 allOf:
-                  - $ref: '#/components/schemas/SuccessfulResponse'  
+                  - $ref: '#/components/schemas/SuccessfulResponse'
                   - properties:
                       data:
                         type: array
@@ -397,7 +397,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
 
-    post:          
+    post:
       summary: Upload Document
       operationId: massgov.pfml.api.applications.document_upload
       tags:
@@ -413,8 +413,8 @@ paths:
           required: true
       requestBody:
         content:
-          multipart/form-data:    
-            schema:            
+          multipart/form-data:
+            schema:
               $ref: '#/components/schemas/DocumentUploadRequest'
             encoding:
               file:
@@ -426,7 +426,7 @@ paths:
             application/json:
               schema:
                 allOf:
-                  - $ref: '#/components/schemas/SuccessfulResponse'  
+                  - $ref: '#/components/schemas/SuccessfulResponse'
                   - properties:
                       data:
                         $ref: "#/components/schemas/DocumentResponse"
@@ -436,7 +436,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
-                                    
+
   /financial-eligibility:
     post:
       security:
@@ -714,7 +714,7 @@ components:
             - type: integer
             - type: boolean
             - type: array
-            - type: object  
+            - type: object
         field:
           type: string
       required: ["type", "message"]
@@ -1027,6 +1027,10 @@ components:
             - Health Care
           example: "Sales Clerk"
           nullable: true
+        hours_worked_per_week:
+          type: number
+          nullable: true
+          example: 40.5
         leave_details:
           $ref: "#/components/schemas/ApplicationLeaveDetails"
           nullable: true
@@ -1055,7 +1059,7 @@ components:
 
     DocumentUploadRequest:
       type: object
-      properties:        
+      properties:
         document_category:
           type: string
           enum:
@@ -1084,7 +1088,7 @@ components:
       required:
         - document_category
         - document_type
-        - file        
+        - file
       additionalProperties: false
 
     DocumentResponse:
@@ -1131,7 +1135,7 @@ components:
         - fineos_document_id
         - name
         - description
-      additionalProperties: false    
+      additionalProperties: false
 
     EligibilityRequest:
       type: object

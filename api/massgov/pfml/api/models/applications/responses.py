@@ -1,4 +1,5 @@
 from datetime import date, datetime
+from decimal import Decimal
 from enum import Enum
 from typing import List, Optional
 
@@ -40,6 +41,7 @@ class ApplicationResponse(PydanticBaseModel):
     has_state_id: Optional[bool]
     mass_id: Optional[MaskedMassIdStr]
     occupation: Optional[Occupation]
+    hours_worked_per_week: Optional[Decimal]
     employment_status: Optional[EmploymentStatus]
     leave_details: Optional[ApplicationLeaveDetails]
     payment_preferences: Optional[List[PaymentPreferences]]

@@ -483,6 +483,22 @@ def test_application_patch_employment_status(client, user, auth_token, test_db_s
     assert updated_employment_status == "Employed"
 
 
+def test_application_patch_hours_worked_per_week(client, user, auth_token, test_db_session):
+    application = ApplicationFactory.create(user=user)
+
+    response = client.patch(
+        "/v1/applications/{}".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+        json={"hours_worked_per_week": 50.5},
+    )
+
+    assert response.status_code == 200
+
+    response_body = response.get_json().get("data")
+    updated_hours_worked_per_week = response_body.get("hours_worked_per_week")
+    assert updated_hours_worked_per_week == 50.5
+
+
 def test_application_patch_pregnant_or_recent_birth(client, user, auth_token, test_db_session):
     application = ApplicationFactory.create(user=user)
 

@@ -1,4 +1,5 @@
 from datetime import date
+from decimal import Decimal
 from typing import List, Optional
 
 from dateutil.relativedelta import relativedelta
@@ -30,6 +31,7 @@ class ApplicationRequestBody(PydanticBaseModel):
     has_state_id: Optional[bool]
     mass_id: Optional[MassIdStr]
     occupation: Optional[Occupation]
+    hours_worked_per_week: Optional[Decimal]
     employment_status: Optional[EmploymentStatus]
     leave_details: Optional[ApplicationLeaveDetails]
     payment_preferences: Optional[List[PaymentPreferences]]

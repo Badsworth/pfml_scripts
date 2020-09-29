@@ -133,6 +133,7 @@ class Application(Base):
     has_state_id = Column(Boolean)
     mass_id = Column(Text)
     occupation_id = Column(Integer, ForeignKey("lk_occupation.occupation_id"))
+    hours_worked_per_week = Column(Numeric)
     relationship_to_caregiver_id = Column(
         Integer, ForeignKey("lk_relationship_to_caregiver.relationship_to_caregiver_id")
     )
