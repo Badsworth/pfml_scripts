@@ -16,13 +16,13 @@ import { useTranslation } from "../../locales/i18n";
 import withClaim from "../../hoc/withClaim";
 
 export const fields = [
-  "claim.temp.has_continuous_leave_periods",
-  "claim.leave_details.continuous_leave_periods[0].end_date",
-  "claim.leave_details.continuous_leave_periods[0].start_date",
-  "claim.leave_details.continuous_leave_periods[0].leave_period_id",
+  "claim.temp.has_intermittent_leave_periods",
+  "claim.leave_details.intermittent_leave_periods[0].end_date",
+  "claim.leave_details.intermittent_leave_periods[0].start_date",
+  "claim.leave_details.intermittent_leave_periods[0].leave_period_id",
 ];
 
-export const LeavePeriodContinuous = (props) => {
+export const LeavePeriodIntermittent = (props) => {
   const { appLogic, claim } = props;
   const { t } = useTranslation();
 
@@ -38,6 +38,9 @@ export const LeavePeriodContinuous = (props) => {
     [LeaveReason.medical]: "medical",
   }[claim.leave_details.reason];
 
+  const hasOtherLeavePeriodTypes =
+    claim.isContinuous || claim.isReducedSchedule;
+
   const getFunctionalInputProps = useFunctionalInputProps({
     appErrors: appLogic.appErrors,
     formState,
@@ -46,63 +49,77 @@ export const LeavePeriodContinuous = (props) => {
 
   return (
     <QuestionPage
-      title={t("pages.claimsLeavePeriodContinuous.title")}
+      title={t("pages.claimsLeavePeriodIntermittent.title")}
       onSave={handleSave}
     >
       {claim.isMedicalLeave && (
         <Alert state="info">
-          {t("pages.claimsLeavePeriodContinuous.medicalAlert")}
+          {t("pages.claimsLeavePeriodIntermittent.medicalAlert")}
         </Alert>
       )}
 
       <InputChoiceGroup
-        {...getFunctionalInputProps("temp.has_continuous_leave_periods")}
+        {...getFunctionalInputProps("temp.has_intermittent_leave_periods")}
         choices={[
           {
-            checked: formState.temp.has_continuous_leave_periods === true,
-            label: t("pages.claimsLeavePeriodContinuous.choiceYes"),
+            checked: formState.temp.has_intermittent_leave_periods === true,
+            label: t("pages.claimsLeavePeriodIntermittent.choiceYes"),
             value: "true",
           },
           {
-            checked: formState.temp.has_continuous_leave_periods === false,
-            label: t("pages.claimsLeavePeriodContinuous.choiceNo"),
+            checked: formState.temp.has_intermittent_leave_periods === false,
+            label: t("pages.claimsLeavePeriodIntermittent.choiceNo"),
             value: "false",
           },
         ]}
         hint={
           claim.isMedicalLeave
-            ? t("pages.claimsLeavePeriodContinuous.hasLeaveHint_medical")
+            ? t("pages.claimsLeavePeriodIntermittent.hasLeaveHint_medical")
             : null // could use `context` if another leave type needs hint text
         }
-        label={t("pages.claimsLeavePeriodContinuous.hasLeaveLabel")}
+        label={t("pages.claimsLeavePeriodIntermittent.hasLeaveLabel")}
         type="radio"
       />
 
       <ConditionalContent
+        visible={
+          formState.temp.has_intermittent_leave_periods &&
+          hasOtherLeavePeriodTypes
+        }
+      >
+        <Alert state="warning">
+          {t("pages.claimsLeavePeriodIntermittent.hybridLeaveWarning")}
+        </Alert>
+      </ConditionalContent>
+
+      <ConditionalContent
         fieldNamesClearedWhenHidden={[
-          "claim.leave_details.continuous_leave_periods[0]",
+          "claim.leave_details.intermittent_leave_periods[0]",
         ]}
         getField={getField}
         removeField={removeField}
         updateFields={updateFields}
-        visible={formState.temp.has_continuous_leave_periods}
+        visible={
+          formState.temp.has_intermittent_leave_periods &&
+          !hasOtherLeavePeriodTypes
+        }
       >
         <Heading level="2" size="1">
-          {t("pages.claimsLeavePeriodContinuous.datesSectionLabel")}
+          {t("pages.claimsLeavePeriodIntermittent.datesSectionLabel")}
         </Heading>
 
         <Lead>
           <Trans
-            i18nKey="pages.claimsLeavePeriodContinuous.datesLead"
+            i18nKey="pages.claimsLeavePeriodIntermittent.datesLead"
             tOptions={{ context: contentContext }}
           />
         </Lead>
 
         <InputDate
           {...getFunctionalInputProps(
-            "leave_details.continuous_leave_periods[0].start_date"
+            "leave_details.intermittent_leave_periods[0].start_date"
           )}
-          label={t("pages.claimsLeavePeriodContinuous.startDateLabel")}
+          label={t("pages.claimsLeavePeriodIntermittent.startDateLabel")}
           example={t("components.form.dateInputExample")}
           dayLabel={t("components.form.dateInputDayLabel")}
           monthLabel={t("components.form.dateInputMonthLabel")}
@@ -111,9 +128,11 @@ export const LeavePeriodContinuous = (props) => {
         />
         <InputDate
           {...getFunctionalInputProps(
-            "leave_details.continuous_leave_periods[0].end_date"
+            "leave_details.intermittent_leave_periods[0].end_date"
           )}
-          label={t("pages.claimsLeavePeriodContinuous.endDateLabel")}
+          label={t("pages.claimsLeavePeriodIntermittent.endDateLabel", {
+            context: contentContext,
+          })}
           example={t("components.form.dateInputExample")}
           dayLabel={t("components.form.dateInputDayLabel")}
           monthLabel={t("components.form.dateInputMonthLabel")}
@@ -125,7 +144,7 @@ export const LeavePeriodContinuous = (props) => {
   );
 };
 
-LeavePeriodContinuous.propTypes = {
+LeavePeriodIntermittent.propTypes = {
   appLogic: PropTypes.object.isRequired,
   claim: PropTypes.instanceOf(Claim).isRequired,
   query: PropTypes.shape({
@@ -133,4 +152,4 @@ LeavePeriodContinuous.propTypes = {
   }),
 };
 
-export default withClaim(LeavePeriodContinuous);
+export default withClaim(LeavePeriodIntermittent);

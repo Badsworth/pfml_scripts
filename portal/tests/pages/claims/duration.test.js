@@ -1,154 +1,15 @@
+import Duration, { every6monthsId } from "../../../src/pages/claims/duration";
 import {
-  ContinuousLeavePeriod,
   DurationBasis,
   FrequencyIntervalBasis,
   IntermittentLeavePeriod,
-  LeaveReason,
-  ReducedScheduleLeavePeriod,
 } from "../../../src/models/Claim";
-import Duration, { every6monthsId } from "../../../src/pages/claims/duration";
-import { MockClaimBuilder, renderWithAppLogic } from "../../test-utils";
 import { act } from "react-dom/test-utils";
 import { random } from "lodash";
+import { renderWithAppLogic } from "../../test-utils";
 
 describe("Duration", () => {
   const leave_period_id = "mock-leave-period-id";
-
-  describe("regardless of duration type", () => {
-    it("initially renders the page without conditional fields", () => {
-      const { wrapper } = renderWithAppLogic(Duration, {
-        claimAttrs: {
-          leave_details: {
-            reason: LeaveReason.medical,
-          },
-        },
-      });
-
-      expect(wrapper).toMatchSnapshot();
-      expect(
-        wrapper.find({ name: "reduced_schedule_section" }).prop("visible")
-      ).toBeFalsy();
-      expect(
-        wrapper.find({ name: "intermittent_section" }).prop("visible")
-      ).toBeFalsy();
-    });
-  });
-
-  it("removes an entire leave period object if their content becomes hidden", () => {
-    const { wrapper } = renderWithAppLogic(Duration);
-
-    expect(
-      wrapper
-        .find({ name: "reduced_schedule_section" })
-        .prop("fieldNamesClearedWhenHidden")
-    ).toEqual(
-      expect.arrayContaining([
-        "temp.leave_details.reduced_schedule_leave_periods",
-      ])
-    );
-
-    expect(
-      wrapper
-        .find({ name: "intermittent_section" })
-        .prop("fieldNamesClearedWhenHidden")
-    ).toEqual(
-      expect.arrayContaining(["leave_details.intermittent_leave_periods"])
-    );
-  });
-
-  describe("when claim is a bonding leave", () => {
-    it("renders the correct guidance text", () => {
-      const claim = new MockClaimBuilder()
-        .bondingAdoptionLeaveReason()
-        .create();
-      const { wrapper } = renderWithAppLogic(Duration, {
-        claimAttrs: claim,
-      });
-      expect(wrapper.find({ name: "duration_type" }).prop("hint"))
-        .toMatchInlineSnapshot(`
-        <React.Fragment>
-          <p>
-            You can take up to 12 weeks of family leave within the first year of your child’s birth or placement. You do not need to take this leave all at once.
-          </p>
-          <p>
-            Select all that apply.
-          </p>
-        </React.Fragment>
-      `);
-    });
-  });
-
-  describe("when claim has a reduced schedule entry", () => {
-    const claimAttrs = {
-      temp: {
-        leave_details: {
-          reduced_schedule_leave_periods: [
-            new ReducedScheduleLeavePeriod({ leave_period_id }),
-          ],
-        },
-      },
-    };
-
-    it("it renders reduced schedule leave section", () => {
-      const { wrapper } = renderWithAppLogic(Duration, { claimAttrs });
-      expect(
-        wrapper.find({ name: "reduced_schedule_section" }).prop("visible")
-      ).toBe(true);
-    });
-  });
-
-  describe("when claim has an intermittent leave entry", () => {
-    const claimAttrs = {
-      leave_details: {
-        intermittent_leave_periods: [
-          new IntermittentLeavePeriod({ leave_period_id }),
-        ],
-      },
-    };
-
-    it("it renders intermittent leave section", () => {
-      const { wrapper } = renderWithAppLogic(Duration, { claimAttrs });
-      expect(
-        wrapper.find({ name: "intermittent_section" }).prop("visible")
-      ).toBe(true);
-    });
-  });
-
-  describe("when user clicks continue", () => {
-    it("calls claims.update", () => {
-      const claimAttrs = {
-        leave_details: {
-          intermittent_leave_periods: [
-            new IntermittentLeavePeriod({ leave_period_id }),
-          ],
-        },
-        temp: {
-          leave_details: {
-            continuous_leave_periods: [
-              new ContinuousLeavePeriod({ leave_period_id }),
-            ],
-            reduced_schedule_leave_periods: [
-              new ReducedScheduleLeavePeriod({ leave_period_id }),
-            ],
-          },
-        },
-      };
-
-      const { wrapper, appLogic, claim } = renderWithAppLogic(Duration, {
-        claimAttrs,
-      });
-      const updateClaimSpy = jest.spyOn(appLogic.claims, "update");
-
-      act(() => {
-        wrapper.find("QuestionPage").simulate("save");
-      });
-
-      expect(updateClaimSpy).toHaveBeenCalledWith(
-        claim.application_id,
-        expect.objectContaining(claimAttrs)
-      );
-    });
-  });
 
   describe("intermittent leave section", () => {
     const intermittentClaimAttrs = (attrs) => ({

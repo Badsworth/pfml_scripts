@@ -17,10 +17,6 @@ const LeaveSchedule = (props) => {
   const { t } = useTranslation();
   const {
     isIntermittent,
-    isReducedSchedule,
-    temp: {
-      leave_details: { reduced_schedule_leave_periods },
-    },
     leave_details: { intermittent_leave_periods },
   } = props.claim;
 
@@ -37,11 +33,6 @@ const LeaveSchedule = (props) => {
           <tr>
             <th scope="col">
               {t(
-                "pages.employersClaimsReview.leaveSchedule.tableHeader_duration"
-              )}
-            </th>
-            <th scope="col">
-              {t(
                 "pages.employersClaimsReview.leaveSchedule.tableHeader_frequency"
               )}
             </th>
@@ -53,38 +44,10 @@ const LeaveSchedule = (props) => {
           </tr>
         </thead>
         <tbody>
-          {isReducedSchedule &&
-            reduced_schedule_leave_periods.map((leavePeriod) => {
-              return (
-                <tr key={leavePeriod.leave_period_id} className="reduced">
-                  <th scope="row">
-                    {t("pages.employersClaimsReview.durationBasis_weeks", {
-                      numOfWeeks: leavePeriod.weeks,
-                    })}
-                  </th>
-                  <td>
-                    {t(
-                      "pages.employersClaimsReview.leaveSchedule.type_reducedSchedule"
-                    )}
-                  </td>
-                  <td>
-                    {t(
-                      "pages.employersClaimsReview.leaveSchedule.reducedDetails_reducedHours",
-                      {
-                        numOfHours: leavePeriod.hours_per_week,
-                      }
-                    )}
-                  </td>
-                </tr>
-              );
-            })}
           {isIntermittent &&
             intermittent_leave_periods.map((leavePeriod) => {
               return (
                 <tr key={leavePeriod.leave_period_id} className="intermittent">
-                  <th scope="row">
-                    {t("pages.employersClaimsReview.notApplicable")}
-                  </th>
                   <td>
                     {t(
                       "pages.employersClaimsReview.leaveSchedule.type_intermittent"

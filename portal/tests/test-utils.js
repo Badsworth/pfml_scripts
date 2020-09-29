@@ -136,11 +136,21 @@ export class MockClaimBuilder {
   /**
    * @returns {MockClaimBuilder}
    */
-  intermittent(attrs) {
+  intermittent() {
+    set(this.claimAttrs, "temp.has_intermittent_leave_periods", true);
     set(
       this.claimAttrs,
       "leave_details.intermittent_leave_periods[0]",
-      new IntermittentLeavePeriod(attrs)
+      new IntermittentLeavePeriod({
+        leave_period_id: "mock-leave-period-id",
+        start_date: "2021-02-01",
+        end_date: "2021-07-01",
+        duration: 3,
+        duration_basis: DurationBasis.hours,
+        frequency: 6,
+        frequency_interval: 6,
+        frequency_interval_basis: FrequencyIntervalBasis.months,
+      })
     );
     return this;
   }
@@ -148,22 +158,18 @@ export class MockClaimBuilder {
   /**
    * @returns {MockClaimBuilder}
    */
-  reducedSchedule(attrs = {}) {
+  reducedSchedule() {
+    set(this.claimAttrs, "temp.has_reduced_schedule_leave_periods", true);
     set(
       this.claimAttrs,
-      "temp.leave_details.reduced_schedule_leave_periods[0]",
-      new ReducedScheduleLeavePeriod(attrs)
+      "leave_details.reduced_schedule_leave_periods[0]",
+      new ReducedScheduleLeavePeriod({
+        leave_period_id: "mock-leave-period-id",
+        start_date: "2021-02-01",
+        end_date: "2021-07-01",
+      })
     );
 
-    // TODO (CP-714): These are the only fields currently available in the API
-    // remove once reduced leave is fully integrated with API
-    const { leave_period_id, start_date, end_date } = attrs;
-
-    set(this.claimAttrs, "leave_details.reduced_schedule_leave_periods[0]", {
-      leave_period_id,
-      start_date,
-      end_date,
-    });
     return this;
   }
 
@@ -402,22 +408,9 @@ export const claim = new MockClaimBuilder()
   .medicalLeaveReason()
   .leaveDuration()
   .employed()
-  .continuous({
-    leave_period_id: 1,
-  })
-  .intermittent({
-    leave_period_id: 3,
-    duration: 3,
-    duration_basis: DurationBasis.hours,
-    frequency: 6,
-    frequency_interval: 6,
-    frequency_interval_basis: FrequencyIntervalBasis.months,
-  })
-  .reducedSchedule({
-    leave_period_id: 2,
-    hours_per_week: 5,
-    weeks: 10,
-  })
+  .continuous()
+  .intermittent()
+  .reducedSchedule()
   .previousLeave([
     {
       leave_start_date: "2020-03-01",

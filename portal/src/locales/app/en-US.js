@@ -132,6 +132,8 @@ const shared = {
   fileUpload_addAnotherFileButton: "Choose another file",
   fileUpload_addFirstFileButton: "Choose a file",
   fileUpload_fileHeadingPrefix: "File",
+  leavePeriodMedicalAlert:
+    "You will need a completed medical leave certification form for this section.",
   leaveReasonActiveDutyFamily: "Active duty",
   leaveReasonBonding: "Bonding leave",
   leaveReasonMedical: "Medical leave",
@@ -433,12 +435,56 @@ const pages = {
     choiceYes: "$t(shared.choiceYes)",
     datesLead_bonding:
       "If you have already taken some or all of your family leave, tell us when you first missed work and your last day of leave.",
-    datesLead_medical: "",
+    datesLead_medical:
+      'If you have already taken some or all of your leave for this condition, tell us when you first missed work and your last day of leave.<br /><br />Refer to Question 27 in the "Estimate leave details" section of the certification form (page 6).',
     datesSectionLabel:
       "Enter the start and end dates for your continuous leave.",
     endDateLabel: "Last day of leave",
+    hasLeaveHint_medical:
+      'Refer to Question 26 in the "Estimate leave details" section of the certification form (page 6).',
     hasLeaveLabel:
       "Do you need to take off work completely for a period of time (continuous leave)?",
+    medicalAlert: "$t(shared.leavePeriodMedicalAlert)",
+    startDateLabel: "First day of leave",
+    title: "$t(shared.claimsLeaveDetailsTitle)",
+  },
+  claimsLeavePeriodIntermittent: {
+    choiceNo: "$t(shared.choiceNo)",
+    choiceYes: "$t(shared.choiceYes)",
+    datesLead_bonding:
+      "If you have already taken some or all of your family leave, tell us when you first missed work and your last day of leave.",
+    datesLead_medical:
+      'If you have already taken some or all of your leave for this condition, tell us when you first missed work and your last day of leave.<br /><br />Refer to Question 33 in the "Estimate leave details" section of the certification form (page 6).',
+    datesSectionLabel:
+      "Enter the start and end dates for your intermittent leave.",
+    endDateLabel: "Last day of leave",
+    endDateLabel_medical: "Last day of leave or re-evaluation date",
+    hasLeaveHint_medical:
+      'Refer to Question 31 in the "Estimate leave details" section of the certification form (page 6).',
+    hasLeaveLabel:
+      "Do you need to take off work at irregular intervals (intermittent leave)?",
+    hybridLeaveWarning:
+      "You have to create a separate application for intermittent leave.",
+    medicalAlert: "$t(shared.leavePeriodMedicalAlert)",
+    startDateLabel: "First day of leave",
+    title: "$t(shared.claimsLeaveDetailsTitle)",
+  },
+  claimsLeavePeriodReducedSchedule: {
+    choiceNo: "$t(shared.choiceNo)",
+    choiceYes: "$t(shared.choiceYes)",
+    datesLead_bonding:
+      "If you have already taken some or all of your family leave, tell us when you first missed work and your last day of leave.",
+    datesLead_medical:
+      'If you have already taken some or all of your leave for this condition, tell us when you first missed work and your last day of leave.<br /><br />Refer to Question 30 in the "Estimate leave details" section of the certification form (page 6).',
+    datesSectionLabel:
+      "Enter the start and end dates for your reduced leave schedule.",
+    endDateLabel: "Last day of leave",
+    endDateLabel_medical: "Last day of leave or re-evaluation date",
+    hasLeaveHint_medical:
+      'Refer to Question 28 in the "Estimate leave details" section of the certification form (page 6).',
+    hasLeaveLabel:
+      "Do you need to work a reduced schedule for a period of time (reduced leave schedule)?",
+    medicalAlert: "$t(shared.leavePeriodMedicalAlert)",
     startDateLabel: "First day of leave",
     title: "$t(shared.claimsLeaveDetailsTitle)",
   },
@@ -744,7 +790,6 @@ const pages = {
     amend: "Amend",
     documentationLabel: "Documentation",
     durationBasis_days: "{{numOfDays}} days",
-    durationBasis_weeks: "{{numOfWeeks}} weeks",
     employeeInformation: {
       addressLabel: "Mailing address",
       dobLabel: "Birthdate",
@@ -802,13 +847,10 @@ const pages = {
       intermittentDetails_estimatedAbsences:
         "Estimated <strong>{{frequency}}</strong> absences each lasting <strong>less than a full work day</strong> for <strong>{{duration}}</strong> {{durationBasis}}.",
       intermittentDetails_oncePerMonth: "At least once per month.",
-      reducedDetails_reducedHours: "Reduced by {{numOfHours}} hours per week",
       tableHeader_details: "Details",
-      tableHeader_duration: "Duration",
       tableHeader_frequency: "Frequency",
       tableName: "Leave schedule details table",
       type_intermittent: "$t(shared.claimDurationTypeIntermittent)",
-      type_reducedSchedule: "$t(shared.claimDurationTypeReducedSchedule)",
     },
     noneReported: "None reported",
     notApplicable: "-",

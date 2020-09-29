@@ -65,16 +65,16 @@ class Claim extends BaseModel {
         has_continuous_leave_periods: null,
         // TODO (CP-567): this field doesn't exist in the API yet
         has_employer_benefits: null,
+        // TODO (CP-984): Connect to API
+        has_intermittent_leave_periods: null,
         // TODO (CP-1019): Connect address preference to the API
         has_mailing_address: null,
         // TODO (CP-567): this field doesn't exist in the API yet
         has_other_incomes: null,
         // TODO (CP-567): this field doesn't exist in the API yet
         has_previous_leaves: null,
-        leave_details: {
-          // TODO (CP-714): connect with reduced schedule periods fields to the API
-          reduced_schedule_leave_periods: null,
-        },
+        // TODO (CP-984): Connect to API
+        has_reduced_schedule_leave_periods: null,
       },
     };
   }
@@ -124,11 +124,7 @@ class Claim extends BaseModel {
    * @returns {boolean}
    */
   get isReducedSchedule() {
-    // TODO (CP-714): Remove once reduced schedule is integrated with API
-    return (
-      !!get(this, "temp.leave_details.reduced_schedule_leave_periods[0]") ||
-      !!get(this, "leave_details.reduced_schedule_leave_periods[0]")
-    );
+    return !!get(this, "leave_details.reduced_schedule_leave_periods[0]");
   }
 
   /**
@@ -204,6 +200,7 @@ export class IntermittentLeavePeriod extends BaseModel {
       duration: null,
       // How long will an absence typically last?
       duration_basis: null,
+      end_date: null,
       // Estimate how many absences {per week|per month|over the next 6 months}
       frequency: null,
       // Implied by input selection of "over the next 6 months"
@@ -212,6 +209,7 @@ export class IntermittentLeavePeriod extends BaseModel {
       // How often might you need to be absent from work?
       frequency_interval_basis: null,
       leave_period_id: null,
+      start_date: null,
     };
   }
 }
@@ -239,9 +237,9 @@ export const DurationBasis = {
 export class ReducedScheduleLeavePeriod extends BaseModel {
   get defaults() {
     return {
-      hours_per_week: null,
+      end_date: null,
       leave_period_id: null,
-      weeks: null,
+      start_date: null,
     };
   }
 }

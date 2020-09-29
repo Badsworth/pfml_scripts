@@ -136,6 +136,7 @@ export default class Step extends BaseModel {
           "claim.leave_details.continuous_leave_periods[0]",
           "claim.leave_details.intermittent_leave_periods[0]",
           "claim.leave_details.reason_qualifier",
+          "claim.leave_details.reduced_schedule_leave_periods[0]",
           "claim.mass_id",
           "claim.middle_name",
           "claim.other_incomes",
@@ -147,7 +148,6 @@ export default class Step extends BaseModel {
           "claim.previous_leaves",
           "claim.temp.has_mailing_address",
           "claim.temp.leave_details.bonding.date_of_child",
-          "claim.temp.leave_details.reduced_schedule_leave_periods[0]",
         ].some((ignoredFieldName) => field.includes(ignoredFieldName));
 
         const hasValue = fieldHasValue(field, this.context);

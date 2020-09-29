@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`LeavePeriodContinuous renders the page with bonding leave content 1`] = `
+exports[`LeavePeriodReducedSchedule renders the page with bonding leave content 1`] = `
 <QuestionPage
   onSave={[Function]}
   title="Leave details"
@@ -21,8 +21,8 @@ exports[`LeavePeriodContinuous renders the page with bonding leave content 1`] =
       ]
     }
     hint={null}
-    label="Do you need to take off work completely for a period of time (continuous leave)?"
-    name="temp.has_continuous_leave_periods"
+    label="Do you need to work a reduced schedule for a period of time (reduced leave schedule)?"
+    name="temp.has_reduced_schedule_leave_periods"
     onChange={[Function]}
     type="radio"
     value=""
@@ -30,7 +30,7 @@ exports[`LeavePeriodContinuous renders the page with bonding leave content 1`] =
   <ConditionalContent
     fieldNamesClearedWhenHidden={
       Array [
-        "claim.leave_details.continuous_leave_periods[0]",
+        "claim.leave_details.reduced_schedule_leave_periods[0]",
       ]
     }
     getField={[Function]}
@@ -42,11 +42,11 @@ exports[`LeavePeriodContinuous renders the page with bonding leave content 1`] =
       level="2"
       size="1"
     >
-      Enter the start and end dates for your continuous leave.
+      Enter the start and end dates for your reduced leave schedule.
     </Heading>
     <Lead>
       <Trans
-        i18nKey="pages.claimsLeavePeriodContinuous.datesLead"
+        i18nKey="pages.claimsLeavePeriodReducedSchedule.datesLead"
         tOptions={
           Object {
             "context": "bonding",
@@ -59,7 +59,7 @@ exports[`LeavePeriodContinuous renders the page with bonding leave content 1`] =
       example="For example: 04 / 28 / 1986"
       label="First day of leave"
       monthLabel="Month"
-      name="leave_details.continuous_leave_periods[0].start_date"
+      name="leave_details.reduced_schedule_leave_periods[0].start_date"
       onChange={[Function]}
       smallLabel={true}
       value=""
@@ -70,7 +70,7 @@ exports[`LeavePeriodContinuous renders the page with bonding leave content 1`] =
       example="For example: 04 / 28 / 1986"
       label="Last day of leave"
       monthLabel="Month"
-      name="leave_details.continuous_leave_periods[0].end_date"
+      name="leave_details.reduced_schedule_leave_periods[0].end_date"
       onChange={[Function]}
       smallLabel={true}
       value=""
@@ -80,9 +80,9 @@ exports[`LeavePeriodContinuous renders the page with bonding leave content 1`] =
 </QuestionPage>
 `;
 
-exports[`LeavePeriodContinuous renders the page with bonding leave content 2`] = `"If you have already taken some or all of your family leave, tell us when you first missed work and your last day of leave."`;
+exports[`LeavePeriodReducedSchedule renders the page with bonding leave content 2`] = `"If you have already taken some or all of your family leave, tell us when you first missed work and your last day of leave."`;
 
-exports[`LeavePeriodContinuous renders the page with medical leave content 1`] = `
+exports[`LeavePeriodReducedSchedule renders the page with medical leave content 1`] = `
 <QuestionPage
   onSave={[Function]}
   title="Leave details"
@@ -107,9 +107,9 @@ exports[`LeavePeriodContinuous renders the page with medical leave content 1`] =
         },
       ]
     }
-    hint="Refer to Question 26 in the \\"Estimate leave details\\" section of the certification form (page 6)."
-    label="Do you need to take off work completely for a period of time (continuous leave)?"
-    name="temp.has_continuous_leave_periods"
+    hint="Refer to Question 28 in the \\"Estimate leave details\\" section of the certification form (page 6)."
+    label="Do you need to work a reduced schedule for a period of time (reduced leave schedule)?"
+    name="temp.has_reduced_schedule_leave_periods"
     onChange={[Function]}
     type="radio"
     value=""
@@ -117,7 +117,7 @@ exports[`LeavePeriodContinuous renders the page with medical leave content 1`] =
   <ConditionalContent
     fieldNamesClearedWhenHidden={
       Array [
-        "claim.leave_details.continuous_leave_periods[0]",
+        "claim.leave_details.reduced_schedule_leave_periods[0]",
       ]
     }
     getField={[Function]}
@@ -129,11 +129,11 @@ exports[`LeavePeriodContinuous renders the page with medical leave content 1`] =
       level="2"
       size="1"
     >
-      Enter the start and end dates for your continuous leave.
+      Enter the start and end dates for your reduced leave schedule.
     </Heading>
     <Lead>
       <Trans
-        i18nKey="pages.claimsLeavePeriodContinuous.datesLead"
+        i18nKey="pages.claimsLeavePeriodReducedSchedule.datesLead"
         tOptions={
           Object {
             "context": "medical",
@@ -146,7 +146,7 @@ exports[`LeavePeriodContinuous renders the page with medical leave content 1`] =
       example="For example: 04 / 28 / 1986"
       label="First day of leave"
       monthLabel="Month"
-      name="leave_details.continuous_leave_periods[0].start_date"
+      name="leave_details.reduced_schedule_leave_periods[0].start_date"
       onChange={[Function]}
       smallLabel={true}
       value=""
@@ -155,9 +155,9 @@ exports[`LeavePeriodContinuous renders the page with medical leave content 1`] =
     <InputDate
       dayLabel="Day"
       example="For example: 04 / 28 / 1986"
-      label="Last day of leave"
+      label="Last day of leave or re-evaluation date"
       monthLabel="Month"
-      name="leave_details.continuous_leave_periods[0].end_date"
+      name="leave_details.reduced_schedule_leave_periods[0].end_date"
       onChange={[Function]}
       smallLabel={true}
       value=""
@@ -167,7 +167,7 @@ exports[`LeavePeriodContinuous renders the page with medical leave content 1`] =
 </QuestionPage>
 `;
 
-exports[`LeavePeriodContinuous renders the page with medical leave content 2`] = `
+exports[`LeavePeriodReducedSchedule renders the page with medical leave content 2`] = `
 Array [
   "If you have already taken some or all of your leave for this condition, tell us when you first missed work and your last day of leave.",
   <br
@@ -176,6 +176,6 @@ Array [
   <br
     key="br-2"
   />,
-  "Refer to Question 27 in the \\"Estimate leave details\\" section of the certification form (page 6).",
+  "Refer to Question 30 in the \\"Estimate leave details\\" section of the certification form (page 6).",
 ]
 `;
