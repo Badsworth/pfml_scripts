@@ -11,4 +11,9 @@ services:
     image: mass-pfml-api:release
     container_name: mass-pfml-api
     init: true
-    command: ["mass-pfml-api"]
+    volumes:
+      - app:/app
+      - ./jwks.json:/app/jwks.json
+
+volumes:
+  app:

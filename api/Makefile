@@ -221,6 +221,14 @@ release-build: ## Build release image
 		--build-arg RUN_UID=4000 \
 		.
 
+release-start-api: jwks.json
+	docker-compose --file docker-compose.yml --file docker-compose.release.yml up --detach
+
+release-stop-api:
+	docker-compose --file docker-compose.yml --file docker-compose.release.yml down
+
+release-test: db-upgrade db-create-users release-start-api run-test
+
 # Since we have a time-based tag INFO_TAG, tagging and pushing are usually best
 # to be done together, but you could tag then later push by setting INFO_TAG
 # directly
@@ -234,6 +242,10 @@ release-push: ## Push release image to the registry
 release-tag: ## Tag release image for registry
 	docker tag $(APP_NAME):$(RELEASE_TAG) $(DOCKER_REGISTRY)/$(DOCKER_REPO):$(RELEASE_TAG)
 	docker tag $(APP_NAME):$(RELEASE_TAG) $(DOCKER_REGISTRY)/$(DOCKER_REPO):$(INFO_TAG)
+
+run-test: # The second parameter is the number of retries (each followed by 
+		  # a second of wait) until a state is determined by the docker daemon
+	./bin/check_container_health.sh 60
 
 run: ## Run docker-compose
 run: start logs

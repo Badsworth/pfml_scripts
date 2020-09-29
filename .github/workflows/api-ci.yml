@@ -75,3 +75,5 @@ jobs:
       - name: build
         run: make release-build
   
+      - name: pre-flight-test
+        run: make release-test
