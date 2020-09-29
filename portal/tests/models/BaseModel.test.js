@@ -16,6 +16,9 @@ describe("BaseModel", () => {
         b: "foo",
         c: [],
         d: new NestedModel(),
+        e: {
+          f: "bar",
+        },
       };
     }
   }
@@ -29,14 +32,20 @@ describe("BaseModel", () => {
         b: "foo",
         c: [],
         d: new NestedModel(),
+        e: {
+          f: "bar",
+        },
       });
     });
 
-    it("overrides default attributes with passed in attributes", () => {
+    it("overrides and merges default attributes with passed in attributes", () => {
       const testModel = new TestModel({
         b: "bar",
         c: [1, 2, 3],
         d: new NestedModel({ z: "baz" }),
+        e: {
+          new_field: "hello",
+        },
       });
 
       expect(testModel).toEqual({
@@ -44,6 +53,10 @@ describe("BaseModel", () => {
         b: "bar",
         c: [1, 2, 3],
         d: new NestedModel({ z: "baz" }),
+        e: {
+          f: "bar",
+          new_field: "hello",
+        },
       });
     });
 
@@ -51,7 +64,7 @@ describe("BaseModel", () => {
       jest.spyOn(console, "warn").mockImplementationOnce(jest.fn());
       const testModel = new TestModel({
         a: "cow",
-        e: "should be ignored",
+        unknown_field: "should be ignored",
       });
 
       expect(testModel).toEqual({
@@ -59,6 +72,9 @@ describe("BaseModel", () => {
         b: "foo",
         c: [],
         d: new NestedModel(),
+        e: {
+          f: "bar",
+        },
       });
       expect(console.warn).toHaveBeenCalled(); // eslint-disable-line no-console
     });

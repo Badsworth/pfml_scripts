@@ -73,6 +73,7 @@ describe("LeaveReasonPage", () => {
           {
             leave_details: {
               reason: LeaveReason.medical,
+              reason_qualifier: null,
             },
           }
         );

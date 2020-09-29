@@ -1,4 +1,4 @@
-import isEqual from "lodash/isEqual";
+import { isEqual, merge } from "lodash";
 
 /**
  * Class representing the base class for the application's models
@@ -30,7 +30,7 @@ export default class BaseModel {
         continue;
       }
 
-      this[property] = value;
+      merge(this, { [property]: value });
     }
   }
 
