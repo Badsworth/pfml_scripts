@@ -184,6 +184,7 @@ export const MedicalClaimTestTypes = [
   "MedicalAddlBenefits",
   "MedicalBasicNew",
   "HAP1",
+  "HAP2",
   "GBR1",
   "HAP3",
 ] as const;

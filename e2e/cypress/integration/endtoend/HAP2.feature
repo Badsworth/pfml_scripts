@@ -1,9 +1,9 @@
-Feature: Submit a medical claim that is missing an HCP, and refer it to DFML
+Feature: Submit and accept HAP2 claim: Simple claim, out of state resident
 
   @setFeatureFlags
   @routeRequest
-  Scenario: As a claimant, I should be able to start submitting a GBR1 claim through the portal
-    Given I have a GBR1 claim to submit
+  Scenario: As a claimant, I should be able to submit a claim (HAP2) through the portal
+    Given I have a HAP2 claim to submit
     And I log in as a claimant on the portal dashboard
     And I create an application
     And I am on the claims "start" page
@@ -34,27 +34,30 @@ Feature: Submit a medical claim that is missing an HCP, and refer it to DFML
     Given I am on the claims "review" page
     Then I should have agreed and successfully submitted the claim
     And I should be able to return to the portal dashboard
-  
-  Scenario: As a CSR (Savilix), I should be able to confirm that the HCP is missing
+
+Scenario: As a CSR (Savilinx), I should be able to Approve a HAP2 claim submission 
     Given I am logged in as a Savilinx CSR on the Fineos homepage
-    When I search for the GBR1 application in Fineos
+    When I search for the HAP2 application in Fineos
     Then I should find the specified claim
     Given I am on the claim case page
     Given I am on the tab "Documents"
-    Then I should confirm "HCP form" is not present
+    Then I should confirm "OOS ID form" is not present
     Given I am on the tab "Absence Hub"
-    When I click Adjudicate
+    When I click Adjudicate 
     Given I am on the tab "Evidence"
     When I click Manage Evidence
-    Then I should confirm evidence is "invalid due to missing HCP form"
+    Then I should confirm evidence is "valid"
+    When I highlight ID Proof
+    And I click Manage Evidence
+    Then I should confirm evidence is "invalid due to missing identity documents"
+    Given I am on the tab "Manage Request"
+    Then I click Reject
     Given I am on the claim case page
-    And I am on the tab "Tasks"
-    When I click Add
-    And I search for Evidence Review
-    Then I click Next
-    And I click on Evidence Review 
-    When I click Open
-    Then I should start transferring task to DMFL
-    Given I am on the Transfer to Dept page
-    Then I should finish transferring task to DMFL
-    Then I should confirm task assigned to DFML Ops
+    And claim is rejected
+    When I click Deny
+    And I select "Insufficient Certification" for Denial Reason
+    Then I add "Insufficient Certification" as reason in notes
+    And I should confirm claim has been completed
+
+
+

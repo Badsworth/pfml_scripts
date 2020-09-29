@@ -46,6 +46,6 @@ Feature: Submit a medical claim that is happy, but financially ineligible, and i
     Given I am on the claim case page
     And claim is rejected
     When I click Deny
-    And I select Ineligible for Denial Reason
+    And I select "Ineligible" for Denial Reason
     Then I add Financially Ineligible as reason in notes
     And I should confirm claim has been completed

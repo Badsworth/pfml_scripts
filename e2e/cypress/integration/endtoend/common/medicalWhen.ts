@@ -69,7 +69,10 @@ When("I highlight ID Proof", function (): void {
 });
 
 When("I click Deny", function () {
-  cy.get('td[class="secondMenu"]').contains("Deny").click();
+  cy.get('a[title="Deny the Pending Leave Request"]')
+    .dblclick({ force: true })
+    .wait(150);
+  cy.get('span[id="leaveRequestDenialDetailsWidget"]');
 });
 
 When("I click Add", function () {
@@ -79,10 +82,10 @@ When("I click Add", function () {
   });
 });
 
-When("I select Ineligible for Denial Reason", function (): void {
+When("I select {string} for Denial Reason", function (reason: string): void {
   cy.get('span[id="leaveRequestDenialDetailsWidget"]')
     .find("select")
-    .select("Ineligible");
+    .select(reason);
 });
 
 When("I search for Evidence Review", function (): void {

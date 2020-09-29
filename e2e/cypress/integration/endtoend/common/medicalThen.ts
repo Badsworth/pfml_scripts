@@ -611,19 +611,35 @@ Then("I should fufill availability request", function (): void {
 });
 
 Then("I should confirm evidence is {string}", function (label: string): void {
+  let receipt: string, decision: string, reason: string;
+  if (label === "valid") {
+    receipt = "Received";
+    decision = "Satisfied";
+    reason = "Evidence is Approved";
+  } else if (label === "invalid due to missing HCP form") {
+    receipt = "Not Received";
+    decision = "Pending";
+    reason = "Missing HCP Form";
+  } else if (label === "invalid due to missing identity documents") {
+    receipt = "Received";
+    decision = "Not Satisfied";
+    reason = "Submitted document is not a valid out-of-state ID.";
+  } else {
+    receipt = "Not Received";
+    decision = "Pending";
+    reason = "";
+  }
   cy.labelled("Evidence Receipt")
     .get('select[id="manageEvidenceResultPopupWidget_un92_evidence-receipt"]')
-    .select(label === "valid" ? "Received" : "Not Received");
+    .select(receipt);
   cy.labelled("Evidence Decision")
     .get(
       'select[id="manageEvidenceResultPopupWidget_un92_evidence-resulttype"]'
     )
-    .select(label === "valid" ? "Satisfied" : "Pending");
-  cy.labelled("Evidence Decision Reason").type(
-    label === "valid" ? "Evidence is Approved" : "Missing HCP Form"
-  );
+    .select(decision);
+  cy.labelled("Evidence Decision Reason").type(reason);
   cy.get('input[type="button"][value="OK"]').click();
-  if (label === "invalid") {
+  if (label === "invalid due to missing HCP form") {
     cy.get("#p8_un180_editPageSave").click();
   }
 });
@@ -634,11 +650,11 @@ Then("I click Accept", function (): void {
 });
 
 Then("I should approve claim", function (): void {
-  cy.get('a[title="Approve the Pending Leaving Request"]').click().wait(5000);
-  cy.get("label").should("contain.text", "Future Leave");
+  cy.get('a[title="Approve the Pending Leaving Request"]').dblclick();
+  cy.get("#managedLeaveProgressCardWidget").contains("Future Leave");
 });
 
-Then("I should confirm HCP form is not present", function (): void {
+Then("I should confirm {string} is not present", function (): void {
   cy.contains("No Records To Display");
 });
 
@@ -660,11 +676,23 @@ Then("I should confirm task assigned to DFML Ops", function (): void {
   );
 });
 
-Then("I add Financially Ineligible as reason in notes", function (): void {
+Then("I add {string} as reason in notes", function (reason: string): void {
+  let reasonText = "";
+  switch (reason) {
+    case "Financially Ineligible": {
+      reasonText =
+        "This leave claim was denied due to financial ineligibility.";
+    }
+    case "Insufficient Certification": {
+      reasonText =
+        "This leave claim was denied due to invalid out-of-state ID.";
+    }
+  }
+
   cy.get('span[id="leaveRequestDenialDetailsWidget"]')
     .find("textarea")
-    .type("This leave claim was denied due to financial ineligibility.");
-  cy.get("#leaveRequestDenialPopup_un63_okButtonBean").click();
+    .type(reasonText);
+  cy.get("div[class='popup-footer']").find("input[title='OK']").click();
 });
 
 Then("I click on Evidence Review", function (): void {
