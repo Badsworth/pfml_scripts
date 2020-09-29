@@ -35,11 +35,11 @@ const cmd: CommandModule<SystemWideArgs, SimulateArgs> = {
     const storage = new SimulationStorage(args.directory);
     args.logger.info(`Executing simulation plan from ${storage.claimFile}`);
     const submitter = new PortalSubmitter({
-      UserPoolId: config("COGNITO_POOL"),
-      ClientId: config("COGNITO_CLIENTID"),
-      Username: config("PORTAL_USERNAME"),
-      Password: config("PORTAL_PASSWORD"),
-      ApiBaseUrl: config("API_BASEURL"),
+      UserPoolId: config("E2E_COGNITO_POOL"),
+      ClientId: config("E2E_COGNITO_CLIENTID"),
+      Username: config("E2E_PORTAL_USERNAME"),
+      Password: config("E2E_PORTAL_PASSWORD"),
+      ApiBaseUrl: config("E2E_API_BASEURL"),
     });
     const tracker = args.track
       ? new SimulationStateFileTracker(storage.stateFile)

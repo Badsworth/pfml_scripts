@@ -30,21 +30,18 @@ export type FillPDFTaskOptions = {
  */
 export default function (on: Cypress.PluginEvents): Cypress.ConfigOptions {
   const configOverrides: Cypress.ConfigOptions = {};
-  // Load variables from .env.
-  const env = dotenv();
-  if ("error" in env && env.error) {
-    // Allow missing .env files by swallowing the ENOENT missing .env file error.
-    // This lets us pass in environment variables directly in prod.
-    if (
-      !("code" in env.error) ||
-      (env.error as Error & { code: string }).code !== "ENOENT"
-    ) {
-      throw env.error;
-    }
-  }
-  if ("parsed" in env) {
-    configOverrides.env = env.parsed;
-  }
+
+  // Load variables from .env. This populates process.env with .env file values.
+  // .env files only exist in local environments. In CI, we populate real env variables.
+  dotenv();
+
+  // "lift" any environment variable that we care about into Cypress.
+  configOverrides.env = Object.entries(process.env)
+    .filter(([k]) => k.startsWith("E2E_"))
+    .reduce(
+      (collected, [k, v]) => ({ ...collected, [k]: v }),
+      {} as { [k: string]: unknown }
+    );
 
   // Declare tasks here.
   on("task", {
@@ -62,10 +59,10 @@ export default function (on: Cypress.PluginEvents): Cypress.ConfigOptions {
       return fillPDF(options.source, options.data);
     },
     generateCredentials(): Credentials {
-      const { TESTMAIL_NAMESPACE } = process.env;
+      const { E2E_TESTMAIL_NAMESPACE } = process.env;
       const tag = faker.random.alphaNumeric(8);
       return {
-        username: `${TESTMAIL_NAMESPACE}.${tag}@inbox.testmail.app`,
+        username: `${E2E_TESTMAIL_NAMESPACE}.${tag}@inbox.testmail.app`,
         password: faker.internet.password(10) + faker.random.number(999),
       };
     },
@@ -82,11 +79,14 @@ export default function (on: Cypress.PluginEvents): Cypress.ConfigOptions {
 }
 
 export function createClientFromEnv(): TestMailVerificationFetcher {
-  const { TESTMAIL_APIKEY, TESTMAIL_NAMESPACE } = process.env;
-  if (!TESTMAIL_APIKEY || !TESTMAIL_NAMESPACE) {
+  const { E2E_TESTMAIL_APIKEY, E2E_TESTMAIL_NAMESPACE } = process.env;
+  if (!E2E_TESTMAIL_APIKEY || !E2E_TESTMAIL_NAMESPACE) {
     throw new Error(
       "Unable to create Test Mail API client due to missing environment variables."
     );
   }
-  return new TestMailVerificationFetcher(TESTMAIL_APIKEY, TESTMAIL_NAMESPACE);
+  return new TestMailVerificationFetcher(
+    E2E_TESTMAIL_APIKEY,
+    E2E_TESTMAIL_NAMESPACE
+  );
 }

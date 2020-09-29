@@ -34,15 +34,21 @@ export const getRequestOptions = (
 });
 
 async function getFineosBaseUrl(): Promise<string> {
-  const base = await config("FINEOS_BASEURL");
-  const username = await config("FINEOS_USERNAME");
-  const password = await config("FINEOS_PASSWORD");
+  const base = await config("E2E_FINEOS_BASEURL");
+  const username = await config("E2E_FINEOS_USERNAME");
+  const password = await config("E2E_FINEOS_PASSWORD");
   if (!base)
-    throw new Error(`You must set the FINEOS_BASEURL environment variable.`);
+    throw new Error(
+      `You must set the E2E_FINEOS_BASEURL environment variable.`
+    );
   if (!username)
-    throw new Error(`You must set the FINEOS_USERNAME environment variable.`);
+    throw new Error(
+      `You must set the E2E_FINEOS_USERNAME environment variable.`
+    );
   if (!password)
-    throw new Error(`You must set the FINEOS_PASSWORD environment variable.`);
+    throw new Error(
+      `You must set the E2E_FINEOS_PASSWORD environment variable.`
+    );
   return `${base.split("//")[0]}//${username}:${password}@${
     base.split("//")[1]
   }`;

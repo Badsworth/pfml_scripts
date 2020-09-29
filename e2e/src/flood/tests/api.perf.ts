@@ -38,10 +38,10 @@ export const steps = [
       });
       await browser.visit(PortalBaseUrl);
       await (await labelled(browser, "Email address")).type(
-        await config("PORTAL_USERNAME")
+        await config("E2E_PORTAL_USERNAME")
       );
       await (await labelled(browser, "Password")).type(
-        await config("PORTAL_PASSWORD")
+        await config("E2E_PORTAL_PASSWORD")
       );
       await (
         await waitForElement(browser, By.css("button[type='submit']"))

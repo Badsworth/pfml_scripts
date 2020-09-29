@@ -1,5 +1,5 @@
 import { Given } from "cypress-cucumber-preprocessor/steps";
-import { getFineosBaseUrl } from "@/index";
+import { getFineosBaseUrl } from "../../../config";
 import { CypressStepThis, TestType } from "@/types";
 
 Given("I am logged in as a Savilinx CSR on the Fineos homepage", function () {
@@ -8,8 +8,8 @@ Given("I am logged in as a Savilinx CSR on the Fineos homepage", function () {
 
 Given("I log in as a claimant on the portal dashboard", function () {
   const credentials: CypressStepThis["credentials"] = {
-    username: Cypress.env("PORTAL_USERNAME"),
-    password: Cypress.env("PORTAL_PASSWORD"),
+    username: Cypress.env("E2E_PORTAL_USERNAME"),
+    password: Cypress.env("E2E_PORTAL_PASSWORD"),
   };
   // Alias the credentials for later use.
   cy.wrap(credentials).as("credentials");
