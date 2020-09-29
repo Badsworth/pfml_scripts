@@ -910,6 +910,18 @@ components:
             residential_address:
               $ref: "#/components/schemas/Address"
               nullable: true
+            has_continuous_leave_periods:
+              type: boolean
+              nullable: true
+              example: true
+            has_intermittent_leave_periods:
+              type: boolean
+              nullable: true
+              example: true
+            has_reduced_schedule_leave_periods:
+              type: boolean
+              nullable: true
+              example: true
             has_state_id:
               type: boolean
               nullable: true
@@ -996,6 +1008,18 @@ components:
         date_of_birth:
           nullable: true
           $ref: "#/components/schemas/Date"
+        has_continuous_leave_periods:
+          type: boolean
+          nullable: true
+          example: true
+        has_intermittent_leave_periods:
+          type: boolean
+          nullable: true
+          example: true
+        has_reduced_schedule_leave_periods:
+          type: boolean
+          nullable: true
+          example: true
         has_state_id:
           type: boolean
           nullable: true

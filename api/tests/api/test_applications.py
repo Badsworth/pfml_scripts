@@ -667,12 +667,22 @@ def test_application_patch_add_leave_period(client, user, auth_token):
     response = client.patch(
         "/v1/applications/{}".format(application.application_id),
         headers={"Authorization": f"Bearer {auth_token}"},
-        json={"leave_details": {"continuous_leave_periods": [{"start_date": "2020-06-11"}]}},
+        json={
+            "has_continuous_leave_periods": True,
+            "has_intermittent_leave_periods": False,
+            "has_reduced_schedule_leave_periods": False,
+            "leave_details": {"continuous_leave_periods": [{"start_date": "2020-06-11"}]},
+        },
     )
 
     assert response.status_code == 200
 
     response_body = response.get_json().get("data")
+
+    assert response_body.get("has_continuous_leave_periods") is True
+    assert response_body.get("has_intermittent_leave_periods") is False
+    assert response_body.get("has_reduced_schedule_leave_periods") is False
+
     updated_leave_details = response_body.get("leave_details")
     assert updated_leave_details
 
