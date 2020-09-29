@@ -953,7 +953,9 @@ const components = {
   applicationCard: {
     feinHeading: "Employer FEIN",
     heading: "Application {{number}}",
-    leaveDurationHeading: "Leave duration",
+    leavePeriodLabel_continuous: "$t(shared.claimDurationTypeContinuous)",
+    leavePeriodLabel_intermittent: "$t(shared.claimDurationTypeIntermittent)",
+    leavePeriodLabel_reduced: "$t(shared.claimDurationTypeReducedSchedule)",
     leaveReasonValue_activeDutyFamily: "$t(shared.leaveReasonActiveDutyFamily)",
     leaveReasonValue_bonding: "$t(shared.leaveReasonBonding)",
     leaveReasonValue_medical: "$t(shared.leaveReasonMedical)",

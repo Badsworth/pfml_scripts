@@ -16,12 +16,14 @@ function ApplicationCard(props) {
   const { claim, number } = props;
   const { t } = useTranslation();
   const leaveReason = get(claim, "leave_details.reason");
-
-  // TODO (CP-984): Factor in dates for other leave period types
-  const leaveDurationRange = formatDateRange(
-    get(claim, "leave_details.continuous_leave_periods[0].start_date"),
-    get(claim, "leave_details.continuous_leave_periods[0].end_date")
-  );
+  const metadataHeadingProps = {
+    className: "margin-top-0 margin-bottom-05 text-base",
+    level: "4",
+    size: "6",
+  };
+  const metadataValueProps = {
+    className: "margin-top-0 margin-bottom-2 font-body-2xs text-medium",
+  };
 
   return (
     <article className="maxw-mobile-lg border border-base-lighter margin-bottom-3">
@@ -41,33 +43,69 @@ function ApplicationCard(props) {
       </div>
 
       <div className="padding-3">
-        {leaveDurationRange && (
+        {claim.isContinuous && (
           <React.Fragment>
-            <Heading
-              className="margin-top-0 margin-bottom-05 text-base"
-              level="4"
-              size="6"
-            >
-              {t("components.applicationCard.leaveDurationHeading")}
+            <Heading {...metadataHeadingProps}>
+              {t("components.applicationCard.leavePeriodLabel_continuous")}
             </Heading>
-            <p className="margin-top-0 margin-bottom-2 font-body-3xs">
-              {leaveDurationRange}
+            <p {...metadataValueProps}>
+              {formatDateRange(
+                get(
+                  claim,
+                  "leave_details.continuous_leave_periods[0].start_date"
+                ),
+                get(claim, "leave_details.continuous_leave_periods[0].end_date")
+              )}
+            </p>
+          </React.Fragment>
+        )}
+
+        {claim.isReducedSchedule && (
+          <React.Fragment>
+            <Heading {...metadataHeadingProps}>
+              {t("components.applicationCard.leavePeriodLabel_reduced")}
+            </Heading>
+            <p {...metadataValueProps}>
+              {formatDateRange(
+                get(
+                  claim,
+                  "leave_details.reduced_schedule_leave_periods[0].start_date"
+                ),
+                get(
+                  claim,
+                  "leave_details.reduced_schedule_leave_periods[0].end_date"
+                )
+              )}
+            </p>
+          </React.Fragment>
+        )}
+
+        {claim.isIntermittent && (
+          <React.Fragment>
+            <Heading {...metadataHeadingProps}>
+              {t("components.applicationCard.leavePeriodLabel_intermittent")}
+            </Heading>
+            <p {...metadataValueProps}>
+              {formatDateRange(
+                get(
+                  claim,
+                  "leave_details.intermittent_leave_periods[0].start_date"
+                ),
+                get(
+                  claim,
+                  "leave_details.intermittent_leave_periods[0].end_date"
+                )
+              )}
             </p>
           </React.Fragment>
         )}
 
         {claim.employer_fein && (
           <React.Fragment>
-            <Heading
-              className="margin-top-0 margin-bottom-05 text-base"
-              level="4"
-              size="6"
-            >
+            <Heading {...metadataHeadingProps}>
               {t("components.applicationCard.feinHeading")}
             </Heading>
-            <p className="margin-top-0 margin-bottom-2 font-body-3xs">
-              {claim.employer_fein}
-            </p>
+            <p {...metadataValueProps}>{claim.employer_fein}</p>
           </React.Fragment>
         )}
 

@@ -14,7 +14,13 @@ export default {
       defaultValue: "Submitted",
       control: {
         type: "radio",
-        options: ["Started (Empty)", "Submitted", "Completed"],
+        options: [
+          "Empty",
+          "Hybrid leave",
+          "Intermittent leave",
+          "Submitted",
+          "Completed",
+        ],
       },
     },
   },
@@ -23,8 +29,12 @@ export default {
 export const Story = ({ claim, ...args }) => {
   let claimAttrs;
 
-  if (claim === "Started (Empty)") {
+  if (claim === "Empty") {
     claimAttrs = new MockClaimBuilder().create();
+  } else if (claim === "Hybrid leave") {
+    claimAttrs = new MockClaimBuilder().continuous().reducedSchedule().create();
+  } else if (claim === "Intermittent leave") {
+    claimAttrs = new MockClaimBuilder().intermittent().create();
   } else if (claim === "Submitted") {
     claimAttrs = new MockClaimBuilder().submitted().create();
   } else if (claim === "Completed") {

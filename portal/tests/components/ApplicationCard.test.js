@@ -15,6 +15,54 @@ describe("ApplicationCard", () => {
     expect(wrapper).toMatchSnapshot();
   });
 
+  it("renders Continuous leave period date range", () => {
+    const claimAttrs = new MockClaimBuilder().continuous().create();
+
+    const wrapper = shallow(
+      <ApplicationCard claim={new Claim(claimAttrs)} number={2} />
+    );
+    const leavePeriodHeading = wrapper
+      .find("Heading")
+      .filterWhere(
+        (heading) => heading.children().text() === "Continuous leave"
+      );
+
+    expect(leavePeriodHeading.exists()).toBe(true);
+    expect(wrapper.html()).toMatch("1/1/2021 – 6/1/2021");
+  });
+
+  it("renders Reduced Schedule leave period date range", () => {
+    const claimAttrs = new MockClaimBuilder().reducedSchedule().create();
+
+    const wrapper = shallow(
+      <ApplicationCard claim={new Claim(claimAttrs)} number={2} />
+    );
+    const leavePeriodHeading = wrapper
+      .find("Heading")
+      .filterWhere(
+        (heading) => heading.children().text() === "Reduced leave schedule"
+      );
+
+    expect(leavePeriodHeading.exists()).toBe(true);
+    expect(wrapper.html()).toMatch("2/1/2021 – 7/1/2021");
+  });
+
+  it("renders Intermittent leave period date range", () => {
+    const claimAttrs = new MockClaimBuilder().intermittent().create();
+
+    const wrapper = shallow(
+      <ApplicationCard claim={new Claim(claimAttrs)} number={2} />
+    );
+    const leavePeriodHeading = wrapper
+      .find("Heading")
+      .filterWhere(
+        (heading) => heading.children().text() === "Intermittent leave"
+      );
+
+    expect(leavePeriodHeading.exists()).toBe(true);
+    expect(wrapper.html()).toMatch("2/1/2021 – 7/1/2021");
+  });
+
   describe("when the claim status is Submitted", () => {
     let claimAttrs, wrapper;
 
