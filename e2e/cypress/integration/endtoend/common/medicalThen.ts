@@ -227,20 +227,20 @@ Then("I finish submitting the claim based on its type", function (
     intermittent: application.leave_details.intermittent_leave_periods,
   });
 
+  const continuousLeaveButtonValue: string =
+    leaveType === "continuous" ? "true" : "false";
+
+  cy.contains(
+    "fieldset",
+    "Do you need to take off work completely for a period of time (continuous leave)?"
+  ).within(() => {
+    cy.get("input[type='radio']").check(continuousLeaveButtonValue, {
+      force: true,
+    });
+  });
   /**
    * Leave details section.
    */
-  cy.contains("fieldset", "Which of the following situations apply?").within(
-    () => {
-      const value = lookup(leaveType, {
-        continuous: "Continuous leave",
-        reduced: "Reduced leave schedule",
-        intermittent: "Intermittent leave",
-      });
-      cy.contains(value).click();
-    }
-  );
-  cy.contains("button", "Save and continue").click();
 
   // Leave type-based questions.
   switch (leaveType) {
@@ -260,19 +260,12 @@ Then("I finish submitting the claim based on its type", function (
       */
 
       // Continous Leave details section (continued).
-      cy.contains("fieldset", "When will you first need to take leave?").within(
-        () => {
-          cy.contains("Month").type(String(startDate.getMonth() + 1) as string);
-          cy.contains("Day").type(String(startDate.getUTCDate()) as string);
-          cy.contains("Year").type(
-            String(startDate.getUTCFullYear()) as string
-          );
-        }
-      );
-      cy.contains(
-        "fieldset",
-        "When will your leave end or be re-evaluated?"
-      ).within(() => {
+      cy.contains("fieldset", "First day of leave").within(() => {
+        cy.contains("Month").type(String(startDate.getMonth() + 1) as string);
+        cy.contains("Day").type(String(startDate.getUTCDate()) as string);
+        cy.contains("Year").type(String(startDate.getUTCFullYear()) as string);
+      });
+      cy.contains("fieldset", "Last day of leave").within(() => {
         cy.contains("Month").type(String(endDate.getMonth() + 1) as string);
         cy.contains("Day").type(String(endDate.getUTCDate()) as string);
         cy.contains("Year").type(String(endDate.getUTCFullYear()) as string);
