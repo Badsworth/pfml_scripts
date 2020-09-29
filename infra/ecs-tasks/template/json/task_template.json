@@ -29,7 +29,8 @@
       { "name": "DB_USERNAME", "value": "${db_username}" }
     ],
     "secrets": [
-      { "name": "DB_PASSWORD", "valueFrom": "/service/${app_name}/${environment_name}/db-password" }
+      { "name": "DB_PASSWORD", "valueFrom": "/service/${app_name}/${environment_name}/db-password"},
+      { "name": "COGNITO_FINEOS_APP_CLIENT_ID", "valueFrom": "/service/${app_name}/${environment_name}/cognito_fineos_app_client_id"}
     ]
   }
 ]

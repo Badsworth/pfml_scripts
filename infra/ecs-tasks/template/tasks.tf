@@ -31,6 +31,10 @@ locals {
       command   = ["db-admin-create-db-users"],
       task_role = null
     },
+    "${local.app_name}-db-create-fineos-user" = {
+      command   = ["db-create-fineos-user"],
+      task_role = null
+    },
     "${local.app_name}-${var.environment_name}-ad-hoc-verification" = {
       command = ["generate-verification-codes",
         "--input=s3://massgov-pfml-${var.environment_name}-verification-codes/source.csv",
