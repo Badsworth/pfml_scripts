@@ -18,6 +18,9 @@ class Claim extends BaseModel {
       employment_status: null,
       fineos_absence_id: null,
       first_name: null,
+      has_continuous_leave_periods: null,
+      has_intermittent_leave_periods: null,
+      has_reduced_schedule_leave_periods: null,
       has_state_id: null,
       hours_worked_per_week: null,
       last_name: null,
@@ -62,20 +65,14 @@ class Claim extends BaseModel {
        * this temporary space.
        */
       temp: {
-        // TODO (CP-984): Connect to API
-        has_continuous_leave_periods: null,
         // TODO (CP-567): this field doesn't exist in the API yet
         has_employer_benefits: null,
-        // TODO (CP-984): Connect to API
-        has_intermittent_leave_periods: null,
         // TODO (CP-1019): Connect address preference to the API
         has_mailing_address: null,
         // TODO (CP-567): this field doesn't exist in the API yet
         has_other_incomes: null,
         // TODO (CP-567): this field doesn't exist in the API yet
         has_previous_leaves: null,
-        // TODO (CP-984): Connect to API
-        has_reduced_schedule_leave_periods: null,
       },
     };
   }

@@ -57,7 +57,7 @@ export class MockClaimBuilder {
    * @returns {MockClaimBuilder}
    */
   continuous() {
-    set(this.claimAttrs, "temp.has_continuous_leave_periods", true);
+    set(this.claimAttrs, "has_continuous_leave_periods", true);
     set(
       this.claimAttrs,
       "leave_details.continuous_leave_periods[0]",
@@ -137,7 +137,7 @@ export class MockClaimBuilder {
    * @returns {MockClaimBuilder}
    */
   intermittent() {
-    set(this.claimAttrs, "temp.has_intermittent_leave_periods", true);
+    set(this.claimAttrs, "has_intermittent_leave_periods", true);
     set(
       this.claimAttrs,
       "leave_details.intermittent_leave_periods[0]",
@@ -159,7 +159,7 @@ export class MockClaimBuilder {
    * @returns {MockClaimBuilder}
    */
   reducedSchedule() {
-    set(this.claimAttrs, "temp.has_reduced_schedule_leave_periods", true);
+    set(this.claimAttrs, "has_reduced_schedule_leave_periods", true);
     set(
       this.claimAttrs,
       "leave_details.reduced_schedule_leave_periods[0]",

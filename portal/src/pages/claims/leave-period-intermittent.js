@@ -16,7 +16,7 @@ import { useTranslation } from "../../locales/i18n";
 import withClaim from "../../hoc/withClaim";
 
 export const fields = [
-  "claim.temp.has_intermittent_leave_periods",
+  "claim.has_intermittent_leave_periods",
   "claim.leave_details.intermittent_leave_periods[0].end_date",
   "claim.leave_details.intermittent_leave_periods[0].start_date",
   "claim.leave_details.intermittent_leave_periods[0].leave_period_id",
@@ -59,15 +59,15 @@ export const LeavePeriodIntermittent = (props) => {
       )}
 
       <InputChoiceGroup
-        {...getFunctionalInputProps("temp.has_intermittent_leave_periods")}
+        {...getFunctionalInputProps("has_intermittent_leave_periods")}
         choices={[
           {
-            checked: formState.temp.has_intermittent_leave_periods === true,
+            checked: formState.has_intermittent_leave_periods === true,
             label: t("pages.claimsLeavePeriodIntermittent.choiceYes"),
             value: "true",
           },
           {
-            checked: formState.temp.has_intermittent_leave_periods === false,
+            checked: formState.has_intermittent_leave_periods === false,
             label: t("pages.claimsLeavePeriodIntermittent.choiceNo"),
             value: "false",
           },
@@ -83,8 +83,7 @@ export const LeavePeriodIntermittent = (props) => {
 
       <ConditionalContent
         visible={
-          formState.temp.has_intermittent_leave_periods &&
-          hasOtherLeavePeriodTypes
+          formState.has_intermittent_leave_periods && hasOtherLeavePeriodTypes
         }
       >
         <Alert state="warning">
@@ -100,8 +99,7 @@ export const LeavePeriodIntermittent = (props) => {
         removeField={removeField}
         updateFields={updateFields}
         visible={
-          formState.temp.has_intermittent_leave_periods &&
-          !hasOtherLeavePeriodTypes
+          formState.has_intermittent_leave_periods && !hasOtherLeavePeriodTypes
         }
       >
         <Heading level="2" size="1">

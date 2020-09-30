@@ -22,7 +22,7 @@ exports[`LeavePeriodIntermittent renders the page with bonding leave content 1`]
     }
     hint={null}
     label="Do you need to take off work at irregular intervals (intermittent leave)?"
-    name="temp.has_intermittent_leave_periods"
+    name="has_intermittent_leave_periods"
     onChange={[Function]}
     type="radio"
     value=""
@@ -118,7 +118,7 @@ exports[`LeavePeriodIntermittent renders the page with medical leave content 1`]
     }
     hint="Refer to Question 31 in the \\"Estimate leave details\\" section of the certification form (page 6)."
     label="Do you need to take off work at irregular intervals (intermittent leave)?"
-    name="temp.has_intermittent_leave_periods"
+    name="has_intermittent_leave_periods"
     onChange={[Function]}
     type="radio"
     value=""

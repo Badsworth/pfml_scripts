@@ -43,7 +43,7 @@ describe("LeavePeriodReducedSchedule", () => {
     const { changeRadioGroup } = simulateEvents(wrapper);
 
     expect(wrapper.find("ConditionalContent").prop("visible")).toBeFalsy();
-    changeRadioGroup("temp.has_reduced_schedule_leave_periods", true);
+    changeRadioGroup("has_reduced_schedule_leave_periods", true);
     expect(wrapper.find("ConditionalContent").prop("visible")).toBe(true);
   });
 
@@ -65,13 +65,11 @@ describe("LeavePeriodReducedSchedule", () => {
     wrapper.find("QuestionPage").simulate("save");
 
     expect(appLogic.claims.update).toHaveBeenCalledWith(claim.application_id, {
+      has_reduced_schedule_leave_periods: true,
       leave_details: {
         reduced_schedule_leave_periods: [
           { end_date, start_date, leave_period_id },
         ],
-      },
-      temp: {
-        has_reduced_schedule_leave_periods: true,
       },
     });
   });

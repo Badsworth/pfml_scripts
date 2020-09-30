@@ -43,7 +43,7 @@ describe("LeavePeriodContinuous", () => {
     const { changeRadioGroup } = simulateEvents(wrapper);
 
     expect(wrapper.find("ConditionalContent").prop("visible")).toBeFalsy();
-    changeRadioGroup("temp.has_continuous_leave_periods", true);
+    changeRadioGroup("has_continuous_leave_periods", true);
     expect(wrapper.find("ConditionalContent").prop("visible")).toBe(true);
   });
 
@@ -62,11 +62,9 @@ describe("LeavePeriodContinuous", () => {
     wrapper.find("QuestionPage").simulate("save");
 
     expect(appLogic.claims.update).toHaveBeenCalledWith(claim.application_id, {
+      has_continuous_leave_periods: true,
       leave_details: {
         continuous_leave_periods: [{ end_date, start_date, leave_period_id }],
-      },
-      temp: {
-        has_continuous_leave_periods: true,
       },
     });
   });

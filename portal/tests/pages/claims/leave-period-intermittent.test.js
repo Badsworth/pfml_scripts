@@ -50,7 +50,7 @@ describe("LeavePeriodIntermittent", () => {
         .prop("visible")
     ).toBeFalsy();
 
-    changeRadioGroup("temp.has_intermittent_leave_periods", true);
+    changeRadioGroup("has_intermittent_leave_periods", true);
 
     expect(
       wrapper
@@ -80,7 +80,7 @@ describe("LeavePeriodIntermittent", () => {
         .prop("visible")
     ).toBeFalsy();
 
-    changeRadioGroup("temp.has_intermittent_leave_periods", true);
+    changeRadioGroup("has_intermittent_leave_periods", true);
 
     expect(
       wrapper
@@ -106,11 +106,9 @@ describe("LeavePeriodIntermittent", () => {
     wrapper.find("QuestionPage").simulate("save");
 
     expect(appLogic.claims.update).toHaveBeenCalledWith(claim.application_id, {
+      has_intermittent_leave_periods: true,
       leave_details: {
         intermittent_leave_periods: [{ end_date, start_date, leave_period_id }],
-      },
-      temp: {
-        has_intermittent_leave_periods: true,
       },
     });
   });
