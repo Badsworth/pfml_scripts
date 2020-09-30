@@ -68,22 +68,33 @@ export function clickDeny(): void {
 
 export function validateEvidence(label: string): void {
   let receipt: string, decision: string, reason: string;
-  if (label === "valid") {
-    receipt = "Received";
-    decision = "Satisfied";
-    reason = "Evidence is Approved";
-  } else if (label === "invalid due to missing HCP form") {
-    receipt = "Not Received";
-    decision = "Pending";
-    reason = "Missing HCP Form";
-  } else if (label === "invalid due to missing identity documents") {
-    receipt = "Received";
-    decision = "Not Satisfied";
-    reason = "Submitted document is not a valid out-of-state ID.";
-  } else {
-    receipt = "Not Received";
-    decision = "Pending";
-    reason = "";
+  switch (label) {
+    case "valid": {
+      receipt = "Received";
+      decision = "Satisfied";
+      reason = "Evidence is Approved";
+    }
+    case "invalid due to missing HCP form": {
+      receipt = "Not Received";
+      decision = "Pending";
+      reason = "Missing HCP Form";
+    }
+    case "invalid due to missing identity documents": {
+      receipt = "Received";
+      decision = "Not Satisfied";
+      reason = "Submitted document is not a valid out-of-state ID.";
+    }
+    case "invalid due to invalid HCP form": {
+      receipt = "Received";
+      decision = "Not Satisfied";
+      reason =
+        "Submitted document is not a valid DFML-certified HCP form or FMLA form.";
+    }
+    default: {
+      receipt = "Not Received";
+      decision = "Pending";
+      reason = "";
+    }
   }
   cy.labelled("Evidence Receipt")
     .get('select[id="manageEvidenceResultPopupWidget_un92_evidence-receipt"]')

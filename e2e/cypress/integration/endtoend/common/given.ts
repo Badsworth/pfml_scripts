@@ -9,6 +9,10 @@ Given("I am an anonymous user on the portal homepage", () => {
 Given("I begin the process to submit a {string} claim", function (
   scenario: string
 ) {
+  this.credentials = {
+    username: Cypress.env("E2E_PORTAL_USERNAME"),
+    password: Cypress.env("E2E_PORTAL_PASSWORD"),
+  };
   portal.submittingClaimType(scenario);
   portal.login(this.credentials);
   portal.startClaim();
