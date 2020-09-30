@@ -232,32 +232,58 @@ export const Review = (props) => {
           </ReviewRow>
         )}
 
-      {/* TODO (CP-984): Factor in dates for other leave period types */}
       <ReviewRow
         level={reviewRowLevel}
-        label={t("pages.claimsReview.leaveDurationLabel")}
+        label={t("pages.claimsReview.leavePeriodLabel", {
+          context: "continuous",
+        })}
       >
-        {formatDateRange(
-          get(claim, "leave_details.continuous_leave_periods[0].start_date"),
-          get(claim, "leave_details.continuous_leave_periods[0].end_date")
-        )}
+        {claim.isContinuous
+          ? formatDateRange(
+              get(
+                claim,
+                "leave_details.continuous_leave_periods[0].start_date"
+              ),
+              get(claim, "leave_details.continuous_leave_periods[0].end_date")
+            )
+          : t("pages.claimsReview.leavePeriodNotSelected")}
       </ReviewRow>
 
       <ReviewRow
         level={reviewRowLevel}
-        label={t("pages.claimsReview.leaveDurationTypeLabel")}
+        label={t("pages.claimsReview.leavePeriodLabel", {
+          context: "reduced",
+        })}
       >
-        {compact([
-          claim.isContinuous
-            ? t("pages.claimsReview.leaveDurationTypeContinuous")
-            : null,
-          claim.isReducedSchedule
-            ? t("pages.claimsReview.leaveDurationTypeReducedSchedule")
-            : null,
-          claim.isIntermittent
-            ? t("pages.claimsReview.leaveDurationTypeIntermittent")
-            : null,
-        ]).join(", ")}
+        {claim.isReducedSchedule
+          ? formatDateRange(
+              get(
+                claim,
+                "leave_details.reduced_schedule_leave_periods[0].start_date"
+              ),
+              get(
+                claim,
+                "leave_details.reduced_schedule_leave_periods[0].end_date"
+              )
+            )
+          : t("pages.claimsReview.leavePeriodNotSelected")}
+      </ReviewRow>
+
+      <ReviewRow
+        level={reviewRowLevel}
+        label={t("pages.claimsReview.leavePeriodLabel", {
+          context: "intermittent",
+        })}
+      >
+        {claim.isIntermittent
+          ? formatDateRange(
+              get(
+                claim,
+                "leave_details.intermittent_leave_periods[0].start_date"
+              ),
+              get(claim, "leave_details.intermittent_leave_periods[0].end_date")
+            )
+          : t("pages.claimsReview.leavePeriodNotSelected")}
       </ReviewRow>
 
       {/* EMPLOYMENT INFO */}

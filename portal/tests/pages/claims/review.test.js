@@ -104,49 +104,6 @@ describe("Employer info", () => {
   });
 });
 
-describe("Duration type", () => {
-  it("lists only existing duration type", () => {
-    const intermittentClaim = new MockClaimBuilder()
-      .part1Complete()
-      .intermittent()
-      .create();
-
-    intermittentClaim.leave_details.continuous_leave_periods = [];
-
-    const continuousAndReducedClaim = new MockClaimBuilder()
-      .part1Complete()
-      .continuous()
-      .reducedSchedule()
-      .create();
-
-    const { wrapper: intermittentWrapper } = renderWithAppLogic(Review, {
-      claimAttrs: intermittentClaim,
-    });
-    const { wrapper: contAndReducedWrapper } = renderWithAppLogic(Review, {
-      claimAttrs: continuousAndReducedClaim,
-    });
-
-    expect(intermittentWrapper.find({ label: "Leave duration type" }))
-      .toMatchInlineSnapshot(`
-      <ReviewRow
-        label="Leave duration type"
-        level="4"
-      >
-        Intermittent leave
-      </ReviewRow>
-    `);
-    expect(contAndReducedWrapper.find({ label: "Leave duration type" }))
-      .toMatchInlineSnapshot(`
-      <ReviewRow
-        label="Leave duration type"
-        level="4"
-      >
-        Continuous leave, Reduced leave schedule
-      </ReviewRow>
-    `);
-  });
-});
-
 describe("Leave details", () => {
   const pregnancyOrRecentBirthLabel =
     "Are you pregnant or have you recently given birth?";

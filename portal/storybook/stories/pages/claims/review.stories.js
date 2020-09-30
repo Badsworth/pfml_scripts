@@ -2,10 +2,18 @@ import { MockClaimBuilder } from "tests/test-utils";
 import generateClaimPageStory from "storybook/utils/generateClaimPageStory";
 
 const mockClaims = {
-  "Part 1 (Medical)": new MockClaimBuilder().part1Complete().create(),
-  "Part 1 (Adoption)": new MockClaimBuilder()
-    .part1Complete()
+  "Part 1 (Medical - Continuous)": new MockClaimBuilder()
+    .part1Complete({ excludeLeavePeriod: true })
+    .continuous()
+    .create(),
+  "Part 1 (Medical - Reduced Schedule)": new MockClaimBuilder()
+    .part1Complete({ excludeLeavePeriod: true })
+    .reducedSchedule()
+    .create(),
+  "Part 1 (Adoption - Intermittent)": new MockClaimBuilder()
+    .part1Complete({ excludeLeavePeriod: true })
     .bondingAdoptionLeaveReason()
+    .intermittent()
     .create(),
   "Part 1 (Newborn)": new MockClaimBuilder()
     .part1Complete()

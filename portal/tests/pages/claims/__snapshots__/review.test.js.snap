@@ -138,16 +138,22 @@ exports[`Final Review Page when all data is present renders Review page with fin
     No
   </ReviewRow>
   <ReviewRow
-    label="Leave duration"
+    label="Continuous leave"
     level="3"
   >
     1/1/2021 – 6/1/2021
   </ReviewRow>
   <ReviewRow
-    label="Leave duration type"
+    label="Reduced leave schedule"
     level="3"
   >
-    Continuous leave
+    No
+  </ReviewRow>
+  <ReviewRow
+    label="Intermittent leave"
+    level="3"
+  >
+    No
   </ReviewRow>
   <ReviewHeading
     editText="Edit"
@@ -437,16 +443,22 @@ exports[`Part 1 Review Page when all data is present renders Review page with Pa
     No
   </ReviewRow>
   <ReviewRow
-    label="Leave duration"
+    label="Continuous leave"
     level="4"
   >
     1/1/2021 – 6/1/2021
   </ReviewRow>
   <ReviewRow
-    label="Leave duration type"
+    label="Reduced leave schedule"
     level="4"
   >
-    Continuous leave
+    No
+  </ReviewRow>
+  <ReviewRow
+    label="Intermittent leave"
+    level="4"
+  >
+    No
   </ReviewRow>
   <ReviewHeading
     editHref="/claims/employment-status?claim_id=mock_application_id"
@@ -592,13 +604,23 @@ exports[`Part 1 Review Page when data is empty does not render strings like 'nul
     No
   </ReviewRow>
   <ReviewRow
-    label="Leave duration"
+    label="Continuous leave"
     level="4"
-  />
+  >
+    No
+  </ReviewRow>
   <ReviewRow
-    label="Leave duration type"
+    label="Reduced leave schedule"
     level="4"
-  />
+  >
+    No
+  </ReviewRow>
+  <ReviewRow
+    label="Intermittent leave"
+    level="4"
+  >
+    No
+  </ReviewRow>
   <ReviewHeading
     editHref="/claims/employment-status?claim_id=mock_application_id"
     editText="Edit"

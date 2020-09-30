@@ -284,16 +284,18 @@ export class MockClaimBuilder {
 
   /**
    * Part 1 steps are complete but not yet submitted to API
+   * @param {object} [options]
+   * @param {boolean} [options.excludeLeavePeriod]
    * @returns {MockClaimBuilder}
    */
-  part1Complete() {
+  part1Complete(options = {}) {
     this.verifiedId();
     this.medicalLeaveReason();
-    this.continuous();
     this.employed();
     this.noOtherLeave();
     this.address();
-    this.leaveDuration();
+
+    if (!options.excludeLeavePeriod) this.continuous();
 
     return this;
   }
@@ -329,23 +331,6 @@ export class MockClaimBuilder {
           })
     );
     set(this.claimAttrs, "temp.has_mailing_address", false);
-    return this;
-  }
-
-  /**
-   * @returns {MockClaimBuilder}
-   */
-  leaveDuration() {
-    set(
-      this.claimAttrs,
-      "leave_details.continuous_leave_periods[0].start_date",
-      "2021-01-01"
-    );
-    set(
-      this.claimAttrs,
-      "leave_details.continuous_leave_periods[0].end_date",
-      "2021-06-01"
-    );
     return this;
   }
 
@@ -407,7 +392,7 @@ export const claim = new MockClaimBuilder()
   .verifiedId()
   .address()
   .medicalLeaveReason()
-  .leaveDuration()
+  .continuous()
   .employed()
   .continuous()
   .intermittent()
