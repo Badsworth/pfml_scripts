@@ -368,16 +368,6 @@ class FINEOSWebIdExt(Base):
     fineos_web_id = Column(Text)
 
 
-class LkDocumentCategory(Base):
-    __tablename__ = "lk_document_category"
-    document_category_id = Column(Integer, primary_key=True, autoincrement=True)
-    document_category_description = Column(Text, nullable=False)
-
-    def __init__(self, document_category_id, document_category_description):
-        self.document_category_id = document_category_id
-        self.document_category_description = document_category_description
-
-
 class LkDocumentType(Base):
     __tablename__ = "lk_document_type"
     document_type_id = Column(Integer, primary_key=True, autoincrement=True)
@@ -396,14 +386,6 @@ class LkContentType(Base):
     def __init__(self, content_type_id, content_type_description):
         self.content_type_id = content_type_id
         self.content_type_description = content_type_description
-
-
-class DocumentCategory(LookupTable):
-    model = LkDocumentCategory
-    column_names = ("document_category_id", "document_category_description")
-
-    IDENTITY_PROOFING = LkDocumentCategory(1, "Identity Proofing")
-    CERTIFICATION = LkDocumentCategory(2, "Certification")
 
 
 class DocumentType(LookupTable):
@@ -439,9 +421,6 @@ class Document(Base):
     )
     created_at = Column(DateTime, nullable=False)
     updated_at = Column(DateTime, nullable=False)
-    document_category_id = Column(
-        Integer, ForeignKey("lk_document_category.document_category_id"), nullable=False
-    )
     document_type_id = Column(
         Integer, ForeignKey("lk_document_type.document_type_id"), nullable=False
     )
@@ -452,7 +431,6 @@ class Document(Base):
     name = Column(Text, nullable=False)
     description = Column(Text, nullable=False)
 
-    document_category_instance = relationship(LkDocumentCategory)
     document_type_instance = relationship(LkDocumentType)
     content_type_instance = relationship(LkContentType)
 
@@ -543,7 +521,6 @@ def sync_lookup_tables(db_session):
     NotificationMethod.sync_to_database(db_session)
     FrequencyOrDuration.sync_to_database(db_session)
     EmploymentStatus.sync_to_database(db_session)
-    DocumentCategory.sync_to_database(db_session)
     DocumentType.sync_to_database(db_session)
     ContentType.sync_to_database(db_session)
     db_session.commit()

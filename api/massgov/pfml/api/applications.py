@@ -23,13 +23,7 @@ from massgov.pfml.api.services.fineos_actions import (
     upload_document,
 )
 from massgov.pfml.api.validation.exceptions import ValidationErrorDetail, ValidationException
-from massgov.pfml.db.models.applications import (
-    Application,
-    ContentType,
-    Document,
-    DocumentCategory,
-    DocumentType,
-)
+from massgov.pfml.db.models.applications import Application, ContentType, Document, DocumentType
 from massgov.pfml.util.sqlalchemy import get_or_404
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
@@ -283,9 +277,6 @@ def document_upload(application_id, body, file):
         now = datetime.now()
         document.created_at = now
         document.updated_at = now
-        document.document_category_id = DocumentCategory.get_id(
-            document_details.document_category.value
-        )
         document.document_type_id = DocumentType.get_id(document_details.document_type.value)
         document.content_type_id = ContentType.get_id(content_type)
         document.size_bytes = file_size

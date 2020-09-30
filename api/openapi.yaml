@@ -1084,12 +1084,6 @@ components:
     DocumentUploadRequest:
       type: object
       properties:
-        document_category:
-          type: string
-          enum:
-            - Identity Proofing
-            - Certification
-          example: "Identity Proofing"
         document_type:
           type: string
           enum:
@@ -1110,7 +1104,6 @@ components:
           format: binary
           nullable: false
       required:
-        - document_category
         - document_type
         - file
       additionalProperties: false

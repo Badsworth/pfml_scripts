@@ -260,15 +260,6 @@ class PaymentPreferences(PydanticBaseModel):
 # Document I/O Types
 
 
-class DocumentCategory(str, LookupEnum):
-    identity_proofing = "Identity Proofing"
-    certification = "Certification"
-
-    @classmethod
-    def get_lookup_model(cls):
-        return db_application_models.LkDocumentCategory
-
-
 class DocumentType(str, LookupEnum):
     passport = "Passport"
     drivers_license_mass = "Driver's License Mass"

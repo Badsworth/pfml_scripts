@@ -4,20 +4,18 @@ from massgov.pfml.api.models.applications.common import ContentType as AllowedCo
 from massgov.pfml.db.models.factories import ApplicationFactory
 
 VALID_FORM_DATA = {
-    "document_category": "Certification",
     "document_type": "Passport",
     "name": "passport.png",
     "description": "Passport",
 }
 
 VALID_MISSING_NAME_DESCRIPTION_FORM_DATA = {
-    "document_category": "Certification",
     "document_type": "Passport",
     "description": "Passport",
 }
 
-MISSING_DOCUMENT_CATEGORY_FORM_DATA = {
-    "document_type": "Passport",
+MISSING_DOCUMENT_TYPE_FORM_DATA = {
+    "description": "Passport",
 }
 
 FILE_WITH_NO_EXTENSION = (io.BytesIO(b"abcdef"), "test")
@@ -140,14 +138,14 @@ def test_document_upload_invalid_form_data(
         client=client,
         user=consented_user,
         auth_token=consented_user_token,
-        form_data=document_upload_payload_helper(MISSING_DOCUMENT_CATEGORY_FORM_DATA, valid_file()),
+        form_data=document_upload_payload_helper(MISSING_DOCUMENT_TYPE_FORM_DATA, valid_file()),
     )
 
     assert response["status_code"] == 400
     assert response["errors"] is not None
     assert len(response["errors"]) == 1
     assert response["errors"][0]["type"] == "required"
-    assert response["errors"][0]["message"] == "'document_category' is a required property"
+    assert response["errors"][0]["message"] == "'document_type' is a required property"
 
 
 def test_document_upload_defaults_for_name(

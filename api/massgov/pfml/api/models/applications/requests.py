@@ -8,7 +8,6 @@ from pydantic import validator
 from massgov.pfml.api.models.applications.common import (
     Address,
     ApplicationLeaveDetails,
-    DocumentCategory,
     DocumentType,
     EmploymentStatus,
     Occupation,
@@ -72,7 +71,6 @@ class ApplicationRequestBody(PydanticBaseModel):
 
 
 class DocumentRequestBody(PydanticBaseModel):
-    document_category: DocumentCategory
     document_type: DocumentType
     name: Optional[str]
     description: Optional[str]
