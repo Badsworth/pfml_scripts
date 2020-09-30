@@ -13,9 +13,10 @@ from massgov.pfml.db.models.applications import (
     Application,
     ApplicationPaymentPreference,
     ContinuousLeavePeriod,
+    EmploymentStatus,
 )
 from massgov.pfml.db.models.employees import TaxIdentifier
-from massgov.pfml.db.models.factories import ApplicationFactory, UserFactory
+from massgov.pfml.db.models.factories import AddressFactory, ApplicationFactory, UserFactory
 
 
 def sqlalchemy_object_as_dict(obj):
@@ -83,7 +84,6 @@ def test_applications_get_fineos_forbidden(client, fineos_user, fineos_user_toke
         "/v1/applications/{}".format(application.application_id),
         headers={"Authorization": f"Bearer {fineos_user_token}"},
     )
-
     assert response.status_code == 403
 
 
@@ -1076,8 +1076,7 @@ def test_application_patch_null_values(client, user, auth_token):
         json=null_request_body,
     )
 
-    # This will fail when required values are set in openapi.yaml
-    assert response.get_json().get("warnings", None) is None
+    assert response.get_json().get("warnings")
     assert response.status_code == 200
 
 
@@ -1168,6 +1167,8 @@ def test_application_post_submit_app(client, user, auth_token, test_db_session):
     factory.random.reseed_random(1)
     application = ApplicationFactory.create(user=user)
     application.date_of_birth = "1997-06-06"
+    application.employment_status_id = EmploymentStatus.UNEMPLOYED.employment_status_id
+    application.residential_address = AddressFactory.create()
     assert not application.submitted_time
 
     # Applications must have an FEIN for submit to succeed.
@@ -1177,7 +1178,6 @@ def test_application_post_submit_app(client, user, auth_token, test_db_session):
         "/v1/applications/{}/submit_application".format(application.application_id),
         headers={"Authorization": f"Bearer {auth_token}"},
     )
-
     assert response.status_code == 201
     assert response.json == {
         "data": {
@@ -1186,8 +1186,10 @@ def test_application_post_submit_app(client, user, auth_token, test_db_session):
             "date_of_birth": "1997-06-06",
             "employer_fein": "770007777",
             "employer_id": "a6cecc1b-78e5-4061-b311-d8a3c2ce6f44",
+            "employment_status": "Unemployed",
             "fineos_absence_id": "NTN-259-ABS-01",
             "first_name": "Kathryn",
+            "has_state_id": False,
             "last_name": "Scott",
             "leave_details": {
                 "continuous_leave_periods": [],
@@ -1198,6 +1200,12 @@ def test_application_post_submit_app(client, user, auth_token, test_db_session):
                 "reduced_schedule_leave_periods": [],
             },
             "payment_preferences": [],
+            "residential_address": {
+                "city": "New Jenniferburgh",
+                "line_1": "33740 Sabrina Valleys",
+                "state": "MA",
+                "zip": "97906",
+            },
             "status": "Submitted",
             "tax_identifier": "***-**-****",
             "updated_time": "2021-12-31T11:20:31Z",
@@ -1226,6 +1234,8 @@ def test_application_post_submit_app_fein_not_found(client, user, auth_token, te
 
     application = ApplicationFactory.create(user=user)
     application.date_of_birth = "1953-01-05"
+    application.employment_status_id = EmploymentStatus.UNEMPLOYED.employment_status_id
+    application.residential_address = AddressFactory.create()
     assert not application.completed_time
 
     # A FEIN of 999999999 is simulated as not found in MockFINEOSClient.
@@ -1236,7 +1246,6 @@ def test_application_post_submit_app_fein_not_found(client, user, auth_token, te
         "/v1/applications/{}/submit_application".format(application.application_id),
         headers={"Authorization": f"Bearer {auth_token}"},
     )
-
     # FINEOS errors are reported back as 503 Service Unavailable.
     assert response.status_code == 503
 
@@ -1247,7 +1256,9 @@ def test_application_post_submit_app_fein_not_found(client, user, auth_token, te
             "date_of_birth": "1953-01-05",
             "employer_fein": "999999999",
             "employer_id": "da94e3e8-ab73-438f-8f18-22ffbc688778",
+            "employment_status": "Unemployed",
             "first_name": "Brian",
+            "has_state_id": False,
             "last_name": "Miller",
             "leave_details": {
                 "continuous_leave_periods": [],
@@ -1258,6 +1269,12 @@ def test_application_post_submit_app_fein_not_found(client, user, auth_token, te
                 "reduced_schedule_leave_periods": [],
             },
             "payment_preferences": [],
+            "residential_address": {
+                "city": "Rebekahborough",
+                "line_1": "5882 Griffin Lakes",
+                "state": "MA",
+                "zip": "78290",
+            },
             "status": "Started",
             "tax_identifier": "***-**-****",
             "updated_time": "2020-09-10T13:06:12Z",
@@ -1278,6 +1295,8 @@ def test_application_post_submit_app_ssn_not_found(client, user, auth_token, tes
 
     application = ApplicationFactory.create(user=user)
     application.date_of_birth = "2009-01-20"
+    application.employment_status_id = EmploymentStatus.UNEMPLOYED.employment_status_id
+    application.residential_address = AddressFactory.create()
     assert not application.completed_time
 
     # A tax identifier of 999999999 is simulated as not found in MockFINEOSClient.
@@ -1288,7 +1307,6 @@ def test_application_post_submit_app_ssn_not_found(client, user, auth_token, tes
         "/v1/applications/{}/submit_application".format(application.application_id),
         headers={"Authorization": f"Bearer {auth_token}"},
     )
-
     # FINEOS errors are reported back as 503 Service Unavailable.
     assert response.status_code == 503
 
@@ -1299,7 +1317,9 @@ def test_application_post_submit_app_ssn_not_found(client, user, auth_token, tes
             "date_of_birth": "2009-01-20",
             "employer_fein": "227777777",
             "employer_id": "035efa25-9b08-423d-90c6-7fd994b2b8fd",
+            "employment_status": "Unemployed",
             "first_name": "Mitchell",
+            "has_state_id": False,
             "last_name": "Munoz",
             "leave_details": {
                 "continuous_leave_periods": [],
@@ -1310,6 +1330,12 @@ def test_application_post_submit_app_ssn_not_found(client, user, auth_token, tes
                 "reduced_schedule_leave_periods": [],
             },
             "payment_preferences": [],
+            "residential_address": {
+                "city": "Grahamstad",
+                "line_1": "697 Anderson Islands Apt. 734",
+                "state": "MA",
+                "zip": "39957",
+            },
             "status": "Started",
             "tax_identifier": "***-**-****",
             "updated_time": "2020-10-29T01:32:51Z",
@@ -1336,6 +1362,8 @@ def test_application_post_submit_to_fineos(client, user, auth_token, test_db_ses
     application.employer_fein = "770000001"
     application.employer_notified = True
     application.employer_notification_date = date(2021, 1, 7)
+    application.employment_status_id = EmploymentStatus.UNEMPLOYED.employment_status_id
+    application.residential_address = AddressFactory.create()
 
     leave_period = ContinuousLeavePeriod(
         start_date=date(2021, 1, 15),
@@ -1361,6 +1389,7 @@ def test_application_post_submit_to_fineos(client, user, auth_token, test_db_ses
 
     capture = massgov.pfml.fineos.mock_client.get_capture()
     # This is generated randomly and changes each time.
+
     fineos_user_id = capture[2][1]
     assert capture == [
         ("find_employer", None, {"employer_fein": "770000001"}),
@@ -1423,6 +1452,8 @@ def test_application_post_submit_to_fineos(client, user, auth_token, test_db_ses
 def test_application_post_complete_app(client, user, auth_token, test_db_session):
     application = ApplicationFactory.create(user=user)
     application.tax_identifier = TaxIdentifier(tax_identifier="999004444")
+    application.employment_status_id = EmploymentStatus.UNEMPLOYED.employment_status_id
+    application.residential_address = AddressFactory.create()
     application.employer_fein = "770000001"
     application.fineos_notification_case_id = "NTN-259"
 
@@ -1442,6 +1473,8 @@ def test_application_post_complete_app(client, user, auth_token, test_db_session
 def test_application_post_complete_to_fineos(client, user, auth_token, test_db_session):
     application = ApplicationFactory.create(user=user)
     application.tax_identifier = TaxIdentifier(tax_identifier="999004444")
+    application.employment_status_id = EmploymentStatus.UNEMPLOYED.employment_status_id
+    application.residential_address = AddressFactory.create()
     application.employer_fein = "770000001"
     application.fineos_notification_case_id = "NTN-259"
 

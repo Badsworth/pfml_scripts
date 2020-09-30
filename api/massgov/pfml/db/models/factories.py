@@ -191,7 +191,7 @@ class ApplicationFactory(BaseFactory):
     middle_name = None
     date_of_birth = factory.Faker("date_of_birth", minimum_age=14, maximum_age=100)
 
-    has_state_id = None
+    has_state_id = False
     mass_id = None
     pregnant_or_recent_birth = False
     child_birth_date = None
@@ -240,6 +240,78 @@ class AddressFactory(BaseFactory):
     address_line_one = factory.Faker("street_address")
     city = factory.Faker("city")
     zip_code = factory.Faker("postcode")
+    geo_state_id = employee_models.GeoState.MA.geo_state_id
+
+
+class PaymentPreferenceFactory(BaseFactory):
+    class Meta:
+        model = application_models.ApplicationPaymentPreference
+
+    payment_pref_id = Generators.UuidObj
+    description = "My checking account"
+    payment_type_id = employee_models.PaymentType.ACH.payment_type_id
+    is_default = True
+    account_name = ""
+    account_number = "123456789"
+    routing_number = "234567890"
+    type_of_account = "Checking"
+    name_in_check = None
+
+
+class ContinuousLeavePeriodFactory(BaseFactory):
+    class Meta:
+        model = application_models.ContinuousLeavePeriod
+
+    leave_period_id = Generators.UuidObj
+    start_date = factory.Faker("date_object")
+    end_date = factory.Faker("date_object")
+    is_estimated = True
+    last_day_worked = factory.Faker("date_object")
+    expected_return_to_work_date = factory.Faker("date_object")
+    start_date_full_day = None
+    start_date_off_hours = None
+    start_date_off_minutes = None
+    end_date_full_day = None
+    end_date_off_hours = None
+    end_date_off_minutes = None
+
+
+class IntermittentLeavePeriodFactory(BaseFactory):
+    class Meta:
+        model = application_models.IntermittentLeavePeriod
+
+    leave_period_id = Generators.UuidObj
+    start_date = factory.Faker("date_object")
+    end_date = factory.Faker("date_object")
+    frequency = None
+    frequency_interval = None
+    frequency_interval_basis = None
+    duration = None
+    duration_basis = None
+
+
+class ReducedScheduleLeavePeriod(BaseFactory):
+    class Meta:
+        model = application_models.ReducedScheduleLeavePeriod
+
+    leave_period_id = Generators.UuidObj
+    start_date = factory.Faker("date_object")
+    end_date = factory.Faker("date_object")
+    is_estimated = True
+    thursday_off_hours = None
+    thursday_off_minutes = None
+    friday_off_hours = None
+    friday_off_minutes = None
+    saturday_off_hours = None
+    saturday_off_minutes = None
+    sunday_off_hours = None
+    sunday_off_minutes = None
+    monday_off_hours = None
+    monday_off_minutes = None
+    tuesday_off_hours = None
+    tuesday_off_minutes = None
+    wednesday_off_hours = None
+    wednesday_off_minutes = None
 
 
 class StateMetricFactory(BaseFactory):

@@ -1,4 +1,5 @@
 from dataclasses import asdict, dataclass
+from enum import Enum
 from typing import Any, Dict, List, Optional, Type, Union
 
 import flask
@@ -24,9 +25,15 @@ class MetaData:
     paging: Optional[PagingMetaData] = None
 
 
+# Partial list of types currently use manually
+# This is not a comprehensive list of all IssueTypes
+class IssueType(str, Enum):
+    required = "required"
+
+
 @dataclass
 class Issue:
-    type: str
+    type: Union[IssueType, str]
     message: str = ""
     rule: Optional[Any] = None
     field: Optional[str] = None
@@ -65,6 +72,8 @@ class Response:
 
 
 def exclude_none(obj):
+    if not isinstance(obj, dict):
+        return obj
     clean = {}
     for k, v in obj.items():
         if "data" == k:  # defer none exclusion of data payload to service layer
@@ -73,6 +82,8 @@ def exclude_none(obj):
             nested = exclude_none(v)
             if len(nested.keys()) > 0:
                 clean[k] = nested
+        elif isinstance(v, list):
+            clean[k] = list(map(exclude_none, v))
         elif v is not None:
             clean[k] = v
     return clean

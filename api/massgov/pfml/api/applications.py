@@ -6,6 +6,7 @@ from puremagic import PureError
 from werkzeug.exceptions import BadRequest, ServiceUnavailable, Unauthorized
 
 import massgov.pfml.api.app as app
+import massgov.pfml.api.services.application_rules as application_rules
 import massgov.pfml.api.services.applications as applications_service
 import massgov.pfml.api.util.response as response_util
 import massgov.pfml.util.logging
@@ -36,8 +37,12 @@ def application_get(application_id):
         ensure(READ, existing_application)
         application_response = ApplicationResponse.from_orm(existing_application)
 
+    issues = application_rules.get_application_issues(existing_application)
+
     return response_util.success_response(
-        message="Successfully retrieved application", data=application_response.dict(),
+        message="Successfully retrieved application",
+        data=application_response.dict(),
+        warnings=issues,
     ).to_api_response()
 
 
@@ -99,9 +104,12 @@ def applications_update(application_id):
             db_session, application_request, existing_application
         )
 
+    issues = application_rules.get_application_issues(existing_application)
+
     return response_util.success_response(
         message="Application updated without errors.",
         data=ApplicationResponse.from_orm(existing_application).dict(exclude_none=True),
+        warnings=issues,
     ).to_api_response()
 
 
@@ -110,6 +118,15 @@ def applications_submit(application_id):
         existing_application = get_or_404(db_session, Application, application_id)
 
         ensure(EDIT, existing_application)
+
+        issues = application_rules.get_application_issues(existing_application)
+        if issues:
+            return response_util.error_response(
+                status_code=BadRequest,
+                message="Application is not valid for submission",
+                errors=issues,
+                data=ApplicationResponse.from_orm(existing_application).dict(exclude_none=True),
+            ).to_api_response()
 
         if send_to_fineos(existing_application, db_session):
             existing_application.submitted_time = datetime.now()
@@ -139,6 +156,15 @@ def applications_complete(application_id):
         existing_application = get_or_404(db_session, Application, application_id)
 
         ensure(EDIT, existing_application)
+
+        issues = application_rules.get_application_issues(existing_application)
+        if issues:
+            return response_util.error_response(
+                status_code=BadRequest,
+                message="Application is not valid for completion",
+                errors=issues,
+                data=ApplicationResponse.from_orm(existing_application).dict(exclude_none=True),
+            ).to_api_response()
 
         if complete_intake(existing_application, db_session):
             existing_application.completed_time = datetime.now()
