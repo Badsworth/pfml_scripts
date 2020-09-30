@@ -1,12 +1,14 @@
-/* eslint-disable no-console */
 import React, { useState } from "react";
-import ButtonLink from "../ButtonLink";
+import Button from "../Button";
+import ConditionalContent from "../ConditionalContent";
 import FileCardList from "../FileCardList";
 import FormLabel from "../FormLabel";
 import InputChoiceGroup from "../InputChoiceGroup";
 import PropTypes from "prop-types";
 import ReviewHeading from "../ReviewHeading";
+import { get } from "lodash";
 import routeWithParams from "../../utils/routeWithParams";
+import { useRouter } from "next/router";
 import { useTranslation } from "../../locales/i18n";
 
 /**
@@ -16,35 +18,63 @@ import { useTranslation } from "../../locales/i18n";
 
 const Feedback = (props) => {
   const { t } = useTranslation();
-  const [isApplicationCorrect, setIsApplicationCorrect] = useState(true);
-  const [employerReviewFiles, setEmployerReviewFiles] = useState([]);
+  const router = useRouter();
+  const [uploadedFiles, setUploadedFiles] = useState([]);
+  const [formState, setFormState] = useState({
+    additionalComments: "false",
+    comment: "",
+  });
 
-  const handleInputChange = (event) => {
-    setEmployerReviewFiles([]);
-    setIsApplicationCorrect(
-      event.target.value === t("pages.employersClaimsReview.feedback.choiceNo")
-    );
-    const employerComment = document.getElementById("employer-comment");
-    if (employerComment && employerComment.value) {
-      employerComment.value = "";
+  const getField = (fieldName) => {
+    return get(formState, fieldName);
+  };
+
+  const updateFields = (fields) => {
+    setFormState({ ...formState, ...fields });
+  };
+
+  const removeField = (fieldName) => {
+    setFormState({
+      ...formState,
+      [fieldName]: "",
+    });
+  };
+
+  const handleOnChange = (event) => {
+    const { name, value } = event.target;
+    if (name === "additionalComments" && value === "false") {
+      setUploadedFiles([]);
     }
+
+    setFormState({
+      ...formState,
+      [event.target.name]: event.target.value,
+    });
+  };
+
+  const handleSubmit = (event) => {
+    event.preventDefault();
+    props.onSubmit({ ...formState, uploadedFiles });
+    const route = routeWithParams("employers.success", {
+      absence_id: props.absenceId,
+    });
+    router.push(route);
   };
 
   return (
     <React.Fragment>
-      <form id="employer-feedback-form">
+      <form id="employer-feedback-form" onSubmit={handleSubmit}>
         <InputChoiceGroup
           choices={[
             {
-              checked: isApplicationCorrect,
+              checked: formState.additionalComments === "false",
               label: t("pages.employersClaimsReview.feedback.choiceNo"),
-              value: t("pages.employersClaimsReview.feedback.choiceNo"),
-              id: t("pages.employersClaimsReview.feedback.choiceNo"),
+              value: "false",
             },
             {
+              checked: formState.additionalComments === "true",
               label: t("pages.employersClaimsReview.feedback.choiceYes"),
-              value: t("pages.employersClaimsReview.feedback.choiceYes"),
-              id: t("pages.employersClaimsReview.feedback.choiceYes"),
+              value: "true",
             },
           ]}
           label={
@@ -52,20 +82,25 @@ const Feedback = (props) => {
               {t("pages.employersClaimsReview.feedback.instructionsLabel")}
             </ReviewHeading>
           }
-          name="employer-review-options"
-          onChange={handleInputChange}
+          name="additionalComments"
+          onChange={handleOnChange}
           type="radio"
         />
-
-        {!isApplicationCorrect && (
+        <ConditionalContent
+          fieldNamesClearedWhenHidden={["comment"]}
+          getField={getField}
+          removeField={removeField}
+          updateFields={updateFields}
+          visible={formState.additionalComments === "true"}
+        >
           <React.Fragment>
             <FormLabel className="usa-label" htmlFor="employer-comment" small>
               {t("pages.employersClaimsReview.feedback.tellUsMoreLabel")}
             </FormLabel>
             <textarea
               className="usa-textarea"
-              id="employer-comment"
-              name="employer-comment"
+              name="comment"
+              onChange={handleOnChange}
             />
             <FormLabel small>
               {t(
@@ -73,8 +108,8 @@ const Feedback = (props) => {
               )}
             </FormLabel>
             <FileCardList
-              files={employerReviewFiles}
-              setFiles={setEmployerReviewFiles}
+              files={uploadedFiles}
+              setFiles={setUploadedFiles}
               setAppErrors={props.appLogic.setAppErrors}
               fileHeadingPrefix={t(
                 "pages.employersClaimsReview.feedback.fileHeadingPrefix"
@@ -87,15 +122,10 @@ const Feedback = (props) => {
               )}
             />
           </React.Fragment>
-        )}
-        <ButtonLink
-          href={routeWithParams("employers.success", {
-            absence_id: props.absenceId,
-          })}
-          className="margin-top-4"
-        >
+        </ConditionalContent>
+        <Button className="margin-top-4" type="submit">
           {t("pages.employersClaimsReview.submitButton")}
-        </ButtonLink>
+        </Button>
       </form>
     </React.Fragment>
   );
@@ -104,6 +134,7 @@ const Feedback = (props) => {
 Feedback.propTypes = {
   appLogic: PropTypes.object.isRequired,
   absenceId: PropTypes.string,
+  onSubmit: PropTypes.func,
 };
 
 export default Feedback;

@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import AmendButton from "./AmendButton";
 import AmendmentForm from "./AmendmentForm";
+import ConditionalContent from "../ConditionalContent";
 import InputDate from "../InputDate";
 import { LeaveReason } from "../../models/Claim";
 import PropTypes from "prop-types";
@@ -23,6 +24,7 @@ const LeaveDetails = (props) => {
       fineos_absence_id,
       leave_details: { employer_notification_date, reason },
     },
+    onChange,
   } = props;
 
   // TODO (CP-984): Factor in start and end dates for Reduced and Intermittent leaves
@@ -40,7 +42,9 @@ const LeaveDetails = (props) => {
     false
   );
   const amendDate = (event) => {
-    setAmendment(event.target.value);
+    const value = event.target.value;
+    setAmendment(value);
+    onChange(value);
   };
 
   return (
@@ -72,11 +76,12 @@ const LeaveDetails = (props) => {
         }
       >
         {formatDateRange(employer_notification_date)}
-        {isAmendmentFormDisplayed && (
+        <ConditionalContent visible={isAmendmentFormDisplayed}>
           <AmendmentForm
             onCancel={() => {
               setIsAmendmentFormDisplayed(false);
               setAmendment(employer_notification_date);
+              onChange(employer_notification_date);
             }}
           >
             <InputDate
@@ -90,7 +95,7 @@ const LeaveDetails = (props) => {
               smallLabel
             />
           </AmendmentForm>
-        )}
+        </ConditionalContent>
       </ReviewRow>
       <ReviewRow
         level="3"
@@ -104,6 +109,7 @@ const LeaveDetails = (props) => {
 
 LeaveDetails.propTypes = {
   claim: PropTypes.object.isRequired,
+  onChange: PropTypes.func,
 };
 
 export default LeaveDetails;

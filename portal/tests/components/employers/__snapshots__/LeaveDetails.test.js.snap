@@ -29,6 +29,24 @@ exports[`LeaveDetails renders the component 1`] = `
     level="3"
   >
     1/1/2021
+    <ConditionalContent
+      visible={false}
+    >
+      <AmendmentForm
+        onCancel={[Function]}
+      >
+        <InputDate
+          dayLabel="Day"
+          label="When did the employee tell you about their expected leave?"
+          monthLabel="Month"
+          name="employer-notification-date-amendment"
+          onChange={[Function]}
+          smallLabel={true}
+          value="2021-01-01"
+          yearLabel="Year"
+        />
+      </AmendmentForm>
+    </ConditionalContent>
   </ReviewRow>
   <ReviewRow
     label="Leave duration"

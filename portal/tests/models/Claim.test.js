@@ -1,9 +1,14 @@
 import { MockClaimBuilder } from "../test-utils";
 
 describe("Claim", () => {
+  let emptyClaim;
+
+  beforeEach(() => {
+    emptyClaim = new MockClaimBuilder().create();
+  });
+
   describe("#isCompleted", () => {
     it("returns true when the Claim status is 'completed'", () => {
-      const emptyClaim = new MockClaimBuilder().create();
       const completedClaim = new MockClaimBuilder().completed().create();
 
       expect(emptyClaim.isCompleted).toBe(false);
@@ -13,7 +18,6 @@ describe("Claim", () => {
 
   describe("#isSubmitted", () => {
     it("returns true when the Claim status is 'submitted'", () => {
-      const emptyClaim = new MockClaimBuilder().create();
       const submittedClaim = new MockClaimBuilder().submitted().create();
 
       expect(emptyClaim.isSubmitted).toBe(false);
@@ -22,27 +26,24 @@ describe("Claim", () => {
   });
 
   it("#isBondingLeave returns true when the Claim reason is bonding", () => {
-    const blankClaim = new MockClaimBuilder().create();
     const claimWithReason = new MockClaimBuilder()
       .bondingBirthLeaveReason()
       .create();
 
-    expect(blankClaim.isMedicalLeave).toBe(false);
+    expect(emptyClaim.isMedicalLeave).toBe(false);
     expect(claimWithReason.isBondingLeave).toBe(true);
   });
 
   it("#isMedicalLeave returns true when the Claim reason is medical", () => {
-    const blankClaim = new MockClaimBuilder().create();
     const claimWithReason = new MockClaimBuilder()
       .medicalLeaveReason()
       .create();
 
-    expect(blankClaim.isMedicalLeave).toBe(false);
+    expect(emptyClaim.isMedicalLeave).toBe(false);
     expect(claimWithReason.isMedicalLeave).toBe(true);
   });
 
   describe("leave period getters", () => {
-    const emptyClaim = new MockClaimBuilder().create();
     const claimWithContinuousLeaveData = new MockClaimBuilder()
       .continuous()
       .create();
@@ -87,6 +88,22 @@ describe("Claim", () => {
         expect(claimWithReducedLeaveData.isIntermittent).toBe(false);
         expect(claimWithIntermittentLeaveData.isIntermittent).toBe(true);
         expect(claimWithMultipleLeaveDurationTypes.isIntermittent).toBe(true);
+      });
+    });
+
+    describe("#fullName", () => {
+      it("returns formatted full name", () => {
+        const claimWithVerifiedId = new MockClaimBuilder()
+          .verifiedId()
+          .create();
+        expect(claimWithVerifiedId.fullName).toEqual("Jane Doe");
+      });
+
+      it("returns formatted name with middle name", () => {
+        const claimWithMiddleName = new MockClaimBuilder()
+          .verifiedId("John")
+          .create();
+        expect(claimWithMiddleName.fullName).toEqual("Jane John Doe");
       });
     });
   });

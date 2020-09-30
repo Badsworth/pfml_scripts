@@ -1,13 +1,14 @@
 import LeaveDetails from "../../../src/components/employers/LeaveDetails";
+import { MockClaimBuilder } from "../../test-utils";
 import React from "react";
 import ReviewRow from "../../../src/components/ReviewRow";
-import { claim } from "../../test-utils";
 import { shallow } from "enzyme";
 
 describe("LeaveDetails", () => {
-  let wrapper;
+  let claim, wrapper;
 
   beforeEach(() => {
+    claim = new MockClaimBuilder().submitted().create();
     wrapper = shallow(<LeaveDetails claim={claim} />);
   });
 

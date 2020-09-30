@@ -378,9 +378,9 @@ export class MockClaimBuilder {
   /**
    * @returns {MockClaimBuilder}
    */
-  verifiedId() {
+  verifiedId(middleName) {
     set(this.claimAttrs, "first_name", "Jane");
-    set(this.claimAttrs, "middle_name", "");
+    set(this.claimAttrs, "middle_name", middleName || "");
     set(this.claimAttrs, "last_name", "Doe");
     set(this.claimAttrs, "date_of_birth", "1980-07-17");
     set(this.claimAttrs, "tax_identifier", "***-**-****");
@@ -398,7 +398,8 @@ export class MockClaimBuilder {
 }
 
 /**
- * A complete mock claim (currently used for Employer Claim Review page & tests)
+ * TODO (EMPLOYER-364): Remove once live data is available
+ * A complete mock claim (currently used for demo'ing Employer Claim Review page)
  * @type {Claim}
  */
 export const claim = new MockClaimBuilder()

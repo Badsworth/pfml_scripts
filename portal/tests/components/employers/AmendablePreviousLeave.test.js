@@ -1,17 +1,20 @@
 import AmendButton from "../../../src/components/employers/AmendButton";
 import AmendablePreviousLeave from "../../../src/components/employers/AmendablePreviousLeave";
 import AmendmentForm from "../../../src/components/employers/AmendmentForm";
+import PreviousLeave from "../../../src/models/PreviousLeave";
 import React from "react";
-import { claim } from "../../test-utils";
 import { shallow } from "enzyme";
 
 describe("AmendablePreviousLeave", () => {
-  let wrapper;
+  let previousLeave, wrapper;
 
   beforeEach(() => {
-    wrapper = shallow(
-      <AmendablePreviousLeave leavePeriod={claim.previous_leaves[0]} />
-    );
+    previousLeave = new PreviousLeave({
+      leave_start_date: "2020-03-01",
+      leave_end_date: "2020-03-06",
+      id: 1,
+    });
+    wrapper = shallow(<AmendablePreviousLeave leavePeriod={previousLeave} />);
   });
 
   it("renders the component", () => {
@@ -19,8 +22,8 @@ describe("AmendablePreviousLeave", () => {
   });
 
   it("renders an AmendmentForm if user clicks on AmendButton", () => {
-    expect(wrapper.find(AmendmentForm).exists()).toEqual(false);
     wrapper.find(AmendButton).simulate("click");
+
     expect(wrapper.find(AmendmentForm).exists()).toEqual(true);
   });
 });

@@ -17,5 +17,43 @@ exports[`AmendablePreviousLeave renders the component 1`] = `
       />
     </td>
   </tr>
+  <ConditionalContent
+    visible={false}
+  >
+    <tr>
+      <td
+        className="padding-top-2 padding-bottom-2 padding-left-0"
+        colSpan="2"
+      >
+        <AmendmentForm
+          onCancel={[Function]}
+        >
+          <InputDate
+            dayLabel="Day"
+            label="When did the leave begin?"
+            monthLabel="Month"
+            name="leave-start-date-amendment"
+            onChange={[Function]}
+            smallLabel={true}
+            value="2020-03-01"
+            yearLabel="Year"
+          />
+          <InputDate
+            dayLabel="Day"
+            label="When did the leave end?"
+            monthLabel="Month"
+            name="leave-end-date-amendment"
+            onChange={[Function]}
+            smallLabel={true}
+            value="2020-03-06"
+            yearLabel="Year"
+          />
+        </AmendmentForm>
+      </td>
+      <td
+        colSpan="2"
+      />
+    </tr>
+  </ConditionalContent>
 </Fragment>
 `;

@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import AmendButton from "./AmendButton";
 import AmendmentForm from "./AmendmentForm";
+import ConditionalContent from "../ConditionalContent";
 import InputDate from "../InputDate";
 import PropTypes from "prop-types";
 import formatDateRange from "../../utils/formatDateRange";
@@ -11,18 +12,19 @@ import { useTranslation } from "../../locales/i18n";
  * in the Leave Admin claim review page.
  */
 
-const AmendablePreviousLeave = ({ leavePeriod }) => {
+const AmendablePreviousLeave = ({ leavePeriod, onChange }) => {
   const { t } = useTranslation();
   const [amendment, setAmendment] = useState(leavePeriod);
   const [isAmendmentFormDisplayed, setIsAmendmentFormDisplayed] = useState(
     false
   );
 
-  const amendLeave = (field, value) => {
+  const amendLeave = (id, field, value) => {
     setAmendment({
       ...amendment,
       [field]: value,
     });
+    onChange({ id, [field]: value });
   };
 
   return (
@@ -43,7 +45,7 @@ const AmendablePreviousLeave = ({ leavePeriod }) => {
           <AmendButton onClick={() => setIsAmendmentFormDisplayed(true)} />
         </td>
       </tr>
-      {isAmendmentFormDisplayed && (
+      <ConditionalContent visible={isAmendmentFormDisplayed}>
         <tr>
           <td
             colSpan="2"
@@ -53,10 +55,13 @@ const AmendablePreviousLeave = ({ leavePeriod }) => {
               onCancel={() => {
                 setIsAmendmentFormDisplayed(false);
                 setAmendment(leavePeriod);
+                onChange(leavePeriod);
               }}
             >
               <InputDate
-                onChange={(e) => amendLeave("leave_start_date", e.target.value)}
+                onChange={(e) =>
+                  amendLeave(leavePeriod.id, "leave_start_date", e.target.value)
+                }
                 value={amendment.leave_start_date}
                 label={t("components.amendmentForm.question_leaveStartDate")}
                 name="leave-start-date-amendment"
@@ -66,7 +71,9 @@ const AmendablePreviousLeave = ({ leavePeriod }) => {
                 smallLabel
               />
               <InputDate
-                onChange={(e) => amendLeave("leave_end_date", e.target.value)}
+                onChange={(e) =>
+                  amendLeave(leavePeriod.id, "leave_end_date", e.target.value)
+                }
                 value={amendment.leave_end_date}
                 label={t("components.amendmentForm.question_leaveEndDate")}
                 name="leave-end-date-amendment"
@@ -79,13 +86,14 @@ const AmendablePreviousLeave = ({ leavePeriod }) => {
           </td>
           <td colSpan="2" />
         </tr>
-      )}
+      </ConditionalContent>
     </React.Fragment>
   );
 };
 
 AmendablePreviousLeave.propTypes = {
   leavePeriod: PropTypes.object.isRequired,
+  onChange: PropTypes.func,
 };
 
 export default AmendablePreviousLeave;

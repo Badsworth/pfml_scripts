@@ -16,7 +16,7 @@ export const AmendmentForm = ({ className = "", onCancel, children }) => {
   );
 
   return (
-    <form className={classes}>
+    <div className={classes}>
       <div className="usa-alert__body">
         <div className="usa-alert__text">{children}</div>
         <Button
@@ -27,7 +27,7 @@ export const AmendmentForm = ({ className = "", onCancel, children }) => {
           {t("components.amendmentForm.cancel")}
         </Button>
       </div>
-    </form>
+    </div>
   );
 };
 

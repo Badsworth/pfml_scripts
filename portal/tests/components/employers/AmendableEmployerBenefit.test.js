@@ -39,8 +39,6 @@ describe("AmendableEmployerBenefit", () => {
   });
 
   it("renders an AmendmentForm if user clicks on AmendButton", () => {
-    expect(wrapper.find(AmendmentForm).exists()).toEqual(false);
-
     wrapper.find(AmendButton).simulate("click");
 
     expect(wrapper.find(AmendmentForm).exists()).toEqual(true);

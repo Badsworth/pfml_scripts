@@ -13,7 +13,7 @@ import { useTranslation } from "../../locales/i18n";
 
 const PreviousLeaves = (props) => {
   const { t } = useTranslation();
-  const { previousLeaves } = props;
+  const { previousLeaves, onChange } = props;
 
   return (
     <React.Fragment>
@@ -51,6 +51,7 @@ const PreviousLeaves = (props) => {
                   <AmendablePreviousLeave
                     leavePeriod={leavePeriod}
                     key={leavePeriod.id}
+                    onChange={onChange}
                   />
                 );
               })}
@@ -83,6 +84,7 @@ const PreviousLeaves = (props) => {
 
 PreviousLeaves.propTypes = {
   previousLeaves: PropTypes.array,
+  onChange: PropTypes.func,
 };
 
 export default PreviousLeaves;

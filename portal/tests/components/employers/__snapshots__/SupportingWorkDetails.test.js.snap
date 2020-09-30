@@ -21,6 +21,25 @@ exports[`SupportingWorkDetails renders the component 1`] = `
     >
       3
     </p>
+    <ConditionalContent
+      visible={false}
+    >
+      <AmendmentForm
+        className="input-text-first-child"
+        onCancel={[Function]}
+      >
+        <InputText
+          hint="If their schedule varies, tell us the average number of hours worked over the past 52 weeks."
+          label="On average, how many hours does the employee work each week?"
+          name="supporting-work-detail-amendment"
+          onChange={[Function]}
+          smallLabel={true}
+          type="number"
+          value={3}
+          width="small"
+        />
+      </AmendmentForm>
+    </ConditionalContent>
   </ReviewRow>
   <ReviewRow
     label="Documentation"

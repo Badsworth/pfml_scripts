@@ -4,20 +4,20 @@ exports[`Feedback renders the component 1`] = `
 <Fragment>
   <form
     id="employer-feedback-form"
+    onSubmit={[Function]}
   >
     <InputChoiceGroup
       choices={
         Array [
           Object {
             "checked": true,
-            "id": "No",
             "label": "No",
-            "value": "No",
+            "value": "false",
           },
           Object {
-            "id": "Yes",
+            "checked": false,
             "label": "Yes",
-            "value": "Yes",
+            "value": "true",
           },
         ]
       }
@@ -28,16 +28,53 @@ exports[`Feedback renders the component 1`] = `
           Do you have any additional comments or concerns?
         </ReviewHeading>
       }
-      name="employer-review-options"
+      name="additionalComments"
       onChange={[Function]}
       type="radio"
     />
-    <ButtonLink
+    <ConditionalContent
+      fieldNamesClearedWhenHidden={
+        Array [
+          "comment",
+        ]
+      }
+      getField={[Function]}
+      removeField={[Function]}
+      updateFields={[Function]}
+      visible={false}
+    >
+      <FormLabel
+        className="usa-label"
+        htmlFor="employer-comment"
+        small={true}
+      >
+        Please tell us more.
+      </FormLabel>
+      <textarea
+        className="usa-textarea"
+        name="comment"
+        onChange={[Function]}
+      />
+      <FormLabel
+        small={true}
+      >
+        If you have any supporting documentation, please attach it for review.
+      </FormLabel>
+      <FileCardList
+        addAnotherFileButtonText="Choose another file"
+        addFirstFileButtonText="Choose a file"
+        fileHeadingPrefix="File"
+        files={Array []}
+        setAppErrors={[MockFunction]}
+        setFiles={[Function]}
+      />
+    </ConditionalContent>
+    <Button
       className="margin-top-4"
-      href="/employers/claims/success"
+      type="submit"
     >
       Submit
-    </ButtonLink>
+    </Button>
   </form>
 </Fragment>
 `;

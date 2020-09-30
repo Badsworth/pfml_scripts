@@ -1,5 +1,5 @@
-import { MockClaimBuilder, claim } from "../../test-utils";
 import EmployeeInformation from "../../../src/components/employers/EmployeeInformation";
+import { MockClaimBuilder } from "../../test-utils";
 import React from "react";
 import ReviewRow from "../../../src/components/ReviewRow";
 import { shallow } from "enzyme";
@@ -9,9 +9,10 @@ describe("EmployeeInformation", () => {
     `<span class="residential-address">1234 My St.<br/>${
       secondLine ? secondLine + "<br/>" : ""
     }Boston, MA 00000</span>`;
-  let wrapper;
+  let claim, wrapper;
 
   beforeEach(() => {
+    claim = new MockClaimBuilder().verifiedId().address().create();
     wrapper = shallow(<EmployeeInformation claim={claim} />);
   });
 
@@ -27,7 +28,7 @@ describe("EmployeeInformation", () => {
 
   it("renders two line breaks if second address line exists", () => {
     const secondAddressLine = "Apt 1";
-    const claimWithUpdatedAddress = new MockClaimBuilder()
+    const claimWithSecondAddressLine = new MockClaimBuilder()
       .verifiedId()
       .address({
         city: "Boston",
@@ -39,7 +40,7 @@ describe("EmployeeInformation", () => {
       .create();
 
     const wrapper = shallow(
-      <EmployeeInformation claim={claimWithUpdatedAddress} />
+      <EmployeeInformation claim={claimWithSecondAddressLine} />
     );
 
     expect(wrapper.find(".residential-address").html()).toEqual(

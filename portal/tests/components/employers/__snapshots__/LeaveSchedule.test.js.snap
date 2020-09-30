@@ -27,35 +27,7 @@ exports[`LeaveSchedule renders the component 1`] = `
         </th>
       </tr>
     </thead>
-    <tbody>
-      <tr
-        className="intermittent"
-        key="mock-leave-period-id"
-      >
-        <td>
-          Intermittent leave
-        </td>
-        <td>
-          <div>
-            <strong>
-              At least once per month.
-            </strong>
-          </div>
-          <div>
-            <Trans
-              i18nKey="pages.employersClaimsReview.leaveSchedule.intermittentDetails_estimatedAbsences"
-              values={
-                Object {
-                  "duration": 3,
-                  "durationBasis": "hours",
-                  "frequency": 6,
-                }
-              }
-            />
-          </div>
-        </td>
-      </tr>
-    </tbody>
+    <tbody />
   </Table>
   <ReviewRow
     label="Documentation"

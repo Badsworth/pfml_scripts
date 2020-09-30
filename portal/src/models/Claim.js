@@ -2,9 +2,9 @@
 /**
  * @file Benefits application model and enum values
  */
+import { compact, get } from "lodash";
 import Address from "./Address";
 import BaseModel from "./BaseModel";
-import { get } from "lodash";
 
 class Claim extends BaseModel {
   get defaults() {
@@ -132,6 +132,16 @@ class Claim extends BaseModel {
    */
   get isSubmitted() {
     return this.status === ClaimStatus.submitted;
+  }
+
+  /**
+   * Returns full name accounting for any false values
+   * @returns {string}
+   */
+  get fullName() {
+    return compact([this.first_name, this.middle_name, this.last_name]).join(
+      " "
+    );
   }
 }
 

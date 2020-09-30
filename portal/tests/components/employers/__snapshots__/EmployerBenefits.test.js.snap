@@ -42,23 +42,10 @@ exports[`EmployerBenefits renders the component 1`] = `
             "benefit_end_date": "2021-03-01",
             "benefit_start_date": "2021-02-01",
             "benefit_type": "Short Term Disability",
-            "id": 1,
+            "id": null,
           }
         }
-        key="1"
-      />
-      <EmployerBenefit
-        benefit={
-          EmployerBenefit {
-            "benefit_amount_dollars": 0,
-            "benefit_amount_frequency": null,
-            "benefit_end_date": "2021-02-01",
-            "benefit_start_date": "2021-01-01",
-            "benefit_type": "Paid Leave",
-            "id": 2,
-          }
-        }
-        key="2"
+        key="null"
       />
     </tbody>
   </Table>

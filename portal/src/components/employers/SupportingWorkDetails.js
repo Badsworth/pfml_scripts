@@ -1,12 +1,14 @@
 import React, { useState } from "react";
 import AmendButton from "./AmendButton";
 import AmendmentForm from "./AmendmentForm";
+import ConditionalContent from "../ConditionalContent";
 import InputText from "../InputText";
 import PropTypes from "prop-types";
 import ReviewHeading from "../ReviewHeading";
 import ReviewRow from "../ReviewRow";
 import { useTranslation } from "../../locales/i18n";
 
+// TODO (EMPLOYER-364): Remove hardcoded link
 const detailedWorkScheduleFile = "example-work-schedule-link.pdf";
 
 /**
@@ -16,14 +18,16 @@ const detailedWorkScheduleFile = "example-work-schedule-link.pdf";
 
 const SupportingWorkDetails = (props) => {
   const { t } = useTranslation();
-  const { intermittentLeavePeriods } = props;
+  const { intermittentLeavePeriods, onChange } = props;
   const leavePeriod = intermittentLeavePeriods[0];
   const [amendment, setAmendment] = useState(leavePeriod.duration);
   const [isAmendmentFormDisplayed, setIsAmendmentFormDisplayed] = useState(
     false
   );
   const amendDuration = (event) => {
-    setAmendment(event.target.value);
+    const value = event.target.value;
+    setAmendment(value);
+    onChange(value);
   };
 
   return (
@@ -41,11 +45,12 @@ const SupportingWorkDetails = (props) => {
         }
       >
         <p className="margin-top-0">{leavePeriod.duration}</p>
-        {isAmendmentFormDisplayed && (
+        <ConditionalContent visible={isAmendmentFormDisplayed}>
           <AmendmentForm
             onCancel={() => {
               setIsAmendmentFormDisplayed(false);
               setAmendment(leavePeriod.duration);
+              onChange(leavePeriod.duration);
             }}
             className="input-text-first-child"
           >
@@ -62,7 +67,7 @@ const SupportingWorkDetails = (props) => {
               smallLabel
             />
           </AmendmentForm>
-        )}
+        </ConditionalContent>
       </ReviewRow>
       <ReviewRow
         level="3"
@@ -80,6 +85,7 @@ const SupportingWorkDetails = (props) => {
 
 SupportingWorkDetails.propTypes = {
   intermittentLeavePeriods: PropTypes.array,
+  onChange: PropTypes.func,
 };
 
 export default SupportingWorkDetails;

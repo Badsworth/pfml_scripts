@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import AmendButton from "./AmendButton";
 import AmendmentForm from "./AmendmentForm";
+import ConditionalContent from "../ConditionalContent";
 import { EmployerBenefitType } from "../../models/EmployerBenefit";
 import InputDate from "../InputDate";
 import InputText from "../InputText";
@@ -14,17 +15,20 @@ import { useTranslation } from "../../locales/i18n";
  * in the Leave Admin claim review page.
  */
 
-const EmployerBenefit = ({ benefit }) => {
+const EmployerBenefit = ({ benefit, onChange }) => {
   const { t } = useTranslation();
   const [amendment, setAmendment] = useState(benefit);
   const [isAmendmentFormDisplayed, setIsAmendmentFormDisplayed] = useState(
     false
   );
-  const amendBenefit = (field, value) => {
+  const amendBenefit = (id, field, value) => {
+    const formattedValue =
+      field === "benefit_amount_dollars" ? parseInt(value) : value;
     setAmendment({
       ...amendment,
       [field]: value,
     });
+    onChange({ id, [field]: formattedValue });
   };
   const benefitType = findKeyByValue(EmployerBenefitType, benefit.benefit_type);
   const isPaidLeave = benefit.benefit_type === EmployerBenefitType.paidLeave;
@@ -56,7 +60,7 @@ const EmployerBenefit = ({ benefit }) => {
           <AmendButton onClick={() => setIsAmendmentFormDisplayed(true)} />
         </td>
       </tr>
-      {isAmendmentFormDisplayed && (
+      <ConditionalContent visible={isAmendmentFormDisplayed}>
         <tr>
           <td
             colSpan="2"
@@ -66,6 +70,7 @@ const EmployerBenefit = ({ benefit }) => {
               onCancel={() => {
                 setIsAmendmentFormDisplayed(false);
                 setAmendment(benefit);
+                onChange(benefit);
               }}
             >
               <p>
@@ -78,7 +83,7 @@ const EmployerBenefit = ({ benefit }) => {
               </p>
               <InputDate
                 onChange={(e) =>
-                  amendBenefit("benefit_start_date", e.target.value)
+                  amendBenefit(benefit.id, "benefit_start_date", e.target.value)
                 }
                 value={amendment.benefit_start_date}
                 label={t("components.amendmentForm.question_benefitStartDate")}
@@ -90,7 +95,7 @@ const EmployerBenefit = ({ benefit }) => {
               />
               <InputDate
                 onChange={(e) =>
-                  amendBenefit("benefit_end_date", e.target.value)
+                  amendBenefit(benefit.id, "benefit_end_date", e.target.value)
                 }
                 value={amendment.benefit_end_date}
                 label={t("components.amendmentForm.question_benefitEndDate")}
@@ -103,7 +108,11 @@ const EmployerBenefit = ({ benefit }) => {
               {!isPaidLeave && (
                 <InputText
                   onChange={(e) =>
-                    amendBenefit("benefit_amount_dollars", e.target.value)
+                    amendBenefit(
+                      benefit.id,
+                      "benefit_amount_dollars",
+                      e.target.value
+                    )
                   }
                   name="benefit-amount-amendment"
                   value={amendment.benefit_amount_dollars}
@@ -117,13 +126,14 @@ const EmployerBenefit = ({ benefit }) => {
           </td>
           <td colSpan="2" />
         </tr>
-      )}
+      </ConditionalContent>
     </React.Fragment>
   );
 };
 
 EmployerBenefit.propTypes = {
   benefit: PropTypes.object.isRequired,
+  onChange: PropTypes.func,
 };
 
 export default EmployerBenefit;

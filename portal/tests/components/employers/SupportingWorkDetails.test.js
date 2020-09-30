@@ -1,14 +1,27 @@
+import {
+  DurationBasis,
+  FrequencyIntervalBasis,
+  IntermittentLeavePeriod,
+} from "../../../src/models/Claim";
 import React from "react";
 import ReviewRow from "../../../src/components/ReviewRow";
 import SupportingWorkDetails from "../../../src/components/employers/SupportingWorkDetails";
-import { claim } from "../../test-utils";
 import { shallow } from "enzyme";
 
 describe("SupportingWorkDetails", () => {
-  const leavePeriods = claim.leave_details.intermittent_leave_periods;
-  let wrapper;
+  let leavePeriods, wrapper;
 
   beforeEach(() => {
+    leavePeriods = [
+      new IntermittentLeavePeriod({
+        leave_period_id: 3,
+        duration: 3,
+        duration_basis: DurationBasis.hours,
+        frequency: 6,
+        frequency_interval: 6,
+        frequency_interval_basis: FrequencyIntervalBasis.months,
+      }),
+    ];
     wrapper = shallow(
       <SupportingWorkDetails intermittentLeavePeriods={leavePeriods} />
     );

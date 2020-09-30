@@ -6,6 +6,7 @@ import Table from "../Table";
 import { Trans } from "react-i18next";
 import { useTranslation } from "../../locales/i18n";
 
+// TODO (EMPLOYER-364): Remove hardcoded link
 const healthCareProviderCertificationFile = "example-hcp-link.pdf";
 
 /**

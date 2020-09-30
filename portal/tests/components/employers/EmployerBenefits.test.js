@@ -1,15 +1,21 @@
 /* eslint-disable react/jsx-key */
+import EmployerBenefit, {
+  EmployerBenefitType,
+} from "../../../src/models/EmployerBenefit";
 import AmendableEmployerBenefit from "../../../src/components/employers/AmendableEmployerBenefit";
 import EmployerBenefits from "../../../src/components/employers/EmployerBenefits";
 import React from "react";
-import { claim } from "../../test-utils";
 import { shallow } from "enzyme";
 
 describe("EmployerBenefits", () => {
   it("renders the component", () => {
-    const wrapper = shallow(
-      <EmployerBenefits benefits={claim.employer_benefits} />
-    );
+    const benefits = new EmployerBenefit({
+      benefit_amount_dollars: 1000,
+      benefit_end_date: "2021-03-01",
+      benefit_start_date: "2021-02-01",
+      benefit_type: EmployerBenefitType.shortTermDisability,
+    });
+    const wrapper = shallow(<EmployerBenefits benefits={[benefits]} />);
 
     expect(wrapper).toMatchSnapshot();
   });
