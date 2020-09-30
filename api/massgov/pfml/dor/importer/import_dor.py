@@ -3,7 +3,6 @@
 # Lambda function to import DOR data from S3 to PostgreSQL (RDS).
 #
 
-import json
 import os
 import uuid
 from dataclasses import asdict, dataclass, field
@@ -214,9 +213,6 @@ def process_daily_import(
         logger.info("Attempting to update existing import log entry with latest report")
         dor_persistence_util.update_import_log_entry(db_session, report_log_entry, report)
         logger.info("Import log entry successfully updated")
-
-        # TODO determine if this is still necessary now that we have db logs
-        # write_report_to_s3(bucket, report)
 
     return report
 
@@ -629,13 +625,6 @@ def parse_employee_file(employee_file_path, decrypter):
     return employers_quarter_info, employees_info
 
 
-def read_file(bucket, key):
-    """Read the data from an s3 object."""
-    response = s3.get_object(Bucket=bucket.name, Key=key)
-    # read all the data at once for now since we need to decrypt.
-    return response["Body"].read()
-
-
 def move_file_to_processed(bucket, file_to_copy):
     """Move file from recieved to processed folder"""
     # TODO make this a move instead of copy in real implementation
@@ -650,20 +639,6 @@ def move_file_to_processed(bucket, file_to_copy):
     s3.copy_object(
         Bucket=bucket_name, CopySource=copy_source, Key=copy_destination,
     )
-
-
-def write_report_to_s3(bucket, report):
-    """Write report of import to s3"""
-    report_str = json.dumps(asdict(report), indent=2)
-    file_name = get_file_name(report.employee_file)
-    destination_key = (
-        PROCESSED_FOLDER
-        + file_name
-        + "_"
-        + datetime.now().strftime("%Y%m%d%H%M%S")
-        + "_report.json"
-    )
-    s3.put_object(Body=report_str, Bucket=bucket.name, Key=destination_key)
 
 
 def get_files_to_process(path: Optional[str]) -> List[ImportBatch]:
