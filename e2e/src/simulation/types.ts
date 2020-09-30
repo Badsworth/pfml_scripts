@@ -1,5 +1,8 @@
 import { ApplicationRequestBody } from "../api";
 
+export const fineosUserTypeNames = ["SAVILINX", "DFMLOPS"] as const;
+export type FineosUserType = typeof fineosUserTypeNames[number];
+
 // Represents a single claim that will be issued to the system.
 export type SimulationClaim = {
   scenario: string;

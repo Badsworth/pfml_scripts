@@ -2,13 +2,14 @@ import {
   TestSettings,
   TestData,
   Browser,
-  // beforeEach,
+  beforeEach,
   step,
 } from "@flood/element";
 import { StoredStep } from "./config";
 import { SimulationClaim } from "../simulation/types";
-import * as Fineos from "./tests/fineos.perf";
-import * as Portal from "./tests/api.perf";
+import * as Fineos from "./tests/FineosClaimSubmit.perf";
+import * as Portal from "./tests/PortalClaimSubmit.perf";
+import * as SavilinxAgent from "./tests/SavilinxAgent.perf";
 
 export const settings: TestSettings = {
   loopCount: 2,
@@ -30,7 +31,7 @@ type ScenarioMap = {
 
 // List of imported scenarios to execute
 // Essentially all scenario imported files
-const availableScenarios = [Fineos, Portal];
+const availableScenarios = [Fineos, Portal, SavilinxAgent];
 
 const scenarios: ScenarioMap = availableScenarios.reduce(
   (allScenarios, curr) => ({
@@ -48,7 +49,7 @@ export default (): void => {
   TestData.fromJSON<SimulationClaim>("./data/claims.json");
 
   // Before moving on to next scenario, fetch and adjust data needed
-  /* @flood/element@1.3.2
+  // @flood/element@1.3.5
   beforeEach(async (browser: Browser, data?: unknown) => {
     if (typeof data !== "object" || !data || !("scenario" in data)) {
       throw new Error("Unable to determine scenario for step");
@@ -67,20 +68,5 @@ export default (): void => {
         stepDef.test
       );
     });
-  });
-  */
-  step("All", async (browser: Browser, data?: unknown) => {
-    if (typeof data !== "object" || !data || !("scenario" in data)) {
-      throw new Error("Unable to determine scenario for step");
-    }
-    curr = (data as SimulationClaim).scenario;
-    if (!Object.keys(scenarios).includes(curr)) {
-      throw new Error(`Unknown step requested: ${curr}`);
-    }
-
-    for (const stepDef of scenarios[curr]) {
-      console.log(`${curr} - ${stepDef.name}`);
-      await stepDef.test(browser, data);
-    }
   });
 };

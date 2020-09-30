@@ -1,22 +1,16 @@
-import { TestSettings, TestData, Browser, step, By } from "@flood/element";
+import { TestData, Browser, step, By } from "@flood/element";
 import { SimulationClaim } from "../../simulation/types";
-import { FineosBaseUrl, StoredStep, formatDate } from "../config";
+import {
+  globalElementSettings as settings,
+  FineosBaseUrl,
+  StoredStep,
+  formatDate,
+} from "../config";
 import { labelled, waitForElement } from "../helpers";
 import assert from "assert";
 
-export const settings: TestSettings = {
-  actionDelay: 0.01,
-  stepDelay: 0.01,
-  waitUntil: "visible",
-  userAgent: "PFML Load Test Bot",
-  description: "PFML Load Test Bot",
-  screenshotOnFailure: true,
-  disableCache: true,
-  clearCache: true,
-  clearCookies: true,
-};
-
-export const scenario = "FineosPOC";
+export { settings };
+export const scenario = "FineosClaimSubmit";
 export const steps: StoredStep[] = [
   {
     name: "Login into fineos",

@@ -1,6 +1,7 @@
-import { TestSettings, TestData, Browser, step, By } from "@flood/element";
+import { TestData, Browser, step, By } from "@flood/element";
 import { SimulationClaim } from "../../simulation/types";
 import {
+  globalElementSettings as settings,
   PortalBaseUrl,
   APIBaseUrl,
   getRequestOptions,
@@ -8,22 +9,10 @@ import {
 } from "../config";
 import { labelled, waitForElement } from "../helpers";
 
-export const settings: TestSettings = {
-  actionDelay: 0.01,
-  stepDelay: 0.01,
-  loopCount: 1,
-  waitUntil: "visible",
-  userAgent: "PFML Load Test Bot",
-  description: "PFML Load Test Bot",
-  screenshotOnFailure: true,
-  disableCache: false,
-  clearCache: false,
-  clearCookies: false,
-};
-
 let authToken: string;
 let applicationId: string;
-export const scenario = "APIPOC";
+export { settings };
+export const scenario = "PortalClaimSubmit";
 export const steps = [
   {
     name: "Login in Portal",
