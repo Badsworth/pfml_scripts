@@ -24,7 +24,6 @@ from massgov.pfml.dor.importer.dor_file_formats import (
 )
 from massgov.pfml.util.config import get_secret_from_env
 from massgov.pfml.util.encryption import Crypt, GpgCrypt, Utf8Crypt
-from massgov.pfml.util.files.file_format import FileFormat
 
 logger = logging.get_logger("massgov.pfml.dor.importer.import_dor")
 
@@ -584,12 +583,11 @@ def parse_employer_file(employer_file_path, decrypter):
     decrypted_str = decrypter.decrypt(file_bytes)
     decrypted_lines = decrypted_str.split("\n")
 
-    employer_file_format = FileFormat(EMPLOYER_FILE_FORMAT)
     for row in decrypted_lines:
         if not row:  # skip empty end of file lines
             continue
 
-        employer = employer_file_format.parse_line(row)
+        employer = EMPLOYER_FILE_FORMAT.parse_line(row)
         employers.append(employer)
 
     logger.info("Finished parsing employer file", extra={"employer_file_path": employer_file_path})
@@ -607,18 +605,15 @@ def parse_employee_file(employee_file_path, decrypter):
     decrypted_str = decrypter.decrypt(file_bytes)
     decrypted_lines = decrypted_str.split("\n")
 
-    employer_quarter_info_file_format = FileFormat(EMPLOYER_QUARTER_INFO_FORMAT)
-    employee_wage_file_format = FileFormat(EMPLOYEE_FORMAT)
-
     for row in decrypted_lines:
         if not row:  # skip empty end of file lines
             continue
 
         if row.startswith("A"):
-            employer_quarter_info = employer_quarter_info_file_format.parse_line(row)
+            employer_quarter_info = EMPLOYER_QUARTER_INFO_FORMAT.parse_line(row)
             employers_quarter_info.append(employer_quarter_info)
         else:
-            employee_info = employee_wage_file_format.parse_line(row)
+            employee_info = EMPLOYEE_FORMAT.parse_line(row)
             employees_info.append(employee_info)
 
     logger.info("Finished parsing employee file", extra={"employee_file_path": employee_file_path})

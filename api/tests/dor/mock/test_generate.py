@@ -12,7 +12,6 @@ from massgov.pfml.dor.importer.dor_file_formats import (
     EMPLOYER_QUARTER_INFO_FORMAT,
 )
 from massgov.pfml.util.datetime.quarter import Quarter
-from massgov.pfml.util.files.file_format import FileFormat
 
 QUARTERS = tuple(Quarter(2019, 2).series(4))
 
@@ -50,10 +49,9 @@ def test_employer_file_populate():
     assert len(employer_lines) == count
 
     employer_line = employer_lines[0].rstrip()
-    employer_file_format = FileFormat(EMPLOYER_FILE_FORMAT)
-    assert len(employer_line) == employer_file_format.get_line_length()
+    assert len(employer_line) == EMPLOYER_FILE_FORMAT.get_line_length()
 
-    parsed_employer_obj = employer_file_format.parse_line(employer_line)
+    parsed_employer_obj = EMPLOYER_FILE_FORMAT.parse_line(employer_line)
     validate_employer_object(parsed_employer_obj)
 
     # employee wage info
@@ -62,10 +60,9 @@ def test_employer_file_populate():
     assert len(employer_wage_lines) == count * 4  # one line for each quarter
 
     employer_wage_line = employer_wage_lines[0].rstrip()
-    employer_quarter_info_file_format = FileFormat(EMPLOYER_QUARTER_INFO_FORMAT)
-    assert len(employer_wage_line) == employer_quarter_info_file_format.get_line_length()
+    assert len(employer_wage_line) == EMPLOYER_QUARTER_INFO_FORMAT.get_line_length()
 
-    parsed_employer_wage_obj = employer_quarter_info_file_format.parse_line(employer_wage_line)
+    parsed_employer_wage_obj = EMPLOYER_QUARTER_INFO_FORMAT.parse_line(employer_wage_line)
     validate_employer_wage(parsed_employer_wage_obj, parsed_employer_obj, QUARTERS[0].as_date())
 
 
@@ -104,10 +101,9 @@ def test_employee_file_populate():
     assert len(employee_wage_lines) == count * 4  # one line for each quarter
 
     employee_wage_line = employee_wage_lines[0].rstrip()
-    employer_file_format = FileFormat(EMPLOYEE_FORMAT)
-    assert len(employee_wage_line) == employer_file_format.get_line_length()
+    assert len(employee_wage_line) == EMPLOYEE_FORMAT.get_line_length()
 
-    parsed_employee_wage_obj = employer_file_format.parse_line(employee_wage_line)
+    parsed_employee_wage_obj = EMPLOYEE_FORMAT.parse_line(employee_wage_line)
     validate_employee_wage(parsed_employee_wage_obj, account_key, QUARTERS[0].as_date())
 
 
