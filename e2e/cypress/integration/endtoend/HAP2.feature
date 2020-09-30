@@ -1,7 +1,6 @@
 Feature: Submit and accept HAP2 claim: Simple claim, out of state resident
 
-  @setFeatureFlags
-  @routeRequest
+  @portal
   Scenario: As a claimant, I should be able to submit a claim (HAP2) through the portal
     Given I begin the process to submit a "HAP2" claim
     When I click on the checklist button called "Verify your identity"
@@ -24,7 +23,7 @@ Feature: Submit and accept HAP2 claim: Simple claim, out of state resident
     When I click on the checklist button called "Review and confirm"
     Given I am on the claims "review" page
     Then I should have confirmed that information is correct
-    Given I am on the claims "checklist" page 
+    Given I am on the claims "checklist" page
     When I click on the checklist button called "Add payment information"
     Then I add payment info
     Given I am on the claims "checklist" page
@@ -33,12 +32,13 @@ Feature: Submit and accept HAP2 claim: Simple claim, out of state resident
     Then I should have agreed and successfully submitted the claim
     And I should be able to return to the portal dashboard
 
-Scenario: As a CSR (Savilinx), I should be able to Approve a HAP2 claim submission 
+  @fineos
+  Scenario: As a CSR (Savilinx), I should be able to Approve a HAP2 claim submission
     Given I search for the proper claim in Fineos
     Given I am on the tab "Documents"
     Then I should confirm "OOS ID form" is not present
     Given I am on the tab "Absence Hub"
-    When I click Adjudicate 
+    When I click Adjudicate
     Given I am on the tab "Evidence"
     When I click Manage Evidence
     Then I should confirm evidence is "valid"

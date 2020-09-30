@@ -1,5 +1,6 @@
 import { When } from "cypress-cucumber-preprocessor/steps";
-import { fineos } from "./actions";
+import { fineos, portal } from "./actions";
+import { CypressStepThis } from "@/types";
 
 /**
  * Continous of prevous claim
@@ -18,6 +19,14 @@ When("I return to my previous application", function () {
 When("I log out", function () {
   cy.contains("button", "Log out").click();
   cy.url().should("contain", "/login");
+});
+
+When("I log into the portal", function (this: CypressStepThis) {
+  if (!this.credentials) {
+    throw new Error("Unable to determine credentials");
+  }
+  cy.visit("/");
+  portal.login(this.credentials);
 });
 
 /* Checklist Page */
@@ -68,4 +77,27 @@ When("I select {string} for Denial Reason", function (reason: string): void {
   cy.get('span[id="leaveRequestDenialDetailsWidget"]')
     .find("select")
     .select(reason);
+});
+
+/* Account creation */
+When("I submit the account registration form", function (
+  this: CypressStepThis
+) {
+  if (!this.credentials) {
+    throw new Error("Credentials not properly set");
+  }
+  cy.visit("/");
+  cy.contains("a", "create an account").click();
+  cy.labelled("Email address").type(this.credentials.username);
+  cy.labelled("Password").type(this.credentials.password);
+  cy.contains("button", "Create account").click();
+  cy.task("getAuthVerification", this.credentials.username as string).then(
+    (code: string) => {
+      cy.labelled("6-digit code").type(code as string);
+      cy.contains("button", "Submit").click();
+    }
+  );
+});
+When("I accept the terms of service", function () {
+  cy.contains("Agree and continue").click();
 });

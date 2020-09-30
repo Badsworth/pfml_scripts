@@ -1,4 +1,4 @@
-import { CypressStepThis } from "@/types";
+import { Credentials } from "@/types";
 import PortalSubmitter from "@/simulation/PortalSubmitter";
 
 export function onPage(page: string): void {
@@ -33,17 +33,17 @@ export function submitClaimDirectlyToAPI(scenario: string): void {
   });
 }
 
-export function login(): void {
-  const credentials: CypressStepThis["credentials"] = {
-    username: Cypress.env("E2E_PORTAL_USERNAME"),
-    password: Cypress.env("E2E_PORTAL_PASSWORD"),
-  };
+export function login(credentials: Credentials): void {
   // Alias the credentials for later use.
   cy.wrap(credentials).as("credentials");
   cy.visit("/");
   cy.labelled("Email address").type(credentials.username);
   cy.labelled("Password").typeMasked(credentials.password);
   cy.contains("button", "Log in").click();
+}
+
+export function assertLoggedIn(): void {
+  cy.contains("button", "Log out").should("be.visible");
 }
 
 export function startClaim(): void {

@@ -1,7 +1,6 @@
 Feature: Submit a medical claim that is missing an HCP, and refer it to DFML
 
-  @setFeatureFlags
-  @routeRequest
+  @portal
   Scenario: As a claimant, I should be able to start submitting a GBR1 claim through the portal
     Given I begin the process to submit a "GBR1" claim
     When I click on the checklist button called "Verify your identity"
@@ -24,7 +23,7 @@ Feature: Submit a medical claim that is missing an HCP, and refer it to DFML
     When I click on the checklist button called "Review and confirm"
     Given I am on the claims "review" page
     Then I should have confirmed that information is correct
-    Given I am on the claims "checklist" page 
+    Given I am on the claims "checklist" page
     When I click on the checklist button called "Add payment information"
     Then I add payment info
     Given I am on the claims "checklist" page
@@ -32,7 +31,8 @@ Feature: Submit a medical claim that is missing an HCP, and refer it to DFML
     Given I am on the claims "review" page
     Then I should have agreed and successfully submitted the claim
     And I should be able to return to the portal dashboard
-  
+
+  @fineos
   Scenario: As a CSR (Savilix), I should be able to confirm that the HCP is missing
     Given I search for the proper claim in Fineos
     And I am on the tab "Documents"

@@ -1,11 +1,16 @@
 import { Given } from "cypress-cucumber-preprocessor/steps";
 import { portal, fineos } from "./actions";
 
+Given("I am an anonymous user on the portal homepage", () => {
+  cy.visit("/");
+  cy.task("generateCredentials").as("credentials");
+});
+
 Given("I begin the process to submit a {string} claim", function (
   scenario: string
 ) {
   portal.submittingClaimType(scenario);
-  portal.login();
+  portal.login(this.credentials);
   portal.startClaim();
   portal.onPage("start");
   portal.agreeToStart();

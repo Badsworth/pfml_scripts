@@ -1,9 +1,12 @@
+import { portal } from "./actions";
 import { Then } from "cypress-cucumber-preprocessor/steps";
 import { CypressStepThis, TestType } from "@/types";
 import { lookup, getLeaveType } from "./util";
 import { fineos, scenarios } from "./actions";
 
 const scenarioFunctions: Record<TestType, () => void> = scenarios;
+
+Then("I should be logged in", () => portal.assertLoggedIn());
 
 Then("I should see a success page confirming my claim submission", function () {
   cy.url({ timeout: 20000 }).should("include", "/claims/success");
@@ -119,7 +122,7 @@ Then("I have my identity verified {string}", function (
   // Preceeded by - "I click on the checklist button called {string}"
   //                with the label "Verify your identity"
 
-  /***** Portal is currenlty NOT handling document submission 
+  /***** Portal is currenlty NOT handling document submission
 
   if (
     !application.idVerification ||
@@ -444,9 +447,9 @@ Then("I report other benefits", function (this: CypressStepThis): void {
 
   // const { extract properties once added to ApplicationRequest } = application.;
 
-  /* Will be used for when "otherBenefits" becomes availble 
+  /* Will be used for when "otherBenefits" becomes availble
      on the API ApplicatinRequestBody
-  
+
     if (willUseEmployerBenefits) {
       const lastBenefit = employerBenefitsUsed.length - 1;
       employerBenefitsUsed.forEach((benefit, index) => {
@@ -482,7 +485,7 @@ Then("I report other benefits", function (this: CypressStepThis): void {
     }
   */
 
-  /* Will be used for when "otherBenefits" becomes availble 
+  /* Will be used for when "otherBenefits" becomes availble
     on the API ApplicatinRequestBody
 
     if (willReceiveOtherIncome) {

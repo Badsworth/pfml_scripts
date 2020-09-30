@@ -1,30 +1,20 @@
 import { Before } from "cypress-cucumber-preprocessor/steps";
 import "@rckeller/cypress-unfetch/await";
 
-Before({ tags: "@setFeatureFlags" }, () => {
+Before({ tags: "@portal" }, () => {
+  // Set the feature flag necessary to see the portal.
   cy.setCookie(
     "_ff",
     JSON.stringify({
       pfmlTerriyay: true,
-    })
+    }),
+    { log: true }
   );
-});
 
-Before({ tags: "@catchStatusError" }, () => {
-  cy.on("uncaught:exception", (e) => {
-    // Suppress failures due to this error, which we can't do anything about.
-    if (e.message.indexOf(`Cannot set property 'status' of undefined`)) {
-      return false;
-    }
-  });
+  // Setup a route for application submission so we can extract claim ID later.
+  cy.route({
+    method: "POST",
+    url:
+      "https://paidleave-api-stage.mass.gov/api/v1/applications/*/submit_application",
+  }).as("submitClaimResponse");
 });
-
-Before({ tags: "@routeRequest" }, () =>
-  cy
-    .route({
-      method: "POST",
-      url:
-        "https://paidleave-api-stage.mass.gov/api/v1/applications/*/submit_application",
-    })
-    .as("submitClaimResponse")
-);

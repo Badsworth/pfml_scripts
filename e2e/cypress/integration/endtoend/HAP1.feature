@@ -1,7 +1,6 @@
 Feature: Submit a medical claim and adjucation approval - HAP1
 
-  @setFeatureFlags
-  @routeRequest
+  @portal
   Scenario: As a claimant, I should be able to submit a claim (HAP1) through the portal
     Given I begin the process to submit a "HAP1" claim
     When I click on the checklist button called "Verify your identity"
@@ -33,7 +32,8 @@ Feature: Submit a medical claim and adjucation approval - HAP1
     Then I should have agreed and successfully submitted the claim
     And I should be able to return to the portal dashboard
 
-Scenario: As a CSR (Savilinx), I should be able to Approve a HAP1 claim submission
+  @fineos
+  Scenario: As a CSR (Savilinx), I should be able to Approve a HAP1 claim submission
     Given I search for the proper claim in Fineos
     When I click Adjudicate
     Given I am on the tab "Paid Benefits"

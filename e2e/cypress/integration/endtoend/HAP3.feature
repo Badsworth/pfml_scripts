@@ -1,7 +1,6 @@
 Feature: Submit a medical claim that is happy, but financially ineligible, and is denied
 
-  @setFeatureFlags
-  @routeRequest
+  @portal
   Scenario: As a claimant, I should be able to start submitting a MedicalBasic claim through the portal
     Given I begin the process to submit a "HAP3" claim
     When I click on the checklist button called "Verify your identity"
@@ -32,8 +31,9 @@ Feature: Submit a medical claim that is happy, but financially ineligible, and i
     Given I am on the claims "review" page
     Then I should have agreed and successfully submitted the claim
     And I should be able to return to the portal dashboard
-  
-  Scenario: As a CSR (Savilinx), I should be able to deny a claim based off financial ineligibility 
+
+  @fineos
+  Scenario: As a CSR (Savilinx), I should be able to deny a claim based off financial ineligibility
     Given I search for the proper claim in Fineos
     When I click Adjudicate
     Given claim is financially ineligible
