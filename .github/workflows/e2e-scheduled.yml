@@ -20,12 +20,12 @@ jobs:
           working-directory: e2e
         env:
           CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
-          E2E_API_BASEURL: ${{ secrets.E2E_API_BASEURL }}
-          E2E_FINEOS_BASEURL: ${{ secrets.E2E_FINEOS_BASEURL }}
+          E2E_API_BASEURL: https://paidleave-api-stage.mass.gov/api/v1
+          E2E_FINEOS_BASEURL: https://idt-claims-webapp.masspfml.fineos.com
           E2E_FINEOS_USERNAME: ${{ secrets.E2E_FINEOS_USERNAME }}
           E2E_FINEOS_PASSWORD: ${{ secrets.E2E_FINEOS_PASSWORD }}
-          E2E_PORTAL_BASEURL: ${{ secrets.E2E_PORTAL_BASEURL }}
-          E2E_PORTAL_USERNAME: ${{ secrets.E2E_PORTAL_USERNAME }}
+          E2E_PORTAL_BASEURL: https://paidleave-stage.mass.gov/
+          E2E_PORTAL_USERNAME: rob+pfml-cypress-gh1@lastcallmedia.com
           E2E_PORTAL_PASSWORD: ${{ secrets.E2E_PORTAL_PASSWORD }}
           E2E_TESTMAIL_APIKEY: ${{ secrets.E2E_TESTMAIL_APIKEY }}
           E2E_TESTMAIL_NAMESPACE: ${{ secrets.E2E_TESTMAIL_NAMESPACE }}
