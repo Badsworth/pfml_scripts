@@ -13,10 +13,6 @@ Feature: Submit a medical claim and adjucation approval - HAP1
     When I click on the checklist button called "Enter employment information"
     Then I enter employer info
     Given I am on the claims "checklist" page
-    When I resume "Enter leave details"
-    Then I start submitting the claim
-    And I finish submitting the claim based on its type
-    Given I am on the claims "checklist" page
     When I click on the checklist button called "Report other leave, income, and benefits"
     Then I report other benefits
     Given I am on the claims "checklist" page

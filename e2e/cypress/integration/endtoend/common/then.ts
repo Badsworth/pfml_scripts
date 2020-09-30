@@ -389,6 +389,10 @@ Then("I enter employer info", function (this: CypressStepThis): void {
   }
   cy.contains("button", "Save and continue").click();
   if (application.employment_status === "Employed") {
+    // @todo: Set to application property once it exists.
+    cy.labelled("On average, how many hours do you work each week?").type("40");
+    cy.contains("button", "Save and continue").click();
+
     cy.contains(
       "fieldset",
       "Have you told your employer that you are taking leave?"
