@@ -34,6 +34,7 @@ xmlschema = "^1.2.2"
 zeep = "^3.4.0"
 csvsorter = "^1.4"
 python-dateutil = "^2.8.1"
+ebcdic = "^1.1.1"
 
 [tool.poetry.dev-dependencies]
 bandit = "^1.6.2"

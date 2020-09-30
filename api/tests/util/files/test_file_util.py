@@ -58,3 +58,29 @@ def test_list_files_in_folder_s3(mock_s3_bucket):
     folder_path = "s3://{}/{}".format(mock_s3_bucket, folder_name)
     files = file_util.list_files(folder_path)
     assert files == [file_name]
+
+
+def test_ebcdic_encoding(test_fs_path):
+    # This test is here as an example for future usage of ebcdic encoding
+    # + verification that this works with our existing file utilities.
+    file_name = "test.txt"
+    full_path = "{}/{}".format(str(test_fs_path), file_name)
+    test_file = file_util.write_file(full_path, encoding=file_util.EBCDIC_ENCODING)
+
+    line1 = "hello,world\n"
+    line2 = "hello world"
+
+    test_file.writelines([line1, line2])
+    test_file.close()
+
+    # Read the file as bytes to validate it is encoded properly.
+    lines = list(file_util.read_file_lines(full_path, mode="rb"))
+    assert (
+        lines[0]
+        == b"\x88\x85\x93\x93\x96k\xa6\x96\x99\x93\x84%\x88\x85\x93\x93\x96@\xa6\x96\x99\x93\x84"
+    )
+
+    # Read the file using the encoding to validate text is the same.
+    lines = list(file_util.read_file_lines(full_path, encoding=file_util.EBCDIC_ENCODING))
+    assert lines[0] == line1.rstrip()  # read_file_lines does an rstrip itself which removes the \n.
+    assert lines[1] == line2

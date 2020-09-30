@@ -6,7 +6,10 @@ import os
 from urllib.parse import urlparse
 
 import boto3
+import ebcdic  # noqa: F401
 import smart_open
+
+EBCDIC_ENCODING = "cp1140"  # See https://pypi.org/project/ebcdic/ for further details
 
 
 def is_s3_path(path):
@@ -42,10 +45,14 @@ def list_files(path):
     return os.listdir(path)
 
 
-def read_file(path, mode="r"):
-    return smart_open.open(path, mode).read()
+def read_file(path, mode="r", encoding=None):
+    return smart_open.open(path, mode, encoding=encoding).read()
 
 
-def read_file_lines(path, mode="r"):
-    stream = smart_open.open(path, mode)
+def write_file(path, mode="w", encoding=None):
+    return smart_open.open(path, mode, encoding=encoding)
+
+
+def read_file_lines(path, mode="r", encoding=None):
+    stream = smart_open.open(path, mode, encoding=encoding)
     return map(lambda line: line.rstrip(), stream)
