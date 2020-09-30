@@ -209,11 +209,9 @@ def test_employee_wage_data_create(test_db_session, dor_employer_lookups):
 
     assert report.created_employees_count == 1
     assert report.updated_employees_count == 0
-    assert report.unmodified_employees_count == 0
 
     assert report.created_wages_and_contributions_count == 1
     assert report.updated_wages_and_contributions_count == 0
-    assert report.unmodified_wages_and_contributions_count == 0
 
 
 def test_employee_wage_data_update(test_db_session, dor_employer_lookups):
@@ -246,7 +244,7 @@ def test_employee_wage_data_update(test_db_session, dor_employer_lookups):
     )
     employee_id = employee_id_by_ssn[employee_wage_data_payload["employee_ssn"]]
 
-    # confirm that non amended employer_quarter_info skips update
+    # confirm that non amended employer_quarter_info is updated anyway (amended flag ignored by us)
     updated_employee_wage_data_payload = test_data.get_updated_employee_wage_data()
     import_dor.import_employees_and_wage_data(
         test_db_session,
@@ -260,16 +258,13 @@ def test_employee_wage_data_update(test_db_session, dor_employer_lookups):
     persisted_employee = test_db_session.query(Employee).get(employee_id)
     assert persisted_employee is not None
 
-    with pytest.raises(AssertionError):
-        validate_employee_persistence(
-            updated_employee_wage_data_payload, persisted_employee, report_log_entry.import_log_id
-        )
+    validate_employee_persistence(
+        updated_employee_wage_data_payload, persisted_employee, report_log_entry.import_log_id
+    )
 
-    assert report.unmodified_employees_count == 1
-    assert report.unmodified_employee_ids == [str(employee_id)]
-    assert report.unmodified_wages_and_contributions_count == 1
-    assert report.updated_employees_count == 0
-    assert report.updated_wages_and_contributions_count == 0
+    assert report.updated_employees_count == 1
+    assert report.updated_employee_ids == [str(employee_id)]
+    assert report.updated_wages_and_contributions_count == 1
 
     # confirm amended updates are persisted
     employer_quarter_info_amended = test_data.get_employer_quarter_info_amended()
@@ -301,9 +296,9 @@ def test_employee_wage_data_update(test_db_session, dor_employer_lookups):
         updated_employee_wage_data_payload, persisted_wage_info, report_log_entry.import_log_id
     )
 
-    assert report.updated_employees_count == 1
-    assert report.updated_employee_ids == [str(employee_id)]
-    assert report.updated_wages_and_contributions_count == 1
+    assert report.updated_employees_count == 2
+    assert report.updated_employee_ids == [str(employee_id), str(employee_id)]
+    assert report.updated_wages_and_contributions_count == 2
 
 
 # == Validation Helpers ==

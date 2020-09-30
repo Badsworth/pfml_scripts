@@ -60,18 +60,14 @@ class ImportReport:
     unmodified_employers_count: int = 0
     created_employees_count: int = 0
     updated_employees_count: int = 0
-    unmodified_employees_count: int = 0
     created_wages_and_contributions_count: int = 0
     updated_wages_and_contributions_count: int = 0
-    unmodified_wages_and_contributions_count: int = 0
     status: Optional[str] = None
     end: Optional[str] = None
     updated_employer_ids: List[UUID] = field(default_factory=list)
     unmodified_employer_ids: List[UUID] = field(default_factory=list)
     updated_employee_ids: List[UUID] = field(default_factory=list)
-    unmodified_employee_ids: List[UUID] = field(default_factory=list)
     updated_wages_and_contributions_ids: List[UUID] = field(default_factory=list)
-    unmodified_wages_and_contributions_ids: List[UUID] = field(default_factory=list)
 
 
 @dataclass
@@ -375,25 +371,6 @@ def import_employees_and_wage_data(
         len(employees_info),
     )
 
-    # create a reference map of amended flag for employee and wage data
-    employee_amended_flag_map = {}
-    wage_data_amended_flag_map = {}
-
-    count = 0
-
-    for employer_quarter_info in employers_quarter_info:
-        count += 1
-        if count % 1000 == 0:
-            logger.info("Importing employer qaurter info, current %i", count)
-
-        account_key = employer_quarter_info["account_key"]
-        filing_period_str = employer_quarter_info["filing_period"].strftime("%Y%m%d")
-        composite_key = "{}-{}".format(account_key, filing_period_str)
-        amended_flag = employer_quarter_info["amended_flag"]
-
-        employee_amended_flag_map[account_key] = amended_flag
-        wage_data_amended_flag_map[composite_key] = amended_flag
-
     # import employees
     ssn_to_new_employee_id = {}
     employee_ids_created_in_current_run = set()
@@ -457,7 +434,6 @@ def import_employees_and_wage_data(
         count += 1
 
         ssn = employee_info["employee_ssn"]
-        account_key = employee_info["account_key"]
         existing_employee = ssn_to_employee[ssn]
 
         if existing_employee is None:
@@ -474,26 +450,21 @@ def import_employees_and_wage_data(
             if existing_employee.employee_id in employee_ids_created_in_current_run:
                 continue
 
-            if employee_amended_flag_map[account_key] is True:
-                dor_persistence_util.update_employee(
-                    db_session, existing_employee, employee_info, import_log_entry_id
-                )
+            dor_persistence_util.update_employee(
+                db_session, existing_employee, employee_info, import_log_entry_id
+            )
 
-                report.updated_employee_ids.append(str(existing_employee.employee_id))
-            else:
-                report.unmodified_employee_ids.append(str(existing_employee.employee_id))
+            report.updated_employee_ids.append(str(existing_employee.employee_id))
 
             ssn_to_new_employee_id[ssn] = existing_employee.employee_id
 
     report.updated_employees_count = len(report.updated_employee_ids)
-    report.unmodified_employees_count = len(report.unmodified_employee_ids)
 
     logger.info(
         "Finished importing employee information",
         extra={
             "created_employees_count": report.created_employees_count,
             "updated_employees_count": report.updated_employees_count,
-            "unmodified_employee_ids": report.unmodified_employees_count,
         },
     )
 
@@ -543,30 +514,20 @@ def import_employees_and_wage_data(
                 report.created_wages_and_contributions_count + 1
             )
         else:
-            ameneded_flag_key = "{}-{}".format(account_key, filing_period.strftime("%Y%m%d"))
-            if wage_data_amended_flag_map[ameneded_flag_key] is True:
-                dor_persistence_util.update_wages_and_contributions(
-                    db_session, existing_wage, employee_info, import_log_entry_id
-                )
-                report.updated_wages_and_contributions_ids.append(
-                    str(existing_wage.wage_and_contribution_id)
-                )
-            else:
-                report.unmodified_wages_and_contributions_ids.append(
-                    str(existing_wage.wage_and_contribution_id)
-                )
+            dor_persistence_util.update_wages_and_contributions(
+                db_session, existing_wage, employee_info, import_log_entry_id
+            )
+            report.updated_wages_and_contributions_ids.append(
+                str(existing_wage.wage_and_contribution_id)
+            )
 
     report.updated_wages_and_contributions_count = len(report.updated_wages_and_contributions_ids)
-    report.unmodified_wages_and_contributions_count = len(
-        report.unmodified_wages_and_contributions_ids
-    )
 
     logger.info(
         "Finished importing employee wage information",
         extra={
             "created_wages_and_contributions_count": report.created_wages_and_contributions_count,
             "updated_wages_and_contributions_count": report.updated_wages_and_contributions_count,
-            "unmodified_wages_and_contributions_count": report.unmodified_wages_and_contributions_count,
         },
     )
 
