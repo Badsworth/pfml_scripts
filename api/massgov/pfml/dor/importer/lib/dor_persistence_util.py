@@ -256,31 +256,14 @@ def update_import_log_entry(db_session, existing_import_log, report):
 # == Query Helpers ==
 
 
-def get_employee_by_ssn(db_session, ssn):
-    tax_id_row = (
-        db_session.query(TaxIdentifier)
-        .filter(TaxIdentifier.tax_identifier == TaxIdUnformattedStr.validate_type(ssn))
-        .one_or_none()
-    )
-    if tax_id_row is None:
-        return None
-    employee_row = (
-        db_session.query(Employee)
-        .filter(Employee.tax_identifier_id == tax_id_row.tax_identifier_id)
-        .one_or_none()
-    )
-    return employee_row
-
-
 def get_employees_by_ssn(db_session, ssns):
-    tax_id_rows = (
-        db_session.query(TaxIdentifier).filter(TaxIdentifier.tax_identifier.in_(ssns)).all()
+    employee_rows = (
+        db_session.query(Employee)
+        .join(TaxIdentifier)
+        .filter(TaxIdentifier.tax_identifier.in_(ssns))
+        .all()
     )
-
-    tax_ids = map(lambda tax_id: tax_id.tax_identifier_id, tax_id_rows)
-
-    employee_rows = db_session.query(Employee).filter(Employee.tax_identifier_id.in_(tax_ids)).all()
-    return employee_rows, tax_id_rows
+    return employee_rows
 
 
 def get_wages_and_contributions_by_employee_id_and_filling_period(

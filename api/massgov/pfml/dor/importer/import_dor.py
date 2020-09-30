@@ -316,8 +316,6 @@ def import_employers(db_session, employers, report, import_log_entry_id):
             )
         )
 
-    logger.info(employer_addresses_assoc_to_create)
-
     db_session.bulk_save_objects(employer_addresses_assoc_to_create)
     db_session.commit()
 
@@ -408,22 +406,15 @@ def import_employees_and_wage_data(
     count = 0
 
     # find all employees by ssn to see if create or update
-    ssns = list(map(lambda employee_info: employee_info["employee_ssn"], employees_info))
-    existing_employees, existing_employees_tax_ids = dor_persistence_util.get_employees_by_ssn(
-        db_session, ssns
-    )
+    ssns = map(lambda employee_info: employee_info["employee_ssn"], employees_info)
+    existing_employees = dor_persistence_util.get_employees_by_ssn(db_session, ssns)
 
-    ssn_to_employee_id = {}
-    for tax_id in existing_employees_tax_ids:
-        for employee in existing_employees:
-            if employee.tax_identifier_id == tax_id.tax_identifier_id:
-                ssn_to_employee_id[tax_id.tax_identifier] = employee.employee_id
+    ssn_to_employee = {}
+    for employee in existing_employees:
+        ssn_to_employee[employee.tax_identifier.tax_identifier] = employee
 
     employees_list = list(
-        filter(
-            lambda employee: ssn_to_employee_id.get(employee["employee_ssn"], None) is None,
-            employees_info,
-        )
+        filter(lambda employee: employee["employee_ssn"] not in ssn_to_employee, employees_info)
     )
     ssn_to_new_tax_id = {}
     for emp in employees_list:
@@ -460,10 +451,7 @@ def import_employees_and_wage_data(
     db_session.commit()
 
     employees_to_update = list(
-        filter(
-            lambda employee: ssn_to_employee_id.get(employee["employee_ssn"], None) is not None,
-            employees_info,
-        )
+        filter(lambda employee: employee["employee_ssn"] in ssn_to_employee, employees_info)
     )
 
     report.created_employees_count = report.created_employees_count + len(
@@ -475,7 +463,7 @@ def import_employees_and_wage_data(
 
         ssn = employee_info["employee_ssn"]
         account_key = employee_info["account_key"]
-        existing_employee = dor_persistence_util.get_employee_by_ssn(db_session, ssn)
+        existing_employee = ssn_to_employee[ssn]
 
         if existing_employee is None:
             created_employee = dor_persistence_util.create_employee(

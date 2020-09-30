@@ -17,12 +17,6 @@ sample_employer_file = "DORDFMLEMP_20200519120622"
 # === test helper functions empty returns and exception raises ===
 
 
-def test_get_employee_by_ssn(test_db_session):
-    employee_row = util.get_employee_by_ssn(test_db_session, "000-00-0000")
-
-    assert employee_row is None
-
-
 def test_get_wages_and_contributions_by_employee_id_and_filling_period(test_db_session):
     wage_row = util.get_wages_and_contributions_by_employee_id_and_filling_period(
         test_db_session, uuid.uuid4(), uuid.uuid4(), date.today()
