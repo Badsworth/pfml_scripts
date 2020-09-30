@@ -23,6 +23,8 @@ const fieldHasValue = (fieldPath, context) => {
 
   if (typeof value === "boolean") return true;
 
+  if (typeof value === "number") return true;
+
   if (value instanceof BaseModel) return !value.isDefault();
 
   return !isEmpty(value);

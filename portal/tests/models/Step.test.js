@@ -184,6 +184,26 @@ describe("Step Model", () => {
         expect(step.status).toEqual("in_progress");
       });
 
+      it("returns in_progress for field with number value", () => {
+        const warnings = [{ field: "claim.field_e" }];
+        const claim = {
+          field_a: 4,
+          field_b: null,
+          field_c: null,
+          field_d: null,
+          field_e: null,
+        };
+
+        const step = new Step({
+          name,
+          pages,
+          context: { claim },
+          warnings,
+        });
+
+        expect(step.status).toEqual("in_progress");
+      });
+
       describe("when a field is a model", () => {
         class TestModel extends BaseModel {
           get defaults() {
@@ -232,6 +252,24 @@ describe("Step Model", () => {
 
           expect(step.status).toEqual("in_progress");
         });
+      });
+    });
+
+    describe("when field is a number", () => {
+      it("returns completed", () => {
+        const warnings = [];
+        const claim = {
+          field_e: 0,
+        };
+
+        const step = new Step({
+          name,
+          pages,
+          context: { claim },
+          warnings,
+        });
+
+        expect(step.status).toEqual("completed");
       });
     });
 
