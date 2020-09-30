@@ -776,12 +776,13 @@ const pages = {
     fileHeadingPrefix: "$t(shared.fileUpload_fileHeadingPrefix)",
     lead_mass:
       "In order to verify your identity, upload a copy of both the front and the back of your ID card.",
-    // TODO (CP-496): update this with the real documents users can use to ID proof
     lead_other:
-      "Upload one of the following: Document 1, Document 2, or Document 3.",
+      "To verify your identity you will need valid documentation issued by state or federal government.",
     sectionLabel_mass: "Upload your Massachusetts driver’s license or ID card",
     sectionLabel_other: "Upload an identification document",
     title: "$t(shared.claimsVerifyIdTitle)",
+    validIdDocumentation:
+      "<p><strong>You can use:</strong></p><ul><li>U.S. State or Territory Real ID</li><li>U.S. passport or passport card</li><li>Permanent Resident Card issued by DHS or INS</li><li>Employment Authorization Document (EAD) issued by DHS</li><li>Foreign passport <strong>and</strong> a <work-visa-link>work visa</work-visa-link></li></ul><p><strong>If you don’t have any of those, you can provide one of the following plus proof of your  Social Security Number or Individual Tax Identification Number:</strong></p><ul><li>Valid U.S. State or Territory License or ID</li><li>Certified copy of a birth certificate filed with a State Office of Vital Statistics or equivalent agency in the individual's state of birth. (You can only use a <puerto-rican-birth-certificate-link>Puerto Rican birth certificate</puerto-rican-birth-certificate-link> if it was issued on or after July 1, 2010.)</li><li>Certificate of Citizenship (Form N-560, or Form N-561)</li><li>Certificate of Naturalization (Form N-550 or N-570)</li></ul><p><strong>You can provide proof of your Social Security Number using one of the following documents displaying your complete Social Security Number:</strong></p><ul><li>Social Security card</li><li>W-2 Form</li><li>SSA-1099 Form</li><li>Non-SSA-1099 Form</li><li>Pay stub with your name on it</li></ul><p>Learn more about verifying your identity with different documents at <identity-proof-link>Mass.gov</identity-proof-link>.</p>",
   },
   employersClaimsReview: {
     amend: "Amend",

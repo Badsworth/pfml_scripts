@@ -5,13 +5,16 @@ import Heading from "../../components/Heading";
 import Lead from "../../components/Lead";
 import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
+import { Trans } from "react-i18next";
+import routes from "../../routes";
 import { useTranslation } from "../../locales/i18n";
 import withClaim from "../../hoc/withClaim";
 
 export const UploadId = (props) => {
   const { t } = useTranslation();
   const [stateIdFiles, setStateIdFiles] = useState([]);
-  const contentContext = props.claim.has_state_id ? "mass" : "other";
+  const hasStateId = props.claim.has_state_id;
+  const contentContext = hasStateId ? "mass" : "other";
   const { appLogic, claim } = props;
 
   const handleSave = async () => {
@@ -24,21 +27,43 @@ export const UploadId = (props) => {
 
   return (
     <QuestionPage title={t("pages.claimsUploadId.title")} onSave={handleSave}>
-      <Heading level="2" size="1">
-        {t("pages.claimsUploadId.sectionLabel", { context: contentContext })}
-      </Heading>
-      <Lead>{t("pages.claimsUploadId.lead", { context: contentContext })}</Lead>
-      <FileUploadDetails />
-      <FileCardList
-        files={stateIdFiles}
-        setFiles={setStateIdFiles}
-        setAppErrors={props.appLogic.setAppErrors}
-        fileHeadingPrefix={t("pages.claimsUploadId.fileHeadingPrefix")}
-        addFirstFileButtonText={t("pages.claimsUploadId.addFirstFileButton")}
-        addAnotherFileButtonText={t(
-          "pages.claimsUploadId.addAnotherFileButton"
+      <div className="measure-6">
+        <Heading level="2" size="1">
+          {t("pages.claimsUploadId.sectionLabel", { context: contentContext })}
+        </Heading>
+        <Lead>
+          {t("pages.claimsUploadId.lead", { context: contentContext })}
+        </Lead>
+        {!hasStateId && (
+          <div className="border-bottom border-base-light margin-bottom-4 padding-bottom-4">
+            <Trans
+              i18nKey="pages.claimsUploadId.validIdDocumentation"
+              components={{
+                ul: <ul className="usa-list" />,
+                li: <li />,
+                "identity-proof-link": (
+                  <a href={routes.external.massgov.identityProof} />
+                ),
+                "puerto-rican-birth-certificate-link": (
+                  <a href={routes.external.puertoRicanBirthCertificate} />
+                ),
+                "work-visa-link": <a href={routes.external.workVisa} />,
+              }}
+            />
+          </div>
         )}
-      />
+        <FileUploadDetails />
+        <FileCardList
+          files={stateIdFiles}
+          setFiles={setStateIdFiles}
+          setAppErrors={props.appLogic.setAppErrors}
+          fileHeadingPrefix={t("pages.claimsUploadId.fileHeadingPrefix")}
+          addFirstFileButtonText={t("pages.claimsUploadId.addFirstFileButton")}
+          addAnotherFileButtonText={t(
+            "pages.claimsUploadId.addAnotherFileButton"
+          )}
+        />
+      </div>
     </QuestionPage>
   );
 };

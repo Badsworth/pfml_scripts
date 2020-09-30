@@ -58,11 +58,16 @@ const routes = {
     massgov: {
       dfml: "https://mass.gov/dfml",
       healthcareProviderForm: "https://www.mass.gov/hcp-form",
+      identityProof:
+        "https://www.mass.gov/info-details/identity-proof-for-paid-leave",
       informedConsent: "https://www.mass.gov/paidleave-informedconsent",
       pfmlBenefitsGuide:
         "https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-guide",
       privacyPolicy: "https://www.mass.gov/privacypolicy",
     },
+    puertoRicanBirthCertificate: "https://prfaa.pr.gov/faqs",
+    workVisa:
+      "https://travel.state.gov/content/travel/en/us-visas/employment/temporary-worker-visas.html",
   },
   home: "/",
   user: {

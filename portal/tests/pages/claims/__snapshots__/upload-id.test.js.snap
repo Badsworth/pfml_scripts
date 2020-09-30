@@ -5,24 +5,52 @@ exports[`UploadId when the user doesn't have a Mass ID renders the page with 'Ot
   onSave={[Function]}
   title="Your identity"
 >
-  <Heading
-    level="2"
-    size="1"
+  <div
+    className="measure-6"
   >
-    Upload an identification document
-  </Heading>
-  <Lead>
-    Upload one of the following: Document 1, Document 2, or Document 3.
-  </Lead>
-  <FileUploadDetails />
-  <FileCardList
-    addAnotherFileButtonText="Choose another file"
-    addFirstFileButtonText="Choose a file"
-    fileHeadingPrefix="File"
-    files={Array []}
-    setAppErrors={[MockFunction]}
-    setFiles={[Function]}
-  />
+    <Heading
+      level="2"
+      size="1"
+    >
+      Upload an identification document
+    </Heading>
+    <Lead>
+      To verify your identity you will need valid documentation issued by state or federal government.
+    </Lead>
+    <div
+      className="border-bottom border-base-light margin-bottom-4 padding-bottom-4"
+    >
+      <Trans
+        components={
+          Object {
+            "identity-proof-link": <a
+              href="https://www.mass.gov/info-details/identity-proof-for-paid-leave"
+            />,
+            "li": <li />,
+            "puerto-rican-birth-certificate-link": <a
+              href="https://prfaa.pr.gov/faqs"
+            />,
+            "ul": <ul
+              className="usa-list"
+            />,
+            "work-visa-link": <a
+              href="https://travel.state.gov/content/travel/en/us-visas/employment/temporary-worker-visas.html"
+            />,
+          }
+        }
+        i18nKey="pages.claimsUploadId.validIdDocumentation"
+      />
+    </div>
+    <FileUploadDetails />
+    <FileCardList
+      addAnotherFileButtonText="Choose another file"
+      addFirstFileButtonText="Choose a file"
+      fileHeadingPrefix="File"
+      files={Array []}
+      setAppErrors={[MockFunction]}
+      setFiles={[Function]}
+    />
+  </div>
 </QuestionPage>
 `;
 
@@ -31,24 +59,28 @@ exports[`UploadId when the user has a Mass ID renders the page with Mass ID cont
   onSave={[Function]}
   title="Your identity"
 >
-  <Heading
-    level="2"
-    size="1"
+  <div
+    className="measure-6"
   >
-    Upload your Massachusetts driver’s license or ID card
-  </Heading>
-  <Lead>
-    In order to verify your identity, upload a copy of both the front and the back of your ID card.
-  </Lead>
-  <FileUploadDetails />
-  <FileCardList
-    addAnotherFileButtonText="Choose another file"
-    addFirstFileButtonText="Choose a file"
-    fileHeadingPrefix="File"
-    files={Array []}
-    setAppErrors={[MockFunction]}
-    setFiles={[Function]}
-  />
+    <Heading
+      level="2"
+      size="1"
+    >
+      Upload your Massachusetts driver’s license or ID card
+    </Heading>
+    <Lead>
+      In order to verify your identity, upload a copy of both the front and the back of your ID card.
+    </Lead>
+    <FileUploadDetails />
+    <FileCardList
+      addAnotherFileButtonText="Choose another file"
+      addFirstFileButtonText="Choose a file"
+      fileHeadingPrefix="File"
+      files={Array []}
+      setAppErrors={[MockFunction]}
+      setFiles={[Function]}
+    />
+  </div>
 </QuestionPage>
 `;
 
@@ -57,55 +89,83 @@ exports[`UploadId when the user uploads files renders filecards for the files 1`
   onSave={[Function]}
   title="Your identity"
 >
-  <Heading
-    level="2"
-    size="1"
+  <div
+    className="measure-6"
   >
-    Upload an identification document
-  </Heading>
-  <Lead>
-    Upload one of the following: Document 1, Document 2, or Document 3.
-  </Lead>
-  <FileUploadDetails />
-  <FileCardList
-    addAnotherFileButtonText="Choose another file"
-    addFirstFileButtonText="Choose a file"
-    fileHeadingPrefix="File"
-    files={
-      Array [
-        Object {
-          "file": File {},
-          "id": "File1",
-        },
-        Object {
-          "file": File {},
-          "id": "File2",
-        },
-        Object {
-          "file": File {},
-          "id": "File3",
-        },
-      ]
-    }
-    setAppErrors={
-      [MockFunction] {
-        "calls": Array [
-          Array [
-            AppErrorInfoCollection {
-              "items": Array [],
-              "itemsById": Object {},
+    <Heading
+      level="2"
+      size="1"
+    >
+      Upload an identification document
+    </Heading>
+    <Lead>
+      To verify your identity you will need valid documentation issued by state or federal government.
+    </Lead>
+    <div
+      className="border-bottom border-base-light margin-bottom-4 padding-bottom-4"
+    >
+      <Trans
+        components={
+          Object {
+            "identity-proof-link": <a
+              href="https://www.mass.gov/info-details/identity-proof-for-paid-leave"
+            />,
+            "li": <li />,
+            "puerto-rican-birth-certificate-link": <a
+              href="https://prfaa.pr.gov/faqs"
+            />,
+            "ul": <ul
+              className="usa-list"
+            />,
+            "work-visa-link": <a
+              href="https://travel.state.gov/content/travel/en/us-visas/employment/temporary-worker-visas.html"
+            />,
+          }
+        }
+        i18nKey="pages.claimsUploadId.validIdDocumentation"
+      />
+    </div>
+    <FileUploadDetails />
+    <FileCardList
+      addAnotherFileButtonText="Choose another file"
+      addFirstFileButtonText="Choose a file"
+      fileHeadingPrefix="File"
+      files={
+        Array [
+          Object {
+            "file": File {},
+            "id": "File1",
+          },
+          Object {
+            "file": File {},
+            "id": "File2",
+          },
+          Object {
+            "file": File {},
+            "id": "File3",
+          },
+        ]
+      }
+      setAppErrors={
+        [MockFunction] {
+          "calls": Array [
+            Array [
+              AppErrorInfoCollection {
+                "items": Array [],
+                "itemsById": Object {},
+              },
+            ],
+          ],
+          "results": Array [
+            Object {
+              "type": "return",
+              "value": undefined,
             },
           ],
-        ],
-        "results": Array [
-          Object {
-            "type": "return",
-            "value": undefined,
-          },
-        ],
+        }
       }
-    }
-    setFiles={[Function]}
-  />
+      setFiles={[Function]}
+    />
+  </div>
 </QuestionPage>
 `;
