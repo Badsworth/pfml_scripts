@@ -40,7 +40,6 @@ export default class DocumentsApi extends BaseApi {
     // TODO (CP-993): handle multiple file uploads
     const file = files[0];
     formData.append("document_type", document_type);
-    formData.append("document_category", "Identity Proofing");
     formData.append("description", "Placeholder");
     formData.append("file", file.file);
     formData.append("name", file.file.name);
