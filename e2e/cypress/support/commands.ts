@@ -4,8 +4,6 @@
 // https://on.cypress.io/custom-commands
 // ***********************************************
 
-import { ApplicationRequestBody } from "../../src/api";
-
 /**
  * This command selects an input by the HTML label "for" value.
  */
@@ -42,80 +40,6 @@ Cypress.Commands.add(
     return cy
       .wrap(subject, { log: false })
       .type(chars, { ...options, log: false });
-  }
-);
-
-/**
- * This command populates the idVerification portion of an application with a PDF version of a license.
- *
- * This command will generate the PDF files on the fly.
- */
-Cypress.Commands.add(
-  "generateIdVerification",
-  (application: Pick<ApplicationRequestBody, "first_name" | "last_name">) => {
-    const fillData = {
-      "Given Name Text Box": application.first_name,
-      "Family Name Text Box": application.last_name,
-    };
-    return cy
-      .task("fillPDF", { source: "form.pdf", data: fillData })
-      .then((front) => {
-        return cy
-          .task("fillPDF", { source: "form.pdf", data: fillData })
-          .then((back) => {
-            return {
-              ...application,
-              idVerification: {
-                front: {
-                  fileContent: Cypress.Blob.binaryStringToBlob(
-                    (front as unknown) as string
-                  ),
-                  fileName: "id.front.pdf",
-                  mimeType: "application/pdf",
-                  encoding: "utf-8",
-                },
-                back: {
-                  fileContent: Cypress.Blob.binaryStringToBlob(
-                    (back as unknown) as string
-                  ),
-                  fileName: "id.back.pdf",
-                  mimeType: "application/pdf",
-                  encoding: "utf-8",
-                },
-              },
-            };
-          });
-      });
-  }
-);
-
-/**
- * Adds a generated HCP form to the application.
- *
- * The HCP form will be a generated PDF file.
- */
-Cypress.Commands.add(
-  "generateHCPForm",
-  (application: ApplicationRequestBody) => {
-    const fillData = {
-      "Given Name Text Box": application.first_name,
-      "Family Name Text Box": application.last_name,
-    };
-    return cy
-      .task("fillPDF", { source: "form.pdf", data: fillData })
-      .then((providerForm) => {
-        return {
-          ...application,
-          providerForm: {
-            fileContent: Cypress.Blob.binaryStringToBlob(
-              (providerForm as unknown) as string
-            ),
-            fileName: "hcp.pdf",
-            mimeType: "application/pdf",
-            encoding: "utf-8",
-          },
-        };
-      });
   }
 );
 

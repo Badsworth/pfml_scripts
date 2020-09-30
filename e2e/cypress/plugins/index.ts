@@ -12,7 +12,6 @@
 import { config as dotenv } from "dotenv";
 import retry from "p-retry";
 import delay from "delay";
-import fillPDF from "./fillPDF";
 import webpackPreprocessor from "@cypress/webpack-preprocessor";
 import TestMailVerificationFetcher from "./TestMailVerificationFetcher";
 import { Credentials } from "@/types";
@@ -54,9 +53,6 @@ export default function (on: Cypress.PluginEvents): Cypress.ConfigOptions {
           return delay(1000);
         },
       });
-    },
-    async fillPDF(options: FillPDFTaskOptions) {
-      return fillPDF(options.source, options.data);
     },
     generateCredentials(): Credentials {
       const { E2E_TESTMAIL_NAMESPACE } = process.env;
