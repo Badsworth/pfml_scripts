@@ -2,7 +2,6 @@ import { Then } from "cypress-cucumber-preprocessor/steps";
 import { CypressStepThis, TestType } from "@/types";
 import { lookup, getLeaveType } from "./util";
 import { fineos, scenarios } from "./actions";
-import "@rckeller/cypress-unfetch/await";
 
 const scenarioFunctions: Record<TestType, () => void> = scenarios;
 

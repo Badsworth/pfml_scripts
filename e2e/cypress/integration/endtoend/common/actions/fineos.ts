@@ -10,22 +10,21 @@ export function searchScenario(): void {
   cy.get('td[keytipnumber="4"]').contains("Case").click();
 
   /* For Testing (hard coded Claim Number)
+    cy.labelled("Case Number").type("NTN-528-ABS-01");
    */
-  cy.labelled("Case Number").type("NTN-474-ABS-01");
-  // cy.unstash("claimNumber2").then((claimNumber) => {
-  //   cy.log("**Inside UNSTASH**")
-  //   // cy.labelled("Case Number").type(claimNumber as string);
-  // });
+  cy.unstash("claimNumber").then((claimNumber) => {
+    cy.labelled("Case Number").type(claimNumber as string);
+  });
   cy.get('input[type="submit"][value="Search"]').click();
 }
 
 export function findClaim(): void {
   /* For Testing (hard coded Claim Number)
+    cy.get("h2 > span").should("contain.text", "NTN-528-ABS-01");
    */
-  cy.get("h2 > span").should("contain.text", "NTN-474-ABS-01");
-  // cy.unstash("claimNumber").then((claimNumber) => {
-  //   cy.get("h2 > span").should("contain.text", claimNumber);
-  // });
+  cy.unstash("claimNumber").then((claimNumber) => {
+    cy.get("h2 > span").should("contain.text", claimNumber);
+  });
 }
 
 export function onPage(page: string): void {
@@ -102,23 +101,30 @@ export function validateEvidence(label: string): void {
 }
 
 export function denialReason(reason: string): void {
-  cy.get('span[id="leaveRequestDenialDetailsWidget"]')
-    .find("select")
-    .select(
-      reason === "Financially Ineligible"
-        ? "Ineligible"
-        : "Insufficient Certification"
-    );
   let reasonText = "";
   switch (reason) {
-    case "Financially Ineligible": {
+    case "Financially Ineligible":
+      cy.get('span[id="leaveRequestDenialDetailsWidget"]')
+        .find("select")
+        .select("Ineligible");
       reasonText =
         "This leave claim was denied due to financial ineligibility.";
-    }
-    case "Insufficient Certification": {
+      cy.labelled("Notes").type(reasonText);
+      cy.get('input[type="submit"][value="OK"]').click();
+      break;
+
+    case "Insufficient Certification":
+      cy.get('span[id="leaveRequestDenialDetailsWidget"]')
+        .find("select")
+        .select(reason);
       reasonText =
         "This leave claim was denied due to invalid out-of-state ID.";
-    }
+      cy.labelled("Notes").type(reasonText);
+      cy.get('input[type="submit"][value="OK"]').click();
+      break;
+
+    default:
+      return;
   }
 }
 
@@ -133,10 +139,10 @@ export function addEvidenceReviewTask(): void {
   });
   cy.get("#NameSearchWidget")
     .find('input[type="text"]')
-    .type("Evidence Review");
+    .type("outstanding document");
   cy.get("#NameSearchWidget").find('input[type="submit"]').click();
   cy.get("#p10_un8_next").click();
-  cy.get('td[title="Evidence Review"]').first().click();
+  cy.get('td[title*="Outstanding Document"]').first().click();
   cy.get("input[type='submit'][title='Open this task']").click();
 }
 

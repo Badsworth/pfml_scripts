@@ -36,7 +36,7 @@ Feature: Submit a medical claim that is missing an HCP, and refer it to DFML
   Scenario: As a CSR (Savilix), I should be able to confirm that the HCP is missing
     Given I search for the proper claim in Fineos
     And I am on the tab "Documents"
-    Then I should confirm HCP form is not present
+    Then I should confirm "HCP form" is not present
     Given I am on the tab "Absence Hub"
     When I click Adjudicate
     Given I am on the tab "Evidence"
