@@ -1,6 +1,7 @@
 import AppErrorInfo from "src/models/AppErrorInfo";
 import AppErrorInfoCollection from "src/models/AppErrorInfoCollection";
 import Claim from "src/models/Claim";
+import DocumentCollection from "src/models/DocumentCollection";
 import React from "react";
 import User from "../../src/models/User";
 import _ from "lodash";
@@ -99,9 +100,21 @@ function generateDefaultStory(Component, mockClaims, possibleErrors) {
       claims: {
         update: () => {},
       },
+      documents: {
+        attachDocuments: () => {},
+        documents: new DocumentCollection([]),
+      },
       appErrors,
+      setAppErrors: () => {},
     };
-    return <Component appLogic={appLogic} claim={claim} user={user} />;
+    return (
+      <Component
+        appLogic={appLogic}
+        claim={claim}
+        user={user}
+        documents={appLogic.documents.documents.items}
+      />
+    );
   };
 
   DefaultStory.argTypes = {

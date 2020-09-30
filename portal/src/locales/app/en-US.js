@@ -50,9 +50,8 @@ const errors = {
     },
     date_of_birth: {
       invalid_age: "The person taking leave must be at least 14 years old.",
-      invalid_year_range: `Date of birth year is not in a valid range (on or after ${
-        new Date().getFullYear() - 100
-      }).`,
+      invalid_year_range: `Date of birth year is not in a valid range (on or after ${new Date().getFullYear() - 100
+        }).`,
       pattern: "Please enter a valid date of birth.",
     },
     employer_fein: {
@@ -132,6 +131,7 @@ const shared = {
   fileUpload_addAnotherFileButton: "Choose another file",
   fileUpload_addFirstFileButton: "Choose a file",
   fileUpload_fileHeadingPrefix: "File",
+  filesUploaded: "Number of files uploaded",
   leavePeriodMedicalAlert:
     "You will need a completed medical leave certification form for this section.",
   leaveReasonActiveDutyFamily: "Active duty",
@@ -754,6 +754,7 @@ const pages = {
   claimsUploadCertification: {
     addAnotherFileButton: "Choose another file",
     addFirstFileButton: "Choose a file",
+    certificationDocumentsCount: "$t(shared.filesUploaded)",
     fileHeadingPrefix: "File",
     leadListNewborn: [
       "Your child's birth certificate.",
@@ -774,6 +775,7 @@ const pages = {
     addAnotherFileButton: "$t(shared.fileUpload_addAnotherFileButton)",
     addFirstFileButton: "$t(shared.fileUpload_addFirstFileButton)",
     fileHeadingPrefix: "$t(shared.fileUpload_fileHeadingPrefix)",
+    idDocumentsCount: "$t(shared.filesUploaded)",
     lead_mass:
       "In order to verify your identity, upload a copy of both the front and the back of your ID card.",
     lead_other:

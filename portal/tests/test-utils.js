@@ -456,7 +456,6 @@ export const renderWithAppLogic = (PageComponent, options = {}) => {
     },
     options
   );
-
   // Add claim and user instances to appLogic
   testHook(() => {
     appLogic = useAppLogic();

@@ -270,16 +270,4 @@ export const PaymentPreferenceMethod = {
   debit: "Debit",
 };
 
-/**
- * Enums for an Application Document's `documentCategory` field
- * @enum {string}
- */
-export const DocumentCategory = {
-  active_duty_certification: "Active Duty Certification",
-  bonding_certification: "Bonding Certification",
-  identity_verification: "Identity Verification",
-  medical_certification: "Medical Certification",
-  notices: "Notices",
-};
-
 export default Claim;

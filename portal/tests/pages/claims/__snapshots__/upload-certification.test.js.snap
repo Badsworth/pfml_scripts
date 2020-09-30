@@ -1,6 +1,17 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`UploadCertification initially renders an empty FileCardList 1`] = `
+exports[`UploadCertification after documents have been loaded when leave reason is Bonding leave renders page with bonding leave content 1`] = `
+<Heading
+  level="2"
+  size="1"
+>
+  Upload your documentation
+</Heading>
+`;
+
+exports[`UploadCertification after documents have been loaded when leave reason is Bonding leave renders page with bonding leave content 2`] = `"You need to upload one of the following documents to confirm your child’s date of birth:"`;
+
+exports[`UploadCertification after documents have been loaded when leave reason is Medical leave renders a FileCardList 1`] = `
 <FileCardList
   addAnotherFileButtonText="Choose another file"
   addFirstFileButtonText="Choose a file"
@@ -11,18 +22,7 @@ exports[`UploadCertification initially renders an empty FileCardList 1`] = `
 />
 `;
 
-exports[`UploadCertification when leave reason is Bonding leave renders page with bonding leave content 1`] = `
-<Heading
-  level="2"
-  size="1"
->
-  Upload your documentation
-</Heading>
-`;
-
-exports[`UploadCertification when leave reason is Bonding leave renders page with bonding leave content 2`] = `"You need to upload one of the following documents to confirm your child’s date of birth:"`;
-
-exports[`UploadCertification when leave reason is Medical leave renders page with medical leave content 1`] = `
+exports[`UploadCertification after documents have been loaded when leave reason is Medical leave renders page with medical leave content 1`] = `
 <Heading
   level="2"
   size="1"
@@ -31,7 +31,7 @@ exports[`UploadCertification when leave reason is Medical leave renders page wit
 </Heading>
 `;
 
-exports[`UploadCertification when leave reason is Medical leave renders page with medical leave content 2`] = `
+exports[`UploadCertification after documents have been loaded when leave reason is Medical leave renders page with medical leave content 2`] = `
 Array [
   "You need to upload a copy of the ",
   <a
@@ -44,4 +44,13 @@ Array [
   </a>,
   " to prove that you need to take medical leave. You can upload a completed Family and Medical Leave Act (FMLA) form instead if your provider filled one out.",
 ]
+`;
+
+exports[`UploadCertification after documents have been loaded when leave reason is Medical leave when there are previously loaded documents renders the ReviewRow component 1`] = `
+<ReviewRow
+  label="Number of files uploaded"
+  level="3"
+>
+  1
+</ReviewRow>
 `;

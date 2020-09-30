@@ -1,6 +1,7 @@
 import AppErrorInfoCollection from "../../models/AppErrorInfoCollection";
 import Claim from "../../models/Claim";
 import ClaimCollection from "../../models/ClaimCollection";
+import Document from "../../models/Document";
 import DocumentCollection from "../../models/DocumentCollection";
 import User from "../../models/User";
 import { uniqueId } from "lodash";

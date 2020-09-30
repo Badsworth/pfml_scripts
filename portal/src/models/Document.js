@@ -19,4 +19,16 @@ class Document extends BaseModel {
   }
 }
 
+/**
+ * Enums for Document `document_type` field
+ * @enum {string}
+ */
+export const DocumentType = {
+  activeDutyCertification: "Active Duty Certification",
+  bondingCertification: "Bonding Certification",
+  identityVerification: "Identification Proof",
+  medicalCertification: "State Managed Paid Leave Confirmation",
+  notices: "Notices",
+};
+
 export default Document;

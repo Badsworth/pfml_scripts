@@ -1,3 +1,4 @@
+import Document, { DocumentType } from "../../models/Document";
 import React, { useState } from "react";
 import FileCardList from "../../components/FileCardList";
 import FileUploadDetails from "../../components/FileUploadDetails";
@@ -5,25 +6,34 @@ import Heading from "../../components/Heading";
 import Lead from "../../components/Lead";
 import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
+import ReviewRow from "../../components/ReviewRow";
+import Spinner from "../../components/Spinner";
 import { Trans } from "react-i18next";
+import findDocumentsByType from "../../utils/findDocumentsByType";
 import routes from "../../routes";
 import { useTranslation } from "../../locales/i18n";
 import withClaim from "../../hoc/withClaim";
+import withClaimDocuments from "../../hoc/withClaimDocuments";
 
 export const UploadId = (props) => {
   const { t } = useTranslation();
   const [stateIdFiles, setStateIdFiles] = useState([]);
   const hasStateId = props.claim.has_state_id;
   const contentContext = hasStateId ? "mass" : "other";
-  const { appLogic, claim } = props;
+  const { appLogic, claim, documents, isLoadingDocuments } = props;
 
   const handleSave = async () => {
     await appLogic.documents.attach(
       claim.application_id,
       stateIdFiles,
-      "Identification Proof" // TODO (CP-962): replace this with an enum value
+      DocumentType.identityVerification // TODO (CP-962): Set based on leaveReason
     );
   };
+
+  const idDocuments = findDocumentsByType(
+    documents,
+    DocumentType.identityVerification // TODO (CP-962): Set based on leaveReason
+  );
 
   return (
     <QuestionPage title={t("pages.claimsUploadId.title")} onSave={handleSave}>
@@ -53,25 +63,37 @@ export const UploadId = (props) => {
           </div>
         )}
         <FileUploadDetails />
-        <FileCardList
-          files={stateIdFiles}
-          setFiles={setStateIdFiles}
-          setAppErrors={props.appLogic.setAppErrors}
-          fileHeadingPrefix={t("pages.claimsUploadId.fileHeadingPrefix")}
-          addFirstFileButtonText={t("pages.claimsUploadId.addFirstFileButton")}
-          addAnotherFileButtonText={t(
-            "pages.claimsUploadId.addAnotherFileButton"
-          )}
-        />
+
+        {idDocuments.length > 0 && (
+          <ReviewRow label={t("pages.claimsUploadId.idDocumentsCount")} level="3">
+            {idDocuments.length}
+          </ReviewRow>
+        )}
+
+        {isLoadingDocuments && (
+          <div className="margin-top-8 text-center">
+            <Spinner aria-valuetext={t("components.withClaims.loadingLabel")} />
+          </div>
+        )}
+
+        {!isLoadingDocuments && (
+          <FileCardList
+            files={stateIdFiles}
+            setFiles={setStateIdFiles}
+            setAppErrors={props.appLogic.setAppErrors}
+            fileHeadingPrefix={t("pages.claimsUploadId.fileHeadingPrefix")}
+            addFirstFileButtonText={t("pages.claimsUploadId.addFirstFileButton")}
+            addAnotherFileButtonText={t(
+              "pages.claimsUploadId.addAnotherFileButton"
+            )}
+          />
+        )}
       </div>
     </QuestionPage>
   );
 };
 
 UploadId.propTypes = {
-  query: PropTypes.shape({
-    claim_id: PropTypes.string,
-  }),
   appLogic: PropTypes.shape({
     claims: PropTypes.object.isRequired,
     documents: PropTypes.object.isRequired,
@@ -79,6 +101,11 @@ UploadId.propTypes = {
     setAppErrors: PropTypes.func.isRequired,
   }).isRequired,
   claim: PropTypes.object.isRequired,
+  documents: PropTypes.arrayOf(PropTypes.instanceOf(Document)),
+  isLoadingDocuments: PropTypes.bool,
+  query: PropTypes.shape({
+    claim_id: PropTypes.string,
+  }),
 };
 
-export default withClaim(UploadId);
+export default withClaim(withClaimDocuments(UploadId));

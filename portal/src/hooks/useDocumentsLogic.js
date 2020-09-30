@@ -20,7 +20,7 @@ const useDocumentsLogic = ({ appErrorsLogic, portalFlow }) => {
     collection: documents,
     addItem: addDocument,
     addItems: addDocuments,
-  } = useCollectionState(new DocumentCollection());
+  } = useCollectionState(new DocumentCollection([]));
 
   const documentsApi = useMemo(() => new DocumentsApi(), []);
   const [documentsLoaded, setDocumentsLoaded] = useState([]);
@@ -30,8 +30,9 @@ const useDocumentsLogic = ({ appErrorsLogic, portalFlow }) => {
    * @param {string} application_id
    * @returns {boolean}
    */
-  const hasLoadedClaimDocuments = (application_id) =>
-    documentsLoaded.includes(application_id);
+  const hasLoadedClaimDocuments = (application_id) => {
+    return documentsLoaded.includes(application_id);
+  };
 
   /**
    * Load all documents for a user's claim

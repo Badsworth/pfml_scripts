@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`UploadId when the user doesn't have a Mass ID renders the page with 'Other' ID content 1`] = `
+exports[`UploadId after documents have been loaded when the user doesn't have a Mass ID renders the page with 'Other' ID content 1`] = `
 <QuestionPage
   onSave={[Function]}
   title="Your identity"
@@ -54,7 +54,18 @@ exports[`UploadId when the user doesn't have a Mass ID renders the page with 'Ot
 </QuestionPage>
 `;
 
-exports[`UploadId when the user has a Mass ID renders the page with Mass ID content 1`] = `
+exports[`UploadId after documents have been loaded when the user has a Mass ID renders a FileCardList 1`] = `
+<FileCardList
+  addAnotherFileButtonText="Choose another file"
+  addFirstFileButtonText="Choose a file"
+  fileHeadingPrefix="File"
+  files={Array []}
+  setAppErrors={[MockFunction]}
+  setFiles={[Function]}
+/>
+`;
+
+exports[`UploadId after documents have been loaded when the user has a Mass ID renders the page with Mass ID content 1`] = `
 <QuestionPage
   onSave={[Function]}
   title="Your identity"
@@ -84,7 +95,7 @@ exports[`UploadId when the user has a Mass ID renders the page with Mass ID cont
 </QuestionPage>
 `;
 
-exports[`UploadId when the user uploads files renders filecards for the files 1`] = `
+exports[`UploadId after documents have been loaded when the user has a Mass ID when the user uploads files renders filecards for the files 1`] = `
 <QuestionPage
   onSave={[Function]}
   title="Your identity"
@@ -96,35 +107,11 @@ exports[`UploadId when the user uploads files renders filecards for the files 1`
       level="2"
       size="1"
     >
-      Upload an identification document
+      Upload your Massachusetts driver’s license or ID card
     </Heading>
     <Lead>
-      To verify your identity you will need valid documentation issued by state or federal government.
+      In order to verify your identity, upload a copy of both the front and the back of your ID card.
     </Lead>
-    <div
-      className="border-bottom border-base-light margin-bottom-4 padding-bottom-4"
-    >
-      <Trans
-        components={
-          Object {
-            "identity-proof-link": <a
-              href="https://www.mass.gov/info-details/identity-proof-for-paid-leave"
-            />,
-            "li": <li />,
-            "puerto-rican-birth-certificate-link": <a
-              href="https://prfaa.pr.gov/faqs"
-            />,
-            "ul": <ul
-              className="usa-list"
-            />,
-            "work-visa-link": <a
-              href="https://travel.state.gov/content/travel/en/us-visas/employment/temporary-worker-visas.html"
-            />,
-          }
-        }
-        i18nKey="pages.claimsUploadId.validIdDocumentation"
-      />
-    </div>
     <FileUploadDetails />
     <FileCardList
       addAnotherFileButtonText="Choose another file"
@@ -168,4 +155,19 @@ exports[`UploadId when the user uploads files renders filecards for the files 1`
     />
   </div>
 </QuestionPage>
+`;
+
+exports[`UploadId after documents have been loaded when the user has a Mass ID when there are previously loaded documents renders the ReviewRow component 1`] = `
+<ReviewRow
+  label="Number of files uploaded"
+  level="3"
+>
+  1
+</ReviewRow>
+`;
+
+exports[`UploadId before any documents have been loaded renders a spinner 1`] = `
+<Spinner
+  aria-valuetext="Loading claims"
+/>
 `;

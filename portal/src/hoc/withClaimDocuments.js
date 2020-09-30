@@ -18,7 +18,6 @@ const withClaimDocuments = (Component) => {
       users,
     } = appLogic;
     const shouldLoad = !hasLoadedClaimDocuments(query.claim_id);
-
     assert(documents);
     // Since we are within a withUser higher order component, user should always be set
     assert(users.user);
@@ -34,7 +33,7 @@ const withClaimDocuments = (Component) => {
       <Component
         {...props}
         documents={documents.filterByApplication(query.claim_id)}
-        isDocumentLoading={shouldLoad}
+        isLoadingDocuments={shouldLoad}
       />
     );
   };

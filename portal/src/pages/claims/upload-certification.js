@@ -1,4 +1,5 @@
 import Claim, { LeaveReason, ReasonQualifier } from "../../models/Claim";
+import Document, { DocumentType } from "../../models/Document";
 import React, { useState } from "react";
 import ConditionalContent from "../../components/ConditionalContent";
 import FileCardList from "../../components/FileCardList";
@@ -7,14 +8,18 @@ import Heading from "../../components/Heading";
 import Lead from "../../components/Lead";
 import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
+import ReviewRow from "../../components/ReviewRow";
+import Spinner from "../../components/Spinner";
 import { Trans } from "react-i18next";
+import findDocumentsByType from "../../utils/findDocumentsByType";
 import findKeyByValue from "../../utils/findKeyByValue";
 import routes from "../../routes";
 import { useTranslation } from "../../locales/i18n";
 import withClaim from "../../hoc/withClaim";
+import withClaimDocuments from "../../hoc/withClaimDocuments";
 
 export const UploadCertification = (props) => {
-  const { appLogic, claim } = props;
+  const { appLogic, claim, documents, isLoadingDocuments } = props;
   const { t } = useTranslation();
   const [files, setFiles] = useState([]);
   const claimReason = claim.leave_details.reason;
@@ -42,9 +47,14 @@ export const UploadCertification = (props) => {
     await appLogic.documents.attach(
       claim.application_id,
       files,
-      "State Managed Paid Leave Confirmation" // TODO (CP-962): replace this with an enum value, and set based on leaveReason
+      DocumentType.medicalCertification // TODO (CP-962): Set based on leaveReason
     );
   };
+
+  const certificationDocuments = findDocumentsByType(
+    documents,
+    DocumentType.medicalCertification // TODO (CP-962): Set based on leaveReason
+  );
 
   return (
     <QuestionPage
@@ -88,20 +98,40 @@ export const UploadCertification = (props) => {
         </ul>
       </ConditionalContent>
       <FileUploadDetails />
-      <FileCardList
-        files={files}
-        setFiles={setFiles}
-        setAppErrors={appLogic.setAppErrors}
-        fileHeadingPrefix={t(
-          "pages.claimsUploadCertification.fileHeadingPrefix"
-        )}
-        addFirstFileButtonText={t(
-          "pages.claimsUploadCertification.addFirstFileButton"
-        )}
-        addAnotherFileButtonText={t(
-          "pages.claimsUploadCertification.addAnotherFileButton"
-        )}
-      />
+
+      {certificationDocuments.length > 0 && (
+        <ReviewRow
+          label={t(
+            "pages.claimsUploadCertification.certificationDocumentsCount"
+          )}
+          level="3"
+        >
+          {certificationDocuments.length}
+        </ReviewRow>
+      )}
+
+      {isLoadingDocuments && (
+        <div className="margin-top-8 text-center">
+          <Spinner aria-valuetext={t("components.withClaims.loadingLabel")} />
+        </div>
+      )}
+
+      {!isLoadingDocuments && (
+        <FileCardList
+          files={files}
+          setFiles={setFiles}
+          setAppErrors={appLogic.setAppErrors}
+          fileHeadingPrefix={t(
+            "pages.claimsUploadCertification.fileHeadingPrefix"
+          )}
+          addFirstFileButtonText={t(
+            "pages.claimsUploadCertification.addFirstFileButton"
+          )}
+          addAnotherFileButtonText={t(
+            "pages.claimsUploadCertification.addAnotherFileButton"
+          )}
+        />
+      )}
     </QuestionPage>
   );
 };
@@ -109,9 +139,11 @@ export const UploadCertification = (props) => {
 UploadCertification.propTypes = {
   appLogic: PropTypes.object.isRequired,
   claim: PropTypes.instanceOf(Claim),
+  documents: PropTypes.arrayOf(PropTypes.instanceOf(Document)),
+  isLoadingDocuments: PropTypes.bool,
   query: PropTypes.shape({
     claim_id: PropTypes.string,
   }),
 };
 
-export default withClaim(UploadCertification);
+export default withClaim(withClaimDocuments(UploadCertification));
