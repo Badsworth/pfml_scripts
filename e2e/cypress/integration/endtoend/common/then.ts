@@ -1,7 +1,10 @@
 import { Then } from "cypress-cucumber-preprocessor/steps";
-import { CypressStepThis } from "@/types";
+import { CypressStepThis, TestType } from "@/types";
 import { lookup, getLeaveType } from "./util";
+import { fineos, scenarios } from "./actions";
 import "@rckeller/cypress-unfetch/await";
+
+const scenarioFunctions: Record<TestType, () => void> = scenarios;
 
 Then("I should see a success page confirming my claim submission", function () {
   cy.url({ timeout: 20000 }).should("include", "/claims/success");
@@ -581,15 +584,6 @@ Then("I add payment info", function (this: CypressStepThis): void {
   cy.contains("button", "Save and continue").click();
 });
 
-Then("I should find the specified claim", function (): void {
-  /* For Testing (hard coded Claim Number)
-    cy.get("h2 > span").should("contain.text", "NTN-84-ABS-01");
-  */
-  cy.unstash("ClaimNumber").then((claimNumber) => {
-    cy.get("h2 > span").should("contain.text", claimNumber);
-  });
-});
-
 Then("I should add weekly wage", function (): void {
   cy.labelled("Average weekly wage").type("{selectall}{backspace}1000");
   cy.get('input[type="submit"][id="p9_un7_editPageSave"]').click();
@@ -604,37 +598,7 @@ Then("I should fufill availability request", function (): void {
 });
 
 Then("I should confirm evidence is {string}", function (label: string): void {
-  let receipt: string, decision: string, reason: string;
-  if (label === "valid") {
-    receipt = "Received";
-    decision = "Satisfied";
-    reason = "Evidence is Approved";
-  } else if (label === "invalid due to missing HCP form") {
-    receipt = "Not Received";
-    decision = "Pending";
-    reason = "Missing HCP Form";
-  } else if (label === "invalid due to missing identity documents") {
-    receipt = "Received";
-    decision = "Not Satisfied";
-    reason = "Submitted document is not a valid out-of-state ID.";
-  } else {
-    receipt = "Not Received";
-    decision = "Pending";
-    reason = "";
-  }
-  cy.labelled("Evidence Receipt")
-    .get('select[id="manageEvidenceResultPopupWidget_un92_evidence-receipt"]')
-    .select(receipt);
-  cy.labelled("Evidence Decision")
-    .get(
-      'select[id="manageEvidenceResultPopupWidget_un92_evidence-resulttype"]'
-    )
-    .select(decision);
-  cy.labelled("Evidence Decision Reason").type(reason);
-  cy.get('input[type="button"][value="OK"]').click();
-  if (label === "invalid due to missing HCP form") {
-    cy.get("#p8_un180_editPageSave").click();
-  }
+  fineos.validateEvidence(label);
 });
 
 Then("I click Accept", function (): void {
@@ -656,17 +620,11 @@ Then("I check financial eligibility", function (): void {
 });
 
 Then("I click Reject", function (): void {
-  cy.get('input[title="Reject Leave Plan"]').click();
-  cy.get("#footerButtonsBar").find('input[value="OK"]').dblclick();
+  fineos.clickReject();
 });
 
 Then("I should confirm task assigned to DFML Ops", function (): void {
-  cy.get("#PopupContainer").contains("Transferred to DFML Ops");
-  cy.get(".popup_buttons").find('input[value="OK"]').click();
-  cy.get("#BasicDetailsUsersDeptWidget_un16_Department").should(
-    "contain.text",
-    "DFML Ops"
-  );
+  fineos.confirmDFMLTransfer();
 });
 
 Then("I add {string} as reason in notes", function (reason: string): void {
@@ -688,28 +646,16 @@ Then("I add {string} as reason in notes", function (reason: string): void {
   cy.get("div[class='popup-footer']").find("input[title='OK']").click();
 });
 
-Then("I click on Evidence Review", function (): void {
-  cy.get('td[title="Evidence Review"]').first().click();
-});
-
-Then("I should start transferring task to DMFL", function (): void {
-  cy.get('div[title="Transfer"]').dblclick();
-  cy.get('a[title="Transfer to Dept"]').dblclick({ force: true });
-});
-
-Then("I should finish transferring task to DMFL", function (): void {
-  cy.get(':nth-child(2) > [title="DFML Ops"]').first().click();
-  cy.contains("label", "Description")
-    .parentsUntil("tr")
-    .get("textarea")
-    .type("This claim is missing a Health Care Provider form.");
-  cy.get("#p12_un6_editPageSave").click();
-});
-
 Then("I should confirm claim has been completed", function (): void {
-  cy.get("#completedLeaveCardWidget").contains("Complete");
+  fineos.claimCompletion();
 });
 
-Then("I click Next", function () {
-  cy.get("#p10_un8_next").click();
+Then("I should adjudicate the {string} claim properly in Fineos", function (
+  scenario: string
+): void {
+  scenarioFunctions[scenario as TestType]();
+});
+
+Then("I should transfer task to DMFL", function (): void {
+  fineos.transferToDFML();
 });

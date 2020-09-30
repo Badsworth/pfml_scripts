@@ -179,13 +179,5 @@ type DebitCard = Payment & {
 export type PaymentInfo = DirectDeposit | DebitCard;
 
 // Used for Cucumber parameters.
-export const MedicalClaimTestTypes = [
-  "MedicalBasic",
-  "MedicalAddlBenefits",
-  "MedicalBasicNew",
-  "HAP1",
-  "HAP2",
-  "GBR1",
-  "HAP3",
-] as const;
-export type TestType = typeof MedicalClaimTestTypes[number];
+export const ScenarioClaimTestTypes = ["HAP1", "HAP2", "HAP3", "GBR1"] as const;
+export type TestType = typeof ScenarioClaimTestTypes[number];

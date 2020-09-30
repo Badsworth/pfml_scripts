@@ -19,7 +19,8 @@
     "baseUrl": "src",
     "paths": {
       "@/*": ["*"],
-      "@test/*": ["../test/*"]
+      "@test/*": ["../test/*"],
+      "@cypress/*": ["../cypress/*"],
     }
   },
   "include": [
