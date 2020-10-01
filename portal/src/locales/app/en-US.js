@@ -310,63 +310,6 @@ const pages = {
     sectionLabel: "What's your birthdate?",
     title: "$t(shared.claimsVerifyIdTitle)",
   },
-  claimsDuration: {
-    continuousTypeHint: "$t(shared.claimDurationTypeContinuous)",
-    continuousTypeLabel:
-      "I need to take off work completely for a period of time.",
-    durationTypeSectionHint_bonding:
-      "You can take up to 12 weeks of family leave within the first year of your child’s birth or placement. You do not need to take this leave all at once.",
-    durationTypeSectionHint_medical:
-      'Refer to Question 18 in the "Ability to work" section of the Healthcare Provider Form.',
-    durationTypeSectionLabel: "Which of the following situations apply?",
-    durationTypeSelectAllHint: "Select all that apply.",
-    intermittentDurationBasisDaysLabel: "At least a day",
-    intermittentDurationBasisHint:
-      'Refer to Question 28 in the "Estimated leave period" section of the Healthcare Provider Form.',
-    intermittentDurationBasisHoursLabel: "Less than a full work day",
-    intermittentDurationBasisLabel: "How long will an absence typically last?",
-    intermittentDurationHint:
-      'Refer to Question 28 in the "Estimated leave period" section of the Healthcare Provider Form.',
-    intermittentDurationLabel: "",
-    intermittentDurationLabelBase:
-      "How many {{unit}} of work will you miss per absence?",
-    intermittentDurationLabel_Days:
-      '$t(pages.claimsDuration.intermittentDurationLabelBase, {"unit": "days"})',
-    intermittentDurationLabel_Hours:
-      '$t(pages.claimsDuration.intermittentDurationLabelBase, {"unit": "hours"})',
-    intermittentFrequencyBasisDaysLabel: "Irregular over the next 6 months",
-    intermittentFrequencyBasisHint:
-      'Refer to Question 27 in the "Estimated leave period" section of the Healthcare Provider Form.',
-    intermittentFrequencyBasisLabel:
-      "How often might you need to be absent from work?",
-    intermittentFrequencyBasisMonthsLabel: "At least once a month",
-    intermittentFrequencyBasisWeeksLabel: "At least once a week",
-    intermittentFrequencyHint:
-      'Refer to Question 27 in the "Estimated leave period" section of the Healthcare Provider Form.',
-    intermittentFrequencyLabel: "",
-    intermittentFrequencyLabelBase: "Estimate how many absences {{per}}.",
-    intermittentFrequencyLabel_Months:
-      '$t(pages.claimsDuration.intermittentFrequencyLabelBase, {"per": "per month"})',
-    intermittentFrequencyLabel_Weeks:
-      '$t(pages.claimsDuration.intermittentFrequencyLabelBase, {"per": "per week"})',
-    intermittentFrequencyLabel_every6months:
-      '$t(pages.claimsDuration.intermittentFrequencyLabelBase, {"per": "over the next 6 months"})',
-    intermittentSectionLabel:
-      "Tell us the estimated frequency and duration of your intermittent leave.",
-    intermittentTypeHint: "Intermittent leave",
-    intermittentTypeLabel: "I need to take off work at irregular intervals.",
-    reducedHoursPerWeekHint:
-      'Refer to Question 26 in the "Estimated leave period" section of the Healthcare Provider Form.',
-    reducedHoursPerWeekLabel:
-      "How many hours will your work schedule be reduced by each week?",
-    reducedTypeHint: "$t(shared.claimDurationTypeReducedSchedule)",
-    reducedTypeLabel: "I need to work a reduced schedule for a period of time.",
-    reducedWeeksHint:
-      'Refer to Question 25 in the "Estimated leave period" section of the Healthcare Provider Form.',
-    reducedWeeksLabel:
-      "How many weeks of a reduced leave schedule do you need?",
-    title: "$t(shared.claimsLeaveDetailsTitle)",
-  },
   claimsEmployerBenefitDetails: {
     addButton: "Add another benefit",
     amountExample: "For example, $250 every month",
@@ -428,6 +371,33 @@ const pages = {
       "We’ll confirm this information and use it to calculate your benefit amount. If your schedule varies, tell us the average number of hours you worked over the past 52 weeks.",
     sectionLabel: "On average, how many hours do you work each week?",
     title: "$t(shared.claimsEmploymentInfoTitle)",
+  },
+  claimsIntermittentFrequency: {
+    durationBasisChoice_days: "At least a day",
+    durationBasisChoice_hours: "Less than a full work day",
+    durationBasisHint_medical:
+      'Refer to Question 32 in the "Estimate leave details" section of the certification form (page 6).',
+    durationBasisLabel: "How long will an absence typically last?",
+    durationHint_medical:
+      'Refer to Question 32 in the "Estimate leave details" section of the certification form (page 6).',
+    durationLabel_days: "How many days of work will you miss per absence?",
+    durationLabel_hours: "How many hours of work will you miss per absence?",
+    frequencyBasisChoice_irregular: "Irregular over the next 6 months",
+    frequencyBasisChoice_months: "At least once a month",
+    frequencyBasisChoice_weeks: "At least once a week",
+    frequencyBasisHint_medical:
+      'Refer to Question 31 in the "Estimate leave details" section of the certification form (page 6).',
+    frequencyBasisLabel: "How often might you need to be absent from work?",
+    frequencyHint_medical:
+      'Refer to Question 31 in the "Estimate leave details" section of the certification form (page 6).',
+    frequencyLabel_irregular:
+      "Estimate how many absences over the next 6 months.",
+    frequencyLabel_months: "Estimate how many absences per month.",
+    frequencyLabel_weeks: "Estimate how many absences per week.",
+    medicalAlert: "$t(shared.leavePeriodMedicalAlert)",
+    sectionLabel:
+      "Tell us the estimated frequency and duration of your intermittent leave.",
+    title: "$t(shared.claimsLeaveDetailsTitle)",
   },
   claimsLeavePeriodContinuous: {
     choiceNo: "$t(shared.choiceNo)",

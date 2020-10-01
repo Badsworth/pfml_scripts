@@ -1,0 +1,27 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`IntermittentFrequency displays Alert about having medical form when claim is for Medical leave 1`] = `
+<Alert
+  state="info"
+>
+  You will need a completed medical leave certification form for this section.
+</Alert>
+`;
+
+exports[`IntermittentFrequency displays duration label corresponding to selected duration basis 1`] = `"How many days of work will you miss per absence?"`;
+
+exports[`IntermittentFrequency displays duration label corresponding to selected duration basis 2`] = `"How many hours of work will you miss per absence?"`;
+
+exports[`IntermittentFrequency displays frequency label corresponding to selected frequency interval and basis 1`] = `"Estimate how many absences per week."`;
+
+exports[`IntermittentFrequency displays frequency label corresponding to selected frequency interval and basis 2`] = `"Estimate how many absences per month."`;
+
+exports[`IntermittentFrequency displays frequency label corresponding to selected frequency interval and basis 3`] = `"Estimate how many absences over the next 6 months."`;
+
+exports[`IntermittentFrequency displays hint text with medical form context when claim is for Medical leave 1`] = `"Refer to Question 31 in the \\"Estimate leave details\\" section of the certification form (page 6)."`;
+
+exports[`IntermittentFrequency displays hint text with medical form context when claim is for Medical leave 2`] = `"Refer to Question 31 in the \\"Estimate leave details\\" section of the certification form (page 6)."`;
+
+exports[`IntermittentFrequency displays hint text with medical form context when claim is for Medical leave 3`] = `"Refer to Question 32 in the \\"Estimate leave details\\" section of the certification form (page 6)."`;
+
+exports[`IntermittentFrequency displays hint text with medical form context when claim is for Medical leave 4`] = `"Refer to Question 32 in the \\"Estimate leave details\\" section of the certification form (page 6)."`;
