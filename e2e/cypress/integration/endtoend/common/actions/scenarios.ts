@@ -15,20 +15,10 @@ export function HAP1(): void {
   // When I click edit
   cy.wait(2000).get('input[type="submit"][value="Edit"]').click();
 
-  // Then I should add weekly wage
-  cy.labelled("Average weekly wage").type("{selectall}{backspace}1000");
-  cy.get('input[type="submit"][id="p9_un7_editPageSave"]').click();
-
+  fineos.addWeeklyWage();
   fineos.onTab("Evidence");
   fineos.onTab("Certification Periods");
-
-  // Then I should fufill availability request
-  cy.get('input[type="submit"][value="Prefill with Requested Absence Periods"]')
-    .click()
-    .wait(1000);
-  cy.get('input[type="submit"][value="Yes"]').click();
-  cy.get('input[type="submit"][id="p8_un180_editPageSave"]').click();
-
+  fineos.fufillAvailability();
   fineos.clickAdjudicate();
   fineos.onTab("Evidence");
   fineos.manageEvidence();
@@ -40,16 +30,9 @@ export function HAP1(): void {
   fineos.manageEvidence();
   fineos.validateEvidence("valid");
   fineos.onTab("Manage Request");
-
-  // Then I click Accept
-  cy.get('input[title="Accept Leave Plan"]').click();
-  cy.get('input[type="submit"][id="p10_un180_editPageSave"]').click();
-
+  fineos.acceptClaim();
   fineos.onPage("claims");
-
-  // Then I should approve Claim
-  cy.get('a[title="Approve the Pending Leaving Request"]').dblclick();
-  cy.get("#managedLeaveProgressCardWidget").contains("Future Leave");
+  fineos.approveClaim();
 }
 
 export function HAP2(): void {

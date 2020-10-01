@@ -69,32 +69,31 @@ export function clickDeny(): void {
 export function validateEvidence(label: string): void {
   let receipt: string, decision: string, reason: string;
   switch (label) {
-    case "valid": {
+    case "valid":
       receipt = "Received";
       decision = "Satisfied";
       reason = "Evidence is Approved";
-    }
-    case "invalid due to missing HCP form": {
+      break;
+    case "invalid due to missing HCP form":
       receipt = "Not Received";
       decision = "Pending";
       reason = "Missing HCP Form";
-    }
-    case "invalid due to missing identity documents": {
+      break;
+    case "invalid due to missing identity documents":
       receipt = "Received";
       decision = "Not Satisfied";
       reason = "Submitted document is not a valid out-of-state ID.";
-    }
-    case "invalid due to invalid HCP form": {
+      break;
+    case "invalid due to invalid HCP form":
       receipt = "Received";
       decision = "Not Satisfied";
       reason =
         "Submitted document is not a valid DFML-certified HCP form or FMLA form.";
-    }
-    default: {
+      break;
+    default:
       receipt = "Not Received";
       decision = "Pending";
       reason = "";
-    }
   }
   cy.labelled("Evidence Receipt")
     .get('select[id="manageEvidenceResultPopupWidget_un92_evidence-receipt"]')
@@ -107,7 +106,7 @@ export function validateEvidence(label: string): void {
   cy.labelled("Evidence Decision Reason").type(reason);
   cy.get('input[type="button"][value="OK"]').click();
   if (label === "invalid due to missing HCP form") {
-    cy.get("#p8_un180_editPageSave").click();
+    clickBottomWidgetButton();
   }
 }
 
@@ -152,7 +151,8 @@ export function addEvidenceReviewTask(): void {
     .find('input[type="text"]')
     .type("outstanding document");
   cy.get("#NameSearchWidget").find('input[type="submit"]').click();
-  cy.get("#p10_un8_next").click();
+  // cy.get("#p10_un8_next").click();
+  clickBottomWidgetButton("Next");
   cy.get('td[title*="Outstanding Document"]').first().click();
   cy.get("input[type='submit'][title='Open this task']").click();
 }
@@ -166,7 +166,7 @@ export function transferToDFML(): void {
     .parentsUntil("tr")
     .get("textarea")
     .type("This claim is missing a Health Care Provider form.");
-  cy.get("#p12_un6_editPageSave").click();
+  clickBottomWidgetButton();
 }
 
 export function confirmDFMLTransfer(): void {
@@ -176,4 +176,33 @@ export function confirmDFMLTransfer(): void {
     "contain.text",
     "DFML Ops"
   );
+}
+
+export function clickBottomWidgetButton(value = "OK"): void {
+  cy.get("#PageFooterWidget").within(() => {
+    cy.get(`input[value="${value}"]`).click();
+  });
+}
+
+export function addWeeklyWage(): void {
+  cy.labelled("Average weekly wage").type("{selectall}{backspace}1000");
+  clickBottomWidgetButton();
+}
+
+export function fufillAvailability(): void {
+  cy.get('input[type="submit"][value="Prefill with Requested Absence Periods"]')
+    .click()
+    .wait(1000);
+  cy.get('input[type="submit"][value="Yes"]').click();
+  clickBottomWidgetButton();
+}
+
+export function acceptClaim(): void {
+  cy.get('input[title="Accept Leave Plan"]').click();
+  clickBottomWidgetButton();
+}
+
+export function approveClaim(): void {
+  cy.get('a[title="Approve the Pending Leaving Request"]').dblclick();
+  cy.get("#managedLeaveProgressCardWidget").contains("Future Leave");
 }

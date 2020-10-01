@@ -599,16 +599,11 @@ Then("I add payment info", function (this: CypressStepThis): void {
 });
 
 Then("I should add weekly wage", function (): void {
-  cy.labelled("Average weekly wage").type("{selectall}{backspace}1000");
-  cy.get('input[type="submit"][id="p9_un7_editPageSave"]').click();
+  fineos.addWeeklyWage();
 });
 
 Then("I should fufill availability request", function (): void {
-  cy.get('input[type="submit"][value="Prefill with Requested Absence Periods"]')
-    .click()
-    .wait(1000);
-  cy.get('input[type="submit"][value="Yes"]').click();
-  cy.get('input[type="submit"][id="p8_un180_editPageSave"]').click();
+  fineos.fufillAvailability();
 });
 
 Then("I should confirm evidence is {string}", function (label: string): void {
@@ -616,13 +611,11 @@ Then("I should confirm evidence is {string}", function (label: string): void {
 });
 
 Then("I click Accept", function (): void {
-  cy.get('input[title="Accept Leave Plan"]').click();
-  cy.get('input[type="submit"][id="p10_un180_editPageSave"]').click();
+  fineos.acceptClaim();
 });
 
 Then("I should approve claim", function (): void {
-  cy.get('a[title="Approve the Pending Leaving Request"]').dblclick();
-  cy.get("#managedLeaveProgressCardWidget").contains("Future Leave");
+  fineos.approveClaim();
 });
 
 Then("I should confirm {string} is not present", function (): void {
