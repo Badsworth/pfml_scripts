@@ -238,18 +238,15 @@ def import_to_db(
 
 
 def import_employers(db_session, employers, report, import_log_entry_id):
-    # look through all employers
     """Import employers into db"""
     logger.info("Importing employers")
 
     existing_employers = dor_persistence_util.get_all_employers_fein(db_session)
+    fein_to_employer = {employer.employer_fein: employer for employer in existing_employers}
 
-    def search(fein):
-        for e in existing_employers:
-            if e[1] == fein:
-                return e
-
-    employer_list = list(filter(lambda employer: search(employer["fein"]) is None, employers))
+    employer_list = list(
+        filter(lambda employer: employer["fein"] not in fein_to_employer, employers)
+    )
 
     fein_to_new_employer_id = {}
     fein_to_new_address_id = {}
@@ -265,17 +262,19 @@ def import_employers(db_session, employers, report, import_log_entry_id):
             employer_list,
         )
     )
-    found_employers = list(filter(lambda employer: search(employer["fein"]) is not None, employers))
+    found_employers = list(filter(lambda employer: employer["fein"] in fein_to_employer, employers))
 
     employers_to_update = list(
         filter(
-            lambda employer: employer["updated_date"] > search(employer["fein"]).dor_updated_date,
+            lambda employer: employer["updated_date"]
+            > fein_to_employer[employer["fein"]].dor_updated_date,
             found_employers,
         )
     )
     emplyers_to_not_update = list(
         filter(
-            lambda employer: employer["updated_date"] <= search(employer["fein"]).dor_updated_date,
+            lambda employer: employer["updated_date"]
+            <= fein_to_employer[employer["fein"]].dor_updated_date,
             found_employers,
         )
     )
@@ -342,7 +341,10 @@ def import_employers(db_session, employers, report, import_log_entry_id):
         account_key_to_employer_id_map[account_key] = existing_employer.employer_id
 
     report.unmodified_employer_ids = list(
-        map(lambda employer: str(search(employer["fein"]).employer_id), emplyers_to_not_update)
+        map(
+            lambda employer: str(fein_to_employer[employer["fein"]].employer_id),
+            emplyers_to_not_update,
+        )
     )
     report.created_employers_count = len(employers_to_create)
     report.updated_employers_count = len(report.updated_employer_ids)
