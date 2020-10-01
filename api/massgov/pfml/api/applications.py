@@ -333,6 +333,12 @@ def documents_get(application_id):
         # Check if user can read application
         ensure(READ, existing_application)
 
+        # Check if application has been submitted to fineos
+        if existing_application.fineos_absence_id is None:
+            return response_util.success_response(
+                message="Successfully retrieved documents", data=[], status_code=200,
+            ).to_api_response()
+
         documents = get_documents(existing_application, db_session)
 
         documents_list = [doc.dict() for doc in documents]

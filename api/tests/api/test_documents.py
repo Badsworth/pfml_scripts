@@ -184,3 +184,18 @@ def test_documents_get(client, consented_user, consented_user_token, test_db_ses
     assert response_data["description"] == "Mock File"
     assert response_data["user_id"] == str(consented_user.user_id)
     assert response_data["created_at"] is not None
+
+
+def test_documents_get_not_submitted_application(
+    client, consented_user, consented_user_token, test_db_session
+):
+    application = ApplicationFactory.create(user=consented_user)
+
+    response = client.get(
+        "/v1/applications/{}/documents".format(application.application_id),
+        headers={"Authorization": f"Bearer {consented_user_token}"},
+    ).get_json()
+
+    assert response["status_code"] == 200
+    assert response["data"] is not None
+    assert len(response["data"]) == 0
