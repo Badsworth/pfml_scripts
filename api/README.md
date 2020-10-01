@@ -23,6 +23,13 @@ This is the API for the Massachusetts Paid Family and Medical Leave program. See
 6. [Monitoring and Alerting](#monitoring-and-alerting)
 7. [Directory Structure](#directory-structure)
 
+**You may also be interested in:**
+
+- [Setting up project tooling](../README.md)
+- [Development practices](../docs/contributing.md)
+- [Adding fields and validations](../docs/api/fields-and-validations.md)
+- [Additional API-specific documentation](../docs/api/)
+
 ## Getting Started
 
 ### Quickstart
