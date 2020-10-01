@@ -511,6 +511,39 @@ paths:
         default:
           $ref: "#/components/responses/UnexpectedError"
 
+  /notifications:
+    post:
+      security:
+        - {} # no authentication while mocked
+      tags:
+        - Notifications
+      summary: >
+        Send a notification that a document is available for a claimant to either the claimant or leave administrator.
+      responses:
+        "201":
+          description: a successful response returns a 201 status code and asynchronously starts the notification process.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessfulResponse"
+                example:
+                  meta:
+                    method: "POST"
+                    resource: "/notifications"
+                  status_code: 201
+                  message: "success"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "503":
+          description: todo
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+      requestBody:
+        $ref: "#/components/requestBodies/NotificationRequest"
+
 tags:
   - name: Test Endpoints
   - name: Users
@@ -519,6 +552,7 @@ tags:
   - name: Applications
   - name: Financial Eligibility
   - name: ID Proofing
+  - name: Notifications
 
 components:
   securitySchemes:
@@ -566,6 +600,12 @@ components:
         application/json:
           schema:
             $ref: "#/components/schemas/EligibilityRequest"
+      required: true
+    NotificationRequest:
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/NotificationRequest"
       required: true
 
   responses:
@@ -1610,6 +1650,90 @@ components:
       required:
         - verified
         - description
+
+    NotificationRecipient:
+      type: object
+      properties:
+        first_name:
+          type: string
+          example: "Jane"
+          nullable: false
+          minLength: 1
+        last_name:
+          type: string
+          example: "Doe"
+          nullable: false
+          minLength: 1
+        email_address:
+          type: string
+          format: email
+          example: "j.a.doe@gmail.com"
+          nullable: false
+          minLength: 1
+
+    NotificationRequest:
+      type: object
+      properties:
+        absence_case_id:
+          title: Absence Case ID
+          description: FINEOS ID for the case the notification is related to.
+          type: string
+          example: NTN-111-ABS-01
+          minLength: 1
+        document_type:
+          title: Document Type
+          description: The type of document that is available to view.
+          type: string
+          example: Legal Notice
+          minLength: 1
+        trigger:
+          title: Trigger
+          description: The claim state that triggered the notification.
+          type: string
+          example: claim.approved
+        source:
+          title: Source
+          description: The source of the claim application. Can be either Self-Service or Call Center.
+          type: string
+          example: Self-Service
+          enum:
+            - Self-Service
+            - Call Center
+        recipient_type:
+          title: Recipient Type
+          description: Who is receiving the notification/what type of person is in the recipients list. Can be either Claimant or Leave Administrator.
+          type: string
+          example: Leave Administrator
+          enum:
+            - Claimant
+            - Leave Administrator
+        recipients:
+          type: array
+          description: Who to send the notification to.
+          items:
+            $ref: "#/components/schemas/NotificationRecipient"
+        claimant_info:
+          type: object
+          description: The claimant that the notification pertains to.
+          properties:
+            first_name:
+              type: string
+              example: "John"
+              nullable: false
+              minLength: 1
+            last_name:
+              type: string
+              example: "Smith"
+              nullable: false
+              minLength: 1
+
+      required:
+        - absence_case_id
+        - document_type
+        - trigger
+        - source
+        - recipient_type
+        - recipients
 
     SsnItin:
       type: string
