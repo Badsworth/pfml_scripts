@@ -182,6 +182,7 @@ def generate_employers(employer_count, on_employer):
 
     logger.info("Generating employer information - count: %i", employer_count)
 
+    fein_provider = 100000001
     for _i in range(employer_count):
 
         if count > 0 and (count % 1000) == 0:
@@ -191,7 +192,9 @@ def generate_employers(employer_count, on_employer):
         account_key = str(account_key_base).rjust(11, "0")
         account_key_base += 1
 
-        fein = fake.ssn(taxpayer_identification_number_type="EIN").replace("-", "")
+        fein = str(fein_provider)
+        fein_provider = fein_provider + 1
+
         employer_name = fake.company()
         employer_address_street = fake.street_address()
         employer_address_city = fake.city()
@@ -313,11 +316,14 @@ def generate_employee_employer_quarterly_wage_rows(
     count = 0
 
     # for the number of employees we want to generate
+    ssn_provider = 250000001
     for _i in range(employee_count):
         # create employee details
         first_name = fake.first_name()
         last_name = fake.last_name()
-        ssn = fake.ssn().replace("-", "")
+
+        ssn = str(ssn_provider)
+        ssn_provider = ssn_provider + 1
 
         # randomly pick employers by random count
         employer_count = random.choice(employer_count_random_pool)
