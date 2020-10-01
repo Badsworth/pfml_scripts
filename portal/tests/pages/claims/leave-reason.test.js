@@ -10,17 +10,11 @@ import { act } from "react-dom/test-utils";
 jest.mock("../../../src/hooks/useAppLogic");
 
 describe("LeaveReasonPage", () => {
-  let appLogic, changeRadioGroup, claim, wrapper;
-  function render() {
-    ({ appLogic, claim, wrapper } = renderWithAppLogic(LeaveReasonPage, {
-      claimAttrs: claim,
-    }));
-    ({ changeRadioGroup } = simulateEvents(wrapper));
-  }
-
   it("renders the page for medical leave and does not show reason qualifier followup", () => {
-    claim = new MockClaimBuilder().medicalLeaveReason().create();
-    render();
+    const { wrapper } = renderWithAppLogic(LeaveReasonPage, {
+      claimAttrs: new MockClaimBuilder().medicalLeaveReason().create(),
+    });
+
     expect(wrapper).toMatchSnapshot();
     expect(
       wrapper.find({ name: "leave_details.reason_qualifier" }).prop("visible")
@@ -28,13 +22,18 @@ describe("LeaveReasonPage", () => {
   });
 
   describe("when a user selects bonding as their leave reason", () => {
+    let appLogic, changeRadioGroup, claim, wrapper;
+
     beforeEach(() => {
+      ({ appLogic, claim, wrapper } = renderWithAppLogic(LeaveReasonPage, {
+        claimAttrs: new MockClaimBuilder().create(),
+      }));
+      ({ changeRadioGroup } = simulateEvents(wrapper));
+
       changeRadioGroup("leave_details.reason", LeaveReason.bonding);
     });
 
     it("shows the bonding type question", () => {
-      claim = new MockClaimBuilder().bondingBirthLeaveReason().create();
-      render();
       expect(
         wrapper
           .find({ name: "leave_details.reason_qualifier" })
@@ -43,41 +42,42 @@ describe("LeaveReasonPage", () => {
       ).toBeTruthy();
     });
 
-    describe("when user clicks continue", () => {
-      it("calls claims.update with leave reason and reason qualifier for bonding leave", () => {
-        claim = new MockClaimBuilder().bondingBirthLeaveReason().create();
-        render();
-        act(() => {
-          wrapper.find("QuestionPage").simulate("save");
-        });
+    it("calls claims.update with leave reason and reason qualifier for bonding leave", () => {
+      changeRadioGroup(
+        "leave_details.reason_qualifier",
+        ReasonQualifier.newBorn
+      );
 
-        expect(appLogic.claims.update).toHaveBeenCalledWith(
-          claim.application_id,
-          {
-            leave_details: {
-              reason: LeaveReason.bonding,
-              reason_qualifier: ReasonQualifier.newBorn,
-            },
-          }
-        );
+      act(() => {
+        wrapper.find("QuestionPage").simulate("save");
       });
 
-      it("calls claims.update with with only leave reason for medical leave", () => {
-        claim = new MockClaimBuilder().medicalLeaveReason().create();
-        render();
-        act(() => {
-          wrapper.find("QuestionPage").simulate("save");
-        });
-        expect(appLogic.claims.update).toHaveBeenCalledWith(
-          claim.application_id,
-          {
-            leave_details: {
-              reason: LeaveReason.medical,
-              reason_qualifier: null,
-            },
-          }
-        );
-      });
+      expect(appLogic.claims.update).toHaveBeenCalledWith(
+        claim.application_id,
+        {
+          leave_details: {
+            reason: LeaveReason.bonding,
+            reason_qualifier: ReasonQualifier.newBorn,
+          },
+        }
+      );
+    });
+  });
+
+  it("calls claims.update with with only leave reason for medical leave", () => {
+    const { appLogic, claim, wrapper } = renderWithAppLogic(LeaveReasonPage, {
+      claimAttrs: new MockClaimBuilder().medicalLeaveReason().create(),
+    });
+
+    act(() => {
+      wrapper.find("QuestionPage").simulate("save");
+    });
+
+    expect(appLogic.claims.update).toHaveBeenCalledWith(claim.application_id, {
+      leave_details: {
+        reason: LeaveReason.medical,
+        reason_qualifier: null,
+      },
     });
   });
 });

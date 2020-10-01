@@ -84,7 +84,7 @@ export const LeaveReason = (props) => {
         getField={getField}
         removeField={removeField}
         updateFields={updateFields}
-        visible={claim.isBondingLeave}
+        visible={reason === LeaveReasonEnum.bonding}
       >
         <InputChoiceGroup
           {...getFunctionalInputProps("leave_details.reason_qualifier")}
