@@ -14,10 +14,10 @@ exports[`Success renders Success page 1`] = `
     }
   />
   <p>
-    We’ll begin processing this application soon, and your employee should hear from us within 14 calendar days.
+    We’ll begin processing this application and your employee should hear from us within 14 calendar days.
   </p>
   <p>
-    Once a decision has been made, you’ll receive an email notification with a link to details about the decision.
+    Once we’ve made a decision, you’ll receive an email notification with a link to details about the decision.
   </p>
   <p>
     <Trans

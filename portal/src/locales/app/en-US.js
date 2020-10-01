@@ -847,9 +847,9 @@ const pages = {
     instructions_benefitsGuide:
       "To learn more about how benefits are calculated, visit our <benefits-guide-link>PFML Benefits Guide</benefits-guide-link>.",
     instructions_emailNotification:
-      "Once a decision has been made, you’ll receive an email notification with a link to details about the decision.",
+      "Once we’ve made a decision, you’ll receive an email notification with a link to details about the decision.",
     instructions_processingApplication:
-      "We’ll begin processing this application soon, and your employee should hear from us within 14 calendar days.",
+      "We’ll begin processing this application and your employee should hear from us within 14 calendar days.",
     title: "Thanks for reviewing the application",
   },
   index: {
