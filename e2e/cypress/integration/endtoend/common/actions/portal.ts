@@ -1,6 +1,3 @@
-import { Credentials } from "@/types";
-import PortalSubmitter from "@/simulation/PortalSubmitter";
-
 export function onPage(page: string): void {
   cy.url().should("include", `/claims/${page}`);
 }
@@ -12,24 +9,12 @@ export function submittingClaimType(claimType: string): void {
 }
 
 export function submitClaimDirectlyToAPI(scenario: string): void {
-  const submitter = new PortalSubmitter({
-    ClientId: Cypress.env("E2E_COGNITO_CLIENTID"),
-    UserPoolId: Cypress.env("E2E_COGNITO_POOL"),
-    Username: Cypress.env("E2E_PORTAL_USERNAME"),
-    Password: Cypress.env("E2E_PORTAL_PASSWORD"),
-    ApiBaseUrl: Cypress.env("E2E_API_BASE_URL"), // verify api base url
-  });
-  cy.fixture(scenario).then((application) => {
-    console.log("application", application);
-    submitter
-      .submit(application)
-      .then((fineosId) => {
-        console.log("Submitted claim with id", fineosId);
-        // cy.stash("claimNumber", fineosId);
-      })
-      .catch((err) => {
-        console.error("Failed to submit claim:", err);
-      });
+  cy.fixture(scenario).then({ timeout: 40000 }, (app) => {
+    console.log("submitting", app);
+    cy.task("submitClaimToAPI", app).then((fineosId) => {
+      cy.stash("claimNumber", fineosId);
+      console.log("submitted", fineosId);
+    });
   });
 }
 

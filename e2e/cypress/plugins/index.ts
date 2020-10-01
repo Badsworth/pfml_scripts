@@ -12,10 +12,11 @@
 import { config as dotenv } from "dotenv";
 import retry from "p-retry";
 import delay from "delay";
-import webpackPreprocessor from "@cypress/webpack-preprocessor";
-import TestMailVerificationFetcher from "./TestMailVerificationFetcher";
-import { Credentials } from "@/types";
 import faker from "faker";
+import webpackPreprocessor from "@cypress/webpack-preprocessor";
+import { CypressStepThis } from "@/types";
+import TestMailVerificationFetcher from "./TestMailVerificationFetcher";
+import PortalSubmitter from "../../src/simulation/PortalSubmitter";
 
 export type FillPDFTaskOptions = {
   source: string;
@@ -54,13 +55,43 @@ export default function (on: Cypress.PluginEvents): Cypress.ConfigOptions {
         },
       });
     },
-    generateCredentials(): Credentials {
+    generateCredentials(): CypressStepThis["credentials"] {
       const { E2E_TESTMAIL_NAMESPACE } = process.env;
       const tag = faker.random.alphaNumeric(8);
       return {
         username: `${E2E_TESTMAIL_NAMESPACE}.${tag}@inbox.testmail.app`,
         password: faker.internet.password(10) + faker.random.number(999),
       };
+    },
+    async submitClaimToAPI(
+      application: CypressStepThis["application"]
+    ): Promise<string> {
+      if (!application) throw new Error("Application missing!");
+      const {
+        E2E_COGNITO_CLIENTID: ClientId,
+        E2E_COGNITO_POOL: UserPoolId,
+        E2E_PORTAL_USERNAME: Username,
+        E2E_PORTAL_PASSWORD: Password,
+        E2E_API_BASEURL: ApiBaseUrl,
+      } = process.env;
+      if (!ClientId || !UserPoolId || !Username || !Password || !ApiBaseUrl) {
+        throw new Error(
+          "Task 'submitClaimToAPI' failed due to missing environment variables!"
+        );
+      }
+      return new PortalSubmitter({
+        ClientId,
+        UserPoolId,
+        Username,
+        Password,
+        ApiBaseUrl,
+      })
+        .submit(application)
+        .then((fineosId) => fineosId)
+        .catch((err) => {
+          console.error("Failed to submit claim:", err.data);
+          throw new Error(err);
+        });
     },
   });
 

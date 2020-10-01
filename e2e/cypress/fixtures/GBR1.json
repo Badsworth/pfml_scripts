@@ -13,6 +13,12 @@
     "state": "PA",
     "zip": "93040"
   },
+  "residential_address": {
+    "city": "South Alexa",
+    "line_1": "302 Myah Spring",
+    "state": "CT",
+    "zip": "31705-6748"
+  },
   "leave_details": {
     "continuous_leave_periods": [
       {
@@ -32,7 +38,8 @@
       "payment_method": "ACH",
       "account_details": {
         "account_number": "12345678",
-        "routing_number": "111111111"
+        "routing_number": "111111111",
+        "account_type": "Checking"
       }
     }
   ]

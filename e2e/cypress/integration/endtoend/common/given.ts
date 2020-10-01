@@ -41,6 +41,12 @@ Given("I am on the claim case page", function () {
 Given("I submit {string} claim directly to API", function (
   scenario: string
 ): void {
+  // Needs to be on fineos base url
+  // before submitting the claim
+  // because when we change the base url
+  // the whole test restarts
+  fineos.loginSavilinx();
+  cy.visit("/");
   portal.submitClaimDirectlyToAPI(scenario);
 });
 

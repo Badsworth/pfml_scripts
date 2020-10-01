@@ -38,7 +38,14 @@ export default class PortalSubmitter {
   private base: string;
 
   constructor(opts: PortalSubmitterOpts) {
-    const { Username, Password, ClientId, UserPoolId, ApiBaseUrl } = opts;
+    const {
+      Username,
+      Password,
+      ClientId,
+      UserPoolId,
+      ApiBaseUrl,
+      //CustomFetch,
+    } = opts;
     this.pool = new CognitoUserPool({ ClientId, UserPoolId });
     this.details = new AuthenticationDetails({ Username, Password });
     this.base = ApiBaseUrl;

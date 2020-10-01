@@ -10,6 +10,8 @@
 // Import some types here. We'll reference them below.
 type Application = import('./src/types').Application;
 type Credentials = import('./src/types').Credentials;
+type FillPDFTaskOptions = import('./cypress/plugins/index').FillPDFTaskOptions
+type ApplicationRequestBody = import('./src/api').ApplicationRequestBody
 
 declare namespace Cypress {
   interface Cypress {
@@ -28,6 +30,7 @@ declare namespace Cypress {
     // Declare our custom tasks.
     task(event: "getAuthVerification", mail: string): Chainable<string>;
     task(event: "generateCredentials"): Chainable<Credentials>;
+    task(event: "submitClaimToAPI", options: ApplicationRequestBody): Chainable<string>;
   }
 }
 
