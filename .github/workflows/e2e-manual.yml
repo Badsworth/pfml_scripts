@@ -3,10 +3,30 @@ name: End-to-End Test Suite (Manual)
 on:
   workflow_dispatch:
 
+env:
+  CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
+  E2E_API_BASEURL: https://paidleave-api-stage.mass.gov/api/v1
+  E2E_FINEOS_BASEURL: https://idt-claims-webapp.masspfml.fineos.com
+  E2E_FINEOS_USERNAME: ${{ secrets.E2E_FINEOS_USERNAME }}
+  E2E_FINEOS_PASSWORD: ${{ secrets.E2E_FINEOS_PASSWORD }}
+  E2E_PORTAL_BASEURL: https://paidleave-stage.mass.gov/
+  E2E_PORTAL_USERNAME: rob+pfml-cypress-gh1@lastcallmedia.com
+  E2E_PORTAL_PASSWORD: ${{ secrets.E2E_PORTAL_PASSWORD }}
+  E2E_TESTMAIL_APIKEY: ${{ secrets.E2E_TESTMAIL_APIKEY }}
+  E2E_TESTMAIL_NAMESPACE: ${{ secrets.E2E_TESTMAIL_NAMESPACE }}
+  E2E_COGNITO_POOL: us-east-1_HpL4XslLg
+  E2E_COGNITO_CLIENTID: 10rjcp71r8bnk4459c67bn18t8
+  # passing token to detect a build vs a re-run build
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
 jobs:
   test:
     name: End-To-End Test
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        containers: [1,2,3]
     steps:
       - uses: actions/checkout@v2
       - name: Cypress Tests
@@ -15,31 +35,8 @@ jobs:
         with:
           spec: "cypress/integration/endtoend/**/*"
           record: true
+          parallel: true
           working-directory: e2e
-        env:
-          CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
-          E2E_API_BASEURL: https://paidleave-api-stage.mass.gov/api/v1
-          E2E_FINEOS_BASEURL: https://idt-claims-webapp.masspfml.fineos.com
-          E2E_FINEOS_USERNAME: ${{ secrets.E2E_FINEOS_USERNAME }}
-          E2E_FINEOS_PASSWORD: ${{ secrets.E2E_FINEOS_PASSWORD }}
-          E2E_PORTAL_BASEURL: https://paidleave-stage.mass.gov/
-          E2E_PORTAL_USERNAME: rob+pfml-cypress-gh1@lastcallmedia.com
-          E2E_PORTAL_PASSWORD: ${{ secrets.E2E_PORTAL_PASSWORD }}
-          E2E_TESTMAIL_APIKEY: ${{ secrets.E2E_TESTMAIL_APIKEY }}
-          E2E_TESTMAIL_NAMESPACE: ${{ secrets.E2E_TESTMAIL_NAMESPACE }}
-          # passing token to detect a build vs a re-run build
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      # Upload artifacts to capture the run as well.
-      - uses: actions/upload-artifact@v2
-        if: always()
-        with:
-          name: Cypress-Videos
-          path: e2e/cypress/videos/*
-      - uses: actions/upload-artifact@v2
-        if: always()
-        with:
-          name: Cypress-Screenshots
-          path: e2e/cypress/screenshots/*
       - name: Print Dashboard URL
         if: always()
         run: |
