@@ -4,7 +4,11 @@
  */
 module.exports = {
   clearMocks: true,
-  coveragePathIgnorePatterns: ["/node_modules/", "<rootDir>/tests/lib/"],
+  coveragePathIgnorePatterns: [
+    "/node_modules/",
+    "<rootDir>/tests/lib/",
+    "<rootDir>/tests/test-utils.js",
+  ],
   coverageReporters: ["text"],
   moduleFileExtensions: ["js", "mjs", "json", "jsx", "ts", "tsx", "node"],
   moduleNameMapper: {
