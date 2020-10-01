@@ -1,14 +1,13 @@
 import { ApplicationRequestBody } from "@/api";
 import { promisify } from "util";
 import fs from "fs";
-import { FillPDFTaskOptions } from "../../cypress/plugins";
 import { PDFCheckBox, PDFDocument, PDFOptionList, PDFTextField } from "pdf-lib";
 import { parseISO, format, differenceInWeeks } from "date-fns";
 
 const readFile = promisify(fs.readFile);
 const writeFile = promisify(fs.writeFile);
 
-type PDFFormData = FillPDFTaskOptions["data"];
+type PDFFormData = { [k: string]: string };
 
 /**
  * Generates an HCP form for upload to the API.

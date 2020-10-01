@@ -10,7 +10,6 @@
 // Import some types here. We'll reference them below.
 type Application = import('./src/types').Application;
 type Credentials = import('./src/types').Credentials;
-type FillPDFTaskOptions = import('./cypress/plugins/index').FillPDFTaskOptions
 type ApplicationRequestBody = import('./src/api').ApplicationRequestBody
 
 declare namespace Cypress {

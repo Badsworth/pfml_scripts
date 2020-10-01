@@ -1,4 +1,4 @@
-import { portal } from "./actions";
+import { inFieldset, portal } from "./actions";
 import { Then } from "cypress-cucumber-preprocessor/steps";
 import { CypressStepThis, TestType } from "@/types";
 import { lookup, getLeaveType } from "./util";
@@ -569,6 +569,14 @@ Then("I add payment info", function (this: CypressStepThis): void {
       cy.labelled("Account number").type(
         accountDetails?.account_number as string
       );
+      inFieldset("Account type", () => {
+        cy.get("input[type='radio']").check(
+          accountDetails?.account_type as string,
+          {
+            force: true,
+          }
+        );
+      });
       break;
 
     case "Check":
