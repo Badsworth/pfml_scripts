@@ -112,17 +112,7 @@ def process_import_batches(
 ) -> List[ImportReport]:
     import_reports: List[ImportReport] = []
 
-    # Initialize the file decrypter
-    decrypter: Crypt
-
-    if decrypt_files:
-        logger.info("Setting up GPG")
-        gpg_decryption_key = get_secret_from_env(aws_ssm, "GPG_DECRYPTION_KEY")
-        gpg_decryption_passphrase = get_secret_from_env(aws_ssm, "GPG_DECRYPTION_KEY_PASSPHRASE")
-        decrypter = GpgCrypt(gpg_decryption_key, gpg_decryption_passphrase)
-    else:
-        logger.info("Skipping GPG decrypter setup")
-        decrypter = Utf8Crypt()
+    decrypter = decrypter_factory(decrypt_files)
 
     # Initialize the database
     db_session_raw = optional_db_session
@@ -148,6 +138,20 @@ def process_import_batches(
             import_reports.append(import_report)
 
         return import_reports
+
+
+def decrypter_factory(decrypt_files):
+    # Initialize the file decrypter
+    decrypter: Crypt
+    if decrypt_files:
+        logger.info("Setting up GPG")
+        gpg_decryption_key = get_secret_from_env(aws_ssm, "GPG_DECRYPTION_KEY")
+        gpg_decryption_passphrase = get_secret_from_env(aws_ssm, "GPG_DECRYPTION_KEY_PASSPHRASE")
+        decrypter = GpgCrypt(gpg_decryption_key, gpg_decryption_passphrase)
+    else:
+        logger.info("Skipping GPG decrypter setup")
+        decrypter = Utf8Crypt()
+    return decrypter
 
 
 def process_daily_import(
