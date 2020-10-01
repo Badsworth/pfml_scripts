@@ -10,6 +10,7 @@ import massgov.pfml.api.app as app
 import massgov.pfml.api.eligibility.eligibility as eligibility
 import massgov.pfml.api.util.response as response_util
 import massgov.pfml.util.logging
+from massgov.pfml.api.authorization.flask import CREATE, ensure
 from massgov.pfml.db.models.employees import Employee, Employer, TaxIdentifier
 from massgov.pfml.util.pydantic import PydanticBaseModel
 
@@ -33,6 +34,9 @@ class EligibilityRequest(PydanticBaseModel):
 
 
 def eligibility_post():
+    # Bounce them out if they do not have access
+    ensure(CREATE, "Financial Eligibility Calculation")
+
     request = EligibilityRequest.parse_obj(connexion.request.json)
     tax_identifier = request.tax_identifier
     fein = request.employer_fein

@@ -22,8 +22,8 @@ def create_authorization(
     def define_authorization(user: User, they: RuleList) -> None:
         # FINEOS endpoint auth
         if has_role_in(user, [Role.FINEOS]):
-            # Add financial eligibility and ID verification auth here when implementing.
-            pass
+            financial_eligibility(user, they)
+            # TODO: Add auth for /rmv-check https://lwd.atlassian.net/browse/API-628
         else:
             users(user, they)
             applications(user, they)
@@ -34,6 +34,10 @@ def create_authorization(
                 employers(user, they)
 
     return define_authorization
+
+
+def financial_eligibility(user: User, they: RuleList) -> None:
+    they.can(CREATE, "Financial Eligibility Calculation")
 
 
 def users(user: User, they: RuleList) -> None:

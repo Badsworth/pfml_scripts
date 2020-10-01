@@ -440,7 +440,7 @@ paths:
   /financial-eligibility:
     post:
       security:
-        - {} # no authentication option
+        - oauth2: []
       tags:
         - Financial Eligibility
       summary: Retrieve financial eligibility by SSN/ITIN, FEIN, leave start date, application submitted date and employment status.
@@ -477,6 +477,7 @@ paths:
     post:
       security:
         - {} # no authentication while mocked
+        # - oauth2: []
       tags:
         - ID Proofing
       summary: Perform lookup and data matching for information on RMV-issued IDs

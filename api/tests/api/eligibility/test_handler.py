@@ -1,3 +1,4 @@
+import re
 from datetime import date
 
 import pytest
@@ -10,7 +11,9 @@ from massgov.pfml.db.models.factories import (
 )
 
 
-def test_endpoint_with_employee_wages_data(client, test_db_session, initialize_factories_session):
+def test_endpoint_with_employee_wages_data(
+    client, test_db_session, initialize_factories_session, fineos_user_token
+):
     tax_id = TaxIdentifierFactory.create(tax_identifier="088574541")
     employee = EmployeeFactory.create(tax_identifier=tax_id)
     employer = EmployerFactory.create(employer_fein="716779225")
@@ -35,7 +38,11 @@ def test_endpoint_with_employee_wages_data(client, test_db_session, initialize_f
         "leave_start_date": "2020-12-30",
         "tax_identifier": "088-57-4541",
     }
-    response = client.post("/v1/financial-eligibility", json=body)
+    response = client.post(
+        "/v1/financial-eligibility",
+        headers={"Authorization": f"Bearer {fineos_user_token}"},
+        json=body,
+    )
     assert response.status_code == 200
     assert response.get_json().get("data").get("description") == "Financially eligible"
     assert response.get_json().get("data").get("total_wages") == float(
@@ -48,7 +55,29 @@ def test_endpoint_with_employee_wages_data(client, test_db_session, initialize_f
     )
 
 
-def test_endpoint_no_employee_wage_data(client, test_db_session, initialize_factories_session):
+def test_endpoint_no_employee_wage_data(
+    client, test_db_session, initialize_factories_session, fineos_user_token
+):
+    WagesAndContributionsFactory.create()
+
+    body = {
+        "application_submitted_date": "2020-06-30",
+        "employer_fein": "00-0000000",
+        "employment_status": "Employed",
+        "leave_start_date": "2020-06-30",
+        "tax_identifier": "000-00-0000",
+    }
+    response = client.post(
+        "/v1/financial-eligibility",
+        headers={"Authorization": f"Bearer {fineos_user_token}"},
+        json=body,
+    )
+
+    assert response.status_code == 404
+    assert response.get_json().get("data") == {}
+
+
+def test_endpoint_unauthenticated_user(client, test_db_session, initialize_factories_session):
     WagesAndContributionsFactory.create()
 
     body = {
@@ -60,11 +89,39 @@ def test_endpoint_no_employee_wage_data(client, test_db_session, initialize_fact
     }
     response = client.post("/v1/financial-eligibility", json=body)
 
-    assert response.status_code == 404
-    assert response.get_json().get("data") == {}
+    assert response.status_code == 401
+    assert response.get_json().get("message") == "No authorization token provided"
 
 
-def test_self_employed_two_quarters(client, test_db_session, initialize_factories_session):
+def test_endpoint_unauthorized_user(
+    client, test_db_session, initialize_factories_session, auth_token
+):
+    WagesAndContributionsFactory.create()
+
+    body = {
+        "application_submitted_date": "2020-06-30",
+        "employer_fein": "00-0000000",
+        "employment_status": "Employed",
+        "leave_start_date": "2020-06-30",
+        "tax_identifier": "000-00-0000",
+    }
+    response = client.post(
+        "/v1/financial-eligibility",
+        headers={"Authorization": "Bearer {}".format(auth_token)},
+        json=body,
+    )
+
+    assert response.status_code == 403
+    # This works around the stringified version of User that gets returned - <massgov.pfml.db.models.employees.User object at 0x7fb466b96be0>
+    assert re.search(
+        r"does not have create access to Financial Eligibility Calculation",
+        response.get_json().get("message"),
+    )
+
+
+def test_self_employed_two_quarters(
+    client, test_db_session, initialize_factories_session, fineos_user_token
+):
     tax_id = TaxIdentifierFactory.create(tax_identifier="088574541")
     employee = EmployeeFactory.create(tax_identifier=tax_id)
     employer = EmployerFactory.create(employer_fein="716779225")
@@ -89,7 +146,11 @@ def test_self_employed_two_quarters(client, test_db_session, initialize_factorie
         "leave_start_date": "2020-12-30",
         "tax_identifier": "088-57-4541",
     }
-    response = client.post("/v1/financial-eligibility", json=body)
+    response = client.post(
+        "/v1/financial-eligibility",
+        headers={"Authorization": f"Bearer {fineos_user_token}"},
+        json=body,
+    )
     assert response.status_code == 200
     assert response.get_json().get("data").get("financially_eligible") is True
     assert response.get_json().get("data").get("description") == "Financially eligible"
@@ -101,7 +162,9 @@ def test_self_employed_two_quarters(client, test_db_session, initialize_factorie
     )
 
 
-def test_self_employed_one_quarter(client, test_db_session, initialize_factories_session):
+def test_self_employed_one_quarter(
+    client, test_db_session, initialize_factories_session, fineos_user_token
+):
     tax_id = TaxIdentifierFactory.create(tax_identifier="088574541")
     employee = EmployeeFactory.create(tax_identifier=tax_id)
     employer = EmployerFactory.create(employer_fein="716779225")
@@ -127,7 +190,11 @@ def test_self_employed_one_quarter(client, test_db_session, initialize_factories
         "leave_start_date": "2020-12-30",
         "tax_identifier": "088-57-4541",
     }
-    response = client.post("/v1/financial-eligibility", json=body)
+    response = client.post(
+        "/v1/financial-eligibility",
+        headers={"Authorization": f"Bearer {fineos_user_token}"},
+        json=body,
+    )
     assert response.status_code == 200
     assert response.get_json().get("data").get("financially_eligible") is False
     assert (
@@ -172,7 +239,14 @@ def body():
 
 
 def test_claimant_A(
-    client, test_db_session, initialize_factories_session, tax_id, employee, employer, body
+    client,
+    test_db_session,
+    initialize_factories_session,
+    tax_id,
+    employee,
+    employer,
+    body,
+    fineos_user_token,
 ):
     # Claimant is eligible, with wages from 2 employers
     employer2 = EmployerFactory.create(employer_fein="553897622")
@@ -262,13 +336,24 @@ def test_claimant_A(
         filing_period=date(2021, 12, 30),
     )
 
-    response = client.post("/v1/financial-eligibility", json=body)
+    response = client.post(
+        "/v1/financial-eligibility",
+        headers={"Authorization": f"Bearer {fineos_user_token}"},
+        json=body,
+    )
     assert response.get_json().get("data").get("total_wages") == float(28000)
     assert response.get_json().get("data").get("financially_eligible") is True
 
 
 def test_claimant_B(
-    client, test_db_session, initialize_factories_session, tax_id, employee, employer, body
+    client,
+    test_db_session,
+    initialize_factories_session,
+    tax_id,
+    employee,
+    employer,
+    body,
+    fineos_user_token,
 ):
     # claimant has 3 employers, and is eligible
     employer2 = EmployerFactory.create(employer_fein="553897622")
@@ -383,13 +468,24 @@ def test_claimant_B(
         filing_period=date(2021, 9, 30),
     )
 
-    response = client.post("/v1/financial-eligibility", json=body)
+    response = client.post(
+        "/v1/financial-eligibility",
+        headers={"Authorization": f"Bearer {fineos_user_token}"},
+        json=body,
+    )
     assert response.get_json().get("data").get("total_wages") == float(33800)
     assert response.get_json().get("data").get("financially_eligible") is True
 
 
 def test_claimant_C(
-    client, test_db_session, initialize_factories_session, tax_id, employee, employer, body
+    client,
+    test_db_session,
+    initialize_factories_session,
+    tax_id,
+    employee,
+    employer,
+    body,
+    fineos_user_token,
 ):
     # claimant has 1 employer, and is ineligible
     wages_and_contribution1 = WagesAndContributionsFactory.create(
@@ -423,7 +519,11 @@ def test_claimant_C(
         filing_period=date(2021, 9, 30),
     )
 
-    response = client.post("/v1/financial-eligibility", json=body)
+    response = client.post(
+        "/v1/financial-eligibility",
+        headers={"Authorization": f"Bearer {fineos_user_token}"},
+        json=body,
+    )
 
     assert response.get_json().get("data").get("total_wages") == float(
         round(
@@ -439,7 +539,14 @@ def test_claimant_C(
 
 
 def test_claimant_D(
-    client, test_db_session, initialize_factories_session, tax_id, employee, employer, body
+    client,
+    test_db_session,
+    initialize_factories_session,
+    tax_id,
+    employee,
+    employer,
+    body,
+    fineos_user_token,
 ):
     # wages from 1 employer, eligible
     WagesAndContributionsFactory.create(
@@ -479,14 +586,25 @@ def test_claimant_D(
         employee_qtr_wages=4600,
         filing_period=date(2021, 9, 30),
     )
-    response = client.post("/v1/financial-eligibility", json=body)
+    response = client.post(
+        "/v1/financial-eligibility",
+        headers={"Authorization": f"Bearer {fineos_user_token}"},
+        json=body,
+    )
 
     assert response.get_json().get("data").get("financially_eligible") is True
     assert response.get_json().get("data").get("total_wages") == float(15750)
 
 
 def test_claimant_E(
-    client, test_db_session, initialize_factories_session, tax_id, employee, employer, body
+    client,
+    test_db_session,
+    initialize_factories_session,
+    tax_id,
+    employee,
+    employer,
+    body,
+    fineos_user_token,
 ):
     # wages from 2 employers, eligible
     employer2 = EmployerFactory.create(employer_fein="553897622")
@@ -545,14 +663,25 @@ def test_claimant_E(
         filing_period=date(2021, 9, 30),
     )
 
-    response = client.post("/v1/financial-eligibility", json=body)
+    response = client.post(
+        "/v1/financial-eligibility",
+        headers={"Authorization": f"Bearer {fineos_user_token}"},
+        json=body,
+    )
 
     assert response.get_json().get("data").get("financially_eligible") is True
     assert response.get_json().get("data").get("total_wages") == float(54000)
 
 
 def test_claimant_F(
-    client, test_db_session, initialize_factories_session, tax_id, employee, employer, body
+    client,
+    test_db_session,
+    initialize_factories_session,
+    tax_id,
+    employee,
+    employer,
+    body,
+    fineos_user_token,
 ):
     # Claimant is ineligible, with wages from 1 employer
 
@@ -575,7 +704,11 @@ def test_claimant_F(
         employee_qtr_wages=4000,
         filing_period=date(2021, 6, 30),
     )
-    response = client.post("/v1/financial-eligibility", json=body)
+    response = client.post(
+        "/v1/financial-eligibility",
+        headers={"Authorization": f"Bearer {fineos_user_token}"},
+        json=body,
+    )
 
     assert response.get_json().get("data").get("financially_eligible") is False
     assert response.get_json().get("data").get("total_wages") == float(5000)
