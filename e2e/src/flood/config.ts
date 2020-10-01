@@ -48,8 +48,18 @@ export const getRequestOptions = (
 
 export async function getFineosBaseUrl(user?: FineosUserType): Promise<string> {
   const base = await config("E2E_FINEOS_BASEURL");
-  const username = await config(user || "E2E_PORTAL_USERNAME");
-  const password = await config("E2E_FINEOS_PASSWORD");
+  let username: string;
+  let password: string;
+  if (user) {
+    // Expects "E2E_FINEOS_USERS" to be stringified JSON.
+    // E.g., "{\"USER\": {\"name\": \"NAME", \"pass\": \"PASS\"}}"
+    ({
+      [user]: { username, password },
+    } = JSON.parse(await config("E2E_FINEOS_USERS")));
+  } else {
+    username = await config("E2E_FINEOS_USERNAME");
+    password = await config("E2E_FINEOS_PASSWORD");
+  }
 
   if (!base) {
     throw new Error(
