@@ -45,6 +45,10 @@ def list_files(path):
     return os.listdir(path)
 
 
+def open_stream(path, mode="r"):
+    return smart_open.open(path, mode)
+
+
 def read_file(path, mode="r", encoding=None):
     return smart_open.open(path, mode, encoding=encoding).read()
 

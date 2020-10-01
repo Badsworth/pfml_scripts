@@ -48,6 +48,15 @@ class GpgCrypt(Crypt):
 
         return result.data.decode("utf8")
 
+    def decrypt_stream(self, stream):
+        result = self.gpg.decrypt_file(stream, passphrase=self.passphrase)
+
+        if not result.ok:
+            logger.error("Failed to decrypt file")
+            raise ValueError(result.stderr)
+
+        return result.data.decode("utf8")
+
     def encrypt(self, str_val):
         return str(self.gpg.encrypt(str_val, self.recipient))
 
@@ -69,6 +78,9 @@ class Utf8Crypt(Crypt):
 
     def decrypt(self, bval):
         return bval.decode("utf8")
+
+    def decrypt_stream(self, stream):
+        return stream.read().decode("utf8")
 
     def remove_keys(self):
         return

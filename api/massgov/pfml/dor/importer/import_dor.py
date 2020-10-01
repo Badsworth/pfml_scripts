@@ -540,8 +540,9 @@ def parse_employer_file(employer_file_path, decrypter):
     logger.info("Start parsing employer file", extra={"employer_file_path": employer_file_path})
     employers = []
 
-    file_bytes = file_util.read_file(employer_file_path, "rb")
-    decrypted_str = decrypter.decrypt(file_bytes)
+    file_stream = file_util.open_stream(employer_file_path, "rb")
+    decrypted_str = decrypter.decrypt_stream(file_stream)
+
     decrypted_lines = decrypted_str.split("\n")
 
     for row in decrypted_lines:
@@ -562,8 +563,8 @@ def parse_employee_file(employee_file_path, decrypter):
     employers_quarter_info = []
     employees_info = []
 
-    file_bytes = file_util.read_file(employee_file_path, "rb")
-    decrypted_str = decrypter.decrypt(file_bytes)
+    file_stream = file_util.open_stream(employee_file_path, "rb")
+    decrypted_str = decrypter.decrypt_stream(file_stream)
     decrypted_lines = decrypted_str.split("\n")
 
     for row in decrypted_lines:
