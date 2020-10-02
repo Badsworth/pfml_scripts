@@ -310,6 +310,7 @@ describe("useAuthLogic", () => {
         logout();
       });
       expect(Auth.signOut).toHaveBeenCalledTimes(1);
+      expect(Auth.signOut).toHaveBeenCalledWith({ global: true });
     });
 
     it("redirects to home page", async () => {

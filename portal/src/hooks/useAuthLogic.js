@@ -105,7 +105,17 @@ const useAuthLogic = ({ appErrorsLogic, portalFlow }) => {
    * Log out of the Portal
    */
   const logout = async () => {
-    await Auth.signOut();
+    // Set global: true to invalidate all refresh tokens associated with the user on the Cognito servers
+    // Notes:
+    // 1. This invalidates tokens across all user sessions on all devices, not just the current session.
+    //    Cognito currently does not support the ability to invalidate tokens for only a single session.
+    // 2. The access token is not invalidated. It remains active until the end of the expiration time.
+    //    Cognito currently does not support the ability to invalidate the access token.
+    // See also:
+    //    - https://dzone.com/articles/aws-cognito-user-pool-access-token-invalidation-1
+    //    - https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_GlobalSignOut.html
+    //    - https://github.com/aws-amplify/amplify-js/issues/3435
+    await Auth.signOut({ global: true });
     setIsLoggedIn(false);
     // Force a page reload so that any local app state is cleared
     window.location.assign(routes.auth.login);
