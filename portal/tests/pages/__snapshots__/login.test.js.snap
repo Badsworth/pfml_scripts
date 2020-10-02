@@ -66,3 +66,14 @@ exports[`Login when account-verified query param is true displays verification s
   Thanks for verifying your email address. You may now log into your account.
 </Alert>
 `;
+
+exports[`Login when session-timed-out query param is true displays session timed out info message 1`] = `
+<Alert
+  className="margin-bottom-3"
+  heading="Session timed out"
+  name="session-timed-out-message"
+  state="info"
+>
+  You were logged out due to inactivity
+</Alert>
+`;

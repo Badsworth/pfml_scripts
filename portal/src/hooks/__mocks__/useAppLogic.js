@@ -13,6 +13,7 @@ export default jest.fn(() => ({
     forgotPassword: jest.fn(),
     isLoggedIn: true,
     login: jest.fn(),
+    logout: jest.fn(),
     requireLogin: jest.fn(),
     resendVerifyAccountCode: jest.fn(),
     verifyAccount: jest.fn(),

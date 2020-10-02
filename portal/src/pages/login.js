@@ -36,6 +36,7 @@ export const Login = (props) => {
   });
 
   const accountVerified = query["account-verified"] === "true";
+  const sessionTimedOut = query["session-timed-out"] === "true";
   const getFunctionalInputProps = useFunctionalInputProps({
     appErrors: appLogic.appErrors,
     formState,
@@ -54,6 +55,18 @@ export const Login = (props) => {
           {t("pages.authLogin.accountVerified")}
         </Alert>
       )}
+
+      {sessionTimedOut && (
+        <Alert
+          className="margin-bottom-3"
+          heading={t("pages.authLogin.sessionTimedOutHeading")}
+          name="session-timed-out-message"
+          state="info"
+        >
+          {t("pages.authLogin.sessionTimedOut")}
+        </Alert>
+      )}
+
       <form className="usa-form" onSubmit={handleSubmit}>
         <Title>{t("pages.authLogin.title")}</Title>
         <Trans
@@ -99,6 +112,7 @@ Login.propTypes = {
   }).isRequired,
   query: PropTypes.shape({
     "account-verified": PropTypes.string,
+    "session-timed-out": PropTypes.string,
     next: PropTypes.string,
   }).isRequired,
 };

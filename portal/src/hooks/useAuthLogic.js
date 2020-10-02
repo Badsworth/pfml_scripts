@@ -2,6 +2,7 @@ import AppErrorInfo from "../models/AppErrorInfo";
 import AppErrorInfoCollection from "../models/AppErrorInfoCollection";
 import { Auth } from "@aws-amplify/auth";
 import assert from "assert";
+import { createRouteWithQuery } from "../utils/routeWithParams";
 import routes from "../routes";
 import { useState } from "react";
 import { useTranslation } from "../locales/i18n";
@@ -103,8 +104,12 @@ const useAuthLogic = ({ appErrorsLogic, portalFlow }) => {
 
   /**
    * Log out of the Portal
+   * @param {object} [options]
+   * @param {boolean} options.sessionTimedOut Whether the logout occurred automatically as a result of
+   *  session timeout. Defaults to false
    */
-  const logout = async () => {
+  const logout = async (options = {}) => {
+    const { sessionTimedOut = false } = options;
     // Set global: true to invalidate all refresh tokens associated with the user on the Cognito servers
     // Notes:
     // 1. This invalidates tokens across all user sessions on all devices, not just the current session.
@@ -117,8 +122,13 @@ const useAuthLogic = ({ appErrorsLogic, portalFlow }) => {
     //    - https://github.com/aws-amplify/amplify-js/issues/3435
     await Auth.signOut({ global: true });
     setIsLoggedIn(false);
+    const params = {};
+    if (sessionTimedOut) {
+      params["session-timed-out"] = "true";
+    }
+    const redirectUrl = createRouteWithQuery(routes.auth.login, params);
     // Force a page reload so that any local app state is cleared
-    window.location.assign(routes.auth.login);
+    window.location.assign(redirectUrl);
   };
 
   /**

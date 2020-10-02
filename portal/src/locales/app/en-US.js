@@ -206,6 +206,8 @@ const pages = {
     forgotPasswordLink: "Forgot your password?",
     loginButton: "Log in",
     passwordLabel: "$t(shared.passwordLabel)",
+    sessionTimedOut: "You were logged out due to inactivity",
+    sessionTimedOutHeading: "Session timed out",
     title: "Log in to get started",
     usernameLabel: "$t(shared.usernameLabel)",
   },

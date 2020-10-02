@@ -305,19 +305,37 @@ describe("useAuthLogic", () => {
       Object.getOwnPropertyDescriptor(window, "location").get.mockRestore();
     });
 
-    it("calls Auth.signOut", () => {
-      act(() => {
-        logout();
+    describe("when called with no parameters", () => {
+      beforeEach(async () => {
+        await act(async () => {
+          await logout();
+        });
       });
-      expect(Auth.signOut).toHaveBeenCalledTimes(1);
-      expect(Auth.signOut).toHaveBeenCalledWith({ global: true });
+
+      it("calls Auth.signOut", () => {
+        expect(Auth.signOut).toHaveBeenCalledTimes(1);
+        expect(Auth.signOut).toHaveBeenCalledWith({ global: true });
+      });
+
+      it("redirects to home page", () => {
+        expect(window.location.assign).toHaveBeenCalledWith(routes.auth.login);
+      });
     });
 
-    it("redirects to home page", async () => {
-      await act(async () => {
-        await logout();
+    describe("when called with sessionTimedOut parameter", () => {
+      beforeEach(async () => {
+        await act(async () => {
+          await logout({
+            sessionTimedOut: true,
+          });
+        });
       });
-      expect(window.location.assign).toHaveBeenCalledWith(routes.auth.login);
+
+      it("redirects to login page with session timed out query parameter", () => {
+        expect(window.location.assign).toHaveBeenCalledWith(
+          `${routes.auth.login}?session-timed-out=true`
+        );
+      });
     });
   });
 

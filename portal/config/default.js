@@ -22,4 +22,8 @@ module.exports = {
     auth: "9Gb_47rccihIuwtcFdJy4w",
     preview: "env-4",
   },
+  session: {
+    // 30 minutes
+    secondsOfInactivityUntilLogout: 30 * 60,
+  },
 };

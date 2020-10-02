@@ -14,6 +14,7 @@ import tracker from "../services/tracker";
 import useAppLogic from "../hooks/useAppLogic";
 import useFeatureFlagsFromQueryEffect from "../hooks/useFeatureFlagsFromQueryEffect";
 import { useRouter } from "next/router";
+import useSessionTimeout from "../hooks/useSessionTimeout";
 
 // Lazy-loaded components
 // https://nextjs.org/docs/advanced-features/dynamic-import
@@ -53,6 +54,10 @@ export const App = ({ Component, pageProps }) => {
   useFeatureFlagsFromQueryEffect();
 
   const appLogic = useAppLogic();
+  useSessionTimeout(
+    process.env.session.secondsOfInactivityUntilLogout,
+    appLogic.auth
+  );
 
   // Global UI state, such as whether to display the loading indicator
   const [ui, setUI] = useState({ isLoading: false });

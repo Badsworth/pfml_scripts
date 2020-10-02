@@ -50,6 +50,7 @@
     "react": "^16.13.1",
     "react-dom": "^16.13.1",
     "react-i18next": "^11.7.2",
+    "react-use": "^15.3.4",
     "readdirp": "^3.4.0",
     "uswds": "^2.8.1",
     "xstate": "^4.13.0"

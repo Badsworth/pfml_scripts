@@ -65,7 +65,10 @@ export const UploadId = (props) => {
         <FileUploadDetails />
 
         {idDocuments.length > 0 && (
-          <ReviewRow label={t("pages.claimsUploadId.idDocumentsCount")} level="3">
+          <ReviewRow
+            label={t("pages.claimsUploadId.idDocumentsCount")}
+            level="3"
+          >
             {idDocuments.length}
           </ReviewRow>
         )}
@@ -82,7 +85,9 @@ export const UploadId = (props) => {
             setFiles={setStateIdFiles}
             setAppErrors={props.appLogic.setAppErrors}
             fileHeadingPrefix={t("pages.claimsUploadId.fileHeadingPrefix")}
-            addFirstFileButtonText={t("pages.claimsUploadId.addFirstFileButton")}
+            addFirstFileButtonText={t(
+              "pages.claimsUploadId.addFirstFileButton"
+            )}
             addAnotherFileButtonText={t(
               "pages.claimsUploadId.addAnotherFileButton"
             )}

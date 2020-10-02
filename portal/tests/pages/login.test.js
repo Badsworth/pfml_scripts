@@ -45,6 +45,20 @@ describe("Login", () => {
     });
   });
 
+  describe("when session-timed-out query param is true", () => {
+    it("displays session timed out info message", () => {
+      query = {
+        "session-timed-out": "true",
+      };
+      render();
+      const sessionTimedOutMessageWrapper = wrapper.find({
+        name: "session-timed-out-message",
+      });
+      expect(sessionTimedOutMessageWrapper).toHaveLength(1);
+      expect(sessionTimedOutMessageWrapper).toMatchSnapshot();
+    });
+  });
+
   describe("when the form is submitted", () => {
     it("calls login", () => {
       changeField("username", email);
