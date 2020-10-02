@@ -20,7 +20,10 @@ describe("AmendableEmployerBenefit", () => {
 
   beforeEach(() => {
     wrapper = shallow(
-      <AmendableEmployerBenefit benefit={shortTermDisability} />
+      <AmendableEmployerBenefit
+        benefit={shortTermDisability}
+        onChange={() => {}}
+      />
     );
   });
 
@@ -58,7 +61,9 @@ describe("AmendableEmployerBenefit", () => {
       benefit_start_date: "2021-02-01",
       benefit_type: EmployerBenefitType.paidLeave,
     });
-    const wrapper = shallow(<AmendableEmployerBenefit benefit={paidLeave} />);
+    const wrapper = shallow(
+      <AmendableEmployerBenefit benefit={paidLeave} onChange={() => {}} />
+    );
 
     wrapper.find(AmendButton).simulate("click");
 

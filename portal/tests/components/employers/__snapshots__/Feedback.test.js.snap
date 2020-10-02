@@ -28,16 +28,11 @@ exports[`Feedback renders the component 1`] = `
           Do you have any additional comments or concerns?
         </ReviewHeading>
       }
-      name="additionalComments"
+      name="hasComments"
       onChange={[Function]}
       type="radio"
     />
     <ConditionalContent
-      fieldNamesClearedWhenHidden={
-        Array [
-          "comment",
-        ]
-      }
       getField={[Function]}
       removeField={[Function]}
       updateFields={[Function]}
@@ -45,14 +40,14 @@ exports[`Feedback renders the component 1`] = `
     >
       <FormLabel
         className="usa-label"
-        htmlFor="employer-comment"
+        htmlFor="comments"
         small={true}
       >
         Please tell us more.
       </FormLabel>
       <textarea
         className="usa-textarea"
-        name="comment"
+        name="comments"
         onChange={[Function]}
       />
       <FormLabel

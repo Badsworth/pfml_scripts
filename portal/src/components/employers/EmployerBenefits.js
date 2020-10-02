@@ -63,7 +63,7 @@ const EmployerBenefits = (props) => {
 
 EmployerBenefits.propTypes = {
   benefits: PropTypes.array,
-  onChange: PropTypes.func,
+  onChange: PropTypes.func.isRequired,
 };
 
 export default EmployerBenefits;

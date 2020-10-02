@@ -97,7 +97,7 @@ const AmendablePreviousLeave = ({ leavePeriod, onChange }) => {
 
 AmendablePreviousLeave.propTypes = {
   leavePeriod: PropTypes.object.isRequired,
-  onChange: PropTypes.func,
+  onChange: PropTypes.func.isRequired,
 };
 
 export default AmendablePreviousLeave;

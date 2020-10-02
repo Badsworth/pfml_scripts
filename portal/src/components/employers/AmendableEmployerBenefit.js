@@ -133,7 +133,7 @@ const EmployerBenefit = ({ benefit, onChange }) => {
 
 EmployerBenefit.propTypes = {
   benefit: PropTypes.object.isRequired,
-  onChange: PropTypes.func,
+  onChange: PropTypes.func.isRequired,
 };
 
 export default EmployerBenefit;

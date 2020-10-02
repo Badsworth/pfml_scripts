@@ -18,13 +18,17 @@ describe("PreviousLeaves", () => {
         id: 2,
       }),
     ];
-    const wrapper = shallow(<PreviousLeaves previousLeaves={previousLeaves} />);
+    const wrapper = shallow(
+      <PreviousLeaves previousLeaves={previousLeaves} onChange={() => {}} />
+    );
 
     expect(wrapper).toMatchSnapshot();
   });
 
   it("displays 'None reported' if no leave periods are reported", () => {
-    const wrapper = shallow(<PreviousLeaves previousLeaves={[]} />);
+    const wrapper = shallow(
+      <PreviousLeaves previousLeaves={[]} onChange={() => {}} />
+    );
 
     expect(wrapper.find(AmendablePreviousLeave).exists()).toEqual(false);
     expect(wrapper.find("th").last().text()).toEqual("None reported");

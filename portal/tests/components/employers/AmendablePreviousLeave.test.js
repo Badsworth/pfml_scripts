@@ -14,7 +14,9 @@ describe("AmendablePreviousLeave", () => {
       leave_end_date: "2020-03-06",
       id: 1,
     });
-    wrapper = shallow(<AmendablePreviousLeave leavePeriod={previousLeave} />);
+    wrapper = shallow(
+      <AmendablePreviousLeave leavePeriod={previousLeave} onChange={() => {}} />
+    );
   });
 
   it("renders the component", () => {

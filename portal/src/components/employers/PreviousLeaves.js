@@ -112,7 +112,7 @@ const PreviousLeaves = (props) => {
 
 PreviousLeaves.propTypes = {
   previousLeaves: PropTypes.array,
-  onChange: PropTypes.func,
+  onChange: PropTypes.func.isRequired,
 };
 
 export default PreviousLeaves;

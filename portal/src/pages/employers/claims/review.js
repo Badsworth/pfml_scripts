@@ -47,11 +47,7 @@ const Review = (props) => {
   };
 
   // TODO (EMPLOYER-365): Remove console logging used for demo'ing
-  const handleAmendmentSubmission = ({
-    additionalComments,
-    comment,
-    uploadedFiles,
-  }) => {
+  const handleSubmit = ({ hasComments, comments, uploadedFiles }) => {
     // eslint-disable-next-line no-console
     console.log("1. Employer notification date: ", amendedDate);
     // eslint-disable-next-line no-console
@@ -60,12 +56,12 @@ const Review = (props) => {
     console.log("3. Previous leaves: ", amendedLeaves);
     // eslint-disable-next-line no-console
     console.log("4. Intermittent leave duration: ", amendedDuration);
-    if (additionalComments === "true") {
-      // eslint-disable-next-line no-console
-      console.log("5. Comment: ", comment);
-      // eslint-disable-next-line no-console
-      console.log("6. Files: ", uploadedFiles);
-    }
+    // eslint-disable-next-line no-console
+    console.log("5. Does Employer have comments? ", hasComments);
+    // eslint-disable-next-line no-console
+    console.log("6. Comments: ", comments);
+    // eslint-disable-next-line no-console
+    console.log("7. Files: ", uploadedFiles);
   };
 
   return (
@@ -109,7 +105,7 @@ const Review = (props) => {
       <Feedback
         appLogic={props.appLogic}
         absenceId={fineos_absence_id}
-        onSubmit={handleAmendmentSubmission}
+        onSubmit={handleSubmit}
       />
     </React.Fragment>
   );

@@ -46,6 +46,7 @@ exports[`EmployerBenefits renders the component 1`] = `
           }
         }
         key="null"
+        onChange={[Function]}
       />
     </tbody>
   </Table>

@@ -21,8 +21,8 @@ const Feedback = (props) => {
   const router = useRouter();
   const [uploadedFiles, setUploadedFiles] = useState([]);
   const [formState, setFormState] = useState({
-    additionalComments: "false",
-    comment: "",
+    hasComments: "false",
+    comments: "",
   });
 
   const getField = (fieldName) => {
@@ -42,14 +42,20 @@ const Feedback = (props) => {
 
   const handleOnChange = (event) => {
     const { name, value } = event.target;
-    if (name === "additionalComments" && value === "false") {
-      setUploadedFiles([]);
-    }
+    const hasSelectedNoCommentOption =
+      name === "hasComments" && value === "false";
 
-    setFormState({
-      ...formState,
-      [event.target.name]: event.target.value,
-    });
+    if (hasSelectedNoCommentOption) {
+      setUploadedFiles([]);
+      updateFields({
+        [name]: value,
+        comments: "",
+      });
+    } else {
+      updateFields({
+        [name]: value,
+      });
+    }
   };
 
   const handleSubmit = (event) => {
@@ -67,12 +73,12 @@ const Feedback = (props) => {
         <InputChoiceGroup
           choices={[
             {
-              checked: formState.additionalComments === "false",
+              checked: formState.hasComments === "false",
               label: t("pages.employersClaimsReview.feedback.choiceNo"),
               value: "false",
             },
             {
-              checked: formState.additionalComments === "true",
+              checked: formState.hasComments === "true",
               label: t("pages.employersClaimsReview.feedback.choiceYes"),
               value: "true",
             },
@@ -82,24 +88,23 @@ const Feedback = (props) => {
               {t("pages.employersClaimsReview.feedback.instructionsLabel")}
             </ReviewHeading>
           }
-          name="additionalComments"
+          name="hasComments"
           onChange={handleOnChange}
           type="radio"
         />
         <ConditionalContent
-          fieldNamesClearedWhenHidden={["comment"]}
           getField={getField}
           removeField={removeField}
           updateFields={updateFields}
-          visible={formState.additionalComments === "true"}
+          visible={formState.hasComments === "true"}
         >
           <React.Fragment>
-            <FormLabel className="usa-label" htmlFor="employer-comment" small>
+            <FormLabel className="usa-label" htmlFor="comments" small>
               {t("pages.employersClaimsReview.feedback.tellUsMoreLabel")}
             </FormLabel>
             <textarea
               className="usa-textarea"
-              name="comment"
+              name="comments"
               onChange={handleOnChange}
             />
             <FormLabel small>
@@ -133,8 +138,8 @@ const Feedback = (props) => {
 
 Feedback.propTypes = {
   appLogic: PropTypes.object.isRequired,
-  absenceId: PropTypes.string,
-  onSubmit: PropTypes.func,
+  absenceId: PropTypes.string.isRequired,
+  onSubmit: PropTypes.func.isRequired,
 };
 
 export default Feedback;

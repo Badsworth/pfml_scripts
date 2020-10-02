@@ -15,13 +15,17 @@ describe("EmployerBenefits", () => {
       benefit_start_date: "2021-02-01",
       benefit_type: EmployerBenefitType.shortTermDisability,
     });
-    const wrapper = shallow(<EmployerBenefits benefits={[benefits]} />);
+    const wrapper = shallow(
+      <EmployerBenefits benefits={[benefits]} onChange={() => {}} />
+    );
 
     expect(wrapper).toMatchSnapshot();
   });
 
   it("displays 'None reported' if no benefits are reported", () => {
-    const wrapper = shallow(<EmployerBenefits benefits={[]} />);
+    const wrapper = shallow(
+      <EmployerBenefits benefits={[]} onChange={() => {}} />
+    );
 
     expect(wrapper.find(AmendableEmployerBenefit).exists()).toEqual(false);
     expect(wrapper.find("th").last().text()).toEqual("None reported");
