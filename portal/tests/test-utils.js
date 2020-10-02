@@ -394,7 +394,6 @@ export const claim = new MockClaimBuilder()
   .medicalLeaveReason()
   .continuous()
   .employed()
-  .continuous()
   .intermittent()
   .reducedSchedule()
   .previousLeave([
@@ -403,26 +402,21 @@ export const claim = new MockClaimBuilder()
       leave_end_date: "2020-03-06",
       id: 1,
     },
-    {
-      leave_start_date: "2020-03-01",
-      leave_end_date: "2020-03-06",
-      id: 2,
-    },
   ])
   .employerBenefit([
-    {
-      benefit_amount_dollars: 1000,
-      benefit_end_date: "2021-03-01",
-      benefit_start_date: "2021-02-01",
-      benefit_type: EmployerBenefitType.shortTermDisability,
-      id: 1,
-    },
     {
       benefit_amount_dollars: 0,
       benefit_end_date: "2021-02-01",
       benefit_start_date: "2021-01-01",
       benefit_type: EmployerBenefitType.paidLeave,
       id: 2,
+    },
+    {
+      benefit_amount_dollars: 1000,
+      benefit_end_date: "2021-03-01",
+      benefit_start_date: "2021-02-01",
+      benefit_type: EmployerBenefitType.shortTermDisability,
+      id: 1,
     },
   ])
   .completed()

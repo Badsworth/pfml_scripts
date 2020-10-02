@@ -817,8 +817,9 @@ const pages = {
       intermittentDetails_estimatedAbsences:
         "Estimated <strong>{{frequency}}</strong> absences each lasting <strong>less than a full work day</strong> for <strong>{{duration}}</strong> {{durationBasis}}.",
       intermittentDetails_oncePerMonth: "At least once per month.",
+      tableHeader_dateRange: "Date range",
       tableHeader_details: "Details",
-      tableHeader_frequency: "Frequency",
+      tableHeader_leaveFrequency: "Leave frequency",
       tableName: "Leave schedule details table",
       type_intermittent: "$t(shared.claimDurationTypeIntermittent)",
     },
@@ -827,12 +828,20 @@ const pages = {
     previousLeaves: {
       detailsLabel: "$t(shared.qualifyingReasonDetailsLabel)",
       explanation:
-        "Employees have listed when they took leave for qualifying reasons",
+        "Employees have listed when they took leave for qualifying reasons.",
       header: "Past leave",
-      qualifyingReasonContent: "Some content here",
+      qualifyingReasonContent: "An employee can take paid or unpaid leave to:",
+      qualifyingReason_activeDuty:
+        "Manage family affairs when a family member is on active duty in the armed forces",
+      qualifyingReason_bondWithChild:
+        "Bond with a child after birth or placement",
+      qualifyingReason_careForFamily:
+        "Care for a family member with a serious health condition",
+      qualifyingReason_manageHealth: "Manage a serious health condition",
       tableFooter_totalLeave: "Total leave",
       tableHeader_dateRange: "Date range",
       tableHeader_days: "Days",
+      tableHeader_leaveType: "Leave type",
     },
     submitButton: "Submit",
     supportingWorkDetails: {

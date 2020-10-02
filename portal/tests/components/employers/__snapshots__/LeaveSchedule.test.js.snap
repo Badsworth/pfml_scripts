@@ -18,7 +18,12 @@ exports[`LeaveSchedule renders the component 1`] = `
         <th
           scope="col"
         >
-          Frequency
+          Date range
+        </th>
+        <th
+          scope="col"
+        >
+          Leave frequency
         </th>
         <th
           scope="col"

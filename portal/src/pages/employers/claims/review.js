@@ -18,7 +18,7 @@ import { useTranslation } from "../../../locales/i18n";
 import withUser from "../../../hoc/withUser";
 
 // TODO (EMPLOYER-364): Remove hardcoded date and mock claim data
-const employerDueDate = formatDateRange("2020-09-28");
+const employerDueDate = formatDateRange("2020-10-10");
 
 const Review = (props) => {
   const { t } = useTranslation();
@@ -33,7 +33,7 @@ const Review = (props) => {
   const [amendedDate, setAmendedDate] = useState(employer_notification_date);
   const [amendedLeaves, setAmendedLeaves] = useState(previous_leaves);
   const [amendedDuration, setAmendedDuration] = useState(
-    intermittent_leave_periods[0].duration
+    intermittent_leave_periods && intermittent_leave_periods[0].duration
   );
 
   const handleBenefitInputChange = (updatedBenefit) => {

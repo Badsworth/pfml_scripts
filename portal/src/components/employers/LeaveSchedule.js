@@ -4,6 +4,7 @@ import ReviewHeading from "../ReviewHeading";
 import ReviewRow from "../ReviewRow";
 import Table from "../Table";
 import { Trans } from "react-i18next";
+import formatDateRange from "../../utils/formatDateRange";
 import { useTranslation } from "../../locales/i18n";
 
 // TODO (EMPLOYER-364): Remove hardcoded link
@@ -34,7 +35,12 @@ const LeaveSchedule = (props) => {
           <tr>
             <th scope="col">
               {t(
-                "pages.employersClaimsReview.leaveSchedule.tableHeader_frequency"
+                "pages.employersClaimsReview.leaveSchedule.tableHeader_dateRange"
+              )}
+            </th>
+            <th scope="col">
+              {t(
+                "pages.employersClaimsReview.leaveSchedule.tableHeader_leaveFrequency"
               )}
             </th>
             <th scope="col">
@@ -49,6 +55,12 @@ const LeaveSchedule = (props) => {
             intermittent_leave_periods.map((leavePeriod) => {
               return (
                 <tr key={leavePeriod.leave_period_id} className="intermittent">
+                  <th scope="row">
+                    {formatDateRange(
+                      leavePeriod.start_date,
+                      leavePeriod.end_date
+                    )}
+                  </th>
                   <td>
                     {t(
                       "pages.employersClaimsReview.leaveSchedule.type_intermittent"

@@ -12,6 +12,9 @@ exports[`AmendablePreviousLeave renders the component 1`] = `
       - days
     </td>
     <td>
+      Bonding leave
+    </td>
+    <td>
       <AmendButton
         onClick={[Function]}
       />

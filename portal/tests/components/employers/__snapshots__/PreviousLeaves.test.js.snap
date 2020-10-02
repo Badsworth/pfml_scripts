@@ -8,14 +8,30 @@ exports[`PreviousLeaves renders the component 1`] = `
     Past leave
   </ReviewHeading>
   <p>
-    Employees have listed when they took leave for qualifying reasons
+    Employees have listed when they took leave for qualifying reasons.
   </p>
   <Details
     label="What counts as a qualifying reason?"
   >
     <p>
-      Some content here
+      An employee can take paid or unpaid leave to:
     </p>
+    <ul
+      className="usa-list"
+    >
+      <li>
+        Manage a serious health condition
+      </li>
+      <li>
+        Care for a family member with a serious health condition
+      </li>
+      <li>
+        Bond with a child after birth or placement
+      </li>
+      <li>
+        Manage family affairs when a family member is on active duty in the armed forces
+      </li>
+    </ul>
   </Details>
   <Table
     className="width-full"
@@ -28,10 +44,15 @@ exports[`PreviousLeaves renders the component 1`] = `
           Date range
         </th>
         <th
-          colSpan="2"
           scope="col"
         >
           Days
+        </th>
+        <th
+          colSpan="2"
+          scope="col"
+        >
+          Leave type
         </th>
       </tr>
     </thead>
@@ -68,6 +89,7 @@ exports[`PreviousLeaves renders the component 1`] = `
         >
           - days
         </td>
+        <td />
       </tr>
     </tbody>
   </Table>

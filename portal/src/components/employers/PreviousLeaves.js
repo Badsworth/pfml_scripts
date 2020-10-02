@@ -29,6 +29,28 @@ const PreviousLeaves = (props) => {
             "pages.employersClaimsReview.previousLeaves.qualifyingReasonContent"
           )}
         </p>
+        <ul className="usa-list">
+          <li>
+            {t(
+              "pages.employersClaimsReview.previousLeaves.qualifyingReason_manageHealth"
+            )}
+          </li>
+          <li>
+            {t(
+              "pages.employersClaimsReview.previousLeaves.qualifyingReason_careForFamily"
+            )}
+          </li>
+          <li>
+            {t(
+              "pages.employersClaimsReview.previousLeaves.qualifyingReason_bondWithChild"
+            )}
+          </li>
+          <li>
+            {t(
+              "pages.employersClaimsReview.previousLeaves.qualifyingReason_activeDuty"
+            )}
+          </li>
+        </ul>
       </Details>
       <Table className="width-full">
         <thead>
@@ -38,8 +60,13 @@ const PreviousLeaves = (props) => {
                 "pages.employersClaimsReview.previousLeaves.tableHeader_dateRange"
               )}
             </th>
-            <th scope="col" colSpan="2">
+            <th scope="col">
               {t("pages.employersClaimsReview.previousLeaves.tableHeader_days")}
+            </th>
+            <th scope="col" colSpan="2">
+              {t(
+                "pages.employersClaimsReview.previousLeaves.tableHeader_leaveType"
+              )}
             </th>
           </tr>
         </thead>
@@ -66,6 +93,7 @@ const PreviousLeaves = (props) => {
                     numOfDays: t("pages.employersClaimsReview.notApplicable"),
                   })}
                 </td>
+                <td />
               </tr>
             </React.Fragment>
           ) : (

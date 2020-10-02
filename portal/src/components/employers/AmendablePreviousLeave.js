@@ -42,6 +42,10 @@ const AmendablePreviousLeave = ({ leavePeriod, onChange }) => {
           })}
         </td>
         <td>
+          {/* TODO (EMPLOYER-364): Replace with actual leave type when available */}
+          {t("shared.leaveReasonBonding")}
+        </td>
+        <td>
           <AmendButton onClick={() => setIsAmendmentFormDisplayed(true)} />
         </td>
       </tr>
