@@ -8,12 +8,12 @@ import massgov.pfml.util.logging as logging
 from massgov.pfml.db.models.employees import (
     Address,
     AddressType,
+    Country,
     Employee,
     Employer,
     EmployerAddress,
+    GeoState,
     ImportLog,
-    LkCountry,
-    LkGeoState,
     TaxIdentifier,
     WagesAndContributions,
 )
@@ -76,22 +76,14 @@ def dict_to_employer(employer_info, import_log_entry_id, uuid=uuid.uuid4):
     )
 
 
-# TODO: state / country lookup move to caches?
-def dict_to_address(db_session, employer_info, uuid=uuid.uuid4):
-    try:
-        state = find_state(db_session, employer_info["employer_address_state"])
-        country = find_country(db_session, "US")
-    except (NoResultFound, MultipleResultsFound) as e:
-        logger.error("Error trying to find address lookup values", extra={"error": e})
-        raise ValueError("Error trying to find address lookup values")
-
+def dict_to_address(employer_info, uuid=uuid.uuid4):
     return Address(
         address_type_id=AddressType.BUSINESS.address_type_id,
         address_line_one=employer_info["employer_address_street"],
         city=employer_info["employer_address_city"],
-        geo_state_id=state.geo_state_id,
+        geo_state_id=GeoState.get_id(employer_info["employer_address_state"]),
         zip_code=employer_info["employer_address_zip"],
-        country_id=country.country_id,
+        country_id=Country.US.country_id,
         address_id=uuid,
     )
 
@@ -124,18 +116,11 @@ def update_employer(db_session, existing_employer, employer_info, import_log_ent
         )
         raise ValueError("Address row not found by id")
 
-    try:
-        state = find_state(db_session, employer_info["employer_address_state"])
-        country = find_country(db_session, "US")
-    except (NoResultFound, MultipleResultsFound) as e:
-        logger.error("Error trying to find address lookup values", extra={"error": e})
-        raise ValueError("Error trying to find address lookup values")
-
     existing_address.address_line_one = employer_info["employer_address_street"]
     existing_address.city = employer_info["employer_address_city"]
-    existing_address.geo_state_id = state.geo_state_id
+    existing_address.geo_state_id = GeoState.get_id(employer_info["employer_address_state"])
     existing_address.zip_code = employer_info["employer_address_zip"]
-    existing_address.country_id = country.country_id
+    existing_address.country_id = Country.US.country_id
 
     return existing_employer
 
@@ -315,17 +300,3 @@ def get_employer_address(db_session, employer_id):
 def get_address(db_session, address_id):
     address_row = db_session.query(Address).filter(Address.address_id == address_id).one()
     return address_row
-
-
-def find_state(db_session, state_name):
-    state = (
-        db_session.query(LkGeoState).filter(LkGeoState.geo_state_description == state_name).one()
-    )
-    return state
-
-
-def find_country(db_session, country_name):
-    country = (
-        db_session.query(LkCountry).filter(LkCountry.country_description == country_name).one()
-    )
-    return country

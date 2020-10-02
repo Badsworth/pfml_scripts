@@ -291,7 +291,7 @@ def import_employers(db_session, employers, report, import_log_entry_id):
     addresses_to_create = list(
         map(
             lambda employer_info: dor_persistence_util.dict_to_address(
-                db_session, employer_info, fein_to_new_address_id[employer_info["fein"]]
+                employer_info, fein_to_new_address_id[employer_info["fein"]]
             ),
             employer_list,
         )
