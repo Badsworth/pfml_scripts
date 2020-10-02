@@ -20,13 +20,14 @@ def init_security_logging():
 
 IGNORE_AUDIT_EVENTS = {
     "builtins.id",
-    "os.listdir",
-    "os.scandir",
+    "code.__new__",
     "compile",
+    "exec",
     "import",
     "object.__getattr__",
     "object.__setattr__",
-    "exec",
+    "os.listdir",
+    "os.scandir",
     "socket.__new__",
     "sys._current_frames",
     "sys._getframe",
@@ -41,9 +42,6 @@ def audit_hook(event_name, args):
         return
     if event_name == "os.chmod" and type(args[0]) is int:
         # Gunicorn generates a high volume of these events in normal operation (see workertmp.py)
-        return
-    if event_name == "code.__new__" and args[1].startswith("/tmp/pip-unpacked-wheel"):
-        # Normal startup behaviour
         return
 
     audit_log("%s %r" % (event_name, args))
