@@ -214,6 +214,22 @@ def create_csv_dict(updates=None):
     return csv_dict
 
 
+def test_default_state(test_db_session, initialize_factories_session):
+    wages_and_contributions = WagesAndContributionsFactory.create()
+    employee = wages_and_contributions.employee
+    efr = ef.EligibilityFeedRecord(
+        employeeIdentifier=employee.employee_id,
+        employeeFirstName=employee.first_name,
+        employeeLastName=employee.last_name,
+        employeeEffectiveFromDate=(
+            employee.wages_and_contributions[0].filing_period.strftime("%m/%d/%Y")
+        ),
+        employeeSalary=round(employee.wages_and_contributions[0].employee_ytd_wages, 6),
+        employeeEarningFrequency=ef.EarningFrequency.yearly.value,
+    )
+    assert efr.employmentWorkState == "MA"
+
+
 def test_write_employees_to_csv(
     tmp_path, initialize_factories_session, test_db_session, address_model
 ):
@@ -279,6 +295,7 @@ def test_write_employees_to_csv(
                 "telephoneAreaCode": employees[0].phone_number[:3],
                 "telephoneNumber": employees[0].phone_number[4:].replace("-", ""),
                 "employeeEmail": employees[0].email_address,
+                "employmentWorkState": ef.DEFAULT_EMPLOYMENT_WORK_STATE,
             }
         ),
         create_csv_dict(
@@ -314,6 +331,7 @@ def test_write_employees_to_csv(
                 "addressCity": employees[1].addresses[0].address.city,
                 "addressState": employees[1].addresses[0].address.geo_state.geo_state_description,
                 "addressZipCode": employees[1].addresses[0].address.zip_code,
+                "employmentWorkState": ef.DEFAULT_EMPLOYMENT_WORK_STATE,
             }
         ),
     ]

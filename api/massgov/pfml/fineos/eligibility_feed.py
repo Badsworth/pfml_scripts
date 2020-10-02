@@ -18,6 +18,7 @@ from massgov.pfml.fineos.exception import FINEOSNotFound
 logger = massgov.pfml.util.logging.get_logger(__name__)
 
 DEFAULT_DATE = date(1753, 1, 1)
+DEFAULT_EMPLOYMENT_WORK_STATE = "MA"
 
 
 class AddressType(Enum):
@@ -171,7 +172,7 @@ class EligibilityFeedRecord(NoneMeansDefault):
     employeeDaysWorkedPerWeek: Optional[Decimal] = None
     employeeHoursWorkedPerYear: Optional[int] = None
     employee50EmployeesWithin75Miles: Optional[bool] = None
-    employmentWorkState: Optional[str] = None
+    employmentWorkState: Optional[str] = DEFAULT_EMPLOYMENT_WORK_STATE
     managerIdentifier: Optional[str] = None
     # TODO: there can be multiple of these starting with occupationQualifier*
     occupationQualifier: Optional[str] = None
