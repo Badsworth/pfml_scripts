@@ -203,6 +203,10 @@ export function acceptClaim(): void {
 }
 
 export function approveClaim(): void {
-  cy.get('a[title="Approve the Pending Leaving Request"]').dblclick();
-  cy.get("#managedLeaveProgressCardWidget").contains("Future Leave");
+  // This button turns out to be unclickable without force, because selecting
+  // it seems to scroll it out of view. Force works around that.
+  cy.get('a[title="Approve the Pending Leaving Request"]').click({
+    force: true,
+  });
+  cy.get(".key-info-bar .status").should("contain.text", "Approved");
 }
