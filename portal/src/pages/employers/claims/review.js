@@ -20,7 +20,7 @@ import withUser from "../../../hoc/withUser";
 // TODO (EMPLOYER-364): Remove hardcoded date and mock claim data
 const employerDueDate = formatDateRange("2020-10-10");
 
-const Review = (props) => {
+export const Review = (props) => {
   const { t } = useTranslation();
   const {
     fineos_absence_id,
