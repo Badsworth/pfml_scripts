@@ -8,7 +8,6 @@ import uuid
 from dataclasses import asdict, dataclass, field
 from datetime import datetime
 from typing import Dict, List, Optional
-from uuid import UUID
 
 import boto3
 from sqlalchemy.orm.session import Session
@@ -59,8 +58,6 @@ class ImportReport:
     updated_wages_and_contributions_count: int = 0
     status: Optional[str] = None
     end: Optional[str] = None
-    updated_employee_ids: List[UUID] = field(default_factory=list)
-    updated_wages_and_contributions_ids: List[UUID] = field(default_factory=list)
 
 
 @dataclass
@@ -117,7 +114,7 @@ def process_import_batches(
         # process each batch
         for import_batch in import_batches:
             logger.info(
-                "Processing import patch",
+                "Processing import batch",
                 extra={
                     "date": import_batch.upload_date,
                     "employer_file": import_batch.employer_file,
@@ -377,115 +374,103 @@ def import_employers(db_session, employers, report, import_log_entry_id):
 
 
 def import_employees_and_wage_data(
-    db_session, account_key_to_employer_id_map, employees_info, report, import_log_entry_id,
+    db_session,
+    account_key_to_employer_id_map,
+    employee_and_wage_info_list,
+    report,
+    import_log_entry_id,
 ):
     """Import employees and wage information"""
     logger.info(
-        "Start import of wage information - rows: %i", len(employees_info),
+        "Start import of wage information - rows: %i", len(employee_and_wage_info_list),
     )
 
-    # import employees
-    ssn_to_new_employee_id = {}
-    employee_ids_created_in_current_run = set()
+    # 1 - Create existing employee reference maps
+    logger.info("Create existing employee reference maps")
 
-    count = 0
-
-    # find all employees by ssn to see if create or update
-    ssns = map(lambda employee_info: employee_info["employee_ssn"], employees_info)
-    existing_employees = dor_persistence_util.get_employees_by_ssn(db_session, ssns)
-
-    ssn_to_employee = {}
-    for employee in existing_employees:
-        ssn_to_employee[employee.tax_identifier.tax_identifier] = employee
-
-    employees_list = list(
-        filter(lambda employee: employee["employee_ssn"] not in ssn_to_employee, employees_info)
+    incoming_ssns = map(
+        lambda employee_info: employee_info["employee_ssn"], employee_and_wage_info_list
     )
-    ssn_to_new_tax_id = {}
-    for emp in employees_list:
-        ssn_to_new_employee_id[emp["employee_ssn"]] = uuid.uuid4()
-        ssn_to_new_tax_id[emp["employee_ssn"]] = uuid.uuid4()
-        employee_ids_created_in_current_run.add(ssn_to_new_employee_id[emp["employee_ssn"]])
+    existing_employee_models = dor_persistence_util.get_employees_by_ssn(db_session, incoming_ssns)
 
-    tax_ids_to_create = []
-    for ssn in ssn_to_new_employee_id:
-        tax_ids_to_create.append(dor_persistence_util.tax_id_from_dict(ssn_to_new_tax_id[ssn], ssn))
+    ssn_to_existing_employee_model = {}
+    for employee in existing_employee_models:
+        ssn_to_existing_employee_model[employee.tax_identifier.tax_identifier] = employee
 
-    db_session.bulk_save_objects(tax_ids_to_create)
-    db_session.commit()
+    logger.info(
+        "Done - Create existing employee reference maps. Existing employees matched: %i",
+        len(existing_employee_models),
+    )
 
-    employee_models = list(
-        map(
-            lambda employee_info: dor_persistence_util.dict_to_employee(
-                employee_info,
-                import_log_entry_id,
-                ssn_to_new_employee_id[employee_info["employee_ssn"]],
-                ssn_to_new_tax_id[employee_info["employee_ssn"]],
-            ),
-            employees_list,
+    # 2 - Stage employee and wage info for creation
+    logger.info("Staging employee and wage info for creation")
+
+    not_found_employee_and_wage_info_list = list(
+        filter(
+            lambda employee: employee["employee_ssn"] not in ssn_to_existing_employee_model,
+            employee_and_wage_info_list,
         )
     )
 
-    employee_id_to_employee_record = {}
-    for emp in employee_models:
-        employee_id_to_employee_record[emp.employee_id] = emp
+    ssn_to_new_tax_id = {}
+    ssn_to_new_employee_id = {}
 
-    employees_to_create = employee_id_to_employee_record.values()
-
-    db_session.bulk_save_objects(employees_to_create)
-    db_session.commit()
-
-    employees_to_update = list(
-        filter(lambda employee: employee["employee_ssn"] in ssn_to_employee, employees_info)
-    )
-
-    report.created_employees_count = report.created_employees_count + len(
-        list(set(employees_to_create))
-    )
-    for employee_info in employees_to_update:
-
-        count += 1
-
-        ssn = employee_info["employee_ssn"]
-        existing_employee = ssn_to_employee[ssn]
-
-        if existing_employee is None:
-            created_employee = dor_persistence_util.create_employee(
-                db_session, employee_info, import_log_entry_id
-            )
-
-            ssn_to_new_employee_id[ssn] = created_employee.employee_id
-            employee_ids_created_in_current_run.add(created_employee.employee_id)
-            report.created_employees_count = report.created_employees_count + 1
-        else:
-            # There may be multiple employee and wage data rows for the same employee for each quarte or because of multiple employers.
-            # Skip if the employee was created in the current run.
-            if existing_employee.employee_id in employee_ids_created_in_current_run:
-                continue
-
-            dor_persistence_util.update_employee(
-                db_session, existing_employee, employee_info, import_log_entry_id
-            )
-
-            report.updated_employee_ids.append(str(existing_employee.employee_id))
-
-            ssn_to_new_employee_id[ssn] = existing_employee.employee_id
-
-    report.updated_employees_count = len(report.updated_employee_ids)
+    for emp in not_found_employee_and_wage_info_list:
+        ssn_to_new_employee_id[emp["employee_ssn"]] = uuid.uuid4()
+        ssn_to_new_tax_id[emp["employee_ssn"]] = uuid.uuid4()
 
     logger.info(
-        "Finished importing employee information",
-        extra={
-            "created_employees_count": report.created_employees_count,
-            "updated_employees_count": report.updated_employees_count,
-        },
+        "Done - Staging employee and wage info for creation. Employees staged for creation: %i",
+        len(not_found_employee_and_wage_info_list),
     )
 
-    logger.info("Importing employee wage information")
+    # 3 - Create tax ids for new employees
+    tax_id_models_to_create = []
+    for ssn in ssn_to_new_employee_id:
+        tax_id_models_to_create.append(
+            dor_persistence_util.tax_id_from_dict(ssn_to_new_tax_id[ssn], ssn)
+        )
 
-    wages_contributions_to_create = []
-    for employee_info in employees_list:
-        wages_contributions_to_create.append(
+    logger.info("Creating new tax ids: %i", len(tax_id_models_to_create))
+
+    db_session.bulk_save_objects(tax_id_models_to_create)
+    db_session.commit()
+
+    logger.info("Done - Creating new tax ids: %i", len(tax_id_models_to_create))
+
+    # 4 - Create new employees
+    employee_ssns_staged_for_creation = set()
+    employee_models_to_create = []
+    for employee_info in not_found_employee_and_wage_info_list:
+        ssn = employee_info["employee_ssn"]
+
+        # since there are multiple rows with the same employee information ignore all but the first one
+        if ssn in employee_ssns_staged_for_creation:
+            continue
+
+        employee_models_to_create.append(
+            dor_persistence_util.dict_to_employee(
+                employee_info,
+                import_log_entry_id,
+                ssn_to_new_employee_id[ssn],
+                ssn_to_new_tax_id[ssn],
+            )
+        )
+        employee_ssns_staged_for_creation.add(ssn)
+
+    logger.info("Creating new employees: %i", len(employee_models_to_create))
+
+    db_session.bulk_save_objects(employee_models_to_create)
+    db_session.commit()
+
+    logger.info("Done - Creating new employees: %i", len(employee_models_to_create))
+
+    report.created_employees_count = len(employee_models_to_create)
+
+    # 5 - Create new wage information for new employees
+    wages_contributions_models_to_create = []
+    for employee_info in not_found_employee_and_wage_info_list:
+        wages_contributions_models_to_create.append(
             dor_persistence_util.dict_to_wages_and_contributions(
                 employee_info,
                 ssn_to_new_employee_id[employee_info["employee_ssn"]],
@@ -494,24 +479,70 @@ def import_employees_and_wage_data(
             )
         )
 
-    report.created_wages_and_contributions_count = len(wages_contributions_to_create)
+    logger.info("Creating new wage information: %i", len(wages_contributions_models_to_create))
 
-    db_session.bulk_save_objects(wages_contributions_to_create)
+    db_session.bulk_save_objects(wages_contributions_models_to_create)
     db_session.commit()
 
-    # import wage information
+    logger.info(
+        "Done - Creating new wage information: %i", len(wages_contributions_models_to_create)
+    )
+
+    report.created_wages_and_contributions_count = len(wages_contributions_models_to_create)
+
+    # 6 - Update all existing employees
+    found_employee_and_wage_info_list = list(
+        filter(
+            lambda employee: employee["employee_ssn"] in ssn_to_existing_employee_model,
+            employee_and_wage_info_list,
+        )
+    )
+
+    logger.info(
+        "Updating existing employees from total records: %i", len(found_employee_and_wage_info_list)
+    )
+
+    ssn_to_employee_id = ssn_to_new_employee_id  # collect all ssn to employee ids for next step
+    ssn_updated_in_current_run = set()
+    for employee_info in found_employee_and_wage_info_list:
+        ssn = employee_info["employee_ssn"]
+
+        # since there are multiple rows with the same employee information ignore all but the first one
+        if ssn in ssn_updated_in_current_run:
+            continue
+
+        existing_employee_model = ssn_to_existing_employee_model[ssn]
+        dor_persistence_util.update_employee(
+            db_session, existing_employee_model, employee_info, import_log_entry_id
+        )
+
+        ssn_updated_in_current_run.add(ssn)
+        ssn_to_employee_id[ssn] = existing_employee_model.employee_id
+
+    logger.info("Done - Updating existing employees: %i", len(ssn_updated_in_current_run))
+
+    report.updated_employees_count = len(ssn_updated_in_current_run)
+
+    # 7 - Create or update wage information for existing employees
+    logger.info(
+        "Creating or updating wage information for existing employees. Total records: %i",
+        len(found_employee_and_wage_info_list),
+    )
+
     count = 0
-    for employee_info in employees_to_update:
+    created_count = 0
+
+    for employee_info in found_employee_and_wage_info_list:
 
         count += 1
         if count % 1000 == 0:
-            logger.info("Importing employee qaurter wage info, current %i", count)
+            logger.info("Updating existing employee wage info, current %i", count)
 
         account_key = employee_info["account_key"]
         filing_period = employee_info["filing_period"]
         ssn = employee_info["employee_ssn"]
 
-        employee_id = ssn_to_new_employee_id[ssn]
+        employee_id = ssn_to_employee_id[ssn]
         employer_id = account_key_to_employer_id_map[account_key]
 
         existing_wage = dor_persistence_util.get_wages_and_contributions_by_employee_id_and_filling_period(
@@ -523,22 +554,28 @@ def import_employees_and_wage_data(
                 db_session, employee_info, employee_id, employer_id, import_log_entry_id
             )
 
-            report.created_wages_and_contributions_count = (
-                report.created_wages_and_contributions_count + 1
-            )
+            created_count += 1
         else:
             dor_persistence_util.update_wages_and_contributions(
                 db_session, existing_wage, employee_info, import_log_entry_id
             )
-            report.updated_wages_and_contributions_ids.append(
-                str(existing_wage.wage_and_contribution_id)
-            )
+            report.updated_wages_and_contributions_count += 1
 
-    report.updated_wages_and_contributions_count = len(report.updated_wages_and_contributions_ids)
+        report.created_wages_and_contributions_count += created_count
 
     logger.info(
-        "Finished importing employee wage information",
+        "Done - Creating or updating wage information for existing employees. Total: %i, Creates: %i, Updates: %i",
+        len(found_employee_and_wage_info_list),
+        created_count,
+        report.updated_wages_and_contributions_count,
+    )
+
+    # 8 - Done
+    logger.info(
+        "Finished importing employee and wage information",
         extra={
+            "created_employees_count": report.created_employees_count,
+            "updated_employees_count": report.updated_employees_count,
             "created_wages_and_contributions_count": report.created_wages_and_contributions_count,
             "updated_wages_and_contributions_count": report.updated_wages_and_contributions_count,
         },
