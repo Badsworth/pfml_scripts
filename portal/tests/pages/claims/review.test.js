@@ -21,6 +21,7 @@ describe("Part 1 Review Page", () => {
     it("renders Review page with Part 1 content and edit links", () => {
       const { wrapper } = renderWithAppLogic(Review, {
         claimAttrs: new MockClaimBuilder().part1Complete().create(),
+        diveLevels: 5,
       });
 
       expect(wrapper).toMatchSnapshot();
@@ -36,6 +37,7 @@ describe("Part 1 Review Page", () => {
             reason: LeaveReason.medical,
           },
         },
+        diveLevels: 5,
       });
 
       expect(wrapper).toMatchSnapshot();
@@ -45,6 +47,7 @@ describe("Part 1 Review Page", () => {
   it("submits the application when the user clicks Submit", () => {
     const { appLogic, claim, wrapper } = renderWithAppLogic(Review, {
       claimAttrs: new MockClaimBuilder().part1Complete().create(),
+      diveLevels: 5,
     });
     wrapper.find("Button").simulate("click");
 
@@ -54,12 +57,15 @@ describe("Part 1 Review Page", () => {
 });
 
 describe("Final Review Page", () => {
+  let appLogic, claim, wrapper;
+  beforeEach(() => {
+    ({ appLogic, claim, wrapper } = renderWithAppLogic(Review, {
+      claimAttrs: new MockClaimBuilder().complete().create(),
+      diveLevels: 5,
+    }));
+  });
   describe("when all data is present", () => {
     it("renders Review page with final review page content and only edit links for Part 2/3 sections", () => {
-      const { wrapper } = renderWithAppLogic(Review, {
-        claimAttrs: new MockClaimBuilder().complete().create(),
-      });
-
       expect(wrapper).toMatchSnapshot();
       expect(
         wrapper
@@ -70,13 +76,15 @@ describe("Final Review Page", () => {
   });
 
   it("completes the application when the user clicks Submit", () => {
-    const { appLogic, claim, wrapper } = renderWithAppLogic(Review, {
-      claimAttrs: new MockClaimBuilder().complete().create(),
-    });
     wrapper.find("Button").simulate("click");
 
     expect(appLogic.claims.submit).not.toHaveBeenCalled();
     expect(appLogic.claims.complete).toHaveBeenCalledWith(claim.application_id);
+  });
+
+  it("renders a spinner for loading documents", () => {
+    expect(wrapper.find("Spinner")).toHaveLength(1);
+    expect(wrapper.exists({ label: "Number of files uploaded" })).toBe(false);
   });
 });
 
@@ -85,9 +93,22 @@ describe("Payment Information", () => {
     it("does not render 'Payment details' row", () => {
       const { wrapper } = renderWithAppLogic(Review, {
         claimAttrs: new MockClaimBuilder().complete().debit().create(),
+        diveLevels: 5,
       });
       expect(wrapper.find({ label: "Payment details" })).toHaveLength(0);
     });
+  });
+});
+
+describe("Upload Document", () => {
+  it("renders the correct number of documents", () => {
+    const { wrapper } = renderWithAppLogic(Review, {
+      claimAttrs: new MockClaimBuilder().complete().create(),
+      diveLevels: 5,
+      hasUploadedDocument: true,
+    });
+    expect(wrapper.exists("Spinner")).toBe(false);
+    expect(wrapper.find({ label: "Number of files uploaded" })).toHaveLength(2);
   });
 });
 
@@ -96,6 +117,7 @@ describe("Employer info", () => {
     it("does not render 'Notified employer' row or FEIN row", () => {
       const { wrapper } = renderWithAppLogic(Review, {
         claimAttrs: new MockClaimBuilder().complete().create(),
+        diveLevels: 5,
       });
 
       expect(wrapper.text()).not.toContain("Notified employer");

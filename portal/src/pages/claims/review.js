@@ -5,6 +5,7 @@ import Claim, {
   PaymentPreferenceMethod,
   ReasonQualifier,
 } from "../../models/Claim";
+import Document, { DocumentType } from "../../models/Document";
 import EmployerBenefit, {
   EmployerBenefitType,
 } from "../../models/EmployerBenefit";
@@ -22,14 +23,17 @@ import PropTypes from "prop-types";
 import React from "react";
 import ReviewHeading from "../../components/ReviewHeading";
 import ReviewRow from "../../components/ReviewRow";
+import Spinner from "../../components/Spinner";
 import Title from "../../components/Title";
 import { Trans } from "react-i18next";
 import claimantConfigs from "../../flows/claimant";
+import findDocumentsByType from "../../utils/findDocumentsByType";
 import findKeyByValue from "../../utils/findKeyByValue";
 import formatDateRange from "../../utils/formatDateRange";
 import useThrottledHandler from "../../hooks/useThrottledHandler";
 import { useTranslation } from "../../locales/i18n";
 import withClaim from "../../hoc/withClaim";
+import withClaimDocuments from "../../hoc/withClaimDocuments";
 
 /**
  * Format an address onto a single line, or return undefined if the address
@@ -55,7 +59,16 @@ function formatAddress(address) {
  */
 export const Review = (props) => {
   const { t } = useTranslation();
-  const { appLogic, claim } = props;
+  const { appLogic, claim, documents, isLoadingDocuments } = props;
+
+  const certificationDocuments = findDocumentsByType(
+    documents,
+    DocumentType.medicalCertification // TODO (CP-962): Set based on leaveReason
+  );
+  const idDocuments = findDocumentsByType(
+    documents,
+    DocumentType.identityVerification
+  );
 
   const payment_method = get(claim, "payment_preferences[0].payment_method");
   const reasonQualifier = get(claim, "leave_details.reason_qualifier");
@@ -478,6 +491,50 @@ export const Review = (props) => {
               {formatAddress(mailing_address)}
             </ReviewRow>
           )}
+          <Heading level="2" size="1">
+            <HeadingPrefix>
+              {t("pages.claimsReview.partHeadingPrefix", { number: 3 })}
+            </HeadingPrefix>
+            {t("pages.claimsReview.partHeading", {
+              context: "3",
+            })}
+          </Heading>
+          {isLoadingDocuments ? (
+            <div className="margin-top-8 text-center">
+              <Spinner aria-valuetext={t("components.spinner.label")} />
+            </div>
+          ) : (
+            <React.Fragment>
+              <ReviewHeading
+                editHref={getStepEditHref(ClaimSteps.uploadId)}
+                editText={t("pages.claimsReview.editLink")}
+                level={reviewHeadingLevel}
+              >
+                {t("pages.claimsReview.stepHeading", { context: "uploadId" })}
+              </ReviewHeading>
+              <ReviewRow
+                label={t("pages.claimsReview.numberOfFilesLabel")}
+                level={reviewRowLevel}
+              >
+                {idDocuments.length}
+              </ReviewRow>
+              <ReviewHeading
+                editHref={getStepEditHref(ClaimSteps.uploadCertification)}
+                editText={t("pages.claimsReview.editLink")}
+                level={reviewHeadingLevel}
+              >
+                {t("pages.claimsReview.stepHeading", {
+                  context: "uploadCertification",
+                })}
+              </ReviewHeading>
+              <ReviewRow
+                label={t("pages.claimsReview.numberOfFilesLabel")}
+                level={reviewRowLevel}
+              >
+                {certificationDocuments.length}
+              </ReviewRow>
+            </React.Fragment>
+          )}
         </React.Fragment>
       )}
 
@@ -498,6 +555,8 @@ export const Review = (props) => {
 Review.propTypes = {
   appLogic: PropTypes.object.isRequired,
   claim: PropTypes.instanceOf(Claim),
+  documents: PropTypes.arrayOf(PropTypes.instanceOf(Document)),
+  isLoadingDocuments: PropTypes.bool,
   query: PropTypes.shape({
     claim_id: PropTypes.string,
   }),
@@ -664,4 +723,4 @@ OtherLeaveEntry.propTypes = {
   type: PropTypes.string,
 };
 
-export default withClaim(Review);
+export default withClaim(withClaimDocuments(Review));

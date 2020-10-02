@@ -11,12 +11,14 @@ import Claim, {
   ReasonQualifier,
   ReducedScheduleLeavePeriod,
 } from "../src/models/Claim";
+import Document, { DocumentType } from "../src/models/Document";
 import EmployerBenefit, {
   EmployerBenefitType,
 } from "../src/models/EmployerBenefit";
 import { mount, shallow } from "enzyme";
 import Address from "../src/models/Address";
 import ClaimCollection from "../src/models/ClaimCollection";
+import DocumentCollection from "../src/models/DocumentCollection";
 import PreviousLeave from "../src/models/PreviousLeave";
 import React from "react";
 import User from "../src/models/User";
@@ -434,6 +436,7 @@ export const claim = new MockClaimBuilder()
  * @param {object} [options.props] - Additional props to set on the PageComponent
  * @param {"mount"|"shallow"} [options.render] - Enzyme render method. Shallow renders by default.
  * @param {object} [options.userAttrs] - Additional attributes to set on the User
+ * @param {boolean} [options.hasUploadedDocument]
  * @returns {{ appLogic: object, claim: Claim, wrapper: object }}
  */
 export const renderWithAppLogic = (PageComponent, options = {}) => {
@@ -466,6 +469,24 @@ export const renderWithAppLogic = (PageComponent, options = {}) => {
     user_id: "mock_user_id",
     ...options.userAttrs,
   });
+
+  if (options.hasUploadedDocument) {
+    appLogic.documents.hasLoadedClaimDocuments = jest
+      .fn()
+      .mockImplementation(() => true);
+    appLogic.documents.documents = new DocumentCollection([
+      new Document({
+        application_id: "mock_application_id",
+        fineos_document_id: 1,
+        document_type: DocumentType.identityVerification,
+      }),
+      new Document({
+        application_id: "mock_application_id",
+        fineos_document_id: 2,
+        document_type: DocumentType.medicalCertification,
+      }),
+    ]);
+  }
 
   // Render the withClaim-wrapped page
   const component = (

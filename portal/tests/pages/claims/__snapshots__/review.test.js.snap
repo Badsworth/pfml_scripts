@@ -244,6 +244,22 @@ exports[`Final Review Page when all data is present renders Review page with fin
   >
     Checking
   </ReviewRow>
+  <Heading
+    level="2"
+    size="1"
+  >
+    <HeadingPrefix>
+      Part 3
+    </HeadingPrefix>
+    Review: Upload document
+  </Heading>
+  <div
+    className="margin-top-8 text-center"
+  >
+    <Spinner
+      aria-valuetext="Loading"
+    />
+  </div>
   <Button
     className="margin-top-3"
     loading={false}

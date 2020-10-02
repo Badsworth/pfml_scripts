@@ -50,8 +50,9 @@ const errors = {
     },
     date_of_birth: {
       invalid_age: "The person taking leave must be at least 14 years old.",
-      invalid_year_range: `Date of birth year is not in a valid range (on or after ${new Date().getFullYear() - 100
-        }).`,
+      invalid_year_range: `Date of birth year is not in a valid range (on or after ${
+        new Date().getFullYear() - 100
+      }).`,
       pattern: "Please enter a valid date of birth.",
     },
     employer_fein: {
@@ -637,6 +638,7 @@ const pages = {
     leaveReasonValue_medical: "$t(shared.leaveReasonMedical)",
     leaveReasonValue_serviceMemberFamily:
       "$t(shared.leaveReasonServiceMemberFamily)",
+    numberOfFilesLabel: "$t(shared.filesUploaded)",
     otherIncomeEntryLabel: "$t(shared.otherIncomeEntryPrefix) {{count}}",
     otherIncomeLabel: "Other sources of income?",
     otherIncomeType_jonesAct: "$t(shared.otherIncomeType_jonesAct)",
@@ -661,6 +663,7 @@ const pages = {
     partHeading_1_part1:
       "Review and confirm: Tell us about yourself and your leave",
     partHeading_2: "Review: Your payment information",
+    partHeading_3: "Review: Upload document",
     partOneNextStepsLine1:
       "Once you review and confirm Part 1, your in-progress application will be viewable by our call center staff. If you need to make edits to Part 1, you’ll need to contact our call center at $t(shared.callCenterPhoneNumber).",
     partOneNextStepsLine2:
@@ -683,6 +686,8 @@ const pages = {
     stepHeading_leaveDetails: "$t(shared.claimsLeaveDetailsTitle)",
     stepHeading_otherLeave: "$t(shared.claimsOtherLeaveTitle)",
     stepHeading_payment: "Payment information",
+    stepHeading_uploadCertification: "Upload certification document",
+    stepHeading_uploadId: "Upload identity document",
     stepHeading_verifyId: "$t(shared.claimsVerifyIdTitle)",
     submitAction_final: "Submit application",
     submitAction_part1: "Submit Part 1",
