@@ -28,7 +28,7 @@ export default (
 
   // Decides which user account to login with.
   let userType: FineosUserType | undefined;
-  for (const typeName in fineosUserTypeNames) {
+  for (const typeName of fineosUserTypeNames) {
     if (scenario.toUpperCase().includes(typeName)) {
       userType = typeName as FineosUserType;
       break;
