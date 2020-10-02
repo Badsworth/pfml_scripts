@@ -27,8 +27,9 @@ Auth.configure({
     // We use env.domain instead of env.NODE_ENV here since our end-to-end test suite is
     // ran against a production build on localhost.
     secure: process.env.domain !== "localhost",
-    // Cookie expiration, in days (defaults to a year, which is wild)
-    expires: 1,
+    // Set cookie expiration to expire at end of session.
+    // (Amplify defaults to a year, which is wild)
+    expires: null,
     // path: '/', (optional)
   },
   mandatorySignIn: false,
