@@ -103,21 +103,28 @@ export const steps = [
     name: "Submit application",
     test: async (browser: Browser): Promise<void> => {
       await browser.visit(PortalBaseUrl);
-      /* We don't want to actually create claims at this initial stage */
-      /* const reqOptions = getRequestOptions(authToken, "POST");
-      const res = await browser.evaluate((baseUrl, appId, options) => {
-        return new Promise((resolve, reject) => {
-          fetch(`${baseUrl}/applications/${appId}/submit_application`, options)
-            .then((r) => {
-              resolve(r.json());
-            }).catch(reject)
-        });
-      }, APIBaseUrl, applicationId, reqOptions)
-      if (res.status_code !== 503) {
+      const reqOptions = getRequestOptions(authToken, "POST");
+      const res = await browser.evaluate(
+        (baseUrl, appId, options) => {
+          return new Promise((resolve, reject) => {
+            fetch(
+              `${baseUrl}/applications/${appId}/submit_application`,
+              options
+            )
+              .then((r) => {
+                resolve(r.json());
+              })
+              .catch(reject);
+          });
+        },
+        APIBaseUrl,
+        applicationId,
+        reqOptions
+      );
+      if (res.status_code !== 201) {
         throw new Error(`Unable to update application: ${JSON.stringify(res)}`);
       }
-      console.log("Submitted application", res);
-      */
+      console.log("Submitted application", res.data);
     },
   },
 ];

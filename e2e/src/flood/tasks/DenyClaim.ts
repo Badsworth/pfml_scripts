@@ -6,6 +6,13 @@ export const steps: StoredStep[] = [
   {
     name: "Reject leave plan",
     test: async (browser: Browser): Promise<void> => {
+      // go to leave details
+      const leaveDetailsTab = await waitForElement(
+        browser,
+        By.css("[class^='TabO'][keytipnumber='6']")
+      );
+      await leaveDetailsTab.click();
+
       const rejectPlan = await waitForElement(
         browser,
         By.css("input[type='submit'][value='Reject']")
@@ -27,13 +34,13 @@ export const steps: StoredStep[] = [
 
       const notesInput = await labelled(browser, "Notes");
       await browser.type(notesInput, "Denied by PFML for LST purposes.");
-      /* 
+
       const okButton = await waitForElement(
         browser,
         By.css("[id*='Popup'] input[type='submit'][value='OK']")
       );
       await okButton.click();
-      */
+
       await waitForElement(browser, By.visibleText("Declined"));
     },
   },

@@ -2,9 +2,9 @@ import { TestData, Browser, step, By } from "@flood/element";
 import { SimulationClaim } from "../../simulation/types";
 import {
   globalElementSettings as settings,
-  FineosBaseUrl,
   StoredStep,
   formatDate,
+  getFineosBaseUrl,
 } from "../config";
 import { labelled, waitForElement } from "../helpers";
 import assert from "assert";
@@ -15,7 +15,7 @@ export const steps: StoredStep[] = [
   {
     name: "Login into fineos",
     test: async (browser: Browser): Promise<void> => {
-      await browser.visit(await FineosBaseUrl);
+      await browser.visit(await getFineosBaseUrl());
     },
   },
   {

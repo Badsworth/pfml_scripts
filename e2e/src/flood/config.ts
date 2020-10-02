@@ -13,9 +13,8 @@ export const globalElementSettings: TestSettings = {
   clearCookies: true,
 };
 
-export const FineosBaseUrl = getFineosBaseUrl();
-export const PortalBaseUrl = "https://paidleave-test.mass.gov";
-export const APIBaseUrl = "https://paidleave-api-test.mass.gov/api/v1";
+export const PortalBaseUrl = "https://paidleave-stage.mass.gov";
+export const APIBaseUrl = "https://paidleave-api-stage.mass.gov/api/v1";
 export type StoredStep = {
   name: string;
   test: StepFunction<unknown>;
@@ -46,21 +45,22 @@ export const getRequestOptions = (
   },
 });
 
-export async function getFineosBaseUrl(user?: FineosUserType): Promise<string> {
+export async function getFineosBaseUrl(
+  userType?: FineosUserType
+): Promise<string> {
   const base = await config("E2E_FINEOS_BASEURL");
   let username: string;
   let password: string;
-  if (user) {
+  if (typeof userType !== "undefined") {
     // Expects "E2E_FINEOS_USERS" to be stringified JSON.
-    // E.g., "{\"USER\": {\"name\": \"NAME", \"pass\": \"PASS\"}}"
+    // E.g., "{\"USER_TYPE\": {\"uername\": \"USERNAME", \"password\": \"PASSWORD\"}}"
     ({
-      [user]: { username, password },
+      [userType]: { username, password },
     } = JSON.parse(await config("E2E_FINEOS_USERS")));
   } else {
     username = await config("E2E_FINEOS_USERNAME");
     password = await config("E2E_FINEOS_PASSWORD");
   }
-
   if (!base) {
     throw new Error(
       `You must set the E2E_FINEOS_BASEURL environment variable.`
