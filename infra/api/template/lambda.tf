@@ -14,7 +14,8 @@ data "aws_s3_bucket" "lambda_build" {
 }
 
 # ----------------------------------------------------------------------------------------------------------------------
-# The DOR Import Function
+# The DOR Import Function.
+# TODO (API-626): Will eventually be replaced by an ECS task.
 
 resource "aws_lambda_layer_version" "dependencies" {
   s3_bucket  = data.aws_s3_bucket.lambda_build.bucket

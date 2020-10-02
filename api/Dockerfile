@@ -80,6 +80,13 @@ USER ${RUN_USER}
 COPY --from=app-build /etc/passwd /etc/group /etc/
 COPY --from=app-build /app/.venv /app/.venv
 
+# Include GPG for the DOR Import task.
+# Ideally this isn't included for every other ECS task/service, but we'll do it for now.
+COPY --from=app-build /usr/lib/gnupg/* /usr/lib/gnupg/
+COPY --from=app-build /usr/lib/gnupg2/* /usr/lib/gnupg2/
+COPY --from=app-build /usr/lib/x86_64-linux-gnu/* /usr/lib/x86_64-linux-gnu/
+COPY --from=app-build /usr/bin/gpg /usr/bin/gpg
+
 ENV PATH="/app/.venv/bin:$PATH"
 
 # run the application

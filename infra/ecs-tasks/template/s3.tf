@@ -13,6 +13,10 @@ locals {
 # ought to be sourced / loaded from and exported to
 #
 
+data "aws_s3_bucket" "agency_transfer" {
+  bucket = "massgov-pfml-${var.environment_name}-agency-transfer"
+}
+
 resource "aws_s3_bucket" "ad_hoc_verification" {
   for_each = toset(local.environments)
   bucket   = "massgov-pfml-${each.key}-verification-codes"

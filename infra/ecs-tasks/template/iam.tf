@@ -1,3 +1,5 @@
+# IAM roles and permissions for ECS tasks.
+
 locals {
   ssm_arn_prefix = "arn:aws:ssm:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:parameter/service"
 }
@@ -130,4 +132,110 @@ resource "aws_iam_policy" "task_adhoc_executor_s3_policy" {
 resource "aws_iam_role_policy_attachment" "task_adhoc_task_executor_s3_attachment" {
   role       = aws_iam_role.task_adhoc_verification_task_role.name
   policy_arn = aws_iam_policy.task_adhoc_executor_s3_policy.arn
+}
+
+# ------------------------------------------------------------------------------------------------------
+# DOR Import task stuff
+# ------------------------------------------------------------------------------------------------------
+
+resource "aws_iam_role" "dor_import_task_role" {
+  assume_role_policy = data.aws_iam_policy_document.ecs_tasks_assume_role_policy.json
+}
+
+resource "aws_iam_role_policy_attachment" "dor_import_task_role_extras" {
+  role       = aws_iam_role.dor_import_task_role.name
+  policy_arn = aws_iam_policy.dor_import_task_role_extras.arn
+}
+
+resource "aws_iam_policy" "dor_import_task_role_extras" {
+  name        = "${local.app_name}-${var.environment_name}-dor-import-ecs"
+  description = "All the things the DOR Import task needs to be allowed to do"
+  policy      = data.aws_iam_policy_document.dor_import_task_role_extras.json
+}
+
+data "aws_iam_policy_document" "dor_import_task_role_extras" {
+  statement {
+    effect = "Allow"
+    actions = [
+      "s3:PutObject",
+      "s3:GetObject",
+      "s3:ListBucket"
+    ]
+    resources = [
+      data.aws_s3_bucket.agency_transfer.arn,
+      "${data.aws_s3_bucket.agency_transfer.arn}/*"
+    ]
+  }
+}
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+resource "aws_iam_role" "dor_import_execution_role" {
+  assume_role_policy = data.aws_iam_policy_document.ecs_tasks_assume_role_policy.json
+}
+
+resource "aws_iam_role_policy_attachment" "dor_import_execution_role_extras" {
+  role       = aws_iam_role.dor_import_execution_role.name
+  policy_arn = aws_iam_policy.dor_import_execution_role_extras.arn
+}
+
+resource "aws_iam_policy" "dor_import_execution_role_extras" {
+  name        = "${local.app_name}-${var.environment_name}-dor-import-executor"
+  description = "A clone of the standard execution role with extra SSM permissions for DOR Import's decryption keys."
+  policy      = data.aws_iam_policy_document.dor_import_execution_role_extras.json
+}
+
+data "aws_iam_policy_document" "dor_import_execution_role_extras" {
+  # Allow ECS to log to Cloudwatch.
+  statement {
+    actions = [
+      "logs:CreateLogStream",
+      "logs:PutLogEvents",
+      "logs:DescribeLogStreams"
+    ]
+
+    resources = [
+      "${aws_cloudwatch_log_group.ecs_tasks.arn}:*"
+    ]
+  }
+
+  # Allow ECS to authenticate with ECR and download images.
+  statement {
+    actions = [
+      "ecr:GetAuthorizationToken",
+      "ecr:BatchCheckLayerAvailability",
+      "ecr:GetDownloadUrlForLayer",
+      "ecr:BatchGetImage",
+    ]
+
+    # ECS Fargate doesn't like it when you restrict the access to a single
+    # repository. Instead, it needs access to all of them.
+    resources = [
+      "*"
+    ]
+  }
+
+  # Allow ECS to access secrets from parameter store.
+  statement {
+    actions = [
+      "ssm:GetParameter",
+      "ssm:GetParameters",
+    ]
+
+    resources = [
+      "${local.ssm_arn_prefix}/${local.app_name}/${var.environment_name}/*",
+      "${local.ssm_arn_prefix}/${local.app_name}-dor-import/${var.environment_name}/*"
+    ]
+  }
+
+  statement {
+    actions = [
+      "ssm:GetParametersByPath",
+    ]
+
+    resources = [
+      "${local.ssm_arn_prefix}/${local.app_name}/${var.environment_name}",
+      "${local.ssm_arn_prefix}/${local.app_name}-dor-import/${var.environment_name}"
+    ]
+  }
 }
