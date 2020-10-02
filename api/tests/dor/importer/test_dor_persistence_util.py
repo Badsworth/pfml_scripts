@@ -62,7 +62,6 @@ def test_update_import_log_entry(test_db_session):
     report_log_entry = util.create_import_log_entry(test_db_session, report)
 
     report.parsed_employers_info_count = 2
-    report.parsed_employers_quarter_info_count = 1
     report.parsed_employees_info_count = 3
     report.end = datetime.now().isoformat()
 
@@ -74,8 +73,4 @@ def test_update_import_log_entry(test_db_session):
     assert updated_report_log_entry.start == report_log_entry.start
     assert updated_report_log_entry.end == report_log_entry.end
     assert persisted_report["parsed_employers_count"] == report.parsed_employers_count
-    assert (
-        persisted_report["parsed_employers_quarter_info_count"]
-        == report.parsed_employers_quarter_info_count
-    )
     assert persisted_report["parsed_employees_info_count"] == report.parsed_employees_info_count

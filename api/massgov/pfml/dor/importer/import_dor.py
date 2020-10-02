@@ -17,11 +17,7 @@ import massgov.pfml.dor.importer.lib.dor_persistence_util as dor_persistence_uti
 import massgov.pfml.util.files as file_util
 import massgov.pfml.util.logging as logging
 from massgov.pfml import db
-from massgov.pfml.dor.importer.dor_file_formats import (
-    EMPLOYEE_FORMAT,
-    EMPLOYER_FILE_FORMAT,
-    EMPLOYER_QUARTER_INFO_FORMAT,
-)
+from massgov.pfml.dor.importer.dor_file_formats import EMPLOYEE_FORMAT, EMPLOYER_FILE_FORMAT
 from massgov.pfml.util.config import get_secret_from_env
 from massgov.pfml.util.encryption import Crypt, GpgCrypt, Utf8Crypt
 
@@ -53,7 +49,6 @@ class ImportReport:
     employer_file: str = ""
     employee_file: str = ""
     parsed_employers_count: int = 0
-    parsed_employers_quarter_info_count: int = 0
     parsed_employees_info_count: int = 0
     created_employers_count: int = 0
     updated_employers_count: int = 0
@@ -64,8 +59,6 @@ class ImportReport:
     updated_wages_and_contributions_count: int = 0
     status: Optional[str] = None
     end: Optional[str] = None
-    updated_employer_ids: List[UUID] = field(default_factory=list)
-    unmodified_employer_ids: List[UUID] = field(default_factory=list)
     updated_employee_ids: List[UUID] = field(default_factory=list)
     updated_wages_and_contributions_ids: List[UUID] = field(default_factory=list)
 
@@ -124,7 +117,7 @@ def process_import_batches(
         # process each batch
         for import_batch in import_batches:
             logger.info(
-                "processing import patch",
+                "Processing import patch",
                 extra={
                     "date": import_batch.upload_date,
                     "employer_file": import_batch.employer_file,
@@ -161,6 +154,7 @@ def process_daily_import(
     logger.info("Starting to process files")
     report = ImportReport(
         start=datetime.now().isoformat(),
+        status="in progress",
         employer_file=employer_file_path,
         employee_file=employee_file_path,
     )
@@ -168,10 +162,9 @@ def process_daily_import(
     try:
         report_log_entry = dor_persistence_util.create_import_log_entry(db_session, report)
         employers = parse_employer_file(employer_file_path, decrypter)
-        employers_quarter_info, employees_info = parse_employee_file(employee_file_path, decrypter)
+        employees_info = parse_employee_file(employee_file_path, decrypter)
 
         parsed_employers_count = len(employers)
-        parsed_employers_quarter_info_count = len(employers_quarter_info)
         parsed_employees_info_count = len(employees_info)
 
         logger.info(
@@ -180,23 +173,16 @@ def process_daily_import(
                 "employer_file": employer_file_path,
                 "employee_file": employee_file_path,
                 "parsed_employers_count": parsed_employers_count,
-                "parsed_employers_quarter_info_count": parsed_employers_quarter_info_count,
                 "parsed_employees_info_count": parsed_employees_info_count,
             },
         )
 
         import_to_db(
-            db_session,
-            employers,
-            employers_quarter_info,
-            employees_info,
-            report,
-            report_log_entry.import_log_id,
+            db_session, employers, employees_info, report, report_log_entry.import_log_id,
         )
 
         # finalize report
         report.parsed_employers_count = parsed_employers_count
-        report.parsed_employers_quarter_info_count = parsed_employers_quarter_info_count
         report.parsed_employees_info_count = parsed_employees_info_count
         report.status = "success"
         report.end = datetime.now().isoformat()
@@ -216,9 +202,7 @@ def process_daily_import(
     return report
 
 
-def import_to_db(
-    db_session, employers, employers_quarter_info, employees_info, report, import_log_entry_id
-):
+def import_to_db(db_session, employers, employees_info, report, import_log_entry_id):
     """Process through parsed objects and persist into database"""
     logger.info("Starting import")
 
@@ -226,12 +210,7 @@ def import_to_db(
         db_session, employers, report, import_log_entry_id
     )
     import_employees_and_wage_data(
-        db_session,
-        account_key_to_employer_id_map,
-        employers_quarter_info,
-        employees_info,
-        report,
-        import_log_entry_id,
+        db_session, account_key_to_employer_id_map, employees_info, report, import_log_entry_id,
     )
 
     logger.info("Finished import")
@@ -241,115 +220,150 @@ def import_employers(db_session, employers, report, import_log_entry_id):
     """Import employers into db"""
     logger.info("Importing employers")
 
-    existing_employers = dor_persistence_util.get_all_employers_fein(db_session)
-    fein_to_employer = {employer.employer_fein: employer for employer in existing_employers}
+    # 1 - Get all employers in DB
+    existing_employer_reference_models = dor_persistence_util.get_all_employers_fein(db_session)
+    fein_to_existing_employer_reference_models = {
+        employer.employer_fein: employer for employer in existing_employer_reference_models
+    }
 
-    employer_list = list(
-        filter(lambda employer: employer["fein"] not in fein_to_employer, employers)
+    logger.info("Found employers in db: %i", len(existing_employer_reference_models))
+
+    # 2 - Create employers
+    not_found_employer_info_list = list(
+        filter(
+            lambda employer: employer["fein"] not in fein_to_existing_employer_reference_models,
+            employers,
+        )
     )
 
     fein_to_new_employer_id = {}
     fein_to_new_address_id = {}
-    for emp in employers:
+    for emp in not_found_employer_info_list:
         fein_to_new_employer_id[emp["fein"]] = uuid.uuid4()
         fein_to_new_address_id[emp["fein"]] = uuid.uuid4()
 
-    employers_to_create = list(
+    employer_models_to_create = list(
         map(
             lambda employer_info: dor_persistence_util.dict_to_employer(
                 employer_info, import_log_entry_id, fein_to_new_employer_id[employer_info["fein"]]
             ),
-            employer_list,
-        )
-    )
-    found_employers = list(filter(lambda employer: employer["fein"] in fein_to_employer, employers))
-
-    employers_to_update = list(
-        filter(
-            lambda employer: employer["updated_date"]
-            > fein_to_employer[employer["fein"]].dor_updated_date,
-            found_employers,
-        )
-    )
-    emplyers_to_not_update = list(
-        filter(
-            lambda employer: employer["updated_date"]
-            <= fein_to_employer[employer["fein"]].dor_updated_date,
-            found_employers,
+            not_found_employer_info_list,
         )
     )
 
-    logger.info("employers to create: %i", len(employers_to_create))
-    logger.info("employers to update: %i", len(employers_to_update))
-    logger.info("employers not being updated: %i", len(emplyers_to_not_update))
+    logger.info("Creating new employers: %i", len(employer_models_to_create))
 
-    # Create employers
-    db_session.bulk_save_objects(employers_to_create)
+    db_session.bulk_save_objects(employer_models_to_create)
     db_session.commit()
 
-    # Create addresses
-    addresses_to_create = list(
+    logger.info("Done - Creating new employers: %i", len(employer_models_to_create))
+
+    report.created_employers_count = len(employer_models_to_create)
+
+    # 3 - Create employer addresses
+    addresses_models_to_create = list(
         map(
             lambda employer_info: dor_persistence_util.dict_to_address(
                 employer_info, fein_to_new_address_id[employer_info["fein"]]
             ),
-            employer_list,
+            not_found_employer_info_list,
         )
     )
-    db_session.bulk_save_objects(addresses_to_create, return_defaults=True)
+
+    logger.info("Creating new employer addresses: %i", len(addresses_models_to_create))
+
+    db_session.bulk_save_objects(addresses_models_to_create, return_defaults=True)
     db_session.commit()
 
-    # Build list of addresses to create
-    employer_addresses_assoc_to_create = []
+    logger.info("Done - Creating new employer addresses: %i", len(addresses_models_to_create))
 
-    for emp in employers_to_create:
-        employer_addresses_assoc_to_create.append(
+    # 4 - Create Address to Employer mapping records
+
+    employer_address_relationship_models_to_create = []
+
+    for emp in employer_models_to_create:
+        employer_address_relationship_models_to_create.append(
             dor_persistence_util.employer_id_address_id_to_model(
                 fein_to_new_employer_id[emp.employer_fein],
                 fein_to_new_address_id[emp.employer_fein],
             )
         )
 
-    db_session.bulk_save_objects(employer_addresses_assoc_to_create)
+    logger.info(
+        "Creating new employer address mapping: %i",
+        len(employer_address_relationship_models_to_create),
+    )
+
+    db_session.bulk_save_objects(employer_address_relationship_models_to_create)
     db_session.commit()
 
+    logger.info(
+        "Done - Creating new employer address mapping: %i",
+        len(employer_address_relationship_models_to_create),
+    )
+
+    # 5 - Create map of new employer account keys
     account_key_to_employer_id_map = {}
-    for e in employers_to_create:
+    for e in employer_models_to_create:
         account_key_to_employer_id_map[e.account_key] = fein_to_new_employer_id[e.employer_fein]
 
+    # 6 - Update existing employers
+    found_employer_info_list = list(
+        filter(
+            lambda employer: employer["fein"] in fein_to_existing_employer_reference_models,
+            employers,
+        )
+    )
+
+    found_employer_info_to_update_list = list(
+        filter(
+            lambda employer: employer["updated_date"]
+            > fein_to_existing_employer_reference_models[employer["fein"]].dor_updated_date,
+            found_employer_info_list,
+        )
+    )
+
+    logger.info("Updating employers: %i", len(found_employer_info_to_update_list))
+
     count = 0
-    for employer_info in employers_to_update:
+    for employer_info in found_employer_info_to_update_list:
         count += 1
         if count % 1000 == 0:
             logger.info("Updating employer info, current %i", count)
 
-        account_key = employer_info["account_key"]
-        existing_employer = dor_persistence_util.get_employer_by_fein(
+        existing_employer_model = dor_persistence_util.get_employer_by_fein(
             db_session, employer_info["fein"]
         )
+        dor_persistence_util.update_employer(
+            db_session, existing_employer_model, employer_info, import_log_entry_id
+        )
 
-        updated_date = employer_info["updated_date"]
-        if updated_date > existing_employer.dor_updated_date:
-            dor_persistence_util.update_employer(
-                db_session, existing_employer, employer_info, import_log_entry_id
-            )
+        account_key = employer_info["account_key"]
+        account_key_to_employer_id_map[account_key] = existing_employer_model.employer_id
 
-            report.updated_employer_ids.append(str(existing_employer.employer_id))
-        else:
-            report.unmodified_employer_ids.append(str(existing_employer.employer_id))
+    report.updated_employers_count = len(found_employer_info_to_update_list)
+    logger.info("Done - Updating employers: %i", len(found_employer_info_to_update_list))
 
-        account_key_to_employer_id_map[account_key] = existing_employer.employer_id
-
-    report.unmodified_employer_ids = list(
-        map(
-            lambda employer: str(fein_to_employer[employer["fein"]].employer_id),
-            emplyers_to_not_update,
+    # 7 - Track and report not updated employers
+    found_employer_info_to_not_update_list = list(
+        filter(
+            lambda employer: employer["updated_date"]
+            <= fein_to_existing_employer_reference_models[employer["fein"]].dor_updated_date,
+            found_employer_info_list,
         )
     )
-    report.created_employers_count = len(employers_to_create)
-    report.updated_employers_count = len(report.updated_employer_ids)
-    report.unmodified_employers_count = len(emplyers_to_not_update)
 
+    for employer_info in found_employer_info_to_not_update_list:
+        existing_employer_reference_model = fein_to_existing_employer_reference_models[
+            employer_info["fein"]
+        ]
+        account_key = employer_info["account_key"]
+        account_key_to_employer_id_map[account_key] = existing_employer_reference_model.employer_id
+
+    report.unmodified_employers_count = len(found_employer_info_to_not_update_list)
+    logger.info("Employers not updated: %i", len(found_employer_info_to_not_update_list))
+
+    # 8 - Done
     logger.info(
         "Finished importing employers",
         extra={
@@ -363,18 +377,11 @@ def import_employers(db_session, employers, report, import_log_entry_id):
 
 
 def import_employees_and_wage_data(
-    db_session,
-    account_key_to_employer_id_map,
-    employers_quarter_info,
-    employees_info,
-    report,
-    import_log_entry_id,
+    db_session, account_key_to_employer_id_map, employees_info, report, import_log_entry_id,
 ):
     """Import employees and wage information"""
     logger.info(
-        "Importing wage information - employer: %i, employee: %i",
-        len(employers_quarter_info),
-        len(employees_info),
+        "Start import of wage information - rows: %i", len(employees_info),
     )
 
     # import employees
@@ -566,7 +573,6 @@ def parse_employee_file(employee_file_path, decrypter):
     """Parse employee file"""
     logger.info("Start parsing employee file", extra={"employee_file_path": employee_file_path})
 
-    employers_quarter_info = []
     employees_info = []
 
     file_stream = file_util.open_stream(employee_file_path, "rb")
@@ -577,15 +583,12 @@ def parse_employee_file(employee_file_path, decrypter):
         if not row:  # skip empty end of file lines
             continue
 
-        if row.startswith("A"):
-            employer_quarter_info = EMPLOYER_QUARTER_INFO_FORMAT.parse_line(row)
-            employers_quarter_info.append(employer_quarter_info)
-        else:
+        if row.startswith("B"):
             employee_info = EMPLOYEE_FORMAT.parse_line(row)
             employees_info.append(employee_info)
 
     logger.info("Finished parsing employee file", extra={"employee_file_path": employee_file_path})
-    return employers_quarter_info, employees_info
+    return employees_info
 
 
 def move_file_to_processed(bucket, file_to_copy):

@@ -125,7 +125,6 @@ def test_employer_update(test_db_session, dor_employer_lookups):
 
     assert report.updated_employers_count == 0
     assert report.unmodified_employers_count == 1
-    assert report.unmodified_employer_ids == [str(employer_id)]
 
     # confirm expected columns are now updated
     updated_employer_payload = test_data.get_updated_employer()
@@ -155,7 +154,6 @@ def test_employer_update(test_db_session, dor_employer_lookups):
     )
 
     assert report.updated_employers_count == 1
-    assert report.updated_employer_ids == [str(employer_id)]
 
 
 def test_employee_wage_data_create(test_db_session, dor_employer_lookups):
@@ -176,12 +174,10 @@ def test_employee_wage_data_create(test_db_session, dor_employer_lookups):
 
     # perform employee and wage import
     employee_wage_data_payload = test_data.get_new_employee_wage_data()
-    employer_quarter_info = test_data.get_employer_quarter_info()
 
     employee_id_by_ssn = import_dor.import_employees_and_wage_data(
         test_db_session,
         account_key_to_employer_id_map,
-        [employer_quarter_info],
         [employee_wage_data_payload],
         report,
         report_log_entry.import_log_id,
@@ -232,24 +228,21 @@ def test_employee_wage_data_update(test_db_session, dor_employer_lookups):
 
     # perform initial employee and wage import
     employee_wage_data_payload = test_data.get_new_employee_wage_data()
-    employer_quarter_info = test_data.get_employer_quarter_info()
 
     employee_id_by_ssn = import_dor.import_employees_and_wage_data(
         test_db_session,
         account_key_to_employer_id_map,
-        [employer_quarter_info],
         [employee_wage_data_payload],
         report,
         report_log_entry.import_log_id,
     )
     employee_id = employee_id_by_ssn[employee_wage_data_payload["employee_ssn"]]
 
-    # confirm that non amended employer_quarter_info is updated anyway (amended flag ignored by us)
+    # confirm that existing employee info is updated each time
     updated_employee_wage_data_payload = test_data.get_updated_employee_wage_data()
     import_dor.import_employees_and_wage_data(
         test_db_session,
         account_key_to_employer_id_map,
-        [employer_quarter_info],
         [updated_employee_wage_data_payload],
         report,
         report_log_entry.import_log_id,
@@ -266,12 +259,10 @@ def test_employee_wage_data_update(test_db_session, dor_employer_lookups):
     assert report.updated_employee_ids == [str(employee_id)]
     assert report.updated_wages_and_contributions_count == 1
 
-    # confirm amended updates are persisted
-    employer_quarter_info_amended = test_data.get_employer_quarter_info_amended()
+    # confirm updates are persisted
     import_dor.import_employees_and_wage_data(
         test_db_session,
         account_key_to_employer_id_map,
-        [employer_quarter_info_amended],
         [updated_employee_wage_data_payload],
         report,
         report_log_entry.import_log_id,
@@ -357,18 +348,16 @@ def test_get_files_for_import_grouped_by_date(test_fs_path_for_s3):
 
 def test_parse_employee_file(test_fs_path_for_s3):
     employee_wage_data = test_data.get_new_employee_wage_data()
-    employer_quarter_info = test_data.get_employer_quarter_info()
     employee_file_path = "{}/{}".format(str(test_fs_path_for_s3), employee_file)
-    employers_info, employees_info = import_dor.parse_employee_file(employee_file_path, decrypter)
-    assert employers_info[0] == employer_quarter_info
+    employees_info = import_dor.parse_employee_file(employee_file_path, decrypter)
     assert employees_info[0] == employee_wage_data
 
 
 def test_parse_employer_file(test_fs_path_for_s3):
-    employer_quarter_info = test_data.get_new_employer()
+    employer_info = test_data.get_new_employer()
     employer_file_path = "{}/{}".format(str(test_fs_path_for_s3), employer_file)
     employers_info = import_dor.parse_employer_file(employer_file_path, decrypter)
-    assert employers_info[0] == employer_quarter_info
+    assert employers_info[0] == employer_info
 
 
 ## == full import ==
