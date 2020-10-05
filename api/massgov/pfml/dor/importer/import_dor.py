@@ -213,6 +213,29 @@ def import_to_db(db_session, employers, employees_info, report, import_log_entry
     logger.info("Finished import")
 
 
+def batch_apply(items, batch_fn_name, batch_fn, batch_size=100000):
+    size = len(items)
+    start_index = 0
+    while start_index < size:
+        logger.info("batch: %s, batch start: %i", batch_fn_name, start_index)
+
+        end_index = start_index + batch_size
+        batch = items[start_index:end_index]
+
+        batch_fn(batch)
+
+        start_index = end_index
+
+
+def bulk_save(db_session, models_list, model_name, commit=False, batch_size=10000):
+    def bulk_save_helper(models_batch):
+        db_session.bulk_save_objects(models_batch)
+        if commit:
+            db_session.commit()
+
+    batch_apply(models_list, f"Saving {model_name}", bulk_save_helper, batch_size=batch_size)
+
+
 def import_employers(db_session, employers, report, import_log_entry_id):
     """Import employers into db"""
     logger.info("Importing employers")
@@ -250,8 +273,7 @@ def import_employers(db_session, employers, report, import_log_entry_id):
 
     logger.info("Creating new employers: %i", len(employer_models_to_create))
 
-    db_session.bulk_save_objects(employer_models_to_create)
-    db_session.commit()
+    bulk_save(db_session, employer_models_to_create, "Employers")
 
     logger.info("Done - Creating new employers: %i", len(employer_models_to_create))
 
@@ -269,8 +291,7 @@ def import_employers(db_session, employers, report, import_log_entry_id):
 
     logger.info("Creating new employer addresses: %i", len(addresses_models_to_create))
 
-    db_session.bulk_save_objects(addresses_models_to_create, return_defaults=True)
-    db_session.commit()
+    bulk_save(db_session, addresses_models_to_create, "Employer Addresses")
 
     logger.info("Done - Creating new employer addresses: %i", len(addresses_models_to_create))
 
@@ -291,8 +312,12 @@ def import_employers(db_session, employers, report, import_log_entry_id):
         len(employer_address_relationship_models_to_create),
     )
 
-    db_session.bulk_save_objects(employer_address_relationship_models_to_create)
-    db_session.commit()
+    bulk_save(
+        db_session,
+        employer_address_relationship_models_to_create,
+        "Employer Address Mapping",
+        commit=True,
+    )
 
     logger.info(
         "Done - Creating new employer address mapping: %i",
@@ -433,8 +458,7 @@ def import_employees_and_wage_data(
 
     logger.info("Creating new tax ids: %i", len(tax_id_models_to_create))
 
-    db_session.bulk_save_objects(tax_id_models_to_create)
-    db_session.commit()
+    bulk_save(db_session, tax_id_models_to_create, "Tax Ids")
 
     logger.info("Done - Creating new tax ids: %i", len(tax_id_models_to_create))
 
@@ -460,35 +484,35 @@ def import_employees_and_wage_data(
 
     logger.info("Creating new employees: %i", len(employee_models_to_create))
 
-    db_session.bulk_save_objects(employee_models_to_create)
-    db_session.commit()
+    bulk_save(db_session, employee_models_to_create, "Employees", commit=True)
 
     logger.info("Done - Creating new employees: %i", len(employee_models_to_create))
 
     report.created_employees_count = len(employee_models_to_create)
 
-    # 5 - Create new wage information for new employees
-    wages_contributions_models_to_create = []
-    for employee_info in not_found_employee_and_wage_info_list:
-        wages_contributions_models_to_create.append(
-            dor_persistence_util.dict_to_wages_and_contributions(
-                employee_info,
-                ssn_to_new_employee_id[employee_info["employee_ssn"]],
-                account_key_to_employer_id_map[employee_info["account_key"]],
-                import_log_entry_id,
+    logger.info("Creating new wage information: %i", len(not_found_employee_and_wage_info_list))
+
+    def wage_create(employee_wage_info_list):
+        wages_contributions_models_to_create = []
+        for employee_info in employee_wage_info_list:
+            wages_contributions_models_to_create.append(
+                dor_persistence_util.dict_to_wages_and_contributions(
+                    employee_info,
+                    ssn_to_new_employee_id[employee_info["employee_ssn"]],
+                    account_key_to_employer_id_map[employee_info["account_key"]],
+                    import_log_entry_id,
+                )
             )
-        )
 
-    logger.info("Creating new wage information: %i", len(wages_contributions_models_to_create))
+        bulk_save(db_session, wages_contributions_models_to_create, "Employee Wages", commit=True)
 
-    db_session.bulk_save_objects(wages_contributions_models_to_create)
-    db_session.commit()
+    batch_apply(not_found_employee_and_wage_info_list, "wage_create", wage_create)
 
     logger.info(
-        "Done - Creating new wage information: %i", len(wages_contributions_models_to_create)
+        "Done - Creating new wage information: %i", len(not_found_employee_and_wage_info_list)
     )
 
-    report.created_wages_and_contributions_count = len(wages_contributions_models_to_create)
+    report.created_wages_and_contributions_count = len(not_found_employee_and_wage_info_list)
 
     # 6 - Update all existing employees
     found_employee_and_wage_info_list = list(

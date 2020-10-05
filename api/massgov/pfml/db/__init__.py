@@ -88,7 +88,7 @@ def create_engine(config: Optional[DbConfig] = None) -> Engine:
     # handles the actual connections.
     #
     # (a SQLAlchemy Engine represents a Dialect+Pool)
-    return sqlalchemy.create_engine("postgresql://", pool=conn_pool)
+    return sqlalchemy.create_engine("postgresql://", pool=conn_pool, executemany_mode="batch")
 
 
 def get_connection_parameters(db_config: DbConfig) -> Dict[str, Any]:
