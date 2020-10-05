@@ -110,7 +110,7 @@ describe("Upload Document", () => {
     const { wrapper } = renderWithAppLogic(Review, {
       claimAttrs: new MockClaimBuilder().complete().create(),
       diveLevels: 5,
-      hasUploadedDocument: true,
+      hasLoadedClaimDocuments: true,
     });
     expect(wrapper.exists("Spinner")).toBe(false);
     expect(wrapper.find({ label: "Number of files uploaded" })).toHaveLength(2);

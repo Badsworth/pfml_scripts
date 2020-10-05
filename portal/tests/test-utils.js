@@ -18,7 +18,6 @@ import EmployerBenefit, {
 import { mount, shallow } from "enzyme";
 import Address from "../src/models/Address";
 import ClaimCollection from "../src/models/ClaimCollection";
-import DocumentCollection from "../src/models/DocumentCollection";
 import PreviousLeave from "../src/models/PreviousLeave";
 import React from "react";
 import User from "../src/models/User";
@@ -436,7 +435,9 @@ export const claim = new MockClaimBuilder()
  * @param {object} [options.props] - Additional props to set on the PageComponent
  * @param {"mount"|"shallow"} [options.render] - Enzyme render method. Shallow renders by default.
  * @param {object} [options.userAttrs] - Additional attributes to set on the User
- * @param {boolean} [options.hasUploadedDocument]
+ * @param {boolean} [options.hasLoadedClaimDocuments] - Additional attributes to indicate document loading is finished
+ * @param {boolean} [options.hasUploadedCertificationDocuments] - Additional attributes to set certification documents
+ * @param {boolean} [options.hasUploadedIdDocuments] - Additional attributes to set id documents
  * @returns {{ appLogic: object, claim: Claim, wrapper: object }}
  */
 export const renderWithAppLogic = (PageComponent, options = {}) => {
@@ -470,22 +471,30 @@ export const renderWithAppLogic = (PageComponent, options = {}) => {
     ...options.userAttrs,
   });
 
-  if (options.hasUploadedDocument) {
+  if (options.hasLoadedClaimDocuments) {
     appLogic.documents.hasLoadedClaimDocuments = jest
       .fn()
       .mockImplementation(() => true);
-    appLogic.documents.documents = new DocumentCollection([
+  }
+
+  if (options.hasUploadedIdDocuments) {
+    appLogic.documents.documents = appLogic.documents.documents.addItem(
       new Document({
         application_id: "mock_application_id",
         fineos_document_id: 1,
         document_type: DocumentType.identityVerification,
-      }),
+      })
+    );
+  }
+
+  if (options.hasUploadedCertificationDocuments) {
+    appLogic.documents.documents = appLogic.documents.documents.addItem(
       new Document({
         application_id: "mock_application_id",
         fineos_document_id: 2,
         document_type: DocumentType.medicalCertification,
-      }),
-    ]);
+      })
+    );
   }
 
   // Render the withClaim-wrapped page

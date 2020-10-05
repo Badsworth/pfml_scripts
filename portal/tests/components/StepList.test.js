@@ -52,19 +52,6 @@ describe("StepList", () => {
     expect(wrapper.find("p").text()).toBe(description);
   });
 
-  it("throws error if children are not Step components", () => {
-    const render = () => {
-      shallow(
-        <StepList {...props}>
-          <div />
-          <div />
-        </StepList>
-      );
-    };
-
-    expect(render).toThrowError();
-  });
-
   it("passes Step props to children", () => {
     const wrapper = shallow(
       <StepList {...props}>

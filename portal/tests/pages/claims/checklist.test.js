@@ -10,9 +10,13 @@ function renderStepListDescription(stepListWrapper) {
 
 describe("Checklist", () => {
   it("renders multiple StepList components with list of Steps", () => {
-    const { wrapper } = renderWithAppLogic(Checklist);
+    const { wrapper } = renderWithAppLogic(Checklist, {
+      diveLevels: 5,
+      hasLoadedClaimDocuments: true,
+    });
 
     expect(wrapper).toMatchSnapshot();
+    expect(wrapper.exists("Spinner")).toBe(false);
   });
 
   it("renders description for Step", () => {
@@ -23,6 +27,8 @@ describe("Checklist", () => {
       // which we have more unit tests for below to capture its other
       // variations
       claimAttrs: new MockClaimBuilder().bondingBirthLeaveReason().create(),
+      diveLevels: 5,
+      hasLoadedClaimDocuments: true,
     });
     const steps = wrapper.find("Step");
 
@@ -32,7 +38,7 @@ describe("Checklist", () => {
   });
 
   it("renders 'In progress' version of Part 1 StepList description when claim isn't yet submitted", () => {
-    const { wrapper } = renderWithAppLogic(Checklist);
+    const { wrapper } = renderWithAppLogic(Checklist, { diveLevels: 5 });
     const part1List = wrapper.find("StepList").at(0);
 
     expect(renderStepListDescription(part1List)).toMatchSnapshot();
@@ -45,6 +51,7 @@ describe("Checklist", () => {
       const claim = new MockClaimBuilder().submitted().create();
       ({ wrapper } = renderWithAppLogic(Checklist, {
         claimAttrs: claim,
+        diveLevels: 5,
       }));
     });
 
@@ -68,6 +75,10 @@ describe("Checklist", () => {
 
     const { wrapper } = renderWithAppLogic(Checklist, {
       claimAttrs: claim,
+      diveLevels: 5,
+      hasLoadedClaimDocuments: true,
+      hasUploadedIdDocuments: true,
+      hasUploadedCertificationDocuments: true,
     });
 
     expect(wrapper.find("ButtonLink").prop("disabled")).toBe(false);
@@ -78,9 +89,10 @@ describe("Checklist", () => {
       const claim = new MockClaimBuilder().submitted().create();
       const { wrapper } = renderWithAppLogic(Checklist, {
         claimAttrs: claim,
+        diveLevels: 5,
+        hasLoadedClaimDocuments: true,
       });
       const uploadCertificationStep = wrapper.find("Step").at(7);
-
       expect(uploadCertificationStep.find("Trans").dive()).toMatchSnapshot();
     });
 
@@ -91,6 +103,8 @@ describe("Checklist", () => {
         .create();
       const { wrapper } = renderWithAppLogic(Checklist, {
         claimAttrs: claim,
+        diveLevels: 5,
+        hasLoadedClaimDocuments: true,
       });
       const uploadCertificationStep = wrapper.find("Step").at(7);
 
@@ -104,10 +118,59 @@ describe("Checklist", () => {
         .create();
       const { wrapper } = renderWithAppLogic(Checklist, {
         claimAttrs: claim,
+        diveLevels: 5,
+        hasLoadedClaimDocuments: true,
       });
       const uploadCertificationStep = wrapper.find("Step").at(7);
 
       expect(uploadCertificationStep.find("Trans").dive()).toMatchSnapshot();
+    });
+  });
+
+  describe("when loading documents", () => {
+    it("renders spinner for loading", () => {
+      const { wrapper } = renderWithAppLogic(Checklist, {
+        diveLevels: 5,
+      });
+
+      expect(wrapper.exists("Spinner")).toBe(true);
+      expect(wrapper.find("Step")).toHaveLength(6);
+    });
+  });
+
+  describe("Upload document steps status", () => {
+    const startStatus = "not_started";
+    const completeStatus = "completed";
+    it("renders both doc steps as not completed", () => {
+      const { wrapper } = renderWithAppLogic(Checklist, {
+        claimAttrs: new MockClaimBuilder().complete().create(),
+        diveLevels: 5,
+        hasLoadedClaimDocuments: true,
+      });
+      expect(wrapper.find("Step").at(6).prop("status")).toBe(startStatus);
+      expect(wrapper.find("Step").at(7).prop("status")).toBe(startStatus);
+    });
+
+    it("renders id doc step as completed", () => {
+      const { wrapper } = renderWithAppLogic(Checklist, {
+        claimAttrs: new MockClaimBuilder().complete().create(),
+        diveLevels: 5,
+        hasLoadedClaimDocuments: true,
+        hasUploadedIdDocuments: true,
+      });
+      expect(wrapper.find("Step").at(6).prop("status")).toBe(completeStatus);
+      expect(wrapper.find("Step").at(7).prop("status")).toBe(startStatus);
+    });
+
+    it("renders certification doc step as completed", () => {
+      const { wrapper } = renderWithAppLogic(Checklist, {
+        claimAttrs: new MockClaimBuilder().complete().create(),
+        diveLevels: 5,
+        hasLoadedClaimDocuments: true,
+        hasUploadedCertificationDocuments: true,
+      });
+      expect(wrapper.find("Step").at(6).prop("status")).toBe(startStatus);
+      expect(wrapper.find("Step").at(7).prop("status")).toBe(completeStatus);
     });
   });
 });

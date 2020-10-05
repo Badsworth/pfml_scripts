@@ -268,6 +268,7 @@ export default class Step extends BaseModel {
     });
 
     const uploadId = new Step({
+      completeCond: (context) => !!context.idDocuments.length,
       name: ClaimSteps.uploadId,
       group: 3,
       pages: pagesByStep[ClaimSteps.uploadId],
@@ -283,6 +284,7 @@ export default class Step extends BaseModel {
     });
 
     const uploadCertification = new Step({
+      completeCond: (context) => !!context.certificationDocuments.length,
       name: ClaimSteps.uploadCertification,
       group: 3,
       pages: pagesByStep[ClaimSteps.uploadCertification],

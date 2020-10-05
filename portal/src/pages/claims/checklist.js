@@ -3,6 +3,7 @@ import Claim, {
   LeaveReason,
   ReasonQualifier,
 } from "../../models/Claim";
+import Document, { DocumentType } from "../../models/Document";
 import StepModel, { ClaimSteps } from "../../models/Step";
 import { filter, findIndex, get } from "lodash";
 import BackButton from "../../components/BackButton";
@@ -10,27 +11,39 @@ import ButtonLink from "../../components/ButtonLink";
 import HeadingPrefix from "../../components/HeadingPrefix";
 import PropTypes from "prop-types";
 import React from "react";
+import Spinner from "../../components/Spinner";
 import Step from "../../components/Step";
 import StepGroup from "../../models/StepGroup";
 import StepList from "../../components/StepList";
 import Title from "../../components/Title";
 import { Trans } from "react-i18next";
 import claimantConfig from "../../flows/claimant";
+import findDocumentsByType from "../../utils/findDocumentsByType";
 import routeWithParams from "../../utils/routeWithParams";
 import routes from "../../routes";
 import { useTranslation } from "../../locales/i18n";
 import withClaim from "../../hoc/withClaim";
+import withClaimDocuments from "../../hoc/withClaimDocuments";
 
 export const Checklist = (props) => {
   const { t } = useTranslation();
-  const { claim } = props;
+  const { claim, documents, isLoadingDocuments } = props;
 
+  const idDocuments = findDocumentsByType(
+    documents,
+    DocumentType.identityVerification
+  );
+
+  const certificationDocuments = findDocumentsByType(
+    documents,
+    DocumentType.medicalCertification // TODO (CP-962): Set based on leaveReason
+  );
   /**
    * @type {StepModel[]}
    */
   const allSteps = StepModel.createClaimStepsFromMachine(
     claimantConfig,
-    { claim },
+    { claim, idDocuments, certificationDocuments },
     // TODO (CP-509): add appErrors.warnings when API validations are in place
     null
   );
@@ -218,7 +231,13 @@ export const Checklist = (props) => {
           }
           {...sharedStepListProps}
         >
-          {renderSteps(stepGroup.steps)}
+          {stepGroup.number === 3 && isLoadingDocuments ? (
+            <div className="margin-top-8 text-center">
+              <Spinner aria-valuetext={t("components.spinner.label")} />
+            </div>
+          ) : (
+            renderSteps(stepGroup.steps)
+          )}
         </StepList>
       ))}
 
@@ -237,6 +256,8 @@ export const Checklist = (props) => {
 
 Checklist.propTypes = {
   claim: PropTypes.instanceOf(Claim).isRequired,
+  documents: PropTypes.arrayOf(PropTypes.instanceOf(Document)),
+  isLoadingDocuments: PropTypes.bool,
 };
 
-export default withClaim(Checklist);
+export default withClaim(withClaimDocuments(Checklist));

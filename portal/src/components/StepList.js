@@ -8,7 +8,7 @@ const StepList = (props) => {
 
   const steps = Children.map(children, (child, index) => {
     if (child.type !== Step) {
-      throw new Error("StepList expects all children to be <Step /> elements");
+      return children;
     }
 
     return cloneElement(child, {
