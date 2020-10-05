@@ -1,0 +1,46 @@
+{
+  "employment_status": "Employed",
+  "first_name": "Florencio",
+  "last_name": "Cummerata",
+  "tax_identifier": "259-43-2367",
+  "employer_fein": "99-9999999",
+  "date_of_birth": "1994-11-02",
+  "has_state_id": true,
+  "mass_id": "637145711",
+  "mailing_address": {
+    "city": "Port Francis",
+    "line_1": "0708 Gail Dam",
+    "state": "ME",
+    "zip": "17839"
+  },
+  "residential_address": {
+    "city": "South Alexa",
+    "line_1": "302 Myah Spring",
+    "state": "CT",
+    "zip": "31705-6748"
+  },
+  "leave_details": {
+    "continuous_leave_periods": [
+      {
+        "start_date": "2021-03-19",
+        "end_date": "2021-05-10",
+        "is_estimated": true
+      }
+    ],
+    "employer_notification_date": "2020-08-19",
+    "employer_notified": true,
+    "intermittent_leave_periods": [],
+    "reason": "Serious Health Condition - Employee",
+    "reduced_schedule_leave_periods": []
+  },
+  "payment_preferences": [
+    {
+      "payment_method": "ACH",
+      "account_details": {
+        "account_number": "12345678",
+        "routing_number": "111111111",
+        "account_type": "Checking"
+      }
+    }
+  ]
+}

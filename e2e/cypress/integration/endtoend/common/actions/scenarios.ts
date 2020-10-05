@@ -18,7 +18,7 @@ export function HAP1(): void {
   fineos.addWeeklyWage();
   fineos.onTab("Evidence");
   fineos.onTab("Certification Periods");
-  fineos.fufillAvailability();
+  fineos.fillAvailability();
   fineos.clickAdjudicate();
   fineos.onTab("Evidence");
   fineos.manageEvidence();
@@ -30,7 +30,7 @@ export function HAP1(): void {
   fineos.manageEvidence();
   fineos.validateEvidence("valid");
   fineos.onTab("Manage Request");
-  fineos.acceptClaim();
+  fineos.acceptLeavePlan();
   fineos.onPage("claims");
   fineos.approveClaim();
 }
@@ -124,7 +124,7 @@ export function UNH2(): void {
 export function UNH3(): void {
   getToClaimPage();
   fineos.onTab("Documents");
-  fineos.uploadDocument("MA ID");
+  fineos.uploadDocument("MA ID", "Identification Proof");
   fineos.findDocument("MA ID");
   fineos.onTab("Absence Hub");
   fineos.clickAdjudicate();
@@ -141,4 +141,37 @@ export function UNH3(): void {
   fineos.clickDeny();
   fineos.denialReason("Ineligible");
   fineos.claimCompletion();
+}
+
+export function GBM1(): void {
+  getToClaimPage();
+  // Uploading HCP Form
+  fineos.onTab("Documents");
+  fineos.uploadDocument("HCP", "State Managed");
+  fineos.findDocument("HCP");
+  fineos.onTab("Absence Hub");
+  fineos.clickAdjudicate();
+  fineos.onTab("Paid Benefits");
+
+  // When I click edit
+  cy.wait(2000).get('input[type="submit"][value="Edit"]').click();
+
+  fineos.addWeeklyWage();
+  fineos.onTab("Evidence");
+  fineos.onTab("Certification Periods");
+  fineos.fillAvailability();
+  fineos.clickAdjudicate();
+  fineos.onTab("Evidence");
+  fineos.manageEvidence();
+  fineos.validateEvidence("valid");
+
+  // When I highlight ID Proof
+  cy.wait(2000).get('.ListRow2 > [width="20%"]').click();
+
+  fineos.manageEvidence();
+  fineos.validateEvidence("valid");
+  fineos.onTab("Manage Request");
+  fineos.acceptLeavePlan();
+  fineos.onPage("claims");
+  fineos.approveClaim();
 }

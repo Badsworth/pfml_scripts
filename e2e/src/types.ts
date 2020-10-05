@@ -186,5 +186,6 @@ export const ScenarioClaimTestTypes = [
   "GBR1",
   "UNH2",
   "UNH3",
+  "GBM1",
 ] as const;
 export type TestType = typeof ScenarioClaimTestTypes[number];

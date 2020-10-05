@@ -150,7 +150,6 @@ export function addEvidenceReviewTask(): void {
     .find('input[type="text"]')
     .type("outstanding document");
   cy.get("#NameSearchWidget").find('input[type="submit"]').click();
-  // cy.get("#p10_un8_next").click();
   clickBottomWidgetButton("Next");
   cy.get('td[title*="Outstanding Document"]').first().click();
   cy.get("input[type='submit'][title='Open this task']").click();
@@ -193,31 +192,42 @@ export function confirmDFMLTransfer(): void {
   );
 }
 
-export function uploadDocument(documentType: string): void {
+export function uploadDocument(
+  documentType: string,
+  businessType: string
+): void {
   const docName = documentType.replace(" ", "_");
   cy.get('input[value="Add"]').click();
   cy.get("table[class='TabStrip']").contains("div", "Search").click();
-  cy.labelled("Business Type").type("Identification Proof");
+  cy.labelled("Business Type").type(businessType);
   cy.get("input[value='Search']").click();
-  cy.get("#p9_un6_searchPageOk").click();
+  clickBottomWidgetButton();
   cy.get("input[type='file']").attachFile(`./${docName}.pdf`);
-  cy.get("#UploadDocumentWidget_un11_OKBtn").click();
+  clickBottomWidgetButton();
 }
 
 export function findDocument(documentType: string): void {
-  if (documentType === "MA ID") {
-    const documentCategory = "Identification_Proof";
-    cy.get(`a[name*=${documentCategory}]`);
-  } else {
-    throw new Error("Document type not found.");
+  let documentCategory: string;
+  switch (documentType) {
+    case "MA ID":
+      documentCategory = "Identification_Proof";
+      cy.get(`a[name*=${documentCategory}]`);
+      break;
+    case "HCP":
+      documentCategory = "State_Managed_Paid_Leave_Confirmation";
+      cy.get(`a[name*=${documentCategory}]`);
+      break;
+    default:
+      throw new Error("Provided reason for transfer is not recognized.");
   }
 }
+
 export function addWeeklyWage(): void {
   cy.labelled("Average weekly wage").type("{selectall}{backspace}1000");
   clickBottomWidgetButton();
 }
 
-export function fufillAvailability(): void {
+export function fillAvailability(): void {
   cy.get('input[type="submit"][value="Prefill with Requested Absence Periods"]')
     .click()
     .wait(1000);
@@ -225,7 +235,7 @@ export function fufillAvailability(): void {
   clickBottomWidgetButton();
 }
 
-export function acceptClaim(): void {
+export function acceptLeavePlan(): void {
   cy.get('input[title="Accept Leave Plan"]').click();
   clickBottomWidgetButton();
 }

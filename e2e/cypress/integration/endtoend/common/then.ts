@@ -603,7 +603,7 @@ Then("I should add weekly wage", function (): void {
 });
 
 Then("I should fufill availability request", function (): void {
-  fineos.fufillAvailability();
+  fineos.fillAvailability();
 });
 
 Then("I should confirm evidence is {string}", function (label: string): void {
@@ -611,7 +611,7 @@ Then("I should confirm evidence is {string}", function (label: string): void {
 });
 
 Then("I click Accept", function (): void {
-  fineos.acceptClaim();
+  fineos.acceptLeavePlan();
 });
 
 Then("I should approve claim", function (): void {
