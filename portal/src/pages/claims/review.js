@@ -30,6 +30,7 @@ import claimantConfigs from "../../flows/claimant";
 import findDocumentsByType from "../../utils/findDocumentsByType";
 import findKeyByValue from "../../utils/findKeyByValue";
 import formatDateRange from "../../utils/formatDateRange";
+import getI18nContextForIntermittentFrequencyDuration from "../../utils/getI18nContextForIntermittentFrequencyDuration";
 import useThrottledHandler from "../../hooks/useThrottledHandler";
 import { useTranslation } from "../../locales/i18n";
 import withClaim from "../../hoc/withClaim";
@@ -298,6 +299,30 @@ export const Review = (props) => {
             )
           : t("pages.claimsReview.leavePeriodNotSelected")}
       </ReviewRow>
+
+      {claim.isIntermittent && (
+        <ReviewRow
+          level={reviewRowLevel}
+          label={t("pages.claimsReview.intermittentFrequencyDurationLabel")}
+        >
+          <Trans
+            i18nKey="pages.claimsReview.intermittentFrequencyDuration"
+            tOptions={{
+              context: getI18nContextForIntermittentFrequencyDuration(
+                get(claim, "leave_details.intermittent_leave_periods[0]")
+              ),
+              duration: get(
+                claim,
+                "leave_details.intermittent_leave_periods[0].duration"
+              ),
+              frequency: get(
+                claim,
+                "leave_details.intermittent_leave_periods[0].frequency"
+              ),
+            }}
+          />
+        </ReviewRow>
+      )}
 
       {/* EMPLOYMENT INFO */}
       <ReviewHeading

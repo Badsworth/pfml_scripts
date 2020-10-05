@@ -629,6 +629,19 @@ const pages = {
     familyLeaveTypeValue_adoption: "Adoption",
     familyLeaveTypeValue_fosterCare: "Foster care",
     familyLeaveTypeValue_newBorn: "Birth",
+    intermittentFrequencyDurationLabel: "Frequency of intermittent leave",
+    intermittentFrequencyDuration_irregularMonths_days:
+      "Estimated {{frequency}} absences over the next 6 months, each lasting {{duration}} days.",
+    intermittentFrequencyDuration_irregularMonths_hours:
+      "Estimated {{frequency}} absences over the next 6 months, each lasting {{duration}} hours.",
+    intermittentFrequencyDuration_months_days:
+      "Estimated {{frequency}} absences per month, each lasting {{duration}} days.",
+    intermittentFrequencyDuration_months_hours:
+      "Estimated {{frequency}} absences per month, each lasting {{duration}} hours.",
+    intermittentFrequencyDuration_weeks_days:
+      "Estimated {{frequency}} absences per week, each lasting {{duration}} days.",
+    intermittentFrequencyDuration_weeks_hours:
+      "Estimated {{frequency}} absences per week, each lasting {{duration}} hours.",
     leaveDetailsSectionHeading: "$t(shared.leaveDetailsStepTitle)",
     leavePeriodLabel_continuous: "$t(shared.claimDurationTypeContinuous)",
     leavePeriodLabel_intermittent: "$t(shared.claimDurationTypeIntermittent)",

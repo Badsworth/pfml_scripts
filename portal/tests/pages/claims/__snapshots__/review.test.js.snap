@@ -282,6 +282,18 @@ Array [
 ]
 `;
 
+exports[`Intermittent leave frequency renders the leave frequency and duration in plain language 1`] = `"Estimated 2 absences per month, each lasting 3 days."`;
+
+exports[`Intermittent leave frequency renders the leave frequency and duration in plain language 2`] = `"Estimated 2 absences per week, each lasting 3 days."`;
+
+exports[`Intermittent leave frequency renders the leave frequency and duration in plain language 3`] = `"Estimated 2 absences per month, each lasting 3 days."`;
+
+exports[`Intermittent leave frequency renders the leave frequency and duration in plain language 4`] = `"Estimated 2 absences per month, each lasting 3 hours."`;
+
+exports[`Intermittent leave frequency renders the leave frequency and duration in plain language 5`] = `"Estimated 2 absences per week, each lasting 3 hours."`;
+
+exports[`Intermittent leave frequency renders the leave frequency and duration in plain language 6`] = `"Estimated 2 absences per month, each lasting 3 hours."`;
+
 exports[`OtherIncomeList when all data are present renders all data fields 1`] = `
 Array [
   <OtherLeaveEntry

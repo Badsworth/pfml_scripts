@@ -227,7 +227,9 @@ export class IntermittentLeavePeriod extends BaseModel {
  * @enum {string}
  */
 export const FrequencyIntervalBasis = {
-  days: "Days",
+  // Days is also a valid enum in the API, however the Portal
+  // doesn't offer this as an option to the user
+  // days: "Days",
   months: "Months",
   weeks: "Weeks",
 };
@@ -239,7 +241,9 @@ export const FrequencyIntervalBasis = {
 export const DurationBasis = {
   days: "Days",
   hours: "Hours",
-  minutes: "Minutes",
+  // Minutes is also a valid enum in the API, however the Portal
+  // doesn't offer this as an option to the user
+  // minutes: "Minutes",
 };
 
 export class ReducedScheduleLeavePeriod extends BaseModel {

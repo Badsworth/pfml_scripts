@@ -1,3 +1,9 @@
+import {
+  DurationBasis,
+  FrequencyIntervalBasis,
+  IntermittentLeavePeriod,
+  LeaveReason,
+} from "../../../src/models/Claim";
 import EmployerBenefit, {
   EmployerBenefitType,
 } from "../../../src/models/EmployerBenefit";
@@ -9,7 +15,6 @@ import Review, {
   OtherLeaveEntry,
   PreviousLeaveList,
 } from "../../../src/pages/claims/review";
-import { LeaveReason } from "../../../src/models/Claim";
 import PreviousLeave from "../../../src/models/PreviousLeave";
 import React from "react";
 import { shallow } from "enzyme";
@@ -126,7 +131,7 @@ describe("Employer info", () => {
   });
 });
 
-describe("Leave details", () => {
+describe("Leave reason", () => {
   const pregnancyOrRecentBirthLabel =
     "Are you pregnant or have you recently given birth?";
   const familyLeaveTypeLabel = "Family leave type";
@@ -156,6 +161,71 @@ describe("Leave details", () => {
       expect(wrapper.text()).not.toContain(pregnancyOrRecentBirthLabel);
       expect(wrapper.text()).toContain(familyLeaveTypeLabel);
     });
+  });
+});
+
+describe("Intermittent leave frequency", () => {
+  // Generate all possible combinations of Duration/Frequency for an Intermittent Leave Period:
+  const durations = Object.values(DurationBasis);
+  const frequencyIntervals = Object.values(FrequencyIntervalBasis);
+  const intermittentLeavePeriodPermutations = [];
+
+  durations.forEach((duration_basis) => {
+    frequencyIntervals.forEach((frequency_interval_basis) => {
+      intermittentLeavePeriodPermutations.push(
+        new IntermittentLeavePeriod({
+          duration_basis,
+          frequency_interval_basis,
+          frequency: 2,
+          duration: 3,
+        })
+      );
+    });
+
+    intermittentLeavePeriodPermutations.push(
+      new IntermittentLeavePeriod({
+        duration_basis,
+        frequency_interval: 6, // irregular over 6 months
+        frequency_interval_basis: FrequencyIntervalBasis.months,
+        frequency: 2,
+        duration: 3,
+      })
+    );
+  });
+
+  it("renders the leave frequency and duration in plain language", () => {
+    expect.assertions();
+
+    intermittentLeavePeriodPermutations.forEach((intermittentLeavePeriod) => {
+      const claim = new MockClaimBuilder().part1Complete().create();
+      claim.leave_details.intermittent_leave_periods = [
+        intermittentLeavePeriod,
+      ];
+
+      const { wrapper } = renderWithAppLogic(Review, {
+        claimAttrs: claim,
+      });
+      const contentElement = wrapper.find({
+        i18nKey: "pages.claimsReview.intermittentFrequencyDuration",
+      });
+
+      expect(contentElement.dive()).toMatchSnapshot();
+    });
+  });
+
+  it("does not render the intermittent leave frequency when a claim has no intermittent leave", () => {
+    const claim = new MockClaimBuilder()
+      .part1Complete({ excludeLeavePeriod: true })
+      .create();
+
+    const { wrapper } = renderWithAppLogic(Review, {
+      claimAttrs: claim,
+    });
+    const contentElement = wrapper.find({
+      i18nKey: "pages.claimsReview.intermittentFrequencyDuration",
+    });
+
+    expect(contentElement.exists()).toBe(false);
   });
 });
 
