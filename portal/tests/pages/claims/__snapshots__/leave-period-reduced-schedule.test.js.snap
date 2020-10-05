@@ -28,11 +28,7 @@ exports[`LeavePeriodReducedSchedule renders the page with bonding leave content 
     value=""
   />
   <ConditionalContent
-    fieldNamesClearedWhenHidden={
-      Array [
-        "claim.leave_details.reduced_schedule_leave_periods[0]",
-      ]
-    }
+    fieldNamesClearedWhenHidden={Array []}
     getField={[Function]}
     removeField={[Function]}
     updateFields={[Function]}
@@ -115,11 +111,7 @@ exports[`LeavePeriodReducedSchedule renders the page with medical leave content 
     value=""
   />
   <ConditionalContent
-    fieldNamesClearedWhenHidden={
-      Array [
-        "claim.leave_details.reduced_schedule_leave_periods[0]",
-      ]
-    }
+    fieldNamesClearedWhenHidden={Array []}
     getField={[Function]}
     removeField={[Function]}
     updateFields={[Function]}

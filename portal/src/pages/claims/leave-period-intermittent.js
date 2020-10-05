@@ -92,9 +92,8 @@ export const LeavePeriodIntermittent = (props) => {
       </ConditionalContent>
 
       <ConditionalContent
-        fieldNamesClearedWhenHidden={[
-          "claim.leave_details.intermittent_leave_periods[0]",
-        ]}
+        // TODO (CP-933): Remove the leave period
+        fieldNamesClearedWhenHidden={[]}
         getField={getField}
         removeField={removeField}
         updateFields={updateFields}

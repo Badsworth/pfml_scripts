@@ -21,7 +21,10 @@ import { fields as employerBenefitsFields } from "../pages/claims/employer-benef
 import { fields as employmentStatusFields } from "../pages/claims/employment-status";
 import { get } from "lodash";
 import { fields as hoursWorkedPerWeekFields } from "../pages/claims/hours-worked-per-week";
+import { fields as intermittentFrequencyFields } from "../pages/claims/intermittent-frequency";
 import { fields as leavePeriodContinuousFields } from "../pages/claims/leave-period-continuous";
+import { fields as leavePeriodIntermittentFields } from "../pages/claims/leave-period-intermittent";
+import { fields as leavePeriodReducedScheduleFields } from "../pages/claims/leave-period-reduced-schedule";
 import { fields as leaveReasonFields } from "../pages/claims/leave-reason";
 import { fields as nameFields } from "../pages/claims/name";
 import { fields as notifiedEmployerFields } from "../pages/claims/notified-employer";
@@ -46,10 +49,10 @@ export const guards = {
   isCompleted: ({ claim }) => claim.isCompleted,
   hasStateId: ({ claim }) => claim.has_state_id === true,
   hasEmployerBenefits: ({ claim }) => claim.temp.has_employer_benefits === true,
+  hasIntermittentLeavePeriods: ({ claim }) =>
+    claim.has_intermittent_leave_periods === true,
   hasOtherIncomes: ({ claim }) => claim.temp.has_other_incomes === true,
   hasPreviousLeaves: ({ claim }) => claim.temp.has_previous_leaves === true,
-  isIntermittentOrReduced: ({ claim }) =>
-    claim.isIntermittent || claim.isReducedSchedule,
 };
 
 export default {
@@ -207,7 +210,41 @@ export default {
         fields: leavePeriodContinuousFields,
       },
       on: {
-        // TODO (CP-984): Route to reduced schedule leave period page
+        CONTINUE: routes.claims.leavePeriodReducedSchedule,
+      },
+    },
+    [routes.claims.leavePeriodReducedSchedule]: {
+      meta: {
+        step: ClaimSteps.leaveDetails,
+        fields: leavePeriodReducedScheduleFields,
+      },
+      on: {
+        CONTINUE: routes.claims.leavePeriodIntermittent,
+      },
+    },
+    [routes.claims.leavePeriodIntermittent]: {
+      meta: {
+        step: ClaimSteps.leaveDetails,
+        fields: leavePeriodIntermittentFields,
+      },
+      on: {
+        CONTINUE: [
+          {
+            target: routes.claims.intermittentFrequency,
+            cond: "hasIntermittentLeavePeriods",
+          },
+          {
+            target: routes.claims.checklist,
+          },
+        ],
+      },
+    },
+    [routes.claims.intermittentFrequency]: {
+      meta: {
+        step: ClaimSteps.leaveDetails,
+        fields: intermittentFrequencyFields,
+      },
+      on: {
         CONTINUE: routes.claims.checklist,
       },
     },

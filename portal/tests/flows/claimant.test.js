@@ -1,9 +1,7 @@
 import Claim, {
   ClaimStatus,
   EmploymentStatus,
-  IntermittentLeavePeriod,
   LeaveReason,
-  ReducedScheduleLeavePeriod,
 } from "../../src/models/Claim";
 import { Machine, assign } from "xstate";
 import claimFlowStates, { guards } from "../../src/flows/claimant";
@@ -107,6 +105,25 @@ const machineTests = {
       test: () => {},
     },
   },
+  [routes.claims.leavePeriodReducedSchedule]: {
+    meta: {
+      test: () => {},
+    },
+  },
+  [routes.claims.leavePeriodIntermittent]: {
+    meta: {
+      test: () => {},
+    },
+  },
+  [routes.claims.intermittentFrequency]: {
+    meta: {
+      test: (_, event) => {
+        expect(
+          get(event.context.claim, "has_intermittent_leave_periods")
+        ).toEqual(true);
+      },
+    },
+  },
   [routes.claims.employerBenefits]: {
     meta: {
       test: () => {},
@@ -199,31 +216,19 @@ describe("claimFlowConfigs", () => {
     employment_status: EmploymentStatus.employed,
   };
   const hasEmployerBenefits = { temp: { has_employer_benefits: true } };
+  const hasIntermittentLeavePeriods = { has_intermittent_leave_periods: true };
   const hasOtherIncomes = { temp: { has_other_incomes: true } };
   const hasStateId = { has_state_id: true };
   const hasPreviousLeaves = { temp: { has_previous_leaves: true } };
-  const intermittentLeave = {
-    leave_details: {
-      intermittent_leave_periods: [new IntermittentLeavePeriod()],
-    },
-  };
-  const reducedSchedule = {
-    temp: {
-      leave_details: {
-        reduced_schedule_leave_periods: [new ReducedScheduleLeavePeriod()],
-      },
-    },
-  };
   const completed = {
     status: ClaimStatus.completed,
   };
   const testData = [
-    { claimData: intermittentLeave, userData: {} },
-    { claimData: reducedSchedule, userData: {} },
     { claimData: hasStateId, userData: {} },
     { claimData: medicalClaim, userData: {} },
     { claimData: employed, userData: {} },
     { claimData: hasEmployerBenefits, userData: {} },
+    { claimData: hasIntermittentLeavePeriods, userData: {} },
     { claimData: hasOtherIncomes, userData: {} },
     { claimData: hasPreviousLeaves, userData: {} },
     { claimData: bondingClaim, userData: {} },

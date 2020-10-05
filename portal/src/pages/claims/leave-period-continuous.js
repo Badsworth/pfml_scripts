@@ -79,9 +79,8 @@ export const LeavePeriodContinuous = (props) => {
       />
 
       <ConditionalContent
-        fieldNamesClearedWhenHidden={[
-          "claim.leave_details.continuous_leave_periods[0]",
-        ]}
+        // TODO (CP-933): Remove the leave period
+        fieldNamesClearedWhenHidden={[]}
         getField={getField}
         removeField={removeField}
         updateFields={updateFields}
