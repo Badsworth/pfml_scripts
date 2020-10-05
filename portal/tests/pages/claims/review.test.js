@@ -204,6 +204,7 @@ describe("Intermittent leave frequency", () => {
 
       const { wrapper } = renderWithAppLogic(Review, {
         claimAttrs: claim,
+        diveLevels: 5,
       });
       const contentElement = wrapper.find({
         i18nKey: "pages.claimsReview.intermittentFrequencyDuration",
