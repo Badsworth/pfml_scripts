@@ -1,5 +1,7 @@
 import Document, { DocumentType } from "../../models/Document";
 import React, { useState } from "react";
+import Accordion from "../../components/Accordion";
+import AccordionItem from "../../components/AccordionItem";
 import FileCardList from "../../components/FileCardList";
 import FileUploadDetails from "../../components/FileUploadDetails";
 import Heading from "../../components/Heading";
@@ -47,19 +49,33 @@ export const UploadId = (props) => {
         {!hasStateId && (
           <div className="border-bottom border-base-light margin-bottom-4 padding-bottom-4">
             <Trans
-              i18nKey="pages.claimsUploadId.validIdDocumentation"
+              i18nKey="pages.claimsUploadId.otherIdentityDocs"
               components={{
                 ul: <ul className="usa-list" />,
                 li: <li />,
-                "identity-proof-link": (
-                  <a href={routes.external.massgov.identityProof} />
-                ),
-                "puerto-rican-birth-certificate-link": (
-                  <a href={routes.external.puertoRicanBirthCertificate} />
-                ),
                 "work-visa-link": <a href={routes.external.workVisa} />,
               }}
             />
+
+            <Accordion>
+              <AccordionItem
+                heading={t("pages.claimsUploadId.accordionHeading")}
+              >
+                <Trans
+                  i18nKey="pages.claimsUploadId.accordionContent"
+                  components={{
+                    ul: <ul className="usa-list" />,
+                    li: <li />,
+                    "identity-proof-link": (
+                      <a href={routes.external.massgov.identityProof} />
+                    ),
+                    "puerto-rican-birth-certificate-link": (
+                      <a href={routes.external.puertoRicanBirthCertificate} />
+                    ),
+                  }}
+                />
+              </AccordionItem>
+            </Accordion>
           </div>
         )}
         <FileUploadDetails />

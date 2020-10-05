@@ -23,13 +23,7 @@ exports[`UploadId after documents have been loaded when the user doesn't have a 
       <Trans
         components={
           Object {
-            "identity-proof-link": <a
-              href="https://www.mass.gov/info-details/identity-proof-for-paid-leave"
-            />,
             "li": <li />,
-            "puerto-rican-birth-certificate-link": <a
-              href="https://prfaa.pr.gov/faqs"
-            />,
             "ul": <ul
               className="usa-list"
             />,
@@ -38,8 +32,31 @@ exports[`UploadId after documents have been loaded when the user doesn't have a 
             />,
           }
         }
-        i18nKey="pages.claimsUploadId.validIdDocumentation"
+        i18nKey="pages.claimsUploadId.otherIdentityDocs"
       />
+      <Accordion>
+        <AccordionItem
+          heading="If you don't have any of those documents:"
+        >
+          <Trans
+            components={
+              Object {
+                "identity-proof-link": <a
+                  href="https://www.mass.gov/info-details/identity-proof-for-paid-leave"
+                />,
+                "li": <li />,
+                "puerto-rican-birth-certificate-link": <a
+                  href="https://prfaa.pr.gov/faqs"
+                />,
+                "ul": <ul
+                  className="usa-list"
+                />,
+              }
+            }
+            i18nKey="pages.claimsUploadId.accordionContent"
+          />
+        </AccordionItem>
+      </Accordion>
     </div>
     <FileUploadDetails />
     <FileCardList
