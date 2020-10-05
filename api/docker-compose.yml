@@ -64,7 +64,7 @@ services:
       - FOLDER_PATH=dor_mock
       # Enable these variables to use a real FINEOS API instead of a mock:
       # - FINEOS_CLIENT_CUSTOMER_API_URL=https://idt-api.masspfml.fineos.com/customerapi/
-      # - FINEOS_CLIENT_WSCOMPOSER_API_URL=https://idt-api.masspfml.fineos.com/wscomposer/
+      # - FINEOS_CLIENT_WSCOMPOSER_API_URL=https://idt-claims-webapp.masspfml.fineos.com/wscomposer/
       # - FINEOS_CLIENT_OAUTH2_URL=https://idt-api.masspfml.fineos.com/oauth2/token
       # - FINEOS_CLIENT_OAUTH2_CLIENT_ID=...
       # - FINEOS_CLIENT_OAUTH2_CLIENT_SECRET=...
