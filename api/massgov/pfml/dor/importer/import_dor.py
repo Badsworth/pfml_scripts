@@ -4,6 +4,8 @@
 #
 
 import os
+import pathlib
+import re
 import uuid
 from dataclasses import asdict, dataclass, field
 from datetime import datetime
@@ -38,8 +40,8 @@ EMPLOYEE_FILE_PREFIX = "DORDFML_"
 @dataclass
 class ImportBatch:
     upload_date: str
-    employer_file: str
-    employee_file: str
+    employer_file: pathlib.PurePath
+    employee_file: pathlib.PurePath
 
 
 @dataclass
@@ -72,7 +74,7 @@ def handler(event=None, context=None):
     """Lambda handler function."""
     logging.init(__name__)
 
-    folder_path = os.environ.get("FOLDER_PATH")
+    folder_path = pathlib.PurePath(os.environ["FOLDER_PATH"])
     decrypt_files = os.getenv("DECRYPT") == "true"
 
     logger.info(
@@ -123,7 +125,10 @@ def process_import_batches(
             )
 
             import_report = process_daily_import(
-                db_session, import_batch.employer_file, import_batch.employee_file, decrypter
+                db_session,
+                str(import_batch.employer_file),
+                str(import_batch.employee_file),
+                decrypter,
             )
             import_reports.append(import_report)
 
@@ -156,8 +161,8 @@ def process_daily_import(
         employee_file=employee_file_path,
     )
 
+    report_log_entry = dor_persistence_util.create_import_log_entry(db_session, report)
     try:
-        report_log_entry = dor_persistence_util.create_import_log_entry(db_session, report)
         employers = parse_employer_file(employer_file_path, decrypter)
         employees_info = parse_employee_file(employee_file_path, decrypter)
 
@@ -668,62 +673,55 @@ def move_file_to_processed(bucket, file_to_copy):
     )
 
 
-def get_files_to_process(path: Optional[str]) -> List[ImportBatch]:
+def get_files_to_process(path: pathlib.PurePath) -> List[ImportBatch]:
     files_by_date = get_files_for_import_grouped_by_date(path)
     file_date_keys = sorted(files_by_date.keys())
 
     import_batches: List[ImportBatch] = []
 
-    if not file_date_keys:
-        return []
-
     for file_date_key in file_date_keys:
-        files_for_import = files_by_date[file_date_key]
+        files = files_by_date[file_date_key]
 
-        # logger.info("importing files", extra={"files_for_import": files_for_import})
-
-        employer_file_filter = [
-            f for f in files_for_import if get_file_name(f).startswith(EMPLOYER_FILE_PREFIX)
-        ]
-        if not employer_file_filter:
-            logger.info("Employer file not found for date", extra={"date": file_date_key})
+        if EMPLOYER_FILE_PREFIX not in files or EMPLOYEE_FILE_PREFIX not in files:
+            logger.warning("incomplete files for %s: %s", file_date_key, files)
             continue
-
-        employer_file = employer_file_filter[0]
-
-        employee_file_filter = [
-            f for f in files_for_import if get_file_name(f).startswith(EMPLOYEE_FILE_PREFIX)
-        ]
-        if len(employee_file_filter) == 0:
-            logger.info("Employee file not found for date", extra={"date": file_date_key})
-            continue
-
-        employee_file = employee_file_filter[0]
 
         import_batches.append(
             ImportBatch(
-                upload_date=file_date_key, employer_file=employer_file, employee_file=employee_file
+                upload_date=file_date_key,
+                employer_file=files[EMPLOYER_FILE_PREFIX],
+                employee_file=files[EMPLOYEE_FILE_PREFIX],
             )
         )
 
     return import_batches
 
 
-def get_files_for_import_grouped_by_date(path):
-    """Get the paths (s3 keys) of files in the recieved folder of the bucket"""
+def get_files_for_import_grouped_by_date(
+    path: pathlib.PurePath,
+) -> Dict[str, Dict[str, pathlib.PurePath]]:
+    """Get the paths (s3 keys) of files in the received folder of the bucket"""
 
-    files_by_date: Dict[str, List[str]] = {}
-    files_for_import = file_util.list_files(path)
+    files_by_date: Dict[str, Dict[str, pathlib.PurePath]] = {}
+    files_for_import = file_util.list_files(str(path))
     files_for_import.sort()
     for file_key in files_for_import:
-        date_start_index = file_key.rfind("_")
-        if date_start_index >= 0:
-            date_start_index = date_start_index + 1
-            date_end_index = date_start_index + 8  # only date part is relevant
-            file_date = file_key[date_start_index:date_end_index]
-            if files_by_date.get(file_date, None) is None:
-                files_by_date[file_date] = []
-            files_by_date[file_date].append("{}/{}".format(str(path), file_key))
+        match = re.match(r"(DORDFML.*_)(\d+)", file_key)
+        if not match:
+            logger.warning("file %s does not match expected format - skipping", file_key)
+            continue
+
+        prefix = match[1]
+        file_date = match[2]
+
+        if prefix not in (EMPLOYER_FILE_PREFIX, EMPLOYEE_FILE_PREFIX):
+            logger.warning("file %s does not have a known prefix - skipping", file_key)
+            continue
+
+        if file_date not in files_by_date:
+            files_by_date[file_date] = {}
+        files_by_date[file_date][prefix] = path / file_key
+
     return files_by_date
 
 
@@ -733,3 +731,7 @@ def get_file_name(s3_file_key):
     file_name_extention_index = s3_file_key.rfind(".txt")
     file_name = s3_file_key[file_name_index:file_name_extention_index]
     return file_name
+
+
+if __name__ == "__main__":
+    handler()

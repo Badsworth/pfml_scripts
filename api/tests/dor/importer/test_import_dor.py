@@ -22,19 +22,17 @@ TEST_FOLDER = pathlib.Path(__file__).parent
 
 @pytest.fixture
 def test_fs_path_for_s3(tmp_path):
-    file_name1 = "DORDFML_20200519120622"
     employer_quarter_line = test_data.get_employer_quarter_line()
     employee_quarter_line = test_data.get_employee_quarter_line()
     content1 = "{}\n{}".format(employer_quarter_line, employee_quarter_line)
 
-    file_name2 = "DORDFMLEMP_20200519120622"
     content2 = test_data.get_employer_info_line()
 
     test_folder = tmp_path / "test_folder"
     test_folder.mkdir()
-    test_file = test_folder / file_name1
+    test_file = test_folder / employee_file
     test_file.write_text(content1)
-    test_file2 = test_folder / file_name2
+    test_file2 = test_folder / employer_file
     test_file2.write_text(content2)
 
     return test_folder
@@ -345,12 +343,21 @@ def validate_employer_address_persistence(
 
 
 def test_get_files_for_import_grouped_by_date(test_fs_path_for_s3):
-    files_by_date = import_dor.get_files_for_import_grouped_by_date(str(test_fs_path_for_s3))
+    (test_fs_path_for_s3 / "extra_file").touch()
+    (test_fs_path_for_s3 / "DORDFMLEMP_20200519133333").touch()
+    (test_fs_path_for_s3 / "DORDFML_20200519133333").touch()
+    (test_fs_path_for_s3 / "DORDFML_20201001133333").touch()
+    files_by_date = import_dor.get_files_for_import_grouped_by_date(test_fs_path_for_s3)
     assert files_by_date == {
-        "20200519": [
-            "{}/{}".format(str(test_fs_path_for_s3), employer_file),
-            "{}/{}".format(str(test_fs_path_for_s3), employee_file),
-        ]
+        "20200519120622": {
+            "DORDFMLEMP_": test_fs_path_for_s3 / employer_file,
+            "DORDFML_": test_fs_path_for_s3 / employee_file,
+        },
+        "20200519133333": {
+            "DORDFMLEMP_": test_fs_path_for_s3 / "DORDFMLEMP_20200519133333",
+            "DORDFML_": test_fs_path_for_s3 / "DORDFML_20200519133333",
+        },
+        "20201001133333": {"DORDFML_": test_fs_path_for_s3 / "DORDFML_20201001133333",},
     }
 
 
