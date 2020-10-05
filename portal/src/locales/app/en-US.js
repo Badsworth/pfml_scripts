@@ -42,56 +42,144 @@ const errors = {
   caughtError_UserNotFoundError:
     "Sorry, we were unable to retrieve your account. Please log out and try again. If this continues to happen, you may call the Paid Family Leave Contact Center at $t(shared.callCenterPhoneNumber)",
   claims: {
-    child_birth_date: {
-      pattern: "Please enter a valid date of birth.",
-    },
-    child_placement_date: {
-      pattern: "Please enter a valid placement date.",
-    },
     date_of_birth: {
       invalid_age: "The person taking leave must be at least 14 years old.",
       invalid_year_range: `Date of birth year is not in a valid range (on or after ${
         new Date().getFullYear() - 100
       }).`,
       pattern: "Please enter a valid date of birth.",
+      required: "Please enter a date of birth.",
     },
     employer_fein: {
       pattern: "Please enter a 9-digit FEIN.",
     },
+    employment_status: {
+      required: "Please enter your employment status.",
+    },
+    first_name: {
+      required: "Please enter a first name.",
+    },
+    has_state_id: {
+      required:
+        "Please enter whether or not you have a Massachusetts driver's license or ID card.",
+    },
+    last_name: {
+      required: "Please enter a last name.",
+    },
     leave_details: {
+      child_birth_date: {
+        pattern: "Please enter a valid date of birth.",
+        required: "Please enter a date of birth for the child.",
+      },
+      child_placement_date: {
+        pattern: "Please enter a valid placement date.",
+        required: "Please enter a date of placement for the child.",
+      },
+      continuous_leave_period: {
+        end_date: {
+          required:
+            "Please enter an end date for this continuous leave period.",
+        },
+        start_date: {
+          required:
+            "Please enter a start date for this continous leave period.",
+        },
+      },
       employer_notification_date: {
         pattern: "Please enter a valid notification date.",
       },
+      intermittent_leave_period: {
+        end_date: {
+          required:
+            "Please enter an end date for this intermittent leave period.",
+        },
+        start_date: {
+          required:
+            "Please enter a start date for this intermittent leave period.",
+        },
+      },
+      pregnant_or_recent_birth: {
+        required:
+          "Please enter whether you are pregnant or recently gave birth.",
+      },
+      reason: {
+        required: "Please enter a reason for taking time off.",
+      },
+      reason_qualifier: {
+        required: "Please enter why you are taking leave.",
+      },
+      reduced_schedule_leave_period: {
+        end_date: {
+          required:
+            "Please enter an end date for this reduced schedule leave period.",
+        },
+        start_date: {
+          required:
+            "Please enter a start date for this reduced schedule leave period.",
+        },
+      },
     },
     mailing_address: {
+      city: {
+        required: "Please enter a city for your mailing address.",
+      },
+      line_1: {
+        required: "Please enter the street address for your mailing address.",
+      },
+      required: "Please enter a mailing address.",
+      state: {
+        required: "Please enter a state for your mailing address.",
+      },
       zip: {
-        pattern: "Please enter a 5- or 9-digit ZIP code.",
+        pattern:
+          "Please enter a 5- or 9-digit ZIP code for your mailing address.",
+        required: "Please enter a ZIP code for your mailing address.",
       },
     },
     mass_id: {
       pattern:
         "Please enter your license or ID number. It should be a total of nine digits including letters and numbers.",
+      required: "Please enter a your license or ID number.",
     },
     payment_preferences: {
       account_details: {
         account_number: {
-          minLength:
-            "Account number too short: Account number must be at least 6 digits.",
           maxLength:
             "Account number too long: Account number must be 17 digits or fewer.",
+          minLength:
+            "Account number too short: Account number must be at least 6 digits.",
+          required: "Please enter an account number.",
+        },
+        account_type: {
+          required: "Please enter an account type.",
         },
         routing_number: {
           pattern: "Please enter a 9 digit routing number.",
+          required: "Please enter a routing number.",
         },
       },
     },
     residential_address: {
+      city: {
+        required: "Please enter a city for your residential address.",
+      },
+      line_1: {
+        required:
+          "Please enter the street address for your residential address.",
+      },
+      required: "Please enter a residential address.",
+      state: {
+        required: "Please enter a state for your residential address.",
+      },
       zip: {
-        pattern: "Please enter a 5- or 9-digit ZIP code.",
+        pattern:
+          "Please enter a 5- or 9-digit ZIP code for your residential address.",
+        required: "Please enter a ZIP code for your residential address.",
       },
     },
     tax_identifier: {
       pattern: "Please enter a 9-digit number.",
+      required: "Please enter a Social Security Number or ITIN.",
     },
   },
   invalidFileType:
