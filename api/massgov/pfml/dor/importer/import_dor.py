@@ -6,6 +6,7 @@
 import os
 import pathlib
 import re
+import resource
 import uuid
 from dataclasses import asdict, dataclass, field
 from datetime import datetime
@@ -17,6 +18,7 @@ from sqlalchemy.orm.session import Session
 import massgov.pfml.dor.importer.lib.dor_persistence_util as dor_persistence_util
 import massgov.pfml.util.files as file_util
 import massgov.pfml.util.logging as logging
+import massgov.pfml.util.logging.audit
 from massgov.pfml import db
 from massgov.pfml.dor.importer.dor_file_formats import EMPLOYEE_FORMAT, EMPLOYER_FILE_FORMAT
 from massgov.pfml.util.config import get_secret_from_env
@@ -72,7 +74,10 @@ class ImportRunReport:
 
 def handler(event=None, context=None):
     """Lambda handler function."""
+    massgov.pfml.util.logging.audit.init_security_logging()
     logging.init(__name__)
+
+    logger.addFilter(filter_add_memory_usage)
 
     folder_path = pathlib.PurePath(os.environ["FOLDER_PATH"])
     decrypt_files = os.getenv("DECRYPT") == "true"
@@ -95,6 +100,13 @@ def handler(event=None, context=None):
     report.end = datetime.now().isoformat()
     logger.info("Finished import run")
     return {"status": "OK", "import_type": "daily", "report": asdict(report)}
+
+
+def filter_add_memory_usage(record):
+    """Logging filter that adds memory usage as an extra attribute."""
+    rusage = resource.getrusage(resource.RUSAGE_SELF)
+    record.maxrss = "%iM" % (rusage.ru_maxrss / 1024)
+    return True
 
 
 def process_import_batches(
