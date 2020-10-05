@@ -6,7 +6,7 @@ import datetime
 import os.path
 import urllib.parse
 import xml.etree.ElementTree
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Callable, Dict, List, Optional, Union
 
 import defusedxml.ElementTree
 import oauthlib.oauth2
@@ -16,6 +16,7 @@ import requests_oauthlib
 import xmlschema
 
 import massgov.pfml.util.logging
+from massgov.pfml.util.converters.json_to_obj import set_empty_dates_to_none
 
 from . import client, exception, models
 
@@ -218,10 +219,11 @@ class FINEOSClient(client.AbstractFINEOSClient):
         )
         json = response.json()
         logger.debug("json %r", json)
-        # Workaround empty strings in response instead of null. These cause parse_obj to fail.
-        for prop in ("accidentDate", "expectedDeliveryDate", "actualDeliveryDate"):
-            if json[0][prop] == "":
-                json[0][prop] = None
+
+        set_empty_dates_to_none(
+            json, ["accidentDate", "expectedDeliveryDate", "actualDeliveryDate"]
+        )
+
         # Doesn't match OpenAPI file - API returns a single-item list instead of the object.
         return models.customer_api.NotificationCaseSummary.parse_obj(json[0])
 
@@ -231,14 +233,24 @@ class FINEOSClient(client.AbstractFINEOSClient):
         logger.debug("json %r", json)
         # Workaround empty strings in response instead of null. These cause parse_obj to fail.
         for item in json:
-            for prop in ("startDate", "endDate"):
-                if item[prop] == "":
-                    item[prop] = None
+            set_empty_dates_to_none(item, ["startDate", "endDate"])
+
         return pydantic.parse_obj_as(List[models.customer_api.AbsenceCaseSummary], json)
 
     def get_absence(self, user_id: str, absence_id: str) -> models.customer_api.AbsenceDetails:
         response = self._customer_api("GET", f"customer/absence/absences/{absence_id}", user_id)
         return models.customer_api.AbsenceDetails.parse_obj(response.json())
+
+    def get_absence_occupations(
+        self, user_id: str, absence_id: str
+    ) -> List[models.customer_api.ReadCustomerOccupation]:
+        response = self._customer_api("GET", f"customer/cases/{absence_id}/occupations", user_id,)
+
+        json = response.json()
+        for item in json:
+            set_empty_dates_to_none(item, ["dateJobBegan", "dateJobEnded"])
+
+        return pydantic.parse_obj_as(List[models.customer_api.ReadCustomerOccupation], json)
 
     def add_payment_preference(
         self, user_id: str, payment_preference: models.customer_api.NewPaymentPreference
@@ -294,3 +306,53 @@ class FINEOSClient(client.AbstractFINEOSClient):
         documents = response.json()
 
         return [client_response_json_to_document(doc) for doc in documents]
+
+    def get_week_based_work_pattern(
+        self, user_id: str, occupation_id: Union[str, int],
+    ) -> models.customer_api.WeekBasedWorkPattern:
+
+        response = self._customer_api(
+            "GET", f"customer/occupations/{occupation_id}/week-based-work-pattern", user_id,
+        )
+
+        json = response.json()
+        set_empty_dates_to_none(json, ["patternStartDate"])
+
+        return models.customer_api.WeekBasedWorkPattern.parse_obj(json)
+
+    def add_week_based_work_pattern(
+        self,
+        user_id: str,
+        occupation_id: Union[str, int],
+        week_based_work_pattern: models.customer_api.WeekBasedWorkPattern,
+    ) -> models.customer_api.WeekBasedWorkPattern:
+
+        response = self._customer_api(
+            "POST",
+            f"customer/occupations/{occupation_id}/week-based-work-pattern",
+            user_id,
+            data=week_based_work_pattern.json(exclude_none=True),
+        )
+
+        json = response.json()
+        set_empty_dates_to_none(json, ["patternStartDate"])
+
+        return models.customer_api.WeekBasedWorkPattern.parse_obj(json)
+
+    def update_week_based_work_pattern(
+        self,
+        user_id: str,
+        occupation_id: Union[str, int],
+        week_based_work_pattern: models.customer_api.WeekBasedWorkPattern,
+    ) -> models.customer_api.WeekBasedWorkPattern:
+
+        response = self._customer_api(
+            "POST",
+            f"customer/occupations/{occupation_id}/week-based-work-pattern/replace",
+            user_id,
+            data=week_based_work_pattern.json(exclude_none=True),
+        )
+
+        json = response.json()
+
+        return models.customer_api.WeekBasedWorkPattern.parse_obj(json)

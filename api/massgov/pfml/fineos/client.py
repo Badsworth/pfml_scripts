@@ -57,6 +57,12 @@ class AbstractFINEOSClient(abc.ABC, metaclass=abc.ABCMeta):
         pass
 
     @abc.abstractmethod
+    def get_absence_occupations(
+        self, user_id: str, absence_id: str
+    ) -> typing.List[models.customer_api.ReadCustomerOccupation]:
+        pass
+
+    @abc.abstractmethod
     def add_payment_preference(
         self, user_id: str, payment_preference: models.customer_api.NewPaymentPreference
     ) -> models.customer_api.PaymentPreferenceResponse:
@@ -79,4 +85,28 @@ class AbstractFINEOSClient(abc.ABC, metaclass=abc.ABCMeta):
     def get_documents(
         self, user_id: str, absence_id: str
     ) -> typing.List[models.customer_api.Document]:
+        pass
+
+    @abc.abstractmethod
+    def get_week_based_work_pattern(
+        self, user_id: str, occupation_id: typing.Union[str, int],
+    ) -> models.customer_api.WeekBasedWorkPattern:
+        pass
+
+    @abc.abstractmethod
+    def add_week_based_work_pattern(
+        self,
+        user_id: str,
+        occupation_id: typing.Union[str, int],
+        week_based_work_pattern: models.customer_api.WeekBasedWorkPattern,
+    ) -> models.customer_api.WeekBasedWorkPattern:
+        pass
+
+    @abc.abstractmethod
+    def update_week_based_work_pattern(
+        self,
+        user_id: str,
+        occupation_id: typing.Union[str, int],
+        week_based_work_pattern: models.customer_api.WeekBasedWorkPattern,
+    ) -> models.customer_api.WeekBasedWorkPattern:
         pass

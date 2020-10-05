@@ -8,7 +8,7 @@
 import datetime
 import pathlib
 import typing
-from typing import List
+from typing import List, Union
 
 import faker
 import requests
@@ -130,6 +130,12 @@ class MockFINEOSClient(client.AbstractFINEOSClient):
     def get_absence(self, user_id: str, absence_id: str) -> models.customer_api.AbsenceDetails:
         return models.customer_api.AbsenceDetails()
 
+    def get_absence_occupations(
+        self, user_id: str, absence_id: str
+    ) -> List[models.customer_api.ReadCustomerOccupation]:
+        _capture_call("get_absence_occupations", user_id, absence_id=absence_id)
+        return [models.customer_api.ReadCustomerOccupation(occupationId=12345)]
+
     def add_payment_preference(
         self, user_id: str, payment_preference: models.customer_api.NewPaymentPreference
     ) -> models.customer_api.PaymentPreferenceResponse:
@@ -153,6 +159,40 @@ class MockFINEOSClient(client.AbstractFINEOSClient):
     def get_documents(self, user_id: str, absence_id: str) -> List[models.customer_api.Document]:
         document = mock_document(absence_id)
         return [models.customer_api.Document.parse_obj(document)]
+
+    def get_week_based_work_pattern(
+        self, user_id: str, occupation_id: Union[str, int],
+    ) -> models.customer_api.WeekBasedWorkPattern:
+        _capture_call("get_week_based_work_pattern", user_id, occupation_id=occupation_id)
+        return models.customer_api.WeekBasedWorkPattern(workPatternType="Fixed", workPatternDays=[])
+
+    def add_week_based_work_pattern(
+        self,
+        user_id: str,
+        occupation_id: Union[str, int],
+        week_based_work_pattern: models.customer_api.WeekBasedWorkPattern,
+    ) -> models.customer_api.WeekBasedWorkPattern:
+        _capture_call(
+            "add_week_based_work_pattern", user_id, week_based_work_pattern=week_based_work_pattern
+        )
+
+        if user_id == "USER_WITH_EXISTING_WORK_PATTERN":
+            raise exception.FINEOSClientBadResponse(200, 403)
+        else:
+            return week_based_work_pattern
+
+    def update_week_based_work_pattern(
+        self,
+        user_id: str,
+        occupation_id: Union[str, int],
+        week_based_work_pattern: models.customer_api.WeekBasedWorkPattern,
+    ) -> models.customer_api.WeekBasedWorkPattern:
+        _capture_call(
+            "update_week_based_work_pattern",
+            user_id,
+            week_based_work_pattern=week_based_work_pattern,
+        )
+        return week_based_work_pattern
 
 
 def start_capture():

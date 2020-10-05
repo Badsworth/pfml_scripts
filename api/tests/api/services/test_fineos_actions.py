@@ -133,3 +133,35 @@ def test_document_upload(user, test_db_session):
     assert fineos_document["fileExtension"] == ".png"
     assert fineos_document["originalFilename"] == file_name
     assert fineos_document["description"] == description
+
+
+def test_build_week_based_work_pattern(user):
+    application = ApplicationFactory.create(user=user)
+
+    application.hours_worked_per_week = 70
+    evenly_split_pattern = fineos_actions.build_week_based_work_pattern(application)
+
+    for day in evenly_split_pattern.workPatternDays:
+        assert day.hours == 10
+
+    application.hours_worked_per_week = 72
+    pattern_with_2_hours_remainder = fineos_actions.build_week_based_work_pattern(application)
+    # it adds an hour to each day until there is no remainder
+    assert pattern_with_2_hours_remainder.workPatternDays[0].hours == 11
+    assert pattern_with_2_hours_remainder.workPatternDays[1].hours == 11
+
+    for i, workPatternDay in enumerate(pattern_with_2_hours_remainder.workPatternDays):
+        if i < 2:
+            continue
+
+        assert workPatternDay.hours == 10
+
+    application.hours_worked_per_week = 70.55
+    pattern_with_minutes_remainder = fineos_actions.build_week_based_work_pattern(application)
+    # it adds minutes to first day
+    assert pattern_with_minutes_remainder.workPatternDays[0].minutes == 33
+
+    application.hours_worked_per_week = 70.56
+    pattern_with_seconds_remainder = fineos_actions.build_week_based_work_pattern(application)
+    # it rounds to the nearest minute
+    assert pattern_with_seconds_remainder.workPatternDays[0].minutes == 34

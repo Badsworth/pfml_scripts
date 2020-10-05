@@ -930,6 +930,10 @@ components:
             employer_fein:
               $ref: "#/components/schemas/Fein"
               nullable: true
+            hours_worked_per_week:
+              type: number
+              nullable: true
+              example: 40.5
             first_name:
               type: string
               nullable: true

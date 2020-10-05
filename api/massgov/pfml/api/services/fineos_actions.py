@@ -13,6 +13,7 @@
 ###
 
 import datetime
+import math
 import mimetypes
 import uuid
 from typing import List, Optional
@@ -113,6 +114,8 @@ def send_to_fineos(application: Application, db_session: massgov.pfml.db.Session
         application.fineos_notification_case_id = new_case.notificationCaseId
         db_session.commit()
 
+        upsert_week_based_work_pattern(fineos, fineos_user_id, application)
+
     except massgov.pfml.fineos.FINEOSClientError:
         logger.exception("FINEOS API error")
         return False
@@ -201,6 +204,62 @@ def build_absence_case(
         employerNotificationDate=application.employer_notification_date,
     )
     return absence_case
+
+
+def upsert_week_based_work_pattern(fineos_client, user_id, application):
+    """Add or update work pattern on an in progress absence case"""
+
+    week_based_work_pattern = build_week_based_work_pattern(application)
+    absence_id = application.fineos_absence_id
+    occupation = fineos_client.get_absence_occupations(user_id, absence_id)[0]
+    occupation_id = occupation.occupationId
+
+    if occupation_id is None:
+        raise ValueError
+
+    try:
+        fineos_client.add_week_based_work_pattern(user_id, occupation_id, week_based_work_pattern)
+    except massgov.pfml.fineos.exception.FINEOSClientBadResponse as error:
+        # FINEOS returns a 403 forbidden when attempting to an add a work pattern
+        # for an occupation when one already exists
+        if error.response_status == 403:
+            fineos_client.update_week_based_work_pattern(
+                user_id, occupation_id, week_based_work_pattern
+            )
+        else:
+            raise error
+
+
+def build_week_based_work_pattern(application):
+    """Split hours_worked_per_week across 7 week days"""
+
+    hours_worked_per_week = getattr(application, "hours_worked_per_week", 40)
+    week_days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
+
+    hours_per_day = math.floor(hours_worked_per_week / 7)
+    remainder = hours_worked_per_week % 7
+    minutes_remainder = round(60 * (remainder % 1))
+    work_pattern_days = []
+
+    for i, week_day in enumerate(week_days):
+        hours = hours_per_day + 1 if remainder >= 1 else hours_per_day
+        minutes = minutes_remainder if i == 0 else 0
+
+        work_pattern_days.append(
+            massgov.pfml.fineos.models.customer_api.WorkPatternDay(
+                dayOfWeek=week_day, weekNumber=1, hours=hours, minutes=minutes
+            )
+        )
+
+        remainder -= 1
+
+    return massgov.pfml.fineos.models.customer_api.WeekBasedWorkPattern(
+        workPatternType="Fixed",
+        workWeekStarts=week_days[0],
+        patternStartDate=None,
+        patternStatus=None,
+        workPatternDays=work_pattern_days,
+    )
 
 
 def upload_document(
