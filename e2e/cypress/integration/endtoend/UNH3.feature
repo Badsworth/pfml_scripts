@@ -1,8 +1,8 @@
-Feature: Submit a medical claim that is missing an HCP, and refer it to DFML
+Feature: Submit a medical claim with a mismatched SSN/ID 
 
   @portal
   Scenario: As a claimant, I should be able to start submitting a GBR1 claim through the portal
-    Given I begin the process to submit a "GBR1" claim
+    Given I begin the process to submit a "UNH3" claim
     When I click on the checklist button called "Verify your identity"
     Then I have my identity verified "normal"
     Given I am on the claims "checklist" page
@@ -27,19 +27,22 @@ Feature: Submit a medical claim that is missing an HCP, and refer it to DFML
     Given I am on the claims "review" page
     Then I should have agreed and successfully submitted the claim
     And I should be able to return to the portal dashboard
-
+    
   @fineos
-  Scenario: As a CSR (Savilix), I should be able to confirm that the HCP is missing
+  Scenario: As a CSR (Savilix), I should be able to confirm that an MA ID is not valid
     Given I search for the proper claim in Fineos
     And I am on the tab "Documents"
-    Then I should confirm "HCP form" is not present
+    And the document "MA ID" has been uploaded
+    Then I should find the "MA ID" document
     Given I am on the tab "Absence Hub"
     When I click Adjudicate
     Given I am on the tab "Evidence"
     When I click Manage Evidence
-    Then I should confirm evidence is "invalid due to missing HCP form"
+    Then I should confirm evidence is "invalid due to mismatched ID and SSN"
+    Given I am on the tab "Manage Request"
+    Then I click Reject
     Given I am on the claim case page
-    And I am on the tab "Tasks"
-    When I complete adding Evidence Review Task
-    Then I should transfer task to DMFL due to "missing HCP form"
-    And I should confirm task assigned to DFML Ops
+    And claim is rejected
+    When I click Deny
+    Given I complete claim Denial for "Insufficient Certification"
+    And I should confirm claim has been completed

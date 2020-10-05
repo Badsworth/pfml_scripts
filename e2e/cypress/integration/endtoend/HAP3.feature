@@ -37,5 +37,5 @@ Feature: Submit a medical claim that is happy, but financially ineligible, and i
     Given I am on the claim case page
     And claim is rejected
     When I click Deny
-    Given I complete claim Denial for "Financially Ineligible"
+    Given I complete claim Denial for "Ineligible"
     Then I should confirm claim has been completed

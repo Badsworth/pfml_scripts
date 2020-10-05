@@ -41,5 +41,5 @@ Feature: Submit a medical claim with an invalid HCP, and refer it to DFML
     Given I am on the claim case page
     And I am on the tab "Tasks"
     When I complete adding Evidence Review Task
-    Then I should transfer task to DMFL
+    Then I should transfer task to DMFL due to "invalid HCP"
     And I should confirm task assigned to DFML Ops

@@ -663,6 +663,12 @@ Then("I should adjudicate the {string} claim properly in Fineos", function (
   scenarioFunctions[scenario as TestType]();
 });
 
-Then("I should transfer task to DMFL", function (): void {
-  fineos.transferToDFML();
+Then("I should transfer task to DMFL due to {string}", function (
+  label: string
+): void {
+  fineos.transferToDFML(label);
+});
+
+Then("I should find the {string} document", function (label: string): void {
+  fineos.findDocument(label);
 });

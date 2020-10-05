@@ -74,3 +74,9 @@ Given("claim is rejected", function (): void {
 Given("I am on the tab {string}", function (label: string): void {
   cy.get('td[class="TabOff"]').contains(label).click().wait(2000);
 });
+
+Given("the document {string} has been uploaded", function (
+  label: string
+): void {
+  fineos.uploadDocument(label);
+});

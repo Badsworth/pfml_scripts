@@ -101,3 +101,7 @@ When("I submit the account registration form", function (
 When("I accept the terms of service", function () {
   cy.contains("Agree and continue").click();
 });
+
+When("I finish managing evidence", function () {
+  fineos.clickBottomWidgetButton();
+});

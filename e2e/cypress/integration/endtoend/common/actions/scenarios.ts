@@ -79,7 +79,7 @@ export function HAP3(): void {
   cy.get('td[title="Rejected"]');
 
   fineos.clickDeny();
-  fineos.denialReason("Financially Ineligible");
+  fineos.denialReason("Ineligible");
   fineos.claimCompletion();
 }
 
@@ -98,6 +98,47 @@ export function GBR1(): void {
   fineos.onPage("claims");
   fineos.onTab("Tasks");
   fineos.addEvidenceReviewTask();
-  fineos.transferToDFML();
+  fineos.transferToDFML("missing HCP form");
   fineos.confirmDFMLTransfer();
+}
+
+export function UNH2(): void {
+  getToClaimPage();
+  fineos.onTab("Documents");
+
+  // Then I should confirm HCP form is not present
+  cy.contains("No Records To Display");
+
+  fineos.onTab("Absence Hub");
+  fineos.clickAdjudicate();
+  fineos.onTab("Evidence");
+  fineos.manageEvidence();
+  fineos.validateEvidence("invalid due to invalid HCP form");
+  fineos.onPage("claims");
+  fineos.onTab("Tasks");
+  fineos.addEvidenceReviewTask();
+  fineos.transferToDFML("invalid HCP");
+  fineos.confirmDFMLTransfer();
+}
+
+export function UNH3(): void {
+  getToClaimPage();
+  fineos.onTab("Documents");
+  fineos.uploadDocument("MA ID");
+  fineos.findDocument("MA ID");
+  fineos.onTab("Absence Hub");
+  fineos.clickAdjudicate();
+  fineos.onTab("Evidence");
+  fineos.manageEvidence();
+  fineos.validateEvidence("invalid due to mismatched ID and SSN");
+  fineos.onTab("Manage Request");
+  fineos.clickReject();
+  fineos.onPage("claims");
+
+  // And claim is rejected
+  cy.get('td[title="Rejected"]');
+
+  fineos.clickDeny();
+  fineos.denialReason("Ineligible");
+  fineos.claimCompletion();
 }

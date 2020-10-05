@@ -66,6 +66,12 @@ export function clickDeny(): void {
   cy.get('span[id="leaveRequestDenialDetailsWidget"]');
 }
 
+export function clickBottomWidgetButton(value = "OK"): void {
+  cy.get("#PageFooterWidget").within(() => {
+    cy.get(`input[value="${value}"]`).click();
+  });
+}
+
 export function validateEvidence(label: string): void {
   let receipt: string, decision: string, reason: string;
   switch (label) {
@@ -90,10 +96,13 @@ export function validateEvidence(label: string): void {
       reason =
         "Submitted document is not a valid DFML-certified HCP form or FMLA form.";
       break;
+    case "invalid due to mismatched ID and SSN":
+      receipt = "Received";
+      decision = "Not Satisfied";
+      reason = "ID does not match SSN.";
+      break;
     default:
-      receipt = "Not Received";
-      decision = "Pending";
-      reason = "";
+      throw new Error("Evidence status not set or not recognized.");
   }
   cy.labelled("Evidence Receipt")
     .get('select[id="manageEvidenceResultPopupWidget_un92_evidence-receipt"]')
@@ -105,37 +114,27 @@ export function validateEvidence(label: string): void {
     .select(decision);
   cy.labelled("Evidence Decision Reason").type(reason);
   cy.get('input[type="button"][value="OK"]').click();
-  if (label === "invalid due to missing HCP form") {
-    clickBottomWidgetButton();
-  }
 }
 
 export function denialReason(reason: string): void {
   let reasonText = "";
   switch (reason) {
-    case "Financially Ineligible":
-      cy.get('span[id="leaveRequestDenialDetailsWidget"]')
-        .find("select")
-        .select("Ineligible");
+    case "Ineligible":
       reasonText =
         "This leave claim was denied due to financial ineligibility.";
-      cy.labelled("Notes").type(reasonText);
-      cy.get('input[type="submit"][value="OK"]').click();
       break;
-
     case "Insufficient Certification":
-      cy.get('span[id="leaveRequestDenialDetailsWidget"]')
-        .find("select")
-        .select(reason);
       reasonText =
         "This leave claim was denied due to invalid out-of-state ID.";
-      cy.labelled("Notes").type(reasonText);
-      cy.get('input[type="submit"][value="OK"]').click();
       break;
-
     default:
-      return;
+      throw new Error("Denial reason not set or not recognized.");
   }
+  cy.get('span[id="leaveRequestDenialDetailsWidget"]')
+    .find("select")
+    .select(reason);
+  cy.labelled("Notes").type(reasonText);
+  cy.get('input[type="submit"][value="OK"]').click();
 }
 
 export function claimCompletion(): void {
@@ -157,7 +156,23 @@ export function addEvidenceReviewTask(): void {
   cy.get("input[type='submit'][title='Open this task']").click();
 }
 
-export function transferToDFML(): void {
+export function transferToDFML(reason: string): void {
+  let reasonText: string;
+  switch (reason) {
+    case "missing HCP form":
+      reasonText = "This claim is missing a Health Care Provider form.";
+      break;
+    case "mismatched ID/SSN":
+      reasonText =
+        "This claim has a mismatched ID number and Social Security Number.";
+      break;
+    case "invalid HCP":
+      reasonText = "This claim has an invalid Health Care Provider form.";
+      break;
+    default:
+      throw new Error("Provided reason for transfer is not recognized.");
+  }
+
   cy.get('div[title="Transfer"]').dblclick();
   cy.get('a[title="Transfer to Dept"]').dblclick({ force: true });
   cy.url().should("include", "/sharedpages/workmanager/transfertodeptpage");
@@ -165,7 +180,7 @@ export function transferToDFML(): void {
   cy.contains("label", "Description")
     .parentsUntil("tr")
     .get("textarea")
-    .type("This claim is missing a Health Care Provider form.");
+    .type(reasonText);
   clickBottomWidgetButton();
 }
 
@@ -178,12 +193,25 @@ export function confirmDFMLTransfer(): void {
   );
 }
 
-export function clickBottomWidgetButton(value = "OK"): void {
-  cy.get("#PageFooterWidget").within(() => {
-    cy.get(`input[value="${value}"]`).click();
-  });
+export function uploadDocument(documentType: string): void {
+  const docName = documentType.replace(" ", "_");
+  cy.get('input[value="Add"]').click();
+  cy.get("table[class='TabStrip']").contains("div", "Search").click();
+  cy.labelled("Business Type").type("Identification Proof");
+  cy.get("input[value='Search']").click();
+  cy.get("#p9_un6_searchPageOk").click();
+  cy.get("input[type='file']").attachFile(`./${docName}.pdf`);
+  cy.get("#UploadDocumentWidget_un11_OKBtn").click();
 }
 
+export function findDocument(documentType: string): void {
+  if (documentType === "MA ID") {
+    const documentCategory = "Identification_Proof";
+    cy.get(`a[name*=${documentCategory}]`);
+  } else {
+    throw new Error("Document type not found.");
+  }
+}
 export function addWeeklyWage(): void {
   cy.labelled("Average weekly wage").type("{selectall}{backspace}1000");
   clickBottomWidgetButton();
