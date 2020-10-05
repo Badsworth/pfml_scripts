@@ -1,5 +1,3 @@
-from datetime import datetime
-
 import connexion
 import puremagic
 from puremagic import PureError
@@ -9,6 +7,7 @@ import massgov.pfml.api.app as app
 import massgov.pfml.api.services.application_rules as application_rules
 import massgov.pfml.api.services.applications as applications_service
 import massgov.pfml.api.util.response as response_util
+import massgov.pfml.util.datetime as datetime_util
 import massgov.pfml.util.logging
 from massgov.pfml.api.authorization.flask import CREATE, EDIT, READ, can, ensure
 from massgov.pfml.api.models.applications.common import ContentType as AllowedContentTypes
@@ -66,7 +65,7 @@ def applications_get():
 def applications_start():
     application = Application()
 
-    now = datetime.now()
+    now = datetime_util.utcnow()
     application.start_time = now
     application.updated_time = now
 
@@ -129,7 +128,7 @@ def applications_submit(application_id):
             ).to_api_response()
 
         if send_to_fineos(existing_application, db_session):
-            existing_application.submitted_time = datetime.now()
+            existing_application.submitted_time = datetime_util.utcnow()
             db_session.add(existing_application)
 
         else:
@@ -167,7 +166,7 @@ def applications_complete(application_id):
             ).to_api_response()
 
         if complete_intake(existing_application, db_session):
-            existing_application.completed_time = datetime.now()
+            existing_application.completed_time = datetime_util.utcnow()
             db_session.add(existing_application)
 
         else:
@@ -300,7 +299,7 @@ def document_upload(application_id, body, file):
         document = Document()
         document.user_id = existing_application.user_id
         document.application_id = existing_application.application_id
-        now = datetime.now()
+        now = datetime_util.utcnow()
         document.created_at = now
         document.updated_at = now
         document.document_type_id = DocumentType.get_id(document_details.document_type.value)

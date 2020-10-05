@@ -1,4 +1,3 @@
-from datetime import datetime
 from typing import Any, List, Optional, Union
 
 from werkzeug.exceptions import BadRequest, Forbidden
@@ -6,6 +5,7 @@ from werkzeug.exceptions import BadRequest, Forbidden
 import massgov.pfml.api.models.applications.common as apps_common_io
 import massgov.pfml.db as db
 import massgov.pfml.db.lookups as db_lookups
+import massgov.pfml.util.datetime as datetime_util
 import massgov.pfml.util.logging
 from massgov.pfml.api.models.applications.common import Address as ApiAddress
 from massgov.pfml.api.models.applications.requests import ApplicationRequestBody
@@ -73,7 +73,7 @@ def update_from_request(
         db_session.add(tax_id)
         application.tax_identifier = tax_id
 
-    application.updated_time = datetime.now()
+    application.updated_time = datetime_util.utcnow()
     db_session.add(application)
 
     for leave_schedule in leave_schedules:

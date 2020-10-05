@@ -3,6 +3,8 @@
 from datetime import datetime
 from decimal import Decimal
 
+import pytz
+
 from massgov.pfml.util.files.file_format import FieldFormat, FileFormat
 
 
@@ -12,7 +14,7 @@ def parse_date(date_str):
 
 
 def parse_datetime(datetime_str):
-    return datetime.strptime(datetime_str, "%Y%m%d%H%M%S")
+    return pytz.UTC.localize(datetime.strptime(datetime_str, "%Y%m%d%H%M%S"))
 
 
 def parse_boolean(boolean_str):

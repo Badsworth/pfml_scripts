@@ -1111,7 +1111,7 @@ components:
         updated_time:
           type: string
           format: date-time
-          example: "2020-06-26T01:02:03.967736Z"
+          example: "2020-06-26T01:02:03.967736+00:00"
         status:
           type: string
           description: |

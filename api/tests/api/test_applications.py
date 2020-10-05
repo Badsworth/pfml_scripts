@@ -49,7 +49,7 @@ def test_applications_get_valid(client, user, auth_token):
 
     assert response_body.get("employer_fein") is not None
     assert response_body.get("application_id") == str(application.application_id)
-    assert response_body.get("updated_time") == "2020-01-01T00:00:00Z"
+    assert response_body.get("updated_time") == "2020-01-01T00:00:00+00:00"
     assert response_body.get("status") == ApplicationStatus.Started.value
 
 
@@ -236,7 +236,7 @@ def test_application_patch(client, user, auth_token, test_db_session):
     assert application.tax_identifier.tax_identifier == "123456789"
 
     assert response_body.get("data").get("last_name") == "Perez"
-    assert response_body.get("data").get("updated_time") == "2020-01-01T00:00:00Z"
+    assert response_body.get("data").get("updated_time") == "2020-01-01T00:00:00+00:00"
     assert response_body.get("data").get("middle_name") == "Mike"
     assert response_body.get("data").get("occupation") == "Engineer"
     assert response_body.get("data").get("mailing_address")["city"] == "Springfield"
@@ -1211,7 +1211,7 @@ def test_application_post_submit_app(client, user, auth_token, test_db_session):
             },
             "status": "Submitted",
             "tax_identifier": "***-**-****",
-            "updated_time": "2021-12-31T11:20:31Z",
+            "updated_time": "2021-12-31T11:20:31+00:00",
         },
         "message": "Application cd613e30-d8f1-4adf-91b7-584a2265b1f5 submitted without errors",
         "meta": {
@@ -1281,7 +1281,7 @@ def test_application_post_submit_app_fein_not_found(client, user, auth_token, te
             },
             "status": "Started",
             "tax_identifier": "***-**-****",
-            "updated_time": "2020-09-10T13:06:12Z",
+            "updated_time": "2020-09-10T13:06:12+00:00",
         },
         "errors": [],
         "message": "Application d95bafc8-f2a4-427b-9cf4-bb99f4bea973 could not be "
@@ -1343,7 +1343,7 @@ def test_application_post_submit_app_ssn_not_found(client, user, auth_token, tes
             },
             "status": "Started",
             "tax_identifier": "***-**-****",
-            "updated_time": "2020-10-29T01:32:51Z",
+            "updated_time": "2020-10-29T01:32:51+00:00",
         },
         "errors": [],
         "message": "Application 21636369-8b52-4b4a-97b7-50923ceb3ffd could not be "

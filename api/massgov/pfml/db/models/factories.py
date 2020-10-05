@@ -7,6 +7,7 @@ from datetime import datetime, timedelta
 from decimal import Decimal
 
 import factory  # this is from the factory_boy package
+import pytz
 from sqlalchemy.orm import scoped_session
 
 import massgov.pfml.db as db
@@ -40,8 +41,8 @@ class Generators:
     # transaction datetime.
     TransactionDateTime = factory.Faker(
         "date_time_between_dates",
-        datetime_start=datetime(2020, 1, 1),
-        datetime_end=datetime(2022, 1, 1),
+        datetime_start=pytz.UTC.localize(datetime(2020, 1, 1)),
+        datetime_end=pytz.UTC.localize(datetime(2022, 1, 1)),
     )
     UtcNow = factory.LazyFunction(datetime_util.utcnow)
     UuidObj = factory.Faker("uuid4", cast_to=None)

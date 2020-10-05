@@ -2,6 +2,8 @@ import copy
 from datetime import date, datetime
 from decimal import Decimal
 
+import pytz
+
 employer_quarter_line = "A0000000000120190930Anderson, Barber and Johnson                                                                                                                                                                                                                                   244674065F2020040120200522110527"
 employee_quarter_line = "B0000000000120190930john                                                                                                                                                                                                                                                           Doe                                                                                                                                                                                                                                                            123456789TF            45000.00            15000.00               55.80              37.29                15.00                7.00"
 employer_info_line = "00000000001Anderson, Barber and Johnson                                                                                                                                                                                                                                   24467406564034 Angela Mews                                                                                                                                                                                                                                              North Kaylabury               MA935463801Anderson, Barber and Johnson                                                                                                                                                                                                                                   TF202001012020123120200522110527"
@@ -19,7 +21,7 @@ new_employer = {
     "medical_exemption": False,
     "exemption_commence_date": date(2020, 1, 1),
     "exemption_cease_date": date(2020, 12, 31),
-    "updated_date": datetime(2020, 5, 22, 11, 5, 27),
+    "updated_date": pytz.UTC.localize(datetime(2020, 5, 22, 11, 5, 27)),
 }
 
 updated_employer_except_update_date = copy.deepcopy(new_employer)
@@ -32,7 +34,7 @@ updated_employer_except_update_date["exemption_commence_date"] = date(2021, 1, 1
 updated_employer_except_update_date["exemption_cease_date"] = date(2021, 12, 31)
 
 updated_employer = copy.deepcopy(updated_employer_except_update_date)
-updated_employer["updated_date"] = datetime(2020, 5, 23, 11, 5, 27)
+updated_employer["updated_date"] = pytz.UTC.localize(datetime(2020, 5, 23, 11, 5, 27))
 
 new_employee_wage_data = {
     "record_type": "B",
@@ -71,7 +73,7 @@ employer_quarter_info = {
     "employer_fein": new_employer["fein"],
     "amended_flag": False,
     "received_date": date(2020, 4, 1),
-    "updated_date": datetime(2020, 5, 22, 11, 5, 27),
+    "updated_date": pytz.UTC.localize(datetime(2020, 5, 22, 11, 5, 27)),
 }
 
 employer_quarter_info_amended = copy.deepcopy(employer_quarter_info)

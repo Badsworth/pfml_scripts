@@ -2,17 +2,7 @@ from datetime import datetime
 from decimal import Decimal
 from enum import Enum
 
-from sqlalchemy import (
-    TIMESTAMP,
-    Boolean,
-    Column,
-    Date,
-    DateTime,
-    ForeignKey,
-    Integer,
-    Numeric,
-    Text,
-)
+from sqlalchemy import TIMESTAMP, Boolean, Column, Date, ForeignKey, Integer, Numeric, Text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 
@@ -157,10 +147,10 @@ class Application(Base):
         Integer, ForeignKey("lk_leave_reason_qualifier.leave_reason_qualifier_id")
     )
     employment_status_id = Column(Integer, ForeignKey("lk_employment_status.employment_status_id"))
-    start_time = Column(DateTime)
-    updated_time = Column(DateTime)
-    completed_time = Column(DateTime)
-    submitted_time = Column(DateTime)
+    start_time = Column(TIMESTAMP(timezone=True))
+    updated_time = Column(TIMESTAMP(timezone=True))
+    completed_time = Column(TIMESTAMP(timezone=True))
+    submitted_time = Column(TIMESTAMP(timezone=True))
     fineos_absence_id = Column(Text)
     fineos_notification_case_id = Column(Text)
 
@@ -419,8 +409,8 @@ class Document(Base):
     application_id = Column(
         UUID(as_uuid=True), ForeignKey("application.application_id"), nullable=False
     )
-    created_at = Column(DateTime, nullable=False)
-    updated_at = Column(DateTime, nullable=False)
+    created_at = Column(TIMESTAMP(timezone=True), nullable=False)
+    updated_at = Column(TIMESTAMP(timezone=True), nullable=False)
     document_type_id = Column(
         Integer, ForeignKey("lk_document_type.document_type_id"), nullable=False
     )

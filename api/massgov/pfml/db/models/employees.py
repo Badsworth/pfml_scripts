@@ -10,7 +10,7 @@
 #
 from typing import TYPE_CHECKING, Optional, cast
 
-from sqlalchemy import Boolean, Column, Date, DateTime, ForeignKey, Integer, Numeric, Text
+from sqlalchemy import TIMESTAMP, Boolean, Column, Date, ForeignKey, Integer, Numeric, Text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Query, dynamic_loader, relationship
 from sqlalchemy.sql.expression import func
@@ -164,7 +164,7 @@ class Employer(Base):
     medical_exemption = Column(Boolean)
     exemption_commence_date = Column(Date)
     exemption_cease_date = Column(Date)
-    dor_updated_date = Column(DateTime)
+    dor_updated_date = Column(TIMESTAMP(timezone=True))
     latest_import_log_id = Column(Integer, ForeignKey("import_log.import_log_id"))
 
     wages_and_contributions: "Query[WagesAndContributions]" = dynamic_loader(
@@ -381,8 +381,8 @@ class ImportLog(Base):
     import_type = Column(Text)
     status = Column(Text)
     report = Column(Text)
-    start = Column(DateTime)
-    end = Column(DateTime)
+    start = Column(TIMESTAMP(timezone=True))
+    end = Column(TIMESTAMP(timezone=True))
 
 
 class AddressType(LookupTable):
