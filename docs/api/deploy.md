@@ -34,6 +34,14 @@ All you have to do to deploy the API using this method is:
 - Click the "Run workflow" button, and select the branch you wish to use. `master` is the default, but any branch can be selected.
 - Click the green "Run workflow" button. The `HEAD` of your chosen branch will be deployed to `test`, as in the git-based workflow.
 
+If you are testing a feature branch on the test environment, please go through the following additional steps:
+- Communicate to #mass-pfml-engineering. "⚠️ I'll be using the API test environment soon, please let me know if you have any concerns."
+- After running the workflow, click the "Disable Workflow" button (see below) to prevent auto-deploys from overriding your deployment.
++ After testing is finished, click the "Enable Workflow" button and update the Slack channel.
+
+![](assets/deploys-disable-autodeploy.png)
+![](assets/deploys-enable-autodeploy.png)
+
 ---
 
 ### Deploying from the command line
