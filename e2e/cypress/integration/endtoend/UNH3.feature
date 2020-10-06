@@ -1,4 +1,4 @@
-Feature: Submit a medical claim with a mismatched SSN/ID 
+Feature: Submit a medical claim with a mismatched SSN/ID
 
   @portal
   Scenario: As a claimant, I should be able to start submitting a GBR1 claim through the portal
@@ -23,11 +23,17 @@ Feature: Submit a medical claim with a mismatched SSN/ID
     When I click on the checklist button called "Add payment information"
     Then I add payment info
     Given I am on the claims "checklist" page
+    When I click on the checklist button called "Upload identity document"
+    Then I add my identity document
+    Given I am on the claims "checklist" page
+    When I click on the checklist button called "Upload leave certification documents"
+    Then I add my leave certification documents
+    Given I am on the claims "checklist" page
     Then I should review and submit the application
     Given I am on the claims "review" page
     Then I should have agreed and successfully submitted the claim
     And I should be able to return to the portal dashboard
-    
+
   @fineos
   Scenario: As a CSR (Savilix), I should be able to confirm that an MA ID is not valid
     Given I search for the proper claim in Fineos

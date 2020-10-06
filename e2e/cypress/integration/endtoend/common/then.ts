@@ -434,19 +434,19 @@ Then("I report other benefits", function (this: CypressStepThis): void {
   cy.contains(
     "fieldset",
     "Will you use any employer-sponsored benefits during your leave?"
-  ).within(() => cy.labelled("No").click());
+  ).within(() => cy.labelled("No").check({ force: true }));
   cy.contains("button", "Save and continue").click();
 
   cy.contains(
     "fieldset",
     "Will you receive income from any other sources during your leave?"
-  ).within(() => cy.labelled("No").click());
+  ).within(() => cy.labelled("No").click({ force: true }));
   cy.contains("button", "Save and continue").click();
 
   cy.contains(
     "fieldset",
     "Have you taken paid or unpaid leave since"
-  ).within(() => cy.labelled("No").click());
+  ).within(() => cy.labelled("No").check({ force: true }));
   cy.contains("button", "Save and continue").click();
 
   // const { extract properties once added to ApplicationRequest } = application.;
@@ -595,6 +595,16 @@ Then("I add payment info", function (this: CypressStepThis): void {
     default:
       throw new Error("Unknown payment method");
   }
+  cy.contains("button", "Save and continue").click();
+});
+
+Then("I add my identity document", function (this: CypressStepThis): void {
+  cy.labelled("Choose a file").attachFile("MA_ID.pdf");
+  cy.contains("button", "Save and continue").click();
+});
+
+Then("I add my leave certification documents", function () {
+  cy.labelled("Choose a file").attachFile("HCP.pdf");
   cy.contains("button", "Save and continue").click();
 });
 

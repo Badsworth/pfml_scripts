@@ -10,15 +10,20 @@
 Cypress.Commands.add("labelled", (label: string) => {
   return cy.contains("label", label, { matchCase: false }).then(($el) => {
     const labelFor = $el.attr("for");
-    if (!labelFor || labelFor.length < 1) {
-      throw new Error(
-        `Unable to find for attribute on label. Got: ${labelFor}`
-      );
+
+    if (labelFor && labelFor.length > 0) {
+      // Use Cypress.$ because cy.get seems to be scoped to the label.
+      // Also, escape "(" and ")" in the selector. Fineos uses these in some of its IDs, and Cypress
+      // does not like them.
+      return Cypress.$(`#${labelFor.replace(/(?<!\\)([()])/g, "\\$1")}`);
     }
-    // Use Cypress.$ because cy.get seems to be scoped to the label.
-    // Also, escape "(" and ")" in the selector. Fineos uses these in some of its IDs, and Cypress
-    // does not like them.
-    return Cypress.$(`#${labelFor.replace(/(?<!\\)([()])/g, "\\$1")}`);
+
+    // Support elements where the label is simply wrapped around the input (eg: file inputs).
+    const nestedElement = Cypress.$("input", $el);
+    if (nestedElement && nestedElement.length === 1) {
+      return nestedElement;
+    }
+    throw new Error(`Unable to find for attribute or nested input for label.`);
   });
 });
 

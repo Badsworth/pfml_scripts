@@ -23,6 +23,12 @@ Feature: Submit a medical claim that is happy, but financially ineligible, and i
     When I click on the checklist button called "Add payment information"
     Then I add payment info
     Given I am on the claims "checklist" page
+    When I click on the checklist button called "Upload identity document"
+    Then I add my identity document
+    Given I am on the claims "checklist" page
+    When I click on the checklist button called "Upload leave certification documents"
+    Then I add my leave certification documents
+    Given I am on the claims "checklist" page
     Then I should review and submit the application
     Given I am on the claims "review" page
     Then I should have agreed and successfully submitted the claim
