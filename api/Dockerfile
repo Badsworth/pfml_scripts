@@ -86,6 +86,7 @@ COPY --from=app-build /usr/lib/gnupg/* /usr/lib/gnupg/
 COPY --from=app-build /usr/lib/gnupg2/* /usr/lib/gnupg2/
 COPY --from=app-build /usr/lib/x86_64-linux-gnu/* /usr/lib/x86_64-linux-gnu/
 COPY --from=app-build /usr/bin/gpg /usr/bin/gpg
+COPY --from=app-build /usr/bin/gpg-agent /usr/bin/gpg-agent
 
 ENV PATH="/app/.venv/bin:$PATH"
 
