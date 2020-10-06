@@ -1,105 +1,113 @@
 PFML End to End Testing
 =======================
 
-Here you will find the [Cypress](https://www.cypress.io/) tests for PFML. In this project, we have two different "styles" of test:
+Here you will find the end-to-end testing code for this project. Testing efforts on this project have been broken into three groups:
 
-* End to End tests - Testing a single, known business case as it progresses through the various parts of the application. The inputs for these tests are always known in advance. These tests are designed to be run on a scheduled basis.
-* Business Simulation tests - Testing designed to exercise business processes using generated, semi-random inputs. These tests are designed to be run on an as-needed basis, and may produce a variable amount of inputs.
+* **[End to End](#end-to-end-tests)** - Tests application functionality from a user (employee, CSR) perspective across multiple components using [Cypress](https://www.cypress.io/). This test type is browser based, and runs nightly in CI to ensure continuity of functionality.
+* **[Business Simulation](#business-simulation)** - Tests business process by flooding the system with a large number of realistic claims. Business simulation runs are schedule activities that involve human participants.
+* **[Load and Stress](#load-and-stress-testing)** - Tests performance of the system by simulating a large amount of user activity on multiple points in the application. Load and stress tests are scheduled activities that will run against a production-like environment.
 
-In general, the two test types will follow the same paths (eg: we might submit a medical leave claim through the claimant portal in both), but the inputs will be very different.
+End-to-End Tests
+----------------
 
-Running Tests
--------------
+End to End tests are Cypress based, and operate by driving a real browser through the Claimant Portal and Claims Processing System.
 
-Before you start, copy the `.env.example` in this directory to `.env`, and make sure it's filled out.
+### Running E2E Tests Locally
 
-To run the tests:
+Tests can be executed locally (against one of the cloud environments) by following these steps:
 
-```bash
-npm install
-npm run cypress:open
-```
+Initial Setup:
+* Open [`.env.example`](./.env.example) and fill in the missing values. Save the file as `.env` in the same directory.
+* Run `npm install` in this directory.
 
-The Cypress UI will open, and you will have a choice of tests to run. Choose the test you wish to run, and Cypress will
-begin running.
+Running Cypress:
 
-Architecture
-------------
+* Run `npm run cypress:open`.
+* A window will pop open showing the various tests available for running.
+* Click the test you want to run, and a browser window will open with the test running in it.
 
-To promote the reuse of automation routines, test code should be composable from modular parts.  To promote this reuse, we've introduced a couple of data structures:
 
-* ["Page Objects"](./src/pages), which encapsulate the logic for dealing with a single page or a handful of similar pages. This is where the majority of our selectors will live, and page classes will have Object Oriented methods pertaining to their usage (Eg: The login page will have `fill()` and `submit()` methods that do exactly what you'd expect).
-* ["Flows"](./src/flows.ts), which orchestrate a journey across multiple pages. A single flow will only operate within the scope of a single application, however, due to limitations with Cypress and crossing domain boundaries.  Typically, a flow will take an input of a known shape (eg: an application), and invoke many page objects.
+### Writing/Editing E2E Tests
 
-Once a flow is written, it may be used in both end to end and business simulation tests, although it's unlikely we'll want to have all of our end to end workflows as business simulation tests, and vice versa.
+We have two different styles of Cypress tests:
 
-Methodology/Philosophy
-----------------------
+* End-to-End - Follows a single claim from initial creation on the Portal to Fineos and back. This type of test truly goes "end to end", but it is very fragile, due to the number of different systems it covers at once.
+* Feature Tests - Exercises a single feature of the application in the most minimal way possible.  These tests still span multiple applications, but will often start or end at the PFML API.  An example of a feature test is "Financial eligiblity should not be met if an employee has made less than $5000 in the past year." We prefer these tests when possible, as they are less brittle.
 
-### Focus on the user journey
+All of our tests start with [Gherkin](https://cucumber.io/docs/gherkin/reference/) - a structured, human-readable specification language that defines and explains what is happening. Once the Gherkin has been defined, we create (or reuse) the implementation of each step using Typescript code.
 
-As we proceed through E2E testing workflows, we always want to try to take the perspective of the user.  To that end, we prefer to select HTML elements based on their display values wherever possible.  ie: If I'm writing a login workflow, I'd prefer to put my e-mail address into a field labelled "E-mail address" rather than an input matching `#input2`. Tests written this way are both easier to understand and come closer to matching the way actual users will interact with the application. Obviously this will not a hard-and-fast rule, but we'd like to avoid hard-coding CSS selectors as much as we can.
+<details>
+  <summary>Tips for writing effective tests</summary>
 
-### Only consider inputs and outputs
+* In Gherkin, focus on the business value you're demonstrating, rather than trying to give a click-by-click of what is happening. Think of this as explaining _what_ you're doing without necessarily needing to explain _how_ you're doing it.
+    _Example_:
+    ```gherkin
+    Scenario: As a CSR, I can satisfy evidence requirements for a Medical Claim
+      Given I am logged into Fineos as a Savilinx user
+      And I am viewing the previously submitted claim
+      When I start adjudication for the claim
+      When I mark "State Managed Paid Leave Confirmation" documentation as satisfactory
+      And I mark "Identification Proof" documentation as satisfactory
+      Then I should see that the claim's "Evidence" is "Satisfied"
+    ```
+* When implementing step definitions, you can use "helper" code in the form of custom Cypress commands, and our system of "actions". Using helpers for repetitive technical steps is good, since it allows us to reuse and improve the execution over time. But make sure your helpers are specifying technical steps rather than business or human process. Business process belongs in the step definition rather than tucked away in a helper.
+  * Good helper examples
+    * Selecting a particular fieldset based on legend label.
+    * Closing a popup window
+    * Selecting a particular form element based on label text.
+    * Filling a particular type of form element with a value.
+  * Bad helper examples:
+    * Approving or denying a particular document
+    * Filling out a page of a form
+* Avoid "flake" in tests without using `cy.wait()`. This is a whole topic in itself, so we'll just refer to [Cypress' documentation](https://docs.cypress.io/guides/core-concepts/retry-ability.html) here. As a rule of thumb, we shouldn't be using `cy.wait()` unless there isn't any other way to do it.
 
-When writing tests, we will be aiming to focus on input (eg: entering a particular type of application), and output (eg: Seeing that application appear in the claims processing system).  What happens in between these two steps is immaterial to us - if the input is accepted, and the output matches what we expect it to be, our test is doing its job. As a concrete example of this, if we wanted that adjustments are working in the API, the way we'd actually test that in an End to End test is to enter an application that should receive an adjustment, then visit the CPS to ensure that the adjustment was applied.
+</details>
 
-### Limit tests to critical business functionality
-
-End-to-end tests are expensive. They are the slowest to run, easiest to break, and most difficult to write of any of the different types of tests available. We write them because they cover a lot of functionality at once, and because they are the closest thing we can get to proving the value of an application in the real world. With that in mind, end to end tests should only be written to validate primary business value, not to test for regressions.
 
 Business Simulation
 -------------------
 
-#### Generating Mock Employee Data
+Business simulation is a tool we use to give the business enough fake data to exercise the business process of adjudicating claims. Simulations have 3 main steps:
 
-Before running the bizSim - you may need to generate mock employee data in order to populate the employee pool.  The script provided will create a JSON file with however many employees you specify.  All files that are generated will be placed here: [./data/simulation/users](./data/simulation/users)
+1. **Preparation**: Generating claims, documents, and DOR files. Test data and documents will be saved for programmatic submission later. DOR files will be shipped to the API to pre-create the necessary employees.
+    * Command to generate 2000 claims worth of data: `npm run pilot3:gen -- -n 2000`
+2. **Technical Execution**: Programatically submitting the claims and documents to the API.
+    * Command to submit previously generated claims: `npm run pilot3:sim -- -n 2000`
+3. **Business Execution**: The human participants actively processing the claims.
 
-To generate mock employee data:
 
-```
-# Generates mock data for <number> of employees
-npm run sim:generateUsers -- <number>
+#### Simulation directory structure:
 
-# eg.
-npm run sim:generateUsers -- 500
-```
+For each generated simulation, the following directory structure will be followed:
 
-The file name will contain a timestamp and the number of employees generated
-```
-yyyy-mm-ddThh:mm:ss--n-users.json
-````
-
----
-
-#### Running the Business Simulation
-
-The business simulation code is kept in [./src/simulation](./src/simulation). Business simulation is run through a NodeJS CLI script that submits generated applications directly to the API. The simulation is broken down into scenarios, each of which has a given probability of running.
-
-##### Adding the employee pool info:
-
-In order to run the bizSim you will need to add the file name of the generated employee pool file.  You must use a ```-u``` or ```-users``` flag to import employee pool data.
-
-eg.
-```
--u ./data/simulation/users/2020-08-20T00:31:46.322Z--10-users.json
+```text
+<selected directory>
+  documents/ <- Document files originally generated here.
+  mail/      <- Document files for manual submission end up here.
+  submitted/ <- Document files submitted over API end up here.
+  claims.json <- Canonical file listing all claims.
+  DORDFML_{DATE} <- DOR Employee file.
+  DORDFMLEMP_{DATE} <- DOR Employer file
+  index.csv    <- A CSV "manifest" of the claims to be submitted.
+  state.json  <- A JSON file tracking the submitted applications to avoid resubmission.
 ```
 
-To run the business simulation, we've created a couple handy commands:
-```
-# Run Pilot 3 simulation with default settings.
-npm run sim:pilot3 -- -u <filname>
+Load and Stress Testing
+-----------------------
 
-# Run HAP1 scenario from Pilot 3 simulation.
-npm run sim:pilot3 -u <filname> -s HAP1
+Documentation TBD.
 
-# Run HAP1 scenario from Pilot 3 20 times.
-npm run sim:pilot3 -u <filname> -s HAP1 -n 20
-```
-If you want to run the simulation w/o submitting the application to the API (for testing) then use ```-r``` or ```-dryrun``` flags.
+General Testing Methodology/Philosophy
+----------------------
 
-eg.
-```
-npm run sim:pilot3 -- -u <filname> -s HAP1 -r
-```
+### Focus on the user journey
 
+As we proceed through E2E testing workflows, we always want to try to take the perspective of the user.  To that end, we prefer to select HTML elements based on their display values wherever possible.  For example, if I'm writing a login workflow, I'd prefer to put my e-mail address into a field labelled "E-mail address" rather than an input matching `#input2`. Tests written this way are both easier to understand and come closer to matching the way actual users will interact with the application. This will not be a hard-and-fast rule, but we'd like to avoid hard-coding CSS selectors as much as we can.
+
+### Only consider inputs and outputs
+
+When writing tests, we will be aiming to focus on input (e.g. entering a particular type of application), and output (e.g. seeing that application appear in the claims processing system).  What happens in between these two steps is immaterial to us - if the input is accepted, and the output matches what we expect it to be, our test is doing its job. As a concrete example of this, if we wanted to check that adjustments are working in the API, the way we'd actually test that in an End to End test would be to enter an application that should receive an adjustment, then visit the CPS to ensure that the adjustment was applied.
+
+### Limit tests to critical business functionality
+
+End-to-end functionality is expensive to test, but valuable to have. In any of our testing efforts, we should focus on capturing the inputs and outputs that will bring the most business value for the least amount of effort.  With that in mind, end to end tests should only be written to validate primary business value, not to test for regressions.
