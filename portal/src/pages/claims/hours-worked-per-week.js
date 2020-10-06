@@ -34,6 +34,8 @@ export const HoursWorkedPerWeek = (props) => {
       <InputText
         {...getFunctionalInputProps("hours_worked_per_week")}
         label={t("pages.claimsHoursWorkedPerWeek.sectionLabel")}
+        inputMode="numeric"
+        pattern="[0-9]*"
         hint={t("pages.claimsHoursWorkedPerWeek.hint")}
         width="small"
       />
