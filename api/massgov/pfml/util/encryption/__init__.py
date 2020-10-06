@@ -15,6 +15,9 @@ class Crypt(ABC):
     def decrypt(self, bval):
         pass
 
+    def decrypt_stream(self, stream):
+        pass
+
     def remove_keys(self):
         pass
 
