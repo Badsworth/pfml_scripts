@@ -67,6 +67,7 @@ const routes = {
       pfmlBenefitsGuide:
         "https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-guide",
       privacyPolicy: "https://www.mass.gov/privacypolicy",
+      userFeedback: "https://www.mass.gov", // TODO (EMPLOYER-417): Update link to external survey
     },
     puertoRicanBirthCertificate: "https://prfaa.pr.gov/faqs",
     workVisa:

@@ -2,6 +2,7 @@ import PropTypes from "prop-types";
 import React from "react";
 import Title from "../../../components/Title";
 import { Trans } from "react-i18next";
+import UserFeedback from "../../../components/UserFeedback";
 import routes from "../../../../src/routes";
 import { useTranslation } from "../../../locales/i18n";
 
@@ -34,6 +35,7 @@ export const Success = (props) => {
           }}
         />
       </p>
+      <UserFeedback />
     </React.Fragment>
   );
 };

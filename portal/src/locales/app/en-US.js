@@ -1169,6 +1169,12 @@ const components = {
   spinner: {
     label: "Loading",
   },
+  userFeedback: {
+    instructions:
+      "We'd like to hear more about your experience on this site. Please take a few minutes to share your feedback.",
+    surveyLink: "<user-feedback-link>Take the survey</user-feedback-link>",
+    title: "Help us improve this site",
+  },
   withClaims: {
     loadingLabel: "Loading claims",
   },

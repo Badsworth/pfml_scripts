@@ -33,5 +33,6 @@ exports[`Success renders Success page 1`] = `
       i18nKey="pages.employersClaimsSuccess.instructions_benefitsGuide"
     />
   </p>
+  <UserFeedback />
 </Fragment>
 `;
