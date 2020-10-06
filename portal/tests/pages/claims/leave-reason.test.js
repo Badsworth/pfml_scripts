@@ -64,7 +64,7 @@ describe("LeaveReasonPage", () => {
     });
   });
 
-  it("calls claims.update with with only leave reason for medical leave", () => {
+  it("calls claims.update with with only leave reason for medical leave and set child birth/placement date to null", () => {
     const { appLogic, claim, wrapper } = renderWithAppLogic(LeaveReasonPage, {
       claimAttrs: new MockClaimBuilder().medicalLeaveReason().create(),
     });
@@ -75,6 +75,8 @@ describe("LeaveReasonPage", () => {
 
     expect(appLogic.claims.update).toHaveBeenCalledWith(claim.application_id, {
       leave_details: {
+        child_birth_date: null,
+        child_placement_date: null,
         reason: LeaveReason.medical,
         reason_qualifier: null,
       },

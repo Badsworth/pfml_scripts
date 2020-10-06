@@ -21,7 +21,7 @@ export const fields = [
 export const Address = (props) => {
   const { appLogic, claim } = props;
   const { t } = useTranslation();
-  const { formState, getField, updateFields, removeField } = useFormState(
+  const { formState, getField, updateFields, clearField } = useFormState(
     pick(props, fields).claim
   );
 
@@ -78,7 +78,7 @@ export const Address = (props) => {
       <ConditionalContent
         fieldNamesClearedWhenHidden={["mailing_address"]}
         getField={getField}
-        removeField={removeField}
+        clearField={clearField}
         updateFields={updateFields}
         visible={has_mailing_address}
       >

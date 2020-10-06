@@ -27,13 +27,13 @@ exports[`StateId initially renders the page without an id field 1`] = `
     value=""
   />
   <ConditionalContent
+    clearField={[Function]}
     fieldNamesClearedWhenHidden={
       Array [
         "mass_id",
       ]
     }
     getField={[Function]}
-    removeField={[Function]}
     updateFields={[Function]}
     visible={false}
   >

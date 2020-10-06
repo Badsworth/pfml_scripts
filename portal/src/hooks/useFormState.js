@@ -1,4 +1,4 @@
-import { get, set, unset } from "lodash";
+import { get, set } from "lodash";
 import { useRef, useState } from "react";
 
 export class FormState {
@@ -27,18 +27,13 @@ export class FormState {
   };
 
   /**
-   * Function that removes a field from the form state.
+   * Function that sets a field from the form state to null.
    * Similar to updateFields, this function identity is guaranteed to be stable
    * and won’t change on re-renders.
    * @param {string} name Name of field to remove
    */
-  removeField = (name) => {
-    this.setState((prevState) => {
-      // Create mutable copy of the state
-      const draftState = { ...prevState };
-      unset(draftState, name);
-      return draftState;
-    });
+  clearField = (name) => {
+    this.updateFields({ [name]: null });
   };
 
   /**

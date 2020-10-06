@@ -28,9 +28,9 @@ exports[`LeavePeriodContinuous renders the page with bonding leave content 1`] =
     value=""
   />
   <ConditionalContent
+    clearField={[Function]}
     fieldNamesClearedWhenHidden={Array []}
     getField={[Function]}
-    removeField={[Function]}
     updateFields={[Function]}
     visible={null}
   >
@@ -111,9 +111,9 @@ exports[`LeavePeriodContinuous renders the page with medical leave content 1`] =
     value=""
   />
   <ConditionalContent
+    clearField={[Function]}
     fieldNamesClearedWhenHidden={Array []}
     getField={[Function]}
-    removeField={[Function]}
     updateFields={[Function]}
     visible={null}
   >

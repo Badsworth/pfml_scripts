@@ -33,8 +33,8 @@ exports[`Feedback renders the component 1`] = `
       type="radio"
     />
     <ConditionalContent
+      clearField={[Function]}
       getField={[Function]}
-      removeField={[Function]}
       updateFields={[Function]}
       visible={false}
     >

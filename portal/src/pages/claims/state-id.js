@@ -16,7 +16,7 @@ export const StateId = (props) => {
   const { appLogic, claim } = props;
   const { t } = useTranslation();
 
-  const { formState, getField, updateFields, removeField } = useFormState(
+  const { formState, getField, updateFields, clearField } = useFormState(
     pick(props, fields).claim
   );
   const { has_state_id } = formState;
@@ -53,7 +53,7 @@ export const StateId = (props) => {
       <ConditionalContent
         fieldNamesClearedWhenHidden={["mass_id"]}
         getField={getField}
-        removeField={removeField}
+        clearField={clearField}
         updateFields={updateFields}
         visible={has_state_id === true}
       >

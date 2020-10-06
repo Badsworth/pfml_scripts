@@ -21,7 +21,7 @@ export const EmploymentStatus = (props) => {
   const { appLogic, claim } = props;
   const { t } = useTranslation();
 
-  const { formState, getField, updateFields, removeField } = useFormState(
+  const { formState, getField, updateFields, clearField } = useFormState(
     pick(props, fields).claim
   );
   const employment_status = get(formState, "employment_status");
@@ -64,7 +64,7 @@ export const EmploymentStatus = (props) => {
       <ConditionalContent
         fieldNamesClearedWhenHidden={["employer_fein"]}
         getField={getField}
-        removeField={removeField}
+        clearField={clearField}
         updateFields={updateFields}
         visible={employment_status === EmploymentStatusEnum.employed}
       >

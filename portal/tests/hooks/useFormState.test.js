@@ -85,7 +85,7 @@ describe("useFormState", () => {
     });
   });
 
-  describe("removeField", () => {
+  describe("clearField", () => {
     beforeEach(() => {
       const initialState = {
         foo: "banana",
@@ -103,12 +103,13 @@ describe("useFormState", () => {
         formState = useFormState(initialState);
       });
     });
-    it("removes field from formState", () => {
+    it("set field from formState to null", () => {
       act(() => {
-        formState.removeField("bar");
+        formState.clearField("bar");
       });
       expect(formState.formState).toStrictEqual({
         foo: "banana",
+        bar: null,
         cat: "pineapple",
         nested: {
           human: "being",
@@ -121,21 +122,23 @@ describe("useFormState", () => {
     });
 
     it("remains stable across renders", () => {
-      const removeField1 = formState.removeField;
+      const clearField1 = formState.clearField;
       act(() => {
-        removeField1("bar");
+        clearField1("bar");
       });
-      const removeField2 = formState.removeField;
-      expect(removeField2).toBe(removeField1);
+      const clearField2 = formState.clearField;
+      expect(clearField2).toBe(clearField1);
     });
 
-    it("handles multiple calls to removeField in same render call", () => {
+    it("handles multiple calls to clearField in same render call", () => {
       act(() => {
-        formState.removeField("cat");
-        formState.removeField("foo");
+        formState.clearField("cat");
+        formState.clearField("foo");
       });
       expect(formState.formState).toEqual({
+        foo: null,
         bar: "watermelon",
+        cat: null,
         nested: {
           human: "being",
           farm: {
@@ -146,9 +149,9 @@ describe("useFormState", () => {
       });
     });
 
-    it("removes nested states", () => {
+    it("clears nested states", () => {
       act(() => {
-        formState.removeField("nested.farm.duck");
+        formState.clearField("nested.farm.duck");
       });
       expect(formState.formState).toEqual({
         foo: "banana",
@@ -158,6 +161,7 @@ describe("useFormState", () => {
           human: "being",
           farm: {
             cow: "pig",
+            duck: null,
           },
         },
       });

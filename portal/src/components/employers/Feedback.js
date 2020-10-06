@@ -33,7 +33,7 @@ const Feedback = (props) => {
     setFormState({ ...formState, ...fields });
   };
 
-  const removeField = (fieldName) => {
+  const clearField = (fieldName) => {
     setFormState({
       ...formState,
       [fieldName]: "",
@@ -94,7 +94,7 @@ const Feedback = (props) => {
         />
         <ConditionalContent
           getField={getField}
-          removeField={removeField}
+          clearField={clearField}
           updateFields={updateFields}
           visible={formState.hasComments === "true"}
         >

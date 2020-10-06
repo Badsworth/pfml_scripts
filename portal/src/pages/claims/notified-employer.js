@@ -25,7 +25,7 @@ export const NotifiedEmployer = (props) => {
   const { appLogic, claim } = props;
   const { t } = useTranslation();
 
-  const { formState, getField, updateFields, removeField } = useFormState(
+  const { formState, getField, updateFields, clearField } = useFormState(
     pick(props, fields).claim
   );
   const employer_notified = get(formState.leave_details, "employer_notified");
@@ -72,7 +72,7 @@ export const NotifiedEmployer = (props) => {
         ]}
         getField={getField}
         updateFields={updateFields}
-        removeField={removeField}
+        clearField={clearField}
         visible={employer_notified === true}
       >
         <InputDate

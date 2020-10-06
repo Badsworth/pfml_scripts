@@ -31,7 +31,7 @@ export const Example = () => {
     updateFormState({ ...formState, ...fields });
   };
 
-  const removeField = (fieldName) => {
+  const clearField = (fieldName) => {
     updateFormState({
       ...formState,
       [fieldName]: "",
@@ -64,7 +64,7 @@ export const Example = () => {
       <ConditionalContent
         fieldNamesClearedWhenHidden={["fullName"]}
         getField={getField}
-        removeField={removeField}
+        clearField={clearField}
         updateFields={updateFields}
         visible={formState.fileClaim === "yes"}
       >

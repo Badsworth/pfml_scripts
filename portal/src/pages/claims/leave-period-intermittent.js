@@ -26,7 +26,7 @@ export const LeavePeriodIntermittent = (props) => {
   const { appLogic, claim } = props;
   const { t } = useTranslation();
 
-  const { formState, getField, updateFields, removeField } = useFormState(
+  const { formState, getField, updateFields, clearField } = useFormState(
     pick(props, fields).claim
   );
 
@@ -95,7 +95,7 @@ export const LeavePeriodIntermittent = (props) => {
         // TODO (CP-933): Remove the leave period
         fieldNamesClearedWhenHidden={[]}
         getField={getField}
-        removeField={removeField}
+        clearField={clearField}
         updateFields={updateFields}
         visible={
           formState.has_intermittent_leave_periods && !hasOtherLeavePeriodTypes

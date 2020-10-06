@@ -42,13 +42,13 @@ exports[`LeaveReasonPage renders the page for medical leave and does not show re
     value="Serious Health Condition - Employee"
   />
   <ConditionalContent
+    clearField={[Function]}
     fieldNamesClearedWhenHidden={
       Array [
         "leave_details.reason_qualifier",
       ]
     }
     getField={[Function]}
-    removeField={[Function]}
     updateFields={[Function]}
     visible={false}
   >

@@ -49,13 +49,13 @@ exports[`Address renders the page without any address info 1`] = `
     value=""
   />
   <ConditionalContent
+    clearField={[Function]}
     fieldNamesClearedWhenHidden={
       Array [
         "mailing_address",
       ]
     }
     getField={[Function]}
-    removeField={[Function]}
     updateFields={[Function]}
     visible={null}
   >

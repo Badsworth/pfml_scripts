@@ -2,14 +2,13 @@ import Claim, {
   LeaveReason as LeaveReasonEnum,
   ReasonQualifier as ReasonQualifierEnum,
 } from "../../models/Claim";
+import { get, pick, set } from "lodash";
 import ConditionalContent from "../../components/ConditionalContent";
 import Details from "../../components/Details";
 import InputChoiceGroup from "../../components/InputChoiceGroup";
 import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
-import get from "lodash/get";
-import { pick } from "lodash";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "react-i18next";
@@ -23,14 +22,20 @@ export const fields = [
 export const LeaveReason = (props) => {
   const { appLogic, claim } = props;
   const { t } = useTranslation();
-  const { formState, getField, updateFields, removeField } = useFormState(
+  const { formState, getField, updateFields, clearField } = useFormState(
     pick(props, fields).claim
   );
   const reason = get(formState, "leave_details.reason");
   const reason_qualifier = get(formState, "leave_details.reason_qualifier");
 
-  const handleSave = () =>
-    appLogic.claims.update(claim.application_id, formState);
+  const handleSave = async () => {
+    if (reason !== LeaveReasonEnum.bonding) {
+      set(formState, "leave_details.child_birth_date", null);
+      set(formState, "leave_details.child_placement_date", null);
+    }
+
+    await appLogic.claims.update(claim.application_id, formState);
+  };
 
   const getFunctionalInputProps = useFunctionalInputProps({
     appErrors: appLogic.appErrors,
@@ -82,7 +87,7 @@ export const LeaveReason = (props) => {
       <ConditionalContent
         fieldNamesClearedWhenHidden={["leave_details.reason_qualifier"]}
         getField={getField}
-        removeField={removeField}
+        clearField={clearField}
         updateFields={updateFields}
         visible={reason === LeaveReasonEnum.bonding}
       >

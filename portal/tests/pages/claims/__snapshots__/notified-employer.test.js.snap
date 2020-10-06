@@ -33,13 +33,13 @@ exports[`NotifiedEmployer renders the page 1`] = `
     value=""
   />
   <ConditionalContent
+    clearField={[Function]}
     fieldNamesClearedWhenHidden={
       Array [
         "leave_details.employer_notification_date",
       ]
     }
     getField={[Function]}
-    removeField={[Function]}
     updateFields={[Function]}
     visible={false}
   >
