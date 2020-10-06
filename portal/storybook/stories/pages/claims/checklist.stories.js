@@ -1,5 +1,8 @@
+import { DateTime } from "luxon";
 import { MockClaimBuilder } from "tests/test-utils";
 import generateClaimPageStory from "storybook/utils/generateClaimPageStory";
+
+const futureBirthDate = DateTime.local.plus({ days: 60 }).toISODate();
 
 const mockClaims = {
   empty: new MockClaimBuilder().create(),
@@ -13,6 +16,10 @@ const mockClaims = {
     .medicalLeaveReason()
     .employed()
     .noOtherLeave()
+    .create(),
+  "Future bonding leave": new MockClaimBuilder()
+    .bondingBirthLeaveReason(futureBirthDate)
+    .submitted()
     .create(),
   submitted: new MockClaimBuilder().submitted().create(),
   complete: new MockClaimBuilder().complete().create(),

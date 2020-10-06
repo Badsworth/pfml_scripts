@@ -68,6 +68,26 @@ describe("Step Model", () => {
     });
   });
 
+  describe("isNotApplicable", () => {
+    it("returns false without a notApplicableCond", () => {
+      const step = new Step();
+
+      expect(step.isNotApplicable).toBe(false);
+    });
+
+    it("returns the result of notApplicableCond if one is provided", () => {
+      const notApplicableStep = new Step({
+        notApplicableCond: () => true,
+      });
+      const applicableStep = new Step({
+        notApplicableCond: () => false,
+      });
+
+      expect(notApplicableStep.isNotApplicable).toBe(true);
+      expect(applicableStep.isNotApplicable).toBe(false);
+    });
+  });
+
   describe("status", () => {
     describe("when step depends on another step", () => {
       describe("when step it depends on has warnings", () => {

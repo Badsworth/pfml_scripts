@@ -44,6 +44,13 @@ export default class Step extends BaseModel {
        */
       name: null,
       /**
+       * @type {Function}
+       * Optional method for evaluating whether a step is not applicable,
+       * based on the Step's `context`. This is useful if a Step
+       * may be skipped for certain types of applications
+       */
+      notApplicableCond: null,
+      /**
        * @type {number}
        * If this belongs within a StepGroup, what StepGroup number is it associated with (e.g Part 2)
        */
@@ -103,6 +110,10 @@ export default class Step extends BaseModel {
   get status() {
     if (this.isDisabled) {
       return "disabled";
+    }
+
+    if (this.isNotApplicable) {
+      return "not_applicable";
     }
 
     if (this.isComplete) {
@@ -178,6 +189,12 @@ export default class Step extends BaseModel {
 
   get isInProgress() {
     return this.fields.some((field) => fieldHasValue(field, this.context));
+  }
+
+  get isNotApplicable() {
+    if (this.notApplicableCond) return this.notApplicableCond(this.context);
+
+    return false;
   }
 
   get isDisabled() {
@@ -286,6 +303,7 @@ export default class Step extends BaseModel {
     const uploadCertification = new Step({
       completeCond: (context) => !!context.certificationDocuments.length,
       name: ClaimSteps.uploadCertification,
+      notApplicableCond: (context) => context.claim.isFutureBondingLeave,
       group: 3,
       pages: pagesByStep[ClaimSteps.uploadCertification],
       dependsOn: [

@@ -174,36 +174,51 @@ export class MockClaimBuilder {
     return this;
   }
 
-  bondingBirthLeaveReason() {
+  /**
+   * @param {string} birthDate Child's birth date in ISO-8601 format. Defaults
+   * to "2012-02-12"
+   * @returns {MockClaimBuilder}
+   */
+  bondingBirthLeaveReason(birthDate = "2012-02-12") {
     set(this.claimAttrs, "leave_details.reason", LeaveReason.bonding);
     set(
       this.claimAttrs,
       "leave_details.reason_qualifier",
       ReasonQualifier.newBorn
     );
-    set(this.claimAttrs, "leave_details.child_birth_date", "2012-02-12");
+    set(this.claimAttrs, "leave_details.child_birth_date", birthDate);
     return this;
   }
 
-  bondingAdoptionLeaveReason() {
+  /**
+   * @param {string} placementDate Child's placement date in ISO-8601 format. Defaults
+   * to "2020-02-14"
+   * @returns {MockClaimBuilder}
+   */
+  bondingAdoptionLeaveReason(placementDate = "2012-02-14") {
     set(this.claimAttrs, "leave_details.reason", LeaveReason.bonding);
     set(
       this.claimAttrs,
       "leave_details.reason_qualifier",
       ReasonQualifier.adoption
     );
-    set(this.claimAttrs, "leave_details.child_placement_date", "2012-02-14");
+    set(this.claimAttrs, "leave_details.child_placement_date", placementDate);
     return this;
   }
 
-  bondingFosterCareLeaveReason() {
+  /**
+   * @param {string} placementDate Child's placement date in ISO-8601 format. Defaults
+   * to "2020-02-14"
+   * @returns {MockClaimBuilder}
+   */
+  bondingFosterCareLeaveReason(placementDate = "2012-02-14") {
     set(this.claimAttrs, "leave_details.reason", LeaveReason.bonding);
     set(
       this.claimAttrs,
       "leave_details.reason_qualifier",
       ReasonQualifier.fosterCare
     );
-    set(this.claimAttrs, "leave_details.child_placement_date", "2012-02-14");
+    set(this.claimAttrs, "leave_details.child_placement_date", placementDate);
     return this;
   }
 

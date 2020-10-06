@@ -230,6 +230,7 @@ exports[`Checklist renders multiple StepList components with list of Steps 1`] =
   >
     <Step
       completedText="Completed"
+      editable={true}
       key="verifyId"
       number={1}
       status="not_started"
@@ -260,6 +261,7 @@ exports[`Checklist renders multiple StepList components with list of Steps 1`] =
     </Step>
     <Step
       completedText="Completed"
+      editable={true}
       key="leaveDetails"
       number={2}
       status="disabled"
@@ -290,6 +292,7 @@ exports[`Checklist renders multiple StepList components with list of Steps 1`] =
     </Step>
     <Step
       completedText="Completed"
+      editable={true}
       key="employerInformation"
       number={3}
       status="disabled"
@@ -320,6 +323,7 @@ exports[`Checklist renders multiple StepList components with list of Steps 1`] =
     </Step>
     <Step
       completedText="Completed"
+      editable={true}
       key="otherLeave"
       number={4}
       status="disabled"
@@ -350,6 +354,7 @@ exports[`Checklist renders multiple StepList components with list of Steps 1`] =
     </Step>
     <Step
       completedText="Completed"
+      editable={true}
       key="reviewAndConfirm"
       number={5}
       status="disabled"
@@ -397,6 +402,7 @@ exports[`Checklist renders multiple StepList components with list of Steps 1`] =
   >
     <Step
       completedText="Completed"
+      editable={true}
       key="payment"
       number={6}
       status="disabled"
@@ -444,6 +450,7 @@ exports[`Checklist renders multiple StepList components with list of Steps 1`] =
   >
     <Step
       completedText="Completed"
+      editable={true}
       key="uploadId"
       number={7}
       status="disabled"
@@ -474,6 +481,7 @@ exports[`Checklist renders multiple StepList components with list of Steps 1`] =
     </Step>
     <Step
       completedText="Completed"
+      editable={true}
       key="uploadCertification"
       number={8}
       status="disabled"

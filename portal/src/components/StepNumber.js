@@ -58,6 +58,7 @@ StepNumber.propTypes = {
     "disabled",
     "completed",
     "in_progress",
+    "not_applicable",
     "not_started",
   ]),
   /**

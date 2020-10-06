@@ -13,6 +13,7 @@ exports[`StepList renders component 1`] = `
   <Step
     completedText="Completed"
     editText="Edit"
+    editable={true}
     key=".0"
     number={1}
     resumeText="Resume"

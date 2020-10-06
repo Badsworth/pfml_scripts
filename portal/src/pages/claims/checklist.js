@@ -51,7 +51,9 @@ export const Checklist = (props) => {
   /**
    * @type {boolean} Flag for determining whether to enable the submit button
    */
-  const allStepsComplete = allSteps.every((step) => step.isComplete);
+  const readyToSubmit = allSteps.every(
+    (step) => step.isComplete || step.isNotApplicable
+  );
 
   /**
    * @type {StepGroup[]}
@@ -92,13 +94,7 @@ export const Checklist = (props) => {
    */
   function renderSteps(steps) {
     return steps.map((step) => {
-      const claimReason = get(claim, "leave_details.reason");
-      const claimReasonQualifier = get(claim, "leave_details.reason_qualifier");
-      const description = getStepDescription(
-        step.name,
-        claimReason,
-        claimReasonQualifier
-      );
+      const description = getStepDescription(step.name, claim);
 
       return (
         <Step
@@ -117,6 +113,7 @@ export const Checklist = (props) => {
           status={
             step.group === 1 && claim.isSubmitted ? "completed" : step.status
           }
+          stepHref={step.href}
           // TODO (CP-676): Simplify the condition below to simply check if step.editable
           // once the Checklist no longer checks local state to determine if steps are completed.
           // The addition of those conditions is in place for now, since
@@ -124,11 +121,7 @@ export const Checklist = (props) => {
           // because some fields are currently only stored in memory while
           // we wait for them to be integrated with the API. Once all fields
           // are retained across page loads, we would only need to check if step.editable
-          stepHref={
-            step.group > 1 || !step.isComplete || step.editable
-              ? step.href
-              : null
-          }
+          editable={step.editable || step.group > 1 || !step.isComplete}
         >
           <Trans
             i18nKey="pages.claimsChecklist.stepHTMLDescription"
@@ -153,31 +146,39 @@ export const Checklist = (props) => {
   }
 
   /**
-   * Helper method for getting step description
-   * @param {ClaimSteps} stepName
-   * @param {LeaveReason} claimReason
-   * @param {ReasonQualifier|null} claimReasonQualifier
-   * @returns {string}
+   * Helper method for generating a context string used to differentiate i18n keys
+   * for the various Step content strings.
+   * @param {string} stepName
+   * @param {Claim} claim
+   * @returns {string|undefined}
    */
-  function getStepDescription(stepName, claimReason, claimReasonQualifier) {
+  function getStepDescription(stepName, claim) {
+    const claimReason = get(claim, "leave_details.reason");
+    const claimReasonQualifier = get(claim, "leave_details.reason_qualifier");
     if (stepName !== ClaimSteps.uploadCertification) {
       return stepName;
     }
-    const conditionalContext = {
-      [LeaveReason.bonding]: {
-        [ReasonQualifier.newBorn]: "bondingNewborn",
-        [ReasonQualifier.adoption]: "bondingAdoptFoster",
-        [ReasonQualifier.fosterCare]: "bondingAdoptFoster",
-      },
-      [LeaveReason.medical]: "medical",
-    };
-
-    switch (claimReason) {
-      case LeaveReason.medical:
-        return conditionalContext[claimReason];
-      case LeaveReason.bonding:
-        return conditionalContext[claimReason][claimReasonQualifier];
+    if (claimReason === LeaveReason.medical) {
+      return "medical";
     }
+    if (claimReason !== LeaveReason.bonding) {
+      return undefined;
+    }
+
+    let context;
+    if (claimReasonQualifier === ReasonQualifier.newBorn) {
+      context = "bondingNewborn";
+    } else {
+      // Same key for adoption or foster care reason qualifiers
+      context = "bondingAdoptFoster";
+    }
+
+    // Check to see if we should use the future bonding leave variant
+    if (claim.isFutureBondingLeave) {
+      context += "Future";
+    }
+
+    return context;
   }
 
   /**
@@ -246,7 +247,7 @@ export const Checklist = (props) => {
           claim_id: claim.application_id,
         })}
         className="margin-bottom-8"
-        disabled={!allStepsComplete}
+        disabled={!readyToSubmit}
       >
         {t("pages.claimsChecklist.submitButton")}
       </ButtonLink>

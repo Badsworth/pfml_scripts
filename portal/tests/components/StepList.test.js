@@ -20,6 +20,7 @@ describe("StepList", () => {
     const wrapper = shallow(
       <StepList {...props}>
         <Step
+          editable
           title="Step 1"
           stepHref="#"
           status="not_started"
@@ -39,6 +40,7 @@ describe("StepList", () => {
     const wrapper = shallow(
       <StepList {...props} description={description}>
         <Step
+          editable
           title="Step 1"
           stepHref="#"
           status="not_started"
@@ -56,6 +58,7 @@ describe("StepList", () => {
     const wrapper = shallow(
       <StepList {...props}>
         <Step
+          editable
           title="Step 1"
           stepHref="#"
           status="not_started"
@@ -64,6 +67,7 @@ describe("StepList", () => {
           Step Description
         </Step>
         <Step
+          editable
           title="Step 2"
           stepHref="#"
           status="disabled"
@@ -86,6 +90,7 @@ describe("StepList", () => {
     const wrapper = shallow(
       <StepList {...props}>
         <Step
+          editable
           number={4}
           title="Upload documents"
           stepHref="#"

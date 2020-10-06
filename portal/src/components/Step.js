@@ -8,9 +8,11 @@ import classnames from "classnames";
 
 const Step = (props) => {
   const disabled = props.status === "disabled";
+  const notStarted = props.status === "not_started";
+  const inProgress = props.status === "in_progress";
   const completed = props.status === "completed";
-  const not_started = props.status === "not_started";
-  const active = ["in_progress", "not_started"].includes(props.status);
+  const notApplicable = props.status === "not_applicable";
+  const showChildren = inProgress || notStarted || notApplicable;
 
   const editCompletedStep = (
     <React.Fragment>
@@ -41,20 +43,16 @@ const Step = (props) => {
     </React.Fragment>
   );
 
-  const buttonText = not_started ? props.startText : props.resumeText;
-  const startResumeButton = props.stepHref ? (
+  const startButton = (
     <ButtonLink href={props.stepHref} className="width-auto">
-      {buttonText}
+      {props.startText}
     </ButtonLink>
-  ) : null;
-
-  const actionColumn = () => {
-    if (completed) {
-      return editCompletedStep;
-    }
-
-    return startResumeButton;
-  };
+  );
+  const resumeButton = (
+    <ButtonLink href={props.stepHref} className="width-auto">
+      {props.resumeText}
+    </ButtonLink>
+  );
 
   // classes for wrapping element
   const classes = classnames(
@@ -81,8 +79,8 @@ const Step = (props) => {
   // column with the title and description
   const titleDescriptionColumnClasses = "tablet:grid-col-8";
 
-  // lighten title color if step is disabled
-  const titleClasses = classnames({ "text-base": disabled });
+  // lighten title color if step is disabled or not applicable
+  const titleClasses = classnames({ "text-base": disabled || notApplicable });
 
   // column with user action links/button (edit, start, or resume)
   const actionColumnClasses = classnames(
@@ -109,11 +107,13 @@ const Step = (props) => {
           <Heading level="3" className={titleClasses}>
             {props.title}
           </Heading>
-          {active && <div className="usa-prose">{props.children}</div>}
+          {showChildren && <div className="usa-prose">{props.children}</div>}
         </div>
-        {!disabled && (
-          <div className={actionColumnClasses}>{actionColumn()}</div>
-        )}
+        <div className={actionColumnClasses}>
+          {notStarted && startButton}
+          {inProgress && resumeButton}
+          {completed && props.editable && editCompletedStep}
+        </div>
       </div>
     </div>
   );
@@ -129,6 +129,7 @@ Step.propTypes = {
    */
   status: PropTypes.oneOf([
     "disabled",
+    "not_applicable",
     "not_started",
     "in_progress",
     "completed",
@@ -141,6 +142,10 @@ Step.propTypes = {
    * Description of the step
    */
   children: PropTypes.node,
+  /**
+   * Whether or not the step is editable by the user
+   */
+  editable: PropTypes.bool.isRequired,
   /**
    * Localized text for the start button.
    * This can also be passed by parent StepList component.

@@ -13,6 +13,7 @@ describe("Step", () => {
       resumeText: "Resume",
       completedText: "Completed",
       editText: "Edit",
+      editable: true,
       screenReaderNumberPrefix: "Step",
       number: "1",
       title: "Step Title",
@@ -44,6 +45,21 @@ describe("Step", () => {
     });
   });
 
+  describe("when status is not_applicable", () => {
+    it("shows children, does not show action links/buttons", () => {
+      const wrapper = shallow(
+        <Step {...props} status="not_applicable">
+          <Child />
+        </Step>
+      );
+
+      expect(wrapper.find("Child")).toHaveLength(1);
+
+      expect(wrapper.find(".usa-link")).toHaveLength(0);
+      expect(wrapper.contains("ButtonLink")).toBe(false);
+    });
+  });
+
   describe("when status is in_progress", () => {
     it("shows children, displays resume button", () => {
       const wrapper = shallow(
@@ -72,11 +88,9 @@ describe("Step", () => {
       expect(wrapper.find(".usa-link")).toHaveLength(1);
     });
 
-    it("hides edit link if stepHref is not present", () => {
-      delete props.stepHref;
-
+    it("hides edit link if editable is false", () => {
       const wrapper = shallow(
-        <Step {...props} status="completed">
+        <Step {...props} status="completed" editable={false}>
           <Child />
         </Step>
       );

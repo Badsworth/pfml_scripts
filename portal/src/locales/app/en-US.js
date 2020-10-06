@@ -355,8 +355,12 @@ const pages = {
     start: "Start",
     stepHTMLDescription_bondingAdoptFoster:
       "You need to provide a statement confirming the placement and the date of placement.",
+    stepHTMLDescription_bondingAdoptFosterFuture:
+      "After your child arrives in your home, you will need to provide a statement confirming the placement and the date of placement.",
     stepHTMLDescription_bondingNewborn:
       "You need to provide your child's birth certificate or a document from a health care provider that shows the child’s birth date.",
+    stepHTMLDescription_bondingNewbornFuture:
+      "After your child is born you will need to provide your child’s birth certificate or a document from a health care provider that shows the child’s birth date.",
     stepHTMLDescription_employerInformation:
       "You will need to know:<ul><li>Your employer’s 9-digit federal employer identification number (FEIN or EIN). <br><strong>Where to find this: </strong>on your W-2 or 1099, or ask your employer’s finance department.</li><li>The date you told your employer you were taking leave.</li></ul>",
     stepHTMLDescription_leaveDetails:

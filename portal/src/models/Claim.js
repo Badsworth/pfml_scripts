@@ -5,6 +5,7 @@
 import { compact, get } from "lodash";
 import Address from "./Address";
 import BaseModel from "./BaseModel";
+import { DateTime } from "luxon";
 
 class Claim extends BaseModel {
   get defaults() {
@@ -83,6 +84,25 @@ class Claim extends BaseModel {
    */
   get isBondingLeave() {
     return get(this, "leave_details.reason") === LeaveReason.bonding;
+  }
+
+  /**
+   * Determine if the claim is a Bonding Leave claim where the birth or
+   * placement date is in the future.
+   * @returns {boolean}
+   */
+  get isFutureBondingLeave() {
+    if (!this.isBondingLeave) return false;
+
+    const birthOrPlacementDate =
+      get(this, "leave_details.child_birth_date") ||
+      get(this, "leave_details.child_placement_date");
+    // Assumes that the birth/placement date is in the same timezone as the user's browser
+    const now = DateTime.local().toISODate();
+
+    // Compare the two dates lexicographically. This works since they're both in
+    // ISO-8601 format, eg "2020-10-13"
+    return birthOrPlacementDate > now;
   }
 
   /**
