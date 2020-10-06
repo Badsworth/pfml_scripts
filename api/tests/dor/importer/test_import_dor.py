@@ -1,6 +1,7 @@
 import pathlib
 import tempfile
 
+import boto3
 import pytest
 
 import dor_test_data as test_data
@@ -21,7 +22,7 @@ TEST_FOLDER = pathlib.Path(__file__).parent
 
 
 @pytest.fixture
-def test_fs_path_for_s3(tmp_path):
+def test_fs_path(tmp_path):
     employer_quarter_line = test_data.get_employer_quarter_line()
     employee_quarter_line = test_data.get_employee_quarter_line()
     content1 = "{}\n{}".format(employer_quarter_line, employee_quarter_line)
@@ -342,35 +343,59 @@ def validate_employer_address_persistence(
     assert address_row.country_id == country.country_id
 
 
-def test_get_files_for_import_grouped_by_date(test_fs_path_for_s3):
-    (test_fs_path_for_s3 / "extra_file").touch()
-    (test_fs_path_for_s3 / "DORDFMLEMP_20200519133333").touch()
-    (test_fs_path_for_s3 / "DORDFML_20200519133333").touch()
-    (test_fs_path_for_s3 / "DORDFML_20201001133333").touch()
-    files_by_date = import_dor.get_files_for_import_grouped_by_date(test_fs_path_for_s3)
+def test_get_files_for_import_grouped_by_date(test_fs_path, mock_s3_bucket):
+    # test file system paths
+    (test_fs_path / "extra_file").touch()
+    (test_fs_path / "DORDFMLEMP_20200519133333").touch()
+    (test_fs_path / "DORDFML_20200519133333").touch()
+    (test_fs_path / "DORDFML_20201001133333").touch()
+    files_by_date = import_dor.get_files_for_import_grouped_by_date(str(test_fs_path))
     assert files_by_date == {
         "20200519120622": {
-            "DORDFMLEMP_": test_fs_path_for_s3 / employer_file,
-            "DORDFML_": test_fs_path_for_s3 / employee_file,
+            "DORDFMLEMP_": str(test_fs_path / employer_file),
+            "DORDFML_": str(test_fs_path / employee_file),
         },
         "20200519133333": {
-            "DORDFMLEMP_": test_fs_path_for_s3 / "DORDFMLEMP_20200519133333",
-            "DORDFML_": test_fs_path_for_s3 / "DORDFML_20200519133333",
+            "DORDFMLEMP_": str(test_fs_path / "DORDFMLEMP_20200519133333"),
+            "DORDFML_": str(test_fs_path / "DORDFML_20200519133333"),
         },
-        "20201001133333": {"DORDFML_": test_fs_path_for_s3 / "DORDFML_20201001133333",},
+        "20201001133333": {"DORDFML_": str(test_fs_path / "DORDFML_20201001133333"),},
+    }
+
+    # test s3 paths
+    s3 = boto3.client("s3")
+    s3.put_object(Bucket=mock_s3_bucket, Key="extra_file", Body="")
+    s3.put_object(Bucket=mock_s3_bucket, Key="DORDFMLEMP_20200519133333", Body="")
+    s3.put_object(Bucket=mock_s3_bucket, Key="DORDFML_20200519133333", Body="")
+    s3.put_object(Bucket=mock_s3_bucket, Key="DORDFML_20201001133333", Body="")
+    s3.put_object(Bucket=mock_s3_bucket, Key=employer_file, Body="")
+    s3.put_object(Bucket=mock_s3_bucket, Key=employee_file, Body="")
+
+    files_by_date = import_dor.get_files_for_import_grouped_by_date(f"s3://{mock_s3_bucket}")
+    s3_prefix = f"s3://{mock_s3_bucket}"
+    assert files_by_date == {
+        "20200519120622": {
+            "DORDFMLEMP_": f"{s3_prefix}/{employer_file}",
+            "DORDFML_": f"{s3_prefix}/{employee_file}",
+        },
+        "20200519133333": {
+            "DORDFMLEMP_": f"{s3_prefix}/DORDFMLEMP_20200519133333",
+            "DORDFML_": f"{s3_prefix}/DORDFML_20200519133333",
+        },
+        "20201001133333": {"DORDFML_": f"{s3_prefix}/DORDFML_20201001133333",},
     }
 
 
-def test_parse_employee_file(test_fs_path_for_s3):
+def test_parse_employee_file(test_fs_path):
     employee_wage_data = test_data.get_new_employee_wage_data()
-    employee_file_path = "{}/{}".format(str(test_fs_path_for_s3), employee_file)
+    employee_file_path = "{}/{}".format(str(test_fs_path), employee_file)
     employees_info = import_dor.parse_employee_file(employee_file_path, decrypter)
     assert employees_info[0] == employee_wage_data
 
 
-def test_parse_employer_file(test_fs_path_for_s3):
+def test_parse_employer_file(test_fs_path):
     employer_info = test_data.get_new_employer()
-    employer_file_path = "{}/{}".format(str(test_fs_path_for_s3), employer_file)
+    employer_file_path = "{}/{}".format(str(test_fs_path), employer_file)
     employers_info = import_dor.parse_employer_file(employer_file_path, decrypter)
     assert employers_info[0] == employer_info
 

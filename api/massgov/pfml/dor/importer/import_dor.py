@@ -4,7 +4,6 @@
 #
 
 import os
-import pathlib
 import re
 import resource
 import uuid
@@ -42,8 +41,8 @@ EMPLOYEE_FILE_PREFIX = "DORDFML_"
 @dataclass
 class ImportBatch:
     upload_date: str
-    employer_file: pathlib.PurePath
-    employee_file: pathlib.PurePath
+    employer_file: str
+    employee_file: str
 
 
 @dataclass
@@ -79,7 +78,7 @@ def handler(event=None, context=None):
 
     logger.addFilter(filter_add_memory_usage)
 
-    folder_path = pathlib.PurePath(os.environ["FOLDER_PATH"])
+    folder_path = os.environ["FOLDER_PATH"]
     decrypt_files = os.getenv("DECRYPT") == "true"
 
     logger.info(
@@ -685,7 +684,7 @@ def move_file_to_processed(bucket, file_to_copy):
     )
 
 
-def get_files_to_process(path: pathlib.PurePath) -> List[ImportBatch]:
+def get_files_to_process(path: str) -> List[ImportBatch]:
     files_by_date = get_files_for_import_grouped_by_date(path)
     file_date_keys = sorted(files_by_date.keys())
 
@@ -709,12 +708,10 @@ def get_files_to_process(path: pathlib.PurePath) -> List[ImportBatch]:
     return import_batches
 
 
-def get_files_for_import_grouped_by_date(
-    path: pathlib.PurePath,
-) -> Dict[str, Dict[str, pathlib.PurePath]]:
+def get_files_for_import_grouped_by_date(path: str,) -> Dict[str, Dict[str, str]]:
     """Get the paths (s3 keys) of files in the received folder of the bucket"""
 
-    files_by_date: Dict[str, Dict[str, pathlib.PurePath]] = {}
+    files_by_date: Dict[str, Dict[str, str]] = {}
     files_for_import = file_util.list_files(str(path))
     files_for_import.sort()
     for file_key in files_for_import:
@@ -732,7 +729,7 @@ def get_files_for_import_grouped_by_date(
 
         if file_date not in files_by_date:
             files_by_date[file_date] = {}
-        files_by_date[file_date][prefix] = path / file_key
+        files_by_date[file_date][prefix] = f"{path}/{file_key}"
 
     return files_by_date
 
