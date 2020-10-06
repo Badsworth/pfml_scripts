@@ -27,7 +27,3 @@ Cypress.on("uncaught:exception", (e) => {
     return false;
   }
 });
-
-afterEach(() => {
-  cy.await();
-});

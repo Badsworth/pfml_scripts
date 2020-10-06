@@ -1,5 +1,5 @@
 import { Before } from "cypress-cucumber-preprocessor/steps";
-import "@rckeller/cypress-unfetch/await";
+// import "@rckeller/cypress-unfetch/await";
 
 Before({ tags: "@portal" }, () => {
   // Set the feature flag necessary to see the portal.
@@ -17,4 +17,9 @@ Before({ tags: "@portal" }, () => {
     url:
       "https://paidleave-api-stage.mass.gov/api/v1/applications/*/submit_application",
   }).as("submitClaimResponse");
+});
+
+Before({ tags: "@fineos" }, () => {
+  // Set up a route we can listen to wait on ajax rendering to complete.
+  cy.route(/ajax\/pagerender\.jsp/).as("ajaxRender");
 });

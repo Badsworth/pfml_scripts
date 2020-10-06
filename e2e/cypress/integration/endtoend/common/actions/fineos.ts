@@ -2,6 +2,23 @@ import { getFineosBaseUrl } from "@cypress/config";
 
 export function loginSavilinx(): void {
   Cypress.config("baseUrl", getFineosBaseUrl());
+  cy.visit("/");
+}
+
+export function visitClaim(claimId: string): void {
+  cy.get('a[aria-label="Cases"]').click();
+  cy.get('td[keytipnumber="4"]').contains("Case").click();
+  cy.labelled("Case Number").type(claimId);
+  cy.get('input[type="submit"][value="Search"]').click();
+  assertOnClaimPage(claimId);
+}
+
+export function assertOnClaimPage(claimId: string): void {
+  cy.contains(".case_pageheader_title", claimId);
+}
+export function assertAdjudicatingClaim(claimId: string): void {
+  cy.contains(".case_pageheader_title", claimId);
+  cy.contains(".pageheader_subtitle", "Editing Leave Request");
 }
 
 export function searchScenario(): void {
@@ -43,7 +60,11 @@ export function onPage(page: string): void {
 }
 
 export function onTab(label: string): void {
-  cy.get('td[class="TabOff"]').contains(label).click().wait(2000);
+  cy.contains(".TabStrip td", label).click().should("have.class", "TabOn");
+  // Wait on any in-flight Ajax to complete.
+  cy.wait("@ajaxRender");
+  // Slight delay after that to allow for the content to be populated.
+  cy.wait(200);
 }
 
 export function clickAdjudicate(): void {

@@ -8,7 +8,7 @@
  * This command selects an input by the HTML label "for" value.
  */
 Cypress.Commands.add("labelled", (label: string) => {
-  return cy.contains("label", label, { matchCase: false }).and(($el) => {
+  return cy.contains("label", label, { matchCase: false }).then(($el) => {
     const labelFor = $el.attr("for");
     if (!labelFor || labelFor.length < 1) {
       throw new Error(

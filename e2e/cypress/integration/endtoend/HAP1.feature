@@ -30,25 +30,18 @@ Feature: Submit a medical claim and adjucation approval - HAP1
 
   @fineos
   Scenario: As a CSR (Savilinx), I should be able to Approve a HAP1 claim submission
-    Given I search for the proper claim in Fineos
-    When I click Adjudicate
-    Given I am on the tab "Paid Benefits"
-    When I click edit
-    Then I should add weekly wage
-    Given I am on the tab "Evidence"
-    And I am on the tab "Certification Periods"
-    Then I should fufill availability request
-    When I click Adjudicate
-    Given I am on the tab "Evidence"
-    When I click Manage Evidence
-    Then I should confirm evidence is "valid"
-    When I highlight ID Proof
-    And I click Manage Evidence
-    Then I should confirm evidence is "valid"
-    Given I am on the tab "Manage Request"
-    Then I click Accept
-    Given I am on the claim case page
-    Then I should approve claim
+    Given I am logged into Fineos as a Savilinx user
+    And I am viewing the previously submitted claim
+    When I start adjudication for the claim
+    And I add paid benefits to the current case
+    Then I should see that the claim's "Eligibility" is "Met"
+    When I mark "State Managed Paid Leave Confirmation" documentation as satisfactory
+    And I mark "Identification Proof" documentation as satisfactory
+    Then I should see that the claim's "Evidence" is "Satisfied"
+    When I fill in the requested absence periods
+    Then I should see that the claim's "Availability" is "Time Available"
+    When I finish adjudication for the claim
+    Then I should be able to approve the claim
 
 
 
