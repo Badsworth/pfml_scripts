@@ -1192,6 +1192,9 @@ def test_application_post_submit_app(client, user, auth_token, test_db_session):
             "employment_status": "Unemployed",
             "fineos_absence_id": "NTN-259-ABS-01",
             "first_name": "Kathryn",
+            "has_continuous_leave_periods": False,
+            "has_intermittent_leave_periods": False,
+            "has_reduced_schedule_leave_periods": False,
             "has_state_id": False,
             "last_name": "Scott",
             "leave_details": {
@@ -1262,6 +1265,9 @@ def test_application_post_submit_app_fein_not_found(client, user, auth_token, te
             "employer_id": "da94e3e8-ab73-438f-8f18-22ffbc688778",
             "employment_status": "Unemployed",
             "first_name": "Brian",
+            "has_continuous_leave_periods": False,
+            "has_intermittent_leave_periods": False,
+            "has_reduced_schedule_leave_periods": False,
             "has_state_id": False,
             "last_name": "Miller",
             "leave_details": {
@@ -1324,6 +1330,9 @@ def test_application_post_submit_app_ssn_not_found(client, user, auth_token, tes
             "employer_id": "035efa25-9b08-423d-90c6-7fd994b2b8fd",
             "employment_status": "Unemployed",
             "first_name": "Mitchell",
+            "has_continuous_leave_periods": False,
+            "has_intermittent_leave_periods": False,
+            "has_reduced_schedule_leave_periods": False,
             "has_state_id": False,
             "last_name": "Munoz",
             "leave_details": {

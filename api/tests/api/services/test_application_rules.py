@@ -147,11 +147,40 @@ def test_residential_address_required(test_db_session, initialize_factories_sess
     ] == issues
 
 
-def test_start_end_dates_required_for_continuous_leave(
-    test_db_session, initialize_factories_session
-):
-    test_leave_period = [ContinuousLeavePeriodFactory.create(start_date=None, end_date=None)]
-    issues = get_continuous_leave_issues(test_leave_period)
+def test_has_leave_periods_required(test_db_session, initialize_factories_session):
+    test_app = ApplicationFactory.create(
+        employment_status=EmploymentStatus.get_instance(
+            test_db_session, template=EmploymentStatus.EMPLOYED
+        ),
+        residential_address=AddressFactory.create(),
+        has_continuous_leave_periods=None,
+        has_intermittent_leave_periods=None,
+        has_reduced_schedule_leave_periods=None,
+    )
+    issues = get_always_required_issues(test_app)
+    assert [
+        Issue(
+            type=IssueType.required,
+            message="has_continuous_leave_periods is required",
+            field="has_continuous_leave_periods",
+        ),
+        Issue(
+            type=IssueType.required,
+            message="has_intermittent_leave_periods is required",
+            field="has_intermittent_leave_periods",
+        ),
+        Issue(
+            type=IssueType.required,
+            message="has_reduced_schedule_leave_periods is required",
+            field="has_reduced_schedule_leave_periods",
+        ),
+    ] == issues
+
+
+def test_continuous_leave_period(test_db_session, initialize_factories_session):
+    test_leave_periods = [ContinuousLeavePeriodFactory.create(start_date=None, end_date=None)]
+    issues = get_continuous_leave_issues(test_leave_periods)
+
     assert [
         Issue(
             type=IssueType.required,
@@ -166,28 +195,59 @@ def test_start_end_dates_required_for_continuous_leave(
     ] == issues
 
 
-def test_start_end_dates_required_for_intermittent_leave(
-    test_db_session, initialize_factories_session
-):
-    test_leave_period = [IntermittentLeavePeriodFactory.create(start_date=None, end_date=None)]
-    issues = get_intermittent_leave_issues(test_leave_period)
+def test_intermittent_leave_period(test_db_session, initialize_factories_session):
+    test_leave_periods = (
+        [
+            IntermittentLeavePeriodFactory.create(
+                start_date=None,
+                end_date=None,
+                duration=None,
+                duration_basis=None,
+                frequency=None,
+                frequency_interval_basis=None,
+            )
+        ],
+    )
+    issues = get_intermittent_leave_issues(test_leave_periods)
+
     assert [
         Issue(
             type=IssueType.required,
-            message="Start date is required for intermittent_leave_periods[0]",
-            field="leave_details.intermittent_leave_periods[0].start_date",
+            message="duration is required",
+            field="leave_details.intermittent_leave_periods[0].duration",
         ),
         Issue(
             type=IssueType.required,
-            message="End date is required for intermittent_leave_periods[0]",
+            message="duration_basis is required",
+            field="leave_details.intermittent_leave_periods[0].duration_basis",
+        ),
+        Issue(
+            type=IssueType.required,
+            message="end_date is required",
             field="leave_details.intermittent_leave_periods[0].end_date",
+        ),
+        Issue(
+            type=IssueType.required,
+            message="frequency is required",
+            field="leave_details.intermittent_leave_periods[0].frequency",
+        ),
+        Issue(
+            type=IssueType.required,
+            message="frequency_interval_basis is required",
+            field="leave_details.intermittent_leave_periods[0].frequency_interval_basis",
+        ),
+        Issue(
+            type=IssueType.required,
+            message="start_date is required",
+            field="leave_details.intermittent_leave_periods[0].start_date",
         ),
     ] == issues
 
 
-def test_start_end_dates_required_for_reduced_leave(test_db_session, initialize_factories_session):
-    test_leave_period = [ReducedScheduleLeavePeriod.create(start_date=None, end_date=None)]
-    issues = get_reduced_schedule_leave_issues(test_leave_period)
+def test_reduced_leave_period(test_db_session, initialize_factories_session):
+    test_leave_periods = [ReducedScheduleLeavePeriod.create(start_date=None, end_date=None)]
+    issues = get_reduced_schedule_leave_issues(test_leave_periods)
+
     assert [
         Issue(
             type=IssueType.required,

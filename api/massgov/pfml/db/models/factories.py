@@ -191,7 +191,6 @@ class ApplicationFactory(BaseFactory):
     last_name = factory.Faker("last_name")
     middle_name = None
     date_of_birth = factory.Faker("date_of_birth", minimum_age=14, maximum_age=100)
-
     has_state_id = False
     mass_id = None
     pregnant_or_recent_birth = False
@@ -203,6 +202,11 @@ class ApplicationFactory(BaseFactory):
     submitted_time = None
     fineos_absence_id = None
     fineos_notification_case_id = None
+
+    # Leave Periods
+    has_continuous_leave_periods = False
+    has_intermittent_leave_periods = False
+    has_reduced_schedule_leave_periods = False
 
     # Relationships
     user = factory.SubFactory(UserFactory)

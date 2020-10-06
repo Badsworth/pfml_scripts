@@ -12,8 +12,8 @@ from massgov.pfml.db.models.employees import PaymentType
 
 
 def get_application_issues(application: Application) -> Optional[List[Issue]]:
-    """Takes in application and outputs any validation warnings.
-    These warnings are either fields that are always required for an application or fields that are conditionally required based on previous input
+    """Takes in application and outputs any validation issues.
+    These issues are either fields that are always required for an application or fields that are conditionally required based on previous input
     """
     issues = []
     issues += get_always_required_issues(application)
@@ -183,6 +183,9 @@ ALWAYS_REQUIRED_FIELDS_DB_NAME_TO_API_NAME_MAP = {
     "first_name": "first_name",
     "last_name": "last_name",
     "date_of_birth": "date_of_birth",
+    "has_continuous_leave_periods": "has_continuous_leave_periods",
+    "has_intermittent_leave_periods": "has_intermittent_leave_periods",
+    "has_reduced_schedule_leave_periods": "has_reduced_schedule_leave_periods",
     "has_state_id": "has_state_id",
     "tax_identifier": "tax_identifier",
     "leave_reason": "leave_details.reason",
@@ -206,18 +209,16 @@ def get_always_required_issues(application: Application) -> List[Issue]:
 def get_leave_periods_issues(application: Application) -> List[Issue]:
     issues = []
 
-    # TODO: Add rules isolated for each leave period in these functions
     issues += get_continuous_leave_issues(application.continuous_leave_periods)
     issues += get_intermittent_leave_issues(application.intermittent_leave_periods)
     issues += get_reduced_schedule_leave_issues(application.reduced_schedule_leave_periods)
-
-    # TODO: Add rules for across leave periods here
 
     return issues
 
 
 def get_continuous_leave_issues(leave_periods: Iterable[ContinuousLeavePeriod]) -> List[Issue]:
     issues = []
+
     for i, current_period in enumerate(leave_periods):
         if not current_period.start_date:
             issues.append(
@@ -240,23 +241,28 @@ def get_continuous_leave_issues(leave_periods: Iterable[ContinuousLeavePeriod]) 
 
 def get_intermittent_leave_issues(leave_periods: Iterable[IntermittentLeavePeriod]) -> List[Issue]:
     issues = []
+    required_leave_period_fields = [
+        "duration",
+        "duration_basis",
+        "end_date",
+        "frequency",
+        "frequency_interval_basis",
+        "start_date",
+    ]
+
     for i, current_period in enumerate(leave_periods):
-        if not current_period.start_date:
-            issues.append(
-                Issue(
-                    type=IssueType.required,
-                    message=f"Start date is required for intermittent_leave_periods[{i}]",
-                    field=f"leave_details.intermittent_leave_periods[{i}].start_date",
+        for field in required_leave_period_fields:
+            val = getattr(current_period, field, None)
+
+            if val is None:
+                issues.append(
+                    Issue(
+                        type=IssueType.required,
+                        message=f"{field} is required",
+                        field=f"leave_details.intermittent_leave_periods[{i}].{field}",
+                    )
                 )
-            )
-        if not current_period.end_date:
-            issues.append(
-                Issue(
-                    type=IssueType.required,
-                    message=f"End date is required for intermittent_leave_periods[{i}]",
-                    field=f"leave_details.intermittent_leave_periods[{i}].end_date",
-                )
-            )
+
     return issues
 
 
@@ -264,6 +270,7 @@ def get_reduced_schedule_leave_issues(
     leave_periods: Iterable[ReducedScheduleLeavePeriod],
 ) -> List[Issue]:
     issues = []
+
     for i, current_period in enumerate(leave_periods):
         if not current_period.start_date:
             issues.append(
