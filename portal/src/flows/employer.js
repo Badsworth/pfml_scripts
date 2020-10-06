@@ -10,5 +10,10 @@ import routes from "../routes";
 export default {
   states: {
     [routes.employers.dashboard]: {},
+    [routes.employers.verifyAccount]: {
+      on: {
+        SEND_CODE: routes.auth.resetPassword,
+      },
+    },
   },
 };

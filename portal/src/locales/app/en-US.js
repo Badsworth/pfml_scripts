@@ -976,6 +976,14 @@ const pages = {
       "We’ll begin processing this application and your employee should hear from us within 14 calendar days.",
     title: "Thanks for reviewing the application",
   },
+  employersVerifyAccount: {
+    lead:
+      "Please verify your email address. If an account exists for the email you provide, you’ll receive a 6-digit verification code. After that, you’ll be prompted to create a new password.",
+    logInFooterLink: "Back to log in",
+    submitButton: "Submit",
+    title: "Set up your employer account",
+    usernameLabel: "$t(shared.usernameLabel)",
+  },
   index: {
     createClaimButton: "Create an application",
     familyLeaveAfterAdoptionBody:
