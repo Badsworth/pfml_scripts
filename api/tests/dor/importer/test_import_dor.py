@@ -423,9 +423,12 @@ def test_e2e_parse_and_persist(test_db_session, dor_employer_lookups):
     assert len(employer_lines) == employer_count
 
     employee_lines = open(employee_file_path, "r").readlines()
-    assert len(employee_lines) == (employer_count * 4) + (
-        employee_count * 4
-    )  # 4 rows for each quarter for employee and employer
+    employee_a_lines = tuple(filter(lambda s: s.startswith("A"), employee_lines))
+    employee_b_lines = tuple(filter(lambda s: s.startswith("B"), employee_lines))
+
+    assert len(employee_a_lines) == employer_count * 4
+    wages_contributions_count = len(employee_b_lines)
+    assert wages_contributions_count >= employee_count * 4
 
     # import
     import_batches = [
@@ -443,7 +446,7 @@ def test_e2e_parse_and_persist(test_db_session, dor_employer_lookups):
     report = reports[0]
     assert report.created_employers_count == employer_count
     assert report.created_employees_count == employee_count
-    assert report.created_wages_and_contributions_count == employee_count * 4
+    assert report.created_wages_and_contributions_count == wages_contributions_count
 
 
 @pytest.mark.timeout(25)

@@ -29,6 +29,10 @@ random.seed(1111)
 fake = faker.Faker()
 fake.seed_instance(2222)
 
+# To make the output of this script identical each time it runs, we use this date as the base of
+# various generated dates.
+SIMULATED_TODAY = datetime(2020, 12, 1, 23, 0, 0)
+
 TWOPLACES = decimal.Decimal(10) ** -2
 
 parser = argparse.ArgumentParser(description="Generate fake DOR data")
@@ -40,6 +44,7 @@ parser.add_argument(
 )
 
 EMPLOYER_COUNT_RANDOM_POOL = (1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 4)
+WAGE_CHANGE_RANDOM_POOL = (0, 0, 0, 0, 1000, 2500, 4400, 7800, -1200, -3500)
 
 
 # helpers
@@ -211,12 +216,12 @@ def generate_employers(employer_count, on_employer):
         has_exemption = random.choice((True, False))
         if has_exemption:
             commence_days_before = random.randrange(1, 365)  # up to one year
-            exemption_commence_date = get_date_days_before(datetime.today(), commence_days_before)
+            exemption_commence_date = get_date_days_before(SIMULATED_TODAY, commence_days_before)
             exemption_cease_date = get_date_days_after(
                 exemption_commence_date, 365
             )  # lasts for a year
 
-        updated_date = get_date_days_before(datetime.today(), random.randrange(1, 90))
+        updated_date = get_date_days_before(SIMULATED_TODAY, random.randrange(1, 90))
 
         # Generate an employer row for each quarter
         # TODO randomize subset of quarters
@@ -243,7 +248,7 @@ def generate_employers(employer_count, on_employer):
             amended_flag = random.choice((True, False))
 
             received_date = get_date_days_after(quarter.as_date(), random.randrange(1, 90))
-            updated_date = get_date_days_before(datetime.today(), random.randrange(1, 90))
+            updated_date = get_date_days_before(SIMULATED_TODAY, random.randrange(1, 90))
 
             # generate an employer specific quarter row
             employer_row = {
@@ -341,14 +346,21 @@ def generate_employee_employer_quarterly_wage_rows(
             independent_contractor = random.choice((True, False))
             opt_in = random.choice((True, False))
 
-            # random quarter wage information to be used by all quarters
+            # initial quarterly wage
             qtr_wages = decimal.Decimal(random.randrange(6000000)) / 100
-            contribution = Contribution(qtr_wages)
 
-            # generate infomration for the last four quarters:
-            for quarter in QUARTERS:
+            # which quarters to generate?
+            start_quarter = random.choice(QUARTERS)
+            quarters = start_quarter.series(random.randint(1, 8))
+
+            # generate information for the selected quarters:
+            ytd_wages = decimal.Decimal(0)
+            for quarter in quarters:
                 # generate the employee details and quarter wage informatino row
-                ytd_wages = quarter.quarter * qtr_wages
+                if quarter.quarter == 1:
+                    ytd_wages = decimal.Decimal(0)
+                ytd_wages += qtr_wages
+                contribution = Contribution(qtr_wages)
 
                 employee = {
                     "account_key": account_key,
@@ -367,6 +379,10 @@ def generate_employee_employer_quarterly_wage_rows(
                 }
 
                 on_employee(employee)
+
+                qtr_wages += random.choice(WAGE_CHANGE_RANDOM_POOL)
+                if qtr_wages <= 0:
+                    qtr_wages = decimal.Decimal(1)
 
     logger.info("Generated employees info - Employee count: %i", count)
 

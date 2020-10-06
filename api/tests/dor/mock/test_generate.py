@@ -67,7 +67,7 @@ def test_employer_file_populate():
 
 
 def test_generate_employee_employer_quarterly_wage_rows():
-    account_key = "00000000001"
+    account_keys = ["%011i" % i for i in range(1, 21)]
 
     employees_wage_infos = []
 
@@ -75,16 +75,24 @@ def test_generate_employee_employer_quarterly_wage_rows():
         employees_wage_infos.append(employee_wage_info)
 
     count = 200
-    generate.generate_employee_employer_quarterly_wage_rows(count, [account_key], on_employee, [1])
-    assert len(employees_wage_infos) == count * 4  # one line for each quarter
+    generate.generate_employee_employer_quarterly_wage_rows(count, account_keys, on_employee, [1])
+    assert len(employees_wage_infos) >= count  # At least 1 line per employee
 
-    for i in range(4):
-        employee_wage = employees_wage_infos[i]
-        validate_employee_wage(employee_wage, account_key, QUARTERS[i])
-        assert (
-            employee_wage["employee_ytd_wages"]
-            == employee_wage["employee_qtr_wages"] * employee_wage["filing_period"].quarter
-        )
+    ytd = Decimal(0)
+    current_employer = None
+    current_employee = None
+    for employee_wage in employees_wage_infos:
+        if (
+            employee_wage["account_key"] != current_employer
+            or employee_wage["employee_ssn"] != current_employee
+            or employee_wage["filing_period"].quarter == 1
+        ):
+            ytd = Decimal(0)
+            current_employer = employee_wage["account_key"]
+            current_employee = employee_wage["employee_ssn"]
+        ytd += employee_wage["employee_qtr_wages"]
+        assert employee_wage["employee_ytd_wages"] == ytd
+        validate_employee_wage(employee_wage)
 
 
 def test_employee_file_populate():
@@ -98,13 +106,13 @@ def test_employee_file_populate():
     # employee info
     employee_wage_file.seek(0)
     employee_wage_lines = employee_wage_file.readlines()
-    assert len(employee_wage_lines) == count * 4  # one line for each quarter
+    assert len(employee_wage_lines) >= count  # At least 1 line per employee
 
     employee_wage_line = employee_wage_lines[0].rstrip()
     assert len(employee_wage_line) == EMPLOYEE_FORMAT.get_line_length()
 
     parsed_employee_wage_obj = EMPLOYEE_FORMAT.parse_line(employee_wage_line)
-    validate_employee_wage(parsed_employee_wage_obj, account_key, QUARTERS[0].as_date())
+    validate_employee_wage(parsed_employee_wage_obj)
 
 
 @pytest.mark.timeout(5)
@@ -123,9 +131,14 @@ def test_full_generate():
 
     employer_employee_wage_file.seek(0)
     employer_employee_wage_file_lines = employer_employee_wage_file.readlines()
-    assert len(employer_employee_wage_file_lines) == (employer_count * 4) + (
-        employee_count * 4
-    )  # one line for each quarter
+    assert (
+        len(list(filter(lambda s: s.startswith("A"), employer_employee_wage_file_lines)))
+        == employer_count * 4
+    )
+    assert (
+        len(list(filter(lambda s: s.startswith("B"), employer_employee_wage_file_lines)))
+        >= employee_count
+    )
 
 
 # validation utils
@@ -162,9 +175,9 @@ def validate_employer_wage(employer_wage, employer, quarter):
     assert isinstance(employer_wage["updated_date"], datetime)
 
 
-def validate_employee_wage(employee_wage, account_key, quarter):
-    assert employee_wage["account_key"] == account_key
-    assert employee_wage["filing_period"] == quarter
+def validate_employee_wage(employee_wage):
+    assert len(employee_wage["account_key"]) >= 1
+    assert type(employee_wage["filing_period"]) in (date, Quarter)
     assert len(employee_wage["employee_first_name"]) > 0
     assert len(employee_wage["employee_last_name"]) > 0
     assert len(employee_wage["employee_ssn"]) == 9
