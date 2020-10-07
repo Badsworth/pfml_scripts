@@ -1171,58 +1171,25 @@ def test_application_post_submit_app(client, user, auth_token, test_db_session):
     application.date_of_birth = "1997-06-06"
     application.employment_status_id = EmploymentStatus.UNEMPLOYED.employment_status_id
     application.residential_address = AddressFactory.create()
-    assert not application.submitted_time
-
     # Applications must have an FEIN for submit to succeed.
     application.employer_fein = "770007777"
+
+    assert not application.submitted_time
+
     test_db_session.commit()
     response = client.post(
         "/v1/applications/{}/submit_application".format(application.application_id),
         headers={"Authorization": f"Bearer {auth_token}"},
     )
+    response_body = response.get_json()
+
     assert response.status_code == 201
-    assert response.json == {
-        "data": {
-            "application_id": "cd613e30-d8f1-4adf-91b7-584a2265b1f5",
-            "application_nickname": "My leave application",
-            "date_of_birth": "1997-06-06",
-            "employer_fein": "770007777",
-            "hours_worked_per_week": 70,
-            "employer_id": "a6cecc1b-78e5-4061-b311-d8a3c2ce6f44",
-            "employment_status": "Unemployed",
-            "fineos_absence_id": "NTN-259-ABS-01",
-            "first_name": "Kathryn",
-            "has_continuous_leave_periods": False,
-            "has_intermittent_leave_periods": False,
-            "has_reduced_schedule_leave_periods": False,
-            "has_state_id": False,
-            "last_name": "Scott",
-            "leave_details": {
-                "continuous_leave_periods": [],
-                "employer_notified": False,
-                "intermittent_leave_periods": [],
-                "pregnant_or_recent_birth": False,
-                "reason": "Care For A Family Member",
-                "reduced_schedule_leave_periods": [],
-            },
-            "payment_preferences": [],
-            "residential_address": {
-                "city": "New Jenniferburgh",
-                "line_1": "33740 Sabrina Valleys",
-                "state": "MA",
-                "zip": "97906",
-            },
-            "status": "Submitted",
-            "tax_identifier": "***-**-****",
-            "updated_time": "2021-12-31T11:20:31+00:00",
-        },
-        "message": "Application cd613e30-d8f1-4adf-91b7-584a2265b1f5 submitted without errors",
-        "meta": {
-            "method": "POST",
-            "resource": "/v1/applications/cd613e30-d8f1-4adf-91b7-584a2265b1f5/submit_application",
-        },
-        "status_code": 201,
-    }
+    assert not response_body.get("errors")
+    assert not response_body.get("warnings")
+    # Simplified check to confirm Application was included in response:
+    assert response_body.get("data").get("application_id") == str(application.application_id)
+    assert response_body.get("data").get("fineos_absence_id") == "NTN-259-ABS-01"
+    assert response_body.get("data").get("status") == ApplicationStatus.Submitted.value
 
 
 def test_application_post_submit_fineos_forbidden(client, fineos_user, fineos_user_token):
@@ -1252,52 +1219,20 @@ def test_application_post_submit_app_fein_not_found(client, user, auth_token, te
         "/v1/applications/{}/submit_application".format(application.application_id),
         headers={"Authorization": f"Bearer {auth_token}"},
     )
+    response_body = response.get_json()
+
     # FINEOS errors are reported back as 503 Service Unavailable.
     assert response.status_code == 503
-
-    assert response.json == {
-        "data": {
-            "application_id": "d95bafc8-f2a4-427b-9cf4-bb99f4bea973",
-            "application_nickname": "My leave application",
-            "date_of_birth": "1953-01-05",
-            "employer_fein": "999999999",
-            "hours_worked_per_week": 70,
-            "employer_id": "da94e3e8-ab73-438f-8f18-22ffbc688778",
-            "employment_status": "Unemployed",
-            "first_name": "Brian",
-            "has_continuous_leave_periods": False,
-            "has_intermittent_leave_periods": False,
-            "has_reduced_schedule_leave_periods": False,
-            "has_state_id": False,
-            "last_name": "Miller",
-            "leave_details": {
-                "continuous_leave_periods": [],
-                "employer_notified": False,
-                "intermittent_leave_periods": [],
-                "pregnant_or_recent_birth": False,
-                "reason": "Care For A Family Member",
-                "reduced_schedule_leave_periods": [],
-            },
-            "payment_preferences": [],
-            "residential_address": {
-                "city": "Rebekahborough",
-                "line_1": "5882 Griffin Lakes",
-                "state": "MA",
-                "zip": "78290",
-            },
-            "status": "Started",
-            "tax_identifier": "***-**-****",
-            "updated_time": "2020-09-10T13:06:12+00:00",
-        },
-        "errors": [],
-        "message": "Application d95bafc8-f2a4-427b-9cf4-bb99f4bea973 could not be "
-        "submitted, try again later",
-        "meta": {
-            "method": "POST",
-            "resource": "/v1/applications/d95bafc8-f2a4-427b-9cf4-bb99f4bea973/submit_application",
-        },
-        "status_code": 503,
-    }
+    assert response_body.get("errors") == []
+    assert (
+        response_body.get("message")
+        == f"Application {str(application.application_id)} could not be submitted, try again later"
+    )
+    assert not response_body.get("warnings")
+    # Simplified check to confirm Application was included in response:
+    assert response_body.get("data").get("application_id") == str(application.application_id)
+    assert not response_body.get("data").get("fineos_absence_id")
+    assert response_body.get("data").get("status") == ApplicationStatus.Started.value
 
 
 def test_application_post_submit_app_ssn_not_found(client, user, auth_token, test_db_session):
@@ -1307,62 +1242,30 @@ def test_application_post_submit_app_ssn_not_found(client, user, auth_token, tes
     application.date_of_birth = "2009-01-20"
     application.employment_status_id = EmploymentStatus.UNEMPLOYED.employment_status_id
     application.residential_address = AddressFactory.create()
-    assert not application.completed_time
-
     # A tax identifier of 999999999 is simulated as not found in MockFINEOSClient.
     application.tax_identifier = TaxIdentifier(tax_identifier="999999999")
-    test_db_session.commit()
 
+    assert not application.completed_time
+
+    test_db_session.commit()
     response = client.post(
         "/v1/applications/{}/submit_application".format(application.application_id),
         headers={"Authorization": f"Bearer {auth_token}"},
     )
+    response_body = response.get_json()
+
     # FINEOS errors are reported back as 503 Service Unavailable.
     assert response.status_code == 503
-
-    assert response.json == {
-        "data": {
-            "application_id": "21636369-8b52-4b4a-97b7-50923ceb3ffd",
-            "application_nickname": "My leave application",
-            "date_of_birth": "2009-01-20",
-            "employer_fein": "227777777",
-            "hours_worked_per_week": 70,
-            "employer_id": "035efa25-9b08-423d-90c6-7fd994b2b8fd",
-            "employment_status": "Unemployed",
-            "first_name": "Mitchell",
-            "has_continuous_leave_periods": False,
-            "has_intermittent_leave_periods": False,
-            "has_reduced_schedule_leave_periods": False,
-            "has_state_id": False,
-            "last_name": "Munoz",
-            "leave_details": {
-                "continuous_leave_periods": [],
-                "employer_notified": False,
-                "intermittent_leave_periods": [],
-                "pregnant_or_recent_birth": False,
-                "reason": "Care For A Family Member",
-                "reduced_schedule_leave_periods": [],
-            },
-            "payment_preferences": [],
-            "residential_address": {
-                "city": "Grahamstad",
-                "line_1": "697 Anderson Islands Apt. 734",
-                "state": "MA",
-                "zip": "39957",
-            },
-            "status": "Started",
-            "tax_identifier": "***-**-****",
-            "updated_time": "2020-10-29T01:32:51+00:00",
-        },
-        "errors": [],
-        "message": "Application 21636369-8b52-4b4a-97b7-50923ceb3ffd could not be "
-        "submitted, try again later",
-        "meta": {
-            "method": "POST",
-            "resource": "/v1/applications/21636369-8b52-4b4a-97b7-50923ceb3ffd/submit_application",
-        },
-        "status_code": 503,
-    }
+    assert response_body.get("errors") == []
+    assert (
+        response_body.get("message")
+        == f"Application {str(application.application_id)} could not be submitted, try again later"
+    )
+    assert not response_body.get("warnings")
+    # Simplified check to confirm Application was included in response:
+    assert response_body.get("data").get("application_id") == str(application.application_id)
+    assert not response_body.get("data").get("fineos_absence_id")
+    assert response_body.get("data").get("status") == ApplicationStatus.Started.value
 
 
 def test_application_post_submit_existing_work_pattern(client, user, auth_token, test_db_session):
