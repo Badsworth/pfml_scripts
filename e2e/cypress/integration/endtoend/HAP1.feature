@@ -8,7 +8,10 @@ Feature: Submit a medical claim and adjucation approval - HAP1
     Given I am on the claims "checklist" page
     When I click on the checklist button called "Enter leave details"
     Then I start submitting the claim
-    And I finish submitting the claim based on its type
+    And I answer the pregnancy question
+    And I answer the continuous leave question
+    And I answer the reduced leave question
+    And I answer the intermittent leave question
     Given I am on the claims "checklist" page
     When I click on the checklist button called "Enter employment information"
     Then I enter employer info

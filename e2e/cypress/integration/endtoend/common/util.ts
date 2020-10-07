@@ -13,17 +13,28 @@ export function lookup<M extends { [k: string]: unknown }, K extends keyof M>(
   throw new Error(`Unable to find ${key} in lookup map`);
 }
 
-export function getLeaveType(
-  details: ApplicationLeaveDetails
-): "continuous" | "reduced" | "intermittent" {
+export function checkIfContinuous(details: ApplicationLeaveDetails): boolean {
   if (details["continuous_leave_periods"]?.length !== 0) {
-    return "continuous";
+    return true;
+  } else {
+    return false;
   }
-  throw new Error("Wrong Claim");
+}
 
-  /* @Todo 
-    Need to account for other leave types ...
-  */
+export function checkIfReduced(details: ApplicationLeaveDetails): boolean {
+  if (details["reduced_schedule_leave_periods"]?.length !== 0) {
+    return true;
+  } else {
+    return false;
+  }
+}
+
+export function checkIfIntermittent(details: ApplicationLeaveDetails): boolean {
+  if (details["reduced_schedule_leave_periods"]?.length !== 0) {
+    return true;
+  } else {
+    return false;
+  }
 }
 
 export function getWeeks(details: ApplicationLeaveDetails): number {

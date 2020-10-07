@@ -1,7 +1,12 @@
 import { inFieldset, portal } from "./actions";
 import { Then } from "cypress-cucumber-preprocessor/steps";
 import { CypressStepThis, TestType } from "@/types";
-import { lookup, getLeaveType } from "./util";
+import {
+  lookup,
+  checkIfContinuous,
+  checkIfReduced,
+  checkIfIntermittent,
+} from "./util";
 import { fineos, scenarios } from "./actions";
 
 const scenarioFunctions: Record<TestType, () => void> = scenarios;
@@ -77,7 +82,7 @@ Then(
 /* Checklist Page's reviewAndSubmit */
 Then("I should review and submit the application", function (): void {
   // Usually preceeded by - "I am on the claims Checklist page"
-  cy.contains("Review and submit application").click();
+  cy.contains("Review and submit application").click({ force: true });
 });
 
 /* Checklist page */
@@ -191,9 +196,7 @@ Then("I have my identity verified {string}", function (
   // cy.contains("button", "Save and continue").click();
 });
 
-Then("I finish submitting the claim based on its type", function (
-  this: CypressStepThis
-) {
+Then("I answer the pregnancy question", function (this: CypressStepThis) {
   if (!this.application) {
     throw new Error("Application has not been set");
   }
@@ -201,7 +204,7 @@ Then("I finish submitting the claim based on its type", function (
   if (
     application.leave_details?.reason !== "Serious Health Condition - Employee"
   ) {
-    throw new Error("Test");
+    throw new Error("Reason besides Serious Health Condition was entered");
   }
   // Example of selecting a radio button pertaining to a particular question. Scopes the lookup
   // of the "yes" value so we don't select "yes" for the wrong question.
@@ -214,147 +217,93 @@ Then("I finish submitting the claim based on its type", function (
     ).click();
   });
   cy.contains("button", "Save and continue").click();
+});
 
-  // Input was removed from portal at some point. If it gets reinstated, generate it here and upload.
-  // if (!claim.providerForm) {
-  //   throw new Error(
-  //     "Provider form was not specified. Did you forget to generate one in your test?"
-  //   );
-  // }
-  // cy.get('input[type="file"]').attachFile(claim.providerForm);
-  // cy.contains("button", "Save and continue").click();
+Then("I answer the continuous leave question", function (
+  this: CypressStepThis
+) {
+  if (!this.application) {
+    throw new Error("Application has not been set");
+  }
+  const { application } = this;
+  if (!application.leave_details) {
+    throw new Error("Leave details not provided.");
+  }
+  const hasContinuous = checkIfContinuous(application.leave_details);
 
-  const leaveType = getLeaveType(application.leave_details);
-
-  const leave = lookup(leaveType, {
-    continuous: application.leave_details.continuous_leave_periods,
-    reduced: application.leave_details.reduced_schedule_leave_periods,
-    intermittent: application.leave_details.intermittent_leave_periods,
-  });
-
-  const continuousLeaveButtonValue: string =
-    leaveType === "continuous" ? "true" : "false";
+  const leave = application.leave_details.continuous_leave_periods;
 
   cy.contains(
     "fieldset",
     "Do you need to take off work completely for a period of time (continuous leave)?"
   ).within(() => {
-    cy.get("input[type='radio']").check(continuousLeaveButtonValue, {
+    cy.get("input[type='radio']").check(hasContinuous.toString(), {
       force: true,
     });
   });
-  /**
-   * Leave details section.
-   */
 
-  // Leave type-based questions.
-  switch (leaveType) {
-    /**
-     * Continuous leave questions.
-     */
-    case "continuous":
-      const startDate = new Date((leave && leave[0].start_date) as string);
-      const endDate = new Date((leave && leave[0].end_date) as string);
+  if (hasContinuous) {
+    const startDate = new Date((leave && leave[0].start_date) as string);
+    const endDate = new Date((leave && leave[0].end_date) as string);
 
-      /* Currently Been Removed from Portal
-        const weeks = getWeeks(application.leave_details)?.toString();
-        cy.labelled(
-          "How many weeks will you need to take continuous leave from work?"
-        ).type(weeks as string);
-        cy.contains("button", "Save and continue").click();
-      */
+    portal.onPage("leave-period-continuous");
+    cy.contains("fieldset", "First day of leave").within(() => {
+      cy.contains("Month").type(String(startDate.getMonth() + 1) as string);
+      cy.contains("Day").type(String(startDate.getUTCDate()) as string);
+      cy.contains("Year").type(String(startDate.getUTCFullYear()) as string);
+    });
+    cy.contains("fieldset", "Last day of leave").within(() => {
+      cy.contains("Month").type(String(endDate.getMonth() + 1) as string);
+      cy.contains("Day").type(String(endDate.getUTCDate()) as string);
+      cy.contains("Year").type(String(endDate.getUTCFullYear()) as string);
+    });
+    cy.contains("button", "Save and continue").click();
+  } else {
+    throw new Error("All claims should currently be for continuous leave.");
+  }
+});
 
-      // Continous Leave details section (continued).
-      cy.contains("fieldset", "First day of leave").within(() => {
-        cy.contains("Month").type(String(startDate.getMonth() + 1) as string);
-        cy.contains("Day").type(String(startDate.getUTCDate()) as string);
-        cy.contains("Year").type(String(startDate.getUTCFullYear()) as string);
-      });
-      cy.contains("fieldset", "Last day of leave").within(() => {
-        cy.contains("Month").type(String(endDate.getMonth() + 1) as string);
-        cy.contains("Day").type(String(endDate.getUTCDate()) as string);
-        cy.contains("Year").type(String(endDate.getUTCFullYear()) as string);
-      });
-      cy.contains("button", "Save and continue").click();
-      break;
+Then("I answer the reduced leave question", function (this: CypressStepThis) {
+  if (!this.application) {
+    throw new Error("Application has not been set");
+  }
+  const { application } = this;
+  if (!application.leave_details) {
+    throw new Error("Leave details not provided.");
+  }
+  const hasReduced = checkIfReduced(application.leave_details);
 
-    /**
-     * Reduced leave schedule questions.
-     */
-    // case "reduced":
-    //   cy.labelled(
-    //     "How many weeks of a reduced leave schedule do you need?"
-    //   ).type(leave.typeBasedDetails.weeks.toString());
-    //   cy.labelled(
-    //     "How many hours will your work schedule be reduced by each week?"
-    //   ).type(leave.typeBasedDetails.hoursPerWeek.toString());
-    //   cy.contains("button", "Save and continue").click();
+  const leave = application.leave_details.continuous_leave_periods;
 
-    // // Reduced leave questions continued ...
-    //   cy.labelled(
-    //     "On average, how many hours do you work for your employer each week?"
-    //   ).type(leave.typeBasedDetails.averageWeeklyWorkHours.toString());
-    //   cy.contains("button", "Save and continue").click();
-    //   break;
+  if (hasReduced) {
+    throw new Error("No claims should currently be for reduced leave.");
+  } else {
+    portal.onPage("leave-period-reduced-schedule");
+    cy.contains("No").click();
+    cy.contains("button", "Save and continue").click();
+  }
+});
 
-    /**
-     * Intermittent leave questions.
-     */
-    // case "intermittent":
-    //   const frequency = lookup(leave.typeBasedDetails.frequencyIntervalBasis, {
-    //     weeks: {
-    //       radioLabel: "At least once a week",
-    //       inputLabel: "Estimate how many absences per week.",
-    //     },
-    //     months: {
-    //       radioLabel: "At least once a month",
-    //       inputLabel: "Estimate how many absences per month.",
-    //     },
-    //     every6Months: {
-    //       radioLabel: "Irregular over the next 6 months",
-    //       inputLabel: "Estimate how many absences over the next 6 months.",
-    //     },
-    //   });
-    //   cy.contains(
-    //     "fieldset",
-    //     "How often might you need to be absent from work?"
-    //   ).within(() => {
-    //     cy.contains(frequency.radioLabel).click();
-    //   });
-    //   cy.labelled(frequency.inputLabel).type(
-    //     leave.typeBasedDetails.frequency.toString()
-    //   );
+Then("I answer the intermittent leave question", function (
+  this: CypressStepThis
+) {
+  if (!this.application) {
+    throw new Error("Application has not been set");
+  }
+  const { application } = this;
+  if (!application.leave_details) {
+    throw new Error("Leave details not provided.");
+  }
+  const hasIntermittent = checkIfIntermittent(application.leave_details);
 
-    //   const duration = lookup(leave.typeBasedDetails.durationBasis, {
-    //     days: {
-    //       radioLabel: "At least a day",
-    //       inputLabel: "How many days of work will you miss per absence?",
-    //     },
-    //     hours: {
-    //       radioLabel: "Less than a full work day",
-    //       inputLabel: "How many hours of work will you miss per absence?",
-    //     },
-    //   });
-    //   cy.contains(
-    //     "fieldset",
-    //     "How long will an absence typically last?"
-    //   ).within(() => {
-    //     cy.contains(duration.radioLabel).click();
-    //   });
-    //   cy.labelled(duration.inputLabel).type(
-    //     leave.typeBasedDetails.duration.toString()
-    //   );
-    //   cy.contains("button", "Save and continue").click();
+  const leave = application.leave_details.intermittent_leave_periods;
 
-    //   // Reduced leave questions continued ...
-    //   cy.labelled(
-    //     "On average, how many hours do you work for your employer each week?"
-    //   ).type(leave.typeBasedDetails.averageWeeklyWorkHours.toString());
-    //   cy.contains("button", "Save and continue").click();
-    //   break;
-
-    default:
-      throw new Error(`Invalid medical leave type.`);
+  if (hasIntermittent) {
+    throw new Error("No claims should currently be for intermittent leave.");
+  } else {
+    portal.onPage("leave-period-intermittent");
+    cy.contains("No").click();
+    cy.contains("button", "Save and continue").click();
   }
 });
 
@@ -434,7 +383,7 @@ Then("I report other benefits", function (this: CypressStepThis): void {
   cy.contains(
     "fieldset",
     "Will you use any employer-sponsored benefits during your leave?"
-  ).within(() => cy.labelled("No").check({ force: true }));
+  ).within(() => cy.labelled("No").click({ force: true }));
   cy.contains("button", "Save and continue").click();
 
   cy.contains(
@@ -446,7 +395,7 @@ Then("I report other benefits", function (this: CypressStepThis): void {
   cy.contains(
     "fieldset",
     "Have you taken paid or unpaid leave since"
-  ).within(() => cy.labelled("No").check({ force: true }));
+  ).within(() => cy.labelled("No").click({ force: true }));
   cy.contains("button", "Save and continue").click();
 
   // const { extract properties once added to ApplicationRequest } = application.;
