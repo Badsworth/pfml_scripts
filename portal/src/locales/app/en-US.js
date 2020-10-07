@@ -315,6 +315,9 @@ const pages = {
   },
   authVerifyAccount: {
     codeLabel: "$t(shared.verificationCodeLabel)",
+    codeResent:
+      "We sent a new 6-digit verification code to your email address. Enter the new code to verify your email.",
+    codeResentHeading: "New verification code sent",
     confirmButton: "Submit",
     lead:
       "We sent a 6-digit verification code to your email address. Enter the code to verify your email.",

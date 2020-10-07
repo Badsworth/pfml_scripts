@@ -1,9 +1,10 @@
+import React, { useState } from "react";
+import Alert from "../components/Alert";
 import Button from "../components/Button";
 import InputText from "../components/InputText";
 import Lead from "../components/Lead";
 import Link from "next/link";
 import PropTypes from "prop-types";
-import React from "react";
 import Title from "../components/Title";
 import get from "lodash/get";
 import routes from "../routes";
@@ -22,6 +23,7 @@ export const VerifyAccount = (props) => {
     code: "",
     username: createAccountUsername,
   });
+  const [codeResent, setCodeResent] = useState(false);
 
   const handleSubmit = useThrottledHandler(async (event) => {
     event.preventDefault();
@@ -29,7 +31,9 @@ export const VerifyAccount = (props) => {
   });
   const handleResendCodeClick = useThrottledHandler(async (event) => {
     event.preventDefault();
+    setCodeResent(false);
     await auth.resendVerifyAccountCode(formState.username);
+    setCodeResent(true);
   });
 
   const getFunctionalInputProps = useFunctionalInputProps({
@@ -39,53 +43,67 @@ export const VerifyAccount = (props) => {
   });
 
   return (
-    <form className="usa-form" onSubmit={handleSubmit}>
-      <Title>{t("pages.authVerifyAccount.title")}</Title>
-      <Lead>
-        {t("pages.authVerifyAccount.lead", {
-          context: createAccountUsername ? "email" : null,
-          emailAddress: createAccountUsername,
-        })}
-      </Lead>
-      <InputText
-        {...getFunctionalInputProps("code")}
-        autoComplete="off"
-        inputMode="numeric"
-        label={t("pages.authVerifyAccount.codeLabel")}
-        smallLabel
-      />
-
-      {!createAccountUsername && (
-        <InputText
-          {...getFunctionalInputProps("username")}
-          type="email"
-          label={t("pages.authVerifyAccount.usernameLabel")}
-          smallLabel
-        />
+    <React.Fragment>
+      {codeResent && (
+        <Alert
+          className="margin-bottom-3"
+          heading={t("pages.authVerifyAccount.codeResentHeading")}
+          name="code-resent-message"
+          role="alert"
+          state="success"
+        >
+          {t("pages.authVerifyAccount.codeResent")}
+        </Alert>
       )}
 
-      <div>
-        <Button
-          className="margin-top-2"
-          name="resend-code-button"
-          onClick={handleResendCodeClick}
-          variation="unstyled"
-          loading={handleResendCodeClick.isThrottled}
-        >
-          {t("pages.authVerifyAccount.resendCodeLink")}
+      <form className="usa-form" onSubmit={handleSubmit}>
+        <Title>{t("pages.authVerifyAccount.title")}</Title>
+        <Lead>
+          {t("pages.authVerifyAccount.lead", {
+            context: createAccountUsername ? "email" : null,
+            emailAddress: createAccountUsername,
+          })}
+        </Lead>
+        <InputText
+          {...getFunctionalInputProps("code")}
+          autoComplete="off"
+          inputMode="numeric"
+          label={t("pages.authVerifyAccount.codeLabel")}
+          smallLabel
+        />
+
+        {!createAccountUsername && (
+          <InputText
+            {...getFunctionalInputProps("username")}
+            type="email"
+            label={t("pages.authVerifyAccount.usernameLabel")}
+            smallLabel
+          />
+        )}
+
+        <div>
+          <Button
+            className="margin-top-2"
+            name="resend-code-button"
+            onClick={handleResendCodeClick}
+            variation="unstyled"
+            loading={handleResendCodeClick.isThrottled}
+          >
+            {t("pages.authVerifyAccount.resendCodeLink")}
+          </Button>
+        </div>
+
+        <Button type="submit" loading={handleSubmit.isThrottled}>
+          {t("pages.authVerifyAccount.confirmButton")}
         </Button>
-      </div>
 
-      <Button type="submit" loading={handleSubmit.isThrottled}>
-        {t("pages.authVerifyAccount.confirmButton")}
-      </Button>
-
-      <div className="margin-top-2 text-bold">
-        <Link href={routes.auth.login}>
-          <a>{t("pages.authVerifyAccount.logInFooterLink")}</a>
-        </Link>
-      </div>
-    </form>
+        <div className="margin-top-2 text-bold">
+          <Link href={routes.auth.login}>
+            <a>{t("pages.authVerifyAccount.logInFooterLink")}</a>
+          </Link>
+        </div>
+      </form>
+    </React.Fragment>
   );
 };
 

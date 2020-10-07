@@ -45,11 +45,31 @@ describe("VerifyAccount", () => {
     });
 
     describe("when resend code button is clicked", () => {
+      let resolveResendVerifyAccountCodeMock;
+      beforeEach(() => {
+        appLogic.auth.resendVerifyAccountCode.mockImplementation(() => {
+          return new Promise((resolve) => {
+            resolveResendVerifyAccountCodeMock = resolve;
+          });
+        });
+      });
+
       it("calls resendVerifyAccountCode", () => {
         click({ name: "resend-code-button" });
         expect(appLogic.auth.resendVerifyAccountCode).toHaveBeenCalledWith(
           username
         );
+      });
+
+      it("shows success message after request completes", async () => {
+        click({ name: "resend-code-button" });
+        await resolveResendVerifyAccountCodeMock();
+        expect(wrapper.find("Alert[name='code-resent-message']")).toHaveLength(
+          1
+        );
+        expect(
+          wrapper.find("Alert[name='code-resent-message']")
+        ).toMatchSnapshot();
       });
     });
 
