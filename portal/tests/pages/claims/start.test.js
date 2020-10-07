@@ -1,6 +1,6 @@
 import { simulateEvents, testHook } from "../../test-utils";
 import React from "react";
-import Start from "../../../src/pages/claims/start";
+import { Start } from "../../../src/pages/claims/start";
 import { shallow } from "enzyme";
 import useAppLogic from "../../../src/hooks/useAppLogic";
 

@@ -6,6 +6,7 @@ import React from "react";
 import Title from "../../components/Title";
 import useThrottledHandler from "../../hooks/useThrottledHandler";
 import { useTranslation } from "../../locales/i18n";
+import withUser from "../../hoc/withUser";
 
 export const Start = (props) => {
   const { t } = useTranslation();
@@ -41,4 +42,4 @@ Start.propTypes = {
   appLogic: PropTypes.object.isRequired,
 };
 
-export default Start;
+export default withUser(Start);
