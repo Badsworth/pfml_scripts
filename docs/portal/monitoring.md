@@ -12,6 +12,13 @@ We then use the environment variable to configure the New Relic snippet by setti
 
 🚨 If we ever update the New Relic snippet, we should ensure that the configuration portion at the bottom is removed, so that we're not overwriting `window.NREUM.loader_config` or `window.NREUM.info`.
 
+#### Content Security Policy
+
+In order for the New Relic script to run, we need to make sure the [Content Security Policy](https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP) set by CloudFront in [cloudfront-handler.js](../../infra/portal/template/cloudfront-handler.js) allows:
+
+- Scripts from `https://js-agent.newrelic.com/`
+- Scripts from `https://bam.nr-data.net/`
+
 ### JS Errors
 
 New Relic Browser is used for monitoring JS Errors. JS Errors are reported to New Relic in a variety of ways:
