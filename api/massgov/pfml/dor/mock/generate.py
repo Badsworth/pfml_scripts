@@ -146,7 +146,7 @@ def process_employer_file(employer_count, employers_file, employees_file):
 
 
 def populate_employee_row(row, employers_file):
-    line = "{}{:255}{}{:255}{:30}{}{}{:255}{}{}{}{}{}\n".format(
+    line = "{}{:255}{:14}{:255}{:30}{}{}{:255}{}{}{}{}{}\n".format(
         row["account_key"],
         row["employer_name"],
         row["fein"],
@@ -165,7 +165,7 @@ def populate_employee_row(row, employers_file):
 
 
 def populate_employer_wage_row(employer_wage_row, employer_wage_row_file):
-    line = "{}{}{!s}{:255}{}{}{}{}\n".format(
+    line = "{}{}{!s}{:255}{:14}{}{}{}\n".format(
         "A",
         employer_wage_row["account_key"],
         employer_wage_row["filing_period"],

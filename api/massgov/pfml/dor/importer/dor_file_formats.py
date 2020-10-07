@@ -30,7 +30,7 @@ EMPLOYER_FILE_FORMAT = FileFormat(
     (
         FieldFormat("account_key", 11),
         FieldFormat("employer_name", 255),
-        FieldFormat("fein", 9),
+        FieldFormat("fein", 14),
         FieldFormat("employer_address_street", 255),
         FieldFormat("employer_address_city", 30),
         FieldFormat("employer_address_state", 2),
@@ -50,7 +50,7 @@ EMPLOYER_QUARTER_INFO_FORMAT = FileFormat(
         FieldFormat("account_key", 11),
         FieldFormat("filing_period", 8, parse_date),
         FieldFormat("employer_name", 255),
-        FieldFormat("employer_fein", 9),
+        FieldFormat("employer_fein", 14),
         FieldFormat("amended_flag", 1, parse_boolean),
         FieldFormat("received_date", 8, parse_date),
         FieldFormat("updated_date", 14, parse_datetime),

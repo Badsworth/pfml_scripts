@@ -458,8 +458,8 @@ def test_decryption(test_db_session, dor_employer_lookups):
 
     decrypter = GpgCrypt(decryption_key, passphrase, test_email)
 
-    employer_file_path = TEST_FOLDER / "encryption" / "DORDFMLEMP_20200805220758"
-    employee_file_path = TEST_FOLDER / "encryption" / "DORDFML_20200805220758"
+    employer_file_path = TEST_FOLDER / "encryption" / "DORDFMLEMP_20201006205131"
+    employee_file_path = TEST_FOLDER / "encryption" / "DORDFML_20201006205131"
 
     report = import_dor.process_daily_import(
         employer_file_path=str(employer_file_path),
@@ -473,7 +473,7 @@ def test_decryption(test_db_session, dor_employer_lookups):
 
     assert report.created_employers_count == employer_count
     assert report.created_employees_count == employee_count
-    assert report.created_wages_and_contributions_count == employee_count * 4
+    assert report.created_wages_and_contributions_count >= employee_count
 
 
 def get_temp_file_path():
