@@ -1,14 +1,15 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`AmendButton renders the component 1`] = `
-<span>
+<span
+  className="c-amend-button"
+>
   <Button
-    className="display-flex flex-align-end"
     variation="unstyled"
   >
     <FontAwesomeIcon
       border={false}
-      className="margin-right-1"
+      className="edit-icon margin-right-1"
       fixedWidth={false}
       flip={null}
       icon={
@@ -37,11 +38,11 @@ exports[`AmendButton renders the component 1`] = `
       title=""
       transform={null}
     />
-    <div
+    <span
       className="amend-text"
     >
       Amend
-    </div>
+    </span>
   </Button>
 </span>
 `;

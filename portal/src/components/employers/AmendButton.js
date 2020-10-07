@@ -14,16 +14,12 @@ const AmendButton = ({ onClick }) => {
   const { t } = useTranslation();
 
   return (
-    <span>
-      <Button
-        variation="unstyled"
-        onClick={onClick}
-        className="display-flex flex-align-end"
-      >
-        <FontAwesomeIcon icon={faEdit} className="margin-right-1" />
-        <div className="amend-text">
+    <span className="c-amend-button">
+      <Button variation="unstyled" onClick={onClick}>
+        <FontAwesomeIcon icon={faEdit} className="edit-icon margin-right-1" />
+        <span className="amend-text">
           {t("pages.employersClaimsReview.amend")}
-        </div>
+        </span>
       </Button>
     </span>
   );

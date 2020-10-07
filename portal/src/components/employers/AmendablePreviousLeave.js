@@ -52,7 +52,7 @@ const AmendablePreviousLeave = ({ leavePeriod, onChange }) => {
       <ConditionalContent visible={isAmendmentFormDisplayed}>
         <tr>
           <td
-            colSpan="2"
+            colSpan="4"
             className="padding-top-2 padding-bottom-2 padding-left-0"
           >
             <AmendmentForm
@@ -88,7 +88,6 @@ const AmendablePreviousLeave = ({ leavePeriod, onChange }) => {
               />
             </AmendmentForm>
           </td>
-          <td colSpan="2" />
         </tr>
       </ConditionalContent>
     </React.Fragment>
