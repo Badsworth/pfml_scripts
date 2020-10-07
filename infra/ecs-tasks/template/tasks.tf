@@ -38,6 +38,10 @@ locals {
       command = ["db-create-fineos-user"]
     },
 
+    "${local.app_name}-execute-sql" = {
+      command = ["execute-sql"]
+    },
+
     "${local.app_name}-${var.environment_name}-ad-hoc-verification" = {
       command = ["generate-verification-codes",
         "--input=s3://massgov-pfml-${var.environment_name}-verification-codes/source.csv",
