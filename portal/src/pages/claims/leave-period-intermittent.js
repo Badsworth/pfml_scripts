@@ -1,4 +1,9 @@
-import Claim, { LeaveReason } from "../../models/Claim";
+import Claim, {
+  IntermittentLeavePeriod,
+  LeaveReason,
+} from "../../models/Claim";
+import React, { useEffect } from "react";
+import { get, pick } from "lodash";
 import Alert from "../../components/Alert";
 import ConditionalContent from "../../components/ConditionalContent";
 import Heading from "../../components/Heading";
@@ -7,9 +12,7 @@ import InputDate from "../../components/InputDate";
 import Lead from "../../components/Lead";
 import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
-import React from "react";
 import { Trans } from "react-i18next";
-import { pick } from "lodash";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "../../locales/i18n";
@@ -29,6 +32,23 @@ export const LeavePeriodIntermittent = (props) => {
   const { formState, getField, updateFields, clearField } = useFormState(
     pick(props, fields).claim
   );
+
+  /**
+   * When user indicates they have this leave period type,
+   * add a blank leave period so validations are ran against it
+   */
+  useEffect(() => {
+    const existingLeavePeriod = get(
+      formState,
+      "leave_details.intermittent_leave_periods[0]"
+    );
+
+    if (formState.has_intermittent_leave_periods && !existingLeavePeriod) {
+      updateFields({
+        "leave_details.intermittent_leave_periods[0]": new IntermittentLeavePeriod(),
+      });
+    }
+  }, [formState, updateFields]);
 
   const handleSave = () =>
     appLogic.claims.update(claim.application_id, formState);

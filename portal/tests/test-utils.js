@@ -628,7 +628,14 @@ export const simulateEvents = (wrapper) => {
    * @param {string} value Value for input field
    */
   function changeRadioGroup(name, value) {
-    changeField(name, value, "radio", true);
+    act(() => {
+      wrapper
+        .find({ name })
+        .last() // in cases where we use `mount` to render, we want the actual input component, which comes last in order
+        .simulate("change", {
+          target: { checked: true, name, type: "radio", value },
+        });
+    });
   }
 
   /**

@@ -75,7 +75,7 @@ const errors = {
         pattern: "Please enter a valid placement date.",
         required: "Please enter a date of placement for the child.",
       },
-      continuous_leave_period: {
+      continuous_leave_periods: {
         end_date: {
           required:
             "Please enter an end date for this continuous leave period.",
@@ -88,7 +88,7 @@ const errors = {
       employer_notification_date: {
         pattern: "Please enter a valid notification date.",
       },
-      intermittent_leave_period: {
+      intermittent_leave_periods: {
         end_date: {
           required:
             "Please enter an end date for this intermittent leave period.",
@@ -108,7 +108,7 @@ const errors = {
       reason_qualifier: {
         required: "Please enter why you are taking leave.",
       },
-      reduced_schedule_leave_period: {
+      reduced_schedule_leave_periods: {
         end_date: {
           required:
             "Please enter an end date for this reduced schedule leave period.",

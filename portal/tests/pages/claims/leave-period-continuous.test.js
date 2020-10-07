@@ -3,7 +3,9 @@ import {
   renderWithAppLogic,
   simulateEvents,
 } from "../../test-utils";
+import { ContinuousLeavePeriod } from "../../../src/models/Claim";
 import LeavePeriodContinuous from "../../../src/pages/claims/leave-period-continuous";
+import { act } from "react-dom/test-utils";
 
 jest.mock("../../../src/hooks/useAppLogic");
 
@@ -45,6 +47,32 @@ describe("LeavePeriodContinuous", () => {
     expect(wrapper.find("ConditionalContent").prop("visible")).toBeFalsy();
     changeRadioGroup("has_continuous_leave_periods", true);
     expect(wrapper.find("ConditionalContent").prop("visible")).toBe(true);
+  });
+
+  it("adds empty leave period when user first indicates they have this leave period", async () => {
+    const { appLogic, claim, wrapper } = renderWithAppLogic(
+      LeavePeriodContinuous,
+      {
+        claimAttrs: new MockClaimBuilder().medicalLeaveReason().create(),
+        render: "mount", // support useEffect
+      }
+    );
+    const { changeRadioGroup } = simulateEvents(wrapper);
+
+    // Trigger the effect
+    changeRadioGroup("has_continuous_leave_periods", "true");
+
+    // Submit the form and assert against what's submitted
+    await act(async () => {
+      await wrapper.find("form").simulate("submit");
+    });
+
+    expect(appLogic.claims.update).toHaveBeenCalledWith(claim.application_id, {
+      has_continuous_leave_periods: true,
+      leave_details: {
+        continuous_leave_periods: [new ContinuousLeavePeriod()],
+      },
+    });
   });
 
   it("sends continuous leave dates to the api", () => {

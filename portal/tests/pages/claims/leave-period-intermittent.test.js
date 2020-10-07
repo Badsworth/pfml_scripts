@@ -3,7 +3,9 @@ import {
   renderWithAppLogic,
   simulateEvents,
 } from "../../test-utils";
+import { IntermittentLeavePeriod } from "../../../src/models/Claim";
 import LeavePeriodIntermittent from "../../../src/pages/claims/leave-period-intermittent";
+import { act } from "react-dom/test-utils";
 
 jest.mock("../../../src/hooks/useAppLogic");
 
@@ -59,6 +61,32 @@ describe("LeavePeriodIntermittent", () => {
         .parents("ConditionalContent")
         .prop("visible")
     ).toBe(true);
+  });
+
+  it("adds empty leave period when user first indicates they have this leave period", async () => {
+    const { appLogic, claim, wrapper } = renderWithAppLogic(
+      LeavePeriodIntermittent,
+      {
+        claimAttrs: new MockClaimBuilder().medicalLeaveReason().create(),
+        render: "mount", // support useEffect
+      }
+    );
+    const { changeRadioGroup } = simulateEvents(wrapper);
+
+    // Trigger the effect
+    changeRadioGroup("has_intermittent_leave_periods", "true");
+
+    // Submit the form and assert against what's submitted
+    await act(async () => {
+      await wrapper.find("form").simulate("submit");
+    });
+
+    expect(appLogic.claims.update).toHaveBeenCalledWith(claim.application_id, {
+      has_intermittent_leave_periods: true,
+      leave_details: {
+        intermittent_leave_periods: [new IntermittentLeavePeriod()],
+      },
+    });
   });
 
   it("displays warning when user indicates they have this leave period and already have another leave period type", () => {

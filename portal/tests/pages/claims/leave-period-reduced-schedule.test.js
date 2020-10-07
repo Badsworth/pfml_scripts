@@ -4,6 +4,8 @@ import {
   simulateEvents,
 } from "../../test-utils";
 import LeavePeriodReducedSchedule from "../../../src/pages/claims/leave-period-reduced-schedule";
+import { ReducedScheduleLeavePeriod } from "../../../src/models/Claim";
+import { act } from "react-dom/test-utils";
 
 jest.mock("../../../src/hooks/useAppLogic");
 
@@ -45,6 +47,32 @@ describe("LeavePeriodReducedSchedule", () => {
     expect(wrapper.find("ConditionalContent").prop("visible")).toBeFalsy();
     changeRadioGroup("has_reduced_schedule_leave_periods", true);
     expect(wrapper.find("ConditionalContent").prop("visible")).toBe(true);
+  });
+
+  it("adds empty leave period when user first indicates they have this leave period", async () => {
+    const { appLogic, claim, wrapper } = renderWithAppLogic(
+      LeavePeriodReducedSchedule,
+      {
+        claimAttrs: new MockClaimBuilder().medicalLeaveReason().create(),
+        render: "mount", // support useEffect
+      }
+    );
+    const { changeRadioGroup } = simulateEvents(wrapper);
+
+    // Trigger the effect
+    changeRadioGroup("has_reduced_schedule_leave_periods", "true");
+
+    // Submit the form and assert against what's submitted
+    await act(async () => {
+      await wrapper.find("form").simulate("submit");
+    });
+
+    expect(appLogic.claims.update).toHaveBeenCalledWith(claim.application_id, {
+      has_reduced_schedule_leave_periods: true,
+      leave_details: {
+        reduced_schedule_leave_periods: [new ReducedScheduleLeavePeriod()],
+      },
+    });
   });
 
   it("sends reduced schedule leave dates to the api", () => {
