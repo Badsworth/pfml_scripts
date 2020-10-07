@@ -243,73 +243,93 @@ describe("useDocumentsLogic", () => {
 
   describe("load", () => {
     describe("when the request is successful", () => {
-      let loadedDocuments;
+      describe("when the API returns documents", () => {
+        let loadedDocuments;
+        beforeEach(async () => {
+          loadedDocuments = new DocumentCollection([
+            new Document({ application_id, fineos_document_id: 1 }),
+            new Document({ application_id, fineos_document_id: 2 }),
+            new Document({ application_id, fineos_document_id: 3 }),
+          ]);
 
-      beforeEach(async () => {
-        loadedDocuments = new DocumentCollection([
-          new Document({ application_id, fineos_document_id: 1 }),
-          new Document({ application_id, fineos_document_id: 2 }),
-          new Document({ application_id, fineos_document_id: 3 }),
-        ]);
+          getDocumentsMock.mockResolvedValueOnce({
+            status: 200,
+            success: true,
+            documents: loadedDocuments,
+          });
 
-        getDocumentsMock.mockResolvedValueOnce({
-          status: 200,
-          success: true,
-          documents: loadedDocuments,
+          await act(async () => {
+            await documentsLogic.load(application_id);
+          });
         });
 
-        await act(async () => {
-          await documentsLogic.load(application_id);
+        it("asynchronously fetches all documents for an application and adds to documents collection", () => {
+          loadedDocuments.items.forEach((document) => {
+            expect(documentsLogic.documents.items).toContain(document);
+          });
+          expect(documentsLogic.documents.items).toHaveLength(
+            loadedDocuments.items.length
+          );
+          expect(getDocumentsMock).toHaveBeenCalledWith(application_id);
+        });
+
+        it("only makes an api request if documents have not already been loaded for an application", async () => {
+          getDocumentsMock.mockClear();
+          await act(async () => {
+            await documentsLogic.load(application_id);
+          });
+          expect(getDocumentsMock).not.toHaveBeenCalled();
+        });
+
+        it("merges previously loaded documents with newly loaded documents", async () => {
+          const newApplicationId = "mock-application-id-2";
+          const newDocuments = new DocumentCollection([
+            new Document({
+              application_id: newApplicationId,
+              fineos_document_id: 4,
+            }),
+            new Document({
+              application_id: newApplicationId,
+              fineos_document_id: 5,
+            }),
+            new Document({
+              application_id: newApplicationId,
+              fineos_document_id: 6,
+            }),
+          ]);
+          getDocumentsMock.mockResolvedValueOnce({
+            success: true,
+            status: 200,
+            documents: newDocuments,
+          });
+
+          await act(async () => {
+            await documentsLogic.load(newApplicationId);
+          });
+          const documents = documentsLogic.documents;
+          expect(documents.items).toHaveLength(6);
+          newDocuments.items.forEach((document) => {
+            expect(documents.items).toContain(document);
+          });
         });
       });
 
-      it("asynchronously fetches all documents for an application and adds to documents collection", () => {
-        loadedDocuments.items.forEach((document) => {
-          expect(documentsLogic.documents.items).toContain(document);
-        });
-        expect(documentsLogic.documents.items).toHaveLength(
-          loadedDocuments.items.length
-        );
-        expect(getDocumentsMock).toHaveBeenCalledWith(application_id);
-      });
-
-      it("only makes an api request if documents have not already been loaded for an application", async () => {
-        getDocumentsMock.mockClear();
-        await act(async () => {
-          await documentsLogic.load(application_id);
-        });
-        expect(getDocumentsMock).not.toHaveBeenCalled();
-      });
-
-      it("merges previously loaded documents with newly loaded documents", async () => {
-        const newApplicationId = "mock-application-id-2";
-        const newDocuments = new DocumentCollection([
-          new Document({
-            application_id: newApplicationId,
-            fineos_document_id: 4,
-          }),
-          new Document({
-            application_id: newApplicationId,
-            fineos_document_id: 5,
-          }),
-          new Document({
-            application_id: newApplicationId,
-            fineos_document_id: 6,
-          }),
-        ]);
-        getDocumentsMock.mockResolvedValueOnce({
-          success: true,
-          status: 200,
-          documents: newDocuments,
+      describe("when the API doesn't return documents", () => {
+        beforeEach(() => {
+          getDocumentsMock.mockResolvedValue({
+            status: 200,
+            success: true,
+            documents: new DocumentCollection([]),
+          });
         });
 
-        await act(async () => {
-          await documentsLogic.load(newApplicationId);
-        });
-        const documents = documentsLogic.documents;
-        expect(documents.items).toHaveLength(6);
-        newDocuments.items.forEach((document) => {
-          expect(documents.items).toContain(document);
+        it("only makes the API request once for the same application", async () => {
+          await act(async () => {
+            await documentsLogic.load(application_id);
+            await documentsLogic.load(application_id);
+          });
+
+          expect(getDocumentsMock).toHaveBeenCalledTimes(1);
         });
       });
     });
@@ -417,6 +437,22 @@ describe("useDocumentsLogic", () => {
     });
 
     it("returns true after load successfully", async () => {
+      getDocumentsMock.mockResolvedValueOnce({
+        status: 200,
+        success: true,
+        documents: new DocumentCollection([
+          new Document({ application_id, fineos_document_id: 1 }),
+        ]),
+      });
+
+      await act(async () => {
+        await documentsLogic.load(application_id);
+      });
+
+      expect(documentsLogic.hasLoadedClaimDocuments(application_id)).toBe(true);
+    });
+
+    it("returns true when there are no documents for an application", async () => {
       getDocumentsMock.mockResolvedValueOnce({
         status: 200,
         success: true,

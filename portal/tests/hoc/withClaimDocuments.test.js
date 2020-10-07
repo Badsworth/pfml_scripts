@@ -1,5 +1,4 @@
-import AppErrorInfo from "../../src/models/AppErrorInfo";
-import AppErrorInfoCollection from "../../src/models/AppErrorInfoCollection";
+import Claim from "../../src/models/Claim";
 import Document from "../../src/models/Document";
 import DocumentCollection from "../../src/models/DocumentCollection";
 import React from "react";
@@ -11,25 +10,21 @@ import withClaimDocuments from "../../src/hoc/withClaimDocuments";
 jest.mock("../../src/hooks/useAppLogic");
 
 describe("withClaimDocuments", () => {
-  let appLogic, application_id, wrapper;
+  let appLogic, wrapper;
+  const application_id = "12345";
+  const claim = new Claim({ application_id });
 
   const PageComponent = () => <div />;
   const WrappedComponent = withClaimDocuments(PageComponent);
 
   function render() {
     act(() => {
-      wrapper = mount(
-        <WrappedComponent
-          appLogic={appLogic}
-          query={{ claim_id: application_id }}
-        />
-      );
+      wrapper = mount(<WrappedComponent appLogic={appLogic} claim={claim} />);
     });
   }
 
   beforeEach(() => {
     appLogic = useAppLogic();
-    application_id = "12345";
   });
 
   it("loads documents", () => {
@@ -37,8 +32,10 @@ describe("withClaimDocuments", () => {
     expect(appLogic.documents.load).toHaveBeenCalledTimes(1);
   });
 
-  it("does not load documents if there is an error", () => {
-    appLogic.appErrors = new AppErrorInfoCollection([new AppErrorInfo()]);
+  it("does not load documents if there are already loaded documents", () => {
+    jest
+      .spyOn(appLogic.documents, "hasLoadedClaimDocuments")
+      .mockReturnValue(true);
     render();
     expect(appLogic.documents.load).not.toHaveBeenCalled();
   });

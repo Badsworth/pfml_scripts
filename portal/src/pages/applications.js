@@ -13,7 +13,7 @@ import withClaims from "../hoc/withClaims";
  * List of all applications associated with the authenticated user
  */
 const Applications = (props) => {
-  const { claims } = props;
+  const { appLogic, claims } = props;
   const { t } = useTranslation();
   const router = useRouter();
 
@@ -33,13 +33,16 @@ const Applications = (props) => {
           <Heading level="2" size="1">
             {t("pages.applications.inProgressHeading")}
           </Heading>
-          {claims.inProgress.map((claim, index) => (
-            <ApplicationCard
-              key={claim.application_id}
-              claim={claim}
-              number={index + 1}
-            />
-          ))}
+          {claims.inProgress.map((claim, index) => {
+            return (
+              <ApplicationCard
+                appLogic={appLogic}
+                key={claim.application_id}
+                claim={claim}
+                number={index + 1}
+              />
+            );
+          })}
         </React.Fragment>
       )}
 
@@ -48,13 +51,16 @@ const Applications = (props) => {
           <Heading level="2" size="1">
             {t("pages.applications.submittedHeading")}
           </Heading>
-          {claims.completed.map((claim, index) => (
-            <ApplicationCard
-              key={claim.application_id}
-              claim={claim}
-              number={claims.inProgress.length + index + 1}
-            />
-          ))}
+          {claims.completed.map((claim, index) => {
+            return (
+              <ApplicationCard
+                appLogic={appLogic}
+                key={claim.application_id}
+                claim={claim}
+                number={claims.inProgress.length + index + 1}
+              />
+            );
+          })}
         </React.Fragment>
       )}
     </React.Fragment>
@@ -62,6 +68,7 @@ const Applications = (props) => {
 };
 
 Applications.propTypes = {
+  appLogic: PropTypes.object.isRequired,
   claims: PropTypes.instanceOf(ClaimCollection).isRequired,
 };
 

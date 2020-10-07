@@ -8,6 +8,7 @@ import formatDateRange from "../utils/formatDateRange";
 import get from "lodash/get";
 import routeWithParams from "../utils/routeWithParams";
 import { useTranslation } from "../locales/i18n";
+import withClaimDocuments from "../hoc/withClaimDocuments";
 
 /**
  * Preview of an existing benefits Application
@@ -132,4 +133,4 @@ ApplicationCard.propTypes = {
   number: PropTypes.number.isRequired,
 };
 
-export default ApplicationCard;
+export default withClaimDocuments(ApplicationCard);

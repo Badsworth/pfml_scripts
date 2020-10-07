@@ -1,10 +1,15 @@
 import { MockClaimBuilder, renderWithAppLogic, testHook } from "../test-utils";
+import ApplicationCard from "../../src/components/ApplicationCard";
 import Applications from "../../src/pages/applications";
+import Claim from "../../src/models/Claim";
 import ClaimCollection from "../../src/models/ClaimCollection";
 import React from "react";
 import User from "../../src/models/User";
-import { shallow } from "enzyme";
+import { act } from "react-dom/test-utils";
+import { mount } from "enzyme";
 import useAppLogic from "../../src/hooks/useAppLogic";
+
+jest.mock("@aws-amplify/auth");
 
 describe("Applications", () => {
   let appLogic, wrapper;
@@ -29,13 +34,12 @@ describe("Applications", () => {
   describe("when no claims exist", () => {
     beforeEach(() => {
       appLogic.claims.claims = new ClaimCollection([]);
-
-      wrapper = shallow(<Applications appLogic={appLogic} />);
+      render();
     });
 
     it("renders the empty page state", () => {
       // Dive to get the child component of the withClaim higher order component
-      expect(wrapper.dive().dive()).toMatchSnapshot();
+      expect(wrapper).toMatchSnapshot();
     });
   });
 
@@ -45,6 +49,9 @@ describe("Applications", () => {
         new MockClaimBuilder().create(),
         new MockClaimBuilder().submitted().create(),
       ]);
+      jest
+        .spyOn(appLogic.documents, "hasLoadedClaimDocuments")
+        .mockImplementation(() => true);
       render();
     });
 
@@ -64,7 +71,7 @@ describe("Applications", () => {
     });
 
     it("renders list of started and completed applications", () => {
-      expect(wrapper.find("ApplicationCard")).toHaveLength(2);
+      expect(wrapper.find(ApplicationCard)).toHaveLength(2);
     });
   });
 
@@ -92,7 +99,7 @@ describe("Applications", () => {
     });
 
     it("renders list of completed applications", () => {
-      expect(wrapper.find("ApplicationCard")).toHaveLength(1);
+      expect(wrapper.find(ApplicationCard)).toHaveLength(1);
     });
   });
 
@@ -112,17 +119,49 @@ describe("Applications", () => {
     });
 
     it("increments the submitted ApplicationCard numbers by the number of in progress claims", () => {
-      expect(wrapper.find("ApplicationCard").last().prop("number")).toBe(3);
+      expect(wrapper.find(ApplicationCard).last().prop("number")).toBe(3);
     });
 
     it("separates completed claims into 'Submitted' section", () => {
-      const sections = wrapper.findWhere((el) =>
-        ["Heading", "ApplicationCard"].includes(el.name())
-      );
+      const sections = wrapper.findWhere((el) => {
+        // using "ComponentWithUser" here because the "withClaimDocuments" HOC uses the
+        // "withUser" HOC, which returns a "ComponentWithUser"
+        return ["Heading", "ComponentWithUser"].includes(el.name());
+      });
 
       expect(sections.get(1).props.claim).toEqual(startedClaim);
       expect(sections.get(2).props.claim).toEqual(submittedClaim);
       expect(sections.get(4).props.claim).toEqual(completedClaim);
+    });
+  });
+
+  describe("when multiple claims exist", () => {
+    const claim1 = new MockClaimBuilder().submitted().create();
+    claim1.application_id = "claim1";
+    const claim2 = new MockClaimBuilder().submitted().create();
+    claim2.application_id = "claim2";
+
+    beforeEach(() => {
+      act(() => {
+        const newClaims = [new Claim(claim1), new Claim(claim2)];
+
+        appLogic.claims.claims = new ClaimCollection(newClaims);
+      });
+    });
+
+    it("should only load documents for each claim once", async () => {
+      const spy = jest
+        .spyOn(appLogic.documents, "load")
+        .mockImplementation(() => jest.fn());
+
+      await act(async () => {
+        jest
+          .spyOn(appLogic.users, "requireUserConsentToDataAgreement")
+          .mockImplementation(() => {});
+        await mount(<Applications appLogic={appLogic} />);
+      });
+
+      expect(spy).toHaveBeenCalledTimes(2);
     });
   });
 });

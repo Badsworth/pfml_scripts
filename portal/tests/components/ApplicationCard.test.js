@@ -1,26 +1,27 @@
+import { MockClaimBuilder, renderWithAppLogic } from "../test-utils";
 import ApplicationCard from "../../src/components/ApplicationCard";
 import Claim from "../../src/models/Claim";
-import { MockClaimBuilder } from "../test-utils";
-import React from "react";
-import { shallow } from "enzyme";
 
 describe("ApplicationCard", () => {
-  it("renders a card for the given application", () => {
-    const claimAttrs = new MockClaimBuilder().create();
+  let wrapper;
 
-    const wrapper = shallow(
-      <ApplicationCard claim={new Claim(claimAttrs)} number={2} />
-    );
+  const render = (claimAttrs = {}) => {
+    ({ wrapper } = renderWithAppLogic(ApplicationCard, {
+      diveLevels: 2,
+      props: { claim: new Claim(claimAttrs), number: 2 },
+      hasUploadedDocument: true,
+    }));
+  };
+
+  it("renders a card for the given application", () => {
+    render(new MockClaimBuilder().create());
 
     expect(wrapper).toMatchSnapshot();
   });
 
   it("renders Continuous leave period date range", () => {
-    const claimAttrs = new MockClaimBuilder().continuous().create();
+    render(new MockClaimBuilder().continuous().create());
 
-    const wrapper = shallow(
-      <ApplicationCard claim={new Claim(claimAttrs)} number={2} />
-    );
     const leavePeriodHeading = wrapper
       .find("Heading")
       .filterWhere(
@@ -32,11 +33,8 @@ describe("ApplicationCard", () => {
   });
 
   it("renders Reduced Schedule leave period date range", () => {
-    const claimAttrs = new MockClaimBuilder().reducedSchedule().create();
+    render(new MockClaimBuilder().reducedSchedule().create());
 
-    const wrapper = shallow(
-      <ApplicationCard claim={new Claim(claimAttrs)} number={2} />
-    );
     const leavePeriodHeading = wrapper
       .find("Heading")
       .filterWhere(
@@ -48,11 +46,8 @@ describe("ApplicationCard", () => {
   });
 
   it("renders Intermittent leave period date range", () => {
-    const claimAttrs = new MockClaimBuilder().intermittent().create();
+    render(new MockClaimBuilder().intermittent().create());
 
-    const wrapper = shallow(
-      <ApplicationCard claim={new Claim(claimAttrs)} number={2} />
-    );
     const leavePeriodHeading = wrapper
       .find("Heading")
       .filterWhere(
@@ -64,13 +59,9 @@ describe("ApplicationCard", () => {
   });
 
   describe("when the claim status is Submitted", () => {
-    let claimAttrs, wrapper;
-
+    const submittedClaim = new MockClaimBuilder().submitted().create();
     beforeEach(() => {
-      claimAttrs = new MockClaimBuilder().submitted().create();
-      wrapper = shallow(
-        <ApplicationCard claim={new Claim(claimAttrs)} number={2} />
-      );
+      render(submittedClaim);
     });
 
     it("includes a link to edit the claim", () => {
@@ -79,20 +70,14 @@ describe("ApplicationCard", () => {
 
     it("uses the Case ID as the main heading", () => {
       expect(wrapper.find("Heading[level='2']").children().text()).toBe(
-        claimAttrs.fineos_absence_id
+        submittedClaim.fineos_absence_id
       );
     });
   });
 
   describe("when the claim status is Completed", () => {
-    let wrapper;
-
     beforeEach(() => {
-      const claimAttrs = new MockClaimBuilder().completed().create();
-
-      wrapper = shallow(
-        <ApplicationCard claim={new Claim(claimAttrs)} number={2} />
-      );
+      render(new MockClaimBuilder().completed().create());
     });
 
     it("does not include a link to edit the claim", () => {

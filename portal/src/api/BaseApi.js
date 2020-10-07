@@ -27,8 +27,6 @@ import tracker from "../services/tracker";
  */
 export default class BaseApi {
   constructor() {
-    this.isLoading = false;
-
     // Reading the prefix here should result in an error being thrown
     // if one isn't defined by the subclass. This is ideal since otherwise
     // an engineer may not notice this is required until a validation error
@@ -90,26 +88,11 @@ export default class BaseApi {
       headers["Content-Type"] = "application/json";
     }
 
-    if (this.isLoading) {
-      // We return an object for instances where
-      // requests are made in a React render block.
-      // This allows us to destructure the response value
-      // without throwing a null pointer error.
-      return {};
-    }
-
-    this.isLoading = true;
-
-    let response;
-    try {
-      response = await this.sendRequest(url, {
-        body: createRequestBody(body),
-        headers,
-        method,
-      });
-    } finally {
-      this.isLoading = false;
-    }
+    const response = await this.sendRequest(url, {
+      body: createRequestBody(body),
+      headers,
+      method,
+    });
 
     return response;
   };

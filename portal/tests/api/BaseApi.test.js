@@ -38,10 +38,8 @@ describe("BaseApi", () => {
       })
     );
 
-    global.fetch = jest.fn().mockResolvedValueOnce({
-      json: jest
-        .fn()
-        .mockResolvedValueOnce({ data: [], errors: [], warnings: [] }),
+    global.fetch = jest.fn().mockResolvedValue({
+      json: jest.fn().mockResolvedValue({ data: [], errors: [], warnings: [] }),
       ok: true,
       status: 200,
     });
@@ -148,13 +146,13 @@ describe("BaseApi", () => {
     );
   });
 
-  it("only makes one api request at a time", async () => {
+  it("can make multiple api requests at a time", async () => {
     await Promise.all([
       testsApi.request("GET", "users"),
-      testsApi.request("GET", "applications"),
+      testsApi.request("GET", "users"),
     ]);
 
-    expect(fetch).toHaveBeenCalledTimes(1);
+    expect(fetch).toHaveBeenCalledTimes(2);
   });
 
   it("transforms the method to uppercase", async () => {

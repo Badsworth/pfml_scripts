@@ -12,27 +12,32 @@ import withUser from "./withUser";
  */
 const withClaimDocuments = (Component) => {
   const ComponentWithDocuments = (props) => {
-    const { appLogic, query } = props;
+    const {
+      appLogic,
+      claim: { application_id },
+    } = props;
     const {
       documents: { load, documents, hasLoadedClaimDocuments },
       users,
     } = appLogic;
-    const shouldLoad = !hasLoadedClaimDocuments(query.claim_id);
+
+    const shouldLoad = !hasLoadedClaimDocuments(application_id);
+
     assert(documents);
     // Since we are within a withUser higher order component, user should always be set
     assert(users.user);
 
     useEffect(() => {
-      if (appLogic.appErrors.isEmpty && shouldLoad) {
-        load(query.claim_id);
+      if (shouldLoad) {
+        load(application_id);
       }
       // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [appLogic.appErrors.isEmpty]);
+    }, [shouldLoad]);
 
     return (
       <Component
         {...props}
-        documents={documents.filterByApplication(query.claim_id)}
+        documents={documents.filterByApplication(application_id)}
         isLoadingDocuments={shouldLoad}
       />
     );
@@ -50,9 +55,9 @@ const withClaimDocuments = (Component) => {
       }).isRequired,
       appErrors: PropTypes.object.isRequired,
     }).isRequired,
-    query: PropTypes.shape({
-      claim_id: PropTypes.string.isRequired,
-    }).isRequired,
+    claim: PropTypes.shape({
+      application_id: PropTypes.string.isRequired,
+    }),
   };
 
   return withUser(ComponentWithDocuments);

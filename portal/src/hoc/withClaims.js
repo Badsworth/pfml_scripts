@@ -23,11 +23,11 @@ const withClaims = (Component) => {
     assert(users.user);
 
     useEffect(() => {
-      if (appLogic.appErrors.isEmpty) {
+      if (!appLogic.claims.claims) {
         appLogic.claims.load();
       }
       // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [appLogic.appErrors.isEmpty]);
+    }, [appLogic.claims.claims]);
 
     if (!appLogic.claims.claims) {
       return (

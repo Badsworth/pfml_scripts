@@ -71,7 +71,6 @@ export default class DocumentsApi extends BaseApi {
       "GET",
       `${application_id}/documents`
     );
-
     let documents = null;
     if (success) {
       documents = data.map((documentData) => new Document(documentData));

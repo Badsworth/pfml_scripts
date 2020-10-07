@@ -23,16 +23,18 @@ const useDocumentsLogic = ({ appErrorsLogic, portalFlow }) => {
   } = useCollectionState(new DocumentCollection([]));
 
   const documentsApi = useMemo(() => new DocumentsApi(), []);
-  const [documentsLoaded, setDocumentsLoaded] = useState([]);
+  const [loadedApplicationDocs, setLoadedApplicationDocs] = useState([]);
 
   /**
    * Check if docs for this application have been loaded
+   * We use a separate array and state here, rather than using the DocumentCollection,
+   * because documents that don't have items won't be represented in the DocumentCollection.
+   *
    * @param {string} application_id
    * @returns {boolean}
    */
-  const hasLoadedClaimDocuments = (application_id) => {
-    return documentsLoaded.includes(application_id);
-  };
+  const hasLoadedClaimDocuments = (application_id) =>
+    loadedApplicationDocs.includes(application_id);
 
   /**
    * Load all documents for a user's claim
@@ -53,11 +55,11 @@ const useDocumentsLogic = ({ appErrorsLogic, portalFlow }) => {
         success,
       } = await documentsApi.getDocuments(application_id);
       if (success) {
-        addDocuments(loadedDocuments.items);
-        setDocumentsLoaded((documentsLoaded) => [
-          ...documentsLoaded,
+        setLoadedApplicationDocs((loadedApplicationDocs) => [
+          ...loadedApplicationDocs,
           application_id,
         ]);
+        addDocuments(loadedDocuments.items);
       }
     } catch (error) {
       appErrorsLogic.catchError(error);
