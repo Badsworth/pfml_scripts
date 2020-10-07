@@ -21,13 +21,6 @@ resource "aws_cloudwatch_event_target" "trigger_formstack_import_lambda_daily_at
   input     = "{\"is_daily_lambda\":true}"
 }
 
-resource "aws_cloudwatch_event_rule" "daily_11pm_et" {
-  name        = "daily-at-11-pm"
-  description = "Fires once daily at 11pm US EDT/3am UTC"
-  # The time of day can only be specified in UTC and will need to be updated when daylight savings changes occur, if the 2300 US ET is desired to be consistent.
-  schedule_expression = "cron(0 03 * * ? *)"
-}
-
 # Cloudwatch rules can only be connected 5 targets, so create an identical one.
 resource "aws_cloudwatch_event_rule" "formstack_lambda_daily_11pm_et" {
   name        = "formstack-lambda-daily-at-11-pm"
