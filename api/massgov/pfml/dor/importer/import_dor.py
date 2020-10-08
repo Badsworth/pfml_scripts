@@ -161,6 +161,7 @@ class EmployeeWriter(object):
         self.line_count = 0
         self.line_buffer_length = line_buffer_length
         self.remainder = ""
+        self.remainder_encoded = b""
         self.lines = []
         self.parsed_employees_info_count = 0
         self.db_session = db_session
@@ -192,18 +193,24 @@ class EmployeeWriter(object):
 
     def __call__(self, data):
         if data:
-            lines = str(data.decode("utf-8")).split("\n")
+            try:
+                to_decode = self.remainder_encoded + data
+                lines = str(to_decode.decode("utf-8")).split("\n")
+                self.remainder_encoded = b""
 
-            i = 0
-            while i < len(lines):
-                if i != (len(lines) - 1):
-                    self.lines.append(self.remainder + lines[i])
-                    self.line_count = self.line_count + 1
-                    self.remainder = ""
-                if i == (len(lines) - 1):
-                    self.remainder = lines[i]
+                i = 0
+                while i < len(lines):
+                    if i != (len(lines) - 1):
+                        self.lines.append(self.remainder + lines[i])
+                        self.line_count = self.line_count + 1
+                        self.remainder = ""
+                    if i == (len(lines) - 1):
+                        self.remainder = lines[i]
 
-                i += 1
+                    i += 1
+
+            except UnicodeDecodeError:
+                self.remainder_encoded = data
 
             if len(self.lines) > self.line_buffer_length:
                 self.clear_buffer()
@@ -222,6 +229,7 @@ class Capturer(object):
         self.line_count = 0
 
         self.remainder = ""
+        self.remainder_encoded = b""
         self.lines = []
 
         logger.info("Capturer initialized")
@@ -239,17 +247,23 @@ class Capturer(object):
 
     def __call__(self, data):
         if data:
-            lines = str(data.decode("utf-8")).split("\n")
+            try:
+                to_decode = self.remainder_encoded + data
+                lines = str(to_decode.decode("utf-8")).split("\n")
+                self.remainder_encoded = b""
 
-            i = 0
-            while i < len(lines):
-                if i != (len(lines) - 1):
-                    self.append_line(self.remainder + lines[i])
-                    self.remainder = ""
-                if i == (len(lines) - 1):
-                    self.remainder = lines[i]
+                i = 0
+                while i < len(lines):
+                    if i != (len(lines) - 1):
+                        self.append_line(self.remainder + lines[i])
+                        self.remainder = ""
+                    if i == (len(lines) - 1):
+                        self.remainder = lines[i]
 
-                i += 1
+                    i += 1
+            # We may have hit a UTF-8 boundary at the wrong byte. If so, save line for next data call
+            except UnicodeDecodeError:
+                self.remainder_encoded = data
 
         else:
             logger.info("Done parsing", extra={"lines_parsed": self.line_count})
