@@ -20,6 +20,7 @@
     "flood:all": "element run src/flood/index.perf.ts",
     "flood:plan": "element plan src/flood/index.perf.ts",
     "flood:PortalClaimSubmit": "element run src/flood/tests/PortalClaimSubmit.perf.ts --no-headless",
+    "flood:PortalRegistration": "element run src/flood/tests/PortalRegistration.perf.ts --no-headless",
     "flood:FineosClaimSubmit": "element run src/flood/tests/FineosClaimSubmit.perf.ts --no-headless",
     "flood:SavilinxAgent": "element run src/flood/tests/SavilinxAgent.perf.ts --no-headless"
   },
