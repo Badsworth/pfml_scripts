@@ -25,9 +25,23 @@ class MetaData:
     paging: Optional[PagingMetaData] = None
 
 
-# Partial list of types currently use manually
+# Partial list of types currently used manually
+# This is not a comprehensive list of all IssueRules
+class IssueRule(str, Enum):
+    # At least one leave period should be present
+    min_leave_periods = "min_leave_periods"
+    # A rule only applied because a certain condition was met
+    conditional = "conditional"
+    # Intermittent leave must be on its own application
+    disallow_hybrid_intermittent_leave = "disallow_hybrid_intermittent_leave"
+
+
+# Partial list of types currently used manually
 # This is not a comprehensive list of all IssueTypes
 class IssueType(str, Enum):
+    # Data is present but shouldn't be
+    conflicting = "conflicting"
+    # Data is missing
     required = "required"
 
 

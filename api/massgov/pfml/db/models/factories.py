@@ -296,7 +296,7 @@ class IntermittentLeavePeriodFactory(BaseFactory):
     duration_basis = None
 
 
-class ReducedScheduleLeavePeriod(BaseFactory):
+class ReducedScheduleLeavePeriodFactory(BaseFactory):
     class Meta:
         model = application_models.ReducedScheduleLeavePeriod
 

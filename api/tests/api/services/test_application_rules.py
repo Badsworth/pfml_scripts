@@ -1,3 +1,4 @@
+from massgov.pfml.api.models.applications.common import DurationBasis, FrequencyIntervalBasis
 from massgov.pfml.api.models.applications.responses import ApplicationResponse
 from massgov.pfml.api.services.application_rules import (
     get_always_required_issues,
@@ -5,10 +6,11 @@ from massgov.pfml.api.services.application_rules import (
     get_conditional_issues,
     get_continuous_leave_issues,
     get_intermittent_leave_issues,
+    get_leave_periods_issues,
     get_payments_issues,
     get_reduced_schedule_leave_issues,
 )
-from massgov.pfml.api.util.response import Issue, IssueType, success_response
+from massgov.pfml.api.util.response import Issue, IssueRule, IssueType, success_response
 from massgov.pfml.db.models.applications import EmploymentStatus, LeaveReasonQualifier, LeaveType
 from massgov.pfml.db.models.employees import PaymentType
 from massgov.pfml.db.models.factories import (
@@ -17,7 +19,7 @@ from massgov.pfml.db.models.factories import (
     ContinuousLeavePeriodFactory,
     IntermittentLeavePeriodFactory,
     PaymentPreferenceFactory,
-    ReducedScheduleLeavePeriod,
+    ReducedScheduleLeavePeriodFactory,
 )
 
 
@@ -177,6 +179,113 @@ def test_has_leave_periods_required(test_db_session, initialize_factories_sessio
     ] == issues
 
 
+def test_allow_hybrid_leave(test_db_session, initialize_factories_session):
+    test_app = ApplicationFactory.create(
+        employment_status=EmploymentStatus.get_instance(
+            test_db_session, template=EmploymentStatus.EMPLOYED
+        ),
+        residential_address=AddressFactory.create(),
+        has_continuous_leave_periods=True,
+        has_intermittent_leave_periods=False,
+        has_reduced_schedule_leave_periods=True,
+        continuous_leave_periods=[ContinuousLeavePeriodFactory.create()],
+        reduced_schedule_leave_periods=[ReducedScheduleLeavePeriodFactory.create()],
+    )
+
+    issues = get_leave_periods_issues(test_app)
+
+    assert not issues
+
+
+def test_disallow_hybrid_intermittent_continuous_leave(
+    test_db_session, initialize_factories_session
+):
+    test_app = ApplicationFactory.create(
+        employment_status=EmploymentStatus.get_instance(
+            test_db_session, template=EmploymentStatus.EMPLOYED
+        ),
+        residential_address=AddressFactory.create(),
+        has_continuous_leave_periods=True,
+        has_intermittent_leave_periods=True,
+        has_reduced_schedule_leave_periods=False,
+        continuous_leave_periods=[ContinuousLeavePeriodFactory.create()],
+        intermittent_leave_periods=[
+            IntermittentLeavePeriodFactory.create(
+                frequency_interval_basis=FrequencyIntervalBasis.months.value,
+                frequency=6,
+                duration_basis=DurationBasis.days.value,
+                duration=3,
+            )
+        ],
+    )
+
+    issues = get_leave_periods_issues(test_app)
+
+    assert [
+        Issue(
+            message="Intermittent leave cannot be taken alongside Continuous or Reduced Schedule leave",
+            rule=IssueRule.disallow_hybrid_intermittent_leave,
+            type=IssueType.conflicting,
+        )
+    ] == issues
+
+
+def test_disallow_hybrid_intermittent_reduced_leave(test_db_session, initialize_factories_session):
+    test_app = ApplicationFactory.create(
+        employment_status=EmploymentStatus.get_instance(
+            test_db_session, template=EmploymentStatus.EMPLOYED
+        ),
+        residential_address=AddressFactory.create(),
+        has_continuous_leave_periods=False,
+        has_intermittent_leave_periods=True,
+        has_reduced_schedule_leave_periods=True,
+        reduced_schedule_leave_periods=[ReducedScheduleLeavePeriodFactory.create()],
+        intermittent_leave_periods=[
+            IntermittentLeavePeriodFactory.create(
+                frequency_interval_basis=FrequencyIntervalBasis.months.value,
+                frequency=6,
+                duration_basis=DurationBasis.days.value,
+                duration=3,
+            )
+        ],
+    )
+
+    issues = get_leave_periods_issues(test_app)
+
+    assert [
+        Issue(
+            message="Intermittent leave cannot be taken alongside Continuous or Reduced Schedule leave",
+            rule=IssueRule.disallow_hybrid_intermittent_leave,
+            type=IssueType.conflicting,
+        )
+    ] == issues
+
+
+def test_min_leave_periods(test_db_session, initialize_factories_session):
+    test_app = ApplicationFactory.create(
+        employment_status=EmploymentStatus.get_instance(
+            test_db_session, template=EmploymentStatus.EMPLOYED
+        ),
+        residential_address=AddressFactory.create(),
+        has_continuous_leave_periods=False,
+        has_intermittent_leave_periods=False,
+        has_reduced_schedule_leave_periods=False,
+        continuous_leave_periods=[],
+        intermittent_leave_periods=[],
+        reduced_schedule_leave_periods=[],
+    )
+
+    issues = get_leave_periods_issues(test_app)
+
+    assert [
+        Issue(
+            message="At least one leave period should be entered",
+            rule=IssueRule.min_leave_periods,
+            type=IssueType.required,
+        ),
+    ] == issues
+
+
 def test_continuous_leave_period(test_db_session, initialize_factories_session):
     test_leave_periods = [ContinuousLeavePeriodFactory.create(start_date=None, end_date=None)]
     issues = get_continuous_leave_issues(test_leave_periods)
@@ -245,7 +354,7 @@ def test_intermittent_leave_period(test_db_session, initialize_factories_session
 
 
 def test_reduced_leave_period(test_db_session, initialize_factories_session):
-    test_leave_periods = [ReducedScheduleLeavePeriod.create(start_date=None, end_date=None)]
+    test_leave_periods = [ReducedScheduleLeavePeriodFactory.create(start_date=None, end_date=None)]
     issues = get_reduced_schedule_leave_issues(test_leave_periods)
 
     assert [
@@ -444,6 +553,8 @@ def test_payment_preferences_same_order(test_db_session, initialize_factories_se
         employment_status=EmploymentStatus.get_instance(
             test_db_session, template=EmploymentStatus.EMPLOYED
         ),
+        has_continuous_leave_periods=True,
+        continuous_leave_periods=[ContinuousLeavePeriodFactory.create()],
         payment_preferences=[
             PaymentPreferenceFactory.create(payment_type_id=PaymentType.DEBIT.payment_type_id),
             PaymentPreferenceFactory.create(

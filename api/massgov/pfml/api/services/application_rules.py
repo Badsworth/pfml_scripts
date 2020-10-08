@@ -6,7 +6,7 @@ from massgov.pfml.api.services.applications import (
     IntermittentLeavePeriod,
     ReducedScheduleLeavePeriod,
 )
-from massgov.pfml.api.util.response import Issue, IssueType
+from massgov.pfml.api.util.response import Issue, IssueRule, IssueType
 from massgov.pfml.db.models.applications import Application, LeaveReasonQualifier, LeaveType
 from massgov.pfml.db.models.employees import PaymentType
 
@@ -34,7 +34,7 @@ def get_conditional_issues(application: Application) -> List[Issue]:
         issues.append(
             Issue(
                 type=IssueType.required,
-                rule="conditional",
+                rule=IssueRule.conditional,
                 message="mass_id is required if has_mass_id is set",
                 field="mass_id",
             )
@@ -68,7 +68,7 @@ def get_medical_leave_issues(application: Application) -> List[Issue]:
         issues.append(
             Issue(
                 type=IssueType.required,
-                rule="conditional",
+                rule=IssueRule.conditional,
                 message="It is required to indicate if there has been a recent pregnancy or birth when medical leave is requested, regardless of if it is related to the leave request",
                 field="leave_details.pregnant_or_recent_birth",
             )
@@ -90,7 +90,7 @@ def get_bonding_leave_issues(application: Application) -> List[Issue]:
         issues.append(
             Issue(
                 type=IssueType.required,
-                rule="conditional",
+                rule=IssueRule.conditional,
                 message="Invalid leave reason qualifier for bonding leave type",
                 field="leave_details.reason_qualifier",
             )
@@ -102,7 +102,7 @@ def get_bonding_leave_issues(application: Application) -> List[Issue]:
         issues.append(
             Issue(
                 type=IssueType.required,
-                rule="conditional",
+                rule=IssueRule.conditional,
                 message="Child birth date is required for newborn bonding leave",
                 field="leave_details.child_birth_date",
             )
@@ -117,7 +117,7 @@ def get_bonding_leave_issues(application: Application) -> List[Issue]:
         issues.append(
             Issue(
                 type=IssueType.required,
-                rule="conditional",
+                rule=IssueRule.conditional,
                 message="Child placement date is required for foster or adoption bonding leave",
                 field="leave_details.child_placement_date",
             )
@@ -133,7 +133,7 @@ def get_payments_issues(application: Application) -> List[Issue]:
                 issues.append(
                     Issue(
                         type=IssueType.required,
-                        rule="conditional",
+                        rule=IssueRule.conditional,
                         message="Account number is required for direct deposit",
                         field=f"payment_preferences[{i}].account_details.account_number",
                     )
@@ -142,7 +142,7 @@ def get_payments_issues(application: Application) -> List[Issue]:
                 issues.append(
                     Issue(
                         type=IssueType.required,
-                        rule="conditional",
+                        rule=IssueRule.conditional,
                         message="Routing number is required for direct deposit",
                         field=f"payment_preferences[{i}].account_details.routing_number",
                     )
@@ -151,7 +151,7 @@ def get_payments_issues(application: Application) -> List[Issue]:
                 issues.append(
                     Issue(
                         type=IssueType.required,
-                        rule="conditional",
+                        rule=IssueRule.conditional,
                         message="Account type is required for direct deposit",
                         field=f"payment_preferences[{i}].account_details.account_type",
                     )
@@ -163,7 +163,7 @@ def get_payments_issues(application: Application) -> List[Issue]:
             issues.append(
                 Issue(
                     type=IssueType.required,
-                    rule="conditional",
+                    rule=IssueRule.conditional,
                     message=f"Address is required for debit card for payment_preference[{i}]",
                     field="residential_address",
                 )
@@ -212,6 +212,32 @@ def get_leave_periods_issues(application: Application) -> List[Issue]:
     issues += get_continuous_leave_issues(application.continuous_leave_periods)
     issues += get_intermittent_leave_issues(application.intermittent_leave_periods)
     issues += get_reduced_schedule_leave_issues(application.reduced_schedule_leave_periods)
+
+    if not any(
+        [
+            application.continuous_leave_periods,
+            application.intermittent_leave_periods,
+            application.reduced_schedule_leave_periods,
+        ]
+    ):
+        issues.append(
+            Issue(
+                message="At least one leave period should be entered",
+                rule=IssueRule.min_leave_periods,
+                type=IssueType.required,
+            )
+        )
+
+    if application.intermittent_leave_periods and (
+        application.continuous_leave_periods or application.reduced_schedule_leave_periods
+    ):
+        issues.append(
+            Issue(
+                message="Intermittent leave cannot be taken alongside Continuous or Reduced Schedule leave",
+                rule=IssueRule.disallow_hybrid_intermittent_leave,
+                type=IssueType.conflicting,
+            )
+        )
 
     return issues
 
