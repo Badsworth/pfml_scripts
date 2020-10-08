@@ -221,7 +221,7 @@ class FINEOSClient(client.AbstractFINEOSClient):
         logger.debug("json %r", json)
 
         set_empty_dates_to_none(
-            json, ["accidentDate", "expectedDeliveryDate", "actualDeliveryDate"]
+            json[0], ["accidentDate", "expectedDeliveryDate", "actualDeliveryDate"]
         )
 
         # Doesn't match OpenAPI file - API returns a single-item list instead of the object.
