@@ -219,6 +219,7 @@ def create_import_log_entry(db_session, report):
     )
     db_session.add(import_log)
     db_session.flush()
+    db_session.commit()
     db_session.refresh(import_log)
     logger.info("Added report to import log")
     return import_log

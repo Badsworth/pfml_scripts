@@ -37,6 +37,9 @@ PROCESSED_FOLDER = "dor/processed/"
 EMPLOYER_FILE_PREFIX = "DORDFMLEMP_"
 EMPLOYEE_FILE_PREFIX = "DORDFML_"
 
+EMPLOYER_LINE_LIMIT = 250000
+EMPLOYEE_LINE_LIMIT = 200000
+
 
 @dataclass
 class ImportBatch:
@@ -146,6 +149,114 @@ def process_import_batches(
         return import_reports
 
 
+class EmployeeWriter(object):
+    def __init__(
+        self,
+        line_buffer_length,
+        db_session,
+        account_key_to_employer_id_map,
+        report,
+        report_log_entry,
+    ):
+        self.line_count = 0
+        self.line_buffer_length = line_buffer_length
+        self.remainder = ""
+        self.lines = []
+        self.parsed_employees_info_count = 0
+        self.db_session = db_session
+        self.account_key_to_employer_id_map = account_key_to_employer_id_map
+        self.report = report
+        self.report_log_entry = report_log_entry
+        self.employee_ssns_created_in_current_import_run = {}
+
+    def clear_buffer(self):
+        employees_info = []
+
+        for row in self.lines:
+            if row.startswith("B"):
+                employee_info = EMPLOYEE_FORMAT.parse_line(row)
+                employees_info.append(employee_info)
+                self.parsed_employees_info_count = self.parsed_employees_info_count + 1
+
+        if len(employees_info) > 0:
+            import_employees_and_wage_data(
+                self.db_session,
+                self.account_key_to_employer_id_map,
+                employees_info,
+                self.employee_ssns_created_in_current_import_run,
+                self.report,
+                self.report_log_entry.import_log_id,
+            )
+
+        self.lines = []
+
+    def __call__(self, data):
+        if data:
+            lines = str(data.decode("utf-8")).split("\n")
+
+            i = 0
+            while i < len(lines):
+                if i != (len(lines) - 1):
+                    self.lines.append(self.remainder + lines[i])
+                    self.line_count = self.line_count + 1
+                    self.remainder = ""
+                if i == (len(lines) - 1):
+                    self.remainder = lines[i]
+
+                i += 1
+
+            if len(self.lines) > self.line_buffer_length:
+                self.clear_buffer()
+
+        else:
+            logger.info("Done parsing", extra={"lines_parsed": self.line_count})
+            self.clear_buffer()
+
+        return False
+
+
+class Capturer(object):
+    def __init__(self, line_offset, line_limit):
+        self.line_offset = line_offset
+        self.line_limit = line_limit
+        self.line_count = 0
+
+        self.remainder = ""
+        self.lines = []
+
+        logger.info("Capturer initialized")
+
+    def append_line(self, line):
+        if self.line_count < self.line_offset:
+            self.line_count = self.line_count + 1
+            return
+
+        if len(self.lines) > self.line_limit:
+            return
+
+        self.lines.append(line)
+        self.line_count = self.line_count + 1
+
+    def __call__(self, data):
+        if data:
+            lines = str(data.decode("utf-8")).split("\n")
+
+            i = 0
+            while i < len(lines):
+                if i != (len(lines) - 1):
+                    self.append_line(self.remainder + lines[i])
+                    self.remainder = ""
+                if i == (len(lines) - 1):
+                    self.remainder = lines[i]
+
+                i += 1
+
+        else:
+            logger.info("Done parsing", extra={"lines_parsed": self.line_count})
+
+        return False
+
+
 def decrypter_factory(decrypt_files):
     # Initialize the file decrypter
     decrypter: Crypt
@@ -153,6 +264,7 @@ def decrypter_factory(decrypt_files):
         logger.info("Setting up GPG")
         gpg_decryption_key = get_secret_from_env(aws_ssm, "GPG_DECRYPTION_KEY")
         gpg_decryption_passphrase = get_secret_from_env(aws_ssm, "GPG_DECRYPTION_KEY_PASSPHRASE")
+
         decrypter = GpgCrypt(gpg_decryption_key, gpg_decryption_passphrase)
     else:
         logger.info("Skipping GPG decrypter setup")
@@ -172,27 +284,62 @@ def process_daily_import(
         employee_file=employee_file_path,
     )
 
-    report_log_entry = dor_persistence_util.create_import_log_entry(db_session, report)
     try:
+        report_log_entry = dor_persistence_util.create_import_log_entry(db_session, report)
+
+        db_session.refresh(report_log_entry)
+
         employers = parse_employer_file(employer_file_path, decrypter)
-        employees_info = parse_employee_file(employee_file_path, decrypter)
 
         parsed_employers_count = len(employers)
-        parsed_employees_info_count = len(employees_info)
+        parsed_employees_info_count = 0
 
-        logger.info(
-            "Finished parsing files",
-            extra={
-                "employer_file": employer_file_path,
-                "employee_file": employee_file_path,
-                "parsed_employers_count": parsed_employers_count,
-                "parsed_employees_info_count": parsed_employees_info_count,
-            },
+        account_key_to_employer_id_map = import_employers(
+            db_session, employers, report, report_log_entry.import_log_id
         )
 
-        import_to_db(
-            db_session, employers, employees_info, report, report_log_entry.import_log_id,
-        )
+        decrypt_files = os.getenv("DECRYPT") == "true"
+
+        if decrypt_files:
+            writer = EmployeeWriter(
+                line_buffer_length=EMPLOYEE_LINE_LIMIT,
+                db_session=db_session,
+                account_key_to_employer_id_map=account_key_to_employer_id_map,
+                report=report,
+                report_log_entry=report_log_entry,
+            )
+            decrypter.set_on_data(writer)
+            get_decrypted_file_stream(employee_file_path, decrypter)
+            parsed_employees_info_count = writer.parsed_employees_info_count
+
+        else:
+            # TODO: parameterize
+            batch_size = EMPLOYEE_LINE_LIMIT
+            processed_count = 0
+
+            employee_count = get_employee_file_lines(employee_file_path, decrypter)
+
+            logger.info("Employee file count", extra={"count": employee_count})
+
+            while processed_count < employee_count:
+                logger.info("Processed count", extra={"count": processed_count})
+                employees_info = parse_employee_file(
+                    employee_file_path, decrypter, processed_count, batch_size
+                )
+
+                parsed_employees_info_count += len(employees_info)
+                logger.info("Employees to process this batch", extra={"count": len(employees_info)})
+                if len(employees_info) > 0:
+                    import_employees_and_wage_data(
+                        db_session,
+                        account_key_to_employer_id_map,
+                        employees_info,
+                        {},
+                        report,
+                        report_log_entry.import_log_id,
+                    )
+
+                processed_count = processed_count + batch_size
 
         # finalize report
         report.parsed_employers_count = parsed_employers_count
@@ -223,7 +370,7 @@ def import_to_db(db_session, employers, employees_info, report, import_log_entry
         db_session, employers, report, import_log_entry_id
     )
     import_employees_and_wage_data(
-        db_session, account_key_to_employer_id_map, employees_info, report, import_log_entry_id,
+        db_session, account_key_to_employer_id_map, employees_info, {}, report, import_log_entry_id,
     )
 
     logger.info("Finished import")
@@ -293,7 +440,7 @@ def import_employers(db_session, employers, report, import_log_entry_id):
 
     logger.info("Done - Creating new employers: %i", len(employer_models_to_create))
 
-    report.created_employers_count = len(employer_models_to_create)
+    report.created_employers_count += len(employer_models_to_create)
 
     # 3 - Create employer addresses
     addresses_models_to_create = list(
@@ -379,7 +526,7 @@ def import_employers(db_session, employers, report, import_log_entry_id):
         account_key = employer_info["account_key"]
         account_key_to_employer_id_map[account_key] = existing_employer_model.employer_id
 
-    report.updated_employers_count = len(found_employer_info_to_update_list)
+    report.updated_employers_count += len(found_employer_info_to_update_list)
     logger.info("Done - Updating employers: %i", len(found_employer_info_to_update_list))
 
     # 7 - Track and report not updated employers
@@ -398,7 +545,7 @@ def import_employers(db_session, employers, report, import_log_entry_id):
         account_key = employer_info["account_key"]
         account_key_to_employer_id_map[account_key] = existing_employer_reference_model.employer_id
 
-    report.unmodified_employers_count = len(found_employer_info_to_not_update_list)
+    report.unmodified_employers_count += len(found_employer_info_to_not_update_list)
     logger.info("Employers not updated: %i", len(found_employer_info_to_not_update_list))
 
     # 8 - Done
@@ -414,25 +561,33 @@ def import_employers(db_session, employers, report, import_log_entry_id):
     return account_key_to_employer_id_map
 
 
-def import_employees_and_wage_data(
+def import_employees(
     db_session,
+    employee_info_list,
     account_key_to_employer_id_map,
-    employee_and_wage_info_list,
+    employee_ssns_to_id_created_in_current_import_run,
     report,
     import_log_entry_id,
 ):
-    """Import employees and wage information"""
+    """Create or update employees data in the db"""
     logger.info(
-        "Start import of wage information - rows: %i", len(employee_and_wage_info_list),
+        "Start import of wage information - rows: %i", len(employee_info_list),
     )
 
     # 1 - Create existing employee reference maps
     logger.info("Create existing employee reference maps")
 
-    incoming_ssns = map(
-        lambda employee_info: employee_info["employee_ssn"], employee_and_wage_info_list
+    incoming_ssns = map(lambda employee_info: employee_info["employee_ssn"], employee_info_list)
+
+    ssns_to_check_in_db = list(
+        filter(
+            lambda ssn: ssn not in employee_ssns_to_id_created_in_current_import_run, incoming_ssns
+        )
     )
-    existing_employee_models = dor_persistence_util.get_employees_by_ssn(db_session, incoming_ssns)
+
+    existing_employee_models = dor_persistence_util.get_employees_by_ssn(
+        db_session, ssns_to_check_in_db
+    )
 
     ssn_to_existing_employee_model = {}
     for employee in existing_employee_models:
@@ -443,26 +598,29 @@ def import_employees_and_wage_data(
         len(existing_employee_models),
     )
 
-    # 2 - Stage employee and wage info for creation
-    logger.info("Staging employee and wage info for creation")
+    # 2 - Stage employee info for creation
+    logger.info("Staging employee info for creation")
 
-    not_found_employee_and_wage_info_list = list(
+    not_found_employee_info_list = list(
         filter(
-            lambda employee: employee["employee_ssn"] not in ssn_to_existing_employee_model,
-            employee_and_wage_info_list,
+            lambda employee: (
+                employee["employee_ssn"] not in employee_ssns_to_id_created_in_current_import_run
+                and employee["employee_ssn"] not in ssn_to_existing_employee_model
+            ),
+            employee_info_list,
         )
     )
 
     ssn_to_new_tax_id = {}
     ssn_to_new_employee_id = {}
 
-    for emp in not_found_employee_and_wage_info_list:
+    for emp in not_found_employee_info_list:
         ssn_to_new_employee_id[emp["employee_ssn"]] = uuid.uuid4()
         ssn_to_new_tax_id[emp["employee_ssn"]] = uuid.uuid4()
 
     logger.info(
         "Done - Staging employee and wage info for creation. Employees staged for creation: %i",
-        len(not_found_employee_and_wage_info_list),
+        len(not_found_employee_info_list),
     )
 
     # 3 - Create tax ids for new employees
@@ -479,76 +637,50 @@ def import_employees_and_wage_data(
     logger.info("Done - Creating new tax ids: %i", len(tax_id_models_to_create))
 
     # 4 - Create new employees
-    employee_ssns_staged_for_creation = set()
     employee_models_to_create = []
-    for employee_info in not_found_employee_and_wage_info_list:
+    employee_ssns_staged_for_creation_in_current_loop = set()
+    for employee_info in not_found_employee_info_list:
         ssn = employee_info["employee_ssn"]
 
         # since there are multiple rows with the same employee information ignore all but the first one
-        if ssn in employee_ssns_staged_for_creation:
+        if ssn in employee_ssns_staged_for_creation_in_current_loop:
             continue
 
+        new_employee_id = ssn_to_new_employee_id[ssn]
         employee_models_to_create.append(
             dor_persistence_util.dict_to_employee(
-                employee_info,
-                import_log_entry_id,
-                ssn_to_new_employee_id[ssn],
-                ssn_to_new_tax_id[ssn],
+                employee_info, import_log_entry_id, new_employee_id, ssn_to_new_tax_id[ssn],
             )
         )
-        employee_ssns_staged_for_creation.add(ssn)
+
+        employee_ssns_staged_for_creation_in_current_loop.add(ssn)
+        employee_ssns_to_id_created_in_current_import_run[ssn] = new_employee_id
 
     logger.info("Creating new employees: %i", len(employee_models_to_create))
 
     bulk_save(db_session, employee_models_to_create, "Employees", commit=True)
 
+    report.created_employees_count += len(employee_models_to_create)
+
     logger.info("Done - Creating new employees: %i", len(employee_models_to_create))
-
-    report.created_employees_count = len(employee_models_to_create)
-
-    logger.info("Creating new wage information: %i", len(not_found_employee_and_wage_info_list))
-
-    def wage_create(employee_wage_info_list):
-        wages_contributions_models_to_create = []
-        for employee_info in employee_wage_info_list:
-            wages_contributions_models_to_create.append(
-                dor_persistence_util.dict_to_wages_and_contributions(
-                    employee_info,
-                    ssn_to_new_employee_id[employee_info["employee_ssn"]],
-                    account_key_to_employer_id_map[employee_info["account_key"]],
-                    import_log_entry_id,
-                )
-            )
-
-        bulk_save(db_session, wages_contributions_models_to_create, "Employee Wages", commit=True)
-
-    batch_apply(not_found_employee_and_wage_info_list, "wage_create", wage_create)
-
-    logger.info(
-        "Done - Creating new wage information: %i", len(not_found_employee_and_wage_info_list)
-    )
-
-    report.created_wages_and_contributions_count = len(not_found_employee_and_wage_info_list)
 
     # 6 - Update all existing employees
     found_employee_and_wage_info_list = list(
         filter(
             lambda employee: employee["employee_ssn"] in ssn_to_existing_employee_model,
-            employee_and_wage_info_list,
+            employee_info_list,
         )
     )
-
     logger.info(
         "Updating existing employees from total records: %i", len(found_employee_and_wage_info_list)
     )
 
-    ssn_to_employee_id = ssn_to_new_employee_id  # collect all ssn to employee ids for next step
-    ssn_updated_in_current_run = set()
+    employee_ssns_updated_in_current_loop = set()
     for employee_info in found_employee_and_wage_info_list:
         ssn = employee_info["employee_ssn"]
 
         # since there are multiple rows with the same employee information ignore all but the first one
-        if ssn in ssn_updated_in_current_run:
+        if ssn in employee_ssns_updated_in_current_loop:
             continue
 
         existing_employee_model = ssn_to_existing_employee_model[ssn]
@@ -556,72 +688,136 @@ def import_employees_and_wage_data(
             db_session, existing_employee_model, employee_info, import_log_entry_id
         )
 
-        ssn_updated_in_current_run.add(ssn)
-        ssn_to_employee_id[ssn] = existing_employee_model.employee_id
+        employee_ssns_updated_in_current_loop.add(ssn)
 
-    logger.info("Done - Updating existing employees: %i", len(ssn_updated_in_current_run))
+        report.updated_employees_count += 1
 
-    report.updated_employees_count = len(ssn_updated_in_current_run)
-
-    # 7 - Create or update wage information for existing employees
     logger.info(
-        "Creating or updating wage information for existing employees. Total records: %i",
-        len(found_employee_and_wage_info_list),
+        "Done - Updating existing employees: %i", len(employee_ssns_updated_in_current_loop)
+    )
+
+
+def import_wage_data(
+    db_session,
+    wage_info_list,
+    account_key_to_employer_id_map,
+    employee_ssns_to_id_created_in_current_import_run,
+    report,
+    import_log_entry_id,
+):
+    # Create wage data
+    wage_info_list_for_creation = list(
+        filter(
+            lambda wage_info: wage_info["employee_ssn"]
+            in employee_ssns_to_id_created_in_current_import_run,
+            wage_info_list,
+        )
+    )
+
+    wages_contributions_models_to_create = []
+    for employee_info in wage_info_list_for_creation:
+        wages_contributions_models_to_create.append(
+            dor_persistence_util.dict_to_wages_and_contributions(
+                employee_info,
+                employee_ssns_to_id_created_in_current_import_run[employee_info["employee_ssn"]],
+                account_key_to_employer_id_map[employee_info["account_key"]],
+                import_log_entry_id,
+            )
+        )
+
+    logger.info("Creating new wage information: %i", len(wages_contributions_models_to_create))
+
+    bulk_save(db_session, wages_contributions_models_to_create, "Employee Wages", commit=True)
+
+    report.created_wages_and_contributions_count += len(wages_contributions_models_to_create)
+
+    logger.info(
+        "Done - Creating new wage information: %i", len(wages_contributions_models_to_create)
+    )
+
+    # Update wage data
+    wage_info_list_to_create_or_update = list(
+        filter(
+            lambda wage_info: wage_info["employee_ssn"]
+            not in employee_ssns_to_id_created_in_current_import_run,
+            wage_info_list,
+        )
     )
 
     count = 0
-    created_count = 0
 
-    for employee_info in found_employee_and_wage_info_list:
+    for wage_info in wage_info_list_to_create_or_update:
 
         count += 1
         if count % 1000 == 0:
-            logger.info("Updating existing employee wage info, current %i", count)
+            logger.info("Creating or updating existing wage info, current %i", count)
 
-        account_key = employee_info["account_key"]
-        filing_period = employee_info["filing_period"]
-        ssn = employee_info["employee_ssn"]
+        account_key = wage_info["account_key"]
+        filing_period = wage_info["filing_period"]
+        ssn = wage_info["employee_ssn"]
 
-        employee_id = ssn_to_employee_id[ssn]
         employer_id = account_key_to_employer_id_map[account_key]
+        existing_employee = dor_persistence_util.get_employees_by_ssn(db_session, [ssn])[0]
 
         existing_wage = dor_persistence_util.get_wages_and_contributions_by_employee_id_and_filling_period(
-            db_session, employee_id, employer_id, filing_period
+            db_session, existing_employee.employee_id, employer_id, filing_period
         )
 
         if existing_wage is None:
             dor_persistence_util.create_wages_and_contributions(
-                db_session, employee_info, employee_id, employer_id, import_log_entry_id
+                db_session,
+                wage_info,
+                existing_employee.employee_id,
+                employer_id,
+                import_log_entry_id,
             )
 
-            created_count += 1
+            report.created_wages_and_contributions_count += 1
         else:
             dor_persistence_util.update_wages_and_contributions(
-                db_session, existing_wage, employee_info, import_log_entry_id
+                db_session, existing_wage, wage_info, import_log_entry_id
             )
             report.updated_wages_and_contributions_count += 1
 
-        report.created_wages_and_contributions_count += created_count
 
-    logger.info(
-        "Done - Creating or updating wage information for existing employees. Total: %i, Creates: %i, Updates: %i",
-        len(found_employee_and_wage_info_list),
-        created_count,
-        report.updated_wages_and_contributions_count,
+def import_employees_and_wage_data(
+    db_session,
+    account_key_to_employer_id_map,
+    employee_and_wage_info_list,
+    employee_ssns_created_in_current_import_run,
+    report,
+    import_log_entry_id,
+):
+    import_employees(
+        db_session,
+        employee_and_wage_info_list,
+        account_key_to_employer_id_map,
+        employee_ssns_created_in_current_import_run,
+        report,
+        import_log_entry_id,
     )
 
-    # 8 - Done
-    logger.info(
-        "Finished importing employee and wage information",
-        extra={
-            "created_employees_count": report.created_employees_count,
-            "updated_employees_count": report.updated_employees_count,
-            "created_wages_and_contributions_count": report.created_wages_and_contributions_count,
-            "updated_wages_and_contributions_count": report.updated_wages_and_contributions_count,
-        },
+    import_wage_data(
+        db_session,
+        employee_and_wage_info_list,
+        account_key_to_employer_id_map,
+        employee_ssns_created_in_current_import_run,
+        report,
+        import_log_entry_id,
     )
 
-    return ssn_to_new_employee_id
+
+def get_decrypted_file_stream(file_path, decrypter):
+    file_stream = file_util.open_stream(file_path, "rb")
+    logger.info("Finished getting file stream")
+
+    decrypt_files = os.getenv("DECRYPT") == "true"
+    if decrypt_files:
+        decrypter.decrypt_stream(file_stream)
+
+        logger.info("Finished decrypted file", extra={"file path": file_path})
+    else:
+        return file_stream
 
 
 # TODO turn return dataclasses list instead of object list
@@ -630,41 +826,84 @@ def parse_employer_file(employer_file_path, decrypter):
     logger.info("Start parsing employer file", extra={"employer_file_path": employer_file_path})
     employers = []
 
-    file_stream = file_util.open_stream(employer_file_path, "rb")
-    decrypted_str = decrypter.decrypt_stream(file_stream)
+    decrypt_files = os.getenv("DECRYPT") == "true"
 
-    decrypted_lines = decrypted_str.split("\n")
+    if decrypt_files:
+        employer_capturer = Capturer(line_offset=0, line_limit=EMPLOYER_LINE_LIMIT)
+        decrypter.set_on_data(employer_capturer)
+        get_decrypted_file_stream(employer_file_path, decrypter)
 
-    for row in decrypted_lines:
-        if not row:  # skip empty end of file lines
-            continue
+        for row in employer_capturer.lines:
+            if not row:  # skip empty end of file lines
+                continue
 
-        employer = EMPLOYER_FILE_FORMAT.parse_line(row)
-        employers.append(employer)
+            employer = EMPLOYER_FILE_FORMAT.parse_line(row)
+            employers.append(employer)
+    else:
+        for row in get_decrypted_file_stream(employer_file_path, decrypter):
+            if not row:  # skip empty end of file lines
+                continue
+
+            employer = EMPLOYER_FILE_FORMAT.parse_line(str(row.decode("utf-8")))
+            employers.append(employer)
 
     logger.info("Finished parsing employer file", extra={"employer_file_path": employer_file_path})
     return employers
 
 
-def parse_employee_file(employee_file_path, decrypter):
+def get_employee_file_lines(employee_file_path, decrypter):
+    line_count = 0
+
+    with get_decrypted_file_stream(employee_file_path, decrypter) as file_stream:
+        has_next = True
+        while has_next:
+            line = file_stream.readline()
+            if not line:
+                has_next = False
+
+            line_count = line_count + 1
+
+        return line_count
+
+
+def parse_employee_file(employee_file_path, decrypter, offset=0, limit=EMPLOYEE_LINE_LIMIT):
     """Parse employee file"""
     logger.info("Start parsing employee file", extra={"employee_file_path": employee_file_path})
 
     employees_info = []
 
-    file_stream = file_util.open_stream(employee_file_path, "rb")
-    decrypted_str = decrypter.decrypt_stream(file_stream)
-    decrypted_lines = decrypted_str.split("\n")
+    decrypt_files = os.getenv("DECRYPT") == "true"
+    if decrypt_files:
+        employee_capturer = Capturer(line_offset=offset, line_limit=limit)
+        decrypter.set_on_data(employee_capturer)
 
-    for row in decrypted_lines:
-        if not row:  # skip empty end of file lines
-            continue
+        get_decrypted_file_stream(employee_file_path, decrypter)
 
-        if row.startswith("B"):
-            employee_info = EMPLOYEE_FORMAT.parse_line(row)
-            employees_info.append(employee_info)
+        for row in employee_capturer.lines:
+            if not row:  # skip empty end of file lines
+                continue
 
-    logger.info("Finished parsing employee file", extra={"employee_file_path": employee_file_path})
+            if row.startswith("B"):
+                employee_info = EMPLOYEE_FORMAT.parse_line(row)
+                employees_info.append(employee_info)
+
+    else:
+        for row in get_decrypted_file_stream(employee_file_path, decrypter):
+            if not row:  # skip empty end of file lines
+                continue
+
+            # TODO: tests pass in binary strings vs. smart open sending in str lines
+            if not isinstance(row, str):
+                row = str(row.decode("utf-8"))
+
+            if row.startswith("B"):
+                employee_info = EMPLOYEE_FORMAT.parse_line(row)
+                employees_info.append(employee_info)
+
+        logger.info(
+            "Finished parsing employee file", extra={"employee_file_path": employee_file_path}
+        )
+
     return employees_info
 
 

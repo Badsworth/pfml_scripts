@@ -15,6 +15,9 @@ class Crypt(ABC):
     def decrypt(self, bval):
         pass
 
+    def set_on_data(self, on_data):
+        pass
+
     def decrypt_stream(self, stream):
         pass
 
@@ -23,13 +26,14 @@ class Crypt(ABC):
 
 
 class GpgCrypt(Crypt):
-    def __init__(self, gpg_key, gpg_passphrase, recipient=None, homedir=None):
+    def __init__(self, gpg_key, gpg_passphrase, recipient=None, homedir=None, on_data=None):
         """Set a different gnuhome so the key is not picked up by default in
            shared machine environments (i.e. on AWS)."""
         # if encrypting the same gpg directory used to generate a key needs to be passed in
         gpghome = homedir or tempfile.mkdtemp()
         gpg = gnupg.GPG(gnupghome=gpghome)
         gpg.encoding = "utf-8"
+        gpg.on_data = on_data
 
         import_result = gpg.import_keys(gpg_key)
 
@@ -41,6 +45,9 @@ class GpgCrypt(Crypt):
         self.passphrase = gpg_passphrase
         self.recipient = recipient
         self.gpg_key_fingerprints = import_result.fingerprints
+
+    def set_on_data(self, on_data):
+        self.gpg.on_data = on_data
 
     def decrypt(self, bval):
         result = self.gpg.decrypt(bval, passphrase=self.passphrase)
@@ -58,7 +65,7 @@ class GpgCrypt(Crypt):
             logger.error("Failed to decrypt file")
             raise ValueError(result.stderr)
 
-        return result.data.decode("utf8")
+        return result.data
 
     def encrypt(self, str_val):
         return str(self.gpg.encrypt(str_val, self.recipient))

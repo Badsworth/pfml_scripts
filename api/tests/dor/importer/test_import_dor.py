@@ -20,6 +20,8 @@ employer_file = "DORDFMLEMP_20200519120622"
 
 TEST_FOLDER = pathlib.Path(__file__).parent
 
+EMPTY_SSN_TO_EMPLOYEE_ID_MAP = {}
+
 
 @pytest.fixture
 def test_fs_path(tmp_path):
@@ -174,10 +176,12 @@ def test_employee_wage_data_create(test_db_session, dor_employer_lookups):
     # perform employee and wage import
     employee_wage_data_payload = test_data.get_new_employee_wage_data()
 
-    employee_id_by_ssn = import_dor.import_employees_and_wage_data(
+    employee_id_by_ssn = {}
+    import_dor.import_employees_and_wage_data(
         test_db_session,
         account_key_to_employer_id_map,
         [employee_wage_data_payload],
+        employee_id_by_ssn,
         report,
         report_log_entry.import_log_id,
     )
@@ -225,10 +229,12 @@ def test_employee_wage_data_update(test_db_session, dor_employer_lookups):
     # perform initial employee and wage import
     employee_wage_data_payload = test_data.get_new_employee_wage_data()
 
-    employee_id_by_ssn = import_dor.import_employees_and_wage_data(
+    employee_id_by_ssn = {}
+    import_dor.import_employees_and_wage_data(
         test_db_session,
         account_key_to_employer_id_map,
         [employee_wage_data_payload],
+        employee_id_by_ssn,
         report,
         report_log_entry.import_log_id,
     )
@@ -246,6 +252,7 @@ def test_employee_wage_data_update(test_db_session, dor_employer_lookups):
         test_db_session,
         account_key_to_employer_id_map,
         [employee_wage_data_payload],
+        EMPTY_SSN_TO_EMPLOYEE_ID_MAP,
         report,
         report_log_entry.import_log_id,
     )
@@ -270,6 +277,7 @@ def test_employee_wage_data_update(test_db_session, dor_employer_lookups):
         test_db_session,
         account_key_to_employer_id_map,
         [updated_employee_wage_data_payload],
+        EMPTY_SSN_TO_EMPLOYEE_ID_MAP,
         report,
         report_log_entry.import_log_id,
     )
@@ -450,7 +458,9 @@ def test_e2e_parse_and_persist(test_db_session, dor_employer_lookups):
 
 
 @pytest.mark.timeout(25)
-def test_decryption(test_db_session, dor_employer_lookups):
+def test_decryption(monkeypatch, test_db_session, dor_employer_lookups):
+
+    monkeypatch.setenv("DECRYPT", "true")
 
     decryption_key = open(TEST_FOLDER / "encryption" / "test_private.key").read()
     passphrase = "bb8d58fa-d781-11ea-87d0-0242ac130003"
