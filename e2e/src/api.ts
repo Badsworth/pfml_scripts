@@ -37,16 +37,21 @@ type MultipartRequestOptions = RequestOptions & {
 /** Utilities functions */
 export const _ = {
     // Encode param names and values as URIComponent
-    encodeReserved: [encodeURIComponent, encodeURIComponent],
-    allowReserved: [encodeURIComponent, encodeURI],
+    encodeReserved: [encodeURI, encodeURIComponent],
+    allowReserved: [encodeURI, encodeURI],
     /** Deeply remove all properties with undefined values. */
     stripUndefined<T>(obj?: T): T | undefined {
         return obj && JSON.parse(JSON.stringify(obj));
     },
+    isEmpty(v: unknown): boolean {
+        return typeof v === "object" && !!v ?
+            Object.keys(v).length === 0 && v.constructor === Object :
+            v === undefined;
+    },
     /** Creates a tag-function to encode template strings with the given encoders. */
     encode(encoders: Encoders, delimiter = ","): TagFunction {
         return (strings: TemplateStringsArray, ...values: any[]) => {
-            return strings.reduce((prev, s, i) => `${prev}${s}${q(values[i] || "", i)}`, "");
+            return strings.reduce((prev, s, i) => `${prev}${s}${q(values[i] ?? "", i)}`, "");
         };
         function q(v: any, i: number): string {
             const encoder = encoders[i % encoders.length];
@@ -63,7 +68,7 @@ export const _ = {
     /** Separate array values by the given delimiter. */
     delimited(delimiter = ","): (params: Record<string, any>, encoders?: Encoders) => string {
         return (params: Record<string, any>, encoders = _.encodeReserved) => Object.entries(params)
-            .filter(([, value]) => value !== undefined)
+            .filter(([, value]) => !_.isEmpty(value))
             .map(([name, value]) => _.encode(encoders, delimiter) `${name}=${value}`)
             .join("&");
     },
@@ -79,7 +84,7 @@ export const _ = {
 export const QS = {
     /** Join params using an ampersand and prepends a questionmark if not empty. */
     query(...params: string[]): string {
-        const s = params.join("&");
+        const s = params.filter(p => !!p).join("&");
         return s && `?${s}`;
     },
     /**
@@ -92,11 +97,12 @@ export const QS = {
         // don't add index to arrays
         // https://github.com/expressjs/body-parser/issues/289
         const visit = (obj: any, prefix = ""): string => Object.entries(obj)
-            .filter(([, v]) => v !== undefined)
+            .filter(([, v]) => !_.isEmpty(v))
             .map(([prop, v]) => {
-            const index = Array.isArray(obj) ? "" : prop;
+            const isValueObject = typeof v === "object";
+            const index = Array.isArray(obj) && !isValueObject ? "" : prop;
             const key = prefix ? qk `${prefix}[${index}]` : prop;
-            if (typeof v === "object") {
+            if (isValueObject) {
                 return visit(v, key);
             }
             return qv `${key}=${v}`;
@@ -143,9 +149,9 @@ export const http = {
             text = await res.text();
         }
         catch (err) { /* ok */ }
-        if (!res.ok) {
-            throw new HttpError(res.status, res.statusText, href, res.headers, text);
-        }
+        // if (!res.ok) {
+        //     throw new HttpError(res.status, res.statusText, href, res.headers, text);
+        // }
         return {
             status: res.status,
             statusText: res.statusText,
@@ -254,9 +260,13 @@ export interface SuccessfulResponse {
     data?: any | object;
     warnings?: Issue[];
 }
-export interface Error {
-    code: string;
-    message: string;
+export interface ErrorResponse {
+    status_code: number;
+    message?: string;
+    meta?: Meta;
+    data?: any | object;
+    warnings?: Issue[];
+    errors: Issue[];
 }
 export interface UserResponse {
     user_id?: string;
@@ -404,12 +414,16 @@ export interface ApplicationResponse {
     middle_name?: string | null;
     last_name?: string | null;
     date_of_birth?: Date | null;
+    has_continuous_leave_periods?: boolean | null;
+    has_intermittent_leave_periods?: boolean | null;
+    has_reduced_schedule_leave_periods?: boolean | null;
     has_state_id?: boolean | null;
     mailing_address?: Address | null;
     residential_address?: Address | null;
     mass_id?: string | null;
     employment_status?: ("Employed" | "Unemployed" | "Self-Employed") | null;
     occupation?: ("Sales Clerk" | "Administrative" | "Engineer" | "Health Care") | null;
+    hours_worked_per_week?: number | null;
     leave_details?: ApplicationLeaveDetails | null;
     payment_preferences?: PaymentPreferences[] | null;
     updated_time?: string;
@@ -430,12 +444,16 @@ export interface ApplicationRequestBody {
     employee_ssn?: SsnItin | null;
     tax_identifier?: SsnItin | null;
     employer_fein?: Fein | null;
+    hours_worked_per_week?: number | null;
     first_name?: string | null;
     middle_name?: string | null;
     last_name?: string | null;
     date_of_birth?: Date | null;
     mailing_address?: Address | null;
     residential_address?: Address | null;
+    has_continuous_leave_periods?: boolean | null;
+    has_intermittent_leave_periods?: boolean | null;
+    has_reduced_schedule_leave_periods?: boolean | null;
     has_state_id?: boolean | null;
     mass_id?: MassId | null;
     employment_status?: ("Employed" | "Unemployed" | "Self-Employed") | null;
@@ -445,14 +463,6 @@ export interface ApplicationRequestBody {
 }
 export interface PATCHApplicationsByApplicationIdResponse extends SuccessfulResponse {
     data?: ApplicationResponse;
-}
-export interface ErrorResponse {
-    status_code: number;
-    message?: string;
-    meta?: Meta;
-    data?: any | object;
-    warnings?: Issue[];
-    errors: Issue[];
 }
 export interface POSTApplicationsByApplicationIdSubmitApplicationResponse extends SuccessfulResponse {
     data?: ApplicationResponse;
@@ -466,45 +476,24 @@ export interface POSTApplicationsByApplicationIdCompleteApplicationResponse exte
 export interface POSTApplicationsByApplicationIdCompleteApplicationResponse503 extends ErrorResponse {
     data?: ApplicationResponse;
 }
-export interface FineosDocumentResponse {
-    caseId?: string;
-    rootCaseId?: string;
-    documentId?: number;
-    name?: string;
-    "type"?: string;
-    fileExtension?: string;
-    fileName?: string;
-    originalFileName?: string;
-    receivedDate?: Date;
-    effectiveFrom?: Date | null;
-    effectiveTo?: Date | null;
-    description?: string;
-    isRead?: boolean;
-    extensionAttributes?: any;
-}
-export interface GETApplicationsByApplicationIdDocumentsResponse extends SuccessfulResponse {
-    data?: FineosDocumentResponse[];
-}
-export interface DocumentUploadRequest {
-    document_category: "Identity Proofing" | "Certification";
-    document_type: "Passport" | "Driver's License Mass" | "Driver's License Other State" | "Identification Proof" | "State Managed Paid Leave Confirmation";
-    name?: string;
-    description: string;
-    file: unknown;
-}
 export interface DocumentResponse {
-    document_id: string;
     user_id: string;
     application_id: string;
     created_at: any;
-    updated_at: any;
-    document_category: "Identity Proofing" | "Certification";
     document_type: "Passport" | "Driver's License Mass" | "Driver's License Other State" | "Identification Proof" | "State Managed Paid Leave Confirmation";
     content_type: string;
-    size_bytes: number;
-    fineos_id: string;
+    fineos_document_id: string;
     name: string;
     description: string;
+}
+export interface GETApplicationsByApplicationIdDocumentsResponse extends SuccessfulResponse {
+    data?: DocumentResponse[];
+}
+export interface DocumentUploadRequest {
+    document_type: "Passport" | "Driver's License Mass" | "Driver's License Other State" | "Identification Proof" | "State Managed Paid Leave Confirmation";
+    name?: string;
+    description?: string;
+    file: Blob;
 }
 export interface POSTApplicationsByApplicationIdDocumentsResponse extends SuccessfulResponse {
     data?: DocumentResponse;
@@ -544,6 +533,25 @@ export interface RMVCheckResponse {
 }
 export interface POSTRmvCheckResponse extends SuccessfulResponse {
     data?: RMVCheckResponse;
+}
+export interface NotificationRecipient {
+    first_name?: string;
+    last_name?: string;
+    email_address?: string;
+}
+export interface NotificationRequest {
+    absence_case_id: string;
+    document_type: string;
+    trigger: string;
+    source: "Self-Service" | "Call Center";
+    recipient_type: "Claimant" | "Leave Administrator";
+    recipients: NotificationRecipient[];
+    claimant_info?: {
+        first_name?: string;
+        last_name?: string;
+    };
+}
+export interface POSTNotificationsResponse extends SuccessfulResponse {
 }
 /**
  * Get the API status
@@ -729,5 +737,16 @@ export async function postRmvCheck(rmvCheckRequest: RMVCheckRequest, options?: R
         ...options,
         method: "POST",
         body: rmvCheckRequest
+    }));
+}
+/**
+ * Send a notification that a document is available for a claimant to either the claimant or leave administrator.
+ *
+ */
+export async function postNotifications(notificationRequest: NotificationRequest, options?: RequestOptions): Promise<ApiResponse<POSTNotificationsResponse>> {
+    return await http.fetchJson("/notifications", http.json({
+        ...options,
+        method: "POST",
+        body: notificationRequest
     }));
 }
