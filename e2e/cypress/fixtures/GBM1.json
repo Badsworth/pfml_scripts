@@ -29,10 +29,11 @@
     ],
     "employer_notification_date": "2020-08-19",
     "employer_notified": true,
-    "intermittent_leave_periods": [],
-    "reason": "Serious Health Condition - Employee",
-    "reduced_schedule_leave_periods": []
+    "reason": "Serious Health Condition - Employee"
   },
+  "has_continuous_leave_periods": true,
+  "has_intermittent_leave_periods": false,
+  "has_reduced_schedule_leave_periods": false,
   "payment_preferences": [
     {
       "payment_method": "ACH",

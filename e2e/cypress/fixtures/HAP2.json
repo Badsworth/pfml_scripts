@@ -33,6 +33,9 @@
     "reason": "Serious Health Condition - Employee",
     "reduced_schedule_leave_periods": []
   },
+  "has_continuous_leave_periods": true,
+  "has_intermittent_leave_periods": false,
+  "has_reduced_schedule_leave_periods": false,
   "payment_preferences": [
     {
       "payment_method": "ACH",
