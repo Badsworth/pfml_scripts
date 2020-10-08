@@ -14,6 +14,7 @@ class EligibilityResponse(PydanticBaseModel):
     total_wages: Optional[Decimal]
     state_average_weekly_wage: Optional[int]
     unemployment_minimum: Optional[int]
+    employer_average_weekly_wage: Optional[Decimal]
 
 
 def calculate_effective_date(leave_start_date, application_submitted_date):
@@ -30,6 +31,7 @@ def get_financially_eligible(description):
 def compute_financial_eligibility(
     db_session,
     employee_id,
+    employer_id,
     employer_fein,
     leave_start_date,
     application_submitted_date,
@@ -68,6 +70,9 @@ def compute_financial_eligibility(
         description = "Financially eligible"
 
     financially_eligible = get_financially_eligible(description)
+    employer_average_weekly_wage = round(
+        wage_calculator.get_employer_average_weekly_wage(employer_id), 2
+    )
 
     return EligibilityResponse(
         financially_eligible=financially_eligible,
@@ -75,4 +80,5 @@ def compute_financial_eligibility(
         total_wages=total_wages,
         state_average_weekly_wage=state_average_weekly_wage,
         unemployment_minimum=unemployment_minimum,
+        employer_average_weekly_wage=employer_average_weekly_wage,
     )

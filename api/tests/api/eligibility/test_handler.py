@@ -3,6 +3,8 @@ from datetime import date
 
 import pytest
 
+import massgov.pfml.api.eligibility.wage as wage
+from massgov.pfml.api.eligibility.eligibility_date import eligibility_date
 from massgov.pfml.db.models.factories import (
     EmployeeFactory,
     EmployerFactory,
@@ -43,7 +45,7 @@ def test_endpoint_with_employee_wages_data(
         headers={"Authorization": f"Bearer {fineos_user_token}"},
         json=body,
     )
-    assert response.status_code == 200
+
     assert response.get_json().get("data").get("description") == "Financially eligible"
     assert response.get_json().get("data").get("total_wages") == float(
         round(
@@ -52,6 +54,23 @@ def test_endpoint_with_employee_wages_data(
             + wages_and_contribution3.employee_qtr_wages,
             2,
         )
+    )
+
+    def _get_employer_average_weekly_wage():
+        # no easy way to evaluate whether employer_average_weekly_wage is correct without doing
+        # the computation here
+        effective_date = eligibility_date(date(2020, 12, 30), date(2020, 12, 30))
+        wage_calculator = wage.get_wage_calculator(
+            employee.employee_id, effective_date, test_db_session
+        )
+        employer_avg_weekly_wage = float(
+            round(wage_calculator.compute_employer_average_weekly_wage(employer.employer_id), 2)
+        )
+        return employer_avg_weekly_wage
+
+    assert (
+        response.get_json().get("data").get("employer_average_weekly_wage")
+        == _get_employer_average_weekly_wage()
     )
 
 

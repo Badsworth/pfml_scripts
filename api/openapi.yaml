@@ -468,6 +468,7 @@ paths:
                     total_wages: 55000
                     state_average_weekly_wage: 1431
                     unemployment_minimum: 5100
+                    employer_average_weekly_wage: 1500
         "400":
           $ref: "#/components/responses/BadRequest"
       requestBody:
@@ -1248,6 +1249,9 @@ components:
         unemployment_minimum:
           type: integer
           example: 5100
+        employer_average_weekly_wage:
+          type: number
+          example: 1500
       required:
         - financially_eligible
         - description

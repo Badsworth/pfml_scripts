@@ -103,6 +103,10 @@ class WageCalculator:
         """Set the effective quarter for the computation."""
         self.effective_quarter = effective_quarter
 
+    def get_employer_average_weekly_wage(self, employer_id):
+        employer_average_weekly_wage = self.employer_average_weekly_wage.get(employer_id)
+        return employer_average_weekly_wage
+
     def compute_average_weekly_wage(self) -> int:
         """Compute the average weekly wage, summed across all employers."""
         logger.info(
@@ -112,6 +116,7 @@ class WageCalculator:
         )
         for employer_id in self.employer_quarter_wage:
             self.compute_employer_average_weekly_wage(employer_id)
+
         return math.ceil(sum(self.employer_average_weekly_wage.values()))
 
     def compute_employer_average_weekly_wage(self, employer_id: uuid.UUID) -> decimal.Decimal:
@@ -135,6 +140,7 @@ class WageCalculator:
             average_weekly_wage = (max_wage_0 + max_wage_1) / 26
 
         self.employer_average_weekly_wage[employer_id] = average_weekly_wage
+
         return average_weekly_wage
 
     def compute_total_wage(self) -> decimal.Decimal:
@@ -148,6 +154,7 @@ class WageCalculator:
         total_wage = decimal.Decimal("0")
         for employer_id in self.employer_quarter_wage:
             total_wage += self.compute_employer_total_wage(employer_id)
+
         return total_wage
 
     def compute_employer_total_wage(self, employer_id: uuid.UUID) -> decimal.Decimal:

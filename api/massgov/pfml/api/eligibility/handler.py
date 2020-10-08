@@ -23,6 +23,7 @@ class EligibilityResponse(PydanticBaseModel):
     total_wages: Optional[Decimal]
     state_average_weekly_wage: Optional[int]
     unemployment_minimum: Optional[int]
+    employer_average_weekly_wage: Optional[Decimal]
 
 
 class EligibilityRequest(PydanticBaseModel):
@@ -60,10 +61,12 @@ def eligibility_post():
             ).to_api_response()
 
         employee_id: UUID = UUID(str(employee.employee_id))
+        employer_id: UUID = UUID(str(employer.employer_id))
 
     wage_data_response = eligibility.compute_financial_eligibility(
         db_session,
         employee_id,
+        employer_id,
         fein,
         leave_start_date,
         application_submitted_date,
