@@ -213,7 +213,7 @@ class ApplicationFactory(BaseFactory):
     user_id = factory.LazyAttribute(lambda a: a.user.user_id)
 
     employer = factory.SubFactory(EmployerFactory)
-    hours_worked_per_week = 70
+    hours_worked_per_week = None
     employer_id = factory.LazyAttribute(lambda a: a.employer.employer_id)
 
     tax_identifier = factory.SubFactory(TaxIdentifierFactory)

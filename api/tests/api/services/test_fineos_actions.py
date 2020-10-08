@@ -138,6 +138,19 @@ def test_document_upload(user, test_db_session):
 def test_build_week_based_work_pattern(user):
     application = ApplicationFactory.create(user=user)
 
+    # default behavior of falling back to 40 hours if not provided
+    application.hours_worked_per_week = None
+    forty_hours_split_pattern = fineos_actions.build_week_based_work_pattern(application)
+
+    # 40 does not divide into 7 evenly under integer division, it has a quotient
+    # of 5 and a remainder of 5, so first 5 days will spread out the extra 5
+    # hours by adding an hour each day, the last two days will just have 5 hours
+    for i, day in enumerate(forty_hours_split_pattern.workPatternDays):
+        if i < 5:
+            assert day.hours == 6
+        else:
+            assert day.hours == 5
+
     application.hours_worked_per_week = 70
     evenly_split_pattern = fineos_actions.build_week_based_work_pattern(application)
 

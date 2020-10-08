@@ -230,10 +230,12 @@ def upsert_week_based_work_pattern(fineos_client, user_id, application):
             raise error
 
 
-def build_week_based_work_pattern(application):
+def build_week_based_work_pattern(
+    application: Application,
+) -> massgov.pfml.fineos.models.customer_api.WeekBasedWorkPattern:
     """Split hours_worked_per_week across 7 week days"""
 
-    hours_worked_per_week = getattr(application, "hours_worked_per_week", 40)
+    hours_worked_per_week = application.hours_worked_per_week or 40
     week_days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
 
     hours_per_day = math.floor(hours_worked_per_week / 7)
