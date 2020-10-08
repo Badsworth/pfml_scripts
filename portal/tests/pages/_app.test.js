@@ -120,8 +120,8 @@ describe("App", () => {
 
       expect(wrapper.find("Spinner").exists()).toBe(false);
       expect(wrapper.find("TestComponent").exists()).toBe(true);
-      expect(tracker.setCurrentRouteName).toHaveBeenCalledTimes(1);
-      expect(tracker.setCurrentRouteName).toHaveBeenCalledWith("/claims");
+      expect(tracker.startPageView).toHaveBeenCalledTimes(1);
+      expect(tracker.startPageView).toHaveBeenCalledWith("/claims");
     });
 
     it("hides spinner when a route change throws an error", async () => {

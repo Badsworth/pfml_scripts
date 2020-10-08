@@ -51,13 +51,17 @@ function noticeError(error, customAttributes) {
 }
 
 /**
- * Give a route in New Relic more accurate names.
+ * Track Single Page App (SPA) route changes in New Relic and give them more accurate names.
+ * @see https://docs.newrelic.com/docs/browser/new-relic-browser/guides/guide-using-browser-spa-apis
  * @see https://docs.newrelic.com/docs/browser/new-relic-browser/browser-agent-spa-api/spa-set-current-route-name
  * @param {string} routeName - Route names should represent a routing pattern
  *  rather than a specific resource. For example /claims/:id rather than /claims/123
  */
-function setCurrentRouteName(routeName) {
+function startPageView(routeName) {
   if (newrelicReady()) {
+    // First end previous page view interaction if that's still in progress
+    newrelic.interaction().end();
+    newrelic.interaction();
     newrelic.setCurrentRouteName(routeName);
   }
 }
@@ -78,6 +82,6 @@ function trackEvent(name, customAttributes) {
 export default {
   initialize,
   noticeError,
-  setCurrentRouteName,
+  startPageView,
   trackEvent,
 };

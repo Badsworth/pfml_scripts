@@ -75,7 +75,10 @@ export const App = ({ Component, pageProps }) => {
   /**
    * Event handler for when a page route is transitioning
    */
-  const handleRouteChangeStart = () => {
+  const handleRouteChangeStart = (url = "") => {
+    const routeName = url.split("?")[0];
+    tracker.startPageView(routeName);
+
     appLogic.clearErrors();
     setUI({ ...ui, isLoading: true });
   };
@@ -86,9 +89,6 @@ export const App = ({ Component, pageProps }) => {
    */
   const handleRouteChangeComplete = (url = "") => {
     handleRouteChangeEnd();
-
-    const routeName = url.split("?")[0];
-    tracker.setCurrentRouteName(routeName);
   };
 
   /**

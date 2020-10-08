@@ -15,7 +15,7 @@ describe("tracker", () => {
     // Mappings of tracker.METHOD_NAME to newrelic.METHOD_NAME
     { trackerMethod: "noticeError", newrelicMethod: "noticeError" },
     {
-      trackerMethod: "setCurrentRouteName",
+      trackerMethod: "startPageView",
       newrelicMethod: "setCurrentRouteName",
     },
     { trackerMethod: "trackEvent", newrelicMethod: "addPageAction" },
@@ -27,6 +27,9 @@ describe("tracker", () => {
       // which is set when the New Relic JS snippet loads.
       global.newrelic = {
         addPageAction: jest.fn(),
+        interaction: jest.fn().mockImplementation(() => ({
+          end: jest.fn(),
+        })),
         noticeError: jest.fn(),
         setCurrentRouteName: jest.fn(),
       };
