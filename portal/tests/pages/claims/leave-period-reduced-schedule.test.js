@@ -4,7 +4,6 @@ import {
   simulateEvents,
 } from "../../test-utils";
 import LeavePeriodReducedSchedule from "../../../src/pages/claims/leave-period-reduced-schedule";
-import { ReducedScheduleLeavePeriod } from "../../../src/models/Claim";
 import { act } from "react-dom/test-utils";
 
 jest.mock("../../../src/hooks/useAppLogic");
@@ -49,7 +48,7 @@ describe("LeavePeriodReducedSchedule", () => {
     expect(wrapper.find("ConditionalContent").prop("visible")).toBe(true);
   });
 
-  it("adds empty leave period when user first indicates they have this leave period", async () => {
+  it("adds leave period with only the page's fields when user first indicates they have this leave period", async () => {
     const { appLogic, claim, wrapper } = renderWithAppLogic(
       LeavePeriodReducedSchedule,
       {
@@ -70,7 +69,13 @@ describe("LeavePeriodReducedSchedule", () => {
     expect(appLogic.claims.update).toHaveBeenCalledWith(claim.application_id, {
       has_reduced_schedule_leave_periods: true,
       leave_details: {
-        reduced_schedule_leave_periods: [new ReducedScheduleLeavePeriod()],
+        reduced_schedule_leave_periods: [
+          {
+            leave_period_id: null,
+            end_date: null,
+            start_date: null,
+          },
+        ],
       },
     });
   });

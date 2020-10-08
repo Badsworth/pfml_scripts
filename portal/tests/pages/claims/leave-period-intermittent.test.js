@@ -3,7 +3,6 @@ import {
   renderWithAppLogic,
   simulateEvents,
 } from "../../test-utils";
-import { IntermittentLeavePeriod } from "../../../src/models/Claim";
 import LeavePeriodIntermittent from "../../../src/pages/claims/leave-period-intermittent";
 import { act } from "react-dom/test-utils";
 
@@ -63,7 +62,7 @@ describe("LeavePeriodIntermittent", () => {
     ).toBe(true);
   });
 
-  it("adds empty leave period when user first indicates they have this leave period", async () => {
+  it("adds leave period with only the page's fields when user first indicates they have this leave period", async () => {
     const { appLogic, claim, wrapper } = renderWithAppLogic(
       LeavePeriodIntermittent,
       {
@@ -84,7 +83,13 @@ describe("LeavePeriodIntermittent", () => {
     expect(appLogic.claims.update).toHaveBeenCalledWith(claim.application_id, {
       has_intermittent_leave_periods: true,
       leave_details: {
-        intermittent_leave_periods: [new IntermittentLeavePeriod()],
+        intermittent_leave_periods: [
+          {
+            leave_period_id: null,
+            end_date: null,
+            start_date: null,
+          },
+        ],
       },
     });
   });

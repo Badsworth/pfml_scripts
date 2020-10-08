@@ -1,9 +1,6 @@
-import Claim, {
-  IntermittentLeavePeriod,
-  LeaveReason,
-} from "../../models/Claim";
+import Claim, { LeaveReason } from "../../models/Claim";
 import React, { useEffect } from "react";
-import { get, pick } from "lodash";
+import { get, pick, set } from "lodash";
 import Alert from "../../components/Alert";
 import ConditionalContent from "../../components/ConditionalContent";
 import Heading from "../../components/Heading";
@@ -18,11 +15,17 @@ import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "../../locales/i18n";
 import withClaim from "../../hoc/withClaim";
 
+/**
+ * Convenience constant for referencing the leave period object
+ * and referencing fields within it
+ */
+const leavePeriodPath = "leave_details.intermittent_leave_periods[0]";
+
 export const fields = [
   "claim.has_intermittent_leave_periods",
-  "claim.leave_details.intermittent_leave_periods[0].end_date",
-  "claim.leave_details.intermittent_leave_periods[0].start_date",
-  "claim.leave_details.intermittent_leave_periods[0].leave_period_id",
+  `claim.${leavePeriodPath}.end_date`,
+  `claim.${leavePeriodPath}.start_date`,
+  `claim.${leavePeriodPath}.leave_period_id`,
 ];
 
 export const LeavePeriodIntermittent = (props) => {
@@ -38,15 +41,21 @@ export const LeavePeriodIntermittent = (props) => {
    * add a blank leave period so validations are ran against it
    */
   useEffect(() => {
-    const existingLeavePeriod = get(
-      formState,
-      "leave_details.intermittent_leave_periods[0]"
-    );
+    const existingLeavePeriod = get(formState, leavePeriodPath);
 
     if (formState.has_intermittent_leave_periods && !existingLeavePeriod) {
-      updateFields({
-        "leave_details.intermittent_leave_periods[0]": new IntermittentLeavePeriod(),
-      });
+      // Portal will display validation warnings for any field included
+      // in the API request. We only want to display errors for fields on
+      // this page so we create an object with just those:
+      const leavePeriod = fields
+        .filter((field) => field.includes(leavePeriodPath))
+        .reduce((draftLeavePeriod, field) => {
+          const fieldPath = field.replace(`claim.${leavePeriodPath}.`, "");
+          // For example: set({ end_date: null }, "start_date", null) => { end_date: null, start_date: null }
+          return set(draftLeavePeriod, fieldPath, null);
+        }, {});
+
+      updateFields({ [leavePeriodPath]: leavePeriod });
     }
   }, [formState, updateFields]);
 
@@ -133,9 +142,7 @@ export const LeavePeriodIntermittent = (props) => {
         </Lead>
 
         <InputDate
-          {...getFunctionalInputProps(
-            "leave_details.intermittent_leave_periods[0].start_date"
-          )}
+          {...getFunctionalInputProps(`${leavePeriodPath}.start_date`)}
           label={t("pages.claimsLeavePeriodIntermittent.startDateLabel")}
           example={t("components.form.dateInputExample")}
           dayLabel={t("components.form.dateInputDayLabel")}
@@ -144,9 +151,7 @@ export const LeavePeriodIntermittent = (props) => {
           smallLabel
         />
         <InputDate
-          {...getFunctionalInputProps(
-            "leave_details.intermittent_leave_periods[0].end_date"
-          )}
+          {...getFunctionalInputProps(`${leavePeriodPath}.end_date`)}
           label={t("pages.claimsLeavePeriodIntermittent.endDateLabel", {
             context: contentContext,
           })}

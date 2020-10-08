@@ -3,7 +3,6 @@ import {
   renderWithAppLogic,
   simulateEvents,
 } from "../../test-utils";
-import { ContinuousLeavePeriod } from "../../../src/models/Claim";
 import LeavePeriodContinuous from "../../../src/pages/claims/leave-period-continuous";
 import { act } from "react-dom/test-utils";
 
@@ -49,7 +48,7 @@ describe("LeavePeriodContinuous", () => {
     expect(wrapper.find("ConditionalContent").prop("visible")).toBe(true);
   });
 
-  it("adds empty leave period when user first indicates they have this leave period", async () => {
+  it("adds leave period with only the page's fields when user first indicates they have this leave period", async () => {
     const { appLogic, claim, wrapper } = renderWithAppLogic(
       LeavePeriodContinuous,
       {
@@ -70,7 +69,13 @@ describe("LeavePeriodContinuous", () => {
     expect(appLogic.claims.update).toHaveBeenCalledWith(claim.application_id, {
       has_continuous_leave_periods: true,
       leave_details: {
-        continuous_leave_periods: [new ContinuousLeavePeriod()],
+        continuous_leave_periods: [
+          {
+            leave_period_id: null,
+            end_date: null,
+            start_date: null,
+          },
+        ],
       },
     });
   });

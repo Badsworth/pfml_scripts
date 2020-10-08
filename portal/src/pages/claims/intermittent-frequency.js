@@ -20,7 +20,7 @@ import { useTranslation } from "react-i18next";
 import withClaim from "../../hoc/withClaim";
 
 /**
- * Convenience constant for reference the leave period object
+ * Convenience constant for referencing the leave period object
  * and referencing fields within it
  */
 const leavePeriodPath = "leave_details.intermittent_leave_periods[0]";
