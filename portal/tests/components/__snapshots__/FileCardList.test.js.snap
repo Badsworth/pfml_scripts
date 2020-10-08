@@ -1,7 +1,9 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`FileCardList with no files selected renders an empty list 1`] = `
-<div>
+<div
+  className="margin-bottom-4"
+>
   <ul
     className="usa-list usa-list--unstyled measure-5"
   />
@@ -21,7 +23,9 @@ exports[`FileCardList with no files selected renders an empty list 1`] = `
 `;
 
 exports[`FileCardList with previously-selected files renders a list of the files 1`] = `
-<div>
+<div
+  className="margin-bottom-4"
+>
   <ul
     className="usa-list usa-list--unstyled measure-5"
   >

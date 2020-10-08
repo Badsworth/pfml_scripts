@@ -136,7 +136,7 @@ const FileCardList = (props) => {
   const handleChange = useChangeHandler(setFiles, setAppErrors, t);
 
   return (
-    <div>
+    <div className="margin-bottom-4">
       <ul className="usa-list usa-list--unstyled measure-5">{fileCards}</ul>
       <label className="margin-top-2 usa-button usa-button--outline">
         {button}

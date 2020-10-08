@@ -2,7 +2,7 @@
 
 exports[`RepeatableFieldset renders a RepeatableFieldsetCard for each entry 1`] = `
 <section
-  className="margin-bottom--3"
+  className="margin-bottom-4"
 >
   <RepeatableFieldsetCard
     className="js-repeated-fieldset-card"

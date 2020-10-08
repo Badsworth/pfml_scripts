@@ -30,7 +30,7 @@ const RepeatableFieldset = (props) => {
   }, [containerRef, entriesAndIds.length, previousEntriesLength]);
 
   return (
-    <section className="margin-bottom--3" ref={containerRef}>
+    <section className="margin-bottom-4" ref={containerRef}>
       {entriesAndIds.map(([entry, id], index) => (
         <RepeatableFieldsetCard
           key={id}
