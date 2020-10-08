@@ -30,6 +30,7 @@ def test_first_name_required(test_db_session, initialize_factories_session):
         employment_status=EmploymentStatus.get_instance(
             test_db_session, template=EmploymentStatus.EMPLOYED
         ),
+        hours_worked_per_week=70,
         residential_address=AddressFactory.create(),
     )
     issues = get_always_required_issues(test_app)
@@ -45,6 +46,7 @@ def test_last_name_required(test_db_session, initialize_factories_session):
         employment_status=EmploymentStatus.get_instance(
             test_db_session, template=EmploymentStatus.EMPLOYED
         ),
+        hours_worked_per_week=70,
         residential_address=AddressFactory.create(),
     )
     issues = get_always_required_issues(test_app)
@@ -60,6 +62,7 @@ def test_date_of_birth_required(test_db_session, initialize_factories_session):
         employment_status=EmploymentStatus.get_instance(
             test_db_session, template=EmploymentStatus.EMPLOYED
         ),
+        hours_worked_per_week=70,
         residential_address=AddressFactory.create(),
     )
     issues = get_always_required_issues(test_app)
@@ -74,6 +77,7 @@ def test_has_state_id_required(test_db_session, initialize_factories_session):
         employment_status=EmploymentStatus.get_instance(
             test_db_session, template=EmploymentStatus.EMPLOYED
         ),
+        hours_worked_per_week=70,
         residential_address=AddressFactory.create(),
     )
     issues = get_always_required_issues(test_app)
@@ -90,6 +94,7 @@ def test_tax_identifier_required(test_db_session, initialize_factories_session):
         employment_status=EmploymentStatus.get_instance(
             test_db_session, template=EmploymentStatus.EMPLOYED
         ),
+        hours_worked_per_week=70,
         residential_address=AddressFactory.create(),
     )
     issues = get_always_required_issues(test_app)
@@ -105,6 +110,7 @@ def test_leave_reason_required(test_db_session, initialize_factories_session):
         employment_status=EmploymentStatus.get_instance(
             test_db_session, template=EmploymentStatus.EMPLOYED
         ),
+        hours_worked_per_week=70,
         residential_address=AddressFactory.create(),
     )
     issues = get_always_required_issues(test_app)
@@ -119,7 +125,10 @@ def test_leave_reason_required(test_db_session, initialize_factories_session):
 
 def test_employment_status_required(test_db_session, initialize_factories_session):
     test_app = ApplicationFactory.create(
-        employment_status=None, has_state_id=True, residential_address=AddressFactory.create()
+        employment_status=None,
+        hours_worked_per_week=70,
+        has_state_id=True,
+        residential_address=AddressFactory.create(),
     )
     issues = get_always_required_issues(test_app)
     assert [
@@ -131,12 +140,31 @@ def test_employment_status_required(test_db_session, initialize_factories_sessio
     ] == issues
 
 
+def test_hours_worked_per_week_required(test_db_session, initialize_factories_session):
+    test_app = ApplicationFactory.create(
+        employment_status=EmploymentStatus.get_instance(
+            test_db_session, template=EmploymentStatus.EMPLOYED
+        ),
+        has_state_id=True,
+        residential_address=AddressFactory.create(),
+    )
+    issues = get_always_required_issues(test_app)
+    assert [
+        Issue(
+            type=IssueType.required,
+            message="hours_worked_per_week is required",
+            field="hours_worked_per_week",
+        )
+    ] == issues
+
+
 def test_residential_address_required(test_db_session, initialize_factories_session):
     test_app = ApplicationFactory.create(
         residential_address=None,
         employment_status=EmploymentStatus.get_instance(
             test_db_session, template=EmploymentStatus.EMPLOYED
         ),
+        hours_worked_per_week=70,
         has_state_id=True,
     )
     issues = get_always_required_issues(test_app)
@@ -154,6 +182,7 @@ def test_has_leave_periods_required(test_db_session, initialize_factories_sessio
         employment_status=EmploymentStatus.get_instance(
             test_db_session, template=EmploymentStatus.EMPLOYED
         ),
+        hours_worked_per_week=70,
         residential_address=AddressFactory.create(),
         has_continuous_leave_periods=None,
         has_intermittent_leave_periods=None,
@@ -553,6 +582,7 @@ def test_payment_preferences_same_order(test_db_session, initialize_factories_se
         employment_status=EmploymentStatus.get_instance(
             test_db_session, template=EmploymentStatus.EMPLOYED
         ),
+        hours_worked_per_week=70,
         has_continuous_leave_periods=True,
         continuous_leave_periods=[ContinuousLeavePeriodFactory.create()],
         payment_preferences=[

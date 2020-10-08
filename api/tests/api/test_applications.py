@@ -505,6 +505,48 @@ def test_application_patch_hours_worked_per_week(client, user, auth_token, test_
     assert updated_hours_worked_per_week == 50.5
 
 
+def test_application_patch_hours_worked_per_week_out_of_range(
+    client, user, auth_token, test_db_session
+):
+    application = ApplicationFactory.create(user=user)
+
+    response = client.patch(
+        "/v1/applications/{}".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+        json={"hours_worked_per_week": 0},
+    )
+
+    assert response.status_code == 400
+
+    response_body = response.get_json()
+
+    error = response_body.get("errors")[0]
+    assert error["field"] == "hours_worked_per_week"
+    assert error["message"] == "0 is less than the minimum of 1"
+
+    response = client.patch(
+        "/v1/applications/{}".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+        json={"hours_worked_per_week": 169},
+    )
+
+    assert response.status_code == 400
+
+    response_body = response.get_json()
+
+    error = response_body.get("errors")[0]
+    assert error["field"] == "hours_worked_per_week"
+    assert error["message"] == "169 is greater than the maximum of 168"
+
+    response = client.patch(
+        "/v1/applications/{}".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+        json={"hours_worked_per_week": None},
+    )
+
+    assert response.status_code == 200
+
+
 def test_application_patch_pregnant_or_recent_birth(client, user, auth_token, test_db_session):
     application = ApplicationFactory.create(user=user)
 
@@ -1176,6 +1218,7 @@ def test_application_post_submit_app(client, user, auth_token, test_db_session):
     application.continuous_leave_periods = [ContinuousLeavePeriodFactory.create()]
     application.date_of_birth = "1997-06-06"
     application.employment_status_id = EmploymentStatus.UNEMPLOYED.employment_status_id
+    application.hours_worked_per_week = 70
     application.has_continuous_leave_periods = True
     application.residential_address = AddressFactory.create()
     # Applications must have an FEIN for submit to succeed.
@@ -1215,6 +1258,7 @@ def test_application_post_submit_app_fein_not_found(client, user, auth_token, te
     application = ApplicationFactory.create(user=user)
     application.date_of_birth = "1953-01-05"
     application.employment_status_id = EmploymentStatus.UNEMPLOYED.employment_status_id
+    application.hours_worked_per_week = 70
     application.residential_address = AddressFactory.create()
     application.continuous_leave_periods = [ContinuousLeavePeriodFactory.create()]
     application.has_continuous_leave_periods = True
@@ -1251,6 +1295,7 @@ def test_application_post_submit_app_ssn_not_found(client, user, auth_token, tes
     application = ApplicationFactory.create(user=user)
     application.date_of_birth = "2009-01-20"
     application.employment_status_id = EmploymentStatus.UNEMPLOYED.employment_status_id
+    application.hours_worked_per_week = 70
     application.residential_address = AddressFactory.create()
     application.continuous_leave_periods = [ContinuousLeavePeriodFactory.create()]
     application.has_continuous_leave_periods = True
@@ -1545,6 +1590,7 @@ def test_application_post_complete_app(client, user, auth_token, test_db_session
     application = ApplicationFactory.create(user=user)
     application.tax_identifier = TaxIdentifier(tax_identifier="999004444")
     application.employment_status_id = EmploymentStatus.UNEMPLOYED.employment_status_id
+    application.hours_worked_per_week = 70
     application.residential_address = AddressFactory.create()
     application.employer_fein = "770000001"
     application.fineos_notification_case_id = "NTN-259"
@@ -1568,6 +1614,7 @@ def test_application_post_complete_to_fineos(client, user, auth_token, test_db_s
     application = ApplicationFactory.create(user=user)
     application.tax_identifier = TaxIdentifier(tax_identifier="999004444")
     application.employment_status_id = EmploymentStatus.UNEMPLOYED.employment_status_id
+    application.hours_worked_per_week = 70
     application.residential_address = AddressFactory.create()
     application.employer_fein = "770000001"
     application.fineos_notification_case_id = "NTN-259"

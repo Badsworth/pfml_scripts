@@ -190,6 +190,7 @@ ALWAYS_REQUIRED_FIELDS_DB_NAME_TO_API_NAME_MAP = {
     "tax_identifier": "tax_identifier",
     "leave_reason": "leave_details.reason",
     "employment_status": "employment_status",
+    "hours_worked_per_week": "hours_worked_per_week",
     "residential_address": "residential_address",
 }
 
