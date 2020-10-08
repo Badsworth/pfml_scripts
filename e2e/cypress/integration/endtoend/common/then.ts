@@ -273,8 +273,6 @@ Then("I answer the reduced leave question", function (this: CypressStepThis) {
   }
   const hasReduced = checkIfReduced(application.leave_details);
 
-  const leave = application.leave_details.continuous_leave_periods;
-
   if (hasReduced) {
     throw new Error("No claims should currently be for reduced leave.");
   } else {
@@ -295,8 +293,6 @@ Then("I answer the intermittent leave question", function (
     throw new Error("Leave details not provided.");
   }
   const hasIntermittent = checkIfIntermittent(application.leave_details);
-
-  const leave = application.leave_details.intermittent_leave_periods;
 
   if (hasIntermittent) {
     throw new Error("No claims should currently be for intermittent leave.");

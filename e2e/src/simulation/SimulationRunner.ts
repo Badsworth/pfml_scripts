@@ -84,7 +84,6 @@ export default class SimulationRunner {
     );
 
     const makeDocUploadBody = (doc: ClaimDocument): DocumentUploadRequest => ({
-      document_category: getDocumentCategory(doc),
       document_type: getDocumentType(doc),
       description: "Automated Upload",
       file: fs.createReadStream(
@@ -152,20 +151,6 @@ function getDocumentType(
     case "ID-front":
     case "ID-back":
       return "Identification Proof";
-    default:
-      throw new Error(`Unhandled document type: ${document.type}`);
-  }
-}
-
-function getDocumentCategory(
-  document: ClaimDocument
-): DocumentUploadRequest["document_category"] {
-  switch (document.type) {
-    case "HCP":
-      return "Certification";
-    case "ID-front":
-    case "ID-back":
-      return "Identity Proofing";
     default:
       throw new Error(`Unhandled document type: ${document.type}`);
   }

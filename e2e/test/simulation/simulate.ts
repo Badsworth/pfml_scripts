@@ -88,6 +88,18 @@ describe("Simulation Generator", () => {
     expect(claim.financiallyIneligible).toBe(true);
   });
 
+  it("Should have has_ properties that match its leave periods", async () => {
+    const claim = await scenario("TEST", {
+      residence: "OOS",
+      financiallyIneligible: true,
+    })(opts);
+    expect(claim.claim).toMatchObject({
+      has_continuous_leave_periods: true,
+      has_intermittent_leave_periods: false,
+      has_reduced_schedule_leave_periods: false,
+    });
+  });
+
   it("Should generate an HCP form", async () => {
     const claim = await scenario("TEST", {
       residence: "OOS",

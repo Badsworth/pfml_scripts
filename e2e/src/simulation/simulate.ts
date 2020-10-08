@@ -92,6 +92,9 @@ export function scenario(
         reason: "Serious Health Condition - Employee",
         reason_qualifier: "Serious Health Condition",
       },
+      has_continuous_leave_periods: true,
+      has_intermittent_leave_periods: false,
+      has_reduced_schedule_leave_periods: false,
       payment_preferences: [
         {
           payment_method: "Check",
