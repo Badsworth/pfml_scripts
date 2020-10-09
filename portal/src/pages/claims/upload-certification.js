@@ -8,7 +8,6 @@ import Heading from "../../components/Heading";
 import Lead from "../../components/Lead";
 import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
-import ReviewRow from "../../components/ReviewRow";
 import Spinner from "../../components/Spinner";
 import { Trans } from "react-i18next";
 import findDocumentsByType from "../../utils/findDocumentsByType";
@@ -99,17 +98,6 @@ export const UploadCertification = (props) => {
       </ConditionalContent>
       <FileUploadDetails />
 
-      {certificationDocuments.length > 0 && (
-        <ReviewRow
-          label={t(
-            "pages.claimsUploadCertification.certificationDocumentsCount"
-          )}
-          level="3"
-        >
-          {certificationDocuments.length}
-        </ReviewRow>
-      )}
-
       {isLoadingDocuments && (
         <div className="margin-top-8 text-center">
           <Spinner aria-valuetext={t("components.withClaims.loadingLabel")} />
@@ -119,6 +107,7 @@ export const UploadCertification = (props) => {
       {!isLoadingDocuments && (
         <FileCardList
           files={files}
+          documents={certificationDocuments}
           setFiles={setFiles}
           setAppErrors={appLogic.setAppErrors}
           fileHeadingPrefix={t(

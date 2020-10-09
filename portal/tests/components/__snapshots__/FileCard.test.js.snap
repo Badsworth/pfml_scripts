@@ -1,6 +1,29 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`FileCard renders 1`] = `
+exports[`FileCard when the FileCard receives a Document renders a FileCard component without a Button 1`] = `
+<div
+  className="c-file-card padding-2 margin-bottom-3 border-1px border-base-lighter display-flex flex-wrap"
+>
+  <Thumbnail />
+  <div
+    className="c-file-card__content"
+  >
+    <Heading
+      className="margin-bottom-1"
+      level="3"
+    >
+      Document 1
+    </Heading>
+    <div
+      className="c-file-card__name padding-bottom-2 margin-bottom-2 margin-top-0 border-bottom-2px border-base-lighter"
+    >
+      Date of upload: 10/10/2020
+    </div>
+  </div>
+</div>
+`;
+
+exports[`FileCard when the FileCard receives a File renders 1`] = `
 <div
   className="c-file-card padding-2 margin-bottom-3 border-1px border-base-lighter display-flex flex-wrap"
 >
@@ -11,8 +34,8 @@ exports[`FileCard renders 1`] = `
     className="c-file-card__content"
   >
     <Heading
-      level="2"
-      size="3"
+      className="margin-bottom-1"
+      level="3"
     >
       Document 1
     </Heading>

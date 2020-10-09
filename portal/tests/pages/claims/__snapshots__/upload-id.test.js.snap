@@ -62,6 +62,7 @@ exports[`UploadId after documents have been loaded when the user doesn't have a 
     <FileCardList
       addAnotherFileButtonText="Choose another file"
       addFirstFileButtonText="Choose a file"
+      documents={Array []}
       fileHeadingPrefix="File"
       files={Array []}
       setAppErrors={[MockFunction]}
@@ -75,6 +76,7 @@ exports[`UploadId after documents have been loaded when the user has a Mass ID r
 <FileCardList
   addAnotherFileButtonText="Choose another file"
   addFirstFileButtonText="Choose a file"
+  documents={Array []}
   fileHeadingPrefix="File"
   files={Array []}
   setAppErrors={[MockFunction]}
@@ -103,6 +105,7 @@ exports[`UploadId after documents have been loaded when the user has a Mass ID r
     <FileCardList
       addAnotherFileButtonText="Choose another file"
       addFirstFileButtonText="Choose a file"
+      documents={Array []}
       fileHeadingPrefix="File"
       files={Array []}
       setAppErrors={[MockFunction]}
@@ -133,6 +136,7 @@ exports[`UploadId after documents have been loaded when the user has a Mass ID w
     <FileCardList
       addAnotherFileButtonText="Choose another file"
       addFirstFileButtonText="Choose a file"
+      documents={Array []}
       fileHeadingPrefix="File"
       files={
         Array [
@@ -172,15 +176,6 @@ exports[`UploadId after documents have been loaded when the user has a Mass ID w
     />
   </div>
 </QuestionPage>
-`;
-
-exports[`UploadId after documents have been loaded when the user has a Mass ID when there are previously loaded documents renders the ReviewRow component 1`] = `
-<ReviewRow
-  label="Number of files uploaded"
-  level="3"
->
-  1
-</ReviewRow>
 `;
 
 exports[`UploadId before any documents have been loaded renders a spinner 1`] = `

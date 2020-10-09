@@ -128,7 +128,7 @@ describe("UploadCertification", () => {
       });
 
       describe("when there are previously loaded documents", () => {
-        it("renders the ReviewRow component", async () => {
+        it("renders the FileCardList with documents", async () => {
           const newDoc = new Document({
             document_type: DocumentType.medicalCertification,
             application_id: claim.application_id,
@@ -138,8 +138,9 @@ describe("UploadCertification", () => {
             newDoc
           );
           render();
-          expect(wrapper.find("ReviewRow")).toMatchSnapshot();
-          expect(wrapper.find("ReviewRow")).toHaveLength(1);
+          expect(wrapper.find("FileCardList").props().documents).toHaveLength(
+            1
+          );
         });
       });
     });

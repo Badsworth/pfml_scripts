@@ -8,7 +8,6 @@ import Heading from "../../components/Heading";
 import Lead from "../../components/Lead";
 import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
-import ReviewRow from "../../components/ReviewRow";
 import Spinner from "../../components/Spinner";
 import { Trans } from "react-i18next";
 import findDocumentsByType from "../../utils/findDocumentsByType";
@@ -80,15 +79,6 @@ export const UploadId = (props) => {
         )}
         <FileUploadDetails />
 
-        {idDocuments.length > 0 && (
-          <ReviewRow
-            label={t("pages.claimsUploadId.idDocumentsCount")}
-            level="3"
-          >
-            {idDocuments.length}
-          </ReviewRow>
-        )}
-
         {isLoadingDocuments && (
           <div className="margin-top-8 text-center">
             <Spinner aria-valuetext={t("components.withClaims.loadingLabel")} />
@@ -98,6 +88,7 @@ export const UploadId = (props) => {
         {!isLoadingDocuments && (
           <FileCardList
             files={stateIdFiles}
+            documents={idDocuments}
             setFiles={setStateIdFiles}
             setAppErrors={props.appLogic.setAppErrors}
             fileHeadingPrefix={t("pages.claimsUploadId.fileHeadingPrefix")}

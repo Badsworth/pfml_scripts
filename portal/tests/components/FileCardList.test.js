@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import _, { uniqueId } from "lodash";
 import { makeFile, testHook } from "../test-utils";
+import Document from "../../src/models/Document";
+import FileCard from "../../src/components/FileCard";
 import FileCardList from "../../src/components/FileCardList";
 import { act } from "react-dom/test-utils";
 import { shallow } from "enzyme";
@@ -244,6 +246,57 @@ describe("FileCardList", () => {
       expect(appErrors.items[0].message).toMatchInlineSnapshot(
         `"Only PDF and image files may be uploaded. See the tips below for suggestions on how to convert them to an image file. These files that you selected will not be uploaded: ${invalidFileName}"`
       );
+    });
+  });
+
+  describe("with documents in props", () => {
+    const mock_application_id = "mock_application_id";
+    let newDoc1, newDoc2;
+    beforeEach(() => {
+      newDoc1 = new Document({
+        document_type: DocumentType.medicalCertification,
+        application_id: mock_application_id,
+        fineos_document_id: "testId1",
+        created_at: "10/10/2020",
+      });
+      newDoc2 = new Document({
+        document_type: DocumentType.medicalCertification,
+        application_id: mock_application_id,
+        fineos_document_id: "testId2",
+        created_at: "10/10/2020",
+      });
+    });
+
+    it("renders a FileCard for each document", () => {
+      const wrapper = render({ documents: [newDoc1, newDoc2] });
+      expect(wrapper.find(FileCard)).toHaveLength(2);
+    });
+
+    describe("when there are additional files selected", () => {
+      it("renders a FileCard for the old and new files", () => {
+        const newFile = makeFileObject({ id: "newFile" });
+        const wrapper = render({
+          files: [newFile],
+          documents: [newDoc1, newDoc2],
+        });
+        expect(wrapper.find(FileCard)).toHaveLength(3);
+      });
+
+      it("continues numbering of the new FileCards from where it left off", () => {
+        const newFiles = [
+          makeFileObject({ id: "newFile1" }),
+          makeFileObject({ id: "newFile2" }),
+          makeFileObject({ id: "newFile3" }),
+        ];
+        const wrapper = render({
+          files: newFiles,
+          documents: [newDoc1, newDoc2],
+        });
+
+        expect(wrapper.find(FileCard).last().prop("heading")).toBe(
+          "Document 5"
+        );
+      });
     });
   });
 

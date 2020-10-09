@@ -1127,6 +1127,7 @@ const components = {
   },
   fileCard: {
     removeButton: "Remove file",
+    uploadDate: "Date of upload: {{date}}",
   },
   fileUploadDetails: {
     label: "Some tips for uploading documents and images",

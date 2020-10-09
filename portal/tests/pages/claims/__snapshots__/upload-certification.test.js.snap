@@ -15,6 +15,7 @@ exports[`UploadCertification after documents have been loaded when leave reason 
 <FileCardList
   addAnotherFileButtonText="Choose another file"
   addFirstFileButtonText="Choose a file"
+  documents={Array []}
   fileHeadingPrefix="File"
   files={Array []}
   setAppErrors={[MockFunction]}
@@ -44,13 +45,4 @@ Array [
   </a>,
   " to prove that you need to take medical leave. You can upload a completed Family and Medical Leave Act (FMLA) form instead if your provider filled one out.",
 ]
-`;
-
-exports[`UploadCertification after documents have been loaded when leave reason is Medical leave when there are previously loaded documents renders the ReviewRow component 1`] = `
-<ReviewRow
-  label="Number of files uploaded"
-  level="3"
->
-  1
-</ReviewRow>
 `;

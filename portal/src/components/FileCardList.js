@@ -1,6 +1,7 @@
 import { partition, uniqueId } from "lodash";
 import AppErrorInfo from "../models/AppErrorInfo";
 import AppErrorInfoCollection from "../models/AppErrorInfoCollection";
+import Document from "../models/Document";
 import FileCard from "./FileCard";
 import PropTypes from "prop-types";
 import React from "react";
@@ -118,15 +119,47 @@ function renderFileCard(file, index, setFiles, fileHeadingPrefix) {
 }
 
 /**
+ * Render a read-only FileCard for a document. These represent documents that have already been uploaded,
+ * and can no longer be removed from the application. Renders the FileCard inside of a <li> element.
+ * @param {Document} document The document to render as a FileCard
+ * @param {integer} index The zero-based index of the file in the list. This is used to
+ * to interpolate a heading for the file.
+ * @param {string} fileHeadingPrefix A string prefix we'll use as a heading in each FileCard. We
+ * will use the index param to interpolate the heading.
+ * @returns {React.Component} A <li> element containing the rendered FileCard.
+ */
+function renderDocumentFileCard(document, index, fileHeadingPrefix) {
+  const heading = `${fileHeadingPrefix} ${index + 1}`;
+
+  return (
+    <li key={document.fineos_document_id}>
+      <FileCard document={document} heading={heading} />
+    </li>
+  );
+}
+
+/**
  * A list of previously uploaded files and a button to upload additional files. This component
  * renders an invisible input component to handle file selection and then renders a list of
  * FileCards for each selected file.
  */
 const FileCardList = (props) => {
-  const { files, setFiles, fileHeadingPrefix } = props;
+  const { documents, files, setFiles, fileHeadingPrefix } = props;
+
+  let documentFileCount = 0;
+  let documentFileCards = [];
+
+  if (documents) {
+    documentFileCount = documents.length;
+    documentFileCards = documents.map((file, index) =>
+      renderDocumentFileCard(file, index, fileHeadingPrefix)
+    );
+  }
+
   const fileCards = files.map((file, index) =>
-    renderFileCard(file, index, setFiles, fileHeadingPrefix)
+    renderFileCard(file, index + documentFileCount, setFiles, fileHeadingPrefix)
   );
+
   const button = files.length
     ? props.addAnotherFileButtonText
     : props.addFirstFileButtonText;
@@ -137,6 +170,9 @@ const FileCardList = (props) => {
 
   return (
     <div className="margin-bottom-4">
+      <ul className="usa-list usa-list--unstyled measure-5">
+        {documentFileCards}
+      </ul>
       <ul className="usa-list usa-list--unstyled measure-5">{fileCards}</ul>
       <label className="margin-top-2 usa-button usa-button--outline">
         {button}
@@ -186,6 +222,8 @@ FileCardList.propTypes = {
   addFirstFileButtonText: PropTypes.string.isRequired,
   /** Button text to use when one or more files have already been selected */
   addAnotherFileButtonText: PropTypes.string.isRequired,
+  /** Documents that need to be rendered as read-only FileCards, representing previously uploaded files */
+  documents: PropTypes.arrayOf(PropTypes.instanceOf(Document)),
 };
 
 export default FileCardList;
