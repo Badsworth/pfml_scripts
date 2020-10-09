@@ -59,6 +59,15 @@ const errors = {
     first_name: {
       required: "Please enter a first name.",
     },
+    has_continuous_leave_periods: {
+      required: "Please indicate whether you are taking continuous leave.",
+    },
+    has_intermittent_leave_periods: {
+      required: "Please indicate whether you are taking intermittent leave.",
+    },
+    has_reduced_schedule_leave_periods: {
+      required: "Please indicate whether you are working a reduced schedule.",
+    },
     has_state_id: {
       required:
         "Please enter whether or not you have a Massachusetts driver's license or ID card.",
@@ -82,16 +91,28 @@ const errors = {
         },
         start_date: {
           required:
-            "Please enter a start date for this continous leave period.",
+            "Please enter a start date for this continuous leave period.",
         },
       },
       employer_notification_date: {
         pattern: "Please enter a valid notification date.",
       },
       intermittent_leave_periods: {
+        duration: {
+          required: "Please enter a duration.",
+        },
+        duration_basis: {
+          required: "Please select a duration option.",
+        },
         end_date: {
           required:
             "Please enter an end date for this intermittent leave period.",
+        },
+        frequency: {
+          required: "Please enter a frequency.",
+        },
+        frequency_interval_basis: {
+          required: "Please select a frequency option.",
         },
         start_date: {
           required:
@@ -110,12 +131,10 @@ const errors = {
       },
       reduced_schedule_leave_periods: {
         end_date: {
-          required:
-            "Please enter an end date for this reduced schedule leave period.",
+          required: "Please enter an end date for this reduced leave period.",
         },
         start_date: {
-          required:
-            "Please enter a start date for this reduced schedule leave period.",
+          required: "Please enter a start date for this reduced leave period.",
         },
       },
     },
