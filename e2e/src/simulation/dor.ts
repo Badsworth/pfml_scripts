@@ -48,7 +48,7 @@ function getEmployeeFilingRecords(
         employer.accountKey,
         formatISODate(period),
         employer.name.padEnd(255),
-        employer.fein.replace(/-/g, ""),
+        employer.fein.replace(/-/g, "").padEnd(14),
         "F",
         formatISODate(period),
         formatISODatetime(period)
@@ -151,7 +151,7 @@ export function createEmployersStream(
           "%s%s%s%s%s%s%s%s%s%s%s%s%s",
           record.accountKey,
           record.name.padEnd(255),
-          record.fein.replace(/-/g, ""),
+          record.fein.replace(/-/g, "").padEnd(14),
           record.street.padEnd(255),
           record.city.padEnd(30),
           record.state,
