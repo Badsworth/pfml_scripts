@@ -42,6 +42,26 @@ export const waitForElement = async (
   return browser.findElement(locator);
 };
 
+export const isFinanciallyEligible = async (
+  browser: Browser
+): Promise<boolean> => {
+  // go to the absence hub tab
+  const absenceHubTab = await waitForElement(
+    browser,
+    By.css("[class^='TabO'][keytipnumber='5']")
+  );
+  await absenceHubTab.click();
+
+  // and verify eligibility before proceeding
+  const eligibility = await waitForElement(
+    browser,
+    By.css("td[id*='EligibilityStatusIcon'] i")
+  );
+  const eligibilityIcon = await eligibility.getAttribute("class");
+
+  return eligibilityIcon === "icon-checkbox";
+};
+
 export type TestMailVerificationFetcher = {
   getVerificationCodeForUser: (address: string) => Promise<string>;
   getCodeFromMessage: (message: { html: string }) => string;

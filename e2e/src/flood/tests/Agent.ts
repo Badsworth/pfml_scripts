@@ -95,6 +95,12 @@ export default (
     const nextTaskType = await nextTask.text();
     await nextTask.click();
 
+    // Runs task-specific pre-hook
+    const preHook = `Before ${nextTaskType}`;
+    if (preHook in taskTypes) {
+      await taskTypes[`Before ${nextTaskType}`](browser, data);
+    }
+
     // do task button click opens a popup window
     const currentPage = await browser.page;
     const doTask = await waitForElement(
@@ -108,9 +114,9 @@ export default (
     await browser.wait(5000);
     const page = await browser.waitForNewPage();
     await browser.switchTo().page(page);
-    await browser.setViewport({ width: 1920, height: 1280 });
+    await browser.setViewport({ width: 1920, height: 1080 });
 
-    // Runs task-specific handler
+    // Runs task-specific main handler
     await taskTypes[nextTaskType](browser, data);
 
     // Close popup window & go back to initial window

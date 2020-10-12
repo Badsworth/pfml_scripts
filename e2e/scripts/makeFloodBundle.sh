@@ -11,7 +11,7 @@ cp simulation/types.ts flood/simulation;
 
 sed -i '' -e 's|"\.\./api"|"\./api"|g' flood/simulation/types.ts
 
-for f in flood/tests/*.ts; do
+for f in flood/*/*.ts; do
   sed -i '' -e 's|"\.\./\.\./simulation/types"|"\.\./simulation/types"|g' $f
 done
 
@@ -23,7 +23,7 @@ cd flood/
 
 zip -r ../../scripts/floodBundle.zip * -x '*index.perf.ts' '*tmp*' '*.git*' '*.md' '*.DS_Store'
 
-for f in tests/*.ts; do
+for f in */*.ts; do
   sed -i '' -e 's|"\.\./simulation/types"|"\.\./\.\./simulation/types"|g' $f
 done
 
