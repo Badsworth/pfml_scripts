@@ -96,19 +96,30 @@ Then("I start submitting the claim", function (this: CypressStepThis): void {
   }
   const { application } = this;
   const reason = application.leave_details && application.leave_details.reason;
+  const reasonQualifier =
+    application.leave_details && application.leave_details.reason_qualifier;
   type ClaimTypePortal = {
     [index: string]: string;
   };
   const claimType: ClaimTypePortal = {
     "Serious Health Condition - Employee":
       "I can’t work due to an illness, injury, or pregnancy.",
-    "Child Bonding": "I need to bond with my child after birth or placement.",
+    "Child Bonding":
+      "I need to bond with my child after birth, adoption, or foster placement.",
     "Care For A Family Member":
       "I need to manage family affairs while a family member is on active duty in the armed forces.",
     "Pregnancy/Maternity":
       "I need to care for a family member who serves in the armed forces.",
   };
+  const leaveReason: ClaimTypePortal = {
+    Newborn: "Birth",
+    Adoption: "Adoption",
+    "Foster Care": "Foster placement",
+  };
   cy.contains(claimType[reason as string]).click();
+  if (reason === "Child Bonding") {
+    cy.contains(leaveReason[reasonQualifier as string]).click();
+  }
   cy.contains("button", "Save and continue").click();
 
   // Submits data required by specific claim types.
@@ -365,6 +376,22 @@ Then("I enter employer info", function (this: CypressStepThis): void {
     }
     cy.contains("button", "Save and continue").click();
   }
+});
+
+Then("I enter child due date", function (this: CypressStepThis): void {
+  if (!this.application) {
+    throw new Error("Application has not been set");
+  }
+  const { application } = this;
+
+  cy.contains("fieldset", "When was your child born?").within(() => {
+    const DOB = new Date(application.leave_details?.child_birth_date as string);
+
+    cy.contains("Month").type(String(DOB.getMonth() + 1) as string);
+    cy.contains("Day").type(String(DOB.getUTCDate()) as string);
+    cy.contains("Year").type(String(DOB.getUTCFullYear()) as string);
+  });
+  cy.contains("button", "Save and continue").click();
 });
 
 // reportOtherBenefits
