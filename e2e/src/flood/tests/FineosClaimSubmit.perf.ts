@@ -28,14 +28,14 @@ export const steps: StoredStep[] = [
       );
       await linkParties.click();
 
-      assert(claim.employee_ssn, "employee_ssn is not defined");
+      assert(claim.tax_identifier, "tax_identifier is not defined");
       const identificationNum = await labelled(
         browser,
         "Identification Number"
       );
       await browser.type(
         identificationNum,
-        claim.employee_ssn.split("-").join("")
+        claim.tax_identifier.split("-").join("")
       );
 
       const search = await waitForElement(
@@ -49,7 +49,7 @@ export const steps: StoredStep[] = [
     name: "Add new application",
     test: async (browser: Browser, data: unknown): Promise<void> => {
       const { claim } = data as SimulationClaim;
-      assert(claim.employee_ssn, "employee_ssn is not defined");
+      assert(claim.tax_identifier, "tax_identifier is not defined");
       const okButton = await waitForElement(
         browser,
         By.css('input[type="submit"][value="OK"]')
@@ -193,12 +193,12 @@ export const steps: StoredStep[] = [
         By.css('input[type="submit"][value^="Next"]')
       );
       await nextButton.click();
-      /* We don't want to actually create claims at this initial stage */
-      /* const completeRegistration = await waitForElement(
+      const completeRegistration = await waitForElement(
         browser,
         By.css('input[type="submit"][value^="Next"]')
       );
-      await completeRegistration.click(); */
+      await completeRegistration.click();
+      await waitForElement(browser, By.visibleText("Adjudication"));
     },
   },
 ];
