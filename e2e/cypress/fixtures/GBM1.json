@@ -1,8 +1,8 @@
 {
   "employment_status": "Employed",
-  "first_name": "Florencio",
-  "last_name": "Cummerata",
-  "tax_identifier": "259-43-2367",
+  "first_name": "Ezra",
+  "last_name": "Tromp",
+  "tax_identifier": "558-28-6363",
   "employer_fein": "99-9999999",
   "date_of_birth": "1994-11-02",
   "has_state_id": true,
@@ -43,5 +43,6 @@
         "account_type": "Checking"
       }
     }
-  ]
+  ],
+  "hours_worked_per_week": 40
 }

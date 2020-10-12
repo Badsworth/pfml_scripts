@@ -1,4 +1,4 @@
-import { fineos } from "../actions/";
+import { fineos } from ".";
 
 function getToClaimPage(): void {
   fineos.loginSavilinx();
@@ -32,7 +32,7 @@ export function HAP1(): void {
   fineos.onTab("Manage Request");
   fineos.acceptLeavePlan();
   fineos.onPage("claims");
-  fineos.approveClaim();
+  fineos.assertClaimApprovable();
 }
 
 export function HAP2(): void {
@@ -173,5 +173,5 @@ export function GBM1(): void {
   fineos.onTab("Manage Request");
   fineos.acceptLeavePlan();
   fineos.onPage("claims");
-  fineos.approveClaim();
+  fineos.assertClaimApprovable();
 }

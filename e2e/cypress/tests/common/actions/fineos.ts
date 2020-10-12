@@ -10,15 +10,59 @@ export function visitClaim(claimId: string): void {
   cy.get('td[keytipnumber="4"]').contains("Case").click();
   cy.labelled("Case Number").type(claimId);
   cy.get('input[type="submit"][value="Search"]').click();
-  assertOnClaimPage(claimId);
+  assertOnClaimPage();
 }
 
-export function assertOnClaimPage(claimId: string): void {
-  cy.contains(".case_pageheader_title", claimId);
+export function assertOnClaimPage(): void {
+  cy.unstash("claimNumber")
+    .then((claimNumber) => {
+      if (typeof claimNumber === "string") {
+        return claimNumber;
+      } else {
+        throw new Error("Claim number must be a string.");
+      }
+    })
+    .then((claimNumber) => {
+      cy.get(".case_pageheader_title").contains(claimNumber);
+    });
 }
+
 export function assertAdjudicatingClaim(claimId: string): void {
   cy.contains(".case_pageheader_title", claimId);
   cy.contains(".pageheader_subtitle", "Editing Leave Request");
+}
+
+export function assertClaimApprovable(): void {
+  assertOnClaimPage();
+  // Assert that we have all green checkboxes.
+  cy.get(
+    "[id*='leavePlanAdjudicationListviewWidgetApplicabilityStatus']"
+  ).should("have.text", "Applicable");
+  cy.get("[id*='leavePlanAdjudicationListviewWidgetEligibilityStatus']").should(
+    "have.text",
+    "Met"
+  );
+  cy.get("[id*='leavePlanAdjudicationListviewWidgetEvidenceStatus']").should(
+    "have.text",
+    "Satisfied"
+  );
+  cy.get(
+    "[id*='leavePlanAdjudicationListviewWidgetAvailabilityStatus']"
+  ).should("have.text", "Time Available");
+  cy.get("[id*='leavePlanAdjudicationListviewWidgetRestrictionStatus']").should(
+    "have.text",
+    "Passed"
+  );
+  cy.get("[id*='leavePlanAdjudicationListviewWidgetProtocolsStatus']").should(
+    "have.text",
+    "Passed"
+  );
+  cy.get("[id*='leavePlanAdjudicationListviewWidgetPlanDecision0']").should(
+    "have.text",
+    "Undecided"
+  );
+  // Assert that we can see the approve button.
+  cy.contains(".menulink a", "Approve").should("be.visible");
 }
 
 export function searchScenario(): void {

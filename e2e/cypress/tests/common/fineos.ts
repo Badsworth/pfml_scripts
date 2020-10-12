@@ -1,5 +1,5 @@
 import { Given, Then, When } from "cypress-cucumber-preprocessor/steps";
-import { fineos } from "@cypress/integration/endtoend/common/actions";
+import { fineos } from "@cypress/tests/common/actions";
 
 Given("I am logged into Fineos as a Savilinx user", () => {
   fineos.loginSavilinx();
@@ -28,7 +28,7 @@ Given("I am viewing a {string} claim", (scenario) => {
 });
 
 When("I start adjudication for the claim", () => {
-  cy.get<string>("@claimNumber").then(fineos.assertOnClaimPage);
+  fineos.assertOnClaimPage();
   cy.get("input[type='submit'][value='Adjudicate']").click();
 });
 
@@ -89,34 +89,5 @@ Then(
 );
 
 Then("I should be able to approve the claim", () => {
-  cy.get<string>("@claimNumber").then(fineos.assertOnClaimPage);
-  // Assert that we have all green checkboxes.
-  cy.get(
-    "[id*='leavePlanAdjudicationListviewWidgetApplicabilityStatus']"
-  ).should("have.text", "Applicable");
-  cy.get("[id*='leavePlanAdjudicationListviewWidgetEligibilityStatus']").should(
-    "have.text",
-    "Met"
-  );
-  cy.get("[id*='leavePlanAdjudicationListviewWidgetEvidenceStatus']").should(
-    "have.text",
-    "Satisfied"
-  );
-  cy.get(
-    "[id*='leavePlanAdjudicationListviewWidgetAvailabilityStatus']"
-  ).should("have.text", "Time Available");
-  cy.get("[id*='leavePlanAdjudicationListviewWidgetRestrictionStatus']").should(
-    "have.text",
-    "Passed"
-  );
-  cy.get("[id*='leavePlanAdjudicationListviewWidgetProtocolsStatus']").should(
-    "have.text",
-    "Passed"
-  );
-  cy.get("[id*='leavePlanAdjudicationListviewWidgetPlanDecision0']").should(
-    "have.text",
-    "Undecided"
-  );
-  // Assert that we can see the approve button.
-  cy.contains(".menulink a", "Approve").should("be.visible");
+  fineos.assertClaimApprovable();
 });

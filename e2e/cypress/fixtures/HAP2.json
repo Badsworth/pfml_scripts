@@ -45,5 +45,6 @@
         "account_type": "Checking"
       }
     }
-  ]
+  ],
+  "hours_worked_per_week": 40
 }

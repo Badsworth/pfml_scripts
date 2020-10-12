@@ -1,7 +1,7 @@
 import {
   ApplicationLeaveDetails,
   ContinuousLeavePeriods,
-} from "../../../../src/api";
+} from "../../../src/api";
 
 export function lookup<M extends { [k: string]: unknown }, K extends keyof M>(
   key: K,

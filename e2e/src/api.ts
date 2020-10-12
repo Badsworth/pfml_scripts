@@ -149,9 +149,9 @@ export const http = {
             text = await res.text();
         }
         catch (err) { /* ok */ }
-        if (!res.ok) {
-            throw new HttpError(res.status, res.statusText, href, res.headers, text);
-        }
+        // if (!res.ok) {
+        //     throw new HttpError(res.status, res.statusText, href, res.headers, text);
+        // }
         return {
             status: res.status,
             statusText: res.statusText,

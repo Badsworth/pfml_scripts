@@ -8,9 +8,9 @@
 /// <reference types="cypress-file-upload" />
 
 // Import some types here. We'll reference them below.
-type Application = import('./src/types').Application;
-type Credentials = import('./src/types').Credentials;
-type ApplicationRequestBody = import('./src/api').ApplicationRequestBody
+type Application = import("./src/types").Application;
+type Credentials = import("./src/types").Credentials;
+type ApplicationRequestBody = import("./src/api").ApplicationRequestBody;
 
 declare namespace Cypress {
   interface Cypress {
@@ -21,15 +21,25 @@ declare namespace Cypress {
   interface cy {}
   interface Chainable<Subject = any> {
     labelled(label: string): Chainable<Element>;
-    typeMasked(text: string, options?: Partial<Cypress.TypeOptions>): Chainable<Element>
-    generateIdVerification<App extends Pick<Application, firstName|lastName>>(application: App): Chainable<App & Pick<Application, idVerification>>
-    generateHCPForm<App extends Pick<Application, firstName|lastName>>(application: App): Chainable<App & Pick<Application, claim>>
+    typeMasked(
+      text: string,
+      options?: Partial<Cypress.TypeOptions>
+    ): Chainable<Element>;
+    generateIdVerification<App extends Pick<Application, firstName | lastName>>(
+      application: App
+    ): Chainable<App & Pick<Application, idVerification>>;
+    generateHCPForm<App extends Pick<Application, firstName | lastName>>(
+      application: App
+    ): Chainable<App & Pick<Application, claim>>;
     stash(key: string, value: unknown): null;
     unstash(key: string): Chainable<unknown>;
     // Declare our custom tasks.
     task(event: "getAuthVerification", mail: string): Chainable<string>;
     task(event: "generateCredentials"): Chainable<Credentials>;
-    task(event: "submitClaimToAPI", options: ApplicationRequestBody): Chainable<string>;
+    task(
+      event: "submitClaimToAPI",
+      options: ApplicationRequestBody
+    ): Chainable<string>;
   }
 }
 

@@ -38,5 +38,6 @@
         "routing_number": "111111111"
       }
     }
-  ]
+  ],
+  "hours_worked_per_week": 40
 }

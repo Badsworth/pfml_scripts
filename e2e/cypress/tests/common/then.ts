@@ -627,3 +627,9 @@ Then("I should transfer task to DMFL due to {string}", function (
 Then("I should find the {string} document", function (label: string): void {
   fineos.findDocument(label);
 });
+
+Then("I see that financially eligibility is {string}", function (
+  status: string
+): void {
+  cy.get("td[id*='EligibilityStatus']").contains(status);
+});

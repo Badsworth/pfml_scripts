@@ -50,6 +50,16 @@ Given("I submit {string} claim directly to API", function (
   portal.submitClaimDirectlyToAPI(scenario);
 });
 
+Given("there is a new {string} claim", function (claimType: string): void {
+  let scenario = "HAP3";
+  if (claimType === "financially eligible") {
+    scenario = "HAP1";
+  }
+  fineos.loginSavilinx();
+  cy.visit("/");
+  portal.submitClaimDirectlyToAPI(scenario);
+});
+
 Given("I complete claim Denial for {string}", function (reason: string): void {
   fineos.denialReason(reason);
 });

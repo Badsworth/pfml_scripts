@@ -79,7 +79,7 @@
   },
   "cypress-cucumber-preprocessor": {
     "nonGlobalStepDefinitions": true,
-    "commonPath": "cypress/integration/endtoend/common"
+    "commonPath": "cypress/tests/common"
   },
   "jest": {
     "testMatch": [

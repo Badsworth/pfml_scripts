@@ -10,10 +10,10 @@ export function submittingClaimType(claimType: string): void {
 
 export function submitClaimDirectlyToAPI(scenario: string): void {
   cy.fixture(scenario).then({ timeout: 40000 }, (app) => {
-    console.log("submitting", app);
+    cy.log("submitting", app);
     cy.task("submitClaimToAPI", app).then((fineosId) => {
       cy.stash("claimNumber", fineosId);
-      console.log("submitted", fineosId);
+      cy.log("submitted", fineosId);
     });
   });
 }
