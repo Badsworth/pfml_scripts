@@ -82,12 +82,22 @@ export default (
 
     let nextTask: ElementHandle;
     try {
+      if ("priorityTask" in _data) {
+        taskTypeElementLocator = `td[title="${_data.priorityTask}"]`;
+        await findClaimType(browser, data);
+      }
       nextTask = await waitForElement(browser, By.css(taskTypeElementLocator));
     } catch (e) {
       if (!("priorityTask" in _data)) throw new Error(e);
-      tasksToDo = 1;
       taskTypeElementLocator = `td[title="${_data.priorityTask}"]`;
+
+      const departmentTasksTab = await waitForElement(
+        browser,
+        By.visibleText("Department Tasks")
+      );
+      await browser.click(departmentTasksTab);
       await findClaimType(browser, data);
+
       nextTask = await waitForElement(browser, By.css(taskTypeElementLocator));
     }
 
@@ -98,7 +108,7 @@ export default (
     // Runs task-specific pre-hook
     const preHook = `Before ${nextTaskType}`;
     if (preHook in taskTypes) {
-      await taskTypes[`Before ${nextTaskType}`](browser, data);
+      await taskTypes[preHook](browser, data);
     }
 
     // do task button click opens a popup window
@@ -153,12 +163,6 @@ export default (
 
 async function findClaimType(browser: Browser, data: unknown) {
   const _data = data as SimulationClaim & { priorityTask: string };
-  const departmentTasksTab = await waitForElement(
-    browser,
-    By.visibleText("Department Tasks")
-  );
-  await browser.click(departmentTasksTab);
-
   const filterByType = await waitForElement(
     browser,
     By.css("a[title='Filter by:TaskType']")
@@ -180,7 +184,10 @@ async function findClaimType(browser: Browser, data: unknown) {
 
   await browser.wait(2000);
 
-  const claimantName = `${_data.claim.first_name} ${_data.claim.last_name}`.trim();
+  const claimantName = (_data.claim && "first_name" in _data.claim
+    ? `${_data.claim.first_name} ${_data.claim.last_name}`
+    : ""
+  ).trim();
   if (claimantName.length > 0) {
     const filterBySubject = await waitForElement(
       browser,
@@ -193,14 +200,15 @@ async function findClaimType(browser: Browser, data: unknown) {
       By.css("#PopupContainer .filterField input[id*='_SubjectReference']")
     );
     await browser.type(filterInput, claimantName);
+
+    applyFilter = await waitForElement(
+      browser,
+      By.css(
+        ".popup_buttons input[value='Apply'][onclick*='_SubjectReference']"
+      )
+    );
+    await browser.click(applyFilter);
   }
-
-  applyFilter = await waitForElement(
-    browser,
-    By.css(".popup_buttons input[value='Apply'][onclick*='_SubjectReference']")
-  );
-
-  await browser.click(applyFilter);
 
   await browser.wait(2000);
 }

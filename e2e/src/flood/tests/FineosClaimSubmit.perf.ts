@@ -193,11 +193,13 @@ export const steps: StoredStep[] = [
         By.css('input[type="submit"][value^="Next"]')
       );
       await nextButton.click();
+
       const completeRegistration = await waitForElement(
         browser,
         By.css('input[type="submit"][value^="Next"]')
       );
       await completeRegistration.click();
+
       await waitForElement(browser, By.visibleText("Adjudication"));
     },
   },

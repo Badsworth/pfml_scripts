@@ -18,6 +18,12 @@ export const steps: StoredStep[] = [
       );
       await browser.click(documentsTab);
 
+      // figure out which document to review
+      if (docToReview.includes("id document")) {
+        docToReview = "Identification Proof";
+      } else if (docToReview.includes("hcp form")) {
+        docToReview = "State Managed Paid Leave Confirmation";
+      }
       const document: Locator = By.css(`a[title='${docToReview}' i]`);
 
       // open document & review
@@ -107,27 +113,23 @@ export const steps: StoredStep[] = [
           By.css("input[type='submit'][value='OK']")
         );
         await browser.click(okButton);
+
+        // go to the tasks tab
+        const tasksTab = await waitForElement(
+          browser,
+          By.css("[class^='TabO'][keytipnumber='9']")
+        );
+        await browser.click(tasksTab);
+
+        // close this task
+        const closeTaskButton = await waitForElement(
+          browser,
+          By.css("input[type='submit'][value='Close']")
+        );
+        await browser.click(closeTaskButton);
+
+        await browser.wait(1000);
       }
-    },
-  },
-  {
-    name: "Close task",
-    test: async (browser: Browser): Promise<void> => {
-      // go to the tasks tab
-      const tasksTab = await waitForElement(
-        browser,
-        By.css("[class^='TabO'][keytipnumber='9']")
-      );
-      await browser.click(tasksTab);
-
-      // close this task
-      const closeTaskButton = await waitForElement(
-        browser,
-        By.css("input[type='submit'][value='Close']")
-      );
-      await browser.click(closeTaskButton);
-
-      await browser.wait(1000);
     },
   },
 ];

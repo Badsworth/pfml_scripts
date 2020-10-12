@@ -1,24 +1,128 @@
 import { Browser, By } from "@flood/element";
+import { waitForElement, labelled, isFinanciallyEligible } from "../helpers";
 import { StoredStep } from "../config";
-import { waitForElement, labelled } from "../helpers";
+import Tasks from "./index";
 
+let evidenceApproved: boolean;
 export const steps: StoredStep[] = [
   {
-    name: "Go to Absence Hub",
-    test: async (browser: Browser): Promise<void> => {
-      const AbsenceHubTab = await waitForElement(
+    name: "Check if claim is ready for approval",
+    test: async (browser: Browser, data: unknown): Promise<void> => {
+      // if evidence has not been reviewed yet,
+      // approve all evidence
+      const evidence = await waitForElement(
         browser,
-        By.visibleText("Absence Hub")
+        By.css("td[id*='EvidenceStatusIcon0'] i")
       );
-      await AbsenceHubTab.click();
+      const evidenceIcon = await evidence.getAttribute("class");
+      evidenceApproved = evidenceIcon === "icon-checkbox";
 
-      const AdjudicateButton = await waitForElement(
+      const adjudicateButton = await waitForElement(
         browser,
         By.css("input[type='submit'][value='Adjudicate']")
       );
-      await AdjudicateButton.click();
+      await browser.click(adjudicateButton);
+
+      if (evidenceIcon === "icon-unverified") {
+        for (const approveEvidenceStep of approveEvidenceSteps) {
+          console.log(`Approve - ${approveEvidenceStep.name}`);
+          await approveEvidenceStep.test(browser, data);
+        }
+        evidenceApproved = true;
+      }
     },
   },
+  {
+    name: "Paid Benefits",
+    test: async (browser: Browser): Promise<void> => {
+      const paidBenefitsTab = await waitForElement(
+        browser,
+        By.visibleText("Paid Benefits")
+      );
+      await browser.click(paidBenefitsTab);
+
+      const currentAvgWeeklyAge = parseFloat(
+        (
+          await (
+            await waitForElement(
+              browser,
+              By.css("[id*='paidBenefitsListviewAverageWeeklyWage0']")
+            )
+          ).text()
+        ).replace(",", "")
+      );
+      console.log({ currentAvgWeeklyAge });
+
+      if (currentAvgWeeklyAge < 1200) {
+        const editButton = await waitForElement(
+          browser,
+          By.css("input[type='submit'][value='Edit']")
+        );
+        await editButton.click();
+
+        const avgWeeklyWage = await labelled(browser, "Average weekly wage");
+        await browser.clear(avgWeeklyWage);
+        await browser.type(avgWeeklyWage, "1200");
+        const okButton = await waitForElement(
+          browser,
+          By.css("input[type='submit'][value='OK']")
+        );
+        await browser.click(okButton);
+      }
+    },
+  },
+  {
+    name: "Accept Leave Plan",
+    test: async (browser: Browser): Promise<void> => {
+      const manageRequestTab = await waitForElement(
+        browser,
+        By.visibleText("Manage Request")
+      );
+      await browser.click(manageRequestTab);
+
+      const acceptButton = await waitForElement(
+        browser,
+        By.css("input[type='submit'][value='Accept']")
+      );
+      await browser.click(acceptButton);
+
+      // exit adjudication
+      const okButton = await waitForElement(
+        browser,
+        By.css("input[type='submit'][value='OK']")
+      );
+      await browser.click(okButton);
+    },
+  },
+  {
+    name: "Finalize claim adjudication",
+    test: async (browser: Browser, data: unknown): Promise<void> => {
+      // check if leave has been accepted
+      const leavePlanStatus = await (
+        await waitForElement(
+          browser,
+          By.css("td[id*='leavePlanAdjudicationListviewWidgetPlanDecision0']")
+        )
+      ).text();
+      // if not accepted, deny claim
+      // something was missing, most likely Availability
+      if (leavePlanStatus !== "Accepted" || !evidenceApproved) {
+        await Tasks.Deny(browser, data);
+        return;
+      }
+
+      const approveButton = await waitForElement(
+        browser,
+        By.css("a[aria-label='Approve']")
+      );
+      await approveButton.click();
+
+      await waitForElement(browser, By.visibleText("Approved"));
+    },
+  },
+];
+
+const approveEvidenceSteps: StoredStep[] = [
   {
     name: "Evidence Review",
     test: async (browser: Browser): Promise<void> => {
@@ -90,72 +194,20 @@ export const steps: StoredStep[] = [
       await yesButton.click();
     },
   },
-  {
-    name: "Paid Benefits",
-    test: async (browser: Browser): Promise<void> => {
-      const paidBenefitsTab = await waitForElement(
-        browser,
-        By.visibleText("Paid Benefits")
-      );
-      await paidBenefitsTab.click();
-
-      const editButton = await waitForElement(
-        browser,
-        By.css("input[type='submit'][value='Edit']")
-      );
-      await editButton.click();
-
-      const avgWeeklyWage = await labelled(browser, "Average weekly wage");
-      await avgWeeklyWage.clear();
-      await avgWeeklyWage.type("1000");
-
-      const okButton = await waitForElement(
-        browser,
-        By.css("input[type='submit'][value='OK']")
-      );
-      await okButton.click();
-    },
-  },
-  {
-    name: "Accept Leave Plan",
-    test: async (browser: Browser): Promise<void> => {
-      const ManageRequestTab = await waitForElement(
-        browser,
-        By.visibleText("Manage Request")
-      );
-      await ManageRequestTab.click();
-
-      const AcceptButton = await waitForElement(
-        browser,
-        By.css("input[type='submit'][value='Accept']")
-      );
-      await AcceptButton.click();
-
-      const okButton = await waitForElement(
-        browser,
-        By.css("input[type='submit'][value='OK']")
-      );
-      await okButton.click();
-    },
-  },
-  {
-    name: "Approve claim",
-    test: async (browser: Browser): Promise<void> => {
-      /*
-      const approveButton = await waitForElement(
-        browser,
-        By.css("a[aria-label='Approve']")
-      );
-      await approveButton.click();
-      */
-      await waitForElement(browser, By.visibleText("Approved"));
-    },
-  },
 ];
 
 export default async (browser: Browser, data: unknown): Promise<void> => {
-  for (const step of steps) {
-    console.log(`Approve - ${step.name}`);
-    await step.test(browser, data);
+  const isEligible = await isFinanciallyEligible(browser);
+  if (isEligible) {
+    for (const step of steps) {
+      console.log(`Approve - ${step.name}`);
+      await step.test(browser, data);
+    }
+  } else {
+    // Deny claim due to lack of Financial Eligibility
+    console.log(
+      "Tried to Approve but denied claim due to lack of Financial Eligibility"
+    );
+    await Tasks.Deny(browser, data);
   }
 };
