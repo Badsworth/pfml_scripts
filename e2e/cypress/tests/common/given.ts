@@ -1,3 +1,4 @@
+import { CypressStepThis } from "@/types";
 import { Given } from "cypress-cucumber-preprocessor/steps";
 import { portal, fineos } from "./actions";
 
@@ -7,19 +8,14 @@ Given("I am an anonymous user on the portal homepage", () => {
 });
 
 Given("I begin the process to submit a {string} claim", function (
+  this: CypressStepThis,
   scenario: string
 ) {
-  this.credentials = {
+  const credentials = {
     username: Cypress.env("E2E_PORTAL_USERNAME"),
     password: Cypress.env("E2E_PORTAL_PASSWORD"),
   };
-  portal.submittingClaimType(scenario);
-  portal.login(this.credentials);
-  portal.startClaim();
-  portal.onPage("start");
-  portal.agreeToStart();
-  portal.hasClaimId();
-  portal.onPage("checklist");
+  portal.startSubmit(credentials, scenario);
 });
 
 Given("I search for the proper claim in Fineos", function () {
@@ -58,6 +54,16 @@ Given("there is a new {string} claim", function (claimType: string): void {
   fineos.loginSavilinx();
   cy.visit("/");
   portal.submitClaimDirectlyToAPI(scenario);
+});
+
+Given("Part One of the claim has been submitted", function (
+  this: CypressStepThis
+): void {
+  if (!this.application) {
+    throw new Error("Can't find application");
+  }
+  const { application } = this;
+  portal.submitClaimPartOne(application);
 });
 
 Given("I complete claim Denial for {string}", function (reason: string): void {

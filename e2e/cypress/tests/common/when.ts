@@ -33,11 +33,7 @@ When("I log into the portal", function (this: CypressStepThis) {
 When("I click on the checklist button called {string}", function (
   label: string
 ): void {
-  // @todo: Very brittle selector. Ask for a better one.
-  cy.contains(label)
-    .parentsUntil(".display-flex.border-bottom.border-base-light.padding-y-4")
-    .contains("a", "Start")
-    .click();
+  portal.clickChecklistButton(label);
 });
 
 /* Checklist Page */
