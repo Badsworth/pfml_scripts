@@ -1,0 +1,40 @@
+name: API Nightly Security Check
+
+on:
+  workflow_dispatch:
+  schedule:
+  # scheduled to run nightly at 11 PM
+    - cron: '0 23 * * *'
+
+defaults:
+  run:
+    working-directory: ./api
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    #  Run a job matrix so the steps get run once for stage, and once for prod
+    strategy:
+      matrix:
+        api_environment: ['deploy/api/stage', 'deploy/api/prod']
+    steps:
+      - name: Get Branches
+        uses: actions/checkout@v2
+        with: 
+          ref: ${{ matrix.api_environment }}
+    
+      - name: build container
+        run: make build
+
+      - name: install project dependencies not built into container
+        run: make deps
+
+      - name: run Bandit
+        run: make lint-security
+    
+      - name: run Safety
+        run: make deps-check
+    # TODO: Figure out where to send alerts
+    # - name: Alert if failed
+    #   if: ${{ failure() }}
+    #   run: <send an email to ma-pfml-alerts@mass.gov or something>
