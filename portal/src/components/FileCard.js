@@ -17,7 +17,7 @@ const FileCard = (props) => {
     "c-file-card padding-2 margin-bottom-3 border-1px border-base-lighter display-flex flex-wrap";
 
   const filenameClasses =
-    "c-file-card__name padding-bottom-2 margin-bottom-2 margin-top-0 border-bottom-2px border-base-lighter";
+    "c-file-card__name padding-bottom-1 margin-bottom-1 margin-top-0 border-bottom-2px border-base-lighter font-heading-xs";
 
   const readOnly = !!document;
 
@@ -25,20 +25,25 @@ const FileCard = (props) => {
     <div className={cardClasses}>
       <Thumbnail file={file} />
       <div className="c-file-card__content">
-        <Heading level="3" className="margin-bottom-1">
+        <Heading level="3" className="margin-bottom-1 margin-top-1" size="4">
           {heading}
         </Heading>
         {readOnly ? (
-          <div className={filenameClasses}>
-            {t("components.fileCard.uploadDate", {
-              date: new Date(document.created_at).toLocaleDateString(),
-            })}
-          </div>
+          <React.Fragment>
+            <div className={filenameClasses}>
+              {t("components.fileCard.uploadDate", {
+                date: new Date(document.created_at).toLocaleDateString(),
+              })}
+            </div>
+            <div className="text-italic">
+              {t("components.fileCard.removalWarning")}
+            </div>
+          </React.Fragment>
         ) : (
           <React.Fragment>
             <div className={filenameClasses}>{file.name}</div>
             <Button
-              className="text-error hover:text-error-dark active:text-error-darker"
+              className="text-error hover:text-error-dark active:text-error-darker margin-top-0"
               onClick={() => props.onRemoveClick()}
               variation="unstyled"
             >

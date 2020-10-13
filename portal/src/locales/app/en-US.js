@@ -1149,6 +1149,7 @@ const components = {
     zipLabel: "ZIP",
   },
   fileCard: {
+    removalWarning: "You can't remove files previously uploaded.",
     removeButton: "Remove file",
     uploadDate: "Date of upload: {{date}}",
   },

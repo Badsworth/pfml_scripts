@@ -9,15 +9,21 @@ exports[`FileCard when the FileCard receives a Document renders a FileCard compo
     className="c-file-card__content"
   >
     <Heading
-      className="margin-bottom-1"
+      className="margin-bottom-1 margin-top-1"
       level="3"
+      size="4"
     >
       Document 1
     </Heading>
     <div
-      className="c-file-card__name padding-bottom-2 margin-bottom-2 margin-top-0 border-bottom-2px border-base-lighter"
+      className="c-file-card__name padding-bottom-1 margin-bottom-1 margin-top-0 border-bottom-2px border-base-lighter font-heading-xs"
     >
       Date of upload: 10/10/2020
+    </div>
+    <div
+      className="text-italic"
+    >
+      You can't remove files previously uploaded.
     </div>
   </div>
 </div>
@@ -34,18 +40,19 @@ exports[`FileCard when the FileCard receives a File renders 1`] = `
     className="c-file-card__content"
   >
     <Heading
-      className="margin-bottom-1"
+      className="margin-bottom-1 margin-top-1"
       level="3"
+      size="4"
     >
       Document 1
     </Heading>
     <div
-      className="c-file-card__name padding-bottom-2 margin-bottom-2 margin-top-0 border-bottom-2px border-base-lighter"
+      className="c-file-card__name padding-bottom-1 margin-bottom-1 margin-top-0 border-bottom-2px border-base-lighter font-heading-xs"
     >
       foo.png
     </div>
     <Button
-      className="text-error hover:text-error-dark active:text-error-darker"
+      className="text-error hover:text-error-dark active:text-error-darker margin-top-0"
       onClick={[Function]}
       variation="unstyled"
     >
