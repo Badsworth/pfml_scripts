@@ -27,7 +27,7 @@ Feature: Submit a bonding claim and adjucation approval - BHAP1
     Then I add payment info
     Given I am on the claims "checklist" page
     When I click on the checklist button called "Upload identity document"
-    Then I add my identity document
+    Then I add my identity document "MA ID"
     Given I am on the claims "checklist" page
     Then I should review and submit the application
     Given I am on the claims "review" page

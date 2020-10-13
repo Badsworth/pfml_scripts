@@ -391,8 +391,9 @@ export function addPaymentInfo(application: ApplicationRequestBody): void {
   cy.contains("button", "Save and continue").click();
 }
 
-export function addId(): void {
-  cy.labelled("Choose a file").attachFile("MA_ID.pdf");
+export function addId(idType: string): void {
+  const docName = idType.replace(" ", "_");
+  cy.labelled("Choose a file").attachFile(`${docName}.pdf`);
   cy.contains("button", "Save and continue").click();
 }
 
@@ -446,7 +447,7 @@ export function submitClaimPortal(application: ApplicationRequestBody): void {
   addPaymentInfo(application);
   onPage("checklist");
   clickChecklistButton("Upload identity document");
-  addId();
+  addId("MA ID");
   onPage("checklist");
   clickChecklistButton("Upload leave certification documents");
   addLeaveDocs();

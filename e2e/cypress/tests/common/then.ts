@@ -193,8 +193,11 @@ Then("I add payment info", function (this: CypressStepThis): void {
   portal.addPaymentInfo(application);
 });
 
-Then("I add my identity document", function (this: CypressStepThis): void {
-  portal.addId();
+Then("I add my identity document {string}", function (
+  this: CypressStepThis,
+  idType: string
+): void {
+  portal.addId(idType);
 });
 
 Then("I add my leave certification documents", function () {
