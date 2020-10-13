@@ -13,6 +13,14 @@ export function visitClaim(claimId: string): void {
   assertOnClaimPage();
 }
 
+export function commenceIntake(claimId: string): void {
+  cy.get('a[aria-label="Cases"]').click();
+  cy.get('td[keytipnumber="4"]').contains("Case").click();
+  cy.labelled("Case Number").type(claimId);
+  cy.get('input[type="submit"][value="Search"]').click();
+  cy.contains("Capture the following details in order to commence intake");
+}
+
 export function assertOnClaimPage(): void {
   cy.unstash("claimNumber")
     .then((claimNumber) => {

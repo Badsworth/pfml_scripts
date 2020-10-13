@@ -91,3 +91,8 @@ Then(
 Then("I should be able to approve the claim", () => {
   fineos.assertClaimApprovable();
 });
+
+Then("I can commence intake on that claim", () => {
+  cy.unstash("claimNumber").as("claimNumber");
+  cy.get<string>("@claimNumber").then(fineos.commenceIntake);
+});
