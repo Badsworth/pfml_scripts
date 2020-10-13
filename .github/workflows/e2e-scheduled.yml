@@ -35,7 +35,7 @@ jobs:
         id: cypress
         uses: cypress-io/github-action@v2
         with:
-          spec: "cypress/integration/endtoend/**/*"
+          spec: "cypress/tests/**/*"
           record: true
           parallel: true
           working-directory: e2e
