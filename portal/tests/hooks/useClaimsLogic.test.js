@@ -20,6 +20,7 @@ import useClaimsLogic from "../../src/hooks/useClaimsLogic";
 import usePortalFlow from "../../src/hooks/usePortalFlow";
 
 jest.mock("../../src/api/ClaimsApi");
+jest.mock("../../src/services/tracker");
 
 describe("useClaimsLogic", () => {
   const applicationId = "mock-application-id";

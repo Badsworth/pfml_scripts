@@ -76,7 +76,6 @@ function trackEvent(name, customAttributes) {
   if (newrelicReady()) {
     newrelic.addPageAction(name, customAttributes);
   }
-  // TODO (CP-433): Send the event to Google Analytics as well
 }
 
 export default {

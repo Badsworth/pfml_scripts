@@ -144,7 +144,7 @@ describe("useAppErrorsLogic", () => {
           appErrorsLogic.catchError(error);
         });
 
-        expect(tracker.noticeError.mock.calls[0][1]).toMatchSnapshot();
+        expect(tracker.trackEvent.mock.calls[0][1]).toMatchSnapshot();
       });
     });
 

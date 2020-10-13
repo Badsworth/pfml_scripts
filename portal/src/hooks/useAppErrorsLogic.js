@@ -29,11 +29,10 @@ const useAppErrorsLogic = () => {
    * @param {Error} error - Error or custom subclass of Error
    */
   const catchError = (error) => {
-    console.error(error);
-
     if (error instanceof ValidationError) {
       handleValidationError(error);
     } else {
+      console.error(error);
       handleError(error);
     }
   };
@@ -123,7 +122,9 @@ const useAppErrorsLogic = () => {
       })),
     };
 
-    tracker.noticeError(error, trackerCustomAttrs);
+    // ValidationError can be expected, so to avoid adding noise to the
+    // "Errors" section in New Relic, we track these as custom events instead
+    tracker.trackEvent(error.name, trackerCustomAttrs);
   };
 
   return {
