@@ -27,7 +27,7 @@ Feature: Submit a medical claim that is happy, but financially ineligible, and i
     Then I add payment info
     Given I am on the claims "checklist" page
     When I click on the checklist button called "Upload identity document"
-    Then I add my identity document
+    Then I add my identity document "MA ID"
     Given I am on the claims "checklist" page
     When I click on the checklist button called "Upload leave certification documents"
     Then I add my leave certification documents

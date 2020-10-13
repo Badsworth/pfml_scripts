@@ -27,7 +27,7 @@ Feature: Submit a medical claim with an invalid HCP, and refer it to DFML
     Then I add payment info
     Given I am on the claims "checklist" page
     When I click on the checklist button called "Upload identity document"
-    Then I add my identity document
+    Then I add my identity document "OOS ID"
     Given I am on the claims "checklist" page
     When I click on the checklist button called "Upload leave certification documents"
     Then I add my leave certification documents

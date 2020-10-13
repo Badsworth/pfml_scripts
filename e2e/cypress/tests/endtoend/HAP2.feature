@@ -27,7 +27,7 @@ Feature: Submit and accept HAP2 claim: Simple claim, out of state resident
     Then I add payment info
     Given I am on the claims "checklist" page
     When I click on the checklist button called "Upload identity document"
-    Then I add my identity document
+    Then I add my identity document "OOS ID"
     Given I am on the claims "checklist" page
     When I click on the checklist button called "Upload leave certification documents"
     Then I add my leave certification documents
@@ -39,24 +39,15 @@ Feature: Submit and accept HAP2 claim: Simple claim, out of state resident
 
   @fineos
   Scenario: As a CSR (Savilinx), I should be able to Approve a HAP2 claim submission
-    Given I search for the proper claim in Fineos
-    Given I am on the tab "Documents"
-    Then I should confirm "OOS ID form" is not present
-    Given I am on the tab "Absence Hub"
-    When I click Adjudicate
-    Given I am on the tab "Evidence"
-    When I click Manage Evidence
-    Then I should confirm evidence is "valid"
-    When I highlight ID Proof
-    And I click Manage Evidence
-    Then I should confirm evidence is "invalid due to missing identity documents"
-    Given I am on the tab "Manage Request"
-    Then I click Reject
-    Given I am on the claim case page
-    And claim is rejected
-    When I click Deny
-    Given I complete claim Denial for "Insufficient Certification"
-    And I should confirm claim has been completed
-
-
-
+    Given I am logged into Fineos as a Savilinx user
+    And I am viewing the previously submitted claim
+    When I start adjudication for the claim
+    And I add paid benefits to the current case
+    Then I should see that the claim's "Eligibility" is "Met"
+    When I mark "State Managed Paid Leave Confirmation" documentation as satisfactory
+    And I mark "Identification Proof" documentation as satisfactory
+    Then I should see that the claim's "Evidence" is "Satisfied"
+    When I fill in the requested absence periods
+    Then I should see that the claim's "Availability" is "Time Available"
+    When I finish adjudication for the claim
+    Then I should be able to approve the claim

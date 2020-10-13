@@ -37,12 +37,16 @@ export function HAP1(): void {
 
 export function HAP2(): void {
   getToClaimPage();
-  fineos.onTab("Documents");
+  fineos.clickAdjudicate();
+  fineos.onTab("Paid Benefits");
 
-  // Then I should confirm "OOS ID form" is not present
-  cy.contains("No Records To Display");
+  // When I click edit
+  cy.wait(2000).get('input[type="submit"][value="Edit"]').click();
 
-  fineos.onTab("Absence Hub");
+  fineos.addWeeklyWage();
+  fineos.onTab("Evidence");
+  fineos.onTab("Certification Periods");
+  fineos.fillAvailability();
   fineos.clickAdjudicate();
   fineos.onTab("Evidence");
   fineos.manageEvidence();
@@ -52,17 +56,11 @@ export function HAP2(): void {
   cy.wait(2000).get('.ListRow2 > [width="20%"]').click();
 
   fineos.manageEvidence();
-  fineos.validateEvidence("invalid due to missing identity documents");
+  fineos.validateEvidence("valid");
   fineos.onTab("Manage Request");
-  fineos.clickReject();
+  fineos.acceptLeavePlan();
   fineos.onPage("claims");
-
-  // And claim is rejected
-  cy.get('td[title="Rejected"]');
-
-  fineos.clickDeny();
-  fineos.denialReason("Insufficient Certification");
-  fineos.claimCompletion();
+  fineos.assertClaimApprovable();
 }
 
 export function HAP3(): void {
