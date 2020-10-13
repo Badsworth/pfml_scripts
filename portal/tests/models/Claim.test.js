@@ -1,3 +1,4 @@
+import { DayOfWeek, WorkPattern, WorkPatternDay } from "../../src/models/Claim";
 import { DateTime } from "luxon";
 import { MockClaimBuilder } from "../test-utils";
 
@@ -156,6 +157,102 @@ describe("Claim", () => {
           .verifiedId("John")
           .create();
         expect(claimWithMiddleName.fullName).toEqual("Jane John Doe");
+      });
+    });
+  });
+
+  describe("WorkPattern", () => {
+    const createWeek = (week_number) => {
+      return Object.values(DayOfWeek).map(
+        (day_of_week) => new WorkPatternDay({ day_of_week, week_number })
+      );
+    };
+
+    describe("weeks", () => {
+      it("groups work_pattern_days by week_number", () => {
+        const workPattern = new WorkPattern({
+          work_pattern_days: [1, 2, 3, 4].flatMap((week_number) =>
+            createWeek(week_number)
+          ),
+        });
+
+        const weeks = workPattern.weeks;
+
+        expect(weeks.length).toEqual(4);
+
+        weeks.forEach((week, i) => {
+          expect(week.length).toEqual(7);
+          expect(week.map((day) => day.day_of_week)).toEqual(
+            Object.values(DayOfWeek)
+          );
+          expect(week.every((day) => day.week_number === i + 1)).toBe(true);
+        });
+      });
+    });
+
+    describe("addWeek", () => {
+      it("adds 7 days to work_pattern_days", () => {
+        let workPattern = new WorkPattern({
+          work_pattern_days: createWeek(1),
+        });
+
+        workPattern = WorkPattern.addWeek(workPattern);
+        expect(workPattern.work_pattern_days.length).toEqual(14);
+        expect(workPattern.weeks.length).toEqual(2);
+
+        workPattern.weeks.forEach((week, i) => {
+          expect(week.length).toEqual(7);
+          expect(week.map((day) => day.day_of_week)).toEqual(
+            Object.values(DayOfWeek)
+          );
+          expect(week.every((day) => day.week_number === i + 1)).toBe(true);
+        });
+      });
+
+      it("adds 7 days to work_pattern days when days are empty", () => {
+        let workPattern = new WorkPattern();
+
+        workPattern = WorkPattern.addWeek(workPattern);
+        expect(workPattern.work_pattern_days.length).toEqual(7);
+      });
+    });
+
+    describe("removeWeek", () => {
+      it("removes days from work_pattern_days with given week_number", () => {
+        let workPattern = new WorkPattern({
+          work_pattern_days: [1, 2, 3, 4].flatMap((week_number) =>
+            createWeek(week_number).map((day) => ({
+              ...day,
+              hours: week_number * 10,
+            }))
+          ),
+        });
+
+        workPattern = WorkPattern.removeWeek(workPattern, 3);
+
+        expect(workPattern.work_pattern_days.length).toEqual(21);
+        expect(workPattern.weeks.length).toEqual(3);
+        expect(
+          workPattern.work_pattern_days.every((day) => day.hours !== 30)
+        ).toBe(true);
+        expect(workPattern.weeks[2].every((day) => day.hours === 40)).toBe(
+          true
+        );
+
+        workPattern.weeks.forEach((week, i) => {
+          expect(week.length).toEqual(7);
+          expect(week.map((day) => day.day_of_week)).toEqual(
+            Object.values(DayOfWeek)
+          );
+          expect(week.every((day) => day.week_number === i + 1)).toBe(true);
+        });
+      });
+
+      it("it fails silently when work_pattern_days is empty or attempts to remove an week_number that doesn't exist", () => {
+        let workPattern = new WorkPattern();
+        workPattern = WorkPattern.removeWeek(workPattern, 3);
+
+        expect(workPattern.work_pattern_days).toEqual([]);
       });
     });
   });

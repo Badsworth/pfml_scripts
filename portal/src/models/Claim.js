@@ -2,10 +2,11 @@
 /**
  * @file Benefits application model and enum values
  */
-import { compact, get } from "lodash";
+import { compact, get, groupBy, sortBy } from "lodash";
 import Address from "./Address";
 import BaseModel from "./BaseModel";
 import { DateTime } from "luxon";
+import assert from "assert";
 
 class Claim extends BaseModel {
   get defaults() {
@@ -75,6 +76,7 @@ class Claim extends BaseModel {
         // TODO (CP-567): this field doesn't exist in the API yet
         has_previous_leaves: null,
       },
+      work_pattern: null,
     };
   }
 
@@ -242,6 +244,97 @@ export class IntermittentLeavePeriod extends BaseModel {
   }
 }
 
+export class WorkPattern extends BaseModel {
+  constructor(attrs) {
+    const work_pattern_days = get(attrs, "work_pattern_days");
+
+    if (work_pattern_days) {
+      assert(
+        work_pattern_days.length % 7 === 0,
+        "work_pattern_days length must be a multiple of 7. Consider using WorkPattern's static `addWeek` or `removeWeek` methods."
+      );
+    }
+
+    super(attrs);
+  }
+
+  get defaults() {
+    return {
+      pattern_start_date: null,
+      work_pattern_days: undefined,
+      work_pattern_type: null,
+      work_week_starts: "Sunday",
+    };
+  }
+
+  /**
+   * Return work_pattern_days grouped by week_number.
+   * @returns {Array.<WorkPatternDay[]>}
+   */
+  get weeks() {
+    const workPatternDays = sortBy(
+      [...get(this, "work_pattern_days", [])],
+      (day) => OrderedDaysOfWeek.indexOf(day.day_of_week)
+    );
+    return Object.values(groupBy(workPatternDays, "week_number"));
+  }
+
+  /**
+   * Add a 7 day work week to work_pattern_days.
+   * @param {WorkPattern} workPattern - instance of a WorkPattern
+   * @returns {WorkPattern}
+   */
+  static addWeek(workPattern) {
+    const newWeek = OrderedDaysOfWeek.map(
+      (day_of_week) =>
+        new WorkPatternDay({
+          day_of_week,
+          week_number: workPattern.weeks.length + 1,
+        })
+    );
+
+    return new WorkPattern({
+      ...workPattern,
+      work_pattern_days: [
+        ...get(workPattern, "work_pattern_days", []),
+        ...newWeek,
+      ],
+    });
+  }
+
+  /**
+   * Remove a 7 day work week from work_pattern_days by week_number
+   * @param {WorkPattern} workPattern - instance of a WorkPattern
+   * @param {number} weekNumber - week_number to be removed
+   * @returns {WorkPattern}
+   */
+  static removeWeek(workPattern, weekNumber) {
+    const weeks = workPattern.weeks;
+    weeks.splice(weekNumber - 1, 1);
+
+    const work_pattern_days = weeks.flatMap((week, i) =>
+      week.map((day) => new WorkPatternDay({ ...day, week_number: i + 1 }))
+    );
+
+    return new WorkPattern({
+      ...workPattern,
+      work_pattern_days,
+    });
+  }
+}
+
+export class WorkPatternDay extends BaseModel {
+  get defaults() {
+    return {
+      day_of_week: null,
+      hours: null,
+      minutes: null,
+      // an integer between 1 and 4
+      week_number: null,
+    };
+  }
+}
+
 /**
  * Enums for the Application's `intermittent_leave_periods[].frequency_interval_basis` field
  * @enum {string}
@@ -293,5 +386,38 @@ export const PaymentPreferenceMethod = {
   ach: "ACH",
   debit: "Debit",
 };
+
+/**
+ * Enums for the Application's `work_pattern.work_pattern_type` field
+ * @enum {string}
+ */
+export const WorkPatternType = {
+  fixed: "Fixed",
+  rotating: "Rotating",
+  variable: "Variable",
+};
+
+/**
+ * Ordered days of the week
+ */
+export const OrderedDaysOfWeek = [
+  "Sunday",
+  "Monday",
+  "Tuesday",
+  "Wednesday",
+  "Thursday",
+  "Friday",
+  "Saturday",
+];
+
+/**
+ * Enums for the Application's `work_pattern.work_week_starts` and `work_pattern.work_pattern_days[].day_of_week` fields
+ * Produces object: { sunday: "Sunday", monday: "Monday", ... }
+ * @enum {string}
+ */
+export const DayOfWeek = OrderedDaysOfWeek.reduce(
+  (dayOfWeek, dayName) => ({ ...dayOfWeek, [dayName.toLowerCase()]: dayName }),
+  {}
+);
 
 export default Claim;

@@ -10,6 +10,7 @@ import Claim, {
   PaymentPreferenceMethod,
   ReasonQualifier,
   ReducedScheduleLeavePeriod,
+  WorkPattern,
 } from "../src/models/Claim";
 import Document, { DocumentType } from "../src/models/Document";
 import EmployerBenefit, {
@@ -387,6 +388,19 @@ export class MockClaimBuilder {
     set(this.claimAttrs, "tax_identifier", "***-**-****");
     this.address();
     this.hasStateId();
+    return this;
+  }
+
+  /**
+   * @returns {MockClaimBuilder}
+   */
+  workPattern(attrs = {}) {
+    let workPattern = new WorkPattern(attrs);
+    if (!attrs.work_pattern_days) {
+      workPattern = WorkPattern.addWeek(workPattern);
+    }
+    set(this.claimAttrs, "work_pattern", workPattern);
+
     return this;
   }
 
