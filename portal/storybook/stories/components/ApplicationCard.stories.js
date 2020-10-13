@@ -1,12 +1,12 @@
 import Document, { DocumentType } from "src/models/Document";
+import { ApplicationCard } from "src/components/ApplicationCard";
 import Claim from "src/models/Claim";
 import { MockClaimBuilder } from "tests/test-utils";
 import React from "react";
-import { TestableApplicationCard } from "src/components/ApplicationCard";
 
 export default {
   title: "Components/ApplicationCard",
-  component: TestableApplicationCard,
+  component: ApplicationCard,
   args: {
     number: 1,
   },
@@ -64,7 +64,7 @@ export const Story = ({ claim, documents, ...args }) => {
   }
 
   return (
-    <TestableApplicationCard
+    <ApplicationCard
       claim={new Claim(claimAttrs)}
       {...args}
       documents={attachedDocuments}

@@ -14,7 +14,7 @@ import withClaimDocuments from "../hoc/withClaimDocuments";
 /**
  * Preview of an existing benefits Application
  */
-export const TestableApplicationCard = (props) => {
+export const ApplicationCard = (props) => {
   const { claim, documents, number } = props;
   const { t } = useTranslation();
   const leaveReason = get(claim, "leave_details.reason");
@@ -174,7 +174,7 @@ export const TestableApplicationCard = (props) => {
   );
 };
 
-TestableApplicationCard.propTypes = {
+ApplicationCard.propTypes = {
   claim: PropTypes.instanceOf(Claim).isRequired,
   documents: PropTypes.arrayOf(PropTypes.instanceOf(Document)),
   /**
@@ -183,4 +183,4 @@ TestableApplicationCard.propTypes = {
   number: PropTypes.number.isRequired,
 };
 
-export default withClaimDocuments(TestableApplicationCard);
+export default withClaimDocuments(ApplicationCard);
