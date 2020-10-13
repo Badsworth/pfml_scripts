@@ -111,33 +111,51 @@ describe("UploadId", () => {
 
           expect(wrapper).toMatchSnapshot();
         });
-      });
 
-      describe("when the form is successfully submitted", () => {
-        it("calls claimsLogic.documents.attach", async () => {
+        it("makes API request when no documents exist", async () => {
           claim = new MockClaimBuilder().create();
           render();
+
+          // Add files to the page state
           const files = [makeFile(), makeFile()];
-          const formattedFiles = files.map((file) => {
-            return { id: expect.any(String), file };
-          });
-          const event = {
-            target: {
-              files,
-            },
-          };
           const input = wrapper.find("FileCardList").dive().find("input");
-          input.simulate("change", event);
+          act(() => {
+            input.simulate("change", {
+              target: {
+                files,
+              },
+            });
+          });
+
           await act(async () => {
             await wrapper.find("QuestionPage").simulate("save");
           });
 
+          const expectedFiles = files.map((file) => {
+            return { id: expect.any(String), file };
+          });
           expect(appLogic.documents.attach).toHaveBeenCalledWith(
             claim.application_id,
-            formattedFiles,
+            expectedFiles,
             expect.any(String)
           );
         });
+      });
+
+      it("makes API request when no documents exist and no new files are added", async () => {
+        claim = new MockClaimBuilder().create();
+
+        render();
+
+        await act(async () => {
+          await wrapper.find("QuestionPage").simulate("save");
+        });
+
+        expect(appLogic.documents.attach).toHaveBeenCalledWith(
+          claim.application_id,
+          [],
+          expect.any(String)
+        );
       });
 
       describe("when there are previously loaded documents", () => {
@@ -145,6 +163,7 @@ describe("UploadId", () => {
           const newDoc = new Document({
             document_type: DocumentType.identityVerification,
             application_id: claim.application_id,
+            created_at: "2020-10-12",
             fineos_document_id: "testId",
           });
           appLogic.documents.documents = await appLogic.documents.documents.addItem(
@@ -154,6 +173,63 @@ describe("UploadId", () => {
           expect(wrapper.find("FileCardList").props().documents).toHaveLength(
             1
           );
+        });
+
+        it("makes API request when there are new files", async () => {
+          claim = new MockClaimBuilder().create();
+          appLogic.documents.documents = appLogic.documents.documents.addItem(
+            new Document({
+              document_type: DocumentType.identityVerification,
+              application_id: claim.application_id,
+              created_at: "2020-10-12",
+              fineos_document_id: "testId",
+            })
+          );
+          render();
+
+          // Add files to the page state
+          const files = [makeFile(), makeFile()];
+          const input = wrapper.find("FileCardList").dive().find("input");
+          act(() => {
+            input.simulate("change", {
+              target: {
+                files,
+              },
+            });
+          });
+
+          await act(async () => {
+            await wrapper.find("QuestionPage").simulate("save");
+          });
+
+          const expectedFiles = files.map((file) => {
+            return { id: expect.any(String), file };
+          });
+          expect(appLogic.documents.attach).toHaveBeenCalledWith(
+            claim.application_id,
+            expectedFiles,
+            expect.any(String)
+          );
+        });
+
+        it("skips an API request if there are no new files added", async () => {
+          appLogic.documents.documents = appLogic.documents.documents.addItem(
+            new Document({
+              document_type: DocumentType.identityVerification,
+              application_id: claim.application_id,
+              created_at: "2020-10-12",
+              fineos_document_id: "testId",
+            })
+          );
+
+          render();
+
+          await act(async () => {
+            await wrapper.find("QuestionPage").simulate("save");
+          });
+
+          expect(appLogic.documents.attach).not.toHaveBeenCalled();
+          expect(appLogic.goToNextPage).toHaveBeenCalledTimes(1);
         });
       });
     });

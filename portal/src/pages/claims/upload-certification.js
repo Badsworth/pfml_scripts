@@ -42,18 +42,23 @@ export const UploadCertification = (props) => {
       break;
   }
 
+  const certificationDocuments = findDocumentsByType(
+    documents,
+    DocumentType.medicalCertification // TODO (CP-962): Set based on leaveReason
+  );
+
   const handleSave = async () => {
+    if (!files.length && certificationDocuments.length) {
+      // Allow user to skip this page if they've previously uploaded documents
+      return appLogic.goToNextPage({}, { claim_id: claim.application_id });
+    }
+
     await appLogic.documents.attach(
       claim.application_id,
       files,
       DocumentType.medicalCertification // TODO (CP-962): Set based on leaveReason
     );
   };
-
-  const certificationDocuments = findDocumentsByType(
-    documents,
-    DocumentType.medicalCertification // TODO (CP-962): Set based on leaveReason
-  );
 
   return (
     <QuestionPage

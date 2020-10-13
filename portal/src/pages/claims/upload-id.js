@@ -23,18 +23,23 @@ export const UploadId = (props) => {
   const contentContext = hasStateId ? "mass" : "other";
   const { appLogic, claim, documents, isLoadingDocuments } = props;
 
+  const idDocuments = findDocumentsByType(
+    documents,
+    DocumentType.identityVerification // TODO (CP-962): Set based on leaveReason
+  );
+
   const handleSave = async () => {
+    if (!stateIdFiles.length && idDocuments.length) {
+      // Allow user to skip this page if they've previously uploaded documents
+      return appLogic.goToNextPage({}, { claim_id: claim.application_id });
+    }
+
     await appLogic.documents.attach(
       claim.application_id,
       stateIdFiles,
       DocumentType.identityVerification // TODO (CP-962): Set based on leaveReason
     );
   };
-
-  const idDocuments = findDocumentsByType(
-    documents,
-    DocumentType.identityVerification // TODO (CP-962): Set based on leaveReason
-  );
 
   return (
     <QuestionPage title={t("pages.claimsUploadId.title")} onSave={handleSave}>
