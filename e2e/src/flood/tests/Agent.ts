@@ -88,17 +88,8 @@ export default (
       }
       nextTask = await waitForElement(browser, By.css(taskTypeElementLocator));
     } catch (e) {
-      if (!("priorityTask" in _data)) throw new Error(e);
-      taskTypeElementLocator = `td[title="${_data.priorityTask}"]`;
-
-      const departmentTasksTab = await waitForElement(
-        browser,
-        By.visibleText("Department Tasks")
-      );
-      await browser.click(departmentTasksTab);
-      await findClaimType(browser, data);
-
-      nextTask = await waitForElement(browser, By.css(taskTypeElementLocator));
+      console.info("Agent could not find tasks to do!");
+      return;
     }
 
     // select next task
@@ -128,16 +119,18 @@ export default (
 
     // Runs task-specific main handler
     await taskTypes[nextTaskType](browser, data);
+    console.info(`${scenario} - Do task - Task Handler Done!`);
 
     // Close popup window & go back to initial window
     await browser.wait(3000);
     page.close({ runBeforeUnload: true });
     await browser.switchTo().page(currentPage);
-    const closeTask = await waitForElement(
-      browser,
-      By.css("input[type='submit'][value='Close']")
-    );
-    await closeTask.click();
+
+    // Runs task-specific post-hook
+    const postHook = `After ${nextTaskType}`;
+    if (postHook in taskTypes) {
+      await taskTypes[postHook](browser, data);
+    }
 
     // Task was completed, so tasksDone += 1
     tasksDone++;

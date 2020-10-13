@@ -194,3 +194,13 @@ export const PreOutstandingDocumentReceived = async (
   }
   console.log(docToReview);
 };
+
+export const PostOutstandingDocumentReceived = async (
+  browser: Browser
+): Promise<void> => {
+  const closeTask = await waitForElement(
+    browser,
+    By.css("input[type='submit'][value='Close']")
+  );
+  await closeTask.click();
+};

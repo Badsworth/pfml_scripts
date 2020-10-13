@@ -4,6 +4,7 @@ import { StoredStep } from "../config";
 import Tasks from "./index";
 
 let evidenceApproved: boolean;
+
 export const steps: StoredStep[] = [
   {
     name: "Check if claim is ready for approval",
@@ -24,10 +25,8 @@ export const steps: StoredStep[] = [
       await browser.click(adjudicateButton);
 
       if (evidenceIcon === "icon-unverified") {
-        for (const approveEvidenceStep of approveEvidenceSteps) {
-          console.log(`Approve - ${approveEvidenceStep.name}`);
-          await approveEvidenceStep.test(browser, data);
-        }
+        await approveEvidence.test(browser, data);
+        await certifyEvidence.test(browser, data);
         evidenceApproved = true;
       }
     },
@@ -73,13 +72,36 @@ export const steps: StoredStep[] = [
   },
   {
     name: "Accept Leave Plan",
-    test: async (browser: Browser): Promise<void> => {
-      const manageRequestTab = await waitForElement(
+    test: async (browser: Browser, data: unknown): Promise<void> => {
+      let manageRequestTab = await waitForElement(
         browser,
         By.visibleText("Manage Request")
       );
       await browser.click(manageRequestTab);
 
+      // check if availability can still be approved
+      const availabilityStatus = await (
+        await waitForElement(
+          browser,
+          By.css("td[id*='LeaveRequestListviewWidgetAvailabilityStatus0']")
+        )
+      ).text();
+      // when it is Pending Certification, then we can make it pass
+      if (availabilityStatus === "Pending Certification") {
+        const evidenceTab = await waitForElement(
+          browser,
+          By.visibleText("Evidence")
+        );
+        await evidenceTab.click();
+        await certifyEvidence.test(browser, data);
+      }
+
+      // go back and try to approve leave plan
+      manageRequestTab = await waitForElement(
+        browser,
+        By.visibleText("Manage Request")
+      );
+      await browser.click(manageRequestTab);
       const acceptButton = await waitForElement(
         browser,
         By.css("input[type='submit'][value='Accept']")
@@ -104,8 +126,9 @@ export const steps: StoredStep[] = [
           By.css("td[id*='leavePlanAdjudicationListviewWidgetPlanDecision0']")
         )
       ).text();
-      // if not accepted, deny claim
-      // something was missing, most likely Availability
+
+      // if leave plan has not been accepted, deny claim
+      // something was missing, most likely Availability errors
       if (leavePlanStatus !== "Accepted" || !evidenceApproved) {
         await Tasks.Deny(browser, data);
         return;
@@ -122,79 +145,86 @@ export const steps: StoredStep[] = [
   },
 ];
 
-const approveEvidenceSteps: StoredStep[] = [
-  {
-    name: "Evidence Review",
-    test: async (browser: Browser): Promise<void> => {
-      const evidenceTab = await waitForElement(
-        browser,
-        By.visibleText("Evidence")
-      );
-      await evidenceTab.click();
-
-      const requiredEvidences = await browser.findElements(
-        By.css("table[id^='evidenceResultList'] tr")
-      );
-
-      for (let i = 0; i < requiredEvidences.length; i++) {
-        const evidence = await waitForElement(
-          browser,
-          By.css(`table[id^='evidenceResultList'] tr:nth-child(${i + 1})`)
-        );
-        await browser.doubleClick(evidence);
-
-        await browser.wait(1000);
-        const manageButton = await waitForElement(
-          browser,
-          By.css("input[type='submit'][value='Manage Evidence']")
-        );
-        await manageButton.click();
-
-        const receiptSelect = await labelled(browser, "Evidence Receipt");
-        await browser.selectByText(receiptSelect, "Received");
-
-        const decisionSelect = await labelled(browser, "Evidence Decision");
-        await browser.selectByText(decisionSelect, "Satisfied");
-
-        const reasonInput = await labelled(browser, "Evidence Decision Reason");
-        await browser.type(
-          reasonInput,
-          "PFMLE2E - Approved for Load and Stress Test purposes"
-        );
-
-        const okButton = await waitForElement(
-          browser,
-          By.css("table[id*='Popup'] input[type='button'][value='OK']")
-        );
-        await okButton.click();
-      }
-    },
-  },
-  {
-    name: "Evidence Certification",
-    test: async (browser: Browser): Promise<void> => {
-      const certificationTab = await waitForElement(
-        browser,
-        By.visibleText("Certification Periods")
-      );
-      await certificationTab.click();
-
-      const prefillButton = await waitForElement(
+const approveEvidence: StoredStep = {
+  name: "Evidence Review",
+  test: async (browser: Browser): Promise<void> => {
+    console.info("Approve - Evidence Review");
+    const evidenceTab = await waitForElement(
+      browser,
+      By.visibleText("Evidence")
+    );
+    await evidenceTab.click();
+    // get the list of documents attached to this claim
+    const documents = await browser.findElements(
+      By.css("table[id*='evidenceResultListviewWidget'] tr")
+    );
+    // if we have no documents to review, do nothing
+    if (documents.length === 0) return;
+    // approve pending documents
+    for (let i = 0; i < documents.length; i++) {
+      // search for this documents' review decision
+      const evidence = await waitForElement(
         browser,
         By.css(
-          "input[type='submit'][value='Prefill with Requested Absence Periods']"
+          `table[id*='evidenceResultListviewWidget'] tr:nth-child(${
+            i + 1
+          }) td:nth-child(5)`
         )
       );
-      await prefillButton.click();
+      // if document decision is not pending, ignore
+      if ((await evidence.text()) !== "Pending") continue;
+      // confirmed it is pending, so we continue with approval
+      await browser.doubleClick(evidence);
 
-      const yesButton = await waitForElement(
+      await browser.wait(1000);
+      const manageButton = await waitForElement(
         browser,
-        By.css(".popup_buttons input[type='submit'][value='Yes']")
+        By.css("input[type='submit'][value='Manage Evidence']")
       );
-      await yesButton.click();
-    },
+      await manageButton.click();
+
+      const receiptSelect = await labelled(browser, "Evidence Receipt");
+      await browser.selectByText(receiptSelect, "Received");
+
+      const decisionSelect = await labelled(browser, "Evidence Decision");
+      await browser.selectByText(decisionSelect, "Satisfied");
+
+      const reasonInput = await labelled(browser, "Evidence Decision Reason");
+      await browser.type(reasonInput, "PFML - Approved for LST purposes");
+
+      const okButton = await waitForElement(
+        browser,
+        By.css("table[id*='Popup'] input[type='button'][value='OK']")
+      );
+      await okButton.click();
+    }
   },
-];
+};
+const certifyEvidence: StoredStep = {
+  name: "Evidence Certification",
+  test: async (browser: Browser): Promise<void> => {
+    console.info("Approve - Evidence Certification");
+    const certificationTab = await waitForElement(
+      browser,
+      By.visibleText("Certification Periods")
+    );
+    await certificationTab.click();
+
+    const prefillButton = await waitForElement(
+      browser,
+      By.css(
+        "input[type='submit'][value='Prefill with Requested Absence Periods']"
+      )
+    );
+    await prefillButton.click();
+
+    const yesButton = await waitForElement(
+      browser,
+      By.css(".popup_buttons input[type='submit'][value='Yes']")
+    );
+    await yesButton.click();
+  },
+};
 
 export default async (browser: Browser, data: unknown): Promise<void> => {
   const isEligible = await isFinanciallyEligible(browser);

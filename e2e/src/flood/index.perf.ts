@@ -14,8 +14,8 @@ import * as SavilinxAgent from "./tests/SavilinxAgent.perf";
 
 export const settings: TestSettings = {
   loopCount: 50,
-  actionDelay: 0.01,
-  stepDelay: 0.01,
+  actionDelay: 1,
+  stepDelay: 1,
   waitUntil: "visible",
   name: "PFML Load Test Bot",
   userAgent: "PFML Load Test Bot",

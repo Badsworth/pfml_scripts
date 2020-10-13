@@ -10,6 +10,7 @@ export const taskTypes: TaskTypes = {
   // ODR checks if certain document is added to the claim
   "Before Outstanding Document Received": Tasks.PreOutstandingDocumentReceived,
   "Outstanding Document Received": Tasks.OutstandingDocumentReceived,
+  "After Outstanding Document Received": Tasks.PostOutstandingDocumentReceived,
 };
 
 const { default: SavilinxAgent, steps } = Agent(scenario, taskTypes, tasksToDo);
