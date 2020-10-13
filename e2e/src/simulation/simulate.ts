@@ -41,6 +41,11 @@ export type ScenarioOpts = {
   shortNotice?: boolean;
 };
 
+export type AgentOpts = {
+  priorityTask?: string;
+  claim?: ApplicationRequestBody;
+};
+
 export function scenario(
   name: string,
   config: ScenarioOpts
@@ -157,6 +162,21 @@ export function scenario(
       financiallyIneligible: !!config.financiallyIneligible,
       // Flag for skipSubmitClaim.
       skipSubmitClaim: !!config.skipSubmitClaim,
+    };
+  };
+}
+
+// For LST purposes, some scenarios do not need a claim or documents to be generated
+export function agentScenario(
+  name: string,
+  config: AgentOpts = {}
+): SimulationGenerator {
+  return async (opts) => {
+    return {
+      scenario: name,
+      claim: {},
+      documents: [],
+      ...config,
     };
   };
 }

@@ -29,4 +29,7 @@ done
 
 sed -i '' -e 's|"\./simulation/types"|"\.\./simulation/types"|g' config.ts
 
+cp index.perf.ts ../../scripts;
+sed -i '' -e 's|"\.\./simulation/types"|"\./simulation/types"|g' ../../scripts/index.perf.ts
+
 rm -rf simulation/

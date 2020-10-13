@@ -82,9 +82,11 @@ const cmd: CommandModule<SystemWideArgs, GenerateArgs> = {
         `${storage.directory}/DORDFMLEMP_${formatISODatetime(now)}`
       )
     );
+    // Strip off any claims that don't need DOR file inclusion.
+    const dorClaims = claims.filter((claim) => !!claim.claim.employer_fein);
     // Generate the employees DOR file. This is done by "pipelining" a read stream into a write stream.
     const dorEmployeesPromise = pipelineP(
-      createEmployeesStream(claims, employers, quarters()),
+      createEmployeesStream(dorClaims, employers, quarters()),
       fs.createWriteStream(
         `${storage.directory}/DORDFML_${formatISODatetime(now)}`
       )

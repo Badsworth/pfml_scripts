@@ -8,11 +8,12 @@ import {
 import { StoredStep } from "./config";
 import { SimulationClaim } from "../simulation/types";
 import * as Fineos from "./tests/FineosClaimSubmit.perf";
-import * as Portal from "./tests/PortalClaimSubmit.perf";
+import * as PortalSubmit from "./tests/PortalClaimSubmit.perf";
+import * as PortalRegistration from "./tests/PortalRegistration.perf";
 import * as SavilinxAgent from "./tests/SavilinxAgent.perf";
 
 export const settings: TestSettings = {
-  loopCount: 2,
+  loopCount: 50,
   actionDelay: 0.01,
   stepDelay: 0.01,
   waitUntil: "visible",
@@ -31,7 +32,12 @@ type ScenarioMap = {
 
 // List of imported scenarios to execute
 // Essentially all scenario imported files
-const availableScenarios = [Fineos, Portal, SavilinxAgent];
+const availableScenarios = [
+  Fineos,
+  PortalSubmit,
+  PortalRegistration,
+  SavilinxAgent,
+];
 
 const scenarios: ScenarioMap = availableScenarios.reduce(
   (allScenarios, curr) => ({
@@ -46,7 +52,7 @@ export default (): void => {
   let curr: string;
 
   // Set up test data to control execution.
-  TestData.fromJSON<SimulationClaim>("./data/claims.json");
+  TestData.fromJSON<SimulationClaim>("./data/pilot3/claims.json");
 
   // Before moving on to next scenario, fetch and adjust data needed
   // @flood/element@1.3.5

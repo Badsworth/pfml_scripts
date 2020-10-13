@@ -18,6 +18,7 @@
     "generate:api": "npx @spec2ts/openapi-client ../api/openapi.yaml -o src/api.ts",
     "flood:build": "cd scripts && makeFloodBundle.sh",
     "flood:all": "element run src/flood/index.perf.ts",
+    "flood:pilot3:gen": "ts-node src/cli.ts simulation generate -f ./src/simulation/scenarios/pilot3LST.ts -d ./src/flood/data/pilot3 -n 10",
     "flood:plan": "element plan src/flood/index.perf.ts",
     "flood:PortalClaimSubmit": "element run src/flood/tests/PortalClaimSubmit.perf.ts --no-headless",
     "flood:PortalRegistration": "element run src/flood/tests/PortalRegistration.perf.ts --no-headless",

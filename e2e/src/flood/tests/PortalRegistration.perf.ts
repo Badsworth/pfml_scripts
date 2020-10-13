@@ -71,7 +71,7 @@ export const steps = [
 ];
 
 export default (): void => {
-  TestData.fromJSON<SimulationClaim>("../data/claims.json").filter(
+  TestData.fromJSON<SimulationClaim>("../data/pilot3/claims.json").filter(
     (line) => line.scenario === scenario
   );
   steps.forEach((action) => {
