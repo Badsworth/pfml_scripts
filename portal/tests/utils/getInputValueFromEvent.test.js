@@ -97,7 +97,7 @@ describe("getInputValueFromEvent", () => {
       };
       const value = getInputValueFromEvent({ target });
 
-      expect(value).toBeUndefined();
+      expect(value).toBeNull();
     });
 
     it("doesn't attempt to trim an undefined value", () => {
@@ -146,7 +146,7 @@ describe("getInputValueFromEvent", () => {
       };
       const value = getInputValueFromEvent({ target });
 
-      expect(value).toBe(undefined);
+      expect(value).toBeNull();
     });
 
     it("does not convert undefined", () => {

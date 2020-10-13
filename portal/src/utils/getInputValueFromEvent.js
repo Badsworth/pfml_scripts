@@ -38,10 +38,10 @@ export default function getInputValueFromEvent(event) {
     }
   } else if (typeof value === "string" && value.trim() === "") {
     // An empty or empty-looking string will be interpreted as valid
-    // in the eyes of JSON Schema, even if marked as "required." So,
-    // we want to store an empty string as `undefined` in order for a
-    // required field to fail validation if its value is empty.
-    result = undefined;
+    // in our application_rules, even if it's required. We want to
+    // store an empty string as null in order for a required field
+    // to fail validation if its value is empty.
+    result = null;
   }
 
   return result;

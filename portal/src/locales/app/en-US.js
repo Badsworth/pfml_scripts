@@ -70,7 +70,13 @@ const errors = {
     },
     has_state_id: {
       required:
-        "Please enter whether or not you have a Massachusetts driver's license or ID card.",
+        "Please enter whether or not you have a Massachusetts driver's license or ID.",
+    },
+    hours_worked_per_week: {
+      maximum: "The average hours you work each week must be less than 168.",
+      minimum: "The average hours you work each week must be greater than 1.",
+      required: "Please enter how many hours you work on average each week.",
+      type: "The average hours you work each week must be a number.",
     },
     last_name: {
       required: "Please enter a last name.",
