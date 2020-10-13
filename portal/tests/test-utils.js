@@ -408,10 +408,8 @@ export const claim = new MockClaimBuilder()
   .verifiedId()
   .address()
   .medicalLeaveReason()
-  .continuous()
   .employed()
   .intermittent()
-  .reducedSchedule()
   .previousLeave([
     {
       leave_start_date: "2020-03-01",

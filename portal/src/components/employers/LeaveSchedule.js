@@ -1,10 +1,11 @@
+import IntermittentLeaveSchedule from "./IntermittentLeaveSchedule";
 import PropTypes from "prop-types";
 import React from "react";
 import ReviewHeading from "../ReviewHeading";
 import ReviewRow from "../ReviewRow";
 import Table from "../Table";
-import { Trans } from "react-i18next";
 import formatDateRange from "../../utils/formatDateRange";
+import { get } from "lodash";
 import { useTranslation } from "../../locales/i18n";
 
 // TODO (EMPLOYER-364): Remove hardcoded link
@@ -15,12 +16,14 @@ const healthCareProviderCertificationFile = "example-hcp-link.pdf";
  * in the Leave Admin claim review page.
  */
 
-const LeaveSchedule = (props) => {
+const LeaveSchedule = ({ claim }) => {
   const { t } = useTranslation();
   const {
+    isContinuous,
     isIntermittent,
+    isReducedSchedule,
     leave_details: { intermittent_leave_periods },
-  } = props.claim;
+  } = claim;
 
   return (
     <React.Fragment>
@@ -51,43 +54,61 @@ const LeaveSchedule = (props) => {
           </tr>
         </thead>
         <tbody>
-          {isIntermittent &&
-            intermittent_leave_periods.map((leavePeriod) => {
-              return (
-                <tr key={leavePeriod.leave_period_id} className="intermittent">
-                  <th scope="row">
-                    {formatDateRange(
-                      leavePeriod.start_date,
-                      leavePeriod.end_date
-                    )}
-                  </th>
-                  <td>
-                    {t(
-                      "pages.employersClaimsReview.leaveSchedule.type_intermittent"
-                    )}
-                  </td>
-                  <td>
-                    <div>
-                      <strong>
-                        {t(
-                          "pages.employersClaimsReview.leaveSchedule.intermittentDetails_oncePerMonth"
-                        )}
-                      </strong>
-                    </div>
-                    <div>
-                      <Trans
-                        i18nKey="pages.employersClaimsReview.leaveSchedule.intermittentDetails_estimatedAbsences"
-                        values={{
-                          frequency: leavePeriod.frequency,
-                          duration: leavePeriod.duration,
-                          durationBasis: leavePeriod.duration_basis.toLowerCase(),
-                        }}
-                      />
-                    </div>
-                  </td>
-                </tr>
-              );
-            })}
+          {isContinuous && (
+            <tr>
+              <th scope="row">
+                {formatDateRange(
+                  get(
+                    claim,
+                    "leave_details.continuous_leave_periods[0].start_date"
+                  ),
+                  get(
+                    claim,
+                    "leave_details.continuous_leave_periods[0].end_date"
+                  )
+                )}
+              </th>
+              <td colSpan="2">
+                {t("pages.employersClaimsReview.leaveSchedule.type_continuous")}
+              </td>
+            </tr>
+          )}
+          {isReducedSchedule && (
+            <tr>
+              <th scope="row">
+                {formatDateRange(
+                  get(
+                    claim,
+                    "leave_details.reduced_schedule_leave_periods[0].start_date"
+                  ),
+                  get(
+                    claim,
+                    "leave_details.reduced_schedule_leave_periods[0].end_date"
+                  )
+                )}
+              </th>
+              <td>
+                {t(
+                  "pages.employersClaimsReview.leaveSchedule.type_reducedSchedule"
+                )}
+              </td>
+              <td>
+                {/* TODO (EMPLOYER-364): Remove hardcoded number of hours */}
+                {/* TODO (CP-1074): Update hours/day */}
+                {t(
+                  "pages.employersClaimsReview.leaveSchedule.reducedHoursPerWeek",
+                  {
+                    numOfHours: 10,
+                  }
+                )}
+              </td>
+            </tr>
+          )}
+          {isIntermittent && (
+            <IntermittentLeaveSchedule
+              intermittentLeavePeriods={intermittent_leave_periods}
+            />
+          )}
         </tbody>
       </Table>
       <ReviewRow
@@ -105,7 +126,7 @@ const LeaveSchedule = (props) => {
 };
 
 LeaveSchedule.propTypes = {
-  claim: PropTypes.object,
+  claim: PropTypes.object.isRequired,
 };
 
 export default LeaveSchedule;

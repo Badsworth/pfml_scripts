@@ -949,16 +949,31 @@ const pages = {
       natureOfLeaveLabel: "Nature of leave",
     },
     leaveSchedule: {
+      frequencyBasis_irregular: "Irregular over the next 6 months",
+      frequencyBasis_months: "At least once a month",
+      frequencyBasis_weeks: "At least once a week",
       header: "Leave schedule",
       healthCareProviderFormLink: "Health care provider form",
-      intermittentDetails_estimatedAbsences:
-        "Estimated <strong>{{frequency}}</strong> absences each lasting <strong>less than a full work day</strong> for <strong>{{duration}}</strong> {{durationBasis}}.",
-      intermittentDetails_oncePerMonth: "At least once per month.",
+      intermittentFrequencyDuration_irregularMonths_days:
+        "Estimated <strong>{{frequency}}</strong> absences over the next 6 months, each lasting <strong>at least a day</strong> for <strong>{{duration}}</strong> days.",
+      intermittentFrequencyDuration_irregularMonths_hours:
+        "Estimated <strong>{{frequency}}</strong> absences over the next 6 months, each lasting <strong>less than a full work day</strong> for <strong>{{duration}}</strong> hours.",
+      intermittentFrequencyDuration_months_days:
+        "Estimated <strong>{{frequency}}</strong> absences per month, each lasting <strong>at least a day</strong> for <strong>{{duration}}</strong> days.",
+      intermittentFrequencyDuration_months_hours:
+        "Estimated <strong>{{frequency}}</strong> absences per month, each lasting <strong>less than a full work day</strong> for <strong>{{duration}}</strong> hours.",
+      intermittentFrequencyDuration_weeks_days:
+        "Estimated <strong>{{frequency}}</strong> absences per week, each lasting <strong>at least a day</strong> for <strong>{{duration}}</strong> days.",
+      intermittentFrequencyDuration_weeks_hours:
+        "Estimated <strong>{{frequency}}</strong> absences per week, each lasting <strong>less than a full work day</strong> for <strong>{{duration}}</strong> hours.",
+      reducedHoursPerWeek: "Reduced by {{numOfHours}} hours per week",
       tableHeader_dateRange: "Date range",
       tableHeader_details: "Details",
       tableHeader_leaveFrequency: "Leave frequency",
       tableName: "Leave schedule details table",
+      type_continuous: "$t(shared.claimDurationTypeContinuous)",
       type_intermittent: "$t(shared.claimDurationTypeIntermittent)",
+      type_reducedSchedule: "$t(shared.claimDurationTypeReducedSchedule)",
     },
     noneReported: "None reported",
     notApplicable: "-",
@@ -978,7 +993,6 @@ const pages = {
       tableFooter_totalLeave: "Total leave",
       tableHeader_dateRange: "Date range",
       tableHeader_days: "Days",
-      tableHeader_leaveType: "Leave type",
     },
     submitButton: "Submit",
     supportingWorkDetails: {

@@ -60,13 +60,8 @@ const PreviousLeaves = (props) => {
                 "pages.employersClaimsReview.previousLeaves.tableHeader_dateRange"
               )}
             </th>
-            <th scope="col">
-              {t("pages.employersClaimsReview.previousLeaves.tableHeader_days")}
-            </th>
             <th scope="col" colSpan="2">
-              {t(
-                "pages.employersClaimsReview.previousLeaves.tableHeader_leaveType"
-              )}
+              {t("pages.employersClaimsReview.previousLeaves.tableHeader_days")}
             </th>
           </tr>
         </thead>
@@ -88,7 +83,7 @@ const PreviousLeaves = (props) => {
                     "pages.employersClaimsReview.previousLeaves.tableFooter_totalLeave"
                   )}
                 </th>
-                <td colSpan="2">
+                <td colSpan="1">
                   {t("pages.employersClaimsReview.durationBasis_days", {
                     numOfDays: t("pages.employersClaimsReview.notApplicable"),
                   })}

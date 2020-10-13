@@ -1,0 +1,67 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`IntermittentLeaveSchedule renders a regular intermittent leave period 1`] = `
+<tr>
+  <th
+    scope="row"
+  >
+    2/1/2021 – 7/1/2021
+  </th>
+  <td>
+    Intermittent leave
+  </td>
+  <td>
+    <div
+      className="text-bold"
+    >
+      At least once a week
+    </div>
+    <div>
+      <Trans
+        i18nKey="pages.employersClaimsReview.leaveSchedule.intermittentFrequencyDuration"
+        tOptions={
+          Object {
+            "context": "weeks_hours",
+            "duration": 3,
+            "durationBasis": undefined,
+            "frequency": 2,
+          }
+        }
+      />
+    </div>
+  </td>
+</tr>
+`;
+
+exports[`IntermittentLeaveSchedule renders an irregular intermittent leave period 1`] = `
+<tr>
+  <th
+    scope="row"
+  >
+    2/1/2021 – 7/1/2021
+  </th>
+  <td>
+    Intermittent leave
+  </td>
+  <td>
+    <div
+      className="text-bold"
+    >
+      Irregular over the next 6 months
+    </div>
+    <div>
+      <Trans
+        i18nKey="pages.employersClaimsReview.leaveSchedule.intermittentFrequencyDuration"
+        tOptions={
+          Object {
+            "context": "irregularMonths_hours",
+            "duration": 3,
+            "durationBasis": undefined,
+            "frequency": 6,
+          }
+        }
+      />
+    </div>
+  </td>
+</tr>
+`;

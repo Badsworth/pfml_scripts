@@ -32,7 +32,33 @@ exports[`LeaveSchedule renders the component 1`] = `
         </th>
       </tr>
     </thead>
-    <tbody />
+    <tbody>
+      <tr>
+        <th
+          scope="row"
+        >
+          1/1/2021 – 6/1/2021
+        </th>
+        <td
+          colSpan="2"
+        >
+          Continuous leave
+        </td>
+      </tr>
+      <tr>
+        <th
+          scope="row"
+        >
+          2/1/2021 – 7/1/2021
+        </th>
+        <td>
+          Reduced leave schedule
+        </td>
+        <td>
+          Reduced by 10 hours per week
+        </td>
+      </tr>
+    </tbody>
   </Table>
   <ReviewRow
     label="Documentation"

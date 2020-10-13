@@ -28,13 +28,13 @@ describe("LeaveDetails", () => {
     ).toEqual("Amend");
   });
 
-  it("renders formatted date range for leave duration", () => {
+  it("renders formatted employer notification date", () => {
     expect(wrapper.find(ReviewRow).at(2).children().first().text()).toEqual(
       "1/1/2021"
     );
   });
 
-  it("renders formatted employer notification date", () => {
+  it("renders formatted date range for leave duration", () => {
     expect(wrapper.find(ReviewRow).last().children().first().text()).toEqual(
       "1/1/2021 – 6/1/2021"
     );

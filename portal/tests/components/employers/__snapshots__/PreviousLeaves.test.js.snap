@@ -44,15 +44,10 @@ exports[`PreviousLeaves renders the component 1`] = `
           Date range
         </th>
         <th
-          scope="col"
-        >
-          Days
-        </th>
-        <th
           colSpan="2"
           scope="col"
         >
-          Leave type
+          Days
         </th>
       </tr>
     </thead>
@@ -87,7 +82,7 @@ exports[`PreviousLeaves renders the component 1`] = `
           Total leave
         </th>
         <td
-          colSpan="2"
+          colSpan="1"
         >
           - days
         </td>
