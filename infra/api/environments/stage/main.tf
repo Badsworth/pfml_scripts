@@ -66,4 +66,6 @@ module "api" {
   fineos_client_oauth2_url                         = "https://idt-api.masspfml.fineos.com/oauth2/token"
   fineos_client_oauth2_client_id                   = "1fa281uto9tjuqtm21jle7loam"
   fineos_eligibility_transfer_lambda_build_s3_key  = local.fineos_eligibility_transfer_lambda_build_s3_key
+  rmv_client_base_url                              = "https://atlas-staging-gateway.massdot.state.ma.us"
+  rmv_client_certificate_binary_arn                = "arn:aws:secretsmanager:us-east-1:498823821309:secret:/service/pfml-api-stage/rmv_client_certificate-QlZaMl"
 }
