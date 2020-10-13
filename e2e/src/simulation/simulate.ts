@@ -1,12 +1,16 @@
 import faker from "faker";
-import { SimulationGenerator, ClaimDocument } from "./types";
-import { Employer } from "./dor";
+import {
+  SimulationGenerator,
+  ClaimDocument,
+  SimulationGeneratorOpts,
+} from "./types";
 import employers from "./fixtures/employerPool";
-import { ApplicationRequestBody } from "../api";
-import { generateHCP, generateIDFront, generateIDBack } from "./documents";
+import { ApplicationRequestBody, ApplicationLeaveDetails } from "../api";
+import generators from "./documents";
 import add from "date-fns/add";
 import path from "path";
 import { RandomSSN } from "ssn";
+import fs from "fs";
 
 export function chance(
   config: [number, SimulationGenerator][]
@@ -27,138 +31,93 @@ export function chance(
   };
 }
 
-type Doc = "HCP" | "ID";
+type DocumentGenerators = typeof generators;
+type ScenarioDocumentConfiguration = {
+  [P in keyof DocumentGenerators]?: Parameters<DocumentGenerators[P]>[1] & {
+    mailed?: boolean;
+  };
+};
+
 export type ScenarioOpts = {
+  reason: ApplicationLeaveDetails["reason"];
+  reason_qualifier: ApplicationLeaveDetails["reason_qualifier"];
   residence: "MA-proofed" | "MA-unproofed" | "OOS";
   financiallyIneligible?: boolean;
   employerExempt?: boolean;
-  employerPool?: Employer[];
-  invalidHCP?: boolean;
   gaveAppropriateNotice?: boolean;
-  missingDocs?: Doc[];
-  mailedDocs?: Doc[];
+  docs: ScenarioDocumentConfiguration;
   skipSubmitClaim?: boolean;
   shortNotice?: boolean;
 };
 
-export type AgentOpts = {
-  priorityTask?: string;
-  claim?: ApplicationRequestBody;
-};
+type ClaimUser = Pick<
+  ApplicationRequestBody,
+  "first_name" | "last_name" | "tax_identifier" | "employer_fein"
+>;
 
 export function scenario(
   name: string,
-  config: ScenarioOpts
+  config: ScenarioOpts,
+  existingUser?: ClaimUser
 ): SimulationGenerator {
   return async (opts) => {
     const hasMassId =
       config.residence === "MA-proofed" || config.residence === "MA-unproofed";
 
-    const [startDate, endDate] = generateLeaveDates();
-    const notificationDate = generateNotificationDate(
-      startDate,
-      !!config.shortNotice
-    );
+    const user: ClaimUser = {
+      first_name: existingUser?.first_name ?? faker.name.firstName(),
+      last_name: existingUser?.last_name ?? faker.name.lastName(),
+      tax_identifier:
+        existingUser?.tax_identifier ??
+        new RandomSSN().value().toFormattedString(),
+      employer_fein:
+        existingUser?.employer_fein ??
+        employers[Math.floor(Math.random() * employers.length)].fein,
+    };
 
-    // Pulls random FEIN from employerPool fixture.
-    const employer_fein =
-      employers[Math.floor(Math.random() * employers.length)].fein;
-    const first_name = faker.name.firstName();
-    const last_name = faker.name.lastName();
+    const address = {
+      city: faker.address.city(),
+      line_1: faker.address.streetAddress(),
+      state: faker.address.stateAbbr(),
+      zip: faker.address.zipCode(),
+    };
 
     const claim: ApplicationRequestBody = {
       // These fields are brought directly over from the employee record.
       employment_status: "Employed",
       occupation: "Administrative",
-      first_name: first_name,
-      last_name: last_name,
-      tax_identifier: new RandomSSN().value().toFormattedString(),
-      employer_fein,
+      first_name: user.first_name,
+      last_name: user.last_name,
+      tax_identifier: user.tax_identifier,
+      employer_fein: user.employer_fein,
       date_of_birth: fmt(generateBirthDate()),
       has_state_id: hasMassId,
-      mass_id: hasMassId ? generateMassID() : null,
-      mailing_address: {
-        city: faker.address.city(),
-        line_1: faker.address.streetAddress(),
-        state: faker.address.stateAbbr(),
-        zip: faker.address.zipCode(),
-      },
-      leave_details: {
-        continuous_leave_periods: [
-          {
-            start_date: fmt(startDate),
-            end_date: fmt(endDate),
-            is_estimated: true,
-          },
-        ],
-        pregnant_or_recent_birth: false,
-        employer_notification_date: fmt(notificationDate),
-        employer_notified: true,
-        reason: "Serious Health Condition - Employee",
-        reason_qualifier: "Serious Health Condition",
-      },
-      has_continuous_leave_periods: true,
-      has_intermittent_leave_periods: false,
-      has_reduced_schedule_leave_periods: false,
+      mass_id: hasMassId ? generateMassIDString() : null,
+      mailing_address: address,
+      residential_address: address,
+      hours_worked_per_week: 40,
       payment_preferences: [
         {
           payment_method: "Check",
           is_default: true,
           cheque_details: {
-            name_to_print_on_check: `${first_name} ${last_name}`,
+            name_to_print_on_check: `${user.first_name} ${user.last_name}`,
           },
         },
       ],
     };
-
-    // Generate the necessary documents for the claim.
-    const documents: ClaimDocument[] = [];
-    const hcpPath = `${claim.tax_identifier}.hcp.pdf`;
-    const idFrontPath = `${claim.tax_identifier}.id-front.pdf`;
-    const idBackPath = `${claim.tax_identifier}.id-back.pdf`;
-
-    // Flag for Missing Doc HCP
-    if (!config.missingDocs || !config.missingDocs.includes("HCP")) {
-      // Includes flag for invalid HCP in call to `generateHCP()`.
-      await generateHCP(
-        claim,
-        path.join(opts.documentDirectory, hcpPath),
-        !!config.invalidHCP
-      );
-      documents.push({
-        type: "HCP",
-        path: hcpPath,
-        submittedManually:
-          config.mailedDocs && config.mailedDocs.includes("HCP") ? true : false,
-      });
-    }
-    // Flag for Missing Doc ID
-    if (!config.missingDocs || !config.missingDocs.includes("ID")) {
-      await generateIDFront(
-        claim,
-        path.join(opts.documentDirectory, idFrontPath),
-        // Specifies UNH scn involving mismatched ID/SSN.
-        config.residence === "MA-unproofed"
-      );
-      await generateIDBack(
-        claim,
-        path.join(opts.documentDirectory, idBackPath)
-      );
-
-      documents.push({
-        type: "ID-front",
-        path: idFrontPath,
-      });
-      documents.push({
-        type: "ID-back",
-        path: idBackPath,
-      });
-    }
+    claim.leave_details = generateLeaveDetails(config);
+    claim.has_continuous_leave_periods =
+      (claim.leave_details?.continuous_leave_periods?.length ?? 0) > 0;
+    claim.has_reduced_schedule_leave_periods =
+      (claim.leave_details?.reduced_schedule_leave_periods?.length ?? 0) > 0;
+    claim.has_intermittent_leave_periods =
+      (claim.leave_details?.intermittent_leave_periods?.length ?? 0) > 0;
 
     return {
       scenario: name,
       claim,
-      documents,
+      documents: await generateDocuments(claim, config, opts),
       financiallyIneligible: !!config.financiallyIneligible,
       // Flag for skipSubmitClaim.
       skipSubmitClaim: !!config.skipSubmitClaim,
@@ -166,12 +125,16 @@ export function scenario(
   };
 }
 
+export type AgentOpts = {
+  priorityTask?: string;
+  claim?: ApplicationRequestBody;
+};
 // For LST purposes, some scenarios do not need a claim or documents to be generated
 export function agentScenario(
   name: string,
   config: AgentOpts = {}
 ): SimulationGenerator {
-  return async (opts) => {
+  return async () => {
     return {
       scenario: name,
       claim: {},
@@ -181,8 +144,94 @@ export function agentScenario(
   };
 }
 
+/**
+ * Generate all requested documents for a scenario.
+ */
+async function generateDocuments(
+  claim: ApplicationRequestBody,
+  config: ScenarioOpts,
+  opts: SimulationGeneratorOpts
+): Promise<ClaimDocument[]> {
+  const dir = opts.documentDirectory;
+  const docs = config.docs ?? ({} as ScenarioDocumentConfiguration);
+
+  const promises = Object.entries(docs).map(async ([type, options]) => {
+    if (!(type in generators)) {
+      throw new Error(`Invalid document type: ${type}`);
+    }
+    // Cast document type to a const.
+    const constType = type as keyof ScenarioDocumentConfiguration;
+    // Pick the mailed property off of the options.
+    const { mailed, ...actualOptions } = {
+      mailed: false,
+      ...options,
+    } as Record<string, unknown>;
+    const name = `${claim.tax_identifier}.${type}.pdf`;
+    // Generate the document.
+    await fs.promises.writeFile(
+      path.join(dir, name),
+      await generators[constType](claim, actualOptions)
+    );
+    return {
+      type: constType,
+      path: name,
+      submittedManually: !!mailed,
+    };
+  });
+  return Promise.all(promises);
+}
+
+function generateLeaveDetails(config: ScenarioOpts): ApplicationLeaveDetails {
+  const { reason, reason_qualifier } = config;
+  const [startDate, endDate] = generateLeaveDates();
+  const notificationDate = generateNotificationDate(
+    startDate,
+    !!config.shortNotice
+  );
+  const details: ApplicationLeaveDetails = {
+    continuous_leave_periods: [
+      {
+        start_date: fmt(startDate),
+        end_date: fmt(endDate),
+        is_estimated: true,
+      },
+    ],
+    pregnant_or_recent_birth: false,
+    employer_notification_date: fmt(notificationDate),
+    employer_notified: true,
+    reason,
+    reason_qualifier,
+  };
+  switch (reason) {
+    case "Serious Health Condition - Employee":
+      // Do nothing else.
+      break;
+    case "Child Bonding":
+      switch (reason_qualifier) {
+        case "Newborn":
+          details.child_birth_date = fmt(startDate);
+          details.pregnant_or_recent_birth = true;
+          // @todo: What additional properties need to be added here?
+          break;
+        case "Adoption":
+          // @todo: What additional properties need to be added here?
+          break;
+        case "Foster Care":
+          details.child_placement_date = fmt(startDate);
+          // @todo: What additional properties need to be added here?
+          break;
+        default:
+          throw new Error(`Invalid reason_qualifier for Child Bonding`);
+      }
+      break;
+    default:
+      throw new Error(`Invalid reason given`);
+  }
+  return details;
+}
+
 // Generate a Mass ID string.
-function generateMassID(): string {
+function generateMassIDString(): string {
   return faker.random.arrayElement([
     faker.phone.phoneNumber("S########"),
     faker.phone.phoneNumber("SA#######"),

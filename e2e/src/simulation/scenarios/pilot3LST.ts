@@ -29,25 +29,41 @@ import { scenario, agentScenario, chance } from "../simulate";
       * can trigger "Request Additional Information" when document is missing
 ******/
 
-/* 
+/*
   PortalRegistration
 */
 const PortalRegistration = agentScenario("PortalRegistration");
 
-/* 
+/*
   PortalClaimSubmit
 */
 const HAP1Portal = scenario("PortalClaimSubmit", {
+  reason: "Serious Health Condition - Employee",
+  reason_qualifier: "Serious Health Condition",
   residence: "MA-proofed",
+  docs: {
+    MASSID: {},
+    HCP: {},
+  },
 });
 
 const GBR1Portal = scenario("PortalClaimSubmit", {
+  reason: "Serious Health Condition - Employee",
+  reason_qualifier: "Serious Health Condition",
   residence: "MA-proofed",
-  missingDocs: ["HCP"],
+  docs: {
+    MASSID: {},
+  },
 });
 
 const HAP3Portal = scenario("PortalClaimSubmit", {
+  reason: "Serious Health Condition - Employee",
+  reason_qualifier: "Serious Health Condition",
   residence: "MA-proofed",
+  docs: {
+    MASSID: {},
+    HCP: {},
+  },
   financiallyIneligible: true,
 });
 
@@ -57,20 +73,36 @@ const HAPPortal = chance([
   [1, HAP3Portal],
 ]);
 
-/* 
+/*
   FineosClaimSubmit
 */
 const HAP1Fineos = scenario("FineosClaimSubmit", {
+  reason: "Serious Health Condition - Employee",
+  reason_qualifier: "Serious Health Condition",
   residence: "MA-proofed",
+  docs: {
+    MASSID: {},
+    HCP: {},
+  },
 });
 
 const GBR1Fineos = scenario("PortalClaimSubmit", {
+  reason: "Serious Health Condition - Employee",
+  reason_qualifier: "Serious Health Condition",
   residence: "MA-proofed",
-  missingDocs: ["HCP"],
+  docs: {
+    MASSID: {},
+  },
 });
 
 const HAP3Fineos = scenario("FineosClaimSubmit", {
+  reason: "Serious Health Condition - Employee",
+  reason_qualifier: "Serious Health Condition",
   residence: "MA-proofed",
+  docs: {
+    MASSID: {},
+    HCP: {},
+  },
   financiallyIneligible: true,
 });
 
@@ -80,7 +112,7 @@ const HAPFineos = chance([
   [1, HAP3Fineos],
 ]);
 
-/* 
+/*
   SavilinxAgent - do only "Adjudicate Absence" tasks
 */
 const SavilinxAgent = agentScenario("SavilinxAgent", {

@@ -1,4 +1,5 @@
 import { ApplicationRequestBody } from "../api";
+import { DocumentTypes } from "@/simulation/documents";
 
 export const fineosUserTypeNames = ["SAVILINX", "DFMLOPS"] as const;
 export type FineosUserType = typeof fineosUserTypeNames[number];
@@ -22,7 +23,7 @@ export type SimulationClaim = {
 // be captured to a folder for "manual" delivery.
 export type ClaimDocument = {
   // Type of document.
-  type: "HCP" | "ID-front" | "ID-back";
+  type: DocumentTypes;
   // Filesystem path to the document.
   path: string;
   // Flag to control whether the document should be uploaded (default), or "manually"

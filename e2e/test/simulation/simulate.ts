@@ -2,17 +2,33 @@ import { describe, it, expect, jest } from "@jest/globals";
 import { scenario, chance, ScenarioOpts } from "../../src/simulation/simulate";
 import employerPool from "../../src/simulation/fixtures/employerPool";
 import type { SimulationClaim } from "@/simulation/types";
-import {
-  generateHCP,
-  generateIDBack,
-  generateIDFront,
-} from "../../src/simulation/documents";
+import generators from "../../src/simulation/documents";
 import { ParseSSN } from "ssn";
+import fs from "fs";
 
 jest.mock("../../src/simulation/documents");
 
 const opts = {
   documentDirectory: "/tmp",
+};
+
+const medical: ScenarioOpts = {
+  residence: "MA-proofed",
+  reason: "Serious Health Condition - Employee",
+  reason_qualifier: "Serious Health Condition",
+  docs: {
+    HCP: {},
+    MASSID: {},
+  },
+};
+const bonding: ScenarioOpts = {
+  residence: "MA-proofed",
+  reason: "Child Bonding",
+  reason_qualifier: "Newborn",
+  docs: {
+    HCP: {},
+    MASSID: {},
+  },
 };
 
 describe("Simulation Generator", () => {
@@ -21,7 +37,7 @@ describe("Simulation Generator", () => {
   });
 
   it("Should have claim properties", async () => {
-    const claim = await scenario("TEST", { residence: "MA-proofed" })(opts);
+    const claim = await scenario("TEST", medical)(opts);
     expect(claim.scenario).toEqual("TEST");
     expect(claim.claim).toMatchObject({
       employment_status: "Employed",
@@ -33,7 +49,7 @@ describe("Simulation Generator", () => {
   });
 
   it("Should have payment information", async () => {
-    const claim = await scenario("TEST", { residence: "MA-proofed" })(opts);
+    const claim = await scenario("TEST", medical)(opts);
     const { payment_preferences } = claim.claim;
     expect(payment_preferences).toHaveLength(1);
     expect(payment_preferences).toContainEqual(
@@ -47,42 +63,49 @@ describe("Simulation Generator", () => {
   });
 
   it("Should generate a valid SSN", async () => {
-    const claim = await scenario("TEST", { residence: "MA-proofed" })(opts);
+    const claim = await scenario("TEST", medical)(opts);
     new ParseSSN((claim.claim.tax_identifier ?? "").replace(/-/g, ""));
   });
 
   it("Should pull an employer from the pool", async () => {
     const employerFeins = employerPool.map((e) => e.fein);
-    const claim = await scenario("TEST", { residence: "MA-proofed" })(opts);
+    const claim = await scenario("TEST", medical)(opts);
     expect(employerFeins).toContain(claim.claim.employer_fein);
   });
 
   it("Should populate the mass_id property for mass proofed claims", async () => {
-    const claim = await scenario("TEST", { residence: "MA-proofed" })(opts);
+    const claim = await scenario("TEST", medical)(opts);
     expect(claim.claim.mass_id).toMatch(/^S(\d{8}|A\d{7})$/);
     expect(claim.claim.has_state_id).toBe(true);
   });
 
   it("Should populate the mass_id property for mass unproofed claims", async () => {
-    const claim = await scenario("TEST", { residence: "MA-unproofed" })(opts);
+    const claim = await scenario("TEST", {
+      ...medical,
+      residence: "MA-unproofed",
+    })(opts);
     expect(claim.claim.mass_id).toMatch(/^S(\d{8}|A\d{7})$/);
     expect(claim.claim.has_state_id).toBe(true);
   });
 
   it("Should not populate the mass_id property for OOS claims", async () => {
-    const claim = await scenario("TEST", { residence: "OOS" })(opts);
+    const claim = await scenario("TEST", { ...medical, residence: "OOS" })(
+      opts
+    );
     expect(claim.claim.mass_id).toBe(null);
     expect(claim.claim.has_state_id).toBe(false);
   });
 
   it("Should default to generating financially eligible claims", async () => {
-    const claim = await scenario("TEST", { residence: "OOS" })(opts);
+    const claim = await scenario("TEST", { ...medical, residence: "OOS" })(
+      opts
+    );
     expect(claim.financiallyIneligible).toBe(false);
   });
 
   it("Should populate financial eligibility field.", async () => {
     const claim = await scenario("TEST", {
-      residence: "OOS",
+      ...medical,
       financiallyIneligible: true,
     })(opts);
     expect(claim.financiallyIneligible).toBe(true);
@@ -90,7 +113,7 @@ describe("Simulation Generator", () => {
 
   it("Should have has_ properties that match its leave periods", async () => {
     const claim = await scenario("TEST", {
-      residence: "OOS",
+      ...medical,
       financiallyIneligible: true,
     })(opts);
     expect(claim.claim).toMatchObject({
@@ -102,97 +125,48 @@ describe("Simulation Generator", () => {
 
   it("Should generate an HCP form", async () => {
     const claim = await scenario("TEST", {
+      ...medical,
       residence: "OOS",
     })(opts);
 
-    expect(generateHCP).toHaveBeenCalledWith(
-      claim.claim,
-      expect.stringMatching(/^\/tmp\/[\d-]+\.hcp\.pdf/),
-      false
-    );
+    expect(generators.HCP).toHaveBeenCalledWith(claim.claim, {});
   });
 
-  it("Should generate an invalid HCP form", async () => {
+  it("Should generate requested documents", async () => {
     const claim = await scenario("TEST", {
-      residence: "OOS",
-      invalidHCP: true,
+      ...medical,
+      docs: {
+        HCP: { invalid: true },
+        MASSID: {},
+      },
     })(opts);
 
-    expect(generateHCP).toHaveBeenCalledWith(
-      claim.claim,
-      expect.stringMatching(/^\/tmp\/[\d-]+\.hcp\.pdf/),
-      true
-    );
+    expect(generators.HCP).toHaveBeenCalledWith(claim.claim, { invalid: true });
+    expect(generators.MASSID).toHaveBeenCalledWith(claim.claim, {});
+    await expect(
+      fs.promises.stat(`${opts.documentDirectory}/${claim.documents[0].path}`)
+    ).resolves.toBeTruthy();
+    await expect(
+      fs.promises.stat(`${opts.documentDirectory}/${claim.documents[1].path}`)
+    ).resolves.toBeTruthy();
   });
 
-  it("Should generate an License Front", async () => {
-    const config = { residence: "OOS" } as ScenarioOpts;
-    const claim = await scenario("TEST", config)(opts);
-
-    expect(generateIDFront).toHaveBeenCalledWith(
-      claim.claim,
-      expect.stringMatching(/^\/tmp\/[\d-]+\.id-front\.pdf/),
-      false
-    );
-  });
-
-  it("Should generate a license back", async () => {
+  it("Should allow the generation of mailed documents", async () => {
     const claim = await scenario("TEST", {
-      residence: "OOS",
+      ...medical,
+      docs: {
+        HCP: { mailed: true },
+        MASSID: {},
+      },
     })(opts);
-    expect(generateIDBack).toHaveBeenCalledWith(
-      claim.claim,
-      expect.stringMatching(/^\/tmp\/[\d-]+\.id-back\.pdf/)
-    );
-  });
 
-  it("Should not add HCP form to Documents", async () => {
-    const claim = await scenario("TEST", {
-      residence: "MA-proofed",
-      missingDocs: ["HCP"],
-    })(opts);
-    claim.documents.forEach((doc) => {
-      expect(doc.type).not.toEqual("HCP");
+    expect(generators.HCP).toHaveBeenCalledWith(claim.claim, {});
+    expect(claim.documents[0]).toMatchObject({
+      submittedManually: true,
     });
-  });
-
-  it("HCP Form should be submitted Manually", async () => {
-    const claim = await scenario("TEST", {
-      residence: "MA-proofed",
-      mailedDocs: ["HCP"],
-    })(opts);
-    expect(claim.documents).toContainEqual(
-      expect.objectContaining({
-        type: "HCP",
-        submittedManually: true,
-      })
-    );
-  });
-
-  it("Should not submit a claim nor generate an ID when an HCP was mailed before applying", async () => {
-    const claim = await scenario("TEST", {
-      residence: "MA-proofed",
-      mailedDocs: ["HCP"],
-      missingDocs: ["ID"],
-      skipSubmitClaim: true,
-    })(opts);
-    expect(claim.documents).toContainEqual(
-      expect.objectContaining({
-        type: "HCP",
-        submittedManually: true,
-      })
-    );
-    expect(claim.documents).not.toContainEqual(
-      expect.objectContaining({
-        type: "ID-front",
-      })
-    );
-    expect(claim.documents).not.toContainEqual(
-      expect.objectContaining({
-        type: "ID-back",
-      })
-    );
-    expect(claim.skipSubmitClaim).toBeTruthy();
+    expect(claim.documents[1]).toMatchObject({
+      submittedManually: false,
+    });
   });
 
   function extractLeavePeriod(claim: SimulationClaim["claim"]): [Date, Date] {
@@ -212,25 +186,19 @@ describe("Simulation Generator", () => {
   }
 
   it("Should have an application start date past 01/01/2021", async () => {
-    const { claim } = await scenario("TEST", {
-      residence: "MA-proofed",
-    })(opts);
+    const { claim } = await scenario("TEST", medical)(opts);
     const [start] = extractLeavePeriod(claim);
     expect(start.getTime()).toBeGreaterThan(new Date(2021, 0).getTime());
   });
 
   it("Should have an application end date greater/later than start date", async () => {
-    const { claim } = await scenario("TEST", {
-      residence: "MA-proofed",
-    })(opts);
+    const { claim } = await scenario("TEST", medical)(opts);
     const [start, end] = extractLeavePeriod(claim);
     expect(start.getTime()).toBeLessThan(end.getTime());
   });
 
   it("Should have an application end date within 20 weeks of the start date", async () => {
-    const { claim } = await scenario("TEST", {
-      residence: "MA-proofed",
-    })(opts);
+    const { claim } = await scenario("TEST", medical)(opts);
     const [start, end] = extractLeavePeriod(claim);
     expect(end.getTime() - start.getTime()).toBeLessThan(
       // 20 weeks worth of milliseconds...
@@ -239,9 +207,7 @@ describe("Simulation Generator", () => {
   });
 
   it("Should have a notification date prior to the leave start date", async () => {
-    const { claim } = await scenario("TEST", {
-      residence: "MA-proofed",
-    })(opts);
+    const { claim } = await scenario("TEST", medical)(opts);
     const [start] = extractLeavePeriod(claim);
     const notification = extractNotificationDate(claim);
 
@@ -249,10 +215,7 @@ describe("Simulation Generator", () => {
   });
 
   it("Should have a notification date that qualifies as short notice", async () => {
-    const { claim } = await scenario("TEST", {
-      residence: "MA-proofed",
-      shortNotice: true,
-    })(opts);
+    const { claim } = await scenario("TEST", medical)(opts);
     const [start] = extractLeavePeriod(claim);
     const notification = extractNotificationDate(claim);
     expect(notification.getTime()).toBeLessThanOrEqual(
@@ -261,7 +224,7 @@ describe("Simulation Generator", () => {
   });
 
   it("Should generate a birth date 18-65 years in the past.", async () => {
-    const { claim } = await scenario("TEST", { residence: "MA-proofed" })(opts);
+    const { claim } = await scenario("TEST", medical)(opts);
     const { date_of_birth } = claim;
     if (typeof date_of_birth !== "string") {
       throw new Error("Expected date_of_birth to be a string");
@@ -274,6 +237,22 @@ describe("Simulation Generator", () => {
     expect(date.getFullYear()).toBeGreaterThanOrEqual(
       new Date().getFullYear() - 65
     );
+  });
+
+  it("Should set the leave reason for medical claims", async () => {
+    const { claim } = await scenario("TEST", medical)(opts);
+    expect(claim.leave_details).toMatchObject({
+      reason: medical.reason,
+      reason_qualifier: medical.reason_qualifier,
+    });
+  });
+
+  it("Should set the leave reason for bonding claims", async () => {
+    const { claim } = await scenario("TEST", bonding)(opts);
+    expect(claim.leave_details).toMatchObject({
+      reason: bonding.reason,
+      reason_qualifier: bonding.reason_qualifier,
+    });
   });
 });
 

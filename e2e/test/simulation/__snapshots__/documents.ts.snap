@@ -1,5 +1,20 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`Documents Should generate a non-mass ID 1`] = `
+Object {
+  "Address city": "Example",
+  "Address state": "MA",
+  "Address street": "123 Test Way",
+  "Date birth": "06/07/2020",
+  "Date expiration": "01/01/2028",
+  "Date issue": "01/01/2020",
+  "License number": "XXX",
+  "Name first": "John",
+  "Name last": "Smith",
+  "address ZIP": "01000",
+}
+`;
+
 exports[`Documents Should generate an HCP form 1`] = `
 Object {
   "untitled1": "John Smith",

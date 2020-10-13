@@ -65,6 +65,7 @@ export default class SimulationRunner {
           });
         } catch (e) {
           // Track that the claim failed.
+          logger.debug(e);
           await this.tracker.set(claimId, e.toString(), true);
           profiler.done({ message: "Submission failed", level: "error" });
         }
@@ -148,8 +149,8 @@ function getDocumentType(
   switch (document.type) {
     case "HCP":
       return "State Managed Paid Leave Confirmation";
-    case "ID-front":
-    case "ID-back":
+    case "MASSID":
+    case "OOSID":
       return "Identification Proof";
     default:
       throw new Error(`Unhandled document type: ${document.type}`);

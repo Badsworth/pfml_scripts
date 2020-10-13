@@ -1,13 +1,61 @@
 import { ApplicationRequestBody } from "@/api";
-import { promisify } from "util";
 import fs from "fs";
 import { PDFCheckBox, PDFDocument, PDFOptionList, PDFTextField } from "pdf-lib";
 import { parseISO, format, differenceInWeeks } from "date-fns";
 
-const readFile = promisify(fs.readFile);
-const writeFile = promisify(fs.writeFile);
-
 type PDFFormData = { [k: string]: string };
+
+interface DocumentGenerator {
+  (claim: ApplicationRequestBody, options: Record<string, unknown>): Promise<
+    Uint8Array
+  >;
+}
+
+const generateMassID: DocumentGenerator = (
+  claim: ApplicationRequestBody,
+  { invalid }: { invalid?: boolean }
+) => {
+  if (
+    !claim.first_name ||
+    !claim.last_name ||
+    !claim.date_of_birth ||
+    !claim.mass_id
+  ) {
+    throw new Error("Unable to generate document due to missing properties");
+  }
+  const dob = format(parseISO(claim.date_of_birth), "MM/dd/yyyy");
+  return fillPDFBytes(`${__dirname}/../../forms/license-MA.pdf`, {
+    "Name first": claim.first_name,
+    "Name last": claim.last_name,
+    "Date birth": dob,
+    "License number": invalid ? "" : claim.mass_id,
+    "Date issue": "01/01/2020",
+    "Date expiration": "01/01/2028",
+    "Address street": claim.mailing_address?.line_1 ?? "",
+    "Address state": claim.mailing_address?.state ?? "",
+    "Address city": claim.mailing_address?.city ?? "",
+    "address ZIP": claim.mailing_address?.zip ?? "",
+  });
+};
+
+const generateOOSID: DocumentGenerator = (claim: ApplicationRequestBody) => {
+  if (!claim.first_name || !claim.last_name || !claim.date_of_birth) {
+    throw new Error("Unable to generate document due to missing properties");
+  }
+  const dob = format(parseISO(claim.date_of_birth), "MM/dd/yyyy");
+  return fillPDFBytes(`${__dirname}/../../forms/license-CT.pdf`, {
+    "Name first": claim.first_name,
+    "Name last": claim.last_name,
+    "Date birth": dob,
+    "License number": "XXX",
+    "Date issue": "01/01/2020",
+    "Date expiration": "01/01/2028",
+    "Address street": claim.mailing_address?.line_1 ?? "",
+    "Address state": claim.mailing_address?.state ?? "",
+    "Address city": claim.mailing_address?.city ?? "",
+    "address ZIP": claim.mailing_address?.zip ?? "",
+  });
+};
 
 /**
  * Generates an HCP form for upload to the API.
@@ -16,11 +64,10 @@ type PDFFormData = { [k: string]: string };
  * @param target
  * @param invalidHCP
  */
-export function generateHCP(
+const generateHCP: DocumentGenerator = (
   claim: ApplicationRequestBody,
-  target: string,
-  invalidHCP = false
-): Promise<void> {
+  { invalid }: { invalid?: boolean }
+) => {
   if (!claim.first_name || !claim.last_name || !claim.date_of_birth) {
     throw new Error("Unable to generate document due to missing properties");
   }
@@ -34,8 +81,8 @@ export function generateHCP(
     untitled50: `${claim.first_name} ${claim.last_name}`,
     untitled4: format(dob, "MM"),
     untitled5: format(dob, "dd"),
-    untitled6: invalidHCP ? "" : format(dob, "yyyy"),
-    untitled3: `${invalidHCP ? "" : claim.tax_identifier?.slice(7)}`,
+    untitled6: invalid ? "" : format(dob, "yyyy"),
+    untitled3: `${invalid ? "" : claim.tax_identifier?.slice(7)}`,
     // Checkbox 5 - "I am taking leave because of my own serious health condition"
     untitled51: "Yes",
     // Checkbox 12 - "Does the patient have a serious health condition that necessitates continuing care􏰗"
@@ -96,71 +143,43 @@ export function generateHCP(
     data["untitled31"] = differenceInWeeks(end_date, start_date).toString();
   }
 
-  return fillPDF(`${__dirname}/../../forms/hcp-real.pdf`, target, data);
-}
+  return fillPDFBytes(`${__dirname}/../../forms/hcp-real.pdf`, data);
+};
 
-/**
- * Generates the front side of an ID, for upload to the API.
- *
- * @param claim
- * @param target
- * @param unproofed
- */
-export function generateIDFront(
-  claim: ApplicationRequestBody,
-  target: string,
-  invalid?: boolean
-): Promise<void> {
-  if (!claim.first_name || !claim.last_name || !claim.date_of_birth) {
-    throw new Error("Unable to generate document due to missing properties");
-  }
-  const dob = format(parseISO(claim.date_of_birth), "MM/dd/yyyy");
-  if (claim.mass_id) {
-    return fillPDF(`${__dirname}/../../forms/license-MA.pdf`, target, {
-      "Name first": claim.first_name,
-      "Name last": claim.last_name,
-      "Date birth": dob,
-      "License number": invalid ? "" : claim.mass_id,
-      "Date issue": "01/01/2020",
-      "Date expiration": "01/01/2028",
-      "Address street": claim.mailing_address?.line_1 ?? "",
-      "Address state": claim.mailing_address?.state ?? "",
-      "Address city": claim.mailing_address?.city ?? "",
-      "address ZIP": claim.mailing_address?.zip ?? "",
-    });
-  } else {
-    // @todo: Replace with OOS license when we have it.
-    return fillPDF(`${__dirname}/../../forms/license-CT.pdf`, target, {
-      "Name first": claim.first_name,
-      "Name last": claim.last_name,
-      "Date birth": dob,
-      "License number": "XXX",
-      "Date issue": "01/01/2020",
-      "Date expiration": "01/01/2028",
-      "Address street": claim.mailing_address?.line_1 ?? "",
-      "Address state": claim.mailing_address?.state ?? "",
-      "Address city": claim.mailing_address?.city ?? "",
-      "address ZIP": claim.mailing_address?.zip ?? "",
-    });
-  }
-}
+const generatePrebirthLetter: DocumentGenerator = async (
+  claim,
+  { birthDate }: { birthDate?: string }
+) => {
+  // Just to keep linting happy :(
+  console.log(birthDate);
+  return Uint8Array.from(Buffer.from("test"));
+};
 
-/**
- * Generates the back side of an ID, for upload to the API.
- *
- * @param claim
- * @param target
- */
-export async function generateIDBack(
-  claim: ApplicationRequestBody,
-  target: string
-): Promise<void> {
-  if (!claim.first_name || !claim.last_name) {
-    throw new Error("Unable to generate document due to missing properties");
-  }
-  const contents = await readFile(`${__dirname}/../../forms/license-back.pdf`);
-  return writeFile(target, contents);
-}
+const generateFosterPlacementLetter: DocumentGenerator = async () => {
+  return Uint8Array.from(Buffer.from("test"));
+};
+
+const generateAdoptionCertificate: DocumentGenerator = async (
+  claim,
+  { placementDate }: { placementDate?: string }
+) => {
+  // Just to keep linting happy :(
+  console.log(placementDate);
+  return Uint8Array.from(Buffer.from("test"));
+};
+
+const generators = {
+  MASSID: generateMassID,
+  OOSID: generateOOSID,
+  HCP: generateHCP,
+  PREBIRTH: generatePrebirthLetter,
+  FOSTERPLACEMENT: generateFosterPlacementLetter,
+  ADOPTIONCERT: generateAdoptionCertificate,
+};
+
+export default generators;
+
+export type DocumentTypes = keyof typeof generators;
 
 /**
  * Fills a PDF form using the pdf-lib module.
@@ -171,20 +190,15 @@ export async function generateIDBack(
  * @param source
  * @param data
  */
-export default async function fillPDF(
+async function fillPDFBytes(
   source: string,
-  target: string,
   data: PDFFormData
-): Promise<void> {
-  const buf = await readFile(source);
+): Promise<Uint8Array> {
+  const buf = await fs.promises.readFile(source);
   const doc = await PDFDocument.load(Uint8Array.from(buf));
-  const bytes = await fill(doc, data).then((doc) => doc.save());
-  await writeFile(target, bytes);
-}
 
-async function fill(doc: PDFDocument, data: PDFFormData): Promise<PDFDocument> {
+  // Fill in the PDF form.
   const form = doc.getForm();
-
   for (const [fieldName, fieldValue] of Object.entries(data)) {
     const field = form.getField(fieldName);
     if (field instanceof PDFTextField) {
@@ -201,5 +215,5 @@ async function fill(doc: PDFDocument, data: PDFFormData): Promise<PDFDocument> {
     field.enableReadOnly();
   }
 
-  return doc;
+  return doc.save();
 }

@@ -3,11 +3,7 @@ import os from "os";
 import path from "path";
 import { PDFCheckBox, PDFDocument, PDFTextField } from "pdf-lib";
 import { beforeAll, afterAll, describe, it, expect } from "@jest/globals";
-import {
-  generateHCP,
-  generateIDBack,
-  generateIDFront,
-} from "../../src/simulation/documents";
+import generators from "../../src/simulation/documents";
 import { ApplicationRequestBody } from "../../src/api";
 
 describe("Documents", function () {
@@ -45,9 +41,8 @@ describe("Documents", function () {
   };
 
   type FormValues = { [k: string]: string | boolean | undefined };
-  async function parsePDFForm(filename: string): Promise<FormValues> {
-    const buf = await fs.promises.readFile(filename);
-    const doc = await PDFDocument.load(Uint8Array.from(buf));
+  async function parsePDF(bytes: Uint8Array): Promise<FormValues> {
+    const doc = await PDFDocument.load(bytes);
     const values = await doc
       .getForm()
       .getFields()
@@ -65,9 +60,8 @@ describe("Documents", function () {
   }
 
   it("Should generate an HCP form", async function () {
-    const file = path.join(tempDir, "hcp.pdf");
-    await generateHCP(claim, path.join(tempDir, "hcp.pdf"));
-    const values = await parsePDFForm(file);
+    const bytes = await generators.HCP(claim, {});
+    const values = await parsePDF(bytes);
 
     expect(values).toMatchObject({
       // Assert DOB has correct values.
@@ -94,9 +88,8 @@ describe("Documents", function () {
   });
 
   it("Should generate an invalid HCP form", async function () {
-    const file = path.join(tempDir, "hcp.pdf");
-    await generateHCP(claim, file, true);
-    const values = await parsePDFForm(file);
+    const bytes = await generators.HCP(claim, { invalid: true });
+    const values = await parsePDF(bytes);
     // Assert DOB/SSN has correct values.
     expect(values).toMatchObject({
       untitled3: undefined,
@@ -108,9 +101,8 @@ describe("Documents", function () {
   });
 
   it("Should generate an ID front", async function () {
-    const file = path.join(tempDir, "id-front.pdf");
-    await generateIDFront(claim, path.join(tempDir, "id-front.pdf"));
-    const values = await parsePDFForm(file);
+    const bytes = await generators.MASSID(claim, {});
+    const values = await parsePDF(bytes);
     expect(values).toMatchObject({
       "Address street": "123 Test Way",
       "Address state": "MA",
@@ -121,14 +113,13 @@ describe("Documents", function () {
       "Name last": "Smith",
       "Date birth": "06/07/2020",
     });
-    await expect(parsePDFForm(file)).resolves.toMatchSnapshot();
+    await expect(parsePDF(bytes)).resolves.toMatchSnapshot();
   });
 
   it("Should generate an ID front without MA ID number", async function () {
-    const file = path.join(tempDir, "id-front.pdf");
     claim.mass_id = "123456789";
-    await generateIDFront(claim, path.join(tempDir, "id-front.pdf"), true);
-    const values = await parsePDFForm(file);
+    const bytes = await generators.MASSID(claim, { invalid: true });
+    const values = await parsePDF(bytes);
     expect(values).toMatchObject({
       "Address street": "123 Test Way",
       "Address state": "MA",
@@ -141,9 +132,19 @@ describe("Documents", function () {
     });
   });
 
-  it("Should generate an ID back", async function () {
-    const file = path.join(tempDir, "id-back.pdf");
-    await generateIDBack(claim, path.join(tempDir, "id-back.pdf"));
-    await expect(fs.promises.stat(file)).resolves.toBeTruthy();
+  it("Should generate a non-mass ID", async function () {
+    const bytes = await generators.OOSID(claim, {});
+    const values = await parsePDF(bytes);
+    expect(values).toMatchObject({
+      "Address street": "123 Test Way",
+      "Address state": "MA",
+      "Address city": "Example",
+      "address ZIP": "01000",
+      "License number": "XXX",
+      "Name first": "John",
+      "Name last": "Smith",
+      "Date birth": "06/07/2020",
+    });
+    await expect(parsePDF(bytes)).resolves.toMatchSnapshot();
   });
 });
