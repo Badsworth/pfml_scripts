@@ -465,6 +465,7 @@ export const claim = new MockClaimBuilder()
  * @param {boolean} [options.hasLoadedClaimDocuments] - Additional attributes to indicate document loading is finished
  * @param {boolean} [options.hasUploadedCertificationDocuments] - Additional attributes to set certification documents
  * @param {boolean} [options.hasUploadedIdDocuments] - Additional attributes to set id documents
+ * @param {boolean} [options.hasLegalNotices] - Create legal notices for claim
  * @returns {{ appLogic: object, claim: Claim, wrapper: object }}
  */
 export const renderWithAppLogic = (PageComponent, options = {}) => {
@@ -520,6 +521,17 @@ export const renderWithAppLogic = (PageComponent, options = {}) => {
         application_id: "mock_application_id",
         fineos_document_id: 2,
         document_type: DocumentType.medicalCertification,
+      })
+    );
+  }
+
+  if (options.hasLegalNotices) {
+    appLogic.documents.documents = appLogic.documents.documents.addItem(
+      new Document({
+        application_id: "mock_application_id",
+        created_at: "01/01/2021",
+        document_type: DocumentType.notices, // TODO (CP-1111): refactor with legal notice types (and create additional doc for each type here)
+        fineos_document_id: 3,
       })
     );
   }

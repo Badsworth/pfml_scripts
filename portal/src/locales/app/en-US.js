@@ -1105,6 +1105,9 @@ const components = {
     leaveReasonValue_medical: "$t(shared.leaveReasonMedical)",
     leaveReasonValue_serviceMemberFamily:
       "$t(shared.leaveReasonServiceMemberFamily)",
+    noticesDate: "Posted {{date}}",
+    noticesHeading: "View your notices",
+    noticesName: "{{fileName}} (PDF)",
     resumeClaimButton: "Complete your application",
   },
   authNav: {

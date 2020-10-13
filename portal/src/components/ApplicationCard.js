@@ -1,4 +1,5 @@
 import Claim, { LeaveReason } from "../models/Claim";
+import Document, { DocumentType } from "../models/Document";
 import ButtonLink from "../components/ButtonLink";
 import Heading from "../components/Heading";
 import PropTypes from "prop-types";
@@ -13,8 +14,8 @@ import withClaimDocuments from "../hoc/withClaimDocuments";
 /**
  * Preview of an existing benefits Application
  */
-function ApplicationCard(props) {
-  const { claim, number } = props;
+export const TestableApplicationCard = (props) => {
+  const { claim, documents, number } = props;
   const { t } = useTranslation();
   const leaveReason = get(claim, "leave_details.reason");
   const metadataHeadingProps = {
@@ -26,13 +27,42 @@ function ApplicationCard(props) {
     className: "margin-top-0 margin-bottom-2 font-body-2xs text-medium",
   };
 
+  const legalNotices = documents.filter(
+    (document) => document.document_type === DocumentType.notices
+  ); // TODO (CP-1111): Refactor to use legal notice types
+
+  const renderLegalNoticeRow = (legalNotice) => {
+    const downloadUrl = `/applications/${legalNotice.application_id}/documents/${legalNotice.fineos_document_id}`;
+    return (
+      <li key={legalNotice.fineos_document_id}>
+        <div className="margin-bottom-05">
+          <a className="text-normal" href={downloadUrl}>
+            {t("components.applicationCard.noticesName", {
+              fileName: legalNotice.document_type,
+            })}
+          </a>
+        </div>
+        <div className="text-base">
+          {t("components.applicationCard.noticesDate", {
+            date: new Date(legalNotice.created_at).toLocaleDateString(),
+          })}
+        </div>
+      </li>
+    );
+  };
+
   return (
     <article className="maxw-mobile-lg border border-base-lighter margin-bottom-3">
       <div className="bg-base-lightest padding-3">
-        <Heading className="margin-bottom-05 margin-top-0" level="2">
-          {claim.fineos_absence_id ||
-            t("components.applicationCard.heading", { number })}
-        </Heading>
+        {claim.fineos_absence_id ? (
+          <Heading className="margin-bottom-1 margin-top-0" level="2">
+            {claim.fineos_absence_id}
+          </Heading>
+        ) : (
+          <Heading className="margin-bottom-05 margin-top-0" level="2">
+            {t("components.applicationCard.heading", { number })}
+          </Heading>
+        )}
 
         {leaveReason && (
           <Heading className="margin-top-0" size="2" level="3" weight="normal">
@@ -44,6 +74,15 @@ function ApplicationCard(props) {
       </div>
 
       <div className="padding-3">
+        {claim.employer_fein && (
+          <React.Fragment>
+            <Heading {...metadataHeadingProps}>
+              {t("components.applicationCard.feinHeading")}
+            </Heading>
+            <p {...metadataValueProps}>{claim.employer_fein}</p>
+          </React.Fragment>
+        )}
+
         {claim.isContinuous && (
           <React.Fragment>
             <Heading {...metadataHeadingProps}>
@@ -101,15 +140,6 @@ function ApplicationCard(props) {
           </React.Fragment>
         )}
 
-        {claim.employer_fein && (
-          <React.Fragment>
-            <Heading {...metadataHeadingProps}>
-              {t("components.applicationCard.feinHeading")}
-            </Heading>
-            <p {...metadataValueProps}>{claim.employer_fein}</p>
-          </React.Fragment>
-        )}
-
         {!claim.isCompleted && (
           <ButtonLink
             className="display-block margin-top-0"
@@ -120,17 +150,37 @@ function ApplicationCard(props) {
             {t("components.applicationCard.resumeClaimButton")}
           </ButtonLink>
         )}
+
+        {/* Legal Notices Section */}
+
+        {claim.isCompleted && legalNotices.length > 0 && (
+          <div className="border-top border-base-lighter padding-top-2">
+            <Heading
+              className="margin-top-0"
+              size="2"
+              level="3"
+              weight="normal"
+            >
+              {t("components.applicationCard.noticesHeading")}
+            </Heading>
+
+            <ul className="usa-list">
+              {legalNotices.map((notice) => renderLegalNoticeRow(notice))}
+            </ul>
+          </div>
+        )}
       </div>
     </article>
   );
-}
+};
 
-ApplicationCard.propTypes = {
+TestableApplicationCard.propTypes = {
   claim: PropTypes.instanceOf(Claim).isRequired,
+  documents: PropTypes.arrayOf(PropTypes.instanceOf(Document)),
   /**
    * Cards are displayed in a list. What position is this card?
    */
   number: PropTypes.number.isRequired,
 };
 
-export default withClaimDocuments(ApplicationCard);
+export default withClaimDocuments(TestableApplicationCard);

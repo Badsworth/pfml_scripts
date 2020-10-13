@@ -1,11 +1,12 @@
-import ApplicationCard from "src/components/ApplicationCard";
+import Document, { DocumentType } from "src/models/Document";
 import Claim from "src/models/Claim";
 import { MockClaimBuilder } from "tests/test-utils";
 import React from "react";
+import { TestableApplicationCard } from "src/components/ApplicationCard";
 
 export default {
   title: "Components/ApplicationCard",
-  component: ApplicationCard,
+  component: TestableApplicationCard,
   args: {
     number: 1,
   },
@@ -23,11 +24,18 @@ export default {
         ],
       },
     },
+    documents: {
+      defaultValue: "Empty",
+      control: {
+        type: "radio",
+        options: ["Empty", "With Legal Notice (Claim must be completed)"],
+      },
+    },
   },
 };
 
-export const Story = ({ claim, ...args }) => {
-  let claimAttrs;
+export const Story = ({ claim, documents, ...args }) => {
+  let attachedDocuments, claimAttrs;
 
   if (claim === "Empty") {
     claimAttrs = new MockClaimBuilder().create();
@@ -41,5 +49,25 @@ export const Story = ({ claim, ...args }) => {
     claimAttrs = new MockClaimBuilder().completed().create();
   }
 
-  return <ApplicationCard claim={new Claim(claimAttrs)} {...args} />;
+  switch (documents) {
+    case "Empty":
+      attachedDocuments = [];
+      break;
+    case "With Legal Notice (Claim must be completed)": // TODO (CP-1111): Update to display all notice types
+      attachedDocuments = [
+        new Document({
+          created_at: "1/1/2021",
+          document_type: DocumentType.notices,
+        }),
+      ];
+      break;
+  }
+
+  return (
+    <TestableApplicationCard
+      claim={new Claim(claimAttrs)}
+      {...args}
+      documents={attachedDocuments}
+    />
+  );
 };

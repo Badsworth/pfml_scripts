@@ -1,15 +1,16 @@
 import { MockClaimBuilder, renderWithAppLogic } from "../test-utils";
 import ApplicationCard from "../../src/components/ApplicationCard";
 import Claim from "../../src/models/Claim";
+import { DocumentType } from "../../src/models/Document";
 
 describe("ApplicationCard", () => {
-  let wrapper;
+  let appLogic, wrapper;
 
   const render = (claimAttrs = {}) => {
-    ({ wrapper } = renderWithAppLogic(ApplicationCard, {
+    ({ appLogic, wrapper } = renderWithAppLogic(ApplicationCard, {
       diveLevels: 2,
       props: { claim: new Claim(claimAttrs), number: 2 },
-      hasUploadedDocument: true,
+      hasLegalNotices: true,
     }));
   };
 
@@ -82,6 +83,21 @@ describe("ApplicationCard", () => {
 
     it("does not include a link to edit the claim", () => {
       expect(wrapper.find("ButtonLink")).toHaveLength(0);
+    });
+
+    describe("when there are legal notices attached", () => {
+      it("renders the legal notices section", () => {
+        expect(wrapper).toMatchSnapshot();
+      });
+
+      it("links to the document download endpoint", () => {
+        const legalNotice = appLogic.documents.documents.items.filter(
+          (item) => item.document_type === DocumentType.notices
+        )[0];
+        expect(wrapper.find("a").props().href).toBe(
+          `/applications/${legalNotice.application_id}/documents/${legalNotice.fineos_document_id}`
+        );
+      });
     });
   });
 });
