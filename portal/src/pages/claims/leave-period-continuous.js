@@ -1,6 +1,6 @@
 import Claim, { LeaveReason } from "../../models/Claim";
 import React, { useEffect } from "react";
-import { get, pick, set } from "lodash";
+import { cloneDeep, get, pick, set } from "lodash";
 import Alert from "../../components/Alert";
 import ConditionalContent from "../../components/ConditionalContent";
 import Heading from "../../components/Heading";
@@ -25,7 +25,6 @@ export const fields = [
   "claim.has_continuous_leave_periods",
   `claim.${leavePeriodPath}.end_date`,
   `claim.${leavePeriodPath}.start_date`,
-  `claim.${leavePeriodPath}.leave_period_id`,
 ];
 
 export const LeavePeriodContinuous = (props) => {
@@ -59,8 +58,25 @@ export const LeavePeriodContinuous = (props) => {
     }
   }, [formState, updateFields]);
 
-  const handleSave = () =>
-    appLogic.claims.update(claim.application_id, formState);
+  const handleSave = async () => {
+    /**
+     * We need to include the leave_period_id if one exists, so the
+     * API merges changes, rather than creates a different leave period.
+     * We access this ID from the `claim` prop, rather than including it
+     * as part of our initial form state, because there are scenarios where a
+     * leave period can be created and not reflected back in our form state,
+     * such as when the user has validation issues when initially submitting
+     * the page.
+     */
+    const leave_period_id = get(claim, `${leavePeriodPath}.leave_period_id`);
+    const requestData = cloneDeep(formState);
+
+    if (formState.has_continuous_leave_periods && leave_period_id) {
+      set(requestData, `${leavePeriodPath}.leave_period_id`, leave_period_id);
+    }
+
+    await appLogic.claims.update(claim.application_id, requestData);
+  };
 
   const contentContext = {
     [LeaveReason.bonding]: "bonding",

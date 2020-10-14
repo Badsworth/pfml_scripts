@@ -1,4 +1,5 @@
 import Claim, { ClaimStatus } from "../../src/models/Claim";
+import { MockClaimBuilder, testHook } from "../test-utils";
 import {
   completeClaimMock,
   createClaimMock,
@@ -14,7 +15,6 @@ import User from "../../src/models/User";
 import { act } from "react-dom/test-utils";
 import { mockRouter } from "next/router";
 import routes from "../../src/routes";
-import { testHook } from "../test-utils";
 import useAppErrorsLogic from "../../src/hooks/useAppErrorsLogic";
 import useClaimsLogic from "../../src/hooks/useClaimsLogic";
 import usePortalFlow from "../../src/hooks/usePortalFlow";
@@ -361,8 +361,32 @@ describe("useClaimsLogic", () => {
           jest.spyOn(console, "error").mockImplementationOnce(jest.fn());
         });
 
-        it("reports all relevant warnings in the response", async () => {
+        it("updates the local claim if response only included warnings", async () => {
+          const claimResponse = new MockClaimBuilder()
+            .id(applicationId)
+            .create();
+          const last_name = "Updated from API";
+
           updateClaimMock.mockResolvedValueOnce({
+            claim: { ...claimResponse, last_name },
+            errors: [],
+            warnings: [{ field: "first_name", type: "required" }],
+            // Responses with only warnings receive a 200 status
+            success: true,
+          });
+
+          await act(async () => {
+            await claimsLogic.update(applicationId, patchData);
+          });
+
+          const claim = claimsLogic.claims.get(applicationId);
+
+          expect(claim.last_name).toBe(last_name);
+        });
+
+        it("reports all warnings for fields in patchData", async () => {
+          updateClaimMock.mockResolvedValueOnce({
+            claim: new MockClaimBuilder().id(applicationId).create(),
             errors: [],
             warnings: [
               { field: "last_name", type: "required" },
@@ -380,6 +404,52 @@ describe("useClaimsLogic", () => {
 
           expect(errors).toHaveLength(1);
           expect(errors[0].field).toEqual("last_name");
+        });
+
+        it("does not update the local claim if response included any errors", async () => {
+          const claimResponse = new MockClaimBuilder()
+            .id(applicationId)
+            .create();
+          const last_name = "Name in API";
+
+          updateClaimMock.mockResolvedValueOnce({
+            claim: { ...claimResponse, last_name },
+            errors: [{ rule: "disallow_foo" }],
+            warnings: [],
+            // Responses with errors receive a 400 status
+            success: false,
+          });
+
+          await act(async () => {
+            await claimsLogic.update(applicationId, patchData);
+          });
+
+          const claim = claimsLogic.claims.get(applicationId);
+
+          expect(claim.last_name).toBeNull();
+        });
+
+        it("reports all errors and any warnings for fields in patchData", async () => {
+          updateClaimMock.mockResolvedValueOnce({
+            claim: new MockClaimBuilder().id(applicationId).create(),
+            errors: [{ field: "error_field" }],
+            warnings: [
+              { field: "last_name", type: "required" },
+              { field: "date_of_birth", type: "required" },
+            ],
+            // Responses with errors receive a 400 status
+            success: false,
+          });
+
+          await act(async () => {
+            await claimsLogic.update(applicationId, patchData);
+          });
+
+          const errors = appErrorsLogic.appErrors.items;
+
+          expect(errors).toHaveLength(2);
+          expect(errors[0].field).toEqual("error_field");
+          expect(errors[1].field).toEqual("last_name");
         });
 
         it("catches exceptions thrown from the API module", async () => {

@@ -48,7 +48,7 @@ describe("LeavePeriodContinuous", () => {
     expect(wrapper.find("ConditionalContent").prop("visible")).toBe(true);
   });
 
-  it("adds leave period with only the page's fields when user first indicates they have this leave period", async () => {
+  it("sends leave period with only the page's fields when user first indicates they have this leave period", async () => {
     const { appLogic, claim, wrapper } = renderWithAppLogic(
       LeavePeriodContinuous,
       {
@@ -71,7 +71,6 @@ describe("LeavePeriodContinuous", () => {
       leave_details: {
         continuous_leave_periods: [
           {
-            leave_period_id: null,
             end_date: null,
             start_date: null,
           },
@@ -80,7 +79,7 @@ describe("LeavePeriodContinuous", () => {
     });
   });
 
-  it("sends continuous leave dates to the api", () => {
+  it("sends continuous leave dates and ID to the api", () => {
     const claim = new MockClaimBuilder().continuous().create();
     const {
       end_date,

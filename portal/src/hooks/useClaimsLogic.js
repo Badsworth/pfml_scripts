@@ -54,10 +54,12 @@ const useClaimsLogic = ({ appErrorsLogic, portalFlow, user }) => {
         application_id,
         patchData
       );
-
       const issues = getRelevantIssues(errors, warnings, patchData);
 
-      if (issues.length) {
+      // If there were any validation errors, then throw *before*
+      // the claim is updated in our state, to avoid overriding
+      // the user's in-progress answers
+      if (errors && errors.length) {
         throw new ValidationError(issues, "claims");
       }
 
@@ -69,6 +71,17 @@ const useClaimsLogic = ({ appErrorsLogic, portalFlow, user }) => {
       // </ end workaround >
 
       setClaim(claim);
+
+      // If there were only validation warnings, then throw *after*
+      // the claim has been updated in our state, so our local claim
+      // state remains consistent with the claim state stored in the API,
+      // which still received the updates in the request. This is important
+      // for situations like leave periods, where the API passes us back
+      // a leave_period_id field for making subsequent updates.
+      if (issues.length) {
+        throw new ValidationError(issues, "claims");
+      }
+
       const params = { claim_id: claim.application_id };
       portalFlow.goToNextPage({ claim, user }, params);
     } catch (error) {

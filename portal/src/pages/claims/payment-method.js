@@ -2,6 +2,7 @@ import Claim, {
   PaymentAccountType,
   PaymentPreferenceMethod,
 } from "../../models/Claim";
+import { cloneDeep, get, pick, set } from "lodash";
 import Alert from "../../components/Alert";
 import ConditionalContent from "../../components/ConditionalContent";
 import Fieldset from "../../components/Fieldset";
@@ -12,8 +13,6 @@ import Lead from "../../components/Lead";
 import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
-import get from "lodash/get";
-import pick from "lodash/pick";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "../../locales/i18n";
@@ -24,7 +23,6 @@ export const fields = [
   "claim.payment_preferences[0].account_details.account_number",
   "claim.payment_preferences[0].account_details.account_type",
   "claim.payment_preferences[0].account_details.routing_number",
-  "claim.payment_preferences[0].payment_preference_id",
 ];
 
 export const PaymentMethod = (props) => {
@@ -42,8 +40,27 @@ export const PaymentMethod = (props) => {
     "payment_preferences[0].payment_method"
   );
 
-  const handleSave = () =>
-    appLogic.claims.update(claim.application_id, formState);
+  const handleSave = async () => {
+    /**
+     * We need to include the payment_preference_id if one exists, so the
+     * API merges changes, rather than creates a different payment preference.
+     * We access this ID from the `claim` prop, rather than including it
+     * as part of our initial form state, because there are scenarios where a
+     * payment preference can be created and not reflected back in our form state,
+     * such as when the user has validation issues when initially submitting
+     * the page.
+     */
+    const paymentPreferenceIdPath =
+      "payment_preferences[0].payment_preference_id";
+    const payment_preference_id = get(claim, paymentPreferenceIdPath);
+    const requestData = cloneDeep(formState);
+
+    if (payment_preference_id) {
+      set(requestData, paymentPreferenceIdPath, payment_preference_id);
+    }
+
+    await appLogic.claims.update(claim.application_id, requestData);
+  };
 
   const getFunctionalInputProps = useFunctionalInputProps({
     appErrors: appLogic.appErrors,

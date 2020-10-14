@@ -1,7 +1,7 @@
+import { MockClaimBuilder, renderWithAppLogic } from "../../test-utils";
 import PaymentMethod from "../../../src/pages/claims/payment-method";
 import { PaymentPreferenceMethod } from "../../../src/models/Claim";
 import { act } from "react-dom/test-utils";
-import { renderWithAppLogic } from "../../test-utils";
 
 jest.mock("../../../src/hooks/useAppLogic");
 
@@ -75,8 +75,10 @@ describe("PaymentMethod", () => {
   });
 
   describe("when user clicks continue", () => {
-    it("calls claims.update", () => {
-      ({ appLogic, claim, wrapper } = renderWithAppLogic(PaymentMethod));
+    it("submits payment preference fields and ID", () => {
+      ({ appLogic, claim, wrapper } = renderWithAppLogic(PaymentMethod, {
+        claimAttrs: new MockClaimBuilder().directDeposit().create(),
+      }));
 
       act(() => {
         wrapper.find("QuestionPage").simulate("save");
@@ -84,7 +86,19 @@ describe("PaymentMethod", () => {
 
       expect(appLogic.claims.update).toHaveBeenCalledWith(
         claim.application_id,
-        expect.any(Object)
+        {
+          payment_preferences: [
+            {
+              account_details: {
+                account_number: "091000022",
+                account_type: "Checking",
+                routing_number: "1234567890",
+              },
+              payment_method: "ACH",
+              payment_preference_id: "mock-payment-preference-id",
+            },
+          ],
+        }
       );
     });
   });

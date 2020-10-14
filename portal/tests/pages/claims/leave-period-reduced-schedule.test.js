@@ -48,7 +48,7 @@ describe("LeavePeriodReducedSchedule", () => {
     expect(wrapper.find("ConditionalContent").prop("visible")).toBe(true);
   });
 
-  it("adds leave period with only the page's fields when user first indicates they have this leave period", async () => {
+  it("sends leave period with only the page's fields when user first indicates they have this leave period", async () => {
     const { appLogic, claim, wrapper } = renderWithAppLogic(
       LeavePeriodReducedSchedule,
       {
@@ -71,7 +71,6 @@ describe("LeavePeriodReducedSchedule", () => {
       leave_details: {
         reduced_schedule_leave_periods: [
           {
-            leave_period_id: null,
             end_date: null,
             start_date: null,
           },
@@ -80,7 +79,7 @@ describe("LeavePeriodReducedSchedule", () => {
     });
   });
 
-  it("sends reduced schedule leave dates to the api", () => {
+  it("sends reduced schedule leave dates and ID to the api", () => {
     const claim = new MockClaimBuilder().reducedSchedule().create();
     const {
       end_date,
