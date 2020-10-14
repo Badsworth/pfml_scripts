@@ -62,6 +62,9 @@ services:
       - ENABLE_EMPLOYEE_ENDPOINTS=1
       - ENABLE_EMPLOYER_ENDPOINTS=1
       - FOLDER_PATH=dor_mock
+      # Enable this variable to configure /rmv-check
+      - RMV_CHECK_BEHAVIOR=fully_mocked
+      - RMV_CHECK_MOCK_SUCCESS=1
       # Enable these variables to use a real FINEOS API instead of a mock:
       # - FINEOS_CLIENT_CUSTOMER_API_URL=https://idt-api.masspfml.fineos.com/customerapi/
       # - FINEOS_CLIENT_WSCOMPOSER_API_URL=https://idt-claims-webapp.masspfml.fineos.com/wscomposer/

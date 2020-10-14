@@ -511,6 +511,7 @@ paths:
       tags:
         - ID Proofing
       summary: Perform lookup and data matching for information on RMV-issued IDs
+      operationId: massgov.pfml.api.rmv_check.rmv_check_post
       requestBody:
         required: true
         content:

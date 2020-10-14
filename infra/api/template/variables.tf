@@ -141,6 +141,18 @@ variable "rmv_client_certificate_binary_arn" {
   default     = ""
 }
 
+variable "rmv_check_behavior" {
+  description = "Specifies if the RMV response is mocked"
+  type        = string
+  default     = ""
+}
+
+variable "rmv_check_mock_success" {
+  description = "Specifies if RMV mock response always passes. '1' always passes id proofing, '0' always fails id proofing."
+  type        = string
+  default     = ""
+}
+
 variable "fineos_client_customer_api_url" {
   description = "URL of the FINEOS Customer API"
   type        = string
