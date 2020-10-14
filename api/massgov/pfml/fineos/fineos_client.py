@@ -90,7 +90,7 @@ class FINEOSClient(client.AbstractFINEOSClient):
         self.request_count += 1
         logger.debug("%s %s start", method, url)
         try:
-            response = request_function(method, url, timeout=(3.1, 15), headers=headers, **args)
+            response = request_function(method, url, timeout=(6.1, 60), headers=headers, **args)
         except requests.exceptions.RequestException as ex:
             logger.error("%s %s => %r", method, url, ex)
             raise exception.FINEOSClientError(cause=ex)
