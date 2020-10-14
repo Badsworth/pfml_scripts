@@ -760,6 +760,8 @@ def import_wage_data(
 
     count = 0
 
+    wages_contributions_models_existing_employees_to_create = []
+
     for wage_info in wage_info_list_to_create_or_update:
 
         count += 1
@@ -778,20 +780,32 @@ def import_wage_data(
         )
 
         if existing_wage is None:
-            dor_persistence_util.create_wages_and_contributions(
-                db_session,
-                wage_info,
-                existing_employee.employee_id,
-                employer_id,
-                import_log_entry_id,
-            )
 
-            report.created_wages_and_contributions_count += 1
+            wage_model = dor_persistence_util.dict_to_wages_and_contributions(
+                wage_info, existing_employee.employee_id, employer_id, import_log_entry_id
+            )
+            wages_contributions_models_existing_employees_to_create.append(wage_model)
+
         else:
             dor_persistence_util.update_wages_and_contributions(
                 db_session, existing_wage, wage_info, import_log_entry_id
             )
             report.updated_wages_and_contributions_count += 1
+
+    logger.info(
+        "Creating new wage information for existing employees: %i",
+        len(wages_contributions_models_existing_employees_to_create),
+    )
+
+    bulk_save(
+        db_session,
+        wages_contributions_models_existing_employees_to_create,
+        "Employee Wages",
+        commit=True,
+    )
+    report.created_wages_and_contributions_count += len(
+        wages_contributions_models_existing_employees_to_create
+    )
 
 
 def import_employees_and_wage_data(
