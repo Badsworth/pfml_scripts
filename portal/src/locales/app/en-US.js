@@ -207,6 +207,9 @@ const errors = {
       required: "Please enter a Social Security Number or ITIN.",
     },
   },
+  documents: {
+    required: "Please upload at least one file to continue.",
+  },
   invalidFileType:
     "Only PDF and image files may be uploaded. See the tips below for suggestions on how to convert them to an image file. These files that you selected will not be uploaded: {{disallowedFileNames}}",
   network:

@@ -62,18 +62,22 @@ const useAppErrorsLogic = () => {
 
     // Remove array indexes from the field since the array index is not relevant for the error message
     // i.e. convert foo[0].bar[1].cat to foo.bar.cat
-    const i18nErrorKey = `${i18nPrefix}.${field}.${type}`
+    const fieldErrorKey = `${i18nPrefix}.${field}.${type}`
       .replace(/\[(\d+)\]/g, "")
       // Also convert foo.0.bar.1.cat to foo.bar.cat in case
       // TODO (CP-1052): Remove this line once API starts using bracket notation for array indexes
       .replace(/\.(\d+)/g, "");
 
+    const modelErrorKey = `${i18nPrefix}.${type}`;
+
     // 1. Field-level message: "errors.claim.ssn.required" => "Please enter your SSN."
-    // 2. Generic message: "errors.fallback.pattern" => "Field (ssn) is invalid format."
-    // 3. Fallback to API message as last resort
+    // 2. Model-level message: "errors.documents.required" => "At least one file is required."
+    // 3. Generic message: "errors.fallback.pattern" => "Field (ssn) is invalid format."
+    // 4. Fallback to API message as last resort
     return t(
       [
-        `errors.${i18nErrorKey}`,
+        `errors.${fieldErrorKey}`,
+        `errors.${modelErrorKey}`,
         `errors.validationFallback.${type}`,
         fallbackMessage,
       ],

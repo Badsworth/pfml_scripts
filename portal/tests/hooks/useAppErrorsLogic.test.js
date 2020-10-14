@@ -137,6 +137,23 @@ describe("useAppErrorsLogic", () => {
         );
       });
 
+      it("displays an internationalized error message for the Documents model", () => {
+        const issue = {
+          field: "",
+          type: "required",
+          message: "'file' is a required property",
+          rule: ["document_type", "file"],
+        };
+
+        act(() => {
+          appErrorsLogic.catchError(new ValidationError([issue], "documents"));
+        });
+
+        expect(appErrorsLogic.appErrors.items[0].message).toMatchInlineSnapshot(
+          `"Please upload at least one file to continue."`
+        );
+      });
+
       it("tracks which issues were encountered", () => {
         const error = new ValidationError(issues, "test");
 
