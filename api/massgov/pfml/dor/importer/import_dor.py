@@ -417,7 +417,9 @@ def import_employers(db_session, employers, report, import_log_entry_id):
     """Import employers into db"""
     logger.info("Importing employers")
 
-    # 1 - Get all employers in DB
+    # 1 - Stage employers for creation and update
+
+    # Get all employers in DB
     existing_employer_reference_models = dor_persistence_util.get_all_employers_fein(db_session)
     fein_to_existing_employer_reference_models = {
         employer.employer_fein: employer for employer in existing_employer_reference_models
@@ -425,14 +427,28 @@ def import_employers(db_session, employers, report, import_log_entry_id):
 
     logger.info("Found employers in db: %i", len(existing_employer_reference_models))
 
-    # 2 - Create employers
-    not_found_employer_info_list = list(
-        filter(
-            lambda employer: employer["fein"] not in fein_to_existing_employer_reference_models,
-            employers,
-        )
-    )
+    not_found_employer_info_list = []
+    found_employer_info_list = []
 
+    staged_not_found_employer_ssns = set()
+    for employer_info in employers:
+        fein = employer_info["fein"]
+        if fein in staged_not_found_employer_ssns:
+            # this means there is more than one line for the same employer
+            # add it to the found list for later possible update processing
+            logger.warning(
+                "found multiple lines for same employer: %s", employer_info["account_key"]
+            )
+            found_employer_info_list.append(employer_info)
+            continue
+
+        if fein not in fein_to_existing_employer_reference_models:
+            not_found_employer_info_list.append(employer_info)
+            staged_not_found_employer_ssns.add(fein)
+        else:
+            found_employer_info_list.append(employer_info)
+
+    # 2 - Create employers
     fein_to_new_employer_id = {}
     fein_to_new_address_id = {}
     for emp in not_found_employer_info_list:
@@ -507,20 +523,25 @@ def import_employers(db_session, employers, report, import_log_entry_id):
         account_key_to_employer_id_map[e.account_key] = fein_to_new_employer_id[e.employer_fein]
 
     # 6 - Update existing employers
-    found_employer_info_list = list(
-        filter(
-            lambda employer: employer["fein"] in fein_to_existing_employer_reference_models,
-            employers,
-        )
-    )
+    found_employer_info_to_update_list = []
+    found_employer_info_to_not_update_list = []
 
-    found_employer_info_to_update_list = list(
-        filter(
-            lambda employer: employer["updated_date"]
-            > fein_to_existing_employer_reference_models[employer["fein"]].dor_updated_date,
-            found_employer_info_list,
-        )
-    )
+    for employer_info in found_employer_info_list:
+        fein = employer_info["fein"]
+
+        # this means the same employer was created previously in the current import run
+        # fetch the existing employer for an update check
+        if fein not in fein_to_existing_employer_reference_models:
+            existing_employer = dor_persistence_util.get_employer_by_fein(db_session, fein)
+            fein_to_existing_employer_reference_models[fein] = existing_employer
+
+        if (
+            employer_info["updated_date"]
+            > fein_to_existing_employer_reference_models[fein].dor_updated_date
+        ):
+            found_employer_info_to_update_list.append(employer_info)
+        else:
+            found_employer_info_to_not_update_list.append(employer_info)
 
     logger.info("Updating employers: %i", len(found_employer_info_to_update_list))
 
@@ -544,14 +565,6 @@ def import_employers(db_session, employers, report, import_log_entry_id):
     logger.info("Done - Updating employers: %i", len(found_employer_info_to_update_list))
 
     # 7 - Track and report not updated employers
-    found_employer_info_to_not_update_list = list(
-        filter(
-            lambda employer: employer["updated_date"]
-            <= fein_to_existing_employer_reference_models[employer["fein"]].dor_updated_date,
-            found_employer_info_list,
-        )
-    )
-
     for employer_info in found_employer_info_to_not_update_list:
         existing_employer_reference_model = fein_to_existing_employer_reference_models[
             employer_info["fein"]

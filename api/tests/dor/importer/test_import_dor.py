@@ -153,6 +153,32 @@ def test_employer_update(test_db_session, dor_employer_lookups):
     assert report.updated_employers_count == 1
 
 
+def test_employer_create_and_update_in_same_run(test_db_session):
+    new_employer_payload = test_data.get_new_employer()
+    updated_employer_payload = test_data.get_updated_employer()
+    report, report_log_entry = get_new_import_report(test_db_session)
+
+    account_key_to_employer_id_map = import_dor.import_employers(
+        test_db_session,
+        [new_employer_payload, updated_employer_payload],
+        report,
+        report_log_entry.import_log_id,
+    )
+    employer_id = account_key_to_employer_id_map[new_employer_payload["account_key"]]
+
+    assert report.created_employers_count == 1
+    assert report.updated_employers_count == 1
+    assert report.unmodified_employers_count == 0
+
+    # confirm expected columns are now updated
+    persisted_employer = test_db_session.query(Employer).get(employer_id)
+    assert persisted_employer is not None
+
+    validate_employer_persistence(
+        updated_employer_payload, persisted_employer, report_log_entry.import_log_id
+    )
+
+
 def get_new_import_report(test_db_session):
     report = import_dor.ImportReport()
     report_log_entry = dor_persistence_util.create_import_log_entry(test_db_session, report)
