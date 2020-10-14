@@ -18,7 +18,6 @@ import { scenario, chance } from "../simulate";
 //Simple claim, MA resident:
 export const HAP1 = scenario("HAP1", {
   reason: "Serious Health Condition - Employee",
-  reason_qualifier: "Serious Health Condition",
   residence: "MA-proofed",
   docs: {
     HCP: {},
@@ -28,7 +27,6 @@ export const HAP1 = scenario("HAP1", {
 // Simple claim, OOS resident.
 export const HAP2 = scenario("HAP2", {
   reason: "Serious Health Condition - Employee",
-  reason_qualifier: "Serious Health Condition",
   residence: "OOS",
   docs: {
     HCP: {},
@@ -38,7 +36,6 @@ export const HAP2 = scenario("HAP2", {
 // Simple denial, MA resident.
 export const HAP3 = scenario("HAP3", {
   reason: "Serious Health Condition - Employee",
-  reason_qualifier: "Serious Health Condition",
   residence: "MA-proofed",
   financiallyIneligible: true,
   docs: {
@@ -61,7 +58,6 @@ export const HAP = chance([
 // Missing HCP, MA Resident
 export const GBR1 = scenario("GBR1", {
   reason: "Serious Health Condition - Employee",
-  reason_qualifier: "Serious Health Condition",
   residence: "MA-proofed",
   docs: {
     MASSID: {},
@@ -71,7 +67,6 @@ export const GBR1 = scenario("GBR1", {
 // Mailed HCP, MA Resident
 export const GBM1 = scenario("GBM1", {
   reason: "Serious Health Condition - Employee",
-  reason_qualifier: "Serious Health Condition",
   residence: "MA-proofed",
   docs: {
     HCP: { mailed: true },
@@ -82,7 +77,6 @@ export const GBM1 = scenario("GBM1", {
 // Missing HCP, Out of State Resident
 export const GBR2 = scenario("GBR2", {
   reason: "Serious Health Condition - Employee",
-  reason_qualifier: "Serious Health Condition",
   residence: "OOS",
   docs: {
     OOSID: {},
@@ -92,7 +86,6 @@ export const GBR2 = scenario("GBR2", {
 // Mailed HCP, Out of State Resident
 export const GBM2 = scenario("GBM2", {
   reason: "Serious Health Condition - Employee",
-  reason_qualifier: "Serious Health Condition",
   residence: "OOS",
   docs: {
     HCP: { mailed: true },
@@ -111,7 +104,6 @@ const GB = chance([
 // HCP sent before an application is started
 export const UNH1 = scenario("UNH1", {
   reason: "Serious Health Condition - Employee",
-  reason_qualifier: "Serious Health Condition",
   residence: "MA-proofed",
   docs: {
     HCP: { mailed: true },
@@ -121,7 +113,6 @@ export const UNH1 = scenario("UNH1", {
 // Invalid HCP
 export const UNH2 = scenario("UNH2", {
   reason: "Serious Health Condition - Employee",
-  reason_qualifier: "Serious Health Condition",
   residence: "OOS",
   docs: {
     HCP: { invalid: true },
@@ -131,7 +122,6 @@ export const UNH2 = scenario("UNH2", {
 // Mismatched ID/SSN
 export const UNH3 = scenario("UNH3", {
   reason: "Serious Health Condition - Employee",
-  reason_qualifier: "Serious Health Condition",
   residence: "MA-unproofed",
   docs: {
     OOSID: { invalid: true },
@@ -140,7 +130,6 @@ export const UNH3 = scenario("UNH3", {
 // Short Notice
 export const UNH4 = scenario("UNH4", {
   reason: "Serious Health Condition - Employee",
-  reason_qualifier: "Serious Health Condition",
   residence: "MA-proofed",
   shortNotice: true,
   docs: {

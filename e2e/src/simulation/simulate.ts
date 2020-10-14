@@ -41,7 +41,7 @@ type ScenarioDocumentConfiguration = {
 
 export type ScenarioOpts = {
   reason: ApplicationLeaveDetails["reason"];
-  reason_qualifier: ApplicationLeaveDetails["reason_qualifier"];
+  reason_qualifier?: ApplicationLeaveDetails["reason_qualifier"];
   residence: "MA-proofed" | "MA-unproofed" | "OOS";
   financiallyIneligible?: boolean;
   employerExempt?: boolean;

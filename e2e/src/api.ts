@@ -371,8 +371,8 @@ export interface IntermittentLeavePeriods {
     duration_basis?: ("Minutes" | "Hours" | "Days") | null;
 }
 export interface ApplicationLeaveDetails {
-    reason?: ("Care For A Family Member" | "Pregnancy/Maternity" | "Child Bonding" | "Serious Health Condition - Employee") | null;
-    reason_qualifier?: ("Newborn" | "Adoption" | "Foster Care" | "Serious Health Condition" | "Work Related Accident/Injury") | null;
+    reason?: ("Pregnancy/Maternity" | "Child Bonding" | "Serious Health Condition - Employee") | null;
+    reason_qualifier?: ("Newborn" | "Adoption" | "Foster Care") | null;
     reduced_schedule_leave_periods?: ReducedScheduleLeavePeriods[];
     continuous_leave_periods?: ContinuousLeavePeriods[];
     intermittent_leave_periods?: IntermittentLeavePeriods[];

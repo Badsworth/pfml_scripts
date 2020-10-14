@@ -15,7 +15,6 @@ const opts = {
 const medical: ScenarioOpts = {
   residence: "MA-proofed",
   reason: "Serious Health Condition - Employee",
-  reason_qualifier: "Serious Health Condition",
   docs: {
     HCP: {},
     MASSID: {},

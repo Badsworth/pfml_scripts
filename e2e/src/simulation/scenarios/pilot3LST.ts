@@ -39,7 +39,6 @@ const PortalRegistration = agentScenario("PortalRegistration");
 */
 const HAP1Portal = scenario("PortalClaimSubmit", {
   reason: "Serious Health Condition - Employee",
-  reason_qualifier: "Serious Health Condition",
   residence: "MA-proofed",
   docs: {
     MASSID: {},
@@ -49,7 +48,6 @@ const HAP1Portal = scenario("PortalClaimSubmit", {
 
 const GBR1Portal = scenario("PortalClaimSubmit", {
   reason: "Serious Health Condition - Employee",
-  reason_qualifier: "Serious Health Condition",
   residence: "MA-proofed",
   docs: {
     MASSID: {},
@@ -58,7 +56,6 @@ const GBR1Portal = scenario("PortalClaimSubmit", {
 
 const HAP3Portal = scenario("PortalClaimSubmit", {
   reason: "Serious Health Condition - Employee",
-  reason_qualifier: "Serious Health Condition",
   residence: "MA-proofed",
   docs: {
     MASSID: {},
@@ -78,7 +75,6 @@ const HAPPortal = chance([
 */
 const HAP1Fineos = scenario("FineosClaimSubmit", {
   reason: "Serious Health Condition - Employee",
-  reason_qualifier: "Serious Health Condition",
   residence: "MA-proofed",
   docs: {
     MASSID: {},
@@ -88,7 +84,6 @@ const HAP1Fineos = scenario("FineosClaimSubmit", {
 
 const GBR1Fineos = scenario("PortalClaimSubmit", {
   reason: "Serious Health Condition - Employee",
-  reason_qualifier: "Serious Health Condition",
   residence: "MA-proofed",
   docs: {
     MASSID: {},
@@ -97,7 +92,6 @@ const GBR1Fineos = scenario("PortalClaimSubmit", {
 
 const HAP3Fineos = scenario("FineosClaimSubmit", {
   reason: "Serious Health Condition - Employee",
-  reason_qualifier: "Serious Health Condition",
   residence: "MA-proofed",
   docs: {
     MASSID: {},
