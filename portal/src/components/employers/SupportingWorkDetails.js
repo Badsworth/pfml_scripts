@@ -18,14 +18,12 @@ const detailedWorkScheduleFile = "example-work-schedule-link.pdf";
 
 const SupportingWorkDetails = (props) => {
   const { t } = useTranslation();
-  const { intermittentLeavePeriods, onChange } = props;
-  const leavePeriod = intermittentLeavePeriods[0];
-  const [amendment, setAmendment] = useState(leavePeriod.duration);
+  const { hoursWorkedPerWeek, onChange } = props;
+  const [amendment, setAmendment] = useState(hoursWorkedPerWeek);
   const [isAmendmentFormDisplayed, setIsAmendmentFormDisplayed] = useState(
     false
   );
-  const amendDuration = (event) => {
-    const value = event.target.value;
+  const amendDuration = (value) => {
     setAmendment(value);
     onChange(value);
   };
@@ -44,18 +42,18 @@ const SupportingWorkDetails = (props) => {
           <AmendButton onClick={() => setIsAmendmentFormDisplayed(true)} />
         }
       >
-        <p className="margin-top-0">{leavePeriod.duration}</p>
+        <p className="margin-top-0">{hoursWorkedPerWeek}</p>
         <ConditionalContent visible={isAmendmentFormDisplayed}>
           <AmendmentForm
             onCancel={() => {
               setIsAmendmentFormDisplayed(false);
-              setAmendment(leavePeriod.duration);
-              onChange(leavePeriod.duration);
+              setAmendment(hoursWorkedPerWeek);
+              onChange(hoursWorkedPerWeek);
             }}
             className="input-text-first-child"
           >
             <InputText
-              onChange={amendDuration}
+              onChange={(e) => amendDuration(e.target.value)}
               value={amendment}
               label={t("components.amendmentForm.question_leavePeriodDuration")}
               hint={t(
@@ -84,7 +82,7 @@ const SupportingWorkDetails = (props) => {
 };
 
 SupportingWorkDetails.propTypes = {
-  intermittentLeavePeriods: PropTypes.array,
+  hoursWorkedPerWeek: PropTypes.number.isRequired,
   onChange: PropTypes.func,
 };
 

@@ -25,16 +25,15 @@ export const Review = (props) => {
   const {
     fineos_absence_id,
     employer_fein,
-    leave_details: { employer_notification_date, intermittent_leave_periods },
+    hours_worked_per_week,
+    leave_details: { employer_notification_date },
     employer_benefits,
     previous_leaves,
   } = claim;
   const [amendedBenefits, setAmendedBenefits] = useState(employer_benefits);
   const [amendedDate, setAmendedDate] = useState(employer_notification_date);
   const [amendedLeaves, setAmendedLeaves] = useState(previous_leaves);
-  const [amendedDuration, setAmendedDuration] = useState(
-    intermittent_leave_periods && intermittent_leave_periods[0].duration
-  );
+  const [amendedHours, setAmendedHours] = useState(hours_worked_per_week);
 
   const handleBenefitInputChange = (updatedBenefit) => {
     const updatedBenefits = updateAmendments(amendedBenefits, updatedBenefit);
@@ -55,7 +54,7 @@ export const Review = (props) => {
     // eslint-disable-next-line no-console
     console.log("3. Previous leaves: ", amendedLeaves);
     // eslint-disable-next-line no-console
-    console.log("4. Intermittent leave duration: ", amendedDuration);
+    console.log("4. Hours worked per week: ", amendedHours);
     // eslint-disable-next-line no-console
     console.log("5. Does Employer have comments? ", hasComments);
     // eslint-disable-next-line no-console
@@ -88,12 +87,10 @@ export const Review = (props) => {
       <EmployeeInformation claim={claim} />
       <LeaveDetails claim={claim} onChange={setAmendedDate} />
       <LeaveSchedule claim={claim} />
-      {claim.isIntermittent && (
-        <SupportingWorkDetails
-          intermittentLeavePeriods={intermittent_leave_periods}
-          onChange={setAmendedDuration}
-        />
-      )}
+      <SupportingWorkDetails
+        hoursWorkedPerWeek={hours_worked_per_week}
+        onChange={setAmendedHours}
+      />
       <EmployerBenefits
         benefits={employer_benefits}
         onChange={handleBenefitInputChange}

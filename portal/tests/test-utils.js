@@ -230,6 +230,7 @@ export class MockClaimBuilder {
     set(this.claimAttrs, "employment_status", EmploymentStatus.employed);
     set(this.claimAttrs, "employer_fein", "12-3456789");
     set(this.claimAttrs, "leave_details.employer_notified", true);
+    set(this.claimAttrs, "hours_worked_per_week", 30);
     set(
       this.claimAttrs,
       "leave_details.employer_notification_date",

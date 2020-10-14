@@ -1,30 +1,22 @@
-import {
-  DurationBasis,
-  FrequencyIntervalBasis,
-  IntermittentLeavePeriod,
-} from "../../../src/models/Claim";
+import AmendButton from "../../../src/components/employers/AmendButton";
+import AmendmentForm from "../../../src/components/employers/AmendmentForm";
+import Button from "../../../src/components/Button";
+import InputText from "../../../src/components/InputText";
 import React from "react";
 import ReviewRow from "../../../src/components/ReviewRow";
 import SupportingWorkDetails from "../../../src/components/employers/SupportingWorkDetails";
 import { shallow } from "enzyme";
 
 describe("SupportingWorkDetails", () => {
-  let leavePeriods, wrapper;
+  const hoursWorkedPerWeek = 30;
+  const props = {
+    onChange: jest.fn(),
+    hoursWorkedPerWeek,
+  };
+  let wrapper;
 
   beforeEach(() => {
-    leavePeriods = [
-      new IntermittentLeavePeriod({
-        leave_period_id: 3,
-        duration: 3,
-        duration_basis: DurationBasis.hours,
-        frequency: 6,
-        frequency_interval: 6,
-        frequency_interval_basis: FrequencyIntervalBasis.months,
-      }),
-    ];
-    wrapper = shallow(
-      <SupportingWorkDetails intermittentLeavePeriods={leavePeriods} />
-    );
+    wrapper = shallow(<SupportingWorkDetails {...props} />);
   });
 
   it("renders the component", () => {
@@ -39,7 +31,22 @@ describe("SupportingWorkDetails", () => {
 
   it("renders weekly hours", () => {
     expect(wrapper.find("p").first().text()).toEqual(
-      leavePeriods[0].duration.toString()
+      hoursWorkedPerWeek.toString()
     );
+  });
+
+  it("renders amended value on change", () => {
+    wrapper.find(ReviewRow).first().dive(3).find(AmendButton).simulate("click");
+    wrapper.find(InputText).simulate("change", { target: { value: "10" } });
+
+    expect(props.onChange).toHaveBeenCalled();
+  });
+
+  it("hides amendment form and clears value on cancel", () => {
+    wrapper.find(ReviewRow).first().dive(3).find(AmendButton).simulate("click");
+    wrapper.find(InputText).simulate("change", { target: { value: "10" } });
+    wrapper.find(AmendmentForm).dive().find(Button).simulate("click");
+
+    expect(props.onChange).toHaveBeenCalledTimes(2);
   });
 });
