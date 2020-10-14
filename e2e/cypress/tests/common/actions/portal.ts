@@ -1,10 +1,5 @@
 import { SimulationClaim } from "@/simulation/types";
-import {
-  lookup,
-  checkIfContinuous,
-  checkIfReduced,
-  checkIfIntermittent,
-} from "../util";
+import { lookup } from "../util";
 
 import { inFieldset } from "../actions";
 
@@ -195,7 +190,6 @@ export function answerContinuousLeaveQuestion(
   if (!application.leave_details) {
     throw new Error("Leave details not provided.");
   }
-  const hasContinuous = checkIfContinuous(application.leave_details);
 
   const leave = application.leave_details.continuous_leave_periods;
 
@@ -203,12 +197,15 @@ export function answerContinuousLeaveQuestion(
     "fieldset",
     "Do you need to take off work completely for a period of time (continuous leave)?"
   ).within(() => {
-    cy.get("input[type='radio']").check(hasContinuous.toString(), {
-      force: true,
-    });
+    cy.get("input[type='radio']").check(
+      application.has_continuous_leave_periods?.toString() as string,
+      {
+        force: true,
+      }
+    );
   });
 
-  if (hasContinuous) {
+  if (application.has_continuous_leave_periods) {
     const startDate = new Date((leave && leave[0].start_date) as string);
     const endDate = new Date((leave && leave[0].end_date) as string);
 
@@ -235,9 +232,8 @@ export function answerReducedLeaveQuestion(
   if (!application.leave_details) {
     throw new Error("Leave details not provided.");
   }
-  const hasReduced = checkIfReduced(application.leave_details);
 
-  if (hasReduced) {
+  if (application.has_reduced_schedule_leave_periods) {
     throw new Error("No claims should currently be for reduced leave.");
   } else {
     onPage("leave-period-reduced-schedule");
@@ -252,9 +248,8 @@ export function answerIntermittentLeaveQuestion(
   if (!application.leave_details) {
     throw new Error("Leave details not provided.");
   }
-  const hasIntermittent = checkIfIntermittent(application.leave_details);
 
-  if (hasIntermittent) {
+  if (application.has_intermittent_leave_periods) {
     throw new Error("No claims should currently be for intermittent leave.");
   } else {
     onPage("leave-period-intermittent");
@@ -370,7 +365,7 @@ export function addPaymentInfo(application: ApplicationRequestBody): void {
     () => {
       const paymentInfoLabel = {
         ACH: "Direct deposit",
-        Check: "Debit card",
+        Check: "MA PFML Prepaid Debit Card",
         "Gift Card": "Gift Card",
       };
       cy.contains(
