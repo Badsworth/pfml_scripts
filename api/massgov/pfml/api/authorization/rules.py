@@ -28,12 +28,18 @@ def create_authorization(
             users(user, they)
             applications(user, they)
             documents(user, they)
+            leave_admins(user, they)
             if enable_employees:
                 employees(user, they)
             if enable_employers:
                 employers(user, they)
 
     return define_authorization
+
+
+def leave_admins(user: User, they: RuleList) -> None:
+    if has_role_in(user, [Role.EMPLOYER]):
+        they.can((EDIT, READ), "EMPLOYER_API")
 
 
 def financial_eligibility(user: User, they: RuleList) -> None:

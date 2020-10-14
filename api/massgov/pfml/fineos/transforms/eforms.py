@@ -45,8 +45,7 @@ class TransformOtherInfo(TransformEformAttributes):
     ATTRIBUTE_MAP = {
         "comment": {"name": "comment", "type": "stringValue"},
         "employer_notification_date": {"name": "notifiedDate", "type": "dateValue"},
-        "intermittent_leave_duration": {"name": "leaveDuration", "type": "stringValue"},
-        "hours_worked": {"name": "HoursWorked", "type": "integerValue"},
+        "hours_worked_per_week": {"name": "HoursWorked", "type": "integerValue"},
     }
 
 

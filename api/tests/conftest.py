@@ -89,6 +89,16 @@ def oauth_claims(user):
 
 
 @pytest.fixture
+def employer_claims(employer_user):
+    claims = {
+        "exp": datetime.now() + timedelta(days=1),
+        "sub": str(employer_user.active_directory_id),
+    }
+
+    return claims
+
+
+@pytest.fixture
 def consented_user(initialize_factories_session):
     user = UserFactory.create(consented_to_data_sharing=True)
     return user
@@ -97,6 +107,12 @@ def consented_user(initialize_factories_session):
 @pytest.fixture
 def fineos_user(initialize_factories_session):
     user = UserFactory.create(roles=[employee_models.Role.FINEOS])
+    return user
+
+
+@pytest.fixture
+def employer_user(initialize_factories_session):
+    user = UserFactory.create(roles=[employee_models.Role.EMPLOYER])
     return user
 
 
@@ -172,6 +188,13 @@ def auth_token(auth_claims, auth_key):
 def oauth_auth_token(oauth_claims, auth_key):
 
     encoded = jwt.encode(oauth_claims, auth_key)
+    return encoded
+
+
+@pytest.fixture
+def employer_auth_token(employer_claims, auth_key):
+
+    encoded = jwt.encode(employer_claims, auth_key)
     return encoded
 
 

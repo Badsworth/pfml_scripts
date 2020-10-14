@@ -41,7 +41,7 @@ def employer_claim_review(previous_leave, employer_benefit):
         employer_notification_date="2020-10-01",
         employer_benefits=[employer_benefit],
         previous_leaves=[previous_leave],
-        hours_worked=22,
+        hours_worked_per_week=22,
     )
 
 
@@ -77,15 +77,15 @@ class TestTransformEformAttributes:
 
     def test_transform_other_info(self, employer_claim_review):
         result = TransformOtherInfo.to_attributes(employer_claim_review)
-        assert len(result) == 4
-        comment, er_notified_date, _, hours_worked = result
+        assert len(result) == 3
+        comment, er_notified_date, hours_worked_per_week = result
         assert comment.stringValue == employer_claim_review.comment
         assert er_notified_date.dateValue == employer_claim_review.employer_notification_date
-        assert hours_worked.integerValue == employer_claim_review.hours_worked
+        assert hours_worked_per_week.integerValue == employer_claim_review.hours_worked_per_week
 
 
 class TestTransformEformBody:
     def test_transform_employer_claim_review(self, employer_claim_review):
         eform_body = TransformEmployerClaimReview.to_fineos(employer_claim_review)
         assert eform_body.eformType == "Employer Info Request"
-        assert len(eform_body.eformAttributes) == 12
+        assert len(eform_body.eformAttributes) == 11

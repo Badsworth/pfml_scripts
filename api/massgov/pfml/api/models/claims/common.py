@@ -28,6 +28,5 @@ class EmployerClaimReview(pydantic.BaseModel):
     comment: Optional[str]
     employer_benefits: List[EmployerBenefit]
     employer_notification_date: Optional[date]
-    intermittent_leave_duration: Optional[str]
+    hours_worked_per_week: Optional[int]
     previous_leaves: List[PreviousLeave]
-    hours_worked: Optional[int]

@@ -203,6 +203,35 @@ paths:
         "404":
           $ref: "#/components/responses/NotFound"
 
+  /employers/claim/review/{claim_id}:
+    patch:
+      tags:
+        - Employers
+      summary: Save review claim from leave admin
+      operationId: massgov.pfml.api.claims.employer_update_claim
+      parameters:
+        - name: claim_id
+          in: path
+          schema:
+            type: string
+          description: ID of claim to update
+          required: true
+      responses:
+        "200":
+          description: A successful request returns a 200 status code and a claim object.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessfulResponse"
+                  - properties:
+                      data:
+                        $ref: "#/components/schemas/ClaimResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
+      requestBody:
+        $ref: "#/components/requestBodies/EmployerClaimRequestBody"
+
   /applications:
     post:
       tags:
@@ -591,6 +620,12 @@ components:
           schema:
             $ref: "#/components/schemas/EmployeeUpdateRequest"
       required: true
+    EmployerClaimRequestBody:
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/EmployerClaimRequestBody"
+      required: true
     ApplicationRequestBody:
       content:
         application/json:
@@ -913,6 +948,61 @@ components:
         - employer_id
         - employer_fein
         - employer_dba
+
+    EmployerClaimRequestBody:
+      type: object
+      properties:
+        employer_notification_date:
+          $ref: "#/components/schemas/Date"
+        employer_benefits:
+          type: array
+          items:
+            $ref: "#/components/schemas/EmployerBenefit"
+        previous_leaves:
+          type: array
+          items:
+            $ref: "#/components/schemas/PreviousLeave"
+        hours_worked_per_week:
+          type: integer
+        comment:
+          type: string
+      additionalProperties: false
+      required:
+        - employer_notification_date
+        - employer_benefits
+        - previous_leaves
+        - hours_worked_per_week
+
+    ClaimResponse:
+      type: object
+      properties:
+        claim_id:
+          type: string
+      additionalProperties: false
+      required:
+        - claim_id
+
+    EmployerBenefit:
+      type: object
+      properties:
+        benefit_amount_dollars:
+          type: integer
+        benefit_amount_frequency:
+          type: string
+        benefit_end_date:
+          $ref: "#/components/schemas/Date"
+        benefit_start_date:
+          $ref: "#/components/schemas/Date"
+        benefit_type:
+          type: string
+
+    PreviousLeave:
+      type: object
+      properties:
+        leave_end_date:
+          $ref: "#/components/schemas/Date"
+        leave_start_date:
+          $ref: "#/components/schemas/Date"
 
     ApplicationRequestBody:
       allOf:
