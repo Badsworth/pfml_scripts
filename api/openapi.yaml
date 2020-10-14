@@ -1265,11 +1265,10 @@ components:
           type: string
           nullable: true
           enum:
-            - Care For A Family Member
             - Pregnancy/Maternity
             - Child Bonding
             - Serious Health Condition - Employee
-          example: "Care For A Family Member"
+          example: "Child Bonding"
         reason_qualifier:
           type: string
           nullable: true
@@ -1277,9 +1276,7 @@ components:
             - Newborn
             - Adoption
             - Foster Care
-            - Serious Health Condition
-            - Work Related Accident/Injury
-          example: "Serious Health Condition"
+          example: "Newborn"
         reduced_schedule_leave_periods:
           type: array
           items:

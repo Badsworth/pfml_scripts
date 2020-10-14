@@ -267,6 +267,7 @@ class LeaveReason(LookupTable):
     model = LkLeaveReason
     column_names = ("leave_reason_id", "leave_reason_description")
 
+    # This reason is not currently being used. See API-389 & PR #1280.
     CARE_FOR_A_FAMILY_MEMBER = LkLeaveReason(1, "Care For A Family Member")
     PREGNANCY_MATERNITY = LkLeaveReason(2, "Pregnancy/Maternity")
     CHILD_BONDING = LkLeaveReason(3, "Child Bonding")
@@ -278,10 +279,15 @@ class LeaveReasonQualifier(LookupTable):
     column_names = ("leave_reason_qualifier_id", "leave_reason_qualifier_description")
 
     NEWBORN = LkLeaveReasonQualifier(1, "Newborn")
+    # This reason qualifier is not currently being used. See API-389 & PR #1280.
     SERIOUS_HEALTH_CONDITION = LkLeaveReasonQualifier(2, "Serious Health Condition")
+    # This reason qualifier is not currently being used. See API-389 & PR #1280.
     WORK_RELATED_ACCIDENT_INJURY = LkLeaveReasonQualifier(3, "Work Related Accident/Injury")
     ADOPTION = LkLeaveReasonQualifier(4, "Adoption")
     FOSTER_CARE = LkLeaveReasonQualifier(5, "Foster Care")
+    NOT_WORK_RELATED = LkLeaveReasonQualifier(6, "Not Work Related")
+    SICKNESS = LkLeaveReasonQualifier(7, "Sickness")
+    POSTNATAL_DISABILITY = LkLeaveReasonQualifier(8, "Postnatal Disability")
 
 
 class LeaveType(LookupTable):

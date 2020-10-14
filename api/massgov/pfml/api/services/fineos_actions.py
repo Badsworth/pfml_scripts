@@ -22,7 +22,12 @@ import massgov.pfml.db
 import massgov.pfml.fineos.models
 import massgov.pfml.util.logging as logging
 from massgov.pfml.api.models.applications.responses import DocumentResponse
-from massgov.pfml.db.models.applications import Application, FINEOSWebIdExt
+from massgov.pfml.db.models.applications import (
+    Application,
+    FINEOSWebIdExt,
+    LeaveReason,
+    LeaveReasonQualifier,
+)
 
 logger = logging.get_logger(__name__)
 
@@ -192,13 +197,38 @@ def build_absence_case(
         )
     # Temporary workaround while API appends leave periods on each edit. TODO: remove when fixed.
     leave_periods = leave_periods[-1:]
+
+    # Leave Reason and Leave Reason Qualifier mapping.
+    reason = reason_qualifier_1 = reason_qualifier_2 = None
+    if application.leave_reason_id == LeaveReason.PREGNANCY_MATERNITY.leave_reason_id or (
+        application.leave_reason_id == LeaveReason.SERIOUS_HEALTH_CONDITION_EMPLOYEE.leave_reason_id
+        and application.pregnant_or_recent_birth
+    ):
+        reason = LeaveReason.PREGNANCY_MATERNITY.leave_reason_description
+        reason_qualifier_1 = (
+            LeaveReasonQualifier.POSTNATAL_DISABILITY.leave_reason_qualifier_description
+        )
+    elif (
+        application.leave_reason_id == LeaveReason.SERIOUS_HEALTH_CONDITION_EMPLOYEE.leave_reason_id
+    ):
+        reason = LeaveReason.SERIOUS_HEALTH_CONDITION_EMPLOYEE.leave_reason_description
+        reason_qualifier_1 = (
+            LeaveReasonQualifier.NOT_WORK_RELATED.leave_reason_qualifier_description
+        )
+        reason_qualifier_2 = LeaveReasonQualifier.SICKNESS.leave_reason_qualifier_description
+    elif application.leave_reason_id == LeaveReason.CHILD_BONDING.leave_reason_id:
+        reason = application.leave_reason.leave_reason_description
+        reason_qualifier_1 = application.leave_reason_qualifier.leave_reason_qualifier_description
+    else:
+        raise ValueError("Invalid application.leave_reason")
+
     absence_case = massgov.pfml.fineos.models.customer_api.AbsenceCase(
         additionalComments="PFML API " + str(application.application_id),
         intakeSource="Self-Service",
         notifiedBy="Employee",
-        reason="Serious Health Condition - Employee",
-        reasonQualifier1="Not Work Related",
-        reasonQualifier2="Sickness",
+        reason=reason,
+        reasonQualifier1=reason_qualifier_1,
+        reasonQualifier2=reason_qualifier_2,
         timeOffLeavePeriods=leave_periods,
         employerNotified=application.employer_notified,
         employerNotificationDate=application.employer_notification_date,

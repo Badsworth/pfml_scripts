@@ -35,7 +35,6 @@ class EmploymentStatus(str, LookupEnum):
 
 
 class LeaveReason(str, LookupEnum):
-    family_care = "Care For A Family Member"
     pregnancy = "Pregnancy/Maternity"
     child_bonding = "Child Bonding"
     serious_health_condition_employee = "Serious Health Condition - Employee"
@@ -49,8 +48,6 @@ class LeaveReasonQualifier(str, LookupEnum):
     newborn = "Newborn"
     adoption = "Adoption"
     foster_care = "Foster Care"
-    serious_health_condition = "Serious Health Condition"
-    work_related_accident = "Work Related Accident/Injury"
 
     @classmethod
     def get_lookup_model(cls):

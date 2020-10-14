@@ -15,6 +15,8 @@ from massgov.pfml.db.models.applications import (
     ContinuousLeavePeriod,
     EmploymentStatus,
     FINEOSWebIdExt,
+    LeaveReason,
+    LeaveReasonQualifier,
 )
 from massgov.pfml.db.models.employees import TaxIdentifier
 from massgov.pfml.db.models.factories import (
@@ -1584,6 +1586,257 @@ def test_application_post_submit_to_fineos(client, user, auth_token, test_db_ses
             },
         ),
     ]
+
+
+def test_application_post_submit_to_fineos_bonding_adoption(
+    client, user, auth_token, test_db_session
+):
+    application = ApplicationFactory.create(user=user)
+    application.hours_worked_per_week = 70
+    application.employment_status_id = EmploymentStatus.UNEMPLOYED.employment_status_id
+    application.residential_address = AddressFactory.create()
+    leave_period = ContinuousLeavePeriod(
+        start_date=date(2021, 1, 15),
+        end_date=date(2021, 2, 9),
+        application_id=application.application_id,
+    )
+    test_db_session.add(leave_period)
+
+    # Reason = Child Bonding
+    # Reason Qualifier 1 = Adoption
+    application.leave_reason_id = LeaveReason.CHILD_BONDING.leave_reason_id
+    application.leave_reason_qualifier_id = LeaveReasonQualifier.ADOPTION.leave_reason_qualifier_id
+    test_db_session.commit()
+
+    massgov.pfml.fineos.mock_client.start_capture()
+    response = client.post(
+        "/v1/applications/{}/submit_application".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+    )
+
+    assert response.status_code == 201
+
+    capture = massgov.pfml.fineos.mock_client.get_capture()
+    captured_absence_case = capture[3][2]["absence_case"]
+
+    assert captured_absence_case.reason == LeaveReason.CHILD_BONDING.leave_reason_description
+    assert (
+        captured_absence_case.reasonQualifier1
+        == LeaveReasonQualifier.ADOPTION.leave_reason_qualifier_description
+    )
+    assert captured_absence_case.reasonQualifier2 is None
+
+
+def test_application_post_submit_to_fineos_bonding_foster(
+    client, user, auth_token, test_db_session
+):
+    application = ApplicationFactory.create(user=user)
+    application.hours_worked_per_week = 70
+    application.employment_status_id = EmploymentStatus.UNEMPLOYED.employment_status_id
+    application.residential_address = AddressFactory.create()
+    leave_period = ContinuousLeavePeriod(
+        start_date=date(2021, 1, 15),
+        end_date=date(2021, 2, 9),
+        application_id=application.application_id,
+    )
+    test_db_session.add(leave_period)
+
+    # Reason = Child Bonding
+    # Reason Qualifier 1 = Foster Care
+    application.leave_reason_id = LeaveReason.CHILD_BONDING.leave_reason_id
+    application.leave_reason_qualifier_id = (
+        LeaveReasonQualifier.FOSTER_CARE.leave_reason_qualifier_id
+    )
+    test_db_session.commit()
+
+    massgov.pfml.fineos.mock_client.start_capture()
+    response = client.post(
+        "/v1/applications/{}/submit_application".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+    )
+
+    assert response.status_code == 201
+
+    capture = massgov.pfml.fineos.mock_client.get_capture()
+    captured_absence_case = capture[3][2]["absence_case"]
+
+    assert captured_absence_case.reason == LeaveReason.CHILD_BONDING.leave_reason_description
+    assert (
+        captured_absence_case.reasonQualifier1
+        == LeaveReasonQualifier.FOSTER_CARE.leave_reason_qualifier_description
+    )
+    assert captured_absence_case.reasonQualifier2 is None
+
+
+def test_application_post_submit_to_fineos_bonding_newborn(
+    client, user, auth_token, test_db_session
+):
+    application = ApplicationFactory.create(user=user)
+    application.hours_worked_per_week = 70
+    application.employment_status_id = EmploymentStatus.UNEMPLOYED.employment_status_id
+    application.residential_address = AddressFactory.create()
+    leave_period = ContinuousLeavePeriod(
+        start_date=date(2021, 1, 15),
+        end_date=date(2021, 2, 9),
+        application_id=application.application_id,
+    )
+    test_db_session.add(leave_period)
+
+    # Reason = Child Bonding
+    # Reason Qualifier 1 = Newborn
+    application.leave_reason_id = LeaveReason.CHILD_BONDING.leave_reason_id
+    application.leave_reason_qualifier_id = LeaveReasonQualifier.NEWBORN.leave_reason_qualifier_id
+    test_db_session.commit()
+
+    massgov.pfml.fineos.mock_client.start_capture()
+    response = client.post(
+        "/v1/applications/{}/submit_application".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+    )
+
+    assert response.status_code == 201
+
+    capture = massgov.pfml.fineos.mock_client.get_capture()
+    captured_absence_case = capture[3][2]["absence_case"]
+
+    assert captured_absence_case.reason == LeaveReason.CHILD_BONDING.leave_reason_description
+    assert (
+        captured_absence_case.reasonQualifier1
+        == LeaveReasonQualifier.NEWBORN.leave_reason_qualifier_description
+    )
+    assert captured_absence_case.reasonQualifier2 is None
+
+
+def test_application_post_submit_to_fineos_medical(client, user, auth_token, test_db_session):
+    application = ApplicationFactory.create(user=user)
+    application.hours_worked_per_week = 70
+    application.employment_status_id = EmploymentStatus.UNEMPLOYED.employment_status_id
+    application.residential_address = AddressFactory.create()
+    leave_period = ContinuousLeavePeriod(
+        start_date=date(2021, 1, 15),
+        end_date=date(2021, 2, 9),
+        application_id=application.application_id,
+    )
+    test_db_session.add(leave_period)
+
+    # API input:
+    # Reason = Serious Health Condition - Employee
+    # Pregnant or Recent Birth = False
+    application.leave_reason_id = LeaveReason.SERIOUS_HEALTH_CONDITION_EMPLOYEE.leave_reason_id
+    application.pregnant_or_recent_birth = False
+    test_db_session.commit()
+
+    massgov.pfml.fineos.mock_client.start_capture()
+    response = client.post(
+        "/v1/applications/{}/submit_application".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+    )
+
+    assert response.status_code == 201
+
+    capture = massgov.pfml.fineos.mock_client.get_capture()
+    captured_absence_case = capture[3][2]["absence_case"]
+
+    # Maps to FINEOS:
+    # Reason = Serious Health Condition - Employee
+    # Reason Qualifier 1 = Not Work Related
+    # Reason Qualifier 2 = Sickness
+    assert (
+        captured_absence_case.reason
+        == LeaveReason.SERIOUS_HEALTH_CONDITION_EMPLOYEE.leave_reason_description
+    )
+    assert (
+        captured_absence_case.reasonQualifier1
+        == LeaveReasonQualifier.NOT_WORK_RELATED.leave_reason_qualifier_description
+    )
+    assert (
+        captured_absence_case.reasonQualifier2
+        == LeaveReasonQualifier.SICKNESS.leave_reason_qualifier_description
+    )
+
+
+def test_application_post_submit_to_fineos_medical_pregnant(
+    client, user, auth_token, test_db_session
+):
+    application = ApplicationFactory.create(user=user)
+    application.hours_worked_per_week = 70
+    application.employment_status_id = EmploymentStatus.UNEMPLOYED.employment_status_id
+    application.residential_address = AddressFactory.create()
+    leave_period = ContinuousLeavePeriod(
+        start_date=date(2021, 1, 15),
+        end_date=date(2021, 2, 9),
+        application_id=application.application_id,
+    )
+    test_db_session.add(leave_period)
+
+    # API input:
+    # Reason = Serious Health Condition - Employee
+    # Pregnant or Recent Birth = True
+    application.leave_reason_id = LeaveReason.SERIOUS_HEALTH_CONDITION_EMPLOYEE.leave_reason_id
+    application.pregnant_or_recent_birth = True
+    test_db_session.commit()
+
+    massgov.pfml.fineos.mock_client.start_capture()
+    response = client.post(
+        "/v1/applications/{}/submit_application".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+    )
+
+    assert response.status_code == 201
+
+    capture = massgov.pfml.fineos.mock_client.get_capture()
+    captured_absence_case = capture[3][2]["absence_case"]
+
+    # Maps to FINEOS:
+    # Reason = Pregnancy/Maternity
+    # Reason Qualifier 1 = Postnatal Disability
+    assert captured_absence_case.reason == LeaveReason.PREGNANCY_MATERNITY.leave_reason_description
+    assert (
+        captured_absence_case.reasonQualifier1
+        == LeaveReasonQualifier.POSTNATAL_DISABILITY.leave_reason_qualifier_description
+    )
+    assert captured_absence_case.reasonQualifier2 is None
+
+
+def test_application_post_submit_to_fineos_pregnant(client, user, auth_token, test_db_session):
+    application = ApplicationFactory.create(user=user)
+    application.hours_worked_per_week = 70
+    application.employment_status_id = EmploymentStatus.UNEMPLOYED.employment_status_id
+    application.residential_address = AddressFactory.create()
+    leave_period = ContinuousLeavePeriod(
+        start_date=date(2021, 1, 15),
+        end_date=date(2021, 2, 9),
+        application_id=application.application_id,
+    )
+    test_db_session.add(leave_period)
+
+    # API input:
+    # Reason = Pregnancy/Maternity
+    # Pregnant or Recent Birth = False
+    application.leave_reason_id = LeaveReason.PREGNANCY_MATERNITY.leave_reason_id
+    application.pregnant_or_recent_birth = False
+    test_db_session.commit()
+
+    massgov.pfml.fineos.mock_client.start_capture()
+    response = client.post(
+        "/v1/applications/{}/submit_application".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+    )
+
+    assert response.status_code == 201
+
+    capture = massgov.pfml.fineos.mock_client.get_capture()
+    captured_absence_case = capture[3][2]["absence_case"]
+
+    # Maps to FINEOS:
+    # Reason = Pregnancy/Maternity
+    # Reason Qualifier 1 = Postnatal Disability
+    assert captured_absence_case.reason == LeaveReason.PREGNANCY_MATERNITY.leave_reason_description
+    assert (
+        captured_absence_case.reasonQualifier1
+        == LeaveReasonQualifier.POSTNATAL_DISABILITY.leave_reason_qualifier_description
+    )
+    assert captured_absence_case.reasonQualifier2 is None
 
 
 def test_application_post_complete_app(client, user, auth_token, test_db_session):
