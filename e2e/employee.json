@@ -1,0 +1,14 @@
+{
+  "financially inelgible": {
+    "first_name": "Marianna",
+    "last_name": "Bernier",
+    "tax_identifier": "494-67-8316",
+    "employer_fein": "99-9999999"
+  }, 
+  "financially eligible": {
+    "first_name": "Wilhelm",
+    "last_name": "Brown",
+    "tax_identifier": "688-97-6093",
+    "employer_fein": "84-7847847"
+  }
+}

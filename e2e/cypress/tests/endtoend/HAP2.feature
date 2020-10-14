@@ -2,7 +2,7 @@ Feature: Submit and accept HAP2 claim: Simple claim, out of state resident
 
   @portal
   Scenario: As a claimant, I should be able to submit a claim (HAP2) through the portal
-    Given I begin the process to submit a "HAP2" claim
+    Given I begin to submit a "HAP2" claim as a "financially eligible" employee
     When I click on the checklist button called "Verify your identity"
     Then I have my identity verified "normal"
     Given I am on the claims "checklist" page

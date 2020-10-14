@@ -1,3 +1,4 @@
+import { SimulationClaim } from "@/simulation/types";
 import {
   lookup,
   checkIfContinuous,
@@ -11,16 +12,35 @@ export function onPage(page: string): void {
   cy.url().should("include", `/claims/${page}`);
 }
 
-export function submittingClaimType(claimType: string): void {
-  cy.fixture(claimType).then((application) => {
-    cy.wrap(application).as("application");
+export function submittingClaimType(
+  claimType: string,
+  employeeType: string
+): void {
+  cy.task("generateClaim", {
+    claimType: claimType,
+    employeeType: employeeType,
+  }).then((claim?: SimulationClaim) => {
+    if (!claim) {
+      throw new Error("Claim Was Not Generated");
+    }
+    cy.log("generated claim", claim.claim);
+    cy.wrap(claim.claim).as("application");
   });
 }
 
-export function submitClaimDirectlyToAPI(scenario: string): void {
-  cy.fixture(scenario).then({ timeout: 40000 }, (app) => {
-    cy.log("submitting", app);
-    cy.task("submitClaimToAPI", app).then((fineosId) => {
+export function submitClaimDirectlyToAPI(
+  scenario: string,
+  employeeType: string
+): void {
+  cy.task("generateClaim", {
+    claimType: scenario,
+    employeeType: employeeType,
+  }).then({ timeout: 40000 }, (claim?: SimulationClaim) => {
+    if (!claim) {
+      throw new Error("Claim Was Not Generated");
+    }
+    cy.log("submitting", claim.claim);
+    cy.task("submitClaimToAPI", claim.claim).then((fineosId) => {
       cy.stash("claimNumber", fineosId);
       cy.log("submitted", fineosId);
     });
@@ -52,8 +72,12 @@ export function hasClaimId(): void {
   cy.url().should("include", "claim_id");
 }
 
-export function startSubmit(credentials: Credentials, scenario: string): void {
-  submittingClaimType(scenario);
+export function startSubmit(
+  credentials: Credentials,
+  scenario: string,
+  employeeType: string
+): void {
+  submittingClaimType(scenario, employeeType);
   login(credentials);
   startClaim();
   onPage("start");
@@ -373,16 +397,19 @@ export function addPaymentInfo(application: ApplicationRequestBody): void {
       break;
 
     case "Check":
-      cy.labelled("Street address 1").type(
-        application.residential_address?.line_1 as string
-      );
-      cy.labelled("City").type(application.residential_address?.city as string);
-      cy.labelled("State").type(
-        application.residential_address?.state as string
-      );
-      cy.labelled("ZIP Code").type(
-        application.residential_address?.zip as string
-      );
+      /* Currently has been removed from Portal (may return)
+
+        cy.labelled("Street address 1").type(
+          application.residential_address?.line_1 as string
+        );
+        cy.labelled("City").type(application.residential_address?.city as string);
+        cy.labelled("State").type(
+          application.residential_address?.state as string
+        );
+        cy.labelled("ZIP Code").type(
+          application.residential_address?.zip as string
+        );
+      */
       break;
 
     default:

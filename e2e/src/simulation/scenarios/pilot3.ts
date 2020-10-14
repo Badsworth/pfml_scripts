@@ -16,7 +16,7 @@ import { scenario, chance } from "../simulate";
 ******/
 
 //Simple claim, MA resident:
-const HAP1 = scenario("HAP1", {
+export const HAP1 = scenario("HAP1", {
   reason: "Serious Health Condition - Employee",
   reason_qualifier: "Serious Health Condition",
   residence: "MA-proofed",
@@ -26,7 +26,7 @@ const HAP1 = scenario("HAP1", {
   },
 });
 // Simple claim, OOS resident.
-const HAP2 = scenario("HAP2", {
+export const HAP2 = scenario("HAP2", {
   reason: "Serious Health Condition - Employee",
   reason_qualifier: "Serious Health Condition",
   residence: "OOS",
@@ -36,7 +36,7 @@ const HAP2 = scenario("HAP2", {
   },
 });
 // Simple denial, MA resident.
-const HAP3 = scenario("HAP3", {
+export const HAP3 = scenario("HAP3", {
   reason: "Serious Health Condition - Employee",
   reason_qualifier: "Serious Health Condition",
   residence: "MA-proofed",
@@ -48,7 +48,7 @@ const HAP3 = scenario("HAP3", {
 });
 
 // Combine Happy path scenarios into a single group:
-const HAP = chance([
+export const HAP = chance([
   [1, HAP1],
   [1, HAP2],
   [1, HAP3],
@@ -59,7 +59,7 @@ const HAP = chance([
 ******/
 
 // Missing HCP, MA Resident
-const GBR1 = scenario("GBR1", {
+export const GBR1 = scenario("GBR1", {
   reason: "Serious Health Condition - Employee",
   reason_qualifier: "Serious Health Condition",
   residence: "MA-proofed",
@@ -69,7 +69,7 @@ const GBR1 = scenario("GBR1", {
 });
 
 // Mailed HCP, MA Resident
-const GBM1 = scenario("GBM1", {
+export const GBM1 = scenario("GBM1", {
   reason: "Serious Health Condition - Employee",
   reason_qualifier: "Serious Health Condition",
   residence: "MA-proofed",
@@ -80,7 +80,7 @@ const GBM1 = scenario("GBM1", {
 });
 
 // Missing HCP, Out of State Resident
-const GBR2 = scenario("GBR2", {
+export const GBR2 = scenario("GBR2", {
   reason: "Serious Health Condition - Employee",
   reason_qualifier: "Serious Health Condition",
   residence: "OOS",
@@ -90,7 +90,7 @@ const GBR2 = scenario("GBR2", {
 });
 
 // Mailed HCP, Out of State Resident
-const GBM2 = scenario("GBM2", {
+export const GBM2 = scenario("GBM2", {
   reason: "Serious Health Condition - Employee",
   reason_qualifier: "Serious Health Condition",
   residence: "OOS",
@@ -109,7 +109,7 @@ const GB = chance([
 ]);
 
 // HCP sent before an application is started
-const UNH1 = scenario("UNH1", {
+export const UNH1 = scenario("UNH1", {
   reason: "Serious Health Condition - Employee",
   reason_qualifier: "Serious Health Condition",
   residence: "MA-proofed",
@@ -119,7 +119,7 @@ const UNH1 = scenario("UNH1", {
   skipSubmitClaim: true,
 });
 // Invalid HCP
-const UNH2 = scenario("UNH2", {
+export const UNH2 = scenario("UNH2", {
   reason: "Serious Health Condition - Employee",
   reason_qualifier: "Serious Health Condition",
   residence: "OOS",
@@ -129,7 +129,7 @@ const UNH2 = scenario("UNH2", {
   },
 });
 // Mismatched ID/SSN
-const UNH3 = scenario("UNH3", {
+export const UNH3 = scenario("UNH3", {
   reason: "Serious Health Condition - Employee",
   reason_qualifier: "Serious Health Condition",
   residence: "MA-unproofed",
@@ -138,7 +138,7 @@ const UNH3 = scenario("UNH3", {
   },
 });
 // Short Notice
-const UNH4 = scenario("UNH4", {
+export const UNH4 = scenario("UNH4", {
   reason: "Serious Health Condition - Employee",
   reason_qualifier: "Serious Health Condition",
   residence: "MA-proofed",

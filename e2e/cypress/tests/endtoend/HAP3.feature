@@ -2,7 +2,7 @@ Feature: Submit a medical claim that is happy, but financially ineligible, and i
 
   @portal
   Scenario: As a claimant, I should be able to start submitting a MedicalBasic claim through the portal
-    Given I begin the process to submit a "HAP3" claim
+    Given I begin to submit a "HAP3" claim as a "financially ineligible" employee
     When I click on the checklist button called "Verify your identity"
     Then I have my identity verified "normal"
     Given I am on the claims "checklist" page

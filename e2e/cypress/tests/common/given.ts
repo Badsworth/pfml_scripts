@@ -7,15 +7,15 @@ Given("I am an anonymous user on the portal homepage", () => {
   cy.task("generateCredentials").as("credentials");
 });
 
-Given("I begin the process to submit a {string} claim", function (
-  this: CypressStepThis,
-  scenario: string
+Given("I begin to submit a {string} claim as a {string} employee", function (
+  scenario: string,
+  employeeType: string
 ) {
   const credentials = {
     username: Cypress.env("E2E_PORTAL_USERNAME"),
     password: Cypress.env("E2E_PORTAL_PASSWORD"),
   };
-  portal.startSubmit(credentials, scenario);
+  portal.startSubmit(credentials, scenario, employeeType);
 });
 
 Given("I search for the proper claim in Fineos", function () {
@@ -34,27 +34,18 @@ Given("I am on the claim case page", function () {
   fineos.onPage("claims");
 });
 
-Given("I submit {string} claim directly to API", function (
-  scenario: string
-): void {
-  // Needs to be on fineos base url
-  // before submitting the claim
-  // because when we change the base url
-  // the whole test restarts
-  fineos.loginSavilinx();
-  cy.visit("/");
-  portal.submitClaimDirectlyToAPI(scenario);
-});
-
-Given("there is a new {string} claim", function (claimType: string): void {
-  let scenario = "HAP3";
-  if (claimType === "financially eligible") {
-    scenario = "HAP1";
+Given(
+  "I submit a {string} claim directly to API as a {string} employee",
+  function (scenario: string, employeeType: string): void {
+    // Needs to be on fineos base url
+    // before submitting the claim
+    // because when we change the base url
+    // the whole test restarts
+    fineos.loginSavilinx();
+    cy.visit("/");
+    portal.submitClaimDirectlyToAPI(scenario, employeeType);
   }
-  fineos.loginSavilinx();
-  cy.visit("/");
-  portal.submitClaimDirectlyToAPI(scenario);
-});
+);
 
 Given("Part One of the claim has been submitted", function (
   this: CypressStepThis

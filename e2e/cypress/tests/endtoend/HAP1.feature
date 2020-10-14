@@ -2,7 +2,7 @@ Feature: Submit a medical claim and adjucation approval - HAP1
 
   @portal
   Scenario: As a claimant, I should be able to submit a claim (HAP1) through the portal
-    Given I begin the process to submit a "HAP1" claim
+    Given I begin to submit a "HAP1" claim as a "financially eligible" employee
     When I click on the checklist button called "Verify your identity"
     Then I have my identity verified "normal"
     Given I am on the claims "checklist" page

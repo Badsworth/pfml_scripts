@@ -3,6 +3,7 @@ import {
   SimulationGenerator,
   ClaimDocument,
   SimulationGeneratorOpts,
+  EmployeeRecord,
 } from "./types";
 import employers from "./fixtures/employerPool";
 import { ApplicationRequestBody, ApplicationLeaveDetails } from "../api";
@@ -50,21 +51,15 @@ export type ScenarioOpts = {
   shortNotice?: boolean;
 };
 
-type ClaimUser = Pick<
-  ApplicationRequestBody,
-  "first_name" | "last_name" | "tax_identifier" | "employer_fein"
->;
-
 export function scenario(
   name: string,
-  config: ScenarioOpts,
-  existingUser?: ClaimUser
+  config: ScenarioOpts
 ): SimulationGenerator {
-  return async (opts) => {
+  return async (opts, existingUser?: EmployeeRecord) => {
     const hasMassId =
       config.residence === "MA-proofed" || config.residence === "MA-unproofed";
 
-    const user: ClaimUser = {
+    const user: EmployeeRecord = {
       first_name: existingUser?.first_name ?? faker.name.firstName(),
       last_name: existingUser?.last_name ?? faker.name.lastName(),
       tax_identifier:

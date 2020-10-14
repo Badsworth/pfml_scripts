@@ -41,8 +41,15 @@ export type ClaimDocument = {
 export type SimulationGeneratorOpts = {
   documentDirectory: string;
 };
+// ClaimUser is a partial of a pre-created user we can pass to scenario generators.
+export type EmployeeRecord = Pick<
+  ApplicationRequestBody,
+  "first_name" | "last_name" | "tax_identifier" | "employer_fein"
+>;
 export interface SimulationGenerator {
   // The generator returns a promise of a SimulationClaim so that it can
   // do asynchronous operations, like writing documents to the filesystem.
-  (opts: SimulationGeneratorOpts): Promise<SimulationClaim>;
+  (opts: SimulationGeneratorOpts, existingUser?: EmployeeRecord): Promise<
+    SimulationClaim
+  >;
 }

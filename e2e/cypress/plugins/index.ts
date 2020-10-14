@@ -17,6 +17,11 @@ import webpackPreprocessor from "@cypress/webpack-preprocessor";
 import { CypressStepThis } from "@/types";
 import TestMailVerificationFetcher from "./TestMailVerificationFetcher";
 import PortalSubmitter from "../../src/simulation/PortalSubmitter";
+import fs from "fs";
+import { SimulationClaim, SimulationGenerator } from "@/simulation/types";
+import * as scenarios from "../../src/simulation/scenarios/pilot3";
+
+const scenarioFunctions: Record<string, SimulationGenerator> = scenarios;
 
 // This function is called when a project is opened or re-opened (e.g. due to
 // the project's config changing)
@@ -88,6 +93,22 @@ export default function (on: Cypress.PluginEvents): Cypress.ConfigOptions {
           throw new Error(err);
         });
     },
+    async generateClaim({ claimType, employeeType }): Promise<SimulationClaim> {
+      if (!(claimType in scenarios)) {
+        throw new Error("Invalid claim type");
+      }
+      const opts = {
+        documentDirectory: "/tmp",
+      };
+      // Get the employee record here (read JSON, map to identifier).
+      const employee = await getEmployee(employeeType);
+
+      if (!employee) {
+        throw new Error("Employee Type Not Found!");
+      }
+
+      return scenarioFunctions[claimType](opts, employee);
+    },
   });
 
   // @see https://github.com/TheBrainFamily/cypress-cucumber-webpack-typescript-example
@@ -111,4 +132,11 @@ export function createClientFromEnv(): TestMailVerificationFetcher {
     E2E_TESTMAIL_APIKEY,
     E2E_TESTMAIL_NAMESPACE
   );
+}
+
+async function getEmployee(
+  employeeType: string
+): Promise<Record<string, string>> {
+  const content = await fs.promises.readFile("employee.json");
+  return JSON.parse(content.toString("utf-8"))[employeeType];
 }

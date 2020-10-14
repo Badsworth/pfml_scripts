@@ -2,7 +2,7 @@ Feature: Submit a medical claim with a mismatched SSN/ID
 
   @portal
   Scenario: As a claimant, I should be able to start submitting a GBR1 claim through the portal
-    Given I begin the process to submit a "UNH3" claim
+    Given I begin to submit a "UNH3" claim as a "financially eligible" employee
     When I click on the checklist button called "Verify your identity"
     Then I have my identity verified "normal"
     Given I am on the claims "checklist" page
