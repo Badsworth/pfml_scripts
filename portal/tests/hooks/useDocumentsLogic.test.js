@@ -13,6 +13,7 @@ import useDocumentsLogic from "../../src/hooks/useDocumentsLogic";
 import usePortalFlow from "../../src/hooks/usePortalFlow";
 
 jest.mock("../../src/api/DocumentsApi");
+jest.mock("../../src/services/tracker");
 
 describe("useDocumentsLogic", () => {
   const application_id = "mock-application-id-1";
@@ -62,7 +63,9 @@ describe("useDocumentsLogic", () => {
       let files;
 
       it("redirects to nextPage", async () => {
+        files = [makeFile({ name: mockFilename })];
         const spy = jest.spyOn(portalFlow, "goToNextPage");
+
         await act(async () => {
           await documentsLogic.attach(application_id, files, mockDocumentType);
         });
@@ -210,6 +213,21 @@ describe("useDocumentsLogic", () => {
       beforeEach(() => {
         // remove error logs
         jest.spyOn(console, "error").mockImplementationOnce(jest.fn());
+      });
+
+      it("throws ValidationError when no files are included in the request", async () => {
+        const files = [];
+
+        await act(async () => {
+          await documentsLogic.attach(application_id, files, mockDocumentType);
+        });
+
+        expect(appErrorsLogic.appErrors.items[0]).toEqual(
+          expect.objectContaining({
+            field: "file",
+            message: "Please upload at least one file to continue.",
+          })
+        );
       });
 
       it("catches the error", async () => {

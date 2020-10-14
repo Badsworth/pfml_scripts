@@ -35,14 +35,16 @@ export default class DocumentsApi extends BaseApi {
    * @param {string} document_type type of documents
    * @returns {DocumentApiSingleResult} The result of the API call
    */
-  attachDocuments = async (application_id, files, document_type) => {
+  attachDocuments = async (application_id, files = [], document_type) => {
     const formData = new FormData();
-    // TODO (CP-993): handle multiple file uploads
-    const file = files[0];
     formData.append("document_type", document_type);
     formData.append("description", "Placeholder");
-    formData.append("file", file.file);
-    formData.append("name", file.file.name);
+
+    // TODO (CP-993): handle multiple file uploads
+    files.forEach((file) => {
+      formData.set("file", file.file);
+      formData.set("name", file.file.name);
+    });
 
     const { data, status, success } = await this.request(
       "POST",

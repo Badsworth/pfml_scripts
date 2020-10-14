@@ -40,14 +40,8 @@ describe("DocumentsApi", () => {
   });
 
   describe("attachDocument", () => {
-    let files;
     describe("successful request", () => {
       beforeEach(() => {
-        files = [
-          { file: makeFile() },
-          { file: makeFile() },
-          { file: makeFile() },
-        ];
         global.fetch = mockFetch({
           response: {
             data: {
@@ -60,28 +54,51 @@ describe("DocumentsApi", () => {
         });
       });
 
-      it("sends POST request to /applications/{application_id}/documents", async () => {
+      it("sends POST request even when there are no files", async () => {
+        const files = [];
+
         await documentsApi.attachDocuments(
           applicationId,
           files,
           "Mock Category"
         );
-        const formData = new FormData();
-        formData.append("document_type", "Certification");
-        formData.append("file", files[0].file);
-        formData.append("name", files[0].file.name);
 
-        expect(fetch).toHaveBeenCalledWith(
-          `${process.env.apiUrl}/applications/${applicationId}/documents`,
-          expect.objectContaining({
-            body: formData,
-            headers: { Authorization: `Bearer ${accessTokenJwt}` },
-            method: "POST",
-          })
+        expect(fetch).toHaveBeenCalledTimes(1);
+
+        const [url, request] = fetch.mock.calls[0];
+
+        expect(url).toBe(
+          `${process.env.apiUrl}/applications/${applicationId}/documents`
         );
+        expect(request.body.get("file")).toBeNull();
+        expect(request.body.get("document_type")).toBe("Mock Category");
+      });
+
+      it("sends POST request to /applications/{application_id}/documents", async () => {
+        const files = [{ file: makeFile() }];
+
+        await documentsApi.attachDocuments(
+          applicationId,
+          files,
+          "Mock Category"
+        );
+
+        expect(fetch).toHaveBeenCalledTimes(1);
+
+        const [url, request] = fetch.mock.calls[0];
+
+        expect(url).toBe(
+          `${process.env.apiUrl}/applications/${applicationId}/documents`
+        );
+        expect(request.method).toBe("POST");
+        expect(request.body.get("file")).toBeInstanceOf(File);
+        expect(request.body.get("name")).toBe(files[0].file.name);
+        expect(request.body.get("document_type")).toBe("Mock Category");
       });
 
       it("resolves with success, status, and document instance", async () => {
+        const files = [{ file: makeFile() }];
+
         const {
           document: documentResponse,
           ...rest

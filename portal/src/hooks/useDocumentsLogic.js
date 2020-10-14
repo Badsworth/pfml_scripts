@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import DocumentCollection from "../models/DocumentCollection";
 import DocumentsApi from "../api/DocumentsApi";
+import { ValidationError } from "../errors";
 import assert from "assert";
 import useCollectionState from "./useCollectionState";
 
@@ -72,16 +73,32 @@ const useDocumentsLogic = ({ appErrorsLogic, portalFlow }) => {
    * @param {Array} files - array of objects {id: string, file: File object}
    * @param {string} documentType - category of documents
    */
-  const attach = async (application_id, files, documentType) => {
+  const attach = async (application_id, files = [], documentType) => {
     assert(application_id);
     appErrorsLogic.clearErrors();
 
     try {
+      if (!files.length) {
+        throw new ValidationError(
+          [
+            {
+              // field and type will be used for forming the internationalized error message
+              field: "file", // 'file' is the field name in the API
+              message:
+                "Client requires at least one file before sending request",
+              type: "required",
+            },
+          ],
+          "documents"
+        );
+      }
+
       const { success, document } = await documentsApi.attachDocuments(
         application_id,
         files,
         documentType
       );
+
       if (success) {
         if (!hasLoadedClaimDocuments(application_id)) {
           await load(application_id);
