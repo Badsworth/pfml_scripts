@@ -69,12 +69,30 @@ describe("ErrorsSummary", () => {
       ]);
       const { wrapper } = render({ errors });
 
-      // Not taking a full snapshot since the IDs of the list items
-      // change on each test run (which is expected)
       expect(wrapper.prop("heading")).toMatchInlineSnapshot(
         `"2 errors were encountered"`
       );
       expect(wrapper.find(".usa-list li")).toHaveLength(2);
+    });
+
+    it("removes any duplicate error messages", () => {
+      const errors = new AppErrorInfoCollection([
+        new AppErrorInfo({ message: "Mock error message #1" }),
+        new AppErrorInfo({ message: "Mock error message #1" }),
+        new AppErrorInfo({ message: "Mock error message #2" }),
+      ]);
+      const { wrapper } = render({ errors });
+
+      expect(wrapper.prop("heading")).toMatchInlineSnapshot(
+        `"3 errors were encountered"`
+      );
+      expect(wrapper.find(".usa-list li")).toHaveLength(2);
+      expect(wrapper.find(".usa-list li").first().text()).toBe(
+        errors.items[0].message
+      );
+      expect(wrapper.find(".usa-list li").last().text()).toBe(
+        errors.items[2].message
+      );
     });
   });
 

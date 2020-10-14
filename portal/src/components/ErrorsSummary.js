@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from "react";
 import Alert from "./Alert";
 import PropTypes from "prop-types";
+import { groupBy } from "lodash";
 import { useTranslation } from "../locales/i18n";
 
 /**
@@ -33,10 +34,13 @@ function ErrorsSummary(props) {
   const errorMessages = () => {
     if (errors.items.length === 1) return <p>{errors.items[0].message}</p>;
 
+    // Condense the list to only unique messages, combining any that are redundant
+    const visibleErrorMessages = Object.keys(groupBy(errors.items, "message"));
+
     return (
       <ul className="usa-list">
-        {errors.items.map((error) => (
-          <li key={error.key}>{error.message}</li>
+        {visibleErrorMessages.map((message) => (
+          <li key={message}>{message}</li>
         ))}
       </ul>
     );
