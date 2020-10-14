@@ -19,9 +19,13 @@ import TestMailVerificationFetcher from "./TestMailVerificationFetcher";
 import PortalSubmitter from "../../src/simulation/PortalSubmitter";
 import fs from "fs";
 import { SimulationClaim, SimulationGenerator } from "@/simulation/types";
-import * as scenarios from "../../src/simulation/scenarios/pilot3";
+import * as pilot3 from "../../src/simulation/scenarios/pilot3";
+import * as pilot4 from "../../src/simulation/scenarios/pilot4";
 
-const scenarioFunctions: Record<string, SimulationGenerator> = scenarios;
+const scenarioFunctions: Record<string, SimulationGenerator> = {
+  ...pilot3,
+  ...pilot4,
+};
 
 // This function is called when a project is opened or re-opened (e.g. due to
 // the project's config changing)
@@ -94,8 +98,8 @@ export default function (on: Cypress.PluginEvents): Cypress.ConfigOptions {
         });
     },
     async generateClaim({ claimType, employeeType }): Promise<SimulationClaim> {
-      if (!(claimType in scenarios)) {
-        throw new Error("Invalid claim type");
+      if (!(claimType in scenarioFunctions)) {
+        throw new Error(`Invalid claim type: ${claimType}`);
       }
       const opts = {
         documentDirectory: "/tmp",
