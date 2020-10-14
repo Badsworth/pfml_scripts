@@ -1,5 +1,5 @@
 import yargs, { CommandModule } from "yargs";
-import PortalSubmitter from "../PortalSubmitter";
+import PortalPuppeteerSubmitter from "../PortalPuppeteerSubmitter";
 import SimulationRunner from "../SimulationRunner";
 import SimulationStorage from "../SimulationStorage";
 import {
@@ -34,13 +34,16 @@ const cmd: CommandModule<SystemWideArgs, SimulateArgs> = {
   async handler(args) {
     const storage = new SimulationStorage(args.directory);
     args.logger.info(`Executing simulation plan from ${storage.claimFile}`);
-    const submitter = new PortalSubmitter({
-      UserPoolId: config("E2E_COGNITO_POOL"),
-      ClientId: config("E2E_COGNITO_CLIENTID"),
-      Username: config("E2E_PORTAL_USERNAME"),
-      Password: config("E2E_PORTAL_PASSWORD"),
-      ApiBaseUrl: config("E2E_API_BASEURL"),
-    });
+    const submitter = new PortalPuppeteerSubmitter(
+      {
+        UserPoolId: config("E2E_COGNITO_POOL"),
+        ClientId: config("E2E_COGNITO_CLIENTID"),
+        Username: config("E2E_PORTAL_USERNAME"),
+        Password: config("E2E_PORTAL_PASSWORD"),
+        ApiBaseUrl: config("E2E_API_BASEURL"),
+      },
+      getFineosBaseUrl()
+    );
     const tracker = args.track
       ? new SimulationStateFileTracker(storage.stateFile)
       : new SimulationStateNullTracker();
@@ -68,6 +71,28 @@ function config(name: string): string {
   throw new Error(
     `${name} must be set as an environment variable to use this script`
   );
+}
+
+export function getFineosBaseUrl(): string {
+  const base = config("E2E_FINEOS_BASEURL");
+  const username = config("E2E_FINEOS_USERNAME");
+  const password = config("E2E_FINEOS_PASSWORD");
+  if (!base)
+    throw new Error(
+      `You must set the E2E_FINEOS_BASEURL environment variable.`
+    );
+  if (!username)
+    throw new Error(
+      `You must set the E2E_FINEOS_USERNAME environment variable.`
+    );
+  if (!password)
+    throw new Error(
+      `You must set the E2E_FINEOS_PASSWORD environment variable.`
+    );
+  const url = new URL(base);
+  url.username = username;
+  url.password = password;
+  return url.toString();
 }
 
 const { command, describe, builder, handler } = cmd;

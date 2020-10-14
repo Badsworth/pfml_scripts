@@ -23,7 +23,7 @@ if (!global.FormData) {
   global.FormData = FormData;
 }
 
-type PortalSubmitterOpts = {
+export type PortalSubmitterOpts = {
   UserPoolId: string;
   ClientId: string;
   Username: string;
@@ -38,14 +38,7 @@ export default class PortalSubmitter {
   private base: string;
 
   constructor(opts: PortalSubmitterOpts) {
-    const {
-      Username,
-      Password,
-      ClientId,
-      UserPoolId,
-      ApiBaseUrl,
-      //CustomFetch,
-    } = opts;
+    const { Username, Password, ClientId, UserPoolId, ApiBaseUrl } = opts;
     this.pool = new CognitoUserPool({ ClientId, UserPoolId });
     this.details = new AuthenticationDetails({ Username, Password });
     this.base = ApiBaseUrl;
@@ -91,21 +84,23 @@ export default class PortalSubmitter {
     await this.updateApplication(application_id, application);
     const fineos_id = await this.submitApplication(application_id);
     await this.completeApplication(application_id);
-    for (const doc of documents) {
-      await this.uploadDocument(application_id, doc);
-    }
+    await this.uploadDocuments(application_id, fineos_id, documents);
     return fineos_id;
   }
 
-  private async uploadDocument(
+  protected async uploadDocuments(
     applicationId: string,
-    doc: DocumentUploadRequest
-  ) {
-    return postApplicationsByApplicationIdDocuments(
-      { applicationId },
-      doc,
-      await this.getOptions()
-    );
+    fineosId: string,
+    documents: DocumentUploadRequest[]
+  ): Promise<void> {
+    const promises = documents.map(async (document) => {
+      return postApplicationsByApplicationIdDocuments(
+        { applicationId },
+        document,
+        await this.getOptions()
+      );
+    });
+    await Promise.all(promises);
   }
 
   private async createApplication(): Promise<string> {
