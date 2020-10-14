@@ -8,7 +8,7 @@ const StepList = (props) => {
 
   const steps = Children.map(children, (child, index) => {
     if (child.type !== Step) {
-      return children;
+      return child;
     }
 
     return cloneElement(child, {

@@ -105,4 +105,16 @@ describe("StepList", () => {
     const steps = wrapper.find("Step");
     expect(steps.first().prop("number")).toBe(4);
   });
+
+  it("renders when children are not steps", () => {
+    const TestComponent = () => <div />;
+    const wrapper = shallow(
+      <StepList {...props}>
+        <TestComponent />
+        <TestComponent />
+      </StepList>
+    );
+
+    expect(wrapper.find(TestComponent)).toHaveLength(2);
+  });
 });
