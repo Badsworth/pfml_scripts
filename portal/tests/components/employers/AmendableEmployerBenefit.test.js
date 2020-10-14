@@ -41,6 +41,10 @@ describe("AmendableEmployerBenefit", () => {
     );
   });
 
+  it("renders formatted benefit amount with dollar sign", () => {
+    expect(wrapper.find("td").at(1).text()).toEqual("$1000");
+  });
+
   it("renders an AmendmentForm if user clicks on AmendButton", () => {
     wrapper.find(AmendButton).simulate("click");
 
@@ -52,6 +56,12 @@ describe("AmendableEmployerBenefit", () => {
 
     expect(wrapper.find(InputDate)).toHaveLength(2);
     expect(wrapper.find(InputText)).toHaveLength(1);
+  });
+
+  it("renders 'amount' field with currency mask", () => {
+    wrapper.find(AmendButton).simulate("click");
+
+    expect(wrapper.find(InputText).prop("mask")).toEqual("currency");
   });
 
   it("hides amount input field if the benefit is acrrued paid leave", () => {

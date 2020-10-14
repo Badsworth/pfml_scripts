@@ -35,7 +35,7 @@ const EmployerBenefit = ({ benefit, onChange }) => {
   const getBenefitAmountByType = () => {
     return isPaidLeave
       ? t("pages.employersClaimsReview.notApplicable")
-      : benefit.benefit_amount_dollars;
+      : "$" + benefit.benefit_amount_dollars;
   };
 
   return (
@@ -118,6 +118,7 @@ const EmployerBenefit = ({ benefit, onChange }) => {
                   value={amendment.benefit_amount_dollars}
                   label={t("components.amendmentForm.question_benefitAmount")}
                   type="number"
+                  mask="currency"
                   width="medium"
                   smallLabel
                 />

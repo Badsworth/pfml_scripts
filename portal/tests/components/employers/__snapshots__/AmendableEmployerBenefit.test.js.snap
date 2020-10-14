@@ -12,7 +12,7 @@ exports[`AmendableEmployerBenefit renders the component 1`] = `
       Short-term disability insurance
     </td>
     <td>
-      1000
+      $1000
     </td>
     <td>
       <AmendButton
@@ -56,6 +56,7 @@ exports[`AmendableEmployerBenefit renders the component 1`] = `
           />
           <InputText
             label="How much will they receive each month?"
+            mask="currency"
             name="benefit-amount-amendment"
             onChange={[Function]}
             smallLabel={true}
