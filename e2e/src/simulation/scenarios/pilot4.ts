@@ -1,6 +1,6 @@
 import { scenario, chance } from "../simulate";
 
-const BHAP1 = scenario("BHAP1", {
+export const BHAP1 = scenario("BHAP1", {
   reason: "Child Bonding",
   reason_qualifier: "Foster Care",
   residence: "MA-proofed",
@@ -11,7 +11,7 @@ const BHAP1 = scenario("BHAP1", {
   },
 });
 
-const BHAP2 = scenario("BHAP2", {
+export const BHAP2 = scenario("BHAP2", {
   reason: "Child Bonding",
   reason_qualifier: "Adoption",
   residence: "OOS",
@@ -22,7 +22,7 @@ const BHAP2 = scenario("BHAP2", {
   },
 });
 
-const BHAP3 = scenario("BHAP3", {
+export const BHAP3 = scenario("BHAP3", {
   reason: "Child Bonding",
   reason_qualifier: "Newborn",
   residence: "MA-proofed",
@@ -34,7 +34,7 @@ const BHAP3 = scenario("BHAP3", {
 });
 
 // Happy path denial due to ?
-const BHAP4 = scenario("BHAP4", {
+export const BHAP4 = scenario("BHAP4", {
   reason: "Child Bonding",
   reason_qualifier: "Adoption",
   residence: "OOS",
@@ -49,7 +49,7 @@ const BHAP4 = scenario("BHAP4", {
 });
 
 // Happy path denial due to adoption > 12 months ago.
-const BHAP5 = scenario("BHAP5", {
+export const BHAP5 = scenario("BHAP5", {
   reason: "Child Bonding",
   reason_qualifier: "Adoption",
   residence: "OOS",
@@ -62,7 +62,7 @@ const BHAP5 = scenario("BHAP5", {
   },
 });
 
-const BHAP = chance([
+export const BHAP = chance([
   [1, BHAP1],
   [1, BHAP2],
   [1, BHAP3],
