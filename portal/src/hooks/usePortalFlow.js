@@ -7,14 +7,28 @@ import { useRouter } from "next/router";
 
 /**
  * Hook that provides methods for convenient page routing
- * @returns {object} { goToNextPage: Function, goToPageFor: Function, goTo: Function, page: string, pageWithParams: string }
+ * @returns {object} { goToNextPage: Function, goToPageFor: Function, goTo: Function, page: object, pathname: string, pathWithParams: string }
  */
 const usePortalFlow = () => {
+  /**
+   * @type {Machine}
+   * @see https://xstate.js.org/docs/guides/machines.html
+   */
   const routingMachine = useMemo(() => Machine(machineConfigs, { guards }), []);
+
   // TODO (CP-732) use custom useRouter
   const router = useRouter();
+
   // State representing current page route
-  const { pathname: page, asPath: pageWithParams } = router;
+  const { pathname, asPath: pathWithParams } = router;
+
+  /**
+   * The routing machine's active State Node
+   * @type {{ meta?: { applicableRules?: string[], fields?: string[], step?: string }, on: object}}
+   * @see https://xstate.js.org/docs/guides/statenodes.html
+   */
+  const page = machineConfigs.states[pathname];
+
   /**
    * Navigate to a page route
    * @param {string} route - url
@@ -33,7 +47,7 @@ const usePortalFlow = () => {
    */
   const goToPageFor = (event, context, params) => {
     const nextRoutingMachine = routingMachine.withContext(context);
-    const nextPageRoute = nextRoutingMachine.transition(page, event);
+    const nextPageRoute = nextRoutingMachine.transition(pathname, event);
     if (!nextPageRoute) {
       throw new RouteTransitionError();
     }
@@ -50,7 +64,7 @@ const usePortalFlow = () => {
     goToPageFor(event, context, params);
   };
 
-  return { page, pageWithParams, goTo, goToNextPage, goToPageFor };
+  return { page, pathname, pathWithParams, goTo, goToNextPage, goToPageFor };
 };
 
 export default usePortalFlow;

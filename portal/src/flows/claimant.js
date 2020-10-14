@@ -226,6 +226,13 @@ export default {
       meta: {
         step: ClaimSteps.leaveDetails,
         fields: leavePeriodIntermittentFields,
+        // This page is after the Continuous and Reduced Schedule pages,
+        // so on this page is where we can surface validation issues
+        // related to the following rules:
+        applicableRules: [
+          "disallow_hybrid_intermittent_leave",
+          "min_leave_periods",
+        ],
       },
       on: {
         CONTINUE: [

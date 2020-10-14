@@ -57,33 +57,40 @@ const useAppErrorsLogic = () => {
    * @returns {string} Internationalized error message
    * @example getMessageFromApiIssue(issue, "claims");
    */
-  const getMessageFromApiIssue = ({ field, message, type }, i18nPrefix) => {
+  const getMessageFromApiIssue = (
+    { field, message, rule, type },
+    i18nPrefix
+  ) => {
     const fallbackMessage = message || "errors.validationFallback.invalid";
+    let fieldOrRuleKey;
 
-    // Remove array indexes from the field since the array index is not relevant for the error message
-    // i.e. convert foo[0].bar[1].cat to foo.bar.cat
-    const fieldErrorKey = `${i18nPrefix}.${field}.${type}`
-      .replace(/\[(\d+)\]/g, "")
-      // Also convert foo.0.bar.1.cat to foo.bar.cat in case
-      // TODO (CP-1052): Remove this line once API starts using bracket notation for array indexes
-      .replace(/\.(\d+)/g, "");
+    if (field) {
+      // Remove array indexes from the field since the array index is not relevant for the error message
+      // i.e. convert foo[0].bar[1].cat to foo.bar.cat
+      fieldOrRuleKey = `${i18nPrefix}.${field}.${type}`
+        .replace(/\[(\d+)\]/g, "")
+        // Also convert foo.0.bar.1.cat to foo.bar.cat in case
+        .replace(/\.(\d+)/g, "");
+    } else if (rule) {
+      fieldOrRuleKey = `${i18nPrefix}.rules.${rule}`;
+    }
 
     const modelErrorKey = `${i18nPrefix}.${type}`;
 
-    // 1. Field-level message: "errors.claim.ssn.required" => "Please enter your SSN."
+    // 1. Field or rule-level message:
+    //    a. Field-level: "errors.claims.ssn.required" => "Please enter your SSN."
+    //    b. Rule-level: "errors.claims.rules.min_leave_periods" => "At least one leave period is required."
     // 2. Model-level message: "errors.documents.required" => "At least one file is required."
     // 3. Generic message: "errors.fallback.pattern" => "Field (ssn) is invalid format."
     // 4. Fallback to API message as last resort
     return t(
       [
-        `errors.${fieldErrorKey}`,
+        `errors.${fieldOrRuleKey}`,
         `errors.${modelErrorKey}`,
         `errors.validationFallback.${type}`,
         fallbackMessage,
       ],
-      {
-        field,
-      }
+      { field }
     );
   };
 
@@ -112,6 +119,7 @@ const useAppErrorsLogic = () => {
         field: issue.field,
         message: getMessageFromApiIssue(issue, error.i18nPrefix),
         name: error.name,
+        rule: issue.rule,
       });
 
       addError(appError);

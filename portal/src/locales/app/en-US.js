@@ -202,6 +202,12 @@ const errors = {
         required: "Please enter a ZIP code for your residential address.",
       },
     },
+    rules: {
+      disallow_hybrid_intermittent_leave:
+        "You cannot request intermittent leave in the same application as your continuous or reduced schedule leave. Create a separate application for your intermittent leave dates.",
+      min_leave_periods:
+        "You must choose at least one kind of leave (continuous, reduced schedule, or intermittent).",
+    },
     tax_identifier: {
       pattern: "Please enter a 9-digit number.",
       required: "Please enter a Social Security Number or ITIN.",

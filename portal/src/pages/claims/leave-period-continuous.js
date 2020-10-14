@@ -43,18 +43,7 @@ export const LeavePeriodContinuous = (props) => {
     const existingLeavePeriod = get(formState, leavePeriodPath);
 
     if (formState.has_continuous_leave_periods && !existingLeavePeriod) {
-      // Portal will display validation warnings for any field included
-      // in the API request. We only want to display errors for fields on
-      // this page so we create an object with just those:
-      const leavePeriod = fields
-        .filter((field) => field.includes(leavePeriodPath))
-        .reduce((draftLeavePeriod, field) => {
-          const fieldPath = field.replace(`claim.${leavePeriodPath}.`, "");
-          // For example: set({ end_date: null }, "start_date", null) => { end_date: null, start_date: null }
-          return set(draftLeavePeriod, fieldPath, null);
-        }, {});
-
-      updateFields({ [leavePeriodPath]: leavePeriod });
+      updateFields({ [leavePeriodPath]: {} });
     }
   }, [formState, updateFields]);
 

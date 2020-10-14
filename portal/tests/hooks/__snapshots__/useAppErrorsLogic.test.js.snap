@@ -9,6 +9,11 @@ Object {
       "type": "pattern",
     },
     Object {
+      "field": undefined,
+      "rule": "min_leave_periods",
+      "type": "multiFieldIssue",
+    },
+    Object {
       "field": "unknown_field",
       "rule": "/d{9}",
       "type": "pattern",

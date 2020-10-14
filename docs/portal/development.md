@@ -24,12 +24,14 @@ For Employer-specific pages, files will be nested in an [`/employers`](../../por
 1. Add content strings for the page to [`src/locales/app/en-US.js`](../../portal/src/locales/app/en-US.js).
 1. Add a test file for the page (and for any new components) to [`tests`](../../portal/tests/)
 
-### Question Page Routing
+### Question Pages
 
 We use a [state machine](https://statecharts.github.io/) to control routing between question pages in a flow. The library we use behind the scenes for this is [XState](https://xstate.js.org/docs/).
 
-1. Add a new state for the route to [`src/flows/claimaint.js`](../../portal/src/flows/claimant.js). Include the `step` and `fields` to the state's `meta` object and add a `CONTINUE` transition. Read more on xstate configs [here](https://xstate.js.org/docs/guides/transitions.html#machine-transition-method).
-1. If routing to or from the page is conditional, you'll need to define `guard`s that determine the state. Read more on xstate guards [here](https://xstate.js.org/docs/guides/guards.html#guards-condition-functions).
+1. Add a new state node for the route to [`src/flows/claimaint.js`](../../portal/src/flows/claimant.js), and add a `CONTINUE` transition. Read more on XState configs [here](https://xstate.js.org/docs/guides/transitions.html#machine-transition-method).
+1. Within a `meta` object on the state node, add a `step` and `fields` properties. The `fields` value should contain the field paths for every field that may be displayed on the question page. This is important because this array is what's used for determining what validation errors should display on the question page, and also is used for identifying when a step on the checklist is In Progress or Completed.
+1. If the page should display validation issues for specific rules, add an array of `applicableRules` to the state's `meta` object.
+1. If routing to or from the page is conditional, you'll need to define `guards` that determine the state. Read more on xstate guards [here](https://xstate.js.org/docs/guides/guards.html#guards-condition-functions).
 1. Add a test state for the new page to the `machineTests` object in [`tests/flows/claimant.test.js`](../../portal/tests/flows/claimant.test.js)
 1. If routing is conditional, add items with appropriate data to the `testData` array.
 

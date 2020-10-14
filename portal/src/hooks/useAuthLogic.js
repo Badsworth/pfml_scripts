@@ -183,10 +183,10 @@ const useAuthLogic = ({ appErrorsLogic, portalFlow }) => {
     // reset React in-memory state and set isLoggedIn back to null.
 
     if (tempIsLoggedIn) return;
-    if (!tempIsLoggedIn && !portalFlow.page.match(routes.auth.login)) {
-      const { pageWithParams } = portalFlow;
+    if (!tempIsLoggedIn && !portalFlow.pathname.match(routes.auth.login)) {
+      const { pathWithParams } = portalFlow;
 
-      portalFlow.goTo(routes.auth.login, { next: pageWithParams });
+      portalFlow.goTo(routes.auth.login, { next: pathWithParams });
     }
   };
 

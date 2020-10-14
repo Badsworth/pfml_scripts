@@ -48,7 +48,7 @@ describe("LeavePeriodContinuous", () => {
     expect(wrapper.find("ConditionalContent").prop("visible")).toBe(true);
   });
 
-  it("sends leave period with only the page's fields when user first indicates they have this leave period", async () => {
+  it("adds empty leave period when user first indicates they have this leave period", async () => {
     const { appLogic, claim, wrapper } = renderWithAppLogic(
       LeavePeriodContinuous,
       {
@@ -69,12 +69,7 @@ describe("LeavePeriodContinuous", () => {
     expect(appLogic.claims.update).toHaveBeenCalledWith(claim.application_id, {
       has_continuous_leave_periods: true,
       leave_details: {
-        continuous_leave_periods: [
-          {
-            end_date: null,
-            start_date: null,
-          },
-        ],
+        continuous_leave_periods: [{}],
       },
     });
   });

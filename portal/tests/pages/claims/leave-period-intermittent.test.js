@@ -62,7 +62,7 @@ describe("LeavePeriodIntermittent", () => {
     ).toBe(true);
   });
 
-  it("sends leave period with only the page's fields when user first indicates they have this leave period", async () => {
+  it("adds empty leave period when user first indicates they have this leave period", async () => {
     const { appLogic, claim, wrapper } = renderWithAppLogic(
       LeavePeriodIntermittent,
       {
@@ -83,12 +83,36 @@ describe("LeavePeriodIntermittent", () => {
     expect(appLogic.claims.update).toHaveBeenCalledWith(claim.application_id, {
       has_intermittent_leave_periods: true,
       leave_details: {
-        intermittent_leave_periods: [
-          {
-            end_date: null,
-            start_date: null,
-          },
-        ],
+        intermittent_leave_periods: [{}],
+      },
+    });
+  });
+
+  it("adds empty leave period when user first indicates they have this leave period but also already have a continuous leave period", async () => {
+    const { appLogic, claim, wrapper } = renderWithAppLogic(
+      LeavePeriodIntermittent,
+      {
+        claimAttrs: new MockClaimBuilder()
+          .medicalLeaveReason()
+          .continuous()
+          .create(),
+        render: "mount", // support useEffect
+      }
+    );
+    const { changeRadioGroup } = simulateEvents(wrapper);
+
+    // Trigger the effect
+    changeRadioGroup("has_intermittent_leave_periods", "true");
+
+    // Submit the form and assert against what's submitted
+    await act(async () => {
+      await wrapper.find("form").simulate("submit");
+    });
+
+    expect(appLogic.claims.update).toHaveBeenCalledWith(claim.application_id, {
+      has_intermittent_leave_periods: true,
+      leave_details: {
+        intermittent_leave_periods: [{}],
       },
     });
   });

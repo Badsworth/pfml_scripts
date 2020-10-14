@@ -35,8 +35,8 @@ describe("useClaimsLogic", () => {
   }
 
   beforeEach(() => {
+    mockRouter.pathname = routes.home;
     user = new User({ user_id: "mock-user-id" });
-    renderHook();
   });
 
   afterEach(() => {
@@ -46,10 +46,16 @@ describe("useClaimsLogic", () => {
   });
 
   it("returns claims with null value", () => {
+    renderHook();
+
     expect(claimsLogic.claims).toBeNull();
   });
 
   describe("load", () => {
+    beforeEach(() => {
+      renderHook();
+    });
+
     it("asynchronously fetches all claims and adds to claims collection", async () => {
       await act(async () => {
         await claimsLogic.load();
@@ -113,6 +119,11 @@ describe("useClaimsLogic", () => {
   });
 
   describe("create", () => {
+    beforeEach(() => {
+      mockRouter.pathname = routes.claims.start;
+      renderHook();
+    });
+
     it("sends API request", async () => {
       await act(async () => {
         await claimsLogic.create();
@@ -122,12 +133,6 @@ describe("useClaimsLogic", () => {
     });
 
     it("routes to claim checklist page when the request succeeds", async () => {
-      mockRouter.pathname = routes.claims.start;
-
-      act(() => {
-        appErrorsLogic.setAppErrors(new AppErrorInfoCollection([]));
-      });
-
       await act(async () => {
         await claimsLogic.create();
       });
@@ -245,21 +250,18 @@ describe("useClaimsLogic", () => {
   });
 
   describe("when claims have been loaded or a new claim was created", () => {
-    beforeEach(() => {
-      testHook(() => {
-        appErrorsLogic = useAppErrorsLogic();
-        portalFlow = usePortalFlow({ user });
-        claimsLogic = useClaimsLogic({ user, appErrorsLogic, portalFlow });
-      });
-
-      act(() => {
-        claimsLogic.setClaims(
-          new ClaimCollection([new Claim({ application_id: applicationId })])
-        );
-      });
-    });
-
     describe("complete", () => {
+      beforeEach(() => {
+        mockRouter.pathname = routes.claims.review;
+        renderHook();
+
+        act(() => {
+          claimsLogic.setClaims(
+            new ClaimCollection([new Claim({ application_id: applicationId })])
+          );
+        });
+      });
+
       it("completes the claim", async () => {
         await act(async () => {
           await claimsLogic.complete(applicationId);
@@ -286,12 +288,6 @@ describe("useClaimsLogic", () => {
       });
 
       it("routes to claim success page when the request succeeds", async () => {
-        mockRouter.pathname = routes.claims.review;
-
-        act(() => {
-          appErrorsLogic.setAppErrors(new AppErrorInfoCollection([]));
-        });
-
         await act(async () => {
           await claimsLogic.complete(applicationId);
         });
@@ -328,6 +324,16 @@ describe("useClaimsLogic", () => {
       };
 
       it("updates claim and redirects to nextPage when successful", async () => {
+        mockRouter.pathname = routes.claims.name;
+
+        renderHook();
+
+        act(() => {
+          claimsLogic.setClaims(
+            new ClaimCollection([new Claim({ application_id: applicationId })])
+          );
+        });
+
         await act(async () => {
           await claimsLogic.update(applicationId, patchData);
         });
@@ -338,12 +344,21 @@ describe("useClaimsLogic", () => {
         expect(claim).toEqual(expect.objectContaining(patchData));
         expect(updateClaimMock).toHaveBeenCalled();
         expect(mockRouter.push).toHaveBeenCalledWith(
-          expect.stringContaining(`?claim_id=${claim.application_id}`)
+          expect.stringContaining(
+            `${routes.claims.address}?claim_id=${claim.application_id}`
+          )
         );
       });
 
       it("clears prior errors", async () => {
+        mockRouter.pathname = routes.claims.name;
+        renderHook();
+
         act(() => {
+          claimsLogic.setClaims(
+            new ClaimCollection([new Claim({ application_id: applicationId })])
+          );
+
           appErrorsLogic.setAppErrors(
             new AppErrorInfoCollection([new AppErrorInfo()])
           );
@@ -362,10 +377,21 @@ describe("useClaimsLogic", () => {
         });
 
         it("updates the local claim if response only included warnings", async () => {
+          mockRouter.pathname = routes.claims.name;
           const claimResponse = new MockClaimBuilder()
             .id(applicationId)
             .create();
           const last_name = "Updated from API";
+
+          renderHook();
+
+          act(() => {
+            claimsLogic.setClaims(
+              new ClaimCollection([
+                new Claim({ application_id: applicationId }),
+              ])
+            );
+          });
 
           updateClaimMock.mockResolvedValueOnce({
             claim: { ...claimResponse, last_name },
@@ -384,33 +410,22 @@ describe("useClaimsLogic", () => {
           expect(claim.last_name).toBe(last_name);
         });
 
-        it("reports all warnings for fields in patchData", async () => {
-          updateClaimMock.mockResolvedValueOnce({
-            claim: new MockClaimBuilder().id(applicationId).create(),
-            errors: [],
-            warnings: [
-              { field: "last_name", type: "required" },
-              { field: "date_of_birth", type: "required" },
-            ],
-            // Responses with only warnings receive a 200 status
-            success: true,
-          });
-
-          await act(async () => {
-            await claimsLogic.update(applicationId, patchData);
-          });
-
-          const errors = appErrorsLogic.appErrors.items;
-
-          expect(errors).toHaveLength(1);
-          expect(errors[0].field).toEqual("last_name");
-        });
-
         it("does not update the local claim if response included any errors", async () => {
+          mockRouter.pathname = routes.claims.name;
           const claimResponse = new MockClaimBuilder()
             .id(applicationId)
             .create();
           const last_name = "Name in API";
+
+          renderHook();
+
+          act(() => {
+            claimsLogic.setClaims(
+              new ClaimCollection([
+                new Claim({ application_id: applicationId }),
+              ])
+            );
+          });
 
           updateClaimMock.mockResolvedValueOnce({
             claim: { ...claimResponse, last_name },
@@ -429,16 +444,64 @@ describe("useClaimsLogic", () => {
           expect(claim.last_name).toBeNull();
         });
 
-        it("reports all errors and any warnings for fields in patchData", async () => {
+        it("reports warnings for fields on the Name page", async () => {
+          mockRouter.pathname = routes.claims.name;
+
+          renderHook();
+
+          act(() => {
+            claimsLogic.setClaims(
+              new ClaimCollection([
+                new Claim({ application_id: applicationId }),
+              ])
+            );
+          });
+
           updateClaimMock.mockResolvedValueOnce({
             claim: new MockClaimBuilder().id(applicationId).create(),
-            errors: [{ field: "error_field" }],
+            errors: [],
             warnings: [
+              { field: "first_name", type: "required" },
               { field: "last_name", type: "required" },
               { field: "date_of_birth", type: "required" },
             ],
-            // Responses with errors receive a 400 status
-            success: false,
+            // Responses with only warnings receive a 200 status
+            success: true,
+          });
+
+          await act(async () => {
+            await claimsLogic.update(applicationId, patchData);
+          });
+
+          const errors = appErrorsLogic.appErrors.items;
+          const errorFields = errors.map((error) => error.field);
+
+          expect(errors).toHaveLength(2);
+          expect(errorFields).toContain("first_name");
+          expect(errorFields).toContain("last_name");
+        });
+
+        it("reports warnings for applicable rules on the Intermittent Leave page", async () => {
+          mockRouter.pathname = routes.claims.leavePeriodIntermittent;
+          renderHook();
+
+          act(() => {
+            claimsLogic.setClaims(
+              new ClaimCollection([
+                new Claim({ application_id: applicationId }),
+              ])
+            );
+          });
+
+          updateClaimMock.mockResolvedValueOnce({
+            claim: new MockClaimBuilder().id(applicationId).create(),
+            errors: [],
+            warnings: [
+              { rule: "disallow_hybrid_intermittent_leave" },
+              { field: "tax_identifier", type: "required" },
+            ],
+            // Responses with only warnings receive a 200 status
+            success: true,
           });
 
           await act(async () => {
@@ -447,12 +510,22 @@ describe("useClaimsLogic", () => {
 
           const errors = appErrorsLogic.appErrors.items;
 
-          expect(errors).toHaveLength(2);
-          expect(errors[0].field).toEqual("error_field");
-          expect(errors[1].field).toEqual("last_name");
+          expect(errors).toHaveLength(1);
+          expect(errors[0].rule).toBe("disallow_hybrid_intermittent_leave");
         });
 
         it("catches exceptions thrown from the API module", async () => {
+          mockRouter.pathname = routes.claims.name;
+          renderHook();
+
+          act(() => {
+            claimsLogic.setClaims(
+              new ClaimCollection([
+                new Claim({ application_id: applicationId }),
+              ])
+            );
+          });
+
           updateClaimMock.mockImplementationOnce(() => {
             throw new BadRequestError();
           });
@@ -470,6 +543,17 @@ describe("useClaimsLogic", () => {
     });
 
     describe("submit", () => {
+      beforeEach(() => {
+        mockRouter.pathname = routes.claims.review;
+        renderHook(routes.claims);
+
+        act(() => {
+          claimsLogic.setClaims(
+            new ClaimCollection([new Claim({ application_id: applicationId })])
+          );
+        });
+      });
+
       it("submits the claim", async () => {
         await act(async () => {
           await claimsLogic.submit(applicationId);
@@ -496,12 +580,6 @@ describe("useClaimsLogic", () => {
       });
 
       it("routes to claim checklist page when the request succeeds", async () => {
-        mockRouter.pathname = routes.claims.review;
-
-        act(() => {
-          appErrorsLogic.setAppErrors(new AppErrorInfoCollection([]));
-        });
-
         await act(async () => {
           await claimsLogic.submit(applicationId);
         });

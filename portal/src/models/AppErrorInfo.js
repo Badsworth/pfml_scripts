@@ -7,6 +7,7 @@ import uniqueId from "lodash/uniqueId";
  * @property {string} key - Unique key used for React `key` prop (https://reactjs.org/docs/lists-and-keys.html)
  * @property {string} message - Internationalized message displayed to the user (like `Error#message`)
  * @property {string} [name] - Name of the error (like `Error#name`)
+ * @property {string} [rule] - Name of validation rule that was not fulfilled, if caused by a validation issue
  */
 class AppErrorInfo extends BaseModel {
   get defaults() {
@@ -15,6 +16,7 @@ class AppErrorInfo extends BaseModel {
       message: null,
       name: null,
       field: null,
+      rule: null,
     };
   }
 }

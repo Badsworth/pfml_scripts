@@ -54,7 +54,8 @@ const useClaimsLogic = ({ appErrorsLogic, portalFlow, user }) => {
         application_id,
         patchData
       );
-      const issues = getRelevantIssues(errors, warnings, patchData);
+
+      const issues = getRelevantIssues(errors, warnings, [portalFlow.page]);
 
       // If there were any validation errors, then throw *before*
       // the claim is updated in our state, to avoid overriding

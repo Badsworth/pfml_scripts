@@ -182,6 +182,9 @@ export default class Step extends BaseModel {
     }
     // </WorkAround>
 
+    // TODO (CP-625): Use warnings returned by API to determine if step is completed:
+    // const issues = getRelevantIssues([], this.warnings, this.pages);
+    // return !!issues.length;
     return !this.warnings.some((warning) =>
       this.fields.includes(warning.field)
     );

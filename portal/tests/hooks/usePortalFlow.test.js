@@ -95,4 +95,31 @@ describe("usePortalFlow", () => {
       });
     });
   });
+
+  describe("page", () => {
+    it("returns the active page's state node", () => {
+      let portalFlow;
+      mockRouter.pathname = routes.claims.name;
+
+      testHook(() => {
+        portalFlow = usePortalFlow();
+      });
+
+      expect(portalFlow.page).toMatchInlineSnapshot(`
+        Object {
+          "meta": Object {
+            "fields": Array [
+              "claim.first_name",
+              "claim.middle_name",
+              "claim.last_name",
+            ],
+            "step": "verifyId",
+          },
+          "on": Object {
+            "CONTINUE": "/claims/address",
+          },
+        }
+      `);
+    });
+  });
 });

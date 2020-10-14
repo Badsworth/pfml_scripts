@@ -95,6 +95,10 @@ describe("useAppErrorsLogic", () => {
             rule: "/d{9}",
           },
           {
+            rule: "min_leave_periods",
+            type: "multiFieldIssue",
+          },
+          {
             field: "unknown_field",
             type: "pattern",
             message: "This validation should have a generic error message",
@@ -118,7 +122,7 @@ describe("useAppErrorsLogic", () => {
           appErrorsLogic.catchError(new ValidationError(issues, "claims"));
         });
 
-        expect(appErrorsLogic.appErrors.items).toHaveLength(4);
+        expect(appErrorsLogic.appErrors.items).toHaveLength(5);
         expect(appErrorsLogic.appErrors.items[0].field).toBe(issues[0].field);
         expect(appErrorsLogic.appErrors.items[0].name).toBe("ValidationError");
 
@@ -127,12 +131,15 @@ describe("useAppErrorsLogic", () => {
           `"Please enter a 9-digit number."`
         );
         expect(appErrorsLogic.appErrors.items[1].message).toMatchInlineSnapshot(
-          `"Field (unknown_field) didn't match expected format."`
+          `"You must choose at least one kind of leave (continuous, reduced schedule, or intermittent)."`
         );
         expect(appErrorsLogic.appErrors.items[2].message).toMatchInlineSnapshot(
-          `"This validation should show THIS message"`
+          `"Field (unknown_field) didn't match expected format."`
         );
         expect(appErrorsLogic.appErrors.items[3].message).toMatchInlineSnapshot(
+          `"This validation should show THIS message"`
+        );
+        expect(appErrorsLogic.appErrors.items[4].message).toMatchInlineSnapshot(
           `"Field (validation_without_a_message) has invalid value."`
         );
       });

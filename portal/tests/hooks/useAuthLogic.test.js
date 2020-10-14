@@ -604,7 +604,7 @@ describe("useAuthLogic", () => {
       });
 
       it("doesn't redirect if route is already set to login page", async () => {
-        portalFlow.page = routes.auth.login;
+        portalFlow.pathname = routes.auth.login;
         await act(async () => {
           await requireLogin();
         });
@@ -612,7 +612,7 @@ describe("useAuthLogic", () => {
       });
 
       it("redirects to login page with nextUrl", async () => {
-        portalFlow.pageWithParams = routes.claims.checklist;
+        portalFlow.pathWithParams = routes.claims.checklist;
         await act(async () => {
           await requireLogin();
         });
