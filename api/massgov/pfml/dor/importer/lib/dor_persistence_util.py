@@ -232,9 +232,7 @@ def update_import_log_entry(db_session, existing_import_log, report):
     existing_import_log.report = json.dumps(asdict(report), indent=2)
     existing_import_log.start = report.start
     existing_import_log.end = report.end
-    db_session.add(existing_import_log)
-    db_session.flush()
-    db_session.refresh(existing_import_log)
+    db_session.commit()
     logger.info("Finished saving import report in log")
     return existing_import_log
 

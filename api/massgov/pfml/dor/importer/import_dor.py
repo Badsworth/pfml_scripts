@@ -12,6 +12,7 @@ from datetime import datetime
 from typing import Dict, List, Optional
 
 import boto3
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm.session import Session
 
 import massgov.pfml.dor.importer.lib.dor_persistence_util as dor_persistence_util
@@ -19,6 +20,7 @@ import massgov.pfml.util.files as file_util
 import massgov.pfml.util.logging as logging
 import massgov.pfml.util.logging.audit
 from massgov.pfml import db
+from massgov.pfml.db.models.employees import ImportLog
 from massgov.pfml.dor.importer.dor_file_formats import EMPLOYEE_FORMAT, EMPLOYER_FILE_FORMAT
 from massgov.pfml.util.config import get_secret_from_env
 from massgov.pfml.util.encryption import Crypt, GpgCrypt, Utf8Crypt
@@ -39,6 +41,14 @@ EMPLOYEE_FILE_PREFIX = "DORDFML_"
 
 EMPLOYER_LINE_LIMIT = 250000
 EMPLOYEE_LINE_LIMIT = 200000
+
+
+class ImportException(Exception):
+    __slots__ = ["message", "error_type"]
+
+    def __init__(self, message: str, error_type: str):
+        self.message = message
+        self.error_type = error_type
 
 
 @dataclass
@@ -62,6 +72,7 @@ class ImportReport:
     updated_employees_count: int = 0
     created_wages_and_contributions_count: int = 0
     updated_wages_and_contributions_count: int = 0
+    message: str = ""
     status: Optional[str] = None
     end: Optional[str] = None
 
@@ -81,27 +92,39 @@ def handler(event=None, context=None):
 
     logger.addFilter(filter_add_memory_usage)
 
-    folder_path = os.environ["FOLDER_PATH"]
-    decrypt_files = os.getenv("DECRYPT") == "true"
-
-    logger.info(
-        "Starting import run", extra={"folder_path": folder_path, "decrypt_files": decrypt_files}
-    )
-
-    import_batches = get_files_to_process(folder_path)
     report = ImportRunReport(start=datetime.now().isoformat())
 
-    if not import_batches:
-        logger.info("no files found to import")
-        report.message = "no files found to import"
-    else:
-        import_reports = process_import_batches(import_batches, decrypt_files)
-        report.imports = import_reports
-        report.message = "files imported"
+    try:
+        folder_path = os.environ["FOLDER_PATH"]
+        decrypt_files = os.getenv("DECRYPT") == "true"
 
-    report.end = datetime.now().isoformat()
-    logger.info("Finished import run")
-    return {"status": "OK", "import_type": "daily", "report": asdict(report)}
+        logger.info(
+            "Starting import run",
+            extra={"folder_path": folder_path, "decrypt_files": decrypt_files},
+        )
+
+        import_batches = get_files_to_process(folder_path)
+
+        if not import_batches:
+            logger.info("no files found to import")
+            report.message = "no files found to import"
+        else:
+            import_reports = process_import_batches(import_batches, decrypt_files)
+            report.imports = import_reports
+            report.message = "files imported"
+
+        report.end = datetime.now().isoformat()
+        logger.info("Finished import run", extra={"report": asdict(report)})
+    except ImportException as ie:
+        report.end = datetime.now().isoformat()
+        message = str(ie)
+        report.message = message
+        logger.error(message, extra={"report": asdict(report)})
+    except Exception as e:
+        report.end = datetime.now().isoformat()
+        message = f"Unexpected error during import run: {type(e)}"
+        report.message = message
+        logger.error(message, extra={"report": asdict(report)})
 
 
 def filter_add_memory_usage(record):
@@ -116,37 +139,42 @@ def process_import_batches(
     decrypt_files: bool,
     optional_db_session: Optional[Session] = None,
 ) -> List[ImportReport]:
-    import_reports: List[ImportReport] = []
+    try:
+        import_reports: List[ImportReport] = []
 
-    decrypter = decrypter_factory(decrypt_files)
+        decrypter = decrypter_factory(decrypt_files)
 
-    # Initialize the database
-    db_session_raw = optional_db_session
-    if not db_session_raw:
-        db_session_raw = db.init()
+        # Initialize the database
+        db_session_raw = optional_db_session
+        if not db_session_raw:
+            db_session_raw = db.init()
 
-    with db.session_scope(db_session_raw) as db_session:
+        with db.session_scope(db_session_raw) as db_session:
 
-        # process each batch
-        for import_batch in import_batches:
-            logger.info(
-                "Processing import batch",
-                extra={
-                    "date": import_batch.upload_date,
-                    "employer_file": import_batch.employer_file,
-                    "employee_file": import_batch.employee_file,
-                },
-            )
+            # process each batch
+            for import_batch in import_batches:
+                logger.info(
+                    "Processing import batch",
+                    extra={
+                        "date": import_batch.upload_date,
+                        "employer_file": import_batch.employer_file,
+                        "employee_file": import_batch.employee_file,
+                    },
+                )
 
-            import_report = process_daily_import(
-                db_session,
-                str(import_batch.employer_file),
-                str(import_batch.employee_file),
-                decrypter,
-            )
-            import_reports.append(import_report)
+                import_report = process_daily_import(
+                    db_session,
+                    str(import_batch.employer_file),
+                    str(import_batch.employee_file),
+                    decrypter,
+                )
+                import_reports.append(import_report)
+    except ImportException as ie:
+        raise ie
+    except Exception as e:
+        raise ImportException("Unexpected error importing batches", type(e).__name__)
 
-        return import_reports
+    return import_reports
 
 
 class EmployeeWriter(object):
@@ -286,6 +314,45 @@ def decrypter_factory(decrypt_files):
     return decrypter
 
 
+# TODO take this out once psql is on TERSE logging setting https://lwd.atlassian.net/browse/API-697
+def get_discreet_db_exception_message(db_exception: SQLAlchemyError) -> str:
+    exception_type = type(db_exception).__name__
+    # see https://github.com/zzzeek/sqlalchemy/blob/master/lib/sqlalchemy/exc.py
+    message = db_exception._message()  # type: ignore[attr-defined]
+    discreet_message = message
+    detail_index = message.find("DETAIL")
+    if detail_index != -1:
+        discreet_message = message[0:detail_index]
+
+    return f"DB Exception: {discreet_message}, exception type: {exception_type}"
+
+
+def handle_import_exception(
+    exception: Exception, db_session: Session, report_log_entry: ImportLog, report: ImportReport
+) -> None:
+    """Gracefully close out import run"""
+    try:
+        message = ""
+        if isinstance(exception, SQLAlchemyError):
+            db_session.rollback()
+            message = get_discreet_db_exception_message(exception)
+        else:
+            message = f"Unexpected error while processing import: {str(exception)}"
+
+        logger.error(message)
+        report.status = "error"
+        report.message = message
+        report.end = datetime.now().isoformat()
+        dor_persistence_util.update_import_log_entry(db_session, report_log_entry, report)
+        import_exception = ImportException(message, type(exception).__name__)
+    except Exception as e:
+        logger.exception("What")
+        message = f"Unexpected error while closing out import run due to original exception: {type(exception)}"
+        import_exception = ImportException(message, type(e).__name__)
+    finally:
+        raise import_exception
+
+
 def process_daily_import(
     db_session: Session, employer_file_path: str, employee_file_path: str, decrypter: Crypt,
 ) -> ImportReport:
@@ -360,18 +427,13 @@ def process_daily_import(
         report.parsed_employees_info_count = parsed_employees_info_count
         report.status = "success"
         report.end = datetime.now().isoformat()
+        dor_persistence_util.update_import_log_entry(db_session, report_log_entry, report)
 
         # move file to processed folder
         # move_file_to_processed(bucket, file_for_import) # TODO turn this on with invoke flag
 
-    except Exception:
-        logger.exception("Exception while processing")
-        report.status = "error"
-        report.end = datetime.now().isoformat()
-    finally:
-        logger.info("Attempting to update existing import log entry with latest report")
-        dor_persistence_util.update_import_log_entry(db_session, report_log_entry, report)
-        logger.info("Import log entry successfully updated")
+    except Exception as e:
+        handle_import_exception(e, db_session, report_log_entry, report)
 
     return report
 

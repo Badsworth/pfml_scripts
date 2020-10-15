@@ -3,6 +3,7 @@ import tempfile
 
 import boto3
 import pytest
+from sqlalchemy.exc import SQLAlchemyError
 
 import dor_test_data as test_data
 import massgov.pfml.dor.importer.import_dor as import_dor
@@ -510,6 +511,15 @@ def test_decryption(monkeypatch, test_db_session, dor_employer_lookups):
     assert report.created_employers_count == employer_count
     assert report.created_employees_count == employee_count
     assert report.created_wages_and_contributions_count >= employee_count
+
+
+def test_get_discreet_db_exception_message():
+    original_exception_message = 'sqlalchemy.exc.InvalidRequestError: This Session\'s transaction has been rolled back due to a previous exception during flush. To begin a new transaction with this Session, first issue Session.rollback(). Original exception was: (psycopg2.errors.UniqueViolation) duplicate key value violates unique constraint "tax_identifier_tax_identifier_key"\nDETAIL:  Key (tax_identifier)=(123456789) already exists.'
+    expected_discreet_message = 'DB Exception: sqlalchemy.exc.InvalidRequestError: This Session\'s transaction has been rolled back due to a previous exception during flush. To begin a new transaction with this Session, first issue Session.rollback(). Original exception was: (psycopg2.errors.UniqueViolation) duplicate key value violates unique constraint "tax_identifier_tax_identifier_key"\n, exception type: SQLAlchemyError'
+    exception = SQLAlchemyError(original_exception_message)
+    discreet_message = import_dor.get_discreet_db_exception_message(exception)
+    assert "123456789" not in discreet_message
+    assert expected_discreet_message == discreet_message
 
 
 def get_temp_file_path():
