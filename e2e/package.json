@@ -16,6 +16,7 @@
     "pilot3:gen": "ts-node src/cli.ts simulation generate -f ./src/simulation/scenarios/pilot3.ts -d ./data/pilot3",
     "pilot3:sim": "ts-node src/cli.ts simulation run -d ./data/pilot3",
     "generate:api": "npx @spec2ts/openapi-client ../api/openapi.yaml -o src/api.ts",
+    "flood:userData": "ts-node src/cli.ts simulation importUserData",
     "flood:build": "cd scripts && makeFloodBundle.sh",
     "flood:all": "element run src/flood/index.perf.ts",
     "flood:pilot3:gen": "ts-node src/cli.ts simulation generate -f ./src/simulation/scenarios/pilot3LST.ts -d ./src/flood/data/pilot3 -n 10",

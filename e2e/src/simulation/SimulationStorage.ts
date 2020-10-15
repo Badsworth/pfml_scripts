@@ -14,6 +14,13 @@ export default class SimulationStorage {
     const content = await fs.promises.readFile(this.claimFile);
     return JSON.parse(content.toString("utf-8"));
   }
+  async users(): Promise<SimulationClaim[]> {
+    const content = await fs.promises.readFile(this.usersFile);
+    return JSON.parse(content.toString("utf-8"));
+  }
+  get usersFile(): string {
+    return path.join(this.directory, "users.json");
+  }
   get stateFile(): string {
     return path.join(this.directory, "state.json");
   }
