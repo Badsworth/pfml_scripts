@@ -114,6 +114,10 @@ export function verifyIdentity(
   cy.labelled("ZIP").type(
     (application.mailing_address && application.mailing_address.zip) as string
   );
+
+  // Answers the question "Do you get your mail at this address?"
+  cy.get(":nth-child(1) > .usa-radio__label").click();
+
   cy.contains("button", "Save and continue").click();
 
   cy.contains("fieldset", "What's your birthdate?").within(() => {
