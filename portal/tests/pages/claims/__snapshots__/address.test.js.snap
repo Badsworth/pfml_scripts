@@ -43,7 +43,7 @@ exports[`Address renders the page without any address info 1`] = `
     }
     hint="We may send notices to this address. If you choose to get your payments through a debit card, we will mail the card to this address."
     label="Do you get your mail at this address?"
-    name="temp.has_mailing_address"
+    name="has_mailing_address"
     onChange={[Function]}
     type="radio"
     value=""

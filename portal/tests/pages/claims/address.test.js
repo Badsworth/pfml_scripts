@@ -33,7 +33,7 @@ describe("Address", () => {
     beforeEach(() => {
       ({ changeField, changeRadioGroup } = simulateEvents(wrapper));
       changeField("residential_address", testAddress);
-      changeRadioGroup("temp.has_mailing_address", "false");
+      changeRadioGroup("has_mailing_address", "false");
     });
 
     it("hides conditional content", () => {
@@ -44,14 +44,14 @@ describe("Address", () => {
       wrapper.find("QuestionPage").simulate("save");
       expect(appLogic.claims.update).toHaveBeenCalledWith(expect.any(String), {
         residential_address: testAddress,
-        temp: { has_mailing_address: false },
+        has_mailing_address: false,
         mailing_address: null,
       });
     });
 
     describe("When user has a different mailing address", () => {
       beforeEach(() => {
-        changeRadioGroup("temp.has_mailing_address", "true");
+        changeRadioGroup("has_mailing_address", "true");
       });
 
       it("shows mailing address fields", () => {
@@ -68,7 +68,7 @@ describe("Address", () => {
           {
             residential_address: testAddress,
             mailing_address: testAddress,
-            temp: { has_mailing_address: true },
+            has_mailing_address: true,
           }
         );
       });

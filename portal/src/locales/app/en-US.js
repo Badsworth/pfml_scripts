@@ -65,6 +65,9 @@ const errors = {
     has_intermittent_leave_periods: {
       required: "Select Yes if you are taking intermittent leave.",
     },
+    has_mailing_address: {
+      required: "Please indicate whether you get mail at this address.",
+    },
     has_reduced_schedule_leave_periods: {
       required: "Select Yes if you are working a reduced schedule.",
     },

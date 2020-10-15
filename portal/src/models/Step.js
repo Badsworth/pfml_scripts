@@ -159,7 +159,6 @@ export default class Step extends BaseModel {
           "claim.mailing_address",
           "claim.payment_preferences[0].account_details",
           "claim.previous_leaves",
-          "claim.temp.has_mailing_address",
           "claim.temp.leave_details.bonding.date_of_child",
         ].some((ignoredFieldName) => field.includes(ignoredFieldName));
 

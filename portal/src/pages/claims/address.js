@@ -15,7 +15,7 @@ import withClaim from "../../hoc/withClaim";
 export const fields = [
   "claim.residential_address",
   "claim.mailing_address",
-  "claim.temp.has_mailing_address",
+  "claim.has_mailing_address",
 ];
 
 export const Address = (props) => {
@@ -25,8 +25,7 @@ export const Address = (props) => {
     pick(props, fields).claim
   );
 
-  const { temp } = formState;
-  const { has_mailing_address } = temp;
+  const { has_mailing_address } = formState;
 
   const handleSave = () =>
     appLogic.claims.update(claim.application_id, formState);
@@ -58,7 +57,7 @@ export const Address = (props) => {
         {...residentialAddressProps}
       />
       <InputChoiceGroup
-        {...getFunctionalInputProps("temp.has_mailing_address")}
+        {...getFunctionalInputProps("has_mailing_address")}
         choices={[
           {
             checked: has_mailing_address === false,

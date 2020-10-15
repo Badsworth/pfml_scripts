@@ -348,7 +348,7 @@ export class MockClaimBuilder {
             zip: "00000",
           })
     );
-    set(this.claimAttrs, "temp.has_mailing_address", false);
+    set(this.claimAttrs, "has_mailing_address", false);
     return this;
   }
 
