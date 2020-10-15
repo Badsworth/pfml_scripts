@@ -225,7 +225,7 @@ describe("useDocumentsLogic", () => {
         expect(appErrorsLogic.appErrors.items[0]).toEqual(
           expect.objectContaining({
             field: "file",
-            message: "Please upload at least one file to continue.",
+            message: "Upload at least one file to continue.",
           })
         );
       });

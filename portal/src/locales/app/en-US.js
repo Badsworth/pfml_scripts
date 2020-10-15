@@ -21,16 +21,16 @@ const errors = {
       "Invalid verification code. Please request a new code.",
     incorrectEmailOrPassword: "Incorrect email or password",
     insecurePassword:
-      "Please use a different password. Avoid commonly used passwords and avoid using the same password on multiple websites.",
-    invalidParametersFallback: "Please enter all required information",
+      "Choose a different password. Avoid commonly used passwords and avoid using the same password on multiple websites.",
+    invalidParametersFallback: "Enter all required information",
     invalidParametersIncludingMaybePassword:
-      "Please check the requirements and try again. Ensure all required information is entered and the password meets the requirements.",
+      "Check the requirements and try again. Ensure all required information is entered and the password meets the requirements.",
     invalidPhoneFormat: "Invalid phone number",
     passwordErrors:
       "Your password does not meet the requirements. Please check the requirements and try again.",
     passwordRequired: "Enter your password",
     userNotConfirmed:
-      "Please first confirm your account by following the instructions in the verification email sent to your inbox.",
+      "Confirm your account by following the instructions in the verification email sent to your inbox.",
     userNotFound: "Incorrect email",
     usernameExists: "An account with the given email already exists",
   },
@@ -47,124 +47,118 @@ const errors = {
       invalid_year_range: `Date of birth year is not in a valid range (on or after ${
         new Date().getFullYear() - 100
       }).`,
-      pattern: "Please enter a valid date of birth.",
-      required: "Please enter a date of birth.",
+      pattern: "Enter a valid date of birth.",
+      required: "Enter a date of birth.",
     },
     employer_fein: {
-      pattern: "Please enter a 9-digit FEIN.",
+      pattern: "Enter a 9-digit FEIN.",
     },
     employment_status: {
-      required: "Please enter your employment status.",
+      required: "Enter your employment status.",
     },
     first_name: {
-      required: "Please enter a first name.",
+      required: "Enter a first name.",
     },
     has_continuous_leave_periods: {
-      required: "Please indicate whether you are taking continuous leave.",
+      required: "Select Yes if you are taking continuous leave.",
     },
     has_intermittent_leave_periods: {
-      required: "Please indicate whether you are taking intermittent leave.",
+      required: "Select Yes if you are taking intermittent leave.",
     },
     has_reduced_schedule_leave_periods: {
-      required: "Please indicate whether you are working a reduced schedule.",
+      required: "Select Yes if you are working a reduced schedule.",
     },
     has_state_id: {
       required:
-        "Please enter whether or not you have a Massachusetts driver's license or ID.",
+        "Enter whether or not you have a Massachusetts driver's license or ID.",
     },
     hours_worked_per_week: {
       maximum: "The average hours you work each week must be less than 168.",
       minimum: "The average hours you work each week must be greater than 1.",
-      required: "Please enter how many hours you work on average each week.",
+      required: "Enter how many hours you work on average each week.",
       type: "The average hours you work each week must be a number.",
     },
     last_name: {
-      required: "Please enter a last name.",
+      required: "Enter a last name.",
     },
     leave_details: {
       child_birth_date: {
-        pattern: "Please enter a valid date of birth.",
-        required: "Please enter a date of birth for the child.",
+        pattern: "Enter a valid date of birth.",
+        required: "Enter a date of birth for the child.",
       },
       child_placement_date: {
-        pattern: "Please enter a valid placement date.",
-        required: "Please enter a date of placement for the child.",
+        pattern: "Enter a valid placement date.",
+        required: "Enter a date of placement for the child.",
       },
       continuous_leave_periods: {
         end_date: {
-          required:
-            "Please enter an end date for this continuous leave period.",
+          required: "Enter an end date for this continuous leave period.",
         },
         start_date: {
-          required:
-            "Please enter a start date for this continuous leave period.",
+          required: "Enter a start date for this continuous leave period.",
         },
       },
       employer_notification_date: {
-        pattern: "Please enter a valid notification date.",
+        pattern: "Enter a valid notification date.",
       },
       intermittent_leave_periods: {
         duration: {
-          required: "Please enter a duration.",
+          required: "Enter a duration.",
         },
         duration_basis: {
-          required: "Please select a duration option.",
+          required: "Select a duration option.",
         },
         end_date: {
-          required:
-            "Please enter an end date for this intermittent leave period.",
+          required: "Enter an end date for this intermittent leave period.",
         },
         frequency: {
-          required: "Please enter a frequency.",
+          required: "Enter a frequency.",
         },
         frequency_interval_basis: {
-          required: "Please select a frequency option.",
+          required: "Select a frequency option.",
         },
         start_date: {
-          required:
-            "Please enter a start date for this intermittent leave period.",
+          required: "Enter a start date for this intermittent leave period.",
         },
       },
       pregnant_or_recent_birth: {
-        required:
-          "Please enter whether you are pregnant or recently gave birth.",
+        required: "Enter whether you are pregnant or recently gave birth.",
       },
       reason: {
-        required: "Please enter a reason for taking time off.",
+        required: "Enter a reason for taking time off.",
       },
       reason_qualifier: {
-        required: "Please enter why you are taking leave.",
+        required: "Enter why you are taking leave.",
       },
       reduced_schedule_leave_periods: {
         end_date: {
-          required: "Please enter an end date for this reduced leave period.",
+          required: "Enter an end date for this reduced leave period.",
         },
         start_date: {
-          required: "Please enter a start date for this reduced leave period.",
+          required: "Enter a start date for this reduced leave period.",
         },
       },
     },
     mailing_address: {
       city: {
-        required: "Please enter a city for your mailing address.",
+        required: "Enter a city for your mailing address.",
       },
       line_1: {
-        required: "Please enter the street address for your mailing address.",
+        required: "Enter the street address for your mailing address.",
       },
-      required: "Please enter a mailing address.",
+      required: "Enter a mailing address.",
       state: {
-        required: "Please enter a state for your mailing address.",
+        required: "Enter a state for your mailing address.",
       },
       zip: {
-        pattern:
-          "Please enter a 5- or 9-digit ZIP code for your mailing address.",
-        required: "Please enter a ZIP code for your mailing address.",
+        pattern: "Enter a 5- or 9-digit ZIP code for your mailing address.",
+        required: "Enter a ZIP code for your mailing address.",
       },
     },
     mass_id: {
       pattern:
-        "Please enter your license or ID number. It should be a total of nine digits including letters and numbers.",
-      required: "Please enter a your license or ID number.",
+        "Enter your license or ID number. It should be a total of nine digits including letters and numbers.",
+      required: "Enter a your license or ID number.",
     },
     payment_preferences: {
       account_details: {
@@ -173,33 +167,31 @@ const errors = {
             "Account number too long: Account number must be 17 digits or fewer.",
           minLength:
             "Account number too short: Account number must be at least 6 digits.",
-          required: "Please enter an account number.",
+          required: "Enter an account number.",
         },
         account_type: {
-          required: "Please enter an account type.",
+          required: "Enter an account type.",
         },
         routing_number: {
-          pattern: "Please enter a 9 digit routing number.",
-          required: "Please enter a routing number.",
+          pattern: "Enter a 9 digit routing number.",
+          required: "Enter a routing number.",
         },
       },
     },
     residential_address: {
       city: {
-        required: "Please enter a city for your residential address.",
+        required: "Enter a city for your residential address.",
       },
       line_1: {
-        required:
-          "Please enter the street address for your residential address.",
+        required: "Enter the street address for your residential address.",
       },
-      required: "Please enter a residential address.",
+      required: "Enter a residential address.",
       state: {
-        required: "Please enter a state for your residential address.",
+        required: "Enter a state for your residential address.",
       },
       zip: {
-        pattern:
-          "Please enter a 5- or 9-digit ZIP code for your residential address.",
-        required: "Please enter a ZIP code for your residential address.",
+        pattern: "Enter a 5- or 9-digit ZIP code for your residential address.",
+        required: "Enter a ZIP code for your residential address.",
       },
     },
     rules: {
@@ -209,13 +201,13 @@ const errors = {
         "You must choose at least one kind of leave (continuous, reduced schedule, or intermittent).",
     },
     tax_identifier: {
-      pattern: "Please enter a 9-digit number.",
-      required: "Please enter a Social Security Number or ITIN.",
+      pattern: "Enter a 9-digit number.",
+      required: "Enter a Social Security Number or ITIN.",
     },
   },
   documents: {
     file: {
-      required: "Please upload at least one file to continue.",
+      required: "Upload at least one file to continue.",
     },
   },
   invalidFileType:

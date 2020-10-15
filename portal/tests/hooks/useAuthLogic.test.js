@@ -123,7 +123,7 @@ describe("useAuthLogic", () => {
       });
       expect(appErrors.items).toHaveLength(1);
       expect(appErrors.items[0].message).toMatchInlineSnapshot(
-        `"Please enter all required information"`
+        `"Enter all required information"`
       );
     });
 
@@ -221,7 +221,7 @@ describe("useAuthLogic", () => {
       });
       expect(appErrors.items).toHaveLength(1);
       expect(appErrors.items[0].message).toMatchInlineSnapshot(
-        `"Please enter all required information"`
+        `"Enter all required information"`
       );
     });
 
@@ -242,7 +242,7 @@ describe("useAuthLogic", () => {
       });
       expect(appErrors.items).toHaveLength(1);
       expect(appErrors.items[0].message).toMatchInlineSnapshot(
-        `"Please enter all required information"`
+        `"Enter all required information"`
       );
     });
 
@@ -498,7 +498,7 @@ describe("useAuthLogic", () => {
         });
         expect(appErrors.items).toHaveLength(1);
         expect(appErrors.items[0].message).toMatchInlineSnapshot(
-          `"Please use a different password. Avoid commonly used passwords and avoid using the same password on multiple websites."`
+          `"Choose a different password. Avoid commonly used passwords and avoid using the same password on multiple websites."`
         );
       }
     });
@@ -763,7 +763,7 @@ describe("useAuthLogic", () => {
 
       expect(appErrors.items).toHaveLength(1);
       expect(appErrors.items[0].message).toMatchInlineSnapshot(
-        `"Please check the requirements and try again. Ensure all required information is entered and the password meets the requirements."`
+        `"Check the requirements and try again. Ensure all required information is entered and the password meets the requirements."`
       );
     });
 
@@ -805,7 +805,7 @@ describe("useAuthLogic", () => {
 
       expect(appErrors.items).toHaveLength(1);
       expect(appErrors.items[0].message).toMatchInlineSnapshot(
-        `"Please use a different password. Avoid commonly used passwords and avoid using the same password on multiple websites."`
+        `"Choose a different password. Avoid commonly used passwords and avoid using the same password on multiple websites."`
       );
     });
 
@@ -826,7 +826,7 @@ describe("useAuthLogic", () => {
 
       expect(appErrors.items).toHaveLength(1);
       expect(appErrors.items[0].message).toMatchInlineSnapshot(
-        `"Please first confirm your account by following the instructions in the verification email sent to your inbox."`
+        `"Confirm your account by following the instructions in the verification email sent to your inbox."`
       );
     });
 
