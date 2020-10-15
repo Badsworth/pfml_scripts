@@ -88,6 +88,7 @@ export function scenario(
       date_of_birth: fmt(generateBirthDate()),
       has_state_id: hasMassId,
       mass_id: hasMassId ? generateMassIDString() : null,
+      has_mailing_address: true,
       mailing_address: address,
       residential_address: address,
       hours_worked_per_week: 40,

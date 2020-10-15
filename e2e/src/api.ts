@@ -317,8 +317,32 @@ export interface EmployerResponse {
 export interface GETEmployersByEmployerIdResponse extends SuccessfulResponse {
     data?: EmployerResponse;
 }
-export type MaskedSsnItin = string;
 export type Date = string;
+export interface EmployerBenefit {
+    benefit_amount_dollars?: number;
+    benefit_amount_frequency?: string;
+    benefit_end_date?: Date;
+    benefit_start_date?: Date;
+    benefit_type?: string;
+}
+export interface PreviousLeave {
+    leave_end_date?: Date;
+    leave_start_date?: Date;
+}
+export interface EmployerClaimRequestBody {
+    employer_notification_date: Date;
+    employer_benefits: EmployerBenefit[];
+    previous_leaves: PreviousLeave[];
+    hours_worked_per_week: number;
+    comment?: string;
+}
+export interface ClaimResponse {
+    claim_id: string;
+}
+export interface PATCHEmployersClaimReviewByClaimIdResponse extends SuccessfulResponse {
+    data?: ClaimResponse;
+}
+export type MaskedSsnItin = string;
 export interface Address {
     city: string | null;
     line_1: string | null;
@@ -418,6 +442,7 @@ export interface ApplicationResponse {
     has_intermittent_leave_periods?: boolean | null;
     has_reduced_schedule_leave_periods?: boolean | null;
     has_state_id?: boolean | null;
+    has_mailing_address?: boolean | null;
     mailing_address?: Address | null;
     residential_address?: Address | null;
     mass_id?: string | null;
@@ -449,6 +474,7 @@ export interface ApplicationRequestBody {
     middle_name?: string | null;
     last_name?: string | null;
     date_of_birth?: Date | null;
+    has_mailing_address?: boolean | null;
     mailing_address?: Address | null;
     residential_address?: Address | null;
     has_continuous_leave_periods?: boolean | null;
@@ -634,6 +660,18 @@ export async function getEmployersByEmployerId({ employerId }: {
     return await http.fetchJson(`/employers/${employerId}`, {
         ...options
     });
+}
+/**
+ * Save review claim from leave admin
+ */
+export async function patchEmployersClaimReviewByClaimId({ claimId }: {
+    claimId: string;
+}, employerClaimRequestBody: EmployerClaimRequestBody, options?: RequestOptions): Promise<ApiResponse<PATCHEmployersClaimReviewByClaimIdResponse>> {
+    return await http.fetchJson(`/employers/claim/review/${claimId}`, http.json({
+        ...options,
+        method: "PATCH",
+        body: employerClaimRequestBody
+    }));
 }
 /**
  * Create an Application
