@@ -16,7 +16,7 @@ import { useTranslation } from "../../locales/i18n";
  * (this page is the same as /forgot-password with updated content)
  */
 
-export const VerifyAccount = (props) => {
+export const FinishAccountSetup = (props) => {
   const { appLogic } = props;
   const { t } = useTranslation();
 
@@ -37,31 +37,31 @@ export const VerifyAccount = (props) => {
 
   return (
     <form className="usa-form" onSubmit={handleSubmit}>
-      <Title>{t("pages.employersVerifyAccount.title")}</Title>
-      <Lead>{t("pages.employersVerifyAccount.lead")}</Lead>
+      <Title>{t("pages.employersFinishAccountSetup.title")}</Title>
+      <Lead>{t("pages.employersFinishAccountSetup.lead")}</Lead>
 
       <InputText
         {...getFunctionalInputProps("username")}
         type="email"
-        label={t("pages.employersVerifyAccount.usernameLabel")}
+        label={t("pages.employersFinishAccountSetup.usernameLabel")}
         smallLabel
       />
 
       <Button type="submit" loading={handleSubmit.isThrottled}>
-        {t("pages.employersVerifyAccount.submitButton")}
+        {t("pages.employersFinishAccountSetup.submitButton")}
       </Button>
 
       <div className="margin-top-2 text-bold">
         <Link href={routes.auth.login}>
-          <a>{t("pages.employersVerifyAccount.logInFooterLink")}</a>
+          <a>{t("pages.employersFinishAccountSetup.logInFooterLink")}</a>
         </Link>
       </div>
     </form>
   );
 };
 
-VerifyAccount.propTypes = {
+FinishAccountSetup.propTypes = {
   appLogic: PropTypes.object.isRequired,
 };
 
-export default VerifyAccount;
+export default FinishAccountSetup;

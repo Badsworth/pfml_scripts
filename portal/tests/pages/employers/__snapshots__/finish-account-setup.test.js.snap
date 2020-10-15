@@ -1,12 +1,12 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`VerifyAccount renders the page 1`] = `
+exports[`FinishAccountSetup renders the page 1`] = `
 <form
   className="usa-form"
   onSubmit={[Function]}
 >
   <Title>
-    Set up your employer account
+    Finish setting up your account
   </Title>
   <Lead>
     Please verify your email address. If an account exists for the email you provide, you’ll receive a 6-digit verification code. After that, you’ll be prompted to create a new password.

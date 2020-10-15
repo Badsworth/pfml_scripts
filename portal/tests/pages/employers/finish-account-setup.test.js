@@ -1,13 +1,13 @@
 import { simulateEvents, testHook } from "../../test-utils";
+import FinishAccountSetup from "../../../src/pages/employers/finish-account-setup";
 import React from "react";
-import VerifyAccount from "../../../src/pages/employers/verify-account";
 import { act } from "react-dom/test-utils";
 import { shallow } from "enzyme";
 import useAppLogic from "../../../src/hooks/useAppLogic";
 
 jest.mock("../../../src/hooks/useAppLogic");
 
-describe("VerifyAccount", () => {
+describe("FinishAccountSetup", () => {
   let appLogic, changeField, submitForm, wrapper;
 
   beforeEach(() => {
@@ -15,7 +15,7 @@ describe("VerifyAccount", () => {
       appLogic = useAppLogic();
     });
     act(() => {
-      wrapper = shallow(<VerifyAccount appLogic={appLogic} />);
+      wrapper = shallow(<FinishAccountSetup appLogic={appLogic} />);
     });
     ({ changeField, submitForm } = simulateEvents(wrapper));
   });

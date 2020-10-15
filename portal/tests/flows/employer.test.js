@@ -6,7 +6,7 @@ import { merge } from "lodash";
 import routes from "../../src/routes";
 
 const verifyAccountStates = [
-  routes.employers.verifyAccount,
+  routes.employers.finishAccountSetup,
   routes.auth.resetPassword,
 ];
 
@@ -88,7 +88,7 @@ describe("verifyAccountFlow", () => {
     {
       SEND_CODE: {},
     },
-    routes.employers.verifyAccount,
+    routes.employers.finishAccountSetup,
     machineConfigsWithTests
   );
 });

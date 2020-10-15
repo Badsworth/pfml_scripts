@@ -53,10 +53,10 @@ const routes = {
   },
   employers: {
     dashboard: "/employers",
+    finishAccountSetup: "/employers/finish-account-setup",
     login: "/employers/login",
     review: "/employers/claims/review",
     success: "/employers/claims/success",
-    verifyAccount: "/employers/verify-account",
   },
   external: {
     massgov: {
