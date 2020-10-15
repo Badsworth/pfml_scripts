@@ -23,7 +23,7 @@ def create_authorization(
         # FINEOS endpoint auth
         if has_role_in(user, [Role.FINEOS]):
             financial_eligibility(user, they)
-            # TODO: Add auth for /rmv-check https://lwd.atlassian.net/browse/API-628
+            rmv_check(user, they)
         else:
             users(user, they)
             applications(user, they)
@@ -44,6 +44,10 @@ def leave_admins(user: User, they: RuleList) -> None:
 
 def financial_eligibility(user: User, they: RuleList) -> None:
     they.can(CREATE, "Financial Eligibility Calculation")
+
+
+def rmv_check(user: User, they: RuleList) -> None:
+    they.can(CREATE, "RMVCheck")
 
 
 def users(user: User, they: RuleList) -> None:

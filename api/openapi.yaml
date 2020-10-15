@@ -506,8 +506,7 @@ paths:
   /rmv-check:
     post:
       security:
-        - {} # no authentication while mocked
-        # - oauth2: []
+        - oauth2: []
       tags:
         - ID Proofing
       summary: Perform lookup and data matching for information on RMV-issued IDs

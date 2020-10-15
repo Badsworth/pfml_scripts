@@ -1,4 +1,5 @@
 # Testing Mocked API responses
+import re
 from unittest import mock
 
 import pytest
@@ -44,8 +45,10 @@ body = {
 }
 
 
-def test_rmv_check_fully_mocked(rmv_full_mock, rmv_toggle_success, client):
-    response = client.post("/v1/rmv-check", json=body)
+def test_rmv_check_fully_mocked(rmv_full_mock, rmv_toggle_success, client, fineos_user_token):
+    response = client.post(
+        "/v1/rmv-check", headers={"Authorization": f"Bearer {fineos_user_token}"}, json=body
+    )
     response_body = response.get_json().get("data")
 
     assert response.status_code == 200
@@ -53,8 +56,10 @@ def test_rmv_check_fully_mocked(rmv_full_mock, rmv_toggle_success, client):
     assert response_body["description"] == "Verification check passed."
 
 
-def test_rmv_check_failed_fully_mocked(rmv_full_mock, client):
-    response = client.post("/v1/rmv-check", json=body)
+def test_rmv_check_failed_fully_mocked(rmv_full_mock, client, fineos_user_token):
+    response = client.post(
+        "/v1/rmv-check", headers={"Authorization": f"Bearer {fineos_user_token}"}, json=body
+    )
     response_body = response.get_json().get("data")
 
     assert response.status_code == 200
@@ -66,7 +71,9 @@ def test_rmv_check_failed_fully_mocked(rmv_full_mock, client):
 
 
 @mock.patch("massgov.pfml.api.rmv_check.RmvClient.__init__", return_value=None)
-def test_rmv_check_partial_mock_steve(monkeypatch, rmv_partial_mock, rmv_toggle_success, client):
+def test_rmv_check_partial_mock_steve(
+    monkeypatch, rmv_partial_mock, rmv_toggle_success, client, fineos_user_token
+):
     # This tests one of the pre-loaded test cases for the stage env
     body = {
         "absence_case_id": "testing_the_env",
@@ -90,7 +97,9 @@ def test_rmv_check_partial_mock_steve(monkeypatch, rmv_partial_mock, rmv_toggle_
         }
     )
     with mock.patch("massgov.pfml.api.rmv_check.RmvClient._caller", mock_rmv_caller) as MockCaller:
-        response = client.post("/v1/rmv-check", json=body)
+        response = client.post(
+            "/v1/rmv-check", headers={"Authorization": f"Bearer {fineos_user_token}"}, json=body
+        )
         response_body = response.get_json().get("data")
 
     assert response.status_code == 200
@@ -99,7 +108,7 @@ def test_rmv_check_partial_mock_steve(monkeypatch, rmv_partial_mock, rmv_toggle_
     assert response_body["description"] == "Verification check passed."
 
 
-def test_failed_partial_mock_rmv_check(rmv_partial_mock, client):
+def test_failed_partial_mock_rmv_check(rmv_partial_mock, client, fineos_user_token):
     body = {
         "absence_case_id": "testing_the_env",
         "date_of_birth": "1970-01-01",
@@ -112,7 +121,9 @@ def test_failed_partial_mock_rmv_check(rmv_partial_mock, client):
         "residential_address_zip_code": "12345",
         "ssn_last_4": "9999",
     }
-    response = client.post("/v1/rmv-check", json=body)
+    response = client.post(
+        "/v1/rmv-check", headers={"Authorization": f"Bearer {fineos_user_token}"}, json=body
+    )
     response_body = response.get_json().get("data")
     assert response.status_code == 200
     assert response_body["verified"] is False
@@ -122,7 +133,7 @@ def test_failed_partial_mock_rmv_check(rmv_partial_mock, client):
     )
 
 
-def test_partial_mock_rmv_check(rmv_partial_mock, rmv_toggle_success, client):
+def test_partial_mock_rmv_check(rmv_partial_mock, rmv_toggle_success, client, fineos_user_token):
     body = {
         "absence_case_id": "testing_the_env",
         "date_of_birth": "1970-01-01",
@@ -135,7 +146,9 @@ def test_partial_mock_rmv_check(rmv_partial_mock, rmv_toggle_success, client):
         "residential_address_zip_code": "12345",
         "ssn_last_4": "9999",
     }
-    response = client.post("/v1/rmv-check", json=body)
+    response = client.post(
+        "/v1/rmv-check", headers={"Authorization": f"Bearer {fineos_user_token}"}, json=body
+    )
     response_body = response.get_json().get("data")
     assert response.status_code == 200
     assert response_body["verified"] is True
@@ -143,7 +156,7 @@ def test_partial_mock_rmv_check(rmv_partial_mock, rmv_toggle_success, client):
 
 
 @mock.patch("massgov.pfml.api.rmv_check.RmvClient.__init__", return_value=None)
-def test_rmv_check_no_mocking(monkeypatch, rmv_no_mock, client):
+def test_rmv_check_no_mocking(monkeypatch, rmv_no_mock, client, fineos_user_token):
     mock_rmv_caller = MockZeepCaller(
         {
             "LicenseID": "S99988801",
@@ -154,10 +167,30 @@ def test_rmv_check_no_mocking(monkeypatch, rmv_no_mock, client):
         }
     )
     with mock.patch("massgov.pfml.api.rmv_check.RmvClient._caller", mock_rmv_caller) as MockCaller:
-        response = client.post("/v1/rmv-check", json=body)
+        response = client.post(
+            "/v1/rmv-check", headers={"Authorization": f"Bearer {fineos_user_token}"}, json=body
+        )
         response_body = response.get_json().get("data")
 
     assert response.status_code == 200
     assert MockCaller.calls["VendorLicenseInquiry"] == 1
     assert response_body["verified"] is True
     assert response_body["description"] == "Verification check passed."
+
+
+def test_endpoint_unauthenticated_user(client):
+    response = client.post("/v1/rmv-check", json=body)
+
+    assert response.status_code == 401
+    assert response.get_json().get("message") == "No authorization token provided"
+
+
+def test_endpoint_unauthorized_user(client, auth_token):
+    response = client.post(
+        "/v1/rmv-check", headers={"Authorization": "Bearer {}".format(auth_token)}, json=body
+    )
+
+    assert response.status_code == 403
+    assert re.search(
+        r"does not have create access to RMVCheck", response.get_json().get("message"),
+    )

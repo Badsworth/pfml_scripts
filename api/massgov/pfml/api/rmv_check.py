@@ -2,6 +2,7 @@ import connexion
 
 import massgov.pfml.api.app as app
 import massgov.pfml.api.util.response as response_util
+from massgov.pfml.api.authorization.flask import CREATE, ensure
 from massgov.pfml.api.config import RMVCheckBehavior
 from massgov.pfml.api.services.rmv_check import (
     RMVCheckRequest,
@@ -26,6 +27,9 @@ def is_mocked(rmv_mocking_behavior: RMVCheckBehavior, request: RMVCheckRequest) 
 
 
 def rmv_check_post():
+    # Check if requester has access, else bounce back
+    ensure(CREATE, "RMVCheck")
+
     request = RMVCheckRequest.parse_obj(connexion.request.json)
 
     with app.db_session() as db_session:
