@@ -1,5 +1,60 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`ApplicationCard displays legal notices 1`] = `
+<ul
+  className="usa-list margin-top-1"
+>
+  <li
+    className="font-body-2xs"
+    key="mock-document-3"
+  >
+    <a
+      className="text-medium"
+      href="/applications/mock_application_id/documents/mock-document-3"
+    >
+      Approval notice (PDF)
+    </a>
+    <div
+      className="text-base-dark"
+    >
+      Posted 1/1/2021
+    </div>
+  </li>
+  <li
+    className="font-body-2xs"
+    key="mock-document-4"
+  >
+    <a
+      className="text-medium"
+      href="/applications/mock_application_id/documents/mock-document-4"
+    >
+      Denial notice (PDF)
+    </a>
+    <div
+      className="text-base-dark"
+    >
+      Posted 1/1/2021
+    </div>
+  </li>
+  <li
+    className="font-body-2xs"
+    key="mock-document-5"
+  >
+    <a
+      className="text-medium"
+      href="/applications/mock_application_id/documents/mock-document-5"
+    >
+      Request for more information (PDF)
+    </a>
+    <div
+      className="text-base-dark"
+    >
+      Posted 1/1/2021
+    </div>
+  </li>
+</ul>
+`;
+
 exports[`ApplicationCard renders Alert inside the component when there is an error loading documents 1`] = `
 <Alert
   className="margin-bottom-3"
@@ -32,94 +87,6 @@ exports[`ApplicationCard renders a card for the given application 1`] = `
     >
       Complete your application
     </ButtonLink>
-  </div>
-</article>
-`;
-
-exports[`ApplicationCard when the claim status is Completed when there are legal notices attached renders the legal notices section 1`] = `
-<article
-  className="maxw-mobile-lg border border-base-lighter margin-bottom-3"
->
-  <div
-    className="bg-base-lightest padding-3"
-  >
-    <Heading
-      className="margin-bottom-1 margin-top-0"
-      level="2"
-    >
-      NTN-111-ABS-01
-    </Heading>
-    <Heading
-      className="margin-top-0"
-      level="3"
-      size="2"
-      weight="normal"
-    >
-      Medical leave
-    </Heading>
-  </div>
-  <div
-    className="padding-3"
-  >
-    <Heading
-      className="margin-top-0 margin-bottom-05 text-base"
-      level="4"
-      size="6"
-    >
-      Employer FEIN
-    </Heading>
-    <p
-      className="margin-top-0 margin-bottom-2 font-body-2xs text-medium"
-    >
-      12-3456789
-    </p>
-    <Heading
-      className="margin-top-0 margin-bottom-05 text-base"
-      level="4"
-      size="6"
-    >
-      Continuous leave
-    </Heading>
-    <p
-      className="margin-top-0 margin-bottom-2 font-body-2xs text-medium"
-    >
-      1/1/2021 – 6/1/2021
-    </p>
-    <div
-      className="border-top border-base-lighter padding-top-2"
-    >
-      <Heading
-        className="margin-top-0"
-        level="3"
-        size="2"
-        weight="normal"
-      >
-        View your notices
-      </Heading>
-      <ul
-        className="usa-list"
-      >
-        <li
-          key="3"
-        >
-          <div
-            className="margin-bottom-05"
-          >
-            <a
-              className="text-normal"
-              href="/applications/mock_application_id/documents/3"
-            >
-              Notices (PDF)
-            </a>
-          </div>
-          <div
-            className="text-base"
-          >
-            Posted 1/1/2021
-          </div>
-        </li>
-      </ul>
-    </div>
   </div>
 </article>
 `;

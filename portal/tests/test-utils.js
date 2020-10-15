@@ -542,8 +542,8 @@ export const renderWithAppLogic = (PageComponent, options = {}) => {
     appLogic.documents.documents = appLogic.documents.documents.addItem(
       new Document({
         application_id: "mock_application_id",
-        created_at: "01/01/2021",
-        document_type: DocumentType.notices, // TODO (CP-1111): refactor with legal notice types (and create additional doc for each type here)
+        created_at: "2021-01-01",
+        document_type: DocumentType.approvalNotice,
         fineos_document_id: 3,
       })
     );

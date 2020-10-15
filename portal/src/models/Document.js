@@ -24,11 +24,11 @@ class Document extends BaseModel {
  * @enum {string}
  */
 export const DocumentType = {
-  activeDutyCertification: "Active Duty Certification",
-  bondingCertification: "Bonding Certification",
+  approvalNotice: "Approval notice",
+  denialNotice: "Denial notice",
   identityVerification: "Identification Proof",
   medicalCertification: "State Managed Paid Leave Confirmation",
-  notices: "Notices",
+  requestForInfoNotice: "Request for more information",
 };
 
 export default Document;

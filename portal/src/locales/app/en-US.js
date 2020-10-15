@@ -1127,9 +1127,12 @@ const components = {
     leaveReasonValue_medical: "$t(shared.leaveReasonMedical)",
     leaveReasonValue_serviceMemberFamily:
       "$t(shared.leaveReasonServiceMemberFamily)",
-    noticesDate: "Posted {{date}}",
+    noticeDate: "Posted {{date}}",
+    noticeName: "Legal notice (PDF)", // fallback for unexpected document_type
+    noticeName_approvalNotice: "Approval notice (PDF)",
+    noticeName_denialNotice: "Denial notice (PDF)",
+    noticeName_requestForInfoNotice: "Request for more information (PDF)",
     noticesHeading: "View your notices",
-    noticesName: "{{fileName}} (PDF)",
     resumeClaimButton: "Complete your application",
   },
   authNav: {

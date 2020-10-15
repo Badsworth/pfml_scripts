@@ -21,21 +21,17 @@ export default {
           "Intermittent leave",
           "Submitted",
           "Completed",
+          "Approved",
+          "Denied",
         ],
-      },
-    },
-    documents: {
-      defaultValue: "Empty",
-      control: {
-        type: "radio",
-        options: ["Empty", "With Legal Notice (Claim must be completed)"],
       },
     },
   },
 };
 
 export const Story = ({ claim, documents, ...args }) => {
-  let attachedDocuments, claimAttrs;
+  let attachedDocuments = [];
+  let claimAttrs;
 
   if (claim === "Empty") {
     claimAttrs = new MockClaimBuilder().create();
@@ -47,20 +43,34 @@ export const Story = ({ claim, documents, ...args }) => {
     claimAttrs = new MockClaimBuilder().submitted().create();
   } else if (claim === "Completed") {
     claimAttrs = new MockClaimBuilder().completed().create();
-  }
-
-  switch (documents) {
-    case "Empty":
-      attachedDocuments = [];
-      break;
-    case "With Legal Notice (Claim must be completed)": // TODO (CP-1111): Update to display all notice types
-      attachedDocuments = [
-        new Document({
-          created_at: "1/1/2021",
-          document_type: DocumentType.notices,
-        }),
-      ];
-      break;
+  } else if (claim === "Approved") {
+    claimAttrs = new MockClaimBuilder().completed().create();
+    attachedDocuments = [
+      new Document({
+        created_at: "2021-01-15",
+        document_type: DocumentType.requestForInfoNotice,
+        fineos_document_id: "a",
+      }),
+      new Document({
+        created_at: "2021-01-30",
+        document_type: DocumentType.approvalNotice,
+        fineos_document_id: "b",
+      }),
+    ];
+  } else if (claim === "Denied") {
+    claimAttrs = new MockClaimBuilder().completed().create();
+    attachedDocuments = [
+      new Document({
+        created_at: "2021-01-15",
+        document_type: DocumentType.requestForInfoNotice,
+        fineos_document_id: "a",
+      }),
+      new Document({
+        created_at: "2021-01-30",
+        document_type: DocumentType.denialNotice,
+        fineos_document_id: "b",
+      }),
+    ];
   }
 
   return (

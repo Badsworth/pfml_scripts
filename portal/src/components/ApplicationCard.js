@@ -27,7 +27,7 @@ export const ApplicationCard = (props) => {
   const { t } = useTranslation();
   const leaveReason = get(claim, "leave_details.reason");
   const metadataHeadingProps = {
-    className: "margin-top-0 margin-bottom-05 text-base",
+    className: "margin-top-0 margin-bottom-05 text-base-dark",
     level: "4",
     size: "6",
   };
@@ -35,24 +35,26 @@ export const ApplicationCard = (props) => {
     className: "margin-top-0 margin-bottom-2 font-body-2xs text-medium",
   };
 
-  const legalNotices = documents.filter(
-    (document) => document.document_type === DocumentType.notices
-  ); // TODO (CP-1111): Refactor to use legal notice types
+  const legalNotices = documents.filter((document) =>
+    [
+      DocumentType.approvalNotice,
+      DocumentType.denialNotice,
+      DocumentType.requestForInfoNotice,
+    ].includes(document.document_type)
+  );
 
   const renderLegalNoticeRow = (legalNotice) => {
     const downloadUrl = `/applications/${legalNotice.application_id}/documents/${legalNotice.fineos_document_id}`;
     return (
-      <li key={legalNotice.fineos_document_id}>
-        <div className="margin-bottom-05">
-          <a className="text-normal" href={downloadUrl}>
-            {t("components.applicationCard.noticesName", {
-              fileName: legalNotice.document_type,
-            })}
-          </a>
-        </div>
-        <div className="text-base">
-          {t("components.applicationCard.noticesDate", {
-            date: new Date(legalNotice.created_at).toLocaleDateString(),
+      <li key={legalNotice.fineos_document_id} className="font-body-2xs">
+        <a className="text-medium" href={downloadUrl}>
+          {t("components.applicationCard.noticeName", {
+            context: findKeyByValue(DocumentType, legalNotice.document_type),
+          })}
+        </a>
+        <div className="text-base-dark">
+          {t("components.applicationCard.noticeDate", {
+            date: formatDateRange(legalNotice.created_at),
           })}
         </div>
       </li>
@@ -168,16 +170,11 @@ export const ApplicationCard = (props) => {
         )}
         {claim.isCompleted && legalNotices.length > 0 && (
           <div className="border-top border-base-lighter padding-top-2">
-            <Heading
-              className="margin-top-0"
-              size="2"
-              level="3"
-              weight="normal"
-            >
+            <Heading level="3" weight="normal">
               {t("components.applicationCard.noticesHeading")}
             </Heading>
 
-            <ul className="usa-list">
+            <ul className="usa-list margin-top-1">
               {legalNotices.map((notice) => renderLegalNoticeRow(notice))}
             </ul>
           </div>
