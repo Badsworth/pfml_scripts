@@ -65,7 +65,7 @@ const HAP3Portal = scenario("PortalClaimSubmit", {
 });
 
 const HAPPortal = chance([
-  [2, HAP1Portal],
+  [1, HAP1Portal],
   [1, GBR1Portal],
   [1, HAP3Portal],
 ]);
@@ -101,7 +101,7 @@ const HAP3Fineos = scenario("FineosClaimSubmit", {
 });
 
 const HAPFineos = chance([
-  [2, HAP1Fineos],
+  [1, HAP1Fineos],
   [1, GBR1Fineos],
   [1, HAP3Fineos],
 ]);
@@ -116,7 +116,7 @@ const SavilinxAgent = agentScenario("SavilinxAgent", {
 // Chance Function for all combinations!
 export default chance([
   [3, HAPPortal],
-  [2, HAPFineos],
-  [7, SavilinxAgent],
-  [2, PortalRegistration],
+  [3, HAPFineos],
+  [6, SavilinxAgent],
+  [1, PortalRegistration],
 ]);

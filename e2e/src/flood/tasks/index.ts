@@ -1,21 +1,24 @@
 import OutstandingDocumentReceived, {
   PreOutstandingDocumentReceived,
-  PostOutstandingDocumentReceived,
 } from "./OutDocReceived";
 import RequestAdditionalInformation, {
   PreRequestAdditionalInfo,
 } from "./RequestInfo";
-import Adjudicate from "./AdjudicateClaim";
+import AdjudicateAbsence, {
+  PreAdjudicateAbsence,
+  PostAdjudicateAbsence,
+} from "./AdjudicateClaim";
 import Approve from "./ApproveClaim";
 import Deny from "./DenyClaim";
 
 export default {
   PreOutstandingDocumentReceived,
   OutstandingDocumentReceived,
-  PostOutstandingDocumentReceived,
   PreRequestAdditionalInfo,
   RequestAdditionalInformation,
-  Adjudicate,
+  PreAdjudicateAbsence,
+  AdjudicateAbsence,
+  PostAdjudicateAbsence,
   Approve,
   Deny,
 };

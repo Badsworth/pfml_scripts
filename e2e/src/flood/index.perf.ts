@@ -13,7 +13,7 @@ import * as PortalRegistration from "./tests/PortalRegistration.perf";
 import * as SavilinxAgent from "./tests/SavilinxAgent.perf";
 
 export const settings: TestSettings = {
-  loopCount: 50,
+  loopCount: 1000,
   actionDelay: 1,
   stepDelay: 1,
   waitUntil: "visible",

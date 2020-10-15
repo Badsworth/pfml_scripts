@@ -4,9 +4,9 @@ import { labelled, waitForElement, isFinanciallyEligible } from "../helpers";
 import { StoredStep } from "../config";
 import Tasks from "./index";
 
+let taskDescription: string;
 let docToReview: string;
 let attachedDocument: ElementHandle | null;
-
 export const steps: StoredStep[] = [
   {
     name: "Check document is attached to claim",
@@ -121,10 +121,18 @@ export const steps: StoredStep[] = [
         );
         await browser.click(tasksTab);
 
+        // find this task
+        const currentTask = await waitForElement(
+          browser,
+          By.css(
+            `table[id*='TasksForCaseWidget'] td[title='${taskDescription}']`
+          )
+        );
+        await browser.click(currentTask);
         // close this task
         const closeTaskButton = await waitForElement(
           browser,
-          By.css("input[type='submit'][value='Close']")
+          By.css("input[title='Close selected task']")
         );
         await browser.click(closeTaskButton);
 
@@ -159,6 +167,7 @@ export default async (browser: Browser, data: unknown): Promise<void> => {
     evidenceStatus.includes("Not Satisfied")
   ) {
     // close task
+    console.info("Claim / Evidence is not reviewable. Closing task...");
     await steps[steps.length - 1].test(browser, data);
     return;
   }
@@ -178,11 +187,13 @@ export default async (browser: Browser, data: unknown): Promise<void> => {
 export const PreOutstandingDocumentReceived = async (
   browser: Browser
 ): Promise<void> => {
+  console.info("Running ODR pre-hook...");
   const description = await waitForElement(
     browser,
     By.css(".ListRowSelected td[id*='workqueuelistviewDescription']")
   );
-  docToReview = (await description.text()).toLowerCase();
+  taskDescription = await description.text();
+  docToReview = taskDescription.toLowerCase();
   // figure out which document to review
   if (
     docToReview.includes("hcp form") ||
@@ -192,15 +203,17 @@ export const PreOutstandingDocumentReceived = async (
   } else {
     docToReview = "Identification Proof";
   }
-  console.log(docToReview);
-};
+  console.info("Document to review:", docToReview);
 
-export const PostOutstandingDocumentReceived = async (
-  browser: Browser
-): Promise<void> => {
-  const closeTask = await waitForElement(
+  const openTask = await waitForElement(
     browser,
-    By.css("input[type='submit'][value='Close']")
+    By.css('a[aria-label="Open Task"]')
   );
-  await closeTask.click();
+  await browser.click(openTask);
+
+  const openClaim = await waitForElement(
+    browser,
+    By.css('a[title="Navigate to case details"]')
+  );
+  await browser.click(openClaim);
 };

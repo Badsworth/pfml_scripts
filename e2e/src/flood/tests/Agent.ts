@@ -102,29 +102,9 @@ export default (
       await taskTypes[preHook](browser, data);
     }
 
-    // do task button click opens a popup window
-    const currentPage = await browser.page;
-    const doTask = await waitForElement(
-      browser,
-      By.css('a[aria-label="Do Task"]')
-    );
-    await doTask.click();
-
-    // Waits for new popup window to load
-    // and change browser focus to that new tab
-    await browser.wait(5000);
-    const page = await browser.waitForNewPage();
-    await browser.switchTo().page(page);
-    await browser.setViewport({ width: 1920, height: 1080 });
-
     // Runs task-specific main handler
     await taskTypes[nextTaskType](browser, data);
     console.info(`${scenario} - Do task - Task Handler Done!`);
-
-    // Close popup window & go back to initial window
-    await browser.wait(3000);
-    page.close({ runBeforeUnload: true });
-    await browser.switchTo().page(currentPage);
 
     // Runs task-specific post-hook
     const postHook = `After ${nextTaskType}`;

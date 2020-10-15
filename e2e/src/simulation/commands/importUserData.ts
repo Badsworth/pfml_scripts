@@ -14,6 +14,8 @@ const userFields = [
   "employer_fein",
 ] as const;
 
+const claimDocs = ["MASSID", "HCP"] as const;
+
 const cmd: CommandModule<SystemWideArgs, ImportUserDataArgs> = {
   command: "importUserData",
   describe: "Import users into LST scenario dataset",
@@ -59,7 +61,7 @@ const cmd: CommandModule<SystemWideArgs, ImportUserDataArgs> = {
       // Find useful data to correlate LST scenarios with BizSim ones.
       let pool: SimulationClaim[] = [];
       const isEligible = !scenario.financiallyIneligible;
-      const hasMissingDocs = scenario.documents.length !== 3;
+      const hasMissingDocs = scenario.documents.length !== claimDocs.length;
       // Find out which pool of users best matches our current scenario.
       if (hasMissingDocs) {
         pool = GBR1Users;
