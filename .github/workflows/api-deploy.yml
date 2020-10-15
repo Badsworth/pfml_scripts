@@ -247,7 +247,7 @@ jobs:
       - uses: actions/checkout@v2
 
       - name: Set api-env Value
-        run: echo "::set-env name=api-env::${{ env[github.ref] || 'test' }}"
+        run: echo "api-env=${{ env[github.ref] || 'test' }}" >> $GITHUB_ENV
 
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
@@ -294,7 +294,7 @@ jobs:
       - uses: actions/checkout@v2
 
       - name: Set api-env Value
-        run: echo "::set-env name=api-env::${{ env[github.ref] || 'test' }}"
+        run: echo "api-env=${{ env[github.ref] || 'test' }}" >> $GITHUB_ENV
 
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
@@ -341,7 +341,7 @@ jobs:
       # For more info, see:
       # https://help.github.com/en/actions/reference/context-and-expression-syntax-for-github-actions#github-context
       - name: Set api-env Value
-        run: echo "::set-env name=api-env::${{ env[github.ref] || 'test' }}"
+        run: echo "api-env=${{ env[github.ref] || 'test' }}" >> $GITHUB_ENV
 
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1

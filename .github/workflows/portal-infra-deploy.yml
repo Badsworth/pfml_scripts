@@ -30,7 +30,7 @@ jobs:
         # see https://help.github.com/en/actions/reference/context-and-expression-syntax-for-github-actions#github-context
         # github.ref will give the branch or tag reference that triggered the workflow
         # e.g refs/heads/master or refs/heads/deploy/portal/stage
-        run: echo "::set-env name=portal_env::${{ env[github.ref] || 'test' }}"
+        run: echo "portal_env=${{ env[github.ref] || 'test' }}" >> $GITHUB_ENV
 
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
