@@ -1,5 +1,6 @@
 import Claim, { LeaveReason } from "../models/Claim";
 import Document, { DocumentType } from "../models/Document";
+import Alert from "../components/Alert";
 import ButtonLink from "../components/ButtonLink";
 import Heading from "../components/Heading";
 import PropTypes from "prop-types";
@@ -7,6 +8,7 @@ import React from "react";
 import findKeyByValue from "../utils/findKeyByValue";
 import formatDateRange from "../utils/formatDateRange";
 import get from "lodash/get";
+import hasDocumentsLoadError from "../utils/hasDocumentsLoadError";
 import routeWithParams from "../utils/routeWithParams";
 import { useTranslation } from "../locales/i18n";
 import withClaimDocuments from "../hoc/withClaimDocuments";
@@ -15,7 +17,13 @@ import withClaimDocuments from "../hoc/withClaimDocuments";
  * Preview of an existing benefits Application
  */
 export const ApplicationCard = (props) => {
-  const { claim, documents, number } = props;
+  const { appLogic, claim, documents, number } = props;
+
+  const { appErrors } = appLogic;
+  const hasLoadingDocumentsError = hasDocumentsLoadError(
+    appErrors,
+    claim.application_id
+  );
   const { t } = useTranslation();
   const leaveReason = get(claim, "leave_details.reason");
   const metadataHeadingProps = {
@@ -153,6 +161,11 @@ export const ApplicationCard = (props) => {
 
         {/* Legal Notices Section */}
 
+        {hasLoadingDocumentsError && (
+          <Alert className="margin-bottom-3" noIcon>
+            {t("components.applicationCard.documentsRequestError")}
+          </Alert>
+        )}
         {claim.isCompleted && legalNotices.length > 0 && (
           <div className="border-top border-base-lighter padding-top-2">
             <Heading
@@ -175,6 +188,9 @@ export const ApplicationCard = (props) => {
 };
 
 ApplicationCard.propTypes = {
+  appLogic: PropTypes.shape({
+    appErrors: PropTypes.object.isRequired,
+  }).isRequired,
   claim: PropTypes.instanceOf(Claim).isRequired,
   documents: PropTypes.arrayOf(PropTypes.instanceOf(Document)),
   /**

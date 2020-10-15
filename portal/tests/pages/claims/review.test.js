@@ -115,6 +115,17 @@ describe("Upload Document", () => {
     expect(wrapper.exists("Spinner")).toBe(false);
     expect(wrapper.find({ label: "Number of files uploaded" })).toHaveLength(2);
   });
+
+  it("renders Alert when there is an error for loading documents", () => {
+    const { wrapper } = renderWithAppLogic(Review, {
+      claimAttrs: new MockClaimBuilder().complete().create(),
+      diveLevels: 5,
+      hasLoadingDocumentsError: true,
+    });
+
+    expect(wrapper.exists("Alert")).toBe(true);
+    expect(wrapper.exists({ label: "Number of files uploaded" })).toBe(false);
+  });
 });
 
 describe("Employer info", () => {

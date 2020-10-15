@@ -18,6 +18,8 @@ import EmployerBenefit, {
 } from "../src/models/EmployerBenefit";
 import { mount, shallow } from "enzyme";
 import Address from "../src/models/Address";
+import AppErrorInfo from "../src/models/AppErrorInfo";
+import AppErrorInfoCollection from "../src/models/AppErrorInfoCollection";
 import ClaimCollection from "../src/models/ClaimCollection";
 import PreviousLeave from "../src/models/PreviousLeave";
 import React from "react";
@@ -466,6 +468,7 @@ export const claim = new MockClaimBuilder()
  * @param {boolean} [options.hasLoadedClaimDocuments] - Additional attributes to indicate document loading is finished
  * @param {boolean} [options.hasUploadedCertificationDocuments] - Additional attributes to set certification documents
  * @param {boolean} [options.hasUploadedIdDocuments] - Additional attributes to set id documents
+ * @param {boolean} [options.hasLoadingDocumentsError] - Additional attributs to set errors for loading documents
  * @param {boolean} [options.hasLegalNotices] - Create legal notices for claim
  * @returns {{ appLogic: object, claim: Claim, wrapper: object }}
  */
@@ -524,6 +527,15 @@ export const renderWithAppLogic = (PageComponent, options = {}) => {
         document_type: DocumentType.medicalCertification,
       })
     );
+  }
+
+  if (options.hasLoadingDocumentsError) {
+    appLogic.appErrors = new AppErrorInfoCollection([
+      new AppErrorInfo({
+        meta: { application_id: "mock_application_id" },
+        name: "DocumentsRequestError",
+      }),
+    ]);
   }
 
   if (options.hasLegalNotices) {

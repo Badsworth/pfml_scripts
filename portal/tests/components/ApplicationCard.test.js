@@ -100,4 +100,17 @@ describe("ApplicationCard", () => {
       });
     });
   });
+
+  it("renders Alert inside the component when there is an error loading documents", () => {
+    ({ wrapper } = renderWithAppLogic(ApplicationCard, {
+      diveLevels: 2,
+      props: {
+        claim: new Claim(new MockClaimBuilder().submitted().create()),
+        number: 2,
+      },
+      hasLoadingDocumentsError: true,
+    }));
+    expect(wrapper.exists("Alert")).toBe(true);
+    expect(wrapper.find("Alert")).toMatchSnapshot();
+  });
 });

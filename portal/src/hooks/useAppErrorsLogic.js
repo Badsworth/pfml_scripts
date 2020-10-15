@@ -1,6 +1,6 @@
+import { DocumentsRequestError, ValidationError } from "../errors";
 import AppErrorInfo from "../models/AppErrorInfo";
 import AppErrorInfoCollection from "../models/AppErrorInfoCollection";
-import { ValidationError } from "../errors";
 import tracker from "../services/tracker";
 import useCollectionState from "./useCollectionState";
 import { useTranslation } from "../locales/i18n";
@@ -31,6 +31,8 @@ const useAppErrorsLogic = () => {
   const catchError = (error) => {
     if (error instanceof ValidationError) {
       handleValidationError(error);
+    } else if (error instanceof DocumentsRequestError) {
+      handleDocumentsRequestError(error);
     } else {
       console.error(error);
       handleError(error);
@@ -102,6 +104,22 @@ const useAppErrorsLogic = () => {
     const appError = new AppErrorInfo({
       name: error.name,
       message: t("errors.caughtError", { context: error.name }),
+    });
+
+    addError(appError);
+
+    tracker.noticeError(error);
+  };
+
+  /**
+   * Add and track the Error
+   * @param {DocumentsRequestError} error
+   */
+  const handleDocumentsRequestError = (error) => {
+    const appError = new AppErrorInfo({
+      name: error.name,
+      message: t("errors.caughtError", { context: error.name }),
+      meta: { application_id: error.application_id },
     });
 
     addError(appError);

@@ -6,6 +6,7 @@ import Claim, {
 import Document, { DocumentType } from "../../models/Document";
 import StepModel, { ClaimSteps } from "../../models/Step";
 import { filter, findIndex, get } from "lodash";
+import Alert from "../../components/Alert";
 import BackButton from "../../components/BackButton";
 import ButtonLink from "../../components/ButtonLink";
 import HeadingPrefix from "../../components/HeadingPrefix";
@@ -19,6 +20,7 @@ import Title from "../../components/Title";
 import { Trans } from "react-i18next";
 import claimantConfig from "../../flows/claimant";
 import findDocumentsByType from "../../utils/findDocumentsByType";
+import hasDocumentsLoadError from "../../utils/hasDocumentsLoadError";
 import routeWithParams from "../../utils/routeWithParams";
 import routes from "../../routes";
 import { useTranslation } from "../../locales/i18n";
@@ -27,7 +29,13 @@ import withClaimDocuments from "../../hoc/withClaimDocuments";
 
 export const Checklist = (props) => {
   const { t } = useTranslation();
-  const { claim, documents, isLoadingDocuments } = props;
+  const { appLogic, claim, documents, isLoadingDocuments } = props;
+
+  const { appErrors } = appLogic;
+  const hasLoadingDocumentsError = hasDocumentsLoadError(
+    appErrors,
+    claim.application_id
+  );
 
   const idDocuments = findDocumentsByType(
     documents,
@@ -232,10 +240,12 @@ export const Checklist = (props) => {
           }
           {...sharedStepListProps}
         >
-          {stepGroup.number === 3 && isLoadingDocuments ? (
-            <div className="margin-top-8 text-center">
-              <Spinner aria-valuetext={t("components.spinner.label")} />
-            </div>
+          {stepGroup.number === 3 && hasLoadingDocumentsError ? (
+            <Alert className="margin-bottom-3" noIcon>
+              {t("pages.claimsChecklist.documentsRequestError")}
+            </Alert>
+          ) : stepGroup.number === 3 && isLoadingDocuments ? (
+            <Spinner aria-valuetext={t("components.spinner.label")} />
           ) : (
             renderSteps(stepGroup.steps)
           )}
@@ -256,6 +266,9 @@ export const Checklist = (props) => {
 };
 
 Checklist.propTypes = {
+  appLogic: PropTypes.shape({
+    appErrors: PropTypes.object.isRequired,
+  }).isRequired,
   claim: PropTypes.instanceOf(Claim).isRequired,
   documents: PropTypes.arrayOf(PropTypes.instanceOf(Document)),
   isLoadingDocuments: PropTypes.bool,

@@ -232,4 +232,15 @@ describe("UploadCertification", () => {
       });
     });
   });
+
+  describe("there is an error while loading document", () => {
+    it("renders alert", () => {
+      ({ wrapper } = renderWithAppLogic(UploadCertification, {
+        claimAttrs: claim,
+        diveLevels: 5,
+        hasLoadingDocumentsError: true,
+      }));
+      expect(wrapper.exists("Alert")).toBe(true);
+    });
+  });
 });

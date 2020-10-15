@@ -136,6 +136,16 @@ describe("Checklist", () => {
       expect(wrapper.exists("Spinner")).toBe(true);
       expect(wrapper.find("Step")).toHaveLength(6);
     });
+
+    it("renders Alert when there is an error for loading documents", () => {
+      const { wrapper } = renderWithAppLogic(Checklist, {
+        diveLevels: 5,
+        hasLoadingDocumentsError: true,
+      });
+
+      expect(wrapper.find("StepList").at(2).exists("Alert")).toBe(true);
+      expect(wrapper.find("Step")).toHaveLength(6);
+    });
   });
 
   describe("Upload document steps status", () => {

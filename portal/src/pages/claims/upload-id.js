@@ -2,6 +2,7 @@ import Document, { DocumentType } from "../../models/Document";
 import React, { useState } from "react";
 import Accordion from "../../components/Accordion";
 import AccordionItem from "../../components/AccordionItem";
+import Alert from "../../components/Alert";
 import FileCardList from "../../components/FileCardList";
 import FileUploadDetails from "../../components/FileUploadDetails";
 import Heading from "../../components/Heading";
@@ -11,6 +12,7 @@ import QuestionPage from "../../components/QuestionPage";
 import Spinner from "../../components/Spinner";
 import { Trans } from "react-i18next";
 import findDocumentsByType from "../../utils/findDocumentsByType";
+import hasDocumentsLoadError from "../../utils/hasDocumentsLoadError";
 import routes from "../../routes";
 import { useTranslation } from "../../locales/i18n";
 import withClaim from "../../hoc/withClaim";
@@ -22,6 +24,12 @@ export const UploadId = (props) => {
   const hasStateId = props.claim.has_state_id;
   const contentContext = hasStateId ? "mass" : "other";
   const { appLogic, claim, documents, isLoadingDocuments } = props;
+
+  const { appErrors } = appLogic;
+  const hasLoadingDocumentsError = hasDocumentsLoadError(
+    appErrors,
+    claim.application_id
+  );
 
   const idDocuments = findDocumentsByType(
     documents,
@@ -84,7 +92,13 @@ export const UploadId = (props) => {
         )}
         <FileUploadDetails />
 
-        {isLoadingDocuments && (
+        {hasLoadingDocumentsError && (
+          <Alert className="margin-bottom-3" noIcon>
+            {t("pages.claimsUploadId.documentsRequestError")}
+          </Alert>
+        )}
+
+        {isLoadingDocuments && !hasLoadingDocumentsError && (
           <div className="margin-top-8 text-center">
             <Spinner aria-valuetext={t("components.withClaims.loadingLabel")} />
           </div>
@@ -112,7 +126,7 @@ export const UploadId = (props) => {
 
 UploadId.propTypes = {
   appLogic: PropTypes.shape({
-    claims: PropTypes.object.isRequired,
+    appErrors: PropTypes.object.isRequired,
     documents: PropTypes.object.isRequired,
     goToNextPage: PropTypes.func.isRequired,
     setAppErrors: PropTypes.func.isRequired,

@@ -367,7 +367,12 @@ describe("useDocumentsLogic", () => {
           await documentsLogic.load(application_id);
         });
 
-        expect(appErrorsLogic.appErrors.items[0].name).toEqual("Error");
+        expect(appErrorsLogic.appErrors.items[0].name).toEqual(
+          "DocumentsRequestError"
+        );
+        expect(appErrorsLogic.appErrors.items[0].meta).toEqual({
+          application_id,
+        });
       });
     });
 

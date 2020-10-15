@@ -12,6 +12,7 @@ import EmployerBenefit, {
 import OtherIncome, { OtherIncomeType } from "../../models/OtherIncome";
 import Step, { ClaimSteps } from "../../models/Step";
 import { compact, get } from "lodash";
+import Alert from "../../components/Alert";
 import BackButton from "../../components/BackButton";
 import Button from "../../components/Button";
 import { DateTime } from "luxon";
@@ -31,6 +32,7 @@ import findDocumentsByType from "../../utils/findDocumentsByType";
 import findKeyByValue from "../../utils/findKeyByValue";
 import formatDateRange from "../../utils/formatDateRange";
 import getI18nContextForIntermittentFrequencyDuration from "../../utils/getI18nContextForIntermittentFrequencyDuration";
+import hasDocumentsLoadError from "../../utils/hasDocumentsLoadError";
 import useThrottledHandler from "../../hooks/useThrottledHandler";
 import { useTranslation } from "../../locales/i18n";
 import withClaim from "../../hoc/withClaim";
@@ -61,6 +63,12 @@ function formatAddress(address) {
 export const Review = (props) => {
   const { t } = useTranslation();
   const { appLogic, claim, documents, isLoadingDocuments } = props;
+
+  const { appErrors } = appLogic;
+  const hasLoadingDocumentsError = hasDocumentsLoadError(
+    appErrors,
+    claim.application_id
+  );
 
   const certificationDocuments = findDocumentsByType(
     documents,
@@ -524,11 +532,17 @@ export const Review = (props) => {
               context: "3",
             })}
           </Heading>
-          {isLoadingDocuments ? (
+          {hasLoadingDocumentsError && (
+            <Alert className="margin-bottom-3" noIcon>
+              {t("pages.claimsReview.documentsRequestError")}
+            </Alert>
+          )}
+          {isLoadingDocuments && !hasLoadingDocumentsError && (
             <div className="margin-top-8 text-center">
               <Spinner aria-valuetext={t("components.spinner.label")} />
             </div>
-          ) : (
+          )}
+          {!isLoadingDocuments && !hasLoadingDocumentsError && (
             <React.Fragment>
               <ReviewHeading
                 editHref={getStepEditHref(ClaimSteps.uploadId)}
@@ -578,7 +592,10 @@ export const Review = (props) => {
 };
 
 Review.propTypes = {
-  appLogic: PropTypes.object.isRequired,
+  appLogic: PropTypes.shape({
+    appErrors: PropTypes.object.isRequired,
+    claims: PropTypes.object.isRequired,
+  }).isRequired,
   claim: PropTypes.instanceOf(Claim),
   documents: PropTypes.arrayOf(PropTypes.instanceOf(Document)),
   isLoadingDocuments: PropTypes.bool,

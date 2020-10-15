@@ -1,5 +1,14 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`ApplicationCard renders Alert inside the component when there is an error loading documents 1`] = `
+<Alert
+  className="margin-bottom-3"
+  noIcon={true}
+>
+  An error was encountered while checking your application for documents. If this continues to happen, you may call the Paid Family Leave Contact Center at XXX‑XXX‑XXXX
+</Alert>
+`;
+
 exports[`ApplicationCard renders a card for the given application 1`] = `
 <article
   className="maxw-mobile-lg border border-base-lighter margin-bottom-3"

@@ -1,6 +1,7 @@
 import Claim, { LeaveReason, ReasonQualifier } from "../../models/Claim";
 import Document, { DocumentType } from "../../models/Document";
 import React, { useState } from "react";
+import Alert from "../../components/Alert";
 import ConditionalContent from "../../components/ConditionalContent";
 import FileCardList from "../../components/FileCardList";
 import FileUploadDetails from "../../components/FileUploadDetails";
@@ -12,6 +13,7 @@ import Spinner from "../../components/Spinner";
 import { Trans } from "react-i18next";
 import findDocumentsByType from "../../utils/findDocumentsByType";
 import findKeyByValue from "../../utils/findKeyByValue";
+import hasDocumentsLoadError from "../../utils/hasDocumentsLoadError";
 import routes from "../../routes";
 import { useTranslation } from "../../locales/i18n";
 import withClaim from "../../hoc/withClaim";
@@ -23,6 +25,12 @@ export const UploadCertification = (props) => {
   const [files, setFiles] = useState([]);
   const claimReason = claim.leave_details.reason;
   const claimReasonQualifier = claim.leave_details.reason_qualifier;
+
+  const { appErrors } = appLogic;
+  const hasLoadingDocumentsError = hasDocumentsLoadError(
+    appErrors,
+    claim.application_id
+  );
 
   const conditionalContext = {
     [LeaveReason.bonding]: {
@@ -103,12 +111,16 @@ export const UploadCertification = (props) => {
       </ConditionalContent>
       <FileUploadDetails />
 
-      {isLoadingDocuments && (
+      {hasLoadingDocumentsError && (
+        <Alert className="margin-bottom-3" noIcon>
+          {t("pages.claimsUploadCertification.documentsRequestError")}
+        </Alert>
+      )}
+      {isLoadingDocuments && !hasLoadingDocumentsError && (
         <div className="margin-top-8 text-center">
           <Spinner aria-valuetext={t("components.withClaims.loadingLabel")} />
         </div>
       )}
-
       {!isLoadingDocuments && (
         <FileCardList
           files={files}
@@ -131,7 +143,12 @@ export const UploadCertification = (props) => {
 };
 
 UploadCertification.propTypes = {
-  appLogic: PropTypes.object.isRequired,
+  appLogic: PropTypes.shape({
+    appErrors: PropTypes.object.isRequired,
+    documents: PropTypes.object.isRequired,
+    goToNextPage: PropTypes.func.isRequired,
+    setAppErrors: PropTypes.func.isRequired,
+  }).isRequired,
   claim: PropTypes.instanceOf(Claim),
   documents: PropTypes.arrayOf(PropTypes.instanceOf(Document)),
   isLoadingDocuments: PropTypes.bool,

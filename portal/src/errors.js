@@ -100,6 +100,17 @@ export class RequestTimeoutError extends ApiRequestError {
 }
 
 /**
+ * A request to an Application's `/documents` endpoint failed
+ */
+export class DocumentsRequestError extends Error {
+  constructor(application_id, ...params) {
+    super(...params);
+    this.application_id = application_id;
+    this.name = "DocumentsRequestError";
+  }
+}
+
+/**
  *  An API response returned a 503 status code
  */
 export class ServiceUnavailableError extends ApiRequestError {

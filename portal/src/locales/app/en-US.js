@@ -36,6 +36,7 @@ const errors = {
   },
   caughtError:
     "Sorry, an unexpected error in our system was encountered. If this continues to happen, you may call the Paid Family Leave Contact Center at $t(shared.callCenterPhoneNumber)",
+  caughtError_DocumentsRequestError: "$t(shared.documentsRequestError)",
   caughtError_ForbiddenError:
     "Sorry, an authorization error was encountered. Please log out and then log in to try again.",
   caughtError_NetworkError: "$t(shared.networkError)",
@@ -243,6 +244,8 @@ const shared = {
   claimsLeaveDurationTitle: "Leave duration",
   claimsOtherLeaveTitle: "Other leave, income, and benefits",
   claimsVerifyIdTitle: "Your identity",
+  documentsRequestError:
+    "An error was encountered while checking your application for documents. If this continues to happen, you may call the Paid Family Leave Contact Center at $t(shared.callCenterPhoneNumber)",
   employerBenefitEntryPrefix: "Benefit",
   employerBenefitType_familyOrMedicalLeave: "Family or medical leave insurance",
   employerBenefitType_paidLeave: "Accrued paid leave",
@@ -383,6 +386,7 @@ const pages = {
     backButtonLabel: "Back to Dashboard",
     completed_editable: "Completed",
     completed_uneditable: "Confirmed",
+    documentsRequestError: "$t(shared.documentsRequestError)",
     edit: "Edit",
     resume: "Resume",
     screenReaderNumberPrefix: "Step",
@@ -732,6 +736,7 @@ const pages = {
     achType_savings: "$t(shared.achTypeSavings)",
     childBirthDateLabel: "Child's date of birth",
     childPlacementDateLabel: "Child's placement date",
+    documentsRequestError: "$t(shared.documentsRequestError)",
     editLink: "Edit",
     employerBenefitEntryLabel:
       "$t(shared.employerBenefitEntryPrefix) {{count}}",
@@ -871,6 +876,7 @@ const pages = {
     addAnotherFileButton: "Choose another file",
     addFirstFileButton: "Choose a file",
     certificationDocumentsCount: "$t(shared.filesUploaded)",
+    documentsRequestError: "$t(shared.documentsRequestError)",
     fileHeadingPrefix: "File",
     leadListNewborn: [
       "Your child's birth certificate.",
@@ -893,6 +899,7 @@ const pages = {
     accordionHeading: "If you don't have any of those documents:",
     addAnotherFileButton: "$t(shared.fileUpload_addAnotherFileButton)",
     addFirstFileButton: "$t(shared.fileUpload_addFirstFileButton)",
+    documentsRequestError: "$t(shared.documentsRequestError)",
     fileHeadingPrefix: "$t(shared.fileUpload_fileHeadingPrefix)",
     idDocumentsCount: "$t(shared.filesUploaded)",
     lead_mass:
@@ -1101,6 +1108,7 @@ const components = {
       "When did the employee tell you about their expected leave?",
   },
   applicationCard: {
+    documentsRequestError: "$t(shared.documentsRequestError)",
     feinHeading: "Employer FEIN",
     heading: "Application {{number}}",
     leavePeriodLabel_continuous: "$t(shared.claimDurationTypeContinuous)",

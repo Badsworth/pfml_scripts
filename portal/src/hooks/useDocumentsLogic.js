@@ -1,7 +1,7 @@
+import { DocumentsRequestError, ValidationError } from "../errors";
 import { useMemo, useState } from "react";
 import DocumentCollection from "../models/DocumentCollection";
 import DocumentsApi from "../api/DocumentsApi";
-import { ValidationError } from "../errors";
 import assert from "assert";
 import useCollectionState from "./useCollectionState";
 
@@ -63,7 +63,9 @@ const useDocumentsLogic = ({ appErrorsLogic, portalFlow }) => {
         addDocuments(loadedDocuments.items);
       }
     } catch (error) {
-      appErrorsLogic.catchError(error);
+      appErrorsLogic.catchError(
+        new DocumentsRequestError(application_id, error)
+      );
     }
   };
 

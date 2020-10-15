@@ -41,7 +41,7 @@ describe("UploadId", () => {
   });
 
   describe("after documents have been loaded", () => {
-    function render(attrs = {}) {
+    function render() {
       ({ wrapper } = renderWithAppLogic(UploadId, {
         claimAttrs: claim,
         diveLevels: 5,
@@ -232,6 +232,17 @@ describe("UploadId", () => {
           expect(appLogic.goToNextPage).toHaveBeenCalledTimes(1);
         });
       });
+    });
+  });
+
+  describe("there is an error while loading document", () => {
+    it("renders alert", () => {
+      ({ wrapper } = renderWithAppLogic(UploadId, {
+        claimAttrs: claim,
+        diveLevels: 5,
+        hasLoadingDocumentsError: true,
+      }));
+      expect(wrapper.exists("Alert")).toBe(true);
     });
   });
 });
