@@ -12,9 +12,9 @@ import { useTranslation } from "../locales/i18n";
 import withUser from "../hoc/withUser";
 
 /**
- * "Dashboard" - Where a user is redirected to after successfully authenticating.
+ * "Dashboard" - Where a Claimant is redirected to after successfully authenticating.
  */
-const Index = () => {
+export const Index = () => {
   const { t } = useTranslation();
   const router = useRouter();
 
@@ -57,10 +57,20 @@ const Index = () => {
             </AccordionItem>
           </Accordion>
         </div>
+
         <Heading level="2">{t("pages.index.stepThreeHeading")}</Heading>
         <p>{t("pages.index.stepThreeLead")}</p>
+        <p>{t("pages.index.multipleApplicationsListIntro")}</p>
+        <ul className="usa-list">
+          <li>{t("pages.index.multipleApplicationsList_pregnancy")}</li>
+          <li>{t("pages.index.multipleApplicationsList_multipleEmployers")}</li>
+          <li>{t("pages.index.multipleApplicationsList_intermittent")}</li>
+        </ul>
 
-        <ButtonLink className="margin-bottom-8" href={routes.claims.start}>
+        <ButtonLink
+          className="margin-top-3 margin-bottom-8"
+          href={routes.claims.start}
+        >
           {t("pages.index.createClaimButton")}
         </ButtonLink>
       </div>

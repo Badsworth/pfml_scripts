@@ -1054,6 +1054,14 @@ const pages = {
     medicalLeaveBody:
       "Your health care provider must complete the <healthcare-provider-form-link>PFML Health Care Provider Certification</healthcare-provider-form-link>",
     medicalLeaveHeading: "Medical leave due to injury, illness, or pregnancy",
+    multipleApplicationsListIntro:
+      "There are some cases where you might need to create multiple leave applications:",
+    multipleApplicationsList_intermittent:
+      "If you need to take time off at irregular intervals (intermittent leave), you must create an application for the irregular time off you will need. If you also need to take off work completely or work a reduced schedule, you must create a separate application for that time period.",
+    multipleApplicationsList_multipleEmployers:
+      "If you are taking leave from multiple employers, you must create separate applications for each job.",
+    multipleApplicationsList_pregnancy:
+      "You can take paid medical leave if you're unable to work during your pregnancy and to recover from childbirth. You can also take paid family leave to bond with your child after your medical leave ends. You must create separate applications for your paid medical leave and family leave.",
     stepOneHeading:
       "Step one: Tell your employer that you need to take Paid Family and Medical Leave. ",
     stepOneLeadLine1:
