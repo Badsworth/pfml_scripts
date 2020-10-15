@@ -88,3 +88,9 @@ Given(
     fineos.uploadDocument(label, type);
   }
 );
+
+Given("I click through the commence intake flow", function (): void {
+  cy.get("#nextPreviousButtons").contains("Next").click();
+  cy.get("#nextPreviousButtons").contains("Next").click();
+  cy.get("#nextPreviousButtons").contains("Next").click();
+});

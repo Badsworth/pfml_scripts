@@ -2,38 +2,17 @@ Feature: Submit a Medical Claim in which the claimant mails their HCP form at la
 
   @portal
   Scenario: As a claimant, I should be able to start submitting a GBM1 claim through the portal
-    Given I begin to submit a "GBM1" claim as a "financially eligible" employee
-    When I click on the checklist button called "Verify your identity"
-    Then I have my identity verified "normal"
-    Given I am on the claims "checklist" page
-    When I click on the checklist button called "Enter leave details"
-    Then I start submitting the claim
-    And I answer the pregnancy question
-    And I answer the continuous leave question
-    And I answer the reduced leave question
-    And I answer the intermittent leave question
-    Given I am on the claims "checklist" page
-    When I click on the checklist button called "Enter employment information"
-    Then I enter employer info
-    Given I am on the claims "checklist" page
-    When I click on the checklist button called "Report other leave, income, and benefits"
-    Then I report other benefits
-    Given I am on the claims "checklist" page
-    When I click on the checklist button called "Review and confirm"
-    Given I am on the claims "review" page
-    Then I should have confirmed that information is correct
-    Given I am on the claims "checklist" page
-    When I click on the checklist button called "Add payment information"
-    Then I add payment info
-    Given I am on the claims "checklist" page
-    Then I should review and submit the application
-    Given I am on the claims "review" page
-    Then I should have agreed and successfully submitted the claim
-    And I should be able to return to the portal dashboard
+    Given I begin the process to submit a "GBM1" claim
+    And Part One of the claim has been submitted
+    And I am on the claims "checklist" page
+    When I click on the checklist button called "Upload identity document"
+    Then I add my identity document
 
   @fineos
   Scenario: As a CSR (Savilix), I should be able to confirm that the HCP is missing
-    Given I search for the proper claim in Fineos
+    Given I am logged into Fineos as a Savilinx user
+    Then I can commence intake on that claim
+    And I click through the commence intake flow
     And I am on the tab "Documents"
     And the document "HCP" has been uploaded with "State Managed" business type
     Then I should find the "HCP" document
@@ -55,4 +34,4 @@ Feature: Submit a Medical Claim in which the claimant mails their HCP form at la
     Given I am on the tab "Manage Request"
     Then I click Accept
     Given I am on the claim case page
-    Then I should approve claim
+    Then I should be able to approve the claim
