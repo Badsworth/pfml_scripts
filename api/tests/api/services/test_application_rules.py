@@ -177,6 +177,26 @@ def test_residential_address_required(test_db_session, initialize_factories_sess
     ] == issues
 
 
+def test_has_mailing_address_required(test_db_session, initialize_factories_session):
+    test_app = ApplicationFactory.create(
+        has_mailing_address=None,
+        employment_status=EmploymentStatus.get_instance(
+            test_db_session, template=EmploymentStatus.EMPLOYED
+        ),
+        hours_worked_per_week=70,
+        has_state_id=True,
+        residential_address=AddressFactory.create(),
+    )
+    issues = get_always_required_issues(test_app)
+    assert [
+        Issue(
+            type=IssueType.required,
+            message="has_mailing_address is required",
+            field="has_mailing_address",
+        )
+    ] == issues
+
+
 def test_has_leave_periods_required(test_db_session, initialize_factories_session):
     test_app = ApplicationFactory.create(
         employment_status=EmploymentStatus.get_instance(
@@ -413,6 +433,19 @@ def test_mass_id_required_if_has_mass_id(test_db_session, initialize_factories_s
     ] == issues
 
 
+def test_mailing_addr_required_if_has_mailing_addr(test_db_session, initialize_factories_session):
+    test_app = ApplicationFactory.create(has_mailing_address=True, mailing_address=None)
+    issues = get_conditional_issues(test_app)
+    assert [
+        Issue(
+            type=IssueType.required,
+            rule="conditional",
+            message="mailing_address is required if has_mailing_address is set",
+            field="mailing_address",
+        )
+    ] == issues
+
+
 def test_pregnant_required_medical_leave(test_db_session, initialize_factories_session):
     test_app = ApplicationFactory.create(
         leave_type_id=LeaveType.MEDICAL_LEAVE.leave_type_id, pregnant_or_recent_birth=None
@@ -558,25 +591,6 @@ def test_account_type_required_for_ACH(test_db_session, initialize_factories_ses
     ] == issues
 
 
-def test_mailing_address_required_for_debit(test_db_session, initialize_factories_session):
-    test_app = ApplicationFactory.create(
-        payment_preferences=[
-            PaymentPreferenceFactory.create(payment_type_id=PaymentType.DEBIT.payment_type_id)
-        ],
-        mailing_address=None,
-        residential_address=None,
-    )
-    issues = get_payments_issues(test_app)
-    assert [
-        Issue(
-            type=IssueType.required,
-            rule="conditional",
-            message="Address is required for debit card for payment_preference[0]",
-            field="residential_address",
-        )
-    ] == issues
-
-
 def test_payment_preferences_same_order(test_db_session, initialize_factories_session, app):
     test_app = ApplicationFactory.create(
         employment_status=EmploymentStatus.get_instance(
@@ -607,12 +621,6 @@ def test_payment_preferences_same_order(test_db_session, initialize_factories_se
         {
             "field": "residential_address",
             "message": "residential_address is required",
-            "type": "required",
-        },
-        {
-            "field": "residential_address",
-            "message": "Address is required for debit card for payment_preference[0]",
-            "rule": "conditional",
             "type": "required",
         },
         {

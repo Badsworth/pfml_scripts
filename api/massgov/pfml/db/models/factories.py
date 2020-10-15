@@ -193,6 +193,7 @@ class ApplicationFactory(BaseFactory):
     date_of_birth = factory.Faker("date_of_birth", minimum_age=14, maximum_age=100)
     has_state_id = False
     mass_id = None
+    has_mailing_address = False
     pregnant_or_recent_birth = False
     child_birth_date = None
     child_placement_date = None

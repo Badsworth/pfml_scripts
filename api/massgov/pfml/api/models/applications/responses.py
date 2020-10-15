@@ -50,6 +50,7 @@ class ApplicationResponse(PydanticBaseModel):
     payment_preferences: Optional[List[PaymentPreferences]]
     updated_time: datetime
     status: Optional[ApplicationStatus]
+    has_mailing_address: Optional[bool]
     mailing_address: Optional[Address]
     residential_address: Optional[Address]
 

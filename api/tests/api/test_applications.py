@@ -254,6 +254,32 @@ def test_application_patch(client, user, auth_token, test_db_session):
     assert response_body.get("data").get("tax_identifier") == "***-**-****"
 
 
+def test_application_patch_has_mailing_address(client, user, auth_token, test_db_session):
+    application = ApplicationFactory.create(user=user, has_mailing_address=None)
+    assert application.has_mailing_address is None
+    response = client.patch(
+        "/v1/applications/{}".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+        json={
+            "has_mailing_address": True,
+            "mailing_address": {
+                "city": "Chicago",
+                "state": "IL",
+                "line_1": "123 Foo St.",
+                "zip": "12345-1234",
+            },
+        },
+    )
+    assert response.status_code == 200
+    response_body = response.get_json()
+    assert response_body.get("data").get("has_mailing_address") is True
+    assert response_body.get("data").get("mailing_address")["line_1"] == "123 Foo St."
+
+    test_db_session.refresh(application)
+    assert application.has_mailing_address is True
+    assert application.mailing_address.address_line_one == "123 Foo St."
+
+
 def test_application_patch_mailing_address(client, user, auth_token, test_db_session):
     application = ApplicationFactory.create(user=user)
     assert application.mailing_address is None

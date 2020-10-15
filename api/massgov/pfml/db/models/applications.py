@@ -111,6 +111,7 @@ class Application(Base):
     requestor = Column(Integer)
     employee_id = Column(UUID(as_uuid=True), ForeignKey("employee.employee_id"))
     employer_id = Column(UUID(as_uuid=True), ForeignKey("employer.employer_id"))
+    has_mailing_address = Column(Boolean)
     mailing_address_id = Column(UUID(as_uuid=True), ForeignKey("address.address_id"), nullable=True)
     residential_address_id = Column(
         UUID(as_uuid=True), ForeignKey("address.address_id"), nullable=True

@@ -40,7 +40,15 @@ def get_conditional_issues(application: Application) -> List[Issue]:
             )
         )
 
-    # TODO: (CP-1019) add has_mailing_address conditional constraint here
+    if application.has_mailing_address and not application.mailing_address:
+        issues.append(
+            Issue(
+                type=IssueType.required,
+                rule=IssueRule.conditional,
+                message="mailing_address is required if has_mailing_address is set",
+                field="mailing_address",
+            )
+        )
 
     if application.leave_type and (
         application.leave_type.leave_type_id == LeaveType.MEDICAL_LEAVE.leave_type_id
@@ -156,18 +164,6 @@ def get_payments_issues(application: Application) -> List[Issue]:
                         field=f"payment_preferences[{i}].account_details.account_type",
                     )
                 )
-        # (CP-1019) once has_mailing_address, update the condition here
-        if preference.payment_type_id == PaymentType.DEBIT.payment_type_id and not (
-            application.mailing_address or application.residential_address
-        ):
-            issues.append(
-                Issue(
-                    type=IssueType.required,
-                    rule=IssueRule.conditional,
-                    message=f"Address is required for debit card for payment_preference[{i}]",
-                    field="residential_address",
-                )
-            )
 
     return issues
 
@@ -180,18 +176,19 @@ def deepgetattr(obj, attr):
 # This maps the required field name in the DB to its equivalent in the API
 # Because the DB schema and the API schema differ
 ALWAYS_REQUIRED_FIELDS_DB_NAME_TO_API_NAME_MAP = {
-    "first_name": "first_name",
-    "last_name": "last_name",
     "date_of_birth": "date_of_birth",
+    "first_name": "first_name",
+    "employment_status": "employment_status",
     "has_continuous_leave_periods": "has_continuous_leave_periods",
     "has_intermittent_leave_periods": "has_intermittent_leave_periods",
+    "has_mailing_address": "has_mailing_address",
     "has_reduced_schedule_leave_periods": "has_reduced_schedule_leave_periods",
     "has_state_id": "has_state_id",
-    "tax_identifier": "tax_identifier",
-    "leave_reason": "leave_details.reason",
-    "employment_status": "employment_status",
     "hours_worked_per_week": "hours_worked_per_week",
+    "last_name": "last_name",
+    "leave_reason": "leave_details.reason",
     "residential_address": "residential_address",
+    "tax_identifier": "tax_identifier",
 }
 
 

@@ -37,6 +37,7 @@ class ApplicationRequestBody(PydanticBaseModel):
     employment_status: Optional[EmploymentStatus]
     leave_details: Optional[ApplicationLeaveDetails]
     payment_preferences: Optional[List[PaymentPreferences]]
+    has_mailing_address: Optional[bool]
     mailing_address: Optional[Address]
     residential_address: Optional[Address]
 

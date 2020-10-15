@@ -1043,6 +1043,10 @@ components:
             date_of_birth:
               $ref: "#/components/schemas/Date"
               nullable: true
+            has_mailing_address:
+              type: boolean
+              nullable: true
+              example: false
             mailing_address:
               $ref: "#/components/schemas/Address"
               nullable: true
@@ -1163,6 +1167,10 @@ components:
           type: boolean
           nullable: true
           example: true
+        has_mailing_address:
+          type: boolean
+          nullable: true
+          example: false
         mailing_address:
           $ref: "#/components/schemas/Address"
           nullable: true
