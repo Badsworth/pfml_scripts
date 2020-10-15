@@ -85,11 +85,19 @@ def create_engine(config: Optional[DbConfig] = None) -> Engine:
 
     conn_pool = pool.QueuePool(get_conn, max_overflow=10, pool_size=5)
 
+    if db_config.hide_sql_parameter_logs:
+        logger.warning("db_config hide_parameters set to true")
+
     # The URL only needs to specify the dialect, since the connection pool
     # handles the actual connections.
     #
     # (a SQLAlchemy Engine represents a Dialect+Pool)
-    return sqlalchemy.create_engine("postgresql://", pool=conn_pool, executemany_mode="batch")
+    return sqlalchemy.create_engine(
+        "postgresql://",
+        pool=conn_pool,
+        executemany_mode="batch",
+        hide_parameters=db_config.hide_sql_parameter_logs,
+    )
 
 
 def get_connection_parameters(db_config: DbConfig) -> Dict[str, Any]:

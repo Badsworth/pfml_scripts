@@ -16,6 +16,7 @@ class DbConfig:
     schema: str
     port: str
     use_iam_auth: bool = False
+    hide_sql_parameter_logs: bool = True
 
 
 def get_config(prefer_admin: bool = False) -> DbConfig:
@@ -50,6 +51,7 @@ def get_config(prefer_admin: bool = False) -> DbConfig:
             "schema": db_config.schema,
             "port": db_config.port,
             "use_iam_auth": db_config.use_iam_auth,
+            "hide_sql_parameter_logs": db_config.hide_sql_parameter_logs,
         },
     )
 

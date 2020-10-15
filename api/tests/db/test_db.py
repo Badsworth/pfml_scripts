@@ -5,9 +5,12 @@ import logging  # noqa: B1
 import urllib.parse
 
 import moto
+import pytest
+from sqlalchemy.exc import InvalidRequestError
 
 import massgov.pfml.db
 from massgov.pfml.db import DbConfig, get_config, make_connection_uri
+from massgov.pfml.db.models.employees import TaxIdentifier
 
 
 class DummyConnectionInfo:
@@ -125,3 +128,41 @@ def test_get_connection_parameters_not_local_no_set_password(
 
         assert conn_params["sslmode"] == "require"
         assert conn_params["password"]
+
+
+def simulate_insert_duplicate_row(db_session):
+    TEST_SSN = "123456789"
+    tax_id_1 = TaxIdentifier(
+        tax_identifier_id="638309eb-1981-4a13-aa35-8f1eb6f52e75", tax_identifier=TEST_SSN
+    )
+    tax_id_2 = TaxIdentifier(
+        tax_identifier_id="c28b9a52-cd53-445f-b3eb-a15a05ed287f", tax_identifier=TEST_SSN
+    )
+    db_session.add(tax_id_1)
+    db_session.add(tax_id_2)
+    db_session.flush()
+
+
+def simulate_rollback(db_session):
+    try:
+        simulate_insert_duplicate_row(db_session)
+    except Exception:
+        db_session.commit()
+
+
+def test_db_doesnt_log_sql_params(test_db_session, verbose_test_db_session):
+    ERROR_PARAMETERS = "[parameters: ({'tax_identifier_id': '638309eb-1981-4a13-aa35-8f1eb6f52e75', 'tax_identifier': '123456789'}, {'tax_identifier_id': 'c28b9a52-cd53-445f-b3eb-a15a05ed287f', 'tax_identifier': '123456789'})]"
+
+    with pytest.raises(InvalidRequestError) as verbose_e:
+        simulate_rollback(verbose_test_db_session)
+
+    verbose_error_str = verbose_e.exconly()
+
+    assert ERROR_PARAMETERS in verbose_error_str
+
+    with pytest.raises(InvalidRequestError) as silent_e:
+        simulate_rollback(test_db_session)
+
+    silent_error_str: str = silent_e.exconly()
+
+    assert ERROR_PARAMETERS not in silent_error_str

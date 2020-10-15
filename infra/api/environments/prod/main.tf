@@ -49,7 +49,6 @@ module "api" {
     "https://paidleave-api.mass.gov",
     "https://zi7eve1v85.execute-api.us-east-1.amazonaws.com"
   ]
-
   dor_import_lambda_build_s3_key        = local.dor_lambda_artifact_s3_key
   dor_import_lambda_dependencies_s3_key = local.dor_import_lambda_dependencies_s3_key
   formstack_import_lambda_build_s3_key  = local.formstack_lambda_artifact_s3_key
