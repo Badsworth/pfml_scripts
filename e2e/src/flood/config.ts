@@ -1,4 +1,4 @@
-import { StepFunction, TestSettings } from "@flood/element";
+import { StepFunction, TestSettings, ENV } from "@flood/element";
 import { FineosUserType } from "../simulation/types";
 
 export const globalElementSettings: TestSettings = {
@@ -57,6 +57,12 @@ export async function getFineosBaseUrl(
     ({
       [userType]: { username, password },
     } = JSON.parse(await config("E2E_FINEOS_USERS")));
+    if (ENV.FLOOD_LOAD_TEST) {
+      const randomUser = Math.floor(Math.random() * 7);
+      if (randomUser > 0) {
+        username = `${username}${randomUser}`;
+      }
+    }
   } else {
     username = await config("E2E_FINEOS_USERNAME");
     password = await config("E2E_FINEOS_PASSWORD");
