@@ -33,6 +33,7 @@ export default class PortalPuppeteerSubmitter extends PortalSubmitter {
     await gotoCase(page, fineosId);
     for (const document of documents) {
       await uploadDocument(page, document);
+      await createDocumentTask(page);
     }
   }
 }
@@ -87,6 +88,27 @@ async function uploadDocument(
   );
   await page
     .$('input[type="submit"][value="OK"]')
+    .then((el) => click(page, el));
+}
+
+async function createDocumentTask(page: puppeteer.Page) {
+  await clickTab(page, "Tasks");
+  await page
+    .waitForSelector('input[type="submit"][value="Add"]')
+    .then((el) => click(page, el));
+
+  await page
+    .waitForSelector('input[type="text"][id*="NameTextBox"]')
+    .then((el) => el.type("Outstanding Document Received"));
+  await page
+    .$('input[type="submit"][value="Find"]')
+    .then((el) => click(page, el));
+
+  // Issue: there is no way to add a description to the task
+  // affects LST and CSR's - won't know which document to review
+
+  await page
+    .waitForSelector('input[type="submit"][value="Next"]')
     .then((el) => click(page, el));
 }
 
