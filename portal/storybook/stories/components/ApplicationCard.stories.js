@@ -1,4 +1,6 @@
 import Document, { DocumentType } from "src/models/Document";
+import AppErrorInfo from "src/models/AppErrorInfo";
+import AppErrorInfoCollection from "src/models/AppErrorInfoCollection";
 import { ApplicationCard } from "src/components/ApplicationCard";
 import Claim from "src/models/Claim";
 import { MockClaimBuilder } from "tests/test-utils";
@@ -26,12 +28,17 @@ export default {
         ],
       },
     },
+    errors: {
+      defaultValue: "None",
+      control: { type: "radio", options: ["DocumentsRequestError"] },
+    },
   },
 };
 
 export const Story = ({ claim, documents, ...args }) => {
   let attachedDocuments = [];
   let claimAttrs;
+  const errors = [];
 
   if (claim === "Empty") {
     claimAttrs = new MockClaimBuilder().create();
@@ -73,8 +80,25 @@ export const Story = ({ claim, documents, ...args }) => {
     ];
   }
 
+  if (args.errors === "DocumentsRequestError") {
+    // There wouldn't be documents in this case
+    attachedDocuments = [];
+
+    errors.push(
+      new AppErrorInfo({
+        meta: { application_id: claimAttrs.application_id },
+        name: "DocumentsRequestError",
+      })
+    );
+  }
+
+  const appLogic = {
+    appErrors: new AppErrorInfoCollection(errors),
+  };
+
   return (
     <ApplicationCard
+      appLogic={appLogic}
       claim={new Claim(claimAttrs)}
       {...args}
       documents={attachedDocuments}

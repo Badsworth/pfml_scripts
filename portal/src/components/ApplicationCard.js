@@ -164,7 +164,7 @@ export const ApplicationCard = (props) => {
         {/* Legal Notices Section */}
 
         {hasLoadingDocumentsError && (
-          <Alert className="margin-bottom-3" noIcon>
+          <Alert noIcon>
             {t("components.applicationCard.documentsRequestError")}
           </Alert>
         )}

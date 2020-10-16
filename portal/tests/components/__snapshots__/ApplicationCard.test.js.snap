@@ -57,7 +57,6 @@ exports[`ApplicationCard displays legal notices 1`] = `
 
 exports[`ApplicationCard renders Alert inside the component when there is an error loading documents 1`] = `
 <Alert
-  className="margin-bottom-3"
   noIcon={true}
 >
   An error was encountered while checking your application for documents. If this continues to happen, you may call the Paid Family Leave Contact Center at XXX‑XXX‑XXXX
