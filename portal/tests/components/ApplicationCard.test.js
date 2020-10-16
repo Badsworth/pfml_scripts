@@ -85,10 +85,20 @@ describe("ApplicationCard", () => {
   });
 
   describe("when the claim status is Completed", () => {
-    it("does not include a link to edit the claim", () => {
+    it("includes a button to upload additional documents", () => {
       const wrapper = render(new MockClaimBuilder().completed().create());
+      expect(wrapper.find("ButtonLink")).toHaveLength(1);
+    });
 
-      expect(wrapper.find("ButtonLink")).toHaveLength(0);
+    describe("when it's a bonding claim with no cert doc", () => {
+      it("renders guidance to upload a cert doc", () => {
+        const wrapper = render(
+          new MockClaimBuilder().completed().bondingBirthLeaveReason().create()
+        );
+        expect(wrapper.html()).toMatch(
+          `Once your child is born, submit proof of birth so that we can make a decision.`
+        );
+      });
     });
   });
 

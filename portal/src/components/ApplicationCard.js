@@ -26,6 +26,10 @@ export const ApplicationCard = (props) => {
   );
   const { t } = useTranslation();
   const leaveReason = get(claim, "leave_details.reason");
+  const hasCertDoc = documents.some(
+    (doc) => doc.document_type === DocumentType.medicalCertification
+  ); // This enum is used because for MVP all certs will have the same doc type
+
   const metadataHeadingProps = {
     className: "margin-top-0 margin-bottom-05 text-base-dark",
     level: "4",
@@ -162,23 +166,43 @@ export const ApplicationCard = (props) => {
         )}
 
         {/* Legal Notices Section */}
-
         {hasLoadingDocumentsError && (
           <Alert noIcon>
             {t("components.applicationCard.documentsRequestError")}
           </Alert>
         )}
-        {claim.isCompleted && legalNotices.length > 0 && (
-          <div className="border-top border-base-lighter padding-top-2">
-            <Heading level="3" weight="normal">
-              {t("components.applicationCard.noticesHeading")}
-            </Heading>
+        <div className="border-top border-base-lighter padding-top-2">
+          {claim.isCompleted && legalNotices.length > 0 && (
+            <div>
+              <Heading level="3" weight="normal">
+                {t("components.applicationCard.noticesHeading")}
+              </Heading>
 
-            <ul className="usa-list margin-top-1">
-              {legalNotices.map((notice) => renderLegalNoticeRow(notice))}
-            </ul>
-          </div>
-        )}
+              <ul className="usa-list margin-top-1">
+                {legalNotices.map((notice) => renderLegalNoticeRow(notice))}
+              </ul>
+            </div>
+          )}
+
+          {/* Additional documents section */}
+          {claim.isCompleted &&
+            leaveReason === LeaveReason.bonding &&
+            !hasCertDoc && (
+              // This condition is used instead of isFutureBondingLeave because we want to continue showing the button after the placement or birth of the child
+              <React.Fragment>
+                <p>{t("components.applicationCard.futureBondingLeave")}</p>
+              </React.Fragment>
+            )}
+
+          {claim.isCompleted && (
+            <ButtonLink
+              className="display-block"
+              href={routeWithParams("claims.dashboard")}
+            >
+              {t("components.applicationCard.uploadDocsButton")}
+            </ButtonLink>
+          )}
+        </div>
       </div>
     </article>
   );

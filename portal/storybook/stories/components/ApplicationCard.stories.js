@@ -23,6 +23,7 @@ export default {
           "Intermittent leave",
           "Submitted",
           "Completed",
+          "Bonding Completed With No Cert",
           "Approved",
           "Denied",
         ],
@@ -50,6 +51,18 @@ export const Story = ({ claim, documents, ...args }) => {
     claimAttrs = new MockClaimBuilder().submitted().create();
   } else if (claim === "Completed") {
     claimAttrs = new MockClaimBuilder().completed().create();
+  } else if (claim === "Bonding Completed With No Cert") {
+    claimAttrs = new MockClaimBuilder()
+      .completed()
+      .bondingBirthLeaveReason()
+      .create();
+    attachedDocuments = [
+      new Document({
+        created_at: "2021-01-15",
+        document_type: DocumentType.identityVerification,
+        fineos_document_id: "a",
+      }),
+    ];
   } else if (claim === "Approved") {
     claimAttrs = new MockClaimBuilder().completed().create();
     attachedDocuments = [

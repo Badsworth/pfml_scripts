@@ -1118,6 +1118,8 @@ const components = {
   applicationCard: {
     documentsRequestError: "$t(shared.documentsRequestError)",
     feinHeading: "Employer FEIN",
+    futureBondingLeave:
+      "Once your child is born, submit proof of birth so that we can make a decision.",
     heading: "Application {{number}}",
     leavePeriodLabel_continuous: "$t(shared.claimDurationTypeContinuous)",
     leavePeriodLabel_intermittent: "$t(shared.claimDurationTypeIntermittent)",
@@ -1134,6 +1136,7 @@ const components = {
     noticeName_requestForInfoNotice: "Request for more information (PDF)",
     noticesHeading: "View your notices",
     resumeClaimButton: "Complete your application",
+    uploadDocsButton: "Upload additional documents",
   },
   authNav: {
     logOutButton: "Log out",

@@ -86,6 +86,9 @@ exports[`ApplicationCard renders a card for the given application 1`] = `
     >
       Complete your application
     </ButtonLink>
+    <div
+      className="border-top border-base-lighter padding-top-2"
+    />
   </div>
 </article>
 `;
