@@ -27,7 +27,7 @@ describe("Claim", () => {
     });
   });
 
-  describe("#isFutureBondingLeave", () => {
+  describe("#isFutureChildDate", () => {
     const past = "2020-09-30";
     const now = "2020-10-01";
     const future = "2020-10-02";
@@ -50,7 +50,7 @@ describe("Claim", () => {
         .bondingBirthLeaveReason(future)
         .create();
 
-      expect(claim.isFutureBondingLeave).toBe(true);
+      expect(claim.isFutureChildDate).toBe(true);
     });
 
     it("returns false for past birth bonding leave", () => {
@@ -58,7 +58,7 @@ describe("Claim", () => {
         .bondingBirthLeaveReason(past)
         .create();
 
-      expect(claim.isFutureBondingLeave).toBe(false);
+      expect(claim.isFutureChildDate).toBe(false);
     });
 
     it("returns true for future placement bonding leave", () => {
@@ -66,7 +66,7 @@ describe("Claim", () => {
         .bondingFosterCareLeaveReason(future)
         .create();
 
-      expect(claim.isFutureBondingLeave).toBe(true);
+      expect(claim.isFutureChildDate).toBe(true);
     });
 
     it("returns false for past placement bonding leave", () => {
@@ -74,7 +74,7 @@ describe("Claim", () => {
         .bondingFosterCareLeaveReason(past)
         .create();
 
-      expect(claim.isFutureBondingLeave).toBe(false);
+      expect(claim.isFutureChildDate).toBe(false);
     });
   });
 

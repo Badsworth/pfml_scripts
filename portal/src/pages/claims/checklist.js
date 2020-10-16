@@ -182,7 +182,7 @@ export const Checklist = (props) => {
     }
 
     // Check to see if we should use the future bonding leave variant
-    if (claim.isFutureBondingLeave) {
+    if (claim.isFutureChildDate) {
       context += "Future";
     }
 

@@ -92,7 +92,7 @@ class Claim extends BaseModel {
    * placement date is in the future.
    * @returns {boolean}
    */
-  get isFutureBondingLeave() {
+  get isFutureChildDate() {
     if (!this.isBondingLeave) return false;
 
     const birthOrPlacementDate =
