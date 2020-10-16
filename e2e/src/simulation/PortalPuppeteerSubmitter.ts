@@ -86,6 +86,7 @@ async function uploadDocument(
   fileInput?.uploadFile(
     (document.file as fs.ReadStream).path.toString("utf-8")
   );
+
   await page
     .$('input[type="submit"][value="OK"]')
     .then((el) => click(page, el));

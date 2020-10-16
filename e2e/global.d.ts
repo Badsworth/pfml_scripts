@@ -10,6 +10,7 @@
 // Import some types here. We'll reference them below.
 type Application = import("./src/types").Application;
 type Credentials = import("./src/types").Credentials;
+type SimulationClaim = import("./src/simulation/types").SimulationClaim;
 type ApplicationRequestBody = import("./src/api").ApplicationRequestBody;
 
 declare namespace Cypress {
@@ -38,7 +39,7 @@ declare namespace Cypress {
     task(event: "generateCredentials"): Chainable<Credentials>;
     task(
       event: "submitClaimToAPI",
-      options: ApplicationRequestBody
+      options: SimulationClaim
     ): Chainable<string>;
   }
 }

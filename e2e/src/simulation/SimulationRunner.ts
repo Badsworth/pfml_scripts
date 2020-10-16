@@ -84,15 +84,6 @@ export default class SimulationRunner {
       (d) => !d.submittedManually
     );
 
-    const makeDocUploadBody = (doc: ClaimDocument): DocumentUploadRequest => ({
-      document_type: getDocumentType(doc),
-      description: "Automated Upload",
-      file: fs.createReadStream(
-        path.join(this.storage.documentDirectory, doc.path)
-      ),
-      name: `${doc.type}.pdf`,
-    });
-
     let claimId = "unsubmitted";
 
     if (!claim.skipSubmitClaim) {
@@ -101,7 +92,9 @@ export default class SimulationRunner {
       );
       claimId = await this.submitter.submit(
         claim.claim,
-        submittedDocuments.map(makeDocUploadBody)
+        submittedDocuments.map(
+          makeDocUploadBody(this.storage.documentDirectory, "Automated Upload")
+        )
       );
     }
 
@@ -155,4 +148,13 @@ function getDocumentType(
     default:
       throw new Error(`Unhandled document type: ${document.type}`);
   }
+}
+
+export function makeDocUploadBody(docDir: string, description?: string) {
+  return (doc: ClaimDocument): DocumentUploadRequest => ({
+    document_type: getDocumentType(doc),
+    description,
+    file: fs.createReadStream(path.join(docDir, doc.path)),
+    name: `${doc.type}.pdf`,
+  });
 }

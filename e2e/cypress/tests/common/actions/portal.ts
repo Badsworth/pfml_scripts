@@ -34,8 +34,8 @@ export function submitClaimDirectlyToAPI(
     if (!claim) {
       throw new Error("Claim Was Not Generated");
     }
-    cy.log("submitting", claim.claim);
-    cy.task("submitClaimToAPI", claim.claim).then((fineosId) => {
+    cy.log("submitting", claim);
+    cy.task("submitClaimToAPI", claim).then((fineosId) => {
       cy.stash("claimNumber", fineosId);
       cy.log("submitted", fineosId);
     });

@@ -13,12 +13,17 @@ import { config as dotenv } from "dotenv";
 import retry from "p-retry";
 import delay from "delay";
 import faker from "faker";
+import fs from "fs";
 import webpackPreprocessor from "@cypress/webpack-preprocessor";
 import { CypressStepThis } from "@/types";
 import TestMailVerificationFetcher from "./TestMailVerificationFetcher";
 import PortalSubmitter from "../../src/simulation/PortalSubmitter";
-import fs from "fs";
-import { SimulationClaim, SimulationGenerator } from "@/simulation/types";
+import {
+  SimulationClaim,
+  SimulationGenerator,
+} from "../../src/simulation/types";
+import { DocumentUploadRequest } from "../../src/api";
+import { makeDocUploadBody } from "../../src/simulation/SimulationRunner";
 import * as pilot3 from "../../src/simulation/scenarios/pilot3";
 import * as pilot4 from "../../src/simulation/scenarios/pilot4";
 
@@ -67,10 +72,10 @@ export default function (on: Cypress.PluginEvents): Cypress.ConfigOptions {
         password: faker.internet.password(10) + faker.random.number(999),
       };
     },
-    async submitClaimToAPI(
-      application: CypressStepThis["application"]
-    ): Promise<string> {
-      if (!application) throw new Error("Application missing!");
+    async submitClaimToAPI(application: SimulationClaim): Promise<string> {
+      if (!application.claim) throw new Error("Application missing!");
+      if (!application.documents.length) throw new Error("Documents missing!");
+      const { claim, documents } = application;
       const {
         E2E_COGNITO_CLIENTID: ClientId,
         E2E_COGNITO_POOL: UserPoolId,
@@ -83,6 +88,11 @@ export default function (on: Cypress.PluginEvents): Cypress.ConfigOptions {
           "Task 'submitClaimToAPI' failed due to missing environment variables!"
         );
       }
+
+      const newDocuments: DocumentUploadRequest[] = documents.map(
+        makeDocUploadBody("/tmp", "Direct API Upload")
+      );
+
       return new PortalSubmitter({
         ClientId,
         UserPoolId,
@@ -90,7 +100,7 @@ export default function (on: Cypress.PluginEvents): Cypress.ConfigOptions {
         Password,
         ApiBaseUrl,
       })
-        .submit(application)
+        .submit(claim, newDocuments)
         .then((fineosId) => fineosId)
         .catch((err) => {
           console.error("Failed to submit claim:", err.data);
