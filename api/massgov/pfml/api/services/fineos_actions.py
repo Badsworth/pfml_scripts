@@ -119,6 +119,15 @@ def send_to_fineos(application: Application, db_session: massgov.pfml.db.Session
         application.fineos_notification_case_id = new_case.notificationCaseId
         db_session.commit()
 
+        if application.leave_reason_qualifier_id in [
+            LeaveReasonQualifier.NEWBORN.leave_reason_qualifier_id,
+            LeaveReasonQualifier.ADOPTION.leave_reason_qualifier_id,
+            LeaveReasonQualifier.FOSTER_CARE.leave_reason_qualifier_id,
+        ]:
+            reflexive_question = build_bonding_date_reflexive_question(application)
+            fineos.update_reflexive_questions(
+                fineos_user_id, application.fineos_absence_id, reflexive_question
+            )
         upsert_week_based_work_pattern(fineos, fineos_user_id, application)
 
     except massgov.pfml.fineos.FINEOSClientError:
@@ -234,6 +243,28 @@ def build_absence_case(
         employerNotificationDate=application.employer_notification_date,
     )
     return absence_case
+
+
+def build_bonding_date_reflexive_question(
+    application: Application,
+) -> massgov.pfml.fineos.models.customer_api.AdditionalInformation:
+    if (
+        application.leave_reason_qualifier_id
+        == LeaveReasonQualifier.NEWBORN.leave_reason_qualifier_id
+    ):
+        field_name = "FamilyMemberDetailsQuestionGroup.familyMemberDetailsQuestions.dateOfBirth"
+        date_value = application.child_birth_date
+    else:
+        field_name = "PlacementQuestionGroup.placementQuestions.adoptionDate"
+        date_value = application.child_placement_date
+
+    reflexive_details = massgov.pfml.fineos.models.customer_api.Attribute(
+        fieldName=field_name, dateValue=date_value,
+    )
+    reflexive_question = massgov.pfml.fineos.models.customer_api.AdditionalInformation(
+        reflexiveQuestionLevel="reason", reflexiveQuestionDetails=[reflexive_details],
+    )
+    return reflexive_question
 
 
 def upsert_week_based_work_pattern(fineos_client, user_id, application):

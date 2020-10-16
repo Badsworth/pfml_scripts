@@ -110,3 +110,12 @@ class AbstractFINEOSClient(abc.ABC, metaclass=abc.ABCMeta):
         week_based_work_pattern: models.customer_api.WeekBasedWorkPattern,
     ) -> models.customer_api.WeekBasedWorkPattern:
         pass
+
+    @abc.abstractmethod
+    def update_reflexive_questions(
+        self,
+        user_id: str,
+        absence_id: typing.Optional[str],
+        additional_information: models.customer_api.AdditionalInformation,
+    ) -> None:
+        pass

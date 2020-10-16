@@ -194,6 +194,19 @@ class MockFINEOSClient(client.AbstractFINEOSClient):
         )
         return week_based_work_pattern
 
+    def update_reflexive_questions(
+        self,
+        user_id: str,
+        absence_id: typing.Optional[str],
+        additional_information: models.customer_api.AdditionalInformation,
+    ) -> None:
+        _capture_call(
+            "update_reflexive_questions",
+            user_id,
+            absence_id=absence_id,
+            additional_information=additional_information,
+        )
+
 
 def start_capture():
     """Start capturing API calls made via MockFINEOSClient."""

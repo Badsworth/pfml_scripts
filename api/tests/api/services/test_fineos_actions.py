@@ -1,8 +1,9 @@
 import io
+from datetime import date
 
 import massgov.pfml.fineos
 from massgov.pfml.api.services import fineos_actions
-from massgov.pfml.db.models.applications import Application
+from massgov.pfml.db.models.applications import Application, LeaveReasonQualifier
 from massgov.pfml.db.models.factories import ApplicationFactory
 from massgov.pfml.fineos.exception import FINEOSClientBadResponse, FINEOSNotFound
 
@@ -178,3 +179,45 @@ def test_build_week_based_work_pattern(user):
     pattern_with_seconds_remainder = fineos_actions.build_week_based_work_pattern(application)
     # it rounds to the nearest minute
     assert pattern_with_seconds_remainder.workPatternDays[0].minutes == 34
+
+
+def test_build_bonding_date_reflexive_question_birth(user):
+    application = ApplicationFactory.create(user=user)
+    application.child_birth_date = date(2021, 2, 9)
+    application.leave_reason_qualifier_id = LeaveReasonQualifier.NEWBORN.leave_reason_qualifier_id
+    reflexive_question = fineos_actions.build_bonding_date_reflexive_question(application)
+
+    assert reflexive_question.reflexiveQuestionLevel == "reason"
+    assert (
+        reflexive_question.reflexiveQuestionDetails[0].fieldName
+        == "FamilyMemberDetailsQuestionGroup.familyMemberDetailsQuestions.dateOfBirth"
+    )
+    assert reflexive_question.reflexiveQuestionDetails[0].dateValue == date(2021, 2, 9)
+
+
+def test_build_bonding_date_reflexive_question_adoption(user):
+    application = ApplicationFactory.create(user=user)
+    application.child_placement_date = date(2021, 2, 9)
+    application.leave_reason_qualifier_id = LeaveReasonQualifier.ADOPTION.leave_reason_qualifier_id
+    reflexive_question = fineos_actions.build_bonding_date_reflexive_question(application)
+
+    assert (
+        reflexive_question.reflexiveQuestionDetails[0].fieldName
+        == "PlacementQuestionGroup.placementQuestions.adoptionDate"
+    )
+    assert reflexive_question.reflexiveQuestionDetails[0].dateValue == date(2021, 2, 9)
+
+
+def test_build_bonding_date_reflexive_question_foster(user):
+    application = ApplicationFactory.create(user=user)
+    application.child_placement_date = date(2021, 2, 9)
+    application.leave_reason_qualifier_id = (
+        LeaveReasonQualifier.FOSTER_CARE.leave_reason_qualifier_id
+    )
+    reflexive_question = fineos_actions.build_bonding_date_reflexive_question(application)
+
+    assert (
+        reflexive_question.reflexiveQuestionDetails[0].fieldName
+        == "PlacementQuestionGroup.placementQuestions.adoptionDate"
+    )
+    assert reflexive_question.reflexiveQuestionDetails[0].dateValue == date(2021, 2, 9)

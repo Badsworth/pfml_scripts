@@ -356,3 +356,17 @@ class FINEOSClient(client.AbstractFINEOSClient):
         json = response.json()
 
         return models.customer_api.WeekBasedWorkPattern.parse_obj(json)
+
+    def update_reflexive_questions(
+        self,
+        user_id: str,
+        absence_id: Optional[str],
+        additional_information: models.customer_api.AdditionalInformation,
+    ) -> None:
+        """Update reflexive questions."""
+        self._customer_api(
+            "POST",
+            f"customer/absence/{absence_id}/reflexive-questions",
+            user_id,
+            data=additional_information.json(exclude_none=True),
+        )

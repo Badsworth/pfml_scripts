@@ -715,7 +715,9 @@ class WorkPlaceAccommodation(BaseModel):
 
 
 class Attribute(BaseModel):
-    fieldName: str = Field(..., description="The name of an attribute.")
+    fieldName: constr(min_length=0, max_length=300) = Field(
+        ..., description="The name of an attribute."
+    )
     booleanValue: Optional[bool] = Field(None, description="Boolean value of an attribute.")
     dateValue: Optional[date] = Field(None, description="ISO 8601 date format")
     decimalValue: Optional[float] = Field(None, description="Decimal value of an attribute.")
@@ -1711,7 +1713,10 @@ class AccommodationCase(BaseModel):
 
 
 class AdditionalInformation(BaseModel):
-    reflexiveQuestionLevel: str = Field(..., description="The reflexive question level.")
+    reflexiveQuestionLevel: constr(min_length=0, max_length=25) = Field(
+        ...,
+        description="The reflexive question level possible value can be 'reason', 'primary relationship' or 'secondary relationship'.",
+    )
     reflexiveQuestionDetails: Optional[List[Attribute]] = None
 
 
