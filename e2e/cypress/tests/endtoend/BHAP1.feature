@@ -8,7 +8,7 @@ Feature: Submit a bonding claim and adjucation approval - BHAP1
     Given I am on the claims "checklist" page
     When I click on the checklist button called "Enter leave details"
     Then I start submitting the claim
-    And I enter child due date
+    And I enter "Foster Care" date
     And I answer the continuous leave question
     And I answer the reduced leave question
     And I answer the intermittent leave question
@@ -33,3 +33,22 @@ Feature: Submit a bonding claim and adjucation approval - BHAP1
     Given I am on the claims "review" page
     Then I should have agreed and successfully submitted the claim
     And I should be able to return to the portal dashboard
+
+  @fineos
+  Scenario: As a CSR (Savilinx), I should be able to Approve a BHAP1 claim submission
+    Given I am logged into Fineos as a Savilinx user
+    And I am viewing the previously submitted claim
+    Given I am on the tab "Documents"
+    And the document "FOSTER" has been uploaded with "State Managed" business type
+    Then I should find the "FOSTER" document
+    Given I am on the tab "Absence Hub"
+    When I start adjudication for the claim
+    And I add paid benefits to the current case
+    Then I should see that the claim's "Eligibility" is "Met"
+    When I mark "State Managed Paid Leave Confirmation" documentation as satisfactory
+    And I mark "Identification Proof" documentation as satisfactory
+    Then I should see that the claim's "Evidence" is "Satisfied"
+    When I fill in the requested absence periods
+    Then I should see that the claim's "Availability" is "Time Available"
+    When I finish adjudication for the claim
+    Then I should be able to approve the claim

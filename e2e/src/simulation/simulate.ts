@@ -239,7 +239,7 @@ function generateMassIDString(): string {
 function generateLeaveDates(): [Date, Date] {
   const startDate = soon(182, "2021-01-01");
   const endDate = add(startDate, {
-    weeks: faker.random.number({ min: 1, max: 19 }),
+    weeks: faker.random.number({ min: 1, max: 11 }),
   });
   return [startDate, endDate];
 }

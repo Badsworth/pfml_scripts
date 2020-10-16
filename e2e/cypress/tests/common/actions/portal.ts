@@ -428,6 +428,43 @@ export function addLeaveDocs(): void {
   cy.contains("button", "Save and continue").click();
 }
 
+export function enterBondingDateInfo(
+  dateType: string,
+  application: ApplicationRequestBody
+): void {
+  switch (dateType) {
+    case "Newborn":
+      cy.contains("fieldset", "When was your child born?").within(() => {
+        const DOB = new Date(
+          application.leave_details?.child_birth_date as string
+        );
+
+        cy.contains("Month").type(String(DOB.getMonth() + 1) as string);
+        cy.contains("Day").type(String(DOB.getUTCDate()) as string);
+        cy.contains("Year").type(String(DOB.getUTCFullYear()) as string);
+      });
+      break;
+
+    case "Foster Care":
+      cy.contains(
+        "fieldset",
+        "When did the child arrive in your home through foster care or adoption?"
+      ).within(() => {
+        const DOB = new Date(
+          application.leave_details?.child_placement_date as string
+        );
+
+        cy.contains("Month").type(String(DOB.getMonth() + 1) as string);
+        cy.contains("Day").type(String(DOB.getUTCDate()) as string);
+        cy.contains("Year").type(String(DOB.getUTCFullYear()) as string);
+      });
+      break;
+
+    default:
+      throw new Error("Unknown Reason Qualifier");
+  }
+}
+
 export function reviewAndSubmit(): void {
   cy.contains("Review and submit application").click({ force: true });
 }
@@ -476,7 +513,6 @@ export function submitClaimPortal(application: ApplicationRequestBody): void {
   addId("MA ID");
   onPage("checklist");
   clickChecklistButton("Upload leave certification documents");
-  addLeaveDocs();
   onPage("checklist");
   reviewAndSubmit();
   onPage("review");

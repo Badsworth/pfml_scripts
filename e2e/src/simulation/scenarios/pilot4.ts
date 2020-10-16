@@ -29,7 +29,6 @@ export const BHAP3 = scenario("BHAP3", {
   docs: {
     MASSID: {},
     // @todo: Implement document type.
-    PREBIRTH: {},
   },
 });
 

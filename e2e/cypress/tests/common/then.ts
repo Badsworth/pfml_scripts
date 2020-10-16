@@ -102,9 +102,6 @@ Then("I start submitting the claim", function (this: CypressStepThis): void {
     cy.contains(leaveReason[reasonQualifier as string]).click();
   }
   cy.contains("button", "Save and continue").click();
-
-  // Submits data required by specific claim types.
-  /* Usually followed by - "I finish submitting the claim based on its type" */
 });
 
 Then("I have my identity verified {string}", function (
@@ -163,19 +160,16 @@ Then("I enter employer info", function (this: CypressStepThis): void {
   portal.enterEmployerInfo(application);
 });
 
-Then("I enter child due date", function (this: CypressStepThis): void {
+Then("I enter {string} date", function (
+  this: CypressStepThis,
+  dateType: string
+): void {
   if (!this.application) {
     throw new Error("Application has not been set");
   }
   const { application } = this;
 
-  cy.contains("fieldset", "When was your child born?").within(() => {
-    const DOB = new Date(application.leave_details?.child_birth_date as string);
-
-    cy.contains("Month").type(String(DOB.getMonth() + 1) as string);
-    cy.contains("Day").type(String(DOB.getUTCDate()) as string);
-    cy.contains("Year").type(String(DOB.getUTCFullYear()) as string);
-  });
+  portal.enterBondingDateInfo(dateType, application);
   cy.contains("button", "Save and continue").click();
 });
 
@@ -200,7 +194,7 @@ Then("I add my identity document {string}", function (
   portal.addId(idType);
 });
 
-Then("I add my leave certification documents", function () {
+Then("I add my leave certification documents", function (): void {
   portal.addLeaveDocs();
 });
 
