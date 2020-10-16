@@ -37,6 +37,8 @@
       { "name": "COGNITO_USER_POOL_KEYS_URL", "value": "${cognito_user_pool_keys_url}"},
       { "name": "RMV_CLIENT_BASE_URL", "value": "${rmv_client_base_url}" },
       { "name": "RMV_CLIENT_CERTIFICATE_BINARY_ARN", "value": "${rmv_client_certificate_binary_arn}" },
+      { "name": "RMV_CHECK_BEHAVIOR", "value": "${rmv_check_behavior}" },
+      { "name": "RMV_CHECK_MOCK_SUCCESS", "value": "${rmv_check_mock_success}" },
       { "name": "FINEOS_CLIENT_CUSTOMER_API_URL", "value": "${fineos_client_customer_api_url}" },
       { "name": "FINEOS_CLIENT_WSCOMPOSER_API_URL", "value": "${fineos_client_wscomposer_api_url}" },
       { "name": "FINEOS_CLIENT_OAUTH2_URL", "value": "${fineos_client_oauth2_url}" },

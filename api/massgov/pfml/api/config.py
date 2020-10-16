@@ -44,5 +44,5 @@ def get_config() -> AppConfig:
             os.environ.get("RMV_CHECK_BEHAVIOR", RMVCheckBehavior.MOCK.value)
         ),
         # "1" always passes id proofing, "0" always fails id proofing
-        rmv_check_mock_success=os.environ.get("RMV_CHECK_MOCK_SUCCESS", "1") == "0",
+        rmv_check_mock_success=os.environ.get("RMV_CHECK_MOCK_SUCCESS", "1") == "1",
     )

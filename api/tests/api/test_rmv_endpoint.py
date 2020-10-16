@@ -26,7 +26,7 @@ def rmv_no_mock(monkeypatch):
 
 
 @pytest.fixture
-def rmv_toggle_success(monkeypatch):
+def rmv_mock_fail(monkeypatch):
     new_env = monkeypatch.setenv("RMV_CHECK_MOCK_SUCCESS", "0")
     return new_env
 
@@ -45,7 +45,7 @@ body = {
 }
 
 
-def test_rmv_check_fully_mocked(rmv_full_mock, rmv_toggle_success, client, fineos_user_token):
+def test_rmv_check_fully_mocked(rmv_full_mock, client, fineos_user_token):
     response = client.post(
         "/v1/rmv-check", headers={"Authorization": f"Bearer {fineos_user_token}"}, json=body
     )
@@ -56,7 +56,7 @@ def test_rmv_check_fully_mocked(rmv_full_mock, rmv_toggle_success, client, fineo
     assert response_body["description"] == "Verification check passed."
 
 
-def test_rmv_check_failed_fully_mocked(rmv_full_mock, client, fineos_user_token):
+def test_rmv_check_failed_fully_mocked(rmv_full_mock, rmv_mock_fail, client, fineos_user_token):
     response = client.post(
         "/v1/rmv-check", headers={"Authorization": f"Bearer {fineos_user_token}"}, json=body
     )
@@ -71,9 +71,7 @@ def test_rmv_check_failed_fully_mocked(rmv_full_mock, client, fineos_user_token)
 
 
 @mock.patch("massgov.pfml.api.rmv_check.RmvClient.__init__", return_value=None)
-def test_rmv_check_partial_mock_steve(
-    monkeypatch, rmv_partial_mock, rmv_toggle_success, client, fineos_user_token
-):
+def test_rmv_check_partial_mock_steve(monkeypatch, rmv_partial_mock, client, fineos_user_token):
     # This tests one of the pre-loaded test cases for the stage env
     body = {
         "absence_case_id": "testing_the_env",
@@ -108,7 +106,7 @@ def test_rmv_check_partial_mock_steve(
     assert response_body["description"] == "Verification check passed."
 
 
-def test_failed_partial_mock_rmv_check(rmv_partial_mock, client, fineos_user_token):
+def test_failed_partial_mock_rmv_check(rmv_partial_mock, rmv_mock_fail, client, fineos_user_token):
     body = {
         "absence_case_id": "testing_the_env",
         "date_of_birth": "1970-01-01",
@@ -133,7 +131,7 @@ def test_failed_partial_mock_rmv_check(rmv_partial_mock, client, fineos_user_tok
     )
 
 
-def test_partial_mock_rmv_check(rmv_partial_mock, rmv_toggle_success, client, fineos_user_token):
+def test_partial_mock_rmv_check(rmv_partial_mock, client, fineos_user_token):
     body = {
         "absence_case_id": "testing_the_env",
         "date_of_birth": "1970-01-01",
