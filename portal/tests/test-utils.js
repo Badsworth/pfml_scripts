@@ -355,6 +355,28 @@ export class MockClaimBuilder {
   }
 
   /**
+   * @param {object} attrs Address object
+   * @returns {MockClaimBuilder}
+   */
+  mailingAddress(attrs) {
+    set(
+      this.claimAttrs,
+      "mailing_address",
+      attrs
+        ? new Address(attrs)
+        : new Address({
+            city: "Boston",
+            line_1: "124 My St.",
+            line_2: null,
+            state: "MA",
+            zip: "00000",
+          })
+    );
+    set(this.claimAttrs, "has_mailing_address", true);
+    return this;
+  }
+
+  /**
    * @param {Array} attrs List of PreviousLeave objects
    * @returns {MockClaimBuilder}
    */

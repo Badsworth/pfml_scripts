@@ -81,9 +81,6 @@ export const Review = (props) => {
 
   const payment_method = get(claim, "payment_preferences[0].payment_method");
   const reasonQualifier = get(claim, "leave_details.reason_qualifier");
-  const mailing_address = get(claim, "has_mailing_address")
-    ? get(claim, "mailing_address")
-    : get(claim, "residential_address");
 
   const steps = Step.createClaimStepsFromMachine(
     claimantConfigs,
@@ -164,6 +161,15 @@ export const Review = (props) => {
       >
         {formatAddress(get(claim, "residential_address"))}
       </ReviewRow>
+
+      {claim.has_mailing_address && (
+        <ReviewRow
+          label={t("pages.claimsReview.mailingAddressLabel")}
+          level={reviewRowLevel}
+        >
+          {formatAddress(get(claim, "mailing_address"))}
+        </ReviewRow>
+      )}
 
       {claim.has_state_id && (
         <ReviewRow
@@ -515,14 +521,6 @@ export const Review = (props) => {
                 })}
               </ReviewRow>
             </React.Fragment>
-          )}
-          {payment_method === PaymentPreferenceMethod.debit && (
-            <ReviewRow
-              label={t("pages.claimsReview.paymentAddressLabel")}
-              level={reviewRowLevel}
-            >
-              {formatAddress(mailing_address)}
-            </ReviewRow>
           )}
           <Heading level="2" size="1">
             <HeadingPrefix>

@@ -25,7 +25,10 @@ describe("Part 1 Review Page", () => {
   describe("when all data is present", () => {
     it("renders Review page with Part 1 content and edit links", () => {
       const { wrapper } = renderWithAppLogic(Review, {
-        claimAttrs: new MockClaimBuilder().part1Complete().create(),
+        claimAttrs: new MockClaimBuilder()
+          .part1Complete()
+          .mailingAddress()
+          .create(),
         diveLevels: 5,
       });
 

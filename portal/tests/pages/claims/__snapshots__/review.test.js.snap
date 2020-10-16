@@ -434,6 +434,12 @@ exports[`Part 1 Review Page when all data is present renders Review page with Pa
     1234 My St., Boston, MA 00000
   </ReviewRow>
   <ReviewRow
+    label="Mailing address"
+    level="4"
+  >
+    124 My St., Boston, MA 00000
+  </ReviewRow>
+  <ReviewRow
     label="Driver's License Number"
     level="4"
   >

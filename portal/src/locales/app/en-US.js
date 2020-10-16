@@ -784,6 +784,7 @@ const pages = {
     leaveReasonValue_medical: "$t(shared.leaveReasonMedical)",
     leaveReasonValue_serviceMemberFamily:
       "$t(shared.leaveReasonServiceMemberFamily)",
+    mailingAddressLabel: "Mailing address",
     numberOfFilesLabel: "$t(shared.filesUploaded)",
     otherIncomeEntryLabel: "$t(shared.otherIncomeEntryPrefix) {{count}}",
     otherIncomeLabel: "Other sources of income?",
@@ -817,7 +818,6 @@ const pages = {
     partOneNextStepsLine3:
       "Next, you’ll be able to work on Parts 2 and 3, and submit your application.",
     paymentAccountNumLabel: "Account number",
-    paymentAddressLabel: "Mailing address",
     paymentMethodLabel: "Payment method",
     paymentMethodValue_ach: "$t(shared.paymentMethodAch)",
     paymentMethodValue_debit: "$t(shared.paymentMethodDebit)",
