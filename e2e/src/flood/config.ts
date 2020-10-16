@@ -58,7 +58,7 @@ export async function getFineosBaseUrl(
       [userType]: { username, password },
     } = JSON.parse(await config("E2E_FINEOS_USERS")));
     if (ENV.FLOOD_LOAD_TEST) {
-      const randomUser = Math.floor(Math.random() * 7);
+      const randomUser = Math.floor(Math.random() * 8);
       if (randomUser > 0) {
         username = `${username}${randomUser}`;
       }
