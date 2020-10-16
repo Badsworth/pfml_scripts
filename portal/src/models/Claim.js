@@ -2,11 +2,12 @@
 /**
  * @file Benefits application model and enum values
  */
-import { compact, get, groupBy, sortBy } from "lodash";
+import { compact, get, groupBy, sortBy, sumBy, zip, zipObject } from "lodash";
 import Address from "./Address";
 import BaseModel from "./BaseModel";
 import { DateTime } from "luxon";
 import assert from "assert";
+import convertMinutesToHours from "../utils/convertMinutesToHours";
 
 class Claim extends BaseModel {
   get defaults() {
@@ -279,16 +280,35 @@ export class WorkPattern extends BaseModel {
   }
 
   /**
-   * Add a 7 day work week to work_pattern_days.
+   * Return array with total minutes worked each week
+   * @returns {number[]}
+   */
+  get minutesWorkedEachWeek() {
+    return this.weeks.map((week) => {
+      const hours = sumBy(week, "hours");
+      const minutes = sumBy(week, "minutes");
+
+      return 60 * hours + minutes;
+    });
+  }
+
+  /**
+   * Add a 7 day week to work_pattern_days.
    * @param {WorkPattern} workPattern - instance of a WorkPattern
+   * @param {number} [minutesWorkedPerWeek] - average minutes worked per week. Must be an integer. If provided, will split hours evenly across 7 day week
    * @returns {WorkPattern}
    */
-  static addWeek(workPattern) {
-    const newWeek = OrderedDaysOfWeek.map(
-      (day_of_week) =>
+  static addWeek(workPattern, minutesWorkedPerWeek = 0) {
+    const minutesOverWeek = WorkPattern._spreadMinutesOverWeek(
+      minutesWorkedPerWeek
+    );
+
+    const newWeek = zip(OrderedDaysOfWeek, minutesOverWeek).map(
+      ([day_of_week, minutes]) =>
         new WorkPatternDay({
           day_of_week,
           week_number: workPattern.weeks.length + 1,
+          ...convertMinutesToHours(minutes),
         })
     );
 
@@ -302,7 +322,23 @@ export class WorkPattern extends BaseModel {
   }
 
   /**
-   * Remove a 7 day work week from work_pattern_days by week_number
+   * Split provided minutes across a 7 day week
+   * @param {number} minutesWorkedPerWeek - average hours worked per week. Must be an integer.
+   * @returns {number[]}
+   */
+  static _spreadMinutesOverWeek(minutesWorkedPerWeek) {
+    const remainder = minutesWorkedPerWeek % 7;
+    return OrderedDaysOfWeek.map((day, i) => {
+      if (i < remainder) {
+        return Math.ceil(minutesWorkedPerWeek / 7);
+      } else {
+        return Math.floor(minutesWorkedPerWeek / 7);
+      }
+    });
+  }
+
+  /**
+   * Remove a 7 day week from work_pattern_days by week_number
    * @param {WorkPattern} workPattern - instance of a WorkPattern
    * @param {number} weekNumber - week_number to be removed
    * @returns {WorkPattern}
@@ -414,9 +450,9 @@ export const OrderedDaysOfWeek = [
  * Produces object: { sunday: "Sunday", monday: "Monday", ... }
  * @enum {string}
  */
-export const DayOfWeek = OrderedDaysOfWeek.reduce(
-  (dayOfWeek, dayName) => ({ ...dayOfWeek, [dayName.toLowerCase()]: dayName }),
-  {}
+export const DayOfWeek = zipObject(
+  OrderedDaysOfWeek.map((day) => day.toLowerCase()),
+  OrderedDaysOfWeek
 );
 
 export default Claim;

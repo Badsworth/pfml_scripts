@@ -1,6 +1,7 @@
 import { DayOfWeek, WorkPattern, WorkPatternDay } from "../../src/models/Claim";
 import { DateTime } from "luxon";
 import { MockClaimBuilder } from "../test-utils";
+import { map } from "lodash";
 
 describe("Claim", () => {
   let emptyClaim;
@@ -215,6 +216,66 @@ describe("Claim", () => {
         workPattern = WorkPattern.addWeek(workPattern);
         expect(workPattern.work_pattern_days.length).toEqual(7);
       });
+
+      describe("when minutesWorkedPerWeek is provided", () => {
+        it("splits hours and minutes evenly if minutes is a multiple of 7", () => {
+          const workPattern = WorkPattern.addWeek(new WorkPattern(), 77 * 60); // 77 hours
+          const workPattern2 = WorkPattern.addWeek(
+            new WorkPattern(),
+            77 * 60 + 70 // 77 hours and 70 minutes
+          );
+
+          workPattern.work_pattern_days.forEach((day) => {
+            expect(day.hours).toEqual(11);
+            expect(day.minutes).toEqual(0);
+          });
+
+          workPattern2.work_pattern_days.forEach((day) => {
+            expect(day.hours).toEqual(11);
+            expect(day.minutes).toEqual(10);
+          });
+        });
+
+        it("returns week will 0 hours and 0 minutes when no hours are provided", () => {
+          const workPattern = WorkPattern.addWeek(new WorkPattern(), 0);
+          const workPattern2 = WorkPattern.addWeek(new WorkPattern());
+
+          workPattern.work_pattern_days.forEach((day) => {
+            expect(day.hours).toEqual(0);
+            expect(day.minutes).toEqual(0);
+          });
+
+          workPattern2.work_pattern_days.forEach((day) => {
+            expect(day.hours).toEqual(0);
+            expect(day.minutes).toEqual(0);
+          });
+        });
+
+        it("adds a minute to each day until there is no remainder when minutes are not a multiple of 7", () => {
+          const workPattern = WorkPattern.addWeek(
+            new WorkPattern(),
+            77 * 60 + 18 // 77 hours and 18 minutes
+          );
+          expect(map(workPattern.work_pattern_days, "hours")).toEqual([
+            11,
+            11,
+            11,
+            11,
+            11,
+            11,
+            11,
+          ]);
+          expect(map(workPattern.work_pattern_days, "minutes")).toEqual([
+            3,
+            3,
+            3,
+            3,
+            2,
+            2,
+            2,
+          ]);
+        });
+      });
     });
 
     describe("removeWeek", () => {
@@ -253,6 +314,17 @@ describe("Claim", () => {
         workPattern = WorkPattern.removeWeek(workPattern, 3);
 
         expect(workPattern.work_pattern_days).toEqual([]);
+      });
+    });
+
+    describe("minutesWorkedEachWeek", () => {
+      it("totals minutes worked each week", () => {
+        let workPattern = WorkPattern.addWeek(new WorkPattern(), 70 * 60); // 70 hours
+        workPattern = WorkPattern.addWeek(workPattern, 70 * 60 + 4); // 70 hours and 4 minutes
+
+        const minutesWorkedEachWeek = workPattern.minutesWorkedEachWeek;
+        expect(minutesWorkedEachWeek[0]).toEqual(70 * 60);
+        expect(minutesWorkedEachWeek[1]).toEqual(70 * 60 + 4);
       });
     });
   });
