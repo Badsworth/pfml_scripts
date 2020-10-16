@@ -12,6 +12,7 @@ import QuestionPage from "../../components/QuestionPage";
 import Spinner from "../../components/Spinner";
 import { Trans } from "react-i18next";
 import findDocumentsByType from "../../utils/findDocumentsByType";
+import { get } from "lodash";
 import hasDocumentsLoadError from "../../utils/hasDocumentsLoadError";
 import routes from "../../routes";
 import { useTranslation } from "../../locales/i18n";
@@ -21,9 +22,17 @@ import withClaimDocuments from "../../hoc/withClaimDocuments";
 export const UploadId = (props) => {
   const { t } = useTranslation();
   const [stateIdFiles, setStateIdFiles] = useState([]);
-  const hasStateId = props.claim.has_state_id;
+  const { appLogic, claim, documents, isLoadingDocuments, query } = props;
+  let hasStateId;
+  if (query.showStateId === "true") {
+    hasStateId = true;
+  } else if (query.showStateId === "false") {
+    hasStateId = false;
+  } else {
+    hasStateId = claim.has_state_id;
+  }
   const contentContext = hasStateId ? "mass" : "other";
-  const { appLogic, claim, documents, isLoadingDocuments } = props;
+  const absence_id = get(claim, "fineos_absence_id");
 
   const { appErrors } = appLogic;
   const hasLoadingDocumentsError = hasDocumentsLoadError(
@@ -42,11 +51,26 @@ export const UploadId = (props) => {
       return appLogic.goToNextPage({}, { claim_id: claim.application_id });
     }
 
-    await appLogic.documents.attach(
-      claim.application_id,
-      stateIdFiles,
-      DocumentType.identityVerification // TODO (CP-962): Set based on leaveReason
-    );
+    try {
+      const { success } = await appLogic.documents.attach(
+        claim.application_id,
+        stateIdFiles,
+        DocumentType.identityVerification // TODO (CP-962): Set based on leaveReason
+      );
+      if (success && claim.isCompleted) {
+        return appLogic.goToNextPage(
+          { claim },
+          { claim_id: claim.application_id, uploadedAbsenceId: absence_id }
+        );
+      } else if (success) {
+        return appLogic.goToNextPage(
+          { claim },
+          { claim_id: claim.application_id }
+        );
+      }
+    } catch (error) {
+      appLogic.setAppErrors(error);
+    }
   };
 
   return (
@@ -136,6 +160,7 @@ UploadId.propTypes = {
   isLoadingDocuments: PropTypes.bool,
   query: PropTypes.shape({
     claim_id: PropTypes.string,
+    showStateId: PropTypes.string,
   }),
 };
 

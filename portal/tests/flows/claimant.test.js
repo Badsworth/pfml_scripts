@@ -32,6 +32,11 @@ const machineTests = {
       test: () => {},
     },
   },
+  [routes.applications]: {
+    meta: {
+      test: () => {},
+    },
+  },
   [routes.claims.start]: {
     meta: {
       test: () => {},
@@ -195,6 +200,11 @@ const machineTests = {
       test: () => {},
     },
   },
+  [routes.claims.uploadDocsOptions]: {
+    meta: {
+      test: () => {},
+    },
+  },
 };
 
 const machineConfigsWithTests = {
@@ -267,7 +277,9 @@ describe("claimFlowConfigs", () => {
     REVIEW_AND_CONFIRM: {},
     START: { cases: testData },
     UPLOAD_CERTIFICATION: {},
+    UPLOAD_DOCS: {},
     UPLOAD_ID: {},
+    UPLOAD_MASS_ID: {},
     VERIFY_ID: {},
   });
 

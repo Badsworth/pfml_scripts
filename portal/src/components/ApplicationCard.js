@@ -197,7 +197,9 @@ export const ApplicationCard = (props) => {
           {claim.isCompleted && (
             <ButtonLink
               className="display-block"
-              href={routeWithParams("claims.dashboard")}
+              href={routeWithParams("claims.uploadDocsOptions", {
+                claim_id: claim.application_id,
+              })}
             >
               {t("components.applicationCard.uploadDocsButton")}
             </ButtonLink>

@@ -62,16 +62,6 @@ describe("useDocumentsLogic", () => {
       const mockFilename = "testUploadImage.jpg";
       let files;
 
-      it("redirects to nextPage", async () => {
-        files = [makeFile({ name: mockFilename })];
-        const spy = jest.spyOn(portalFlow, "goToNextPage");
-
-        await act(async () => {
-          await documentsLogic.attach(application_id, files, mockDocumentType);
-        });
-        expect(spy).toHaveBeenCalled();
-      });
-
       describe("when documents have not been previously loaded", () => {
         const newDocument = new Document({
           application_id,

@@ -100,17 +100,14 @@ const useDocumentsLogic = ({ appErrorsLogic, portalFlow }) => {
         files,
         documentType
       );
-
       if (success) {
         if (!hasLoadedClaimDocuments(application_id)) {
           await load(application_id);
         } else {
           addDocument(document);
         }
-        const context = {};
-        const params = { claim_id: application_id };
-        portalFlow.goToNextPage(context, params);
       }
+      return { success };
     } catch (error) {
       appErrorsLogic.catchError(error);
     }

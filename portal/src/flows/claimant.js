@@ -76,6 +76,12 @@ export default {
         CONTINUE: routes.claims.dashboard,
       },
     },
+    [routes.applications]: {
+      meta: {},
+      on: {
+        CONTINUE: routes.claims.uploadDocsOptions,
+      },
+    },
     [routes.claims.checklist]: {
       meta: {},
       on: {
@@ -144,7 +150,15 @@ export default {
         fields: [],
       },
       on: {
-        CONTINUE: routes.claims.checklist,
+        CONTINUE: [
+          {
+            target: routes.applications,
+            cond: "isCompleted",
+          },
+          {
+            target: routes.claims.checklist,
+          },
+        ],
       },
     },
     [routes.claims.ssn]: {
@@ -192,7 +206,15 @@ export default {
         fields: [],
       },
       on: {
-        CONTINUE: routes.claims.checklist,
+        CONTINUE: [
+          {
+            target: routes.applications,
+            cond: "isCompleted",
+          },
+          {
+            target: routes.claims.checklist,
+          },
+        ],
       },
     },
     [routes.claims.dateOfChild]: {
@@ -392,6 +414,14 @@ export default {
             target: routes.claims.checklist,
           },
         ],
+      },
+    },
+    [routes.claims.uploadDocsOptions]: {
+      meta: {},
+      on: {
+        UPLOAD_ID: routes.claims.uploadId,
+        UPLOAD_MASS_ID: routes.claims.uploadId,
+        UPLOAD_CERTIFICATION: routes.claims.uploadCertification,
       },
     },
   },

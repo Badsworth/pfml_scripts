@@ -49,6 +49,7 @@ const routes = {
     // which is less confusing than seeing routes.claims.checklist
     todo: "/claims/checklist",
     uploadCertification: "/claims/upload-certification",
+    uploadDocsOptions: "/claims/upload-docs-options",
     uploadId: "/claims/upload-id",
   },
   employers: {

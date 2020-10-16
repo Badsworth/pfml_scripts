@@ -13,6 +13,7 @@ import Spinner from "../../components/Spinner";
 import { Trans } from "react-i18next";
 import findDocumentsByType from "../../utils/findDocumentsByType";
 import findKeyByValue from "../../utils/findKeyByValue";
+import { get } from "lodash";
 import hasDocumentsLoadError from "../../utils/hasDocumentsLoadError";
 import routes from "../../routes";
 import { useTranslation } from "../../locales/i18n";
@@ -60,12 +61,27 @@ export const UploadCertification = (props) => {
       // Allow user to skip this page if they've previously uploaded documents
       return appLogic.goToNextPage({}, { claim_id: claim.application_id });
     }
-
-    await appLogic.documents.attach(
-      claim.application_id,
-      files,
-      DocumentType.medicalCertification // TODO (CP-962): Set based on leaveReason
-    );
+    try {
+      const { success } = await appLogic.documents.attach(
+        claim.application_id,
+        files,
+        DocumentType.medicalCertification // TODO (CP-962): Set based on leaveReason
+      );
+      if (success && claim.isCompleted) {
+        const absence_id = get(claim, "fineos_absence_id");
+        return appLogic.goToNextPage(
+          { claim },
+          { claim_id: claim.application_id, uploadedAbsenceId: absence_id }
+        );
+      } else if (success) {
+        return appLogic.goToNextPage(
+          { claim },
+          { claim_id: claim.application_id }
+        );
+      }
+    } catch (error) {
+      appLogic.setAppErrors(error);
+    }
   };
 
   return (

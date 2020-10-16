@@ -300,6 +300,9 @@ const pages = {
     noClaims: "You don't have any applications yet.",
     submittedHeading: "Submitted applications",
     title: "Your applications",
+    uploadSuccessHeading: "You successfully submitted your documents",
+    uploadSuccessMessage:
+      "Our Contact Center staff will review your documents for {{absence_id}}.",
   },
   authCreateAccount: {
     createAccountButton: "Create account",
@@ -892,6 +895,17 @@ const pages = {
     sectionLabel_bonding: "Upload your documentation",
     sectionLabel_medical: "Upload your Healthcare Provider form",
     title: "$t(shared.claimsLeaveDetailsTitle)",
+  },
+  claimsUploadDocsOptions: {
+    certLabel_bonding_adopt_foster: "Proof of placement",
+    certLabel_bonding_newborn: "Proof of birth",
+    certLabel_medical: "Health Care Provider Certification",
+    nonStateIdLabel: "Different identification documentation",
+    sectionHint:
+      "You only need to complete this if you received a notice from the Department of Family and Medical Leave asking you to provide additional documents or you need to provide proof of birth or placement. ",
+    sectionLabel: "What kind of document are you uploading?",
+    stateIdLabel: "Massachusetts driver's license or ID",
+    title: "Additional documentation",
   },
   claimsUploadId: {
     accordionContent:

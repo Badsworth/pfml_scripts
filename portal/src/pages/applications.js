@@ -1,3 +1,4 @@
+import Alert from "../components/Alert";
 import ApplicationCard from "../components/ApplicationCard";
 import ClaimCollection from "../models/ClaimCollection";
 import DashboardNavigation from "../components/DashboardNavigation";
@@ -13,7 +14,7 @@ import withClaims from "../hoc/withClaims";
  * List of all applications associated with the authenticated user
  */
 const Applications = (props) => {
-  const { appLogic, claims } = props;
+  const { appLogic, claims, query } = props;
   const { t } = useTranslation();
   const router = useRouter();
 
@@ -23,6 +24,19 @@ const Applications = (props) => {
 
   return (
     <React.Fragment>
+      {query && query.uploadedAbsenceId && (
+        <Alert
+          className="margin-bottom-3"
+          heading={t("pages.applications.uploadSuccessHeading")}
+          name="upload-success-message"
+          state="success"
+        >
+          {t("pages.applications.uploadSuccessMessage", {
+            absence_id: query.uploadedAbsenceId,
+          })}
+        </Alert>
+      )}
+
       <DashboardNavigation activeHref={router.route} />
       <Title hidden={hasClaims}>{t("pages.applications.title")}</Title>
 
@@ -70,6 +84,9 @@ const Applications = (props) => {
 Applications.propTypes = {
   appLogic: PropTypes.object.isRequired,
   claims: PropTypes.instanceOf(ClaimCollection).isRequired,
+  query: PropTypes.shape({
+    uploadedAbsenceId: PropTypes.string,
+  }),
 };
 
 export default withClaims(Applications);

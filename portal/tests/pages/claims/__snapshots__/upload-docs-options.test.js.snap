@@ -1,0 +1,493 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`UploadDocsOptions renders the appropriate cert option for adoption bonding leave 1`] = `
+<QuestionPage
+  onSave={[Function]}
+  title="Additional documentation"
+>
+  <InputChoiceGroup
+    choices={
+      Array [
+        Object {
+          "checked": false,
+          "label": "Massachusetts driver's license or ID",
+          "value": "UPLOAD_MASS_ID",
+        },
+        Object {
+          "checked": false,
+          "label": "Different identification documentation",
+          "value": "UPLOAD_ID",
+        },
+        Object {
+          "checked": false,
+          "label": "Proof of placement",
+          "value": "UPLOAD_CERTIFICATION",
+        },
+      ]
+    }
+    hint="You only need to complete this if you received a notice from the Department of Family and Medical Leave asking you to provide additional documents or you need to provide proof of birth or placement. "
+    label="What kind of document are you uploading?"
+    name="nextPage"
+    onChange={[Function]}
+    type="radio"
+    value=""
+  />
+</QuestionPage>
+`;
+
+exports[`UploadDocsOptions renders the appropriate cert option for newborn bonding leave 1`] = `
+<QuestionPage
+  onSave={[Function]}
+  title="Additional documentation"
+>
+  <InputChoiceGroup
+    choices={
+      Array [
+        Object {
+          "checked": false,
+          "label": "Massachusetts driver's license or ID",
+          "value": "UPLOAD_MASS_ID",
+        },
+        Object {
+          "checked": false,
+          "label": "Different identification documentation",
+          "value": "UPLOAD_ID",
+        },
+        Object {
+          "checked": false,
+          "label": "Proof of birth",
+          "value": "UPLOAD_CERTIFICATION",
+        },
+      ]
+    }
+    hint="You only need to complete this if you received a notice from the Department of Family and Medical Leave asking you to provide additional documents or you need to provide proof of birth or placement. "
+    label="What kind of document are you uploading?"
+    name="nextPage"
+    onChange={[Function]}
+    type="radio"
+    value=""
+  />
+</QuestionPage>
+`;
+
+exports[`UploadDocsOptions renders the page for medical leave with HCP as cert option 1`] = `
+<UploadDocsOptions
+  appLogic={
+    Object {
+      "appErrors": AppErrorInfoCollection {
+        "items": Array [],
+        "itemsById": Object {},
+      },
+      "auth": Object {
+        "createAccount": [MockFunction],
+        "forgotPassword": [MockFunction],
+        "isLoggedIn": true,
+        "login": [MockFunction],
+        "logout": [MockFunction],
+        "requireLogin": [MockFunction],
+        "resendVerifyAccountCode": [MockFunction],
+        "verifyAccount": [MockFunction],
+      },
+      "claims": Object {
+        "claims": ClaimCollection {
+          "items": Array [
+            Claim {
+              "application_id": "mock_application_id",
+              "created_at": null,
+              "date_of_birth": "1980-07-17",
+              "employer_benefits": Array [],
+              "employer_fein": "12-3456789",
+              "employment_status": "Employed",
+              "fineos_absence_id": "NTN-111-ABS-01",
+              "first_name": "Jane",
+              "has_continuous_leave_periods": true,
+              "has_intermittent_leave_periods": null,
+              "has_mailing_address": false,
+              "has_reduced_schedule_leave_periods": null,
+              "has_state_id": true,
+              "hours_worked_per_week": 30,
+              "last_name": "Doe",
+              "leave_details": Object {
+                "child_birth_date": null,
+                "child_placement_date": null,
+                "continuous_leave_periods": Array [
+                  ContinuousLeavePeriod {
+                    "end_date": "2021-06-01",
+                    "leave_period_id": "mock-leave-period-id",
+                    "start_date": "2021-01-01",
+                  },
+                ],
+                "employer_notification_date": "2021-01-01",
+                "employer_notified": true,
+                "intermittent_leave_periods": null,
+                "pregnant_or_recent_birth": null,
+                "reason": "Serious Health Condition - Employee",
+                "reason_qualifier": null,
+                "reduced_schedule_leave_periods": null,
+              },
+              "mailing_address": null,
+              "mass_id": "*********",
+              "middle_name": "",
+              "other_incomes": Array [],
+              "payment_preferences": Array [
+                Object {
+                  "account_details": Object {
+                    "account_number": "091000022",
+                    "account_type": "Checking",
+                    "routing_number": "1234567890",
+                  },
+                  "payment_method": "ACH",
+                  "payment_preference_id": "mock-payment-preference-id",
+                },
+              ],
+              "previous_leaves": Array [],
+              "residential_address": Address {
+                "city": "Boston",
+                "line_1": "1234 My St.",
+                "line_2": null,
+                "state": "MA",
+                "zip": "00000",
+              },
+              "status": "Completed",
+              "tax_identifier": "***-**-****",
+              "temp": Object {
+                "has_employer_benefits": false,
+                "has_other_incomes": false,
+                "has_previous_leaves": false,
+              },
+              "work_pattern": null,
+            },
+          ],
+          "itemsById": Object {
+            "mock_application_id": Claim {
+              "application_id": "mock_application_id",
+              "created_at": null,
+              "date_of_birth": "1980-07-17",
+              "employer_benefits": Array [],
+              "employer_fein": "12-3456789",
+              "employment_status": "Employed",
+              "fineos_absence_id": "NTN-111-ABS-01",
+              "first_name": "Jane",
+              "has_continuous_leave_periods": true,
+              "has_intermittent_leave_periods": null,
+              "has_mailing_address": false,
+              "has_reduced_schedule_leave_periods": null,
+              "has_state_id": true,
+              "hours_worked_per_week": 30,
+              "last_name": "Doe",
+              "leave_details": Object {
+                "child_birth_date": null,
+                "child_placement_date": null,
+                "continuous_leave_periods": Array [
+                  ContinuousLeavePeriod {
+                    "end_date": "2021-06-01",
+                    "leave_period_id": "mock-leave-period-id",
+                    "start_date": "2021-01-01",
+                  },
+                ],
+                "employer_notification_date": "2021-01-01",
+                "employer_notified": true,
+                "intermittent_leave_periods": null,
+                "pregnant_or_recent_birth": null,
+                "reason": "Serious Health Condition - Employee",
+                "reason_qualifier": null,
+                "reduced_schedule_leave_periods": null,
+              },
+              "mailing_address": null,
+              "mass_id": "*********",
+              "middle_name": "",
+              "other_incomes": Array [],
+              "payment_preferences": Array [
+                Object {
+                  "account_details": Object {
+                    "account_number": "091000022",
+                    "account_type": "Checking",
+                    "routing_number": "1234567890",
+                  },
+                  "payment_method": "ACH",
+                  "payment_preference_id": "mock-payment-preference-id",
+                },
+              ],
+              "previous_leaves": Array [],
+              "residential_address": Address {
+                "city": "Boston",
+                "line_1": "1234 My St.",
+                "line_2": null,
+                "state": "MA",
+                "zip": "00000",
+              },
+              "status": "Completed",
+              "tax_identifier": "***-**-****",
+              "temp": Object {
+                "has_employer_benefits": false,
+                "has_other_incomes": false,
+                "has_previous_leaves": false,
+              },
+              "work_pattern": null,
+            },
+          },
+        },
+        "complete": [MockFunction],
+        "create": [MockFunction],
+        "get": [MockFunction],
+        "load": [MockFunction],
+        "submit": [MockFunction],
+        "update": [MockFunction],
+      },
+      "documents": Object {
+        "attach": [MockFunction],
+        "documents": DocumentCollection {
+          "items": Array [],
+          "itemsById": Object {},
+        },
+        "hasLoadedClaimDocuments": [MockFunction],
+        "load": [MockFunction],
+      },
+      "goToNextPage": [MockFunction],
+      "setAppErrors": [MockFunction],
+      "updateUser": [MockFunction],
+      "user": User {
+        "auth_id": null,
+        "consented_to_data_sharing": true,
+        "email_address": null,
+        "status": null,
+        "user_id": "mock_user_id",
+      },
+      "users": Object {
+        "loadUser": [MockFunction],
+        "requireUserConsentToDataAgreement": [MockFunction],
+        "updateUser": [MockFunction],
+        "user": User {
+          "auth_id": null,
+          "consented_to_data_sharing": true,
+          "email_address": null,
+          "status": null,
+          "user_id": "mock_user_id",
+        },
+      },
+    }
+  }
+  claim={
+    Claim {
+      "application_id": "mock_application_id",
+      "created_at": null,
+      "date_of_birth": "1980-07-17",
+      "employer_benefits": Array [],
+      "employer_fein": "12-3456789",
+      "employment_status": "Employed",
+      "fineos_absence_id": "NTN-111-ABS-01",
+      "first_name": "Jane",
+      "has_continuous_leave_periods": true,
+      "has_intermittent_leave_periods": null,
+      "has_mailing_address": false,
+      "has_reduced_schedule_leave_periods": null,
+      "has_state_id": true,
+      "hours_worked_per_week": 30,
+      "last_name": "Doe",
+      "leave_details": Object {
+        "child_birth_date": null,
+        "child_placement_date": null,
+        "continuous_leave_periods": Array [
+          ContinuousLeavePeriod {
+            "end_date": "2021-06-01",
+            "leave_period_id": "mock-leave-period-id",
+            "start_date": "2021-01-01",
+          },
+        ],
+        "employer_notification_date": "2021-01-01",
+        "employer_notified": true,
+        "intermittent_leave_periods": null,
+        "pregnant_or_recent_birth": null,
+        "reason": "Serious Health Condition - Employee",
+        "reason_qualifier": null,
+        "reduced_schedule_leave_periods": null,
+      },
+      "mailing_address": null,
+      "mass_id": "*********",
+      "middle_name": "",
+      "other_incomes": Array [],
+      "payment_preferences": Array [
+        Object {
+          "account_details": Object {
+            "account_number": "091000022",
+            "account_type": "Checking",
+            "routing_number": "1234567890",
+          },
+          "payment_method": "ACH",
+          "payment_preference_id": "mock-payment-preference-id",
+        },
+      ],
+      "previous_leaves": Array [],
+      "residential_address": Address {
+        "city": "Boston",
+        "line_1": "1234 My St.",
+        "line_2": null,
+        "state": "MA",
+        "zip": "00000",
+      },
+      "status": "Completed",
+      "tax_identifier": "***-**-****",
+      "temp": Object {
+        "has_employer_benefits": false,
+        "has_other_incomes": false,
+        "has_previous_leaves": false,
+      },
+      "work_pattern": null,
+    }
+  }
+  claims={
+    ClaimCollection {
+      "items": Array [
+        Claim {
+          "application_id": "mock_application_id",
+          "created_at": null,
+          "date_of_birth": "1980-07-17",
+          "employer_benefits": Array [],
+          "employer_fein": "12-3456789",
+          "employment_status": "Employed",
+          "fineos_absence_id": "NTN-111-ABS-01",
+          "first_name": "Jane",
+          "has_continuous_leave_periods": true,
+          "has_intermittent_leave_periods": null,
+          "has_mailing_address": false,
+          "has_reduced_schedule_leave_periods": null,
+          "has_state_id": true,
+          "hours_worked_per_week": 30,
+          "last_name": "Doe",
+          "leave_details": Object {
+            "child_birth_date": null,
+            "child_placement_date": null,
+            "continuous_leave_periods": Array [
+              ContinuousLeavePeriod {
+                "end_date": "2021-06-01",
+                "leave_period_id": "mock-leave-period-id",
+                "start_date": "2021-01-01",
+              },
+            ],
+            "employer_notification_date": "2021-01-01",
+            "employer_notified": true,
+            "intermittent_leave_periods": null,
+            "pregnant_or_recent_birth": null,
+            "reason": "Serious Health Condition - Employee",
+            "reason_qualifier": null,
+            "reduced_schedule_leave_periods": null,
+          },
+          "mailing_address": null,
+          "mass_id": "*********",
+          "middle_name": "",
+          "other_incomes": Array [],
+          "payment_preferences": Array [
+            Object {
+              "account_details": Object {
+                "account_number": "091000022",
+                "account_type": "Checking",
+                "routing_number": "1234567890",
+              },
+              "payment_method": "ACH",
+              "payment_preference_id": "mock-payment-preference-id",
+            },
+          ],
+          "previous_leaves": Array [],
+          "residential_address": Address {
+            "city": "Boston",
+            "line_1": "1234 My St.",
+            "line_2": null,
+            "state": "MA",
+            "zip": "00000",
+          },
+          "status": "Completed",
+          "tax_identifier": "***-**-****",
+          "temp": Object {
+            "has_employer_benefits": false,
+            "has_other_incomes": false,
+            "has_previous_leaves": false,
+          },
+          "work_pattern": null,
+        },
+      ],
+      "itemsById": Object {
+        "mock_application_id": Claim {
+          "application_id": "mock_application_id",
+          "created_at": null,
+          "date_of_birth": "1980-07-17",
+          "employer_benefits": Array [],
+          "employer_fein": "12-3456789",
+          "employment_status": "Employed",
+          "fineos_absence_id": "NTN-111-ABS-01",
+          "first_name": "Jane",
+          "has_continuous_leave_periods": true,
+          "has_intermittent_leave_periods": null,
+          "has_mailing_address": false,
+          "has_reduced_schedule_leave_periods": null,
+          "has_state_id": true,
+          "hours_worked_per_week": 30,
+          "last_name": "Doe",
+          "leave_details": Object {
+            "child_birth_date": null,
+            "child_placement_date": null,
+            "continuous_leave_periods": Array [
+              ContinuousLeavePeriod {
+                "end_date": "2021-06-01",
+                "leave_period_id": "mock-leave-period-id",
+                "start_date": "2021-01-01",
+              },
+            ],
+            "employer_notification_date": "2021-01-01",
+            "employer_notified": true,
+            "intermittent_leave_periods": null,
+            "pregnant_or_recent_birth": null,
+            "reason": "Serious Health Condition - Employee",
+            "reason_qualifier": null,
+            "reduced_schedule_leave_periods": null,
+          },
+          "mailing_address": null,
+          "mass_id": "*********",
+          "middle_name": "",
+          "other_incomes": Array [],
+          "payment_preferences": Array [
+            Object {
+              "account_details": Object {
+                "account_number": "091000022",
+                "account_type": "Checking",
+                "routing_number": "1234567890",
+              },
+              "payment_method": "ACH",
+              "payment_preference_id": "mock-payment-preference-id",
+            },
+          ],
+          "previous_leaves": Array [],
+          "residential_address": Address {
+            "city": "Boston",
+            "line_1": "1234 My St.",
+            "line_2": null,
+            "state": "MA",
+            "zip": "00000",
+          },
+          "status": "Completed",
+          "tax_identifier": "***-**-****",
+          "temp": Object {
+            "has_employer_benefits": false,
+            "has_other_incomes": false,
+            "has_previous_leaves": false,
+          },
+          "work_pattern": null,
+        },
+      },
+    }
+  }
+  query={
+    Object {
+      "claim_id": "mock_application_id",
+    }
+  }
+  user={
+    User {
+      "auth_id": null,
+      "consented_to_data_sharing": true,
+      "email_address": null,
+      "status": null,
+      "user_id": "mock_user_id",
+    }
+  }
+/>
+`;

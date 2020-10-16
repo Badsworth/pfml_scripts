@@ -158,6 +158,34 @@ describe("UploadId", () => {
         );
       });
 
+      it("redirects to the Applications page when the claim has been completed", async () => {
+        claim = new MockClaimBuilder().completed().create();
+        appLogic.claims.claims = new ClaimCollection([claim]);
+        render();
+        // Add files to the page state
+        const files = [makeFile(), makeFile()];
+        const input = wrapper.find("FileCardList").dive().find("input");
+        act(() => {
+          input.simulate("change", {
+            target: {
+              files,
+            },
+          });
+        });
+
+        await act(async () => {
+          await wrapper.find("QuestionPage").simulate("save");
+        });
+
+        expect(appLogic.goToNextPage).toHaveBeenCalledWith(
+          { claim },
+          {
+            claim_id: claim.application_id,
+            uploadedAbsenceId: claim.fineos_absence_id,
+          }
+        );
+      });
+
       describe("when there are previously loaded documents", () => {
         it("renders the FileCardList with documents", async () => {
           const newDoc = new Document({
