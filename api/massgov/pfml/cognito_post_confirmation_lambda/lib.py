@@ -1,5 +1,7 @@
 from typing import Any, Dict, Literal, Optional
 
+from sqlalchemy.exc import IntegrityError
+
 import massgov.pfml.db as db
 import massgov.pfml.util.aws_lambda as aws_lambda
 import massgov.pfml.util.logging
@@ -41,10 +43,20 @@ def handler(
     )
 
     logger.info("creating user", extra={"active_directory_id": user.active_directory_id})
+    try:
+        db_session.add(user)
+        db_session.commit()
 
-    db_session.add(user)
-    db_session.commit()
-
-    logger.info("successfully created user", extra={"user_id": user.user_id})
+        logger.info("successfully created user", extra={"user_id": user.user_id})
+    except IntegrityError as ie:
+        if 'violates unique constraint "user_active_directory_id_key"' in str(ie):
+            logger.info(
+                "active_directory_id already exists",
+                extra={"active_directory_id": cognito_user_attrs["sub"]},
+            )
+            db_session.rollback()
+        else:
+            db_session.rollback()
+            raise ie
 
     return event

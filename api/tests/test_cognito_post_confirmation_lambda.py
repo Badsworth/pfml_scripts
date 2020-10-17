@@ -86,3 +86,37 @@ def test_lib_skip_non_post_confirmation_event(test_db_session, event_dict):
 
     assert user_that_should_not_exist is None
     assert response == event
+
+
+def test_user_active_directory_id_uniqueness(test_db_session, event_dict):
+    from massgov.pfml.db.models.employees import User
+
+    event1 = lib.PostConfirmationEvent(**event_dict)
+
+    # create second event with different email address
+    event_dict["request"]["userAttributes"]["email"] = "user2@example.com"
+    event2 = lib.PostConfirmationEvent(**event_dict)
+
+    # a request for user comes in
+    lib.handler(test_db_session, event1, {})
+
+    # user is created as normal
+    created_user_initial = (
+        test_db_session.query(User)
+        .filter(User.active_directory_id == event1.request.userAttributes["sub"])
+        .one()
+    )
+
+    # a second request for same user comes in
+    lib.handler(test_db_session, event2, {})
+
+    # there should still only be one User record with the requested `active_directory_id`
+    created_user_after_second_request = (
+        test_db_session.query(User)
+        .filter(User.active_directory_id == event2.request.userAttributes["sub"])
+        .one()
+    )
+
+    # make sure it's the same user as before
+    assert created_user_initial.user_id == created_user_after_second_request.user_id
+    assert created_user_initial.email_address == created_user_after_second_request.email_address
