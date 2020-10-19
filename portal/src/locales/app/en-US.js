@@ -870,10 +870,33 @@ const pages = {
     title: "$t(shared.claimsVerifyIdTitle)",
   },
   claimsSuccess: {
-    body:
+    callToChangeDates_bondingAdoptFosterFuture:
+      "Please contact the DFML Contact Center at $t(shared.callCenterPhoneNumber) if you need to change your leave dates because your child arrived at a date earlier or later than you put in your application.",
+    callToChangeDates_bondingNewbornFuture:
+      "Please contact the DFML Contact Center at $t(shared.callCenterPhoneNumber) if you need to change your leave dates because your child was born at a date earlier or later than you put in your application.",
+    exitLink: "Return to applications",
+    familyLeaveToBond:
+      "You can take up to 12 weeks of paid family leave to bond with your child after your medical leave ends. You do not need to take this leave all at once. You must create a separate leave application if you want to take family leave.",
+    familyLeaveToBondHeading: "You can also apply for paid family leave.",
+    medicalLeaveAfterBirth:
+      "You can take up to 20 weeks of paid medical leave if you're unable to work during your pregnancy and to recover from childbirth. Your health care provider determines how much medical leave you will need. You must create a separate leave application if you need to take medical leave.",
+    medicalLeaveAfterBirthHeading:
+      "If you gave birth, you may also be eligible for paid medical leave.",
+    proofRequiredHeading_bondingAdoptFosterFuture:
+      "You will need to provide proof of your child’s placement",
+    proofRequiredHeading_bondingNewbornFuture:
+      "You will need to provide proof of your child’s birthdate",
+    proofRequired_bondingAdoptFosterFuture:
+      "After your child arrives in your home, you will need to upload, mail, or fax a document that shows your child’s placement date. We will begin reviewing your application now, but we can’t approve it until we have this proof.",
+    proofRequired_bondingNewbornFuture:
+      "You will need to upload, mail, or fax a document that shows your child’s birthdate. We will begin reviewing your application now, but we can't approve it until we have this proof.",
+    reviewProgressAndStatus:
       "We are reviewing your application. You can check the status of your application anytime in the portal.",
-    dashboardLink: "Return to dashboard",
+    reviewProgressAndStatus_noReview:
+      "You can check the status of your application anytime in the portal.",
     title: "Your leave application was submitted successfully",
+    title_bonding: "Your family leave application was submitted successfully",
+    title_medical: "Your medical leave application was submitted successfully",
   },
   claimsUploadCertification: {
     addAnotherFileButton: "Choose another file",

@@ -195,7 +195,7 @@ export const EmploymentStatus = {
  * @enum {string}
  */
 export const LeaveReason = {
-  // TODO (CP-515): We need to map some of these to the correct API fields,
+  // TODO (CP-534): We need to map some of these to the correct API fields,
   // once those enum values exist within the API
   activeDutyFamily: "Care For A Family Member",
   bonding: "Child Bonding",

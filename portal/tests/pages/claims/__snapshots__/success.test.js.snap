@@ -1,17 +1,181 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`Success renders Success page 1`] = `
+exports[`Success renders content tailored to Family (Bonding Adoption) 1`] = `
 <Fragment>
   <Title>
-    Your leave application was submitted successfully
+    Your family leave application was submitted successfully
   </Title>
-  <Lead>
-    We are reviewing your application. You can check the status of your application anytime in the portal.
-  </Lead>
-  <ButtonLink
-    href="/"
+  <div
+    className="measure-6"
   >
-    Return to dashboard
-  </ButtonLink>
+    <Lead>
+      We are reviewing your application. You can check the status of your application anytime in the portal.
+    </Lead>
+    <ButtonLink
+      className="margin-top-4"
+      href="/applications"
+    >
+      Return to applications
+    </ButtonLink>
+  </div>
+</Fragment>
+`;
+
+exports[`Success renders content tailored to Family (Bonding Future Adoption) 1`] = `
+<Fragment>
+  <Title>
+    Your family leave application was submitted successfully
+  </Title>
+  <div
+    className="measure-6"
+  >
+    <Alert
+      heading="You will need to provide proof of your child’s placement"
+      state="warning"
+    >
+      After your child arrives in your home, you will need to upload, mail, or fax a document that shows your child’s placement date. We will begin reviewing your application now, but we can’t approve it until we have this proof.
+    </Alert>
+    <Lead>
+      Please contact the DFML Contact Center at XXX‑XXX‑XXXX if you need to change your leave dates because your child arrived at a date earlier or later than you put in your application.
+    </Lead>
+    <Lead>
+      We are reviewing your application. You can check the status of your application anytime in the portal.
+    </Lead>
+    <ButtonLink
+      className="margin-top-4"
+      href="/applications"
+    >
+      Return to applications
+    </ButtonLink>
+  </div>
+</Fragment>
+`;
+
+exports[`Success renders content tailored to Family (Bonding Future Newborn) 1`] = `
+<Fragment>
+  <Title>
+    Your family leave application was submitted successfully
+  </Title>
+  <div
+    className="measure-6"
+  >
+    <Alert
+      heading="You will need to provide proof of your child’s birthdate"
+      state="warning"
+    >
+      You will need to upload, mail, or fax a document that shows your child’s birthdate. We will begin reviewing your application now, but we can't approve it until we have this proof.
+    </Alert>
+    <Lead>
+      Please contact the DFML Contact Center at XXX‑XXX‑XXXX if you need to change your leave dates because your child was born at a date earlier or later than you put in your application.
+    </Lead>
+    <Lead>
+      You can check the status of your application anytime in the portal.
+    </Lead>
+    <div
+      className="border-top-2px border-base-lighter padding-top-4 margin-top-4"
+    >
+      <Heading
+        level="2"
+      >
+        If you gave birth, you may also be eligible for paid medical leave.
+      </Heading>
+      <Lead>
+        You can take up to 20 weeks of paid medical leave if you're unable to work during your pregnancy and to recover from childbirth. Your health care provider determines how much medical leave you will need. You must create a separate leave application if you need to take medical leave.
+      </Lead>
+    </div>
+    <ButtonLink
+      className="margin-top-4"
+      href="/applications"
+    >
+      Return to applications
+    </ButtonLink>
+  </div>
+</Fragment>
+`;
+
+exports[`Success renders content tailored to Family (Bonding Newborn) 1`] = `
+<Fragment>
+  <Title>
+    Your family leave application was submitted successfully
+  </Title>
+  <div
+    className="measure-6"
+  >
+    <Lead>
+      We are reviewing your application. You can check the status of your application anytime in the portal.
+    </Lead>
+    <div
+      className="border-top-2px border-base-lighter padding-top-4 margin-top-4"
+    >
+      <Heading
+        level="2"
+      >
+        If you gave birth, you may also be eligible for paid medical leave.
+      </Heading>
+      <Lead>
+        You can take up to 20 weeks of paid medical leave if you're unable to work during your pregnancy and to recover from childbirth. Your health care provider determines how much medical leave you will need. You must create a separate leave application if you need to take medical leave.
+      </Lead>
+    </div>
+    <ButtonLink
+      className="margin-top-4"
+      href="/applications"
+    >
+      Return to applications
+    </ButtonLink>
+  </div>
+</Fragment>
+`;
+
+exports[`Success renders content tailored to Medical (Not pregnant) 1`] = `
+<Fragment>
+  <Title>
+    Your medical leave application was submitted successfully
+  </Title>
+  <div
+    className="measure-6"
+  >
+    <Lead>
+      We are reviewing your application. You can check the status of your application anytime in the portal.
+    </Lead>
+    <ButtonLink
+      className="margin-top-4"
+      href="/applications"
+    >
+      Return to applications
+    </ButtonLink>
+  </div>
+</Fragment>
+`;
+
+exports[`Success renders content tailored to Medical (Pregnant) 1`] = `
+<Fragment>
+  <Title>
+    Your medical leave application was submitted successfully
+  </Title>
+  <div
+    className="measure-6"
+  >
+    <Lead>
+      We are reviewing your application. You can check the status of your application anytime in the portal.
+    </Lead>
+    <div
+      className="border-top-2px border-base-lighter padding-top-4 margin-top-4"
+    >
+      <Heading
+        level="2"
+      >
+        You can also apply for paid family leave.
+      </Heading>
+      <Lead>
+        You can take up to 12 weeks of paid family leave to bond with your child after your medical leave ends. You do not need to take this leave all at once. You must create a separate leave application if you want to take family leave.
+      </Lead>
+    </div>
+    <ButtonLink
+      className="margin-top-4"
+      href="/applications"
+    >
+      Return to applications
+    </ButtonLink>
+  </div>
 </Fragment>
 `;

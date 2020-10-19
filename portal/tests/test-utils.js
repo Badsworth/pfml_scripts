@@ -281,6 +281,14 @@ export class MockClaimBuilder {
   }
 
   /**
+   * @returns {MockClaimBuilder}
+   */
+  pregnant() {
+    set(this.claimAttrs, "leave_details.pregnant_or_recent_birth", true);
+    return this;
+  }
+
+  /**
    * All required data is present but the claim hasn't been marked
    * as Completed yet in the API
    * @returns {MockClaimBuilder}
