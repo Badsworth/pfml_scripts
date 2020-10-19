@@ -136,4 +136,29 @@ describe("Dropdown", () => {
       expect(props.onChange).toHaveBeenCalledTimes(1);
     });
   });
+
+  describe("when `labelWeight` is set", () => {
+    it("sets the FormLabel weight prop", () => {
+      const { wrapper } = render({ labelWeight: "normal" });
+      const label = wrapper.find("FormLabel");
+
+      expect(label.prop("weight")).toBe("normal");
+    });
+  });
+
+  describe("when formGroupClassName prop is set", () => {
+    it("includes the formGroupClassName on the containing element", () => {
+      const { wrapper } = render({ formGroupClassName: "custom-input-class" });
+
+      expect(wrapper.hasClass("custom-input-class")).toBe(true);
+    });
+  });
+
+  describe("when selectClassName prop is set", () => {
+    it("includes the formGroupClassName on the containing element", () => {
+      const { wrapper } = render({ selectClassName: "custom-input-class" });
+
+      expect(wrapper.find("select").hasClass("custom-input-class")).toBe(true);
+    });
+  });
 });

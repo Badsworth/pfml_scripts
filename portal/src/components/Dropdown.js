@@ -14,13 +14,21 @@ function Dropdown(props) {
   const hasError = !!props.errorMsg;
   const inputId = useUniqueId("Dropdown");
 
-  const fieldClasses = classnames("usa-select maxw-mobile-lg", {
-    "usa-input--error": hasError,
-  });
+  const fieldClasses = classnames(
+    "usa-select maxw-mobile-lg",
+    props.selectClassName,
+    {
+      "usa-input--error": hasError,
+    }
+  );
 
-  const formGroupClasses = classnames("usa-form-group", {
-    "usa-form-group--error": hasError,
-  });
+  const formGroupClasses = classnames(
+    "usa-form-group",
+    props.formGroupClassName,
+    {
+      "usa-form-group--error": hasError,
+    }
+  );
 
   return (
     <div className={formGroupClasses}>
@@ -30,6 +38,7 @@ function Dropdown(props) {
         inputId={inputId}
         optionalText={props.optionalText}
         small={props.smallLabel}
+        weight={props.labelWeight}
       >
         {props.label}
       </FormLabel>
@@ -69,7 +78,7 @@ Dropdown.propTypes = {
   /**
    * Localized label for the initially selected option when no value is set
    */
-  emptyChoiceLabel: PropTypes.string.isRequired,
+  emptyChoiceLabel: PropTypes.string,
   /**
    * Localized error message. Setting this enables the error state styling.
    */
@@ -78,6 +87,18 @@ Dropdown.propTypes = {
    * Localized hint text
    */
   hint: PropTypes.node,
+  /**
+   * Additional classes to include on the HTML select
+   */
+  selectClassName: PropTypes.string,
+  /**
+   * Override the default label font weight
+   */
+  labelWeight: PropTypes.oneOf(["bold", "normal"]),
+  /**
+   * Additional classes to include on the containing form group element
+   */
+  formGroupClassName: PropTypes.string,
   /**
    * Localized label
    */
@@ -99,7 +120,7 @@ Dropdown.propTypes = {
    */
   smallLabel: PropTypes.bool,
   /** The `value` of the selected choice */
-  value: PropTypes.string,
+  value: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
 };
 
 export default Dropdown;
