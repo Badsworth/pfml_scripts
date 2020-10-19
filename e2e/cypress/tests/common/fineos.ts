@@ -6,7 +6,7 @@ Given("I am logged into Fineos as a Savilinx user", () => {
 });
 
 // Initial step to view a just-submitted Portal claim.
-Given("I am viewing the previously submitted claim", () => {
+Then("I should be able to find claim in Adjudication", () => {
   cy.unstash("claimNumber").as("claimNumber");
   cy.get<string>("@claimNumber").then(fineos.visitClaim);
 });

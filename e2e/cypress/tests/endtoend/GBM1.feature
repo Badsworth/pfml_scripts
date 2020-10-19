@@ -2,17 +2,16 @@ Feature: Submit a Medical Claim in which the claimant mails their HCP form at la
 
   @portal
   Scenario: As a claimant, I should be able to start submitting a GBM1 claim through the portal
-    Given I begin the process to submit a "GBM1" claim
+    Given I begin to submit a "GBM1" claim as a "financially eligible" employee
     And Part One of the claim has been submitted
     And I am on the claims "checklist" page
     When I click on the checklist button called "Upload identity document"
-    Then I add my identity document
-
+    Then I add my identity document "MA ID"
+  
   @fineos
   Scenario: As a CSR (Savilix), I should be able to confirm that the HCP is missing
     Given I am logged into Fineos as a Savilinx user
-    Then I can commence intake on that claim
-    And I click through the commence intake flow
+    Given I should be able to find claim in Adjudication
     And I am on the tab "Documents"
     And the document "HCP" has been uploaded with "State Managed" business type
     Then I should find the "HCP" document

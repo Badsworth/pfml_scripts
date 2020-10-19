@@ -31,6 +31,7 @@ export function assertOnClaimPage(): void {
       }
     })
     .then((claimNumber) => {
+      cy.get("[id*='processPhaseEnum']").should("contain.text", "Adjudication");
       cy.get(".case_pageheader_title").contains(claimNumber);
     });
 }

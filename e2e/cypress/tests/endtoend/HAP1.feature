@@ -40,7 +40,7 @@ Feature: Submit a medical claim and adjucation approval - HAP1
   @fineos
   Scenario: As a CSR (Savilinx), I should be able to Approve a HAP1 claim submission
     Given I am logged into Fineos as a Savilinx user
-    And I am viewing the previously submitted claim
+    Then I should be able to find claim in Adjudication
     When I start adjudication for the claim
     And I add paid benefits to the current case
     Then I should see that the claim's "Eligibility" is "Met"

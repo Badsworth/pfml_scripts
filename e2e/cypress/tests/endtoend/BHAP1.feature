@@ -37,7 +37,7 @@ Feature: Submit a bonding claim and adjucation approval - BHAP1
   @fineos
   Scenario: As a CSR (Savilinx), I should be able to Approve a BHAP1 claim submission
     Given I am logged into Fineos as a Savilinx user
-    And I am viewing the previously submitted claim
+    Then I should be able to find claim in Adjudication
     Given I am on the tab "Documents"
     And the document "FOSTER" has been uploaded with "State Managed" business type
     Then I should find the "FOSTER" document
