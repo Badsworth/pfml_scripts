@@ -213,6 +213,24 @@ class MockFINEOSClient(client.AbstractFINEOSClient):
         )
         return week_based_work_pattern
 
+    def create_or_update_employer(
+        self, employer_create_or_update: models.CreateOrUpdateEmployer
+    ) -> typing.Tuple[str, int]:
+        _capture_call(
+            "create_or_update_employer", None, employer_create_or_update=employer_create_or_update
+        )
+
+        if employer_create_or_update.employer_fein == "999999999":
+            raise exception.FINEOSClientError(
+                Exception(
+                    "Employer not created. Response Code: 422, "
+                    "Party alias pfml_api_21ecb120-9a9a-4f8d-968d-e710b120e148 for alias "
+                    "type Unknown already exists for customer 2569"
+                )
+            )
+
+        return employer_create_or_update.fineos_customer_nbr, 250
+
     def update_reflexive_questions(
         self,
         user_id: str,

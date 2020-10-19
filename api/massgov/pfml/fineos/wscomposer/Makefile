@@ -11,7 +11,9 @@ TIDY := tidy -xml -indent -wrap 120
 TARGETS = EmployeeRegisterService.Request.xsd \
        EmployeeRegisterService.Response.xsd \
        ReadEmployer.Request.xsd \
-       ReadEmployer.Response.xsd
+       ReadEmployer.Response.xsd \
+       UpdateOrCreateParty.Request.xsd \
+       UpdateOrCreateParty.Response.xsd
 
 update: $(TARGETS)
 

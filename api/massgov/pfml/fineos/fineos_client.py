@@ -7,7 +7,7 @@ import datetime
 import os.path
 import urllib.parse
 import xml.etree.ElementTree
-from typing import Any, Callable, Dict, List, Optional, Union
+from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 import defusedxml.ElementTree
 import oauthlib.oauth2
@@ -26,6 +26,14 @@ MILLISECOND = datetime.timedelta(milliseconds=1)
 
 employee_register_request_schema = xmlschema.XMLSchema(
     os.path.join(os.path.dirname(__file__), "wscomposer", "EmployeeRegisterService.Request.xsd")
+)
+
+update_or_create_party_request_schema = xmlschema.XMLSchema(
+    os.path.join(os.path.dirname(__file__), "wscomposer", "UpdateOrCreateParty.Request.xsd")
+)
+
+update_or_create_party_response_schema = xmlschema.XMLSchema(
+    os.path.join(os.path.dirname(__file__), "wscomposer", "UpdateOrCreateParty.Response.xsd")
 )
 
 
@@ -377,6 +385,102 @@ class FINEOSClient(client.AbstractFINEOSClient):
         json = response.json()
 
         return models.customer_api.WeekBasedWorkPattern.parse_obj(json)
+
+    def create_or_update_employer(
+        self, employer_create_or_update: models.CreateOrUpdateEmployer
+    ) -> Tuple[str, int]:
+        """Create or update an employer in FINEOS."""
+        xml_body = self._create_or_update_employer_payload(employer_create_or_update)
+        response = self._wscomposer_request(
+            "POST", "webservice?userid=CONTENT&config=UpdateOrCreateParty", xml_body
+        )
+        response_decoded = update_or_create_party_response_schema.decode(response.text)
+
+        fineos_employer_id: dict = next(
+            (
+                item
+                for item in response_decoded["additional-data-set"]["additional-data"]
+                if item["name"] == "CUSTOMER_NUMBER"
+            ),
+            {},
+        )
+
+        if fineos_employer_id == {}:
+            response_code: dict = next(
+                (
+                    item
+                    for item in response_decoded["additional-data-set"]["additional-data"]
+                    if item["name"] == "SERVICE_RESPONSE_CODE"
+                ),
+                {},
+            )
+            response_code_value = response_code.get("value")
+            validation_msg: dict = next(
+                (
+                    item
+                    for item in response_decoded["additional-data-set"]["additional-data"]
+                    if item["name"] == "VALIDATION_MESSAGE"
+                ),
+                {},
+            )
+            validation_msg_value = validation_msg.get("value")
+            raise exception.FINEOSClientError(
+                Exception(
+                    f"Employer not created. Response Code: {response_code_value}, {validation_msg_value}"
+                )
+            )
+        else:
+            fineos_employer_id_value = fineos_employer_id.get("value")
+            logger.info(
+                f"Employer ID created is {fineos_employer_id_value} for "
+                f"CustomerNo {employer_create_or_update.fineos_customer_nbr}"
+            )
+            fineos_employer_id_int = int(str(fineos_employer_id_value))
+
+        return employer_create_or_update.fineos_customer_nbr, fineos_employer_id_int
+
+    @staticmethod
+    def _create_or_update_employer_payload(
+        employer_create_or_update: models.CreateOrUpdateEmployer,
+    ) -> str:
+
+        organization_default = models.OCOrganisationDefaultItem(
+            CustomerNo=employer_create_or_update.fineos_customer_nbr,
+            CorporateTaxNumber=employer_create_or_update.employer_fein,
+            DoingBusinessAs=employer_create_or_update.employer_dba,
+            LegalBusinessName=employer_create_or_update.employer_legal_name,
+            Name=employer_create_or_update.employer_legal_name,
+        )
+
+        organization_name = models.OCOrganisationNameItem(
+            DoingBusinessAs=employer_create_or_update.employer_dba,
+            LegalBusinessName=employer_create_or_update.employer_legal_name,
+            Name=employer_create_or_update.employer_legal_name,
+            organisationWithDefault=models.OCOrganisationWithDefault(
+                OCOrganisation=[organization_default]
+            ),
+        )
+
+        organization = models.OCOrganisationItem(
+            CustomerNo=employer_create_or_update.fineos_customer_nbr,
+            CorporateTaxNumber=employer_create_or_update.employer_fein,
+            DoingBusinessAs=employer_create_or_update.employer_dba,
+            LegalBusinessName=employer_create_or_update.employer_legal_name,
+            Name=employer_create_or_update.employer_legal_name,
+            names=models.OCOrganisationName(OCOrganisationName=[organization_name]),
+        )
+
+        party_dto = models.PartyIntegrationDTOItem(
+            organisation=models.OCOrganisation(OCOrganisation=[organization])
+        )
+
+        employer_create_payload = models.UpdateOrCreatePartyRequest()
+        employer_create_payload.update_data = models.UpdateData(PartyIntegrationDTO=[party_dto])
+
+        payload_as_dict = employer_create_payload.dict(by_alias=True)
+
+        xml_element = update_or_create_party_request_schema.encode(payload_as_dict)
+        return xml.etree.ElementTree.tostring(xml_element, encoding="unicode", xml_declaration=True)
 
     def update_reflexive_questions(
         self,

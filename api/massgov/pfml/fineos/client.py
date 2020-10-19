@@ -124,3 +124,10 @@ class AbstractFINEOSClient(abc.ABC, metaclass=abc.ABCMeta):
         additional_information: models.customer_api.AdditionalInformation,
     ) -> None:
         pass
+
+    @abc.abstractmethod
+    def create_or_update_employer(
+        self, employer_creation: models.CreateOrUpdateEmployer
+    ) -> typing.Tuple[str, int]:
+        """Create or update an employer in FINEOS."""
+        pass

@@ -18,6 +18,8 @@ import mimetypes
 import uuid
 from typing import List, Optional
 
+from sqlalchemy.orm.exc import NoResultFound
+
 import massgov.pfml.db
 import massgov.pfml.fineos.models
 import massgov.pfml.util.logging as logging
@@ -28,6 +30,7 @@ from massgov.pfml.db.models.applications import (
     LeaveReason,
     LeaveReasonQualifier,
 )
+from massgov.pfml.db.models.employees import Employer
 
 logger = logging.get_logger(__name__)
 
@@ -447,3 +450,62 @@ def download_document(
     except massgov.pfml.fineos.FINEOSClientError:
         logger.exception("FINEOS Client Exception")
         raise ValueError("FINEOS Client Exception")
+
+
+def create_or_update_employer(
+    fineos: massgov.pfml.fineos.AbstractFINEOSClient,
+    employer_fein: str,
+    db_session: massgov.pfml.db.Session,
+) -> Optional[str]:
+    # Determine if operation is create or update by querying
+    # for a FINEOS customer number in the employer model.
+    try:
+        employer = (
+            db_session.query(Employer).filter(Employer.employer_fein == str(employer_fein)).one()
+        )
+    except NoResultFound:
+        raise massgov.pfml.fineos.exception.FINEOSNotFound("Employer with provided FEIN not found.")
+
+    if employer.fineos_customer_nbr is None:
+        # create
+        # Generate external id
+        fineos_customer_nbr = f"pfml_api_{str(uuid.uuid4())}"
+        employer_creation = massgov.pfml.fineos.models.CreateOrUpdateEmployer(
+            fineos_customer_nbr=fineos_customer_nbr,
+            employer_fein=employer.employer_fein,
+            employer_legal_name=employer.employer_name,
+            employer_dba=employer.employer_dba,
+        )
+        fineos_customer_nbr, fineos_employer_id = fineos.create_or_update_employer(
+            employer_creation
+        )
+
+        logger.info(
+            "Created employer in FINEOS with customer nbr %s and FINEOS employer id %s",
+            fineos_customer_nbr,
+            fineos_employer_id,
+        )
+
+        # If successful save ExternalIdentifier in the database
+        employer.fineos_customer_nbr = fineos_customer_nbr
+        employer.fineos_employer_id = fineos_employer_id
+        db_session.add(employer)
+    else:
+        # update
+        employer_creation = massgov.pfml.fineos.models.CreateOrUpdateEmployer(
+            fineos_customer_nbr=employer.fineos_customer_nbr,
+            employer_fein=employer.employer_fein,
+            employer_legal_name=employer.employer_name,
+            employer_dba=employer.employer_dba,
+        )
+        fineos_customer_nbr, fineos_employer_id = fineos.create_or_update_employer(
+            employer_creation
+        )
+
+        logger.info(
+            "Updated employer with FINEOS customer nbr %s and FINEOS employer id %s",
+            fineos_customer_nbr,
+            fineos_employer_id,
+        )
+
+    return employer_creation.fineos_customer_nbr

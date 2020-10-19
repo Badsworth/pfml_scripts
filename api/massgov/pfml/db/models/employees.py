@@ -166,6 +166,8 @@ class Employer(Base):
     exemption_cease_date = Column(Date)
     dor_updated_date = Column(TIMESTAMP(timezone=True))
     latest_import_log_id = Column(Integer, ForeignKey("import_log.import_log_id"))
+    fineos_customer_nbr = Column(Text)
+    fineos_employer_id = Column(Integer)
 
     wages_and_contributions: "Query[WagesAndContributions]" = dynamic_loader(
         "WagesAndContributions", back_populates="employer"

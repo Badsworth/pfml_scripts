@@ -4,8 +4,11 @@ from datetime import date
 import massgov.pfml.fineos
 from massgov.pfml.api.services import fineos_actions
 from massgov.pfml.db.models.applications import Application, LeaveReasonQualifier
+from massgov.pfml.db.models.employees import Employer
 from massgov.pfml.db.models.factories import ApplicationFactory
-from massgov.pfml.fineos.exception import FINEOSClientBadResponse, FINEOSNotFound
+from massgov.pfml.fineos import FINEOSClient
+from massgov.pfml.fineos.exception import FINEOSClientBadResponse, FINEOSClientError, FINEOSNotFound
+from massgov.pfml.fineos.models import CreateOrUpdateEmployer
 
 
 def test_register_employee_pass(test_db_session):
@@ -179,6 +182,104 @@ def test_build_week_based_work_pattern(user):
     pattern_with_seconds_remainder = fineos_actions.build_week_based_work_pattern(application)
     # it rounds to the nearest minute
     assert pattern_with_seconds_remainder.workPatternDays[0].minutes == 34
+
+
+def test_create_employer_simple(test_db_session):
+    fineos_client = massgov.pfml.fineos.MockFINEOSClient()
+
+    employer = Employer()
+    employer.employer_fein = "888447598"
+    employer.employer_name = "Test Organization Name44"
+    employer.employer_dba = "Test Organization DBA"
+    test_db_session.add(employer)
+    test_db_session.commit()
+
+    fineos_customer_nbr = fineos_actions.create_or_update_employer(
+        fineos_client, employer.employer_fein, test_db_session
+    )
+
+    assert fineos_customer_nbr is not None
+    created_employer = (
+        test_db_session.query(Employer)
+        .filter(Employer.employer_fein == str(employer.employer_fein))
+        .one()
+    )
+    assert created_employer.fineos_customer_nbr == employer.fineos_customer_nbr
+    assert isinstance(created_employer.fineos_employer_id, int)
+
+
+def test_update_employer_simple(test_db_session):
+    fineos_client = massgov.pfml.fineos.MockFINEOSClient()
+
+    employer = Employer()
+    employer.employer_fein = "888447576"
+    employer.employer_name = "Test Organization Name"
+    employer.employer_dba = "Test Organization DBA"
+    employer.fineos_customer_nbr = "pfml_api_testing_update"
+    employer.fineos_employer_id = 250
+    test_db_session.add(employer)
+    test_db_session.commit()
+
+    fineos_customer_nbr = fineos_actions.create_or_update_employer(
+        fineos_client, employer.employer_fein, test_db_session
+    )
+
+    assert fineos_customer_nbr is not None
+    assert fineos_customer_nbr == employer.fineos_customer_nbr
+
+
+def test_employer_creation_exception(test_db_session):
+    fineos_client = massgov.pfml.fineos.MockFINEOSClient()
+
+    employer = Employer()
+    employer.employer_fein = "999999999"
+    employer.employer_name = "Test Organization Dupe"
+    employer.employer_dba = "Test Organization Dupe DBA"
+    employer.fineos_customer_nbr = "pfml_api_testing_duplicate"
+    test_db_session.add(employer)
+    test_db_session.commit()
+
+    try:
+        fineos_actions.create_or_update_employer(
+            fineos_client, employer.employer_fein, test_db_session
+        )
+        AssertionError
+    except FINEOSClientError:
+        assert True
+
+
+def test__employer_fein_not_found(test_db_session):
+    fineos_client = massgov.pfml.fineos.MockFINEOSClient()
+
+    employer = Employer()
+    employer.employer_fein = "888447598"
+    employer.employer_name = "Test Organization Name44"
+    employer.employer_dba = "Test Organization DBA"
+    test_db_session.add(employer)
+    test_db_session.commit()
+
+    try:
+        fineos_actions.create_or_update_employer(fineos_client, "999999999", test_db_session)
+        AssertionError()
+    except FINEOSNotFound:
+        assert True
+
+
+def test_creating_request_payload():
+    create_or_update_request = CreateOrUpdateEmployer(
+        fineos_customer_nbr="pfml_test_payload",
+        employer_fein="888997766",
+        employer_legal_name="Test Organization Name",
+        employer_dba="Test Organization DBA",
+    )
+    payload = FINEOSClient._create_or_update_employer_payload(create_or_update_request)
+
+    assert payload is not None
+    assert payload.__contains__("<Name>Test Organization Name</Name>")
+    assert payload.__contains__("<CustomerNo>pfml_test_payload</CustomerNo>")
+    assert payload.__contains__("<CorporateTaxNumber>888997766</CorporateTaxNumber>")
+    assert payload.__contains__("<LegalBusinessName>Test Organization Name</LegalBusinessName>")
+    assert payload.__contains__("<DoingBusinessAs>Test Organization DBA</DoingBusinessAs>")
 
 
 def test_build_bonding_date_reflexive_question_birth(user):
