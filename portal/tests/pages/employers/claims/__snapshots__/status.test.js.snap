@@ -1,0 +1,65 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Status renders the page 1`] = `
+<Fragment>
+  <BackButton />
+  <Title>
+    Notices for Jane Doe
+  </Title>
+  <Lead>
+    <Trans
+      i18nKey="pages.employersClaimStatus.lead"
+    />
+  </Lead>
+  <Heading
+    level="2"
+  >
+    Leave details
+  </Heading>
+  <div
+    className="border-bottom-2px border-base-lighter"
+  >
+    <StatusRow
+      label="Application ID"
+    >
+      mock_application_id
+    </StatusRow>
+    <StatusRow
+      label="Status"
+    >
+      <StatusTag
+        state="approved"
+      />
+    </StatusRow>
+    <StatusRow
+      label="Leave type"
+    >
+      Medical leave
+    </StatusRow>
+    <StatusRow
+      label="Leave duration"
+    >
+      1/1/2021 – 6/1/2021
+    </StatusRow>
+  </div>
+  <Heading
+    level="2"
+  >
+    Notices
+  </Heading>
+  <div>
+    <p>
+      <a
+        href="/"
+      >
+        Benefit determination notice (PDF)
+      </a>
+    </p>
+    <p
+      className="margin-top-1"
+    >
+      Posted 1/22/2021
+    </p>
+  </div>
+</Fragment>
+`;

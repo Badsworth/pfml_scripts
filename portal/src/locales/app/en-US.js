@@ -949,6 +949,19 @@ const pages = {
     sectionLabel_other: "Upload an identification document",
     title: "$t(shared.claimsVerifyIdTitle)",
   },
+  employersClaimStatus: {
+    applicationIdLabel: "Application ID",
+    documentPostedDate: "Posted {{date}}",
+    lead:
+      "<p>A decision has been made for this application. You can download a copy of the decision notice for more details.</p><p>No action is required, but your employee has the right to appeal this decision under Massachusetts regulations (458 CMR 2.14).</p>",
+    leaveDetailsLabel: "$t(shared.claimsLeaveDetailsTitle)",
+    leaveDurationLabel: "$t(shared.claimsLeaveDurationTitle)",
+    leaveTypeLabel: "Leave type",
+    medicalLeave: "$t(shared.leaveReasonMedical)",
+    noticesLabel: "Notices",
+    statusLabel: "Status",
+    title: "Notices for {{name}}",
+  },
   employersClaimsReview: {
     amend: "Amend",
     documentationLabel: "Documentation",
@@ -1290,6 +1303,9 @@ const components = {
   },
   spinner: {
     label: "Loading",
+  },
+  tag: {
+    state_approved: "Approved",
   },
   userFeedback: {
     instructions:
