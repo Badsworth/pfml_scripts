@@ -21,11 +21,17 @@ See below for how to allow this field in API requests and responses.
 1. Add the field to the [`responses.py`](../../api/massgov/pfml/api/models/applications/responses.py) API Application model
 1. Add test coverage to assert the new field is included in responses.
 
-## Adding validations
+## Validation rules
 
-Validations occur at several different layers within the API.
+### Validation Rules vs. Eligibility Rules
 
-### OpenAPI
+We should distinguish validation rules from eligibility rules. It’s one thing to automatically deny someone eligibility based on some eligibility criteria (like child birth date being within 12 months) and then allowing that person to appeal (if they have some valid extenuating circumstances), and it’s an entirely different thing to prevent them from applying altogether claiming that the application isn’t even a valid application.
+
+**Validation should only serve to help prevent incorrect data (typos, etc) not prevent ineligible applications**. We should be careful not to accidentally deny a claimant’s right to an appeal or otherwise make the system less flexible than it needs to be as is so often the case with government systems.
+
+### Adding validation rules
+
+#### OpenAPI
 
 OpenAPI includes keywords that help enforce a subset of validation rules, primarily:
 
@@ -38,7 +44,7 @@ For all endpoints, these validations always result in a 400 status code with `er
 
 These validations are located in the `openapi.yml` spec file.
 
-### Pydantic custom validators
+#### Pydantic custom validators
 
 [Pydantic custom validators](https://pydantic-docs.helpmanual.io/usage/validators/) are used for enforcing more complex validation logic, such as business rules or reality checks on a single field(e.g a birthdate must be in the past).
 
@@ -46,7 +52,7 @@ For all endpoints, these validations always result in a 400 status code with `er
 
 These validations are located in `requests.py`.
 
-### Required and cross-field validations
+#### Required and cross-field validations
 
 A `get_application_issues` function also exists for reporting potential "warnings" on an application. These are primarily rules related to required or conditionally required fields, but may also relate to rules that span multiple fields.
 
