@@ -871,9 +871,9 @@ const pages = {
   },
   claimsSuccess: {
     callToChangeDates_bondingAdoptFosterFuture:
-      "Please contact the DFML Contact Center at $t(shared.callCenterPhoneNumber) if you need to change your leave dates because your child arrived at a date earlier or later than you put in your application.",
+      "Please contact the DFML Contact Center at $t(shared.contactCenterPhoneNumber) if you need to change your leave dates because your child arrived at a date earlier or later than you put in your application.",
     callToChangeDates_bondingNewbornFuture:
-      "Please contact the DFML Contact Center at $t(shared.callCenterPhoneNumber) if you need to change your leave dates because your child was born at a date earlier or later than you put in your application.",
+      "Please contact the DFML Contact Center at $t(shared.contactCenterPhoneNumber) if you need to change your leave dates because your child was born at a date earlier or later than you put in your application.",
     exitLink: "Return to applications",
     familyLeaveToBond:
       "You can take up to 12 weeks of paid family leave to bond with your child after your medical leave ends. You do not need to take this leave all at once. You must create a separate leave application if you want to take family leave.",

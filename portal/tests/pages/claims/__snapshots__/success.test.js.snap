@@ -36,7 +36,7 @@ exports[`Success renders content tailored to Family (Bonding Future Adoption) 1`
       After your child arrives in your home, you will need to upload, mail, or fax a document that shows your child’s placement date. We will begin reviewing your application now, but we can’t approve it until we have this proof.
     </Alert>
     <Lead>
-      Please contact the DFML Contact Center at shared.callCenterPhoneNumber if you need to change your leave dates because your child arrived at a date earlier or later than you put in your application.
+      Please contact the DFML Contact Center at 833‑344‑7365 if you need to change your leave dates because your child arrived at a date earlier or later than you put in your application.
     </Lead>
     <Lead>
       We are reviewing your application. You can check the status of your application anytime in the portal.
@@ -66,7 +66,7 @@ exports[`Success renders content tailored to Family (Bonding Future Newborn) 1`]
       You will need to upload, mail, or fax a document that shows your child’s birthdate. We will begin reviewing your application now, but we can't approve it until we have this proof.
     </Alert>
     <Lead>
-      Please contact the DFML Contact Center at shared.callCenterPhoneNumber if you need to change your leave dates because your child was born at a date earlier or later than you put in your application.
+      Please contact the DFML Contact Center at 833‑344‑7365 if you need to change your leave dates because your child was born at a date earlier or later than you put in your application.
     </Lead>
     <Lead>
       You can check the status of your application anytime in the portal.
