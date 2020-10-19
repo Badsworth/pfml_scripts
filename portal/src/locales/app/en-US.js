@@ -35,13 +35,13 @@ const errors = {
     usernameExists: "An account with the given email already exists",
   },
   caughtError:
-    "Sorry, an unexpected error in our system was encountered. If this continues to happen, you may call the Paid Family Leave Contact Center at $t(shared.callCenterPhoneNumber)",
+    "Sorry, an unexpected error in our system was encountered. If this continues to happen, you may call the Paid Family Leave Contact Center at $t(shared.contactCenterPhoneNumber)",
   caughtError_DocumentsRequestError: "$t(shared.documentsRequestError)",
   caughtError_ForbiddenError:
     "Sorry, an authorization error was encountered. Please log out and then log in to try again.",
   caughtError_NetworkError: "$t(shared.networkError)",
   caughtError_UserNotFoundError:
-    "Sorry, we were unable to retrieve your account. Please log out and try again. If this continues to happen, you may call the Paid Family Leave Contact Center at $t(shared.callCenterPhoneNumber)",
+    "Sorry, we were unable to retrieve your account. Please log out and try again. If this continues to happen, you may call the Paid Family Leave Contact Center at $t(shared.contactCenterPhoneNumber)",
   claims: {
     date_of_birth: {
       invalid_age: "The person taking leave must be at least 14 years old.",
@@ -217,7 +217,7 @@ const errors = {
   invalidFileType:
     "Only PDF and image files may be uploaded. See the tips below for suggestions on how to convert them to an image file. These files that you selected will not be uploaded: {{disallowedFileNames}}",
   network:
-    "Sorry, an error was encountered. This may occur for a variety of reasons, including temporarily losing an internet connection or an unexpected error in our system. If this continues to happen, you may call the Paid Family Leave Contact Center at $t(shared.callCenterPhoneNumber)",
+    "Sorry, an error was encountered. This may occur for a variety of reasons, including temporarily losing an internet connection or an unexpected error in our system. If this continues to happen, you may call the Paid Family Leave Contact Center at $t(shared.contactCenterPhoneNumber)",
   // These fallbacks shouldn't normally render, but they may if a validation rule or
   // field is introduced and we don't add a custom field-level error message for it.
   validationFallback: {
@@ -231,9 +231,6 @@ const shared = {
   achTypeChecking: "Checking",
   achTypeSavings: "Savings",
   backToLoginLink: "Back to log in",
-  // TODO (CP-143): Correct phone number, but preserve usage of non-breaking hyphens to avoid awkward text wrapping
-  // https://alignedonline.com/non%E2%80%91breaking-spaces
-  callCenterPhoneNumber: "XXX‑XXX‑XXXX",
   choiceNo: "No",
   choiceYes: "Yes",
   claimDurationTypeContinuous: "Continuous leave",
@@ -244,8 +241,11 @@ const shared = {
   claimsLeaveDurationTitle: "Leave duration",
   claimsOtherLeaveTitle: "Other leave, income, and benefits",
   claimsVerifyIdTitle: "Your identity",
+  // contactCenterPhoneNumber uses non-breaking hyphens to avoid awkward text wrapping
+  // https://alignedonline.com/non%E2%80%91breaking-spaces
+  contactCenterPhoneNumber: "833‑344‑7365",
   documentsRequestError:
-    "An error was encountered while checking your application for documents. If this continues to happen, you may call the Paid Family Leave Contact Center at $t(shared.callCenterPhoneNumber)",
+    "An error was encountered while checking your application for documents. If this continues to happen, you may call the Paid Family Leave Contact Center at $t(shared.contactCenterPhoneNumber)",
   employerBenefitEntryPrefix: "Benefit",
   employerBenefitType_familyOrMedicalLeave: "Family or medical leave insurance",
   employerBenefitType_paidLeave: "Accrued paid leave",
@@ -264,7 +264,7 @@ const shared = {
   multipleEmployerAppAlert:
     "You need to complete a separate application for each employer you are taking leave from.",
   networkError:
-    "Sorry, an error was encountered. This may occur for a variety of reasons, including temporarily losing an internet connection or an unexpected error in our system. If this continues to happen, you may call the Paid Family Leave Contact Center at $t(shared.callCenterPhoneNumber)",
+    "Sorry, an error was encountered. This may occur for a variety of reasons, including temporarily losing an internet connection or an unexpected error in our system. If this continues to happen, you may call the Paid Family Leave Contact Center at $t(shared.contactCenterPhoneNumber)",
   otherIncomeEntryPrefix: "Income",
   otherIncomeType_jonesAct: "Jones Act benefits",
   otherIncomeType_otherEmployer: "Earnings from another employer",
@@ -413,7 +413,7 @@ const pages = {
     stepHTMLDescription_payment:
       "<p>Tell us how you want to receive payment.</p><p>If you want to receive payment by direct deposit, you will need to provide your bank account information, including a routing number and account number.</p>",
     stepHTMLDescription_reviewAndConfirm:
-      "<p>Once you confirm your leave information, we’ll notify your employer. Your job will be protected. To complete your application, you will need to finish the last three steps and submit.</p><p>If you need to edit your information in Part 1 after completing this step, you’ll need to call the Contact Center at $t(shared.callCenterPhoneNumber).</p>",
+      "<p>Once you confirm your leave information, we’ll notify your employer. Your job will be protected. To complete your application, you will need to finish the last three steps and submit.</p><p>If you need to edit your information in Part 1 after completing this step, you’ll need to call the Contact Center at $t(shared.contactCenterPhoneNumber).</p>",
     stepHTMLDescription_uploadId:
       "Upload proof of identity. If you entered a Massachusetts driver’s license or Mass ID number in step 1, upload the same ID.",
     stepHTMLDescription_verifyId:
@@ -421,9 +421,9 @@ const pages = {
     stepListDescription_1:
       "Your progress is automatically saved as you complete the application. You can edit any information you enter in Part 1 until step 5 is completed.",
     stepListDescription_1_submitted:
-      "If you need to edit your information in Part 1, you’ll need to call the Contact Center at $t(shared.callCenterPhoneNumber). Your application ID is <strong>{{absence_id}}</strong>.",
+      "If you need to edit your information in Part 1, you’ll need to call the Contact Center at $t(shared.contactCenterPhoneNumber). Your application ID is <strong>{{absence_id}}</strong>.",
     stepListDescription_2:
-      "Entering payment information here leads to faster processing, but you can also call $t(shared.callCenterPhoneNumber).",
+      "Entering payment information here leads to faster processing, but you can also call $t(shared.contactCenterPhoneNumber).",
     // TODO (CP-907): Add correct fax # and address
     stepListDescription_3:
       "Uploading documents online leads to faster processing, but you can also fax documents to NNN-NNN-NNNN, or mail them to 123 Address.",
@@ -807,7 +807,7 @@ const pages = {
     // eslint-disable-next-line no-template-curly-in-string
     otherLeaveDollarAmount: "${{amount}} every month",
     partDescription_1:
-      "If you need to make edits to Part 1, you’ll need to contact our call center at $t(shared.callCenterPhoneNumber). Your application ID is <strong>{{absence_id}}</strong>",
+      "If you need to make edits to Part 1, you’ll need to contact our Contact Center at $t(shared.contactCenterPhoneNumber). Your application ID is <strong>{{absence_id}}</strong>",
     partHeadingPrefix: "Part {{number}}",
     partHeading_1_final: "Review: Tell us about yourself and your leave",
     partHeading_1_part1:
@@ -815,7 +815,7 @@ const pages = {
     partHeading_2: "Review: Your payment information",
     partHeading_3: "Review: Upload document",
     partOneNextStepsLine1:
-      "Once you review and confirm Part 1, your in-progress application will be viewable by our call center staff. If you need to make edits to Part 1, you’ll need to contact our call center at $t(shared.callCenterPhoneNumber).",
+      "Once you review and confirm Part 1, your in-progress application will be viewable by our Contact Center staff. If you need to make edits to Part 1, you’ll need to contact our Contact Center at $t(shared.contactCenterPhoneNumber).",
     partOneNextStepsLine2:
       "We’ll also notify your employer that you’ve started an application for paid family and medical leave.",
     partOneNextStepsLine3:
@@ -1199,7 +1199,7 @@ const components = {
   },
   errorBoundary: {
     message:
-      "Sorry, we encountered an unexpected error. If this continues to happen, you may call the Paid Family Leave Contact Center at $t(shared.callCenterPhoneNumber)",
+      "Sorry, we encountered an unexpected error. If this continues to happen, you may call the Paid Family Leave Contact Center at $t(shared.contactCenterPhoneNumber)",
     reloadButton: "Reload this page",
   },
   errorsSummary: {
@@ -1259,11 +1259,9 @@ const components = {
   footer: {
     description:
       "Paid Family and Medical Leave is a state-offered benefit for anyone who works in Massachusetts and is eligible to take up to 26 weeks of paid leave for medical or family reasons.",
-    // TODO (CP-698): correct address
-    orgAddress: "xxxx, Boston, MA 02210",
+    orgAddress: "PO Box 838 Lawrence, MA 01843",
     orgName: "Department of Family and Medical Leave (DFML)",
-    // TODO (CP-698): correct phone number
-    orgPhoneNumber: "(XXX) XXX-XXXX",
+    orgPhoneNumber: "(833) 344-7365",
     title: "Paid Family and Medical Leave (PFML)",
   },
   form: {

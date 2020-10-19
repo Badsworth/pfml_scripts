@@ -4,12 +4,12 @@ exports[`Footer renders footer with default settings 1`] = `
 <FooterSlim
   contact={
     Object {
-      "address": "xxxx, Boston, MA 02210",
+      "address": "PO Box 838 Lawrence, MA 01843",
       "online": Object {
         "href": "https://mass.gov/dfml",
         "title": "Department of Family and Medical Leave (DFML)",
       },
-      "phone": "(XXX) XXX-XXXX",
+      "phone": "(833) 344-7365",
     }
   }
   description="Paid Family and Medical Leave is a state-offered benefit for anyone who works in Massachusetts and is eligible to take up to 26 weeks of paid leave for medical or family reasons."

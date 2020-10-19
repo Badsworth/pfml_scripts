@@ -161,7 +161,7 @@ Array [
   <p
     key="p-1"
   >
-    If you need to edit your information in Part 1 after completing this step, you’ll need to call the Contact Center at XXX‑XXX‑XXXX.
+    If you need to edit your information in Part 1 after completing this step, you’ll need to call the Contact Center at 833‑344‑7365.
   </p>,
 ]
 `;
@@ -521,13 +521,13 @@ exports[`Checklist renders multiple StepList components with list of Steps 1`] =
 </div>
 `;
 
-exports[`Checklist when Part 1 is submitted renders descriptions for Part 2 and 3 1`] = `"Entering payment information here leads to faster processing, but you can also call XXX‑XXX‑XXXX."`;
+exports[`Checklist when Part 1 is submitted renders descriptions for Part 2 and 3 1`] = `"Entering payment information here leads to faster processing, but you can also call 833‑344‑7365."`;
 
 exports[`Checklist when Part 1 is submitted renders descriptions for Part 2 and 3 2`] = `"Uploading documents online leads to faster processing, but you can also fax documents to NNN-NNN-NNNN, or mail them to 123 Address."`;
 
 exports[`Checklist when Part 1 is submitted renders different description for Part 1 1`] = `
 Array [
-  "If you need to edit your information in Part 1, you’ll need to call the Contact Center at XXX‑XXX‑XXXX. Your application ID is ",
+  "If you need to edit your information in Part 1, you’ll need to call the Contact Center at 833‑344‑7365. Your application ID is ",
   <strong
     key="strong-1"
   >

@@ -16,7 +16,7 @@ exports[`ErrorBoundary when an error is thrown by a descendant component renders
         className="usa-alert__text"
       >
         <p>
-          Sorry, we encountered an unexpected error. If this continues to happen, you may call the Paid Family Leave Contact Center at XXX‑XXX‑XXXX
+          Sorry, we encountered an unexpected error. If this continues to happen, you may call the Paid Family Leave Contact Center at 833‑344‑7365
         </p>
         <Button
           onClick={[Function]}

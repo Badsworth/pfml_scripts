@@ -59,7 +59,7 @@ exports[`ApplicationCard renders Alert inside the component when there is an err
 <Alert
   noIcon={true}
 >
-  An error was encountered while checking your application for documents. If this continues to happen, you may call the Paid Family Leave Contact Center at XXX‑XXX‑XXXX
+  An error was encountered while checking your application for documents. If this continues to happen, you may call the Paid Family Leave Contact Center at 833‑344‑7365
 </Alert>
 `;
 
