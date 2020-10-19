@@ -15,12 +15,18 @@ const ButtonLink = (props) => {
     { disabled: props.disabled }
   );
 
-  const Component = props.disabled ? "span" : Link;
+  if (props.disabled) {
+    return (
+      <button className={classes} type="button" disabled>
+        {props.children}
+      </button>
+    );
+  }
 
   return (
-    <Component href={props.href}>
+    <Link href={props.href}>
       <a className={classes}>{props.children}</a>
-    </Component>
+    </Link>
   );
 };
 

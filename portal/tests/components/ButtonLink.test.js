@@ -53,11 +53,11 @@ describe("ButtonLink", () => {
   });
 
   describe("when disabled is true", () => {
-    it("does not render a Link and adds disabled style", () => {
+    it("it renders a button with disabled attribute and style", () => {
       const { wrapper } = render({ disabled: true });
 
-      expect(wrapper.find("span")).toHaveLength(1);
-      expect(wrapper.find("a").hasClass("disabled")).toBe(true);
+      expect(wrapper.find("button").prop("disabled")).toBe(true);
+      expect(wrapper.find("button").hasClass("disabled")).toBe(true);
     });
   });
 });
