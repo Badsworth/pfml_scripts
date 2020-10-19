@@ -58,6 +58,11 @@ resource "aws_db_parameter_group" "postgres11" {
     name  = "log_statement"
     value = "ddl"
   }
+  # Error verbosity: TERSE excludes the logging of DETAIL, HINT, QUERY and CONTEXT information
+  parameter {
+    name  = "log_error_verbosity"
+    value = "terse"
+  }
 }
 
 resource "aws_db_instance" "default" {
