@@ -454,6 +454,9 @@ export interface ApplicationResponse {
     updated_time?: string;
     status?: "Started" | "Submitted" | "Completed";
 }
+
+export type PartialResponse = Partial<ApplicationResponse>
+
 export interface POSTApplicationsResponse extends SuccessfulResponse {
     data?: ApplicationResponse;
 }

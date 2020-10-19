@@ -17,16 +17,6 @@ Given("I am viewing claim {string}", (claimId: string) => {
   fineos.visitClaim(claimId);
 });
 
-// Initial step to view a brand new claim submitted now by API:
-Given("I am viewing a {string} claim", (scenario) => {
-  // Submit claim first:
-  cy.fixture(scenario).then({ timeout: 40000 }, (app) => {
-    cy.task("submitClaimToAPI", app).as("claimNumber");
-  });
-  // Navigate to claim in UI.
-  cy.get<string>("@claimNumber").then(fineos.visitClaim);
-});
-
 When("I start adjudication for the claim", () => {
   fineos.assertOnClaimPage();
   cy.get("input[type='submit'][value='Adjudicate']").click();

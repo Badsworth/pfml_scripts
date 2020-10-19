@@ -26,6 +26,7 @@ import { DocumentUploadRequest } from "../../src/api";
 import { makeDocUploadBody } from "../../src/simulation/SimulationRunner";
 import * as pilot3 from "../../src/simulation/scenarios/pilot3";
 import * as pilot4 from "../../src/simulation/scenarios/pilot4";
+import { PartialResponse } from "@/api";
 
 const scenarioFunctions: Record<string, SimulationGenerator> = {
   ...pilot3,
@@ -72,7 +73,10 @@ export default function (on: Cypress.PluginEvents): Cypress.ConfigOptions {
         password: faker.internet.password(10) + faker.random.number(999),
       };
     },
-    async submitClaimToAPI(application: SimulationClaim): Promise<string> {
+
+    async submitClaimToAPI(
+      application: SimulationClaim
+    ): Promise<PartialResponse> {
       if (!application.claim) throw new Error("Application missing!");
       if (!application.documents.length) throw new Error("Documents missing!");
       const { claim, documents } = application;
@@ -100,8 +104,9 @@ export default function (on: Cypress.PluginEvents): Cypress.ConfigOptions {
         Password,
         ApiBaseUrl,
       })
+
         .submit(claim, newDocuments)
-        .then((fineosId) => fineosId)
+        .then((responseIds) => responseIds as PartialResponse)
         .catch((err) => {
           console.error("Failed to submit claim:", err.data);
           throw new Error(err);

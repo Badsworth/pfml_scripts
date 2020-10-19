@@ -90,12 +90,13 @@ export default class SimulationRunner {
       logger.debug(
         `Submitting claim with ${submittedDocuments.length} documents`
       );
-      claimId = await this.submitter.submit(
+      const responseIds = await this.submitter.submit(
         claim.claim,
         submittedDocuments.map(
           makeDocUploadBody(this.storage.documentDirectory, "Automated Upload")
         )
       );
+      claimId = responseIds.fineos_absence_id as string;
     }
 
     if (submittedDocuments.length) {

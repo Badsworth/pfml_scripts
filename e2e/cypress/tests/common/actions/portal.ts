@@ -1,10 +1,27 @@
 import { SimulationClaim } from "@/simulation/types";
+import { PartialResponse } from "@/api";
 import { lookup } from "../util";
 
 import { inFieldset } from "../actions";
 
 export function onPage(page: string): void {
   cy.url().should("include", `/claims/${page}`);
+}
+export function setCookies(): void {
+  cy.setCookie(
+    "_ff",
+    JSON.stringify({
+      pfmlTerriyay: true,
+    }),
+    { log: true }
+  );
+
+  // Setup a route for application submission so we can extract claim ID later.
+  cy.route({
+    method: "POST",
+    url:
+      "https://paidleave-api-stage.mass.gov/api/v1/applications/*/submit_application",
+  }).as("submitClaimResponse");
 }
 
 export function submittingClaimType(
@@ -35,10 +52,14 @@ export function submitClaimDirectlyToAPI(
       throw new Error("Claim Was Not Generated");
     }
     cy.log("submitting", claim);
-    cy.task("submitClaimToAPI", claim).then((fineosId) => {
-      cy.stash("claimNumber", fineosId);
-      cy.log("submitted", fineosId);
-    });
+    cy.task("submitClaimToAPI", claim)
+      .then((responseIds: unknown) => responseIds as PartialResponse)
+      .then((responseIds: PartialResponse) => {
+        cy.stash("claimNumber", responseIds.fineos_absence_id);
+        cy.log("submitted", responseIds.fineos_absence_id);
+        cy.stash("applicationId", responseIds.application_id);
+        cy.log("submitted", responseIds.application_id);
+      });
   });
 }
 
@@ -49,6 +70,7 @@ export function login(credentials: Credentials): void {
   cy.labelled("Email address").type(credentials.username);
   cy.labelled("Password").typeMasked(credentials.password);
   cy.contains("button", "Log in").click();
+  cy.url().should("not.include", "login");
 }
 
 export function assertLoggedIn(): void {
@@ -72,6 +94,7 @@ export function startSubmit(
   scenario: string,
   employeeType: string
 ): void {
+  setCookies();
   submittingClaimType(scenario, employeeType);
   login(credentials);
   startClaim();
@@ -351,6 +374,9 @@ export function confirmInfo(): void {
   cy.wait("@submitClaimResponse").then((xhr) => {
     const responseBody = xhr.response.body as Cypress.ObjectLike;
     cy.stash("claimNumber", responseBody.data.fineos_absence_id);
+    cy.log("submitted", responseBody.data.fineos_absence_id);
+    cy.stash("applicationId", responseBody.data.application_id);
+    cy.log("submitted", responseBody.data.application_id);
   });
 }
 
@@ -480,6 +506,25 @@ export function goToDashboard(): void {
   cy.url().should("equal", `${Cypress.config().baseUrl}/`);
 }
 
+export function viewClaim(): void {
+  cy.unstash("applicationId").then((applicationId) => {
+    cy.visit(`/claims/checklist/?claim_id=${applicationId}`);
+    cy.url().should("include", `/claims/checklist/?claim_id=${applicationId}`);
+  });
+}
+
+export function goToIdUploadPage(): void {
+  cy.unstash("applicationId").then((applicationId) => {
+    cy.visit(`/claims/upload-id/?claim_id=${applicationId}`);
+  });
+}
+
+export function goToCertificationUploadPage(): void {
+  cy.unstash("applicationId").then((applicationId) => {
+    cy.visit(`/claims/certification-id/?claim_id=${applicationId}`);
+  });
+}
+
 export function submitClaimPartOne(application: ApplicationRequestBody): void {
   clickChecklistButton("Verify your identity");
   verifyIdentity(application, "normal");
@@ -500,9 +545,6 @@ export function submitClaimPartOne(application: ApplicationRequestBody): void {
   clickChecklistButton("Review and confirm");
   onPage("review");
   confirmInfo();
-  onPage("checklist");
-  clickChecklistButton("Add payment information");
-  addPaymentInfo(application);
 }
 
 export function submitClaimPortal(application: ApplicationRequestBody): void {

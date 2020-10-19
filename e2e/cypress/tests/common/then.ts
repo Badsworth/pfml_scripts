@@ -278,3 +278,11 @@ Then("I see that financially eligibility is {string}", function (
 ): void {
   cy.get("td[id*='EligibilityStatus']").contains(status);
 });
+
+Then("there should be {int} ID document(s) uploaded", function (
+  count: number
+): void {
+  cy.contains("form", "Upload your Massachusetts driver’s license or ID card")
+    .find("h3")
+    .should("have.length", count);
+});

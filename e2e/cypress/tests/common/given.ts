@@ -88,3 +88,32 @@ Given("I click through the commence intake flow", function (): void {
   cy.get("#nextPreviousButtons").contains("Next").click();
   cy.get("#nextPreviousButtons").contains("Next").click();
 });
+
+Given("I am on the page for that claim", function (): void {
+  portal.viewClaim();
+});
+
+Given("I go directly to the ID upload page", function (): void {
+  portal.goToIdUploadPage();
+});
+
+Given("I have added payment information", function (
+  this: CypressStepThis
+): void {
+  if (!this.application) {
+    throw new Error("Application has not been set");
+  }
+  const { application } = this;
+  portal.onPage("checklist");
+  portal.clickChecklistButton("Add payment information");
+  portal.addPaymentInfo(application);
+});
+
+Given("I return to the portal", function () {
+  Cypress.config("baseUrl", "https://paidleave-stage.mass.gov");
+  const credentials = {
+    username: Cypress.env("E2E_PORTAL_USERNAME"),
+    password: Cypress.env("E2E_PORTAL_PASSWORD"),
+  };
+  portal.login(credentials);
+});
