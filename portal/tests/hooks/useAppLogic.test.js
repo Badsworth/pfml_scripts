@@ -10,6 +10,7 @@ describe("useAppLogic", () => {
       claims,
       clearErrors,
       documents,
+      employers,
       goToNextPage,
       rest,
       setAppErrors,
@@ -21,6 +22,7 @@ describe("useAppLogic", () => {
         auth,
         claims,
         documents,
+        employers,
         clearErrors,
         goToNextPage,
         setAppErrors,
@@ -44,6 +46,7 @@ describe("useAppLogic", () => {
     expect(documents.documents).toBeInstanceOf(DocumentCollection);
     expect(documents.load).toBeInstanceOf(Function);
     expect(documents.attach).toBeInstanceOf(Function);
+    expect(employers.submit).toBeInstanceOf(Function);
     expect(users.user).toBeUndefined();
     expect(users).toEqual(expect.anything());
     // there should be no other properties;

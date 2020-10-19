@@ -7,22 +7,19 @@ import InputChoiceGroup from "../InputChoiceGroup";
 import PropTypes from "prop-types";
 import ReviewHeading from "../ReviewHeading";
 import { get } from "lodash";
-import routeWithParams from "../../utils/routeWithParams";
-import { useRouter } from "next/router";
 import { useTranslation } from "../../locales/i18n";
 
 /**
- * Display language and form for Leave Admin to include comments
+ * Display language and form for Leave Admin to include comment
  * in the Leave Admin claim review page.
  */
 
 const Feedback = (props) => {
   const { t } = useTranslation();
-  const router = useRouter();
   const [uploadedFiles, setUploadedFiles] = useState([]);
   const [formState, setFormState] = useState({
-    hasComments: "false",
-    comments: "",
+    hasComment: "false",
+    comment: "",
   });
 
   const getField = (fieldName) => {
@@ -43,13 +40,13 @@ const Feedback = (props) => {
   const handleOnChange = (event) => {
     const { name, value } = event.target;
     const hasSelectedNoCommentOption =
-      name === "hasComments" && value === "false";
+      name === "hasComment" && value === "false";
 
     if (hasSelectedNoCommentOption) {
       setUploadedFiles([]);
       updateFields({
         [name]: value,
-        comments: "",
+        comment: "",
       });
     } else {
       updateFields({
@@ -61,10 +58,6 @@ const Feedback = (props) => {
   const handleSubmit = (event) => {
     event.preventDefault();
     props.onSubmit({ ...formState, uploadedFiles });
-    const route = routeWithParams("employers.success", {
-      absence_id: props.absenceId,
-    });
-    router.push(route);
   };
 
   return (
@@ -73,12 +66,12 @@ const Feedback = (props) => {
         <InputChoiceGroup
           choices={[
             {
-              checked: formState.hasComments === "false",
+              checked: formState.hasComment === "false",
               label: t("pages.employersClaimsReview.feedback.choiceNo"),
               value: "false",
             },
             {
-              checked: formState.hasComments === "true",
+              checked: formState.hasComment === "true",
               label: t("pages.employersClaimsReview.feedback.choiceYes"),
               value: "true",
             },
@@ -88,7 +81,7 @@ const Feedback = (props) => {
               {t("pages.employersClaimsReview.feedback.instructionsLabel")}
             </ReviewHeading>
           }
-          name="hasComments"
+          name="hasComment"
           onChange={handleOnChange}
           type="radio"
         />
@@ -96,15 +89,15 @@ const Feedback = (props) => {
           getField={getField}
           clearField={clearField}
           updateFields={updateFields}
-          visible={formState.hasComments === "true"}
+          visible={formState.hasComment === "true"}
         >
           <React.Fragment>
-            <FormLabel className="usa-label" htmlFor="comments" small>
+            <FormLabel className="usa-label" htmlFor="comment" small>
               {t("pages.employersClaimsReview.feedback.tellUsMoreLabel")}
             </FormLabel>
             <textarea
               className="usa-textarea"
-              name="comments"
+              name="comment"
               onChange={handleOnChange}
             />
             <FormLabel small>
@@ -140,7 +133,6 @@ Feedback.propTypes = {
   appLogic: PropTypes.shape({
     setAppErrors: PropTypes.func.isRequired,
   }).isRequired,
-  absenceId: PropTypes.string.isRequired,
   onSubmit: PropTypes.func.isRequired,
 };
 

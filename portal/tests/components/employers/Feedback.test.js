@@ -9,9 +9,7 @@ jest.mock("../../../src/hooks/useAppLogic");
 
 describe("Feedback", () => {
   const appLogic = useAppLogic();
-  const wrapper = shallow(
-    <Feedback appLogic={appLogic} absenceId="1" onSubmit={() => {}} />
-  );
+  const wrapper = shallow(<Feedback appLogic={appLogic} onSubmit={() => {}} />);
   const { changeRadioGroup } = simulateEvents(wrapper);
 
   it("renders the component", () => {
@@ -20,7 +18,7 @@ describe("Feedback", () => {
 
   describe("when user selects option to leave additional comments", () => {
     it("shows comment box and file upload button", () => {
-      changeRadioGroup("hasComments", "Yes");
+      changeRadioGroup("hasComment", "Yes");
 
       expect(wrapper.find("textarea").exists()).toEqual(true);
       expect(wrapper.find(FileCardList).exists()).toEqual(true);

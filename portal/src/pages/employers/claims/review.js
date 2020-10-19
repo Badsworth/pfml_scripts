@@ -21,6 +21,7 @@ import withUser from "../../../hoc/withUser";
 const employerDueDate = formatDateRange("2020-10-10");
 
 export const Review = (props) => {
+  const { appLogic } = props;
   const { t } = useTranslation();
   const {
     fineos_absence_id,
@@ -45,22 +46,14 @@ export const Review = (props) => {
     setAmendedLeaves(updatedPreviousLeaves);
   };
 
-  // TODO (EMPLOYER-365): Remove console logging used for demo'ing
-  const handleSubmit = ({ hasComments, comments, uploadedFiles }) => {
-    // eslint-disable-next-line no-console
-    console.log("1. Employer notification date: ", amendedDate);
-    // eslint-disable-next-line no-console
-    console.log("2. Employer benefits: ", amendedBenefits);
-    // eslint-disable-next-line no-console
-    console.log("3. Previous leaves: ", amendedLeaves);
-    // eslint-disable-next-line no-console
-    console.log("4. Hours worked per week: ", amendedHours);
-    // eslint-disable-next-line no-console
-    console.log("5. Does Employer have comments? ", hasComments);
-    // eslint-disable-next-line no-console
-    console.log("6. Comments: ", comments);
-    // eslint-disable-next-line no-console
-    console.log("7. Files: ", uploadedFiles);
+  const handleSubmit = async ({ comment }) => {
+    await appLogic.employers.submit(fineos_absence_id, {
+      employer_notification_date: amendedDate,
+      employer_benefits: amendedBenefits,
+      previous_leaves: amendedLeaves,
+      hours_worked_per_week: parseInt(amendedHours),
+      comment,
+    });
   };
 
   return (
@@ -99,11 +92,7 @@ export const Review = (props) => {
         previousLeaves={previous_leaves}
         onChange={handlePreviousLeavesChange}
       />
-      <Feedback
-        appLogic={props.appLogic}
-        absenceId={fineos_absence_id}
-        onSubmit={handleSubmit}
-      />
+      <Feedback appLogic={props.appLogic} onSubmit={handleSubmit} />
     </React.Fragment>
   );
 };

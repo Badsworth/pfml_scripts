@@ -28,7 +28,7 @@ exports[`Feedback renders the component 1`] = `
           Do you have any additional comments or concerns?
         </ReviewHeading>
       }
-      name="hasComments"
+      name="hasComment"
       onChange={[Function]}
       type="radio"
     />
@@ -40,14 +40,14 @@ exports[`Feedback renders the component 1`] = `
     >
       <FormLabel
         className="usa-label"
-        htmlFor="comments"
+        htmlFor="comment"
         small={true}
       >
         Please tell us more.
       </FormLabel>
       <textarea
         className="usa-textarea"
-        name="comments"
+        name="comment"
         onChange={[Function]}
       />
       <FormLabel
