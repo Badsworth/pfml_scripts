@@ -332,14 +332,14 @@ def handle_import_exception(
 ) -> None:
     """Gracefully close out import run"""
     try:
-        message = ""
         if isinstance(exception, SQLAlchemyError):
             db_session.rollback()
             message = get_discreet_db_exception_message(exception)
+            logger.error(message)
         else:
             message = f"Unexpected error while processing import: {str(exception)}"
+            logger.exception("exception occurred during import")
 
-        logger.error(message)
         report.status = "error"
         report.message = message
         report.end = datetime.now().isoformat()
