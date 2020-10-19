@@ -1,6 +1,6 @@
 # Lambda Infrastructure
 
-We use a parameterized Makefile to provide shared build, local testing and release commands around lambda functions.
+We use a parameterized Makefile to provide shared build, local testing and release commands across lambda functions.
 
 ## Prerequisites
 
@@ -13,60 +13,25 @@ Install the following prerequisites on your machine:
 
 ## Commands
 
-`make` commands should be run from the specific lambda folder (i.e. `dor/` or `fineos/eligibility_export_feed`)
+`make` commands should be run from the specific lambda folder (i.e. `fineos/eligibility_export_feed`).
 
-Build the function (whenever the importer code changes)
-
-```
-$ make build
-```
-
-Invoke the function locally
-
-```
-make invoke-local
-```
-
-Invoke the function after a full build including API
-
-```
-make build-invoke-local
-```
-
-Build and upload to lambda to S3
-
-```
-make release
-```
-
-Get the S3 key for the lambda build
-
-```
-make get-release-key
-```
-
-Clean build artifacts
-
-```
-make clean
-```
-
-View available commands
-
-```
-make help
-```
+- `make build` - Build the function (whenever the importer code changes)
+- `make invoke-local` - Invoke the function locally
+- `make build-invoke-local` - Invoke the function after a full build including API
+- `make release` - Build and upload lambda to S3
+- `make get-release-key` - Get the S3 key for the most recent lambda build
+- `make clean` - Clean build artifacts
+- `make help` - View available commands
 
 ## Setting up a new Lambda
 
 Create a new folder and copy files from one of the existing lambdas. Update these files for your specific lambda:
 
 `Makefile`:
-* `Makefiles` should include the `Makefile.template` file in this folder
+* `Makefiles` should include the `Makefile.template` file in this folder.
 * `fineos/eligibility_export_feed` has the basic pattern and all you need to do is set the variables in the `Makefile` correctly
-* Default pattern is empty event payload. Specify an event json payload for local testing by setting the `LOCAL_INVOKE_EVENT_JSON` variable in the lambda makefile (see `fineos/conginto_post_confirmation` as reference)
-* `dor` has a binary dependencies layer to support gpg encryption. Use this as a template for lambdas with a binary dependency use case.
-* lambda specific commands (see DOR `make generate`) should be added to the lambda specific Makefile and document with a README
+* Default pattern is empty event payload. Specify an event json payload for local testing by setting the `LOCAL_INVOKE_EVENT_JSON` variable in the lambda makefile (see `fineos/cognito_post_confirmation` as reference)
+* Lambda specific commands should be added to the lambda-specific Makefile and documented with a README.
 
 `requirements.txt`: link to the PFML API source code. Also include any other python dependencies specific to your lambda code (if any).
 
@@ -92,7 +57,7 @@ For lambdas that require AWS resources (i.e S3) you will need to be logged in to
 Infrastructure for lambdas is described in various Terraform files.
 
 Variables needed for lambda build (S3 keys, ARN):
-* `infra/api/environments/{env}/` - `terraform plan` input variables (see `dor_lambda_artifact_s3_key.tf` as reference)
+* `infra/api/environments/{env}/` - `terraform plan` input variables (see `*_artifact_s3_key.tf` as reference)
 * `infra/api/template/variables.tf` - variables for the lambda function definition
 * `infra/api/environments/{env}/main.tf` - pass in variables as argument to environment specific modules
 * Environment generators - replicate input variable and arguments from above in `bin/bootstrap-env/api/main.tf` and `bin/boostrap-env/api/`
@@ -112,15 +77,12 @@ Lambda build buckets:
 
 ## CI / CD
 
-Lambdas are built and deployed as part of the our CD workflow using Github Actions.
+Lambdas are built and deployed as part of our CD workflow using Github Actions.
 
-* `.github/workflows/api-deploy.yml` - Duplicate code for one of the existing lambdas (see `dor-import-build` as reference)
+* `.github/workflows/api-deploy.yml` - Duplicate code for one of the existing lambdas
 
 ### Setting up a new lambda CI/CD
 
-* add a new lambda job (see `dor-import-build` as reference)
+* add a new lambda job
 * add the job name under `api-db-migrate-up`
 * add the job under `api-release`, specify input variables to the terraform plan
-
-
-

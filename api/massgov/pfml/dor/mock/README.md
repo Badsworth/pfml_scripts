@@ -1,3 +1,3 @@
 # Mock data tools
 
-See `api/lambdas/dor` for running instructions.
+See `api/lambdas/README.md` and `api/massgov/dor/importer/README.md` for running instructions.

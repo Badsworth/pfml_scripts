@@ -44,18 +44,16 @@ module "api" {
     "https://paidleave-api-test.mass.gov",
     "https://67385ye4yb.execute-api.us-east-1.amazonaws.com"
   ]
-  dor_import_lambda_build_s3_key        = local.dor_lambda_artifact_s3_key
-  dor_import_lambda_dependencies_s3_key = local.dor_import_lambda_dependencies_s3_key
-  formstack_import_lambda_build_s3_key  = local.formstack_lambda_artifact_s3_key
 
   cognito_user_pool_arn                            = "arn:aws:cognito-idp:us-east-1:498823821309:userpool/us-east-1_HhQSLYSIe"
   cognito_post_confirmation_lambda_artifact_s3_key = local.cognito_post_confirmation_lambda_artifact_s3_key
   cognito_user_pool_keys_url                       = "https://cognito-idp.us-east-1.amazonaws.com/us-east-1_HhQSLYSIe/.well-known/jwks.json"
+  formstack_import_lambda_build_s3_key             = local.formstack_lambda_artifact_s3_key
   rmv_client_base_url                              = "https://atlas-staging-gateway.massdot.state.ma.us"
   rmv_client_certificate_binary_arn                = "arn:aws:secretsmanager:us-east-1:498823821309:secret:/service/pfml-api-test/rmv_client_certificate-zWimpc"
   rmv_check_behavior                               = "fully_mocked"
   rmv_check_mock_success                           = "1"
-  fineos_client_customer_api_url                   = "https://dt2-api.masspfml.fineos.com/customerapi/"
+  fineos_client_customer_api_url                   = "https://dt2-api.masspfml.fineos.com/customer-services/"
   fineos_client_wscomposer_api_url                 = "https://dt2-claims-webapp.masspfml.fineos.com/wscomposer/"
   fineos_client_oauth2_url                         = "https://dt2-api.masspfml.fineos.com/oauth2/token"
   fineos_client_oauth2_client_id                   = "1ral5e957i0l9shul52bhk0037"

@@ -56,23 +56,6 @@ resource "aws_lambda_permission" "nr_lambda_permission_cognito_postconf" {
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-resource "aws_cloudwatch_log_subscription_filter" "nr_lambda_dor_import" {
-  name            = "nr_lambda_dor_import"
-  log_group_name  = "/aws/lambda/massgov-pfml-${var.environment_name}-dor-import"
-  filter_pattern  = "?REPORT ?NR_LAMBDA_MONITORING ?\"Task timed out\""
-  destination_arn = local.newrelic_log_ingestion_lambda
-}
-
-resource "aws_lambda_permission" "nr_lambda_permission_dor_import" {
-  statement_id  = "NRLambdaPermission_DORImport_${var.environment_name}"
-  action        = "lambda:InvokeFunction"
-  function_name = local.newrelic_log_ingestion_lambda
-  principal     = "logs.us-east-1.amazonaws.com"
-  source_arn    = "arn:aws:logs:us-east-1:498823821309:log-group:/aws/lambda/massgov-pfml-${var.environment_name}-dor-import:*"
-}
-
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
 resource "aws_cloudwatch_log_subscription_filter" "nr_lambda_formstack_import" {
   name            = "nr_lambda_formstack_import"
   log_group_name  = "/aws/lambda/massgov-pfml-${var.environment_name}-formstack-import"

@@ -54,13 +54,13 @@ module "api" {
     # API, but we're not heavily using the stage environment right now so it's fine.
     "http://localhost:3000"
   ]
-  dor_import_lambda_build_s3_key        = local.dor_lambda_artifact_s3_key
-  dor_import_lambda_dependencies_s3_key = local.dor_import_lambda_dependencies_s3_key
-  formstack_import_lambda_build_s3_key  = local.formstack_lambda_artifact_s3_key
 
   cognito_user_pool_arn                            = "arn:aws:cognito-idp:us-east-1:498823821309:userpool/us-east-1_HpL4XslLg"
-  cognito_post_confirmation_lambda_artifact_s3_key = local.cognito_post_confirmation_lambda_artifact_s3_key
   cognito_user_pool_keys_url                       = "https://cognito-idp.us-east-1.amazonaws.com/us-east-1_HpL4XslLg/.well-known/jwks.json"
+  cognito_post_confirmation_lambda_artifact_s3_key = local.cognito_post_confirmation_lambda_artifact_s3_key
+  formstack_import_lambda_build_s3_key             = local.formstack_lambda_artifact_s3_key
+  rmv_client_base_url                              = "https://atlas-staging-gateway.massdot.state.ma.us"
+  rmv_client_certificate_binary_arn                = "arn:aws:secretsmanager:us-east-1:498823821309:secret:/service/pfml-api-stage/rmv_client_certificate-QlZaMl"
   rmv_check_behavior                               = "partially_mocked"
   rmv_check_mock_success                           = "1"
   fineos_client_customer_api_url                   = "https://idt-api.masspfml.fineos.com/customerapi/"
@@ -68,6 +68,4 @@ module "api" {
   fineos_client_oauth2_url                         = "https://idt-api.masspfml.fineos.com/oauth2/token"
   fineos_client_oauth2_client_id                   = "1fa281uto9tjuqtm21jle7loam"
   fineos_eligibility_transfer_lambda_build_s3_key  = local.fineos_eligibility_transfer_lambda_build_s3_key
-  rmv_client_base_url                              = "https://atlas-staging-gateway.massdot.state.ma.us"
-  rmv_client_certificate_binary_arn                = "arn:aws:secretsmanager:us-east-1:498823821309:secret:/service/pfml-api-stage/rmv_client_certificate-QlZaMl"
 }

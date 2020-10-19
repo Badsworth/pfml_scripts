@@ -91,18 +91,8 @@ variable "cors_origins" {
   type        = list(string)
 }
 
-variable "dor_import_lambda_build_s3_key" {
-  description = "The S3 object key of the DOR integration lambda artifact"
-  type        = string
-}
-
 variable "formstack_import_lambda_build_s3_key" {
   description = "The S3 object key of the Formstack integration lambda artifact"
-  type        = string
-}
-
-variable "dor_import_lambda_dependencies_s3_key" {
-  description = "The S3 object key of the DOR integration lambda dependency layer"
   type        = string
 }
 
