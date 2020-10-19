@@ -1,5 +1,6 @@
 import AmendablePreviousLeave from "./AmendablePreviousLeave";
 import Details from "../Details";
+import PreviousLeave from "../../models/PreviousLeave";
 import PropTypes from "prop-types";
 import React from "react";
 import ReviewHeading from "../ReviewHeading";
@@ -106,7 +107,7 @@ const PreviousLeaves = (props) => {
 };
 
 PreviousLeaves.propTypes = {
-  previousLeaves: PropTypes.array,
+  previousLeaves: PropTypes.arrayOf(PropTypes.instanceOf(PreviousLeave)),
   onChange: PropTypes.func.isRequired,
 };
 

@@ -1,8 +1,10 @@
+import EmployerBenefit, {
+  EmployerBenefitType,
+} from "../../models/EmployerBenefit";
 import React, { useState } from "react";
 import AmendButton from "./AmendButton";
 import AmendmentForm from "./AmendmentForm";
 import ConditionalContent from "../ConditionalContent";
-import { EmployerBenefitType } from "../../models/EmployerBenefit";
 import InputDate from "../InputDate";
 import InputText from "../InputText";
 import PropTypes from "prop-types";
@@ -15,7 +17,7 @@ import { useTranslation } from "../../locales/i18n";
  * in the Leave Admin claim review page.
  */
 
-const EmployerBenefit = ({ benefit, onChange }) => {
+const AmendableEmployerBenefit = ({ benefit, onChange }) => {
   const { t } = useTranslation();
   const [amendment, setAmendment] = useState(benefit);
   const [isAmendmentFormDisplayed, setIsAmendmentFormDisplayed] = useState(
@@ -131,9 +133,9 @@ const EmployerBenefit = ({ benefit, onChange }) => {
   );
 };
 
-EmployerBenefit.propTypes = {
-  benefit: PropTypes.object.isRequired,
+AmendableEmployerBenefit.propTypes = {
+  benefit: PropTypes.instanceOf(EmployerBenefit).isRequired,
   onChange: PropTypes.func.isRequired,
 };
 
-export default EmployerBenefit;
+export default AmendableEmployerBenefit;

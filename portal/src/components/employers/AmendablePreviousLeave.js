@@ -3,6 +3,7 @@ import AmendButton from "./AmendButton";
 import AmendmentForm from "./AmendmentForm";
 import ConditionalContent from "../ConditionalContent";
 import InputDate from "../InputDate";
+import PreviousLeave from "../../models/PreviousLeave";
 import PropTypes from "prop-types";
 import formatDateRange from "../../utils/formatDateRange";
 import { useTranslation } from "../../locales/i18n";
@@ -91,7 +92,7 @@ const AmendablePreviousLeave = ({ leavePeriod, onChange }) => {
 };
 
 AmendablePreviousLeave.propTypes = {
-  leavePeriod: PropTypes.object.isRequired,
+  leavePeriod: PropTypes.instanceOf(PreviousLeave).isRequired,
   onChange: PropTypes.func.isRequired,
 };
 

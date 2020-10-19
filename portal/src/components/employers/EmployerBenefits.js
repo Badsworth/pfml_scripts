@@ -1,4 +1,5 @@
 import AmendableEmployerBenefit from "./AmendableEmployerBenefit";
+import EmployerBenefit from "../../models/EmployerBenefit";
 import PropTypes from "prop-types";
 import React from "react";
 import ReviewHeading from "../ReviewHeading";
@@ -62,7 +63,7 @@ const EmployerBenefits = (props) => {
 };
 
 EmployerBenefits.propTypes = {
-  benefits: PropTypes.array,
+  benefits: PropTypes.arrayOf(PropTypes.instanceOf(EmployerBenefit)),
   onChange: PropTypes.func.isRequired,
 };
 

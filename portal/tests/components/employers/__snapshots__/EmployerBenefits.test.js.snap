@@ -34,7 +34,7 @@ exports[`EmployerBenefits renders the component 1`] = `
       </tr>
     </thead>
     <tbody>
-      <EmployerBenefit
+      <AmendableEmployerBenefit
         benefit={
           EmployerBenefit {
             "benefit_amount_dollars": 1000,

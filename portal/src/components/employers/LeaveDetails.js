@@ -1,9 +1,9 @@
+import Claim, { LeaveReason } from "../../models/Claim";
 import React, { useState } from "react";
 import AmendButton from "./AmendButton";
 import AmendmentForm from "./AmendmentForm";
 import ConditionalContent from "../ConditionalContent";
 import InputDate from "../InputDate";
-import { LeaveReason } from "../../models/Claim";
 import PropTypes from "prop-types";
 import ReviewHeading from "../ReviewHeading";
 import ReviewRow from "../ReviewRow";
@@ -108,7 +108,7 @@ const LeaveDetails = (props) => {
 };
 
 LeaveDetails.propTypes = {
-  claim: PropTypes.object.isRequired,
+  claim: PropTypes.instanceOf(Claim).isRequired,
   onChange: PropTypes.func,
 };
 

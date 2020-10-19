@@ -1,4 +1,4 @@
-import EmployerBenefits, {
+import EmployerBenefit, {
   EmployerBenefitType,
 } from "../../../src/models/EmployerBenefit";
 import AmendButton from "../../../src/components/employers/AmendButton";
@@ -10,7 +10,7 @@ import React from "react";
 import { shallow } from "enzyme";
 
 describe("AmendableEmployerBenefit", () => {
-  const shortTermDisability = new EmployerBenefits({
+  const shortTermDisability = new EmployerBenefit({
     benefit_amount_dollars: 1000,
     benefit_end_date: "2021-03-01",
     benefit_start_date: "2021-02-01",
@@ -65,7 +65,7 @@ describe("AmendableEmployerBenefit", () => {
   });
 
   it("hides amount input field if the benefit is acrrued paid leave", () => {
-    const paidLeave = new EmployerBenefits({
+    const paidLeave = new EmployerBenefit({
       benefit_amount_dollars: 0,
       benefit_end_date: "2021-03-01",
       benefit_start_date: "2021-02-01",

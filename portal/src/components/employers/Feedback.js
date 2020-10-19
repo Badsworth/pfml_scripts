@@ -137,7 +137,9 @@ const Feedback = (props) => {
 };
 
 Feedback.propTypes = {
-  appLogic: PropTypes.object.isRequired,
+  appLogic: PropTypes.shape({
+    setAppErrors: PropTypes.func.isRequired,
+  }).isRequired,
   absenceId: PropTypes.string.isRequired,
   onSubmit: PropTypes.func.isRequired,
 };
