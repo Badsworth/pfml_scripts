@@ -6,7 +6,6 @@ import Heading from "../components/Heading";
 import PropTypes from "prop-types";
 import React from "react";
 import Title from "../components/Title";
-import { useRouter } from "next/router";
 import { useTranslation } from "../locales/i18n";
 import withClaims from "../hoc/withClaims";
 
@@ -16,7 +15,6 @@ import withClaims from "../hoc/withClaims";
 const Applications = (props) => {
   const { appLogic, claims, query } = props;
   const { t } = useTranslation();
-  const router = useRouter();
 
   const hasClaims = claims.items.length > 0;
   const hasInProgressClaims = hasClaims && claims.inProgress.length > 0;
@@ -37,7 +35,7 @@ const Applications = (props) => {
         </Alert>
       )}
 
-      <DashboardNavigation activeHref={router.route} />
+      <DashboardNavigation activeHref={appLogic.portalFlow.pathname} />
       <Title hidden={hasClaims}>{t("pages.applications.title")}</Title>
 
       {!hasClaims && <p>{t("pages.applications.noClaims")}</p>}

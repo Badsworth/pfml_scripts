@@ -51,7 +51,7 @@ const useAppLogic = () => {
     clearErrors: appErrorsLogic.clearErrors,
     documents,
     employers,
-    goToNextPage: portalFlow.goToNextPage,
+    portalFlow,
     setAppErrors: appErrorsLogic.setAppErrors,
     users,
   };

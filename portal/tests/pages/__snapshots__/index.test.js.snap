@@ -2,7 +2,9 @@
 
 exports[`Index renders dashboard content 1`] = `
 <Fragment>
-  <DashboardNavigation />
+  <DashboardNavigation
+    activeHref="/"
+  />
   <div
     className="measure-6"
   >

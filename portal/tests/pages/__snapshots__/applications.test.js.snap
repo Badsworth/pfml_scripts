@@ -2,7 +2,9 @@
 
 exports[`Applications when no claims exist renders the empty page state 1`] = `
 <Fragment>
-  <DashboardNavigation />
+  <DashboardNavigation
+    activeHref="/applications"
+  />
   <Title
     hidden={false}
   >

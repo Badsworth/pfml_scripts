@@ -62,7 +62,7 @@ describe("UploadDocsOptions", () => {
         wrapper.find("QuestionPage").simulate("save");
       });
       const claim_id = claim.application_id;
-      expect(appLogic.goToNextPage).toHaveBeenCalledWith(
+      expect(appLogic.portalFlow.goToNextPage).toHaveBeenCalledWith(
         { claim },
         { claim_id, showStateId: true },
         "UPLOAD_MASS_ID"
@@ -84,7 +84,7 @@ describe("UploadDocsOptions", () => {
         wrapper.find("QuestionPage").simulate("save");
       });
       const claim_id = claim.application_id;
-      expect(appLogic.goToNextPage).toHaveBeenCalledWith(
+      expect(appLogic.portalFlow.goToNextPage).toHaveBeenCalledWith(
         { claim },
         { claim_id, showStateId: false },
         "UPLOAD_ID"
@@ -106,7 +106,7 @@ describe("UploadDocsOptions", () => {
         wrapper.find("QuestionPage").simulate("save");
       });
       const claim_id = claim.application_id;
-      expect(appLogic.goToNextPage).toHaveBeenCalledWith(
+      expect(appLogic.portalFlow.goToNextPage).toHaveBeenCalledWith(
         { claim },
         { claim_id },
         "UPLOAD_CERTIFICATION"

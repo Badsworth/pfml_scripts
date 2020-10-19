@@ -6,7 +6,9 @@ import ClaimCollection from "../../src/models/ClaimCollection";
 import React from "react";
 import User from "../../src/models/User";
 import { act } from "react-dom/test-utils";
+import { mockRouter } from "next/router";
 import { mount } from "enzyme";
+import routes from "../../src/routes";
 import useAppLogic from "../../src/hooks/useAppLogic";
 
 jest.mock("@aws-amplify/auth");
@@ -23,6 +25,8 @@ describe("Applications", () => {
   }
 
   beforeEach(() => {
+    mockRouter.pathname = routes.applications;
+
     testHook(() => {
       appLogic = useAppLogic();
       appLogic.users.user = new User({ consented_to_data_sharing: true });

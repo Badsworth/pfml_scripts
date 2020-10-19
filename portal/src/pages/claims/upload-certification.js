@@ -27,7 +27,7 @@ export const UploadCertification = (props) => {
   const claimReason = claim.leave_details.reason;
   const claimReasonQualifier = claim.leave_details.reason_qualifier;
 
-  const { appErrors } = appLogic;
+  const { appErrors, portalFlow } = appLogic;
   const hasLoadingDocumentsError = hasDocumentsLoadError(
     appErrors,
     claim.application_id
@@ -59,7 +59,7 @@ export const UploadCertification = (props) => {
   const handleSave = async () => {
     if (!files.length && certificationDocuments.length) {
       // Allow user to skip this page if they've previously uploaded documents
-      return appLogic.goToNextPage({}, { claim_id: claim.application_id });
+      return portalFlow.goToNextPage({}, { claim_id: claim.application_id });
     }
     try {
       const { success } = await appLogic.documents.attach(
@@ -69,12 +69,12 @@ export const UploadCertification = (props) => {
       );
       if (success && claim.isCompleted) {
         const absence_id = get(claim, "fineos_absence_id");
-        return appLogic.goToNextPage(
+        return portalFlow.goToNextPage(
           { claim },
           { claim_id: claim.application_id, uploadedAbsenceId: absence_id }
         );
       } else if (success) {
-        return appLogic.goToNextPage(
+        return portalFlow.goToNextPage(
           { claim },
           { claim_id: claim.application_id }
         );
@@ -162,7 +162,7 @@ UploadCertification.propTypes = {
   appLogic: PropTypes.shape({
     appErrors: PropTypes.object.isRequired,
     documents: PropTypes.object.isRequired,
-    goToNextPage: PropTypes.func.isRequired,
+    portalFlow: PropTypes.object.isRequired,
     setAppErrors: PropTypes.func.isRequired,
   }).isRequired,
   claim: PropTypes.instanceOf(Claim),

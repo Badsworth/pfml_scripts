@@ -243,7 +243,10 @@ exports[`UploadDocsOptions renders the page for medical leave with HCP as cert o
         "hasLoadedClaimDocuments": [MockFunction],
         "load": [MockFunction],
       },
-      "goToNextPage": [MockFunction],
+      "portalFlow": Object {
+        "goToNextPage": [MockFunction],
+        "pathname": "/mock-portalFlow-pathname",
+      },
       "setAppErrors": [MockFunction],
       "updateUser": [MockFunction],
       "user": User {

@@ -43,14 +43,14 @@ export const UploadDocsOptions = (props) => {
 
   const handleSave = () => {
     if (nextPage === UploadType.certification) {
-      return appLogic.goToNextPage(
+      return appLogic.portalFlow.goToNextPage(
         { claim },
         { claim_id: claim.application_id },
         nextPage
       );
     } else {
       const showStateId = nextPage === UploadType.mass_id;
-      return appLogic.goToNextPage(
+      return appLogic.portalFlow.goToNextPage(
         { claim },
         { claim_id: claim.application_id, showStateId },
         nextPage

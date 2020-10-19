@@ -11,7 +11,7 @@ describe("useAppLogic", () => {
       clearErrors,
       documents,
       employers,
-      goToNextPage,
+      portalFlow,
       rest,
       setAppErrors,
       users;
@@ -24,7 +24,7 @@ describe("useAppLogic", () => {
         documents,
         employers,
         clearErrors,
-        goToNextPage,
+        portalFlow,
         setAppErrors,
         users,
         ...rest
@@ -36,7 +36,7 @@ describe("useAppLogic", () => {
     expect(auth).toEqual(expect.anything());
     expect(claims.claims).toBeNull();
     expect(clearErrors).toBeInstanceOf(Function);
-    expect(goToNextPage).toBeInstanceOf(Function);
+    expect(portalFlow).toEqual(expect.anything());
     expect(claims.load).toBeInstanceOf(Function);
     expect(claims.create).toBeInstanceOf(Function);
     expect(claims.update).toBeInstanceOf(Function);

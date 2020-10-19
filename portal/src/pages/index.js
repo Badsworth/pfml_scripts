@@ -3,24 +3,24 @@ import AccordionItem from "../components/AccordionItem";
 import ButtonLink from "../components/ButtonLink";
 import DashboardNavigation from "../components/DashboardNavigation";
 import Heading from "../components/Heading";
+import PropTypes from "prop-types";
 import React from "react";
 import Title from "../components/Title";
 import { Trans } from "react-i18next";
 import routes from "../routes";
-import { useRouter } from "next/router";
 import { useTranslation } from "../locales/i18n";
 import withUser from "../hoc/withUser";
 
 /**
  * "Dashboard" - Where a Claimant is redirected to after successfully authenticating.
  */
-export const Index = () => {
+export const Index = (props) => {
+  const { appLogic } = props;
   const { t } = useTranslation();
-  const router = useRouter();
 
   return (
     <React.Fragment>
-      <DashboardNavigation activeHref={router.route} />
+      <DashboardNavigation activeHref={appLogic.portalFlow.pathname} />
       <div className="measure-6">
         <Title>{t("pages.index.title")}</Title>
 
@@ -76,6 +76,10 @@ export const Index = () => {
       </div>
     </React.Fragment>
   );
+};
+
+Index.propTypes = {
+  appLogic: PropTypes.object.isRequired,
 };
 
 export default withUser(Index);

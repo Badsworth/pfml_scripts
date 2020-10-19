@@ -34,7 +34,10 @@ export default jest.fn(() => ({
     documents: new DocumentCollection(),
     load: jest.fn(),
   },
-  goToNextPage: jest.fn(),
+  portalFlow: {
+    goToNextPage: jest.fn(),
+    pathname: "/mock-portalFlow-pathname",
+  },
   setAppErrors: jest.fn(),
   updateUser: jest.fn(),
   user: new User({ user_id: "mock_user_id", consented_to_data_sharing: true }),

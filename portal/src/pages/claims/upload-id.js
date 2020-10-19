@@ -34,7 +34,7 @@ export const UploadId = (props) => {
   const contentContext = hasStateId ? "mass" : "other";
   const absence_id = get(claim, "fineos_absence_id");
 
-  const { appErrors } = appLogic;
+  const { appErrors, portalFlow } = appLogic;
   const hasLoadingDocumentsError = hasDocumentsLoadError(
     appErrors,
     claim.application_id
@@ -48,7 +48,7 @@ export const UploadId = (props) => {
   const handleSave = async () => {
     if (!stateIdFiles.length && idDocuments.length) {
       // Allow user to skip this page if they've previously uploaded documents
-      return appLogic.goToNextPage({}, { claim_id: claim.application_id });
+      return portalFlow.goToNextPage({}, { claim_id: claim.application_id });
     }
 
     try {
@@ -58,12 +58,12 @@ export const UploadId = (props) => {
         DocumentType.identityVerification // TODO (CP-962): Set based on leaveReason
       );
       if (success && claim.isCompleted) {
-        return appLogic.goToNextPage(
+        return portalFlow.goToNextPage(
           { claim },
           { claim_id: claim.application_id, uploadedAbsenceId: absence_id }
         );
       } else if (success) {
-        return appLogic.goToNextPage(
+        return portalFlow.goToNextPage(
           { claim },
           { claim_id: claim.application_id }
         );
@@ -152,7 +152,7 @@ UploadId.propTypes = {
   appLogic: PropTypes.shape({
     appErrors: PropTypes.object.isRequired,
     documents: PropTypes.object.isRequired,
-    goToNextPage: PropTypes.func.isRequired,
+    portalFlow: PropTypes.object.isRequired,
     setAppErrors: PropTypes.func.isRequired,
   }).isRequired,
   claim: PropTypes.object.isRequired,

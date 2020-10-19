@@ -177,7 +177,7 @@ describe("UploadId", () => {
           await wrapper.find("QuestionPage").simulate("save");
         });
 
-        expect(appLogic.goToNextPage).toHaveBeenCalledWith(
+        expect(appLogic.portalFlow.goToNextPage).toHaveBeenCalledWith(
           { claim },
           {
             claim_id: claim.application_id,
@@ -257,7 +257,7 @@ describe("UploadId", () => {
           });
 
           expect(appLogic.documents.attach).not.toHaveBeenCalled();
-          expect(appLogic.goToNextPage).toHaveBeenCalledTimes(1);
+          expect(appLogic.portalFlow.goToNextPage).toHaveBeenCalledTimes(1);
         });
       });
     });

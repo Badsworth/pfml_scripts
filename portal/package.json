@@ -76,7 +76,6 @@
     "readdirp": "^3.4.0",
     "sass": "^1.27.0",
     "sass-loader": "^10.0.3",
-    "state-machine-cat": "^7.0.10",
-    "storybook-addon-next-router": "^2.0.0"
+    "state-machine-cat": "^7.0.10"
   }
 }
