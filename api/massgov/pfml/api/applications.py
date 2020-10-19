@@ -1,5 +1,8 @@
+import base64
+
 import connexion
 import puremagic
+from flask import Response
 from puremagic import PureError
 from werkzeug.exceptions import BadRequest, ServiceUnavailable, Unauthorized
 
@@ -18,6 +21,7 @@ from massgov.pfml.api.models.applications.requests import (
 from massgov.pfml.api.models.applications.responses import ApplicationResponse, DocumentResponse
 from massgov.pfml.api.services.fineos_actions import (
     complete_intake,
+    download_document,
     get_documents,
     send_to_fineos,
     upload_document,
@@ -345,3 +349,27 @@ def documents_get(application_id):
         return response_util.success_response(
             message="Successfully retrieved documents", data=documents_list, status_code=200,
         ).to_api_response()
+
+
+def document_download(application_id: str, document_id: str) -> Response:
+    with app.db_session() as db_session:
+        # Get the referenced application or return 404
+        existing_application = get_or_404(db_session, Application, application_id)
+
+        # Check if user can read application
+        ensure(READ, existing_application)
+
+        # TODO: Access control https://lwd.atlassian.net/browse/API-543
+
+        document_data: massgov.pfml.fineos.models.customer_api.Base64EncodedFileData = download_document(
+            existing_application, document_id, db_session
+        )
+        file_bytes = base64.b64decode(document_data.base64EncodedFileContents.encode("ascii"))
+
+        content_type = document_data.contentType or "application/octet-stream"
+
+        return Response(
+            file_bytes,
+            content_type=content_type,
+            headers={"Content-Disposition": f"attachment; filename={document_data.fileName}"},
+        )

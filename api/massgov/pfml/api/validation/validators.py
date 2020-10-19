@@ -125,6 +125,10 @@ class CustomResponseValidator(ResponseValidator):
         v.validate_schema(data, url)
 
     def validate_response(self, data, status_code, headers, url):
+        # Only validate json responses
+        if headers.get("Content-Type") != "application/json":
+            return True
+
         response_body = self.operation.json_loads(data)
 
         # Do not validate GET responses.

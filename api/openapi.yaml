@@ -391,12 +391,50 @@ paths:
                       data:
                         $ref: "#/components/schemas/ApplicationResponse"
 
-  /applications/{application_id}/documents:
+  /applications/{application_id}/documents/{document_id}:
     get:
+      summary: Download an application (case) document by id.
+      operationId: massgov.pfml.api.applications.document_download
+      tags:
+        - Applications
+      parameters:
+        - name: application_id
+          in: path
+          schema:
+            type: string
+            format: uuid
+            example: 5f91c12b-4d49-4eb0-b5d9-7fa0ce13eb32
+          description: ID of Application the document is associated with
+          required: true
+        - name: document_id
+          in: path
+          schema:
+            type: string
+            example: "4074"
+          description: The fineos document id
+          required: true
+      responses:
+        "200":
+          description: The document stream.
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        "400":
+          description: An unsuccessful request returns a 400 status code if one or more errors occurred.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /applications/{application_id}/documents:
+    get:      
       summary: Get list of documents for a case
       operationId: massgov.pfml.api.applications.documents_get
       tags:
         - Applications
+        - Documents
       parameters:
         - name: application_id
           in: path
@@ -431,6 +469,7 @@ paths:
       operationId: massgov.pfml.api.applications.document_upload
       tags:
         - Applications
+        - Documents
       parameters:
         - name: application_id
           in: path

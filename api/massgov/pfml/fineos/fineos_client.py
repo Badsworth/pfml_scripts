@@ -2,6 +2,7 @@
 # FINEOS client - FINEOS implementation.
 #
 
+import base64
 import datetime
 import os.path
 import urllib.parse
@@ -306,6 +307,26 @@ class FINEOSClient(client.AbstractFINEOSClient):
         documents = response.json()
 
         return [client_response_json_to_document(doc) for doc in documents]
+
+    def download_document(
+        self, user_id: str, absence_id: str, fineos_document_id: str
+    ) -> models.customer_api.Base64EncodedFileData:
+        header_content_type = None
+
+        response = self._customer_api(
+            "GET",
+            f"customer/cases/{absence_id}/documents/{fineos_document_id}/base64Download",
+            user_id,
+            header_content_type=header_content_type,
+        )
+        response_json = response.json()
+        # populate spec required field missing in fineos response
+        if "fileSizeInBytes" not in response_json:
+            response_json["fileSizeInBytes"] = len(
+                base64.b64decode(response_json["base64EncodedFileContents"].encode("ascii"))
+            )
+
+        return models.customer_api.Base64EncodedFileData.parse_obj(response_json)
 
     def get_week_based_work_pattern(
         self, user_id: str, occupation_id: Union[str, int],

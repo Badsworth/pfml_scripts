@@ -186,6 +186,22 @@ def test_documents_get(client, consented_user, consented_user_token, test_db_ses
     assert response_data["created_at"] is not None
 
 
+def test_documents_download(client, consented_user, consented_user_token, test_db_session):
+    absence_case_id = "NTN-111-ABS-01"
+    document_id = "3011"
+    application = ApplicationFactory.create(user=consented_user, fineos_absence_id=absence_case_id)
+
+    response = client.get(
+        "/v1/applications/{}/documents/{}".format(application.application_id, document_id),
+        headers={"Authorization": f"Bearer {consented_user_token}"},
+    )
+
+    assert response.status_code == 200
+    assert response.content_type == "image/png"
+    assert response.headers.get("Content-Disposition") == "attachment; filename=test.png"
+    assert response.data.startswith(b"\x89PNG\r\n")
+
+
 def test_documents_get_not_submitted_application(
     client, consented_user, consented_user_token, test_db_session
 ):

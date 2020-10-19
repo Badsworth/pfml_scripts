@@ -5,6 +5,7 @@
 # used in deployed environments when needed.
 #
 
+import base64
 import datetime
 import pathlib
 import typing
@@ -21,6 +22,8 @@ logger = massgov.pfml.util.logging.get_logger(__name__)
 
 # Capture calls for unit testing.
 _capture: typing.Optional[typing.List] = None
+
+TEST_IMAGE_FILE_PATH = pathlib.Path(__file__).parent / "mock_files" / "test.png"
 
 
 def fake_date_of_birth(fake):
@@ -159,6 +162,22 @@ class MockFINEOSClient(client.AbstractFINEOSClient):
     def get_documents(self, user_id: str, absence_id: str) -> List[models.customer_api.Document]:
         document = mock_document(absence_id)
         return [models.customer_api.Document.parse_obj(document)]
+
+    def download_document(
+        self, user_id: str, absence_id: str, fineos_document_id: str
+    ) -> models.customer_api.Base64EncodedFileData:
+        file_bytes = open(str(TEST_IMAGE_FILE_PATH), "rb").read()
+        encoded_file_contents_str = base64.b64encode(file_bytes).decode("ascii")
+
+        return models.customer_api.Base64EncodedFileData.parse_obj(
+            {
+                "fileName": "test.png",
+                "fileExtension": "png",
+                "contentType": "image/png",
+                "base64EncodedFileContents": encoded_file_contents_str,
+                "fileSizeInBytes": len(file_bytes),
+            }
+        )
 
     def get_week_based_work_pattern(
         self, user_id: str, occupation_id: Union[str, int],
