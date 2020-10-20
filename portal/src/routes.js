@@ -58,6 +58,7 @@ const routes = {
     finishAccountSetup: "/employers/finish-account-setup",
     login: "/employers/login",
     review: "/employers/claims/review",
+    status: "/employers/claims/status",
     success: "/employers/claims/success",
   },
   external: {
