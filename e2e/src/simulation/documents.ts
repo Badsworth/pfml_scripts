@@ -147,7 +147,7 @@ const generateHCP: DocumentGenerator = (
   return fillPDFBytes(`${__dirname}/../../forms/hcp-real.pdf`, data);
 };
 
-const generateBirthCertificate: DocumentGenerator = async (claim) => {
+const generateBirthCertificate: DocumentGenerator = async (claim, opts) => {
   if (!claim.leave_details?.child_birth_date) {
     throw new Error(
       `No birth date was given. Unable to generate birth certificate.`
@@ -167,15 +167,27 @@ const generateBirthCertificate: DocumentGenerator = async (claim) => {
     parseISO(claim.leave_details.child_birth_date),
     "MM/dd/yyyy"
   );
+
+  const employee = {
+    first_name: claim.first_name,
+    last_name: claim.last_name,
+  };
+  if ("mismatchedName" in opts && opts.mismatchedName === true) {
+    employee.first_name = faker.name.firstName(gender);
+    employee.last_name = faker.name.lastName(gender);
+  }
+  const employeeName = `${employee.first_name} ${employee.last_name}`;
+  const spouseName = faker.name.findName(undefined, employee.last_name, 0);
+  const childName = faker.name.findName(undefined, employee.last_name, gender);
   const data = {
     "Certificate Number": "123",
     "Record Number": "123",
     "Date of Birth": dob,
-    "Name of Child": faker.name.findName(undefined, claim.last_name, gender),
+    "Name of Child": childName,
     Sex: gender === 0 ? "Male" : "Female",
     Race: race,
-    "Name of Mother": `${claim.first_name} ${claim.last_name}`,
-    "Name of Father": faker.name.findName(undefined, claim.last_name, 1),
+    "Name of Mother": employeeName,
+    "Name of Father": spouseName,
     "Birthplace of Mother": faker.fake("{{address.city}}, {{address.state}}"),
     "Birthplace of Father": faker.fake("{{address.city}}, {{address.state}}"),
     "Place of Birth": faker.fake("{{address.city}}, {{address.state}}"),

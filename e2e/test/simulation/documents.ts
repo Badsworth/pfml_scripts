@@ -175,6 +175,16 @@ describe("Documents", function () {
     });
   });
 
+  it("Should generate a birth certificate with mismatched name", async function () {
+    const bytes = await generators.BIRTHCERTIFICATE(claim, {
+      mismatchedName: true,
+    });
+    const values = await parsePDF(bytes);
+    expect(values["Name of Mother"]).not.toEqual(
+      `${claim.first_name} ${claim.last_name}`
+    );
+  });
+
   it("Should generate a pre-birth letter", async function () {
     const bytes = await generators.PREBIRTH(claim, {});
     const values = await parsePDF(bytes);
