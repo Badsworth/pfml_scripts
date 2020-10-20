@@ -30,24 +30,23 @@ import withClaimDocuments from "../../hoc/withClaimDocuments";
 export const Checklist = (props) => {
   const { t } = useTranslation();
   const { appLogic, claim, documents, isLoadingDocuments, query } = props;
-
-  const partOneSubmitted = query["part-one-submitted"];
-
   const { appErrors } = appLogic;
+
   const hasLoadingDocumentsError = hasDocumentsLoadError(
     appErrors,
     claim.application_id
   );
-
   const idDocuments = findDocumentsByType(
     documents,
     DocumentType.identityVerification
   );
-
   const certificationDocuments = findDocumentsByType(
     documents,
     DocumentType.medicalCertification // TODO (CP-962): Set based on leaveReason
   );
+
+  const partOneSubmitted = query["part-one-submitted"];
+
   /**
    * @type {StepModel[]}
    */

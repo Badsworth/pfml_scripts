@@ -113,6 +113,7 @@ function generateDefaultStory(Component, mockClaims, possibleErrors) {
         claim={claim}
         user={user}
         documents={appLogic.documents.documents.items}
+        query={{}}
       />
     );
   };
