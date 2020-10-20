@@ -45,7 +45,7 @@ def set_empty_dates_to_none(
         return None
 
     for prop in date_strings:
-        if object_instance[prop] == "":
+        if prop in object_instance and object_instance[prop] == "":
             object_instance[prop] = None
 
     return object_instance
