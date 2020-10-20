@@ -492,8 +492,10 @@ def import_employers(db_session, employers, report, import_log_entry_id):
     not_found_employer_info_list = []
     found_employer_info_list = []
 
+    unique_employer_state_codes = set()
     staged_not_found_employer_ssns = set()
     for employer_info in employers:
+        unique_employer_state_codes.add(employer_info["employer_address_state"])
         fein = employer_info["fein"]
         if fein in staged_not_found_employer_ssns:
             # this means there is more than one line for the same employer
@@ -509,6 +511,8 @@ def import_employers(db_session, employers, report, import_log_entry_id):
             staged_not_found_employer_ssns.add(fein)
         else:
             found_employer_info_list.append(employer_info)
+
+    logger.info("employer states to insert: %s", repr(unique_employer_state_codes))
 
     # 2 - Create employers
     fein_to_new_employer_id = {}
