@@ -8,10 +8,13 @@ import {
 import employers from "./fixtures/employerPool";
 import { ApplicationRequestBody, ApplicationLeaveDetails } from "../api";
 import generators from "./documents";
-import add from "date-fns/add";
 import path from "path";
 import { RandomSSN } from "ssn";
 import fs from "fs";
+import { formatISO, subMonths, add } from "date-fns";
+
+const formatISODate = (date: Date) =>
+  formatISO(date, { representation: "date" });
 
 export function chance(
   config: [number, SimulationGenerator][]
@@ -49,8 +52,7 @@ export type ScenarioOpts = {
   docs: ScenarioDocumentConfiguration;
   skipSubmitClaim?: boolean;
   shortNotice?: boolean;
-  child_birth_date?: string;
-  child_placement_date?: string;
+  bondingDate?: "far-past" | "past" | "future";
 };
 
 export function scenario(
@@ -207,16 +209,23 @@ function generateLeaveDetails(config: ScenarioOpts): ApplicationLeaveDetails {
     case "Child Bonding":
       switch (reason_qualifier) {
         case "Newborn":
-          details.child_birth_date = config.child_birth_date ?? fmt(startDate);
+          details.child_birth_date = makeChildPlacementDate(
+            config.bondingDate,
+            startDate
+          );
           details.pregnant_or_recent_birth = true;
           break;
         case "Adoption":
-          details.child_placement_date =
-            config.child_placement_date ?? fmt(startDate);
+          details.child_placement_date = makeChildPlacementDate(
+            config.bondingDate ?? "past",
+            startDate
+          );
           break;
         case "Foster Care":
-          details.child_placement_date =
-            config.child_placement_date ?? fmt(startDate);
+          details.child_placement_date = makeChildPlacementDate(
+            config.bondingDate ?? "past",
+            startDate
+          );
           break;
         default:
           throw new Error(`Invalid reason_qualifier for Child Bonding`);
@@ -226,6 +235,32 @@ function generateLeaveDetails(config: ScenarioOpts): ApplicationLeaveDetails {
       throw new Error(`Invalid reason given`);
   }
   return details;
+}
+
+function makeChildPlacementDate(
+  spec: ScenarioOpts["bondingDate"],
+  leaveStart: Date
+): string {
+  switch (spec) {
+    case "far-past":
+      return formatISODate(
+        faker.date.between(subMonths(new Date(), 13), subMonths(new Date(), 12))
+      );
+    case "past":
+      // Recent birth date.
+      return formatISODate(
+        faker.date.between(subMonths(new Date(), 1), new Date())
+      );
+    case "future":
+      // A date after 01-02-2021, but no more than startDate
+      return formatISODate(
+        faker.date.between(new Date("2021-01-01"), leaveStart)
+      );
+    default:
+      throw new Error(
+        `Invalid bondingDate property given. You must set this property with one of "far-past", "past", or "future"`
+      );
+  }
 }
 
 // Generate a Mass ID string.

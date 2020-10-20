@@ -1,6 +1,4 @@
 import { scenario, chance } from "../simulate";
-import subMonths from "date-fns/subMonths";
-import formatISO from "date-fns/formatISO";
 
 // Cases drawn from: https://massgov.sharepoint.com/:x:/r/sites/EOL-PFMLProject/_layouts/15/Doc.aspx?sourcedoc=%7B7541FAF6-B95A-48F0-B7EA-24CD06E52CF0%7D&file=Cases%20to%20Create%20v1.xlsx&action=default&mobileredirect=true
 
@@ -34,6 +32,7 @@ export const BHAP3 = scenario("BHAP3", {
   reason: "Child Bonding",
   reason_qualifier: "Newborn",
   residence: "MA-proofed",
+  bondingDate: "future",
   docs: {
     MASSID: {},
   },
@@ -45,6 +44,7 @@ export const BHAP4 = scenario("BHAP4", {
   reason_qualifier: "Newborn",
   residence: "OOS",
   financiallyIneligible: true,
+  bondingDate: "past",
   docs: {
     OOSID: {},
     PREBIRTH: {},
@@ -56,7 +56,7 @@ export const BHAP5 = scenario("BHAP5", {
   reason: "Child Bonding",
   reason_qualifier: "Adoption",
   residence: "MA-proofed",
-  child_birth_date: formatISO(subMonths(new Date(), 13)),
+  bondingDate: "far-past",
   docs: {
     MASSID: {},
     ADOPTIONCERT: {},
@@ -69,7 +69,7 @@ export const BHAP6 = scenario("BHAP6", {
   reason: "Child Bonding",
   reason_qualifier: "Adoption",
   residence: "MA-proofed",
-  child_birth_date: formatISO(subMonths(new Date(), 13)),
+  bondingDate: "far-past",
   docs: {
     MASSID: {},
     ADOPTIONCERT: {},
@@ -81,6 +81,7 @@ export const BHAP7 = scenario("BHAP7", {
   reason: "Child Bonding",
   reason_qualifier: "Newborn",
   residence: "MA-proofed",
+  bondingDate: "past",
   docs: {
     MASSID: {},
     BIRTHCERTIFICATE: {},
@@ -126,6 +127,7 @@ export const BUNH1 = scenario("BUNH1", {
   reason: "Child Bonding",
   reason_qualifier: "Newborn",
   residence: "OOS",
+  bondingDate: "past",
   docs: {
     OOSID: {},
     BIRTHCERTIFICATE: {
@@ -140,6 +142,7 @@ export const BUNH2 = scenario("BUNH2", {
   reason: "Child Bonding",
   reason_qualifier: "Newborn",
   residence: "MA-proofed",
+  bondingDate: "past",
   docs: {
     MASSID: {},
     // @todo: Implement personal letter.
@@ -152,6 +155,7 @@ export const BUNH3 = scenario("BUNH3", {
   reason: "Child Bonding",
   reason_qualifier: "Newborn",
   residence: "OOS",
+  bondingDate: "past",
   docs: {
     OOSID: {},
     // @todo: Implement cat pic.

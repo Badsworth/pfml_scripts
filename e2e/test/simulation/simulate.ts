@@ -24,6 +24,7 @@ const bonding: ScenarioOpts = {
   residence: "MA-proofed",
   reason: "Child Bonding",
   reason_qualifier: "Newborn",
+  bondingDate: "past",
   docs: {
     HCP: {},
     MASSID: {},
@@ -252,6 +253,29 @@ describe("Simulation Generator", () => {
       reason: bonding.reason,
       reason_qualifier: bonding.reason_qualifier,
     });
+  });
+
+  it("Should set the child birth date for bonding newborn claims", async () => {
+    const { claim } = await scenario("TEST", bonding)(opts);
+    expect(claim.leave_details?.child_birth_date).toMatch(/\d{4}-\d{2}-\d{2}/);
+  });
+  it("Should set the child placement date for bonding adoption claims", async () => {
+    const { claim } = await scenario("TEST", {
+      ...bonding,
+      reason_qualifier: "Adoption",
+    })(opts);
+    expect(claim.leave_details?.child_placement_date).toMatch(
+      /\d{4}-\d{2}-\d{2}/
+    );
+  });
+  it("Should set the child placement date for bonding foster claims", async () => {
+    const { claim } = await scenario("TEST", {
+      ...bonding,
+      reason_qualifier: "Foster Care",
+    })(opts);
+    expect(claim.leave_details?.child_placement_date).toMatch(
+      /\d{4}-\d{2}-\d{2}/
+    );
   });
 });
 
