@@ -26,6 +26,29 @@ def get_application_issues(application: Application) -> Optional[List[Issue]]:
         return issues
 
 
+def get_address_issues(application: Application, address_field_name: str) -> List[Issue]:
+    issues = []
+    address_field_db_name_to_api_name_map = {
+        f"{address_field_name}.address_line_one": f"{address_field_name}.line_1",
+        f"{address_field_name}.city": f"{address_field_name}.city",
+        f"{address_field_name}.geo_state_id": f"{address_field_name}.state",
+        f"{address_field_name}.zip_code": f"{address_field_name}.zip",
+    }
+
+    for (field, openapi_field) in address_field_db_name_to_api_name_map.items():
+        val = deepgetattr(application, field)
+        if val is None:
+            issues.append(
+                Issue(
+                    type=IssueType.required,
+                    message=f"{openapi_field} is required",
+                    field=openapi_field,
+                )
+            )
+
+    return issues
+
+
 def get_conditional_issues(application: Application) -> List[Issue]:
     issues = []
 
@@ -40,7 +63,12 @@ def get_conditional_issues(application: Application) -> List[Issue]:
             )
         )
 
-    if application.has_mailing_address and not application.mailing_address:
+    if application.residential_address:
+        issues += get_address_issues(application, "residential_address")
+
+    if application.mailing_address:
+        issues += get_address_issues(application, "mailing_address")
+    elif not application.mailing_address and application.has_mailing_address:
         issues.append(
             Issue(
                 type=IssueType.required,
@@ -198,7 +226,11 @@ def get_always_required_issues(application: Application) -> List[Issue]:
         val = deepgetattr(application, field)
         if val is None:
             issues.append(
-                Issue(type=IssueType.required, message=f"{field} is required", field=openapi_field)
+                Issue(
+                    type=IssueType.required,
+                    message=f"{openapi_field} is required",
+                    field=openapi_field,
+                )
             )
 
     return issues

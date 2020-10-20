@@ -117,7 +117,7 @@ def test_leave_reason_required(test_db_session, initialize_factories_session):
     assert [
         Issue(
             type=IssueType.required,
-            message="leave_reason is required",
+            message="leave_details.reason is required",
             field="leave_details.reason",
         )
     ] == issues
@@ -174,6 +174,78 @@ def test_residential_address_required(test_db_session, initialize_factories_sess
             message="residential_address is required",
             field="residential_address",
         )
+    ] == issues
+
+
+def test_residential_address_fields_required(test_db_session, initialize_factories_session):
+    test_app = ApplicationFactory.create(
+        residential_address=AddressFactory.create(
+            address_line_one=None, city=None, geo_state_id=None, zip_code=None,
+        ),
+        employment_status=EmploymentStatus.get_instance(
+            test_db_session, template=EmploymentStatus.EMPLOYED
+        ),
+    )
+
+    issues = get_conditional_issues(test_app)
+
+    assert [
+        Issue(
+            type=IssueType.required,
+            message="residential_address.line_1 is required",
+            field="residential_address.line_1",
+        ),
+        Issue(
+            type=IssueType.required,
+            message="residential_address.city is required",
+            field="residential_address.city",
+        ),
+        Issue(
+            type=IssueType.required,
+            message="residential_address.state is required",
+            field="residential_address.state",
+        ),
+        Issue(
+            type=IssueType.required,
+            message="residential_address.zip is required",
+            field="residential_address.zip",
+        ),
+    ] == issues
+
+
+def test_mailing_address_fields_required(test_db_session, initialize_factories_session):
+    test_app = ApplicationFactory.create(
+        mailing_address=AddressFactory.create(
+            address_line_one=None, city=None, geo_state_id=None, zip_code=None,
+        ),
+        employment_status=EmploymentStatus.get_instance(
+            test_db_session, template=EmploymentStatus.EMPLOYED
+        ),
+    )
+
+    issues = get_conditional_issues(test_app)
+
+    assert [
+        Issue(
+            type=IssueType.required,
+            message="mailing_address.line_1 is required",
+            field="mailing_address.line_1",
+        ),
+        Issue(
+            type=IssueType.required,
+            message="mailing_address.city is required",
+            field="mailing_address.city",
+        ),
+        Issue(
+            type=IssueType.required,
+            message="mailing_address.state is required",
+            field="mailing_address.state",
+        ),
+        Issue(
+            type=IssueType.required,
+            message="mailing_address.zip is required",
+            field="mailing_address.zip",
+        ),
     ] == issues
 
 
