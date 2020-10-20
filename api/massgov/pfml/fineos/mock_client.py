@@ -58,6 +58,111 @@ def mock_document(
     }
 
 
+def mock_absence_periods():
+    return {
+        "startDate": "2021-06-24",
+        "endDate": "2021-10-28",
+        "decisions": [
+            {
+                "absence": {"id": "NTN-61-ABS-01", "caseReference": "NTN-61-ABS-01"},
+                "employee": {"id": "1079", "name": "ZZ: Olaf Aufderhar"},
+                "period": {
+                    "periodReference": "PL-14449-0000000152",
+                    "parentPeriodReference": "",
+                    "relatedToEpisodic": "false",
+                    "startDate": "2021-06-24",
+                    "endDate": "2021-06-25",
+                    "balanceDeduction": 0.4,
+                    "timeRequested": "16:00",
+                    "timeDeducted": "16:00",
+                    "timeDeductedBasis": "Hours",
+                    "timeDecisionStatus": "Approved",
+                    "timeDecisionReason": "Leave Request Approved",
+                    "type": "Time off period",
+                    "status": "Known",
+                    "leavePlan": {
+                        "id": "abdc368f-ace6-4d6a-b697-f1016fe8a314",
+                        "name": "MA PFML - Employee",
+                        "shortName": "MA PFML - Employee",
+                        "applicabilityStatus": "Applicable",
+                        "eligibilityStatus": "Met",
+                        "availabilityStatus": "Approved",
+                        "adjudicationStatus": "Accepted",
+                        "evidenceStatus": "Satisfied",
+                        "category": "Paid",
+                        "calculationPeriodMethod": "Rolling Forward - Sunday",
+                        "timeBankMethod": "Length / Duration",
+                        "timeWithinPeriod": 52,
+                        "timeWithinPeriodBasis": "Weeks",
+                        "fixedYearStartDay": 0,
+                        "fixedYearStartMonth": "Please Select",
+                        "timeEntitlement": 20,
+                        "timeEntitlementBasis": "Weeks",
+                        "paidLeaveCaseId": "PL ABS-542",
+                    },
+                    "leaveRequest": {
+                        "id": "PL-14432-0000000137",
+                        "reasonName": "Serious Health Condition - Employee",
+                        "qualifier1": "Not Work Related",
+                        "qualifier2": "Sickness",
+                        "decisionStatus": "Approved",
+                        "approvalReason": "Fully Approved",
+                        "denialReason": "Please Select",
+                    },
+                },
+            },
+            {
+                "absence": {"id": "NTN-61-ABS-01", "caseReference": "NTN-61-ABS-01"},
+                "employee": {"id": "1079", "name": "ZZ: Olaf Aufderhar"},
+                "period": {
+                    "periodReference": "PL-14449-0000000152",
+                    "parentPeriodReference": "",
+                    "relatedToEpisodic": "false",
+                    "startDate": "2021-06-26",
+                    "endDate": "2021-06-27",
+                    "balanceDeduction": 0,
+                    "timeRequested": "",
+                    "timeDeducted": "",
+                    "timeDeductedBasis": "",
+                    "timeDecisionStatus": "",
+                    "timeDecisionReason": "",
+                    "type": "Time off period",
+                    "status": "Known",
+                    "leavePlan": {
+                        "id": "abdc368f-ace6-4d6a-b697-f1016fe8a314",
+                        "name": "MA PFML - Employee",
+                        "shortName": "MA PFML - Employee",
+                        "applicabilityStatus": "Applicable",
+                        "eligibilityStatus": "Met",
+                        "availabilityStatus": "Approved",
+                        "adjudicationStatus": "Accepted",
+                        "evidenceStatus": "Satisfied",
+                        "category": "Paid",
+                        "calculationPeriodMethod": "Rolling Forward - Sunday",
+                        "timeBankMethod": "Length / Duration",
+                        "timeWithinPeriod": 52,
+                        "timeWithinPeriodBasis": "Weeks",
+                        "fixedYearStartDay": 0,
+                        "fixedYearStartMonth": "Please Select",
+                        "timeEntitlement": 20,
+                        "timeEntitlementBasis": "Weeks",
+                        "paidLeaveCaseId": "PL ABS-542",
+                    },
+                    "leaveRequest": {
+                        "id": "PL-14432-0000000137",
+                        "reasonName": "Serious Health Condition - Employee",
+                        "qualifier1": "Not Work Related",
+                        "qualifier2": "Sickness",
+                        "decisionStatus": "Approved",
+                        "approvalReason": "Fully Approved",
+                        "denialReason": "Please Select",
+                    },
+                },
+            },
+        ],
+    }
+
+
 class MockFINEOSClient(client.AbstractFINEOSClient):
     """Mock FINEOS API client that returns fake responses."""
 
@@ -132,6 +237,30 @@ class MockFINEOSClient(client.AbstractFINEOSClient):
 
     def get_absence(self, user_id: str, absence_id: str) -> models.customer_api.AbsenceDetails:
         return models.customer_api.AbsenceDetails()
+
+    def get_absence_period_decisions(
+        self, user_id: str, absence_id: str
+    ) -> models.group_client_api.PeriodDecisions:
+        return models.group_client_api.PeriodDecisions.parse_obj(mock_absence_periods())
+
+    def get_customer_info(
+        self, user_id: str, customer_id: str
+    ) -> models.group_client_api.CustomerInfo:
+        return models.group_client_api.CustomerInfo()
+
+    def get_eform_summary(
+        self, user_id: str, absence_id: str
+    ) -> List[models.group_client_api.EFormSummary]:
+        return [
+            models.group_client_api.EFormSummary(
+                eformId=12345, eformType="Mocked Other Leave EForm"
+            )
+        ]
+
+    def get_eform(
+        self, user_id: str, absence_id: str, eform_id: str
+    ) -> models.group_client_api.EForm:
+        return models.group_client_api.EForm(eformId=12345)
 
     def get_absence_occupations(
         self, user_id: str, absence_id: str

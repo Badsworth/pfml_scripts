@@ -366,6 +366,7 @@ class UserLeaveAdministrator(Base):
     __tablename__ = "link_user_leave_administrator"
     user_id = Column(UUID(as_uuid=True), ForeignKey("user.user_id"), primary_key=True)
     employer_id = Column(UUID(as_uuid=True), ForeignKey("employer.employer_id"), primary_key=True)
+    fineos_web_id = Column(Text)
 
     user = relationship(User)
     employer = relationship(Employer)

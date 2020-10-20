@@ -57,6 +57,30 @@ class AbstractFINEOSClient(abc.ABC, metaclass=abc.ABCMeta):
         pass
 
     @abc.abstractmethod
+    def get_absence_period_decisions(
+        self, user_id: str, absence_id: str
+    ) -> models.group_client_api.PeriodDecisions:
+        pass
+
+    @abc.abstractmethod
+    def get_customer_info(
+        self, user_id: str, customer_id: str
+    ) -> models.group_client_api.CustomerInfo:
+        pass
+
+    @abc.abstractmethod
+    def get_eform_summary(
+        self, user_id: str, absence_id: str
+    ) -> typing.List[models.group_client_api.EFormSummary]:
+        pass
+
+    @abc.abstractmethod
+    def get_eform(
+        self, user_id: str, absence_id: str, eform_id: str
+    ) -> models.group_client_api.EForm:
+        pass
+
+    @abc.abstractmethod
     def get_absence_occupations(
         self, user_id: str, absence_id: str
     ) -> typing.List[models.customer_api.ReadCustomerOccupation]:

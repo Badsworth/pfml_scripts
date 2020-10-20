@@ -4,15 +4,11 @@ from typing import List, Optional
 from pydantic import BaseModel, Field
 
 from massgov.pfml.api.models.claims.common import EmployerClaimReview
-from massgov.pfml.fineos.models.customer_api import EFormAttribute
-from massgov.pfml.fineos.transforms.base import TransformEformAttributes
-
-# This should be an EForm from the group client generated swagger
-# (this differs from from massgov.pfml.fineos.models.customer_api.EForm only
-# in the optional eformId)
-# TODO: https://lwd.atlassian.net/browse/EMPLOYER-425
+from massgov.pfml.fineos.models.group_client_api import EFormAttribute
+from massgov.pfml.fineos.transforms.to_fineos.base import TransformEformAttributes
 
 
+# TODO use EForm from group_client_api model here
 class EFormBody(BaseModel):
     eformType: str = Field(
         None, description="Name of the EForm document type", min_length=0, max_length=200

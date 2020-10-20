@@ -3,9 +3,7 @@ from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel
 
-# This should be replaced with the groupclient api EFormAttribute
-# TODO: https://lwd.atlassian.net/browse/EMPLOYER-425
-from massgov.pfml.fineos.models.customer_api import EFormAttribute
+from massgov.pfml.fineos.models.group_client_api import EFormAttribute
 
 
 class AbstractTransform(abc.ABC, metaclass=abc.ABCMeta):

@@ -203,14 +203,44 @@ paths:
         "404":
           $ref: "#/components/responses/NotFound"
 
-  /employers/claim/review/{claim_id}:
+  /employers/claims/{fineos_absence_id}/review:
+    get:
+      summary: Retrieve FINEOS absence data for a specified absence ID
+      operationId: massgov.pfml.api.claims.employer_get_claim_review
+      tags:
+        - Claims
+      parameters:
+        - name: fineos_absence_id
+          in: path
+          schema:
+            type: string
+            example: "NTN-00-ABS-00"
+          description: "FINEOS absence ID of the claim data to be retrieved"
+          required: true
+      responses:
+        "200":
+          description: A successful request returns a 200 status code.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessfulResponse'  
+                  - properties:
+                      data:
+                        $ref: "#/components/schemas/ClaimReviewResponse"
+        "400":
+          description: An unsuccessful request returns a 400 status code if one or more errors occurred.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
     patch:
       tags:
         - Employers
       summary: Save review claim from leave admin
-      operationId: massgov.pfml.api.claims.employer_update_claim
+      operationId: massgov.pfml.api.claims.employer_update_claim_review
       parameters:
-        - name: claim_id
+        - name: fineos_absence_id
           in: path
           schema:
             type: string
@@ -226,7 +256,7 @@ paths:
                   - $ref: "#/components/schemas/SuccessfulResponse"
                   - properties:
                       data:
-                        $ref: "#/components/schemas/ClaimResponse"
+                        $ref: "#/components/schemas/ClaimReviewResponse"
         "404":
           $ref: "#/components/responses/NotFound"
       requestBody:
@@ -619,6 +649,7 @@ tags:
   - name: Users
   - name: Employees
   - name: Employers
+  - name: Claims
   - name: Applications
   - name: Financial Eligibility
   - name: ID Proofing
@@ -1011,7 +1042,7 @@ components:
         - previous_leaves
         - hours_worked_per_week
 
-    ClaimResponse:
+    ClaimReviewResponse:
       type: object
       properties:
         claim_id:

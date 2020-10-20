@@ -53,16 +53,31 @@ class FINEOSClient(client.AbstractFINEOSClient):
     """FINEOS API client."""
 
     wscomposer_url: str
+    group_client_api_url: str
     customer_api_url: str
     request_count: int
     oauth_session: requests_oauthlib.OAuth2Session
 
-    def __init__(self, customer_api_url, wscomposer_url, oauth2_url, client_id, client_secret):
+    def __init__(
+        self,
+        group_client_api_url,
+        customer_api_url,
+        wscomposer_url,
+        oauth2_url,
+        client_id,
+        client_secret,
+    ):
+        self.group_client_api_url = group_client_api_url
         self.customer_api_url = customer_api_url
         self.wscomposer_url = wscomposer_url
         self.oauth2_url = oauth2_url
         self.request_count = 0
-        logger.info("customer_api_url %s, wscomposer_url %s", customer_api_url, wscomposer_url)
+        logger.info(
+            "customer_api_url %s, wscomposer_url %s, group_client_api_url %s",
+            customer_api_url,
+            wscomposer_url,
+            group_client_api_url,
+        )
         self._init_oauth_session(oauth2_url, client_id, client_secret)
 
     def _init_oauth_session(self, token_url, client_id, client_secret):
@@ -130,9 +145,22 @@ class FINEOSClient(client.AbstractFINEOSClient):
     ) -> requests.Response:
         """Make a request to the Customer API."""
         url = urllib.parse.urljoin(self.customer_api_url, path)
-        content_type_header = (
-            {} if header_content_type is None else {"Content-Type": header_content_type}
-        )
+        content_type_header = {"Content-Type": header_content_type} if header_content_type else {}
+        headers = dict({"userid": user_id}, **content_type_header)
+        response = self._request(self.oauth_session.request, method, url, headers, **args)
+        return response
+
+    def _group_client_api(
+        self,
+        method: str,
+        path: str,
+        user_id: str,
+        header_content_type: Optional[str] = "application/json",
+        **args: Any,
+    ) -> requests.Response:
+        """Make a request to the Group Client API."""
+        url = urllib.parse.urljoin(self.group_client_api_url, path)
+        content_type_header = {"Content-Type": header_content_type} if header_content_type else {}
         headers = dict({"userid": user_id}, **content_type_header)
         response = self._request(self.oauth_session.request, method, url, headers, **args)
         return response
@@ -249,6 +277,41 @@ class FINEOSClient(client.AbstractFINEOSClient):
     def get_absence(self, user_id: str, absence_id: str) -> models.customer_api.AbsenceDetails:
         response = self._customer_api("GET", f"customer/absence/absences/{absence_id}", user_id)
         return models.customer_api.AbsenceDetails.parse_obj(response.json())
+
+    def get_absence_period_decisions(
+        self, user_id: str, absence_id: str
+    ) -> models.group_client_api.PeriodDecisions:
+        response = self._group_client_api(
+            "GET", f"groupClient/absences/absence-period-decisions?absenceId={absence_id}", user_id
+        )
+        return models.group_client_api.PeriodDecisions.parse_obj(response.json())
+
+    def get_customer_info(
+        self, user_id: str, customer_id: str
+    ) -> models.group_client_api.CustomerInfo:
+        response = self._group_client_api(
+            "GET", f"groupClient/customers/{customer_id}/customer-info", user_id
+        )
+        return models.group_client_api.CustomerInfo.parse_obj(response.json())
+
+    def get_eform_summary(
+        self, user_id: str, absence_id: str
+    ) -> List[models.group_client_api.EFormSummary]:
+        response = self._group_client_api("GET", f"groupClient/cases/{absence_id}/eforms", user_id)
+        json = response.json()
+        # Workaround empty strings in response instead of null. These cause parse_obj to fail.
+        for item in json:
+            set_empty_dates_to_none(item, ["effectiveDateFrom", "effectiveDateTo"])
+
+        return pydantic.parse_obj_as(List[models.group_client_api.EFormSummary], json)
+
+    def get_eform(
+        self, user_id: str, absence_id: str, eform_id: str
+    ) -> models.group_client_api.EForm:
+        response = self._group_client_api(
+            "GET", f"groupClient/cases/{absence_id}/eforms/{eform_id}/readEform", user_id
+        )
+        return models.group_client_api.EForm.parse_obj(response.json())
 
     def get_absence_occupations(
         self, user_id: str, absence_id: str

@@ -15,6 +15,7 @@ logger = massgov.pfml.util.logging.get_logger(__name__)
 
 @dataclass
 class FINEOSClientConfig:
+    group_client_api_url: Optional[str]
     customer_api_url: Optional[str]
     wscomposer_api_url: Optional[str]
     oauth2_url: Optional[str]
@@ -24,6 +25,7 @@ class FINEOSClientConfig:
     @classmethod
     def from_env(cls):
         return FINEOSClientConfig(
+            group_client_api_url=os.environ.get("FINEOS_CLIENT_GROUP_CLIENT_API_URL", None),
             customer_api_url=os.environ.get("FINEOS_CLIENT_CUSTOMER_API_URL", None),
             wscomposer_api_url=os.environ.get("FINEOS_CLIENT_WSCOMPOSER_API_URL", None),
             oauth2_url=os.environ.get("FINEOS_CLIENT_OAUTH2_URL", None),
@@ -39,6 +41,7 @@ def create_client(config: Optional[FINEOSClientConfig] = None) -> client.Abstrac
 
     if config.customer_api_url:
         return fineos_client.FINEOSClient(
+            group_client_api_url=config.group_client_api_url,
             customer_api_url=config.customer_api_url,
             wscomposer_url=config.wscomposer_api_url,
             oauth2_url=config.oauth2_url,

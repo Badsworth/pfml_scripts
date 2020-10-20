@@ -149,6 +149,12 @@ variable "fineos_client_customer_api_url" {
   default     = ""
 }
 
+variable "fineos_client_group_client_api_url" {
+  description = "URL of the FINEOS Group Client API"
+  type        = string
+  default     = ""
+}
+
 variable "fineos_client_wscomposer_api_url" {
   description = "URL of the FINEOS Web Services Composer API"
   type        = string
