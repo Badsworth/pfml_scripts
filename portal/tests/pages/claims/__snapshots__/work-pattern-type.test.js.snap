@@ -1,0 +1,38 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`WorkPatternType renders the page with expected content 1`] = `
+<QuestionPage
+  onSave={[Function]}
+  title="Employment information"
+>
+  <InputChoiceGroup
+    choices={
+      Array [
+        Object {
+          "checked": false,
+          "hint": null,
+          "label": "The number of hours I work is consistent from week to week.",
+          "value": "Fixed",
+        },
+        Object {
+          "checked": false,
+          "hint": null,
+          "label": "The number of hours I work is not consistent from week to week.",
+          "value": "Variable",
+        },
+        Object {
+          "checked": false,
+          "hint": "Choose this option if you have 2–4 different schedules that you alternate between each month.",
+          "label": "My work hours alternate between weekly schedules.",
+          "value": "Rotating",
+        },
+      ]
+    }
+    label="How would you describe your work schedule?"
+    name="work_pattern.work_pattern_type"
+    onChange={[Function]}
+    type="radio"
+    value=""
+  />
+</QuestionPage>
+`;

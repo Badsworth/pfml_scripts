@@ -949,6 +949,17 @@ const pages = {
     sectionLabel_other: "Upload an identification document",
     title: "$t(shared.claimsVerifyIdTitle)",
   },
+  claimsWorkPatternType: {
+    choiceHint_rotating:
+      "Choose this option if you have 2–4 different schedules that you alternate between each month.",
+    choiceLabel_fixed:
+      "The number of hours I work is consistent from week to week.",
+    choiceLabel_rotating: "My work hours alternate between weekly schedules.",
+    choiceLabel_variable:
+      "The number of hours I work is not consistent from week to week.",
+    sectionLabel: "How would you describe your work schedule?",
+    title: "$t(shared.claimsEmploymentInfoTitle)",
+  },
   employersClaimStatus: {
     applicationIdLabel: "Application ID",
     documentPostedDate: "Posted {{date}}",
