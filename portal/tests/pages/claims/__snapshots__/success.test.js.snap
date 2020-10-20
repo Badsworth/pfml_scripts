@@ -179,3 +179,42 @@ exports[`Success renders content tailored to Medical (Pregnant) 1`] = `
   </div>
 </Fragment>
 `;
+
+exports[`Success renders content tailored to Medical (Pregnant, applying in advance) 1`] = `
+<Fragment>
+  <Title>
+    Your medical leave application was submitted successfully
+  </Title>
+  <div
+    className="measure-6"
+  >
+    <Alert
+      heading="Call us when your medical leave begins."
+      state="warning"
+    >
+      We’ll start reviewing your application now, but we can’t approve it until your medical leave begins. Call the DFML Contact Center at 833‑344‑7365 when you go out on leave.
+    </Alert>
+    <Lead>
+      You can check the status of your application anytime in the portal.
+    </Lead>
+    <div
+      className="border-top-2px border-base-lighter padding-top-4 margin-top-4"
+    >
+      <Heading
+        level="2"
+      >
+        You can also apply for paid family leave.
+      </Heading>
+      <Lead>
+        You can take up to 12 weeks of paid family leave to bond with your child after your medical leave ends. You do not need to take this leave all at once. You must create a separate leave application if you want to take family leave.
+      </Lead>
+    </div>
+    <ButtonLink
+      className="margin-top-4"
+      href="/applications"
+    >
+      Return to applications
+    </ButtonLink>
+  </div>
+</Fragment>
+`;

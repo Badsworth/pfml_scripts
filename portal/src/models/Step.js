@@ -305,7 +305,7 @@ export default class Step extends BaseModel {
     const uploadCertification = new Step({
       completeCond: (context) => !!context.certificationDocuments.length,
       name: ClaimSteps.uploadCertification,
-      notApplicableCond: (context) => context.claim.isFutureChildDate,
+      notApplicableCond: (context) => context.claim.isChildDateInFuture,
       group: 3,
       pages: pagesByStep[ClaimSteps.uploadCertification],
       dependsOn: [

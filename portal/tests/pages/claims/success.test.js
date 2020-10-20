@@ -3,6 +3,8 @@ import { DateTime } from "luxon";
 import Success from "../../../src/pages/claims/success";
 
 describe("Success", () => {
+  const futureDate = DateTime.local().plus({ months: 1 }).toISODate();
+
   /**
    * Output a snapshot for each of these claim variations
    */
@@ -12,7 +14,12 @@ describe("Success", () => {
       .medicalLeaveReason()
       .create(),
     "Medical (Pregnant)": new MockClaimBuilder()
-      .completed()
+      .continuous({ start_date: "2020-01-01" })
+      .medicalLeaveReason()
+      .pregnant()
+      .create(),
+    "Medical (Pregnant, applying in advance)": new MockClaimBuilder()
+      .continuous({ start_date: futureDate })
       .medicalLeaveReason()
       .pregnant()
       .create(),
@@ -22,7 +29,7 @@ describe("Success", () => {
       .create(),
     "Family (Bonding Future Newborn)": new MockClaimBuilder()
       .completed()
-      .bondingBirthLeaveReason(DateTime.local().plus({ months: 1 }).toISODate())
+      .bondingBirthLeaveReason(futureDate)
       .create(),
     "Family (Bonding Adoption)": new MockClaimBuilder()
       .completed()
@@ -30,9 +37,7 @@ describe("Success", () => {
       .create(),
     "Family (Bonding Future Adoption)": new MockClaimBuilder()
       .completed()
-      .bondingAdoptionLeaveReason(
-        DateTime.local().plus({ months: 1 }).toISODate()
-      )
+      .bondingAdoptionLeaveReason(futureDate)
       .create(),
   };
 

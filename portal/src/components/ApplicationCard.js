@@ -200,7 +200,7 @@ function CompletedApplicationDocsInfo(props) {
       )}
 
       {needsBondingCertDoc && (
-        // This condition is used instead of isFutureChildDate because we want
+        // This condition is used instead of isChildDateInFuture because we want
         // to continue showing the button after the placement or birth of the child
         <p>{t("components.applicationCard.futureBondingLeave")}</p>
       )}

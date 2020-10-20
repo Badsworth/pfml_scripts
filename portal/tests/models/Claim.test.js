@@ -28,7 +28,7 @@ describe("Claim", () => {
     });
   });
 
-  describe("#isFutureChildDate", () => {
+  describe("#isChildDateInFuture", () => {
     const past = "2020-09-30";
     const now = "2020-10-01";
     const future = "2020-10-02";
@@ -51,7 +51,7 @@ describe("Claim", () => {
         .bondingBirthLeaveReason(future)
         .create();
 
-      expect(claim.isFutureChildDate).toBe(true);
+      expect(claim.isChildDateInFuture).toBe(true);
     });
 
     it("returns false for past birth bonding leave", () => {
@@ -59,7 +59,7 @@ describe("Claim", () => {
         .bondingBirthLeaveReason(past)
         .create();
 
-      expect(claim.isFutureChildDate).toBe(false);
+      expect(claim.isChildDateInFuture).toBe(false);
     });
 
     it("returns true for future placement bonding leave", () => {
@@ -67,7 +67,7 @@ describe("Claim", () => {
         .bondingFosterCareLeaveReason(future)
         .create();
 
-      expect(claim.isFutureChildDate).toBe(true);
+      expect(claim.isChildDateInFuture).toBe(true);
     });
 
     it("returns false for past placement bonding leave", () => {
@@ -75,7 +75,74 @@ describe("Claim", () => {
         .bondingFosterCareLeaveReason(past)
         .create();
 
-      expect(claim.isFutureChildDate).toBe(false);
+      expect(claim.isChildDateInFuture).toBe(false);
+    });
+  });
+
+  describe("#isLeaveStartDateInFuture", () => {
+    const past = "2020-09-30";
+    const now = "2020-10-01";
+    const future = "2020-10-02";
+    let spy;
+
+    beforeAll(() => {
+      spy = jest.spyOn(DateTime, "local").mockImplementation(() => {
+        return {
+          toISODate: () => now,
+        };
+      });
+    });
+
+    afterAll(() => {
+      spy.mockRestore();
+    });
+
+    it("returns true when hybrid leave start dates are in the future", () => {
+      const claim = new MockClaimBuilder()
+        .continuous({ start_date: future })
+        .reducedSchedule({ start_date: future })
+        .create();
+
+      expect(claim.isLeaveStartDateInFuture).toBe(true);
+    });
+
+    it("returns false when one of the hybrid leave start dates is in the past", () => {
+      const claim = new MockClaimBuilder()
+        .continuous({ start_date: past })
+        .reducedSchedule({ start_date: future })
+        .create();
+
+      expect(claim.isLeaveStartDateInFuture).toBe(false);
+    });
+
+    it("returns true when intermittent leave start dates are in the future", () => {
+      const claim = new MockClaimBuilder()
+        .intermittent({ start_date: future })
+        .create();
+
+      expect(claim.isLeaveStartDateInFuture).toBe(true);
+    });
+
+    it("returns false when continuous leave start date is in the past", () => {
+      const claim = new MockClaimBuilder()
+        .continuous({ start_date: past })
+        .create();
+
+      expect(claim.isLeaveStartDateInFuture).toBe(false);
+    });
+
+    it("returns false when continuous leave start date is the current day", () => {
+      const claim = new MockClaimBuilder()
+        .continuous({ start_date: now })
+        .create();
+
+      expect(claim.isLeaveStartDateInFuture).toBe(false);
+    });
+
+    it("returns false when there are no start dates", () => {
+      const claim = new MockClaimBuilder().create();
+
+      expect(claim.isLeaveStartDateInFuture).toBe(false);
     });
   });
 

@@ -35,15 +35,21 @@ export const Success = (props) => {
    */
   let claimContext;
 
-  if (claim.isMedicalLeave && pregnant_or_recent_birth) {
+  if (
+    claim.isMedicalLeave &&
+    claim.isLeaveStartDateInFuture &&
+    pregnant_or_recent_birth
+  ) {
+    claimContext = "medicalPregnantFuture";
+  } else if (claim.isMedicalLeave && pregnant_or_recent_birth) {
     claimContext = "medicalPregnant";
   } else if (
-    claim.isFutureChildDate &&
+    claim.isChildDateInFuture &&
     reason_qualifier === ReasonQualifier.newBorn
   ) {
     claimContext = "bondingNewbornFuture";
   } else if (
-    claim.isFutureChildDate &&
+    claim.isChildDateInFuture &&
     (reason_qualifier === ReasonQualifier.adoption ||
       reason_qualifier === ReasonQualifier.fosterCare)
   ) {
@@ -64,9 +70,11 @@ export const Success = (props) => {
       </Title>
 
       <div className="measure-6">
-        {["bondingNewbornFuture", "bondingAdoptFosterFuture"].includes(
-          claimContext
-        ) && (
+        {[
+          "bondingNewbornFuture",
+          "bondingAdoptFosterFuture",
+          "medicalPregnantFuture",
+        ].includes(claimContext) && (
           <Alert
             state="warning"
             heading={t("pages.claimsSuccess.proofRequiredHeading", {
@@ -89,13 +97,17 @@ export const Success = (props) => {
 
         <Lead>
           {t("pages.claimsSuccess.reviewProgressAndStatus", {
-            context: ["bondingNewbornFuture"].includes(claimContext)
+            context: ["bondingNewbornFuture", "medicalPregnantFuture"].includes(
+              claimContext
+            )
               ? "noReview"
               : null,
           })}
         </Lead>
 
-        {claimContext === "medicalPregnant" && (
+        {["medicalPregnantFuture", "medicalPregnant"].includes(
+          claimContext
+        ) && (
           <div className={secondaryContentContainerClasses}>
             <Heading level="2">
               {t("pages.claimsSuccess.familyLeaveToBondHeading")}

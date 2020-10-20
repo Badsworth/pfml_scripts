@@ -93,7 +93,7 @@ class Claim extends BaseModel {
    * placement date is in the future.
    * @returns {boolean}
    */
-  get isFutureChildDate() {
+  get isChildDateInFuture() {
     if (!this.isBondingLeave) return false;
 
     const birthOrPlacementDate =
@@ -105,6 +105,27 @@ class Claim extends BaseModel {
     // Compare the two dates lexicographically. This works since they're both in
     // ISO-8601 format, eg "2020-10-13"
     return birthOrPlacementDate > now;
+  }
+
+  /**
+   * Determine if applicable leave period start date(s) are in the future.
+   * @returns {boolean}
+   */
+  get isLeaveStartDateInFuture() {
+    const startDates = compact([
+      get(this, "leave_details.continuous_leave_periods[0].start_date"),
+      get(this, "leave_details.intermittent_leave_periods[0].start_date"),
+      get(this, "leave_details.reduced_schedule_leave_periods[0].start_date"),
+    ]);
+
+    if (!startDates.length) return false;
+
+    const now = DateTime.local().toISODate();
+    return startDates.every((startDate) => {
+      // Compare the two dates lexicographically. This works since they're both in
+      // ISO-8601 format, eg "2020-10-13"
+      return startDate > now;
+    });
   }
 
   /**

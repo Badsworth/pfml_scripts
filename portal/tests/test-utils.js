@@ -58,18 +58,24 @@ export class MockClaimBuilder {
   }
 
   /**
+   * @param {object} [leavePeriodAttrs]
    * @returns {MockClaimBuilder}
    */
-  continuous() {
+  continuous(leavePeriodAttrs = {}) {
     set(this.claimAttrs, "has_continuous_leave_periods", true);
     set(
       this.claimAttrs,
       "leave_details.continuous_leave_periods[0]",
-      new ContinuousLeavePeriod({
-        leave_period_id: "mock-leave-period-id",
-        start_date: "2021-01-01",
-        end_date: "2021-06-01",
-      })
+      new ContinuousLeavePeriod(
+        Object.assign(
+          {
+            leave_period_id: "mock-leave-period-id",
+            start_date: "2021-01-01",
+            end_date: "2021-06-01",
+          },
+          leavePeriodAttrs
+        )
+      )
     );
     return this;
   }
@@ -138,40 +144,52 @@ export class MockClaimBuilder {
   }
 
   /**
+   * @param {object} [leavePeriodAttrs]
    * @returns {MockClaimBuilder}
    */
-  intermittent() {
+  intermittent(leavePeriodAttrs = {}) {
     set(this.claimAttrs, "has_intermittent_leave_periods", true);
     set(
       this.claimAttrs,
       "leave_details.intermittent_leave_periods[0]",
-      new IntermittentLeavePeriod({
-        leave_period_id: "mock-leave-period-id",
-        start_date: "2021-02-01",
-        end_date: "2021-07-01",
-        duration: 3,
-        duration_basis: DurationBasis.hours,
-        frequency: 6,
-        frequency_interval: 6,
-        frequency_interval_basis: FrequencyIntervalBasis.months,
-      })
+      new IntermittentLeavePeriod(
+        Object.assign(
+          {
+            leave_period_id: "mock-leave-period-id",
+            start_date: "2021-02-01",
+            end_date: "2021-07-01",
+            duration: 3,
+            duration_basis: DurationBasis.hours,
+            frequency: 6,
+            frequency_interval: 6,
+            frequency_interval_basis: FrequencyIntervalBasis.months,
+          },
+          leavePeriodAttrs
+        )
+      )
     );
     return this;
   }
 
   /**
+   * @param {object} [leavePeriodAttrs]
    * @returns {MockClaimBuilder}
    */
-  reducedSchedule() {
+  reducedSchedule(leavePeriodAttrs = {}) {
     set(this.claimAttrs, "has_reduced_schedule_leave_periods", true);
     set(
       this.claimAttrs,
       "leave_details.reduced_schedule_leave_periods[0]",
-      new ReducedScheduleLeavePeriod({
-        leave_period_id: "mock-leave-period-id",
-        start_date: "2021-02-01",
-        end_date: "2021-07-01",
-      })
+      new ReducedScheduleLeavePeriod(
+        Object.assign(
+          {
+            leave_period_id: "mock-leave-period-id",
+            start_date: "2021-02-01",
+            end_date: "2021-07-01",
+          },
+          leavePeriodAttrs
+        )
+      )
     );
 
     return this;

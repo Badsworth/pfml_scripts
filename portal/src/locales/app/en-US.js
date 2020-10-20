@@ -886,10 +886,14 @@ const pages = {
       "You will need to provide proof of your child’s placement",
     proofRequiredHeading_bondingNewbornFuture:
       "You will need to provide proof of your child’s birthdate",
+    proofRequiredHeading_medicalPregnantFuture:
+      "Call us when your medical leave begins.",
     proofRequired_bondingAdoptFosterFuture:
       "After your child arrives in your home, you will need to upload, mail, or fax a document that shows your child’s placement date. We will begin reviewing your application now, but we can’t approve it until we have this proof.",
     proofRequired_bondingNewbornFuture:
       "You will need to upload, mail, or fax a document that shows your child’s birthdate. We will begin reviewing your application now, but we can't approve it until we have this proof.",
+    proofRequired_medicalPregnantFuture:
+      "We’ll start reviewing your application now, but we can’t approve it until your medical leave begins. Call the DFML Contact Center at $t(shared.contactCenterPhoneNumber) when you go out on leave.",
     reviewProgressAndStatus:
       "We are reviewing your application. You can check the status of your application anytime in the portal.",
     reviewProgressAndStatus_noReview:
