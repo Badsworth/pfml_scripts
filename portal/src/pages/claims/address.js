@@ -13,9 +13,20 @@ import { useTranslation } from "../../locales/i18n";
 import withClaim from "../../hoc/withClaim";
 
 export const fields = [
-  "claim.residential_address",
-  "claim.mailing_address",
   "claim.has_mailing_address",
+  "claim.residential_address.line_1",
+  "claim.residential_address.line_2",
+  "claim.residential_address.city",
+  "claim.residential_address.state",
+  "claim.residential_address.zip",
+  // Include `mailing_address` so validation error shows for completely empty mailing address.
+  // We don't need this for `residential_address` since that defaults to a blank object, rather than null.
+  "claim.mailing_address",
+  "claim.mailing_address.line_1",
+  "claim.mailing_address.line_2",
+  "claim.mailing_address.city",
+  "claim.mailing_address.state",
+  "claim.mailing_address.zip",
 ];
 
 export const Address = (props) => {
