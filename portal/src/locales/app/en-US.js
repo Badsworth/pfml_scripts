@@ -400,6 +400,8 @@ const pages = {
     partOneSubmittedHeading:
       "Part 1 of your application was confirmed successfully",
     resume: "Resume",
+    // Resume button aria-label for screen readers, since VoiceOver reads "résumé":
+    resumeScreenReader: "Continue with",
     screenReaderNumberPrefix: "Step",
     start: "Start",
     stepHTMLDescription_bondingAdoptFoster:

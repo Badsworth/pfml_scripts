@@ -49,7 +49,11 @@ const Step = (props) => {
     </ButtonLink>
   );
   const resumeButton = (
-    <ButtonLink href={props.stepHref} className="width-auto">
+    <ButtonLink
+      href={props.stepHref}
+      className="width-auto"
+      ariaLabel={`${props.resumeScreenReaderText}: ${props.title}`}
+    >
       {props.resumeText}
     </ButtonLink>
   );
@@ -156,6 +160,12 @@ Step.propTypes = {
    * This can also be passed by parent StepList component.
    */
   resumeText: PropTypes.string,
+  /**
+   * Localized text for the resume button's aria-label,
+   * needed for screen readers, since VoiceOver reads "résumé".
+   * This can also be passed by parent StepList component.
+   */
+  resumeScreenReaderText: PropTypes.string,
   /**
    * Localized text for the edit link.
    * This can also be passed by parent StepList component.

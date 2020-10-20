@@ -42,15 +42,20 @@ StepList.propTypes = {
    */
   children: PropTypes.node.isRequired,
   /**
-   *  Localized text for each step's start button.
+   * Localized text for each step's start button.
    */
   startText: PropTypes.string.isRequired,
   /**
-   *  Localized text for each step's resume button.
+   * Localized text for each step's resume button.
    */
   resumeText: PropTypes.string.isRequired,
   /**
-   *  Localized text for each step's edit link.
+   * Localized text for each step's resume button aria-label,
+   * needed for screen readers, since VoiceOver reads "résumé".
+   */
+  resumeScreenReaderText: PropTypes.string.isRequired,
+  /**
+   * Localized text for each step's edit link.
    */
   editText: PropTypes.string.isRequired,
   /**

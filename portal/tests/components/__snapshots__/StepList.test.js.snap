@@ -16,6 +16,7 @@ exports[`StepList renders component 1`] = `
     editable={true}
     key=".0"
     number={1}
+    resumeScreenReaderText="Continue with"
     resumeText="Resume"
     screenReaderNumberPrefix="Step"
     startText="Start"

@@ -60,4 +60,13 @@ describe("ButtonLink", () => {
       expect(wrapper.find("button").hasClass("disabled")).toBe(true);
     });
   });
+
+  describe("when ariaLabel is set", () => {
+    it("it renders a button with an aria-label attribute", () => {
+      const { wrapper } = render({ ariaLabel: "example text" });
+      const anchor = wrapper.find("a");
+
+      expect(anchor.prop("aria-label")).toEqual("example text");
+    });
+  });
 });

@@ -11,6 +11,7 @@ describe("StepList", () => {
       title: "Step List",
       startText: "Start",
       resumeText: "Resume",
+      resumeScreenReaderText: "Continue with",
       editText: "Edit",
       screenReaderNumberPrefix: "Step",
     };

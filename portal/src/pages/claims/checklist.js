@@ -81,6 +81,7 @@ export const Checklist = (props) => {
   const sharedStepListProps = {
     startText: t("pages.claimsChecklist.start"),
     resumeText: t("pages.claimsChecklist.resume"),
+    resumeScreenReaderText: t("pages.claimsChecklist.resumeScreenReader"),
     editText: t("pages.claimsChecklist.edit"),
     screenReaderNumberPrefix: t(
       "pages.claimsChecklist.screenReaderNumberPrefix"

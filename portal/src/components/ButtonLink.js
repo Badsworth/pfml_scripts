@@ -17,7 +17,12 @@ const ButtonLink = (props) => {
 
   if (props.disabled) {
     return (
-      <button className={classes} type="button" disabled>
+      <button
+        type="button"
+        className={classes}
+        aria-label={props.ariaLabel}
+        disabled
+      >
         {props.children}
       </button>
     );
@@ -25,7 +30,9 @@ const ButtonLink = (props) => {
 
   return (
     <Link href={props.href}>
-      <a className={classes}>{props.children}</a>
+      <a className={classes} aria-label={props.ariaLabel}>
+        {props.children}
+      </a>
     </Link>
   );
 };
@@ -39,6 +46,10 @@ ButtonLink.propTypes = {
    * Button text.
    */
   children: PropTypes.node.isRequired,
+  /**
+   * Button's aria-label text.
+   */
+  ariaLabel: PropTypes.string,
   /**
    * Additional classes to apply to the HTML element. Useful for adding
    * utility classes to control spacing.
