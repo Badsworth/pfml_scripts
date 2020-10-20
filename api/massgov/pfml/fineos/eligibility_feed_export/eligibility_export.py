@@ -34,8 +34,14 @@ def handler(_event, _context):
         raise Exception("OUTPUT_DIRECTORY_PATH environment variable not set. Aborting run.")
 
     with db.session_scope(db_session_raw, close=True) as db_session:
-        process_result = eligibility_feed.process_updates(
-            db_session, fineos_client, output_dir_path
-        )
+        eligibility_feed_mode = os.environ.get("ELIGIBILITY_FEED_MODE", "full")
+        if eligibility_feed_mode == "updates":
+            process_result = eligibility_feed.process_employee_updates(
+                db_session, fineos_client, output_dir_path
+            )
+        else:
+            process_result = eligibility_feed.process_all_employers(
+                db_session, fineos_client, output_dir_path
+            )
 
     return dataclasses.asdict(process_result)

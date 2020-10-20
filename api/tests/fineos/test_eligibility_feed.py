@@ -1,5 +1,7 @@
 import csv
 import os
+import uuid
+from dataclasses import dataclass
 from datetime import date
 from pathlib import Path
 
@@ -257,9 +259,7 @@ def test_write_employees_to_csv(
     dest_file = tmp_path / "test.csv"
 
     with open(dest_file, "w") as f:
-        ef.write_employees_to_csv(
-            test_db_session, employer, fineos_employer_id, number_of_employees, employees, f
-        )
+        ef.write_employees_to_csv(employer, fineos_employer_id, number_of_employees, employees, f)
 
     with open(dest_file, "r") as f:
         file_content = f.readlines()
@@ -380,10 +380,10 @@ def assert_employer_file_does_not_exists(directory, fineos_employer_id):
     assert not employer_file_exists(directory, fineos_employer_id)
 
 
-def test_process_updates_simple(test_db_session, tmp_path, initialize_factories_session):
+def test_process_all_employers_simple(test_db_session, tmp_path, initialize_factories_session):
     WagesAndContributionsFactory.create()
 
-    process_results = ef.process_updates(
+    process_results = ef.process_all_employers(
         test_db_session, massgov.pfml.fineos.MockFINEOSClient(), tmp_path
     )
 
@@ -393,13 +393,13 @@ def test_process_updates_simple(test_db_session, tmp_path, initialize_factories_
     assert_number_of_data_lines_in_each_file(tmp_path, 1)
 
 
-def test_process_updates_for_single_employee_different_employers(
+def test_process_all_employers_for_single_employee_different_employers(
     test_db_session, tmp_path, initialize_factories_session
 ):
     # wages_for_single_employee_different_employers
     WagesAndContributionsFactory.create_batch(size=5, employee=EmployeeFactory.create())
 
-    process_results = ef.process_updates(
+    process_results = ef.process_all_employers(
         test_db_session, massgov.pfml.fineos.MockFINEOSClient(), tmp_path
     )
 
@@ -409,13 +409,13 @@ def test_process_updates_for_single_employee_different_employers(
     assert_number_of_data_lines_in_each_file(tmp_path, 1)
 
 
-def test_process_updates_for_single_employer_different_employees(
+def test_process_all_employers_for_single_employer_different_employees(
     test_db_session, tmp_path, initialize_factories_session
 ):
     # wages_for_single_employer_different_employees
     WagesAndContributionsFactory.create_batch(size=5, employer=EmployerFactory.create())
 
-    process_results = ef.process_updates(
+    process_results = ef.process_all_employers(
         test_db_session, massgov.pfml.fineos.MockFINEOSClient(), tmp_path
     )
 
@@ -425,7 +425,7 @@ def test_process_updates_for_single_employer_different_employees(
     assert_number_of_data_lines_in_each_file(tmp_path, 5)
 
 
-def test_process_updates_for_multiple_wages_for_single_employee_employer_pair(
+def test_process_all_employers_for_multiple_wages_for_single_employee_employer_pair(
     test_db_session, tmp_path, initialize_factories_session
 ):
     # multiple_wages_for_single_employee_employer_pair
@@ -433,7 +433,7 @@ def test_process_updates_for_multiple_wages_for_single_employee_employer_pair(
         size=5, employee=EmployeeFactory.create(), employer=EmployerFactory.create()
     )
 
-    process_results = ef.process_updates(
+    process_results = ef.process_all_employers(
         test_db_session, massgov.pfml.fineos.MockFINEOSClient(), tmp_path
     )
 
@@ -443,7 +443,7 @@ def test_process_updates_for_multiple_wages_for_single_employee_employer_pair(
     assert_number_of_data_lines_in_each_file(tmp_path, 1)
 
 
-def test_process_updates_skips_nonexistent_employer(
+def test_process_all_employers_skips_nonexistent_employer(
     test_db_session, tmp_path, initialize_factories_session
 ):
     # Employer FEIN 999999999 will not be found by the mock FINEOS client and should be skipped
@@ -456,7 +456,120 @@ def test_process_updates_skips_nonexistent_employer(
     WagesAndContributionsFactory.create_batch(size=5, employer=employer)
 
     fineos_client = massgov.pfml.fineos.MockFINEOSClient()
-    process_results = ef.process_updates(test_db_session, fineos_client, tmp_path)
+    process_results = ef.process_all_employers(test_db_session, fineos_client, tmp_path)
+
+    assert process_results.employers_total_count == 1
+    assert process_results.employee_and_employer_pairs_total_count == 5
+
+    # assert_employer_file_does_not_exists(tmp_path, missing_employer_fein)
+    assert_employer_file_exists(tmp_path, fineos_client.find_employer(employer.employer_fein))
+    assert_number_of_data_lines_in_each_file(tmp_path, 5)
+
+
+def test_get_latest_employer_for_updates():
+    @dataclass
+    class QueryRecord:
+        employer_id: uuid
+        employee_id: uuid
+        maxdate: date
+
+    employee_with_two_employers = [
+        QueryRecord(
+            employer_id=uuid.UUID("64665f09-9e00-48d4-94da-a4f58f759012"),
+            employee_id=uuid.UUID("0009d8b3-cf7c-4ed2-85ff-acfefb017525"),
+            maxdate=date(2020, 9, 30),
+        ),
+        QueryRecord(
+            employer_id=uuid.UUID("64665f09-9e00-48d4-94da-a4f58f759012"),
+            employee_id=uuid.UUID("0009d8b3-cf7c-4ed2-85ff-acfefb017525"),
+            maxdate=date(2020, 6, 30),
+        ),
+        QueryRecord(
+            employer_id=uuid.UUID("64665f09-9e00-48d4-94da-a4f58f759012"),
+            employee_id=uuid.UUID("0009d8b3-cf7c-4ed2-85ff-acfefb017525"),
+            maxdate=date(2020, 3, 31),
+        ),
+        QueryRecord(
+            employer_id=uuid.UUID("0c0232c8-6741-42f9-9afa-bb7c42a3ca13"),
+            employee_id=uuid.UUID("0009d8b3-cf7c-4ed2-85ff-acfefb017525"),
+            maxdate=date(2019, 12, 31),
+        ),
+        QueryRecord(
+            employer_id=uuid.UUID("0c0232c8-6741-42f9-9afa-bb7c42a3ca13"),
+            employee_id=uuid.UUID("0009d8b3-cf7c-4ed2-85ff-acfefb017525"),
+            maxdate=date(2019, 9, 30),
+        ),
+    ]
+
+    latest_employer_for_employee = ef.get_latest_employer_for_updates(employee_with_two_employers)
+
+    assert len(latest_employer_for_employee) == 1
+    assert latest_employer_for_employee[0].maxdate == date(2020, 9, 30)
+
+
+def test_process_employee_updates_simple(
+    test_db_session, tmp_path, initialize_factories_session, create_triggers
+):
+    WagesAndContributionsFactory.create()
+
+    process_results = ef.process_employee_updates(
+        test_db_session, massgov.pfml.fineos.MockFINEOSClient(), tmp_path
+    )
+
+    assert process_results.employers_total_count == 1
+    assert process_results.employee_and_employer_pairs_total_count == 1
+
+    assert_number_of_data_lines_in_each_file(tmp_path, 1)
+
+
+def test_process_employee_updates_for_single_employer_different_employees(
+    test_db_session, tmp_path, initialize_factories_session, create_triggers
+):
+    # wages_for_single_employer_different_employees
+    WagesAndContributionsFactory.create_batch(size=5, employer=EmployerFactory.create())
+
+    process_results = ef.process_employee_updates(
+        test_db_session, massgov.pfml.fineos.MockFINEOSClient(), tmp_path
+    )
+
+    assert process_results.employers_total_count == 1
+    assert process_results.employee_and_employer_pairs_total_count == 5
+
+    assert_number_of_data_lines_in_each_file(tmp_path, 5)
+
+
+def test_process_employee_updates_for_multiple_wages_for_single_employee_employer_pair(
+    test_db_session, tmp_path, initialize_factories_session, create_triggers
+):
+    # multiple_wages_for_single_employee_employer_pair
+    WagesAndContributionsFactory.create_batch(
+        size=5, employee=EmployeeFactory.create(), employer=EmployerFactory.create()
+    )
+
+    process_results = ef.process_employee_updates(
+        test_db_session, massgov.pfml.fineos.MockFINEOSClient(), tmp_path
+    )
+
+    assert process_results.employers_total_count == 1
+    assert process_results.employee_and_employer_pairs_total_count == 1
+
+    assert_number_of_data_lines_in_each_file(tmp_path, 1)
+
+
+def test_process_employee_updates_skips_nonexistent_employer(
+    test_db_session, tmp_path, initialize_factories_session, create_triggers
+):
+    # Employer FEIN 999999999 will not be found by the mock FINEOS client and should be skipped
+    missing_employer_fein = "999999999"
+    WagesAndContributionsFactory.create_batch(
+        size=1, employer=EmployerFactory.create(employer_fein=missing_employer_fein)
+    )
+    # wages_for_single_employer_different_employees
+    employer = EmployerFactory.create()
+    WagesAndContributionsFactory.create_batch(size=5, employer=employer)
+
+    fineos_client = massgov.pfml.fineos.MockFINEOSClient()
+    process_results = ef.process_employee_updates(test_db_session, fineos_client, tmp_path)
 
     assert process_results.employers_total_count == 1
     assert process_results.employee_and_employer_pairs_total_count == 5

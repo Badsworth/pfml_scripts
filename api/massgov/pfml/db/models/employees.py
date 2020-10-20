@@ -16,7 +16,7 @@ from sqlalchemy.orm import Query, dynamic_loader, relationship
 from sqlalchemy.sql.expression import func
 
 from ..lookup import LookupTable
-from .base import Base, uuid_gen
+from .base import Base, utc_timestamp_gen, uuid_gen
 
 # https://github.com/dropbox/sqlalchemy-stubs/issues/98
 if TYPE_CHECKING:
@@ -177,6 +177,14 @@ class Employer(Base):
     )
 
 
+class EmployerLog(Base):
+    __tablename__ = "employer_log"
+    employer_log_id = Column(UUID(as_uuid=True), primary_key=True)
+    employer_id = Column(UUID(as_uuid=True), index=True)
+    action = Column(Text, index=True)
+    modified_at = Column(TIMESTAMP(timezone=True), default=utc_timestamp_gen)
+
+
 class PaymentInformation(Base):
     __tablename__ = "payment_information"
     payment_info_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
@@ -242,6 +250,14 @@ class Employee(Base):
     addresses: "Query[EmployeeAddress]" = dynamic_loader(
         "EmployeeAddress", back_populates="employee"
     )
+
+
+class EmployeeLog(Base):
+    __tablename__ = "employee_log"
+    employee_log_id = Column(UUID(as_uuid=True), primary_key=True)
+    employee_id = Column(UUID(as_uuid=True), index=True)
+    action = Column(Text, index=True)
+    modified_at = Column(TIMESTAMP(timezone=True), default=utc_timestamp_gen)
 
 
 class Claim(Base):

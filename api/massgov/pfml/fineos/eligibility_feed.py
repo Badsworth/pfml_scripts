@@ -4,15 +4,16 @@ from dataclasses import dataclass
 from datetime import date, datetime
 from decimal import Decimal
 from enum import Enum
-from typing import Iterable, Optional, TextIO, TypeVar, Union
+from typing import Any, Dict, Iterable, List, Optional, TextIO, TypeVar, Union
 
 import smart_open
+from sqlalchemy import func
 from sqlalchemy.orm import Query
 
 import massgov.pfml.db as db
 import massgov.pfml.util.csv as csv_util
 import massgov.pfml.util.logging
-from massgov.pfml.db.models.employees import Employee, Employer, WagesAndContributions
+from massgov.pfml.db.models.employees import Employee, EmployeeLog, Employer, WagesAndContributions
 from massgov.pfml.fineos.exception import FINEOSNotFound
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
@@ -199,13 +200,115 @@ class ProcessUpdatesResult:
     employee_and_employer_pairs_total_count: int
 
 
-def process_updates(
+def get_latest_employer_for_updates(employer_employee_list: List) -> List:
+    latest_employer_employee_list: List[Any] = []
+    employee_filing_dates: Dict[str, Optional[date]] = {}
+    for employer_employee_pair in employer_employee_list:
+        filing_date = employee_filing_dates.setdefault(employer_employee_pair.employee_id, None)
+        if filing_date is None:
+            employee_filing_dates[
+                employer_employee_pair.employee_id
+            ] = employer_employee_pair.maxdate
+            latest_employer_employee_list.append(employer_employee_pair)
+
+    return latest_employer_employee_list
+
+
+def process_employee_updates(
     db_session: db.Session, fineos: massgov.pfml.fineos.AbstractFINEOSClient, output_dir_path: str
 ) -> ProcessUpdatesResult:
     employers_total_count = 0
     employee_and_employer_pairs_total_count = 0
 
-    logger.info("Starting eligibility feeds generation")
+    logger.info("Starting eligibility feeds generation for employee updates.")
+    # Get employee changes from log table in batches
+    # TODO Add a process date to process only items since last run.
+    # https://lwd.atlassian.net/browse/API-710
+    updated_employees_query = (
+        db_session.query(EmployeeLog.employee_id)
+        .filter(EmployeeLog.action.in_(["INSERT", "UPDATE"]))
+        .distinct(EmployeeLog.employee_id)
+        .yield_per(1000)
+    )
+
+    if updated_employees_query.count() == 0:
+        logger.info("Eligibility Feed: No updates to process.")
+        return ProcessUpdatesResult(
+            employers_total_count=0, employee_and_employer_pairs_total_count=0,
+        )
+
+    # Get the latest wages record for modified employee to get
+    # employer associated with it.
+    employer_employee_pairs = (
+        db_session.query(
+            WagesAndContributions.employer_id,
+            WagesAndContributions.employee_id,
+            func.max(WagesAndContributions.filing_period).label("maxdate"),
+        )
+        .filter(WagesAndContributions.employee_id.in_(updated_employees_query))
+        .group_by(WagesAndContributions.employer_id, WagesAndContributions.employee_id)
+        .order_by(WagesAndContributions.employee_id, WagesAndContributions.employer_id)
+        .all()
+    )
+
+    latest_employer_for_employee = get_latest_employer_for_updates(employer_employee_pairs)
+
+    # Organize pairs into a structured class
+    employer_id_to_employee_ids: Dict[str, List] = {}
+    for employer_employee_pair in latest_employer_for_employee:
+        employer_id_to_employee_ids.setdefault(employer_employee_pair.employer_id, []).append(
+            employer_employee_pair.employee_id
+        )
+
+    # Process list of employers
+    for employer_id, employee_ids in employer_id_to_employee_ids.items():
+        employer = db_session.query(Employer).filter(Employer.employer_id == employer_id).one()
+        # Find FINEOS employer id using employer FEIN
+        try:
+            fineos_employer_id = fineos.find_employer(employer.employer_fein)
+        except FINEOSNotFound:
+            logger.info(
+                "Could not find employer FEIN in FINEOS. Continuing.",
+                extra={"employer_fein": employer.employer_fein},
+            )
+            continue
+
+        number_of_employees = len(employee_ids)
+        employee_and_employer_pairs_total_count += number_of_employees
+
+        employees = (
+            db_session.query(Employee)
+            .filter(Employee.employee_id.in_(employee_ids))
+            .yield_per(1000)
+        )
+
+        open_and_write_to_eligibility_file(
+            output_dir_path, fineos_employer_id, employer, number_of_employees, employees
+        )
+
+        employers_total_count += 1
+
+    logger.info(
+        "Finished writing all eligibility feeds",
+        extra={
+            "employers_total_count": employers_total_count,
+            "employee_and_employer_pairs_total_count": employee_and_employer_pairs_total_count,
+        },
+    )
+
+    return ProcessUpdatesResult(
+        employers_total_count=employers_total_count,
+        employee_and_employer_pairs_total_count=employee_and_employer_pairs_total_count,
+    )
+
+
+def process_all_employers(
+    db_session: db.Session, fineos: massgov.pfml.fineos.AbstractFINEOSClient, output_dir_path: str
+) -> ProcessUpdatesResult:
+    employers_total_count = 0
+    employee_and_employer_pairs_total_count = 0
+
+    logger.info("Starting eligibility feeds generation for all employers")
 
     employers = db_session.query(Employer).yield_per(1000)
 
@@ -233,29 +336,9 @@ def process_updates(
             1000
         )
 
-        output_file_path = (
-            f"{output_dir_path}/{datetime.now().strftime('%Y%m%dT%H%M%S')}_{fineos_employer_id}.csv"
+        open_and_write_to_eligibility_file(
+            output_dir_path, fineos_employer_id, employer, number_of_employees, employees
         )
-
-        logger.info(
-            "Opening destination to write eligibility feed",
-            extra={
-                "internal_employer_id": employer.employer_id,
-                "fineos_employer_id": fineos_employer_id,
-                "number_of_employees": number_of_employees,
-                "output_file": output_file_path,
-            },
-        )
-
-        with smart_open.open(output_file_path, "w") as output_file:
-            write_employees_to_csv(
-                db_session,
-                employer,
-                fineos_employer_id,
-                number_of_employees,
-                employees,
-                output_file,
-            )
 
     logger.info(
         "Finished writing all eligibility feeds",
@@ -277,8 +360,36 @@ ELIGIBILITY_FEED_CSV_ENCODERS: csv_util.Encoders = {
 }
 
 
+def open_and_write_to_eligibility_file(
+    output_dir_path: str,
+    fineos_employer_id: str,
+    employer: Employer,
+    number_of_employees: int,
+    employees: Iterable[Employee],
+) -> str:
+    output_file_path = (
+        f"{output_dir_path}/{datetime.now().strftime('%Y%m%dT%H%M%S')}_{fineos_employer_id}.csv"
+    )
+
+    logger.info(
+        "Opening destination to write eligibility feed",
+        extra={
+            "internal_employer_id": employer.employer_id,
+            "fineos_employer_id": fineos_employer_id,
+            "number_of_employees": number_of_employees,
+            "output_file": output_file_path,
+        },
+    )
+
+    with smart_open.open(output_file_path, "w") as output_file:
+        write_employees_to_csv(
+            employer, fineos_employer_id, number_of_employees, employees, output_file,
+        )
+
+    return output_file_path
+
+
 def write_employees_to_csv(
-    db_session: db.Session,
     employer: Employer,
     fineos_employer_id: str,
     number_of_employees: int,
