@@ -1,4 +1,8 @@
 import { scenario, chance } from "../simulate";
+import subMonths from "date-fns/subMonths";
+import formatISO from "date-fns/formatISO";
+
+// Cases drawn from: https://massgov.sharepoint.com/:x:/r/sites/EOL-PFMLProject/_layouts/15/Doc.aspx?sourcedoc=%7B7541FAF6-B95A-48F0-B7EA-24CD06E52CF0%7D&file=Cases%20to%20Create%20v1.xlsx&action=default&mobileredirect=true
 
 export const BHAP1 = scenario("BHAP1", {
   reason: "Child Bonding",
@@ -6,7 +10,6 @@ export const BHAP1 = scenario("BHAP1", {
   residence: "MA-proofed",
   docs: {
     MASSID: {},
-    // @todo: Implement document type.
     FOSTERPLACEMENT: {},
   },
 });
@@ -17,7 +20,6 @@ export const BHAP2 = scenario("BHAP2", {
   residence: "OOS",
   docs: {
     OOSID: {},
-    // @todo: Implement document type.
     ADOPTIONCERT: {},
   },
 });
@@ -28,22 +30,20 @@ export const BHAP3 = scenario("BHAP3", {
   residence: "MA-proofed",
   docs: {
     MASSID: {},
-    // @todo: Implement document type.
+    PREBIRTH: {},
   },
 });
 
-// Happy path denial due to ?
+// Happy path denial due to financial eligibility.
 export const BHAP4 = scenario("BHAP4", {
   reason: "Child Bonding",
-  reason_qualifier: "Adoption",
+  reason_qualifier: "Newborn",
   residence: "OOS",
   financiallyIneligible: true,
+  child_birth_date: formatISO(subMonths(new Date(), 13)),
   docs: {
     OOSID: {},
-    // @todo: Implement document type.
-    PREBIRTH: {
-      birthDate: "now -13 months",
-    },
+    PREBIRTH: {},
   },
 });
 
@@ -52,12 +52,11 @@ export const BHAP5 = scenario("BHAP5", {
   reason: "Child Bonding",
   reason_qualifier: "Adoption",
   residence: "OOS",
+  child_birth_date: formatISO(subMonths(new Date(), 13)),
   docs: {
     OOSID: {},
     // @todo: Implement document type.
-    ADOPTIONCERT: {
-      adoptionDate: "now -13 months",
-    },
+    ADOPTIONCERT: {},
   },
 });
 

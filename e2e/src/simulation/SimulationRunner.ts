@@ -142,6 +142,10 @@ function getDocumentType(
 ): DocumentUploadRequest["document_type"] {
   switch (document.type) {
     case "HCP":
+    case "ADOPTIONCERT":
+    case "BIRTHCERTIFICATE":
+    case "PREBIRTH":
+    case "FOSTERPLACEMENT":
       return "State Managed Paid Leave Confirmation";
     case "MASSID":
     case "OOSID":

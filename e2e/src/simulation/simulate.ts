@@ -24,11 +24,11 @@ export function chance(
     return partialWheel.concat(slices);
   }, [] as number[]);
 
-  return async function (opts) {
+  return async function (opts, employee) {
     // Pick a slice from the wheel.
     const sliceIdx = Math.floor(Math.random() * wheel.length);
     const generator = config[wheel[sliceIdx]][1];
-    return generator(opts);
+    return generator(opts, employee);
   };
 }
 
@@ -49,6 +49,8 @@ export type ScenarioOpts = {
   docs: ScenarioDocumentConfiguration;
   skipSubmitClaim?: boolean;
   shortNotice?: boolean;
+  child_birth_date?: string;
+  child_placement_date?: string;
 };
 
 export function scenario(
@@ -205,16 +207,16 @@ function generateLeaveDetails(config: ScenarioOpts): ApplicationLeaveDetails {
     case "Child Bonding":
       switch (reason_qualifier) {
         case "Newborn":
-          details.child_birth_date = fmt(startDate);
+          details.child_birth_date = config.child_birth_date ?? fmt(startDate);
           details.pregnant_or_recent_birth = true;
-          // @todo: What additional properties need to be added here?
           break;
         case "Adoption":
-          // @todo: What additional properties need to be added here?
+          details.child_placement_date =
+            config.child_placement_date ?? fmt(startDate);
           break;
         case "Foster Care":
-          details.child_placement_date = fmt(startDate);
-          // @todo: What additional properties need to be added here?
+          details.child_placement_date =
+            config.child_placement_date ?? fmt(startDate);
           break;
         default:
           throw new Error(`Invalid reason_qualifier for Child Bonding`);

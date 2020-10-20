@@ -2,8 +2,9 @@ import { ApplicationRequestBody } from "@/api";
 import fs from "fs";
 import { PDFCheckBox, PDFDocument, PDFOptionList, PDFTextField } from "pdf-lib";
 import { parseISO, format, differenceInWeeks } from "date-fns";
+import faker from "faker";
 
-type PDFFormData = { [k: string]: string };
+type PDFFormData = { [k: string]: string | boolean };
 
 interface DocumentGenerator {
   (claim: ApplicationRequestBody, options: Record<string, unknown>): Promise<
@@ -146,32 +147,159 @@ const generateHCP: DocumentGenerator = (
   return fillPDFBytes(`${__dirname}/../../forms/hcp-real.pdf`, data);
 };
 
+const generateBirthCertificate: DocumentGenerator = async (claim) => {
+  if (!claim.leave_details?.child_birth_date) {
+    throw new Error(
+      `No birth date was given. Unable to generate birth certificate.`
+    );
+  }
+  if (!claim.first_name || !claim.last_name) {
+    throw new Error("Claim is missing required properties");
+  }
+  const gender = faker.random.number(1);
+  const race = faker.random.arrayElement([
+    "White",
+    "Asian",
+    "Black or African American",
+    "Hispanic or Latino",
+  ]);
+  const dob = format(
+    parseISO(claim.leave_details.child_birth_date),
+    "MM/dd/yyyy"
+  );
+  const data = {
+    "Certificate Number": "123",
+    "Record Number": "123",
+    "Date of Birth": dob,
+    "Name of Child": faker.name.findName(undefined, claim.last_name, gender),
+    Sex: gender === 0 ? "Male" : "Female",
+    Race: race,
+    "Name of Mother": `${claim.first_name} ${claim.last_name}`,
+    "Name of Father": faker.name.findName(undefined, claim.last_name, 1),
+    "Birthplace of Mother": faker.fake("{{address.city}}, {{address.state}}"),
+    "Birthplace of Father": faker.fake("{{address.city}}, {{address.state}}"),
+    "Place of Birth": faker.fake("{{address.city}}, {{address.state}}"),
+    "Residence of Parents": faker.fake("{{address.city}}, {{address.state}}"),
+    "Occupation of Parent": "Widget Maker",
+    "Date of Record": dob,
+    "Name of Informant": faker.fake("{{name.firstName}} {{name.lastName}}"),
+    "Address of Informant": faker.fake("{{address.city}}, {{address.state}}"),
+    "Witness Date": dob,
+    "Role of Undersigned": "Friend",
+  };
+  return fillPDFBytes(`${__dirname}/../../forms/birth-certificate.pdf`, data);
+};
+
 const generatePrebirthLetter: DocumentGenerator = async (
   claim,
   { birthDate }: { birthDate?: string }
 ) => {
-  // Just to keep linting happy :(
-  console.log(birthDate);
-  return Uint8Array.from(Buffer.from("test"));
+  if (!claim.last_name || !claim.leave_details?.child_birth_date) {
+    throw new Error(
+      "Claim missing required properties to generate a pre-birth letter"
+    );
+  }
+  const dob = birthDate
+    ? parseISO(birthDate)
+    : parseISO(claim.leave_details?.child_birth_date);
+  const data = {
+    Date: "01/01/2021",
+    "Name of Doctor": "Theodore T. Cure",
+    "Name of Practice": "Cure Cares",
+    "Name of Child(ren)": `${faker.name.firstName()} ${claim.last_name}`,
+    "Name of Parent(s)": `${claim.first_name} ${claim.last_name}`,
+    "Due Date": format(dob, "MM/dd/yyyy"),
+  };
+  return fillPDFBytes(`${__dirname}/../../forms/pre-birth-letter.pdf`, data);
 };
 
-const generateFosterPlacementLetter: DocumentGenerator = async () => {
-  return Uint8Array.from(Buffer.from("test"));
+function reformat(date: string): string {
+  return format(parseISO(date), "MM/dd/yyyy");
+}
+
+const generateFosterPlacementLetter: DocumentGenerator = async (claim) => {
+  if (
+    !claim.leave_details?.continuous_leave_periods?.[0].start_date ||
+    !claim.leave_details?.continuous_leave_periods?.[0].end_date
+  ) {
+    throw new Error("Invalid leave period to generate foster placement letter");
+  }
+  if (!claim.leave_details?.child_placement_date) {
+    throw new Error(
+      `Unable to generate foster placement letter without child placement date`
+    );
+  }
+  const data = {
+    "Date Leave to Begin": reformat(
+      claim.leave_details?.continuous_leave_periods[0].start_date
+    ),
+    "Date Leave to End": reformat(
+      claim.leave_details?.continuous_leave_periods[0].end_date
+    ),
+    "Actual or Anticipated Date of Adoption / Placement": reformat(
+      claim.leave_details?.child_placement_date
+    ),
+    "Date Signed": "01/01/2021",
+    Fax: "555-555-5555",
+    "Signature of Employee": `${claim.first_name} ${claim.last_name}`,
+    "Signature of Official": faker.name.findName(),
+    "Phone Number": "555-555-1212",
+    "Employee Name": `${claim.first_name} ${claim.last_name}`,
+    Adoption: false,
+    "Foster Care Placement": true,
+    "Professional / Agency Name and Address": "[assume valid]",
+    "Supervisor / Responsible Administrator Name": faker.name.findName(),
+    "Employer Name": "[assume this matches claim]",
+    "Employer Title": "[assume this matches claim]",
+    "Employee's Work Schedule": "[assume this matches claim]",
+  };
+  return fillPDFBytes(`${__dirname}/../../forms/foster-adopt-cert.pdf`, data);
 };
 
-const generateAdoptionCertificate: DocumentGenerator = async (
-  claim,
-  { placementDate }: { placementDate?: string }
-) => {
-  // Just to keep linting happy :(
-  console.log(placementDate);
-  return Uint8Array.from(Buffer.from("test"));
+const generateAdoptionCertificate: DocumentGenerator = async (claim) => {
+  if (
+    !claim.leave_details?.continuous_leave_periods?.[0].start_date ||
+    !claim.leave_details?.continuous_leave_periods?.[0].end_date
+  ) {
+    throw new Error("Invalid leave period to generate foster placement letter");
+  }
+  if (!claim.leave_details?.child_placement_date) {
+    throw new Error(
+      `Unable to generate foster placement letter without child placement date`
+    );
+  }
+  const data = {
+    "Date Leave to Begin": reformat(
+      claim.leave_details?.continuous_leave_periods[0].start_date
+    ),
+    "Date Leave to End": reformat(
+      claim.leave_details?.continuous_leave_periods[0].end_date
+    ),
+    "Actual or Anticipated Date of Adoption / Placement": reformat(
+      claim.leave_details?.child_placement_date
+    ),
+    "Date Signed": "01/01/2021",
+    Fax: "555-555-5555",
+    "Signature of Employee": `${claim.first_name} ${claim.last_name}`,
+    "Signature of Official": faker.name.findName(),
+    "Phone Number": "555-555-1212",
+    "Employee Name": `${claim.first_name} ${claim.last_name}`,
+    Adoption: true,
+    "Foster Care Placement": false,
+    "Professional / Agency Name and Address": "[assume valid]",
+    "Supervisor / Responsible Administrator Name": faker.name.findName(),
+    "Employer Name": "[assume this matches claim]",
+    "Employer Title": "[assume this matches claim]",
+    "Employee's Work Schedule": "[assume this matches claim]",
+  };
+  return fillPDFBytes(`${__dirname}/../../forms/foster-adopt-cert.pdf`, data);
 };
 
 const generators = {
   MASSID: generateMassID,
   OOSID: generateOOSID,
   HCP: generateHCP,
+  BIRTHCERTIFICATE: generateBirthCertificate,
   PREBIRTH: generatePrebirthLetter,
   FOSTERPLACEMENT: generateFosterPlacementLetter,
   ADOPTIONCERT: generateAdoptionCertificate,
@@ -202,12 +330,12 @@ async function fillPDFBytes(
   for (const [fieldName, fieldValue] of Object.entries(data)) {
     const field = form.getField(fieldName);
     if (field instanceof PDFTextField) {
-      field.setText(fieldValue);
+      field.setText(fieldValue as string);
     } else if (field instanceof PDFCheckBox) {
       if (fieldValue) field.check();
       else field.uncheck();
     } else if (field instanceof PDFOptionList) {
-      field.select(fieldValue);
+      field.select(fieldValue as string);
     } else {
       throw new Error(`Unknown field type for ${fieldName}`);
     }

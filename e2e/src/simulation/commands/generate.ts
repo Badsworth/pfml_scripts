@@ -12,6 +12,7 @@ import createClaimIndexStream from "../claimIndex";
 import { promisify } from "util";
 import { pipeline } from "stream";
 import { SystemWideArgs } from "../../cli";
+import { getEmployee } from "../../util";
 
 // Create a promised version of the pipeline function.
 const pipelineP = promisify(pipeline);
@@ -20,6 +21,7 @@ type GenerateArgs = {
   filename: string;
   count: string;
   directory: string;
+  employee?: string;
 } & SystemWideArgs;
 
 const cmd: CommandModule<SystemWideArgs, GenerateArgs> = {
@@ -49,6 +51,12 @@ const cmd: CommandModule<SystemWideArgs, GenerateArgs> = {
       normalize: true,
       alias: "d",
     },
+    employee: {
+      type: "string",
+      description:
+        "The identifier of an employee to generate claims with (from employee.json)",
+      requiresArg: true,
+    },
   },
   async handler(args) {
     args.logger.profile("generate");
@@ -56,6 +64,9 @@ const cmd: CommandModule<SystemWideArgs, GenerateArgs> = {
       paths: [process.cwd()],
     });
     const { default: generator } = await import(path);
+    const employee = args.employee
+      ? await getEmployee(args.employee)
+      : undefined;
 
     const storage = new SimulationStorage(args.directory);
     await fs.promises.rmdir(storage.directory, { recursive: true });
@@ -64,7 +75,10 @@ const cmd: CommandModule<SystemWideArgs, GenerateArgs> = {
     const limit = parseInt(args.count);
     for (let i = 0; i < limit; i++) {
       claims.push(
-        await generator({ documentDirectory: storage.documentDirectory })
+        await generator(
+          { documentDirectory: storage.documentDirectory },
+          employee
+        )
       );
     }
 

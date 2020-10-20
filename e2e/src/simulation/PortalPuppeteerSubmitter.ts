@@ -19,7 +19,11 @@ export default class PortalPuppeteerSubmitter extends PortalSubmitter {
     if (this.page) {
       return this.page;
     }
-    const browser = await puppeteer.launch();
+    // Viewport must be set so the screen is wide enough to show particular elements, otherwise
+    // they are unclickable.
+    const browser = await puppeteer.launch({
+      defaultViewport: { width: 1200, height: 1000 },
+    });
     this.page = await browser.newPage();
     return this.page;
   }
@@ -73,10 +77,8 @@ async function uploadDocument(
     .$('input[type="submit"][value="Search"]')
     .then((el) => click(page, el));
 
-  const matches = await page.$(`.ListCell[title="${document.document_type}"]`);
-  if (!matches) {
-    throw new Error("Unable to find document type");
-  }
+  // Case insensitive because Fineos task names do not exactly match API task names.
+  await page.waitForSelector(`.ListCell[title="${document.document_type}" i]`);
   await page
     .$('input[type="submit"][value="OK"]')
     .then((el) => click(page, el));
@@ -124,6 +126,7 @@ async function click(
 }
 
 async function clickTab(page: puppeteer.Page, label: string) {
+  await page.waitForSelector("div.TabOn");
   const tab = await contains(
     page,
     ".TabStrip div.TabOn, .TabStrip div.TabOff",

@@ -31,6 +31,8 @@ describe("Documents", function () {
       zip: "01000",
     },
     leave_details: {
+      child_birth_date: "2020-08-01",
+      child_placement_date: "2020-08-05",
       continuous_leave_periods: [
         {
           start_date: "2020-08-01",
@@ -146,5 +148,91 @@ describe("Documents", function () {
       "Date birth": "06/07/2020",
     });
     await expect(parsePDF(bytes)).resolves.toMatchSnapshot();
+  });
+
+  it("Should generate a birth certificate", async function () {
+    const bytes = await generators.BIRTHCERTIFICATE(claim, {});
+    const values = await parsePDF(bytes);
+    expect(values).toMatchObject({
+      "Certificate Number": expect.stringMatching(/\d+/),
+      "Record Number": expect.stringMatching(/\d+/),
+      "Date of Birth": expect.stringMatching(/\d{2}\/\d{2}\/\d{4}/),
+      "Name of Child": expect.any(String),
+      Sex: expect.stringMatching(/(M|F)/),
+      Race: expect.any(String),
+      "Name of Mother": expect.any(String),
+      "Name of Father": expect.any(String),
+      "Birthplace of Mother": expect.any(String),
+      "Birthplace of Father": expect.any(String),
+      "Place of Birth": expect.any(String),
+      "Residence of Parents": expect.any(String),
+      "Occupation of Parent": expect.any(String),
+      "Date of Record": expect.stringMatching(/\d{2}\/\d{2}\/\d{4}/),
+      "Name of Informant": expect.any(String),
+      "Address of Informant": expect.any(String),
+      "Witness Date": expect.stringMatching(/\d{2}\/\d{2}\/\d{4}/),
+      "Role of Undersigned": expect.any(String),
+    });
+  });
+
+  it("Should generate a pre-birth letter", async function () {
+    const bytes = await generators.PREBIRTH(claim, {});
+    const values = await parsePDF(bytes);
+    expect(values).toMatchObject({
+      Date: "01/01/2021",
+      "Name of Doctor": "Theodore T. Cure",
+      "Name of Practice": "Cure Cares",
+      "Name of Child(ren)": expect.stringMatching(/^\S+ Smith$/),
+      "Name of Parent(s)": "John Smith",
+      "Due Date": "08/01/2020",
+    });
+  });
+
+  it("Should generate a foster placement letter", async function () {
+    const bytes = await generators.FOSTERPLACEMENT(claim, {});
+    const values = await parsePDF(bytes);
+    await fs.promises.writeFile(`${__dirname}/../../pbl.pdf`, bytes);
+    expect(values).toMatchObject({
+      "Date Leave to Begin": "08/01/2020",
+      "Actual or Anticipated Date of Adoption / Placement": "08/05/2020",
+      "Date Leave to End": "09/01/2020",
+      "Date Signed": "01/01/2021",
+      Fax: "555-555-5555",
+      "Signature of Employee": "John Smith",
+      "Signature of Official": expect.any(String),
+      "Phone Number": "555-555-1212",
+      "Employer Name": "[assume this matches claim]",
+      "Employee Name": "John Smith",
+      Adoption: false,
+      "Professional / Agency Name and Address": "[assume valid]",
+      "Supervisor / Responsible Administrator Name": expect.any(String),
+      "Employer Title": "[assume this matches claim]",
+      "Employee's Work Schedule": "[assume this matches claim]",
+      "Foster Care Placement": true,
+    });
+  });
+
+  it("Should generate a adoption placement letter", async function () {
+    const bytes = await generators.FOSTERPLACEMENT(claim, {});
+    const values = await parsePDF(bytes);
+    await fs.promises.writeFile(`${__dirname}/../../pbl.pdf`, bytes);
+    expect(values).toMatchObject({
+      "Date Leave to Begin": "08/01/2020",
+      "Actual or Anticipated Date of Adoption / Placement": "08/05/2020",
+      "Date Leave to End": "09/01/2020",
+      "Date Signed": "01/01/2021",
+      Fax: "555-555-5555",
+      "Signature of Employee": "John Smith",
+      "Signature of Official": expect.any(String),
+      "Phone Number": "555-555-1212",
+      "Employer Name": "[assume this matches claim]",
+      "Employee Name": "John Smith",
+      Adoption: false,
+      "Professional / Agency Name and Address": "[assume valid]",
+      "Supervisor / Responsible Administrator Name": expect.any(String),
+      "Employer Title": "[assume this matches claim]",
+      "Employee's Work Schedule": "[assume this matches claim]",
+      "Foster Care Placement": true,
+    });
   });
 });
