@@ -5,6 +5,7 @@ import ButtonLink from "../components/ButtonLink";
 import Heading from "../components/Heading";
 import PropTypes from "prop-types";
 import React from "react";
+import classnames from "classnames";
 import findKeyByValue from "../utils/findKeyByValue";
 import formatDateRange from "../utils/formatDateRange";
 import get from "lodash/get";
@@ -17,18 +18,15 @@ import withClaimDocuments from "../hoc/withClaimDocuments";
  * Preview of an existing benefits Application
  */
 export const ApplicationCard = (props) => {
-  const { appLogic, claim, documents, number } = props;
-
+  const { appLogic, claim, number } = props;
+  const { t } = useTranslation();
   const { appErrors } = appLogic;
+
   const hasLoadingDocumentsError = hasDocumentsLoadError(
     appErrors,
     claim.application_id
   );
-  const { t } = useTranslation();
   const leaveReason = get(claim, "leave_details.reason");
-  const hasCertDoc = documents.some(
-    (doc) => doc.document_type === DocumentType.medicalCertification
-  ); // This enum is used because for MVP all certs will have the same doc type
 
   const metadataHeadingProps = {
     className: "margin-top-0 margin-bottom-05 text-base-dark",
@@ -37,32 +35,6 @@ export const ApplicationCard = (props) => {
   };
   const metadataValueProps = {
     className: "margin-top-0 margin-bottom-2 font-body-2xs text-medium",
-  };
-
-  const legalNotices = documents.filter((document) =>
-    [
-      DocumentType.approvalNotice,
-      DocumentType.denialNotice,
-      DocumentType.requestForInfoNotice,
-    ].includes(document.document_type)
-  );
-
-  const renderLegalNoticeRow = (legalNotice) => {
-    const downloadUrl = `/applications/${legalNotice.application_id}/documents/${legalNotice.fineos_document_id}`;
-    return (
-      <li key={legalNotice.fineos_document_id} className="font-body-2xs">
-        <a className="text-medium" href={downloadUrl}>
-          {t("components.applicationCard.noticeName", {
-            context: findKeyByValue(DocumentType, legalNotice.document_type),
-          })}
-        </a>
-        <div className="text-base-dark">
-          {t("components.applicationCard.noticeDate", {
-            date: formatDateRange(legalNotice.created_at),
-          })}
-        </div>
-      </li>
-    );
   };
 
   return (
@@ -165,50 +137,110 @@ export const ApplicationCard = (props) => {
           </ButtonLink>
         )}
 
-        {/* Legal Notices Section */}
         {hasLoadingDocumentsError && (
           <Alert noIcon>
             {t("components.applicationCard.documentsRequestError")}
           </Alert>
         )}
-        <div className="border-top border-base-lighter padding-top-2">
-          {claim.isCompleted && legalNotices.length > 0 && (
-            <div>
-              <Heading level="3" weight="normal">
-                {t("components.applicationCard.noticesHeading")}
-              </Heading>
 
-              <ul className="usa-list margin-top-1">
-                {legalNotices.map((notice) => renderLegalNoticeRow(notice))}
-              </ul>
-            </div>
-          )}
-
-          {/* Additional documents section */}
-          {claim.isCompleted &&
-            leaveReason === LeaveReason.bonding &&
-            !hasCertDoc && (
-              // This condition is used instead of isFutureBondingLeave because we want to continue showing the button after the placement or birth of the child
-              <React.Fragment>
-                <p>{t("components.applicationCard.futureBondingLeave")}</p>
-              </React.Fragment>
-            )}
-
-          {claim.isCompleted && (
-            <ButtonLink
-              className="display-block"
-              href={routeWithParams("claims.uploadDocsOptions", {
-                claim_id: claim.application_id,
-              })}
-            >
-              {t("components.applicationCard.uploadDocsButton")}
-            </ButtonLink>
-          )}
-        </div>
+        {claim.isCompleted && <CompletedApplicationDocsInfo {...props} />}
       </div>
     </article>
   );
 };
+
+/**
+ * Document-related information only displayed for Completed applications
+ */
+function CompletedApplicationDocsInfo(props) {
+  const { t } = useTranslation();
+  const { claim, documents } = props;
+
+  const hasCertDoc = documents.some(
+    (doc) => doc.document_type === DocumentType.medicalCertification
+  ); // This enum is used because for MVP all certs will have the same doc type
+
+  const leaveReason = get(claim, "leave_details.reason");
+  const legalNotices = documents.filter((document) =>
+    [
+      DocumentType.approvalNotice,
+      DocumentType.denialNotice,
+      DocumentType.requestForInfoNotice,
+    ].includes(document.document_type)
+  );
+
+  const hasLegalNotices = legalNotices.length > 0;
+  const needsBondingCertDoc =
+    leaveReason === LeaveReason.bonding && !hasCertDoc;
+
+  const containerClasses = classnames({
+    // Don't render a border if we only have the Button to render,
+    // which matches how the card is presented for non-Completed claims
+    "border-top border-base-lighter padding-top-2":
+      hasLegalNotices || needsBondingCertDoc,
+  });
+
+  return (
+    <div className={containerClasses}>
+      {hasLegalNotices && (
+        <React.Fragment>
+          <Heading level="3" weight="normal">
+            {t("components.applicationCard.noticesHeading")}
+          </Heading>
+
+          <ul className="usa-list margin-top-1">
+            {legalNotices.map((notice) => (
+              <LegalNoticeListItem
+                key={notice.fineos_document_id}
+                document={notice}
+              />
+            ))}
+          </ul>
+        </React.Fragment>
+      )}
+
+      {needsBondingCertDoc && (
+        // This condition is used instead of isFutureChildDate because we want
+        // to continue showing the button after the placement or birth of the child
+        <p>{t("components.applicationCard.futureBondingLeave")}</p>
+      )}
+
+      <ButtonLink
+        className="display-block"
+        href={routeWithParams("claims.uploadDocsOptions", {
+          claim_id: claim.application_id,
+        })}
+      >
+        {t("components.applicationCard.uploadDocsButton")}
+      </ButtonLink>
+    </div>
+  );
+}
+
+/**
+ * Link and metadata for a Legal notice
+ */
+function LegalNoticeListItem(props) {
+  const { document } = props;
+  const { t } = useTranslation();
+
+  const downloadUrl = `/applications/${document.application_id}/documents/${document.fineos_document_id}`;
+
+  return (
+    <li key={document.fineos_document_id} className="font-body-2xs">
+      <a className="text-medium" href={downloadUrl}>
+        {t("components.applicationCard.noticeName", {
+          context: findKeyByValue(DocumentType, document.document_type),
+        })}
+      </a>
+      <div className="text-base-dark">
+        {t("components.applicationCard.noticeDate", {
+          date: formatDateRange(document.created_at),
+        })}
+      </div>
+    </li>
+  );
+}
 
 ApplicationCard.propTypes = {
   appLogic: PropTypes.shape({
@@ -220,6 +252,15 @@ ApplicationCard.propTypes = {
    * Cards are displayed in a list. What position is this card?
    */
   number: PropTypes.number.isRequired,
+};
+
+CompletedApplicationDocsInfo.propTypes = {
+  claim: PropTypes.instanceOf(Claim).isRequired,
+  documents: PropTypes.arrayOf(PropTypes.instanceOf(Document)),
+};
+
+LegalNoticeListItem.propTypes = {
+  document: PropTypes.instanceOf(Document),
 };
 
 export default withClaimDocuments(ApplicationCard);

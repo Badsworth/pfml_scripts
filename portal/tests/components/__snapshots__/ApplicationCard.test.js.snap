@@ -1,58 +1,60 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`ApplicationCard displays legal notices 1`] = `
-<ul
-  className="usa-list margin-top-1"
+exports[`ApplicationCard displays legal notice 1`] = `
+<li
+  className="font-body-2xs"
+  key="mock-document-3"
 >
-  <li
-    className="font-body-2xs"
-    key="mock-document-3"
+  <a
+    className="text-medium"
+    href="/applications/mock_application_id/documents/mock-document-3"
   >
-    <a
-      className="text-medium"
-      href="/applications/mock_application_id/documents/mock-document-3"
-    >
-      Approval notice (PDF)
-    </a>
-    <div
-      className="text-base-dark"
-    >
-      Posted 1/1/2021
-    </div>
-  </li>
-  <li
-    className="font-body-2xs"
-    key="mock-document-4"
+    Approval notice (PDF)
+  </a>
+  <div
+    className="text-base-dark"
   >
-    <a
-      className="text-medium"
-      href="/applications/mock_application_id/documents/mock-document-4"
-    >
-      Denial notice (PDF)
-    </a>
-    <div
-      className="text-base-dark"
-    >
-      Posted 1/1/2021
-    </div>
-  </li>
-  <li
-    className="font-body-2xs"
-    key="mock-document-5"
+    Posted 1/1/2021
+  </div>
+</li>
+`;
+
+exports[`ApplicationCard displays legal notice 2`] = `
+<li
+  className="font-body-2xs"
+  key="mock-document-4"
+>
+  <a
+    className="text-medium"
+    href="/applications/mock_application_id/documents/mock-document-4"
   >
-    <a
-      className="text-medium"
-      href="/applications/mock_application_id/documents/mock-document-5"
-    >
-      Request for more information (PDF)
-    </a>
-    <div
-      className="text-base-dark"
-    >
-      Posted 1/1/2021
-    </div>
-  </li>
-</ul>
+    Denial notice (PDF)
+  </a>
+  <div
+    className="text-base-dark"
+  >
+    Posted 1/1/2021
+  </div>
+</li>
+`;
+
+exports[`ApplicationCard displays legal notice 3`] = `
+<li
+  className="font-body-2xs"
+  key="mock-document-5"
+>
+  <a
+    className="text-medium"
+    href="/applications/mock_application_id/documents/mock-document-5"
+  >
+    Request for more information (PDF)
+  </a>
+  <div
+    className="text-base-dark"
+  >
+    Posted 1/1/2021
+  </div>
+</li>
 `;
 
 exports[`ApplicationCard renders Alert inside the component when there is an error loading documents 1`] = `
@@ -86,9 +88,6 @@ exports[`ApplicationCard renders a card for the given application 1`] = `
     >
       Complete your application
     </ButtonLink>
-    <div
-      className="border-top border-base-lighter padding-top-2"
-    />
   </div>
 </article>
 `;

@@ -87,7 +87,9 @@ describe("ApplicationCard", () => {
   describe("when the claim status is Completed", () => {
     it("includes a button to upload additional documents", () => {
       const wrapper = render(new MockClaimBuilder().completed().create());
-      expect(wrapper.find("ButtonLink")).toHaveLength(1);
+      expect(
+        wrapper.find("CompletedApplicationDocsInfo").dive().find("ButtonLink")
+      ).toHaveLength(1);
     });
 
     describe("when it's a bonding claim with no cert doc", () => {
@@ -102,7 +104,7 @@ describe("ApplicationCard", () => {
     });
   });
 
-  it("displays legal notices", () => {
+  it("displays legal notice", () => {
     const claim = new MockClaimBuilder().completed().create();
     const documents = [
       new Document({
@@ -133,8 +135,13 @@ describe("ApplicationCard", () => {
     ];
 
     const wrapper = render(claim, { documents });
+    const listItems = wrapper
+      .find("CompletedApplicationDocsInfo")
+      .dive()
+      .find("LegalNoticeListItem");
 
-    expect(wrapper.find(".usa-list")).toMatchSnapshot();
+    expect.assertions(3);
+    listItems.forEach((listItem) => expect(listItem.dive()).toMatchSnapshot());
   });
 
   it("renders Alert inside the component when there is an error loading documents", () => {
