@@ -48,7 +48,7 @@ module "api" {
     "https://paidleave-test.mass.gov",
     "https://d1ah9hpoapx4f1.cloudfront.net",
 
-    # We're also going to allow requests from developer's machines for now, so they
+    # We're also going to allow requests from Portal developer's machines for now, so they
     # can test certain features without deploying to the test environment. This is not
     # really that secure since anyone can spin up a local server on port 3000 and hit our
     # API, but we're not heavily using the stage environment right now so it's fine.

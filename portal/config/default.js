@@ -10,12 +10,15 @@
 module.exports = {
   // We target the API stage environment for the systems we're dependent on,
   // even in dev and test. Read more here: https://lwd.atlassian.net/wiki/spaces/DD/pages/246612440/Environments
-  apiUrl: "https://paidleave-api-stage.mass.gov/api/v1",
+  // TODO (CP-1064): Revert temporary switch to Test environment
+  apiUrl: "https://paidleave-api-test.mass.gov/api/v1",
   awsConfig: {
     cognitoRegion: "us-east-1",
-    // Cognito Stage environment (must match whatever API environment we're targeting)
-    cognitoUserPoolId: "us-east-1_HpL4XslLg",
-    cognitoUserPoolWebClientId: "10rjcp71r8bnk4459c67bn18t8",
+    // Cognito Test environment (must match whatever API environment we're targeting)
+    // TODO (CP-1064): Revert temporary switch to Test environment
+    cognitoUserPoolId: "us-east-1_HhQSLYSIe",
+    // TODO (CP-1064): Revert temporary switch to Test environment
+    cognitoUserPoolWebClientId: "7sjb96tvg8251lrq5vdk7de9",
   },
   gtmConfig: {
     // Google Tag Manager Stage environment

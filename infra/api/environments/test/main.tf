@@ -42,7 +42,18 @@ module "api" {
     "https://paidleave-test.mass.gov",
     "https://d1ah9hpoapx4f1.cloudfront.net",
     "https://paidleave-api-test.mass.gov",
-    "https://67385ye4yb.execute-api.us-east-1.amazonaws.com"
+    "https://67385ye4yb.execute-api.us-east-1.amazonaws.com",
+
+    # Since we may temporarily point the Portal stage environment to API test
+    # as well, allow requests to come from that origin.
+    # Example: https://lwd.atlassian.net/browse/CP-1063
+    "https://paidleave-stage.mass.gov",
+
+    # We're also going to allow requests from Portal developer's machines for now, so they
+    # can test certain features without deploying to the test environment. This is not
+    # really that secure since anyone can spin up a local server on port 3000 and hit our
+    # API, but we're not heavily using the test environment right now so it's fine.
+    "http://localhost:3000"
   ]
 
   cognito_user_pool_arn                            = "arn:aws:cognito-idp:us-east-1:498823821309:userpool/us-east-1_HhQSLYSIe"
