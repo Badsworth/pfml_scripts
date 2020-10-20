@@ -521,6 +521,17 @@ exports[`Checklist renders multiple StepList components with list of Steps 1`] =
 </div>
 `;
 
+exports[`Checklist renders success message after submitting part one 1`] = `
+<Alert
+  className="margin-bottom-3"
+  heading="Part 1 of your application was confirmed successfully"
+  name="part-one-submitted-message"
+  state="success"
+>
+  Your in-progress application will be viewable by our Contact Center staff. If you need to make edits to Part 1, you'll need to call our Contact Center at shared.callCenterPhoneNumber. Now, you can work on Parts 2 and 3, and submit your application.
+</Alert>
+`;
+
 exports[`Checklist when Part 1 is submitted renders descriptions for Part 2 and 3 1`] = `"Entering payment information here leads to faster processing, but you can also call 833‑344‑7365."`;
 
 exports[`Checklist when Part 1 is submitted renders descriptions for Part 2 and 3 2`] = `"Uploading documents online leads to faster processing, but you can also fax documents to NNN-NNN-NNNN, or mail them to 123 Address."`;

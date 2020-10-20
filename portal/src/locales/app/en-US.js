@@ -391,6 +391,10 @@ const pages = {
     completed_uneditable: "Confirmed",
     documentsRequestError: "$t(shared.documentsRequestError)",
     edit: "Edit",
+    partOneSubmittedDescription:
+      "Your in-progress application will be viewable by our Contact Center staff. If you need to make edits to Part 1, you'll need to call our Contact Center at $t(shared.callCenterPhoneNumber). Now, you can work on Parts 2 and 3, and submit your application.",
+    partOneSubmittedHeading:
+      "Part 1 of your application was confirmed successfully",
     resume: "Resume",
     screenReaderNumberPrefix: "Step",
     start: "Start",

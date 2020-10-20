@@ -70,6 +70,23 @@ describe("Checklist", () => {
     });
   });
 
+  it("renders success message after submitting part one", () => {
+    const claim = new MockClaimBuilder().submitted().create();
+    const { wrapper } = renderWithAppLogic(Checklist, {
+      claimAttrs: claim,
+      diveLevels: 5,
+      props: {
+        query: { "part-one-submitted": "true", claim_id: claim.application_id },
+      },
+    });
+
+    const partOneSubmittedMessage = wrapper.find({
+      name: "part-one-submitted-message",
+    });
+    expect(partOneSubmittedMessage).toHaveLength(1);
+    expect(partOneSubmittedMessage).toMatchSnapshot();
+  });
+
   it("enables Review and Submit button when all Parts are completed", () => {
     const claim = new MockClaimBuilder().complete().create();
 

@@ -158,7 +158,10 @@ const useClaimsLogic = ({ appErrorsLogic, portalFlow, user }) => {
         setClaim(claim);
 
         const context = { claim, user };
-        const params = { claim_id: claim.application_id };
+        const params = {
+          claim_id: claim.application_id,
+          "part-one-submitted": "true",
+        };
         portalFlow.goToNextPage(context, params);
       }
     } catch (error) {

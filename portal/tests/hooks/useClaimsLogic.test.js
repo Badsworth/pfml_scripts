@@ -591,6 +591,16 @@ describe("useClaimsLogic", () => {
         );
       });
 
+      it("passes part-one-submitted into the route when the request succeeds", async () => {
+        await act(async () => {
+          await claimsLogic.submit(applicationId);
+        });
+
+        expect(mockRouter.push).toHaveBeenCalledWith(
+          expect.stringContaining(`&part-one-submitted=true`)
+        );
+      });
+
       it("catches exceptions thrown from the API module", async () => {
         jest.spyOn(console, "error").mockImplementationOnce(jest.fn());
         submitClaimMock.mockImplementationOnce(() => {

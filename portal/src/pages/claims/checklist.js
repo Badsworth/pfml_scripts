@@ -29,7 +29,9 @@ import withClaimDocuments from "../../hoc/withClaimDocuments";
 
 export const Checklist = (props) => {
   const { t } = useTranslation();
-  const { appLogic, claim, documents, isLoadingDocuments } = props;
+  const { appLogic, claim, documents, isLoadingDocuments, query } = props;
+
+  const partOneSubmitted = query["part-one-submitted"];
 
   const { appErrors } = appLogic;
   const hasLoadingDocumentsError = hasDocumentsLoadError(
@@ -216,6 +218,16 @@ export const Checklist = (props) => {
 
   return (
     <div className="measure-6">
+      {partOneSubmitted && (
+        <Alert
+          className="margin-bottom-3"
+          heading={t("pages.claimsChecklist.partOneSubmittedHeading")}
+          name="part-one-submitted-message"
+          state="success"
+        >
+          {t("pages.claimsChecklist.partOneSubmittedDescription")}
+        </Alert>
+      )}
       <BackButton
         label={t("pages.claimsChecklist.backButtonLabel")}
         href={routes.claims.dashboard}
@@ -272,6 +284,9 @@ Checklist.propTypes = {
   claim: PropTypes.instanceOf(Claim).isRequired,
   documents: PropTypes.arrayOf(PropTypes.instanceOf(Document)),
   isLoadingDocuments: PropTypes.bool,
+  query: PropTypes.shape({
+    "part-one-submitted": PropTypes.string,
+  }),
 };
 
 export default withClaim(withClaimDocuments(Checklist));
