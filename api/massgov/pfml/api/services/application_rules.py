@@ -7,7 +7,12 @@ from massgov.pfml.api.services.applications import (
     ReducedScheduleLeavePeriod,
 )
 from massgov.pfml.api.util.response import Issue, IssueRule, IssueType
-from massgov.pfml.db.models.applications import Application, LeaveReasonQualifier, LeaveType
+from massgov.pfml.db.models.applications import (
+    Application,
+    EmploymentStatus,
+    LeaveReasonQualifier,
+    LeaveType,
+)
 from massgov.pfml.db.models.employees import PaymentType
 
 
@@ -75,6 +80,19 @@ def get_conditional_issues(application: Application) -> List[Issue]:
                 rule=IssueRule.conditional,
                 message="mailing_address is required if has_mailing_address is set",
                 field="mailing_address",
+            )
+        )
+
+    if (
+        application.employer_notified is None
+        and application.employment_status_id is EmploymentStatus.EMPLOYED.employment_status_id
+    ):
+        issues.append(
+            Issue(
+                type=IssueType.required,
+                rule=IssueRule.conditional,
+                message="leave_details.employer_notified is required if employment_status is set to Employed",
+                field="leave_details.employer_notified",
             )
         )
 

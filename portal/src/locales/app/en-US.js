@@ -105,6 +105,10 @@ const errors = {
       employer_notification_date: {
         pattern: "Enter a valid notification date.",
       },
+      employer_notified: {
+        required:
+          "Select yes if you told your employer that you are taking leave",
+      },
       intermittent_leave_periods: {
         duration: {
           required: "Enter a duration.",

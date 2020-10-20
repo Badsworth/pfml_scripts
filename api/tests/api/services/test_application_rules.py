@@ -668,6 +668,7 @@ def test_payment_preferences_same_order(test_db_session, initialize_factories_se
         employment_status=EmploymentStatus.get_instance(
             test_db_session, template=EmploymentStatus.EMPLOYED
         ),
+        employer_notified=True,
         hours_worked_per_week=70,
         has_continuous_leave_periods=True,
         continuous_leave_periods=[ContinuousLeavePeriodFactory.create()],
@@ -702,3 +703,36 @@ def test_payment_preferences_same_order(test_db_session, initialize_factories_se
             "type": "required",
         },
     ]
+
+
+def test_employer_notified_required_for_employed_claimants(
+    test_db_session, initialize_factories_session
+):
+    test_app = ApplicationFactory.create(
+        employer_notified=None,
+        employment_status=EmploymentStatus.get_instance(
+            test_db_session, template=EmploymentStatus.EMPLOYED
+        ),
+    )
+    issues = get_conditional_issues(test_app)
+    assert [
+        Issue(
+            type=IssueType.required,
+            rule=IssueRule.conditional,
+            message="leave_details.employer_notified is required if employment_status is set to Employed",
+            field="leave_details.employer_notified",
+        )
+    ] == issues
+
+
+def test_allow_false_employer_notified_for_employed_claimants(
+    test_db_session, initialize_factories_session
+):
+    test_app = ApplicationFactory.create(
+        employer_notified=False,
+        employment_status=EmploymentStatus.get_instance(
+            test_db_session, template=EmploymentStatus.EMPLOYED
+        ),
+    )
+    issues = get_conditional_issues(test_app)
+    assert not issues
