@@ -30,12 +30,12 @@ Feature: Submit a medical claim that is happy, but financially ineligible, and i
     Then I add my identity document "MA ID"
     Given I am on the claims "checklist" page
     When I click on the checklist button called "Upload leave certification documents"
-    Then I add my leave certification documents
+    Then I add my leave certification document "HCP"
     Given I am on the claims "checklist" page
     Then I should review and submit the application
     Given I am on the claims "review" page
     Then I should have agreed and successfully submitted the claim
-    And I should be able to return to the portal dashboard
+    And I should be able to confirm claim was submitted successfully
 
   @fineos
   Scenario: As a CSR (Savilinx), I should be able to deny a claim based off financial ineligibility

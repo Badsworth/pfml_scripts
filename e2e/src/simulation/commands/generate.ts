@@ -12,7 +12,7 @@ import createClaimIndexStream from "../claimIndex";
 import { promisify } from "util";
 import { pipeline } from "stream";
 import { SystemWideArgs } from "../../cli";
-import { getEmployee } from "../../util";
+import { getEmployee } from "../../utils";
 
 // Create a promised version of the pipeline function.
 const pipelineP = promisify(pipeline);

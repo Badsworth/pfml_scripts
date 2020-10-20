@@ -29,7 +29,7 @@ Feature: Submit a medical claim that is missing an HCP, and refer it to DFML
     Then I should review and submit the application
     Given I am on the claims "review" page
     Then I should have agreed and successfully submitted the claim
-    And I should be able to return to the portal dashboard
+    And I should be able to confirm claim was submitted successfully
 
   @fineos
   Scenario: As a CSR (Savilix), I should be able to confirm that the HCP is missing

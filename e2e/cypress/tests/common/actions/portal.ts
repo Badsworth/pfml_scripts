@@ -449,8 +449,8 @@ export function addId(idType: string): void {
   cy.contains("button", "Save and continue").click();
 }
 
-export function addLeaveDocs(): void {
-  cy.labelled("Choose a file").attachFile("HCP.pdf");
+export function addLeaveDocs(leaveType: string): void {
+  cy.labelled("Choose a file").attachFile(`${leaveType}.pdf`);
   cy.contains("button", "Save and continue").click();
 }
 
@@ -502,8 +502,11 @@ export function confirmSubmit(): void {
 }
 
 export function goToDashboard(): void {
-  cy.contains("Return to dashboard").click();
-  cy.url().should("equal", `${Cypress.config().baseUrl}/`);
+  cy.contains("Return to applications").click();
+}
+
+export function confirmClaimSubmissionSucces(): void {
+  cy.url().should("include", "/claims/success");
 }
 
 export function viewClaim(): void {

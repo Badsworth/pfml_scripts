@@ -15,6 +15,13 @@ Then("I should be able to return to the portal dashboard", function () {
   portal.goToDashboard();
 });
 
+Then(
+  "I should be able to confirm claim was submitted successfully",
+  function () {
+    portal.confirmClaimSubmissionSucces();
+  }
+);
+
 /**
  * Assert the data matches previously filled info
  */
@@ -194,8 +201,10 @@ Then("I add my identity document {string}", function (
   portal.addId(idType);
 });
 
-Then("I add my leave certification documents", function (): void {
-  portal.addLeaveDocs();
+Then("I add my leave certification document {string}", function (
+  leaveType: string
+): void {
+  portal.addLeaveDocs(leaveType);
 });
 
 Then("I should add weekly wage", function (): void {
