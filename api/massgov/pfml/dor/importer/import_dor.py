@@ -953,10 +953,12 @@ def parse_employer_file(employer_file_path, decrypter):
 
             line_count = line_count + 1
 
-            if len(row) != EMPLOYER_FILE_ROW_LENGTH:
+            if len(row.strip("\n")) != EMPLOYER_FILE_ROW_LENGTH:
                 employer = EMPLOYER_FILE_FORMAT.parse_line(row)
                 invalid_employer_key_line_nums.append(
-                    "Line {0}, account key: {1}".format(line_count, employer["account_key"])
+                    "Line {0}, account key: {1}, line length: {2}".format(
+                        line_count, employer["account_key"], len(row)
+                    )
                 )
                 continue
 
