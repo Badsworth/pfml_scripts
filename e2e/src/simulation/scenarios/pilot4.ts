@@ -187,8 +187,7 @@ export const BUNH = chance([
 ]);
 
 export default chance([
-  // @todo: Doublecheck probabilities here.
-  [1, BHAP],
-  [1, BGBM],
-  [1, BUNH],
+  [13, BHAP],
+  [3, BGBM],
+  [4, BUNH],
 ]);
