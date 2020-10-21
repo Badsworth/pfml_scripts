@@ -158,8 +158,7 @@ export const BUNH3 = scenario("BUNH3", {
   bondingDate: "past",
   docs: {
     OOSID: {},
-    // @todo: Implement cat pic.
-    // CATPIC: {},
+    CATPIC: {},
   },
 });
 

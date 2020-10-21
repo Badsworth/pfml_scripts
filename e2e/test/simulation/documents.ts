@@ -245,4 +245,11 @@ describe("Documents", function () {
       "Foster Care Placement": true,
     });
   });
+
+  it("Should generate a cat picture", async function () {
+    const bytes = await generators.CATPIC(claim, {});
+    const values = await parsePDF(bytes);
+    await fs.promises.writeFile(`${__dirname}/../../forms/cat-pic.pdf`, bytes);
+    expect(values).toMatchObject({});
+  });
 });

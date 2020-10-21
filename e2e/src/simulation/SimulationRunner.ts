@@ -146,6 +146,7 @@ function getDocumentType(
     case "BIRTHCERTIFICATE":
     case "PREBIRTH":
     case "FOSTERPLACEMENT":
+    case "CATPIC":
       return "State Managed Paid Leave Confirmation";
     case "MASSID":
     case "OOSID":

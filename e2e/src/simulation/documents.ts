@@ -307,6 +307,11 @@ const generateAdoptionCertificate: DocumentGenerator = async (claim) => {
   return fillPDFBytes(`${__dirname}/../../forms/foster-adopt-cert.pdf`, data);
 };
 
+const generateCatPicture: DocumentGenerator = async () => {
+  const data = {};
+  return fillPDFBytes(`${__dirname}/../../forms/cat-pic.pdf`, data);
+};
+
 const generators = {
   MASSID: generateMassID,
   OOSID: generateOOSID,
@@ -315,6 +320,7 @@ const generators = {
   PREBIRTH: generatePrebirthLetter,
   FOSTERPLACEMENT: generateFosterPlacementLetter,
   ADOPTIONCERT: generateAdoptionCertificate,
+  CATPIC: generateCatPicture,
 };
 
 export default generators;
