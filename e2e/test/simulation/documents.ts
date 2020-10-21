@@ -246,6 +246,18 @@ describe("Documents", function () {
     });
   });
 
+  it("Should generate a personal letter", async function () {
+    const bytes = await generators.PERSONALLETTER(claim, {});
+    const values = await parsePDF(bytes);
+    expect(values).toMatchObject({
+      Date: "01/01/2021",
+      "Name of Signee": "Robert Uncleman",
+      Relationship: "Uncle",
+      "Name of Parent(s)": "John Smith",
+      "Due Date": "08/01/2020",
+    });
+  });
+
   it("Should generate a cat picture", async function () {
     const bytes = await generators.CATPIC(claim, {});
     const values = await parsePDF(bytes);

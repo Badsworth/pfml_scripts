@@ -145,8 +145,7 @@ export const BUNH2 = scenario("BUNH2", {
   bondingDate: "past",
   docs: {
     MASSID: {},
-    // @todo: Implement personal letter.
-    // PERSONALLETTER: {},
+    PERSONALLETTER: {},
   },
 });
 

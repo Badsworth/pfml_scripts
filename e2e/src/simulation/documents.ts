@@ -307,6 +307,27 @@ const generateAdoptionCertificate: DocumentGenerator = async (claim) => {
   return fillPDFBytes(`${__dirname}/../../forms/foster-adopt-cert.pdf`, data);
 };
 
+const generatePersonalLetter: DocumentGenerator = async (
+  claim,
+  { birthDate }: { birthDate?: string }
+) => {
+  if (!claim.leave_details?.child_birth_date) {
+    throw new Error(
+      "Claim missing required properties to generate a pre-birth letter"
+    );
+  }
+  const dob = birthDate
+    ? parseISO(birthDate)
+    : parseISO(claim.leave_details?.child_birth_date);
+  const data = {
+    Date: "01/01/2021",
+    "Name of Signee": "Robert Uncleman",
+    Relationship: "Uncle",
+    "Name of Parent(s)": `${claim.first_name} ${claim.last_name}`,
+    "Due Date": format(dob, "MM/dd/yyyy"),
+  };
+  return fillPDFBytes(`${__dirname}/../../forms/personal-letter.pdf`, data);
+};
 const generateCatPicture: DocumentGenerator = async () => {
   const data = {};
   return fillPDFBytes(`${__dirname}/../../forms/cat-pic.pdf`, data);
@@ -320,6 +341,7 @@ const generators = {
   PREBIRTH: generatePrebirthLetter,
   FOSTERPLACEMENT: generateFosterPlacementLetter,
   ADOPTIONCERT: generateAdoptionCertificate,
+  PERSONALLETTER: generatePersonalLetter,
   CATPIC: generateCatPicture,
 };
 
