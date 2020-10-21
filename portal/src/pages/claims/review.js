@@ -4,6 +4,7 @@ import Claim, {
   PaymentAccountType,
   PaymentPreferenceMethod,
   ReasonQualifier,
+  WorkPatternType,
 } from "../../models/Claim";
 import Document, { DocumentType } from "../../models/Document";
 import EmployerBenefit, {
@@ -388,6 +389,18 @@ export const Review = (props) => {
           })}
         </ReviewRow>
       )}
+
+      <ReviewRow
+        level={reviewRowLevel}
+        label={t("pages.claimsReview.workPatternTypeLabel")}
+      >
+        {t("pages.claimsReview.workPatternTypeValue", {
+          context: findKeyByValue(
+            WorkPatternType,
+            get(claim, "work_pattern.work_pattern_type")
+          ),
+        })}
+      </ReviewRow>
 
       {/* OTHER LEAVE */}
       <ReviewHeading

@@ -11,6 +11,7 @@ import Claim, {
   ReasonQualifier,
   ReducedScheduleLeavePeriod,
   WorkPattern,
+  WorkPatternType,
 } from "../src/models/Claim";
 import Document, { DocumentType } from "../src/models/Document";
 import EmployerBenefit, {
@@ -340,6 +341,7 @@ export class MockClaimBuilder {
     this.employed();
     this.noOtherLeave();
     this.address();
+    this.workPattern({ work_pattern_type: WorkPatternType.fixed });
 
     if (!options.excludeLeavePeriod) this.continuous();
 

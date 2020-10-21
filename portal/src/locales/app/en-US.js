@@ -860,6 +860,10 @@ const pages = {
     userNameLabel: "Name",
     userStateIdLabel: "Driver's License Number",
     userTaxIdLabel: "Social Security Number or ITIN",
+    workPatternTypeLabel: "Work schedule type",
+    workPatternTypeValue_fixed: "Consistent from week to week",
+    workPatternTypeValue_rotating: "Hours alternate between weekly schedules",
+    workPatternTypeValue_variable: "Not consistent from week to week",
   },
   claimsSsn: {
     lead:

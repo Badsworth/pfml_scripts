@@ -2,7 +2,7 @@ import {
   DurationBasis,
   FrequencyIntervalBasis,
   IntermittentLeavePeriod,
-  LeaveReason,
+  WorkPatternType,
 } from "../../../src/models/Claim";
 import EmployerBenefit, {
   EmployerBenefitType,
@@ -39,20 +39,17 @@ describe("Part 1 Review Page", () => {
     });
   });
 
-  describe("when data is empty", () => {
-    it("does not render strings like 'null' or 'undefined'", () => {
-      const { wrapper } = renderWithAppLogic(Review, {
-        claimAttrs: {
-          tax_identifier: "***-**-****",
-          leave_details: {
-            reason: LeaveReason.medical,
-          },
-        },
-        diveLevels,
-      });
-
-      expect(wrapper).toMatchSnapshot();
+  it("does not render strings 'null', 'undefined', or missing translations", () => {
+    const { wrapper } = renderWithAppLogic(Review, {
+      claimAttrs: new MockClaimBuilder().part1Complete().create(),
+      diveLevels,
     });
+
+    const html = wrapper.html();
+
+    expect(html).not.toMatch("null");
+    expect(html).not.toMatch("undefined");
+    expect(html).not.toMatch("pages.claimsReview");
   });
 
   it("submits the application when the user clicks Submit", () => {
@@ -96,6 +93,26 @@ describe("Final Review Page", () => {
   it("renders a spinner for loading documents", () => {
     expect(wrapper.find("Spinner")).toHaveLength(1);
     expect(wrapper.exists({ label: "Number of files uploaded" })).toBe(false);
+  });
+});
+
+describe("Work patterns", () => {
+  it("has internationalized strings for each work pattern type", () => {
+    expect.assertions();
+
+    Object.values(WorkPatternType).forEach((work_pattern_type) => {
+      const { wrapper } = renderWithAppLogic(Review, {
+        claimAttrs: new MockClaimBuilder()
+          .part1Complete()
+          .workPattern({ work_pattern_type })
+          .create(),
+        diveLevels,
+      });
+
+      expect(
+        wrapper.find({ label: "Work schedule type" }).prop("children")
+      ).toMatchSnapshot();
+    });
   });
 });
 

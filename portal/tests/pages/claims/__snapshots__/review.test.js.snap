@@ -179,6 +179,12 @@ exports[`Final Review Page when all data is present renders Review page with fin
   >
     Notified employer on 1/1/2021
   </ReviewRow>
+  <ReviewRow
+    label="Work schedule type"
+    level="3"
+  >
+    Consistent from week to week
+  </ReviewRow>
   <ReviewHeading
     editText="Edit"
     level="2"
@@ -519,149 +525,12 @@ exports[`Part 1 Review Page when all data is present renders Review page with Pa
   >
     Notified employer on 1/1/2021
   </ReviewRow>
-  <ReviewHeading
-    editHref="/claims/employer-benefits?claim_id=mock_application_id"
-    editText="Edit"
-    level="3"
-  >
-    Other leave, income, and benefits
-  </ReviewHeading>
   <ReviewRow
-    label="Employer-sponsored benefits?"
+    label="Work schedule type"
     level="4"
   >
-    No
+    Consistent from week to week
   </ReviewRow>
-  <ReviewRow
-    label="Other sources of income?"
-    level="4"
-  >
-    No
-  </ReviewRow>
-  <ReviewRow
-    editText="Edit"
-    label="Previous paid or unpaid leave?"
-    level="4"
-  >
-    No
-  </ReviewRow>
-  <div
-    className="margin-top-6 margin-bottom-2"
-  >
-    <p>
-      Once you review and confirm Part 1, your in-progress application will be viewable by our Contact Center staff. If you need to make edits to Part 1, you’ll need to contact our Contact Center at 833‑344‑7365.
-    </p>
-    <p>
-      We’ll also notify your employer that you’ve started an application for paid family and medical leave.
-    </p>
-    <p>
-      Next, you’ll be able to work on Parts 2 and 3, and submit your application.
-    </p>
-  </div>
-  <Button
-    className="margin-top-3"
-    loading={false}
-    onClick={[Function]}
-    type="button"
-  >
-    Submit Part 1
-  </Button>
-</div>
-`;
-
-exports[`Part 1 Review Page when data is empty does not render strings like 'null' or 'undefined' 1`] = `
-<div
-  className="measure-6"
->
-  <BackButton />
-  <Title
-    hidden={true}
-  >
-    Check your answers before submitting your application.
-  </Title>
-  <Heading
-    className="margin-top-0"
-    level="2"
-    size="1"
-  >
-    <HeadingPrefix>
-      Part 1
-    </HeadingPrefix>
-    Review and confirm: Tell us about yourself and your leave
-  </Heading>
-  <ReviewHeading
-    editHref="/claims/name?claim_id=mock_application_id"
-    editText="Edit"
-    level="3"
-  >
-    Your identity
-  </ReviewHeading>
-  <ReviewRow
-    label="Name"
-    level="4"
-  >
-      
-  </ReviewRow>
-  <ReviewRow
-    label="Residential address"
-    level="4"
-  />
-  <ReviewRow
-    label="Social Security Number or ITIN"
-    level="4"
-  >
-    ***-**-****
-  </ReviewRow>
-  <ReviewRow
-    label="Date of birth"
-    level="4"
-  >
-    **/**/****
-  </ReviewRow>
-  <ReviewHeading
-    editHref="/claims/leave-reason?claim_id=mock_application_id"
-    editText="Edit"
-    level="3"
-  >
-    Leave details
-  </ReviewHeading>
-  <ReviewRow
-    label="Leave type"
-    level="4"
-  >
-    Medical leave
-  </ReviewRow>
-  <ReviewRow
-    label="Are you pregnant or have you recently given birth?"
-    level="4"
-  >
-    No
-  </ReviewRow>
-  <ReviewRow
-    label="Continuous leave"
-    level="4"
-  >
-    No
-  </ReviewRow>
-  <ReviewRow
-    label="Reduced leave schedule"
-    level="4"
-  >
-    No
-  </ReviewRow>
-  <ReviewRow
-    label="Intermittent leave"
-    level="4"
-  >
-    No
-  </ReviewRow>
-  <ReviewHeading
-    editHref="/claims/employment-status?claim_id=mock_application_id"
-    editText="Edit"
-    level="3"
-  >
-    Employment information
-  </ReviewHeading>
   <ReviewHeading
     editHref="/claims/employer-benefits?claim_id=mock_application_id"
     editText="Edit"
@@ -729,3 +598,9 @@ exports[`PreviousLeaveList when data are missing doesn't render missing data 1`]
   reviewRowLevel="4"
 />
 `;
+
+exports[`Work patterns has internationalized strings for each work pattern type 1`] = `"Consistent from week to week"`;
+
+exports[`Work patterns has internationalized strings for each work pattern type 2`] = `"Hours alternate between weekly schedules"`;
+
+exports[`Work patterns has internationalized strings for each work pattern type 3`] = `"Not consistent from week to week"`;
