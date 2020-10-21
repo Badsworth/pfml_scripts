@@ -37,6 +37,7 @@ import { fields as reasonPregnancyFields } from "../pages/claims/reason-pregnanc
 import routes from "../routes";
 import { fields as ssnFields } from "../pages/claims/ssn";
 import { fields as stateIdFields } from "../pages/claims/state-id";
+import { fields as workPatternTypeFields } from "../pages/claims/work-pattern-type";
 
 /**
  * @see https://xstate.js.org/docs/guides/guards.html
@@ -387,7 +388,7 @@ export default {
         fields: notifiedEmployerFields,
       },
       on: {
-        CONTINUE: routes.claims.checklist,
+        CONTINUE: routes.claims.workPatternType,
       },
     },
     [routes.claims.paymentMethod]: {
@@ -422,6 +423,15 @@ export default {
         UPLOAD_ID: routes.claims.uploadId,
         UPLOAD_MASS_ID: routes.claims.uploadId,
         UPLOAD_CERTIFICATION: routes.claims.uploadCertification,
+      },
+    },
+    [routes.claims.workPatternType]: {
+      meta: {
+        step: ClaimSteps.employerInformation,
+        fields: workPatternTypeFields,
+      },
+      on: {
+        CONTINUE: routes.claims.checklist,
       },
     },
   },

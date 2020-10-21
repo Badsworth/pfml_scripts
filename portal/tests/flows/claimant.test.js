@@ -205,6 +205,11 @@ const machineTests = {
       test: () => {},
     },
   },
+  [routes.claims.workPatternType]: {
+    meta: {
+      test: () => {},
+    },
+  },
 };
 
 const machineConfigsWithTests = {

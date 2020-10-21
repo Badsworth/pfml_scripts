@@ -52,6 +52,7 @@ const routes = {
     uploadCertification: "/claims/upload-certification",
     uploadDocsOptions: "/claims/upload-docs-options",
     uploadId: "/claims/upload-id",
+    workPatternType: "/claims/work-pattern-type",
   },
   employers: {
     dashboard: "/employers",
