@@ -150,6 +150,7 @@ export default class Step extends BaseModel {
           "claim.leave_details.intermittent_leave_periods[0]",
           "claim.leave_details.reason_qualifier",
           "claim.leave_details.reduced_schedule_leave_periods[0]",
+          "claim.residential_address.line_2",
           "claim.mass_id",
           "claim.middle_name",
           "claim.other_incomes",
