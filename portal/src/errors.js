@@ -16,6 +16,16 @@ export class NetworkError extends Error {
 }
 
 /**
+ * A fetch request failed due to a 404 error
+ */
+export class NotFoundError extends Error {
+  constructor(...params) {
+    super(...params);
+    this.name = "NotFoundError";
+  }
+}
+
+/**
  * A transition between the current route state to the next route failed most likely because
  * a CONTINUE transition was not defined for the current route.
  */

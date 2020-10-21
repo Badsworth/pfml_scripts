@@ -25,7 +25,7 @@ describe("withClaims", () => {
   });
 
   it("Shows spinner when claims are not loaded", () => {
-    appLogic.claims.claims = null;
+    appLogic.claims.claims = new ClaimCollection();
     act(() => {
       wrapper = shallow(<WrappedComponent appLogic={appLogic} />);
     });
@@ -41,7 +41,7 @@ describe("withClaims", () => {
   });
 
   it("loads claims", () => {
-    appLogic.claims.claims = null;
+    appLogic.claims.claims = new ClaimCollection();
     render();
     expect(appLogic.claims.loadAll).toHaveBeenCalledTimes(1);
   });
@@ -55,6 +55,8 @@ describe("withClaims", () => {
 
   it("does not load claims if claims have already been loaded", () => {
     appLogic.claims.claims = new ClaimCollection([]);
+    appLogic.claims.hasLoadedAll = true;
+
     render();
     expect(appLogic.claims.loadAll).not.toHaveBeenCalled();
   });
@@ -66,6 +68,7 @@ describe("withClaims", () => {
       const claim = new Claim({ application_id: "mock-application-id" });
       const claims = new ClaimCollection([claim]);
       appLogic.claims.claims = claims;
+      appLogic.claims.hasLoadedAll = true;
       render();
     });
 

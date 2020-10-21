@@ -22,6 +22,8 @@ export default jest.fn(() => ({
     complete: jest.fn(),
     create: jest.fn(() => new Claim({ application_id: uniqueId() })),
     get: jest.fn(),
+    hasLoadedAll: false,
+    load: jest.fn(),
     loadAll: jest.fn(),
     submit: jest.fn(),
     update: jest.fn(),

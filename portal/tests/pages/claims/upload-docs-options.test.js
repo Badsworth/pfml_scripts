@@ -19,7 +19,6 @@ describe("UploadDocsOptions", () => {
         .medicalLeaveReason()
         .completed()
         .create(),
-      diveLevels: 2,
     }));
     expect(wrapper).toMatchSnapshot();
     expect(wrapper.html()).not.toMatch("Proof of placement");

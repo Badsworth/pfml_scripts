@@ -1,15 +1,17 @@
+import { BadRequestError, NotFoundError } from "../../src/errors";
 import Claim, { ClaimStatus } from "../../src/models/Claim";
 import { MockClaimBuilder, testHook } from "../test-utils";
 import {
   completeClaimMock,
   createClaimMock,
+  getClaimMock,
+  getClaimMockApplicationId,
   getClaimsMock,
   submitClaimMock,
   updateClaimMock,
 } from "../../src/api/ClaimsApi";
 import AppErrorInfo from "../../src/models/AppErrorInfo";
 import AppErrorInfoCollection from "../../src/models/AppErrorInfoCollection";
-import { BadRequestError } from "../../src/errors";
 import ClaimCollection from "../../src/models/ClaimCollection";
 import User from "../../src/models/User";
 import { act } from "react-dom/test-utils";
@@ -23,8 +25,7 @@ jest.mock("../../src/api/ClaimsApi");
 jest.mock("../../src/services/tracker");
 
 describe("useClaimsLogic", () => {
-  const applicationId = "mock-application-id";
-  let appErrorsLogic, claimsLogic, portalFlow, user;
+  let appErrorsLogic, applicationId, claimsLogic, portalFlow, user;
 
   function renderHook() {
     testHook(() => {
@@ -35,6 +36,7 @@ describe("useClaimsLogic", () => {
   }
 
   beforeEach(() => {
+    applicationId = "mock-application-id";
     mockRouter.pathname = routes.home;
     user = new User({ user_id: "mock-user-id" });
   });
@@ -45,10 +47,102 @@ describe("useClaimsLogic", () => {
     portalFlow = null;
   });
 
-  it("returns claims with null value", () => {
+  it("sets initial claims data to empty collection", () => {
     renderHook();
 
-    expect(claimsLogic.claims).toBeNull();
+    expect(claimsLogic.claims).toBeInstanceOf(ClaimCollection);
+    expect(claimsLogic.claims.items).toHaveLength(0);
+  });
+
+  describe("load", () => {
+    beforeEach(() => {
+      // Make sure the ID we're loading matches what the API will return to us so caching works as
+      applicationId = getClaimMockApplicationId;
+
+      renderHook();
+    });
+
+    it("asynchronously fetches a claim and adds it to claims collection", async () => {
+      await act(async () => {
+        await claimsLogic.load(applicationId);
+      });
+
+      const claims = claimsLogic.claims.items;
+
+      expect(claims).toHaveLength(1);
+      expect(claims[0]).toBeInstanceOf(Claim);
+      expect(getClaimMock).toHaveBeenCalledTimes(1);
+    });
+
+    it("only makes api request if claim has not been loaded", async () => {
+      await act(async () => {
+        await claimsLogic.load(applicationId);
+        await claimsLogic.load(applicationId);
+      });
+
+      expect(getClaimMock).toHaveBeenCalledTimes(1);
+    });
+
+    it("skips API request when claim already exists in the collection", async () => {
+      await act(async () => {
+        await claimsLogic.loadAll();
+        await claimsLogic.load(applicationId);
+      });
+
+      expect(getClaimMock).toHaveBeenCalledTimes(0);
+    });
+
+    it("clears prior errors", async () => {
+      act(() => {
+        appErrorsLogic.setAppErrors(
+          new AppErrorInfoCollection([new AppErrorInfo()])
+        );
+      });
+
+      await act(async () => {
+        await claimsLogic.load(applicationId);
+      });
+
+      expect(appErrorsLogic.appErrors.items).toHaveLength(0);
+    });
+
+    describe("when request is unsuccessful", () => {
+      beforeEach(() => {
+        jest.spyOn(console, "error").mockImplementationOnce(jest.fn());
+      });
+
+      it("throws an error if user has not been loaded", async () => {
+        user = null;
+        renderHook();
+        await expect(claimsLogic.load).rejects.toThrow(/Cannot load claim/);
+      });
+
+      it("redirects to /applications page if claim wasn't found", async () => {
+        getClaimMock.mockImplementationOnce(() => {
+          throw new NotFoundError();
+        });
+
+        await act(async () => {
+          await claimsLogic.load(applicationId);
+        });
+
+        expect(mockRouter.push).toHaveBeenCalledWith(routes.applications);
+      });
+
+      it("catches exceptions thrown from the API module", async () => {
+        getClaimMock.mockImplementationOnce(() => {
+          throw new BadRequestError();
+        });
+
+        await act(async () => {
+          await claimsLogic.load(applicationId);
+        });
+
+        expect(appErrorsLogic.appErrors.items[0].name).toEqual(
+          "BadRequestError"
+        );
+      });
+    });
   });
 
   describe("loadAll", () => {
@@ -65,14 +159,16 @@ describe("useClaimsLogic", () => {
       expect(getClaimsMock).toHaveBeenCalled();
     });
 
-    it("only makes api request if claims have not been loaded", async () => {
+    it("only makes api request if all claims have not been loaded", async () => {
       await act(async () => {
+        // load a single application so that the claims collection is not empty
+        await claimsLogic.load(getClaimMockApplicationId);
+        // this should make an API request since ALL claims haven't been loaded yet
         await claimsLogic.loadAll();
+        // but this shouldn't, since we've already loaded all claims
         await claimsLogic.loadAll();
       });
 
-      const claims = claimsLogic.claims.items;
-      expect(claims[0]).toBeInstanceOf(Claim);
       expect(getClaimsMock).toHaveBeenCalledTimes(1);
     });
 
@@ -171,35 +267,18 @@ describe("useClaimsLogic", () => {
       expect(mockRouter.push).not.toHaveBeenCalled();
     });
 
-    describe("when claims have not been previously loaded", () => {
-      let claim;
-
-      beforeEach(async () => {
-        claim = new Claim({ application_id: "12345" });
-        createClaimMock.mockResolvedValueOnce({
-          claim,
-          success: true,
-        });
-
-        getClaimsMock.mockImplementationOnce(() => {
-          return {
-            success: true,
-            claims: new ClaimCollection([claim]),
-          };
-        });
-
-        await act(async () => {
-          await claimsLogic.create();
-        });
+    it("adds the claim to a new collection when claims weren't loaded yet", async () => {
+      const claim = new Claim({ application_id: "12345" });
+      createClaimMock.mockResolvedValueOnce({
+        claim,
+        success: true,
       });
 
-      it("calls claimsApi.getClaims", () => {
-        expect(getClaimsMock).toHaveBeenCalledTimes(1);
+      await act(async () => {
+        await claimsLogic.create();
       });
 
-      it("updates claimsLogic.claims with the new claim", () => {
-        expect(claimsLogic.claims.items).toContain(claim);
-      });
+      expect(claimsLogic.claims.items).toContain(claim);
     });
 
     describe("when claims have previously been loaded", () => {
@@ -227,13 +306,8 @@ describe("useClaimsLogic", () => {
 
         await act(async () => {
           await claimsLogic.loadAll();
-          getClaimsMock.mockClear(); // to clear the getClaimsMock calls
           await claimsLogic.create();
         });
-      });
-
-      it("should not call claimsApi.getClaims", () => {
-        expect(getClaimsMock).not.toHaveBeenCalled();
       });
 
       it("stores the new claim", () => {

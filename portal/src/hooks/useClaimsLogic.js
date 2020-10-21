@@ -1,9 +1,11 @@
+import { NotFoundError, ValidationError } from "../errors";
+import { useMemo, useState } from "react";
+import ClaimCollection from "../models/ClaimCollection";
 import ClaimsApi from "../api/ClaimsApi";
-import { ValidationError } from "../errors";
 import getRelevantIssues from "../utils/getRelevantIssues";
 import { merge } from "lodash";
+import routes from "../routes";
 import useCollectionState from "./useCollectionState";
-import { useMemo } from "react";
 
 const useClaimsLogic = ({ appErrorsLogic, portalFlow, user }) => {
   // State representing the collection of claims for the current user.
@@ -15,17 +17,44 @@ const useClaimsLogic = ({ appErrorsLogic, portalFlow, user }) => {
     addItem: addClaim,
     updateItem: setClaim,
     setCollection: setClaims,
-  } = useCollectionState(null); // Set initial value to null to lazy load claims
+  } = useCollectionState(new ClaimCollection());
+
+  // Track whether the loadAll method has been called. Checking that claims
+  // is set isn't sufficient, since it may only include a subset of applications
+  // if loadAll hasn't been called yet
+  const [hasLoadedAll, setHasLoadedAll] = useState(false);
 
   const claimsApi = useMemo(() => new ClaimsApi({ user }), [user]);
 
   /**
-   * Load all claims for user
-   * This must be called before claims are available
+   * Load a single claim
+   * @param {string} application_id - ID of claim to load
+   */
+  const load = async (application_id) => {
+    if (!user) throw new Error("Cannot load claim before user is loaded");
+    if (claims && claims.get(application_id)) return;
+
+    appErrorsLogic.clearErrors();
+
+    try {
+      const { claim } = await claimsApi.getClaim(application_id);
+      addClaim(claim);
+    } catch (error) {
+      if (error instanceof NotFoundError) {
+        return portalFlow.goTo(routes.applications);
+      }
+
+      appErrorsLogic.catchError(error);
+    }
+  };
+
+  /**
+   * Load all claims for the authenticated user
    */
   const loadAll = async () => {
     if (!user) throw new Error("Cannot load claims before user is loaded");
-    if (claims) return;
+    if (hasLoadedAll) return;
+
     appErrorsLogic.clearErrors();
 
     try {
@@ -33,6 +62,7 @@ const useClaimsLogic = ({ appErrorsLogic, portalFlow, user }) => {
 
       if (success) {
         setClaims(claims);
+        setHasLoadedAll(true);
       }
     } catch (error) {
       appErrorsLogic.catchError(error);
@@ -124,11 +154,7 @@ const useClaimsLogic = ({ appErrorsLogic, portalFlow, user }) => {
       const { claim, success } = await claimsApi.createClaim();
 
       if (success) {
-        if (!claims) {
-          await loadAll();
-        } else {
-          addClaim(claim);
-        }
+        addClaim(claim);
 
         const context = { claim, user };
         const params = { claim_id: claim.application_id };
@@ -173,6 +199,8 @@ const useClaimsLogic = ({ appErrorsLogic, portalFlow, user }) => {
     claims,
     complete,
     create,
+    hasLoadedAll,
+    load,
     loadAll,
     update,
     submit,

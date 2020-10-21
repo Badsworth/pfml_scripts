@@ -21,7 +21,7 @@ const useDocumentsLogic = ({ appErrorsLogic }) => {
     collection: documents,
     addItem: addDocument,
     addItems: addDocuments,
-  } = useCollectionState(new DocumentCollection([]));
+  } = useCollectionState(new DocumentCollection());
 
   const documentsApi = useMemo(() => new DocumentsApi(), []);
   const [loadedApplicationDocs, setLoadedApplicationDocs] = useState([]);

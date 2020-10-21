@@ -21,6 +21,9 @@ import { shallow } from "enzyme";
 
 jest.mock("../../../src/hooks/useAppLogic");
 
+// Dive more levels to account for withClaimDocuments HOC
+const diveLevels = 4;
+
 describe("Part 1 Review Page", () => {
   describe("when all data is present", () => {
     it("renders Review page with Part 1 content and edit links", () => {
@@ -29,7 +32,7 @@ describe("Part 1 Review Page", () => {
           .part1Complete()
           .mailingAddress()
           .create(),
-        diveLevels: 5,
+        diveLevels,
       });
 
       expect(wrapper).toMatchSnapshot();
@@ -45,7 +48,7 @@ describe("Part 1 Review Page", () => {
             reason: LeaveReason.medical,
           },
         },
-        diveLevels: 5,
+        diveLevels,
       });
 
       expect(wrapper).toMatchSnapshot();
@@ -55,7 +58,7 @@ describe("Part 1 Review Page", () => {
   it("submits the application when the user clicks Submit", () => {
     const { appLogic, claim, wrapper } = renderWithAppLogic(Review, {
       claimAttrs: new MockClaimBuilder().part1Complete().create(),
-      diveLevels: 5,
+      diveLevels,
     });
     wrapper.find("Button").simulate("click");
 
@@ -69,7 +72,7 @@ describe("Final Review Page", () => {
   beforeEach(() => {
     ({ appLogic, claim, wrapper } = renderWithAppLogic(Review, {
       claimAttrs: new MockClaimBuilder().complete().create(),
-      diveLevels: 5,
+      diveLevels,
     }));
   });
   describe("when all data is present", () => {
@@ -101,7 +104,7 @@ describe("Payment Information", () => {
     it("does not render 'Payment details' row", () => {
       const { wrapper } = renderWithAppLogic(Review, {
         claimAttrs: new MockClaimBuilder().complete().debit().create(),
-        diveLevels: 5,
+        diveLevels,
       });
       expect(wrapper.find({ label: "Payment details" })).toHaveLength(0);
     });
@@ -112,7 +115,7 @@ describe("Upload Document", () => {
   it("renders the correct number of documents", () => {
     const { wrapper } = renderWithAppLogic(Review, {
       claimAttrs: new MockClaimBuilder().complete().create(),
-      diveLevels: 5,
+      diveLevels,
       hasLoadedClaimDocuments: true,
     });
     expect(wrapper.exists("Spinner")).toBe(false);
@@ -122,7 +125,7 @@ describe("Upload Document", () => {
   it("renders Alert when there is an error for loading documents", () => {
     const { wrapper } = renderWithAppLogic(Review, {
       claimAttrs: new MockClaimBuilder().complete().create(),
-      diveLevels: 5,
+      diveLevels,
       hasLoadingDocumentsError: true,
     });
 
@@ -136,7 +139,7 @@ describe("Employer info", () => {
     it("does not render 'Notified employer' row or FEIN row", () => {
       const { wrapper } = renderWithAppLogic(Review, {
         claimAttrs: new MockClaimBuilder().complete().create(),
-        diveLevels: 5,
+        diveLevels,
       });
 
       expect(wrapper.text()).not.toContain("Notified employer");
@@ -218,7 +221,7 @@ describe("Intermittent leave frequency", () => {
 
       const { wrapper } = renderWithAppLogic(Review, {
         claimAttrs: claim,
-        diveLevels: 5,
+        diveLevels,
       });
       const contentElement = wrapper.find({
         i18nKey: "pages.claimsReview.intermittentFrequencyDuration",

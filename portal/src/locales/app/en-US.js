@@ -40,6 +40,8 @@ const errors = {
   caughtError_ForbiddenError:
     "Sorry, an authorization error was encountered. Please log out and then log in to try again.",
   caughtError_NetworkError: "$t(shared.networkError)",
+  caughtError_NotFoundError:
+    "Sorry, we were unable to retrieve what you were looking for. Check that the link you are visiting is correct. If this continues to happen, please log out and try again.",
   caughtError_UserNotFoundError:
     "Sorry, we were unable to retrieve your account. Please log out and try again. If this continues to happen, you may call the Paid Family Leave Contact Center at $t(shared.contactCenterPhoneNumber)",
   claims: {

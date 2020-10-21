@@ -6,14 +6,15 @@ import { isFeatureEnabled } from "../services/featureFlags";
 import routes from "../routes";
 
 /**
- * @typedef {{ success: boolean, claim: Claim }} ClaimsApiSingleResult
+ * @typedef {object} ClaimsApiSingleResult
  * @property {number} status - Status code
  * @property {boolean} success - Did the request succeed or fail?
  * @property {Claim} [claim] - If the request succeeded, this will contain the created claim
+ * @property {{ field: string, message: string, rule: string, type: string }[]} [warnings] - Validation warnings
  */
 
 /**
- * @typedef {{ success: boolean, claims: ClaimCollection }} ClaimsApiListResult
+ * @typedef {object} ClaimsApiListResult
  * @property {number} status - Status code
  * @property {boolean} success - Did the request succeed or fail?
  * @property {ClaimCollection} [claims] - If the request succeeded, this will contain the created user
@@ -27,6 +28,24 @@ export default class ClaimsApi extends BaseApi {
   get i18nPrefix() {
     return "claims";
   }
+
+  /**
+   * Fetches a single claim
+   * @returns {Promise<ClaimsApiSingleResult>} The result of the API call
+   */
+  getClaim = async (application_id) => {
+    const { data, success, status, warnings } = await this.request(
+      "GET",
+      application_id
+    );
+
+    return {
+      claim: success ? new Claim(data) : null,
+      success,
+      status,
+      warnings,
+    };
+  };
 
   /**
    * Fetches the list of claims for a user

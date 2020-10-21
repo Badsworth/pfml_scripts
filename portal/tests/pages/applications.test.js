@@ -17,9 +17,7 @@ describe("Applications", () => {
   let appLogic, wrapper;
 
   function render() {
-    // Dive two levels since Applications is wrapped by withClaims and withUser
     ({ wrapper } = renderWithAppLogic(Applications, {
-      diveLevels: 2,
       props: { appLogic },
     }));
   }
@@ -30,6 +28,7 @@ describe("Applications", () => {
     testHook(() => {
       appLogic = useAppLogic();
       appLogic.users.user = new User({ consented_to_data_sharing: true });
+      appLogic.claims.hasLoadedAll = true;
     });
 
     jest.spyOn(appLogic.claims, "loadAll").mockResolvedValue();
@@ -42,7 +41,6 @@ describe("Applications", () => {
     });
 
     it("renders the empty page state", () => {
-      // Dive to get the child component of the withClaim higher order component
       expect(wrapper).toMatchSnapshot();
     });
   });

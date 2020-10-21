@@ -511,7 +511,7 @@ export const claim = new MockClaimBuilder()
  * @param {object} [options.claimAttrs] - Additional attributes to set on the Claim
  * @param {number} [options.diveLevels] - number of levels to dive before returning the enzyme wrapper.
  *    This is needed to return the desired component when the component is wrapped in higher-order components.
- *    Defaults to 3 since most claim pages are wrapped by `withUser(withClaims(withClaim(Page)))`.
+ *    Defaults to 2 since most claim pages are wrapped by `withUser(withClaim(Page))`.
  * @param {object} [options.props] - Additional props to set on the PageComponent
  * @param {"mount"|"shallow"} [options.render] - Enzyme render method. Shallow renders by default.
  * @param {object} [options.userAttrs] - Additional attributes to set on the User
@@ -527,7 +527,7 @@ export const renderWithAppLogic = (PageComponent, options = {}) => {
   options = merge(
     {
       claimAttrs: {},
-      diveLevels: 3,
+      diveLevels: 2,
       props: {},
 
       // whether to use shallow() or mount()

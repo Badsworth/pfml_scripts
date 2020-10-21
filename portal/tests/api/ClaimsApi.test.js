@@ -45,6 +45,60 @@ describe("ClaimsApi", () => {
     );
   });
 
+  describe("getClaim", () => {
+    let claim;
+
+    beforeEach(() => {
+      claim = new Claim({ application_id: "mock-application_id" });
+      global.fetch = mockFetch({
+        response: {
+          data: claim,
+          warnings: [
+            {
+              field: "first_name",
+              type: "required",
+              message: "First name is required",
+            },
+          ],
+        },
+      });
+    });
+
+    it("sends GET request to /applications/:application_id", async () => {
+      await claimsApi.getClaim(claim.application_id);
+      expect(fetch).toHaveBeenCalledWith(
+        `${process.env.apiUrl}/applications/${claim.application_id}`,
+        {
+          body: null,
+          headers,
+          method: "GET",
+        }
+      );
+    });
+
+    it("resolves with claim, success, status, and warnings properties", async () => {
+      const { claim: claimResponse, ...rest } = await claimsApi.getClaim(
+        claim.application_id
+      );
+
+      expect(claimResponse).toBeInstanceOf(Claim);
+      expect(claimResponse).toEqual(claim);
+      expect(rest).toMatchInlineSnapshot(`
+        Object {
+          "status": 200,
+          "success": true,
+          "warnings": Array [
+            Object {
+              "field": "first_name",
+              "message": "First name is required",
+              "type": "required",
+            },
+          ],
+        }
+      `);
+    });
+  });
+
   describe("getClaims", () => {
     describe("successful request", () => {
       let claim;

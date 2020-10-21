@@ -4,6 +4,7 @@ import {
   ForbiddenError,
   InternalServerError,
   NetworkError,
+  NotFoundError,
   RequestTimeoutError,
   ServiceUnavailableError,
   UnauthorizedError,
@@ -202,6 +203,8 @@ const throwError = ({ status }) => {
       throw new UnauthorizedError();
     case 403:
       throw new ForbiddenError();
+    case 404:
+      throw new NotFoundError();
     case 408:
       throw new RequestTimeoutError();
     case 500:

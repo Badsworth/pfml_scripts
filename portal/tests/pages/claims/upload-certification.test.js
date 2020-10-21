@@ -13,6 +13,9 @@ import useAppLogic from "../../../src/hooks/useAppLogic";
 
 jest.mock("../../../src/hooks/useAppLogic");
 
+// Dive more levels to account for withClaimDocuments HOC
+const diveLevels = 4;
+
 describe("UploadCertification", () => {
   let appLogic, claim, wrapper;
 
@@ -20,7 +23,7 @@ describe("UploadCertification", () => {
     function render() {
       ({ appLogic, wrapper } = renderWithAppLogic(UploadCertification, {
         claimAttrs: claim,
-        diveLevels: 5,
+        diveLevels,
       }));
     }
 
@@ -46,7 +49,7 @@ describe("UploadCertification", () => {
     function render(attrs = {}) {
       ({ wrapper } = renderWithAppLogic(UploadCertification, {
         claimAttrs: claim,
-        diveLevels: 5,
+        diveLevels,
         props: { appLogic },
       }));
     }
@@ -435,7 +438,7 @@ describe("UploadCertification", () => {
     it("renders alert", () => {
       ({ wrapper } = renderWithAppLogic(UploadCertification, {
         claimAttrs: claim,
-        diveLevels: 5,
+        diveLevels,
         hasLoadingDocumentsError: true,
       }));
       expect(wrapper.exists("Alert")).toBe(true);

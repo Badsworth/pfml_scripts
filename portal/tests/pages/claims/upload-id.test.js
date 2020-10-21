@@ -13,6 +13,9 @@ import useAppLogic from "../../../src/hooks/useAppLogic";
 
 jest.mock("../../../src/hooks/useAppLogic");
 
+// Dive more levels to account for withClaimDocuments HOC
+const diveLevels = 4;
+
 describe("UploadId", () => {
   let appLogic, claim, wrapper;
 
@@ -20,7 +23,7 @@ describe("UploadId", () => {
     function render() {
       ({ appLogic, wrapper } = renderWithAppLogic(UploadId, {
         claimAttrs: claim,
-        diveLevels: 5,
+        diveLevels,
       }));
     }
     beforeEach(() => {
@@ -45,7 +48,7 @@ describe("UploadId", () => {
     function render() {
       ({ wrapper } = renderWithAppLogic(UploadId, {
         claimAttrs: claim,
-        diveLevels: 5,
+        diveLevels,
         props: { appLogic },
       }));
     }
@@ -472,7 +475,7 @@ describe("UploadId", () => {
     it("renders alert", () => {
       ({ wrapper } = renderWithAppLogic(UploadId, {
         claimAttrs: claim,
-        diveLevels: 5,
+        diveLevels,
         hasLoadingDocumentsError: true,
       }));
       expect(wrapper.exists("Alert")).toBe(true);

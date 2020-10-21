@@ -1,4 +1,5 @@
 import AppErrorInfoCollection from "../../src/models/AppErrorInfoCollection";
+import ClaimCollection from "../../src/models/ClaimCollection";
 import DocumentCollection from "../../src/models/DocumentCollection";
 import { testHook } from "../test-utils";
 import useAppLogic from "../../src/hooks/useAppLogic";
@@ -34,9 +35,11 @@ describe("useAppLogic", () => {
     expect(appErrors).toBeInstanceOf(AppErrorInfoCollection);
     expect(appErrors.items).toHaveLength(0);
     expect(auth).toEqual(expect.anything());
-    expect(claims.claims).toBeNull();
+    expect(claims.claims).toBeInstanceOf(ClaimCollection);
     expect(clearErrors).toBeInstanceOf(Function);
     expect(portalFlow).toEqual(expect.anything());
+    expect(claims.hasLoadedAll).toEqual(expect.any(Boolean));
+    expect(claims.load).toBeInstanceOf(Function);
     expect(claims.loadAll).toBeInstanceOf(Function);
     expect(claims.create).toBeInstanceOf(Function);
     expect(claims.update).toBeInstanceOf(Function);
