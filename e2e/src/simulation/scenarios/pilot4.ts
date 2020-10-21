@@ -47,7 +47,7 @@ export const BHAP4 = scenario("BHAP4", {
   bondingDate: "past",
   docs: {
     OOSID: {},
-    PREBIRTH: {},
+    BIRTHCERTIFICATE: {},
   },
 });
 
