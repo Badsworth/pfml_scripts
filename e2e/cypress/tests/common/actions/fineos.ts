@@ -1,7 +1,6 @@
 import { getFineosBaseUrl } from "@cypress/config";
 
 export function loginSavilinx(): void {
-  listenForAjax();
   Cypress.config("baseUrl", getFineosBaseUrl());
   cy.visit("/");
 }
@@ -323,8 +322,4 @@ export function approveClaim(): void {
     force: true,
   });
   cy.get(".key-info-bar .status").should("contain.text", "Approved");
-}
-
-export function listenForAjax(): void {
-  cy.route(/ajax\/pagerender\.jsp/).as("ajaxRender");
 }

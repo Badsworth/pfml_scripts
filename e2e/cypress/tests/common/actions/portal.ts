@@ -7,22 +7,6 @@ import { inFieldset } from "../actions";
 export function onPage(page: string): void {
   cy.url().should("include", `/claims/${page}`);
 }
-export function setCookies(): void {
-  cy.setCookie(
-    "_ff",
-    JSON.stringify({
-      pfmlTerriyay: true,
-    }),
-    { log: true }
-  );
-
-  // Setup a route for application submission so we can extract claim ID later.
-  cy.route({
-    method: "POST",
-    url:
-      "https://paidleave-api-stage.mass.gov/api/v1/applications/*/submit_application",
-  }).as("submitClaimResponse");
-}
 
 export function submittingClaimType(
   claimType: string,
@@ -94,7 +78,6 @@ export function startSubmit(
   scenario: string,
   employeeType: string
 ): void {
-  setCookies();
   submittingClaimType(scenario, employeeType);
   login(credentials);
   startClaim();
