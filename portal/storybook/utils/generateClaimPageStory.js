@@ -101,7 +101,7 @@ function generateDefaultStory(Component, mockClaims, possibleErrors) {
         update: () => {},
       },
       documents: {
-        attachDocuments: () => {},
+        attachDocument: () => {},
         documents: new DocumentCollection([]),
       },
       appErrors,

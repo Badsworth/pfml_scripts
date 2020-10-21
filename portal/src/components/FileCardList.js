@@ -87,7 +87,7 @@ function useChangeHandler(setFiles, setAppErrors, t) {
 /**
  * Render a FileCard. This handles some busy work such as creating a onRemove handler and
  * interpolating a heading string for the file. Renders the FileCard inside of a <li> element.
- * @param {object} file The files to render as FileCards
+ * @param {object} file The file to render as a FileCard
  * @param {integer} index The zero-based index of the file in the list. This is used to
  * to interpolate a heading for the file.
  * @param {Function} setFiles Setter function for updating the list of files. This is needed

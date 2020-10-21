@@ -27,8 +27,12 @@ export default jest.fn(() => ({
     update: jest.fn(),
   },
   documents: {
-    attach: jest.fn(() => {
-      return { success: true };
+    attach: jest.fn((application_id, files, documentType) => {
+      const uploadPromises = [];
+      for (let i = 0; i < files.length; i++) {
+        uploadPromises.push(Promise.resolve({ success: true }));
+      }
+      return uploadPromises;
     }),
     hasLoadedClaimDocuments: jest.fn(),
     documents: new DocumentCollection(),

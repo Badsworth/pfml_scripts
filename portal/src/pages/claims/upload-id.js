@@ -1,5 +1,6 @@
 import Document, { DocumentType } from "../../models/Document";
 import React, { useState } from "react";
+import { get, map } from "lodash";
 import Accordion from "../../components/Accordion";
 import AccordionItem from "../../components/AccordionItem";
 import Alert from "../../components/Alert";
@@ -12,9 +13,9 @@ import QuestionPage from "../../components/QuestionPage";
 import Spinner from "../../components/Spinner";
 import { Trans } from "react-i18next";
 import findDocumentsByType from "../../utils/findDocumentsByType";
-import { get } from "lodash";
 import hasDocumentsLoadError from "../../utils/hasDocumentsLoadError";
 import routes from "../../routes";
+import uploadDocumentsHelper from "../../utils/uploadDocumentsHelper";
 import { useTranslation } from "../../locales/i18n";
 import withClaim from "../../hoc/withClaim";
 import withClaimDocuments from "../../hoc/withClaimDocuments";
@@ -52,11 +53,18 @@ export const UploadId = (props) => {
     }
 
     try {
-      const { success } = await appLogic.documents.attach(
+      const uploadPromises = await appLogic.documents.attach(
         claim.application_id,
-        stateIdFiles,
-        DocumentType.identityVerification // TODO (CP-962): Set based on leaveReason
+        map(stateIdFiles, "file"), // extract the "file" object
+        DocumentType.identityVerification // TODO (CP-962): set based on leave reason
       );
+
+      const { success } = await uploadDocumentsHelper(
+        uploadPromises,
+        stateIdFiles,
+        setStateIdFiles
+      );
+
       if (success && claim.isCompleted) {
         return portalFlow.goToNextPage(
           { claim },

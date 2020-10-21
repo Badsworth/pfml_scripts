@@ -8,6 +8,7 @@ import {
 import ClaimCollection from "../../../src/models/ClaimCollection";
 import UploadId from "../../../src/pages/claims/upload-id";
 import { act } from "react-dom/test-utils";
+import { uniqueId } from "xstate/lib/utils";
 import useAppLogic from "../../../src/hooks/useAppLogic";
 
 jest.mock("../../../src/hooks/useAppLogic");
@@ -112,7 +113,7 @@ describe("UploadId", () => {
           expect(wrapper).toMatchSnapshot();
         });
 
-        it("makes API request when no documents exist", async () => {
+        it("makes documents.attach request when no documents exist", async () => {
           claim = new MockClaimBuilder().create();
           render();
 
@@ -131,31 +132,241 @@ describe("UploadId", () => {
             await wrapper.find("QuestionPage").simulate("save");
           });
 
-          const expectedFiles = files.map((file) => {
-            return { id: expect.any(String), file };
-          });
           expect(appLogic.documents.attach).toHaveBeenCalledWith(
             claim.application_id,
-            expectedFiles,
+            files,
             expect.any(String)
           );
         });
-      });
 
-      it("makes API request when no documents exist and no new files are added", async () => {
-        claim = new MockClaimBuilder().create();
+        it("navigates the user to the next page if there are no errors", async () => {
+          render();
+          const files = [makeFile(), makeFile(), makeFile()];
+          const event = {
+            target: {
+              files,
+            },
+          };
 
-        render();
+          const input = wrapper.find("FileCardList").dive().find("input");
+          await act(async () => {
+            input.simulate("change", event);
+            await wrapper.find("QuestionPage").simulate("save");
+          });
 
-        await act(async () => {
-          await wrapper.find("QuestionPage").simulate("save");
+          expect(appLogic.portalFlow.goToNextPage).toHaveBeenCalled();
         });
 
-        expect(appLogic.documents.attach).toHaveBeenCalledWith(
-          claim.application_id,
-          [],
-          expect.any(String)
-        );
+        it("does not navigate the user to the next page if there are errors", async () => {
+          jest
+            .spyOn(appLogic.documents, "attach")
+            .mockImplementationOnce(() => [
+              Promise.resolve({ success: false }),
+            ]);
+          render();
+          const files = [makeFile()];
+          const event = {
+            target: {
+              files,
+            },
+          };
+
+          const input = wrapper.find("FileCardList").dive().find("input");
+          await act(async () => {
+            input.simulate("change", event);
+            await wrapper.find("QuestionPage").simulate("save");
+          });
+
+          expect(appLogic.portalFlow.goToNextPage).not.toHaveBeenCalled();
+        });
+
+        it("displays successfully uploaded files as unremovable file cards", async () => {
+          claim = new MockClaimBuilder().medicalLeaveReason().create();
+
+          const attachSpy = jest
+            .spyOn(appLogic.documents, "attach")
+            .mockImplementation(
+              jest.fn(() => {
+                return [
+                  Promise.resolve({ success: true }),
+                  Promise.resolve({ success: true }),
+                  Promise.resolve({ success: true }),
+                ];
+              })
+            );
+
+          render();
+
+          const files = [
+            makeFile({ name: "File1" }),
+            makeFile({ name: "File2" }),
+            makeFile({ name: "File3" }),
+          ];
+          const event = {
+            target: {
+              files,
+            },
+          };
+
+          const input = wrapper.find("FileCardList").dive().find("input");
+          act(() => {
+            input.simulate("change", event);
+          });
+
+          let removableFileCards = wrapper
+            .find("FileCardList")
+            .dive()
+            .findWhere(
+              (component) =>
+                component.name() === "FileCard" && component.prop("file")
+            );
+          let unremovableFileCards = wrapper
+            .find("FileCardList")
+            .dive()
+            .findWhere(
+              (component) =>
+                component.name() === "FileCard" && component.prop("document")
+            );
+          expect(removableFileCards).toHaveLength(3);
+          expect(unremovableFileCards).toHaveLength(0);
+
+          await act(async () => {
+            await wrapper.find("QuestionPage").simulate("save");
+          });
+
+          const newDocuments = [
+            new Document({
+              document_type: DocumentType.identityVerification,
+              application_id: claim.application_id,
+              created_at: "2020-10-12",
+              fineos_document_id: uniqueId(),
+            }),
+            new Document({
+              document_type: DocumentType.identityVerification,
+              application_id: claim.application_id,
+              created_at: "2020-10-12",
+              fineos_document_id: uniqueId(),
+            }),
+            new Document({
+              document_type: DocumentType.identityVerification,
+              application_id: claim.application_id,
+              created_at: "2020-10-12",
+              fineos_document_id: uniqueId(),
+            }),
+          ];
+
+          wrapper.setProps({ documents: newDocuments }); // force the documents to update because we don't have access to the collection in useDocumentsLogic
+
+          removableFileCards = wrapper
+            .find("FileCardList")
+            .dive()
+            .findWhere(
+              (component) =>
+                component.name() === "FileCard" && component.prop("file")
+            );
+          unremovableFileCards = wrapper
+            .find("FileCardList")
+            .dive()
+            .findWhere(
+              (component) =>
+                component.name() === "FileCard" && component.prop("document")
+            );
+          expect(removableFileCards).toHaveLength(0);
+          expect(unremovableFileCards).toHaveLength(3);
+
+          attachSpy.mockRestore();
+        });
+
+        it("displays unsucessfully uploaded files as removable file cards", async () => {
+          claim = new MockClaimBuilder().medicalLeaveReason().create();
+
+          const attachSpy = jest
+            .spyOn(appLogic.documents, "attach")
+            .mockImplementation(
+              jest.fn(() => {
+                return [
+                  Promise.resolve({ success: true }),
+                  Promise.resolve({ success: true }),
+                  Promise.resolve({ success: false }),
+                ];
+              })
+            );
+
+          render();
+
+          const files = [
+            makeFile({ name: "File1" }),
+            makeFile({ name: "File2" }),
+            makeFile({ name: "File3" }),
+          ];
+          const event = {
+            target: {
+              files,
+            },
+          };
+
+          const input = wrapper.find("FileCardList").dive().find("input");
+          act(() => {
+            input.simulate("change", event);
+          });
+
+          let removableFileCards = wrapper
+            .find("FileCardList")
+            .dive()
+            .findWhere(
+              (component) =>
+                component.name() === "FileCard" && component.prop("file")
+            );
+          let unremovableFileCards = wrapper
+            .find("FileCardList")
+            .dive()
+            .findWhere(
+              (component) =>
+                component.name() === "FileCard" && component.prop("document")
+            );
+          expect(removableFileCards).toHaveLength(3);
+          expect(unremovableFileCards).toHaveLength(0);
+
+          await act(async () => {
+            await wrapper.find("QuestionPage").simulate("save");
+          });
+
+          const newDocuments = [
+            new Document({
+              document_type: DocumentType.identityVerification,
+              application_id: claim.application_id,
+              created_at: "2020-10-12",
+              fineos_document_id: uniqueId(),
+            }),
+            new Document({
+              document_type: DocumentType.identityVerification,
+              application_id: claim.application_id,
+              created_at: "2020-10-12",
+              fineos_document_id: uniqueId(),
+            }),
+          ];
+
+          wrapper.setProps({ documents: newDocuments }); // force the documents to update because we don't have access to the collection in useDocumentsLogic
+
+          removableFileCards = wrapper
+            .find("FileCardList")
+            .dive()
+            .findWhere(
+              (component) =>
+                component.name() === "FileCard" && component.prop("file")
+            );
+          unremovableFileCards = wrapper
+            .find("FileCardList")
+            .dive()
+            .findWhere(
+              (component) =>
+                component.name() === "FileCard" && component.prop("document")
+            );
+          expect(removableFileCards).toHaveLength(1);
+          expect(unremovableFileCards).toHaveLength(2);
+
+          attachSpy.mockRestore();
+        });
       });
 
       it("redirects to the Applications page when the claim has been completed", async () => {
@@ -218,24 +429,18 @@ describe("UploadId", () => {
           // Add files to the page state
           const files = [makeFile(), makeFile()];
           const input = wrapper.find("FileCardList").dive().find("input");
-          act(() => {
+          await act(async () => {
             input.simulate("change", {
               target: {
                 files,
               },
             });
-          });
-
-          await act(async () => {
             await wrapper.find("QuestionPage").simulate("save");
           });
 
-          const expectedFiles = files.map((file) => {
-            return { id: expect.any(String), file };
-          });
           expect(appLogic.documents.attach).toHaveBeenCalledWith(
             claim.application_id,
-            expectedFiles,
+            files,
             expect.any(String)
           );
         });

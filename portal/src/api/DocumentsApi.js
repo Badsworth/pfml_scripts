@@ -1,6 +1,7 @@
 import BaseApi from "./BaseApi";
 import Document from "../models/Document";
 import DocumentCollection from "../models/DocumentCollection";
+import assert from "assert";
 import routes from "../routes";
 
 /**
@@ -31,20 +32,18 @@ export default class DocumentsApi extends BaseApi {
    *
    * Corresponds to this API endpoint: /application/{application_id}/documents
    * @param {string} application_id ID of the Claim
-   * @param {Array} files - array of objects {id: string, file: File object}
+   * @param {File} file - The File object to upload
    * @param {string} document_type type of documents
    * @returns {DocumentApiSingleResult} The result of the API call
    */
-  attachDocuments = async (application_id, files = [], document_type) => {
+  attachDocument = async (application_id, file, document_type) => {
     const formData = new FormData();
     formData.append("document_type", document_type);
     formData.append("description", "Placeholder");
 
-    // TODO (CP-993): handle multiple file uploads
-    files.forEach((file) => {
-      formData.set("file", file.file);
-      formData.set("name", file.file.name);
-    });
+    assert(file);
+    formData.set("file", file);
+    formData.set("name", file.name);
 
     const { data, status, success } = await this.request(
       "POST",

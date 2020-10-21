@@ -1,6 +1,7 @@
 import Claim, { LeaveReason, ReasonQualifier } from "../../models/Claim";
 import Document, { DocumentType } from "../../models/Document";
 import React, { useState } from "react";
+import { get, map } from "lodash";
 import Alert from "../../components/Alert";
 import ConditionalContent from "../../components/ConditionalContent";
 import FileCardList from "../../components/FileCardList";
@@ -13,9 +14,9 @@ import Spinner from "../../components/Spinner";
 import { Trans } from "react-i18next";
 import findDocumentsByType from "../../utils/findDocumentsByType";
 import findKeyByValue from "../../utils/findKeyByValue";
-import { get } from "lodash";
 import hasDocumentsLoadError from "../../utils/hasDocumentsLoadError";
 import routes from "../../routes";
+import uploadDocumentsHelper from "../../utils/uploadDocumentsHelper";
 import { useTranslation } from "../../locales/i18n";
 import withClaim from "../../hoc/withClaim";
 import withClaimDocuments from "../../hoc/withClaimDocuments";
@@ -62,11 +63,18 @@ export const UploadCertification = (props) => {
       return portalFlow.goToNextPage({}, { claim_id: claim.application_id });
     }
     try {
-      const { success } = await appLogic.documents.attach(
+      const uploadPromises = await appLogic.documents.attach(
         claim.application_id,
-        files,
-        DocumentType.medicalCertification // TODO (CP-962): Set based on leaveReason
+        map(files, "file"), // extract the "file" object
+        DocumentType.medicalCertification // TODO (CP-962): set based on leave reason
       );
+
+      const { success } = await uploadDocumentsHelper(
+        uploadPromises,
+        files,
+        setFiles
+      );
+
       if (success && claim.isCompleted) {
         const absence_id = get(claim, "fineos_absence_id");
         return portalFlow.goToNextPage(
@@ -83,7 +91,6 @@ export const UploadCertification = (props) => {
       appLogic.setAppErrors(error);
     }
   };
-
   return (
     <QuestionPage
       title={t("pages.claimsUploadCertification.title")}

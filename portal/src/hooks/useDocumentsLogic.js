@@ -5,7 +5,7 @@ import DocumentsApi from "../api/DocumentsApi";
 import assert from "assert";
 import useCollectionState from "./useCollectionState";
 
-const useDocumentsLogic = ({ appErrorsLogic, portalFlow }) => {
+const useDocumentsLogic = ({ appErrorsLogic }) => {
   /**
    * State representing the collection of documents for the current user.
    * Initialize to empty collection, but will eventually store the document
@@ -72,10 +72,11 @@ const useDocumentsLogic = ({ appErrorsLogic, portalFlow }) => {
   /**
    * Submit files to the API and set application errors if any
    * @param {string} application_id - application id for claim
-   * @param {Array} files - array of objects {id: string, file: File object}
+   * @param {File[]} files - array of File objects to upload and attach to the application
    * @param {string} documentType - category of documents
+   * @returns {Promise[]}
    */
-  const attach = async (application_id, files = [], documentType) => {
+  const attach = (application_id, files = [], documentType) => {
     assert(application_id);
     appErrorsLogic.clearErrors();
 
@@ -95,19 +96,23 @@ const useDocumentsLogic = ({ appErrorsLogic, portalFlow }) => {
         );
       }
 
-      const { success, document } = await documentsApi.attachDocuments(
-        application_id,
-        files,
-        documentType
-      );
-      if (success) {
-        if (!hasLoadedClaimDocuments(application_id)) {
-          await load(application_id);
-        } else {
-          addDocument(document);
+      const uploadPromises = files.map(async (file) => {
+        try {
+          const { success, document } = await documentsApi.attachDocument(
+            application_id,
+            file,
+            documentType
+          );
+          if (success) {
+            addDocument(document);
+            return { success };
+          }
+        } catch (error) {
+          appErrorsLogic.catchError(error);
+          return { success: false };
         }
-      }
-      return { success };
+      });
+      return uploadPromises;
     } catch (error) {
       appErrorsLogic.catchError(error);
     }
