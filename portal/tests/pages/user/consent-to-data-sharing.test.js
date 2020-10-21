@@ -2,7 +2,6 @@ import { simulateEvents, testHook } from "../../test-utils";
 import ConsentToDataSharing from "../../../src/pages/user/consent-to-data-sharing";
 import React from "react";
 import User from "../../../src/models/User";
-import { mockRouter } from "next/router";
 import routes from "../../../src/routes";
 import { shallow } from "enzyme";
 import useAppLogic from "../../../src/hooks/useAppLogic";
@@ -18,7 +17,7 @@ describe("ConsentToDataSharing", () => {
       appLogic = useAppLogic();
     });
 
-    mockRouter.pathname = routes.user.consentToDataSharing;
+    appLogic.portalFlow.pathname = routes.user.consentToDataSharing;
     appLogic.users.user = new User({ user_id });
 
     // Dive once since ConsentToDataSharing is wrapped by withUser

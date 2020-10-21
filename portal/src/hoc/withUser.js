@@ -3,7 +3,6 @@ import PropTypes from "prop-types";
 import Spinner from "../components/Spinner";
 import User from "../models/User";
 import routes from "../routes";
-import { useRouter } from "next/router";
 import { useTranslation } from "../locales/i18n";
 
 /**
@@ -19,8 +18,7 @@ import { useTranslation } from "../locales/i18n";
 const withUser = (Component) => {
   const ComponentWithUser = (props) => {
     const { appLogic } = props;
-    const { auth, users } = appLogic;
-    const router = useRouter();
+    const { auth, portalFlow, users } = appLogic;
     const { t } = useTranslation();
 
     useEffect(() => {
@@ -43,7 +41,7 @@ const withUser = (Component) => {
       // Only trigger this effect when the user is set/updated
       // or when the user attempts to navigate to another page
       // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [users.user, router.pathname]);
+    }, [users.user, portalFlow.pathname]);
 
     if (!users.user)
       return (
@@ -54,7 +52,7 @@ const withUser = (Component) => {
 
     if (
       !users.user.consented_to_data_sharing &&
-      router.pathname !== routes.user.consentToDataSharing
+      portalFlow.pathname !== routes.user.consentToDataSharing
     )
       return null;
 
@@ -66,6 +64,9 @@ const withUser = (Component) => {
       auth: PropTypes.shape({
         isLoggedIn: PropTypes.bool,
         requireLogin: PropTypes.func.isRequired,
+      }),
+      portalFlow: PropTypes.shape({
+        pathname: PropTypes.string.isRequired,
       }),
       users: PropTypes.shape({
         loadUser: PropTypes.func.isRequired,

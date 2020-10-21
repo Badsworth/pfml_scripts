@@ -112,7 +112,7 @@ function mockForbiddenDependenciesToThrow(forbiddenDependencies, rootDir) {
         const allowModule = allowedDependencies.some(
           (filename) => !!modulePath.match(filename)
         );
-        if (allowModule) return;
+        if (allowModule) continue;
       }
 
       jest.doMock(modulePath, () => {

@@ -23,6 +23,7 @@ const dependencyRules = [
           "usePreviousValue",
           "useUniqueId",
           "usePiiHandlers",
+          "useThrottledHandler",
         ],
         reason:
           "Components should not depend on application code. Consider exposing events that clients handle.",

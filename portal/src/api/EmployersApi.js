@@ -3,8 +3,8 @@ import routes from "../routes";
 
 /**
  * @typedef {object} EmployersAPISingleResult
- * @property {boolean} success
- * @property {number} status - Status code
+ * @property {boolean} success Whether or not the request was successful
+ * @property {number} status Status code
  */
 
 export default class EmployersApi extends BaseApi {
