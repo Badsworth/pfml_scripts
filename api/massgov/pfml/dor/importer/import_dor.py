@@ -21,7 +21,11 @@ import massgov.pfml.util.logging as logging
 import massgov.pfml.util.logging.audit
 from massgov.pfml import db
 from massgov.pfml.db.models.employees import ImportLog
-from massgov.pfml.dor.importer.dor_file_formats import EMPLOYEE_FORMAT, EMPLOYER_FILE_FORMAT
+from massgov.pfml.dor.importer.dor_file_formats import (
+    EMPLOYEE_FORMAT,
+    EMPLOYER_FILE_FORMAT,
+    EMPLOYER_FILE_ROW_LENGTH,
+)
 from massgov.pfml.util.config import get_secret_from_env
 from massgov.pfml.util.encryption import Crypt, GpgCrypt, Utf8Crypt
 
@@ -935,6 +939,9 @@ def parse_employer_file(employer_file_path, decrypter):
 
     decrypt_files = os.getenv("DECRYPT") == "true"
 
+    invalid_employer_key_line_nums = []
+    line_count = 0
+
     if decrypt_files:
         employer_capturer = Capturer(line_offset=0, line_limit=EMPLOYER_LINE_LIMIT)
         decrypter.set_on_data(employer_capturer)
@@ -944,6 +951,15 @@ def parse_employer_file(employer_file_path, decrypter):
             if not row:  # skip empty end of file lines
                 continue
 
+            line_count = line_count + 1
+
+            if len(row) != EMPLOYER_FILE_ROW_LENGTH:
+                employer = EMPLOYER_FILE_FORMAT.parse_line(row)
+                invalid_employer_key_line_nums.append(
+                    "Line {0}, account key: {1}".format(line_count, employer["account_key"])
+                )
+                continue
+
             employer = EMPLOYER_FILE_FORMAT.parse_line(row)
             employers.append(employer)
     else:
@@ -951,10 +967,25 @@ def parse_employer_file(employer_file_path, decrypter):
             if not row:  # skip empty end of file lines
                 continue
 
+            line_count = line_count + 1
+
+            if len(str(row.decode("utf-8")).strip("\n")) != EMPLOYER_FILE_ROW_LENGTH:
+                employer = EMPLOYER_FILE_FORMAT.parse_line(row)
+                invalid_employer_key_line_nums.append(
+                    "Line {0}, account key: {1}".format(line_count, employer["account_key"])
+                )
+                continue
+
             employer = EMPLOYER_FILE_FORMAT.parse_line(str(row.decode("utf-8")))
             employers.append(employer)
 
-    logger.info("Finished parsing employer file", extra={"employer_file_path": employer_file_path})
+    logger.info(
+        "Finished parsing employer file",
+        extra={
+            "employer_file_path": employer_file_path,
+            "invalid_parsed_employers": repr(invalid_employer_key_line_nums),
+        },
+    )
     return employers
 
 

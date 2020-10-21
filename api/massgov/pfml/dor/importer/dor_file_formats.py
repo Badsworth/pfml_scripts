@@ -44,6 +44,9 @@ EMPLOYER_FILE_FORMAT = FileFormat(
     )
 )
 
+# numbers correspond to format cols above
+EMPLOYER_FILE_ROW_LENGTH = 11 + 255 + 14 + 255 + 30 + 2 + 9 + 255 + 1 + 1 + 8 + 8 + 14
+
 EMPLOYER_QUARTER_INFO_FORMAT = FileFormat(
     (
         FieldFormat("record_type", 1),
