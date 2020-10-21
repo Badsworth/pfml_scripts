@@ -1,4 +1,4 @@
-from typing import Any, List, Optional, Union
+from typing import Any, List, Optional, Tuple, Union
 
 from werkzeug.exceptions import BadRequest, Forbidden
 
@@ -14,9 +14,13 @@ from massgov.pfml.db.models.applications import (
     Application,
     ApplicationPaymentPreference,
     ContinuousLeavePeriod,
+    DayOfWeek,
     IntermittentLeavePeriod,
     ReducedScheduleLeavePeriod,
     TaxIdentifier,
+    WorkPattern,
+    WorkPatternDay,
+    WorkPatternType,
 )
 from massgov.pfml.db.models.employees import Address, AddressType, GeoState, LkAddressType
 
@@ -46,6 +50,10 @@ def update_from_request(
             add_or_update_address(
                 db_session, body.residential_address, AddressType.RESIDENTIAL, application
             )
+            continue
+
+        if key == "work_pattern":
+            add_or_update_work_pattern(db_session, body.work_pattern, application)
             continue
 
         if key == "application_nickname":
@@ -319,6 +327,117 @@ def add_or_update_address(
         setattr(application, address_field_name, address_to_update)
 
     return address_to_update
+
+
+def add_or_update_work_pattern(
+    db_session: db.Session,
+    api_work_pattern: Optional[apps_common_io.WorkPattern],
+    application: Application,
+) -> Optional[WorkPattern]:
+    if api_work_pattern is None:
+        return None
+
+    # Consider only explicitly set fields
+    fieldset = api_work_pattern.__fields_set__
+    work_pattern = application.work_pattern or WorkPattern()
+
+    if "work_pattern_days" in fieldset:
+        validate_work_pattern_days(api_work_pattern.work_pattern_days)
+
+        if work_pattern.work_pattern_days:
+            for work_pattern_day in work_pattern.work_pattern_days:
+                db_session.delete(work_pattern_day)
+
+            work_pattern.work_pattern_days = []
+
+        if api_work_pattern.work_pattern_days:
+            work_pattern_days = []
+
+            for api_work_pattern_day in api_work_pattern.work_pattern_days:
+                work_pattern_days.append(
+                    WorkPatternDay(
+                        day_of_week_id=DayOfWeek.get_id(api_work_pattern_day.day_of_week.value),
+                        week_number=api_work_pattern_day.week_number,
+                        hours=api_work_pattern_day.hours,
+                        minutes=api_work_pattern_day.minutes,
+                    )
+                )
+
+                work_pattern.work_pattern_days = work_pattern_days
+    if "work_week_starts" in fieldset:
+        if api_work_pattern.work_week_starts:
+            work_pattern.work_week_starts_id = DayOfWeek.get_id(
+                api_work_pattern.work_week_starts.value
+            )
+        else:
+            work_pattern.work_week_starts_id = None
+
+    if "work_pattern_type" in fieldset:
+        if api_work_pattern.work_pattern_type:
+            work_pattern.work_pattern_type_id = WorkPatternType.get_id(
+                api_work_pattern.work_pattern_type.value
+            )
+        else:
+            work_pattern.work_pattern_type_id = None
+
+    if "pattern_start_date" in fieldset:
+        if api_work_pattern.pattern_start_date is not None:
+            pattern_start_week_day_id = api_work_pattern.pattern_start_date.isoweekday()
+            if pattern_start_week_day_id != work_pattern.work_week_starts_id:
+                raise BadRequest(
+                    "pattern_start_date must be on the same day of the week that the work week starts."
+                )
+
+        work_pattern.pattern_start_date = api_work_pattern.pattern_start_date
+
+    db_session.add(work_pattern)
+    application.work_pattern = work_pattern
+
+    return work_pattern
+
+
+def validate_work_pattern_days(
+    api_work_pattern_days: Optional[List[apps_common_io.WorkPatternDay]],
+) -> None:
+    """Validate work pattern. These errors should not be the result of bad user input"""
+    if api_work_pattern_days is None:
+        return None
+
+    weeks: Tuple[
+        List[apps_common_io.WorkPatternDay],
+        List[apps_common_io.WorkPatternDay],
+        List[apps_common_io.WorkPatternDay],
+        List[apps_common_io.WorkPatternDay],
+    ] = ([], [], [], [])
+    for day in api_work_pattern_days:
+        # week_number 1 - 4 is enforced through OpenAPI spec
+        weeks[day.week_number - 1].append(day)
+
+    for i, week in enumerate(weeks):
+        number_of_days = len(week)
+
+        if number_of_days == 0:
+            continue
+
+        provided_week_days = {day.day_of_week.value for day in week}
+        week_days = {"Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"}
+        missing_days = week_days - provided_week_days
+        if len(missing_days) > 0:
+            raise BadRequest(
+                f"Week number {i+1} for provided work_pattern_days is missing {', '.join(sorted(missing_days))}."
+            )
+
+        if number_of_days != 7:
+            raise BadRequest(
+                f"Week number {i+1} for provided work_pattern_days has {number_of_days} days. There should be 7 days."
+            )
+
+        # Check if work pattern weeks aren't consecutive, as in request provides
+        # 7 days for week number 3 but 0 days for week number 2
+        if i > 0 and len(weeks[i - 1]) == 0:
+            raise BadRequest(
+                f"Week number {i} for provided work_pattern_days has 0 days, but you are attempting to add days for week number {i+1}. All provided weeks should be consecutive."
+            )
 
 
 def get_or_add_tax_identifier(

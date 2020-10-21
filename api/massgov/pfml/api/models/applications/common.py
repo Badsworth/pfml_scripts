@@ -234,6 +234,30 @@ class PaymentAccountType(str, Enum):
     savings = "Savings"
 
 
+class WorkPatternType(str, LookupEnum):
+    fixed = "Fixed"
+    rotating = "Rotating"
+    variable = "Variable"
+
+    @classmethod
+    def get_lookup_model(cls):
+        return db_application_models.LkWorkPatternType
+
+
+class DayOfWeek(str, LookupEnum):
+    sunday = "Sunday"
+    monday = "Monday"
+    tuesday = "Tuesday"
+    wednesday = "Wednesday"
+    thursday = "Thursday"
+    friday = "Friday"
+    saturday = "Saturday"
+
+    @classmethod
+    def get_lookup_model(cls):
+        return db_application_models.LkDayOfWeek
+
+
 class ApplicationPaymentAccountDetails(PydanticBaseModel):
     account_name: Optional[str]
     account_number: Optional[MaskedFinancialAcctNum]
@@ -252,6 +276,20 @@ class PaymentPreferences(PydanticBaseModel):
     is_default: Optional[bool]
     account_details: Optional[ApplicationPaymentAccountDetails]
     cheque_details: Optional[ApplicationPaymentChequeDetails]
+
+
+class WorkPatternDay(PydanticBaseModel):
+    day_of_week: DayOfWeek
+    week_number: int
+    hours: Optional[int]
+    minutes: Optional[int]
+
+
+class WorkPattern(PydanticBaseModel):
+    work_pattern_type: Optional[WorkPatternType]
+    work_week_starts: Optional[DayOfWeek]
+    pattern_start_date: Optional[date]
+    work_pattern_days: Optional[List[WorkPatternDay]]
 
 
 # Document I/O Types

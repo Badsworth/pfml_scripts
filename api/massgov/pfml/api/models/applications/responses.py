@@ -15,6 +15,7 @@ from massgov.pfml.api.models.applications.common import (
     PaymentAccountType,
     PaymentMethod,
     PaymentPreferences,
+    WorkPattern,
 )
 from massgov.pfml.db.models.applications import Application, ApplicationPaymentPreference, Document
 from massgov.pfml.util.pydantic import PydanticBaseModel
@@ -48,6 +49,7 @@ class ApplicationResponse(PydanticBaseModel):
     employment_status: Optional[EmploymentStatus]
     leave_details: Optional[ApplicationLeaveDetails]
     payment_preferences: Optional[List[PaymentPreferences]]
+    work_pattern: Optional[WorkPattern]
     updated_time: datetime
     status: Optional[ApplicationStatus]
     has_mailing_address: Optional[bool]

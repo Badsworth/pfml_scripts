@@ -12,6 +12,7 @@ from massgov.pfml.api.models.applications.common import (
     EmploymentStatus,
     Occupation,
     PaymentPreferences,
+    WorkPattern,
 )
 from massgov.pfml.api.validation.exceptions import ValidationErrorDetail, ValidationException
 from massgov.pfml.util.pydantic import PydanticBaseModel
@@ -36,6 +37,7 @@ class ApplicationRequestBody(PydanticBaseModel):
     hours_worked_per_week: Optional[Decimal]
     employment_status: Optional[EmploymentStatus]
     leave_details: Optional[ApplicationLeaveDetails]
+    work_pattern: Optional[WorkPattern]
     payment_preferences: Optional[List[PaymentPreferences]]
     has_mailing_address: Optional[bool]
     mailing_address: Optional[Address]

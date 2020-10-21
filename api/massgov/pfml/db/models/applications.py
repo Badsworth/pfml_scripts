@@ -102,6 +102,26 @@ class LkFrequencyOrDuration(Base):
         self.frequency_or_duration_description = frequency_or_duration_description
 
 
+class LkWorkPatternType(Base):
+    __tablename__ = "lk_work_pattern_type"
+    work_pattern_type_id = Column(Integer, primary_key=True, autoincrement=True)
+    work_pattern_type_description = Column(Text)
+
+    def __init__(self, work_pattern_type_id, work_pattern_type_description):
+        self.work_pattern_type_id = work_pattern_type_id
+        self.work_pattern_type_description = work_pattern_type_description
+
+
+class LkDayOfWeek(Base):
+    __tablename__ = "lk_day_of_week"
+    day_of_week_id = Column(Integer, primary_key=True, autoincrement=True)
+    day_of_week_description = Column(Text)
+
+    def __init__(self, day_of_week_id, day_of_week_description):
+        self.day_of_week_id = day_of_week_id
+        self.day_of_week_description = day_of_week_description
+
+
 class Application(Base):
     __tablename__ = "application"
     application_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
@@ -148,6 +168,7 @@ class Application(Base):
         Integer, ForeignKey("lk_leave_reason_qualifier.leave_reason_qualifier_id")
     )
     employment_status_id = Column(Integer, ForeignKey("lk_employment_status.employment_status_id"))
+    work_pattern_id = Column(UUID(as_uuid=True), ForeignKey("work_pattern.work_pattern_id"))
     start_time = Column(TIMESTAMP(timezone=True))
     updated_time = Column(TIMESTAMP(timezone=True))
     completed_time = Column(TIMESTAMP(timezone=True))
@@ -169,6 +190,8 @@ class Application(Base):
     tax_identifier = relationship(TaxIdentifier)
     mailing_address = relationship(Address, foreign_keys=[mailing_address_id])
     residential_address = relationship(Address, foreign_keys=[residential_address_id])
+
+    work_pattern = relationship("WorkPattern", back_populates="applications", uselist=False)
 
     # `uselist` default is True, but for mypy need to state it explicitly so it
     # detects the relationship as many-to-one
@@ -262,6 +285,56 @@ class ReducedScheduleLeavePeriod(Base):
     wednesday_off_minutes = Column(Integer)
 
     application = relationship(Application, back_populates="reduced_schedule_leave_periods")
+
+
+class WorkPattern(Base):
+    __tablename__ = "work_pattern"
+    work_pattern_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
+    work_pattern_type_id = Column(Integer, ForeignKey("lk_work_pattern_type.work_pattern_type_id"))
+    work_week_starts_id = Column(Integer, ForeignKey("lk_day_of_week.day_of_week_id"))
+    pattern_start_date = Column(Date)
+
+    applications = relationship("Application", back_populates="work_pattern", uselist=True)
+    work_pattern_type = relationship(LkWorkPatternType)
+    work_week_starts = relationship(LkDayOfWeek)
+    work_pattern_days = relationship("WorkPatternDay", back_populates="work_pattern", uselist=True)
+
+
+class WorkPatternDay(Base):
+    __tablename__ = "work_pattern_day"
+    work_pattern_id = Column(
+        UUID(as_uuid=True), ForeignKey("work_pattern.work_pattern_id"), primary_key=True
+    )
+    day_of_week_id = Column(Integer, ForeignKey("lk_day_of_week.day_of_week_id"), primary_key=True)
+    week_number = Column(Integer, nullable=False, primary_key=True)
+    hours = Column(Integer)
+    minutes = Column(Integer)
+
+    work_pattern = relationship("WorkPattern", back_populates="work_pattern_days", uselist=False)
+    day_of_week = relationship(LkDayOfWeek)
+    relationship(WorkPattern, back_populates="work_pattern_days")
+
+
+class WorkPatternType(LookupTable):
+    model = LkWorkPatternType
+    column_names = ("work_pattern_type_id", "work_pattern_type_description")
+
+    FIXED = LkWorkPatternType(0, "Fixed")
+    ROTATING = LkWorkPatternType(1, "Rotating")
+    VARIABLE = LkWorkPatternType(2, "Variable")
+
+
+class DayOfWeek(LookupTable):
+    model = LkDayOfWeek
+    column_names = ("day_of_week_id", "day_of_week_description")
+
+    MONDAY = LkDayOfWeek(1, "Monday")
+    TUESDAY = LkDayOfWeek(2, "Tuesday")
+    WEDNESDAY = LkDayOfWeek(3, "Wednesday")
+    THURSDAY = LkDayOfWeek(4, "Thursday")
+    FRIDAY = LkDayOfWeek(5, "Friday")
+    SATURDAY = LkDayOfWeek(6, "Saturday")
+    SUNDAY = LkDayOfWeek(7, "Sunday")
 
 
 class LeaveReason(LookupTable):
@@ -528,4 +601,6 @@ def sync_lookup_tables(db_session):
     EmploymentStatus.sync_to_database(db_session)
     DocumentType.sync_to_database(db_session)
     ContentType.sync_to_database(db_session)
+    DayOfWeek.sync_to_database(db_session)
+    WorkPatternType.sync_to_database(db_session)
     db_session.commit()

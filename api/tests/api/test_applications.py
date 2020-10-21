@@ -1,3 +1,4 @@
+import copy
 from datetime import date, datetime
 
 import factory.random
@@ -17,6 +18,8 @@ from massgov.pfml.db.models.applications import (
     FINEOSWebIdExt,
     LeaveReason,
     LeaveReasonQualifier,
+    WorkPattern,
+    WorkPatternDay,
 )
 from massgov.pfml.db.models.employees import TaxIdentifier
 from massgov.pfml.db.models.factories import (
@@ -962,6 +965,246 @@ def test_application_patch_update_payment_preference_belonging_to_other_applicat
     response_body = response.get_json().get("data")
     payment_preferences_response = response_body.get("payment_preferences")
     assert len(payment_preferences_response) == 0
+
+
+def test_application_patch_add_work_pattern(client, user, auth_token, test_db_session):
+    application = ApplicationFactory.create(user=user)
+
+    response = client.patch(
+        "/v1/applications/{}".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+        json={
+            "work_pattern": {
+                "work_pattern_type": "Fixed",
+                "pattern_start_date": "2021-01-03",
+                "work_week_starts": "Sunday",
+                "work_pattern_days": [
+                    {"day_of_week": "Sunday", "week_number": 1, "hours": 8, "minutes": 0},
+                    {"day_of_week": "Monday", "week_number": 1, "hours": 8, "minutes": 0},
+                    {"day_of_week": "Tuesday", "week_number": 1, "hours": 8, "minutes": 0},
+                    {"day_of_week": "Wednesday", "week_number": 1, "hours": 8, "minutes": 0},
+                    {"day_of_week": "Thursday", "week_number": 1, "hours": 8, "minutes": 0},
+                    {"day_of_week": "Friday", "week_number": 1, "hours": 8, "minutes": 0},
+                    {"day_of_week": "Saturday", "week_number": 1, "hours": 8, "minutes": 0},
+                ],
+            }
+        },
+    )
+
+    assert response.status_code == 200
+
+    response_body = response.get_json().get("data")
+    work_pattern = response_body.get("work_pattern")
+
+    assert work_pattern.get("work_pattern_type") == "Fixed"
+    assert work_pattern.get("pattern_start_date") == "2021-01-03"
+    assert work_pattern.get("work_week_starts") == "Sunday"
+    assert len(work_pattern.get("work_pattern_days")) == 7
+
+
+def test_application_patch_update_work_pattern(client, user, auth_token, test_db_session):
+    application = ApplicationFactory.create(user=user)
+
+    new_work_pattern = WorkPattern(
+        pattern_start_date="2021-01-03",
+        work_pattern_days=[WorkPatternDay(day_of_week_id=i + 1, week_number=1) for i in range(7)],
+    )
+    application.work_pattern = new_work_pattern
+    test_db_session.add(application)
+    test_db_session.commit()
+
+    response = client.patch(
+        "/v1/applications/{}".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+        json={
+            "work_pattern": {
+                "work_pattern_type": "Fixed",
+                "work_week_starts": "Sunday",
+                "work_pattern_days": [
+                    {"day_of_week": "Sunday", "week_number": 1, "hours": 8, "minutes": 0},
+                    {"day_of_week": "Monday", "week_number": 1, "hours": 8, "minutes": 0},
+                    {"day_of_week": "Tuesday", "week_number": 1, "hours": 8, "minutes": 0},
+                    {"day_of_week": "Wednesday", "week_number": 1, "hours": 8, "minutes": 0},
+                    {"day_of_week": "Thursday", "week_number": 1, "hours": 8, "minutes": 0},
+                    {"day_of_week": "Friday", "week_number": 1, "hours": 8, "minutes": 0},
+                    {"day_of_week": "Saturday", "week_number": 1, "hours": 8, "minutes": 0},
+                ],
+            }
+        },
+    )
+
+    assert response.status_code == 200
+
+    response_body = response.get_json().get("data")
+    work_pattern = response_body.get("work_pattern")
+
+    assert work_pattern.get("work_pattern_type") == "Fixed"
+    assert work_pattern.get("pattern_start_date") == "2021-01-03"
+    assert work_pattern.get("work_week_starts") == "Sunday"
+    assert len(work_pattern.get("work_pattern_days")) == 7
+
+
+def test_application_patch_remove_work_pattern_days(client, user, auth_token, test_db_session):
+    application = ApplicationFactory.create(user=user)
+
+    new_work_pattern = WorkPattern(
+        pattern_start_date="2021-01-03",
+        work_pattern_type_id=1,
+        work_week_starts_id=7,
+        work_pattern_days=[WorkPatternDay(day_of_week_id=i + 1, week_number=1) for i in range(7)],
+    )
+    application.work_pattern = new_work_pattern
+    test_db_session.add(application)
+    test_db_session.commit()
+
+    response = client.patch(
+        "/v1/applications/{}".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+        json={
+            "work_pattern": {
+                "work_pattern_type": "Variable",
+                "pattern_start_date": None,
+                "work_pattern_days": None,
+            }
+        },
+    )
+
+    assert response.status_code == 200
+
+    response_body = response.get_json().get("data")
+    work_pattern = response_body.get("work_pattern")
+
+    assert work_pattern.get("work_pattern_type") == "Variable"
+    assert work_pattern.get("pattern_start_date") is None
+    assert work_pattern.get("work_week_starts") == "Sunday"
+    assert len(work_pattern.get("work_pattern_days")) == 0
+
+
+def test_application_patch_invalid_work_pattern(client, user, auth_token, test_db_session):
+    application = ApplicationFactory.create(user=user)
+
+    base_work_pattern = {
+        "work_pattern_type": "Fixed",
+        "work_week_starts": "Sunday",
+        "pattern_start_date": "2021-01-03",
+        "work_pattern_days": [
+            {"day_of_week": "Sunday", "week_number": 1, "hours": 8, "minutes": 0},
+            {"day_of_week": "Monday", "week_number": 1, "hours": 8, "minutes": 0},
+            {"day_of_week": "Tuesday", "week_number": 1, "hours": 8, "minutes": 0},
+            {"day_of_week": "Wednesday", "week_number": 1, "hours": 8, "minutes": 0},
+            {"day_of_week": "Thursday", "week_number": 1, "hours": 8, "minutes": 0},
+            {"day_of_week": "Friday", "week_number": 1, "hours": 8, "minutes": 0},
+            {"day_of_week": "Saturday", "week_number": 1, "hours": 8, "minutes": 0},
+        ],
+    }
+
+    work_pattern_with_invalid_start_date = copy.deepcopy(base_work_pattern)
+    work_pattern_with_invalid_start_date["pattern_start_date"] = "2021-01-04"
+
+    response = client.patch(
+        "/v1/applications/{}".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+        json={"work_pattern": work_pattern_with_invalid_start_date},
+    )
+
+    assert response.status_code == 400
+    assert (
+        response.get_json().get("detail")
+        == "pattern_start_date must be on the same day of the week that the work week starts."
+    )
+
+    work_pattern_with_invalid_week_number = copy.deepcopy(base_work_pattern)
+    work_pattern_with_invalid_week_number["work_pattern_days"][0]["week_number"] = 5
+
+    response = client.patch(
+        "/v1/applications/{}".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+        json={"work_pattern": work_pattern_with_invalid_week_number},
+    )
+    error = response.get_json().get("errors")[0]
+
+    assert response.status_code == 400
+    assert error.get("field") == "work_pattern.work_pattern_days.0.week_number"
+    assert error.get("message") == "5 is greater than the maximum of 4"
+    assert error.get("type") == "maximum"
+
+    work_pattern_with_invalid_hours = copy.deepcopy(base_work_pattern)
+    work_pattern_with_invalid_hours["work_pattern_days"][3]["hours"] = 25
+
+    response = client.patch(
+        "/v1/applications/{}".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+        json={"work_pattern": work_pattern_with_invalid_hours},
+    )
+    error = response.get_json().get("errors")[0]
+
+    assert response.status_code == 400
+    assert error.get("field") == "work_pattern.work_pattern_days.3.hours"
+    assert error.get("message") == "25 is greater than the maximum of 24"
+    assert error.get("type") == "maximum"
+
+    work_pattern_with_additional_days = copy.deepcopy(base_work_pattern)
+    work_pattern_with_additional_days["work_pattern_days"].append(
+        {"day_of_week": "Sunday", "week_number": 1, "hours": 8, "minutes": 0}
+    )
+
+    response = client.patch(
+        "/v1/applications/{}".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+        json={"work_pattern": work_pattern_with_additional_days},
+    )
+
+    assert response.status_code == 400
+    assert (
+        response.get_json().get("detail")
+        == "Week number 1 for provided work_pattern_days has 8 days. There should be 7 days."
+    )
+
+    work_pattern_with_incomplete_week = copy.deepcopy(base_work_pattern)
+    work_pattern_with_incomplete_week["work_pattern_days"].extend(
+        [
+            {"day_of_week": "Sunday", "week_number": 2, "hours": 8, "minutes": 0},
+            {"day_of_week": "Monday", "week_number": 2, "hours": 8, "minutes": 0},
+            {"day_of_week": "Wednesday", "week_number": 2, "hours": 8, "minutes": 0},
+        ]
+    )
+
+    response = client.patch(
+        "/v1/applications/{}".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+        json={"work_pattern": work_pattern_with_incomplete_week},
+    )
+
+    assert response.status_code == 400
+    assert (
+        response.get_json().get("detail")
+        == "Week number 2 for provided work_pattern_days is missing Friday, Saturday, Thursday, Tuesday."
+    )
+
+    work_pattern_with_non_consecutive_weeks = copy.deepcopy(base_work_pattern)
+    work_pattern_with_non_consecutive_weeks["work_pattern_days"].extend(
+        [
+            {"day_of_week": "Sunday", "week_number": 3, "hours": 8, "minutes": 0},
+            {"day_of_week": "Monday", "week_number": 3, "hours": 8, "minutes": 0},
+            {"day_of_week": "Tuesday", "week_number": 3, "hours": 8, "minutes": 0},
+            {"day_of_week": "Wednesday", "week_number": 3, "hours": 8, "minutes": 0},
+            {"day_of_week": "Thursday", "week_number": 3, "hours": 8, "minutes": 0},
+            {"day_of_week": "Friday", "week_number": 3, "hours": 8, "minutes": 0},
+            {"day_of_week": "Saturday", "week_number": 3, "hours": 8, "minutes": 0},
+        ]
+    )
+
+    response = client.patch(
+        "/v1/applications/{}".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+        json={"work_pattern": work_pattern_with_non_consecutive_weeks},
+    )
+
+    assert response.status_code == 400
+    assert (
+        response.get_json().get("detail")
+        == "Week number 2 for provided work_pattern_days has 0 days, but you are attempting to add days for week number 3. All provided weeks should be consecutive."
+    )
 
 
 def test_application_patch_date_of_birth_after_1900_over_14(client, user, auth_token):
