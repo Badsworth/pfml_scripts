@@ -53,16 +53,13 @@ const PreviousLeaves = (props) => {
           </li>
         </ul>
       </Details>
-      <Table className="width-full">
+      <Table>
         <thead>
           <tr>
-            <th scope="col">
+            <th colSpan="3" scope="col">
               {t(
                 "pages.employersClaimsReview.previousLeaves.tableHeader_dateRange"
               )}
-            </th>
-            <th scope="col" colSpan="2">
-              {t("pages.employersClaimsReview.previousLeaves.tableHeader_days")}
             </th>
           </tr>
         </thead>
@@ -78,26 +75,13 @@ const PreviousLeaves = (props) => {
                   />
                 );
               })}
-              <tr>
-                <th scope="row" className="text-bold">
-                  {t(
-                    "pages.employersClaimsReview.previousLeaves.tableFooter_totalLeave"
-                  )}
-                </th>
-                <td colSpan="1">
-                  {t("pages.employersClaimsReview.durationBasis_days", {
-                    numOfDays: t("pages.employersClaimsReview.notApplicable"),
-                  })}
-                </td>
-                <td />
-              </tr>
             </React.Fragment>
           ) : (
             <tr>
               <th scope="row">
                 {t("pages.employersClaimsReview.noneReported")}
               </th>
-              <td colSpan="2" />
+              <td colSpan="3" />
             </tr>
           )}
         </tbody>

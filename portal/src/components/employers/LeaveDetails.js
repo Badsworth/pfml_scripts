@@ -1,10 +1,6 @@
 import Claim, { LeaveReason } from "../../models/Claim";
-import React, { useState } from "react";
-import AmendButton from "./AmendButton";
-import AmendmentForm from "./AmendmentForm";
-import ConditionalContent from "../ConditionalContent";
-import InputDate from "../InputDate";
 import PropTypes from "prop-types";
+import React from "react";
 import ReviewHeading from "../ReviewHeading";
 import ReviewRow from "../ReviewRow";
 import findKeyByValue from "../../utils/findKeyByValue";
@@ -22,9 +18,8 @@ const LeaveDetails = (props) => {
   const {
     claim: {
       fineos_absence_id,
-      leave_details: { employer_notification_date, reason },
+      leave_details: { reason },
     },
-    onChange,
   } = props;
 
   // TODO (CP-984): Factor in start and end dates for Reduced and Intermittent leaves
@@ -36,16 +31,6 @@ const LeaveDetails = (props) => {
     props.claim,
     "leave_details.continuous_leave_periods[0].end_date"
   );
-
-  const [amendment, setAmendment] = useState(employer_notification_date);
-  const [isAmendmentFormDisplayed, setIsAmendmentFormDisplayed] = useState(
-    false
-  );
-  const amendDate = (event) => {
-    const value = event.target.value;
-    setAmendment(value);
-    onChange(value);
-  };
 
   return (
     <React.Fragment>
@@ -68,37 +53,6 @@ const LeaveDetails = (props) => {
       </ReviewRow>
       <ReviewRow
         level="3"
-        label={t(
-          "pages.employersClaimsReview.leaveDetails.employerNotifiedLabel"
-        )}
-        action={
-          <AmendButton onClick={() => setIsAmendmentFormDisplayed(true)} />
-        }
-      >
-        {formatDateRange(employer_notification_date)}
-        <ConditionalContent visible={isAmendmentFormDisplayed}>
-          <AmendmentForm
-            onCancel={() => {
-              setIsAmendmentFormDisplayed(false);
-              setAmendment(employer_notification_date);
-              onChange(employer_notification_date);
-            }}
-          >
-            <InputDate
-              onChange={amendDate}
-              value={amendment}
-              label={t("components.amendmentForm.question_notificationDate")}
-              name="employer-notification-date-amendment"
-              dayLabel={t("components.form.dateInputDayLabel")}
-              monthLabel={t("components.form.dateInputMonthLabel")}
-              yearLabel={t("components.form.dateInputYearLabel")}
-              smallLabel
-            />
-          </AmendmentForm>
-        </ConditionalContent>
-      </ReviewRow>
-      <ReviewRow
-        level="3"
         label={t("pages.employersClaimsReview.leaveDetails.leaveDurationLabel")}
       >
         {formatDateRange(start_date, end_date)}
@@ -109,7 +63,6 @@ const LeaveDetails = (props) => {
 
 LeaveDetails.propTypes = {
   claim: PropTypes.instanceOf(Claim).isRequired,
-  onChange: PropTypes.func,
 };
 
 export default LeaveDetails;

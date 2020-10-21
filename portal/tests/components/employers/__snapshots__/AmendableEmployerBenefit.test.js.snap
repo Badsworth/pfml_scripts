@@ -12,7 +12,7 @@ exports[`AmendableEmployerBenefit renders the component 1`] = `
       Short-term disability insurance
     </td>
     <td>
-      $1000
+      $1000 per month
     </td>
     <td>
       <AmendButton
@@ -55,7 +55,7 @@ exports[`AmendableEmployerBenefit renders the component 1`] = `
             yearLabel="Year"
           />
           <InputText
-            label="How much will they receive each month?"
+            label="How much will they receive?"
             mask="currency"
             name="benefit-amount-amendment"
             onChange={[Function]}
@@ -63,6 +63,31 @@ exports[`AmendableEmployerBenefit renders the component 1`] = `
             type="number"
             value={1000}
             width="medium"
+          />
+          <Dropdown
+            choices={
+              Array [
+                Object {
+                  "label": "Daily",
+                  "value": "Per Day",
+                },
+                Object {
+                  "label": "Weekly",
+                  "value": "Per Week",
+                },
+                Object {
+                  "label": "Monthly",
+                  "value": "Per Month",
+                },
+              ]
+            }
+            class="margin-top-0"
+            label="How often will they receive the benefit?"
+            labelWeight="bold"
+            name="benefit-frequency-amendment"
+            onChange={[Function]}
+            smallLabel={true}
+            value="Per Month"
           />
         </AmendmentForm>
       </td>

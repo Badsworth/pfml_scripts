@@ -255,6 +255,9 @@ const shared = {
   employerBenefitType_paidLeave: "Accrued paid leave",
   employerBenefitType_permanentDisability: "Permanent disability insurance",
   employerBenefitType_shortTermDisability: "Short-term disability insurance",
+  employerFrequency_daily: "Daily",
+  employerFrequency_monthly: "Monthly",
+  employerFrequency_weekly: "Weekly",
   fileUpload_addAnotherFileButton: "Choose another file",
   fileUpload_addFirstFileButton: "Choose a file",
   fileUpload_fileHeadingPrefix: "File",
@@ -1010,6 +1013,9 @@ const pages = {
         "$t(shared.employerBenefitType_permanentDisability)",
       employerBenefitType_shortTermDisability:
         "$t(shared.employerBenefitType_shortTermDisability)",
+      frequencyValue_daily: "$t(shared.employerFrequency_daily)",
+      frequencyValue_monthly: "$t(shared.employerFrequency_monthly)",
+      frequencyValue_weekly: "$t(shared.employerFrequency_weekly)",
       header: "Employer benefits",
       tableName: "Employer-sponsored benefit details",
     },
@@ -1027,10 +1033,11 @@ const pages = {
     },
     instructionsAmendment:
       "Please review the details of this application carefully. If anything seems incorrect, you can add an amendment within each section or include general comments at the end.",
+    instructionsComment:
+      "If you have not been notified of this, please include a comment at the end.",
     instructionsDueDate: "Review and respond by: <strong>{{date}}</strong>",
     leaveDetails: {
       applicationIdLabel: "Application ID",
-      employerNotifiedLabel: "Employer notified",
       header: "Leave details",
       leaveDurationLabel: "Leave duration",
       leaveReasonValue_activeDutyFamily:
@@ -1084,15 +1091,12 @@ const pages = {
       qualifyingReason_careForFamily:
         "Care for a family member with a serious health condition",
       qualifyingReason_manageHealth: "Manage a serious health condition",
-      tableFooter_totalLeave: "Total leave",
       tableHeader_dateRange: "Date range",
-      tableHeader_days: "Days",
     },
     submitButton: "Submit",
     supportingWorkDetails: {
       header: "Supporting work details",
       hoursWorkedLabel: "Weekly hours worked",
-      viewScheduleLink: "View detailed work schedule",
     },
     title: "Review application for {{name}}",
   },
@@ -1177,8 +1181,9 @@ const pages = {
 const components = {
   amendmentForm: {
     cancel: "Cancel amendment",
-    question_benefitAmount: "How much will they receive each month?",
+    question_benefitAmount: "How much will they receive?",
     question_benefitEndDate: "When will the employee stop using the benefit?",
+    question_benefitFrequency: "How often will they receive the benefit?",
     question_benefitStartDate:
       "When will the employee start using the benefit?",
     question_leaveEndDate: "When did the leave end?",

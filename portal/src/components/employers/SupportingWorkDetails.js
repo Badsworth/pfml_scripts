@@ -8,9 +8,6 @@ import ReviewHeading from "../ReviewHeading";
 import ReviewRow from "../ReviewRow";
 import { useTranslation } from "../../locales/i18n";
 
-// TODO (EMPLOYER-364): Remove hardcoded link
-const detailedWorkScheduleFile = "example-work-schedule-link.pdf";
-
 /**
  * Display weekly hours worked for intermittent leave
  * in the Leave Admin claim review page.
@@ -66,16 +63,6 @@ const SupportingWorkDetails = (props) => {
             />
           </AmendmentForm>
         </ConditionalContent>
-      </ReviewRow>
-      <ReviewRow
-        level="3"
-        label={t("pages.employersClaimsReview.documentationLabel")}
-      >
-        <a href={detailedWorkScheduleFile} className="text-normal">
-          {t(
-            "pages.employersClaimsReview.supportingWorkDetails.viewScheduleLink"
-          )}
-        </a>
       </ReviewRow>
     </React.Fragment>
   );

@@ -4,6 +4,8 @@ import EmployerBenefit, {
 import AmendButton from "../../../src/components/employers/AmendButton";
 import AmendableEmployerBenefit from "../../../src/components/employers/AmendableEmployerBenefit";
 import AmendmentForm from "../../../src/components/employers/AmendmentForm";
+import Button from "../../../src/components/Button";
+import Dropdown from "../../../src/components/Dropdown";
 import InputDate from "../../../src/components/InputDate";
 import InputText from "../../../src/components/InputText";
 import React from "react";
@@ -12,19 +14,19 @@ import { shallow } from "enzyme";
 describe("AmendableEmployerBenefit", () => {
   const shortTermDisability = new EmployerBenefit({
     benefit_amount_dollars: 1000,
+    benefit_amount_frequency: "Per Month",
     benefit_end_date: "2021-03-01",
     benefit_start_date: "2021-02-01",
     benefit_type: EmployerBenefitType.shortTermDisability,
   });
+  const props = {
+    onChange: jest.fn(),
+    benefit: shortTermDisability,
+  };
   let wrapper;
 
   beforeEach(() => {
-    wrapper = shallow(
-      <AmendableEmployerBenefit
-        benefit={shortTermDisability}
-        onChange={() => {}}
-      />
-    );
+    wrapper = shallow(<AmendableEmployerBenefit {...props} />);
   });
 
   it("renders the component", () => {
@@ -42,7 +44,7 @@ describe("AmendableEmployerBenefit", () => {
   });
 
   it("renders formatted benefit amount with dollar sign", () => {
-    expect(wrapper.find("td").at(1).text()).toEqual("$1000");
+    expect(wrapper.find("td").at(1).text()).toEqual("$1000 per month");
   });
 
   it("renders an AmendmentForm if user clicks on AmendButton", () => {
@@ -58,7 +60,7 @@ describe("AmendableEmployerBenefit", () => {
     expect(wrapper.find(InputText)).toHaveLength(1);
   });
 
-  it("renders 'amount' field with currency mask", () => {
+  it("renders amount field with currency mask", () => {
     wrapper.find(AmendButton).simulate("click");
 
     expect(wrapper.find(InputText).prop("mask")).toEqual("currency");
@@ -67,6 +69,7 @@ describe("AmendableEmployerBenefit", () => {
   it("hides amount input field if the benefit is acrrued paid leave", () => {
     const paidLeave = new EmployerBenefit({
       benefit_amount_dollars: 0,
+      benefit_amount_frequency: "",
       benefit_end_date: "2021-03-01",
       benefit_start_date: "2021-02-01",
       benefit_type: EmployerBenefitType.paidLeave,
@@ -79,5 +82,43 @@ describe("AmendableEmployerBenefit", () => {
 
     expect(wrapper.find(InputDate)).toHaveLength(2);
     expect(wrapper.find(InputText)).toHaveLength(0);
+  });
+
+  it("updates start and end dates in the AmendmentForm", () => {
+    wrapper.find(AmendButton).simulate("click");
+    wrapper
+      .find(InputDate)
+      .first()
+      .simulate("change", { target: { value: "10-10-2020" } });
+    wrapper
+      .find(InputDate)
+      .last()
+      .simulate("change", { target: { value: "10-20-2020" } });
+
+    expect(props.onChange).toHaveBeenCalledTimes(2);
+  });
+
+  it("updates amount in the AmendmentForm", () => {
+    wrapper.find(AmendButton).simulate("click");
+    wrapper.find(InputText).simulate("change", { target: { value: "500" } });
+
+    expect(props.onChange).toHaveBeenCalled();
+  });
+
+  it("updates frequency in the AmendmentForm", () => {
+    wrapper.find(AmendButton).simulate("click");
+    wrapper
+      .find(Dropdown)
+      .simulate("change", { target: { value: "Per Week" } });
+
+    expect(props.onChange).toHaveBeenCalled();
+  });
+
+  it("hides amendment form and clears value on cancel", () => {
+    wrapper.find(AmendButton).simulate("click");
+    wrapper.find(InputText).simulate("change", { target: { value: "500" } });
+    wrapper.find(AmendmentForm).dive().find(Button).simulate("click");
+
+    expect(props.onChange).toHaveBeenCalledTimes(2);
   });
 });

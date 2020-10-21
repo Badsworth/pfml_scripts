@@ -1,22 +1,26 @@
 import AmendButton from "../../../src/components/employers/AmendButton";
 import AmendablePreviousLeave from "../../../src/components/employers/AmendablePreviousLeave";
 import AmendmentForm from "../../../src/components/employers/AmendmentForm";
+import Button from "../../../src/components/Button";
+import InputDate from "../../../src/components/InputDate";
 import PreviousLeave from "../../../src/models/PreviousLeave";
 import React from "react";
 import { shallow } from "enzyme";
 
 describe("AmendablePreviousLeave", () => {
-  let previousLeave, wrapper;
+  const leavePeriod = new PreviousLeave({
+    leave_start_date: "2020-03-01",
+    leave_end_date: "2020-03-06",
+    id: 1,
+  });
+  const props = {
+    onChange: jest.fn(),
+    leavePeriod,
+  };
+  let wrapper;
 
   beforeEach(() => {
-    previousLeave = new PreviousLeave({
-      leave_start_date: "2020-03-01",
-      leave_end_date: "2020-03-06",
-      id: 1,
-    });
-    wrapper = shallow(
-      <AmendablePreviousLeave leavePeriod={previousLeave} onChange={() => {}} />
-    );
+    wrapper = shallow(<AmendablePreviousLeave {...props} />);
   });
 
   it("renders the component", () => {
@@ -27,5 +31,30 @@ describe("AmendablePreviousLeave", () => {
     wrapper.find(AmendButton).simulate("click");
 
     expect(wrapper.find(AmendmentForm).exists()).toEqual(true);
+  });
+
+  it("updates start and end dates in the AmendmentForm", () => {
+    wrapper.find(AmendButton).simulate("click");
+    wrapper
+      .find(InputDate)
+      .first()
+      .simulate("change", { target: { value: "10-10-2020" } });
+    wrapper
+      .find(InputDate)
+      .last()
+      .simulate("change", { target: { value: "10-20-2020" } });
+
+    expect(props.onChange).toHaveBeenCalledTimes(2);
+  });
+
+  it("hides amendment form and clears value on cancel", () => {
+    wrapper.find(AmendButton).simulate("click");
+    wrapper
+      .find(InputDate)
+      .first()
+      .simulate("change", { target: { value: "10-10-2020" } });
+    wrapper.find(AmendmentForm).dive().find(Button).simulate("click");
+
+    expect(props.onChange).toHaveBeenCalledTimes(2);
   });
 });

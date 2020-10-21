@@ -1,10 +1,12 @@
 import EmployerBenefit, {
   EmployerBenefitType,
+  IncomeFrequency,
 } from "../../models/EmployerBenefit";
 import React, { useState } from "react";
 import AmendButton from "./AmendButton";
 import AmendmentForm from "./AmendmentForm";
 import ConditionalContent from "../ConditionalContent";
+import Dropdown from "../Dropdown";
 import InputDate from "../InputDate";
 import InputText from "../InputText";
 import PropTypes from "prop-types";
@@ -35,9 +37,23 @@ const AmendableEmployerBenefit = ({ benefit, onChange }) => {
   const benefitType = findKeyByValue(EmployerBenefitType, benefit.benefit_type);
   const isPaidLeave = benefit.benefit_type === EmployerBenefitType.paidLeave;
   const getBenefitAmountByType = () => {
+    const { benefit_amount_dollars, benefit_amount_frequency } = benefit;
     return isPaidLeave
       ? t("pages.employersClaimsReview.notApplicable")
-      : "$" + benefit.benefit_amount_dollars;
+      : `$${benefit_amount_dollars} ${benefit_amount_frequency.toLowerCase()}`;
+  };
+  const getAllBenefitFrequencies = () => {
+    return Object.values(IncomeFrequency).map((frequency) => {
+      return {
+        label: t(
+          "pages.employersClaimsReview.employerBenefits.frequencyValue",
+          {
+            context: findKeyByValue(IncomeFrequency, frequency),
+          }
+        ),
+        value: frequency,
+      };
+    });
   };
 
   return (
@@ -108,22 +124,42 @@ const AmendableEmployerBenefit = ({ benefit, onChange }) => {
                 smallLabel
               />
               {!isPaidLeave && (
-                <InputText
-                  onChange={(e) =>
-                    amendBenefit(
-                      benefit.id,
-                      "benefit_amount_dollars",
-                      e.target.value
-                    )
-                  }
-                  name="benefit-amount-amendment"
-                  value={amendment.benefit_amount_dollars}
-                  label={t("components.amendmentForm.question_benefitAmount")}
-                  type="number"
-                  mask="currency"
-                  width="medium"
-                  smallLabel
-                />
+                <React.Fragment>
+                  <InputText
+                    onChange={(e) =>
+                      amendBenefit(
+                        benefit.id,
+                        "benefit_amount_dollars",
+                        e.target.value
+                      )
+                    }
+                    name="benefit-amount-amendment"
+                    value={amendment.benefit_amount_dollars}
+                    label={t("components.amendmentForm.question_benefitAmount")}
+                    type="number"
+                    mask="currency"
+                    width="medium"
+                    smallLabel
+                  />
+                  <Dropdown
+                    choices={getAllBenefitFrequencies()}
+                    label={t(
+                      "components.amendmentForm.question_benefitFrequency"
+                    )}
+                    labelWeight="bold"
+                    name="benefit-frequency-amendment"
+                    onChange={(e) =>
+                      amendBenefit(
+                        benefit.id,
+                        "benefit_amount_frequency",
+                        e.target.value
+                      )
+                    }
+                    class="margin-top-0"
+                    value={amendment.benefit_amount_frequency}
+                    smallLabel
+                  />
+                </React.Fragment>
               )}
             </AmendmentForm>
           </td>

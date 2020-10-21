@@ -38,11 +38,6 @@ const AmendablePreviousLeave = ({ leavePeriod, onChange }) => {
           )}
         </th>
         <td>
-          {t("pages.employersClaimsReview.durationBasis_days", {
-            numOfDays: t("pages.employersClaimsReview.notApplicable"),
-          })}
-        </td>
-        <td>
           <AmendButton onClick={() => setIsAmendmentFormDisplayed(true)} />
         </td>
       </tr>

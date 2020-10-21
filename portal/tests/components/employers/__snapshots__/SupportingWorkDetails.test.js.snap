@@ -41,16 +41,5 @@ exports[`SupportingWorkDetails renders the component 1`] = `
       </AmendmentForm>
     </ConditionalContent>
   </ReviewRow>
-  <ReviewRow
-    label="Documentation"
-    level="3"
-  >
-    <a
-      className="text-normal"
-      href="example-work-schedule-link.pdf"
-    >
-      View detailed work schedule
-    </a>
-  </ReviewRow>
 </Fragment>
 `;

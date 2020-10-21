@@ -33,21 +33,14 @@ exports[`PreviousLeaves renders the component 1`] = `
       </li>
     </ul>
   </Details>
-  <Table
-    className="width-full"
-  >
+  <Table>
     <thead>
       <tr>
         <th
+          colSpan="3"
           scope="col"
         >
           Date range
-        </th>
-        <th
-          colSpan="2"
-          scope="col"
-        >
-          Days
         </th>
       </tr>
     </thead>
@@ -74,20 +67,6 @@ exports[`PreviousLeaves renders the component 1`] = `
         }
         onChange={[Function]}
       />
-      <tr>
-        <th
-          className="text-bold"
-          scope="row"
-        >
-          Total leave
-        </th>
-        <td
-          colSpan="1"
-        >
-          - days
-        </td>
-        <td />
-      </tr>
     </tbody>
   </Table>
 </Fragment>

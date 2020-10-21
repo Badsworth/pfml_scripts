@@ -27,12 +27,10 @@ export const Review = (props) => {
     fineos_absence_id,
     employer_fein,
     hours_worked_per_week,
-    leave_details: { employer_notification_date },
     employer_benefits,
     previous_leaves,
   } = claim;
   const [amendedBenefits, setAmendedBenefits] = useState(employer_benefits);
-  const [amendedDate, setAmendedDate] = useState(employer_notification_date);
   const [amendedLeaves, setAmendedLeaves] = useState(previous_leaves);
   const [amendedHours, setAmendedHours] = useState(hours_worked_per_week);
 
@@ -48,7 +46,6 @@ export const Review = (props) => {
 
   const handleSubmit = async ({ comment }) => {
     await appLogic.employers.submit(fineos_absence_id, {
-      employer_notification_date: amendedDate,
       employer_benefits: amendedBenefits,
       previous_leaves: amendedLeaves,
       hours_worked_per_week: parseInt(amendedHours),
@@ -73,12 +70,15 @@ export const Review = (props) => {
       <p aria-labelledby="instructionsAmendment">
         {t("pages.employersClaimsReview.instructionsAmendment")}
       </p>
+      <p aria-labelledby="instructionsComment">
+        {t("pages.employersClaimsReview.instructionsComment")}
+      </p>
       <p className="text-bold" aria-labelledby="employerIdentifierNumber">
         {t("pages.employersClaimsReview.employerIdentifierLabel")}
       </p>
       <p className="margin-top-0">{employer_fein}</p>
       <EmployeeInformation claim={claim} />
-      <LeaveDetails claim={claim} onChange={setAmendedDate} />
+      <LeaveDetails claim={claim} />
       <LeaveSchedule claim={claim} />
       <SupportingWorkDetails
         hoursWorkedPerWeek={hours_worked_per_week}
