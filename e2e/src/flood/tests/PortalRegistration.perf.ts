@@ -23,9 +23,9 @@ export const steps = [
         value: JSON.stringify({
           pfmlTerriyay: true,
         }),
-        url: PortalBaseUrl,
+        url: await PortalBaseUrl,
       });
-      await browser.visit(PortalBaseUrl);
+      await browser.visit(await PortalBaseUrl);
     },
   },
   {
@@ -50,11 +50,10 @@ export const steps = [
   {
     name: "Verify new user's email",
     test: async (browser: Browser): Promise<void> => {
-      // TODO: how much do we need to wait
-      // for verification email to arrive
-      await browser.wait(20000);
-      // get the email code
+      // initial wait time for email to be sent
       const code = await emailVerifier.getVerificationCodeForUser(username);
+      if (code.length === 0)
+        throw new Error("Couldn't getVerificationCodeForUser email!");
       // type code
       await (await labelled(browser, "6-digit code")).type(code);
       // submit code

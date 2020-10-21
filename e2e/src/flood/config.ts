@@ -13,8 +13,9 @@ export const globalElementSettings: TestSettings = {
   clearCookies: true,
 };
 
-export const PortalBaseUrl = "https://paidleave-stage.mass.gov";
-export const APIBaseUrl = "https://paidleave-api-stage.mass.gov/api/v1";
+export const PortalBaseUrl = config("E2E_PORTAL_BASEURL");
+export const APIBaseUrl = config("E2E_API_BASEURL");
+
 export type StoredStep = {
   name: string;
   test: StepFunction<unknown>;

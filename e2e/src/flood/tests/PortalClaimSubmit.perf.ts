@@ -23,9 +23,9 @@ export const steps = [
         value: JSON.stringify({
           pfmlTerriyay: true,
         }),
-        url: PortalBaseUrl,
+        url: await PortalBaseUrl,
       });
-      await browser.visit(PortalBaseUrl);
+      await browser.visit(await PortalBaseUrl);
       await (await labelled(browser, "Email address")).type(
         await config("E2E_PORTAL_USERNAME")
       );
@@ -61,7 +61,7 @@ export const steps = [
               .catch(reject);
           });
         },
-        APIBaseUrl,
+        await APIBaseUrl,
         reqOptions
       );
       if (!res.data || !res.data.application_id) {
@@ -89,7 +89,7 @@ export const steps = [
               .catch(reject);
           });
         },
-        APIBaseUrl,
+        await APIBaseUrl,
         applicationId,
         reqOptions
       );
@@ -102,7 +102,7 @@ export const steps = [
   {
     name: "Submit application",
     test: async (browser: Browser): Promise<void> => {
-      await browser.visit(PortalBaseUrl);
+      await browser.visit(await PortalBaseUrl);
       const reqOptions = getRequestOptions(authToken, "POST");
       const res = await browser.evaluate(
         (baseUrl, appId, options) => {
@@ -117,7 +117,7 @@ export const steps = [
               .catch(reject);
           });
         },
-        APIBaseUrl,
+        await APIBaseUrl,
         applicationId,
         reqOptions
       );

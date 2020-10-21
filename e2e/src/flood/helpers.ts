@@ -86,16 +86,21 @@ export async function getMailVerifier(
       apikey: apiKey,
       namespace: namespace,
       tag: getTagFromAddress(address),
+      livequery: true,
+      timestamp_from: new Date().getTime(),
     };
 
     const paramsString = Object.entries(params)
       .map(([key, val]) => `${key}=${val}`)
       .join("&");
 
+    // Stop trying to find email after 60 seconds
+    const controller = new AbortController();
+    setTimeout(() => controller.abort(), 60000);
     const body = await browser.evaluate(
-      (baseUrl, query) => {
+      (baseUrl, query, signal) => {
         return new Promise((resolve, reject) => {
-          fetch(`${baseUrl}?${query}`)
+          fetch(`${baseUrl}?${query}`, { signal })
             .then((r) => {
               resolve(r.json());
             })
@@ -103,7 +108,8 @@ export async function getMailVerifier(
         });
       },
       endpoint,
-      paramsString
+      paramsString,
+      controller.signal
     );
 
     if (body.result !== "success") {
