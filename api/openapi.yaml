@@ -614,11 +614,12 @@ paths:
   /notifications:
     post:
       security:
-        - {} # no authentication while mocked
+        - {}
       tags:
         - Notifications
       summary: >
         Send a notification that a document is available for a claimant to either the claimant or leave administrator.
+      operationId: massgov.pfml.api.notifications.notifications_post
       responses:
         "201":
           description: a successful response returns a 201 status code and asynchronously starts the notification process.
@@ -1832,19 +1833,47 @@ components:
         first_name:
           type: string
           example: "Jane"
-          nullable: false
-          minLength: 1
+          description: "Required if and only if recipient_type is Claimant"
         last_name:
           type: string
           example: "Doe"
-          nullable: false
-          minLength: 1
+          description: "Required if and only if recipient_type is Claimant"
+        full_name:
+          type: string
+          example: "Jane Doe"
+          description: "Required if and only if recipient_type is Leave Administrator"
+        contact_id:
+          type: string
+          example: "11"
+          description: "The contact ID of the recipient, only required if recipient type is a Leave Adminstrator"
         email_address:
           type: string
           format: email
           example: "j.a.doe@gmail.com"
           nullable: false
           minLength: 1
+        
+
+    NotificationClaimant:
+      type: object
+      properties:
+        first_name:
+          type: string
+          example: "John"
+          nullable: false
+          minLength: 1
+        last_name:
+          type: string
+          example: "Smith"
+          nullable: false
+          minLength: 1
+        date_of_birth:
+          $ref: "#/components/schemas/Date"
+          nullable: false
+        customer_id:
+          type: string
+          example: "1234"
+          nullable: false
 
     NotificationRequest:
       type: object
@@ -1888,19 +1917,7 @@ components:
           items:
             $ref: "#/components/schemas/NotificationRecipient"
         claimant_info:
-          type: object
-          description: The claimant that the notification pertains to.
-          properties:
-            first_name:
-              type: string
-              example: "John"
-              nullable: false
-              minLength: 1
-            last_name:
-              type: string
-              example: "Smith"
-              nullable: false
-              minLength: 1
+          $ref: "#/components/schemas/NotificationClaimant"
 
       required:
         - absence_case_id
@@ -1909,6 +1926,7 @@ components:
         - source
         - recipient_type
         - recipients
+        - claimant_info
 
     SsnItin:
       type: string

@@ -2,7 +2,7 @@ from datetime import datetime
 from decimal import Decimal
 from enum import Enum
 
-from sqlalchemy import TIMESTAMP, Boolean, Column, Date, ForeignKey, Integer, Numeric, Text
+from sqlalchemy import JSON, TIMESTAMP, Boolean, Column, Date, ForeignKey, Integer, Numeric, Text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 
@@ -506,6 +506,14 @@ def sync_state_metrics(db_session):
             db_session.add(metric)
 
     db_session.commit()
+
+
+class Notification(Base):
+    __tablename__ = "notification"
+    notification_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
+    request_json = Column(JSON, nullable=False)
+    created_at = Column(TIMESTAMP(timezone=True), nullable=False)
+    updated_at = Column(TIMESTAMP(timezone=True), nullable=False)
 
 
 def sync_lookup_tables(db_session):
