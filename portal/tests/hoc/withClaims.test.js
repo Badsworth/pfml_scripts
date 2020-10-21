@@ -43,20 +43,20 @@ describe("withClaims", () => {
   it("loads claims", () => {
     appLogic.claims.claims = null;
     render();
-    expect(appLogic.claims.load).toHaveBeenCalledTimes(1);
+    expect(appLogic.claims.loadAll).toHaveBeenCalledTimes(1);
   });
 
   it("does not load claims if user has not yet loaded", () => {
     appLogic.user = appLogic.users.user = null;
     render();
     wrapper.update();
-    expect(appLogic.claims.load).not.toHaveBeenCalled();
+    expect(appLogic.claims.loadAll).not.toHaveBeenCalled();
   });
 
   it("does not load claims if claims have already been loaded", () => {
     appLogic.claims.claims = new ClaimCollection([]);
     render();
-    expect(appLogic.claims.load).not.toHaveBeenCalled();
+    expect(appLogic.claims.loadAll).not.toHaveBeenCalled();
   });
 
   describe("when claims are loaded", () => {

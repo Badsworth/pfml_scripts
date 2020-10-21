@@ -32,7 +32,7 @@ describe("Applications", () => {
       appLogic.users.user = new User({ consented_to_data_sharing: true });
     });
 
-    jest.spyOn(appLogic.claims, "load").mockResolvedValue();
+    jest.spyOn(appLogic.claims, "loadAll").mockResolvedValue();
   });
 
   describe("when no claims exist", () => {
@@ -155,7 +155,7 @@ describe("Applications", () => {
 
     it("should only load documents for each claim once", async () => {
       const spy = jest
-        .spyOn(appLogic.documents, "load")
+        .spyOn(appLogic.documents, "loadAll")
         .mockImplementation(() => jest.fn());
 
       await act(async () => {

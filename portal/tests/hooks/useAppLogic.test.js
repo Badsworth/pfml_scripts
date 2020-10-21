@@ -37,14 +37,14 @@ describe("useAppLogic", () => {
     expect(claims.claims).toBeNull();
     expect(clearErrors).toBeInstanceOf(Function);
     expect(portalFlow).toEqual(expect.anything());
-    expect(claims.load).toBeInstanceOf(Function);
+    expect(claims.loadAll).toBeInstanceOf(Function);
     expect(claims.create).toBeInstanceOf(Function);
     expect(claims.update).toBeInstanceOf(Function);
     expect(users.updateUser).toBeInstanceOf(Function);
     expect(setAppErrors).toBeInstanceOf(Function);
     expect(claims.submit).toBeInstanceOf(Function);
     expect(documents.documents).toBeInstanceOf(DocumentCollection);
-    expect(documents.load).toBeInstanceOf(Function);
+    expect(documents.loadAll).toBeInstanceOf(Function);
     expect(documents.attach).toBeInstanceOf(Function);
     expect(employers.submit).toBeInstanceOf(Function);
     expect(users.user).toBeUndefined();

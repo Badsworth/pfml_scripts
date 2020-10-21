@@ -143,7 +143,7 @@ describe("useDocumentsLogic", () => {
 
         // load the documents into documentsLogic
         await act(async () => {
-          await documentsLogic.load(application_id);
+          await documentsLogic.loadAll(application_id);
         });
         // reset the call count
         getDocumentsMock.mockClear();
@@ -278,7 +278,7 @@ describe("useDocumentsLogic", () => {
     expect(appErrorsLogic.appErrors.items).toHaveLength(0);
   });
 
-  describe("load", () => {
+  describe("loadAll", () => {
     describe("when the request is successful", () => {
       describe("when the API returns documents", () => {
         let loadedDocuments;
@@ -296,7 +296,7 @@ describe("useDocumentsLogic", () => {
           });
 
           await act(async () => {
-            await documentsLogic.load(application_id);
+            await documentsLogic.loadAll(application_id);
           });
         });
 
@@ -313,7 +313,7 @@ describe("useDocumentsLogic", () => {
         it("only makes an api request if documents have not already been loaded for an application", async () => {
           getDocumentsMock.mockClear();
           await act(async () => {
-            await documentsLogic.load(application_id);
+            await documentsLogic.loadAll(application_id);
           });
           expect(getDocumentsMock).not.toHaveBeenCalled();
         });
@@ -341,7 +341,7 @@ describe("useDocumentsLogic", () => {
           });
 
           await act(async () => {
-            await documentsLogic.load(newApplicationId);
+            await documentsLogic.loadAll(newApplicationId);
           });
           const documents = documentsLogic.documents;
           expect(documents.items).toHaveLength(6);
@@ -362,8 +362,8 @@ describe("useDocumentsLogic", () => {
 
         it("only makes the API request once for the same application", async () => {
           await act(async () => {
-            await documentsLogic.load(application_id);
-            await documentsLogic.load(application_id);
+            await documentsLogic.loadAll(application_id);
+            await documentsLogic.loadAll(application_id);
           });
 
           expect(getDocumentsMock).toHaveBeenCalledTimes(1);
@@ -383,7 +383,7 @@ describe("useDocumentsLogic", () => {
         });
 
         await act(async () => {
-          await documentsLogic.load(application_id);
+          await documentsLogic.loadAll(application_id);
         });
 
         expect(appErrorsLogic.appErrors.items[0].name).toEqual(
@@ -403,7 +403,7 @@ describe("useDocumentsLogic", () => {
       });
 
       await act(async () => {
-        await documentsLogic.load(application_id);
+        await documentsLogic.loadAll(application_id);
       });
 
       expect(appErrorsLogic.appErrors.items).toHaveLength(0);
@@ -448,8 +448,8 @@ describe("useDocumentsLogic", () => {
         );
 
       await act(async () => {
-        const promise1 = documentsLogic.load(application_id);
-        const promise2 = documentsLogic.load(application_id2);
+        const promise1 = documentsLogic.loadAll(application_id);
+        const promise2 = documentsLogic.loadAll(application_id2);
         resolveFirstLoad({
           success: true,
           status: 200,
@@ -488,7 +488,7 @@ describe("useDocumentsLogic", () => {
       });
 
       await act(async () => {
-        await documentsLogic.load(application_id);
+        await documentsLogic.loadAll(application_id);
       });
 
       expect(documentsLogic.hasLoadedClaimDocuments(application_id)).toBe(true);
@@ -502,7 +502,7 @@ describe("useDocumentsLogic", () => {
       });
 
       await act(async () => {
-        await documentsLogic.load(application_id);
+        await documentsLogic.loadAll(application_id);
       });
 
       expect(documentsLogic.hasLoadedClaimDocuments(application_id)).toBe(true);

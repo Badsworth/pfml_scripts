@@ -42,7 +42,7 @@ const useDocumentsLogic = ({ appErrorsLogic }) => {
    * This must be called before documents are available
    * @param {string} application_id - application id for claim
    */
-  const load = async (application_id) => {
+  const loadAll = async (application_id) => {
     assert(application_id);
     // if documents already contains docs for application_id, don't load again
     if (hasLoadedClaimDocuments(application_id)) {
@@ -122,7 +122,7 @@ const useDocumentsLogic = ({ appErrorsLogic }) => {
     attach,
     hasLoadedClaimDocuments,
     documents,
-    load,
+    loadAll,
   };
 };
 

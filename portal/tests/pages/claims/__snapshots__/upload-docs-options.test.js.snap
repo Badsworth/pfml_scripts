@@ -230,7 +230,7 @@ exports[`UploadDocsOptions renders the page for medical leave with HCP as cert o
         "complete": [MockFunction],
         "create": [MockFunction],
         "get": [MockFunction],
-        "load": [MockFunction],
+        "loadAll": [MockFunction],
         "submit": [MockFunction],
         "update": [MockFunction],
       },
@@ -241,7 +241,7 @@ exports[`UploadDocsOptions renders the page for medical leave with HCP as cert o
           "itemsById": Object {},
         },
         "hasLoadedClaimDocuments": [MockFunction],
-        "load": [MockFunction],
+        "loadAll": [MockFunction],
       },
       "portalFlow": Object {
         "goToNextPage": [MockFunction],

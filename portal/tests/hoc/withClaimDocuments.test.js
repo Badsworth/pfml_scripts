@@ -29,7 +29,7 @@ describe("withClaimDocuments", () => {
 
   it("loads documents", () => {
     render();
-    expect(appLogic.documents.load).toHaveBeenCalledTimes(1);
+    expect(appLogic.documents.loadAll).toHaveBeenCalledTimes(1);
   });
 
   it("does not load documents if there are already loaded documents", () => {
@@ -37,19 +37,19 @@ describe("withClaimDocuments", () => {
       .spyOn(appLogic.documents, "hasLoadedClaimDocuments")
       .mockReturnValue(true);
     render();
-    expect(appLogic.documents.load).not.toHaveBeenCalled();
+    expect(appLogic.documents.loadAll).not.toHaveBeenCalled();
   });
 
   it("does not load documents if user has not yet loaded", () => {
     appLogic.user = appLogic.users.user = null;
     render();
-    expect(appLogic.claims.load).not.toHaveBeenCalled();
+    expect(appLogic.claims.loadAll).not.toHaveBeenCalled();
   });
 
   it("does not load documents when documents are already loaded", () => {
     appLogic.documents.hasLoadedClaimDocuments.mockReturnValueOnce(true);
     render();
-    expect(appLogic.documents.load).not.toHaveBeenCalled();
+    expect(appLogic.documents.loadAll).not.toHaveBeenCalled();
   });
 
   it("sets the 'documents' prop on the passed component to the loaded documents", () => {

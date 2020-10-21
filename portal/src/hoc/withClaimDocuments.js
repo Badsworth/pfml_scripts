@@ -17,7 +17,7 @@ const withClaimDocuments = (Component) => {
       claim: { application_id },
     } = props;
     const {
-      documents: { load, documents, hasLoadedClaimDocuments },
+      documents: { loadAll, documents, hasLoadedClaimDocuments },
       users,
     } = appLogic;
 
@@ -29,7 +29,7 @@ const withClaimDocuments = (Component) => {
 
     useEffect(() => {
       if (shouldLoad) {
-        load(application_id);
+        loadAll(application_id);
       }
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [shouldLoad]);
@@ -51,7 +51,7 @@ const withClaimDocuments = (Component) => {
       documents: PropTypes.shape({
         hasLoadedClaimDocuments: PropTypes.func.isRequired,
         documents: PropTypes.instanceOf(DocumentCollection).isRequired,
-        load: PropTypes.func.isRequired,
+        loadAll: PropTypes.func.isRequired,
       }).isRequired,
       appErrors: PropTypes.object.isRequired,
     }).isRequired,

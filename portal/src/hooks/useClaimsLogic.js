@@ -23,7 +23,7 @@ const useClaimsLogic = ({ appErrorsLogic, portalFlow, user }) => {
    * Load all claims for user
    * This must be called before claims are available
    */
-  const load = async () => {
+  const loadAll = async () => {
     if (!user) throw new Error("Cannot load claims before user is loaded");
     if (claims) return;
     appErrorsLogic.clearErrors();
@@ -125,7 +125,7 @@ const useClaimsLogic = ({ appErrorsLogic, portalFlow, user }) => {
 
       if (success) {
         if (!claims) {
-          await load();
+          await loadAll();
         } else {
           addClaim(claim);
         }
@@ -172,8 +172,8 @@ const useClaimsLogic = ({ appErrorsLogic, portalFlow, user }) => {
   return {
     claims,
     complete,
-    load,
     create,
+    loadAll,
     update,
     submit,
     setClaims,

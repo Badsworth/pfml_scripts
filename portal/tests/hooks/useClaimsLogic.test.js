@@ -51,14 +51,14 @@ describe("useClaimsLogic", () => {
     expect(claimsLogic.claims).toBeNull();
   });
 
-  describe("load", () => {
+  describe("loadAll", () => {
     beforeEach(() => {
       renderHook();
     });
 
     it("asynchronously fetches all claims and adds to claims collection", async () => {
       await act(async () => {
-        await claimsLogic.load();
+        await claimsLogic.loadAll();
       });
 
       expect(claimsLogic.claims.items[0]).toBeInstanceOf(Claim);
@@ -67,8 +67,8 @@ describe("useClaimsLogic", () => {
 
     it("only makes api request if claims have not been loaded", async () => {
       await act(async () => {
-        await claimsLogic.load();
-        await claimsLogic.load();
+        await claimsLogic.loadAll();
+        await claimsLogic.loadAll();
       });
 
       const claims = claimsLogic.claims.items;
@@ -84,7 +84,7 @@ describe("useClaimsLogic", () => {
       });
 
       await act(async () => {
-        await claimsLogic.load();
+        await claimsLogic.loadAll();
       });
 
       expect(appErrorsLogic.appErrors.items).toHaveLength(0);
@@ -98,7 +98,7 @@ describe("useClaimsLogic", () => {
       it("throws an error if user has not been loaded", async () => {
         user = null;
         renderHook();
-        await expect(claimsLogic.load).rejects.toThrow(/Cannot load claims/);
+        await expect(claimsLogic.loadAll).rejects.toThrow(/Cannot load claims/);
       });
 
       it("catches exceptions thrown from the API module", async () => {
@@ -107,7 +107,7 @@ describe("useClaimsLogic", () => {
         });
 
         await act(async () => {
-          await claimsLogic.load();
+          await claimsLogic.loadAll();
         });
 
         expect(appErrorsLogic.appErrors.items[0].name).toEqual(
@@ -226,7 +226,7 @@ describe("useClaimsLogic", () => {
         });
 
         await act(async () => {
-          await claimsLogic.load();
+          await claimsLogic.loadAll();
           getClaimsMock.mockClear(); // to clear the getClaimsMock calls
           await claimsLogic.create();
         });

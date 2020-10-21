@@ -24,7 +24,7 @@ const withClaims = (Component) => {
 
     useEffect(() => {
       if (!appLogic.claims.claims) {
-        appLogic.claims.load();
+        appLogic.claims.loadAll();
       }
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [appLogic.claims.claims]);
@@ -46,7 +46,7 @@ const withClaims = (Component) => {
         user: PropTypes.instanceOf(User).isRequired,
       }).isRequired,
       claims: PropTypes.shape({
-        load: PropTypes.func.isRequired,
+        loadAll: PropTypes.func.isRequired,
       }).isRequired,
       appErrors: PropTypes.object.isRequired,
     }).isRequired,
