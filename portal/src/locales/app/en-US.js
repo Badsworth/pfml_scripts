@@ -870,7 +870,7 @@ const pages = {
     submitApplicationButton: "I understand and agree",
     title: "Start your application",
     truthAttestation:
-      "I understand that I need to give true answers to all questions in order to receive and keep my paid leave benefits and job protections. I understand false answers may forfeit my rights to paid leave.",
+      "I understand that I need to give true answers to all questions in order to receive and keep my paid leave benefits and job protections. I understand false answers may forfeit my rights to paid leave and job protections.",
   },
   claimsStateId: {
     choiceNo: "$t(shared.choiceNo)",
