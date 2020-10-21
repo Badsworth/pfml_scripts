@@ -67,6 +67,11 @@ export default function (on: Cypress.PluginEvents): Cypress.ConfigOptions {
     },
     generateCredentials(): CypressStepThis["credentials"] {
       const { E2E_TESTMAIL_NAMESPACE } = process.env;
+      if (!E2E_TESTMAIL_NAMESPACE) {
+        throw new Error(
+          "Unable to determine E2E_TESTMAIL_NAMESPACE. You must set this environment variable."
+        );
+      }
       const tag = faker.random.alphaNumeric(8);
       return {
         username: `${E2E_TESTMAIL_NAMESPACE}.${tag}@inbox.testmail.app`,

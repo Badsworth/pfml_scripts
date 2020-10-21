@@ -1,5 +1,5 @@
 {
-  "baseUrl": "https://paidleave-stage.mass.gov",
+  "baseUrl": "https://paidleave-test.mass.gov",
   "integrationFolder": "cypress/tests",
   "watchForFileChanges": false,
   "defaultCommandTimeout": 20000,
