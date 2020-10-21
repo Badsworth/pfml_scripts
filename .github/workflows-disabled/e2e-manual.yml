@@ -1,0 +1,44 @@
+name: End-to-End Test Suite (Manual)
+
+on:
+  workflow_dispatch:
+
+env:
+  CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
+  E2E_API_BASEURL: https://paidleave-api-stage.mass.gov/api/v1
+  E2E_FINEOS_BASEURL: https://idt-claims-webapp.masspfml.fineos.com
+  E2E_FINEOS_USERNAME: ${{ secrets.E2E_FINEOS_USERNAME }}
+  E2E_FINEOS_PASSWORD: ${{ secrets.E2E_FINEOS_PASSWORD }}
+  E2E_PORTAL_BASEURL: https://paidleave-stage.mass.gov/
+  E2E_PORTAL_USERNAME: rob+pfml-cypress-gh1@lastcallmedia.com
+  E2E_PORTAL_PASSWORD: ${{ secrets.E2E_PORTAL_PASSWORD }}
+  E2E_TESTMAIL_APIKEY: ${{ secrets.E2E_TESTMAIL_APIKEY }}
+  E2E_TESTMAIL_NAMESPACE: ${{ secrets.E2E_TESTMAIL_NAMESPACE }}
+  E2E_COGNITO_POOL: us-east-1_HpL4XslLg
+  E2E_COGNITO_CLIENTID: 10rjcp71r8bnk4459c67bn18t8
+  # passing token to detect a build vs a re-run build
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+jobs:
+  test:
+    name: End-To-End Test
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        containers: [1,2,3]
+    steps:
+      - uses: actions/checkout@v2
+      - name: Cypress Tests
+        id: cypress
+        uses: cypress-io/github-action@v2
+        with:
+          spec: "cypress/tests/**/*"
+          record: true
+          parallel: true
+          working-directory: e2e
+      - name: Print Dashboard URL
+        if: always()
+        run: |
+          echo Cypress finished with: ${{ steps.cypress.outcome }}
+          echo See results at ${{ steps.cypress.outputs.dashboardUrl }}
