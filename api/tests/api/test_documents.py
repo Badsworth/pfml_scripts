@@ -1,5 +1,7 @@
+import copy
 import io
 
+import massgov.pfml.fineos.mock_client
 from massgov.pfml.api.models.applications.common import ContentType as AllowedContentTypes
 from massgov.pfml.db.models.factories import ApplicationFactory
 
@@ -184,6 +186,41 @@ def test_documents_get(client, consented_user, consented_user_token, test_db_ses
     assert response_data["description"] == "Mock File"
     assert response_data["user_id"] == str(consented_user.user_id)
     assert response_data["created_at"] is not None
+
+
+def test_documents_get_date_created(
+    client, consented_user, consented_user_token, test_db_session, monkeypatch
+):
+    absence_case_id = "NTN-111-ABS-01"
+
+    def mocked_mock_document(absence_id):
+
+        # mock the response object using "dateCreated"
+        mocked_document = copy.copy(massgov.pfml.fineos.mock_client.MOCK_DOCUMENT_DATA)
+        mocked_document.update(
+            {
+                "caseId": absence_id,
+                "dateCreated": "2020-09-01",
+                "name": "ID Document",
+                "originalFilename": "test.png",
+                "receivedDate": "",
+            }
+        )
+        return mocked_document
+
+    monkeypatch.setattr(massgov.pfml.fineos.mock_client, "mock_document", mocked_mock_document)
+
+    application = ApplicationFactory.create(user=consented_user, fineos_absence_id=absence_case_id)
+
+    response = client.get(
+        "/v1/applications/{}/documents".format(application.application_id),
+        headers={"Authorization": f"Bearer {consented_user_token}"},
+    ).get_json()
+
+    assert response["status_code"] == 200
+    response_data = response["data"][0]
+
+    assert response_data["created_at"] == "2020-09-01T00:00:00Z"
 
 
 def test_documents_download(client, consented_user, consented_user_token, test_db_session):

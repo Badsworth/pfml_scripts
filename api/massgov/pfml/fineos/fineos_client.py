@@ -40,11 +40,19 @@ update_or_create_party_response_schema = xmlschema.XMLSchema(
 def client_response_json_to_document(response_json: dict) -> models.customer_api.Document:
     # Document effectiveFrom and effectiveTo are empty and set to empty strings
     # These fields are not set by the portal. Set to none to avoid validation errors.
+
     if response_json["effectiveFrom"] == "":
         response_json["effectiveFrom"] = None
 
     if response_json["effectiveTo"] == "":
         response_json["effectiveTo"] = None
+
+    # Documents uploaded through FINEOS use "dateCreated" instead of "receivedDate"
+    if response_json["receivedDate"] == "":
+        if response_json["dateCreated"]:
+            response_json["receivedDate"] = response_json["dateCreated"]
+        else:
+            response_json["receivedDate"] = None
 
     return models.customer_api.Document.parse_obj(response_json)
 

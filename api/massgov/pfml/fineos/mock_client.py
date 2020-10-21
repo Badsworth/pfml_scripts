@@ -6,6 +6,7 @@
 #
 
 import base64
+import copy
 import datetime
 import pathlib
 import typing
@@ -16,12 +17,31 @@ import requests
 
 import massgov.pfml.util.logging
 
-from . import client, exception, models
+from . import client, exception, fineos_client, models
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
 
 # Capture calls for unit testing.
 _capture: typing.Optional[typing.List] = None
+
+MOCK_DOCUMENT_DATA = {
+    "caseId": "",
+    "rootCaseId": "NTN-111",
+    "documentId": 3011,
+    "name": "",
+    "type": "Document",
+    "fileExtension": "",
+    "fileName": "26e82dd7-dbfc-4e7b-9804-ea955627253d.png",
+    "originalFilename": "",
+    "receivedDate": "2020-09-01",
+    "effectiveFrom": "2020-09-02",
+    "effectiveTo": "2020-09-03",
+    "description": "",
+    "title": "",
+    "isRead": False,
+    "createdBy": "Roberto Carlos",
+    "extensionAttributes": [],
+}
 
 TEST_IMAGE_FILE_PATH = pathlib.Path(__file__).parent / "mock_files" / "test.png"
 
@@ -37,25 +57,18 @@ def mock_document(
     file_name: str = "test.png",
     description: str = "Mock File",
 ) -> dict:
-    return {
-        "caseId": absence_id,
-        "rootCaseId": "NTN-111",
-        "documentId": 3011,
-        "name": document_type,
-        "type": "Document",
-        "fileExtension": pathlib.Path(file_name).suffix,
-        "fileName": "26e82dd7-dbfc-4e7b-9804-ea955627253d.png",
-        "originalFilename": file_name,
-        "receivedDate": "2020-09-01",
-        "effectiveFrom": "2020-09-02",
-        "effectiveTo": "2020-09-03",
-        "description": description,
-        "title": "",
-        "isRead": False,
-        "createdBy": "Roberto Carlos",
-        "dateCreated": "2020-09-01",
-        "extensionAttributes": [],
-    }
+    mocked_document = copy.copy(MOCK_DOCUMENT_DATA)
+    mocked_document.update(
+        {
+            "caseId": absence_id,
+            "name": document_type,
+            "fileExtension": pathlib.Path(file_name).suffix,
+            "originalFilename": file_name,
+            "description": description,
+        }
+    )
+
+    return mocked_document
 
 
 def mock_absence_periods():
@@ -290,7 +303,7 @@ class MockFINEOSClient(client.AbstractFINEOSClient):
 
     def get_documents(self, user_id: str, absence_id: str) -> List[models.customer_api.Document]:
         document = mock_document(absence_id)
-        return [models.customer_api.Document.parse_obj(document)]
+        return [fineos_client.client_response_json_to_document(document)]
 
     def download_document(
         self, user_id: str, absence_id: str, fineos_document_id: str
