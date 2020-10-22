@@ -816,3 +816,36 @@ def test_work_pattern_days_required(test_db_session, initialize_factories_sessio
             field="work_pattern.work_pattern_days",
         )
     ] == issues
+
+
+def test_employer_fein_required_for_employed_claimants(
+    test_db_session, initialize_factories_session
+):
+    test_app = ApplicationFactory.create(
+        employer_fein=None,
+        employment_status=EmploymentStatus.get_instance(
+            test_db_session, template=EmploymentStatus.EMPLOYED
+        ),
+    )
+    issues = get_conditional_issues(test_app)
+    assert [
+        Issue(
+            type=IssueType.required,
+            rule=IssueRule.conditional,
+            message="employer_fein is required if employment_status is Employed",
+            field="employer_fein",
+        )
+    ] == issues
+
+
+def test_employer_fein_not_required_for_self_employed_claimants(
+    test_db_session, initialize_factories_session
+):
+    test_app = ApplicationFactory.create(
+        employer_fein=None,
+        employment_status=EmploymentStatus.get_instance(
+            test_db_session, template=EmploymentStatus.SELF_EMPLOYED
+        ),
+    )
+    issues = get_conditional_issues(test_app)
+    assert not issues

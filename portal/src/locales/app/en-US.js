@@ -55,6 +55,7 @@ const errors = {
     },
     employer_fein: {
       pattern: "Enter a 9-digit FEIN.",
+      required: "Enter your employer's Federal Employer Identification Number.",
     },
     employment_status: {
       required: "Enter your employment status.",

@@ -110,6 +110,28 @@ def get_conditional_issues(application: Application) -> List[Issue]:
     if application.work_pattern:
         issues += get_work_pattern_issues(application)
 
+    if (
+        application.employment_status
+        and not application.employer_fein
+        and (
+            application.employment_status_id
+            in [
+                EmploymentStatus.EMPLOYED.employment_status_id,
+                # TODO (CP-1176): Uncomment the below line to require FEIN for unemployed claimants
+                # EmploymentStatus.UNEMPLOYED.employment_status_id,
+            ]
+        )
+    ):
+        issues.append(
+            Issue(
+                type=IssueType.required,
+                rule=IssueRule.conditional,
+                # TODO (CP-1176): Update the error message to include Unemployed
+                message="employer_fein is required if employment_status is Employed",
+                field="employer_fein",
+            )
+        )
+
     # Fields involved in Part 2 of the progressive application
     if application.payment_preferences:
         issues += get_payments_issues(application)
