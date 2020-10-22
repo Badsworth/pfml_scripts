@@ -171,7 +171,6 @@ describe("Documents", function () {
       "Name of Informant": expect.any(String),
       "Address of Informant": expect.any(String),
       "Witness Date": expect.stringMatching(/\d{2}\/\d{2}\/\d{4}/),
-      "Role of Undersigned": expect.any(String),
     });
   });
 

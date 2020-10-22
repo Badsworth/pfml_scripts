@@ -197,7 +197,6 @@ const generateBirthCertificate: DocumentGenerator = async (claim, opts) => {
     "Name of Informant": faker.fake("{{name.firstName}} {{name.lastName}}"),
     "Address of Informant": faker.fake("{{address.city}}, {{address.state}}"),
     "Witness Date": dob,
-    "Role of Undersigned": "Friend",
   };
   return fillPDFBytes(`${__dirname}/../../forms/birth-certificate.pdf`, data);
 };
