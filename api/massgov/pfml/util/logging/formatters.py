@@ -4,6 +4,7 @@
 
 import json
 import logging  # noqa: B1
+import re
 
 import flask
 
@@ -23,6 +24,17 @@ EXCLUDE_ATTRIBUTES = {
     "relativeCreated",
 }
 
+# Attributes of LogRecord to allow through without masking suspected PII.
+ALLOW_NO_MASK = {
+    "count",
+    "created",
+    "process",
+    "thread",
+}
+
+# Regular expression to match a tax identifier, 9 digits with optional dashes.
+TIN_RE = re.compile(r"\b(\d-?){8}\d\b", re.ASCII)
+
 MOST_COMPACT_JSON_SEPARATORS = (",", ":")
 
 
@@ -38,8 +50,15 @@ class JsonFormatter(logging.Formatter):  # noqa: B1
             record.request_id = flask.request.headers.get("x-amzn-requestid", "")
         super(JsonFormatter, self).format(record)
         output = {
-            key: str(value)
+            key: str_mask_pii(key, value)
             for key, value in record.__dict__.items()
             if key not in EXCLUDE_ATTRIBUTES and value is not None
         }
         return json.dumps(output, separators=MOST_COMPACT_JSON_SEPARATORS)
+
+
+def str_mask_pii(key, value):
+    """Convert value to str and replace suspected PII with placeholder text."""
+    if key in ALLOW_NO_MASK:
+        return str(value)
+    return TIN_RE.sub("*********", str(value))

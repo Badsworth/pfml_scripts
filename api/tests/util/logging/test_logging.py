@@ -208,3 +208,43 @@ def test_log_message_with_flask_request_context(capsys, monkeypatch):
     assert last_line["path"] == "/test/path"
     assert last_line["request_id"] == "123"
     assert last_line["message"] == "test request context"
+
+
+def test_log_message_with_exception_and_pii(capsys):
+    massgov.pfml.util.logging.init("test_logging_1234")
+
+    logger = massgov.pfml.util.logging.get_logger("massgov.pfml.test.logging")
+
+    try:
+        non_existent_function_999999999()
+    except NameError:
+        logger.exception("test exception 999-99-9999", extra={"a": {"b": "99-9999999"}})
+
+    stderr = capsys.readouterr().err
+    lines = stderr.split("\n")
+    last_line = json.loads(lines[-2])
+    assert last_line.keys() == {
+        "name",
+        "levelname",
+        "exc_text",
+        "funcName",
+        "created",
+        "thread",
+        "threadName",
+        "process",
+        "message",
+        "a",
+    }
+    assert last_line["name"] == "massgov.pfml.test.logging"
+    assert last_line["levelname"] == "ERROR"
+    assert re.match(
+        """^Traceback \\(most recent call last\\):
+  File ".*", line \\d+, in test_log_message_with_exception_and_pii
+    non_existent_function_999999999\\(\\)
+NameError: name 'non_existent_function_999999999' is not defined$""",
+        last_line["exc_text"],
+    )
+    assert last_line["funcName"] == "test_log_message_with_exception_and_pii"
+    assert last_line["threadName"] == "MainThread"
+    assert last_line["message"] == "test exception *********"
+    assert last_line["a"] == "{'b': '*********'}"
