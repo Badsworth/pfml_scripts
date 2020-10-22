@@ -979,13 +979,13 @@ def test_application_patch_add_work_pattern(client, user, auth_token, test_db_se
                 "pattern_start_date": "2021-01-03",
                 "work_week_starts": "Sunday",
                 "work_pattern_days": [
-                    {"day_of_week": "Sunday", "week_number": 1, "hours": 8, "minutes": 0},
-                    {"day_of_week": "Monday", "week_number": 1, "hours": 8, "minutes": 0},
-                    {"day_of_week": "Tuesday", "week_number": 1, "hours": 8, "minutes": 0},
-                    {"day_of_week": "Wednesday", "week_number": 1, "hours": 8, "minutes": 0},
-                    {"day_of_week": "Thursday", "week_number": 1, "hours": 8, "minutes": 0},
-                    {"day_of_week": "Friday", "week_number": 1, "hours": 8, "minutes": 0},
-                    {"day_of_week": "Saturday", "week_number": 1, "hours": 8, "minutes": 0},
+                    {"day_of_week": "Sunday", "week_number": 1, "minutes": 60 * 8},
+                    {"day_of_week": "Monday", "week_number": 1, "minutes": 60 * 8},
+                    {"day_of_week": "Tuesday", "week_number": 1, "minutes": 60 * 8},
+                    {"day_of_week": "Wednesday", "week_number": 1, "minutes": 60 * 8},
+                    {"day_of_week": "Thursday", "week_number": 1, "minutes": 60 * 8},
+                    {"day_of_week": "Friday", "week_number": 1, "minutes": 60 * 8},
+                    {"day_of_week": "Saturday", "week_number": 1, "minutes": 60 * 8},
                 ],
             }
         },
@@ -1021,13 +1021,13 @@ def test_application_patch_update_work_pattern(client, user, auth_token, test_db
                 "work_pattern_type": "Fixed",
                 "work_week_starts": "Sunday",
                 "work_pattern_days": [
-                    {"day_of_week": "Sunday", "week_number": 1, "hours": 8, "minutes": 0},
-                    {"day_of_week": "Monday", "week_number": 1, "hours": 8, "minutes": 0},
-                    {"day_of_week": "Tuesday", "week_number": 1, "hours": 8, "minutes": 0},
-                    {"day_of_week": "Wednesday", "week_number": 1, "hours": 8, "minutes": 0},
-                    {"day_of_week": "Thursday", "week_number": 1, "hours": 8, "minutes": 0},
-                    {"day_of_week": "Friday", "week_number": 1, "hours": 8, "minutes": 0},
-                    {"day_of_week": "Saturday", "week_number": 1, "hours": 8, "minutes": 0},
+                    {"day_of_week": "Sunday", "week_number": 1, "minutes": 60 * 8},
+                    {"day_of_week": "Monday", "week_number": 1, "minutes": 60 * 8},
+                    {"day_of_week": "Tuesday", "week_number": 1, "minutes": 60 * 8},
+                    {"day_of_week": "Wednesday", "week_number": 1, "minutes": 60 * 8},
+                    {"day_of_week": "Thursday", "week_number": 1, "minutes": 60 * 8},
+                    {"day_of_week": "Friday", "week_number": 1, "minutes": 60 * 8},
+                    {"day_of_week": "Saturday", "week_number": 1, "minutes": 60 * 8},
                 ],
             }
         },
@@ -1088,13 +1088,13 @@ def test_application_patch_invalid_work_pattern(client, user, auth_token, test_d
         "work_week_starts": "Sunday",
         "pattern_start_date": "2021-01-03",
         "work_pattern_days": [
-            {"day_of_week": "Sunday", "week_number": 1, "hours": 8, "minutes": 0},
-            {"day_of_week": "Monday", "week_number": 1, "hours": 8, "minutes": 0},
-            {"day_of_week": "Tuesday", "week_number": 1, "hours": 8, "minutes": 0},
-            {"day_of_week": "Wednesday", "week_number": 1, "hours": 8, "minutes": 0},
-            {"day_of_week": "Thursday", "week_number": 1, "hours": 8, "minutes": 0},
-            {"day_of_week": "Friday", "week_number": 1, "hours": 8, "minutes": 0},
-            {"day_of_week": "Saturday", "week_number": 1, "hours": 8, "minutes": 0},
+            {"day_of_week": "Sunday", "week_number": 1, "minutes": 60 * 8},
+            {"day_of_week": "Monday", "week_number": 1, "minutes": 60 * 8},
+            {"day_of_week": "Tuesday", "week_number": 1, "minutes": 60 * 8},
+            {"day_of_week": "Wednesday", "week_number": 1, "minutes": 60 * 8},
+            {"day_of_week": "Thursday", "week_number": 1, "minutes": 60 * 8},
+            {"day_of_week": "Friday", "week_number": 1, "minutes": 60 * 8},
+            {"day_of_week": "Saturday", "week_number": 1, "minutes": 60 * 8},
         ],
     }
 
@@ -1128,24 +1128,9 @@ def test_application_patch_invalid_work_pattern(client, user, auth_token, test_d
     assert error.get("message") == "5 is greater than the maximum of 4"
     assert error.get("type") == "maximum"
 
-    work_pattern_with_invalid_hours = copy.deepcopy(base_work_pattern)
-    work_pattern_with_invalid_hours["work_pattern_days"][3]["hours"] = 25
-
-    response = client.patch(
-        "/v1/applications/{}".format(application.application_id),
-        headers={"Authorization": f"Bearer {auth_token}"},
-        json={"work_pattern": work_pattern_with_invalid_hours},
-    )
-    error = response.get_json().get("errors")[0]
-
-    assert response.status_code == 400
-    assert error.get("field") == "work_pattern.work_pattern_days.3.hours"
-    assert error.get("message") == "25 is greater than the maximum of 24"
-    assert error.get("type") == "maximum"
-
     work_pattern_with_additional_days = copy.deepcopy(base_work_pattern)
     work_pattern_with_additional_days["work_pattern_days"].append(
-        {"day_of_week": "Sunday", "week_number": 1, "hours": 8, "minutes": 0}
+        {"day_of_week": "Sunday", "week_number": 1, "minutes": 60 * 8}
     )
 
     response = client.patch(
@@ -1163,9 +1148,9 @@ def test_application_patch_invalid_work_pattern(client, user, auth_token, test_d
     work_pattern_with_incomplete_week = copy.deepcopy(base_work_pattern)
     work_pattern_with_incomplete_week["work_pattern_days"].extend(
         [
-            {"day_of_week": "Sunday", "week_number": 2, "hours": 8, "minutes": 0},
-            {"day_of_week": "Monday", "week_number": 2, "hours": 8, "minutes": 0},
-            {"day_of_week": "Wednesday", "week_number": 2, "hours": 8, "minutes": 0},
+            {"day_of_week": "Sunday", "week_number": 2, "minutes": 60 * 8},
+            {"day_of_week": "Monday", "week_number": 2, "minutes": 60 * 8},
+            {"day_of_week": "Wednesday", "week_number": 2, "minutes": 60 * 8},
         ]
     )
 
@@ -1184,13 +1169,13 @@ def test_application_patch_invalid_work_pattern(client, user, auth_token, test_d
     work_pattern_with_non_consecutive_weeks = copy.deepcopy(base_work_pattern)
     work_pattern_with_non_consecutive_weeks["work_pattern_days"].extend(
         [
-            {"day_of_week": "Sunday", "week_number": 3, "hours": 8, "minutes": 0},
-            {"day_of_week": "Monday", "week_number": 3, "hours": 8, "minutes": 0},
-            {"day_of_week": "Tuesday", "week_number": 3, "hours": 8, "minutes": 0},
-            {"day_of_week": "Wednesday", "week_number": 3, "hours": 8, "minutes": 0},
-            {"day_of_week": "Thursday", "week_number": 3, "hours": 8, "minutes": 0},
-            {"day_of_week": "Friday", "week_number": 3, "hours": 8, "minutes": 0},
-            {"day_of_week": "Saturday", "week_number": 3, "hours": 8, "minutes": 0},
+            {"day_of_week": "Sunday", "week_number": 3, "minutes": 60 * 8},
+            {"day_of_week": "Monday", "week_number": 3, "minutes": 60 * 8},
+            {"day_of_week": "Tuesday", "week_number": 3, "minutes": 60 * 8},
+            {"day_of_week": "Wednesday", "week_number": 3, "minutes": 60 * 8},
+            {"day_of_week": "Thursday", "week_number": 3, "minutes": 60 * 8},
+            {"day_of_week": "Friday", "week_number": 3, "minutes": 60 * 8},
+            {"day_of_week": "Saturday", "week_number": 3, "minutes": 60 * 8},
         ]
     )
 

@@ -281,7 +281,6 @@ class PaymentPreferences(PydanticBaseModel):
 class WorkPatternDay(PydanticBaseModel):
     day_of_week: DayOfWeek
     week_number: int
-    hours: Optional[int]
     minutes: Optional[int]
 
 

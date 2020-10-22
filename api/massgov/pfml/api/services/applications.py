@@ -358,7 +358,6 @@ def add_or_update_work_pattern(
                     WorkPatternDay(
                         day_of_week_id=DayOfWeek.get_id(api_work_pattern_day.day_of_week.value),
                         week_number=api_work_pattern_day.week_number,
-                        hours=api_work_pattern_day.hours,
                         minutes=api_work_pattern_day.minutes,
                     )
                 )
