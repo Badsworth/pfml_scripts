@@ -2,6 +2,7 @@ import Claim, {
   ClaimStatus,
   EmploymentStatus,
   LeaveReason,
+  WorkPatternType,
 } from "../../src/models/Claim";
 import { Machine, assign } from "xstate";
 import claimFlowStates, { guards } from "../../src/flows/claimant";
@@ -176,11 +177,6 @@ const machineTests = {
       test: () => {},
     },
   },
-  [routes.claims.hoursWorkedPerWeek]: {
-    meta: {
-      test: () => {},
-    },
-  },
   [routes.claims.notifiedEmployer]: {
     meta: {
       test: (_, event) => {
@@ -210,6 +206,29 @@ const machineTests = {
       test: () => {},
     },
   },
+  [routes.claims.scheduleRotatingNumberWeeks]: {
+    meta: {
+      test: (_, event) => {
+        expect(
+          get(event.context.claim, "work_pattern.work_pattern_type")
+        ).toEqual(WorkPatternType.rotating);
+      },
+    },
+  },
+  [routes.claims.scheduleRotating]: {
+    meta: {
+      test: (_, event) => {
+        expect(
+          get(event.context.claim, "work_pattern.work_pattern_type")
+        ).toEqual(WorkPatternType.rotating);
+      },
+    },
+  },
+  [routes.claims.hoursWorkedPerWeek]: {
+    meta: {
+      test: () => {},
+    },
+  },
 };
 
 const machineConfigsWithTests = {
@@ -235,6 +254,15 @@ describe("claimFlowConfigs", () => {
   const hasOtherIncomes = { temp: { has_other_incomes: true } };
   const hasStateId = { has_state_id: true };
   const hasPreviousLeaves = { temp: { has_previous_leaves: true } };
+  const fixedWorkPattern = {
+    work_pattern: { work_pattern_type: WorkPatternType.fixed },
+  };
+  const rotatingWorkPattern = {
+    work_pattern: { work_pattern_type: WorkPatternType.rotating },
+  };
+  const variableWorkPattern = {
+    work_pattern: { work_pattern_type: WorkPatternType.variable },
+  };
   const completed = {
     status: ClaimStatus.completed,
   };
@@ -248,6 +276,9 @@ describe("claimFlowConfigs", () => {
     { claimData: hasPreviousLeaves, userData: {} },
     { claimData: bondingClaim, userData: {} },
     { claimData: completed, userData: {} },
+    { claimData: fixedWorkPattern, userData: {} },
+    { claimData: rotatingWorkPattern, userData: {} },
+    { claimData: variableWorkPattern, userData: {} },
   ];
 
   // Action that's fired when exiting dashboard state and creating a claim and

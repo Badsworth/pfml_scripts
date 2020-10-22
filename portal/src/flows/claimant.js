@@ -11,8 +11,8 @@
  * is complete, in progress, or not started
  * @see ../models/Step
  */
+import { EmploymentStatus, WorkPatternType } from "../models/Claim";
 import { ClaimSteps } from "../models/Step";
-import { EmploymentStatus } from "../models/Claim";
 import { fields as addressFields } from "../pages/claims/address";
 import { fields as dateOfBirthFields } from "../pages/claims/date-of-birth";
 import { fields as dateOfChildFields } from "../pages/claims/date-of-child";
@@ -35,6 +35,8 @@ import { fields as previousLeavesDetailsFields } from "../pages/claims/previous-
 import { fields as previousLeavesFields } from "../pages/claims/previous-leaves";
 import { fields as reasonPregnancyFields } from "../pages/claims/reason-pregnancy";
 import routes from "../routes";
+import { fields as scheduleRotatingFields } from "../pages/claims/schedule-rotating";
+import { fields as scheduleRotatingNumberWeeksFields } from "../pages/claims/schedule-rotating-number-weeks";
 import { fields as ssnFields } from "../pages/claims/ssn";
 import { fields as stateIdFields } from "../pages/claims/state-id";
 import { fields as workPatternTypeFields } from "../pages/claims/work-pattern-type";
@@ -54,6 +56,12 @@ export const guards = {
     claim.has_intermittent_leave_periods === true,
   hasOtherIncomes: ({ claim }) => claim.temp.has_other_incomes === true,
   hasPreviousLeaves: ({ claim }) => claim.temp.has_previous_leaves === true,
+  isFixedWorkPattern: ({ claim }) =>
+    get(claim, "work_pattern.work_pattern_type") === WorkPatternType.fixed,
+  isRotatingWorkPattern: ({ claim }) =>
+    get(claim, "work_pattern.work_pattern_type") === WorkPatternType.rotating,
+  isVariableWorkPattern: ({ claim }) =>
+    get(claim, "work_pattern.work_pattern_type") === WorkPatternType.variable,
 };
 
 export default {
@@ -362,15 +370,6 @@ export default {
         fields: employmentStatusFields,
       },
       on: {
-        CONTINUE: routes.claims.hoursWorkedPerWeek,
-      },
-    },
-    [routes.claims.hoursWorkedPerWeek]: {
-      meta: {
-        step: ClaimSteps.employerInformation,
-        fields: hoursWorkedPerWeekFields,
-      },
-      on: {
         CONTINUE: [
           {
             target: routes.claims.notifiedEmployer,
@@ -429,6 +428,49 @@ export default {
       meta: {
         step: ClaimSteps.employerInformation,
         fields: workPatternTypeFields,
+      },
+      on: {
+        CONTINUE: [
+          {
+            target: routes.claims.scheduleRotatingNumberWeeks,
+            cond: "isRotatingWorkPattern",
+          },
+          {
+            target: routes.claims.hoursWorkedPerWeek,
+          },
+        ],
+      },
+    },
+    [routes.claims.scheduleRotatingNumberWeeks]: {
+      meta: {
+        step: ClaimSteps.employerInformation,
+        fields: scheduleRotatingNumberWeeksFields,
+      },
+      on: {
+        CONTINUE: [
+          {
+            target: routes.claims.hoursWorkedPerWeek,
+            cond: "isVariableWorkPattern",
+          },
+          {
+            target: routes.claims.scheduleRotating,
+          },
+        ],
+      },
+    },
+    [routes.claims.scheduleRotating]: {
+      meta: {
+        step: ClaimSteps.employerInformation,
+        fields: scheduleRotatingFields,
+      },
+      on: {
+        CONTINUE: routes.claims.checklist,
+      },
+    },
+    [routes.claims.hoursWorkedPerWeek]: {
+      meta: {
+        step: ClaimSteps.employerInformation,
+        fields: hoursWorkedPerWeekFields,
       },
       on: {
         CONTINUE: routes.claims.checklist,

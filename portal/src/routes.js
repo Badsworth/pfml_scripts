@@ -41,6 +41,8 @@ const routes = {
     previousLeavesDetails: "/claims/previous-leaves-details",
     reasonPregnancy: "/claims/reason-pregnancy",
     review: "/claims/review",
+    scheduleRotating: "/claims/schedule-rotating",
+    scheduleRotatingNumberWeeks: "/claims/schedule-rotating-number-weeks",
     ssn: "/claims/ssn",
     start: "/claims/start",
     stateId: "/claims/state-id",

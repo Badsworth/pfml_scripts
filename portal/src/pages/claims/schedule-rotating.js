@@ -67,7 +67,13 @@ export const ScheduleRotating = (props) => {
       sum(work_pattern.minutesWorkedEachWeek) / numberOfWeeks;
     const hours_worked_per_week = round(averageMinutes / 60, 2);
 
-    updateFields({ work_pattern, hours_worked_per_week });
+    updateFields({
+      work_pattern: pick(work_pattern, [
+        "work_pattern_days",
+        "pattern_start_date",
+      ]),
+      hours_worked_per_week,
+    });
   };
 
   const handleSave = () =>
