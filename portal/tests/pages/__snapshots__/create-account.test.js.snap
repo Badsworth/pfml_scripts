@@ -18,7 +18,7 @@ exports[`CreateAccount renders the empty page 1`] = `
   />
   <InputText
     autoComplete="new-password"
-    hint="Your password must be at least 8 characters long and include numbers and letters."
+    hint="Your password must be at least 12 characters long and include at least 1 number, 1 symbol, and both uppercase and lowercase letters."
     label="Password"
     name="password"
     onChange={[Function]}

@@ -30,10 +30,10 @@ resource "aws_cognito_user_pool" "claimants_pool" {
   }
 
   password_policy {
-    minimum_length                   = 8
+    minimum_length                   = 12
     require_lowercase                = true
     require_numbers                  = true
-    require_symbols                  = false
+    require_symbols                  = true
     require_uppercase                = true
     temporary_password_validity_days = 7
   }

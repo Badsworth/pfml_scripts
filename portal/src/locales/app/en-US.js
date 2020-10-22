@@ -284,8 +284,10 @@ const shared = {
   otherIncomeType_ssdi: "Social Security Disability Insurance",
   otherIncomeType_unemployment: "Unemployment Insurance",
   otherIncomeType_workersCompensation: "Workers Compensation",
+  // passwordHint uses non-breaking spaces to keep cardinal adjectives on the
+  // same line as the nouns they describe.
   passwordHint:
-    "Your password must be at least 8 characters long and include numbers and letters.",
+    "Your password must be at least 12 characters long and include at least 1 number, 1 symbol, and both uppercase and lowercase letters.",
   passwordLabel: "Password",
   paymentMethodAch: "Direct deposit",
   paymentMethodDebit: "MA PFML Prepaid Debit Card",
