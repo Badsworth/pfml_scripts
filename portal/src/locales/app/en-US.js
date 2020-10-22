@@ -1011,6 +1011,9 @@ const pages = {
         "Social Security Number or Individual Taxpayer Identification Number",
     },
     employerBenefits: {
+      amountValue_daily: "{{amount, currency}} per day",
+      amountValue_monthly: "{{amount, currency}} per month",
+      amountValue_weekly: "{{amount, currency}} per week",
       benefitTypeLabel: "Benefit type",
       dateRangeLabel: "Date range",
       detailsLabel: "Details",

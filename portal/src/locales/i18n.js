@@ -20,6 +20,16 @@ export const initializeI18n = (locale = defaultLocale) => {
       fallbackLng: defaultLocale,
       interpolation: {
         escapeValue: false, // react already escapes values
+        format: function (value, format) {
+          // formats number into currency (e.g. 1000 -> $1,000.00)
+          if (format === "currency") {
+            return new Intl.NumberFormat("en-US", {
+              style: "currency",
+              currency: "USD",
+            }).format(value);
+          }
+          return value;
+        },
       },
       lng: locale,
       resources: {

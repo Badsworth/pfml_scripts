@@ -38,9 +38,14 @@ const AmendableEmployerBenefit = ({ benefit, onChange }) => {
   const isPaidLeave = benefit.benefit_type === EmployerBenefitType.paidLeave;
   const getBenefitAmountByType = () => {
     const { benefit_amount_dollars, benefit_amount_frequency } = benefit;
-    return isPaidLeave
+    const hasBenefitAmountDetails =
+      benefit_amount_dollars && benefit_amount_frequency;
+    return isPaidLeave || !hasBenefitAmountDetails
       ? t("pages.employersClaimsReview.notApplicable")
-      : `$${benefit_amount_dollars} ${benefit_amount_frequency.toLowerCase()}`;
+      : t("pages.employersClaimsReview.employerBenefits.amountValue", {
+          context: findKeyByValue(IncomeFrequency, benefit_amount_frequency),
+          amount: benefit_amount_dollars,
+        });
   };
   const getAllBenefitFrequencies = () => {
     return Object.values(IncomeFrequency).map((frequency) => {

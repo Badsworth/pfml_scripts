@@ -38,23 +38,29 @@ describe("AmendablePreviousLeave", () => {
     wrapper
       .find(InputDate)
       .first()
-      .simulate("change", { target: { value: "10-10-2020" } });
+      .simulate("change", { target: { value: "2020-10-10" } });
     wrapper
       .find(InputDate)
       .last()
-      .simulate("change", { target: { value: "10-20-2020" } });
+      .simulate("change", { target: { value: "2020-10-20" } });
 
     expect(props.onChange).toHaveBeenCalledTimes(2);
+    expect(wrapper.find(InputDate).first().prop("value")).toEqual("2020-10-10");
+    expect(wrapper.find(InputDate).last().prop("value")).toEqual("2020-10-20");
   });
 
-  it("hides amendment form and clears value on cancel", () => {
+  it("restores original value on cancel", () => {
     wrapper.find(AmendButton).simulate("click");
     wrapper
       .find(InputDate)
       .first()
-      .simulate("change", { target: { value: "10-10-2020" } });
+      .simulate("change", { target: { value: "2020-10-10" } });
+
+    expect(wrapper.find(InputDate).first().prop("value")).toEqual("2020-10-10");
+
     wrapper.find(AmendmentForm).dive().find(Button).simulate("click");
 
-    expect(props.onChange).toHaveBeenCalledTimes(2);
+    wrapper.find(AmendButton).simulate("click");
+    expect(wrapper.find(InputDate).first().prop("value")).toEqual("2020-03-01");
   });
 });
