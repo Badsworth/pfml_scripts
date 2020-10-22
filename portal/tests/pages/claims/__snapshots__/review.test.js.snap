@@ -132,7 +132,7 @@ exports[`Final Review Page when all data is present renders Review page with fin
     Medical leave
   </ReviewRow>
   <ReviewRow
-    label="Are you pregnant or have you recently given birth?"
+    label="Medical leave for pregnancy or birth"
     level="3"
   >
     No
@@ -477,7 +477,7 @@ exports[`Part 1 Review Page when all data is present renders Review page with Pa
     Medical leave
   </ReviewRow>
   <ReviewRow
-    label="Are you pregnant or have you recently given birth?"
+    label="Medical leave for pregnancy or birth"
     level="4"
   >
     No

@@ -132,7 +132,8 @@ const errors = {
         },
       },
       pregnant_or_recent_birth: {
-        required: "Enter whether you are pregnant or recently gave birth.",
+        required:
+          "Select yes if are you taking medical leave because you are pregnant or recently gave birth.",
       },
       reason: {
         required: "Enter a reason for taking time off.",
@@ -293,8 +294,6 @@ const shared = {
   passwordLabel: "Password",
   paymentMethodAch: "Direct deposit",
   paymentMethodDebit: "MA PFML Prepaid Debit Card",
-  pregnancyOrRecentBirthLabel:
-    "Are you pregnant or have you recently given birth?",
   previousLeaveEntryPrefix: "Previous leave",
   qualifyingReasonDetailsLabel: "What counts as a qualifying reason?",
   resendVerificationCodeLink: "Resend the code",
@@ -749,7 +748,8 @@ const pages = {
   claimsReasonPregnancy: {
     choiceNo: "$t(shared.choiceNo)",
     choiceYes: "$t(shared.choiceYes)",
-    pregnancyOrRecentBirthLabel: "$t(shared.pregnancyOrRecentBirthLabel)",
+    pregnancyOrRecentBirthLabel:
+      "Are you taking medical leave because you are pregnant or recently gave birth?",
     title: "$t(shared.claimsLeaveDetailsTitle)",
   },
   claimsReview: {
@@ -844,7 +844,7 @@ const pages = {
     paymentMethodValue_ach: "$t(shared.paymentMethodAch)",
     paymentMethodValue_debit: "$t(shared.paymentMethodDebit)",
     paymentRoutingNumLabel: "Routing number",
-    pregnancyOrRecentBirthLabel: "$t(shared.pregnancyOrRecentBirthLabel)",
+    pregnancyOrRecentBirthLabel: "Medical leave for pregnancy or birth",
     pregnancyOrRecentBirth_no: "$t(shared.choiceNo)",
     pregnancyOrRecentBirth_yes: "$t(shared.choiceYes)",
     previousLeaveEntryLabel: "$t(shared.previousLeaveEntryPrefix) {{count}}",

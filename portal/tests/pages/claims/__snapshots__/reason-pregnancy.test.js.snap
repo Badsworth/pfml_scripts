@@ -20,7 +20,7 @@ exports[`ReasonPregnancy renders the page 1`] = `
         },
       ]
     }
-    label="Are you pregnant or have you recently given birth?"
+    label="Are you taking medical leave because you are pregnant or recently gave birth?"
     name="leave_details.pregnant_or_recent_birth"
     onChange={[Function]}
     type="radio"

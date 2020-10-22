@@ -166,8 +166,7 @@ describe("Employer info", () => {
 });
 
 describe("Leave reason", () => {
-  const pregnancyOrRecentBirthLabel =
-    "Are you pregnant or have you recently given birth?";
+  const pregnancyOrRecentBirthLabel = "Medical leave for pregnancy or birth";
   const familyLeaveTypeLabel = "Family leave type";
 
   describe("When the reason is medical leave", () => {
