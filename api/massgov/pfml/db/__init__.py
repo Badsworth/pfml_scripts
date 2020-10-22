@@ -10,6 +10,7 @@ import sqlalchemy.pool as pool
 from sqlalchemy.engine import Connection, Engine
 from sqlalchemy.orm import Session, scoped_session, sessionmaker
 
+import massgov.pfml.db.handle_error
 import massgov.pfml.db.models
 import massgov.pfml.util.logging
 from massgov.pfml.db.config import DbConfig, get_config
