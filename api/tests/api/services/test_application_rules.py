@@ -9,9 +9,17 @@ from massgov.pfml.api.services.application_rules import (
     get_leave_periods_issues,
     get_payments_issues,
     get_reduced_schedule_leave_issues,
+    get_work_pattern_issues,
 )
 from massgov.pfml.api.util.response import Issue, IssueRule, IssueType, success_response
-from massgov.pfml.db.models.applications import EmploymentStatus, LeaveReasonQualifier, LeaveType
+from massgov.pfml.db.models.applications import (
+    EmploymentStatus,
+    LeaveReasonQualifier,
+    LeaveType,
+    WorkPattern,
+    WorkPatternDay,
+    WorkPatternType,
+)
 from massgov.pfml.db.models.employees import PaymentType
 from massgov.pfml.db.models.factories import (
     AddressFactory,
@@ -736,3 +744,75 @@ def test_allow_false_employer_notified_for_employed_claimants(
     )
     issues = get_conditional_issues(test_app)
     assert not issues
+
+
+def test_pattern_start_date_required_if_rotating(test_db_session, initialize_factories_session):
+    test_app = ApplicationFactory.create(
+        work_pattern=WorkPattern(
+            work_pattern_type=WorkPatternType.get_instance(
+                test_db_session, template=WorkPatternType.ROTATING
+            ),
+            work_pattern_days=[
+                WorkPatternDay(week_number=1, day_of_week_id=i + 1, hours=1) for i in range(7)
+            ],
+            work_week_starts_id=7,
+        )
+    )
+
+    issues = get_work_pattern_issues(test_app)
+
+    assert [
+        Issue(
+            type=IssueType.required,
+            message="Pattern start date is required for rotating work patterns",
+            field="work_pattern.pattern_start_date",
+        )
+    ] == issues
+
+
+def test_pattern_start_date_is_not_expected_if_not_rotating(
+    test_db_session, initialize_factories_session
+):
+    test_app = ApplicationFactory.create(
+        work_pattern=WorkPattern(
+            work_pattern_type=WorkPatternType.get_instance(
+                test_db_session, template=WorkPatternType.FIXED
+            ),
+            work_pattern_days=[
+                WorkPatternDay(week_number=1, day_of_week_id=i + 1) for i in range(7)
+            ],
+            work_week_starts_id=7,
+            pattern_start_date="2021-01-03",
+        )
+    )
+
+    issues = get_work_pattern_issues(test_app)
+
+    assert [
+        Issue(
+            type=IssueType.conflicting,
+            message="Pattern start date is not expected for fixed or variable work patterns.",
+            field="work_pattern.pattern_start_date",
+        )
+    ] == issues
+
+
+def test_work_pattern_days_required(test_db_session, initialize_factories_session):
+    test_app = ApplicationFactory.create(
+        work_pattern=WorkPattern(
+            work_pattern_type=WorkPatternType.get_instance(
+                test_db_session, template=WorkPatternType.FIXED
+            ),
+            work_week_starts_id=7,
+        )
+    )
+
+    issues = get_work_pattern_issues(test_app)
+
+    assert [
+        Issue(
+            type=IssueType.required,
+            message="Work patterns days are required",
+            field="work_pattern.work_pattern_days",
+        )
+    ] == issues

@@ -12,6 +12,7 @@ from massgov.pfml.db.models.applications import (
     EmploymentStatus,
     LeaveReasonQualifier,
     LeaveType,
+    WorkPatternType,
 )
 from massgov.pfml.db.models.employees import PaymentType
 
@@ -105,6 +106,9 @@ def get_conditional_issues(application: Application) -> List[Issue]:
         application.leave_type.leave_type_id == LeaveType.BONDING_LEAVE.leave_type_id
     ):
         issues += get_bonding_leave_issues(application)
+
+    if application.work_pattern:
+        issues += get_work_pattern_issues(application)
 
     # Fields involved in Part 2 of the progressive application
     if application.payment_preferences:
@@ -362,4 +366,45 @@ def get_reduced_schedule_leave_issues(
                     field=f"leave_details.reduced_schedule_leave_periods[{i}].end_date",
                 )
             )
+    return issues
+
+
+def get_work_pattern_issues(application: Application) -> List[Issue]:
+    issues = []
+
+    work_pattern = application.work_pattern
+
+    if (
+        work_pattern.work_pattern_type_id == WorkPatternType.ROTATING.work_pattern_type_id
+        and work_pattern.pattern_start_date is None
+    ):
+        issues.append(
+            Issue(
+                type=IssueType.required,
+                message="Pattern start date is required for rotating work patterns",
+                field="work_pattern.pattern_start_date",
+            )
+        )
+
+    if (
+        work_pattern.work_pattern_type_id != WorkPatternType.ROTATING.work_pattern_type_id
+        and work_pattern.pattern_start_date is not None
+    ):
+        issues.append(
+            Issue(
+                type=IssueType.conflicting,
+                message="Pattern start date is not expected for fixed or variable work patterns.",
+                field="work_pattern.pattern_start_date",
+            )
+        )
+
+    if len(list(work_pattern.work_pattern_days)) == 0:
+        issues.append(
+            Issue(
+                type=IssueType.required,
+                message="Work patterns days are required",
+                field="work_pattern.work_pattern_days",
+            )
+        )
+
     return issues
