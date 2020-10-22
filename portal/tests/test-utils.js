@@ -448,11 +448,7 @@ export class MockClaimBuilder {
    * @returns {MockClaimBuilder}
    */
   workPattern(attrs = {}) {
-    let workPattern = new WorkPattern(attrs);
-    if (!attrs.work_pattern_days) {
-      workPattern = WorkPattern.addWeek(workPattern);
-    }
-    set(this.claimAttrs, "work_pattern", workPattern);
+    set(this.claimAttrs, "work_pattern", new WorkPattern(attrs));
 
     return this;
   }

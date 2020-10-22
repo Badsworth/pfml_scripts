@@ -1,0 +1,40 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`ScheduleRotatingNumberWeeks renders the page 1`] = `
+<QuestionPage
+  onSave={[Function]}
+  title="Employment information"
+>
+  <InputChoiceGroup
+    choices={
+      Array [
+        Object {
+          "checked": false,
+          "label": "2",
+          "value": "2",
+        },
+        Object {
+          "checked": false,
+          "label": "3",
+          "value": "3",
+        },
+        Object {
+          "checked": false,
+          "label": "4",
+          "value": "4",
+        },
+        Object {
+          "checked": false,
+          "label": "More than 4",
+          "value": "Variable",
+        },
+      ]
+    }
+    label="How many weekly schedules do you have?"
+    name="work_pattern.work_pattern_days"
+    onChange={[Function]}
+    type="radio"
+    value={0}
+  />
+</QuestionPage>
+`;

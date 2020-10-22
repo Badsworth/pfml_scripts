@@ -264,12 +264,14 @@ const shared = {
   fileUpload_addFirstFileButton: "Choose a file",
   fileUpload_fileHeadingPrefix: "File",
   filesUploaded: "Number of files uploaded",
+  hoursLabel: "Hours",
   leavePeriodMedicalAlert:
     "You will need a completed medical leave certification form for this section.",
   leaveReasonActiveDutyFamily: "Active duty",
   leaveReasonBonding: "Bonding leave",
   leaveReasonMedical: "Medical leave",
   leaveReasonServiceMemberFamily: "Military family",
+  minutesLabel: "Minutes",
   multipleEmployerAppAlert:
     "You need to complete a separate application for each employer you are taking leave from.",
   networkError:
@@ -866,6 +868,31 @@ const pages = {
     workPatternTypeValue_fixed: "Consistent from week to week",
     workPatternTypeValue_rotating: "Hours alternate between weekly schedules",
     workPatternTypeValue_variable: "Not consistent from week to week",
+  },
+  claimsScheduleRotating: {
+    choicePatternStartWeek_1: "Week 1",
+    choicePatternStartWeek_2: "Week 2",
+    choicePatternStartWeek_3: "Week 3",
+    choicePatternStartWeek_4: "Week 4",
+    hoursLabel: "$t(shared.hoursLabel)",
+    inputHoursHeading: "Tell us your work hours.",
+    inputHoursHeadingHint:
+      "Enter the number of hours you work for each week of your rotating schedule.",
+    inputHoursLabel_1: "Week 1",
+    inputHoursLabel_2: "Week 2",
+    inputHoursLabel_3: "Week 3",
+    inputHoursLabel_4: "Week 4",
+    minutesLabel: "$t(shared.minutesLabel)",
+    scheduleStartDateLabel: "Which week will your leave start during?",
+    title: "$t(shared.claimsEmploymentInfoTitle)",
+  },
+  claimsScheduleRotatingNumberWeeks: {
+    choice2Weeks: "2",
+    choice3Weeks: "3",
+    choice4Weeks: "4",
+    choiceMoreThan4Weeks: "More than 4",
+    howManyWeeksLabel: "How many weekly schedules do you have?",
+    title: "$t(shared.claimsEmploymentInfoTitle)",
   },
   claimsSsn: {
     lead:

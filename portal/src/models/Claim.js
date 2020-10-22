@@ -2,12 +2,20 @@
 /**
  * @file Benefits application model and enum values
  */
-import { compact, get, groupBy, sortBy, sumBy, zip, zipObject } from "lodash";
+import {
+  compact,
+  get,
+  groupBy,
+  map,
+  sortBy,
+  sumBy,
+  zip,
+  zipObject,
+} from "lodash";
 import Address from "./Address";
 import BaseModel from "./BaseModel";
 import { DateTime } from "luxon";
 import assert from "assert";
-import convertMinutesToHours from "../utils/convertMinutesToHours";
 
 class Claim extends BaseModel {
   get defaults() {
@@ -186,6 +194,24 @@ class Claim extends BaseModel {
       " "
     );
   }
+
+  /**
+   * Returns earliest start date across all leave periods
+   * @returns {string}
+   */
+  get leaveStartDate() {
+    const periods = [
+      get(this, "leave_details.continuous_leave_periods"),
+      get(this, "leave_details.intermittent_leave_periods"),
+      get(this, "leave_details.reduced_schedule_leave_periods"),
+    ].flat();
+
+    const startDates = map(compact(periods), "start_date").sort();
+
+    if (!startDates.length) return null;
+
+    return startDates[0];
+  }
 }
 
 /**
@@ -282,7 +308,7 @@ export class WorkPattern extends BaseModel {
   get defaults() {
     return {
       pattern_start_date: null,
-      work_pattern_days: undefined,
+      work_pattern_days: [],
       work_pattern_type: null,
       work_week_starts: "Sunday",
     };
@@ -293,9 +319,8 @@ export class WorkPattern extends BaseModel {
    * @returns {Array.<WorkPatternDay[]>}
    */
   get weeks() {
-    const workPatternDays = sortBy(
-      [...get(this, "work_pattern_days", [])],
-      (day) => OrderedDaysOfWeek.indexOf(day.day_of_week)
+    const workPatternDays = sortBy([...this.work_pattern_days], (day) =>
+      OrderedDaysOfWeek.indexOf(day.day_of_week)
     );
     return Object.values(groupBy(workPatternDays, "week_number"));
   }
@@ -305,18 +330,13 @@ export class WorkPattern extends BaseModel {
    * @returns {number[]}
    */
   get minutesWorkedEachWeek() {
-    return this.weeks.map((week) => {
-      const hours = sumBy(week, "hours");
-      const minutes = sumBy(week, "minutes");
-
-      return 60 * hours + minutes;
-    });
+    return this.weeks.map((days) => sumBy(days, "minutes"));
   }
 
   /**
    * Add a 7 day week to work_pattern_days.
    * @param {WorkPattern} workPattern - instance of a WorkPattern
-   * @param {number} [minutesWorkedPerWeek] - average minutes worked per week. Must be an integer. If provided, will split hours evenly across 7 day week
+   * @param {number} [minutesWorkedPerWeek] - average minutes worked per week. Must be an integer. If provided, will split minutes evenly across 7 day week
    * @returns {WorkPattern}
    */
   static addWeek(workPattern, minutesWorkedPerWeek = 0) {
@@ -328,23 +348,49 @@ export class WorkPattern extends BaseModel {
       ([day_of_week, minutes]) =>
         new WorkPatternDay({
           day_of_week,
+          minutes,
           week_number: workPattern.weeks.length + 1,
-          ...convertMinutesToHours(minutes),
         })
     );
 
     return new WorkPattern({
       ...workPattern,
-      work_pattern_days: [
-        ...get(workPattern, "work_pattern_days", []),
-        ...newWeek,
-      ],
+      work_pattern_days: [...workPattern.work_pattern_days, ...newWeek],
+    });
+  }
+
+  /**
+   * Update minutes of a 7 day week.
+   * @param {WorkPattern} workPattern - instance of a WorkPattern
+   * @param {number} weekNumber - number of the week to update
+   * @param {number} minutesWorkedPerWeek - average minutes worked per week. Must be an integer. If provided, will split minutes evenly across 7 day week
+   * @returns {WorkPattern}
+   */
+  static updateWeek(workPattern, weekNumber, minutesWorkedPerWeek) {
+    const minutesOverWeek = WorkPattern._spreadMinutesOverWeek(
+      minutesWorkedPerWeek
+    );
+    const weeks = workPattern.weeks;
+    const i = weekNumber - 1;
+    assert(weeks[i]);
+
+    weeks[i] = zip(weeks[i], minutesOverWeek).map(
+      ([day, minutes]) =>
+        new WorkPatternDay({
+          ...day,
+          minutes,
+        })
+    );
+
+    return new WorkPattern({
+      ...workPattern,
+      work_pattern_days: [...weeks.flat()],
     });
   }
 
   /**
    * Split provided minutes across a 7 day week
-   * @param {number} minutesWorkedPerWeek - average hours worked per week. Must be an integer.
+   * @param {number} minutesWorkedPerWeek - average minutes worked per week. Must be an integer.
    * @returns {number[]}
    */
   static _spreadMinutesOverWeek(minutesWorkedPerWeek) {
@@ -383,7 +429,7 @@ export class WorkPatternDay extends BaseModel {
   get defaults() {
     return {
       day_of_week: null,
-      hours: null,
+      // API represents hours in minutes
       minutes: null,
       // an integer between 1 and 4
       week_number: null,

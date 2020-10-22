@@ -1,7 +1,7 @@
 import { DayOfWeek, WorkPattern, WorkPatternDay } from "../../src/models/Claim";
+import { map, sumBy } from "lodash";
 import { DateTime } from "luxon";
 import { MockClaimBuilder } from "../test-utils";
-import { map } from "lodash";
 
 describe("Claim", () => {
   let emptyClaim;
@@ -166,18 +166,18 @@ describe("Claim", () => {
 
   describe("leave period getters", () => {
     const claimWithContinuousLeaveData = new MockClaimBuilder()
-      .continuous()
+      .continuous({ start_date: "2021-03-01" })
       .create();
     const claimWithIntermittentLeaveData = new MockClaimBuilder()
-      .intermittent()
+      .intermittent({ start_date: "2021-02-01" })
       .create();
     const claimWithReducedLeaveData = new MockClaimBuilder()
-      .reducedSchedule()
+      .reducedSchedule({ start_date: "2021-01-01" })
       .create();
     const claimWithMultipleLeaveDurationTypes = new MockClaimBuilder()
-      .continuous()
-      .intermittent()
-      .reducedSchedule()
+      .continuous({ start_date: "2021-03-01" })
+      .intermittent({ start_date: "2021-02-01" })
+      .reducedSchedule({ start_date: "2021-01-01" })
       .create();
 
     describe("#isContinuous", () => {
@@ -225,6 +225,22 @@ describe("Claim", () => {
           .verifiedId("John")
           .create();
         expect(claimWithMiddleName.fullName).toEqual("Jane John Doe");
+      });
+    });
+
+    describe("#leaveStartDate", () => {
+      it("returns earliest start_date", () => {
+        expect(emptyClaim.leaveStartDate).toBeNull();
+        expect(claimWithContinuousLeaveData.leaveStartDate).toEqual(
+          "2021-03-01"
+        );
+        expect(claimWithIntermittentLeaveData.leaveStartDate).toEqual(
+          "2021-02-01"
+        );
+        expect(claimWithReducedLeaveData.leaveStartDate).toEqual("2021-01-01");
+        expect(claimWithMultipleLeaveDurationTypes.leaveStartDate).toEqual(
+          "2021-01-01"
+        );
       });
     });
   });
@@ -285,7 +301,7 @@ describe("Claim", () => {
       });
 
       describe("when minutesWorkedPerWeek is provided", () => {
-        it("splits hours and minutes evenly if minutes is a multiple of 7", () => {
+        it("splits minutes evenly if minutes is a multiple of 7", () => {
           const workPattern = WorkPattern.addWeek(new WorkPattern(), 77 * 60); // 77 hours
           const workPattern2 = WorkPattern.addWeek(
             new WorkPattern(),
@@ -293,27 +309,23 @@ describe("Claim", () => {
           );
 
           workPattern.work_pattern_days.forEach((day) => {
-            expect(day.hours).toEqual(11);
-            expect(day.minutes).toEqual(0);
+            expect(day.minutes).toEqual(660);
           });
 
           workPattern2.work_pattern_days.forEach((day) => {
-            expect(day.hours).toEqual(11);
-            expect(day.minutes).toEqual(10);
+            expect(day.minutes).toEqual(670);
           });
         });
 
-        it("returns week will 0 hours and 0 minutes when no hours are provided", () => {
+        it("returns week with 0 minutes when no hours are provided", () => {
           const workPattern = WorkPattern.addWeek(new WorkPattern(), 0);
           const workPattern2 = WorkPattern.addWeek(new WorkPattern());
 
           workPattern.work_pattern_days.forEach((day) => {
-            expect(day.hours).toEqual(0);
             expect(day.minutes).toEqual(0);
           });
 
           workPattern2.work_pattern_days.forEach((day) => {
-            expect(day.hours).toEqual(0);
             expect(day.minutes).toEqual(0);
           });
         });
@@ -323,25 +335,47 @@ describe("Claim", () => {
             new WorkPattern(),
             77 * 60 + 18 // 77 hours and 18 minutes
           );
-          expect(map(workPattern.work_pattern_days, "hours")).toEqual([
-            11,
-            11,
-            11,
-            11,
-            11,
-            11,
-            11,
-          ]);
+
           expect(map(workPattern.work_pattern_days, "minutes")).toEqual([
-            3,
-            3,
-            3,
-            3,
-            2,
-            2,
-            2,
+            663,
+            663,
+            663,
+            663,
+            662,
+            662,
+            662,
           ]);
         });
+      });
+    });
+
+    describe("updateWeek", () => {
+      let workPattern;
+
+      beforeEach(() => {
+        workPattern = new WorkPattern({
+          work_pattern_days: [createWeek(1), createWeek(2)].flat(),
+        });
+      });
+
+      it("updates week's minutes", () => {
+        workPattern = WorkPattern.updateWeek(workPattern, 2, 77 * 60 + 18);
+        expect(sumBy(workPattern.weeks[0], "minutes")).toEqual(0);
+        expect(map(workPattern.weeks[1], "minutes")).toEqual([
+          663,
+          663,
+          663,
+          663,
+          662,
+          662,
+          662,
+        ]);
+      });
+
+      it("throws error if weekNumber is out of bounds", () => {
+        expect(() =>
+          WorkPattern.updateWeek(workPattern, 3, 77 * 60 + 18)
+        ).toThrow();
       });
     });
 
@@ -351,7 +385,7 @@ describe("Claim", () => {
           work_pattern_days: [1, 2, 3, 4].flatMap((week_number) =>
             createWeek(week_number).map((day) => ({
               ...day,
-              hours: week_number * 10,
+              minutes: week_number * 10 * 60,
             }))
           ),
         });
@@ -360,12 +394,16 @@ describe("Claim", () => {
 
         expect(workPattern.work_pattern_days.length).toEqual(21);
         expect(workPattern.weeks.length).toEqual(3);
+        // removes week_number 3
         expect(
-          workPattern.work_pattern_days.every((day) => day.hours !== 30)
+          workPattern.work_pattern_days.every(
+            (day) => day.minutes !== 3 * 10 * 60
+          )
         ).toBe(true);
-        expect(workPattern.weeks[2].every((day) => day.hours === 40)).toBe(
-          true
-        );
+        // what was week_number 4 is now week_number 3
+        expect(
+          workPattern.weeks[2].every((day) => day.minutes === 4 * 10 * 60)
+        ).toBe(true);
 
         workPattern.weeks.forEach((week, i) => {
           expect(week.length).toEqual(7);
