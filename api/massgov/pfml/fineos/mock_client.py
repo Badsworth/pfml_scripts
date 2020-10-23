@@ -303,7 +303,21 @@ class MockFINEOSClient(client.AbstractFINEOSClient):
 
     def get_documents(self, user_id: str, absence_id: str) -> List[models.customer_api.Document]:
         document = mock_document(absence_id)
-        return [fineos_client.client_response_json_to_document(document)]
+        return [
+            models.customer_api.Document.parse_obj(
+                fineos_client.fineos_document_empty_dates_to_none(document)
+            )
+        ]
+
+    def group_client_get_documents(
+        self, user_id: str, absence_id: str
+    ) -> List[models.group_client_api.GroupClientDocument]:
+        document = mock_document(absence_id)
+        return [
+            models.group_client_api.GroupClientDocument.parse_obj(
+                fineos_client.fineos_document_empty_dates_to_none(document)
+            )
+        ]
 
     def download_document(
         self, user_id: str, absence_id: str, fineos_document_id: str

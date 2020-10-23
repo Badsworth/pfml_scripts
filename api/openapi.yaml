@@ -203,9 +203,41 @@ paths:
         "404":
           $ref: "#/components/responses/NotFound"
 
+  /employers/claims/{fineos_absence_id}/documents:
+    get:
+      summary: Retrieve a list of FINEOS documents for a specified absence ID
+      operationId: massgov.pfml.api.claims.employer_get_claim_documents
+      tags:
+        - Claims
+      parameters:
+        - name: fineos_absence_id
+          in: path
+          schema:
+            type: string
+            example: "NTN-00-ABS-00"
+          description: "FINEOS absence ID of the claim data to be retrieved"
+          required: true
+      responses:
+        "200":
+          description: A successful request returns a 200 status code.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessfulResponse'
+                  - properties:
+                      data:
+                        $ref: "#/components/schemas/ClaimDocumentResponse"
+        "400":
+          description: An unsuccessful request returns a 400 status code if one or more errors occurred.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
   /employers/claims/{fineos_absence_id}/review:
     get:
-      summary: Retrieve FINEOS absence data for a specified absence ID
+      summary: Retrieve FINEOS claim review data for a specified absence ID
       operationId: massgov.pfml.api.claims.employer_get_claim_review
       tags:
         - Claims
@@ -1328,6 +1360,42 @@ components:
       required:
         - document_type
         - file
+      additionalProperties: false
+
+    ClaimDocumentResponse:
+      type: object
+      properties:
+        created_at:
+          format: date
+          example: "1970-06-01"
+        document_type:
+          type: string
+          enum:
+            - Passport
+            - Driver's License Mass
+            - Driver's License Other State
+            - Identification Proof
+            - State Managed Paid Leave Confirmation
+          example: "Passport"
+        content_type:
+          type: string
+          example: "image/png"
+        fineos_document_id:
+          type: string
+          example: "1234"
+        name:
+          type: string
+          example: "passport.png"
+        description:
+          type: string
+          example: "Jane Smith Passport"
+      required:
+        - created_at
+        - document_type
+        - content_type
+        - fineos_document_id
+        - name
+        - description
       additionalProperties: false
 
     DocumentResponse:

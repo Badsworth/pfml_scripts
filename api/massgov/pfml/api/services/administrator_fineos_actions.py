@@ -1,3 +1,4 @@
+import mimetypes
 from typing import Dict, List
 
 import massgov.pfml.db
@@ -10,7 +11,7 @@ from massgov.pfml.api.models.claims.common import (
     PreviousLeave,
     StandardLeavePeriod,
 )
-from massgov.pfml.api.models.claims.responses import ClaimReviewResponse
+from massgov.pfml.api.models.claims.responses import ClaimReviewResponse, DocumentResponse
 from massgov.pfml.fineos.transforms.from_fineos.eforms import (
     TransformOtherIncomeEform,
     TransformOtherLeaveEform,
@@ -52,28 +53,60 @@ def get_leave_details(absence_periods: Dict) -> LeaveDetails:
     return LeaveDetails.parse_obj(leave_details)
 
 
+def fineos_document_response_to_document_response(
+    fineos_document_response: massgov.pfml.fineos.models.group_client_api.GroupClientDocument,
+) -> DocumentResponse:
+    content_type, encoding = mimetypes.guess_type(fineos_document_response.originalFilename or "")
+
+    document_response = DocumentResponse(
+        created_at=fineos_document_response.dateCreated,
+        document_type=fineos_document_response.name,
+        content_type=content_type,
+        fineos_document_id=fineos_document_response.documentId,
+        name=fineos_document_response.originalFilename,
+        description=fineos_document_response.description,
+    )
+    return document_response
+
+
+def get_documents_as_leave_admin(fineos_user_id: str, absence_id: str) -> List[DocumentResponse]:
+    """
+    Given an absence ID, gets the documents associated with the claim
+    """
+    try:
+        fineos = massgov.pfml.fineos.create_client()
+        fineos_documents = fineos.group_client_get_documents(fineos_user_id, absence_id)
+        document_responses = list(
+            map(lambda fd: fineos_document_response_to_document_response(fd), fineos_documents,)
+        )
+        return document_responses
+    except massgov.pfml.fineos.FINEOSClientError as error:
+        logger.exception("FINEOS Client Exception", extra={"error": error})
+        raise ValueError("FINEOS Client Exception")
+
+
 def get_claim_as_leave_admin(
-    user_id: str, absence_id: str, employer_fein: str
+    fineos_user_id: str, absence_id: str, employer_fein: str
 ) -> ClaimReviewResponse:
     """
     Given an absence ID, gets a full claim for the claim review page by calling multiple endpoints from FINEOS
     """
     try:
         fineos = massgov.pfml.fineos.create_client()
-        absence_periods = fineos.get_absence_period_decisions(user_id, absence_id).dict()
+        absence_periods = fineos.get_absence_period_decisions(fineos_user_id, absence_id).dict()
         customer_id = absence_periods["decisions"][0]["employee"]["id"]
-        customer_info = fineos.get_customer_info(user_id, customer_id).dict()
-        eform_summaries = fineos.get_eform_summary(user_id, absence_id)
+        customer_info = fineos.get_customer_info(fineos_user_id, customer_id).dict()
+        eform_summaries = fineos.get_eform_summary(fineos_user_id, absence_id)
         other_leaves: List[PreviousLeave] = []
         other_incomes: List[EmployerBenefit] = []
 
         for eform_summary_obj in eform_summaries:
             eform_summary = eform_summary_obj.dict()
             if eform_summary["eformType"] == "Other Income":
-                eform = fineos.get_eform(user_id, absence_id, eform_summary["eformId"])
+                eform = fineos.get_eform(fineos_user_id, absence_id, eform_summary["eformId"])
                 other_incomes = other_incomes + TransformOtherIncomeEform.from_fineos(eform)
             elif eform_summary["eformType"] == "Other Leaves":
-                eform = fineos.get_eform(user_id, absence_id, eform_summary["eformId"])
+                eform = fineos.get_eform(fineos_user_id, absence_id, eform_summary["eformId"])
                 other_leaves = other_leaves + TransformOtherLeaveEform.from_fineos(eform)
 
         if customer_info["address"] is not None:

@@ -37,7 +37,7 @@ update_or_create_party_response_schema = xmlschema.XMLSchema(
 )
 
 
-def client_response_json_to_document(response_json: dict) -> models.customer_api.Document:
+def fineos_document_empty_dates_to_none(response_json: dict) -> dict:
     # Document effectiveFrom and effectiveTo are empty and set to empty strings
     # These fields are not set by the portal. Set to none to avoid validation errors.
 
@@ -54,7 +54,7 @@ def client_response_json_to_document(response_json: dict) -> models.customer_api
         else:
             response_json["receivedDate"] = None
 
-    return models.customer_api.Document.parse_obj(response_json)
+    return response_json
 
 
 class FINEOSClient(client.AbstractFINEOSClient):
@@ -374,7 +374,30 @@ class FINEOSClient(client.AbstractFINEOSClient):
 
         response_json = response.json()
 
-        return client_response_json_to_document(response_json)
+        return models.customer_api.Document.parse_obj(
+            fineos_document_empty_dates_to_none(response_json)
+        )
+
+    def group_client_get_documents(
+        self, user_id: str, absence_id: str
+    ) -> List[models.group_client_api.GroupClientDocument]:
+        header_content_type = None
+
+        response = self._group_client_api(
+            "GET",
+            f"groupClient/cases/{absence_id}/documents",
+            user_id,
+            header_content_type=header_content_type,
+        )
+
+        documents = response.json()
+
+        return [
+            models.group_client_api.GroupClientDocument.parse_obj(
+                fineos_document_empty_dates_to_none(doc)
+            )
+            for doc in documents
+        ]
 
     def get_documents(self, user_id: str, absence_id: str) -> List[models.customer_api.Document]:
         header_content_type = None
@@ -388,7 +411,10 @@ class FINEOSClient(client.AbstractFINEOSClient):
 
         documents = response.json()
 
-        return [client_response_json_to_document(doc) for doc in documents]
+        return [
+            models.customer_api.Document.parse_obj(fineos_document_empty_dates_to_none(doc))
+            for doc in documents
+        ]
 
     def download_document(
         self, user_id: str, absence_id: str, fineos_document_id: str

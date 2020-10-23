@@ -22,3 +22,12 @@ class ClaimReviewResponse(PydanticBaseModel):
     previous_leaves: Optional[List[PreviousLeave]]
     residential_address: Optional[Address]
     tax_identifier: Optional[str]
+
+
+class DocumentResponse(PydanticBaseModel):
+    created_at: Optional[date]
+    document_type: Optional[str]
+    content_type: Optional[str]
+    fineos_document_id: Optional[str]
+    name: str
+    description: str

@@ -2,6 +2,35 @@ from massgov.pfml.db.models.employees import UserLeaveAdministrator
 from massgov.pfml.db.models.factories import EmployerFactory
 
 
+def test_non_employers_cannot_access_get_documents(client, auth_token):
+    response = client.get(
+        "/v1/employers/claims/NTN-100-ABS-01/documents",
+        headers={"Authorization": f"Bearer {auth_token}"},
+    )
+
+    assert response.status_code == 403
+
+
+def test_employers_receive_200_from_get_documents(
+    client, employer_user, employer_auth_token, test_db_session
+):
+    employer = EmployerFactory.create()
+    link = UserLeaveAdministrator(
+        user_id=employer_user.user_id,
+        employer_id=employer.employer_id,
+        fineos_web_id="fake-fineos-web-id",
+    )
+    test_db_session.add(link)
+    test_db_session.commit()
+
+    response = client.get(
+        "/v1/employers/claims/NTN-100-ABS-01/documents",
+        headers={"Authorization": f"Bearer {employer_auth_token}"},
+    )
+
+    assert response.status_code == 200
+
+
 def test_non_employers_cannot_access_get_claim_review(client, auth_token):
     response = client.get(
         "/v1/employers/claims/NTN-100-ABS-01/review",
