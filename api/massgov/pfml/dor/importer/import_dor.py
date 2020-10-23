@@ -637,8 +637,17 @@ def import_employers(db_session, employers, report, import_log_entry_id):
         # this means the same employer was created previously in the current import run
         # fetch the existing employer for an update check
         if fein not in fein_to_existing_employer_reference_models:
-            existing_employer = dor_persistence_util.get_employer_by_fein(db_session, fein)
-            fein_to_existing_employer_reference_models[fein] = existing_employer
+            recently_created_existing_employer = dor_persistence_util.get_employer_by_fein(
+                db_session, fein
+            )
+            fein_to_existing_employer_reference_models[fein] = recently_created_existing_employer
+
+        existing_employer = fein_to_existing_employer_reference_models[fein]
+        if existing_employer is None:
+            logger.warning(
+                "Expected existing employer not found {}".format(employer_info["account_key"])
+            )
+            continue
 
         if (
             employer_info["updated_date"]
