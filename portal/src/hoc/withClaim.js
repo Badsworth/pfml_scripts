@@ -25,7 +25,9 @@ const withClaim = (Component) => {
     const application_id = query.claim_id;
     const claims = appLogic.claims.claims;
     const claim = claims.get(application_id);
-    const shouldLoad = !claim;
+    const shouldLoad = !appLogic.claims.hasLoadedClaimAndWarnings(
+      application_id
+    );
 
     useEffect(() => {
       if (shouldLoad) {
@@ -54,6 +56,7 @@ const withClaim = (Component) => {
       claims: PropTypes.shape({
         claims: PropTypes.instanceOf(ClaimCollection),
         load: PropTypes.func.isRequired,
+        hasLoadedClaimAndWarnings: PropTypes.func.isRequired,
       }).isRequired,
       appErrors: PropTypes.object.isRequired,
     }).isRequired,

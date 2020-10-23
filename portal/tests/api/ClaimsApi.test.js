@@ -311,7 +311,7 @@ describe("ClaimsApi", () => {
           "errors": undefined,
           "status": 200,
           "success": true,
-          "warnings": undefined,
+          "warnings": Array [],
         }
       `);
     });

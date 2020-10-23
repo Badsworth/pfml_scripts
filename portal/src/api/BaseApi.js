@@ -139,9 +139,11 @@ export default class BaseApi {
     return {
       data,
       errors,
-      warnings,
+      // Guaranteeing warnings is always an array makes our code simpler
+      warnings: warnings || [],
       status: response.status,
-      success: response.ok, // Was the status in the 2xx range?
+      // response.ok is true when the status was in the 2xx range
+      success: response.ok,
     };
   };
 }

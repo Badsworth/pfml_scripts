@@ -26,19 +26,64 @@ const useClaimsLogic = ({ appErrorsLogic, portalFlow, user }) => {
 
   const claimsApi = useMemo(() => new ClaimsApi({ user }), [user]);
 
+  // Cache the validation warnings associated with each claim. Primarily
+  // used for controlling the status of Checklist steps.
+  const [warningsLists, setWarningsLists] = useState({});
+
+  /**
+   * Store warnings for a specific claim
+   * @param {string} application_id
+   * @param {Array} warnings
+   * @private
+   */
+  const setClaimWarnings = (application_id, warnings) => {
+    setWarningsLists((prevWarningsList) => {
+      return {
+        ...prevWarningsList,
+        [application_id]: warnings,
+      };
+    });
+  };
+
+  /**
+   * Check if a claim and its warnings have been loaded. This helps
+   * our withClaim higher-order component accurately display a loading state.
+   *
+   * @param {string} application_id
+   * @returns {boolean}
+   */
+  const hasLoadedClaimAndWarnings = (application_id) => {
+    // !! so we always return a Boolean
+    return !!(
+      warningsLists.hasOwnProperty(application_id) && claims.get(application_id)
+    );
+  };
+
   /**
    * Load a single claim
    * @param {string} application_id - ID of claim to load
    */
   const load = async (application_id) => {
     if (!user) throw new Error("Cannot load claim before user is loaded");
-    if (claims && claims.get(application_id)) return;
+
+    // Skip API request if we already have the claim AND its validation warnings.
+    // It's important we load the claim if warnings haven't been fetched yet,
+    // since the Checklist needs those to be present in order to accurately
+    // determine what steps are completed.
+    if (claims && hasLoadedClaimAndWarnings(application_id)) return;
 
     appErrorsLogic.clearErrors();
 
     try {
-      const { claim } = await claimsApi.getClaim(application_id);
-      addClaim(claim);
+      const { claim, warnings } = await claimsApi.getClaim(application_id);
+
+      if (claims.get(application_id)) {
+        setClaim(claim);
+      } else {
+        addClaim(claim);
+      }
+
+      setClaimWarnings(application_id, warnings);
     } catch (error) {
       if (error instanceof NotFoundError) {
         return portalFlow.goTo(routes.applications);
@@ -102,6 +147,7 @@ const useClaimsLogic = ({ appErrorsLogic, portalFlow, user }) => {
       // </ end workaround >
 
       setClaim(claim);
+      setClaimWarnings(application_id, warnings);
 
       // If there were only validation warnings, then throw *after*
       // the claim has been updated in our state, so our local claim
@@ -200,11 +246,13 @@ const useClaimsLogic = ({ appErrorsLogic, portalFlow, user }) => {
     complete,
     create,
     hasLoadedAll,
+    hasLoadedClaimAndWarnings,
     load,
     loadAll,
     update,
     submit,
     setClaims,
+    warningsLists,
   };
 };
 

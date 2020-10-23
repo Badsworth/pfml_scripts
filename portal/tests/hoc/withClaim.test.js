@@ -28,7 +28,18 @@ describe("withClaim", () => {
   });
 
   it("Shows spinner when claim is not loaded", () => {
-    appLogic.claims.claims = new ClaimCollection();
+    appLogic.claims.hasLoadedClaimAndWarnings.mockReturnValue(false);
+
+    render();
+
+    expect(wrapper.find("Spinner").exists()).toBe(true);
+    expect(wrapper.find("PageComponent").exists()).toBe(false);
+  });
+
+  it("Shows spinner when claim's warnings aren't loaded", () => {
+    const claim = new Claim({ application_id: claim_id });
+    appLogic.claims.claims = new ClaimCollection([claim]);
+    appLogic.claims.hasLoadedClaimAndWarnings.mockReturnValue(false);
 
     render();
 
@@ -37,7 +48,7 @@ describe("withClaim", () => {
   });
 
   it("loads the claim", () => {
-    appLogic.claims.claims = new ClaimCollection();
+    appLogic.claims.hasLoadedClaimAndWarnings.mockReturnValue(false);
 
     render();
 
@@ -57,6 +68,7 @@ describe("withClaim", () => {
     beforeEach(() => {
       claim = new Claim({ application_id: claim_id });
       appLogic.claims.claims = new ClaimCollection([claim]);
+      appLogic.claims.hasLoadedClaimAndWarnings.mockReturnValue(true);
     });
 
     it("passes through the 'user' prop from the withUser higher order component", () => {

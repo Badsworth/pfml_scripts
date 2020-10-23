@@ -543,6 +543,9 @@ export const renderWithAppLogic = (PageComponent, options = {}) => {
     ...options.claimAttrs,
   });
   appLogic.claims.claims = new ClaimCollection([claim]);
+  appLogic.claims.hasLoadedClaimAndWarnings = jest
+    .fn()
+    .mockReturnValue(options.hasLoadedClaimAndWarnings || true);
   appLogic.auth.isLoggedIn = true;
   appLogic.users.requireUserConsentToDataAgreement = jest.fn();
   appLogic.users.user = new User({

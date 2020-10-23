@@ -54,6 +54,25 @@ describe("useClaimsLogic", () => {
     expect(claimsLogic.claims.items).toHaveLength(0);
   });
 
+  describe("hasLoadedClaimAndWarnings", () => {
+    beforeEach(() => {
+      // Make sure the ID we're loading matches what the API will return to us so caching works as
+      applicationId = getClaimMockApplicationId;
+
+      renderHook();
+    });
+
+    it("returns true when a claim and its warnings are loaded", async () => {
+      expect(claimsLogic.hasLoadedClaimAndWarnings(applicationId)).toBe(false);
+
+      await act(async () => {
+        await claimsLogic.load(applicationId);
+      });
+
+      expect(claimsLogic.hasLoadedClaimAndWarnings(applicationId)).toBe(true);
+    });
+  });
+
   describe("load", () => {
     beforeEach(() => {
       // Make sure the ID we're loading matches what the API will return to us so caching works as
@@ -74,6 +93,16 @@ describe("useClaimsLogic", () => {
       expect(getClaimMock).toHaveBeenCalledTimes(1);
     });
 
+    it("stores the claim's warnings in warningsLists", async () => {
+      await act(async () => {
+        await claimsLogic.load(applicationId);
+      });
+
+      expect(claimsLogic.warningsLists).toEqual({
+        [applicationId]: [],
+      });
+    });
+
     it("only makes api request if claim has not been loaded", async () => {
       await act(async () => {
         await claimsLogic.load(applicationId);
@@ -83,13 +112,13 @@ describe("useClaimsLogic", () => {
       expect(getClaimMock).toHaveBeenCalledTimes(1);
     });
 
-    it("skips API request when claim already exists in the collection", async () => {
+    it("makes API request when claim is loaded but its warnings haven't been stored in warningsLists", async () => {
       await act(async () => {
         await claimsLogic.loadAll();
         await claimsLogic.load(applicationId);
       });
 
-      expect(getClaimMock).toHaveBeenCalledTimes(0);
+      expect(getClaimMock).toHaveBeenCalledTimes(1);
     });
 
     it("clears prior errors", async () => {
@@ -450,7 +479,7 @@ describe("useClaimsLogic", () => {
           jest.spyOn(console, "error").mockImplementationOnce(jest.fn());
         });
 
-        it("updates the local claim if response only included warnings", async () => {
+        it("updates the local claim and warningsList if response only included warnings", async () => {
           mockRouter.pathname = routes.claims.name;
           const claimResponse = new MockClaimBuilder()
             .id(applicationId)
@@ -482,6 +511,9 @@ describe("useClaimsLogic", () => {
           const claim = claimsLogic.claims.get(applicationId);
 
           expect(claim.last_name).toBe(last_name);
+          expect(claimsLogic.warningsLists[applicationId]).toEqual([
+            { field: "first_name", type: "required" },
+          ]);
         });
 
         it("does not update the local claim if response included any errors", async () => {

@@ -15,6 +15,7 @@ export const completeClaimMock = jest.fn((application_id) =>
       application_id,
       status: ClaimStatus.completed,
     }),
+    warnings: [],
   })
 );
 
@@ -26,6 +27,7 @@ export const createClaimMock = jest.fn(() =>
       application_id: `mock-created-claim-application-id-${uniqueId()}`,
       status: ClaimStatus.started,
     }),
+    warnings: [],
   })
 );
 
@@ -56,6 +58,7 @@ export const getClaimsMock = jest.fn(() =>
         status: ClaimStatus.started,
       }),
     ]),
+    warnings: [],
   })
 );
 
@@ -68,6 +71,7 @@ export const updateClaimMock = jest.fn((application_id, patchData) =>
       status: ClaimStatus.started,
       ...patchData,
     }),
+    warnings: [],
   })
 );
 
@@ -79,6 +83,7 @@ export const submitClaimMock = jest.fn((application_id) =>
       application_id,
       status: ClaimStatus.submitted,
     }),
+    warnings: [],
   })
 );
 
