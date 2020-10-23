@@ -1,0 +1,15 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`EmployersApi submitClaimReview successful request resolves with success and status: 
+          Object {
+            "claim": null,
+            "status": 200,
+            "success": true,
+          }
+         1`] = `
+Object {
+  "claim": null,
+  "status": 200,
+  "success": true,
+}
+`;

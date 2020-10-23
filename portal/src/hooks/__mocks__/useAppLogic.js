@@ -42,6 +42,10 @@ export default jest.fn(() => ({
     documents: new DocumentCollection(),
     loadAll: jest.fn(),
   },
+  employers: {
+    load: jest.fn(() => new Claim({ fineos_absence_id: "NTN-111-ABS-01" })),
+    submit: jest.fn(),
+  },
   portalFlow: {
     goToNextPage: jest.fn(),
     pathname: "/mock-portalFlow-pathname",

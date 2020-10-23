@@ -1,3 +1,5 @@
+import { MockClaimBuilder, testHook } from "../../../test-utils";
+import { mount, shallow } from "enzyme";
 import EmployeeInformation from "../../../../src/components/employers/EmployeeInformation";
 import EmployerBenefits from "../../../../src/components/employers/EmployerBenefits";
 import Feedback from "../../../../src/components/employers/Feedback";
@@ -6,31 +8,46 @@ import LeaveSchedule from "../../../../src/components/employers/LeaveSchedule";
 import PreviousLeaves from "../../../../src/components/employers/PreviousLeaves";
 import React from "react";
 import Review from "../../../../src/pages/employers/claims/review";
-import Title from "../../../../src/components/Title";
-import { shallow } from "enzyme";
-import { testHook } from "../../../test-utils";
+import Spinner from "../../../../src/components/Spinner";
+import { act } from "react-dom/test-utils";
 import useAppLogic from "../../../../src/hooks/useAppLogic";
 
 jest.mock("../../../../src/hooks/useAppLogic");
 
 describe("Review", () => {
+  const query = { absence_id: "NTN-111-ABS-01" };
   let appLogic, wrapper;
 
   beforeEach(() => {
     testHook(() => {
       appLogic = useAppLogic();
     });
-
-    wrapper = shallow(<Review appLogic={appLogic} />).dive();
   });
 
-  it("displays the claimant's full name", () => {
-    expect(wrapper.find(Title).childAt(0).text()).toEqual(
-      "Review application for Jane Doe"
-    );
+  it("displays the spinner if claim is not loaded", () => {
+    wrapper = shallow(<Review appLogic={appLogic} query={query} />).dive();
+
+    expect(wrapper.find(Spinner).exists()).toEqual(true);
   });
 
-  it("renders the following components", () => {
+  it("makes a call to load claim if claim is not loaded", () => {
+    appLogic.employers.claim = null;
+
+    act(() => {
+      wrapper = mount(<Review appLogic={appLogic} query={query} />);
+    });
+
+    expect(appLogic.employers.load).toHaveBeenCalled();
+  });
+
+  it("renders pages when claim is loaded", () => {
+    const claim = new MockClaimBuilder().submitted().create();
+    appLogic.employers.claim = claim;
+
+    act(() => {
+      wrapper = mount(<Review appLogic={appLogic} query={query} />);
+    });
+
     const components = [
       EmployeeInformation,
       EmployerBenefits,

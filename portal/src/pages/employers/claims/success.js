@@ -42,8 +42,8 @@ export const Success = (props) => {
 
 Success.propTypes = {
   query: PropTypes.shape({
-    absence_id: PropTypes.string,
-  }),
+    absence_id: PropTypes.string.isRequired,
+  }).isRequired,
 };
 
 export default Success;

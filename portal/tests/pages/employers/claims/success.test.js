@@ -4,7 +4,7 @@ import { shallow } from "enzyme";
 
 describe("Success", () => {
   it("renders Success page", () => {
-    const query = { claim_id: "test-claim-id" };
+    const query = { absence_id: "test-absence-id" };
     const wrapper = shallow(<Success query={query} />);
 
     expect(wrapper).toMatchSnapshot();

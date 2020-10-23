@@ -1,8 +1,27 @@
+import { useMemo, useState } from "react";
 import EmployersApi from "../api/EmployersApi";
-import { useMemo } from "react";
 
 const useEmployersLogic = ({ appErrorsLogic, portalFlow }) => {
+  const [claim, setClaim] = useState(null);
   const employersApi = useMemo(() => new EmployersApi(), []);
+
+  /**
+   * Retrieve claim from the API and set application errors if any
+   * @param {string} absenceId - FINEOS absence id
+   */
+  const load = async (absenceId) => {
+    if (claim) return;
+    appErrorsLogic.clearErrors();
+
+    try {
+      const { claim, success } = await employersApi.getClaim(absenceId);
+      if (success) {
+        setClaim(claim);
+      }
+    } catch (error) {
+      appErrorsLogic.catchError(error);
+    }
+  };
 
   /**
    * Submit claim review to the API and set application errors if any
@@ -24,6 +43,8 @@ const useEmployersLogic = ({ appErrorsLogic, portalFlow }) => {
   };
 
   return {
+    claim,
+    load,
     submit,
   };
 };

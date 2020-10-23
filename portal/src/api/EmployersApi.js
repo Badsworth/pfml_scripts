@@ -1,10 +1,12 @@
 import BaseApi from "./BaseApi";
+import Claim from "../models/Claim";
 import routes from "../routes";
 
 /**
  * @typedef {object} EmployersAPISingleResult
- * @property {boolean} success Whether or not the request was successful
- * @property {number} status Status code
+ * @property {number} status - Status code
+ * @property {boolean} success - Returns true if 2xx status code
+ * @property {Claim} [claim] - If the request succeeded, this will contain a claim
  */
 
 export default class EmployersApi extends BaseApi {
@@ -17,6 +19,25 @@ export default class EmployersApi extends BaseApi {
   }
 
   /**
+   * Retrieve a claim
+   *
+   * @param {string} absenceId - FINEOS absence id
+   * @returns {Promise<EmployersAPISingleResult>}
+   */
+  getClaim = async (absenceId) => {
+    const { data, success, status } = await this.request(
+      "GET",
+      `claims/${absenceId}/review`
+    );
+
+    return {
+      claim: success ? new Claim(data) : null,
+      status,
+      success,
+    };
+  };
+
+  /**
    * Submit an employer claim review
    *
    * @param {string} absenceId - FINEOS absence id
@@ -24,15 +45,16 @@ export default class EmployersApi extends BaseApi {
    * @returns {Promise<EmployersAPISingleResult>}
    */
   submitClaimReview = async (absenceId, patchData) => {
-    const { success, status } = await this.request(
+    const { status, success } = await this.request(
       "PATCH",
       `claims/${absenceId}/review`,
       patchData
     );
 
-    return Promise.resolve({
-      success,
+    return {
+      claim: null,
       status,
-    });
+      success,
+    };
   };
 }

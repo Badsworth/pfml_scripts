@@ -9,7 +9,7 @@ exports[`Success renders Success page 1`] = `
     i18nKey="pages.employersClaimsSuccess.applicationIdLabel"
     values={
       Object {
-        "absenceId": undefined,
+        "absenceId": "test-absence-id",
       }
     }
   />

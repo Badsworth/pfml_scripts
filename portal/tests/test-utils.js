@@ -14,14 +14,12 @@ import Claim, {
   WorkPatternType,
 } from "../src/models/Claim";
 import Document, { DocumentType } from "../src/models/Document";
-import EmployerBenefit, {
-  EmployerBenefitType,
-} from "../src/models/EmployerBenefit";
 import { mount, shallow } from "enzyme";
 import Address from "../src/models/Address";
 import AppErrorInfo from "../src/models/AppErrorInfo";
 import AppErrorInfoCollection from "../src/models/AppErrorInfoCollection";
 import ClaimCollection from "../src/models/ClaimCollection";
+import EmployerBenefit from "../src/models/EmployerBenefit";
 import PreviousLeave from "../src/models/PreviousLeave";
 import React from "react";
 import User from "../src/models/User";
@@ -460,46 +458,6 @@ export class MockClaimBuilder {
     return new Claim(this.claimAttrs);
   }
 }
-
-/**
- * TODO (EMPLOYER-364): Remove once live data is available
- * A complete mock claim (currently used for demo'ing Employer Claim Review page)
- * @type {Claim}
- */
-export const claim = new MockClaimBuilder()
-  .id()
-  .verifiedId()
-  .address()
-  .medicalLeaveReason()
-  .employed()
-  .intermittent()
-  .previousLeave([
-    {
-      leave_start_date: "2020-03-01",
-      leave_end_date: "2020-03-06",
-      id: 1,
-    },
-  ])
-  .employerBenefit([
-    {
-      benefit_amount_dollars: 0,
-      benefit_end_date: "2021-02-01",
-      benefit_start_date: "2021-01-01",
-      benefit_amount_frequency: "",
-      benefit_type: EmployerBenefitType.paidLeave,
-      id: 2,
-    },
-    {
-      benefit_amount_dollars: 1000,
-      benefit_end_date: "2021-03-01",
-      benefit_start_date: "2021-02-01",
-      benefit_amount_frequency: "Per Month",
-      benefit_type: EmployerBenefitType.shortTermDisability,
-      id: 1,
-    },
-  ])
-  .completed()
-  .create();
 
 /**
  * Render a component, automatically setting its appLogic and query props
