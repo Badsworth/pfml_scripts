@@ -12,12 +12,12 @@ clean:
 	rm $(MODELS)
 
 %.py: %.cleaned.yaml
-	poetry run datamodel-codegen --input $< --output $@
+	poetry run datamodel-codegen --field-constraints --input $< --output $@
 	poetry run black $@
 
 # Fix some issues in the OpenAPI file.
 %.cleaned.yaml: %.yaml
-	perl -pe "s/format: string//; s/format: money/format: decimal/; s/format: date-time/format: date/" $< >$@
+	poetry run python preprocess-customer-api-spec.py $< > $@
 
 # This is difficult to automate as both an oauth2 session and valid userid header are needed.
 customer_api.yaml:
