@@ -300,7 +300,10 @@ class FINEOSClient(client.AbstractFINEOSClient):
         response = self._group_client_api(
             "GET", f"groupClient/customers/{customer_id}/customer-info", user_id
         )
-        return models.group_client_api.CustomerInfo.parse_obj(response.json())
+        json = response.json()
+        set_empty_dates_to_none(json, ["dateOfBirth"])
+
+        return models.group_client_api.CustomerInfo.parse_obj(json)
 
     def get_eform_summary(
         self, user_id: str, absence_id: str
