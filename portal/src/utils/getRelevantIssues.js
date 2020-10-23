@@ -22,13 +22,31 @@ function getRelevantIssues(errors = [], warnings = [], pages = []) {
     // Remove falsy values, which may occur if a page didn't include a set of fields,
     // then remove the model prefix:
     fields = compact(fields).map((field) => {
-      // Our pages export fields prefixed with the model, but the warnings
-      // won't include that prefix, so we trim it here:
-      return field.replace(/^claim./, "");
+      return (
+        // Fields are matched using regex
+        field
+          // Our pages export fields prefixed with the model, but the warnings
+          // won't include that prefix, so we trim it here:
+          .replace(/^claim./, "")
+          // support wild card in array field names
+          // e.g. work_pattern.work_pattern_days[*].minutes
+          .replace(/\*/g, "\\d+")
+          // escape brackets for support in regex
+          // eslint-disable-next-line no-useless-escape
+          .replace(/(?=[\[\]])/g, "\\")
+          // Prepend entire field with ^ and append with $
+          // to enforce exact match. Without this
+          // leave_details.continuous_leave_periods would match
+          // both leave_details.continuous_leave_periods and
+          // leave_details.continuous_leave_periods[0].start_date
+          .replace(/(.*)/, "^$&$")
+      );
     });
 
-    relevantWarnings = warnings.filter(({ field, rule }) => {
-      return applicableRules.includes(rule) || fields.includes(field);
+    relevantWarnings = warnings.filter(({ field = "", rule }) => {
+      return (
+        applicableRules.includes(rule) || fields.some((f) => !!field.match(f))
+      );
     });
   }
 

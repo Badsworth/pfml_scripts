@@ -110,6 +110,7 @@ describe("getRelevantIssues", () => {
     const warnings = [
       { field: "first_name", type: "required" },
       { field: "ssn", type: "required" },
+      { field: "work_pattern.work_pattern_days[0].minutes", type: "required" },
       { rule: "disallow_foo" },
       { rule: "disallow_bar" },
       { rule: "min_leave_periods" },
@@ -130,6 +131,35 @@ describe("getRelevantIssues", () => {
       { field: "first_name", type: "required" },
       { rule: "disallow_foo" },
       { rule: "disallow_bar" },
+    ]);
+  });
+
+  it("filters only fields that are exact matches", () => {
+    const errors = [];
+    const warnings = [
+      { field: "first_name", type: "required" },
+      { field: "work_pattern.work_pattern_days[0].minutes", type: "required" },
+      { field: "work_pattern.work_pattern_days[5].minutes", type: "required" },
+    ];
+    const pages = [
+      {
+        meta: {
+          applicableRules: ["disallow_foo", "disallow_bar"],
+          fields: [
+            "first_name",
+            "work_pattern.work_pattern_days",
+            "work_pattern.work_pattern_days[5].minutes",
+          ],
+        },
+      },
+    ];
+
+    const issues = getRelevantIssues(errors, warnings, pages);
+
+    expect(issues).toHaveLength(2);
+    expect(issues).toEqual([
+      { field: "first_name", type: "required" },
+      { field: "work_pattern.work_pattern_days[5].minutes", type: "required" },
     ]);
   });
 
@@ -162,5 +192,123 @@ describe("getRelevantIssues", () => {
 
     expect(issues).toHaveLength(1);
     expect(issues).toEqual([{ rule: "disallow_hybrid_intermittent_leave" }]);
+  });
+
+  describe("array wildcard [*]", () => {
+    it("includes warnings for a field in any index of an array", () => {
+      const errors = [];
+      const warnings = [
+        { field: "first_name", type: "required" },
+        {
+          field: "work_pattern.work_pattern_days[5].minutes",
+          type: "required",
+        },
+        {
+          field: "work_pattern.work_pattern_days[12].minutes",
+          type: "required",
+        },
+        {
+          field: "work_pattern.work_pattern_days[5].week_number",
+          type: "required",
+        },
+        { rule: "disallow_foo" },
+      ];
+      const pages = [
+        {
+          meta: {
+            fields: ["work_pattern.work_pattern_days[*].minutes"],
+            applicableRules: ["disallow_foo"],
+          },
+        },
+      ];
+
+      const issues = getRelevantIssues(errors, warnings, pages);
+
+      expect(issues).toHaveLength(3);
+      expect(issues).toEqual([
+        {
+          field: "work_pattern.work_pattern_days[5].minutes",
+          type: "required",
+        },
+        {
+          field: "work_pattern.work_pattern_days[12].minutes",
+          type: "required",
+        },
+        { rule: "disallow_foo" },
+      ]);
+    });
+
+    it("supports array in dot notation", () => {
+      const errors = [];
+      const warnings = [
+        { field: "first_name", type: "required" },
+        {
+          field: "work_pattern.work_pattern_days.5.minutes",
+          type: "required",
+        },
+        {
+          field: "work_pattern.work_pattern_days.12.minutes",
+          type: "required",
+        },
+        {
+          field: "work_pattern.work_pattern_days.5.week_number",
+          type: "required",
+        },
+        { rule: "disallow_foo" },
+      ];
+      const pages = [
+        {
+          meta: {
+            fields: ["work_pattern.work_pattern_days.*.minutes"],
+            applicableRules: ["disallow_foo"],
+          },
+        },
+      ];
+
+      const issues = getRelevantIssues(errors, warnings, pages);
+
+      expect(issues).toHaveLength(3);
+      expect(issues).toEqual([
+        {
+          field: "work_pattern.work_pattern_days.5.minutes",
+          type: "required",
+        },
+        {
+          field: "work_pattern.work_pattern_days.12.minutes",
+          type: "required",
+        },
+        { rule: "disallow_foo" },
+      ]);
+    });
+
+    it("filters only fields that are exact matches", () => {
+      const errors = [];
+      const warnings = [
+        { field: "first_name", type: "required" },
+        {
+          field: "work_pattern.work_pattern_days[0].minutes",
+          type: "required",
+        },
+        {
+          field: "work_pattern.work_pattern_days[5].week_number",
+          type: "required",
+        },
+        { field: "work_pattern.work_pattern_days[2]", type: "required" },
+      ];
+      const pages = [
+        {
+          meta: {
+            fields: ["work_pattern.work_pattern_days[*]"],
+          },
+        },
+      ];
+
+      const issues = getRelevantIssues(errors, warnings, pages);
+
+      expect(issues).toHaveLength(1);
+      expect(issues).toEqual([
+        { field: "work_pattern.work_pattern_days[2]", type: "required" },
+      ]);
+    });
   });
 });
