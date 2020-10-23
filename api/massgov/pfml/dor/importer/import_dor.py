@@ -215,9 +215,23 @@ class EmployeeWriter(object):
 
         for row in self.lines:
             if row.startswith("B"):
-                employee_info = EMPLOYEE_FORMAT.parse_line(row)
-                employees_info.append(employee_info)
-                self.parsed_employees_info_count = self.parsed_employees_info_count + 1
+                try:
+                    employee_info = EMPLOYEE_FORMAT.parse_line(row)
+
+                    line_length = len(row.strip("\n\r"))
+                    if line_length != EMPLOYEE_FILE_ROW_LENGTH:
+                        logger.warning(
+                            "Incorrect employee line length - account key {0}, line length: {1}".format(
+                                employee_info["account_key"], line_length
+                            )
+                        )
+                        self.report.invalid_employee_lines_count += 1
+
+                    employees_info.append(employee_info)
+                    self.parsed_employees_info_count = self.parsed_employees_info_count + 1
+                except Exception:
+                    logger.exception("Parse error with employee")
+                    self.report.parsed_employees_exception_count += 1
 
         if len(employees_info) > 0:
             import_employees_and_wage_data(
@@ -547,12 +561,12 @@ def import_employers(db_session, employers, report, import_log_entry_id):
         except Exception:
             logger.warning(
                 "Invalid employer state: {}, {}, {}".format(
-                    employer_info["employer_address_city"],
-                    employer_info["employer_address_state"],
-                    employer_info["employer_address_zip"],
+                    employer["employer_address_city"],
+                    employer["employer_address_state"],
+                    employer["employer_address_zip"],
                 )
             )
-            report.invalid_address_state_and_account_keys[employer_info["account_key"]] = employer[
+            report.invalid_address_state_and_account_keys[employer["account_key"]] = employer[
                 "employer_address_state"
             ]
 

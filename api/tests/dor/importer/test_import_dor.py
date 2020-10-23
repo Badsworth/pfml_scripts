@@ -558,9 +558,12 @@ def test_decryption_invalid_employer_lines(monkeypatch, test_db_session, dor_emp
     employee_count = (employer_count - 1) * generator.EMPLOYER_TO_EMPLOYEE_RATIO
 
     assert report.created_employers_count == 19
-    assert len(report.parsed_employers_exception_line_nums) == 0
+    assert report.parsed_employers_exception_line_nums == [22]
     assert report.invalid_employer_lines_count == 1
-    assert len(report.invalid_address_state_and_account_keys) == 1
+    assert report.invalid_address_state_and_account_keys == {
+        "00000000020": "BC",
+        "00000000021": "10",
+    }
     assert report.created_employees_count == employee_count
     assert report.created_wages_and_contributions_count >= employee_count
 
