@@ -9,7 +9,7 @@ import resource
 import uuid
 from dataclasses import asdict, dataclass, field
 from datetime import datetime
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 import boto3
 from sqlalchemy.exc import SQLAlchemyError
@@ -20,8 +20,9 @@ import massgov.pfml.util.files as file_util
 import massgov.pfml.util.logging as logging
 import massgov.pfml.util.logging.audit
 from massgov.pfml import db
-from massgov.pfml.db.models.employees import ImportLog
+from massgov.pfml.db.models.employees import GeoState, ImportLog
 from massgov.pfml.dor.importer.dor_file_formats import (
+    EMPLOYEE_FILE_ROW_LENGTH,
     EMPLOYEE_FORMAT,
     EMPLOYER_FILE_FORMAT,
     EMPLOYER_FILE_ROW_LENGTH,
@@ -76,6 +77,13 @@ class ImportReport:
     updated_employees_count: int = 0
     created_wages_and_contributions_count: int = 0
     updated_wages_and_contributions_count: int = 0
+    sample_employers_line_lengths: Dict[Any, Any] = field(default_factory=dict)
+    skipped_employers_count: int = 0
+    parsed_employers_exception_line_nums: List[Any] = field(default_factory=list)
+    invalid_address_state_and_account_keys: Dict[Any, Any] = field(default_factory=dict)
+    skipped_employees_count: int = 0
+    skipped_wages_count: int = 0
+    parsed_employees_exception_count: int = 0
     message: str = ""
     status: Optional[str] = None
     end: Optional[str] = None
@@ -350,7 +358,6 @@ def handle_import_exception(
         dor_persistence_util.update_import_log_entry(db_session, report_log_entry, report)
         import_exception = ImportException(message, type(exception).__name__)
     except Exception as e:
-        logger.exception("What")
         message = f"Unexpected error while closing out import run due to original exception: {type(exception)}"
         import_exception = ImportException(message, type(e).__name__)
     finally:
@@ -370,11 +377,15 @@ def process_daily_import(
     )
 
     try:
+        report.sample_employers_line_lengths = {}
+        report.parsed_employers_exception_line_nums = []
+        report.invalid_address_state_and_account_keys = {}
+
         report_log_entry = dor_persistence_util.create_import_log_entry(db_session, report)
 
         db_session.refresh(report_log_entry)
 
-        employers = parse_employer_file(employer_file_path, decrypter)
+        employers = parse_employer_file(employer_file_path, decrypter, report)
 
         parsed_employers_count = len(employers)
         parsed_employees_info_count = 0
@@ -409,7 +420,7 @@ def process_daily_import(
             while processed_count < employee_count:
                 logger.info("Processed count", extra={"count": processed_count})
                 employees_info = parse_employee_file(
-                    employee_file_path, decrypter, processed_count, batch_size
+                    employee_file_path, decrypter, report, processed_count, batch_size
                 )
 
                 parsed_employees_info_count += len(employees_info)
@@ -432,6 +443,9 @@ def process_daily_import(
         report.status = "success"
         report.end = datetime.now().isoformat()
         dor_persistence_util.update_import_log_entry(db_session, report_log_entry, report)
+
+        logger.info("Invalid states: %s", repr(report.invalid_address_state_and_account_keys))
+        logger.info("Sample Employer line lengths: %s", repr(report.sample_employers_line_lengths))
 
         # move file to processed folder
         # move_file_to_processed(bucket, file_for_import) # TODO turn this on with invoke flag
@@ -525,16 +539,30 @@ def import_employers(db_session, employers, report, import_log_entry_id):
         fein_to_new_employer_id[emp["fein"]] = uuid.uuid4()
         fein_to_new_address_id[emp["fein"]] = uuid.uuid4()
 
+    employers_with_valid_addresses = []
+    for employer in not_found_employer_info_list:
+        try:
+            GeoState.get_id(employer["employer_address_state"])
+            employers_with_valid_addresses.append(employer)
+        except Exception:
+            report.invalid_address_state_and_account_keys[employer_info["account_key"]] = employer[
+                "employer_address_state"
+            ]
+
+    logger.warning(
+        "Invalid employer states: %s", repr(report.invalid_address_state_and_account_keys)
+    )
+
     employer_models_to_create = list(
         map(
             lambda employer_info: dor_persistence_util.dict_to_employer(
                 employer_info, import_log_entry_id, fein_to_new_employer_id[employer_info["fein"]]
             ),
-            not_found_employer_info_list,
+            employers_with_valid_addresses,
         )
     )
 
-    logger.info("Creating new employers: %i", len(employer_models_to_create))
+    logger.warning("Creating new employers: %i", len(employer_models_to_create))
 
     bulk_save(db_session, employer_models_to_create, "Employers")
 
@@ -548,7 +576,7 @@ def import_employers(db_session, employers, report, import_log_entry_id):
             lambda employer_info: dor_persistence_util.dict_to_address(
                 employer_info, fein_to_new_address_id[employer_info["fein"]]
             ),
-            not_found_employer_info_list,
+            employers_with_valid_addresses,
         )
     )
 
@@ -813,6 +841,10 @@ def import_wage_data(
 
     wages_contributions_models_to_create = []
     for employee_info in wage_info_list_for_creation:
+        if account_key_to_employer_id_map.get(employee_info["account_key"], None) is None:
+            report.skipped_wages_count += 1
+            continue
+
         wages_contributions_models_to_create.append(
             dor_persistence_util.dict_to_wages_and_contributions(
                 employee_info,
@@ -932,7 +964,7 @@ def get_decrypted_file_stream(file_path, decrypter):
 
 
 # TODO turn return dataclasses list instead of object list
-def parse_employer_file(employer_file_path, decrypter):
+def parse_employer_file(employer_file_path, decrypter, report):
     """Parse employer file"""
     logger.info("Start parsing employer file", extra={"employer_file_path": employer_file_path})
     employers = []
@@ -953,17 +985,29 @@ def parse_employer_file(employer_file_path, decrypter):
 
             line_count = line_count + 1
 
-            if len(row.strip("\n")) != EMPLOYER_FILE_ROW_LENGTH:
+            try:
                 employer = EMPLOYER_FILE_FORMAT.parse_line(row)
-                invalid_employer_key_line_nums.append(
-                    "Line {0}, account key: {1}, line length: {2}".format(
-                        line_count, employer["account_key"], len(row)
-                    )
-                )
-                continue
 
-            employer = EMPLOYER_FILE_FORMAT.parse_line(row)
-            employers.append(employer)
+                line_length = len(row.strip("\n"))
+                line_length_value = report.sample_employers_line_lengths.get(line_length, [])
+                if len(line_length_value) < 3:
+                    line_length_value.append(employer["account_key"])
+                    report.sample_employers_line_lengths[line_length] = line_length_value
+
+                if len(row.strip("\n")) != EMPLOYER_FILE_ROW_LENGTH:
+                    invalid_employer_key_line_nums.append(
+                        "Line {0}, account key: {1}, line length without newlines: {2}".format(
+                            line_count, employer["account_key"], len(row.strip("\n"))
+                        )
+                    )
+                    report.skipped_employers_count += 1
+                    continue
+
+                employer = EMPLOYER_FILE_FORMAT.parse_line(row)
+                employers.append(employer)
+            except Exception as e:
+                logger.exception(e)
+                report.parsed_employers_exception_line_nums.add(line_count)
     else:
         for row in get_decrypted_file_stream(employer_file_path, decrypter):
             if not row:  # skip empty end of file lines
@@ -1006,11 +1050,13 @@ def get_employee_file_lines(employee_file_path, decrypter):
         return line_count
 
 
-def parse_employee_file(employee_file_path, decrypter, offset=0, limit=EMPLOYEE_LINE_LIMIT):
+def parse_employee_file(employee_file_path, decrypter, report, offset=0, limit=EMPLOYEE_LINE_LIMIT):
     """Parse employee file"""
     logger.info("Start parsing employee file", extra={"employee_file_path": employee_file_path})
 
     employees_info = []
+    invalid_employee_key_line_nums = []
+    line_count = 0
 
     decrypt_files = os.getenv("DECRYPT") == "true"
     if decrypt_files:
@@ -1023,9 +1069,24 @@ def parse_employee_file(employee_file_path, decrypter, offset=0, limit=EMPLOYEE_
             if not row:  # skip empty end of file lines
                 continue
 
+            line_count = line_count + 1
+
             if row.startswith("B"):
-                employee_info = EMPLOYEE_FORMAT.parse_line(row)
-                employees_info.append(employee_info)
+                if len(row.strip("\n")) != EMPLOYEE_FILE_ROW_LENGTH:
+                    invalid_employee_key_line_nums.append(
+                        "Line {0}, line length without newlines: {1}".format(
+                            line_count, len(row.strip("\n"))
+                        )
+                    )
+                    report.skipped_employees_count += 1
+                    continue
+
+                try:
+                    employee_info = EMPLOYEE_FORMAT.parse_line(row)
+                    employees_info.append(employee_info)
+
+                except Exception:
+                    report.parsed_employees_exception_count += 1
 
     else:
         for row in get_decrypted_file_stream(employee_file_path, decrypter):
@@ -1041,7 +1102,11 @@ def parse_employee_file(employee_file_path, decrypter, offset=0, limit=EMPLOYEE_
                 employees_info.append(employee_info)
 
         logger.info(
-            "Finished parsing employee file", extra={"employee_file_path": employee_file_path}
+            "Finished parsing employee file",
+            extra={
+                "employee_file_path": employee_file_path,
+                "invalid_parsed_employers": repr(invalid_employee_key_line_nums),
+            },
         )
 
     return employees_info

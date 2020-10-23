@@ -78,3 +78,5 @@ EMPLOYEE_FORMAT = FileFormat(
         FieldFormat("employer_family", 20, parse_dollar_amount),
     )
 )
+
+EMPLOYEE_FILE_ROW_LENGTH = 1 + 11 + 8 + 255 + 255 + 9 + 1 + 1 + 20 + 20 + 20 + 20 + 20 + 20

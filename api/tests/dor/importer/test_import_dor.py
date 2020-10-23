@@ -1,5 +1,6 @@
 import pathlib
 import tempfile
+from datetime import datetime
 
 import boto3
 import pytest
@@ -424,14 +425,30 @@ def test_get_files_for_import_grouped_by_date(test_fs_path, mock_s3_bucket):
 def test_parse_employee_file(test_fs_path):
     employee_wage_data = test_data.get_new_employee_wage_data()
     employee_file_path = "{}/{}".format(str(test_fs_path), employee_file)
-    employees_info = import_dor.parse_employee_file(employee_file_path, decrypter)
+
+    report = import_dor.ImportReport(
+        start=datetime.now().isoformat(),
+        status="in progress",
+        employer_file=test_fs_path,
+        employee_file=test_fs_path,
+    )
+
+    employees_info = import_dor.parse_employee_file(employee_file_path, decrypter, report)
     assert employees_info[0] == employee_wage_data
 
 
 def test_parse_employer_file(test_fs_path):
     employer_info = test_data.get_new_employer()
     employer_file_path = "{}/{}".format(str(test_fs_path), employer_file)
-    employers_info = import_dor.parse_employer_file(employer_file_path, decrypter)
+
+    report = import_dor.ImportReport(
+        start=datetime.now().isoformat(),
+        status="in progress",
+        employer_file=employer_file_path,
+        employee_file=employer_file_path,
+    )
+
+    employers_info = import_dor.parse_employer_file(employer_file_path, decrypter, report)
     assert employers_info[0] == employer_info
 
 
@@ -509,6 +526,41 @@ def test_decryption(monkeypatch, test_db_session, dor_employer_lookups):
     employee_count = employer_count * generator.EMPLOYER_TO_EMPLOYEE_RATIO
 
     assert report.created_employers_count == employer_count
+    assert report.created_employees_count == employee_count
+    assert report.created_wages_and_contributions_count >= employee_count
+
+
+@pytest.mark.timeout(25)
+def test_decryption_invalid_employer_lines(monkeypatch, test_db_session, dor_employer_lookups):
+
+    monkeypatch.setenv("DECRYPT", "true")
+
+    decryption_key = open(TEST_FOLDER / "encryption" / "test_private.key").read()
+    passphrase = "bb8d58fa-d781-11ea-87d0-0242ac130003"
+    test_email = "pfml-test@example.com"
+
+    decrypter = GpgCrypt(decryption_key, passphrase, test_email)
+
+    employer_file_path = TEST_FOLDER / "encryption" / "DORDFMLEMP_20201006205131_invalid_emp"
+    employee_file_path = TEST_FOLDER / "encryption" / "DORDFML_20201006205131_invalid_emp"
+
+    report = import_dor.process_daily_import(
+        employer_file_path=str(employer_file_path),
+        employee_file_path=str(employee_file_path),
+        decrypter=decrypter,
+        db_session=test_db_session,
+    )
+
+    # one employer will contain a parse error and be skipped
+    employer_count = 21
+
+    # one employer will contain a state error and be created, but the address will not
+    employee_count = (employer_count - 1) * generator.EMPLOYER_TO_EMPLOYEE_RATIO
+
+    assert report.created_employers_count == 19
+    assert len(report.parsed_employers_exception_line_nums) == 0
+    assert report.skipped_employers_count == 1
+    assert len(report.invalid_address_state_and_account_keys) == 1
     assert report.created_employees_count == employee_count
     assert report.created_wages_and_contributions_count >= employee_count
 
