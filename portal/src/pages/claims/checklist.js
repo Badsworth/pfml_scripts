@@ -46,6 +46,7 @@ export const Checklist = (props) => {
   );
 
   const partOneSubmitted = query["part-one-submitted"];
+  const warnings = appLogic.claims.warningsLists[claim.application_id];
 
   /**
    * @type {StepModel[]}
@@ -53,8 +54,7 @@ export const Checklist = (props) => {
   const allSteps = StepModel.createClaimStepsFromMachine(
     claimantConfig,
     { claim, idDocuments, certificationDocuments },
-    // TODO (CP-509): add appErrors.warnings when API validations are in place
-    null
+    warnings
   );
 
   /**
@@ -280,6 +280,9 @@ export const Checklist = (props) => {
 Checklist.propTypes = {
   appLogic: PropTypes.shape({
     appErrors: PropTypes.object.isRequired,
+    claims: PropTypes.shape({
+      warningsLists: PropTypes.object.isRequired,
+    }).isRequired,
   }).isRequired,
   claim: PropTypes.instanceOf(Claim).isRequired,
   documents: PropTypes.arrayOf(PropTypes.instanceOf(Document)),

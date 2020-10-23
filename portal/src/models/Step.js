@@ -2,6 +2,7 @@ import { get, groupBy, isEmpty, map } from "lodash";
 import BaseModel from "./BaseModel";
 import { ClaimStatus } from "./Claim";
 import { createRouteWithQuery } from "../utils/routeWithParams";
+import getRelevantIssues from "../utils/getRelevantIssues";
 
 /**
  * Unique identifiers for steps in the portal application
@@ -56,8 +57,7 @@ export default class Step extends BaseModel {
        */
       group: null,
       /**
-       * @type {object[]}
-       * { route: "page/route", step: "verifyId", fields: ["first_name"] }
+       * @type {Array<{ route: string, meta: { step: string, fields: string[], applicableRules: string[] }}>}
        * object representing all pages in this step keyed by the page route
        * @see ../flows
        */
@@ -86,14 +86,17 @@ export default class Step extends BaseModel {
       context: null,
       /**
        * @type {object[]}
-       * Array of validation warnings and errors from the API
+       * Array of validation warnings from the API, used for determining
+       * the completion status of Steps that include fields. You can exclude
+       * this if a Step doesn't include a field, or if it has its own
+       * completeCond set.
        */
       warnings: null,
     };
   }
 
   get fields() {
-    return this.pages.flatMap((page) => page.fields);
+    return this.pages.flatMap((page) => page.meta.fields);
   }
 
   get initialPage() {
@@ -129,7 +132,6 @@ export default class Step extends BaseModel {
 
   get isComplete() {
     if (this.completeCond) return this.completeCond(this.context);
-
     // TODO (CP-625): remove once api returns validations
     // <WorkAround>
     if (!this.warnings) {
@@ -145,23 +147,12 @@ export default class Step extends BaseModel {
         // so that we can show a "Completed" checklist.
         // Fields names can be partial, to ignore an array or object of fields.
         const ignoredField = [
+          // TODO (CP-567): Remove reduction fields once the Reductions step utilizes the warnings
           "claim.employer_benefits",
-          "claim.leave_details.continuous_leave_periods[0]",
-          "claim.leave_details.intermittent_leave_periods[0]",
-          "claim.leave_details.reason_qualifier",
-          "claim.leave_details.reduced_schedule_leave_periods[0]",
-          "claim.residential_address.line_2",
-          "claim.mass_id",
-          "claim.middle_name",
           "claim.other_incomes",
-          "claim.leave_details.child_birth_date",
-          "claim.leave_details.child_placement_date",
-          "claim.leave_details.pregnant_or_recent_birth",
-          "claim.mailing_address",
-          "claim.payment_preferences[0].account_details",
           "claim.previous_leaves",
-          "claim.work_pattern.pattern_start_date",
-          "claim.temp.leave_details.bonding.date_of_child",
+          // TODO (CP-1264): Remove payment fields from here once the Payment step utilizes the warnings
+          "claim.payment_preferences[0].account_details",
         ].some((ignoredFieldName) => field.includes(ignoredFieldName));
 
         const hasValue = fieldHasValue(field, this.context);
@@ -183,12 +174,14 @@ export default class Step extends BaseModel {
     }
     // </WorkAround>
 
-    // TODO (CP-625): Use warnings returned by API to determine if step is completed:
-    // const issues = getRelevantIssues([], this.warnings, this.pages);
-    // return !!issues.length;
-    return !this.warnings.some((warning) =>
-      this.fields.includes(warning.field)
-    );
+    const issues = getRelevantIssues([], this.warnings, this.pages);
+
+    if (process.env.NODE_ENV === "development" && issues.length) {
+      // eslint-disable-next-line no-console
+      console.log(`${this.name} has warnings`, issues);
+    }
+
+    return issues.length === 0;
   }
 
   get isInProgress() {
@@ -212,16 +205,27 @@ export default class Step extends BaseModel {
    * @see ../flows/index.js
    * @param {object} machineConfigs - configuration object for routing machine
    * @param {object} context - used for evaluating a step's status
+   * @param {Claim} [context.claim]
+   * @param {Document[]} [context.certificationDocuments]
+   * @param {Document[]} [context.idDocuments]
    * @param {object[]} [warnings] - array of validation warnings returned from API
    * @returns {Step[]}
    * @example createClaimStepsFromMachine(claimFlowConfig, { claim: { first_name: "Bud" } })
    */
-  static createClaimStepsFromMachine = (machineConfigs, context, warnings) => {
+  static createClaimStepsFromMachine = (
+    machineConfigs,
+    context = {
+      claim: {},
+      certificationDocuments: [],
+      idDocuments: [],
+    },
+    warnings
+  ) => {
     const { claim } = context;
     const pages = map(machineConfigs.states, (state, key) =>
-      Object.assign({ route: key }, state.meta)
+      Object.assign({ route: key, meta: state.meta })
     );
-    const pagesByStep = groupBy(pages, "step");
+    const pagesByStep = groupBy(pages, "meta.step");
 
     const verifyId = new Step({
       name: ClaimSteps.verifyId,
@@ -259,7 +263,9 @@ export default class Step extends BaseModel {
       pages: pagesByStep[ClaimSteps.otherLeave],
       dependsOn: [verifyId, leaveDetails],
       context,
-      warnings,
+      // TODO (CP-567): Pass in warnings when at least one of this step's required fields are
+      // integrated with the API and has a validation rule
+      // warnings,
     });
 
     const reviewAndConfirm = new Step({
@@ -270,7 +276,6 @@ export default class Step extends BaseModel {
       pages: pagesByStep[ClaimSteps.reviewAndConfirm],
       dependsOn: [verifyId, leaveDetails, employerInformation, otherLeave],
       context,
-      warnings,
     });
 
     const payment = new Step({
@@ -285,7 +290,8 @@ export default class Step extends BaseModel {
         reviewAndConfirm,
       ],
       context,
-      warnings,
+      // TODO (CP-1264): Pass in warnings while when API validation rule exists to require a payment method
+      // warnings,
     });
 
     const uploadId = new Step({
@@ -301,7 +307,6 @@ export default class Step extends BaseModel {
         reviewAndConfirm,
       ],
       context,
-      warnings,
     });
 
     const uploadCertification = new Step({
@@ -318,7 +323,6 @@ export default class Step extends BaseModel {
         reviewAndConfirm,
       ],
       context,
-      warnings,
     });
 
     return [

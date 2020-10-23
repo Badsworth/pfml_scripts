@@ -9,14 +9,18 @@ describe("Step Model", () => {
   const step = "step";
   const pages = [
     {
-      step,
       route: "path/to/page/1",
-      fields: ["claim.field_a", "claim.field_b", "claim.field_c"],
+      meta: {
+        fields: ["claim.field_a", "claim.field_b", "claim.field_c"],
+        step,
+      },
     },
     {
-      step,
-      fields: ["claim.field_d", "claim.field_e"],
-      nextPage: "path/to/page/1",
+      route: "path/to/page/2",
+      meta: {
+        fields: ["claim.field_d", "claim.field_e"],
+        step,
+      },
     },
   ];
 
@@ -98,9 +102,11 @@ describe("Step Model", () => {
             name: "dependedOnStep",
             pages: [
               {
-                step: "dependedOnStep",
                 route: "path/to/page/3",
-                fields: ["field_x", "field_y"],
+                meta: {
+                  fields: ["field_x", "field_y"],
+                  step: "dependedOnStep",
+                },
               },
             ],
             context: {},
@@ -128,8 +134,9 @@ describe("Step Model", () => {
             pages: [
               {
                 route: "path/to/page/3",
-                fields: ["field_x", "field_y"],
-                nextPage: "path/to/page/1",
+                meta: {
+                  fields: ["field_x", "field_y"],
+                },
               },
             ],
             warnings,
@@ -163,9 +170,9 @@ describe("Step Model", () => {
       });
     });
 
-    describe("when field has warnings and formState has some fields with values", () => {
-      it("returns in_progress for field with string value", () => {
-        const warnings = [{ field: "claim.field_e" }];
+    describe("when field has warnings and claim fields aren't empty", () => {
+      it("returns in_progress when Step has field with string value", () => {
+        const warnings = [{ field: "field_e" }];
         const claim = {
           field_a: null,
           field_b: null,
@@ -185,7 +192,7 @@ describe("Step Model", () => {
       });
 
       it("returns in_progress for field with boolean value", () => {
-        const warnings = [{ field: "claim.field_e" }];
+        const warnings = [{ field: "field_e" }];
         const claim = {
           field_a: false,
           field_b: null,
@@ -205,7 +212,7 @@ describe("Step Model", () => {
       });
 
       it("returns in_progress for field with number value", () => {
-        const warnings = [{ field: "claim.field_e" }];
+        const warnings = [{ field: "field_e" }];
         const claim = {
           field_a: 4,
           field_b: null,
@@ -234,7 +241,7 @@ describe("Step Model", () => {
         }
 
         it("returns not_started when field is the default value", () => {
-          const warnings = [{ field: "claim.field_e" }];
+          const warnings = [{ field: "field_e" }];
           const claim = {
             field_a: null,
             field_b: null,
@@ -254,7 +261,7 @@ describe("Step Model", () => {
         });
 
         it("returns in_progress when field is not the default value", () => {
-          const warnings = [{ field: "claim.field_e" }];
+          const warnings = [{ field: "field_e" }];
           const claim = {
             field_a: null,
             field_b: null,
@@ -295,7 +302,7 @@ describe("Step Model", () => {
 
     describe("when field has warnings and formState has no fields with values", () => {
       it("returns not_started", () => {
-        const warnings = [{ field: "claim.field_e" }];
+        const warnings = [{ field: "field_e" }];
         const claim = {
           field_a: null,
           field_b: [],
@@ -325,7 +332,7 @@ describe("Step Model", () => {
       );
       const machinePages = map(claimantConfig.states, (value, key) => ({
         route: key,
-        ...value.meta,
+        meta: value.meta,
       }));
 
       expect(steps).toHaveLength(8);

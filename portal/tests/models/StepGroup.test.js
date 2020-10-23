@@ -11,9 +11,11 @@ describe("StepGroup", () => {
           name: "dependedOnStep",
           pages: [
             {
-              step: "dependedOnStep",
               route: "path/to/page/3",
-              fields: ["field_x", "field_y"],
+              meta: {
+                step: "dependedOnStep",
+                fields: ["field_x", "field_y"],
+              },
             },
           ],
           context: {},
@@ -47,9 +49,11 @@ describe("StepGroup", () => {
           name: "dependedOnStep",
           pages: [
             {
-              step: "dependedOnStep",
               route: "path/to/page/3",
-              fields: ["field_x", "field_y"],
+              meta: {
+                fields: ["field_x", "field_y"],
+                step: "dependedOnStep",
+              },
             },
           ],
           context: {},
