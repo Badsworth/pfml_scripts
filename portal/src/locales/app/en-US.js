@@ -522,12 +522,6 @@ const pages = {
     sectionLabel: "What is your employment status?",
     title: "$t(shared.claimsEmploymentInfoTitle)",
   },
-  claimsHoursWorkedPerWeek: {
-    hint:
-      "We’ll confirm this information and use it to calculate your benefit amount. If your schedule varies, tell us the average number of hours you worked over the past 52 weeks.",
-    sectionLabel: "On average, how many hours do you work each week?",
-    title: "$t(shared.claimsEmploymentInfoTitle)",
-  },
   claimsIntermittentFrequency: {
     durationBasisChoice_days: "At least a day",
     durationBasisChoice_hours: "Less than a full work day",
@@ -909,6 +903,13 @@ const pages = {
     choice4Weeks: "4",
     choiceMoreThan4Weeks: "More than 4",
     howManyWeeksLabel: "How many weekly schedules do you have?",
+    title: "$t(shared.claimsEmploymentInfoTitle)",
+  },
+  claimsScheduleVariable: {
+    hoursLabel: "$t(shared.hoursLabel)",
+    inputHoursLabel: "How many hours do you work on average per week?",
+    minutesLabel: "$t(shared.minutesLabel)",
+    scheduleStartDateLabel: "Which week will your leave start during?",
     title: "$t(shared.claimsEmploymentInfoTitle)",
   },
   claimsSsn: {

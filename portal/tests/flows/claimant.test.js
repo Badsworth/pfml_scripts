@@ -233,9 +233,13 @@ const machineTests = {
       },
     },
   },
-  [routes.claims.hoursWorkedPerWeek]: {
+  [routes.claims.scheduleVariable]: {
     meta: {
-      test: () => {},
+      test: (_, event) => {
+        expect(
+          get(event.context.claim, "work_pattern.work_pattern_type")
+        ).toEqual(WorkPatternType.variable);
+      },
     },
   },
 };

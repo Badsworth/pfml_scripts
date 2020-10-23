@@ -20,7 +20,6 @@ import { fields as employerBenefitDetailsFields } from "../pages/claims/employer
 import { fields as employerBenefitsFields } from "../pages/claims/employer-benefits";
 import { fields as employmentStatusFields } from "../pages/claims/employment-status";
 import { get } from "lodash";
-import { fields as hoursWorkedPerWeekFields } from "../pages/claims/hours-worked-per-week";
 import { fields as intermittentFrequencyFields } from "../pages/claims/intermittent-frequency";
 import { fields as leavePeriodContinuousFields } from "../pages/claims/leave-period-continuous";
 import { fields as leavePeriodIntermittentFields } from "../pages/claims/leave-period-intermittent";
@@ -38,6 +37,7 @@ import routes from "../routes";
 import { fields as scheduleFixedFields } from "../pages/claims/schedule-fixed";
 import { fields as scheduleRotatingFields } from "../pages/claims/schedule-rotating";
 import { fields as scheduleRotatingNumberWeeksFields } from "../pages/claims/schedule-rotating-number-weeks";
+import { fields as scheduleVariableFields } from "../pages/claims/schedule-variable";
 import { fields as ssnFields } from "../pages/claims/ssn";
 import { fields as stateIdFields } from "../pages/claims/state-id";
 import { fields as workPatternTypeFields } from "../pages/claims/work-pattern-type";
@@ -441,6 +441,10 @@ export default {
             cond: "isFixedWorkPattern",
           },
           {
+            target: routes.claims.scheduleVariable,
+            cond: "isVariableWorkPattern",
+          },
+          {
             target: routes.claims.hoursWorkedPerWeek,
           },
         ],
@@ -463,7 +467,7 @@ export default {
       on: {
         CONTINUE: [
           {
-            target: routes.claims.hoursWorkedPerWeek,
+            target: routes.claims.scheduleVariable,
             cond: "isVariableWorkPattern",
           },
           {
@@ -481,10 +485,10 @@ export default {
         CONTINUE: routes.claims.checklist,
       },
     },
-    [routes.claims.hoursWorkedPerWeek]: {
+    [routes.claims.scheduleVariable]: {
       meta: {
         step: ClaimSteps.employerInformation,
-        fields: hoursWorkedPerWeekFields,
+        fields: scheduleVariableFields,
       },
       on: {
         CONTINUE: routes.claims.checklist,
