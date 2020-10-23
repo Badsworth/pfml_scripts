@@ -1001,7 +1001,6 @@ def parse_employer_file(employer_file_path, decrypter, report):
                         )
                     )
                     report.skipped_employers_count += 1
-                    continue
 
                 employer = EMPLOYER_FILE_FORMAT.parse_line(row)
                 employers.append(employer)
@@ -1079,13 +1078,13 @@ def parse_employee_file(employee_file_path, decrypter, report, offset=0, limit=E
                         )
                     )
                     report.skipped_employees_count += 1
-                    continue
 
                 try:
                     employee_info = EMPLOYEE_FORMAT.parse_line(row)
                     employees_info.append(employee_info)
 
                 except Exception:
+                    logger.warning("Parse error with employee on line %i", line_count)
                     report.parsed_employees_exception_count += 1
 
     else:
@@ -1105,7 +1104,7 @@ def parse_employee_file(employee_file_path, decrypter, report, offset=0, limit=E
             "Finished parsing employee file",
             extra={
                 "employee_file_path": employee_file_path,
-                "invalid_parsed_employers": repr(invalid_employee_key_line_nums),
+                "invalid_parsed_employees": repr(invalid_employee_key_line_nums),
             },
         )
 
