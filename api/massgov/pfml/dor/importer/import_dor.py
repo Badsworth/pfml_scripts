@@ -78,10 +78,10 @@ class ImportReport:
     created_wages_and_contributions_count: int = 0
     updated_wages_and_contributions_count: int = 0
     sample_employers_line_lengths: Dict[Any, Any] = field(default_factory=dict)
-    skipped_employers_count: int = 0
+    invalid_employer_lines_count: int = 0
     parsed_employers_exception_line_nums: List[Any] = field(default_factory=list)
     invalid_address_state_and_account_keys: Dict[Any, Any] = field(default_factory=dict)
-    skipped_employees_count: int = 0
+    invalid_employee_lines_count: int = 0
     skipped_wages_count: int = 0
     parsed_employees_exception_count: int = 0
     message: str = ""
@@ -545,6 +545,13 @@ def import_employers(db_session, employers, report, import_log_entry_id):
             GeoState.get_id(employer["employer_address_state"])
             employers_with_valid_addresses.append(employer)
         except Exception:
+            logger.warning(
+                "Invalid employer state: {}, {}, {}".format(
+                    employer_info["employer_address_city"],
+                    employer_info["employer_address_state"],
+                    employer_info["employer_address_zip"],
+                )
+            )
             report.invalid_address_state_and_account_keys[employer_info["account_key"]] = employer[
                 "employer_address_state"
             ]
@@ -988,25 +995,24 @@ def parse_employer_file(employer_file_path, decrypter, report):
             try:
                 employer = EMPLOYER_FILE_FORMAT.parse_line(row)
 
-                line_length = len(row.strip("\n"))
+                line_length = len(row.strip("\n\r"))
                 line_length_value = report.sample_employers_line_lengths.get(line_length, [])
                 if len(line_length_value) < 3:
                     line_length_value.append(employer["account_key"])
                     report.sample_employers_line_lengths[line_length] = line_length_value
 
-                if len(row.strip("\n")) != EMPLOYER_FILE_ROW_LENGTH:
-                    invalid_employer_key_line_nums.append(
-                        "Line {0}, account key: {1}, line length without newlines: {2}".format(
-                            line_count, employer["account_key"], len(row.strip("\n"))
+                if line_length != EMPLOYER_FILE_ROW_LENGTH:
+                    logger.warning(
+                        "Incorrect employer line length - Line {0}, account key: {1}, line length: {2}".format(
+                            line_count, employer["account_key"], line_length
                         )
                     )
-                    report.skipped_employers_count += 1
+                    report.invalid_employer_lines_count += 1
 
-                employer = EMPLOYER_FILE_FORMAT.parse_line(row)
                 employers.append(employer)
             except Exception as e:
                 logger.exception(e)
-                report.parsed_employers_exception_line_nums.add(line_count)
+                report.parsed_employers_exception_line_nums.append(line_count)
     else:
         for row in get_decrypted_file_stream(employer_file_path, decrypter):
             if not row:  # skip empty end of file lines
@@ -1054,7 +1060,6 @@ def parse_employee_file(employee_file_path, decrypter, report, offset=0, limit=E
     logger.info("Start parsing employee file", extra={"employee_file_path": employee_file_path})
 
     employees_info = []
-    invalid_employee_key_line_nums = []
     line_count = 0
 
     decrypt_files = os.getenv("DECRYPT") == "true"
@@ -1071,13 +1076,14 @@ def parse_employee_file(employee_file_path, decrypter, report, offset=0, limit=E
             line_count = line_count + 1
 
             if row.startswith("B"):
-                if len(row.strip("\n")) != EMPLOYEE_FILE_ROW_LENGTH:
-                    invalid_employee_key_line_nums.append(
-                        "Line {0}, line length without newlines: {1}".format(
-                            line_count, len(row.strip("\n"))
+                line_length = len(row.strip("\n\r"))
+                if line_length != EMPLOYEE_FILE_ROW_LENGTH:
+                    logger.warning(
+                        "Incorrect employee line length - Line {0}, line length: {1}".format(
+                            line_count, line_length
                         )
                     )
-                    report.skipped_employees_count += 1
+                    report.invalid_employee_lines_count += 1
 
                 try:
                     employee_info = EMPLOYEE_FORMAT.parse_line(row)
@@ -1101,11 +1107,7 @@ def parse_employee_file(employee_file_path, decrypter, report, offset=0, limit=E
                 employees_info.append(employee_info)
 
         logger.info(
-            "Finished parsing employee file",
-            extra={
-                "employee_file_path": employee_file_path,
-                "invalid_parsed_employees": repr(invalid_employee_key_line_nums),
-            },
+            "Finished parsing employee file", extra={"employee_file_path": employee_file_path},
         )
 
     return employees_info
