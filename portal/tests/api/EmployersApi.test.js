@@ -55,11 +55,11 @@ describe("EmployersApi", () => {
         });
       });
 
-      it("sends PATCH request to /employers/claim/review/{absenceId}", async () => {
+      it("sends PATCH request to /employers/claims/{absenceId}/review/", async () => {
         await employersApi.submitClaimReview(absenceId, patchData);
 
         expect(fetch).toHaveBeenCalledWith(
-          `${process.env.apiUrl}/employers/claim/review/${absenceId}`,
+          `${process.env.apiUrl}/employers/claims/${absenceId}/review`,
           expect.objectContaining({
             body: JSON.stringify(patchData),
             headers,

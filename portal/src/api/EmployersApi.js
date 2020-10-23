@@ -26,7 +26,7 @@ export default class EmployersApi extends BaseApi {
   submitClaimReview = async (absenceId, patchData) => {
     const { success, status } = await this.request(
       "PATCH",
-      `claim/review/${absenceId}`,
+      `claims/${absenceId}/review`,
       patchData
     );
 
