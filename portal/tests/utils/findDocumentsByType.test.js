@@ -36,4 +36,18 @@ describe("findDocumentsByType", () => {
       expect(documents).toEqual([]);
     });
   });
+
+  it("returns matching documents even if casing of document_type is different", () => {
+    const testDocs = [
+      new Document({ document_type: "Test Type" }),
+      new Document({ document_type: "test Type" }),
+    ];
+    const documents = findDocumentsByType(
+      [...documentsList, ...testDocs],
+      "test type"
+    );
+
+    expect(documents).toHaveLength(2);
+    expect(documents).toEqual(testDocs);
+  });
 });

@@ -24,11 +24,11 @@ class Document extends BaseModel {
  * @enum {string}
  */
 export const DocumentType = {
-  approvalNotice: "Approval notice",
-  denialNotice: "Denial notice",
+  approvalNotice: "Approval Notice",
+  denialNotice: "Denial Notice",
   identityVerification: "Identification Proof",
   medicalCertification: "State Managed Paid Leave Confirmation",
-  requestForInfoNotice: "Request for more information",
+  requestForInfoNotice: "Request for more Information",
 };
 
 export default Document;

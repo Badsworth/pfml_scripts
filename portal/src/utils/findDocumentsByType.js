@@ -8,7 +8,8 @@
  */
 const findDocumentsByType = (documents, document_type) => {
   return documents.filter((document) => {
-    return document.document_type === document_type;
+    // Ignore casing differences by comparing lowercased enums
+    return document.document_type.toLowerCase() === document_type.toLowerCase();
   });
 };
 
