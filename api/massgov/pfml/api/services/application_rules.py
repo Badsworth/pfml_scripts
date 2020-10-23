@@ -107,6 +107,16 @@ def get_conditional_issues(application: Application) -> List[Issue]:
     ):
         issues += get_bonding_leave_issues(application)
 
+    if application.employer_notified and not application.employer_notification_date:
+        issues.append(
+            Issue(
+                type=IssueType.required,
+                rule=IssueRule.conditional,
+                message="employer_notification_date is required for leave_details if employer_notified is set",
+                field="leave_details.employer_notification_date",
+            )
+        )
+
     if application.work_pattern:
         issues += get_work_pattern_issues(application)
 

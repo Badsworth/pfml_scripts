@@ -107,6 +107,7 @@ const errors = {
       },
       employer_notification_date: {
         pattern: "Enter a valid notification date.",
+        required: "Enter the date you notified your employer.",
       },
       employer_notified: {
         required:

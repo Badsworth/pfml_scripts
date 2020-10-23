@@ -676,7 +676,6 @@ def test_payment_preferences_same_order(test_db_session, initialize_factories_se
         employment_status=EmploymentStatus.get_instance(
             test_db_session, template=EmploymentStatus.EMPLOYED
         ),
-        employer_notified=True,
         hours_worked_per_week=70,
         has_continuous_leave_periods=True,
         continuous_leave_periods=[ContinuousLeavePeriodFactory.create()],
@@ -690,6 +689,7 @@ def test_payment_preferences_same_order(test_db_session, initialize_factories_se
         residential_address=None,
     )
     issues = get_application_issues(test_app)
+    print(issues)
     with app.app.test_request_context(
         path=f"/v1/applications/{test_app.application_id}", method="PATCH"
     ):
@@ -849,3 +849,16 @@ def test_employer_fein_not_required_for_self_employed_claimants(
     )
     issues = get_conditional_issues(test_app)
     assert not issues
+
+
+def test_employer_notification_date_required(test_db_session, initialize_factories_session):
+    test_app = ApplicationFactory.create(employer_notified=True, employer_notification_date=None)
+    issues = get_conditional_issues(test_app)
+    assert [
+        Issue(
+            type=IssueType.required,
+            rule=IssueRule.conditional,
+            message="employer_notification_date is required for leave_details if employer_notified is set",
+            field="leave_details.employer_notification_date",
+        )
+    ] == issues
