@@ -38,8 +38,12 @@ claimant_body = {
 }
 
 
-def test_notifications_post_leave_admin(client, test_db_session):
-    response = client.post("/v1/notifications", json=leave_admin_body)
+def test_notifications_post_leave_admin(client, test_db_session, fineos_user_token):
+    response = client.post(
+        "/v1/notifications",
+        headers={"Authorization": f"Bearer {fineos_user_token}"},
+        json=leave_admin_body,
+    )
     assert response.status_code == 201
 
     notification = test_db_session.query(Notification).first()
@@ -50,8 +54,12 @@ def test_notifications_post_leave_admin(client, test_db_session):
     assert request_json == leave_admin_body
 
 
-def test_notifications_post_claimant(client, test_db_session):
-    response = client.post("/v1/notifications", json=claimant_body)
+def test_notifications_post_claimant(client, test_db_session, fineos_user_token):
+    response = client.post(
+        "/v1/notifications",
+        headers={"Authorization": f"Bearer {fineos_user_token}"},
+        json=claimant_body,
+    )
     assert response.status_code == 201
 
     notification = test_db_session.query(Notification).first()
@@ -62,34 +70,55 @@ def test_notifications_post_claimant(client, test_db_session):
     assert request_json == claimant_body
 
 
-def test_notification_post_multiple_notifications(client, test_db_session):
+def test_notification_post_multiple_notifications(client, test_db_session, fineos_user_token):
     # Send the same notification twice, we don't do any sort of de-dupe
-    response = client.post("/v1/notifications", json=leave_admin_body)
+    response = client.post(
+        "/v1/notifications",
+        headers={"Authorization": f"Bearer {fineos_user_token}"},
+        json=leave_admin_body,
+    )
     assert response.status_code == 201
-    response = client.post("/v1/notifications", json=leave_admin_body)
+    response = client.post(
+        "/v1/notifications",
+        headers={"Authorization": f"Bearer {fineos_user_token}"},
+        json=leave_admin_body,
+    )
     assert response.status_code == 201
 
     notifications = test_db_session.query(Notification).all()
     assert len(notifications) == 2
 
 
-def test_notification_post_missing_leave_admin_param(client, test_db_session):
+def test_notification_post_missing_leave_admin_param(client, test_db_session, fineos_user_token):
     bad_body = leave_admin_body.copy()
     bad_body["recipients"] = [{"email_address": "fake@website.com"}]
-    response = client.post("/v1/notifications", json=bad_body)
-    print(response.get_json())
+    response = client.post(
+        "/v1/notifications", headers={"Authorization": f"Bearer {fineos_user_token}"}, json=bad_body
+    )
     assert response.status_code == 400
 
     tests.api.validate_error_response(response, 400, message="Validation error")
     assert len(response.get_json()["errors"]) == 2
 
 
-def test_notification_post_missing_claimant_param(client, test_db_session):
+def test_notification_post_missing_claimant_param(client, test_db_session, fineos_user_token):
     bad_body = claimant_body.copy()
     bad_body["recipients"] = [{"email_address": "fake@website.com"}]
-    response = client.post("/v1/notifications", json=bad_body)
-    print(response.get_json())
+    response = client.post(
+        "/v1/notifications", headers={"Authorization": f"Bearer {fineos_user_token}"}, json=bad_body
+    )
     assert response.status_code == 400
 
     tests.api.validate_error_response(response, 400, message="Validation error")
     assert len(response.get_json()["errors"]) == 2
+
+
+def test_notification_post_unauthorized(client, test_db_session, auth_token):
+    response = client.post(
+        "/v1/notifications",
+        headers={"Authorization": f"Bearer {auth_token}"},
+        json=leave_admin_body,
+    )
+    tests.api.validate_error_response(response, 403)
+    notifications = test_db_session.query(Notification).all()
+    assert len(notifications) == 0

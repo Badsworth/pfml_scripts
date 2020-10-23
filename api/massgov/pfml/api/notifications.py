@@ -8,6 +8,7 @@ from pydantic import validator
 import massgov.pfml.api.app as app
 import massgov.pfml.api.util.response as response_util
 import massgov.pfml.util.datetime as datetime_util
+from massgov.pfml.api.authorization.flask import CREATE, ensure
 from massgov.pfml.api.validation.exceptions import ValidationErrorDetail, ValidationException
 from massgov.pfml.db.models.applications import Notification
 from massgov.pfml.util.pydantic import PydanticBaseModel
@@ -68,6 +69,9 @@ class NotificationRequest(PydanticBaseModel):
 
 
 def notifications_post():
+    # Bounce them out if they do not have access
+    ensure(CREATE, Notification)
+
     body = connexion.request.json
     # Use the pydantic models for validation
     NotificationRequest.parse_obj(connexion.request.json)

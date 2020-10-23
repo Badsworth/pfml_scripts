@@ -614,7 +614,7 @@ paths:
   /notifications:
     post:
       security:
-        - {}
+        - oauth2: []
       tags:
         - Notifications
       summary: >

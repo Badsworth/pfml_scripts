@@ -24,6 +24,7 @@ def create_authorization(
         if has_role_in(user, [Role.FINEOS]):
             financial_eligibility(user, they)
             rmv_check(user, they)
+            notifications(user, they)
         else:
             users(user, they)
             applications(user, they)
@@ -73,3 +74,7 @@ def documents(user: User, they: RuleList) -> None:
         "Document",
         lambda d: d.user_id == user.user_id and user.consented_to_data_sharing is True,
     )
+
+
+def notifications(user: User, they: RuleList) -> None:
+    they.can(CREATE, "Notification")
