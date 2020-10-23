@@ -871,6 +871,21 @@ const pages = {
     workPatternTypeValue_rotating: "Hours alternate between weekly schedules",
     workPatternTypeValue_variable: "Not consistent from week to week",
   },
+  claimsScheduleFixed: {
+    hoursLabel: "$t(shared.hoursLabel)",
+    inputHoursHeading: "Tell us your work schedule.",
+    inputHoursHeadingHint:
+      "Enter the number of hours you work each day. You can enter time in 15-minute increments if needed.",
+    inputHoursLabel_Friday: "Friday",
+    inputHoursLabel_Monday: "Monday",
+    inputHoursLabel_Saturday: "Saturday",
+    inputHoursLabel_Sunday: "Sunday",
+    inputHoursLabel_Thursday: "Thursday",
+    inputHoursLabel_Tuesday: "Tuesday",
+    inputHoursLabel_Wednesday: "Wednesday",
+    minutesLabel: "$t(shared.minutesLabel)",
+    title: "$t(shared.claimsEmploymentInfoTitle)",
+  },
   claimsScheduleRotating: {
     choicePatternStartWeek_1: "Week 1",
     choicePatternStartWeek_2: "Week 2",

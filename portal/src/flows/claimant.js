@@ -35,6 +35,7 @@ import { fields as previousLeavesDetailsFields } from "../pages/claims/previous-
 import { fields as previousLeavesFields } from "../pages/claims/previous-leaves";
 import { fields as reasonPregnancyFields } from "../pages/claims/reason-pregnancy";
 import routes from "../routes";
+import { fields as scheduleFixedFields } from "../pages/claims/schedule-fixed";
 import { fields as scheduleRotatingFields } from "../pages/claims/schedule-rotating";
 import { fields as scheduleRotatingNumberWeeksFields } from "../pages/claims/schedule-rotating-number-weeks";
 import { fields as ssnFields } from "../pages/claims/ssn";
@@ -436,9 +437,22 @@ export default {
             cond: "isRotatingWorkPattern",
           },
           {
+            target: routes.claims.scheduleFixed,
+            cond: "isFixedWorkPattern",
+          },
+          {
             target: routes.claims.hoursWorkedPerWeek,
           },
         ],
+      },
+    },
+    [routes.claims.scheduleFixed]: {
+      meta: {
+        step: ClaimSteps.employerInformation,
+        fields: scheduleFixedFields,
+      },
+      on: {
+        CONTINUE: routes.claims.checklist,
       },
     },
     [routes.claims.scheduleRotatingNumberWeeks]: {

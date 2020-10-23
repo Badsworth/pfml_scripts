@@ -63,6 +63,8 @@ export const ScheduleRotating = (props) => {
       weekNumber,
       event.target.value
     );
+
+    // TODO (CP-1262): refactor calculating hours worked per week to WorkPattern model
     const averageMinutes =
       sum(work_pattern.minutesWorkedEachWeek) / numberOfWeeks;
     const hours_worked_per_week = round(averageMinutes / 60, 2);

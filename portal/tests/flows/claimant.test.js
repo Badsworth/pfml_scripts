@@ -206,6 +206,15 @@ const machineTests = {
       test: () => {},
     },
   },
+  [routes.claims.scheduleFixed]: {
+    meta: {
+      test: (_, event) => {
+        expect(
+          get(event.context.claim, "work_pattern.work_pattern_type")
+        ).toEqual(WorkPatternType.fixed);
+      },
+    },
+  },
   [routes.claims.scheduleRotatingNumberWeeks]: {
     meta: {
       test: (_, event) => {
