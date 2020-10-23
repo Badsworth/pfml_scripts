@@ -27,6 +27,7 @@ from massgov.pfml.db.models.factories import (
     ApplicationFactory,
     ContinuousLeavePeriodFactory,
     UserFactory,
+    WorkPatternFixedFactory,
 )
 
 
@@ -1477,6 +1478,7 @@ def test_application_post_submit_app(client, user, auth_token, test_db_session):
     application.hours_worked_per_week = 70
     application.has_continuous_leave_periods = True
     application.residential_address = AddressFactory.create()
+    application.work_pattern = WorkPatternFixedFactory.create()
     # Applications must have an FEIN for submit to succeed.
     application.employer_fein = "770007777"
 
@@ -1516,6 +1518,7 @@ def test_application_post_submit_app_fein_not_found(client, user, auth_token, te
     application.employment_status_id = EmploymentStatus.UNEMPLOYED.employment_status_id
     application.hours_worked_per_week = 70
     application.residential_address = AddressFactory.create()
+    application.work_pattern = WorkPatternFixedFactory.create()
     application.continuous_leave_periods = [ContinuousLeavePeriodFactory.create()]
     application.has_continuous_leave_periods = True
 
@@ -1553,6 +1556,7 @@ def test_application_post_submit_app_ssn_not_found(client, user, auth_token, tes
     application.employment_status_id = EmploymentStatus.UNEMPLOYED.employment_status_id
     application.hours_worked_per_week = 70
     application.residential_address = AddressFactory.create()
+    application.work_pattern = WorkPatternFixedFactory.create()
     application.continuous_leave_periods = [ContinuousLeavePeriodFactory.create()]
     application.has_continuous_leave_periods = True
 
@@ -1597,6 +1601,7 @@ def test_application_post_submit_existing_work_pattern(client, user, auth_token,
     application.employer_notification_date = date(2021, 1, 7)
     application.employment_status_id = EmploymentStatus.UNEMPLOYED.employment_status_id
     application.residential_address = AddressFactory.create()
+    application.work_pattern = WorkPatternFixedFactory.create()
     application.continuous_leave_periods = [ContinuousLeavePeriodFactory.create()]
     application.has_continuous_leave_periods = True
 
@@ -1715,6 +1720,7 @@ def test_application_post_submit_to_fineos(client, user, auth_token, test_db_ses
     application.employer_notification_date = date(2021, 1, 7)
     application.employment_status_id = EmploymentStatus.UNEMPLOYED.employment_status_id
     application.residential_address = AddressFactory.create()
+    application.work_pattern = WorkPatternFixedFactory.create()
     application.continuous_leave_periods = [ContinuousLeavePeriodFactory.create()]
     application.has_continuous_leave_periods = True
 
@@ -1849,6 +1855,7 @@ def test_application_post_submit_to_fineos_bonding_adoption(
     application.hours_worked_per_week = 70
     application.employment_status_id = EmploymentStatus.UNEMPLOYED.employment_status_id
     application.residential_address = AddressFactory.create()
+    application.work_pattern = WorkPatternFixedFactory.create()
     leave_period = ContinuousLeavePeriod(
         start_date=date(2021, 1, 15),
         end_date=date(2021, 2, 9),
@@ -1888,6 +1895,7 @@ def test_application_post_submit_to_fineos_bonding_foster(
     application.hours_worked_per_week = 70
     application.employment_status_id = EmploymentStatus.UNEMPLOYED.employment_status_id
     application.residential_address = AddressFactory.create()
+    application.work_pattern = WorkPatternFixedFactory.create()
     leave_period = ContinuousLeavePeriod(
         start_date=date(2021, 1, 15),
         end_date=date(2021, 2, 9),
@@ -1929,6 +1937,7 @@ def test_application_post_submit_to_fineos_bonding_newborn(
     application.hours_worked_per_week = 70
     application.employment_status_id = EmploymentStatus.UNEMPLOYED.employment_status_id
     application.residential_address = AddressFactory.create()
+    application.work_pattern = WorkPatternFixedFactory.create()
     leave_period = ContinuousLeavePeriod(
         start_date=date(2021, 1, 15),
         end_date=date(2021, 2, 9),
@@ -1966,6 +1975,7 @@ def test_application_post_submit_to_fineos_medical(client, user, auth_token, tes
     application.hours_worked_per_week = 70
     application.employment_status_id = EmploymentStatus.UNEMPLOYED.employment_status_id
     application.residential_address = AddressFactory.create()
+    application.work_pattern = WorkPatternFixedFactory.create()
     leave_period = ContinuousLeavePeriod(
         start_date=date(2021, 1, 15),
         end_date=date(2021, 2, 9),
@@ -2016,6 +2026,7 @@ def test_application_post_submit_to_fineos_medical_pregnant(
     application.hours_worked_per_week = 70
     application.employment_status_id = EmploymentStatus.UNEMPLOYED.employment_status_id
     application.residential_address = AddressFactory.create()
+    application.work_pattern = WorkPatternFixedFactory.create()
     leave_period = ContinuousLeavePeriod(
         start_date=date(2021, 1, 15),
         end_date=date(2021, 2, 9),
@@ -2057,6 +2068,7 @@ def test_application_post_submit_to_fineos_pregnant(client, user, auth_token, te
     application.hours_worked_per_week = 70
     application.employment_status_id = EmploymentStatus.UNEMPLOYED.employment_status_id
     application.residential_address = AddressFactory.create()
+    application.work_pattern = WorkPatternFixedFactory.create()
     leave_period = ContinuousLeavePeriod(
         start_date=date(2021, 1, 15),
         end_date=date(2021, 2, 9),
@@ -2099,6 +2111,7 @@ def test_application_post_complete_app(client, user, auth_token, test_db_session
     application.employment_status_id = EmploymentStatus.UNEMPLOYED.employment_status_id
     application.hours_worked_per_week = 70
     application.residential_address = AddressFactory.create()
+    application.work_pattern = WorkPatternFixedFactory.create()
     application.employer_fein = "770000001"
     application.fineos_notification_case_id = "NTN-259"
     application.continuous_leave_periods = [ContinuousLeavePeriodFactory.create()]
@@ -2123,6 +2136,7 @@ def test_application_post_complete_to_fineos(client, user, auth_token, test_db_s
     application.employment_status_id = EmploymentStatus.UNEMPLOYED.employment_status_id
     application.hours_worked_per_week = 70
     application.residential_address = AddressFactory.create()
+    application.work_pattern = WorkPatternFixedFactory.create()
     application.employer_fein = "770000001"
     application.fineos_notification_case_id = "NTN-259"
     application.continuous_leave_periods = [ContinuousLeavePeriodFactory.create()]

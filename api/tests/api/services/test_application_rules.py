@@ -28,6 +28,7 @@ from massgov.pfml.db.models.factories import (
     IntermittentLeavePeriodFactory,
     PaymentPreferenceFactory,
     ReducedScheduleLeavePeriodFactory,
+    WorkPatternFixedFactory,
 )
 
 
@@ -40,6 +41,7 @@ def test_first_name_required(test_db_session, initialize_factories_session):
         ),
         hours_worked_per_week=70,
         residential_address=AddressFactory.create(),
+        work_pattern=WorkPatternFixedFactory.create(),
     )
     issues = get_always_required_issues(test_app)
     assert [
@@ -56,6 +58,7 @@ def test_last_name_required(test_db_session, initialize_factories_session):
         ),
         hours_worked_per_week=70,
         residential_address=AddressFactory.create(),
+        work_pattern=WorkPatternFixedFactory.create(),
     )
     issues = get_always_required_issues(test_app)
     assert [
@@ -72,6 +75,7 @@ def test_date_of_birth_required(test_db_session, initialize_factories_session):
         ),
         hours_worked_per_week=70,
         residential_address=AddressFactory.create(),
+        work_pattern=WorkPatternFixedFactory.create(),
     )
     issues = get_always_required_issues(test_app)
     assert [
@@ -87,6 +91,7 @@ def test_has_state_id_required(test_db_session, initialize_factories_session):
         ),
         hours_worked_per_week=70,
         residential_address=AddressFactory.create(),
+        work_pattern=WorkPatternFixedFactory.create(),
     )
     issues = get_always_required_issues(test_app)
     assert [
@@ -104,6 +109,7 @@ def test_tax_identifier_required(test_db_session, initialize_factories_session):
         ),
         hours_worked_per_week=70,
         residential_address=AddressFactory.create(),
+        work_pattern=WorkPatternFixedFactory.create(),
     )
     issues = get_always_required_issues(test_app)
     assert [
@@ -120,6 +126,7 @@ def test_leave_reason_required(test_db_session, initialize_factories_session):
         ),
         hours_worked_per_week=70,
         residential_address=AddressFactory.create(),
+        work_pattern=WorkPatternFixedFactory.create(),
     )
     issues = get_always_required_issues(test_app)
     assert [
@@ -137,6 +144,7 @@ def test_employment_status_required(test_db_session, initialize_factories_sessio
         hours_worked_per_week=70,
         has_state_id=True,
         residential_address=AddressFactory.create(),
+        work_pattern=WorkPatternFixedFactory.create(),
     )
     issues = get_always_required_issues(test_app)
     assert [
@@ -155,6 +163,7 @@ def test_hours_worked_per_week_required(test_db_session, initialize_factories_se
         ),
         has_state_id=True,
         residential_address=AddressFactory.create(),
+        work_pattern=WorkPatternFixedFactory.create(),
     )
     issues = get_always_required_issues(test_app)
     assert [
@@ -174,6 +183,7 @@ def test_residential_address_required(test_db_session, initialize_factories_sess
         ),
         hours_worked_per_week=70,
         has_state_id=True,
+        work_pattern=WorkPatternFixedFactory.create(),
     )
     issues = get_always_required_issues(test_app)
     assert [
@@ -266,6 +276,7 @@ def test_has_mailing_address_required(test_db_session, initialize_factories_sess
         hours_worked_per_week=70,
         has_state_id=True,
         residential_address=AddressFactory.create(),
+        work_pattern=WorkPatternFixedFactory.create(),
     )
     issues = get_always_required_issues(test_app)
     assert [
@@ -277,6 +288,25 @@ def test_has_mailing_address_required(test_db_session, initialize_factories_sess
     ] == issues
 
 
+def test_work_pattern_type_required(test_db_session, initialize_factories_session):
+    test_app = ApplicationFactory.create(
+        employment_status=EmploymentStatus.get_instance(
+            test_db_session, template=EmploymentStatus.EMPLOYED
+        ),
+        hours_worked_per_week=70,
+        residential_address=AddressFactory.create(),
+        work_pattern=None,
+    )
+    issues = get_always_required_issues(test_app)
+    assert [
+        Issue(
+            type=IssueType.required,
+            message="work_pattern.work_pattern_type is required",
+            field="work_pattern.work_pattern_type",
+        )
+    ] == issues
+
+
 def test_has_leave_periods_required(test_db_session, initialize_factories_session):
     test_app = ApplicationFactory.create(
         employment_status=EmploymentStatus.get_instance(
@@ -284,6 +314,7 @@ def test_has_leave_periods_required(test_db_session, initialize_factories_sessio
         ),
         hours_worked_per_week=70,
         residential_address=AddressFactory.create(),
+        work_pattern=WorkPatternFixedFactory.create(),
         has_continuous_leave_periods=None,
         has_intermittent_leave_periods=None,
         has_reduced_schedule_leave_periods=None,
@@ -314,6 +345,7 @@ def test_allow_hybrid_leave(test_db_session, initialize_factories_session):
             test_db_session, template=EmploymentStatus.EMPLOYED
         ),
         residential_address=AddressFactory.create(),
+        work_pattern=WorkPatternFixedFactory.create(),
         has_continuous_leave_periods=True,
         has_intermittent_leave_periods=False,
         has_reduced_schedule_leave_periods=True,
@@ -334,6 +366,7 @@ def test_disallow_hybrid_intermittent_continuous_leave(
             test_db_session, template=EmploymentStatus.EMPLOYED
         ),
         residential_address=AddressFactory.create(),
+        work_pattern=WorkPatternFixedFactory.create(),
         has_continuous_leave_periods=True,
         has_intermittent_leave_periods=True,
         has_reduced_schedule_leave_periods=False,
@@ -365,6 +398,7 @@ def test_disallow_hybrid_intermittent_reduced_leave(test_db_session, initialize_
             test_db_session, template=EmploymentStatus.EMPLOYED
         ),
         residential_address=AddressFactory.create(),
+        work_pattern=WorkPatternFixedFactory.create(),
         has_continuous_leave_periods=False,
         has_intermittent_leave_periods=True,
         has_reduced_schedule_leave_periods=True,
@@ -396,6 +430,7 @@ def test_min_leave_periods(test_db_session, initialize_factories_session):
             test_db_session, template=EmploymentStatus.EMPLOYED
         ),
         residential_address=AddressFactory.create(),
+        work_pattern=WorkPatternFixedFactory.create(),
         has_continuous_leave_periods=False,
         has_intermittent_leave_periods=False,
         has_reduced_schedule_leave_periods=False,
@@ -687,6 +722,7 @@ def test_payment_preferences_same_order(test_db_session, initialize_factories_se
         ],
         mailing_address=None,
         residential_address=None,
+        work_pattern=WorkPatternFixedFactory.create(),
     )
     issues = get_application_issues(test_app)
     print(issues)

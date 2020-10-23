@@ -331,3 +331,68 @@ class StateMetricFactory(BaseFactory):
     effective_date = datetime(2019, 10, 1)
     unemployment_minimum_earnings = Decimal(5000)
     average_weekly_wage = Decimal(1331.66)
+
+
+class WorkPatternFixedFactory(BaseFactory):
+    """A single week work pattern for someone working a fixed (consistent) schedule"""
+
+    class Meta:
+        model = application_models.WorkPattern
+
+    work_pattern_id = Generators.UuidObj
+
+    work_pattern_type_id = application_models.WorkPatternType.FIXED.work_pattern_type_id
+    work_week_starts_id = application_models.DayOfWeek.SUNDAY.day_of_week_id
+    work_pattern_days = factory.LazyAttribute(
+        lambda w: [
+            application_models.WorkPatternDay(
+                work_pattern_id=w.work_pattern_id,
+                day_of_week_id=application_models.DayOfWeek.SUNDAY.day_of_week_id,
+                week_number=1,
+                hours=8,
+                minutes=0,
+            ),
+            application_models.WorkPatternDay(
+                work_pattern_id=w.work_pattern_id,
+                day_of_week_id=application_models.DayOfWeek.MONDAY.day_of_week_id,
+                week_number=1,
+                hours=8,
+                minutes=0,
+            ),
+            application_models.WorkPatternDay(
+                work_pattern_id=w.work_pattern_id,
+                day_of_week_id=application_models.DayOfWeek.TUESDAY.day_of_week_id,
+                week_number=1,
+                hours=8,
+                minutes=0,
+            ),
+            application_models.WorkPatternDay(
+                work_pattern_id=w.work_pattern_id,
+                day_of_week_id=application_models.DayOfWeek.WEDNESDAY.day_of_week_id,
+                week_number=1,
+                hours=8,
+                minutes=0,
+            ),
+            application_models.WorkPatternDay(
+                work_pattern_id=w.work_pattern_id,
+                day_of_week_id=application_models.DayOfWeek.THURSDAY.day_of_week_id,
+                week_number=1,
+                hours=8,
+                minutes=0,
+            ),
+            application_models.WorkPatternDay(
+                work_pattern_id=w.work_pattern_id,
+                day_of_week_id=application_models.DayOfWeek.FRIDAY.day_of_week_id,
+                week_number=1,
+                hours=8,
+                minutes=0,
+            ),
+            application_models.WorkPatternDay(
+                work_pattern_id=w.work_pattern_id,
+                day_of_week_id=application_models.DayOfWeek.SATURDAY.day_of_week_id,
+                week_number=1,
+                hours=8,
+                minutes=0,
+            ),
+        ]
+    )

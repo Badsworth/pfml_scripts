@@ -217,6 +217,11 @@ const errors = {
       pattern: "Enter a 9-digit number.",
       required: "Enter a Social Security Number or ITIN.",
     },
+    work_pattern: {
+      work_pattern_type: {
+        required: "Select a work schedule type.",
+      },
+    },
   },
   documents: {
     file: {

@@ -1,4 +1,3 @@
-from functools import reduce
 from typing import Iterable, List, Optional
 
 from massgov.pfml.api.services.applications import (
@@ -252,7 +251,17 @@ def get_payments_issues(application: Application) -> List[Issue]:
 
 def deepgetattr(obj, attr):
     """Recurses through an attribute chain to get the ultimate value."""
-    return reduce(getattr, attr.split("."), obj)
+    fields = attr.split(".")
+    value = obj
+
+    for field in fields:
+        # Bail at the first instance where a field is empty
+        if value is None:
+            return None
+        else:
+            value = getattr(value, field, None)
+
+    return value
 
 
 # This maps the required field name in the DB to its equivalent in the API
@@ -271,6 +280,7 @@ ALWAYS_REQUIRED_FIELDS_DB_NAME_TO_API_NAME_MAP = {
     "leave_reason": "leave_details.reason",
     "residential_address": "residential_address",
     "tax_identifier": "tax_identifier",
+    "work_pattern.work_pattern_type": "work_pattern.work_pattern_type",
 }
 
 
