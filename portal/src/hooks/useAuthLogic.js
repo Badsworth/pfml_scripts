@@ -53,14 +53,13 @@ const useAuthLogic = ({ appErrorsLogic, portalFlow }) => {
 
     try {
       await Auth.forgotPassword(username);
+      // Store the username so the user doesn't need to reenter it on the Reset page
+      setAuthData({ resetPasswordUsername: username });
+      portalFlow.goToPageFor("SEND_CODE");
     } catch (error) {
       const appErrors = getForgotPasswordErrorInfo(error, t);
       appErrorsLogic.setAppErrors(appErrors);
     }
-
-    // Store the username so the user doesn't need to reenter it on the Reset page
-    setAuthData({ resetPasswordUsername: username });
-    portalFlow.goToPageFor("SEND_CODE");
   };
 
   /**
@@ -367,18 +366,20 @@ function validateUsername(username, t) {
 }
 
 /**
- * Converts an error thrown by the Amplify library's Auth.signIn method into
+ * Converts an error thrown by the Amplify library's Auth.forgotPassword method into
  * AppErrorInfo objects to be rendered by the page.
  * For a list of possible exceptions, see
- * https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_SignUp.html#API_SignUp_Errors
- * @param {object} error Error object that was thrown by Amplify's Auth.signIn method
+ * https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_ForgotPassword.html#API_ForgotPassword_Errors
+ * @param {{ code: string, message: string }} error Error object that was thrown by Amplify's Auth.signIn method
  * @param {Function} t Localization method
  * @returns {AppErrorInfoCollection}
  */
 function getForgotPasswordErrorInfo(error, t) {
   let message;
 
-  if (error.code === "CodeDeliveryFailureException") {
+  if (error.code === "NotAuthorizedException") {
+    message = getNotAuthorizedExceptionMessage(error, t);
+  } else if (error.code === "CodeDeliveryFailureException") {
     message = t("errors.auth.codeDeliveryFailure");
   } else if (error.code === "InvalidParameterException") {
     message = t("errors.auth.invalidParametersFallback");
@@ -396,15 +397,15 @@ function getForgotPasswordErrorInfo(error, t) {
  * Converts an error thrown by the Amplify library's Auth.signIn method into
  * AppErrorInfo objects to be rendered by the page.
  * For a list of possible exceptions, see
- * https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_ForgotPassword.html#API_ForgotPassword_Errors
- * @param {object} error Error object that was thrown by Amplify
+ * https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_InitiateAuth.html#API_InitiateAuth_Errors
+ * @param {{ code: string, message: string }} error Error object that was thrown by Amplify
  * @param {Function} t Localization method
  * @returns {AppErrorInfoCollection}
  */
 function getLoginErrorInfo(error, t) {
   let message;
   if (error.code === "NotAuthorizedException") {
-    message = t("errors.auth.incorrectEmailOrPassword");
+    message = getNotAuthorizedExceptionMessage(error, t);
   } else if (error.code === "InvalidParameterException") {
     // This error triggers when password is empty
     // This code should be unreachable if validation works properly
@@ -426,7 +427,7 @@ function getLoginErrorInfo(error, t) {
  * AppErrorInfo objects to be rendered by the page.
  * For a list of possible exceptions, see
  * https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_SignUp.html#API_SignUp_Errors
- * @param {object} error Error object that was thrown by Amplify's Auth.signUp method
+ * @param {{ code: string, message: string }} error Error object that was thrown by Amplify's Auth.signUp method
  * @param {Function} t Localization method
  * @returns {AppErrorInfoCollection}
  */
@@ -452,7 +453,7 @@ function getCreateAccountErrorInfo(error, t) {
  * AppErrorInfo objects to be rendered by the page.
  * For a list of possible exceptions, see
  * https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_ConfirmForgotPassword.html
- * @param {object} error Error object that was thrown by Amplify
+ * @param {{ code: string, message: string }} error Error object that was thrown by Amplify
  * @param {Function} t Localization method
  * @returns {AppErrorInfoCollection}
  */
@@ -481,7 +482,7 @@ function getResetPasswordErrorInfo(error, t) {
 /**
  * InvalidPasswordException may occur for a variety of reasons,
  * so our messaging needs to reflect this nuance.
- * @param {object} error Error object that was thrown by Amplify
+ * @param {{ code: string, message: string }} error Error object that was thrown by Amplify
  * @param {Function} t Localization method
  * @returns {string}
  */
@@ -522,11 +523,39 @@ function getInvalidPasswordExceptionMessage(error, t) {
 }
 
 /**
+ * NotAuthorizedException may occur for a variety of reasons,
+ * so our messaging needs to reflect this nuance.
+ * @param {{ code: string, message: string }} error Error object that was thrown by Amplify
+ * @param {Function} t Localization method
+ * @returns {string}
+ */
+function getNotAuthorizedExceptionMessage(error, t) {
+  // These are the specific Cognito errors that can occur:
+  //
+  // 1. When password or username is invalid (error is same for either scenario)
+  // code: "NotAuthorizedException"
+  // message: "Incorrect username or password."
+  //
+  // 2. When Adaptive Authentication blocked login attempt due to risk score
+  // code: "NotAuthorizedException"
+  // message: "Request not allowed due to security reasons."
+
+  if (error.message.match(/Request not allowed due to security reasons/)) {
+    // This error may trigger if the password is incorrect, or if the
+    // risk score of the login attempt resulted in the attempt being Blocked
+    // by our Cognito Advanced Security settings
+    return t("errors.auth.suspiciousLoginBlocked");
+  }
+
+  return t("errors.auth.incorrectEmailOrPassword");
+}
+
+/**
  * Converts an error thrown by the Amplify library's Auth.confirmSignUp method into
  * AppErrorInfo objects to be rendered by the page.
  * For a list of possible exceptions, see
  * https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_ConfirmSignUp.html
- * @param {object} error Error object that was thrown by Amplify
+ * @param {{ code: string, message: string }} error Error object that was thrown by Amplify
  * @param {Function} t Localization method
  * @returns {AppErrorInfoCollection}
  */

@@ -53,7 +53,7 @@ describe("useAppErrorsLogic", () => {
 
         expect(appErrorsLogic.appErrors.items).toHaveLength(1);
         expect(appErrorsLogic.appErrors.items[0].message).toMatchInlineSnapshot(
-          `"Sorry, an unexpected error in our system was encountered. If this continues to happen, you may call the Paid Family Leave Contact Center at 833‑344‑7365"`
+          `"Sorry, an unexpected error in our system was encountered. If this continues to happen, you may call the Paid Family Leave Contact Center at 833‑344‑7365."`
         );
       });
     });

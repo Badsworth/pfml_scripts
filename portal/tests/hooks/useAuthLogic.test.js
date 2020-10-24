@@ -61,6 +61,36 @@ describe("useAuthLogic", () => {
       expect(Auth.forgotPassword).toHaveBeenCalledWith(username);
     });
 
+    it("routes to next page when successful", async () => {
+      const spy = jest.spyOn(portalFlow, "goToPageFor");
+
+      await act(async () => {
+        await forgotPassword(username);
+      });
+
+      expect(spy).toHaveBeenCalledWith("SEND_CODE");
+    });
+
+    it("does not change page when Cognito request fails", async () => {
+      const spy = jest.spyOn(portalFlow, "goToPageFor");
+
+      jest.spyOn(Auth, "forgotPassword").mockImplementation(() => {
+        // Ignore lint rule since AWS Auth class actually throws an object literal
+        // eslint-disable-next-line no-throw-literal
+        throw {
+          code: "UserNotFoundException",
+          message: "An account with the given email does not exist.",
+          name: "UserNotFoundException",
+        };
+      });
+
+      await act(async () => {
+        await forgotPassword(username);
+      });
+
+      expect(spy).not.toHaveBeenCalled();
+    });
+
     it("trims whitespace from username", async () => {
       await act(async () => {
         await forgotPassword(`  ${username} `);
@@ -124,6 +154,25 @@ describe("useAuthLogic", () => {
       expect(appErrors.items).toHaveLength(1);
       expect(appErrors.items[0].message).toMatchInlineSnapshot(
         `"Enter all required information"`
+      );
+    });
+
+    it("sets app errors when Auth.forgotPassword throws NotAuthorizedException due to security reasons", () => {
+      jest.spyOn(Auth, "forgotPassword").mockImplementation(() => {
+        // Ignore lint rule since AWS Auth class actually throws an object literal
+        // eslint-disable-next-line no-throw-literal
+        throw {
+          code: "NotAuthorizedException",
+          message: "Request not allowed due to security reasons.",
+          name: "NotAuthorizedException",
+        };
+      });
+      act(() => {
+        forgotPassword(username);
+      });
+      expect(appErrors.items).toHaveLength(1);
+      expect(appErrors.items[0].message).toMatchInlineSnapshot(
+        `"Your authentication request has been blocked due to suspicious activity. If this continues to happen, you may call the Paid Family Leave Contact Center at 833‑344‑7365."`
       );
     });
 
@@ -222,6 +271,44 @@ describe("useAuthLogic", () => {
       expect(appErrors.items).toHaveLength(1);
       expect(appErrors.items[0].message).toMatchInlineSnapshot(
         `"Enter all required information"`
+      );
+    });
+
+    it("sets app errors when Auth.forgotPassword throws NotAuthorizedException due to security reasons", async () => {
+      jest.spyOn(Auth, "signIn").mockImplementation(() => {
+        // Ignore lint rule since AWS Auth class actually throws an object literal
+        // eslint-disable-next-line no-throw-literal
+        throw {
+          code: "NotAuthorizedException",
+          message: "Request not allowed due to security reasons.",
+          name: "NotAuthorizedException",
+        };
+      });
+      await act(async () => {
+        await login(username, password);
+      });
+      expect(appErrors.items).toHaveLength(1);
+      expect(appErrors.items[0].message).toMatchInlineSnapshot(
+        `"Your authentication request has been blocked due to suspicious activity. If this continues to happen, you may call the Paid Family Leave Contact Center at 833‑344‑7365."`
+      );
+    });
+
+    it("sets app errors when Auth.forgotPassword throws NotAuthorizedException due to incorrect username or password", async () => {
+      jest.spyOn(Auth, "signIn").mockImplementation(() => {
+        // Ignore lint rule since AWS Auth class actually throws an object literal
+        // eslint-disable-next-line no-throw-literal
+        throw {
+          code: "NotAuthorizedException",
+          message: "Incorrect username or password.",
+          name: "NotAuthorizedException",
+        };
+      });
+      await act(async () => {
+        await login(username, password);
+      });
+      expect(appErrors.items).toHaveLength(1);
+      expect(appErrors.items[0].message).toMatchInlineSnapshot(
+        `"Incorrect email or password"`
       );
     });
 
