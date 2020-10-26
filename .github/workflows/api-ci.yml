@@ -3,6 +3,11 @@
 name: API CI Testing
 
 on:
+  push:
+    branches:
+      - master
+    paths:
+      - api/**
   pull_request:
     paths:
       - api/**
