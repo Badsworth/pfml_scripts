@@ -16,7 +16,7 @@ import {
   postApplicationsByApplicationIdDocuments,
   DocumentUploadRequest,
   postApplicationsByApplicationIdCompleteApplication,
-  PartialResponse,
+  ApplicationResponse,
 } from "../api";
 
 if (!global.FormData) {
@@ -80,7 +80,7 @@ export default class PortalSubmitter {
   async submit(
     application: ApplicationRequestBody,
     documents: DocumentUploadRequest[] = []
-  ): Promise<PartialResponse> {
+  ): Promise<ApplicationResponse> {
     const application_id = await this.createApplication();
     await this.updateApplication(application_id, application);
     const fineos_absence_id = await this.submitApplication(application_id);

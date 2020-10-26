@@ -1,10 +1,17 @@
 import faker from "faker";
+import { min as minDate, parseISO } from "date-fns";
 import {
   SimulationGenerator,
   ClaimDocument,
   SimulationGeneratorOpts,
 } from "./types";
-import { ApplicationRequestBody, ApplicationLeaveDetails } from "../api";
+import {
+  ApplicationRequestBody,
+  ApplicationLeaveDetails,
+  ContinuousLeavePeriods,
+  ReducedScheduleLeavePeriods,
+  IntermittentLeavePeriods,
+} from "../api";
 import generators from "./documents";
 import path from "path";
 import fs from "fs";
@@ -49,6 +56,9 @@ export type ScenarioOpts = {
   docs: ScenarioDocumentConfiguration;
   skipSubmitClaim?: boolean;
   shortNotice?: boolean;
+  has_continuous_leave_periods?: boolean;
+  has_reduced_schedule_leave_periods?: boolean;
+  has_intermittent_leave_periods?: boolean;
   bondingDate?: "far-past" | "past" | "future";
 };
 
@@ -169,27 +179,67 @@ async function generateDocuments(
   return Promise.all(promises);
 }
 
+function generateLeavePeriods(
+  leaveType: "continuous" | "reduced" | "intermittent"
+):
+  | ContinuousLeavePeriods[]
+  | ReducedScheduleLeavePeriods[]
+  | IntermittentLeavePeriods[] {
+  const [startDate, endDate] = generateLeaveDates();
+  return [
+    {
+      start_date: fmt(startDate),
+      end_date: fmt(endDate),
+      is_estimated: leaveType === "intermittent" ? false : true,
+    },
+  ];
+}
+
+function getEarliestStartDate(details: ApplicationLeaveDetails): Date {
+  const leaveDates: Date[] = [];
+
+  const leavePeriods = [
+    details.continuous_leave_periods,
+    details.reduced_schedule_leave_periods,
+    details.intermittent_leave_periods,
+  ];
+  leavePeriods.forEach((period) => {
+    if (period === undefined || period.length < 1) {
+      return;
+    }
+    leaveDates.push(parseISO(period[0].start_date as string));
+  });
+  if (leaveDates.length < 1)
+    throw new Error("No leave dates have been specified");
+  return minDate(leaveDates);
+}
+
 function generateLeaveDetails(config: ScenarioOpts): ApplicationLeaveDetails {
   const { reason, reason_qualifier } = config;
-  const [startDate, endDate] = generateLeaveDates();
-  const notificationDate = generateNotificationDate(
-    startDate,
-    !!config.shortNotice
-  );
   const details: ApplicationLeaveDetails = {
-    continuous_leave_periods: [
-      {
-        start_date: fmt(startDate),
-        end_date: fmt(endDate),
-        is_estimated: true,
-      },
-    ],
+    continuous_leave_periods:
+      !config.has_reduced_schedule_leave_periods &&
+      !config.has_intermittent_leave_periods
+        ? generateLeavePeriods("continuous")
+        : [],
+    reduced_schedule_leave_periods: config.has_reduced_schedule_leave_periods
+      ? generateLeavePeriods("reduced")
+      : [],
+    intermittent_leave_periods: config.has_intermittent_leave_periods
+      ? generateLeavePeriods("intermittent")
+      : [],
     pregnant_or_recent_birth: false,
-    employer_notification_date: fmt(notificationDate),
     employer_notified: true,
     reason,
     reason_qualifier,
   };
+
+  const earliestStartDate = getEarliestStartDate(details);
+
+  details.employer_notification_date = fmt(
+    generateNotificationDate(earliestStartDate, !!config.shortNotice)
+  );
+
   switch (reason) {
     case "Serious Health Condition - Employee":
       // Do nothing else.
@@ -199,20 +249,20 @@ function generateLeaveDetails(config: ScenarioOpts): ApplicationLeaveDetails {
         case "Newborn":
           details.child_birth_date = makeChildPlacementDate(
             config.bondingDate,
-            startDate
+            earliestStartDate
           );
           details.pregnant_or_recent_birth = true;
           break;
         case "Adoption":
           details.child_placement_date = makeChildPlacementDate(
             config.bondingDate ?? "past",
-            startDate
+            earliestStartDate
           );
           break;
         case "Foster Care":
           details.child_placement_date = makeChildPlacementDate(
             config.bondingDate ?? "past",
-            startDate
+            earliestStartDate
           );
           break;
         default:

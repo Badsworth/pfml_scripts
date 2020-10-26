@@ -3,6 +3,7 @@ import { scenario, chance, ScenarioOpts } from "../../src/simulation/simulate";
 import type { SimulationClaim } from "@/simulation/types";
 import generators from "../../src/simulation/documents";
 import fs from "fs";
+import { extractLeavePeriod } from "../../src/utils";
 
 jest.mock("../../src/simulation/documents");
 
@@ -35,6 +36,30 @@ const bonding: ScenarioOpts = {
     HCP: {},
     MASSID: {},
   },
+};
+
+const reduced: ScenarioOpts = {
+  residence: "MA-proofed",
+  reason: "Child Bonding",
+  reason_qualifier: "Newborn",
+  bondingDate: "past",
+  docs: {
+    HCP: {},
+    MASSID: {},
+  },
+  has_reduced_schedule_leave_periods: true,
+};
+
+const intermittent: ScenarioOpts = {
+  residence: "MA-proofed",
+  reason: "Child Bonding",
+  reason_qualifier: "Newborn",
+  bondingDate: "past",
+  docs: {
+    HCP: {},
+    MASSID: {},
+  },
+  has_intermittent_leave_periods: true,
 };
 
 describe("Simulation Generator", () => {
@@ -171,14 +196,6 @@ describe("Simulation Generator", () => {
     });
   });
 
-  function extractLeavePeriod(claim: SimulationClaim["claim"]): [Date, Date] {
-    const period = claim.leave_details?.continuous_leave_periods?.[0];
-    if (!period || !period.start_date || !period.end_date) {
-      throw new Error("No leave period given");
-    }
-    return [new Date(period.start_date), new Date(period.end_date)];
-  }
-
   function extractNotificationDate(claim: SimulationClaim["claim"]): Date {
     const str = claim.leave_details?.employer_notification_date;
     if (!str) {
@@ -278,6 +295,24 @@ describe("Simulation Generator", () => {
     expect(claim.leave_details?.child_placement_date).toMatch(
       /\d{4}-\d{2}-\d{2}/
     );
+  });
+
+  it("Should create a reduced leave claim", async () => {
+    const { claim } = await scenario("TEST", reduced)(opts);
+    const [start, end] = extractLeavePeriod(
+      claim,
+      "reduced_schedule_leave_periods"
+    );
+    expect(start.getTime()).toBeLessThan(end.getTime());
+  });
+
+  it("Should create an intermittent leave claim", async () => {
+    const { claim } = await scenario("TEST", intermittent)(opts);
+    const [start, end] = extractLeavePeriod(
+      claim,
+      "intermittent_leave_periods"
+    );
+    expect(start.getTime()).toBeLessThan(end.getTime());
   });
 });
 

@@ -7,7 +7,7 @@ function getToClaimPage(): void {
   fineos.onPage("claims");
 }
 
-export function HAP1(): void {
+export function standardAdjudication(): void {
   getToClaimPage();
   fineos.clickAdjudicate();
   fineos.onTab("Paid Benefits");
@@ -35,6 +35,9 @@ export function HAP1(): void {
   fineos.assertClaimApprovable();
 }
 
+export function HAP1(): void {
+  standardAdjudication();
+}
 export function HAP2(): void {
   getToClaimPage();
   fineos.clickAdjudicate();
@@ -79,6 +82,14 @@ export function HAP3(): void {
   fineos.clickDeny();
   fineos.denialReason("Ineligible");
   fineos.claimCompletion();
+}
+
+export function MHAP4(): void {
+  standardAdjudication();
+}
+
+export function MHAP5(): void {
+  standardAdjudication();
 }
 
 export function GBR1(): void {

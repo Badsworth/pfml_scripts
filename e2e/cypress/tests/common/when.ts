@@ -101,3 +101,13 @@ When("I accept the terms of service", function () {
 When("I finish managing evidence", function () {
   fineos.clickBottomWidgetButton();
 });
+
+When("I have submitted all parts of the claim", function (
+  this: CypressStepThis
+): void {
+  if (!this.application) {
+    throw new Error("Can't find application");
+  }
+  const { application } = this;
+  portal.submitClaimPortal(application);
+});

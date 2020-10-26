@@ -110,7 +110,11 @@ Given("I have added payment information", function (
 });
 
 Given("I return to the portal", function () {
-  Cypress.config("baseUrl", "https://paidleave-stage.mass.gov");
+  const portalBaseUrl = Cypress.env("E2E_PORTAL_BASEURL");
+  if (!portalBaseUrl) {
+    throw new Error("Portal base URL must be set");
+  }
+  Cypress.config("baseUrl", portalBaseUrl);
   const credentials = {
     username: Cypress.env("E2E_PORTAL_USERNAME"),
     password: Cypress.env("E2E_PORTAL_PASSWORD"),

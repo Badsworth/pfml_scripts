@@ -122,27 +122,51 @@ const generateHCP: DocumentGenerator = (
     untitled44: "555-555-5555",
     untitled45: "example@example.com",
   };
+  let start_date = new Date();
+  let end_date = new Date();
 
   if (
-    claim.leave_details?.continuous_leave_periods?.[0].start_date &&
-    claim.leave_details?.continuous_leave_periods?.[0].end_date
+    claim.leave_details?.continuous_leave_periods?.[0]?.start_date &&
+    claim.leave_details?.continuous_leave_periods?.[0]?.end_date
   ) {
-    const start_date = parseISO(
+    start_date = parseISO(
       claim.leave_details.continuous_leave_periods[0].start_date
     );
-    const end_date = parseISO(
+    end_date = parseISO(
       claim.leave_details.continuous_leave_periods[0].end_date
     );
-    data["untitled21"] = format(start_date, "MM");
-    data["untitled22"] = format(start_date, "dd");
-    data["untitled23"] = format(start_date, "yyyy");
-
-    data["untitled24"] = format(end_date, "MM");
-    data["untitled25"] = format(end_date, "dd");
-    data["untitled26"] = format(end_date, "yyyy");
-
-    data["untitled31"] = differenceInWeeks(end_date, start_date).toString();
+  } else if (
+    claim.leave_details?.reduced_schedule_leave_periods?.[0]?.start_date &&
+    claim.leave_details?.reduced_schedule_leave_periods?.[0]?.end_date
+  ) {
+    start_date = parseISO(
+      claim.leave_details.reduced_schedule_leave_periods[0].start_date
+    );
+    end_date = parseISO(
+      claim.leave_details.reduced_schedule_leave_periods[0].end_date
+    );
+  } else if (
+    claim.leave_details?.intermittent_leave_periods?.[0]?.start_date &&
+    claim.leave_details?.intermittent_leave_periods?.[0]?.end_date
+  ) {
+    start_date = parseISO(
+      claim.leave_details.intermittent_leave_periods[0].start_date
+    );
+    end_date = parseISO(
+      claim.leave_details.intermittent_leave_periods[0].end_date
+    );
   }
+  console.warn(
+    "Reduced and intermittent HCP are not available. HCP will always describe continuous leave claim."
+  );
+  data["untitled21"] = format(start_date, "MM");
+  data["untitled22"] = format(start_date, "dd");
+  data["untitled23"] = format(start_date, "yyyy");
+  data["untitled24"] = format(end_date, "MM");
+  data["untitled25"] = format(end_date, "dd");
+  data["untitled26"] = format(end_date, "yyyy");
+
+  data["untitled31"] = differenceInWeeks(end_date, start_date).toString();
 
   return fillPDFBytes(`${__dirname}/../../forms/hcp-real.pdf`, data);
 };

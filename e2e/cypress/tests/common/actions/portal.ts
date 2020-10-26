@@ -1,7 +1,10 @@
 import { SimulationClaim } from "@/simulation/types";
-import { PartialResponse } from "@/api";
+import {
+  ApplicationResponse,
+  WorkPattern,
+  IntermittentLeavePeriods,
+} from "@/api";
 import { lookup } from "../util";
-
 import { inFieldset } from "../actions";
 
 export function onPage(page: string): void {
@@ -37,8 +40,8 @@ export function submitClaimDirectlyToAPI(
     }
     cy.log("submitting", claim);
     cy.task("submitClaimToAPI", claim)
-      .then((responseIds: unknown) => responseIds as PartialResponse)
-      .then((responseIds: PartialResponse) => {
+      .then((responseIds: unknown) => responseIds as ApplicationResponse)
+      .then((responseIds) => {
         cy.stash("claimNumber", responseIds.fineos_absence_id);
         cy.log("submitted", responseIds.fineos_absence_id);
         cy.stash("applicationId", responseIds.application_id);
@@ -185,7 +188,7 @@ export function answerPregnancyQuestion(
   // of the "yes" value so we don't select "yes" for the wrong question.
   cy.contains(
     "fieldset",
-    "Are you pregnant or have you recently given birth?"
+    "Are you taking medical leave because you are pregnant or recently gave birth?"
   ).within(() => {
     cy.contains(
       application.leave_details?.pregnant_or_recent_birth ? "Yes" : "No"
@@ -220,20 +223,9 @@ export function answerContinuousLeaveQuestion(
     const endDate = new Date((leave && leave[0].end_date) as string);
 
     onPage("leave-period-continuous");
-    cy.contains("fieldset", "First day of leave").within(() => {
-      cy.contains("Month").type(String(startDate.getMonth() + 1) as string);
-      cy.contains("Day").type(String(startDate.getUTCDate()) as string);
-      cy.contains("Year").type(String(startDate.getUTCFullYear()) as string);
-    });
-    cy.contains("fieldset", "Last day of leave").within(() => {
-      cy.contains("Month").type(String(endDate.getMonth() + 1) as string);
-      cy.contains("Day").type(String(endDate.getUTCDate()) as string);
-      cy.contains("Year").type(String(endDate.getUTCFullYear()) as string);
-    });
-    cy.contains("button", "Save and continue").click();
-  } else {
-    throw new Error("All claims should currently be for continuous leave.");
+    completeDateForm(startDate, endDate);
   }
+  cy.contains("button", "Save and continue").click();
 }
 
 export function answerReducedLeaveQuestion(
@@ -243,13 +235,28 @@ export function answerReducedLeaveQuestion(
     throw new Error("Leave details not provided.");
   }
 
+  cy.contains(
+    "fieldset",
+    "Do you need to work a reduced schedule for a period of time (reduced leave schedule)?"
+  ).within(() => {
+    cy.get("input[type='radio']").check(
+      application.has_reduced_schedule_leave_periods?.toString() as string,
+      {
+        force: true,
+      }
+    );
+  });
+
   if (application.has_reduced_schedule_leave_periods) {
-    throw new Error("No claims should currently be for reduced leave.");
-  } else {
+    const leave = application.leave_details.reduced_schedule_leave_periods;
+
+    const startDate = new Date((leave && leave[0].start_date) as string);
+    const endDate = new Date((leave && leave[0].end_date) as string);
+
     onPage("leave-period-reduced-schedule");
-    cy.contains("No").click();
-    cy.contains("button", "Save and continue").click();
+    completeDateForm(startDate, endDate);
   }
+  cy.contains("button", "Save and continue").click();
 }
 
 export function answerIntermittentLeaveQuestion(
@@ -259,11 +266,35 @@ export function answerIntermittentLeaveQuestion(
     throw new Error("Leave details not provided.");
   }
 
-  if (application.has_intermittent_leave_periods) {
-    throw new Error("No claims should currently be for intermittent leave.");
-  } else {
+  cy.contains(
+    "fieldset",
+    "Do you need to take off work at irregular intervals (intermittent leave)?"
+  ).within(() => {
+    cy.get("input[type='radio']").check(
+      application.has_intermittent_leave_periods?.toString() as string,
+      {
+        force: true,
+      }
+    );
+  });
+  if (application.leave_details?.intermittent_leave_periods?.[0]) {
+    const leave: IntermittentLeavePeriods | undefined =
+      application.leave_details.intermittent_leave_periods[0];
+    Object.assign(leave, {
+      frequency: 5,
+      frequency_interval: 6,
+      frequency_interval_basis: "Months",
+      duration: 2,
+      duration_basis: "Days",
+    });
+
+    const startDate = new Date((leave && leave.start_date) as string);
+    const endDate = new Date((leave && leave.end_date) as string);
     onPage("leave-period-intermittent");
-    cy.contains("No").click();
+    completeDateForm(startDate, endDate);
+    cy.contains("button", "Save and continue").click();
+    completeIntermittentLeaveDetails(leave);
+  } else {
     cy.contains("button", "Save and continue").click();
   }
 }
@@ -294,8 +325,8 @@ export function enterEmployerInfo(application: ApplicationRequestBody): void {
   cy.contains("button", "Save and continue").click();
   if (application.employment_status === "Employed") {
     // @todo: Set to application property once it exists.
-    cy.labelled("On average, how many hours do you work each week?").type("40");
-    cy.contains("button", "Save and continue").click();
+    // cy.labelled("On average, how many hours do you work each week?").type("40");
+    // cy.contains("button", "Save and continue").click();
 
     cy.contains(
       "fieldset",
@@ -308,22 +339,33 @@ export function enterEmployerInfo(application: ApplicationRequestBody): void {
     });
     if (application.employment_status) {
       cy.contains("fieldset", "When did you tell them?").within(() => {
-        const notifcationDate = new Date(
+        const notificationDate = new Date(
           application.leave_details?.employer_notification_date as string
         );
         cy.labelled("Month").type(
-          (notifcationDate.getMonth() + 1).toString() as string
+          (notificationDate.getMonth() + 1).toString() as string
         );
         cy.labelled("Day").type(
-          notifcationDate.getUTCDate().toString() as string
+          notificationDate.getUTCDate().toString() as string
         );
         cy.labelled("Year").type(
-          notifcationDate.getUTCFullYear().toString() as string
+          notificationDate.getUTCFullYear().toString() as string
         );
       });
     }
     cy.contains("button", "Save and continue").click();
+    describeWorkSchedule();
   }
+}
+
+export function describeWorkSchedule(): void {
+  const workSchedule: WorkPattern["work_pattern_type"] = "Fixed";
+  cy.contains("fieldset", "How would you describe your work schedule?").within(
+    () => {
+      cy.get(`input[value = ${workSchedule}]`).check({ force: true });
+    }
+  );
+  cy.contains("button", "Save and continue").click();
 }
 
 export function reportOtherBenefits(): void {
@@ -509,6 +551,57 @@ export function goToCertificationUploadPage(): void {
   cy.unstash("applicationId").then((applicationId) => {
     cy.visit(`/claims/certification-id/?claim_id=${applicationId}`);
   });
+}
+
+export function completeDateForm(startDate: Date, endDate: Date): void {
+  cy.contains("fieldset", "First day of leave").within(() => {
+    cy.contains("Month").type(String(startDate.getMonth() + 1) as string);
+    cy.contains("Day").type(String(startDate.getUTCDate()) as string);
+    cy.contains("Year").type(String(startDate.getUTCFullYear()) as string);
+  });
+  cy.contains("fieldset", "Last day of leave").within(() => {
+    cy.contains("Month").type(String(endDate.getMonth() + 1) as string);
+    cy.contains("Day").type(String(endDate.getUTCDate()) as string);
+    cy.contains("Year").type(String(endDate.getUTCFullYear()) as string);
+  });
+}
+
+export function completeIntermittentLeaveDetails(
+  leave: IntermittentLeavePeriods
+): void {
+  cy.contains(
+    "fieldset",
+    "How often might you need to be absent from work?"
+  ).within(() => {
+    const label = "Irregular over the next 6 months";
+    if (leave.frequency_interval_basis !== "Months") {
+      throw new Error("Frequency interval should be Months");
+    }
+    cy.labelled(label).click({ force: true });
+  });
+  if (!leave.frequency) {
+    throw new Error("Frequency must be specified");
+  }
+  cy.get(
+    "input[name='leave_details.intermittent_leave_periods[0].frequency']"
+  ).type(leave.frequency.toString());
+
+  cy.contains("fieldset", "How long will an absence typically last?").within(
+    () => {
+      if (leave.duration_basis !== "Days") {
+        throw new Error("Duration basis should be Days");
+      }
+      cy.labelled("At least a day").click({ force: true });
+    }
+  );
+  if (!leave.duration) {
+    throw new Error("Frequency must be specified");
+  }
+  cy.get(
+    "input[name='leave_details.intermittent_leave_periods[0].duration']"
+  ).type(leave.duration.toString());
+
+  cy.contains("button", "Save and continue").click();
 }
 
 export function submitClaimPartOne(application: ApplicationRequestBody): void {

@@ -7,7 +7,7 @@
 /* eslint-disable */
 
 export const defaults: RequestOptions = {
-    baseUrl: "/v1",
+    baseUrl: "/v1"
 };
 export const servers = {
     developmentServer: "/v1"
@@ -220,7 +220,7 @@ export class HttpError extends Error {
     status: number;
     statusText: string;
     headers: Record<string, string>;
-    data?: object;
+    data?: Record<string, unknown>;
     constructor(status: number, statusText: string, url: string, headers: Headers, text?: string) {
         super(`${url} - ${statusText} (${status})`);
         this.status = status;
@@ -317,6 +317,12 @@ export interface EmployerResponse {
 export interface GETEmployersByEmployerIdResponse extends SuccessfulResponse {
     data?: EmployerResponse;
 }
+export interface ClaimReviewResponse {
+    claim_id: string;
+}
+export interface GETEmployersClaimsByFineosAbsenceIdReviewResponse extends SuccessfulResponse {
+    data?: ClaimReviewResponse;
+}
 export type Date = string;
 export interface EmployerBenefit {
     benefit_amount_dollars?: number;
@@ -336,19 +342,16 @@ export interface EmployerClaimRequestBody {
     hours_worked_per_week: number;
     comment?: string;
 }
-export interface ClaimResponse {
-    claim_id: string;
-}
-export interface PATCHEmployersClaimReviewByClaimIdResponse extends SuccessfulResponse {
-    data?: ClaimResponse;
+export interface PATCHEmployersClaimsByFineosAbsenceIdReviewResponse extends SuccessfulResponse {
+    data?: ClaimReviewResponse;
 }
 export type MaskedSsnItin = string;
 export interface Address {
-    city: string | null;
-    line_1: string | null;
+    city?: string | null;
+    line_1?: string | null;
     line_2?: string | null;
-    state: string | null;
-    zip: string | null;
+    state?: string | null;
+    zip?: string | null;
 }
 export interface ReducedScheduleLeavePeriods {
     leave_period_id?: string | null;
@@ -394,12 +397,9 @@ export interface IntermittentLeavePeriods {
     duration?: number | null;
     duration_basis?: ("Minutes" | "Hours" | "Days") | null;
 }
-export interface ApplicationLeaveDetails {
+export interface ApplicationLeaveDetails extends LeavePeriods{
     reason?: ("Pregnancy/Maternity" | "Child Bonding" | "Serious Health Condition - Employee") | null;
     reason_qualifier?: ("Newborn" | "Adoption" | "Foster Care") | null;
-    reduced_schedule_leave_periods?: ReducedScheduleLeavePeriods[];
-    continuous_leave_periods?: ContinuousLeavePeriods[];
-    intermittent_leave_periods?: IntermittentLeavePeriods[];
     relationship_to_caregiver?: ("Parent" | "Child" | "Grandparent" | "Grandchild" | "Other Family Member" | "Service Member" | "Inlaw" | "Sibling" | "Other") | null;
     relationship_qualifier?: ("Adoptive" | "Biological" | "Foster" | "Custodial Parent" | "Legal Guardian" | "Step Parent") | null;
     pregnant_or_recent_birth?: boolean | null;
@@ -408,6 +408,12 @@ export interface ApplicationLeaveDetails {
     employer_notified?: boolean | null;
     employer_notification_date?: Date | null;
     employer_notification_method?: ("In Writing" | "In Person" | "By Telephone" | "Other") | null;
+}
+
+export interface LeavePeriods {
+    reduced_schedule_leave_periods?: ReducedScheduleLeavePeriods[];
+    continuous_leave_periods?: ContinuousLeavePeriods[];
+    intermittent_leave_periods?: IntermittentLeavePeriods[];
 }
 export type RoutingNbr = string;
 export interface ApplicationPaymentAccountDetails {
@@ -426,6 +432,19 @@ export interface PaymentPreferences {
     is_default?: boolean | null;
     account_details?: ApplicationPaymentAccountDetails;
     cheque_details?: ApplicationPaymentChequeDetails;
+}
+export type DayOfWeek = "Sunday" | "Monday" | "Tuesday" | "Wednesday" | "Thursday" | "Friday" | "Saturday";
+export interface WorkPatternDay {
+    day_of_week?: DayOfWeek;
+    week_number?: number;
+    hours?: number | null;
+    minutes?: number | null;
+}
+export interface WorkPattern {
+    work_pattern_type?: ("Fixed" | "Rotating" | "Variable") | null;
+    work_week_starts?: DayOfWeek | null;
+    pattern_start_date?: Date | null;
+    work_pattern_days?: WorkPatternDay[] | null;
 }
 export interface ApplicationResponse {
     application_nickname?: string | null;
@@ -451,12 +470,10 @@ export interface ApplicationResponse {
     hours_worked_per_week?: number | null;
     leave_details?: ApplicationLeaveDetails | null;
     payment_preferences?: PaymentPreferences[] | null;
+    work_pattern?: WorkPattern | null;
     updated_time?: string;
     status?: "Started" | "Submitted" | "Completed";
 }
-
-export type PartialResponse = Partial<ApplicationResponse>
-
 export interface POSTApplicationsResponse extends SuccessfulResponse {
     data?: ApplicationResponse;
 }
@@ -489,6 +506,7 @@ export interface ApplicationRequestBody {
     occupation?: ("Sales Clerk" | "Administrative" | "Engineer" | "Health Care") | null;
     leave_details?: ApplicationLeaveDetails;
     payment_preferences?: PaymentPreferences[];
+    work_pattern?: WorkPattern | null;
 }
 export interface PATCHApplicationsByApplicationIdResponse extends SuccessfulResponse {
     data?: ApplicationResponse;
@@ -567,7 +585,15 @@ export interface POSTRmvCheckResponse extends SuccessfulResponse {
 export interface NotificationRecipient {
     first_name?: string;
     last_name?: string;
+    full_name?: string;
+    contact_id?: string;
     email_address?: string;
+}
+export interface NotificationClaimant {
+    first_name?: string;
+    last_name?: string;
+    date_of_birth?: Date;
+    customer_id?: string;
 }
 export interface NotificationRequest {
     absence_case_id: string;
@@ -576,10 +602,7 @@ export interface NotificationRequest {
     source: "Self-Service" | "Call Center";
     recipient_type: "Claimant" | "Leave Administrator";
     recipients: NotificationRecipient[];
-    claimant_info?: {
-        first_name?: string;
-        last_name?: string;
-    };
+    claimant_info: NotificationClaimant;
 }
 export interface POSTNotificationsResponse extends SuccessfulResponse {
 }
@@ -665,12 +688,22 @@ export async function getEmployersByEmployerId({ employerId }: {
     });
 }
 /**
+ * Retrieve FINEOS absence data for a specified absence ID
+ */
+export async function getEmployersClaimsByFineosAbsenceIdReview({ fineosAbsenceId }: {
+    fineosAbsenceId: string;
+}, options?: RequestOptions): Promise<ApiResponse<GETEmployersClaimsByFineosAbsenceIdReviewResponse>> {
+    return await http.fetchJson(`/employers/claims/${fineosAbsenceId}/review`, {
+        ...options
+    });
+}
+/**
  * Save review claim from leave admin
  */
-export async function patchEmployersClaimReviewByClaimId({ claimId }: {
-    claimId: string;
-}, employerClaimRequestBody: EmployerClaimRequestBody, options?: RequestOptions): Promise<ApiResponse<PATCHEmployersClaimReviewByClaimIdResponse>> {
-    return await http.fetchJson(`/employers/claim/review/${claimId}`, http.json({
+export async function patchEmployersClaimsByFineosAbsenceIdReview({ fineosAbsenceId }: {
+    fineosAbsenceId: string;
+}, employerClaimRequestBody: EmployerClaimRequestBody, options?: RequestOptions): Promise<ApiResponse<PATCHEmployersClaimsByFineosAbsenceIdReviewResponse>> {
+    return await http.fetchJson(`/employers/claims/${fineosAbsenceId}/review`, http.json({
         ...options,
         method: "PATCH",
         body: employerClaimRequestBody
@@ -737,6 +770,17 @@ export async function postApplicationsByApplicationIdCompleteApplication({ appli
     return await http.fetchJson(`/applications/${applicationId}/complete_application`, {
         ...options,
         method: "POST"
+    });
+}
+/**
+ * Download an application (case) document by id.
+ */
+export async function getApplicationsByApplicationIdDocumentsAndDocumentId({ applicationId, documentId }: {
+    applicationId: string;
+    documentId: string;
+}, options?: RequestOptions): Promise<ApiResponse<string|undefined>> {
+    return await http.fetch(`/applications/${applicationId}/documents/${documentId}`, {
+        ...options
     });
 }
 /**

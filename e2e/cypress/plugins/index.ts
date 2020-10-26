@@ -22,15 +22,16 @@ import {
   SimulationClaim,
   SimulationGenerator,
 } from "../../src/simulation/types";
-import { DocumentUploadRequest } from "../../src/api";
+import { ApplicationResponse, DocumentUploadRequest } from "../../src/api";
 import { makeDocUploadBody } from "../../src/simulation/SimulationRunner";
 import * as pilot3 from "../../src/simulation/scenarios/pilot3";
 import * as pilot4 from "../../src/simulation/scenarios/pilot4";
-import { PartialResponse } from "@/api";
+import * as integrationScenarios from "../../src/simulation/scenarios/integrationScenarios";
 
 const scenarioFunctions: Record<string, SimulationGenerator> = {
   ...pilot3,
   ...pilot4,
+  ...integrationScenarios,
 };
 
 // This function is called when a project is opened or re-opened (e.g. due to
@@ -81,7 +82,7 @@ export default function (on: Cypress.PluginEvents): Cypress.ConfigOptions {
 
     async submitClaimToAPI(
       application: SimulationClaim
-    ): Promise<PartialResponse> {
+    ): Promise<ApplicationResponse> {
       if (!application.claim) throw new Error("Application missing!");
       if (!application.documents.length) throw new Error("Documents missing!");
       const { claim, documents } = application;
@@ -111,7 +112,6 @@ export default function (on: Cypress.PluginEvents): Cypress.ConfigOptions {
       })
 
         .submit(claim, newDocuments)
-        .then((responseIds) => responseIds as PartialResponse)
         .catch((err) => {
           console.error("Failed to submit claim:", err.data);
           throw new Error(err);

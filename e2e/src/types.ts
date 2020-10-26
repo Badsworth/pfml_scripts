@@ -1,4 +1,4 @@
-import { ApplicationRequestBody } from "./api";
+import { ApplicationRequestBody, ApplicationLeaveDetails } from "./api";
 
 type DateObj = { month: number; day: number; year: number };
 
@@ -178,11 +178,20 @@ type DebitCard = Payment & {
 };
 export type PaymentInfo = DirectDeposit | DebitCard;
 
+export type LeavePeriods = Pick<
+  ApplicationLeaveDetails,
+  | "reduced_schedule_leave_periods"
+  | "continuous_leave_periods"
+  | "intermittent_leave_periods"
+>;
+
 // Used for Cucumber parameters.
 export const ScenarioClaimTestTypes = [
   "HAP1",
   "HAP2",
   "HAP3",
+  "MHAP4",
+  "MHAP5",
   "GBR1",
   "UNH2",
   "UNH3",
