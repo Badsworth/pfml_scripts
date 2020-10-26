@@ -32,12 +32,11 @@ jobs:
       - uses: actions/checkout@v2
 
       # GitHub actions don't provide a self-link at execution time, but we can make an API call to retrieve one.
-      # NB: The checks API is still in beta.
       - name: generate self link
         run: |
           self_link=$(curl -Ls "${{ env.github_api }}/commits/${{ github.sha }}/check-runs" \
           -H 'Authorization: Token ${{ env.pfml_devops_token }}' \
-          -H 'Accept: application/vnd.github.antiope-preview+json' | \
+          -H 'Accept: application/vnd.github.v3+json' | \
           jq -c '.check_runs[] | select( .name == "conflict-check") | .details_url')
           echo "self_link=$self_link" >> $GITHUB_ENV
 

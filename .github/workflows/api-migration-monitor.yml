@@ -50,7 +50,7 @@ jobs:
             
             if [ "$MOST_RECENT_MIGRATION_CHECK" != "null" ]; then
               echo "  $headref needs its Alembic check re-run."
-              echo "  (URL: $url)"
+              echo "  (URL: $url )"
               jq -nc --arg baseref $baseref --arg headref $headref \
               '{ "ref": $headref , "inputs": { "baseref": $baseref, "headref": $headref } }' \
               >> workflows_to_rerun.json
