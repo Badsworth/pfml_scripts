@@ -36,7 +36,7 @@ describe("PaymentMethod", () => {
       expect(conditionalContent.prop("visible")).toBe(true);
     });
 
-    it("hides the debit card destination info box", () => {
+    it("hides the paper check destination info box", () => {
       const conditionalContent = wrapper
         .find("Alert")
         .parents("ConditionalContent");
@@ -44,13 +44,13 @@ describe("PaymentMethod", () => {
     });
   });
 
-  describe("when Debit is selected as the payment method", () => {
+  describe("when Paper check is selected as the payment method", () => {
     beforeEach(() => {
       ({ appLogic, claim, wrapper } = renderWithAppLogic(PaymentMethod, {
         claimAttrs: {
           payment_preferences: [
             {
-              payment_method: PaymentPreferenceMethod.debit,
+              payment_method: PaymentPreferenceMethod.check,
             },
           ],
         },
@@ -66,7 +66,7 @@ describe("PaymentMethod", () => {
       expect(conditionalContent.prop("visible")).toBe(false);
     });
 
-    it("shows the debit card destination info box", () => {
+    it("shows the paper check destination info box", () => {
       const conditionalContent = wrapper
         .find("Alert")
         .parents("ConditionalContent");

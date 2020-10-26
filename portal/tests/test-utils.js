@@ -80,14 +80,14 @@ export class MockClaimBuilder {
   }
 
   /**
-   * Sets payment method to debit card
+   * Sets payment method to paper check
    * @returns {MockClaimBuilder}
    */
-  debit() {
+  check() {
     set(
       this.claimAttrs,
       "payment_preferences[0].payment_method",
-      PaymentPreferenceMethod.debit
+      PaymentPreferenceMethod.check
     );
     return this;
   }

@@ -29,7 +29,9 @@ export const PaymentMethod = (props) => {
   const { appLogic, claim } = props;
   const { t } = useTranslation();
 
-  const { formState, updateFields } = useFormState(pick(props, fields).claim);
+  const { formState, getField, updateFields, clearField } = useFormState(
+    pick(props, fields).claim
+  );
 
   const account_type = get(
     formState,
@@ -83,10 +85,10 @@ export const PaymentMethod = (props) => {
             value: PaymentPreferenceMethod.ach,
           },
           {
-            checked: payment_method === PaymentPreferenceMethod.debit,
-            label: t("pages.claimsPaymentMethod.choiceDebit"),
-            hint: t("pages.claimsPaymentMethod.choiceHintDebit"),
-            value: PaymentPreferenceMethod.debit,
+            checked: payment_method === PaymentPreferenceMethod.check,
+            label: t("pages.claimsPaymentMethod.choiceCheck"),
+            hint: t("pages.claimsPaymentMethod.choiceHintCheck"),
+            value: PaymentPreferenceMethod.check,
           },
         ]}
         label={t("pages.claimsPaymentMethod.sectionLabel")}
@@ -94,6 +96,14 @@ export const PaymentMethod = (props) => {
       />
 
       <ConditionalContent
+        fieldNamesClearedWhenHidden={[
+          "payment_preferences[0].account_details.account_number",
+          "payment_preferences[0].account_details.account_type",
+          "payment_preferences[0].account_details.routing_number",
+        ]}
+        getField={getField}
+        updateFields={updateFields}
+        clearField={clearField}
         visible={payment_method === PaymentPreferenceMethod.ach}
       >
         <Fieldset>
@@ -148,10 +158,10 @@ export const PaymentMethod = (props) => {
       </ConditionalContent>
 
       <ConditionalContent
-        visible={payment_method === PaymentPreferenceMethod.debit}
+        visible={payment_method === PaymentPreferenceMethod.check}
       >
         <Alert state="info">
-          {t("pages.claimsPaymentMethod.debitDestinationInfo")}
+          {t("pages.claimsPaymentMethod.checkDestinationInfo")}
         </Alert>
       </ConditionalContent>
     </QuestionPage>

@@ -486,7 +486,7 @@ export const PaymentAccountType = {
  */
 export const PaymentPreferenceMethod = {
   ach: "ACH",
-  debit: "Debit",
+  check: "Check",
 };
 
 /**

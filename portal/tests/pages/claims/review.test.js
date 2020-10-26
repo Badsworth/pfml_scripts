@@ -117,10 +117,10 @@ describe("Work patterns", () => {
 });
 
 describe("Payment Information", () => {
-  describe("When payment method is debit", () => {
+  describe("When payment method is paper", () => {
     it("does not render 'Payment details' row", () => {
       const { wrapper } = renderWithAppLogic(Review, {
-        claimAttrs: new MockClaimBuilder().complete().debit().create(),
+        claimAttrs: new MockClaimBuilder().complete().check().create(),
         diveLevels,
       });
       expect(wrapper.find({ label: "Payment details" })).toHaveLength(0);

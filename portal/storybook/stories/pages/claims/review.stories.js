@@ -28,7 +28,7 @@ const mockClaims = {
     .bondingFosterCareLeaveReason()
     .create(),
   "Final (Deposit)": new MockClaimBuilder().complete().create(),
-  "Final (Debit)": new MockClaimBuilder().complete().debit().create(),
+  "Final (Paper check)": new MockClaimBuilder().complete().check().create(),
 };
 
 const { config, DefaultStory } = generateClaimPageStory("review", mockClaims);

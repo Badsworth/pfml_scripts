@@ -17,8 +17,8 @@ exports[`PaymentMethod renders the page 1`] = `
         Object {
           "checked": false,
           "hint": "Does not require a bank account",
-          "label": "MA PFML Prepaid Debit Card",
-          "value": "Debit",
+          "label": "Paper check",
+          "value": "Check",
         },
       ]
     }
@@ -29,6 +29,16 @@ exports[`PaymentMethod renders the page 1`] = `
     value=""
   />
   <ConditionalContent
+    clearField={[Function]}
+    fieldNamesClearedWhenHidden={
+      Array [
+        "payment_preferences[0].account_details.account_number",
+        "payment_preferences[0].account_details.account_type",
+        "payment_preferences[0].account_details.routing_number",
+      ]
+    }
+    getField={[Function]}
+    updateFields={[Function]}
     visible={false}
   >
     <Fieldset>
@@ -90,7 +100,7 @@ exports[`PaymentMethod renders the page 1`] = `
     <Alert
       state="info"
     >
-      You will receive the card in the mail at the address you listed as your mailing address.
+      You will receive your checks in the mail at the address you listed as your mailing address. The first round of paper checks will not be mailed until mid-January 2021.
     </Alert>
   </ConditionalContent>
 </QuestionPage>

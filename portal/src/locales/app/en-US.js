@@ -302,7 +302,7 @@ const shared = {
     "Your password must be at least 12 characters long and include at least 1 number, 1 symbol, and both uppercase and lowercase letters.",
   passwordLabel: "Password",
   paymentMethodAch: "Direct deposit",
-  paymentMethodDebit: "MA PFML Prepaid Debit Card",
+  paymentMethodCheck: "Paper check",
   previousLeaveEntryPrefix: "Previous leave",
   qualifyingReasonDetailsLabel: "What counts as a qualifying reason?",
   resendVerificationCodeLink: "Resend the code",
@@ -390,7 +390,7 @@ const pages = {
     choiceNo: "$t(shared.choiceNo)",
     choiceYes: "$t(shared.choiceYes)",
     hasMailingAddressHint:
-      "We may send notices to this address. If you choose to get your payments through a debit card, we will mail the card to this address.",
+      "We may send notices to this address. If you choose to get your payments through paper checks, we will mail the checks to this address.",
     hasMailingAddressLabel: "Do you get your mail at this address?",
     hint:
       "If you are part of an Address Confidentiality Program, please provide your substitute address.",
@@ -709,13 +709,12 @@ const pages = {
     achTypeChecking: "$t(shared.achTypeChecking)",
     achTypeLabel: "Account type",
     achTypeSavings: "$t(shared.achTypeSavings)",
+    checkDestinationInfo:
+      "You will receive your checks in the mail at the address you listed as your mailing address. The first round of paper checks will not be mailed until mid-January 2021.",
     choiceAch: "$t(shared.paymentMethodAch)",
-    choiceDebit: "$t(shared.paymentMethodDebit)",
+    choiceCheck: "$t(shared.paymentMethodCheck)",
     choiceHintAch: "Requires a bank account",
-    choiceHintDebit: "Does not require a bank account",
-    debitDestinationInfo:
-      "You will receive the card in the mail at the address you listed as your mailing address.",
-    debitSectionLabel: "Where should we send your debit card?",
+    choiceHintCheck: "Does not require a bank account",
     routingNumberHint:
       "This is the 9-digit number found on the lower left corner of a check.",
     routingNumberLabel: "Routing number",
@@ -845,7 +844,7 @@ const pages = {
     paymentAccountNumLabel: "Account number",
     paymentMethodLabel: "Payment method",
     paymentMethodValue_ach: "$t(shared.paymentMethodAch)",
-    paymentMethodValue_debit: "$t(shared.paymentMethodDebit)",
+    paymentMethodValue_check: "$t(shared.paymentMethodCheck)",
     paymentRoutingNumLabel: "Routing number",
     pregnancyOrRecentBirthLabel: "Medical leave for pregnancy or birth",
     pregnancyOrRecentBirth_no: "$t(shared.choiceNo)",
