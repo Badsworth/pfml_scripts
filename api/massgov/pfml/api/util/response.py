@@ -34,6 +34,8 @@ class IssueRule(str, Enum):
     conditional = "conditional"
     # Intermittent leave must be on its own application
     disallow_hybrid_intermittent_leave = "disallow_hybrid_intermittent_leave"
+    # Leave Period dates can't overlap
+    disallow_overlapping_leave_periods = "disallow_overlapping_leave_periods"
 
 
 # Partial list of types currently used manually

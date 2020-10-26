@@ -1724,7 +1724,6 @@ def test_application_post_submit_to_fineos(client, user, auth_token, test_db_ses
     application.employment_status_id = EmploymentStatus.UNEMPLOYED.employment_status_id
     application.residential_address = AddressFactory.create()
     application.work_pattern = WorkPatternFixedFactory.create()
-    application.continuous_leave_periods = [ContinuousLeavePeriodFactory.create()]
     application.has_continuous_leave_periods = True
 
     leave_period = ContinuousLeavePeriod(

@@ -360,6 +360,48 @@ def test_allow_hybrid_leave(test_db_session, initialize_factories_session):
     assert not issues
 
 
+def test_disallow_overlapping_hybrid_leave_dates(test_db_session, initialize_factories_session):
+    test_app = ApplicationFactory.create(
+        continuous_leave_periods=[
+            ContinuousLeavePeriodFactory.create(
+                start_date=date(2021, 3, 1), end_date=date(2021, 4, 1)
+            )
+        ],
+        reduced_schedule_leave_periods=[
+            ReducedScheduleLeavePeriodFactory.create(
+                # Make sure empty dates don't crash things
+                start_date=None,
+                end_date=None,
+            ),
+            ReducedScheduleLeavePeriodFactory.create(
+                start_date=date(2021, 3, 15), end_date=date(2021, 3, 20)
+            ),
+            ReducedScheduleLeavePeriodFactory.create(
+                start_date=date(2021, 3, 21), end_date=date(2021, 4, 1)
+            ),
+        ],
+    )
+
+    issues = get_leave_periods_issues(test_app)
+
+    # Only one disallow_overlapping_leave_periods is output even if there are several overlapping leave periods
+    disallow_overlapping_leave_period_issues = filter(
+        lambda issue: issue.rule is IssueRule.disallow_overlapping_leave_periods, issues
+    )
+    assert [
+        Issue(
+            message="Leave period ranges cannot overlap. Received 2021-03-01 – 2021-04-01 and 2021-03-15 – 2021-03-20.",
+            rule=IssueRule.disallow_overlapping_leave_periods,
+            type=IssueType.conflicting,
+        ),
+        Issue(
+            message="Leave period ranges cannot overlap. Received 2021-03-01 – 2021-04-01 and 2021-03-21 – 2021-04-01.",
+            rule=IssueRule.disallow_overlapping_leave_periods,
+            type=IssueType.conflicting,
+        ),
+    ] == list(disallow_overlapping_leave_period_issues)
+
+
 def test_disallow_hybrid_intermittent_continuous_leave(
     test_db_session, initialize_factories_session
 ):
@@ -385,13 +427,14 @@ def test_disallow_hybrid_intermittent_continuous_leave(
 
     issues = get_leave_periods_issues(test_app)
 
-    assert [
+    assert (
         Issue(
             message="Intermittent leave cannot be taken alongside Continuous or Reduced Schedule leave",
             rule=IssueRule.disallow_hybrid_intermittent_leave,
             type=IssueType.conflicting,
         )
-    ] == issues
+        in issues
+    )
 
 
 def test_disallow_hybrid_intermittent_reduced_leave(test_db_session, initialize_factories_session):
@@ -417,13 +460,14 @@ def test_disallow_hybrid_intermittent_reduced_leave(test_db_session, initialize_
 
     issues = get_leave_periods_issues(test_app)
 
-    assert [
+    assert (
         Issue(
             message="Intermittent leave cannot be taken alongside Continuous or Reduced Schedule leave",
             rule=IssueRule.disallow_hybrid_intermittent_leave,
             type=IssueType.conflicting,
         )
-    ] == issues
+        in issues
+    )
 
 
 def test_disallow_2020_leave_period_start_dates(test_db_session, initialize_factories_session):

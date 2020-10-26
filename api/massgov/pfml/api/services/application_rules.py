@@ -1,5 +1,6 @@
 from datetime import date
-from typing import Iterable, List, Optional
+from itertools import chain, combinations
+from typing import Iterable, List, Optional, Union
 
 from massgov.pfml.api.services.applications import (
     ContinuousLeavePeriod,
@@ -309,6 +310,7 @@ def get_leave_periods_issues(application: Application) -> List[Issue]:
     issues += get_continuous_leave_issues(application.continuous_leave_periods)
     issues += get_intermittent_leave_issues(application.intermittent_leave_periods)
     issues += get_reduced_schedule_leave_issues(application.reduced_schedule_leave_periods)
+    issues += get_leave_period_range_issues(application)
 
     if not any(
         [
@@ -335,6 +337,42 @@ def get_leave_periods_issues(application: Application) -> List[Issue]:
                 type=IssueType.conflicting,
             )
         )
+
+    return issues
+
+
+def get_leave_period_range_issues(application: Application) -> List[Issue]:
+    """Validate leave period date ranges against each other"""
+    issues = []
+
+    all_leave_periods: Iterable[
+        Union[ContinuousLeavePeriod, IntermittentLeavePeriod, ReducedScheduleLeavePeriod]
+    ] = chain(
+        application.continuous_leave_periods,
+        application.intermittent_leave_periods,
+        application.reduced_schedule_leave_periods,
+    )
+
+    leave_period_ranges = [
+        (leave_period.start_date, leave_period.end_date)
+        for leave_period in all_leave_periods
+        # Only store complete ranges
+        if leave_period.start_date and leave_period.end_date
+    ]
+    leave_period_ranges.sort()
+
+    # Prevent overlapping leave periods, which FINEOS will fail on
+    for ([start_date_1, end_date_1], [start_date_2, end_date_2]) in combinations(
+        leave_period_ranges, 2
+    ):
+        if start_date_2 <= end_date_1:
+            issues.append(
+                Issue(
+                    message=f"Leave period ranges cannot overlap. Received {start_date_1.isoformat()} – {end_date_1.isoformat()} and {start_date_2.isoformat()} – {end_date_2.isoformat()}.",
+                    rule=IssueRule.disallow_overlapping_leave_periods,
+                    type=IssueType.conflicting,
+                )
+            )
 
     return issues
 
