@@ -917,6 +917,10 @@ def import_wage_data(
         filing_period = wage_info["filing_period"]
         ssn = wage_info["employee_ssn"]
 
+        if account_key_to_employer_id_map.get(account_key, None) is None:
+            logger.warning("Attempted to create a wage row for unknown employer: %s", account_key)
+            continue
+
         employer_id = account_key_to_employer_id_map[account_key]
         existing_employee = dor_persistence_util.get_employees_by_ssn(db_session, [ssn])[0]
 
