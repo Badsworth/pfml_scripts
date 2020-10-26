@@ -68,6 +68,8 @@ const routes = {
   },
   external: {
     massgov: {
+      consentAgreement:
+        "https://www.mass.gov/info-details/massachusetts-department-of-family-and-medical-leave-informed-consent-agreement",
       dfml: "https://mass.gov/dfml",
       healthcareProviderForm: "https://www.mass.gov/hcp-form",
       identityProof:

@@ -925,10 +925,8 @@ const pages = {
     title: "$t(shared.claimsVerifyIdTitle)",
   },
   claimsStart: {
-    explanation1:
-      "We use this application to determine the leave time and benefit amount you will receive.",
-    explanation2:
-      "We need true answers to every question so that we can manage this program the way the law requires. Please confirm that you will answer as truthfully as you can.",
+    explanation:
+      "<p>We use this application to determine the leave time and benefit amount you will receive.</p><p>We need true answers to every question so that we can manage the program the way the law requires. You can read more about the requirement to answer truthfully at <mass-consent-agreement-link>Mass.gov</mass-consent-agreement-link>.</p><p>Please confirm that you will answer as truthfully as you can.</p>",
     submitApplicationButton: "I understand and agree",
     title: "Start your application",
     truthAttestation:

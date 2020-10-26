@@ -21,6 +21,10 @@ describe("Start", () => {
     expect(wrapper).toMatchSnapshot();
   });
 
+  it("renders descriptions with mass gov link", () => {
+    expect(wrapper.find("Trans").dive()).toMatchSnapshot();
+  });
+
   describe("when user clicks agree and submit", () => {
     it("calls submitApplication", () => {
       const { submitForm } = simulateEvents(wrapper);

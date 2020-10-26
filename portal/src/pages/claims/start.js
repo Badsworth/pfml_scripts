@@ -4,6 +4,8 @@ import Button from "../../components/Button";
 import PropTypes from "prop-types";
 import React from "react";
 import Title from "../../components/Title";
+import { Trans } from "react-i18next";
+import routes from "../../routes";
 import useThrottledHandler from "../../hooks/useThrottledHandler";
 import { useTranslation } from "../../locales/i18n";
 import withUser from "../../hoc/withUser";
@@ -21,8 +23,18 @@ export const Start = (props) => {
       <BackButton />
       <form onSubmit={handleSubmit} className="usa-form">
         <Title>{t("pages.claimsStart.title")}</Title>
-        <p>{t("pages.claimsStart.explanation1")}</p>
-        <p>{t("pages.claimsStart.explanation2")}</p>
+        <Trans
+          i18nKey="pages.claimsStart.explanation"
+          components={{
+            "mass-consent-agreement-link": (
+              <a
+                target="_blank"
+                rel="noopener"
+                href={routes.external.massgov.consentAgreement}
+              />
+            ),
+          }}
+        />
         <Alert className="measure-6" state="info" noIcon>
           {t("pages.claimsStart.truthAttestation")}
         </Alert>
