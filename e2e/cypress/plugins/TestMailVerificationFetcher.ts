@@ -1,4 +1,5 @@
 import fetch from "node-fetch";
+import AbortController from "abort-controller";
 
 export default class TestMailVerificationFetcher {
   apiKey: string;
@@ -15,8 +16,27 @@ export default class TestMailVerificationFetcher {
       apikey: this.apiKey,
       namespace: this.namespace,
       tag: this.getTagFromAddress(address),
+      livequery: "true",
     });
-    const response = await fetch(`${this.endpoint}?${params.toString()}`);
+    const controller = new AbortController();
+    // 50 second timeout.
+    const timeout = setTimeout(() => {
+      controller.abort();
+    }, 50000);
+
+    let response;
+    try {
+      response = await fetch(`${this.endpoint}?${params.toString()}`, {
+        signal: controller.signal,
+      });
+    } catch (err) {
+      if (err.name === "AbortError") {
+        throw new Error(`Request timed out`);
+      }
+      throw err;
+    } finally {
+      clearTimeout(timeout);
+    }
     const body = await response.json();
     if (body.result !== "success") {
       throw new Error(

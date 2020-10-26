@@ -61,6 +61,7 @@
   "dependencies": {
     "@flood/element": "^1.3.8",
     "@flood/element-cli": "^1.3.8",
+    "abort-controller": "^3.0.0",
     "amazon-cognito-identity-js": "^4.4.0",
     "cross-fetch": "^3.0.6",
     "csv-stringify": "^5.5.1",

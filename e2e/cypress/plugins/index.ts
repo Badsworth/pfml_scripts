@@ -10,8 +10,6 @@
 // ***********************************************************
 
 import { config as dotenv } from "dotenv";
-import retry from "p-retry";
-import delay from "delay";
 import faker from "faker";
 import fs from "fs";
 import webpackPreprocessor from "@cypress/webpack-preprocessor";
@@ -57,14 +55,7 @@ export default function (on: Cypress.PluginEvents): Cypress.ConfigOptions {
   // Declare tasks here.
   on("task", {
     getAuthVerification: (toAddress: string) => {
-      const attempt = () =>
-        createClientFromEnv().getVerificationCodeForUser(toAddress);
-      return retry(attempt, {
-        retries: 5,
-        onFailedAttempt: () => {
-          return delay(1000);
-        },
-      });
+      return createClientFromEnv().getVerificationCodeForUser(toAddress);
     },
     generateCredentials(): CypressStepThis["credentials"] {
       const { E2E_TESTMAIL_NAMESPACE } = process.env;
@@ -76,7 +67,7 @@ export default function (on: Cypress.PluginEvents): Cypress.ConfigOptions {
       const tag = faker.random.alphaNumeric(8);
       return {
         username: `${E2E_TESTMAIL_NAMESPACE}.${tag}@inbox.testmail.app`,
-        password: faker.internet.password(10) + faker.random.number(999),
+        password: generatePassword(),
       };
     },
 
@@ -145,6 +136,12 @@ export default function (on: Cypress.PluginEvents): Cypress.ConfigOptions {
   on("file:preprocessor", webpackPreprocessor(options));
 
   return configOverrides;
+}
+
+function generatePassword(): string {
+  return faker.fake(
+    "{{internet.password(12)}}{{random.number(999)}}{{finance.currencySymbol}}"
+  );
 }
 
 export function createClientFromEnv(): TestMailVerificationFetcher {
