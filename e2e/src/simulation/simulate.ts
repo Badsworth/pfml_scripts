@@ -3,13 +3,10 @@ import {
   SimulationGenerator,
   ClaimDocument,
   SimulationGeneratorOpts,
-  EmployeeRecord,
 } from "./types";
-import employers from "./fixtures/employerPool";
 import { ApplicationRequestBody, ApplicationLeaveDetails } from "../api";
 import generators from "./documents";
 import path from "path";
-import { RandomSSN } from "ssn";
 import fs from "fs";
 import { formatISO, subMonths, add } from "date-fns";
 
@@ -27,11 +24,11 @@ export function chance(
     return partialWheel.concat(slices);
   }, [] as number[]);
 
-  return async function (opts, employee) {
+  return async function (opts) {
     // Pick a slice from the wheel.
     const sliceIdx = Math.floor(Math.random() * wheel.length);
     const generator = config[wheel[sliceIdx]][1];
-    return generator(opts, employee);
+    return generator(opts);
   };
 }
 
@@ -59,20 +56,11 @@ export function scenario(
   name: string,
   config: ScenarioOpts
 ): SimulationGenerator {
-  return async (opts, existingUser?: EmployeeRecord) => {
+  return async (opts) => {
     const hasMassId =
       config.residence === "MA-proofed" || config.residence === "MA-unproofed";
 
-    const user: EmployeeRecord = {
-      first_name: existingUser?.first_name ?? faker.name.firstName(),
-      last_name: existingUser?.last_name ?? faker.name.lastName(),
-      tax_identifier:
-        existingUser?.tax_identifier ??
-        new RandomSSN().value().toFormattedString(),
-      employer_fein:
-        existingUser?.employer_fein ??
-        employers[Math.floor(Math.random() * employers.length)].fein,
-    };
+    const employee = opts.employeeFactory(!!config.financiallyIneligible);
 
     const address = {
       city: faker.address.city(),
@@ -85,10 +73,10 @@ export function scenario(
       // These fields are brought directly over from the employee record.
       employment_status: "Employed",
       occupation: "Administrative",
-      first_name: user.first_name,
-      last_name: user.last_name,
-      tax_identifier: user.tax_identifier,
-      employer_fein: user.employer_fein,
+      first_name: employee.first_name,
+      last_name: employee.last_name,
+      tax_identifier: employee.tax_identifier,
+      employer_fein: employee.employer_fein,
       date_of_birth: fmt(generateBirthDate()),
       has_state_id: hasMassId,
       mass_id: hasMassId ? generateMassIDString() : null,
@@ -101,7 +89,7 @@ export function scenario(
           payment_method: "Check",
           is_default: true,
           cheque_details: {
-            name_to_print_on_check: `${user.first_name} ${user.last_name}`,
+            name_to_print_on_check: `${employee.first_name} ${employee.last_name}`,
           },
         },
       ],

@@ -123,20 +123,25 @@ async function click(
 }
 
 async function clickTab(page: puppeteer.Page, label: string) {
-  await page.waitForSelector("div.TabOn");
+  await page.waitForSelector("td.TabOn");
   const tab = await contains(
     page,
-    ".TabStrip div.TabOn, .TabStrip div.TabOff",
+    ".TabStrip td.TabOn, .TabStrip td.TabOff",
     label
   );
+  // Remove the TabOn class before we start so we can detect when it has been re-added.
+  await tab.evaluate((tab) => {
+    tab.classList.remove("TabOn");
+  });
 
-  // Click the tab, then wait for the tab to have the active class. Once that has been added,
-  // we're reasonably sure processing is done.
+  await tab.click();
   await Promise.all([
-    tab.click(),
+    // Wait for the page to stabilize.
+    waitForStablePage(page),
+    // Wait for the tab to have the `TabOn` class added as well.
     page.waitForFunction(
       (label) => {
-        const tabs = document.querySelectorAll(".TabStrip div.TabOn");
+        const tabs = document.querySelectorAll(".TabStrip td.TabOn");
         return (
           Array.prototype.slice
             .call(tabs)
@@ -146,6 +151,22 @@ async function clickTab(page: puppeteer.Page, label: string) {
       undefined,
       [label]
     ),
+  ]);
+}
+
+async function waitForStablePage(page: puppeteer.Page) {
+  // Waits for all known Fineos ajax stuff to complete.
+  return Promise.all([
+    page.waitForFunction(() => {
+      // @ts-ignore - Ignore use of Fineos window properties.
+      const requests = Object.values(window.axGetAjaxQueueManager().requests);
+      // @ts-ignore - Ignore use of Fineos window properties.
+      return requests.filter((r) => r.state === "resolved").length === 0;
+    }),
+    // @ts-ignore - Ignore use of Fineos window properties.
+    page.waitForFunction(() => window.submitted_99 === 0),
+    // @ts-ignore - Ignore use of Fineos window properties.
+    page.waitForFunction(() => !window.wl_mainButtons_processing),
   ]);
 }
 

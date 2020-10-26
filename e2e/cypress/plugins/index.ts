@@ -121,17 +121,19 @@ export default function (on: Cypress.PluginEvents): Cypress.ConfigOptions {
       if (!(claimType in scenarioFunctions)) {
         throw new Error(`Invalid claim type: ${claimType}`);
       }
-      const opts = {
-        documentDirectory: "/tmp",
-      };
+
       // Get the employee record here (read JSON, map to identifier).
       const employee = await getEmployee(employeeType);
-
       if (!employee) {
         throw new Error("Employee Type Not Found!");
       }
 
-      return scenarioFunctions[claimType](opts, employee);
+      const opts = {
+        documentDirectory: "/tmp",
+        employeeFactory: () => employee,
+      };
+
+      return scenarioFunctions[claimType](opts);
     },
   });
 

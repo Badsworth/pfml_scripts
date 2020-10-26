@@ -12,7 +12,8 @@ import createClaimIndexStream from "../claimIndex";
 import { promisify } from "util";
 import { pipeline } from "stream";
 import { SystemWideArgs } from "../../cli";
-import { getEmployee } from "../../utils";
+import { random, fromClaimsFactory } from "../EmployeeFactory";
+import { EmployeeFactory, SimulationClaim } from "@/simulation/types";
 
 // Create a promised version of the pipeline function.
 const pipelineP = promisify(pipeline);
@@ -21,7 +22,7 @@ type GenerateArgs = {
   filename: string;
   count: string;
   directory: string;
-  employee?: string;
+  employeesFrom?: string;
 } & SystemWideArgs;
 
 const cmd: CommandModule<SystemWideArgs, GenerateArgs> = {
@@ -51,10 +52,10 @@ const cmd: CommandModule<SystemWideArgs, GenerateArgs> = {
       normalize: true,
       alias: "d",
     },
-    employee: {
+    employeesFrom: {
       type: "string",
       description:
-        "The identifier of an employee to generate claims with (from employee.json)",
+        "The path to a previous claims file to use as an employee pool",
       requiresArg: true,
     },
   },
@@ -64,9 +65,12 @@ const cmd: CommandModule<SystemWideArgs, GenerateArgs> = {
       paths: [process.cwd()],
     });
     const { default: generator } = await import(path);
-    const employee = args.employee
-      ? await getEmployee(args.employee)
-      : undefined;
+    let employeeFactory: EmployeeFactory = random;
+    if (args.employeesFrom) {
+      employeeFactory = fromClaimsFactory(
+        await readClaimsFile(args.employeesFrom)
+      );
+    }
 
     const storage = new SimulationStorage(args.directory);
     await fs.promises.rmdir(storage.directory, { recursive: true });
@@ -75,10 +79,10 @@ const cmd: CommandModule<SystemWideArgs, GenerateArgs> = {
     const limit = parseInt(args.count);
     for (let i = 0; i < limit; i++) {
       claims.push(
-        await generator(
-          { documentDirectory: storage.documentDirectory },
-          employee
-        )
+        await generator({
+          documentDirectory: storage.documentDirectory,
+          employeeFactory,
+        })
       );
     }
 
@@ -125,6 +129,11 @@ const cmd: CommandModule<SystemWideArgs, GenerateArgs> = {
     );
   },
 };
+
+async function readClaimsFile(filename: string): Promise<SimulationClaim[]> {
+  const contents = await fs.promises.readFile(filename, "utf-8");
+  return JSON.parse(contents);
+}
 
 const { command, describe, builder, handler } = cmd;
 

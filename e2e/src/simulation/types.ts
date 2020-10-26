@@ -40,7 +40,14 @@ export type ClaimDocument = {
  */
 export type SimulationGeneratorOpts = {
   documentDirectory: string;
+  employeeFactory: EmployeeFactory;
 };
+
+// EmployeeSource is the interface for getting or generating an employee.
+export interface EmployeeFactory {
+  (financiallyIneligible: boolean): EmployeeRecord;
+}
+
 // ClaimUser is a partial of a pre-created user we can pass to scenario generators.
 export type EmployeeRecord = Pick<
   ApplicationRequestBody,
@@ -49,7 +56,5 @@ export type EmployeeRecord = Pick<
 export interface SimulationGenerator {
   // The generator returns a promise of a SimulationClaim so that it can
   // do asynchronous operations, like writing documents to the filesystem.
-  (opts: SimulationGeneratorOpts, existingUser?: EmployeeRecord): Promise<
-    SimulationClaim
-  >;
+  (opts: SimulationGeneratorOpts): Promise<SimulationClaim>;
 }

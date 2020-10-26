@@ -1,15 +1,21 @@
 import { describe, it, expect, jest } from "@jest/globals";
 import { scenario, chance, ScenarioOpts } from "../../src/simulation/simulate";
-import employerPool from "../../src/simulation/fixtures/employerPool";
 import type { SimulationClaim } from "@/simulation/types";
 import generators from "../../src/simulation/documents";
-import { ParseSSN } from "ssn";
 import fs from "fs";
 
 jest.mock("../../src/simulation/documents");
 
 const opts = {
   documentDirectory: "/tmp",
+  employeeFactory: jest.fn(() => {
+    return {
+      first_name: "John",
+      last_name: "Doe",
+      employer_fein: "00-000000",
+      tax_identifier: "000-00-0000",
+    };
+  }),
 };
 
 const medical: ScenarioOpts = {
@@ -62,15 +68,11 @@ describe("Simulation Generator", () => {
     );
   });
 
-  it("Should generate a valid SSN", async () => {
-    const claim = await scenario("TEST", medical)(opts);
-    new ParseSSN((claim.claim.tax_identifier ?? "").replace(/-/g, ""));
-  });
-
-  it("Should pull an employer from the pool", async () => {
-    const employerFeins = employerPool.map((e) => e.fein);
-    const claim = await scenario("TEST", medical)(opts);
-    expect(employerFeins).toContain(claim.claim.employer_fein);
+  it("Should pass arguments to the employee factory", async () => {
+    await scenario("TEST", { ...medical })(opts);
+    expect(opts.employeeFactory).toHaveBeenCalledWith(false);
+    await scenario("TEST", { ...medical, financiallyIneligible: true })(opts);
+    expect(opts.employeeFactory).toHaveBeenCalledWith(true);
   });
 
   it("Should populate the mass_id property for mass proofed claims", async () => {
