@@ -25,17 +25,3 @@ export type LeavePeriods = Pick<
   | "continuous_leave_periods"
   | "intermittent_leave_periods"
 >;
-
-// Used for Cucumber parameters.
-export const ScenarioClaimTestTypes = [
-  "HAP1",
-  "HAP2",
-  "HAP3",
-  "MHAP4",
-  "MHAP5",
-  "GBR1",
-  "UNH2",
-  "UNH3",
-  "GBM1",
-] as const;
-export type TestType = typeof ScenarioClaimTestTypes[number];

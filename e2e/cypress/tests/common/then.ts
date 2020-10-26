@@ -1,9 +1,7 @@
 import { portal } from "./actions";
 import { Then } from "cypress-cucumber-preprocessor/steps";
-import { CypressStepThis, TestType } from "@/types";
-import { fineos, scenarios } from "./actions";
-
-const scenarioFunctions: Record<TestType, () => void> = scenarios;
+import { CypressStepThis } from "@/types";
+import { fineos } from "./actions";
 
 Then("I should be logged in", () => portal.assertLoggedIn());
 
@@ -264,12 +262,6 @@ Then("I add {string} as reason in notes", function (reason: string): void {
 
 Then("I should confirm claim has been completed", function (): void {
   fineos.claimCompletion();
-});
-
-Then("I should adjudicate the {string} claim properly in Fineos", function (
-  scenario: string
-): void {
-  scenarioFunctions[scenario as TestType]();
 });
 
 Then("I should transfer task to DMFL due to {string}", function (
