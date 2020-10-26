@@ -139,6 +139,9 @@ const generateHCP: DocumentGenerator = (
     claim.leave_details?.reduced_schedule_leave_periods?.[0]?.start_date &&
     claim.leave_details?.reduced_schedule_leave_periods?.[0]?.end_date
   ) {
+    console.warn(
+      "Reduced leave HCP is not available. HCP will always describe continuous leave claim."
+    );
     start_date = parseISO(
       claim.leave_details.reduced_schedule_leave_periods[0].start_date
     );
@@ -149,6 +152,9 @@ const generateHCP: DocumentGenerator = (
     claim.leave_details?.intermittent_leave_periods?.[0]?.start_date &&
     claim.leave_details?.intermittent_leave_periods?.[0]?.end_date
   ) {
+    console.warn(
+      "Intermittent leave HCP is not available. HCP will always describe continuous leave claim."
+    );
     start_date = parseISO(
       claim.leave_details.intermittent_leave_periods[0].start_date
     );
@@ -156,9 +162,7 @@ const generateHCP: DocumentGenerator = (
       claim.leave_details.intermittent_leave_periods[0].end_date
     );
   }
-  console.warn(
-    "Reduced and intermittent HCP are not available. HCP will always describe continuous leave claim."
-  );
+
   data["untitled21"] = format(start_date, "MM");
   data["untitled22"] = format(start_date, "dd");
   data["untitled23"] = format(start_date, "yyyy");

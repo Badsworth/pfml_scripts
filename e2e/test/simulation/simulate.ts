@@ -207,7 +207,7 @@ describe("Simulation Generator", () => {
   it("Should have an application start date past 01/01/2021", async () => {
     const { claim } = await scenario("TEST", medical)(opts);
     const [start] = extractLeavePeriod(claim);
-    expect(start.getTime()).toBeGreaterThan(new Date(2021, 0).getTime());
+    expect(start.getTime()).toBeGreaterThanOrEqual(new Date(2021, 0).getTime());
   });
 
   it("Should have an application end date greater/later than start date", async () => {
