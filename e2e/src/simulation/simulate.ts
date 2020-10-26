@@ -11,6 +11,7 @@ import {
   ContinuousLeavePeriods,
   ReducedScheduleLeavePeriods,
   IntermittentLeavePeriods,
+  WorkPattern,
 } from "../api";
 import generators from "./documents";
 import path from "path";
@@ -94,6 +95,7 @@ export function scenario(
       mailing_address: address,
       residential_address: address,
       hours_worked_per_week: 40,
+      work_pattern: generateWorkPattern(),
       payment_preferences: [
         {
           payment_method: "Check",
@@ -177,6 +179,27 @@ async function generateDocuments(
     };
   });
   return Promise.all(promises);
+}
+
+function generateWorkPattern(): WorkPattern {
+  const days = [
+    "Sunday" as const,
+    "Monday" as const,
+    "Tuesday" as const,
+    "Wednesday" as const,
+    "Thursday" as const,
+    "Friday" as const,
+    "Saturday" as const,
+  ];
+  return {
+    work_pattern_type: "Fixed",
+    work_week_starts: "Monday",
+    work_pattern_days: days.map((day) => ({
+      day_of_week: day,
+      minutes: 6 * 60,
+      week_number: 1,
+    })),
+  };
 }
 
 function generateLeavePeriods(

@@ -7,7 +7,7 @@
 /* eslint-disable */
 
 export const defaults: RequestOptions = {
-    baseUrl: "/v1"
+    baseUrl: "/v1",
 };
 export const servers = {
     developmentServer: "/v1"
@@ -220,7 +220,7 @@ export class HttpError extends Error {
     status: number;
     statusText: string;
     headers: Record<string, string>;
-    data?: Record<string, unknown>;
+    data?: object;
     constructor(status: number, statusText: string, url: string, headers: Headers, text?: string) {
         super(`${url} - ${statusText} (${status})`);
         this.status = status;
@@ -317,6 +317,17 @@ export interface EmployerResponse {
 export interface GETEmployersByEmployerIdResponse extends SuccessfulResponse {
     data?: EmployerResponse;
 }
+export interface ClaimDocumentResponse {
+    created_at: any;
+    document_type: "Passport" | "Driver's License Mass" | "Driver's License Other State" | "Identification Proof" | "State Managed Paid Leave Confirmation";
+    content_type: string;
+    fineos_document_id: string;
+    name: string;
+    description: string;
+}
+export interface GETEmployersClaimsByFineosAbsenceIdDocumentsResponse extends SuccessfulResponse {
+    data?: ClaimDocumentResponse;
+}
 export interface ClaimReviewResponse {
     claim_id: string;
 }
@@ -397,9 +408,12 @@ export interface IntermittentLeavePeriods {
     duration?: number | null;
     duration_basis?: ("Minutes" | "Hours" | "Days") | null;
 }
-export interface ApplicationLeaveDetails extends LeavePeriods{
+export interface ApplicationLeaveDetails {
     reason?: ("Pregnancy/Maternity" | "Child Bonding" | "Serious Health Condition - Employee") | null;
     reason_qualifier?: ("Newborn" | "Adoption" | "Foster Care") | null;
+    reduced_schedule_leave_periods?: ReducedScheduleLeavePeriods[];
+    continuous_leave_periods?: ContinuousLeavePeriods[];
+    intermittent_leave_periods?: IntermittentLeavePeriods[];
     relationship_to_caregiver?: ("Parent" | "Child" | "Grandparent" | "Grandchild" | "Other Family Member" | "Service Member" | "Inlaw" | "Sibling" | "Other") | null;
     relationship_qualifier?: ("Adoptive" | "Biological" | "Foster" | "Custodial Parent" | "Legal Guardian" | "Step Parent") | null;
     pregnant_or_recent_birth?: boolean | null;
@@ -408,12 +422,6 @@ export interface ApplicationLeaveDetails extends LeavePeriods{
     employer_notified?: boolean | null;
     employer_notification_date?: Date | null;
     employer_notification_method?: ("In Writing" | "In Person" | "By Telephone" | "Other") | null;
-}
-
-export interface LeavePeriods {
-    reduced_schedule_leave_periods?: ReducedScheduleLeavePeriods[];
-    continuous_leave_periods?: ContinuousLeavePeriods[];
-    intermittent_leave_periods?: IntermittentLeavePeriods[];
 }
 export type RoutingNbr = string;
 export interface ApplicationPaymentAccountDetails {
@@ -437,7 +445,6 @@ export type DayOfWeek = "Sunday" | "Monday" | "Tuesday" | "Wednesday" | "Thursda
 export interface WorkPatternDay {
     day_of_week?: DayOfWeek;
     week_number?: number;
-    hours?: number | null;
     minutes?: number | null;
 }
 export interface WorkPattern {
@@ -688,7 +695,17 @@ export async function getEmployersByEmployerId({ employerId }: {
     });
 }
 /**
- * Retrieve FINEOS absence data for a specified absence ID
+ * Retrieve a list of FINEOS documents for a specified absence ID
+ */
+export async function getEmployersClaimsByFineosAbsenceIdDocuments({ fineosAbsenceId }: {
+    fineosAbsenceId: string;
+}, options?: RequestOptions): Promise<ApiResponse<GETEmployersClaimsByFineosAbsenceIdDocumentsResponse>> {
+    return await http.fetchJson(`/employers/claims/${fineosAbsenceId}/documents`, {
+        ...options
+    });
+}
+/**
+ * Retrieve FINEOS claim review data for a specified absence ID
  */
 export async function getEmployersClaimsByFineosAbsenceIdReview({ fineosAbsenceId }: {
     fineosAbsenceId: string;

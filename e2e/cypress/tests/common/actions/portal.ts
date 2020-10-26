@@ -3,6 +3,7 @@ import {
   ApplicationResponse,
   WorkPattern,
   IntermittentLeavePeriods,
+  WorkPatternDay,
 } from "@/api";
 import { lookup } from "../util";
 import { inFieldset } from "../actions";
@@ -354,17 +355,44 @@ export function enterEmployerInfo(application: ApplicationRequestBody): void {
       });
     }
     cy.contains("button", "Save and continue").click();
-    describeWorkSchedule();
+    describeWorkSchedule(application);
   }
 }
 
-export function describeWorkSchedule(): void {
-  const workSchedule: WorkPattern["work_pattern_type"] = "Fixed";
+export function describeWorkSchedule(
+  application: ApplicationRequestBody
+): void {
+  const workScheduleType: WorkPattern["work_pattern_type"] = "Fixed";
+
   cy.contains("fieldset", "How would you describe your work schedule?").within(
     () => {
-      cy.get(`input[value = ${workSchedule}]`).check({ force: true });
+      cy.get(`input[value = ${workScheduleType}]`).check({ force: true });
     }
   );
+  cy.contains("button", "Save and continue").click();
+
+  if (!application?.work_pattern?.work_pattern_days) {
+    throw new Error("Work pattern days must be specified");
+  }
+  const workSchedule: WorkPatternDay[] =
+    application?.work_pattern?.work_pattern_days;
+
+  for (const workDay of workSchedule) {
+    if (!workDay?.minutes || !workDay?.day_of_week) {
+      throw new Error("Minutes and day of week must be specified");
+    }
+    if (workDay.minutes % 15 !== 0) {
+      throw new Error("Minutes must be multiple of 15");
+    }
+    const hours = Math.floor(workDay.minutes / 60);
+    const minutes = workDay.minutes % 60;
+    cy.contains("fieldset", workDay.day_of_week).within(() => {
+      cy.labelled("Hours").type(hours.toString());
+      cy.labelled("minutes").select(minutes.toString(), {
+        force: true,
+      });
+    });
+  }
   cy.contains("button", "Save and continue").click();
 }
 
@@ -420,7 +448,7 @@ export function addPaymentInfo(application: ApplicationRequestBody): void {
     () => {
       const paymentInfoLabel = {
         ACH: "Direct deposit",
-        Check: "MA PFML Prepaid Debit Card",
+        Check: "Paper check",
         "Gift Card": "Gift Card",
       };
       cy.contains(

@@ -1,4 +1,4 @@
-import { LeavePeriods } from "@/api";
+import { LeavePeriods } from "./types";
 import { parseISO } from "date-fns";
 
 export function extractLeavePeriod(
