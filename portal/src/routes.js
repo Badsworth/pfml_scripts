@@ -64,6 +64,7 @@ const routes = {
     review: "/employers/claims/review",
     status: "/employers/claims/status",
     success: "/employers/claims/success",
+    verification: "/employers/claims/verification",
   },
   external: {
     massgov: {

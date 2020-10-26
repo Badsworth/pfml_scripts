@@ -15,10 +15,15 @@ export default {
         SEND_CODE: routes.auth.resetPassword,
       },
     },
-    [routes.employers.success]: {},
     [routes.employers.review]: {
       on: {
         CONTINUE: routes.employers.success,
+      },
+    },
+    [routes.employers.success]: {},
+    [routes.employers.verification]: {
+      on: {
+        CONTINUE: routes.employers.review,
       },
     },
   },

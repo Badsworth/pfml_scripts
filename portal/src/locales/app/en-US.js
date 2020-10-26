@@ -1172,6 +1172,16 @@ const pages = {
       "We’ll begin processing this application and your employee should hear from us within 14 calendar days.",
     title: "Thanks for reviewing the application",
   },
+  employersClaimsVerification: {
+    agreementBody:
+      "I certify under penalty of perjury that the above information is true and correct. I understand that I need to give true answers to all questions in order to fulfill my responsibilities as a Massachussetts employer.",
+    instructions:
+      "We need true answers to every question so that we can manage this program the way the law requires. Please confirm that you will answer as truthfully as you can.",
+    instructionsDueDate: "Review and respond by: <strong>{{date}}</strong>",
+    submitButton: "Agree and submit",
+    title: "Verification",
+    truthAttestationHeading: "Confirm and submit",
+  },
   employersFinishAccountSetup: {
     lead:
       "Please verify your email address. If an account exists for the email you provide, you’ll receive a 6-digit verification code. After that, you’ll be prompted to create a new password.",
