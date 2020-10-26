@@ -2,13 +2,24 @@
  * @file Custom Error classes. Useful as a way to see all potential errors that our system may throw/catch
  */
 
+class BasePortalError extends Error {
+  constructor(...params) {
+    super(...params);
+
+    // Maintains proper stack trace for where our error was thrown in modern browsers
+    if (Error.captureStackTrace) {
+      Error.captureStackTrace(this, BasePortalError);
+    }
+  }
+}
+
 /**
  * A fetch request failed due to a network error. The error wasn't the fault of the user,
  * and an issue was encountered while setting up or sending a request, or parsing the response.
  * Examples of a NetworkError could be the user's device lost internet connection, a CORS issue,
  * or a malformed request.
  */
-export class NetworkError extends Error {
+export class NetworkError extends BasePortalError {
   constructor(...params) {
     super(...params);
     this.name = "NetworkError";
@@ -18,7 +29,7 @@ export class NetworkError extends Error {
 /**
  * A fetch request failed due to a 404 error
  */
-export class NotFoundError extends Error {
+export class NotFoundError extends BasePortalError {
   constructor(...params) {
     super(...params);
     this.name = "NotFoundError";
@@ -29,7 +40,7 @@ export class NotFoundError extends Error {
  * A transition between the current route state to the next route failed most likely because
  * a CONTINUE transition was not defined for the current route.
  */
-export class RouteTransitionError extends Error {
+export class RouteTransitionError extends BasePortalError {
   constructor(...params) {
     super(...params);
     this.name = "RouteTransitionError";
@@ -39,7 +50,7 @@ export class RouteTransitionError extends Error {
 /**
  * users/current api resource did not return a user in its response
  */
-export class UserNotReceivedError extends Error {
+export class UserNotReceivedError extends BasePortalError {
   constructor(...params) {
     super(...params);
     this.name = "UserNotReceivedError";
@@ -49,7 +60,7 @@ export class UserNotReceivedError extends Error {
 /**
  * There was an error when attempting to a request to the users/current api resource
  */
-export class UserNotFoundError extends Error {
+export class UserNotFoundError extends BasePortalError {
   constructor(...params) {
     super(...params);
     this.name = "UserNotFoundError";
@@ -59,11 +70,10 @@ export class UserNotFoundError extends Error {
 /**
  * An API response returned a status code greater than 400
  */
-export class ApiRequestError extends Error {
+export class ApiRequestError extends BasePortalError {
   constructor(...params) {
     super(...params);
     this.name = "ApiRequestError";
-    this.code = params.code;
   }
 }
 
@@ -112,7 +122,7 @@ export class RequestTimeoutError extends ApiRequestError {
 /**
  * A request to an Application's `/documents` endpoint failed
  */
-export class DocumentsRequestError extends Error {
+export class DocumentsRequestError extends BasePortalError {
   constructor(application_id, ...params) {
     super(...params);
     this.application_id = application_id;
@@ -143,7 +153,7 @@ export class UnauthorizedError extends ApiRequestError {
 /**
  * A request wasn't completed due to one or more validation issues
  */
-export class ValidationError extends Error {
+export class ValidationError extends BasePortalError {
   /**
    * @param {{ field: string, message: string, rule: string, type: string }[]} issues - List of validation issues returned by the API
    * @param {string} i18nPrefix - Used in the i18n message keys, prefixed to the field name (e.g. `prefix.field_name`)

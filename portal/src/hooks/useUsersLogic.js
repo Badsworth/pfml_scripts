@@ -65,7 +65,7 @@ const useUsersLogic = ({ appErrorsLogic, isLoggedIn, portalFlow }) => {
         setUser(user);
         appErrorsLogic.clearErrors();
       } else {
-        throw new UserNotReceivedError();
+        throw new UserNotReceivedError("User not received in loadUser");
       }
     } catch (error) {
       // Show user not found error unless it's a network error

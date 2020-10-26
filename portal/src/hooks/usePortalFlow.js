@@ -49,7 +49,7 @@ const usePortalFlow = () => {
     const nextRoutingMachine = routingMachine.withContext(context);
     const nextPageRoute = nextRoutingMachine.transition(pathname, event);
     if (!nextPageRoute) {
-      throw new RouteTransitionError();
+      throw new RouteTransitionError(`Next page not found for: ${event}`);
     }
 
     goTo(nextPageRoute.value, params);

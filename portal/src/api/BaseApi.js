@@ -198,22 +198,24 @@ function createRequestUrl(...paths) {
 }
 
 const throwError = ({ status }) => {
+  const message = `${status} status code received`;
+
   switch (status) {
     case 400:
-      throw new BadRequestError();
+      throw new BadRequestError(message);
     case 401:
-      throw new UnauthorizedError();
+      throw new UnauthorizedError(message);
     case 403:
-      throw new ForbiddenError();
+      throw new ForbiddenError(message);
     case 404:
-      throw new NotFoundError();
+      throw new NotFoundError(message);
     case 408:
-      throw new RequestTimeoutError();
+      throw new RequestTimeoutError(message);
     case 500:
-      throw new InternalServerError();
+      throw new InternalServerError(message);
     case 503:
-      throw new ServiceUnavailableError();
+      throw new ServiceUnavailableError(message);
     default:
-      throw new ApiRequestError();
+      throw new ApiRequestError(message);
   }
 };

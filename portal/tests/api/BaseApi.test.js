@@ -284,9 +284,9 @@ describe("BaseApi", () => {
       [501, ApiRequestError],
     ];
 
-    errorCodes.forEach(([code, errorClass]) => {
+    errorCodes.forEach(([code, CustomError]) => {
       describe(`due to a ${code} status`, () => {
-        it(`throws ${errorClass.name}`, async () => {
+        it(`throws ${CustomError.name}`, async () => {
           expect.assertions();
 
           global.fetch = jest.fn().mockResolvedValue({
@@ -295,8 +295,10 @@ describe("BaseApi", () => {
             json: jest.fn().mockResolvedValue({}),
           });
 
-          await expect(testsApi.request("GET", "users")).rejects.toThrow(
-            errorClass
+          const request = async () => await testsApi.request("GET", "users");
+
+          await expect(request).rejects.toThrow(
+            new CustomError(`${code} status code received`)
           );
         });
       });
