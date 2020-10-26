@@ -604,14 +604,14 @@ def test_application_patch_child_birth_date(client, user, auth_token, test_db_se
     response = client.patch(
         "/v1/applications/{}".format(application.application_id),
         headers={"Authorization": f"Bearer {auth_token}"},
-        json={"leave_details": {"child_birth_date": "2020-09-21"}},
+        json={"leave_details": {"child_birth_date": "2021-09-21"}},
     )
 
     assert response.status_code == 200
 
     response_body = response.get_json()
     child_dob = response_body.get("data").get("leave_details").get("child_birth_date")
-    assert child_dob == "2020-09-21"
+    assert child_dob == "2021-09-21"
 
 
 def test_application_patch_child_placement_date(client, user, auth_token, test_db_session):
@@ -620,14 +620,14 @@ def test_application_patch_child_placement_date(client, user, auth_token, test_d
     response = client.patch(
         "/v1/applications/{}".format(application.application_id),
         headers={"Authorization": f"Bearer {auth_token}"},
-        json={"leave_details": {"child_placement_date": "2020-05-13"}},
+        json={"leave_details": {"child_placement_date": "2021-05-13"}},
     )
 
     assert response.status_code == 200
 
     response_body = response.get_json()
     child_dob = response_body.get("data").get("leave_details").get("child_placement_date")
-    assert child_dob == "2020-05-13"
+    assert child_dob == "2021-05-13"
 
 
 def test_application_patch_state_id_fields(client, user, auth_token, test_db_session):
@@ -754,7 +754,7 @@ def test_application_patch_add_leave_period(client, user, auth_token):
             "has_continuous_leave_periods": True,
             "has_intermittent_leave_periods": False,
             "has_reduced_schedule_leave_periods": False,
-            "leave_details": {"continuous_leave_periods": [{"start_date": "2020-06-11"}]},
+            "leave_details": {"continuous_leave_periods": [{"start_date": "2021-06-11"}]},
         },
     )
 
@@ -775,14 +775,14 @@ def test_application_patch_add_leave_period(client, user, auth_token):
 
     updated_leave_period = updated_leave_periods[0]
     assert updated_leave_period["leave_period_id"]
-    assert updated_leave_period["start_date"] == "2020-06-11"
+    assert updated_leave_period["start_date"] == "2021-06-11"
 
 
 def test_application_patch_update_leave_period(client, user, auth_token, test_db_session):
     application = ApplicationFactory.create(user=user)
 
     leave_period = ContinuousLeavePeriod(
-        start_date=date(2020, 6, 11), application_id=application.application_id
+        start_date=date(2021, 6, 11), application_id=application.application_id
     )
     test_db_session.add(leave_period)
     test_db_session.commit()
@@ -793,7 +793,7 @@ def test_application_patch_update_leave_period(client, user, auth_token, test_db
         json={
             "leave_details": {
                 "continuous_leave_periods": [
-                    {"leave_period_id": leave_period.leave_period_id, "start_date": "2020-06-12"}
+                    {"leave_period_id": leave_period.leave_period_id, "start_date": "2021-06-12"}
                 ]
             }
         },
@@ -811,7 +811,7 @@ def test_application_patch_update_leave_period(client, user, auth_token, test_db
 
     updated_leave_period = updated_leave_periods[0]
     assert updated_leave_period["leave_period_id"]
-    assert updated_leave_period["start_date"] == "2020-06-12"
+    assert updated_leave_period["start_date"] == "2021-06-12"
 
 
 def test_application_patch_update_leave_period_belonging_to_other_application_blocked(
@@ -821,7 +821,7 @@ def test_application_patch_update_leave_period_belonging_to_other_application_bl
     application_2 = ApplicationFactory.create(user=user)
 
     leave_period = ContinuousLeavePeriod(
-        start_date=date(2020, 6, 11), application_id=application_1.application_id
+        start_date=date(2021, 6, 11), application_id=application_1.application_id
     )
     test_db_session.add(leave_period)
     test_db_session.commit()
@@ -832,7 +832,7 @@ def test_application_patch_update_leave_period_belonging_to_other_application_bl
         json={
             "leave_details": {
                 "continuous_leave_periods": [
-                    {"leave_period_id": leave_period.leave_period_id, "start_date": "2020-06-12"}
+                    {"leave_period_id": leave_period.leave_period_id, "start_date": "2021-06-12"}
                 ]
             }
         },
@@ -843,7 +843,7 @@ def test_application_patch_update_leave_period_belonging_to_other_application_bl
     # assert existing leave period has not changed
     test_db_session.refresh(leave_period)
     assert leave_period.application_id == application_1.application_id
-    assert leave_period.start_date == date(2020, 6, 11)
+    assert leave_period.start_date == date(2021, 6, 11)
 
     # assert other application does not have the leave period
     response = client.get(
@@ -1867,6 +1867,7 @@ def test_application_post_submit_to_fineos_intermittent_leave(
     application.employer_notification_date = date(2021, 1, 7)
     application.employment_status_id = EmploymentStatus.UNEMPLOYED.employment_status_id
     application.residential_address = AddressFactory.create()
+    application.work_pattern = WorkPatternFixedFactory.create()
 
     leave_period = IntermittentLeavePeriodFactory.create(
         application_id=application.application_id,
@@ -1930,6 +1931,7 @@ def test_application_post_submit_to_fineos_reduced_schedule_leave(
     application.employer_notification_date = date(2021, 1, 7)
     application.employment_status_id = EmploymentStatus.UNEMPLOYED.employment_status_id
     application.residential_address = AddressFactory.create()
+    application.work_pattern = WorkPatternFixedFactory.create()
 
     leave_period = ReducedScheduleLeavePeriodFactory.create(
         application_id=application.application_id,

@@ -1,3 +1,4 @@
+from datetime import date
 from typing import Iterable, List, Optional
 
 from massgov.pfml.api.services.applications import (
@@ -14,6 +15,8 @@ from massgov.pfml.db.models.applications import (
     WorkPatternType,
 )
 from massgov.pfml.db.models.employees import PaymentType
+
+PFML_PROGRAM_LAUNCH_DATE = date(2021, 1, 1)
 
 
 def get_application_issues(application: Application) -> Optional[List[Issue]]:
@@ -338,24 +341,34 @@ def get_leave_periods_issues(application: Application) -> List[Issue]:
 
 def get_continuous_leave_issues(leave_periods: Iterable[ContinuousLeavePeriod]) -> List[Issue]:
     issues = []
+    required_leave_period_fields = [
+        "end_date",
+        "start_date",
+    ]
 
     for i, current_period in enumerate(leave_periods):
-        if not current_period.start_date:
+        start_date = getattr(current_period, "start_date", None)
+        if start_date and start_date < PFML_PROGRAM_LAUNCH_DATE:
             issues.append(
                 Issue(
-                    type=IssueType.required,
-                    message=f"Start date is required for continuous_leave_periods[{i}]",
+                    type=IssueType.minimum,
+                    message="start_date cannot be in a year earlier than 2021",
                     field=f"leave_details.continuous_leave_periods[{i}].start_date",
                 )
             )
-        if not current_period.end_date:
-            issues.append(
-                Issue(
-                    type=IssueType.required,
-                    message=f"End date is required for continuous_leave_periods[{i}]",
-                    field=f"leave_details.continuous_leave_periods[{i}].end_date",
+
+        for field in required_leave_period_fields:
+            val = getattr(current_period, field, None)
+
+            if val is None:
+                issues.append(
+                    Issue(
+                        type=IssueType.required,
+                        message=f"{field} is required",
+                        field=f"leave_details.continuous_leave_periods[{i}].{field}",
+                    )
                 )
-            )
+
     return issues
 
 
@@ -371,6 +384,16 @@ def get_intermittent_leave_issues(leave_periods: Iterable[IntermittentLeavePerio
     ]
 
     for i, current_period in enumerate(leave_periods):
+        start_date = getattr(current_period, "start_date", None)
+        if start_date and start_date < PFML_PROGRAM_LAUNCH_DATE:
+            issues.append(
+                Issue(
+                    type=IssueType.minimum,
+                    message="start_date cannot be in a year earlier than 2021",
+                    field=f"leave_details.intermittent_leave_periods[{i}].start_date",
+                )
+            )
+
         for field in required_leave_period_fields:
             val = getattr(current_period, field, None)
 
@@ -390,24 +413,34 @@ def get_reduced_schedule_leave_issues(
     leave_periods: Iterable[ReducedScheduleLeavePeriod],
 ) -> List[Issue]:
     issues = []
+    required_leave_period_fields = [
+        "end_date",
+        "start_date",
+    ]
 
     for i, current_period in enumerate(leave_periods):
-        if not current_period.start_date:
+        start_date = getattr(current_period, "start_date", None)
+        if start_date and start_date < PFML_PROGRAM_LAUNCH_DATE:
             issues.append(
                 Issue(
-                    type=IssueType.required,
-                    message=f"Start date is required for reduced_schedule_leave_periods[{i}]",
+                    type=IssueType.minimum,
+                    message="start_date cannot be in a year earlier than 2021",
                     field=f"leave_details.reduced_schedule_leave_periods[{i}].start_date",
                 )
             )
-        if not current_period.end_date:
-            issues.append(
-                Issue(
-                    type=IssueType.required,
-                    message=f"End date is required for reduced_schedule_leave_periods[{i}]",
-                    field=f"leave_details.reduced_schedule_leave_periods[{i}].end_date",
+
+        for field in required_leave_period_fields:
+            val = getattr(current_period, field, None)
+
+            if val is None:
+                issues.append(
+                    Issue(
+                        type=IssueType.required,
+                        message=f"{field} is required",
+                        field=f"leave_details.reduced_schedule_leave_periods[{i}].{field}",
+                    )
                 )
-            )
+
     return issues
 
 

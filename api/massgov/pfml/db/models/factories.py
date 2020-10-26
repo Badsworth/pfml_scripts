@@ -3,7 +3,7 @@
 #
 
 import random
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 from decimal import Decimal
 
 import factory  # this is from the factory_boy package
@@ -272,8 +272,12 @@ class ContinuousLeavePeriodFactory(BaseFactory):
         model = application_models.ContinuousLeavePeriod
 
     leave_period_id = Generators.UuidObj
-    start_date = factory.Faker("date_object")
-    end_date = factory.Faker("date_object")
+    start_date = factory.Faker(
+        "date_between_dates", date_start=date(2021, 1, 1), date_end=date(2021, 1, 15)
+    )
+    end_date = factory.Faker(
+        "date_between_dates", date_start=date(2021, 1, 16), date_end=date(2021, 1, 28)
+    )
     is_estimated = True
     last_day_worked = factory.Faker("date_object")
     expected_return_to_work_date = factory.Faker("date_object")
@@ -290,8 +294,12 @@ class IntermittentLeavePeriodFactory(BaseFactory):
         model = application_models.IntermittentLeavePeriod
 
     leave_period_id = Generators.UuidObj
-    start_date = factory.Faker("date_object")
-    end_date = factory.Faker("date_object")
+    start_date = factory.Faker(
+        "date_between_dates", date_start=date(2021, 2, 1), date_end=date(2021, 2, 15)
+    )
+    end_date = factory.Faker(
+        "date_between_dates", date_start=date(2021, 2, 16), date_end=date(2021, 2, 28)
+    )
     frequency = None
     frequency_interval = None
     frequency_interval_basis = None
@@ -304,8 +312,12 @@ class ReducedScheduleLeavePeriodFactory(BaseFactory):
         model = application_models.ReducedScheduleLeavePeriod
 
     leave_period_id = Generators.UuidObj
-    start_date = factory.Faker("date_object")
-    end_date = factory.Faker("date_object")
+    start_date = factory.Faker(
+        "date_between_dates", date_start=date(2021, 3, 1), date_end=date(2021, 3, 15)
+    )
+    end_date = factory.Faker(
+        "date_between_dates", date_start=date(2021, 3, 16), date_end=date(2021, 3, 28)
+    )
     is_estimated = True
     thursday_off_hours = None
     thursday_off_minutes = None

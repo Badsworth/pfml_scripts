@@ -1,3 +1,5 @@
+from datetime import date
+
 from massgov.pfml.api.models.applications.common import DurationBasis, FrequencyIntervalBasis
 from massgov.pfml.api.models.applications.responses import ApplicationResponse
 from massgov.pfml.api.services.application_rules import (
@@ -424,6 +426,49 @@ def test_disallow_hybrid_intermittent_reduced_leave(test_db_session, initialize_
     ] == issues
 
 
+def test_disallow_2020_leave_period_start_dates(test_db_session, initialize_factories_session):
+    test_app = ApplicationFactory.create(
+        continuous_leave_periods=[
+            ContinuousLeavePeriodFactory.create(start_date=date(2020, 12, 30))
+        ],
+        intermittent_leave_periods=[
+            IntermittentLeavePeriodFactory.create(start_date=date(2020, 12, 30))
+        ],
+        reduced_schedule_leave_periods=[
+            ReducedScheduleLeavePeriodFactory.create(start_date=date(2020, 12, 30))
+        ],
+    )
+
+    issues = get_leave_periods_issues(test_app)
+
+    assert (
+        Issue(
+            field="leave_details.continuous_leave_periods[0].start_date",
+            message="start_date cannot be in a year earlier than 2021",
+            type=IssueType.minimum,
+        )
+        in issues
+    )
+
+    assert (
+        Issue(
+            field="leave_details.intermittent_leave_periods[0].start_date",
+            message="start_date cannot be in a year earlier than 2021",
+            type=IssueType.minimum,
+        )
+        in issues
+    )
+
+    assert (
+        Issue(
+            field="leave_details.reduced_schedule_leave_periods[0].start_date",
+            message="start_date cannot be in a year earlier than 2021",
+            type=IssueType.minimum,
+        )
+        in issues
+    )
+
+
 def test_min_leave_periods(test_db_session, initialize_factories_session):
     test_app = ApplicationFactory.create(
         employment_status=EmploymentStatus.get_instance(
@@ -457,13 +502,13 @@ def test_continuous_leave_period(test_db_session, initialize_factories_session):
     assert [
         Issue(
             type=IssueType.required,
-            message="Start date is required for continuous_leave_periods[0]",
-            field="leave_details.continuous_leave_periods[0].start_date",
+            message="end_date is required",
+            field="leave_details.continuous_leave_periods[0].end_date",
         ),
         Issue(
             type=IssueType.required,
-            message="End date is required for continuous_leave_periods[0]",
-            field="leave_details.continuous_leave_periods[0].end_date",
+            message="start_date is required",
+            field="leave_details.continuous_leave_periods[0].start_date",
         ),
     ] == issues
 
@@ -524,13 +569,13 @@ def test_reduced_leave_period(test_db_session, initialize_factories_session):
     assert [
         Issue(
             type=IssueType.required,
-            message="Start date is required for reduced_schedule_leave_periods[0]",
-            field="leave_details.reduced_schedule_leave_periods[0].start_date",
+            message="end_date is required",
+            field="leave_details.reduced_schedule_leave_periods[0].end_date",
         ),
         Issue(
             type=IssueType.required,
-            message="End date is required for reduced_schedule_leave_periods[0]",
-            field="leave_details.reduced_schedule_leave_periods[0].end_date",
+            message="start_date is required",
+            field="leave_details.reduced_schedule_leave_periods[0].start_date",
         ),
     ] == issues
 
@@ -725,7 +770,7 @@ def test_payment_preferences_same_order(test_db_session, initialize_factories_se
         work_pattern=WorkPatternFixedFactory.create(),
     )
     issues = get_application_issues(test_app)
-    print(issues)
+
     with app.app.test_request_context(
         path=f"/v1/applications/{test_app.application_id}", method="PATCH"
     ):

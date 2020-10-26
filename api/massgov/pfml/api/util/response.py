@@ -41,6 +41,8 @@ class IssueRule(str, Enum):
 class IssueType(str, Enum):
     # Data is present but shouldn't be
     conflicting = "conflicting"
+    # Number or Date is less than the expected range
+    minimum = "minimum"
     # Data is missing
     required = "required"
 
