@@ -9,6 +9,7 @@ from sqlalchemy import inspect
 import massgov.pfml.fineos.mock_client
 import massgov.pfml.fineos.models
 import tests.api
+from massgov.pfml.api.models.applications.common import DurationBasis, FrequencyIntervalBasis
 from massgov.pfml.api.models.applications.responses import ApplicationStatus
 from massgov.pfml.db.models.applications import (
     Application,
@@ -26,6 +27,8 @@ from massgov.pfml.db.models.factories import (
     AddressFactory,
     ApplicationFactory,
     ContinuousLeavePeriodFactory,
+    IntermittentLeavePeriodFactory,
+    ReducedScheduleLeavePeriodFactory,
     UserFactory,
     WorkPatternFixedFactory,
 )
@@ -1747,8 +1750,8 @@ def test_application_post_submit_to_fineos(client, user, auth_token, test_db_ses
     assert status == ApplicationStatus.Submitted.value
 
     capture = massgov.pfml.fineos.mock_client.get_capture()
-    # This is generated randomly and changes each time.
 
+    # This is generated randomly and changes each time.
     fineos_user_id = capture[2][1]
     assert capture == [
         ("find_employer", None, {"employer_fein": "770000001"}),
@@ -1845,6 +1848,149 @@ def test_application_post_submit_to_fineos(client, user, auth_token, test_db_ses
                 )
             },
         ),
+    ]
+
+
+def test_application_post_submit_to_fineos_intermittent_leave(
+    client, user, auth_token, test_db_session
+):
+    application = ApplicationFactory.create(user=user)
+
+    application.tax_identifier = TaxIdentifier(tax_identifier="999004444")
+    application.first_name = "First"
+    application.middle_name = "Middle"
+    application.last_name = "Last"
+    application.date_of_birth = date(1977, 7, 27)
+    application.employer_fein = "770000001"
+    application.hours_worked_per_week = 70
+    application.employer_notified = True
+    application.employer_notification_date = date(2021, 1, 7)
+    application.employment_status_id = EmploymentStatus.UNEMPLOYED.employment_status_id
+    application.residential_address = AddressFactory.create()
+
+    leave_period = IntermittentLeavePeriodFactory.create(
+        application_id=application.application_id,
+        start_date=date(2021, 1, 15),
+        end_date=date(2021, 2, 9),
+        frequency_interval=4,
+        frequency_interval_basis=FrequencyIntervalBasis.months.value,
+        frequency=6,
+        duration_basis=DurationBasis.days.value,
+        duration=3,
+    )
+
+    application.intermittent_leave_periods = [leave_period]
+    application.has_intermittent_leave_periods = True
+
+    test_db_session.add(application)
+
+    test_db_session.commit()
+
+    massgov.pfml.fineos.mock_client.start_capture()
+
+    response = client.post(
+        "/v1/applications/{}/submit_application".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+    )
+
+    assert response.status_code == 201
+
+    response_body = response.get_json()
+    status = response_body.get("data").get("status")
+    assert status == ApplicationStatus.Submitted.value
+
+    capture = massgov.pfml.fineos.mock_client.get_capture()
+
+    assert capture[3][2]["absence_case"].episodicLeavePeriods == [
+        massgov.pfml.fineos.models.customer_api.EpisodicLeavePeriod(
+            startDate=date(2021, 1, 15),
+            endDate=date(2021, 2, 9),
+            frequency=6,
+            frequencyInterval=4,
+            frequencyIntervalBasis="Months",
+            duration=3,
+            durationBasis="Days",
+        )
+    ]
+
+
+def test_application_post_submit_to_fineos_reduced_schedule_leave(
+    client, user, auth_token, test_db_session
+):
+    application = ApplicationFactory.create(user=user)
+
+    application.tax_identifier = TaxIdentifier(tax_identifier="999004444")
+    application.first_name = "First"
+    application.middle_name = "Middle"
+    application.last_name = "Last"
+    application.date_of_birth = date(1977, 7, 27)
+    application.employer_fein = "770000001"
+    application.hours_worked_per_week = 70
+    application.employer_notified = True
+    application.employer_notification_date = date(2021, 1, 7)
+    application.employment_status_id = EmploymentStatus.UNEMPLOYED.employment_status_id
+    application.residential_address = AddressFactory.create()
+
+    leave_period = ReducedScheduleLeavePeriodFactory.create(
+        application_id=application.application_id,
+        start_date=date(2021, 1, 15),
+        end_date=date(2021, 2, 9),
+        thursday_off_hours=1,
+        thursday_off_minutes=5,
+        friday_off_hours=2,
+        friday_off_minutes=10,
+        saturday_off_hours=3,
+        saturday_off_minutes=15,
+        sunday_off_hours=4,
+        sunday_off_minutes=20,
+        monday_off_hours=5,
+        monday_off_minutes=25,
+        tuesday_off_hours=6,
+        tuesday_off_minutes=30,
+        wednesday_off_hours=7,
+        wednesday_off_minutes=35,
+    )
+    application.reduced_schedule_leave_periods = [leave_period]
+    application.has_reduced_schedule_leave_periods = True
+
+    test_db_session.add(application)
+    test_db_session.commit()
+
+    massgov.pfml.fineos.mock_client.start_capture()
+
+    response = client.post(
+        "/v1/applications/{}/submit_application".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+    )
+
+    assert response.status_code == 201
+
+    response_body = response.get_json()
+    status = response_body.get("data").get("status")
+    assert status == ApplicationStatus.Submitted.value
+
+    capture = massgov.pfml.fineos.mock_client.get_capture()
+
+    assert capture[3][2]["absence_case"].reducedScheduleLeavePeriods == [
+        massgov.pfml.fineos.models.customer_api.ReducedScheduleLeavePeriod(
+            startDate=date(2021, 1, 15),
+            endDate=date(2021, 2, 9),
+            status="Known",
+            mondayOffHours=5,
+            mondayOffMinutes=25,
+            tuesdayOffHours=6,
+            tuesdayOffMinutes=30,
+            wednesdayOffHours=7,
+            wednesdayOffMinutes=35,
+            thursdayOffHours=1,
+            thursdayOffMinutes=5,
+            fridayOffHours=2,
+            fridayOffMinutes=10,
+            saturdayOffHours=3,
+            saturdayOffMinutes=15,
+            sundayOffHours=4,
+            sundayOffMinutes=20,
+        )
     ]
 
 

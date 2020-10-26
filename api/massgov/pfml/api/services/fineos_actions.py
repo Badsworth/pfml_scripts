@@ -194,9 +194,9 @@ def build_absence_case(
     application: Application,
 ) -> massgov.pfml.fineos.models.customer_api.AbsenceCase:
     """Convert an Application to a FINEOS API AbsenceCase model."""
-    leave_periods = []
+    continuous_leave_periods = []
     for leave_period in application.continuous_leave_periods:
-        leave_periods.append(
+        continuous_leave_periods.append(
             massgov.pfml.fineos.models.customer_api.TimeOffLeavePeriod(
                 startDate=leave_period.start_date,
                 endDate=leave_period.end_date,
@@ -208,7 +208,45 @@ def build_absence_case(
             )
         )
     # Temporary workaround while API appends leave periods on each edit. TODO: remove when fixed.
-    leave_periods = leave_periods[-1:]
+    continuous_leave_periods = continuous_leave_periods[-1:]
+
+    reduced_schedule_leave_periods = []
+    for reduced_leave_period in application.reduced_schedule_leave_periods:
+        reduced_schedule_leave_periods.append(
+            massgov.pfml.fineos.models.customer_api.ReducedScheduleLeavePeriod(
+                startDate=reduced_leave_period.start_date,
+                endDate=reduced_leave_period.end_date,
+                status="Known",  # API-711 will set this properly.
+                mondayOffHours=reduced_leave_period.monday_off_hours,
+                mondayOffMinutes=reduced_leave_period.monday_off_minutes,
+                tuesdayOffHours=reduced_leave_period.tuesday_off_hours,
+                tuesdayOffMinutes=reduced_leave_period.tuesday_off_minutes,
+                wednesdayOffHours=reduced_leave_period.wednesday_off_hours,
+                wednesdayOffMinutes=reduced_leave_period.wednesday_off_minutes,
+                thursdayOffHours=reduced_leave_period.thursday_off_hours,
+                thursdayOffMinutes=reduced_leave_period.thursday_off_minutes,
+                fridayOffHours=reduced_leave_period.friday_off_hours,
+                fridayOffMinutes=reduced_leave_period.friday_off_minutes,
+                saturdayOffHours=reduced_leave_period.saturday_off_hours,
+                saturdayOffMinutes=reduced_leave_period.saturday_off_minutes,
+                sundayOffHours=reduced_leave_period.sunday_off_hours,
+                sundayOffMinutes=reduced_leave_period.sunday_off_minutes,
+            )
+        )
+
+    intermittent_leave_periods = []
+    for int_leave_period in application.intermittent_leave_periods:
+        intermittent_leave_periods.append(
+            massgov.pfml.fineos.models.customer_api.EpisodicLeavePeriod(
+                startDate=int_leave_period.start_date,
+                endDate=int_leave_period.end_date,
+                frequency=int_leave_period.frequency,
+                frequencyInterval=int_leave_period.frequency_interval,
+                frequencyIntervalBasis=int_leave_period.frequency_interval_basis,
+                duration=int_leave_period.duration,
+                durationBasis=int_leave_period.duration_basis,
+            )
+        )
 
     # Leave Reason and Leave Reason Qualifier mapping.
     reason = reason_qualifier_1 = reason_qualifier_2 = None
@@ -241,7 +279,11 @@ def build_absence_case(
         reason=reason,
         reasonQualifier1=reason_qualifier_1,
         reasonQualifier2=reason_qualifier_2,
-        timeOffLeavePeriods=leave_periods,
+        timeOffLeavePeriods=continuous_leave_periods if continuous_leave_periods else None,
+        reducedScheduleLeavePeriods=reduced_schedule_leave_periods
+        if reduced_schedule_leave_periods
+        else None,
+        episodicLeavePeriods=intermittent_leave_periods if intermittent_leave_periods else None,
         employerNotified=application.employer_notified,
         employerNotificationDate=application.employer_notification_date,
     )
