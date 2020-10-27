@@ -27,6 +27,13 @@ When("I add paid benefits to the current case", () => {
   fineos.onTab("Paid Benefits");
   cy.get("input[type='submit'][value='Edit']").click();
   cy.labelled("Average weekly wage").type("{selectall}{backspace}1000");
+  cy.contains(
+    "div[class='flex-item']",
+    "Benefit payment waiting period"
+  ).within(() => {
+    cy.get("input").first().type("10");
+    cy.get("select").select("Days");
+  });
   fineos.clickBottomWidgetButton("OK");
 });
 
