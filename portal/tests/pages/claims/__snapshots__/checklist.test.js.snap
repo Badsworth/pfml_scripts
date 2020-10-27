@@ -537,7 +537,7 @@ exports[`Checklist renders success message after submitting part one 1`] = `
 
 exports[`Checklist when Part 1 is submitted renders descriptions for Part 2 and 3 1`] = `"Entering payment information here leads to faster processing, but you can also call 833‑344‑7365."`;
 
-exports[`Checklist when Part 1 is submitted renders descriptions for Part 2 and 3 2`] = `"Uploading documents online leads to faster processing, but you can also fax documents to NNN-NNN-NNNN, or mail them to 123 Address."`;
+exports[`Checklist when Part 1 is submitted renders descriptions for Part 2 and 3 2`] = `"Uploading documents online leads to faster processing, but you can also fax documents to 617‑855‑6180, or mail them to PO Box 838 Lawrence, MA 01843."`;
 
 exports[`Checklist when Part 1 is submitted renders different description for Part 1 1`] = `
 Array [

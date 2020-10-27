@@ -271,8 +271,10 @@ const shared = {
   claimsLeaveDurationTitle: "Leave duration",
   claimsOtherLeaveTitle: "Other leave, income, and benefits",
   claimsVerifyIdTitle: "Your identity",
-  // contactCenterPhoneNumber uses non-breaking hyphens to avoid awkward text wrapping
+  contactCenterAddress: "PO Box 838 Lawrence, MA 01843",
+  // Phone and Fax numbers use non-breaking hyphens to avoid awkward text wrapping
   // https://alignedonline.com/non%E2%80%91breaking-spaces
+  contactCenterFaxNumber: "617‑855‑6180",
   contactCenterPhoneNumber: "833‑344‑7365",
   documentsRequestError:
     "An error was encountered while checking your application for documents. If this continues to happen, you may call the Paid Family Leave Contact Center at $t(shared.contactCenterPhoneNumber)",
@@ -473,9 +475,8 @@ const pages = {
       "If you need to edit your information in Part 1, you’ll need to call the Contact Center at $t(shared.contactCenterPhoneNumber). Your application ID is <strong>{{absence_id}}</strong>.",
     stepListDescription_2:
       "Entering payment information here leads to faster processing, but you can also call $t(shared.contactCenterPhoneNumber).",
-    // TODO (CP-907): Add correct fax # and address
     stepListDescription_3:
-      "Uploading documents online leads to faster processing, but you can also fax documents to NNN-NNN-NNNN, or mail them to 123 Address.",
+      "Uploading documents online leads to faster processing, but you can also fax documents to $t(shared.contactCenterFaxNumber), or mail them to $t(shared.contactCenterAddress).",
     stepListTitlePrefix: "Part {{number}}",
     stepListTitle_1: "Tell us about yourself and your leave",
     stepListTitle_2: "Enter your payment information",
