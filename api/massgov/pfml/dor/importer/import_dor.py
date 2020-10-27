@@ -42,7 +42,7 @@ RECEIVED_FOLDER = "dor/received/"
 PROCESSED_FOLDER = "dor/processed/"
 
 EMPLOYER_LINE_LIMIT = 250000
-EMPLOYEE_LINE_LIMIT = 200000
+EMPLOYEE_LINE_LIMIT = 15000
 
 
 class ImportException(Exception):
