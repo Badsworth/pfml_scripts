@@ -122,6 +122,7 @@ export default function (on: Cypress.PluginEvents): Cypress.ConfigOptions {
       const opts = {
         documentDirectory: "/tmp",
         employeeFactory: () => employee,
+        shortClaim: true,
       };
 
       return scenarioFunctions[claimType](opts);

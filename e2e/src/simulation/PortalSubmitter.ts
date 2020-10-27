@@ -60,7 +60,7 @@ export default class PortalSubmitter {
           resolve(token);
         },
         onFailure(err) {
-          reject(err);
+          reject(`${err.code}: ${err.message}`);
         },
       });
     });

@@ -1,10 +1,6 @@
 import faker from "faker";
 import { min as minDate, parseISO } from "date-fns";
-import {
-  SimulationGenerator,
-  ClaimDocument,
-  SimulationGeneratorOpts,
-} from "./types";
+import { ClaimDocument, EmployeeFactory, SimulationClaim } from "./types";
 import {
   ApplicationRequestBody,
   ApplicationLeaveDetails,
@@ -47,6 +43,18 @@ type ScenarioDocumentConfiguration = {
   };
 };
 
+/**
+ * SimulationGenerator is a function that generates a single SimulationClaim.
+ */
+export interface SimulationGenerator {
+  // The generator returns a promise of a SimulationClaim so that it can
+  // do asynchronous operations, like writing documents to the filesystem.
+  (opts: GeneratorOpts): Promise<SimulationClaim>;
+}
+export type GeneratorOpts = Partial<ScenarioOpts> & {
+  documentDirectory: string;
+  employeeFactory: EmployeeFactory;
+};
 export type ScenarioOpts = {
   reason: ApplicationLeaveDetails["reason"];
   reason_qualifier?: ApplicationLeaveDetails["reason_qualifier"];
@@ -61,6 +69,8 @@ export type ScenarioOpts = {
   has_reduced_schedule_leave_periods?: boolean;
   has_intermittent_leave_periods?: boolean;
   bondingDate?: "far-past" | "past" | "future";
+  // Makes a claim for an extremely short time period (1 day).
+  shortClaim?: boolean;
 };
 
 export function scenario(
@@ -68,10 +78,13 @@ export function scenario(
   config: ScenarioOpts
 ): SimulationGenerator {
   return async (opts) => {
+    // Allow opts to overide config.
+    const _config = { ...config, ...opts };
     const hasMassId =
-      config.residence === "MA-proofed" || config.residence === "MA-unproofed";
+      _config.residence === "MA-proofed" ||
+      _config.residence === "MA-unproofed";
 
-    const employee = opts.employeeFactory(!!config.financiallyIneligible);
+    const employee = opts.employeeFactory(!!_config.financiallyIneligible);
 
     const address = {
       city: faker.address.city(),
@@ -106,7 +119,7 @@ export function scenario(
         },
       ],
     };
-    claim.leave_details = generateLeaveDetails(config);
+    claim.leave_details = generateLeaveDetails(_config);
     claim.has_continuous_leave_periods =
       (claim.leave_details?.continuous_leave_periods?.length ?? 0) > 0;
     claim.has_reduced_schedule_leave_periods =
@@ -117,10 +130,10 @@ export function scenario(
     return {
       scenario: name,
       claim,
-      documents: await generateDocuments(claim, config, opts),
-      financiallyIneligible: !!config.financiallyIneligible,
+      documents: await generateDocuments(claim, _config, opts),
+      financiallyIneligible: !!_config.financiallyIneligible,
       // Flag for skipSubmitClaim.
-      skipSubmitClaim: !!config.skipSubmitClaim,
+      skipSubmitClaim: !!_config.skipSubmitClaim,
     };
   };
 }
@@ -150,7 +163,7 @@ export function agentScenario(
 async function generateDocuments(
   claim: ApplicationRequestBody,
   config: ScenarioOpts,
-  opts: SimulationGeneratorOpts
+  opts: GeneratorOpts
 ): Promise<ClaimDocument[]> {
   const dir = opts.documentDirectory;
   const docs = config.docs ?? ({} as ScenarioDocumentConfiguration);
@@ -203,12 +216,13 @@ function generateWorkPattern(): WorkPattern {
 }
 
 function generateLeavePeriods(
-  leaveType: "continuous" | "reduced" | "intermittent"
+  leaveType: "continuous" | "reduced" | "intermittent",
+  shortLeave: boolean
 ):
   | ContinuousLeavePeriods[]
   | ReducedScheduleLeavePeriods[]
   | IntermittentLeavePeriods[] {
-  const [startDate, endDate] = generateLeaveDates();
+  const [startDate, endDate] = generateLeaveDates(shortLeave);
   return [
     {
       start_date: fmt(startDate),
@@ -243,13 +257,13 @@ function generateLeaveDetails(config: ScenarioOpts): ApplicationLeaveDetails {
     continuous_leave_periods:
       !config.has_reduced_schedule_leave_periods &&
       !config.has_intermittent_leave_periods
-        ? generateLeavePeriods("continuous")
+        ? generateLeavePeriods("continuous", !!config.shortClaim)
         : [],
     reduced_schedule_leave_periods: config.has_reduced_schedule_leave_periods
-      ? generateLeavePeriods("reduced")
+      ? generateLeavePeriods("reduced", !!config.shortClaim)
       : [],
     intermittent_leave_periods: config.has_intermittent_leave_periods
-      ? generateLeavePeriods("intermittent")
+      ? generateLeavePeriods("intermittent", !!config.shortClaim)
       : [],
     pregnant_or_recent_birth: false,
     employer_notified: true,
@@ -334,12 +348,13 @@ function generateMassIDString(): string {
 
 // Generate start and end dates for a leave request, not to exceed 20 weeks, and with a minimum
 // start date of 2021-01-01.
-function generateLeaveDates(): [Date, Date] {
+function generateLeaveDates(shortLeave: boolean): [Date, Date] {
   const startDate = soon(182, "2021-01-01");
-  const endDate = add(startDate, {
-    weeks: faker.random.number({ min: 1, max: 11 }),
-  });
-  return [startDate, endDate];
+  // If the claim is marked as "short leave", give it a 1 day length.
+  const addition = shortLeave
+    ? { days: 1 }
+    : { weeks: faker.random.number({ min: 1, max: 11 }) };
+  return [startDate, add(startDate, addition)];
 }
 
 // Generate an employer notification date based on the claim start date.

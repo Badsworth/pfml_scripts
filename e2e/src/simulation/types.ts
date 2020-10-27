@@ -31,18 +31,6 @@ export type ClaimDocument = {
   submittedManually?: boolean;
 };
 
-/**
- * SimulationGenerator is a function that generates a single SimulationClaim.
- *
- * This is an interface, but it will actually be implemented by two functions that look a lot
- * like scenario() and chance() do today. That is - which scenario we actually run will be
- * determined by probability at the time the function is called.
- */
-export type SimulationGeneratorOpts = {
-  documentDirectory: string;
-  employeeFactory: EmployeeFactory;
-};
-
 // EmployeeSource is the interface for getting or generating an employee.
 export interface EmployeeFactory {
   (financiallyIneligible: boolean): EmployeeRecord;
@@ -53,8 +41,5 @@ export type EmployeeRecord = Pick<
   ApplicationRequestBody,
   "first_name" | "last_name" | "tax_identifier" | "employer_fein"
 >;
-export interface SimulationGenerator {
-  // The generator returns a promise of a SimulationClaim so that it can
-  // do asynchronous operations, like writing documents to the filesystem.
-  (opts: SimulationGeneratorOpts): Promise<SimulationClaim>;
-}
+
+export { SimulationGenerator } from "./simulate";
