@@ -1196,6 +1196,22 @@ def test_application_patch_invalid_work_pattern(client, user, auth_token, test_d
     )
 
 
+def test_application_patch_null_date_of_birth(client, user, auth_token):
+    application = ApplicationFactory.create(user=user)
+
+    response = client.patch(
+        "/v1/applications/{}".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+        json={"date_of_birth": None},
+    )
+
+    assert response.status_code == 200
+
+    response_body = response.get_json().get("data")
+    dob = response_body.get("date_of_birth")
+    assert dob is None
+
+
 def test_application_patch_date_of_birth_after_1900_over_14(client, user, auth_token):
     application = ApplicationFactory.create(user=user)
 

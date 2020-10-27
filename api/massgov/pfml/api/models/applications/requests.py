@@ -46,6 +46,10 @@ class ApplicationRequestBody(PydanticBaseModel):
     @validator("date_of_birth")
     def date_of_birth_in_valid_range(cls, date_of_birth):  # noqa: B902
         """Applicant must be older than 14 and under 100"""
+
+        if not date_of_birth:
+            return date_of_birth
+
         error_list = []
         today = date.today()
         if date_of_birth.year < today.year - 100 or today < date_of_birth:
