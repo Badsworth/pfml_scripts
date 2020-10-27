@@ -101,9 +101,13 @@ const errors = {
       },
       continuous_leave_periods: {
         end_date: {
+          minimum:
+            "Last day of leave must be on or after the first day of leave.",
           required: "Enter an end date for this continuous leave period.",
         },
         start_date: {
+          minimum:
+            "Paid Family and Medical Leave cannot be taken before Jan 1, 2021. Enter a date after December 31, 2020.",
           required: "Enter a start date for this continuous leave period.",
         },
       },
@@ -123,6 +127,8 @@ const errors = {
           required: "Select a duration option.",
         },
         end_date: {
+          minimum:
+            "Last day of leave must be on or after the first day of leave.",
           required: "Enter an end date for this intermittent leave period.",
         },
         frequency: {
@@ -132,6 +138,8 @@ const errors = {
           required: "Select a frequency option.",
         },
         start_date: {
+          minimum:
+            "Paid Family and Medical Leave cannot be taken before Jan 1, 2021. Enter a date after December 31, 2020.",
           required: "Enter a start date for this intermittent leave period.",
         },
       },
@@ -147,9 +155,13 @@ const errors = {
       },
       reduced_schedule_leave_periods: {
         end_date: {
+          minimum:
+            "Last day of leave must be on or after the first day of leave.",
           required: "Enter an end date for this reduced leave period.",
         },
         start_date: {
+          minimum:
+            "Paid Family and Medical Leave cannot be taken before Jan 1, 2021. Enter a date after December 31, 2020.",
           required: "Enter a start date for this reduced leave period.",
         },
       },
@@ -212,6 +224,8 @@ const errors = {
     rules: {
       disallow_hybrid_intermittent_leave:
         "You cannot request intermittent leave in the same application as your continuous or reduced schedule leave. Create a separate application for your intermittent leave dates.",
+      disallow_overlapping_leave_periods:
+        "Your reduced leave schedule cannot overlap with your continuous leave. Check whether you’ve entered the correct start and end dates for each leave period.",
       min_leave_periods:
         "You must choose at least one kind of leave (continuous, reduced schedule, or intermittent).",
     },

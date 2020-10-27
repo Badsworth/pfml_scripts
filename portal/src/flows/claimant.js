@@ -253,6 +253,9 @@ export default {
     },
     [routes.claims.leavePeriodReducedSchedule]: {
       meta: {
+        // This page is after the Continuous page, so on this page is
+        // where we can surface validation issues related to the following rules:
+        applicableRules: ["disallow_overlapping_leave_periods"],
         step: ClaimSteps.leaveDetails,
         fields: leavePeriodReducedScheduleFields,
       },
