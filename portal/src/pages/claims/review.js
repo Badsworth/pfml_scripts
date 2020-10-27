@@ -34,6 +34,7 @@ import findKeyByValue from "../../utils/findKeyByValue";
 import formatDateRange from "../../utils/formatDateRange";
 import getI18nContextForIntermittentFrequencyDuration from "../../utils/getI18nContextForIntermittentFrequencyDuration";
 import hasDocumentsLoadError from "../../utils/hasDocumentsLoadError";
+import { isFeatureEnabled } from "../../services/featureFlags";
 import useThrottledHandler from "../../hooks/useThrottledHandler";
 import { useTranslation } from "../../locales/i18n";
 import withClaim from "../../hoc/withClaim";
@@ -349,20 +350,21 @@ export const Review = (props) => {
           context: "employerInformation",
         })}
       </ReviewHeading>
-
-      {get(claim, "employment_status") && (
-        <ReviewRow
-          level={reviewRowLevel}
-          label={t("pages.claimsReview.employmentStatusLabel")}
-        >
-          {t("pages.claimsReview.employmentStatusValue", {
-            context: findKeyByValue(
-              EmploymentStatus,
-              get(claim, "employment_status")
-            ),
-          })}
-        </ReviewRow>
-      )}
+      {/* TODO (CP-1281): Show employment status when Portal supports other employment statuses */}
+      {!isFeatureEnabled("claimantHideEmploymentStatus") &&
+        get(claim, "employment_status") && (
+          <ReviewRow
+            level={reviewRowLevel}
+            label={t("pages.claimsReview.employmentStatusLabel")}
+          >
+            {t("pages.claimsReview.employmentStatusValue", {
+              context: findKeyByValue(
+                EmploymentStatus,
+                get(claim, "employment_status")
+              ),
+            })}
+          </ReviewRow>
+        )}
 
       {get(claim, "employment_status") === EmploymentStatus.employed && ( // only display this if the claimant is Employed
         <ReviewRow
