@@ -310,7 +310,7 @@ def get_leave_periods_issues(application: Application) -> List[Issue]:
     issues += get_continuous_leave_issues(application.continuous_leave_periods)
     issues += get_intermittent_leave_issues(application.intermittent_leave_periods)
     issues += get_reduced_schedule_leave_issues(application.reduced_schedule_leave_periods)
-    issues += get_leave_period_range_issues(application)
+    issues += get_leave_period_ranges_issues(application)
 
     if not any(
         [
@@ -341,8 +341,8 @@ def get_leave_periods_issues(application: Application) -> List[Issue]:
     return issues
 
 
-def get_leave_period_range_issues(application: Application) -> List[Issue]:
-    """Validate leave period date ranges against each other"""
+def get_leave_period_ranges_issues(application: Application) -> List[Issue]:
+    """Validate multiple leave period date ranges against each other"""
     issues = []
 
     all_leave_periods: Iterable[
@@ -377,6 +377,36 @@ def get_leave_period_range_issues(application: Application) -> List[Issue]:
     return issues
 
 
+def get_leave_period_date_issues(
+    leave_period: Union[ContinuousLeavePeriod, IntermittentLeavePeriod, ReducedScheduleLeavePeriod],
+    leave_period_path: str,
+) -> List[Issue]:
+    """Validate an individual leave period's start and end dates"""
+    issues = []
+    end_date = getattr(leave_period, "end_date", None)
+    start_date = getattr(leave_period, "start_date", None)
+
+    if start_date and start_date < PFML_PROGRAM_LAUNCH_DATE:
+        issues.append(
+            Issue(
+                type=IssueType.minimum,
+                message="start_date cannot be in a year earlier than 2021",
+                field=f"{leave_period_path}.start_date",
+            )
+        )
+
+    if start_date and end_date and start_date > end_date:
+        issues.append(
+            Issue(
+                type=IssueType.minimum,
+                message="end_date cannot be earlier than the start_date",
+                field=f"{leave_period_path}.end_date",
+            )
+        )
+
+    return issues
+
+
 def get_continuous_leave_issues(leave_periods: Iterable[ContinuousLeavePeriod]) -> List[Issue]:
     issues = []
     required_leave_period_fields = [
@@ -385,15 +415,8 @@ def get_continuous_leave_issues(leave_periods: Iterable[ContinuousLeavePeriod]) 
     ]
 
     for i, current_period in enumerate(leave_periods):
-        start_date = getattr(current_period, "start_date", None)
-        if start_date and start_date < PFML_PROGRAM_LAUNCH_DATE:
-            issues.append(
-                Issue(
-                    type=IssueType.minimum,
-                    message="start_date cannot be in a year earlier than 2021",
-                    field=f"leave_details.continuous_leave_periods[{i}].start_date",
-                )
-            )
+        leave_period_path = f"leave_details.continuous_leave_periods[{i}]"
+        issues += get_leave_period_date_issues(current_period, leave_period_path)
 
         for field in required_leave_period_fields:
             val = getattr(current_period, field, None)
@@ -403,7 +426,7 @@ def get_continuous_leave_issues(leave_periods: Iterable[ContinuousLeavePeriod]) 
                     Issue(
                         type=IssueType.required,
                         message=f"{field} is required",
-                        field=f"leave_details.continuous_leave_periods[{i}].{field}",
+                        field=f"{leave_period_path}.{field}",
                     )
                 )
 
@@ -422,15 +445,8 @@ def get_intermittent_leave_issues(leave_periods: Iterable[IntermittentLeavePerio
     ]
 
     for i, current_period in enumerate(leave_periods):
-        start_date = getattr(current_period, "start_date", None)
-        if start_date and start_date < PFML_PROGRAM_LAUNCH_DATE:
-            issues.append(
-                Issue(
-                    type=IssueType.minimum,
-                    message="start_date cannot be in a year earlier than 2021",
-                    field=f"leave_details.intermittent_leave_periods[{i}].start_date",
-                )
-            )
+        leave_period_path = f"leave_details.intermittent_leave_periods[{i}]"
+        issues += get_leave_period_date_issues(current_period, leave_period_path)
 
         for field in required_leave_period_fields:
             val = getattr(current_period, field, None)
@@ -440,7 +456,7 @@ def get_intermittent_leave_issues(leave_periods: Iterable[IntermittentLeavePerio
                     Issue(
                         type=IssueType.required,
                         message=f"{field} is required",
-                        field=f"leave_details.intermittent_leave_periods[{i}].{field}",
+                        field=f"{leave_period_path}.{field}",
                     )
                 )
 
@@ -457,15 +473,8 @@ def get_reduced_schedule_leave_issues(
     ]
 
     for i, current_period in enumerate(leave_periods):
-        start_date = getattr(current_period, "start_date", None)
-        if start_date and start_date < PFML_PROGRAM_LAUNCH_DATE:
-            issues.append(
-                Issue(
-                    type=IssueType.minimum,
-                    message="start_date cannot be in a year earlier than 2021",
-                    field=f"leave_details.reduced_schedule_leave_periods[{i}].start_date",
-                )
-            )
+        leave_period_path = f"leave_details.reduced_schedule_leave_periods[{i}]"
+        issues += get_leave_period_date_issues(current_period, leave_period_path)
 
         for field in required_leave_period_fields:
             val = getattr(current_period, field, None)
@@ -475,7 +484,7 @@ def get_reduced_schedule_leave_issues(
                     Issue(
                         type=IssueType.required,
                         message=f"{field} is required",
-                        field=f"leave_details.reduced_schedule_leave_periods[{i}].{field}",
+                        field=f"{leave_period_path}.{field}",
                     )
                 )
 

@@ -557,6 +557,72 @@ def test_continuous_leave_period(test_db_session, initialize_factories_session):
     ] == issues
 
 
+def test_leave_period_end_date_before_start_date(test_db_session, initialize_factories_session):
+    continuous_leave_issues = get_continuous_leave_issues(
+        [
+            ContinuousLeavePeriodFactory.create(
+                start_date=date(2021, 2, 1), end_date=date(2021, 1, 1)
+            )
+        ]
+    )
+    intermittent_leave_issues = get_intermittent_leave_issues(
+        [
+            IntermittentLeavePeriodFactory.create(
+                start_date=date(2021, 2, 1),
+                end_date=date(2021, 1, 1),
+                frequency_interval_basis=FrequencyIntervalBasis.months.value,
+                frequency=6,
+                duration_basis=DurationBasis.days.value,
+                duration=3,
+            )
+        ]
+    )
+    reduced_schedule_leave_issues = get_reduced_schedule_leave_issues(
+        [
+            ReducedScheduleLeavePeriodFactory.create(
+                start_date=date(2021, 2, 1), end_date=date(2021, 1, 1)
+            )
+        ]
+    )
+
+    assert [
+        Issue(
+            type=IssueType.minimum,
+            message="end_date cannot be earlier than the start_date",
+            field="leave_details.continuous_leave_periods[0].end_date",
+        ),
+    ] == continuous_leave_issues
+
+    assert [
+        Issue(
+            type=IssueType.minimum,
+            message="end_date cannot be earlier than the start_date",
+            field="leave_details.intermittent_leave_periods[0].end_date",
+        ),
+    ] == intermittent_leave_issues
+
+    assert [
+        Issue(
+            type=IssueType.minimum,
+            message="end_date cannot be earlier than the start_date",
+            field="leave_details.reduced_schedule_leave_periods[0].end_date",
+        ),
+    ] == reduced_schedule_leave_issues
+
+
+def test_leave_period_allows_same_start_end_date(test_db_session, initialize_factories_session):
+    start_end_date = date(2021, 2, 2)
+    issues = get_reduced_schedule_leave_issues(
+        [
+            ReducedScheduleLeavePeriodFactory.create(
+                start_date=start_end_date, end_date=start_end_date
+            ),
+        ]
+    )
+
+    assert not issues
+
+
 def test_intermittent_leave_period(test_db_session, initialize_factories_session):
     test_leave_periods = (
         [
