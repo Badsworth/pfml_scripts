@@ -161,3 +161,10 @@ class AbstractFINEOSClient(abc.ABC, metaclass=abc.ABCMeta):
     ) -> typing.Tuple[str, int]:
         """Create or update an employer in FINEOS."""
         pass
+
+    @abc.abstractmethod
+    def create_service_agreement_for_employer(
+        self, fineos_employer_id: int, leave_plans: str
+    ) -> str:
+        """Create Service Agreement For An Employer in FINEOS"""
+        pass

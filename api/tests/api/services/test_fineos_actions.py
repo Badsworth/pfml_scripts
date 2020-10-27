@@ -194,7 +194,7 @@ def test_create_employer_simple(test_db_session):
     test_db_session.add(employer)
     test_db_session.commit()
 
-    fineos_customer_nbr = fineos_actions.create_or_update_employer(
+    fineos_customer_nbr, fineos_employer_id = fineos_actions.create_or_update_employer(
         fineos_client, employer.employer_fein, test_db_session
     )
 
@@ -206,6 +206,7 @@ def test_create_employer_simple(test_db_session):
     )
     assert created_employer.fineos_customer_nbr == employer.fineos_customer_nbr
     assert isinstance(created_employer.fineos_employer_id, int)
+    assert created_employer.fineos_employer_id == 250
 
 
 def test_update_employer_simple(test_db_session):
@@ -220,12 +221,13 @@ def test_update_employer_simple(test_db_session):
     test_db_session.add(employer)
     test_db_session.commit()
 
-    fineos_customer_nbr = fineos_actions.create_or_update_employer(
+    fineos_customer_nbr, fines_employer_id = fineos_actions.create_or_update_employer(
         fineos_client, employer.employer_fein, test_db_session
     )
 
     assert fineos_customer_nbr is not None
     assert fineos_customer_nbr == employer.fineos_customer_nbr
+    assert fines_employer_id == employer.fineos_employer_id
 
 
 def test_employer_creation_exception(test_db_session):
@@ -322,3 +324,75 @@ def test_build_bonding_date_reflexive_question_foster(user):
         == "PlacementQuestionGroup.placementQuestions.adoptionDate"
     )
     assert reflexive_question.reflexiveQuestionDetails[0].dateValue == date(2021, 2, 9)
+
+
+def test_create_service_agreement_for_employer(test_db_session):
+    fineos_client = massgov.pfml.fineos.MockFINEOSClient()
+
+    employer = Employer()
+    employer.employer_fein = "888447598"
+    employer.employer_name = "Test Organization Name"
+    employer.employer_dba = "Test Organization DBA"
+    test_db_session.add(employer)
+    test_db_session.commit()
+
+    fineos_customer_nbr, fineos_employer_id = fineos_actions.create_or_update_employer(
+        fineos_client, employer.employer_fein, test_db_session
+    )
+
+    fineos_sa_id = fineos_actions.create_service_agreement_for_employer(
+        fineos_client, fineos_employer_id, test_db_session
+    )
+
+    assert fineos_sa_id is not None
+    assert fineos_sa_id == "SA-123"
+
+
+def test_create_service_agreement_payload():
+    payload = FINEOSClient._create_service_agreement_payload(
+        123, "MA PFML - Limit, MA PFML - Employee"
+    )
+
+    assert payload is not None
+    assert payload.__contains__("<config-name>ServiceAgreementService</config-name>")
+    assert payload.__contains__("<name>CustomerNumber</name>")
+    assert payload.__contains__("<value>123</value>")
+    assert payload.__contains__("<name>LeavePlans</name>")
+    assert payload.__contains__("<value>MA PFML - Limit, MA PFML - Employee</value>")
+
+
+def test_resolve_leave_plans():
+    # Family Exemption = false
+    # Medical Exemption = false
+    # Assign: MA PFML - Limit, MA PFML Employee, MA PFML Family, MA PFML - Military Care
+    leave_plans = fineos_actions.resolve_leave_plans(False, False)
+    assert len(leave_plans) == 4
+    leave_plans_str = ", ".join(leave_plans)
+    assert leave_plans_str.__contains__("MA PFML - Limit")
+    assert leave_plans_str.__contains__("MA PFML - Employee")
+    assert leave_plans_str.__contains__("MA PFML - Family")
+    assert leave_plans_str.__contains__("MA PFML - Military Care")
+
+    # Family Exemption = false
+    # Medical Exemption = true
+    # Assign: MA PFML - Limit, MA PFML Family, MA PFML - Military Care
+    leave_plans = fineos_actions.resolve_leave_plans(False, True)
+    assert len(leave_plans) == 3
+    assert leave_plans_str.__contains__("MA PFML - Limit")
+    assert leave_plans_str.__contains__("MA PFML - Family")
+    assert leave_plans_str.__contains__("MA PFML - Military Care")
+
+    # Family Exemption = true
+    # Medical Exemption = false
+    # Assign: MA PFML - Limit, MA PFML Employee
+    leave_plans = fineos_actions.resolve_leave_plans(True, False)
+    assert len(leave_plans) == 2
+    assert leave_plans_str.__contains__("MA PFML - Limit")
+    assert leave_plans_str.__contains__("MA PFML - Employee")
+
+    # Family Exemption = true
+    # Medical Exemption = true
+    # Assign: no plans assigned (empty set)
+    leave_plans = fineos_actions.resolve_leave_plans(True, True)
+    assert len(leave_plans) == 0
+    assert ", ".join(leave_plans) == ""

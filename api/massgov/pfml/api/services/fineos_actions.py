@@ -16,7 +16,7 @@ import datetime
 import math
 import mimetypes
 import uuid
-from typing import List, Optional
+from typing import List, Optional, Set, Tuple
 
 from sqlalchemy.orm.exc import NoResultFound
 
@@ -498,7 +498,7 @@ def create_or_update_employer(
     fineos: massgov.pfml.fineos.AbstractFINEOSClient,
     employer_fein: str,
     db_session: massgov.pfml.db.Session,
-) -> Optional[str]:
+) -> Tuple[str, int]:
     # Determine if operation is create or update by querying
     # for a FINEOS customer number in the employer model.
     try:
@@ -550,4 +550,45 @@ def create_or_update_employer(
             fineos_employer_id,
         )
 
-    return employer_creation.fineos_customer_nbr
+    return employer_creation.fineos_customer_nbr, fineos_employer_id
+
+
+def create_service_agreement_for_employer(
+    fineos: massgov.pfml.fineos.AbstractFINEOSClient,
+    fineos_employer_id: int,
+    db_session: massgov.pfml.db.Session,
+) -> str:
+    employer = (
+        db_session.query(Employer).filter(Employer.fineos_employer_id == fineos_employer_id).one()
+    )
+
+    family_exemption = bool(employer.family_exemption)
+    medical_exemption = bool(employer.medical_exemption)
+    leave_plans = resolve_leave_plans(family_exemption, medical_exemption)
+
+    fineos_service_agreement_id = fineos.create_service_agreement_for_employer(
+        fineos_employer_id, ", ".join(leave_plans)
+    )
+
+    return fineos_service_agreement_id
+
+
+def resolve_leave_plans(family_exemption: bool, medical_exemption: bool) -> Set[str]:
+    # Logic to set leave plan list
+    if family_exemption:
+        if medical_exemption:
+            leave_plans: set = set("")
+        else:
+            leave_plans = {"MA PFML - Limit", "MA PFML - Employee"}
+    else:
+        if medical_exemption:
+            leave_plans = {"MA PFML - Limit", "MA PFML - Family", "MA PFML - Military Care"}
+        else:
+            leave_plans = {
+                "MA PFML - Limit",
+                "MA PFML - Employee",
+                "MA PFML - Family",
+                "MA PFML - Military Care",
+            }
+
+    return leave_plans

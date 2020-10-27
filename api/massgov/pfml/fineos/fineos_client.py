@@ -36,6 +36,14 @@ update_or_create_party_response_schema = xmlschema.XMLSchema(
     os.path.join(os.path.dirname(__file__), "wscomposer", "UpdateOrCreateParty.Response.xsd")
 )
 
+service_agreement_service_request_schema = xmlschema.XMLSchema(
+    os.path.join(os.path.dirname(__file__), "wscomposer", "ServiceAgreementService.Request.xsd")
+)
+
+service_agreement_service_response_schema = xmlschema.XMLSchema(
+    os.path.join(os.path.dirname(__file__), "wscomposer", "ServiceAgreementService.Response.xsd")
+)
+
 
 def fineos_document_empty_dates_to_none(response_json: dict) -> dict:
     # Document effectiveFrom and effectiveTo are empty and set to empty strings
@@ -580,6 +588,60 @@ class FINEOSClient(client.AbstractFINEOSClient):
         payload_as_dict = employer_create_payload.dict(by_alias=True)
 
         xml_element = update_or_create_party_request_schema.encode(payload_as_dict)
+        return xml.etree.ElementTree.tostring(xml_element, encoding="unicode", xml_declaration=True)
+
+    def create_service_agreement_for_employer(
+        self, fineos_employer_id: int, leave_plans: str
+    ) -> str:
+        """Create a Service Agreement for an employer in FINEOS."""
+        xml_body = self._create_service_agreement_payload(fineos_employer_id, leave_plans)
+
+        response = self._wscomposer_request(
+            "POST", "webservice?userid=CONTENT&config=ServiceAgreementService", xml_body
+        )
+        response_decoded = service_agreement_service_response_schema.decode(response.text)
+
+        fineos_customer_nbr: dict = next(
+            (
+                item
+                for item in response_decoded["additional-data-set"]["additional-data"]
+                if item["name"] == "CustomerNumber"
+            ),
+            {},
+        )
+
+        if fineos_customer_nbr == {}:
+            raise exception.FINEOSClientError(
+                Exception(
+                    f"Could not create service agreement for FINEOS employer id: {fineos_employer_id}"
+                )
+            )
+        else:
+            fineos_customer_nbr_value = fineos_customer_nbr.get("value")
+
+        return str(fineos_customer_nbr_value)
+
+    @staticmethod
+    def _create_service_agreement_payload(fineos_employer_id: int, leave_plans: str) -> str:
+        fineos_employer_id_data = models.AdditionalData(
+            name="CustomerNumber", value=str(fineos_employer_id)
+        )
+        leave_plans_data = models.AdditionalData(name="LeavePlans", value=leave_plans)
+
+        additional_data_set = models.AdditionalDataSet()
+        additional_data_set.additional_data.append(fineos_employer_id_data)
+        additional_data_set.additional_data.append(leave_plans_data)
+
+        service_data = models.ServiceAgreementData()
+        service_data.additional_data_set = additional_data_set
+
+        service_request = models.ServiceAgreementServiceRequest()
+        service_request.update_data = service_data
+
+        payload_as_dict = service_request.dict(by_alias=True)
+
+        xml_element = service_agreement_service_request_schema.encode(payload_as_dict)
+
         return xml.etree.ElementTree.tostring(xml_element, encoding="unicode", xml_declaration=True)
 
     def update_reflexive_questions(

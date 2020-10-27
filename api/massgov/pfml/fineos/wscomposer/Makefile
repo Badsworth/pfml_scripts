@@ -13,7 +13,9 @@ TARGETS = EmployeeRegisterService.Request.xsd \
        ReadEmployer.Request.xsd \
        ReadEmployer.Response.xsd \
        UpdateOrCreateParty.Request.xsd \
-       UpdateOrCreateParty.Response.xsd
+       UpdateOrCreateParty.Response.xsd \
+       ServiceAgreementService.Request.xsd \
+       ServiceAgreementService.Response.xsd
 
 update: $(TARGETS)
 

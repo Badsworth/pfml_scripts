@@ -69,6 +69,13 @@ class OCOrganisationDefaultItem(pydantic.BaseModel):
     GroupClient: bool = False
     I_CORRESP_PRIVHOLDER: int = 0
     I_OSGROUP_OWP: int = 0
+    IdentificationNumberType: InstanceDomainAndFullId = InstanceDomainAndFullId(
+        InstanceDomainAndFullId=InstanceDomainAndFullIdItem(
+            InstanceName="Tax Identification Number",
+            DomainName="IdentificationNumberType",
+            FullId=8736002,
+        )
+    )
     LastSuccessfulLogon: str = "1753-01-01T00:00:00"
     NotificationIssued: bool = False
     PartyType: InstanceDomainAndFullId = InstanceDomainAndFullId(
@@ -171,6 +178,13 @@ class OCOrganisationItem(pydantic.BaseModel):
     GroupClient: bool = False
     I_CORRESP_PRIVHOLDER: int = 0
     I_OSGROUP_OWP: int = 0
+    IdentificationNumberType: InstanceDomainAndFullId = InstanceDomainAndFullId(
+        InstanceDomainAndFullId=InstanceDomainAndFullIdItem(
+            InstanceName="Tax Identification Number",
+            DomainName="IdentificationNumberType",
+            FullId=8736002,
+        )
+    )
     LastSuccessfulLogon: str = "1753-01-01T00:00:00"
     NotificationIssued: bool = False
     PartyType: InstanceDomainAndFullId = InstanceDomainAndFullId(
@@ -263,3 +277,30 @@ class UpdateOrCreatePartyRequest(pydantic.BaseModel):
     )
     config_name: str = pydantic.Field("UpdateOrCreateParty", alias="config-name")
     update_data: UpdateData = pydantic.Field(None, alias="update-data")
+
+
+# Classes to model ServiceAgreementService request XML
+class AdditionalData(pydantic.BaseModel):
+    name: str
+    value: str
+
+
+class AdditionalDataSet(pydantic.BaseModel):
+    additional_data: List[AdditionalData] = pydantic.Field([], alias="additional-data")
+
+
+class ServiceAgreementData(pydantic.BaseModel):
+    additional_data_set: AdditionalDataSet = pydantic.Field(None, alias="additional-data-set")
+
+
+class ServiceAgreementServiceRequest(pydantic.BaseModel):
+    xmlns_p: str = pydantic.Field(
+        "http://www.fineos.com/wscomposer/ServiceAgreementService", alias="@xmlns:p"
+    )
+    xmlns_xsi: str = pydantic.Field("http://www.w3.org/2001/XMLSchema-instance", alias="@xmlns:xsi")
+    xsi_schemaLocation: str = pydantic.Field(
+        "http://www.fineos.com/wscomposer/ServiceAgreementService serviceagreement.xsd",
+        alias="@xsi:schemaLocation",
+    )
+    config_name: str = pydantic.Field("ServiceAgreementService", alias="config-name")
+    update_data: ServiceAgreementData = pydantic.Field(None, alias="update-data")

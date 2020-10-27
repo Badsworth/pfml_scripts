@@ -192,6 +192,11 @@ xmlns:tns="http://www.fineos.com/wscomposer/UpdateOrCreateParty" elementFormDefa
               parties to different parts of the organisation.</xs:documentation>
             </xs:annotation>
           </xs:element>
+          <xs:element name="IdentificationNumberType" minOccurs="1" maxOccurs="1" type="tns:FineosEnum">
+            <xs:annotation>
+              <xs:documentation>Specifies the type of identification number the party will have.</xs:documentation>
+            </xs:annotation>
+          </xs:element>
           <xs:element name="LastSuccessfulLogon" minOccurs="1" maxOccurs="1" nillable="true" type="xs:dateTime">
             <xs:annotation>
               <xs:documentation>Indicates the date and time of the last occasion when the customer successfully logged
@@ -2259,6 +2264,26 @@ xmlns:tns="http://www.fineos.com/wscomposer/UpdateOrCreateParty" elementFormDefa
               proceed with applying for Benefits</xs:documentation>
             </xs:annotation>
           </xs:element>
+          <xs:element name="MassachusettsID" minOccurs="0" maxOccurs="1">
+            <xs:annotation>
+              <xs:documentation>Field to capture state of Massachusetts ID</xs:documentation>
+            </xs:annotation>
+            <xs:simpleType>
+              <xs:restriction base="xs:string">
+                <xs:maxLength value="50" />
+              </xs:restriction>
+            </xs:simpleType>
+          </xs:element>
+          <xs:element name="OutOfStateID" minOccurs="0" maxOccurs="1">
+            <xs:annotation>
+              <xs:documentation>Field to capture out of state ID</xs:documentation>
+            </xs:annotation>
+            <xs:simpleType>
+              <xs:restriction base="xs:string">
+                <xs:maxLength value="50" />
+              </xs:restriction>
+            </xs:simpleType>
+          </xs:element>
           <xs:element name="names" type="tns:person.names_OCPerson_OCPersonName_List" />
         </xs:sequence>
       </xs:extension>
@@ -2570,6 +2595,11 @@ xmlns:tns="http://www.fineos.com/wscomposer/UpdateOrCreateParty" elementFormDefa
             <xs:annotation>
               <xs:documentation>I value of a department that is responsible for this party. Allows the assignment of
               parties to different parts of the organisation.</xs:documentation>
+            </xs:annotation>
+          </xs:element>
+          <xs:element name="IdentificationNumberType" minOccurs="1" maxOccurs="1" type="tns:FineosEnum">
+            <xs:annotation>
+              <xs:documentation>Specifies the type of identification number the party will have.</xs:documentation>
             </xs:annotation>
           </xs:element>
           <xs:element name="LastSuccessfulLogon" minOccurs="1" maxOccurs="1" nillable="true" type="xs:dateTime">
@@ -2993,6 +3023,26 @@ xmlns:tns="http://www.fineos.com/wscomposer/UpdateOrCreateParty" elementFormDefa
               proceed with applying for Benefits</xs:documentation>
             </xs:annotation>
           </xs:element>
+          <xs:element name="MassachusettsID" minOccurs="0" maxOccurs="1">
+            <xs:annotation>
+              <xs:documentation>Field to capture state of Massachusetts ID</xs:documentation>
+            </xs:annotation>
+            <xs:simpleType>
+              <xs:restriction base="xs:string">
+                <xs:maxLength value="50" />
+              </xs:restriction>
+            </xs:simpleType>
+          </xs:element>
+          <xs:element name="OutOfStateID" minOccurs="0" maxOccurs="1">
+            <xs:annotation>
+              <xs:documentation>Field to capture out of state ID</xs:documentation>
+            </xs:annotation>
+            <xs:simpleType>
+              <xs:restriction base="xs:string">
+                <xs:maxLength value="50" />
+              </xs:restriction>
+            </xs:simpleType>
+          </xs:element>
         </xs:sequence>
       </xs:extension>
     </xs:complexContent>
@@ -3085,6 +3135,11 @@ xmlns:tns="http://www.fineos.com/wscomposer/UpdateOrCreateParty" elementFormDefa
             <xs:annotation>
               <xs:documentation>I value of a department that is responsible for this party. Allows the assignment of
               parties to different parts of the organisation.</xs:documentation>
+            </xs:annotation>
+          </xs:element>
+          <xs:element name="IdentificationNumberType" minOccurs="1" maxOccurs="1" type="tns:FineosEnum">
+            <xs:annotation>
+              <xs:documentation>Specifies the type of identification number the party will have.</xs:documentation>
             </xs:annotation>
           </xs:element>
           <xs:element name="LastSuccessfulLogon" minOccurs="1" maxOccurs="1" nillable="true" type="xs:dateTime">
@@ -4873,6 +4928,11 @@ xmlns:tns="http://www.fineos.com/wscomposer/UpdateOrCreateParty" elementFormDefa
             <xs:annotation>
               <xs:documentation>I value of a department that is responsible for this party. Allows the assignment of
               parties to different parts of the organisation.</xs:documentation>
+            </xs:annotation>
+          </xs:element>
+          <xs:element name="IdentificationNumberType" minOccurs="1" maxOccurs="1" type="tns:FineosEnum">
+            <xs:annotation>
+              <xs:documentation>Specifies the type of identification number the party will have.</xs:documentation>
             </xs:annotation>
           </xs:element>
           <xs:element name="LastSuccessfulLogon" minOccurs="1" maxOccurs="1" nillable="true" type="xs:dateTime">
