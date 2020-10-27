@@ -139,8 +139,13 @@ export default function (on: Cypress.PluginEvents): Cypress.ConfigOptions {
 }
 
 function generatePassword(): string {
-  return faker.fake(
-    "{{internet.password(12)}}{{random.number(999)}}{{finance.currencySymbol}}"
+  // Password = {uppercase}{lowercase}{random*10){number}{symbol}
+  return (
+    faker.internet.password(1, false, /[A-Z]/) +
+    faker.internet.password(1, false, /[a-z]/) +
+    faker.internet.password(10) +
+    faker.random.number(999) +
+    faker.random.arrayElement(["@#$%^&*"])
   );
 }
 
