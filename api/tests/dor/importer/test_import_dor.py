@@ -380,14 +380,6 @@ def validate_employer_address_persistence(
     assert address_row.country_id == country.country_id
 
 
-def test_parse_employee_file(test_fs_path):
-    employee_wage_data = test_data.get_new_employee_wage_data()
-    employee_file_path = "{}/{}".format(str(test_fs_path), employee_file)
-
-    employees_info = import_dor.parse_employee_file_not_encrypted(employee_file_path, decrypter)
-    assert employees_info[0] == employee_wage_data
-
-
 def test_parse_employer_file(test_fs_path):
     employer_info = test_data.get_new_employer()
     employer_file_path = "{}/{}".format(str(test_fs_path), employer_file)

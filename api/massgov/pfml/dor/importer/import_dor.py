@@ -199,8 +199,11 @@ class EmployeeWriter(object):
         self.report = report
         self.report_log_entry = report_log_entry
         self.employee_ssns_created_in_current_import_run = {}
+        logger.info("created EmployeeWriter, buffer length %i", line_buffer_length)
 
-    def clear_buffer(self):
+    def flush_buffer(self):
+        logger.info("flushing buffer, %i lines", len(self.lines))
+
         employees_info = []
 
         for row in self.lines:
@@ -257,11 +260,11 @@ class EmployeeWriter(object):
                 self.remainder_encoded = data
 
             if len(self.lines) > self.line_buffer_length:
-                self.clear_buffer()
+                self.flush_buffer()
 
         else:
             logger.info("Done parsing", extra={"lines_parsed": self.line_count})
-            self.clear_buffer()
+            self.flush_buffer()
 
         return False
 
@@ -380,64 +383,34 @@ def process_daily_import(
         employee_file=employee_file_path,
     )
 
+    report.sample_employers_line_lengths = {}
+    report.parsed_employers_exception_line_nums = []
+    report.invalid_address_state_and_account_keys = {}
+
+    report_log_entry = dor_persistence_util.create_import_log_entry(db_session, report)
+
+    db_session.refresh(report_log_entry)
+
     try:
-        report.sample_employers_line_lengths = {}
-        report.parsed_employers_exception_line_nums = []
-        report.invalid_address_state_and_account_keys = {}
-
-        report_log_entry = dor_persistence_util.create_import_log_entry(db_session, report)
-
-        db_session.refresh(report_log_entry)
-
         employers = parse_employer_file(employer_file_path, decrypter, report)
 
         parsed_employers_count = len(employers)
-        parsed_employees_info_count = 0
 
         account_key_to_employer_id_map = import_employers(
             db_session, employers, report, report_log_entry.import_log_id
         )
 
-        decrypt_files = os.getenv("DECRYPT") == "true"
-
-        if decrypt_files:
-            writer = EmployeeWriter(
-                line_buffer_length=EMPLOYEE_LINE_LIMIT,
-                db_session=db_session,
-                account_key_to_employer_id_map=account_key_to_employer_id_map,
-                report=report,
-                report_log_entry=report_log_entry,
-            )
-            decrypter.set_on_data(writer)
-            get_decrypted_file_stream(employee_file_path, decrypter)
-            parsed_employees_info_count = writer.parsed_employees_info_count
-
-        else:
-            # TODO: parameterize
-            batch_size = EMPLOYEE_LINE_LIMIT
-            processed_count = 0
-
-            employee_count = get_employee_file_lines(employee_file_path, decrypter)
-
-            logger.info("Employee file count", extra={"count": employee_count})
-
-            while processed_count < employee_count:
-                logger.info("Processed count", extra={"count": processed_count})
-                employees_info = parse_employee_file_not_encrypted(employee_file_path, decrypter)
-
-                parsed_employees_info_count += len(employees_info)
-                logger.info("Employees to process this batch", extra={"count": len(employees_info)})
-                if len(employees_info) > 0:
-                    import_employees_and_wage_data(
-                        db_session,
-                        account_key_to_employer_id_map,
-                        employees_info,
-                        {},
-                        report,
-                        report_log_entry.import_log_id,
-                    )
-
-                processed_count = processed_count + batch_size
+        writer = EmployeeWriter(
+            line_buffer_length=EMPLOYEE_LINE_LIMIT,
+            db_session=db_session,
+            account_key_to_employer_id_map=account_key_to_employer_id_map,
+            report=report,
+            report_log_entry=report_log_entry,
+        )
+        decrypter.set_on_data(writer)
+        file_stream = file_util.open_stream(employee_file_path, "rb")
+        decrypter.decrypt_stream(file_stream)
+        parsed_employees_info_count = writer.parsed_employees_info_count
 
         # finalize report
         report.parsed_employers_count = parsed_employers_count
@@ -1039,46 +1012,6 @@ def parse_employer_file(employer_file_path, decrypter, report):
         },
     )
     return employers
-
-
-def get_employee_file_lines(employee_file_path, decrypter):
-    line_count = 0
-
-    with get_decrypted_file_stream(employee_file_path, decrypter) as file_stream:
-        has_next = True
-        while has_next:
-            line = file_stream.readline()
-            if not line:
-                has_next = False
-
-            line_count = line_count + 1
-
-        return line_count
-
-
-def parse_employee_file_not_encrypted(employee_file_path, decrypter):
-    """Parse employee file"""
-    logger.info("Start parsing employee file", extra={"employee_file_path": employee_file_path})
-
-    employees_info = []
-
-    for row in get_decrypted_file_stream(employee_file_path, decrypter):
-        if not row:  # skip empty end of file lines
-            continue
-
-        # TODO: tests pass in binary strings vs. smart open sending in str lines
-        if not isinstance(row, str):
-            row = str(row.decode("utf-8"))
-
-        if row.startswith("B"):
-            employee_info = EMPLOYEE_FORMAT.parse_line(row)
-            employees_info.append(employee_info)
-
-    logger.info(
-        "Finished parsing employee file", extra={"employee_file_path": employee_file_path},
-    )
-
-    return employees_info
 
 
 def move_file_to_processed(bucket, file_to_copy):

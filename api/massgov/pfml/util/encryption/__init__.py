@@ -1,5 +1,6 @@
 import tempfile
 from abc import ABC
+from typing import Callable, Optional
 
 import gnupg
 
@@ -83,14 +84,26 @@ class GpgCrypt(Crypt):
 
 
 class Utf8Crypt(Crypt):
+    on_data: Optional[Callable]
+
+    def __init__(self):
+        self.on_data = None
+
     def encrypt(self, str_val):
         return str_val.encode("utf8")
+
+    def set_on_data(self, on_data):
+        self.on_data = on_data
 
     def decrypt(self, bval):
         return bval.decode("utf8")
 
     def decrypt_stream(self, stream):
-        return stream.read().decode("utf8")
+        if self.on_data is None:
+            raise RuntimeError("set_on_data must be called before decrypt_stream")
+        while data := stream.read(1000000):
+            self.on_data(data)
+        self.on_data("")
 
     def remove_keys(self):
         return
