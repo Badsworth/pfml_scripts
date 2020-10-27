@@ -26,6 +26,30 @@ def test_read_fs_file(test_fs_path):
     assert lines[2] == "line 3 text"
 
 
+def test_read_s3_stream(mock_s3_bucket):
+    # path variables
+    folder_name = "test_folder"
+    file_name = "test.txt"
+    key = "{}/{}".format(folder_name, file_name)
+    full_path = "s3://{}/{}".format(mock_s3_bucket, key)
+
+    s3 = boto3.client("s3")
+    s3.put_object(Bucket=mock_s3_bucket, Key=key, Body="line 1 text\nline 2 text\nline 3 text")
+    # because function returns a map object instead of a list, must cast to list
+    file_stream = file_util.open_stream(full_path)
+
+    line_count = 0
+
+    for line in file_stream:
+        line_count += 1
+        if line_count == 1:
+            assert line == "line 1 text\n"
+        if line_count == 2:
+            assert line == "line 2 text\n"
+        if line_count == 3:
+            assert line == "line 3 text"
+
+
 def test_read_s3_file(mock_s3_bucket):
     # path variables
     folder_name = "test_folder"

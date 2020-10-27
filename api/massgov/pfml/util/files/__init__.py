@@ -6,7 +6,6 @@ import os
 from urllib.parse import urlparse
 
 import boto3
-import boto3.session
 import ebcdic  # noqa: F401
 import smart_open
 from botocore.config import Config
@@ -49,10 +48,9 @@ def list_files(path):
 
 def open_stream(path, mode="r"):
     if is_s3_path(path):
-        so_session = boto3.session.Session()
         so_config = Config(connect_timeout=50, read_timeout=1200)
-        s3_session = so_session.resource(service_name="s3", config=so_config)
-        so_transport_params = {"session": s3_session}
+        so_transport_params = {"resource_kwargs": {"config": so_config}}
+
         return smart_open.open(path, mode, transport_params=so_transport_params)
     else:
         return smart_open.open(path, mode)
