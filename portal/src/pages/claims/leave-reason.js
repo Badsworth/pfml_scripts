@@ -9,6 +9,7 @@ import InputChoiceGroup from "../../components/InputChoiceGroup";
 import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
+import { isFeatureEnabled } from "../../services/featureFlags";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "react-i18next";
@@ -20,6 +21,11 @@ export const fields = [
 ];
 
 export const LeaveReason = (props) => {
+  // Hide "Leave reason" options for soft launch (CP-1145)
+  const hideMilitaryLeaveTypes = isFeatureEnabled(
+    "claimantHideMilitaryLeaveTypes"
+  );
+
   const { appLogic, claim } = props;
   const { t } = useTranslation();
   const { formState, getField, updateFields, clearField } = useFormState(
@@ -63,22 +69,34 @@ export const LeaveReason = (props) => {
             label: t("pages.claimsLeaveReason.bondingLeaveLabel"),
             value: LeaveReasonEnum.bonding,
           },
-          {
-            // TODO (CP-515): We need to more accurately map this Family Leave option to signify that
-            // this is active duty family leave, as opposed to another family leave type.
-            checked: reason === LeaveReasonEnum.activeDutyFamily,
-            hint: t("pages.claimsLeaveReason.activeDutyFamilyLeaveHint"),
-            label: t("pages.claimsLeaveReason.activeDutyFamilyLeaveLabel"),
-            value: LeaveReasonEnum.activeDutyFamily,
-          },
-          {
-            // TODO (CP-515): We need to more accurately map this Family Leave option to signify that
-            // this is family leave to care for a service member, as opposed to another family leave type.
-            checked: reason === LeaveReasonEnum.serviceMemberFamily,
-            hint: t("pages.claimsLeaveReason.serviceMemberFamilyLeaveHint"),
-            label: t("pages.claimsLeaveReason.serviceMemberFamilyLeaveLabel"),
-            value: LeaveReasonEnum.serviceMemberFamily,
-          },
+          // TODO (CP-534): Remove this feature flag and show all options
+          // when the portal supports activeDutyFamily and serviceMemberFamily
+          ...(hideMilitaryLeaveTypes
+            ? []
+            : [
+                {
+                  // TODO (CP-515): We need to more accurately map this Family Leave option to signify that
+                  // this is active duty family leave, as opposed to another family leave type.
+                  checked: reason === LeaveReasonEnum.activeDutyFamily,
+                  hint: t("pages.claimsLeaveReason.activeDutyFamilyLeaveHint"),
+                  label: t(
+                    "pages.claimsLeaveReason.activeDutyFamilyLeaveLabel"
+                  ),
+                  value: LeaveReasonEnum.activeDutyFamily,
+                },
+                {
+                  // TODO (CP-515): We need to more accurately map this Family Leave option to signify that
+                  // this is family leave to care for a service member, as opposed to another family leave type.
+                  checked: reason === LeaveReasonEnum.serviceMemberFamily,
+                  hint: t(
+                    "pages.claimsLeaveReason.serviceMemberFamilyLeaveHint"
+                  ),
+                  label: t(
+                    "pages.claimsLeaveReason.serviceMemberFamilyLeaveLabel"
+                  ),
+                  value: LeaveReasonEnum.serviceMemberFamily,
+                },
+              ]),
         ]}
         label={t("pages.claimsLeaveReason.sectionLabel")}
         hint={t("pages.claimsLeaveReason.sectionHint")}

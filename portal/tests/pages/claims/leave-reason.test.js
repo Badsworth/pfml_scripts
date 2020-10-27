@@ -10,6 +10,58 @@ import { act } from "react-dom/test-utils";
 jest.mock("../../../src/hooks/useAppLogic");
 
 describe("LeaveReasonPage", () => {
+  describe("when claimantHideMilitaryLeaveTypes feature flag is not enabled", () => {
+    let wrapper;
+
+    beforeEach(() => {
+      process.env.featureFlags = {
+        claimantHideMilitaryLeaveTypes: false,
+      };
+      ({ wrapper } = renderWithAppLogic(LeaveReasonPage, {
+        claimAttrs: new MockClaimBuilder().create(),
+      }));
+    });
+
+    it("renders the page with all four reasons", () => {
+      const choiceGroup = wrapper.find("InputChoiceGroup").first().dive();
+
+      expect(choiceGroup.exists(`[value="${LeaveReason.medical}"]`)).toBe(true);
+      expect(choiceGroup.exists(`[value="${LeaveReason.bonding}"]`)).toBe(true);
+      expect(
+        choiceGroup.exists(`[value="${LeaveReason.activeDutyFamily}"]`)
+      ).toBe(true);
+      expect(
+        choiceGroup.exists(`[value="${LeaveReason.serviceMemberFamily}"]`)
+      ).toBe(true);
+    });
+  });
+
+  describe("when claimantHideMilitaryLeaveTypes feature flag is enabled", () => {
+    let wrapper;
+
+    beforeEach(() => {
+      process.env.featureFlags = {
+        claimantHideMilitaryLeaveTypes: true,
+      };
+      ({ wrapper } = renderWithAppLogic(LeaveReasonPage, {
+        claimAttrs: new MockClaimBuilder().create(),
+      }));
+    });
+
+    it("renders the page without activeDutyFamily and serviceMemberFamily reasons", () => {
+      const choiceGroup = wrapper.find("InputChoiceGroup").first().dive();
+
+      expect(choiceGroup.exists(`[value="${LeaveReason.medical}"]`)).toBe(true);
+      expect(choiceGroup.exists(`[value="${LeaveReason.bonding}"]`)).toBe(true);
+      expect(
+        choiceGroup.exists(`[value="${LeaveReason.activeDutyFamily}"]`)
+      ).toBe(false);
+      expect(
+        choiceGroup.exists(`[value="${LeaveReason.serviceMemberFamily}"]`)
+      ).toBe(false);
+    });
+  });
+
   it("renders the page for medical leave and does not show reason qualifier followup", () => {
     const { wrapper } = renderWithAppLogic(LeaveReasonPage, {
       claimAttrs: new MockClaimBuilder().medicalLeaveReason().create(),

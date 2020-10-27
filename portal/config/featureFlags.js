@@ -10,6 +10,9 @@ const flagsConfig = {
     // Hide "Employment status" question from claimant flow (CP-1204)
     // TODO (CP-1281): Show employment status question when Portal supports other employment statuses
     claimantHideEmploymentStatus: true,
+    // Hide "Leave reason" options for soft launch (CP-1145)
+    // TODO (CP-534): Show all options when portal supports activeDutyFamily, serviceMemberFamily
+    claimantHideMilitaryLeaveTypes: true,
     example: false,
     // When this flag is enabled, the user can see the site.
     // To immediately hide the site from people who previously overrode this

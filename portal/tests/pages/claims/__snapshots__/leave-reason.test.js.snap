@@ -20,18 +20,6 @@ exports[`LeaveReasonPage renders the page for medical leave and does not show re
           "label": "I need to bond with my child after birth, adoption, or foster placement.",
           "value": "Child Bonding",
         },
-        Object {
-          "checked": false,
-          "hint": "Family leave",
-          "label": "I need to manage family affairs while a family member is on active duty in the armed forces.",
-          "value": "Care For A Family Member",
-        },
-        Object {
-          "checked": false,
-          "hint": "Family leave",
-          "label": "I need to care for a family member who serves in the armed forces.",
-          "value": "Pregnancy/Maternity",
-        },
       ]
     }
     hint="You can only request one leave at a time."
