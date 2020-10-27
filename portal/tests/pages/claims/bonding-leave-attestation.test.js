@@ -1,5 +1,5 @@
+import { renderWithAppLogic, simulateEvents } from "../../test-utils";
 import BondingLeaveAttestation from "../../../src/pages/claims/bonding-leave-attestation";
-import { renderWithAppLogic } from "../../test-utils";
 
 describe("BondingLeaveAttestation", () => {
   it("renders the page", () => {
@@ -9,11 +9,12 @@ describe("BondingLeaveAttestation", () => {
     expect(wrapper.find("Trans").dive()).toMatchSnapshot();
   });
 
-  it("calls goToNextPage when user clicks button", () => {
+  it("calls goToNextPage when user submits form", () => {
     const { appLogic, wrapper } = renderWithAppLogic(BondingLeaveAttestation);
     const spy = jest.spyOn(appLogic.portalFlow, "goToNextPage");
 
-    wrapper.find("Button").simulate("click");
+    const { submitForm } = simulateEvents(wrapper);
+    submitForm();
     expect(spy).toHaveBeenCalledTimes(1);
   });
 });
