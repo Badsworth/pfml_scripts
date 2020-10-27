@@ -433,9 +433,7 @@ def process_daily_import(
 
             while processed_count < employee_count:
                 logger.info("Processed count", extra={"count": processed_count})
-                employees_info = parse_employee_file(
-                    employee_file_path, decrypter, report, processed_count, batch_size
-                )
+                employees_info = parse_employee_file_not_encrypted(employee_file_path, decrypter)
 
                 parsed_employees_info_count += len(employees_info)
                 logger.info("Employees to process this batch", extra={"count": len(employees_info)})
@@ -1082,60 +1080,27 @@ def get_employee_file_lines(employee_file_path, decrypter):
         return line_count
 
 
-def parse_employee_file(employee_file_path, decrypter, report, offset=0, limit=EMPLOYEE_LINE_LIMIT):
+def parse_employee_file_not_encrypted(employee_file_path, decrypter):
     """Parse employee file"""
     logger.info("Start parsing employee file", extra={"employee_file_path": employee_file_path})
 
     employees_info = []
-    line_count = 0
 
-    decrypt_files = os.getenv("DECRYPT") == "true"
-    if decrypt_files:
-        employee_capturer = Capturer(line_offset=offset, line_limit=limit)
-        decrypter.set_on_data(employee_capturer)
+    for row in get_decrypted_file_stream(employee_file_path, decrypter):
+        if not row:  # skip empty end of file lines
+            continue
 
-        get_decrypted_file_stream(employee_file_path, decrypter)
+        # TODO: tests pass in binary strings vs. smart open sending in str lines
+        if not isinstance(row, str):
+            row = str(row.decode("utf-8"))
 
-        for row in employee_capturer.lines:
-            if not row:  # skip empty end of file lines
-                continue
+        if row.startswith("B"):
+            employee_info = EMPLOYEE_FORMAT.parse_line(row)
+            employees_info.append(employee_info)
 
-            line_count = line_count + 1
-
-            if row.startswith("B"):
-                line_length = len(row.strip("\n\r"))
-                if line_length != EMPLOYEE_FILE_ROW_LENGTH:
-                    logger.warning(
-                        "Incorrect employee line length - Line {0}, line length: {1}".format(
-                            line_count, line_length
-                        )
-                    )
-                    report.invalid_employee_lines_count += 1
-
-                try:
-                    employee_info = EMPLOYEE_FORMAT.parse_line(row)
-                    employees_info.append(employee_info)
-
-                except Exception:
-                    logger.warning("Parse error with employee on line %i", line_count)
-                    report.parsed_employees_exception_count += 1
-
-    else:
-        for row in get_decrypted_file_stream(employee_file_path, decrypter):
-            if not row:  # skip empty end of file lines
-                continue
-
-            # TODO: tests pass in binary strings vs. smart open sending in str lines
-            if not isinstance(row, str):
-                row = str(row.decode("utf-8"))
-
-            if row.startswith("B"):
-                employee_info = EMPLOYEE_FORMAT.parse_line(row)
-                employees_info.append(employee_info)
-
-        logger.info(
-            "Finished parsing employee file", extra={"employee_file_path": employee_file_path},
-        )
+    logger.info(
+        "Finished parsing employee file", extra={"employee_file_path": employee_file_path},
+    )
 
     return employees_info
 
