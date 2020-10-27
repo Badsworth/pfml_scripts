@@ -406,6 +406,14 @@ const pages = {
     sectionLabel_newborn: "When was your child born?",
     title: "$t(shared.claimsLeaveDetailsTitle)",
   },
+  claimsBondingLeaveAttestation: {
+    lead:
+      "<p>This paid leave applies to parents of children who have joined their family in the past 12 months via:</p><ul><li>Birth</li><li>Foster placement</li><li>Adoption</li></ul>",
+    submitApplicationButton: "I understand and agree",
+    title: "Confirm that you are an eligible parent",
+    truthAttestation:
+      "I agree that I am a new parent by one of the routes above and can provide certification to support this relationship.",
+  },
   claimsChecklist: {
     backButtonLabel: "Back to Dashboard",
     completed_editable: "Completed",

@@ -3,6 +3,7 @@ import BaseModel from "./BaseModel";
 import { ClaimStatus } from "./Claim";
 import { createRouteWithQuery } from "../utils/routeWithParams";
 import getRelevantIssues from "../utils/getRelevantIssues";
+import routes from "../routes";
 
 /**
  * Unique identifiers for steps in the portal application
@@ -63,6 +64,12 @@ export default class Step extends BaseModel {
        */
       pages: null,
       /**
+       * @type {string}
+       * Optionally define which route a user should be directed to for this Step.
+       * By default, the first entry in `pages` will be used.
+       */
+      initialPageRoute: null,
+      /**
        * @type {Step[]}
        * Array of steps that must be completed before this step
        */
@@ -100,6 +107,7 @@ export default class Step extends BaseModel {
   }
 
   get initialPage() {
+    if (this.initialPageRoute) return this.initialPageRoute;
     return this.pages[0].route;
   }
 
@@ -274,6 +282,11 @@ export default class Step extends BaseModel {
       editable: !claim.isSubmitted,
       group: 1,
       pages: pagesByStep[ClaimSteps.reviewAndConfirm],
+      // TODO (CP-1272): Utilize the Checklist state node's transitions instead of
+      // relying on the array order or the extra `initialPageRoute` property
+      initialPageRoute: claim.isBondingLeave
+        ? routes.claims.bondingLeaveAttestation
+        : routes.claims.review,
       dependsOn: [verifyId, leaveDetails, employerInformation, otherLeave],
       context,
     });

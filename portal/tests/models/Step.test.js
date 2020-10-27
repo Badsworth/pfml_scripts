@@ -38,6 +38,26 @@ describe("Step Model", () => {
     });
   });
 
+  describe("initialPage", () => {
+    it("return first page's route", () => {
+      const step = new Step({
+        name,
+        pages,
+      });
+      expect(step.initialPage).toBe(pages[0].route);
+    });
+
+    it("return initialPageRoute while initialPageRoute is specified", () => {
+      const initialPageRoute = "/testing";
+      const step = new Step({
+        name,
+        pages,
+        initialPageRoute,
+      });
+      expect(step.initialPage).toBe(initialPageRoute);
+    });
+  });
+
   describe("isComplete", () => {
     it("uses completeCond when present", () => {
       const completeCond = (context) => context.username !== "";

@@ -191,6 +191,13 @@ const machineTests = {
       test: () => {},
     },
   },
+  [routes.claims.bondingLeaveAttestation]: {
+    meta: {
+      test: (_, event) => {
+        expect(event.context.claim.isBondingLeave).toEqual(true);
+      },
+    },
+  },
   [routes.claims.review]: {
     meta: {
       test: () => {},

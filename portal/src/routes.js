@@ -19,6 +19,7 @@ const routes = {
   },
   claims: {
     address: "/claims/address",
+    bondingLeaveAttestation: "/claims/bonding-leave-attestation",
     checklist: "/claims/checklist",
     dashboard: "/",
     dateOfBirth: "/claims/date-of-birth",

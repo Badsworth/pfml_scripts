@@ -105,7 +105,13 @@ export default {
         OTHER_LEAVE: routes.claims.employerBenefits,
         EMPLOYER_INFORMATION: routes.claims.employmentStatus,
         PAYMENT: routes.claims.paymentMethod,
-        REVIEW_AND_CONFIRM: routes.claims.review,
+        REVIEW_AND_CONFIRM: [
+          {
+            target: routes.claims.bondingLeaveAttestation,
+            cond: "isBondingLeave",
+          },
+          { target: routes.claims.review },
+        ],
         UPLOAD_CERTIFICATION: routes.claims.uploadCertification,
         UPLOAD_ID: routes.claims.uploadId,
       },
@@ -398,6 +404,15 @@ export default {
       },
       on: {
         CONTINUE: routes.claims.checklist,
+      },
+    },
+    [routes.claims.bondingLeaveAttestation]: {
+      meta: {
+        step: ClaimSteps.reviewAndConfirm,
+        fields: [],
+      },
+      on: {
+        CONTINUE: routes.claims.review,
       },
     },
     [routes.claims.review]: {
