@@ -10,6 +10,7 @@ import InputText from "../../components/InputText";
 import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
+import { isFeatureEnabled } from "../../services/featureFlags";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "../../locales/i18n";
@@ -21,8 +22,17 @@ export const EmploymentStatus = (props) => {
   const { appLogic, claim } = props;
   const { t } = useTranslation();
 
+  // TODO (CP-1281): Show employment status question when Portal supports other employment statuses
+  const hideEmploymentStatus = isFeatureEnabled("claimantHideEmploymentStatus");
+  const initialFormState = pick(props, fields).claim;
+
+  if (hideEmploymentStatus) {
+    // Hard-code the field if it's hidden so that validations pass
+    initialFormState.employment_status = EmploymentStatusEnum.employed;
+  }
+
   const { formState, getField, updateFields, clearField } = useFormState(
-    pick(props, fields).claim
+    initialFormState
   );
   const employment_status = get(formState, "employment_status");
 
@@ -44,23 +54,26 @@ export const EmploymentStatus = (props) => {
         {t("pages.claimsEmploymentStatus.multipleEmployerAppAlert")}
       </Alert>
 
-      <InputChoiceGroup
-        {...getFunctionalInputProps("employment_status")}
-        choices={["employed", "unemployed", "selfEmployed"].map((key) => ({
-          checked: employment_status === EmploymentStatusEnum[key],
-          label: t("pages.claimsEmploymentStatus.choiceLabel", {
-            context: key,
-          }),
-          value: EmploymentStatusEnum[key],
-        }))}
-        label={t("pages.claimsEmploymentStatus.sectionLabel")}
-        hint={
-          <Details label={t("pages.claimsEmploymentStatus.furloughQuestion")}>
-            {t("pages.claimsEmploymentStatus.furloughAnswer")}
-          </Details>
-        }
-        type="radio"
-      />
+      {!hideEmploymentStatus && (
+        <InputChoiceGroup
+          {...getFunctionalInputProps("employment_status")}
+          choices={["employed", "unemployed", "selfEmployed"].map((key) => ({
+            checked: employment_status === EmploymentStatusEnum[key],
+            label: t("pages.claimsEmploymentStatus.choiceLabel", {
+              context: key,
+            }),
+            value: EmploymentStatusEnum[key],
+          }))}
+          label={t("pages.claimsEmploymentStatus.sectionLabel")}
+          hint={
+            <Details label={t("pages.claimsEmploymentStatus.furloughQuestion")}>
+              {t("pages.claimsEmploymentStatus.furloughAnswer")}
+            </Details>
+          }
+          type="radio"
+        />
+      )}
+
       <ConditionalContent
         fieldNamesClearedWhenHidden={["employer_fein"]}
         getField={getField}

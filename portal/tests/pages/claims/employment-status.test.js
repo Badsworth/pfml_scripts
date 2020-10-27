@@ -17,26 +17,61 @@ describe("EmploymentStatusPage", () => {
     ({ changeField, changeRadioGroup } = simulateEvents(wrapper));
   });
 
-  it("renders the page", () => {
-    expect(wrapper).toMatchSnapshot();
+  describe("when claimantHideEmploymentStatus feature flag is enabled", () => {
+    beforeEach(() => {
+      process.env.featureFlags = {
+        claimantHideEmploymentStatus: true,
+      };
+    });
+
+    it("renders the page without the employment status field", () => {
+      expect(wrapper).toMatchSnapshot();
+    });
+
+    it("submits status and FEIN", () => {
+      const testFein = 123456789;
+      changeField("employer_fein", testFein);
+
+      act(() => {
+        wrapper.find("QuestionPage").simulate("save");
+      });
+
+      expect(appLogic.claims.update).toHaveBeenCalledWith(
+        claim.application_id,
+        {
+          employment_status: EmploymentStatus.employed,
+          employer_fein: testFein,
+        }
+      );
+    });
   });
 
-  describe("when user selects employed in MA as their employment status", () => {
+  describe("when claimantHideEmploymentStatus feature flag is not enabled", () => {
     beforeEach(() => {
-      changeRadioGroup("employment_status", EmploymentStatus.employed);
+      process.env.featureFlags = {
+        claimantHideEmploymentStatus: false,
+      };
     });
 
-    it("shows FEIN question", () => {
-      expect(
-        notificationFeinQuestionWrapper()
-          .parents("ConditionalContent")
-          .prop("visible")
-      ).toBeTruthy();
+    it("renders the page with the employment status field", () => {
+      expect(wrapper).toMatchSnapshot();
     });
 
-    describe("when user clicks continue", () => {
-      it("calls claims.update", () => {
-        const testFein = 987654;
+    describe("when user selects employed in MA as their employment status", () => {
+      beforeEach(() => {
+        changeRadioGroup("employment_status", EmploymentStatus.employed);
+      });
+
+      it("shows FEIN question", () => {
+        expect(
+          notificationFeinQuestionWrapper()
+            .parents("ConditionalContent")
+            .prop("visible")
+        ).toBeTruthy();
+      });
+
+      it("submits status and FEIN", () => {
+        const testFein = 123456789;
         changeField("employer_fein", testFein);
         act(() => {
           wrapper.find("QuestionPage").simulate("save");
@@ -51,32 +86,46 @@ describe("EmploymentStatusPage", () => {
         );
       });
     });
-  });
 
-  describe("when user selects self-employed as their employment status", () => {
-    beforeEach(() => {
-      changeRadioGroup("employment_status", EmploymentStatus.selfEmployed);
+    describe("when user selects self-employed as their employment status", () => {
+      beforeEach(() => {
+        changeRadioGroup("employment_status", EmploymentStatus.selfEmployed);
+      });
+
+      it("hides FEIN question", () => {
+        expect(
+          notificationFeinQuestionWrapper()
+            .parents("ConditionalContent")
+            .prop("visible")
+        ).toBeFalsy();
+      });
+
+      it("submits status and empty FEIN", () => {
+        act(() => {
+          wrapper.find("QuestionPage").simulate("save");
+        });
+
+        expect(appLogic.claims.update).toHaveBeenCalledWith(
+          claim.application_id,
+          {
+            employment_status: EmploymentStatus.selfEmployed,
+            employer_fein: null,
+          }
+        );
+      });
     });
 
-    it("hides FEIN question", () => {
-      expect(
-        notificationFeinQuestionWrapper()
-          .parents("ConditionalContent")
-          .prop("visible")
-      ).toBeFalsy();
-    });
-  });
-
-  describe("when user selects unemployed as their employment status", () => {
-    beforeEach(() => {
-      changeRadioGroup("employment_status", EmploymentStatus.unemployed);
-    });
-    it("hides FEIN question", () => {
-      expect(
-        notificationFeinQuestionWrapper()
-          .parents("ConditionalContent")
-          .prop("visible")
-      ).toBeFalsy();
+    describe("when user selects unemployed as their employment status", () => {
+      beforeEach(() => {
+        changeRadioGroup("employment_status", EmploymentStatus.unemployed);
+      });
+      it("hides FEIN question", () => {
+        expect(
+          notificationFeinQuestionWrapper()
+            .parents("ConditionalContent")
+            .prop("visible")
+        ).toBeFalsy();
+      });
     });
   });
 });
