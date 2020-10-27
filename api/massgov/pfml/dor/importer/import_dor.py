@@ -4,7 +4,6 @@
 #
 
 import os
-import re
 import resource
 import uuid
 from dataclasses import asdict, dataclass, field
@@ -27,6 +26,7 @@ from massgov.pfml.dor.importer.dor_file_formats import (
     EMPLOYER_FILE_FORMAT,
     EMPLOYER_FILE_ROW_LENGTH,
 )
+from massgov.pfml.dor.importer.paths import ImportBatch, get_files_to_process
 from massgov.pfml.util.config import get_secret_from_env
 from massgov.pfml.util.encryption import Crypt, GpgCrypt, Utf8Crypt
 
@@ -41,9 +41,6 @@ aws_ssm = boto3.client("ssm", region_name="us-east-1")
 RECEIVED_FOLDER = "dor/received/"
 PROCESSED_FOLDER = "dor/processed/"
 
-EMPLOYER_FILE_PREFIX = "DORDFMLEMP_"
-EMPLOYEE_FILE_PREFIX = "DORDFML_"
-
 EMPLOYER_LINE_LIMIT = 250000
 EMPLOYEE_LINE_LIMIT = 200000
 
@@ -54,13 +51,6 @@ class ImportException(Exception):
     def __init__(self, message: str, error_type: str):
         self.message = message
         self.error_type = error_type
-
-
-@dataclass
-class ImportBatch:
-    upload_date: str
-    employer_file: str
-    employee_file: str
 
 
 @dataclass
@@ -1121,61 +1111,11 @@ def move_file_to_processed(bucket, file_to_copy):
     )
 
 
-def get_files_to_process(path: str) -> List[ImportBatch]:
-    files_by_date = get_files_for_import_grouped_by_date(path)
-    file_date_keys = sorted(files_by_date.keys())
-
-    import_batches: List[ImportBatch] = []
-
-    for file_date_key in file_date_keys:
-        files = files_by_date[file_date_key]
-
-        if EMPLOYER_FILE_PREFIX not in files or EMPLOYEE_FILE_PREFIX not in files:
-            logger.warning("incomplete files for %s: %s", file_date_key, files)
-            continue
-
-        import_batches.append(
-            ImportBatch(
-                upload_date=file_date_key,
-                employer_file=files[EMPLOYER_FILE_PREFIX],
-                employee_file=files[EMPLOYEE_FILE_PREFIX],
-            )
-        )
-
-    return import_batches
-
-
-def get_files_for_import_grouped_by_date(path: str,) -> Dict[str, Dict[str, str]]:
-    """Get the paths (s3 keys) of files in the received folder of the bucket"""
-
-    files_by_date: Dict[str, Dict[str, str]] = {}
-    files_for_import = file_util.list_files(str(path))
-    files_for_import.sort()
-    for file_key in files_for_import:
-        match = re.match(r"(DORDFML.*_)(\d+)", file_key)
-        if not match:
-            logger.warning("file %s does not match expected format - skipping", file_key)
-            continue
-
-        prefix = match[1]
-        file_date = match[2]
-
-        if prefix not in (EMPLOYER_FILE_PREFIX, EMPLOYEE_FILE_PREFIX):
-            logger.warning("file %s does not have a known prefix - skipping", file_key)
-            continue
-
-        if file_date not in files_by_date:
-            files_by_date[file_date] = {}
-        files_by_date[file_date][prefix] = f"{path}/{file_key}"
-
-    return files_by_date
-
-
 def get_file_name(s3_file_key):
     """Get file name without extension from an object key"""
     file_name_index = s3_file_key.rfind("/") + 1
-    file_name_extention_index = s3_file_key.rfind(".txt")
-    file_name = s3_file_key[file_name_index:file_name_extention_index]
+    file_name_extension_index = s3_file_key.rfind(".txt")
+    file_name = s3_file_key[file_name_index:file_name_extension_index]
     return file_name
 
 

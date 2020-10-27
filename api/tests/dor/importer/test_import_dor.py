@@ -2,16 +2,17 @@ import pathlib
 import tempfile
 from datetime import datetime
 
-import boto3
 import pytest
 from sqlalchemy.exc import SQLAlchemyError
 
-import dor_test_data as test_data
 import massgov.pfml.dor.importer.import_dor as import_dor
 import massgov.pfml.dor.importer.lib.dor_persistence_util as dor_persistence_util
+import massgov.pfml.dor.importer.paths
 import massgov.pfml.dor.mock.generate as generator
 from massgov.pfml.db.models.employees import AddressType, Country, Employee, Employer, GeoState
 from massgov.pfml.util.encryption import GpgCrypt, Utf8Crypt
+
+from . import dor_test_data as test_data
 
 # every test in here requires real resources
 pytestmark = pytest.mark.integration
@@ -379,49 +380,6 @@ def validate_employer_address_persistence(
     assert address_row.country_id == country.country_id
 
 
-def test_get_files_for_import_grouped_by_date(test_fs_path, mock_s3_bucket):
-    # test file system paths
-    (test_fs_path / "extra_file").touch()
-    (test_fs_path / "DORDFMLEMP_20200519133333").touch()
-    (test_fs_path / "DORDFML_20200519133333").touch()
-    (test_fs_path / "DORDFML_20201001133333").touch()
-    files_by_date = import_dor.get_files_for_import_grouped_by_date(str(test_fs_path))
-    assert files_by_date == {
-        "20200519120622": {
-            "DORDFMLEMP_": str(test_fs_path / employer_file),
-            "DORDFML_": str(test_fs_path / employee_file),
-        },
-        "20200519133333": {
-            "DORDFMLEMP_": str(test_fs_path / "DORDFMLEMP_20200519133333"),
-            "DORDFML_": str(test_fs_path / "DORDFML_20200519133333"),
-        },
-        "20201001133333": {"DORDFML_": str(test_fs_path / "DORDFML_20201001133333"),},
-    }
-
-    # test s3 paths
-    s3 = boto3.client("s3")
-    s3.put_object(Bucket=mock_s3_bucket, Key="extra_file", Body="")
-    s3.put_object(Bucket=mock_s3_bucket, Key="DORDFMLEMP_20200519133333", Body="")
-    s3.put_object(Bucket=mock_s3_bucket, Key="DORDFML_20200519133333", Body="")
-    s3.put_object(Bucket=mock_s3_bucket, Key="DORDFML_20201001133333", Body="")
-    s3.put_object(Bucket=mock_s3_bucket, Key=employer_file, Body="")
-    s3.put_object(Bucket=mock_s3_bucket, Key=employee_file, Body="")
-
-    files_by_date = import_dor.get_files_for_import_grouped_by_date(f"s3://{mock_s3_bucket}")
-    s3_prefix = f"s3://{mock_s3_bucket}"
-    assert files_by_date == {
-        "20200519120622": {
-            "DORDFMLEMP_": f"{s3_prefix}/{employer_file}",
-            "DORDFML_": f"{s3_prefix}/{employee_file}",
-        },
-        "20200519133333": {
-            "DORDFMLEMP_": f"{s3_prefix}/DORDFMLEMP_20200519133333",
-            "DORDFML_": f"{s3_prefix}/DORDFML_20200519133333",
-        },
-        "20201001133333": {"DORDFML_": f"{s3_prefix}/DORDFML_20201001133333",},
-    }
-
-
 def test_parse_employee_file(test_fs_path):
     employee_wage_data = test_data.get_new_employee_wage_data()
     employee_file_path = "{}/{}".format(str(test_fs_path), employee_file)
@@ -477,7 +435,7 @@ def test_e2e_parse_and_persist(test_db_session, dor_employer_lookups):
 
     # import
     import_batches = [
-        import_dor.ImportBatch(
+        massgov.pfml.dor.importer.paths.ImportBatch(
             upload_date="20200805",
             employer_file=employer_file_path,
             employee_file=employee_file_path,
