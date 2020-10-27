@@ -458,20 +458,6 @@ def process_daily_import(
     return report
 
 
-def import_to_db(db_session, employers, employees_info, report, import_log_entry_id):
-    """Process through parsed objects and persist into database"""
-    logger.info("Starting import")
-
-    account_key_to_employer_id_map = import_employers(
-        db_session, employers, report, import_log_entry_id
-    )
-    import_employees_and_wage_data(
-        db_session, account_key_to_employer_id_map, employees_info, {}, report, import_log_entry_id,
-    )
-
-    logger.info("Finished import")
-
-
 def batch_apply(items, batch_fn_name, batch_fn, batch_size=100000):
     size = len(items)
     start_index = 0
