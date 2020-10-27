@@ -1,7 +1,14 @@
 import multiprocessing
+import os
+import platform
+import pwd
 
 import connexion
 import gunicorn.app.base
+
+import massgov.pfml.util.logging
+
+logger = massgov.pfml.util.logging.get_logger(__name__)
 
 
 class GunicornAppWrapper(gunicorn.app.base.BaseApplication):
@@ -50,4 +57,12 @@ class GunicornAppWrapper(gunicorn.app.base.BaseApplication):
             self.cfg.set(key.lower(), value)
 
     def load(self) -> connexion.FlaskApp:
+        logger.info(
+            "start worker: hostname %s, pid %i, user %i(%s)",
+            platform.node(),
+            os.getpid(),
+            os.getuid(),
+            pwd.getpwuid(os.getuid()).pw_name,
+            extra={"hostname": platform.node()},
+        )
         return self.application

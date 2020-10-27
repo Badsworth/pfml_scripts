@@ -2,13 +2,18 @@
 # Utility functions for configuring and interfacing with logging.
 #
 
+import atexit
 import logging.config  # noqa: B1
 import os
 import platform
 import pwd
+import resource
 import sys
+import time
 
 from . import formatters, network
+
+start_time = time.monotonic()
 
 LOGGING = {
     "version": 1,
@@ -57,7 +62,24 @@ def init(program_name):
     )
     logger.info("invoked as: %s", " ".join(original_argv))
 
+    atexit.register(exit_handler, program_name)
+
     network.init()
+
+
+def exit_handler(program_name):
+    """Log a message at program exit."""
+    t = time.monotonic() - start_time
+    ru = resource.getrusage(resource.RUSAGE_SELF)
+    logger.info(
+        "exit %s: pid %i, real %.3fs, user %.2fs, system %.2fs, peak rss %iK",
+        program_name,
+        os.getpid(),
+        t,
+        ru.ru_utime,
+        ru.ru_stime,
+        ru.ru_maxrss,
+    )
 
 
 def get_logger(name):
