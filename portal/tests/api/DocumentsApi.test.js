@@ -5,6 +5,7 @@ import DocumentsApi from "../../src/api/DocumentsApi";
 import { makeFile } from "../test-utils";
 
 jest.mock("@aws-amplify/auth");
+jest.mock("../../src/services/tracker");
 
 const mockFetch = ({
   response = { data: [], errors: [], warnings: [] },

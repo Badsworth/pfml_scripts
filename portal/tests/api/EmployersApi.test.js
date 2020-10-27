@@ -3,6 +3,7 @@ import Claim from "../../src/models/Claim";
 import EmployersApi from "../../src/api/EmployersApi";
 
 jest.mock("@aws-amplify/auth");
+jest.mock("../../src/services/tracker");
 
 const mockFetch = ({
   response = { data: [], errors: [], warnings: [] },

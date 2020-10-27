@@ -59,7 +59,7 @@ function noticeError(error, customAttributes) {
  */
 function startPageView(routeName) {
   if (newrelicReady()) {
-    // First end previous page view interaction if that's still in progress
+    // First end previous interaction if that's still in progress
     newrelic.interaction().end();
     newrelic.interaction();
     newrelic.setCurrentRouteName(routeName);
@@ -78,9 +78,28 @@ function trackEvent(name, customAttributes) {
   }
 }
 
+/**
+ * For New Relic, Fetch requests are only recorded if they are executed during a BrowserInteraction event,
+ * which by default happens during the initial page load and any time the route is changed. That means
+ * for other cases, we need to manually initiate a BrowserInteraction so the request is tracked.
+ * @see https://docs.newrelic.com/docs/browser/new-relic-browser/troubleshooting/troubleshoot-ajax-data-collection
+ * @param {string} url - URL being fetched
+ * @example trackFetchRequest('https://paidleave-api.mass.gov/applications'); request(...);
+ */
+function trackFetchRequest(url) {
+  if (newrelicReady()) {
+    // First end previous interaction if that's still in progress
+    newrelic.interaction().end();
+
+    const route = url.replace("https://", "");
+    newrelic.interaction().setName(`fetch: ${route}`).save();
+  }
+}
+
 export default {
   initialize,
   noticeError,
   startPageView,
   trackEvent,
+  trackFetchRequest,
 };

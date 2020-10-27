@@ -4,6 +4,7 @@ import ClaimCollection from "../../src/models/ClaimCollection";
 import ClaimsApi from "../../src/api/ClaimsApi";
 
 jest.mock("@aws-amplify/auth");
+jest.mock("../../src/services/tracker");
 
 const mockFetch = ({
   response = { data: [], errors: [], warnings: [] },

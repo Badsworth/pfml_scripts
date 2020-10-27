@@ -3,6 +3,7 @@ import User from "../../src/models/User";
 import UsersApi from "../../src/api/UsersApi";
 
 jest.mock("@aws-amplify/auth");
+jest.mock("../../src/services/tracker");
 
 const mockFetch = ({
   response = { data: [], errors: [], warnings: [] },

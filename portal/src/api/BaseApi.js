@@ -109,6 +109,7 @@ export default class BaseApi {
     let data, errors, response, warnings;
 
     try {
+      tracker.trackFetchRequest(url);
       response = await fetch(url, options);
       ({ data, errors, warnings } = await response.json());
     } catch (error) {
