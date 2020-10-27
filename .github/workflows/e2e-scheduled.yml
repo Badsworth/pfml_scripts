@@ -39,6 +39,7 @@ jobs:
           record: true
           parallel: true
           working-directory: e2e
+          tag: Nightly
       - name: Print Dashboard URL
         if: always()
         run: |

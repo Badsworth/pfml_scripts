@@ -37,6 +37,7 @@ jobs:
           record: true
           parallel: true
           working-directory: e2e
+          tag: Manual
       - name: Print Dashboard URL
         if: always()
         run: |
