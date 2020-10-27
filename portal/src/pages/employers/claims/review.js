@@ -88,9 +88,8 @@ export const Review = (props) => {
               values={{ date: employerDueDate }}
             />
           </Alert>
-          <p aria-labelledby="instructionsAmendment">
-            {t("pages.employersClaimsReview.instructionsAmendment")}
-          </p>
+          <p>{t("pages.employersClaimsReview.instructionsAmendment")}</p>
+          <p>{t("pages.employersClaimsReview.instructionsComment")}</p>
           <p className="text-bold" aria-labelledby="employerIdentifierNumber">
             {t("pages.employersClaimsReview.employerIdentifierLabel")}
           </p>
