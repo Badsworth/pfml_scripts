@@ -19,7 +19,7 @@ import massgov.pfml.util.files as file_util
 import massgov.pfml.util.logging as logging
 import massgov.pfml.util.logging.audit
 from massgov.pfml import db
-from massgov.pfml.db.models.employees import GeoState, ImportLog
+from massgov.pfml.db.models.employees import GeoState, ImportLog, WagesAndContributions
 from massgov.pfml.dor.importer.dor_file_formats import (
     EMPLOYEE_FILE_ROW_LENGTH,
     EMPLOYEE_FORMAT,
@@ -849,16 +849,23 @@ def import_wage_data(
             wage_info_list,
         )
     )
+    wage_data_total = len(wage_info_list_to_create_or_update)
+    logger.info("update wage data, total %i", wage_data_total)
+
+    wages_contributions_models_existing_employees_to_create: List[WagesAndContributions] = []
 
     count = 0
-
-    wages_contributions_models_existing_employees_to_create = []
-
     for wage_info in wage_info_list_to_create_or_update:
-
+        if count % 100 == 0:
+            logger.info(
+                "update wage data %i/%i (%.1f%%), updated %i + new %i",
+                count,
+                wage_data_total,
+                100.0 * count / wage_data_total,
+                report.updated_wages_and_contributions_count,
+                len(wages_contributions_models_existing_employees_to_create),
+            )
         count += 1
-        if count % 1000 == 0:
-            logger.info("Creating or updating existing wage info, current %i", count)
 
         account_key = wage_info["account_key"]
         filing_period = wage_info["filing_period"]
@@ -887,6 +894,14 @@ def import_wage_data(
                 db_session, existing_wage, wage_info, import_log_entry_id
             )
             report.updated_wages_and_contributions_count += 1
+    logger.info(
+        "update wage data %i/%i (%.1f%%), updated %i + new %i",
+        count,
+        wage_data_total,
+        100.0,
+        report.updated_wages_and_contributions_count,
+        len(wages_contributions_models_existing_employees_to_create),
+    )
 
     logger.info(
         "Creating new wage information for existing employees: %i",
