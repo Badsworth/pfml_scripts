@@ -304,20 +304,6 @@ export function enterEmployerInfo(application: ApplicationRequestBody): void {
   // Preceeded by - "I am on the claims Checklist page";
   // Preceeded by - "I click on the checklist button called {string}"
   //                with the label "Enter employment information"
-  cy.contains("fieldset", "What is your employment status?").within(() => {
-    const choice = lookup(
-      application.employment_status as
-        | "Employed"
-        | "Unemployed"
-        | "Self-Employed",
-      {
-        Employed: "I'm employed in Massachusetts",
-        Unemployed: "I'm unemployed",
-        "Self-Employed": "I'm self-employed",
-      }
-    );
-    cy.contains("label", choice).click({ force: true });
-  });
   if (application.employment_status === "Employed") {
     cy.labelled(
       "What is your employer's Federal Employer Identification Number (FEIN)?"
