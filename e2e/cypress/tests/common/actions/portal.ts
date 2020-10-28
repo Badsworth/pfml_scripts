@@ -618,6 +618,10 @@ export function completeIntermittentLeaveDetails(
   cy.contains("button", "Save and continue").click();
 }
 
+export function confirmEligibleParent(): void {
+  cy.contains("button", "I understand and agree").click();
+}
+
 export function submitClaimPartOne(application: ApplicationRequestBody): void {
   clickChecklistButton("Verify your identity");
   verifyIdentity(application, "normal");

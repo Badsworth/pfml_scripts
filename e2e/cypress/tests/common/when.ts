@@ -29,6 +29,10 @@ When("I log into the portal", function (this: CypressStepThis) {
   portal.login(this.credentials);
 });
 
+When("I confirm that I am an eligible parent", function (): void {
+  portal.confirmEligibleParent();
+});
+
 /* Checklist Page */
 When("I click on the checklist button called {string}", function (
   label: string

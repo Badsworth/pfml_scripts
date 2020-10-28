@@ -20,6 +20,7 @@ Feature: Submit a bonding claim and adjucation approval - BHAP1
     Then I report other benefits
     Given I am on the claims "checklist" page
     When I click on the checklist button called "Review and confirm"
+    And I confirm that I am an eligible parent
     Given I am on the claims "review" page
     Then I should have confirmed that information is correct
     Given I am on the claims "checklist" page
