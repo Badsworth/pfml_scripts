@@ -51,7 +51,7 @@ const AmendableEmployerBenefit = ({ benefit, onChange }) => {
     return Object.values(IncomeFrequency).map((frequency) => {
       return {
         label: t(
-          "pages.employersClaimsReview.employerBenefits.frequencyValue",
+          "pages.employersClaimsReview.employerBenefits.employerBenefitFrequencyValue",
           {
             context: findKeyByValue(IncomeFrequency, frequency),
           }

@@ -279,13 +279,14 @@ const shared = {
   documentsRequestError:
     "An error was encountered while checking your application for documents. If this continues to happen, you may call the Paid Family Leave Contact Center at $t(shared.contactCenterPhoneNumber)",
   employerBenefitEntryPrefix: "Benefit",
+  employerBenefitFrequency_daily: "Daily",
+  employerBenefitFrequency_inTotal: "All at once",
+  employerBenefitFrequency_monthly: "Monthly",
+  employerBenefitFrequency_weekly: "Weekly",
   employerBenefitType_familyOrMedicalLeave: "Family or medical leave insurance",
   employerBenefitType_paidLeave: "Accrued paid leave",
   employerBenefitType_permanentDisability: "Permanent disability insurance",
   employerBenefitType_shortTermDisability: "Short-term disability insurance",
-  employerFrequency_daily: "Daily",
-  employerFrequency_monthly: "Monthly",
-  employerFrequency_weekly: "Weekly",
   fileUpload_addAnotherFileButton: "Choose another file",
   fileUpload_addFirstFileButton: "Choose a file",
   fileUpload_fileHeadingPrefix: "File",
@@ -1084,11 +1085,20 @@ const pages = {
     },
     employerBenefits: {
       amountValue_daily: "{{amount, currency}} per day",
+      amountValue_inTotal: "{{amount, currency}} all at once",
       amountValue_monthly: "{{amount, currency}} per month",
       amountValue_weekly: "{{amount, currency}} per week",
       benefitTypeLabel: "Benefit type",
       dateRangeLabel: "Date range",
       detailsLabel: "Details",
+      employerBenefitFrequencyValue_daily:
+        "$t(shared.employerBenefitFrequency_daily)",
+      employerBenefitFrequencyValue_inTotal:
+        "$t(shared.employerBenefitFrequency_inTotal)",
+      employerBenefitFrequencyValue_monthly:
+        "$t(shared.employerBenefitFrequency_monthly)",
+      employerBenefitFrequencyValue_weekly:
+        "$t(shared.employerBenefitFrequency_weekly)",
       employerBenefitType_familyOrMedicalLeave:
         "$t(shared.employerBenefitType_familyOrMedicalLeave)",
       employerBenefitType_paidLeave: "$t(shared.employerBenefitType_paidLeave)",
@@ -1096,9 +1106,6 @@ const pages = {
         "$t(shared.employerBenefitType_permanentDisability)",
       employerBenefitType_shortTermDisability:
         "$t(shared.employerBenefitType_shortTermDisability)",
-      frequencyValue_daily: "$t(shared.employerFrequency_daily)",
-      frequencyValue_monthly: "$t(shared.employerFrequency_monthly)",
-      frequencyValue_weekly: "$t(shared.employerFrequency_weekly)",
       header: "Employer benefits",
       tableName: "Employer-sponsored benefit details",
     },
