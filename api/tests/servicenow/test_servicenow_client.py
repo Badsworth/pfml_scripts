@@ -4,7 +4,7 @@ import pytest
 import responses
 
 from massgov.pfml.servicenow.client import ServiceNowClient, ServiceNowException
-from massgov.pfml.servicenow.models import OutboundMessage, Recipient
+from massgov.pfml.servicenow.models import Claimant, OutboundMessage, Recipient
 
 
 @pytest.fixture
@@ -24,18 +24,28 @@ def test_client_no_resp():
 @pytest.fixture
 def test_recipient():
     return Recipient(
-        first="Carrie",
-        last="Brown",
-        email="test@mailinator.com",
-        fineos_id=str(uuid.uuid4()),
-        phone="",
-    )
+        first_name="Carrie", last_name="Brown", email="test@mailinator.com", id=str(uuid.uuid4()),
+    ).json()
 
 
 @pytest.fixture
-def test_message(test_recipient):
+def test_claimant():
+    return Claimant(
+        first_name="Carrie", last_name="Brown", dob="1970-01-01", id=str(uuid.uuid4()),
+    ).json()
+
+
+@pytest.fixture
+def test_message(test_recipient, test_claimant):
     return OutboundMessage(
-        recipients=[test_recipient], trigger="test.trigger", absence_id="NTN-ABS-FAK-001"
+        u_absence_id="NTN-ABS-FAK-001",
+        u_claimant_info=test_claimant,
+        u_document_type="Legal Notice",
+        u_recipients=[test_recipient],
+        u_source="Call Center",
+        u_trigger="test.trigger",
+        u_user_type="Leave Administrator",
+        u_link="https://www.google.com",
     )
 
 

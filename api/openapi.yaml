@@ -2001,7 +2001,8 @@ components:
           description: The type of document that is available to view.
           type: string
           example: Legal Notice
-          minLength: 1
+          enum:
+            - Legal Notice
         trigger:
           title: Trigger
           description: The claim state that triggered the notification.

@@ -6,20 +6,29 @@ from pydantic import AnyHttpUrl, BaseModel, Field
 class Recipient(BaseModel):
     """ Recipient model for outbound messages """
 
-    first: Optional[str] = Field("", description="First name of recipient")
-    last: Optional[str] = Field("", description="Last name of recipient")
-    fineos_id: Optional[str] = Field("", description="FINEOS User ID")
+    first_name: Optional[str] = Field("", description="First name of recipient")
+    last_name: Optional[str] = Field("", description="Last name of recipient")
+    id: Optional[str] = Field("", description="FINEOS User ID")
     email: str = Field(..., description="Recipient email address")
-    phone: Optional[str] = Field("", description="Recipient phone number")
+
+
+class Claimant(BaseModel):
+    """ Claimant model for outbound messages """
+
+    first_name: str = Field("", description="First name of claimant")
+    last_name: str = Field("", description="Last name of claimant")
+    dob: str = Field("", description="DOB of claimant")
+    id: str = Field("", description="Fineos customer id")
 
 
 class OutboundMessage(BaseModel):
-    """ Outbound message model -- still not finalized """
+    """ Outbound message model """
 
-    # TODO: Finalize structure of OutboundMessage - https://lwd.atlassian.net/browse/EMPLOYER-400
-
-    recipients: List[Recipient] = Field(..., description="List of recipients for message")
-    trigger: str = Field(..., description="Source trigger of message")
-    absence_id: str = Field(..., description="Absence ID")
-    document_id: Optional[str] = Field(None, description="Document ID for claim")
-    portal_url: Optional[AnyHttpUrl] = Field(None, description="Link to portal")
+    u_absence_id: str = Field(..., description="Absence ID")
+    u_claimant_info: str = Field(..., description="Encoded JSON of a Claimant object")
+    u_document_type: str = Field(..., description="Type of available document")
+    u_recipients: List[str] = Field(..., description="List of encoded JSON of Recipient objects")
+    u_source: str = Field(..., description="Self-Service or Call Center")
+    u_trigger: str = Field(..., description="Status change that required notification")
+    u_user_type: str = Field(..., description="Leave Administrator or Claimant")
+    u_link: Optional[AnyHttpUrl] = Field(None, description="Link to portal")
