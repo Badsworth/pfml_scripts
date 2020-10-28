@@ -1733,6 +1733,7 @@ def test_application_post_submit_to_fineos(client, user, auth_token, test_db_ses
     application.middle_name = "Middle"
     application.last_name = "Last"
     application.date_of_birth = date(1977, 7, 27)
+    application.mass_id = "S12345678"
     application.employer_fein = "770000001"
     application.hours_worked_per_week = 70
     application.employer_notified = True
@@ -1792,6 +1793,14 @@ def test_application_post_submit_to_fineos(client, user, auth_token, test_db_ses
                     secondName="Middle",
                     dateOfBirth=date(1977, 7, 27),
                     idNumber="999004444",
+                    classExtensionInformation=[
+                        massgov.pfml.fineos.models.customer_api.ExtensionAttribute(
+                            name="MassachusettsID", stringValue=application.mass_id
+                        ),
+                        massgov.pfml.fineos.models.customer_api.ExtensionAttribute(
+                            name="Confirmed", booleanValue=True
+                        ),
+                    ],
                 )
             },
         ),

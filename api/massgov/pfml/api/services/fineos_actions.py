@@ -179,6 +179,12 @@ def build_customer_model(application):
     tax_identifier = TEST_TAX_IDENTIFIER
     if application.tax_identifier is not None:
         tax_identifier = application.tax_identifier.tax_identifier
+    mass_id = massgov.pfml.fineos.models.customer_api.ExtensionAttribute(
+        name="MassachusettsID", stringValue=application.mass_id
+    )
+    confirmed = massgov.pfml.fineos.models.customer_api.ExtensionAttribute(
+        name="Confirmed", booleanValue=True
+    )
     customer = massgov.pfml.fineos.models.customer_api.Customer(
         firstName=application.first_name,
         secondName=application.middle_name,
@@ -186,6 +192,7 @@ def build_customer_model(application):
         dateOfBirth=application.date_of_birth,
         # We have to send back the SSN as FINEOS wipes it from the Customer otherwise.
         idNumber=tax_identifier,
+        classExtensionInformation=[mass_id, confirmed,],
     )
     return customer
 
