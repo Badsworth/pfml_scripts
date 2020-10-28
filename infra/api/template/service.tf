@@ -68,5 +68,6 @@ data "template_file" "container_definitions" {
     fineos_client_wscomposer_api_url   = var.fineos_client_wscomposer_api_url
     fineos_client_oauth2_url           = var.fineos_client_oauth2_url
     fineos_client_oauth2_client_id     = var.fineos_client_oauth2_client_id
+    enable_employer_endpoints          = var.enable_employer_endpoints
   }
 }

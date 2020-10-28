@@ -7,6 +7,7 @@ We use [Terraform](https://terraform.io) to manage our infra in a modular, conci
 - [Runbook](#runbook)
 - [Directory Structure](#directory-structure)
 - [tfstate files](#tfstate-files)
+- [Troubleshooting](#troubleshooting)
 
 ## Local Setup
 
@@ -288,4 +289,23 @@ S3
         └── portal.tfstate
         └── api.tfstate
         └── ecs-tasks.tfstate
+```
+
+## Troubleshooting
+
+Sometimes, Terraform does things you might not expect it to do.
+
+### I have an unexpected error not related to my change?
+
+If you see something like this message:
+
+```
+Error: Network Load Balancers do not support Stickiness
+  on ../../template/load_balancer.tf line 19, in resource "aws_lb_target_group" "app":
+  19: resource "aws_lb_target_group" "app" {
+```
+
+Try "hard resetting" your Terraform state from the environment you're currently deploying from with the following command:
+```bash
+rm -rf .terraform/ && terraform init
 ```

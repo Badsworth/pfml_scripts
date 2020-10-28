@@ -177,3 +177,8 @@ variable "fineos_eligibility_transfer_lambda_build_s3_key" {
   description = "The S3 object key of the FINEOS eligibility transfer lambda artifact"
   type        = string
 }
+
+variable "enable_employer_endpoints" {
+  description = "Enable Employer API endpoints in this environment"
+  type        = string
+}

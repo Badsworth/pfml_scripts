@@ -59,4 +59,5 @@ module "api" {
   rmv_check_behavior                               = "partially_mocked"
   rmv_check_mock_success                           = "1"
   fineos_eligibility_transfer_lambda_build_s3_key  = local.fineos_eligibility_transfer_lambda_build_s3_key
+  enable_employer_endpoints                        = "0"
 }

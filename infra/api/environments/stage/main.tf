@@ -69,4 +69,5 @@ module "api" {
   fineos_client_oauth2_url                         = "https://idt-api.masspfml.fineos.com/oauth2/token"
   fineos_client_oauth2_client_id                   = "1fa281uto9tjuqtm21jle7loam"
   fineos_eligibility_transfer_lambda_build_s3_key  = local.fineos_eligibility_transfer_lambda_build_s3_key
+  enable_employer_endpoints                        = "1"
 }
