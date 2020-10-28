@@ -52,7 +52,7 @@ def dor_employer_lookups(test_db_session):
     state = GeoState.get_instance(test_db_session, template=GeoState.MA)
 
     Country.sync_to_database(test_db_session)
-    country = Country.get_instance(test_db_session, template=Country.US)
+    country = Country.get_instance(test_db_session, template=Country.USA)
 
     return (state, country)
 

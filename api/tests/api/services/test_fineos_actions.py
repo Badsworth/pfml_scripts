@@ -4,8 +4,8 @@ from datetime import date
 import massgov.pfml.fineos
 from massgov.pfml.api.services import fineos_actions
 from massgov.pfml.db.models.applications import Application, LeaveReasonQualifier
-from massgov.pfml.db.models.employees import Employer
-from massgov.pfml.db.models.factories import ApplicationFactory
+from massgov.pfml.db.models.employees import Country, Employer
+from massgov.pfml.db.models.factories import AddressFactory, ApplicationFactory
 from massgov.pfml.fineos import FINEOSClient
 from massgov.pfml.fineos.exception import FINEOSClientBadResponse, FINEOSClientError, FINEOSNotFound
 from massgov.pfml.fineos.models import CreateOrUpdateEmployer
@@ -324,6 +324,21 @@ def test_build_bonding_date_reflexive_question_foster(user):
         == "PlacementQuestionGroup.placementQuestions.adoptionDate"
     )
     assert reflexive_question.reflexiveQuestionDetails[0].dateValue == date(2021, 2, 9)
+
+
+def test_build_customer_address(user):
+    residential_address = AddressFactory.create()
+    application = ApplicationFactory.create(user=user, residential_address=residential_address)
+    customer_address = fineos_actions.build_customer_address(application.residential_address)
+
+    assert customer_address.address.addressLine1 == residential_address.address_line_one
+    assert customer_address.address.addressLine2 == residential_address.address_line_two
+    assert customer_address.address.addressLine4 == residential_address.city
+    assert (
+        customer_address.address.addressLine6 == residential_address.geo_state.geo_state_description
+    )
+    assert customer_address.address.postCode == residential_address.zip_code
+    assert customer_address.address.country == Country.USA.country_description
 
 
 def test_create_service_agreement_for_employer(test_db_session):

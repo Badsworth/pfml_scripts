@@ -83,7 +83,7 @@ def dict_to_address(employer_info, uuid=uuid.uuid4):
         city=employer_info["employer_address_city"],
         geo_state_id=GeoState.get_id(employer_info["employer_address_state"]),
         zip_code=employer_info["employer_address_zip"],
-        country_id=Country.US.country_id,
+        country_id=Country.USA.country_id,
         address_id=uuid,
     )
 
@@ -120,7 +120,7 @@ def update_employer(db_session, existing_employer, employer_info, import_log_ent
     existing_address.city = employer_info["employer_address_city"]
     existing_address.geo_state_id = GeoState.get_id(employer_info["employer_address_state"])
     existing_address.zip_code = employer_info["employer_address_zip"]
-    existing_address.country_id = Country.US.country_id
+    existing_address.country_id = Country.USA.country_id
 
     return existing_employer
 

@@ -1793,6 +1793,16 @@ def test_application_post_submit_to_fineos(client, user, auth_token, test_db_ses
                     secondName="Middle",
                     dateOfBirth=date(1977, 7, 27),
                     idNumber="999004444",
+                    customerAddress=massgov.pfml.fineos.models.customer_api.CustomerAddress(
+                        address=massgov.pfml.fineos.models.customer_api.Address(
+                            addressLine1=application.residential_address.address_line_one,
+                            addressLine2=application.residential_address.address_line_two,
+                            addressLine4=application.residential_address.city,
+                            addressLine6=application.residential_address.geo_state.geo_state_description,
+                            postCode=application.residential_address.zip_code,
+                            country="USA",
+                        ),
+                    ),
                     classExtensionInformation=[
                         massgov.pfml.fineos.models.customer_api.ExtensionAttribute(
                             name="MassachusettsID", stringValue=application.mass_id

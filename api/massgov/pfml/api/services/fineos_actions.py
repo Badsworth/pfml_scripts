@@ -30,7 +30,7 @@ from massgov.pfml.db.models.applications import (
     LeaveReason,
     LeaveReasonQualifier,
 )
-from massgov.pfml.db.models.employees import Employer
+from massgov.pfml.db.models.employees import Address, Country, Employer
 
 logger = logging.get_logger(__name__)
 
@@ -194,7 +194,36 @@ def build_customer_model(application):
         idNumber=tax_identifier,
         classExtensionInformation=[mass_id, confirmed,],
     )
+
+    # API-394: Residential address is added using updateCustomerDetails endpoint,
+    # but mailing address (if different from residential address) is added using
+    # the addPaymentPreference or updatePaymentPreference endpoints
+    if application.residential_address is not None:
+        customer.customerAddress = build_customer_address(application.residential_address)
     return customer
+
+
+def build_customer_address(
+    application_address: Address,
+) -> massgov.pfml.fineos.models.customer_api.CustomerAddress:
+    """ Convert an application's address into a FINEOS API CustomerAddress model."""
+    # Note: In the FINEOS model:
+    # - addressLine1 = Address Line 1
+    # - addressLine2 = Address Line 2
+    # - addressLine3 = Unknown. Do not use
+    # - addressLine4 = City
+    # - addressLine5 = Unknown. Do not use
+    # - addressLine6 = State
+    address = massgov.pfml.fineos.models.customer_api.Address(
+        addressLine1=application_address.address_line_one,
+        addressLine2=application_address.address_line_two,
+        addressLine4=application_address.city,
+        addressLine6=application_address.geo_state.geo_state_description,
+        postCode=application_address.zip_code,
+        country=Country.USA.country_description,
+    )
+    customer_address = massgov.pfml.fineos.models.customer_api.CustomerAddress(address=address)
+    return customer_address
 
 
 def build_absence_case(

@@ -489,7 +489,7 @@ class Country(LookupTable):
     model = LkCountry
     column_names = ("country_id", "country_description")
 
-    US = LkCountry(1, "US")
+    USA = LkCountry(1, "USA")
 
 
 class ClaimType(LookupTable):
