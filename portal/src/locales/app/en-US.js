@@ -294,7 +294,7 @@ const shared = {
   leavePeriodMedicalAlert:
     "You will need a completed medical leave certification form for this section.",
   leaveReasonActiveDutyFamily: "Active duty",
-  leaveReasonBonding: "Bonding leave",
+  leaveReasonBonding: "Family leave",
   leaveReasonMedical: "Medical leave",
   leaveReasonServiceMemberFamily: "Military family",
   minutesLabel: "Minutes",
@@ -651,7 +651,7 @@ const pages = {
     bondingTypeMultipleBirthsDetailsLabel:
       "What if I've had multiple births or placements within one year?",
     bondingTypeMultipleBirthsDetailsSummary:
-      "Leave is determined based on benefit year (365 days from the first day you take leave), not based on number of children. You have 1 year to take your bonding leave from the date of the birth/placement of the child (whichever is later). ",
+      "Leave is determined based on benefit year (365 days from the first day you take leave), not based on number of children. You have 1 year to take your family leave from the date of the birth/placement of the child (whichever is later). ",
     bondingTypeNewbornLabel: "Birth",
     medicalLeaveHint: "Medical leave",
     medicalLeaveLabel: "I can’t work due to an illness, injury, or pregnancy.",

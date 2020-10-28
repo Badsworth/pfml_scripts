@@ -64,7 +64,7 @@ exports[`LeaveReasonPage renders the page for medical leave and does not show re
         <Details
           label="What if I've had multiple births or placements within one year?"
         >
-          Leave is determined based on benefit year (365 days from the first day you take leave), not based on number of children. You have 1 year to take your bonding leave from the date of the birth/placement of the child (whichever is later). 
+          Leave is determined based on benefit year (365 days from the first day you take leave), not based on number of children. You have 1 year to take your family leave from the date of the birth/placement of the child (whichever is later). 
         </Details>
       }
       label="Will you take leave for a birth, an adoption, or a foster placement?"
