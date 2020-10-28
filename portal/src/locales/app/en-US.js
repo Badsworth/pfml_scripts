@@ -30,7 +30,7 @@ const errors = {
       "Your password does not meet the requirements. Please check the requirements and try again.",
     passwordRequired: "Enter your password",
     suspiciousLoginBlocked:
-      "Your authentication request has been blocked due to suspicious activity. If this continues to happen, you may call the Paid Family Leave Contact Center at $t(shared.contactCenterPhoneNumber).",
+      "Your authentication attempt has been blocked due to suspicious activity. We sent you an email to confirm your identity. Check your email and then follow the instructions to try again. If this continues to occur, call the contact center at $t(shared.contactCenterPhoneNumber).",
     userNotConfirmed:
       "Confirm your account by following the instructions in the verification email sent to your inbox.",
     userNotFound: "Incorrect email",
