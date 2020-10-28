@@ -156,8 +156,8 @@ class HealthCareProvider(Base):
 class Employer(Base):
     __tablename__ = "employer"
     employer_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
-    account_key = Column(Text)
-    employer_fein = Column(Text, nullable=False)
+    account_key = Column(Text, index=True)
+    employer_fein = Column(Text, nullable=False, index=True)
     employer_name = Column(Text)
     employer_dba = Column(Text, nullable=False)
     family_exemption = Column(Boolean)
@@ -165,9 +165,9 @@ class Employer(Base):
     exemption_commence_date = Column(Date)
     exemption_cease_date = Column(Date)
     dor_updated_date = Column(TIMESTAMP(timezone=True))
-    latest_import_log_id = Column(Integer, ForeignKey("import_log.import_log_id"))
-    fineos_customer_nbr = Column(Text)
-    fineos_employer_id = Column(Integer)
+    latest_import_log_id = Column(Integer, ForeignKey("import_log.import_log_id"), index=True)
+    fineos_customer_nbr = Column(Text, index=True)
+    fineos_employer_id = Column(Integer, index=True)
 
     wages_and_contributions: "Query[WagesAndContributions]" = dynamic_loader(
         "WagesAndContributions", back_populates="employer"
@@ -213,7 +213,9 @@ class TaxIdentifier(Base):
 class Employee(Base):
     __tablename__ = "employee"
     employee_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
-    tax_identifier_id = Column(UUID(as_uuid=True), ForeignKey("tax_identifier.tax_identifier_id"))
+    tax_identifier_id = Column(
+        UUID(as_uuid=True), ForeignKey("tax_identifier.tax_identifier_id"), index=True
+    )
     first_name = Column(Text, nullable=False)
     middle_name = Column(Text)
     last_name = Column(Text, nullable=False)
@@ -228,7 +230,7 @@ class Employee(Base):
     gender_id = Column(Integer, ForeignKey("lk_gender.gender_id"))
     occupation_id = Column(Integer, ForeignKey("lk_occupation.occupation_id"))
     education_level_id = Column(Integer, ForeignKey("lk_education_level.education_level_id"))
-    latest_import_log_id = Column(Integer, ForeignKey("import_log.import_log_id"))
+    latest_import_log_id = Column(Integer, ForeignKey("import_log.import_log_id"), index=True)
 
     payment_info = relationship(PaymentInformation)
     race = relationship(LkRace)
@@ -263,7 +265,7 @@ class EmployeeLog(Base):
 class Claim(Base):
     __tablename__ = "claim"
     claim_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
-    employer_id = Column(UUID(as_uuid=True))
+    employer_id = Column(UUID(as_uuid=True), index=True)
     authorized_representative_id = Column(UUID(as_uuid=True))
     claim_type_id = Column(UUID(as_uuid=True))
     benefit_amount = Column(Numeric(asdecimal=True))
@@ -346,7 +348,7 @@ class HealthCareProviderAddress(Base):
 class User(Base):
     __tablename__ = "user"
     user_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
-    active_directory_id = Column(Text)
+    active_directory_id = Column(Text, index=True)
     email_address = Column(Text)
     consented_to_data_sharing = Column(Boolean, default=False, nullable=False)
 
@@ -376,9 +378,13 @@ class WagesAndContributions(Base):
     __tablename__ = "wages_and_contributions"
     wage_and_contribution_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
     account_key = Column(Text, nullable=False)
-    filing_period = Column(Date, nullable=False)
-    employee_id = Column(UUID(as_uuid=True), ForeignKey("employee.employee_id"), nullable=False)
-    employer_id = Column(UUID(as_uuid=True), ForeignKey("employer.employer_id"), nullable=False)
+    filing_period = Column(Date, nullable=False, index=True)
+    employee_id = Column(
+        UUID(as_uuid=True), ForeignKey("employee.employee_id"), nullable=False, index=True
+    )
+    employer_id = Column(
+        UUID(as_uuid=True), ForeignKey("employer.employer_id"), nullable=False, index=True
+    )
     is_independent_contractor = Column(Boolean, nullable=False)
     is_opted_in = Column(Boolean, nullable=False)
     employee_ytd_wages = Column(Numeric(asdecimal=True), nullable=False)
@@ -387,7 +393,7 @@ class WagesAndContributions(Base):
     employer_med_contribution = Column(Numeric(asdecimal=True), nullable=False)
     employee_fam_contribution = Column(Numeric(asdecimal=True), nullable=False)
     employer_fam_contribution = Column(Numeric(asdecimal=True), nullable=False)
-    latest_import_log_id = Column(Integer, ForeignKey("import_log.import_log_id"))
+    latest_import_log_id = Column(Integer, ForeignKey("import_log.import_log_id"), index=True)
 
     employee = relationship("Employee", back_populates="wages_and_contributions")
     employer = relationship("Employer", back_populates="wages_and_contributions")
@@ -396,11 +402,11 @@ class WagesAndContributions(Base):
 class ImportLog(Base):
     __tablename__ = "import_log"
     import_log_id = Column(Integer, primary_key=True)
-    source = Column(Text)
-    import_type = Column(Text)
+    source = Column(Text, index=True)
+    import_type = Column(Text, index=True)
     status = Column(Text)
     report = Column(Text)
-    start = Column(TIMESTAMP(timezone=True))
+    start = Column(TIMESTAMP(timezone=True), index=True)
     end = Column(TIMESTAMP(timezone=True))
 
 

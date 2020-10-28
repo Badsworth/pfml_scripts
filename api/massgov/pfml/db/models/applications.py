@@ -125,12 +125,12 @@ class LkDayOfWeek(Base):
 class Application(Base):
     __tablename__ = "application"
     application_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
-    user_id = Column(UUID(as_uuid=True), ForeignKey("user.user_id"), nullable=False)
+    user_id = Column(UUID(as_uuid=True), ForeignKey("user.user_id"), nullable=False, index=True)
     tax_identifier_id = Column(UUID(as_uuid=True), ForeignKey("tax_identifier.tax_identifier_id"))
     nickname = Column(Text)
     requestor = Column(Integer)
-    employee_id = Column(UUID(as_uuid=True), ForeignKey("employee.employee_id"))
-    employer_id = Column(UUID(as_uuid=True), ForeignKey("employer.employer_id"))
+    employee_id = Column(UUID(as_uuid=True), ForeignKey("employee.employee_id"), index=True)
+    employer_id = Column(UUID(as_uuid=True), ForeignKey("employer.employer_id"), index=True)
     has_mailing_address = Column(Boolean)
     mailing_address_id = Column(UUID(as_uuid=True), ForeignKey("address.address_id"), nullable=True)
     residential_address_id = Column(
@@ -173,8 +173,8 @@ class Application(Base):
     updated_time = Column(TIMESTAMP(timezone=True))
     completed_time = Column(TIMESTAMP(timezone=True))
     submitted_time = Column(TIMESTAMP(timezone=True))
-    fineos_absence_id = Column(Text)
-    fineos_notification_case_id = Column(Text)
+    fineos_absence_id = Column(Text, index=True)
+    fineos_notification_case_id = Column(Text, index=True)
 
     user = relationship(User)
     employer = relationship(Employer)
@@ -214,7 +214,9 @@ class Application(Base):
 class ApplicationPaymentPreference(Base):
     __tablename__ = "application_payment_preference"
     payment_pref_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
-    application_id = Column(UUID(as_uuid=True), ForeignKey("application.application_id"))
+    application_id = Column(
+        UUID(as_uuid=True), ForeignKey("application.application_id"), index=True
+    )
     description = Column(Text)
     payment_type_id = Column(Integer, ForeignKey("lk_payment_type.payment_type_id"))
     is_default = Column(Boolean)
@@ -231,7 +233,9 @@ class ApplicationPaymentPreference(Base):
 class ContinuousLeavePeriod(Base):
     __tablename__ = "continuous_leave_period"
     leave_period_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
-    application_id = Column(UUID(as_uuid=True), ForeignKey("application.application_id"))
+    application_id = Column(
+        UUID(as_uuid=True), ForeignKey("application.application_id"), index=True
+    )
     start_date = Column(Date)
     end_date = Column(Date)
     is_estimated = Column(Boolean, default=True, nullable=False)
@@ -250,7 +254,9 @@ class ContinuousLeavePeriod(Base):
 class IntermittentLeavePeriod(Base):
     __tablename__ = "intermittent_leave_period"
     leave_period_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
-    application_id = Column(UUID(as_uuid=True), ForeignKey("application.application_id"))
+    application_id = Column(
+        UUID(as_uuid=True), ForeignKey("application.application_id"), index=True
+    )
     start_date = Column(Date)
     end_date = Column(Date)
     frequency = Column(Integer)
@@ -265,7 +271,9 @@ class IntermittentLeavePeriod(Base):
 class ReducedScheduleLeavePeriod(Base):
     __tablename__ = "reduced_schedule_leave_period"
     leave_period_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
-    application_id = Column(UUID(as_uuid=True), ForeignKey("application.application_id"))
+    application_id = Column(
+        UUID(as_uuid=True), ForeignKey("application.application_id"), index=True
+    )
     start_date = Column(Date)
     end_date = Column(Date)
     is_estimated = Column(Boolean, default=True, nullable=False)
@@ -485,9 +493,9 @@ class ContentType(LookupTable):
 class Document(Base):
     __tablename__ = "document"
     document_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
-    user_id = Column(UUID(as_uuid=True), ForeignKey("user.user_id"), nullable=False)
+    user_id = Column(UUID(as_uuid=True), ForeignKey("user.user_id"), nullable=False, index=True)
     application_id = Column(
-        UUID(as_uuid=True), ForeignKey("application.application_id"), nullable=False
+        UUID(as_uuid=True), ForeignKey("application.application_id"), nullable=False, index=True
     )
     created_at = Column(TIMESTAMP(timezone=True), nullable=False)
     updated_at = Column(TIMESTAMP(timezone=True), nullable=False)
@@ -547,7 +555,7 @@ class RMVCheck(Base):
     rmv_error_code = Column(StrEnum(RmvAcknowledgement), nullable=True)
     api_error_code = Column(StrEnum(RMVCheckApiErrorCode), nullable=True)
 
-    absence_case_id = Column(Text, nullable=False)
+    absence_case_id = Column(Text, nullable=False, index=True)
     rmv_customer_key = Column(Text, nullable=True)
 
 
