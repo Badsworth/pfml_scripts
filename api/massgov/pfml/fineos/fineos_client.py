@@ -364,20 +364,24 @@ class FINEOSClient(client.AbstractFINEOSClient):
         content_type: str,
         description: str,
     ) -> models.customer_api.Document:
-        files = {"documentContents": (file_name, file_content, content_type)}
+        file_size = len(file_content)
+        encoded_file_contents = base64.b64encode(file_content).decode("utf-8")
+        file_name_root, file_extension = os.path.splitext(file_name)
 
-        data = {"documentDescription": description}
-
-        # fineos upload endpoint returns errors when any Content-Type header value is set
-        header_content_type = None
+        data = {
+            "fileName": file_name_root,
+            "fileExtension": file_extension,
+            "base64EncodedFileContents": encoded_file_contents,
+            "fileSizeInBytes": file_size,
+            "description": description,
+            "managedReqId": None,
+        }
 
         response = self._customer_api(
             "POST",
-            f"customer/cases/{absence_id}/documents/upload/{document_type}",
+            f"customer/cases/{absence_id}/documents/base64Upload/{document_type}",
             user_id,
-            header_content_type=header_content_type,
-            files=files,
-            data=data,
+            json=data,
         )
 
         response_json = response.json()
