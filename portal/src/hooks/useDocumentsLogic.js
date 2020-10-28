@@ -118,8 +118,24 @@ const useDocumentsLogic = ({ appErrorsLogic }) => {
     }
   };
 
+  /**
+   * Download document from the API and sets app errors if any
+   * @param {Document} document - Document instance to download
+   * @returns {Blob}
+   */
+  const download = async (document) => {
+    appErrorsLogic.clearErrors();
+    try {
+      const response = await documentsApi.downloadDocument(document);
+      return response;
+    } catch (error) {
+      appErrorsLogic.catchError(error);
+    }
+  };
+
   return {
     attach,
+    download,
     hasLoadedClaimDocuments,
     documents,
     loadAll,

@@ -1,62 +1,5 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`ApplicationCard displays legal notice 1`] = `
-<li
-  className="font-body-2xs"
-  key="mock-document-3"
->
-  <a
-    className="text-medium"
-    href="/applications/mock_application_id/documents/mock-document-3"
-  >
-    Approval notice (PDF)
-  </a>
-  <div
-    className="text-base-dark"
-  >
-    Posted 1/1/2021
-  </div>
-</li>
-`;
-
-exports[`ApplicationCard displays legal notice 2`] = `
-<li
-  className="font-body-2xs"
-  key="mock-document-4"
->
-  <a
-    className="text-medium"
-    href="/applications/mock_application_id/documents/mock-document-4"
-  >
-    Denial notice (PDF)
-  </a>
-  <div
-    className="text-base-dark"
-  >
-    Posted 1/1/2021
-  </div>
-</li>
-`;
-
-exports[`ApplicationCard displays legal notice 3`] = `
-<li
-  className="font-body-2xs"
-  key="mock-document-5"
->
-  <a
-    className="text-medium"
-    href="/applications/mock_application_id/documents/mock-document-5"
-  >
-    Request for more information (PDF)
-  </a>
-  <div
-    className="text-base-dark"
-  >
-    Posted 1/1/2021
-  </div>
-</li>
-`;
-
 exports[`ApplicationCard renders Alert inside the component when there is an error loading documents 1`] = `
 <Alert
   noIcon={true}
@@ -90,4 +33,64 @@ exports[`ApplicationCard renders a card for the given application 1`] = `
     </ButtonLink>
   </div>
 </article>
+`;
+
+exports[`ApplicationCard when there are legal notices displays legal notices 1`] = `
+<li
+  className="font-body-2xs"
+  key="mock-document-3"
+>
+  <a
+    className="text-medium"
+    href=""
+    onClick={[Function]}
+  >
+    Approval notice (PDF)
+  </a>
+  <div
+    className="text-base-dark"
+  >
+    Posted 1/1/2021
+  </div>
+</li>
+`;
+
+exports[`ApplicationCard when there are legal notices displays legal notices 2`] = `
+<li
+  className="font-body-2xs"
+  key="mock-document-4"
+>
+  <a
+    className="text-medium"
+    href=""
+    onClick={[Function]}
+  >
+    Denial notice (PDF)
+  </a>
+  <div
+    className="text-base-dark"
+  >
+    Posted 1/1/2021
+  </div>
+</li>
+`;
+
+exports[`ApplicationCard when there are legal notices displays legal notices 3`] = `
+<li
+  className="font-body-2xs"
+  key="mock-document-5"
+>
+  <a
+    className="text-medium"
+    href=""
+    onClick={[Function]}
+  >
+    Request for more information (PDF)
+  </a>
+  <div
+    className="text-base-dark"
+  >
+    Posted 1/1/2021
+  </div>
+</li>
 `;

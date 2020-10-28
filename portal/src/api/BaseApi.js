@@ -15,7 +15,7 @@ import { Auth } from "@aws-amplify/auth";
 import tracker from "../services/tracker";
 
 /**
- * @typedef {Promise<{ data: object, errors: ?Array, warnings: ?Array, status: number, success: boolean }>} Response
+ * @typedef {Promise<{ data: object, errors: ?Array, warnings: ?Array, status: number, success: boolean}>} Response
  * @property {object} data - API's JSON response
  * @property {Array} warnings - API's validation warnings, such as missing required fields. These are "warnings"
  *  because we expect some fields to be missing as the user proceeds page-by-page through the flow.
@@ -58,6 +58,7 @@ export default class BaseApi {
    * @param {string} subPath - relative path without a leading forward slash
    * @param {object|FormData} [body] - request body
    * @param {object} [additionalHeaders] - request headers
+   * @param {{ multipartForm: boolean}}  options
    * @returns {Response} response - rejects on non-2xx status codes
    */
   request = async (
@@ -71,10 +72,9 @@ export default class BaseApi {
     validateRequestMethod(method);
 
     const url = createRequestUrl(this.basePath, subPath);
-    const { accessToken } = await Auth.currentSession();
-
+    const authHeader = await getAuthorizationHeader();
     const headers = {
-      Authorization: `Bearer ${accessToken.jwtToken}`,
+      ...authHeader,
       ...additionalHeaders,
     };
 
@@ -111,30 +111,14 @@ export default class BaseApi {
     try {
       tracker.trackFetchRequest(url);
       response = await fetch(url, options);
+
       ({ data, errors, warnings } = await response.json());
     } catch (error) {
-      // Request failed to send or something failed while parsing the response
-      // Log the JS error to support troubleshooting
-      console.error(error);
-      tracker.noticeError(error);
-      throw new NetworkError(error.message);
+      handleError(error);
     }
 
     if (!response.ok) {
-      // Request completed, but the response status code was outside the 2xx range
-      // Log the error response to track trends and surges
-      tracker.noticeError(
-        new Error(`Fetch request to ${url} returned status: ${response.status}`)
-      );
-
-      if (isEmpty(errors)) {
-        // Response didn't include any errors that we could use to
-        // display user friendly error message(s) from, so throw
-        // an error based on the status code
-        throwError(response);
-      } else {
-        throw new ValidationError(errors, this.i18nPrefix);
-      }
+      handleNotOkResponse(url, response, errors, this.i18nPrefix);
     }
 
     return {
@@ -179,23 +163,67 @@ function createRequestBody(payload) {
 }
 
 /**
+ * Create the full URL for a given API path
+ * @param {...string} paths - Relative api path
+ * @returns {string} url
+ */
+export function createRequestUrl(...paths) {
+  // Remove leading slash from apiPath if it has one
+  const cleanedPaths = compact(paths).map(removeLeadingSlash);
+  return [process.env.apiUrl, ...cleanedPaths].join("/");
+}
+
+/**
+ * Retrieve auth token header
+ * @returns {{Authorization: string}}
+ */
+export async function getAuthorizationHeader() {
+  const { accessToken } = await Auth.currentSession();
+  return { Authorization: `Bearer ${accessToken.jwtToken}` };
+}
+
+/**
+ * Handle request errors
+ * @param {Error} error
+ */
+
+export function handleError(error) {
+  // Request failed to send or something failed while parsing the response
+  // Log the JS error to support troubleshooting
+  console.error(error);
+  tracker.noticeError(error);
+  throw new NetworkError(error.message);
+}
+
+/**
+ * Handle responses with non-200 errors
+ * @param {Error} error
+ */
+
+export function handleNotOkResponse(url, response, errors = [], i18nPrefix) {
+  // Request completed, but the response status code was outside the 2xx range
+  // Log the error response to track trends and surges
+  tracker.noticeError(
+    new Error(`Fetch request to ${url} returned status: ${response.status}`)
+  );
+
+  if (isEmpty(errors)) {
+    // Response didn't include any errors that we could use to
+    // display user friendly error message(s) from, so throw
+    // an error based on the status code
+    throwError(response);
+  } else {
+    throw new ValidationError(errors, i18nPrefix);
+  }
+}
+
+/**
  * Remove leading slash
  * @param {string} path - relative path
  * @returns {string}
  */
 function removeLeadingSlash(path) {
   return path.replace(/^\//, "");
-}
-
-/**
- * Create the full URL for a given API path
- * @param {...string} paths - Relative api path
- * @returns {string} url
- */
-function createRequestUrl(...paths) {
-  // Remove leading slash from apiPath if it has one
-  const cleanedPaths = compact(paths).map(removeLeadingSlash);
-  return [process.env.apiUrl, ...cleanedPaths].join("/");
 }
 
 const throwError = ({ status }) => {

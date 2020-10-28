@@ -1,4 +1,9 @@
-import BaseApi from "./BaseApi";
+import BaseApi, {
+  createRequestUrl,
+  getAuthorizationHeader,
+  handleError,
+  handleNotOkResponse,
+} from "./BaseApi";
 import Document from "../models/Document";
 import DocumentCollection from "../models/DocumentCollection";
 import assert from "assert";
@@ -16,6 +21,11 @@ import routes from "../routes";
  * @property {DocumentCollection} [documents] - If the request succeeded, this will contain a list of documents
  * @property {number} status - Status code
  * @property {boolean} success - Did the request succeed or fail?
+ */
+
+/**
+ * @typedef {{ blob: Blob }} DocumentResponse
+ * @property {Blob} blob - Document data
  */
 
 export default class DocumentsApi extends BaseApi {
@@ -83,5 +93,39 @@ export default class DocumentsApi extends BaseApi {
       success,
       status,
     };
+  };
+
+  /**
+   * Download document
+   *
+   * Corresponds to this API endpoint: /application/{application_id}/documents/{fineos_document_id}
+   * @param {Document} document instance of Document to download
+   * @returns {Blob} file data
+   */
+  downloadDocument = async (document) => {
+    assert(document);
+    const { application_id, content_type, fineos_document_id } = document;
+    const subPath = `${application_id}/documents/${fineos_document_id}`;
+    const url = createRequestUrl(this.basePath, subPath);
+    const authHeader = await getAuthorizationHeader();
+
+    const headers = {
+      ...authHeader,
+      "Content-Type": content_type,
+    };
+
+    let blob, response;
+    try {
+      response = await fetch(url, { headers, method: "GET" });
+      blob = await response.blob();
+    } catch (error) {
+      handleError(error);
+    }
+
+    if (!response.ok) {
+      handleNotOkResponse(url, response);
+    }
+
+    return blob;
   };
 }

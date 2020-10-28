@@ -6,6 +6,7 @@ import Heading from "../components/Heading";
 import PropTypes from "prop-types";
 import React from "react";
 import classnames from "classnames";
+import download from "downloadjs";
 import findKeyByValue from "../utils/findKeyByValue";
 import formatDateRange from "../utils/formatDateRange";
 import get from "lodash/get";
@@ -193,6 +194,7 @@ function CompletedApplicationDocsInfo(props) {
               <LegalNoticeListItem
                 key={notice.fineos_document_id}
                 document={notice}
+                {...props}
               />
             ))}
           </ul>
@@ -221,14 +223,24 @@ function CompletedApplicationDocsInfo(props) {
  * Link and metadata for a Legal notice
  */
 function LegalNoticeListItem(props) {
-  const { document } = props;
+  const { appLogic, document } = props;
   const { t } = useTranslation();
 
-  const downloadUrl = `/applications/${document.application_id}/documents/${document.fineos_document_id}`;
+  const handleClick = async (event) => {
+    event.preventDefault();
+    const documentData = await appLogic.documents.download(document);
+    if (documentData) {
+      download(
+        documentData,
+        document.name.trim() || document.document_type.trim(),
+        document.content_type || "application/pdf"
+      );
+    }
+  };
 
   return (
     <li key={document.fineos_document_id} className="font-body-2xs">
-      <a className="text-medium" href={downloadUrl}>
+      <a onClick={handleClick} className="text-medium" href="">
         {t("components.applicationCard.noticeName", {
           context: findKeyByValue(DocumentType, document.document_type),
         })}
@@ -245,6 +257,9 @@ function LegalNoticeListItem(props) {
 ApplicationCard.propTypes = {
   appLogic: PropTypes.shape({
     appErrors: PropTypes.object.isRequired,
+    documents: PropTypes.shape({
+      download: PropTypes.func.isRequired,
+    }),
   }).isRequired,
   claim: PropTypes.instanceOf(Claim).isRequired,
   documents: PropTypes.arrayOf(PropTypes.instanceOf(Document)),
@@ -260,6 +275,12 @@ CompletedApplicationDocsInfo.propTypes = {
 };
 
 LegalNoticeListItem.propTypes = {
+  appLogic: PropTypes.shape({
+    appErrors: PropTypes.object.isRequired,
+    documents: PropTypes.shape({
+      download: PropTypes.func.isRequired,
+    }),
+  }).isRequired,
   document: PropTypes.instanceOf(Document),
 };
 

@@ -16,6 +16,7 @@ const mockFetch = ({
     json: jest.fn().mockResolvedValueOnce(response),
     ok,
     status,
+    blob: jest.fn().mockResolvedValueOnce(new Blob()),
   });
 };
 
@@ -93,67 +94,102 @@ describe("DocumentsApi", () => {
         `);
       });
     });
-
-    describe("getDocuments", () => {
-      describe("successful request", () => {
-        beforeEach(() => {
-          global.fetch = mockFetch({
-            response: {
-              data: [
-                {
-                  application_id: applicationId,
-                  fineos_document_id: 1,
-                },
-                {
-                  application_id: applicationId,
-                  fineos_document_id: 2,
-                },
-                {
-                  application_id: applicationId,
-                  fineos_document_id: 3,
-                },
-              ],
-            },
-            status: 200,
-            ok: true,
-          });
-        });
-
-        it("sends GET request to /applications/{application_id/documents", async () => {
-          await documentsApi.getDocuments(applicationId);
-          expect(fetch).toHaveBeenCalledWith(
-            `${process.env.apiUrl}/applications/${applicationId}/documents`,
-            {
-              body: null,
-              headers,
-              method: "GET",
-            }
-          );
-        });
-
-        it("resolves with success, status, and DocumentCollection instance", async () => {
-          const result = await documentsApi.getDocuments(applicationId);
-          expect(result).toEqual({
-            documents: expect.any(DocumentCollection),
-            status: 200,
-            success: true,
-          });
-          expect(result.documents.items).toEqual([
-            new Document({
-              application_id: applicationId,
-              fineos_document_id: 1,
-            }),
-            new Document({
-              application_id: applicationId,
-              fineos_document_id: 2,
-            }),
-            new Document({
-              application_id: applicationId,
-              fineos_document_id: 3,
-            }),
-          ]);
+  });
+  describe("getDocuments", () => {
+    describe("successful request", () => {
+      beforeEach(() => {
+        global.fetch = mockFetch({
+          response: {
+            data: [
+              {
+                application_id: applicationId,
+                fineos_document_id: 1,
+              },
+              {
+                application_id: applicationId,
+                fineos_document_id: 2,
+              },
+              {
+                application_id: applicationId,
+                fineos_document_id: 3,
+              },
+            ],
+          },
+          status: 200,
+          ok: true,
         });
       });
+
+      it("sends GET request to /applications/{application_id/documents", async () => {
+        await documentsApi.getDocuments(applicationId);
+        expect(fetch).toHaveBeenCalledWith(
+          `${process.env.apiUrl}/applications/${applicationId}/documents`,
+          {
+            body: null,
+            headers,
+            method: "GET",
+          }
+        );
+      });
+
+      it("resolves with success, status, and DocumentCollection instance", async () => {
+        const result = await documentsApi.getDocuments(applicationId);
+        expect(result).toEqual({
+          documents: expect.any(DocumentCollection),
+          status: 200,
+          success: true,
+        });
+        expect(result.documents.items).toEqual([
+          new Document({
+            application_id: applicationId,
+            fineos_document_id: 1,
+          }),
+          new Document({
+            application_id: applicationId,
+            fineos_document_id: 2,
+          }),
+          new Document({
+            application_id: applicationId,
+            fineos_document_id: 3,
+          }),
+        ]);
+      });
+    });
+  });
+  describe("downloadDocument", () => {
+    beforeEach(() => {
+      global.fetch = mockFetch({
+        response: {},
+        status: 200,
+        ok: true,
+      });
+    });
+
+    it("sends GET request to /applications/{application_id/documents/{fineos_document_id}", async () => {
+      const document = new Document({
+        fineos_document_id: 1234,
+        content_type: "image/png",
+        application_id: applicationId,
+      });
+
+      await documentsApi.downloadDocument(document);
+      expect(fetch).toHaveBeenCalledWith(
+        `${process.env.apiUrl}/applications/${document.application_id}/documents/${document.fineos_document_id}`,
+        {
+          headers: { ...headers, "Content-Type": "image/png" },
+          method: "GET",
+        }
+      );
+    });
+
+    it("returns a Blob object", async () => {
+      const document = new Document({
+        fineos_document_id: 1234,
+        content_type: "image/png",
+        application_id: applicationId,
+      });
+      const response = await documentsApi.downloadDocument(document);
+      expect(response).toBeInstanceOf(Blob);
     });
   });
 });

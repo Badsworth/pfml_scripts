@@ -1,10 +1,12 @@
 import {
   attachDocumentMock,
+  downloadDocumentMock,
   getDocumentsMock,
 } from "../../src/api/DocumentsApi";
 import { makeFile, testHook } from "../test-utils";
 import AppErrorInfo from "../../src/models/AppErrorInfo";
 import AppErrorInfoCollection from "../../src/models/AppErrorInfoCollection";
+import { BadRequestError } from "../../src/errors";
 import Document from "../../src/models/Document";
 import DocumentCollection from "../../src/models/DocumentCollection";
 import { act } from "react-dom/test-utils";
@@ -254,14 +256,18 @@ describe("useDocumentsLogic", () => {
   });
 
   it("clears prior errors", async () => {
+    act(() => {
+      appErrorsLogic.setAppErrors(
+        new AppErrorInfoCollection([new AppErrorInfo()])
+      );
+    });
+
     attachDocumentMock.mockResolvedValueOnce({
       success: true,
       document: new Document({ fineos_document_id: uniqueId() }),
     }); // file1 - success
 
     const files = [makeFile({ name: "file1" })];
-    jest.spyOn(console, "error").mockImplementationOnce(jest.fn());
-
     let uploadPromises;
 
     await act(async () => {
@@ -506,6 +512,71 @@ describe("useDocumentsLogic", () => {
       });
 
       expect(documentsLogic.hasLoadedClaimDocuments(application_id)).toBe(true);
+    });
+  });
+
+  describe("download", () => {
+    it("clears prior errors", async () => {
+      act(() => {
+        appErrorsLogic.setAppErrors(
+          new AppErrorInfoCollection([new AppErrorInfo()])
+        );
+      });
+
+      const document = new Document({
+        application_id,
+        content_type: "image/png",
+        fineos_document_id: uniqueId(),
+      });
+
+      await act(async () => {
+        await documentsLogic.download(document);
+      });
+
+      expect(appErrorsLogic.appErrors.items).toHaveLength(0);
+    });
+
+    it("makes a request to the API", () => {
+      const document = new Document({
+        application_id,
+        content_type: "image/png",
+        fineos_document_id: uniqueId(),
+      });
+
+      act(() => {
+        documentsLogic.download(document);
+      });
+
+      expect(downloadDocumentMock).toHaveBeenCalledWith(document);
+    });
+
+    it("returns a blob", async () => {
+      const document = new Document({
+        application_id,
+        content_type: "image/png",
+        fineos_document_id: uniqueId(),
+      });
+
+      let response;
+      await act(async () => {
+        response = await documentsLogic.download(document);
+      });
+
+      expect(response).toBeInstanceOf(Blob);
+    });
+
+    it("catches exceptions thrown from the API module", async () => {
+      jest.spyOn(console, "error").mockImplementationOnce(jest.fn());
+
+      downloadDocumentMock.mockImplementationOnce(() => {
+        throw new BadRequestError();
+      });
+
+      await act(async () => {
+        await documentsLogic.download();
+      });
+
+      expect(appErrorsLogic.appErrors.items[0].name).toEqual("BadRequestError");
     });
   });
 });

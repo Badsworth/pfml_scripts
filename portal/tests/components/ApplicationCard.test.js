@@ -7,15 +7,19 @@ import React from "react";
 import { shallow } from "enzyme";
 
 describe("ApplicationCard", () => {
-  const render = (claim, props = {}) => {
+  let props;
+  const render = (claim, additionalProps = {}) => {
     props = Object.assign(
       {
         appLogic: {
           appErrors: new AppErrorInfoCollection([]),
+          documents: {
+            download: jest.fn(),
+          },
         },
         documents: [],
       },
-      props
+      additionalProps
     );
 
     return shallow(<ApplicationCard claim={claim} number={2} {...props} />);
@@ -104,44 +108,78 @@ describe("ApplicationCard", () => {
     });
   });
 
-  it("displays legal notice", () => {
-    const claim = new MockClaimBuilder().completed().create();
-    const documents = [
-      new Document({
-        application_id: claim.application_id,
-        created_at: "2021-01-01",
-        document_type: DocumentType.approvalNotice,
-        fineos_document_id: "mock-document-3",
-      }),
-      new Document({
-        application_id: claim.application_id,
-        created_at: "2021-01-01",
-        document_type: DocumentType.denialNotice,
-        fineos_document_id: "mock-document-4",
-      }),
-      new Document({
-        application_id: claim.application_id,
-        created_at: "2021-01-01",
-        document_type: DocumentType.requestForInfoNotice,
-        fineos_document_id: "mock-document-5",
-      }),
-      // Throw in a non-legal notice to confirm it doesn't get rendered
-      new Document({
-        application_id: claim.application_id,
-        created_at: "2020-12-01",
-        document_type: DocumentType.medicalCertification,
-        fineos_document_id: "mock-document-6",
-      }),
-    ];
+  describe("when there are legal notices", () => {
+    it("displays legal notices", () => {
+      const claim = new MockClaimBuilder().completed().create();
+      const documents = [
+        new Document({
+          application_id: claim.application_id,
+          created_at: "2021-01-01",
+          document_type: DocumentType.approvalNotice,
+          fineos_document_id: "mock-document-3",
+        }),
+        new Document({
+          application_id: claim.application_id,
+          created_at: "2021-01-01",
+          document_type: DocumentType.denialNotice,
+          fineos_document_id: "mock-document-4",
+        }),
+        new Document({
+          application_id: claim.application_id,
+          created_at: "2021-01-01",
+          document_type: DocumentType.requestForInfoNotice,
+          fineos_document_id: "mock-document-5",
+        }),
+        // Throw in a non-legal notice to confirm it doesn't get rendered
+        new Document({
+          application_id: claim.application_id,
+          created_at: "2020-12-01",
+          document_type: DocumentType.medicalCertification,
+          fineos_document_id: "mock-document-6",
+        }),
+      ];
 
-    const wrapper = render(claim, { documents });
-    const listItems = wrapper
-      .find("CompletedApplicationDocsInfo")
-      .dive()
-      .find("LegalNoticeListItem");
+      const wrapper = render(claim, { documents });
+      const listItems = wrapper
+        .find("CompletedApplicationDocsInfo")
+        .dive()
+        .find("LegalNoticeListItem");
 
-    expect.assertions(3);
-    listItems.forEach((listItem) => expect(listItem.dive()).toMatchSnapshot());
+      expect.assertions(3);
+      listItems.forEach((listItem) =>
+        expect(listItem.dive()).toMatchSnapshot()
+      );
+    });
+
+    describe("when the user clicks on the download link", () => {
+      it("calls documentsLogic.download", () => {
+        const claim = new MockClaimBuilder().completed().create();
+        const documents = [
+          new Document({
+            application_id: claim.application_id,
+            created_at: "2021-01-01",
+            document_type: DocumentType.approvalNotice,
+            fineos_document_id: "mock-document-3",
+          }),
+        ];
+
+        const wrapper = render(claim, { documents });
+
+        wrapper
+          .find("CompletedApplicationDocsInfo")
+          .dive()
+          .find("LegalNoticeListItem")
+          .dive()
+          .find("a")
+          .simulate("click", {
+            preventDefault: () => jest.fn(),
+          });
+
+        expect(props.appLogic.documents.download).toHaveBeenCalledWith(
+          documents[0]
+        );
+      });
+    });
   });
 
   it("renders Alert inside the component when there is an error loading documents", () => {

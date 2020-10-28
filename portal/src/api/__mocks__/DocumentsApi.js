@@ -32,8 +32,13 @@ export const getDocumentsMock = jest.fn((application_id) => {
   });
 });
 
+export const downloadDocumentMock = jest.fn(() => {
+  return new Blob();
+});
+
 const documentsApi = jest.fn().mockImplementation(() => ({
   attachDocument: attachDocumentMock,
+  downloadDocument: downloadDocumentMock,
   getDocuments: getDocumentsMock,
 }));
 

@@ -43,6 +43,7 @@ describe("BaseApi", () => {
       json: jest.fn().mockResolvedValue({ data: [], errors: [], warnings: [] }),
       ok: true,
       status: 200,
+      blob: jest.fn().mockResolvedValue(new Blob()),
     });
 
     testsApi = new TestsApi();
@@ -228,6 +229,30 @@ describe("BaseApi", () => {
           headers: expect.objectContaining(headers),
         })
       );
+    });
+  });
+
+  describe("when options are passed", () => {
+    describe("when multipartForm is true", () => {
+      it("doesn't set the Content-Type header", async () => {
+        expect.assertions();
+        const method = "PUT";
+        const body = null;
+        const headers = {};
+        const options = { multipartForm: true };
+
+        await testsApi.request(method, "users", body, headers, options);
+
+        expect(fetch).toHaveBeenCalledWith(
+          expect.any(String),
+          expect.objectContaining({
+            body,
+            headers: expect.not.objectContaining({
+              "Content-Type": "application/json",
+            }),
+          })
+        );
+      });
     });
   });
 
