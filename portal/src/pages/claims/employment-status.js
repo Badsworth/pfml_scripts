@@ -23,11 +23,12 @@ export const EmploymentStatus = (props) => {
   const { t } = useTranslation();
 
   // TODO (CP-1281): Show employment status question when Portal supports other employment statuses
-  const hideEmploymentStatus = isFeatureEnabled("claimantHideEmploymentStatus");
+  const showEmploymentStatus = isFeatureEnabled("claimantShowEmploymentStatus");
+
   const initialFormState = pick(props, fields).claim;
 
-  if (hideEmploymentStatus) {
-    // Hard-code the field if it's hidden so that validations pass
+  if (!showEmploymentStatus) {
+    // If the radio buttons are disabled, hard-code the field so that validations pass
     initialFormState.employment_status = EmploymentStatusEnum.employed;
   }
 
@@ -54,7 +55,7 @@ export const EmploymentStatus = (props) => {
         {t("pages.claimsEmploymentStatus.multipleEmployerAppAlert")}
       </Alert>
 
-      {!hideEmploymentStatus && (
+      {showEmploymentStatus && (
         <InputChoiceGroup
           {...getFunctionalInputProps("employment_status")}
           choices={["employed", "unemployed", "selfEmployed"].map((key) => ({

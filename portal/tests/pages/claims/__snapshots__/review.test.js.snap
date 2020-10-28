@@ -162,12 +162,6 @@ exports[`Final Review Page when all data is present renders Review page with fin
     Employment information
   </ReviewHeading>
   <ReviewRow
-    label="Employment status"
-    level="3"
-  >
-    Currently employed
-  </ReviewRow>
-  <ReviewRow
     label="Employer's FEIN"
     level="3"
   >
@@ -507,12 +501,6 @@ exports[`Part 1 Review Page when all data is present renders Review page with Pa
   >
     Employment information
   </ReviewHeading>
-  <ReviewRow
-    label="Employment status"
-    level="4"
-  >
-    Currently employed
-  </ReviewRow>
   <ReviewRow
     label="Employer's FEIN"
     level="4"

@@ -7,13 +7,14 @@ const flagsConfig = {
   // Define a default or all feature flags here.
   // Environments will fallback to these default values.
   defaults: {
-    // Hide "Employment status" question from claimant flow (CP-1204)
+    // When this flag is enabled, the user can see the "Employment status"
+    // question in the claimant flow (CP-1204)
     // TODO (CP-1281): Show employment status question when Portal supports other employment statuses
-    claimantHideEmploymentStatus: true,
-    // Hide "Leave reason" options for soft launch (CP-1145)
+    claimantShowEmploymentStatus: false,
+    // When this flag is enabled, the military leave options are selectable on
+    // the Leave Reason page in the claimant flow (CP-1145)
     // TODO (CP-534): Show all options when portal supports activeDutyFamily, serviceMemberFamily
-    claimantHideMilitaryLeaveTypes: true,
-    example: false,
+    claimantShowMilitaryLeaveTypes: false,
     // When this flag is enabled, the user can see the site.
     // To immediately hide the site from people who previously overrode this
     // flag in a cookie, you can rename this flag to something else (and also

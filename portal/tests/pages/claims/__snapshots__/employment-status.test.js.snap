@@ -1,6 +1,40 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`EmploymentStatusPage when claimantHideEmploymentStatus feature flag is enabled renders the page without the employment status field 1`] = `
+exports[`EmploymentStatusPage when claimantShowEmploymentStatus feature flag is disabled renders the page without the employment status field 1`] = `
+<QuestionPage
+  onSave={[Function]}
+  title="Employment information"
+>
+  <Alert
+    state="info"
+  >
+    You need to complete a separate application for each employer you are taking leave from.
+  </Alert>
+  <ConditionalContent
+    clearField={[Function]}
+    fieldNamesClearedWhenHidden={
+      Array [
+        "employer_fein",
+      ]
+    }
+    getField={[Function]}
+    updateFields={[Function]}
+    visible={true}
+  >
+    <InputText
+      hint="This number is 9-digits. You can find this number on all notices your employer sent about Paid Family and Medical Leave. You can also find it on your W-2 or 1099-MISC. Ask your employer if you need help getting this information."
+      label="What is your employer's Federal Employer Identification Number (FEIN)?"
+      mask="fein"
+      name="employer_fein"
+      onChange={[Function]}
+      type="numeric"
+      value=""
+    />
+  </ConditionalContent>
+</QuestionPage>
+`;
+
+exports[`EmploymentStatusPage when claimantShowEmploymentStatus feature flag is enabled renders the page with the employment status field 1`] = `
 <QuestionPage
   onSave={[Function]}
   title="Employment information"
@@ -53,40 +87,6 @@ exports[`EmploymentStatusPage when claimantHideEmploymentStatus feature flag is 
     getField={[Function]}
     updateFields={[Function]}
     visible={false}
-  >
-    <InputText
-      hint="This number is 9-digits. You can find this number on all notices your employer sent about Paid Family and Medical Leave. You can also find it on your W-2 or 1099-MISC. Ask your employer if you need help getting this information."
-      label="What is your employer's Federal Employer Identification Number (FEIN)?"
-      mask="fein"
-      name="employer_fein"
-      onChange={[Function]}
-      type="numeric"
-      value=""
-    />
-  </ConditionalContent>
-</QuestionPage>
-`;
-
-exports[`EmploymentStatusPage when claimantHideEmploymentStatus feature flag is not enabled renders the page with the employment status field 1`] = `
-<QuestionPage
-  onSave={[Function]}
-  title="Employment information"
->
-  <Alert
-    state="info"
-  >
-    You need to complete a separate application for each employer you are taking leave from.
-  </Alert>
-  <ConditionalContent
-    clearField={[Function]}
-    fieldNamesClearedWhenHidden={
-      Array [
-        "employer_fein",
-      ]
-    }
-    getField={[Function]}
-    updateFields={[Function]}
-    visible={true}
   >
     <InputText
       hint="This number is 9-digits. You can find this number on all notices your employer sent about Paid Family and Medical Leave. You can also find it on your W-2 or 1099-MISC. Ask your employer if you need help getting this information."

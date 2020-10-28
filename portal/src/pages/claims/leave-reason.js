@@ -21,9 +21,9 @@ export const fields = [
 ];
 
 export const LeaveReason = (props) => {
-  // Hide "Leave reason" options for soft launch (CP-1145)
-  const hideMilitaryLeaveTypes = isFeatureEnabled(
-    "claimantHideMilitaryLeaveTypes"
+  // Military leave types are disabled for soft launch (CP-1145)
+  const showMilitaryLeaveTypes = isFeatureEnabled(
+    "claimantShowMilitaryLeaveTypes"
   );
 
   const { appLogic, claim } = props;
@@ -71,9 +71,8 @@ export const LeaveReason = (props) => {
           },
           // TODO (CP-534): Remove this feature flag and show all options
           // when the portal supports activeDutyFamily and serviceMemberFamily
-          ...(hideMilitaryLeaveTypes
-            ? []
-            : [
+          ...(showMilitaryLeaveTypes
+            ? [
                 {
                   // TODO (CP-515): We need to more accurately map this Family Leave option to signify that
                   // this is active duty family leave, as opposed to another family leave type.
@@ -96,7 +95,8 @@ export const LeaveReason = (props) => {
                   ),
                   value: LeaveReasonEnum.serviceMemberFamily,
                 },
-              ]),
+              ]
+            : []),
         ]}
         label={t("pages.claimsLeaveReason.sectionLabel")}
         hint={t("pages.claimsLeaveReason.sectionHint")}

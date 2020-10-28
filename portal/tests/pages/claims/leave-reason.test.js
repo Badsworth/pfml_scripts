@@ -10,12 +10,12 @@ import { act } from "react-dom/test-utils";
 jest.mock("../../../src/hooks/useAppLogic");
 
 describe("LeaveReasonPage", () => {
-  describe("when claimantHideMilitaryLeaveTypes feature flag is not enabled", () => {
+  describe("when claimantShowMilitaryLeaveTypes feature flag is enabled", () => {
     let wrapper;
 
     beforeEach(() => {
       process.env.featureFlags = {
-        claimantHideMilitaryLeaveTypes: false,
+        claimantShowMilitaryLeaveTypes: true,
       };
       ({ wrapper } = renderWithAppLogic(LeaveReasonPage, {
         claimAttrs: new MockClaimBuilder().create(),
@@ -36,12 +36,12 @@ describe("LeaveReasonPage", () => {
     });
   });
 
-  describe("when claimantHideMilitaryLeaveTypes feature flag is enabled", () => {
+  describe("when claimantShowMilitaryLeaveTypes feature flag is disabled", () => {
     let wrapper;
 
     beforeEach(() => {
       process.env.featureFlags = {
-        claimantHideMilitaryLeaveTypes: true,
+        claimantShowMilitaryLeaveTypes: false,
       };
       ({ wrapper } = renderWithAppLogic(LeaveReasonPage, {
         claimAttrs: new MockClaimBuilder().create(),

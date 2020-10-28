@@ -12,16 +12,13 @@ describe("EmploymentStatusPage", () => {
     return wrapper.find({ name: "employer_fein" });
   }
 
-  beforeEach(() => {
-    ({ appLogic, claim, wrapper } = renderWithAppLogic(EmploymentStatusPage));
-    ({ changeField, changeRadioGroup } = simulateEvents(wrapper));
-  });
-
-  describe("when claimantHideEmploymentStatus feature flag is enabled", () => {
+  describe("when claimantShowEmploymentStatus feature flag is disabled", () => {
     beforeEach(() => {
       process.env.featureFlags = {
-        claimantHideEmploymentStatus: true,
+        claimantShowEmploymentStatus: false,
       };
+      ({ appLogic, claim, wrapper } = renderWithAppLogic(EmploymentStatusPage));
+      ({ changeField, changeRadioGroup } = simulateEvents(wrapper));
     });
 
     it("renders the page without the employment status field", () => {
@@ -46,11 +43,13 @@ describe("EmploymentStatusPage", () => {
     });
   });
 
-  describe("when claimantHideEmploymentStatus feature flag is not enabled", () => {
+  describe("when claimantShowEmploymentStatus feature flag is enabled", () => {
     beforeEach(() => {
       process.env.featureFlags = {
-        claimantHideEmploymentStatus: false,
+        claimantShowEmploymentStatus: true,
       };
+      ({ appLogic, claim, wrapper } = renderWithAppLogic(EmploymentStatusPage));
+      ({ changeField, changeRadioGroup } = simulateEvents(wrapper));
     });
 
     it("renders the page with the employment status field", () => {

@@ -351,7 +351,7 @@ export const Review = (props) => {
         })}
       </ReviewHeading>
       {/* TODO (CP-1281): Show employment status when Portal supports other employment statuses */}
-      {!isFeatureEnabled("claimantHideEmploymentStatus") &&
+      {isFeatureEnabled("claimantShowEmploymentStatus") &&
         get(claim, "employment_status") && (
           <ReviewRow
             level={reviewRowLevel}
