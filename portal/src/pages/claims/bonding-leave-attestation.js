@@ -12,7 +12,8 @@ import withClaim from "../../hoc/withClaim";
 export const BondingLeaveAttestation = (props) => {
   const { t } = useTranslation();
   const { appLogic, claim, query } = props;
-  const handleSubmit = () => {
+  const handleSubmit = (event) => {
+    event.preventDefault();
     appLogic.portalFlow.goToNextPage({ claim }, query);
   };
 
