@@ -20,7 +20,7 @@ import { useTranslation } from "../../../locales/i18n";
 import withUser from "../../../hoc/withUser";
 
 // TODO (EMPLOYER-363): Update respond by date
-const employerDueDate = formatDateRange("2020-10-10");
+const employerDueDate = "2020-10-10";
 
 export const Review = (props) => {
   const {
@@ -85,7 +85,7 @@ export const Review = (props) => {
           <Alert state="warning" noIcon>
             <Trans
               i18nKey="pages.employersClaimsReview.instructionsDueDate"
-              values={{ date: employerDueDate }}
+              values={{ date: formatDateRange(employerDueDate) }}
             />
           </Alert>
           <p>{t("pages.employersClaimsReview.instructionsAmendment")}</p>
