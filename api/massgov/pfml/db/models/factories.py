@@ -84,6 +84,8 @@ class EmployerFactory(BaseFactory):
     employer_id = Generators.UuidObj
     employer_fein = Generators.Fein
     employer_dba = factory.Faker("company")
+    fineos_customer_nbr = f"pfml_api_{str(Generators.UuidObj)}"
+    fineos_employer_id = random.randint(100, 1000)
 
 
 class TaxIdentifierFactory(BaseFactory):

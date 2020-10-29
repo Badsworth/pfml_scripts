@@ -446,10 +446,13 @@ def test_process_all_employers_for_multiple_wages_for_single_employee_employer_p
 def test_process_all_employers_skips_nonexistent_employer(
     test_db_session, tmp_path, initialize_factories_session
 ):
-    # Employer FEIN 999999999 will not be found by the mock FINEOS client and should be skipped
+    # Set fineos_employer_id to None for 'missing' employer to skip employer.
     missing_employer_fein = "999999999"
     WagesAndContributionsFactory.create_batch(
-        size=1, employer=EmployerFactory.create(employer_fein=missing_employer_fein)
+        size=1,
+        employer=EmployerFactory.create(
+            employer_fein=missing_employer_fein, fineos_employer_id=None
+        ),
     )
     # wages_for_single_employer_different_employees
     employer = EmployerFactory.create()
@@ -461,8 +464,7 @@ def test_process_all_employers_skips_nonexistent_employer(
     assert process_results.employers_total_count == 1
     assert process_results.employee_and_employer_pairs_total_count == 5
 
-    # assert_employer_file_does_not_exists(tmp_path, missing_employer_fein)
-    assert_employer_file_exists(tmp_path, fineos_client.find_employer(employer.employer_fein))
+    assert_employer_file_exists(tmp_path, employer.fineos_employer_id)
     assert_number_of_data_lines_in_each_file(tmp_path, 5)
 
 
@@ -559,10 +561,13 @@ def test_process_employee_updates_for_multiple_wages_for_single_employee_employe
 def test_process_employee_updates_skips_nonexistent_employer(
     test_db_session, tmp_path, initialize_factories_session, create_triggers
 ):
-    # Employer FEIN 999999999 will not be found by the mock FINEOS client and should be skipped
+    # Set fineos_employer_id to None for 'missing' employer to skip employer.
     missing_employer_fein = "999999999"
     WagesAndContributionsFactory.create_batch(
-        size=1, employer=EmployerFactory.create(employer_fein=missing_employer_fein)
+        size=1,
+        employer=EmployerFactory.create(
+            employer_fein=missing_employer_fein, fineos_employer_id=None
+        ),
     )
     # wages_for_single_employer_different_employees
     employer = EmployerFactory.create()
@@ -574,6 +579,5 @@ def test_process_employee_updates_skips_nonexistent_employer(
     assert process_results.employers_total_count == 1
     assert process_results.employee_and_employer_pairs_total_count == 5
 
-    # assert_employer_file_does_not_exists(tmp_path, missing_employer_fein)
-    assert_employer_file_exists(tmp_path, fineos_client.find_employer(employer.employer_fein))
+    assert_employer_file_exists(tmp_path, employer.fineos_employer_id)
     assert_number_of_data_lines_in_each_file(tmp_path, 5)

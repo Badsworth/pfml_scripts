@@ -214,6 +214,29 @@ def get_latest_employer_for_updates(employer_employee_list: List) -> List:
     return latest_employer_employee_list
 
 
+# When loading employers to FINEOS the API we use requires us to
+# generate a unique key which we pass in the attribute CustomerNo.
+# We store that value in fineos_customer_nbr in the employer model.
+# FINEOS uses this key to determine if a request is a create or an
+# update.
+# The API returns the FINEOS primary key for the organization it
+# created in the response as attribute CUSTOMER_NUMBER. We store
+# this value in the fineos_employer_id field in the employer model.
+# The fineos_employer_id is the value that should be used to identify
+# an employer in the Eligibility Feed.
+def get_fineos_employer_id(
+    fineos: massgov.pfml.fineos.AbstractFINEOSClient, employer: Employer
+) -> Optional[int]:
+    if employer.fineos_employer_id:
+        return employer.fineos_employer_id
+
+    try:
+        fineos_employer_id = fineos.find_employer(employer.employer_fein)
+        return int(fineos_employer_id)
+    except FINEOSNotFound:
+        return None
+
+
 def process_employee_updates(
     db_session: db.Session, fineos: massgov.pfml.fineos.AbstractFINEOSClient, output_dir_path: str
 ) -> ProcessUpdatesResult:
@@ -264,12 +287,11 @@ def process_employee_updates(
     for employer_id, employee_ids in employer_id_to_employee_ids.items():
         employer = db_session.query(Employer).filter(Employer.employer_id == employer_id).one()
         # Find FINEOS employer id using employer FEIN
-        try:
-            fineos_employer_id = fineos.find_employer(employer.employer_fein)
-        except FINEOSNotFound:
+        fineos_employer_id = get_fineos_employer_id(fineos, employer)
+        if fineos_employer_id is None:
             logger.info(
-                "Could not find employer FEIN in FINEOS. Continuing.",
-                extra={"employer_fein": employer.employer_fein},
+                "FINEOS employer id not in Portal DB. Continuing.",
+                extra={"account_key": employer.account_key},
             )
             continue
 
@@ -314,12 +336,11 @@ def process_all_employers(
 
     for employer in employers:
         # Find FINEOS employer id using employer FEIN
-        try:
-            fineos_employer_id = fineos.find_employer(employer.employer_fein)
-        except FINEOSNotFound:
+        fineos_employer_id = get_fineos_employer_id(fineos, employer)
+        if fineos_employer_id is None:
             logger.info(
-                "Could not find employer FEIN in FINEOS. Continuing.",
-                extra={"employer_fein": employer.employer_fein},
+                "FINEOS employer id not in Portal DB. Continuing.",
+                extra={"account_key": employer.account_key},
             )
             continue
 
@@ -362,7 +383,7 @@ ELIGIBILITY_FEED_CSV_ENCODERS: csv_util.Encoders = {
 
 def open_and_write_to_eligibility_file(
     output_dir_path: str,
-    fineos_employer_id: str,
+    fineos_employer_id: int,
     employer: Employer,
     number_of_employees: int,
     employees: Iterable[Employee],
@@ -383,7 +404,7 @@ def open_and_write_to_eligibility_file(
 
     with smart_open.open(output_file_path, "w") as output_file:
         write_employees_to_csv(
-            employer, fineos_employer_id, number_of_employees, employees, output_file,
+            employer, str(fineos_employer_id), number_of_employees, employees, output_file,
         )
 
     return output_file_path
