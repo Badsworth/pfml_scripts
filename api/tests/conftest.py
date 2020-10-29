@@ -423,3 +423,26 @@ def create_triggers(initialize_factories_session):
                 REFERENCING OLD TABLE AS old_table\
                 FOR EACH STATEMENT EXECUTE PROCEDURE audit_employer_func();"
         )
+
+
+@pytest.hookimpl(tryfirst=True, hookwrapper=True)
+def pytest_terminal_summary(terminalreporter, exitstatus, config):
+    """Format output for GitHub Actions.
+
+    See https://docs.github.com/en/free-pro-team@latest/actions/reference/workflow-commands-for-github-actions
+    """
+    yield
+
+    if "CI" not in os.environ:
+        return
+
+    for report in terminalreporter.stats.get("failed", []):
+        print(
+            "::error file=api/%s,line=%s::%s %s\n"
+            % (
+                report.location[0],
+                report.longrepr.reprcrash.lineno,
+                report.location[2],
+                report.longrepr.reprcrash.message,
+            )
+        )

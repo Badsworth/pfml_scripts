@@ -19,7 +19,7 @@ INFO_TAG := $(DATE).$(USER)
 # default. -T is needed for Github Actions to work properly with its version of
 # docker-compose.
 ifdef CI
-	DOCKER_EXEC_ARGS := -T
+	DOCKER_EXEC_ARGS := -T -e CI -e PYTEST_ADDOPTS="--color=yes"
 endif
 
 # Path to Open API file for spectral linting
