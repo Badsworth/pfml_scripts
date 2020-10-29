@@ -267,6 +267,8 @@ that they can be run on Github Actions with the right read/write permissions. Th
 └── pfml-aws            🏡 infrastructure for AWS and VPCs, shared across envs e.g. developer IAM roles,
                            docker registries, and network load balancers for each VPC.
 
+└── pagerduty           🏡 configuration for pagerduty schedules and on-call policies
+
 └── portal              🏡 infrastructure for a PFML portal environment
     └── template        🏗  shared template for portal env
     └── environments
@@ -283,6 +285,7 @@ S3
 └── massgov-pfml-aws-account-mgmt
     └── terraform
         └── aws.tfstate
+        └── pagerduty.tfstate
 └── massgov-pfml-test-env-mgmt
     └── terraform
         └── env-shared.tfstate

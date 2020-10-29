@@ -26,61 +26,6 @@ jobs:
           tf_actions_working_dir: ${{ env.working-dir }}
           tf_actions_comment: false
 
-  tf-validate-pfml-aws:
-    name: "tf validate pfml-aws"
-    runs-on: ubuntu-latest
-
-    env:
-      baseref: ${{ github['base_ref'] }}
-
-    steps:
-      - uses: actions/checkout@v2
-
-      - name: "Fetch status of remote ref"
-        run: |
-          git fetch --no-tags --prune --depth=1 origin +refs/heads/${{ env.baseref }}:refs/remotes/origin/${{ env.baseref }}
-
-      - name: "Check for changes"
-        id: check-for-changes
-        # Check whether the pfml-aws config has changed within the PR.
-        # This is done by comparing the PR's base branch (usually master) against the current PR commit.
-        run: |
-          tf_dir=${{ env.working-dir }}/pfml-aws
-
-          if [ -n "$(git --no-pager diff --name-only origin/${{ env.baseref }} ${GITHUB_SHA} -- ${tf_dir})" ]; then
-            echo "::set-output name=has-changes::true"
-          else
-            echo "::set-output name=has-changes::false"
-          fi
-
-      - name: Configure AWS Credentials
-        if: steps.check-for-changes.outputs.has-changes == 'true'
-        uses: aws-actions/configure-aws-credentials@v1
-        with:
-          aws-access-key-id: ${{ secrets.PFML_AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.PFML_AWS_SECRET_ACCESS_KEY }}
-          aws-region: us-east-1
-          role-to-assume: ci-run-deploys
-          role-duration-seconds: 3600
-
-      - name: tf-init
-        if: steps.check-for-changes.outputs.has-changes == 'true'
-        uses: hashicorp/terraform-github-actions@master
-        with:
-          tf_actions_version: ${{ env.tf-version }}
-          tf_actions_subcommand: "init"
-          tf_actions_working_dir: ${{ env.working-dir }}/pfml-aws
-          tf_actions_comment: false
-
-      - name: tf-validate
-        if: steps.check-for-changes.outputs.has-changes == 'true'
-        uses: hashicorp/terraform-github-actions@master
-        with:
-          tf_actions_version: ${{ env.tf-version }}
-          tf_actions_subcommand: "validate"
-          tf_actions_working_dir: ${{ env.working-dir }}/pfml-aws
-          tf_actions_comment: false
-
   tf-validate:
     name: "tf validate"
     runs-on: ubuntu-latest
@@ -95,6 +40,9 @@ jobs:
       matrix:
         component: ["portal", "api", "env-shared"]
         environment: ["test", "stage", "prod"]
+        include:
+        - component: "pfml-aws"
+        - component: "pagerduty"
 
     steps:
       - uses: actions/checkout@v2
@@ -108,15 +56,25 @@ jobs:
         # Check whether the config has changed within the PR.
         # This is done by comparing the PR's base branch (usually master) against the current PR commit.
         run: |
-          tf_dir=${{ env.working-dir }}/${{ matrix.component }}/environments/${{ matrix.environment }}
-          template_dir=${{ env.working-dir }}/${{ matrix.component }}/template
+          echo "::set-output name=has-changes::false"
 
-          if [ -n "$(git --no-pager diff --name-only origin/${{ env.baseref }} ${GITHUB_SHA} -- ${tf_dir})" ] ||
-             [ -n "$(git --no-pager diff --name-only origin/${{ env.baseref }} ${GITHUB_SHA} -- ${template_dir})" ]; then
-            echo "::set-output name=has-changes::true"
+          if [ -z "${{ matrix.environment }}" ]; then
+            tf_dir=${{ env.working-dir }}/${{ matrix.component }}
+            folders=${tf_dir}
           else
-            echo "::set-output name=has-changes::false"
+            tf_dir=${{ env.working-dir }}/${{ matrix.component }}/environments/${{ matrix.environment }}
+            template_dir=${{ env.working-dir }}/${{ matrix.component }}/template
+            folders="${tf_dir} ${template_dir}"
           fi
+
+          echo "::set-output name=tf_working_dir::${tf_dir}"
+
+          for folder in $folders; do
+            if [ -n "$(git --no-pager diff --name-only origin/${{ env.baseref }} ${GITHUB_SHA} -- ${folder})" ]; then
+              echo "::set-output name=has-changes::true"
+              break
+            fi
+          done
 
       - name: Configure AWS Credentials
         if: steps.check-for-changes.outputs.has-changes == 'true'
@@ -134,7 +92,7 @@ jobs:
         with:
           tf_actions_version: ${{ env.tf-version }}
           tf_actions_subcommand: "init"
-          tf_actions_working_dir: ${{ env.working-dir }}/${{ matrix.component }}/environments/${{ matrix.environment }}
+          tf_actions_working_dir: ${{ steps.check-for-changes.outputs.tf_working_dir }}
           tf_actions_comment: false
 
       - name: tf-validate
@@ -143,5 +101,5 @@ jobs:
         with:
           tf_actions_version: ${{ env.tf-version }}
           tf_actions_subcommand: "validate"
-          tf_actions_working_dir: ${{ env.working-dir }}/${{ matrix.component }}/environments/${{ matrix.environment }}
+          tf_actions_working_dir: ${{ steps.check-for-changes.outputs.tf_working_dir }}
           tf_actions_comment: false
