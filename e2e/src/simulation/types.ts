@@ -1,5 +1,5 @@
 import { ApplicationRequestBody } from "../api";
-import { DocumentTypes } from "@/simulation/documents";
+import { DocumentTypes } from "./documents";
 
 export const fineosUserTypeNames = ["SAVILINX", "DFMLOPS"] as const;
 export type FineosUserType = typeof fineosUserTypeNames[number];
@@ -41,5 +41,3 @@ export type EmployeeRecord = Pick<
   ApplicationRequestBody,
   "first_name" | "last_name" | "tax_identifier" | "employer_fein"
 >;
-
-export { SimulationGenerator } from "./simulate";

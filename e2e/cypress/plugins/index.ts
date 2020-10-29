@@ -16,10 +16,8 @@ import webpackPreprocessor from "@cypress/webpack-preprocessor";
 import { CypressStepThis } from "@/types";
 import TestMailVerificationFetcher from "./TestMailVerificationFetcher";
 import PortalSubmitter from "../../src/simulation/PortalSubmitter";
-import {
-  SimulationClaim,
-  SimulationGenerator,
-} from "../../src/simulation/types";
+import { SimulationClaim } from "../../src/simulation/types";
+import { SimulationGenerator } from "../../src/simulation/simulate";
 import { ApplicationResponse, DocumentUploadRequest } from "../../src/api";
 import { makeDocUploadBody } from "../../src/simulation/SimulationRunner";
 import * as pilot3 from "../../src/simulation/scenarios/pilot3";

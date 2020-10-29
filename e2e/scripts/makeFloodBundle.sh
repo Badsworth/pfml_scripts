@@ -8,6 +8,7 @@ fi
 
 cp api.ts flood/simulation;
 cp simulation/types.ts flood/simulation;
+cp simulation/documents.ts flood/simulation;
 
 sed -i '' -e 's|"\.\./api"|"\./api"|g' flood/simulation/types.ts
 

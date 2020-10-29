@@ -5,7 +5,7 @@ import {
   beforeEach,
   step,
 } from "@flood/element";
-import { StoredStep, dataBaseUrl } from "./config";
+import { globalElementSettings, StoredStep, dataBaseUrl } from "./config";
 import { SimulationClaim } from "../simulation/types";
 import * as Fineos from "./tests/FineosClaimSubmit.perf";
 import * as PortalSubmit from "./tests/PortalClaimSubmit.perf";
@@ -13,17 +13,8 @@ import * as PortalRegistration from "./tests/PortalRegistration.perf";
 import * as SavilinxAgent from "./tests/SavilinxAgent.perf";
 
 export const settings: TestSettings = {
+  ...globalElementSettings,
   loopCount: 1000,
-  actionDelay: 1,
-  stepDelay: 1,
-  waitUntil: "visible",
-  name: "PFML Load Test Bot",
-  userAgent: "PFML Load Test Bot",
-  description: "PFML Load Test Bot",
-  screenshotOnFailure: true,
-  disableCache: true,
-  clearCache: true,
-  clearCookies: true,
 };
 
 type ScenarioMap = {
