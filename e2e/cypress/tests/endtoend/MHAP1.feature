@@ -1,8 +1,8 @@
-Feature: Submit a medical claim with a mismatched SSN/ID
+Feature: Submit a medical claim and adjucation approval - MHAP1
 
   @portal
-  Scenario: As a claimant, I should be able to start submitting a GBR1 claim through the portal
-    Given I begin to submit a "UNH3" claim as a "financially eligible" employee
+  Scenario: As a claimant, I should be able to submit a claim (MHAP1) through the portal
+    Given I begin to submit a "MHAP1" claim as a "financially eligible" employee
     When I click on the checklist button called "Verify your identity"
     Then I have my identity verified "normal"
     Given I am on the claims "checklist" page
@@ -38,20 +38,19 @@ Feature: Submit a medical claim with a mismatched SSN/ID
     And I should be able to confirm claim was submitted successfully
 
   @fineos
-  Scenario: As a CSR (Savilix), I should be able to confirm that an MA ID is not valid
-    Given I search for the proper claim in Fineos
-    And I am on the tab "Documents"
-    And the document "MA ID" has been uploaded
-    Then I should find the "MA ID" document
-    Given I am on the tab "Absence Hub"
-    When I click Adjudicate
-    Given I am on the tab "Evidence"
-    When I click Manage Evidence
-    Then I should confirm evidence is "invalid due to mismatched ID and SSN"
-    Given I am on the tab "Manage Request"
-    Then I click Reject
-    Given I am on the claim case page
-    And claim is rejected
-    When I click Deny
-    Given I complete claim Denial for "Insufficient Certification"
-    And I should confirm claim has been completed
+  Scenario: As a CSR (Savilinx), I should be able to Approve a MHAP1 claim submission
+    Given I am logged into Fineos as a Savilinx user
+    Then I should be able to find claim in Adjudication
+    When I start adjudication for the claim
+    And I add paid benefits to the current case
+    Then I should see that the claim's "Eligibility" is "Met"
+    When I mark "State managed Paid Leave Confirmation" documentation as satisfactory
+    And I mark "Identification Proof" documentation as satisfactory
+    Then I should see that the claim's "Evidence" is "Satisfied"
+    When I fill in the requested absence periods
+    Then I should see that the claim's "Availability" is "Time Available"
+    When I finish adjudication for the claim
+    Then I should be able to approve the claim
+
+
+

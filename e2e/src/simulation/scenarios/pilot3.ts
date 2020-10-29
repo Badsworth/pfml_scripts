@@ -16,7 +16,7 @@ import { scenario, chance } from "../simulate";
 ******/
 
 //Simple claim, MA resident:
-export const HAP1 = scenario("HAP1", {
+export const MHAP1 = scenario("MHAP1", {
   reason: "Serious Health Condition - Employee",
   residence: "MA-proofed",
   docs: {
@@ -25,7 +25,7 @@ export const HAP1 = scenario("HAP1", {
   },
 });
 // Simple claim, OOS resident.
-export const HAP2 = scenario("HAP2", {
+export const MHAP2 = scenario("MHAP2", {
   reason: "Serious Health Condition - Employee",
   residence: "OOS",
   docs: {
@@ -34,7 +34,7 @@ export const HAP2 = scenario("HAP2", {
   },
 });
 // Simple denial, MA resident.
-export const HAP3 = scenario("HAP3", {
+export const MHAP3 = scenario("MHAP3", {
   reason: "Serious Health Condition - Employee",
   residence: "MA-proofed",
   financiallyIneligible: true,
@@ -45,10 +45,10 @@ export const HAP3 = scenario("HAP3", {
 });
 
 // Combine Happy path scenarios into a single group:
-export const HAP = chance([
-  [1, HAP1],
-  [1, HAP2],
-  [1, HAP3],
+export const MHAP = chance([
+  [1, MHAP1],
+  [1, MHAP2],
+  [1, MHAP3],
 ]);
 
 /*****
@@ -56,7 +56,7 @@ export const HAP = chance([
 ******/
 
 // Missing HCP, MA Resident
-export const GBR1 = scenario("GBR1", {
+export const MGBR1 = scenario("MGBR1", {
   reason: "Serious Health Condition - Employee",
   residence: "MA-proofed",
   docs: {
@@ -65,7 +65,7 @@ export const GBR1 = scenario("GBR1", {
 });
 
 // Mailed HCP, MA Resident
-export const GBM1 = scenario("GBM1", {
+export const MGBM1 = scenario("MGBM1", {
   reason: "Serious Health Condition - Employee",
   residence: "MA-proofed",
   docs: {
@@ -75,7 +75,7 @@ export const GBM1 = scenario("GBM1", {
 });
 
 // Missing HCP, Out of State Resident
-export const GBR2 = scenario("GBR2", {
+export const MGBR2 = scenario("MGBR2", {
   reason: "Serious Health Condition - Employee",
   residence: "OOS",
   docs: {
@@ -84,7 +84,7 @@ export const GBR2 = scenario("GBR2", {
 });
 
 // Mailed HCP, Out of State Resident
-export const GBM2 = scenario("GBM2", {
+export const MGBM2 = scenario("MGBM2", {
   reason: "Serious Health Condition - Employee",
   residence: "OOS",
   docs: {
@@ -94,15 +94,15 @@ export const GBM2 = scenario("GBM2", {
 });
 
 //Combine Good but ... path scenarios into a single group:
-const GB = chance([
-  [1, GBR1],
-  [1, GBM1],
-  [1, GBR2],
-  [1, GBM2],
+const MGB = chance([
+  [1, MGBR1],
+  [1, MGBM1],
+  [1, MGBR2],
+  [1, MGBM2],
 ]);
 
 // HCP sent before an application is started
-export const UNH1 = scenario("UNH1", {
+export const MUNH1 = scenario("MUNH1", {
   reason: "Serious Health Condition - Employee",
   residence: "MA-proofed",
   docs: {
@@ -111,7 +111,7 @@ export const UNH1 = scenario("UNH1", {
   skipSubmitClaim: true,
 });
 // Invalid HCP
-export const UNH2 = scenario("UNH2", {
+export const MUNH2 = scenario("MUNH2", {
   reason: "Serious Health Condition - Employee",
   residence: "OOS",
   docs: {
@@ -120,7 +120,7 @@ export const UNH2 = scenario("UNH2", {
   },
 });
 // Mismatched ID/SSN
-export const UNH3 = scenario("UNH3", {
+export const MUNH3 = scenario("MUNH3", {
   reason: "Serious Health Condition - Employee",
   residence: "MA-unproofed",
   docs: {
@@ -128,7 +128,7 @@ export const UNH3 = scenario("UNH3", {
   },
 });
 // Short Notice
-export const UNH4 = scenario("UNH4", {
+export const MUNH4 = scenario("MUNH4", {
   reason: "Serious Health Condition - Employee",
   residence: "MA-proofed",
   shortNotice: true,
@@ -137,16 +137,16 @@ export const UNH4 = scenario("UNH4", {
     OOSID: {},
   },
 });
-const UNH = chance([
-  [1, UNH1],
-  [1, UNH2],
-  [1, UNH3],
-  [1, UNH4],
+const MUNH = chance([
+  [1, MUNH1],
+  [1, MUNH2],
+  [1, MUNH3],
+  [1, MUNH4],
 ]);
 
 // Chance Function for all combinations!
 export default chance([
-  [1, HAP],
-  [1, GB],
-  [1, UNH],
+  [1, MHAP],
+  [1, MGB],
+  [1, MUNH],
 ]);

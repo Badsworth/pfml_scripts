@@ -5,7 +5,6 @@ import {
   IntermittentLeavePeriods,
   WorkPatternDay,
 } from "@/api";
-import { lookup } from "../util";
 import { inFieldset } from "../actions";
 
 export function onPage(page: string): void {
