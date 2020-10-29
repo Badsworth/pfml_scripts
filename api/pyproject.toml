@@ -57,6 +57,7 @@ pytest-timeout = "^1.4.1"
 pytest-watch = "^4.2.0"
 safety = "^1.9.0"
 sqlalchemy-stubs = {git = "https://github.com/dropbox/sqlalchemy-stubs", rev = "55470ceab8149db983411d5c094c9fe16343c58b"}
+pytest-mock = "^3.3.1"
 
 [tool.poetry.scripts]
 massgov-pfml-api = "massgov.pfml.api.__main__:main"

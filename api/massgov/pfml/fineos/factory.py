@@ -23,7 +23,7 @@ class FINEOSClientConfig:
     oauth2_client_secret: Optional[str]
 
     @classmethod
-    def from_env(cls):
+    def from_env(cls) -> "FINEOSClientConfig":
         return FINEOSClientConfig(
             group_client_api_url=os.environ.get("FINEOS_CLIENT_GROUP_CLIENT_API_URL", None),
             customer_api_url=os.environ.get("FINEOS_CLIENT_CUSTOMER_API_URL", None),

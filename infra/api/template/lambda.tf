@@ -139,8 +139,9 @@ resource "aws_lambda_function" "eligibility_feed" {
       FINEOS_CLIENT_OAUTH2_URL                    = var.fineos_client_oauth2_url
       FINEOS_CLIENT_OAUTH2_CLIENT_ID              = var.fineos_client_oauth2_client_id
       FINEOS_CLIENT_OAUTH2_CLIENT_SECRET_SSM_PATH = "/service/${local.app_name}/${var.environment_name}/fineos_oauth2_client_secret"
-      # TODO (API-300): TBD where exactly we will put the exports
-      # OUTPUT_DIRECTORY_PATH                 = "s3://massgov-pfml-${var.environment_name}-fineos-transfer"
+      OUTPUT_DIRECTORY_PATH                       = var.fineos_eligibility_feed_output_directory_path
+      FINEOS_AWS_IAM_ROLE_ARN                     = var.fineos_aws_iam_role_arn
+      FINEOS_AWS_IAM_ROLE_EXTERNAL_ID             = var.fineos_aws_iam_role_external_id
     }
   }
 }

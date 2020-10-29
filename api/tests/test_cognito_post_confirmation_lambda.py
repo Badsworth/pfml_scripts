@@ -25,6 +25,8 @@ def test_main_success(test_db_session, event_dict, logging_fix):
     from massgov.pfml.db.models.employees import User
     import massgov.pfml.cognito_post_confirmation_lambda.main as main
 
+    main.db_session_raw = test_db_session
+
     response = main.handler(event_dict, {})
 
     created_user = (
@@ -43,6 +45,8 @@ def test_main_success(test_db_session, event_dict, logging_fix):
 def test_main_does_not_throw_exception_on_bad_input(test_db_session, logging_fix):
     from massgov.pfml.db.models.employees import User
     import massgov.pfml.cognito_post_confirmation_lambda.main as main
+
+    main.db_session_raw = test_db_session
 
     bad_event = {"foo": "bar"}
     response = main.handler(bad_event, {})

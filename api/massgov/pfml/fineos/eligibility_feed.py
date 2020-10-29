@@ -181,6 +181,15 @@ class EligibilityFeedRecord(NoneMeansDefault):
     employeeEffectiveToDate: Optional[date] = None
 
 
+@dataclass
+class ProcessUpdatesResult:
+    employers_total_count: int
+    employee_and_employer_pairs_total_count: int
+
+
+OutputTransportParams = Dict[str, Any]
+
+
 _T = TypeVar("_T")
 
 
@@ -192,12 +201,6 @@ def query_employees_for_employer(query: "Query[_T]", employer: Employer) -> "Que
         .group_by(Employee.employee_id)
         .distinct(Employee.employee_id)
     )
-
-
-@dataclass
-class ProcessUpdatesResult:
-    employers_total_count: int
-    employee_and_employer_pairs_total_count: int
 
 
 def get_latest_employer_for_updates(employer_employee_list: List) -> List:
@@ -238,7 +241,10 @@ def get_fineos_employer_id(
 
 
 def process_employee_updates(
-    db_session: db.Session, fineos: massgov.pfml.fineos.AbstractFINEOSClient, output_dir_path: str
+    db_session: db.Session,
+    fineos: massgov.pfml.fineos.AbstractFINEOSClient,
+    output_dir_path: str,
+    output_transport_params: Optional[OutputTransportParams] = None,
 ) -> ProcessUpdatesResult:
     employers_total_count = 0
     employee_and_employer_pairs_total_count = 0
@@ -325,7 +331,10 @@ def process_employee_updates(
 
 
 def process_all_employers(
-    db_session: db.Session, fineos: massgov.pfml.fineos.AbstractFINEOSClient, output_dir_path: str
+    db_session: db.Session,
+    fineos: massgov.pfml.fineos.AbstractFINEOSClient,
+    output_dir_path: str,
+    output_transport_params: Optional[OutputTransportParams] = None,
 ) -> ProcessUpdatesResult:
     employers_total_count = 0
     employee_and_employer_pairs_total_count = 0
@@ -358,7 +367,12 @@ def process_all_employers(
         )
 
         open_and_write_to_eligibility_file(
-            output_dir_path, fineos_employer_id, employer, number_of_employees, employees
+            output_dir_path,
+            fineos_employer_id,
+            employer,
+            number_of_employees,
+            employees,
+            output_transport_params,
         )
 
     logger.info(
@@ -387,6 +401,7 @@ def open_and_write_to_eligibility_file(
     employer: Employer,
     number_of_employees: int,
     employees: Iterable[Employee],
+    output_transport_params: Optional[OutputTransportParams] = None,
 ) -> str:
     output_file_path = (
         f"{output_dir_path}/{datetime.now().strftime('%Y%m%dT%H%M%S')}_{fineos_employer_id}.csv"
@@ -402,7 +417,9 @@ def open_and_write_to_eligibility_file(
         },
     )
 
-    with smart_open.open(output_file_path, "w") as output_file:
+    with smart_open.open(
+        output_file_path, "w", transport_params=output_transport_params
+    ) as output_file:
         write_employees_to_csv(
             employer, str(fineos_employer_id), number_of_employees, employees, output_file,
         )

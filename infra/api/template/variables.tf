@@ -178,6 +178,24 @@ variable "fineos_eligibility_transfer_lambda_build_s3_key" {
   type        = string
 }
 
+variable "fineos_eligibility_feed_output_directory_path" {
+  description = "Location the Eligibility Feed Lambda should write output to"
+  type        = string
+  default     = null
+}
+
+variable "fineos_aws_iam_role_arn" {
+  description = "ARN for role in the FINEOS AWS account that must be used to access resources inside of it"
+  type        = string
+  default     = null
+}
+
+variable "fineos_aws_iam_role_external_id" {
+  description = "ExternalId paramter for assuming role specified by fineos_aws_iam_role_arn"
+  type        = string
+  default     = null
+}
+
 variable "enable_employer_endpoints" {
   description = "Enable Employer API endpoints in this environment"
   type        = string

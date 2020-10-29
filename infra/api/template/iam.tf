@@ -270,6 +270,34 @@ data "aws_iam_policy_document" "iam_policy_eligibility_feed_lambda_execution" {
   }
 }
 
+# Normally this would be rolled into `eligibility_feed_lambda_execution` above,
+# but we may not always have a value for `fineos_aws_iam_role_arn` and a policy
+# has to list a resource, so make this part conditional with the count hack
+resource "aws_iam_role_policy" "eligibility_feed_lambda_execution_fineos" {
+  count = var.fineos_aws_iam_role_arn == null ? 0 : 1
+
+  name   = "massgov-pfml-${var.environment_name}-eligibility_feed_lambda_execution_role_fineos"
+  role   = aws_iam_role.eligibility_feed_lambda_role.id
+  policy = data.aws_iam_policy_document.iam_policy_eligibility_feed_lambda_execution_fineos[0].json
+}
+
+data "aws_iam_policy_document" "iam_policy_eligibility_feed_lambda_execution_fineos" {
+  count = var.fineos_aws_iam_role_arn == null ? 0 : 1
+
+  statement {
+
+    effect = "Allow"
+
+    actions = [
+      "sts:AssumeRole",
+    ]
+
+    resources = [
+      var.fineos_aws_iam_role_arn,
+    ]
+  }
+}
+
 # ----------------------------------------------------------------------------------------------------------------------
 # IAM stuff for RDS
 # ----------------------------------------------------------------------------------------------------------------------
