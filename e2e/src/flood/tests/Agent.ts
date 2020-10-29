@@ -8,7 +8,7 @@ import {
 } from "@flood/element";
 import { SimulationClaim } from "../../simulation/types";
 import { fineosUserTypeNames, FineosUserType } from "../../simulation/types";
-import { StoredStep, getFineosBaseUrl } from "../config";
+import { StoredStep, getFineosBaseUrl, dataBaseUrl } from "../config";
 import { waitForElement } from "../helpers";
 
 export type TaskTypes = {
@@ -124,9 +124,9 @@ export default (
   return {
     steps,
     default: (): void => {
-      TestData.fromJSON<SimulationClaim>("../data/pilot3/claims.json").filter(
-        (line) => line.scenario === scenario
-      );
+      TestData.fromJSON<SimulationClaim>(
+        `../${dataBaseUrl}/claims.json`
+      ).filter((line) => line.scenario === scenario);
       steps.forEach((action) => {
         step(action.name, action.test);
       });

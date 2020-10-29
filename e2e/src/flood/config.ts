@@ -13,6 +13,7 @@ export const globalElementSettings: TestSettings = {
   clearCookies: true,
 };
 
+export const dataBaseUrl = "data/pilot3";
 export const PortalBaseUrl = config("E2E_PORTAL_BASEURL");
 export const APIBaseUrl = config("E2E_API_BASEURL");
 
@@ -20,31 +21,6 @@ export type StoredStep = {
   name: string;
   test: StepFunction<unknown>;
 };
-
-export const formatDate = (d: string | null | undefined): string => {
-  const notificationDate = new Date(d || "");
-  const notifDate = {
-    day: notificationDate.getDate().toString().padStart(2, "0"),
-    month: (notificationDate.getMonth() + 1).toString().padStart(2, "0"),
-    year: notificationDate.getFullYear(),
-  };
-  const notifDateStr = `${notifDate.month}/${notifDate.day}/${notifDate.year}`;
-  return notifDateStr;
-};
-
-export const getRequestOptions = (
-  token: string,
-  method: string,
-  body?: unknown
-): RequestInit => ({
-  method,
-  body: JSON.stringify(body),
-  headers: {
-    Authorization: `Bearer ${token}`,
-    "User-Agent": "PFML Load Testing Bot",
-    "Content-Type": "application/json",
-  },
-});
 
 export async function getFineosBaseUrl(
   userType?: FineosUserType

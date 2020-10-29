@@ -5,7 +5,7 @@ import {
   beforeEach,
   step,
 } from "@flood/element";
-import { StoredStep } from "./config";
+import { StoredStep, dataBaseUrl } from "./config";
 import { SimulationClaim } from "../simulation/types";
 import * as Fineos from "./tests/FineosClaimSubmit.perf";
 import * as PortalSubmit from "./tests/PortalClaimSubmit.perf";
@@ -52,7 +52,7 @@ export default (): void => {
   let curr: string;
 
   // Set up test data to control execution.
-  TestData.fromJSON<SimulationClaim>("./data/pilot3/claims.json");
+  TestData.fromJSON<SimulationClaim>(`./${dataBaseUrl}/claims.json`);
 
   // Before moving on to next scenario, fetch and adjust data needed
   // @flood/element@1.3.5

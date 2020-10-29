@@ -3,10 +3,10 @@ import { SimulationClaim } from "../../simulation/types";
 import {
   globalElementSettings as settings,
   StoredStep,
-  formatDate,
   getFineosBaseUrl,
+  dataBaseUrl,
 } from "../config";
-import { labelled, waitForElement } from "../helpers";
+import { labelled, waitForElement, formatDate } from "../helpers";
 import assert from "assert";
 
 export { settings };
@@ -241,7 +241,7 @@ async function fillContinuousLeavePeriods(
 }
 
 export default (): void => {
-  TestData.fromJSON<SimulationClaim>("../data/pilot3/claims.json").filter(
+  TestData.fromJSON<SimulationClaim>(`../${dataBaseUrl}/claims.json`).filter(
     (line) => line.scenario === scenario
   );
   steps.forEach((action) => {

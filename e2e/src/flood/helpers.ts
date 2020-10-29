@@ -1,16 +1,14 @@
 import { Locator, Browser, By, ElementHandle, Until } from "@flood/element";
 import { config } from "./config";
+import { DocumentUploadRequest } from "../api";
+import { ClaimDocument } from "../simulation/types";
 
-export const formatDate = (d: string | null | undefined): string => {
-  const notificationDate = new Date(d || "");
-  const notifDate = {
-    day: notificationDate.getDate().toString().padStart(2, "0"),
-    month: (notificationDate.getMonth() + 1).toString().padStart(2, "0"),
-    year: notificationDate.getFullYear(),
-  };
-  const notifDateStr = `${notifDate.month}/${notifDate.day}/${notifDate.year}`;
-  return notifDateStr;
-};
+export const formatDate = (d: string | null | undefined): string =>
+  new Intl.DateTimeFormat("en-US", {
+    month: "2-digit",
+    day: "2-digit",
+    year: "numeric",
+  }).format(new Date(d || ""));
 
 export const labelled = async (
   browser: Browser,
@@ -172,4 +170,34 @@ export async function getMailVerifier(
     getTagFromAddress,
     getCredentials,
   };
+}
+
+export const getRequestOptions = (
+  token: string,
+  method: string,
+  body?: unknown,
+  headers: HeadersInit = {
+    "Content-Type": "application/json",
+  },
+  options?: RequestInit
+): RequestInit => ({
+  method,
+  body: JSON.stringify(body),
+  headers: {
+    Accept: "application/json",
+    Authorization: `Bearer ${token}`,
+    "User-Agent": "PFML Load Testing Bot",
+    ...headers,
+  },
+  ...options,
+});
+
+export function getDocumentType(
+  document: ClaimDocument
+): DocumentUploadRequest["document_type"] {
+  if (["MASSID", "OOSID"].includes(document.type)) {
+    return "Identification Proof";
+  } else {
+    return "State Managed Paid Leave Confirmation";
+  }
 }

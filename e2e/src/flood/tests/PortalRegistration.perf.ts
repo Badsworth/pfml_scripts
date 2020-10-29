@@ -1,6 +1,10 @@
 import { TestData, Browser, step, By } from "@flood/element";
 import { SimulationClaim } from "../../simulation/types";
-import { globalElementSettings as settings, PortalBaseUrl } from "../config";
+import {
+  globalElementSettings as settings,
+  PortalBaseUrl,
+  dataBaseUrl,
+} from "../config";
 import {
   getMailVerifier,
   TestMailVerificationFetcher,
@@ -70,7 +74,7 @@ export const steps = [
 ];
 
 export default (): void => {
-  TestData.fromJSON<SimulationClaim>("../data/pilot3/claims.json").filter(
+  TestData.fromJSON<SimulationClaim>(`../${dataBaseUrl}/claims.json`).filter(
     (line) => line.scenario === scenario
   );
   steps.forEach((action) => {
