@@ -17,6 +17,7 @@ export default jest.fn(() => ({
     resendVerifyAccountCode: jest.fn(),
     verifyAccount: jest.fn(),
   },
+  catchError: jest.fn(),
   claims: {
     claims: new ClaimCollection(),
     complete: jest.fn(),

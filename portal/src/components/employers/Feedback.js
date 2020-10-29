@@ -106,7 +106,7 @@ const Feedback = (props) => {
               )}
             </FormLabel>
             <FileCardList
-              files={uploadedFiles}
+              filesWithUniqueId={uploadedFiles}
               setFiles={setUploadedFiles}
               setAppErrors={props.appLogic.setAppErrors}
               fileHeadingPrefix={t(

@@ -8,16 +8,24 @@ describe("uploadDocumentsHelper", () => {
     Promise.resolve({ success: false }),
   ];
 
-  const files = [makeFile(), makeFile(), makeFile()];
+  const filesWithUniqueId = [
+    { id: "1", file: makeFile({ name: "file1" }) },
+    { id: "2", file: makeFile({ name: "file2" }) },
+    { id: "3", file: makeFile({ name: "file3" }) },
+  ];
   const setFiles = jest.fn();
 
   it("calls setFiles for each successful upload", async () => {
-    await uploadDocumentsHelper(uploadPromises, files, setFiles);
+    await uploadDocumentsHelper(uploadPromises, filesWithUniqueId, setFiles);
     expect(setFiles).toHaveBeenCalledTimes(2);
   });
 
   it("returns success = false when there are upload errors", async () => {
-    const result = await uploadDocumentsHelper(uploadPromises, files, setFiles);
+    const result = await uploadDocumentsHelper(
+      uploadPromises,
+      filesWithUniqueId,
+      setFiles
+    );
     expect(result).toEqual({ success: false });
   });
 
@@ -30,7 +38,7 @@ describe("uploadDocumentsHelper", () => {
 
     const result = await uploadDocumentsHelper(
       successfulPromises,
-      files,
+      filesWithUniqueId,
       setFiles
     );
     expect(result).toEqual({ success: true });

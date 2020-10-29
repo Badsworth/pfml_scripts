@@ -46,6 +46,7 @@ const useAppLogic = () => {
   return {
     appErrors,
     auth,
+    catchError: appErrorsLogic.catchError,
     claims,
     // TODO (CP-886): remove once all API calls are behind appLogic
     clearErrors: appErrorsLogic.clearErrors,

@@ -63,59 +63,58 @@ const useDocumentsLogic = ({ appErrorsLogic }) => {
         addDocuments(loadedDocuments.items);
       }
     } catch (error) {
-      appErrorsLogic.catchError(
-        new DocumentsRequestError(application_id, error)
-      );
+      appErrorsLogic.catchError(new DocumentsRequestError(application_id));
     }
   };
 
   /**
    * Submit files to the API and set application errors if any
    * @param {string} application_id - application id for claim
-   * @param {File[]} files - array of File objects to upload and attach to the application
+   * @param {{id:string, file:File}[]} filesWithUniqueId - array of objects including unique Id and File to upload and attach to the application
    * @param {string} documentType - category of documents
    * @returns {Promise[]}
    */
-  const attach = (application_id, files = [], documentType) => {
+  const attach = (application_id, filesWithUniqueId = [], documentType) => {
     assert(application_id);
     appErrorsLogic.clearErrors();
 
-    try {
-      if (!files.length) {
-        throw new ValidationError(
-          [
-            {
-              // field and type will be used for forming the internationalized error message
-              field: "file", // 'file' is the field name in the API
-              message:
-                "Client requires at least one file before sending request",
-              type: "required",
-            },
-          ],
-          "documents"
-        );
-      }
-
-      const uploadPromises = files.map(async (file) => {
-        try {
-          const { success, document } = await documentsApi.attachDocument(
-            application_id,
-            file,
-            documentType
-          );
-          if (success) {
-            addDocument(document);
-            return { success };
-          }
-        } catch (error) {
-          appErrorsLogic.catchError(error);
-          return { success: false };
-        }
-      });
-      return uploadPromises;
-    } catch (error) {
-      appErrorsLogic.catchError(error);
+    if (!filesWithUniqueId.length) {
+      throw new ValidationError(
+        [
+          {
+            // field and type will be used for forming the internationalized error message
+            field: "file", // 'file' is the field name in the API
+            message: "Client requires at least one file before sending request",
+            type: "required",
+          },
+        ],
+        "documents"
+      );
     }
+
+    const uploadPromises = filesWithUniqueId.map(async (fileWithUniqueId) => {
+      try {
+        const { success, document } = await documentsApi.attachDocument(
+          application_id,
+          fileWithUniqueId.file,
+          documentType
+        );
+        if (success) {
+          addDocument(document);
+          return { success };
+        }
+      } catch (error) {
+        appErrorsLogic.catchError(
+          new DocumentsRequestError(
+            application_id,
+            fileWithUniqueId.id,
+            error.issues
+          )
+        );
+        return { success: false };
+      }
+    });
+    return uploadPromises;
   };
 
   /**

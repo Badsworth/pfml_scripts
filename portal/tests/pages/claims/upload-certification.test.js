@@ -5,10 +5,10 @@ import {
   renderWithAppLogic,
   testHook,
 } from "../../test-utils";
+import _, { uniqueId } from "lodash";
 import ClaimCollection from "../../../src/models/ClaimCollection";
 import UploadCertification from "../../../src/pages/claims/upload-certification";
 import { act } from "react-dom/test-utils";
-import { uniqueId } from "xstate/lib/utils";
 import useAppLogic from "../../../src/hooks/useAppLogic";
 
 jest.mock("../../../src/hooks/useAppLogic");
@@ -53,6 +53,10 @@ describe("UploadCertification", () => {
         props: { appLogic },
       }));
     }
+    const filesWithUniqueId = [
+      { id: "1", file: makeFile({ name: "file1" }) },
+      { id: "2", file: makeFile({ name: "file2" }) },
+    ];
 
     beforeEach(() => {
       testHook(() => {
@@ -132,10 +136,14 @@ describe("UploadCertification", () => {
           const input = wrapper.find("FileCardList").dive().find("input");
           input.simulate("change", event);
 
-          expect(wrapper.find("FileCardList").prop("files")).toHaveLength(3);
+          expect(
+            wrapper.find("FileCardList").prop("filesWithUniqueId")
+          ).toHaveLength(3);
         });
 
         it("makes API request when no documents exist", async () => {
+          let id = 0;
+          jest.spyOn(_, "uniqueId").mockImplementation(() => String(++id));
           claim = new MockClaimBuilder().create();
           render();
 
@@ -156,7 +164,7 @@ describe("UploadCertification", () => {
 
           expect(appLogic.documents.attach).toHaveBeenCalledWith(
             claim.application_id,
-            files,
+            filesWithUniqueId,
             expect.any(String)
           );
         });
@@ -367,6 +375,8 @@ describe("UploadCertification", () => {
         });
 
         it("makes API request when there are new files", async () => {
+          let id = 0;
+          jest.spyOn(_, "uniqueId").mockImplementation(() => String(++id));
           claim = new MockClaimBuilder().create();
           appLogic.documents.documents = appLogic.documents.documents.addItem(
             new Document({
@@ -395,7 +405,7 @@ describe("UploadCertification", () => {
 
           expect(appLogic.documents.attach).toHaveBeenCalledWith(
             claim.application_id,
-            files,
+            filesWithUniqueId,
             expect.any(String)
           );
         });

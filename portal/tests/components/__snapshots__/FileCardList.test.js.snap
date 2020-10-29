@@ -39,6 +39,7 @@ exports[`FileCardList with previously-selected files renders a list of the files
       key="File1"
     >
       <FileCard
+        errorMsg={null}
         file={File {}}
         heading="Document 1"
         onRemoveClick={[Function]}

@@ -80,23 +80,30 @@ function useChangeHandler(setFiles, setAppErrors, t) {
       };
     });
 
-    setFiles((files) => [...files, ...newFiles]);
+    setFiles((filesWithUniqueId) => [...filesWithUniqueId, ...newFiles]);
   };
 }
 
 /**
  * Render a FileCard. This handles some busy work such as creating a onRemove handler and
  * interpolating a heading string for the file. Renders the FileCard inside of a <li> element.
- * @param {object} file The file to render as a FileCard
+ * @param {{id:string, file: File}} fileWithUniqueId The file to render as a FileCard
  * @param {integer} index The zero-based index of the file in the list. This is used to
  * to interpolate a heading for the file.
  * @param {Function} setFiles Setter function for updating the list of files. This is needed
  * for the onRemoveClick handler function that we pass into each FileCard.
  * @param {string} fileHeadingPrefix A string prefix we'll use as a heading in each FileCard. We
  * will use the index param to interpolate the heading.
+ * @param {string} [errorMsg]
  * @returns {React.Component} A <li> element containing the rendered FileCard.
  */
-function renderFileCard(file, index, setFiles, fileHeadingPrefix) {
+function renderFileCard(
+  fileWithUniqueId,
+  index,
+  setFiles,
+  fileHeadingPrefix,
+  errorMsg = null
+) {
   const removeFile = (id) => {
     // Given a file id remove it from the list of files
     setFiles((files) => {
@@ -104,15 +111,16 @@ function renderFileCard(file, index, setFiles, fileHeadingPrefix) {
     });
   };
 
-  const handleRemoveClick = () => removeFile(file.id);
+  const handleRemoveClick = () => removeFile(fileWithUniqueId.id);
   const heading = `${fileHeadingPrefix} ${index + 1}`;
 
   return (
-    <li key={file.id}>
+    <li key={fileWithUniqueId.id}>
       <FileCard
         heading={heading}
-        file={file.file}
+        file={fileWithUniqueId.file}
         onRemoveClick={handleRemoveClick}
+        errorMsg={errorMsg}
       />
     </li>
   );
@@ -144,7 +152,13 @@ function renderDocumentFileCard(document, index, fileHeadingPrefix) {
  * FileCards for each selected file.
  */
 const FileCardList = (props) => {
-  const { documents, files, setFiles, fileHeadingPrefix } = props;
+  const {
+    documents,
+    filesWithUniqueId,
+    setFiles,
+    fileHeadingPrefix,
+    fileErrors,
+  } = props;
 
   let documentFileCount = 0;
   let documentFileCards = [];
@@ -156,11 +170,21 @@ const FileCardList = (props) => {
     );
   }
 
-  const fileCards = files.map((file, index) =>
-    renderFileCard(file, index + documentFileCount, setFiles, fileHeadingPrefix)
-  );
+  const fileCards = filesWithUniqueId.map((file, index) => {
+    const fileError = fileErrors.find(
+      (appErrorInfo) => appErrorInfo.meta.file_id === file.id
+    );
+    const errorMsg = fileError ? fileError.message : null;
+    return renderFileCard(
+      file,
+      index + documentFileCount,
+      setFiles,
+      fileHeadingPrefix,
+      errorMsg
+    );
+  });
 
-  const button = files.length
+  const button = filesWithUniqueId.length
     ? props.addAnotherFileButtonText
     : props.addFirstFileButtonText;
 
@@ -193,7 +217,7 @@ FileCardList.propTypes = {
    * Array of files to be rendered as FileCards. This should be a state variable which can be set
    * with setFiles below.
    */
-  files: PropTypes.arrayOf(
+  filesWithUniqueId: PropTypes.arrayOf(
     PropTypes.shape({
       /** A unique ID for each file */
       id: PropTypes.string.isRequired,
@@ -209,6 +233,7 @@ FileCardList.propTypes = {
       }).isRequired,
     })
   ).isRequired,
+  fileErrors: PropTypes.arrayOf(PropTypes.instanceOf(AppErrorInfo)),
   /** Errors setter function to use when there are errors in the file upload */
   setAppErrors: PropTypes.func.isRequired,
   /** Setter to update the application's files state */

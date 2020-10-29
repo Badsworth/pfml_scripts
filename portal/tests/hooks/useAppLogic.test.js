@@ -8,6 +8,7 @@ describe("useAppLogic", () => {
   it("returns app state and getter and setter methods", () => {
     let appErrors,
       auth,
+      catchError,
       claims,
       clearErrors,
       documents,
@@ -21,6 +22,7 @@ describe("useAppLogic", () => {
       ({
         appErrors,
         auth,
+        catchError,
         claims,
         documents,
         employers,
@@ -35,6 +37,7 @@ describe("useAppLogic", () => {
     expect(appErrors).toBeInstanceOf(AppErrorInfoCollection);
     expect(appErrors.items).toHaveLength(0);
     expect(auth).toEqual(expect.anything());
+    expect(catchError).toBeInstanceOf(Function);
     expect(claims.claims).toBeInstanceOf(ClaimCollection);
     expect(clearErrors).toBeInstanceOf(Function);
     expect(portalFlow).toEqual(expect.anything());

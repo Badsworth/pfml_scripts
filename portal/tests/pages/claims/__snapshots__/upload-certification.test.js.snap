@@ -16,8 +16,9 @@ exports[`UploadCertification after documents have been loaded when leave reason 
   addAnotherFileButtonText="Choose another file"
   addFirstFileButtonText="Choose a file"
   documents={Array []}
+  fileErrors={Array []}
   fileHeadingPrefix="File"
-  files={Array []}
+  filesWithUniqueId={Array []}
   setAppErrors={[MockFunction]}
   setFiles={[Function]}
 />

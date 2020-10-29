@@ -1,6 +1,5 @@
 import Document, { DocumentType } from "../../models/Document";
 import React, { useState } from "react";
-import { get, map } from "lodash";
 import Accordion from "../../components/Accordion";
 import AccordionItem from "../../components/AccordionItem";
 import Alert from "../../components/Alert";
@@ -13,6 +12,7 @@ import QuestionPage from "../../components/QuestionPage";
 import Spinner from "../../components/Spinner";
 import { Trans } from "react-i18next";
 import findDocumentsByType from "../../utils/findDocumentsByType";
+import { get } from "lodash";
 import hasDocumentsLoadError from "../../utils/hasDocumentsLoadError";
 import routes from "../../routes";
 import uploadDocumentsHelper from "../../utils/uploadDocumentsHelper";
@@ -49,13 +49,14 @@ export const UploadId = (props) => {
   const handleSave = async () => {
     if (!stateIdFiles.length && idDocuments.length) {
       // Allow user to skip this page if they've previously uploaded documents
-      return portalFlow.goToNextPage({}, { claim_id: claim.application_id });
+      portalFlow.goToNextPage({ claim }, { claim_id: claim.application_id });
+      return;
     }
 
     try {
-      const uploadPromises = await appLogic.documents.attach(
+      const uploadPromises = appLogic.documents.attach(
         claim.application_id,
-        map(stateIdFiles, "file"), // extract the "file" object
+        stateIdFiles,
         DocumentType.identityVerification // TODO (CP-962): set based on leave reason
       );
 
@@ -77,9 +78,13 @@ export const UploadId = (props) => {
         );
       }
     } catch (error) {
-      appLogic.setAppErrors(error);
+      appLogic.catchError(error);
     }
   };
+
+  const fileErrors = appErrors.items.filter(
+    (appErrorInfo) => appErrorInfo.meta && appErrorInfo.meta.file_id
+  );
 
   return (
     <QuestionPage title={t("pages.claimsUploadId.title")} onSave={handleSave}>
@@ -138,7 +143,8 @@ export const UploadId = (props) => {
 
         {!isLoadingDocuments && (
           <FileCardList
-            files={stateIdFiles}
+            fileErrors={fileErrors}
+            filesWithUniqueId={stateIdFiles}
             documents={idDocuments}
             setFiles={setStateIdFiles}
             setAppErrors={props.appLogic.setAppErrors}
@@ -159,6 +165,7 @@ export const UploadId = (props) => {
 UploadId.propTypes = {
   appLogic: PropTypes.shape({
     appErrors: PropTypes.object.isRequired,
+    catchError: PropTypes.func.isRequired,
     documents: PropTypes.object.isRequired,
     portalFlow: PropTypes.object.isRequired,
     setAppErrors: PropTypes.func.isRequired,

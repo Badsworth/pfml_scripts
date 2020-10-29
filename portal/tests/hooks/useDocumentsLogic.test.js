@@ -1,4 +1,9 @@
 import {
+  BadRequestError,
+  DocumentsRequestError,
+  ValidationError,
+} from "../../src/errors";
+import {
   attachDocumentMock,
   downloadDocumentMock,
   getDocumentsMock,
@@ -6,7 +11,6 @@ import {
 import { makeFile, testHook } from "../test-utils";
 import AppErrorInfo from "../../src/models/AppErrorInfo";
 import AppErrorInfoCollection from "../../src/models/AppErrorInfoCollection";
-import { BadRequestError } from "../../src/errors";
 import Document from "../../src/models/Document";
 import DocumentCollection from "../../src/models/DocumentCollection";
 import { act } from "react-dom/test-utils";
@@ -47,9 +51,9 @@ describe("useDocumentsLogic", () => {
   describe("attach", () => {
     it("returns an array with a promise for each file", async () => {
       const files = [
-        makeFile({ name: "file1" }),
-        makeFile({ name: "file2" }),
-        makeFile({ name: "file3" }),
+        { id: "1", file: makeFile({ name: "file1" }) },
+        { id: "2", file: makeFile({ name: "file2" }) },
+        { id: "3", file: makeFile({ name: "file3" }) },
       ];
 
       let uploadPromises;
@@ -66,12 +70,11 @@ describe("useDocumentsLogic", () => {
     });
 
     it("returns promises that resolve with a success=true when the upload success", async () => {
+      const files = [{ id: "1", file: makeFile({ name: "file1" }) }];
       attachDocumentMock.mockResolvedValueOnce({
         success: true,
         document: { fineos_document_id: uniqueId() },
       });
-
-      const files = [makeFile({ name: "file1" })];
 
       let uploadPromises;
 
@@ -87,10 +90,9 @@ describe("useDocumentsLogic", () => {
     });
 
     it("returns promises that resolve with a success=false when the upload fails", async () => {
+      const files = [{ id: "1", file: makeFile({ name: "file1" }) }];
       jest.spyOn(console, "error").mockImplementationOnce(jest.fn());
       attachDocumentMock.mockRejectedValueOnce(new Error("upload error"));
-
-      const files = [makeFile({ name: "file1" })];
 
       let uploadPromises;
 
@@ -107,19 +109,18 @@ describe("useDocumentsLogic", () => {
 
     it("asynchronously submits documents", async () => {
       const files = [
-        makeFile({ name: "file1" }),
-        makeFile({ name: "file2" }),
-        makeFile({ name: "file3" }),
+        { id: "1", file: makeFile({ name: "file1" }) },
+        { id: "2", file: makeFile({ name: "file2" }) },
+        { id: "3", file: makeFile({ name: "file3" }) },
       ];
-
       await act(async () => {
         await documentsLogic.attach(application_id, files, mockDocumentType);
       });
 
-      files.forEach((file) => {
+      files.forEach((fileWithUniqueId) => {
         expect(attachDocumentMock).toHaveBeenCalledWith(
           application_id,
-          file,
+          fileWithUniqueId.file,
           mockDocumentType
         );
       });
@@ -166,8 +167,8 @@ describe("useDocumentsLogic", () => {
       });
 
       it("stores the newly uploaded document", async () => {
+        const files = [{ id: "1", file: makeFile({ name: "file1" }) }];
         let { documents } = documentsLogic;
-        const files = [makeFile({ name: mockFilename })];
 
         expect(documents.items).toHaveLength(3);
 
@@ -223,34 +224,28 @@ describe("useDocumentsLogic", () => {
         }); // file3 - success
     });
 
-    it("throws ValidationError when no files are included in the request", async () => {
+    it("throws ValidationError when no files are included in the request", () => {
       const files = [];
 
-      await act(async () => {
-        await documentsLogic.attach(application_id, files, mockDocumentType);
-      });
-
-      expect(appErrorsLogic.appErrors.items[0]).toEqual(
-        expect.objectContaining({
-          field: "file",
-          message: "Upload at least one file to continue.",
-        })
-      );
+      expect(() =>
+        documentsLogic.attach(application_id, files, mockDocumentType)
+      ).toThrow(ValidationError);
     });
 
-    it("passes the error to appErrorsLogic", async () => {
+    it("passes the error with file id into appErrorsLogic", async () => {
       const files = [
-        makeFile({ name: "file1" }),
-        makeFile({ name: "file2" }),
-        makeFile({ name: "file3" }),
+        { id: "1", file: makeFile({ name: "file1" }) },
+        { id: "2", file: makeFile({ name: "file2" }) },
+        { id: "3", file: makeFile({ name: "file3" }) },
       ];
-
       const spy = jest.spyOn(appErrorsLogic, "catchError");
       await act(async () => {
         await documentsLogic.attach(application_id, files, mockDocumentType);
       });
+      const fileErrorId = appErrorsLogic.appErrors.items[0].meta.file_id;
 
-      expect(spy).toHaveBeenCalledWith(new Error("File 2 failed"));
+      expect(spy).toHaveBeenCalledWith(new DocumentsRequestError());
+      expect(fileErrorId).toBe("2");
       expect(spy).toHaveBeenCalledTimes(1);
     });
   });
@@ -267,7 +262,9 @@ describe("useDocumentsLogic", () => {
       document: new Document({ fineos_document_id: uniqueId() }),
     }); // file1 - success
 
-    const files = [makeFile({ name: "file1" })];
+    const files = [{ id: "1", file: makeFile({ name: "file1" }) }];
+    jest.spyOn(console, "error").mockImplementationOnce(jest.fn());
+
     let uploadPromises;
 
     await act(async () => {

@@ -26,7 +26,8 @@ describe("FileCardList", () => {
   function render(customProps = {}) {
     const props = Object.assign(
       {
-        files: [],
+        filesWithUniqueId: [],
+        fileErrors: [],
         setFiles: jest.fn(),
         appErrors: [],
         setAppErrors: jest.fn(),
@@ -58,17 +59,17 @@ describe("FileCardList", () => {
   });
 
   describe("with previously-selected files", () => {
-    const files = [makeFileObject()];
+    const filesWithUniqueId = [makeFileObject()];
 
     it("renders a list of the files", () => {
-      const wrapper = render({ files });
+      const wrapper = render({ filesWithUniqueId });
 
       expect(wrapper).toMatchSnapshot();
     });
 
     it("renders the 'Add another file' button text", () => {
       const addAnotherFileButtonText = "Choose more files!";
-      const wrapper = render({ files, addAnotherFileButtonText });
+      const wrapper = render({ filesWithUniqueId, addAnotherFileButtonText });
 
       expect(wrapper.find("label").text()).toBe(addAnotherFileButtonText);
     });
@@ -81,7 +82,7 @@ describe("FileCardList", () => {
       [files, setFiles] = useState(initialFiles);
     });
     act(() => {
-      const wrapper = render({ files, setFiles });
+      const wrapper = render({ filesWithUniqueId: files, setFiles });
       wrapper.find("FileCard").simulate("removeClick");
     });
     expect(files).toEqual([]);
@@ -276,7 +277,7 @@ describe("FileCardList", () => {
       it("renders a FileCard for the old and new files", () => {
         const newFile = makeFileObject({ id: "newFile" });
         const wrapper = render({
-          files: [newFile],
+          filesWithUniqueId: [newFile],
           documents: [newDoc1, newDoc2],
         });
         expect(wrapper.find(FileCard)).toHaveLength(3);
@@ -289,7 +290,7 @@ describe("FileCardList", () => {
           makeFileObject({ id: "newFile3" }),
         ];
         const wrapper = render({
-          files: newFiles,
+          filesWithUniqueId: newFiles,
           documents: [newDoc1, newDoc2],
         });
 

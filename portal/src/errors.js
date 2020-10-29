@@ -123,9 +123,21 @@ export class RequestTimeoutError extends ApiRequestError {
  * A request to an Application's `/documents` endpoint failed
  */
 export class DocumentsRequestError extends BasePortalError {
-  constructor(application_id, ...params) {
+  /**
+   * Since we construct DocumentsRequestError when we catch them in document logic,
+   * the error could be a ValidationError or some other type of errors.
+   * If it's a ValidationError, we need to pass the validation message.
+   *
+   * @param {string} application_id - ID of the Claim
+   * @param {string} file_id - ID of the file causing errors
+   * @param {{ field: string, message: string, rule: string, type: string }} issue - the validation issue returned by the API
+   * @example new DocumentsRequestError('mock_application_id',[{ field: "", type: "fineos", message: "File size limit" }])
+   */
+  constructor(application_id, file_id, issue = null, ...params) {
     super(...params);
     this.application_id = application_id;
+    this.file_id = file_id;
+    this.issue = issue;
     this.name = "DocumentsRequestError";
   }
 }

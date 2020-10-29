@@ -5,10 +5,10 @@ import {
   renderWithAppLogic,
   testHook,
 } from "../../test-utils";
+import _, { uniqueId } from "lodash";
 import ClaimCollection from "../../../src/models/ClaimCollection";
 import UploadId from "../../../src/pages/claims/upload-id";
 import { act } from "react-dom/test-utils";
-import { uniqueId } from "xstate/lib/utils";
 import useAppLogic from "../../../src/hooks/useAppLogic";
 
 jest.mock("../../../src/hooks/useAppLogic");
@@ -75,6 +75,10 @@ describe("UploadId", () => {
     });
 
     describe("when the user has a Mass ID", () => {
+      const filesWithUniqueId = [
+        { id: "1", file: makeFile({ name: "file1" }) },
+        { id: "2", file: makeFile({ name: "file2" }) },
+      ];
       beforeEach(() => {
         claim = new MockClaimBuilder().medicalLeaveReason().create();
         claim.has_state_id = true;
@@ -117,6 +121,8 @@ describe("UploadId", () => {
         });
 
         it("makes documents.attach request when no documents exist", async () => {
+          let id = 0;
+          jest.spyOn(_, "uniqueId").mockImplementation(() => String(++id));
           claim = new MockClaimBuilder().create();
           render();
 
@@ -137,7 +143,7 @@ describe("UploadId", () => {
 
           expect(appLogic.documents.attach).toHaveBeenCalledWith(
             claim.application_id,
-            files,
+            filesWithUniqueId,
             expect.any(String)
           );
         });
@@ -418,6 +424,8 @@ describe("UploadId", () => {
         });
 
         it("makes API request when there are new files", async () => {
+          let id = 0;
+          jest.spyOn(_, "uniqueId").mockImplementation(() => String(++id));
           claim = new MockClaimBuilder().create();
           appLogic.documents.documents = appLogic.documents.documents.addItem(
             new Document({
@@ -443,7 +451,7 @@ describe("UploadId", () => {
 
           expect(appLogic.documents.attach).toHaveBeenCalledWith(
             claim.application_id,
-            files,
+            filesWithUniqueId,
             expect.any(String)
           );
         });

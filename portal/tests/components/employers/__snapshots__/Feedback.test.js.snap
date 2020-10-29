@@ -59,7 +59,7 @@ exports[`Feedback renders the component 1`] = `
         addAnotherFileButtonText="Choose another file"
         addFirstFileButtonText="Choose a file"
         fileHeadingPrefix="File"
-        files={Array []}
+        filesWithUniqueId={Array []}
         setAppErrors={[MockFunction]}
         setFiles={[Function]}
       />

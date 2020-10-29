@@ -3,6 +3,7 @@ import Heading from "./Heading";
 import PropTypes from "prop-types";
 import React from "react";
 import Thumbnail from "./Thumbnail";
+import classnames from "classnames";
 import { useTranslation } from "../locales/i18n";
 
 /**
@@ -10,11 +11,16 @@ import { useTranslation } from "../locales/i18n";
  */
 const FileCard = (props) => {
   const { t } = useTranslation();
-  const { document, file, heading } = props;
+  const { document, file, heading, errorMsg } = props;
   const removeButton = t("components.fileCard.removeButton");
 
-  const cardClasses =
-    "c-file-card padding-2 margin-bottom-3 border-1px border-base-lighter display-flex flex-wrap";
+  const cardClasses = classnames(
+    "c-file-card padding-2 margin-bottom-3  display-flex flex-wrap",
+    {
+      "border-1px border-base-lighter": !errorMsg,
+      "border-2px border-red": errorMsg,
+    }
+  );
 
   const filenameClasses =
     "c-file-card__name padding-bottom-1 margin-bottom-1 margin-top-0 border-bottom-2px border-base-lighter font-heading-xs";
@@ -27,6 +33,7 @@ const FileCard = (props) => {
       <div className="c-file-card__content">
         <Heading level="3" className="margin-bottom-1 margin-top-1" size="4">
           {heading}
+          {errorMsg && <p className="text-error">{errorMsg}</p>}
         </Heading>
         {readOnly ? (
           <React.Fragment>
@@ -76,6 +83,7 @@ FileCard.propTypes = {
   }),
   /** Event handler for when the "Remove" button is clicked. We'll pass it the `id` prop above. */
   onRemoveClick: PropTypes.func,
+  errorMsg: PropTypes.string,
 };
 
 export default FileCard;

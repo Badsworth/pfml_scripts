@@ -1,7 +1,6 @@
 import Claim, { LeaveReason, ReasonQualifier } from "../../models/Claim";
 import Document, { DocumentType } from "../../models/Document";
 import React, { useState } from "react";
-import { get, map } from "lodash";
 import Alert from "../../components/Alert";
 import ConditionalContent from "../../components/ConditionalContent";
 import FileCardList from "../../components/FileCardList";
@@ -14,6 +13,7 @@ import Spinner from "../../components/Spinner";
 import { Trans } from "react-i18next";
 import findDocumentsByType from "../../utils/findDocumentsByType";
 import findKeyByValue from "../../utils/findKeyByValue";
+import { get } from "lodash";
 import hasDocumentsLoadError from "../../utils/hasDocumentsLoadError";
 import routes from "../../routes";
 import uploadDocumentsHelper from "../../utils/uploadDocumentsHelper";
@@ -60,12 +60,13 @@ export const UploadCertification = (props) => {
   const handleSave = async () => {
     if (!files.length && certificationDocuments.length) {
       // Allow user to skip this page if they've previously uploaded documents
-      return portalFlow.goToNextPage({}, { claim_id: claim.application_id });
+      portalFlow.goToNextPage({ claim }, { claim_id: claim.application_id });
+      return;
     }
     try {
-      const uploadPromises = await appLogic.documents.attach(
+      const uploadPromises = appLogic.documents.attach(
         claim.application_id,
-        map(files, "file"), // extract the "file" object
+        files,
         DocumentType.medicalCertification // TODO (CP-962): set based on leave reason
       );
 
@@ -88,9 +89,13 @@ export const UploadCertification = (props) => {
         );
       }
     } catch (error) {
-      appLogic.setAppErrors(error);
+      appLogic.catchError(error);
     }
   };
+  const fileErrors = appErrors.items.filter(
+    (appErrorInfo) => appErrorInfo.meta && appErrorInfo.meta.file_id
+  );
+
   return (
     <QuestionPage
       title={t("pages.claimsUploadCertification.title")}
@@ -146,7 +151,8 @@ export const UploadCertification = (props) => {
       )}
       {!isLoadingDocuments && (
         <FileCardList
-          files={files}
+          fileErrors={fileErrors}
+          filesWithUniqueId={files}
           documents={certificationDocuments}
           setFiles={setFiles}
           setAppErrors={appLogic.setAppErrors}
@@ -168,6 +174,7 @@ export const UploadCertification = (props) => {
 UploadCertification.propTypes = {
   appLogic: PropTypes.shape({
     appErrors: PropTypes.object.isRequired,
+    catchError: PropTypes.func.isRequired,
     documents: PropTypes.object.isRequired,
     portalFlow: PropTypes.object.isRequired,
     setAppErrors: PropTypes.func.isRequired,

@@ -118,8 +118,13 @@ const useAppErrorsLogic = () => {
   const handleDocumentsRequestError = (error) => {
     const appError = new AppErrorInfo({
       name: error.name,
-      message: t("errors.caughtError", { context: error.name }),
-      meta: { application_id: error.application_id },
+      message: error.issue
+        ? getMessageFromApiIssue(error.issue, "documents")
+        : t("errors.caughtError", { context: error.name }),
+      meta: {
+        application_id: error.application_id,
+        file_id: error.file_id,
+      },
     });
 
     addError(appError);
