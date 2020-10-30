@@ -10,11 +10,12 @@ import { act } from "react-dom/test-utils";
 jest.mock("../../../src/hooks/useAppLogic");
 
 describe("LeaveReasonPage", () => {
-  describe("when claimantShowMilitaryLeaveTypes feature flag is enabled", () => {
+  describe("when type feature flags are enabled", () => {
     let wrapper;
 
     beforeEach(() => {
       process.env.featureFlags = {
+        claimantShowMedicalLeaveType: true,
         claimantShowMilitaryLeaveTypes: true,
       };
       ({ wrapper } = renderWithAppLogic(LeaveReasonPage, {
@@ -36,11 +37,12 @@ describe("LeaveReasonPage", () => {
     });
   });
 
-  describe("when claimantShowMilitaryLeaveTypes feature flag is disabled", () => {
+  describe("when type feature flags are disabled", () => {
     let wrapper;
 
     beforeEach(() => {
       process.env.featureFlags = {
+        claimantShowMedicalLeaveType: false,
         claimantShowMilitaryLeaveTypes: false,
       };
       ({ wrapper } = renderWithAppLogic(LeaveReasonPage, {
@@ -48,10 +50,12 @@ describe("LeaveReasonPage", () => {
       }));
     });
 
-    it("renders the page without activeDutyFamily and serviceMemberFamily reasons", () => {
+    it("renders the page with only the bonding reason", () => {
       const choiceGroup = wrapper.find("InputChoiceGroup").first().dive();
 
-      expect(choiceGroup.exists(`[value="${LeaveReason.medical}"]`)).toBe(true);
+      expect(choiceGroup.exists(`[value="${LeaveReason.medical}"]`)).toBe(
+        false
+      );
       expect(choiceGroup.exists(`[value="${LeaveReason.bonding}"]`)).toBe(true);
       expect(
         choiceGroup.exists(`[value="${LeaveReason.activeDutyFamily}"]`)

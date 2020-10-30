@@ -11,6 +11,10 @@ const flagsConfig = {
     // question in the claimant flow (CP-1204)
     // TODO (CP-1281): Show employment status question when Portal supports other employment statuses
     claimantShowEmploymentStatus: false,
+    // When this flag is enabled, the medical leave option is selectable on
+    // the Leave Reason page in the claimant flow (CP-1245)
+    // TODO (CP-1246): Show this option when portal supports medical leave
+    claimantShowMedicalLeaveType: false,
     // When this flag is enabled, the military leave options are selectable on
     // the Leave Reason page in the claimant flow (CP-1145)
     // TODO (CP-534): Show all options when portal supports activeDutyFamily, serviceMemberFamily

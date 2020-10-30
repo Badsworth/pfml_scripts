@@ -9,12 +9,6 @@ exports[`LeaveReasonPage renders the page for medical leave and does not show re
     choices={
       Array [
         Object {
-          "checked": true,
-          "hint": "Medical leave",
-          "label": "I can’t work due to an illness, injury, or pregnancy.",
-          "value": "Serious Health Condition - Employee",
-        },
-        Object {
           "checked": false,
           "hint": "Family leave",
           "label": "I need to bond with my child after birth, adoption, or foster placement.",
