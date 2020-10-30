@@ -163,6 +163,10 @@ data "archive_file" "cognito_custom_message" {
   }
 }
 
+resource "aws_cloudwatch_log_group" "lambda_cognito_custom_message" {
+  name = "/aws/lambda/${aws_lambda_function.cognito_custom_message.function_name}"
+}
+
 # Allow the Lambda to be invoked by our user pool
 resource "aws_lambda_permission" "allow_cognito_custom_message" {
   statement_id  = "AllowExecutionFromCognito"
@@ -174,7 +178,7 @@ resource "aws_lambda_permission" "allow_cognito_custom_message" {
 
 resource "aws_cloudwatch_log_subscription_filter" "nr_lambda_cognito_custom_msg" {
   name            = "nr_lambda_cognito_custom_msg"
-  log_group_name  = "/aws/lambda/${aws_lambda_function.cognito_custom_message.function_name}"
+  log_group_name  = aws_cloudwatch_log_group.lambda_cognito_custom_message.name
   filter_pattern  = "?REPORT ?NR_LAMBDA_MONITORING ?\"Task timed out\""
   destination_arn = local.newrelic_log_ingestion_lambda
 }
@@ -184,5 +188,5 @@ resource "aws_lambda_permission" "nr_lambda_permission_cognito_custom_msg" {
   action        = "lambda:InvokeFunction"
   function_name = local.newrelic_log_ingestion_lambda
   principal     = "logs.us-east-1.amazonaws.com"
-  source_arn    = "arn:aws:logs:us-east-1:498823821309:log-group:/aws/lambda/${aws_lambda_function.cognito_custom_message.function_name}:*"
+  source_arn    = "${aws_cloudwatch_log_group.lambda_cognito_custom_message.arn}:*"
 }

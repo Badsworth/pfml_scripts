@@ -26,10 +26,14 @@ resource "aws_lambda_permission" "allow_cloudwatch" {
   principal     = "events.amazonaws.com"
 }
 
+resource "aws_cloudwatch_log_group" "lambda_cloudfront_handler" {
+  name = "/aws/lambda/${aws_lambda_function.cloudfront_handler.function_name}"
+}
+
 # TODO (API-441): Commented out for now. Uncomment when this lambda has been instrumented.
 # resource "aws_cloudwatch_log_subscription_filter" "nr_lambda_cloudfront_handler" {
 #   name            = "nr_lambda_cloudfront_handler"
-#   log_group_name  = "/aws/lambda/us-east-1.${aws_lambda_function.cloudfront_handler.function_name}"
+#   log_group_name  = aws_cloudwatch_log_group.lambda_cloudfront_handler.name
 #   filter_pattern  = "?REPORT ?NR_LAMBDA_MONITORING ?\"Task timed out\""
 #   destination_arn = local.newrelic_log_ingestion_lambda
 # }
@@ -39,5 +43,5 @@ resource "aws_lambda_permission" "allow_cloudwatch" {
 #   action        = "lambda:InvokeFunction"
 #   function_name = local.newrelic_log_ingestion_lambda
 #   principal     = "logs.us-east-1.amazonaws.com"
-#   source_arn    = "arn:aws:logs:us-east-1:498823821309:log-group:/aws/lambda/${aws_lambda_function.cloudfront_handler.function_name}:*"
+#   source_arn    = "${aws_cloudwatch_log_group.lambda_cloudfront_handler.arn}:*"
 # }

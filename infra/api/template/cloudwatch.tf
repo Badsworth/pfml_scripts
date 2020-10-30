@@ -39,9 +39,13 @@ resource "aws_lambda_permission" "allow_cloudwatch_to_call_formstack_import" {
 
 # ----------------------------------------------------------------------------------------------------------------------
 
+resource "aws_cloudwatch_log_group" "lambda_cognito_postconf" {
+  name = "/aws/lambda/${aws_lambda_function.cognito_post_confirmation.function_name}"
+}
+
 resource "aws_cloudwatch_log_subscription_filter" "nr_lambda_cognito_postconf" {
   name            = "nr_lambda_cognito_postconf"
-  log_group_name  = "/aws/lambda/massgov-pfml-${var.environment_name}-cognito_post_confirmation"
+  log_group_name  = aws_cloudwatch_log_group.lambda_cognito_postconf.name
   filter_pattern  = "?REPORT ?NR_LAMBDA_MONITORING ?\"Task timed out\""
   destination_arn = local.newrelic_log_ingestion_lambda
 }
@@ -51,14 +55,18 @@ resource "aws_lambda_permission" "nr_lambda_permission_cognito_postconf" {
   action        = "lambda:InvokeFunction"
   function_name = local.newrelic_log_ingestion_lambda
   principal     = "logs.us-east-1.amazonaws.com"
-  source_arn    = "arn:aws:logs:us-east-1:498823821309:log-group:/aws/lambda/massgov-pfml-${var.environment_name}-cognito_post_confirmation:*"
+  source_arn    = "${aws_cloudwatch_log_group.lambda_cognito_postconf.arn}:*"
 }
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
+resource "aws_cloudwatch_log_group" "lambda_formstack_import" {
+  name = "/aws/lambda/${aws_lambda_function.formstack_import.function_name}"
+}
+
 resource "aws_cloudwatch_log_subscription_filter" "nr_lambda_formstack_import" {
   name            = "nr_lambda_formstack_import"
-  log_group_name  = "/aws/lambda/massgov-pfml-${var.environment_name}-formstack-import"
+  log_group_name  = aws_cloudwatch_log_group.lambda_formstack_import.name
   filter_pattern  = "?REPORT ?NR_LAMBDA_MONITORING ?\"Task timed out\""
   destination_arn = local.newrelic_log_ingestion_lambda
 }
@@ -68,14 +76,18 @@ resource "aws_lambda_permission" "nr_lambda_permission_formstack_import" {
   action        = "lambda:InvokeFunction"
   function_name = local.newrelic_log_ingestion_lambda
   principal     = "logs.us-east-1.amazonaws.com"
-  source_arn    = "arn:aws:logs:us-east-1:498823821309:log-group:/aws/lambda/massgov-pfml-${var.environment_name}-formstack-import:*"
+  source_arn    = "${aws_cloudwatch_log_group.lambda_formstack_import.arn}:*"
 }
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
+resource "aws_cloudwatch_log_group" "lambda_eligibility_feed" {
+  name = "/aws/lambda/${aws_lambda_function.eligibility_feed.function_name}"
+}
+
 resource "aws_cloudwatch_log_subscription_filter" "nr_lambda_eligibility_feed" {
   name            = "nr_lambda_eligibility_feed"
-  log_group_name  = "/aws/lambda/massgov-pfml-${var.environment_name}-eligibility-feed"
+  log_group_name  = aws_cloudwatch_log_group.lambda_eligibility_feed.name
   filter_pattern  = "?REPORT ?NR_LAMBDA_MONITORING ?\"Task timed out\""
   destination_arn = local.newrelic_log_ingestion_lambda
 }
@@ -85,7 +97,7 @@ resource "aws_lambda_permission" "nr_lambda_permission_eligibility_feed" {
   action        = "lambda:InvokeFunction"
   function_name = local.newrelic_log_ingestion_lambda
   principal     = "logs.us-east-1.amazonaws.com"
-  source_arn    = "arn:aws:logs:us-east-1:498823821309:log-group:/aws/lambda/massgov-pfml-${var.environment_name}-eligibility-feed:*"
+  source_arn    = "${aws_cloudwatch_log_group.lambda_eligibility_feed.arn}:*"
 }
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
