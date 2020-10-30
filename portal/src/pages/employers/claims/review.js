@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import Alert from "../../../components/Alert";
 import BackButton from "../../../components/BackButton";
+import Claim from "../../../models/Claim";
 import EmployeeInformation from "../../../components/employers/EmployeeInformation";
 import EmployerBenefit from "../../../models/EmployerBenefit";
 import EmployerBenefits from "../../../components/employers/EmployerBenefits";
@@ -25,14 +26,16 @@ const employerDueDate = "2020-10-10";
 export const Review = (props) => {
   const {
     appLogic,
+    retrievedClaim,
     query: { absence_id: absenceId },
   } = props;
   const { t } = useTranslation();
-  const claim = appLogic.employers.claim;
+  const claim = retrievedClaim || appLogic.employers.claim;
   const [amendedBenefits, setAmendedBenefits] = useState([]);
   const [amendedLeaves, setAmendedLeaves] = useState([]);
   const [amendedHours, setAmendedHours] = useState(0);
 
+  // TODO (EMPLOYER-500): Remove logic in favor of `withEmployerClaim` HOC
   useEffect(() => {
     if (!claim) {
       appLogic.employers.load(absenceId);
@@ -69,6 +72,7 @@ export const Review = (props) => {
 
   return (
     <React.Fragment>
+      {/* TODO (EMPLOYER-500): Remove logic in favor of `withEmployerClaim` HOC */}
       {!claim && (
         <div className="margin-top-8 text-center">
           <Spinner aria-valuetext={t("components.spinner.label")} />
@@ -131,8 +135,9 @@ Review.propTypes = {
         hours_worked_per_week: PropTypes.number,
         previous_leaves: PropTypes.arrayOf(PropTypes.instanceOf(PreviousLeave)),
       }),
-    }),
+    }).isRequired,
   }).isRequired,
+  retrievedClaim: PropTypes.instanceOf(Claim),
   query: PropTypes.shape({
     absence_id: PropTypes.string.isRequired,
   }).isRequired,

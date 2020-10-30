@@ -15,6 +15,7 @@ import useAppLogic from "../../../../src/hooks/useAppLogic";
 jest.mock("../../../../src/hooks/useAppLogic");
 
 describe("Review", () => {
+  const claim = new MockClaimBuilder().completed().create();
   const query = { absence_id: "NTN-111-ABS-01" };
   let appLogic, wrapper;
 
@@ -41,7 +42,6 @@ describe("Review", () => {
   });
 
   it("renders pages when claim is loaded", () => {
-    const claim = new MockClaimBuilder().submitted().create();
     appLogic.employers.claim = claim;
 
     act(() => {

@@ -1058,6 +1058,34 @@ const pages = {
     sectionLabel: "How would you describe your work schedule?",
     title: "$t(shared.claimsEmploymentInfoTitle)",
   },
+  employersClaimsConfirmation: {
+    applicationIdLabel: "<strong>Application ID:</strong> {{absenceId}}",
+    instructions:
+      "<p>Thanks for letting us know that you’re not the right person to review this.</p><ul><li>Please check with your human resources team and your colleagues to see who should respond.</li><li>If the right person already has an employer account with your company info, you can forward them the email you received so they can respond directly.</li><li>Otherwise, please ask them to contact us at $t(shared.contactCenterPhoneNumber).</li></ul>",
+    instructions_benefitsGuide:
+      "To learn more about how benefits are calculated, visit our <benefits-guide-link>PFML Benefits Guide</benefits-guide-link>.",
+    instructions_processingApplication:
+      "If we do not hear from anyone at your company before the deadline, we will process the application solely based on the information the employee provided.",
+    reviewByLabel: "<div><strong>Review by:</strong> {{employerDueDate}}</div>",
+    title: "Help us find the right person to review the application",
+  },
+  employersClaimsNewApplication: {
+    agreementBody:
+      "I certify under penalty of perjury that the above information is true and correct. I understand that I need to give true answers to all questions in order to fulfill my responsibilities as a Massachusetts employer.",
+    choiceNo: "$t(shared.choiceNo)",
+    choiceYes: "$t(shared.choiceYes)",
+    dobLabel: "Date of birth",
+    employeeNameLabel: "Employee name",
+    employerIdNumberLabel: "Employer ID number",
+    instructions:
+      "We need true answers to every question so that we can manage this program the way the law requires. Please confirm that you will answer as truthfully as you can.",
+    instructionsDueDate: "Review and respond by: <strong>{{date}}</strong>",
+    instructionsLabel:
+      "Are you the right person to respond to this leave application?",
+    submitButton: "Agree and submit",
+    title: "New application from {{name}}",
+    truthAttestationHeading: "Confirm and submit",
+  },
   employersClaimsReview: {
     amend: "Amend",
     documentationLabel: "Documentation",
@@ -1204,16 +1232,6 @@ const pages = {
     instructions_processingApplication:
       "We’ll begin processing this application and your employee should hear from us within 14 calendar days.",
     title: "Thanks for reviewing the application",
-  },
-  employersClaimsVerification: {
-    agreementBody:
-      "I certify under penalty of perjury that the above information is true and correct. I understand that I need to give true answers to all questions in order to fulfill my responsibilities as a Massachussetts employer.",
-    instructions:
-      "We need true answers to every question so that we can manage this program the way the law requires. Please confirm that you will answer as truthfully as you can.",
-    instructionsDueDate: "Review and respond by: <strong>{{date}}</strong>",
-    submitButton: "Agree and submit",
-    title: "Verification",
-    truthAttestationHeading: "Confirm and submit",
   },
   employersFinishAccountSetup: {
     lead:

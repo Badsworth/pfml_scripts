@@ -8,6 +8,7 @@ import Heading from "../../../components/Heading";
 import Lead from "../../../components/Lead";
 import PropTypes from "prop-types";
 import Spinner from "../../../components/Spinner";
+import StatusRow from "../../../components/StatusRow";
 import StatusTag from "../../../components/StatusTag";
 import Title from "../../../components/Title";
 import findKeyByValue from "../../../utils/findKeyByValue";
@@ -119,22 +120,6 @@ Status.propTypes = {
     absence_id: PropTypes.string,
   }).isRequired,
   retrievedClaim: PropTypes.instanceOf(Claim),
-};
-
-export const StatusRow = ({ children, label }) => {
-  return (
-    <div className="margin-bottom-2 padding-bottom-2">
-      <Heading level="3" size="4" className="margin-bottom-1">
-        {label}
-      </Heading>
-      {children}
-    </div>
-  );
-};
-
-StatusRow.propTypes = {
-  children: PropTypes.node.isRequired,
-  label: PropTypes.node.isRequired,
 };
 
 export default withUser(Status);

@@ -9,6 +9,7 @@ import routes from "../routes";
 
 export default {
   states: {
+    [routes.employers.confirmation]: {},
     [routes.employers.dashboard]: {},
     [routes.employers.finishAccountSetup]: {
       on: {
@@ -21,8 +22,9 @@ export default {
       },
     },
     [routes.employers.success]: {},
-    [routes.employers.verification]: {
+    [routes.employers.newApplication]: {
       on: {
+        CONFIRMATION: routes.employers.confirmation,
         CONTINUE: routes.employers.review,
       },
     },

@@ -1,0 +1,1047 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`NewApplication when the claim is loaded renders the page 1`] = `
+<ComponentWithUser
+  appLogic={
+    Object {
+      "appErrors": AppErrorInfoCollection {
+        "items": Array [],
+        "itemsById": Object {},
+      },
+      "auth": Object {
+        "createAccount": [MockFunction],
+        "forgotPassword": [MockFunction],
+        "isLoggedIn": true,
+        "login": [MockFunction],
+        "logout": [MockFunction],
+        "requireLogin": [MockFunction] {
+          "calls": Array [
+            Array [],
+          ],
+          "results": Array [
+            Object {
+              "type": "return",
+              "value": undefined,
+            },
+          ],
+        },
+        "resendVerifyAccountCode": [MockFunction],
+        "verifyAccount": [MockFunction],
+      },
+      "catchError": [MockFunction],
+      "claims": Object {
+        "claims": ClaimCollection {
+          "items": Array [],
+          "itemsById": Object {},
+        },
+        "complete": [MockFunction],
+        "create": [MockFunction],
+        "get": [MockFunction],
+        "hasLoadedAll": false,
+        "hasLoadedClaimAndWarnings": [MockFunction],
+        "load": [MockFunction],
+        "loadAll": [MockFunction],
+        "submit": [MockFunction],
+        "update": [MockFunction],
+        "warningsLists": Object {},
+      },
+      "documents": Object {
+        "attach": [MockFunction],
+        "documents": DocumentCollection {
+          "items": Array [],
+          "itemsById": Object {},
+        },
+        "hasLoadedClaimDocuments": [MockFunction],
+        "loadAll": [MockFunction],
+      },
+      "employers": Object {
+        "claim": Claim {
+          "application_id": "mock_application_id",
+          "created_at": null,
+          "date_of_birth": "1980-07-17",
+          "employer_benefits": Array [],
+          "employer_fein": "12-3456789",
+          "employment_status": "Employed",
+          "fineos_absence_id": "NTN-111-ABS-01",
+          "first_name": "Jane",
+          "has_continuous_leave_periods": true,
+          "has_intermittent_leave_periods": null,
+          "has_mailing_address": false,
+          "has_reduced_schedule_leave_periods": null,
+          "has_state_id": true,
+          "hours_worked_per_week": 30,
+          "last_name": "Doe",
+          "leave_details": Object {
+            "child_birth_date": null,
+            "child_placement_date": null,
+            "continuous_leave_periods": Array [
+              ContinuousLeavePeriod {
+                "end_date": "2021-06-01",
+                "leave_period_id": "mock-leave-period-id",
+                "start_date": "2021-01-01",
+              },
+            ],
+            "employer_notification_date": "2021-01-01",
+            "employer_notified": true,
+            "intermittent_leave_periods": null,
+            "pregnant_or_recent_birth": null,
+            "reason": "Serious Health Condition - Employee",
+            "reason_qualifier": null,
+            "reduced_schedule_leave_periods": null,
+          },
+          "mailing_address": null,
+          "mass_id": "*********",
+          "middle_name": "",
+          "other_incomes": Array [],
+          "payment_preferences": Array [
+            Object {
+              "account_details": Object {
+                "account_number": null,
+                "account_type": null,
+                "routing_number": null,
+              },
+              "payment_method": null,
+              "payment_preference_id": null,
+            },
+          ],
+          "previous_leaves": Array [],
+          "residential_address": Address {
+            "city": "Boston",
+            "line_1": "1234 My St.",
+            "line_2": null,
+            "state": "MA",
+            "zip": "00000",
+          },
+          "status": "Submitted",
+          "tax_identifier": "***-**-****",
+          "temp": Object {
+            "has_employer_benefits": false,
+            "has_other_incomes": false,
+            "has_previous_leaves": false,
+          },
+          "work_pattern": WorkPattern {
+            "pattern_start_date": null,
+            "work_pattern_days": Array [],
+            "work_pattern_type": "Fixed",
+            "work_week_starts": "Sunday",
+          },
+        },
+        "load": [MockFunction],
+        "submit": [MockFunction],
+      },
+      "portalFlow": Object {
+        "goToNextPage": [MockFunction],
+        "goToPageFor": [MockFunction],
+        "pathname": "/mock-portalFlow-pathname",
+      },
+      "setAppErrors": [MockFunction],
+      "updateUser": [MockFunction],
+      "user": User {
+        "auth_id": null,
+        "consented_to_data_sharing": true,
+        "email_address": null,
+        "status": null,
+        "user_id": "mock_user_id",
+      },
+      "users": Object {
+        "loadUser": [MockFunction] {
+          "calls": Array [
+            Array [],
+          ],
+          "results": Array [
+            Object {
+              "type": "return",
+              "value": undefined,
+            },
+          ],
+        },
+        "requireUserConsentToDataAgreement": [MockFunction] {
+          "calls": Array [
+            Array [],
+          ],
+          "results": Array [
+            Object {
+              "type": "return",
+              "value": undefined,
+            },
+          ],
+        },
+        "updateUser": [MockFunction],
+        "user": User {
+          "auth_id": null,
+          "consented_to_data_sharing": true,
+          "email_address": null,
+          "status": null,
+          "user_id": "mock_user_id",
+        },
+      },
+    }
+  }
+  query={
+    Object {
+      "absence_id": "mock-absence-id",
+    }
+  }
+>
+  <NewApplication
+    appLogic={
+      Object {
+        "appErrors": AppErrorInfoCollection {
+          "items": Array [],
+          "itemsById": Object {},
+        },
+        "auth": Object {
+          "createAccount": [MockFunction],
+          "forgotPassword": [MockFunction],
+          "isLoggedIn": true,
+          "login": [MockFunction],
+          "logout": [MockFunction],
+          "requireLogin": [MockFunction] {
+            "calls": Array [
+              Array [],
+            ],
+            "results": Array [
+              Object {
+                "type": "return",
+                "value": undefined,
+              },
+            ],
+          },
+          "resendVerifyAccountCode": [MockFunction],
+          "verifyAccount": [MockFunction],
+        },
+        "catchError": [MockFunction],
+        "claims": Object {
+          "claims": ClaimCollection {
+            "items": Array [],
+            "itemsById": Object {},
+          },
+          "complete": [MockFunction],
+          "create": [MockFunction],
+          "get": [MockFunction],
+          "hasLoadedAll": false,
+          "hasLoadedClaimAndWarnings": [MockFunction],
+          "load": [MockFunction],
+          "loadAll": [MockFunction],
+          "submit": [MockFunction],
+          "update": [MockFunction],
+          "warningsLists": Object {},
+        },
+        "documents": Object {
+          "attach": [MockFunction],
+          "documents": DocumentCollection {
+            "items": Array [],
+            "itemsById": Object {},
+          },
+          "hasLoadedClaimDocuments": [MockFunction],
+          "loadAll": [MockFunction],
+        },
+        "employers": Object {
+          "claim": Claim {
+            "application_id": "mock_application_id",
+            "created_at": null,
+            "date_of_birth": "1980-07-17",
+            "employer_benefits": Array [],
+            "employer_fein": "12-3456789",
+            "employment_status": "Employed",
+            "fineos_absence_id": "NTN-111-ABS-01",
+            "first_name": "Jane",
+            "has_continuous_leave_periods": true,
+            "has_intermittent_leave_periods": null,
+            "has_mailing_address": false,
+            "has_reduced_schedule_leave_periods": null,
+            "has_state_id": true,
+            "hours_worked_per_week": 30,
+            "last_name": "Doe",
+            "leave_details": Object {
+              "child_birth_date": null,
+              "child_placement_date": null,
+              "continuous_leave_periods": Array [
+                ContinuousLeavePeriod {
+                  "end_date": "2021-06-01",
+                  "leave_period_id": "mock-leave-period-id",
+                  "start_date": "2021-01-01",
+                },
+              ],
+              "employer_notification_date": "2021-01-01",
+              "employer_notified": true,
+              "intermittent_leave_periods": null,
+              "pregnant_or_recent_birth": null,
+              "reason": "Serious Health Condition - Employee",
+              "reason_qualifier": null,
+              "reduced_schedule_leave_periods": null,
+            },
+            "mailing_address": null,
+            "mass_id": "*********",
+            "middle_name": "",
+            "other_incomes": Array [],
+            "payment_preferences": Array [
+              Object {
+                "account_details": Object {
+                  "account_number": null,
+                  "account_type": null,
+                  "routing_number": null,
+                },
+                "payment_method": null,
+                "payment_preference_id": null,
+              },
+            ],
+            "previous_leaves": Array [],
+            "residential_address": Address {
+              "city": "Boston",
+              "line_1": "1234 My St.",
+              "line_2": null,
+              "state": "MA",
+              "zip": "00000",
+            },
+            "status": "Submitted",
+            "tax_identifier": "***-**-****",
+            "temp": Object {
+              "has_employer_benefits": false,
+              "has_other_incomes": false,
+              "has_previous_leaves": false,
+            },
+            "work_pattern": WorkPattern {
+              "pattern_start_date": null,
+              "work_pattern_days": Array [],
+              "work_pattern_type": "Fixed",
+              "work_week_starts": "Sunday",
+            },
+          },
+          "load": [MockFunction],
+          "submit": [MockFunction],
+        },
+        "portalFlow": Object {
+          "goToNextPage": [MockFunction],
+          "goToPageFor": [MockFunction],
+          "pathname": "/mock-portalFlow-pathname",
+        },
+        "setAppErrors": [MockFunction],
+        "updateUser": [MockFunction],
+        "user": User {
+          "auth_id": null,
+          "consented_to_data_sharing": true,
+          "email_address": null,
+          "status": null,
+          "user_id": "mock_user_id",
+        },
+        "users": Object {
+          "loadUser": [MockFunction] {
+            "calls": Array [
+              Array [],
+            ],
+            "results": Array [
+              Object {
+                "type": "return",
+                "value": undefined,
+              },
+            ],
+          },
+          "requireUserConsentToDataAgreement": [MockFunction] {
+            "calls": Array [
+              Array [],
+            ],
+            "results": Array [
+              Object {
+                "type": "return",
+                "value": undefined,
+              },
+            ],
+          },
+          "updateUser": [MockFunction],
+          "user": User {
+            "auth_id": null,
+            "consented_to_data_sharing": true,
+            "email_address": null,
+            "status": null,
+            "user_id": "mock_user_id",
+          },
+        },
+      }
+    }
+    query={
+      Object {
+        "absence_id": "mock-absence-id",
+      }
+    }
+    user={
+      User {
+        "auth_id": null,
+        "consented_to_data_sharing": true,
+        "email_address": null,
+        "status": null,
+        "user_id": "mock_user_id",
+      }
+    }
+  >
+    <BackButton>
+      <Button
+        className="margin-bottom-5"
+        onClick={[Function]}
+        variation="unstyled"
+      >
+        <button
+          className="usa-button position-relative margin-bottom-5 usa-button--unstyled"
+          onClick={[Function]}
+          type="button"
+        >
+          <svg
+            className="margin-right-05"
+            height="12"
+            viewBox="0 0 448 512"
+            width="12"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M257.5 445.1l-22.2 22.2c-9.4 9.4-24.6 9.4-33.9 0L7 273c-9.4-9.4-9.4-24.6 0-33.9L201.4 44.7c9.4-9.4 24.6-9.4 33.9 0l22.2 22.2c9.5 9.5 9.3 25-.4 34.3L136.6 216H424c13.3 0 24 10.7 24 24v32c0 13.3-10.7 24-24 24H136.6l120.5 114.8c9.8 9.3 10 24.8.4 34.3z"
+              fill="currentColor"
+            />
+          </svg>
+          Back
+        </button>
+      </Button>
+    </BackButton>
+    <Title>
+      <Head>
+        <_default
+          headManager={Object {}}
+          inAmpMode={false}
+          reduceComponentsToState={[Function]}
+        />
+      </Head>
+      <h1
+        className="margin-top-0 margin-bottom-2 font-heading-lg line-height-sans-2"
+      >
+        New application from Jane Doe
+      </h1>
+    </Title>
+    <Alert
+      state="warning"
+    >
+      <div
+        className="usa-alert usa-alert--warning"
+        tabIndex="-1"
+      >
+        <div
+          className="usa-alert__body"
+          role="region"
+        >
+          <div
+            className="usa-alert__text"
+          >
+            <Trans
+              i18nKey="pages.employersClaimsNewApplication.instructionsDueDate"
+              values={
+                Object {
+                  "date": "10/10/2020",
+                }
+              }
+            >
+              Review and respond by: 
+              <strong
+                key="strong-1"
+              >
+                10/10/2020
+              </strong>
+            </Trans>
+          </div>
+        </div>
+      </div>
+    </Alert>
+    <form
+      className="usa-form"
+      id="employer-verification-form"
+      onSubmit={[Function]}
+    >
+      <InputChoiceGroup
+        choices={
+          Array [
+            Object {
+              "checked": false,
+              "label": "Yes",
+              "value": "true",
+            },
+            Object {
+              "checked": false,
+              "label": "No",
+              "value": "false",
+            },
+          ]
+        }
+        label={
+          <ReviewHeading
+            level="2"
+          >
+            Are you the right person to respond to this leave application?
+          </ReviewHeading>
+        }
+        name="hasReviewerVerified"
+        onChange={[Function]}
+        smallLabel={true}
+        type="radio"
+      >
+        <Fieldset
+          className="usa-form-group"
+        >
+          <fieldset
+            className="usa-fieldset usa-form-group"
+          >
+            <span>
+              <FormLabel
+                component="legend"
+                small={true}
+              >
+                <legend
+                  className="usa-label text-bold usa-legend font-heading-sm measure-5"
+                >
+                  <ReviewHeading
+                    level="2"
+                  >
+                    <div
+                      className="display-flex flex-align-end margin-top-6 margin-bottom-3"
+                    >
+                      <Heading
+                        className="flex-fill margin-right-1"
+                        level="2"
+                        size="2"
+                      >
+                        <h2
+                          className="flex-fill margin-right-1 font-heading-md text-bold"
+                        >
+                          Are you the right person to respond to this leave application?
+                        </h2>
+                      </Heading>
+                    </div>
+                  </ReviewHeading>
+                </legend>
+              </FormLabel>
+              <div
+                className="margin-top-3"
+              >
+                <InputChoice
+                  checked={false}
+                  key="true"
+                  label="Yes"
+                  name="hasReviewerVerified"
+                  onChange={[Function]}
+                  type="radio"
+                  value="true"
+                >
+                  <div
+                    className="usa-radio measure-5"
+                  >
+                    <input
+                      checked={false}
+                      className="usa-radio__input"
+                      id="InputChoice1"
+                      name="hasReviewerVerified"
+                      onChange={[Function]}
+                      type="radio"
+                      value="true"
+                    />
+                    <label
+                      className="usa-radio__label"
+                      htmlFor="InputChoice1"
+                    >
+                      Yes
+                    </label>
+                  </div>
+                </InputChoice>
+                <InputChoice
+                  checked={false}
+                  key="false"
+                  label="No"
+                  name="hasReviewerVerified"
+                  onChange={[Function]}
+                  type="radio"
+                  value="false"
+                >
+                  <div
+                    className="usa-radio measure-5"
+                  >
+                    <input
+                      checked={false}
+                      className="usa-radio__input"
+                      id="InputChoice2"
+                      name="hasReviewerVerified"
+                      onChange={[Function]}
+                      type="radio"
+                      value="false"
+                    />
+                    <label
+                      className="usa-radio__label"
+                      htmlFor="InputChoice2"
+                    >
+                      No
+                    </label>
+                  </div>
+                </InputChoice>
+              </div>
+            </span>
+          </fieldset>
+        </Fieldset>
+      </InputChoiceGroup>
+      <StatusRow
+        className="margin-top-2 padding-top-2"
+        label="Employee name"
+      >
+        <div
+          className="margin-bottom-2 padding-bottom-2 margin-top-2 padding-top-2"
+        >
+          <Heading
+            className="margin-bottom-1"
+            level="3"
+            size="4"
+          >
+            <h3
+              className="margin-bottom-1 font-heading-xs text-bold"
+            >
+              Employee name
+            </h3>
+          </Heading>
+          Jane Doe
+        </div>
+      </StatusRow>
+      <StatusRow
+        label="Employer ID number"
+      >
+        <div
+          className="margin-bottom-2 padding-bottom-2"
+        >
+          <Heading
+            className="margin-bottom-1"
+            level="3"
+            size="4"
+          >
+            <h3
+              className="margin-bottom-1 font-heading-xs text-bold"
+            >
+              Employer ID number
+            </h3>
+          </Heading>
+          ***-**-****
+        </div>
+      </StatusRow>
+      <StatusRow
+        label="Date of birth"
+      >
+        <div
+          className="margin-bottom-2 padding-bottom-2"
+        >
+          <Heading
+            className="margin-bottom-1"
+            level="3"
+            size="4"
+          >
+            <h3
+              className="margin-bottom-1 font-heading-xs text-bold"
+            >
+              Date of birth
+            </h3>
+          </Heading>
+          7/17/1980
+        </div>
+      </StatusRow>
+      <ConditionalContent
+        clearField={[Function]}
+        getField={[Function]}
+        updateFields={[Function]}
+        visible={false}
+      />
+    </form>
+  </NewApplication>
+</ComponentWithUser>
+`;
+
+exports[`NewApplication while the claim is not loaded renders the page with a spinner 1`] = `
+<ComponentWithUser
+  appLogic={
+    Object {
+      "appErrors": AppErrorInfoCollection {
+        "items": Array [],
+        "itemsById": Object {},
+      },
+      "auth": Object {
+        "createAccount": [MockFunction],
+        "forgotPassword": [MockFunction],
+        "isLoggedIn": true,
+        "login": [MockFunction],
+        "logout": [MockFunction],
+        "requireLogin": [MockFunction] {
+          "calls": Array [
+            Array [],
+          ],
+          "results": Array [
+            Object {
+              "type": "return",
+              "value": undefined,
+            },
+          ],
+        },
+        "resendVerifyAccountCode": [MockFunction],
+        "verifyAccount": [MockFunction],
+      },
+      "catchError": [MockFunction],
+      "claims": Object {
+        "claims": ClaimCollection {
+          "items": Array [],
+          "itemsById": Object {},
+        },
+        "complete": [MockFunction],
+        "create": [MockFunction],
+        "get": [MockFunction],
+        "hasLoadedAll": false,
+        "hasLoadedClaimAndWarnings": [MockFunction],
+        "load": [MockFunction],
+        "loadAll": [MockFunction],
+        "submit": [MockFunction],
+        "update": [MockFunction],
+        "warningsLists": Object {},
+      },
+      "documents": Object {
+        "attach": [MockFunction],
+        "documents": DocumentCollection {
+          "items": Array [],
+          "itemsById": Object {},
+        },
+        "hasLoadedClaimDocuments": [MockFunction],
+        "loadAll": [MockFunction],
+      },
+      "employers": Object {
+        "claim": null,
+        "load": [MockFunction] {
+          "calls": Array [
+            Array [
+              "mock-absence-id",
+            ],
+          ],
+          "results": Array [
+            Object {
+              "type": "return",
+              "value": Claim {
+                "application_id": null,
+                "created_at": null,
+                "date_of_birth": null,
+                "employer_benefits": Array [],
+                "employer_fein": null,
+                "employment_status": null,
+                "fineos_absence_id": "NTN-111-ABS-01",
+                "first_name": null,
+                "has_continuous_leave_periods": null,
+                "has_intermittent_leave_periods": null,
+                "has_mailing_address": null,
+                "has_reduced_schedule_leave_periods": null,
+                "has_state_id": null,
+                "hours_worked_per_week": null,
+                "last_name": null,
+                "leave_details": Object {
+                  "child_birth_date": null,
+                  "child_placement_date": null,
+                  "continuous_leave_periods": null,
+                  "employer_notification_date": null,
+                  "employer_notified": null,
+                  "intermittent_leave_periods": null,
+                  "pregnant_or_recent_birth": null,
+                  "reason": null,
+                  "reason_qualifier": null,
+                  "reduced_schedule_leave_periods": null,
+                },
+                "mailing_address": null,
+                "mass_id": null,
+                "middle_name": null,
+                "other_incomes": Array [],
+                "payment_preferences": Array [
+                  Object {
+                    "account_details": Object {
+                      "account_number": null,
+                      "account_type": null,
+                      "routing_number": null,
+                    },
+                    "payment_method": null,
+                    "payment_preference_id": null,
+                  },
+                ],
+                "previous_leaves": Array [],
+                "residential_address": Address {
+                  "city": null,
+                  "line_1": null,
+                  "line_2": null,
+                  "state": null,
+                  "zip": null,
+                },
+                "status": null,
+                "tax_identifier": null,
+                "temp": Object {
+                  "has_employer_benefits": null,
+                  "has_other_incomes": null,
+                  "has_previous_leaves": null,
+                },
+                "work_pattern": null,
+              },
+            },
+          ],
+        },
+        "submit": [MockFunction],
+      },
+      "portalFlow": Object {
+        "goToNextPage": [MockFunction],
+        "goToPageFor": [MockFunction],
+        "pathname": "/mock-portalFlow-pathname",
+      },
+      "setAppErrors": [MockFunction],
+      "updateUser": [MockFunction],
+      "user": User {
+        "auth_id": null,
+        "consented_to_data_sharing": true,
+        "email_address": null,
+        "status": null,
+        "user_id": "mock_user_id",
+      },
+      "users": Object {
+        "loadUser": [MockFunction] {
+          "calls": Array [
+            Array [],
+          ],
+          "results": Array [
+            Object {
+              "type": "return",
+              "value": undefined,
+            },
+          ],
+        },
+        "requireUserConsentToDataAgreement": [MockFunction] {
+          "calls": Array [
+            Array [],
+          ],
+          "results": Array [
+            Object {
+              "type": "return",
+              "value": undefined,
+            },
+          ],
+        },
+        "updateUser": [MockFunction],
+        "user": User {
+          "auth_id": null,
+          "consented_to_data_sharing": true,
+          "email_address": null,
+          "status": null,
+          "user_id": "mock_user_id",
+        },
+      },
+    }
+  }
+  query={
+    Object {
+      "absence_id": "mock-absence-id",
+    }
+  }
+>
+  <NewApplication
+    appLogic={
+      Object {
+        "appErrors": AppErrorInfoCollection {
+          "items": Array [],
+          "itemsById": Object {},
+        },
+        "auth": Object {
+          "createAccount": [MockFunction],
+          "forgotPassword": [MockFunction],
+          "isLoggedIn": true,
+          "login": [MockFunction],
+          "logout": [MockFunction],
+          "requireLogin": [MockFunction] {
+            "calls": Array [
+              Array [],
+            ],
+            "results": Array [
+              Object {
+                "type": "return",
+                "value": undefined,
+              },
+            ],
+          },
+          "resendVerifyAccountCode": [MockFunction],
+          "verifyAccount": [MockFunction],
+        },
+        "catchError": [MockFunction],
+        "claims": Object {
+          "claims": ClaimCollection {
+            "items": Array [],
+            "itemsById": Object {},
+          },
+          "complete": [MockFunction],
+          "create": [MockFunction],
+          "get": [MockFunction],
+          "hasLoadedAll": false,
+          "hasLoadedClaimAndWarnings": [MockFunction],
+          "load": [MockFunction],
+          "loadAll": [MockFunction],
+          "submit": [MockFunction],
+          "update": [MockFunction],
+          "warningsLists": Object {},
+        },
+        "documents": Object {
+          "attach": [MockFunction],
+          "documents": DocumentCollection {
+            "items": Array [],
+            "itemsById": Object {},
+          },
+          "hasLoadedClaimDocuments": [MockFunction],
+          "loadAll": [MockFunction],
+        },
+        "employers": Object {
+          "claim": null,
+          "load": [MockFunction] {
+            "calls": Array [
+              Array [
+                "mock-absence-id",
+              ],
+            ],
+            "results": Array [
+              Object {
+                "type": "return",
+                "value": Claim {
+                  "application_id": null,
+                  "created_at": null,
+                  "date_of_birth": null,
+                  "employer_benefits": Array [],
+                  "employer_fein": null,
+                  "employment_status": null,
+                  "fineos_absence_id": "NTN-111-ABS-01",
+                  "first_name": null,
+                  "has_continuous_leave_periods": null,
+                  "has_intermittent_leave_periods": null,
+                  "has_mailing_address": null,
+                  "has_reduced_schedule_leave_periods": null,
+                  "has_state_id": null,
+                  "hours_worked_per_week": null,
+                  "last_name": null,
+                  "leave_details": Object {
+                    "child_birth_date": null,
+                    "child_placement_date": null,
+                    "continuous_leave_periods": null,
+                    "employer_notification_date": null,
+                    "employer_notified": null,
+                    "intermittent_leave_periods": null,
+                    "pregnant_or_recent_birth": null,
+                    "reason": null,
+                    "reason_qualifier": null,
+                    "reduced_schedule_leave_periods": null,
+                  },
+                  "mailing_address": null,
+                  "mass_id": null,
+                  "middle_name": null,
+                  "other_incomes": Array [],
+                  "payment_preferences": Array [
+                    Object {
+                      "account_details": Object {
+                        "account_number": null,
+                        "account_type": null,
+                        "routing_number": null,
+                      },
+                      "payment_method": null,
+                      "payment_preference_id": null,
+                    },
+                  ],
+                  "previous_leaves": Array [],
+                  "residential_address": Address {
+                    "city": null,
+                    "line_1": null,
+                    "line_2": null,
+                    "state": null,
+                    "zip": null,
+                  },
+                  "status": null,
+                  "tax_identifier": null,
+                  "temp": Object {
+                    "has_employer_benefits": null,
+                    "has_other_incomes": null,
+                    "has_previous_leaves": null,
+                  },
+                  "work_pattern": null,
+                },
+              },
+            ],
+          },
+          "submit": [MockFunction],
+        },
+        "portalFlow": Object {
+          "goToNextPage": [MockFunction],
+          "goToPageFor": [MockFunction],
+          "pathname": "/mock-portalFlow-pathname",
+        },
+        "setAppErrors": [MockFunction],
+        "updateUser": [MockFunction],
+        "user": User {
+          "auth_id": null,
+          "consented_to_data_sharing": true,
+          "email_address": null,
+          "status": null,
+          "user_id": "mock_user_id",
+        },
+        "users": Object {
+          "loadUser": [MockFunction] {
+            "calls": Array [
+              Array [],
+            ],
+            "results": Array [
+              Object {
+                "type": "return",
+                "value": undefined,
+              },
+            ],
+          },
+          "requireUserConsentToDataAgreement": [MockFunction] {
+            "calls": Array [
+              Array [],
+            ],
+            "results": Array [
+              Object {
+                "type": "return",
+                "value": undefined,
+              },
+            ],
+          },
+          "updateUser": [MockFunction],
+          "user": User {
+            "auth_id": null,
+            "consented_to_data_sharing": true,
+            "email_address": null,
+            "status": null,
+            "user_id": "mock_user_id",
+          },
+        },
+      }
+    }
+    query={
+      Object {
+        "absence_id": "mock-absence-id",
+      }
+    }
+    user={
+      User {
+        "auth_id": null,
+        "consented_to_data_sharing": true,
+        "email_address": null,
+        "status": null,
+        "user_id": "mock_user_id",
+      }
+    }
+  >
+    <div
+      className="margin-top-8 text-center"
+    >
+      <Spinner
+        aria-valuetext="Loading"
+      >
+        <span
+          aria-valuetext="Loading"
+          className="c-spinner"
+          role="progressbar"
+        />
+      </Spinner>
+    </div>
+  </NewApplication>
+</ComponentWithUser>
+`;

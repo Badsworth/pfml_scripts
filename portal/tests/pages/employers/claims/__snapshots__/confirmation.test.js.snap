@@ -1,0 +1,57 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Confirmation renders Confirmation page 1`] = `
+<Fragment>
+  <Title>
+    Help us find the right person to review the application
+  </Title>
+  <Trans
+    i18nKey="pages.employersClaimsConfirmation.applicationIdLabel"
+    values={
+      Object {
+        "absenceId": "test-absence-id",
+      }
+    }
+  />
+  <Trans
+    components={
+      Object {
+        "div": <div />,
+      }
+    }
+    i18nKey="pages.employersClaimsConfirmation.reviewByLabel"
+    values={
+      Object {
+        "employerDueDate": "1/1/2022",
+      }
+    }
+  />
+  <Trans
+    components={
+      Object {
+        "li": <li />,
+        "p": <p />,
+        "ul": <ul
+          className="usa-list"
+        />,
+      }
+    }
+    i18nKey="pages.employersClaimsConfirmation.instructions"
+  />
+  <p>
+    <Trans
+      components={
+        Object {
+          "benefits-guide-link": <a
+            href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-guide"
+            rel="noopener"
+            target="_blank"
+          />,
+        }
+      }
+      i18nKey="pages.employersClaimsConfirmation.instructions_benefitsGuide"
+    />
+  </p>
+  <UserFeedback />
+</Fragment>
+`;

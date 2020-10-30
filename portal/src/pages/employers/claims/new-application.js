@@ -1,0 +1,195 @@
+import React, { useEffect, useState } from "react";
+import Alert from "../../../components/Alert";
+import AppErrorInfoCollection from "../../../models/AppErrorInfoCollection";
+import BackButton from "../../../components/BackButton";
+import Button from "../../../components/Button";
+import Claim from "../../../models/Claim";
+import ConditionalContent from "../../../components/ConditionalContent";
+import Heading from "../../../components/Heading";
+import InputChoiceGroup from "../../../components/InputChoiceGroup";
+import PropTypes from "prop-types";
+import ReviewHeading from "../../../components/ReviewHeading";
+import Spinner from "../../../components/Spinner";
+import StatusRow from "../../../components/StatusRow";
+import Title from "../../../components/Title";
+import { Trans } from "react-i18next";
+import formatDateRange from "../../../utils/formatDateRange";
+import { get } from "lodash";
+import { useTranslation } from "../../../locales/i18n";
+import withUser from "../../../hoc/withUser";
+
+// TODO (EMPLOYER-363): Update respond by date
+const employerDueDate = "2020-10-10";
+
+export const NewApplication = (props) => {
+  const { t } = useTranslation();
+  const {
+    appLogic,
+    query: { absence_id: absenceId },
+  } = props;
+  const claim = appLogic.employers.claim;
+
+  // TODO (EMPLOYER-500): Remove logic in favor of `withEmployerClaim` HOC
+  useEffect(() => {
+    if (!claim) {
+      appLogic.employers.load(absenceId);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [claim, absenceId]);
+
+  const handleSubmit = (event) => {
+    event.preventDefault();
+
+    if (formState.hasReviewerVerified === "true") {
+      appLogic.portalFlow.goToNextPage(
+        { retrievedClaim: claim },
+        { absence_id: absenceId }
+      );
+    } else if (formState.hasReviewerVerified === "false") {
+      appLogic.portalFlow.goToPageFor(
+        "CONFIRMATION",
+        {},
+        { absence_id: absenceId, due_date: employerDueDate }
+      );
+    }
+  };
+
+  const handleOnChange = (event) => {
+    updateFields({
+      hasReviewerVerified: event.target.value,
+    });
+  };
+
+  const [formState, setFormState] = useState({
+    hasReviewerVerified: "",
+  });
+
+  const getField = (fieldName) => {
+    return get(formState, fieldName);
+  };
+
+  const updateFields = (fields) => {
+    setFormState({ ...formState, ...fields });
+  };
+
+  const clearField = () => {
+    setFormState({
+      hasReviewerVerified: "",
+    });
+  };
+
+  return (
+    <React.Fragment>
+      {/* TODO (EMPLOYER-500): Remove logic in favor of `withEmployerClaim` HOC */}
+      {!claim && appLogic.appErrors.isEmpty && (
+        <div className="margin-top-8 text-center">
+          <Spinner aria-valuetext={t("components.spinner.label")} />
+        </div>
+      )}
+      {claim && (
+        <React.Fragment>
+          <BackButton />
+          <Title>
+            {t("pages.employersClaimsNewApplication.title", {
+              name: claim.fullName,
+            })}
+          </Title>
+          <Alert state="warning">
+            <Trans
+              i18nKey="pages.employersClaimsNewApplication.instructionsDueDate"
+              values={{ date: formatDateRange(employerDueDate) }}
+            />
+          </Alert>
+          <form
+            id="employer-verification-form"
+            onSubmit={handleSubmit}
+            className="usa-form"
+          >
+            <InputChoiceGroup
+              choices={[
+                {
+                  checked: formState.hasReviewerVerified === "true",
+                  label: t("pages.employersClaimsNewApplication.choiceYes"),
+                  value: "true",
+                },
+                {
+                  checked: formState.hasReviewerVerified === "false",
+                  label: t("pages.employersClaimsNewApplication.choiceNo"),
+                  value: "false",
+                },
+              ]}
+              label={
+                <ReviewHeading level="2">
+                  {t("pages.employersClaimsNewApplication.instructionsLabel")}
+                </ReviewHeading>
+              }
+              name="hasReviewerVerified"
+              onChange={handleOnChange}
+              type="radio"
+              smallLabel
+            />
+            <StatusRow
+              label={t("pages.employersClaimsNewApplication.employeeNameLabel")}
+              className="margin-top-2 padding-top-2"
+            >
+              {claim.fullName}
+            </StatusRow>
+            <StatusRow
+              label={t(
+                "pages.employersClaimsNewApplication.employerIdNumberLabel"
+              )}
+            >
+              {claim.tax_identifier}
+            </StatusRow>
+            <StatusRow
+              label={t("pages.employersClaimsNewApplication.dobLabel")}
+            >
+              {formatDateRange(claim.date_of_birth)}
+            </StatusRow>
+            <ConditionalContent
+              getField={getField}
+              clearField={clearField}
+              updateFields={updateFields}
+              visible={
+                formState.hasReviewerVerified === "true" ||
+                formState.hasReviewerVerified === "false"
+              }
+            >
+              <Heading level="2">
+                {t(
+                  "pages.employersClaimsNewApplication.truthAttestationHeading"
+                )}
+              </Heading>
+              <p>{t("pages.employersClaimsNewApplication.instructions")}</p>
+              <Alert noIcon state="info">
+                {t("pages.employersClaimsNewApplication.agreementBody")}
+              </Alert>
+              <Button type="submit">
+                {t("pages.employersClaimsNewApplication.submitButton")}
+              </Button>
+            </ConditionalContent>
+          </form>
+        </React.Fragment>
+      )}
+    </React.Fragment>
+  );
+};
+
+NewApplication.propTypes = {
+  appLogic: PropTypes.shape({
+    appErrors: PropTypes.instanceOf(AppErrorInfoCollection).isRequired,
+    employers: PropTypes.shape({
+      load: PropTypes.func.isRequired,
+      claim: PropTypes.instanceOf(Claim),
+    }).isRequired,
+    portalFlow: PropTypes.shape({
+      goToNextPage: PropTypes.func.isRequired,
+      goToPageFor: PropTypes.func.isRequired,
+    }).isRequired,
+  }).isRequired,
+  query: PropTypes.shape({
+    absence_id: PropTypes.string.isRequired,
+  }).isRequired,
+};
+
+export default withUser(NewApplication);

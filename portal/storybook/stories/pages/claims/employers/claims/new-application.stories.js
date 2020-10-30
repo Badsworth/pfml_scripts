@@ -1,12 +1,12 @@
 import AppErrorInfoCollection from "src/models/AppErrorInfoCollection";
 import { MockClaimBuilder } from "tests/test-utils";
+import { NewApplication } from "src/pages/employers/claims/new-application";
 import React from "react";
-import { Review } from "src/pages/employers/claims/review";
 import User from "src/models/User";
 
 export default {
-  title: `Pages/Employers/Claims/Review`,
-  component: Review,
+  title: "Pages/Employers/Claims/New Application",
+  component: NewApplication,
 };
 
 export const Default = () => {
@@ -17,9 +17,12 @@ export const Default = () => {
     employers: {
       claim: new MockClaimBuilder().completed().create(),
       load: () => {},
-      submit: () => {},
+    },
+    portalFlow: {
+      goToNextPage: () => {},
+      goToPageFor: () => {},
     },
     setAppErrors: () => {},
   };
-  return <Review appLogic={appLogic} query={query} user={user} />;
+  return <NewApplication appLogic={appLogic} query={query} user={user} />;
 };

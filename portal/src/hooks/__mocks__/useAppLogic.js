@@ -49,6 +49,7 @@ export default jest.fn(() => ({
   },
   portalFlow: {
     goToNextPage: jest.fn(),
+    goToPageFor: jest.fn(),
     pathname: "/mock-portalFlow-pathname",
   },
   setAppErrors: jest.fn(),

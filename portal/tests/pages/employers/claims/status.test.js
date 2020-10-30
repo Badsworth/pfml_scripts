@@ -1,12 +1,11 @@
 import { MockClaimBuilder, testHook } from "../../../test-utils";
-import Status, {
-  StatusRow,
-} from "../../../../src/pages/employers/claims/status";
 import { mount, shallow } from "enzyme";
 import Heading from "../../../../src/components/Heading";
 import Lead from "../../../../src/components/Lead";
 import React from "react";
 import Spinner from "../../../../src/components/Spinner";
+import Status from "../../../../src/pages/employers/claims/status";
+import StatusRow from "../../../../src/components/StatusRow";
 import StatusTag from "../../../../src/components/StatusTag";
 import Title from "../../../../src/components/Title";
 import { act } from "react-dom/test-utils";

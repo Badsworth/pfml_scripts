@@ -195,6 +195,7 @@ exports[`Status while the claim is not loaded renders the page with a spinner 1`
       },
       "portalFlow": Object {
         "goToNextPage": [MockFunction],
+        "goToPageFor": [MockFunction],
         "pathname": "/mock-portalFlow-pathname",
       },
       "setAppErrors": [MockFunction],
@@ -376,6 +377,7 @@ exports[`Status while the claim is not loaded renders the page with a spinner 1`
         },
         "portalFlow": Object {
           "goToNextPage": [MockFunction],
+          "goToPageFor": [MockFunction],
           "pathname": "/mock-portalFlow-pathname",
         },
         "setAppErrors": [MockFunction],

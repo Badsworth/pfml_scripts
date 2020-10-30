@@ -59,13 +59,14 @@ const routes = {
     workPatternType: "/claims/work-pattern-type",
   },
   employers: {
+    confirmation: "/employers/claims/confirmation",
     dashboard: "/employers",
     finishAccountSetup: "/employers/finish-account-setup",
     login: "/employers/login",
+    newApplication: "/employers/claims/new-application",
     review: "/employers/claims/review",
     status: "/employers/claims/status",
     success: "/employers/claims/success",
-    verification: "/employers/claims/verification",
   },
   external: {
     massgov: {
