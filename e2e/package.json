@@ -77,13 +77,15 @@
     "node-fetch": "^2.6.1",
     "p-retry": "^4.2.0",
     "pdf-lib": "^1.11.1",
-    "puppeteer": "npm:puppeteer@^2.1.1",
-    "puppeteer5": "npm:puppeteer@^5.3.1",
+    "puppeteer": "^5.3.1",
     "ssn": "^1.0.3",
     "typescript": "^3.9.6",
     "whatwg-fetch": "^3.4.1",
     "winston": "^3.3.3",
     "yargs": "^16.0.3"
+  },
+  "peerDependencies": {
+    "puppeteer": "^2.1.1"
   },
   "cypress-cucumber-preprocessor": {
     "nonGlobalStepDefinitions": true,
