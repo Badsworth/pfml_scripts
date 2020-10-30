@@ -66,7 +66,7 @@ export const ClaimFlowFields = () => {
             <article key={page.route}>
               <h3>{page.route}</h3>
               <ul>
-                {page.fields.map((field) => (
+                {page.meta.fields.map((field) => (
                   <li key={field}>
                     <code>{field}</code>
                   </li>
