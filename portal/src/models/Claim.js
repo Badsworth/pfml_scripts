@@ -212,6 +212,24 @@ class Claim extends BaseModel {
 
     return startDates[0];
   }
+
+  /**
+   * Returns latest end date across all leave periods
+   * @returns {string}
+   */
+  get leaveEndDate() {
+    const periods = [
+      get(this, "leave_details.continuous_leave_periods"),
+      get(this, "leave_details.intermittent_leave_periods"),
+      get(this, "leave_details.reduced_schedule_leave_periods"),
+    ].flat();
+
+    const endDates = map(compact(periods), "end_date").sort();
+
+    if (!endDates.length) return null;
+
+    return endDates[endDates.length - 1];
+  }
 }
 
 /**

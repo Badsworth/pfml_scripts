@@ -1058,19 +1058,6 @@ const pages = {
     sectionLabel: "How would you describe your work schedule?",
     title: "$t(shared.claimsEmploymentInfoTitle)",
   },
-  employersClaimStatus: {
-    applicationIdLabel: "Application ID",
-    documentPostedDate: "Posted {{date}}",
-    lead:
-      "<p>A decision has been made for this application. You can download a copy of the decision notice for more details.</p><p>No action is required, but your employee has the right to appeal this decision under Massachusetts regulations (458 CMR 2.14).</p>",
-    leaveDetailsLabel: "$t(shared.claimsLeaveDetailsTitle)",
-    leaveDurationLabel: "$t(shared.claimsLeaveDurationTitle)",
-    leaveTypeLabel: "Leave type",
-    medicalLeave: "$t(shared.leaveReasonMedical)",
-    noticesLabel: "Notices",
-    statusLabel: "Status",
-    title: "Notices for {{name}}",
-  },
   employersClaimsReview: {
     amend: "Amend",
     documentationLabel: "Documentation",
@@ -1189,6 +1176,24 @@ const pages = {
       hoursWorkedLabel: "Weekly hours worked",
     },
     title: "Review application for {{name}}",
+  },
+  employersClaimsStatus: {
+    applicationIdLabel: "Application ID",
+    documentPostedDate: "Posted {{date}}",
+    lead:
+      "A decision has been made for this application. You can download a copy of the decision notice for more details. No action is required, but your employee has the right to appeal this decision under Massachusetts regulations (458 CMR 2.14).",
+    leaveDetailsLabel: "$t(shared.claimsLeaveDetailsTitle)",
+    leaveDurationLabel: "$t(shared.claimsLeaveDurationTitle)",
+    leaveReasonLabel: "Leave type",
+    leaveReasonValue_activeDutyFamily: "$t(shared.leaveReasonActiveDutyFamily)",
+    leaveReasonValue_bonding: "$t(shared.leaveReasonBonding)",
+    leaveReasonValue_medical: "$t(shared.leaveReasonMedical)",
+    leaveReasonValue_serviceMemberFamily:
+      "$t(shared.leaveReasonServiceMemberFamily)",
+    medicalLeave: "$t(shared.leaveReasonMedical)",
+    noticesLabel: "Notices",
+    statusLabel: "Status",
+    title: "Notices for {{name}}",
   },
   employersClaimsSuccess: {
     applicationIdLabel: "<strong>Application ID:</strong> {{absenceId}}",

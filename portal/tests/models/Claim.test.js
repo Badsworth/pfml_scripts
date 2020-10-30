@@ -166,18 +166,18 @@ describe("Claim", () => {
 
   describe("leave period getters", () => {
     const claimWithContinuousLeaveData = new MockClaimBuilder()
-      .continuous({ start_date: "2021-03-01" })
+      .continuous({ start_date: "2021-03-01", end_date: "2021-09-01" })
       .create();
     const claimWithIntermittentLeaveData = new MockClaimBuilder()
-      .intermittent({ start_date: "2021-02-01" })
+      .intermittent({ start_date: "2021-02-01", end_date: "2021-08-01" })
       .create();
     const claimWithReducedLeaveData = new MockClaimBuilder()
-      .reducedSchedule({ start_date: "2021-01-01" })
+      .reducedSchedule({ start_date: "2021-01-01", end_date: "2021-08-01" })
       .create();
     const claimWithMultipleLeaveDurationTypes = new MockClaimBuilder()
-      .continuous({ start_date: "2021-03-01" })
-      .intermittent({ start_date: "2021-02-01" })
-      .reducedSchedule({ start_date: "2021-01-01" })
+      .continuous({ start_date: "2021-03-01", end_date: "2021-09-01" })
+      .intermittent({ start_date: "2021-02-01", end_date: "2021-08-01" })
+      .reducedSchedule({ start_date: "2021-01-01", end_date: "2021-08-01" })
       .create();
 
     describe("#isContinuous", () => {
@@ -240,6 +240,20 @@ describe("Claim", () => {
         expect(claimWithReducedLeaveData.leaveStartDate).toEqual("2021-01-01");
         expect(claimWithMultipleLeaveDurationTypes.leaveStartDate).toEqual(
           "2021-01-01"
+        );
+      });
+    });
+
+    describe("#leaveEndDate", () => {
+      it("returns latest end_date", () => {
+        expect(emptyClaim.leaveEndDate).toBeNull();
+        expect(claimWithContinuousLeaveData.leaveEndDate).toEqual("2021-09-01");
+        expect(claimWithIntermittentLeaveData.leaveEndDate).toEqual(
+          "2021-08-01"
+        );
+        expect(claimWithReducedLeaveData.leaveEndDate).toEqual("2021-08-01");
+        expect(claimWithMultipleLeaveDurationTypes.leaveEndDate).toEqual(
+          "2021-09-01"
         );
       });
     });
