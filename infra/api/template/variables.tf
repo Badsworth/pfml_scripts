@@ -28,6 +28,11 @@ variable "vpc_app_subnet_ids" {
   type        = list(string)
 }
 
+variable "vpc_db_subnet_ids" {
+  description = "A list of db-level subnets within the VPC."
+  type        = list(string)
+}
+
 variable "postgres_version" {
   description = "The version of the postgres database."
   type        = string

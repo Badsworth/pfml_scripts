@@ -22,10 +22,18 @@ resource "aws_ssm_parameter" "db_password" {
   value = random_password.rds_super_password.result
 }
 
+# API-752: Will be deleted in the near future.
 resource "aws_db_subnet_group" "rds_postgres" {
   name        = "massgov-pfml-${var.environment_name}-rds"
   description = "Mass RDS DB subnet group"
   subnet_ids  = var.vpc_app_subnet_ids
+}
+
+# API-752: Will be used in the near future.
+resource "aws_db_subnet_group" "rds_postgres_dbprivate" {
+  name        = "${local.app_name}-${var.environment_name}-rds"
+  description = "Mass RDS DB subnet group"
+  subnet_ids  = var.vpc_db_subnet_ids
 }
 
 resource "aws_db_parameter_group" "postgres11" {
