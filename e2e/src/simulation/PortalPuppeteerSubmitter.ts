@@ -2,6 +2,7 @@ import PortalSubmitter, { PortalSubmitterOpts } from "./PortalSubmitter";
 import { DocumentUploadRequest } from "../api";
 import puppeteer from "puppeteer";
 import fs from "fs";
+import delay from "delay";
 import * as actions from "../utils";
 
 /**
@@ -26,6 +27,15 @@ export default class PortalPuppeteerSubmitter extends PortalSubmitter {
       defaultViewport: { width: 1200, height: 1000 },
     });
     this.page = await browser.newPage();
+    this.page.on("dialog", async (dialog) => {
+      // When a dialog is detected, attempt to close it. This is usually
+      // a "request in progress" thing, and closing it will allow the rest
+      // of the claim to proceed.
+      await delay(2000);
+      await dialog.dismiss().catch(() => {
+        //intentional no-op on error.
+      });
+    });
     return this.page;
   }
   protected async uploadDocuments(
@@ -49,7 +59,7 @@ async function uploadDocument(
 ) {
   await actions.clickTab(page, "Documents");
   await page
-    .waitForSelector('input[type="submit"][value="Add"]')
+    .waitForSelector('input[type="submit"][value="Add"]', { visible: true })
     .then((el) => actions.click(page, el));
 
   // Select the document type.

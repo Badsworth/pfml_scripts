@@ -2,6 +2,7 @@ import { LeavePeriods } from "./types";
 import { parseISO } from "date-fns";
 import puppeteer from "puppeteer";
 import { SimulationClaim } from "./simulation/types";
+import delay from "delay";
 
 export function extractLeavePeriod(
   claim: SimulationClaim["claim"],
@@ -97,6 +98,7 @@ export async function clickTab(
       [label]
     ),
   ]);
+  await delay(100);
 }
 
 async function waitForStablePage(page: puppeteer.Page) {

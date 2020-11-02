@@ -13,6 +13,7 @@ import generators from "./documents";
 import path from "path";
 import fs from "fs";
 import { formatISO, subMonths, add } from "date-fns";
+import { v4 as uuid } from "uuid";
 
 const formatISODate = (date: Date) =>
   formatISO(date, { representation: "date" });
@@ -128,6 +129,7 @@ export function scenario(
       (claim.leave_details?.intermittent_leave_periods?.length ?? 0) > 0;
 
     return {
+      id: uuid(),
       scenario: name,
       claim,
       documents: await generateDocuments(claim, _config, opts),
@@ -149,6 +151,7 @@ export function agentScenario(
 ): SimulationGenerator {
   return async () => {
     return {
+      id: uuid(),
       scenario: name,
       claim: {},
       documents: [],

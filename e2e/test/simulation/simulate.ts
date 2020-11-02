@@ -67,6 +67,14 @@ describe("Simulation Generator", () => {
     jest.clearAllMocks();
   });
 
+  it("Should generate a unique ID for each simulation claim", async () => {
+    const claim1 = await scenario("TEST", medical)(opts);
+    const claim2 = await scenario("TEST", medical)(opts);
+    expect(claim1).toHaveProperty("id", expect.any(String));
+    expect(claim2).toHaveProperty("id", expect.any(String));
+    expect(claim1.id).not.toEqual(claim2.id);
+  });
+
   it("Should have claim properties", async () => {
     const claim = await scenario("TEST", medical)(opts);
     expect(claim.scenario).toEqual("TEST");

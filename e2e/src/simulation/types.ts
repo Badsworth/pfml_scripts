@@ -6,6 +6,7 @@ export type FineosUserType = typeof fineosUserTypeNames[number];
 
 // Represents a single claim that will be issued to the system.
 export type SimulationClaim = {
+  id: string;
   scenario: string;
   claim: ApplicationRequestBody;
   documents: ClaimDocument[];

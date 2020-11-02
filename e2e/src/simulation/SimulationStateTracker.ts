@@ -1,15 +1,12 @@
 import fs from "fs";
 
 type ExecutionMap = Record<string, ExecutionRecord>;
-type ExecutionRecord = { result: unknown; error: boolean };
+type ExecutionRecord = { result?: string; error?: string; time: string };
 
 export default interface SimulationStateTracker {
-  set(
-    id: string,
-    result: ExecutionRecord["result"],
-    error?: boolean
-  ): Promise<void>;
+  set(id: string, result?: string, error?: string): Promise<void>;
   has(id: string): Promise<boolean>;
+  get(id: string): Promise<ExecutionRecord | null>;
 }
 
 /**
@@ -41,15 +38,21 @@ export class SimulationStateFileTracker implements SimulationStateTracker {
     await fs.promises.writeFile(this.filename, JSON.stringify(records));
   }
 
-  async set(
-    id: string,
-    result: ExecutionRecord["result"],
-    error?: boolean
-  ): Promise<void> {
+  async get(id: string): Promise<ExecutionRecord | null> {
     if (!this.records) {
       this.records = await this.init();
     }
-    this.records[id] = { result, error: !!error };
+    if (id in this.records) {
+      return this.records[id];
+    }
+    return null;
+  }
+
+  async set(id: string, result?: string, error?: string): Promise<void> {
+    if (!this.records) {
+      this.records = await this.init();
+    }
+    this.records[id] = { result, error, time: new Date().toISOString() };
     await this.flush(this.records);
   }
 
@@ -63,12 +66,10 @@ export class SimulationStateFileTracker implements SimulationStateTracker {
   async resetErrors(): Promise<void> {
     const records = await this.init().then(
       (records): ExecutionMap => {
-        return Object.entries(records).reduce((collected, [k, v]) => {
-          if (!v.error) {
-            return { ...collected, [k]: v };
-          }
-          return collected;
-        }, {} as ExecutionMap);
+        const entries = Object.entries(records).filter(
+          (entry) => entry[1].error === undefined
+        );
+        return Object.fromEntries(entries);
       }
     );
     await this.flush(records);
@@ -82,5 +83,8 @@ export class SimulationStateNullTracker implements SimulationStateTracker {
   }
   has(): Promise<boolean> {
     return Promise.resolve(false);
+  }
+  get(): Promise<null> {
+    return Promise.resolve(null);
   }
 }

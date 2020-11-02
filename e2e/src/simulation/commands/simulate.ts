@@ -11,6 +11,7 @@ import { SystemWideArgs } from "../../cli";
 type SimulateArgs = {
   directory: string;
   track: boolean;
+  delay: number;
 } & SystemWideArgs;
 
 const cmd: CommandModule<SystemWideArgs, SimulateArgs> = {
@@ -29,6 +30,12 @@ const cmd: CommandModule<SystemWideArgs, SimulateArgs> = {
       type: "boolean",
       description: "Flag indicating whether to use submission tracking",
       default: true,
+    },
+    delay: {
+      type: "number",
+      description: "Number of seconds to wait between claim submissions",
+      default: 0,
+      requiresArg: true,
     },
   },
   async handler(args) {
@@ -55,9 +62,10 @@ const cmd: CommandModule<SystemWideArgs, SimulateArgs> = {
     );
     const profile = args.logger.startTimer();
     try {
-      await simulation.run();
+      await simulation.run(args.delay);
       profile.done({ message: "Simulation complete" });
     } catch (e) {
+      args.logger.error(e);
       profile.done({ message: "Simulation errored", level: "error" });
       yargs.exit(1, e);
     }

@@ -6,6 +6,7 @@ import fs from "fs";
 import path from "path";
 import winston from "winston";
 import SimulationStateTracker from "./SimulationStateTracker";
+import delay from "delay";
 
 /**
  * This class is responsible for executing a business simulation.
@@ -28,36 +29,28 @@ export default class SimulationRunner {
     this.logger = logger;
   }
 
-  async run(): Promise<void> {
+  async run(delaySeconds = 0): Promise<void> {
     for (const claim of await this.storage.claims()) {
-      const claimId = claim.claim.tax_identifier;
+      // const claimId = claim.claim.tax_identifier;
       const logger = this.logger.child({
-        ssn: claimId,
+        ssn: claim.claim.tax_identifier,
         scenario: claim.scenario,
       });
-      if (!claimId) {
-        throw new Error(`Unable to detect a claim ID on this claim`);
+      if (!claim.id) {
+        throw new Error(
+          "This claim has no ID, and cannot be tracked or submitted."
+        );
       }
 
       // Only execute the claim if we haven't already done so previously.
-      if (!(await this.tracker.has(claimId))) {
+      if (!(await this.tracker.has(claim.id))) {
         const profiler = logger.startTimer();
         try {
           // Submit.
           logger.debug(`Starting Submission`);
           const fineosId = await this.submit(claim, logger);
           // Track that the claim succeeded.
-          await this.tracker.set(
-            claimId,
-            {
-              ssn: claim.claim.tax_identifier,
-              first_name: claim.claim.first_name,
-              last_name: claim.claim.last_name,
-              fineosId,
-              scenario: claim.scenario,
-            },
-            false
-          );
+          await this.tracker.set(claim.id, fineosId);
           profiler.done({
             message: "Submission complete",
             level: "debug",
@@ -66,8 +59,13 @@ export default class SimulationRunner {
         } catch (e) {
           // Track that the claim failed.
           logger.debug(e);
-          await this.tracker.set(claimId, e.toString(), true);
+          await this.tracker.set(claim.id, undefined, e.toString());
           profiler.done({ message: "Submission failed", level: "error" });
+        }
+        // Allow for a delay between submissions to allow us to stop mid-stream on a bigger batch
+        // if we need to.
+        if (delaySeconds > 0) {
+          await delay(delaySeconds * 1000);
         }
       } else {
         logger.debug(`Skipping`);

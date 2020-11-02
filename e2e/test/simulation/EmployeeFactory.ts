@@ -22,6 +22,7 @@ describe("Random generator", () => {
 describe("Employee pool generator", () => {
   let pool: EmployeeFactory;
   const claimA = {
+    id: "123",
     claim: {
       first_name: "John",
       last_name: "Doe",
@@ -33,6 +34,7 @@ describe("Employee pool generator", () => {
     financiallyIneligible: false,
   };
   const claimB = {
+    id: "123",
     claim: {
       first_name: "Dave",
       last_name: "Doe",
