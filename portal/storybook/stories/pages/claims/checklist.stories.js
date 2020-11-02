@@ -36,19 +36,19 @@ const scenarios = {
     claim: new MockClaimBuilder().create(),
     warnings: generateWarningsForStep(ClaimSteps.verifyId),
   },
-  "Leave step not started": {
-    claim: new MockClaimBuilder().create(),
-    warnings: generateWarningsForStep(ClaimSteps.leaveDetails),
-  },
   "Employer step not started": {
     claim: new MockClaimBuilder().create(),
     warnings: generateWarningsForStep(ClaimSteps.employerInformation),
+  },
+  "Leave step not started": {
+    claim: new MockClaimBuilder().create(),
+    warnings: generateWarningsForStep(ClaimSteps.leaveDetails),
   },
   "Part 1 ready for submit": {
     claim: new MockClaimBuilder().noOtherLeave().create(),
   },
   "Part 1 submitted": {
-    claim: new MockClaimBuilder().noOtherLeave().create(),
+    claim: new MockClaimBuilder().noOtherLeave().submitted().create(),
     query: {
       "part-one-submitted": "true",
     },

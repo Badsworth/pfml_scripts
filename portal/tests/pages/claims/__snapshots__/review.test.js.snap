@@ -123,6 +123,30 @@ exports[`Final Review Page when all data is present renders Review page with fin
     editText="Edit"
     level="2"
   >
+    Employment information
+  </ReviewHeading>
+  <ReviewRow
+    label="Employer's FEIN"
+    level="3"
+  >
+    12-3456789
+  </ReviewRow>
+  <ReviewRow
+    label="Notified employer"
+    level="3"
+  >
+    Notified employer on 1/1/2021
+  </ReviewRow>
+  <ReviewRow
+    label="Work schedule type"
+    level="3"
+  >
+    Consistent from week to week
+  </ReviewRow>
+  <ReviewHeading
+    editText="Edit"
+    level="2"
+  >
     Leave details
   </ReviewHeading>
   <ReviewRow
@@ -154,30 +178,6 @@ exports[`Final Review Page when all data is present renders Review page with fin
     level="3"
   >
     No
-  </ReviewRow>
-  <ReviewHeading
-    editText="Edit"
-    level="2"
-  >
-    Employment information
-  </ReviewHeading>
-  <ReviewRow
-    label="Employer's FEIN"
-    level="3"
-  >
-    12-3456789
-  </ReviewRow>
-  <ReviewRow
-    label="Notified employer"
-    level="3"
-  >
-    Notified employer on 1/1/2021
-  </ReviewRow>
-  <ReviewRow
-    label="Work schedule type"
-    level="3"
-  >
-    Consistent from week to week
   </ReviewRow>
   <ReviewHeading
     editText="Edit"
@@ -458,6 +458,31 @@ exports[`Part 1 Review Page when all data is present renders Review page with Pa
     **/**/****
   </ReviewRow>
   <ReviewHeading
+    editHref="/claims/employment-status?claim_id=mock_application_id"
+    editText="Edit"
+    level="3"
+  >
+    Employment information
+  </ReviewHeading>
+  <ReviewRow
+    label="Employer's FEIN"
+    level="4"
+  >
+    12-3456789
+  </ReviewRow>
+  <ReviewRow
+    label="Notified employer"
+    level="4"
+  >
+    Notified employer on 1/1/2021
+  </ReviewRow>
+  <ReviewRow
+    label="Work schedule type"
+    level="4"
+  >
+    Consistent from week to week
+  </ReviewRow>
+  <ReviewHeading
     editHref="/claims/leave-reason?claim_id=mock_application_id"
     editText="Edit"
     level="3"
@@ -493,31 +518,6 @@ exports[`Part 1 Review Page when all data is present renders Review page with Pa
     level="4"
   >
     No
-  </ReviewRow>
-  <ReviewHeading
-    editHref="/claims/employment-status?claim_id=mock_application_id"
-    editText="Edit"
-    level="3"
-  >
-    Employment information
-  </ReviewHeading>
-  <ReviewRow
-    label="Employer's FEIN"
-    level="4"
-  >
-    12-3456789
-  </ReviewRow>
-  <ReviewRow
-    label="Notified employer"
-    level="4"
-  >
-    Notified employer on 1/1/2021
-  </ReviewRow>
-  <ReviewRow
-    label="Work schedule type"
-    level="4"
-  >
-    Consistent from week to week
   </ReviewRow>
   <ReviewHeading
     editHref="/claims/employer-benefits?claim_id=mock_application_id"

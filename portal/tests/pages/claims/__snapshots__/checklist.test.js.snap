@@ -58,6 +58,36 @@ Array [
 
 exports[`Checklist renders description for Step 2`] = `
 Array [
+  "You will need to know:",
+  <ul
+    className="usa-list"
+    key="1"
+  >
+    <li
+      key="0"
+    >
+      Your employer’s 9-digit federal employer identification number (FEIN or EIN). 
+      <br
+        key="br-1"
+      />
+      <strong
+        key="strong-2"
+      >
+        Where to find this: 
+      </strong>
+      on your W-2 or 1099, or ask your employer’s finance department.
+    </li>
+    <li
+      key="1"
+    >
+      The date you told your employer you were taking leave.
+    </li>
+  </ul>,
+]
+`;
+
+exports[`Checklist renders description for Step 3`] = `
+Array [
   <p
     key="p-0"
   >
@@ -90,36 +120,6 @@ Array [
       key="1"
     >
       When you want your leave to begin and end.
-    </li>
-  </ul>,
-]
-`;
-
-exports[`Checklist renders description for Step 3`] = `
-Array [
-  "You will need to know:",
-  <ul
-    className="usa-list"
-    key="1"
-  >
-    <li
-      key="0"
-    >
-      Your employer’s 9-digit federal employer identification number (FEIN or EIN). 
-      <br
-        key="br-1"
-      />
-      <strong
-        key="strong-2"
-      >
-        Where to find this: 
-      </strong>
-      on your W-2 or 1099, or ask your employer’s finance department.
-    </li>
-    <li
-      key="1"
-    >
-      The date you told your employer you were taking leave.
     </li>
   </ul>,
 ]
@@ -263,39 +263,8 @@ exports[`Checklist renders multiple StepList components with list of Steps 1`] =
     <Step
       completedText="Completed"
       editable={true}
-      key="leaveDetails"
-      number={2}
-      status="disabled"
-      stepHref="/claims/leave-reason?claim_id=mock_application_id"
-      title="Enter leave details"
-    >
-      <Trans
-        components={
-          Object {
-            "healthcare-provider-form-link": <a
-              href="https://www.mass.gov/hcp-form"
-              rel="noopener"
-              target="_blank"
-            />,
-            "li": <li />,
-            "ul": <ul
-              className="usa-list"
-            />,
-          }
-        }
-        i18nKey="pages.claimsChecklist.stepHTMLDescription"
-        tOptions={
-          Object {
-            "context": "leaveDetails",
-          }
-        }
-      />
-    </Step>
-    <Step
-      completedText="Completed"
-      editable={true}
       key="employerInformation"
-      number={3}
+      number={2}
       status="disabled"
       stepHref="/claims/employment-status?claim_id=mock_application_id"
       title="Enter employment information"
@@ -318,6 +287,37 @@ exports[`Checklist renders multiple StepList components with list of Steps 1`] =
         tOptions={
           Object {
             "context": "employerInformation",
+          }
+        }
+      />
+    </Step>
+    <Step
+      completedText="Completed"
+      editable={true}
+      key="leaveDetails"
+      number={3}
+      status="disabled"
+      stepHref="/claims/leave-reason?claim_id=mock_application_id"
+      title="Enter leave details"
+    >
+      <Trans
+        components={
+          Object {
+            "healthcare-provider-form-link": <a
+              href="https://www.mass.gov/hcp-form"
+              rel="noopener"
+              target="_blank"
+            />,
+            "li": <li />,
+            "ul": <ul
+              className="usa-list"
+            />,
+          }
+        }
+        i18nKey="pages.claimsChecklist.stepHTMLDescription"
+        tOptions={
+          Object {
+            "context": "leaveDetails",
           }
         }
       />

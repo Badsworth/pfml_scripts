@@ -11,8 +11,8 @@ import routes from "../routes";
  */
 export const ClaimSteps = {
   verifyId: "verifyId",
-  leaveDetails: "leaveDetails",
   employerInformation: "employerInformation",
+  leaveDetails: "leaveDetails",
   otherLeave: "otherLeave",
   reviewAndConfirm: "reviewAndConfirm",
   payment: "payment",
@@ -244,22 +244,22 @@ export default class Step extends BaseModel {
       warnings,
     });
 
-    const leaveDetails = new Step({
-      name: ClaimSteps.leaveDetails,
-      editable: !claim.isSubmitted,
-      group: 1,
-      pages: pagesByStep[ClaimSteps.leaveDetails],
-      dependsOn: [verifyId],
-      context,
-      warnings,
-    });
-
     const employerInformation = new Step({
       name: ClaimSteps.employerInformation,
       editable: !claim.isSubmitted,
       group: 1,
       pages: pagesByStep[ClaimSteps.employerInformation],
-      dependsOn: [verifyId, leaveDetails],
+      dependsOn: [verifyId],
+      context,
+      warnings,
+    });
+
+    const leaveDetails = new Step({
+      name: ClaimSteps.leaveDetails,
+      editable: !claim.isSubmitted,
+      group: 1,
+      pages: pagesByStep[ClaimSteps.leaveDetails],
+      dependsOn: [verifyId, employerInformation],
       context,
       warnings,
     });
@@ -269,7 +269,7 @@ export default class Step extends BaseModel {
       editable: !claim.isSubmitted,
       group: 1,
       pages: pagesByStep[ClaimSteps.otherLeave],
-      dependsOn: [verifyId, leaveDetails],
+      dependsOn: [verifyId, leaveDetails, employerInformation],
       context,
       // TODO (CP-567): Pass in warnings when at least one of this step's required fields are
       // integrated with the API and has a validation rule
@@ -287,7 +287,7 @@ export default class Step extends BaseModel {
       initialPageRoute: claim.isBondingLeave
         ? routes.claims.bondingLeaveAttestation
         : routes.claims.review,
-      dependsOn: [verifyId, leaveDetails, employerInformation, otherLeave],
+      dependsOn: [verifyId, employerInformation, leaveDetails, otherLeave],
       context,
     });
 
@@ -297,8 +297,8 @@ export default class Step extends BaseModel {
       pages: pagesByStep[ClaimSteps.payment],
       dependsOn: [
         verifyId,
-        leaveDetails,
         employerInformation,
+        leaveDetails,
         otherLeave,
         reviewAndConfirm,
       ],
@@ -314,8 +314,8 @@ export default class Step extends BaseModel {
       pages: pagesByStep[ClaimSteps.uploadId],
       dependsOn: [
         verifyId,
-        leaveDetails,
         employerInformation,
+        leaveDetails,
         otherLeave,
         reviewAndConfirm,
       ],
@@ -330,8 +330,8 @@ export default class Step extends BaseModel {
       pages: pagesByStep[ClaimSteps.uploadCertification],
       dependsOn: [
         verifyId,
-        leaveDetails,
         employerInformation,
+        leaveDetails,
         otherLeave,
         reviewAndConfirm,
       ],
@@ -340,8 +340,8 @@ export default class Step extends BaseModel {
 
     return [
       verifyId,
-      leaveDetails,
       employerInformation,
+      leaveDetails,
       otherLeave,
       reviewAndConfirm,
       payment,

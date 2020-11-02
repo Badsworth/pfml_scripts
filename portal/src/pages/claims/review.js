@@ -196,6 +196,70 @@ export const Review = (props) => {
         **/**/****
       </ReviewRow>
 
+      {/* EMPLOYMENT INFO */}
+      <ReviewHeading
+        editHref={getStepEditHref(ClaimSteps.employerInformation)}
+        editText={t("pages.claimsReview.editLink")}
+        level={reviewHeadingLevel}
+      >
+        {t("pages.claimsReview.stepHeading", {
+          context: "employerInformation",
+        })}
+      </ReviewHeading>
+      {/* TODO (CP-1281): Show employment status when Portal supports other employment statuses */}
+      {isFeatureEnabled("claimantShowEmploymentStatus") &&
+        get(claim, "employment_status") && (
+          <ReviewRow
+            level={reviewRowLevel}
+            label={t("pages.claimsReview.employmentStatusLabel")}
+          >
+            {t("pages.claimsReview.employmentStatusValue", {
+              context: findKeyByValue(
+                EmploymentStatus,
+                get(claim, "employment_status")
+              ),
+            })}
+          </ReviewRow>
+        )}
+
+      {get(claim, "employment_status") === EmploymentStatus.employed && ( // only display this if the claimant is Employed
+        <ReviewRow
+          level={reviewRowLevel}
+          label={t("pages.claimsReview.employerFeinLabel")}
+        >
+          {get(claim, "employer_fein")}
+        </ReviewRow>
+      )}
+
+      {get(claim, "employment_status") === EmploymentStatus.employed && ( // only display this if the claimant is Employed
+        <ReviewRow
+          level={reviewRowLevel}
+          label={t("pages.claimsReview.employerNotifiedLabel")}
+        >
+          {t("pages.claimsReview.employerNotifiedValue", {
+            context: (!!get(
+              claim,
+              "leave_details.employer_notified"
+            )).toString(),
+            date: DateTime.fromISO(
+              get(claim, "leave_details.employer_notification_date")
+            ).toLocaleString(),
+          })}
+        </ReviewRow>
+      )}
+
+      <ReviewRow
+        level={reviewRowLevel}
+        label={t("pages.claimsReview.workPatternTypeLabel")}
+      >
+        {t("pages.claimsReview.workPatternTypeValue", {
+          context: findKeyByValue(
+            WorkPatternType,
+            get(claim, "work_pattern.work_pattern_type")
+          ),
+        })}
+      </ReviewRow>
+
       {/* LEAVE DETAILS */}
       <ReviewHeading
         editHref={getStepEditHref(ClaimSteps.leaveDetails)}
@@ -339,70 +403,6 @@ export const Review = (props) => {
           />
         </ReviewRow>
       )}
-
-      {/* EMPLOYMENT INFO */}
-      <ReviewHeading
-        editHref={getStepEditHref(ClaimSteps.employerInformation)}
-        editText={t("pages.claimsReview.editLink")}
-        level={reviewHeadingLevel}
-      >
-        {t("pages.claimsReview.stepHeading", {
-          context: "employerInformation",
-        })}
-      </ReviewHeading>
-      {/* TODO (CP-1281): Show employment status when Portal supports other employment statuses */}
-      {isFeatureEnabled("claimantShowEmploymentStatus") &&
-        get(claim, "employment_status") && (
-          <ReviewRow
-            level={reviewRowLevel}
-            label={t("pages.claimsReview.employmentStatusLabel")}
-          >
-            {t("pages.claimsReview.employmentStatusValue", {
-              context: findKeyByValue(
-                EmploymentStatus,
-                get(claim, "employment_status")
-              ),
-            })}
-          </ReviewRow>
-        )}
-
-      {get(claim, "employment_status") === EmploymentStatus.employed && ( // only display this if the claimant is Employed
-        <ReviewRow
-          level={reviewRowLevel}
-          label={t("pages.claimsReview.employerFeinLabel")}
-        >
-          {get(claim, "employer_fein")}
-        </ReviewRow>
-      )}
-
-      {get(claim, "employment_status") === EmploymentStatus.employed && ( // only display this if the claimant is Employed
-        <ReviewRow
-          level={reviewRowLevel}
-          label={t("pages.claimsReview.employerNotifiedLabel")}
-        >
-          {t("pages.claimsReview.employerNotifiedValue", {
-            context: (!!get(
-              claim,
-              "leave_details.employer_notified"
-            )).toString(),
-            date: DateTime.fromISO(
-              get(claim, "leave_details.employer_notification_date")
-            ).toLocaleString(),
-          })}
-        </ReviewRow>
-      )}
-
-      <ReviewRow
-        level={reviewRowLevel}
-        label={t("pages.claimsReview.workPatternTypeLabel")}
-      >
-        {t("pages.claimsReview.workPatternTypeValue", {
-          context: findKeyByValue(
-            WorkPatternType,
-            get(claim, "work_pattern.work_pattern_type")
-          ),
-        })}
-      </ReviewRow>
 
       {/* OTHER LEAVE */}
       <ReviewHeading
