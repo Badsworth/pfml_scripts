@@ -22,14 +22,6 @@ resource "aws_ssm_parameter" "db_password" {
   value = random_password.rds_super_password.result
 }
 
-# API-752: Will be deleted in the near future.
-resource "aws_db_subnet_group" "rds_postgres" {
-  name        = "massgov-pfml-${var.environment_name}-rds"
-  description = "Mass RDS DB subnet group"
-  subnet_ids  = var.vpc_app_subnet_ids
-}
-
-# API-752: Will be used in the near future.
 resource "aws_db_subnet_group" "rds_postgres_dbprivate" {
   name        = "${local.app_name}-${var.environment_name}-rds"
   description = "Mass RDS DB subnet group"
@@ -103,7 +95,7 @@ resource "aws_db_instance" "default" {
   apply_immediately           = true  # enact changes immediately instead of waiting for a "maintenance window"
   copy_tags_to_snapshot       = true  # not applicable right now, but useful in the future
 
-  db_subnet_group_name = aws_db_subnet_group.rds_postgres.name
+  db_subnet_group_name = aws_db_subnet_group.rds_postgres_dbprivate.name
   parameter_group_name = aws_db_parameter_group.postgres11.name
 
   monitoring_interval = 30
