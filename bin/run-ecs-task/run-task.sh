@@ -56,6 +56,7 @@ AWS_ARGS=("--region=us-east-1"
     "--started-by=$AUTHOR"
     "--task-definition=$TASK_DEFINITION"
     "--launch-type=FARGATE"
+    "--platform-version=1.4.0"
     --network-configuration "$NETWORK_CONFIG"
     )
 
