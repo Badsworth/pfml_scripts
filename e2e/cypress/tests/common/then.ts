@@ -81,32 +81,7 @@ Then("I start submitting the claim", function (this: CypressStepThis): void {
     throw new Error("Application has not been set");
   }
   const { application } = this;
-  const reason = application.leave_details && application.leave_details.reason;
-  const reasonQualifier =
-    application.leave_details && application.leave_details.reason_qualifier;
-  type ClaimTypePortal = {
-    [index: string]: string;
-  };
-  const claimType: ClaimTypePortal = {
-    "Serious Health Condition - Employee":
-      "I can’t work due to an illness, injury, or pregnancy.",
-    "Child Bonding":
-      "I need to bond with my child after birth, adoption, or foster placement.",
-    "Care For A Family Member":
-      "I need to manage family affairs while a family member is on active duty in the armed forces.",
-    "Pregnancy/Maternity":
-      "I need to care for a family member who serves in the armed forces.",
-  };
-  const leaveReason: ClaimTypePortal = {
-    Newborn: "Birth",
-    Adoption: "Adoption",
-    "Foster Care": "Foster placement",
-  };
-  cy.contains(claimType[reason as string]).click();
-  if (reason === "Child Bonding") {
-    cy.contains(leaveReason[reasonQualifier as string]).click();
-  }
-  cy.contains("button", "Save and continue").click();
+  portal.selectClaimType(application);
 });
 
 Then("I have my identity verified {string}", function (
@@ -165,17 +140,13 @@ Then("I enter employer info", function (this: CypressStepThis): void {
   portal.enterEmployerInfo(application);
 });
 
-Then("I enter {string} date", function (
-  this: CypressStepThis,
-  dateType: string
-): void {
+Then("I enter {string} date", function (this: CypressStepThis): void {
   if (!this.application) {
     throw new Error("Application has not been set");
   }
   const { application } = this;
 
-  portal.enterBondingDateInfo(dateType, application);
-  cy.contains("button", "Save and continue").click();
+  portal.enterBondingDateInfo(application);
 });
 
 // reportOtherBenefits

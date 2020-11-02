@@ -12,5 +12,6 @@
   "retries": 1,
   "testFiles": "**/*.feature",
   "viewportWidth": 2000,
-  "viewportHeight": 1320
+  "viewportHeight": 1320,
+  "ignoreTestFiles": ["**/medical/*.feature"]
 }

@@ -2,7 +2,7 @@ Feature: Upload a document in FINEOS and see it has been uploaded in the portal
 
   @portal
   Scenario: I upload Part One and Payment information of a HAP1 claim
-    Given I begin to submit a "MHAP1" claim as a "financially eligible" employee
+    Given I begin to submit a "BHAP1" claim as a "financially eligible" employee
     And Part One of the claim has been submitted
     And I have added payment information
 

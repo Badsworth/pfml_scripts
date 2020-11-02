@@ -160,30 +160,41 @@ export function selectClaimType(application: ApplicationRequestBody): void {
   // Preceeded by - "I click on the checklist button called {string}"
   //                with the label "Enter leave details"
   const reason = application.leave_details && application.leave_details.reason;
+  const reasonQualifier =
+    application.leave_details && application.leave_details.reason_qualifier;
   type ClaimTypePortal = {
     [index: string]: string;
   };
   const claimType: ClaimTypePortal = {
     "Serious Health Condition - Employee":
       "I can’t work due to an illness, injury, or pregnancy.",
-    "Child Bonding": "I need to bond with my child after birth or placement.",
+    "Child Bonding":
+      "I need to bond with my child after birth, adoption, or foster placement.",
     "Care For A Family Member":
       "I need to manage family affairs while a family member is on active duty in the armed forces.",
     "Pregnancy/Maternity":
       "I need to care for a family member who serves in the armed forces.",
   };
+  const leaveReason: ClaimTypePortal = {
+    Newborn: "Birth",
+    Adoption: "Adoption",
+    "Foster Care": "Foster placement",
+  };
   cy.contains(claimType[reason as string]).click();
+  if (reason === "Child Bonding") {
+    cy.contains(leaveReason[reasonQualifier as string]).click();
+  }
   cy.contains("button", "Save and continue").click();
 }
 
 export function answerPregnancyQuestion(
   application: ApplicationRequestBody
 ): void {
-  if (
-    application.leave_details?.reason !== "Serious Health Condition - Employee"
-  ) {
-    throw new Error("Reason besides Serious Health Condition was entered");
-  }
+  // if (
+  //   application.leave_details?.reason !== "Serious Health Condition - Employee"
+  // ) {
+  //   throw new Error("Reason besides Serious Health Condition was entered");
+  // }
   // Example of selecting a radio button pertaining to a particular question. Scopes the lookup
   // of the "yes" value so we don't select "yes" for the wrong question.
   cy.contains(
@@ -493,9 +504,10 @@ export function addLeaveDocs(leaveType: string): void {
 }
 
 export function enterBondingDateInfo(
-  dateType: string,
   application: ApplicationRequestBody
 ): void {
+  const dateType =
+    application.leave_details && application.leave_details.reason_qualifier;
   switch (dateType) {
     case "Newborn":
       cy.contains("fieldset", "When was your child born?").within(() => {
@@ -527,6 +539,7 @@ export function enterBondingDateInfo(
     default:
       throw new Error("Unknown Reason Qualifier");
   }
+  cy.contains("button", "Save and continue").click();
 }
 
 export function reviewAndSubmit(): void {
@@ -622,23 +635,33 @@ export function confirmEligibleParent(): void {
 }
 
 export function submitClaimPartOne(application: ApplicationRequestBody): void {
+  const reason = application.leave_details && application.leave_details.reason;
+  const reasonQualifier =
+    application.leave_details && application.leave_details.reason_qualifier;
+
   clickChecklistButton("Verify your identity");
   verifyIdentity(application, "normal");
   onPage("checklist");
+  clickChecklistButton("Enter employment information");
+  enterEmployerInfo(application);
+  onPage("checklist");
   clickChecklistButton("Enter leave details");
   selectClaimType(application);
-  answerPregnancyQuestion(application);
+  enterBondingDateInfo(application);
+  if (reasonQualifier === "Newborn") {
+    answerPregnancyQuestion(application);
+  }
   answerContinuousLeaveQuestion(application);
   answerReducedLeaveQuestion(application);
   answerIntermittentLeaveQuestion(application);
-  onPage("checklist");
-  clickChecklistButton("Enter employment information");
-  enterEmployerInfo(application);
   onPage("checklist");
   clickChecklistButton("Report other leave, income, and benefits");
   reportOtherBenefits();
   onPage("checklist");
   clickChecklistButton("Review and confirm");
+  if (reason === "Child Bonding") {
+    confirmEligibleParent();
+  }
   onPage("review");
   confirmInfo();
 }
