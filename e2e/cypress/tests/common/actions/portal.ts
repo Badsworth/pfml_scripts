@@ -92,7 +92,7 @@ export function startSubmit(
 
 export function clickChecklistButton(label: string): void {
   cy.contains(label)
-    .parentsUntil(".display-flex.border-bottom.border-base-light.padding-y-4")
+    .parents(".display-flex.border-bottom.border-base-light.padding-y-3")
     .contains("a", "Start")
     .click();
 }
