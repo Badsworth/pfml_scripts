@@ -45,3 +45,17 @@ jobs:
         run: |
           echo Cypress finished with: ${{ steps.cypress.outcome }}
           echo See results at ${{ steps.cypress.outputs.dashboardUrl }}
+  withdraw:
+    name: Claim Withdraw Script
+    runs-on: ubuntu-latest
+    env: { CYPRESS_INSTALL_BINARY: 0 }
+    steps:
+      - uses: actions/checkout@v2
+      - name: Setup Node
+        uses: actions/setup-node@v1
+        with: { node-version: 12.x }
+      - name: "Install Dependencies"
+        run: npm ci
+      - name: "Claim Withdraw Script"
+        run: npm run cli -- simulation claim-withdraw
+

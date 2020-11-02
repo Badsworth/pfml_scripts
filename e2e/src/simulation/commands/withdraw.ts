@@ -16,35 +16,40 @@ const cmd: CommandModule<SystemWideArgs, SystemWideArgs> = {
       defaultViewport: { width: 1200, height: 1000 },
     });
     const page = await browser.newPage();
-    await page.goto(`${getFineosBaseUrl()}/`);
-    const em = await getEmployee("financially eligible");
-    await goToEmployee(page, em.tax_identifier);
-    await goToLeavePeriods(page, args, browser);
+    try {
+      await page.goto(`${getFineosBaseUrl()}/`);
+      const em = await getEmployee("financially eligible");
+      await goToEmployee(page, em.tax_identifier);
+      await goToLeavePeriods(page);
 
-    // Gather All Case Number in Table
-    await page.waitForTimeout(5000);
-    const claimNumbers = await page.$$eval(".PageLinkBeanDescriptor", (links) =>
-      links.map((link) => link.innerHTML)
-    );
+      // Gather All Case Number in Table. In order to accomodate
+      await page.waitForSelector(
+        '.ListView[lvname="entitlementPeriodLeaveRequestListviewWidget"] a[id*="ViewAbsenceCase"]'
+      );
+      const claimNumbers = await page.$$eval(
+        '.ListView[lvname="entitlementPeriodLeaveRequestListviewWidget"] a[id*="ViewAbsenceCase"]',
+        (links) => links.map((link) => link.innerHTML)
+      );
 
-    for (const claimNumber of claimNumbers) {
-      if (claimNumber.includes("NTN")) {
-        await actions.gotoCase(page, await claimNumber);
+      for (const claimNumber of claimNumbers) {
+        args.logger.info(`Withdrawing ${claimNumber}`);
+        await actions.gotoCase(page, claimNumber);
         await actions.withdrawClaim(page);
       }
-    }
 
-    args.logger.info(
-      `Successfully withdrew ${claimNumbers.length - 1} claims!`
-    );
-    await browser.close();
+      args.logger.info(
+        `Successfully withdrew ${claimNumbers.length - 1} claims!`
+      );
+    } finally {
+      await browser.close();
+    }
   },
 };
 
 // Supporting Functions
 async function goToEmployee(page: puppeteer.Page, employeeSSN: string) {
   await page
-    .$(`.menulink a.Link[aria-label="Parties"]`)
+    .waitForSelector(`.menulink a.Link[aria-label="Parties"]`)
     .then((el) => actions.click(page, el));
   await actions
     .labelled(page, "Identification Number")
@@ -57,23 +62,9 @@ async function goToEmployee(page: puppeteer.Page, employeeSSN: string) {
     .then((el) => actions.click(page, el));
 }
 
-async function goToLeavePeriods(
-  page: puppeteer.Page,
-  args: SystemWideArgs,
-  browswer: puppeteer.Browser
-): Promise<void> {
+async function goToLeavePeriods(page: puppeteer.Page): Promise<void> {
   await actions.clickTab(page, "Leave Information");
   await actions.clickTab(page, "Entitlement Periods");
-  await page.waitForTimeout(5000);
-  const claimAmount = await page
-    .$(
-      "#entitlementPeriodLeaveRequestListviewWidget_un82_entitlementPeriodLeaveRequestListviewWidget_NumRowsInList"
-    )
-    .then((el) => el?.getProperty("innerText").then((val) => val.jsonValue()));
-  if (claimAmount === "0-0 of 0") {
-    args.logger.info("No Claims to Withdraw");
-    await browswer.close();
-  }
 }
 
 async function getEmployee(
