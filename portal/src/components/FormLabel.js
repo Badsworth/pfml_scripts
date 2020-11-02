@@ -28,19 +28,22 @@ function FormLabel({
 
   const hintClasses = classnames("display-block line-height-sans-5 measure-5", {
     // Use hint styling for small labels
-    "usa-hint": small,
+    "usa-hint text-base-darkest": small,
     // Use lead styling for regular labels
     "usa-intro": !small,
   });
 
-  const exampleClasses = "display-block line-height-sans-5 usa-hint measure-5";
+  const exampleClasses =
+    "display-block line-height-sans-5 usa-hint text-base-dark measure-5";
 
   return (
     <React.Fragment>
       <LabelElement className={labelClasses} htmlFor={props.inputId}>
         {props.children}
         {props.optionalText && (
-          <span className="usa-hint text-normal"> {props.optionalText}</span>
+          <span className="usa-hint text-base-dark text-normal">
+            {" " + props.optionalText}
+          </span>
         )}
       </LabelElement>
 

@@ -80,7 +80,7 @@ describe("FormLabel", () => {
 
         expect(hint).toMatchInlineSnapshot(`
           <span
-            className="display-block line-height-sans-5 measure-5 usa-hint"
+            className="display-block line-height-sans-5 measure-5 usa-hint text-base-darkest"
           >
             Hint text
           </span>
@@ -96,7 +96,7 @@ describe("FormLabel", () => {
 
       expect(example).toMatchInlineSnapshot(`
         <span
-          className="display-block line-height-sans-5 usa-hint measure-5"
+          className="display-block line-height-sans-5 usa-hint text-base-dark measure-5"
         >
           Example text
         </span>
@@ -111,10 +111,9 @@ describe("FormLabel", () => {
 
       expect(node).toMatchInlineSnapshot(`
         <span
-          className="usa-hint text-normal"
+          className="usa-hint text-base-dark text-normal"
         >
-           
-          (optional)
+           (optional)
         </span>
       `);
     });

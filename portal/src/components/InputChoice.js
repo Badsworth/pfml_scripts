@@ -28,7 +28,7 @@ function InputChoice({ type = "checkbox", ...props }) {
         {props.label}
 
         {props.hint && (
-          <span className="usa-hint">
+          <span className="usa-hint text-base-dark">
             <br />
             {props.hint}
           </span>
