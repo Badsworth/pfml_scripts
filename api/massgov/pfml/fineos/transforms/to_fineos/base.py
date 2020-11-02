@@ -1,4 +1,5 @@
 import abc
+from datetime import date
 from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel
@@ -32,7 +33,10 @@ class TransformEformAttributes:
             attribute_name = f"{cls.ATTRIBUTE_MAP[key]['name']}{suffix}"
             attribute_type = cls.ATTRIBUTE_MAP[key]["type"]
             attribute = EFormAttribute(name=attribute_name)
-            setattr(attribute, attribute_type, getattr(target, key))
+            attribute_value = getattr(target, key)
+            if isinstance(attribute_value, date):
+                attribute_value = attribute_value.strftime("%Y-%m-%d")
+            setattr(attribute, attribute_type, attribute_value)
             transformed.append(attribute)
         return transformed
 

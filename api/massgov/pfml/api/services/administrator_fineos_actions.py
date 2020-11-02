@@ -16,6 +16,7 @@ from massgov.pfml.fineos.transforms.from_fineos.eforms import (
     TransformOtherIncomeEform,
     TransformOtherLeaveEform,
 )
+from massgov.pfml.fineos.transforms.to_fineos.eforms import EFormBody
 
 logger = logging.get_logger(__name__)
 
@@ -140,3 +141,8 @@ def get_claim_as_leave_admin(
     except massgov.pfml.fineos.FINEOSClientError as error:
         logger.exception("FINEOS Client Exception", extra={"error": error})
         raise ValueError("FINEOS Client Exception")
+
+
+def create_eform(user_id: str, absence_id: str, eform: EFormBody) -> None:
+    fineos = massgov.pfml.fineos.create_client()
+    fineos.create_eform(user_id, absence_id, eform)

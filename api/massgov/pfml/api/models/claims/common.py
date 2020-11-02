@@ -54,6 +54,7 @@ class EmployerClaimReview(PydanticBaseModel):
 
     comment: Optional[str]
     employer_benefits: List[EmployerBenefit]
-    employer_notification_date: Optional[date]
     hours_worked_per_week: Optional[int]
     previous_leaves: List[PreviousLeave]
+    employer_decision: Optional[str]
+    fraud: Optional[str]

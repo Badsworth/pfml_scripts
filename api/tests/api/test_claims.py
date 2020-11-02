@@ -66,15 +66,22 @@ def test_non_employees_cannot_access_employer_update_claim_review(client, auth_t
         "employer_benefits": [
             {
                 "benefit_amount_dollars": 0,
-                "benefit_amount_frequency": "string",
+                "benefit_amount_frequency": "Per Day",
                 "benefit_end_date": "1970-01-01",
                 "benefit_start_date": "1970-01-01",
-                "benefit_type": "string",
+                "benefit_type": "Accrued Paid Leave",
             }
         ],
-        "employer_notification_date": "1970-01-01",
+        "employer_decision": "Approve",
+        "fraud": "Yes",
         "hours_worked_per_week": 0,
-        "previous_leaves": [{"leave_end_date": "1970-01-01", "leave_start_date": "1970-01-01"}],
+        "previous_leaves": [
+            {
+                "leave_end_date": "1970-01-01",
+                "leave_start_date": "1970-01-01",
+                "leave_type": "Pregnancy/Maternity",
+            }
+        ],
     }
 
     response = client.patch(
@@ -86,25 +93,43 @@ def test_non_employees_cannot_access_employer_update_claim_review(client, auth_t
     assert response.status_code == 403
 
 
-def test_employees_receive_200_from_employer_update_claim_review(client, employer_auth_token):
+def test_employees_receive_200_from_employer_update_claim_review(
+    client, employer_user, employer_auth_token, test_db_session
+):
+    employer = EmployerFactory.create()
+    link = UserLeaveAdministrator(
+        user_id=employer_user.user_id,
+        employer_id=employer.employer_id,
+        fineos_web_id="fake-fineos-web-id",
+    )
+    test_db_session.add(link)
+    test_db_session.commit()
+
     update_request_body = {
         "comment": "string",
         "employer_benefits": [
             {
                 "benefit_amount_dollars": 0,
-                "benefit_amount_frequency": "string",
+                "benefit_amount_frequency": "Per Day",
                 "benefit_end_date": "1970-01-01",
                 "benefit_start_date": "1970-01-01",
-                "benefit_type": "string",
+                "benefit_type": "Accrued Paid Leave",
             }
         ],
-        "employer_notification_date": "1970-01-01",
+        "employer_decision": "Approve",
+        "fraud": "Yes",
         "hours_worked_per_week": 0,
-        "previous_leaves": [{"leave_end_date": "1970-01-01", "leave_start_date": "1970-01-01"}],
+        "previous_leaves": [
+            {
+                "leave_end_date": "1970-01-01",
+                "leave_start_date": "1970-01-01",
+                "leave_type": "Pregnancy/Maternity",
+            }
+        ],
     }
 
     response = client.patch(
-        "/v1/employers/claims/3/review",
+        "/v1/employers/claims/NTN-100-ABS-01/review",
         headers={"Authorization": f"Bearer {employer_auth_token}"},
         json=update_request_body,
     )

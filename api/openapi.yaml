@@ -268,7 +268,7 @@ paths:
                 $ref: "#/components/schemas/ErrorResponse"
     patch:
       tags:
-        - Employers
+        - Claims
       summary: Save review claim from leave admin
       operationId: massgov.pfml.api.claims.employer_update_claim_review
       parameters:
@@ -276,7 +276,8 @@ paths:
           in: path
           schema:
             type: string
-          description: ID of claim to update
+            example: "NTN-00-ABS-00"
+          description: ID of absence to update
           required: true
       responses:
         "200":
@@ -1054,8 +1055,6 @@ components:
     EmployerClaimRequestBody:
       type: object
       properties:
-        employer_notification_date:
-          $ref: "#/components/schemas/Date"
         employer_benefits:
           type: array
           items:
@@ -1066,11 +1065,21 @@ components:
             $ref: "#/components/schemas/PreviousLeave"
         hours_worked_per_week:
           type: integer
+        employer_decision:
+          type: string
+          enum:
+            - Approve
+            - Deny
+            - Requires More Information
+        fraud:
+          type: string
+          enum:
+            - "Yes"
+            - "No"
         comment:
           type: string
       additionalProperties: false
       required:
-        - employer_notification_date
         - employer_benefits
         - previous_leaves
         - hours_worked_per_week
@@ -1091,12 +1100,22 @@ components:
           type: integer
         benefit_amount_frequency:
           type: string
+          enum:
+            - Per Day
+            - Per Week
+            - Per Month
+            - In Total  
         benefit_end_date:
           $ref: "#/components/schemas/Date"
         benefit_start_date:
           $ref: "#/components/schemas/Date"
         benefit_type:
           type: string
+          enum:
+            - Accrued Paid Leave
+            - Short Term Disability
+            - Permanent Disability Insurance
+            - Family or Medical Leave Insurance
 
     PreviousLeave:
       type: object
@@ -1105,6 +1124,15 @@ components:
           $ref: "#/components/schemas/Date"
         leave_start_date:
           $ref: "#/components/schemas/Date"
+        leave_type:
+          type: string
+          enum:
+            - Pregnancy/Maternity
+            - Serious Health Condition
+            - Care of Family Member
+            - Child Bonding
+            - Military Caregiver
+            - Military Exigency Family
 
     ApplicationRequestBody:
       allOf:

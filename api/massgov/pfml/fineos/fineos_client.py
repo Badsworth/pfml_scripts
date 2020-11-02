@@ -4,6 +4,7 @@
 
 import base64
 import datetime
+import json
 import os.path
 import urllib.parse
 import xml.etree.ElementTree
@@ -17,6 +18,7 @@ import requests_oauthlib
 import xmlschema
 
 import massgov.pfml.util.logging
+from massgov.pfml.fineos.transforms.to_fineos.eforms import EFormBody
 from massgov.pfml.util.converters.json_to_obj import set_empty_dates_to_none
 
 from . import client, exception, models
@@ -331,6 +333,25 @@ class FINEOSClient(client.AbstractFINEOSClient):
             "GET", f"groupClient/cases/{absence_id}/eforms/{eform_id}/readEform", user_id
         )
         return models.group_client_api.EForm.parse_obj(response.json())
+
+    def create_eform(self, user_id: str, absence_id: str, eform: EFormBody) -> None:
+        eform_json = []
+        for eformAttribute in eform.eformAttributes:
+            cleanedEformAttribute = dict()
+            for key, value in dict(eformAttribute).items():
+                if value is not None:
+                    cleanedEformAttribute[key] = value
+            if len(cleanedEformAttribute) > 1:
+                eform_json.append(cleanedEformAttribute)
+
+        encoded_eform_type = urllib.parse.quote(eform.eformType)
+
+        self._group_client_api(
+            "POST",
+            f"groupClient/cases/{absence_id}/addEForm/{encoded_eform_type}",
+            user_id,
+            data=json.dumps(eform_json),
+        )
 
     def get_absence_occupations(
         self, user_id: str, absence_id: str

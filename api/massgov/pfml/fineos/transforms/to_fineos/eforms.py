@@ -14,34 +14,33 @@ class EFormBody(BaseModel):
         None, description="Name of the EForm document type", min_length=0, max_length=200
     )
     eformId: Optional[int]
-    eformAttributes: Optional[List[EFormAttribute]] = Field(
-        None, description="An array of EForm attributes."
-    )
+    eformAttributes: List[EFormAttribute] = Field(None, description="An array of EForm attributes.")
 
 
 class TransformEmployerBenefit(TransformEformAttributes):
     ATTRIBUTE_MAP = {
         "benefit_amount_dollars": {"name": "Amount", "type": "decimalValue"},
         "benefit_amount_frequency": {"name": "Frequency", "type": "stringValue"},
-        "benefit_start_date": {"name": "StartDate", "type": "dateValue"},
-        "benefit_end_date": {"name": "EndDate", "type": "dateValue"},
-        "benefit_type": {"name": "WRT", "type": "enumValue"},
+        "benefit_start_date": {"name": "EmployerBenefitStartDate", "type": "dateValue"},
+        "benefit_end_date": {"name": "EmployerBenefitenddate", "type": "dateValue"},
+        "benefit_type": {"name": "EmployerBenefitType", "type": "stringValue"},
     }
 
 
 class TransformPreviousLeave(TransformEformAttributes):
     ATTRIBUTE_MAP = {
-        "leave_start_date": {"name": "StartDate", "type": "dateValue"},
-        "leave_end_date": {"name": "EndDate", "type": "dateValue"},
-        "leave_type": {"name": "PrimaryReason", "type": "stringValue"},
+        "leave_start_date": {"name": "PastLeaveStartDate", "type": "dateValue"},
+        "leave_end_date": {"name": "Pastleaveenddate", "type": "dateValue"},
+        "leave_type": {"name": "NatureofLeave", "type": "stringValue"},
     }
 
 
 class TransformOtherInfo(TransformEformAttributes):
     ATTRIBUTE_MAP = {
-        "comment": {"name": "comment", "type": "stringValue"},
-        "employer_notification_date": {"name": "notifiedDate", "type": "dateValue"},
-        "hours_worked_per_week": {"name": "HoursWorked", "type": "integerValue"},
+        "comment": {"name": "Comment", "type": "stringValue"},
+        "hours_worked_per_week": {"name": "AverageWeeklyHoursWorked", "type": "decimalValue"},
+        "employer_decision": {"name": "EmployerDecision", "type": "stringValue"},
+        "fraud": {"name": "Fraud1", "type": "stringValue"},
     }
 
 
@@ -56,4 +55,4 @@ class TransformEmployerClaimReview(BaseModel):
             )
         )
 
-        return EFormBody(eformType="Employer Info Request", eformAttributes=attributes)
+        return EFormBody(eformType="Employer Response to Leave Request", eformAttributes=attributes)

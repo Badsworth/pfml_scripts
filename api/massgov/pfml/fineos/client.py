@@ -5,6 +5,8 @@
 import abc
 import typing
 
+from massgov.pfml.fineos.transforms.to_fineos.eforms import EFormBody
+
 from . import models
 
 
@@ -78,6 +80,9 @@ class AbstractFINEOSClient(abc.ABC, metaclass=abc.ABCMeta):
     def get_eform(
         self, user_id: str, absence_id: str, eform_id: str
     ) -> models.group_client_api.EForm:
+        pass
+
+    def create_eform(self, user_id: str, absence_id: str, eform: EFormBody) -> None:
         pass
 
     @abc.abstractmethod
