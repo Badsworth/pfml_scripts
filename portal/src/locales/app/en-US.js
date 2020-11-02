@@ -5,6 +5,19 @@
  *
  */
 
+// When editing this file, be mindful that many of its strings use non-breaking
+// hyphen and non-breaking space characters.
+// https://alignedonline.com/non%E2%80%91breaking-spaces
+const chars = {
+  // Non-breaking hyphen characters are used in phone and fax numbers to avoid
+  // the numbers awkwardly wrapping to multiple lines.
+  nbhyphen: "‑",
+  // Non-breaking space characters are used to keep cardinal adjectives on the
+  // same line as the nouns they describe or between the last two words of a
+  // sentence to prevent line breaks that would cause orphaned words.
+  nbsp: " ",
+};
+
 const errors = {
   auth: {
     codeDeliveryFailure:
@@ -107,7 +120,7 @@ const errors = {
         },
         start_date: {
           minimum:
-            "Paid Family and Medical Leave cannot be taken before Jan 1, 2021. Enter a date after December 31, 2020.",
+            "Paid Family and Medical Leave cannot be taken before Jan 1, 2021. Enter a date after December$t(chars.nbsp)31,$t(chars.nbsp)2020.",
           required: "Enter a start date for this continuous leave period.",
         },
       },
@@ -139,7 +152,7 @@ const errors = {
         },
         start_date: {
           minimum:
-            "Paid Family and Medical Leave cannot be taken before Jan 1, 2021. Enter a date after December 31, 2020.",
+            "Paid Family and Medical Leave cannot be taken before Jan 1, 2021. Enter a date after December$t(chars.nbsp)31,$t(chars.nbsp)2020.",
           required: "Enter a start date for this intermittent leave period.",
         },
       },
@@ -161,7 +174,7 @@ const errors = {
         },
         start_date: {
           minimum:
-            "Paid Family and Medical Leave cannot be taken before Jan 1, 2021. Enter a date after December 31, 2020.",
+            "Paid Family and Medical Leave cannot be taken before Jan 1, 2021. Enter a date after December$t(chars.nbsp)31,$t(chars.nbsp)2020.",
           required: "Enter a start date for this reduced leave period.",
         },
       },
@@ -271,11 +284,10 @@ const shared = {
   claimsLeaveDurationTitle: "Leave duration",
   claimsOtherLeaveTitle: "Other leave, income, and benefits",
   claimsVerifyIdTitle: "Your identity",
-  contactCenterAddress: "PO Box 838 Lawrence, MA 01843",
-  // Phone and Fax numbers use non-breaking hyphens to avoid awkward text wrapping
-  // https://alignedonline.com/non%E2%80%91breaking-spaces
-  contactCenterFaxNumber: "617‑855‑6180",
-  contactCenterPhoneNumber: "833‑344‑7365",
+  contactCenterAddress:
+    "PO Box 838$t(chars.nbsp)Lawrence, MA$t(chars.nbsp)01843",
+  contactCenterFaxNumber: "617$t(chars.nbhyphen)855$t(chars.nbhyphen)6180",
+  contactCenterPhoneNumber: "833$t(chars.nbhyphen)344$t(chars.nbhyphen)7365",
   documentsRequestError:
     "An error was encountered while checking your application for documents. If this continues to happen, you may call the Paid Family Leave Contact Center at $t(shared.contactCenterPhoneNumber)",
   employerBenefitEntryPrefix: "Benefit",
@@ -308,15 +320,13 @@ const shared = {
   otherIncomeType_otherEmployer: "Earnings from another employer",
   otherIncomeType_railroadRetirement: "Railroad Retirement benefits",
   otherIncomeType_retirementDisability:
-    "Disability benefits under a governmental retirement plan",
+    "Disability benefits under a governmental retirement$t(chars.nbsp)plan",
   otherIncomeType_selfEmployment: "Earnings from self-employment",
   otherIncomeType_ssdi: "Social Security Disability Insurance",
   otherIncomeType_unemployment: "Unemployment Insurance",
   otherIncomeType_workersCompensation: "Workers Compensation",
-  // passwordHint uses non-breaking spaces to keep cardinal adjectives on the
-  // same line as the nouns they describe.
   passwordHint:
-    "Your password must be at least 12 characters long and include at least 1 number, 1 symbol, and both uppercase and lowercase letters.",
+    "Your password must be at least 12$t(chars.nbsp)characters long and include at least 1$t(chars.nbsp)number, 1$t(chars.nbsp)symbol, and both uppercase and lowercase letters.",
   passwordLabel: "Password",
   paymentMethodAch: "Direct deposit",
   paymentMethodCheck: "Paper check",
@@ -455,7 +465,7 @@ const pages = {
     stepHTMLDescription_bondingNewbornFuture:
       "After your child is born you will need to provide your child’s birth certificate or a document from a health care provider that shows the child’s birth date.",
     stepHTMLDescription_employerInformation:
-      "You will need to know:<ul><li>Your employer’s 9-digit federal employer identification number (FEIN or EIN). <br><strong>Where to find this: </strong>on your W-2 or 1099, or ask your employer’s finance department.</li><li>The date you told your employer you were taking leave.</li></ul>",
+      "You will need to know:<ul><li>Your employer’s 9-digit federal employer identification number (FEIN or EIN). <br><strong>Where to find this: </strong>on your W$t(chars.nbhyphen)2 or 1099, or ask your employer’s finance department.</li><li>The date you told your employer you were taking leave.</li></ul>",
     stepHTMLDescription_leaveDetails:
       "<p>If you are taking medical leave due to injury, illness, or pregnancy, you need to have your health care provider fill out <healthcare-provider-form-link>the certification form</healthcare-provider-form-link>. Some of the answers you will need for the online application will come from your health care provider’s answers on the certification form.</p><p>If you are taking leave to bond with a child, you will need to know:</p><ul><li>The child's date of birth, due date, or the date they arrived in your home for adoption or foster care.</li><li>When you want your leave to begin and end.</li></ul>",
     stepHTMLDescription_medical:
@@ -475,7 +485,7 @@ const pages = {
     stepListDescription_1_submitted:
       "If you need to edit your information in Part 1, you’ll need to call the Contact Center at $t(shared.contactCenterPhoneNumber). Your application ID is <strong>{{absence_id}}</strong>.",
     stepListDescription_2:
-      "Entering payment information here leads to faster processing, but you can also call $t(shared.contactCenterPhoneNumber).",
+      "Entering payment information here leads to faster processing, but you can also call$t(chars.nbsp)$t(shared.contactCenterPhoneNumber).",
     stepListDescription_3:
       "Uploading documents online leads to faster processing, but you can also fax documents to $t(shared.contactCenterFaxNumber), or mail them to $t(shared.contactCenterAddress).",
     stepListTitlePrefix: "Part {{number}}",
@@ -543,7 +553,7 @@ const pages = {
     choiceLabel_selfEmployed: "I'm self-employed",
     choiceLabel_unemployed: "I'm unemployed",
     feinHint:
-      "This number is 9-digits. You can find this number on all notices your employer sent about Paid Family and Medical Leave. You can also find it on your W-2 or 1099-MISC. Ask your employer if you need help getting this information.",
+      "This number is 9-digits. You can find this number on all notices your employer sent about Paid Family and Medical Leave. You can also find it on your W$t(chars.nbhyphen)2 or 1099$t(chars.nbhyphen)MISC. Ask your employer if you need help getting this information.",
     feinLabel:
       "What is your employer's Federal Employer Identification Number (FEIN)?",
     furloughAnswer:
@@ -577,7 +587,7 @@ const pages = {
     frequencyLabel_weeks: "Estimate how many absences per week.",
     medicalAlert: "$t(shared.leavePeriodMedicalAlert)",
     sectionLabel:
-      "Tell us the estimated frequency and duration of your intermittent leave.",
+      "Tell us the estimated frequency and duration of your intermittent$t(chars.nbsp)leave.",
     title: "$t(shared.claimsLeaveDetailsTitle)",
   },
   claimsLeavePeriodContinuous: {
@@ -586,7 +596,7 @@ const pages = {
     datesLead_bonding:
       "If you have already taken some or all of your family leave, tell us when you first missed work and your last day of leave.",
     datesLead_medical:
-      'If you have already taken some or all of your leave for this condition, tell us when you first missed work and your last day of leave.<br /><br />Refer to Question 27 in the "Estimate leave details" section of the certification form (page 6).',
+      'If you have already taken some or all of your leave for this condition, tell us when you first missed work and your last day of leave.<br /><br />Refer to Question 27 in the "Estimate leave details" section of the certification form (page$t(chars.nbsp)6).',
     datesSectionLabel:
       "Enter the start and end dates for your continuous leave.",
     endDateLabel: "Last day of leave",
@@ -608,7 +618,8 @@ const pages = {
     datesSectionLabel:
       "Enter the start and end dates for your intermittent leave.",
     endDateLabel: "Last day of leave",
-    endDateLabel_medical: "Last day of leave or re-evaluation date",
+    endDateLabel_medical:
+      "Last day of leave or re$t(chars.nbhyphen)evaluation date",
     hasLeaveHint_medical:
       'Refer to Question 31 in the "Estimate leave details" section of the certification form (page 6).',
     hasLeaveLabel:
@@ -629,7 +640,8 @@ const pages = {
     datesSectionLabel:
       "Enter the start and end dates for your reduced leave schedule.",
     endDateLabel: "Last day of leave",
-    endDateLabel_medical: "Last day of leave or re-evaluation date",
+    endDateLabel_medical:
+      "Last day of leave or re$t(chars.nbhyphen)evaluation date",
     hasLeaveHint_medical:
       'Refer to Question 28 in the "Estimate leave details" section of the certification form (page 6).',
     hasLeaveLabel:
@@ -667,7 +679,7 @@ const pages = {
     firstNameLabel: "First name",
     lastNameLabel: "Last name",
     lead:
-      "Fill out your name as it appears on official documents like your driver’s license or W-2.",
+      "Fill out your name as it appears on official documents like your driver’s license or W$t(chars.nbhyphen)2.",
     middleNameLabel: "Middle name",
     sectionLabel: "What's your name?",
     title: "$t(shared.claimsVerifyIdTitle)",
@@ -678,11 +690,12 @@ const pages = {
     employerNotificationDateHint: "This can be an approximate date.",
     employerNotificationLabel: "When did you tell them?",
     hint:
-      "Notify your employer at least 30 days before the start of your leave if possible.",
+      "Notify your employer at least 30 days before the start of your leave if$t(chars.nbsp)possible.",
     multipleEmployerAppAlert: "$t(shared.multipleEmployerAppAlert)",
     mustNotifyEmployerWarning:
-      "Before you can submit an application, you must tell your employer that you're taking leave.",
-    sectionLabel: "Have you told your employer that you are taking leave?",
+      "Before you can submit an application, you must tell your employer that you're taking$t(chars.nbsp)leave.",
+    sectionLabel:
+      "Have you told your employer that you are taking$t(chars.nbsp)leave?",
     title: "$t(shared.claimsEmploymentInfoTitle)",
   },
   claimsOtherIncomes: {
@@ -709,7 +722,7 @@ const pages = {
     cardHeadingPrefix: "$t(shared.otherIncomeEntryPrefix)",
     endDateLabel: "When will you stop receiving this income?",
     removeButton: "Remove income",
-    sectionLabel: "Tell us about your other sources of income.",
+    sectionLabel: "Tell us about your other sources of$t(chars.nbsp)income.",
     startDateLabel: "When will you start receiving this income?",
     title: "$t(shared.claimsOtherLeaveTitle)",
     typeChoiceLabel_jonesAct: "$t(shared.otherIncomeType_jonesAct)",
@@ -740,7 +753,7 @@ const pages = {
     choiceHintAch: "Requires a bank account",
     choiceHintCheck: "Does not require a bank account",
     routingNumberHint:
-      "This is the 9-digit number found on the lower left corner of a check.",
+      "This is the 9-digit number found on the lower left corner of a$t(chars.nbsp)check.",
     routingNumberLabel: "Routing number",
     sectionLabel: "How do you want to get your weekly benefit?",
     title: "Payment method",
@@ -854,9 +867,10 @@ const pages = {
     partDescription_1:
       "If you need to make edits to Part 1, you’ll need to contact our Contact Center at $t(shared.contactCenterPhoneNumber). Your application ID is <strong>{{absence_id}}</strong>",
     partHeadingPrefix: "Part {{number}}",
-    partHeading_1_final: "Review: Tell us about yourself and your leave",
+    partHeading_1_final:
+      "Review: Tell us about yourself and your$t(chars.nbsp)leave",
     partHeading_1_part1:
-      "Review and confirm: Tell us about yourself and your leave",
+      "Review and confirm: Tell us about yourself and your$t(chars.nbsp)leave",
     partHeading_2: "Review: Your payment information",
     partHeading_3: "Review: Upload document",
     partOneNextStepsLine1:
@@ -885,7 +899,8 @@ const pages = {
     stepHeading_verifyId: "$t(shared.claimsVerifyIdTitle)",
     submitAction_final: "Submit application",
     submitAction_part1: "Submit Part 1",
-    title: "Check your answers before submitting your application.",
+    title:
+      "Check your answers before submitting your$t(chars.nbsp)application.",
     userDateOfBirthLabel: "Date of birth",
     userNameLabel: "Name",
     userStateIdLabel: "Driver's License Number",
@@ -989,9 +1004,9 @@ const pages = {
     proofRequired_medicalPregnantFuture:
       "We’ll start reviewing your application now, but we can’t approve it until your medical leave begins. Call the DFML Contact Center at $t(shared.contactCenterPhoneNumber) when you go out on leave.",
     reviewProgressAndStatus:
-      "We are reviewing your application. You can check the status of your application anytime in the portal.",
+      "We are reviewing your application. You can check the status of your application anytime in the$t(chars.nbsp)portal.",
     reviewProgressAndStatus_noReview:
-      "You can check the status of your application anytime in the portal.",
+      "You can check the status of your application anytime in the$t(chars.nbsp)portal.",
     title: "Your leave application was submitted successfully",
     title_bonding: "Your family leave application was submitted successfully",
     title_medical: "Your medical leave application was submitted successfully",
@@ -1012,9 +1027,9 @@ const pages = {
     lead_bonding_newborn:
       "You need to upload one of the following documents to confirm your child’s date of birth:",
     lead_medical:
-      "You need to upload a copy of the <healthcare-provider-form-link>PFML Healthcare Provider Form (opens in new tab)</healthcare-provider-form-link> to prove that you need to take medical leave. You can upload a completed Family and Medical Leave Act (FMLA) form instead if your provider filled one out.",
+      "You need to upload a copy of the <healthcare-provider-form-link>PFML Healthcare Provider Form (opens in new tab)</healthcare-provider-form-link> to prove that you need to take medical leave. You can upload a completed Family and Medical Leave Act (FMLA) form instead if your provider filled$t(chars.nbsp)one$t(chars.nbsp)out.",
     sectionLabel_bonding: "Upload your documentation",
-    sectionLabel_medical: "Upload your Healthcare Provider form",
+    sectionLabel_medical: "Upload your Healthcare Provider$t(chars.nbsp)form",
     title: "$t(shared.claimsLeaveDetailsTitle)",
   },
   claimsUploadDocsOptions: {
@@ -1030,7 +1045,7 @@ const pages = {
   },
   claimsUploadId: {
     accordionContent:
-      "<p><strong>If you don’t have any of those, you can provide one of the following plus proof of your  Social Security Number or Individual Tax Identification Number:</strong></p><ul><li>Valid U.S. State or Territory License or ID</li><li>Certified copy of a birth certificate filed with a State Office of Vital Statistics or equivalent agency in the individual's state of birth. (You can only use a <puerto-rican-birth-certificate-link>Puerto Rican birth certificate</puerto-rican-birth-certificate-link> if it was issued on or after July 1, 2010.)</li><li>Certificate of Citizenship (Form N-560, or Form N-561)</li><li>Certificate of Naturalization (Form N-550 or N-570)</li></ul><p><strong>You can provide proof of your Social Security Number using one of the following documents displaying your complete Social Security Number:</strong></p><ul><li>Social Security card</li><li>W-2 Form</li><li>SSA-1099 Form</li><li>Non-SSA-1099 Form</li><li>Pay stub with your name on it</li></ul><p>Learn more about verifying your identity with different documents at <identity-proof-link>Mass.gov</identity-proof-link>.</p>",
+      "<p><strong>If you don’t have any of those, you can provide one of the following plus proof of your  Social Security Number or Individual Tax Identification Number:</strong></p><ul><li>Valid U.S. State or Territory License or ID</li><li>Certified copy of a birth certificate filed with a State Office of Vital Statistics or equivalent agency in the individual's state of birth. (You can only use a <puerto-rican-birth-certificate-link>Puerto Rican birth certificate</puerto-rican-birth-certificate-link> if it was issued on or after July 1, 2010.)</li><li>Certificate of Citizenship (Form N$t(chars.nbhyphen)560, or Form N$t(chars.nbhyphen)561)</li><li>Certificate of Naturalization (Form N$t(chars.nbhyphen)550 or N$t(chars.nbhyphen)570)</li></ul><p><strong>You can provide proof of your Social Security Number using one of the following documents displaying your complete Social Security Number:</strong></p><ul><li>Social Security card</li><li>W$t(chars.nbhyphen)2 Form</li><li>SSA$t(chars.nbhyphen)1099 Form</li><li>Non$t(chars.nbhyphen)SSA$t(chars.nbhyphen)1099 Form</li><li>Pay stub with your name on it</li></ul><p>Learn more about verifying your identity with different documents at <identity-proof-link>Mass.gov</identity-proof-link>.</p>",
     accordionHeading: "If you don't have any of those documents:",
     addAnotherFileButton: "$t(shared.fileUpload_addAnotherFileButton)",
     addFirstFileButton: "$t(shared.fileUpload_addFirstFileButton)",
@@ -1279,7 +1294,7 @@ const pages = {
   },
   userConsentToDataSharing: {
     agreementBody:
-      "By continuing, I am indicating that I have read and understood the above user agreements. I give the DFML permission to collect, share, and use my information consistent with the terms of the agreements linked above.",
+      "By continuing, I am indicating that I have read and understood the above user agreements. I give the DFML permission to collect, share, and use my information consistent with the terms of the agreements linked$t(chars.nbsp)above.",
     applicationUsage: "",
     applicationUsageHeading: "Applying for PFML",
     applicationUsageIntro: "We need this information to:",
@@ -1427,7 +1442,7 @@ const components = {
       "Paid Family and Medical Leave is a state-offered benefit for anyone who works in Massachusetts and is eligible to take up to 26 weeks of paid leave for medical or family reasons.",
     orgAddress: "PO Box 838 Lawrence, MA 01843",
     orgName: "Department of Family and Medical Leave (DFML)",
-    orgPhoneNumber: "(833) 344-7365",
+    orgPhoneNumber: "(833)$t(chars.nbsp)344$t(chars.nbhyphen)7365",
     title: "Paid Family and Medical Leave (PFML)",
   },
   form: {
@@ -1475,7 +1490,7 @@ const components = {
 };
 
 const englishLocale = {
-  translation: Object.assign({}, { components, errors, pages, shared }),
+  translation: Object.assign({}, { chars, components, errors, pages, shared }),
 };
 
 export default englishLocale;

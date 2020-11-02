@@ -62,7 +62,7 @@ exports[`NotifiedEmployer renders the page 1`] = `
       role="alert"
       state="warning"
     >
-      Before you can submit an application, you must tell your employer that you're taking leave.
+      Before you can submit an application, you must tell your employer that you're taking leave.
     </Alert>
   </ConditionalContent>
 </QuestionPage>

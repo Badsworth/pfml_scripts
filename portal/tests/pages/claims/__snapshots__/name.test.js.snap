@@ -7,7 +7,7 @@ exports[`Name renders the page 1`] = `
 >
   <FormLabel
     component="legend"
-    hint="Fill out your name as it appears on official documents like your driver’s license or W-2."
+    hint="Fill out your name as it appears on official documents like your driver’s license or W‑2."
   >
     What's your name?
   </FormLabel>
