@@ -19,6 +19,10 @@ const flagsConfig = {
     // the Leave Reason page in the claimant flow (CP-1145)
     // TODO (CP-534): Show all options when portal supports activeDutyFamily, serviceMemberFamily
     claimantShowMilitaryLeaveTypes: false,
+    // When this flag is enabled, the user can see the "Have you taken paid or unpaid leave since January 1,
+    // 2021 for a qualifying reason?" question.
+    // TODO (CP-1247): Show previous leaves related questions
+    claimantShowPreviousLeaves: false,
     // When this flag is enabled, the user can see the site.
     // To immediately hide the site from people who previously overrode this
     // flag in a cookie, you can rename this flag to something else (and also

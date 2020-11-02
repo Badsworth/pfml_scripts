@@ -197,13 +197,6 @@ exports[`Final Review Page when all data is present renders Review page with fin
   >
     No
   </ReviewRow>
-  <ReviewRow
-    editText="Edit"
-    label="Previous paid or unpaid leave?"
-    level="3"
-  >
-    No
-  </ReviewRow>
   <Heading
     level="2"
     size="1"
@@ -534,13 +527,6 @@ exports[`Part 1 Review Page when all data is present renders Review page with Pa
   </ReviewRow>
   <ReviewRow
     label="Other sources of income?"
-    level="4"
-  >
-    No
-  </ReviewRow>
-  <ReviewRow
-    editText="Edit"
-    label="Previous paid or unpaid leave?"
     level="4"
   >
     No

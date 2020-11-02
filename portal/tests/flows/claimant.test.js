@@ -315,7 +315,11 @@ describe("claimFlowConfigs", () => {
       initial: routes.claims.dashboard,
     },
     {
-      guards,
+      guards: {
+        ...guards,
+        // TODO (CP-1247): Show previous leaves related questions
+        showPreviousLeaves: () => true,
+      },
       actions: { assignTestDataToMachineContext },
     }
   );

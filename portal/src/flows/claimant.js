@@ -21,6 +21,7 @@ import { fields as employerBenefitsFields } from "../pages/claims/employer-benef
 import { fields as employmentStatusFields } from "../pages/claims/employment-status";
 import { get } from "lodash";
 import { fields as intermittentFrequencyFields } from "../pages/claims/intermittent-frequency";
+import { isFeatureEnabled } from "../services/featureFlags";
 import { fields as leavePeriodContinuousFields } from "../pages/claims/leave-period-continuous";
 import { fields as leavePeriodIntermittentFields } from "../pages/claims/leave-period-intermittent";
 import { fields as leavePeriodReducedScheduleFields } from "../pages/claims/leave-period-reduced-schedule";
@@ -57,6 +58,8 @@ export const guards = {
     claim.has_intermittent_leave_periods === true,
   hasOtherIncomes: ({ claim }) => claim.temp.has_other_incomes === true,
   hasPreviousLeaves: ({ claim }) => claim.temp.has_previous_leaves === true,
+  // TODO (CP-1247): Show previous leaves related questions
+  showPreviousLeaves: () => isFeatureEnabled("claimantShowPreviousLeaves"),
   isFixedWorkPattern: ({ claim }) =>
     get(claim, "work_pattern.work_pattern_type") === WorkPatternType.fixed,
   isRotatingWorkPattern: ({ claim }) =>
@@ -335,6 +338,10 @@ export default {
           },
           {
             target: routes.claims.previousLeaves,
+            cond: "showPreviousLeaves",
+          },
+          {
+            target: routes.claims.checklist,
           },
         ],
       },

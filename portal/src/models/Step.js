@@ -149,7 +149,6 @@ export default class Step extends BaseModel {
       ) {
         return true;
       }
-
       return this.fields.every((field) => {
         // Ignore optional and conditional questions for now,
         // so that we can show a "Completed" checklist.
@@ -161,6 +160,8 @@ export default class Step extends BaseModel {
           "claim.previous_leaves",
           // TODO (CP-1264): Remove payment fields from here once the Payment step utilizes the warnings
           "claim.payment_preferences[0].account_details",
+          // TODO (CP-1247): Show previous leaves related questions
+          "claim.temp.has_previous_leaves",
         ].some((ignoredFieldName) => field.includes(ignoredFieldName));
 
         const hasValue = fieldHasValue(field, this.context);

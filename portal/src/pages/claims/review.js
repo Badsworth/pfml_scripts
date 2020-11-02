@@ -444,16 +444,18 @@ export const Review = (props) => {
           reviewRowLevel={reviewRowLevel}
         />
       )}
-
-      <ReviewRow
-        level={reviewRowLevel}
-        label={t("pages.claimsReview.previousLeaveLabel")}
-        editText={t("pages.claimsReview.editLink")}
-      >
-        {get(claim, "temp.has_previous_leaves") === true
-          ? t("pages.claimsReview.otherLeaveChoiceYes")
-          : t("pages.claimsReview.otherLeaveChoiceNo")}
-      </ReviewRow>
+      {/* TODO (CP-1247): Show previous leaves related questions */}
+      {isFeatureEnabled("claimantShowPreviousLeaves") && (
+        <ReviewRow
+          level={reviewRowLevel}
+          label={t("pages.claimsReview.previousLeaveLabel")}
+          editText={t("pages.claimsReview.editLink")}
+        >
+          {get(claim, "temp.has_previous_leaves") === true
+            ? t("pages.claimsReview.otherLeaveChoiceYes")
+            : t("pages.claimsReview.otherLeaveChoiceNo")}
+        </ReviewRow>
+      )}
 
       {get(claim, "temp.has_previous_leaves") && (
         <PreviousLeaveList
