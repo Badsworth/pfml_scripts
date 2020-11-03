@@ -56,6 +56,18 @@ locals {
       cpu                 = "4096",
       memory              = "18432",
       containers_template = "dor_import_template.json"
+    },
+
+    "${local.app_name}-load-employers-to-fineos" = {
+      command             = ["load-employers-to-fineos"]
+      containers_template = "load_employers_to_fineos_template.json"
+      vars = {
+        fineos_client_customer_api_url     = var.fineos_client_customer_api_url
+        fineos_client_group_client_api_url = var.fineos_client_group_client_api_url
+        fineos_client_wscomposer_api_url   = var.fineos_client_wscomposer_api_url
+        fineos_client_oauth2_url           = var.fineos_client_oauth2_url
+        fineos_client_oauth2_client_id     = var.fineos_client_oauth2_client_id
+      }
     }
   }
 }
@@ -81,7 +93,7 @@ data "template_file" "task_container_definitions" {
   for_each = local.tasks
   template = file("${path.module}/json/${lookup(each.value, "containers_template", "default_template.json")}")
 
-  vars = {
+  vars = merge({
     app_name                   = local.app_name
     task_name                  = each.key
     command                    = jsonencode(each.value.command)
@@ -94,5 +106,5 @@ data "template_file" "task_container_definitions" {
     environment_name           = var.environment_name
     cloudwatch_logs_group_name = aws_cloudwatch_log_group.ecs_tasks.name
     aws_region                 = data.aws_region.current.name
-  }
+  }, lookup(each.value, "vars", {}))
 }
