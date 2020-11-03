@@ -62,7 +62,7 @@ class LkLeaveType(Base):
         self.leave_type_description = leave_type_description
 
 
-class LkRelationshipToCareGiver(Base):
+class LkRelationshipToCaregiver(Base):
     __tablename__ = "lk_relationship_to_caregiver"
     relationship_to_caregiver_id = Column(Integer, primary_key=True, autoincrement=True)
     relationship_to_caregiver_description = Column(Text)
@@ -184,7 +184,7 @@ class Application(Base):
     leave_reason = relationship(LkLeaveReason)
     leave_reason_qualifier = relationship(LkLeaveReasonQualifier)
     employment_status = relationship(LkEmploymentStatus)
-    relationship_to_caregiver = relationship(LkRelationshipToCareGiver)
+    relationship_to_caregiver = relationship(LkRelationshipToCaregiver)
     relationship_qualifier = relationship(LkRelationshipQualifier)
     employer_notification_method = relationship(LkNotificationMethod)
     tax_identifier = relationship(TaxIdentifier)
@@ -382,19 +382,20 @@ class LeaveType(LookupTable):
     MILITARY = LkLeaveType(4, "Military")
 
 
-class RelationshipToCareGiver(LookupTable):
-    model = LkRelationshipToCareGiver
+class RelationshipToCaregiver(LookupTable):
+    model = LkRelationshipToCaregiver
     column_names = ("relationship_to_caregiver_id", "relationship_to_caregiver_description")
 
-    PARENT = LkRelationshipToCareGiver(1, "Parent")
-    CHILD = LkRelationshipToCareGiver(2, "Child")
-    GRANDPARENT = LkRelationshipToCareGiver(3, "Grandparent")
-    GRANDCHILD = LkRelationshipToCareGiver(4, "Grandchild")
-    OTHER_FAMILY_MEMBER = LkRelationshipToCareGiver(5, "Other Family Member")
-    SERVICE_MEMBER = LkRelationshipToCareGiver(6, "Service Member")
-    INLAW = LkRelationshipToCareGiver(7, "Inlaw")
-    SIBLING = LkRelationshipToCareGiver(8, "Sibling")
-    OTHER = LkRelationshipToCareGiver(9, "Other")
+    PARENT = LkRelationshipToCaregiver(1, "Parent")
+    CHILD = LkRelationshipToCaregiver(2, "Child")
+    GRANDPARENT = LkRelationshipToCaregiver(3, "Grandparent")
+    GRANDCHILD = LkRelationshipToCaregiver(4, "Grandchild")
+    OTHER_FAMILY_MEMBER = LkRelationshipToCaregiver(5, "Other Family Member")
+    SERVICE_MEMBER = LkRelationshipToCaregiver(6, "Service Member")
+    INLAW = LkRelationshipToCaregiver(7, "Inlaw")
+    SIBLING = LkRelationshipToCaregiver(8, "Sibling")
+    OTHER = LkRelationshipToCaregiver(9, "Other")
+    EMPLOYEE = LkRelationshipToCaregiver(10, "Employee")
 
 
 class RelationshipQualifier(LookupTable):
@@ -402,7 +403,7 @@ class RelationshipQualifier(LookupTable):
     column_names = ("relationship_qualifier_id", "relationship_qualifier_description")
 
     ADOPTIVE = LkRelationshipQualifier(1, "Adoptive")
-    BIOLGICAL = LkRelationshipQualifier(2, "Biological")
+    BIOLOGICAL = LkRelationshipQualifier(2, "Biological")
     FOSTER = LkRelationshipQualifier(3, "Foster")
     CUSTODIAL_PARENT = LkRelationshipQualifier(4, "Custodial Parent")
     LEGAL_GAURDIAN = LkRelationshipQualifier(5, "Legal Guardian")
@@ -602,7 +603,7 @@ def sync_lookup_tables(db_session):
     LeaveReason.sync_to_database(db_session)
     LeaveReasonQualifier.sync_to_database(db_session)
     LeaveType.sync_to_database(db_session)
-    RelationshipToCareGiver.sync_to_database(db_session)
+    RelationshipToCaregiver.sync_to_database(db_session)
     RelationshipQualifier.sync_to_database(db_session)
     NotificationMethod.sync_to_database(db_session)
     FrequencyOrDuration.sync_to_database(db_session)

@@ -64,10 +64,11 @@ class RelationshipToCaregiver(str, LookupEnum):
     inlaw = "Inlaw"
     sibling = "Sibling"
     other = "Other"
+    employee = "Employee"
 
     @classmethod
     def get_lookup_model(cls):
-        return db_application_models.LkRelationshipToCareGiver
+        return db_application_models.LkRelationshipToCaregiver
 
 
 class RelationshipQualifier(str, LookupEnum):

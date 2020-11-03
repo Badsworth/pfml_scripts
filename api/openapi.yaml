@@ -1572,6 +1572,7 @@ components:
             - Inlaw
             - Sibling
             - Other
+            - Employee
           example: "Parent"
         relationship_qualifier:
           type: string

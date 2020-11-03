@@ -29,6 +29,8 @@ from massgov.pfml.db.models.applications import (
     FINEOSWebIdExt,
     LeaveReason,
     LeaveReasonQualifier,
+    RelationshipQualifier,
+    RelationshipToCaregiver,
 )
 from massgov.pfml.db.models.employees import Address, Country, Employer
 
@@ -286,6 +288,8 @@ def build_absence_case(
 
     # Leave Reason and Leave Reason Qualifier mapping.
     reason = reason_qualifier_1 = reason_qualifier_2 = None
+    primary_relationship = primary_rel_qualifier_1 = primary_rel_qualifier_2 = None
+
     if application.leave_reason_id == LeaveReason.PREGNANCY_MATERNITY.leave_reason_id or (
         application.leave_reason_id == LeaveReason.SERIOUS_HEALTH_CONDITION_EMPLOYEE.leave_reason_id
         and application.pregnant_or_recent_birth
@@ -293,6 +297,9 @@ def build_absence_case(
         reason = LeaveReason.PREGNANCY_MATERNITY.leave_reason_description
         reason_qualifier_1 = (
             LeaveReasonQualifier.POSTNATAL_DISABILITY.leave_reason_qualifier_description
+        )
+        primary_relationship = (
+            RelationshipToCaregiver.EMPLOYEE.relationship_to_caregiver_description
         )
     elif (
         application.leave_reason_id == LeaveReason.SERIOUS_HEALTH_CONDITION_EMPLOYEE.leave_reason_id
@@ -302,9 +309,34 @@ def build_absence_case(
             LeaveReasonQualifier.NOT_WORK_RELATED.leave_reason_qualifier_description
         )
         reason_qualifier_2 = LeaveReasonQualifier.SICKNESS.leave_reason_qualifier_description
+        primary_relationship = (
+            RelationshipToCaregiver.EMPLOYEE.relationship_to_caregiver_description
+        )
     elif application.leave_reason_id == LeaveReason.CHILD_BONDING.leave_reason_id:
         reason = application.leave_reason.leave_reason_description
+        reason_qualifier = application.leave_reason_qualifier
         reason_qualifier_1 = application.leave_reason_qualifier.leave_reason_qualifier_description
+        primary_relationship = RelationshipToCaregiver.CHILD.relationship_to_caregiver_description
+
+        if (
+            reason_qualifier.leave_reason_qualifier_id
+            == LeaveReasonQualifier.ADOPTION.leave_reason_qualifier_id
+        ):
+            primary_rel_qualifier_1 = (
+                RelationshipQualifier.ADOPTIVE.relationship_qualifier_description
+            )
+        elif (
+            reason_qualifier.leave_reason_qualifier_id
+            == LeaveReasonQualifier.FOSTER_CARE.leave_reason_qualifier_id
+        ):
+            primary_rel_qualifier_1 = (
+                RelationshipQualifier.FOSTER.relationship_qualifier_description
+            )
+        else:
+            primary_rel_qualifier_1 = (
+                RelationshipQualifier.BIOLOGICAL.relationship_qualifier_description
+            )
+
     else:
         raise ValueError("Invalid application.leave_reason")
 
@@ -322,6 +354,9 @@ def build_absence_case(
         episodicLeavePeriods=intermittent_leave_periods if intermittent_leave_periods else None,
         employerNotified=application.employer_notified,
         employerNotificationDate=application.employer_notification_date,
+        primaryRelationship=primary_relationship,
+        primaryRelQualifier1=primary_rel_qualifier_1,
+        primaryRelQualifier2=primary_rel_qualifier_2,
     )
     return absence_case
 
