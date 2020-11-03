@@ -1,5 +1,6 @@
 import { TestData, Browser, step, By } from "@flood/element";
 import { SimulationClaim } from "../../simulation/types";
+import { DocumentUploadRequest } from "../../api";
 import {
   globalElementSettings as settings,
   PortalBaseUrl,
@@ -12,6 +13,7 @@ import {
   waitForElement,
   getRequestOptions,
   getDocumentType,
+  evalFetch,
 } from "../helpers";
 import fs from "fs";
 
@@ -59,128 +61,186 @@ export const steps = [
     },
   },
   {
-    name: "Create a new application",
-    test: async (browser: Browser): Promise<void> => {
-      const reqOptions = getRequestOptions(authToken, "POST");
-      const res = await browser.evaluate(
-        (baseUrl, options) => {
-          return new Promise((resolve, reject) => {
-            fetch(`${baseUrl}/applications`, options)
-              .then((r) => {
-                resolve(r.json());
-              })
-              .catch(reject);
-          });
-        },
-        await APIBaseUrl,
-        reqOptions
-      );
-      if (!res.data || !res.data.application_id) {
-        throw new Error(`Unable to create application: ${JSON.stringify(res)}`);
-      }
-      applicationId = res.data.application_id;
-      console.log("Created application", applicationId);
-    },
-  },
-  {
-    name: "Update application",
+    name: "Create, Update and Submit new application",
     test: async (browser: Browser, data: unknown): Promise<void> => {
-      const reqOptions = getRequestOptions(
-        authToken,
-        "PATCH",
-        (data as SimulationClaim).claim
-      );
-      const res = await browser.evaluate(
-        (baseUrl, appId, options) => {
-          return new Promise((resolve, reject) => {
-            fetch(`${baseUrl}/applications/${appId}`, options)
-              .then((r) => {
-                resolve(r.json());
-              })
-              .catch(reject);
-          });
+      const { claim, documents } = data as SimulationClaim;
+      const { leave_details } = claim;
+      // Attempt at simulating portal's consequent small patch requests
+      const claimParts: (Partial<SimulationClaim["claim"]> | string)[] = [
+        "create",
+        {
+          first_name: claim.first_name,
+          middle_name: null,
+          last_name: claim.last_name,
         },
-        await APIBaseUrl,
-        applicationId,
-        reqOptions
-      );
-      if (res.status_code !== 200) {
-        throw new Error(`Unable to update application: ${JSON.stringify(res)}`);
-      }
-      console.log("Updated application", res.status_code);
-    },
-  },
-  {
-    name: "Submit application",
-    test: async (browser: Browser): Promise<void> => {
-      const reqOptions = getRequestOptions(authToken, "POST");
-      const res = await browser.evaluate(
-        (baseUrl, appId, options) => {
-          return new Promise((resolve, reject) => {
-            fetch(
-              `${baseUrl}/applications/${appId}/submit_application`,
-              options
-            )
-              .then((r) => {
-                resolve(r.json());
-              })
-              .catch(reject);
-          });
+        {
+          has_mailing_address: claim.has_mailing_address,
+          residential_address: claim.residential_address,
+          mailing_address: claim.mailing_address,
         },
-        await APIBaseUrl,
-        applicationId,
-        reqOptions
-      );
-      if (res.status_code !== 201) {
-        throw new Error(`Unable to update application: ${JSON.stringify(res)}`);
-      }
-      console.log("Submitted application", res.status_code);
-    },
-  },
-  {
-    name: "Upload documents",
-    test: async (browser: Browser, data: unknown): Promise<void> => {
-      const { documents } = data as SimulationClaim;
-      for (const document of documents) {
-        // important: body & headers need to be empty objects
-        const reqOptions = getRequestOptions(authToken, "POST", {}, {});
-
-        const res = await browser.evaluate(
-          (baseUrl, appId, options, body) => {
-            return new Promise((resolve, reject) => {
-              const fd = new FormData();
-              const blobType = "application/pdf";
-              fd.append(
-                "file",
-                new Blob([new Uint8Array(body.file.data)], { type: blobType }),
-                body.name
-              );
-              fd.append("document_type", body.document_type);
-              fd.append("description", body.description);
-              fd.append("name", body.name);
-
-              options.body = fd;
-              fetch(`${baseUrl}/applications/${appId}/documents`, options)
-                .then((r) => r.json())
-                .then(resolve)
-                .catch(reject);
-            });
+        {
+          date_of_birth: claim.date_of_birth,
+        },
+        {
+          has_state_id: claim.has_state_id,
+          mass_id: claim.mass_id,
+        },
+        {
+          tax_identifier: claim.tax_identifier,
+        },
+        {
+          employment_status: claim.employment_status,
+          employer_fein: claim.employer_fein,
+        },
+        {
+          leave_details: {
+            employer_notified: leave_details?.employer_notified,
+            employer_notification_date:
+              leave_details?.employer_notification_date,
           },
-          await APIBaseUrl,
-          applicationId,
-          reqOptions,
-          {
-            document_type: getDocumentType(document),
-            description: "LST - Direct to API",
-            file: pdfDocument,
-            name: `${document.type}.pdf`,
+        },
+        {
+          work_pattern: {
+            work_pattern_type: claim.work_pattern?.work_pattern_type,
+          },
+        },
+        {
+          hours_worked_per_week: claim.hours_worked_per_week,
+          work_pattern: {
+            work_pattern_days: claim.work_pattern?.work_pattern_days,
+          },
+        },
+        {
+          leave_details: {
+            reason: leave_details?.reason,
+            reason_qualifier: leave_details?.reason_qualifier,
+          },
+        },
+        {
+          leave_details: {
+            child_birth_date: leave_details?.child_birth_date,
+            child_placement_date: leave_details?.child_placement_date,
+          },
+        },
+        {
+          has_continuous_leave_periods: claim.has_continuous_leave_periods,
+          leave_details: {
+            continuous_leave_periods: leave_details?.continuous_leave_periods,
+          },
+        },
+        {
+          has_reduced_schedule_leave_periods:
+            claim.has_reduced_schedule_leave_periods,
+        },
+        {
+          has_intermittent_leave_periods: claim.has_intermittent_leave_periods,
+        },
+        // { temp: { has_employer_benefits: false } },
+        // { temp: { has_other_incomes: false } },
+        // { temp: { has_previous_leaves: false } },
+        "submit",
+        {
+          payment_preferences: claim.payment_preferences,
+        },
+        "documents",
+        "complete",
+      ];
+      // Execute all claim steps in queue and in order
+      for (const claimPart of claimParts) {
+        let reqOptions: RequestInit;
+        let res;
+        if (typeof claimPart === "string") {
+          switch (claimPart) {
+            // request to create application
+            case "create":
+              reqOptions = getRequestOptions(authToken, "POST");
+              res = await evalFetch(
+                browser,
+                `${await APIBaseUrl}/applications`,
+                reqOptions
+              );
+              if (!res.data || !res.data.application_id) {
+                throw new Error(
+                  `Unable to create application: ${JSON.stringify(res)}`
+                );
+              }
+              applicationId = res.data.application_id;
+              console.info("Created application", { authToken, applicationId });
+              break;
+            // request to submit application
+            case "submit":
+              reqOptions = getRequestOptions(authToken, "POST");
+              res = await evalFetch(
+                browser,
+                `${await APIBaseUrl}/applications/${applicationId}/submit_application`,
+                reqOptions
+              );
+              if (res.status_code !== 201) {
+                throw new Error(
+                  `Unable to submit application: ${JSON.stringify(res)}`
+                );
+              }
+              console.info("Submitted application", res.status_code);
+              break;
+            // request to upload application documents
+            case "documents":
+              for (const document of documents) {
+                // important: body & headers need to be empty objects
+                reqOptions = getRequestOptions(authToken, "POST", {}, {});
+                const docBody: DocumentUploadRequest = {
+                  document_type: getDocumentType(document),
+                  description: "LST - Direct to API",
+                  file: pdfDocument,
+                  name: `${document.type}.pdf`,
+                };
+                res = await evalFetch(
+                  browser,
+                  `${await APIBaseUrl}/applications/${applicationId}/documents`,
+                  reqOptions,
+                  docBody
+                );
+                if (res.status_code !== 200) {
+                  throw new Error(
+                    `Unable to upload document: ${JSON.stringify(res)}`
+                  );
+                }
+                console.info("Uploaded document", res);
+                await browser.wait(1000);
+              }
+              break;
+            case "complete":
+              reqOptions = getRequestOptions(authToken, "POST");
+              res = await evalFetch(
+                browser,
+                `${await APIBaseUrl}/applications/${applicationId}/complete_application`,
+                reqOptions
+              );
+              if (res.status_code !== 200) {
+                throw new Error(
+                  `Unable to complete application: ${JSON.stringify(res)}`
+                );
+              }
+              console.info("Completed application", res.status_code);
+              break;
+            default:
+              break;
           }
-        );
-        if (res.status_code !== 200) {
-          throw new Error(`Unable to upload document: ${JSON.stringify(res)}`);
+        } else {
+          reqOptions = getRequestOptions(authToken, "PATCH", claimPart);
+          res = await evalFetch(
+            browser,
+            `${await APIBaseUrl}/applications/${applicationId}`,
+            reqOptions
+          );
+          if (res.status_code !== 200) {
+            throw new Error(
+              `Unable to update application: ${JSON.stringify(res)}`
+            );
+          }
+          console.info("Updated application", res.status_code);
         }
-        console.log("Uploaded document", res);
-        await browser.wait(1000);
+        // wait a bit before executing next step
+        await browser.wait(300);
       }
     },
   },

@@ -201,3 +201,44 @@ export function getDocumentType(
     return "State Managed Paid Leave Confirmation";
   }
 }
+
+export const evalFetch = async (
+  browser: Browser,
+  url: string,
+  options: RequestInit,
+  docUpload?: DocumentUploadRequest
+): // eslint-disable-next-line @typescript-eslint/no-explicit-any
+Promise<any> => {
+  return browser.evaluate(
+    (
+      fUrl: RequestInfo,
+      fOpts: RequestInit,
+      fDocUpload: DocumentUploadRequest
+    ) => {
+      return new Promise((resolve, reject) => {
+        if (typeof fDocUpload !== "undefined") {
+          const body = fDocUpload;
+          const fd = new FormData();
+          const blobType = "application/pdf";
+          fd.append(
+            "file",
+            // @ts-ignore
+            new Blob([new Uint8Array(body.file.data)], { type: blobType }),
+            body.name
+          );
+          fd.append("document_type", body.document_type);
+          fd.append("description", body.description as string);
+          fd.append("name", body.name as string);
+          fOpts.body = fd;
+        }
+        fetch(fUrl, fOpts)
+          .then((r) => r.json())
+          .then(resolve)
+          .catch(reject);
+      });
+    },
+    url,
+    options,
+    docUpload
+  );
+};
