@@ -198,6 +198,15 @@ const machineTests = {
       },
     },
   },
+  [routes.claims.reducedLeaveSchedule]: {
+    meta: {
+      test: (_, event) => {
+        expect(
+          get(event.context.claim, "has_reduced_schedule_leave_periods")
+        ).toEqual(true);
+      },
+    },
+  },
   [routes.claims.review]: {
     meta: {
       test: () => {},
@@ -253,6 +262,9 @@ describe("claimFlowConfigs", () => {
   };
   const hasEmployerBenefits = { temp: { has_employer_benefits: true } };
   const hasIntermittentLeavePeriods = { has_intermittent_leave_periods: true };
+  const hasReducedScheduleLeavePeriods = {
+    has_reduced_schedule_leave_periods: true,
+  };
   const hasOtherIncomes = { temp: { has_other_incomes: true } };
   const hasStateId = { has_state_id: true };
   const hasPreviousLeaves = { temp: { has_previous_leaves: true } };
@@ -274,6 +286,7 @@ describe("claimFlowConfigs", () => {
     { claimData: employed, userData: {} },
     { claimData: hasEmployerBenefits, userData: {} },
     { claimData: hasIntermittentLeavePeriods, userData: {} },
+    { claimData: hasReducedScheduleLeavePeriods, userData: {} },
     { claimData: hasOtherIncomes, userData: {} },
     { claimData: hasPreviousLeaves, userData: {} },
     { claimData: bondingClaim, userData: {} },

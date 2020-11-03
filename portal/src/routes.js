@@ -40,6 +40,7 @@ const routes = {
     previousLeaves: "/claims/previous-leaves",
     previousLeavesDetails: "/claims/previous-leaves-details",
     reasonPregnancy: "/claims/reason-pregnancy",
+    reducedLeaveSchedule: "/claims/reduced-leave-schedule",
     review: "/claims/review",
     scheduleFixed: "/claims/schedule-fixed",
     scheduleRotating: "/claims/schedule-rotating",

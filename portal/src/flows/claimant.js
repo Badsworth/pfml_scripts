@@ -34,6 +34,7 @@ import { fields as paymentMethodFields } from "../pages/claims/payment-method";
 import { fields as previousLeavesDetailsFields } from "../pages/claims/previous-leaves-details";
 import { fields as previousLeavesFields } from "../pages/claims/previous-leaves";
 import { fields as reasonPregnancyFields } from "../pages/claims/reason-pregnancy";
+import { fields as reducedLeaveScheduleFields } from "../pages/claims/reduced-leave-schedule";
 import routes from "../routes";
 import { fields as scheduleFixedFields } from "../pages/claims/schedule-fixed";
 import { fields as scheduleVariableFields } from "../pages/claims/schedule-variable";
@@ -54,6 +55,8 @@ export const guards = {
   hasEmployerBenefits: ({ claim }) => claim.temp.has_employer_benefits === true,
   hasIntermittentLeavePeriods: ({ claim }) =>
     claim.has_intermittent_leave_periods === true,
+  hasReducedScheduleLeavePeriods: ({ claim }) =>
+    claim.has_reduced_schedule_leave_periods === true,
   hasOtherIncomes: ({ claim }) => claim.temp.has_other_incomes === true,
   hasPreviousLeaves: ({ claim }) => claim.temp.has_previous_leaves === true,
   // TODO (CP-1247): Show previous leaves related questions
@@ -206,6 +209,15 @@ export default {
         ],
       },
     },
+    [routes.claims.reducedLeaveSchedule]: {
+      meta: {
+        step: ClaimSteps.leaveDetails,
+        fields: reducedLeaveScheduleFields,
+      },
+      on: {
+        CONTINUE: routes.claims.leavePeriodIntermittent,
+      },
+    },
     [routes.claims.reasonPregnancy]: {
       meta: {
         step: ClaimSteps.leaveDetails,
@@ -259,7 +271,15 @@ export default {
         fields: leavePeriodReducedScheduleFields,
       },
       on: {
-        CONTINUE: routes.claims.leavePeriodIntermittent,
+        CONTINUE: [
+          {
+            target: routes.claims.reducedLeaveSchedule,
+            cond: "hasReducedScheduleLeavePeriods",
+          },
+          {
+            target: routes.claims.leavePeriodIntermittent,
+          },
+        ],
       },
     },
     [routes.claims.leavePeriodIntermittent]: {
