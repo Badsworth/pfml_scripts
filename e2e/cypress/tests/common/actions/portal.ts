@@ -408,11 +408,15 @@ export function reportOtherBenefits(): void {
   ).within(() => cy.labelled("No").click({ force: true }));
   cy.contains("button", "Save and continue").click();
 
-  cy.contains(
-    "fieldset",
-    "Have you taken paid or unpaid leave since"
-  ).within(() => cy.labelled("No").click({ force: true }));
-  cy.contains("button", "Save and continue").click();
+  /* ********** 
+    Been removed from flow as 2nd November
+
+    cy.contains(
+      "fieldset",
+      "Have you taken paid or unpaid leave since"
+    ).within(() => cy.labelled("No").click({ force: true }));
+    cy.contains("button", "Save and continue").click();
+  */
 }
 
 export function confirmInfo(): void {
