@@ -13,7 +13,6 @@ from massgov.pfml.db.models.applications import (
     EmploymentStatus,
     LeaveReasonQualifier,
     LeaveType,
-    WorkPatternType,
 )
 from massgov.pfml.db.models.employees import PaymentType
 
@@ -494,39 +493,25 @@ def get_reduced_schedule_leave_issues(
 def get_work_pattern_issues(application: Application) -> List[Issue]:
     issues = []
 
-    work_pattern = application.work_pattern
+    minutes_each_day = [day.minutes or 0 for day in application.work_pattern.work_pattern_days]
 
-    if (
-        work_pattern.work_pattern_type_id == WorkPatternType.ROTATING.work_pattern_type_id
-        and work_pattern.pattern_start_date is None
-    ):
+    if sum(minutes_each_day) <= 0:
         issues.append(
             Issue(
-                type=IssueType.required,
-                message="Pattern start date is required for rotating work patterns",
-                field="work_pattern.pattern_start_date",
-            )
-        )
-
-    if (
-        work_pattern.work_pattern_type_id != WorkPatternType.ROTATING.work_pattern_type_id
-        and work_pattern.pattern_start_date is not None
-    ):
-        issues.append(
-            Issue(
-                type=IssueType.conflicting,
-                message="Pattern start date is not expected for fixed or variable work patterns.",
-                field="work_pattern.pattern_start_date",
-            )
-        )
-
-    if len(list(work_pattern.work_pattern_days)) == 0:
-        issues.append(
-            Issue(
-                type=IssueType.required,
-                message="Work patterns days are required",
+                type=IssueType.minimum,
                 field="work_pattern.work_pattern_days",
+                message="Total minutes for a work pattern must be greater than 0",
             )
         )
+
+    for i, minutes in enumerate(minutes_each_day):
+        if minutes >= 24 * 60:
+            issues.append(
+                Issue(
+                    type=IssueType.maximum,
+                    message="Total minutes in a work pattern week must be less than a day (1440 minutes)",
+                    field=f"work_pattern.work_pattern_days[{i}].minutes",
+                )
+            )
 
     return issues

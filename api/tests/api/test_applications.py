@@ -542,48 +542,6 @@ def test_application_patch_hours_worked_per_week(client, user, auth_token, test_
     assert updated_hours_worked_per_week == 50.5
 
 
-def test_application_patch_hours_worked_per_week_out_of_range(
-    client, user, auth_token, test_db_session
-):
-    application = ApplicationFactory.create(user=user)
-
-    response = client.patch(
-        "/v1/applications/{}".format(application.application_id),
-        headers={"Authorization": f"Bearer {auth_token}"},
-        json={"hours_worked_per_week": 0},
-    )
-
-    assert response.status_code == 400
-
-    response_body = response.get_json()
-
-    error = response_body.get("errors")[0]
-    assert error["field"] == "hours_worked_per_week"
-    assert error["message"] == "0 is less than the minimum of 1"
-
-    response = client.patch(
-        "/v1/applications/{}".format(application.application_id),
-        headers={"Authorization": f"Bearer {auth_token}"},
-        json={"hours_worked_per_week": 169},
-    )
-
-    assert response.status_code == 400
-
-    response_body = response.get_json()
-
-    error = response_body.get("errors")[0]
-    assert error["field"] == "hours_worked_per_week"
-    assert error["message"] == "169 is greater than the maximum of 168"
-
-    response = client.patch(
-        "/v1/applications/{}".format(application.application_id),
-        headers={"Authorization": f"Bearer {auth_token}"},
-        json={"hours_worked_per_week": None},
-    )
-
-    assert response.status_code == 200
-
-
 def test_application_patch_pregnant_or_recent_birth(client, user, auth_token, test_db_session):
     application = ApplicationFactory.create(user=user)
 
@@ -1905,6 +1863,7 @@ def test_application_post_submit_to_fineos_intermittent_leave(
     application.employer_notified = True
     application.employer_notification_date = date(2021, 1, 7)
     application.employment_status_id = EmploymentStatus.UNEMPLOYED.employment_status_id
+    application.work_pattern = WorkPatternFixedFactory.create()
     application.residential_address = AddressFactory.create()
     application.work_pattern = WorkPatternFixedFactory.create()
 
@@ -1969,6 +1928,7 @@ def test_application_post_submit_to_fineos_reduced_schedule_leave(
     application.employer_notified = True
     application.employer_notification_date = date(2021, 1, 7)
     application.employment_status_id = EmploymentStatus.UNEMPLOYED.employment_status_id
+    application.work_pattern = WorkPatternFixedFactory.create()
     application.residential_address = AddressFactory.create()
     application.work_pattern = WorkPatternFixedFactory.create()
 

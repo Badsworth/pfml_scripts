@@ -18,9 +18,7 @@ from massgov.pfml.db.models.applications import (
     EmploymentStatus,
     LeaveReasonQualifier,
     LeaveType,
-    WorkPattern,
     WorkPatternDay,
-    WorkPatternType,
 )
 from massgov.pfml.db.models.employees import PaymentType
 from massgov.pfml.db.models.factories import (
@@ -31,6 +29,7 @@ from massgov.pfml.db.models.factories import (
     PaymentPreferenceFactory,
     ReducedScheduleLeavePeriodFactory,
     WorkPatternFixedFactory,
+    WorkPatternVariableFactory,
 )
 
 
@@ -937,16 +936,12 @@ def test_allow_false_employer_notified_for_employed_claimants(
     assert not issues
 
 
-def test_pattern_start_date_required_if_rotating(test_db_session, initialize_factories_session):
+def test_min_work_pattern_total_minutes_worked(test_db_session, initialize_factories_session):
     test_app = ApplicationFactory.create(
-        work_pattern=WorkPattern(
-            work_pattern_type=WorkPatternType.get_instance(
-                test_db_session, template=WorkPatternType.ROTATING
-            ),
+        work_pattern=WorkPatternFixedFactory(
             work_pattern_days=[
-                WorkPatternDay(week_number=1, day_of_week_id=i + 1, hours=1) for i in range(7)
-            ],
-            work_week_starts_id=7,
+                WorkPatternDay(week_number=1, day_of_week_id=i + 1, minutes=0) for i in range(7)
+            ]
         )
     )
 
@@ -954,59 +949,36 @@ def test_pattern_start_date_required_if_rotating(test_db_session, initialize_fac
 
     assert [
         Issue(
-            type=IssueType.required,
-            message="Pattern start date is required for rotating work patterns",
-            field="work_pattern.pattern_start_date",
-        )
-    ] == issues
-
-
-def test_pattern_start_date_is_not_expected_if_not_rotating(
-    test_db_session, initialize_factories_session
-):
-    test_app = ApplicationFactory.create(
-        work_pattern=WorkPattern(
-            work_pattern_type=WorkPatternType.get_instance(
-                test_db_session, template=WorkPatternType.FIXED
-            ),
-            work_pattern_days=[
-                WorkPatternDay(week_number=1, day_of_week_id=i + 1) for i in range(7)
-            ],
-            work_week_starts_id=7,
-            pattern_start_date="2021-01-03",
-        )
-    )
-
-    issues = get_work_pattern_issues(test_app)
-
-    assert [
-        Issue(
-            type=IssueType.conflicting,
-            message="Pattern start date is not expected for fixed or variable work patterns.",
-            field="work_pattern.pattern_start_date",
-        )
-    ] == issues
-
-
-def test_work_pattern_days_required(test_db_session, initialize_factories_session):
-    test_app = ApplicationFactory.create(
-        work_pattern=WorkPattern(
-            work_pattern_type=WorkPatternType.get_instance(
-                test_db_session, template=WorkPatternType.FIXED
-            ),
-            work_week_starts_id=7,
-        )
-    )
-
-    issues = get_work_pattern_issues(test_app)
-
-    assert [
-        Issue(
-            type=IssueType.required,
-            message="Work patterns days are required",
+            type=IssueType.minimum,
             field="work_pattern.work_pattern_days",
+            message="Total minutes for a work pattern must be greater than 0",
         )
     ] == issues
+
+
+def test_max_work_pattern_hours(test_db_session, initialize_factories_session):
+    test_app = ApplicationFactory.create(
+        work_pattern=WorkPatternVariableFactory(
+            work_pattern_days=[
+                WorkPatternDay(week_number=1, day_of_week_id=i + 1, minutes=1500) for i in range(7)
+            ]
+        )
+    )
+
+    issues = get_work_pattern_issues(test_app)
+
+    expected_issues = []
+
+    for i in range(7):
+        expected_issues.append(
+            Issue(
+                type=IssueType.maximum,
+                message="Total minutes in a work pattern week must be less than a day (1440 minutes)",
+                field=f"work_pattern.work_pattern_days[{i}].minutes",
+            )
+        )
+
+    assert expected_issues == issues
 
 
 def test_employer_fein_required_for_employed_claimants(

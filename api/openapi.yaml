@@ -1104,7 +1104,7 @@ components:
             - Per Day
             - Per Week
             - Per Month
-            - In Total  
+            - In Total
         benefit_end_date:
           $ref: "#/components/schemas/Date"
         benefit_start_date:
@@ -1153,8 +1153,6 @@ components:
               nullable: true
             hours_worked_per_week:
               type: number
-              minimum: 1
-              maximum: 168
               nullable: true
               example: 40.5
             first_name:
@@ -1839,7 +1837,6 @@ components:
         minutes:
           type: integer
           minimum: 0
-          maximum: 1440
           nullable: true
 
     ApplicationPaymentAccountDetails:
