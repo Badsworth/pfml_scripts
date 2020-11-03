@@ -36,15 +36,27 @@ def handler(
 
     cognito_user_attrs = event.request.userAttributes
 
-    user = User(
-        active_directory_id=cognito_user_attrs["sub"], email_address=cognito_user_attrs["email"],
+    user = (
+        db_session.query(User)
+        .filter(User.active_directory_id == cognito_user_attrs["sub"])
+        .one_or_none()
     )
 
-    logger.info("creating user", extra={"active_directory_id": user.active_directory_id})
+    if user is not None:
+        logger.info(
+            "active_directory_id already exists",
+            extra={"active_directory_id": user.active_directory_id},
+        )
+    else:
+        user = User(
+            active_directory_id=cognito_user_attrs["sub"],
+            email_address=cognito_user_attrs["email"],
+        )
+        logger.info("creating user", extra={"active_directory_id": user.active_directory_id})
 
-    db_session.add(user)
-    db_session.commit()
+        db_session.add(user)
+        db_session.commit()
 
-    logger.info("successfully created user", extra={"user_id": user.user_id})
+        logger.info("successfully created user", extra={"user_id": user.user_id})
 
     return event
