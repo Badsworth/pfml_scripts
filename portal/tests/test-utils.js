@@ -11,6 +11,7 @@ import Claim, {
   ReasonQualifier,
   ReducedScheduleLeavePeriod,
   WorkPattern,
+  WorkPatternDay,
   WorkPatternType,
 } from "../src/models/Claim";
 import Document, { DocumentType } from "../src/models/Document";
@@ -455,12 +456,68 @@ export class MockClaimBuilder {
    * @returns {MockClaimBuilder}
    */
   fixedWorkPattern() {
+    set(
+      this.claimAttrs,
+      "work_pattern",
+      new WorkPattern({
+        work_pattern_type: WorkPatternType.fixed,
+        work_pattern_days: [
+          new WorkPatternDay({
+            day_of_week: "Sunday",
+            week_number: 1,
+            minutes: 0,
+          }),
+          new WorkPatternDay({
+            day_of_week: "Monday",
+            week_number: 1,
+            minutes: 8 * 60,
+          }),
+          new WorkPatternDay({
+            day_of_week: "Tuesday",
+            week_number: 1,
+            minutes: 8 * 60,
+          }),
+          new WorkPatternDay({
+            day_of_week: "Wednesday",
+            week_number: 1,
+            minutes: 8 * 60,
+          }),
+          new WorkPatternDay({
+            day_of_week: "Thursday",
+            week_number: 1,
+            minutes: 8 * 60,
+          }),
+          new WorkPatternDay({
+            day_of_week: "Friday",
+            week_number: 1,
+            minutes: 8 * 60,
+          }),
+          new WorkPatternDay({
+            day_of_week: "Saturday",
+            week_number: 1,
+            minutes: 0,
+          }),
+        ],
+      })
+    );
+
+    set(this.claimAttrs, "hours_worked_per_week", 40);
+
+    return this;
+  }
+
+  /**
+   * @returns {MockClaimBuilder}
+   */
+  variableWorkPattern() {
     let workPattern = new WorkPattern({
-      work_pattern_type: WorkPatternType.fixed,
+      work_pattern_type: WorkPatternType.variable,
     });
 
-    workPattern = WorkPattern.addWeek(workPattern);
+    workPattern = WorkPattern.addWeek(workPattern, 40 * 60);
+
     set(this.claimAttrs, "work_pattern", workPattern);
+    set(this.claimAttrs, "hours_worked_per_week", 40);
 
     return this;
   }

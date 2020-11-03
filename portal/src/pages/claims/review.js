@@ -4,6 +4,7 @@ import Claim, {
   PaymentAccountType,
   PaymentPreferenceMethod,
   ReasonQualifier,
+  WorkPattern,
   WorkPatternType,
 } from "../../models/Claim";
 import Document, { DocumentType } from "../../models/Document";
@@ -12,7 +13,7 @@ import EmployerBenefit, {
 } from "../../models/EmployerBenefit";
 import OtherIncome, { OtherIncomeType } from "../../models/OtherIncome";
 import Step, { ClaimSteps } from "../../models/Step";
-import { compact, get } from "lodash";
+import { compact, get, isUndefined } from "lodash";
 import Alert from "../../components/Alert";
 import BackButton from "../../components/BackButton";
 import Button from "../../components/Button";
@@ -28,7 +29,9 @@ import ReviewRow from "../../components/ReviewRow";
 import Spinner from "../../components/Spinner";
 import Title from "../../components/Title";
 import { Trans } from "react-i18next";
+import WorkPatternTable from "../../components/WorkPatternTable";
 import claimantConfigs from "../../flows/claimant";
+import convertMinutesToHours from "../../utils/convertMinutesToHours";
 import findDocumentsByType from "../../utils/findDocumentsByType";
 import findKeyByValue from "../../utils/findKeyByValue";
 import formatDateRange from "../../utils/formatDateRange";
@@ -83,6 +86,7 @@ export const Review = (props) => {
 
   const payment_method = get(claim, "payment_preferences[0].payment_method");
   const reasonQualifier = get(claim, "leave_details.reason_qualifier");
+  const workPattern = new WorkPattern(get(claim, "work_pattern"));
 
   const steps = Step.createClaimStepsFromMachine(
     claimantConfigs,
@@ -259,6 +263,32 @@ export const Review = (props) => {
           ),
         })}
       </ReviewRow>
+
+      {workPattern.work_pattern_type === WorkPatternType.fixed && (
+        <ReviewRow
+          level={reviewRowLevel}
+          label={t("pages.claimsReview.workPatternDaysFixedLabel")}
+        >
+          <WorkPatternTable weeks={workPattern.weeks} />
+        </ReviewRow>
+      )}
+
+      {workPattern.work_pattern_type === WorkPatternType.variable && (
+        <ReviewRow
+          level={reviewRowLevel}
+          label={t("pages.claimsReview.workPatternDaysVariableLabel")}
+        >
+          {!isUndefined(workPattern.minutesWorkedEachWeek[0]) &&
+            t("pages.claimsReview.workPatternVariableTime", {
+              context:
+                convertMinutesToHours(workPattern.minutesWorkedEachWeek[0])
+                  .minutes === 0
+                  ? "noMinutes"
+                  : null,
+              ...convertMinutesToHours(workPattern.minutesWorkedEachWeek[0]),
+            })}
+        </ReviewRow>
+      )}
 
       {/* LEAVE DETAILS */}
       <ReviewHeading

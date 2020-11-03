@@ -1,22 +1,21 @@
 import { MockClaimBuilder } from "tests/test-utils";
-import { WorkPatternType } from "src/models/Claim";
 import generateClaimPageStory from "storybook/utils/generateClaimPageStory";
 
 const mockClaims = {
   "Part 1 (Medical - Continuous)": new MockClaimBuilder()
     .part1Complete({ excludeLeavePeriod: true })
     .continuous()
-    .workPattern({ work_pattern_type: WorkPatternType.fixed })
+    .fixedWorkPattern()
     .create(),
   "Part 1 (Medical - Reduced Schedule)": new MockClaimBuilder()
     .part1Complete({ excludeLeavePeriod: true })
     .reducedSchedule()
-    .workPattern({ work_pattern_type: WorkPatternType.rotating })
+    .fixedWorkPattern()
     .create(),
   "Part 1 (Adoption - Intermittent)": new MockClaimBuilder()
     .part1Complete({ excludeLeavePeriod: true })
     .bondingAdoptionLeaveReason()
-    .workPattern({ work_pattern_type: WorkPatternType.variable })
+    .variableWorkPattern()
     .intermittent()
     .create(),
   "Part 1 (Newborn)": new MockClaimBuilder()

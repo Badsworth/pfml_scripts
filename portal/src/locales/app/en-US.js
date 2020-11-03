@@ -302,6 +302,10 @@ const shared = {
   day_Thursday: "Thursday",
   day_Tuesday: "Tuesday",
   day_Wednesday: "Wednesday",
+  // TODO (CP-1335): Add i18next formatter for time
+  displayTime: "{{hours}}h {{minutes}}m",
+  // TODO (CP-1335): Add i18next formatter for time
+  displayTime_noMinutes: "{{hours}}h",
   documentsRequestError:
     "An error was encountered while checking your application for documents. If this continues to happen, you may call the Paid Family Leave Contact Center at $t(shared.contactCenterPhoneNumber)",
   employerBenefitEntryPrefix: "Benefit",
@@ -939,10 +943,14 @@ const pages = {
     userNameLabel: "Name",
     userStateIdLabel: "Driver's License Number",
     userTaxIdLabel: "Social Security Number or ITIN",
+    workPatternDaysFixedLabel: "Weekly work hours",
+    workPatternDaysVariableLabel: "Average weekly hours",
     workPatternTypeLabel: "Work schedule type",
     workPatternTypeValue_fixed: "Consistent from week to week",
     workPatternTypeValue_rotating: "Hours alternate between weekly schedules",
     workPatternTypeValue_variable: "Not consistent from week to week",
+    workPatternVariableTime: "$t(shared.displayTime)",
+    workPatternVariableTime_noMinutes: "$t(shared.displayTime_noMinutes)",
   },
   claimsScheduleFixed: {
     hoursLabel: "$t(shared.hoursLabel)",
@@ -1529,8 +1537,8 @@ const components = {
     dayAbbr_Thursday: "Thur",
     dayAbbr_Tuesday: "Tues",
     dayAbbr_Wednesday: "Wed",
-    time: "{{hours}}h {{minutes}}m",
-    time_noMinutes: "{{hours}}h",
+    time: "$t(shared.displayTime)",
+    time_noMinutes: "$t(shared.displayTime_noMinutes)",
   },
 };
 

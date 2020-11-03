@@ -143,6 +143,14 @@ exports[`Final Review Page when all data is present renders Review page with fin
   >
     Consistent from week to week
   </ReviewRow>
+  <ReviewRow
+    label="Weekly work hours"
+    level="3"
+  >
+    <WorkPatternTable
+      weeks={Array []}
+    />
+  </ReviewRow>
   <ReviewHeading
     editText="Edit"
     level="2"
@@ -475,6 +483,14 @@ exports[`Part 1 Review Page when all data is present renders Review page with Pa
   >
     Consistent from week to week
   </ReviewRow>
+  <ReviewRow
+    label="Weekly work hours"
+    level="4"
+  >
+    <WorkPatternTable
+      weeks={Array []}
+    />
+  </ReviewRow>
   <ReviewHeading
     editHref="/claims/leave-reason?claim_id=mock_application_id"
     editText="Edit"
@@ -578,3 +594,51 @@ exports[`Work patterns has internationalized strings for each work pattern type 
 exports[`Work patterns has internationalized strings for each work pattern type 2`] = `"Hours alternate between weekly schedules"`;
 
 exports[`Work patterns has internationalized strings for each work pattern type 3`] = `"Not consistent from week to week"`;
+
+exports[`Work patterns shows average weekly hours if work pattern type is variable 1`] = `"40h"`;
+
+exports[`Work patterns shows work pattern days if work pattern type is fixed 1`] = `
+<WorkPatternTable
+  weeks={
+    Array [
+      Array [
+        WorkPatternDay {
+          "day_of_week": "Sunday",
+          "minutes": 0,
+          "week_number": 1,
+        },
+        WorkPatternDay {
+          "day_of_week": "Monday",
+          "minutes": 480,
+          "week_number": 1,
+        },
+        WorkPatternDay {
+          "day_of_week": "Tuesday",
+          "minutes": 480,
+          "week_number": 1,
+        },
+        WorkPatternDay {
+          "day_of_week": "Wednesday",
+          "minutes": 480,
+          "week_number": 1,
+        },
+        WorkPatternDay {
+          "day_of_week": "Thursday",
+          "minutes": 480,
+          "week_number": 1,
+        },
+        WorkPatternDay {
+          "day_of_week": "Friday",
+          "minutes": 480,
+          "week_number": 1,
+        },
+        WorkPatternDay {
+          "day_of_week": "Saturday",
+          "minutes": 0,
+          "week_number": 1,
+        },
+      ],
+    ]
+  }
+/>
+`;

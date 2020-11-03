@@ -114,6 +114,38 @@ describe("Work patterns", () => {
       ).toMatchSnapshot();
     });
   });
+
+  it("shows work pattern days if work pattern type is fixed", () => {
+    const { wrapper } = renderWithAppLogic(Review, {
+      claimAttrs: new MockClaimBuilder()
+        .part1Complete()
+        .fixedWorkPattern()
+        .create(),
+      diveLevels,
+    });
+
+    expect(
+      wrapper.find({ label: "Weekly work hours" }).prop("children")
+    ).toMatchSnapshot();
+    expect(wrapper.find({ label: "Average weekly hours" }).exists()).toBe(
+      false
+    );
+  });
+
+  it("shows average weekly hours if work pattern type is variable", () => {
+    const { wrapper } = renderWithAppLogic(Review, {
+      claimAttrs: new MockClaimBuilder()
+        .part1Complete()
+        .variableWorkPattern()
+        .create(),
+      diveLevels,
+    });
+
+    expect(
+      wrapper.find({ label: "Average weekly hours" }).prop("children")
+    ).toMatchSnapshot();
+    expect(wrapper.find({ label: "Weekly work hours" }).exists()).toBe(false);
+  });
 });
 
 describe("Payment Information", () => {
