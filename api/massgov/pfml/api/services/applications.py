@@ -1,5 +1,6 @@
 from typing import Any, List, Optional, Tuple, Union
 
+from sqlalchemy.orm.exc import NoResultFound
 from werkzeug.exceptions import BadRequest, Forbidden
 
 import massgov.pfml.api.models.applications.common as apps_common_io
@@ -9,12 +10,15 @@ import massgov.pfml.util.datetime as datetime_util
 import massgov.pfml.util.logging
 from massgov.pfml.api.models.applications.common import Address as ApiAddress
 from massgov.pfml.api.models.applications.requests import ApplicationRequestBody
+from massgov.pfml.api.models.applications.responses import DocumentResponse
 from massgov.pfml.api.models.common import LookupEnum
+from massgov.pfml.api.services.fineos_actions import get_documents
 from massgov.pfml.db.models.applications import (
     Application,
     ApplicationPaymentPreference,
     ContinuousLeavePeriod,
     DayOfWeek,
+    Document,
     IntermittentLeavePeriod,
     ReducedScheduleLeavePeriod,
     TaxIdentifier,
@@ -468,3 +472,25 @@ def address_type_mapping(address_type):
             "residential_address_id",
             AddressType.RESIDENTIAL.address_type_id,
         )
+
+
+def get_document_by_id(
+    db_session: db.Session, document_id: str, application: Application
+) -> Union[Document, DocumentResponse]:
+
+    try:
+        # check whether document metadata exists in database
+        document = db_session.query(Document).filter(Document.fineos_id == document_id).one()
+    except NoResultFound:
+        # if not, retrieve the document using fineos_actions
+        # this will return a DocumentResponse rather than a document
+        documents = get_documents(application, db_session)
+
+        for d in documents:
+            if d.fineos_document_id == document_id:
+                return d
+            else:
+                logger.warning("No document found for ID %s", document_id)
+                raise RuntimeError("No document found for ID %s", document_id)
+
+    return document

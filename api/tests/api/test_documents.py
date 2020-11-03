@@ -179,10 +179,10 @@ def test_documents_get(client, consented_user, consented_user_token, test_db_ses
     response_data = response["data"][0]
 
     # See massgov/pfml/fineos/mock_client for the following values
-    assert response_data["content_type"] == "image/png"
-    assert response_data["document_type"] == "ID Document"
+    assert response_data["content_type"] == "application/pdf"
+    assert response_data["document_type"] == "Approval Notice"
     assert response_data["fineos_document_id"] == "3011"
-    assert response_data["name"] == "test.png"
+    assert response_data["name"] == "test.pdf"
     assert response_data["description"] == "Mock File"
     assert response_data["user_id"] == str(consented_user.user_id)
     assert response_data["created_at"] is not None
@@ -226,6 +226,7 @@ def test_documents_get_date_created(
 def test_documents_download(client, consented_user, consented_user_token, test_db_session):
     absence_case_id = "NTN-111-ABS-01"
     document_id = "3011"
+
     application = ApplicationFactory.create(user=consented_user, fineos_absence_id=absence_case_id)
 
     response = client.get(
@@ -234,9 +235,23 @@ def test_documents_download(client, consented_user, consented_user_token, test_d
     )
 
     assert response.status_code == 200
-    assert response.content_type == "image/png"
-    assert response.headers.get("Content-Disposition") == "attachment; filename=test.png"
+    assert response.content_type == "application/pdf"
+    assert response.headers.get("Content-Disposition") == "attachment; filename=test.pdf"
     assert response.data.startswith(b"\x89PNG\r\n")
+
+
+def test_documents_download_forbidden(client, fineos_user, fineos_user_token, test_db_session):
+    absence_case_id = "NTN-111-ABS-01"
+    document_id = "3011"
+
+    application = ApplicationFactory.create(user=fineos_user, fineos_absence_id=absence_case_id)
+
+    response = client.get(
+        "/v1/applications/{}/documents/{}".format(application.application_id, document_id),
+        headers={"Authorization": f"Bearer {fineos_user_token}"},
+    )
+
+    assert response.status_code == 403
 
 
 def test_documents_get_not_submitted_application(

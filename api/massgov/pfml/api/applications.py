@@ -19,6 +19,7 @@ from massgov.pfml.api.models.applications.requests import (
     DocumentRequestBody,
 )
 from massgov.pfml.api.models.applications.responses import ApplicationResponse, DocumentResponse
+from massgov.pfml.api.services.applications import get_document_by_id
 from massgov.pfml.api.services.fineos_actions import (
     complete_intake,
     download_document,
@@ -359,7 +360,9 @@ def document_download(application_id: str, document_id: str) -> Response:
         # Check if user can read application
         ensure(READ, existing_application)
 
-        # TODO: Access control https://lwd.atlassian.net/browse/API-543
+        document = get_document_by_id(db_session, document_id, existing_application)
+
+        ensure(READ, document)
 
         document_data: massgov.pfml.fineos.models.customer_api.Base64EncodedFileData = download_document(
             existing_application, document_id, db_session

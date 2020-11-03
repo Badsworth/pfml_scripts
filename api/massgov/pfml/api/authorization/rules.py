@@ -1,9 +1,11 @@
-from typing import Any, Callable, List
+from typing import Any, Callable, List, Union
 
 from bouncer.constants import CREATE, EDIT, READ  # noqa: F401 F403
 from bouncer.models import RuleList
 from flask_bouncer import Bouncer  # noqa: F401
 
+from massgov.pfml.api.models.applications.responses import DocumentResponse
+from massgov.pfml.db.models.applications import Document, DocumentType
 from massgov.pfml.db.models.employees import LkRole, Role, User
 
 
@@ -51,6 +53,39 @@ def rmv_check(user: User, they: RuleList) -> None:
     they.can(CREATE, "RMVCheck")
 
 
+def can_download(user: User, doc: Union[Document, DocumentResponse]) -> bool:
+    # FINEOS users should not be permitted to download.
+    if has_role_in(user, [Role.FINEOS]):
+        return False
+
+    # Employer users have TBD download permissions.
+    if has_role_in(user, [Role.EMPLOYER]):
+        return False
+
+    # Regular users can download a limited number of doc types.
+    if not user.roles:
+        regular_user_allowed_doc_types = [
+            DocumentType.APPROVAL_NOTICE.document_type_description,
+            DocumentType.REQUEST_FOR_MORE_INFORMATION.document_type_description,
+            DocumentType.DENIAL_NOTICE.document_type_description,
+        ]
+
+        if (
+            isinstance(doc, Document)
+            and doc.document_type_instance.document_type_description
+            in regular_user_allowed_doc_types
+        ):
+            return True
+
+        if (
+            isinstance(doc, DocumentResponse)
+            and doc.document_type in regular_user_allowed_doc_types
+        ):
+            return True
+
+    return False
+
+
 def users(user: User, they: RuleList) -> None:
     they.can((EDIT, READ), "User", user_id=user.user_id)
 
@@ -73,6 +108,14 @@ def documents(user: User, they: RuleList) -> None:
         CREATE,
         "Document",
         lambda d: d.user_id == user.user_id and user.consented_to_data_sharing is True,
+    )
+
+    they.can(
+        READ, "Document", lambda d: d.user_id == user.user_id and can_download(user, d),
+    )
+
+    they.can(
+        READ, "DocumentResponse", lambda d: d.user_id == user.user_id and can_download(user, d),
     )
 
 

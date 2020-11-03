@@ -478,6 +478,9 @@ class DocumentType(LookupTable):
     STATE_MANAGED_PAID_LEAVE_CONFIRMATION = LkDocumentType(
         5, "State Managed Paid Leave Confirmation"
     )
+    APPROVAL_NOTICE = LkDocumentType(6, "Approval Notice")
+    REQUEST_FOR_MORE_INFORMATION = LkDocumentType(7, "Request for More Information")
+    DENIAL_NOTICE = LkDocumentType(8, "Denial Notice")
 
 
 class ContentType(LookupTable):

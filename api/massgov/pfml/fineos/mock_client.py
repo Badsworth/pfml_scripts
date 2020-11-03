@@ -53,8 +53,8 @@ def fake_date_of_birth(fake):
 
 def mock_document(
     absence_id: str,
-    document_type: str = "ID Document",
-    file_name: str = "test.png",
+    document_type: str = "Approval Notice",
+    file_name: str = "test.pdf",
     description: str = "Mock File",
 ) -> dict:
     mocked_document = copy.copy(MOCK_DOCUMENT_DATA)
@@ -327,9 +327,9 @@ class MockFINEOSClient(client.AbstractFINEOSClient):
 
         return models.customer_api.Base64EncodedFileData.parse_obj(
             {
-                "fileName": "test.png",
-                "fileExtension": "png",
-                "contentType": "image/png",
+                "fileName": "test.pdf",
+                "fileExtension": "pdf",
+                "contentType": "application/pdf",
                 "base64EncodedFileContents": encoded_file_contents_str,
                 "fileSizeInBytes": len(file_bytes),
             }

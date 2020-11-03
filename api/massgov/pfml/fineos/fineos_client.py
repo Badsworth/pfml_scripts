@@ -460,6 +460,7 @@ class FINEOSClient(client.AbstractFINEOSClient):
             user_id,
             header_content_type=header_content_type,
         )
+
         response_json = response.json()
         # populate spec required field missing in fineos response
         if "fileSizeInBytes" not in response_json:

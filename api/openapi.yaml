@@ -526,8 +526,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
-
-    post:
+    post:          
       summary: Upload Document
       operationId: massgov.pfml.api.applications.document_upload
       tags:
@@ -545,7 +544,7 @@ paths:
       requestBody:
         content:
           multipart/form-data:
-            schema:
+            schema: 
               $ref: '#/components/schemas/DocumentUploadRequest'
             encoding:
               file:
@@ -1372,6 +1371,9 @@ components:
             - Driver's License Other State
             - Identification Proof
             - State Managed Paid Leave Confirmation
+            - Approval Notice
+            - Request for More information
+            - Denial Notice
           example: "Passport"
         name:
           type: string
@@ -1402,6 +1404,9 @@ components:
             - Driver's License Other State
             - Identification Proof
             - State Managed Paid Leave Confirmation
+            - Approval Notice
+            - Request for More information
+            - Denial Notice
           example: "Passport"
         content_type:
           type: string

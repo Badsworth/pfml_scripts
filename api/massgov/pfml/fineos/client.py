@@ -128,6 +128,7 @@ class AbstractFINEOSClient(abc.ABC, metaclass=abc.ABCMeta):
     ) -> models.customer_api.Base64EncodedFileData:
         pass
 
+    @abc.abstractmethod
     def get_week_based_work_pattern(
         self, user_id: str, occupation_id: typing.Union[str, int],
     ) -> models.customer_api.WeekBasedWorkPattern:
