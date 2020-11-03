@@ -44,13 +44,14 @@ describe("ScheduleVariable", () => {
 
     ({ appLogic, wrapper } = renderWithAppLogic(ScheduleVariable, {
       claimAttrs: mockClaim,
-      render: "mount",
-      diveLevels: 0,
     }));
 
-    wrapper.update();
+    act(() => {
+      wrapper.find("QuestionPage").simulate("save");
+    });
 
-    expect(wrapper.find("InputHours").props().value).toEqual(0);
+    const { work_pattern } = appLogic.claims.update.mock.calls[0][1];
+    expect(work_pattern.work_pattern_days.length).toEqual(7);
   });
 
   it("updates API with work_pattern_days and hours_worked_per_week", () => {

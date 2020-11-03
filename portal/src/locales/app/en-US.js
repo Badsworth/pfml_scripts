@@ -247,6 +247,13 @@ const errors = {
       required: "Enter a Social Security Number or ITIN.",
     },
     work_pattern: {
+      work_pattern_days: {
+        minimum: "Enter the hours you work.",
+        minutes: {
+          maximum:
+            "Each day must contain no more than 24 hours. The week must contain no more than 168 hours.",
+        },
+      },
       work_pattern_type: {
         required: "Select a work schedule type.",
       },

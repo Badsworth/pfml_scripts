@@ -10,7 +10,7 @@ exports[`ScheduleVariable renders the form 1`] = `
     label="How many hours do you work on average per week?"
     minutesIncrement={15}
     minutesLabel="Minutes"
-    name="hours_worked_per_week"
+    name="work_pattern.work_pattern_days[0].minutes"
     onChange={[Function]}
     value={3360}
   />

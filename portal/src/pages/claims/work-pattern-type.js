@@ -1,7 +1,7 @@
 import Claim, {
   WorkPatternType as WorkPatternTypeEnum,
 } from "../../models/Claim";
-import { get, pick } from "lodash";
+import { get, pick, set } from "lodash";
 import InputChoiceGroup from "../../components/InputChoiceGroup";
 import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
@@ -20,8 +20,19 @@ export const WorkPatternType = (props) => {
   const { formState, updateFields } = useFormState(pick(props, fields).claim);
   const work_pattern_type = get(formState, "work_pattern.work_pattern_type");
 
-  const handleSave = () =>
-    appLogic.claims.update(claim.application_id, formState);
+  const handleSave = async () => {
+    const patchData = { ...formState };
+
+    // if a user navigates back to this page after filling hours for
+    // a work pattern type, we need to reset work_patterns_days to empty array
+    // and hours_worked_per_week to null if the work_pattern_type changes
+    if (work_pattern_type !== get(claim, "work_pattern.work_pattern_type")) {
+      set(patchData, "hours_worked_per_week", null);
+      set(patchData, "work_pattern.work_pattern_days", []);
+    }
+
+    await appLogic.claims.update(claim.application_id, patchData);
+  };
 
   const getFunctionalInputProps = useFunctionalInputProps({
     appErrors: appLogic.appErrors,

@@ -1,6 +1,6 @@
 import Claim, { WorkPattern } from "../../models/Claim";
-import React, { useEffect } from "react";
-import { get, isEmpty, pick, round } from "lodash";
+import React, { useState } from "react";
+import { isEmpty, pick, round } from "lodash";
 import InputHours from "../../components/InputHours";
 import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
@@ -11,33 +11,24 @@ import withClaim from "../../hoc/withClaim";
 
 export const fields = [
   "claim.work_pattern.work_pattern_days",
-  "claim.hours_worked_per_week",
+  // Include validations for maximum minutes worked in a week
+  // If minutes worked in a week are greater than the minutes in a calendar week (10080),
+  // the minutes allocated to the first day will always be over 1440
+  // and return a validation error.
+  "claim.work_pattern.work_pattern_days[0].minutes",
 ];
 
 export const ScheduleVariable = (props) => {
   const { appLogic, claim } = props;
   const { t } = useTranslation();
 
-  const initialEntries = pick(props, fields).claim;
-  const { formState, updateFields } = useFormState(initialEntries);
-  const workPattern = new WorkPattern(formState.work_pattern);
-  const minutes = workPattern.minutesWorkedEachWeek[0];
-
-  // If the claim doesn't have any work pattern days pre-populate with a week
-  useEffect(() => {
-    const initialWorkPatternDays = get(
-      initialEntries,
-      "work_pattern.work_pattern_days"
-    );
-
-    if (isEmpty(initialWorkPatternDays)) {
-      const { work_pattern_days } = WorkPattern.addWeek(new WorkPattern());
-      updateFields({
-        work_pattern: { work_pattern_days },
-      });
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  const workPattern = new WorkPattern(claim.work_pattern);
+  const { formState, updateFields } = useFormState(pick(props, fields).claim);
+  // minutesWorkedPerWeek will be spread across
+  // 7 work_pattern_days when user submits and is not a part of the Claim model.
+  const [minutesWorkedPerWeek, setMinutesWorkedPerWeek] = useState(
+    workPattern.minutesWorkedEachWeek[0]
+  );
 
   const getFunctionalInputProps = useFunctionalInputProps({
     appErrors: appLogic.appErrors,
@@ -46,30 +37,26 @@ export const ScheduleVariable = (props) => {
   });
 
   const handleHoursChange = (event) => {
-    const { work_pattern_days } = WorkPattern.updateWeek(
-      workPattern,
-      1,
-      event.target.value
-    );
-
-    updateFields({
-      work_pattern: { work_pattern_days },
-    });
+    setMinutesWorkedPerWeek(event.target.value);
   };
 
   const handleSave = async () => {
-    // User may have navigated to this page from a rotating schedule
-    // which has multiple weeks. Update the work_pattern_days with just
-    // the first week of a variable schedule
-    const work_pattern_days = workPattern.weeks[0];
-    // TODO (CP-1262): refactor calculating hours worked per week to WorkPattern model
-    const hours_worked_per_week = round(
-      workPattern.minutesWorkedEachWeek[0] / 60,
-      2
-    );
+    let workPattern = new WorkPattern(formState.work_pattern);
+
+    if (isEmpty(workPattern.work_pattern_days)) {
+      workPattern = WorkPattern.addWeek(workPattern, minutesWorkedPerWeek);
+    } else {
+      workPattern = WorkPattern.updateWeek(
+        workPattern,
+        1,
+        minutesWorkedPerWeek
+      );
+    }
+
+    const hours_worked_per_week = round(minutesWorkedPerWeek / 60, 2);
     await appLogic.claims.update(claim.application_id, {
       hours_worked_per_week,
-      work_pattern: { work_pattern_days },
+      work_pattern: { work_pattern_days: workPattern.weeks[0] },
     });
   };
 
@@ -79,13 +66,15 @@ export const ScheduleVariable = (props) => {
       onSave={handleSave}
     >
       <InputHours
-        {...getFunctionalInputProps("hours_worked_per_week")}
+        {...getFunctionalInputProps(
+          "work_pattern.work_pattern_days[0].minutes"
+        )}
         label={t("pages.claimsScheduleVariable.inputHoursLabel")}
         hoursLabel={t("pages.claimsScheduleVariable.hoursLabel")}
         minutesLabel={t("pages.claimsScheduleVariable.minutesLabel")}
-        value={minutes}
-        minutesIncrement={15}
+        value={minutesWorkedPerWeek}
         onChange={handleHoursChange}
+        minutesIncrement={15}
       />
     </QuestionPage>
   );

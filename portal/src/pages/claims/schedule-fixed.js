@@ -13,7 +13,8 @@ import withClaim from "../../hoc/withClaim";
 
 export const fields = [
   "claim.work_pattern.work_pattern_days",
-  "claim.hours_worked_per_week",
+  // Include validations for minutes at any work_pattern_days index
+  "claim.work_pattern.work_pattern_days[*].minutes",
 ];
 
 export const ScheduleFixed = (props) => {

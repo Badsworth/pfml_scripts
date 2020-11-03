@@ -452,6 +452,20 @@ export class MockClaimBuilder {
   }
 
   /**
+   * @returns {MockClaimBuilder}
+   */
+  fixedWorkPattern() {
+    let workPattern = new WorkPattern({
+      work_pattern_type: WorkPatternType.fixed,
+    });
+
+    workPattern = WorkPattern.addWeek(workPattern);
+    set(this.claimAttrs, "work_pattern", workPattern);
+
+    return this;
+  }
+
+  /**
    * @returns {Claim}
    */
   create() {
