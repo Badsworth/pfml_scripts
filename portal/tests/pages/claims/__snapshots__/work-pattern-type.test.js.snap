@@ -10,21 +10,15 @@ exports[`WorkPatternType renders the page with expected content 1`] = `
       Array [
         Object {
           "checked": false,
-          "hint": null,
-          "label": "The number of hours I work is consistent from week to week.",
+          "hint": "For example, every Monday I work 6 hours, and every Tuesday I work 7 hours.",
+          "label": "Each week I work the same number of hours on the same days.",
           "value": "Fixed",
         },
         Object {
           "checked": false,
-          "hint": null,
-          "label": "The number of hours I work is not consistent from week to week.",
+          "hint": "For example, I work 40 hours every week but the days differ, or my schedule changes from week to week.",
+          "label": "My schedule is not consistent from week to week.",
           "value": "Variable",
-        },
-        Object {
-          "checked": false,
-          "hint": "Choose this option if you have 2–4 different schedules that you alternate between each month.",
-          "label": "My work hours alternate between weekly schedules.",
-          "value": "Rotating",
         },
       ]
     }

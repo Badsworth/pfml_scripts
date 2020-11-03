@@ -271,9 +271,6 @@ describe("claimFlowConfigs", () => {
   const fixedWorkPattern = {
     work_pattern: { work_pattern_type: WorkPatternType.fixed },
   };
-  const rotatingWorkPattern = {
-    work_pattern: { work_pattern_type: WorkPatternType.rotating },
-  };
   const variableWorkPattern = {
     work_pattern: { work_pattern_type: WorkPatternType.variable },
   };
@@ -292,7 +289,6 @@ describe("claimFlowConfigs", () => {
     { claimData: bondingClaim, userData: {} },
     { claimData: completed, userData: {} },
     { claimData: fixedWorkPattern, userData: {} },
-    { claimData: rotatingWorkPattern, userData: {} },
     { claimData: variableWorkPattern, userData: {} },
   ];
 

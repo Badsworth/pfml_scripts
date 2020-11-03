@@ -47,14 +47,11 @@ export const WorkPatternType = (props) => {
     >
       <InputChoiceGroup
         {...getFunctionalInputProps("work_pattern.work_pattern_type")}
-        choices={["fixed", "variable", "rotating"].map((key) => ({
+        choices={["fixed", "variable"].map((key) => ({
           checked: work_pattern_type === WorkPatternTypeEnum[key],
-          hint:
-            key === "rotating"
-              ? t("pages.claimsWorkPatternType.choiceHint", {
-                  context: key,
-                })
-              : null,
+          hint: t("pages.claimsWorkPatternType.choiceHint", {
+            context: key,
+          }),
           label: t("pages.claimsWorkPatternType.choiceLabel", {
             context: key,
           }),

@@ -1105,13 +1105,13 @@ const pages = {
     title: "$t(shared.claimsVerifyIdTitle)",
   },
   claimsWorkPatternType: {
-    choiceHint_rotating:
-      "Choose this option if you have 2–4 different schedules that you alternate between each month.",
+    choiceHint_fixed:
+      "For example, every Monday I work 6 hours, and every Tuesday I work 7 hours.",
+    choiceHint_variable:
+      "For example, I work 40 hours every week but the days differ, or my schedule changes from week to week.",
     choiceLabel_fixed:
-      "The number of hours I work is consistent from week to week.",
-    choiceLabel_rotating: "My work hours alternate between weekly schedules.",
-    choiceLabel_variable:
-      "The number of hours I work is not consistent from week to week.",
+      "Each week I work the same number of hours on the same days.",
+    choiceLabel_variable: "My schedule is not consistent from week to week.",
     sectionLabel: "How would you describe your work schedule?",
     title: "$t(shared.claimsEmploymentInfoTitle)",
   },
