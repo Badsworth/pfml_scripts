@@ -16,7 +16,7 @@ resource "aws_s3_bucket" "document_upload" {
   }
 
   tags = merge(module.constants.common_tags, {
-    environment = var.environment_name
+    environment = module.constants.environment_tags[var.environment_name]
     public      = "no"
     Name        = "pfml-${var.environment_name}-document-upload"
   })
@@ -78,7 +78,7 @@ resource "aws_s3_bucket" "cloudtrail_s3_logging_bucket" {
   bucket = "massgov-pfml-${var.environment_name}-cloudtrail-s3-logging"
 
   tags = merge(module.constants.common_tags, {
-    environment = var.environment_name
+    environment = module.constants.environment_tags[var.environment_name]
     public      = "no"
     Name        = "massgov-pfml-${var.environment_name}-cloudtrail-s3-logging"
   })

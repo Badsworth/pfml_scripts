@@ -1,10 +1,12 @@
 # Set up a terraform bucket for each environment.
 #
 locals {
-  # When you need a new environment bucket, add your environment name here.
+  # When you need a new environment bucket, add your environment name here and to
+  # the environment_tags output in infra/constants/outputs.tf.
+  #
   # The for_each logic below will automagically define your S3 bucket, so you
   # can go straight to running terraform apply.
-  environments = ["test", "stage", "prod"]
+  environments = ["test", "stage", "prod", "performance", "training"]
 }
 
 resource "aws_s3_bucket" "terraform" {
@@ -26,7 +28,7 @@ resource "aws_s3_bucket" "terraform" {
   }
 
   tags = merge(module.constants.common_tags, {
-    environment = each.key
+    environment = module.constants.environment_tags[each.key]
     public      = "no"
     Name        = "pfml-${each.key}-env-mgmt"
   })
@@ -63,7 +65,7 @@ resource "aws_s3_bucket" "formstack_import" {
   }
 
   tags = merge(module.constants.common_tags, {
-    environment = each.key
+    environment = module.constants.environment_tags[each.key]
     public      = "no"
     Name        = "massgov-pfml-${each.key}-formstack-data"
   })
@@ -109,7 +111,7 @@ resource "aws_s3_bucket" "agency_transfer" {
   }
 
   tags = merge(module.constants.common_tags, {
-    environment = each.key == "nonprod" ? "stage" : each.key
+    environment = module.constants.environment_tags[each.key]
     Name        = "massgov-pfml-${each.key}-agency-transfer"
     public      = "no"
   })

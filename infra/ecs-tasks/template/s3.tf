@@ -31,7 +31,7 @@ resource "aws_s3_bucket" "ad_hoc_verification" {
   }
 
   tags = merge(module.constants.common_tags, {
-    environment = each.key == "nonprod" ? "stage" : each.key
+    environment = module.constants.environment_tags[each.key]
     Name        = "massgov-pfml-${each.key}-verification-codes"
     public      = "no"
   })

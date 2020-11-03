@@ -11,7 +11,7 @@ resource "aws_s3_bucket" "portal_web" {
 
   # EOTSS AWS Tagging Standards
   tags = merge(module.constants.common_tags, {
-    environment = var.environment_name
+    environment = module.constants.environment_tags[var.environment_name]
     Name        = "massgov-${local.app_name}-${var.environment_name}-portal-site-builds"
     public      = "yes"
   })

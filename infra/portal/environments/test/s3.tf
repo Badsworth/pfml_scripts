@@ -12,7 +12,7 @@ resource "aws_s3_bucket" "playroom" {
 
   # EOTSS AWS Tagging Standards
   tags = merge(module.constants.common_tags, {
-    environment = local.environment_name
+    environment = module.constants.environment_tags[local.environment_name]
     Name        = "massgov-${local.app_name}-${local.environment_name}-playroom-builds"
     public      = "yes"
   })
@@ -46,7 +46,7 @@ resource "aws_s3_bucket" "storybook" {
 
   # EOTSS AWS Tagging Standards
   tags = merge(module.constants.common_tags, {
-    environment = local.environment_name
+    environment = module.constants.environment_tags[local.environment_name]
     Name        = "massgov-${local.app_name}-${local.environment_name}-storybook-builds"
     public      = "yes"
   })
