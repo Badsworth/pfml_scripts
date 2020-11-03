@@ -1,0 +1,73 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`WorkPatternTable hides minutes from the time if minutes are 0 1`] = `
+<tbody>
+  <tr
+    key="0"
+  >
+    <td
+      key="Sunday"
+    >
+      0h
+    </td>
+    <td
+      key="Monday"
+    >
+      0h 15m
+    </td>
+    <td
+      key="Tuesday"
+    >
+      1h
+    </td>
+    <td
+      key="Wednesday"
+    >
+      1h 15m
+    </td>
+    <td
+      key="Thursday"
+    >
+      1h 30m
+    </td>
+    <td
+      key="Friday"
+    >
+      1h 45m
+    </td>
+    <td
+      key="Saturday"
+    >
+      2h
+    </td>
+  </tr>
+</tbody>
+`;
+
+exports[`WorkPatternTable renders day names in the header 1`] = `
+<thead>
+  <tr>
+    <th>
+      Sun
+    </th>
+    <th>
+      Mon
+    </th>
+    <th>
+      Tues
+    </th>
+    <th>
+      Wed
+    </th>
+    <th>
+      Thur
+    </th>
+    <th>
+      Fri
+    </th>
+    <th>
+      Sat
+    </th>
+  </tr>
+</thead>
+`;

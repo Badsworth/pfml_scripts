@@ -1487,6 +1487,17 @@ const components = {
   withUser: {
     loadingLabel: "Loading account",
   },
+  workPatternTable: {
+    dayAbbr_Friday: "Fri",
+    dayAbbr_Monday: "Mon",
+    dayAbbr_Saturday: "Sat",
+    dayAbbr_Sunday: "Sun",
+    dayAbbr_Thursday: "Thur",
+    dayAbbr_Tuesday: "Tues",
+    dayAbbr_Wednesday: "Wed",
+    time: "{{hours}}h {{minutes}}m",
+    time_noMinutes: "{{hours}}h",
+  },
 };
 
 const englishLocale = {
