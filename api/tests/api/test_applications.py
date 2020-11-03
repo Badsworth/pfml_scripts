@@ -1785,7 +1785,7 @@ def test_application_post_submit_to_fineos(client, user, auth_token, test_db_ses
                     reason="Serious Health Condition - Employee",
                     reasonQualifier1="Not Work Related",
                     reasonQualifier2="Sickness",
-                    primaryRelationship="Employee",
+                    primaryRelationship=None,
                     primaryRelQualifier1=None,
                     primaryRelQualifier2=None,
                     timeOffLeavePeriods=[
@@ -2040,7 +2040,7 @@ def test_application_post_submit_to_fineos_bonding_adoption(
     )
     assert (
         captured_absence_case.primaryRelQualifier1
-        == RelationshipQualifier.ADOPTIVE.relationship_qualifier_description
+        == RelationshipQualifier.ADOPTED.relationship_qualifier_description
     )
     assert captured_absence_case.primaryRelQualifier2 is None
 
@@ -2195,10 +2195,7 @@ def test_application_post_submit_to_fineos_medical(client, user, auth_token, tes
         captured_absence_case.reasonQualifier2
         == LeaveReasonQualifier.SICKNESS.leave_reason_qualifier_description
     )
-    assert (
-        captured_absence_case.primaryRelationship
-        == RelationshipToCaregiver.EMPLOYEE.relationship_to_caregiver_description
-    )
+    assert captured_absence_case.primaryRelationship is None
     assert captured_absence_case.primaryRelQualifier1 is None
     assert captured_absence_case.primaryRelQualifier2 is None
 
@@ -2245,10 +2242,7 @@ def test_application_post_submit_to_fineos_medical_pregnant(
         == LeaveReasonQualifier.POSTNATAL_DISABILITY.leave_reason_qualifier_description
     )
     assert captured_absence_case.reasonQualifier2 is None
-    assert (
-        captured_absence_case.primaryRelationship
-        == RelationshipToCaregiver.EMPLOYEE.relationship_to_caregiver_description
-    )
+    assert captured_absence_case.primaryRelationship is None
     assert captured_absence_case.primaryRelQualifier1 is None
     assert captured_absence_case.primaryRelQualifier2 is None
 
@@ -2293,10 +2287,7 @@ def test_application_post_submit_to_fineos_pregnant(client, user, auth_token, te
         == LeaveReasonQualifier.POSTNATAL_DISABILITY.leave_reason_qualifier_description
     )
     assert captured_absence_case.reasonQualifier2 is None
-    assert (
-        captured_absence_case.primaryRelationship
-        == RelationshipToCaregiver.EMPLOYEE.relationship_to_caregiver_description
-    )
+    assert captured_absence_case.primaryRelationship is None
     assert captured_absence_case.primaryRelQualifier1 is None
     assert captured_absence_case.primaryRelQualifier2 is None
 

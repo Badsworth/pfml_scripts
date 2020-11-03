@@ -285,6 +285,7 @@ def build_absence_case(
         )
 
     # Leave Reason and Leave Reason Qualifier mapping.
+    # Relationship and Relationship Qualifier mapping.
     reason = reason_qualifier_1 = reason_qualifier_2 = None
     primary_relationship = primary_rel_qualifier_1 = primary_rel_qualifier_2 = None
 
@@ -296,9 +297,7 @@ def build_absence_case(
         reason_qualifier_1 = (
             LeaveReasonQualifier.POSTNATAL_DISABILITY.leave_reason_qualifier_description
         )
-        primary_relationship = (
-            RelationshipToCaregiver.EMPLOYEE.relationship_to_caregiver_description
-        )
+
     elif (
         application.leave_reason_id == LeaveReason.SERIOUS_HEALTH_CONDITION_EMPLOYEE.leave_reason_id
     ):
@@ -307,9 +306,7 @@ def build_absence_case(
             LeaveReasonQualifier.NOT_WORK_RELATED.leave_reason_qualifier_description
         )
         reason_qualifier_2 = LeaveReasonQualifier.SICKNESS.leave_reason_qualifier_description
-        primary_relationship = (
-            RelationshipToCaregiver.EMPLOYEE.relationship_to_caregiver_description
-        )
+
     elif application.leave_reason_id == LeaveReason.CHILD_BONDING.leave_reason_id:
         reason = application.leave_reason.leave_reason_description
         reason_qualifier = application.leave_reason_qualifier
@@ -321,7 +318,7 @@ def build_absence_case(
             == LeaveReasonQualifier.ADOPTION.leave_reason_qualifier_id
         ):
             primary_rel_qualifier_1 = (
-                RelationshipQualifier.ADOPTIVE.relationship_qualifier_description
+                RelationshipQualifier.ADOPTED.relationship_qualifier_description
             )
         elif (
             reason_qualifier.leave_reason_qualifier_id

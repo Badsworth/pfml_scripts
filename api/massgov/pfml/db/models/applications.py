@@ -402,7 +402,7 @@ class RelationshipQualifier(LookupTable):
     model = LkRelationshipQualifier
     column_names = ("relationship_qualifier_id", "relationship_qualifier_description")
 
-    ADOPTIVE = LkRelationshipQualifier(1, "Adoptive")
+    ADOPTED = LkRelationshipQualifier(1, "Adopted")
     BIOLOGICAL = LkRelationshipQualifier(2, "Biological")
     FOSTER = LkRelationshipQualifier(3, "Foster")
     CUSTODIAL_PARENT = LkRelationshipQualifier(4, "Custodial Parent")
