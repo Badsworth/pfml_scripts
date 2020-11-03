@@ -222,24 +222,6 @@ const machineTests = {
       },
     },
   },
-  [routes.claims.scheduleRotatingNumberWeeks]: {
-    meta: {
-      test: (_, event) => {
-        expect(
-          get(event.context.claim, "work_pattern.work_pattern_type")
-        ).toEqual(WorkPatternType.rotating);
-      },
-    },
-  },
-  [routes.claims.scheduleRotating]: {
-    meta: {
-      test: (_, event) => {
-        expect(
-          get(event.context.claim, "work_pattern.work_pattern_type")
-        ).toEqual(WorkPatternType.rotating);
-      },
-    },
-  },
   [routes.claims.scheduleVariable]: {
     meta: {
       test: (_, event) => {

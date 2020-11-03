@@ -36,8 +36,6 @@ import { fields as previousLeavesFields } from "../pages/claims/previous-leaves"
 import { fields as reasonPregnancyFields } from "../pages/claims/reason-pregnancy";
 import routes from "../routes";
 import { fields as scheduleFixedFields } from "../pages/claims/schedule-fixed";
-import { fields as scheduleRotatingFields } from "../pages/claims/schedule-rotating";
-import { fields as scheduleRotatingNumberWeeksFields } from "../pages/claims/schedule-rotating-number-weeks";
 import { fields as scheduleVariableFields } from "../pages/claims/schedule-variable";
 import { fields as ssnFields } from "../pages/claims/ssn";
 import { fields as stateIdFields } from "../pages/claims/state-id";
@@ -62,8 +60,6 @@ export const guards = {
   showPreviousLeaves: () => isFeatureEnabled("claimantShowPreviousLeaves"),
   isFixedWorkPattern: ({ claim }) =>
     get(claim, "work_pattern.work_pattern_type") === WorkPatternType.fixed,
-  isRotatingWorkPattern: ({ claim }) =>
-    get(claim, "work_pattern.work_pattern_type") === WorkPatternType.rotating,
   isVariableWorkPattern: ({ claim }) =>
     get(claim, "work_pattern.work_pattern_type") === WorkPatternType.variable,
 };
@@ -458,19 +454,12 @@ export default {
       on: {
         CONTINUE: [
           {
-            target: routes.claims.scheduleRotatingNumberWeeks,
-            cond: "isRotatingWorkPattern",
-          },
-          {
             target: routes.claims.scheduleFixed,
             cond: "isFixedWorkPattern",
           },
           {
             target: routes.claims.scheduleVariable,
             cond: "isVariableWorkPattern",
-          },
-          {
-            target: routes.claims.hoursWorkedPerWeek,
           },
         ],
       },
@@ -479,32 +468,6 @@ export default {
       meta: {
         step: ClaimSteps.employerInformation,
         fields: scheduleFixedFields,
-      },
-      on: {
-        CONTINUE: routes.claims.checklist,
-      },
-    },
-    [routes.claims.scheduleRotatingNumberWeeks]: {
-      meta: {
-        step: ClaimSteps.employerInformation,
-        fields: scheduleRotatingNumberWeeksFields,
-      },
-      on: {
-        CONTINUE: [
-          {
-            target: routes.claims.scheduleVariable,
-            cond: "isVariableWorkPattern",
-          },
-          {
-            target: routes.claims.scheduleRotating,
-          },
-        ],
-      },
-    },
-    [routes.claims.scheduleRotating]: {
-      meta: {
-        step: ClaimSteps.employerInformation,
-        fields: scheduleRotatingFields,
       },
       on: {
         CONTINUE: routes.claims.checklist,
