@@ -1,14 +1,14 @@
 import os
 import urllib.parse
 from contextlib import contextmanager
-from typing import Any, Dict, Generator, List, Optional, Union
+from typing import Any, Dict, Generator, Iterable, List, Optional, TypeVar, Union
 
 import boto3
 import psycopg2
 import sqlalchemy
 import sqlalchemy.pool as pool
 from sqlalchemy.engine import Connection, Engine
-from sqlalchemy.orm import Session, scoped_session, sessionmaker
+from sqlalchemy.orm import Query, Session, scoped_session, sessionmaker
 
 import massgov.pfml.db.handle_error
 import massgov.pfml.db.models
@@ -211,3 +211,34 @@ def create_user(
     for role in roles:
         logger.info(f"Granting '{role}' to '{username}'")
         db_conn.execute(f"GRANT {role} TO {username};")
+
+
+_T = TypeVar("_T")
+
+
+# https://github.com/sqlalchemy/sqlalchemy/wiki/RangeQuery-and-WindowedRangeQuery
+def windowed_query(q: "Query[_T]", column: Any, window_size: int) -> Iterable[_T]:
+    """"Break a Query into chunks on a given column."""
+
+    is_single_entity = q.is_single_entity  # type: ignore
+    q_modified = q.add_columns(column).order_by(column)
+    last_id: Optional[Any] = None
+
+    while True:
+        subq = q_modified
+
+        if last_id is not None:
+            subq = subq.filter(column > last_id)
+
+        chunk = subq.limit(window_size).all()
+
+        if not chunk:
+            break
+
+        last_id = chunk[-1][-1]
+
+        for row in chunk:
+            if is_single_entity:
+                yield row[0]
+            else:
+                yield row[0:-1]

@@ -1,6 +1,8 @@
 import io
 from datetime import date
 
+import pytest
+
 import massgov.pfml.fineos
 from massgov.pfml.api.services import fineos_actions
 from massgov.pfml.db.models.applications import Application, LeaveReasonQualifier
@@ -9,6 +11,9 @@ from massgov.pfml.db.models.factories import AddressFactory, ApplicationFactory
 from massgov.pfml.fineos import FINEOSClient
 from massgov.pfml.fineos.exception import FINEOSClientBadResponse, FINEOSClientError, FINEOSNotFound
 from massgov.pfml.fineos.models import CreateOrUpdateEmployer
+
+# almost every test in here requires real resources
+pytestmark = pytest.mark.integration
 
 
 def test_register_employee_pass(test_db_session):
@@ -185,6 +190,8 @@ def test_build_week_based_work_pattern(user):
 
 
 def test_create_employer_simple(test_db_session):
+    fineos_client = massgov.pfml.fineos.MockFINEOSClient()
+
     employer = Employer()
     employer.employer_fein = "888447598"
     employer.employer_name = "Test Organization Name44"
@@ -192,22 +199,21 @@ def test_create_employer_simple(test_db_session):
     test_db_session.add(employer)
     test_db_session.commit()
 
+    assert employer.fineos_customer_nbr is None
+    assert employer.fineos_employer_id is None
+
     fineos_customer_nbr, fineos_employer_id = fineos_actions.create_or_update_employer(
-        employer.employer_fein, test_db_session
+        fineos_client, employer
     )
 
     assert fineos_customer_nbr is not None
-    created_employer = (
-        test_db_session.query(Employer)
-        .filter(Employer.employer_fein == str(employer.employer_fein))
-        .one()
-    )
-    assert created_employer.fineos_customer_nbr == employer.fineos_customer_nbr
-    assert isinstance(created_employer.fineos_employer_id, int)
-    assert created_employer.fineos_employer_id == 250
+    assert employer.fineos_customer_nbr == fineos_customer_nbr
+    assert employer.fineos_employer_id == fineos_employer_id
 
 
 def test_update_employer_simple(test_db_session):
+    fineos_client = massgov.pfml.fineos.MockFINEOSClient()
+
     employer = Employer()
     employer.employer_fein = "888447576"
     employer.employer_name = "Test Organization Name"
@@ -217,16 +223,44 @@ def test_update_employer_simple(test_db_session):
     test_db_session.add(employer)
     test_db_session.commit()
 
-    fineos_customer_nbr, fines_employer_id = fineos_actions.create_or_update_employer(
-        employer.employer_fein, test_db_session
+    fineos_customer_nbr, fineos_employer_id = fineos_actions.create_or_update_employer(
+        fineos_client, employer
     )
 
     assert fineos_customer_nbr is not None
-    assert fineos_customer_nbr == employer.fineos_customer_nbr
-    assert fines_employer_id == employer.fineos_employer_id
+    assert employer.fineos_customer_nbr == fineos_customer_nbr
+    assert employer.fineos_employer_id == fineos_employer_id
+
+
+def test_update_employer_missing_employer_id_not_populated(test_db_session):
+    fineos_client = massgov.pfml.fineos.MockFINEOSClient()
+
+    employer = Employer()
+    employer.employer_fein = "888447576"
+    employer.employer_name = "Test Organization Name"
+    employer.employer_dba = "Test Organization DBA"
+
+    # this situation of having a customer number but not employer id should
+    # never happen, but the code does not set these on updates, so testing that
+    # behavior
+    employer.fineos_customer_nbr = "pfml_api_testing_update"
+    employer.fineos_employer_id = None
+
+    test_db_session.add(employer)
+    test_db_session.commit()
+
+    fineos_customer_nbr, fineos_employer_id = fineos_actions.create_or_update_employer(
+        fineos_client, employer
+    )
+
+    assert fineos_customer_nbr is not None
+    assert employer.fineos_customer_nbr == fineos_customer_nbr
+    assert employer.fineos_employer_id is None
 
 
 def test_employer_creation_exception(test_db_session):
+    fineos_client = massgov.pfml.fineos.MockFINEOSClient()
+
     employer = Employer()
     employer.employer_fein = "999999999"
     employer.employer_name = "Test Organization Dupe"
@@ -235,28 +269,12 @@ def test_employer_creation_exception(test_db_session):
     test_db_session.add(employer)
     test_db_session.commit()
 
-    try:
-        fineos_actions.create_or_update_employer(employer.employer_fein, test_db_session)
-        AssertionError
-    except FINEOSClientError:
-        assert True
+    with pytest.raises(FINEOSClientError):
+        fineos_actions.create_or_update_employer(fineos_client, employer)
 
 
-def test__employer_fein_not_found(test_db_session):
-    employer = Employer()
-    employer.employer_fein = "888447598"
-    employer.employer_name = "Test Organization Name44"
-    employer.employer_dba = "Test Organization DBA"
-    test_db_session.add(employer)
-    test_db_session.commit()
-
-    try:
-        fineos_actions.create_or_update_employer("999999999", test_db_session)
-        AssertionError()
-    except FINEOSNotFound:
-        assert True
-
-
+# not an integration test, but marked as such by global pytest.mark.integration
+# at top of file
 def test_creating_request_payload():
     create_or_update_request = CreateOrUpdateEmployer(
         fineos_customer_nbr="pfml_test_payload",
@@ -332,25 +350,26 @@ def test_build_customer_address(user):
 
 
 def test_create_service_agreement_for_employer(test_db_session):
+    fineos_client = massgov.pfml.fineos.MockFINEOSClient()
+
     employer = Employer()
     employer.employer_fein = "888447598"
     employer.employer_name = "Test Organization Name"
     employer.employer_dba = "Test Organization DBA"
     test_db_session.add(employer)
-    test_db_session.commit()
 
     fineos_customer_nbr, fineos_employer_id = fineos_actions.create_or_update_employer(
-        employer.employer_fein, test_db_session
+        fineos_client, employer
     )
 
-    fineos_sa_id = fineos_actions.create_service_agreement_for_employer(
-        fineos_employer_id, test_db_session
-    )
+    fineos_sa_id = fineos_actions.create_service_agreement_for_employer(fineos_client, employer)
 
     assert fineos_sa_id is not None
     assert fineos_sa_id == "SA-123"
 
 
+# not an integration test, but marked as such by global pytest.mark.integration
+# at top of file
 def test_create_service_agreement_payload():
     payload = FINEOSClient._create_service_agreement_payload(
         123, "MA PFML - Limit, MA PFML - Employee"
@@ -364,6 +383,8 @@ def test_create_service_agreement_payload():
     assert payload.__contains__("<value>MA PFML - Limit, MA PFML - Employee</value>")
 
 
+# not an integration test, but marked as such by global pytest.mark.integration
+# at top of file
 def test_resolve_leave_plans():
     # Family Exemption = false
     # Medical Exemption = false

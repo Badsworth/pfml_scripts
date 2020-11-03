@@ -10,6 +10,8 @@ import pwd
 import resource
 import sys
 import time
+from datetime import datetime
+from typing import Any, Dict, Generator, Iterable, Optional, TypeVar
 
 from . import formatters, network
 
@@ -89,6 +91,36 @@ def get_logger(name):
             "invalid logger name %r (try passing __package__ instead of __name__)" % name
         )
     return logging.getLogger(name)
+
+
+_T = TypeVar("_T")
+
+
+def log_every(
+    log: Any,
+    items: Iterable[_T],
+    *,
+    count: int = 100,
+    total_count: Optional[int] = None,
+    start_time: Optional[datetime] = None,
+    extra: Optional[Dict[str, Any]] = None,
+) -> Generator[_T, Any, Any]:
+    """Every `count` items, log a message about progress through `items`."""
+
+    if not extra:
+        extra = {}
+
+    for index, item in enumerate(items, 1):
+        if count and not index % count:
+            if start_time:
+                extra["elapsed_seconds"] = (datetime.now() - start_time).total_seconds()
+
+            if total_count:
+                extra["percent_complete"] = round((index / total_count) * 100, 2)
+
+            log.info(f"Processing item {index} of {total_count or 'unknown total'}", extra=extra)
+
+        yield item
 
 
 logger = get_logger(__name__)

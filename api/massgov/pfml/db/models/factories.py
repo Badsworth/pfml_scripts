@@ -78,13 +78,42 @@ class UserFactory(BaseFactory):
                 get_db_session().commit()
 
 
-class EmployerFactory(BaseFactory):
+class EmployerOnlyRequiredFactory(BaseFactory):
     class Meta:
         model = employee_models.Employer
 
     employer_id = Generators.UuidObj
     employer_fein = Generators.Fein
     employer_dba = factory.Faker("company")
+
+
+class EmployerOnlyDORDataFactory(EmployerOnlyRequiredFactory):
+    account_key = Generators.AccountKey
+    employer_name = factory.Faker("company")
+    family_exemption = factory.Faker("boolean", chance_of_getting_true=0.1)
+    medical_exemption = factory.Faker("boolean", chance_of_getting_true=0.1)
+
+    # Address info not implemented
+
+    exemption_commence_date = factory.LazyAttribute(
+        lambda e: factory.Faker(
+            "date_between_dates", start_date=date(2020, 1, 1), end_date="next year"
+        )
+        if e.family_exemption or e.medical_exemption
+        else None
+    )
+    exemption_cease_date = factory.LazyAttribute(
+        lambda e: factory.Faker(
+            "date_between_dates",
+            start_date=e.exemption_commence_date,
+            end_date=e.exemption_commence_date + timedelta(weeks=52),
+        )
+        if e.exemption_commence_date
+        else None
+    )
+
+
+class EmployerFactory(EmployerOnlyDORDataFactory):
     fineos_customer_nbr = f"pfml_api_{str(Generators.UuidObj)}"
     fineos_employer_id = random.randint(100, 1000)
 
