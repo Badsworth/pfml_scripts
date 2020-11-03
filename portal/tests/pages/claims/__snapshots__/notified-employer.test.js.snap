@@ -8,7 +8,7 @@ exports[`NotifiedEmployer renders the page 1`] = `
   <Alert
     state="info"
   >
-    You need to complete a separate application for each employer you are taking leave from.
+    If you are filing for paid leave from multiple employers, you will need to fill out a separate application for each individual employer.
   </Alert>
   <InputChoiceGroup
     choices={

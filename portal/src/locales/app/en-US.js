@@ -312,7 +312,7 @@ const shared = {
   leaveReasonServiceMemberFamily: "Military family",
   minutesLabel: "Minutes",
   multipleEmployerAppAlert:
-    "You need to complete a separate application for each employer you are taking leave from.",
+    "If you are filing for paid leave from multiple employers, you will need to fill out a separate application for each individual employer.",
   networkError:
     "Sorry, an error was encountered. This may occur for a variety of reasons, including temporarily losing an internet connection or an unexpected error in our system. If this continues to happen, you may call the Paid Family Leave Contact Center at $t(shared.contactCenterPhoneNumber)",
   otherIncomeEntryPrefix: "Income",

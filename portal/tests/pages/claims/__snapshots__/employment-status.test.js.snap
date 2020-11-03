@@ -8,7 +8,7 @@ exports[`EmploymentStatusPage when claimantShowEmploymentStatus feature flag is 
   <Alert
     state="info"
   >
-    You need to complete a separate application for each employer you are taking leave from.
+    If you are filing for paid leave from multiple employers, you will need to fill out a separate application for each individual employer.
   </Alert>
   <ConditionalContent
     clearField={[Function]}
@@ -42,7 +42,7 @@ exports[`EmploymentStatusPage when claimantShowEmploymentStatus feature flag is 
   <Alert
     state="info"
   >
-    You need to complete a separate application for each employer you are taking leave from.
+    If you are filing for paid leave from multiple employers, you will need to fill out a separate application for each individual employer.
   </Alert>
   <InputChoiceGroup
     choices={
