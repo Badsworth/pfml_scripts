@@ -16,8 +16,8 @@ from massgov.pfml.api.services.application_rules import (
 from massgov.pfml.api.util.response import Issue, IssueRule, IssueType, success_response
 from massgov.pfml.db.models.applications import (
     EmploymentStatus,
+    LeaveReason,
     LeaveReasonQualifier,
-    LeaveType,
     WorkPatternDay,
 )
 from massgov.pfml.db.models.employees import PaymentType
@@ -717,7 +717,8 @@ def test_mailing_addr_required_if_has_mailing_addr(test_db_session, initialize_f
 
 def test_pregnant_required_medical_leave(test_db_session, initialize_factories_session):
     test_app = ApplicationFactory.create(
-        leave_type_id=LeaveType.MEDICAL_LEAVE.leave_type_id, pregnant_or_recent_birth=None
+        leave_reason_id=LeaveReason.SERIOUS_HEALTH_CONDITION_EMPLOYEE.leave_reason_id,
+        pregnant_or_recent_birth=None,
     )
     issues = get_conditional_issues(test_app)
     assert [
@@ -732,7 +733,7 @@ def test_pregnant_required_medical_leave(test_db_session, initialize_factories_s
 
 def test_reason_qualifers_required_for_bonding(test_db_session, initialize_factories_session):
     test_app = ApplicationFactory.create(
-        leave_type_id=LeaveType.BONDING_LEAVE.leave_type_id,
+        leave_reason_id=LeaveReason.CHILD_BONDING.leave_reason_id,
         leave_reason_qualifier_id=LeaveReasonQualifier.SERIOUS_HEALTH_CONDITION.leave_reason_qualifier_id,
     )
     issues = get_conditional_issues(test_app)
@@ -750,7 +751,7 @@ def test_child_birth_date_required_for_newborn_bonding(
     test_db_session, initialize_factories_session
 ):
     test_app = ApplicationFactory.create(
-        leave_type_id=LeaveType.BONDING_LEAVE.leave_type_id,
+        leave_reason_id=LeaveReason.CHILD_BONDING.leave_reason_id,
         leave_reason_qualifier_id=LeaveReasonQualifier.NEWBORN.leave_reason_qualifier_id,
         child_birth_date=None,
     )
@@ -769,7 +770,7 @@ def test_child_placement_date_required_for_adoption_bonding(
     test_db_session, initialize_factories_session
 ):
     test_app = ApplicationFactory.create(
-        leave_type_id=LeaveType.BONDING_LEAVE.leave_type_id,
+        leave_reason_id=LeaveReason.CHILD_BONDING.leave_reason_id,
         leave_reason_qualifier_id=LeaveReasonQualifier.ADOPTION.leave_reason_qualifier_id,
         child_placement_date=None,
     )
@@ -788,7 +789,7 @@ def test_child_placement_date_required_for_fostercare_bonding(
     test_db_session, initialize_factories_session
 ):
     test_app = ApplicationFactory.create(
-        leave_type_id=LeaveType.BONDING_LEAVE.leave_type_id,
+        leave_reason_id=LeaveReason.CHILD_BONDING.leave_reason_id,
         leave_reason_qualifier_id=LeaveReasonQualifier.FOSTER_CARE.leave_reason_qualifier_id,
         child_placement_date=None,
     )

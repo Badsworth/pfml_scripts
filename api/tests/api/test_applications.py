@@ -2014,6 +2014,8 @@ def test_application_post_submit_to_fineos_bonding_adoption(
     # Reason Qualifier 1 = Adoption
     application.leave_reason_id = LeaveReason.CHILD_BONDING.leave_reason_id
     application.leave_reason_qualifier_id = LeaveReasonQualifier.ADOPTION.leave_reason_qualifier_id
+
+    application.child_placement_date = date(2021, 1, 15)
     test_db_session.commit()
 
     massgov.pfml.fineos.mock_client.start_capture()
@@ -2021,7 +2023,6 @@ def test_application_post_submit_to_fineos_bonding_adoption(
         "/v1/applications/{}/submit_application".format(application.application_id),
         headers={"Authorization": f"Bearer {auth_token}"},
     )
-
     assert response.status_code == 201
 
     capture = massgov.pfml.fineos.mock_client.get_capture()
@@ -2065,6 +2066,7 @@ def test_application_post_submit_to_fineos_bonding_foster(
     application.leave_reason_qualifier_id = (
         LeaveReasonQualifier.FOSTER_CARE.leave_reason_qualifier_id
     )
+    application.child_placement_date = date(2020, 2, 1)
     test_db_session.commit()
 
     massgov.pfml.fineos.mock_client.start_capture()
@@ -2114,6 +2116,8 @@ def test_application_post_submit_to_fineos_bonding_newborn(
     # Reason Qualifier 1 = Newborn
     application.leave_reason_id = LeaveReason.CHILD_BONDING.leave_reason_id
     application.leave_reason_qualifier_id = LeaveReasonQualifier.NEWBORN.leave_reason_qualifier_id
+
+    application.child_birth_date = date(2020, 2, 1)
     test_db_session.commit()
 
     massgov.pfml.fineos.mock_client.start_capture()

@@ -11,8 +11,8 @@ from massgov.pfml.api.util.response import Issue, IssueRule, IssueType
 from massgov.pfml.db.models.applications import (
     Application,
     EmploymentStatus,
+    LeaveReason,
     LeaveReasonQualifier,
-    LeaveType,
 )
 from massgov.pfml.db.models.employees import PaymentType
 
@@ -99,13 +99,17 @@ def get_conditional_issues(application: Application) -> List[Issue]:
             )
         )
 
-    if application.leave_type and (
-        application.leave_type.leave_type_id == LeaveType.MEDICAL_LEAVE.leave_type_id
+    if application.leave_reason and (
+        application.leave_reason.leave_reason_id
+        in [
+            LeaveReason.SERIOUS_HEALTH_CONDITION_EMPLOYEE.leave_reason_id,
+            LeaveReason.PREGNANCY_MATERNITY.leave_reason_id,
+        ]
     ):
         issues += get_medical_leave_issues(application)
 
-    if application.leave_type and (
-        application.leave_type.leave_type_id == LeaveType.BONDING_LEAVE.leave_type_id
+    if application.leave_reason and (
+        application.leave_reason.leave_reason_id == LeaveReason.CHILD_BONDING.leave_reason_id
     ):
         issues += get_bonding_leave_issues(application)
 
@@ -177,6 +181,7 @@ QUALIFIER_IDS_FOR_BONDING = [
 
 def get_bonding_leave_issues(application: Application) -> List[Issue]:
     issues = []
+
     # This is here for now to consolidate cross-field validation but can be moved to the openapi.yml if this file becomes too unwieldy
     if application.leave_reason_qualifier_id not in QUALIFIER_IDS_FOR_BONDING:
         issues.append(
