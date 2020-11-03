@@ -1,10 +1,10 @@
 import { TestData, Browser, step, By } from "@flood/element";
-import { SimulationClaim } from "../../simulation/types";
 import {
   globalElementSettings as settings,
-  StoredStep,
-  getFineosBaseUrl,
   dataBaseUrl,
+  StoredStep,
+  LSTSimClaim,
+  getFineosBaseUrl,
 } from "../config";
 import { labelled, waitForElement, formatDate } from "../helpers";
 import assert from "assert";
@@ -21,7 +21,7 @@ export const steps: StoredStep[] = [
   {
     name: "Search for a party",
     test: async (browser: Browser, data: unknown): Promise<void> => {
-      const { claim } = data as SimulationClaim;
+      const { claim } = data as LSTSimClaim;
       const linkParties = await waitForElement(
         browser,
         By.css('a[aria-label="Parties"]')
@@ -48,7 +48,7 @@ export const steps: StoredStep[] = [
   {
     name: "Add new application",
     test: async (browser: Browser, data: unknown): Promise<void> => {
-      const { claim } = data as SimulationClaim;
+      const { claim } = data as LSTSimClaim;
       assert(claim.tax_identifier, "tax_identifier is not defined");
       const okButton = await waitForElement(
         browser,
@@ -75,7 +75,7 @@ export const steps: StoredStep[] = [
   {
     name: "Fill out Intake Opening info",
     test: async (browser: Browser, data: unknown): Promise<void> => {
-      const { claim } = data as SimulationClaim;
+      const { claim } = data as LSTSimClaim;
       const intakeSourceSelect = await labelled(browser, "Intake Source");
       await browser.selectByText(intakeSourceSelect, "Self-Service");
       /* Date of claim submission, defaults to current date/time */
@@ -99,7 +99,7 @@ export const steps: StoredStep[] = [
   {
     name: "Fill out Paper Intake - Absence Reason section",
     test: async (browser: Browser, data: unknown): Promise<void> => {
-      const { claim } = data as SimulationClaim;
+      const { claim } = data as LSTSimClaim;
       if (claim.employment_status === "Employed") {
         const absenceRelatesToSelect = await labelled(
           browser,
@@ -135,7 +135,7 @@ export const steps: StoredStep[] = [
   {
     name: "Fill out Paper Intake - Leave Periods section",
     test: async (browser: Browser, data: unknown): Promise<void> => {
-      const { claim } = data as SimulationClaim;
+      const { claim } = data as LSTSimClaim;
       assert(claim.leave_details, "claim.leave_details is not defined");
       assert(
         claim.leave_details.continuous_leave_periods,
@@ -147,7 +147,7 @@ export const steps: StoredStep[] = [
           By.css("input[type='checkbox'][id*='continuousTimeToggle_CHECKBOX']")
         );
         await continuousLeave.click();
-        await fillContinuousLeavePeriods(browser, data as SimulationClaim);
+        await fillContinuousLeavePeriods(browser, data as LSTSimClaim);
       }
       await browser.wait(1000);
       // TODO: other types of leaves "Episodic / leave as needed", "Reduced work schedule"
@@ -156,7 +156,7 @@ export const steps: StoredStep[] = [
   {
     name: "Fill out Paper Intake - Timely Reporting section",
     test: async (browser: Browser, data: unknown): Promise<void> => {
-      const { claim } = data as SimulationClaim;
+      const { claim } = data as LSTSimClaim;
       assert(claim.leave_details, "claim.leave_details is not defined");
       if (claim.leave_details.employer_notified) {
         const hasBeenNotifiedCheckbox = await labelled(
@@ -207,7 +207,7 @@ export const steps: StoredStep[] = [
 
 async function fillContinuousLeavePeriods(
   browser: Browser,
-  data: SimulationClaim,
+  data: LSTSimClaim,
   period = 0
 ): Promise<void> {
   if (!data.claim.leave_details) return;
@@ -241,7 +241,7 @@ async function fillContinuousLeavePeriods(
 }
 
 export default (): void => {
-  TestData.fromJSON<SimulationClaim>(`../${dataBaseUrl}/claims.json`).filter(
+  TestData.fromJSON<LSTSimClaim>(`../${dataBaseUrl}/claims.json`).filter(
     (line) => line.scenario === scenario
   );
   steps.forEach((action) => {

@@ -1,7 +1,7 @@
 import { Locator, Browser, By, ElementHandle, Until } from "@flood/element";
-import { config } from "./config";
-import { DocumentUploadRequest } from "../api";
+import { config, StandardDocumentType } from "./config";
 import { ClaimDocument } from "../simulation/types";
+import { DocumentUploadRequest } from "../api";
 
 export const formatDate = (d: string | null | undefined): string =>
   new Intl.DateTimeFormat("en-US", {
@@ -192,9 +192,7 @@ export const getRequestOptions = (
   ...options,
 });
 
-export function getDocumentType(
-  document: ClaimDocument
-): DocumentUploadRequest["document_type"] {
+export function getDocumentType(document: ClaimDocument): StandardDocumentType {
   if (["MASSID", "OOSID"].includes(document.type)) {
     return "Identification Proof";
   } else {

@@ -1,14 +1,34 @@
 import { Browser, By } from "@flood/element";
-import { SimulationClaim } from "../../simulation/types";
-import { StoredStep } from "../config";
+import { StoredStep, LSTSimClaim, StandardDocumentType } from "../config";
 import { waitForElement, labelled } from "../helpers";
 
-let reviewedDocument: string;
+let missingDocument: StandardDocumentType;
+
+export const PreRequestAdditionalInfo = async (
+  browser: Browser,
+  data: unknown
+): Promise<void> => {
+  const _data = data as LSTSimClaim;
+  missingDocument = _data.missingDocument as StandardDocumentType;
+};
+
+export default async (browser: Browser, data: unknown): Promise<void> => {
+  for (const step of steps) {
+    console.log(`Request Additional Info - ${step.name} - ${missingDocument}`);
+    await step.test(browser, data);
+  }
+};
 
 export const steps: StoredStep[] = [
   {
     name: "Add info for missing document",
     test: async (browser: Browser): Promise<void> => {
+      // go to evidence and approve
+      const evidenceTab = await waitForElement(
+        browser,
+        By.visibleText("Evidence")
+      );
+      await browser.click(evidenceTab);
       // start adding additional information
       const additionalInfoButton = await waitForElement(
         browser,
@@ -16,10 +36,9 @@ export const steps: StoredStep[] = [
       );
       await browser.click(additionalInfoButton);
 
-      let documentCheckbox = "";
-      if (reviewedDocument === "Identification Proof") {
-        documentCheckbox = "supportingDocumentationNotProvided";
-      } else if (reviewedDocument === "State Managed Paid Leave Confirmation") {
+      // default matches the "Identification Proof" document type
+      let documentCheckbox = "supportingDocumentationNotProvided";
+      if (missingDocument === "State Managed Paid Leave Confirmation") {
         documentCheckbox = "healthcareProviderInformationIncomplete";
       }
 
@@ -35,7 +54,7 @@ export const steps: StoredStep[] = [
       );
       await browser.type(
         notesTextarea,
-        `PFML LST - missing ${reviewedDocument}`
+        `PFML LST - missing ${missingDocument}`
       );
 
       const okEvidenceButton = await waitForElement(
@@ -83,7 +102,7 @@ export const steps: StoredStep[] = [
       const reviewNotesTextarea = await labelled(browser, "Review note");
       await browser.type(
         reviewNotesTextarea,
-        `PFML LST - reviewed ${reviewedDocument}`
+        `PFML LST - reviewed ${missingDocument}`
       );
 
       const okButton = await waitForElement(
@@ -94,19 +113,3 @@ export const steps: StoredStep[] = [
     },
   },
 ];
-
-export default async (browser: Browser, data: unknown): Promise<void> => {
-  for (const step of steps) {
-    console.log(`Request Additional Info - ${step.name} - ${reviewedDocument}`);
-    await step.test(browser, data);
-  }
-};
-
-export const PreRequestAdditionalInfo = async (
-  browser: Browser,
-  data: unknown
-): Promise<void> => {
-  ({ reviewedDocument } = data as SimulationClaim & {
-    reviewedDocument: string;
-  });
-};

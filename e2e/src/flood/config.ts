@@ -1,5 +1,7 @@
 import { StepFunction, TestSettings, ENV } from "@flood/element";
-import { FineosUserType } from "../simulation/types";
+import { SimulationClaim, FineosUserType } from "../simulation/types";
+import { DocumentUploadRequest } from "../api";
+import Tasks from "./tasks";
 
 export const globalElementSettings: TestSettings = {
   loopCount: 1,
@@ -24,19 +26,42 @@ export type StoredStep = {
   test: StepFunction<unknown>;
 };
 
-export const getRequestOptions = (
-  token: string,
-  method: string,
-  body?: unknown
-): RequestInit => ({
-  method,
-  body: JSON.stringify(body),
-  headers: {
-    Authorization: `Bearer ${token}`,
-    "User-Agent": "PFML Load Testing Bot",
-    "Content-Type": "application/json",
-  },
-});
+export type Agent = {
+  steps: StoredStep[];
+  default: () => void;
+};
+
+export type TaskType =
+  | "Adjudicate Absence"
+  | "Outstanding Requirement Received";
+
+export type TaskHook = "" | "Before" | "After";
+
+export type AgentActions = {
+  // [k: `${TaskHook}${TaskType}`] ?
+  [k: string]: StepFunction<unknown>;
+};
+
+export const agentActions: AgentActions = {
+  // Adjudicate randomly approves or denies a claim
+  "Before Adjudicate Absence": Tasks.PreAdjudicateAbsence,
+  "Adjudicate Absence": Tasks.AdjudicateAbsence,
+  "After Adjudicate Absence": Tasks.PostAdjudicateAbsence,
+  // ORR checks if certain Requirement was added to the claim
+  "Before Outstanding Requirement Received": Tasks.PreORR,
+  "Outstanding Requirement Received": Tasks.OutstandingRequirementReceived,
+};
+
+export type StandardDocumentType = DocumentUploadRequest["document_type"];
+export const standardDocuments: StandardDocumentType[] = [
+  "State Managed Paid Leave Confirmation",
+  "Identification Proof",
+];
+
+export type LSTSimClaim = SimulationClaim & {
+  priorityTask?: TaskType;
+  missingDocument?: StandardDocumentType;
+};
 
 // Default flood configurations for given grid
 const MAX_BROWSERS = 25;

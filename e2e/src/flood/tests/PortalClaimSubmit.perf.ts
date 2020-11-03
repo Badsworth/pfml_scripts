@@ -1,11 +1,11 @@
 import { TestData, Browser, step, By } from "@flood/element";
-import { SimulationClaim } from "../../simulation/types";
 import { DocumentUploadRequest } from "../../api";
 import {
   globalElementSettings as settings,
   PortalBaseUrl,
   APIBaseUrl,
   dataBaseUrl,
+  LSTSimClaim,
   config,
 } from "../config";
 import {
@@ -63,10 +63,10 @@ export const steps = [
   {
     name: "Create, Update and Submit new application",
     test: async (browser: Browser, data: unknown): Promise<void> => {
-      const { claim, documents } = data as SimulationClaim;
+      const { claim, documents } = data as LSTSimClaim;
       const { leave_details } = claim;
       // Attempt at simulating portal's consequent small patch requests
-      const claimParts: (Partial<SimulationClaim["claim"]> | string)[] = [
+      const claimParts: (Partial<LSTSimClaim["claim"]> | string)[] = [
         "create",
         {
           first_name: claim.first_name,
@@ -247,7 +247,7 @@ export const steps = [
 ];
 
 export default (): void => {
-  TestData.fromJSON<SimulationClaim>(`../${dataBaseUrl}/claims.json`).filter(
+  TestData.fromJSON<LSTSimClaim>(`../${dataBaseUrl}/claims.json`).filter(
     (line) => line.scenario === scenario
   );
   steps.forEach((action) => {

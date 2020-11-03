@@ -1,34 +1,26 @@
-import {
-  TestData,
-  StepFunction,
-  ElementHandle,
-  Browser,
-  step,
-  By,
-} from "@flood/element";
-import { SimulationClaim } from "../../simulation/types";
+import { TestData, ElementHandle, Browser, step, By } from "@flood/element";
 import { fineosUserTypeNames, FineosUserType } from "../../simulation/types";
-import { StoredStep, getFineosBaseUrl, dataBaseUrl } from "../config";
+import {
+  dataBaseUrl,
+  agentActions,
+  Agent,
+  TaskType,
+  TaskHook,
+  StoredStep,
+  LSTSimClaim,
+  getFineosBaseUrl,
+} from "../config";
 import { waitForElement } from "../helpers";
-
-export type TaskTypes = {
-  [k: string]: StepFunction<unknown>;
-};
-
-export type Agent = {
-  steps: StoredStep[];
-  default: () => void;
-};
 
 export default (
   scenario: string,
-  taskTypes: TaskTypes,
+  actions: TaskType[],
   tasksToDo = 1
 ): Agent => {
   let tasksDone = 0;
 
   const taskTypeElementSelectors: string[] = [];
-  for (const key in taskTypes) {
+  for (const key in actions) {
     taskTypeElementSelectors.push(`td[title="${key}"]`);
   }
   let taskTypeElementLocator = taskTypeElementSelectors.join(", ");
@@ -71,7 +63,7 @@ export default (
   async function doNextTask(browser: Browser, data: unknown): Promise<void> {
     // this is mostly for testing purposes,
     // forces script to run the task type specified in claims.json
-    const _data = data as SimulationClaim & { priorityTask: string };
+    const _data = data as LSTSimClaim;
 
     // get next task
     const getNextTask = await waitForElement(
@@ -96,20 +88,13 @@ export default (
     const nextTaskType = await nextTask.text();
     await nextTask.click();
 
-    // Runs task-specific pre-hook
-    const preHook = `Before ${nextTaskType}`;
-    if (preHook in taskTypes) {
-      await taskTypes[preHook](browser, data);
-    }
-
-    // Runs task-specific main handler
-    await taskTypes[nextTaskType](browser, data);
-    console.info(`${scenario} - Do task - Task Handler Done!`);
-
-    // Runs task-specific post-hook
-    const postHook = `After ${nextTaskType}`;
-    if (postHook in taskTypes) {
-      await taskTypes[postHook](browser, data);
+    const agentHooks: TaskHook[] = ["Before", "", "After"];
+    for (const hook of agentHooks) {
+      const hookHandler = `${hook} ${nextTaskType}`.trim();
+      if (hookHandler in agentActions) {
+        console.info(`\n${scenario} - ${hookHandler}\n`);
+        await agentActions[hookHandler](browser, data);
+      }
     }
 
     // Task was completed, so tasksDone += 1
@@ -124,9 +109,9 @@ export default (
   return {
     steps,
     default: (): void => {
-      TestData.fromJSON<SimulationClaim>(
-        `../${dataBaseUrl}/claims.json`
-      ).filter((line) => line.scenario === scenario);
+      TestData.fromJSON<LSTSimClaim>(`../${dataBaseUrl}/claims.json`).filter(
+        (line) => line.scenario === scenario
+      );
       steps.forEach((action) => {
         step(action.name, action.test);
       });
@@ -135,7 +120,8 @@ export default (
 };
 
 async function findClaimType(browser: Browser, data: unknown) {
-  const _data = data as SimulationClaim & { priorityTask: string };
+  const _data = data as LSTSimClaim;
+  if (!_data.priorityTask) return;
   const filterByType = await waitForElement(
     browser,
     By.css("a[title='Filter by:TaskType']")

@@ -145,7 +145,7 @@ export const steps: StoredStep[] = [
   },
 ];
 
-const approveEvidence: StoredStep = {
+export const approveEvidence: StoredStep = {
   name: "Evidence Review",
   test: async (browser: Browser): Promise<void> => {
     console.info("Approve - Evidence Review");
@@ -200,7 +200,8 @@ const approveEvidence: StoredStep = {
     }
   },
 };
-const certifyEvidence: StoredStep = {
+
+export const certifyEvidence: StoredStep = {
   name: "Evidence Certification",
   test: async (browser: Browser): Promise<void> => {
     console.info("Approve - Evidence Certification");
