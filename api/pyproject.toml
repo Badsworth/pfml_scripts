@@ -70,6 +70,7 @@ execute-sql = "massgov.pfml.db.execute_sql:execute_sql"
 generate-verification-codes = "massgov.pfml.verification.generate_verification_codes:main"
 dor-generate = "massgov.pfml.dor.mock.generate:main"
 dor-import = "massgov.pfml.dor.importer.import_dor:handler"
+load-employers-to-fineos = "massgov.pfml.fineos.employer_load:handler"
 
 [tool.black]
 line-length = 100

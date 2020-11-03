@@ -531,12 +531,18 @@ def download_document(
 
 
 def create_or_update_employer(
-    fineos: massgov.pfml.fineos.AbstractFINEOSClient,
-    employer_fein: str,
-    db_session: massgov.pfml.db.Session,
+    employer_fein: str, db_session: massgov.pfml.db.Session,
 ) -> Tuple[str, int]:
+    # Create the FINEOS client.
+    fineos = massgov.pfml.fineos.create_client()
+
     # Determine if operation is create or update by querying
     # for a FINEOS customer number in the employer model.
+    # Attribute fineos_customer_nbr is a key we generate to
+    # indicate to FINEOS our concept of uniqueness. It is
+    # generated in the code below.
+    # The FINEOS API to create an employer expects this value
+    # in the Organization's CustomerNo attribute (see models).
     try:
         employer = (
             db_session.query(Employer).filter(Employer.employer_fein == str(employer_fein)).one()
@@ -590,10 +596,11 @@ def create_or_update_employer(
 
 
 def create_service_agreement_for_employer(
-    fineos: massgov.pfml.fineos.AbstractFINEOSClient,
-    fineos_employer_id: int,
-    db_session: massgov.pfml.db.Session,
+    fineos_employer_id: int, db_session: massgov.pfml.db.Session,
 ) -> str:
+    # Create the FINEOS client.
+    fineos = massgov.pfml.fineos.create_client()
+
     employer = (
         db_session.query(Employer).filter(Employer.fineos_employer_id == fineos_employer_id).one()
     )

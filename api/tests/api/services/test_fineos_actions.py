@@ -185,8 +185,6 @@ def test_build_week_based_work_pattern(user):
 
 
 def test_create_employer_simple(test_db_session):
-    fineos_client = massgov.pfml.fineos.MockFINEOSClient()
-
     employer = Employer()
     employer.employer_fein = "888447598"
     employer.employer_name = "Test Organization Name44"
@@ -195,7 +193,7 @@ def test_create_employer_simple(test_db_session):
     test_db_session.commit()
 
     fineos_customer_nbr, fineos_employer_id = fineos_actions.create_or_update_employer(
-        fineos_client, employer.employer_fein, test_db_session
+        employer.employer_fein, test_db_session
     )
 
     assert fineos_customer_nbr is not None
@@ -210,8 +208,6 @@ def test_create_employer_simple(test_db_session):
 
 
 def test_update_employer_simple(test_db_session):
-    fineos_client = massgov.pfml.fineos.MockFINEOSClient()
-
     employer = Employer()
     employer.employer_fein = "888447576"
     employer.employer_name = "Test Organization Name"
@@ -222,7 +218,7 @@ def test_update_employer_simple(test_db_session):
     test_db_session.commit()
 
     fineos_customer_nbr, fines_employer_id = fineos_actions.create_or_update_employer(
-        fineos_client, employer.employer_fein, test_db_session
+        employer.employer_fein, test_db_session
     )
 
     assert fineos_customer_nbr is not None
@@ -231,8 +227,6 @@ def test_update_employer_simple(test_db_session):
 
 
 def test_employer_creation_exception(test_db_session):
-    fineos_client = massgov.pfml.fineos.MockFINEOSClient()
-
     employer = Employer()
     employer.employer_fein = "999999999"
     employer.employer_name = "Test Organization Dupe"
@@ -242,17 +236,13 @@ def test_employer_creation_exception(test_db_session):
     test_db_session.commit()
 
     try:
-        fineos_actions.create_or_update_employer(
-            fineos_client, employer.employer_fein, test_db_session
-        )
+        fineos_actions.create_or_update_employer(employer.employer_fein, test_db_session)
         AssertionError
     except FINEOSClientError:
         assert True
 
 
 def test__employer_fein_not_found(test_db_session):
-    fineos_client = massgov.pfml.fineos.MockFINEOSClient()
-
     employer = Employer()
     employer.employer_fein = "888447598"
     employer.employer_name = "Test Organization Name44"
@@ -261,7 +251,7 @@ def test__employer_fein_not_found(test_db_session):
     test_db_session.commit()
 
     try:
-        fineos_actions.create_or_update_employer(fineos_client, "999999999", test_db_session)
+        fineos_actions.create_or_update_employer("999999999", test_db_session)
         AssertionError()
     except FINEOSNotFound:
         assert True
@@ -342,8 +332,6 @@ def test_build_customer_address(user):
 
 
 def test_create_service_agreement_for_employer(test_db_session):
-    fineos_client = massgov.pfml.fineos.MockFINEOSClient()
-
     employer = Employer()
     employer.employer_fein = "888447598"
     employer.employer_name = "Test Organization Name"
@@ -352,11 +340,11 @@ def test_create_service_agreement_for_employer(test_db_session):
     test_db_session.commit()
 
     fineos_customer_nbr, fineos_employer_id = fineos_actions.create_or_update_employer(
-        fineos_client, employer.employer_fein, test_db_session
+        employer.employer_fein, test_db_session
     )
 
     fineos_sa_id = fineos_actions.create_service_agreement_for_employer(
-        fineos_client, fineos_employer_id, test_db_session
+        fineos_employer_id, test_db_session
     )
 
     assert fineos_sa_id is not None

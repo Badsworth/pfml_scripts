@@ -529,6 +529,8 @@ class FINEOSClient(client.AbstractFINEOSClient):
         )
         response_decoded = update_or_create_party_response_schema.decode(response.text)
 
+        # The value returned in CUSTOMER_NUMBER is the organization's primary key
+        # in FINEOS which we store as fineos_employer_id in the employer model.
         fineos_employer_id: dict = next(
             (
                 item
@@ -626,6 +628,8 @@ class FINEOSClient(client.AbstractFINEOSClient):
         )
         response_decoded = service_agreement_service_response_schema.decode(response.text)
 
+        # The value returned in CustomerNumber is the organization's primary key
+        # in FINEOS which we store as fineos_employer_id in the employer model.
         fineos_customer_nbr: dict = next(
             (
                 item
