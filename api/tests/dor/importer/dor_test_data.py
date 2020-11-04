@@ -6,7 +6,7 @@ import pytz
 
 employer_quarter_line = "A0000000000120190930Anderson, Barber and Johnson                                                                                                                                                                                                                                   244674065     F2020040120200522110527"
 employee_quarter_line = "B0000000000120190930john                                                                                                                                                                                                                                                           Doe                                                                                                                                                                                                                                                            123456789TF            45000.00            15000.00               55.80              37.29                15.00                7.00"
-employer_info_line = "00000000001Anderson, Barber and Johnson                                                                                                                                                                                                                                   244674065     64034 Angela Mews                                                                                                                                                                                                                                              North Kaylabury               MA935463801Anderson, Barber and Johnson                                                                                                                                                                                                                                   TF202001012020123120200522110527"
+employer_info_line = "00000000001Anderson, Barber and Johnson                                                                                                                                                                                                                                   244674065     64034 Angela Mews                                                                                                                                                                                                                                              North Kaylabury               MA935463801USAAnderson, Barber and Johnson                                                                                                                                                                                                                                   TF202001012020123120200522110527"
 
 new_employer = {
     "account_key": "00000000001",
@@ -17,6 +17,7 @@ new_employer = {
     "employer_address_city": "North Kaylabury",
     "employer_address_state": "MA",
     "employer_address_zip": "935463801",
+    "employer_address_country": "USA",
     "family_exemption": True,
     "medical_exemption": False,
     "exemption_commence_date": date(2020, 1, 1),

@@ -83,7 +83,7 @@ def dict_to_address(employer_info, uuid=uuid.uuid4):
         city=employer_info["employer_address_city"],
         geo_state_id=GeoState.get_id(employer_info["employer_address_state"]),
         zip_code=employer_info["employer_address_zip"],
-        country_id=Country.USA.country_id,
+        country_id=Country.get_id(employer_info["employer_address_country"]),
         address_id=uuid,
     )
 

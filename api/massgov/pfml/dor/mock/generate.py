@@ -146,7 +146,7 @@ def process_employer_file(employer_count, employers_file, employees_file):
 
 
 def populate_employee_row(row, employers_file):
-    line = "{}{:255}{:14}{:255}{:30}{}{}{:255}{}{}{}{}{}\n".format(
+    line = "{}{:255}{:14}{:255}{:30}{}{}{}{:255}{}{}{}{}{}\n".format(
         row["account_key"],
         row["employer_name"],
         row["fein"],
@@ -154,6 +154,7 @@ def populate_employee_row(row, employers_file):
         row["employer_address_city"],
         row["employer_address_state"],
         row["employer_address_zip"],
+        row["employer_address_country"],
         row["employer_dba"],
         boolean_to_str(row["family_exemption"]),
         boolean_to_str(row["medical_exemption"]),
@@ -205,6 +206,7 @@ def generate_employers(employer_count, on_employer):
         employer_address_city = fake.city()
         employer_address_state = fake.state_abbr()
         employer_address_zip = fake.zipcode_plus4().replace("-", "")
+        employer_address_country = fake.country_code(representation="alpha-3")
         employer_dba = employer_name
         if random.random() < 0.2:
             employer_dba = fake.company()
@@ -233,6 +235,7 @@ def generate_employers(employer_count, on_employer):
             "employer_address_city": employer_address_city,
             "employer_address_state": employer_address_state,
             "employer_address_zip": employer_address_zip,
+            "employer_address_country": employer_address_country,
             "employer_dba": employer_dba,
             "family_exemption": family_exemption,
             "medical_exemption": medical_exemption,

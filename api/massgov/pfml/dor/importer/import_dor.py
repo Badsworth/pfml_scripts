@@ -19,7 +19,7 @@ import massgov.pfml.util.files as file_util
 import massgov.pfml.util.logging as logging
 import massgov.pfml.util.logging.audit
 from massgov.pfml import db
-from massgov.pfml.db.models.employees import GeoState, ImportLog, WagesAndContributions
+from massgov.pfml.db.models.employees import Country, GeoState, ImportLog, WagesAndContributions
 from massgov.pfml.dor.importer.dor_file_formats import (
     EMPLOYEE_FILE_ROW_LENGTH,
     EMPLOYEE_FORMAT,
@@ -472,9 +472,12 @@ def import_employers(db_session, employers, report, import_log_entry_id):
     found_employer_info_list = []
 
     unique_employer_state_codes = set()
+    unique_employer_country_codes = set()
+
     staged_not_found_employer_ssns = set()
     for employer_info in employers:
         unique_employer_state_codes.add(employer_info["employer_address_state"])
+        unique_employer_country_codes.add(employer_info["employer_address_country"])
         fein = employer_info["fein"]
         if fein in staged_not_found_employer_ssns:
             # this means there is more than one line for the same employer
@@ -492,6 +495,7 @@ def import_employers(db_session, employers, report, import_log_entry_id):
             found_employer_info_list.append(employer_info)
 
     logger.info("employer states to insert: %s", repr(unique_employer_state_codes))
+    logger.warning("employer countries to insert: %s", repr(unique_employer_country_codes))
 
     # 2 - Create employers
     fein_to_new_employer_id = {}
@@ -504,13 +508,16 @@ def import_employers(db_session, employers, report, import_log_entry_id):
     for employer in not_found_employer_info_list:
         try:
             GeoState.get_id(employer["employer_address_state"])
+            Country.get_id(employer["employer_address_country"])
+
             employers_with_valid_addresses.append(employer)
         except Exception:
             logger.warning(
-                "Invalid employer state: {}, {}, {}".format(
+                "Invalid employer state or country: {}, {}, {}, {}".format(
                     employer["employer_address_city"],
                     employer["employer_address_state"],
                     employer["employer_address_zip"],
+                    employer["employer_address_country"],
                 )
             )
             report.invalid_address_state_and_account_keys[employer["account_key"]] = employer[

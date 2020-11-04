@@ -35,6 +35,7 @@ EMPLOYER_FILE_FORMAT = FileFormat(
         FieldFormat("employer_address_city", 30),
         FieldFormat("employer_address_state", 2),
         FieldFormat("employer_address_zip", 9),
+        FieldFormat("employer_address_country", 3),
         FieldFormat("employer_dba", 255),
         FieldFormat("family_exemption", 1, parse_boolean),
         FieldFormat("medical_exemption", 1, parse_boolean),
@@ -45,7 +46,7 @@ EMPLOYER_FILE_FORMAT = FileFormat(
 )
 
 # numbers correspond to format cols above
-EMPLOYER_FILE_ROW_LENGTH = 11 + 255 + 14 + 255 + 30 + 2 + 9 + 255 + 1 + 1 + 8 + 8 + 14
+EMPLOYER_FILE_ROW_LENGTH = 11 + 255 + 14 + 255 + 30 + 2 + 9 + 255 + 1 + 1 + 8 + 8 + 14 + 3
 
 EMPLOYER_QUARTER_INFO_FORMAT = FileFormat(
     (
