@@ -250,6 +250,14 @@ def get_employees_by_ssn(db_session, ssns):
     return employee_rows
 
 
+def get_wages_and_contributions_by_employee_ids(db_session, employee_ids):
+    return list(
+        db_session.query(WagesAndContributions).filter(
+            WagesAndContributions.employee_id.in_(employee_ids),
+        )
+    )
+
+
 def get_wages_and_contributions_by_employee_id_and_filling_period(
     db_session, employee_id, employer_id, filing_period
 ):

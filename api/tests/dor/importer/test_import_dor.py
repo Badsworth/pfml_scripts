@@ -112,9 +112,13 @@ def test_employer_update(test_db_session, dor_employer_lookups):
     assert report.updated_employers_count == 0
 
     # confirm unchanged update date will be skipped
+    report2, report_log_entry2 = get_new_import_report(test_db_session)
     updated_employer_payload_to_skip = test_data.get_updated_employer_except_update_date()
     import_dor.import_employers(
-        test_db_session, [updated_employer_payload_to_skip], report, report_log_entry.import_log_id
+        test_db_session,
+        [updated_employer_payload_to_skip],
+        report2,
+        report_log_entry2.import_log_id,
     )
     existing_employer = test_db_session.query(Employer).get(employer_id)
 
@@ -123,19 +127,21 @@ def test_employer_update(test_db_session, dor_employer_lookups):
             updated_employer_payload_to_skip, existing_employer, report_log_entry.import_log_id
         )
 
-    assert report.updated_employers_count == 0
-    assert report.unmodified_employers_count == 1
+    assert report2.updated_employers_count == 0
+    assert report2.unmodified_employers_count == 1
+    assert existing_employer.latest_import_log_id == report_log_entry.import_log_id
 
     # confirm expected columns are now updated
+    report3, report_log_entry3 = get_new_import_report(test_db_session)
     updated_employer_payload = test_data.get_updated_employer()
     import_dor.import_employers(
-        test_db_session, [updated_employer_payload], report, report_log_entry.import_log_id
+        test_db_session, [updated_employer_payload], report3, report_log_entry3.import_log_id
     )
     persisted_employer = test_db_session.query(Employer).get(employer_id)
     assert persisted_employer is not None
 
     validate_employer_persistence(
-        updated_employer_payload, persisted_employer, report_log_entry.import_log_id
+        updated_employer_payload, persisted_employer, report_log_entry3.import_log_id
     )
 
     persisted_employer_address = dor_persistence_util.get_employer_address(
@@ -153,7 +159,7 @@ def test_employer_update(test_db_session, dor_employer_lookups):
         updated_employer_payload, persisted_address, AddressType.BUSINESS, state, country
     )
 
-    assert report.updated_employers_count == 1
+    assert report3.updated_employers_count == 1
 
 
 def test_employer_create_and_update_in_same_run(test_db_session):
@@ -275,31 +281,31 @@ def test_employee_wage_data_update(test_db_session, dor_employer_lookups):
     assert report.updated_wages_and_contributions_count == 0
 
     # confirm that existing employee info is updated even without a change
-    report, report_log_entry = get_new_import_report(test_db_session)
+    report2, report_log_entry2 = get_new_import_report(test_db_session)
 
     import_dor.import_employees_and_wage_data(
         test_db_session,
         account_key_to_employer_id_map,
         [employee_wage_data_payload],
         EMPTY_SSN_TO_EMPLOYEE_ID_MAP,
-        report,
-        report_log_entry.import_log_id,
+        report2,
+        report_log_entry2.import_log_id,
     )
 
     persisted_employee = test_db_session.query(Employee).get(employee_id)
     assert persisted_employee is not None
 
     validate_employee_persistence(
-        employee_wage_data_payload, persisted_employee, report_log_entry.import_log_id
+        employee_wage_data_payload, persisted_employee, report_log_entry2.import_log_id
     )
 
-    assert report.created_employees_count == 0
-    assert report.created_wages_and_contributions_count == 0
-    assert report.updated_employees_count == 1
-    assert report.updated_wages_and_contributions_count == 1
+    assert report2.created_employees_count == 0
+    assert report2.created_wages_and_contributions_count == 0
+    assert report2.updated_employees_count == 1
+    assert report2.updated_wages_and_contributions_count == 1
 
     # confirm updates are persisted
-    report, report_log_entry = get_new_import_report(test_db_session)
+    report3, report_log_entry3 = get_new_import_report(test_db_session)
 
     updated_employee_wage_data_payload = test_data.get_updated_employee_wage_data()
     import_dor.import_employees_and_wage_data(
@@ -307,15 +313,15 @@ def test_employee_wage_data_update(test_db_session, dor_employer_lookups):
         account_key_to_employer_id_map,
         [updated_employee_wage_data_payload],
         EMPTY_SSN_TO_EMPLOYEE_ID_MAP,
-        report,
-        report_log_entry.import_log_id,
+        report3,
+        report_log_entry3.import_log_id,
     )
 
     persisted_employee = test_db_session.query(Employee).get(employee_id)
 
     assert persisted_employee is not None
     validate_employee_persistence(
-        updated_employee_wage_data_payload, persisted_employee, report_log_entry.import_log_id
+        updated_employee_wage_data_payload, persisted_employee, report_log_entry3.import_log_id
     )
 
     persisted_wage_info = dor_persistence_util.get_wages_and_contributions_by_employee_id_and_filling_period(
@@ -327,13 +333,13 @@ def test_employee_wage_data_update(test_db_session, dor_employer_lookups):
 
     assert persisted_wage_info is not None
     validate_wage_persistence(
-        updated_employee_wage_data_payload, persisted_wage_info, report_log_entry.import_log_id
+        updated_employee_wage_data_payload, persisted_wage_info, report_log_entry3.import_log_id
     )
 
-    assert report.created_employees_count == 0
-    assert report.created_wages_and_contributions_count == 0
-    assert report.updated_employees_count == 1
-    assert report.updated_wages_and_contributions_count == 1
+    assert report3.created_employees_count == 0
+    assert report3.created_wages_and_contributions_count == 0
+    assert report3.updated_employees_count == 1
+    assert report3.updated_wages_and_contributions_count == 1
 
 
 # == Validation Helpers ==

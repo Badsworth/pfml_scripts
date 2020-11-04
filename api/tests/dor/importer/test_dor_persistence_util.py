@@ -6,6 +6,11 @@ import pytest
 from sqlalchemy.orm.exc import NoResultFound
 
 import massgov.pfml.dor.importer.lib.dor_persistence_util as util
+from massgov.pfml.db.models.factories import (
+    EmployeeFactory,
+    EmployerFactory,
+    WagesAndContributionsFactory,
+)
 from massgov.pfml.dor.importer.import_dor import ImportReport
 
 # every test in here requires real resources
@@ -15,6 +20,28 @@ sample_employee_file = "DORDFML_20200519120622"
 sample_employer_file = "DORDFMLEMP_20200519120622"
 
 # === test helper functions empty returns and exception raises ===
+
+
+def test_get_wages_and_contributions_by_employee_ids(test_db_session, initialize_factories_session):
+    empty_wages = util.get_wages_and_contributions_by_employee_ids(test_db_session, [])
+    assert len(empty_wages) == 0
+
+    employer = EmployerFactory.create()
+    employee1 = EmployeeFactory.create()
+    employee2 = EmployeeFactory.create()
+    WagesAndContributionsFactory.create(
+        employee=employee1, employer=employer, filing_period=date(2020, 6, 30),
+    )
+    WagesAndContributionsFactory.create(
+        employee=employee1, employer=employer, filing_period=date(2020, 9, 30),
+    )
+    WagesAndContributionsFactory.create(
+        employee=employee2, employer=employer, filing_period=date(2020, 9, 30),
+    )
+    wages = util.get_wages_and_contributions_by_employee_ids(
+        test_db_session, [employee1.employee_id, employee2.employee_id]
+    )
+    assert len(wages) == 3
 
 
 def test_get_wages_and_contributions_by_employee_id_and_filling_period(test_db_session):
