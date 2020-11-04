@@ -32,19 +32,20 @@ jobs:
       - uses: actions/checkout@v2
 
       # GitHub actions don't provide a self-link at execution time, but we can make an API call to retrieve one.
-      - name: generate self link
-        run: |
-          self_link=$(curl -Ls "${{ env.github_api }}/commits/${{ github.sha }}/check-runs" \
-          -H 'Authorization: Token ${{ env.pfml_devops_token }}' \
-          -H 'Accept: application/vnd.github.v3+json' | \
-          jq -c '.check_runs[] | select( .name == "conflict-check") | .details_url')
-          echo "self_link=$self_link" >> $GITHUB_ENV
+      # TODO (API-805): Repair or remove this code.
+#      - name: generate self link
+#        run: |
+#          self_link=$(curl -Ls "${{ env.github_api }}/commits/${{ github.sha }}/check-runs" \
+#          -H 'Authorization: Token ${{ env.pfml_devops_token }}' \
+#          -H 'Accept: application/vnd.github.v3+json' | \
+#          jq -c '.check_runs[] | select( .name == "conflict-check") | .details_url')
+#          echo "self_link=$self_link" >> $GITHUB_ENV
 
       # Most of the GitHub checks API is only usable by GitHub Apps, so we cannot alter check statuses directly.
       # As a workaround, we create and maintain a pseudo-check using the statuses API.
       - name: create or update check state
         run: |
-          pending_status='{"state": "pending", "description": "${{ env.pending_message }}", "context": "${{ env.ctx }}", "target_url": ${{ env.self_link }}}'
+          pending_status='{"state": "pending", "description": "${{ env.pending_message }}", "context": "${{ env.ctx }}"}'
 
           curl -Ls -X POST "${{ env.github_api }}/statuses/${{ github.sha }}" \
           -H 'Authorization: Token ${{ env.pfml_devops_token }}' \
@@ -78,7 +79,7 @@ jobs:
       # Update both the pseudo-check through the checks API, and the result of *this* check through the exit code.
       - name: finish and synchronize check state
         run: |
-          check_data='{"state": "${{ env.CHECK_STATUS }}", "description": "${{ env.STATUS_MESSAGE }}", "context": "${{ env.ctx }}", "target_url": ${{ env.self_link }}}'
+          check_data='{"state": "${{ env.CHECK_STATUS }}", "description": "${{ env.STATUS_MESSAGE }}", "context": "${{ env.ctx }}"}'
 
           curl -Ls -X POST "${{ env.github_api }}/statuses/${{ github.sha }}" \
           -H 'Authorization: Token ${{ env.pfml_devops_token }}' \
