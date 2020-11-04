@@ -29,7 +29,7 @@ export const Success = (props) => {
               <a
                 target="_blank"
                 rel="noopener"
-                href={routes.external.massgov.pfmlBenefitsGuide}
+                href={routes.external.massgov.benefitsGuide}
               />
             ),
           }}

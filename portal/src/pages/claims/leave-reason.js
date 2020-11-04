@@ -2,7 +2,9 @@ import Claim, {
   LeaveReason as LeaveReasonEnum,
   ReasonQualifier as ReasonQualifierEnum,
 } from "../../models/Claim";
+import { Trans, useTranslation } from "react-i18next";
 import { get, pick, set } from "lodash";
+import Alert from "../../components/Alert";
 import ConditionalContent from "../../components/ConditionalContent";
 import Details from "../../components/Details";
 import InputChoiceGroup from "../../components/InputChoiceGroup";
@@ -10,9 +12,9 @@ import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
 import { isFeatureEnabled } from "../../services/featureFlags";
+import routes from "../../routes";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
-import { useTranslation } from "react-i18next";
 import withClaim from "../../hoc/withClaim";
 
 export const fields = [
@@ -103,6 +105,28 @@ export const LeaveReason = (props) => {
       title={t("pages.claimsLeaveReason.title")}
       onSave={handleSave}
     >
+      {(!showMilitaryLeaveTypes || !showMedicalLeaveType) && (
+        <Alert state="info">
+          <Trans
+            i18nKey="pages.claimsLeaveReason.alertBody"
+            components={{
+              "mass-benefits-guide-serious-health-condition": (
+                <a
+                  target="_blank"
+                  rel="noopener"
+                  href={
+                    routes.external.massgov.benefitsGuide_seriousHealthCondition
+                  }
+                />
+              ),
+              p: <p />,
+              ul: <ul className="usa-list" />,
+              li: <li />,
+            }}
+          />
+        </Alert>
+      )}
+
       <InputChoiceGroup
         {...getFunctionalInputProps("leave_details.reason")}
         choices={getChoices()}
@@ -110,12 +134,6 @@ export const LeaveReason = (props) => {
         hint={t("pages.claimsLeaveReason.sectionHint")}
         type="radio"
       />
-
-      {
-        // TODO (CP-1273): Add content so claimants know why there's only 1 radio
-        // button and that they should call the Contact Center for other options
-        // (using the showMedicalLeaveType and showMilitaryLeaveTypes booleans).
-      }
 
       <ConditionalContent
         fieldNamesClearedWhenHidden={["leave_details.reason_qualifier"]}

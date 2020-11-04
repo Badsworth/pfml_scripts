@@ -72,6 +72,7 @@ describe("LeaveReasonPage", () => {
     });
 
     expect(wrapper).toMatchSnapshot();
+    expect(wrapper.find("Trans")).toMatchSnapshot();
     expect(
       wrapper.find({ name: "leave_details.reason_qualifier" }).prop("visible")
     ).toBeFalsy();

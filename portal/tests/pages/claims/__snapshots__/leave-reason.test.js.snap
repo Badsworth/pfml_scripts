@@ -5,6 +5,27 @@ exports[`LeaveReasonPage renders the page for medical leave and does not show re
   onSave={[Function]}
   title="Leave type"
 >
+  <Alert
+    state="info"
+  >
+    <Trans
+      components={
+        Object {
+          "li": <li />,
+          "mass-benefits-guide-serious-health-condition": <a
+            href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-guide#what-is-a-serious-health-condition?-"
+            rel="noopener"
+            target="_blank"
+          />,
+          "p": <p />,
+          "ul": <ul
+            className="usa-list"
+          />,
+        }
+      }
+      i18nKey="pages.claimsLeaveReason.alertBody"
+    />
+  </Alert>
   <InputChoiceGroup
     choices={
       Array [
@@ -69,4 +90,24 @@ exports[`LeaveReasonPage renders the page for medical leave and does not show re
     />
   </ConditionalContent>
 </QuestionPage>
+`;
+
+exports[`LeaveReasonPage renders the page for medical leave and does not show reason qualifier followup 2`] = `
+<Trans
+  components={
+    Object {
+      "li": <li />,
+      "mass-benefits-guide-serious-health-condition": <a
+        href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-guide#what-is-a-serious-health-condition?-"
+        rel="noopener"
+        target="_blank"
+      />,
+      "p": <p />,
+      "ul": <ul
+        className="usa-list"
+      />,
+    }
+  }
+  i18nKey="pages.claimsLeaveReason.alertBody"
+/>
 `;

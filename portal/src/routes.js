@@ -71,6 +71,10 @@ const routes = {
   },
   external: {
     massgov: {
+      benefitsGuide:
+        "https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-guide",
+      benefitsGuide_seriousHealthCondition:
+        "https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-guide#what-is-a-serious-health-condition?-",
       benefitsTimeline_2020December2:
         "https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-timeline#december-2,-2020-",
       consentAgreement:
@@ -80,8 +84,6 @@ const routes = {
       identityProof:
         "https://www.mass.gov/info-details/identity-proof-for-paid-leave",
       informedConsent: "https://www.mass.gov/paidleave-informedconsent",
-      pfmlBenefitsGuide:
-        "https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-guide",
       privacyPolicy: "https://www.mass.gov/privacypolicy",
       userFeedback: "https://www.mass.gov", // TODO (EMPLOYER-417): Update link to external survey
     },

@@ -676,6 +676,8 @@ const pages = {
     activeDutyFamilyLeaveHint: "Family leave",
     activeDutyFamilyLeaveLabel:
       "I need to manage family affairs while a family member is on active duty in the armed forces.",
+    alertBody:
+      "<p>Starting January$t(chars.nbsp)1, 2021, you can also apply for the following$t(chars.nbsp)benefits:</p><ul><li>Paid medical leave to manage your own <mass-benefits-guide-serious-health-condition>serious health$t(chars.nbsp)condition</mass-benefits-guide-serious-health-condition></li><li>Paid family leave to manage family affairs while a family member is on active duty$t(chars.nbsp)overseas</li><li>Paid family leave to care for a family member who serves in the armed$t(chars.nbsp)forces</li></ul>",
     bondingLeaveHint: "Family leave",
     bondingLeaveLabel:
       "I need to bond with my child after birth, adoption, or foster placement.",
