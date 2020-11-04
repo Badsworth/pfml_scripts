@@ -371,6 +371,10 @@ const pages = {
       "Our Contact Center staff will review your documents for {{absence_id}}.",
   },
   authCreateAccount: {
+    alertBody:
+      "<p>You can apply online if you’re currently employed in Massachusetts.</p><p>If you’re self-employed or unemployed, apply by calling the Department of Family and Medical Leave Contact Center at $t(shared.contactCenterPhoneNumber).</p><p>Learn more about the <mass-benefits-timeline-link>PFML benefit timeline on mass.gov</mass-benefits-timeline-link>.</p>",
+    alertHeading:
+      "You can now apply for paid family leave to bond with your$t(chars.nbsp)child.",
     createAccountButton: "Create account",
     haveAnAccountFooterLabel: "Have an account? ",
     logInFooterLink: "Log in",

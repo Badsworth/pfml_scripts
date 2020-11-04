@@ -71,6 +71,8 @@ const routes = {
   },
   external: {
     massgov: {
+      benefitsTimeline_2020December2:
+        "https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-timeline#december-2,-2020-",
       consentAgreement:
         "https://www.mass.gov/info-details/massachusetts-department-of-family-and-medical-leave-informed-consent-agreement",
       dfml: "https://mass.gov/dfml",

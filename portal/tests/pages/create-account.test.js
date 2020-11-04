@@ -20,6 +20,7 @@ describe("CreateAccount", () => {
 
   it("renders the empty page", () => {
     expect(wrapper).toMatchSnapshot();
+    expect(wrapper.find("Trans")).toMatchSnapshot();
   });
 
   describe("when the form is submitted", () => {

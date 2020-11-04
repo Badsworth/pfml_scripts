@@ -5,6 +5,23 @@ exports[`CreateAccount renders the empty page 1`] = `
   className="usa-form"
   onSubmit={[Function]}
 >
+  <Alert
+    className="margin-bottom-3"
+    heading="You can now apply for paid family leave to bond with your child."
+    state="info"
+  >
+    <Trans
+      components={
+        Object {
+          "mass-benefits-timeline-link": <a
+            href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-timeline#december-2,-2020-"
+          />,
+          "p": <p />,
+        }
+      }
+      i18nKey="pages.authCreateAccount.alertBody"
+    />
+  </Alert>
   <Title>
     Create an account
   </Title>
@@ -45,4 +62,18 @@ exports[`CreateAccount renders the empty page 1`] = `
     </Link>
   </div>
 </form>
+`;
+
+exports[`CreateAccount renders the empty page 2`] = `
+<Trans
+  components={
+    Object {
+      "mass-benefits-timeline-link": <a
+        href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-timeline#december-2,-2020-"
+      />,
+      "p": <p />,
+    }
+  }
+  i18nKey="pages.authCreateAccount.alertBody"
+/>
 `;

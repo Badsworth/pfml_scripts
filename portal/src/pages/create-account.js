@@ -1,3 +1,4 @@
+import Alert from "../components/Alert";
 import AppErrorInfoCollection from "../models/AppErrorInfoCollection";
 import Button from "../components/Button";
 import InputText from "../components/InputText";
@@ -5,6 +6,7 @@ import Link from "next/link";
 import PropTypes from "prop-types";
 import React from "react";
 import Title from "../components/Title";
+import { Trans } from "react-i18next";
 import routes from "../routes";
 import useFormState from "../hooks/useFormState";
 import useFunctionalInputProps from "../hooks/useFunctionalInputProps";
@@ -33,6 +35,23 @@ export const CreateAccount = (props) => {
 
   return (
     <form className="usa-form" onSubmit={handleSubmit}>
+      <Alert
+        state="info"
+        heading={t("pages.authCreateAccount.alertHeading")}
+        className="margin-bottom-3"
+      >
+        <Trans
+          i18nKey="pages.authCreateAccount.alertBody"
+          components={{
+            "mass-benefits-timeline-link": (
+              <a
+                href={routes.external.massgov.benefitsTimeline_2020December2}
+              />
+            ),
+            p: <p />,
+          }}
+        />
+      </Alert>
       <Title>{t("pages.authCreateAccount.title")}</Title>
       <InputText
         {...getFunctionalInputProps("username")}
