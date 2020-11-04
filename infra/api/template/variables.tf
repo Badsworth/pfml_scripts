@@ -39,6 +39,12 @@ variable "postgres_version" {
   default     = "11.6"
 }
 
+variable "postgres_parameter_group_family" {
+  description = "The parameter group family for the postgres database."
+  type        = string
+  default     = "postgres11"
+}
+
 variable "db_allocated_storage" {
   description = "The allocated storage in gibibytes."
   type        = number

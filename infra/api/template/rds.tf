@@ -29,8 +29,8 @@ resource "aws_db_subnet_group" "rds_postgres_dbprivate" {
 }
 
 resource "aws_db_parameter_group" "postgres11" {
-  name_prefix = "${local.app_name}-${var.environment_name}-postgres11-"
-  family      = "postgres11"
+  name_prefix = "${local.app_name}-${var.environment_name}-${var.postgres_parameter_group_family}-"
+  family      = var.postgres_parameter_group_family
   description = "PSQL 11 RDS parameters for ${local.app_name}-${var.environment_name}"
 
   # Log all client connection details.
