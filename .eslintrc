@@ -49,6 +49,7 @@
         "jsx-a11y/no-onchange": "off",
         "camelcase": "off",
         "no-console": ["error", { "allow": ["error"] }],
+        "no-irregular-whitespace": ["error", { "skipTemplates": true }],
         "no-prototype-builtins": "off",
         "object-shorthand": ["error", "properties", { "avoidQuotes": true }],
         "promise/no-native": "off",
