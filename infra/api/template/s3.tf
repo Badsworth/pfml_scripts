@@ -119,4 +119,8 @@ resource "aws_cloudtrail" "massgov_pfml_s3_logging" {
       ]
     }
   }
+
+  insight_selector {
+    insight_type = "ApiCallRateInsight"
+  }
 }
