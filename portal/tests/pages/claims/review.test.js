@@ -15,6 +15,7 @@ import Review, {
   OtherLeaveEntry,
   PreviousLeaveList,
 } from "../../../src/pages/claims/review";
+import { DateTime } from "luxon";
 import PreviousLeave from "../../../src/models/PreviousLeave";
 import React from "react";
 import { shallow } from "enzyme";
@@ -180,6 +181,19 @@ describe("Upload Document", () => {
 
     expect(wrapper.exists("Alert")).toBe(true);
     expect(wrapper.exists({ label: "Number of files uploaded" })).toBe(false);
+  });
+
+  it("does not render certification document for bonding leave in advance", () => {
+    const futureDate = DateTime.local().plus({ months: 1 }).toISODate();
+    const { wrapper } = renderWithAppLogic(Review, {
+      claimAttrs: new MockClaimBuilder()
+        .complete()
+        .bondingBirthLeaveReason(futureDate)
+        .create(),
+      diveLevels,
+      hasLoadedClaimDocuments: true,
+    });
+    expect(wrapper.find({ label: "Number of files uploaded" })).toHaveLength(1);
   });
 });
 

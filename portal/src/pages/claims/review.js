@@ -602,21 +602,25 @@ export const Review = (props) => {
               >
                 {idDocuments.length}
               </ReviewRow>
-              <ReviewHeading
-                editHref={getStepEditHref(ClaimSteps.uploadCertification)}
-                editText={t("pages.claimsReview.editLink")}
-                level={reviewHeadingLevel}
-              >
-                {t("pages.claimsReview.stepHeading", {
-                  context: "uploadCertification",
-                })}
-              </ReviewHeading>
-              <ReviewRow
-                label={t("pages.claimsReview.numberOfFilesLabel")}
-                level={reviewRowLevel}
-              >
-                {certificationDocuments.length}
-              </ReviewRow>
+              {!claim.isChildDateInFuture && (
+                <React.Fragment>
+                  <ReviewHeading
+                    editHref={getStepEditHref(ClaimSteps.uploadCertification)}
+                    editText={t("pages.claimsReview.editLink")}
+                    level={reviewHeadingLevel}
+                  >
+                    {t("pages.claimsReview.stepHeading", {
+                      context: "uploadCertification",
+                    })}
+                  </ReviewHeading>
+                  <ReviewRow
+                    label={t("pages.claimsReview.numberOfFilesLabel")}
+                    level={reviewRowLevel}
+                  >
+                    {certificationDocuments.length}
+                  </ReviewRow>
+                </React.Fragment>
+              )}
             </React.Fragment>
           )}
         </React.Fragment>
