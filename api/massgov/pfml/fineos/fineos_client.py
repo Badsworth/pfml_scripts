@@ -11,6 +11,8 @@ import xml.etree.ElementTree
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 import defusedxml.ElementTree
+import flask
+import newrelic.agent
 import oauthlib.oauth2
 import pydantic
 import requests
@@ -132,9 +134,25 @@ class FINEOSClient(client.AbstractFINEOSClient):
         self.request_count += 1
         logger.debug("%s %s start", method, url)
         try:
+            has_flask_context = flask.has_request_context()
             response = request_function(method, url, timeout=(6.1, 60), headers=headers, **args)
         except requests.exceptions.RequestException as ex:
             logger.error("%s %s => %r", method, url, ex)
+            # Make sure New Relic records errors from FINEOS, even if the API does not ultimately return an error.
+            newrelic.agent.record_custom_event(
+                "FineosError",
+                {
+                    "error.class": type(ex).__name__,
+                    "error.message": str(ex),
+                    "request.method": flask.request.method if has_flask_context else None,
+                    "request.uri": flask.request.path if has_flask_context else None,
+                    "request.headers.x-amzn-requestid": flask.request.headers.get(
+                        "x-amzn-requestid", None
+                    )
+                    if has_flask_context
+                    else None,
+                },
+            )
             raise exception.FINEOSClientError(cause=ex)
 
         if response.status_code != requests.codes.ok:
@@ -145,6 +163,22 @@ class FINEOSClient(client.AbstractFINEOSClient):
                 response.status_code,
                 response.elapsed / MILLISECOND,
                 extra={"text": response.text},
+            )
+            # FINEOS returned an error. Record it in New Relic before raising the exception.
+            newrelic.agent.record_custom_event(
+                "FineosError",
+                {
+                    "error.class": "FINEOSClientBadResponse",
+                    "error.message": response.text,
+                    "response.status": response.status_code,
+                    "request.method": flask.request.method if has_flask_context else None,
+                    "request.uri": flask.request.path if has_flask_context else None,
+                    "request.headers.x-amzn-requestid": flask.request.headers.get(
+                        "x-amzn-requestid", None
+                    )
+                    if has_flask_context
+                    else None,
+                },
             )
             raise exception.FINEOSClientBadResponse(requests.codes.ok, response.status_code)
 

@@ -422,8 +422,7 @@ def upsert_week_based_work_pattern(fineos_client, user_id, application):
     try:
         fineos_client.add_week_based_work_pattern(user_id, occupation_id, week_based_work_pattern)
     except massgov.pfml.fineos.exception.FINEOSClientBadResponse as error:
-        # FINEOS returns a 403 forbidden when attempting to an add a work pattern
-        # for an occupation when one already exists
+        # FINEOS returns 403 when attempting to add a work pattern for an occupation when one already exists.
         if error.response_status == 403:
             fineos_client.update_week_based_work_pattern(
                 user_id, occupation_id, week_based_work_pattern
