@@ -169,6 +169,12 @@ class AbstractFINEOSClient(abc.ABC, metaclass=abc.ABCMeta):
         pass
 
     @abc.abstractmethod
+    def create_or_update_leave_admin(
+        self, leave_admin_create_or_update: models.CreateOrUpdateLeaveAdmin
+    ) -> None:
+        """Create or update a leave admin in FINEOS."""
+        pass
+
     def create_service_agreement_for_employer(
         self, fineos_employer_id: int, leave_plans: str
     ) -> str:

@@ -387,6 +387,11 @@ class MockFINEOSClient(client.AbstractFINEOSClient):
 
         return employer_create_or_update.fineos_customer_nbr, 250
 
+    def create_or_update_leave_admin(
+        self, leave_admin_create_or_update: models.CreateOrUpdateLeaveAdmin
+    ) -> None:
+        _capture_call("create_or_update_leave_admin", None)
+
     def update_reflexive_questions(
         self,
         user_id: str,

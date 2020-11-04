@@ -65,6 +65,7 @@ module "api" {
   rmv_check_behavior                               = "partially_mocked"
   rmv_check_mock_success                           = "1"
   fineos_client_customer_api_url                   = "https://idt-api.masspfml.fineos.com/customerapi/"
+  fineos_client_integration_services_api_url       = "https://idt-api.masspfml.fineos.com/integration-services/"
   fineos_client_group_client_api_url               = "https://idt-api.masspfml.fineos.com/groupclientapi/"
   fineos_client_wscomposer_api_url                 = "https://idt-claims-webapp.masspfml.fineos.com/wscomposer/"
   fineos_client_oauth2_url                         = "https://idt-api.masspfml.fineos.com/oauth2/token"

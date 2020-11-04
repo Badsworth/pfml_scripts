@@ -12,6 +12,7 @@ import massgov.pfml.fineos.mock_client
 def test_fineos_client_config_from_env_default():
     config = massgov.pfml.fineos.factory.FINEOSClientConfig.from_env()
     assert config == massgov.pfml.fineos.factory.FINEOSClientConfig(
+        integration_services_api_url=None,
         customer_api_url=None,
         group_client_api_url=None,
         wscomposer_api_url=None,
@@ -22,6 +23,9 @@ def test_fineos_client_config_from_env_default():
 
 
 def test_fineos_client_config_from_env(monkeypatch):
+    monkeypatch.setenv(
+        "FINEOS_CLIENT_INTEGRATION_SERVICES_API_URL", "https://2.abc.test/integrationservicesapi/"
+    )
     monkeypatch.setenv("FINEOS_CLIENT_GROUP_CLIENT_API_URL", "https://2.abc.test/groupclientapi/")
     monkeypatch.setenv("FINEOS_CLIENT_CUSTOMER_API_URL", "https://1.abc.test/customerapi/")
     monkeypatch.setenv("FINEOS_CLIENT_WSCOMPOSER_API_URL", "https://1.def.test/wscomposer/")
@@ -31,6 +35,7 @@ def test_fineos_client_config_from_env(monkeypatch):
 
     config = massgov.pfml.fineos.factory.FINEOSClientConfig.from_env()
     assert config == massgov.pfml.fineos.factory.FINEOSClientConfig(
+        integration_services_api_url="https://2.abc.test/integrationservicesapi/",
         group_client_api_url="https://2.abc.test/groupclientapi/",
         customer_api_url="https://1.abc.test/customerapi/",
         wscomposer_api_url="https://1.def.test/wscomposer/",
@@ -50,6 +55,9 @@ def fake_fetch_token(session, token_url, client_id, client_secret, timeout):
 
 
 def test_create_client_from_env(monkeypatch):
+    monkeypatch.setenv(
+        "FINEOS_CLIENT_INTEGRATION_SERVICES_API_URL", "https://2.abc.test/integrationservicesapi/"
+    )
     monkeypatch.setenv("FINEOS_CLIENT_GROUP_CLIENT_API_URL", "https://1.abc.test/groupclientapi/")
     monkeypatch.setenv("FINEOS_CLIENT_CUSTOMER_API_URL", "https://2.abc.test/customerapi/")
     monkeypatch.setenv("FINEOS_CLIENT_WSCOMPOSER_API_URL", "https://2.def.test/wscomposer/")
@@ -64,6 +72,7 @@ def test_create_client_from_env(monkeypatch):
 
     client = massgov.pfml.fineos.factory.create_client()
     assert type(client) == massgov.pfml.fineos.fineos_client.FINEOSClient
+    assert client.integration_services_api_url == "https://2.abc.test/integrationservicesapi/"
     assert client.group_client_api_url == "https://1.abc.test/groupclientapi/"
     assert client.customer_api_url == "https://2.abc.test/customerapi/"
     assert client.wscomposer_url == "https://2.def.test/wscomposer/"
@@ -72,6 +81,7 @@ def test_create_client_from_env(monkeypatch):
 
 def test_create_client_from_config(monkeypatch):
     config = massgov.pfml.fineos.factory.FINEOSClientConfig(
+        integration_services_api_url="https://2.abc.test/integrationservicesapi/",
         group_client_api_url="https://1.abc.test/groupclientapi/",
         customer_api_url="https://3.abc.test/customerapi/",
         wscomposer_api_url="https://3.def.test/wscomposer/",
@@ -87,6 +97,7 @@ def test_create_client_from_config(monkeypatch):
 
     client = massgov.pfml.fineos.factory.create_client(config)
     assert type(client) == massgov.pfml.fineos.fineos_client.FINEOSClient
+    assert client.integration_services_api_url == "https://2.abc.test/integrationservicesapi/"
     assert client.group_client_api_url == "https://1.abc.test/groupclientapi/"
     assert client.customer_api_url == "https://3.abc.test/customerapi/"
     assert client.wscomposer_url == "https://3.def.test/wscomposer/"

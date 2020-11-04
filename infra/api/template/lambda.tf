@@ -135,6 +135,7 @@ resource "aws_lambda_function" "eligibility_feed" {
       NEW_RELIC_DISTRIBUTED_TRACING_ENABLED       = true
       FINEOS_CLIENT_CUSTOMER_API_URL              = var.fineos_client_customer_api_url
       FINEOS_CLIENT_GROUP_CLIENT_API_URL          = var.fineos_client_group_client_api_url
+      FINEOS_CLIENT_INTEGRATION_SERVICES_API_URL  = var.fineos_client_integration_services_api_url
       FINEOS_CLIENT_WSCOMPOSER_API_URL            = var.fineos_client_wscomposer_api_url
       FINEOS_CLIENT_OAUTH2_URL                    = var.fineos_client_oauth2_url
       FINEOS_CLIENT_OAUTH2_CLIENT_ID              = var.fineos_client_oauth2_client_id

@@ -40,6 +40,12 @@ update_or_create_party_response_schema = xmlschema.XMLSchema(
     os.path.join(os.path.dirname(__file__), "wscomposer", "UpdateOrCreateParty.Response.xsd")
 )
 
+create_or_update_leave_admin_request_schema = xmlschema.XMLSchema(
+    os.path.join(
+        os.path.dirname(__file__), "leave_admin_creation", "CreateOrUpdateLeaveAdmin.Request.xsd"
+    )
+)
+
 service_agreement_service_request_schema = xmlschema.XMLSchema(
     os.path.join(os.path.dirname(__file__), "wscomposer", "ServiceAgreementService.Request.xsd")
 )
@@ -72,6 +78,7 @@ def fineos_document_empty_dates_to_none(response_json: dict) -> dict:
 class FINEOSClient(client.AbstractFINEOSClient):
     """FINEOS API client."""
 
+    integration_services_api_url: str
     wscomposer_url: str
     group_client_api_url: str
     customer_api_url: str
@@ -80,6 +87,7 @@ class FINEOSClient(client.AbstractFINEOSClient):
 
     def __init__(
         self,
+        integration_services_api_url,
         group_client_api_url,
         customer_api_url,
         wscomposer_url,
@@ -87,16 +95,18 @@ class FINEOSClient(client.AbstractFINEOSClient):
         client_id,
         client_secret,
     ):
+        self.integration_services_api_url = integration_services_api_url
         self.group_client_api_url = group_client_api_url
         self.customer_api_url = customer_api_url
         self.wscomposer_url = wscomposer_url
         self.oauth2_url = oauth2_url
         self.request_count = 0
         logger.info(
-            "customer_api_url %s, wscomposer_url %s, group_client_api_url %s",
+            "customer_api_url %s, wscomposer_url %s, group_client_api_url %s, integration_services_api_url %s",
             customer_api_url,
             wscomposer_url,
             group_client_api_url,
+            integration_services_api_url,
         )
         self._init_oauth_session(oauth2_url, client_id, client_secret)
 
@@ -212,6 +222,21 @@ class FINEOSClient(client.AbstractFINEOSClient):
     ) -> requests.Response:
         """Make a request to the Group Client API."""
         url = urllib.parse.urljoin(self.group_client_api_url, path)
+        content_type_header = {"Content-Type": header_content_type} if header_content_type else {}
+        headers = dict({"userid": user_id}, **content_type_header)
+        response = self._request(self.oauth_session.request, method, url, headers, **args)
+        return response
+
+    def _integration_services_api(
+        self,
+        method: str,
+        path: str,
+        user_id: str,
+        header_content_type: Optional[str] = "application/xml",
+        **args: Any,
+    ) -> requests.Response:
+        """Make a request to the Integration Services API."""
+        url = urllib.parse.urljoin(self.integration_services_api_url, path)
         content_type_header = {"Content-Type": header_content_type} if header_content_type else {}
         headers = dict({"userid": user_id}, **content_type_header)
         response = self._request(self.oauth_session.request, method, url, headers, **args)
@@ -554,6 +579,18 @@ class FINEOSClient(client.AbstractFINEOSClient):
 
         return models.customer_api.WeekBasedWorkPattern.parse_obj(json)
 
+    def create_or_update_leave_admin(
+        self, leave_admin_create_or_update: models.CreateOrUpdateLeaveAdmin
+    ) -> None:
+        """Create or update a leave admin in FINEOS."""
+        xml_body = self._create_or_update_leave_admin_payload(leave_admin_create_or_update)
+        self._integration_services_api(
+            "POST",
+            "rest/externalUserProvisioningService/createOrUpdateEmployerViewpointUser",
+            "CONTENT",
+            data=xml_body,
+        )
+
     def create_or_update_employer(
         self, employer_create_or_update: models.CreateOrUpdateEmployer
     ) -> Tuple[str, int]:
@@ -610,6 +647,25 @@ class FINEOSClient(client.AbstractFINEOSClient):
         return employer_create_or_update.fineos_customer_nbr, fineos_employer_id_int
 
     @staticmethod
+    def _create_or_update_leave_admin_payload(
+        leave_admin_create_or_update: models.CreateOrUpdateLeaveAdmin,
+    ) -> str:
+        leave_admin_phone = models.PhoneNumber(
+            area_code=leave_admin_create_or_update.admin_area_code,
+            contact_number=leave_admin_create_or_update.admin_phone_number,
+        )
+        leave_admin_create_payload = models.CreateOrUpdateLeaveAdminRequest(
+            full_name=leave_admin_create_or_update.admin_full_name,
+            party_reference=leave_admin_create_or_update.fineos_customer_nbr,
+            user_id=leave_admin_create_or_update.fineos_web_id,
+            email=leave_admin_create_or_update.admin_email,
+            phone=leave_admin_phone,
+        )
+        payload_as_dict = leave_admin_create_payload.dict(by_alias=True)
+        xml_element = create_or_update_leave_admin_request_schema.encode(payload_as_dict)
+        return xml.etree.ElementTree.tostring(xml_element, encoding="unicode", xml_declaration=True)
+
+    @staticmethod
     def _create_or_update_employer_payload(
         employer_create_or_update: models.CreateOrUpdateEmployer,
     ) -> str:
@@ -648,7 +704,6 @@ class FINEOSClient(client.AbstractFINEOSClient):
         employer_create_payload.update_data = models.UpdateData(PartyIntegrationDTO=[party_dto])
 
         payload_as_dict = employer_create_payload.dict(by_alias=True)
-
         xml_element = update_or_create_party_request_schema.encode(payload_as_dict)
         return xml.etree.ElementTree.tostring(xml_element, encoding="unicode", xml_declaration=True)
 
