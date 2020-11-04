@@ -1,7 +1,7 @@
 /**
  * Convert minutes to object with hours and minutes
  * @param {number} minutes - minutes, must be an integer
- * @returns {{ hours, minutes }}
+ * @returns {{ hours: number, minutes: number }}
  */
 const convertMinutesToHours = (minutes) => {
   return {

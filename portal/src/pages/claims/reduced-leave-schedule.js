@@ -87,7 +87,8 @@ export const ReducedLeaveSchedule = (props) => {
       {OrderedDaysOfWeek.map((day, i) => (
         <InputHours
           {...getFunctionalInputProps(
-            `${leavePeriodPath}.${day.toLowerCase()}_off_minutes`
+            `${leavePeriodPath}.${day.toLowerCase()}_off_minutes`,
+            { fallbackValue: null }
           )}
           label={t("pages.claimsReducedLeaveSchedule.inputHoursLabel", {
             context: day,

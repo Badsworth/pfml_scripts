@@ -100,10 +100,10 @@ describe("InputHours", () => {
     expect(wrapper.find("Dropdown").props().value).toEqual(0);
   });
 
-  it("renders 0 hours and 0 minutes if value is null", () => {
-    const { wrapper } = render({ value: null });
-    expect(wrapper.find("InputText").props().value).toEqual(0);
-    expect(wrapper.find("Dropdown").props().value).toEqual(0);
+  it("renders empty hours and minutes if value is undefined", () => {
+    const { wrapper } = render({ value: undefined });
+    expect(wrapper.find("InputText").props().value).toEqual("");
+    expect(wrapper.find("Dropdown").props().value).toEqual("");
   });
 
   it("logs warning if minutesIncrements is not a multiple of value", () => {

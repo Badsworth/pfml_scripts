@@ -1,3 +1,4 @@
+import { isNil, range } from "lodash";
 import Dropdown from "./Dropdown";
 import Fieldset from "./Fieldset";
 import FormLabel from "./FormLabel";
@@ -6,7 +7,6 @@ import PropTypes from "prop-types";
 import React from "react";
 import classnames from "classnames";
 import convertMinutesToHours from "../utils/convertMinutesToHours";
-import { range } from "lodash";
 
 const InputHours = (props) => {
   const formGroupClasses = classnames("usa-form-group", {
@@ -33,20 +33,23 @@ const InputHours = (props) => {
     value: i * props.minutesIncrement,
   }));
 
-  const value = convertMinutesToHours(props.value || 0);
+  const hoursMinutes = convertMinutesToHours(props.value || 0);
 
-  if (value.minutes % props.minutesIncrement !== 0) {
+  if (hoursMinutes.minutes % props.minutesIncrement !== 0) {
     // eslint-disable-next-line no-console
     console.warn(
-      `Minutes value of ${props.value} is not a multipe of provided minutesIncrement (${props.minutesIncrement}).`
+      `Minutes value of ${props.value} is not a multiple of provided minutesIncrement (${props.minutesIncrement}).`
     );
   }
 
   const handleHoursChange = (event) =>
-    dispatchChange(Math.floor(event.target.value) * 60 + value.minutes, event);
+    dispatchChange(
+      Math.floor(event.target.value) * 60 + hoursMinutes.minutes,
+      event
+    );
 
   const handleMinutesChange = (event) =>
-    dispatchChange(value.hours * 60 + Number(event.target.value), event);
+    dispatchChange(hoursMinutes.hours * 60 + Number(event.target.value), event);
 
   /**
    * Call props.onChange with an argument value in a shape resembling Event so
@@ -90,7 +93,7 @@ const InputHours = (props) => {
         labelWeight="normal"
         inputMode="numeric"
         pattern="[0-9]*"
-        value={value.hours}
+        value={isNil(props.value) ? "" : hoursMinutes.hours}
         onChange={handleHoursChange}
       />
       <Dropdown
@@ -101,7 +104,7 @@ const InputHours = (props) => {
         smallLabel
         labelWeight="normal"
         choices={minuteChoices}
-        value={value.minutes}
+        value={isNil(props.value) ? "" : hoursMinutes.minutes}
         onChange={handleMinutesChange}
       />
     </Fieldset>

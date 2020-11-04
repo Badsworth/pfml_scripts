@@ -358,7 +358,7 @@ export class WorkPattern extends BaseModel {
    * @returns {WorkPattern}
    */
   static addWeek(workPattern, minutesWorkedPerWeek = 0) {
-    // TODO (CP-1336): Move away from defaulting minutesWorkedPerWeek to 0 once InputHours supports an empty value
+    // TODO (CP-1336): Move away from defaulting minutesWorkedPerWeek to 0
     const minutesOverWeek = WorkPattern._spreadMinutesOverWeek(
       minutesWorkedPerWeek
     );
@@ -482,18 +482,17 @@ export const DurationBasis = {
 
 export class ReducedScheduleLeavePeriod extends BaseModel {
   get defaults() {
-    // TODO (CP-1336): Move away from defaulting minutes to 0 once InputHours supports an empty value
     return {
       end_date: null,
-      friday_off_minutes: 0,
+      friday_off_minutes: null,
       leave_period_id: null,
-      monday_off_minutes: 0,
-      saturday_off_minutes: 0,
+      monday_off_minutes: null,
+      saturday_off_minutes: null,
       start_date: null,
-      sunday_off_minutes: 0,
-      thursday_off_minutes: 0,
-      tuesday_off_minutes: 0,
-      wednesday_off_minutes: 0,
+      sunday_off_minutes: null,
+      thursday_off_minutes: null,
+      tuesday_off_minutes: null,
+      wednesday_off_minutes: null,
     };
   }
 }

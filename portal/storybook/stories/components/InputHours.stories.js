@@ -7,7 +7,7 @@ export default {
 };
 
 export const ControlledField = (args) => {
-  const [value, setFieldValue] = useState(40 * 60 + 45);
+  const [value, setFieldValue] = useState();
   const handleChange = (evt) => {
     setFieldValue(evt.target.value);
   };

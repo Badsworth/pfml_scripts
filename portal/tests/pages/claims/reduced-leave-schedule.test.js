@@ -74,14 +74,14 @@ describe("ReducedLeaveSchedule", () => {
           leave_details: {
             reduced_schedule_leave_periods: [
               {
-                friday_off_minutes: 0,
+                friday_off_minutes: null,
                 leave_period_id: "mock-leave-period-id",
                 monday_off_minutes: 480,
-                saturday_off_minutes: 0,
-                sunday_off_minutes: 0,
-                thursday_off_minutes: 0,
-                tuesday_off_minutes: 0,
-                wednesday_off_minutes: 0,
+                saturday_off_minutes: null,
+                sunday_off_minutes: null,
+                thursday_off_minutes: null,
+                tuesday_off_minutes: null,
+                wednesday_off_minutes: null,
               },
             ],
           },

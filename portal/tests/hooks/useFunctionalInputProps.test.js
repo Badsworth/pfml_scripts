@@ -41,6 +41,42 @@ describe("useFunctionalInputProps", () => {
     expect(props.value).toBe("");
   });
 
+  it("sets the value to the given fallback value when a field value is null", () => {
+    let getFunctionalInputProps;
+    testHook(() => {
+      const { formState, updateFields } = useFormState({});
+
+      getFunctionalInputProps = useFunctionalInputProps({
+        appErrors: new AppErrorInfoCollection(),
+        formState,
+        updateFields,
+      });
+    });
+
+    const props = getFunctionalInputProps("first_name", {
+      fallbackValue: "default",
+    });
+
+    expect(props.value).toBe("default");
+  });
+
+  it("sets the value to 0 when the value is 0", () => {
+    let getFunctionalInputProps;
+    testHook(() => {
+      const { formState, updateFields } = useFormState({ minutes: 0 });
+
+      getFunctionalInputProps = useFunctionalInputProps({
+        appErrors: new AppErrorInfoCollection(),
+        formState,
+        updateFields,
+      });
+    });
+
+    const props = getFunctionalInputProps("minutes");
+
+    expect(props.value).toBe(0);
+  });
+
   it("gets the value from the formState by the field path", () => {
     let getFunctionalInputProps;
     testHook(() => {
