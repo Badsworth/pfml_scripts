@@ -176,6 +176,25 @@ describe("useAuthLogic", () => {
       );
     });
 
+    it("sets app errors when Auth.forgotPassword throws LimitExceededException due to too many forget password requests", () => {
+      jest.spyOn(Auth, "forgotPassword").mockImplementation(() => {
+        // Ignore lint rule since AWS Auth class actually throws an object literal
+        // eslint-disable-next-line no-throw-literal
+        throw {
+          code: "LimitExceededException",
+          message: "Attempt limit exceeded, please try after some time.",
+          name: "LimitExceededException",
+        };
+      });
+      act(() => {
+        forgotPassword(username);
+      });
+      expect(appErrors.items).toHaveLength(1);
+      expect(appErrors.items[0].message).toMatchInlineSnapshot(
+        `"Your account is temporarily locked because of too many forget password requests. Wait 15 minutes before trying again."`
+      );
+    });
+
     it("sets system error message when Auth.forgotPassword throws unanticipated error", () => {
       jest.spyOn(Auth, "forgotPassword").mockImplementation(() => {
         throw new Error("Some unknown error");
@@ -274,7 +293,7 @@ describe("useAuthLogic", () => {
       );
     });
 
-    it("sets app errors when Auth.forgotPassword throws NotAuthorizedException due to security reasons", async () => {
+    it("sets app errors when Auth.signIn throws NotAuthorizedException due to security reasons", async () => {
       jest.spyOn(Auth, "signIn").mockImplementation(() => {
         // Ignore lint rule since AWS Auth class actually throws an object literal
         // eslint-disable-next-line no-throw-literal
@@ -293,7 +312,7 @@ describe("useAuthLogic", () => {
       );
     });
 
-    it("sets app errors when Auth.forgotPassword throws NotAuthorizedException due to incorrect username or password", async () => {
+    it("sets app errors when Auth.signIn throws NotAuthorizedException due to incorrect username or password", async () => {
       jest.spyOn(Auth, "signIn").mockImplementation(() => {
         // Ignore lint rule since AWS Auth class actually throws an object literal
         // eslint-disable-next-line no-throw-literal
@@ -309,6 +328,25 @@ describe("useAuthLogic", () => {
       expect(appErrors.items).toHaveLength(1);
       expect(appErrors.items[0].message).toMatchInlineSnapshot(
         `"Incorrect email or password"`
+      );
+    });
+
+    it("sets app errors when Auth.signIn throws NotAuthorizedException due to too many failed login attempts", () => {
+      jest.spyOn(Auth, "signIn").mockImplementation(() => {
+        // Ignore lint rule since AWS Auth class actually throws an object literal
+        // eslint-disable-next-line no-throw-literal
+        throw {
+          code: "NotAuthorizedException",
+          message: "Password attempts exceeded",
+          name: "NotAuthorizedException",
+        };
+      });
+      act(() => {
+        login(username, password);
+      });
+      expect(appErrors.items).toHaveLength(1);
+      expect(appErrors.items[0].message).toMatchInlineSnapshot(
+        `"Your account is temporarily locked because of too many failed login attempts. Wait 15 minutes before trying again."`
       );
     });
 

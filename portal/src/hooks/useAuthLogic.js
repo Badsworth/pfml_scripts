@@ -385,6 +385,10 @@ function getForgotPasswordErrorInfo(error, t) {
     message = t("errors.auth.invalidParametersFallback");
   } else if (error.code === "UserNotFoundException") {
     message = t("errors.auth.userNotFound");
+  } else if (error.code === "LimitExceededException") {
+    message = t("errors.auth.attemptsLimitExceeded", {
+      context: "forgotPassword",
+    });
   } else {
     message = t("errors.network");
   }
@@ -539,12 +543,19 @@ function getNotAuthorizedExceptionMessage(error, t) {
   // 2. When Adaptive Authentication blocked login attempt due to risk score
   // code: "NotAuthorizedException"
   // message: "Request not allowed due to security reasons."
+  //
+  // 3. When user's account is temporarily locked due to too many failed login attempts
+  // code: "NotAuthorizedException"
+  // message: "Password attempts exceeded"
 
   if (error.message.match(/Request not allowed due to security reasons/)) {
     // This error may trigger if the password is incorrect, or if the
     // risk score of the login attempt resulted in the attempt being Blocked
     // by our Cognito Advanced Security settings
     return t("errors.auth.suspiciousLoginBlocked");
+  }
+  if (error.message.match(/Password attempts exceeded/)) {
+    return t("errors.auth.attemptsLimitExceeded", { context: "login" });
   }
 
   return t("errors.auth.incorrectEmailOrPassword");

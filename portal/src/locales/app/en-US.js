@@ -20,6 +20,10 @@ const chars = {
 
 const errors = {
   auth: {
+    attemptsLimitExceeded_forgotPassword:
+      "Your account is temporarily locked because of too many forget password requests. Wait 15 minutes before trying again.",
+    attemptsLimitExceeded_login:
+      "Your account is temporarily locked because of too many failed login attempts. Wait 15 minutes before trying again.",
     codeDeliveryFailure:
       "We encountered an error while sending the verification code. Try again.",
     codeExpired:
