@@ -1,0 +1,80 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Header includes a Skip Nav link as its first link 1`] = `
+<HeaderSlim
+  siteLogo={
+    <SiteLogo
+      image={
+        Object {
+          "alt": "Massachusetts state seal",
+          "height": 45,
+          "src": "test-file-stub",
+          "width": 45,
+        }
+      }
+      siteName="Paid Family and Medical Leave"
+      title="Paid Family and Medical Leave Homepage"
+      url={
+        Object {
+          "domain": "/",
+        }
+      }
+    />
+  }
+  skipNav={
+    <a
+      className="usa-skipnav"
+      href="#main"
+    >
+      Skip to main content
+    </a>
+  }
+  utilityNav={
+    <AuthNav
+      onLogout={[MockFunction]}
+    />
+  }
+/>
+`;
+
+exports[`Header passes the user into AuthNav 1`] = `
+<HeaderSlim
+  siteLogo={
+    <SiteLogo
+      image={
+        Object {
+          "alt": "Massachusetts state seal",
+          "height": 45,
+          "src": "test-file-stub",
+          "width": 45,
+        }
+      }
+      siteName="Paid Family and Medical Leave"
+      title="Paid Family and Medical Leave Homepage"
+      url={
+        Object {
+          "domain": "/",
+        }
+      }
+    />
+  }
+  skipNav={
+    <a
+      className="usa-skipnav"
+      href="#main"
+    >
+      Skip to main content
+    </a>
+  }
+  utilityNav={
+    <AuthNav
+      onLogout={[MockFunction]}
+      user={
+        Object {
+          "username": "Foo Bar",
+        }
+      }
+    />
+  }
+/>
+`;

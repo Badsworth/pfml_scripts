@@ -5,9 +5,9 @@ import { shallow } from "enzyme";
 describe("Header", () => {
   it("includes a Skip Nav link as its first link", () => {
     const wrapper = shallow(<Header onLogout={jest.fn()} />);
-    const links = wrapper.find("a");
 
-    expect(links.first().prop("href")).toBe("#main");
+    expect(wrapper).toMatchSnapshot();
+    expect(wrapper.prop("skipNav").props.href).toBe("#main");
   });
 
   it("passes the user into AuthNav", () => {
@@ -16,8 +16,8 @@ describe("Header", () => {
     };
 
     const wrapper = shallow(<Header user={user} onLogout={jest.fn()} />);
-    const authNav = wrapper.find("AuthNav");
 
-    expect(authNav.prop("user")).toBe(user);
+    expect(wrapper).toMatchSnapshot();
+    expect(wrapper.prop("utilityNav").props.user).toBe(user);
   });
 });

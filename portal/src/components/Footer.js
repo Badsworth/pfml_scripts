@@ -1,6 +1,7 @@
 import FooterSlim from "@massds/mayflower-react/dist/FooterSlim";
 import React from "react";
-import SiteLogo from "./SiteLogo";
+import SiteLogo from "@massds/mayflower-react/dist/SiteLogo";
+import logo from "@massds/mayflower-assets/static/images/logo/stateseal.png";
 import routes from "../routes";
 import { useTranslation } from "../locales/i18n";
 
@@ -21,7 +22,20 @@ const Footer = () => {
         href: routes.external.massgov.dfml,
       },
     },
-    siteLogo: <SiteLogo />,
+    siteLogo: (
+      <SiteLogo
+        url={{
+          domain: routes.home,
+        }}
+        image={{
+          src: logo,
+          alt: t("components.siteLogo.alt"),
+          width: 45,
+          height: 45,
+        }}
+        title={`${t("components.header.appTitle")} Homepage`}
+      />
+    ),
   };
 
   return <FooterSlim {...footerSlimProps} />;

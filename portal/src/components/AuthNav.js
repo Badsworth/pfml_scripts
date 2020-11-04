@@ -11,7 +11,7 @@ const AuthNav = (props) => {
   const user = props.user || {};
 
   return (
-    <div className="bg-primary font-body-sm text-white text-right">
+    <div className="text-right">
       <div className="grid-container">
         <div className="grid-row">
           <div className="grid-col-fill margin-y-1">

@@ -2,7 +2,7 @@
 
 exports[`AuthNav when a user is NOT authenticated doesn't render the logged-in state 1`] = `
 <div
-  className="bg-primary font-body-sm text-white text-right"
+  className="text-right"
 >
   <div
     className="grid-container"
@@ -20,7 +20,7 @@ exports[`AuthNav when a user is NOT authenticated doesn't render the logged-in s
 
 exports[`AuthNav when a user is authenticated renders the logged-in state 1`] = `
 <div
-  className="bg-primary font-body-sm text-white text-right"
+  className="text-right"
 >
   <div
     className="grid-container"

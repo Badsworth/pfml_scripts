@@ -1,7 +1,10 @@
 import AuthNav from "./AuthNav";
-import Link from "next/link";
+import HeaderSlim from "@massds/mayflower-react/dist/HeaderSlim";
 import PropTypes from "prop-types";
 import React from "react";
+import SiteLogo from "@massds/mayflower-react/dist/SiteLogo";
+import logo from "@massds/mayflower-assets/static/images/logo/stateseal.png";
+import routes from "../routes";
 import { useTranslation } from "../locales/i18n";
 
 /**
@@ -10,29 +13,31 @@ import { useTranslation } from "../locales/i18n";
 const Header = (props) => {
   const { t } = useTranslation();
 
-  return (
-    <React.Fragment>
+  const headerProps = {
+    siteLogo: (
+      <SiteLogo
+        url={{
+          domain: routes.home,
+        }}
+        image={{
+          src: logo,
+          alt: t("components.siteLogo.alt"),
+          width: 45,
+          height: 45,
+        }}
+        siteName={t("components.header.appTitle")}
+        title={`${t("components.header.appTitle")} Homepage`}
+      />
+    ),
+    skipNav: (
       <a href="#main" className="usa-skipnav">
         {t("components.header.skipToContent")}
       </a>
+    ),
+    utilityNav: <AuthNav user={props.user} onLogout={props.onLogout} />,
+  };
 
-      <AuthNav user={props.user} onLogout={props.onLogout} />
-
-      <header className="bg-base-lightest">
-        <div className="grid-container">
-          <div className="grid-row">
-            <div className="grid-col-fill margin-left-0 margin-y-3 desktop:margin-y-4">
-              <Link href="/">
-                <a className="usa-logo__text font-heading-lg text-no-underline text-secondary">
-                  {t("components.header.appTitle")}
-                </a>
-              </Link>
-            </div>
-          </div>
-        </div>
-      </header>
-    </React.Fragment>
-  );
+  return <HeaderSlim {...headerProps} />;
 };
 
 Header.propTypes = {
