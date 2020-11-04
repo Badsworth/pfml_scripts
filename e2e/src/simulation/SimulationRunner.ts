@@ -30,6 +30,7 @@ export default class SimulationRunner {
   }
 
   async run(delaySeconds = 0): Promise<void> {
+    let consecutiveFailures = 0;
     for (const claim of await this.storage.claims()) {
       // const claimId = claim.claim.tax_identifier;
       const logger = this.logger.child({
@@ -40,6 +41,9 @@ export default class SimulationRunner {
         throw new Error(
           "This claim has no ID, and cannot be tracked or submitted."
         );
+      }
+      if (consecutiveFailures > 3) {
+        throw new Error("Aborting due to too many consecutive failures.");
       }
 
       // Only execute the claim if we haven't already done so previously.
@@ -56,9 +60,11 @@ export default class SimulationRunner {
             level: "debug",
             fineosId,
           });
+          consecutiveFailures = 0;
         } catch (e) {
           // Track that the claim failed.
           logger.debug(e);
+          consecutiveFailures++;
           await this.tracker.set(claim.id, undefined, e.toString());
           profiler.done({ message: "Submission failed", level: "error" });
         }

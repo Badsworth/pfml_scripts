@@ -45,9 +45,9 @@ export default class PortalSubmitter {
     this.base = ApiBaseUrl;
   }
 
-  private async authenticate() {
+  async authenticate(): Promise<string> {
     if (this.jwt) {
-      return;
+      return this.jwt;
     }
     this.jwt = await new Promise((resolve, reject) => {
       const cognitoUser = new CognitoUser({
@@ -64,6 +64,7 @@ export default class PortalSubmitter {
         },
       });
     });
+    return this.jwt as string;
   }
 
   private async getOptions(): Promise<RequestOptions> {
