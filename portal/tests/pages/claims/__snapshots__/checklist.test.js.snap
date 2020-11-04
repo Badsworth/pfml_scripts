@@ -83,6 +83,11 @@ Array [
       The date you told your employer you were taking leave.
     </li>
   </ul>,
+  <p
+    key="p-2"
+  >
+    If you are taking leave from multiple employers, you must create separate applications for each job.
+  </p>,
 ]
 `;
 

@@ -2,7 +2,6 @@ import Claim, {
   EmploymentStatus as EmploymentStatusEnum,
 } from "../../models/Claim";
 import { get, pick } from "lodash";
-import Alert from "../../components/Alert";
 import ConditionalContent from "../../components/ConditionalContent";
 import Details from "../../components/Details";
 import InputChoiceGroup from "../../components/InputChoiceGroup";
@@ -51,10 +50,6 @@ export const EmploymentStatus = (props) => {
       title={t("pages.claimsEmploymentStatus.title")}
       onSave={handleSave}
     >
-      <Alert state="info">
-        {t("pages.claimsEmploymentStatus.multipleEmployerAppAlert")}
-      </Alert>
-
       {showEmploymentStatus && (
         <InputChoiceGroup
           {...getFunctionalInputProps("employment_status")}

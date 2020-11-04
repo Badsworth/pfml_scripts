@@ -329,8 +329,6 @@ const shared = {
   leaveReasonMedical: "Medical leave",
   leaveReasonServiceMemberFamily: "Military family",
   minutesLabel: "Minutes",
-  multipleEmployerAppAlert:
-    "If you are filing for paid leave from multiple employers, you will need to fill out a separate application for each individual employer.",
   networkError:
     "Sorry, an error was encountered. This may occur for a variety of reasons, including temporarily losing an internet connection or an unexpected error in our system. If this continues to happen, you may call the Paid Family Leave Contact Center at $t(shared.contactCenterPhoneNumber)",
   otherIncomeEntryPrefix: "Income",
@@ -487,7 +485,7 @@ const pages = {
     stepHTMLDescription_bondingNewbornFuture:
       "After your child is born you will need to provide your child’s birth certificate or a document from a health care provider that shows the child’s birth date.",
     stepHTMLDescription_employerInformation:
-      "You will need to know:<ul><li>Your employer’s 9-digit federal employer identification number (FEIN or EIN). <br><strong>Where to find this: </strong>on your W$t(chars.nbhyphen)2 or 1099, or ask your employer’s finance department.</li><li>The date you told your employer you were taking leave.</li></ul>",
+      "You will need to know:<ul><li>Your employer’s 9-digit federal employer identification number (FEIN or EIN). <br><strong>Where to find this: </strong>on your W$t(chars.nbhyphen)2 or 1099, or ask your employer’s finance department.</li><li>The date you told your employer you were taking leave.</li></ul><p>If you are taking leave from multiple employers, you must create separate applications for each job.</p>",
     stepHTMLDescription_leaveDetails:
       "<p>If you are taking medical leave due to injury, illness, or pregnancy, you need to have your health care provider fill out <healthcare-provider-form-link>the certification form</healthcare-provider-form-link>. Some of the answers you will need for the online application will come from your health care provider’s answers on the certification form.</p><p>If you are taking leave to bond with a child, you will need to know:</p><ul><li>The child's date of birth, due date, or the date they arrived in your home for adoption or foster care.</li><li>When you want your leave to begin and end.</li></ul>",
     stepHTMLDescription_medical:
@@ -581,7 +579,6 @@ const pages = {
     furloughAnswer:
       'If your hours have been cut or significantly reduced but you have not been laid off, select "$t(pages.claimsEmploymentStatus.choiceLabel_employed)"',
     furloughQuestion: "What if I've been furloughed?",
-    multipleEmployerAppAlert: "$t(shared.multipleEmployerAppAlert)",
     sectionLabel: "What is your employment status?",
     title: "$t(shared.claimsEmploymentInfoTitle)",
   },
@@ -715,7 +712,6 @@ const pages = {
     employerNotificationLabel: "When did you tell them?",
     hint:
       "Notify your employer at least 30 days before the start of your leave if$t(chars.nbsp)possible.",
-    multipleEmployerAppAlert: "$t(shared.multipleEmployerAppAlert)",
     mustNotifyEmployerWarning:
       "Before you can submit an application, you must tell your employer that you're taking$t(chars.nbsp)leave.",
     sectionLabel:

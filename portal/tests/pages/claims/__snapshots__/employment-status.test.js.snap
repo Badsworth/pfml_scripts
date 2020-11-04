@@ -5,11 +5,6 @@ exports[`EmploymentStatusPage when claimantShowEmploymentStatus feature flag is 
   onSave={[Function]}
   title="Employment information"
 >
-  <Alert
-    state="info"
-  >
-    If you are filing for paid leave from multiple employers, you will need to fill out a separate application for each individual employer.
-  </Alert>
   <ConditionalContent
     clearField={[Function]}
     fieldNamesClearedWhenHidden={
@@ -39,11 +34,6 @@ exports[`EmploymentStatusPage when claimantShowEmploymentStatus feature flag is 
   onSave={[Function]}
   title="Employment information"
 >
-  <Alert
-    state="info"
-  >
-    If you are filing for paid leave from multiple employers, you will need to fill out a separate application for each individual employer.
-  </Alert>
   <InputChoiceGroup
     choices={
       Array [
