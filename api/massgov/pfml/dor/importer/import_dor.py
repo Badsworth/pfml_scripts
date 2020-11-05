@@ -19,7 +19,7 @@ import massgov.pfml.util.files as file_util
 import massgov.pfml.util.logging as logging
 import massgov.pfml.util.logging.audit
 from massgov.pfml import db
-from massgov.pfml.db.models.employees import Country, ImportLog, WagesAndContributions
+from massgov.pfml.db.models.employees import ImportLog, WagesAndContributions
 from massgov.pfml.dor.importer.dor_file_formats import (
     EMPLOYEE_FILE_ROW_LENGTH,
     EMPLOYEE_FORMAT,
@@ -70,7 +70,7 @@ class ImportReport:
     sample_employers_line_lengths: Dict[Any, Any] = field(default_factory=dict)
     invalid_employer_lines_count: int = 0
     parsed_employers_exception_line_nums: List[Any] = field(default_factory=list)
-    invalid_address_country_and_account_keys: Dict[Any, Any] = field(default_factory=dict)
+    invalid_employer_addresses_by_account_key: Dict[Any, Any] = field(default_factory=dict)
     invalid_employee_lines_count: int = 0
     skipped_wages_count: int = 0
     parsed_employees_exception_count: int = 0
@@ -401,7 +401,7 @@ def process_daily_import(
 
     report.sample_employers_line_lengths = {}
     report.parsed_employers_exception_line_nums = []
-    report.invalid_address_country_and_account_keys = {}
+    report.invalid_employer_addresses_by_account_key = {}
 
     report_log_entry = dor_persistence_util.create_import_log_entry(db_session, report)
 
@@ -435,7 +435,9 @@ def process_daily_import(
         report.end = datetime.now().isoformat()
         dor_persistence_util.update_import_log_entry(db_session, report_log_entry, report)
 
-        logger.info("Invalid countries: %s", repr(report.invalid_address_country_and_account_keys))
+        logger.info(
+            "Invalid employer addresses: %s", repr(report.invalid_employer_addresses_by_account_key)
+        )
         logger.info("Sample Employer line lengths: %s", repr(report.sample_employers_line_lengths))
 
         # move file to processed folder
@@ -471,6 +473,25 @@ def bulk_save(db_session, models_list, model_name, commit=False, batch_size=1000
     batch_apply(models_list, f"Saving {model_name}", bulk_save_helper, batch_size=batch_size)
 
 
+def is_valid_employer_address(employee_info, report):
+    try:
+        dor_persistence_util.employer_dict_to_country_and_state_values(employee_info)
+    except KeyError:
+        invalid_address_msg = "city: {}, state: {}, zip: {}, country: {}".format(
+            employee_info["employer_address_city"],
+            employee_info["employer_address_state"],
+            employee_info["employer_address_zip"],
+            employee_info["employer_address_country"],
+        )
+        logger.warning(f"Invalid employer address - {invalid_address_msg}")
+        report.invalid_employer_addresses_by_account_key[
+            employee_info["account_key"]
+        ] = invalid_address_msg
+        return False
+
+    return True
+
+
 def import_employers(db_session, employers, report, import_log_entry_id):
     """Import employers into db"""
     logger.info("Importing employers")
@@ -495,6 +516,10 @@ def import_employers(db_session, employers, report, import_log_entry_id):
     for employer_info in employers:
         unique_employer_state_codes.add(employer_info["employer_address_state"])
         unique_employer_country_codes.add(employer_info["employer_address_country"])
+
+        if not is_valid_employer_address(employer_info, report):
+            continue
+
         fein = employer_info["fein"]
         if fein in staged_not_found_employer_ssns:
             # this means there is more than one line for the same employer
@@ -513,6 +538,9 @@ def import_employers(db_session, employers, report, import_log_entry_id):
 
     logger.info("Employer states to insert: %s", repr(unique_employer_state_codes))
     logger.info("Employer countries to insert: %s", repr(unique_employer_country_codes))
+    logger.warning(
+        "Invalid employer addresses: %s", repr(report.invalid_employer_addresses_by_account_key)
+    )
 
     # 2 - Create employers
     fein_to_new_employer_id = {}
@@ -521,35 +549,12 @@ def import_employers(db_session, employers, report, import_log_entry_id):
         fein_to_new_employer_id[emp["fein"]] = uuid.uuid4()
         fein_to_new_address_id[emp["fein"]] = uuid.uuid4()
 
-    employers_with_valid_addresses = []
-    for employer in not_found_employer_info_list:
-        try:
-            Country.get_id(employer["employer_address_country"])
-
-            employers_with_valid_addresses.append(employer)
-        except Exception:
-            logger.warning(
-                "Invalid employer state or country: {}, {}, {}, {}".format(
-                    employer["employer_address_city"],
-                    employer["employer_address_state"],
-                    employer["employer_address_zip"],
-                    employer["employer_address_country"],
-                )
-            )
-            report.invalid_address_country_and_account_keys[employer["account_key"]] = employer[
-                "employer_address_country"
-            ]
-
-    logger.warning(
-        "Invalid employer countries: %s", repr(report.invalid_address_country_and_account_keys)
-    )
-
     employer_models_to_create = list(
         map(
             lambda employer_info: dor_persistence_util.dict_to_employer(
                 employer_info, import_log_entry_id, fein_to_new_employer_id[employer_info["fein"]]
             ),
-            employers_with_valid_addresses,
+            not_found_employer_info_list,
         )
     )
 
@@ -567,7 +572,7 @@ def import_employers(db_session, employers, report, import_log_entry_id):
             lambda employer_info: dor_persistence_util.dict_to_address(
                 employer_info, fein_to_new_address_id[employer_info["fein"]]
             ),
-            employers_with_valid_addresses,
+            not_found_employer_info_list,
         )
     )
 

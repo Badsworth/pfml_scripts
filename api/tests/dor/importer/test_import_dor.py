@@ -201,11 +201,10 @@ def test_employer_address(test_db_session):
         report_log_entry.import_log_id,
     )
 
-    invalid_country_report = {}
-    invalid_country_report[employer_invalid_country["account_key"]] = employer_invalid_country[
-        "employer_address_country"
-    ]
-    assert report.invalid_address_country_and_account_keys == invalid_country_report
+    assert (
+        employer_invalid_country["employer_address_country"]
+        in report.invalid_employer_addresses_by_account_key[employer_invalid_country["account_key"]]
+    )
     assert report.created_employers_count == 1
 
     # confirm expected columns are now updated

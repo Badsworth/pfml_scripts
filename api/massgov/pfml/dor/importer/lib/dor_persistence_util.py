@@ -76,14 +76,26 @@ def dict_to_employer(employer_info, import_log_entry_id, uuid=uuid.uuid4):
     )
 
 
-def dict_to_address(employer_info, uuid=uuid.uuid4):
+def employer_dict_to_country_and_state_values(employer_info):
+    """
+    Get employer country and state values for persistence.
+    Will throw a KeyError if country code is invalid or if state is invalid for a USA country code.
+    """
     state_id = None
     state_text = None
 
-    try:
+    country_id = Country.get_id(employer_info["employer_address_country"])
+
+    if Country.USA.country_id == country_id:
         state_id = GeoState.get_id(employer_info["employer_address_state"])
-    except Exception:
+    else:
         state_text = employer_info["employer_address_state"]
+
+    return country_id, state_id, state_text
+
+
+def dict_to_address(employer_info, uuid=uuid.uuid4):
+    country_id, state_id, state_text = employer_dict_to_country_and_state_values(employer_info)
 
     return Address(
         address_type_id=AddressType.BUSINESS.address_type_id,
@@ -92,7 +104,7 @@ def dict_to_address(employer_info, uuid=uuid.uuid4):
         geo_state_id=state_id,
         geo_state_text=state_text,
         zip_code=employer_info["employer_address_zip"],
-        country_id=Country.get_id(employer_info["employer_address_country"]),
+        country_id=country_id,
         address_id=uuid,
     )
 
@@ -125,11 +137,14 @@ def update_employer(db_session, existing_employer, employer_info, import_log_ent
         )
         raise ValueError("Address row not found by id")
 
+    country_id, state_id, state_text = employer_dict_to_country_and_state_values(employer_info)
+
     existing_address.address_line_one = employer_info["employer_address_street"]
     existing_address.city = employer_info["employer_address_city"]
-    existing_address.geo_state_id = GeoState.get_id(employer_info["employer_address_state"])
+    existing_address.geo_state_id = state_id
+    existing_address.geo_state_text = state_text
     existing_address.zip_code = employer_info["employer_address_zip"]
-    existing_address.country_id = Country.USA.country_id
+    existing_address.country_id = country_id
 
     return existing_employer
 

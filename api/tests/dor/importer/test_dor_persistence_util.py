@@ -6,6 +6,7 @@ import pytest
 from sqlalchemy.orm.exc import NoResultFound
 
 import massgov.pfml.dor.importer.lib.dor_persistence_util as util
+from massgov.pfml.db.models.employees import Country, GeoState
 from massgov.pfml.db.models.factories import (
     EmployeeFactory,
     EmployerFactory,
@@ -56,6 +57,44 @@ def test_get_employer_by_fein(test_db_session):
     employer_row = util.get_employer_by_fein(test_db_session, "00-000000000")
 
     assert employer_row is None
+
+
+def test_employer_dict_to_country_and_state_values(test_db_session):
+    valid_us_address = {"employer_address_state": "MA", "employer_address_country": "USA"}
+
+    country_id, state_id, state_text = util.employer_dict_to_country_and_state_values(
+        valid_us_address
+    )
+
+    assert country_id == Country.get_id(valid_us_address["employer_address_country"])
+    assert state_id == GeoState.get_id(valid_us_address["employer_address_state"])
+    assert state_text is None
+
+    invalid_us_state = {"employer_address_state": "QC", "employer_address_country": "USA"}
+
+    with pytest.raises(KeyError):
+        util.employer_dict_to_country_and_state_values(invalid_us_state)
+
+    valid_international_address = {
+        "employer_address_state": "QC",
+        "employer_address_country": "CAN",
+    }
+
+    country_id, state_id, state_text = util.employer_dict_to_country_and_state_values(
+        valid_international_address
+    )
+
+    assert country_id == Country.get_id(valid_international_address["employer_address_country"])
+    assert state_id is None
+    assert state_text == valid_international_address["employer_address_state"]
+
+    invalid_international_address = {
+        "employer_address_state": "QC",
+        "employer_address_country": "UXU",
+    }
+
+    with pytest.raises(KeyError):
+        util.employer_dict_to_country_and_state_values(invalid_international_address)
 
 
 def test_get_employer_address(test_db_session):
