@@ -21,6 +21,9 @@ export default class SimulationStorage {
   get usersFile(): string {
     return path.join(this.directory, "users.json");
   }
+  get employersFile(): string {
+    return path.join(this.directory, "employers.json");
+  }
   get stateFile(): string {
     return path.join(this.directory, "state.json");
   }
