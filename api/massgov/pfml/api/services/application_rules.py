@@ -510,7 +510,7 @@ def get_work_pattern_issues(application: Application) -> List[Issue]:
         )
 
     for i, minutes in enumerate(minutes_each_day):
-        if minutes >= 24 * 60:
+        if minutes > 24 * 60:
             issues.append(
                 Issue(
                     type=IssueType.maximum,

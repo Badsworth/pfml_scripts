@@ -961,7 +961,9 @@ def test_max_work_pattern_hours(test_db_session, initialize_factories_session):
     test_app = ApplicationFactory.create(
         work_pattern=WorkPatternVariableFactory(
             work_pattern_days=[
-                WorkPatternDay(week_number=1, day_of_week_id=i + 1, minutes=1500) for i in range(7)
+                # index 0 will be 24 hours and should be valid
+                WorkPatternDay(week_number=1, day_of_week_id=i + 1, minutes=24 * 60 + i)
+                for i in range(7)
             ]
         )
     )
@@ -970,12 +972,12 @@ def test_max_work_pattern_hours(test_db_session, initialize_factories_session):
 
     expected_issues = []
 
-    for i in range(7):
+    for i in range(6):
         expected_issues.append(
             Issue(
                 type=IssueType.maximum,
                 message="Total minutes in a work pattern week must be less than a day (1440 minutes)",
-                field=f"work_pattern.work_pattern_days[{i}].minutes",
+                field=f"work_pattern.work_pattern_days[{i + 1}].minutes",
             )
         )
 
