@@ -24,6 +24,8 @@ import withUser from "../../../hoc/withUser";
 
 // TODO (EMPLOYER-363): Update respond by date
 const employerDueDate = "2020-10-10";
+// TODO (EMPLOYER-519): Remove `hoursWorkedPerWeek` when BE provides value
+const hoursWorkedPerWeek = 40;
 
 export const Review = (props) => {
   const {
@@ -51,7 +53,8 @@ export const Review = (props) => {
     if (claim) {
       setAmendedBenefits(claim.employer_benefits);
       setAmendedLeaves(claim.previous_leaves);
-      setAmendedHours(claim.hours_worked_per_week);
+      // TODO (EMPLOYER-519): Remove `hoursWorkedPerWeek` value when BE provides value
+      setAmendedHours(claim.hours_worked_per_week || hoursWorkedPerWeek);
     }
   }, [claim]);
 
@@ -116,7 +119,8 @@ export const Review = (props) => {
           <LeaveDetails claim={claim} />
           <LeaveSchedule claim={claim} />
           <SupportingWorkDetails
-            hoursWorkedPerWeek={claim.hours_worked_per_week}
+            // TODO (EMPLOYER-519): Change `hoursWorkedPerWeek` to `claim.hours_worked_per_week` when BE provides value
+            hoursWorkedPerWeek={hoursWorkedPerWeek}
             onChange={setAmendedHours}
           />
           <EmployerBenefits
