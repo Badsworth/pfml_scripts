@@ -19,7 +19,7 @@ import massgov.pfml.util.files as file_util
 import massgov.pfml.util.logging as logging
 import massgov.pfml.util.logging.audit
 from massgov.pfml import db
-from massgov.pfml.db.models.employees import Country, GeoState, ImportLog, WagesAndContributions
+from massgov.pfml.db.models.employees import Country, ImportLog, WagesAndContributions
 from massgov.pfml.dor.importer.dor_file_formats import (
     EMPLOYEE_FILE_ROW_LENGTH,
     EMPLOYEE_FORMAT,
@@ -70,7 +70,7 @@ class ImportReport:
     sample_employers_line_lengths: Dict[Any, Any] = field(default_factory=dict)
     invalid_employer_lines_count: int = 0
     parsed_employers_exception_line_nums: List[Any] = field(default_factory=list)
-    invalid_address_state_and_account_keys: Dict[Any, Any] = field(default_factory=dict)
+    invalid_address_country_and_account_keys: Dict[Any, Any] = field(default_factory=dict)
     invalid_employee_lines_count: int = 0
     skipped_wages_count: int = 0
     parsed_employees_exception_count: int = 0
@@ -401,7 +401,7 @@ def process_daily_import(
 
     report.sample_employers_line_lengths = {}
     report.parsed_employers_exception_line_nums = []
-    report.invalid_address_state_and_account_keys = {}
+    report.invalid_address_country_and_account_keys = {}
 
     report_log_entry = dor_persistence_util.create_import_log_entry(db_session, report)
 
@@ -435,7 +435,7 @@ def process_daily_import(
         report.end = datetime.now().isoformat()
         dor_persistence_util.update_import_log_entry(db_session, report_log_entry, report)
 
-        logger.info("Invalid states: %s", repr(report.invalid_address_state_and_account_keys))
+        logger.info("Invalid countries: %s", repr(report.invalid_address_country_and_account_keys))
         logger.info("Sample Employer line lengths: %s", repr(report.sample_employers_line_lengths))
 
         # move file to processed folder
@@ -524,7 +524,6 @@ def import_employers(db_session, employers, report, import_log_entry_id):
     employers_with_valid_addresses = []
     for employer in not_found_employer_info_list:
         try:
-            GeoState.get_id(employer["employer_address_state"])
             Country.get_id(employer["employer_address_country"])
 
             employers_with_valid_addresses.append(employer)
@@ -537,12 +536,12 @@ def import_employers(db_session, employers, report, import_log_entry_id):
                     employer["employer_address_country"],
                 )
             )
-            report.invalid_address_state_and_account_keys[employer["account_key"]] = employer[
-                "employer_address_state"
+            report.invalid_address_country_and_account_keys[employer["account_key"]] = employer[
+                "employer_address_country"
             ]
 
     logger.warning(
-        "Invalid employer states: %s", repr(report.invalid_address_state_and_account_keys)
+        "Invalid employer countries: %s", repr(report.invalid_address_country_and_account_keys)
     )
 
     employer_models_to_create = list(

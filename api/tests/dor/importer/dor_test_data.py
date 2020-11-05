@@ -37,6 +37,18 @@ updated_employer_except_update_date["exemption_cease_date"] = date(2021, 12, 31)
 updated_employer = copy.deepcopy(updated_employer_except_update_date)
 updated_employer["updated_date"] = pytz.UTC.localize(datetime(2020, 5, 23, 11, 5, 27))
 
+employer_international_address = copy.deepcopy(new_employer)
+employer_international_address["fein"] = "999999999"
+employer_international_address["account_key"] = "00000000002"
+employer_international_address["employer_address_state"] = "DX"
+employer_international_address["employer_address_country"] = "CAN"
+
+employer_invalid_country = copy.deepcopy(new_employer)
+employer_international_address["fein"] = "999999991"
+employer_invalid_country["account_key"] = "00000000003"
+employer_invalid_country["employer_address_state"] = "MA"
+employer_invalid_country["employer_address_country"] = "UXU"
+
 new_employee_wage_data = {
     "record_type": "B",
     "account_key": "00000000001",
@@ -91,6 +103,14 @@ def get_updated_employer_except_update_date():
 
 def get_updated_employer():
     return updated_employer
+
+
+def get_employer_international_address():
+    return employer_international_address
+
+
+def get_employer_invalid_country():
+    return employer_invalid_country
 
 
 def get_new_employee_wage_data():

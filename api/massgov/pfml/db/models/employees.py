@@ -293,6 +293,7 @@ class Address(Base):
     address_line_two = Column(Text)
     city = Column(Text)
     geo_state_id = Column(Integer, ForeignKey("lk_geo_state.geo_state_id"))
+    geo_state_text = Column(Text)
     zip_code = Column(Text)
     country_id = Column(Integer, ForeignKey("lk_country.country_id"))
 

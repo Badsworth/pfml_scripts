@@ -188,6 +188,43 @@ def test_employer_create_and_update_in_same_run(test_db_session):
     )
 
 
+def test_employer_address(test_db_session):
+    employer_international_address = test_data.get_employer_international_address()
+    employer_invalid_country = test_data.get_employer_invalid_country()
+
+    report, report_log_entry = get_new_import_report(test_db_session)
+
+    account_key_to_employer_id_map = import_dor.import_employers(
+        test_db_session,
+        [employer_international_address, employer_invalid_country],
+        report,
+        report_log_entry.import_log_id,
+    )
+
+    invalid_country_report = {}
+    invalid_country_report[employer_invalid_country["account_key"]] = employer_invalid_country[
+        "employer_address_country"
+    ]
+    assert report.invalid_address_country_and_account_keys == invalid_country_report
+    assert report.created_employers_count == 1
+
+    # confirm expected columns are now updated
+    employer_id = account_key_to_employer_id_map[employer_international_address["account_key"]]
+    persisted_employer_address = dor_persistence_util.get_employer_address(
+        test_db_session, employer_id
+    )
+    persisted_address = dor_persistence_util.get_address(
+        test_db_session, persisted_employer_address.address_id
+    )
+    assert persisted_address.geo_state_id is None
+    assert (
+        persisted_address.geo_state_text == employer_international_address["employer_address_state"]
+    )
+    assert persisted_address.country_id == Country.get_id(
+        employer_international_address["employer_address_country"]
+    )
+
+
 def get_new_import_report(test_db_session):
     report = import_dor.ImportReport()
     report_log_entry = dor_persistence_util.create_import_log_entry(test_db_session, report)

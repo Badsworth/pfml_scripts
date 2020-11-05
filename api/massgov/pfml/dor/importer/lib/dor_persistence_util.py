@@ -77,11 +77,20 @@ def dict_to_employer(employer_info, import_log_entry_id, uuid=uuid.uuid4):
 
 
 def dict_to_address(employer_info, uuid=uuid.uuid4):
+    state_id = None
+    state_text = None
+
+    try:
+        state_id = GeoState.get_id(employer_info["employer_address_state"])
+    except Exception:
+        state_text = employer_info["employer_address_state"]
+
     return Address(
         address_type_id=AddressType.BUSINESS.address_type_id,
         address_line_one=employer_info["employer_address_street"],
         city=employer_info["employer_address_city"],
-        geo_state_id=GeoState.get_id(employer_info["employer_address_state"]),
+        geo_state_id=state_id,
+        geo_state_text=state_text,
         zip_code=employer_info["employer_address_zip"],
         country_id=Country.get_id(employer_info["employer_address_country"]),
         address_id=uuid,
