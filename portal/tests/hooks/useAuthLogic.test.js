@@ -410,6 +410,24 @@ describe("useAuthLogic", () => {
       expect(spy).toHaveBeenCalledWith("LOG_IN");
       spy.mockRestore();
     });
+
+    it("redirects to verify account page while receiving UserNotConfirmedException error", () => {
+      jest.spyOn(Auth, "signIn").mockImplementation(() => {
+        // Ignore lint rule since AWS Auth class actually throws an object literal
+        // eslint-disable-next-line no-throw-literal
+        throw {
+          code: "UserNotConfirmedException",
+          message: "User is not confirmed.",
+          name: "UserNotConfirmedException",
+        };
+      });
+      const spy = jest.spyOn(portalFlow, "goToPageFor");
+      act(() => {
+        login(username, password);
+      });
+      expect(spy).toHaveBeenCalledWith("UNCONFIRMED_ACCOUNT");
+      spy.mockRestore();
+    });
   });
 
   describe("logout", () => {

@@ -17,6 +17,7 @@ const forgotPasswordStates = [
   routes.auth.forgotPassword,
   routes.claims.dashboard,
   routes.auth.login,
+  routes.auth.verifyAccount,
   routes.auth.resetPassword,
 ];
 
@@ -119,6 +120,7 @@ describe("forgotPasswordFlow", () => {
 
   runTestsWithStatesAndEvents(
     {
+      UNCONFIRMED_ACCOUNT: {},
       LOG_IN: {},
       SEND_CODE: {},
       SET_NEW_PASSWORD: {},

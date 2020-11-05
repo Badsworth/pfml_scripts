@@ -96,6 +96,10 @@ const useAuthLogic = ({ appErrorsLogic, portalFlow }) => {
         portalFlow.goToPageFor("LOG_IN");
       }
     } catch (error) {
+      if (error.code === "UserNotConfirmedException") {
+        portalFlow.goToPageFor("UNCONFIRMED_ACCOUNT");
+        return;
+      }
       const loginErrors = getLoginErrorInfo(error, t);
       appErrorsLogic.setAppErrors(loginErrors);
     }

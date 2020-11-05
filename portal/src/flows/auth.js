@@ -23,6 +23,7 @@ export default {
     [routes.auth.login]: {
       on: {
         LOG_IN: routes.claims.dashboard,
+        UNCONFIRMED_ACCOUNT: routes.auth.verifyAccount,
       },
     },
     [routes.auth.resetPassword]: {
