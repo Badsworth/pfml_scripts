@@ -576,12 +576,15 @@ def test_leave_period_end_date_before_start_date(test_db_session, initialize_fac
             )
         ]
     )
+
     reduced_schedule_leave_issues = get_reduced_schedule_leave_issues(
-        [
-            ReducedScheduleLeavePeriodFactory.create(
-                start_date=date(2021, 2, 1), end_date=date(2021, 1, 1)
-            )
-        ]
+        ApplicationFactory.create(
+            reduced_schedule_leave_periods=[
+                ReducedScheduleLeavePeriodFactory.create(
+                    start_date=date(2021, 2, 1), end_date=date(2021, 1, 1)
+                )
+            ]
+        )
     )
 
     assert [
@@ -612,11 +615,13 @@ def test_leave_period_end_date_before_start_date(test_db_session, initialize_fac
 def test_leave_period_allows_same_start_end_date(test_db_session, initialize_factories_session):
     start_end_date = date(2021, 2, 2)
     issues = get_reduced_schedule_leave_issues(
-        [
-            ReducedScheduleLeavePeriodFactory.create(
-                start_date=start_end_date, end_date=start_end_date
-            ),
-        ]
+        ApplicationFactory.create(
+            reduced_schedule_leave_periods=[
+                ReducedScheduleLeavePeriodFactory.create(
+                    start_date=start_end_date, end_date=start_end_date
+                ),
+            ]
+        )
     )
 
     assert not issues
@@ -671,11 +676,30 @@ def test_intermittent_leave_period(test_db_session, initialize_factories_session
     ] == issues
 
 
-def test_reduced_leave_period(test_db_session, initialize_factories_session):
-    test_leave_periods = [ReducedScheduleLeavePeriodFactory.create(start_date=None, end_date=None)]
-    issues = get_reduced_schedule_leave_issues(test_leave_periods)
+def test_reduced_leave_period_required_fields(test_db_session, initialize_factories_session):
+    test_leave_periods = [
+        ReducedScheduleLeavePeriodFactory.create(
+            start_date=None,
+            end_date=None,
+            sunday_off_minutes=None,
+            monday_off_minutes=None,
+            tuesday_off_minutes=None,
+            wednesday_off_minutes=None,
+            thursday_off_minutes=None,
+            friday_off_minutes=None,
+            saturday_off_minutes=None,
+        )
+    ]
+    test_app = ApplicationFactory.create(reduced_schedule_leave_periods=test_leave_periods)
+
+    issues = get_reduced_schedule_leave_issues(test_app)
 
     assert [
+        Issue(
+            type=IssueType.minimum,
+            message="Reduced leave minutes must be greater than 0",
+            rule=IssueRule.min_reduced_leave_minutes,
+        ),
         Issue(
             type=IssueType.required,
             message="end_date is required",
@@ -686,6 +710,133 @@ def test_reduced_leave_period(test_db_session, initialize_factories_session):
             message="start_date is required",
             field="leave_details.reduced_schedule_leave_periods[0].start_date",
         ),
+        Issue(
+            type=IssueType.required,
+            message="monday_off_minutes is required",
+            field="leave_details.reduced_schedule_leave_periods[0].monday_off_minutes",
+        ),
+        Issue(
+            type=IssueType.required,
+            message="tuesday_off_minutes is required",
+            field="leave_details.reduced_schedule_leave_periods[0].tuesday_off_minutes",
+        ),
+        Issue(
+            type=IssueType.required,
+            message="wednesday_off_minutes is required",
+            field="leave_details.reduced_schedule_leave_periods[0].wednesday_off_minutes",
+        ),
+        Issue(
+            type=IssueType.required,
+            message="thursday_off_minutes is required",
+            field="leave_details.reduced_schedule_leave_periods[0].thursday_off_minutes",
+        ),
+        Issue(
+            type=IssueType.required,
+            message="friday_off_minutes is required",
+            field="leave_details.reduced_schedule_leave_periods[0].friday_off_minutes",
+        ),
+        Issue(
+            type=IssueType.required,
+            message="saturday_off_minutes is required",
+            field="leave_details.reduced_schedule_leave_periods[0].saturday_off_minutes",
+        ),
+        Issue(
+            type=IssueType.required,
+            message="sunday_off_minutes is required",
+            field="leave_details.reduced_schedule_leave_periods[0].sunday_off_minutes",
+        ),
+    ] == issues
+
+
+def test_reduced_leave_period_maximum_minutes(test_db_session, initialize_factories_session):
+    test_leave_periods = [
+        ReducedScheduleLeavePeriodFactory.create(
+            sunday_off_minutes=8,
+            monday_off_minutes=8,
+            tuesday_off_minutes=8,
+            wednesday_off_minutes=8,
+            thursday_off_minutes=8,
+            friday_off_minutes=8,
+            saturday_off_minutes=8,
+        )
+    ]
+
+    test_app = ApplicationFactory.create(
+        reduced_schedule_leave_periods=test_leave_periods,
+        work_pattern=WorkPatternFixedFactory.create(
+            work_pattern_days=[
+                # Use different minutes so the error messages are unique per day, helping
+                # us assert that the minutes were compared against each day, rather than
+                # the same day over and and over
+                WorkPatternDay(week_number=1, day_of_week_id=i + 1, minutes=i + 1)
+                for i in range(7)
+            ]
+        ),
+    )
+
+    issues = get_reduced_schedule_leave_issues(test_app)
+
+    assert [
+        Issue(
+            type=IssueType.maximum,
+            message="monday_off_minutes cannot exceed the work pattern minutes for the same day, which is 1",
+            field="leave_details.reduced_schedule_leave_periods[0].monday_off_minutes",
+        ),
+        Issue(
+            type=IssueType.maximum,
+            message="tuesday_off_minutes cannot exceed the work pattern minutes for the same day, which is 2",
+            field="leave_details.reduced_schedule_leave_periods[0].tuesday_off_minutes",
+        ),
+        Issue(
+            type=IssueType.maximum,
+            message="wednesday_off_minutes cannot exceed the work pattern minutes for the same day, which is 3",
+            field="leave_details.reduced_schedule_leave_periods[0].wednesday_off_minutes",
+        ),
+        Issue(
+            type=IssueType.maximum,
+            message="thursday_off_minutes cannot exceed the work pattern minutes for the same day, which is 4",
+            field="leave_details.reduced_schedule_leave_periods[0].thursday_off_minutes",
+        ),
+        Issue(
+            type=IssueType.maximum,
+            message="friday_off_minutes cannot exceed the work pattern minutes for the same day, which is 5",
+            field="leave_details.reduced_schedule_leave_periods[0].friday_off_minutes",
+        ),
+        Issue(
+            type=IssueType.maximum,
+            message="saturday_off_minutes cannot exceed the work pattern minutes for the same day, which is 6",
+            field="leave_details.reduced_schedule_leave_periods[0].saturday_off_minutes",
+        ),
+        Issue(
+            type=IssueType.maximum,
+            message="sunday_off_minutes cannot exceed the work pattern minutes for the same day, which is 7",
+            field="leave_details.reduced_schedule_leave_periods[0].sunday_off_minutes",
+        ),
+    ] == issues
+
+
+def test_reduced_leave_period_minimum_total_minutes(test_db_session, initialize_factories_session):
+    test_leave_periods = [
+        ReducedScheduleLeavePeriodFactory.create(
+            sunday_off_minutes=0,
+            monday_off_minutes=0,
+            tuesday_off_minutes=0,
+            wednesday_off_minutes=0,
+            thursday_off_minutes=0,
+            friday_off_minutes=0,
+            saturday_off_minutes=0,
+        )
+    ]
+    test_app = ApplicationFactory.create(reduced_schedule_leave_periods=test_leave_periods)
+
+    issues = get_reduced_schedule_leave_issues(test_app)
+
+    assert [
+        Issue(
+            type=IssueType.minimum,
+            message="Reduced leave minutes must be greater than 0",
+            rule=IssueRule.min_reduced_leave_minutes,
+        )
     ] == issues
 
 

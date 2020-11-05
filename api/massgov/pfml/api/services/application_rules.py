@@ -313,7 +313,7 @@ def get_leave_periods_issues(application: Application) -> List[Issue]:
 
     issues += get_continuous_leave_issues(application.continuous_leave_periods)
     issues += get_intermittent_leave_issues(application.intermittent_leave_periods)
-    issues += get_reduced_schedule_leave_issues(application.reduced_schedule_leave_periods)
+    issues += get_reduced_schedule_leave_issues(application)
     issues += get_leave_period_ranges_issues(application)
 
     if not any(
@@ -467,18 +467,33 @@ def get_intermittent_leave_issues(leave_periods: Iterable[IntermittentLeavePerio
     return issues
 
 
-def get_reduced_schedule_leave_issues(
-    leave_periods: Iterable[ReducedScheduleLeavePeriod],
-) -> List[Issue]:
+def get_reduced_schedule_leave_issues(application: Application) -> List[Issue]:
+    """Validate required fields are present for each reduced schedule leave period
+    and validate that the amount of minutes entered are within a valid range, in
+    comparison to the work pattern entered.
+    """
+
+    leave_periods = application.reduced_schedule_leave_periods
     issues = []
+
     required_leave_period_fields = [
         "end_date",
         "start_date",
+        "monday_off_minutes",
+        "tuesday_off_minutes",
+        "wednesday_off_minutes",
+        "thursday_off_minutes",
+        "friday_off_minutes",
+        "saturday_off_minutes",
+        "sunday_off_minutes",
     ]
 
     for i, current_period in enumerate(leave_periods):
         leave_period_path = f"leave_details.reduced_schedule_leave_periods[{i}]"
         issues += get_leave_period_date_issues(current_period, leave_period_path)
+        issues += get_reduced_schedule_leave_minutes_issues(
+            current_period, leave_period_path, application
+        )
 
         for field in required_leave_period_fields:
             val = getattr(current_period, field, None)
@@ -488,6 +503,62 @@ def get_reduced_schedule_leave_issues(
                     Issue(
                         type=IssueType.required,
                         message=f"{field} is required",
+                        field=f"{leave_period_path}.{field}",
+                    )
+                )
+
+    return issues
+
+
+def get_reduced_schedule_leave_minutes_issues(
+    leave_period: ReducedScheduleLeavePeriod, leave_period_path: str, application: Application
+) -> List[Issue]:
+    """Validate the *_off_minutes fields of a reduced leave period
+    """
+
+    issues = []
+    # These fields should be ordered in the same order as DayOfWeek (Monday–Sunday)
+    minute_fields = [
+        "monday_off_minutes",
+        "tuesday_off_minutes",
+        "wednesday_off_minutes",
+        "thursday_off_minutes",
+        "friday_off_minutes",
+        "saturday_off_minutes",
+        "sunday_off_minutes",
+    ]
+    minutes_each_day = [getattr(leave_period, field, None) or 0 for field in minute_fields]
+
+    # *_off_minutes fields individually have a minimum of 0, through the OpenAPI spec
+    if sum(minutes_each_day) <= 0:
+        issues.append(
+            Issue(
+                type=IssueType.minimum,
+                message="Reduced leave minutes must be greater than 0",
+                rule=IssueRule.min_reduced_leave_minutes,
+            )
+        )
+
+    if application.work_pattern:
+        work_pattern_days = application.work_pattern.work_pattern_days
+
+        # There should only ever be one week since the length is validated in validate_work_pattern_days
+        assert len(list(work_pattern_days)) == 7
+
+        work_pattern_minutes_each_day = [
+            day.minutes
+            # TODO (CP-1344): Guarantee the order of work_pattern_days closer to the DB query rather than here
+            for day in sorted(work_pattern_days, key=lambda day: day.day_of_week_id)
+        ]
+
+        for field, work_pattern_minutes in zip(minute_fields, work_pattern_minutes_each_day):
+            leave_period_minutes: int = getattr(leave_period, field, None) or 0
+
+            if work_pattern_minutes is not None and leave_period_minutes > work_pattern_minutes:
+                issues.append(
+                    Issue(
+                        type=IssueType.maximum,
+                        message=f"{field} cannot exceed the work pattern minutes for the same day, which is {work_pattern_minutes}",
                         field=f"{leave_period_path}.{field}",
                     )
                 )

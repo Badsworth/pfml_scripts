@@ -30,6 +30,8 @@ class MetaData:
 class IssueRule(str, Enum):
     # At least one leave period should be present
     min_leave_periods = "min_leave_periods"
+    # At least one reduced leave schedule day should have an amount of reduced time
+    min_reduced_leave_minutes = "min_reduced_leave_minutes"
     # A rule only applied because a certain condition was met
     conditional = "conditional"
     # Intermittent leave must be on its own application
