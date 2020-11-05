@@ -172,7 +172,7 @@ describe("useAuthLogic", () => {
       });
       expect(appErrors.items).toHaveLength(1);
       expect(appErrors.items[0].message).toMatchInlineSnapshot(
-        `"Your authentication attempt has been blocked due to suspicious activity. We sent you an email to confirm your identity. Check your email and then follow the instructions to try again. If this continues to occur, call the contact center at 833‑344‑7365."`
+        `"Your authentication attempt has been blocked due to suspicious activity. We sent you an email to confirm your identity. Check your email and then follow the instructions to try again. If this continues to occur, call the contact center at (833) 344‑7365."`
       );
     });
 
@@ -204,7 +204,7 @@ describe("useAuthLogic", () => {
       });
       expect(appErrors.items).toHaveLength(1);
       expect(appErrors.items[0].message).toMatchInlineSnapshot(
-        `"Sorry, an error was encountered. This may occur for a variety of reasons, including temporarily losing an internet connection or an unexpected error in our system. If this continues to happen, you may call the Paid Family Leave Contact Center at 833‑344‑7365"`
+        `"Sorry, an error was encountered. This may occur for a variety of reasons, including temporarily losing an internet connection or an unexpected error in our system. If this continues to happen, you may call the Paid Family Leave Contact Center at (833) 344‑7365"`
       );
     });
 
@@ -308,7 +308,7 @@ describe("useAuthLogic", () => {
       });
       expect(appErrors.items).toHaveLength(1);
       expect(appErrors.items[0].message).toMatchInlineSnapshot(
-        `"Your authentication attempt has been blocked due to suspicious activity. We sent you an email to confirm your identity. Check your email and then follow the instructions to try again. If this continues to occur, call the contact center at 833‑344‑7365."`
+        `"Your authentication attempt has been blocked due to suspicious activity. We sent you an email to confirm your identity. Check your email and then follow the instructions to try again. If this continues to occur, call the contact center at (833) 344‑7365."`
       );
     });
 
@@ -380,7 +380,7 @@ describe("useAuthLogic", () => {
       });
       expect(appErrors.items).toHaveLength(1);
       expect(appErrors.items[0].message).toMatchInlineSnapshot(
-        `"Sorry, an error was encountered. This may occur for a variety of reasons, including temporarily losing an internet connection or an unexpected error in our system. If this continues to happen, you may call the Paid Family Leave Contact Center at 833‑344‑7365"`
+        `"Sorry, an error was encountered. This may occur for a variety of reasons, including temporarily losing an internet connection or an unexpected error in our system. If this continues to happen, you may call the Paid Family Leave Contact Center at (833) 344‑7365"`
       );
     });
 
@@ -655,7 +655,7 @@ describe("useAuthLogic", () => {
       });
       expect(appErrors.items).toHaveLength(1);
       expect(appErrors.items[0].message).toMatchInlineSnapshot(
-        `"Sorry, an error was encountered. This may occur for a variety of reasons, including temporarily losing an internet connection or an unexpected error in our system. If this continues to happen, you may call the Paid Family Leave Contact Center at 833‑344‑7365"`
+        `"Sorry, an error was encountered. This may occur for a variety of reasons, including temporarily losing an internet connection or an unexpected error in our system. If this continues to happen, you may call the Paid Family Leave Contact Center at (833) 344‑7365"`
       );
     });
 
@@ -795,7 +795,7 @@ describe("useAuthLogic", () => {
       });
       expect(appErrors.items).toHaveLength(1);
       expect(appErrors.items[0].message).toMatchInlineSnapshot(
-        `"Sorry, an error was encountered. This may occur for a variety of reasons, including temporarily losing an internet connection or an unexpected error in our system. If this continues to happen, you may call the Paid Family Leave Contact Center at 833‑344‑7365"`
+        `"Sorry, an error was encountered. This may occur for a variety of reasons, including temporarily losing an internet connection or an unexpected error in our system. If this continues to happen, you may call the Paid Family Leave Contact Center at (833) 344‑7365"`
       );
     });
 
@@ -1134,7 +1134,7 @@ describe("useAuthLogic", () => {
         });
         expect(appErrors.items).toHaveLength(1);
         expect(appErrors.items[0].message).toMatchInlineSnapshot(
-          `"Sorry, an error was encountered. This may occur for a variety of reasons, including temporarily losing an internet connection or an unexpected error in our system. If this continues to happen, you may call the Paid Family Leave Contact Center at 833‑344‑7365"`
+          `"Sorry, an error was encountered. This may occur for a variety of reasons, including temporarily losing an internet connection or an unexpected error in our system. If this continues to happen, you may call the Paid Family Leave Contact Center at (833) 344‑7365"`
         );
       }
     });
@@ -1148,7 +1148,7 @@ describe("useAuthLogic", () => {
       });
       expect(appErrors.items).toHaveLength(1);
       expect(appErrors.items[0].message).toMatchInlineSnapshot(
-        `"Sorry, an error was encountered. This may occur for a variety of reasons, including temporarily losing an internet connection or an unexpected error in our system. If this continues to happen, you may call the Paid Family Leave Contact Center at 833‑344‑7365"`
+        `"Sorry, an error was encountered. This may occur for a variety of reasons, including temporarily losing an internet connection or an unexpected error in our system. If this continues to happen, you may call the Paid Family Leave Contact Center at (833) 344‑7365"`
       );
     });
 

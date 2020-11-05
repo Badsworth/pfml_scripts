@@ -296,8 +296,8 @@ const shared = {
   claimsVerifyIdTitle: "Your identity",
   contactCenterAddress:
     "PO Box 838$t(chars.nbsp)Lawrence, MA$t(chars.nbsp)01843",
-  contactCenterFaxNumber: "617$t(chars.nbhyphen)855$t(chars.nbhyphen)6180",
-  contactCenterPhoneNumber: "833$t(chars.nbhyphen)344$t(chars.nbhyphen)7365",
+  contactCenterFaxNumber: "(617)$t(chars.nbsp)855$t(chars.nbhyphen)6180",
+  contactCenterPhoneNumber: "(833)$t(chars.nbsp)344$t(chars.nbhyphen)7365",
   day_Friday: "Friday",
   day_Monday: "Monday",
   day_Saturday: "Saturday",

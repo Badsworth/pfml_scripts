@@ -53,7 +53,7 @@ describe("useAppErrorsLogic", () => {
 
         expect(appErrorsLogic.appErrors.items).toHaveLength(1);
         expect(appErrorsLogic.appErrors.items[0].message).toMatchInlineSnapshot(
-          `"Sorry, an unexpected error in our system was encountered. If this continues to happen, you may call the Paid Family Leave Contact Center at 833‑344‑7365."`
+          `"Sorry, an unexpected error in our system was encountered. If this continues to happen, you may call the Paid Family Leave Contact Center at (833) 344‑7365."`
         );
       });
     });
@@ -79,7 +79,7 @@ describe("useAppErrorsLogic", () => {
 
         expect(appErrorsLogic.appErrors.items).toHaveLength(1);
         expect(appErrorsLogic.appErrors.items[0].message).toMatchInlineSnapshot(
-          `"Sorry, an error was encountered. This may occur for a variety of reasons, including temporarily losing an internet connection or an unexpected error in our system. If this continues to happen, you may call the Paid Family Leave Contact Center at 833‑344‑7365"`
+          `"Sorry, an error was encountered. This may occur for a variety of reasons, including temporarily losing an internet connection or an unexpected error in our system. If this continues to happen, you may call the Paid Family Leave Contact Center at (833) 344‑7365"`
         );
       });
     });
@@ -94,7 +94,7 @@ describe("useAppErrorsLogic", () => {
 
         expect(appErrorsLogic.appErrors.items).toHaveLength(1);
         expect(appErrorsLogic.appErrors.items[0].message).toMatchInlineSnapshot(
-          `"An error was encountered while checking your application for documents. If this continues to happen, you may call the Paid Family Leave Contact Center at 833‑344‑7365"`
+          `"An error was encountered while checking your application for documents. If this continues to happen, you may call the Paid Family Leave Contact Center at (833) 344‑7365"`
         );
         expect(appErrorsLogic.appErrors.items[0].meta).toEqual({
           application_id: "mock-application-id",
