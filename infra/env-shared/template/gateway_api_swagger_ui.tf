@@ -48,7 +48,7 @@ resource "aws_api_gateway_integration" "integration_ui" {
   uri                     = "http://${data.aws_lb.nlb.dns_name}:${var.nlb_port}/v1/docs/"
 
   request_parameters = {
-    "integration.request.header.X-Forwarded-Path" = "'/api/'"
+    "integration.request.header.X-Forwarded-Path" = var.forwarded_path
   }
 }
 
@@ -64,6 +64,6 @@ resource "aws_api_gateway_integration" "integration_ui_proxy" {
 
   request_parameters = {
     "integration.request.path.proxy"              = "method.request.path.proxy"
-    "integration.request.header.X-Forwarded-Path" = "'/api/'"
+    "integration.request.header.X-Forwarded-Path" = var.forwarded_path
   }
 }

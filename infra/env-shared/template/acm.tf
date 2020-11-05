@@ -19,18 +19,21 @@ locals {
 //       paidleave-api-stage.mass.gov
 //
 data "aws_acm_certificate" "domain" {
+  count       = var.enable_pretty_domain ? 1 : 0
   domain      = local.cert_domain
   statuses    = ["ISSUED"]
   most_recent = true
 }
 
 resource "aws_api_gateway_domain_name" "domain_name" {
-  certificate_arn = data.aws_acm_certificate.domain.arn
+  count           = var.enable_pretty_domain ? 1 : 0
+  certificate_arn = data.aws_acm_certificate.domain[0].arn
   domain_name     = local.api_domain
 }
 
 resource "aws_api_gateway_base_path_mapping" "stage_mapping" {
+  count       = var.enable_pretty_domain ? 1 : 0
   stage_name  = var.environment_name
   api_id      = aws_api_gateway_rest_api.pfml.id
-  domain_name = aws_api_gateway_domain_name.domain_name.domain_name
+  domain_name = aws_api_gateway_domain_name.domain_name[0].domain_name
 }

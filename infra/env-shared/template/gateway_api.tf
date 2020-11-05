@@ -35,7 +35,7 @@ resource "aws_api_gateway_integration" "integration_api_proxy" {
 
   request_parameters = {
     "integration.request.path.proxy"              = "method.request.path.proxy"
-    "integration.request.header.X-Forwarded-Path" = "'/api/'"
+    "integration.request.header.X-Forwarded-Path" = var.forwarded_path
     "integration.request.header.x-amzn-requestid" = "context.requestId"
   }
 }

@@ -1,6 +1,18 @@
+variable "enable_pretty_domain" {
+  description = "Set to false to disable ACM certificate lookup and domain configuration"
+  type        = bool
+  default     = false
+}
+
 variable "environment_name" {
   description = "Name of the environment"
   type        = string
+}
+
+variable "forwarded_path" {
+  description = "Forwarded path configured in the API Gateway."
+  type        = string
+  default     = "'/api/'"
 }
 
 variable "nlb_name" {
