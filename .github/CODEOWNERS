@@ -9,3 +9,4 @@
 /portal/ @EOLWD/pfml-portal
 /docs/portal/ @EOLWD/pfml-portal
 /infra/portal/ @EOLWD/pfml-portal
+/e2e/ @EOLWD/pfml-e2e
