@@ -23,6 +23,7 @@ describe("EmploymentStatusPage", () => {
 
     it("renders the page without the employment status field", () => {
       expect(wrapper).toMatchSnapshot();
+      expect(wrapper.find("Trans").dive()).toMatchSnapshot();
     });
 
     it("submits status and FEIN", () => {

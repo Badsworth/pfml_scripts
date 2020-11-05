@@ -2,6 +2,7 @@ import Claim, {
   EmploymentStatus as EmploymentStatusEnum,
 } from "../../models/Claim";
 import { get, pick } from "lodash";
+import Alert from "../../components/Alert";
 import ConditionalContent from "../../components/ConditionalContent";
 import Details from "../../components/Details";
 import InputChoiceGroup from "../../components/InputChoiceGroup";
@@ -9,6 +10,7 @@ import InputText from "../../components/InputText";
 import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
+import { Trans } from "react-i18next";
 import { isFeatureEnabled } from "../../services/featureFlags";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
@@ -50,6 +52,17 @@ export const EmploymentStatus = (props) => {
       title={t("pages.claimsEmploymentStatus.title")}
       onSave={handleSave}
     >
+      {!showEmploymentStatus && (
+        <Alert state="info">
+          <Trans
+            i18nKey="pages.claimsEmploymentStatus.alertBody"
+            components={{
+              p: <p />,
+            }}
+          />
+        </Alert>
+      )}
+
       {showEmploymentStatus && (
         <InputChoiceGroup
           {...getFunctionalInputProps("employment_status")}

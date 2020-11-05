@@ -5,6 +5,18 @@ exports[`EmploymentStatusPage when claimantShowEmploymentStatus feature flag is 
   onSave={[Function]}
   title="Employment information"
 >
+  <Alert
+    state="info"
+  >
+    <Trans
+      components={
+        Object {
+          "p": <p />,
+        }
+      }
+      i18nKey="pages.claimsEmploymentStatus.alertBody"
+    />
+  </Alert>
   <ConditionalContent
     clearField={[Function]}
     fieldNamesClearedWhenHidden={
@@ -27,6 +39,21 @@ exports[`EmploymentStatusPage when claimantShowEmploymentStatus feature flag is 
     />
   </ConditionalContent>
 </QuestionPage>
+`;
+
+exports[`EmploymentStatusPage when claimantShowEmploymentStatus feature flag is disabled renders the page without the employment status field 2`] = `
+Array [
+  <p
+    key="0"
+  >
+    If you’re self-employed or unemployed, apply by calling the Department of Family and Medical Leave Contact Center at 833‑344‑7365.
+  </p>,
+  <p
+    key="1"
+  >
+    You can apply online if you’re currently employed in Massachusetts.
+  </p>,
+]
 `;
 
 exports[`EmploymentStatusPage when claimantShowEmploymentStatus feature flag is enabled renders the page with the employment status field 1`] = `
