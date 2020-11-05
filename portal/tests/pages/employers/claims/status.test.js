@@ -1,4 +1,4 @@
-import { MockClaimBuilder, testHook } from "../../../test-utils";
+import { MockEmployerClaimBuilder, testHook } from "../../../test-utils";
 import { mount, shallow } from "enzyme";
 import Heading from "../../../../src/components/Heading";
 import Lead from "../../../../src/components/Lead";
@@ -14,7 +14,7 @@ import useAppLogic from "../../../../src/hooks/useAppLogic";
 jest.mock("../../../../src/hooks/useAppLogic");
 
 describe("Status", () => {
-  const claim = new MockClaimBuilder().completed().create();
+  const claim = new MockEmployerClaimBuilder().completed().create();
   const query = { absence_id: "NTN-111-ABS-01" };
   let appLogic;
   let wrapper;
@@ -108,7 +108,7 @@ describe("Status", () => {
         const leaveDurationRow = wrapper.find(StatusRow).at(3);
         expect(leaveDurationRow.prop("label")).toEqual("Leave duration");
         expect(leaveDurationRow.childAt(0).text()).toEqual(
-          "1/1/2021 – 6/1/2021"
+          "1/1/2021 – 7/1/2021"
         );
       });
 

@@ -1,4 +1,4 @@
-import { MockClaimBuilder, testHook } from "../../../test-utils";
+import { MockEmployerClaimBuilder, testHook } from "../../../test-utils";
 import { mount, shallow } from "enzyme";
 import React from "react";
 import Review from "../../../../src/pages/employers/claims/review";
@@ -9,7 +9,7 @@ import useAppLogic from "../../../../src/hooks/useAppLogic";
 jest.mock("../../../../src/hooks/useAppLogic");
 
 describe("Review", () => {
-  const claim = new MockClaimBuilder().completed().create();
+  const claim = new MockEmployerClaimBuilder().completed().create();
   const query = { absence_id: "NTN-111-ABS-01" };
   let appLogic, wrapper;
 

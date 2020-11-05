@@ -33,18 +33,6 @@ exports[`LeaveSchedule renders intermittent schedule 1`] = `
       </tr>
     </thead>
     <tbody>
-      <tr>
-        <th
-          scope="row"
-        >
-          1/1/2021 – 6/1/2021
-        </th>
-        <td
-          colSpan="2"
-        >
-          Continuous leave
-        </td>
-      </tr>
       <IntermittentLeaveSchedule
         intermittentLeavePeriods={
           Array [
@@ -110,18 +98,6 @@ exports[`LeaveSchedule renders reduced schedule 1`] = `
       </tr>
     </thead>
     <tbody>
-      <tr>
-        <th
-          scope="row"
-        >
-          1/1/2021 – 6/1/2021
-        </th>
-        <td
-          colSpan="2"
-        >
-          Continuous leave
-        </td>
-      </tr>
       <tr>
         <th
           scope="row"

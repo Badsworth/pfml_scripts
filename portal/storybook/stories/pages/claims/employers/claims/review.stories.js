@@ -1,5 +1,5 @@
 import AppErrorInfoCollection from "src/models/AppErrorInfoCollection";
-import { MockClaimBuilder } from "tests/test-utils";
+import { MockEmployerClaimBuilder } from "tests/test-utils";
 import React from "react";
 import { Review } from "src/pages/employers/claims/review";
 import User from "src/models/User";
@@ -15,7 +15,7 @@ export const Default = () => {
   const appLogic = {
     appErrors: new AppErrorInfoCollection(),
     employers: {
-      claim: new MockClaimBuilder().completed().create(),
+      claim: new MockEmployerClaimBuilder().completed().create(),
       load: () => {},
       submit: () => {},
     },

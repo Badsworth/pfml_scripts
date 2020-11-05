@@ -1,4 +1,4 @@
-import Claim from "../../models/Claim";
+import EmployerClaim from "../../models/EmployerClaim";
 import PropTypes from "prop-types";
 import React from "react";
 import ReviewHeading from "../ReviewHeading";
@@ -68,7 +68,7 @@ const EmployeeInformation = (props) => {
 };
 
 EmployeeInformation.propTypes = {
-  claim: PropTypes.instanceOf(Claim).isRequired,
+  claim: PropTypes.instanceOf(EmployerClaim).isRequired,
 };
 
 export default EmployeeInformation;

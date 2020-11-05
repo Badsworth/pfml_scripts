@@ -2,6 +2,7 @@ import AppErrorInfoCollection from "../../models/AppErrorInfoCollection";
 import Claim from "../../models/Claim";
 import ClaimCollection from "../../models/ClaimCollection";
 import DocumentCollection from "../../models/DocumentCollection";
+import EmployerClaim from "../../models/EmployerClaim";
 import User from "../../models/User";
 import { uniqueId } from "lodash";
 
@@ -44,7 +45,9 @@ export default jest.fn(() => ({
     loadAll: jest.fn(),
   },
   employers: {
-    load: jest.fn(() => new Claim({ fineos_absence_id: "NTN-111-ABS-01" })),
+    load: jest.fn(
+      () => new EmployerClaim({ fineos_absence_id: "NTN-111-ABS-01" })
+    ),
     submit: jest.fn(),
   },
   portalFlow: {

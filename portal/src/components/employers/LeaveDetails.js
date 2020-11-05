@@ -1,4 +1,5 @@
-import Claim, { LeaveReason } from "../../models/Claim";
+import EmployerClaim from "../../models/EmployerClaim";
+import { LeaveReason } from "../../models/Claim";
 import PropTypes from "prop-types";
 import React from "react";
 import ReviewHeading from "../ReviewHeading";
@@ -62,7 +63,7 @@ const LeaveDetails = (props) => {
 };
 
 LeaveDetails.propTypes = {
-  claim: PropTypes.instanceOf(Claim).isRequired,
+  claim: PropTypes.instanceOf(EmployerClaim).isRequired,
 };
 
 export default LeaveDetails;

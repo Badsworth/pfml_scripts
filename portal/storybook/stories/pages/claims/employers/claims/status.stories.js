@@ -1,5 +1,5 @@
 import AppErrorInfoCollection from "src/models/AppErrorInfoCollection";
-import { MockClaimBuilder } from "tests/test-utils";
+import { MockEmployerClaimBuilder } from "tests/test-utils";
 import React from "react";
 import { Status } from "src/pages/employers/claims/status";
 
@@ -23,7 +23,17 @@ export default {
 };
 
 export const Default = ({ retrievedClaim }) => {
-  let claim = new MockClaimBuilder().verifiedId().bondingBirthLeaveReason();
+  let claim = new MockEmployerClaimBuilder().bondingLeaveReason();
+
+  if (retrievedClaim === "Continuous") {
+    claim = claim.continuous().create();
+  } else if (retrievedClaim === "Intermittent leave") {
+    claim = claim.intermittent().create();
+  } else if (retrievedClaim === "Reduced schedule") {
+    claim = claim.reducedSchedule().create();
+  } else if (retrievedClaim === "Hybrid leave") {
+    claim = claim.completed().create();
+  }
 
   const appLogic = {
     appErrors: new AppErrorInfoCollection(),
@@ -33,16 +43,6 @@ export const Default = ({ retrievedClaim }) => {
     },
     setAppErrors: () => {},
   };
-
-  if (retrievedClaim === "Continuous") {
-    claim = claim.continuous().create();
-  } else if (retrievedClaim === "Intermittent leave") {
-    claim = claim.intermittent().create();
-  } else if (retrievedClaim === "Reduced schedule") {
-    claim = claim.reducedSchedule().create();
-  } else if (retrievedClaim === "Hybrid leave") {
-    claim = claim.continuous().reducedSchedule().create();
-  }
 
   const query = { absence_id: "mock-absence-id" };
 

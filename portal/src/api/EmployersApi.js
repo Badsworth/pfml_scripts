@@ -1,12 +1,12 @@
 import BaseApi from "./BaseApi";
-import Claim from "../models/Claim";
+import EmployerClaim from "../models/EmployerClaim";
 import routes from "../routes";
 
 /**
  * @typedef {object} EmployersAPISingleResult
  * @property {number} status - Status code
  * @property {boolean} success - Returns true if 2xx status code
- * @property {Claim} [claim] - If the request succeeded, this will contain a claim
+ * @property {EmployerClaim} [claim] - If the request succeeded, this will contain a claim
  */
 
 export default class EmployersApi extends BaseApi {
@@ -31,7 +31,7 @@ export default class EmployersApi extends BaseApi {
     );
 
     return {
-      claim: success ? new Claim(data) : null,
+      claim: success ? new EmployerClaim(data) : null,
       status,
       success,
     };

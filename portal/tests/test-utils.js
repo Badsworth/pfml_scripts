@@ -15,12 +15,16 @@ import Claim, {
   WorkPatternType,
 } from "../src/models/Claim";
 import Document, { DocumentType } from "../src/models/Document";
+import EmployerBenefit, {
+  EmployerBenefitType,
+  IncomeFrequency,
+} from "../src/models/EmployerBenefit";
 import { mount, shallow } from "enzyme";
 import Address from "../src/models/Address";
 import AppErrorInfo from "../src/models/AppErrorInfo";
 import AppErrorInfoCollection from "../src/models/AppErrorInfoCollection";
 import ClaimCollection from "../src/models/ClaimCollection";
-import EmployerBenefit from "../src/models/EmployerBenefit";
+import EmployerClaim from "../src/models/EmployerClaim";
 import PreviousLeave from "../src/models/PreviousLeave";
 import React from "react";
 import User from "../src/models/User";
@@ -29,6 +33,185 @@ import merge from "lodash/merge";
 import set from "lodash/set";
 import times from "lodash/times";
 import useAppLogic from "../src/hooks/useAppLogic";
+
+export class BaseMockClaimBuilder {
+  employed() {
+    set(this.claimAttrs, "employer_fein", "12-3456789");
+    set(this.claimAttrs, "leave_details.employer_notified", true);
+    set(this.claimAttrs, "hours_worked_per_week", 30);
+    set(
+      this.claimAttrs,
+      "leave_details.employer_notification_date",
+      "2021-01-01"
+    );
+    return this;
+  }
+
+  address(attrs) {
+    set(
+      this.claimAttrs,
+      "residential_address",
+      attrs
+        ? new Address(attrs)
+        : new Address({
+            city: "Boston",
+            line_1: "1234 My St.",
+            line_2: null,
+            state: "MA",
+            zip: "00000",
+          })
+    );
+    return this;
+  }
+
+  continuous(leavePeriodAttrs = {}) {
+    set(
+      this.claimAttrs,
+      "leave_details.continuous_leave_periods[0]",
+      new ContinuousLeavePeriod(
+        Object.assign(
+          {
+            leave_period_id: "mock-leave-period-id",
+            start_date: "2021-01-01",
+            end_date: "2021-06-01",
+          },
+          leavePeriodAttrs
+        )
+      )
+    );
+    return this;
+  }
+
+  intermittent(leavePeriodAttrs = {}) {
+    set(
+      this.claimAttrs,
+      "leave_details.intermittent_leave_periods[0]",
+      new IntermittentLeavePeriod(
+        Object.assign(
+          {
+            leave_period_id: "mock-leave-period-id",
+            start_date: "2021-02-01",
+            end_date: "2021-07-01",
+            duration: 3,
+            duration_basis: DurationBasis.hours,
+            frequency: 6,
+            frequency_interval: 6,
+            frequency_interval_basis: FrequencyIntervalBasis.months,
+          },
+          leavePeriodAttrs
+        )
+      )
+    );
+    return this;
+  }
+
+  reducedSchedule(leavePeriodAttrs = {}) {
+    set(
+      this.claimAttrs,
+      "leave_details.reduced_schedule_leave_periods[0]",
+      new ReducedScheduleLeavePeriod(
+        Object.assign(
+          {
+            leave_period_id: "mock-leave-period-id",
+            start_date: "2021-02-01",
+            end_date: "2021-07-01",
+          },
+          leavePeriodAttrs
+        )
+      )
+    );
+    return this;
+  }
+
+  bondingLeaveReason() {
+    set(this.claimAttrs, "leave_details.reason", LeaveReason.bonding);
+    return this;
+  }
+
+  medicalLeaveReason() {
+    set(this.claimAttrs, "leave_details.reason", LeaveReason.medical);
+    return this;
+  }
+
+  previousLeave(attrs) {
+    set(
+      this.claimAttrs,
+      "previous_leaves",
+      attrs
+        ? attrs.map((attr) => new PreviousLeave(attr))
+        : [
+            new PreviousLeave({
+              id: 1,
+              leave_end_date: "2020-02-01",
+              leave_start_date: "2020-01-01",
+            }),
+          ]
+    );
+    return this;
+  }
+
+  employerBenefit(attrs) {
+    set(
+      this.claimAttrs,
+      "employer_benefits",
+      attrs
+        ? attrs.map((attr) => new EmployerBenefit(attr))
+        : [
+            new EmployerBenefit({
+              benefit_amount_dollars: 500,
+              benefit_amount_frequency: IncomeFrequency.weekly,
+              benefit_end_date: "2021-02-01",
+              benefit_start_date: "2021-01-01",
+              benefit_type: EmployerBenefitType.familyOrMedicalLeave,
+              id: 1,
+            }),
+          ]
+    );
+    return this;
+  }
+}
+
+/**
+ * @class Employer Claim
+ * @example
+ *  new MockEmployerClaimBuilder()
+ *    .completed()
+ *    .create();
+ */
+export class MockEmployerClaimBuilder extends BaseMockClaimBuilder {
+  constructor(middleName = "") {
+    super();
+    this.claimAttrs = {
+      first_name: "Jane",
+      middle_name: middleName,
+      last_name: "Doe",
+      date_of_birth: "1980-07-17",
+      tax_identifier: "1234",
+    };
+  }
+
+  /**
+   * @returns {MockEmployerClaimBuilder}
+   */
+  completed() {
+    this.employed();
+    this.address();
+    this.continuous();
+    this.reducedSchedule();
+    this.medicalLeaveReason();
+    this.previousLeave();
+    this.employerBenefit();
+    set(this.claimAttrs, "fineos_absence_id", "NTN-111-ABS-01");
+    return this;
+  }
+
+  /**
+   * @returns {EmployerClaim}
+   */
+  create() {
+    return new EmployerClaim(this.claimAttrs);
+  }
+}
 
 /**
  * A class that has chainable functions for conveniently creating mock claims
@@ -41,8 +224,9 @@ import useAppLogic from "../src/hooks/useAppLogic";
  *    .intermittent()
  *    .create();
  */
-export class MockClaimBuilder {
+export class MockClaimBuilder extends BaseMockClaimBuilder {
   constructor() {
+    super();
     this.claimAttrs = {
       application_id: "mock_application_id",
       status: ClaimStatus.started,
@@ -63,20 +247,7 @@ export class MockClaimBuilder {
    */
   continuous(leavePeriodAttrs = {}) {
     set(this.claimAttrs, "has_continuous_leave_periods", true);
-    set(
-      this.claimAttrs,
-      "leave_details.continuous_leave_periods[0]",
-      new ContinuousLeavePeriod(
-        Object.assign(
-          {
-            leave_period_id: "mock-leave-period-id",
-            start_date: "2021-01-01",
-            end_date: "2021-06-01",
-          },
-          leavePeriodAttrs
-        )
-      )
-    );
+    super.continuous(leavePeriodAttrs);
     return this;
   }
 
@@ -149,25 +320,7 @@ export class MockClaimBuilder {
    */
   intermittent(leavePeriodAttrs = {}) {
     set(this.claimAttrs, "has_intermittent_leave_periods", true);
-    set(
-      this.claimAttrs,
-      "leave_details.intermittent_leave_periods[0]",
-      new IntermittentLeavePeriod(
-        Object.assign(
-          {
-            leave_period_id: "mock-leave-period-id",
-            start_date: "2021-02-01",
-            end_date: "2021-07-01",
-            duration: 3,
-            duration_basis: DurationBasis.hours,
-            frequency: 6,
-            frequency_interval: 6,
-            frequency_interval_basis: FrequencyIntervalBasis.months,
-          },
-          leavePeriodAttrs
-        )
-      )
-    );
+    super.intermittent(leavePeriodAttrs);
     return this;
   }
 
@@ -177,21 +330,7 @@ export class MockClaimBuilder {
    */
   reducedSchedule(leavePeriodAttrs = {}) {
     set(this.claimAttrs, "has_reduced_schedule_leave_periods", true);
-    set(
-      this.claimAttrs,
-      "leave_details.reduced_schedule_leave_periods[0]",
-      new ReducedScheduleLeavePeriod(
-        Object.assign(
-          {
-            leave_period_id: "mock-leave-period-id",
-            start_date: "2021-02-01",
-            end_date: "2021-07-01",
-          },
-          leavePeriodAttrs
-        )
-      )
-    );
-
+    super.reducedSchedule(leavePeriodAttrs);
     return this;
   }
 
@@ -201,7 +340,7 @@ export class MockClaimBuilder {
    * @returns {MockClaimBuilder}
    */
   bondingBirthLeaveReason(birthDate = "2012-02-12") {
-    set(this.claimAttrs, "leave_details.reason", LeaveReason.bonding);
+    this.bondingLeaveReason();
     set(
       this.claimAttrs,
       "leave_details.reason_qualifier",
@@ -217,7 +356,7 @@ export class MockClaimBuilder {
    * @returns {MockClaimBuilder}
    */
   bondingAdoptionLeaveReason(placementDate = "2012-02-14") {
-    set(this.claimAttrs, "leave_details.reason", LeaveReason.bonding);
+    this.bondingLeaveReason();
     set(
       this.claimAttrs,
       "leave_details.reason_qualifier",
@@ -233,7 +372,7 @@ export class MockClaimBuilder {
    * @returns {MockClaimBuilder}
    */
   bondingFosterCareLeaveReason(placementDate = "2012-02-14") {
-    set(this.claimAttrs, "leave_details.reason", LeaveReason.bonding);
+    this.bondingLeaveReason();
     set(
       this.claimAttrs,
       "leave_details.reason_qualifier",
@@ -248,22 +387,7 @@ export class MockClaimBuilder {
    */
   employed() {
     set(this.claimAttrs, "employment_status", EmploymentStatus.employed);
-    set(this.claimAttrs, "employer_fein", "12-3456789");
-    set(this.claimAttrs, "leave_details.employer_notified", true);
-    set(this.claimAttrs, "hours_worked_per_week", 30);
-    set(
-      this.claimAttrs,
-      "leave_details.employer_notification_date",
-      "2021-01-01"
-    );
-    return this;
-  }
-
-  /**
-   * @returns {MockClaimBuilder}
-   */
-  medicalLeaveReason() {
-    set(this.claimAttrs, "leave_details.reason", LeaveReason.medical);
+    super.employed();
     return this;
   }
 
@@ -364,20 +488,8 @@ export class MockClaimBuilder {
    * @returns {MockClaimBuilder}
    */
   address(attrs) {
-    set(
-      this.claimAttrs,
-      "residential_address",
-      attrs
-        ? new Address(attrs)
-        : new Address({
-            city: "Boston",
-            line_1: "1234 My St.",
-            line_2: null,
-            state: "MA",
-            zip: "00000",
-          })
-    );
     set(this.claimAttrs, "has_mailing_address", false);
+    super.address(attrs);
     return this;
   }
 
@@ -386,6 +498,7 @@ export class MockClaimBuilder {
    * @returns {MockClaimBuilder}
    */
   mailingAddress(attrs) {
+    set(this.claimAttrs, "has_mailing_address", true);
     set(
       this.claimAttrs,
       "mailing_address",
@@ -398,33 +511,6 @@ export class MockClaimBuilder {
             state: "MA",
             zip: "00000",
           })
-    );
-    set(this.claimAttrs, "has_mailing_address", true);
-    return this;
-  }
-
-  /**
-   * @param {Array} attrs List of PreviousLeave objects
-   * @returns {MockClaimBuilder}
-   */
-  previousLeave(attrs) {
-    set(
-      this.claimAttrs,
-      "previous_leaves",
-      attrs.map((attr) => new PreviousLeave(attr))
-    );
-    return this;
-  }
-
-  /**
-   * @param {Array} attrs List of EmployerBenefit objects
-   * @returns {MockClaimBuilder}
-   */
-  employerBenefit(attrs) {
-    set(
-      this.claimAttrs,
-      "employer_benefits",
-      attrs.map((attr) => new EmployerBenefit(attr))
     );
     return this;
   }

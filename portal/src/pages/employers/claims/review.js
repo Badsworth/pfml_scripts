@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from "react";
 import Alert from "../../../components/Alert";
 import BackButton from "../../../components/BackButton";
-import Claim from "../../../models/Claim";
 import EmployeeInformation from "../../../components/employers/EmployeeInformation";
 import EmployerBenefit from "../../../models/EmployerBenefit";
 import EmployerBenefits from "../../../components/employers/EmployerBenefits";
+import EmployerClaim from "../../../models/EmployerClaim";
 import EmployerDecision from "../../../components/employers/EmployerDecision";
 import Feedback from "../../../components/employers/Feedback";
 import FraudReport from "../../../components/employers/FraudReport";
@@ -164,7 +164,7 @@ Review.propTypes = {
       }),
     }).isRequired,
   }).isRequired,
-  retrievedClaim: PropTypes.instanceOf(Claim),
+  retrievedClaim: PropTypes.instanceOf(EmployerClaim),
   query: PropTypes.shape({
     absence_id: PropTypes.string.isRequired,
   }).isRequired,

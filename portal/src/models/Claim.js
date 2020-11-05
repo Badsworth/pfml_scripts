@@ -6,55 +6,39 @@ import {
   compact,
   get,
   groupBy,
-  map,
+  merge,
   sortBy,
   sumBy,
   zip,
   zipObject,
 } from "lodash";
-import Address from "./Address";
+import BaseClaim from "./BaseClaim";
 import BaseModel from "./BaseModel";
 import { DateTime } from "luxon";
 import assert from "assert";
 
-class Claim extends BaseModel {
+class Claim extends BaseClaim {
   get defaults() {
-    return {
-      application_id: null,
-      created_at: null,
-      date_of_birth: null,
-      // array of EmployerBenefit objects. See the EmployerBenefit model
-      employer_benefits: [],
-      employer_fein: null,
+    return merge({
+      ...super.defaults,
       employment_status: null,
-      fineos_absence_id: null,
-      first_name: null,
       has_continuous_leave_periods: null,
       has_intermittent_leave_periods: null,
       has_mailing_address: null,
       has_reduced_schedule_leave_periods: null,
       has_state_id: null,
-      hours_worked_per_week: null,
-      last_name: null,
       leave_details: {
         child_birth_date: null,
         child_placement_date: null,
-        continuous_leave_periods: null,
-        employer_notification_date: null,
         employer_notified: null,
-        intermittent_leave_periods: null,
         pregnant_or_recent_birth: null,
-        reason: null,
         reason_qualifier: null,
-        reduced_schedule_leave_periods: null,
       },
       // address object. See Address model
-      mailing_address: null,
+      mailing_address: null, // default value to null
       mass_id: null,
-      middle_name: null,
       // array of OtherIncome objects. See the OtherIncome model
       other_incomes: [],
-      // array of PreviousLeave objects. See the PreviousLeave model
       payment_preferences: [
         {
           // Fields for ACH details
@@ -67,10 +51,6 @@ class Claim extends BaseModel {
           payment_preference_id: null,
         },
       ],
-      previous_leaves: [],
-      residential_address: new Address(),
-      status: null,
-      tax_identifier: null,
       /**
        * Fields within the `temp` object haven't been connected to the API yet, and
        * should have a ticket in Jira related to eventually moving them out of
@@ -85,7 +65,7 @@ class Claim extends BaseModel {
         has_previous_leaves: null,
       },
       work_pattern: null,
-    };
+    });
   }
 
   /**
@@ -145,35 +125,11 @@ class Claim extends BaseModel {
   }
 
   /**
-   * Determine if claim is a continuous leave claim
-   * @returns {boolean}
-   */
-  get isContinuous() {
-    return !!get(this, "leave_details.continuous_leave_periods[0]");
-  }
-
-  /**
-   * Determine if claim is an intermittent leave claim
-   * @returns {boolean}
-   */
-  get isIntermittent() {
-    return !!get(this, "leave_details.intermittent_leave_periods[0]");
-  }
-
-  /**
    * Determine if claim is a Medical Leave claim
    * @returns {boolean}
    */
   get isMedicalLeave() {
     return get(this, "leave_details.reason") === LeaveReason.medical;
-  }
-
-  /**
-   * Determine if claim is a reduced schedule leave claim
-   * @returns {boolean}
-   */
-  get isReducedSchedule() {
-    return !!get(this, "leave_details.reduced_schedule_leave_periods[0]");
   }
 
   /**
@@ -183,52 +139,6 @@ class Claim extends BaseModel {
    */
   get isSubmitted() {
     return this.status === ClaimStatus.submitted;
-  }
-
-  /**
-   * Returns full name accounting for any false values
-   * @returns {string}
-   */
-  get fullName() {
-    return compact([this.first_name, this.middle_name, this.last_name]).join(
-      " "
-    );
-  }
-
-  /**
-   * Returns earliest start date across all leave periods
-   * @returns {string}
-   */
-  get leaveStartDate() {
-    const periods = [
-      get(this, "leave_details.continuous_leave_periods"),
-      get(this, "leave_details.intermittent_leave_periods"),
-      get(this, "leave_details.reduced_schedule_leave_periods"),
-    ].flat();
-
-    const startDates = map(compact(periods), "start_date").sort();
-
-    if (!startDates.length) return null;
-
-    return startDates[0];
-  }
-
-  /**
-   * Returns latest end date across all leave periods
-   * @returns {string}
-   */
-  get leaveEndDate() {
-    const periods = [
-      get(this, "leave_details.continuous_leave_periods"),
-      get(this, "leave_details.intermittent_leave_periods"),
-      get(this, "leave_details.reduced_schedule_leave_periods"),
-    ].flat();
-
-    const endDates = map(compact(periods), "end_date").sort();
-
-    if (!endDates.length) return null;
-
-    return endDates[endDates.length - 1];
   }
 }
 

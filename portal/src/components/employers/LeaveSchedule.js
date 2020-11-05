@@ -1,4 +1,4 @@
-import Claim from "../../models/Claim";
+import EmployerClaim from "../../models/EmployerClaim";
 import IntermittentLeaveSchedule from "./IntermittentLeaveSchedule";
 import PropTypes from "prop-types";
 import React from "react";
@@ -127,7 +127,7 @@ const LeaveSchedule = ({ claim }) => {
 };
 
 LeaveSchedule.propTypes = {
-  claim: PropTypes.instanceOf(Claim).isRequired,
+  claim: PropTypes.instanceOf(EmployerClaim).isRequired,
 };
 
 export default LeaveSchedule;

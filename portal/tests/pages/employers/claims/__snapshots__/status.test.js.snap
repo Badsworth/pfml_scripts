@@ -39,7 +39,7 @@ exports[`Status when the claim is loaded via passed-in prop renders the page wit
     <StatusRow
       label="Leave duration"
     >
-      1/1/2021 – 6/1/2021
+      1/1/2021 – 7/1/2021
     </StatusRow>
   </div>
   <Heading
@@ -128,49 +128,24 @@ exports[`Status while the claim is not loaded renders the page with a spinner 1`
           "results": Array [
             Object {
               "type": "return",
-              "value": Claim {
+              "value": EmployerClaim {
                 "application_id": null,
                 "created_at": null,
                 "date_of_birth": null,
                 "employer_benefits": Array [],
                 "employer_fein": null,
-                "employment_status": null,
                 "fineos_absence_id": "NTN-111-ABS-01",
                 "first_name": null,
-                "has_continuous_leave_periods": null,
-                "has_intermittent_leave_periods": null,
-                "has_mailing_address": null,
-                "has_reduced_schedule_leave_periods": null,
-                "has_state_id": null,
                 "hours_worked_per_week": null,
                 "last_name": null,
                 "leave_details": Object {
-                  "child_birth_date": null,
-                  "child_placement_date": null,
                   "continuous_leave_periods": null,
                   "employer_notification_date": null,
-                  "employer_notified": null,
                   "intermittent_leave_periods": null,
-                  "pregnant_or_recent_birth": null,
                   "reason": null,
-                  "reason_qualifier": null,
                   "reduced_schedule_leave_periods": null,
                 },
-                "mailing_address": null,
-                "mass_id": null,
                 "middle_name": null,
-                "other_incomes": Array [],
-                "payment_preferences": Array [
-                  Object {
-                    "account_details": Object {
-                      "account_number": null,
-                      "account_type": null,
-                      "routing_number": null,
-                    },
-                    "payment_method": null,
-                    "payment_preference_id": null,
-                  },
-                ],
                 "previous_leaves": Array [],
                 "residential_address": Address {
                   "city": null,
@@ -181,12 +156,6 @@ exports[`Status while the claim is not loaded renders the page with a spinner 1`
                 },
                 "status": null,
                 "tax_identifier": null,
-                "temp": Object {
-                  "has_employer_benefits": null,
-                  "has_other_incomes": null,
-                  "has_previous_leaves": null,
-                },
-                "work_pattern": null,
               },
             },
           ],
@@ -310,49 +279,24 @@ exports[`Status while the claim is not loaded renders the page with a spinner 1`
             "results": Array [
               Object {
                 "type": "return",
-                "value": Claim {
+                "value": EmployerClaim {
                   "application_id": null,
                   "created_at": null,
                   "date_of_birth": null,
                   "employer_benefits": Array [],
                   "employer_fein": null,
-                  "employment_status": null,
                   "fineos_absence_id": "NTN-111-ABS-01",
                   "first_name": null,
-                  "has_continuous_leave_periods": null,
-                  "has_intermittent_leave_periods": null,
-                  "has_mailing_address": null,
-                  "has_reduced_schedule_leave_periods": null,
-                  "has_state_id": null,
                   "hours_worked_per_week": null,
                   "last_name": null,
                   "leave_details": Object {
-                    "child_birth_date": null,
-                    "child_placement_date": null,
                     "continuous_leave_periods": null,
                     "employer_notification_date": null,
-                    "employer_notified": null,
                     "intermittent_leave_periods": null,
-                    "pregnant_or_recent_birth": null,
                     "reason": null,
-                    "reason_qualifier": null,
                     "reduced_schedule_leave_periods": null,
                   },
-                  "mailing_address": null,
-                  "mass_id": null,
                   "middle_name": null,
-                  "other_incomes": Array [],
-                  "payment_preferences": Array [
-                    Object {
-                      "account_details": Object {
-                        "account_number": null,
-                        "account_type": null,
-                        "routing_number": null,
-                      },
-                      "payment_method": null,
-                      "payment_preference_id": null,
-                    },
-                  ],
                   "previous_leaves": Array [],
                   "residential_address": Address {
                     "city": null,
@@ -363,12 +307,6 @@ exports[`Status while the claim is not loaded renders the page with a spinner 1`
                   },
                   "status": null,
                   "tax_identifier": null,
-                  "temp": Object {
-                    "has_employer_benefits": null,
-                    "has_other_incomes": null,
-                    "has_previous_leaves": null,
-                  },
-                  "work_pattern": null,
                 },
               },
             ],

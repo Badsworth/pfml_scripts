@@ -1,5 +1,5 @@
 import LeaveDetails from "../../../src/components/employers/LeaveDetails";
-import { MockClaimBuilder } from "../../test-utils";
+import { MockEmployerClaimBuilder } from "../../test-utils";
 import React from "react";
 import ReviewRow from "../../../src/components/ReviewRow";
 import { shallow } from "enzyme";
@@ -8,7 +8,7 @@ describe("LeaveDetails", () => {
   let claim, wrapper;
 
   beforeEach(() => {
-    claim = new MockClaimBuilder().submitted().create();
+    claim = new MockEmployerClaimBuilder().completed().create();
     wrapper = shallow(<LeaveDetails claim={claim} />);
   });
 

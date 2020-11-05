@@ -1,5 +1,5 @@
 import {
-  MockClaimBuilder,
+  MockEmployerClaimBuilder,
   simulateEvents,
   testHook,
 } from "../../../test-utils";
@@ -14,7 +14,7 @@ import useAppLogic from "../../../../src/hooks/useAppLogic";
 jest.mock("../../../../src/hooks/useAppLogic");
 
 describe("NewApplication", () => {
-  const claim = new MockClaimBuilder().submitted().create();
+  const claim = new MockEmployerClaimBuilder().completed().create();
   const query = { absence_id: "mock-absence-id" };
   let appLogic, wrapper;
 

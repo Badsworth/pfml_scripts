@@ -1,5 +1,5 @@
 import EmployeeInformation from "../../../src/components/employers/EmployeeInformation";
-import { MockClaimBuilder } from "../../test-utils";
+import { MockEmployerClaimBuilder } from "../../test-utils";
 import React from "react";
 import ReviewRow from "../../../src/components/ReviewRow";
 import { shallow } from "enzyme";
@@ -12,7 +12,7 @@ describe("EmployeeInformation", () => {
   let claim, wrapper;
 
   beforeEach(() => {
-    claim = new MockClaimBuilder().verifiedId().address().create();
+    claim = new MockEmployerClaimBuilder().completed().create();
     wrapper = shallow(<EmployeeInformation claim={claim} />);
   });
 
@@ -28,8 +28,7 @@ describe("EmployeeInformation", () => {
 
   it("renders two line breaks if second address line exists", () => {
     const secondAddressLine = "Apt 1";
-    const claimWithSecondAddressLine = new MockClaimBuilder()
-      .verifiedId()
+    const claimWithSecondAddressLine = new MockEmployerClaimBuilder()
       .address({
         city: "Boston",
         line_1: "1234 My St.",

@@ -3,8 +3,8 @@ import Alert from "../../../components/Alert";
 import AppErrorInfoCollection from "../../../models/AppErrorInfoCollection";
 import BackButton from "../../../components/BackButton";
 import Button from "../../../components/Button";
-import Claim from "../../../models/Claim";
 import ConditionalContent from "../../../components/ConditionalContent";
+import EmployerClaim from "../../../models/EmployerClaim";
 import Heading from "../../../components/Heading";
 import InputChoiceGroup from "../../../components/InputChoiceGroup";
 import PropTypes from "prop-types";
@@ -180,7 +180,7 @@ NewApplication.propTypes = {
     appErrors: PropTypes.instanceOf(AppErrorInfoCollection).isRequired,
     employers: PropTypes.shape({
       load: PropTypes.func.isRequired,
-      claim: PropTypes.instanceOf(Claim),
+      claim: PropTypes.instanceOf(EmployerClaim),
     }).isRequired,
     portalFlow: PropTypes.shape({
       goToNextPage: PropTypes.func.isRequired,

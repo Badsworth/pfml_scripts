@@ -1,11 +1,12 @@
-import Claim, { LeaveReason } from "../../../models/Claim";
 import React, { useEffect } from "react";
 import { Trans, useTranslation } from "react-i18next";
 import AppErrorInfo from "../../../models/AppErrorInfo";
 import AppErrorInfoCollection from "../../../models/AppErrorInfoCollection";
 import BackButton from "../../../components/BackButton";
+import EmployerClaim from "../../../models/EmployerClaim";
 import Heading from "../../../components/Heading";
 import Lead from "../../../components/Lead";
+import { LeaveReason } from "../../../models/Claim";
 import PropTypes from "prop-types";
 import Spinner from "../../../components/Spinner";
 import StatusRow from "../../../components/StatusRow";
@@ -112,14 +113,14 @@ Status.propTypes = {
     appErrors: PropTypes.instanceOf(AppErrorInfoCollection).isRequired,
     employers: PropTypes.shape({
       load: PropTypes.func.isRequired,
-      claim: PropTypes.instanceOf(Claim),
+      claim: PropTypes.instanceOf(EmployerClaim),
     }).isRequired,
     setAppErrors: PropTypes.func.isRequired,
   }).isRequired,
   query: PropTypes.shape({
     absence_id: PropTypes.string,
   }).isRequired,
-  retrievedClaim: PropTypes.instanceOf(Claim),
+  retrievedClaim: PropTypes.instanceOf(EmployerClaim),
 };
 
 export default withUser(Status);

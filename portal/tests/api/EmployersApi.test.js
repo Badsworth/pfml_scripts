@@ -1,5 +1,6 @@
+import Address from "../../src/models/Address";
 import { Auth } from "@aws-amplify/auth";
-import Claim from "../../src/models/Claim";
+import EmployerClaim from "../../src/models/EmployerClaim";
 import EmployersApi from "../../src/api/EmployersApi";
 
 jest.mock("@aws-amplify/auth");
@@ -23,7 +24,7 @@ const headers = {
   Authorization: `Bearer ${accessTokenJwt}`,
   "Content-Type": "application/json",
 };
-const mockClaim = new Claim({
+const mockClaim = new EmployerClaim({
   date_of_birth: "1994-03-05",
   employer_benefits: [],
   employer_fein: "133701337",
@@ -43,13 +44,13 @@ const mockClaim = new Claim({
   },
   middle_name: "",
   previous_leaves: [],
-  residential_address: {
+  residential_address: new Address({
     city: "Boston",
     line_1: "71 Main Road",
     line_2: "",
     state: "MA",
     zip: "2971",
-  },
+  }),
   tax_identifier: "6161",
 });
 const mockClaimReview = {
@@ -103,7 +104,7 @@ describe("EmployersApi", () => {
       it("resolves with success and status", async () => {
         const response = await employersApi.getClaim(absenceId);
 
-        expect(response.claim).toBeInstanceOf(Claim);
+        expect(response.claim).toBeInstanceOf(EmployerClaim);
         expect(response.claim).toEqual(mockClaim);
       });
     });
