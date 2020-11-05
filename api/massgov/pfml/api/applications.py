@@ -132,10 +132,22 @@ def applications_submit(application_id):
                 data=ApplicationResponse.from_orm(existing_application).dict(exclude_none=True),
             ).to_api_response()
 
-        if send_to_fineos(existing_application, db_session):
+        # Only send to fineos if fineos_absence_id isn't set. If it is set,
+        # assume that just complete_intake needs to be reattempted.
+        if not existing_application.fineos_absence_id:
+            if not send_to_fineos(existing_application, db_session):
+                return response_util.error_response(
+                    status_code=ServiceUnavailable,
+                    message="Application {} could not be submitted, try again later".format(
+                        existing_application.application_id
+                    ),
+                    errors=[],
+                    data=ApplicationResponse.from_orm(existing_application).dict(exclude_none=True),
+                ).to_api_response()
+
+        if complete_intake(existing_application, db_session):
             existing_application.submitted_time = datetime_util.utcnow()
             db_session.add(existing_application)
-
         else:
             return response_util.error_response(
                 status_code=ServiceUnavailable,
@@ -169,20 +181,9 @@ def applications_complete(application_id):
                 errors=issues,
                 data=ApplicationResponse.from_orm(existing_application).dict(exclude_none=True),
             ).to_api_response()
-
-        if complete_intake(existing_application, db_session):
-            existing_application.completed_time = datetime_util.utcnow()
-            db_session.add(existing_application)
-
-        else:
-            return response_util.error_response(
-                status_code=ServiceUnavailable,
-                message="Application {} could not be completed, try again later".format(
-                    existing_application.application_id
-                ),
-                errors=[],
-                data=ApplicationResponse.from_orm(existing_application).dict(exclude_none=True),
-            ).to_api_response()
+        # API-598 will add functionality back to this endpoint
+        existing_application.completed_time = datetime_util.utcnow()
+        db_session.add(existing_application)
 
     return response_util.success_response(
         message="Application {} completed without errors".format(

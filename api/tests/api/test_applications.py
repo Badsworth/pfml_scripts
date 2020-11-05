@@ -1479,6 +1479,69 @@ def test_application_post_submit_app(client, user, auth_token, test_db_session):
     assert response_body.get("data").get("status") == ApplicationStatus.Submitted.value
 
 
+def test_application_post_submit_app_already_submitted(client, user, auth_token, test_db_session):
+    # This test aims to test the scenario where the application was successfully sent to fineos,
+    # but failed when trying to complete the intake. This would mean we have the fineos_absence_id,
+    # but it isn't currently in submitted status. This verifies that it only calls methods in complete_intake.
+    factory.random.reseed_random(1)
+    application = ApplicationFactory.create(user=user)
+    application.continuous_leave_periods = [ContinuousLeavePeriodFactory.create()]
+    application.date_of_birth = "1997-06-06"
+    application.employment_status_id = EmploymentStatus.UNEMPLOYED.employment_status_id
+    application.hours_worked_per_week = 70
+    application.has_continuous_leave_periods = True
+    application.residential_address = AddressFactory.create()
+    application.work_pattern = WorkPatternFixedFactory.create()
+    # Applications must have an FEIN for submit to succeed.
+    application.employer_fein = "770007777"
+
+    # Add fineos_absence_id so it behaves like it was submitted but failed to complete intake
+    application.fineos_absence_id = "NTN-259-ABS-01"
+    application.fineos_notification_case_id = "NTN-259"
+
+    assert not application.submitted_time
+
+    test_db_session.commit()
+
+    massgov.pfml.fineos.mock_client.start_capture()
+    response = client.post(
+        "/v1/applications/{}/submit_application".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+    )
+    response_body = response.get_json()
+
+    assert response.status_code == 201
+    assert not response_body.get("errors")
+    assert not response_body.get("warnings")
+    # Just verify that it was marked as submitted
+    assert response_body.get("data").get("status") == ApplicationStatus.Submitted.value
+
+    capture = massgov.pfml.fineos.mock_client.get_capture()
+    # This is generated randomly and changes each time.
+    fineos_user_id = capture[2][1]
+    # Capture contains a find_employer call and the complete_intake call
+    assert capture == [
+        ("find_employer", None, {"employer_fein": "770007777"}),
+        (
+            "register_api_user",
+            None,
+            {
+                "employee_registration": massgov.pfml.fineos.models.EmployeeRegistration(
+                    user_id=fineos_user_id,
+                    customer_number=None,
+                    employer_id="7700077771000",
+                    date_of_birth=date(1753, 1, 1),
+                    email=None,
+                    first_name=None,
+                    last_name=None,
+                    national_insurance_no="105410502",
+                )
+            },
+        ),
+        ("complete_intake", fineos_user_id, {"notification_case_id": "NTN-259"},),
+    ]
+
+
 def test_application_post_submit_fineos_forbidden(client, fineos_user, fineos_user_token):
     application = ApplicationFactory.create(user=fineos_user)
     response = client.post(
@@ -1610,8 +1673,9 @@ def test_application_post_submit_existing_work_pattern(client, user, auth_token,
     capture = massgov.pfml.fineos.mock_client.get_capture()
 
     # it attempts to add work pattern then updates work pattern
-    # this should always be the last 2 calls of send_to_fineos
-    assert capture[-2:] == [
+    # causing two queries to fineos in send_to_fineos
+    # Then has an additional fineos query in complete_intake
+    assert capture[-3:] == [
         (
             "add_week_based_work_pattern",
             fineos_user_id,
@@ -1682,6 +1746,7 @@ def test_application_post_submit_existing_work_pattern(client, user, auth_token,
                 )
             },
         ),
+        ("complete_intake", "USER_WITH_EXISTING_WORK_PATTERN", {"notification_case_id": "NTN-259"}),
     ]
 
 
@@ -1845,6 +1910,7 @@ def test_application_post_submit_to_fineos(client, user, auth_token, test_db_ses
                 )
             },
         ),
+        ("complete_intake", fineos_user_id, {"notification_case_id": "NTN-259"}),
     ]
 
 
@@ -2315,45 +2381,3 @@ def test_application_post_complete_app(client, user, auth_token, test_db_session
 
     assert response.status_code == 200
     assert response_body.get("data").get("status") == ApplicationStatus.Completed.value
-
-
-def test_application_post_complete_to_fineos(client, user, auth_token, test_db_session):
-    application = ApplicationFactory.create(user=user)
-    application.tax_identifier = TaxIdentifier(tax_identifier="999004444")
-    application.employment_status_id = EmploymentStatus.UNEMPLOYED.employment_status_id
-    application.hours_worked_per_week = 70
-    application.residential_address = AddressFactory.create()
-    application.work_pattern = WorkPatternFixedFactory.create()
-    application.employer_fein = "770000001"
-    application.fineos_notification_case_id = "NTN-259"
-    application.continuous_leave_periods = [ContinuousLeavePeriodFactory.create()]
-    application.has_continuous_leave_periods = True
-
-    test_db_session.commit()
-
-    massgov.pfml.fineos.mock_client.start_capture()
-
-    client.post(
-        "/v1/applications/{}/complete_application".format(application.application_id),
-        headers={"Authorization": f"Bearer {auth_token}"},
-    )
-    capture = massgov.pfml.fineos.mock_client.get_capture()
-    # This is generated randomly and changes each time.
-    fineos_user_id = capture[2][1]
-
-    assert capture == [
-        ("find_employer", None, {"employer_fein": "770000001"}),
-        (
-            "register_api_user",
-            None,
-            {
-                "employee_registration": massgov.pfml.fineos.models.EmployeeRegistration(
-                    user_id=fineos_user_id,
-                    employer_id="7700000011000",
-                    date_of_birth=date(1753, 1, 1),
-                    national_insurance_no="999004444",
-                )
-            },
-        ),
-        ("complete_intake", fineos_user_id, {"notification_case_id": "NTN-259"}),
-    ]
