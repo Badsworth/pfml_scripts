@@ -42,3 +42,21 @@ variable "fineos_client_oauth2_client_id" {
   type        = string
   default     = ""
 }
+
+variable "fineos_aws_iam_role_arn" {
+  description = "ARN for role in the FINEOS AWS account that must be used to access resources inside of it"
+  type        = string
+  default     = ""
+}
+
+variable "fineos_aws_iam_role_external_id" {
+  description = "ExternalId paramter for assuming role specified by fineos_aws_iam_role_arn"
+  type        = string
+  default     = ""
+}
+
+variable "fineos_eligibility_feed_output_directory_path" {
+  description = "Location the FINEOS Eligibility Feed export should write output to"
+  type        = string
+  default     = ""
+}

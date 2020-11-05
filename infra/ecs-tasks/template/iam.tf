@@ -239,3 +239,39 @@ data "aws_iam_policy_document" "dor_import_execution_role_extras" {
     ]
   }
 }
+
+# ----------------------------------------------------------------------------------------------------------------------
+# IAM role and policies for FINEOS Eligibility Feed export
+# ----------------------------------------------------------------------------------------------------------------------
+
+resource "aws_iam_role" "fineos_eligibility_feed_export_task_role" {
+  name               = "${local.app_name}-${var.environment_name}-ecs-tasks-fineos-eligibility-feed-export"
+  assume_role_policy = data.aws_iam_policy_document.ecs_tasks_assume_role_policy.json
+}
+
+# We may not always have a value for `fineos_aws_iam_role_arn` and a policy has
+# to list a resource, so make this part conditional with the count hack
+resource "aws_iam_role_policy" "fineos_eligibility_feed_task_fineos_role_policy" {
+  count = var.fineos_aws_iam_role_arn == "" ? 0 : 1
+
+  name   = "${local.app_name}-${var.environment_name}-ecs-tasks-fineos-eligibility-feed-export-fineos-policy"
+  role   = aws_iam_role.fineos_eligibility_feed_export_task_role.id
+  policy = data.aws_iam_policy_document.fineos_eligibility_feed_export_fineos_role_policy[0].json
+}
+
+data "aws_iam_policy_document" "fineos_eligibility_feed_export_fineos_role_policy" {
+  count = var.fineos_aws_iam_role_arn == "" ? 0 : 1
+
+  statement {
+
+    effect = "Allow"
+
+    actions = [
+      "sts:AssumeRole",
+    ]
+
+    resources = [
+      var.fineos_aws_iam_role_arn,
+    ]
+  }
+}

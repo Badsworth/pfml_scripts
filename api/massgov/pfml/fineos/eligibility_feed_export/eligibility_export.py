@@ -1,5 +1,5 @@
 #
-# Lambda function to export eligibility feed to FINEOS.
+# Executable functionality to export Eligibility Feed to FINEOS.
 #
 import dataclasses
 from enum import Enum
@@ -28,28 +28,35 @@ if fineos_client_config.oauth2_client_secret is None:
 fineos_client = fineos.create_client(fineos_client_config)
 
 
-class EligibilityFeedMode(Enum):
-    full = "full"
-    updates = "updates"
+class EligibilityFeedExportMode(Enum):
+    FULL = "full"
+    UPDATES = "updates"
 
 
-class EligibilityFeedLambdaConfig(BaseSettings):
+class EligibilityFeedExportConfig(BaseSettings):
     output_directory_path: str = Field(..., min_length=1)
     fineos_aws_iam_role_arn: str = Field(..., min_length=1)
     fineos_aws_iam_role_external_id: str = Field(..., min_length=1)
-    mode: EligibilityFeedMode = Field(EligibilityFeedMode.full, env="ELIGIBILITY_FEED_MODE")
+    mode: EligibilityFeedExportMode = Field(
+        EligibilityFeedExportMode.FULL, env="ELIGIBILITY_FEED_MODE"
+    )
 
 
 def handler(_event, _context):
+    """Handler for Lambda function"""
+    return main()
+
+
+def main():
     logger.info("Starting FINEOS eligibility feed export run")
 
-    config = EligibilityFeedLambdaConfig()
+    config = EligibilityFeedExportConfig()
     output_transport_params = None
 
-    # Note that the IAM role for the Eligibility Feed Export Lambda does not
-    # have access to any S3 bucket in the PFML account by default. So in order
-    # to test the functionality by writing to a non-FINEOS S3 location, the IAM
-    # role needs updated for the test as well.
+    # Note that the IAM role for the Eligibility Feed Export Lambda/ECS Task
+    # does not have access to any S3 bucket in the PFML account by default. So
+    # in order to test the functionality by writing to a non-FINEOS S3 location,
+    # the IAM role needs updated for the test as well.
     is_fineos_output_location = config.output_directory_path.startswith("s3://fin-som")
 
     if is_fineos_output_location:
@@ -64,7 +71,7 @@ def handler(_event, _context):
         output_transport_params = dict(session=session)
 
     with db.session_scope(db_session_raw, close=True) as db_session:
-        if config.mode is EligibilityFeedMode.updates:
+        if config.mode is EligibilityFeedExportMode.UPDATES:
             process_result = eligibility_feed.process_employee_updates(
                 db_session, fineos_client, config.output_directory_path, output_transport_params
             )

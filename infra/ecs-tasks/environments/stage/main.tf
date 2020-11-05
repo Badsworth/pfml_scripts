@@ -25,4 +25,9 @@ module "tasks" {
   fineos_client_wscomposer_api_url   = "https://idt-claims-webapp.masspfml.fineos.com/wscomposer/"
   fineos_client_oauth2_url           = "https://idt-api.masspfml.fineos.com/oauth2/token"
   fineos_client_oauth2_client_id     = "1fa281uto9tjuqtm21jle7loam"
+
+  fineos_aws_iam_role_arn         = "arn:aws:iam::016390658835:role/sompre-IAMRoles-CustomerAccountAccessRole-S0EP9ABIA02Z"
+  fineos_aws_iam_role_external_id = "8jFBtjr4UA@"
+
+  fineos_eligibility_feed_output_directory_path = "s3://fin-somdev-data-import/IDT/absence-eligibility/upload"
 }

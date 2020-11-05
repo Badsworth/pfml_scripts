@@ -25,4 +25,9 @@ module "tasks" {
   fineos_client_wscomposer_api_url   = "https://dt2-claims-webapp.masspfml.fineos.com/wscomposer/"
   fineos_client_oauth2_url           = "https://dt2-api.masspfml.fineos.com/oauth2/token"
   fineos_client_oauth2_client_id     = "1ral5e957i0l9shul52bhk0037"
+
+  fineos_aws_iam_role_arn         = "arn:aws:iam::666444232783:role/somdev-IAMRoles-CustomerAccountAccessRole-BF05IBJSG74B"
+  fineos_aws_iam_role_external_id = "12345"
+
+  fineos_eligibility_feed_output_directory_path = "s3://fin-somdev-data-import/DT2/absence-eligibility/upload"
 }

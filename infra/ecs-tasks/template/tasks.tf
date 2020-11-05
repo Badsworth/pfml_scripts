@@ -68,6 +68,24 @@ locals {
         fineos_client_oauth2_url           = var.fineos_client_oauth2_url
         fineos_client_oauth2_client_id     = var.fineos_client_oauth2_client_id
       }
+    },
+
+    "${local.app_name}-fineos-eligibility-feed-export" = {
+      command             = ["fineos-eligibility-feed-export"]
+      containers_template = "fineos_eligibility_feed_export_template.json"
+      task_role           = aws_iam_role.fineos_eligibility_feed_export_task_role.arn
+      vars = {
+        fineos_client_customer_api_url     = var.fineos_client_customer_api_url
+        fineos_client_group_client_api_url = var.fineos_client_group_client_api_url
+        fineos_client_wscomposer_api_url   = var.fineos_client_wscomposer_api_url
+        fineos_client_oauth2_url           = var.fineos_client_oauth2_url
+        fineos_client_oauth2_client_id     = var.fineos_client_oauth2_client_id
+
+        fineos_aws_iam_role_arn         = var.fineos_aws_iam_role_arn
+        fineos_aws_iam_role_external_id = var.fineos_aws_iam_role_external_id
+
+        output_directory_path = var.fineos_eligibility_feed_output_directory_path
+      }
     }
   }
 }
