@@ -2,7 +2,7 @@ version: "3.8"
 
 services:
   mass-pfml-db:
-    image: postgres:11.6-alpine
+    image: postgres:12.4-alpine
     container_name: "mass-pfml-db"
     ports:
       - "5432:5432"
