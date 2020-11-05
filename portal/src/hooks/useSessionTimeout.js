@@ -1,5 +1,7 @@
 import { useEffect } from "react";
-import { useIdle } from "react-use";
+// Reference the module directly to fix an IE11 bug:
+// https://github.com/streamich/react-use/issues/1189
+import useIdle from "react-use/lib/useIdle";
 
 /**
  *
