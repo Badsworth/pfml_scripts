@@ -254,8 +254,7 @@ const errors = {
       work_pattern_days: {
         minimum: "Enter the hours you work.",
         minutes: {
-          maximum:
-            "Each day must contain no more than 24 hours. The week must contain no more than 168 hours.",
+          maximum: "The hours entered are more than possible hours.",
         },
       },
       work_pattern_type: {
