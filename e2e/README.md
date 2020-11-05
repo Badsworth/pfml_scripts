@@ -17,7 +17,7 @@ End to End tests are Cypress based, and operate by driving a real browser throug
 Tests can be executed locally (against one of the cloud environments) by following these steps:
 
 Initial Setup:
-* Open [`.env.example`](./.env.example) and fill in the missing values. Save the file as `.env` in the same directory.
+* Create your `.env` file with the values [described here](#Setting-up-End-to-End-Configuration).
 * Run `npm install` in this directory.
 
 Running Cypress:
@@ -111,3 +111,18 @@ When writing tests, we will be aiming to focus on input (e.g. entering a particu
 ### Limit tests to critical business functionality
 
 End-to-end functionality is expensive to test, but valuable to have. In any of our testing efforts, we should focus on capturing the inputs and outputs that will bring the most business value for the least amount of effort.  With that in mind, end to end tests should only be written to validate primary business value, not to test for regressions.
+
+Setting up End-to-End Configuration
+-----------------------------------
+
+Configuration for all E2E testing components is in [`config.json`](./config.json) and a `.env` file you can create in this directory.
+
+Must be in your `.env file:`
+```
+# Your username to log into the portal. Easiest if this is consistent between environments.
+E2E_PORTAL_USERNAME=XXX
+# Your password to log into the portal. Easiest if this is consistent between environments.
+E2E_PORTAL_PASSWORD=XXX
+# The Fineos "CONTENT" user's password:
+E2E_FINEOS_PASSWORD=XXX
+```

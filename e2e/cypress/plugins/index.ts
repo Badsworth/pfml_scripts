@@ -9,7 +9,7 @@
 // https://on.cypress.io/plugins-guide
 // ***********************************************************
 
-import { config as dotenv } from "dotenv";
+import config from "../../src/config";
 import faker from "faker";
 import fs from "fs";
 import webpackPreprocessor from "@cypress/webpack-preprocessor";
@@ -36,35 +36,20 @@ const scenarioFunctions: Record<string, SimulationGenerator> = {
  * @type {Cypress.PluginConfig}
  */
 export default function (on: Cypress.PluginEvents): Cypress.ConfigOptions {
-  const configOverrides: Cypress.ConfigOptions = {};
-
-  // Load variables from .env. This populates process.env with .env file values.
-  // .env files only exist in local environments. In CI, we populate real env variables.
-  dotenv();
-
-  // "lift" any environment variable that we care about into Cypress.
-  configOverrides.env = Object.entries(process.env)
-    .filter(([k]) => k.startsWith("E2E_"))
-    .reduce(
-      (collected, [k, v]) => ({ ...collected, [k]: v }),
-      {} as { [k: string]: unknown }
-    );
-
   // Declare tasks here.
   on("task", {
     getAuthVerification: (toAddress: string) => {
-      return createClientFromEnv().getVerificationCodeForUser(toAddress);
+      const client = new TestMailVerificationFetcher(
+        config("TESTMAIL_APIKEY"),
+        config("TESTMAIL_NAMESPACE")
+      );
+      return client.getVerificationCodeForUser(toAddress);
     },
     generateCredentials(): CypressStepThis["credentials"] {
-      const { E2E_TESTMAIL_NAMESPACE } = process.env;
-      if (!E2E_TESTMAIL_NAMESPACE) {
-        throw new Error(
-          "Unable to determine E2E_TESTMAIL_NAMESPACE. You must set this environment variable."
-        );
-      }
+      const namespace = config("TESTMAIL_NAMESPACE");
       const tag = faker.random.alphaNumeric(8);
       return {
-        username: `${E2E_TESTMAIL_NAMESPACE}.${tag}@inbox.testmail.app`,
+        username: `${namespace}.${tag}@inbox.testmail.app`,
         password: generatePassword(),
       };
     },
@@ -75,29 +60,16 @@ export default function (on: Cypress.PluginEvents): Cypress.ConfigOptions {
       if (!application.claim) throw new Error("Application missing!");
       if (!application.documents.length) throw new Error("Documents missing!");
       const { claim, documents } = application;
-      const {
-        E2E_COGNITO_CLIENTID: ClientId,
-        E2E_COGNITO_POOL: UserPoolId,
-        E2E_PORTAL_USERNAME: Username,
-        E2E_PORTAL_PASSWORD: Password,
-        E2E_API_BASEURL: ApiBaseUrl,
-      } = process.env;
-      if (!ClientId || !UserPoolId || !Username || !Password || !ApiBaseUrl) {
-        throw new Error(
-          "Task 'submitClaimToAPI' failed due to missing environment variables!"
-        );
-      }
-
       const newDocuments: DocumentUploadRequest[] = documents.map(
         makeDocUploadBody("/tmp", "Direct API Upload")
       );
 
       return new PortalSubmitter({
-        ClientId,
-        UserPoolId,
-        Username,
-        Password,
-        ApiBaseUrl,
+        ClientId: config("COGNITO_CLIENTID"),
+        UserPoolId: config("COGNITO_POOL"),
+        Username: config("PORTAL_USERNAME"),
+        Password: config("PORTAL_PASSWORD"),
+        ApiBaseUrl: config("API_BASEURL"),
       })
 
         .submit(claim, newDocuments)
@@ -134,7 +106,18 @@ export default function (on: Cypress.PluginEvents): Cypress.ConfigOptions {
   };
   on("file:preprocessor", webpackPreprocessor(options));
 
-  return configOverrides;
+  return {
+    baseUrl: config("PORTAL_BASEURL"),
+    env: {
+      // Map through config => environment variables that we will need to use in our tests.
+      E2E_FINEOS_BASEURL: config("FINEOS_BASEURL"),
+      E2E_FINEOS_USERNAME: config("FINEOS_USERNAME"),
+      E2E_FINEOS_PASSWORD: config("FINEOS_PASSWORD"),
+      E2E_PORTAL_BASEURL: config("PORTAL_BASEURL"),
+      E2E_PORTAL_USERNAME: config("PORTAL_USERNAME"),
+      E2E_PORTAL_PASSWORD: config("PORTAL_PASSWORD"),
+    },
+  };
 }
 
 function generatePassword(): string {
@@ -145,19 +128,6 @@ function generatePassword(): string {
     faker.internet.password(10) +
     faker.random.number(999) +
     faker.random.arrayElement(["@#$%^&*"])
-  );
-}
-
-export function createClientFromEnv(): TestMailVerificationFetcher {
-  const { E2E_TESTMAIL_APIKEY, E2E_TESTMAIL_NAMESPACE } = process.env;
-  if (!E2E_TESTMAIL_APIKEY || !E2E_TESTMAIL_NAMESPACE) {
-    throw new Error(
-      "Unable to create Test Mail API client due to missing environment variables."
-    );
-  }
-  return new TestMailVerificationFetcher(
-    E2E_TESTMAIL_APIKEY,
-    E2E_TESTMAIL_NAMESPACE
   );
 }
 

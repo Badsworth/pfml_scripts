@@ -7,6 +7,7 @@ import {
   SimulationStateNullTracker,
 } from "../SimulationStateTracker";
 import { SystemWideArgs } from "../../cli";
+import config from "../../config";
 
 type SimulateArgs = {
   directory: string;
@@ -43,11 +44,11 @@ const cmd: CommandModule<SystemWideArgs, SimulateArgs> = {
     args.logger.info(`Executing simulation plan from ${storage.claimFile}`);
     const submitter = new PortalPuppeteerSubmitter(
       {
-        UserPoolId: config("E2E_COGNITO_POOL"),
-        ClientId: config("E2E_COGNITO_CLIENTID"),
-        Username: config("E2E_PORTAL_USERNAME"),
-        Password: config("E2E_PORTAL_PASSWORD"),
-        ApiBaseUrl: config("E2E_API_BASEURL"),
+        UserPoolId: config("COGNITO_POOL"),
+        ClientId: config("COGNITO_CLIENTID"),
+        Username: config("PORTAL_USERNAME"),
+        Password: config("PORTAL_PASSWORD"),
+        ApiBaseUrl: config("API_BASEURL"),
       },
       getFineosBaseUrl()
     );
@@ -72,31 +73,10 @@ const cmd: CommandModule<SystemWideArgs, SimulateArgs> = {
   },
 };
 
-function config(name: string): string {
-  if (typeof process.env[name] === "string") {
-    return process.env[name] as string;
-  }
-  throw new Error(
-    `${name} must be set as an environment variable to use this script`
-  );
-}
-
 export function getFineosBaseUrl(): string {
-  const base = config("E2E_FINEOS_BASEURL");
-  const username = config("E2E_FINEOS_USERNAME");
-  const password = config("E2E_FINEOS_PASSWORD");
-  if (!base)
-    throw new Error(
-      `You must set the E2E_FINEOS_BASEURL environment variable.`
-    );
-  if (!username)
-    throw new Error(
-      `You must set the E2E_FINEOS_USERNAME environment variable.`
-    );
-  if (!password)
-    throw new Error(
-      `You must set the E2E_FINEOS_PASSWORD environment variable.`
-    );
+  const base = config("FINEOS_BASEURL");
+  const username = config("FINEOS_USERNAME");
+  const password = config("FINEOS_PASSWORD");
   const url = new URL(base);
   url.username = username;
   url.password = password;
