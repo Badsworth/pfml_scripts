@@ -1,0 +1,37 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`EmployerDecision renders the component 1`] = `
+<Fragment>
+  <form
+    id="employer-approve-or-deny-request-form"
+  >
+    <InputChoiceGroup
+      choices={
+        Array [
+          Object {
+            "checked": false,
+            "disabled": false,
+            "label": "Approve",
+            "value": "Approve",
+          },
+          Object {
+            "checked": false,
+            "label": "Deny",
+            "value": "Deny",
+          },
+        ]
+      }
+      label={
+        <ReviewHeading
+          level="2"
+        >
+          What would be your decision on this leave request?
+        </ReviewHeading>
+      }
+      name="employerDecision"
+      onChange={[Function]}
+      type="radio"
+    />
+  </form>
+</Fragment>
+`;

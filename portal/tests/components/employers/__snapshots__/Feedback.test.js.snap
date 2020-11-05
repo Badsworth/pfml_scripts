@@ -11,6 +11,7 @@ exports[`Feedback renders the component 1`] = `
         Array [
           Object {
             "checked": true,
+            "disabled": false,
             "label": "No",
             "value": "false",
           },

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Button from "../Button";
 import ConditionalContent from "../ConditionalContent";
 import FileCardList from "../FileCardList";
@@ -14,13 +14,20 @@ import { useTranslation } from "../../locales/i18n";
  * in the Leave Admin claim review page.
  */
 
-const Feedback = (props) => {
+const Feedback = ({ appLogic, fraud, onSubmit }) => {
   const { t } = useTranslation();
   const [uploadedFiles, setUploadedFiles] = useState([]);
   const [formState, setFormState] = useState({
-    hasComment: "false",
+    hasComment: fraud === "Yes" ? "true" : "false",
     comment: "",
   });
+
+  useEffect(() => {
+    const hasComment =
+      fraud === "Yes" || !!getField("comment") ? "true" : "false";
+    updateFields({ hasComment });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fraud]);
 
   const getField = (fieldName) => {
     return get(formState, fieldName);
@@ -57,7 +64,7 @@ const Feedback = (props) => {
 
   const handleSubmit = (event) => {
     event.preventDefault();
-    props.onSubmit({ ...formState, uploadedFiles });
+    onSubmit({ ...formState, uploadedFiles });
   };
 
   return (
@@ -67,6 +74,7 @@ const Feedback = (props) => {
           choices={[
             {
               checked: formState.hasComment === "false",
+              disabled: fraud === "Yes",
               label: t("pages.employersClaimsReview.feedback.choiceNo"),
               value: "false",
             },
@@ -108,7 +116,7 @@ const Feedback = (props) => {
             <FileCardList
               filesWithUniqueId={uploadedFiles}
               setFiles={setUploadedFiles}
-              setAppErrors={props.appLogic.setAppErrors}
+              setAppErrors={appLogic.setAppErrors}
               fileHeadingPrefix={t(
                 "pages.employersClaimsReview.feedback.fileHeadingPrefix"
               )}
@@ -133,6 +141,7 @@ Feedback.propTypes = {
   appLogic: PropTypes.shape({
     setAppErrors: PropTypes.func.isRequired,
   }).isRequired,
+  fraud: PropTypes.string,
   onSubmit: PropTypes.func.isRequired,
 };
 

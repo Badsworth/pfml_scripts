@@ -8,6 +8,7 @@ function render(customProps = {}) {
       label: "Field Label",
       name: "field-name",
       value: "field-value",
+      disabled: false,
     },
     customProps
   );
@@ -35,6 +36,14 @@ describe("InputChoice", () => {
     const field = wrapper.find("input");
 
     expect(field.prop("value")).toBe(value);
+  });
+
+  it("sets the input's disabled attribute", () => {
+    const disabled = true;
+    const { wrapper } = render({ disabled });
+    const field = wrapper.find("input");
+
+    expect(field.prop("disabled")).toBe(disabled);
   });
 
   it("generates a unique id if none is provided", () => {

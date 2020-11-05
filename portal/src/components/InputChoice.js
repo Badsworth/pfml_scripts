@@ -18,6 +18,7 @@ function InputChoice({ type = "checkbox", ...props }) {
       <input
         checked={props.checked}
         className={`usa-${type}__input`}
+        disabled={props.disabled}
         id={id}
         name={props.name}
         onChange={props.onChange}
@@ -44,6 +45,10 @@ InputChoice.propTypes = {
    * for a controlled component.
    */
   checked: PropTypes.bool,
+  /**
+   * HTML input `disabled` attribute
+   */
+  disabled: PropTypes.bool,
   /**
    * Unique identifier for input
    */

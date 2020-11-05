@@ -5,7 +5,9 @@ import Claim from "../../../models/Claim";
 import EmployeeInformation from "../../../components/employers/EmployeeInformation";
 import EmployerBenefit from "../../../models/EmployerBenefit";
 import EmployerBenefits from "../../../components/employers/EmployerBenefits";
+import EmployerDecision from "../../../components/employers/EmployerDecision";
 import Feedback from "../../../components/employers/Feedback";
+import FraudReport from "../../../components/employers/FraudReport";
 import LeaveDetails from "../../../components/employers/LeaveDetails";
 import LeaveSchedule from "../../../components/employers/LeaveSchedule";
 import PreviousLeave from "../../../models/PreviousLeave";
@@ -34,6 +36,8 @@ export const Review = (props) => {
   const [amendedBenefits, setAmendedBenefits] = useState([]);
   const [amendedLeaves, setAmendedLeaves] = useState([]);
   const [amendedHours, setAmendedHours] = useState(0);
+  const [fraud, setFraud] = useState();
+  const [employerDecision, setEmployerDecision] = useState();
 
   // TODO (EMPLOYER-500): Remove logic in favor of `withEmployerClaim` HOC
   useEffect(() => {
@@ -61,12 +65,22 @@ export const Review = (props) => {
     setAmendedLeaves(updatedPreviousLeaves);
   };
 
+  const handleFraudInputChange = (updatedFraudInput) => {
+    setFraud(updatedFraudInput);
+  };
+
+  const handleEmployerDecisionChange = (updatedEmployerDecision) => {
+    setEmployerDecision(updatedEmployerDecision);
+  };
+
   const handleSubmit = async ({ comment }) => {
     await appLogic.employers.submit(absenceId, {
       employer_benefits: amendedBenefits,
       previous_leaves: amendedLeaves,
       hours_worked_per_week: parseInt(amendedHours),
       comment,
+      employer_decision: employerDecision,
+      fraud,
     });
   };
 
@@ -113,7 +127,16 @@ export const Review = (props) => {
             previousLeaves={claim.previous_leaves}
             onChange={handlePreviousLeavesChange}
           />
-          <Feedback appLogic={props.appLogic} onSubmit={handleSubmit} />
+          <FraudReport onChange={handleFraudInputChange} />
+          <EmployerDecision
+            onChange={handleEmployerDecisionChange}
+            fraud={fraud}
+          />
+          <Feedback
+            appLogic={props.appLogic}
+            fraud={fraud}
+            onSubmit={handleSubmit}
+          />
         </React.Fragment>
       )}
     </React.Fragment>

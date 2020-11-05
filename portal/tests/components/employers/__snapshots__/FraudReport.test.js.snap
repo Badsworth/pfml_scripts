@@ -1,0 +1,105 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`FraudReport renders just the input choices by default 1`] = `
+<Fragment>
+  <form
+    id="employer-fraud-report-form"
+  >
+    <InputChoiceGroup
+      choices={
+        Array [
+          Object {
+            "checked": false,
+            "label": "No",
+            "value": "No",
+          },
+          Object {
+            "checked": false,
+            "label": "Yes",
+            "value": "Yes",
+          },
+        ]
+      }
+      label={
+        <ReviewHeading
+          level="2"
+        >
+          Do you have any reason to suspect fraud?
+        </ReviewHeading>
+      }
+      name="isFraud"
+      onChange={[Function]}
+      type="radio"
+    />
+  </form>
+  <ConditionalContent
+    visible={false}
+  >
+    <Heading
+      className="text-error"
+      level="4"
+      weight="bold"
+    >
+      Please provide a comment below
+    </Heading>
+    <Alert
+      heading="You are reporting fraud."
+      state="warning"
+    >
+      We take allegations about fraud seriously. Selecting this will begin further investigation. Please only select if you are convinced this is fraudulent. If you have questions, feel free to contact us at 833‑344‑7365 from 8am‑5pm ET.
+    </Alert>
+  </ConditionalContent>
+</Fragment>
+`;
+
+exports[`FraudReport renders the alert if "Yes" is selected 1`] = `
+<Fragment>
+  <form
+    id="employer-fraud-report-form"
+  >
+    <InputChoiceGroup
+      choices={
+        Array [
+          Object {
+            "checked": false,
+            "label": "No",
+            "value": "No",
+          },
+          Object {
+            "checked": true,
+            "label": "Yes",
+            "value": "Yes",
+          },
+        ]
+      }
+      label={
+        <ReviewHeading
+          level="2"
+        >
+          Do you have any reason to suspect fraud?
+        </ReviewHeading>
+      }
+      name="isFraud"
+      onChange={[Function]}
+      type="radio"
+    />
+  </form>
+  <ConditionalContent
+    visible={true}
+  >
+    <Heading
+      className="text-error"
+      level="4"
+      weight="bold"
+    >
+      Please provide a comment below
+    </Heading>
+    <Alert
+      heading="You are reporting fraud."
+      state="warning"
+    >
+      We take allegations about fraud seriously. Selecting this will begin further investigation. Please only select if you are convinced this is fraudulent. If you have questions, feel free to contact us at 833‑344‑7365 from 8am‑5pm ET.
+    </Alert>
+  </ConditionalContent>
+</Fragment>
+`;

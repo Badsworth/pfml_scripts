@@ -1,11 +1,5 @@
 import { MockClaimBuilder, testHook } from "../../../test-utils";
 import { mount, shallow } from "enzyme";
-import EmployeeInformation from "../../../../src/components/employers/EmployeeInformation";
-import EmployerBenefits from "../../../../src/components/employers/EmployerBenefits";
-import Feedback from "../../../../src/components/employers/Feedback";
-import LeaveDetails from "../../../../src/components/employers/LeaveDetails";
-import LeaveSchedule from "../../../../src/components/employers/LeaveSchedule";
-import PreviousLeaves from "../../../../src/components/employers/PreviousLeaves";
 import React from "react";
 import Review from "../../../../src/pages/employers/claims/review";
 import Spinner from "../../../../src/components/Spinner";
@@ -49,12 +43,15 @@ describe("Review", () => {
     });
 
     const components = [
-      EmployeeInformation,
-      EmployerBenefits,
-      Feedback,
-      LeaveDetails,
-      LeaveSchedule,
-      PreviousLeaves,
+      "EmployeeInformation",
+      "EmployerBenefits",
+      "EmployerDecision",
+      "Feedback",
+      "FraudReport",
+      "LeaveDetails",
+      "LeaveSchedule",
+      "PreviousLeaves",
+      "SupportingWorkDetails",
     ];
     components.forEach((component) => {
       expect(wrapper.find(component).exists()).toEqual(true);

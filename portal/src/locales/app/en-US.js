@@ -1186,6 +1186,11 @@ const pages = {
       header: "Employer benefits",
       tableName: "Employer-sponsored benefit details",
     },
+    employerDecision: {
+      choiceApprove: "Approve",
+      choiceDeny: "Deny",
+      heading: "What would be your decision on this leave request?",
+    },
     employerIdentifierLabel: "Employer ID number (EIN)",
     feedback: {
       addAnotherFileButton: "$t(shared.fileUpload_addAnotherFileButton)",
@@ -1197,6 +1202,15 @@ const pages = {
       supportingDocumentationLabel:
         "If you have any supporting documentation, please attach it for review.",
       tellUsMoreLabel: "Please tell us more.",
+    },
+    fraudReport: {
+      alertBody:
+        "We take allegations about fraud seriously. Selecting this will begin further investigation. Please only select if you are convinced this is fraudulent. If you have questions, feel free to contact us at $t(shared.contactCenterPhoneNumber) from 8am$t(chars.nbhyphen)5pm ET.",
+      alertHeading: "You are reporting fraud.",
+      choiceNo: "$t(shared.choiceNo)",
+      choiceYes: "$t(shared.choiceYes)",
+      commentSolicitation: "Please provide a comment below",
+      heading: "Do you have any reason to suspect fraud?",
     },
     instructionsAmendment:
       "Please review the details of this application carefully. If anything seems incorrect, you can add an amendment within each section or include general comments at the end.",
@@ -1489,7 +1503,7 @@ const components = {
       "Paid Family and Medical Leave is a state-offered benefit for anyone who works in Massachusetts and is eligible to take up to 26 weeks of paid leave for medical or family reasons.",
     orgAddress: "PO Box 838 Lawrence, MA 01843",
     orgName: "Department of Family and Medical Leave (DFML)",
-    orgPhoneNumber: "(833)$t(chars.nbsp)344$t(chars.nbhyphen)7365",
+    orgPhoneNumber: "$t(shared.contactCenterPhoneNumber)",
     title: "Paid Family and Medical Leave (PFML)",
   },
   form: {
