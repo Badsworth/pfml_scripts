@@ -65,15 +65,28 @@ exports[`CreateAccount renders the empty page 1`] = `
 `;
 
 exports[`CreateAccount renders the empty page 2`] = `
-<Trans
-  components={
-    Object {
-      "mass-benefits-timeline-link": <a
-        href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-timeline#december-2,-2020-"
-      />,
-      "p": <p />,
-    }
-  }
-  i18nKey="pages.authCreateAccount.alertBody"
-/>
+Array [
+  <p
+    key="0"
+  >
+    You can apply online if you’re currently employed in Massachusetts.
+  </p>,
+  <p
+    key="1"
+  >
+    If you’re self-employed or unemployed, apply by calling the Department of Family and Medical Leave Contact Center at 833‑344‑7365.
+  </p>,
+  <p
+    key="2"
+  >
+    Learn more about the 
+    <a
+      href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-timeline#december-2,-2020-"
+      key="1"
+    >
+      PFML benefit timeline on mass.gov
+    </a>
+    .
+  </p>,
+]
 `;
