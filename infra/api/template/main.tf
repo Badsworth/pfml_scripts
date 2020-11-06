@@ -1,3 +1,13 @@
+terraform {
+  required_version = "0.12.24"
+
+  required_providers {
+    aws      = "~> 3.13.0"
+    random   = "~> 3.0.0"
+    template = "~> 2.2.0"
+  }
+}
+
 provider "aws" {
   region = "us-east-1"
   alias  = "us-east-1"
@@ -22,10 +32,6 @@ data "newrelic_entity" "pfml-api" {
   name   = "${upper(local.app_name)}-${upper(var.environment_name)}"
   domain = "APM"
   type   = "APPLICATION"
-}
-
-terraform {
-  required_version = "0.12.24"
 }
 
 locals {
