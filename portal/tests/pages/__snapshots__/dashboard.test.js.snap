@@ -9,10 +9,76 @@ exports[`Dashboard renders dashboard content 1`] = `
     className="measure-6"
   >
     <Title>
-      Get ready to apply
+      Only some people can apply online for now
     </Title>
     <Heading
       level="2"
+    >
+      <SvgIconLaptop
+        className="margin-right-2 text-secondary text-middle"
+        fill="currentColor"
+        height={30}
+        width={30}
+      />
+      Apply online
+    </Heading>
+    <Trans
+      components={
+        Object {
+          "li": <li />,
+          "p": <p />,
+          "ul": <ul
+            className="usa-list"
+          />,
+        }
+      }
+      i18nKey="pages.dashboard.applyOnline"
+    />
+    <Heading
+      level="2"
+    >
+      <SvgIconPhone
+        className="margin-right-2 text-secondary text-middle"
+        fill="currentColor"
+        height={30}
+        width={30}
+      />
+      Apply by phone
+    </Heading>
+    <Trans
+      components={
+        Object {
+          "li": <li />,
+          "p": <p />,
+          "ul": <ul
+            className="usa-list"
+          />,
+        }
+      }
+      i18nKey="pages.dashboard.applyByPhone"
+    />
+    <Trans
+      components={
+        Object {
+          "a": <a />,
+          "p": <p />,
+        }
+      }
+      i18nKey="pages.dashboard.applyMore"
+    />
+    <hr
+      className="margin-top-4"
+    />
+    <Heading
+      className="margin-top-4"
+      level="2"
+      size="1"
+    >
+      Getting started
+    </Heading>
+    <Heading
+      level="3"
+      size="2"
     >
       Step one: Tell your employer that you need to take Paid Family and Medical Leave. 
     </Heading>
@@ -23,7 +89,8 @@ exports[`Dashboard renders dashboard content 1`] = `
        Once you tell your employer, you have the right to apply and your job is protected. Keep a record of what date you notified your employer. You will need to provide this date in your leave application.
     </p>
     <Heading
-      level="2"
+      level="3"
+      size="2"
     >
       Step two: Get documentation that supports your leave request
     </Heading>
@@ -58,7 +125,7 @@ exports[`Dashboard renders dashboard content 1`] = `
           </p>
         </AccordionItem>
         <AccordionItem
-          heading="Family leave to bond with your child after adoption or foster placement"
+          heading="Family leave to bond with your child after adoption or foster placement"
         >
           <p>
             You need to provide a statement that confirms the placement and the date of placement. This can come from the child's health care provider, the adoption or foster agency, or the Massachusetts Department of Children and Families.
@@ -67,9 +134,10 @@ exports[`Dashboard renders dashboard content 1`] = `
       </Accordion>
     </div>
     <Heading
-      level="2"
+      level="3"
+      size="2"
     >
-      Step three: Apply
+      Step three: Create an application
     </Heading>
     <p>
       Applying takes around 15 minutes. Your information will save as you go, so you can finish your application later if you need to.

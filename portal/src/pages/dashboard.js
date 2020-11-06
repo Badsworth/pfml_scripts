@@ -1,3 +1,4 @@
+import { IconLaptop, IconPhone } from "@massds/mayflower-react/dist/Icon";
 import Accordion from "../components/Accordion";
 import AccordionItem from "../components/AccordionItem";
 import ButtonLink from "../components/ButtonLink";
@@ -17,6 +18,12 @@ import withUser from "../hoc/withUser";
 export const Dashboard = (props) => {
   const { appLogic } = props;
   const { t } = useTranslation();
+  const iconProps = {
+    className: "margin-right-2 text-secondary text-middle",
+    height: 30,
+    width: 30,
+    fill: "currentColor",
+  };
 
   return (
     <React.Fragment>
@@ -24,10 +31,59 @@ export const Dashboard = (props) => {
       <div className="measure-6">
         <Title>{t("pages.dashboard.title")}</Title>
 
-        <Heading level="2">{t("pages.dashboard.stepOneHeading")}</Heading>
+        <Heading level="2">
+          <IconLaptop {...iconProps} />
+          {t("pages.dashboard.applyOnlineTitle")}
+        </Heading>
+
+        <Trans
+          i18nKey="pages.dashboard.applyOnline"
+          components={{
+            p: <p />,
+            ul: <ul className="usa-list" />,
+            li: <li />,
+          }}
+        />
+
+        <Heading level="2">
+          <IconPhone {...iconProps} />
+          {t("pages.dashboard.applyByPhoneTitle")}
+        </Heading>
+
+        <Trans
+          i18nKey="pages.dashboard.applyByPhone"
+          components={{
+            p: <p />,
+            ul: <ul className="usa-list" />,
+            li: <li />,
+          }}
+        />
+
+        <Trans
+          i18nKey="pages.dashboard.applyMore"
+          components={{
+            p: <p />,
+            a: <a />,
+          }}
+        />
+
+        <hr className="margin-top-4" />
+
+        <Heading level="2" size="1" className="margin-top-4">
+          {t("pages.dashboard.stepsTitle")}
+        </Heading>
+
+        <Heading level="3" size="2">
+          {t("pages.dashboard.stepOneHeading")}
+        </Heading>
+
         <p>{t("pages.dashboard.stepOneLeadLine1")}</p>
         <p>{t("pages.dashboard.stepOneLeadLine2")}</p>
-        <Heading level="2">{t("pages.dashboard.stepTwoHeading")}</Heading>
+
+        <Heading level="3" size="2">
+          {t("pages.dashboard.stepTwoHeading")}
+        </Heading>
+
         <div className="measure-4">
           <Accordion>
             <AccordionItem heading={t("pages.dashboard.medicalLeaveHeading")}>
@@ -58,7 +114,10 @@ export const Dashboard = (props) => {
           </Accordion>
         </div>
 
-        <Heading level="2">{t("pages.dashboard.stepThreeHeading")}</Heading>
+        <Heading level="3" size="2">
+          {t("pages.dashboard.stepThreeHeading")}
+        </Heading>
+
         <p>{t("pages.dashboard.stepThreeLead")}</p>
         <p>{t("pages.dashboard.multipleApplicationsListIntro")}</p>
         <ul className="usa-list">

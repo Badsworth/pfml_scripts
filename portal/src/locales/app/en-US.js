@@ -1121,11 +1121,19 @@ const pages = {
     title: "$t(shared.claimsEmploymentInfoTitle)",
   },
   dashboard: {
+    applyByPhone:
+      "<p>Apply by calling the Department of Family and Medical Leave Contact Center at $t(shared.contactCenterPhoneNumber) if you meet the following criteria:</p><ul><li>Self-employed or unemployed</li><li>Applying for paid family leave to bond with your child after birth, adoption, or foster$t(chars.nbsp)placement</li></ul>",
+    applyByPhoneTitle: "Apply by phone",
+    applyMore:
+      '<p>More benefits will be available starting January$t(chars.nbsp)1, 2021. Learn more at <a href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-timeline#december-2,-2020-">mass.gov</a>.</p>',
+    applyOnline:
+      "<p>You can apply online if you meet the following criteria:</p><ul><li>Currently employed in$t(chars.nbsp)Massachusetts</li><li>Not self-employed</li><li>Applying for paid family leave to bond with your child after birth, adoption, or foster$t(chars.nbsp)placement</li></ul>",
+    applyOnlineTitle: "Apply online",
     createClaimButton: "Create an application",
     familyLeaveAfterAdoptionBody:
       "You need to provide a statement that confirms the placement and the date of placement. This can come from the child's health care provider, the adoption or foster agency, or the Massachusetts Department of Children and Families.",
     familyLeaveAfterAdoptionHeading:
-      "Family leave to bond with your child after adoption or foster placement",
+      "Family leave to bond with your child after adoption or foster$t(chars.nbsp)placement",
     familyLeaveAfterBirthBodyLine1:
       "You need a document that confirms your child’s date of birth, such as a birth certificate or statement from a health care provider stating your child's birth date.",
     familyLeaveAfterBirthBodyLine2:
@@ -1149,12 +1157,13 @@ const pages = {
       "If you can, tell your employer at least 30 days before your leave begins. If you need to take leave right away, tell your employer as soon as possible.",
     stepOneLeadLine2:
       " Once you tell your employer, you have the right to apply and your job is protected. Keep a record of what date you notified your employer. You will need to provide this date in your leave application.",
-    stepThreeHeading: "Step three: Apply",
+    stepThreeHeading: "Step three: Create an application",
     stepThreeLead:
       "Applying takes around 15 minutes. Your information will save as you go, so you can finish your application later if you need to.",
     stepTwoHeading:
       "Step two: Get documentation that supports your leave request",
-    title: "Get ready to apply",
+    stepsTitle: "Getting started",
+    title: "Only some people can apply online for now",
   },
   employersClaimsConfirmation: {
     applicationIdLabel: "<strong>Application ID:</strong> {{absenceId}}",
