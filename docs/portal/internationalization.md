@@ -51,8 +51,12 @@ Internationalization content can get messy and lead to hard-to-find bugs during 
 
 #### Organization
 
-- Keys are organized under four top-level objects by how they're used: `components`, `pages`, `errors` and `shared`.
-- `components` and `pages` define content used in specific components and pages, respectively. `errors` contains content used in error messages, which aren’t page or component specific. `shared` defines content shared between multiple components or pages.
+- Keys are organized under top-level objects by how they're used:
+  - `components` defines content used in specific components
+  - `pages` defines content used in specific pages
+  - `errors` defines content used in error messages, which aren’t page or component specific
+  - `shared` defines content shared between multiple components or pages
+  - `chars` defines special characters (such as non-breaking spaces, which are difficult to distinguish in values)
 - Keys are limited to three levels deep, for example `pages.claimsDateOfBirth.title`. This makes the structure easier to navigate and the process of finding a specific element more consistent.
 
 #### Naming
@@ -110,6 +114,17 @@ pages: {
 }
 ```
 
+#### Using markup in values
+
+Sometimes content necessitates the use of specific HTML tags. However, markup should only include tag names and not tag attributes. A tag's `class`, `href`, and other attributes should be set by the page or component that renders the key (see usage example below).
+
+Using markup in content strings can be useful but it can also make them more difficult to read and edit without introducing errors. Markup should be used sparingly. Some of the reasons for using markup in content strings include answering yes to any of these questions:
+
+- Does this content require specific embedded tags for formatting? (e.g. `<a>`, `<em>`, `<strong>`, `<ul>`, `<ol>`, or multiple `<p>` tags)
+- Does this content serve one primary function for the user?
+- Is it helpful to edit this content as one key? (e.g. two paragraphs that serve one purpose for the user, or list items with an explicit order)
+- Would breaking this content into multiple keys make them more difficult to name semantically or add unnecessary structure?
+
 ### Basic usage with hook
 
 ```js
@@ -121,4 +136,32 @@ export function MyComponent() {
 
   return <p>{t("translationResourceKey")}</p>;
 }
+```
+
+When a key is set to a value that includes markup, it requires a different rendering method in pages and components:
+
+```
+htmlKey:
+  "<ul><li>List item one</li><li>List item two has <external-link>a link</external-link></li></ul>",
+```
+
+```js
+import React from "react";
+import { Trans } from "react-i18next";
+
+<Trans
+  i18nKey="htmlKey"
+  components={{
+    "external-link": (
+      <a
+        target="_blank"
+        rel="noopener"
+        href={routes.external.externalLink}
+      />
+    ),
+    ul: <ul className="usa-list" />,
+    li: <li />,
+  }}
+/>
+
 ```
