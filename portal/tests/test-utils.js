@@ -641,6 +641,7 @@ export const renderWithAppLogic = (PageComponent, options = {}) => {
     {
       claimAttrs: {},
       diveLevels: 2,
+      employerClaimAttrs: {},
       props: {},
 
       // whether to use shallow() or mount()
@@ -661,6 +662,7 @@ export const renderWithAppLogic = (PageComponent, options = {}) => {
   appLogic.claims.hasLoadedClaimAndWarnings = jest
     .fn()
     .mockReturnValue(options.hasLoadedClaimAndWarnings || true);
+  appLogic.employers.claim = new EmployerClaim(options.employerClaimAttrs);
   appLogic.auth.isLoggedIn = true;
   appLogic.users.requireUserConsentToDataAgreement = jest.fn();
   appLogic.users.user = new User({

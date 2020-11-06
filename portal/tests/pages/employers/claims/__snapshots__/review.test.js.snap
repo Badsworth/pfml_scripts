@@ -1,0 +1,422 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Review renders the page 1`] = `
+<Fragment>
+  <BackButton />
+  <Title>
+    Review application for Jane Doe
+  </Title>
+  <Alert
+    noIcon={true}
+    state="warning"
+  >
+    <Trans
+      i18nKey="pages.employersClaimsReview.instructionsDueDate"
+      values={
+        Object {
+          "date": "10/10/2020",
+        }
+      }
+    />
+  </Alert>
+  <p>
+    Please review the details of this application carefully. If anything seems incorrect, you can add an amendment within each section or include general comments at the end.
+  </p>
+  <p>
+    If you have not been notified of this, please include a comment at the end.
+  </p>
+  <p
+    aria-labelledby="employerIdentifierNumber"
+    className="text-bold"
+  >
+    Employer ID number (EIN)
+  </p>
+  <p
+    className="margin-top-0"
+  >
+    12-3456789
+  </p>
+  <EmployeeInformation
+    claim={
+      EmployerClaim {
+        "application_id": null,
+        "created_at": null,
+        "date_of_birth": "1980-07-17",
+        "employer_benefits": Array [
+          EmployerBenefit {
+            "benefit_amount_dollars": 500,
+            "benefit_amount_frequency": "Per Week",
+            "benefit_end_date": "2021-02-01",
+            "benefit_start_date": "2021-01-01",
+            "benefit_type": "Family or Medical Leave",
+            "id": 1,
+          },
+        ],
+        "employer_fein": "12-3456789",
+        "fineos_absence_id": "NTN-111-ABS-01",
+        "first_name": "Jane",
+        "hours_worked_per_week": 30,
+        "last_name": "Doe",
+        "leave_details": Object {
+          "continuous_leave_periods": Array [
+            ContinuousLeavePeriod {
+              "end_date": "2021-06-01",
+              "leave_period_id": "mock-leave-period-id",
+              "start_date": "2021-01-01",
+            },
+          ],
+          "employer_notification_date": "2021-01-01",
+          "employer_notified": true,
+          "intermittent_leave_periods": null,
+          "reason": "Serious Health Condition - Employee",
+          "reduced_schedule_leave_periods": Array [
+            ReducedScheduleLeavePeriod {
+              "end_date": "2021-07-01",
+              "friday_off_minutes": null,
+              "leave_period_id": "mock-leave-period-id",
+              "monday_off_minutes": null,
+              "saturday_off_minutes": null,
+              "start_date": "2021-02-01",
+              "sunday_off_minutes": null,
+              "thursday_off_minutes": null,
+              "tuesday_off_minutes": null,
+              "wednesday_off_minutes": null,
+            },
+          ],
+        },
+        "middle_name": "",
+        "previous_leaves": Array [
+          PreviousLeave {
+            "id": 1,
+            "leave_end_date": "2020-02-01",
+            "leave_start_date": "2020-01-01",
+          },
+        ],
+        "residential_address": Address {
+          "city": "Boston",
+          "line_1": "1234 My St.",
+          "line_2": null,
+          "state": "MA",
+          "zip": "00000",
+        },
+        "status": null,
+        "tax_identifier": "1234",
+      }
+    }
+  />
+  <LeaveDetails
+    claim={
+      EmployerClaim {
+        "application_id": null,
+        "created_at": null,
+        "date_of_birth": "1980-07-17",
+        "employer_benefits": Array [
+          EmployerBenefit {
+            "benefit_amount_dollars": 500,
+            "benefit_amount_frequency": "Per Week",
+            "benefit_end_date": "2021-02-01",
+            "benefit_start_date": "2021-01-01",
+            "benefit_type": "Family or Medical Leave",
+            "id": 1,
+          },
+        ],
+        "employer_fein": "12-3456789",
+        "fineos_absence_id": "NTN-111-ABS-01",
+        "first_name": "Jane",
+        "hours_worked_per_week": 30,
+        "last_name": "Doe",
+        "leave_details": Object {
+          "continuous_leave_periods": Array [
+            ContinuousLeavePeriod {
+              "end_date": "2021-06-01",
+              "leave_period_id": "mock-leave-period-id",
+              "start_date": "2021-01-01",
+            },
+          ],
+          "employer_notification_date": "2021-01-01",
+          "employer_notified": true,
+          "intermittent_leave_periods": null,
+          "reason": "Serious Health Condition - Employee",
+          "reduced_schedule_leave_periods": Array [
+            ReducedScheduleLeavePeriod {
+              "end_date": "2021-07-01",
+              "friday_off_minutes": null,
+              "leave_period_id": "mock-leave-period-id",
+              "monday_off_minutes": null,
+              "saturday_off_minutes": null,
+              "start_date": "2021-02-01",
+              "sunday_off_minutes": null,
+              "thursday_off_minutes": null,
+              "tuesday_off_minutes": null,
+              "wednesday_off_minutes": null,
+            },
+          ],
+        },
+        "middle_name": "",
+        "previous_leaves": Array [
+          PreviousLeave {
+            "id": 1,
+            "leave_end_date": "2020-02-01",
+            "leave_start_date": "2020-01-01",
+          },
+        ],
+        "residential_address": Address {
+          "city": "Boston",
+          "line_1": "1234 My St.",
+          "line_2": null,
+          "state": "MA",
+          "zip": "00000",
+        },
+        "status": null,
+        "tax_identifier": "1234",
+      }
+    }
+  />
+  <LeaveSchedule
+    claim={
+      EmployerClaim {
+        "application_id": null,
+        "created_at": null,
+        "date_of_birth": "1980-07-17",
+        "employer_benefits": Array [
+          EmployerBenefit {
+            "benefit_amount_dollars": 500,
+            "benefit_amount_frequency": "Per Week",
+            "benefit_end_date": "2021-02-01",
+            "benefit_start_date": "2021-01-01",
+            "benefit_type": "Family or Medical Leave",
+            "id": 1,
+          },
+        ],
+        "employer_fein": "12-3456789",
+        "fineos_absence_id": "NTN-111-ABS-01",
+        "first_name": "Jane",
+        "hours_worked_per_week": 30,
+        "last_name": "Doe",
+        "leave_details": Object {
+          "continuous_leave_periods": Array [
+            ContinuousLeavePeriod {
+              "end_date": "2021-06-01",
+              "leave_period_id": "mock-leave-period-id",
+              "start_date": "2021-01-01",
+            },
+          ],
+          "employer_notification_date": "2021-01-01",
+          "employer_notified": true,
+          "intermittent_leave_periods": null,
+          "reason": "Serious Health Condition - Employee",
+          "reduced_schedule_leave_periods": Array [
+            ReducedScheduleLeavePeriod {
+              "end_date": "2021-07-01",
+              "friday_off_minutes": null,
+              "leave_period_id": "mock-leave-period-id",
+              "monday_off_minutes": null,
+              "saturday_off_minutes": null,
+              "start_date": "2021-02-01",
+              "sunday_off_minutes": null,
+              "thursday_off_minutes": null,
+              "tuesday_off_minutes": null,
+              "wednesday_off_minutes": null,
+            },
+          ],
+        },
+        "middle_name": "",
+        "previous_leaves": Array [
+          PreviousLeave {
+            "id": 1,
+            "leave_end_date": "2020-02-01",
+            "leave_start_date": "2020-01-01",
+          },
+        ],
+        "residential_address": Address {
+          "city": "Boston",
+          "line_1": "1234 My St.",
+          "line_2": null,
+          "state": "MA",
+          "zip": "00000",
+        },
+        "status": null,
+        "tax_identifier": "1234",
+      }
+    }
+  />
+  <SupportingWorkDetails
+    hoursWorkedPerWeek={30}
+    onChange={[Function]}
+  />
+  <EmployerBenefits
+    benefits={
+      Array [
+        EmployerBenefit {
+          "benefit_amount_dollars": 500,
+          "benefit_amount_frequency": "Per Week",
+          "benefit_end_date": "2021-02-01",
+          "benefit_start_date": "2021-01-01",
+          "benefit_type": "Family or Medical Leave",
+          "id": 1,
+        },
+      ]
+    }
+    onChange={[Function]}
+  />
+  <PreviousLeaves
+    onChange={[Function]}
+    previousLeaves={
+      Array [
+        PreviousLeave {
+          "id": 1,
+          "leave_end_date": "2020-02-01",
+          "leave_start_date": "2020-01-01",
+        },
+      ]
+    }
+  />
+  <FraudReport
+    onChange={[Function]}
+  />
+  <EmployerDecision
+    onChange={[Function]}
+  />
+  <Feedback
+    appLogic={
+      Object {
+        "appErrors": AppErrorInfoCollection {
+          "items": Array [],
+          "itemsById": Object {},
+        },
+        "auth": Object {
+          "createAccount": [MockFunction],
+          "forgotPassword": [MockFunction],
+          "isLoggedIn": true,
+          "login": [MockFunction],
+          "logout": [MockFunction],
+          "requireLogin": [MockFunction],
+          "resendVerifyAccountCode": [MockFunction],
+          "verifyAccount": [MockFunction],
+        },
+        "catchError": [MockFunction],
+        "claims": Object {
+          "claims": ClaimCollection {
+            "items": Array [],
+            "itemsById": Object {},
+          },
+          "complete": [MockFunction],
+          "create": [MockFunction],
+          "get": [MockFunction],
+          "hasLoadedAll": false,
+          "hasLoadedClaimAndWarnings": [MockFunction],
+          "load": [MockFunction],
+          "loadAll": [MockFunction],
+          "submit": [MockFunction],
+          "update": [MockFunction],
+          "warningsLists": Object {},
+        },
+        "documents": Object {
+          "attach": [MockFunction],
+          "documents": DocumentCollection {
+            "items": Array [],
+            "itemsById": Object {},
+          },
+          "hasLoadedClaimDocuments": [MockFunction],
+          "loadAll": [MockFunction],
+        },
+        "employers": Object {
+          "claim": EmployerClaim {
+            "application_id": null,
+            "created_at": null,
+            "date_of_birth": "1980-07-17",
+            "employer_benefits": Array [
+              EmployerBenefit {
+                "benefit_amount_dollars": 500,
+                "benefit_amount_frequency": "Per Week",
+                "benefit_end_date": "2021-02-01",
+                "benefit_start_date": "2021-01-01",
+                "benefit_type": "Family or Medical Leave",
+                "id": 1,
+              },
+            ],
+            "employer_fein": "12-3456789",
+            "fineos_absence_id": "NTN-111-ABS-01",
+            "first_name": "Jane",
+            "hours_worked_per_week": 30,
+            "last_name": "Doe",
+            "leave_details": Object {
+              "continuous_leave_periods": Array [
+                ContinuousLeavePeriod {
+                  "end_date": "2021-06-01",
+                  "leave_period_id": "mock-leave-period-id",
+                  "start_date": "2021-01-01",
+                },
+              ],
+              "employer_notification_date": "2021-01-01",
+              "employer_notified": true,
+              "intermittent_leave_periods": null,
+              "reason": "Serious Health Condition - Employee",
+              "reduced_schedule_leave_periods": Array [
+                ReducedScheduleLeavePeriod {
+                  "end_date": "2021-07-01",
+                  "friday_off_minutes": null,
+                  "leave_period_id": "mock-leave-period-id",
+                  "monday_off_minutes": null,
+                  "saturday_off_minutes": null,
+                  "start_date": "2021-02-01",
+                  "sunday_off_minutes": null,
+                  "thursday_off_minutes": null,
+                  "tuesday_off_minutes": null,
+                  "wednesday_off_minutes": null,
+                },
+              ],
+            },
+            "middle_name": "",
+            "previous_leaves": Array [
+              PreviousLeave {
+                "id": 1,
+                "leave_end_date": "2020-02-01",
+                "leave_start_date": "2020-01-01",
+              },
+            ],
+            "residential_address": Address {
+              "city": "Boston",
+              "line_1": "1234 My St.",
+              "line_2": null,
+              "state": "MA",
+              "zip": "00000",
+            },
+            "status": null,
+            "tax_identifier": "1234",
+          },
+          "load": [MockFunction],
+          "submit": [MockFunction],
+        },
+        "portalFlow": Object {
+          "goToNextPage": [MockFunction],
+          "goToPageFor": [MockFunction],
+          "pathname": "/mock-portalFlow-pathname",
+        },
+        "setAppErrors": [MockFunction],
+        "updateUser": [MockFunction],
+        "user": User {
+          "auth_id": null,
+          "consented_to_data_sharing": true,
+          "email_address": null,
+          "status": null,
+          "user_id": "mock_user_id",
+        },
+        "users": Object {
+          "loadUser": [MockFunction],
+          "requireUserConsentToDataAgreement": [MockFunction],
+          "updateUser": [MockFunction],
+          "user": User {
+            "auth_id": null,
+            "consented_to_data_sharing": true,
+            "email_address": null,
+            "status": null,
+            "user_id": "mock_user_id",
+          },
+        },
+      }
+    }
+    onSubmit={[Function]}
+  />
+</Fragment>
+`;

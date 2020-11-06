@@ -9,7 +9,7 @@ import { useTranslation } from "../../../locales/i18n";
 
 export const Confirmation = (props) => {
   const { t } = useTranslation();
-  // TODO (EMPLOYER-500): Remove query param for due date in favor of `withEmployerClaim` HOC
+  // TODO (EMPLOYER-363) - utilize withEmployerClaim HOC when due_date is available in Claim model
   const { absence_id, due_date } = props.query;
 
   return (

@@ -1,14 +1,12 @@
 import {
   MockEmployerClaimBuilder,
+  renderWithAppLogic,
   simulateEvents,
   testHook,
 } from "../../../test-utils";
 import ConditionalContent from "../../../../src/components/ConditionalContent";
 import NewApplication from "../../../../src/pages/employers/claims/new-application";
-import React from "react";
-import Spinner from "../../../../src/components/Spinner";
 import { act } from "react-dom/test-utils";
-import { mount } from "enzyme";
 import useAppLogic from "../../../../src/hooks/useAppLogic";
 
 jest.mock("../../../../src/hooks/useAppLogic");
@@ -22,52 +20,27 @@ describe("NewApplication", () => {
     testHook(() => {
       appLogic = useAppLogic();
     });
-  });
+    appLogic.employers.claim = claim;
 
-  describe("while the claim is not loaded", () => {
-    beforeEach(() => {
-      appLogic.employers.claim = null;
-
-      act(() => {
-        wrapper = mount(<NewApplication appLogic={appLogic} query={query} />);
-      });
-    });
-
-    it("renders the page with a spinner", () => {
-      expect(wrapper.exists(Spinner)).toBe(true);
-      expect(wrapper).toMatchSnapshot();
-    });
-
-    it("makes a call to load claim", () => {
-      expect(appLogic.employers.load).toHaveBeenCalled();
+    act(() => {
+      ({ wrapper } = renderWithAppLogic(NewApplication, {
+        employerClaimAttrs: claim,
+        props: {
+          appLogic,
+          query,
+        },
+      }));
     });
   });
 
-  describe("when the claim is loaded", () => {
-    beforeEach(() => {
-      appLogic.employers.claim = claim;
-
-      act(() => {
-        wrapper = mount(<NewApplication appLogic={appLogic} query={query} />);
-      });
-    });
-
-    it("renders the page", () => {
-      expect(wrapper.exists(Spinner)).toBe(false);
-      expect(wrapper).toMatchSnapshot();
-    });
+  it("renders the page", () => {
+    expect(wrapper).toMatchSnapshot();
   });
 
   describe("when user responds to question", () => {
     let changeRadioGroup, submitForm;
 
     beforeEach(() => {
-      appLogic.employers.claim = claim;
-
-      act(() => {
-        wrapper = mount(<NewApplication appLogic={appLogic} query={query} />);
-      });
-
       ({ changeRadioGroup, submitForm } = simulateEvents(wrapper));
       changeRadioGroup("hasReviewerVerified", "true");
       wrapper.update();
