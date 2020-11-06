@@ -15,6 +15,7 @@ from datetime import datetime, timedelta
 
 import faker
 
+import massgov.pfml.util.files
 import massgov.pfml.util.logging
 from massgov.pfml.util.datetime.quarter import Quarter
 
@@ -84,14 +85,23 @@ def main():
     employer_count = args.count
 
     output_folder = args.folder
-    os.makedirs(output_folder, exist_ok=True)
-    employer_file = open("{}/{}".format(output_folder, employer_file_name), "w")
-    employee_file = open("{}/{}".format(output_folder, employee_file_name), "w")
+    if not output_folder.startswith("s3:"):
+        os.makedirs(output_folder, exist_ok=True)
+
+    employer_path = "{}/{}".format(output_folder, employer_file_name)
+    employee_path = "{}/{}".format(output_folder, employee_file_name)
+
+    employer_file = massgov.pfml.util.files.open_stream(employer_path, "w")
+    employee_file = massgov.pfml.util.files.open_stream(employee_path, "w")
 
     generate(employer_count, employer_file, employee_file)
 
     employer_file.close()
     employee_file.close()
+
+    logger.info(
+        "DONE: output files %s, %s", employer_path, employee_path,
+    )
 
 
 # == main processor ==
@@ -121,12 +131,6 @@ def generate(
             employee_file,
             employer_count_random_pool,
         )
-
-    logger.info(
-        "DONE: Please check files in generated_files folder: %s and %s",
-        employer_file_name,
-        employee_file_name,
-    )
 
 
 # == Employer ==
