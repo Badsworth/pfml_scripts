@@ -382,7 +382,7 @@ function getForgotPasswordErrorInfo(error, t) {
   let message;
 
   if (error.code === "NotAuthorizedException") {
-    message = getNotAuthorizedExceptionMessage(error, t);
+    message = getNotAuthorizedExceptionMessage(error, t, "forgotPassword");
   } else if (error.code === "CodeDeliveryFailureException") {
     message = t("errors.auth.codeDeliveryFailure");
   } else if (error.code === "InvalidParameterException") {
@@ -413,7 +413,7 @@ function getForgotPasswordErrorInfo(error, t) {
 function getLoginErrorInfo(error, t) {
   let message;
   if (error.code === "NotAuthorizedException") {
-    message = getNotAuthorizedExceptionMessage(error, t);
+    message = getNotAuthorizedExceptionMessage(error, t, "login");
   } else if (error.code === "InvalidParameterException") {
     // This error triggers when password is empty
     // This code should be unreachable if validation works properly
@@ -535,9 +535,10 @@ function getInvalidPasswordExceptionMessage(error, t) {
  * so our messaging needs to reflect this nuance.
  * @param {{ code: string, message: string }} error Error object that was thrown by Amplify
  * @param {Function} t Localization method
+ * @param {string} context - i18next context, representing the action that resulted in this exception (e.g login)
  * @returns {string}
  */
-function getNotAuthorizedExceptionMessage(error, t) {
+function getNotAuthorizedExceptionMessage(error, t, context) {
   // These are the specific Cognito errors that can occur:
   //
   // 1. When password or username is invalid (error is same for either scenario)
@@ -553,10 +554,9 @@ function getNotAuthorizedExceptionMessage(error, t) {
   // message: "Password attempts exceeded"
 
   if (error.message.match(/Request not allowed due to security reasons/)) {
-    // This error may trigger if the password is incorrect, or if the
-    // risk score of the login attempt resulted in the attempt being Blocked
+    // The risk score of the request resulted in the attempt being Blocked
     // by our Cognito Advanced Security settings
-    return t("errors.auth.suspiciousLoginBlocked");
+    return t("errors.auth.attemptBlocked", { context });
   }
   if (error.message.match(/Password attempts exceeded/)) {
     return t("errors.auth.attemptsLimitExceeded", { context: "login" });

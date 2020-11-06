@@ -20,6 +20,10 @@ const chars = {
 
 const errors = {
   auth: {
+    attemptBlocked:
+      "Your authentication attempt has been blocked due to suspicious activity. We sent you an email to confirm your identity. Check your email and then follow the instructions to try again. If this continues to occur, call the contact center at $t(shared.contactCenterPhoneNumber).",
+    attemptBlocked_login:
+      "Your log in attempt was blocked due to suspicious activity. You will need to reset your password to continue. We've also sent you an email to confirm your identity.",
     attemptsLimitExceeded_forgotPassword:
       "Your account is temporarily locked because of too many forget password requests. Wait 15 minutes before trying again.",
     attemptsLimitExceeded_login:
@@ -46,8 +50,6 @@ const errors = {
     passwordErrors:
       "Your password does not meet the requirements. Please check the requirements and try again.",
     passwordRequired: "Enter your password",
-    suspiciousLoginBlocked:
-      "Your authentication attempt has been blocked due to suspicious activity. We sent you an email to confirm your identity. Check your email and then follow the instructions to try again. If this continues to occur, call the contact center at $t(shared.contactCenterPhoneNumber).",
     userNotConfirmed:
       "Confirm your account by following the instructions in the verification email sent to your inbox.",
     userNotFound: "Incorrect email",
