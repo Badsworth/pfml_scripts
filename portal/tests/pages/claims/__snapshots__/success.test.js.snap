@@ -8,9 +8,28 @@ exports[`Success renders content tailored to Family (Bonding Adoption) 1`] = `
   <div
     className="measure-6"
   >
-    <Lead>
-      We are reviewing your application. You can check the status of your application anytime in the portal.
-    </Lead>
+    <Heading
+      level="2"
+    >
+      What happens next
+    </Heading>
+    <Trans
+      components={
+        Object {
+          "li": <li />,
+          "ul": <ul
+            className="usa-list"
+          />,
+        }
+      }
+      i18nKey="pages.claimsSuccess.adjudicationProcess"
+      tOptions={
+        Object {
+          "context": "leaveNotInFuture",
+        }
+      }
+    />
+    <UserFeedback />
     <ButtonLink
       className="margin-top-4"
       href="/applications"
@@ -19,6 +38,33 @@ exports[`Success renders content tailored to Family (Bonding Adoption) 1`] = `
     </ButtonLink>
   </div>
 </Fragment>
+`;
+
+exports[`Success renders content tailored to Family (Bonding Adoption) 2`] = `
+<ul
+  className="usa-list"
+  key="0"
+>
+   
+  <li
+    key="1"
+  >
+    Your leave application will be sent to your employer for review. They have 10 days to provide feedback.
+  </li>
+   
+  <li
+    key="3"
+  >
+    Once your employer has reviewed your application, we’ll confirm your eligibility and make sure that your documents are valid.
+  </li>
+   
+  <li
+    key="5"
+  >
+    After we’ve made a decision, you’ll receive an email notification with a link to details about the decision.
+  </li>
+   
+</ul>
 `;
 
 exports[`Success renders content tailored to Family (Bonding Future Adoption) 1`] = `
@@ -30,17 +76,32 @@ exports[`Success renders content tailored to Family (Bonding Future Adoption) 1`
     className="measure-6"
   >
     <Alert
-      heading="You will need to provide proof of your child’s placement"
       state="warning"
     >
-      After your child arrives in your home, you will need to upload, mail, or fax a document that shows your child’s placement date. We will begin reviewing your application now, but we can’t approve it until we have this proof.
+      After your child arrives in your home, you will need to upload, mail, or fax a document that shows your child’s placement date.
     </Alert>
-    <Lead>
-      Please contact the DFML Contact Center at (833) 344‑7365 if you need to change your leave dates because your child arrived at a date earlier or later than you put in your application.
-    </Lead>
-    <Lead>
-      We are reviewing your application. You can check the status of your application anytime in the portal.
-    </Lead>
+    <Heading
+      level="2"
+    >
+      What happens next
+    </Heading>
+    <Trans
+      components={
+        Object {
+          "li": <li />,
+          "ul": <ul
+            className="usa-list"
+          />,
+        }
+      }
+      i18nKey="pages.claimsSuccess.adjudicationProcess"
+      tOptions={
+        Object {
+          "context": "bondingAdoptFosterFuture",
+        }
+      }
+    />
+    <UserFeedback />
     <ButtonLink
       className="margin-top-4"
       href="/applications"
@@ -49,6 +110,38 @@ exports[`Success renders content tailored to Family (Bonding Future Adoption) 1`
     </ButtonLink>
   </div>
 </Fragment>
+`;
+
+exports[`Success renders content tailored to Family (Bonding Future Adoption) 2`] = `
+<ul
+  className="usa-list"
+  key="0"
+>
+   
+  <li
+    key="1"
+  >
+    Your leave application will be sent to your employer for review. They have 10 days to provide feedback.
+  </li>
+   
+  <li
+    key="3"
+  >
+    Once you’ve provided proof of placement, we’ll confirm your eligibility and make sure that your documents are valid.
+  </li>
+   
+  <li
+    key="5"
+  >
+    After we’ve made a decision, you’ll receive an email notification with a link to details about the decision.
+  </li>
+   
+  <li
+    key="7"
+  >
+    If you need to change your leave dates because your child arrived in your home earlier or later than expected, you must call the DFML Contact Center at (833) 344‑7365.
+  </li>
+</ul>
 `;
 
 exports[`Success renders content tailored to Family (Bonding Future Newborn) 1`] = `
@@ -60,29 +153,44 @@ exports[`Success renders content tailored to Family (Bonding Future Newborn) 1`]
     className="measure-6"
   >
     <Alert
-      heading="You will need to provide proof of your child’s birthdate"
       state="warning"
     >
-      You will need to upload, mail, or fax a document that shows your child’s birthdate. We will begin reviewing your application now, but we can't approve it until we have this proof.
+      After your child is born, you will need to upload, mail, or fax a document that shows your child’s birthdate.
     </Alert>
-    <Lead>
-      Please contact the DFML Contact Center at (833) 344‑7365 if you need to change your leave dates because your child was born at a date earlier or later than you put in your application.
-    </Lead>
-    <Lead>
-      You can check the status of your application anytime in the portal.
-    </Lead>
+    <Heading
+      level="2"
+    >
+      What happens next
+    </Heading>
+    <Trans
+      components={
+        Object {
+          "li": <li />,
+          "ul": <ul
+            className="usa-list"
+          />,
+        }
+      }
+      i18nKey="pages.claimsSuccess.adjudicationProcess"
+      tOptions={
+        Object {
+          "context": "bondingNewbornFuture",
+        }
+      }
+    />
     <div
-      className="border-top-2px border-base-lighter padding-top-4 margin-top-4"
+      className="padding-top-2 margin-top-2"
     >
       <Heading
         level="2"
       >
         If you gave birth, you may also be eligible for paid medical leave.
       </Heading>
-      <Lead>
+      <p>
         You can take up to 20 weeks of paid medical leave if you're unable to work during your pregnancy and to recover from childbirth. Your health care provider determines how much medical leave you will need. You must create a separate leave application if you need to take medical leave.
-      </Lead>
+      </p>
     </div>
+    <UserFeedback />
     <ButtonLink
       className="margin-top-4"
       href="/applications"
@@ -91,6 +199,38 @@ exports[`Success renders content tailored to Family (Bonding Future Newborn) 1`]
     </ButtonLink>
   </div>
 </Fragment>
+`;
+
+exports[`Success renders content tailored to Family (Bonding Future Newborn) 2`] = `
+<ul
+  className="usa-list"
+  key="0"
+>
+   
+  <li
+    key="1"
+  >
+    Your leave application will be sent to your employer for review. They have 10 days to provide feedback.
+  </li>
+   
+  <li
+    key="3"
+  >
+    Once you’ve provided proof of birth, we’ll confirm your eligibility and make sure that your documents are valid.
+  </li>
+   
+  <li
+    key="5"
+  >
+    After we’ve made a decision, you’ll receive an email notification with a link to details about the decision.
+  </li>
+   
+  <li
+    key="7"
+  >
+    If you need to change your leave dates because your child was born earlier or later than expected, you must call the DFML Contact Center at (833) 344‑7365.
+  </li>
+</ul>
 `;
 
 exports[`Success renders content tailored to Family (Bonding Newborn) 1`] = `
@@ -101,21 +241,40 @@ exports[`Success renders content tailored to Family (Bonding Newborn) 1`] = `
   <div
     className="measure-6"
   >
-    <Lead>
-      We are reviewing your application. You can check the status of your application anytime in the portal.
-    </Lead>
+    <Heading
+      level="2"
+    >
+      What happens next
+    </Heading>
+    <Trans
+      components={
+        Object {
+          "li": <li />,
+          "ul": <ul
+            className="usa-list"
+          />,
+        }
+      }
+      i18nKey="pages.claimsSuccess.adjudicationProcess"
+      tOptions={
+        Object {
+          "context": "leaveNotInFuture",
+        }
+      }
+    />
     <div
-      className="border-top-2px border-base-lighter padding-top-4 margin-top-4"
+      className="padding-top-2 margin-top-2"
     >
       <Heading
         level="2"
       >
         If you gave birth, you may also be eligible for paid medical leave.
       </Heading>
-      <Lead>
+      <p>
         You can take up to 20 weeks of paid medical leave if you're unable to work during your pregnancy and to recover from childbirth. Your health care provider determines how much medical leave you will need. You must create a separate leave application if you need to take medical leave.
-      </Lead>
+      </p>
     </div>
+    <UserFeedback />
     <ButtonLink
       className="margin-top-4"
       href="/applications"
@@ -124,6 +283,33 @@ exports[`Success renders content tailored to Family (Bonding Newborn) 1`] = `
     </ButtonLink>
   </div>
 </Fragment>
+`;
+
+exports[`Success renders content tailored to Family (Bonding Newborn) 2`] = `
+<ul
+  className="usa-list"
+  key="0"
+>
+   
+  <li
+    key="1"
+  >
+    Your leave application will be sent to your employer for review. They have 10 days to provide feedback.
+  </li>
+   
+  <li
+    key="3"
+  >
+    Once your employer has reviewed your application, we’ll confirm your eligibility and make sure that your documents are valid.
+  </li>
+   
+  <li
+    key="5"
+  >
+    After we’ve made a decision, you’ll receive an email notification with a link to details about the decision.
+  </li>
+   
+</ul>
 `;
 
 exports[`Success renders content tailored to Medical (Not pregnant) 1`] = `
@@ -134,9 +320,28 @@ exports[`Success renders content tailored to Medical (Not pregnant) 1`] = `
   <div
     className="measure-6"
   >
-    <Lead>
-      We are reviewing your application. You can check the status of your application anytime in the portal.
-    </Lead>
+    <Heading
+      level="2"
+    >
+      What happens next
+    </Heading>
+    <Trans
+      components={
+        Object {
+          "li": <li />,
+          "ul": <ul
+            className="usa-list"
+          />,
+        }
+      }
+      i18nKey="pages.claimsSuccess.adjudicationProcess"
+      tOptions={
+        Object {
+          "context": "leaveNotInFuture",
+        }
+      }
+    />
+    <UserFeedback />
     <ButtonLink
       className="margin-top-4"
       href="/applications"
@@ -147,6 +352,33 @@ exports[`Success renders content tailored to Medical (Not pregnant) 1`] = `
 </Fragment>
 `;
 
+exports[`Success renders content tailored to Medical (Not pregnant) 2`] = `
+<ul
+  className="usa-list"
+  key="0"
+>
+   
+  <li
+    key="1"
+  >
+    Your leave application will be sent to your employer for review. They have 10 days to provide feedback.
+  </li>
+   
+  <li
+    key="3"
+  >
+    Once your employer has reviewed your application, we’ll confirm your eligibility and make sure that your documents are valid.
+  </li>
+   
+  <li
+    key="5"
+  >
+    After we’ve made a decision, you’ll receive an email notification with a link to details about the decision.
+  </li>
+   
+</ul>
+`;
+
 exports[`Success renders content tailored to Medical (Pregnant) 1`] = `
 <Fragment>
   <Title>
@@ -155,21 +387,40 @@ exports[`Success renders content tailored to Medical (Pregnant) 1`] = `
   <div
     className="measure-6"
   >
-    <Lead>
-      We are reviewing your application. You can check the status of your application anytime in the portal.
-    </Lead>
+    <Heading
+      level="2"
+    >
+      What happens next
+    </Heading>
+    <Trans
+      components={
+        Object {
+          "li": <li />,
+          "ul": <ul
+            className="usa-list"
+          />,
+        }
+      }
+      i18nKey="pages.claimsSuccess.adjudicationProcess"
+      tOptions={
+        Object {
+          "context": "leaveNotInFuture",
+        }
+      }
+    />
     <div
-      className="border-top-2px border-base-lighter padding-top-4 margin-top-4"
+      className="padding-top-2 margin-top-2"
     >
       <Heading
         level="2"
       >
         You can also apply for paid family leave.
       </Heading>
-      <Lead>
+      <p>
         You can take up to 12 weeks of paid family leave to bond with your child after your medical leave ends. You do not need to take this leave all at once. You must create a separate leave application if you want to take family leave.
-      </Lead>
+      </p>
     </div>
+    <UserFeedback />
     <ButtonLink
       className="margin-top-4"
       href="/applications"
@@ -178,6 +429,33 @@ exports[`Success renders content tailored to Medical (Pregnant) 1`] = `
     </ButtonLink>
   </div>
 </Fragment>
+`;
+
+exports[`Success renders content tailored to Medical (Pregnant) 2`] = `
+<ul
+  className="usa-list"
+  key="0"
+>
+   
+  <li
+    key="1"
+  >
+    Your leave application will be sent to your employer for review. They have 10 days to provide feedback.
+  </li>
+   
+  <li
+    key="3"
+  >
+    Once your employer has reviewed your application, we’ll confirm your eligibility and make sure that your documents are valid.
+  </li>
+   
+  <li
+    key="5"
+  >
+    After we’ve made a decision, you’ll receive an email notification with a link to details about the decision.
+  </li>
+   
+</ul>
 `;
 
 exports[`Success renders content tailored to Medical (Pregnant, applying in advance) 1`] = `
@@ -189,26 +467,44 @@ exports[`Success renders content tailored to Medical (Pregnant, applying in adva
     className="measure-6"
   >
     <Alert
-      heading="Call us when your medical leave begins."
       state="warning"
     >
-      We’ll start reviewing your application now, but we can’t approve it until your medical leave begins. Call the DFML Contact Center at (833) 344‑7365 when you go out on leave.
+      You must call the DFML Contact Center at (833) 344‑7365 once your medical leave begins. We can’t approve your application until we hear from you.
     </Alert>
-    <Lead>
-      You can check the status of your application anytime in the portal.
-    </Lead>
+    <Heading
+      level="2"
+    >
+      What happens next
+    </Heading>
+    <Trans
+      components={
+        Object {
+          "li": <li />,
+          "ul": <ul
+            className="usa-list"
+          />,
+        }
+      }
+      i18nKey="pages.claimsSuccess.adjudicationProcess"
+      tOptions={
+        Object {
+          "context": "medicalPregnantFuture",
+        }
+      }
+    />
     <div
-      className="border-top-2px border-base-lighter padding-top-4 margin-top-4"
+      className="padding-top-2 margin-top-2"
     >
       <Heading
         level="2"
       >
         You can also apply for paid family leave.
       </Heading>
-      <Lead>
+      <p>
         You can take up to 12 weeks of paid family leave to bond with your child after your medical leave ends. You do not need to take this leave all at once. You must create a separate leave application if you want to take family leave.
-      </Lead>
+      </p>
     </div>
+    <UserFeedback />
     <ButtonLink
       className="margin-top-4"
       href="/applications"
@@ -217,4 +513,31 @@ exports[`Success renders content tailored to Medical (Pregnant, applying in adva
     </ButtonLink>
   </div>
 </Fragment>
+`;
+
+exports[`Success renders content tailored to Medical (Pregnant, applying in advance) 2`] = `
+<ul
+  className="usa-list"
+  key="0"
+>
+   
+  <li
+    key="1"
+  >
+    Your leave application will be sent to your employer for review. They have 10 days to provide feedback.
+  </li>
+   
+  <li
+    key="3"
+  >
+    When your leave begins, call the DFML Contact Center at (833) 344‑7365 to tell us. Then we’ll confirm your eligibility and make sure that your documents are valid.
+  </li>
+   
+  <li
+    key="5"
+  >
+    After we’ve made a decision, you’ll receive an email notification with a link to details about the decision.
+  </li>
+   
+</ul>
 `;

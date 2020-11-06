@@ -10,7 +10,7 @@ describe("Success", () => {
    */
   const variations = {
     "Medical (Not pregnant)": new MockClaimBuilder()
-      .completed()
+      .continuous({ start_date: "2020-01-01" })
       .medicalLeaveReason()
       .create(),
     "Medical (Pregnant)": new MockClaimBuilder()
@@ -24,7 +24,7 @@ describe("Success", () => {
       .pregnant()
       .create(),
     "Family (Bonding Newborn)": new MockClaimBuilder()
-      .completed()
+      .continuous({ start_date: "2020-01-01" })
       .bondingBirthLeaveReason()
       .create(),
     "Family (Bonding Future Newborn)": new MockClaimBuilder()
@@ -32,7 +32,7 @@ describe("Success", () => {
       .bondingBirthLeaveReason(futureDate)
       .create(),
     "Family (Bonding Adoption)": new MockClaimBuilder()
-      .completed()
+      .continuous({ start_date: "2020-01-01" })
       .bondingAdoptionLeaveReason()
       .create(),
     "Family (Bonding Future Adoption)": new MockClaimBuilder()
@@ -49,6 +49,9 @@ describe("Success", () => {
       });
 
       expect(wrapper).toMatchSnapshot();
+
+      const transElements = wrapper.find("Trans");
+      transElements.forEach((el) => expect(el.dive()).toMatchSnapshot());
     });
   });
 });

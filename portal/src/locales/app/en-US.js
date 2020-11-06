@@ -1031,10 +1031,15 @@ const pages = {
     title: "$t(shared.claimsVerifyIdTitle)",
   },
   claimsSuccess: {
-    callToChangeDates_bondingAdoptFosterFuture:
-      "Please contact the DFML Contact Center at $t(shared.contactCenterPhoneNumber) if you need to change your leave dates because your child arrived at a date earlier or later than you put in your application.",
-    callToChangeDates_bondingNewbornFuture:
-      "Please contact the DFML Contact Center at $t(shared.contactCenterPhoneNumber) if you need to change your leave dates because your child was born at a date earlier or later than you put in your application.",
+    adjudicationProcess:
+      "<ul> <li>Your leave application will be sent to your employer for review. They have 10 days to provide feedback.</li> <li>Once your employer has reviewed your application, we’ll confirm your eligibility and make sure that your documents are valid.</li> <li>After we’ve made a decision, you’ll receive an email notification with a link to details about the decision.</li> </ul>",
+    adjudicationProcessHeading: "What happens next",
+    adjudicationProcess_bondingAdoptFosterFuture:
+      "<ul> <li>Your leave application will be sent to your employer for review. They have 10 days to provide feedback.</li> <li>Once you’ve provided proof of placement, we’ll confirm your eligibility and make sure that your documents are valid.</li> <li>After we’ve made a decision, you’ll receive an email notification with a link to details about the decision.</li> <li>If you need to change your leave dates because your child arrived in your home earlier or later than expected, you must call the DFML Contact Center at $t(shared.contactCenterPhoneNumber).</li></ul>",
+    adjudicationProcess_bondingNewbornFuture:
+      "<ul> <li>Your leave application will be sent to your employer for review. They have 10 days to provide feedback.</li> <li>Once you’ve provided proof of birth, we’ll confirm your eligibility and make sure that your documents are valid.</li> <li>After we’ve made a decision, you’ll receive an email notification with a link to details about the decision.</li> <li>If you need to change your leave dates because your child was born earlier or later than expected, you must call the DFML Contact Center at $t(shared.contactCenterPhoneNumber).</li></ul>",
+    adjudicationProcess_medicalPregnantFuture:
+      "<ul> <li>Your leave application will be sent to your employer for review. They have 10 days to provide feedback.</li> <li>When your leave begins, call the DFML Contact Center at $t(shared.contactCenterPhoneNumber) to tell us. Then we’ll confirm your eligibility and make sure that your documents are valid.</li> <li>After we’ve made a decision, you’ll receive an email notification with a link to details about the decision.</li> </ul>",
     exitLink: "Return to applications",
     familyLeaveToBond:
       "You can take up to 12 weeks of paid family leave to bond with your child after your medical leave ends. You do not need to take this leave all at once. You must create a separate leave application if you want to take family leave.",
@@ -1043,22 +1048,12 @@ const pages = {
       "You can take up to 20 weeks of paid medical leave if you're unable to work during your pregnancy and to recover from childbirth. Your health care provider determines how much medical leave you will need. You must create a separate leave application if you need to take medical leave.",
     medicalLeaveAfterBirthHeading:
       "If you gave birth, you may also be eligible for paid medical leave.",
-    proofRequiredHeading_bondingAdoptFosterFuture:
-      "You will need to provide proof of your child’s placement",
-    proofRequiredHeading_bondingNewbornFuture:
-      "You will need to provide proof of your child’s birthdate",
-    proofRequiredHeading_medicalPregnantFuture:
-      "Call us when your medical leave begins.",
     proofRequired_bondingAdoptFosterFuture:
-      "After your child arrives in your home, you will need to upload, mail, or fax a document that shows your child’s placement date. We will begin reviewing your application now, but we can’t approve it until we have this proof.",
+      "After your child arrives in your home, you will need to upload, mail, or fax a document that shows your child’s placement date.",
     proofRequired_bondingNewbornFuture:
-      "You will need to upload, mail, or fax a document that shows your child’s birthdate. We will begin reviewing your application now, but we can't approve it until we have this proof.",
+      "After your child is born, you will need to upload, mail, or fax a document that shows your child’s birthdate.",
     proofRequired_medicalPregnantFuture:
-      "We’ll start reviewing your application now, but we can’t approve it until your medical leave begins. Call the DFML Contact Center at $t(shared.contactCenterPhoneNumber) when you go out on leave.",
-    reviewProgressAndStatus:
-      "We are reviewing your application. You can check the status of your application anytime in the$t(chars.nbsp)portal.",
-    reviewProgressAndStatus_noReview:
-      "You can check the status of your application anytime in the$t(chars.nbsp)portal.",
+      "You must call the DFML Contact Center at $t(shared.contactCenterPhoneNumber) once your medical leave begins. We can’t approve your application until we hear from you.",
     title: "Your leave application was submitted successfully",
     title_bonding: "Your family leave application was submitted successfully",
     title_medical: "Your medical leave application was submitted successfully",

@@ -2,10 +2,11 @@ import Claim, { LeaveReason, ReasonQualifier } from "../../models/Claim";
 import Alert from "../../components/Alert";
 import ButtonLink from "../../components/ButtonLink";
 import Heading from "../../components/Heading";
-import Lead from "../../components/Lead";
 import PropTypes from "prop-types";
 import React from "react";
 import Title from "../../components/Title";
+import { Trans } from "react-i18next";
+import UserFeedback from "../../components/UserFeedback";
 import findKeyByValue from "../../utils/findKeyByValue";
 import { get } from "lodash";
 import routes from "../../routes";
@@ -26,8 +27,7 @@ export const Success = (props) => {
     "leave_details.pregnant_or_recent_birth"
   );
 
-  const secondaryContentContainerClasses =
-    "border-top-2px border-base-lighter padding-top-4 margin-top-4";
+  const secondaryContentContainerClasses = "padding-top-2 margin-top-2";
 
   /**
    * This page renders different content for a handful of different scenarios.
@@ -41,8 +41,6 @@ export const Success = (props) => {
     pregnant_or_recent_birth
   ) {
     claimContext = "medicalPregnantFuture";
-  } else if (claim.isMedicalLeave && pregnant_or_recent_birth) {
-    claimContext = "medicalPregnant";
   } else if (
     claim.isChildDateInFuture &&
     reason_qualifier === ReasonQualifier.newBorn
@@ -54,11 +52,8 @@ export const Success = (props) => {
       reason_qualifier === ReasonQualifier.fosterCare)
   ) {
     claimContext = "bondingAdoptFosterFuture";
-  } else if (
-    claim.isBondingLeave &&
-    reason_qualifier === ReasonQualifier.newBorn
-  ) {
-    claimContext = "bondingNewborn";
+  } else {
+    claimContext = "leaveNotInFuture";
   }
 
   return (
@@ -70,60 +65,43 @@ export const Success = (props) => {
       </Title>
 
       <div className="measure-6">
-        {[
-          "bondingNewbornFuture",
-          "bondingAdoptFosterFuture",
-          "medicalPregnantFuture",
-        ].includes(claimContext) && (
-          <Alert
-            state="warning"
-            heading={t("pages.claimsSuccess.proofRequiredHeading", {
-              context: claimContext,
-            })}
-          >
+        {claimContext !== "leaveNotInFuture" && (
+          <Alert state="warning">
             {t("pages.claimsSuccess.proofRequired", { context: claimContext })}
           </Alert>
         )}
 
-        {["bondingNewbornFuture", "bondingAdoptFosterFuture"].includes(
-          claimContext
-        ) && (
-          <Lead>
-            {t("pages.claimsSuccess.callToChangeDates", {
-              context: claimContext,
-            })}
-          </Lead>
-        )}
+        <Heading level="2">
+          {t("pages.claimsSuccess.adjudicationProcessHeading")}
+        </Heading>
 
-        <Lead>
-          {t("pages.claimsSuccess.reviewProgressAndStatus", {
-            context: ["bondingNewbornFuture", "medicalPregnantFuture"].includes(
-              claimContext
-            )
-              ? "noReview"
-              : null,
-          })}
-        </Lead>
+        <Trans
+          i18nKey="pages.claimsSuccess.adjudicationProcess"
+          components={{ ul: <ul className="usa-list" />, li: <li /> }}
+          tOptions={{
+            context: claimContext,
+          }}
+        />
 
-        {["medicalPregnantFuture", "medicalPregnant"].includes(
-          claimContext
-        ) && (
+        {claim.isMedicalLeave && pregnant_or_recent_birth && (
           <div className={secondaryContentContainerClasses}>
             <Heading level="2">
               {t("pages.claimsSuccess.familyLeaveToBondHeading")}
             </Heading>
-            <Lead>{t("pages.claimsSuccess.familyLeaveToBond")}</Lead>
+            <p>{t("pages.claimsSuccess.familyLeaveToBond")}</p>
           </div>
         )}
 
-        {["bondingNewborn", "bondingNewbornFuture"].includes(claimContext) && (
+        {claim.isBondingLeave && reason_qualifier === ReasonQualifier.newBorn && (
           <div className={secondaryContentContainerClasses}>
             <Heading level="2">
               {t("pages.claimsSuccess.medicalLeaveAfterBirthHeading")}
             </Heading>
-            <Lead>{t("pages.claimsSuccess.medicalLeaveAfterBirth")}</Lead>
+            <p>{t("pages.claimsSuccess.medicalLeaveAfterBirth")}</p>
           </div>
         )}
+
+        <UserFeedback />
 
         <ButtonLink className="margin-top-4" href={routes.applications}>
           {t("pages.claimsSuccess.exitLink")}

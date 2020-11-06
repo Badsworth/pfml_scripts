@@ -11,7 +11,7 @@ const UserFeedback = () => {
   const { t } = useTranslation();
 
   return (
-    <div className="border-top-2px border-base-lighter margin-top-2 padding-top-2">
+    <div className="border-top-2px border-base-lighter margin-top-4 padding-top-4">
       <Heading level="2">{t("components.userFeedback.title")}</Heading>
       <p>{t("components.userFeedback.instructions")}</p>
       <p>
