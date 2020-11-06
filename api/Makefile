@@ -123,7 +123,7 @@ distclean: clean clean-node clean-venv
 	rm -rf dor_mock/
 
 dor-generate: ## Generate fake DOR data
-	$(PY_RUN_CMD) dor-generate --folder dor_mock --count 100 $(DECODE_LOG)
+	$(PY_RUN_CMD) dor-generate --folder dor_mock --count 1000 $(DECODE_LOG)
 
 dor-import: ## Run a DOR import using fake data (see dor-generate)
 	FOLDER_PATH=dor_mock $(PY_RUN_CMD) dor-import $(DECODE_LOG)

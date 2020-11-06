@@ -443,7 +443,7 @@ def test_parse_employer_file(test_fs_path):
 @pytest.mark.timeout(20)
 def test_e2e_parse_and_persist(test_db_session, dor_employer_lookups):
     # generate files for import
-    employer_count = 20
+    employer_count = 100
     employee_count = employer_count * generator.EMPLOYER_TO_EMPLOYEE_RATIO
 
     employer_file_path = get_temp_file_path()
@@ -452,7 +452,7 @@ def test_e2e_parse_and_persist(test_db_session, dor_employer_lookups):
     employer_file = open(employer_file_path, "w")
     employee_file = open(employee_file_path, "w")
 
-    generator.process(employer_count, employer_file, employee_file, [1])
+    generator.generate(employer_count, employer_file, employee_file, [1])
     employer_file.close()
     employee_file.close()
 

@@ -2,32 +2,25 @@
 #
 # Generate fake DOR data.
 #
+# Run via `make dor-generate`.
+#
 
 import argparse
 import datetime as dt
 import decimal
 import os
 import random
-import sys
+import string
 from datetime import datetime, timedelta
 
 import faker
 
-# Running this module as a python command from the top level /api directory seems
-# to reset the path on load causing issues with local module imports.
-# Workaround is to force set the path to run directory (top level api folder)
-# See `api/lambdas/README.md` and `api/massgov/dor/importer/README.md` for running details.
-sys.path.insert(0, ".")  # noqa: E402
+import massgov.pfml.util.logging
+from massgov.pfml.util.datetime.quarter import Quarter
 
-import massgov.pfml.util.logging as logging  # noqa: E402 isort:skip
-from massgov.pfml.util.datetime.quarter import Quarter  # noqa: E402 isort:skip
-
-logger = logging.get_logger("massgov.pfml.dor.mock.generate")
-
-random.seed(1111)
+logger = massgov.pfml.util.logging.get_logger("massgov.pfml.dor.mock.generate")
 
 fake = faker.Faker()
-fake.seed_instance(2222)
 
 # To make the output of this script identical each time it runs, we use this date as the base of
 # various generated dates.
@@ -37,7 +30,7 @@ TWOPLACES = decimal.Decimal(10) ** -2
 
 parser = argparse.ArgumentParser(description="Generate fake DOR data")
 parser.add_argument(
-    "--count", type=int, default=100, help="Number of individuals to generate data for"
+    "--count", type=int, default=100, help="Number of employers to generate data for"
 )
 parser.add_argument(
     "--folder", type=str, default="generated_files", help="Output folder for generated files"
@@ -85,7 +78,7 @@ NO_EXEMPTION_DATE = dt.date(9999, 12, 31)
 
 def main():
     """DOR Mock File Generator"""
-    logging.init(__name__)
+    massgov.pfml.util.logging.init(__name__)
 
     args = parser.parse_args()
     employer_count = args.count
@@ -95,7 +88,7 @@ def main():
     employer_file = open("{}/{}".format(output_folder, employer_file_name), "w")
     employee_file = open("{}/{}".format(output_folder, employee_file_name), "w")
 
-    process(employer_count, employer_file, employee_file)
+    generate(employer_count, employer_file, employee_file)
 
     employer_file.close()
     employee_file.close()
@@ -104,21 +97,30 @@ def main():
 # == main processor ==
 
 
-def process(
+def generate(
     employer_count,
     employer_file,
     employee_file,
     employer_count_random_pool=EMPLOYER_COUNT_RANDOM_POOL,
 ):
-    # minimum of 4 employers
-    employee_count = employer_count * EMPLOYER_TO_EMPLOYEE_RATIO
-    if employer_count < 4:
-        employer_count = 4
+    if employer_count <= 0 or employer_count % 100 != 0:
+        raise RuntimeError("employer_count must be a multiple of 100")
 
-    employer_account_keys = process_employer_file(employer_count, employer_file, employee_file)
-    process_employee_file(
-        employee_count, employer_account_keys, employee_file, employer_count_random_pool
-    )
+    # Generate in chunks of 100 employers, followed by their employees. This ensures that whatever
+    # count we generate, employer M never changes and employee N never changes (including which
+    # employers each employee works for).
+    #
+    # (If we generated all employers then all employees, the possible employer_account_keys for an
+    # employee would change depending on the employer_count.)
+    for chunk in range(0, employer_count, 100):
+        employer_account_keys = generate_employer_file(chunk + 1, 100, employer_file, employee_file)
+        generate_employee_file(
+            chunk * EMPLOYER_TO_EMPLOYEE_RATIO + 1,
+            100 * EMPLOYER_TO_EMPLOYEE_RATIO,
+            employer_account_keys,
+            employee_file,
+            employer_count_random_pool,
+        )
 
     logger.info(
         "DONE: Please check files in generated_files folder: %s and %s",
@@ -130,22 +132,20 @@ def process(
 # == Employer ==
 
 
-def process_employer_file(employer_count, employers_file, employees_file):
+def generate_employer_file(base_id, employer_count, employers_file, employees_file):
     """Generate employers, print rows to file"""
     employer_account_keys = []
 
-    def on_employer(employer, employer_wage_rows):
-        populate_employee_row(employer, employers_file)
+    for employer, employer_wage_rows in generate_employers(base_id, employer_count):
+        write_employee_row(employer, employers_file)
         for employer_wage_row in employer_wage_rows:
-            populate_employer_wage_row(employer_wage_row, employees_file)
+            write_employer_wage_row(employer_wage_row, employees_file)
         employer_account_keys.append(employer["account_key"])
-
-    generate_employers(employer_count, on_employer)
 
     return employer_account_keys
 
 
-def populate_employee_row(row, employers_file):
+def write_employee_row(row, employers_file):
     line = "{}{:255}{:14}{:255}{:30}{}{}{}{:255}{}{}{}{}{}\n".format(
         row["account_key"],
         row["employer_name"],
@@ -165,7 +165,7 @@ def populate_employee_row(row, employers_file):
     employers_file.write(line)
 
 
-def populate_employer_wage_row(employer_wage_row, employer_wage_row_file):
+def write_employer_wage_row(employer_wage_row, employer_wage_row_file):
     line = "{}{}{!s}{:255}{:14}{}{}{}\n".format(
         "A",
         employer_wage_row["account_key"],
@@ -179,119 +179,139 @@ def populate_employer_wage_row(employer_wage_row, employer_wage_row_file):
     employer_wage_row_file.write(line)
 
 
-def generate_employers(employer_count, on_employer):
+def generate_employers(base_id, employer_count):
     """Generate employer rows"""
     # TODO use better id generators to match DOR format when available
-    account_key_base = 1
-
     count = 0
 
     logger.info("Generating employer information - count: %i", employer_count)
 
-    fein_provider = 100000001
-    for _i in range(employer_count):
-
+    for index in range(employer_count):
         if count > 0 and (count % 1000) == 0:
             logger.info("Generating employers, current count: %i", count)
 
-        # employer details
-        account_key = str(account_key_base).rjust(11, "0")
-        account_key_base += 1
-
-        fein = str(fein_provider)
-        fein_provider = fein_provider + 1
-
-        employer_name = fake.company()
-        employer_address_street = fake.street_address()
-        employer_address_city = fake.city()
-        employer_address_state = fake.state_abbr()
-        employer_address_zip = fake.zipcode_plus4().replace("-", "")
-        employer_address_country = fake.country_code(representation="alpha-3")
-        employer_dba = employer_name
-        if random.random() < 0.2:
-            employer_dba = fake.company()
-        family_exemption = random.choice((True, False))
-        medical_exemption = random.choice((True, False))
-
-        exemption_commence_date = NO_EXEMPTION_DATE
-        exemption_cease_date = NO_EXEMPTION_DATE
-        has_exemption = random.choice((True, False))
-        if has_exemption:
-            commence_days_before = random.randrange(1, 365)  # up to one year
-            exemption_commence_date = get_date_days_before(SIMULATED_TODAY, commence_days_before)
-            exemption_cease_date = get_date_days_after(
-                exemption_commence_date, 365
-            )  # lasts for a year
-
-        updated_date = get_date_days_before(SIMULATED_TODAY, random.randrange(1, 90))
-
-        # Generate an employer row for each quarter
-        # TODO randomize subset of quarters
-        employer = {
-            "account_key": account_key,
-            "employer_name": employer_name,
-            "fein": fein,
-            "employer_address_street": employer_address_street,
-            "employer_address_city": employer_address_city,
-            "employer_address_state": employer_address_state,
-            "employer_address_zip": employer_address_zip,
-            "employer_address_country": employer_address_country,
-            "employer_dba": employer_dba,
-            "family_exemption": family_exemption,
-            "medical_exemption": medical_exemption,
-            "exemption_commence_date": exemption_commence_date,
-            "exemption_cease_date": exemption_cease_date,
-            "updated_date": updated_date,
-        }
-
-        employer_wage_rows = []
-
-        for quarter in QUARTERS:
-            # is the quarter information amended
-            amended_flag = random.choice((True, False))
-
-            received_date = get_date_days_after(quarter.as_date(), random.randrange(1, 90))
-            updated_date = get_date_days_before(SIMULATED_TODAY, random.randrange(1, 90))
-
-            # generate an employer specific quarter row
-            employer_row = {
-                "account_key": employer["account_key"],
-                "filing_period": quarter,
-                "employer_name": employer["employer_name"],
-                "employer_fein": employer["fein"],
-                "amended_flag": amended_flag,
-                "received_date": received_date,
-                "updated_date": updated_date,
-            }
-            employer_wage_rows.append(employer_row)
-
-        on_employer(employer, employer_wage_rows)
+        yield generate_single_employer(base_id + index)
 
         count += 1
 
     logger.info("Generated employers total: %i", count)
 
 
+def generate_single_employer(employer_generate_id):
+    """Generate a single employer.
+
+    This is intended to always generate the same fake values for a given employer_generate_id.
+    """
+    fake.seed_instance(employer_generate_id)
+    random.seed(employer_generate_id)
+
+    # employer details
+    account_key = str(employer_generate_id).rjust(11, "0")
+    fein = str(100000000 + employer_generate_id)
+
+    employer_name = fake.company()
+
+    (
+        employer_address_country,
+        employer_address_state,
+        employer_address_city,
+        employer_address_street,
+        employer_address_zip,
+    ) = generate_fake_address()
+
+    employer_dba = employer_name
+    if random.random() < 0.2:
+        employer_dba = fake.company()
+
+    family_exemption = fake.boolean()
+    medical_exemption = fake.boolean()
+    exemption_commence_date = NO_EXEMPTION_DATE
+    exemption_cease_date = NO_EXEMPTION_DATE
+    has_exemption = fake.boolean()
+    if has_exemption:
+        commence_days_before = random.randrange(1, 365)  # up to one year
+        exemption_commence_date = get_date_days_before(SIMULATED_TODAY, commence_days_before)
+        exemption_cease_date = get_date_days_after(exemption_commence_date, 365)  # lasts for a year
+
+    updated_date = get_date_days_before(SIMULATED_TODAY, random.randrange(1, 90))
+
+    # Generate an employer row for each quarter
+    # TODO randomize subset of quarters
+    employer = {
+        "account_key": account_key,
+        "employer_name": employer_name,
+        "fein": fein,
+        "employer_address_street": employer_address_street,
+        "employer_address_city": employer_address_city,
+        "employer_address_state": employer_address_state,
+        "employer_address_zip": employer_address_zip,
+        "employer_address_country": employer_address_country,
+        "employer_dba": employer_dba,
+        "family_exemption": family_exemption,
+        "medical_exemption": medical_exemption,
+        "exemption_commence_date": exemption_commence_date,
+        "exemption_cease_date": exemption_cease_date,
+        "updated_date": updated_date,
+    }
+
+    employer_wage_rows = []
+    for quarter in QUARTERS:
+        # is the quarter information amended
+        amended_flag = fake.boolean()
+
+        received_date = get_date_days_after(quarter.as_date(), random.randrange(1, 90))
+        updated_date = get_date_days_before(SIMULATED_TODAY, random.randrange(1, 90))
+
+        # generate an employer specific quarter row
+        employer_row = {
+            "account_key": employer["account_key"],
+            "filing_period": quarter,
+            "employer_name": employer["employer_name"],
+            "employer_fein": employer["fein"],
+            "amended_flag": amended_flag,
+            "received_date": received_date,
+            "updated_date": updated_date,
+        }
+        employer_wage_rows.append(employer_row)
+
+    return employer, employer_wage_rows
+
+
+def generate_fake_address():
+    """Generate a fake address."""
+    street = fake.street_address()
+    city = fake.city()
+    if random.random() < 0.05:
+        # Small chance of a non-USA address.
+        country = fake.country_code(representation="alpha-3")
+        state = fake.lexify("??", letters=string.ascii_uppercase)
+        postal_code = fake.bothify("??## #?? ", letters=string.ascii_uppercase)
+    else:
+        country = "USA"
+        state = fake.state_abbr()
+        postal_code = fake.zipcode_plus4().replace("-", "")
+
+    return country, state, city, street, postal_code
+
+
 # == Employee ==
 
 
-def process_employee_file(
+def generate_employee_file(
+    base_id,
     employee_count,
     employer_account_keys,
     employees_file,
     employer_count_random_pool=EMPLOYER_COUNT_RANDOM_POOL,
 ):
     """Generate employees rows, print rows to file"""
-
-    def on_employee(employee):
-        populate_employee_line(employee, employees_file)
-
-    generate_employee_employer_quarterly_wage_rows(
-        employee_count, employer_account_keys, on_employee, employer_count_random_pool
-    )
+    for employee in generate_employee_employer_quarterly_wage_rows(
+        base_id, employee_count, employer_account_keys, employer_count_random_pool
+    ):
+        write_employee_line(employee, employees_file)
 
 
-def populate_employee_line(employee_wage_info, employees_file):
+def write_employee_line(employee_wage_info, employees_file):
     line = "{}{}{!s}{:255}{:255}{}{}{}{:20.2f}{:20.2f}{:20.2f}{:20.2f}{:20.2f}{:20.2f}\n".format(
         "B",
         employee_wage_info["account_key"],
@@ -312,9 +332,9 @@ def populate_employee_line(employee_wage_info, employees_file):
 
 
 def generate_employee_employer_quarterly_wage_rows(
+    base_id,
     employee_count,
     employer_account_keys,
-    on_employee,
     employer_count_random_pool=EMPLOYER_COUNT_RANDOM_POOL,
 ):
     """Generate employee and employer quarterly wage information rows"""
@@ -324,70 +344,81 @@ def generate_employee_employer_quarterly_wage_rows(
     count = 0
 
     # for the number of employees we want to generate
-    ssn_provider = 250000001
-    for _i in range(employee_count):
-        # create employee details
-        first_name = fake.first_name()
-        last_name = fake.last_name()
+    for index in range(employee_count):
+        yield from generate_single_employee(
+            base_id + index, employer_account_keys, employer_count_random_pool
+        )
 
-        ssn = str(ssn_provider)
-        ssn_provider = ssn_provider + 1
-
-        # randomly pick employers by random count
-        employer_count = random.choice(employer_count_random_pool)
-        employer_account_keys_for_employee = random.sample(employer_account_keys, employer_count)
-
+        count += 1
         if count > 0 and (count % 1000) == 0:
             logger.info("Generating employee rows, current employee count: %i", count)
 
-        count += 1
-
-        # for each employer account key randomly chosen for an employee
-        for account_key in employer_account_keys_for_employee:
-
-            # information about the employees classification with this employer
-            independent_contractor = random.choice((True, False))
-            opt_in = random.choice((True, False))
-
-            # initial quarterly wage
-            qtr_wages = decimal.Decimal(random.randrange(6000000)) / 100
-
-            # which quarters to generate?
-            start_quarter = random.choice(QUARTERS)
-            quarters = start_quarter.series(random.randint(1, 8))
-
-            # generate information for the selected quarters:
-            ytd_wages = decimal.Decimal(0)
-            for quarter in quarters:
-                # generate the employee details and quarter wage informatino row
-                if quarter.quarter == 1:
-                    ytd_wages = decimal.Decimal(0)
-                ytd_wages += qtr_wages
-                contribution = Contribution(qtr_wages)
-
-                employee = {
-                    "account_key": account_key,
-                    "filing_period": quarter,
-                    "employee_first_name": first_name,
-                    "employee_last_name": last_name,
-                    "employee_ssn": ssn,
-                    "independent_contractor": independent_contractor,
-                    "opt_in": opt_in,
-                    "employee_ytd_wages": ytd_wages,
-                    "employee_qtr_wages": qtr_wages,
-                    "employer_medical": contribution.employer_medical,
-                    "employer_family": contribution.employer_family,
-                    "employee_medical": contribution.employee_medical,
-                    "employee_family": contribution.employee_family,
-                }
-
-                on_employee(employee)
-
-                qtr_wages += random.choice(WAGE_CHANGE_RANDOM_POOL)
-                if qtr_wages <= 0:
-                    qtr_wages = decimal.Decimal(1)
-
     logger.info("Generated employees info - Employee count: %i", count)
+
+
+def generate_single_employee(
+    employee_generate_id, employer_account_keys, employer_count_random_pool
+):
+    """Generate a single employee.
+
+    This is intended to always generate the same fake values for a given employee_generate_id.
+    """
+    fake.seed_instance(employee_generate_id)
+    random.seed(employee_generate_id)
+
+    ssn = str(250000000 + employee_generate_id)
+
+    first_name = fake.first_name()
+    last_name = fake.last_name()
+
+    # randomly pick employers by random count
+    employer_count = random.choice(employer_count_random_pool)
+    employer_account_keys_for_employee = random.sample(employer_account_keys, employer_count)
+
+    # for each employer account key randomly chosen for an employee
+    for account_key in employer_account_keys_for_employee:
+
+        # information about the employees classification with this employer
+        independent_contractor = fake.boolean()
+        opt_in = fake.boolean()
+
+        # initial quarterly wage
+        qtr_wages = decimal.Decimal(random.randrange(6000000)) / 100
+
+        # which quarters to generate?
+        start_quarter = random.choice(QUARTERS)
+        quarters = start_quarter.series(random.randint(1, 8))
+
+        # generate information for the selected quarters:
+        ytd_wages = decimal.Decimal(0)
+        for quarter in quarters:
+            # generate the employee details and quarter wage information row
+            if quarter.quarter == 1:
+                ytd_wages = decimal.Decimal(0)
+            ytd_wages += qtr_wages
+            contribution = Contribution(qtr_wages)
+
+            employee = {
+                "account_key": account_key,
+                "filing_period": quarter,
+                "employee_first_name": first_name,
+                "employee_last_name": last_name,
+                "employee_ssn": ssn,
+                "independent_contractor": independent_contractor,
+                "opt_in": opt_in,
+                "employee_ytd_wages": ytd_wages,
+                "employee_qtr_wages": qtr_wages,
+                "employer_medical": contribution.employer_medical,
+                "employer_family": contribution.employer_family,
+                "employee_medical": contribution.employee_medical,
+                "employee_family": contribution.employee_family,
+            }
+
+            yield employee
+
+            qtr_wages += random.choice(WAGE_CHANGE_RANDOM_POOL)
+            if qtr_wages <= 0:
+                qtr_wages = decimal.Decimal(1)
 
 
 class Contribution:

@@ -20,12 +20,12 @@ def test_generate_employers():
     employer_info_list = []
     employer_wage_info_list = []
 
-    def on_employer(employer_info, employer_wage_data):
+    count = 200
+
+    for employer_info, employer_wage_data in generate.generate_employers(1, count):
         employer_info_list.append(employer_info)
         employer_wage_info_list.extend(employer_wage_data)
 
-    count = 200
-    generate.generate_employers(count, on_employer)
     assert len(employer_info_list) == count
     assert len(employer_wage_info_list) == count * 4  # one line for each quarter
 
@@ -37,8 +37,8 @@ def test_employer_file_populate():
     count = 200
     employers_file = io.StringIO()
     employer_wage_file = io.StringIO()
-    employer_account_keys = generate.process_employer_file(
-        count, employers_file, employer_wage_file
+    employer_account_keys = generate.generate_employer_file(
+        1, count, employers_file, employer_wage_file
     )
 
     assert len(employer_account_keys) == count
@@ -69,13 +69,10 @@ def test_employer_file_populate():
 def test_generate_employee_employer_quarterly_wage_rows():
     account_keys = ["%011i" % i for i in range(1, 21)]
 
-    employees_wage_infos = []
-
-    def on_employee(employee_wage_info):
-        employees_wage_infos.append(employee_wage_info)
-
     count = 200
-    generate.generate_employee_employer_quarterly_wage_rows(count, account_keys, on_employee, [1])
+    employees_wage_infos = list(
+        generate.generate_employee_employer_quarterly_wage_rows(1, count, account_keys, [1])
+    )
     assert len(employees_wage_infos) >= count  # At least 1 line per employee
 
     ytd = Decimal(0)
@@ -101,7 +98,7 @@ def test_employee_file_populate():
 
     account_key = "00000000001"
     employer_account_keys = [account_key]
-    generate.process_employee_file(count, employer_account_keys, employee_wage_file, [1])
+    generate.generate_employee_file(1, count, employer_account_keys, employee_wage_file, [1])
 
     # employee info
     employee_wage_file.seek(0)
@@ -123,7 +120,7 @@ def test_full_generate():
     employer_file = io.StringIO()
     employer_employee_wage_file = io.StringIO()
 
-    generate.process(employer_count, employer_file, employer_employee_wage_file, [1])
+    generate.generate(employer_count, employer_file, employer_employee_wage_file, [1])
 
     employer_file.seek(0)
     employer_file_lines = employer_file.readlines()
