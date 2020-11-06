@@ -29,6 +29,7 @@ import ReviewRow from "../../components/ReviewRow";
 import Spinner from "../../components/Spinner";
 import Title from "../../components/Title";
 import { Trans } from "react-i18next";
+import WeeklyTimeTable from "../../components/WeeklyTimeTable";
 import WorkPatternTable from "../../components/WorkPatternTable";
 import claimantConfigs from "../../flows/claimant";
 import convertMinutesToHours from "../../utils/convertMinutesToHours";
@@ -264,14 +265,16 @@ export const Review = (props) => {
         })}
       </ReviewRow>
 
-      {workPattern.work_pattern_type === WorkPatternType.fixed && (
-        <ReviewRow
-          level={reviewRowLevel}
-          label={t("pages.claimsReview.workPatternDaysFixedLabel")}
-        >
-          <WorkPatternTable weeks={workPattern.weeks} />
-        </ReviewRow>
-      )}
+      {workPattern.work_pattern_type === WorkPatternType.fixed &&
+        workPattern.weeks.length > 0 && (
+          <ReviewRow
+            level={reviewRowLevel}
+            label={t("pages.claimsReview.workPatternDaysFixedLabel")}
+            noBorder
+          >
+            <WorkPatternTable weeks={workPattern.weeks} />
+          </ReviewRow>
+        )}
 
       {workPattern.work_pattern_type === WorkPatternType.variable && (
         <ReviewRow
@@ -392,6 +395,35 @@ export const Review = (props) => {
             )
           : t("pages.claimsReview.leavePeriodNotSelected")}
       </ReviewRow>
+
+      {claim.isReducedSchedule &&
+        workPattern.work_pattern_type === WorkPatternType.fixed && (
+          <ReviewRow
+            level={reviewRowLevel}
+            label={t("pages.claimsReview.reducedLeaveScheduleLabel")}
+            noBorder
+          >
+            <WeeklyTimeTable
+              className="margin-bottom-0"
+              weeks={[
+                [
+                  "sunday_off_minutes",
+                  "monday_off_minutes",
+                  "tuesday_off_minutes",
+                  "wednesday_off_minutes",
+                  "thursday_off_minutes",
+                  "friday_off_minutes",
+                  "saturday_off_minutes",
+                ].map((field) =>
+                  get(
+                    claim,
+                    `leave_details.reduced_schedule_leave_periods[0].${field}`
+                  )
+                ),
+              ]}
+            />
+          </ReviewRow>
+        )}
 
       <ReviewRow
         level={reviewRowLevel}

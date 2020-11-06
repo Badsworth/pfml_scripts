@@ -65,6 +65,10 @@ describe("ReducedLeaveSchedule", () => {
         "leave_details.reduced_schedule_leave_periods[0].monday_off_minutes",
         480
       );
+      changeField(
+        "leave_details.reduced_schedule_leave_periods[0].friday_off_minutes",
+        480
+      );
 
       wrapper.find("QuestionPage").simulate("save");
 
@@ -74,7 +78,7 @@ describe("ReducedLeaveSchedule", () => {
           leave_details: {
             reduced_schedule_leave_periods: [
               {
-                friday_off_minutes: null,
+                friday_off_minutes: 480,
                 leave_period_id: "mock-leave-period-id",
                 monday_off_minutes: 480,
                 saturday_off_minutes: null,

@@ -243,6 +243,22 @@ describe("Leave reason", () => {
   });
 });
 
+describe("Reduced leave", () => {
+  it("renders WeeklyTimeTable for the reduced leave period", () => {
+    const claim = new MockClaimBuilder()
+      .part1Complete()
+      .reducedSchedule()
+      .create();
+
+    const { wrapper } = renderWithAppLogic(Review, {
+      claimAttrs: claim,
+      diveLevels,
+    });
+
+    expect(wrapper.find({ label: "Reduced leave schedule" })).toMatchSnapshot();
+  });
+});
+
 describe("Intermittent leave frequency", () => {
   // Generate all possible combinations of Duration/Frequency for an Intermittent Leave Period:
   const durations = Object.values(DurationBasis);

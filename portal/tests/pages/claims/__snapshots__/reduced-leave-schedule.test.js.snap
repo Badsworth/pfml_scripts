@@ -22,7 +22,7 @@ Array [
     name="leave_details.reduced_schedule_leave_periods[0].monday_off_minutes"
     onChange={[Function]}
     smallLabel={true}
-    value={null}
+    value={390}
   />,
   <InputHours
     hoursLabel="Hours"
@@ -66,7 +66,7 @@ Array [
     name="leave_details.reduced_schedule_leave_periods[0].friday_off_minutes"
     onChange={[Function]}
     smallLabel={true}
-    value={null}
+    value={480}
   />,
   <InputHours
     hoursLabel="Hours"

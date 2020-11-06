@@ -36,6 +36,16 @@ describe("ReviewRow", () => {
     expect(wrapper.find(".test-html")).toHaveLength(1);
   });
 
+  it("excludes border classes when noBorder is set", () => {
+    const { wrapper: borderlessRow } = render({
+      noBorder: true,
+    });
+    const { wrapper: borderedRow } = render();
+
+    expect(borderedRow.prop("className")).toMatch("border");
+    expect(borderlessRow.prop("className")).not.toMatch("border");
+  });
+
   describe("when editHref is defined", () => {
     it("renders with an edit link", () => {
       const { wrapper } = render({

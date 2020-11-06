@@ -882,7 +882,7 @@ const pages = {
     leaveDetailsSectionHeading: "$t(shared.leaveDetailsStepTitle)",
     leavePeriodLabel_continuous: "$t(shared.claimDurationTypeContinuous)",
     leavePeriodLabel_intermittent: "$t(shared.claimDurationTypeIntermittent)",
-    leavePeriodLabel_reduced: "$t(shared.claimDurationTypeReducedSchedule)",
+    leavePeriodLabel_reduced: "Reduced leave",
     leavePeriodNotSelected: "$t(shared.choiceNo)",
     leaveReasonLabel: "Leave type",
     leaveReasonValue_activeDutyFamily: "$t(shared.leaveReasonActiveDutyFamily)",
@@ -934,6 +934,7 @@ const pages = {
     pregnancyOrRecentBirth_yes: "$t(shared.choiceYes)",
     previousLeaveEntryLabel: "$t(shared.previousLeaveEntryPrefix) {{count}}",
     previousLeaveLabel: "Previous paid or unpaid leave?",
+    reducedLeaveScheduleLabel: "Reduced leave schedule",
     residentialAddressLabel: "Residential address",
     stepHeading_employerInformation: "$t(shared.claimsEmploymentInfoTitle)",
     stepHeading_leaveDetails: "$t(shared.claimsLeaveDetailsTitle)",
@@ -1544,13 +1545,7 @@ const components = {
     surveyLink: "<user-feedback-link>Take the survey</user-feedback-link>",
     title: "Help us improve this site",
   },
-  withClaims: {
-    loadingLabel: "Loading claims",
-  },
-  withUser: {
-    loadingLabel: "Loading account",
-  },
-  workPatternTable: {
+  weeklyTimeTable: {
     dayAbbr_Friday: "Fri",
     dayAbbr_Monday: "Mon",
     dayAbbr_Saturday: "Sat",
@@ -1560,6 +1555,12 @@ const components = {
     dayAbbr_Wednesday: "Wed",
     time: "$t(shared.displayTime)",
     time_noMinutes: "$t(shared.displayTime_noMinutes)",
+  },
+  withClaims: {
+    loadingLabel: "Loading claims",
+  },
+  withUser: {
+    loadingLabel: "Loading account",
   },
 };
 

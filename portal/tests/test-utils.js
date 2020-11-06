@@ -330,7 +330,11 @@ export class MockClaimBuilder extends BaseMockClaimBuilder {
    */
   reducedSchedule(leavePeriodAttrs = {}) {
     set(this.claimAttrs, "has_reduced_schedule_leave_periods", true);
-    super.reducedSchedule(leavePeriodAttrs);
+    super.reducedSchedule({
+      monday_off_minutes: 6.5 * 60,
+      friday_off_minutes: 8 * 60,
+      ...leavePeriodAttrs,
+    });
     return this;
   }
 

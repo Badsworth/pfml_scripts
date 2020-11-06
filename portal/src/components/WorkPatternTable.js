@@ -1,49 +1,16 @@
 import PropTypes from "prop-types";
 import React from "react";
-import Table from "./Table";
-import convertMinutesToHours from "../utils/convertMinutesToHours";
-import { useTranslation } from "react-i18next";
+import WeeklyTimeTable from "./WeeklyTimeTable";
 
 /**
- * A table for reviewing a claimant's work pattern, which may
- * include one or more weeks
+ * A convenience component for rendering a WeeklyTimeTable
+ * for a claimant's work pattern
  */
 export const WorkPatternTable = (props) => {
-  const { t } = useTranslation();
+  // A work pattern has only one full week, starting on Sunday
+  const weeklyMinutes = props.weeks[0].map((day) => day.minutes);
 
-  return (
-    <Table>
-      <thead>
-        <tr>
-          <th>{t("components.workPatternTable.dayAbbr_Sunday")}</th>
-          <th>{t("components.workPatternTable.dayAbbr_Monday")}</th>
-          <th>{t("components.workPatternTable.dayAbbr_Tuesday")}</th>
-          <th>{t("components.workPatternTable.dayAbbr_Wednesday")}</th>
-          <th>{t("components.workPatternTable.dayAbbr_Thursday")}</th>
-          <th>{t("components.workPatternTable.dayAbbr_Friday")}</th>
-          <th>{t("components.workPatternTable.dayAbbr_Saturday")}</th>
-        </tr>
-      </thead>
-      <tbody>
-        {props.weeks.map((week, index) => (
-          <tr key={index}>
-            {week.map((day) => (
-              // Assumption here that the days are ordered, starting at Sunday
-              <td key={day.day_of_week}>
-                {t("components.workPatternTable.time", {
-                  context:
-                    convertMinutesToHours(day.minutes).minutes === 0
-                      ? "noMinutes"
-                      : null,
-                  ...convertMinutesToHours(day.minutes),
-                })}
-              </td>
-            ))}
-          </tr>
-        ))}
-      </tbody>
-    </Table>
-  );
+  return <WeeklyTimeTable weeks={[weeklyMinutes]} />;
 };
 
 WorkPatternTable.propTypes = {
