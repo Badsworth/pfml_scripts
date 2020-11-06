@@ -16,16 +16,31 @@ End to End tests are Cypress based, and operate by driving a real browser throug
 
 Tests can be executed locally (against one of the cloud environments) by following these steps:
 
-Initial Setup:
+#### Initial Setup:
 * Create your `.env` file with the values [described here](#Setting-up-End-to-End-Configuration).
 * Run `npm install` in this directory.
 
-Running Cypress:
+#### Running Cypress:
 
-* Run `npm run cypress:open`.
+<u>**E2E Team**</u>
+
+* Run `npm run cypress:open`
 * A window will pop open showing the various tests available for running.
 * Click the test you want to run, and a browser window will open with the test running in it.
 
+<u>**Portal Team**</u>
+
+The test suite can run against your local portal enviornment.
+
+* Run `npm run cypress:open:local`
+* A window will pop open showing the various tests available for running.
+* Depending on what feature you're working on will determine the test of most interest. See Below ⬇️ 
+
+#### Information about Scenario Test:
+* [BHAP1](https://lwd.atlassian.net/browse/ETS-8) - continuous leave bonding claim
+* [BHAP8](https://lwd.atlassian.net/browse/ETS-33) - reduced leave bonding claim
+* [BHAP9](https://lwd.atlassian.net/browse/ETS-34) - intermittent leave bonding claim
+* [BGBM1](https://lwd.atlassian.net/browse/ETS-6) - continous leave bonding claim (Only ID)
 
 ### Writing/Editing E2E Tests
 
