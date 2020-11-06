@@ -148,7 +148,7 @@ export function createEmployersStream(
     (function* () {
       for (const record of employers) {
         yield util.format(
-          "%s%s%s%s%s%s%s%s%s%s%s%s%s",
+          "%s%s%s%s%s%s%s%s%s%s%s%s%s%s",
           record.accountKey,
           record.name.padEnd(255),
           record.fein.replace(/-/g, "").padEnd(14),
@@ -156,6 +156,7 @@ export function createEmployersStream(
           record.city.padEnd(30),
           record.state,
           record.zip.replace(/-/g, ""),
+          "USA",
           record.dba.padEnd(255),
           record.family_exemption ? "T" : "F",
           record.medical_exemption ? "T" : "F",
