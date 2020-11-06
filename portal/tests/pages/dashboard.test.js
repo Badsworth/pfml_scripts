@@ -1,13 +1,13 @@
-import Index from "../../src/pages/index";
+import Dashboard from "../../src/pages/dashboard";
 import { mockRouter } from "next/router";
 import { renderWithAppLogic } from "../test-utils";
 import routes from "../../src/routes";
 
-describe("Index", () => {
+describe("Dashboard", () => {
   it("renders dashboard content", () => {
-    mockRouter.pathname = routes.home;
+    mockRouter.pathname = routes.claims.dashboard;
 
-    const { wrapper } = renderWithAppLogic(Index, {
+    const { wrapper } = renderWithAppLogic(Dashboard, {
       diveLevels: 1,
     });
     expect(wrapper).toMatchSnapshot();

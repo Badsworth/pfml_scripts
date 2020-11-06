@@ -21,7 +21,7 @@ const routes = {
     address: "/claims/address",
     bondingLeaveAttestation: "/claims/bonding-leave-attestation",
     checklist: "/claims/checklist",
-    dashboard: "/",
+    dashboard: "/dashboard",
     dateOfBirth: "/claims/date-of-birth",
     dateOfChild: "/claims/date-of-child",
     employerBenefitDetails: "/claims/employer-benefit-details",
@@ -91,7 +91,7 @@ const routes = {
     workVisa:
       "https://travel.state.gov/content/travel/en/us-visas/employment/temporary-worker-visas.html",
   },
-  home: "/",
+  index: "/",
   user: {
     consentToDataSharing: "/user/consent-to-data-sharing",
   },

@@ -1,17 +1,17 @@
-import { Index } from "src/pages/index";
+import { Dashboard } from "src/pages/dashboard";
 import React from "react";
 import routes from "src/routes";
 
 export default {
   title: "Pages/Claimant dashboard",
-  component: Index,
+  component: Dashboard,
 };
 
 export const Page = () => (
-  <Index
+  <Dashboard
     appLogic={{
       portalFlow: {
-        pathname: routes.home,
+        pathname: routes.claims.dashboard,
       },
     }}
   />

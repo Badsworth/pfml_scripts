@@ -17,7 +17,7 @@ export const guards = {
 
 export default {
   id: "portal-flow",
-  initial: routes.home,
+  initial: routes.claims.index,
   states: {
     ...auth.states,
     ...claimant.states,

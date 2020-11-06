@@ -1,3 +1,5 @@
+import routes from "../../src/routes";
+
 const rootUrl = `http://localhost:${process.env.PORT}`;
 const cognitoUser = {
   // Nava engineers can view this inbox here: https://groups.google.com/a/navapbc.com/forum/#!forum/mass-pfml-aws-ses
@@ -29,31 +31,20 @@ describe("E2E: Routing", () => {
       await page.waitForNavigation();
     });
 
-    it("starts on dashboard page", async () => {
+    it("redirects to dashboard", async () => {
       expect.assertions();
-
-      await page.waitForSelector("h1");
-      const title = await page.$("h1");
-
-      await expect(page.url()).toBe(`${rootUrl}/`);
-      await expect(title).toMatch("Get ready to apply");
+      await expect(page.url()).toMatch(`${rootUrl}${routes.claims.dashboard}`);
     });
 
-    describe("when user clicks Create Claim button", () => {
-      it("routes to /claim/checklist", async () => {
+    describe("when user is on claimant dashboard", () => {
+      it("routes to start page when user clicks Create Claim button", async () => {
         expect.assertions();
 
-        const startButton = await page.$("a.usa-button");
+        const startButton = await page.waitForSelector("a.usa-button");
         await startButton.click();
         await page.waitForNavigation();
 
-        await expect(page.url()).toMatch(`${rootUrl}/claims/start`);
-
-        const newClaimButton = await page.$("button[name='new-claim']");
-        await newClaimButton.click();
-        await page.waitForNavigation();
-
-        await expect(page.url()).toMatch(`${rootUrl}/claims/checklist`);
+        await expect(page.url()).toMatch(`${rootUrl}${routes.claims.start}`);
       });
     });
   });

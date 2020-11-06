@@ -17,7 +17,7 @@ const Header = (props) => {
     siteLogo: (
       <SiteLogo
         url={{
-          domain: routes.home,
+          domain: routes.index,
         }}
         image={{
           src: logo,

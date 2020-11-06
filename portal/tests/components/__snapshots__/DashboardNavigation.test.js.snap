@@ -5,8 +5,8 @@ exports[`DashboardNavigation renders dashboard links 1`] = `
   className="border-bottom border-base-lighter margin-bottom-5 display-flex"
 >
   <Link
-    href="/"
-    key="/"
+    href="/dashboard"
+    key="/dashboard"
   >
     <a
       aria-current="page"

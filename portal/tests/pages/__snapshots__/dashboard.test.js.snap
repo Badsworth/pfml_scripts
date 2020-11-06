@@ -1,9 +1,9 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`Index renders dashboard content 1`] = `
+exports[`Dashboard renders dashboard content 1`] = `
 <Fragment>
   <DashboardNavigation
-    activeHref="/"
+    activeHref="/dashboard"
   />
   <div
     className="measure-6"
@@ -43,7 +43,7 @@ exports[`Index renders dashboard content 1`] = `
                   />,
                 }
               }
-              i18nKey="pages.index.medicalLeaveBody"
+              i18nKey="pages.dashboard.medicalLeaveBody"
             />
           </p>
         </AccordionItem>

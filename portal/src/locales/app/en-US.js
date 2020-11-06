@@ -1123,6 +1123,42 @@ const pages = {
     sectionLabel: "How would you describe your work schedule?",
     title: "$t(shared.claimsEmploymentInfoTitle)",
   },
+  dashboard: {
+    createClaimButton: "Create an application",
+    familyLeaveAfterAdoptionBody:
+      "You need to provide a statement that confirms the placement and the date of placement. This can come from the child's health care provider, the adoption or foster agency, or the Massachusetts Department of Children and Families.",
+    familyLeaveAfterAdoptionHeading:
+      "Family leave to bond with your child after adoption or foster placement",
+    familyLeaveAfterBirthBodyLine1:
+      "You need a document that confirms your child’s date of birth, such as a birth certificate or statement from a health care provider stating your child's birth date.",
+    familyLeaveAfterBirthBodyLine2:
+      "You can apply before your child is born. You will need to provide proof of birth in order for your application to be approved.",
+    familyLeaveAfterBirthHeading:
+      "Family leave to bond with your child after birth",
+    medicalLeaveBody:
+      "Your health care provider must complete the <healthcare-provider-form-link>PFML Health Care Provider Certification</healthcare-provider-form-link>",
+    medicalLeaveHeading: "Medical leave due to injury, illness, or pregnancy",
+    multipleApplicationsListIntro:
+      "There are some cases where you might need to create multiple leave applications:",
+    multipleApplicationsList_intermittent:
+      "If you need to take time off at irregular intervals (intermittent leave), you must create an application for the irregular time off you will need. If you also need to take off work completely or work a reduced schedule, you must create a separate application for that time period.",
+    multipleApplicationsList_multipleEmployers:
+      "If you are taking leave from multiple employers, you must create separate applications for each job.",
+    multipleApplicationsList_pregnancy:
+      "You can take paid medical leave if you're unable to work during your pregnancy and to recover from childbirth. You can also take paid family leave to bond with your child after your medical leave ends. You must create separate applications for your paid medical leave and family leave.",
+    stepOneHeading:
+      "Step one: Tell your employer that you need to take Paid Family and Medical Leave. ",
+    stepOneLeadLine1:
+      "If you can, tell your employer at least 30 days before your leave begins. If you need to take leave right away, tell your employer as soon as possible.",
+    stepOneLeadLine2:
+      " Once you tell your employer, you have the right to apply and your job is protected. Keep a record of what date you notified your employer. You will need to provide this date in your leave application.",
+    stepThreeHeading: "Step three: Apply",
+    stepThreeLead:
+      "Applying takes around 15 minutes. Your information will save as you go, so you can finish your application later if you need to.",
+    stepTwoHeading:
+      "Step two: Get documentation that supports your leave request",
+    title: "Get ready to apply",
+  },
   employersClaimsConfirmation: {
     applicationIdLabel: "<strong>Application ID:</strong> {{absenceId}}",
     instructions:
@@ -1321,40 +1357,7 @@ const pages = {
     usernameLabel: "$t(shared.usernameLabel)",
   },
   index: {
-    createClaimButton: "Create an application",
-    familyLeaveAfterAdoptionBody:
-      "You need to provide a statement that confirms the placement and the date of placement. This can come from the child's health care provider, the adoption or foster agency, or the Massachusetts Department of Children and Families.",
-    familyLeaveAfterAdoptionHeading:
-      "Family leave to bond with your child after adoption or foster placement",
-    familyLeaveAfterBirthBodyLine1:
-      "You need a document that confirms your child’s date of birth, such as a birth certificate or statement from a health care provider stating your child's birth date.",
-    familyLeaveAfterBirthBodyLine2:
-      "You can apply before your child is born. You will need to provide proof of birth in order for your application to be approved.",
-    familyLeaveAfterBirthHeading:
-      "Family leave to bond with your child after birth",
-    medicalLeaveBody:
-      "Your health care provider must complete the <healthcare-provider-form-link>PFML Health Care Provider Certification</healthcare-provider-form-link>",
-    medicalLeaveHeading: "Medical leave due to injury, illness, or pregnancy",
-    multipleApplicationsListIntro:
-      "There are some cases where you might need to create multiple leave applications:",
-    multipleApplicationsList_intermittent:
-      "If you need to take time off at irregular intervals (intermittent leave), you must create an application for the irregular time off you will need. If you also need to take off work completely or work a reduced schedule, you must create a separate application for that time period.",
-    multipleApplicationsList_multipleEmployers:
-      "If you are taking leave from multiple employers, you must create separate applications for each job.",
-    multipleApplicationsList_pregnancy:
-      "You can take paid medical leave if you're unable to work during your pregnancy and to recover from childbirth. You can also take paid family leave to bond with your child after your medical leave ends. You must create separate applications for your paid medical leave and family leave.",
-    stepOneHeading:
-      "Step one: Tell your employer that you need to take Paid Family and Medical Leave. ",
-    stepOneLeadLine1:
-      "If you can, tell your employer at least 30 days before your leave begins. If you need to take leave right away, tell your employer as soon as possible.",
-    stepOneLeadLine2:
-      " Once you tell your employer, you have the right to apply and your job is protected. Keep a record of what date you notified your employer. You will need to provide this date in your leave application.",
-    stepThreeHeading: "Step three: Apply",
-    stepThreeLead:
-      "Applying takes around 15 minutes. Your information will save as you go, so you can finish your application later if you need to.",
-    stepTwoHeading:
-      "Step two: Get documentation that supports your leave request",
-    title: "Get ready to apply",
+    title: "Massachusetts workers can now take paid family and medical leave.",
   },
   userConsentToDataSharing: {
     agreementBody:
