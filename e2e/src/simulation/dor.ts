@@ -1,26 +1,10 @@
 import stream from "stream";
 import merge from "merge2";
 import util from "util";
-import { SimulationClaim } from "./types";
+import { Employer, SimulationClaim } from "./types";
 
 // Date to fill in when no exemption is given.
 const NO_EXEMPTION_DATE = "99991231";
-
-export type Employer = {
-  accountKey: string;
-  name: string;
-  fein: string;
-  street: string;
-  city: string;
-  state: string;
-  zip: string;
-  dba: string;
-  family_exemption: boolean;
-  medical_exemption: boolean;
-  exemption_commence_date?: Date;
-  exemption_cease_date?: Date;
-  updated_date: Date;
-};
 
 function formatISODate(date: Date): string {
   return date.toISOString().split("T")[0].replace(/-/g, "");
@@ -166,7 +150,7 @@ export function createEmployersStream(
           record.exemption_cease_date
             ? formatISODate(record.exemption_cease_date)
             : NO_EXEMPTION_DATE,
-          formatISODatetime(record.updated_date)
+          formatISODatetime(new Date(record.updated_date))
         ) + "\n";
       }
     })()

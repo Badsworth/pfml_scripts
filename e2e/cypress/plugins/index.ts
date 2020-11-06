@@ -16,7 +16,8 @@ import webpackPreprocessor from "@cypress/webpack-preprocessor";
 import { CypressStepThis } from "@/types";
 import TestMailVerificationFetcher from "./TestMailVerificationFetcher";
 import PortalSubmitter from "../../src/simulation/PortalSubmitter";
-import { SimulationClaim } from "../../src/simulation/types";
+import employerPool from "../../src/simulation/fixtures/employerPool";
+import { SimulationClaim, Employer } from "../../src/simulation/types";
 import { SimulationGenerator } from "../../src/simulation/simulate";
 import { ApplicationResponse, DocumentUploadRequest } from "../../src/api";
 import { makeDocUploadBody } from "../../src/simulation/SimulationRunner";
@@ -85,13 +86,13 @@ export default function (on: Cypress.PluginEvents): Cypress.ConfigOptions {
 
       // Get the employee record here (read JSON, map to identifier).
       const employee = await getEmployee(employeeType);
-      if (!employee) {
-        throw new Error("Employee Type Not Found!");
-      }
+      // Get the employer record here (read JSON, map to identifier).
+      const employer = await getEmployer(employee.fein);
 
       const opts = {
         documentDirectory: "/tmp",
         employeeFactory: () => employee,
+        employerFactory: () => employer,
         shortClaim: true,
       };
 
@@ -135,5 +136,18 @@ async function getEmployee(
   employeeType: string
 ): Promise<Record<string, string>> {
   const content = await fs.promises.readFile("employee.json");
-  return JSON.parse(content.toString("utf-8"))[employeeType];
+  const employees = JSON.parse(content.toString("utf-8"));
+  if (!(employeeType in employees)) {
+    throw new Error("Employee Type Not Found!");
+  }
+  return employees[employeeType];
+}
+
+async function getEmployer(fein: string): Promise<Employer> {
+  const employers: Employer[] = employerPool;
+  const employer = employers.find((e) => e.fein === fein);
+  if (typeof employer === "undefined") {
+    throw new Error("Employer Not Found!");
+  }
+  return employer;
 }

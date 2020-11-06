@@ -1,7 +1,8 @@
-import { EmployeeFactory, SimulationClaim } from "./types";
 import faker from "faker";
-import employers from "./fixtures/employerPool";
 import { RandomSSN } from "ssn";
+import { EmployeeFactory, SimulationClaim } from "./types";
+import { fromEmployersFactory } from "./EmployerFactory";
+import employerPool from "./fixtures/employerPool";
 
 /**
  * Creates an employee "pool" from a previous simulation.
@@ -16,7 +17,7 @@ export function fromClaimsFactory(claims: SimulationClaim[]): EmployeeFactory {
     if (!claim) {
       throw new Error("The employee pool is empty");
     }
-    // Delete frm the pool so we don't reuse it.
+    // Delete from the pool so we don't reuse it.
     pool.splice(pool.indexOf(claim), 1);
     return {
       first_name: claim.claim.first_name,
@@ -30,11 +31,14 @@ export function fromClaimsFactory(claims: SimulationClaim[]): EmployeeFactory {
 /**
  * Creates brand new, random employees.
  */
-export const random: EmployeeFactory = () => {
+export const randomEmployee: EmployeeFactory = (
+  financiallyIneligible,
+  employerFactory = fromEmployersFactory(employerPool)
+) => {
   return {
     first_name: faker.name.firstName(),
     last_name: faker.name.lastName(),
     tax_identifier: new RandomSSN().value().toFormattedString(),
-    employer_fein: employers[Math.floor(Math.random() * employers.length)].fein,
+    employer_fein: employerFactory().fein,
   };
 };

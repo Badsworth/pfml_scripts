@@ -6,14 +6,20 @@ import {
   createEmployersStream,
   formatISODatetime,
 } from "../dor";
-import employers from "../fixtures/employerPool";
 import quarters from "../quarters";
 import createClaimIndexStream from "../claimIndex";
 import { promisify } from "util";
 import { pipeline } from "stream";
 import { SystemWideArgs } from "../../cli";
-import { random, fromClaimsFactory } from "../EmployeeFactory";
-import { EmployeeFactory, SimulationClaim } from "@/simulation/types";
+import { randomEmployee, fromClaimsFactory } from "../EmployeeFactory";
+import { fromEmployersFactory } from "../EmployerFactory";
+import employerPool from "../fixtures/employerPool";
+import {
+  SimulationClaim,
+  EmployeeFactory,
+  EmployerFactory,
+  Employer,
+} from "@/simulation/types";
 
 // Create a promised version of the pipeline function.
 const pipelineP = promisify(pipeline);
@@ -23,6 +29,7 @@ type GenerateArgs = {
   count: string;
   directory: string;
   employeesFrom?: string;
+  employersFrom?: string;
 } & SystemWideArgs;
 
 const cmd: CommandModule<SystemWideArgs, GenerateArgs> = {
@@ -57,6 +64,14 @@ const cmd: CommandModule<SystemWideArgs, GenerateArgs> = {
       description:
         "The path to a previous claims file to use as an employee pool",
       requiresArg: true,
+      alias: "e",
+    },
+    employersFrom: {
+      type: "string",
+      description:
+        "The path to a previous employers file to use as an employer pool",
+      requiresArg: true,
+      alias: "E",
     },
   },
   async handler(args) {
@@ -65,10 +80,16 @@ const cmd: CommandModule<SystemWideArgs, GenerateArgs> = {
       paths: [process.cwd()],
     });
     const { default: generator } = await import(path);
-    let employeeFactory: EmployeeFactory = random;
+    // generate or initialize pool of employers
+    const employers = (args.employersFrom
+      ? await readJSONFile(args.employersFrom)
+      : employerPool) as Employer[];
+    const employerFactory: EmployerFactory = fromEmployersFactory(employers);
+    // generate or initialize pool of employees
+    let employeeFactory: EmployeeFactory = randomEmployee;
     if (args.employeesFrom) {
       employeeFactory = fromClaimsFactory(
-        await readClaimsFile(args.employeesFrom)
+        (await readJSONFile(args.employeesFrom)) as SimulationClaim[]
       );
     }
 
@@ -82,6 +103,7 @@ const cmd: CommandModule<SystemWideArgs, GenerateArgs> = {
         await generator({
           documentDirectory: storage.documentDirectory,
           employeeFactory,
+          employerFactory,
         })
       );
     }
@@ -114,7 +136,6 @@ const cmd: CommandModule<SystemWideArgs, GenerateArgs> = {
       createClaimIndexStream(claims),
       fs.createWriteStream(`${storage.directory}/index.csv`)
     );
-
     // Finally wait for all of those files to finish generating.
     await Promise.all([
       claimsJSONPromise,
@@ -130,7 +151,9 @@ const cmd: CommandModule<SystemWideArgs, GenerateArgs> = {
   },
 };
 
-async function readClaimsFile(filename: string): Promise<SimulationClaim[]> {
+async function readJSONFile(
+  filename: string
+): Promise<SimulationClaim[] | Employer[]> {
   const contents = await fs.promises.readFile(filename, "utf-8");
   return JSON.parse(contents);
 }

@@ -1,4 +1,4 @@
-import { Employer } from "../dor";
+import { Employer } from "../types";
 
 const employerPool = [
   {

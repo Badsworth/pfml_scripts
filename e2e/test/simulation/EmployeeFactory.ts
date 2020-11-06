@@ -1,6 +1,6 @@
 import employers from "../../src/simulation/fixtures/employerPool";
 import {
-  random,
+  randomEmployee,
   fromClaimsFactory,
 } from "../../src/simulation/EmployeeFactory";
 import { ParseSSN } from "ssn";
@@ -9,12 +9,12 @@ import { EmployeeFactory } from "../../src/simulation/types";
 
 describe("Random generator", () => {
   it("Should generate an employee with a valid SSN", () => {
-    const employee = random(false);
+    const employee = randomEmployee(false);
     new ParseSSN((employee.tax_identifier ?? "").replace(/-/g, ""));
   });
 
   it("Should pull an employer from the employer pool", () => {
-    const employee = random(false);
+    const employee = randomEmployee(false);
     expect(employers.map((e) => e.fein)).toContain(employee.employer_fein);
   });
 });

@@ -1,10 +1,9 @@
+import fs from "fs";
 import { CommandModule } from "yargs";
 import SimulationStorage from "../SimulationStorage";
-import fs from "fs";
+import { EmployerFactory, Employer } from "../types";
+import { randomEmployer } from "../EmployerFactory";
 import { SystemWideArgs } from "../../cli";
-import { v4 as uuid } from "uuid";
-import faker from "faker";
-import { Employer } from "../dor";
 
 type GenerateEmployersArgs = {
   count: string;
@@ -36,22 +35,11 @@ const cmd: CommandModule<SystemWideArgs, GenerateEmployersArgs> = {
     args.logger.profile("generate:employers");
     await fs.promises.mkdir(args.directory, { recursive: true });
     const storage = new SimulationStorage(args.directory);
-    const employers = [] as Employer[];
+    const pool: EmployerFactory = randomEmployer;
+    const employers: Employer[] = [];
     const limit = parseInt(args.count);
     for (let i = 0; i < limit; i++) {
-      employers.push({
-        accountKey: uuid(),
-        name: faker.company.companyName(0),
-        fein: faker.helpers.replaceSymbolWithNumber("##-#######"),
-        street: faker.address.streetAddress(),
-        city: faker.address.city(),
-        state: "MA",
-        zip: faker.address.zipCode(),
-        dba: "",
-        family_exemption: false,
-        medical_exemption: false,
-        updated_date: new Date(),
-      } as Employer);
+      employers.push(pool());
     }
     // Generate employers JSON file.
     await fs.promises.writeFile(

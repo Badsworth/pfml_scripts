@@ -4,6 +4,8 @@ import type { SimulationClaim } from "@/simulation/types";
 import generators from "../../src/simulation/documents";
 import fs from "fs";
 import { extractLeavePeriod } from "../../src/utils";
+import { fromEmployersFactory } from "../../src/simulation/EmployerFactory";
+import employerPool from "../../src/simulation/fixtures/employerPool";
 
 jest.mock("../../src/simulation/documents");
 
@@ -17,6 +19,7 @@ const opts = {
       tax_identifier: "000-00-0000",
     };
   }),
+  employerFactory: jest.fn(fromEmployersFactory(employerPool)),
 };
 
 const medical: ScenarioOpts = {
@@ -103,9 +106,15 @@ describe("Simulation Generator", () => {
 
   it("Should pass arguments to the employee factory", async () => {
     await scenario("TEST", { ...medical })(opts);
-    expect(opts.employeeFactory).toHaveBeenCalledWith(false);
+    expect(opts.employeeFactory).toHaveBeenCalledWith(
+      false,
+      opts.employerFactory
+    );
     await scenario("TEST", { ...medical, financiallyIneligible: true })(opts);
-    expect(opts.employeeFactory).toHaveBeenCalledWith(true);
+    expect(opts.employeeFactory).toHaveBeenCalledWith(
+      true,
+      opts.employerFactory
+    );
   });
 
   it("Should populate the mass_id property for mass proofed claims", async () => {

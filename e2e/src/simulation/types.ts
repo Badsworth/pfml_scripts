@@ -32,9 +32,12 @@ export type ClaimDocument = {
   submittedManually?: boolean;
 };
 
-// EmployeeSource is the interface for getting or generating an employee.
+// EmployeeFactory is the interface for getting or generating an employee.
 export interface EmployeeFactory {
-  (financiallyIneligible: boolean): EmployeeRecord;
+  (
+    financiallyIneligible: boolean,
+    employerFactory?: EmployerFactory
+  ): EmployeeRecord;
 }
 
 // ClaimUser is a partial of a pre-created user we can pass to scenario generators.
@@ -42,3 +45,24 @@ export type EmployeeRecord = Pick<
   ApplicationRequestBody,
   "first_name" | "last_name" | "tax_identifier" | "employer_fein"
 >;
+
+// EmployerFactory is the interface for getting or generating an employer.
+export interface EmployerFactory {
+  (): Employer;
+}
+
+export type Employer = {
+  accountKey: string;
+  name: string;
+  fein: string;
+  street: string;
+  city: string;
+  state: string;
+  zip: string;
+  dba: string;
+  family_exemption: boolean;
+  medical_exemption: boolean;
+  exemption_commence_date?: Date;
+  exemption_cease_date?: Date;
+  updated_date: Date;
+};

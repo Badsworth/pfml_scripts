@@ -1,6 +1,11 @@
 import faker from "faker";
 import { min as minDate, parseISO } from "date-fns";
-import { ClaimDocument, EmployeeFactory, SimulationClaim } from "./types";
+import {
+  ClaimDocument,
+  SimulationClaim,
+  EmployerFactory,
+  EmployeeFactory,
+} from "./types";
 import {
   ApplicationRequestBody,
   ApplicationLeaveDetails,
@@ -55,6 +60,7 @@ export interface SimulationGenerator {
 export type GeneratorOpts = Partial<ScenarioOpts> & {
   documentDirectory: string;
   employeeFactory: EmployeeFactory;
+  employerFactory: EmployerFactory;
 };
 export type ScenarioOpts = {
   reason: ApplicationLeaveDetails["reason"];
@@ -85,7 +91,10 @@ export function scenario(
       _config.residence === "MA-proofed" ||
       _config.residence === "MA-unproofed";
 
-    const employee = opts.employeeFactory(!!_config.financiallyIneligible);
+    const employee = opts.employeeFactory(
+      !!_config.financiallyIneligible,
+      opts.employerFactory
+    );
 
     const address = {
       city: faker.address.city(),
