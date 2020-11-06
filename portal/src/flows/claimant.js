@@ -211,6 +211,7 @@ export default {
     },
     [routes.claims.reducedLeaveSchedule]: {
       meta: {
+        applicableRules: ["min_reduced_leave_minutes"],
         step: ClaimSteps.leaveDetails,
         fields: reducedLeaveScheduleFields,
       },

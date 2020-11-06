@@ -178,10 +178,45 @@ const errors = {
             "Last day of leave must be on or after the first day of leave.",
           required: "Enter an end date for this reduced leave period.",
         },
+        friday_off_minutes: {
+          maximum: "$t(shared.maximumReducedLeaveMinutes)",
+          minimum: "$t(shared.minimumReducedLeaveMinutes}",
+          required: "Enter your reduced hours for Friday.",
+        },
+        monday_off_minutes: {
+          maximum: "$t(shared.maximumReducedLeaveMinutes)",
+          minimum: "$t(shared.minimumReducedLeaveMinutes}",
+          required: "Enter your reduced hours for Monday.",
+        },
+        saturday_off_minutes: {
+          maximum: "$t(shared.maximumReducedLeaveMinutes)",
+          minimum: "$t(shared.minimumReducedLeaveMinutes}",
+          required: "Enter your reduced hours for Saturday.",
+        },
         start_date: {
           minimum:
             "Paid Family and Medical Leave cannot be taken before Jan 1, 2021. Enter a date after December$t(chars.nbsp)31,$t(chars.nbsp)2020.",
           required: "Enter a start date for this reduced leave period.",
+        },
+        sunday_off_minutes: {
+          maximum: "$t(shared.maximumReducedLeaveMinutes)",
+          minimum: "$t(shared.minimumReducedLeaveMinutes}",
+          required: "Enter your reduced hours for Sunday.",
+        },
+        thursday_off_minutes: {
+          maximum: "$t(shared.maximumReducedLeaveMinutes)",
+          minimum: "$t(shared.minimumReducedLeaveMinutes}",
+          required: "Enter your reduced hours for Thursday.",
+        },
+        tuesday_off_minutes: {
+          maximum: "$t(shared.maximumReducedLeaveMinutes)",
+          minimum: "$t(shared.minimumReducedLeaveMinutes}",
+          required: "Enter your reduced hours for Tuesday.",
+        },
+        wednesday_off_minutes: {
+          maximum: "$t(shared.maximumReducedLeaveMinutes)",
+          minimum: "$t(shared.minimumReducedLeaveMinutes}",
+          required: "Enter your reduced hours for Wednesday.",
         },
       },
     },
@@ -247,6 +282,8 @@ const errors = {
         "Your reduced leave schedule cannot overlap with your continuous leave. Check whether you’ve entered the correct start and end dates for each leave period.",
       min_leave_periods:
         "You must choose at least one kind of leave (continuous, reduced schedule, or intermittent).",
+      min_reduced_leave_minutes:
+        "The total time entered for your reduced leave schedule must be greater than 0.",
     },
     tax_identifier: {
       pattern: "Enter a 9-digit number.",
@@ -333,6 +370,10 @@ const shared = {
   leaveReasonBonding: "Family leave",
   leaveReasonMedical: "Medical leave",
   leaveReasonServiceMemberFamily: "Military family",
+  maximumReducedLeaveMinutes:
+    "Reduced leave schedule hours cannot exceed your work schedule.",
+  minimumReducedLeaveMinutes:
+    "Reduced leave schedule hours must be 0 or greater.",
   minutesLabel: "Minutes",
   networkError:
     "Sorry, an error was encountered. This may occur for a variety of reasons, including temporarily losing an internet connection or an unexpected error in our system. If this continues to happen, you may call the Paid Family Leave Contact Center at $t(shared.contactCenterPhoneNumber)",
