@@ -922,7 +922,7 @@ components:
         zip:
           type: string
           nullable: true
-          pattern: "^[0-9]{5}(?:-[0-9]{4})?$"
+          pattern: '^[0-9]{5}(?:-[0-9]{4})?|(?:-\*{4})?$'
           example: "12345"
 
     UserResponse:
@@ -2054,12 +2054,12 @@ components:
     SsnItin:
       type: string
       example: "000-00-0000"
-      pattern: '^\d{3}-\d{2}-\d{4}$'
+      pattern: '^(\d{3}-\d{2}-\d{4})|(\*{3}-\*{2}-\d{4})$'
 
     MaskedSsnItin:
       type: string
-      example: "***-**-****"
-      pattern: '^\*{3}-\*{2}-\*{4}$'
+      example: "***-**-1234"
+      pattern: '^\*{3}-\*{2}-\d{4}$'
 
     Fein:
       type: string
@@ -2069,12 +2069,12 @@ components:
     MassId:
       type: string
       example: "S99988801"
-      pattern: '^(\d{9}|S(\d{8}|A\d{7}))$'
+      pattern: '^(\d{9}|S(\d{8}|A\d{7})|(\*{9}))$'
 
     RoutingNbr:
       type: string
       example: "000000000"
-      pattern: '^((0[0-9])|(1[0-2])|(2[1-9])|(3[0-2])|(6[1-9])|(7[0-2])|80)([0-9]{7})|(\*{5}\d{4})$'
+      pattern: '^((0[0-9])|(1[0-2])|(2[1-9])|(3[0-2])|(6[1-9])|(7[0-2])|80)([0-9]{7})|(\*{9})$'
 
     Uuid:
       type: string

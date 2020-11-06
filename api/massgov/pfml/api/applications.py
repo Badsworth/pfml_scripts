@@ -101,7 +101,11 @@ def applications_update(application_id):
 
     ensure(EDIT, existing_application)
 
-    application_request = ApplicationRequestBody.parse_obj(body)
+    updated_body = applications_service.remove_masked_fields_from_request(
+        body, existing_application
+    )
+
+    application_request = ApplicationRequestBody.parse_obj(updated_body)
 
     with app.db_session() as db_session:
         applications_service.update_from_request(

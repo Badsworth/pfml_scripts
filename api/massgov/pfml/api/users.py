@@ -10,7 +10,6 @@ import massgov.pfml.util.logging
 from massgov.pfml.api.authorization.flask import EDIT, READ, ensure
 from massgov.pfml.db.models.employees import User
 from massgov.pfml.util.pydantic import PydanticBaseModel
-from massgov.pfml.util.pydantic.types import MaskedEmailStr
 from massgov.pfml.util.sqlalchemy import get_or_404
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
@@ -76,7 +75,7 @@ class UserResponse(PydanticBaseModel):
 
     user_id: UUID4
     auth_id: str = Field(alias="active_directory_id")
-    email_address: MaskedEmailStr
+    email_address: str
     consented_to_data_sharing: bool
 
 

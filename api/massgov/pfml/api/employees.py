@@ -9,7 +9,6 @@ import massgov.pfml.api.util.response as response_util
 from massgov.pfml.api.authorization.flask import EDIT, READ, ensure
 from massgov.pfml.db.models.employees import Employee, TaxIdentifier
 from massgov.pfml.util.pydantic import PydanticBaseModel
-from massgov.pfml.util.pydantic.types import MaskedEmailStr
 from massgov.pfml.util.sqlalchemy import get_or_404
 
 
@@ -34,7 +33,7 @@ class EmployeeResponse(PydanticBaseModel):
     middle_name: Optional[str]
     last_name: Optional[str]
     other_name: Optional[str]
-    email_address: Optional[MaskedEmailStr]
+    email_address: Optional[str]
     phone_number: Optional[str]
 
     @classmethod

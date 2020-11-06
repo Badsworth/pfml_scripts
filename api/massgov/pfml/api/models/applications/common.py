@@ -6,9 +6,15 @@ from pydantic import UUID4
 
 import massgov.pfml.db.models.applications as db_application_models
 import massgov.pfml.db.models.employees as db_employee_models
+import massgov.pfml.util.pydantic.mask as mask
 from massgov.pfml.api.models.common import LookupEnum
 from massgov.pfml.util.pydantic import PydanticBaseModel
-from massgov.pfml.util.pydantic.types import MaskedFinancialAcctNum
+from massgov.pfml.util.pydantic.types import (
+    FinancialRoutingNumber,
+    MaskedDateStr,
+    MaskedFinancialAcctNum,
+    MaskedFinancialRoutingNumber,
+)
 
 # Applications I/O types
 
@@ -154,18 +160,20 @@ class Address(PydanticBaseModel):
     state: Optional[str]
     zip: Optional[str]
 
+
+class MaskedAddress(Address):
     @classmethod
-    def from_orm(cls, address: db_employee_models.Address) -> "Address":
+    def from_orm(cls, address: db_employee_models.Address) -> "MaskedAddress":
         address_response = super().from_orm(address)
-        address_response.zip = address.zip_code
+        address_response.zip = mask.mask_zip(address.zip_code)
         address_response.state = address.geo_state.geo_state_description
-        address_response.line_1 = address.address_line_one
-        address_response.line_2 = address.address_line_two
+        address_response.line_1 = mask.mask_address(address.address_line_one)
+        address_response.line_2 = mask.mask_address(address.address_line_two)
 
         return address_response
 
 
-class ApplicationLeaveDetails(PydanticBaseModel):
+class BaseApplicationLeaveDetails(PydanticBaseModel):
     reason: Optional[LeaveReason]
     reason_qualifier: Optional[LeaveReasonQualifier]
     reduced_schedule_leave_periods: Optional[List[ReducedScheduleLeavePeriods]]
@@ -174,14 +182,19 @@ class ApplicationLeaveDetails(PydanticBaseModel):
     relationship_to_caregiver: Optional[RelationshipToCaregiver]
     relationship_qualifier: Optional[RelationshipQualifier]
     pregnant_or_recent_birth: Optional[bool]
-    child_birth_date: Optional[date]
-    child_placement_date: Optional[date]
     employer_notified: Optional[bool]
     employer_notification_date: Optional[date]
     employer_notification_method: Optional[EmployerNotificationMethod]
 
+
+class MaskedApplicationLeaveDetails(BaseApplicationLeaveDetails):
+    child_birth_date: Optional[MaskedDateStr]
+    child_placement_date: Optional[MaskedDateStr]
+
     @classmethod
-    def from_orm(cls, application: db_application_models.Application) -> "ApplicationLeaveDetails":
+    def from_orm(
+        cls, application: db_application_models.Application
+    ) -> "MaskedApplicationLeaveDetails":
         leave_details = super().from_orm(application)
 
         # This model is shared by requests and responses but some fields need to
@@ -211,6 +224,11 @@ class ApplicationLeaveDetails(PydanticBaseModel):
             )
 
         return leave_details
+
+
+class ApplicationLeaveDetails(BaseApplicationLeaveDetails):
+    child_birth_date: Optional[date]
+    child_placement_date: Optional[date]
 
 
 class PaymentMethod(str, LookupEnum):
@@ -252,24 +270,39 @@ class DayOfWeek(str, LookupEnum):
         return db_application_models.LkDayOfWeek
 
 
-class ApplicationPaymentAccountDetails(PydanticBaseModel):
+class BaseApplicationPaymentAccountDetails(PydanticBaseModel):
     account_name: Optional[str]
-    account_number: Optional[MaskedFinancialAcctNum]
-    routing_number: Optional[MaskedFinancialAcctNum]
     account_type: Optional[PaymentAccountType]
+
+
+class ApplicationPaymentAccountDetails(BaseApplicationPaymentAccountDetails):
+    account_number: Optional[str]
+    routing_number: Optional[FinancialRoutingNumber]
+
+
+class MaskedApplicationPaymentAccountDetails(BaseApplicationPaymentAccountDetails):
+    account_number: Optional[MaskedFinancialAcctNum]
+    routing_number: Optional[MaskedFinancialRoutingNumber]
 
 
 class ApplicationPaymentChequeDetails(PydanticBaseModel):
     name_to_print_on_check: Optional[str]
 
 
-class PaymentPreferences(PydanticBaseModel):
+class BasePaymentPreferences(PydanticBaseModel):
     payment_preference_id: Optional[UUID4]
     description: Optional[str]
     payment_method: Optional[PaymentMethod]
     is_default: Optional[bool]
-    account_details: Optional[ApplicationPaymentAccountDetails]
     cheque_details: Optional[ApplicationPaymentChequeDetails]
+
+
+class PaymentPreferences(BasePaymentPreferences):
+    account_details: Optional[ApplicationPaymentAccountDetails]
+
+
+class MaskedPaymentPreferences(BasePaymentPreferences):
+    account_details: Optional[MaskedApplicationPaymentAccountDetails]
 
 
 class WorkPatternDay(PydanticBaseModel):

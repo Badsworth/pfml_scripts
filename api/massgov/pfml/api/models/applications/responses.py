@@ -1,4 +1,4 @@
-from datetime import date, datetime
+from datetime import datetime
 from decimal import Decimal
 from enum import Enum
 from typing import List, Optional
@@ -6,20 +6,25 @@ from typing import List, Optional
 from pydantic import UUID4
 
 from massgov.pfml.api.models.applications.common import (
-    Address,
-    ApplicationLeaveDetails,
-    ApplicationPaymentAccountDetails,
     ApplicationPaymentChequeDetails,
     EmploymentStatus,
+    MaskedAddress,
+    MaskedApplicationLeaveDetails,
+    MaskedApplicationPaymentAccountDetails,
+    MaskedPaymentPreferences,
     Occupation,
     PaymentAccountType,
     PaymentMethod,
-    PaymentPreferences,
     WorkPattern,
 )
 from massgov.pfml.db.models.applications import Application, ApplicationPaymentPreference, Document
 from massgov.pfml.util.pydantic import PydanticBaseModel
-from massgov.pfml.util.pydantic.types import FEINStr, MaskedMassIdStr, MaskedTaxIdFormattedStr
+from massgov.pfml.util.pydantic.types import (
+    FEINStr,
+    MaskedDateStr,
+    MaskedMassIdStr,
+    MaskedTaxIdFormattedStr,
+)
 
 
 class ApplicationStatus(str, Enum):
@@ -38,7 +43,7 @@ class ApplicationResponse(PydanticBaseModel):
     first_name: Optional[str]
     middle_name: Optional[str]
     last_name: Optional[str]
-    date_of_birth: Optional[date]
+    date_of_birth: Optional[MaskedDateStr]
     has_continuous_leave_periods: Optional[bool]
     has_intermittent_leave_periods: Optional[bool]
     has_reduced_schedule_leave_periods: Optional[bool]
@@ -47,26 +52,28 @@ class ApplicationResponse(PydanticBaseModel):
     occupation: Optional[Occupation]
     hours_worked_per_week: Optional[Decimal]
     employment_status: Optional[EmploymentStatus]
-    leave_details: Optional[ApplicationLeaveDetails]
-    payment_preferences: Optional[List[PaymentPreferences]]
+    leave_details: Optional[MaskedApplicationLeaveDetails]
+    payment_preferences: Optional[List[MaskedPaymentPreferences]]
     work_pattern: Optional[WorkPattern]
     updated_time: datetime
     status: Optional[ApplicationStatus]
     has_mailing_address: Optional[bool]
-    mailing_address: Optional[Address]
-    residential_address: Optional[Address]
+    mailing_address: Optional[MaskedAddress]
+    residential_address: Optional[MaskedAddress]
 
     @classmethod
     def from_orm(cls, application: Application) -> "ApplicationResponse":
         application_response = super().from_orm(application)
         application_response.application_nickname = application.nickname
         if application.mailing_address is not None:
-            application_response.mailing_address = Address.from_orm(application.mailing_address)
+            application_response.mailing_address = MaskedAddress.from_orm(
+                application.mailing_address
+            )
         if application.residential_address is not None:
-            application_response.residential_address = Address.from_orm(
+            application_response.residential_address = MaskedAddress.from_orm(
                 application.residential_address
             )
-        application_response.leave_details = ApplicationLeaveDetails.from_orm(application)
+        application_response.leave_details = MaskedApplicationLeaveDetails.from_orm(application)
         application_response.payment_preferences = list(
             map(build_payment_preference, application.payment_preferences)
         )
@@ -83,8 +90,8 @@ class ApplicationResponse(PydanticBaseModel):
 
 def build_payment_preference(
     db_payment_preference: ApplicationPaymentPreference,
-) -> PaymentPreferences:
-    payment_preference = PaymentPreferences.from_orm(db_payment_preference)
+) -> MaskedPaymentPreferences:
+    payment_preference = MaskedPaymentPreferences.from_orm(db_payment_preference)
 
     # some renames
     payment_preference.payment_preference_id = db_payment_preference.payment_pref_id  # type: ignore
@@ -98,7 +105,7 @@ def build_payment_preference(
     # the response collects some of them under this `account_details` key, so
     # have to pull them out here manually since pydantic doesn't know how to do
     # that automatically
-    payment_preference.account_details = ApplicationPaymentAccountDetails.from_orm(
+    payment_preference.account_details = MaskedApplicationPaymentAccountDetails.from_orm(
         db_payment_preference
     )
 

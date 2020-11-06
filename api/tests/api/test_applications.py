@@ -11,6 +11,7 @@ import massgov.pfml.fineos.models
 import tests.api
 from massgov.pfml.api.models.applications.common import DurationBasis, FrequencyIntervalBasis
 from massgov.pfml.api.models.applications.responses import ApplicationStatus
+from massgov.pfml.api.util.response import IssueRule, IssueType
 from massgov.pfml.db.models.applications import (
     Application,
     ApplicationPaymentPreference,
@@ -24,7 +25,7 @@ from massgov.pfml.db.models.applications import (
     WorkPattern,
     WorkPatternDay,
 )
-from massgov.pfml.db.models.employees import TaxIdentifier
+from massgov.pfml.db.models.employees import Address, TaxIdentifier
 from massgov.pfml.db.models.factories import (
     AddressFactory,
     ApplicationFactory,
@@ -134,7 +135,7 @@ def test_applications_get_partially_displays_fin_acct_num(
 
     payment_preference = payment_preferences[0]
     assert payment_preference["account_details"]["account_number"] == "*****6789"
-    assert payment_preference["account_details"]["routing_number"] == "*****7654"
+    assert payment_preference["account_details"]["routing_number"] == "*********"
 
 
 def test_applications_get_with_payment_preferences(client, user, auth_token, test_db_session):
@@ -260,7 +261,269 @@ def test_application_patch(client, user, auth_token, test_db_session):
     assert (
         response_body.get("data").get("leave_details").get("relationship_to_caregiver") == "Parent"
     )
-    assert response_body.get("data").get("tax_identifier") == "***-**-****"
+    assert response_body.get("data").get("tax_identifier") == "***-**-6789"
+
+
+def test_application_patch_masking(client, user, auth_token, test_db_session):
+    application = ApplicationFactory.create(user=user)
+    update_request_body = {
+        "tax_identifier": "123-45-6789",
+        "has_state_id": True,
+        "mass_id": "123456789",
+        "date_of_birth": "1970-01-01",
+        "mailing_address": {
+            "city": "Chicago",
+            "state": "IL",
+            "line_1": "123 Foo St.",
+            "line_2": "Apt #123",
+            "zip": "12345-1234",
+        },
+        "leave_details": {"child_birth_date": "2021-09-21", "child_placement_date": "2021-05-13"},
+        "payment_preferences": [
+            {
+                "description": "Test",
+                "payment_method": "ACH",
+                "account_details": {
+                    "account_type": "Checking",
+                    "routing_number": "000000000",
+                    "account_number": "123456789",
+                },
+            }
+        ],
+    }
+
+    response = client.patch(
+        "/v1/applications/{}".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+        json=update_request_body,
+    )
+
+    response_body = response.get_json()
+
+    assert response.status_code == 200
+
+    # Verify values in the DB are updated and not masked
+    test_db_session.refresh(application)
+    assert application.tax_identifier.tax_identifier == "123456789"
+    assert application.mass_id == "123456789"
+    assert application.date_of_birth.isoformat() == "1970-01-01"
+    assert application.mailing_address.address_line_one == "123 Foo St."
+    assert application.mailing_address.address_line_two == "Apt #123"
+    assert application.mailing_address.zip_code == "12345-1234"
+    assert application.child_placement_date.isoformat() == "2021-05-13"
+    assert application.child_birth_date.isoformat() == "2021-09-21"
+    assert application.payment_preferences[0].account_number == "123456789"
+    assert application.payment_preferences[0].routing_number == "000000000"
+
+    # Verify values returned by the API are properly masked
+    assert response_body.get("data").get("tax_identifier") == "***-**-6789"
+    assert response_body.get("data").get("mass_id") == "*********"
+    assert response_body.get("data").get("date_of_birth") == "****-01-01"
+    assert response_body.get("data").get("mailing_address")["line_1"] == "*******"
+    assert response_body.get("data").get("mailing_address")["line_2"] == "*******"
+    assert response_body.get("data").get("mailing_address")["zip"] == "12345-****"
+    assert (
+        response_body.get("data").get("leave_details").get("child_placement_date") == "****-05-13"
+    )
+    assert response_body.get("data").get("leave_details").get("child_birth_date") == "****-09-21"
+    payment_preference = response_body.get("data").get("payment_preferences")[0]
+    assert payment_preference["account_details"]["account_number"] == "*****6789"
+    assert payment_preference["account_details"]["routing_number"] == "*********"
+
+
+def test_application_patch_masked_inputs_ignored(client, user, auth_token, test_db_session):
+    application = ApplicationFactory.create(user=user)
+    application.tax_identifier = TaxIdentifier(tax_identifier="123456789")
+    application.has_state_id = True
+    application.mass_id = "123456789"
+    application.date_of_birth = date(1970, 1, 1)
+    application.child_birth_date = date(2021, 9, 21)
+    application.child_placement_date = date(2021, 5, 13)
+    application.payment_preferences = [
+        ApplicationPaymentPreference(
+            description="Test",
+            is_default=True,
+            account_name="Foo",
+            name_in_check="Bob",
+            routing_number="000000000",
+            account_number="123456789",
+        )
+    ]
+    application.mailing_address = Address(
+        address_line_one="123 Foo St.",
+        address_line_two="Apt #123",
+        city="Chicago",
+        geo_state_id=17,  # Illinois
+        zip_code="12345-6789",
+    )
+    application.residential_address = Address(
+        address_line_one="123 Foo St.",
+        address_line_two="Apt #123",
+        city="Chicago",
+        geo_state_id=17,  # Illinois
+        zip_code="12345-6789",
+    )
+
+    test_db_session.commit()
+
+    update_request_body = {
+        "tax_identifier": "***-**-6789",
+        "mass_id": "*********",
+        "date_of_birth": "****-01-01",
+        "leave_details": {"child_birth_date": "****-09-21", "child_placement_date": "****-05-13"},
+        "mailing_address": {
+            "city": "Chicago",
+            "state": "IL",
+            "line_1": "*******",
+            "line_2": "*******",
+            "zip": "12345-****",
+        },
+        "residential_address": {
+            "city": "Chicago",
+            "state": "IL",
+            "line_1": "*******",
+            "line_2": "*******",
+            "zip": "12345-****",
+        },
+        "payment_preferences": [
+            {
+                "account_details": {
+                    "payment_preference_id": application.payment_preferences[0].payment_pref_id,
+                    "routing_number": "*********",
+                    "account_number": "*****6789",
+                },
+            }
+        ],
+    }
+
+    response = client.patch(
+        "/v1/applications/{}".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+        json=update_request_body,
+    )
+
+    assert response.status_code == 200
+
+    # Nothing in the DB value was actually updated to the masked value
+    test_db_session.refresh(application)
+    assert application.tax_identifier.tax_identifier == "123456789"
+    assert application.mass_id == "123456789"
+    assert application.date_of_birth.isoformat() == "1970-01-01"
+    assert application.mailing_address.address_line_one == "123 Foo St."
+    assert application.mailing_address.address_line_two == "Apt #123"
+    assert application.mailing_address.zip_code == "12345-6789"
+    assert application.residential_address.address_line_one == "123 Foo St."
+    assert application.residential_address.address_line_two == "Apt #123"
+    assert application.residential_address.zip_code == "12345-6789"
+    assert application.child_placement_date.isoformat() == "2021-05-13"
+    assert application.child_birth_date.isoformat() == "2021-09-21"
+    assert application.payment_preferences[0].routing_number == "000000000"
+    assert application.payment_preferences[0].account_number == "123456789"
+
+
+def test_application_patch_masked_mismatch_fields(client, user, auth_token, test_db_session):
+    application = ApplicationFactory.create(user=user)
+    application.tax_identifier = TaxIdentifier(tax_identifier="123456789")
+    application.has_state_id = True
+    application.mass_id = None
+    application.date_of_birth = date(1970, 1, 1)
+    application.child_birth_date = date(2021, 9, 21)
+    application.child_placement_date = date(2021, 5, 13)
+    application.payment_preferences = [
+        ApplicationPaymentPreference(
+            description="Test",
+            is_default=True,
+            account_name="Foo",
+            name_in_check="Bob",
+            routing_number=None,
+            account_number="123456789",
+        )
+    ]
+    application.mailing_address = Address(
+        address_line_one=None,
+        address_line_two=None,
+        city="Chicago",
+        geo_state_id=17,  # Illinois
+        zip_code="12345-6789",
+    )
+    application.residential_address = Address(
+        address_line_one=None,
+        address_line_two=None,
+        city="Chicago",
+        geo_state_id=17,  # Illinois
+        zip_code="12345-6789",
+    )
+    test_db_session.commit()
+
+    update_request_body = {
+        "tax_identifier": "***-**-0000",
+        "mass_id": "*********",
+        "date_of_birth": "****-12-31",
+        "leave_details": {"child_birth_date": "****-12-31", "child_placement_date": "****-12-31"},
+        "mailing_address": {
+            "city": "Chicago",
+            "state": "IL",
+            "line_1": "*******",
+            "line_2": "*******",
+            "zip": "55555-****",
+        },
+        "residential_address": {
+            "city": "Chicago",
+            "state": "IL",
+            "line_1": "*******",
+            "line_2": "*******",
+            "zip": "55555-****",
+        },
+        "payment_preferences": [
+            {
+                "account_details": {
+                    "payment_preference_id": application.payment_preferences[0].payment_pref_id,
+                    "routing_number": "*********",
+                    "account_number": "*****0000",
+                },
+            }
+        ],
+    }
+
+    response = client.patch(
+        "/v1/applications/{}".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+        json=update_request_body,
+    )
+
+    assert response.status_code == 400
+    tests.api.validate_error_response(response, 400, message="Error validating masked fields")
+    # Want to make sure every bad value errored above, but the error object is unwieldy, let's just look at the fields.
+    fields = set(err["field"] for err in response.get_json()["errors"])
+    partially_masked_errors = set(
+        [
+            "tax_identifier",
+            "date_of_birth",
+            "leave_details.child_birth_date",
+            "leave_details.child_placement_date",
+            "mailing_address.zip",
+            "residential_address.zip",
+            "payment_preferences[0].account_details.account_number",
+        ]
+    )
+    fully_masked_errors = set(
+        [
+            "mass_id",
+            "mailing_address.line_1",
+            "mailing_address.line_2",
+            "residential_address.line_1",
+            "residential_address.line_2",
+            "payment_preferences[0].account_details.routing_number",
+        ]
+    )
+    assert fields == partially_masked_errors.union(fully_masked_errors)
+    for err in response.get_json()["errors"]:
+        assert err["type"] == IssueType.invalid_masked_field
+
+        if err["field"] in partially_masked_errors:
+            assert err["rule"] == IssueRule.disallow_mismatched_masked_field
+        else:
+            assert err["rule"] == IssueRule.disallow_fully_masked_no_existing
 
 
 def test_application_patch_has_mailing_address(client, user, auth_token, test_db_session):
@@ -282,7 +545,7 @@ def test_application_patch_has_mailing_address(client, user, auth_token, test_db
     assert response.status_code == 200
     response_body = response.get_json()
     assert response_body.get("data").get("has_mailing_address") is True
-    assert response_body.get("data").get("mailing_address")["line_1"] == "123 Foo St."
+    assert response_body.get("data").get("mailing_address")["line_1"] == "*******"
 
     test_db_session.refresh(application)
     assert application.has_mailing_address is True
@@ -313,7 +576,7 @@ def test_application_patch_mailing_address(client, user, auth_token, test_db_ses
     response_body = response.get_json()
     assert response.status_code == 200
     assert response_body.get("data").get("mailing_address")["city"] == "Chicago"
-    assert response_body.get("data").get("mailing_address")["line_1"] == "123 Foo St."
+    assert response_body.get("data").get("mailing_address")["line_1"] == "*******"
     assert application.mailing_address.city == "Chicago"
     assert application.mailing_address.address_line_one == "123 Foo St."
 
@@ -338,7 +601,7 @@ def test_application_patch_mailing_address(client, user, auth_token, test_db_ses
     response_body = response.get_json()
     assert response.status_code == 200
     assert response_body.get("data").get("mailing_address")["city"] == "Chicago"
-    assert response_body.get("data").get("mailing_address")["line_1"] == "123 Bar St."
+    assert response_body.get("data").get("mailing_address")["line_1"] == "*******"
     assert application.mailing_address.city == "Chicago"
     assert application.mailing_address.address_line_one == "123 Bar St."
 
@@ -354,7 +617,7 @@ def test_application_patch_mailing_address(client, user, auth_token, test_db_ses
     test_db_session.refresh(application)
     response_body_new_update = response_new_update.get_json()
     assert response_body_new_update.get("data").get("mailing_address")["city"] == "Chicago"
-    assert response_body_new_update.get("data").get("mailing_address")["line_1"] == "123 Bar St."
+    assert response_body_new_update.get("data").get("mailing_address")["line_1"] == "*******"
 
     # removing mailing address
     update_request_body = {"mailing_address": None}
@@ -396,7 +659,7 @@ def test_application_patch_residential_address(client, user, auth_token, test_db
     response_body = response.get_json()
     assert response.status_code == 200
     assert response_body.get("data").get("residential_address")["city"] == "Chicago"
-    assert response_body.get("data").get("residential_address")["line_1"] == "123 Foo St."
+    assert response_body.get("data").get("residential_address")["line_1"] == "*******"
     assert application.residential_address.city == "Chicago"
     assert application.residential_address.address_line_one == "123 Foo St."
 
@@ -420,7 +683,7 @@ def test_application_patch_residential_address(client, user, auth_token, test_db
     response_body = response.get_json()
     assert response.status_code == 200
     assert response_body.get("data").get("residential_address")["city"] == "Chicago"
-    assert response_body.get("data").get("residential_address")["line_1"] == "123 Bar St."
+    assert response_body.get("data").get("residential_address")["line_1"] == "*******"
     assert application.residential_address.city == "Chicago"
     assert application.residential_address.address_line_one == "123 Bar St."
 
@@ -487,6 +750,7 @@ def test_application_patch_employee_ssn(client, user, auth_token, test_db_sessio
     )
 
     assert response.status_code == 200
+    assert response.get_json()["data"]["tax_identifier"] == "***-**-6789"
 
     test_db_session.refresh(application)
     assert application.tax_identifier
@@ -571,7 +835,7 @@ def test_application_patch_child_birth_date(client, user, auth_token, test_db_se
 
     response_body = response.get_json()
     child_dob = response_body.get("data").get("leave_details").get("child_birth_date")
-    assert child_dob == "2021-09-21"
+    assert child_dob == "****-09-21"
 
 
 def test_application_patch_child_placement_date(client, user, auth_token, test_db_session):
@@ -587,7 +851,7 @@ def test_application_patch_child_placement_date(client, user, auth_token, test_d
 
     response_body = response.get_json()
     child_dob = response_body.get("data").get("leave_details").get("child_placement_date")
-    assert child_dob == "2021-05-13"
+    assert child_dob == "****-05-13"
 
 
 def test_application_patch_state_id_fields(client, user, auth_token, test_db_session):
@@ -642,7 +906,10 @@ def test_application_patch_state_id_fields_bad_format(client, user, auth_token, 
     response_body = response.get_json()
     error = response_body.get("errors")[0]
     assert error["field"] == "mass_id"
-    assert error["message"] == "'123456789000' does not match '^(\\\\d{9}|S(\\\\d{8}|A\\\\d{7}))$'"
+    assert (
+        error["message"]
+        == "'123456789000' does not match '^(\\\\d{9}|S(\\\\d{8}|A\\\\d{7})|(\\\\*{9}))$'"
+    )
 
     response = client.patch(
         "/v1/applications/{}".format(application.application_id),
@@ -655,7 +922,10 @@ def test_application_patch_state_id_fields_bad_format(client, user, auth_token, 
     response_body = response.get_json()
     error = response_body.get("errors")[0]
     assert error["field"] == "mass_id"
-    assert error["message"] == "'C12345678' does not match '^(\\\\d{9}|S(\\\\d{8}|A\\\\d{7}))$'"
+    assert (
+        error["message"]
+        == "'C12345678' does not match '^(\\\\d{9}|S(\\\\d{8}|A\\\\d{7})|(\\\\*{9}))$'"
+    )
 
 
 def test_application_patch_leave_reason(client, user, auth_token, test_db_session):
@@ -847,7 +1117,7 @@ def test_application_patch_add_payment_preferences(client, user, auth_token, tes
     assert payment_preference.get("description") == "Test"
     assert payment_preference.get("payment_method") == "ACH"
     assert payment_preference.get("account_details").get("account_type") == "Checking"
-    assert payment_preference.get("account_details").get("routing_number") == "*****0000"
+    assert payment_preference.get("account_details").get("routing_number") == "*********"
     assert payment_preference.get("cheque_details").get("name_to_print_on_check") == "Bob"
 
 
@@ -885,7 +1155,7 @@ def test_application_patch_update_payment_preferences(client, user, auth_token, 
         payment_preference.payment_pref_id
     )
     assert payment_preference_response["description"] == "Bar"
-    assert payment_preference_response["account_details"]["routing_number"] == "*****4567"
+    assert payment_preference_response["account_details"]["routing_number"] == "*********"
 
     test_db_session.refresh(payment_preference)
     assert payment_preference.description == "Bar"
@@ -1172,7 +1442,9 @@ def test_application_patch_null_date_of_birth(client, user, auth_token):
     assert dob is None
 
 
-def test_application_patch_date_of_birth_after_1900_over_14(client, user, auth_token):
+def test_application_patch_date_of_birth_after_1900_over_14(
+    client, user, auth_token, test_db_session
+):
     application = ApplicationFactory.create(user=user)
 
     now = datetime.now()
@@ -1189,7 +1461,10 @@ def test_application_patch_date_of_birth_after_1900_over_14(client, user, auth_t
 
     response_body = response.get_json().get("data")
     dob = response_body.get("date_of_birth")
-    assert dob == test_date_str
+    assert dob == f"****{test_date_str[4:]}"
+
+    test_db_session.refresh(application)
+    assert application.date_of_birth.isoformat() == test_date_str
 
 
 def test_application_patch_date_of_birth_under_14(client, user, auth_token):

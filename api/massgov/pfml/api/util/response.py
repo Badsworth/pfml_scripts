@@ -38,6 +38,10 @@ class IssueRule(str, Enum):
     disallow_hybrid_intermittent_leave = "disallow_hybrid_intermittent_leave"
     # Leave Period dates can't overlap
     disallow_overlapping_leave_periods = "disallow_overlapping_leave_periods"
+    # Partially masked field does not match existing value
+    disallow_mismatched_masked_field = "disallow_mismatched_masked_field"
+    # Fully masked field present when system contains no data
+    disallow_fully_masked_no_existing = "disallow_fully_masked_no_existing"
 
 
 # Partial list of types currently used manually
@@ -51,6 +55,8 @@ class IssueType(str, Enum):
     minimum = "minimum"
     # Data is missing
     required = "required"
+    # Masked field is not allowed
+    invalid_masked_field = "invalid_masked_field"
 
 
 @dataclass

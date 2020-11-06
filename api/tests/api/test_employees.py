@@ -79,18 +79,6 @@ def test_employees_search_valid_with_middle_name(client, employee, consented_use
     assert response_data.get("middle_name") == employee.middle_name
 
 
-def test_employees_get_masked_email(client, consented_user_token):
-    new_employee = EmployeeFactory.create(email_address="jane@example.com")
-    response = client.get(
-        "/v1/employees/{}".format(new_employee.employee_id),
-        headers={"Authorization": "Bearer {}".format(consented_user_token)},
-    )
-
-    response_body = response.get_json().get("data")
-    assert response.status_code == 200
-    assert response_body.get("email_address") == "j*****@example.com"
-
-
 def test_employees_search_missing_param(client, consented_user_token):
     body = {"last_name": "Doe", "foo": "bar"}
     response = client.post(
