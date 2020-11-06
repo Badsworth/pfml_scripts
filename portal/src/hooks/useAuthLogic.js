@@ -4,6 +4,7 @@ import { Auth } from "@aws-amplify/auth";
 import assert from "assert";
 import { createRouteWithQuery } from "../utils/routeWithParams";
 import routes from "../routes";
+import tracker from "../services/tracker";
 import { useState } from "react";
 import { useTranslation } from "../locales/i18n";
 
@@ -52,11 +53,13 @@ const useAuthLogic = ({ appErrorsLogic, portalFlow }) => {
     }
 
     try {
+      trackAuthRequest("forgotPassword");
       await Auth.forgotPassword(username);
       // Store the username so the user doesn't need to reenter it on the Reset page
       setAuthData({ resetPasswordUsername: username });
       portalFlow.goToPageFor("SEND_CODE");
     } catch (error) {
+      trackAuthError(error);
       const appErrors = getForgotPasswordErrorInfo(error, t);
       appErrorsLogic.setAppErrors(appErrors);
     }
@@ -84,6 +87,7 @@ const useAuthLogic = ({ appErrorsLogic, portalFlow }) => {
     }
 
     try {
+      trackAuthRequest("signIn");
       await Auth.signIn(username, password);
 
       setIsLoggedIn(true);
@@ -96,6 +100,8 @@ const useAuthLogic = ({ appErrorsLogic, portalFlow }) => {
         portalFlow.goToPageFor("LOG_IN");
       }
     } catch (error) {
+      trackAuthError(error);
+
       if (error.code === "UserNotConfirmedException") {
         portalFlow.goToPageFor("UNCONFIRMED_ACCOUNT");
         return;
@@ -113,6 +119,7 @@ const useAuthLogic = ({ appErrorsLogic, portalFlow }) => {
    */
   const logout = async (options = {}) => {
     const { sessionTimedOut = false } = options;
+    trackAuthRequest("signOut");
     // Set global: true to invalidate all refresh tokens associated with the user on the Cognito servers
     // Notes:
     // 1. This invalidates tokens across all user sessions on all devices, not just the current session.
@@ -154,12 +161,14 @@ const useAuthLogic = ({ appErrorsLogic, portalFlow }) => {
       return;
     }
     try {
+      trackAuthRequest("signUp");
       await Auth.signUp({ username, password });
 
       // Store the username so the user doesn't need to reenter it on the Verify page
       setAuthData({ createAccountUsername: username });
       portalFlow.goToPageFor("CREATE_ACCOUNT");
     } catch (error) {
+      trackAuthError(error);
       const appErrors = getCreateAccountErrorInfo(error, t);
       appErrorsLogic.setAppErrors(appErrors);
     }
@@ -205,10 +214,12 @@ const useAuthLogic = ({ appErrorsLogic, portalFlow }) => {
     }
 
     try {
+      trackAuthRequest("resendSignUp");
       await Auth.resendSignUp(username);
 
       // TODO (CP-600): Show success message
     } catch (error) {
+      trackAuthError(error);
       const message = t("errors.network");
       const appErrors = new AppErrorInfoCollection([
         new AppErrorInfo({ message }),
@@ -242,9 +253,11 @@ const useAuthLogic = ({ appErrorsLogic, portalFlow }) => {
     }
 
     try {
+      trackAuthRequest("forgotPasswordSubmit");
       await Auth.forgotPasswordSubmit(username, code, password);
       portalFlow.goToPageFor("SET_NEW_PASSWORD");
     } catch (error) {
+      trackAuthError(error);
       const appErrors = getResetPasswordErrorInfo(error, t);
       appErrorsLogic.setAppErrors(appErrors);
     }
@@ -274,6 +287,7 @@ const useAuthLogic = ({ appErrorsLogic, portalFlow }) => {
     }
 
     try {
+      trackAuthRequest("confirmSignUp");
       await Auth.confirmSignUp(username, code);
       portalFlow.goToPageFor(
         "SUBMIT",
@@ -283,6 +297,7 @@ const useAuthLogic = ({ appErrorsLogic, portalFlow }) => {
         }
       );
     } catch (error) {
+      trackAuthError(error);
       const appErrors = getVerifyAccountErrorInfo(error, t);
       appErrorsLogic.setAppErrors(appErrors);
     }
@@ -594,6 +609,29 @@ function getVerifyAccountErrorInfo(error, t) {
 
   const appErrorInfo = new AppErrorInfo({ message });
   return new AppErrorInfoCollection([appErrorInfo]);
+}
+
+/**
+ * Send errors thrown while making an auth request, for debugging and monitoring.
+ * @param {{code: string, message: string }} error
+ */
+function trackAuthError(error) {
+  tracker.trackEvent("AuthError", {
+    errorCode: error.code,
+    // Cognito sometimes uses the same error code and name to represent
+    // multiple error reasons. The message is always unique, so this  will
+    // be helpful to include so we know more specifically what the error was:
+    errorMessage: error.message,
+    errorName: error.name,
+  });
+}
+
+/**
+ * Ensure Cognito AJAX requests are traceable in New Relic
+ * @param {string} action - name of the Cognito method being called
+ */
+function trackAuthRequest(action) {
+  tracker.trackFetchRequest(`cognito ${action}`);
 }
 
 export default useAuthLogic;

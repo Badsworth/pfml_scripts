@@ -2,11 +2,13 @@ import { Auth } from "@aws-amplify/auth";
 import { act } from "react-dom/test-utils";
 import routes from "../../src/routes";
 import { testHook } from "../test-utils";
+import tracker from "../../src/services/tracker";
 import useAppErrorsLogic from "../../src/hooks/useAppErrorsLogic";
 import useAuthLogic from "../../src/hooks/useAuthLogic";
 import usePortalFlow from "../../src/hooks/usePortalFlow";
 
 jest.mock("@aws-amplify/auth");
+jest.mock("../../src/services/tracker");
 
 describe("useAuthLogic", () => {
   let appErrors,
@@ -59,6 +61,14 @@ describe("useAuthLogic", () => {
         await forgotPassword(username);
       });
       expect(Auth.forgotPassword).toHaveBeenCalledWith(username);
+    });
+
+    it("tracks request", async () => {
+      await act(async () => {
+        await forgotPassword(username);
+      });
+
+      expect(tracker.trackFetchRequest).toHaveBeenCalledTimes(1);
     });
 
     it("routes to next page when successful", async () => {
@@ -208,6 +218,23 @@ describe("useAuthLogic", () => {
       );
     });
 
+    it("tracks Cognito request errors", async () => {
+      const error = new Error("Some unknown error");
+      jest.spyOn(Auth, "forgotPassword").mockImplementation(() => {
+        throw error;
+      });
+
+      await act(async () => {
+        await forgotPassword(username);
+      });
+
+      expect(tracker.trackEvent).toHaveBeenCalledWith("AuthError", {
+        errorCode: undefined,
+        errorMessage: error.message,
+        errorName: error.name,
+      });
+    });
+
     it("clears existing errors", async () => {
       await act(async () => {
         setAppErrors([{ message: "Pre-existing error" }]);
@@ -223,6 +250,14 @@ describe("useAuthLogic", () => {
         await login(username, password);
       });
       expect(Auth.signIn).toHaveBeenCalledWith(username, password);
+    });
+
+    it("tracks request", async () => {
+      await act(async () => {
+        await login(username, password);
+      });
+
+      expect(tracker.trackFetchRequest).toHaveBeenCalledTimes(1);
     });
 
     it("sets isLoggedIn to true", async () => {
@@ -384,6 +419,23 @@ describe("useAuthLogic", () => {
       );
     });
 
+    it("tracks Cognito request errors", async () => {
+      const error = new Error("Some unknown error");
+      jest.spyOn(Auth, "signIn").mockImplementation(() => {
+        throw error;
+      });
+
+      await act(async () => {
+        await login(username, password);
+      });
+
+      expect(tracker.trackEvent).toHaveBeenCalledWith("AuthError", {
+        errorCode: undefined,
+        errorMessage: error.message,
+        errorName: error.name,
+      });
+    });
+
     it("clears existing errors", async () => {
       await act(async () => {
         setAppErrors([{ message: "Pre-existing error" }]);
@@ -480,6 +532,14 @@ describe("useAuthLogic", () => {
         );
       });
     });
+
+    it("tracks request", async () => {
+      await act(async () => {
+        await logout();
+      });
+
+      expect(tracker.trackFetchRequest).toHaveBeenCalledTimes(1);
+    });
   });
 
   describe("createAccount", () => {
@@ -488,6 +548,14 @@ describe("useAuthLogic", () => {
         await createAccount(username, password);
       });
       expect(Auth.signUp).toHaveBeenCalledWith({ username, password });
+    });
+
+    it("tracks request", async () => {
+      await act(async () => {
+        await createAccount(username, password);
+      });
+
+      expect(tracker.trackFetchRequest).toHaveBeenCalledTimes(1);
     });
 
     it("routes to Verify Account page", async () => {
@@ -659,6 +727,23 @@ describe("useAuthLogic", () => {
       );
     });
 
+    it("tracks Cognito request errors", async () => {
+      const error = new Error("Some unknown error");
+      jest.spyOn(Auth, "signUp").mockImplementation(() => {
+        throw error;
+      });
+
+      await act(async () => {
+        await createAccount(username, password);
+      });
+
+      expect(tracker.trackEvent).toHaveBeenCalledWith("AuthError", {
+        errorCode: undefined,
+        errorMessage: error.message,
+        errorName: error.name,
+      });
+    });
+
     it("clears existing errors", async () => {
       await act(async () => {
         setAppErrors([{ message: "Pre-existing error" }]);
@@ -774,6 +859,14 @@ describe("useAuthLogic", () => {
       expect(Auth.resendSignUp).toHaveBeenCalledWith(username);
     });
 
+    it("tracks request", async () => {
+      await act(async () => {
+        await resendVerifyAccountCode(username);
+      });
+
+      expect(tracker.trackFetchRequest).toHaveBeenCalledTimes(1);
+    });
+
     it("sets app errors when username is empty", () => {
       username = "";
       act(() => {
@@ -799,6 +892,23 @@ describe("useAuthLogic", () => {
       );
     });
 
+    it("tracks Cognito request errors", async () => {
+      const error = new Error("Some unknown error");
+      jest.spyOn(Auth, "resendSignUp").mockImplementation(() => {
+        throw error;
+      });
+
+      await act(async () => {
+        await resendVerifyAccountCode(username);
+      });
+
+      expect(tracker.trackEvent).toHaveBeenCalledWith("AuthError", {
+        errorCode: undefined,
+        errorMessage: error.message,
+        errorName: error.name,
+      });
+    });
+
     it("clears existing errors", () => {
       act(() => {
         setAppErrors([{ message: "Pre-existing error" }]);
@@ -819,6 +929,14 @@ describe("useAuthLogic", () => {
         verificationCode,
         password
       );
+    });
+
+    it("tracks request", async () => {
+      await act(async () => {
+        await resetPassword(username, verificationCode, password);
+      });
+
+      expect(tracker.trackFetchRequest).toHaveBeenCalledTimes(1);
     });
 
     it("routes to login page", async () => {
@@ -994,6 +1112,23 @@ describe("useAuthLogic", () => {
       );
     });
 
+    it("tracks Cognito request errors", async () => {
+      const error = new Error("Some unknown error");
+      jest.spyOn(Auth, "forgotPasswordSubmit").mockImplementation(() => {
+        throw error;
+      });
+
+      await act(async () => {
+        await resetPassword(username, verificationCode, password);
+      });
+
+      expect(tracker.trackEvent).toHaveBeenCalledWith("AuthError", {
+        errorCode: undefined,
+        errorMessage: error.message,
+        errorName: error.name,
+      });
+    });
+
     it("clears existing errors", () => {
       act(() => {
         setAppErrors([{ message: "Pre-existing error" }]);
@@ -1012,6 +1147,14 @@ describe("useAuthLogic", () => {
         username,
         verificationCode
       );
+    });
+
+    it("tracks request", async () => {
+      await act(async () => {
+        await verifyAccount(username, verificationCode);
+      });
+
+      expect(tracker.trackFetchRequest).toHaveBeenCalledTimes(1);
     });
 
     it("trims whitespace from code", () => {
@@ -1150,6 +1293,23 @@ describe("useAuthLogic", () => {
       expect(appErrors.items[0].message).toMatchInlineSnapshot(
         `"Sorry, an error was encountered. This may occur for a variety of reasons, including temporarily losing an internet connection or an unexpected error in our system. If this continues to happen, you may call the Paid Family Leave Contact Center at (833) 344‑7365"`
       );
+    });
+
+    it("tracks Cognito request errors", async () => {
+      const error = new Error("Some unknown error");
+      jest.spyOn(Auth, "confirmSignUp").mockImplementation(() => {
+        throw error;
+      });
+
+      await act(async () => {
+        await verifyAccount(username, verificationCode);
+      });
+
+      expect(tracker.trackEvent).toHaveBeenCalledWith("AuthError", {
+        errorCode: undefined,
+        errorMessage: error.message,
+        errorName: error.name,
+      });
     });
 
     it("clears existing errors", () => {

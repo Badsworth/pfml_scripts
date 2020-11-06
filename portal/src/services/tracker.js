@@ -83,16 +83,16 @@ function trackEvent(name, customAttributes) {
  * which by default happens during the initial page load and any time the route is changed. That means
  * for other cases, we need to manually initiate a BrowserInteraction so the request is tracked.
  * @see https://docs.newrelic.com/docs/browser/new-relic-browser/troubleshooting/troubleshoot-ajax-data-collection
- * @param {string} url - URL being fetched
+ * @param {string} requestName - URL being fetched (if known) or name representing the request
  * @example trackFetchRequest('https://paidleave-api.mass.gov/applications'); request(...);
  */
-function trackFetchRequest(url) {
+function trackFetchRequest(requestName) {
   if (newrelicReady()) {
     // First end previous interaction if that's still in progress
     newrelic.interaction().end();
 
-    const route = url.replace("https://", "");
-    newrelic.interaction().setName(`fetch: ${route}`).save();
+    const trackedName = requestName.replace("https://", "");
+    newrelic.interaction().setName(`fetch: ${trackedName}`).save();
   }
 }
 
