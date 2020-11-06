@@ -280,6 +280,8 @@ const errors = {
         "You cannot request intermittent leave in the same application as your continuous or reduced schedule leave. Create a separate application for your intermittent leave dates.",
       disallow_overlapping_leave_periods:
         "Your reduced leave schedule cannot overlap with your continuous leave. Check whether you’ve entered the correct start and end dates for each leave period.",
+      disallow_submit_over_60_days_before_start_date:
+        "The date your leave begins is more than 60 days in the future. Submit your application within 60 days of your leave start date.",
       min_leave_periods:
         "You must choose at least one kind of leave (continuous, reduced schedule, or intermittent).",
       min_reduced_leave_minutes:

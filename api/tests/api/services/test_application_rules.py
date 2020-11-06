@@ -1,5 +1,7 @@
 from datetime import date
 
+from freezegun import freeze_time
+
 from massgov.pfml.api.models.applications.common import DurationBasis, FrequencyIntervalBasis
 from massgov.pfml.api.models.applications.responses import ApplicationResponse
 from massgov.pfml.api.services.application_rules import (
@@ -340,6 +342,7 @@ def test_has_leave_periods_required(test_db_session, initialize_factories_sessio
     ] == issues
 
 
+@freeze_time("2021-01-01")
 def test_allow_hybrid_leave(test_db_session, initialize_factories_session):
     test_app = ApplicationFactory.create(
         employment_status=EmploymentStatus.get_instance(
@@ -350,8 +353,10 @@ def test_allow_hybrid_leave(test_db_session, initialize_factories_session):
         has_continuous_leave_periods=True,
         has_intermittent_leave_periods=False,
         has_reduced_schedule_leave_periods=True,
-        continuous_leave_periods=[ContinuousLeavePeriodFactory.create()],
-        reduced_schedule_leave_periods=[ReducedScheduleLeavePeriodFactory.create()],
+        continuous_leave_periods=[ContinuousLeavePeriodFactory.create(start_date=date(2021, 1, 1))],
+        reduced_schedule_leave_periods=[
+            ReducedScheduleLeavePeriodFactory.create(start_date=date(2021, 2, 1))
+        ],
     )
 
     issues = get_leave_periods_issues(test_app)
@@ -359,6 +364,7 @@ def test_allow_hybrid_leave(test_db_session, initialize_factories_session):
     assert not issues
 
 
+@freeze_time("2021-03-01")
 def test_disallow_overlapping_hybrid_leave_dates(test_db_session, initialize_factories_session):
     test_app = ApplicationFactory.create(
         continuous_leave_periods=[
@@ -510,6 +516,37 @@ def test_disallow_2020_leave_period_start_dates(test_db_session, initialize_fact
         )
         in issues
     )
+
+
+def test_disallow_submit_over_60_days_before_start_date(
+    test_db_session, initialize_factories_session
+):
+    test_app = ApplicationFactory.create(
+        continuous_leave_periods=[
+            ContinuousLeavePeriodFactory.create(
+                start_date=date(2021, 5, 1), end_date=date(2021, 5, 8)
+            )
+        ],
+        reduced_schedule_leave_periods=[
+            ReducedScheduleLeavePeriodFactory.create(
+                start_date=date(2021, 7, 17), end_date=date(2021, 7, 28)
+            )
+        ],
+    )
+
+    disallow_submission_issue = Issue(
+        message="Can't submit application more than 60 days in advance of the earliest leave period",
+        type=IssueType.maximum,
+        rule=IssueRule.disallow_submit_over_60_days_before_start_date,
+    )
+
+    with freeze_time("2021-01-01"):
+        issues = get_leave_periods_issues(test_app)
+        assert disallow_submission_issue in issues
+
+    with freeze_time("2021-04-01"):
+        issues = get_leave_periods_issues(test_app)
+        assert disallow_submission_issue not in issues
 
 
 def test_min_leave_periods(test_db_session, initialize_factories_session):
@@ -1012,6 +1049,7 @@ def test_account_type_required_for_ACH(test_db_session, initialize_factories_ses
     ] == issues
 
 
+@freeze_time("2021-01-01")
 def test_payment_preferences_same_order(test_db_session, initialize_factories_session, app):
     test_app = ApplicationFactory.create(
         employment_status=EmploymentStatus.get_instance(
@@ -1019,7 +1057,7 @@ def test_payment_preferences_same_order(test_db_session, initialize_factories_se
         ),
         hours_worked_per_week=70,
         has_continuous_leave_periods=True,
-        continuous_leave_periods=[ContinuousLeavePeriodFactory.create()],
+        continuous_leave_periods=[ContinuousLeavePeriodFactory.create(start_date=date(2021, 1, 1))],
         payment_preferences=[
             PaymentPreferenceFactory.create(payment_type_id=PaymentType.DEBIT.payment_type_id),
             PaymentPreferenceFactory.create(

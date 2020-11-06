@@ -36,6 +36,10 @@ class IssueRule(str, Enum):
     conditional = "conditional"
     # Intermittent leave must be on its own application
     disallow_hybrid_intermittent_leave = "disallow_hybrid_intermittent_leave"
+    # Can't submit when earliest leave period is more than 60 days in the future
+    disallow_submit_over_60_days_before_start_date = (
+        "disallow_submit_over_60_days_before_start_date"
+    )
     # Leave Period dates can't overlap
     disallow_overlapping_leave_periods = "disallow_overlapping_leave_periods"
     # Partially masked field does not match existing value

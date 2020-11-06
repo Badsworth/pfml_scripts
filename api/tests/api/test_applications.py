@@ -984,7 +984,7 @@ def test_application_patch_add_leave_period(client, user, auth_token):
             "has_continuous_leave_periods": True,
             "has_intermittent_leave_periods": False,
             "has_reduced_schedule_leave_periods": False,
-            "leave_details": {"continuous_leave_periods": [{"start_date": "2021-06-11"}]},
+            "leave_details": {"continuous_leave_periods": [{"start_date": "2021-01-01"}]},
         },
     )
 
@@ -1005,14 +1005,14 @@ def test_application_patch_add_leave_period(client, user, auth_token):
 
     updated_leave_period = updated_leave_periods[0]
     assert updated_leave_period["leave_period_id"]
-    assert updated_leave_period["start_date"] == "2021-06-11"
+    assert updated_leave_period["start_date"] == "2021-01-01"
 
 
 def test_application_patch_update_leave_period(client, user, auth_token, test_db_session):
     application = ApplicationFactory.create(user=user)
 
     leave_period = ContinuousLeavePeriod(
-        start_date=date(2021, 6, 11), application_id=application.application_id
+        start_date=date(2021, 1, 1), application_id=application.application_id
     )
     test_db_session.add(leave_period)
     test_db_session.commit()
@@ -1023,7 +1023,7 @@ def test_application_patch_update_leave_period(client, user, auth_token, test_db
         json={
             "leave_details": {
                 "continuous_leave_periods": [
-                    {"leave_period_id": leave_period.leave_period_id, "start_date": "2021-06-12"}
+                    {"leave_period_id": leave_period.leave_period_id, "start_date": "2021-01-03"}
                 ]
             }
         },
@@ -1041,7 +1041,7 @@ def test_application_patch_update_leave_period(client, user, auth_token, test_db
 
     updated_leave_period = updated_leave_periods[0]
     assert updated_leave_period["leave_period_id"]
-    assert updated_leave_period["start_date"] == "2021-06-12"
+    assert updated_leave_period["start_date"] == "2021-01-03"
 
 
 def test_application_patch_update_leave_period_belonging_to_other_application_blocked(
@@ -1719,7 +1719,9 @@ def test_application_patch_key_set_to_null_does_null_field(
 def test_application_post_submit_app(client, user, auth_token, test_db_session):
     factory.random.reseed_random(1)
     application = ApplicationFactory.create(user=user)
-    application.continuous_leave_periods = [ContinuousLeavePeriodFactory.create()]
+    application.continuous_leave_periods = [
+        ContinuousLeavePeriodFactory.create(start_date=date(2021, 1, 1))
+    ]
     application.date_of_birth = "1997-06-06"
     application.employment_status_id = EmploymentStatus.UNEMPLOYED.employment_status_id
     application.hours_worked_per_week = 70
@@ -1753,7 +1755,9 @@ def test_application_post_submit_app_already_submitted(client, user, auth_token,
     # but it isn't currently in submitted status. This verifies that it only calls methods in complete_intake.
     factory.random.reseed_random(1)
     application = ApplicationFactory.create(user=user)
-    application.continuous_leave_periods = [ContinuousLeavePeriodFactory.create()]
+    application.continuous_leave_periods = [
+        ContinuousLeavePeriodFactory.create(start_date=date(2021, 1, 1))
+    ]
     application.date_of_birth = "1997-06-06"
     application.employment_status_id = EmploymentStatus.UNEMPLOYED.employment_status_id
     application.hours_worked_per_week = 70
@@ -1829,7 +1833,9 @@ def test_application_post_submit_app_fein_not_found(client, user, auth_token, te
     application.hours_worked_per_week = 70
     application.residential_address = AddressFactory.create()
     application.work_pattern = WorkPatternFixedFactory.create()
-    application.continuous_leave_periods = [ContinuousLeavePeriodFactory.create()]
+    application.continuous_leave_periods = [
+        ContinuousLeavePeriodFactory.create(start_date=date(2021, 1, 1))
+    ]
     application.has_continuous_leave_periods = True
 
     assert not application.completed_time
@@ -1867,7 +1873,9 @@ def test_application_post_submit_app_ssn_not_found(client, user, auth_token, tes
     application.hours_worked_per_week = 70
     application.residential_address = AddressFactory.create()
     application.work_pattern = WorkPatternFixedFactory.create()
-    application.continuous_leave_periods = [ContinuousLeavePeriodFactory.create()]
+    application.continuous_leave_periods = [
+        ContinuousLeavePeriodFactory.create(start_date=date(2021, 1, 1))
+    ]
     application.has_continuous_leave_periods = True
 
     # A tax identifier of 999999999 is simulated as not found in MockFINEOSClient.
@@ -1912,7 +1920,9 @@ def test_application_post_submit_existing_work_pattern(client, user, auth_token,
     application.employment_status_id = EmploymentStatus.UNEMPLOYED.employment_status_id
     application.residential_address = AddressFactory.create()
     application.work_pattern = WorkPatternFixedFactory.create()
-    application.continuous_leave_periods = [ContinuousLeavePeriodFactory.create()]
+    application.continuous_leave_periods = [
+        ContinuousLeavePeriodFactory.create(start_date=date(2021, 1, 1))
+    ]
     application.has_continuous_leave_periods = True
 
     # set fineos user id in DB to avoid autogenerated id
@@ -2037,7 +2047,7 @@ def test_application_post_submit_to_fineos(client, user, auth_token, test_db_ses
     application.has_continuous_leave_periods = True
 
     leave_period = ContinuousLeavePeriod(
-        start_date=date(2021, 1, 15),
+        start_date=date(2021, 1, 1),
         end_date=date(2021, 2, 9),
         application_id=application.application_id,
     )
@@ -2123,9 +2133,9 @@ def test_application_post_submit_to_fineos(client, user, auth_token, test_db_ses
                     primaryRelQualifier2=None,
                     timeOffLeavePeriods=[
                         massgov.pfml.fineos.models.customer_api.TimeOffLeavePeriod(
-                            startDate=date(2021, 1, 15),
+                            startDate=date(2021, 1, 1),
                             endDate=date(2021, 2, 9),
-                            lastDayWorked=date(2021, 1, 15),
+                            lastDayWorked=date(2021, 1, 1),
                             expectedReturnToWorkDate=date(2021, 2, 9),
                             startDateFullDay=True,
                             endDateFullDay=True,
@@ -2203,7 +2213,7 @@ def test_application_post_submit_to_fineos_intermittent_leave(
 
     leave_period = IntermittentLeavePeriodFactory.create(
         application_id=application.application_id,
-        start_date=date(2021, 1, 15),
+        start_date=date(2021, 1, 1),
         end_date=date(2021, 2, 9),
         frequency_interval=4,
         frequency_interval_basis=FrequencyIntervalBasis.months.value,
@@ -2236,7 +2246,7 @@ def test_application_post_submit_to_fineos_intermittent_leave(
 
     assert capture[3][2]["absence_case"].episodicLeavePeriods == [
         massgov.pfml.fineos.models.customer_api.EpisodicLeavePeriod(
-            startDate=date(2021, 1, 15),
+            startDate=date(2021, 1, 1),
             endDate=date(2021, 2, 9),
             frequency=6,
             frequencyInterval=4,
@@ -2268,7 +2278,7 @@ def test_application_post_submit_to_fineos_reduced_schedule_leave(
 
     leave_period = ReducedScheduleLeavePeriodFactory.create(
         application_id=application.application_id,
-        start_date=date(2021, 1, 15),
+        start_date=date(2021, 1, 1),
         end_date=date(2021, 2, 9),
         thursday_off_minutes=240 + 45,
         friday_off_minutes=480,
@@ -2301,7 +2311,7 @@ def test_application_post_submit_to_fineos_reduced_schedule_leave(
 
     assert capture[3][2]["absence_case"].reducedScheduleLeavePeriods == [
         massgov.pfml.fineos.models.customer_api.ReducedScheduleLeavePeriod(
-            startDate=date(2021, 1, 15),
+            startDate=date(2021, 1, 1),
             endDate=date(2021, 2, 9),
             status="Known",
             mondayOffHours=4,
@@ -2331,7 +2341,7 @@ def test_application_post_submit_to_fineos_bonding_adoption(
     application.residential_address = AddressFactory.create()
     application.work_pattern = WorkPatternFixedFactory.create()
     leave_period = ContinuousLeavePeriod(
-        start_date=date(2021, 1, 15),
+        start_date=date(2021, 1, 1),
         end_date=date(2021, 2, 9),
         application_id=application.application_id,
     )
@@ -2381,7 +2391,7 @@ def test_application_post_submit_to_fineos_bonding_foster(
     application.residential_address = AddressFactory.create()
     application.work_pattern = WorkPatternFixedFactory.create()
     leave_period = ContinuousLeavePeriod(
-        start_date=date(2021, 1, 15),
+        start_date=date(2021, 1, 1),
         end_date=date(2021, 2, 9),
         application_id=application.application_id,
     )
@@ -2433,7 +2443,7 @@ def test_application_post_submit_to_fineos_bonding_newborn(
     application.residential_address = AddressFactory.create()
     application.work_pattern = WorkPatternFixedFactory.create()
     leave_period = ContinuousLeavePeriod(
-        start_date=date(2021, 1, 15),
+        start_date=date(2021, 1, 1),
         end_date=date(2021, 2, 9),
         application_id=application.application_id,
     )
@@ -2482,7 +2492,7 @@ def test_application_post_submit_to_fineos_medical(client, user, auth_token, tes
     application.residential_address = AddressFactory.create()
     application.work_pattern = WorkPatternFixedFactory.create()
     leave_period = ContinuousLeavePeriod(
-        start_date=date(2021, 1, 15),
+        start_date=date(2021, 1, 1),
         end_date=date(2021, 2, 9),
         application_id=application.application_id,
     )
@@ -2536,7 +2546,7 @@ def test_application_post_submit_to_fineos_medical_pregnant(
     application.residential_address = AddressFactory.create()
     application.work_pattern = WorkPatternFixedFactory.create()
     leave_period = ContinuousLeavePeriod(
-        start_date=date(2021, 1, 15),
+        start_date=date(2021, 1, 1),
         end_date=date(2021, 2, 9),
         application_id=application.application_id,
     )
@@ -2581,7 +2591,7 @@ def test_application_post_submit_to_fineos_pregnant(client, user, auth_token, te
     application.residential_address = AddressFactory.create()
     application.work_pattern = WorkPatternFixedFactory.create()
     leave_period = ContinuousLeavePeriod(
-        start_date=date(2021, 1, 15),
+        start_date=date(2021, 1, 1),
         end_date=date(2021, 2, 9),
         application_id=application.application_id,
     )
@@ -2628,7 +2638,9 @@ def test_application_post_complete_app(client, user, auth_token, test_db_session
     application.work_pattern = WorkPatternFixedFactory.create()
     application.employer_fein = "770000001"
     application.fineos_notification_case_id = "NTN-259"
-    application.continuous_leave_periods = [ContinuousLeavePeriodFactory.create()]
+    application.continuous_leave_periods = [
+        ContinuousLeavePeriodFactory.create(start_date=date(2021, 1, 1))
+    ]
     application.has_continuous_leave_periods = True
 
     test_db_session.commit()
