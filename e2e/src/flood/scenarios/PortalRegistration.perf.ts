@@ -1,15 +1,17 @@
-import { TestData, Browser, step, By } from "@flood/element";
+import { StepFunction, TestData, Browser, step, By } from "@flood/element";
 import {
   globalElementSettings as settings,
   PortalBaseUrl,
   dataBaseUrl,
   LSTSimClaim,
+  LSTScenario,
 } from "../config";
 import {
   getMailVerifier,
   TestMailVerificationFetcher,
   labelled,
   waitForElement,
+  waitForRealTimeSim,
 } from "../helpers";
 
 let emailVerifier: TestMailVerificationFetcher;
@@ -17,11 +19,11 @@ let username: string;
 let password: string;
 
 export { settings };
-export const scenario = "PortalRegistration";
+export const scenario: LSTScenario = "PortalRegistration";
 export const steps = [
   {
     name: "Visit Portal homepage",
-    test: async (browser: Browser): Promise<void> => {
+    test: async (browser: Browser, data: LSTSimClaim): Promise<void> => {
       await browser.page.setCookie({
         name: "_ff",
         value: JSON.stringify({
@@ -30,11 +32,12 @@ export const steps = [
         url: await PortalBaseUrl,
       });
       await browser.visit(await PortalBaseUrl);
+      await waitForRealTimeSim(browser, data, 1 / steps.length);
     },
   },
   {
     name: "Register new user in Portal",
-    test: async (browser: Browser): Promise<void> => {
+    test: async (browser: Browser, data: LSTSimClaim): Promise<void> => {
       // create email verifier and user credentials
       emailVerifier = await getMailVerifier(browser);
       ({ username, password } = emailVerifier.getCredentials());
@@ -49,11 +52,12 @@ export const steps = [
       await (
         await waitForElement(browser, By.css("button[type='submit']"))
       ).click();
+      await waitForRealTimeSim(browser, data, 1 / steps.length);
     },
   },
   {
     name: "Verify new user's email",
-    test: async (browser: Browser): Promise<void> => {
+    test: async (browser: Browser, data: LSTSimClaim): Promise<void> => {
       // initial wait time for email to be sent
       const code = await emailVerifier.getVerificationCodeForUser(username);
       if (code.length === 0)
@@ -69,6 +73,7 @@ export const steps = [
         browser,
         By.visibleText("Email successfully verified")
       );
+      await waitForRealTimeSim(browser, data, 1 / steps.length);
     },
   },
 ];
@@ -78,6 +83,6 @@ export default (): void => {
     (line) => line.scenario === scenario
   );
   steps.forEach((action) => {
-    step(action.name, action.test);
+    step(action.name, action.test as StepFunction<unknown>);
   });
 };

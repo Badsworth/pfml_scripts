@@ -1,6 +1,6 @@
 import { Browser, By } from "@flood/element";
-import { StoredStep } from "../config";
-import { waitForElement, labelled } from "../helpers";
+import { StoredStep, LSTSimClaim } from "../config";
+import { labelled, waitForElement, waitForRealTimeSim } from "../helpers";
 
 export const steps: StoredStep[] = [
   {
@@ -46,9 +46,10 @@ export const steps: StoredStep[] = [
   },
 ];
 
-export default async (browser: Browser, data: unknown): Promise<void> => {
+export default async (browser: Browser, data: LSTSimClaim): Promise<void> => {
   for (const step of steps) {
     console.log(`Deny - ${step.name}`);
     await step.test(browser, data);
+    await waitForRealTimeSim(browser, data, 1 / steps.length);
   }
 };

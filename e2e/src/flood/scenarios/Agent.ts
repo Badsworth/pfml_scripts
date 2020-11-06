@@ -1,4 +1,4 @@
-import { TestData, ElementHandle, Browser, step, By } from "@flood/element";
+import { StepFunction, TestData, Browser, step, By } from "@flood/element";
 import { fineosUserTypeNames, FineosUserType } from "../../simulation/types";
 import {
   dataBaseUrl,
@@ -8,12 +8,13 @@ import {
   TaskHook,
   StoredStep,
   LSTSimClaim,
+  LSTScenario,
   getFineosBaseUrl,
 } from "../config";
 import { waitForElement } from "../helpers";
 
 export default (
-  scenario: string,
+  scenario: LSTScenario,
   actions: TaskType[],
   tasksToDo = 1
 ): Agent => {
@@ -46,7 +47,7 @@ export default (
     },
     {
       name: "Do task",
-      test: async (browser: Browser, data: unknown): Promise<void> => {
+      test: async (browser: Browser, data: LSTSimClaim): Promise<void> => {
         // navigate to tasks list and find next task type
         const linkTasks = await waitForElement(
           browser,
@@ -60,11 +61,12 @@ export default (
     },
   ];
 
-  async function doNextTask(browser: Browser, data: unknown): Promise<void> {
+  async function doNextTask(
+    browser: Browser,
+    data: LSTSimClaim
+  ): Promise<void> {
     // this is mostly for testing purposes,
     // forces script to run the task type specified in claims.json
-    const _data = data as LSTSimClaim;
-
     // get next task
     const getNextTask = await waitForElement(
       browser,
@@ -72,10 +74,10 @@ export default (
     );
     await getNextTask.click();
 
-    let nextTask: ElementHandle;
+    let nextTask;
     try {
-      if ("priorityTask" in _data) {
-        taskTypeElementLocator = `td[title="${_data.priorityTask}"]`;
+      if ("priorityTask" in data) {
+        taskTypeElementLocator = `td[title="${data.priorityTask}"]`;
         await findClaimType(browser, data);
       }
       nextTask = await waitForElement(browser, By.css(taskTypeElementLocator));
@@ -85,8 +87,9 @@ export default (
     }
 
     // select next task
-    const nextTaskType = await nextTask.text();
+    const nextTaskType = (await nextTask.text()) as TaskType;
     await nextTask.click();
+    data.agentTask = nextTaskType;
 
     const agentHooks: TaskHook[] = ["Before", "", "After"];
     for (const hook of agentHooks) {
@@ -113,15 +116,14 @@ export default (
         (line) => line.scenario === scenario
       );
       steps.forEach((action) => {
-        step(action.name, action.test);
+        step(action.name, action.test as StepFunction<unknown>);
       });
     },
   };
 };
 
-async function findClaimType(browser: Browser, data: unknown) {
-  const _data = data as LSTSimClaim;
-  if (!_data.priorityTask) return;
+async function findClaimType(browser: Browser, data: LSTSimClaim) {
+  if (!data.priorityTask) return;
   const filterByType = await waitForElement(
     browser,
     By.css("a[title='Filter by:TaskType']")
@@ -132,7 +134,7 @@ async function findClaimType(browser: Browser, data: unknown) {
     browser,
     By.css("#PopupContainer .filterField input[id*='_Name']")
   );
-  await browser.type(filterInput, _data.priorityTask);
+  await browser.type(filterInput, data.priorityTask);
 
   let applyFilter = await waitForElement(
     browser,
@@ -143,8 +145,8 @@ async function findClaimType(browser: Browser, data: unknown) {
 
   await browser.wait(2000);
 
-  const claimantName = (_data.claim && "first_name" in _data.claim
-    ? `${_data.claim.first_name} ${_data.claim.last_name}`
+  const claimantName = (data.claim && "first_name" in data.claim
+    ? `${data.claim.first_name} ${data.claim.last_name}`
     : ""
   ).trim();
   if (claimantName.length > 0) {

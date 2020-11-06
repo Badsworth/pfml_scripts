@@ -1,7 +1,11 @@
 import Agent from "./Agent";
-import { globalElementSettings as settings, TaskType } from "../config";
+import {
+  globalElementSettings as settings,
+  TaskType,
+  LSTScenario,
+} from "../config";
 
-export const scenario = "SavilinxAgent";
+export const scenario: LSTScenario = "SavilinxAgent";
 export const tasksToDo = 1;
 export const actions: TaskType[] = [
   "Adjudicate Absence",

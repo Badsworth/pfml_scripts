@@ -1,5 +1,12 @@
 import { Locator, Browser, By, ElementHandle, Until } from "@flood/element";
-import { config, StandardDocumentType } from "./config";
+import {
+  config,
+  TaskType,
+  LSTSimClaim,
+  StandardDocumentType,
+  SimulationSpeed,
+  realUserTimings,
+} from "./config";
 import { ClaimDocument } from "../simulation/types";
 import { DocumentUploadRequest } from "../api";
 
@@ -93,21 +100,19 @@ export async function getMailVerifier(
       .join("&");
 
     // Stop trying to find email after 60 seconds
-    const controller = new AbortController();
-    setTimeout(() => controller.abort(), 60000);
     const body = await browser.evaluate(
-      (baseUrl, query, signal) => {
-        return new Promise((resolve, reject) => {
-          fetch(`${baseUrl}?${query}`, { signal })
+      (baseUrl, query) =>
+        new Promise((resolve, reject) => {
+          const controller = new AbortController();
+          setTimeout(() => controller.abort(), 60000);
+          fetch(`${baseUrl}?${query}`, { signal: controller.signal })
             .then((r) => {
               resolve(r.json());
             })
             .catch(reject);
-        });
-      },
+        }),
       endpoint,
-      paramsString,
-      controller.signal
+      paramsString
     );
 
     if (body.result !== "success") {
@@ -142,10 +147,13 @@ export async function getMailVerifier(
   }
 
   function rStr(length: number) {
-    return Array(length)
-      .fill("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz")
-      .map((x) => x[Math.floor(Math.random() * x.length)])
-      .join("");
+    const symbols = "!#$%&|_-?";
+    return (
+      Array(length - 1)
+        .fill("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz")
+        .map((x) => x[Math.floor(Math.random() * x.length)])
+        .join("") + symbols[Math.floor(Math.random() * symbols.length)]
+    );
   }
 
   function rStrWithNums(length: number) {
@@ -239,4 +247,27 @@ Promise<any> => {
     options,
     docUpload
   );
+};
+
+export const waitForRealTimeSim = async (
+  browser: Browser,
+  data: LSTSimClaim,
+  waitFor = 1
+): Promise<void> => {
+  const speedSetting = await config("E2E_SIMULATION_SPEED");
+  const speedFactor = SimulationSpeed[speedSetting];
+  let realTime: number;
+  if (data.agentTask) {
+    realTime = (realUserTimings[data.scenario] as Record<TaskType, number>)[
+      data.agentTask
+    ];
+  } else {
+    realTime = realUserTimings[data.scenario] as number;
+  }
+  realTime = realTime * 60 * 1000 * waitFor * speedFactor;
+  const seconds = (realTime / 1000).toFixed(3);
+  console.info(
+    `[${speedSetting}] Wait ${seconds} seconds - real time simulation`
+  );
+  await browser.wait(realTime);
 };

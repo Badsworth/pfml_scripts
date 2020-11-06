@@ -1,6 +1,11 @@
 import { Browser, By } from "@flood/element";
-import { waitForElement, labelled, isFinanciallyEligible } from "../helpers";
-import { StoredStep } from "../config";
+import {
+  labelled,
+  waitForElement,
+  waitForRealTimeSim,
+  isFinanciallyEligible,
+} from "../helpers";
+import { StoredStep, LSTSimClaim } from "../config";
 import Tasks from "./index";
 
 let evidenceApproved: boolean;
@@ -8,7 +13,7 @@ let evidenceApproved: boolean;
 export const steps: StoredStep[] = [
   {
     name: "Check if claim is ready for approval",
-    test: async (browser: Browser, data: unknown): Promise<void> => {
+    test: async (browser: Browser, data: LSTSimClaim): Promise<void> => {
       // if evidence has not been reviewed yet,
       // approve all evidence
       const evidence = await waitForElement(
@@ -72,7 +77,7 @@ export const steps: StoredStep[] = [
   },
   {
     name: "Accept Leave Plan",
-    test: async (browser: Browser, data: unknown): Promise<void> => {
+    test: async (browser: Browser, data: LSTSimClaim): Promise<void> => {
       let manageRequestTab = await waitForElement(
         browser,
         By.visibleText("Manage Request")
@@ -118,7 +123,7 @@ export const steps: StoredStep[] = [
   },
   {
     name: "Finalize claim adjudication",
-    test: async (browser: Browser, data: unknown): Promise<void> => {
+    test: async (browser: Browser, data: LSTSimClaim): Promise<void> => {
       // check if leave has been accepted
       const leavePlanStatus = await (
         await waitForElement(
@@ -227,12 +232,13 @@ export const certifyEvidence: StoredStep = {
   },
 };
 
-export default async (browser: Browser, data: unknown): Promise<void> => {
+export default async (browser: Browser, data: LSTSimClaim): Promise<void> => {
   const isEligible = await isFinanciallyEligible(browser);
   if (isEligible) {
     for (const step of steps) {
       console.log(`Approve - ${step.name}`);
       await step.test(browser, data);
+      await waitForRealTimeSim(browser, data, 1 / steps.length);
     }
   } else {
     // Deny claim due to lack of Financial Eligibility

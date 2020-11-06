@@ -1,6 +1,11 @@
 import { Locator, Browser, By } from "@flood/element";
-import { waitForElement, isFinanciallyEligible } from "../helpers";
 import {
+  waitForElement,
+  waitForRealTimeSim,
+  isFinanciallyEligible,
+} from "../helpers";
+import {
+  TaskType,
   StoredStep,
   LSTSimClaim,
   StandardDocumentType,
@@ -12,6 +17,8 @@ import { approveEvidence } from "./ApproveClaim";
 let taskDescription: string;
 const attachedDocuments: StandardDocumentType[] = [];
 const missingDocuments: StandardDocumentType[] = [];
+
+export const taskName: TaskType = "Outstanding Requirement Received";
 
 export const PreORR = async (browser: Browser): Promise<void> => {
   const description = await waitForElement(
@@ -33,7 +40,7 @@ export const PreORR = async (browser: Browser): Promise<void> => {
   await browser.click(openClaim);
 };
 
-export default async (browser: Browser, data: unknown): Promise<void> => {
+export default async (browser: Browser, data: LSTSimClaim): Promise<void> => {
   // check if claim has already been approved or declined
   const claimStatus = await (
     await waitForElement(browser, By.css(".key-info-bar .status"))
@@ -100,7 +107,7 @@ export default async (browser: Browser, data: unknown): Promise<void> => {
 export const steps: StoredStep[] = [
   {
     name: "Review documents received",
-    test: async (browser: Browser): Promise<void> => {
+    test: async (browser: Browser, data: LSTSimClaim): Promise<void> => {
       // go to the documents tab
       const documentsTab = await waitForElement(
         browser,
@@ -117,12 +124,12 @@ export const steps: StoredStep[] = [
         documentPage.close({ runBeforeUnload: true });
         await browser.switchTo().page(popupPage);
       }
+      await waitForRealTimeSim(browser, data, 1 / steps.length);
     },
   },
   {
     name: "Approve evidence received",
-    test: async (browser: Browser, data: unknown): Promise<void> => {
-      const _data = data as LSTSimClaim;
+    test: async (browser: Browser, data: LSTSimClaim): Promise<void> => {
       // go to the absence hub tab
       const absenceHubTab = await waitForElement(
         browser,
@@ -138,9 +145,9 @@ export const steps: StoredStep[] = [
       if (missingDocuments.length > 0) {
         // if documents are missing
         for (const missingDocument of missingDocuments) {
-          _data.missingDocument = missingDocument;
-          await Tasks.PreRequestAdditionalInfo(browser, _data);
-          await Tasks.RequestAdditionalInformation(browser, _data);
+          data.missingDocument = missingDocument;
+          await Tasks.PreRequestAdditionalInfo(browser, data);
+          await Tasks.RequestAdditionalInformation(browser, data);
         }
       }
       // if documents exist, approve evidence
@@ -151,11 +158,12 @@ export const steps: StoredStep[] = [
         By.css("input[type='submit'][value='OK']")
       );
       await browser.click(okButton);
+      await waitForRealTimeSim(browser, data, 1 / steps.length);
     },
   },
   {
     name: "Close ORR Task",
-    test: async (browser: Browser): Promise<void> => {
+    test: async (browser: Browser, data: LSTSimClaim): Promise<void> => {
       // go to the tasks tab
       const tasksTab = await waitForElement(
         browser,
@@ -174,6 +182,7 @@ export const steps: StoredStep[] = [
         By.css("input[title='Close selected task']")
       );
       await browser.click(closeTaskButton);
+      await waitForRealTimeSim(browser, data, 1 / steps.length);
     },
   },
 ];

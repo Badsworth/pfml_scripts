@@ -1,4 +1,4 @@
-import { TestData, Browser, step, By } from "@flood/element";
+import { StepFunction, TestData, Browser, step, By } from "@flood/element";
 import { DocumentUploadRequest } from "../../api";
 import {
   globalElementSettings as settings,
@@ -6,11 +6,13 @@ import {
   APIBaseUrl,
   dataBaseUrl,
   LSTSimClaim,
+  LSTScenario,
   config,
 } from "../config";
 import {
   labelled,
   waitForElement,
+  waitForRealTimeSim,
   getRequestOptions,
   getDocumentType,
   evalFetch,
@@ -25,7 +27,7 @@ const pdfDocument = fs.readFileSync(
 );
 
 export { settings };
-export const scenario = "PortalClaimSubmit";
+export const scenario: LSTScenario = "PortalClaimSubmit";
 export const steps = [
   {
     name: "Login in Portal",
@@ -62,8 +64,8 @@ export const steps = [
   },
   {
     name: "Create, Update and Submit new application",
-    test: async (browser: Browser, data: unknown): Promise<void> => {
-      const { claim, documents } = data as LSTSimClaim;
+    test: async (browser: Browser, data: LSTSimClaim): Promise<void> => {
+      const { claim, documents } = data;
       const { leave_details } = claim;
       // Attempt at simulating portal's consequent small patch requests
       const claimParts: (Partial<LSTSimClaim["claim"]> | string)[] = [
@@ -120,6 +122,7 @@ export const steps = [
           leave_details: {
             child_birth_date: leave_details?.child_birth_date,
             child_placement_date: leave_details?.child_placement_date,
+            pregnant_or_recent_birth: leave_details?.pregnant_or_recent_birth,
           },
         },
         {
@@ -239,8 +242,7 @@ export const steps = [
           }
           console.info("Updated application", res.status_code);
         }
-        // wait a bit before executing next step
-        await browser.wait(300);
+        await waitForRealTimeSim(browser, data, 1 / steps.length);
       }
     },
   },
@@ -251,6 +253,6 @@ export default (): void => {
     (line) => line.scenario === scenario
   );
   steps.forEach((action) => {
-    step(action.name, action.test);
+    step(action.name, action.test as StepFunction<unknown>);
   });
 };

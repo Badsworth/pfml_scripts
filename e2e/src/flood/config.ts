@@ -1,4 +1,4 @@
-import { StepFunction, TestSettings, ENV } from "@flood/element";
+import { Browser, TestSettings, ENV } from "@flood/element";
 import { SimulationClaim, FineosUserType } from "../simulation/types";
 import { DocumentUploadRequest } from "../api";
 import Tasks from "./tasks";
@@ -17,13 +17,40 @@ export const globalElementSettings: TestSettings = {
   clearCookies: true,
 };
 
+// simulation speed factor control
+export const SimulationSpeed: Record<string, number> = {
+  REAL: 1,
+  TEST: 0.1,
+  DEV: 0,
+};
+
+// real time simulation in minutes
+export const realUserTimings: Record<
+  LSTScenario,
+  Record<TaskType, number> | number
+> = {
+  SavilinxAgent: {
+    "Adjudicate Absence": 15,
+    "Outstanding Requirement Received": 5,
+  },
+  DFMLOpsAgent: 0,
+  PortalRegistration: 3,
+  PortalClaimSubmit: 15,
+  FineosClaimSubmit: 8,
+};
+
 export const dataBaseUrl = "data/pilot3";
 export const PortalBaseUrl = config("E2E_PORTAL_BASEURL");
 export const APIBaseUrl = config("E2E_API_BASEURL");
 
+export type LSTStepFunction = (
+  browser: Browser,
+  data: LSTSimClaim
+) => Promise<void>;
+
 export type StoredStep = {
   name: string;
-  test: StepFunction<unknown>;
+  test: LSTStepFunction;
 };
 
 export type Agent = {
@@ -31,16 +58,22 @@ export type Agent = {
   default: () => void;
 };
 
+export type AgentActions = {
+  [k: string]: LSTStepFunction;
+};
+
+export type LSTScenario =
+  | "SavilinxAgent"
+  | "DFMLOpsAgent"
+  | "PortalRegistration"
+  | "PortalClaimSubmit"
+  | "FineosClaimSubmit";
+
 export type TaskType =
   | "Adjudicate Absence"
   | "Outstanding Requirement Received";
 
 export type TaskHook = "" | "Before" | "After";
-
-export type AgentActions = {
-  // [k: `${TaskHook}${TaskType}`] ?
-  [k: string]: StepFunction<unknown>;
-};
 
 export const agentActions: AgentActions = {
   // Adjudicate randomly approves or denies a claim
@@ -59,6 +92,8 @@ export const standardDocuments: StandardDocumentType[] = [
 ];
 
 export type LSTSimClaim = SimulationClaim & {
+  scenario: LSTScenario;
+  agentTask?: TaskType;
   priorityTask?: TaskType;
   missingDocument?: StandardDocumentType;
 };

@@ -1,27 +1,34 @@
-import { TestData, Browser, step, By } from "@flood/element";
+import { StepFunction, TestData, Browser, step, By } from "@flood/element";
 import {
   globalElementSettings as settings,
   dataBaseUrl,
   StoredStep,
   LSTSimClaim,
+  LSTScenario,
   getFineosBaseUrl,
 } from "../config";
-import { labelled, waitForElement, formatDate } from "../helpers";
+import {
+  labelled,
+  formatDate,
+  waitForElement,
+  waitForRealTimeSim,
+} from "../helpers";
 import assert from "assert";
 
 export { settings };
-export const scenario = "FineosClaimSubmit";
+export const scenario: LSTScenario = "FineosClaimSubmit";
 export const steps: StoredStep[] = [
   {
     name: "Login into fineos",
-    test: async (browser: Browser): Promise<void> => {
+    test: async (browser: Browser, data: LSTSimClaim): Promise<void> => {
       await browser.visit(await getFineosBaseUrl());
+      await waitForRealTimeSim(browser, data, 1 / steps.length);
     },
   },
   {
     name: "Search for a party",
-    test: async (browser: Browser, data: unknown): Promise<void> => {
-      const { claim } = data as LSTSimClaim;
+    test: async (browser: Browser, data: LSTSimClaim): Promise<void> => {
+      const { claim } = data;
       const linkParties = await waitForElement(
         browser,
         By.css('a[aria-label="Parties"]')
@@ -43,12 +50,13 @@ export const steps: StoredStep[] = [
         By.css('input[type="submit"][value="Search"]')
       );
       await search.click();
+      await waitForRealTimeSim(browser, data, 1 / steps.length);
     },
   },
   {
     name: "Add new application",
-    test: async (browser: Browser, data: unknown): Promise<void> => {
-      const { claim } = data as LSTSimClaim;
+    test: async (browser: Browser, data: LSTSimClaim): Promise<void> => {
+      const { claim } = data;
       assert(claim.tax_identifier, "tax_identifier is not defined");
       const okButton = await waitForElement(
         browser,
@@ -70,12 +78,13 @@ export const steps: StoredStep[] = [
         By.css('input[type="submit"][value^="Next"]')
       );
       await nextButton.click();
+      await waitForRealTimeSim(browser, data, 1 / steps.length);
     },
   },
   {
     name: "Fill out Intake Opening info",
-    test: async (browser: Browser, data: unknown): Promise<void> => {
-      const { claim } = data as LSTSimClaim;
+    test: async (browser: Browser, data: LSTSimClaim): Promise<void> => {
+      const { claim } = data;
       const intakeSourceSelect = await labelled(browser, "Intake Source");
       await browser.selectByText(intakeSourceSelect, "Self-Service");
       /* Date of claim submission, defaults to current date/time */
@@ -94,12 +103,13 @@ export const steps: StoredStep[] = [
         By.css('input[type="submit"][value^="Next"]')
       );
       await nextButton.click();
+      await waitForRealTimeSim(browser, data, 1 / steps.length);
     },
   },
   {
     name: "Fill out Paper Intake - Absence Reason section",
-    test: async (browser: Browser, data: unknown): Promise<void> => {
-      const { claim } = data as LSTSimClaim;
+    test: async (browser: Browser, data: LSTSimClaim): Promise<void> => {
+      const { claim } = data;
       if (claim.employment_status === "Employed") {
         const absenceRelatesToSelect = await labelled(
           browser,
@@ -130,12 +140,13 @@ export const steps: StoredStep[] = [
       await browser.selectByText(secondQualifierSelect, "Accident / Injury");
       // await browser.wait(1000);
       //}
+      await waitForRealTimeSim(browser, data, 1 / steps.length);
     },
   },
   {
     name: "Fill out Paper Intake - Leave Periods section",
-    test: async (browser: Browser, data: unknown): Promise<void> => {
-      const { claim } = data as LSTSimClaim;
+    test: async (browser: Browser, data: LSTSimClaim): Promise<void> => {
+      const { claim } = data;
       assert(claim.leave_details, "claim.leave_details is not defined");
       assert(
         claim.leave_details.continuous_leave_periods,
@@ -147,16 +158,17 @@ export const steps: StoredStep[] = [
           By.css("input[type='checkbox'][id*='continuousTimeToggle_CHECKBOX']")
         );
         await continuousLeave.click();
-        await fillContinuousLeavePeriods(browser, data as LSTSimClaim);
+        await fillContinuousLeavePeriods(browser, data);
       }
       await browser.wait(1000);
+      await waitForRealTimeSim(browser, data, 1 / steps.length);
       // TODO: other types of leaves "Episodic / leave as needed", "Reduced work schedule"
     },
   },
   {
     name: "Fill out Paper Intake - Timely Reporting section",
-    test: async (browser: Browser, data: unknown): Promise<void> => {
-      const { claim } = data as LSTSimClaim;
+    test: async (browser: Browser, data: LSTSimClaim): Promise<void> => {
+      const { claim } = data;
       assert(claim.leave_details, "claim.leave_details is not defined");
       if (claim.leave_details.employer_notified) {
         const hasBeenNotifiedCheckbox = await labelled(
@@ -183,11 +195,12 @@ export const steps: StoredStep[] = [
         }
       }
       await browser.wait(1000);
+      await waitForRealTimeSim(browser, data, 1 / steps.length);
     },
   },
   {
     name: "Submit application",
-    test: async (browser: Browser): Promise<void> => {
+    test: async (browser: Browser, data: LSTSimClaim): Promise<void> => {
       const nextButton = await waitForElement(
         browser,
         By.css('input[type="submit"][value^="Next"]')
@@ -201,6 +214,7 @@ export const steps: StoredStep[] = [
       await completeRegistration.click();
 
       await waitForElement(browser, By.visibleText("Adjudication"));
+      await waitForRealTimeSim(browser, data, 1 / steps.length);
     },
   },
 ];
@@ -245,7 +259,7 @@ export default (): void => {
     (line) => line.scenario === scenario
   );
   steps.forEach((action) => {
-    step(action.name, action.test);
+    step(action.name, action.test as StepFunction<unknown>);
   });
 
   /* TODO: Employee Section */

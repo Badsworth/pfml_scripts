@@ -2,17 +2,16 @@ import { Browser, By } from "@flood/element";
 import { StoredStep, LSTSimClaim, StandardDocumentType } from "../config";
 import { waitForElement, labelled } from "../helpers";
 
-let missingDocument: StandardDocumentType;
+let missingDocument: StandardDocumentType | undefined;
 
 export const PreRequestAdditionalInfo = async (
   browser: Browser,
-  data: unknown
+  data: LSTSimClaim
 ): Promise<void> => {
-  const _data = data as LSTSimClaim;
-  missingDocument = _data.missingDocument as StandardDocumentType;
+  missingDocument = data.missingDocument;
 };
 
-export default async (browser: Browser, data: unknown): Promise<void> => {
+export default async (browser: Browser, data: LSTSimClaim): Promise<void> => {
   for (const step of steps) {
     console.log(`Request Additional Info - ${step.name} - ${missingDocument}`);
     await step.test(browser, data);

@@ -1,7 +1,11 @@
 import Agent from "./Agent";
-import { globalElementSettings as settings, TaskType } from "../config";
+import {
+  globalElementSettings as settings,
+  TaskType,
+  LSTScenario,
+} from "../config";
 
-export const scenario = "DFMLOpsAgent";
+export const scenario: LSTScenario = "DFMLOpsAgent";
 export const tasksToDo = 1;
 export const actions: TaskType[] = [];
 

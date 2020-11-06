@@ -5,53 +5,33 @@ import {
   beforeEach,
   step,
 } from "@flood/element";
-import { globalElementSettings, StoredStep, dataBaseUrl } from "./config";
-import { SimulationClaim } from "../simulation/types";
-import * as Fineos from "./tests/FineosClaimSubmit.perf";
-import * as PortalSubmit from "./tests/PortalClaimSubmit.perf";
-import * as PortalRegistration from "./tests/PortalRegistration.perf";
-import * as SavilinxAgent from "./tests/SavilinxAgent.perf";
+import {
+  globalElementSettings,
+  LSTScenario,
+  LSTSimClaim,
+  dataBaseUrl,
+} from "./config";
+import scenarios from "./scenarios";
 
 export const settings: TestSettings = {
   ...globalElementSettings,
   loopCount: 1000,
 };
 
-type ScenarioMap = {
-  [k: string]: StoredStep[];
-};
-
-// List of imported scenarios to execute
-// Essentially all scenario imported files
-const availableScenarios = [
-  Fineos,
-  PortalSubmit,
-  PortalRegistration,
-  SavilinxAgent,
-];
-
-const scenarios: ScenarioMap = availableScenarios.reduce(
-  (allScenarios, curr) => ({
-    ...allScenarios,
-    [curr.scenario]: curr.steps,
-  }),
-  {}
-);
-
 export default (): void => {
   // Define variable that will control which scenario we're going to execute here.
-  let curr: string;
+  let curr: LSTScenario;
 
   // Set up test data to control execution.
-  TestData.fromJSON<SimulationClaim>(`./${dataBaseUrl}/claims.json`);
+  TestData.fromJSON<LSTSimClaim>(`./${dataBaseUrl}/claims.json`);
 
   // Before moving on to next scenario, fetch and adjust data needed
   // @flood/element@1.3.5
-  beforeEach(async (browser: Browser, data?: unknown) => {
+  beforeEach(async (browser: Browser, data?: LSTSimClaim) => {
     if (typeof data !== "object" || !data || !("scenario" in data)) {
       throw new Error("Unable to determine scenario for step");
     }
-    curr = (data as SimulationClaim).scenario;
+    curr = data.scenario;
     if (!Object.keys(scenarios).includes(curr)) {
       throw new Error(`Unknown step requested: ${curr}`);
     }
