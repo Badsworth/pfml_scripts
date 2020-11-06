@@ -1633,69 +1633,41 @@ components:
           nullable: true
           default: true
           example: true
-        thursday_off_hours:
-          type: integer
-          nullable: true
-          example: 4
         thursday_off_minutes:
           type: integer
           minimum: 0
           nullable: true
-          example: 0
-        friday_off_hours:
-          type: integer
-          nullable: true
-          example: 4
+          example: 90
         friday_off_minutes:
           type: integer
           minimum: 0
           nullable: true
-          example: 30
-        saturday_off_hours:
-          type: integer
-          nullable: true
-          example: 0
+          example: 90
         saturday_off_minutes:
           type: integer
           minimum: 0
           nullable: true
-          example: 0
-        sunday_off_hours:
-          type: integer
-          nullable: true
-          example: 0
+          example: 90
         sunday_off_minutes:
           type: integer
           minimum: 0
           nullable: true
-          example: 0
-        monday_off_hours:
-          type: integer
-          nullable: true
-          example: 4
+          example: 90
         monday_off_minutes:
           type: integer
           minimum: 0
           nullable: true
-          example: 0
-        tuesday_off_hours:
-          type: integer
-          nullable: true
-          example: 4
+          example: 90
         tuesday_off_minutes:
           type: integer
           minimum: 0
           nullable: true
-          example: 0
-        wednesday_off_hours:
-          type: integer
-          nullable: true
-          example: 4
+          example: 90
         wednesday_off_minutes:
           type: integer
           minimum: 0
           nullable: true
-          example: 0
+          example: 90
 
     ContinuousLeavePeriods:
       type: object

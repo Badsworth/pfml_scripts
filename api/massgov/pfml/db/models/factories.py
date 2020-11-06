@@ -351,19 +351,12 @@ class ReducedScheduleLeavePeriodFactory(BaseFactory):
         "date_between_dates", date_start=date(2021, 3, 16), date_end=date(2021, 3, 28)
     )
     is_estimated = True
-    thursday_off_hours = None
     thursday_off_minutes = 90
-    friday_off_hours = None
     friday_off_minutes = 90
-    saturday_off_hours = None
     saturday_off_minutes = 90
-    sunday_off_hours = None
     sunday_off_minutes = 90
-    monday_off_hours = None
     monday_off_minutes = 90
-    tuesday_off_hours = None
     tuesday_off_minutes = 90
-    wednesday_off_hours = None
     wednesday_off_minutes = 90
 
 

@@ -1,5 +1,22 @@
 from datetime import date, datetime, timezone
-from typing import Optional, Union
+from typing import NamedTuple, Optional, Union
+
+
+class HoursAndMinutes(NamedTuple):
+    hours: Optional[int]
+    minutes: Optional[int]
+
+
+def convert_minutes_to_hours_minutes(minutes: Optional[int]) -> HoursAndMinutes:
+    """API manages time at the most granular level we expect (minutes), and
+    converts this time at the interface level (e.g FINEOS API calls).
+
+    For example: Portal can send 1.5 hours to the API in one field as 90 minutes,
+    but FINEOS accepts this as two fields (1 hour, 30 minutes) so this utility
+    supports this necessary conversion.
+    """
+    (hours, mins) = divmod(minutes, 60) if minutes is not None else (None, None)
+    return HoursAndMinutes(hours=hours, minutes=mins)
 
 
 def parse_date_YMD(value: Optional[Union[str, date]]) -> Optional[date]:

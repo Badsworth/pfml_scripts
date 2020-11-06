@@ -31,6 +31,7 @@ from massgov.pfml.db.models.applications import (
     RelationshipToCaregiver,
 )
 from massgov.pfml.db.models.employees import Address, Country, Employer
+from massgov.pfml.util.datetime import convert_minutes_to_hours_minutes
 
 logger = logging.get_logger(__name__)
 
@@ -243,30 +244,50 @@ def build_absence_case(
                 status="Known",
             )
         )
-    # Temporary workaround while API appends leave periods on each edit. TODO: remove when fixed.
+    # Temporary workaround while API appends leave periods on each edit. TODO (API-505): remove when fixed.
     continuous_leave_periods = continuous_leave_periods[-1:]
 
     reduced_schedule_leave_periods = []
     for reduced_leave_period in application.reduced_schedule_leave_periods:
+        [
+            monday_hours_minutes,
+            tuesday_hours_minutes,
+            wednesday_hours_minutes,
+            thursday_hours_minutes,
+            friday_hours_minutes,
+            saturday_hours_minutes,
+            sunday_hours_minutes,
+        ] = map(
+            convert_minutes_to_hours_minutes,
+            [
+                reduced_leave_period.monday_off_minutes,
+                reduced_leave_period.tuesday_off_minutes,
+                reduced_leave_period.wednesday_off_minutes,
+                reduced_leave_period.thursday_off_minutes,
+                reduced_leave_period.friday_off_minutes,
+                reduced_leave_period.saturday_off_minutes,
+                reduced_leave_period.sunday_off_minutes,
+            ],
+        )
         reduced_schedule_leave_periods.append(
             massgov.pfml.fineos.models.customer_api.ReducedScheduleLeavePeriod(
                 startDate=reduced_leave_period.start_date,
                 endDate=reduced_leave_period.end_date,
                 status="Known",  # API-711 will set this properly.
-                mondayOffHours=reduced_leave_period.monday_off_hours,
-                mondayOffMinutes=reduced_leave_period.monday_off_minutes,
-                tuesdayOffHours=reduced_leave_period.tuesday_off_hours,
-                tuesdayOffMinutes=reduced_leave_period.tuesday_off_minutes,
-                wednesdayOffHours=reduced_leave_period.wednesday_off_hours,
-                wednesdayOffMinutes=reduced_leave_period.wednesday_off_minutes,
-                thursdayOffHours=reduced_leave_period.thursday_off_hours,
-                thursdayOffMinutes=reduced_leave_period.thursday_off_minutes,
-                fridayOffHours=reduced_leave_period.friday_off_hours,
-                fridayOffMinutes=reduced_leave_period.friday_off_minutes,
-                saturdayOffHours=reduced_leave_period.saturday_off_hours,
-                saturdayOffMinutes=reduced_leave_period.saturday_off_minutes,
-                sundayOffHours=reduced_leave_period.sunday_off_hours,
-                sundayOffMinutes=reduced_leave_period.sunday_off_minutes,
+                mondayOffHours=monday_hours_minutes.hours,
+                mondayOffMinutes=monday_hours_minutes.minutes,
+                tuesdayOffHours=tuesday_hours_minutes.hours,
+                tuesdayOffMinutes=tuesday_hours_minutes.minutes,
+                wednesdayOffHours=wednesday_hours_minutes.hours,
+                wednesdayOffMinutes=wednesday_hours_minutes.minutes,
+                thursdayOffHours=thursday_hours_minutes.hours,
+                thursdayOffMinutes=thursday_hours_minutes.minutes,
+                fridayOffHours=friday_hours_minutes.hours,
+                fridayOffMinutes=friday_hours_minutes.minutes,
+                saturdayOffHours=saturday_hours_minutes.hours,
+                saturdayOffMinutes=saturday_hours_minutes.minutes,
+                sundayOffHours=sunday_hours_minutes.hours,
+                sundayOffMinutes=sunday_hours_minutes.minutes,
             )
         )
 
