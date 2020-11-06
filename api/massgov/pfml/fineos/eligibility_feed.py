@@ -19,6 +19,7 @@ from massgov.pfml.fineos.exception import FINEOSNotFound
 logger = massgov.pfml.util.logging.get_logger(__name__)
 
 DEFAULT_DATE = date(1753, 1, 1)
+DEFAULT_HIRE_DATE = date(2020, 1, 1)
 DEFAULT_EMPLOYMENT_WORK_STATE = "MA"
 
 
@@ -110,8 +111,8 @@ class EligibilityFeedRecord(NoneMeansDefault):
     # FINEOS required fields, but with an agreed upon default
     employeeDateOfBirth: Union[date, None] = DEFAULT_DATE
     employeeJobTitle: Union[str, None] = "DEFAULT"
-    employeeDateOfHire: Union[date, None] = DEFAULT_DATE
-    employmentStatus: Union[str, None] = "DEFAULT"
+    employeeDateOfHire: Union[date, None] = DEFAULT_HIRE_DATE
+    employmentStatus: Union[str, None] = "Active"
     # FINOES DB type is DECIMAL(5,2)
     # 5 digits of precision overall, 2 digits past the decimal if needed
     employeeHoursWorkedPerWeek: Union[float, None] = 0

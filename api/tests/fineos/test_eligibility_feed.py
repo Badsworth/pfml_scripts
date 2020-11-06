@@ -148,8 +148,8 @@ def create_csv_dict(updates=None):
         # required fields: with defaults though
         "employeeDateOfBirth": ef.DEFAULT_DATE.strftime("%m/%d/%Y"),  # employee.date_of_birth,
         "employeeJobTitle": "DEFAULT",
-        "employeeDateOfHire": ef.DEFAULT_DATE.strftime("%m/%d/%Y"),
-        "employmentStatus": "DEFAULT",
+        "employeeDateOfHire": ef.DEFAULT_HIRE_DATE.strftime("%m/%d/%Y"),
+        "employmentStatus": "Active",
         "employeeHoursWorkedPerWeek": "0",
         # optional fields
         "employeeTitle": "",
