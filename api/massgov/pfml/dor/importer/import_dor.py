@@ -42,7 +42,7 @@ RECEIVED_FOLDER = "dor/received/"
 PROCESSED_FOLDER = "dor/processed/"
 
 EMPLOYER_LINE_LIMIT = 250000
-EMPLOYEE_LINE_LIMIT = 100000
+EMPLOYEE_LINE_LIMIT = 25000
 
 
 class ImportException(Exception):
@@ -651,7 +651,7 @@ def import_employers(db_session, employers, report, import_log_entry_id):
     count = 0
     for employer_info in found_employer_info_to_update_list:
         count += 1
-        if count % 1000 == 0:
+        if count % 10000 == 0:
             logger.info("Updating employer info, current %i", count)
 
         existing_employer_model = dor_persistence_util.get_employer_by_fein(
@@ -797,7 +797,7 @@ def import_employees(
         ssn = employee_info["employee_ssn"]
         count += 1
 
-        if count % 1000 == 0:
+        if count % 10000 == 0:
             logger.info(
                 "Updating existing employees - count: %i/%i (%.1f%%), updated: %i, report id: %i",
                 count,
@@ -963,7 +963,7 @@ def import_wage_data(
             updated_count += 1
             report.updated_wages_and_contributions_count += 1
 
-        if count % 1000 == 0:
+        if count % 10000 == 0:
             logger.info(
                 "Wage data for existing employees - count: %i/%i (%.1f%%), updated: %i , collected for creation: %i",
                 count,
