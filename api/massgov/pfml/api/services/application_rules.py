@@ -22,7 +22,7 @@ MAX_DAYS_IN_ADVANCE_TO_SUBMIT = 60
 
 def get_application_issues(application: Application) -> Optional[List[Issue]]:
     """Takes in application and outputs any validation issues.
-    These issues are either fields that are always required for an application or fields that are conditionally required based on previous input
+    These issues are either fields that are always required for an application or fields that are conditionally required based on previous input.
     """
     issues = []
     issues += get_always_required_issues(application)
@@ -87,19 +87,6 @@ def get_conditional_issues(application: Application) -> List[Issue]:
             )
         )
 
-    if (
-        application.employer_notified is None
-        and application.employment_status_id is EmploymentStatus.EMPLOYED.employment_status_id
-    ):
-        issues.append(
-            Issue(
-                type=IssueType.required,
-                rule=IssueRule.conditional,
-                message="leave_details.employer_notified is required if employment_status is set to Employed",
-                field="leave_details.employer_notified",
-            )
-        )
-
     if application.leave_reason and (
         application.leave_reason.leave_reason_id
         in [
@@ -146,6 +133,19 @@ def get_conditional_issues(application: Application) -> List[Issue]:
                 # TODO (CP-1176): Update the error message to include Unemployed
                 message="employer_fein is required if employment_status is Employed",
                 field="employer_fein",
+            )
+        )
+
+    if (
+        application.employment_status_id == EmploymentStatus.EMPLOYED.employment_status_id
+        and not application.employer_notified
+    ):
+        issues.append(
+            Issue(
+                # `field` is intentionally excluded since this is a submission rule, rather than field rule
+                type=IssueType.required,
+                rule=IssueRule.require_employer_notified,
+                message="employer_notified must be True if employment_status is Employed",
             )
         )
 

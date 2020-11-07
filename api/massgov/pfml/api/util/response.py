@@ -42,6 +42,8 @@ class IssueRule(str, Enum):
     )
     # Leave Period dates can't overlap
     disallow_overlapping_leave_periods = "disallow_overlapping_leave_periods"
+    # Employer must be notified when employment status is Employed
+    require_employer_notified = "require_employer_notified"
     # Partially masked field does not match existing value
     disallow_mismatched_masked_field = "disallow_mismatched_masked_field"
     # Fully masked field present when system contains no data

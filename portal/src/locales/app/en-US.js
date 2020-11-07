@@ -286,6 +286,8 @@ const errors = {
         "You must choose at least one kind of leave (continuous, reduced schedule, or intermittent).",
       min_reduced_leave_minutes:
         "The total time entered for your reduced leave schedule must be greater than 0.",
+      require_employer_notified:
+        "You must tell your employer that you’re taking leave before you can submit an application. If you’ve told your employer, update your application with the date that you notified them.",
     },
     tax_identifier: {
       pattern: "Enter a 9-digit number.",

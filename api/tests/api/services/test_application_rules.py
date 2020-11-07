@@ -206,6 +206,8 @@ def test_residential_address_fields_required(test_db_session, initialize_factori
         employment_status=EmploymentStatus.get_instance(
             test_db_session, template=EmploymentStatus.EMPLOYED
         ),
+        employer_notification_date="2021-01-03",
+        employer_notified=True,
     )
 
     issues = get_conditional_issues(test_app)
@@ -242,6 +244,8 @@ def test_mailing_address_fields_required(test_db_session, initialize_factories_s
         employment_status=EmploymentStatus.get_instance(
             test_db_session, template=EmploymentStatus.EMPLOYED
         ),
+        employer_notification_date="2021-01-03",
+        employer_notified=True,
     )
 
     issues = get_conditional_issues(test_app)
@@ -1055,6 +1059,8 @@ def test_payment_preferences_same_order(test_db_session, initialize_factories_se
         employment_status=EmploymentStatus.get_instance(
             test_db_session, template=EmploymentStatus.EMPLOYED
         ),
+        employer_notification_date="2021-01-03",
+        employer_notified=True,
         hours_worked_per_week=70,
         has_continuous_leave_periods=True,
         continuous_leave_periods=[ContinuousLeavePeriodFactory.create(start_date=date(2021, 1, 1))],
@@ -1091,39 +1097,6 @@ def test_payment_preferences_same_order(test_db_session, initialize_factories_se
             "type": "required",
         },
     ]
-
-
-def test_employer_notified_required_for_employed_claimants(
-    test_db_session, initialize_factories_session
-):
-    test_app = ApplicationFactory.create(
-        employer_notified=None,
-        employment_status=EmploymentStatus.get_instance(
-            test_db_session, template=EmploymentStatus.EMPLOYED
-        ),
-    )
-    issues = get_conditional_issues(test_app)
-    assert [
-        Issue(
-            type=IssueType.required,
-            rule=IssueRule.conditional,
-            message="leave_details.employer_notified is required if employment_status is set to Employed",
-            field="leave_details.employer_notified",
-        )
-    ] == issues
-
-
-def test_allow_false_employer_notified_for_employed_claimants(
-    test_db_session, initialize_factories_session
-):
-    test_app = ApplicationFactory.create(
-        employer_notified=False,
-        employment_status=EmploymentStatus.get_instance(
-            test_db_session, template=EmploymentStatus.EMPLOYED
-        ),
-    )
-    issues = get_conditional_issues(test_app)
-    assert not issues
 
 
 def test_min_work_pattern_total_minutes_worked(test_db_session, initialize_factories_session):
@@ -1181,6 +1154,8 @@ def test_employer_fein_required_for_employed_claimants(
         employment_status=EmploymentStatus.get_instance(
             test_db_session, template=EmploymentStatus.EMPLOYED
         ),
+        employer_notification_date="2021-01-03",
+        employer_notified=True,
     )
     issues = get_conditional_issues(test_app)
     assert [
@@ -1217,3 +1192,48 @@ def test_employer_notification_date_required(test_db_session, initialize_factori
             field="leave_details.employer_notification_date",
         )
     ] == issues
+
+
+def test_employer_notification_date_required_when_employed(
+    test_db_session, initialize_factories_session
+):
+    test_app = ApplicationFactory.create(
+        employer_notified=False,
+        employment_status=EmploymentStatus.get_instance(
+            test_db_session, template=EmploymentStatus.EMPLOYED
+        ),
+    )
+    issues = get_conditional_issues(test_app)
+    assert [
+        Issue(
+            type=IssueType.required,
+            rule=IssueRule.require_employer_notified,
+            message="employer_notified must be True if employment_status is Employed",
+        )
+    ] == issues
+
+
+def test_employer_notification_date_not_required_when_unemployed(
+    test_db_session, initialize_factories_session
+):
+    test_app = ApplicationFactory.create(
+        employer_notified=False,
+        employment_status=EmploymentStatus.get_instance(
+            test_db_session, template=EmploymentStatus.UNEMPLOYED
+        ),
+    )
+    issues = get_conditional_issues(test_app)
+    assert [] == issues
+
+
+def test_employer_notification_date_not_required_when_self_employed(
+    test_db_session, initialize_factories_session
+):
+    test_app = ApplicationFactory.create(
+        employer_notified=False,
+        employment_status=EmploymentStatus.get_instance(
+            test_db_session, template=EmploymentStatus.SELF_EMPLOYED
+        ),
+    )
+    issues = get_conditional_issues(test_app)
+    assert [] == issues
