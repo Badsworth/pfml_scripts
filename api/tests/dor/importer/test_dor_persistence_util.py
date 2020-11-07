@@ -88,14 +88,6 @@ def test_employer_dict_to_country_and_state_values(test_db_session):
     assert state_id is None
     assert state_text == valid_international_address["employer_address_state"]
 
-    invalid_international_address = {
-        "employer_address_state": "QC",
-        "employer_address_country": "UXU",
-    }
-
-    with pytest.raises(KeyError):
-        util.employer_dict_to_country_and_state_values(invalid_international_address)
-
 
 def test_get_employer_address(test_db_session):
     with pytest.raises(NoResultFound):

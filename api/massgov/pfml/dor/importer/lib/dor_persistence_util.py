@@ -79,12 +79,16 @@ def dict_to_employer(employer_info, import_log_entry_id, uuid=uuid.uuid4):
 def employer_dict_to_country_and_state_values(employer_info):
     """
     Get employer country and state values for persistence.
-    Will throw a KeyError if country code is invalid or if state is invalid for a USA country code.
+    Will throw a KeyError if state is invalid for a USA country code.
     """
     state_id = None
     state_text = None
 
-    country_id = Country.get_id(employer_info["employer_address_country"])
+    country_id = None
+    try:
+        country_id = Country.get_id(employer_info["employer_address_country"])
+    except Exception:
+        logger.info("Country not found %s", employer_info["employer_address_country"])
 
     if Country.USA.country_id == country_id:
         state_id = GeoState.get_id(employer_info["employer_address_state"])

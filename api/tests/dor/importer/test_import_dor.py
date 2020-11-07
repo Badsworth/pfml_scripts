@@ -201,11 +201,19 @@ def test_employer_address(test_db_session):
         report_log_entry.import_log_id,
     )
 
-    assert (
-        employer_invalid_country["employer_address_country"]
-        in report.invalid_employer_addresses_by_account_key[employer_invalid_country["account_key"]]
+    assert report.created_employers_count == 2
+
+    # confirm invald employer has a NULL country id
+    invalid_country_employer_id = account_key_to_employer_id_map[
+        employer_invalid_country["account_key"]
+    ]
+    persisted_employer_address_invalid_country = dor_persistence_util.get_employer_address(
+        test_db_session, invalid_country_employer_id
     )
-    assert report.created_employers_count == 1
+    persisted_address_invalid_country = dor_persistence_util.get_address(
+        test_db_session, persisted_employer_address_invalid_country.address_id
+    )
+    assert persisted_address_invalid_country.country_id is None
 
     # confirm expected columns are now updated
     employer_id = account_key_to_employer_id_map[employer_international_address["account_key"]]
