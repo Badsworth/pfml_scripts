@@ -8,6 +8,7 @@ import {
   groupBy,
   merge,
   sortBy,
+  sum,
   sumBy,
   zip,
   zipObject,
@@ -16,6 +17,7 @@ import BaseClaim from "./BaseClaim";
 import BaseModel from "./BaseModel";
 import { DateTime } from "luxon";
 import assert from "assert";
+import spreadMinutesOverWeek from "../utils/spreadMinutesOverWeek";
 
 class Claim extends BaseClaim {
   get defaults() {
@@ -269,9 +271,7 @@ export class WorkPattern extends BaseModel {
    */
   static addWeek(workPattern, minutesWorkedPerWeek = 0) {
     // TODO (CP-1336): Move away from defaulting minutesWorkedPerWeek to 0
-    const minutesOverWeek = WorkPattern._spreadMinutesOverWeek(
-      minutesWorkedPerWeek
-    );
+    const minutesOverWeek = spreadMinutesOverWeek(minutesWorkedPerWeek);
 
     const newWeek = zip(OrderedDaysOfWeek, minutesOverWeek).map(
       ([day_of_week, minutes]) =>
@@ -296,9 +296,7 @@ export class WorkPattern extends BaseModel {
    * @returns {WorkPattern}
    */
   static updateWeek(workPattern, weekNumber, minutesWorkedPerWeek) {
-    const minutesOverWeek = WorkPattern._spreadMinutesOverWeek(
-      minutesWorkedPerWeek
-    );
+    const minutesOverWeek = spreadMinutesOverWeek(minutesWorkedPerWeek);
     const weeks = workPattern.weeks;
     const i = weekNumber - 1;
     assert(weeks[i]);
@@ -314,22 +312,6 @@ export class WorkPattern extends BaseModel {
     return new WorkPattern({
       ...workPattern,
       work_pattern_days: [...weeks.flat()],
-    });
-  }
-
-  /**
-   * Split provided minutes across a 7 day week
-   * @param {number} minutesWorkedPerWeek - average minutes worked per week. Must be an integer.
-   * @returns {number[]}
-   */
-  static _spreadMinutesOverWeek(minutesWorkedPerWeek) {
-    const remainder = minutesWorkedPerWeek % 7;
-    return OrderedDaysOfWeek.map((day, i) => {
-      if (i < remainder) {
-        return Math.ceil(minutesWorkedPerWeek / 7);
-      } else {
-        return Math.floor(minutesWorkedPerWeek / 7);
-      }
     });
   }
 
@@ -404,6 +386,27 @@ export class ReducedScheduleLeavePeriod extends BaseModel {
       tuesday_off_minutes: null,
       wednesday_off_minutes: null,
     };
+  }
+
+  /**
+   * @returns {number?} Sum of all *_off_minutes fields.
+   */
+  get totalMinutesOff() {
+    const fieldsWithMinutes = compact([
+      this.friday_off_minutes,
+      this.monday_off_minutes,
+      this.saturday_off_minutes,
+      this.sunday_off_minutes,
+      this.thursday_off_minutes,
+      this.tuesday_off_minutes,
+      this.wednesday_off_minutes,
+    ]);
+
+    if (fieldsWithMinutes.length) {
+      return sum(fieldsWithMinutes);
+    }
+
+    return null;
   }
 }
 

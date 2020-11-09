@@ -4,6 +4,7 @@ import Claim, {
   PaymentAccountType,
   PaymentPreferenceMethod,
   ReasonQualifier,
+  ReducedScheduleLeavePeriod,
   WorkPattern,
   WorkPatternType,
 } from "../../models/Claim";
@@ -87,6 +88,9 @@ export const Review = (props) => {
 
   const payment_method = get(claim, "payment_preferences[0].payment_method");
   const reasonQualifier = get(claim, "leave_details.reason_qualifier");
+  const reducedLeavePeriod = new ReducedScheduleLeavePeriod(
+    get(claim, "leave_details.reduced_schedule_leave_periods[0]")
+  );
   const workPattern = new WorkPattern(get(claim, "work_pattern"));
 
   const steps = Step.createClaimStepsFromMachine(
@@ -396,13 +400,14 @@ export const Review = (props) => {
           : t("pages.claimsReview.leavePeriodNotSelected")}
       </ReviewRow>
 
-      {claim.isReducedSchedule &&
-        workPattern.work_pattern_type === WorkPatternType.fixed && (
-          <ReviewRow
-            level={reviewRowLevel}
-            label={t("pages.claimsReview.reducedLeaveScheduleLabel")}
-            noBorder
-          >
+      {claim.isReducedSchedule && (
+        <ReviewRow
+          level={reviewRowLevel}
+          label={t("pages.claimsReview.reducedLeaveScheduleLabel")}
+          // Only hide the border when we're rendering a WeeklyTimeTable
+          noBorder={workPattern.work_pattern_type === WorkPatternType.fixed}
+        >
+          {workPattern.work_pattern_type === WorkPatternType.fixed && (
             <WeeklyTimeTable
               className="margin-bottom-0"
               weeks={[
@@ -414,16 +419,21 @@ export const Review = (props) => {
                   "thursday_off_minutes",
                   "friday_off_minutes",
                   "saturday_off_minutes",
-                ].map((field) =>
-                  get(
-                    claim,
-                    `leave_details.reduced_schedule_leave_periods[0].${field}`
-                  )
-                ),
+                ].map((field) => get(reducedLeavePeriod, field)),
               ]}
             />
-          </ReviewRow>
-        )}
+          )}
+          {workPattern.work_pattern_type === WorkPatternType.variable &&
+            t("pages.claimsReview.reducedLeaveScheduleWeeklyTotal", {
+              context:
+                convertMinutesToHours(reducedLeavePeriod.totalMinutesOff)
+                  .minutes === 0
+                  ? "noMinutes"
+                  : null,
+              ...convertMinutesToHours(reducedLeavePeriod.totalMinutesOff),
+            })}
+        </ReviewRow>
+      )}
 
       <ReviewRow
         level={reviewRowLevel}

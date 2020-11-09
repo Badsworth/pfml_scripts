@@ -1,8 +1,11 @@
 import Claim, {
   LeaveReason,
   OrderedDaysOfWeek,
+  ReducedScheduleLeavePeriod,
   WorkPattern,
+  WorkPatternType,
 } from "../../models/Claim";
+import { get, pick, set, zip } from "lodash";
 import Alert from "../../components/Alert";
 import Details from "../../components/Details";
 import Heading from "../../components/Heading";
@@ -13,7 +16,9 @@ import QuestionPage from "../../components/QuestionPage";
 import React from "react";
 import { Trans } from "react-i18next";
 import WorkPatternTable from "../../components/WorkPatternTable";
-import { pick } from "lodash";
+import convertMinutesToHours from "../../utils/convertMinutesToHours";
+import findKeyByValue from "../../utils/findKeyByValue";
+import spreadMinutesOverWeek from "../../utils/spreadMinutesOverWeek";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "../../locales/i18n";
@@ -41,22 +46,69 @@ export const ReducedLeaveSchedule = (props) => {
   const { appLogic, claim } = props;
   const { t } = useTranslation();
 
-  const { formState, updateFields } = useFormState(pick(props, fields).claim);
+  const initialClaimState = pick(props, fields).claim;
+  const initialLeavePeriod = new ReducedScheduleLeavePeriod(
+    get(claim, leavePeriodPath)
+  );
   const workPattern = new WorkPattern(claim.work_pattern);
+  const gatherMinutesAsWeeklyAverage =
+    workPattern.work_pattern_type === WorkPatternType.variable;
 
-  const handleSave = () =>
-    appLogic.claims.update(claim.application_id, formState);
+  const { formState, updateFields } = useFormState({
+    ...initialClaimState,
+    totalMinutesOff: gatherMinutesAsWeeklyAverage
+      ? initialLeavePeriod.totalMinutesOff
+      : undefined,
+  });
 
-  const contentContext = {
+  const handleSave = () => {
+    const { totalMinutesOff, ...dailyMinutesOff } = formState;
+    const requestData = dailyMinutesOff;
+
+    if (gatherMinutesAsWeeklyAverage) {
+      // Still need to store time in the API in individual day fields:
+      const dailyMinutes = spreadMinutesOverWeek(totalMinutesOff);
+      const minuteFields = [
+        `${leavePeriodPath}.sunday_off_minutes`,
+        `${leavePeriodPath}.monday_off_minutes`,
+        `${leavePeriodPath}.tuesday_off_minutes`,
+        `${leavePeriodPath}.wednesday_off_minutes`,
+        `${leavePeriodPath}.thursday_off_minutes`,
+        `${leavePeriodPath}.friday_off_minutes`,
+        `${leavePeriodPath}.saturday_off_minutes`,
+      ];
+
+      zip(minuteFields, dailyMinutes).forEach(([field, minutes]) => {
+        set(requestData, field, minutes);
+      });
+    }
+
+    return appLogic.claims.update(claim.application_id, requestData);
+  };
+
+  const contentReasonContext = {
     [LeaveReason.bonding]: "bonding",
     [LeaveReason.medical]: "medical",
   }[claim.leave_details.reason];
+
+  const contentScheduleTypeContext = findKeyByValue(
+    WorkPatternType,
+    workPattern.work_pattern_type
+  );
 
   const getFunctionalInputProps = useFunctionalInputProps({
     appErrors: appLogic.appErrors,
     formState,
     updateFields,
   });
+
+  // Common props shared across InputHours components regardless of work pattern type
+  const inputHoursProps = {
+    smallLabel: true,
+    hoursLabel: t("pages.claimsReducedLeaveSchedule.hoursLabel"),
+    minutesLabel: t("pages.claimsReducedLeaveSchedule.minutesLabel"),
+    minutesIncrement: 15,
+  };
 
   return (
     <QuestionPage
@@ -70,36 +122,59 @@ export const ReducedLeaveSchedule = (props) => {
       )}
 
       <Heading level="2" size="1">
-        {t("pages.claimsReducedLeaveSchedule.sectionLabel")}
+        {t("pages.claimsReducedLeaveSchedule.sectionLabel", {
+          context: contentScheduleTypeContext,
+        })}
       </Heading>
 
       <Lead>
         <Trans
           i18nKey="pages.claimsReducedLeaveSchedule.lead"
-          tOptions={{ context: contentContext }}
+          tOptions={{ context: contentReasonContext }}
         />
       </Lead>
 
       <Details label={t("pages.claimsReducedLeaveSchedule.workScheduleToggle")}>
-        <WorkPatternTable weeks={workPattern.weeks} />
+        {gatherMinutesAsWeeklyAverage ? (
+          t("pages.claimsReview.workPatternVariableTime", {
+            context:
+              convertMinutesToHours(workPattern.minutesWorkedEachWeek[0])
+                .minutes === 0
+                ? "noMinutes"
+                : null,
+            ...convertMinutesToHours(workPattern.minutesWorkedEachWeek[0]),
+          })
+        ) : (
+          <WorkPatternTable weeks={workPattern.weeks} />
+        )}
       </Details>
 
-      {OrderedDaysOfWeek.map((day, i) => (
+      {gatherMinutesAsWeeklyAverage && (
         <InputHours
-          {...getFunctionalInputProps(
-            `${leavePeriodPath}.${day.toLowerCase()}_off_minutes`,
-            { fallbackValue: null }
-          )}
-          label={t("pages.claimsReducedLeaveSchedule.inputHoursLabel", {
-            context: day,
+          {...getFunctionalInputProps("totalMinutesOff", {
+            fallbackValue: null,
           })}
-          smallLabel
-          hoursLabel={t("pages.claimsReducedLeaveSchedule.hoursLabel")}
-          minutesLabel={t("pages.claimsReducedLeaveSchedule.minutesLabel")}
-          key={`input-hours-${i}`}
-          minutesIncrement={15}
+          label={t("pages.claimsReducedLeaveSchedule.inputHoursLabel", {
+            context: "weekly",
+          })}
+          {...inputHoursProps}
         />
-      ))}
+      )}
+
+      {!gatherMinutesAsWeeklyAverage &&
+        OrderedDaysOfWeek.map((day, i) => (
+          <InputHours
+            {...getFunctionalInputProps(
+              `${leavePeriodPath}.${day.toLowerCase()}_off_minutes`,
+              { fallbackValue: null }
+            )}
+            label={t("pages.claimsReducedLeaveSchedule.inputHoursLabel", {
+              context: day,
+            })}
+            key={`input-hours-${i}`}
+            {...inputHoursProps}
+          />
+        ))}
     </QuestionPage>
   );
 };

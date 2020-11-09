@@ -1,21 +1,21 @@
 import { MockClaimBuilder } from "tests/test-utils";
-import { WorkPattern } from "src/models/Claim";
 import generateClaimPageStory from "storybook/utils/generateClaimPageStory";
 
-// 8 hours days for 7 days
-const defaultMinutesWorked = 8 * 60 * 7;
-const workPattern = WorkPattern.addWeek(
-  new WorkPattern(),
-  defaultMinutesWorked
-);
-
 const mockClaims = {
-  bonding: new MockClaimBuilder()
-    .workPattern(workPattern)
+  "Bonding (Fixed)": new MockClaimBuilder()
+    .fixedWorkPattern()
     .bondingBirthLeaveReason()
     .create(),
-  medical: new MockClaimBuilder()
-    .workPattern(workPattern)
+  "Bonding (Variable)": new MockClaimBuilder()
+    .variableWorkPattern()
+    .bondingBirthLeaveReason()
+    .create(),
+  "Medical (Fixed)": new MockClaimBuilder()
+    .fixedWorkPattern()
+    .medicalLeaveReason()
+    .create(),
+  "Medical (Variable)": new MockClaimBuilder()
+    .variableWorkPattern()
     .medicalLeaveReason()
     .create(),
 };

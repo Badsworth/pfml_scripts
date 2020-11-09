@@ -244,9 +244,25 @@ describe("Leave reason", () => {
 });
 
 describe("Reduced leave", () => {
-  it("renders WeeklyTimeTable for the reduced leave period", () => {
+  it("renders WeeklyTimeTable for the reduced leave period when work pattern is Fixed", () => {
     const claim = new MockClaimBuilder()
       .part1Complete()
+      .fixedWorkPattern()
+      .reducedSchedule()
+      .create();
+
+    const { wrapper } = renderWithAppLogic(Review, {
+      claimAttrs: claim,
+      diveLevels,
+    });
+
+    expect(wrapper.find({ label: "Reduced leave schedule" })).toMatchSnapshot();
+  });
+
+  it("renders total time for the reduced leave period when work pattern is Variable", () => {
+    const claim = new MockClaimBuilder()
+      .part1Complete()
+      .variableWorkPattern()
       .reducedSchedule()
       .create();
 

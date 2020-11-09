@@ -1,4 +1,9 @@
-import { DayOfWeek, WorkPattern, WorkPatternDay } from "../../src/models/Claim";
+import {
+  DayOfWeek,
+  ReducedScheduleLeavePeriod,
+  WorkPattern,
+  WorkPatternDay,
+} from "../../src/models/Claim";
 import { map, sumBy } from "lodash";
 import { DateTime } from "luxon";
 import { MockClaimBuilder } from "../test-utils";
@@ -350,6 +355,30 @@ describe("Claim", () => {
         expect(minutesWorkedEachWeek[0]).toEqual(70 * 60);
         expect(minutesWorkedEachWeek[1]).toEqual(70 * 60 + 4);
       });
+    });
+  });
+});
+
+describe("ReducedScheduleLeavePeriod", () => {
+  describe("totalMinutesOff", () => {
+    it("returns null if no minutes fields are set yet", () => {
+      const leavePeriod = new ReducedScheduleLeavePeriod();
+
+      expect(leavePeriod.totalMinutesOff).toBeNull();
+    });
+
+    it("returns sum of all minutes fields", () => {
+      const leavePeriod = new ReducedScheduleLeavePeriod({
+        friday_off_minutes: 1,
+        monday_off_minutes: 1,
+        saturday_off_minutes: 1,
+        sunday_off_minutes: 1,
+        thursday_off_minutes: 1,
+        tuesday_off_minutes: 1,
+        wednesday_off_minutes: 1,
+      });
+
+      expect(leavePeriod.totalMinutesOff).toBe(7);
     });
   });
 });

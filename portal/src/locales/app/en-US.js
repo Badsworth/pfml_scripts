@@ -180,17 +180,17 @@ const errors = {
         },
         friday_off_minutes: {
           maximum: "$t(shared.maximumReducedLeaveMinutes)",
-          minimum: "$t(shared.minimumReducedLeaveMinutes}",
+          minimum: "$t(shared.minimumReducedLeaveMinutes)",
           required: "Enter your reduced hours for Friday.",
         },
         monday_off_minutes: {
           maximum: "$t(shared.maximumReducedLeaveMinutes)",
-          minimum: "$t(shared.minimumReducedLeaveMinutes}",
+          minimum: "$t(shared.minimumReducedLeaveMinutes)",
           required: "Enter your reduced hours for Monday.",
         },
         saturday_off_minutes: {
           maximum: "$t(shared.maximumReducedLeaveMinutes)",
-          minimum: "$t(shared.minimumReducedLeaveMinutes}",
+          minimum: "$t(shared.minimumReducedLeaveMinutes)",
           required: "Enter your reduced hours for Saturday.",
         },
         start_date: {
@@ -200,22 +200,22 @@ const errors = {
         },
         sunday_off_minutes: {
           maximum: "$t(shared.maximumReducedLeaveMinutes)",
-          minimum: "$t(shared.minimumReducedLeaveMinutes}",
+          minimum: "$t(shared.minimumReducedLeaveMinutes)",
           required: "Enter your reduced hours for Sunday.",
         },
         thursday_off_minutes: {
           maximum: "$t(shared.maximumReducedLeaveMinutes)",
-          minimum: "$t(shared.minimumReducedLeaveMinutes}",
+          minimum: "$t(shared.minimumReducedLeaveMinutes)",
           required: "Enter your reduced hours for Thursday.",
         },
         tuesday_off_minutes: {
           maximum: "$t(shared.maximumReducedLeaveMinutes)",
-          minimum: "$t(shared.minimumReducedLeaveMinutes}",
+          minimum: "$t(shared.minimumReducedLeaveMinutes)",
           required: "Enter your reduced hours for Tuesday.",
         },
         wednesday_off_minutes: {
           maximum: "$t(shared.maximumReducedLeaveMinutes)",
-          minimum: "$t(shared.minimumReducedLeaveMinutes}",
+          minimum: "$t(shared.minimumReducedLeaveMinutes)",
           required: "Enter your reduced hours for Wednesday.",
         },
       },
@@ -872,6 +872,7 @@ const pages = {
     inputHoursLabel_Thursday: "$t(shared.day_Thursday)",
     inputHoursLabel_Tuesday: "$t(shared.day_Tuesday)",
     inputHoursLabel_Wednesday: "$t(shared.day_Wednesday)",
+    inputHoursLabel_weekly: "Reduced weekly hours",
     lead_bonding:
       "Enter the adjusted number of hours you will be working while taking leave. You can enter time in 15-minute increments if needed.",
     lead_medical:
@@ -982,6 +983,9 @@ const pages = {
     previousLeaveEntryLabel: "$t(shared.previousLeaveEntryPrefix) {{count}}",
     previousLeaveLabel: "Previous paid or unpaid leave?",
     reducedLeaveScheduleLabel: "Reduced leave schedule",
+    reducedLeaveScheduleWeeklyTotal: "$t(shared.displayTime)",
+    reducedLeaveScheduleWeeklyTotal_noMinutes:
+      "$t(shared.displayTime_noMinutes)",
     residentialAddressLabel: "Residential address",
     stepHeading_employerInformation: "$t(shared.claimsEmploymentInfoTitle)",
     stepHeading_leaveDetails: "$t(shared.claimsLeaveDetailsTitle)",
