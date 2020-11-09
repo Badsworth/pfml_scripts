@@ -17,7 +17,7 @@ import {
 import generators from "./documents";
 import path from "path";
 import fs from "fs";
-import { formatISO, subMonths, add } from "date-fns";
+import { formatISO, subMonths, add, addDays, differenceInDays } from "date-fns";
 import { v4 as uuid } from "uuid";
 
 const formatISODate = (date: Date) =>
@@ -387,7 +387,18 @@ function generateMassIDString(): string {
 // Generate start and end dates for a leave request, not to exceed 20 weeks, and with a minimum
 // start date of 2021-01-01.
 function generateLeaveDates(shortLeave: boolean): [Date, Date] {
-  const startDate = soon(182, "2021-01-01");
+  // Applciations must be submitted within 60 days of proposed start leave date
+  const within60 = addDays(new Date(), 60);
+
+  // Window for when claims can be submitted after 1 Jan 2021
+  // and still be within 60 days of current day.
+  const claimSubmissionWindow = differenceInDays(
+    within60,
+    new Date("2021-01-01")
+  );
+
+  // generate start date based on claimSubmissionWindow and after 1 Jan 2021
+  const startDate = soon(claimSubmissionWindow, "2021-01-01");
   // If the claim is marked as "short leave", give it a 1 day length.
   const addition = shortLeave
     ? { days: 1 }

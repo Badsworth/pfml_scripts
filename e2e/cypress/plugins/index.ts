@@ -87,7 +87,7 @@ export default function (on: Cypress.PluginEvents): Cypress.ConfigOptions {
       // Get the employee record here (read JSON, map to identifier).
       const employee = await getEmployee(employeeType);
       // Get the employer record here (read JSON, map to identifier).
-      const employer = await getEmployer(employee.fein);
+      const employer = await getEmployer(employee.employer_fein);
 
       const opts = {
         documentDirectory: "/tmp",
