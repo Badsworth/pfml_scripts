@@ -14,6 +14,9 @@ const Alert = React.forwardRef(
       `usa-alert usa-alert--${state}`,
       {
         "usa-alert--no-icon": props.noIcon,
+        "usa-alert--slim": props.slim,
+        "c-alert--neutral": props.neutral,
+        "c-alert--auto-width": props.autoWidth,
       },
       props.className
     );
@@ -39,12 +42,18 @@ Alert.propTypes = {
   children: PropTypes.node.isRequired,
   /** Sets the 'no-icon' style */
   noIcon: PropTypes.bool,
+  /** Sets the 'slim' style */
+  slim: PropTypes.bool,
   /** Optional heading */
   heading: PropTypes.node,
   /** ARIA `role` */
   role: PropTypes.oneOf(["alert", "alertdialog", "region"]),
   /** Alert style */
   state: PropTypes.oneOf(["error", "info", "success", "warning"]),
+  /** Adds custom style overriding the background color set by the state */
+  neutral: PropTypes.bool,
+  /** Adds custom style making the Alert only as wide as its contents require */
+  autoWidth: PropTypes.bool,
 };
 
 // Explicitly set the display name, otherwise ForwardRef is used

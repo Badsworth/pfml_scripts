@@ -112,4 +112,19 @@ describe("Alert", () => {
     const { wrapper } = render({ noIcon: true });
     expect(wrapper.hasClass("usa-alert--no-icon")).toBe(true);
   });
+
+  it("renders slim when the slim prop is set", () => {
+    const { wrapper } = render({ slim: true });
+    expect(wrapper.hasClass("usa-alert--slim")).toBe(true);
+  });
+
+  it("renders with a neutral background color when the neutral prop is set", () => {
+    const { wrapper } = render({ neutral: true });
+    expect(wrapper.hasClass("c-alert--neutral")).toBe(true);
+  });
+
+  it("renders auto-width when the autoWidth prop is set", () => {
+    const { wrapper } = render({ autoWidth: true });
+    expect(wrapper.hasClass("c-alert--auto-width")).toBe(true);
+  });
 });
