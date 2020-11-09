@@ -13,6 +13,8 @@
     "build:test": "BUILD_ENV=test npm run build",
     "build:stage": "BUILD_ENV=stage npm run build",
     "build:prod": "BUILD_ENV=prod npm run build",
+    "build:performance": "BUILD_ENV=performance npm run build",
+    "build:training": "BUILD_ENV=training npm run build",
     "generate-claims-page-stories": "node ./bin/generate-claims-page-stories.js",
     "generate-playroom-components": "node ./bin/generate-playroom-components.js",
     "playroom": "playroom start",

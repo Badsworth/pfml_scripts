@@ -9,6 +9,8 @@ on:
       - master
       - deploy/portal/stage
       - deploy/portal/prod
+      - deploy/portal/training
+      - deploy/portal/performance
     paths:
       - "portal/**"
       - "!portal/__mocks__/**"
