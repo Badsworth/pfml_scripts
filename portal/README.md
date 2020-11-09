@@ -11,7 +11,7 @@ This is a [Next.js](https://nextjs.org/docs)-powered React app to bootstrap the 
 
 ## Prerequisites
 
-Node v10 (or greater)
+Node v10 (or greater) 
 
 ## Env Configuration
 
