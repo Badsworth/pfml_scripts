@@ -9,25 +9,24 @@ import { scenario, agentScenario, chance } from "../simulate";
  *
  * @see chance()
  * @see generate()
+ *
+ * Happy Path Scenarios
+ * HAP1 -> Simple claim, MA resident
+ * HAP3 -> Simple denial, MA resident
+ *
+ * Good But... Path Scenarios
+ * GBR1 -> Missing HCP, MA Resident
+ * GBR2 -> Missing ID, MA Resident
+ *
+ * "PortalRegistration" scenario
+ * "PortalClaimSubmit" scenario
+ * "FineosClaimSubmit" scenario
+ * "SavilinxAgent" scenario
+ *   * "Adjudicate Absence"
+ *     * between approval or denial
+ *   * "Outstanding Document Received"
+ *     * can trigger "Request Additional Information" when document is missing
  */
-
-/*****
-  Happy Path Scenarios
-  HAP1 -> Simple claim, MA resident
-  HAP3 -> Simple denial, MA resident
-
-  Good But... Path Scenarios
-  GBR1 -> Missing HCP, MA Resident
-  GBR2 -> Missing ID, MA Resident
-
-  "PortalClaimSubmit" scenario
-  "FineosClaimSubmit" scenario
-  "SavilinxAgent" scenario
-    * "Adjudicate Absence"
-      * between approval or denial
-    * "Outstanding Document Received"
-      * can trigger "Request Additional Information" when document is missing
-******/
 
 /*
   PortalRegistration
@@ -107,13 +106,12 @@ const HAPFineos = chance([
 ]);
 
 /*
-  SavilinxAgent - do only "Adjudicate Absence" tasks
+  SavilinxAgent
 */
-const SavilinxAgent = agentScenario("SavilinxAgent", {
-  priorityTask: "Adjudicate Absence",
-});
+const SavilinxAgent = agentScenario("SavilinxAgent");
 
 // Chance Function for all combinations!
+
 export default chance([
   [3, HAPPortal],
   [3, HAPFineos],

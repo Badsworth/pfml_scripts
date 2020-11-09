@@ -1,5 +1,4 @@
 import faker from "faker";
-import { v4 as uuid } from "uuid";
 import { EmployerFactory, Employer } from "./types";
 
 /**
@@ -17,7 +16,7 @@ export function fromEmployersFactory(employers: Employer[]): EmployerFactory {
  */
 export const randomEmployer: EmployerFactory = () => {
   return {
-    accountKey: uuid(),
+    accountKey: faker.helpers.replaceSymbolWithNumber("##########"),
     name: faker.company.companyName(0),
     fein: faker.helpers.replaceSymbolWithNumber("##-#######"),
     street: faker.address.streetAddress(),
