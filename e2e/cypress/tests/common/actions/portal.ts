@@ -4,6 +4,7 @@ import {
   WorkPattern,
   IntermittentLeavePeriods,
   WorkPatternDay,
+  ReducedScheduleLeavePeriods,
 } from "@/api";
 import { inFieldset } from "../actions";
 
@@ -260,12 +261,34 @@ export function answerReducedLeaveQuestion(
 
   if (application.has_reduced_schedule_leave_periods) {
     const leave = application.leave_details.reduced_schedule_leave_periods;
-
     const startDate = new Date((leave && leave[0].start_date) as string);
     const endDate = new Date((leave && leave[0].end_date) as string);
-
     onPage("leave-period-reduced-schedule");
     completeDateForm(startDate, endDate);
+    cy.contains("button", "Save and continue").click();
+    enterReducedWorkHours(leave);
+  } else {
+    cy.contains("button", "Save and continue").click();
+  }
+}
+
+export function enterReducedWorkHours(
+  leave?: ReducedScheduleLeavePeriods[]
+): void {
+  const weekdayInfo = [
+    { day: "Sunday", hours: leave && String(leave[0].sunday_off_hours) },
+    { day: "Monday", hours: leave && String(leave[0].monday_off_hours) },
+    { day: "Tuesday", hours: leave && String(leave[0].tuesday_off_hours) },
+    { day: "Wednesday", hours: leave && String(leave[0].wednesday_off_hours) },
+    { day: "Thursday", hours: leave && String(leave[0].thursday_off_hours) },
+    { day: "Friday", hours: leave && String(leave[0].friday_off_hours) },
+    { day: "Saturday", hours: leave && String(leave[0].saturday_off_hours) },
+  ];
+
+  for (const info of weekdayInfo) {
+    cy.contains("fieldset", info.day).within(() => {
+      cy.labelled("Hours").type(info.hours as string);
+    });
   }
   cy.contains("button", "Save and continue").click();
 }

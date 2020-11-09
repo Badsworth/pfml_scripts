@@ -235,13 +235,39 @@ function generateLeavePeriods(
   | ReducedScheduleLeavePeriods[]
   | IntermittentLeavePeriods[] {
   const [startDate, endDate] = generateLeaveDates(shortLeave);
-  return [
-    {
-      start_date: fmt(startDate),
-      end_date: fmt(endDate),
-      is_estimated: leaveType === "intermittent" ? false : true,
-    },
-  ];
+  switch (leaveType) {
+    case "continuous":
+      return [
+        {
+          start_date: fmt(startDate),
+          end_date: fmt(endDate),
+          is_estimated: true,
+        },
+      ];
+    case "intermittent":
+      return [
+        {
+          start_date: fmt(startDate),
+          end_date: fmt(endDate),
+          is_estimated: false,
+        },
+      ];
+    case "reduced":
+      return [
+        {
+          start_date: fmt(startDate),
+          end_date: fmt(endDate),
+          is_estimated: true,
+          sunday_off_hours: 0,
+          monday_off_hours: 4,
+          tuesday_off_hours: 0,
+          wednesday_off_hours: 4,
+          thursday_off_hours: 0,
+          friday_off_hours: 4,
+          saturday_off_hours: 0,
+        },
+      ];
+  }
 }
 
 function getEarliestStartDate(details: ApplicationLeaveDetails): Date {
