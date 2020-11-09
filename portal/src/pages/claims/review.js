@@ -197,12 +197,12 @@ export const Review = (props) => {
       >
         {get(claim, "tax_identifier")}
       </ReviewRow>
-      {/* TODO (CP-891): Use the API response for the PII fields */}
+
       <ReviewRow
         level={reviewRowLevel}
         label={t("pages.claimsReview.userDateOfBirthLabel")}
       >
-        **/**/****
+        {formatDateRange(get(claim, "date_of_birth"))}
       </ReviewRow>
 
       {/* EMPLOYMENT INFO */}

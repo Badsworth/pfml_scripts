@@ -117,7 +117,7 @@ exports[`Final Review Page when all data is present renders Review page with fin
     label="Date of birth"
     level="3"
   >
-    **/**/****
+    7/17/****
   </ReviewRow>
   <ReviewHeading
     editText="Edit"
@@ -448,7 +448,7 @@ exports[`Part 1 Review Page when all data is present renders Review page with Pa
     label="Date of birth"
     level="4"
   >
-    **/**/****
+    7/17/****
   </ReviewRow>
   <ReviewHeading
     editHref="/claims/employment-status?claim_id=mock_application_id"

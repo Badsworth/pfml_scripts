@@ -526,7 +526,7 @@ export class MockClaimBuilder extends BaseMockClaimBuilder {
     set(this.claimAttrs, "first_name", "Jane");
     set(this.claimAttrs, "middle_name", middleName || "");
     set(this.claimAttrs, "last_name", "Doe");
-    set(this.claimAttrs, "date_of_birth", "1980-07-17");
+    set(this.claimAttrs, "date_of_birth", "****-07-17");
     set(this.claimAttrs, "tax_identifier", "***-**-****");
     this.address();
     this.hasStateId();
