@@ -25,6 +25,8 @@ env:
   refs/heads/master: test
   refs/heads/deploy/portal/stage: stage
   refs/heads/deploy/portal/prod: prod
+  refs/heads/deploy/portal/performance: performance
+  refs/heads/deploy/portal/training: training
 
 jobs:
   deploy:

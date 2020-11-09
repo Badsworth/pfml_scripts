@@ -41,7 +41,7 @@ resource "aws_cloudfront_distribution" "portal_web_distribution" {
   is_ipv6_enabled     = true
   http_version        = "http2"
   default_root_object = "index.html"
-  aliases             = [local.domain]
+  aliases             = local.domain == null ? null : [local.domain]
   price_class         = "PriceClass_100"
   retain_on_delete    = true
   # Terraform will exit as soon as it’s made all the updates
