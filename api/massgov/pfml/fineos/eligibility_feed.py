@@ -4,7 +4,8 @@ from dataclasses import dataclass
 from datetime import date, datetime
 from decimal import Decimal
 from enum import Enum
-from typing import Any, Dict, Iterable, List, Optional, TextIO, TypeVar, Union
+from functools import cached_property
+from typing import Any, Dict, Iterable, List, Optional, TextIO, Tuple, TypeVar, Union
 
 import smart_open
 from sqlalchemy import func
@@ -12,9 +13,11 @@ from sqlalchemy.orm import Query
 
 import massgov.pfml.db as db
 import massgov.pfml.util.csv as csv_util
+import massgov.pfml.util.files as file_util
 import massgov.pfml.util.logging
 from massgov.pfml.db.models.employees import Employee, EmployeeLog, Employer, WagesAndContributions
 from massgov.pfml.fineos.exception import FINEOSNotFound
+from massgov.pfml.util.datetime import utcnow
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
 
@@ -75,7 +78,7 @@ class NoneMeansDefault:
     # constructing the dataclass, __setattr__ works when attributes are set
     # after the fact as well
     #
-    # def __post_init__(self):db_session
+    # def __post_init__(self):
     #     for field in dataclasses.fields(self):
     #         if field.default is not None:
     #             field_val = getattr(self, field.name)
@@ -84,16 +87,14 @@ class NoneMeansDefault:
 
     def __setattr__(self, attr, value):
         if value is None:
-            # TODO: pretty wasteful to iterate over the entire field list every
-            # time something is getting set to None
-            fields_with_non_none_default = {
-                f.name: f for f in dataclasses.fields(self) if f.default is not None
-            }
-
-            if attr in fields_with_non_none_default:
-                value = fields_with_non_none_default[attr].default
+            if attr in self.fields_with_non_none_default:
+                value = self.fields_with_non_none_default[attr].default
 
         super().__setattr__(attr, value)
+
+    @cached_property
+    def fields_with_non_none_default(self) -> Dict[str, dataclasses.Field]:
+        return {f.name: f for f in dataclasses.fields(self) if f.default is not None}
 
 
 @dataclass
@@ -183,9 +184,14 @@ class EligibilityFeedRecord(NoneMeansDefault):
 
 
 @dataclass
-class ProcessUpdatesResult:
-    employers_total_count: int
-    employee_and_employer_pairs_total_count: int
+class EligibilityFeedExportReport:
+    started_at: str
+    completed_at: Optional[str] = None
+    employers_total_count: int = 0
+    employers_success_count: int = 0
+    employers_skipped_count: int = 0
+    employers_error_count: int = 0
+    employee_and_employer_pairs_total_count: int = 0
 
 
 OutputTransportParams = Dict[str, Any]
@@ -201,6 +207,22 @@ def query_employees_for_employer(query: "Query[_T]", employer: Employer) -> "Que
         .filter(WagesAndContributions.employer_id == employer.employer_id)
         .group_by(Employee.employee_id)
         .distinct(Employee.employee_id)
+    )
+
+
+def query_employees_and_most_recent_wages_for_employer(
+    query: "Query[_T]", employer: Employer
+) -> "Query[_T]":
+    return (
+        query.select_from(WagesAndContributions)
+        .join(WagesAndContributions.employee)
+        .filter(WagesAndContributions.employer_id == employer.employer_id)
+        .order_by(
+            WagesAndContributions.employer_id,
+            WagesAndContributions.employee_id,
+            WagesAndContributions.filing_period.desc(),
+        )
+        .distinct(WagesAndContributions.employer_id, WagesAndContributions.employee_id)
     )
 
 
@@ -246,9 +268,9 @@ def process_employee_updates(
     fineos: massgov.pfml.fineos.AbstractFINEOSClient,
     output_dir_path: str,
     output_transport_params: Optional[OutputTransportParams] = None,
-) -> ProcessUpdatesResult:
-    employers_total_count = 0
-    employee_and_employer_pairs_total_count = 0
+) -> EligibilityFeedExportReport:
+    start_time = utcnow()
+    report = EligibilityFeedExportReport(started_at=start_time.isoformat())
 
     logger.info("Starting eligibility feeds generation for employee updates.")
     # Get employee changes from log table in batches
@@ -263,9 +285,8 @@ def process_employee_updates(
 
     if updated_employees_query.count() == 0:
         logger.info("Eligibility Feed: No updates to process.")
-        return ProcessUpdatesResult(
-            employers_total_count=0, employee_and_employer_pairs_total_count=0,
-        )
+        report.completed_at = utcnow().isoformat()
+        return report
 
     # Get the latest wages record for modified employee to get
     # employer associated with it.
@@ -292,43 +313,58 @@ def process_employee_updates(
 
     # Process list of employers
     for employer_id, employee_ids in employer_id_to_employee_ids.items():
-        employer = db_session.query(Employer).filter(Employer.employer_id == employer_id).one()
-        # Find FINEOS employer id using employer FEIN
-        fineos_employer_id = get_fineos_employer_id(fineos, employer)
-        if fineos_employer_id is None:
-            logger.info(
-                "FINEOS employer id not in Portal DB. Continuing.",
-                extra={"account_key": employer.account_key},
+        try:
+            report.employers_total_count += 1
+
+            employer = db_session.query(Employer).filter(Employer.employer_id == employer_id).one()
+
+            # Find FINEOS employer id using employer FEIN
+            fineos_employer_id = get_fineos_employer_id(fineos, employer)
+            if fineos_employer_id is None:
+                logger.info(
+                    "FINEOS employer id not in API DB. Continuing.",
+                    extra={
+                        "internal_employer_id": employer.employer_id,
+                        "account_key": employer.account_key,
+                    },
+                )
+                report.employers_skipped_count += 1
+                continue
+
+            number_of_employees = len(employee_ids)
+            report.employee_and_employer_pairs_total_count += number_of_employees
+
+            employees_and_most_recent_wages: Iterable[
+                Tuple[Employee, WagesAndContributions]
+            ] = query_employees_and_most_recent_wages_for_employer(
+                db_session.query(Employee, WagesAndContributions), employer
+            ).filter(
+                Employee.employee_id.in_(employee_ids)
+            ).yield_per(
+                1000
             )
+
+            open_and_write_to_eligibility_file(
+                output_dir_path,
+                fineos_employer_id,
+                employer,
+                number_of_employees,
+                employees_and_most_recent_wages,
+            )
+
+            report.employers_success_count += 1
+        except Exception:
+            logger.exception(
+                "Error generating FINEOS Eligibility Feed for Employer",
+                extra={"internal_employer_id": employer.employer_id},
+            )
+            report.employers_error_count += 1
             continue
 
-        number_of_employees = len(employee_ids)
-        employee_and_employer_pairs_total_count += number_of_employees
+    end_time = utcnow()
+    report.completed_at = end_time.isoformat()
 
-        employees = (
-            db_session.query(Employee)
-            .filter(Employee.employee_id.in_(employee_ids))
-            .yield_per(1000)
-        )
-
-        open_and_write_to_eligibility_file(
-            output_dir_path, fineos_employer_id, employer, number_of_employees, employees
-        )
-
-        employers_total_count += 1
-
-    logger.info(
-        "Finished writing all eligibility feeds",
-        extra={
-            "employers_total_count": employers_total_count,
-            "employee_and_employer_pairs_total_count": employee_and_employer_pairs_total_count,
-        },
-    )
-
-    return ProcessUpdatesResult(
-        employers_total_count=employers_total_count,
-        employee_and_employer_pairs_total_count=employee_and_employer_pairs_total_count,
-    )
+    return report
 
 
 def process_all_employers(
@@ -336,58 +372,71 @@ def process_all_employers(
     fineos: massgov.pfml.fineos.AbstractFINEOSClient,
     output_dir_path: str,
     output_transport_params: Optional[OutputTransportParams] = None,
-) -> ProcessUpdatesResult:
-    employers_total_count = 0
-    employee_and_employer_pairs_total_count = 0
+) -> EligibilityFeedExportReport:
+    start_time = utcnow()
+    report = EligibilityFeedExportReport(started_at=start_time.isoformat())
 
     logger.info("Starting eligibility feeds generation for all employers")
 
     employers = db_session.query(Employer).yield_per(1000)
 
-    for employer in employers:
-        # Find FINEOS employer id using employer FEIN
-        fineos_employer_id = get_fineos_employer_id(fineos, employer)
-        if fineos_employer_id is None:
-            logger.info(
-                "FINEOS employer id not in Portal DB. Continuing.",
-                extra={"account_key": employer.account_key},
+    employers_with_logging = massgov.pfml.util.logging.log_every(
+        logger, employers, count=1000, start_time=start_time, item_name="Employer"
+    )
+
+    for employer in employers_with_logging:
+        try:
+            report.employers_total_count += 1
+
+            # Find FINEOS employer id using employer FEIN
+            fineos_employer_id = get_fineos_employer_id(fineos, employer)
+            if fineos_employer_id is None:
+                logger.info(
+                    "FINEOS employer id not in API DB. Continuing.",
+                    extra={
+                        "internal_employer_id": employer.employer_id,
+                        "account_key": employer.account_key,
+                    },
+                )
+                report.employers_skipped_count += 1
+                continue
+
+            number_of_employees = query_employees_for_employer(
+                db_session.query(Employee.employee_id), employer
+            ).count()
+
+            report.employee_and_employer_pairs_total_count += number_of_employees
+
+            employees_and_most_recent_wages: Iterable[
+                Tuple[Employee, WagesAndContributions]
+            ] = query_employees_and_most_recent_wages_for_employer(
+                db_session.query(Employee, WagesAndContributions), employer
+            ).yield_per(
+                1000
             )
+
+            open_and_write_to_eligibility_file(
+                output_dir_path,
+                fineos_employer_id,
+                employer,
+                number_of_employees,
+                employees_and_most_recent_wages,
+                output_transport_params,
+            )
+
+            report.employers_success_count += 1
+        except Exception:
+            logger.exception(
+                "Error generating FINEOS Eligibility Feed for Employer",
+                extra={"internal_employer_id": employer.employer_id},
+            )
+            report.employers_error_count += 1
             continue
 
-        employers_total_count += 1
+    end_time = utcnow()
+    report.completed_at = end_time.isoformat()
 
-        number_of_employees = query_employees_for_employer(
-            db_session.query(Employee.employee_id), employer
-        ).count()
-
-        # TODO: use result of write_employees_to_csv instead?
-        employee_and_employer_pairs_total_count += number_of_employees
-
-        employees = query_employees_for_employer(db_session.query(Employee), employer).yield_per(
-            1000
-        )
-
-        open_and_write_to_eligibility_file(
-            output_dir_path,
-            fineos_employer_id,
-            employer,
-            number_of_employees,
-            employees,
-            output_transport_params,
-        )
-
-    logger.info(
-        "Finished writing all eligibility feeds",
-        extra={
-            "employers_total_count": employers_total_count,
-            "employee_and_employer_pairs_total_count": employee_and_employer_pairs_total_count,
-        },
-    )
-
-    return ProcessUpdatesResult(
-        employers_total_count=employers_total_count,
-        employee_and_employer_pairs_total_count=employee_and_employer_pairs_total_count,
-    )
+    return report
 
 
 ELIGIBILITY_FEED_CSV_ENCODERS: csv_util.Encoders = {
@@ -401,7 +450,7 @@ def open_and_write_to_eligibility_file(
     fineos_employer_id: int,
     employer: Employer,
     number_of_employees: int,
-    employees: Iterable[Employee],
+    employees: Iterable[Tuple[Employee, WagesAndContributions]],
     output_transport_params: Optional[OutputTransportParams] = None,
 ) -> str:
     output_file_path = (
@@ -418,12 +467,35 @@ def open_and_write_to_eligibility_file(
         },
     )
 
-    with smart_open.open(
-        output_file_path, "w", transport_params=output_transport_params
-    ) as output_file:
-        write_employees_to_csv(
-            employer, str(fineos_employer_id), number_of_employees, employees, output_file,
+    try:
+        s3_obj = None
+
+        with smart_open.open(
+            output_file_path, "w", transport_params=output_transport_params
+        ) as output_file:
+            if file_util.is_s3_path(output_file_path):
+                s3_obj = output_file.to_boto3()
+
+            write_employees_to_csv(
+                employer, str(fineos_employer_id), number_of_employees, employees, output_file,
+            )
+    except Exception:
+        logger.info(
+            "Error writing eligibility feed. Deleting partial export file.",
+            extra={
+                "internal_employer_id": employer.employer_id,
+                "fineos_employer_id": fineos_employer_id,
+                "number_of_employees": number_of_employees,
+                "output_file": output_file_path,
+            },
         )
+
+        if s3_obj:
+            s3_obj.delete()
+        else:
+            file_util.remove_if_exists(output_file_path)
+
+        raise
 
     return output_file_path
 
@@ -432,13 +504,16 @@ def write_employees_to_csv(
     employer: Employer,
     fineos_employer_id: str,
     number_of_employees: int,
-    employees: Iterable[Employee],
+    employees_with_most_recent_wages: Iterable[Tuple[Employee, WagesAndContributions]],
     output_file: TextIO,
 ) -> None:
+    start_time = utcnow()
+
     logger.info(
         "Starting to write eligibility feed",
         extra={
-            "employer_id": employer.employer_id,
+            "internal_employer_id": employer.employer_id,
+            "fineos_employer_id": fineos_employer_id,
             "number_of_employees": number_of_employees,
             "output_file": output_file.name,
         },
@@ -458,22 +533,52 @@ def write_employees_to_csv(
     )
     writer.writeheader()
 
+    employees_with_most_recent_wages_with_logging = massgov.pfml.util.logging.log_every(
+        logger,
+        employees_with_most_recent_wages,
+        count=1000,
+        start_time=start_time,
+        total_count=number_of_employees,
+        item_name="Employee",
+        extra={
+            "internal_employer_id": employer.employer_id,
+            "fineos_employer_id": fineos_employer_id,
+            "output_file": output_file.name,
+        },
+    )
+
     logger.debug("Writing CSV rows")
     processed_employee_count = 0
-    for employee in employees:
+    for (employee, most_recent_wages) in employees_with_most_recent_wages_with_logging:
         logger.debug("Writing row for employee", extra={"employee_id": employee.employee_id})
-        writer.writerow(
-            csv_util.encode_row(
-                employee_to_eligibility_feed_record(employee, employer),
-                ELIGIBILITY_FEED_CSV_ENCODERS,
+        try:
+            writer.writerow(
+                csv_util.encode_row(
+                    employee_to_eligibility_feed_record(employee, most_recent_wages, employer),
+                    ELIGIBILITY_FEED_CSV_ENCODERS,
+                )
             )
-        )
+        except Exception:
+            logger.error(
+                "Error processing employee entry",
+                extra={
+                    "internal_employer_id": employer.employer_id,
+                    "fineos_employer_id": fineos_employer_id,
+                    "number_of_employees": number_of_employees,
+                    "output_file": output_file.name,
+                    "processed_employee_count": processed_employee_count,
+                    "employee_id": employee.employee_id,
+                },
+            )
+            raise
+
         processed_employee_count += 1
 
     logger.info(
         "Finished writing eligibility feed",
         extra={
-            "employer_id": employer.employer_id,
+            "internal_employer_id": employer.employer_id,
+            "fineos_employer_id": fineos_employer_id,
             "number_of_employees": number_of_employees,
             "output_file": output_file.name,
             "processed_employee_count": processed_employee_count,
@@ -485,7 +590,8 @@ def write_employees_to_csv(
         logger.error(
             f"Eligibility feed count mismatch, expected to process {number_of_employees}, actually processed {processed_employee_count}",
             extra={
-                "employer_id": employer.employer_id,
+                "internal_employer_id": employer.employer_id,
+                "fineos_employer_id": fineos_employer_id,
                 "number_of_employees": number_of_employees,
                 "output_file": output_file.name,
                 "processed_employee_count": processed_employee_count,
@@ -494,22 +600,8 @@ def write_employees_to_csv(
 
 
 def employee_to_eligibility_feed_record(
-    employee: Employee, employer: Employer
+    employee: Employee, most_recent_wages: WagesAndContributions, employer: Employer
 ) -> Optional[EligibilityFeedRecord]:
-    most_recent_wages = (
-        employee.wages_and_contributions.order_by(WagesAndContributions.filing_period.desc())
-        .filter(WagesAndContributions.employer_id == employer.employer_id)
-        .first()
-    )
-
-    if most_recent_wages is None:
-        # TODO: should we throw exception instead?
-        logger.warning(
-            "Employee does have wage records for the specified employer, can not export for eligibility feed",
-            extra={"employee_id": employee.employee_id, "employer_id": employer.employer_id},
-        )
-        return None
-
     record = EligibilityFeedRecord(
         # FINEOS required fields, without a general default we can set
         employeeIdentifier=employee.employee_id,

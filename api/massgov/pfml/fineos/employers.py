@@ -1,5 +1,4 @@
 from dataclasses import dataclass
-from datetime import datetime
 from typing import Optional
 
 import massgov.pfml.api.services.fineos_actions as fineos_actions
@@ -7,13 +6,14 @@ import massgov.pfml.db as db
 import massgov.pfml.util.logging
 from massgov.pfml.db.models.employees import Employer
 from massgov.pfml.fineos import AbstractFINEOSClient
+from massgov.pfml.util.datetime import utcnow
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
 
 
 @dataclass
 class LoadEmployersReport:
-    start: str = datetime.now().isoformat()
+    start: str = utcnow().isoformat()
     total_employers_count: int = 0
     loaded_employers_count: int = 0
     errored_employers_count: int = 0
@@ -22,7 +22,7 @@ class LoadEmployersReport:
 
 
 def load_all(db_session: db.Session, fineos: AbstractFINEOSClient) -> LoadEmployersReport:
-    start_time = datetime.now()
+    start_time = utcnow()
     report = LoadEmployersReport(start=start_time.isoformat())
 
     employers_query = db_session.query(Employer).filter(Employer.fineos_customer_nbr.is_(None))
@@ -52,7 +52,7 @@ def load_all(db_session: db.Session, fineos: AbstractFINEOSClient) -> LoadEmploy
             report.errored_employers_count += 1
             continue
 
-    end_time = datetime.now()
+    end_time = utcnow()
     report.end = end_time.isoformat()
     report.process_duration_in_seconds = (end_time - start_time).total_seconds()
 

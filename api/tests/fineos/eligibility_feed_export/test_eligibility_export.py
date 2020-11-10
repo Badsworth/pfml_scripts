@@ -73,9 +73,13 @@ def test_main_success_fineos_location(
         region_name="us-east-1",
     )
 
-    expected_response = {"employee_and_employer_pairs_total_count": 1, "employers_total_count": 1}
-
-    assert response == expected_response
+    assert response["started_at"]
+    assert response["completed_at"]
+    assert response["employers_total_count"] == 1
+    assert response["employers_success_count"] == 1
+    assert response["employers_error_count"] == 0
+    assert response["employers_skipped_count"] == 0
+    assert response["employee_and_employer_pairs_total_count"] == 1
 
 
 @moto.mock_ssm()
@@ -107,6 +111,10 @@ def test_main_success_non_fineos_location(
 
     sts_assume_session_spy.assert_not_called()
 
-    expected_response = {"employee_and_employer_pairs_total_count": 1, "employers_total_count": 1}
-
-    assert response == expected_response
+    assert response["started_at"]
+    assert response["completed_at"]
+    assert response["employers_total_count"] == 1
+    assert response["employers_success_count"] == 1
+    assert response["employers_error_count"] == 0
+    assert response["employers_skipped_count"] == 0
+    assert response["employee_and_employer_pairs_total_count"] == 1

@@ -5,11 +5,12 @@ from dataclasses import dataclass
 from datetime import date
 from pathlib import Path
 
+import boto3
 import pytest
 
 import massgov.pfml.fineos
 import massgov.pfml.fineos.eligibility_feed as ef
-from massgov.pfml.db.models.employees import EmployeeAddress, GeoState, TaxIdentifier
+from massgov.pfml.db.models.employees import EmployeeAddress, Employer, GeoState, TaxIdentifier
 from massgov.pfml.db.models.factories import (
     AddressFactory,
     EmployeeFactory,
@@ -17,6 +18,12 @@ from massgov.pfml.db.models.factories import (
     WagesAndContributionsFactory,
 )
 from massgov.pfml.util.pydantic.types import TaxIdUnformattedStr
+
+
+class SpecialTestException(Exception):
+    """Exception only defined here for ensure mocked exception is bubbled up"""
+
+    pass
 
 
 @pytest.fixture
@@ -41,7 +48,9 @@ def test_employee_to_eligibility_feed_record(initialize_factories_session):
         wages_and_contributions, key=lambda w: w.filing_period, reverse=True
     )[0]
 
-    eligibility_feed_record = ef.employee_to_eligibility_feed_record(employee, employer)
+    eligibility_feed_record = ef.employee_to_eligibility_feed_record(
+        employee, most_recent_wages, employer
+    )
 
     # TODO: assert other fields?
     assert eligibility_feed_record.employeeIdentifier == employee.employee_id
@@ -62,17 +71,6 @@ def test_employee_to_eligibility_feed_record(initialize_factories_session):
         assert eligibility_feed_record.telephoneNumber == employee.phone_number[4:].replace("-", "")
 
 
-def test_employee_to_eligibility_feed_record_without_wages(
-    test_db_session, initialize_factories_session
-):
-    employee = EmployeeFactory.create()
-    employer = EmployerFactory.create()
-
-    eligibility_feed_record = ef.employee_to_eligibility_feed_record(employee, employer)
-
-    assert eligibility_feed_record is None
-
-
 def test_employee_to_eligibility_feed_record_with_itin(
     test_db_session, initialize_factories_session
 ):
@@ -82,7 +80,9 @@ def test_employee_to_eligibility_feed_record_with_itin(
     employee.tax_identifier = TaxIdentifier(
         tax_identifier=TaxIdUnformattedStr.validate_type("999887777")
     )
-    eligibility_feed_record = ef.employee_to_eligibility_feed_record(employee, employer)
+    eligibility_feed_record = ef.employee_to_eligibility_feed_record(
+        employee, wages_and_contributions, employer
+    )
 
     assert eligibility_feed_record.employeeNationalIDType == ef.NationalIdType.itin
 
@@ -96,7 +96,9 @@ def test_employee_to_eligibility_feed_record_with_date_of_birth(
 
     employee.date_of_birth = date(2020, 7, 6)
 
-    eligibility_feed_record = ef.employee_to_eligibility_feed_record(employee, employer)
+    eligibility_feed_record = ef.employee_to_eligibility_feed_record(
+        employee, wages_and_contributions, employer
+    )
 
     assert eligibility_feed_record.employeeDateOfBirth == employee.date_of_birth
 
@@ -112,7 +114,9 @@ def test_employee_to_eligibility_feed_record_with_address(
         EmployeeAddress(employee_id=employee.employee_id, address_id=address_model.address_id)
     ]
 
-    eligibility_feed_record = ef.employee_to_eligibility_feed_record(employee, employer)
+    eligibility_feed_record = ef.employee_to_eligibility_feed_record(
+        employee, wages_and_contributions, employer
+    )
 
     assert eligibility_feed_record.addressType == ef.AddressType.home
     assert eligibility_feed_record.addressAddressLine1 == address_model.address_line_one
@@ -130,7 +134,9 @@ def test_employee_to_eligibility_feed_record_with_no_tax_identifier(
 
     employee.tax_identifier = None
 
-    eligibility_feed_record = ef.employee_to_eligibility_feed_record(employee, employer)
+    eligibility_feed_record = ef.employee_to_eligibility_feed_record(
+        employee, wages_and_contributions, employer
+    )
 
     assert eligibility_feed_record.employeeNationalID is None
     assert eligibility_feed_record.employeeNationalIDType is None
@@ -242,24 +248,31 @@ def test_write_employees_to_csv(
 
     fineos_employer_id = employer.employer_id
 
-    employees = list(map(lambda w: w.employee, wages_for_single_employer_different_employees))
+    employees_with_most_recent_wages = list(
+        map(lambda w: (w.employee, w), wages_for_single_employer_different_employees)
+    )
 
     # remove phone number from record
-    employees[1].phone_number = None
+    employees_with_most_recent_wages[1][0].phone_number = None
 
     # add an address
-    employees[1].addresses = [
-        EmployeeAddress(employee_id=employees[1].employee_id, address_id=address_model.address_id)
+    employees_with_most_recent_wages[1][0].addresses = [
+        EmployeeAddress(
+            employee_id=employees_with_most_recent_wages[1][0].employee_id,
+            address_id=address_model.address_id,
+        )
     ]
 
     test_db_session.commit()
 
-    number_of_employees = len(employees)
+    number_of_employees = len(employees_with_most_recent_wages)
 
     dest_file = tmp_path / "test.csv"
 
     with open(dest_file, "w") as f:
-        ef.write_employees_to_csv(employer, fineos_employer_id, number_of_employees, employees, f)
+        ef.write_employees_to_csv(
+            employer, fineos_employer_id, number_of_employees, employees_with_most_recent_wages, f
+        )
 
     with open(dest_file, "r") as f:
         file_content = f.readlines()
@@ -267,6 +280,8 @@ def test_write_employees_to_csv(
     assert file_content[0].strip() == f"EMPLOYER_ID:{fineos_employer_id}"
     assert file_content[1].strip() == f"NUMBER_OF_RECORDS:{number_of_employees}"
     assert file_content[2].strip() == "@DATABLOCK"
+
+    employees = list(map(lambda ew: ew[0], employees_with_most_recent_wages))
 
     expected_rows = [
         create_csv_dict(
@@ -387,10 +402,75 @@ def test_process_all_employers_simple(test_db_session, tmp_path, initialize_fact
         test_db_session, massgov.pfml.fineos.MockFINEOSClient(), tmp_path
     )
 
+    assert process_results.started_at
+    assert process_results.completed_at
     assert process_results.employers_total_count == 1
+    assert process_results.employers_success_count == 1
+    assert process_results.employers_error_count == 0
+    assert process_results.employers_skipped_count == 0
     assert process_results.employee_and_employer_pairs_total_count == 1
 
     assert_number_of_data_lines_in_each_file(tmp_path, 1)
+
+
+def test_process_all_employers_no_records(test_db_session, tmp_path, initialize_factories_session):
+    process_results = ef.process_all_employers(
+        test_db_session, massgov.pfml.fineos.MockFINEOSClient(), tmp_path
+    )
+
+    assert process_results.started_at
+    assert process_results.completed_at
+    assert process_results.employers_total_count == 0
+    assert process_results.employers_success_count == 0
+    assert process_results.employers_error_count == 0
+    assert process_results.employers_skipped_count == 0
+    assert process_results.employee_and_employer_pairs_total_count == 0
+
+
+def test_process_all_employers_with_skip(
+    test_db_session, tmp_path, initialize_factories_session, monkeypatch
+):
+    WagesAndContributionsFactory.create()
+
+    def mock(fineos, employer):
+        return None
+
+    monkeypatch.setattr(ef, "get_fineos_employer_id", mock)
+
+    process_results = ef.process_all_employers(
+        test_db_session, massgov.pfml.fineos.MockFINEOSClient(), tmp_path
+    )
+
+    assert process_results.started_at
+    assert process_results.completed_at
+    assert process_results.employers_total_count == 1
+    assert process_results.employers_success_count == 0
+    assert process_results.employers_error_count == 0
+    assert process_results.employers_skipped_count == 1
+    assert process_results.employee_and_employer_pairs_total_count == 0
+
+
+def test_process_all_employers_with_error(
+    test_db_session, tmp_path, initialize_factories_session, monkeypatch
+):
+    WagesAndContributionsFactory.create()
+
+    def mock(fineos, employer):
+        raise Exception
+
+    monkeypatch.setattr(ef, "get_fineos_employer_id", mock)
+
+    process_results = ef.process_all_employers(
+        test_db_session, massgov.pfml.fineos.MockFINEOSClient(), tmp_path
+    )
+
+    assert process_results.started_at
+    assert process_results.completed_at
+    assert process_results.employers_total_count == 1
+    assert process_results.employers_success_count == 0
+    assert process_results.employers_error_count == 1
+    assert process_results.employers_skipped_count == 0
+    assert process_results.employee_and_employer_pairs_total_count == 0
 
 
 def test_process_all_employers_for_single_employee_different_employers(
@@ -403,7 +483,12 @@ def test_process_all_employers_for_single_employee_different_employers(
         test_db_session, massgov.pfml.fineos.MockFINEOSClient(), tmp_path
     )
 
+    assert process_results.started_at
+    assert process_results.completed_at
     assert process_results.employers_total_count == 5
+    assert process_results.employers_success_count == 5
+    assert process_results.employers_error_count == 0
+    assert process_results.employers_skipped_count == 0
     assert process_results.employee_and_employer_pairs_total_count == 5
 
     assert_number_of_data_lines_in_each_file(tmp_path, 1)
@@ -419,7 +504,12 @@ def test_process_all_employers_for_single_employer_different_employees(
         test_db_session, massgov.pfml.fineos.MockFINEOSClient(), tmp_path
     )
 
+    assert process_results.started_at
+    assert process_results.completed_at
     assert process_results.employers_total_count == 1
+    assert process_results.employers_success_count == 1
+    assert process_results.employers_error_count == 0
+    assert process_results.employers_skipped_count == 0
     assert process_results.employee_and_employer_pairs_total_count == 5
 
     assert_number_of_data_lines_in_each_file(tmp_path, 5)
@@ -437,7 +527,12 @@ def test_process_all_employers_for_multiple_wages_for_single_employee_employer_p
         test_db_session, massgov.pfml.fineos.MockFINEOSClient(), tmp_path
     )
 
+    assert process_results.started_at
+    assert process_results.completed_at
     assert process_results.employers_total_count == 1
+    assert process_results.employers_success_count == 1
+    assert process_results.employers_error_count == 0
+    assert process_results.employers_skipped_count == 0
     assert process_results.employee_and_employer_pairs_total_count == 1
 
     assert_number_of_data_lines_in_each_file(tmp_path, 1)
@@ -461,7 +556,12 @@ def test_process_all_employers_skips_nonexistent_employer(
     fineos_client = massgov.pfml.fineos.MockFINEOSClient()
     process_results = ef.process_all_employers(test_db_session, fineos_client, tmp_path)
 
-    assert process_results.employers_total_count == 1
+    assert process_results.started_at
+    assert process_results.completed_at
+    assert process_results.employers_total_count == 2
+    assert process_results.employers_success_count == 1
+    assert process_results.employers_error_count == 0
+    assert process_results.employers_skipped_count == 1
     assert process_results.employee_and_employer_pairs_total_count == 5
 
     assert_employer_file_exists(tmp_path, employer.fineos_employer_id)
@@ -518,7 +618,12 @@ def test_process_employee_updates_simple(
         test_db_session, massgov.pfml.fineos.MockFINEOSClient(), tmp_path
     )
 
+    assert process_results.started_at
+    assert process_results.completed_at
     assert process_results.employers_total_count == 1
+    assert process_results.employers_success_count == 1
+    assert process_results.employers_error_count == 0
+    assert process_results.employers_skipped_count == 0
     assert process_results.employee_and_employer_pairs_total_count == 1
 
     assert_number_of_data_lines_in_each_file(tmp_path, 1)
@@ -534,7 +639,12 @@ def test_process_employee_updates_for_single_employer_different_employees(
         test_db_session, massgov.pfml.fineos.MockFINEOSClient(), tmp_path
     )
 
+    assert process_results.started_at
+    assert process_results.completed_at
     assert process_results.employers_total_count == 1
+    assert process_results.employers_success_count == 1
+    assert process_results.employers_error_count == 0
+    assert process_results.employers_skipped_count == 0
     assert process_results.employee_and_employer_pairs_total_count == 5
 
     assert_number_of_data_lines_in_each_file(tmp_path, 5)
@@ -552,7 +662,12 @@ def test_process_employee_updates_for_multiple_wages_for_single_employee_employe
         test_db_session, massgov.pfml.fineos.MockFINEOSClient(), tmp_path
     )
 
+    assert process_results.started_at
+    assert process_results.completed_at
     assert process_results.employers_total_count == 1
+    assert process_results.employers_success_count == 1
+    assert process_results.employers_error_count == 0
+    assert process_results.employers_skipped_count == 0
     assert process_results.employee_and_employer_pairs_total_count == 1
 
     assert_number_of_data_lines_in_each_file(tmp_path, 1)
@@ -576,8 +691,90 @@ def test_process_employee_updates_skips_nonexistent_employer(
     fineos_client = massgov.pfml.fineos.MockFINEOSClient()
     process_results = ef.process_employee_updates(test_db_session, fineos_client, tmp_path)
 
-    assert process_results.employers_total_count == 1
+    assert process_results.started_at
+    assert process_results.completed_at
+    assert process_results.employers_total_count == 2
+    assert process_results.employers_success_count == 1
+    assert process_results.employers_error_count == 0
+    assert process_results.employers_skipped_count == 1
     assert process_results.employee_and_employer_pairs_total_count == 5
 
     assert_employer_file_exists(tmp_path, employer.fineos_employer_id)
     assert_number_of_data_lines_in_each_file(tmp_path, 5)
+
+
+def test_process_employee_updates_with_error(
+    test_db_session, tmp_path, initialize_factories_session, create_triggers, monkeypatch
+):
+    WagesAndContributionsFactory.create()
+
+    def mock(fineos, employer):
+        raise Exception
+
+    monkeypatch.setattr(ef, "get_fineos_employer_id", mock)
+
+    process_results = ef.process_employee_updates(
+        test_db_session, massgov.pfml.fineos.MockFINEOSClient(), tmp_path
+    )
+
+    assert process_results.started_at
+    assert process_results.completed_at
+    assert process_results.employers_total_count == 1
+    assert process_results.employers_success_count == 0
+    assert process_results.employers_error_count == 1
+    assert process_results.employers_skipped_count == 0
+    assert process_results.employee_and_employer_pairs_total_count == 0
+
+
+def test_open_and_write_to_eligibility_file_delete_on_exception(
+    tmp_path, mock_s3_bucket, monkeypatch
+):
+    def mock(employer, fineos_employer_id, number_of_employees, employees, output_file):
+        raise SpecialTestException
+
+    monkeypatch.setattr(ef, "write_employees_to_csv", mock)
+
+    fineos_employer_id = 1
+
+    with pytest.raises(SpecialTestException):
+        ef.open_and_write_to_eligibility_file(
+            tmp_path, fineos_employer_id, Employer(employer_id="foo"), 0, []
+        )
+
+    assert_employer_file_does_not_exists(tmp_path, fineos_employer_id)
+
+    with pytest.raises(SpecialTestException):
+        ef.open_and_write_to_eligibility_file(
+            f"s3://{mock_s3_bucket}", fineos_employer_id, Employer(employer_id="foo"), 0, []
+        )
+
+    s3 = boto3.resource("s3")
+    s3_bucket = s3.Bucket(mock_s3_bucket)
+    assert list(s3_bucket.objects.all()) == []
+
+
+def test_open_and_write_to_eligibility_file_delete_on_exception_on_create(
+    tmp_path, mock_s3_bucket, monkeypatch
+):
+    def mock(output_file, mode, transport_params):
+        raise SpecialTestException
+
+    monkeypatch.setattr(ef.smart_open, "open", mock)
+
+    fineos_employer_id = 1
+
+    with pytest.raises(SpecialTestException):
+        ef.open_and_write_to_eligibility_file(
+            tmp_path, fineos_employer_id, Employer(employer_id="foo"), 0, []
+        )
+
+    assert_employer_file_does_not_exists(tmp_path, fineos_employer_id)
+
+    with pytest.raises(SpecialTestException):
+        ef.open_and_write_to_eligibility_file(
+            f"s3://{mock_s3_bucket}", fineos_employer_id, Employer(employer_id="foo"), 0, []
+        )
+
+    s3 = boto3.resource("s3")
+    s3_bucket = s3.Bucket(mock_s3_bucket)
+    assert list(s3_bucket.objects.all()) == []

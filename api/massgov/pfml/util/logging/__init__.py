@@ -13,6 +13,8 @@ import time
 from datetime import datetime
 from typing import Any, Dict, Generator, Iterable, Optional, TypeVar
 
+from massgov.pfml.util.datetime import utcnow
+
 from . import formatters, network
 
 start_time = time.monotonic()
@@ -28,7 +30,7 @@ LOGGING = {
         "gunicorn.access": {"handlers": ["console"], "level": "INFO", "propagate": False},
         "gunicorn.error": {"handlers": ["console"], "level": "INFO", "propagate": False},
         "massgov.pfml": {"handlers": ["console"], "level": "INFO", "propagate": False},
-        "massgov.pfml.fineos": {"handlers": ["console"], "level": "DEBUG", "propagate": False},
+        "massgov.pfml.fineos": {"handlers": ["console"], "level": "INFO", "propagate": False},
         "newrelic": {"handlers": ["console"], "level": "INFO", "propagate": False},
         "werkzeug": {"handlers": ["console"], "level": "WARN", "propagate": False},
         # Log DB pool connection invalidations and recycle events. At DEBUG
@@ -103,6 +105,7 @@ def log_every(
     count: int = 100,
     total_count: Optional[int] = None,
     start_time: Optional[datetime] = None,
+    item_name: Optional[str] = None,
     extra: Optional[Dict[str, Any]] = None,
 ) -> Generator[_T, Any, Any]:
     """Every `count` items, log a message about progress through `items`."""
@@ -113,12 +116,20 @@ def log_every(
     for index, item in enumerate(items, 1):
         if count and not index % count:
             if start_time:
-                extra["elapsed_seconds"] = (datetime.now() - start_time).total_seconds()
+                extra["start_time"] = start_time
+                extra["elapsed_seconds"] = (utcnow() - start_time).total_seconds()
 
             if total_count:
+                extra["total_count"] = total_count
                 extra["percent_complete"] = round((index / total_count) * 100, 2)
 
-            log.info(f"Processing item {index} of {total_count or 'unknown total'}", extra=extra)
+            if item_name:
+                extra["item_name"] = item_name
+
+            log.info(
+                f"Processing {item_name or 'item'} {index} of {total_count or 'unknown total'}",
+                extra=extra,
+            )
 
         yield item
 

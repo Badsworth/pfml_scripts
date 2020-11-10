@@ -44,10 +44,20 @@ class EligibilityFeedExportConfig(BaseSettings):
 
 def handler(_event, _context):
     """Handler for Lambda function"""
-    return main()
+    return main_with_return()
 
 
 def main():
+    """Entry point for ECS task
+
+    For an ECS task, the return value is taken as a status code, so should not
+    return anything (or anything non-zero) from this function.
+    """
+    main_with_return()
+    return 0
+
+
+def main_with_return():
     logger.info("Starting FINEOS eligibility feed export run")
 
     config = EligibilityFeedExportConfig()
@@ -79,5 +89,10 @@ def main():
             process_result = eligibility_feed.process_all_employers(
                 db_session, fineos_client, config.output_directory_path, output_transport_params
             )
+
+    logger.info(
+        "Finished writing all eligibility feeds",
+        extra={"report": dataclasses.asdict(process_result)},
+    )
 
     return dataclasses.asdict(process_result)

@@ -67,3 +67,10 @@ def write_file(path, mode="w", encoding=None):
 def read_file_lines(path, mode="r", encoding=None):
     stream = smart_open.open(path, mode, encoding=encoding)
     return map(lambda line: line.rstrip(), stream)
+
+
+def remove_if_exists(path: str) -> None:
+    try:
+        os.remove(path)
+    except FileNotFoundError:
+        pass

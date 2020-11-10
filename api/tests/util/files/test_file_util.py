@@ -1,3 +1,5 @@
+import os
+
 import boto3
 
 import massgov.pfml.util.files as file_util
@@ -108,3 +110,24 @@ def test_ebcdic_encoding(test_fs_path):
     lines = list(file_util.read_file_lines(full_path, encoding=file_util.EBCDIC_ENCODING))
     assert lines[0] == line1.rstrip()  # read_file_lines does an rstrip itself which removes the \n.
     assert lines[1] == line2
+
+
+def test_remove_if_exists_when_exists(tmp_path):
+    test_file_that_exists = tmp_path / "test.txt"
+    test_file_that_exists.write_text("foo")
+
+    assert os.path.exists(test_file_that_exists) is True
+
+    file_util.remove_if_exists(test_file_that_exists)
+
+    assert os.path.exists(test_file_that_exists) is False
+
+
+def test_remove_if_exists_when_not_exists():
+    test_file_that_does_not_exist = "./foobar/test.txt"
+
+    assert os.path.exists(test_file_that_does_not_exist) is False
+
+    file_util.remove_if_exists(test_file_that_does_not_exist)
+
+    assert os.path.exists(test_file_that_does_not_exist) is False
