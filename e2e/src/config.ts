@@ -20,6 +20,7 @@ interface E2EConfig {
   FINEOS_PASSWORD: string;
   TESTMAIL_APIKEY: string;
   TESTMAIL_NAMESPACE: string;
+  EMPLOYEES_FILE: string;
 }
 
 type E2EConfigFunction = (name: keyof E2EConfig) => string;

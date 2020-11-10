@@ -41,10 +41,12 @@ export interface EmployeeFactory {
 }
 
 // ClaimUser is a partial of a pre-created user we can pass to scenario generators.
-export type EmployeeRecord = Pick<
-  ApplicationRequestBody,
-  "first_name" | "last_name" | "tax_identifier" | "employer_fein"
->;
+export type EmployeeRecord = {
+  first_name: string;
+  last_name: string;
+  tax_identifier: string;
+  employer_fein: string;
+};
 
 // EmployerFactory is the interface for getting or generating an employer.
 export interface EmployerFactory {

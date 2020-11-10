@@ -11,19 +11,24 @@
 
 import config from "../../src/config";
 import faker from "faker";
-import fs from "fs";
 import webpackPreprocessor from "@cypress/webpack-preprocessor";
 import { CypressStepThis } from "@/types";
 import TestMailVerificationFetcher from "./TestMailVerificationFetcher";
 import PortalSubmitter from "../../src/simulation/PortalSubmitter";
 import employerPool from "../../src/simulation/fixtures/employerPool";
-import { SimulationClaim, Employer } from "../../src/simulation/types";
+import {
+  SimulationClaim,
+  Employer,
+  EmployeeRecord,
+} from "../../src/simulation/types";
 import { SimulationGenerator } from "../../src/simulation/simulate";
 import { ApplicationResponse, DocumentUploadRequest } from "../../src/api";
 import { makeDocUploadBody } from "../../src/simulation/SimulationRunner";
+import { fromClaimsFactory } from "../../src/simulation/EmployeeFactory";
 import * as pilot3 from "../../src/simulation/scenarios/pilot3";
 import * as pilot4 from "../../src/simulation/scenarios/pilot4";
 import * as integrationScenarios from "../../src/simulation/scenarios/integrationScenarios";
+import fs from "fs";
 
 const scenarioFunctions: Record<string, SimulationGenerator> = {
   ...pilot3,
@@ -132,17 +137,28 @@ function generatePassword(): string {
   );
 }
 
-async function getEmployee(
-  employeeType: string
-): Promise<Record<string, string>> {
-  const content = await fs.promises.readFile("employee.json");
-  const employees = JSON.parse(content.toString("utf-8"));
-  if (!(employeeType in employees)) {
-    throw new Error("Employee Type Not Found!");
+/**
+ * Retrieves an existing employee from the employee file for the current environment.
+ */
+async function getEmployee(employeeType: string): Promise<EmployeeRecord> {
+  const claims = await fs.promises
+    .readFile(config("EMPLOYEES_FILE"), "utf-8")
+    .then(JSON.parse);
+  const factory = fromClaimsFactory(claims);
+  switch (employeeType) {
+    case "financially eligible":
+      return factory(false);
+    case "financially ineligible":
+      return factory(true);
+    default:
+      throw new Error(`Unknown employee type: ${employeeType}`);
   }
-  return employees[employeeType];
 }
 
+/**
+ * Retrieves employer data for a specific employer.
+ * @param fein
+ */
 async function getEmployer(fein: string): Promise<Employer> {
   const employers: Employer[] = employerPool;
   const employer = employers.find((e) => e.fein === fein);
