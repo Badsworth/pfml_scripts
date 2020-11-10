@@ -1,4 +1,6 @@
+import DFMLLogo from "./DFMLLogo.svg";
 import FooterSlim from "@massds/mayflower-react/dist/FooterSlim";
+import PFMLLogo from "./PFMLLogo.svg";
 import React from "react";
 import SiteLogo from "@massds/mayflower-react/dist/SiteLogo";
 import routes from "../routes";
@@ -29,7 +31,7 @@ const Footer = () => {
             domain: routes.index,
           }}
           image={{
-            src: "/DFML_logo_RGB_Gray.svg",
+            src: DFMLLogo,
             alt: t("components.siteLogo.dfmlAlt"),
             width: 165,
             height: 45,
@@ -41,7 +43,7 @@ const Footer = () => {
             domain: routes.index,
           }}
           image={{
-            src: "/PFML_logo_RGB_Gray.svg",
+            src: PFMLLogo,
             alt: t("components.siteLogo.pfmlAlt"),
             width: 118,
             height: 45,

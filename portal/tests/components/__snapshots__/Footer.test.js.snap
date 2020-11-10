@@ -20,7 +20,7 @@ exports[`Footer renders footer with default settings 1`] = `
           Object {
             "alt": "Department of Family and Medical Leave logo",
             "height": 45,
-            "src": "/DFML_logo_RGB_Gray.svg",
+            "src": "test-file-stub",
             "width": 165,
           }
         }
@@ -36,7 +36,7 @@ exports[`Footer renders footer with default settings 1`] = `
           Object {
             "alt": "Paid Family and Medical Leave program logo",
             "height": 45,
-            "src": "/PFML_logo_RGB_Gray.svg",
+            "src": "test-file-stub",
             "width": 118,
           }
         }
