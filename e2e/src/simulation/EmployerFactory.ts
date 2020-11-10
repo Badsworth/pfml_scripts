@@ -16,13 +16,13 @@ export function fromEmployersFactory(employers: Employer[]): EmployerFactory {
  */
 export const randomEmployer: EmployerFactory = () => {
   return {
-    accountKey: faker.helpers.replaceSymbolWithNumber("##########"),
+    accountKey: faker.helpers.replaceSymbolWithNumber("###########"),
     name: faker.company.companyName(0),
     fein: faker.helpers.replaceSymbolWithNumber("##-#######"),
     street: faker.address.streetAddress(),
     city: faker.address.city(),
     state: "MA",
-    zip: faker.address.zipCode(),
+    zip: faker.address.zipCode("#####-####"),
     dba: "",
     family_exemption: false,
     medical_exemption: false,

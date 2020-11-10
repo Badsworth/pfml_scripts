@@ -1,15 +1,8 @@
 import { CommandModule } from "yargs";
 import SimulationStorage from "../SimulationStorage";
 import fs from "fs";
-import {
-  createEmployeesStream,
-  createEmployersStream,
-  formatISODatetime,
-} from "../dor";
+import { formatISODatetime } from "../quarters";
 import quarters from "../quarters";
-import createClaimIndexStream from "../claimIndex";
-import { promisify } from "util";
-import { pipeline } from "stream";
 import { SystemWideArgs } from "../../cli";
 import { randomEmployee, fromClaimsFactory } from "../EmployeeFactory";
 import { fromEmployersFactory } from "../EmployerFactory";
@@ -20,9 +13,12 @@ import {
   EmployerFactory,
   Employer,
 } from "@/simulation/types";
-
-// Create a promised version of the pipeline function.
-const pipelineP = promisify(pipeline);
+import {
+  writeClaimFile,
+  writeClaimIndex,
+  writeDOREmployees,
+  writeDOREmployers,
+} from "../writers";
 
 type GenerateArgs = {
   filename: string;
@@ -96,60 +92,63 @@ const cmd: CommandModule<SystemWideArgs, GenerateArgs> = {
     const storage = new SimulationStorage(args.directory);
     await fs.promises.rmdir(storage.directory, { recursive: true });
     await fs.promises.mkdir(storage.documentDirectory, { recursive: true });
-    const claims = [];
     const limit = parseInt(args.count);
-    for (let i = 0; i < limit; i++) {
-      claims.push(
-        await generator({
+
+    const claimsGen = (async function* (): AsyncGenerator<SimulationClaim> {
+      for (let i = 0; i < limit; i++) {
+        yield generator({
           documentDirectory: storage.documentDirectory,
           employeeFactory,
           employerFactory,
-        })
-      );
-    }
+        });
+      }
+    })();
 
-    // Generate claims JSON file.
-    const claimsJSONPromise = fs.promises.writeFile(
+    // Write the claim file first, streaming to JSON. We'll read this back
+    // later on.
+    await writeClaimFile(claimsGen, storage.claimFile);
+    args.logger.info("Completed claim file generation");
+
+    // Generate the claim index, which will be used to cross-reference the claims and scenarios in Fineos.
+    const claimsIndexPromise = writeClaimIndex(
       storage.claimFile,
-      JSON.stringify(claims, null, 2)
-    );
+      `${storage.directory}/index.csv`
+    ).then(() => args.logger.info("Completed index file generation"));
 
     const now = new Date();
-    // Generate the employers DOR file. This is done by "pipelining" a read stream into a write stream.
-    const dorEmployersPromise = pipelineP(
-      createEmployersStream(employers),
-      fs.createWriteStream(
-        `${storage.directory}/DORDFMLEMP_${formatISODatetime(now)}`
-      )
-    );
-    // Strip off any claims that don't need DOR file inclusion.
-    const dorClaims = claims.filter((claim) => !!claim.claim.employer_fein);
-    // Generate the employees DOR file. This is done by "pipelining" a read stream into a write stream.
-    const dorEmployeesPromise = pipelineP(
-      createEmployeesStream(dorClaims, employers, quarters()),
-      fs.createWriteStream(
-        `${storage.directory}/DORDFML_${formatISODatetime(now)}`
-      )
-    );
-    // Generate the claim index, which will be used to cross-reference the claims and scenarios in Fineos.
-    const claimIndex = pipelineP(
-      createClaimIndexStream(claims),
-      fs.createWriteStream(`${storage.directory}/index.csv`)
-    );
-    // Finally wait for all of those files to finish generating.
-    await Promise.all([
-      claimsJSONPromise,
-      dorEmployeesPromise,
-      dorEmployersPromise,
-      claimIndex,
-    ]);
+
+    // Write the employers DOR file.
+    const employerMap = makeEmployerMap(employers);
+    const employersPromise = writeDOREmployers(
+      storage.claimFile,
+      `${storage.directory}/DORDFMLEMP_${formatISODatetime(now)}`,
+      employerMap
+    ).then(() => args.logger.info("Completed DOR employers file generation"));
+
+    // Finally, write the employees DOR file.
+    const employeesPromise = writeDOREmployees(
+      storage.claimFile,
+      `${storage.directory}/DORDFML_${formatISODatetime(now)}`,
+      employerMap,
+      quarters()
+    ).then(() => {
+      args.logger.info("Completed DOR employees file generation");
+    });
+
+    // These operations can all happen in parallel.
+    await Promise.all([claimsIndexPromise, employersPromise, employeesPromise]);
 
     args.logger.profile("generate");
-    args.logger.info(
-      `Generated ${claims.length} claims into ${args.directory}`
-    );
+    args.logger.info(`Generated ${limit} claims into ${args.directory}`);
   },
 };
+
+function makeEmployerMap(employers: Employer[]) {
+  return employers.reduce(
+    (map, employer) => map.set(employer.fein, employer),
+    new Map<string, Employer>()
+  );
+}
 
 async function readJSONFile(
   filename: string

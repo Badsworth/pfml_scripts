@@ -18,12 +18,13 @@
     "outDir": "./dist",
     "baseUrl": "src",
     "paths": {
+      "JSONStream": ["../types/JSONStream"],
       "@/*": ["*"],
       "@test/*": ["../test/*"],
       "@cypress/*": ["../cypress/*"],
     }
   },
   "include": [
-    "**/*.ts"
+    "src/**/*.ts"
   ]
 }

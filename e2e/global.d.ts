@@ -59,5 +59,3 @@ declare module "@cypress/webpack-preprocessor" {
   export = CypressWebpackPreProcessor;
 }
 
-// @see https://www.npmjs.com/package/pdf2json
-declare module "pdf2json";

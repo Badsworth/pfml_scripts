@@ -43,6 +43,7 @@
     "@types/faker": "^4.1.12",
     "@types/form-data": "^2.5.0",
     "@types/merge2": "^1.3.0",
+    "@types/multipipe": "^3.0.0",
     "@types/node": "^14.0.14",
     "@types/node-fetch": "^2.5.7",
     "@types/uuid": "^8.3.0",
@@ -64,6 +65,7 @@
   "dependencies": {
     "@flood/element": "^1.3.9",
     "@flood/element-cli": "^1.3.9",
+    "JSONStream": "^1.3.5",
     "abort-controller": "^3.0.0",
     "amazon-cognito-identity-js": "^4.4.0",
     "cross-fetch": "^3.0.6",
@@ -76,6 +78,7 @@
     "faker": "^4.1.0",
     "form-data": "^3.0.0",
     "merge2": "^1.4.1",
+    "multipipe": "^4.0.0",
     "node-fetch": "^2.6.1",
     "p-retry": "^4.2.0",
     "pdf-lib": "^1.11.1",
