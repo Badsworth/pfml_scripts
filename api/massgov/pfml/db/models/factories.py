@@ -384,45 +384,45 @@ class WorkPatternFixedFactory(BaseFactory):
         lambda w: [
             application_models.WorkPatternDay(
                 work_pattern_id=w.work_pattern_id,
-                day_of_week_id=application_models.DayOfWeek.SUNDAY.day_of_week_id,
-                week_number=1,
-                minutes=8 * 60,
-            ),
-            application_models.WorkPatternDay(
-                work_pattern_id=w.work_pattern_id,
                 day_of_week_id=application_models.DayOfWeek.MONDAY.day_of_week_id,
                 week_number=1,
-                minutes=8 * 60,
+                minutes=8 * 60 + 15,
             ),
             application_models.WorkPatternDay(
                 work_pattern_id=w.work_pattern_id,
                 day_of_week_id=application_models.DayOfWeek.TUESDAY.day_of_week_id,
                 week_number=1,
-                minutes=8 * 60,
+                minutes=8 * 60 + 15,
             ),
             application_models.WorkPatternDay(
                 work_pattern_id=w.work_pattern_id,
                 day_of_week_id=application_models.DayOfWeek.WEDNESDAY.day_of_week_id,
                 week_number=1,
-                minutes=8 * 60,
+                minutes=8 * 60 + 15,
             ),
             application_models.WorkPatternDay(
                 work_pattern_id=w.work_pattern_id,
                 day_of_week_id=application_models.DayOfWeek.THURSDAY.day_of_week_id,
                 week_number=1,
-                minutes=8 * 60,
+                minutes=8 * 60 + 15,
             ),
             application_models.WorkPatternDay(
                 work_pattern_id=w.work_pattern_id,
                 day_of_week_id=application_models.DayOfWeek.FRIDAY.day_of_week_id,
                 week_number=1,
-                minutes=8 * 60,
+                minutes=8 * 60 + 15,
             ),
             application_models.WorkPatternDay(
                 work_pattern_id=w.work_pattern_id,
                 day_of_week_id=application_models.DayOfWeek.SATURDAY.day_of_week_id,
                 week_number=1,
-                minutes=8 * 60,
+                minutes=8 * 60 + 15,
+            ),
+            application_models.WorkPatternDay(
+                work_pattern_id=w.work_pattern_id,
+                day_of_week_id=application_models.DayOfWeek.SUNDAY.day_of_week_id,
+                week_number=1,
+                minutes=8 * 60 + 15,
             ),
         ]
     )

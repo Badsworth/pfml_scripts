@@ -5,9 +5,13 @@ import pytest
 
 import massgov.pfml.fineos
 from massgov.pfml.api.services import fineos_actions
-from massgov.pfml.db.models.applications import Application, LeaveReasonQualifier
+from massgov.pfml.db.models.applications import Application, LeaveReasonQualifier, LkDayOfWeek
 from massgov.pfml.db.models.employees import Country, Employer
-from massgov.pfml.db.models.factories import AddressFactory, ApplicationFactory
+from massgov.pfml.db.models.factories import (
+    AddressFactory,
+    ApplicationFactory,
+    WorkPatternFixedFactory,
+)
 from massgov.pfml.fineos import FINEOSClient
 from massgov.pfml.fineos.exception import FINEOSClientBadResponse, FINEOSClientError, FINEOSNotFound
 from massgov.pfml.fineos.models import CreateOrUpdateEmployer
@@ -90,7 +94,9 @@ def test_register_employee_bad_ssn(test_db_session):
 
 
 def test_send_to_fineos(user, test_db_session):
-    application = ApplicationFactory.create(user=user)
+    application = ApplicationFactory.create(
+        user=user, work_pattern=WorkPatternFixedFactory.create()
+    )
     application.employer_fein = "179892886"
     application.tax_identifier.tax_identifier = "784569632"
 
@@ -110,7 +116,9 @@ def test_send_to_fineos(user, test_db_session):
 
 
 def test_document_upload(user, test_db_session):
-    application = ApplicationFactory.create(user=user)
+    application = ApplicationFactory.create(
+        user=user, work_pattern=WorkPatternFixedFactory.create()
+    )
     application.employer_fein = "179892886"
     application.tax_identifier.tax_identifier = "784569632"
 
@@ -144,49 +152,21 @@ def test_document_upload(user, test_db_session):
     assert fineos_document["description"] == description
 
 
-def test_build_week_based_work_pattern(user):
-    application = ApplicationFactory.create(user=user)
+def test_build_week_based_work_pattern(user, test_db_session):
+    application = ApplicationFactory.create(user=user, work_pattern=WorkPatternFixedFactory(),)
 
-    # default behavior of falling back to 40 hours if not provided
-    application.hours_worked_per_week = None
-    forty_hours_split_pattern = fineos_actions.build_week_based_work_pattern(application)
+    work_pattern = fineos_actions.build_week_based_work_pattern(application)
 
-    # 40 does not divide into 7 evenly under integer division, it has a quotient
-    # of 5 and a remainder of 5, so first 5 days will spread out the extra 5
-    # hours by adding an hour each day, the last two days will just have 5 hours
-    for i, day in enumerate(forty_hours_split_pattern.workPatternDays):
-        if i < 5:
-            assert day.hours == 6
-        else:
-            assert day.hours == 5
-
-    application.hours_worked_per_week = 70
-    evenly_split_pattern = fineos_actions.build_week_based_work_pattern(application)
-
-    for day in evenly_split_pattern.workPatternDays:
-        assert day.hours == 10
-
-    application.hours_worked_per_week = 72
-    pattern_with_2_hours_remainder = fineos_actions.build_week_based_work_pattern(application)
-    # it adds an hour to each day until there is no remainder
-    assert pattern_with_2_hours_remainder.workPatternDays[0].hours == 11
-    assert pattern_with_2_hours_remainder.workPatternDays[1].hours == 11
-
-    for i, workPatternDay in enumerate(pattern_with_2_hours_remainder.workPatternDays):
-        if i < 2:
-            continue
-
-        assert workPatternDay.hours == 10
-
-    application.hours_worked_per_week = 70.55
-    pattern_with_minutes_remainder = fineos_actions.build_week_based_work_pattern(application)
-    # it adds minutes to first day
-    assert pattern_with_minutes_remainder.workPatternDays[0].minutes == 33
-
-    application.hours_worked_per_week = 70.56
-    pattern_with_seconds_remainder = fineos_actions.build_week_based_work_pattern(application)
-    # it rounds to the nearest minute
-    assert pattern_with_seconds_remainder.workPatternDays[0].minutes == 34
+    assert work_pattern.workPatternType == "Fixed"
+    assert work_pattern.workPatternDays == [
+        massgov.pfml.fineos.models.customer_api.WorkPatternDay(
+            dayOfWeek=test_db_session.query(LkDayOfWeek).all()[i].day_of_week_description,
+            weekNumber=1,
+            hours=8,
+            minutes=15,
+        )
+        for i in range(7)
+    ]
 
 
 def test_create_employer_simple(test_db_session):

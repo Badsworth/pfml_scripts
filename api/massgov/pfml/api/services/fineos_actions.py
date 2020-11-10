@@ -13,7 +13,6 @@
 ###
 
 import datetime
-import math
 import mimetypes
 import uuid
 from typing import List, Optional, Set, Tuple
@@ -455,34 +454,27 @@ def upsert_week_based_work_pattern(fineos_client, user_id, application):
 def build_week_based_work_pattern(
     application: Application,
 ) -> massgov.pfml.fineos.models.customer_api.WeekBasedWorkPattern:
-    """Split hours_worked_per_week across 7 week days"""
+    """Construct FINEOS customer api work pattern models from application"""
+    fineos_work_pattern_days = []
 
-    hours_worked_per_week = application.hours_worked_per_week or 40
-    week_days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
+    for day in application.work_pattern.work_pattern_days:
+        (hours, minutes) = convert_minutes_to_hours_minutes(day.minutes or 0)
 
-    hours_per_day = math.floor(hours_worked_per_week / 7)
-    remainder = hours_worked_per_week % 7
-    minutes_remainder = round(60 * (remainder % 1))
-    work_pattern_days = []
-
-    for i, week_day in enumerate(week_days):
-        hours = hours_per_day + 1 if remainder >= 1 else hours_per_day
-        minutes = minutes_remainder if i == 0 else 0
-
-        work_pattern_days.append(
+        fineos_work_pattern_days.append(
             massgov.pfml.fineos.models.customer_api.WorkPatternDay(
-                dayOfWeek=week_day, weekNumber=1, hours=hours, minutes=minutes
+                dayOfWeek=day.day_of_week.day_of_week_description,
+                weekNumber=1,
+                hours=hours,
+                minutes=minutes,
             )
         )
 
-        remainder -= 1
-
     return massgov.pfml.fineos.models.customer_api.WeekBasedWorkPattern(
-        workPatternType="Fixed",
-        workWeekStarts=week_days[0],
+        workPatternType=application.work_pattern.work_pattern_type.work_pattern_type_description,
+        workWeekStarts="Sunday",
         patternStartDate=None,
         patternStatus=None,
-        workPatternDays=work_pattern_days,
+        workPatternDays=fineos_work_pattern_days,
     )
 
 

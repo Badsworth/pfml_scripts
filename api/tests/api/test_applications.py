@@ -1999,25 +1999,25 @@ def test_application_post_submit_existing_work_pattern(client, user, auth_token,
                     patternStatus=None,
                     workPatternDays=[
                         massgov.pfml.fineos.models.customer_api.WorkPatternDay(
-                            dayOfWeek="Sunday", weekNumber=1, hours=10, minutes=0
+                            dayOfWeek="Monday", weekNumber=1, hours=8, minutes=15
                         ),
                         massgov.pfml.fineos.models.customer_api.WorkPatternDay(
-                            dayOfWeek="Monday", weekNumber=1, hours=10, minutes=0
+                            dayOfWeek="Tuesday", weekNumber=1, hours=8, minutes=15
                         ),
                         massgov.pfml.fineos.models.customer_api.WorkPatternDay(
-                            dayOfWeek="Tuesday", weekNumber=1, hours=10, minutes=0
+                            dayOfWeek="Wednesday", weekNumber=1, hours=8, minutes=15
                         ),
                         massgov.pfml.fineos.models.customer_api.WorkPatternDay(
-                            dayOfWeek="Wednesday", weekNumber=1, hours=10, minutes=0
+                            dayOfWeek="Thursday", weekNumber=1, hours=8, minutes=15
                         ),
                         massgov.pfml.fineos.models.customer_api.WorkPatternDay(
-                            dayOfWeek="Thursday", weekNumber=1, hours=10, minutes=0
+                            dayOfWeek="Friday", weekNumber=1, hours=8, minutes=15
                         ),
                         massgov.pfml.fineos.models.customer_api.WorkPatternDay(
-                            dayOfWeek="Friday", weekNumber=1, hours=10, minutes=0
+                            dayOfWeek="Saturday", weekNumber=1, hours=8, minutes=15
                         ),
                         massgov.pfml.fineos.models.customer_api.WorkPatternDay(
-                            dayOfWeek="Saturday", weekNumber=1, hours=10, minutes=0
+                            dayOfWeek="Sunday", weekNumber=1, hours=8, minutes=15
                         ),
                     ],
                 )
@@ -2034,25 +2034,25 @@ def test_application_post_submit_existing_work_pattern(client, user, auth_token,
                     patternStatus=None,
                     workPatternDays=[
                         massgov.pfml.fineos.models.customer_api.WorkPatternDay(
-                            dayOfWeek="Sunday", weekNumber=1, hours=10, minutes=0
+                            dayOfWeek="Monday", weekNumber=1, hours=8, minutes=15
                         ),
                         massgov.pfml.fineos.models.customer_api.WorkPatternDay(
-                            dayOfWeek="Monday", weekNumber=1, hours=10, minutes=0
+                            dayOfWeek="Tuesday", weekNumber=1, hours=8, minutes=15
                         ),
                         massgov.pfml.fineos.models.customer_api.WorkPatternDay(
-                            dayOfWeek="Tuesday", weekNumber=1, hours=10, minutes=0
+                            dayOfWeek="Wednesday", weekNumber=1, hours=8, minutes=15
                         ),
                         massgov.pfml.fineos.models.customer_api.WorkPatternDay(
-                            dayOfWeek="Wednesday", weekNumber=1, hours=10, minutes=0
+                            dayOfWeek="Thursday", weekNumber=1, hours=8, minutes=15
                         ),
                         massgov.pfml.fineos.models.customer_api.WorkPatternDay(
-                            dayOfWeek="Thursday", weekNumber=1, hours=10, minutes=0
+                            dayOfWeek="Friday", weekNumber=1, hours=8, minutes=15
                         ),
                         massgov.pfml.fineos.models.customer_api.WorkPatternDay(
-                            dayOfWeek="Friday", weekNumber=1, hours=10, minutes=0
+                            dayOfWeek="Saturday", weekNumber=1, hours=8, minutes=15
                         ),
                         massgov.pfml.fineos.models.customer_api.WorkPatternDay(
-                            dayOfWeek="Saturday", weekNumber=1, hours=10, minutes=0
+                            dayOfWeek="Sunday", weekNumber=1, hours=8, minutes=15
                         ),
                     ],
                 )
@@ -2198,25 +2198,25 @@ def test_application_post_submit_to_fineos(client, user, auth_token, test_db_ses
                     patternStatus=None,
                     workPatternDays=[
                         massgov.pfml.fineos.models.customer_api.WorkPatternDay(
-                            dayOfWeek="Sunday", weekNumber=1, hours=10, minutes=0
+                            dayOfWeek="Monday", weekNumber=1, hours=8, minutes=15
                         ),
                         massgov.pfml.fineos.models.customer_api.WorkPatternDay(
-                            dayOfWeek="Monday", weekNumber=1, hours=10, minutes=0
+                            dayOfWeek="Tuesday", weekNumber=1, hours=8, minutes=15
                         ),
                         massgov.pfml.fineos.models.customer_api.WorkPatternDay(
-                            dayOfWeek="Tuesday", weekNumber=1, hours=10, minutes=0
+                            dayOfWeek="Wednesday", weekNumber=1, hours=8, minutes=15
                         ),
                         massgov.pfml.fineos.models.customer_api.WorkPatternDay(
-                            dayOfWeek="Wednesday", weekNumber=1, hours=10, minutes=0
+                            dayOfWeek="Thursday", weekNumber=1, hours=8, minutes=15
                         ),
                         massgov.pfml.fineos.models.customer_api.WorkPatternDay(
-                            dayOfWeek="Thursday", weekNumber=1, hours=10, minutes=0
+                            dayOfWeek="Friday", weekNumber=1, hours=8, minutes=15
                         ),
                         massgov.pfml.fineos.models.customer_api.WorkPatternDay(
-                            dayOfWeek="Friday", weekNumber=1, hours=10, minutes=0
+                            dayOfWeek="Saturday", weekNumber=1, hours=8, minutes=15
                         ),
                         massgov.pfml.fineos.models.customer_api.WorkPatternDay(
-                            dayOfWeek="Saturday", weekNumber=1, hours=10, minutes=0
+                            dayOfWeek="Sunday", weekNumber=1, hours=8, minutes=15
                         ),
                     ],
                 )
