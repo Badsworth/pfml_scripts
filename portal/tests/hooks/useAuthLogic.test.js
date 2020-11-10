@@ -334,7 +334,7 @@ describe("useAuthLogic", () => {
         // eslint-disable-next-line no-throw-literal
         throw {
           code: "NotAuthorizedException",
-          message: "Request not allowed due to security reasons.",
+          message: "Unable to login because of security reasons.",
           name: "NotAuthorizedException",
         };
       });
@@ -382,6 +382,33 @@ describe("useAuthLogic", () => {
       expect(appErrors.items).toHaveLength(1);
       expect(appErrors.items[0].message).toMatchInlineSnapshot(
         `"Your account is temporarily locked because of too many failed login attempts. Wait 15 minutes before trying again."`
+      );
+    });
+
+    it("sets app errors and tracks event when Auth.signIn throws NotAuthorizedException with unexpected message", async () => {
+      const cognitoError = {
+        code: "NotAuthorizedException",
+        message:
+          "This message wasn't expected by Portal code and is the error from Cognito.",
+        name: "NotAuthorizedException",
+      };
+
+      jest.spyOn(Auth, "signIn").mockImplementation(() => {
+        // Ignore lint rule since AWS Auth class actually throws an object literal
+        // eslint-disable-next-line no-throw-literal
+        throw cognitoError;
+      });
+      await act(async () => {
+        await login(username, password);
+      });
+
+      expect(appErrors.items).toHaveLength(1);
+      expect(appErrors.items[0].message).toMatchInlineSnapshot(
+        `"This message wasn't expected by Portal code and is the error from Cognito."`
+      );
+      expect(tracker.trackEvent).toHaveBeenLastCalledWith(
+        "Unknown_NotAuthorizedException",
+        expect.objectContaining({ errorMessage: cognitoError.message })
       );
     });
 

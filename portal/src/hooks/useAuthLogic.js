@@ -560,15 +560,22 @@ function getNotAuthorizedExceptionMessage(error, t, context) {
   // code: "NotAuthorizedException"
   // message: "Incorrect username or password."
   //
-  // 2. When Adaptive Authentication blocked login attempt due to risk score
+  // 2. When Adaptive Authentication blocked an attempt. (Seen when manually blocking an IP address)
   // code: "NotAuthorizedException"
   // message: "Request not allowed due to security reasons."
   //
-  // 3. When user's account is temporarily locked due to too many failed login attempts
+  // 3. When Adaptive Authentication blocked login attempt (seen in New Relic)
+  // code: "NotAuthorizedException"
+  // message: "Unable to login because of security reasons."
+  //
+  // 4. When user's account is temporarily locked due to too many failed login attempts
   // code: "NotAuthorizedException"
   // message: "Password attempts exceeded"
 
-  if (error.message.match(/Request not allowed due to security reasons/)) {
+  if (
+    error.message.match(/Request not allowed due to security reasons/) ||
+    error.message.match(/Unable to login because of security reasons/)
+  ) {
     // The risk score of the request resulted in the attempt being Blocked
     // by our Cognito Advanced Security settings
     return t("errors.auth.attemptBlocked", { context });
@@ -576,8 +583,20 @@ function getNotAuthorizedExceptionMessage(error, t, context) {
   if (error.message.match(/Password attempts exceeded/)) {
     return t("errors.auth.attemptsLimitExceeded", { context: "login" });
   }
+  if (error.message.match(/Incorrect username or password/)) {
+    return t("errors.auth.incorrectEmailOrPassword");
+  }
 
-  return t("errors.auth.incorrectEmailOrPassword");
+  // Fallback to the message in Cognito since it's unclear which of the
+  // above scenarios this error falls into, so it's impossible to know
+  // which custom error message is appropriate to show to the user
+  tracker.trackEvent("Unknown_NotAuthorizedException", {
+    errorCode: error.code,
+    errorMessage: error.message,
+    errorName: error.name,
+  });
+
+  return error.message;
 }
 
 /**
