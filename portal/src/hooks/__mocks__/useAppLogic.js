@@ -10,6 +10,7 @@ export default jest.fn(() => ({
   appErrors: new AppErrorInfoCollection(),
   auth: {
     createAccount: jest.fn(),
+    createEmployerAccount: jest.fn(),
     forgotPassword: jest.fn(),
     isLoggedIn: true,
     login: jest.fn(),

@@ -52,11 +52,13 @@ exports[`CreateAccount renders the empty page 1`] = `
   <div
     className="margin-top-2 text-base text-bold"
   >
-    Have an account? 
+    Have an account?
     <Link
       href="/login"
     >
-      <a>
+      <a
+        className="display-inline-block margin-left-1"
+      >
         Log in
       </a>
     </Link>

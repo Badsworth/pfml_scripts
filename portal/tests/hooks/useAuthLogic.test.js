@@ -14,6 +14,8 @@ describe("useAuthLogic", () => {
   let appErrors,
     authData,
     createAccount,
+    createEmployerAccount,
+    ein,
     forgotPassword,
     isLoggedIn,
     login,
@@ -32,6 +34,7 @@ describe("useAuthLogic", () => {
     jest.resetAllMocks();
     username = "test@email.com";
     password = "TestP@ssw0rd!";
+    ein = "12-3456789";
     verificationCode = "123456";
     testHook(() => {
       const appErrorsLogic = useAppErrorsLogic();
@@ -44,6 +47,7 @@ describe("useAuthLogic", () => {
         logout,
         isLoggedIn,
         createAccount,
+        createEmployerAccount,
         requireLogin,
         resendVerifyAccountCode,
         resetPassword,
@@ -777,6 +781,76 @@ describe("useAuthLogic", () => {
         await createAccount(username, password);
       });
       expect(appErrors.items).toHaveLength(0);
+    });
+  });
+
+  describe("createEmployerAccount", () => {
+    it("calls Auth.signUp with username, password, and ein as a custom attribute", async () => {
+      await act(async () => {
+        await createEmployerAccount(username, password, ein);
+      });
+      expect(Auth.signUp).toHaveBeenCalledWith(
+        {
+          username,
+          password,
+        },
+        expect.objectContaining({
+          attributes: {
+            "custom:ein": "12-3456789",
+          },
+        })
+      );
+    });
+
+    it("routes to Verify Account page", async () => {
+      const spy = jest.spyOn(portalFlow, "goToPageFor");
+      await act(async () => {
+        await createEmployerAccount(username, password, ein);
+      });
+
+      expect(spy).toHaveBeenCalledWith("CREATE_ACCOUNT");
+      spy.mockRestore();
+    });
+
+    it("stores username and ein in authData for Verify Account page", async () => {
+      await act(async () => {
+        await createEmployerAccount(username, password, ein);
+      });
+
+      expect(authData).toEqual({
+        createAccountUsername: username,
+        employerIdNumber: ein,
+      });
+    });
+
+    it("trims whitespace from username", async () => {
+      await act(async () => {
+        await createEmployerAccount(`  ${username} `, password, ein);
+      });
+      expect(Auth.signUp).toHaveBeenCalledWith(
+        { username, password },
+        expect.objectContaining({
+          attributes: {
+            "custom:ein": "12-3456789",
+          },
+        })
+      );
+    });
+
+    it("requires fields to not be empty", () => {
+      act(() => {
+        createEmployerAccount();
+      });
+
+      expect(appErrors.items).toHaveLength(3);
+      expect(appErrors.items.map((e) => e.message)).toMatchInlineSnapshot(`
+          Array [
+            "Enter your email address",
+            "Enter your password",
+            "Enter your employer ID number",
+          ]
+        `);
+      expect(Auth.signUp).not.toHaveBeenCalled();
     });
   });
 

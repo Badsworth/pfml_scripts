@@ -142,6 +142,38 @@ const useAuthLogic = ({ appErrorsLogic, portalFlow }) => {
   };
 
   /**
+   * Shared logic to create an account
+   * @param {string} username Email address that is used as the username
+   * @param {string} password Password
+   * @param {object} userAttributes User attributes
+   */
+  const createAccountInCognito = async (username, password, userAttributes) => {
+    try {
+      trackAuthRequest("signUp");
+      if (userAttributes) {
+        await Auth.signUp({ username, password }, userAttributes);
+      } else {
+        await Auth.signUp({ username, password });
+      }
+
+      // Store the username and/or EIN so the user doesn't need to reenter it on the Verify page
+      if (userAttributes) {
+        setAuthData({
+          createAccountUsername: username,
+          employerIdNumber: userAttributes.attributes["custom:ein"],
+        });
+      } else {
+        setAuthData({ createAccountUsername: username });
+      }
+      portalFlow.goToPageFor("CREATE_ACCOUNT");
+    } catch (error) {
+      trackAuthError(error);
+      const appErrors = getCreateAccountErrorInfo(error, t);
+      appErrorsLogic.setAppErrors(appErrors);
+    }
+  };
+
+  /**
    * Create Portal account with the given username (email) and password.
    * If there are any errors, set app errors on the page.
    * @param {string} username Email address that is used as the username
@@ -160,18 +192,37 @@ const useAuthLogic = ({ appErrorsLogic, portalFlow }) => {
       appErrorsLogic.setAppErrors(validationErrors);
       return;
     }
-    try {
-      trackAuthRequest("signUp");
-      await Auth.signUp({ username, password });
 
-      // Store the username so the user doesn't need to reenter it on the Verify page
-      setAuthData({ createAccountUsername: username });
-      portalFlow.goToPageFor("CREATE_ACCOUNT");
-    } catch (error) {
-      trackAuthError(error);
-      const appErrors = getCreateAccountErrorInfo(error, t);
-      appErrorsLogic.setAppErrors(appErrors);
+    await createAccountInCognito(username, password);
+  };
+
+  /**
+   * Create Employer Portal account with the given username (email), password, and employer ID number.
+   * If there are any errors, set app errors on the page.
+   * @param {string} username Email address that is used as the username
+   * @param {string} password Password
+   * @param {string} ein Employer id number (known as EIN or FEIN)
+   */
+  const createEmployerAccount = async (username = "", password, ein) => {
+    appErrorsLogic.clearErrors();
+    username = username.trim();
+
+    const validationErrors = combineErrorCollections([
+      validateUsername(username, t),
+      validatePassword(password, t),
+      validateEmployerIdNumber(ein, t),
+    ]);
+
+    if (validationErrors) {
+      appErrorsLogic.setAppErrors(validationErrors);
+      return;
     }
+
+    await createAccountInCognito(username, password, {
+      attributes: {
+        "custom:ein": ein,
+      },
+    });
   };
 
   /**
@@ -306,6 +357,7 @@ const useAuthLogic = ({ appErrorsLogic, portalFlow }) => {
   return {
     authData,
     createAccount,
+    createEmployerAccount,
     forgotPassword,
     login,
     logout,
@@ -379,6 +431,17 @@ function validateUsername(username, t) {
       new AppErrorInfo({
         field: "username",
         message: t("errors.auth.emailRequired"),
+      }),
+    ]);
+  }
+}
+
+function validateEmployerIdNumber(employerIdNumber, t) {
+  if (!employerIdNumber) {
+    return new AppErrorInfoCollection([
+      new AppErrorInfo({
+        field: "ein",
+        message: t("errors.auth.employerIdNumberRequired"),
       }),
     ]);
   }

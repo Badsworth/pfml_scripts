@@ -286,6 +286,7 @@ exports[`Review renders the page 1`] = `
         },
         "auth": Object {
           "createAccount": [MockFunction],
+          "createEmployerAccount": [MockFunction],
           "forgotPassword": [MockFunction],
           "isLoggedIn": true,
           "login": [MockFunction],

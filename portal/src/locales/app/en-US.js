@@ -38,6 +38,7 @@ const errors = {
       "Invalid verification code. Make sure the code matches the code emailed to you.",
     codeRequired: "Enter the 6-digit code sent to your email",
     emailRequired: "Enter your email address",
+    employerIdNumberRequired: "Enter your employer ID number",
     expiredVerificationCode:
       "Invalid verification code. Please request a new code.",
     incorrectEmailOrPassword: "Incorrect email or password",
@@ -431,7 +432,7 @@ const pages = {
     alertHeading:
       "You can now apply for paid family leave to bond with your$t(chars.nbsp)child.",
     createAccountButton: "Create account",
-    haveAnAccountFooterLabel: "Have an account? ",
+    haveAnAccountFooterLabel: "Have an account?",
     logInFooterLink: "Log in",
     passwordHint: "$t(shared.passwordHint)",
     passwordLabel: "$t(shared.passwordLabel)",
@@ -1220,6 +1221,26 @@ const pages = {
       "Step two: Get documentation that supports your leave request",
     stepsTitle: "Getting started",
     title: "Only some people can apply online for now",
+  },
+  employersAuthCreateAccount: {
+    createAccountButton: "Create account",
+    detailsLabel: "What you can do with this account",
+    detailsList:
+      "<ul><li>Review paid leave applications from your employees</li><li>Get updates about the program by email</li><li>Download documents and decision letters</li></ul>",
+    einHint:
+      "Your Employer Identification Number (EIN) is a <ein-link>9-digit number</ein-link> assigned by the Internal Revenue Service. It is listed on tax returns and your payroll department should have this information.",
+    einLabel: "Employer ID number",
+    haveAnAccountFooterLabel: "Have an account?",
+    lead:
+      "Welcome! If you're a Massachussetts employer and you manage leave for your team, you need to create an employer account with information from your company.",
+    logInFooterLink: "Log in",
+    nextStep: "We'll send you a 6-digit code to verify your email address.",
+    passwordHint: "$t(shared.passwordHint)",
+    passwordLabel: "$t(shared.passwordLabel)",
+    title: "Create an employer account",
+    usernameHint:
+      "Use a work email or a shared email address so your colleagues can manage leave applications when you're out of the office.",
+    usernameLabel: "$t(shared.usernameLabel)",
   },
   employersClaimsConfirmation: {
     applicationIdLabel: "<strong>Application ID:</strong> {{absenceId}}",

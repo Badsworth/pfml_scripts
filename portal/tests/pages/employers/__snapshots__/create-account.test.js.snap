@@ -1,0 +1,109 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`CreateAccount renders the page 1`] = `
+<form
+  className="usa-form"
+  onSubmit={[Function]}
+>
+  <Title>
+    Create an employer account
+  </Title>
+  <Lead>
+    Welcome! If you're a Massachussetts employer and you manage leave for your team, you need to create an employer account with information from your company.
+  </Lead>
+  <Details
+    label="What you can do with this account"
+  >
+    <Trans
+      components={
+        Object {
+          "li": <li />,
+          "ul": <ul
+            className="usa-list"
+          />,
+        }
+      }
+      i18nKey="pages.employersAuthCreateAccount.detailsList"
+    />
+  </Details>
+  <InputText
+    hint="Use a work email or a shared email address so your colleagues can manage leave applications when you're out of the office."
+    label="Email address"
+    name="username"
+    onChange={[Function]}
+    smallLabel={true}
+    type="email"
+    value=""
+  />
+  <InputText
+    autoComplete="new-password"
+    hint="Your password must be at least 12 characters long and include at least 1 number, 1 symbol, and both uppercase and lowercase letters."
+    label="Password"
+    name="password"
+    onChange={[Function]}
+    smallLabel={true}
+    type="password"
+    value=""
+  />
+  <InputText
+    hint={
+      <Trans
+        components={
+          Object {
+            "ein-link": <a
+              href="https://www.mass.gov/info-details/finding-your-employers-federal-employer-identification-number-fein"
+              rel="noopener"
+              target="_blank"
+            />,
+          }
+        }
+        i18nKey="pages.employersAuthCreateAccount.einHint"
+      />
+    }
+    label="Employer ID number"
+    mask="fein"
+    name="ein"
+    onChange={[Function]}
+    smallLabel={true}
+    type="numeric"
+    value=""
+  />
+  <p>
+    We'll send you a 6-digit code to verify your email address.
+  </p>
+  <Button
+    loading={false}
+    type="submit"
+  >
+    Create account
+  </Button>
+  <div
+    className="margin-top-2 text-base text-bold"
+  >
+    Have an account?
+    <Link
+      href="/employers/login"
+    >
+      <a
+        className="display-inline-block margin-left-1"
+      >
+        Log in
+      </a>
+    </Link>
+  </div>
+</form>
+`;
+
+exports[`CreateAccount renders the page 2`] = `
+<Trans
+  components={
+    Object {
+      "li": <li />,
+      "ul": <ul
+        className="usa-list"
+      />,
+    }
+  }
+  i18nKey="pages.employersAuthCreateAccount.detailsList"
+/>
+`;
