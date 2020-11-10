@@ -123,12 +123,11 @@ export default class BaseApi {
 
     return {
       data,
-      errors,
-      // Guaranteeing warnings is always an array makes our code simpler
-      warnings: warnings || [],
       status: response.status,
       // response.ok is true when the status was in the 2xx range
       success: response.ok,
+      // Guaranteeing warnings is always an array makes our code simpler
+      warnings: formatIssues(warnings) || [],
     };
   };
 }
@@ -183,6 +182,29 @@ export async function getAuthorizationHeader() {
 }
 
 /**
+ * Convert API error/warnings field paths into a field path format we use on the Portal
+ * @param {{ field: string }[]} issues - API errors/warnings
+ * @returns {string} fieldPath
+ */
+function formatIssues(issues) {
+  if (!issues) return issues;
+
+  return issues.map((issue) => {
+    if (!issue.field) return issue;
+
+    // Convert dot-notation for array indexes into square bracket notation,
+    // which is how we format our array fields.
+    // For example foo.12 => foo[12]
+    const field = issue.field.replace(/\.(\d+)(\.)?/g, "[$1]$2");
+
+    return {
+      ...issue,
+      field,
+    };
+  });
+}
+
+/**
  * Handle request errors
  * @param {Error} error
  */
@@ -196,10 +218,13 @@ export function handleError(error) {
 }
 
 /**
- * Handle responses with non-200 errors
- * @param {Error} error
+ * Throw an error when the API returns a non-2xx response status code
+ * @param {string} url
+ * @param {object} response
+ * @param {object[]} [errors] - Issues returned by the API
+ * @param {string} i18nPrefix - Prefix used in ValidationError message strings
+ * @throws {Error} error
  */
-
 export function handleNotOkResponse(url, response, errors = [], i18nPrefix) {
   // Request completed, but the response status code was outside the 2xx range
   // Log the error response to track trends and surges
@@ -213,7 +238,7 @@ export function handleNotOkResponse(url, response, errors = [], i18nPrefix) {
     // an error based on the status code
     throwError(response);
   } else {
-    throw new ValidationError(errors, i18nPrefix);
+    throw new ValidationError(formatIssues(errors), i18nPrefix);
   }
 }
 

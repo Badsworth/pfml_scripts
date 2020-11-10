@@ -272,12 +272,51 @@ describe("BaseApi", () => {
                 "data": Object {
                   "mock_response": true,
                 },
-                "errors": undefined,
                 "status": 200,
                 "success": true,
                 "warnings": Array [],
               }
             `);
+    });
+
+    it("converts API warning array field paths to square bracket", async () => {
+      expect.assertions();
+
+      global.fetch = jest.fn().mockResolvedValue({
+        json: jest.fn().mockResolvedValue({
+          data: { mock_response: true },
+          warnings: [
+            {
+              field: "foo.0.bar.12.cat",
+              type: "required",
+            },
+            {
+              field: "beta[2].alpha[3].charlie",
+              type: "required",
+            },
+            {
+              field: "gamma.4",
+              type: "required",
+            },
+          ],
+        }),
+        status: 200,
+        ok: true,
+      });
+
+      const response = await testsApi.request("GET", "users");
+
+      await expect(response.warnings).toEqual([
+        expect.objectContaining({
+          type: "required",
+          field: "foo[0].bar[12].cat",
+        }),
+        expect.objectContaining({
+          type: "required",
+          field: "beta[2].alpha[3].charlie",
+        }),
+        expect.objectContaining({ type: "required", field: "gamma[4]" }),
+      ]);
     });
   });
 
@@ -352,6 +391,31 @@ describe("BaseApi", () => {
         expect(error).toBeInstanceOf(ValidationError);
         expect(error.issues).toHaveLength(1);
         expect(error.i18nPrefix).toBe("testPrefix");
+      }
+    });
+
+    it("converts API error array field paths to square brackets", async () => {
+      expect.assertions();
+
+      global.fetch = jest.fn().mockResolvedValue({
+        ok: false,
+        status: 400,
+        json: jest.fn().mockResolvedValue({
+          errors: [
+            {
+              type: "required",
+              field: "foo.0.bar.12.cat",
+            },
+          ],
+        }),
+      });
+
+      try {
+        await testsApi.request("GET", "users");
+      } catch (error) {
+        expect(error.issues).toEqual([
+          expect.objectContaining({ field: "foo[0].bar[12].cat" }),
+        ]);
       }
     });
 
