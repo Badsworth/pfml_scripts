@@ -1,33 +1,31 @@
-name: End-to-End Cypress Tests
+name: End-to-End Test Suite
 
 on:
+  # Manual runs.
+  workflow_dispatch:
+    inputs:
+      target_environment:
+        description: "Target Environment"
+        required: true
+        default: "stage"
+      cypress_tags:
+        description: "Cypress Run Tags"
+        required: false
+        default: "Manual"
+  # E2E PRs that touch Cypress.
   pull_request:
     paths:
       - e2e/cypress/**
       - e2e/cypress.json
       - e2e/package.json
       - e2e/employee.json
-
-env:
-  CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
-  E2E_API_BASEURL: https://paidleave-api-test.mass.gov/api/v1
-  E2E_FINEOS_BASEURL: https://dt2-claims-webapp.masspfml.fineos.com
-  E2E_FINEOS_USERNAME: ${{ secrets.E2E_FINEOS_USERNAME }}
-  E2E_FINEOS_PASSWORD: ${{ secrets.E2E_FINEOS_PASSWORD }}
-  E2E_PORTAL_BASEURL: https://paidleave-test.mass.gov/
-  E2E_PORTAL_USERNAME: rob+pfml-cypress-gh2@lastcallmedia.com
-  E2E_PORTAL_PASSWORD: ${{ secrets.E2E_PORTAL_PASSWORD }}
-  E2E_TESTMAIL_APIKEY: ${{ secrets.E2E_TESTMAIL_APIKEY }}
-  E2E_TESTMAIL_NAMESPACE: ${{ secrets.E2E_TESTMAIL_NAMESPACE }}
-  E2E_COGNITO_POOL: us-east-1_HhQSLYSIe
-  E2E_COGNITO_CLIENTID: 7sjb96tvg8251lrq5vdk7de9
-  # passing token to detect a build vs a re-run build
-  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  COMMIT_INFO_MESSAGE: ${{ github.event.pull_request.title }}
+  # Nightly runs (Midnight UTC)
+  schedule:
+    - cron: '0 0 * * *'
 
 jobs:
-  test:
-    name: Cypress
+  cypress:
+    name: Run Cypress Tests
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -35,6 +33,26 @@ jobs:
         containers: [1,2,3]
     steps:
       - uses: actions/checkout@v2
+
+      # Set Cypress Tags according to what type of event we're dealing with.
+      - name: Set variables for PR
+        if: github.event_name == 'pull_request'
+        run: |
+          echo "cypress_tags=PR" >> $GITHUB_ENV
+          echo "E2E_ENVIRONMENT=stage" >> $GITHUB_ENV
+          echo "COMMIT_INFO_MESSAGE=${{ github.event.pull_request.title }}" >> $GITHUB_ENV
+      - name: Set variables for Nightly
+        if: github.event_name == 'schedule'
+        run: |
+          echo "cypress_tags=Nightly" >> $GITHUB_ENV
+          echo "E2E_ENVIRONMENT=stage" >> $GITHUB_ENV
+      - name: Set variables for manual run
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          echo "cypress_tags=${{ github.event.inputs.cypress_tags }}" >> $GITHUB_ENV
+          echo "E2E_ENVIRONMENT=${{ github.event.inputs.target_environment }}" >> $GITHUB_ENV
+
+      # Run Cypress tests.
       - name: Cypress Tests
         id: cypress
         uses: cypress-io/github-action@v2
@@ -43,10 +61,12 @@ jobs:
           record: true
           parallel: true
           working-directory: e2e
-          tag: PR
-          config: reporter=junit
-      - name: Print Dashboard URL
-        if: always()
-        run: |
-          echo Cypress finished with: ${{ steps.cypress.outcome }}
-          echo See results at ${{ steps.cypress.outputs.dashboardUrl }}
+          tag: ${{ env.cypress_tags }}
+        env:
+          # Setup any secret overrides that are necessary here.
+          # Most other environment variables will come from /e2e/config.json,
+          # as determined by the E2E_ENVIRONMENT variable set above.
+          E2E_FINEOS_PASSWORD: ${{ secrets.E2E_FINEOS_PASSWORD }}
+          E2E_PORTAL_PASSWORD: ${{ secrets.E2E_PORTAL_PASSWORD }}
+          E2E_TESTMAIL_APIKEY: ${{ secrets.E2E_TESTMAIL_APIKEY }}
+          CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
