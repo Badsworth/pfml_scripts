@@ -691,6 +691,7 @@ export function submitClaimPartOne(application: ApplicationRequestBody): void {
   }
   onPage("review");
   confirmInfo();
+  onPage("checklist");
 }
 
 export function submitClaimPortal(application: ApplicationRequestBody): void {
