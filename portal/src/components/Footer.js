@@ -1,7 +1,6 @@
 import FooterSlim from "@massds/mayflower-react/dist/FooterSlim";
 import React from "react";
 import SiteLogo from "@massds/mayflower-react/dist/SiteLogo";
-import logo from "@massds/mayflower-assets/static/images/logo/stateseal.png";
 import routes from "../routes";
 import { useTranslation } from "../locales/i18n";
 
@@ -22,19 +21,34 @@ const Footer = () => {
         href: routes.external.massgov.dfml,
       },
     },
+    stackedLogo: true,
     siteLogo: (
-      <SiteLogo
-        url={{
-          domain: routes.index,
-        }}
-        image={{
-          src: logo,
-          alt: t("components.siteLogo.alt"),
-          width: 45,
-          height: 45,
-        }}
-        title={`${t("components.header.appTitle")} Homepage`}
-      />
+      <React.Fragment>
+        <SiteLogo
+          url={{
+            domain: routes.index,
+          }}
+          image={{
+            src: "/DFML_logo_RGB_Gray.svg",
+            alt: t("components.siteLogo.dfmlAlt"),
+            width: 165,
+            height: 45,
+          }}
+          title={t("components.footer.logoTitle")}
+        />
+        <SiteLogo
+          url={{
+            domain: routes.index,
+          }}
+          image={{
+            src: "/PFML_logo_RGB_Gray.svg",
+            alt: t("components.siteLogo.pfmlAlt"),
+            width: 118,
+            height: 45,
+          }}
+          title={t("components.footer.logoTitle")}
+        />
+      </React.Fragment>
     ),
   };
 

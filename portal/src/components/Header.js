@@ -21,12 +21,11 @@ const Header = (props) => {
         }}
         image={{
           src: logo,
-          alt: t("components.siteLogo.alt"),
+          alt: t("components.siteLogo.sealAlt"),
           width: 45,
           height: 45,
         }}
         siteName={t("components.header.appTitle")}
-        title={`${t("components.header.appTitle")} Homepage`}
       />
     ),
     skipNav: (

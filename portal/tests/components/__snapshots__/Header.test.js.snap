@@ -13,7 +13,6 @@ exports[`Header includes a Skip Nav link as its first link 1`] = `
         }
       }
       siteName="Paid Family and Medical Leave"
-      title="Paid Family and Medical Leave Homepage"
       url={
         Object {
           "domain": "/",
@@ -50,7 +49,6 @@ exports[`Header passes the user into AuthNav 1`] = `
         }
       }
       siteName="Paid Family and Medical Leave"
-      title="Paid Family and Medical Leave Homepage"
       url={
         Object {
           "domain": "/",
