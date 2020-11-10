@@ -39,14 +39,14 @@ module "api" {
   nlb_name                        = "${local.vpc}-nlb"
   nlb_port                        = 3502
   cors_origins = [
-    # Allow requests from the API Gateway (Swagger) training environment.
-    "https://mo0nk02mkg.execute-api.us-east-1.amazonaws.com"
-    // TODO: PORTAL_DOMAIN CP-1620/API-771
+    # Allow requests from the API Gateway (Swagger) and Portal training environments.
+    "https://mo0nk02mkg.execute-api.us-east-1.amazonaws.com",
+    "https://dist3ws941qq9.cloudfront.net"
   ]
   formstack_import_lambda_build_s3_key = local.formstack_lambda_artifact_s3_key
 
-  cognito_user_pool_arn                            = null                                                                                    // TODO API-771
-  cognito_user_pool_keys_url                       = "https://cognito-idp.us-east-1.amazonaws.com/us-east-1_HhQSLYSIe/.well-known/jwks.json" // TODO: Update in API-771
+  cognito_user_pool_arn                            = "arn:aws:cognito-idp:us-east-1:498823821309:userpool/us-east-1_gHLjkp4A8"
+  cognito_user_pool_keys_url                       = "https://cognito-idp.us-east-1.amazonaws.com/us-east-1_gHLjkp4A8/.well-known/jwks.json"
   cognito_post_confirmation_lambda_artifact_s3_key = local.cognito_post_confirmation_lambda_artifact_s3_key
   rmv_client_base_url                              = "https://atlas-staging-gateway.massdot.state.ma.us"
   rmv_client_certificate_binary_arn                = "arn:aws:secretsmanager:us-east-1:498823821309:secret:/service/pfml-api-performance/rmv_client_certificate-fXNkdl"
