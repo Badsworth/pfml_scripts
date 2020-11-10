@@ -179,7 +179,7 @@ resource "aws_lambda_permission" "allow_cognito_custom_message" {
 resource "aws_cloudwatch_log_subscription_filter" "nr_lambda_cognito_custom_msg" {
   name            = "nr_lambda_cognito_custom_msg"
   log_group_name  = aws_cloudwatch_log_group.lambda_cognito_custom_message.name
-  filter_pattern  = "?REPORT ?NR_LAMBDA_MONITORING ?\"Task timed out\""
+  filter_pattern  = ""
   destination_arn = local.newrelic_log_ingestion_lambda
 }
 

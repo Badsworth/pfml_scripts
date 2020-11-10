@@ -46,7 +46,7 @@ resource "aws_cloudwatch_log_group" "lambda_cognito_postconf" {
 resource "aws_cloudwatch_log_subscription_filter" "nr_lambda_cognito_postconf" {
   name            = "nr_lambda_cognito_postconf"
   log_group_name  = aws_cloudwatch_log_group.lambda_cognito_postconf.name
-  filter_pattern  = "?REPORT ?NR_LAMBDA_MONITORING ?\"Task timed out\""
+  filter_pattern  = ""
   destination_arn = local.newrelic_log_ingestion_lambda
 }
 
@@ -67,7 +67,7 @@ resource "aws_cloudwatch_log_group" "lambda_formstack_import" {
 resource "aws_cloudwatch_log_subscription_filter" "nr_lambda_formstack_import" {
   name            = "nr_lambda_formstack_import"
   log_group_name  = aws_cloudwatch_log_group.lambda_formstack_import.name
-  filter_pattern  = "?REPORT ?NR_LAMBDA_MONITORING ?\"Task timed out\""
+  filter_pattern  = ""
   destination_arn = local.newrelic_log_ingestion_lambda
 }
 
@@ -88,7 +88,7 @@ resource "aws_cloudwatch_log_group" "lambda_eligibility_feed" {
 resource "aws_cloudwatch_log_subscription_filter" "nr_lambda_eligibility_feed" {
   name            = "nr_lambda_eligibility_feed"
   log_group_name  = aws_cloudwatch_log_group.lambda_eligibility_feed.name
-  filter_pattern  = "?REPORT ?NR_LAMBDA_MONITORING ?\"Task timed out\""
+  filter_pattern  = ""
   destination_arn = local.newrelic_log_ingestion_lambda
 }
 
