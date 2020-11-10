@@ -53,7 +53,7 @@ def compute_financial_eligibility(
     )
 
     gte_thirty_times_wba = eligibility_util.wages_gte_thirty_times_wba(
-        total_wages, individual_average_weekly_wage, state_average_weekly_wage
+        total_wages, individual_average_weekly_wage, state_average_weekly_wage, effective_date
     )
 
     # Check various financial eligibility thresholds, set the description accordingly

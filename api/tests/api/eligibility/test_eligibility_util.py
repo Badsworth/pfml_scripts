@@ -37,7 +37,10 @@ def test_wages_gte_thirty_times_wba_true():
     individual_average_weekly_wage = 1538
 
     is_eligible = eligibility_util.wages_gte_thirty_times_wba(
-        total_wages, individual_average_weekly_wage, state_average_weekly_wage
+        total_wages,
+        individual_average_weekly_wage,
+        state_average_weekly_wage,
+        datetime.date(2021, 1, 1),
     )
 
     assert is_eligible is True
@@ -49,7 +52,10 @@ def test_wages_gte_thirty_times_wba_false():
     individual_average_weekly_wage = 423
 
     is_eligible = eligibility_util.wages_gte_thirty_times_wba(
-        total_wages, individual_average_weekly_wage, state_average_weekly_wage
+        total_wages,
+        individual_average_weekly_wage,
+        state_average_weekly_wage,
+        datetime.date(2021, 1, 1),
     )
 
     assert is_eligible is False
@@ -61,7 +67,10 @@ def test_wages_gte_thirty_times_wba_mid():
     individual_average_weekly_wage = 769
 
     is_eligible = eligibility_util.wages_gte_thirty_times_wba(
-        total_wages, individual_average_weekly_wage, state_average_weekly_wage
+        total_wages,
+        individual_average_weekly_wage,
+        state_average_weekly_wage,
+        datetime.date(2021, 1, 1),
     )
 
     assert is_eligible is True
