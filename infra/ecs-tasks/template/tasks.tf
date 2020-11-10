@@ -26,30 +26,30 @@
 #
 locals {
   tasks = {
-    "${local.app_name}-db-migrate-up" = {
+    "db-migrate-up" = {
       command = ["db-migrate-up"]
     },
 
-    "${local.app_name}-db-admin-create-db-users" = {
+    "db-admin-create-db-users" = {
       command = ["db-admin-create-db-users"]
     },
 
-    "${local.app_name}-db-create-fineos-user" = {
+    "db-create-fineos-user" = {
       command = ["db-create-fineos-user"]
     },
 
-    "${local.app_name}-execute-sql" = {
+    "execute-sql" = {
       command = ["execute-sql"]
     },
 
-    "${local.app_name}-${var.environment_name}-ad-hoc-verification" = {
+    "ad-hoc-verification" = {
       command = ["generate-verification-codes",
         "--input=s3://massgov-pfml-${var.environment_name}-verification-codes/source.csv",
       "--output=s3://massgov-pfml-${var.environment_name}-verification-codes/output.csv"],
       task_role = aws_iam_role.task_adhoc_verification_task_role.arn
     },
 
-    "${local.app_name}-dor-import" = {
+    "dor-import" = {
       command             = ["dor-import"],
       task_role           = aws_iam_role.dor_import_task_role.arn,
       execution_role      = aws_iam_role.dor_import_execution_role.arn,
@@ -58,7 +58,7 @@ locals {
       containers_template = "dor_import_template.json"
     },
 
-    "${local.app_name}-load-employers-to-fineos" = {
+    "load-employers-to-fineos" = {
       command             = ["load-employers-to-fineos"]
       containers_template = "load_employers_to_fineos_template.json"
       vars = {
@@ -70,7 +70,7 @@ locals {
       }
     },
 
-    "${local.app_name}-fineos-eligibility-feed-export" = {
+    "fineos-eligibility-feed-export" = {
       command             = ["fineos-eligibility-feed-export"]
       containers_template = "fineos_eligibility_feed_export_template.json"
       task_role           = aws_iam_role.fineos_eligibility_feed_export_task_role.arn
@@ -97,7 +97,7 @@ data "aws_ecr_repository" "app" {
 # this resource is used as a template to provision each ECS task in locals.tasks
 resource "aws_ecs_task_definition" "ecs_tasks" {
   for_each                 = local.tasks
-  family                   = each.key
+  family                   = "${local.app_name}-${var.environment_name}-${each.key}"
   task_role_arn            = lookup(each.value, "task_role", null)
   execution_role_arn       = lookup(each.value, "execution_role", aws_iam_role.task_executor.arn)
   container_definitions    = data.template_file.task_container_definitions[each.key].rendered
@@ -105,6 +105,10 @@ resource "aws_ecs_task_definition" "ecs_tasks" {
   memory                   = lookup(each.value, "memory", "1024")
   requires_compatibilities = ["FARGATE"]
   network_mode             = "awsvpc"
+
+  tags = merge(module.constants.common_tags, {
+    environment = var.environment_name
+  })
 }
 
 data "template_file" "task_container_definitions" {

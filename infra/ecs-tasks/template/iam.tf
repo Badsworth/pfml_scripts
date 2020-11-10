@@ -31,7 +31,7 @@ resource "aws_iam_role" "ecs_tasks" {
 #
 # See: https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task_execution_IAM_role.html
 resource "aws_iam_role" "task_executor" {
-  name = "${local.app_name}-${var.environment_name}-ecs-tasks-executor"
+  name = "${local.app_name}-${var.environment_name}-ecs-tasks-execution-role"
 
   assume_role_policy = data.aws_iam_policy_document.ecs_tasks_assume_role_policy.json
 }
@@ -139,6 +139,7 @@ resource "aws_iam_role_policy_attachment" "task_adhoc_task_executor_s3_attachmen
 # ------------------------------------------------------------------------------------------------------
 
 resource "aws_iam_role" "dor_import_task_role" {
+  name               = "${local.app_name}-${var.environment_name}-ecs-tasks-dor-import-task-role"
   assume_role_policy = data.aws_iam_policy_document.ecs_tasks_assume_role_policy.json
 }
 
@@ -148,7 +149,7 @@ resource "aws_iam_role_policy_attachment" "dor_import_task_role_extras" {
 }
 
 resource "aws_iam_policy" "dor_import_task_role_extras" {
-  name        = "${local.app_name}-${var.environment_name}-dor-import-ecs"
+  name        = "${local.app_name}-${var.environment_name}-ecs-tasks-dor-import-ecs-policy"
   description = "All the things the DOR Import task needs to be allowed to do"
   policy      = data.aws_iam_policy_document.dor_import_task_role_extras.json
 }
@@ -171,6 +172,7 @@ data "aws_iam_policy_document" "dor_import_task_role_extras" {
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 resource "aws_iam_role" "dor_import_execution_role" {
+  name               = "${local.app_name}-${var.environment_name}-ecs-tasks-dor-import-execution-role"
   assume_role_policy = data.aws_iam_policy_document.ecs_tasks_assume_role_policy.json
 }
 
@@ -180,7 +182,7 @@ resource "aws_iam_role_policy_attachment" "dor_import_execution_role_extras" {
 }
 
 resource "aws_iam_policy" "dor_import_execution_role_extras" {
-  name        = "${local.app_name}-${var.environment_name}-dor-import-executor"
+  name        = "${local.app_name}-${var.environment_name}-ecs-tasks-dor-import-execution-policy"
   description = "A clone of the standard execution role with extra SSM permissions for DOR Import's decryption keys."
   policy      = data.aws_iam_policy_document.dor_import_execution_role_extras.json
 }

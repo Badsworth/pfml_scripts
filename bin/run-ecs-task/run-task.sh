@@ -3,28 +3,33 @@
 # This relies on resources and outputs created in infra/api, which should
 # be updated prior to running this script.
 #
-set -eo pipefail
+set -o errexit -o pipefail
 
 DIR=$(dirname "${BASH_SOURCE[0]}")
 
+usage() {
+  echo "Usage: ./run-task.sh ENV_NAME TASK_NAME [AUTHOR] [COMMAND ...]"
+  echo "ex: ./run-task.sh test db-migrate-up first_name.last_name"
+  exit 1
+}
+
 ENV_NAME=$1
 TASK_NAME=$2
-shift 2
+shift 2 || usage
 
 if ! [ -z "$CI" ]; then
     AUTHOR=github-actions
 else
     AUTHOR=$1
-    shift
+    shift || usage
 fi
 
 COMMAND=("$@")
 
 if [ -z "$ENV_NAME" ] || [ -z "$TASK_NAME" ] || [ -z "$AUTHOR" ]; then
-    echo "Usage: ./run-task.sh ENV_NAME TASK_NAME [AUTHOR] [COMMAND ...]"
-    echo "ex: ./run-task.sh test db-migrate-up first_name.last_name"
-    exit 1
+  usage
 fi
+
 
 pushd $DIR/../../infra/ecs-tasks/environments/$ENV_NAME
 TF_OUTPUTS=$(terraform output -json || (terraform init && terraform output -json))
@@ -37,7 +42,7 @@ NETWORK_CONFIG=$(jq \
      .awsvpcConfiguration.securityGroups=$SECURITY_GROUPS' \
     $DIR/network_config.json.tpl)
 
-TASK_DEFINITION=$(echo $TF_OUTPUTS | jq ".ecs_task_arns.value.\"pfml-api-$TASK_NAME\"" | cut -d'/' -f2 | sed -e 's/^"//' -e 's/"$//')
+TASK_DEFINITION="pfml-api-$ENV_NAME-$TASK_NAME"
 echo "Task definition $TASK_DEFINITION"
 
 # Construct command overrides as JSON from COMMAND array
