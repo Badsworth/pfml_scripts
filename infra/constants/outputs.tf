@@ -24,3 +24,14 @@ output "environment_tags" {
     "training"    = "train"
   }
 }
+
+output "environment_shorthand" {
+  value = {
+    "test"        = "test"
+    "stage"       = "stage"
+    "prod"        = "prod"
+    "performance" = "perf"
+    "training"    = "train"
+  }
+}
+

@@ -42,17 +42,19 @@ module "api" {
   formstack_import_lambda_build_s3_key  = local.formstack_lambda_artifact_s3_key
 
   cognito_user_pool_arn                            = null
+  cognito_user_pool_keys_url                       = ""
   cognito_post_confirmation_lambda_artifact_s3_key = local.cognito_post_confirmation_lambda_artifact_s3_key
   fineos_eligibility_transfer_lambda_build_s3_key  = local.fineos_eligibility_transfer_lambda_build_s3_key
   rmv_client_base_url                              = null
   rmv_client_certificate_binary_arn                = null
   rmv_check_behavior                               = "fully_mocked"
   rmv_check_mock_success                           = "1"
-  fineos_client_customer_api_url                   = null
-  fineos_client_group_client_api_url               = null
-  fineos_client_wscomposer_api_url                 = null
-  fineos_client_oauth2_url                         = null
-  fineos_client_oauth2_client_id                   = null
+  fineos_client_integration_services_api_url       = ""
+  fineos_client_customer_api_url                   = ""
+  fineos_client_group_client_api_url               = ""
+  fineos_client_wscomposer_api_url                 = ""
+  fineos_client_oauth2_url                         = ""
+  fineos_client_oauth2_client_id                   = ""
   fineos_eligibility_feed_output_directory_path    = null
   fineos_aws_iam_role_arn                          = null
   fineos_aws_iam_role_external_id                  = null

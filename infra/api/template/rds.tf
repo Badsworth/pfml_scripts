@@ -110,7 +110,7 @@ resource "aws_db_instance" "default" {
   }
 
   tags = merge(module.constants.common_tags, {
-    environment   = var.environment_name
+    environment   = module.constants.environment_tags[var.environment_name]
     Name          = "massgov_pfml_${var.environment_name}"
     backup        = var.environment_name == "prod" ? "prod" : "nonprod"
     "Patch Group" = var.environment_name == "prod" ? "prod-linux1" : "nonprod-linux1"

@@ -5,6 +5,7 @@
 locals {
   ssm_arn_prefix         = "arn:aws:ssm:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:parameter/service"
   iam_db_user_arn_prefix = "arn:aws:rds-db:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:dbuser:${aws_db_instance.default.resource_id}"
+  shorthand_env_name     = module.constants.environment_shorthand[var.environment_name]
 }
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -138,7 +139,7 @@ data "aws_iam_policy_document" "iam_policy_lambda_assumed_role" {
 # IAM role and policies for the Cognito Post Confirmation Lambda
 
 resource "aws_iam_role" "cognito_post_confirmation_lambda_role" {
-  name_prefix        = "massgov-pfml-${var.environment_name}-cog-po-con-"
+  name_prefix        = "massgov-pfml-${local.shorthand_env_name}-cog-po-con-"
   assume_role_policy = data.aws_iam_policy_document.iam_policy_lambda_assumed_role.json
 }
 
@@ -157,7 +158,7 @@ resource "aws_iam_role_policy_attachment" "db_user_pfml_api_to_cognito_post_conf
 
 # name_prefix is highly abbreviated due to 32 character limit by Terraform
 resource "aws_iam_role" "formstack_import_lambda_role" {
-  name_prefix        = "massgov-pfml-${var.environment_name}-frmstk-role-"
+  name_prefix        = "massgov-pfml-${local.shorthand_env_name}-frmstk-role-"
   assume_role_policy = data.aws_iam_policy_document.iam_policy_lambda_assumed_role.json
 }
 
@@ -223,7 +224,7 @@ data "aws_iam_policy_document" "iam_policy_formstack_import_lambda_execution" {
 # IAM role and policies for FINEOS Eligibility Feed Lambda
 
 resource "aws_iam_role" "eligibility_feed_lambda_role" {
-  name_prefix        = "massgov-pfml-${var.environment_name}-ef-lmbd-role-"
+  name_prefix        = "massgov-pfml-${local.shorthand_env_name}-ef-lmbd-role-"
   assume_role_policy = data.aws_iam_policy_document.iam_policy_lambda_assumed_role.json
 }
 
@@ -306,7 +307,7 @@ data "aws_iam_policy_document" "iam_policy_eligibility_feed_lambda_execution_fin
 # Pulled from https://github.com/terraform-aws-modules/terraform-aws-rds/
 #
 resource "aws_iam_role" "rds_enhanced_monitoring" {
-  name_prefix        = "rds-enhanced-monitoring-${var.environment_name}-"
+  name_prefix        = "rds-enhanced-monitoring-${local.shorthand_env_name}-"
   assume_role_policy = data.aws_iam_policy_document.rds_enhanced_monitoring.json
 }
 
