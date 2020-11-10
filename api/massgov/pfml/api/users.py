@@ -1,4 +1,4 @@
-from typing import Any, Dict
+from typing import Any, Dict, List
 
 import connexion
 from pydantic import UUID4, Field
@@ -70,6 +70,15 @@ class UserUpdateRequest(PydanticBaseModel):
     consented_to_data_sharing: bool
 
 
+class RoleResponse(PydanticBaseModel):
+    role_id: int
+    role_description: str
+
+
+class UserRoleResponse(PydanticBaseModel):
+    role: RoleResponse
+
+
 class UserResponse(PydanticBaseModel):
     """Response object for a given User result """
 
@@ -77,6 +86,7 @@ class UserResponse(PydanticBaseModel):
     auth_id: str = Field(alias="active_directory_id")
     email_address: str
     consented_to_data_sharing: bool
+    roles: List[UserRoleResponse]
 
 
 def user_response(user: User) -> Dict[str, Any]:

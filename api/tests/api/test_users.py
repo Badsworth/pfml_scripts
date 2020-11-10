@@ -17,6 +17,7 @@ def test_users_get(client, user, auth_token):
 
     assert response.status_code == 200
     assert response_body.get("data")["user_id"] == str(user.user_id)
+    assert response_body.get("data")["roles"] == []
 
 
 def test_users_unauthorized_get(client, user, auth_token):
@@ -46,12 +47,17 @@ def test_users_get_fineos_forbidden(client, fineos_user, fineos_user_token):
     assert response.status_code == 403
 
 
-def test_users_get_current(client, user, auth_token):
-    response = client.get("/v1/users/current", headers={"Authorization": f"Bearer {auth_token}"})
+def test_users_get_current(client, employer_user, employer_auth_token):
+    response = client.get(
+        "/v1/users/current", headers={"Authorization": f"Bearer {employer_auth_token}"}
+    )
     response_body = response.get_json()
 
     assert response.status_code == 200
-    assert response_body.get("data")["user_id"] == str(user.user_id)
+    assert response_body.get("data")["user_id"] == str(employer_user.user_id)
+    assert response_body.get("data")["roles"] == [
+        {"role": {"role_description": "Employer", "role_id": 3}}
+    ]
 
 
 def test_users_get_current_fineos_forbidden(client, fineos_user_token):
