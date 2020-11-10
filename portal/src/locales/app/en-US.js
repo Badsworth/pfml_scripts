@@ -293,6 +293,9 @@ const errors = {
       pattern: "Enter a 9-digit number.",
       required: "Enter a Social Security Number or ITIN.",
     },
+    upload_docs_options: {
+      required: "Select the kind of document.",
+    },
     work_pattern: {
       work_pattern_days: {
         minimum: "Enter the hours you work.",

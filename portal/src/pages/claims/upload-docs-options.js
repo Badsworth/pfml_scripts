@@ -1,4 +1,6 @@
 import Claim, { LeaveReason, ReasonQualifier } from "../../models/Claim";
+import AppErrorInfo from "../../models/AppErrorInfo";
+import AppErrorInfoCollection from "../../models/AppErrorInfoCollection";
 import InputChoiceGroup from "../../components/InputChoiceGroup";
 import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
@@ -19,7 +21,7 @@ export const UploadDocsOptions = (props) => {
   const { appLogic, claim } = props;
   const { t } = useTranslation();
   const { formState, updateFields } = useFormState();
-  const nextPage = formState.nextPage;
+  const upload_docs_options = formState.upload_docs_options;
 
   const leaveReason = get(claim, "leave_details.reason");
   const reasonQualifier = get(claim, "leave_details.reason_qualifier");
@@ -42,18 +44,27 @@ export const UploadDocsOptions = (props) => {
   }
 
   const handleSave = () => {
-    if (nextPage === UploadType.certification) {
+    if (!upload_docs_options) {
+      appLogic.setAppErrors(
+        new AppErrorInfoCollection([
+          new AppErrorInfo({
+            field: "upload_docs_options",
+            message: t("errors.claims.upload_docs_options.required"),
+          }),
+        ])
+      );
+    } else if (upload_docs_options === UploadType.certification) {
       return appLogic.portalFlow.goToNextPage(
         { claim },
         { claim_id: claim.application_id },
-        nextPage
+        upload_docs_options
       );
     } else {
-      const showStateId = nextPage === UploadType.mass_id;
+      const showStateId = upload_docs_options === UploadType.mass_id;
       return appLogic.portalFlow.goToNextPage(
         { claim },
         { claim_id: claim.application_id, showStateId },
-        nextPage
+        upload_docs_options
       );
     }
   };
@@ -70,20 +81,20 @@ export const UploadDocsOptions = (props) => {
       onSave={handleSave}
     >
       <InputChoiceGroup
-        {...getFunctionalInputProps("nextPage")}
+        {...getFunctionalInputProps("upload_docs_options")}
         choices={[
           {
-            checked: nextPage === UploadType.mass_id,
+            checked: upload_docs_options === UploadType.mass_id,
             label: t("pages.claimsUploadDocsOptions.stateIdLabel"),
             value: UploadType.mass_id,
           },
           {
-            checked: nextPage === UploadType.non_mass_id,
+            checked: upload_docs_options === UploadType.non_mass_id,
             label: t("pages.claimsUploadDocsOptions.nonStateIdLabel"),
             value: UploadType.non_mass_id,
           },
           {
-            checked: nextPage === UploadType.certification,
+            checked: upload_docs_options === UploadType.certification,
             label: t("pages.claimsUploadDocsOptions.certLabel", {
               context: certChoiceLabel,
             }),

@@ -20,7 +20,7 @@ describe("UploadDocsOptions", () => {
         .completed()
         .create(),
     }));
-    expect(wrapper).toMatchSnapshot();
+    expect(wrapper.find("InputChoiceGroup").prop("choices")).toMatchSnapshot();
     expect(wrapper.html()).not.toMatch("Proof of placement");
     expect(wrapper.html()).toMatch("Health Care Provider Certification");
   });
@@ -32,7 +32,7 @@ describe("UploadDocsOptions", () => {
         .bondingBirthLeaveReason()
         .create(),
     }));
-    expect(wrapper).toMatchSnapshot();
+    expect(wrapper.find("InputChoiceGroup").prop("choices")).toMatchSnapshot();
     expect(wrapper.html()).toMatch("Proof of birth");
   });
 
@@ -43,7 +43,7 @@ describe("UploadDocsOptions", () => {
         .bondingAdoptionLeaveReason()
         .create(),
     }));
-    expect(wrapper).toMatchSnapshot();
+    expect(wrapper.find("InputChoiceGroup").prop("choices")).toMatchSnapshot();
     expect(wrapper.html()).toMatch("Proof of placement");
   });
 
@@ -53,7 +53,7 @@ describe("UploadDocsOptions", () => {
         claimAttrs: new MockClaimBuilder().completed().create(),
       }));
       ({ changeRadioGroup } = simulateEvents(wrapper));
-      changeRadioGroup("nextPage", UploadType.mass_id);
+      changeRadioGroup("upload_docs_options", UploadType.mass_id);
     });
 
     it("redirects to the upload_id page", () => {
@@ -75,7 +75,7 @@ describe("UploadDocsOptions", () => {
         claimAttrs: new MockClaimBuilder().completed().create(),
       }));
       ({ changeRadioGroup } = simulateEvents(wrapper));
-      changeRadioGroup("nextPage", UploadType.non_mass_id);
+      changeRadioGroup("upload_docs_options", UploadType.non_mass_id);
     });
 
     it("redirects to the upload_id page", () => {
@@ -97,7 +97,7 @@ describe("UploadDocsOptions", () => {
         claimAttrs: new MockClaimBuilder().completed().create(),
       }));
       ({ changeRadioGroup } = simulateEvents(wrapper));
-      changeRadioGroup("nextPage", UploadType.certification);
+      changeRadioGroup("upload_docs_options", UploadType.certification);
     });
 
     it("redirects to the upload_certification page", () => {

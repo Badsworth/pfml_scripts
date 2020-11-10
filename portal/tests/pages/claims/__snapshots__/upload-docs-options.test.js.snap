@@ -1,106 +1,61 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`UploadDocsOptions renders the appropriate cert option for adoption bonding leave 1`] = `
-<QuestionPage
-  onSave={[Function]}
-  title="Additional documentation"
->
-  <InputChoiceGroup
-    choices={
-      Array [
-        Object {
-          "checked": false,
-          "label": "Massachusetts driver's license or ID",
-          "value": "UPLOAD_MASS_ID",
-        },
-        Object {
-          "checked": false,
-          "label": "Different identification documentation",
-          "value": "UPLOAD_ID",
-        },
-        Object {
-          "checked": false,
-          "label": "Proof of placement",
-          "value": "UPLOAD_CERTIFICATION",
-        },
-      ]
-    }
-    hint="You only need to complete this if you received a notice from the Department of Family and Medical Leave asking you to provide additional documents or you need to provide proof of birth or placement. "
-    label="What kind of document are you uploading?"
-    name="nextPage"
-    onChange={[Function]}
-    type="radio"
-    value=""
-  />
-</QuestionPage>
+Array [
+  Object {
+    "checked": false,
+    "label": "Massachusetts driver's license or ID",
+    "value": "UPLOAD_MASS_ID",
+  },
+  Object {
+    "checked": false,
+    "label": "Different identification documentation",
+    "value": "UPLOAD_ID",
+  },
+  Object {
+    "checked": false,
+    "label": "Proof of placement",
+    "value": "UPLOAD_CERTIFICATION",
+  },
+]
 `;
 
 exports[`UploadDocsOptions renders the appropriate cert option for newborn bonding leave 1`] = `
-<QuestionPage
-  onSave={[Function]}
-  title="Additional documentation"
->
-  <InputChoiceGroup
-    choices={
-      Array [
-        Object {
-          "checked": false,
-          "label": "Massachusetts driver's license or ID",
-          "value": "UPLOAD_MASS_ID",
-        },
-        Object {
-          "checked": false,
-          "label": "Different identification documentation",
-          "value": "UPLOAD_ID",
-        },
-        Object {
-          "checked": false,
-          "label": "Proof of birth",
-          "value": "UPLOAD_CERTIFICATION",
-        },
-      ]
-    }
-    hint="You only need to complete this if you received a notice from the Department of Family and Medical Leave asking you to provide additional documents or you need to provide proof of birth or placement. "
-    label="What kind of document are you uploading?"
-    name="nextPage"
-    onChange={[Function]}
-    type="radio"
-    value=""
-  />
-</QuestionPage>
+Array [
+  Object {
+    "checked": false,
+    "label": "Massachusetts driver's license or ID",
+    "value": "UPLOAD_MASS_ID",
+  },
+  Object {
+    "checked": false,
+    "label": "Different identification documentation",
+    "value": "UPLOAD_ID",
+  },
+  Object {
+    "checked": false,
+    "label": "Proof of birth",
+    "value": "UPLOAD_CERTIFICATION",
+  },
+]
 `;
 
 exports[`UploadDocsOptions renders the page for medical leave with HCP as cert option 1`] = `
-<QuestionPage
-  onSave={[Function]}
-  title="Additional documentation"
->
-  <InputChoiceGroup
-    choices={
-      Array [
-        Object {
-          "checked": false,
-          "label": "Massachusetts driver's license or ID",
-          "value": "UPLOAD_MASS_ID",
-        },
-        Object {
-          "checked": false,
-          "label": "Different identification documentation",
-          "value": "UPLOAD_ID",
-        },
-        Object {
-          "checked": false,
-          "label": "Health Care Provider Certification",
-          "value": "UPLOAD_CERTIFICATION",
-        },
-      ]
-    }
-    hint="You only need to complete this if you received a notice from the Department of Family and Medical Leave asking you to provide additional documents or you need to provide proof of birth or placement. "
-    label="What kind of document are you uploading?"
-    name="nextPage"
-    onChange={[Function]}
-    type="radio"
-    value=""
-  />
-</QuestionPage>
+Array [
+  Object {
+    "checked": false,
+    "label": "Massachusetts driver's license or ID",
+    "value": "UPLOAD_MASS_ID",
+  },
+  Object {
+    "checked": false,
+    "label": "Different identification documentation",
+    "value": "UPLOAD_ID",
+  },
+  Object {
+    "checked": false,
+    "label": "Health Care Provider Certification",
+    "value": "UPLOAD_CERTIFICATION",
+  },
+]
 `;

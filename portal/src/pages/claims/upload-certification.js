@@ -70,24 +70,12 @@ export const UploadCertification = (props) => {
         DocumentType.medicalCertification // TODO (CP-962): set based on leave reason
       );
 
-      const { success } = await uploadDocumentsHelper(
-        uploadPromises,
-        files,
-        setFiles
+      await uploadDocumentsHelper(uploadPromises, files, setFiles);
+      const absence_id = get(claim, "fineos_absence_id");
+      return portalFlow.goToNextPage(
+        { claim },
+        { claim_id: claim.application_id, uploadedAbsenceId: absence_id }
       );
-
-      if (success && claim.isCompleted) {
-        const absence_id = get(claim, "fineos_absence_id");
-        return portalFlow.goToNextPage(
-          { claim },
-          { claim_id: claim.application_id, uploadedAbsenceId: absence_id }
-        );
-      } else if (success) {
-        return portalFlow.goToNextPage(
-          { claim },
-          { claim_id: claim.application_id }
-        );
-      }
     } catch (error) {
       appLogic.catchError(error);
     }
