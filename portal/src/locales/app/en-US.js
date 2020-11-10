@@ -1019,9 +1019,10 @@ const pages = {
     workPatternDaysFixedLabel: "Weekly work hours",
     workPatternDaysVariableLabel: "Average weekly hours",
     workPatternTypeLabel: "Work schedule type",
-    workPatternTypeValue_fixed: "Consistent from week to week",
-    workPatternTypeValue_rotating: "Hours alternate between weekly schedules",
-    workPatternTypeValue_variable: "Not consistent from week to week",
+    workPatternTypeValue_fixed:
+      "Each week I work the same number of hours on the same days.",
+    workPatternTypeValue_variable:
+      "My schedule is not consistent from week to week.",
     workPatternVariableTime: "$t(shared.displayTime)",
     workPatternVariableTime_noMinutes: "$t(shared.displayTime_noMinutes)",
   },
@@ -1066,10 +1067,13 @@ const pages = {
     title: "$t(shared.claimsEmploymentInfoTitle)",
   },
   claimsScheduleVariable: {
+    heading: "Help us calculate your weekly hours.",
+    hint:
+      "We'll confirm your hours with your employer after you submit your application.",
     hoursLabel: "$t(shared.hoursLabel)",
-    inputHoursLabel: "How many hours do you work on average per week?",
+    inputHoursLabel: "Average Weekly Hours",
+    lead: "How many hours do you work on average each week?",
     minutesLabel: "$t(shared.minutesLabel)",
-    scheduleStartDateLabel: "Which week will your leave start during?",
     title: "$t(shared.claimsEmploymentInfoTitle)",
   },
   claimsSsn: {

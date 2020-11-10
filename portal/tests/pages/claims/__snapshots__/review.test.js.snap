@@ -141,7 +141,7 @@ exports[`Final Review Page when all data is present renders Review page with fin
     label="Work schedule type"
     level="3"
   >
-    Consistent from week to week
+    Each week I work the same number of hours on the same days.
   </ReviewRow>
   <ReviewHeading
     editText="Edit"
@@ -473,7 +473,7 @@ exports[`Part 1 Review Page when all data is present renders Review page with Pa
     label="Work schedule type"
     level="4"
   >
-    Consistent from week to week
+    Each week I work the same number of hours on the same days.
   </ReviewRow>
   <ReviewHeading
     editHref="/claims/leave-reason?claim_id=mock_application_id"
@@ -608,11 +608,9 @@ exports[`Reduced leave renders total time for the reduced leave period when work
 </ReviewRow>
 `;
 
-exports[`Work patterns has internationalized strings for each work pattern type 1`] = `"Consistent from week to week"`;
+exports[`Work patterns has internationalized strings for each work pattern type 1`] = `"Each week I work the same number of hours on the same days."`;
 
-exports[`Work patterns has internationalized strings for each work pattern type 2`] = `"Hours alternate between weekly schedules"`;
-
-exports[`Work patterns has internationalized strings for each work pattern type 3`] = `"Not consistent from week to week"`;
+exports[`Work patterns has internationalized strings for each work pattern type 2`] = `"My schedule is not consistent from week to week."`;
 
 exports[`Work patterns shows average weekly hours if work pattern type is variable 1`] = `"40h"`;
 

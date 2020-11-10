@@ -2,7 +2,6 @@ import {
   DurationBasis,
   FrequencyIntervalBasis,
   IntermittentLeavePeriod,
-  WorkPatternType,
 } from "../../../src/models/Claim";
 import EmployerBenefit, {
   EmployerBenefitType,
@@ -101,7 +100,7 @@ describe("Work patterns", () => {
   it("has internationalized strings for each work pattern type", () => {
     expect.assertions();
 
-    Object.values(WorkPatternType).forEach((work_pattern_type) => {
+    ["Fixed", "Variable"].forEach((work_pattern_type) => {
       const { wrapper } = renderWithAppLogic(Review, {
         claimAttrs: new MockClaimBuilder()
           .part1Complete()

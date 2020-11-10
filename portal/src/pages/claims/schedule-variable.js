@@ -1,7 +1,9 @@
 import Claim, { WorkPattern } from "../../models/Claim";
 import React, { useState } from "react";
 import { isEmpty, pick, round } from "lodash";
+import Heading from "../../components/Heading";
 import InputHours from "../../components/InputHours";
+import Lead from "../../components/Lead";
 import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import useFormState from "../../hooks/useFormState";
@@ -65,6 +67,14 @@ export const ScheduleVariable = (props) => {
       title={t("pages.claimsScheduleVariable.title")}
       onSave={handleSave}
     >
+      <Heading level="2" size="1">
+        {t("pages.claimsScheduleVariable.heading")}
+      </Heading>
+
+      <Lead>{t("pages.claimsScheduleVariable.lead")}</Lead>
+      <p className="usa-hint margin-top-0 text-base-darkest">
+        {t("pages.claimsScheduleVariable.hint")}
+      </p>
       <InputHours
         {...getFunctionalInputProps(
           "work_pattern.work_pattern_days[0].minutes"
@@ -74,6 +84,7 @@ export const ScheduleVariable = (props) => {
         minutesLabel={t("pages.claimsScheduleVariable.minutesLabel")}
         value={minutesWorkedPerWeek}
         onChange={handleHoursChange}
+        smallLabel
         minutesIncrement={15}
       />
     </QuestionPage>
