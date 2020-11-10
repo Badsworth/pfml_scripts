@@ -1,4 +1,4 @@
-import Head from "next/head"; // https://nextjs.org/docs/api-reference/next/head
+import { Helmet } from "react-helmet"; // we don't use next/head because of https://lwd.atlassian.net/browse/CP-1071
 import PropTypes from "prop-types";
 import React from "react";
 import classnames from "classnames";
@@ -21,9 +21,9 @@ const Title = ({ component = "h1", small = false, ...props }) => {
 
   return (
     <React.Fragment>
-      <Head>
+      <Helmet>
         <title>{seoTitle}</title>
-      </Head>
+      </Helmet>
       <TitleElement className={classes}>{props.children}</TitleElement>
     </React.Fragment>
   );

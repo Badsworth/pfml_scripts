@@ -9,11 +9,14 @@ describe("Title", () => {
 
       expect(wrapper).toMatchInlineSnapshot(`
         <Fragment>
-          <Head>
+          <HelmetWrapper
+            defer={true}
+            encodeSpecialCharacters={true}
+          >
             <title>
               Hello world
             </title>
-          </Head>
+          </HelmetWrapper>
           <h1
             className="margin-top-0 margin-bottom-2 font-heading-lg line-height-sans-2"
           >
@@ -46,11 +49,14 @@ describe("Title", () => {
       expect(wrapper.find("legend").hasClass("usa-legend")).toBe(true);
       expect(wrapper).toMatchInlineSnapshot(`
         <Fragment>
-          <Head>
+          <HelmetWrapper
+            defer={true}
+            encodeSpecialCharacters={true}
+          >
             <title>
               Hello world
             </title>
-          </Head>
+          </HelmetWrapper>
           <legend
             className="margin-top-0 margin-bottom-2 font-heading-lg line-height-sans-2 usa-legend"
           >

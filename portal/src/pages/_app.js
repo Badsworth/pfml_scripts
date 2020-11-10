@@ -4,8 +4,8 @@ import { initializeI18n, useTranslation } from "../locales/i18n";
 import { Auth } from "@aws-amplify/auth";
 import ErrorBoundary from "../components/ErrorBoundary";
 import ErrorsSummary from "../components/ErrorsSummary";
-import Head from "next/head";
 import Header from "../components/Header";
+import { Helmet } from "react-helmet";
 import PropTypes from "prop-types";
 import Spinner from "../components/Spinner";
 import dynamic from "next/dynamic";
@@ -134,10 +134,10 @@ export const App = ({ Component, pageProps }) => {
 
   return (
     <ErrorBoundary>
-      <Head>
-        <title>{t("pages.app.siteTitle")}</title>
+      <Helmet>
+        {/* <title> is controlled through rendering a <Title> component on each page */}
         <meta name="description" content={t("pages.app.siteDescription")} />
-      </Head>
+      </Helmet>
       <div className="l-container">
         <div>
           {/* Wrap header children in a div because its parent is a flex container */}
