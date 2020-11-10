@@ -5,8 +5,9 @@
 import json
 
 import flask
+import jose
 import requests
-from jose import JWTError, jwt
+from jose import jwt
 from sqlalchemy.orm.exc import MultipleResultsFound, NoResultFound
 from werkzeug.exceptions import Unauthorized
 
@@ -44,6 +45,13 @@ def _decode_cognito_token(token):
 
 
 def decode_cognito_token(token):
+    """Decode a Bearer token and validate signature against public keys.
+
+    This is called automatically by Connexion. See x-bearerInfoFunc and x-tokenInfoFunc lines in
+    openapi.yaml.
+
+    See also https://connexion.readthedocs.io/en/latest/security.html
+    """
     try:
         decoded_token = _decode_cognito_token(token)
         with app.db_session() as db_session:
@@ -55,11 +63,10 @@ def decode_cognito_token(token):
 
             flask.g.current_user = user
 
-        logger.info("Auth token decode successful")
         return decoded_token
-    except JWTError:
-        logger.info("Auth token decode unsuccessful")
+    except jose.JOSEError as e:
+        logger.error("auth token decode failed: %s %s", type(e), str(e), extra={"error": e})
         raise Unauthorized
     except (NoResultFound, MultipleResultsFound) as e:
-        logger.error("Auth token decode unsuccessful", extra={"error": e})
+        logger.error("user query failed: %s", type(e), extra={"error": e})
         raise Unauthorized
