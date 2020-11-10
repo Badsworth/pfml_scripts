@@ -1,10 +1,11 @@
-import { partition, uniqueId } from "lodash";
 import AppErrorInfo from "../models/AppErrorInfo";
 import AppErrorInfoCollection from "../models/AppErrorInfoCollection";
 import Document from "../models/Document";
 import FileCard from "./FileCard";
 import PropTypes from "prop-types";
 import React from "react";
+import tracker from "../services/tracker";
+import { uniqueId } from "lodash";
 import { useTranslation } from "../locales/i18n";
 
 // Only image and pdf files are allowed to be uploaded
@@ -16,27 +17,148 @@ const allowedFileTypes = [
   "application/pdf",
 ];
 
+// Max file size in bytes
+const maximumFileSize = 5000000;
+
+// Exclusion reasons reasons
+const disallowedReasons = {
+  size: "size",
+  sizeAndType: "sizeAndType",
+  type: "type",
+};
+
 /**
- * Partition a list of files into a set of allowed files and a set of disallowed files based on
- * their file types.
+ * Filter a list of files into sets of allowed files and disallowed files based on file types and sizes.
+ * Track disallowed files with a FileUploadError event.
  * @param {File[]} files Files to filter
- * @param {Array.<RegExp|string>} allowedFileTypes Array of strings and/or regexps of allowed
- * file types.
- * @returns {Array.<Array.<File>>} Pair of arrays of Files -- [allowedFiles, disallowedFiles]
- * @example const [allowedFiles, disallowedFiles] = filterAllowedFiles(files, allowedFileTypes);
+ * @returns {Array.<Array.<File>>} Arrays of Files -- [allowedFiles, disallowedFilesForSize, disallowedFilesForType, disallowedFilesForSizeAndType]
+ * @example const [allowedFiles, disallowedFilesForSize, disallowedFilesForType, disallowedFilesForSizeAndType] = filterAllowedFiles(files);
  */
-function filterAllowedFiles(files, allowedFileTypes) {
-  // Filter files into allowed or disallowed based on each file's type.
-  return partition(files, (file) => {
-    // File is allowed if it matches any of the allowed types
-    return allowedFileTypes.some((allowedType) => file.type.match(allowedType));
+function filterAllowedFiles(files) {
+  const allowedFiles = [];
+  const disallowedFilesForSize = [];
+  const disallowedFilesForType = [];
+  const disallowedFilesForSizeAndType = [];
+
+  files.forEach((file) => {
+    let disallowedForSize = false;
+    let disallowedForType = false;
+    let disallowedForSizeAndType = false;
+
+    if (file.size > maximumFileSize) {
+      disallowedForSize = true;
+    }
+    if (!allowedFileTypes.includes(file.type)) {
+      if (disallowedForSize) {
+        disallowedForSizeAndType = true;
+      } else {
+        disallowedForType = true;
+      }
+    }
+
+    const trackingData = {
+      size: file.size,
+      type: file.type,
+    };
+    if (disallowedForSizeAndType) {
+      disallowedFilesForSizeAndType.push(file);
+      tracker.trackEvent(
+        "FileUploadError - Invalid size and type",
+        trackingData
+      );
+    } else if (disallowedForSize) {
+      disallowedFilesForSize.push(file);
+      tracker.trackEvent("FileUploadError - Invalid size", trackingData);
+    } else if (disallowedForType) {
+      disallowedFilesForType.push(file);
+      tracker.trackEvent("FileUploadError - Invalid type", trackingData);
+    } else {
+      allowedFiles.push(file);
+      tracker.trackEvent("File selected", trackingData);
+    }
   });
+
+  return [
+    allowedFiles,
+    disallowedFilesForSize,
+    disallowedFilesForType,
+    disallowedFilesForSizeAndType,
+  ];
+}
+
+/**
+ * Returns i18n reason for excluding files from being uploaded, with interpolated filenames.
+ * @param {File[]} disallowedFiles - Array of excluded files
+ * @param {string} disallowedReason - Enum for exclusion reason
+ * @param {Function} t - Localization method
+ * @returns {string} Message explaining why the files are disallowed
+ */
+function getDisallowedMessage(disallowedFiles, disallowedReason, t) {
+  let message;
+  if (disallowedFiles.length) {
+    const disallowedFileNames = disallowedFiles
+      .map((file) => file.name)
+      .join(", ");
+
+    message = t("errors.invalidFile", {
+      context: disallowedReason,
+      disallowedFileNames,
+    });
+  }
+  return message;
+}
+
+/**
+ * Generate error messages for disallowed files and display messages using AppErrors.
+ * @param {Array.<Array.<File>>} disallowedFiles - Array of array of File objects
+ * @param {Function} setAppErrors - Collection method to update AppErrors
+ * @param {Function} t - Localization method
+ */
+function disallowedFilesMessageHandler(disallowedFiles, setAppErrors, t) {
+  const [
+    disallowedFilesForSize,
+    disallowedFilesForType,
+    disallowedFilesForSizeAndType,
+  ] = disallowedFiles;
+  const errorsCollection = [];
+
+  const sizeMessage = getDisallowedMessage(
+    disallowedFilesForSize,
+    disallowedReasons.size,
+    t
+  );
+  const typeMessage = getDisallowedMessage(
+    disallowedFilesForType,
+    disallowedReasons.type,
+    t
+  );
+  const sizeAndTypeMessage = getDisallowedMessage(
+    disallowedFilesForSizeAndType,
+    disallowedReasons.sizeAndType,
+    t
+  );
+
+  if (sizeMessage) {
+    errorsCollection.push(new AppErrorInfo({ message: sizeMessage }));
+  }
+  if (typeMessage) {
+    errorsCollection.push(new AppErrorInfo({ message: typeMessage }));
+  }
+  if (sizeAndTypeMessage) {
+    errorsCollection.push(new AppErrorInfo({ message: sizeAndTypeMessage }));
+  }
+
+  if (errorsCollection.length) {
+    setAppErrors(new AppErrorInfoCollection(errorsCollection));
+  }
 }
 
 /**
  * Return an onChange handler which filters out invalid file types and then saves any new
  * files with setFiles.
  * @param {Function} setFiles a setter function for updating the files state
+ * @param {Function} setAppErrors - Collection method to update AppErrors
+ * @param {Function} t - Localization method
  * @returns {Function} onChange handler function
  */
 function useChangeHandler(setFiles, setAppErrors, t) {
@@ -56,20 +178,9 @@ function useChangeHandler(setFiles, setAppErrors, t) {
     // this step will reset event.target.files to an empty FileList.
     event.target.value = "";
 
-    const [allowedFiles, disallowedFiles] = filterAllowedFiles(
-      files,
-      allowedFileTypes
-    );
+    const [allowedFiles, ...disallowedFiles] = filterAllowedFiles(files);
 
-    if (disallowedFiles.length > 0) {
-      const disallowedFileNames = disallowedFiles
-        .map((file) => file.name)
-        .join(", ");
-      const message = t("errors.invalidFileType", { disallowedFileNames });
-      setAppErrors(new AppErrorInfoCollection([new AppErrorInfo({ message })]));
-    } else {
-      setAppErrors(new AppErrorInfoCollection());
-    }
+    disallowedFilesMessageHandler(disallowedFiles, setAppErrors, t);
 
     const newFiles = allowedFiles.map((file) => {
       return {

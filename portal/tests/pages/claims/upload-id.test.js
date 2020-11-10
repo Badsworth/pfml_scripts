@@ -12,6 +12,7 @@ import { act } from "react-dom/test-utils";
 import useAppLogic from "../../../src/hooks/useAppLogic";
 
 jest.mock("../../../src/hooks/useAppLogic");
+jest.mock("../../../src/services/tracker");
 
 // Dive more levels to account for withClaimDocuments HOC
 const diveLevels = 4;

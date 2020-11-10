@@ -158,24 +158,7 @@ exports[`UploadId after documents have been loaded when the user has a Mass ID w
           },
         ]
       }
-      setAppErrors={
-        [MockFunction] {
-          "calls": Array [
-            Array [
-              AppErrorInfoCollection {
-                "items": Array [],
-                "itemsById": Object {},
-              },
-            ],
-          ],
-          "results": Array [
-            Object {
-              "type": "return",
-              "value": undefined,
-            },
-          ],
-        }
-      }
+      setAppErrors={[MockFunction]}
       setFiles={[Function]}
     />
   </div>

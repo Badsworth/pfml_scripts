@@ -310,8 +310,12 @@ const errors = {
       required: "Upload at least one file to continue.",
     },
   },
-  invalidFileType:
-    "Only PDF and image files may be uploaded. See the tips below for suggestions on how to convert them to an image file. These files that you selected will not be uploaded: {{disallowedFileNames}}",
+  invalidFile_size:
+    "We could not upload: {{disallowedFileNames}}. Files must be smaller than 5 megabytes.",
+  invalidFile_sizeAndType:
+    "We could not upload: {{disallowedFileNames}}. Choose a PDF or image file that is smaller than 5 megabytes.",
+  invalidFile_type:
+    "We could not upload: {{disallowedFileNames}}. Choose a PDF or image file.",
   network:
     "Sorry, an error was encountered. This may occur for a variety of reasons, including temporarily losing an internet connection or an unexpected error in our system. If this continues to happen, you may call the Paid Family Leave Contact Center at $t(shared.contactCenterPhoneNumber)",
   // These fallbacks shouldn't normally render, but they may if a validation rule or
@@ -1524,7 +1528,7 @@ const components = {
   fileUploadDetails: {
     label: "Some tips for uploading documents and images",
     sizeNotice:
-      "Files should be 22 MB or smaller. If your file is larger than 22 MB, try resizing it or splitting it into separate files.",
+      "Files should be 5 MB or smaller. If your file is larger than 5 MB, try resizing it or splitting it into separate files.",
     tips: [
       {
         listHeading: "This website only accepts:",

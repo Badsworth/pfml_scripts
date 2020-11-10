@@ -9,9 +9,11 @@ import _, { uniqueId } from "lodash";
 import ClaimCollection from "../../../src/models/ClaimCollection";
 import UploadCertification from "../../../src/pages/claims/upload-certification";
 import { act } from "react-dom/test-utils";
+
 import useAppLogic from "../../../src/hooks/useAppLogic";
 
 jest.mock("../../../src/hooks/useAppLogic");
+jest.mock("../../../src/services/tracker");
 
 // Dive more levels to account for withClaimDocuments HOC
 const diveLevels = 4;

@@ -6,6 +6,9 @@ import FileCard from "../../src/components/FileCard";
 import FileCardList from "../../src/components/FileCardList";
 import { act } from "react-dom/test-utils";
 import { shallow } from "enzyme";
+import tracker from "../../src/services/tracker";
+
+jest.mock("../../src/services/tracker");
 
 const makeFileObject = (attrs = {}) => {
   const { id, type } = Object.assign(
@@ -196,57 +199,350 @@ describe("FileCardList", () => {
       expect.assertions(3);
     });
 
-    it("filters out invalid files", () => {
-      const initialFiles = [makeFileObject()];
-      const id = "FileX";
-      const validFile = makeFileObject({ id });
-      const invalidFile = makeFileObject({ id, type: "application/exe" });
-      jest.spyOn(_, "uniqueId").mockImplementation(() => id);
+    describe("when the user selects disallowed files", () => {
+      describe("when the file is not allowed because of the file type", () => {
+        it("filters out invalid files based on type", () => {
+          const initialFiles = [makeFileObject()];
+          const id = "FileX";
+          const validFile = makeFileObject({ id, type: "application/pdf" });
+          const invalidFile = makeFileObject({ id, type: "application/exe" });
+          jest.spyOn(_, "uniqueId").mockImplementation(() => id);
 
-      let files, setFiles, wrapper;
-      testHook(() => {
-        [files, setFiles] = useState(initialFiles);
-      });
+          let files, setFiles, wrapper;
+          testHook(() => {
+            [files, setFiles] = useState(initialFiles);
+          });
 
-      act(() => {
-        wrapper = render({ files, setFiles });
-        // simulate the user selecting files, including an invalid one
-        const input = wrapper.find("input");
-        input.simulate("change", {
-          target: {
-            files: [validFile.file, invalidFile.file],
-          },
+          act(() => {
+            wrapper = render({ files, setFiles });
+            // simulate the user selecting files, including an invalid one
+            const input = wrapper.find("input");
+            input.simulate("change", {
+              target: {
+                files: [validFile.file, invalidFile.file],
+              },
+            });
+          });
+
+          expect(files).toEqual([...initialFiles, validFile]);
+        });
+
+        it("displays an AppError message for file with invalid type", () => {
+          const invalidFile = makeFile({
+            name: "file.exe",
+            type: "application/exe",
+          });
+
+          let appErrors, setAppErrors, wrapper;
+          testHook(() => {
+            [appErrors, setAppErrors] = useState([]);
+          });
+
+          act(() => {
+            wrapper = render({ appErrors, setAppErrors });
+            wrapper.find("input").simulate("change", {
+              target: {
+                files: [invalidFile],
+              },
+            });
+          });
+
+          expect(appErrors.items).toHaveLength(1);
+          expect(appErrors.items[0].message).toMatchInlineSnapshot(
+            `"We could not upload: file.exe. Choose a PDF or image file."`
+          );
+        });
+
+        it("tracks the error event", () => {
+          const invalidFile = makeFile({
+            name: "file.exe",
+            type: "application/exe",
+          });
+
+          act(() => {
+            const wrapper = render();
+            wrapper.find("input").simulate("change", {
+              target: {
+                files: [invalidFile],
+              },
+            });
+          });
+
+          expect(tracker.trackEvent).toHaveBeenCalledWith(
+            "FileUploadError - Invalid type",
+            expect.any(Object)
+          );
         });
       });
+      describe("when the file is not allowed because of the file size", () => {
+        it("filters out invalid files based on size", () => {
+          const initialFiles = [makeFileObject()];
+          const id = "FileX";
+          const validFile = makeFileObject({ id, type: "application/pdf" });
+          const invalidFile = makeFileObject({ id, type: "application/pdf" });
+          Object.defineProperty(invalidFile.file, "size", {
+            get: () => 5000001,
+          });
+          jest.spyOn(_, "uniqueId").mockImplementation(() => id);
 
-      expect(files).toEqual([...initialFiles, validFile]);
-    });
+          let files, setFiles, wrapper;
+          testHook(() => {
+            [files, setFiles] = useState(initialFiles);
+          });
 
-    it("sets page errors for each invalid file the user selects", () => {
-      const invalidFileName = "file.exe";
-      const invalidFile = makeFile({
-        name: invalidFileName,
-        type: "application/exe",
-      });
+          act(() => {
+            wrapper = render({ files, setFiles });
+            // simulate the user selecting files, including the invalid file
+            const input = wrapper.find("input");
+            input.simulate("change", {
+              target: {
+                files: [validFile.file, invalidFile.file],
+              },
+            });
+          });
 
-      let appErrors, setAppErrors, wrapper;
-      testHook(() => {
-        [appErrors, setAppErrors] = useState([]);
-      });
+          expect(files).toEqual([...initialFiles, validFile]);
+        });
 
-      act(() => {
-        wrapper = render({ appErrors, setAppErrors });
-        wrapper.find("input").simulate("change", {
-          target: {
-            files: [invalidFile],
-          },
+        it("displays an AppError message for the file with invalid size", () => {
+          const invalidFile = makeFile({
+            name: "file.pdf",
+            type: "application/pdf",
+          });
+          Object.defineProperty(invalidFile, "size", {
+            get: () => 5000001,
+          });
+
+          let appErrors, setAppErrors, wrapper;
+          testHook(() => {
+            [appErrors, setAppErrors] = useState([]);
+          });
+
+          act(() => {
+            wrapper = render({ appErrors, setAppErrors });
+            wrapper.find("input").simulate("change", {
+              target: {
+                files: [invalidFile],
+              },
+            });
+          });
+
+          expect(appErrors.items).toHaveLength(1);
+          expect(appErrors.items[0].message).toMatchInlineSnapshot(
+            `"We could not upload: file.pdf. Files must be smaller than 5 megabytes."`
+          );
+        });
+        it("tracks the error event", () => {
+          const invalidFile = makeFile({
+            name: "file.pdf",
+            type: "application/pdf",
+          });
+          Object.defineProperty(invalidFile, "size", {
+            get: () => 5000001,
+          });
+
+          act(() => {
+            const wrapper = render();
+            wrapper.find("input").simulate("change", {
+              target: {
+                files: [invalidFile],
+              },
+            });
+          });
+
+          expect(tracker.trackEvent).toHaveBeenCalledWith(
+            "FileUploadError - Invalid size",
+            expect.any(Object)
+          );
         });
       });
+      describe("when the file is not allowed because of file type and size", () => {
+        it("filters out invalid files based on type and size", () => {
+          const initialFiles = [makeFileObject()];
+          const id = "FileX";
+          const validFile = makeFileObject({ id, type: "application/pdf" });
+          const invalidFile = makeFileObject({ id, type: "application/exe" });
+          Object.defineProperty(invalidFile.file, "size", {
+            get: () => 5000001,
+          });
+          jest.spyOn(_, "uniqueId").mockImplementation(() => id);
 
-      expect(appErrors.items).toHaveLength(1);
-      expect(appErrors.items[0].message).toMatchInlineSnapshot(
-        `"Only PDF and image files may be uploaded. See the tips below for suggestions on how to convert them to an image file. These files that you selected will not be uploaded: ${invalidFileName}"`
-      );
+          let files, setFiles, wrapper;
+          testHook(() => {
+            [files, setFiles] = useState(initialFiles);
+          });
+
+          act(() => {
+            wrapper = render({ files, setFiles });
+            // simulate the user selecting files, including the invalid file
+            const input = wrapper.find("input");
+            input.simulate("change", {
+              target: {
+                files: [validFile.file, invalidFile.file],
+              },
+            });
+          });
+
+          expect(files).toEqual([...initialFiles, validFile]);
+        });
+
+        it("displays an AppError message for the file with invalid type and size", () => {
+          const invalidFile = makeFile({
+            name: "file.exe",
+            type: "application/exe",
+          });
+          Object.defineProperty(invalidFile, "size", {
+            get: () => 5000001,
+          });
+
+          let appErrors, setAppErrors, wrapper;
+          testHook(() => {
+            [appErrors, setAppErrors] = useState([]);
+          });
+
+          act(() => {
+            wrapper = render({ appErrors, setAppErrors });
+            wrapper.find("input").simulate("change", {
+              target: {
+                files: [invalidFile],
+              },
+            });
+          });
+
+          expect(appErrors.items).toHaveLength(1);
+          expect(appErrors.items[0].message).toMatchInlineSnapshot(
+            `"We could not upload: file.exe. Choose a PDF or image file that is smaller than 5 megabytes."`
+          );
+        });
+        it("tracks the error event", () => {
+          const invalidFile = makeFile({
+            name: "file.exe",
+            type: "application/exe",
+          });
+          Object.defineProperty(invalidFile, "size", {
+            get: () => 5000001,
+          });
+
+          act(() => {
+            const wrapper = render();
+            wrapper.find("input").simulate("change", {
+              target: {
+                files: [invalidFile],
+              },
+            });
+          });
+
+          expect(tracker.trackEvent).toHaveBeenCalledWith(
+            "FileUploadError - Invalid size and type",
+            expect.any(Object)
+          );
+        });
+      });
+      describe("when files are invalid for multiple reasons", () => {
+        it("displays an AppError for each reason", () => {
+          const invalidTypeFiles = [
+            makeFile({ name: "type1.exe", type: "application/exe" }),
+            makeFile({ name: "type2.gif", type: "image/gif" }),
+          ];
+          const invalidSizeFiles = [
+            makeFile({ name: "size1.pdf", type: "application/pdf" }),
+            makeFile({ name: "size2.pdf", type: "application/pdf" }),
+          ];
+
+          invalidSizeFiles.forEach((file) =>
+            Object.defineProperty(file, "size", { get: () => 5000001 })
+          );
+          const invalidSizeAndTypeFiles = [
+            makeFile({ name: "sizeAndType1.exe", type: "application/exe" }),
+            makeFile({ name: "sizeAndType2.gif", type: "application/gif" }),
+          ];
+          invalidSizeAndTypeFiles.forEach((file) =>
+            Object.defineProperty(file, "size", { get: () => 5000001 })
+          );
+
+          let appErrors, setAppErrors, wrapper;
+          testHook(() => {
+            [appErrors, setAppErrors] = useState([]);
+          });
+
+          act(() => {
+            wrapper = render({ appErrors, setAppErrors });
+            wrapper.find("input").simulate("change", {
+              target: {
+                files: [
+                  ...invalidTypeFiles,
+                  ...invalidSizeFiles,
+                  ...invalidSizeAndTypeFiles,
+                ],
+              },
+            });
+          });
+
+          expect(appErrors.items).toHaveLength(3);
+          expect(
+            appErrors.items.some(
+              (item) =>
+                item.message ===
+                `We could not upload: type1.exe, type2.gif. Choose a PDF or image file.`
+            )
+          ).toBe(true);
+          expect(
+            appErrors.items.some(
+              (item) =>
+                item.message ===
+                `We could not upload: size1.pdf, size2.pdf. Files must be smaller than 5 megabytes.`
+            )
+          ).toBe(true);
+          expect(
+            appErrors.items.some(
+              (item) =>
+                item.message ===
+                `We could not upload: sizeAndType1.exe, sizeAndType2.gif. Choose a PDF or image file that is smaller than 5 megabytes.`
+            )
+          ).toBe(true);
+        });
+        it("tracks the event", () => {
+          const invalidTypeFiles = [
+            makeFile({ name: "type1.exe", type: "application/exe" }),
+            makeFile({ name: "type2.gif", type: "image/gif" }),
+          ];
+          const invalidSizeFiles = [
+            makeFile({ name: "size1.pdf", type: "application/pdf" }),
+            makeFile({ name: "size2.pdf", type: "application/pdf" }),
+          ];
+
+          invalidSizeFiles.forEach((file) =>
+            Object.defineProperty(file, "size", { get: () => 5000001 })
+          );
+          const invalidSizeAndTypeFiles = [
+            makeFile({ name: "sizeAndType1.exe", type: "application/exe" }),
+            makeFile({ name: "sizeAndType2.gif", type: "application/gif" }),
+          ];
+          invalidSizeAndTypeFiles.forEach((file) =>
+            Object.defineProperty(file, "size", { get: () => 5000001 })
+          );
+
+          let appErrors, setAppErrors, wrapper;
+          testHook(() => {
+            [appErrors, setAppErrors] = useState([]);
+          });
+
+          act(() => {
+            wrapper = render({ appErrors, setAppErrors });
+            wrapper.find("input").simulate("change", {
+              target: {
+                files: [
+                  ...invalidTypeFiles,
+                  ...invalidSizeFiles,
+                  ...invalidSizeAndTypeFiles,
+                ],
+              },
+            });
+          });
+
+          expect(tracker.trackEvent).toHaveBeenCalledTimes(6);
+        });
+      });
     });
   });
 
@@ -300,6 +596,4 @@ describe("FileCardList", () => {
       });
     });
   });
-
-  it.todo("sets page errors for each invalid file the user selects");
 });
