@@ -1,7 +1,7 @@
 #
 # Utility functions to support custom validation handlers on connexion
 #
-
+import pydantic
 from flask.wrappers import Response
 from werkzeug.exceptions import (
     BadRequest,
@@ -14,7 +14,7 @@ from werkzeug.exceptions import (
 
 import massgov.pfml.api.util.response as response_util
 import massgov.pfml.util.logging as logging
-from massgov.pfml.api.validation.exceptions import ValidationException
+from massgov.pfml.api.validation.exceptions import ValidationErrorDetail, ValidationException
 from massgov.pfml.api.validation.validators import (
     CustomParameterValidator,
     CustomRequestBodyValidator,
@@ -50,6 +50,7 @@ def add_error_handlers_to_app(connexion_app):
     connexion_app.add_error_handler(Forbidden, http_exception_handler)
     connexion_app.add_error_handler(Unauthorized, http_exception_handler)
     connexion_app.add_error_handler(InternalServerError, http_exception_handler)
+    connexion_app.add_error_handler(pydantic.ValidationError, handle_pydantic_validation_error)
 
 
 def get_custom_validator_map():
@@ -59,3 +60,33 @@ def get_custom_validator_map():
         "parameter": CustomParameterValidator,
     }
     return validator_map
+
+
+def handle_pydantic_validation_error(exception: pydantic.ValidationError) -> Response:
+    return validation_request_handler(convert_pydantic_error_to_validation_exception(exception))
+
+
+# Some pydantic errors aren't of a format we like
+pydantic_error_type_map = {"value_error.date": "date"}
+
+
+def convert_pydantic_error_to_validation_exception(
+    exception: pydantic.ValidationError,
+) -> ValidationException:
+    errors = []
+
+    for e in exception.errors():
+        err_type = e["type"]
+        if err_type in pydantic_error_type_map:
+            err_type = pydantic_error_type_map[err_type]
+
+        errors.append(
+            ValidationErrorDetail(
+                type=err_type,
+                message=e["msg"],
+                rule=None,
+                field=".".join(str(loc) for loc in e["loc"]),
+            )
+        )
+
+    return ValidationException(errors=errors, message="Request Validation Error", data={})

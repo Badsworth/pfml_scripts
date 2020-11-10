@@ -1528,6 +1528,40 @@ def test_application_patch_date_of_birth_before_1900(client, user, auth_token):
     assert error_type == "invalid_year_range"
 
 
+def test_application_patch_date_of_birth_invalid(client, user, auth_token):
+    application = ApplicationFactory.create(user=user)
+
+    response = client.patch(
+        "/v1/applications/{}".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+        json={
+            "date_of_birth": "1970-13-42",
+            "leave_details": {
+                "employer_notification_date": "970-06-01",
+                "reduced_schedule_leave_periods": [{"end_date": ""}],
+            },
+        },
+    )
+
+    tests.api.validate_error_response(
+        response,
+        400,
+        errors=[
+            {"field": "date_of_birth", "message": "invalid date format", "type": "date",},
+            {
+                "field": "leave_details.reduced_schedule_leave_periods.0.end_date",
+                "message": "invalid date format",
+                "type": "date",
+            },
+            {
+                "field": "leave_details.employer_notification_date",
+                "message": "invalid date format",
+                "type": "date",
+            },
+        ],
+    )
+
+
 def test_application_patch_minimum_payload(client, user, auth_token):
     application = ApplicationFactory.create(user=user)
 
