@@ -68,11 +68,11 @@ const errors = {
     "Sorry, we were unable to retrieve your account. Please log out and try again. If this continues to happen, you may call the Paid Family Leave Contact Center at $t(shared.contactCenterPhoneNumber)",
   claims: {
     date_of_birth: {
+      date: "Date of birth must include a valid month, day, and year.",
       invalid_age: "The person taking leave must be at least 14 years old.",
       invalid_year_range: `Date of birth year is not in a valid range (on or after ${
         new Date().getFullYear() - 100
       }).`,
-      pattern: "Enter a valid date of birth.",
       required: "Enter a date of birth.",
     },
     employer_fein: {
@@ -112,27 +112,29 @@ const errors = {
     },
     leave_details: {
       child_birth_date: {
-        pattern: "Enter a valid date of birth.",
+        date: "Date of birth must include a valid month, day, and year.",
         required: "Enter a date of birth for the child.",
       },
       child_placement_date: {
-        pattern: "Enter a valid placement date.",
+        date: "Placement date must include a valid month, day, and year.",
         required: "Enter a date of placement for the child.",
       },
       continuous_leave_periods: {
         end_date: {
+          date: "End date must include a valid month, day, and year.",
           minimum:
             "Last day of leave must be on or after the first day of leave.",
           required: "Enter an end date for this continuous leave period.",
         },
         start_date: {
+          date: "Start date must include a valid month, day, and year.",
           minimum:
             "Paid Family and Medical Leave cannot be taken before Jan 1, 2021. Enter a date after December$t(chars.nbsp)31,$t(chars.nbsp)2020.",
           required: "Enter a start date for this continuous leave period.",
         },
       },
       employer_notification_date: {
-        pattern: "Enter a valid notification date.",
+        date: "Notification date must include a valid month, day, and year.",
         required: "Enter the date you notified your employer.",
       },
       employer_notified: {
@@ -147,6 +149,7 @@ const errors = {
           required: "Select a duration option.",
         },
         end_date: {
+          date: "End date must include a valid month, day, and year.",
           minimum:
             "Last day of leave must be on or after the first day of leave.",
           required: "Enter an end date for this intermittent leave period.",
@@ -158,6 +161,7 @@ const errors = {
           required: "Select a frequency option.",
         },
         start_date: {
+          date: "Start date must include a valid month, day, and year.",
           minimum:
             "Paid Family and Medical Leave cannot be taken before Jan 1, 2021. Enter a date after December$t(chars.nbsp)31,$t(chars.nbsp)2020.",
           required: "Enter a start date for this intermittent leave period.",
@@ -175,6 +179,7 @@ const errors = {
       },
       reduced_schedule_leave_periods: {
         end_date: {
+          date: "End date must include a valid month, day, and year.",
           minimum:
             "Last day of leave must be on or after the first day of leave.",
           required: "Enter an end date for this reduced leave period.",
@@ -195,6 +200,7 @@ const errors = {
           required: "Enter your reduced hours for Saturday.",
         },
         start_date: {
+          date: "Start date must include a valid month, day, and year.",
           minimum:
             "Paid Family and Medical Leave cannot be taken before Jan 1, 2021. Enter a date after December$t(chars.nbsp)31,$t(chars.nbsp)2020.",
           required: "Enter a start date for this reduced leave period.",
