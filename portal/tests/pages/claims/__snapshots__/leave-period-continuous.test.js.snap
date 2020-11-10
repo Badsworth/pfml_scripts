@@ -52,7 +52,7 @@ exports[`LeavePeriodContinuous renders the page with bonding leave content 1`] =
     </Lead>
     <InputDate
       dayLabel="Day"
-      example="For example: 04 / 28 / 1986"
+      example="mm / dd / yyyy"
       label="First day of leave"
       monthLabel="Month"
       name="leave_details.continuous_leave_periods[0].start_date"
@@ -63,7 +63,7 @@ exports[`LeavePeriodContinuous renders the page with bonding leave content 1`] =
     />
     <InputDate
       dayLabel="Day"
-      example="For example: 04 / 28 / 1986"
+      example="mm / dd / yyyy"
       label="Last day of leave"
       monthLabel="Month"
       name="leave_details.continuous_leave_periods[0].end_date"
@@ -135,7 +135,7 @@ exports[`LeavePeriodContinuous renders the page with medical leave content 1`] =
     </Lead>
     <InputDate
       dayLabel="Day"
-      example="For example: 04 / 28 / 1986"
+      example="mm / dd / yyyy"
       label="First day of leave"
       monthLabel="Month"
       name="leave_details.continuous_leave_periods[0].start_date"
@@ -146,7 +146,7 @@ exports[`LeavePeriodContinuous renders the page with medical leave content 1`] =
     />
     <InputDate
       dayLabel="Day"
-      example="For example: 04 / 28 / 1986"
+      example="mm / dd / yyyy"
       label="Last day of leave"
       monthLabel="Month"
       name="leave_details.continuous_leave_periods[0].end_date"

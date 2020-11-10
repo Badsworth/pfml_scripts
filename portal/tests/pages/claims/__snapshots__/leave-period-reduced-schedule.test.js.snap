@@ -52,7 +52,7 @@ exports[`LeavePeriodReducedSchedule renders the page with bonding leave content 
     </Lead>
     <InputDate
       dayLabel="Day"
-      example="For example: 04 / 28 / 1986"
+      example="mm / dd / yyyy"
       label="First day of leave"
       monthLabel="Month"
       name="leave_details.reduced_schedule_leave_periods[0].start_date"
@@ -63,7 +63,7 @@ exports[`LeavePeriodReducedSchedule renders the page with bonding leave content 
     />
     <InputDate
       dayLabel="Day"
-      example="For example: 04 / 28 / 1986"
+      example="mm / dd / yyyy"
       label="Last day of leave"
       monthLabel="Month"
       name="leave_details.reduced_schedule_leave_periods[0].end_date"
@@ -135,7 +135,7 @@ exports[`LeavePeriodReducedSchedule renders the page with medical leave content 
     </Lead>
     <InputDate
       dayLabel="Day"
-      example="For example: 04 / 28 / 1986"
+      example="mm / dd / yyyy"
       label="First day of leave"
       monthLabel="Month"
       name="leave_details.reduced_schedule_leave_periods[0].start_date"
@@ -146,7 +146,7 @@ exports[`LeavePeriodReducedSchedule renders the page with medical leave content 
     />
     <InputDate
       dayLabel="Day"
-      example="For example: 04 / 28 / 1986"
+      example="mm / dd / yyyy"
       label="Last day of leave or re‑evaluation date"
       monthLabel="Month"
       name="leave_details.reduced_schedule_leave_periods[0].end_date"

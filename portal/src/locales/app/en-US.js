@@ -1577,7 +1577,7 @@ const components = {
   form: {
     continueButton: "Save and continue",
     dateInputDayLabel: "Day",
-    dateInputExample: "For example: 04 / 28 / 1986",
+    dateInputExample: "mm / dd / yyyy",
     dateInputMonthLabel: "Month",
     dateInputYearLabel: "Year",
     optional: "(optional)",
