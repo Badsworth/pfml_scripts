@@ -38,9 +38,10 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        component: ["portal", "api", "env-shared"]
+        component: ["portal", "api", "env-shared", "ecs-tasks"]
         environment: ["test", "stage", "prod"]
         include:
+        - component: "constants"
         - component: "pfml-aws"
         - component: "pagerduty"
 
