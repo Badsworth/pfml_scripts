@@ -10,6 +10,7 @@ const withBundleAnalyzer = require("@next/bundle-analyzer")({
 // so remove this plugin when that becomes available. Experimental support was
 // added in https://github.com/zeit/next.js/pull/13018
 const withSourceMaps = require("@zeit/next-source-maps");
+const withTranspileModules = require("next-transpile-modules");
 
 // eslint-disable-next-line no-console
 console.log(`📦 Using "${buildEnv}" environment variables to build the site.`);
@@ -50,4 +51,11 @@ const config = {
   },
 };
 
-module.exports = withBundleAnalyzer(withSourceMaps(withImages(config)));
+module.exports = withBundleAnalyzer(
+  withSourceMaps(
+    // We transpile Mayflower since there's an issue that results in untranspiled
+    // modules being included in our code, which breaks IE11 compatibility
+    // https://jira.mass.gov/browse/DP-20446
+    withTranspileModules(["@massds/mayflower-react"])(withImages(config))
+  )
+);
