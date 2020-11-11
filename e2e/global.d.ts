@@ -35,6 +35,7 @@ declare namespace Cypress {
     stash(key: string, value: unknown): null;
     unstash(key: string): Chainable<unknown>;
     // Declare our custom tasks.
+    stashLog(key: string, value: string | null | undefined): null;
     task(event: "getAuthVerification", mail: string): Chainable<string>;
     task(event: "generateCredentials"): Chainable<Credentials>;
     task(

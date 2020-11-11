@@ -21,13 +21,17 @@ import {
   Employer,
   EmployeeRecord,
 } from "../../src/simulation/types";
-import { SimulationGenerator } from "../../src/simulation/simulate";
+import {
+  SimulationGenerator,
+  generateLeaveDates,
+} from "../../src/simulation/simulate";
 import { ApplicationResponse, DocumentUploadRequest } from "../../src/api";
 import { makeDocUploadBody } from "../../src/simulation/SimulationRunner";
 import { fromClaimsFactory } from "../../src/simulation/EmployeeFactory";
 import * as pilot3 from "../../src/simulation/scenarios/pilot3";
 import * as pilot4 from "../../src/simulation/scenarios/pilot4";
 import * as integrationScenarios from "../../src/simulation/scenarios/integrationScenarios";
+
 import fs from "fs";
 
 const scenarioFunctions: Record<string, SimulationGenerator> = {
@@ -102,6 +106,9 @@ export default function (on: Cypress.PluginEvents): Cypress.ConfigOptions {
       };
 
       return scenarioFunctions[claimType](opts);
+    },
+    async createContinuousLeaveDates(): Promise<Date[]> {
+      return generateLeaveDates(true);
     },
   });
 

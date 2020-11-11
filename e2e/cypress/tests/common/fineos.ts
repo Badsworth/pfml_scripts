@@ -1,5 +1,6 @@
 import { Given, Then, When } from "cypress-cucumber-preprocessor/steps";
 import { fineos } from "@cypress/tests/common/actions";
+import { formatDateString } from "./util";
 
 Given("I am logged into Fineos as a Savilinx user", () => {
   fineos.loginSavilinx();
@@ -92,4 +93,89 @@ Then("I should be able to approve the claim", () => {
 Then("I can commence intake on that claim", () => {
   cy.unstash("claimNumber").as("claimNumber");
   cy.get<string>("@claimNumber").then(fineos.commenceIntake);
+});
+
+Given(
+  "I find an employee in the FINEOS system",
+  (claimType = "BHAP1", employeeType = "financially eligible") => {
+    cy.task("generateClaim", {
+      claimType: claimType,
+      employeeType: employeeType,
+    }).then((claim?: SimulationClaim) => {
+      if (!claim) {
+        throw new Error("Claim Was Not Generated");
+      }
+      cy.log("generated claim", claim.claim);
+      cy.stashLog("firstName", claim.claim.first_name);
+      cy.stashLog("lastName", claim.claim.last_name);
+    });
+  }
+);
+
+Then(
+  "I begin to submit a new claim on that employee in FINEOS",
+  function (): void {
+    fineos.loginSavilinx();
+    fineos.searchClaimant();
+    fineos.clickBottomWidgetButton("OK");
+    fineos.assertOnClaimantPage();
+  }
+);
+
+Then("I start create a new notification", function (): void {
+  cy.contains("span", "Create Notification").click();
+  cy.get("span[id='nextContainer']").first().find("input").click();
+  cy.get("span[id='nextContainer']").first().find("input").click();
+  cy.contains(
+    "div",
+    "Bonding with a new child (adoption/ foster care/ newborn)"
+  )
+    .prev()
+    .find("input")
+    .click();
+  cy.get("span[id='nextContainer']").first().find("input").click();
+  cy.labelled("Qualifier 1").select("Foster Care");
+  cy.get("span[id='nextContainer']")
+    .first()
+    .find("input")
+    .click()
+    .wait("@ajaxRender");
+  cy.contains("div", "One or more fixed time off periods")
+    .prev()
+    .find("input[type='checkbox'][id*='continuousTimeToggle_CHECKBOX']")
+    .click({ force: true });
+  cy.get("span[id='nextContainer']").first().find("input").click();
+  cy.labelled("Absence status").select("Estimated");
+  cy.task("createContinuousLeaveDates").then((leaveDates?: Date[]) => {
+    if (!leaveDates) {
+      throw new Error("Leave dates are not defined.");
+    }
+    const [startdate, endDate] = leaveDates.map((date) =>
+      formatDateString(date)
+    );
+    cy.labelled("Absence start date").type(`${startdate}{enter}`);
+    cy.labelled("Absence end date").type(`${endDate}{enter}`, { force: true });
+    cy.get(
+      "input[type='button'][id*='AddTimeOffAbsencePeriod'][value='Add']"
+    ).click();
+    cy.wait("@ajaxRender");
+    cy.wait(200);
+    cy.wait("@ajaxRender");
+    cy.get("span[id='nextContainer']")
+      .first()
+      .find("input")
+      .click()
+      .wait("@ajaxRender");
+    cy.get("span[id='nextContainer']")
+      .first()
+      .find("input")
+      .click()
+      .wait("@ajaxRender");
+    cy.get("span[id='nextContainer']")
+      .first()
+      .find("input")
+      .click()
+      .wait("@ajaxRender");
+    cy.contains("div", "Thank you. Your notification has been submitted.");
+  });
 });

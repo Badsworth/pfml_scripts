@@ -386,7 +386,7 @@ function generateMassIDString(): string {
 
 // Generate start and end dates for a leave request, not to exceed 20 weeks, and with a minimum
 // start date of 2021-01-01.
-function generateLeaveDates(shortLeave: boolean): [Date, Date] {
+export function generateLeaveDates(shortLeave: boolean): [Date, Date] {
   // Applciations must be submitted within 60 days of proposed start leave date
   const within60 = addDays(new Date(), 60);
 

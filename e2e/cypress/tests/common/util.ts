@@ -53,3 +53,11 @@ export function getWeeks(details: ApplicationLeaveDetails): number {
 
   return numOfWeeks as number;
 }
+
+export function formatDateString(d: Date): string {
+  const newDate = new Date(d);
+  const month = (newDate.getMonth() + 1).toString();
+  const day = newDate.getUTCDate().toString();
+  const year = newDate.getUTCFullYear().toString();
+  return month.padStart(2, "0") + "/" + day.padStart(2, "0") + "/" + year;
+}

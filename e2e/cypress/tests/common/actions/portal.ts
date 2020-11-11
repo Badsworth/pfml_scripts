@@ -41,12 +41,12 @@ export function submitClaimDirectlyToAPI(
     }
     cy.log("submitting", claim);
     cy.task("submitClaimToAPI", claim)
-      .then((responseIds: unknown) => responseIds as ApplicationResponse)
-      .then((responseIds) => {
-        cy.stash("claimNumber", responseIds.fineos_absence_id);
-        cy.log("submitted", responseIds.fineos_absence_id);
-        cy.stash("applicationId", responseIds.application_id);
-        cy.log("submitted", responseIds.application_id);
+      .then((responseData: unknown) => responseData as ApplicationResponse)
+      .then((responseData) => {
+        cy.stashLog("claimNumber", responseData.fineos_absence_id);
+        cy.stashLog("applicationId", responseData.application_id);
+        cy.stashLog("firstName", responseData.first_name);
+        cy.stashLog("lastName", responseData.last_name);
       });
   });
 }

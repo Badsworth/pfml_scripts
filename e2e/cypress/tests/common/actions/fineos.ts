@@ -36,6 +36,14 @@ export function assertOnClaimPage(): void {
     });
 }
 
+export function assertOnClaimantPage(): void {
+  cy.unstash("firstName").then((firstName) => {
+    cy.unstash("lastName").then((lastName) => {
+      cy.contains("h2", firstName + " " + lastName);
+    });
+  });
+}
+
 export function assertAdjudicatingClaim(claimId: string): void {
   cy.contains(".case_pageheader_title", claimId);
   cy.contains(".pageheader_subtitle", "Editing Leave Request");
@@ -86,6 +94,18 @@ export function searchScenario(): void {
     cy.labelled("Case Number").type(claimNumber as string);
   });
   cy.get('input[type="submit"][value="Search"]').click();
+}
+
+export function searchClaimant(): void {
+  cy.unstash("lastName").then((lastName) => {
+    cy.unstash("firstName").then((firstName) => {
+      cy.visit("/");
+      cy.get('a[aria-label="Parties"]').click();
+      cy.get("input[name*='First_Name']").type(firstName as string);
+      cy.get("input[name*='Last_Name']").type(lastName as string);
+      cy.get('input[type="submit"][value="Search"]').click();
+    });
+  });
 }
 
 export function findClaim(): void {

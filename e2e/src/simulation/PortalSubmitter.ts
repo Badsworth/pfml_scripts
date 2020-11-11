@@ -84,12 +84,15 @@ export default class PortalSubmitter {
   ): Promise<ApplicationResponse> {
     const application_id = await this.createApplication();
     await this.updateApplication(application_id, application);
-    const fineos_absence_id = await this.submitApplication(application_id);
+    const submitResponseData = await this.submitApplication(application_id);
+    const { fineos_absence_id, first_name, last_name } = submitResponseData;
     await this.completeApplication(application_id);
     await this.uploadDocuments(application_id, fineos_absence_id, documents);
     return {
       fineos_absence_id: fineos_absence_id,
       application_id: application_id,
+      first_name: first_name,
+      last_name: last_name,
     };
   }
 
@@ -133,10 +136,13 @@ export default class PortalSubmitter {
       await this.getOptions()
     );
     if (response.data.data && "fineos_absence_id" in response.data.data) {
-      return (response.data.data as { fineos_absence_id: string })
-        .fineos_absence_id;
+      return response.data.data as {
+        fineos_absence_id: string;
+        first_name: string;
+        last_name: string;
+      };
     }
-    throw new Error("Unable to determine Fineos Absence ID.");
+    throw new Error("Submit application data did not contain absence id");
   }
 
   private async completeApplication(applicationId: string) {

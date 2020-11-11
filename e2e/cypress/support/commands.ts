@@ -107,3 +107,14 @@ Cypress.Commands.add("unstash", (key: string) => {
       return data;
     });
 });
+
+Cypress.Commands.add(
+  "stashLog",
+  (key: string, data: string | null | undefined) => {
+    if (!data) {
+      throw new Error("Cannot stash undefined data");
+    }
+    cy.stash(key, data);
+    cy.log(data);
+  }
+);
