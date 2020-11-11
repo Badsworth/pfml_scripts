@@ -289,7 +289,7 @@ export function findDocument(documentType: string): void {
       break;
     case "HCP":
     case "FOSTER":
-      documentCategory = "State_Managed_Paid_Leave_Confirmation";
+      documentCategory = "State_managed_Paid_Leave_Confirmation";
       cy.get(`a[name*=${documentCategory}]`);
       break;
     default:

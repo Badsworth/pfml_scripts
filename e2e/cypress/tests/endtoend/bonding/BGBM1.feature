@@ -32,6 +32,6 @@ Feature: Submit a Bonding Claim in which the claimant mails their HCP form at la
     And I click Manage Evidence
     Then I should confirm evidence is "valid"
     Given I am on the tab "Manage Request"
-    Then I click Accept
+    Then I accept claim updates
     Given I am on the claim case page
     Then I should be able to approve the claim

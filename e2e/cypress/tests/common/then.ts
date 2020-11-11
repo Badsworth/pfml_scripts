@@ -188,8 +188,8 @@ Then("I should confirm evidence is {string}", function (label: string): void {
   fineos.validateEvidence(label);
 });
 
-Then("I click Accept", function (): void {
-  fineos.acceptLeavePlan();
+Then("I accept claim updates", function (): void {
+  fineos.clickBottomWidgetButton();
 });
 
 Then("I should approve claim", function (): void {
