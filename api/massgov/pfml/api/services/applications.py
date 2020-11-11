@@ -511,7 +511,7 @@ def add_or_update_address(
     address: Optional[ApiAddress],
     address_type: LkAddressType,
     application: Application,
-) -> Optional[Address]:
+) -> None:
     # Add more checks here as we add more Address types
     if address_type not in [AddressType.MAILING, AddressType.RESIDENTIAL]:
         raise ValueError("Invalid address type")
@@ -519,18 +519,16 @@ def add_or_update_address(
     state_id = None
     address_to_update = None
     if address is not None:
-        state_id = GeoState.get_id(address.state)
+        if address.state:
+            state_id = GeoState.get_id(address.state)
 
-        if state_id is None:
-            raise ValueError("Invalid state code provided")
-        else:
-            address_to_update = Address(
-                address_line_one=address.line_1,
-                address_line_two=address.line_2,
-                city=address.city,
-                geo_state_id=state_id,
-                zip_code=address.zip,
-            )
+        address_to_update = Address(
+            address_line_one=address.line_1,
+            address_line_two=address.line_2,
+            city=address.city,
+            geo_state_id=state_id,
+            zip_code=address.zip,
+        )
 
     address_field_name, address_id_field_name, address_type_id = address_type_mapping(address_type)
 
@@ -547,7 +545,6 @@ def add_or_update_address(
             .one_or_none()
         )
 
-        # If we had an address and there's none in the request, remove the association.
         if address is None:
             setattr(application, address_id_field_name, None)
         elif db_address is not None and state_id is not None:
@@ -573,14 +570,12 @@ def add_or_update_address(
         db_session.add(address_to_update)
         setattr(application, address_field_name, address_to_update)
 
-    return address_to_update
-
 
 def add_or_update_work_pattern(
     db_session: db.Session,
     api_work_pattern: Optional[apps_common_io.WorkPattern],
     application: Application,
-) -> Optional[WorkPattern]:
+) -> None:
     if api_work_pattern is None:
         return None
 
@@ -638,8 +633,6 @@ def add_or_update_work_pattern(
 
     db_session.add(work_pattern)
     application.work_pattern = work_pattern
-
-    return work_pattern
 
 
 def validate_work_pattern_days(

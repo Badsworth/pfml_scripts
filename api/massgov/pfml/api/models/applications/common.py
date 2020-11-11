@@ -166,7 +166,9 @@ class MaskedAddress(Address):
     def from_orm(cls, address: db_employee_models.Address) -> "MaskedAddress":
         address_response = super().from_orm(address)
         address_response.zip = mask.mask_zip(address.zip_code)
-        address_response.state = address.geo_state.geo_state_description
+        address_response.state = (
+            address.geo_state.geo_state_description if address.geo_state else None
+        )
         address_response.line_1 = mask.mask_address(address.address_line_one)
         address_response.line_2 = mask.mask_address(address.address_line_two)
 

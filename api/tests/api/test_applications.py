@@ -703,6 +703,50 @@ def test_application_patch_residential_address(client, user, auth_token, test_db
     assert application.residential_address is None
 
 
+def test_application_patch_residential_address_null_values(
+    client, user, auth_token, test_db_session
+):
+    application = ApplicationFactory.create(user=user)
+    assert application.residential_address is None
+
+    # Missing all values
+    update_request_body = {
+        "residential_address": {"city": None, "state": None, "line_1": None, "zip": None}
+    }
+
+    response = client.patch(
+        "/v1/applications/{}".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+        json=update_request_body,
+    )
+
+    test_db_session.refresh(application)
+    response_body = response.get_json()
+    assert response.status_code == 200
+    assert response_body.get("data").get("residential_address") == {}
+
+    # Missing state value
+    update_request_body = {
+        "residential_address": {
+            "city": "Chicago",
+            "state": None,
+            "line_1": "123 Bar St.",
+            "zip": "12345-1234",
+        }
+    }
+
+    response = client.patch(
+        "/v1/applications/{}".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+        json=update_request_body,
+    )
+
+    test_db_session.refresh(application)
+    response_body = response.get_json()
+    assert response.status_code == 200
+    assert response_body.get("data").get("residential_address") == {}
+
+
 def test_application_unauthorized_patch(client, user, auth_token, test_db_session):
     # create application not associated with user
     application = ApplicationFactory.create(last_name="Smith")
