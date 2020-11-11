@@ -27,16 +27,17 @@ data "aws_ecs_cluster" "stage" {
 module "api" {
   source = "../../template"
 
-  environment_name        = "stage"
-  service_app_count       = 2
-  service_docker_tag      = local.service_docker_tag
-  service_ecs_cluster_arn = data.aws_ecs_cluster.stage.arn
-  vpc_id                  = data.aws_vpc.vpc.id
-  vpc_app_subnet_ids      = data.aws_subnet_ids.vpc_app.ids
-  vpc_db_subnet_ids       = data.aws_subnet_ids.vpc_db.ids
-  postgres_version        = "11.6"
-  nlb_name                = "${local.vpc}-nlb"
-  nlb_port                = 3500
+  environment_name                = "stage"
+  service_app_count               = 2
+  service_docker_tag              = local.service_docker_tag
+  service_ecs_cluster_arn         = data.aws_ecs_cluster.stage.arn
+  vpc_id                          = data.aws_vpc.vpc.id
+  vpc_app_subnet_ids              = data.aws_subnet_ids.vpc_app.ids
+  vpc_db_subnet_ids               = data.aws_subnet_ids.vpc_db.ids
+  postgres_version                = "12.4"
+  postgres_parameter_group_family = "postgres12"
+  nlb_name                        = "${local.vpc}-nlb"
+  nlb_port                        = 3500
   cors_origins = [
     # Allow requests from the Portal and API Gateway (Swagger) staging environment.
     "https://paidleave-stage.mass.gov",
