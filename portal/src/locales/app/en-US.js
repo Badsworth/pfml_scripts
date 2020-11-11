@@ -1496,7 +1496,9 @@ const components = {
   applicationCard: {
     documentsRequestError: "$t(shared.documentsRequestError)",
     feinHeading: "Employer FEIN",
-    futureBondingLeave:
+    futureBondingLeave_adopt_foster:
+      "Once your child arrives, submit proof of placement so that we can make a decision.",
+    futureBondingLeave_newborn:
       "Once your child is born, submit proof of birth so that we can make a decision.",
     heading: "Application {{number}}",
     leavePeriodLabel_continuous: "$t(shared.claimDurationTypeContinuous)",

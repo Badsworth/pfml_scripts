@@ -97,12 +97,24 @@ describe("ApplicationCard", () => {
     });
 
     describe("when it's a bonding claim with no cert doc", () => {
-      it("renders guidance to upload a cert doc", () => {
+      it("renders guidance to upload a birth cert doc for new birth", () => {
         const wrapper = render(
           new MockClaimBuilder().completed().bondingBirthLeaveReason().create()
         );
         expect(wrapper.html()).toMatch(
           `Once your child is born, submit proof of birth so that we can make a decision.`
+        );
+      });
+
+      it("renders guidance to upload an adoption cert doc for adoption", () => {
+        const wrapper = render(
+          new MockClaimBuilder()
+            .completed()
+            .bondingAdoptionLeaveReason()
+            .create()
+        );
+        expect(wrapper.html()).toMatch(
+          `Once your child arrives, submit proof of placement so that we can make a decision.`
         );
       });
     });

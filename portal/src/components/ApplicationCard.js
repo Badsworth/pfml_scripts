@@ -1,4 +1,4 @@
-import Claim, { LeaveReason } from "../models/Claim";
+import Claim, { LeaveReason, ReasonQualifier } from "../models/Claim";
 import Document, { DocumentType } from "../models/Document";
 import Alert from "../components/Alert";
 import ButtonLink from "../components/ButtonLink";
@@ -162,6 +162,7 @@ function CompletedApplicationDocsInfo(props) {
   ); // This enum is used because for MVP all certs will have the same doc type
 
   const leaveReason = get(claim, "leave_details.reason");
+  const leaveReasonQualifier = get(claim, "leave_details.reason_qualifier");
   const legalNotices = documents.filter((document) =>
     [
       DocumentType.approvalNotice,
@@ -169,6 +170,11 @@ function CompletedApplicationDocsInfo(props) {
       DocumentType.requestForInfoNotice,
     ].includes(document.document_type)
   );
+  const contentContext = {
+    [ReasonQualifier.adoption]: "adopt_foster",
+    [ReasonQualifier.fosterCare]: "adopt_foster",
+    [ReasonQualifier.newBorn]: "newborn",
+  };
 
   const hasLegalNotices = legalNotices.length > 0;
   const needsBondingCertDoc =
@@ -204,7 +210,11 @@ function CompletedApplicationDocsInfo(props) {
       {needsBondingCertDoc && (
         // This condition is used instead of isChildDateInFuture because we want
         // to continue showing the button after the placement or birth of the child
-        <p>{t("components.applicationCard.futureBondingLeave")}</p>
+        <p>
+          {t("components.applicationCard.futureBondingLeave", {
+            context: contentContext[leaveReasonQualifier],
+          })}
+        </p>
       )}
 
       <ButtonLink
