@@ -9,8 +9,7 @@ Feature: Upload a document in FINEOS and see it has been uploaded in the portal
   @fineos
   Scenario: As a CSR (Savilinx), I upload an MA ID document to a claim
     Given I am logged into Fineos as a Savilinx user
-    Then I can commence intake on that claim
-    And I click through the commence intake flow
+    And I should be able to find claim in Adjudication
     Given I am on the tab "Documents"
     And the document "MA ID" has been uploaded with "Identification Proof" business type
     Then I should find the "MA ID" document
