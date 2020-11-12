@@ -41,7 +41,6 @@ aws_ssm = boto3.client("ssm", region_name="us-east-1")
 RECEIVED_FOLDER = "dor/received/"
 PROCESSED_FOLDER = "dor/processed/"
 
-EMPLOYER_LINE_LIMIT = 250000
 EMPLOYEE_LINE_LIMIT = 25000
 
 
@@ -286,9 +285,8 @@ class EmployeeWriter(object):
 
 
 class Capturer(object):
-    def __init__(self, line_offset, line_limit):
+    def __init__(self, line_offset):
         self.line_offset = line_offset
-        self.line_limit = line_limit
         self.line_count = 0
 
         self.remainder = ""
@@ -300,9 +298,6 @@ class Capturer(object):
     def append_line(self, line):
         if self.line_count < self.line_offset:
             self.line_count = self.line_count + 1
-            return
-
-        if len(self.lines) > self.line_limit:
             return
 
         self.lines.append(line)
@@ -1090,7 +1085,7 @@ def parse_employer_file(employer_file_path, decrypter, report):
     line_count = 0
 
     if decrypt_files:
-        employer_capturer = Capturer(line_offset=0, line_limit=EMPLOYER_LINE_LIMIT)
+        employer_capturer = Capturer(line_offset=0)
         decrypter.set_on_data(employer_capturer)
         get_decrypted_file_stream(employer_file_path, decrypter)
 
