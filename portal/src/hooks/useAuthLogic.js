@@ -145,22 +145,29 @@ const useAuthLogic = ({ appErrorsLogic, portalFlow }) => {
    * Shared logic to create an account
    * @param {string} username Email address that is used as the username
    * @param {string} password Password
-   * @param {object} userAttributes User attributes
+   * @param {object} ein Employer id number (if signing up through Employer Portal)
    */
-  const createAccountInCognito = async (username, password, userAttributes) => {
+  const createAccountInCognito = async (username, password, ein = "") => {
     try {
       trackAuthRequest("signUp");
-      if (userAttributes) {
-        await Auth.signUp({ username, password }, userAttributes);
+      if (ein) {
+        await Auth.signUp(
+          { username, password },
+          {
+            clientMetadata: {
+              ein,
+            },
+          }
+        );
       } else {
         await Auth.signUp({ username, password });
       }
 
       // Store the username and/or EIN so the user doesn't need to reenter it on the Verify page
-      if (userAttributes) {
+      if (ein) {
         setAuthData({
           createAccountUsername: username,
-          employerIdNumber: userAttributes.attributes["custom:ein"],
+          employerIdNumber: ein,
         });
       } else {
         setAuthData({ createAccountUsername: username });
@@ -218,11 +225,7 @@ const useAuthLogic = ({ appErrorsLogic, portalFlow }) => {
       return;
     }
 
-    await createAccountInCognito(username, password, {
-      attributes: {
-        "custom:ein": ein,
-      },
-    });
+    await createAccountInCognito(username, password, ein);
   };
 
   /**

@@ -794,11 +794,11 @@ describe("useAuthLogic", () => {
           username,
           password,
         },
-        expect.objectContaining({
-          attributes: {
-            "custom:ein": "12-3456789",
+        {
+          clientMetadata: {
+            ein,
           },
-        })
+        }
       );
     });
 
@@ -829,11 +829,11 @@ describe("useAuthLogic", () => {
       });
       expect(Auth.signUp).toHaveBeenCalledWith(
         { username, password },
-        expect.objectContaining({
-          attributes: {
-            "custom:ein": "12-3456789",
+        {
+          clientMetadata: {
+            ein,
           },
-        })
+        }
       );
     });
 

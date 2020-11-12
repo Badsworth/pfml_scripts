@@ -37,23 +37,23 @@ export const FinishAccountSetup = (props) => {
 
   return (
     <form className="usa-form" onSubmit={handleSubmit}>
-      <Title>{t("pages.employersFinishAccountSetup.title")}</Title>
-      <Lead>{t("pages.employersFinishAccountSetup.lead")}</Lead>
+      <Title>{t("pages.employersAuthFinishAccountSetup.title")}</Title>
+      <Lead>{t("pages.employersAuthFinishAccountSetup.lead")}</Lead>
 
       <InputText
         {...getFunctionalInputProps("username")}
         type="email"
-        label={t("pages.employersFinishAccountSetup.usernameLabel")}
+        label={t("pages.employersAuthFinishAccountSetup.usernameLabel")}
         smallLabel
       />
 
       <Button type="submit" loading={handleSubmit.isThrottled}>
-        {t("pages.employersFinishAccountSetup.submitButton")}
+        {t("pages.employersAuthFinishAccountSetup.submitButton")}
       </Button>
 
       <div className="margin-top-2 text-bold">
         <Link href={routes.auth.login}>
-          <a>{t("pages.employersFinishAccountSetup.logInFooterLink")}</a>
+          <a>{t("pages.employersAuthFinishAccountSetup.logInFooterLink")}</a>
         </Link>
       </div>
     </form>

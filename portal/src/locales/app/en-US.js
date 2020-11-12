@@ -1252,6 +1252,14 @@ const pages = {
       "Use a work email or a shared email address so your colleagues can manage leave applications when you're out of the office.",
     usernameLabel: "$t(shared.usernameLabel)",
   },
+  employersAuthFinishAccountSetup: {
+    lead:
+      "Please verify your email address. If an account exists for the email you provide, you’ll receive a 6-digit verification code. After that, you’ll be prompted to create a new password.",
+    logInFooterLink: "$t(shared.backToLoginLink)",
+    submitButton: "Submit",
+    title: "Finish setting up your account",
+    usernameLabel: "$t(shared.usernameLabel)",
+  },
   employersClaimsConfirmation: {
     applicationIdLabel: "<strong>Application ID:</strong> {{absenceId}}",
     instructions:
@@ -1440,14 +1448,6 @@ const pages = {
     instructions_processingApplication:
       "We’ll begin processing this application and your employee should hear from us within 14 calendar days.",
     title: "Thanks for reviewing the application",
-  },
-  employersFinishAccountSetup: {
-    lead:
-      "Please verify your email address. If an account exists for the email you provide, you’ll receive a 6-digit verification code. After that, you’ll be prompted to create a new password.",
-    logInFooterLink: "Back to log in",
-    submitButton: "Submit",
-    title: "Finish setting up your account",
-    usernameLabel: "$t(shared.usernameLabel)",
   },
   index: {
     title: "Massachusetts workers can now take paid family and medical leave.",
