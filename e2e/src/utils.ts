@@ -98,7 +98,7 @@ export async function clickTab(
       [label]
     ),
   ]);
-  await delay(100);
+  await delay(200);
 }
 
 async function waitForStablePage(page: puppeteer.Page) {

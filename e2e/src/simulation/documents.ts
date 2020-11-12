@@ -5,17 +5,17 @@ import { parseISO, format, differenceInWeeks } from "date-fns";
 import faker from "faker";
 
 type PDFFormData = { [k: string]: string | boolean };
-
+type PromisedDocument = Promise<Uint8Array>;
 interface DocumentGenerator {
   (claim: ApplicationRequestBody, options: Record<string, unknown>): Promise<
     Uint8Array
   >;
 }
 
-const generateMassID: DocumentGenerator = (
+const generateMassID = (
   claim: ApplicationRequestBody,
-  { invalid }: { invalid?: boolean }
-) => {
+  { invalid }: { invalid?: boolean } = {}
+): PromisedDocument => {
   if (
     !claim.first_name ||
     !claim.last_name ||
@@ -29,9 +29,9 @@ const generateMassID: DocumentGenerator = (
     "Name first": claim.first_name,
     "Name last": claim.last_name,
     "Date birth": dob,
-    "License number": invalid ? "" : claim.mass_id,
-    "Date issue": "01/01/2020",
-    "Date expiration": "01/01/2028",
+    "License number": claim.mass_id,
+    "Date issue": "01/01/2016",
+    "Date expiration": invalid ? "01/01/2020" : "01/01/2028",
     "Address street": claim.mailing_address?.line_1 ?? "",
     "Address state": claim.mailing_address?.state ?? "",
     "Address city": claim.mailing_address?.city ?? "",
@@ -39,7 +39,10 @@ const generateMassID: DocumentGenerator = (
   });
 };
 
-const generateOOSID: DocumentGenerator = (claim: ApplicationRequestBody) => {
+const generateOOSID = (
+  claim: ApplicationRequestBody,
+  { invalid }: { invalid?: boolean } = {}
+): PromisedDocument => {
   if (!claim.first_name || !claim.last_name || !claim.date_of_birth) {
     throw new Error("Unable to generate document due to missing properties");
   }
@@ -50,7 +53,7 @@ const generateOOSID: DocumentGenerator = (claim: ApplicationRequestBody) => {
     "Date birth": dob,
     "License number": "XXX",
     "Date issue": "01/01/2020",
-    "Date expiration": "01/01/2028",
+    "Date expiration": invalid ? "01/01/2020" : "01/01/2028",
     "Address street": claim.mailing_address?.line_1 ?? "",
     "Address state": claim.mailing_address?.state ?? "",
     "Address city": claim.mailing_address?.city ?? "",
@@ -65,10 +68,10 @@ const generateOOSID: DocumentGenerator = (claim: ApplicationRequestBody) => {
  * @param target
  * @param invalidHCP
  */
-const generateHCP: DocumentGenerator = (
+const generateHCP = (
   claim: ApplicationRequestBody,
-  { invalid }: { invalid?: boolean }
-) => {
+  { invalid }: { invalid?: boolean } = {}
+): PromisedDocument => {
   if (!claim.first_name || !claim.last_name || !claim.date_of_birth) {
     throw new Error("Unable to generate document due to missing properties");
   }
@@ -175,7 +178,10 @@ const generateHCP: DocumentGenerator = (
   return fillPDFBytes(`${__dirname}/../../forms/hcp-real.pdf`, data);
 };
 
-const generateBirthCertificate: DocumentGenerator = async (claim, opts) => {
+const generateBirthCertificate = async (
+  claim: ApplicationRequestBody,
+  { invalid }: { invalid?: boolean } = {}
+): PromisedDocument => {
   if (!claim.leave_details?.child_birth_date) {
     throw new Error(
       `No birth date was given. Unable to generate birth certificate.`
@@ -200,7 +206,7 @@ const generateBirthCertificate: DocumentGenerator = async (claim, opts) => {
     first_name: claim.first_name,
     last_name: claim.last_name,
   };
-  if ("mismatchedName" in opts && opts.mismatchedName === true) {
+  if (invalid) {
     employee.first_name = faker.name.firstName(gender);
     employee.last_name = faker.name.lastName(gender);
   }
@@ -229,10 +235,10 @@ const generateBirthCertificate: DocumentGenerator = async (claim, opts) => {
   return fillPDFBytes(`${__dirname}/../../forms/birth-certificate.pdf`, data);
 };
 
-const generatePrebirthLetter: DocumentGenerator = async (
-  claim,
-  { birthDate }: { birthDate?: string }
-) => {
+const generatePrebirthLetter = async (
+  claim: ApplicationRequestBody,
+  { birthDate }: { birthDate?: string } = {}
+): PromisedDocument => {
   if (!claim.last_name || !claim.leave_details?.child_birth_date) {
     throw new Error(
       "Claim missing required properties to generate a pre-birth letter"
@@ -256,7 +262,10 @@ function reformat(date: string): string {
   return format(parseISO(date), "MM/dd/yyyy");
 }
 
-const generateFosterPlacementLetter: DocumentGenerator = async (claim) => {
+const generateFosterPlacementLetter = async (
+  claim: ApplicationRequestBody,
+  { invalid }: { invalid?: boolean } = {}
+): PromisedDocument => {
   if (
     !claim.leave_details?.continuous_leave_periods?.[0].start_date ||
     !claim.leave_details?.continuous_leave_periods?.[0].end_date
@@ -283,7 +292,9 @@ const generateFosterPlacementLetter: DocumentGenerator = async (claim) => {
     "Signature of Employee": `${claim.first_name} ${claim.last_name}`,
     "Signature of Official": faker.name.findName(),
     "Phone Number": "555-555-1212",
-    "Employee Name": `${claim.first_name} ${claim.last_name}`,
+    "Employee Name": invalid
+      ? faker.name.findName()
+      : `${claim.first_name} ${claim.last_name}`,
     Adoption: false,
     "Foster Care Placement": true,
     "Professional / Agency Name and Address": "[assume valid]",
@@ -295,7 +306,10 @@ const generateFosterPlacementLetter: DocumentGenerator = async (claim) => {
   return fillPDFBytes(`${__dirname}/../../forms/foster-adopt-cert.pdf`, data);
 };
 
-const generateAdoptionCertificate: DocumentGenerator = async (claim) => {
+const generateAdoptionCertificate = async (
+  claim: ApplicationRequestBody,
+  { invalid }: { invalid?: boolean } = {}
+): PromisedDocument => {
   if (
     !claim.leave_details?.continuous_leave_periods?.[0].start_date ||
     !claim.leave_details?.continuous_leave_periods?.[0].end_date
@@ -322,7 +336,9 @@ const generateAdoptionCertificate: DocumentGenerator = async (claim) => {
     "Signature of Employee": `${claim.first_name} ${claim.last_name}`,
     "Signature of Official": faker.name.findName(),
     "Phone Number": "555-555-1212",
-    "Employee Name": `${claim.first_name} ${claim.last_name}`,
+    "Employee Name": invalid
+      ? faker.name.findName()
+      : `${claim.first_name} ${claim.last_name}`,
     Adoption: true,
     "Foster Care Placement": false,
     "Professional / Agency Name and Address": "[assume valid]",
@@ -334,10 +350,10 @@ const generateAdoptionCertificate: DocumentGenerator = async (claim) => {
   return fillPDFBytes(`${__dirname}/../../forms/foster-adopt-cert.pdf`, data);
 };
 
-const generatePersonalLetter: DocumentGenerator = async (
-  claim,
-  { birthDate }: { birthDate?: string }
-) => {
+const generatePersonalLetter = async (
+  claim: ApplicationRequestBody,
+  { birthDate }: { birthDate?: string } = {}
+): PromisedDocument => {
   if (!claim.leave_details?.child_birth_date) {
     throw new Error(
       "Claim missing required properties to generate a pre-birth letter"

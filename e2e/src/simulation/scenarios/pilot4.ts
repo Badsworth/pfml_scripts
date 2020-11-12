@@ -131,8 +131,7 @@ export const BUNH1 = scenario("BUNH1", {
   docs: {
     OOSID: {},
     BIRTHCERTIFICATE: {
-      // @todo: Implement mismatched name birth cert.
-      mismatchedName: true,
+      invalid: true,
     },
   },
 });

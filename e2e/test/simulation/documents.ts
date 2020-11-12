@@ -114,23 +114,16 @@ describe("Documents", function () {
       "Name first": "John",
       "Name last": "Smith",
       "Date birth": "06/07/2020",
+      "Date expiration": "01/01/2028",
     });
-    await expect(parsePDF(bytes)).resolves.toMatchSnapshot();
   });
 
-  it("Should generate an ID front without MA ID number", async function () {
+  it("Should generate an invalid Mass ID", async function () {
     claim.mass_id = "123456789";
     const bytes = await generators.MASSID(claim, { invalid: true });
     const values = await parsePDF(bytes);
     expect(values).toMatchObject({
-      "Address street": "123 Test Way",
-      "Address state": "MA",
-      "Address city": "Example",
-      "address ZIP": "01000",
-      "License number": undefined,
-      "Name first": "John",
-      "Name last": "Smith",
-      "Date birth": "06/07/2020",
+      "Date expiration": "01/01/2020",
     });
   });
 
@@ -176,7 +169,7 @@ describe("Documents", function () {
 
   it("Should generate a birth certificate with mismatched name", async function () {
     const bytes = await generators.BIRTHCERTIFICATE(claim, {
-      mismatchedName: true,
+      invalid: true,
     });
     const values = await parsePDF(bytes);
     expect(values["Name of Mother"]).not.toEqual(
@@ -200,7 +193,6 @@ describe("Documents", function () {
   it("Should generate a foster placement letter", async function () {
     const bytes = await generators.FOSTERPLACEMENT(claim, {});
     const values = await parsePDF(bytes);
-    await fs.promises.writeFile(`${__dirname}/../../pbl.pdf`, bytes);
     expect(values).toMatchObject({
       "Date Leave to Begin": "08/01/2020",
       "Actual or Anticipated Date of Adoption / Placement": "08/05/2020",
@@ -221,10 +213,17 @@ describe("Documents", function () {
     });
   });
 
+  it("Should generate an invalid foster placement letter", async function () {
+    const bytes = await generators.FOSTERPLACEMENT(claim, { invalid: true });
+    const values = await parsePDF(bytes);
+    expect(values["Employee Name"]).not.toEqual(
+      `${claim.first_name} ${claim.last_name}`
+    );
+  });
+
   it("Should generate a adoption placement letter", async function () {
     const bytes = await generators.FOSTERPLACEMENT(claim, {});
     const values = await parsePDF(bytes);
-    await fs.promises.writeFile(`${__dirname}/../../pbl.pdf`, bytes);
     expect(values).toMatchObject({
       "Date Leave to Begin": "08/01/2020",
       "Actual or Anticipated Date of Adoption / Placement": "08/05/2020",
@@ -243,6 +242,14 @@ describe("Documents", function () {
       "Employee's Work Schedule": "[assume this matches claim]",
       "Foster Care Placement": true,
     });
+  });
+
+  it("Should generate an invalid adoption placement letter", async function () {
+    const bytes = await generators.ADOPTIONCERT(claim, { invalid: true });
+    const values = await parsePDF(bytes);
+    expect(values["Employee Name"]).not.toEqual(
+      `${claim.first_name} ${claim.last_name}`
+    );
   });
 
   it("Should generate a personal letter", async function () {
@@ -260,7 +267,6 @@ describe("Documents", function () {
   it("Should generate a cat picture", async function () {
     const bytes = await generators.CATPIC(claim, {});
     const values = await parsePDF(bytes);
-    await fs.promises.writeFile(`${__dirname}/../../forms/cat-pic.pdf`, bytes);
     expect(values).toMatchObject({});
   });
 });

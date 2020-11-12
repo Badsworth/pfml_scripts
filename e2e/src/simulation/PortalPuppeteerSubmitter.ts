@@ -49,7 +49,9 @@ export default class PortalPuppeteerSubmitter extends PortalSubmitter {
     for (const document of documents) {
       await uploadDocument(page, document);
     }
-    if (documents.length > 0) await createDocumentTask(page);
+    for (const document of documents) {
+      await createDocumentTask(page, document);
+    }
   }
 }
 
@@ -88,15 +90,29 @@ async function uploadDocument(
     .then((el) => actions.click(page, el));
 }
 
-async function createDocumentTask(page: puppeteer.Page) {
+async function createDocumentTask(
+  page: puppeteer.Page,
+  document: DocumentUploadRequest
+) {
   await actions.clickTab(page, "Tasks");
   await page
-    .waitForSelector('input[type="submit"][value="Add"]')
+    .waitForSelector('input[type="submit"][value="Add"]', { visible: true })
     .then((el) => actions.click(page, el));
 
+  let type = "";
+  switch (document.document_type) {
+    case "Identification Proof":
+      type = "ID Review";
+      break;
+    case "State Managed Paid Leave Confirmation":
+      type = "Certification Review";
+      break;
+    default:
+      throw new Error(`Unknown document type: ${document.document_type}`);
+  }
   await page
     .waitForSelector('input[type="text"][id*="NameTextBox"]')
-    .then((el) => el.type("Outstanding Requirement Received"));
+    .then((el) => el.type(type));
   await page
     .$('input[type="submit"][value="Find"]')
     .then((el) => actions.click(page, el));

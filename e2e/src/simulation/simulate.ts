@@ -1,5 +1,4 @@
 import faker from "faker";
-import { min as minDate, parseISO } from "date-fns";
 import {
   ClaimDocument,
   SimulationClaim,
@@ -17,7 +16,15 @@ import {
 import generators from "./documents";
 import path from "path";
 import fs from "fs";
-import { formatISO, subMonths, add, addDays, differenceInDays } from "date-fns";
+import {
+  parseISO,
+  formatISO,
+  subMonths,
+  add,
+  addDays,
+  max as maxDate,
+  min as minDate,
+} from "date-fns";
 import { v4 as uuid } from "uuid";
 
 const formatISODate = (date: Date) =>
@@ -111,7 +118,7 @@ export function scenario(
       last_name: employee.last_name,
       tax_identifier: employee.tax_identifier,
       employer_fein: employee.employer_fein,
-      date_of_birth: fmt(generateBirthDate()),
+      date_of_birth: formatISO(generateBirthDate(), { representation: "date" }),
       has_state_id: hasMassId,
       mass_id: hasMassId ? generateMassIDString() : null,
       has_mailing_address: true,
@@ -239,24 +246,24 @@ function generateLeavePeriods(
     case "continuous":
       return [
         {
-          start_date: fmt(startDate),
-          end_date: fmt(endDate),
+          start_date: formatISO(startDate, { representation: "date" }),
+          end_date: formatISO(endDate, { representation: "date" }),
           is_estimated: true,
         },
       ];
     case "intermittent":
       return [
         {
-          start_date: fmt(startDate),
-          end_date: fmt(endDate),
+          start_date: formatISO(startDate, { representation: "date" }),
+          end_date: formatISO(endDate, { representation: "date" }),
           is_estimated: false,
         },
       ];
     case "reduced":
       return [
         {
-          start_date: fmt(startDate),
-          end_date: fmt(endDate),
+          start_date: formatISO(startDate, { representation: "date" }),
+          end_date: formatISO(endDate, { representation: "date" }),
           is_estimated: true,
           sunday_off_hours: 0,
           monday_off_hours: 4,
@@ -311,8 +318,9 @@ function generateLeaveDetails(config: ScenarioOpts): ApplicationLeaveDetails {
 
   const earliestStartDate = getEarliestStartDate(details);
 
-  details.employer_notification_date = fmt(
-    generateNotificationDate(earliestStartDate, !!config.shortNotice)
+  details.employer_notification_date = formatISO(
+    generateNotificationDate(earliestStartDate, !!config.shortNotice),
+    { representation: "date" }
   );
 
   switch (reason) {
@@ -387,18 +395,13 @@ function generateMassIDString(): string {
 // Generate start and end dates for a leave request, not to exceed 20 weeks, and with a minimum
 // start date of 2021-01-01.
 export function generateLeaveDates(shortLeave: boolean): [Date, Date] {
-  // Applciations must be submitted within 60 days of proposed start leave date
-  const within60 = addDays(new Date(), 60);
+  // Start date must be greater than max(2021-01-01 or today).
+  const minStartDate = maxDate([parseISO("2021-01-01"), new Date()]);
+  // Start date must be < 60 days from the application date (now).
+  const maxStartDate = addDays(new Date(), 60);
 
-  // Window for when claims can be submitted after 1 Jan 2021
-  // and still be within 60 days of current day.
-  const claimSubmissionWindow = differenceInDays(
-    within60,
-    new Date("2021-01-01")
-  );
+  const startDate = faker.date.between(minStartDate, maxStartDate);
 
-  // generate start date based on claimSubmissionWindow and after 1 Jan 2021
-  const startDate = soon(claimSubmissionWindow, "2021-01-01");
   // If the claim is marked as "short leave", give it a 1 day length.
   const addition = shortLeave
     ? { days: 1 }
@@ -420,29 +423,4 @@ function generateBirthDate(): Date {
     add(new Date(), { years: -65 }),
     add(new Date(), { years: -18 })
   );
-}
-
-// Replacement for faker.date.soon(), which is slated to be released in the future.
-function soon(days: number, refDate?: string): Date {
-  let date = new Date();
-  if (typeof refDate !== "undefined") {
-    date = new Date(Date.parse(refDate));
-  }
-
-  const range = {
-    min: 1000,
-    max: (days || 1) * 24 * 3600 * 1000,
-  };
-
-  let future = date.getTime();
-  future += faker.random.number(range); // some time from now to N days later, in milliseconds
-  date.setTime(future);
-
-  return date;
-}
-
-function fmt(date: Date): string {
-  return `${date.getFullYear()}-${(date.getMonth() + 1)
-    .toString()
-    .padStart(2, "0")}-${date.getDate().toString().padStart(2, "0")}`;
 }

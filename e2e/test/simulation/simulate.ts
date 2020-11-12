@@ -222,9 +222,16 @@ describe("Simulation Generator", () => {
   }
 
   it("Should have an application start date past 01/01/2021", async () => {
-    const { claim } = await scenario("TEST", medical)(opts);
-    const [start] = extractLeavePeriod(claim);
-    expect(start.getTime()).toBeGreaterThanOrEqual(new Date(2021, 0).getTime());
+    // We run through this test 100 times, because we're dealing with randomness
+    // and need to be sure we're always getting a valid result.
+    for (let i = 0; i < 100; i++) {
+      const claim = await scenario("TEST", medical)(opts);
+      const period = claim.claim.leave_details?.continuous_leave_periods?.[0];
+      if (period === null || period === undefined) {
+        throw new Error("No period was present on the claim");
+      }
+      expect(period?.start_date).toMatch(/^2021\-/);
+    }
   });
 
   it("Should have an application end date greater/later than start date", async () => {
