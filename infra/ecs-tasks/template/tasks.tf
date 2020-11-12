@@ -62,11 +62,12 @@ locals {
       command             = ["load-employers-to-fineos"]
       containers_template = "load_employers_to_fineos_template.json"
       vars = {
-        fineos_client_customer_api_url     = var.fineos_client_customer_api_url
-        fineos_client_group_client_api_url = var.fineos_client_group_client_api_url
-        fineos_client_wscomposer_api_url   = var.fineos_client_wscomposer_api_url
-        fineos_client_oauth2_url           = var.fineos_client_oauth2_url
-        fineos_client_oauth2_client_id     = var.fineos_client_oauth2_client_id
+        fineos_client_integration_services_api_url = var.fineos_client_integration_services_api_url
+        fineos_client_customer_api_url             = var.fineos_client_customer_api_url
+        fineos_client_group_client_api_url         = var.fineos_client_group_client_api_url
+        fineos_client_wscomposer_api_url           = var.fineos_client_wscomposer_api_url
+        fineos_client_oauth2_url                   = var.fineos_client_oauth2_url
+        fineos_client_oauth2_client_id             = var.fineos_client_oauth2_client_id
       }
     },
 
@@ -75,11 +76,12 @@ locals {
       containers_template = "fineos_eligibility_feed_export_template.json"
       task_role           = aws_iam_role.fineos_eligibility_feed_export_task_role.arn
       vars = {
-        fineos_client_customer_api_url     = var.fineos_client_customer_api_url
-        fineos_client_group_client_api_url = var.fineos_client_group_client_api_url
-        fineos_client_wscomposer_api_url   = var.fineos_client_wscomposer_api_url
-        fineos_client_oauth2_url           = var.fineos_client_oauth2_url
-        fineos_client_oauth2_client_id     = var.fineos_client_oauth2_client_id
+        fineos_client_integration_services_api_url = var.fineos_client_integration_services_api_url
+        fineos_client_customer_api_url             = var.fineos_client_customer_api_url
+        fineos_client_group_client_api_url         = var.fineos_client_group_client_api_url
+        fineos_client_wscomposer_api_url           = var.fineos_client_wscomposer_api_url
+        fineos_client_oauth2_url                   = var.fineos_client_oauth2_url
+        fineos_client_oauth2_client_id             = var.fineos_client_oauth2_client_id
 
         fineos_aws_iam_role_arn         = var.fineos_aws_iam_role_arn
         fineos_aws_iam_role_external_id = var.fineos_aws_iam_role_external_id
