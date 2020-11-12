@@ -856,6 +856,31 @@ def test_reduced_leave_period_maximum_minutes(test_db_session, initialize_factor
     ] == issues
 
 
+def test_reduced_leave_period_maximum_minutes_empty_work_pattern_days(
+    test_db_session, initialize_factories_session
+):
+    test_leave_periods = [
+        ReducedScheduleLeavePeriodFactory.create(
+            sunday_off_minutes=8,
+            monday_off_minutes=8,
+            tuesday_off_minutes=8,
+            wednesday_off_minutes=8,
+            thursday_off_minutes=8,
+            friday_off_minutes=8,
+            saturday_off_minutes=8,
+        )
+    ]
+
+    test_app = ApplicationFactory.create(
+        reduced_schedule_leave_periods=test_leave_periods,
+        work_pattern=WorkPatternFixedFactory.create(work_pattern_days=[]),
+    )
+
+    issues = get_reduced_schedule_leave_issues(test_app)
+
+    assert [] == issues
+
+
 def test_reduced_leave_period_minimum_total_minutes(test_db_session, initialize_factories_session):
     test_leave_periods = [
         ReducedScheduleLeavePeriodFactory.create(

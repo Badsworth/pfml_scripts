@@ -564,26 +564,25 @@ def get_reduced_schedule_leave_minutes_issues(
     if application.work_pattern:
         work_pattern_days = application.work_pattern.work_pattern_days
 
-        # There should only ever be one week since the length is validated in validate_work_pattern_days
-        assert len(list(work_pattern_days)) == 7
+        # There should only ever be one week of days since the length is validated in validate_work_pattern_days
+        if len(minute_fields) == len(list(work_pattern_days)):
+            work_pattern_minutes_each_day = [
+                day.minutes
+                # TODO (CP-1344): Guarantee the order of work_pattern_days closer to the DB query rather than here
+                for day in sorted(work_pattern_days, key=lambda day: day.day_of_week_id)
+            ]
 
-        work_pattern_minutes_each_day = [
-            day.minutes
-            # TODO (CP-1344): Guarantee the order of work_pattern_days closer to the DB query rather than here
-            for day in sorted(work_pattern_days, key=lambda day: day.day_of_week_id)
-        ]
+            for field, work_pattern_minutes in zip(minute_fields, work_pattern_minutes_each_day):
+                leave_period_minutes: int = getattr(leave_period, field, None) or 0
 
-        for field, work_pattern_minutes in zip(minute_fields, work_pattern_minutes_each_day):
-            leave_period_minutes: int = getattr(leave_period, field, None) or 0
-
-            if work_pattern_minutes is not None and leave_period_minutes > work_pattern_minutes:
-                issues.append(
-                    Issue(
-                        type=IssueType.maximum,
-                        message=f"{field} cannot exceed the work pattern minutes for the same day, which is {work_pattern_minutes}",
-                        field=f"{leave_period_path}.{field}",
+                if work_pattern_minutes is not None and leave_period_minutes > work_pattern_minutes:
+                    issues.append(
+                        Issue(
+                            type=IssueType.maximum,
+                            message=f"{field} cannot exceed the work pattern minutes for the same day, which is {work_pattern_minutes}",
+                            field=f"{leave_period_path}.{field}",
+                        )
                     )
-                )
 
     return issues
 
