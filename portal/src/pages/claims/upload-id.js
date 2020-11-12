@@ -11,7 +11,7 @@ import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import Spinner from "../../components/Spinner";
 import { Trans } from "react-i18next";
-import findDocumentsByType from "../../utils/findDocumentsByType";
+import findDocumentsByTypes from "../../utils/findDocumentsByTypes";
 import { get } from "lodash";
 import hasDocumentsLoadError from "../../utils/hasDocumentsLoadError";
 import routes from "../../routes";
@@ -41,9 +41,9 @@ export const UploadId = (props) => {
     claim.application_id
   );
 
-  const idDocuments = findDocumentsByType(
+  const idDocuments = findDocumentsByTypes(
     documents,
-    DocumentType.identityVerification // TODO (CP-962): Set based on leaveReason
+    [DocumentType.identityVerification] // TODO (CP-962): Set based on leaveReason
   );
 
   const handleSave = async () => {

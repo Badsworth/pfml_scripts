@@ -1510,7 +1510,7 @@ const components = {
     leaveReasonValue_serviceMemberFamily:
       "$t(shared.leaveReasonServiceMemberFamily)",
     noticeDate: "Posted {{date}}",
-    noticeName: "Legal notice (PDF)", // fallback for unexpected document_type
+    noticeName: "Other notice (PDF)", // it should fallback to this if we receive an unexpected or undefined enum
     noticeName_approvalNotice: "Approval notice (PDF)",
     noticeName_denialNotice: "Denial notice (PDF)",
     noticeName_requestForInfoNotice: "Request for more information (PDF)",

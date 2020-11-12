@@ -11,7 +11,7 @@ import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import Spinner from "../../components/Spinner";
 import { Trans } from "react-i18next";
-import findDocumentsByType from "../../utils/findDocumentsByType";
+import findDocumentsByTypes from "../../utils/findDocumentsByTypes";
 import findKeyByValue from "../../utils/findKeyByValue";
 import { get } from "lodash";
 import hasDocumentsLoadError from "../../utils/hasDocumentsLoadError";
@@ -52,9 +52,9 @@ export const UploadCertification = (props) => {
       break;
   }
 
-  const certificationDocuments = findDocumentsByType(
+  const certificationDocuments = findDocumentsByTypes(
     documents,
-    DocumentType.medicalCertification // TODO (CP-962): Set based on leaveReason
+    [DocumentType.medicalCertification] // TODO (CP-962): Set based on leaveReason
   );
 
   const handleSave = async () => {

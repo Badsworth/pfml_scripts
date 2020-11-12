@@ -7,6 +7,7 @@ import PropTypes from "prop-types";
 import React from "react";
 import classnames from "classnames";
 import download from "downloadjs";
+import findDocumentsByTypes from "../utils/findDocumentsByTypes";
 import findKeyByValue from "../utils/findKeyByValue";
 import formatDateRange from "../utils/formatDateRange";
 import get from "lodash/get";
@@ -157,19 +158,22 @@ function CompletedApplicationDocsInfo(props) {
   const { t } = useTranslation();
   const { claim, documents } = props;
 
-  const hasCertDoc = documents.some(
-    (doc) => doc.document_type === DocumentType.medicalCertification
-  ); // This enum is used because for MVP all certs will have the same doc type
+  const hasCertDoc =
+    findDocumentsByTypes(
+      documents,
+      // This enum is used because for MVP all certs will have the same doc type
+      [DocumentType.medicalCertification]
+    ).length > 0;
 
   const leaveReason = get(claim, "leave_details.reason");
+
+  const legalNotices = findDocumentsByTypes(documents, [
+    DocumentType.approvalNotice,
+    DocumentType.denialNotice,
+    DocumentType.requestForInfoNotice,
+  ]);
   const leaveReasonQualifier = get(claim, "leave_details.reason_qualifier");
-  const legalNotices = documents.filter((document) =>
-    [
-      DocumentType.approvalNotice,
-      DocumentType.denialNotice,
-      DocumentType.requestForInfoNotice,
-    ].includes(document.document_type)
-  );
+
   const contentContext = {
     [ReasonQualifier.adoption]: "adopt_foster",
     [ReasonQualifier.fosterCare]: "adopt_foster",

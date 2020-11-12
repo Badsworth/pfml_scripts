@@ -34,7 +34,7 @@ import WeeklyTimeTable from "../../components/WeeklyTimeTable";
 import WorkPatternTable from "../../components/WorkPatternTable";
 import claimantConfigs from "../../flows/claimant";
 import convertMinutesToHours from "../../utils/convertMinutesToHours";
-import findDocumentsByType from "../../utils/findDocumentsByType";
+import findDocumentsByTypes from "../../utils/findDocumentsByTypes";
 import findKeyByValue from "../../utils/findKeyByValue";
 import formatDateRange from "../../utils/formatDateRange";
 import getI18nContextForIntermittentFrequencyDuration from "../../utils/getI18nContextForIntermittentFrequencyDuration";
@@ -77,14 +77,13 @@ export const Review = (props) => {
     claim.application_id
   );
 
-  const certificationDocuments = findDocumentsByType(
+  const certificationDocuments = findDocumentsByTypes(
     documents,
-    DocumentType.medicalCertification // TODO (CP-962): Set based on leaveReason
+    [DocumentType.medicalCertification] // TODO (CP-962): Set based on leaveReason
   );
-  const idDocuments = findDocumentsByType(
-    documents,
-    DocumentType.identityVerification
-  );
+  const idDocuments = findDocumentsByTypes(documents, [
+    DocumentType.identityVerification,
+  ]);
 
   const payment_method = get(claim, "payment_preferences[0].payment_method");
   const reasonQualifier = get(claim, "leave_details.reason_qualifier");

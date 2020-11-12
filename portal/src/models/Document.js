@@ -27,7 +27,7 @@ export const DocumentType = {
   approvalNotice: "Approval Notice",
   denialNotice: "Denial Notice",
   identityVerification: "Identification Proof",
-  medicalCertification: "State Managed Paid Leave Confirmation",
+  medicalCertification: "State managed Paid Leave Confirmation",
   requestForInfoNotice: "Request for more Information",
 };
 

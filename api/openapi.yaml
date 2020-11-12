@@ -1370,7 +1370,7 @@ components:
             - Driver's License Mass
             - Driver's License Other State
             - Identification Proof
-            - State Managed Paid Leave Confirmation
+            - State managed Paid Leave Confirmation
             - Approval Notice
             - Request for More information
             - Denial Notice
@@ -1403,7 +1403,7 @@ components:
             - Driver's License Mass
             - Driver's License Other State
             - Identification Proof
-            - State Managed Paid Leave Confirmation
+            - State managed Paid Leave Confirmation
             - Approval Notice
             - Request for More information
             - Denial Notice
@@ -1450,7 +1450,7 @@ components:
             - Driver's License Mass
             - Driver's License Other State
             - Identification Proof
-            - State Managed Paid Leave Confirmation
+            - State managed Paid Leave Confirmation
           example: "Passport"
         content_type:
           type: string
