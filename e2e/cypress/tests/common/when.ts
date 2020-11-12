@@ -1,6 +1,6 @@
 import { When } from "cypress-cucumber-preprocessor/steps";
 import { fineos, portal } from "./actions";
-import { CypressStepThis } from "@/types";
+import { CypressStepThis } from "../../../src/types";
 
 /**
  * Continous of prevous claim

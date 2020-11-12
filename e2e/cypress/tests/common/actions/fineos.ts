@@ -1,4 +1,4 @@
-import { getFineosBaseUrl } from "@cypress/config";
+import { getFineosBaseUrl } from "../../../config";
 
 export function loginSavilinx(): void {
   Cypress.config("baseUrl", getFineosBaseUrl());

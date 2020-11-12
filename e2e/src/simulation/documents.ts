@@ -1,4 +1,4 @@
-import { ApplicationRequestBody } from "@/api";
+import { ApplicationRequestBody } from "../api";
 import fs from "fs";
 import { PDFCheckBox, PDFDocument, PDFOptionList, PDFTextField } from "pdf-lib";
 import { parseISO, format, differenceInWeeks } from "date-fns";

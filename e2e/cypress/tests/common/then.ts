@@ -1,6 +1,6 @@
 import { portal } from "./actions";
 import { Then } from "cypress-cucumber-preprocessor/steps";
-import { CypressStepThis } from "@/types";
+import { CypressStepThis } from "../../../src/types";
 import { fineos } from "./actions";
 
 Then("I should be logged in", () => portal.assertLoggedIn());

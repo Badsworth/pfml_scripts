@@ -1,6 +1,6 @@
 import { describe, it, expect, jest } from "@jest/globals";
 import { scenario, chance, ScenarioOpts } from "../../src/simulation/simulate";
-import type { SimulationClaim } from "@/simulation/types";
+import type { SimulationClaim } from "../../src/simulation/types";
 import generators from "../../src/simulation/documents";
 import fs from "fs";
 import { extractLeavePeriod } from "../../src/utils";

@@ -1,4 +1,4 @@
-import { CypressStepThis } from "@/types";
+import { CypressStepThis } from "../../../src/types";
 import { Given } from "cypress-cucumber-preprocessor/steps";
 import { portal, fineos } from "./actions";
 

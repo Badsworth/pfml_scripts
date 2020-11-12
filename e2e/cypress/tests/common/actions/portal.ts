@@ -1,11 +1,11 @@
-import { SimulationClaim } from "@/simulation/types";
+import { SimulationClaim } from "../../../../src/simulation/types";
 import {
   ApplicationResponse,
   WorkPattern,
   IntermittentLeavePeriods,
   WorkPatternDay,
   ReducedScheduleLeavePeriods,
-} from "@/api";
+} from "../../../../src/api";
 import { inFieldset } from "../actions";
 
 export function onPage(page: string): void {
@@ -431,7 +431,7 @@ export function reportOtherBenefits(): void {
   ).within(() => cy.labelled("No").click({ force: true }));
   cy.contains("button", "Save and continue").click();
 
-  /* ********** 
+  /* **********
     Been removed from flow as 2nd November
 
     cy.contains(

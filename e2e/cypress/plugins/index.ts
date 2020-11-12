@@ -12,7 +12,7 @@
 import config from "../../src/config";
 import faker from "faker";
 import webpackPreprocessor from "@cypress/webpack-preprocessor";
-import { CypressStepThis } from "@/types";
+import { CypressStepThis } from "../../src/types";
 import TestMailVerificationFetcher from "./TestMailVerificationFetcher";
 import PortalSubmitter from "../../src/simulation/PortalSubmitter";
 import employerPool from "../../src/simulation/fixtures/employerPool";

@@ -7,12 +7,12 @@ import { SystemWideArgs } from "../../cli";
 import { randomEmployee, fromClaimsFactory } from "../EmployeeFactory";
 import { fromEmployersFactory } from "../EmployerFactory";
 import employerPool from "../fixtures/employerPool";
-import {
+import type {
   SimulationClaim,
   EmployeeFactory,
   EmployerFactory,
   Employer,
-} from "@/simulation/types";
+} from "../types";
 import {
   writeClaimFile,
   writeClaimIndex,

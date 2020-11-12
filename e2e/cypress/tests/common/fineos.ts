@@ -1,5 +1,5 @@
 import { Given, Then, When } from "cypress-cucumber-preprocessor/steps";
-import { fineos } from "@cypress/tests/common/actions";
+import { fineos } from "./actions";
 import { formatDateString } from "./util";
 
 Given("I am logged into Fineos as a Savilinx user", () => {
