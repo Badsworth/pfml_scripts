@@ -116,4 +116,60 @@ describe("InputHours", () => {
     expect(wrapper.find("Dropdown").props().value).toEqual(33);
     expect(warnSpy).toHaveBeenCalled();
   });
+
+  it("renders empty hours if hours value is erased and minutes value is 0", () => {
+    const { wrapper, props } = render({ value: 8 * 60 });
+
+    wrapper.find("InputText").simulate("change", {
+      target: { value: "" },
+    });
+
+    expect(props.onChange).toHaveBeenCalledWith(
+      expect.objectContaining({
+        target: { name: props.name, type: "numeric", value: null },
+      })
+    );
+  });
+
+  it("sets hours to 0 if hours are erased and minutes are greater than 0", () => {
+    const { wrapper, props } = render({ value: 8 * 60 + 15 });
+
+    wrapper.find("InputText").simulate("change", {
+      target: { value: "" },
+    });
+
+    expect(props.onChange).toHaveBeenCalledWith(
+      expect.objectContaining({
+        target: { name: props.name, type: "numeric", value: 0 * 60 + 15 },
+      })
+    );
+  });
+
+  it("renders empty hours if minutes value is erased and hours value is 0", () => {
+    const { wrapper, props } = render({ value: 15 });
+
+    wrapper.find("Dropdown").simulate("change", {
+      target: { value: "" },
+    });
+
+    expect(props.onChange).toHaveBeenCalledWith(
+      expect.objectContaining({
+        target: { name: props.name, type: "numeric", value: null },
+      })
+    );
+  });
+
+  it("sets minutes to 0 if minutes are erased and hours are greater than 0", () => {
+    const { wrapper, props } = render({ value: 8 * 60 + 15 });
+
+    wrapper.find("Dropdown").simulate("change", {
+      target: { value: "" },
+    });
+
+    expect(props.onChange).toHaveBeenCalledWith(
+      expect.objectContaining({
+        target: { name: props.name, type: "numeric", value: 8 * 60 + 0 },
+      })
+    );
+  });
 });

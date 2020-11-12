@@ -42,14 +42,23 @@ const InputHours = (props) => {
     );
   }
 
-  const handleHoursChange = (event) =>
-    dispatchChange(
-      Math.floor(event.target.value) * 60 + hoursMinutes.minutes,
-      event
-    );
+  const handleHoursChange = (event) => {
+    // Change input to null if the hours field is blank and no minutes are provided
+    const isBlank = event.target.value === "" && hoursMinutes.minutes === 0;
+    const value = isBlank
+      ? null
+      : Math.floor(event.target.value) * 60 + hoursMinutes.minutes;
+    dispatchChange(value, event);
+  };
 
-  const handleMinutesChange = (event) =>
-    dispatchChange(hoursMinutes.hours * 60 + Number(event.target.value), event);
+  const handleMinutesChange = (event) => {
+    // Change input to null if the minutes field is blank and no hours are provided
+    const isBlank = event.target.value === "" && hoursMinutes.hours === 0;
+    const value = isBlank
+      ? null
+      : hoursMinutes.hours * 60 + Number(event.target.value);
+    dispatchChange(value, event);
+  };
 
   /**
    * Call props.onChange with an argument value in a shape resembling Event so
