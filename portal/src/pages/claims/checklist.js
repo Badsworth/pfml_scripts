@@ -21,6 +21,7 @@ import { Trans } from "react-i18next";
 import claimantConfig from "../../flows/claimant";
 import findDocumentsByType from "../../utils/findDocumentsByType";
 import hasDocumentsLoadError from "../../utils/hasDocumentsLoadError";
+import { isFeatureEnabled } from "../../services/featureFlags";
 import routeWithParams from "../../utils/routeWithParams";
 import routes from "../../routes";
 import { useTranslation } from "../../locales/i18n";
@@ -53,7 +54,13 @@ export const Checklist = (props) => {
    */
   const allSteps = StepModel.createClaimStepsFromMachine(
     claimantConfig,
-    { claim, idDocuments, certificationDocuments },
+    // TODO (CP-1346) Remove feature flag check once feature flag is no longer relevant
+    {
+      claim,
+      idDocuments,
+      certificationDocuments,
+      showOtherLeaveStep: isFeatureEnabled("claimantShowOtherLeaveStep"),
+    },
     warnings
   );
 

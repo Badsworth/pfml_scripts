@@ -23,6 +23,9 @@ const flagsConfig = {
     // 2021 for a qualifying reason?" question.
     // TODO (CP-1247): Show previous leaves related questions
     claimantShowPreviousLeaves: false,
+    // Hide the entire "Other leave, income, and benefits" step of the Claim flow.
+    // TODO (CP-1346): Show this step once it's been integrated w/ the API.
+    claimantShowOtherLeaveStep: false,
     // When this flag is enabled, the user can see the site.
     // To immediately hide the site from people who previously overrode this
     // flag in a cookie, you can rename this flag to something else (and also

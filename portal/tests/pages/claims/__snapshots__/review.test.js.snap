@@ -179,24 +179,6 @@ exports[`Final Review Page when all data is present renders Review page with fin
   >
     No
   </ReviewRow>
-  <ReviewHeading
-    editText="Edit"
-    level="2"
-  >
-    Other leave, income, and benefits
-  </ReviewHeading>
-  <ReviewRow
-    label="Employer-sponsored benefits?"
-    level="3"
-  >
-    No
-  </ReviewRow>
-  <ReviewRow
-    label="Other sources of income?"
-    level="3"
-  >
-    No
-  </ReviewRow>
   <Heading
     level="2"
     size="1"
@@ -508,25 +490,6 @@ exports[`Part 1 Review Page when all data is present renders Review page with Pa
   </ReviewRow>
   <ReviewRow
     label="Intermittent leave"
-    level="4"
-  >
-    No
-  </ReviewRow>
-  <ReviewHeading
-    editHref="/claims/employer-benefits?claim_id=mock_application_id"
-    editText="Edit"
-    level="3"
-  >
-    Other leave, income, and benefits
-  </ReviewHeading>
-  <ReviewRow
-    label="Employer-sponsored benefits?"
-    level="4"
-  >
-    No
-  </ReviewRow>
-  <ReviewRow
-    label="Other sources of income?"
     level="4"
   >
     No

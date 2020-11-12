@@ -236,6 +236,15 @@ export default class Step extends BaseModel {
     );
     const pagesByStep = groupBy(pages, "meta.step");
 
+    // TODO (CP-1346) Remove this filter logic once the claimantShowOtherLeaveStep feature flag is no longer relevant
+    const filterOutHiddenSteps = (steps) => {
+      if (context.showOtherLeaveStep) {
+        return steps;
+      } else {
+        return steps.filter((step) => step.name !== ClaimSteps.otherLeave);
+      }
+    };
+
     const verifyId = new Step({
       name: ClaimSteps.verifyId,
       editable: !claim.isSubmitted,
@@ -288,7 +297,12 @@ export default class Step extends BaseModel {
       initialPageRoute: claim.isBondingLeave
         ? routes.claims.bondingLeaveAttestation
         : routes.claims.review,
-      dependsOn: [verifyId, employerInformation, leaveDetails, otherLeave],
+      dependsOn: filterOutHiddenSteps([
+        verifyId,
+        employerInformation,
+        leaveDetails,
+        otherLeave,
+      ]),
       context,
     });
 
@@ -296,13 +310,13 @@ export default class Step extends BaseModel {
       name: ClaimSteps.payment,
       group: 2,
       pages: pagesByStep[ClaimSteps.payment],
-      dependsOn: [
+      dependsOn: filterOutHiddenSteps([
         verifyId,
         employerInformation,
         leaveDetails,
         otherLeave,
         reviewAndConfirm,
-      ],
+      ]),
       context,
       // TODO (CP-1264): Pass in warnings while when API validation rule exists to require a payment method
       // warnings,
@@ -313,13 +327,13 @@ export default class Step extends BaseModel {
       name: ClaimSteps.uploadId,
       group: 3,
       pages: pagesByStep[ClaimSteps.uploadId],
-      dependsOn: [
+      dependsOn: filterOutHiddenSteps([
         verifyId,
         employerInformation,
         leaveDetails,
         otherLeave,
         reviewAndConfirm,
-      ],
+      ]),
       context,
     });
 
@@ -329,17 +343,17 @@ export default class Step extends BaseModel {
       notApplicableCond: (context) => context.claim.isChildDateInFuture,
       group: 3,
       pages: pagesByStep[ClaimSteps.uploadCertification],
-      dependsOn: [
+      dependsOn: filterOutHiddenSteps([
         verifyId,
         employerInformation,
         leaveDetails,
         otherLeave,
         reviewAndConfirm,
-      ],
+      ]),
       context,
     });
 
-    return [
+    return filterOutHiddenSteps([
       verifyId,
       employerInformation,
       leaveDetails,
@@ -348,6 +362,6 @@ export default class Step extends BaseModel {
       payment,
       uploadId,
       uploadCertification,
-    ];
+    ]);
   };
 }

@@ -530,9 +530,10 @@ describe("OtherLeaveEntry", () => {
     });
   });
 
-  describe("when claimantShowPreviousLeaves is enabled", () => {
+  describe("when claimantShowOtherLeaveStep and claimantShowPreviousLeaves is enabled", () => {
     it("renders review row of previous leave", () => {
       process.env.featureFlags = {
+        claimantShowOtherLeaveStep: true,
         claimantShowPreviousLeaves: true,
       };
       const { wrapper } = renderWithAppLogic(Review, {

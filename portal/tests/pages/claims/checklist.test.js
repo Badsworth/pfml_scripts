@@ -23,7 +23,7 @@ describe("Checklist", () => {
   });
 
   it("renders description for Step", () => {
-    expect.assertions(8);
+    expect.assertions(7);
 
     const { wrapper } = renderWithAppLogic(Checklist, {
       // Avoids a blank description for the Upload Certification step,
@@ -112,7 +112,7 @@ describe("Checklist", () => {
         diveLevels,
         hasLoadedClaimDocuments: true,
       });
-      const uploadCertificationStep = wrapper.find("Step").at(7);
+      const uploadCertificationStep = wrapper.find("Step").at(6);
       expect(uploadCertificationStep.find("Trans").dive()).toMatchSnapshot();
     });
 
@@ -126,7 +126,7 @@ describe("Checklist", () => {
         diveLevels,
         hasLoadedClaimDocuments: true,
       });
-      const uploadCertificationStep = wrapper.find("Step").at(7);
+      const uploadCertificationStep = wrapper.find("Step").at(6);
 
       expect(uploadCertificationStep.find("Trans").dive()).toMatchSnapshot();
     });
@@ -141,7 +141,7 @@ describe("Checklist", () => {
         diveLevels,
         hasLoadedClaimDocuments: true,
       });
-      const uploadCertificationStep = wrapper.find("Step").at(7);
+      const uploadCertificationStep = wrapper.find("Step").at(6);
 
       expect(uploadCertificationStep.find("Trans").dive()).toMatchSnapshot();
     });
@@ -154,7 +154,7 @@ describe("Checklist", () => {
       });
 
       expect(wrapper.exists("Spinner")).toBe(true);
-      expect(wrapper.find("Step")).toHaveLength(6);
+      expect(wrapper.find("Step")).toHaveLength(5);
     });
 
     it("renders Alert when there is an error for loading documents", () => {
@@ -164,7 +164,7 @@ describe("Checklist", () => {
       });
 
       expect(wrapper.find("StepList").at(2).exists("Alert")).toBe(true);
-      expect(wrapper.find("Step")).toHaveLength(6);
+      expect(wrapper.find("Step")).toHaveLength(5);
     });
   });
 
@@ -177,8 +177,8 @@ describe("Checklist", () => {
         diveLevels,
         hasLoadedClaimDocuments: true,
       });
+      expect(wrapper.find("Step").at(5).prop("status")).toBe(startStatus);
       expect(wrapper.find("Step").at(6).prop("status")).toBe(startStatus);
-      expect(wrapper.find("Step").at(7).prop("status")).toBe(startStatus);
     });
 
     it("renders id doc step as completed", () => {
@@ -188,8 +188,8 @@ describe("Checklist", () => {
         hasLoadedClaimDocuments: true,
         hasUploadedIdDocuments: true,
       });
-      expect(wrapper.find("Step").at(6).prop("status")).toBe(completeStatus);
-      expect(wrapper.find("Step").at(7).prop("status")).toBe(startStatus);
+      expect(wrapper.find("Step").at(5).prop("status")).toBe(completeStatus);
+      expect(wrapper.find("Step").at(6).prop("status")).toBe(startStatus);
     });
 
     it("renders certification doc step as completed", () => {
@@ -199,8 +199,8 @@ describe("Checklist", () => {
         hasLoadedClaimDocuments: true,
         hasUploadedCertificationDocuments: true,
       });
-      expect(wrapper.find("Step").at(6).prop("status")).toBe(startStatus);
-      expect(wrapper.find("Step").at(7).prop("status")).toBe(completeStatus);
+      expect(wrapper.find("Step").at(5).prop("status")).toBe(startStatus);
+      expect(wrapper.find("Step").at(6).prop("status")).toBe(completeStatus);
     });
   });
 });

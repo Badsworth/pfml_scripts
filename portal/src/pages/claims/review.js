@@ -477,63 +477,68 @@ export const Review = (props) => {
       )}
 
       {/* OTHER LEAVE */}
-      <ReviewHeading
-        editHref={getStepEditHref(ClaimSteps.otherLeave)}
-        editText={t("pages.claimsReview.editLink")}
-        level={reviewHeadingLevel}
-      >
-        {t("pages.claimsReview.stepHeading", { context: "otherLeave" })}
-      </ReviewHeading>
+      {/* TODO (CP-1346): Remove condition once "Other leave" step is out from behind feature flag */}
+      {isFeatureEnabled("claimantShowOtherLeaveStep") && (
+        <React.Fragment>
+          <ReviewHeading
+            editHref={getStepEditHref(ClaimSteps.otherLeave)}
+            editText={t("pages.claimsReview.editLink")}
+            level={reviewHeadingLevel}
+          >
+            {t("pages.claimsReview.stepHeading", { context: "otherLeave" })}
+          </ReviewHeading>
 
-      <ReviewRow
-        level={reviewRowLevel}
-        label={t("pages.claimsReview.employerBenefitLabel")}
-      >
-        {get(claim, "temp.has_employer_benefits") === true
-          ? t("pages.claimsReview.otherLeaveChoiceYes")
-          : t("pages.claimsReview.otherLeaveChoiceNo")}
-      </ReviewRow>
+          <ReviewRow
+            level={reviewRowLevel}
+            label={t("pages.claimsReview.employerBenefitLabel")}
+          >
+            {get(claim, "temp.has_employer_benefits") === true
+              ? t("pages.claimsReview.otherLeaveChoiceYes")
+              : t("pages.claimsReview.otherLeaveChoiceNo")}
+          </ReviewRow>
 
-      {get(claim, "temp.has_employer_benefits") && (
-        <EmployerBenefitList
-          entries={get(claim, "employer_benefits")}
-          reviewRowLevel={reviewRowLevel}
-        />
-      )}
+          {get(claim, "temp.has_employer_benefits") && (
+            <EmployerBenefitList
+              entries={get(claim, "employer_benefits")}
+              reviewRowLevel={reviewRowLevel}
+            />
+          )}
 
-      <ReviewRow
-        level={reviewRowLevel}
-        label={t("pages.claimsReview.otherIncomeLabel")}
-      >
-        {get(claim, "temp.has_other_incomes") === true
-          ? t("pages.claimsReview.otherLeaveChoiceYes")
-          : t("pages.claimsReview.otherLeaveChoiceNo")}
-      </ReviewRow>
+          <ReviewRow
+            level={reviewRowLevel}
+            label={t("pages.claimsReview.otherIncomeLabel")}
+          >
+            {get(claim, "temp.has_other_incomes") === true
+              ? t("pages.claimsReview.otherLeaveChoiceYes")
+              : t("pages.claimsReview.otherLeaveChoiceNo")}
+          </ReviewRow>
 
-      {get(claim, "temp.has_other_incomes") && (
-        <OtherIncomeList
-          entries={get(claim, "other_incomes")}
-          reviewRowLevel={reviewRowLevel}
-        />
-      )}
-      {/* TODO (CP-1247): Show previous leaves related questions */}
-      {isFeatureEnabled("claimantShowPreviousLeaves") && (
-        <ReviewRow
-          level={reviewRowLevel}
-          label={t("pages.claimsReview.previousLeaveLabel")}
-          editText={t("pages.claimsReview.editLink")}
-        >
-          {get(claim, "temp.has_previous_leaves") === true
-            ? t("pages.claimsReview.otherLeaveChoiceYes")
-            : t("pages.claimsReview.otherLeaveChoiceNo")}
-        </ReviewRow>
-      )}
+          {get(claim, "temp.has_other_incomes") && (
+            <OtherIncomeList
+              entries={get(claim, "other_incomes")}
+              reviewRowLevel={reviewRowLevel}
+            />
+          )}
+          {/* TODO (CP-1247): Show previous leaves related questions */}
+          {isFeatureEnabled("claimantShowPreviousLeaves") && (
+            <ReviewRow
+              level={reviewRowLevel}
+              label={t("pages.claimsReview.previousLeaveLabel")}
+              editText={t("pages.claimsReview.editLink")}
+            >
+              {get(claim, "temp.has_previous_leaves") === true
+                ? t("pages.claimsReview.otherLeaveChoiceYes")
+                : t("pages.claimsReview.otherLeaveChoiceNo")}
+            </ReviewRow>
+          )}
 
-      {get(claim, "temp.has_previous_leaves") && (
-        <PreviousLeaveList
-          entries={get(claim, "previous_leaves")}
-          reviewRowLevel={reviewRowLevel}
-        />
+          {get(claim, "temp.has_previous_leaves") && (
+            <PreviousLeaveList
+              entries={get(claim, "previous_leaves")}
+              reviewRowLevel={reviewRowLevel}
+            />
+          )}
+        </React.Fragment>
       )}
 
       {usePartOneReview ? (

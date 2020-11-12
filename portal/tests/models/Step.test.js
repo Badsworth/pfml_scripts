@@ -1,7 +1,7 @@
-import Step, { ClaimSteps } from "../../src/models/Step";
 import BaseModel from "../../src/models/BaseModel";
 import Claim from "../../src/models/Claim";
 import { MockClaimBuilder } from "../test-utils";
+import Step from "../../src/models/Step";
 import claimantConfig from "../../src/flows/claimant";
 import { map } from "lodash";
 
@@ -344,7 +344,29 @@ describe("Step Model", () => {
   });
 
   describe("createClaimSteps", () => {
-    it("creates portal steps from machineConfigs", () => {
+    it("creates expected portal steps from machineConfigs", () => {
+      const steps = Step.createClaimStepsFromMachine(
+        claimantConfig,
+        { claim: new MockClaimBuilder().create() },
+        []
+      );
+
+      expect(steps.map((s) => s.name)).toMatchInlineSnapshot(`
+        Array [
+          "verifyId",
+          "employerInformation",
+          "leaveDetails",
+          "reviewAndConfirm",
+          "payment",
+          "uploadId",
+          "uploadCertification",
+        ]
+      `);
+    });
+
+    it("sets #pages property for each Step", () => {
+      expect.assertions();
+
       const steps = Step.createClaimStepsFromMachine(
         claimantConfig,
         { claim: new MockClaimBuilder().create() },
@@ -355,8 +377,6 @@ describe("Step Model", () => {
         meta: value.meta,
       }));
 
-      expect(steps).toHaveLength(8);
-      expect(steps.map((s) => s.name)).toEqual(Object.keys(ClaimSteps));
       steps.forEach((s) => {
         expect(s).toBeInstanceOf(Step);
         const expectedPages = machinePages.filter((p) => p.step === s.name);
