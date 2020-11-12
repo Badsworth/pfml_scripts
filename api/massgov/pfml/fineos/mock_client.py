@@ -275,10 +275,10 @@ class MockFINEOSClient(client.AbstractFINEOSClient):
     ) -> models.group_client_api.EForm:
         return models.group_client_api.EForm(eformId=12345)
 
-    def get_absence_occupations(
-        self, user_id: str, absence_id: str
+    def get_case_occupations(
+        self, user_id: str, case_id: str
     ) -> List[models.customer_api.ReadCustomerOccupation]:
-        _capture_call("get_absence_occupations", user_id, absence_id=absence_id)
+        _capture_call("get_case_occupations", user_id, case_id=case_id)
         return [models.customer_api.ReadCustomerOccupation(occupationId=12345)]
 
     def add_payment_preference(

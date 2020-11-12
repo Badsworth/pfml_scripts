@@ -419,10 +419,10 @@ class FINEOSClient(client.AbstractFINEOSClient):
             data=json.dumps(eform_json),
         )
 
-    def get_absence_occupations(
-        self, user_id: str, absence_id: str
+    def get_case_occupations(
+        self, user_id: str, case_id: str
     ) -> List[models.customer_api.ReadCustomerOccupation]:
-        response = self._customer_api("GET", f"customer/cases/{absence_id}/occupations", user_id,)
+        response = self._customer_api("GET", f"customer/cases/{case_id}/occupations", user_id,)
 
         json = response.json()
         for item in json:

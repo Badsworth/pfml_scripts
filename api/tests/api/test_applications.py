@@ -2231,11 +2231,7 @@ def test_application_post_submit_to_fineos(client, user, auth_token, test_db_ses
                 )
             },
         ),
-        (
-            "get_absence_occupations",
-            fineos_user_id,
-            {"absence_id": response_body.get("data").get("fineos_absence_id")},
-        ),
+        ("get_case_occupations", fineos_user_id, {"case_id": "NTN-259"},),
         (
             "add_week_based_work_pattern",
             fineos_user_id,

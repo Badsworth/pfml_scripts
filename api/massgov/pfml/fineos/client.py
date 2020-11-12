@@ -86,8 +86,8 @@ class AbstractFINEOSClient(abc.ABC, metaclass=abc.ABCMeta):
         pass
 
     @abc.abstractmethod
-    def get_absence_occupations(
-        self, user_id: str, absence_id: str
+    def get_case_occupations(
+        self, user_id: str, case_id: str
     ) -> typing.List[models.customer_api.ReadCustomerOccupation]:
         pass
 

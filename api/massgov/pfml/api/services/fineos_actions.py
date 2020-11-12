@@ -432,8 +432,9 @@ def upsert_week_based_work_pattern(fineos_client, user_id, application):
     """Add or update work pattern on an in progress absence case"""
 
     week_based_work_pattern = build_week_based_work_pattern(application)
-    absence_id = application.fineos_absence_id
-    occupation = fineos_client.get_absence_occupations(user_id, absence_id)[0]
+    occupation = fineos_client.get_case_occupations(
+        user_id, application.fineos_notification_case_id
+    )[0]
     occupation_id = occupation.occupationId
 
     if occupation_id is None:
@@ -470,7 +471,12 @@ def build_week_based_work_pattern(
         )
 
     return massgov.pfml.fineos.models.customer_api.WeekBasedWorkPattern(
-        workPatternType=application.work_pattern.work_pattern_type.work_pattern_type_description,
+        # FINEOS does not support Variable work patterns.
+        # We capture variable work patterns as average hours worked per week,
+        # split the hours evenly across 7 work pattern days, and send the days to
+        # FINEOS as a Fixed pattern
+        # TODO (CP-1377): Record variable work pattern somewhere in FINEOS
+        workPatternType="Fixed",
         workWeekStarts="Sunday",
         patternStartDate=None,
         patternStatus=None,
