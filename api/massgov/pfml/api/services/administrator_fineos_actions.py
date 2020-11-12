@@ -1,6 +1,6 @@
 import mimetypes
 import uuid
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 import massgov.pfml.db
 import massgov.pfml.fineos.models
@@ -13,7 +13,7 @@ from massgov.pfml.api.models.claims.common import (
     StandardLeavePeriod,
 )
 from massgov.pfml.api.models.claims.responses import ClaimReviewResponse, DocumentResponse
-from massgov.pfml.db.models.employees import UserLeaveAdministrator
+from massgov.pfml.db.models.employees import Employer, User, UserLeaveAdministrator
 from massgov.pfml.fineos.models.leave_admin_creation import CreateOrUpdateLeaveAdmin
 from massgov.pfml.fineos.transforms.from_fineos.eforms import (
     TransformOtherIncomeEform,
@@ -147,13 +147,12 @@ def get_claim_as_leave_admin(
 
 
 def register_leave_admin_with_fineos(
-    fineos_customer_nbr: str,
     admin_full_name: str,
     admin_email: str,
-    admin_area_code: str,
-    admin_phone_number: str,
-    employer_id: str,
-    current_user_id: str,
+    admin_area_code: Optional[str],
+    admin_phone_number: Optional[str],
+    employer: Employer,
+    user: User,
     db_session: massgov.pfml.db.Session,
 ) -> UserLeaveAdministrator:
     """
@@ -165,7 +164,7 @@ def register_leave_admin_with_fineos(
         fineos_web_id = f"pfml_leave_admin_{str(uuid.uuid4())}"
         leave_admin_create_payload = CreateOrUpdateLeaveAdmin(
             fineos_web_id=fineos_web_id,
-            fineos_customer_nbr=fineos_customer_nbr,
+            fineos_customer_nbr=employer.fineos_customer_nbr,
             admin_full_name=admin_full_name,
             admin_area_code=admin_area_code,
             admin_phone_number=admin_phone_number,
@@ -179,7 +178,7 @@ def register_leave_admin_with_fineos(
 
     try:
         leave_admin_record = UserLeaveAdministrator(
-            user_id=current_user_id, employer_id=employer_id, fineos_web_id=fineos_web_id,
+            user=user, employer=employer, fineos_web_id=fineos_web_id,
         )
         db_session.add(leave_admin_record)
 

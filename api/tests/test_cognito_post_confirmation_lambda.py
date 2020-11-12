@@ -4,6 +4,8 @@ import os
 import pytest
 
 import massgov.pfml.cognito_post_confirmation_lambda.lib as lib
+from massgov.pfml.db.models.employees import Role, User, UserLeaveAdministrator
+from massgov.pfml.db.models.factories import EmployerFactory
 
 
 @pytest.fixture
@@ -93,8 +95,6 @@ def test_lib_skip_non_post_confirmation_event(test_db_session, event_dict):
 
 
 def test_user_active_directory_id_uniqueness(test_db_session, event_dict):
-    from massgov.pfml.db.models.employees import User
-
     event1 = lib.PostConfirmationEvent(**event_dict)
 
     # create second event with different email address
@@ -124,3 +124,24 @@ def test_user_active_directory_id_uniqueness(test_db_session, event_dict):
     # make sure it's the same user as before
     assert created_user_initial.user_id == created_user_after_second_request.user_id
     assert created_user_initial.email_address == created_user_after_second_request.email_address
+
+
+def test_leave_admin_create(test_db_session):
+    employer = EmployerFactory.create()
+
+    lib.leave_admin_create(test_db_session, "UUID", "fake@fake.com", employer.employer_fein)
+
+    created_user = test_db_session.query(User).filter(User.active_directory_id == "UUID").one()
+
+    assert created_user.active_directory_id == "UUID"
+    assert created_user.email_address == "fake@fake.com"
+    assert created_user.roles[0].role_id == Role.EMPLOYER.role_id
+
+    created_leave_admin = (
+        test_db_session.query(UserLeaveAdministrator)
+        .filter(UserLeaveAdministrator.user_id == created_user.user_id)
+        .one_or_none()
+    )
+
+    assert created_leave_admin.fineos_web_id is not None
+    assert created_leave_admin.employer_id == employer.employer_id

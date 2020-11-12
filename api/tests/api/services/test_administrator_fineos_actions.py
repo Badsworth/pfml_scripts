@@ -29,14 +29,7 @@ def test_create_leave_admin_request_payload():
 def test_register_leave_admin_with_fineos(employer_user, test_db_session):
     employer = EmployerFactory.create()
     register_leave_admin_with_fineos(
-        "1005",
-        "Bob Smith",
-        "test@test.com",
-        "817",
-        "1234560",
-        employer.employer_id,
-        employer_user.user_id,
-        test_db_session,
+        "Bob Smith", "test@test.com", "817", "1234560", employer, employer_user, test_db_session,
     )
     created_leave_admin = (
         test_db_session.query(UserLeaveAdministrator)
