@@ -146,6 +146,43 @@ jobs:
         run: echo "::set-output name=s3_key::$(make get-release-key)"
         working-directory: ${{ env.infra-working-dir }}
 
+  cognito-pre-signup-build:
+    name: Build and upload Lambda function for Cognito Pre Signup hook
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./api/lambdas/cognito_pre_signup
+    outputs:
+      s3_key: ${{ steps.get_s3_key.outputs.s3_key }}
+
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v1
+        with:
+          python-version: ${{ env.python-version }}
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.PFML_AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.PFML_AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+          role-to-assume: ci-run-deploys
+          role-duration-seconds: 3600
+
+      - name: Install API Package Dependencies
+        run: pip install wheel setuptools poetry
+
+      - name: Install Lambda CLI Dependencies
+        run: pip install setuptools awscli aws-sam-cli
+
+      - name: Lambda Build, Package and Upload to S3
+        run: make release
+
+      - name: Get Package S3 Key
+        id: get_s3_key
+        run: echo "::set-output name=s3_key::$(make get-release-key)"
+
   cognito-post-confirmation-build:
     name: Build and upload Lambda function for Cognito Post Confirmation hook
     runs-on: ubuntu-latest
@@ -273,12 +310,13 @@ jobs:
   api-release:
     name: Release
     runs-on: ubuntu-latest
-    needs: [api-build, cognito-post-confirmation-build, eligibility-feed-build, api-db-migrate-up, formstack-import-build]
+    needs: [api-build, cognito-post-confirmation-build, cognito-pre-signup-build, eligibility-feed-build, api-db-migrate-up, formstack-import-build]
 
     env:
       TF_VAR_service_docker_tag: ${{ github.sha }}
       TF_VAR_formstack_lambda_artifact_s3_key: ${{ needs.formstack-import-build.outputs.s3_key }}
       TF_VAR_cognito_post_confirmation_lambda_artifact_s3_key: ${{ needs.cognito-post-confirmation-build.outputs.s3_key }}
+      TF_VAR_cognito_pre_signup_lambda_artifact_s3_key: ${{ needs.cognito-pre-signup-build.outputs.s3_key }}
       TF_VAR_fineos_eligibility_transfer_lambda_build_s3_key: ${{ needs.eligibility-feed-build.outputs.s3_key }}
 
     steps:

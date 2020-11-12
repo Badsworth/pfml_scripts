@@ -37,3 +37,9 @@ variable "cognito_post_confirmation_lambda_arn" {
   type        = string
   default     = null
 }
+
+variable "cognito_pre_signup_lambda_arn" {
+  description = "Optional. ARN of AWS Lambda to connect to the pre-signup event on the Cognito User Pool."
+  type        = string
+  default     = null
+}

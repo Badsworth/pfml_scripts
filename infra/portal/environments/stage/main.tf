@@ -39,6 +39,7 @@ module "massgov_pfml" {
 
   # Integrations
   cognito_post_confirmation_lambda_arn = "arn:aws:lambda:us-east-1:498823821309:function:massgov-pfml-stage-cognito_post_confirmation"
+  cognito_pre_signup_lambda_arn        = "arn:aws:lambda:us-east-1:498823821309:function:massgov-pfml-stage-cognito_pre_signup"
 
   # You probably don't need to change the variables below:
   source                 = "../../template"

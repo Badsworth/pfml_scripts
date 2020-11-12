@@ -9,6 +9,7 @@ locals {
   newrelic_log_ingestion_lambda = module.constants.newrelic_log_ingestion_arn
 }
 
+# It should noted that 'claimants_pool' is a misnomer as this user pool will also contain Leave Administrators
 resource "aws_cognito_user_pool" "claimants_pool" {
   name                     = "massgov-${local.app_name}-${var.environment_name}"
   username_attributes      = ["email"]
@@ -27,6 +28,7 @@ resource "aws_cognito_user_pool" "claimants_pool" {
   lambda_config {
     custom_message    = aws_lambda_function.cognito_custom_message.arn
     post_confirmation = var.cognito_post_confirmation_lambda_arn
+    pre_sign_up       = var.cognito_pre_signup_lambda_arn
   }
 
   password_policy {

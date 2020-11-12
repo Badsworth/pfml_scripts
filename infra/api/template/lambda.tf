@@ -15,6 +15,55 @@ data "aws_s3_bucket" "lambda_build" {
 
 # ----------------------------------------------------------------------------------------------------------------------
 
+resource "aws_lambda_function" "cognito_pre_signup" {
+  s3_bucket = data.aws_s3_bucket.lambda_build.bucket
+  s3_key    = "cognito-pre-signup/${var.cognito_pre_signup_lambda_artifact_s3_key}"
+
+  # This function is connected to Cognito in the Portal Terraform configs via
+  # this name, any changes to the function name should be done by deploying a
+  # new Lambda function with the updated name, updating the Portal config to
+  # point to new Lambda, then drop the old Lambda. Otherwise downtime is
+  # required/User creation is broken.
+  function_name = "massgov-pfml-${var.environment_name}-cognito_pre_signup"
+  handler       = "newrelic_lambda_wrapper.handler" # the entrypoint of the newrelic instrumentation layer
+  runtime       = var.runtime_py
+  publish       = "true"
+
+  # Cognito will only wait 5 seconds, so match that timeout here for
+  # consistency.
+  timeout = 5
+
+  role   = aws_iam_role.cognito_pre_signup_lambda_role.arn
+  layers = [local.newrelic_log_ingestion_layer]
+
+  vpc_config {
+    subnet_ids         = var.vpc_app_subnet_ids
+    security_group_ids = [aws_security_group.data_import.id]
+  }
+
+  environment {
+    variables = {
+      DB_HOST                               = aws_db_instance.default.address
+      DB_NAME                               = aws_db_instance.default.name
+      DB_USERNAME                           = "pfml_api"
+      NEW_RELIC_ACCOUNT_ID                  = local.newrelic_account_id
+      NEW_RELIC_TRUSTED_ACCOUNT_KEY         = local.newrelic_trusted_account_key
+      NEW_RELIC_LAMBDA_HANDLER              = "handler.handler" # the actual lambda entrypoint
+      NEW_RELIC_DISTRIBUTED_TRACING_ENABLED = true
+    }
+  }
+}
+
+resource "aws_lambda_permission" "allow_cognito_pre_signup" {
+  statement_id  = "AllowExecutionFromCognito"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.cognito_pre_signup.function_name
+  principal     = "cognito-idp.amazonaws.com"
+  source_arn    = var.cognito_user_pool_arn
+}
+
+# ----------------------------------------------------------------------------------------------------------------------
+
 resource "aws_lambda_function" "cognito_post_confirmation" {
   s3_bucket = data.aws_s3_bucket.lambda_build.bucket
   s3_key    = "cognito-post-confirmation/${var.cognito_post_confirmation_lambda_artifact_s3_key}"
