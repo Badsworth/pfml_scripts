@@ -48,7 +48,7 @@ echo "Task definition $TASK_DEFINITION"
 # Construct command overrides as JSON from COMMAND array
 COMMAND_JSON=$(printf '%s\n' "${COMMAND[@]}" | jq -R . | jq -s .)
 OVERRIDES=$(jq --compact-output \
-    --arg TASK_NAME "pfml-api-$TASK_NAME" \
+    --arg TASK_NAME "$TASK_NAME" \
     --argjson COMMAND "$COMMAND_JSON" \
     '.containerOverrides[0].name=$TASK_NAME |
      .containerOverrides[0].command=$COMMAND' \
