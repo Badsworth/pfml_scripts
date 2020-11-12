@@ -60,6 +60,7 @@ data "template_file" "container_definitions" {
     aws_region                                 = data.aws_region.current.name
     cors_origins                               = join(",", var.cors_origins)
     cognito_user_pool_keys_url                 = var.cognito_user_pool_keys_url
+    logging_level                              = var.logging_level
     rmv_client_certificate_binary_arn          = var.rmv_client_certificate_binary_arn
     rmv_client_base_url                        = var.rmv_client_base_url
     rmv_check_behavior                         = var.rmv_check_behavior

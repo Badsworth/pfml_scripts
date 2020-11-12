@@ -51,7 +51,7 @@ def test_init(caplog, monkeypatch):
 
     massgov.pfml.util.logging.init("test_logging_1234")
 
-    assert len(caplog.record_tuples) == 2
+    assert len(caplog.record_tuples) >= 2
     start_entry = caplog.record_tuples[0]
     invoked_as_entry = caplog.record_tuples[1]
     assert start_entry[0] == "massgov.pfml.util.logging"

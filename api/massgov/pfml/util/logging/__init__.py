@@ -66,9 +66,26 @@ def init(program_name):
     )
     logger.info("invoked as: %s", " ".join(original_argv))
 
+    override_logging_levels()
+
     atexit.register(exit_handler, program_name)
 
     network.init()
+
+
+def override_logging_levels():
+    """Override default logging levels using settings in LOGGING_LEVEL environment variable.
+
+    The format is "name1=level,name2=level". For example:
+
+      LOGGING_LEVEL="massgov.pfml.fineos=DEBUG,sqlalchemy=INFO"
+    """
+    for override in os.environ.get("LOGGING_LEVEL", "").split(","):
+        if "=" not in override:
+            continue
+        logger_name, _separator, logging_level = override.partition("=")
+        logger.info("set level for %s to %s", logger_name, logging_level)
+        logging.getLogger(logger_name).setLevel(logging_level)
 
 
 def exit_handler(program_name):

@@ -148,7 +148,8 @@ class FINEOSClient(client.AbstractFINEOSClient):
             response = request_function(method, url, timeout=(6.1, 60), headers=headers, **args)
         except requests.exceptions.RequestException as ex:
             logger.error("%s %s => %r", method, url, ex)
-            # Make sure New Relic records errors from FINEOS, even if the API does not ultimately return an error.
+            # Make sure New Relic records errors from FINEOS, even if the API does not ultimately
+            # return an error.
             newrelic.agent.record_custom_event(
                 "FineosError",
                 {
@@ -172,7 +173,13 @@ class FINEOSClient(client.AbstractFINEOSClient):
                 url,
                 response.status_code,
                 response.elapsed / MILLISECOND,
-                extra={"text": response.text},
+                extra={"response.text": response.text},
+            )
+            logger.debug(
+                "%s %s detail",
+                method,
+                url,
+                extra={"request.headers": headers, "request.args": args},
             )
             # FINEOS returned an error. Record it in New Relic before raising the exception.
             newrelic.agent.record_custom_event(

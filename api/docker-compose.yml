@@ -59,6 +59,7 @@ services:
       - DB_PASSWORD=secret123
       - CORS_ORIGINS=http://localhost:3000
       - COGNITO_USER_POOL_KEYS_URL=file:///app/jwks.json
+      - LOGGING_LEVEL=massgov.pfml.fineos.fineos_client=DEBUG
       - ENABLE_EMPLOYEE_ENDPOINTS=1
       - ENABLE_EMPLOYER_ENDPOINTS=1
       - FOLDER_PATH=dor_mock

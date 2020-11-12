@@ -130,6 +130,12 @@ variable "cognito_user_pool_keys_url" {
   default     = null
 }
 
+variable "logging_level" {
+  description = "Override default logging levels for certain Python modules."
+  type        = string
+  default     = ""
+}
+
 variable "rmv_client_base_url" {
   description = "The base URL for the Registry of Motor Vehicles (RMV) API."
   type        = string
