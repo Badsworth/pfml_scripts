@@ -701,7 +701,7 @@ components:
       x-tokenInfoFunc: massgov.pfml.api.authentication.decode_cognito_token
       flows:
         clientCredentials:
-          tokenUrl: /oauth2/token
+          tokenUrl: /api/v1/oauth2/token
           scopes: {}
 
   requestBodies:
