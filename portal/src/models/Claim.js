@@ -172,12 +172,12 @@ export const EmploymentStatus = {
  * @enum {string}
  */
 export const LeaveReason = {
-  // TODO (CP-534): We need to map some of these to the correct API fields,
-  // once those enum values exist within the API
-  activeDutyFamily: "Care For A Family Member",
+  // TODO (CP-534): Replace this placeholder with the actual value once it's implemented in the API
+  activeDutyFamily: "Active Duty Family Placeholder",
   bonding: "Child Bonding",
   medical: "Serious Health Condition - Employee",
-  serviceMemberFamily: "Pregnancy/Maternity",
+  // TODO (CP-534): Replace this placeholder with the actual value once it's implemented in the API
+  serviceMemberFamily: "Service Member Family Placeholder",
 };
 
 /**
