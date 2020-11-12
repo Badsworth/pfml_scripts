@@ -76,7 +76,7 @@ const errors = {
       required: "Enter a date of birth.",
     },
     employer_fein: {
-      pattern: "Enter a 9-digit FEIN.",
+      pattern: "Enter a 9-digit number formatted as XX-XXXXXXX.",
       required: "Enter your employer's Federal Employer Identification Number.",
     },
     employment_status: {
@@ -297,7 +297,7 @@ const errors = {
         "You must tell your employer that you’re taking leave before you can submit an application. If you’ve told your employer, update your application with the date that you notified them.",
     },
     tax_identifier: {
-      pattern: "Enter a 9-digit number.",
+      pattern: "Enter a 9-digit number formatted as XXX-XX-XXXX.",
       required: "Enter a Social Security Number or ITIN.",
     },
     upload_docs_options: {

@@ -147,7 +147,7 @@ describe("useAppErrorsLogic", () => {
 
         // Compare the order of message fallbacks
         expect(appErrorsLogic.appErrors.items[0].message).toMatchInlineSnapshot(
-          `"Enter a 9-digit number."`
+          `"Enter a 9-digit number formatted as XXX-XX-XXXX."`
         );
         expect(appErrorsLogic.appErrors.items[1].message).toMatchInlineSnapshot(
           `"You must choose at least one kind of leave (continuous, reduced schedule, or intermittent)."`

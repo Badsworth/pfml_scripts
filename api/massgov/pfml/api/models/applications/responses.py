@@ -20,7 +20,7 @@ from massgov.pfml.api.models.applications.common import (
 from massgov.pfml.db.models.applications import Application, ApplicationPaymentPreference, Document
 from massgov.pfml.util.pydantic import PydanticBaseModel
 from massgov.pfml.util.pydantic.types import (
-    FEINStr,
+    FEINFormattedStr,
     MaskedDateStr,
     MaskedMassIdStr,
     MaskedTaxIdFormattedStr,
@@ -38,7 +38,7 @@ class ApplicationResponse(PydanticBaseModel):
     application_nickname: Optional[str]
     tax_identifier: Optional[MaskedTaxIdFormattedStr]
     employer_id: Optional[UUID4]
-    employer_fein: Optional[FEINStr]
+    employer_fein: Optional[FEINFormattedStr]
     fineos_absence_id: Optional[str]
     first_name: Optional[str]
     middle_name: Optional[str]

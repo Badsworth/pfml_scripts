@@ -249,8 +249,10 @@ def test_application_patch(client, user, auth_token, test_db_session):
 
     test_db_session.refresh(application)
 
+    # Formatted fields are saved as unformatted (i.e. no dashes)
     assert application.tax_identifier
     assert application.tax_identifier.tax_identifier == "123456789"
+    assert application.employer_fein == "227777777"
 
     assert response_body.get("data").get("last_name") == "Perez"
     assert response_body.get("data").get("updated_time") == "2020-01-01T00:00:00+00:00"
@@ -261,6 +263,9 @@ def test_application_patch(client, user, auth_token, test_db_session):
     assert (
         response_body.get("data").get("leave_details").get("relationship_to_caregiver") == "Parent"
     )
+
+    # Formatted / masked fields:
+    assert response_body.get("data").get("employer_fein") == "22-7777777"
     assert response_body.get("data").get("tax_identifier") == "***-**-6789"
 
 

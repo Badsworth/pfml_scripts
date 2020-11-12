@@ -74,7 +74,7 @@ class MaskedTaxIdFormattedStr(str):
         return mask.mask_tax_identifier(val)
 
 
-class FEINStr(str):
+class FEINUnformattedStr(str):
     @classmethod
     def __get_validators__(cls):
         yield cls.validate_type
@@ -91,6 +91,23 @@ class FEINStr(str):
             return val
 
         raise ValueError(f"does not match one of: {Regexes.FEIN.pattern}, {Regexes.FEIN_FORMATTED}")
+
+
+class FEINFormattedStr(str):
+    @classmethod
+    def __get_validators__(cls):
+        yield cls.validate_type
+
+    @classmethod
+    def validate_type(cls, val):
+        if val is None:
+            return None
+
+        elif Regexes.FEIN.match(val):
+            return "{}-{}".format(val[:2], val[2:])
+
+        elif Regexes.FEIN_FORMATTED.match(val):
+            return val
 
 
 class MaskedFinancialAcctNum(str):

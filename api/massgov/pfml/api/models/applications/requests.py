@@ -16,14 +16,14 @@ from massgov.pfml.api.models.applications.common import (
 )
 from massgov.pfml.api.validation.exceptions import ValidationErrorDetail, ValidationException
 from massgov.pfml.util.pydantic import PydanticBaseModel
-from massgov.pfml.util.pydantic.types import FEINStr, MassIdStr, TaxIdUnformattedStr
+from massgov.pfml.util.pydantic.types import FEINUnformattedStr, MassIdStr, TaxIdUnformattedStr
 
 
 class ApplicationRequestBody(PydanticBaseModel):
     application_nickname: Optional[str]
     employee_ssn: Optional[TaxIdUnformattedStr]
     tax_identifier: Optional[TaxIdUnformattedStr]
-    employer_fein: Optional[FEINStr]
+    employer_fein: Optional[FEINUnformattedStr]
     first_name: Optional[str]
     middle_name: Optional[str]
     last_name: Optional[str]
