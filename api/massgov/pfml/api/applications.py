@@ -1,4 +1,5 @@
 import base64
+import hashlib
 
 import connexion
 import puremagic
@@ -252,6 +253,11 @@ def validate_file_name(file_name):
 
 def document_upload(application_id, body, file):
     with app.db_session() as db_session:
+        # ** Temporary debugging code **
+        file_md5 = hashlib.md5(file.read()).hexdigest()  # nosec
+        logger.warning("File MD5 - filename: %s, md5: %s", file.filename, file_md5)
+        file.seek(0)
+
         # Get the referenced application or return 404
         existing_application = get_or_404(db_session, Application, application_id)
 
