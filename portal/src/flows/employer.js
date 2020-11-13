@@ -10,6 +10,11 @@ import routes from "../routes";
 export default {
   states: {
     [routes.employers.confirmation]: {},
+    [routes.employers.createAccount]: {
+      on: {
+        CREATE_ACCOUNT: routes.auth.verifyAccount,
+      },
+    },
     [routes.employers.dashboard]: {},
     [routes.employers.finishAccountSetup]: {
       on: {
