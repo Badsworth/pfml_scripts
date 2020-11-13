@@ -1,3 +1,4 @@
+import copy
 import json
 
 import tests.api
@@ -5,7 +6,7 @@ from massgov.pfml.db.models.applications import Notification
 
 leave_admin_body = {
     "absence_case_id": "NTN-111-ABS-01",
-    "document_type": "Legal Notice",
+    "document_type": "Approval Notice",
     "trigger": "claim.approved",
     "source": "Self-Service",
     "recipient_type": "Leave Administrator",
@@ -52,6 +53,46 @@ def test_notifications_post_leave_admin(client, test_db_session, fineos_user_tok
     assert notification.updated_at
     request_json = json.loads(notification.request_json)
     assert request_json == leave_admin_body
+
+
+def test_notifications_post_leave_admin_no_document_type(
+    client, test_db_session, fineos_user_token
+):
+    leave_admin_body_no_document_type = copy.deepcopy(leave_admin_body)
+    del leave_admin_body_no_document_type["document_type"]
+    response = client.post(
+        "/v1/notifications",
+        headers={"Authorization": f"Bearer {fineos_user_token}"},
+        json=leave_admin_body_no_document_type,
+    )
+    assert response.status_code == 201
+
+    notification = test_db_session.query(Notification).first()
+
+    assert notification.created_at
+    assert notification.updated_at
+    request_json = json.loads(notification.request_json)
+    assert request_json == leave_admin_body_no_document_type
+
+
+def test_notifications_post_leave_admin_empty_str_document_type(
+    client, test_db_session, fineos_user_token
+):
+    leave_admin_body_empty_str_document_type = copy.deepcopy(leave_admin_body)
+    leave_admin_body_empty_str_document_type["document_type"] = ""
+    response = client.post(
+        "/v1/notifications",
+        headers={"Authorization": f"Bearer {fineos_user_token}"},
+        json=leave_admin_body_empty_str_document_type,
+    )
+    assert response.status_code == 201
+
+    notification = test_db_session.query(Notification).first()
+
+    assert notification.created_at
+    assert notification.updated_at
+    request_json = json.loads(notification.request_json)
+    assert request_json == leave_admin_body_empty_str_document_type
 
 
 def test_notifications_post_claimant(client, test_db_session, fineos_user_token):

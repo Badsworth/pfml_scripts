@@ -10,8 +10,6 @@ RECIPIENT_TYPE_MAPPING = {"Leave Administrator": "leave_administrator", "Claiman
 
 SOURCE_MAPPING = {"Self-Service": "portal", "Call Center": "call_center"}
 
-DOCUMENT_TYPE_MAPPING = {"Legal Notice": "legal_notice"}
-
 
 def is_leave_administrator(notification_request: NotificationRequest) -> bool:
     return notification_request.recipient_type == "Leave Administrator"
@@ -62,12 +60,17 @@ def format_link(notification_request: NotificationRequest) -> str:
     return os.environ.get("PORTAL_ABSENCE_CLAIMANT_URL", "")
 
 
+def format_document_type(notification_request: NotificationRequest) -> str:
+    document_type = getattr(notification_request, "document_type", "") or ""
+    return document_type.lower().replace(" ", "_")
+
+
 class TransformNotificationRequest(BaseModel):
     @classmethod
     def to_service_now(cls, notification_request: NotificationRequest) -> OutboundMessage:
         return OutboundMessage(
             u_absence_id=notification_request.absence_case_id,
-            u_document_type=DOCUMENT_TYPE_MAPPING[notification_request.document_type],
+            u_document_type=format_document_type(notification_request),
             u_source=SOURCE_MAPPING[notification_request.source],
             u_user_type=RECIPIENT_TYPE_MAPPING[notification_request.recipient_type],
             u_trigger=notification_request.trigger,

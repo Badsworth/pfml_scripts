@@ -526,7 +526,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
-    post:          
+    post:
       summary: Upload Document
       operationId: massgov.pfml.api.applications.document_upload
       tags:
@@ -544,7 +544,7 @@ paths:
       requestBody:
         content:
           multipart/form-data:
-            schema: 
+            schema:
               $ref: '#/components/schemas/DocumentUploadRequest'
             encoding:
               file:
@@ -2011,8 +2011,6 @@ components:
           description: The type of document that is available to view.
           type: string
           example: Legal Notice
-          enum:
-            - Legal Notice
         trigger:
           title: Trigger
           description: The claim state that triggered the notification.
@@ -2044,7 +2042,6 @@ components:
 
       required:
         - absence_case_id
-        - document_type
         - trigger
         - source
         - recipient_type

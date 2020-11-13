@@ -29,6 +29,43 @@ def leave_admin_notification_request():
 
 
 @pytest.fixture
+def leave_admin_notification_request_empty_doctype():
+    return NotificationRequest(
+        absence_case_id="NTN-110-ABS-01",
+        claimant_info=ClaimantInfo(
+            customer_id="1234", date_of_birth="1970-01-01", first_name="John", last_name="Smith"
+        ),
+        document_type="",
+        recipient_type="Leave Administrator",
+        recipients=[
+            RecipientDetails(
+                contact_id="11", email_address="j.a.doe@gmail.com", full_name="Jane Doe"
+            )
+        ],
+        source="Self-Service",
+        trigger="claim.approved",
+    )
+
+
+@pytest.fixture
+def leave_admin_notification_request_no_doctype():
+    return NotificationRequest(
+        absence_case_id="NTN-110-ABS-01",
+        claimant_info=ClaimantInfo(
+            customer_id="1234", date_of_birth="1970-01-01", first_name="John", last_name="Smith"
+        ),
+        recipient_type="Leave Administrator",
+        recipients=[
+            RecipientDetails(
+                contact_id="11", email_address="j.a.doe@gmail.com", full_name="Jane Doe"
+            )
+        ],
+        source="Self-Service",
+        trigger="claim.approved",
+    )
+
+
+@pytest.fixture
 def claimant_notification_request():
     return NotificationRequest(
         absence_case_id="NTN-110-ABS-01",
@@ -75,6 +112,54 @@ class TestTransformNotificationRequest:
         assert type(result) == OutboundMessage
         assert result.u_absence_id == "NTN-110-ABS-01"
         assert result.u_document_type == "legal_notice"
+        assert result.u_source == "portal"
+        assert result.u_user_type == "leave_administrator"
+        assert result.u_trigger == "claim.approved"
+        assert (
+            result.u_link
+            == "http://paidleave.mass.gov/employers/claims/review/?absence_id=NTN-110-ABS-01"
+        )
+        assert result.u_recipients == [
+            '{"first_name": "Jane", "last_name": "Doe", "id": "11", "email": "j.a.doe@gmail.com"}'
+        ]
+        assert (
+            result.u_claimant_info
+            == '{"first_name": "John", "last_name": "Smith", "dob": "1970/01/01", "id": "1234"}'
+        )
+
+    def test_transform_leave_admin_notification_request_empty_doctype(
+        self, leave_admin_notification_request_empty_doctype
+    ):
+        result = TransformNotificationRequest.to_service_now(
+            leave_admin_notification_request_empty_doctype
+        )
+        assert type(result) == OutboundMessage
+        assert result.u_absence_id == "NTN-110-ABS-01"
+        assert result.u_document_type == ""
+        assert result.u_source == "portal"
+        assert result.u_user_type == "leave_administrator"
+        assert result.u_trigger == "claim.approved"
+        assert (
+            result.u_link
+            == "http://paidleave.mass.gov/employers/claims/review/?absence_id=NTN-110-ABS-01"
+        )
+        assert result.u_recipients == [
+            '{"first_name": "Jane", "last_name": "Doe", "id": "11", "email": "j.a.doe@gmail.com"}'
+        ]
+        assert (
+            result.u_claimant_info
+            == '{"first_name": "John", "last_name": "Smith", "dob": "1970/01/01", "id": "1234"}'
+        )
+
+    def test_transform_leave_admin_notification_request_no_doctype(
+        self, leave_admin_notification_request_no_doctype
+    ):
+        result = TransformNotificationRequest.to_service_now(
+            leave_admin_notification_request_no_doctype
+        )
+        assert type(result) == OutboundMessage
+        assert result.u_absence_id == "NTN-110-ABS-01"
+        assert result.u_document_type == ""
         assert result.u_source == "portal"
         assert result.u_user_type == "leave_administrator"
         assert result.u_trigger == "claim.approved"
