@@ -12,6 +12,7 @@ import {
   formatDate,
   waitForElement,
   waitForRealTimeSim,
+  getDocumentType,
 } from "../helpers";
 import assert from "assert";
 
@@ -434,6 +435,45 @@ export const steps: StoredStep[] = [
         `Notification Status is '${notifStatus}' instead of 'Open'.`
       );
       await waitForRealTimeSim(browser, data, 1 / steps.length);
+    },
+  },
+  {
+    name: "Upload documents",
+    test: async (browser: Browser, data: LSTSimClaim): Promise<void> => {
+      const { documents } = data;
+      const documentsTab = await waitForElement(
+        browser,
+        By.css("[class^='TabO'][keytipnumber='11']")
+      );
+      await browser.click(documentsTab);
+      for (const doc of documents) {
+        const addDocument = await waitForElement(
+          browser,
+          By.css("input[type='submit'][title='Add Document']")
+        );
+        await browser.click(addDocument);
+        const searchTab = await waitForElement(
+          browser,
+          By.css("[class^='TabO'][keytipnumber='4']")
+        );
+        await browser.click(searchTab);
+        // search for doc type
+        const docType = await labelled(browser, "Business Type");
+        await browser.type(docType, getDocumentType(doc));
+        const searchOkButton = await waitForElement(
+          browser,
+          By.css("input[type='submit'][value='OK']")
+        );
+        await browser.click(searchOkButton);
+        // upload pdf
+        const uploadInput = await labelled(browser, "Business Type");
+        await uploadInput.uploadFile("data/HCP.pdf");
+        const uploadOkButton = await waitForElement(
+          browser,
+          By.css("input[type='submit'][value='OK']")
+        );
+        await browser.click(uploadOkButton);
+      }
     },
   },
 ];
