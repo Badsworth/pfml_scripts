@@ -23,6 +23,8 @@ import massgov.pfml.util.logging as logging
 from massgov.pfml.api.models.applications.responses import DocumentResponse
 from massgov.pfml.db.models.applications import (
     Application,
+    Document,
+    DocumentType,
     FINEOSWebIdExt,
     LeaveReason,
     LeaveReasonQualifier,
@@ -167,6 +169,46 @@ def complete_intake(application: Application, db_session: massgov.pfml.db.Sessio
         db_session.commit()
         fineos.complete_intake(fineos_user_id, str(application.fineos_notification_case_id))
 
+    except massgov.pfml.fineos.FINEOSClientError:
+        logger.exception("FINEOS API error")
+        return False
+
+    return True
+
+
+def mark_documents_as_received(
+    application: Application, db_session: massgov.pfml.db.Session
+) -> bool:
+    """Mark documents attached to an application as received in FINEOS."""
+
+    if application.fineos_absence_id is None:
+        raise ValueError("application.fineos_absence_id is None")
+
+    try:
+        fineos = massgov.pfml.fineos.create_client()
+        fineos_user_id = get_or_register_employee_fineos_user_id(fineos, application, db_session)
+
+        doc_types = (
+            DocumentType.IDENTIFICATION_PROOF.document_type_id,
+            DocumentType.STATE_MANAGED_PAID_LEAVE_CONFIRMATION.document_type_id,
+        )
+
+        documents = (
+            db_session.query(Document)
+            .filter(Document.application_id == application.application_id)
+            .filter(Document.document_type_id.in_(doc_types))
+        )
+        for document in documents:
+            if document.fineos_id is None:
+                logger.error(
+                    "Document does not have a fineos_id",
+                    extra={"document_id": document.document_id},
+                )
+                return False
+
+            fineos.mark_document_as_received(
+                fineos_user_id, str(application.fineos_absence_id), str(document.fineos_id)
+            )
     except massgov.pfml.fineos.FINEOSClientError:
         logger.exception("FINEOS API error")
         return False

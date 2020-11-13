@@ -335,6 +335,16 @@ class MockFINEOSClient(client.AbstractFINEOSClient):
             }
         )
 
+    def mark_document_as_received(
+        self, user_id: str, absence_id: str, fineos_document_id: str
+    ) -> None:
+        _capture_call(
+            "mark_document_as_received",
+            user_id,
+            absence_id=absence_id,
+            fineos_document_id=fineos_document_id,
+        )
+
     def get_week_based_work_pattern(
         self, user_id: str, occupation_id: Union[str, int],
     ) -> models.customer_api.WeekBasedWorkPattern:

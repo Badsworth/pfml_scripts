@@ -129,6 +129,12 @@ class AbstractFINEOSClient(abc.ABC, metaclass=abc.ABCMeta):
         pass
 
     @abc.abstractmethod
+    def mark_document_as_received(
+        self, user_id: str, absence_id: str, fineos_document_id: str
+    ) -> None:
+        pass
+
+    @abc.abstractmethod
     def get_week_based_work_pattern(
         self, user_id: str, occupation_id: typing.Union[str, int],
     ) -> models.customer_api.WeekBasedWorkPattern:

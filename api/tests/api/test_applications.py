@@ -16,6 +16,7 @@ from massgov.pfml.db.models.applications import (
     Application,
     ApplicationPaymentPreference,
     ContinuousLeavePeriod,
+    DocumentType,
     EmploymentStatus,
     FINEOSWebIdExt,
     LeaveReason,
@@ -30,6 +31,7 @@ from massgov.pfml.db.models.factories import (
     AddressFactory,
     ApplicationFactory,
     ContinuousLeavePeriodFactory,
+    DocumentFactory,
     IntermittentLeavePeriodFactory,
     ReducedScheduleLeavePeriodFactory,
     UserFactory,
@@ -2717,6 +2719,7 @@ def test_application_post_complete_app(client, user, auth_token, test_db_session
     application.work_pattern = WorkPatternFixedFactory.create()
     application.employer_fein = "770000001"
     application.fineos_notification_case_id = "NTN-259"
+    application.fineos_absence_id = application.fineos_notification_case_id + "-ABS-01"
     application.continuous_leave_periods = [
         ContinuousLeavePeriodFactory.create(start_date=date(2021, 1, 1))
     ]
@@ -2733,3 +2736,84 @@ def test_application_post_complete_app(client, user, auth_token, test_db_session
 
     assert response.status_code == 200
     assert response_body.get("data").get("status") == ApplicationStatus.Completed.value
+
+
+def test_application_complete_mark_document_received_fineos(
+    client, user, auth_token, test_db_session
+):
+    application = ApplicationFactory.create(user=user)
+    application.tax_identifier = TaxIdentifier(tax_identifier="999004444")
+    application.employment_status_id = EmploymentStatus.UNEMPLOYED.employment_status_id
+    application.hours_worked_per_week = 70
+    application.residential_address = AddressFactory.create()
+    application.work_pattern = WorkPatternFixedFactory.create()
+    application.employer_fein = "770000001"
+    application.fineos_notification_case_id = "NTN-259"
+    application.fineos_absence_id = application.fineos_notification_case_id + "-ABS-01"
+    application.continuous_leave_periods = [
+        ContinuousLeavePeriodFactory.create(
+            # Dates that pass validation criteria. 55 and 75 are not meaningful values outside
+            # of the fact that they are valid. Would work with any valid leave period.
+            start_date=datetime.now() + relativedelta(days=55),
+            end_date=datetime.now() + relativedelta(days=75),
+        )
+    ]
+    application.has_continuous_leave_periods = True
+
+    test_db_session.add(application)
+
+    id_proof = DocumentFactory.create(
+        user_id=user.user_id,
+        application_id=application.application_id,
+        document_type_id=DocumentType.IDENTIFICATION_PROOF.document_type_id,
+        fineos_id="id-proof-dummy-doc-id",
+    )
+    test_db_session.add(id_proof)
+
+    irrelevant_evidence = DocumentFactory.create(
+        user_id=user.user_id,
+        application_id=application.application_id,
+        document_type_id=DocumentType.PASSPORT.document_type_id,
+        fineos_id="passport-dummy-doc-id",
+    )
+    test_db_session.add(irrelevant_evidence)
+
+    test_db_session.commit()
+
+    assert not application.completed_time
+
+    massgov.pfml.fineos.mock_client.start_capture()
+
+    response = client.post(
+        "/v1/applications/{}/complete_application".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+    )
+    assert response.status_code == 200
+
+    capture = massgov.pfml.fineos.mock_client.get_capture()
+
+    # Refresh the db session because the application object was manipulated by another session
+    # in the logic we executed as a result of the POST request above.
+    test_db_session.refresh(application)
+    assert application.completed_time
+
+    client_function_calls = (
+        "find_employer",
+        "register_api_user",
+        "mark_document_as_received",
+    )
+    for i in range(len(capture)):
+        assert capture[i][0] == client_function_calls[i]
+
+    assert (
+        len(capture) == 3
+    ), "Did not make 3 requests to FINEOS API. Confirm that we did not attempt to mark_document_as_received for irrelevant_evidence"
+
+    # Function name
+    assert capture[2][0] == "mark_document_as_received"
+
+    # Arguments we pass to the function
+    assert capture[2][2] == {
+        "absence_id": application.fineos_absence_id,
+        "fineos_document_id": id_proof.fineos_id,
+    }

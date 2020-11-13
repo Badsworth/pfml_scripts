@@ -370,6 +370,41 @@ class StateMetricFactory(BaseFactory):
     average_weekly_wage = Decimal(1331.66)
 
 
+class DocumentFactory(BaseFactory):
+    class Meta:
+        model = application_models.Document
+
+    document_id = Generators.UuidObj
+
+    # TODO: This should point to a User object but that relationship does not exist in the base model.
+    #
+    # user = factory.SubFactory(UserFactory)
+    # user_id = factory.LazyAttribute(lambda a: a.user.user_id)
+    user_id = Generators.UuidObj
+
+    # TODO: This should point to an Application object but that relationship does not exist in the base model.
+    #
+    # application = factory.SubFactory(ApplicationFactory)
+    # application_id = factory.LazyAttribute(lambda a: a.application.application_id)
+    application_id = Generators.UuidObj
+
+    created_at = Generators.UtcNow
+    updated_at = Generators.UtcNow
+
+    # Initialize these type_ids to some random value.
+    document_type_id = random.randint(
+        1, application_models.DocumentType.STATE_MANAGED_PAID_LEAVE_CONFIRMATION.document_type_id
+    )
+    content_type_id = random.randint(1, application_models.ContentType.HEIC.content_type_id)
+
+    # These values have no special meaning, just bounds so we get some variation.
+    size_bytes = random.randint(1989, 24_072_020)
+
+    is_stored_in_s3 = False
+    name = ""
+    description = ""
+
+
 class WorkPatternFixedFactory(BaseFactory):
     """A single week work pattern for someone working a fixed (consistent) schedule"""
 

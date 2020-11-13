@@ -542,6 +542,15 @@ class FINEOSClient(client.AbstractFINEOSClient):
 
         return models.customer_api.Base64EncodedFileData.parse_obj(response_json)
 
+    def mark_document_as_received(
+        self, user_id: str, absence_id: str, fineos_document_id: str
+    ) -> None:
+        self._customer_api(
+            "POST",
+            f"customer/cases/{absence_id}/documents/{fineos_document_id}/doc-received-for-outstanding-supporting-evidence",
+            user_id,
+        )
+
     def get_week_based_work_pattern(
         self, user_id: str, occupation_id: Union[str, int],
     ) -> models.customer_api.WeekBasedWorkPattern:

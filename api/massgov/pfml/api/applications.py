@@ -25,6 +25,7 @@ from massgov.pfml.api.services.fineos_actions import (
     complete_intake,
     download_document,
     get_documents,
+    mark_documents_as_received,
     send_to_fineos,
     upload_document,
 )
@@ -186,9 +187,19 @@ def applications_complete(application_id):
                 errors=issues,
                 data=ApplicationResponse.from_orm(existing_application).dict(exclude_none=True),
             ).to_api_response()
-        # API-598 will add functionality back to this endpoint
-        existing_application.completed_time = datetime_util.utcnow()
-        db_session.add(existing_application)
+
+        if mark_documents_as_received(existing_application, db_session):
+            existing_application.completed_time = datetime_util.utcnow()
+
+        else:
+            return response_util.error_response(
+                status_code=ServiceUnavailable,
+                message="Application {} could not be completed (failed to mark associated documents as received), try again later".format(
+                    existing_application.application_id
+                ),
+                errors=[],
+                data=ApplicationResponse.from_orm(existing_application).dict(exclude_none=True),
+            ).to_api_response()
 
     return response_util.success_response(
         message="Application {} completed without errors".format(
