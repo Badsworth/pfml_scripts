@@ -11,27 +11,37 @@ const flagsConfig = {
     // question in the claimant flow (CP-1204)
     // TODO (CP-1281): Show employment status question when Portal supports other employment statuses
     claimantShowEmploymentStatus: false,
+
     // When this flag is enabled, the medical leave option is selectable on
     // the Leave Reason page in the claimant flow (CP-1245)
     // TODO (CP-1246): Show this option when portal supports medical leave
     claimantShowMedicalLeaveType: false,
+
     // When this flag is enabled, the military leave options are selectable on
     // the Leave Reason page in the claimant flow (CP-1145)
     // TODO (CP-534): Show all options when portal supports activeDutyFamily, serviceMemberFamily
     claimantShowMilitaryLeaveTypes: false,
+
     // When this flag is enabled, the user can see the "Have you taken paid or unpaid leave since January 1,
     // 2021 for a qualifying reason?" question.
     // TODO (CP-1247): Show previous leaves related questions
     claimantShowPreviousLeaves: false,
+
     // Hide the entire "Other leave, income, and benefits" step of the Claim flow.
     // TODO (CP-1346): Show this step once it's been integrated w/ the API.
     claimantShowOtherLeaveStep: false,
+
     // When this flag is enabled, the user can see the site.
     // To immediately hide the site from people who previously overrode this
     // flag in a cookie, you can rename this flag to something else (and also
     // update the reference to it in _app.js), but try to keep it prefixed with pfml.
     // https://lwd.atlassian.net/browse/CP-459
     pfmlTerriyay: false,
+
+    // When this flag is enabled, content accessible on paidleave.mass.gov
+    // reflects functionality available and intended for use by
+    // leave admins and claimants on December 15, 2020.
+    claimantShow1215SoftLaunchFeatures: false,
     sendPii: true,
   },
   // Environments can optionally override a default feature flag below.
