@@ -25,12 +25,7 @@ EXCLUDE_ATTRIBUTES = {
 }
 
 # Attributes of LogRecord to allow through without masking suspected PII.
-ALLOW_NO_MASK = {
-    "count",
-    "created",
-    "process",
-    "thread",
-}
+ALLOW_NO_MASK = {"count", "created", "process", "thread", "account_key"}
 
 # Regular expression to match a tax identifier, 9 digits with optional dashes.
 TIN_RE = re.compile(r"\b(\d-?){8}\d\b", re.ASCII)

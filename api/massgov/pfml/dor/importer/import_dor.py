@@ -931,12 +931,20 @@ def import_wage_data(
 
         employer_id = account_key_to_employer_id_map.get(account_key, None)
         if employer_id is None:
-            logger.warning("Attempted to save a wage row for unknown employer: %s", account_key)
+            logger.warning(
+                "Attempted to save a wage row for unknown employer: %s",
+                account_key,
+                extra={"account_key": account_key},
+            )
             continue
 
         existing_employee = ssn_to_existing_employee_model.get(ssn, None)
-        if employer_id is None:
-            logger.warning("Attempted to save a wage row for unknown employee: %s", account_key)
+        if existing_employee is None:
+            logger.warning(
+                "Attempted to save a wage row for unknown employee: %s",
+                account_key,
+                extra={"account_key": account_key},
+            )
             continue
 
         existing_wage_composite_key: str = get_wage_composite_key(
