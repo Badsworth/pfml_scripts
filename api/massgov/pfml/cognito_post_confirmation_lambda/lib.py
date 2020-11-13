@@ -1,3 +1,4 @@
+import re
 from typing import Any, Dict, Literal, Optional
 
 import massgov.pfml.db as db
@@ -36,6 +37,20 @@ def handler(
         return event
 
     cognito_user_attrs = event.request.userAttributes
+    cognito_metadata = event.request.clientMetadata
+
+    if cognito_metadata is not None and "ein" in cognito_metadata:
+        logger.debug("Signup is for a leave administrator account")
+        leave_admin_create(
+            db_session=db_session,
+            active_directory_id=cognito_user_attrs["sub"],
+            email=cognito_user_attrs["email"],
+            employer_fein=re.sub("-", "", cognito_metadata["ein"]),
+        )
+
+        return event
+
+    logger.debug("Signup is for a claimant account")
 
     user = (
         db_session.query(User)
