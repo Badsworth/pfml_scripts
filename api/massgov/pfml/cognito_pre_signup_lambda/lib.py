@@ -35,7 +35,7 @@ def handler(
             db_session.query(Employer).filter(Employer.employer_fein == stripped_ein).one_or_none()
         )
 
-        if employer is not None and employer.fineos_customer_nbr is not None:
+        if employer is not None and employer.fineos_employer_id is not None:
             logger.info("Signup is for a valid FEIN that is contributing, progressing signup")
             return event
         elif employer is None:

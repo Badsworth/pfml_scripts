@@ -8,7 +8,7 @@ from massgov.pfml.fineos.models import CreateOrUpdateLeaveAdmin
 def test_create_leave_admin_request_payload():
     create_or_update_request = CreateOrUpdateLeaveAdmin(
         fineos_web_id="testID",
-        fineos_customer_nbr="1005",
+        fineos_employer_id=1005,
         admin_full_name="Bob Smith",
         admin_area_code="817",
         admin_phone_number="1234560",

@@ -678,7 +678,7 @@ class FINEOSClient(client.AbstractFINEOSClient):
         )
         leave_admin_create_payload = models.CreateOrUpdateLeaveAdminRequest(
             full_name=leave_admin_create_or_update.admin_full_name,
-            party_reference=leave_admin_create_or_update.fineos_customer_nbr,
+            party_reference=leave_admin_create_or_update.fineos_employer_id,
             user_id=leave_admin_create_or_update.fineos_web_id,
             email=leave_admin_create_or_update.admin_email,
             phone=leave_admin_phone,

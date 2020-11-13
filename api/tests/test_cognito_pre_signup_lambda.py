@@ -21,9 +21,7 @@ def test_main_success_on_existing_fein_with_fineos_nbr(test_db_session, event_di
     from massgov.pfml.db.models.employees import Employer
     import massgov.pfml.cognito_pre_signup_lambda.main as main
 
-    employer = Employer(
-        employer_fein="133701337", employer_dba="Acme Corp", fineos_customer_nbr="93"
-    )
+    employer = Employer(employer_fein="133701337", employer_dba="Acme Corp", fineos_employer_id=93)
 
     test_db_session.add(employer)
     test_db_session.commit()
