@@ -682,9 +682,12 @@ export function submitClaimPartOne(application: ApplicationRequestBody): void {
   answerReducedLeaveQuestion(application);
   answerIntermittentLeaveQuestion(application);
   onPage("checklist");
-  clickChecklistButton("Report other leave, income, and benefits");
-  reportOtherBenefits();
-  onPage("checklist");
+  /*  Note:
+  Feature has been removed until soft launch (2nd Dec 2020)
+    clickChecklistButton("Report other leave, income, and benefits");
+    reportOtherBenefits();
+    onPage("checklist");
+  */
   clickChecklistButton("Review and confirm");
   if (reason === "Child Bonding") {
     confirmEligibleParent();
