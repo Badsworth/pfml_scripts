@@ -637,6 +637,7 @@ export class MockClaimBuilder extends BaseMockClaimBuilder {
  * @param {boolean} [options.hasUploadedIdDocuments] - Additional attributes to set id documents
  * @param {boolean} [options.hasLoadingDocumentsError] - Additional attributs to set errors for loading documents
  * @param {boolean} [options.hasLegalNotices] - Create legal notices for claim
+ * @param {object} [options.warningsLists] - Mock appLogic.claims.warningsLists
  * @returns {{ appLogic: object, claim: Claim, wrapper: object }}
  */
 export const renderWithAppLogic = (PageComponent, options = {}) => {
@@ -651,6 +652,7 @@ export const renderWithAppLogic = (PageComponent, options = {}) => {
       // whether to use shallow() or mount()
       render: "shallow",
       userAttrs: {},
+      warningsLists: {},
     },
     options
   );
@@ -666,6 +668,7 @@ export const renderWithAppLogic = (PageComponent, options = {}) => {
   appLogic.claims.hasLoadedClaimAndWarnings = jest
     .fn()
     .mockReturnValue(options.hasLoadedClaimAndWarnings || true);
+  appLogic.claims.warningsLists = options.warningsLists;
   appLogic.employers.claim = new EmployerClaim(options.employerClaimAttrs);
   appLogic.auth.isLoggedIn = true;
   appLogic.users.requireUserConsentToDataAgreement = jest.fn();

@@ -3,7 +3,6 @@ import { useMemo, useState } from "react";
 import ClaimCollection from "../models/ClaimCollection";
 import ClaimsApi from "../api/ClaimsApi";
 import getRelevantIssues from "../utils/getRelevantIssues";
-import { merge } from "lodash";
 import routes from "../routes";
 import useCollectionState from "./useCollectionState";
 
@@ -139,13 +138,6 @@ const useClaimsLogic = ({ appErrorsLogic, portalFlow, user }) => {
         throw new ValidationError(issues, "claims");
       }
 
-      // TODO (CP-676): Remove workaround once API returns all the fields in our application
-      if (patchData.temp) {
-        const { temp } = claims.get(claim.application_id);
-        claim.temp = merge(temp, patchData.temp);
-      }
-      // </ end workaround >
-
       setClaim(claim);
       setClaimWarnings(application_id, warnings);
 
@@ -223,10 +215,6 @@ const useClaimsLogic = ({ appErrorsLogic, portalFlow, user }) => {
       const { claim, success } = await claimsApi.submitClaim(application_id);
 
       if (success) {
-        // TODO (CP-676): Remove workaround once API returns all the fields in our application
-        claim.temp = claims.get(claim.application_id).temp;
-        // </ end workaround >
-
         setClaim(claim);
 
         const context = { claim, user };

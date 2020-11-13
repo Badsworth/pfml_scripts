@@ -123,12 +123,6 @@ export default class ClaimsApi extends BaseApi {
       }
     );
 
-    // TODO (CP-676): Remove workaround once API returns all the fields in our application
-    if (patchData.temp) {
-      data.temp = patchData.temp;
-    }
-    // </ end workaround >
-
     return {
       claim: success ? new Claim(data) : null,
       errors,
@@ -151,12 +145,8 @@ export default class ClaimsApi extends BaseApi {
       `${application_id}/submit_application`
     );
 
-    // TODO (CP-676): Remove workaround once API returns all the fields in our application
-    const workaroundData = { ...data, application_id };
-    // </ end workaround >
-
     return {
-      claim: success ? new Claim(workaroundData) : null,
+      claim: success ? new Claim(data) : null,
       status,
       success,
     };

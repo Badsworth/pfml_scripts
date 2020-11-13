@@ -52,9 +52,13 @@ describe("Checklist", () => {
 
     beforeEach(() => {
       const claim = new MockClaimBuilder().submitted().create();
+
       ({ wrapper } = renderWithAppLogic(Checklist, {
         claimAttrs: claim,
         diveLevels,
+        warningsLists: {
+          [claim.application_id]: [],
+        },
       }));
     });
 
@@ -99,6 +103,9 @@ describe("Checklist", () => {
       hasLoadedClaimDocuments: true,
       hasUploadedIdDocuments: true,
       hasUploadedCertificationDocuments: true,
+      warningsLists: {
+        [claim.application_id]: [],
+      },
     });
 
     expect(wrapper.find("ButtonLink").prop("disabled")).toBe(false);
@@ -171,33 +178,46 @@ describe("Checklist", () => {
   describe("Upload document steps status", () => {
     const startStatus = "not_started";
     const completeStatus = "completed";
+
     it("renders both doc steps as not completed", () => {
+      const claim = new MockClaimBuilder().complete().create();
       const { wrapper } = renderWithAppLogic(Checklist, {
-        claimAttrs: new MockClaimBuilder().complete().create(),
+        claimAttrs: claim,
         diveLevels,
         hasLoadedClaimDocuments: true,
+        warningsLists: {
+          [claim.application_id]: [],
+        },
       });
       expect(wrapper.find("Step").at(5).prop("status")).toBe(startStatus);
       expect(wrapper.find("Step").at(6).prop("status")).toBe(startStatus);
     });
 
     it("renders id doc step as completed", () => {
+      const claim = new MockClaimBuilder().complete().create();
       const { wrapper } = renderWithAppLogic(Checklist, {
-        claimAttrs: new MockClaimBuilder().complete().create(),
+        claimAttrs: claim,
         diveLevels,
         hasLoadedClaimDocuments: true,
         hasUploadedIdDocuments: true,
+        warningsLists: {
+          [claim.application_id]: [],
+        },
       });
       expect(wrapper.find("Step").at(5).prop("status")).toBe(completeStatus);
       expect(wrapper.find("Step").at(6).prop("status")).toBe(startStatus);
     });
 
     it("renders certification doc step as completed", () => {
+      const claim = new MockClaimBuilder().complete().create();
       const { wrapper } = renderWithAppLogic(Checklist, {
-        claimAttrs: new MockClaimBuilder().complete().create(),
+        claimAttrs: claim,
         diveLevels,
         hasLoadedClaimDocuments: true,
         hasUploadedCertificationDocuments: true,
+        warningsLists: {
+          [claim.application_id]: [],
+        },
       });
       expect(wrapper.find("Step").at(5).prop("status")).toBe(startStatus);
       expect(wrapper.find("Step").at(6).prop("status")).toBe(completeStatus);
