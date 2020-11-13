@@ -1,4 +1,5 @@
 /* eslint-disable jsdoc/require-returns */
+import { compact, map } from "lodash";
 import BaseApi from "./BaseApi";
 import User from "../models/User";
 import routes from "../routes";
@@ -29,11 +30,12 @@ export default class UsersApi extends BaseApi {
       "current",
       null
     );
+    const roles = this.transformUserRoles(data.roles);
 
     return Promise.resolve({
       success,
       status,
-      user: success ? new User(data) : null,
+      user: success ? new User({ ...data, roles }) : null,
     });
   };
 
@@ -49,11 +51,24 @@ export default class UsersApi extends BaseApi {
       user_id,
       patchData
     );
+    const roles = this.transformUserRoles(data.roles);
 
     return {
       success,
       status,
-      user: success ? new User({ ...patchData, ...data }) : null,
+      user: success
+        ? new User({
+            ...patchData,
+            ...data,
+            roles,
+          })
+        : null,
     };
+  };
+
+  // TODO (EMPLOYER-536): Remove helper method when API returns array of UserRole objects
+  // [{ role: { role_description, role_id }}] --> [{ role_description, role_id }]
+  transformUserRoles = (roles) => {
+    return compact(map(roles, "role"));
   };
 }

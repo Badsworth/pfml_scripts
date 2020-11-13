@@ -100,4 +100,39 @@ const routes = {
   },
 };
 
+/**
+ * @param {string} url - path, with or without query param
+ * @returns {boolean}
+ */
+export const isEmployersRoute = (url) => {
+  return Object.values(routes.employers).includes(getRouteFromUrl(url));
+};
+
+/**
+ * @param {string} url - path, with or without query param
+ * @returns {boolean}
+ */
+export const isClaimsRoute = (url) => {
+  return Object.values(routes.claims).includes(getRouteFromUrl(url));
+};
+
+/**
+ * @param {string} url - path, with or without query param
+ * @returns {string}
+ */
+const getRouteFromUrl = (url) => {
+  let route = url;
+  const queryStringIndex = route.indexOf("?");
+
+  if (queryStringIndex !== -1) {
+    route = route.substring(0, queryStringIndex);
+  }
+
+  if (route.endsWith("/")) {
+    route = route.substring(0, route.length - 1);
+  }
+
+  return route;
+};
+
 export default routes;

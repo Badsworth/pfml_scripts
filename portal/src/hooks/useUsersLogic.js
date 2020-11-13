@@ -3,9 +3,10 @@ import {
   UserNotFoundError,
   UserNotReceivedError,
 } from "../errors";
+import routes, { isClaimsRoute, isEmployersRoute } from "../routes";
 import { useMemo, useState } from "react";
+import { RoleDescription } from "../models/User";
 import UsersApi from "../api/UsersApi";
-import routes from "../routes";
 import { useRouter } from "next/router";
 
 /**
@@ -97,7 +98,38 @@ const useUsersLogic = ({ appErrorsLogic, isLoggedIn, portalFlow }) => {
     }
   };
 
-  return { user, updateUser, loadUser, requireUserConsentToDataAgreement };
+  /**
+   * Redirect to Employer Portal if role is employer and current page is claims route
+   * redirect to Claimant Portal if role is not employer and current page is employers route
+   */
+  const requireUserRole = () => {
+    //  Allow roles to view data sharing consent page
+    const route = router.pathname;
+    if (route === routes.user.consentToDataSharing) return;
+
+    const hasEmployerRole = user.roles.some(
+      (role) => role.role_description === RoleDescription.employer
+    );
+
+    // Portal currently does not support hybrid account (both Employer AND Claimant account)
+    // If user has Employer role, they cannot access Claimant Portal regardless of multiple roles
+    if (!hasEmployerRole && isEmployersRoute(route)) {
+      router.push(routes.claims.dashboard);
+      return;
+    }
+
+    if (hasEmployerRole && isClaimsRoute(route)) {
+      router.push(routes.employers.dashboard);
+    }
+  };
+
+  return {
+    user,
+    updateUser,
+    loadUser,
+    requireUserConsentToDataAgreement,
+    requireUserRole,
+  };
 };
 
 export default useUsersLogic;

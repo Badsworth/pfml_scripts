@@ -37,7 +37,9 @@ const withUser = (Component) => {
     useEffect(() => {
       if (users.user) {
         users.requireUserConsentToDataAgreement();
+        users.requireUserRole();
       }
+
       // Only trigger this effect when the user is set/updated
       // or when the user attempts to navigate to another page
       // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -71,6 +73,7 @@ const withUser = (Component) => {
       users: PropTypes.shape({
         loadUser: PropTypes.func.isRequired,
         requireUserConsentToDataAgreement: PropTypes.func.isRequired,
+        requireUserRole: PropTypes.func.isRequired,
         user: PropTypes.instanceOf(User),
       }).isRequired,
       appErrors: PropTypes.object.isRequired,

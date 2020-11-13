@@ -62,6 +62,7 @@ export default jest.fn(() => ({
   users: {
     loadUser: jest.fn(),
     requireUserConsentToDataAgreement: jest.fn(),
+    requireUserRole: jest.fn(),
     updateUser: jest.fn(),
     user: new User({
       user_id: "mock_user_id",

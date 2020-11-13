@@ -1,19 +1,10 @@
 /* eslint-disable react/no-unused-prop-types */
 import PropTypes from "prop-types";
-import routes from "../../../src/routes";
-import { useEffect } from "react";
-import { useRouter } from "next/router";
+import React from "react";
 import withUser from "../../hoc/withUser";
 
 export const Index = () => {
-  const router = useRouter();
-  const redirectUrl = `${routes.employers.review}`;
-
-  useEffect(() => {
-    router.push(redirectUrl);
-  });
-
-  return null;
+  return <p>Welcome Page here</p>;
 };
 
 Index.propTypes = {

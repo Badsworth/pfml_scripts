@@ -1,11 +1,12 @@
 import { NetworkError, UserNotFoundError } from "../../src/errors";
+import User, { RoleDescription, UserRole } from "../../src/models/User";
 import AppErrorInfo from "../../src/models/AppErrorInfo";
 import AppErrorInfoCollection from "../../src/models/AppErrorInfoCollection";
 import Claim from "../../src/models/Claim";
-import User from "../../src/models/User";
 import UsersApi from "../../src/api/UsersApi";
 import { act } from "react-dom/test-utils";
 import { mockRouter } from "next/router";
+import routes from "../../src/routes";
 import { testHook } from "../test-utils";
 import useAppErrorsLogic from "../../src/hooks/useAppErrorsLogic";
 import usePortalFlow from "../../src/hooks/usePortalFlow";
@@ -220,6 +221,61 @@ describe("useUsersLogic", () => {
 
         expect(mockRouter.push).not.toHaveBeenCalled();
       });
+    });
+  });
+
+  describe("requireUserRole", () => {
+    const employerRole = [
+      new UserRole({
+        role_id: 1,
+        role_description: RoleDescription.employer,
+      }),
+    ];
+
+    it("redirects to Employers dashboard if user has Employer role", async () => {
+      await preloadUser(
+        new User({ roles: employerRole, consented_to_data_sharing: true })
+      );
+      mockRouter.pathname = routes.claims.dashboard;
+      usersLogic.requireUserRole();
+      expect(mockRouter.push).toHaveBeenCalledWith("/employers");
+    });
+
+    it("does not redirect if user has Employer role and currently in Employer Portal", async () => {
+      await preloadUser(
+        new User({ roles: employerRole, consented_to_data_sharing: true })
+      );
+      mockRouter.pathname = routes.employers.dashboard;
+      usersLogic.requireUserRole();
+
+      expect(mockRouter.push).not.toHaveBeenCalled();
+    });
+
+    it("redirects to Employers dashboard if user has multiple roles, including Employer", async () => {
+      const userRole = [
+        new UserRole({
+          role_id: 2,
+          role_description: "Random user role",
+        }),
+      ];
+      const multipleRoles = employerRole.concat(userRole);
+      await preloadUser(
+        new User({ roles: multipleRoles, consented_to_data_sharing: true })
+      );
+      mockRouter.pathname = routes.claims.dashboard;
+      usersLogic.requireUserRole();
+
+      expect(mockRouter.push).toHaveBeenCalledWith("/employers");
+    });
+
+    it("redirects to Claims dashboard if user does not have a role", async () => {
+      await preloadUser(
+        new User({ roles: [], consented_to_data_sharing: true })
+      );
+      mockRouter.pathname = routes.employers.dashboard;
+      usersLogic.requireUserRole();
+
+      expect(mockRouter.push).toHaveBeenCalledWith("/dashboard");
     });
   });
 });

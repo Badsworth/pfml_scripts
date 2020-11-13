@@ -39,6 +39,10 @@ describe("users API", () => {
           response: {
             data: {
               email_address: "mock-user@example.com",
+              roles: [
+                { role: { role_description: "Employer", role_id: 1 } },
+                { role: { role_description: "User", role_id: 2 } },
+              ],
             },
           },
           status: 200,
@@ -76,6 +80,21 @@ describe("users API", () => {
 
         expect(response.user).toBeInstanceOf(User);
       });
+
+      it("returns transformed user roles", async () => {
+        const response = await usersApi.getCurrentUser();
+
+        expect(response.user.roles).toEqual([
+          {
+            role_description: "Employer",
+            role_id: 1,
+          },
+          {
+            role_description: "User",
+            role_id: 2,
+          },
+        ]);
+      });
     });
 
     describe("when the request is unsuccessful", () => {
@@ -105,6 +124,14 @@ describe("users API", () => {
           data: {
             user_id: "mock-user_id",
             consented_to_data_sharing: true,
+            roles: [
+              {
+                role: {
+                  role_description: "Employer",
+                  role_id: 1,
+                },
+              },
+            ],
           },
         },
         status: 200,
@@ -125,6 +152,12 @@ describe("users API", () => {
           "auth_id": null,
           "consented_to_data_sharing": true,
           "email_address": null,
+          "roles": Array [
+            Object {
+              "role_description": "Employer",
+              "role_id": 1,
+            },
+          ],
           "status": null,
           "user_id": "mock-user_id",
         }

@@ -160,6 +160,9 @@ describe("Applications", () => {
         jest
           .spyOn(appLogic.users, "requireUserConsentToDataAgreement")
           .mockImplementation(() => {});
+        jest
+          .spyOn(appLogic.users, "requireUserRole")
+          .mockImplementation(() => {});
         await mount(<Applications appLogic={appLogic} />);
       });
 
