@@ -226,7 +226,7 @@ def remove_masked_fields_from_request(
             # If the new payment preference does not have an ID, it's a new one
             # If there are no existing payment preferences, it can't be a (valid) update
             # Let these through and don't try to compare, if it's masked/invalid, later validation will error.
-            payment_preference_id = account_details.get("payment_preference_id")
+            payment_preference_id = payment_preference.get("payment_preference_id")
             if not payment_preference_id or not existing_payment_preferences:
                 continue
 

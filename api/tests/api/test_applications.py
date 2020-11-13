@@ -394,11 +394,8 @@ def test_application_patch_masked_inputs_ignored(client, user, auth_token, test_
         },
         "payment_preferences": [
             {
-                "account_details": {
-                    "payment_preference_id": application.payment_preferences[0].payment_pref_id,
-                    "routing_number": "*********",
-                    "account_number": "*****6789",
-                },
+                "payment_preference_id": application.payment_preferences[0].payment_pref_id,
+                "account_details": {"routing_number": "*********", "account_number": "*****6789",},
             }
         ],
     }
@@ -483,11 +480,8 @@ def test_application_patch_masked_mismatch_fields(client, user, auth_token, test
         },
         "payment_preferences": [
             {
-                "account_details": {
-                    "payment_preference_id": application.payment_preferences[0].payment_pref_id,
-                    "routing_number": "*********",
-                    "account_number": "*****0000",
-                },
+                "payment_preference_id": application.payment_preferences[0].payment_pref_id,
+                "account_details": {"routing_number": "*********", "account_number": "*****0000",},
             }
         ],
     }
