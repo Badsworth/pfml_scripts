@@ -444,7 +444,6 @@ export function reportOtherBenefits(): void {
 
 export function confirmInfo(): void {
   // Usually preceeded by - "I am on the claims Review page"
-  cy.await();
   cy.contains("Submit Part 1").click();
 
   cy.wait("@submitClaimResponse").then((xhr) => {

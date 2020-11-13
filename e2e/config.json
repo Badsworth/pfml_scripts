@@ -42,9 +42,12 @@
     "TESTMAIL_NAMESPACE": "gqzap"
   },
   "local": {
-    "PORTAL_BASEURL": "https://localhost:3030",
-    "FINEOS_BASEURL": "https://dt2-claims-webapp.masspfml.fineos.com",
-    "API_BASEURL": "https://paidleave-api-test.mass.gov/api/v1",
+    "PORTAL_BASEURL": "http://localhost:3000",
+    "COGNITO_POOL": "us-east-1_HpL4XslLg",
+    "COGNITO_CLIENTID": "10rjcp71r8bnk4459c67bn18t8",
+    "PORTAL_USERNAME": "rob+pfml-cypress-gh3@lastcallmedia.com",
+    "API_BASEURL": "https://paidleave-api-stage.mass.gov/api/v1",
+    "FINEOS_BASEURL": "https://idt-claims-webapp.masspfml.fineos.com",
     "FINEOS_USERNAME": "CONTENT",
     "EMPLOYEES_FILE": "./employees/stage.json",
     "TESTMAIL_NAMESPACE": "gqzap"

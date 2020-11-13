@@ -1,5 +1,4 @@
 import { Before } from "cypress-cucumber-preprocessor/steps";
-import "@rckeller/cypress-unfetch/await";
 
 Before({ tags: "@portal" }, () => {
   // Set the feature flag necessary to see the portal.
@@ -12,7 +11,7 @@ Before({ tags: "@portal" }, () => {
   );
 
   // Setup a route for application submission so we can extract claim ID later.
-  cy.route({
+  cy.route2({
     method: "POST",
     url: "**/api/v1/applications/*/submit_application",
   }).as("submitClaimResponse");
@@ -20,5 +19,5 @@ Before({ tags: "@portal" }, () => {
 
 Before({ tags: "@fineos" }, () => {
   // Set up a route we can listen to wait on ajax rendering to complete.
-  cy.route(/ajax\/pagerender\.jsp/).as("ajaxRender");
+  cy.route2(/ajax\/pagerender\.jsp/).as("ajaxRender");
 });

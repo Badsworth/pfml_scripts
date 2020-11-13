@@ -16,8 +16,6 @@
 // Import commands.js using ES2015 syntax:
 import "./commands";
 import "cypress-file-upload";
-import "@rckeller/cypress-unfetch";
-import "@rckeller/cypress-unfetch/await";
 
 // Suppress a particular error message that is causing immediate failure due to a JS
 // error on the client side.
@@ -26,4 +24,18 @@ Cypress.on("uncaught:exception", (e) => {
   if (e.message.indexOf(`Cannot set property 'status' of undefined`)) {
     return false;
   }
+  return true;
+});
+
+// Block that same error from logging to New Relic.
+Cypress.on("window:before:load", (window) => {
+  window.addEventListener("DOMContentLoaded", () => {
+    // @ts-ignore
+    if (window.newrelic) {
+      /*eslint-disable*/
+      // @ts-ignore
+      window.newrelic.setErrorHandler((err) => String(err).indexOf("Cannot set property 'status' of undefined") !== -1);
+      /*eslint-enable*/
+    }
+  });
 });
