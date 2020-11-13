@@ -26,11 +26,11 @@ describe("StateId", () => {
   });
 
   describe("when the form is successfully submitted", () => {
-    it("calls claims.update", () => {
+    it("calls claims.update and transforms state ID to uppercase", () => {
       const { appLogic, wrapper } = renderWithAppLogic(StateId, {
         claimAttrs: {
           has_state_id: true,
-          mass_id: "123456789",
+          mass_id: "sa3456789",
         },
       });
 
@@ -38,7 +38,23 @@ describe("StateId", () => {
 
       expect(appLogic.claims.update).toHaveBeenCalledWith(expect.any(String), {
         has_state_id: true,
-        mass_id: "123456789",
+        mass_id: "SA3456789",
+      });
+    });
+
+    it("calls claims.update successfully when has_state_id is false", () => {
+      const { appLogic, wrapper } = renderWithAppLogic(StateId, {
+        claimAttrs: {
+          has_state_id: false,
+          mass_id: null,
+        },
+      });
+
+      wrapper.find("QuestionPage").simulate("save");
+
+      expect(appLogic.claims.update).toHaveBeenCalledWith(expect.any(String), {
+        has_state_id: false,
+        mass_id: null,
       });
     });
   });

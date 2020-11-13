@@ -21,8 +21,13 @@ export const StateId = (props) => {
   );
   const { has_state_id } = formState;
 
-  const handleSave = () =>
-    appLogic.claims.update(claim.application_id, formState);
+  const handleSave = () => {
+    const { mass_id, ...requestData } = { ...formState };
+    // API requires any letters in the ID to be uppercase:
+    requestData.mass_id = mass_id ? mass_id.toUpperCase() : mass_id;
+
+    appLogic.claims.update(claim.application_id, requestData);
+  };
 
   const getFunctionalInputProps = useFunctionalInputProps({
     appErrors: appLogic.appErrors,
