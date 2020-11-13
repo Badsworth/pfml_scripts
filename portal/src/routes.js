@@ -88,7 +88,7 @@ const routes = {
         "https://www.mass.gov/info-details/identity-proof-for-paid-leave",
       informedConsent: "https://www.mass.gov/paidleave-informedconsent",
       privacyPolicy: "https://www.mass.gov/privacypolicy",
-      userFeedback: "https://www.mass.gov", // TODO (EMPLOYER-417): Update link to external survey
+      userFeedback: "https://www.mass.gov/paidleave-employer-feedback",
     },
     puertoRicanBirthCertificate: "https://prfaa.pr.gov/faqs",
     workVisa:

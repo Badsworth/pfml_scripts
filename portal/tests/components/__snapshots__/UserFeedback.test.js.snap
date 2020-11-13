@@ -2,7 +2,7 @@
 
 exports[`UserFeedback renders the component 1`] = `
 <a
-  href="https://www.mass.gov"
+  href="https://www.mass.gov/paidleave-employer-feedback"
   key="0"
   rel="noopener"
   target="_blank"
