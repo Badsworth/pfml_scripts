@@ -44,6 +44,7 @@ const errors = {
     incorrectEmailOrPassword: "Incorrect email or password",
     insecurePassword:
       "Choose a different password. Avoid commonly used passwords and avoid using the same password on multiple websites.",
+    invalidEmployerIdNumber: "Invalid employer ID number. Please try again.",
     invalidParametersFallback: "Enter all required information",
     invalidParametersIncludingMaybePassword:
       "Check the requirements and try again. Ensure all required information is entered and the password meets the requirements.",

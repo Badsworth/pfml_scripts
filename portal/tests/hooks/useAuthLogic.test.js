@@ -852,6 +852,23 @@ describe("useAuthLogic", () => {
         `);
       expect(Auth.signUp).not.toHaveBeenCalled();
     });
+
+    it("sets app errors when an employer ID number is invalid", () => {
+      jest.spyOn(Auth, "signUp").mockImplementation(() => {
+        // Ignore lint rule since AWS Auth class actually throws an object literal
+        // eslint-disable-next-line no-throw-literal
+        throw {
+          code: "UnexpectedLambdaException",
+        };
+      });
+      act(() => {
+        createEmployerAccount(username, password, "11-1111111");
+      });
+      expect(appErrors.items).toHaveLength(1);
+      expect(appErrors.items[0].message).toMatchInlineSnapshot(
+        `"Invalid employer ID number. Please try again."`
+      );
+    });
   });
 
   describe("requireLogin", () => {

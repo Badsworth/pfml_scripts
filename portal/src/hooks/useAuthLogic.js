@@ -530,6 +530,8 @@ function getCreateAccountErrorInfo(error, t) {
   } else if (error.code === "UsernameExistsException") {
     // TODO (CP-576): Obfuscate the fact that the user exists
     message = t("errors.auth.usernameExists");
+  } else if (error.code === "UnexpectedLambdaException") {
+    message = t("errors.auth.invalidEmployerIdNumber");
   } else {
     message = t("errors.network");
   }
