@@ -22,9 +22,7 @@ import fs from "fs";
 let authToken: string;
 let applicationId: string;
 
-const pdfDocument = fs.readFileSync(
-  "src/flood/data/pilot3/documents/219-45-4343.MASSID.pdf"
-);
+const pdfDocument = fs.readFileSync("data/HCP.pdf");
 
 export { settings };
 export const scenario: LSTScenario = "PortalClaimSubmit";

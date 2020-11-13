@@ -17,6 +17,16 @@ import assert from "assert";
 
 export { settings };
 export const scenario: LSTScenario = "FineosClaimSubmit";
+
+let claimType: ClaimType;
+enum ClaimType {
+  ACCIDENT = 1, // "Accident or treatment required for an injury"
+  SICKNESS = 2, // "Sickness, treatment required for a medical condition"
+  PREGNANCY = 3, // "Pregnancy, birth or related medical treatment"
+  BONDING = 4, // "Bonding with a new child (adoption/ foster care/ newborn)"
+  CARING = 5, // "Caring for a family member"
+  OTHER = 6, // "Out of work for another reason"
+}
 export const steps: StoredStep[] = [
   {
     name: "Login into fineos",
@@ -50,54 +60,85 @@ export const steps: StoredStep[] = [
         By.css('input[type="submit"][value="Search"]')
       );
       await search.click();
-      await waitForRealTimeSim(browser, data, 1 / steps.length);
-    },
-  },
-  {
-    name: "Add new application",
-    test: async (browser: Browser, data: LSTSimClaim): Promise<void> => {
-      const { claim } = data;
-      assert(claim.tax_identifier, "tax_identifier is not defined");
       const okButton = await waitForElement(
         browser,
         By.css('input[type="submit"][value="OK"]')
       );
       await okButton.click();
-      const addCaseTab = await waitForElement(
-        browser,
-        By.visibleText("Add Case")
-      );
-      await addCaseTab.click();
-      const selectCase = await waitForElement(
-        browser,
-        By.css('[title="Absence Case"]')
-      );
-      await selectCase.click();
-      const nextButton = await waitForElement(
-        browser,
-        By.css('input[type="submit"][value^="Next"]')
-      );
-      await nextButton.click();
       await waitForRealTimeSim(browser, data, 1 / steps.length);
     },
   },
   {
-    name: "Fill out Intake Opening info",
+    name: "Fill out Notification Details",
     test: async (browser: Browser, data: LSTSimClaim): Promise<void> => {
       const { claim } = data;
-      const intakeSourceSelect = await labelled(browser, "Intake Source");
-      await browser.selectByText(intakeSourceSelect, "Self-Service");
+      const createNotif = await waitForElement(
+        browser,
+        By.visibleText("Create Notification")
+      );
+      await createNotif.click();
+
+      const notifSourceSelect = await labelled(browser, "Notification source");
+      await browser.selectByText(notifSourceSelect, "Self-Service");
       /* Date of claim submission, defaults to current date/time */
       assert(claim.leave_details, "claim.leave_details is not defined");
-      /*
-      const notifDateInput = await labelled(browser, "Notification Date");
+      const notifDateInput = await labelled(browser, "Notification date");
       await notifDateInput.clear();
-      await notifDateInput.type(formatDate(claim.leave_details.employer_notification_date));
-      */
-      /*
-      const notifiedBySelect = await labelled(browser, "Notified By");
-      await browser.selectByText(notifiedBySelect, "Employee");
-      */
+      await notifDateInput.type(
+        formatDate(claim.leave_details.employer_notification_date)
+      );
+
+      const notifiedBySelect = await labelled(browser, "Notified by");
+      await browser.selectByText(notifiedBySelect, "Requester");
+
+      await waitForRealTimeSim(browser, data, 1 / steps.length);
+      const nextButton = await waitForElement(
+        browser,
+        By.css('input[type="submit"][value^="Next"]')
+      );
+      await nextButton.click();
+    },
+  },
+  {
+    name: "Fill out Occupation Details",
+    test: async (browser: Browser, data: LSTSimClaim): Promise<void> => {
+      await waitForRealTimeSim(browser, data, 1 / steps.length);
+      const nextButton = await waitForElement(
+        browser,
+        By.css('input[type="submit"][value^="Next"]')
+      );
+      await nextButton.click();
+    },
+  },
+  {
+    name: "Fill out Notification Options",
+    test: async (browser: Browser, data: LSTSimClaim): Promise<void> => {
+      const {
+        claim: { leave_details },
+      } = data;
+      switch (leave_details?.reason) {
+        case "Serious Health Condition - Employee":
+          claimType = ClaimType.ACCIDENT;
+          break;
+        case "Pregnancy/Maternity":
+          claimType = ClaimType.PREGNANCY;
+          break;
+        case "Child Bonding":
+          claimType = ClaimType.BONDING;
+          break;
+        default:
+          throw new Error(
+            `There is no claim type matching '${leave_details?.reason}'`
+          );
+      }
+      const claimTypeRadio = await waitForElement(
+        browser,
+        By.css(
+          `[type='radio'][value*='notificationReasonRadio928000${claimType}']`
+        )
+      );
+      await claimTypeRadio.click();
+
       const nextButton = await waitForElement(
         browser,
         By.css('input[type="submit"][value^="Next"]')
@@ -107,44 +148,88 @@ export const steps: StoredStep[] = [
     },
   },
   {
-    name: "Fill out Paper Intake - Absence Reason section",
+    name: "Fill out Reason for Absence",
     test: async (browser: Browser, data: LSTSimClaim): Promise<void> => {
       const { claim } = data;
-      if (claim.employment_status === "Employed") {
-        const absenceRelatesToSelect = await labelled(
-          browser,
-          "Absence relates to"
-        );
-        await browser.selectByText(absenceRelatesToSelect, "Employee");
-        await browser.wait(1500);
+      const { leave_details } = claim;
+
+      const absenceRelatesToSelect = await labelled(
+        browser,
+        "Absence relates to"
+      );
+      const relatesTo =
+        claimType === ClaimType.ACCIDENT
+          ? "Employee"
+          : claimType === ClaimType.BONDING
+          ? "Family"
+          : "";
+      await browser.selectByText(absenceRelatesToSelect, relatesTo);
+
+      if (leave_details?.reason) {
+        const absenceReasonSelect = await labelled(browser, "Absence reason");
+        await browser.selectByText(absenceReasonSelect, leave_details?.reason);
+        await browser.wait(1000);
+        if (
+          claimType === ClaimType.ACCIDENT ||
+          leave_details?.reason_qualifier
+        ) {
+          const firstQualifierSelect = await labelled(browser, "Qualifier 1");
+          await browser.selectByText(
+            firstQualifierSelect,
+            claimType === ClaimType.ACCIDENT
+              ? "Work Related"
+              : (leave_details?.reason_qualifier as string)
+          );
+          await browser.wait(1000);
+        }
       }
 
-      assert(claim.leave_details, "claim.leave_details is not defined");
-      if (claim.leave_details.reason) {
-        const absenceReasonSelect = await labelled(browser, "Absence Reason");
+      /* currently no longer necessary, but might be later
+      if (claimType !== ClaimType.ACCIDENT && leave_details?.reason_qualifier) {
+        const secondQualifierSelect = await labelled(browser, "Qualifier 2");
         await browser.selectByText(
-          absenceReasonSelect,
-          claim.leave_details.reason
+          secondQualifierSelect,
+          leave_details?.reason_qualifier
         );
-        await browser.wait(1500);
+      } */
+
+      if (claimType === ClaimType.BONDING) {
+        const relationshipSelect = await labelled(
+          browser,
+          "Primary Relationship to Employee"
+        );
+        await browser.selectByText(
+          relationshipSelect,
+          leave_details?.relationship_to_caregiver ?? "Child"
+        );
+        await browser.wait(1000);
+
+        const relFirstQualifierSelect = await waitForElement(
+          browser,
+          By.css(
+            "#leaveRequestAbsenceRelationshipsWidget select[name*='selected-qualifier1']"
+          )
+        );
+        const relQualifier1 =
+          leave_details?.relationship_qualifier ??
+          leave_details?.reason_qualifier === "Foster Care"
+            ? "Foster"
+            : leave_details?.reason_qualifier === "Adoption"
+            ? "Adopted"
+            : "Biological";
+        await browser.selectByText(relFirstQualifierSelect, relQualifier1);
+        await browser.wait(1000);
       }
-
-      // TODO: Handle 2 different qualifiers with single string input from json
-      // TODO: use claim.leave_details.reason_qualifier instead of fixed value
-      //if (claim.leave_details.reason_qualifier) {
-      const firstQualifierSelect = await labelled(browser, "Qualifier 1");
-      await browser.selectByText(firstQualifierSelect, "Work Related");
-      await browser.wait(1000);
-
-      const secondQualifierSelect = await labelled(browser, "Qualifier 2");
-      await browser.selectByText(secondQualifierSelect, "Accident / Injury");
-      // await browser.wait(1000);
-      //}
+      const nextButton = await waitForElement(
+        browser,
+        By.css('input[type="submit"][value^="Next"]')
+      );
+      await nextButton.click();
       await waitForRealTimeSim(browser, data, 1 / steps.length);
     },
   },
   {
-    name: "Fill out Paper Intake - Leave Periods section",
+    name: "Fill out Dates of Absence",
     test: async (browser: Browser, data: LSTSimClaim): Promise<void> => {
       const { claim } = data;
       assert(claim.leave_details, "claim.leave_details is not defined");
@@ -152,7 +237,7 @@ export const steps: StoredStep[] = [
         claim.leave_details.continuous_leave_periods,
         "claim.leave_details.continuous_leave_periods is not defined"
       );
-      if (claim.leave_details.continuous_leave_periods.length > 0) {
+      if (claim.has_continuous_leave_periods) {
         const continuousLeave = await waitForElement(
           browser,
           By.css("input[type='checkbox'][id*='continuousTimeToggle_CHECKBOX']")
@@ -161,16 +246,73 @@ export const steps: StoredStep[] = [
         await fillContinuousLeavePeriods(browser, data);
       }
       await browser.wait(1000);
+      const nextButton = await waitForElement(
+        browser,
+        By.css('input[type="submit"][value^="Next"]')
+      );
+      await nextButton.click();
       await waitForRealTimeSim(browser, data, 1 / steps.length);
       // TODO: other types of leaves "Episodic / leave as needed", "Reduced work schedule"
     },
   },
   {
-    name: "Fill out Paper Intake - Timely Reporting section",
+    name: "Fill out Work Absence Details",
     test: async (browser: Browser, data: LSTSimClaim): Promise<void> => {
       const { claim } = data;
-      assert(claim.leave_details, "claim.leave_details is not defined");
-      if (claim.leave_details.employer_notified) {
+      const { work_pattern, leave_details } = claim;
+      if (work_pattern?.work_pattern_type) {
+        const workPatternTypeSelect = await labelled(
+          browser,
+          "Work Pattern Type"
+        );
+        await browser.selectByText(
+          workPatternTypeSelect,
+          work_pattern?.work_pattern_type
+        );
+      }
+      if (work_pattern?.work_week_starts) {
+        const workWeekStartsSelect = await labelled(
+          browser,
+          "Work Week Starts"
+        );
+        await browser.selectByText(
+          workWeekStartsSelect,
+          work_pattern?.work_week_starts
+        );
+      }
+      if (work_pattern?.work_pattern_days?.length) {
+        let dayIdx = 0;
+        for (const day of work_pattern?.work_pattern_days) {
+          dayIdx++;
+          if (!day.minutes || day.minutes === 0) continue;
+          const hoursInput = await waitForElement(
+            browser,
+            By.css(`.workPattern td:nth-child(${dayIdx}) input[id*='hours']`)
+          );
+          await browser.clear(hoursInput);
+          await browser.type(
+            hoursInput,
+            Math.floor(day.minutes / 60).toString()
+          );
+          if (day.minutes % 60 > 0) {
+            const minutesInput = await waitForElement(
+              browser,
+              By.css(
+                `.workPattern td:nth-child(${dayIdx}) input[id*='minutes']`
+              )
+            );
+            await browser.clear(minutesInput);
+            await browser.type(minutesInput, (day.minutes % 60).toString());
+          }
+        }
+        const applyWorkPatternButton = await waitForElement(
+          browser,
+          By.css('input[type="submit"][value="Apply to Calendar"]')
+        );
+        await applyWorkPatternButton.click();
+      }
+
+      if (leave_details?.employer_notified) {
         const hasBeenNotifiedCheckbox = await labelled(
           browser,
           "Has the Employer been notified?"
@@ -180,26 +322,103 @@ export const steps: StoredStep[] = [
 
         const notifDateInput = await labelled(browser, "Notification Date");
         await notifDateInput.type(
-          formatDate(claim.leave_details.employer_notification_date)
+          formatDate(leave_details?.employer_notification_date)
         );
 
-        if (claim.leave_details.employer_notification_method) {
+        if (leave_details?.employer_notification_method) {
           const notifMethodSelect = await labelled(
             browser,
             "Notification Method"
           );
           await browser.selectByText(
             notifMethodSelect,
-            claim.leave_details.employer_notification_method
+            leave_details?.employer_notification_method
           );
         }
       }
-      await browser.wait(1000);
+      const nextButton = await waitForElement(
+        browser,
+        By.css('input[type="submit"][value^="Next"]')
+      );
+      await nextButton.click();
       await waitForRealTimeSim(browser, data, 1 / steps.length);
     },
   },
   {
-    name: "Submit application",
+    name: "Fill out Additional Absence Details",
+    test: async (browser: Browser, data: LSTSimClaim): Promise<void> => {
+      const { claim } = data;
+      const { leave_details } = claim;
+      if (claimType === ClaimType.BONDING) {
+        // no Family member's First Name specified in SimulationClaim?
+        const firstNameInput = await labelled(browser, "First Name");
+        await browser.type(firstNameInput, claim.first_name ?? "Thisis");
+        // no Family member's Last Name specified in SimulationClaim?
+        const lastNameInput = await labelled(browser, "Last Name");
+        await browser.type(lastNameInput, claim.last_name ?? "Mychild");
+
+        if (leave_details?.child_birth_date) {
+          const dateOfBirthInput = await labelled(
+            browser,
+            "What is your Family Member's Date of Birth?"
+          );
+          await browser.type(
+            dateOfBirthInput,
+            formatDate(leave_details?.child_birth_date)
+          );
+        }
+        // no Family member's gender specified in SimulationClaim?
+        const genderSelect = await labelled(
+          browser,
+          "What is your Family Member's Gender?"
+        );
+        await browser.selectByText(genderSelect, "Not Provided");
+
+        if (leave_details?.child_placement_date) {
+          const dateOfPlacementInput = await labelled(
+            browser,
+            "What is the date of placement, if applicable?"
+          );
+          await browser.type(
+            dateOfPlacementInput,
+            formatDate(leave_details?.child_placement_date)
+          );
+        }
+
+        if (
+          leave_details?.continuous_leave_periods?.length &&
+          leave_details?.child_birth_date
+        ) {
+          const willBe18Select = await labelled(
+            browser,
+            "Will your family member be 18 years or older on the start date of the leave request?"
+          );
+          let startDate = new Date(
+            leave_details?.continuous_leave_periods[0].start_date as string
+          );
+          startDate = new Date(
+            startDate.getFullYear() - 18,
+            startDate.getMonth(),
+            startDate.getDate()
+          );
+          const willNotBe18 =
+            startDate <= new Date(leave_details?.child_birth_date);
+          await browser.selectByText(
+            willBe18Select,
+            willNotBe18 ? "No" : "Yes"
+          );
+        }
+      }
+      const nextButton = await waitForElement(
+        browser,
+        By.css('input[type="submit"][value^="Next"]')
+      );
+      await nextButton.click();
+      await waitForRealTimeSim(browser, data, 1 / steps.length);
+    },
+  },
+  {
+    name: "Complete Wrap up section",
     test: async (browser: Browser, data: LSTSimClaim): Promise<void> => {
       const nextButton = await waitForElement(
         browser,
@@ -207,13 +426,13 @@ export const steps: StoredStep[] = [
       );
       await nextButton.click();
 
-      const completeRegistration = await waitForElement(
-        browser,
-        By.css('input[type="submit"][value^="Next"]')
+      const notifStatus = await (
+        await waitForElement(browser, By.css("dl.status dd"))
+      ).text();
+      assert(
+        notifStatus.includes("Open"),
+        `Notification Status is '${notifStatus}' instead of 'Open'.`
       );
-      await completeRegistration.click();
-
-      await waitForElement(browser, By.visibleText("Adjudication"));
       await waitForRealTimeSim(browser, data, 1 / steps.length);
     },
   },
@@ -261,18 +480,4 @@ export default (): void => {
   steps.forEach((action) => {
     step(action.name, action.test as StepFunction<unknown>);
   });
-
-  /* TODO: Employee Section */
-  /* TODO: Correspondence Section */
-  /* TODO: Contact Details Section */
-  /* TODO: Communication Preferences Section */
-  /* TODO: Employment Details Section */
-  /* TODO: Occupation Details Section */
-  /* TODO: Earnings Section */
-  /* TODO: Employee Work Pattern Section */
-
-  /* Uncomment to stop test at the end of all steps */
-  /* step("Delete me pls", async (browser: Browser) => {
-    await browser.wait(Until.elementIsVisible(By.partialVisibleText('pleasestopthanks')))
-  }) */
 };
