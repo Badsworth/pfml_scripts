@@ -21,6 +21,26 @@
     "TESTMAIL_NAMESPACE": "gqzap",
     "EMPLOYEES_FILE": "./employees/stage.json"
   },
+  "training": {
+    "PORTAL_BASEURL": "https://dist3ws941qq9.cloudfront.net",
+    "API_BASEURL": "https://mo0nk02mkg.execute-api.us-east-1.amazonaws.com/training/api/v1",
+    "FINEOS_BASEURL": "https://trn-claims-webapp.masspfml.fineos.com/",
+    "PORTAL_USERNAME": "rob+training@lastcallmedia.com",
+    "FINEOS_USERNAME": "CONTENT",
+    "COGNITO_POOL": "us-east-1_gHLjkp4A8",
+    "COGNITO_CLIENTID": "2hr6bckdopamvq92jahr542p5p",
+    "TESTMAIL_NAMESPACE": "gqzap"
+  },
+  "performance": {
+    "PORTAL_BASEURL": "https://dijouhh49zeeb.cloudfront.net",
+    "API_BASEURL": "https://lk64ifbnn4.execute-api.us-east-1.amazonaws.com/performance/api/v1",
+    "FINEOS_BASEURL": "https://perf-claims-webapp.masspfml.fineos.com/",
+    "PORTAL_USERNAME": "rob+pfml-performance@lastcallmedia.com",
+    "FINEOS_USERNAME": "CONTENT",
+    "COGNITO_POOL": "us-east-1_0jv6SlemT",
+    "COGNITO_CLIENTID": "1ps8bs9s5ns4f6qamj6qn6qd3",
+    "TESTMAIL_NAMESPACE": "gqzap"
+  },
   "local": {
     "PORTAL_BASEURL": "https://localhost:3030",
     "FINEOS_BASEURL": "https://dt2-claims-webapp.masspfml.fineos.com",
