@@ -1,17 +1,17 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`ReducedLeaveSchedule when leave reason is Bonding renders lead with expected content 1`] = `"Enter the adjusted number of hours you will be working while taking leave. You can enter time in 15-minute increments if needed."`;
+exports[`ReducedLeaveSchedule when leave reason is Bonding renders lead with expected content 1`] = `"You can enter time in 15-minute increments if needed."`;
 
 exports[`ReducedLeaveSchedule when leave reason is Medical renders lead with expected content 1`] = `
 Array [
-  "Enter the adjusted number of hours you will be working while taking leave. You can enter time in 15-minute increments if needed.",
+  "You can enter time in 15-minute increments if needed.",
   <br
     key="br-1"
   />,
   <br
     key="br-2"
   />,
-  "Refer to Question 29 in the \\"Estimate leave details\\" section of the certification form (page 6).",
+  "Refer to Question 31 in the \\"Estimate leave details\\" section of the certification form (page 8).",
 ]
 `;
 
@@ -20,7 +20,7 @@ exports[`ReducedLeaveSchedule when work pattern is a fixed schedule renders sect
   level="2"
   size="1"
 >
-  How will your work hours change while you are on a reduced leave schedule?
+  How many hours will you take off while you are on a reduced leave schedule?
 </Heading>
 `;
 
@@ -109,7 +109,7 @@ Array [
 exports[`ReducedLeaveSchedule when work pattern is a variable schedule renders a single field for gathering the schedule 1`] = `
 <InputHours
   hoursLabel="Hours"
-  label="Reduced weekly hours"
+  label="Hours off per week"
   minutesIncrement={15}
   minutesLabel="Minutes"
   name="totalMinutesOff"
@@ -124,6 +124,6 @@ exports[`ReducedLeaveSchedule when work pattern is a variable schedule renders s
   level="2"
   size="1"
 >
-  How will your work hours change while you are on a reduced leave schedule?
+  How many hours will you take off while you are on a reduced leave schedule?
 </Heading>
 `;

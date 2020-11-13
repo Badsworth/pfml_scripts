@@ -188,17 +188,17 @@ const errors = {
         friday_off_minutes: {
           maximum: "$t(shared.maximumReducedLeaveMinutes)",
           minimum: "$t(shared.minimumReducedLeaveMinutes)",
-          required: "Enter your reduced hours for Friday.",
+          required: "Enter your hours off for Friday.",
         },
         monday_off_minutes: {
           maximum: "$t(shared.maximumReducedLeaveMinutes)",
           minimum: "$t(shared.minimumReducedLeaveMinutes)",
-          required: "Enter your reduced hours for Monday.",
+          required: "Enter your hours off for Monday.",
         },
         saturday_off_minutes: {
           maximum: "$t(shared.maximumReducedLeaveMinutes)",
           minimum: "$t(shared.minimumReducedLeaveMinutes)",
-          required: "Enter your reduced hours for Saturday.",
+          required: "Enter your hours off for Saturday.",
         },
         start_date: {
           date: "Start date must include a valid month, day, and year.",
@@ -209,22 +209,22 @@ const errors = {
         sunday_off_minutes: {
           maximum: "$t(shared.maximumReducedLeaveMinutes)",
           minimum: "$t(shared.minimumReducedLeaveMinutes)",
-          required: "Enter your reduced hours for Sunday.",
+          required: "Enter your hours off for Sunday.",
         },
         thursday_off_minutes: {
           maximum: "$t(shared.maximumReducedLeaveMinutes)",
           minimum: "$t(shared.minimumReducedLeaveMinutes)",
-          required: "Enter your reduced hours for Thursday.",
+          required: "Enter your hours off for Thursday.",
         },
         tuesday_off_minutes: {
           maximum: "$t(shared.maximumReducedLeaveMinutes)",
           minimum: "$t(shared.minimumReducedLeaveMinutes)",
-          required: "Enter your reduced hours for Tuesday.",
+          required: "Enter your hours off for Tuesday.",
         },
         wednesday_off_minutes: {
           maximum: "$t(shared.maximumReducedLeaveMinutes)",
           minimum: "$t(shared.minimumReducedLeaveMinutes)",
-          required: "Enter your reduced hours for Wednesday.",
+          required: "Enter your hours off for Wednesday.",
         },
       },
     },
@@ -293,7 +293,7 @@ const errors = {
       min_leave_periods:
         "You must choose at least one kind of leave (continuous, reduced schedule, or intermittent).",
       min_reduced_leave_minutes:
-        "The total time entered for your reduced leave schedule must be greater than 0.",
+        "The total time entered for your hours off must be greater than 0.",
       require_employer_notified:
         "You must tell your employer that you’re taking leave before you can submit an application. If you’ve told your employer, update your application with the date that you notified them.",
     },
@@ -390,7 +390,7 @@ const shared = {
   leaveReasonMedical: "Medical leave",
   leaveReasonServiceMemberFamily: "Military family",
   maximumReducedLeaveMinutes:
-    "Reduced leave schedule hours cannot exceed your work schedule.",
+    "Hours you will take off cannot exceed your work schedule.",
   minimumReducedLeaveMinutes:
     "Reduced leave schedule hours must be 0 or greater.",
   minutesLabel: "Minutes",
@@ -887,15 +887,14 @@ const pages = {
     inputHoursLabel_Thursday: "$t(shared.day_Thursday)",
     inputHoursLabel_Tuesday: "$t(shared.day_Tuesday)",
     inputHoursLabel_Wednesday: "$t(shared.day_Wednesday)",
-    inputHoursLabel_weekly: "Reduced weekly hours",
-    lead_bonding:
-      "Enter the adjusted number of hours you will be working while taking leave. You can enter time in 15-minute increments if needed.",
+    inputHoursLabel_weekly: "Hours off per week",
+    lead_bonding: "You can enter time in 15-minute increments if needed.",
     lead_medical:
-      'Enter the adjusted number of hours you will be working while taking leave. You can enter time in 15-minute increments if needed.<br /><br />Refer to Question 29 in the "Estimate leave details" section of the certification form (page 6).',
+      'You can enter time in 15-minute increments if needed.<br /><br />Refer to Question 31 in the "Estimate leave details" section of the certification form (page 8).',
     medicalAlert: "$t(shared.leavePeriodMedicalAlert)",
     minutesLabel: "$t(shared.minutesLabel)",
     sectionLabel:
-      "How will your work hours change while you are on a reduced leave schedule?",
+      "How many hours will you take off while you are on a reduced leave schedule?",
     title: "$t(shared.claimsLeaveDetailsTitle)",
     workScheduleToggle: "View your work schedule",
   },
