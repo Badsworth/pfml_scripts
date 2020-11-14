@@ -39,7 +39,7 @@ jobs:
       fail-fast: false
       matrix:
         component: ["portal", "api", "env-shared", "ecs-tasks"]
-        environment: ["test", "stage", "prod"]
+        environment: ["test", "stage", "prod", "performance", "training"]
         include:
         - component: "constants"
         - component: "pfml-aws"
