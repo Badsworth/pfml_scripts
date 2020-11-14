@@ -4,6 +4,7 @@ import io
 import massgov.pfml.fineos.mock_client
 from massgov.pfml.api.models.applications.common import ContentType as AllowedContentTypes
 from massgov.pfml.db.models.factories import ApplicationFactory
+from massgov.pfml.fineos import fineos_client, models
 
 VALID_FORM_DATA = {
     "document_type": "Passport",
@@ -226,6 +227,66 @@ def test_documents_get_date_created(
 def test_documents_download(client, consented_user, consented_user_token, test_db_session):
     absence_case_id = "NTN-111-ABS-01"
     document_id = "3011"
+
+    application = ApplicationFactory.create(user=consented_user, fineos_absence_id=absence_case_id)
+
+    response = client.get(
+        "/v1/applications/{}/documents/{}".format(application.application_id, document_id),
+        headers={"Authorization": f"Bearer {consented_user_token}"},
+    )
+
+    assert response.status_code == 200
+    assert response.content_type == "application/pdf"
+    assert response.headers.get("Content-Disposition") == "attachment; filename=test.pdf"
+    assert response.data.startswith(b"\x89PNG\r\n")
+
+
+def test_documents_download_matches_document_id(
+    client, consented_user, consented_user_token, test_db_session, monkeypatch
+):
+    # Regression test to ensure that get_document_by_id searches through all documents from FINEOS
+    absence_case_id = "NTN-111-ABS-01"
+    document_id = "3012"
+
+    def mock_get_documents(self, user_id, absence_id):
+        # mock the response to return multiple documents
+        document_type = "Approval Notice"
+        file_name = "test.pdf"
+        description = "Mock File"
+        document1 = copy.copy(massgov.pfml.fineos.mock_client.MOCK_DOCUMENT_DATA)
+        document1.update(
+            {
+                "caseId": absence_id,
+                "name": document_type,
+                "fileExtension": ".pdf",
+                "originalFilename": file_name,
+                "description": description,
+                "documentId": 3011,
+            }
+        )
+        document2 = copy.copy(massgov.pfml.fineos.mock_client.MOCK_DOCUMENT_DATA)
+        document2.update(
+            {
+                "caseId": absence_id,
+                "name": document_type,
+                "fileExtension": ".pdf",
+                "originalFilename": file_name,
+                "description": description,
+                "documentId": 3012,
+            }
+        )
+        return [
+            models.customer_api.Document.parse_obj(
+                fineos_client.fineos_document_empty_dates_to_none(document1)
+            ),
+            models.customer_api.Document.parse_obj(
+                fineos_client.fineos_document_empty_dates_to_none(document2)
+            ),
+        ]
+
+    monkeypatch.setattr(
+        massgov.pfml.fineos.mock_client.MockFINEOSClient, "get_documents", mock_get_documents
+    )
 
     application = ApplicationFactory.create(user=consented_user, fineos_absence_id=absence_case_id)
 

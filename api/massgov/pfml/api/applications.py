@@ -5,7 +5,7 @@ import connexion
 import puremagic
 from flask import Response
 from puremagic import PureError
-from werkzeug.exceptions import BadRequest, ServiceUnavailable, Unauthorized
+from werkzeug.exceptions import BadRequest, NotFound, ServiceUnavailable, Unauthorized
 
 import massgov.pfml.api.app as app
 import massgov.pfml.api.services.application_rules as application_rules
@@ -383,6 +383,8 @@ def document_download(application_id: str, document_id: str) -> Response:
         ensure(READ, existing_application)
 
         document = get_document_by_id(db_session, document_id, existing_application)
+        if not document:
+            raise NotFound(description=f"Could not find Document with ID {document_id}")
 
         ensure(READ, document)
 

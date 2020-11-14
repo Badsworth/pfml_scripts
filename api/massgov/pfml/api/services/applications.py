@@ -712,8 +712,8 @@ def address_type_mapping(address_type):
 
 def get_document_by_id(
     db_session: db.Session, document_id: str, application: Application
-) -> Union[Document, DocumentResponse]:
-
+) -> Optional[Union[Document, DocumentResponse]]:
+    document = None
     try:
         # check whether document metadata exists in database
         document = db_session.query(Document).filter(Document.fineos_id == document_id).one()
@@ -721,12 +721,9 @@ def get_document_by_id(
         # if not, retrieve the document using fineos_actions
         # this will return a DocumentResponse rather than a document
         documents = get_documents(application, db_session)
-
         for d in documents:
             if d.fineos_document_id == document_id:
                 return d
-            else:
-                logger.warning("No document found for ID %s", document_id)
-                raise RuntimeError("No document found for ID %s", document_id)
+        logger.warning("No document found for ID %s", document_id)
 
     return document
