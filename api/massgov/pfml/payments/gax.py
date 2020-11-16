@@ -11,7 +11,7 @@ generic_attributes = {
     "DOC_TYP": "ABS",
     "DOC_CD": "GAX",
     "DOC_DEPT_CD": "EOL",
-    "DOC_UNIT_CD": "8710",
+    "DOC_UNIT_CD": "8700",
     "DOC_VERS_NO": "1",
 }
 
