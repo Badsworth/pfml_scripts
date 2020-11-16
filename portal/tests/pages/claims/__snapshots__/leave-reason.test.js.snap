@@ -38,7 +38,7 @@ exports[`LeaveReasonPage renders the page for medical leave and does not show re
       ]
     }
     hint="You can only request one leave at a time."
-    label="Why do you need to take time off?"
+    label="Why do you need to take leave?"
     name="leave_details.reason"
     onChange={[Function]}
     type="radio"
@@ -97,7 +97,7 @@ Array [
   <p
     key="0"
   >
-    Starting January 1, 2021, you can also apply for the following benefits:
+    Starting January 1, 2021, you can also apply for the following paid benefits:
   </p>,
   <ul
     className="usa-list"
@@ -106,7 +106,7 @@ Array [
     <li
       key="0"
     >
-      Paid medical leave to manage your own 
+      Medical leave to manage your own 
       <a
         href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-guide#what-is-a-serious-health-condition?-"
         key="1"
@@ -119,12 +119,12 @@ Array [
     <li
       key="1"
     >
-      Paid family leave to manage family affairs while a family member is on active duty overseas
+      Family leave to manage family affairs while a family member is on active duty overseas
     </li>
     <li
       key="2"
     >
-      Paid family leave to care for a family member who serves in the armed forces
+      Family leave to care for a family member who serves in the armed forces
     </li>
   </ul>,
 ]

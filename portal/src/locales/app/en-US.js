@@ -78,7 +78,7 @@ const errors = {
     },
     employer_fein: {
       pattern: "Enter a 9-digit number formatted as XX-XXXXXXX.",
-      required: "Enter your employer's Federal Employer Identification Number.",
+      required: "Enter your employer's Employer Identification Number.",
     },
     employment_status: {
       required: "Enter your employment status.",
@@ -537,8 +537,7 @@ const pages = {
     edit: "Edit",
     partOneSubmittedDescription:
       "Your in-progress application will be viewable by our Contact Center staff. If you need to make edits to Part 1, you'll need to call our Contact Center at $t(shared.contactCenterPhoneNumber). Now, you can work on Parts 2 and 3, and submit your application.",
-    partOneSubmittedHeading:
-      "Part 1 of your application was confirmed successfully",
+    partOneSubmittedHeading: "Part 1 of your application was confirmed.",
     resume: "Resume",
     // Resume button aria-label for screen readers, since VoiceOver reads "résumé":
     resumeScreenReader: "Continue with",
@@ -549,13 +548,13 @@ const pages = {
     stepHTMLDescription_bondingAdoptFosterFuture:
       "After your child arrives in your home, you will need to provide a statement confirming the placement and the date of placement.",
     stepHTMLDescription_bondingNewborn:
-      "You need to provide your child's birth certificate or a document from a health care provider that shows the child’s birth date.",
+      "You need to provide your child's birth certificate or a document from a health care provider that shows the child’s date of birth.",
     stepHTMLDescription_bondingNewbornFuture:
-      "After your child is born you will need to provide your child’s birth certificate or a document from a health care provider that shows the child’s birth date.",
+      "After your child is born you will need to provide your child’s birth certificate or a document from a health care provider that shows the child’s date of birth.",
     stepHTMLDescription_employerInformation:
       "You will need to know:<ul><li>Your employer’s 9-digit federal employer identification number (FEIN or EIN). <br><strong>Where to find this: </strong>on your W$t(chars.nbhyphen)2 or 1099, or ask your employer’s finance department.</li><li>The date you told your employer you were taking leave.</li></ul><p>If you are taking leave from multiple employers, you must create separate applications for each job.</p>",
     stepHTMLDescription_leaveDetails:
-      "<p>If you are taking medical leave due to injury, illness, or pregnancy, you need to have your health care provider fill out <healthcare-provider-form-link>the certification form</healthcare-provider-form-link>. Some of the answers you will need for the online application will come from your health care provider’s answers on the certification form.</p><p>If you are taking leave to bond with a child, you will need to know:</p><ul><li>The child's date of birth, due date, or the date they arrived in your home for adoption or foster care.</li><li>When you want your leave to begin and end.</li></ul>",
+      "<p>If you are taking medical leave due to injury, illness, or pregnancy, you need to have your health care provider fill out <healthcare-provider-form-link>the certification form</healthcare-provider-form-link>. Some of the answers you will need for the online application will come from your health care provider’s answers on the certification form.</p><p>If you are taking family leave to bond with a child, you will need to know:</p><ul><li>The child's date of birth, due date, or the date they arrived in your home for adoption or foster care.</li><li>When you want your leave to begin and end.</li></ul>",
     stepHTMLDescription_medical:
       "You need to provide your completed <healthcare-provider-form-link>Health Care Provider Certification</healthcare-provider-form-link>. ",
     stepHTMLDescription_otherLeave:
@@ -563,7 +562,7 @@ const pages = {
     stepHTMLDescription_payment:
       "<p>Tell us how you want to receive payment.</p><p>If you want to receive payment by direct deposit, you will need to provide your bank account information, including a routing number and account number.</p>",
     stepHTMLDescription_reviewAndConfirm:
-      "<p>Once you confirm your leave information, we’ll notify your employer. Your job will be protected. To complete your application, you will need to finish the last three steps and submit.</p><p>If you need to edit your information in Part 1 after completing this step, you’ll need to call the Contact Center at $t(shared.contactCenterPhoneNumber).</p>",
+      "<p>Once you confirm your leave information, we’ll notify your employer. Your job will be protected. To complete your application, you will need to finish steps 6-8 and submit.</p><p>If you need to edit your information in Part 1 after completing this step, you’ll need to call the Contact Center at $t(shared.contactCenterPhoneNumber).</p>",
     stepHTMLDescription_uploadId:
       "Upload proof of identity. If you entered a Massachusetts driver’s license or Mass ID number in step 1, upload the same ID.",
     stepHTMLDescription_verifyId:
@@ -592,7 +591,7 @@ const pages = {
     title: "Checklist: Create a new application",
   },
   claimsDateOfBirth: {
-    sectionLabel: "What's your birthdate?",
+    sectionLabel: "What's your date of birth?",
     title: "$t(shared.claimsVerifyIdTitle)",
   },
   claimsEmployerBenefitDetails: {
@@ -644,8 +643,7 @@ const pages = {
     choiceLabel_unemployed: "I'm unemployed",
     feinHint:
       "This number is 9-digits. You can find this number on all notices your employer sent about Paid Family and Medical Leave. You can also find it on your W$t(chars.nbhyphen)2 or 1099$t(chars.nbhyphen)MISC. Ask your employer if you need help getting this information.",
-    feinLabel:
-      "What is your employer's Federal Employer Identification Number (FEIN)?",
+    feinLabel: "What is your employer's Employer Identification Number (EIN)?",
     furloughAnswer:
       'If your hours have been cut or significantly reduced but you have not been laid off, select "$t(pages.claimsEmploymentStatus.choiceLabel_employed)"',
     furloughQuestion: "What if I've been furloughed?",
@@ -712,7 +710,7 @@ const pages = {
     hasLeaveHint_medical:
       'Refer to Question 31 in the "Estimate leave details" section of the certification form (page 6).',
     hasLeaveLabel:
-      "Do you need to take off work at irregular intervals (intermittent leave)?",
+      "Do you need to take off work in uneven blocks of time (intermittent leave)?",
     hybridLeaveWarning:
       "You have to create a separate application for intermittent leave.",
     medicalAlert: "$t(shared.leavePeriodMedicalAlert)",
@@ -744,7 +742,7 @@ const pages = {
     activeDutyFamilyLeaveLabel:
       "I need to manage family affairs while a family member is on active duty in the armed forces.",
     alertBody:
-      "<p>Starting January$t(chars.nbsp)1, 2021, you can also apply for the following$t(chars.nbsp)benefits:</p><ul><li>Paid medical leave to manage your own <mass-benefits-guide-serious-health-condition>serious health$t(chars.nbsp)condition</mass-benefits-guide-serious-health-condition></li><li>Paid family leave to manage family affairs while a family member is on active duty$t(chars.nbsp)overseas</li><li>Paid family leave to care for a family member who serves in the armed$t(chars.nbsp)forces</li></ul>",
+      "<p>Starting January$t(chars.nbsp)1, 2021, you can also apply for the following paid$t(chars.nbsp)benefits:</p><ul><li>Medical leave to manage your own <mass-benefits-guide-serious-health-condition>serious health$t(chars.nbsp)condition</mass-benefits-guide-serious-health-condition></li><li>Family leave to manage family affairs while a family member is on active duty$t(chars.nbsp)overseas</li><li>Family leave to care for a family member who serves in the armed$t(chars.nbsp)forces</li></ul>",
     bondingLeaveHint: "Family leave",
     bondingLeaveLabel:
       "I need to bond with my child after birth, adoption, or foster placement.",
@@ -760,7 +758,7 @@ const pages = {
     medicalLeaveHint: "Medical leave",
     medicalLeaveLabel: "I can’t work due to an illness, injury, or pregnancy.",
     sectionHint: "You can only request one leave at a time.",
-    sectionLabel: "Why do you need to take time off?",
+    sectionLabel: "Why do you need to take leave?",
     serviceMemberFamilyLeaveHint: "Family leave",
     serviceMemberFamilyLeaveLabel:
       "I need to care for a family member who serves in the armed forces.",
@@ -919,7 +917,7 @@ const pages = {
       "$t(shared.employerBenefitType_permanentDisability)",
     employerBenefitType_shortTermDisability:
       "$t(shared.employerBenefitType_shortTermDisability)",
-    employerFeinLabel: "Employer's FEIN",
+    employerFeinLabel: "Employer's EIN",
     employerNotifiedLabel: "Notified employer",
     employerNotifiedValue: "No",
     employerNotifiedValue_true: "Notified employer on {{date}}",
@@ -975,7 +973,7 @@ const pages = {
     // eslint-disable-next-line no-template-curly-in-string
     otherLeaveDollarAmount: "${{amount}} every month",
     partDescription_1:
-      "If you need to make edits to Part 1, you’ll need to contact our Contact Center at $t(shared.contactCenterPhoneNumber). Your application ID is <strong>{{absence_id}}</strong>",
+      "If you need to make edits to Part 1, you’ll need to call our Contact Center at $t(shared.contactCenterPhoneNumber). Your application ID is <strong>{{absence_id}}</strong>",
     partHeadingPrefix: "Part {{number}}",
     partHeading_1_final:
       "Review: Tell us about yourself and your$t(chars.nbsp)leave",
@@ -984,7 +982,7 @@ const pages = {
     partHeading_2: "Review: Your payment information",
     partHeading_3: "Review: Upload document",
     partOneNextStepsLine1:
-      "Once you review and confirm Part 1, your in-progress application will be viewable by our Contact Center staff. If you need to make edits to Part 1, you’ll need to contact our Contact Center at $t(shared.contactCenterPhoneNumber).",
+      "Once you review and confirm Part 1, your in-progress application will be viewable by our Contact Center staff. If you need to make edits to Part 1, you’ll need to call our Contact Center at $t(shared.contactCenterPhoneNumber).",
     partOneNextStepsLine2:
       "We’ll also notify your employer that you’ve started an application for paid family and medical leave.",
     partOneNextStepsLine3:
@@ -1081,7 +1079,7 @@ const pages = {
   },
   claimsSsn: {
     lead:
-      "It’s recommended that you enter your SSN. Don’t have an SSN? Use your Individual Taxpayer Identification Number (ITIN).",
+      "Don’t have a Social Security Number? Use your Individual Taxpayer Identification Number (ITIN).",
     sectionLabel: "What's your Social Security Number?",
     title: "$t(shared.claimsVerifyIdTitle)",
   },
@@ -1121,7 +1119,7 @@ const pages = {
     proofRequired_bondingAdoptFosterFuture:
       "After your child arrives in your home, you will need to upload, mail, or fax a document that shows your child’s placement date.",
     proofRequired_bondingNewbornFuture:
-      "After your child is born, you will need to upload, mail, or fax a document that shows your child’s birthdate.",
+      "After your child is born, you will need to upload, mail, or fax a document that shows your child’s date of birth.",
     proofRequired_medicalPregnantFuture:
       "You must call the DFML Contact Center at $t(shared.contactCenterPhoneNumber) once your medical leave begins. We can’t approve your application until we hear from you.",
     title: "Your leave application was submitted successfully",
@@ -1136,8 +1134,8 @@ const pages = {
     fileHeadingPrefix: "File",
     leadListNewborn: [
       "Your child's birth certificate.",
-      "A note from your child's health care provider stating your child's birth date.",
-      "A note from the health care provider of the person who gave birth stating your child's birth date.",
+      "A note from your child's health care provider stating your child's date of birth.",
+      "A note from the health care provider of the person who gave birth stating your child's date of birth.",
     ],
     lead_bonding_adopt_foster:
       "<p>It's faster to upload your documents online, but you can fax or mail your documents if you prefer. Follow the instructions on <mail-fax-instructions-link>Mass.gov</mail-fax-instructions-link>.</p><p>You need to upload a statement from your adoption or foster agency or from the Massachusetts Department of Children and Families to confirm the placement and the date of the placement.</p>",
@@ -1266,7 +1264,7 @@ const pages = {
   employersClaimsConfirmation: {
     applicationIdLabel: "<strong>Application ID:</strong> {{absenceId}}",
     instructions:
-      "<p>Thanks for letting us know that you’re not the right person to review this.</p><ul><li>Please check with your human resources team and your colleagues to see who should respond.</li><li>If the right person already has an employer account with your company info, you can forward them the email you received so they can respond directly.</li><li>Otherwise, please ask them to contact us at $t(shared.contactCenterPhoneNumber).</li></ul>",
+      "<p>Thanks for letting us know that you’re not the right person to review this.</p><ul><li>Please check with your human resources team and your colleagues to see who should respond.</li><li>If the right person already has an employer account with your company info, you can forward them the email you received so they can respond directly.</li><li>Otherwise, please ask them to call us at $t(shared.contactCenterPhoneNumber).</li></ul>",
     instructions_benefitsGuide:
       "To learn more about how benefits are calculated, visit our <benefits-guide-link>PFML Benefits Guide</benefits-guide-link>.",
     instructions_processingApplication:
@@ -1297,7 +1295,7 @@ const pages = {
     durationBasis_days: "{{numOfDays}} days",
     employeeInformation: {
       addressLabel: "Mailing address",
-      dobLabel: "Birthdate",
+      dobLabel: "Date of birth",
       employeeNameLabel: "Employee name",
       header: "Employee information",
       ssnOrItinLabel:
@@ -1348,7 +1346,7 @@ const pages = {
     },
     fraudReport: {
       alertBody:
-        "We take allegations about fraud seriously. Selecting this will begin further investigation. Please only select if you are convinced this is fraudulent. If you have questions, feel free to contact us at $t(shared.contactCenterPhoneNumber) from 8am$t(chars.nbhyphen)5pm ET.",
+        "We take allegations about fraud seriously. Selecting this will begin further investigation. Please only select if you are convinced this is fraudulent. If you have questions, feel free to call us at $t(shared.contactCenterPhoneNumber) from 8am$t(chars.nbhyphen)5pm ET.",
       alertHeading: "You are reporting fraud.",
       choiceNo: "$t(shared.choiceNo)",
       choiceYes: "$t(shared.choiceYes)",
@@ -1466,7 +1464,7 @@ const pages = {
   },
   userConsentToDataSharing: {
     agreementBody:
-      "By continuing, I am indicating that I have read and understood the above user agreements. I give the DFML permission to collect, share, and use my information consistent with the terms of the agreements linked$t(chars.nbsp)above.",
+      "By continuing, I am indicating that I have read and understood the above user agreements. I give the Department of Family and Medical Leave permission to collect, share, and use my information consistent with the terms of the agreements linked$t(chars.nbsp)above.",
     applicationUsage: "",
     applicationUsageHeading_employer: "Reviewing paid leave applications",
     applicationUsageHeading_user: "Applying for PFML",
@@ -1489,10 +1487,10 @@ const pages = {
       "We’ll keep your information private as required by law. As a part of the application process, we may check the information you give with other state agencies. We may share information related to your claim with your employer, health care provider(s), and contracted private partners.",
     dataUsageHeading: "How we use your data",
     fullUserAgreementBody:
-      "To find out more about how the Commonwealth might use the information you share with DFML, please read the <informed-consent-link>DFML Informed Consent Agreement</informed-consent-link> and the <privacy-policy-link>Privacy Policy for Mass.gov</privacy-policy-link>.",
+      "To find out more about how the Commonwealth might use the information you share with the Department of Family and Medical Leave, please read the <informed-consent-link>DFML Informed Consent Agreement</informed-consent-link> and the <privacy-policy-link>Privacy Policy for Mass.gov</privacy-policy-link>.",
     fullUserAgreementHeading: "Full user agreements",
     intro:
-      "The information you provide on this website will be used to administer the Department of Family and Medical Leave (DFML) program.",
+      "The information you provide on this website will be used to administer the Paid Family and Medical Leave (PFML) program.",
     title: "How this website uses your information",
   },
 };
@@ -1516,7 +1514,7 @@ const components = {
   },
   applicationCard: {
     documentsRequestError: "$t(shared.documentsRequestError)",
-    feinHeading: "Employer FEIN",
+    feinHeading: "Employer EIN",
     futureBondingLeave_adopt_foster:
       "Once your child arrives, submit proof of placement so that we can make a decision.",
     futureBondingLeave_newborn:

@@ -155,7 +155,7 @@ exports[`Success renders content tailored to Family (Bonding Future Newborn) 1`]
     <Alert
       state="warning"
     >
-      After your child is born, you will need to upload, mail, or fax a document that shows your child’s birthdate.
+      After your child is born, you will need to upload, mail, or fax a document that shows your child’s date of birth.
     </Alert>
     <Heading
       level="2"

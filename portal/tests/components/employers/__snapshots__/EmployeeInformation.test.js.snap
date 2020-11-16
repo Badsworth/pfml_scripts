@@ -39,7 +39,7 @@ exports[`EmployeeInformation renders the component 1`] = `
     1234
   </ReviewRow>
   <ReviewRow
-    label="Birthdate"
+    label="Date of birth"
     level="3"
   >
     7/17/1980

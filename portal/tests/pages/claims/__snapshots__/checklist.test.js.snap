@@ -17,7 +17,7 @@ Array [
 ]
 `;
 
-exports[`Checklist Upload leave certification step renders newborn bonding leave content if claim reason is newborn 1`] = `"You need to provide your child's birth certificate or a document from a health care provider that shows the child’s birth date."`;
+exports[`Checklist Upload leave certification step renders newborn bonding leave content if claim reason is newborn 1`] = `"You need to provide your child's birth certificate or a document from a health care provider that shows the child’s date of birth."`;
 
 exports[`Checklist renders 'In progress' version of Part 1 StepList description when claim isn't yet submitted 1`] = `"Your progress is automatically saved as you complete the application. You can edit any information you enter in Part 1 until step 5 is completed."`;
 
@@ -110,7 +110,7 @@ Array [
   <p
     key="p-1"
   >
-    If you are taking leave to bond with a child, you will need to know:
+    If you are taking family leave to bond with a child, you will need to know:
   </p>,
   <ul
     className="usa-list"
@@ -135,7 +135,7 @@ Array [
   <p
     key="p-0"
   >
-    Once you confirm your leave information, we’ll notify your employer. Your job will be protected. To complete your application, you will need to finish the last three steps and submit.
+    Once you confirm your leave information, we’ll notify your employer. Your job will be protected. To complete your application, you will need to finish steps 6-8 and submit.
   </p>,
   <p
     key="p-1"
@@ -162,7 +162,7 @@ Array [
 
 exports[`Checklist renders description for Step 6`] = `"Upload proof of identity. If you entered a Massachusetts driver’s license or Mass ID number in step 1, upload the same ID."`;
 
-exports[`Checklist renders description for Step 7`] = `"You need to provide your child's birth certificate or a document from a health care provider that shows the child’s birth date."`;
+exports[`Checklist renders description for Step 7`] = `"You need to provide your child's birth certificate or a document from a health care provider that shows the child’s date of birth."`;
 
 exports[`Checklist renders multiple StepList components with list of Steps 1`] = `
 <div
@@ -484,7 +484,7 @@ exports[`Checklist renders multiple StepList components with list of Steps 1`] =
 exports[`Checklist renders success message after submitting part one 1`] = `
 <Alert
   className="margin-bottom-3"
-  heading="Part 1 of your application was confirmed successfully"
+  heading="Part 1 of your application was confirmed."
   name="part-one-submitted-message"
   state="success"
 >

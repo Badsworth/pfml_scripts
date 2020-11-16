@@ -30,7 +30,7 @@ exports[`EmploymentStatusPage when claimantShowEmploymentStatus feature flag is 
   >
     <InputText
       hint="This number is 9-digits. You can find this number on all notices your employer sent about Paid Family and Medical Leave. You can also find it on your W‑2 or 1099‑MISC. Ask your employer if you need help getting this information."
-      label="What is your employer's Federal Employer Identification Number (FEIN)?"
+      label="What is your employer's Employer Identification Number (EIN)?"
       mask="fein"
       name="employer_fein"
       onChange={[Function]}
@@ -107,7 +107,7 @@ exports[`EmploymentStatusPage when claimantShowEmploymentStatus feature flag is 
   >
     <InputText
       hint="This number is 9-digits. You can find this number on all notices your employer sent about Paid Family and Medical Leave. You can also find it on your W‑2 or 1099‑MISC. Ask your employer if you need help getting this information."
-      label="What is your employer's Federal Employer Identification Number (FEIN)?"
+      label="What is your employer's Employer Identification Number (EIN)?"
       mask="fein"
       name="employer_fein"
       onChange={[Function]}
