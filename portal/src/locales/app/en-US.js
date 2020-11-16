@@ -572,7 +572,7 @@ const pages = {
     stepListDescription_2:
       "Entering payment information here leads to faster processing, but you can also call$t(chars.nbsp)$t(shared.contactCenterPhoneNumber).",
     stepListDescription_3:
-      "Uploading documents online leads to faster processing, but you can also fax documents to $t(shared.contactCenterFaxNumber), or mail them to $t(shared.contactCenterAddress).",
+      "Uploading documents online leads to faster processing, but you can also fax or mail documents. Follow the instructions on <mail-fax-instructions-link>Mass.gov</mail-fax-instructions-link>.",
     stepListTitlePrefix: "Part {{number}}",
     stepListTitle_1: "Tell us about yourself and your leave",
     stepListTitle_2: "Enter your payment information",
@@ -1137,11 +1137,11 @@ const pages = {
       "A note from the health care provider of the person who gave birth stating your child's birth date.",
     ],
     lead_bonding_adopt_foster:
-      "You need to upload a statement from your adoption or foster agency or from the Massachusetts Department of Children and Families to confirm the placement and the date of the placement.",
+      "<p>It's faster to upload your documents online, but you can fax or mail your documents if you prefer. Follow the instructions on <mail-fax-instructions-link>Mass.gov</mail-fax-instructions-link>.</p><p>You need to upload a statement from your adoption or foster agency or from the Massachusetts Department of Children and Families to confirm the placement and the date of the placement.</p>",
     lead_bonding_newborn:
-      "You need to upload one of the following documents to confirm your child’s date of birth:",
+      "<p>It's faster to upload your documents online, but you can fax or mail your documents if you prefer. Follow the instructions on <mail-fax-instructions-link>Mass.gov</mail-fax-instructions-link>.</p><p>You need to upload one of the following documents to confirm your child’s date of birth:</p>",
     lead_medical:
-      "You need to upload a copy of the <healthcare-provider-form-link>PFML Healthcare Provider Form (opens in new tab)</healthcare-provider-form-link> to prove that you need to take medical leave. You can upload a completed Family and Medical Leave Act (FMLA) form instead if your provider filled$t(chars.nbsp)one$t(chars.nbsp)out.",
+      "<p>It's faster to upload your documents online, but you can fax or mail your documents if you prefer. Follow the instructions on <mail-fax-instructions-link>Mass.gov</mail-fax-instructions-link>.</p><p>You need to upload a copy of the <healthcare-provider-form-link>PFML Healthcare Provider Form</healthcare-provider-form-link> to prove that you need to take medical leave. You can upload a completed Family and Medical Leave Act (FMLA) form instead if your provider filled$t(chars.nbsp)one$t(chars.nbsp)out.</p>",
     sectionLabel_bonding: "Upload your documentation",
     sectionLabel_medical: "Upload your Healthcare Provider$t(chars.nbsp)form",
     title: "$t(shared.claimsLeaveDetailsTitle)",
@@ -1167,9 +1167,9 @@ const pages = {
     fileHeadingPrefix: "$t(shared.fileUpload_fileHeadingPrefix)",
     idDocumentsCount: "$t(shared.filesUploaded)",
     lead_mass:
-      "In order to verify your identity, upload a copy of both the front and the back of your ID card.",
+      "<p>It's faster to upload your documents online, but you can fax or mail your documents if you prefer. Follow the instructions on <mail-fax-instructions-link>Mass.gov</mail-fax-instructions-link>.</p><p>In order to verify your identity, upload a copy of both the front and the back of your ID card.</p>",
     lead_other:
-      "To verify your identity you will need valid documentation issued by state or federal government.",
+      "<p>It's faster to upload your documents online, but you can fax or mail your documents if you prefer. Follow the instructions on <mail-fax-instructions-link>Mass.gov</mail-fax-instructions-link>.<p>To verify your identity you will need valid documentation issued by state or federal government.</p>",
     otherIdentityDocs:
       "<p><strong>You can use:</strong></p><ul><li>U.S. State or Territory Real ID</li><li>U.S. passport or passport card</li><li>Permanent Resident Card issued by DHS or INS</li><li>Employment Authorization Document (EAD) issued by DHS</li><li>Foreign passport <strong>and</strong> a <work-visa-link>work visa</work-visa-link></li></ul>",
     sectionLabel_mass: "Upload your Massachusetts driver’s license or ID card",

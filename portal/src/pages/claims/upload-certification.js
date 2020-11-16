@@ -98,6 +98,13 @@ export const UploadCertification = (props) => {
         <Trans
           i18nKey="pages.claimsUploadCertification.lead"
           components={{
+            "mail-fax-instructions-link": (
+              <a
+                target="_blank"
+                rel="noopener"
+                href={routes.external.massgov.mailFaxInstructions}
+              />
+            ),
             "healthcare-provider-form-link": (
               <a
                 target="_blank"

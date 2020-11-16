@@ -93,7 +93,19 @@ export const UploadId = (props) => {
           {t("pages.claimsUploadId.sectionLabel", { context: contentContext })}
         </Heading>
         <Lead>
-          {t("pages.claimsUploadId.lead", { context: contentContext })}
+          <Trans
+            i18nKey="pages.claimsUploadId.lead"
+            components={{
+              "mail-fax-instructions-link": (
+                <a
+                  target="_blank"
+                  rel="noopener"
+                  href={routes.external.massgov.mailFaxInstructions}
+                />
+              ),
+            }}
+            tOptions={{ context: contentContext }}
+          />
         </Lead>
         {!hasStateId && (
           <div className="border-bottom border-base-light margin-bottom-4 padding-bottom-4">

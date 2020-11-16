@@ -201,6 +201,15 @@ export const Checklist = (props) => {
     return (
       <Trans
         i18nKey="pages.claimsChecklist.stepListDescription"
+        components={{
+          "mail-fax-instructions-link": (
+            <a
+              target="_blank"
+              rel="noopener"
+              href={routes.external.massgov.mailFaxInstructions}
+            />
+          ),
+        }}
         tOptions={{ context }}
         values={{ absence_id: claim.fineos_absence_id }}
       />

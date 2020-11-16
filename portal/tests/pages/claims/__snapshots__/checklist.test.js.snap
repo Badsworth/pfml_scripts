@@ -180,6 +180,15 @@ exports[`Checklist renders multiple StepList components with list of Steps 1`] =
   <StepList
     description={
       <Trans
+        components={
+          Object {
+            "mail-fax-instructions-link": <a
+              href="https://www.mass.gov/pfmlsubmitinfo"
+              rel="noopener"
+              target="_blank"
+            />,
+          }
+        }
         i18nKey="pages.claimsChecklist.stepListDescription"
         tOptions={
           Object {
@@ -485,7 +494,20 @@ exports[`Checklist renders success message after submitting part one 1`] = `
 
 exports[`Checklist when Part 1 is submitted renders descriptions for Part 2 and 3 1`] = `"Entering payment information here leads to faster processing, but you can also call (833) 344‑7365."`;
 
-exports[`Checklist when Part 1 is submitted renders descriptions for Part 2 and 3 2`] = `"Uploading documents online leads to faster processing, but you can also fax documents to (617) 855‑6180, or mail them to PO Box 838 Lawrence, MA 01843."`;
+exports[`Checklist when Part 1 is submitted renders descriptions for Part 2 and 3 2`] = `
+Array [
+  "Uploading documents online leads to faster processing, but you can also fax or mail documents. Follow the instructions on ",
+  <a
+    href="https://www.mass.gov/pfmlsubmitinfo"
+    key="1"
+    rel="noopener"
+    target="_blank"
+  >
+    Mass.gov
+  </a>,
+  ".",
+]
+`;
 
 exports[`Checklist when Part 1 is submitted renders different description for Part 1 1`] = `
 Array [

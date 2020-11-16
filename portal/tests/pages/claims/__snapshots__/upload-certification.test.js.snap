@@ -9,7 +9,29 @@ exports[`UploadCertification after documents have been loaded when leave reason 
 </Heading>
 `;
 
-exports[`UploadCertification after documents have been loaded when leave reason is Bonding leave renders page with bonding leave content 2`] = `"You need to upload one of the following documents to confirm your child’s date of birth:"`;
+exports[`UploadCertification after documents have been loaded when leave reason is Bonding leave renders page with bonding leave content 2`] = `
+Array [
+  <p
+    key="p-0"
+  >
+    It's faster to upload your documents online, but you can fax or mail your documents if you prefer. Follow the instructions on 
+    <a
+      href="https://www.mass.gov/pfmlsubmitinfo"
+      key="1"
+      rel="noopener"
+      target="_blank"
+    >
+      Mass.gov
+    </a>
+    .
+  </p>,
+  <p
+    key="p-1"
+  >
+    You need to upload one of the following documents to confirm your child’s date of birth:
+  </p>,
+]
+`;
 
 exports[`UploadCertification after documents have been loaded when leave reason is Medical leave renders a FileCardList 1`] = `
 <FileCardList
@@ -35,15 +57,33 @@ exports[`UploadCertification after documents have been loaded when leave reason 
 
 exports[`UploadCertification after documents have been loaded when leave reason is Medical leave renders page with medical leave content 2`] = `
 Array [
-  "You need to upload a copy of the ",
-  <a
-    href="https://www.mass.gov/hcp-form"
-    key="1"
-    rel="noopener"
-    target="_blank"
+  <p
+    key="p-0"
   >
-    PFML Healthcare Provider Form (opens in new tab)
-  </a>,
-  " to prove that you need to take medical leave. You can upload a completed Family and Medical Leave Act (FMLA) form instead if your provider filled one out.",
+    It's faster to upload your documents online, but you can fax or mail your documents if you prefer. Follow the instructions on 
+    <a
+      href="https://www.mass.gov/pfmlsubmitinfo"
+      key="1"
+      rel="noopener"
+      target="_blank"
+    >
+      Mass.gov
+    </a>
+    .
+  </p>,
+  <p
+    key="p-1"
+  >
+    You need to upload a copy of the 
+    <a
+      href="https://www.mass.gov/hcp-form"
+      key="1"
+      rel="noopener"
+      target="_blank"
+    >
+      PFML Healthcare Provider Form
+    </a>
+     to prove that you need to take medical leave. You can upload a completed Family and Medical Leave Act (FMLA) form instead if your provider filled one out.
+  </p>,
 ]
 `;

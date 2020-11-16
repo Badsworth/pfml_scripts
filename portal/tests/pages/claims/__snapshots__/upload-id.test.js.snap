@@ -15,7 +15,23 @@ exports[`UploadId after documents have been loaded when the user doesn't have a 
       Upload an identification document
     </Heading>
     <Lead>
-      To verify your identity you will need valid documentation issued by state or federal government.
+      <Trans
+        components={
+          Object {
+            "mail-fax-instructions-link": <a
+              href="https://www.mass.gov/pfmlsubmitinfo"
+              rel="noopener"
+              target="_blank"
+            />,
+          }
+        }
+        i18nKey="pages.claimsUploadId.lead"
+        tOptions={
+          Object {
+            "context": "other",
+          }
+        }
+      />
     </Lead>
     <div
       className="border-bottom border-base-light margin-bottom-4 padding-bottom-4"
@@ -101,7 +117,23 @@ exports[`UploadId after documents have been loaded when the user has a Mass ID r
       Upload your Massachusetts driver’s license or ID card
     </Heading>
     <Lead>
-      In order to verify your identity, upload a copy of both the front and the back of your ID card.
+      <Trans
+        components={
+          Object {
+            "mail-fax-instructions-link": <a
+              href="https://www.mass.gov/pfmlsubmitinfo"
+              rel="noopener"
+              target="_blank"
+            />,
+          }
+        }
+        i18nKey="pages.claimsUploadId.lead"
+        tOptions={
+          Object {
+            "context": "mass",
+          }
+        }
+      />
     </Lead>
     <FileUploadDetails />
     <FileCardList
@@ -133,7 +165,23 @@ exports[`UploadId after documents have been loaded when the user has a Mass ID w
       Upload your Massachusetts driver’s license or ID card
     </Heading>
     <Lead>
-      In order to verify your identity, upload a copy of both the front and the back of your ID card.
+      <Trans
+        components={
+          Object {
+            "mail-fax-instructions-link": <a
+              href="https://www.mass.gov/pfmlsubmitinfo"
+              rel="noopener"
+              target="_blank"
+            />,
+          }
+        }
+        i18nKey="pages.claimsUploadId.lead"
+        tOptions={
+          Object {
+            "context": "mass",
+          }
+        }
+      />
     </Lead>
     <FileUploadDetails />
     <FileCardList
