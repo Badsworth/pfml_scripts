@@ -3,13 +3,13 @@ import connexion
 import massgov.pfml.api.app as app
 import massgov.pfml.api.util.response as response_util
 from massgov.pfml.api.authorization.flask import CREATE, ensure
-from massgov.pfml.api.config import RMVCheckBehavior
 from massgov.pfml.api.services.rmv_check import (
     RMVCheckRequest,
     RMVCheckResponse,
     handle_rmv_check_request,
     make_response_from_rmv_check,
 )
+from massgov.pfml.rmv.config import RMVCheckBehavior
 from massgov.pfml.rmv.client import RmvClient
 
 
@@ -33,9 +33,9 @@ def rmv_check_post():
     request = RMVCheckRequest.parse_obj(connexion.request.json)
 
     with app.db_session() as db_session:
-        rmv_mocking_behavior = app.get_app_config().rmv_check_behavior
+        rmv_mocking_behavior = app.get_app_config().rmv.check_behavior
         if is_mocked(rmv_mocking_behavior, request):
-            if app.get_app_config().rmv_check_mock_success:
+            if app.get_app_config().rmv.check_mock_success:
                 final_response = RMVCheckResponse(
                     verified=True, description="Verification check passed."
                 )
@@ -45,7 +45,7 @@ def rmv_check_post():
                     description="Verification failed because no record could be found for given ID information.",
                 )
         else:
-            client = RmvClient()
+            client = RmvClient(config=app.get_app_config().rmv)
             complete_rmv_check = handle_rmv_check_request(db_session, client, request)
             final_response = make_response_from_rmv_check(complete_rmv_check)
 
