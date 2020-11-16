@@ -8,12 +8,19 @@ name: API CI Deploy
 
 on:
   workflow_dispatch:
+    inputs:
+      version:
+        required: false
+        description: |
+          ⬆️️ Env to deploy to. For test deploys, select master or a feature branch.
+          For all other envs, select "deploy/api/*".
+          --------------------------------------
+          ⬇️ Tag or branch to be deployed. For deploys to test, leave blank to deploy master.
+          For all other deploys, select an appropriate tag or feature branch.
+        default: null
   push:
     branches:
       - master
-      - deploy/api/stage
-      - deploy/api/prod
-      - deploy/api/performance
     paths:
       - api/**
       - infra/api/**
@@ -38,8 +45,34 @@ env:
   refs/heads/deploy/api/performance: performance
 
 jobs:
+  update-the-deploy-branch:
+    name: Update archival branch
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Commit and push new code to archival branch
+        if: github.event.inputs.version && contains(github.ref, 'deploy/api')
+        run: |
+          git config user.name "PFMLDevOps"
+          git config user.email "68565627+PFMLDevOps@users.noreply.github.com"
+          branch_or_tag=$(echo ${{github.ref}} | sed -E 's/^refs\/(heads|tags)\///')
+          if commit_hash=$(git rev-parse origin/${{github.event.inputs.version}} 2>/dev/null); then
+            echo "Received branch"
+          else
+            commit_hash=$(git rev-parse ${{github.event.inputs.version}})
+            echo "Received tag"
+          fi
+          echo "about to commit $commit_hash to $branch_or_tag..."
+          git pull origin $branch_or_tag --ff-only
+          git reset --hard $commit_hash
+          git push -f origin HEAD
+
   api-build:
     name: Build docker image
+    needs: update-the-deploy-branch
     runs-on: ubuntu-latest
 
     steps:
@@ -60,6 +93,7 @@ jobs:
 
   formstack-import-build:
     name: Build lambda function for Formstack import
+    needs: update-the-deploy-branch
     runs-on: ubuntu-latest
     env:
       infra-working-dir: ./api/lambdas/formstack_import
@@ -102,9 +136,9 @@ jobs:
         run: echo "::set-output name=s3_key::$(make get-release-key)"
         working-directory: ${{ env.infra-working-dir }}
 
-
   eligibility-feed-build:
     name: Build lambda function for FINEOS eligibility feed
+    needs: update-the-deploy-branch
     runs-on: ubuntu-latest
     env:
       infra-working-dir: ./api/lambdas/fineos/eligibility_export_feed
@@ -150,6 +184,7 @@ jobs:
 
   cognito-pre-signup-build:
     name: Build and upload Lambda function for Cognito Pre Signup hook
+    needs: update-the-deploy-branch
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -187,6 +222,7 @@ jobs:
 
   cognito-post-confirmation-build:
     name: Build and upload Lambda function for Cognito Post Confirmation hook
+    needs: update-the-deploy-branch
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -228,7 +264,7 @@ jobs:
     # This step doesn't really depend on any steps except api-build,
     # but for good measure we should make sure everything builds before
     # we deploy any updates to ECS tasks or services.
-    needs: [api-build, cognito-post-confirmation-build, eligibility-feed-build]
+    needs: [api-build, formstack-import-build, cognito-post-confirmation-build, eligibility-feed-build]
 
     env:
       TF_VAR_service_docker_tag: ${{ github.sha }}
