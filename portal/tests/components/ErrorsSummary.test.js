@@ -75,6 +75,20 @@ describe("ErrorsSummary", () => {
       expect(wrapper.find(".usa-list li")).toHaveLength(2);
     });
 
+    it("renders the singular heading if all errors are duplicates", () => {
+      const errors = new AppErrorInfoCollection([
+        new AppErrorInfo({ message: "Mock error message #1" }),
+        new AppErrorInfo({ message: "Mock error message #1" }),
+        new AppErrorInfo({ message: "Mock error message #1" }),
+      ]);
+
+      const { wrapper } = render({ errors });
+
+      expect(wrapper.prop("heading")).toMatchInlineSnapshot(
+        `"An error was encountered"`
+      );
+    });
+
     it("removes any duplicate error messages", () => {
       const errors = new AppErrorInfoCollection([
         new AppErrorInfo({ message: "Mock error message #1" }),
@@ -83,9 +97,6 @@ describe("ErrorsSummary", () => {
       ]);
       const { wrapper } = render({ errors });
 
-      expect(wrapper.prop("heading")).toMatchInlineSnapshot(
-        `"3 errors were encountered"`
-      );
       expect(wrapper.find(".usa-list li")).toHaveLength(2);
       expect(wrapper.find(".usa-list li").first().text()).toBe(
         errors.items[0].message

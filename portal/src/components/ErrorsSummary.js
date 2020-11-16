@@ -31,11 +31,11 @@ function ErrorsSummary(props) {
     return null;
   }
 
+  // Condense the list to only unique messages, combining any that are redundant
+  const visibleErrorMessages = Object.keys(groupBy(errors.items, "message"));
+
   const errorMessages = () => {
     if (errors.items.length === 1) return <p>{errors.items[0].message}</p>;
-
-    // Condense the list to only unique messages, combining any that are redundant
-    const visibleErrorMessages = Object.keys(groupBy(errors.items, "message"));
 
     return (
       <ul className="usa-list">
@@ -50,7 +50,7 @@ function ErrorsSummary(props) {
     <Alert
       className="margin-bottom-3"
       heading={t("components.errorsSummary.genericHeading", {
-        count: errors.items.length,
+        count: visibleErrorMessages.length,
       })}
       ref={alertRef}
       role="alert"
