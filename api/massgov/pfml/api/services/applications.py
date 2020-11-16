@@ -547,7 +547,7 @@ def add_or_update_address(
 
         if address is None:
             setattr(application, address_id_field_name, None)
-        elif db_address is not None and state_id is not None:
+        elif db_address is not None:
             db_address.address_line_one = (
                 address.line_1
                 if address.line_1 != mask.ADDRESS_MASK
@@ -560,11 +560,15 @@ def add_or_update_address(
             )
             db_address.city = address.city
             db_address.geo_state_id = state_id
-            db_address.zip_code = (
-                address.zip
-                if address.zip and not Regexes.MASKED_ZIP.match(address.zip)
-                else db_address.zip_code
-            )
+            zip_code = None
+            if address.zip:
+                # re-use the db value if zip is masked, otherwise, use the new value
+                if Regexes.MASKED_ZIP.match(address.zip):
+                    zip_code = db_address.zip_code
+                else:
+                    zip_code = address.zip
+            db_address.zip_code = zip_code
+
     # If we don't have an existing address but have a body, add an address.
     elif address_to_update is not None:
         db_session.add(address_to_update)

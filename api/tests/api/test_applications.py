@@ -745,7 +745,7 @@ def test_application_patch_residential_address_null_values(
     test_db_session.refresh(application)
     response_body = response.get_json()
     assert response.status_code == 200
-    assert response_body.get("data").get("residential_address") == {}
+    assert response_body.get("data").get("residential_address").get("state") is None
 
 
 def test_application_unauthorized_patch(client, user, auth_token, test_db_session):
