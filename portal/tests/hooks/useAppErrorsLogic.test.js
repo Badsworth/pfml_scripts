@@ -103,74 +103,158 @@ describe("useAppErrorsLogic", () => {
     });
 
     describe("when ValidationError is thrown", () => {
-      let issues;
-
-      beforeEach(() => {
-        issues = [
+      it("sets AppErrorInfo.message based on the issue's 'field' and 'type' properties", () => {
+        const issues = [
           {
             field: "tax_identifier",
             type: "pattern",
             message: "This field should have a custom error message",
             rule: "/d{9}",
           },
+        ];
+
+        act(() => {
+          appErrorsLogic.catchError(new ValidationError(issues, "claims"));
+        });
+
+        expect(appErrorsLogic.appErrors.items[0].message).toMatchInlineSnapshot(
+          `"Enter a 9-digit number formatted as XXX-XX-XXXX."`
+        );
+      });
+
+      it("sets AppErrorInfo.message based on the issue's 'rule' property when 'field' property isn't set", () => {
+        const issues = [
           {
             rule: "min_leave_periods",
             type: "multiFieldIssue",
           },
+        ];
+
+        act(() => {
+          appErrorsLogic.catchError(new ValidationError(issues, "claims"));
+        });
+
+        expect(appErrorsLogic.appErrors.items[0].message).toMatchInlineSnapshot(
+          `"You must choose at least one kind of leave (continuous, reduced schedule, or intermittent)."`
+        );
+      });
+
+      it("tracks when a field or rule-level error message is missing", () => {
+        const issues = [
           {
-            field: "unknown_field",
+            field: "shop_name",
             type: "pattern",
             message: "This validation should have a generic error message",
             rule: "/d{9}",
           },
+        ];
+
+        act(() => {
+          appErrorsLogic.catchError(new ValidationError(issues, "claims"));
+        });
+
+        expect(tracker.trackEvent).toHaveBeenCalledWith(
+          "Missing i18n - issue message",
           {
-            field: "custom_field_validation",
-            type: "customValidation",
-            message: "This validation should show THIS message",
-            rule: "custom",
+            i18nKey: "errors.claims.shop_name.pattern",
+          }
+        );
+      });
+
+      it("sets AppErrorInfo.message to generic field-level fallback based on the issue's 'type' when 'type' is 'pattern' and field-level message is missing", () => {
+        const issues = [
+          {
+            field: "shop_name",
+            type: "pattern",
+            message: "This validation should have a generic error message",
+            rule: "/d{9}",
           },
+        ];
+
+        act(() => {
+          appErrorsLogic.catchError(new ValidationError(issues, "claims"));
+        });
+
+        expect(appErrorsLogic.appErrors.items[0].message).toMatchInlineSnapshot(
+          `"Field (shop_name) didn't match expected format."`
+        );
+      });
+
+      it("tracks when a generic field-level fallback error message is missing", () => {
+        const issues = [
+          {
+            field: "shop_name",
+            type: "length",
+            message: "Field doesn't meet requirements",
+          },
+        ];
+
+        act(() => {
+          appErrorsLogic.catchError(new ValidationError(issues, "claims"));
+        });
+
+        expect(tracker.trackEvent).toHaveBeenCalledWith(
+          "Missing i18n - issue message",
+          {
+            i18nKey: "errors.validationFallback.length",
+          }
+        );
+      });
+
+      it("sets AppErrorInfo.message based on the issue 'message' property when other fallback messages are missing", () => {
+        const issues = [
+          {
+            field: "unknown_field",
+            message: "does not match: [0-9]{7}",
+          },
+        ];
+
+        act(() => {
+          appErrorsLogic.catchError(new ValidationError(issues, "claims"));
+        });
+
+        expect(appErrorsLogic.appErrors.items[0].message).toMatchInlineSnapshot(
+          `"does not match: [0-9]{7}"`
+        );
+      });
+
+      it("sets AppErrorInfo.message to generic fallback message when issue 'message' property is not set and other fallback messages are missing", () => {
+        const issues = [
           {
             field: "validation_without_a_message",
             type: "noMessage",
           },
         ];
-      });
 
-      it("displays an internationalized message for each issue", () => {
         act(() => {
           appErrorsLogic.catchError(new ValidationError(issues, "claims"));
         });
 
-        expect(appErrorsLogic.appErrors.items).toHaveLength(5);
-        expect(appErrorsLogic.appErrors.items[0].field).toBe(issues[0].field);
-        expect(appErrorsLogic.appErrors.items[0].name).toBe("ValidationError");
-
-        // Compare the order of message fallbacks
         expect(appErrorsLogic.appErrors.items[0].message).toMatchInlineSnapshot(
-          `"Enter a 9-digit number formatted as XXX-XX-XXXX."`
-        );
-        expect(appErrorsLogic.appErrors.items[1].message).toMatchInlineSnapshot(
-          `"You must choose at least one kind of leave (continuous, reduced schedule, or intermittent)."`
-        );
-        expect(appErrorsLogic.appErrors.items[2].message).toMatchInlineSnapshot(
-          `"Field (unknown_field) didn't match expected format."`
-        );
-        expect(appErrorsLogic.appErrors.items[3].message).toMatchInlineSnapshot(
-          `"This validation should show THIS message"`
-        );
-        expect(appErrorsLogic.appErrors.items[4].message).toMatchInlineSnapshot(
           `"Field (validation_without_a_message) has invalid value."`
         );
       });
 
-      it("tracks which issues were encountered", () => {
-        const error = new ValidationError(issues, "test");
+      it("sets appErrors in same order as issues", () => {
+        const issues = [
+          {
+            field: "first_name",
+            message: "first_name is required",
+            type: "required",
+          },
+          {
+            rule: "min_leave_periods",
+          },
+        ];
 
         act(() => {
-          appErrorsLogic.catchError(error);
+          appErrorsLogic.catchError(new ValidationError(issues, "claims"));
         });
 
-        expect(tracker.trackEvent.mock.calls[0][1]).toMatchSnapshot();
+        expect(appErrorsLogic.appErrors.items).toHaveLength(2);
+        expect(appErrorsLogic.appErrors.items[0].field).toBe(issues[0].field);
+        expect(appErrorsLogic.appErrors.items[0].name).toBe("ValidationError");
+        expect(appErrorsLogic.appErrors.items[1].rule).toBe(issues[1].rule);
       });
     });
 
