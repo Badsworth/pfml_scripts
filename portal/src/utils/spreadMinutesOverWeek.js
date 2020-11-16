@@ -1,9 +1,12 @@
+import assert from "assert";
+import { isNil } from "lodash";
 /**
  * Split provided minutes across a 7 day week
  * @param {number} minutesWorkedPerWeek - average minutes worked per week. Must be an integer.
  * @returns {number[]} dailyMinutes
  */
 function spreadMinutesOverWeek(minutesWorkedPerWeek) {
+  assert(!isNil(minutesWorkedPerWeek));
   const remainder = minutesWorkedPerWeek % 7;
   const dailyMinutes = [];
 

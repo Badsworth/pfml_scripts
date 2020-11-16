@@ -269,13 +269,13 @@ export const Review = (props) => {
       </ReviewRow>
 
       {workPattern.work_pattern_type === WorkPatternType.fixed &&
-        workPattern.weeks.length > 0 && (
+        workPattern.minutesWorkedPerWeek !== null && (
           <ReviewRow
             level={reviewRowLevel}
             label={t("pages.claimsReview.workPatternDaysFixedLabel")}
             noBorder
           >
-            <WorkPatternTable weeks={workPattern.weeks} />
+            <WorkPatternTable days={workPattern.work_pattern_days} />
           </ReviewRow>
         )}
 
@@ -284,14 +284,14 @@ export const Review = (props) => {
           level={reviewRowLevel}
           label={t("pages.claimsReview.workPatternDaysVariableLabel")}
         >
-          {!isUndefined(workPattern.minutesWorkedEachWeek[0]) &&
+          {!isUndefined(workPattern.minutesWorkedPerWeek) &&
             t("pages.claimsReview.workPatternVariableTime", {
               context:
-                convertMinutesToHours(workPattern.minutesWorkedEachWeek[0])
+                convertMinutesToHours(workPattern.minutesWorkedPerWeek)
                   .minutes === 0
                   ? "noMinutes"
                   : null,
-              ...convertMinutesToHours(workPattern.minutesWorkedEachWeek[0]),
+              ...convertMinutesToHours(workPattern.minutesWorkedPerWeek),
             })}
         </ReviewRow>
       )}
@@ -409,17 +409,15 @@ export const Review = (props) => {
           {workPattern.work_pattern_type === WorkPatternType.fixed && (
             <WeeklyTimeTable
               className="margin-bottom-0"
-              weeks={[
-                [
-                  "sunday_off_minutes",
-                  "monday_off_minutes",
-                  "tuesday_off_minutes",
-                  "wednesday_off_minutes",
-                  "thursday_off_minutes",
-                  "friday_off_minutes",
-                  "saturday_off_minutes",
-                ].map((field) => get(reducedLeavePeriod, field)),
-              ]}
+              minutesEachDay={[
+                "sunday_off_minutes",
+                "monday_off_minutes",
+                "tuesday_off_minutes",
+                "wednesday_off_minutes",
+                "thursday_off_minutes",
+                "friday_off_minutes",
+                "saturday_off_minutes",
+              ].map((field) => get(reducedLeavePeriod, field))}
             />
           )}
           {workPattern.work_pattern_type === WorkPatternType.variable &&

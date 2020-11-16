@@ -457,6 +457,53 @@ exports[`Part 1 Review Page when all data is present renders Review page with Pa
   >
     Each week I work the same number of hours on the same days.
   </ReviewRow>
+  <ReviewRow
+    label="Weekly work hours"
+    level="4"
+    noBorder={true}
+  >
+    <WorkPatternTable
+      days={
+        Array [
+          WorkPatternDay {
+            "day_of_week": "Sunday",
+            "minutes": 0,
+            "week_number": 1,
+          },
+          WorkPatternDay {
+            "day_of_week": "Monday",
+            "minutes": 480,
+            "week_number": 1,
+          },
+          WorkPatternDay {
+            "day_of_week": "Tuesday",
+            "minutes": 480,
+            "week_number": 1,
+          },
+          WorkPatternDay {
+            "day_of_week": "Wednesday",
+            "minutes": 480,
+            "week_number": 1,
+          },
+          WorkPatternDay {
+            "day_of_week": "Thursday",
+            "minutes": 480,
+            "week_number": 1,
+          },
+          WorkPatternDay {
+            "day_of_week": "Friday",
+            "minutes": 480,
+            "week_number": 1,
+          },
+          WorkPatternDay {
+            "day_of_week": "Saturday",
+            "minutes": 0,
+            "week_number": 1,
+          },
+        ]
+      }
+    />
+  </ReviewRow>
   <ReviewHeading
     editHref="/claims/leave-reason?claim_id=mock_application_id"
     editText="Edit"
@@ -544,17 +591,15 @@ exports[`Reduced leave renders WeeklyTimeTable for the reduced leave period when
 >
   <WeeklyTimeTable
     className="margin-bottom-0"
-    weeks={
+    minutesEachDay={
       Array [
-        Array [
-          null,
-          390,
-          null,
-          null,
-          null,
-          480,
-          null,
-        ],
+        null,
+        390,
+        null,
+        null,
+        null,
+        480,
+        null,
       ]
     }
   />
@@ -579,45 +624,43 @@ exports[`Work patterns shows average weekly hours if work pattern type is variab
 
 exports[`Work patterns shows work pattern days if work pattern type is fixed 1`] = `
 <WorkPatternTable
-  weeks={
+  days={
     Array [
-      Array [
-        WorkPatternDay {
-          "day_of_week": "Sunday",
-          "minutes": 0,
-          "week_number": 1,
-        },
-        WorkPatternDay {
-          "day_of_week": "Monday",
-          "minutes": 480,
-          "week_number": 1,
-        },
-        WorkPatternDay {
-          "day_of_week": "Tuesday",
-          "minutes": 480,
-          "week_number": 1,
-        },
-        WorkPatternDay {
-          "day_of_week": "Wednesday",
-          "minutes": 480,
-          "week_number": 1,
-        },
-        WorkPatternDay {
-          "day_of_week": "Thursday",
-          "minutes": 480,
-          "week_number": 1,
-        },
-        WorkPatternDay {
-          "day_of_week": "Friday",
-          "minutes": 480,
-          "week_number": 1,
-        },
-        WorkPatternDay {
-          "day_of_week": "Saturday",
-          "minutes": 0,
-          "week_number": 1,
-        },
-      ],
+      WorkPatternDay {
+        "day_of_week": "Sunday",
+        "minutes": 0,
+        "week_number": 1,
+      },
+      WorkPatternDay {
+        "day_of_week": "Monday",
+        "minutes": 480,
+        "week_number": 1,
+      },
+      WorkPatternDay {
+        "day_of_week": "Tuesday",
+        "minutes": 480,
+        "week_number": 1,
+      },
+      WorkPatternDay {
+        "day_of_week": "Wednesday",
+        "minutes": 480,
+        "week_number": 1,
+      },
+      WorkPatternDay {
+        "day_of_week": "Thursday",
+        "minutes": 480,
+        "week_number": 1,
+      },
+      WorkPatternDay {
+        "day_of_week": "Friday",
+        "minutes": 480,
+        "week_number": 1,
+      },
+      WorkPatternDay {
+        "day_of_week": "Saturday",
+        "minutes": 0,
+        "week_number": 1,
+      },
     ]
   }
 />

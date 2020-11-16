@@ -8,19 +8,17 @@ import WeeklyTimeTable from "./WeeklyTimeTable";
  */
 export const WorkPatternTable = (props) => {
   // A work pattern has only one full week, starting on Sunday
-  const weeklyMinutes = props.weeks[0].map((day) => day.minutes);
+  const minutesEachDay = props.days.map((day) => day.minutes);
 
-  return <WeeklyTimeTable weeks={[weeklyMinutes]} />;
+  return <WeeklyTimeTable minutesEachDay={minutesEachDay} />;
 };
 
 WorkPatternTable.propTypes = {
-  weeks: PropTypes.arrayOf(
-    PropTypes.arrayOf(
-      PropTypes.shape({
-        day_of_week: PropTypes.string.isRequired,
-        minutes: PropTypes.number.isRequired,
-      })
-    )
+  days: PropTypes.arrayOf(
+    PropTypes.shape({
+      day_of_week: PropTypes.string.isRequired,
+      minutes: PropTypes.number.isRequired,
+    })
   ).isRequired,
 };
 

@@ -31,6 +31,7 @@ describe("Part 1 Review Page", () => {
         claimAttrs: new MockClaimBuilder()
           .part1Complete()
           .mailingAddress()
+          .fixedWorkPattern()
           .create(),
         diveLevels,
       });

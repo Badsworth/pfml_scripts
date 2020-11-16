@@ -10,4 +10,12 @@ describe("spreadMinutesOverWeek", () => {
     const dailyMinutes = spreadMinutesOverWeek(480);
     expect(dailyMinutes).toEqual([69, 69, 69, 69, 68, 68, 68]);
   });
+
+  it("throws error if minutes null or undefined", () => {
+    const nullMinutes = () => spreadMinutesOverWeek(null);
+    const undefinedMinutes = () => spreadMinutesOverWeek(undefined);
+
+    expect(nullMinutes).toThrow();
+    expect(undefinedMinutes).toThrow();
+  });
 });

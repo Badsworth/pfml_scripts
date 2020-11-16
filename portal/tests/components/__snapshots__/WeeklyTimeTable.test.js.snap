@@ -2,41 +2,39 @@
 
 exports[`WeeklyTimeTable hides minutes from the time if minutes are 0 1`] = `
 <tbody>
-  <tr
-    key="0"
-  >
+  <tr>
     <td
       key="0"
     >
       0h
     </td>
     <td
-      key="0"
+      key="1"
     >
       0h 15m
     </td>
     <td
-      key="0"
+      key="2"
     >
       1h
     </td>
     <td
-      key="0"
+      key="3"
     >
       1h 15m
     </td>
     <td
-      key="0"
+      key="4"
     >
       1h 30m
     </td>
     <td
-      key="0"
+      key="5"
     >
       1h 45m
     </td>
     <td
-      key="0"
+      key="6"
     >
       2h
     </td>

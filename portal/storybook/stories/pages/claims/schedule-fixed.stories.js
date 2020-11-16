@@ -5,12 +5,12 @@ import generateClaimPageStory from "storybook/utils/generateClaimPageStory";
 const mockClaims = {
   fixed: new MockClaimBuilder()
     .continuous()
-    .workPattern({ work_pattern_type: WorkPatternType.variable })
+    .workPattern({ work_pattern_type: WorkPatternType.fixed })
     .create(),
 };
 
 const { config, DefaultStory } = generateClaimPageStory(
-  "schedule-variable",
+  "schedule-fixed",
   mockClaims
 );
 export default config;

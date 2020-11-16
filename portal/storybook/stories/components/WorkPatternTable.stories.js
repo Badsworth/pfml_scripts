@@ -4,17 +4,14 @@ import WorkPatternTable from "src/components/WorkPatternTable";
 
 // 8 hours days for 7 days
 const defaultMinutesWorked = 8 * 60 * 7;
-const workPattern = WorkPattern.addWeek(
-  new WorkPattern(),
-  defaultMinutesWorked
-);
+const workPattern = WorkPattern.createWithWeek(defaultMinutesWorked);
 
 export default {
   title: "Components/WorkPatternTable",
   component: WorkPatternTable,
   argTypes: {
-    weeks: {
-      defaultValue: workPattern.weeks,
+    days: {
+      defaultValue: workPattern.work_pattern_days,
       control: {
         type: "object",
       },

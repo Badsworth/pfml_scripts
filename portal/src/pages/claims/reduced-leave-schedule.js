@@ -67,7 +67,9 @@ export const ReducedLeaveSchedule = (props) => {
 
     if (gatherMinutesAsWeeklyAverage) {
       // Still need to store time in the API in individual day fields:
-      const dailyMinutes = spreadMinutesOverWeek(totalMinutesOff);
+      const dailyMinutes = !totalMinutesOff
+        ? [null, null, null, null, null, null, null]
+        : spreadMinutesOverWeek(totalMinutesOff);
       const minuteFields = [
         `${leavePeriodPath}.sunday_off_minutes`,
         `${leavePeriodPath}.monday_off_minutes`,
@@ -138,14 +140,14 @@ export const ReducedLeaveSchedule = (props) => {
         {gatherMinutesAsWeeklyAverage ? (
           t("pages.claimsReview.workPatternVariableTime", {
             context:
-              convertMinutesToHours(workPattern.minutesWorkedEachWeek[0])
+              convertMinutesToHours(workPattern.minutesWorkedPerWeek)
                 .minutes === 0
                 ? "noMinutes"
                 : null,
-            ...convertMinutesToHours(workPattern.minutesWorkedEachWeek[0]),
+            ...convertMinutesToHours(workPattern.minutesWorkedPerWeek),
           })
         ) : (
-          <WorkPatternTable weeks={workPattern.weeks} />
+          <WorkPatternTable days={workPattern.work_pattern_days} />
         )}
       </Details>
 

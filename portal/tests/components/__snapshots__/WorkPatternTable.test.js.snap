@@ -1,18 +1,16 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`WorkPatternTable renders a WeeklyTimeTable with the work pattern's first week of minutes 1`] = `
+exports[`WorkPatternTable renders a WeeklyTimeTable with the work pattern's week of minutes 1`] = `
 <WeeklyTimeTable
-  weeks={
+  minutesEachDay={
     Array [
-      Array [
-        480,
-        480,
-        480,
-        480,
-        480,
-        480,
-        480,
-      ],
+      480,
+      480,
+      480,
+      480,
+      480,
+      480,
+      480,
     ]
   }
 />

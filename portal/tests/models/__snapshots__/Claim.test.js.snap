@@ -1,0 +1,41 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Claim WorkPattern defaults work_pattern_days to a 7 day week with null minutes 1`] = `
+Array [
+  WorkPatternDay {
+    "day_of_week": "Sunday",
+    "minutes": null,
+    "week_number": 1,
+  },
+  WorkPatternDay {
+    "day_of_week": "Monday",
+    "minutes": null,
+    "week_number": 1,
+  },
+  WorkPatternDay {
+    "day_of_week": "Tuesday",
+    "minutes": null,
+    "week_number": 1,
+  },
+  WorkPatternDay {
+    "day_of_week": "Wednesday",
+    "minutes": null,
+    "week_number": 1,
+  },
+  WorkPatternDay {
+    "day_of_week": "Thursday",
+    "minutes": null,
+    "week_number": 1,
+  },
+  WorkPatternDay {
+    "day_of_week": "Friday",
+    "minutes": null,
+    "week_number": 1,
+  },
+  WorkPatternDay {
+    "day_of_week": "Saturday",
+    "minutes": null,
+    "week_number": 1,
+  },
+]
+`;

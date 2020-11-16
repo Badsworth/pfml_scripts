@@ -600,11 +600,9 @@ export class MockClaimBuilder extends BaseMockClaimBuilder {
    * @returns {MockClaimBuilder}
    */
   variableWorkPattern() {
-    let workPattern = new WorkPattern({
+    const workPattern = WorkPattern.createWithWeek(40 * 60, {
       work_pattern_type: WorkPatternType.variable,
     });
-
-    workPattern = WorkPattern.addWeek(workPattern, 40 * 60);
 
     set(this.claimAttrs, "work_pattern", workPattern);
     set(this.claimAttrs, "hours_worked_per_week", 40);

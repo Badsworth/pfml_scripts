@@ -24,22 +24,20 @@ export const WeeklyTimeTable = (props) => {
         </tr>
       </thead>
       <tbody>
-        {props.weeks.map((week, index) => (
-          <tr key={index}>
-            {week.map((minutes) => (
-              // Assumption here that the days are ordered, starting at Sunday
-              <td key={index}>
-                {t("components.weeklyTimeTable.time", {
-                  context:
-                    convertMinutesToHours(minutes).minutes === 0
-                      ? "noMinutes"
-                      : null,
-                  ...convertMinutesToHours(minutes),
-                })}
-              </td>
-            ))}
-          </tr>
-        ))}
+        <tr>
+          {props.minutesEachDay.map((minutes, index) => (
+            // Assumption here that the days are ordered, starting at Sunday
+            <td key={index}>
+              {t("components.weeklyTimeTable.time", {
+                context:
+                  convertMinutesToHours(minutes).minutes === 0
+                    ? "noMinutes"
+                    : null,
+                ...convertMinutesToHours(minutes),
+              })}
+            </td>
+          ))}
+        </tr>
       </tbody>
     </Table>
   );
@@ -49,10 +47,10 @@ WeeklyTimeTable.propTypes = {
   /** Additional classNames to add */
   className: PropTypes.string,
   /**
-   * Nested array of daily minute totals, starting on Sunday.
-   * For example, weeks: [[ 0, 240, 240, 240, 240, 240, 0]]
+   * Array of daily minute totals, starting on Sunday.
+   * For example, minutesEachDay: [ 0, 240, 240, 240, 240, 240, 0 ]
    */
-  weeks: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.number)).isRequired,
+  minutesEachDay: PropTypes.arrayOf(PropTypes.number).isRequired,
 };
 
 export default WeeklyTimeTable;

@@ -1,12 +1,10 @@
 import {
-  DayOfWeek,
   ReducedScheduleLeavePeriod,
   WorkPattern,
-  WorkPatternDay,
 } from "../../src/models/Claim";
-import { map, sumBy } from "lodash";
 import { DateTime } from "luxon";
 import { MockClaimBuilder } from "../test-utils";
+import { map } from "lodash";
 
 describe("Claim", () => {
   let emptyClaim;
@@ -170,122 +168,47 @@ describe("Claim", () => {
   });
 
   describe("WorkPattern", () => {
-    const createWeek = (week_number) => {
-      return Object.values(DayOfWeek).map(
-        (day_of_week) => new WorkPatternDay({ day_of_week, week_number })
-      );
-    };
+    it("defaults work_pattern_days to a 7 day week with null minutes", () => {
+      const workPattern = new WorkPattern();
 
-    describe("weeks", () => {
-      it("groups work_pattern_days by week_number", () => {
-        const workPattern = new WorkPattern({
-          work_pattern_days: [1, 2, 3, 4].flatMap((week_number) =>
-            createWeek(week_number)
-          ),
-        });
-
-        const weeks = workPattern.weeks;
-
-        expect(weeks.length).toEqual(4);
-
-        weeks.forEach((week, i) => {
-          expect(week.length).toEqual(7);
-          expect(week.map((day) => day.day_of_week)).toEqual(
-            Object.values(DayOfWeek)
-          );
-          expect(week.every((day) => day.week_number === i + 1)).toBe(true);
-        });
-      });
+      expect(workPattern.work_pattern_days.length).toEqual(7);
+      expect(workPattern.work_pattern_days).toMatchSnapshot();
     });
 
-    describe("addWeek", () => {
-      it("adds 7 days to work_pattern_days", () => {
-        let workPattern = new WorkPattern({
-          work_pattern_days: createWeek(1),
-        });
-
-        workPattern = WorkPattern.addWeek(workPattern);
-        expect(workPattern.work_pattern_days.length).toEqual(14);
-        expect(workPattern.weeks.length).toEqual(2);
-
-        workPattern.weeks.forEach((week, i) => {
-          expect(week.length).toEqual(7);
-          expect(week.map((day) => day.day_of_week)).toEqual(
-            Object.values(DayOfWeek)
-          );
-          expect(week.every((day) => day.week_number === i + 1)).toBe(true);
-        });
-      });
-
-      it("adds 7 days to work_pattern days when days are empty", () => {
-        let workPattern = new WorkPattern();
-
-        workPattern = WorkPattern.addWeek(workPattern);
+    describe("createWithWeek", () => {
+      it("creates a WorkPattern, spreading minutes across 7 work_pattern_days", () => {
+        const workPattern = WorkPattern.createWithWeek(8 * 60 * 7);
         expect(workPattern.work_pattern_days.length).toEqual(7);
+        expect(
+          workPattern.work_pattern_days.every((day) => day.minutes === 8 * 60)
+        ).toBe(true);
       });
 
-      describe("when minutesWorkedPerWeek is provided", () => {
-        it("splits minutes evenly if minutes is a multiple of 7", () => {
-          const workPattern = WorkPattern.addWeek(new WorkPattern(), 77 * 60); // 77 hours
-          const workPattern2 = WorkPattern.addWeek(
-            new WorkPattern(),
-            77 * 60 + 70 // 77 hours and 70 minutes
-          );
+      it("splits minutes evenly if minutes is a multiple of 7", () => {
+        const workPattern = WorkPattern.createWithWeek(77 * 60); // 77 hours
+        const workPattern2 = WorkPattern.createWithWeek(77 * 60 + 70); // 77 hours and 70 minutes
 
-          workPattern.work_pattern_days.forEach((day) => {
-            expect(day.minutes).toEqual(660);
-          });
-
-          workPattern2.work_pattern_days.forEach((day) => {
-            expect(day.minutes).toEqual(670);
-          });
+        workPattern.work_pattern_days.forEach((day) => {
+          expect(day.minutes).toEqual(660);
         });
 
-        it("returns week with 0 minutes when no hours are provided", () => {
-          const workPattern = WorkPattern.addWeek(new WorkPattern(), 0);
-          const workPattern2 = WorkPattern.addWeek(new WorkPattern());
-
-          workPattern.work_pattern_days.forEach((day) => {
-            expect(day.minutes).toEqual(0);
-          });
-
-          workPattern2.work_pattern_days.forEach((day) => {
-            expect(day.minutes).toEqual(0);
-          });
-        });
-
-        it("adds a minute to each day until there is no remainder when minutes are not a multiple of 7", () => {
-          const workPattern = WorkPattern.addWeek(
-            new WorkPattern(),
-            77 * 60 + 18 // 77 hours and 18 minutes
-          );
-
-          expect(map(workPattern.work_pattern_days, "minutes")).toEqual([
-            663,
-            663,
-            663,
-            663,
-            662,
-            662,
-            662,
-          ]);
-        });
-      });
-    });
-
-    describe("updateWeek", () => {
-      let workPattern;
-
-      beforeEach(() => {
-        workPattern = new WorkPattern({
-          work_pattern_days: [createWeek(1), createWeek(2)].flat(),
+        workPattern2.work_pattern_days.forEach((day) => {
+          expect(day.minutes).toEqual(670);
         });
       });
 
-      it("updates week's minutes", () => {
-        workPattern = WorkPattern.updateWeek(workPattern, 2, 77 * 60 + 18);
-        expect(sumBy(workPattern.weeks[0], "minutes")).toEqual(0);
-        expect(map(workPattern.weeks[1], "minutes")).toEqual([
+      it("returns week with 0 minutes when 0 minutes are provided", () => {
+        const workPattern = WorkPattern.createWithWeek(0);
+
+        workPattern.work_pattern_days.forEach((day) => {
+          expect(day.minutes).toEqual(0);
+        });
+      });
+
+      it("adds a minute to each day until there is no remainder when minutes are not a multiple of 7", () => {
+        const workPattern = WorkPattern.createWithWeek(77 * 60 + 18); // 77 hours and 18 minutes
+
+        expect(map(workPattern.work_pattern_days, "minutes")).toEqual([
           663,
           663,
           663,
@@ -296,64 +219,30 @@ describe("Claim", () => {
         ]);
       });
 
-      it("throws error if weekNumber is out of bounds", () => {
-        expect(() =>
-          WorkPattern.updateWeek(workPattern, 3, 77 * 60 + 18)
-        ).toThrow();
+      it("passes provided attributes to new WorkPattern", () => {
+        const workPattern = WorkPattern.createWithWeek(70, {
+          work_pattern_type: "Fixed",
+        });
+
+        expect(workPattern.work_pattern_type).toEqual("Fixed");
       });
     });
 
-    describe("removeWeek", () => {
-      it("removes days from work_pattern_days with given week_number", () => {
-        let workPattern = new WorkPattern({
-          work_pattern_days: [1, 2, 3, 4].flatMap((week_number) =>
-            createWeek(week_number).map((day) => ({
-              ...day,
-              minutes: week_number * 10 * 60,
-            }))
-          ),
-        });
+    describe("minutesWorkedPerWeek", () => {
+      it("totals minutes worked across all work pattern days", () => {
+        const workPattern = WorkPattern.createWithWeek(70 * 60 + 4); // 70 hours and 4 minutes
 
-        workPattern = WorkPattern.removeWeek(workPattern, 3);
-
-        expect(workPattern.work_pattern_days.length).toEqual(21);
-        expect(workPattern.weeks.length).toEqual(3);
-        // removes week_number 3
-        expect(
-          workPattern.work_pattern_days.every(
-            (day) => day.minutes !== 3 * 10 * 60
-          )
-        ).toBe(true);
-        // what was week_number 4 is now week_number 3
-        expect(
-          workPattern.weeks[2].every((day) => day.minutes === 4 * 10 * 60)
-        ).toBe(true);
-
-        workPattern.weeks.forEach((week, i) => {
-          expect(week.length).toEqual(7);
-          expect(week.map((day) => day.day_of_week)).toEqual(
-            Object.values(DayOfWeek)
-          );
-          expect(week.every((day) => day.week_number === i + 1)).toBe(true);
-        });
+        expect(workPattern.minutesWorkedPerWeek).toEqual(70 * 60 + 4);
       });
 
-      it("it fails silently when work_pattern_days is empty or attempts to remove an week_number that doesn't exist", () => {
-        let workPattern = new WorkPattern();
-        workPattern = WorkPattern.removeWeek(workPattern, 3);
+      it("returns null if work_pattern_days are empty", () => {
+        const nullValuesWorkPatternDays = new WorkPattern();
+        const emptyWorkPatternDays = new WorkPattern({
+          work_pattern_days: [],
+        });
 
-        expect(workPattern.work_pattern_days).toEqual([]);
-      });
-    });
-
-    describe("minutesWorkedEachWeek", () => {
-      it("totals minutes worked each week", () => {
-        let workPattern = WorkPattern.addWeek(new WorkPattern(), 70 * 60); // 70 hours
-        workPattern = WorkPattern.addWeek(workPattern, 70 * 60 + 4); // 70 hours and 4 minutes
-
-        const minutesWorkedEachWeek = workPattern.minutesWorkedEachWeek;
-        expect(minutesWorkedEachWeek[0]).toEqual(70 * 60);
-        expect(minutesWorkedEachWeek[1]).toEqual(70 * 60 + 4);
+        expect(nullValuesWorkPatternDays.minutesWorkedPerWeek).toBeNull();
+        expect(emptyWorkPatternDays.minutesWorkedPerWeek).toBeNull();
       });
     });
   });

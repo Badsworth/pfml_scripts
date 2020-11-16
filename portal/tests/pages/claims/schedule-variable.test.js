@@ -13,7 +13,7 @@ describe("ScheduleVariable", () => {
   const defaultMinutesWorked = 8 * 60 * 7;
 
   beforeEach(() => {
-    workPattern = WorkPattern.addWeek(new WorkPattern(), defaultMinutesWorked);
+    workPattern = WorkPattern.createWithWeek(defaultMinutesWorked);
     const claim = new MockClaimBuilder()
       .continuous()
       .workPattern({
@@ -32,7 +32,7 @@ describe("ScheduleVariable", () => {
   });
 
   it("creates an empty work pattern if work pattern has no days", () => {
-    expect.assertions(1);
+    expect.assertions(2);
 
     const mockClaim = new MockClaimBuilder()
       .continuous()
@@ -47,11 +47,17 @@ describe("ScheduleVariable", () => {
     }));
 
     act(() => {
+      wrapper
+        .find("InputHours")
+        .simulate("change", { target: { value: 8 * 60 * 7 } });
       wrapper.find("QuestionPage").simulate("save");
     });
 
     const { work_pattern } = appLogic.claims.update.mock.calls[0][1];
     expect(work_pattern.work_pattern_days.length).toEqual(7);
+    expect(
+      work_pattern.work_pattern_days.every((day) => day.minutes === 8 * 60)
+    ).toBe(true);
   });
 
   it("updates API with work_pattern_days and hours_worked_per_week", () => {
@@ -72,37 +78,6 @@ describe("ScheduleVariable", () => {
     expect(work_pattern.work_pattern_days.length).toEqual(7);
     expect(sum(map(work_pattern.work_pattern_days, "minutes"))).toEqual(
       changedMinutes
-    );
-  });
-
-  it("truncates the work_pattern_days to just the first week if work_pattern days have more than 1 week", () => {
-    // add a second week
-    workPattern = WorkPattern.addWeek(workPattern, 8 * 60 * 5);
-
-    const mockClaim = new MockClaimBuilder()
-      .workPattern({
-        work_pattern_type: WorkPatternType.fixed,
-        work_pattern_days: workPattern.work_pattern_days,
-      })
-      .create();
-
-    ({ appLogic, wrapper } = renderWithAppLogic(ScheduleVariable, {
-      claimAttrs: mockClaim,
-    }));
-
-    act(() => {
-      wrapper.find("QuestionPage").simulate("save");
-    });
-
-    const {
-      hours_worked_per_week,
-      work_pattern,
-    } = appLogic.claims.update.mock.calls[0][1];
-
-    expect(hours_worked_per_week).toEqual(defaultMinutesWorked / 60);
-    expect(work_pattern.work_pattern_days.length).toEqual(7);
-    expect(sum(map(work_pattern.work_pattern_days, "minutes"))).toEqual(
-      defaultMinutesWorked
     );
   });
 });

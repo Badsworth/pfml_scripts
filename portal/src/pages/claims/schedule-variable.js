@@ -1,6 +1,6 @@
 import Claim, { WorkPattern } from "../../models/Claim";
 import React, { useState } from "react";
-import { isEmpty, pick, round } from "lodash";
+import { pick, round } from "lodash";
 import Heading from "../../components/Heading";
 import InputHours from "../../components/InputHours";
 import Lead from "../../components/Lead";
@@ -29,7 +29,7 @@ export const ScheduleVariable = (props) => {
   // minutesWorkedPerWeek will be spread across
   // 7 work_pattern_days when user submits and is not a part of the Claim model.
   const [minutesWorkedPerWeek, setMinutesWorkedPerWeek] = useState(
-    workPattern.minutesWorkedEachWeek[0]
+    workPattern.minutesWorkedPerWeek
   );
 
   const getFunctionalInputProps = useFunctionalInputProps({
@@ -43,22 +43,21 @@ export const ScheduleVariable = (props) => {
   };
 
   const handleSave = async () => {
-    let workPattern = new WorkPattern(formState.work_pattern);
+    let work_pattern_days;
+    let hours_worked_per_week = null;
 
-    if (isEmpty(workPattern.work_pattern_days)) {
-      workPattern = WorkPattern.addWeek(workPattern, minutesWorkedPerWeek);
+    if (!minutesWorkedPerWeek) {
+      work_pattern_days = [];
     } else {
-      workPattern = WorkPattern.updateWeek(
-        workPattern,
-        1,
+      ({ work_pattern_days } = WorkPattern.createWithWeek(
         minutesWorkedPerWeek
-      );
+      ));
+      hours_worked_per_week = round(minutesWorkedPerWeek / 60, 2);
     }
 
-    const hours_worked_per_week = round(minutesWorkedPerWeek / 60, 2);
     await appLogic.claims.update(claim.application_id, {
       hours_worked_per_week,
-      work_pattern: { work_pattern_days: workPattern.weeks[0] },
+      work_pattern: { work_pattern_days },
     });
   };
 
