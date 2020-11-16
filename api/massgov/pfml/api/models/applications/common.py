@@ -328,7 +328,7 @@ class DocumentType(str, LookupEnum):
     drivers_license_mass = "Driver's License Mass"
     drivers_license_other_state = "Driver's License Other State"
     identification_proof = "Identification Proof"
-    state_managed_paid_leave_confirmation = "State Managed Paid Leave Confirmation"
+    state_managed_paid_leave_confirmation = "State managed Paid Leave Confirmation"
     approval_notice = "Approval Notice"
     request_for_more_information = "Request for More Information"
     denial_notice = "Denial Notice"

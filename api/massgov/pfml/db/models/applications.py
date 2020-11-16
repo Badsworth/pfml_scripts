@@ -469,7 +469,7 @@ class DocumentType(LookupTable):
     DRIVERS_LICENSE_OTHER_STATE = LkDocumentType(3, "Driver's License Other State")
     IDENTIFICATION_PROOF = LkDocumentType(4, "Identification Proof")
     STATE_MANAGED_PAID_LEAVE_CONFIRMATION = LkDocumentType(
-        5, "State Managed Paid Leave Confirmation"
+        5, "State managed Paid Leave Confirmation"
     )
     APPROVAL_NOTICE = LkDocumentType(6, "Approval Notice")
     REQUEST_FOR_MORE_INFORMATION = LkDocumentType(7, "Request for More Information")
