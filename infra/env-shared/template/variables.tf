@@ -1,7 +1,7 @@
 variable "enable_pretty_domain" {
   description = "Set to false to disable ACM certificate lookup and domain configuration"
   type        = bool
-  default     = false
+  default     = true
 }
 
 variable "environment_name" {
