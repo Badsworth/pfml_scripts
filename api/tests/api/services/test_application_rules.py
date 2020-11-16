@@ -1167,7 +1167,34 @@ def test_min_work_pattern_total_minutes_worked(test_db_session, initialize_facto
     ] == issues
 
 
-def test_max_work_pattern_hours(test_db_session, initialize_factories_session):
+def test_required_work_pattern_minutes(test_db_session, initialize_factories_session):
+    test_app = ApplicationFactory.create(
+        work_pattern=WorkPatternVariableFactory(
+            work_pattern_days=[
+                # index 0 will have 60 minutes, so work_pattern should pass minimum total minutes for work pattern
+                WorkPatternDay(week_number=1, day_of_week_id=i + 1, minutes=60 if i == 0 else None)
+                for i in range(7)
+            ]
+        )
+    )
+
+    issues = get_work_pattern_issues(test_app)
+
+    expected_issues = []
+
+    for i in range(6):
+        expected_issues.append(
+            Issue(
+                type=IssueType.required,
+                message=f"work_pattern.work_pattern_days[{i + 1}].minutes is required",
+                field=f"work_pattern.work_pattern_days[{i + 1}].minutes",
+            )
+        )
+
+    assert expected_issues == issues
+
+
+def test_max_work_pattern_minutes(test_db_session, initialize_factories_session):
     test_app = ApplicationFactory.create(
         work_pattern=WorkPatternVariableFactory(
             work_pattern_days=[

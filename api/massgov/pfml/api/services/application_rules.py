@@ -611,15 +611,26 @@ def get_work_pattern_issues(application: Application) -> List[Issue]:
                 message="Total minutes for a work pattern must be greater than 0",
             )
         )
-
-    for i, minutes in enumerate(minutes_each_day):
-        if minutes > 24 * 60:
-            issues.append(
-                Issue(
-                    type=IssueType.maximum,
-                    message="Total minutes in a work pattern week must be less than a day (1440 minutes)",
-                    field=f"work_pattern.work_pattern_days[{i}].minutes",
+    else:
+        # We only check if all minute fields are set when the total minutes are greater than 0
+        # which indicates that all fields are empty or set to 0. For that scenario,
+        # validating minimum total minutes for the work pattern is all that's needed.
+        for i, day in enumerate(application.work_pattern.work_pattern_days):
+            if day.minutes is None:
+                issues.append(
+                    Issue(
+                        type=IssueType.required,
+                        message=f"work_pattern.work_pattern_days[{i}].minutes is required",
+                        field=f"work_pattern.work_pattern_days[{i}].minutes",
+                    )
                 )
-            )
+            elif day.minutes > 24 * 60:
+                issues.append(
+                    Issue(
+                        type=IssueType.maximum,
+                        message="Total minutes in a work pattern week must be less than a day (1440 minutes)",
+                        field=f"work_pattern.work_pattern_days[{i}].minutes",
+                    )
+                )
 
     return issues
