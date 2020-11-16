@@ -447,11 +447,14 @@ export function confirmInfo(): void {
   cy.contains("Submit Part 1").click();
 
   cy.wait("@submitClaimResponse").then((xhr) => {
-    const responseBody = xhr.response.body as Cypress.ObjectLike;
-    cy.stash("claimNumber", responseBody.data.fineos_absence_id);
-    cy.log("submitted", responseBody.data.fineos_absence_id);
-    cy.stash("applicationId", responseBody.data.application_id);
-    cy.log("submitted", responseBody.data.application_id);
+    const body =
+      typeof xhr.response.body === "string"
+        ? JSON.parse(xhr.response.body)
+        : xhr.response.body;
+    cy.stash("claimNumber", body.data.fineos_absence_id);
+    cy.log("submitted", body.data.fineos_absence_id);
+    cy.stash("applicationId", body.data.application_id);
+    cy.log("submitted", body.data.application_id);
   });
 }
 
