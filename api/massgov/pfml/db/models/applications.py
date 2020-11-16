@@ -157,6 +157,7 @@ class Application(Base):
     pregnant_or_recent_birth = Column(Boolean)
     child_birth_date = Column(Date)
     child_placement_date = Column(Date)
+    has_future_child_date = Column(Boolean)
     employer_notified = Column(Boolean)
     employer_notification_date = Column(Date)
     employer_notification_method_id = Column(

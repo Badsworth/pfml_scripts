@@ -187,6 +187,7 @@ class BaseApplicationLeaveDetails(PydanticBaseModel):
     employer_notified: Optional[bool]
     employer_notification_date: Optional[date]
     employer_notification_method: Optional[EmployerNotificationMethod]
+    has_future_child_date: Optional[bool]
 
 
 class MaskedApplicationLeaveDetails(BaseApplicationLeaveDetails):

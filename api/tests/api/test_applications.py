@@ -899,6 +899,24 @@ def test_application_patch_child_placement_date(client, user, auth_token, test_d
     assert child_dob == "****-05-13"
 
 
+def test_application_patch_has_future_child_date(client, user, auth_token, test_db_session):
+    application = ApplicationFactory.create(user=user, has_future_child_date=None)
+    assert application.has_future_child_date is None
+    response = client.patch(
+        "/v1/applications/{}".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+        json={"leave_details": {"has_future_child_date": True,}},
+    )
+    assert response.status_code == 200
+    response_body = response.get_json()
+    response_leave_details = response_body.get("data").get("leave_details")
+    assert response_leave_details
+    assert response_leave_details.get("has_future_child_date") is True
+
+    test_db_session.refresh(application)
+    assert application.has_future_child_date is True
+
+
 def test_application_patch_state_id_fields(client, user, auth_token, test_db_session):
     application = ApplicationFactory.create(user=user)
 

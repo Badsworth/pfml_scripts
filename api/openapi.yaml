@@ -1598,6 +1598,10 @@ components:
         child_placement_date:
           nullable: true
           $ref: "#/components/schemas/Date"
+        has_future_child_date:
+          type: boolean
+          nullable: true 
+          example: true
         employer_notified:
           type: boolean
           nullable: true
