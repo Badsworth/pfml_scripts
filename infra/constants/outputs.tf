@@ -2,9 +2,9 @@ output "common_tags" {
   value = {
     agency        = "dfml"
     application   = "pfml"
-    businessowner = "ma-pfml-alerts@mass.gov"
+    businessowner = "anthony.fantasia@state.ma.us"
     createdby     = "ma-pfml-alerts@mass.gov"
-    itowner       = "ma-pfml-alerts@mass.gov"
+    itowner       = "anthony.fantasia@state.ma.us"
     secretariat   = "eolwd"
   }
 }
@@ -35,3 +35,12 @@ output "environment_shorthand" {
   }
 }
 
+output "smartronix_environment_tags" {
+  value = {
+    "test"        = "Development"
+    "stage"       = "Staging"
+    "prod"        = "Production"
+    "performance" = "QA"
+    "training"    = "Sandbox"
+  }
+}

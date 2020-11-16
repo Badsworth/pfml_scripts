@@ -110,6 +110,7 @@ resource "aws_db_instance" "default" {
   }
 
   tags = merge(module.constants.common_tags, {
+    "SMX:Asset"   = "v1:massgov_pfml_${var.environment_name}:${module.constants.smartronix_environment_tags[var.environment_name]}:RDS:PFML:Advanced:None"
     environment   = module.constants.environment_tags[var.environment_name]
     Name          = "massgov_pfml_${var.environment_name}"
     backup        = var.environment_name == "prod" ? "prod" : "nonprod"

@@ -6,3 +6,7 @@ provider "aws" {
 terraform {
   required_version = "0.12.24"
 }
+
+module "constants" {
+  source = "../../constants"
+}

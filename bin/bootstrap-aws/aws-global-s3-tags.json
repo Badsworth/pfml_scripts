@@ -1,8 +1,8 @@
 {
   "TagSet": [
-    { "Key": "businessowner", "Value": "ma-pfml-alerts@mass.gov" },
+    { "Key": "businessowner", "Value": "anthony.fantasia@state.ma.us" },
     { "Key": "createdby", "Value": "ma-pfml-alerts@mass.gov" },
-    { "Key": "itowner", "Value": "ma-pfml-alerts@mass.gov" },
+    { "Key": "itowner", "Value": "anthony.fantasia@state.ma.us" },
     { "Key": "environment", "Value": "prod" },
     { "Key": "agency", "Value": "dfml" },
     { "Key": "application", "Value": "pfml" },
