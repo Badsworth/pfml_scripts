@@ -7,6 +7,8 @@ on:
       - master
       - deploy/portal/stage
       - deploy/portal/prod
+      - deploy/portal/performance
+      - deploy/portal/training
     paths:
       - infra/portal/**
 
@@ -17,6 +19,8 @@ env:
   refs/heads/master: test
   refs/heads/deploy/portal/stage: stage
   refs/heads/deploy/portal/prod: prod
+  refs/heads/deploy/portal/performance: performance
+  refs/heads/deploy/portal/training: training
 
 jobs:
   release:
@@ -63,7 +67,7 @@ jobs:
     name: End-to-End Test Deployment
     runs-on: ubuntu-latest
     needs: [ release ]
-    if: ${{ env[github.ref] != "prod" }}
+    if: github.ref != 'refs/heads/deploy/portal/prod'
     steps:
       - uses: actions/checkout@v2
       - uses: ./.github/actions/trigger-cypress
