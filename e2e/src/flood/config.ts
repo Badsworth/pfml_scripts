@@ -87,7 +87,7 @@ export const agentActions: AgentActions = {
 
 export type StandardDocumentType = DocumentUploadRequest["document_type"];
 export const standardDocuments: StandardDocumentType[] = [
-  "State Managed Paid Leave Confirmation",
+  "State managed Paid Leave Confirmation",
   "Identification Proof",
 ];
 

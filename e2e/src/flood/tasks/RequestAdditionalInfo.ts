@@ -37,7 +37,7 @@ export const steps: StoredStep[] = [
 
       // default matches the "Identification Proof" document type
       let documentCheckbox = "supportingDocumentationNotProvided";
-      if (missingDocument === "State Managed Paid Leave Confirmation") {
+      if (missingDocument === "State managed Paid Leave Confirmation") {
         documentCheckbox = "healthcareProviderInformationIncomplete";
       }
 

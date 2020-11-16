@@ -54,7 +54,7 @@ export function submitClaimDirectlyToAPI(
 export function login(credentials: Credentials): void {
   // Alias the credentials for later use.
   cy.wrap(credentials).as("credentials");
-  cy.visit("/");
+  cy.visit("/login");
   cy.labelled("Email address").type(credentials.username);
   cy.labelled("Password").typeMasked(credentials.password);
   cy.contains("button", "Log in").click();
@@ -270,19 +270,27 @@ export function answerReducedLeaveQuestion(
 export function enterReducedWorkHours(
   leave?: ReducedScheduleLeavePeriods[]
 ): void {
+  if (!leave) {
+    throw new Error(
+      "Unable to enter reduced work hours - leave was not defined"
+    );
+  }
+  const hrs = (minutes: number | null | undefined) => {
+    return minutes ? Math.round(minutes / 60) : 0;
+  };
   const weekdayInfo = [
-    { day: "Sunday", hours: leave && String(leave[0].sunday_off_hours) },
-    { day: "Monday", hours: leave && String(leave[0].monday_off_hours) },
-    { day: "Tuesday", hours: leave && String(leave[0].tuesday_off_hours) },
-    { day: "Wednesday", hours: leave && String(leave[0].wednesday_off_hours) },
-    { day: "Thursday", hours: leave && String(leave[0].thursday_off_hours) },
-    { day: "Friday", hours: leave && String(leave[0].friday_off_hours) },
-    { day: "Saturday", hours: leave && String(leave[0].saturday_off_hours) },
+    { day: "Sunday", hours: hrs(leave[0].sunday_off_minutes) },
+    { day: "Monday", hours: hrs(leave[0].monday_off_minutes) },
+    { day: "Tuesday", hours: hrs(leave[0].tuesday_off_minutes) },
+    { day: "Wednesday", hours: hrs(leave[0].wednesday_off_minutes) },
+    { day: "Thursday", hours: hrs(leave[0].thursday_off_minutes) },
+    { day: "Friday", hours: hrs(leave[0].friday_off_minutes) },
+    { day: "Saturday", hours: hrs(leave[0].saturday_off_minutes) },
   ];
 
   for (const info of weekdayInfo) {
     cy.contains("fieldset", info.day).within(() => {
-      cy.labelled("Hours").type(info.hours as string);
+      cy.labelled("Hours").type(info.hours.toString());
     });
   }
   cy.contains("button", "Save and continue").click();

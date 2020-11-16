@@ -152,7 +152,7 @@ function getDocumentType(
     case "FOSTERPLACEMENT":
     case "PERSONALLETTER":
     case "CATPIC":
-      return "State Managed Paid Leave Confirmation";
+      return "State managed Paid Leave Confirmation";
     case "MASSID":
     case "OOSID":
       return "Identification Proof";

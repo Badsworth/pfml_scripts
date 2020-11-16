@@ -104,7 +104,7 @@ async function createDocumentTask(
     case "Identification Proof":
       type = "ID Review";
       break;
-    case "State Managed Paid Leave Confirmation":
+    case "State managed Paid Leave Confirmation":
       type = "Certification Review";
       break;
     default:

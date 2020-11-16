@@ -7,7 +7,7 @@
 /* eslint-disable */
 
 export const defaults: RequestOptions = {
-    baseUrl: "/v1",
+    baseUrl: "/v1"
 };
 export const servers = {
     developmentServer: "/v1"
@@ -29,10 +29,13 @@ type FetchRequestOptions = RequestOptions & {
     body?: string | FormData;
 };
 type JsonRequestOptions = RequestOptions & {
-    body: object;
+    body: unknown;
+};
+type FormRequestOptions<T extends Record<string, unknown>> = RequestOptions & {
+    body: T;
 };
 type MultipartRequestOptions = RequestOptions & {
-    body: Record<string, string | Blob | undefined | any>;
+    body: Record<string, any>; // string | Blob
 };
 /** Utilities functions */
 export const _ = {
@@ -190,7 +193,7 @@ export const http = {
             },
         };
     },
-    form({ body, headers, ...req }: JsonRequestOptions): FetchRequestOptions {
+    form<T extends Record<string, unknown>>({ body, headers, ...req }: FormRequestOptions<T>): FetchRequestOptions {
         return {
             ...req,
             body: QS.form(body),
@@ -220,7 +223,7 @@ export class HttpError extends Error {
     status: number;
     statusText: string;
     headers: Record<string, string>;
-    data?: object;
+    data?: Record<string, unknown>;
     constructor(status: number, statusText: string, url: string, headers: Headers, text?: string) {
         super(`${url} - ${statusText} (${status})`);
         this.status = status;
@@ -319,7 +322,7 @@ export interface GETEmployersByEmployerIdResponse extends SuccessfulResponse {
 }
 export interface ClaimDocumentResponse {
     created_at: any;
-    document_type: "Passport" | "Driver's License Mass" | "Driver's License Other State" | "Identification Proof" | "State Managed Paid Leave Confirmation";
+    document_type: "Passport" | "Driver's License Mass" | "Driver's License Other State" | "Identification Proof" | "State managed Paid Leave Confirmation" | "Approval Notice" | "Request for More information" | "Denial Notice";
     content_type: string;
     fineos_document_id: string;
     name: string;
@@ -337,20 +340,22 @@ export interface GETEmployersClaimsByFineosAbsenceIdReviewResponse extends Succe
 export type Date = string;
 export interface EmployerBenefit {
     benefit_amount_dollars?: number;
-    benefit_amount_frequency?: string;
+    benefit_amount_frequency?: "Per Day" | "Per Week" | "Per Month" | "In Total";
     benefit_end_date?: Date;
     benefit_start_date?: Date;
-    benefit_type?: string;
+    benefit_type?: "Accrued Paid Leave" | "Short Term Disability" | "Permanent Disability Insurance" | "Family or Medical Leave Insurance";
 }
 export interface PreviousLeave {
     leave_end_date?: Date;
     leave_start_date?: Date;
+    leave_type?: "Pregnancy/Maternity" | "Serious Health Condition" | "Care of Family Member" | "Child Bonding" | "Military Caregiver" | "Military Exigency Family";
 }
 export interface EmployerClaimRequestBody {
-    employer_notification_date: Date;
     employer_benefits: EmployerBenefit[];
     previous_leaves: PreviousLeave[];
     hours_worked_per_week: number;
+    employer_decision?: "Approve" | "Deny" | "Requires More Information";
+    fraud?: "Yes" | "No";
     comment?: string;
 }
 export interface PATCHEmployersClaimsByFineosAbsenceIdReviewResponse extends SuccessfulResponse {
@@ -369,19 +374,12 @@ export interface ReducedScheduleLeavePeriods {
     start_date?: Date | null;
     end_date?: Date | null;
     is_estimated?: boolean | null;
-    thursday_off_hours?: number | null;
     thursday_off_minutes?: number | null;
-    friday_off_hours?: number | null;
     friday_off_minutes?: number | null;
-    saturday_off_hours?: number | null;
     saturday_off_minutes?: number | null;
-    sunday_off_hours?: number | null;
     sunday_off_minutes?: number | null;
-    monday_off_hours?: number | null;
     monday_off_minutes?: number | null;
-    tuesday_off_hours?: number | null;
     tuesday_off_minutes?: number | null;
-    wednesday_off_hours?: number | null;
     wednesday_off_minutes?: number | null;
 }
 export interface ContinuousLeavePeriods {
@@ -414,7 +412,7 @@ export interface ApplicationLeaveDetails {
     reduced_schedule_leave_periods?: ReducedScheduleLeavePeriods[];
     continuous_leave_periods?: ContinuousLeavePeriods[];
     intermittent_leave_periods?: IntermittentLeavePeriods[];
-    relationship_to_caregiver?: ("Parent" | "Child" | "Grandparent" | "Grandchild" | "Other Family Member" | "Service Member" | "Inlaw" | "Sibling" | "Other") | null;
+    relationship_to_caregiver?: ("Parent" | "Child" | "Grandparent" | "Grandchild" | "Other Family Member" | "Service Member" | "Inlaw" | "Sibling" | "Other" | "Employee") | null;
     relationship_qualifier?: ("Adoptive" | "Biological" | "Foster" | "Custodial Parent" | "Legal Guardian" | "Step Parent") | null;
     pregnant_or_recent_birth?: boolean | null;
     child_birth_date?: Date | null;
@@ -534,7 +532,7 @@ export interface DocumentResponse {
     user_id: string;
     application_id: string;
     created_at: any;
-    document_type: "Passport" | "Driver's License Mass" | "Driver's License Other State" | "Identification Proof" | "State Managed Paid Leave Confirmation";
+    document_type: "Passport" | "Driver's License Mass" | "Driver's License Other State" | "Identification Proof" | "State managed Paid Leave Confirmation";
     content_type: string;
     fineos_document_id: string;
     name: string;
@@ -544,7 +542,7 @@ export interface GETApplicationsByApplicationIdDocumentsResponse extends Success
     data?: DocumentResponse[];
 }
 export interface DocumentUploadRequest {
-    document_type: "Passport" | "Driver's License Mass" | "Driver's License Other State" | "Identification Proof" | "State Managed Paid Leave Confirmation";
+    document_type: "Passport" | "Driver's License Mass" | "Driver's License Other State" | "Identification Proof" | "State managed Paid Leave Confirmation" | "Approval Notice" | "Request for More information" | "Denial Notice";
     name?: string;
     description?: string;
     file: unknown;
@@ -604,7 +602,7 @@ export interface NotificationClaimant {
 }
 export interface NotificationRequest {
     absence_case_id: string;
-    document_type: string;
+    document_type?: string;
     trigger: string;
     source: "Self-Service" | "Call Center";
     recipient_type: "Claimant" | "Leave Administrator";

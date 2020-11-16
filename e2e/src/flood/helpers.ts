@@ -204,7 +204,7 @@ export function getDocumentType(document: ClaimDocument): StandardDocumentType {
   if (["MASSID", "OOSID"].includes(document.type)) {
     return "Identification Proof";
   } else {
-    return "State Managed Paid Leave Confirmation";
+    return "State managed Paid Leave Confirmation";
   }
 }
 
