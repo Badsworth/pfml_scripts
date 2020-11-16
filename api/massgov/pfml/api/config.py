@@ -30,5 +30,5 @@ def get_config() -> AppConfig:
         cognito_user_pool_keys_url=os.environ["COGNITO_USER_POOL_KEYS_URL"],
         enable_employee_endpoints=os.environ.get("ENABLE_EMPLOYEE_ENDPOINTS", "0") == "1",
         enable_employer_endpoints=os.environ.get("ENABLE_EMPLOYER_ENDPOINTS", "0") == "1",
-        rmv=massgov.pfml.rmv.config.RmvConfig.from_env_and_secrets_manager()
+        rmv=massgov.pfml.rmv.config.RmvConfig.from_env_and_secrets_manager(),
     )

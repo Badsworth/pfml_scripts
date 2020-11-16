@@ -9,8 +9,8 @@ from massgov.pfml.api.services.rmv_check import (
     handle_rmv_check_request,
     make_response_from_rmv_check,
 )
-from massgov.pfml.rmv.config import RMVCheckBehavior
 from massgov.pfml.rmv.client import RmvClient
+from massgov.pfml.rmv.config import RMVCheckBehavior
 
 
 def is_test_record(request: RMVCheckRequest) -> bool:

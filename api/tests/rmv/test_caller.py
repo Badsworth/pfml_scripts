@@ -10,7 +10,7 @@ from requests.models import Response
 
 from certs import generate_x509_cert_and_key, p12_encoded_cert
 from massgov.pfml.rmv.caller import LazyZeepApiCaller
-from massgov.pfml.rmv.config import RmvConfig, RMVCheckBehavior
+from massgov.pfml.rmv.config import RMVCheckBehavior, RmvConfig
 
 
 @pytest.fixture(scope="session")
@@ -55,7 +55,13 @@ def mock_wsdl_response(status_code):
 def test_zeep_caller_get_200(mock_wsdl_200, pkcs12_data):
     # RMV Client should be able to retrieve and parse WSDL from a given source.
     caller = LazyZeepApiCaller(
-        RmvConfig(check_behavior=RMVCheckBehavior.NO_MOCK, check_mock_success=False, base_url="https://fake-rmv-url.com", pkcs12_data=pkcs12_data, pkcs12_pw="abcd")
+        RmvConfig(
+            check_behavior=RMVCheckBehavior.NO_MOCK,
+            check_mock_success=False,
+            base_url="https://fake-rmv-url.com",
+            pkcs12_data=pkcs12_data,
+            pkcs12_pw="abcd",
+        )
     )
     assert caller.get()
 
@@ -63,7 +69,13 @@ def test_zeep_caller_get_200(mock_wsdl_200, pkcs12_data):
 def test_zeep_caller_get_500(mock_wsdl_500, pkcs12_data):
     # RMV Client should raise an HTTP error when failing to retrieve the WSDL on first call.
     caller = LazyZeepApiCaller(
-        RmvConfig(check_behavior=RMVCheckBehavior.NO_MOCK, check_mock_success=False, base_url="https://fake-rmv-url.com", pkcs12_data=pkcs12_data, pkcs12_pw="abcd")
+        RmvConfig(
+            check_behavior=RMVCheckBehavior.NO_MOCK,
+            check_mock_success=False,
+            base_url="https://fake-rmv-url.com",
+            pkcs12_data=pkcs12_data,
+            pkcs12_pw="abcd",
+        )
     )
 
     with pytest.raises(HTTPError):
