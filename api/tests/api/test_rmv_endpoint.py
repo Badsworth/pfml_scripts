@@ -2,6 +2,9 @@
 import re
 from unittest import mock
 
+import boto3
+import botocore
+import botocore.stub
 import pytest
 
 from massgov.pfml.rmv.caller import MockZeepCaller
@@ -9,20 +12,34 @@ from massgov.pfml.rmv.caller import MockZeepCaller
 
 @pytest.fixture
 def rmv_full_mock(monkeypatch):
-    new_env = monkeypatch.setenv("RMV_CHECK_BEHAVIOR", "fully_mocked")
-    return new_env
+    monkeypatch.setenv("RMV_CHECK_BEHAVIOR", "fully_mocked")
 
 
 @pytest.fixture
 def rmv_partial_mock(monkeypatch):
-    new_env = monkeypatch.setenv("RMV_CHECK_BEHAVIOR", "partially_mocked")
-    return new_env
+    monkeypatch.setenv("RMV_CHECK_BEHAVIOR", "partially_mocked")
+    monkeypatch.setenv("RMV_CLIENT_CERTIFICATE_BINARY_ARN", "arn")
+    monkeypatch.setenv("RMV_CLIENT_BASE_URL", "https://fake-rmv-url.com")
+    monkeypatch.setenv("RMV_CLIENT_CERTIFICATE_PASSWORD", "pw")
+
+    # patch a custom secretsmanager client into all boto3 sessions
+    client = botocore.session.get_session().create_client("secretsmanager", region_name="us-east-1")
+    monkeypatch.setattr(boto3, "client", lambda name: client)
+
+    with botocore.stub.Stubber(client) as stubber:
+        # Add a response to the custom client
+        stubber.add_response(
+            "get_secret_value",
+            expected_params={"SecretId": "arn"},
+            service_response={"SecretBinary": str.encode("hello")},
+        )
+
+        yield
 
 
 @pytest.fixture
-def rmv_no_mock(monkeypatch):
-    new_env = monkeypatch.setenv("RMV_CHECK_BEHAVIOR", "not_mocked")
-    return new_env
+def rmv_no_mock(monkeypatch, rmv_partial_mock):
+    monkeypatch.setenv("RMV_CHECK_BEHAVIOR", "not_mocked")
 
 
 @pytest.fixture
