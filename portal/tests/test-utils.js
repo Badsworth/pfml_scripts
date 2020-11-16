@@ -849,6 +849,19 @@ export const simulateEvents = (wrapper) => {
   }
 
   /**
+   * Simulate selecting a checkbox
+   * @param {string} name Name of input field
+   * @param {boolean} checked Select (true) or deselect (false)
+   */
+  function selectCheckbox(name, checked = true) {
+    act(() => {
+      wrapper.find({ name }).simulate("change", {
+        target: { checked, type: "checkbox" },
+      });
+    });
+  }
+
+  /**
    * Simulate clicking on an element, such as a button or link
    * @param {*} enzymeSelector Enzym selector. See https://enzymejs.github.io/enzyme/docs/api/selector.html
    */
@@ -871,5 +884,5 @@ export const simulateEvents = (wrapper) => {
     });
   }
 
-  return { changeField, changeRadioGroup, click, submitForm };
+  return { changeField, changeRadioGroup, click, selectCheckbox, submitForm };
 };

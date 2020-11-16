@@ -294,6 +294,7 @@ exports[`Review renders the page 1`] = `
           "requireLogin": [MockFunction],
           "resendVerifyAccountCode": [MockFunction],
           "verifyAccount": [MockFunction],
+          "verifyEmployerAccount": [MockFunction],
         },
         "catchError": [MockFunction],
         "claims": Object {

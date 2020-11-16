@@ -143,20 +143,19 @@ const useAuthLogic = ({ appErrorsLogic, portalFlow }) => {
    * Shared logic to create an account
    * @param {string} username Email address that is used as the username
    * @param {string} password Password
-   * @param {object} ein Employer id number (if signing up through Employer Portal)
+   * @param {string} ein Employer id number (if signing up through Employer Portal)
    */
   const createAccountInCognito = async (username, password, ein = "") => {
     try {
       trackAuthRequest("signUp");
       if (ein) {
-        await Auth.signUp(
-          { username, password },
-          {
-            clientMetadata: {
-              ein,
-            },
-          }
-        );
+        await Auth.signUp({
+          username,
+          password,
+          clientMetadata: {
+            ein,
+          },
+        });
       } else {
         await Auth.signUp({ username, password });
       }
@@ -316,6 +315,36 @@ const useAuthLogic = ({ appErrorsLogic, portalFlow }) => {
   };
 
   /**
+   * Shared logic to verify an account
+   * @param {string} username Email address that is used as the username
+   * @param {string} code Verification code that is emailed to the user
+   * @param {string} ein Employer id number (if signing up through Employer Portal)
+   */
+  const verifyAccountInCognito = async (username = "", code = "", ein = "") => {
+    try {
+      trackAuthRequest("confirmSignUp");
+      if (ein) {
+        await Auth.confirmSignUp(username, code, {
+          clientMetadata: { ein },
+        });
+      } else {
+        await Auth.confirmSignUp(username, code);
+      }
+      portalFlow.goToPageFor(
+        "SUBMIT",
+        {},
+        {
+          "account-verified": true,
+        }
+      );
+    } catch (error) {
+      trackAuthError(error);
+      const appErrors = getVerifyAccountErrorInfo(error, t);
+      appErrorsLogic.setAppErrors(appErrors);
+    }
+  };
+
+  /**
    * Verify Portal account with the one time verification code that
    * was emailed to the user. If there are any errors, set app errors
    * on the page.
@@ -338,21 +367,36 @@ const useAuthLogic = ({ appErrorsLogic, portalFlow }) => {
       return;
     }
 
-    try {
-      trackAuthRequest("confirmSignUp");
-      await Auth.confirmSignUp(username, code);
-      portalFlow.goToPageFor(
-        "SUBMIT",
-        {},
-        {
-          "account-verified": true,
-        }
-      );
-    } catch (error) {
-      trackAuthError(error);
-      const appErrors = getVerifyAccountErrorInfo(error, t);
-      appErrorsLogic.setAppErrors(appErrors);
+    await verifyAccountInCognito(username, code);
+  };
+
+  /**
+   * Verify Employer Portal account with the one time verification code that
+   * was emailed to the user. If there are any errors, set app errors
+   * on the page.
+   * @param {string} username Email address that is used as the username
+   * @param {string} code Verification code that is emailed to the user
+   * @param {string} ein Employer id number (known as EIN or FEIN)
+   */
+  const verifyEmployerAccount = async (username = "", code = "", ein = "") => {
+    appErrorsLogic.clearErrors();
+
+    username = username.trim();
+    code = code.trim();
+    ein = ein.trim();
+
+    const validationErrors = combineErrorCollections([
+      validateVerificationCode(code, t),
+      validateUsername(username, t),
+      validateEmployerIdNumber(ein, t),
+    ]);
+
+    if (validationErrors) {
+      appErrorsLogic.setAppErrors(validationErrors);
+      return;
     }
+
+    await verifyAccountInCognito(username, code, ein);
   };
 
   return {
@@ -367,6 +411,7 @@ const useAuthLogic = ({ appErrorsLogic, portalFlow }) => {
     resendVerifyAccountCode,
     resetPassword,
     verifyAccount,
+    verifyEmployerAccount,
   };
 };
 
@@ -528,7 +573,10 @@ function getCreateAccountErrorInfo(error, t) {
   } else if (error.code === "UsernameExistsException") {
     // TODO (CP-576): Obfuscate the fact that the user exists
     message = t("errors.auth.usernameExists");
-  } else if (error.code === "UnexpectedLambdaException") {
+  } else if (
+    error.code === "UnexpectedLambdaException" ||
+    error.code === "UserLambdaValidationException"
+  ) {
     message = t("errors.auth.invalidEmployerIdNumber");
   } else {
     message = t("errors.network");

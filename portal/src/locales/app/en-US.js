@@ -492,6 +492,9 @@ const pages = {
       "We sent a new 6-digit verification code to your email address. Enter the new code to verify your email.",
     codeResentHeading: "New verification code sent",
     confirmButton: "Submit",
+    einLabel: "Employer ID number",
+    employerAccountLabel:
+      "I need an employer account to manage leave for my team.",
     lead:
       "We sent a 6-digit verification code to your email address. Enter the code to verify your email.",
     lead_email:

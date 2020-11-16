@@ -28,7 +28,8 @@ describe("useAuthLogic", () => {
     setAppErrors,
     username,
     verificationCode,
-    verifyAccount;
+    verifyAccount,
+    verifyEmployerAccount;
 
   beforeEach(() => {
     jest.resetAllMocks();
@@ -52,6 +53,7 @@ describe("useAuthLogic", () => {
         resendVerifyAccountCode,
         resetPassword,
         verifyAccount,
+        verifyEmployerAccount,
       } = useAuthLogic({
         appErrorsLogic,
         portalFlow,
@@ -789,17 +791,13 @@ describe("useAuthLogic", () => {
       await act(async () => {
         await createEmployerAccount(username, password, ein);
       });
-      expect(Auth.signUp).toHaveBeenCalledWith(
-        {
-          username,
-          password,
+      expect(Auth.signUp).toHaveBeenCalledWith({
+        username,
+        password,
+        clientMetadata: {
+          ein,
         },
-        {
-          clientMetadata: {
-            ein,
-          },
-        }
-      );
+      });
     });
 
     it("routes to Verify Account page", async () => {
@@ -827,14 +825,13 @@ describe("useAuthLogic", () => {
       await act(async () => {
         await createEmployerAccount(`  ${username} `, password, ein);
       });
-      expect(Auth.signUp).toHaveBeenCalledWith(
-        { username, password },
-        {
-          clientMetadata: {
-            ein,
-          },
-        }
-      );
+      expect(Auth.signUp).toHaveBeenCalledWith({
+        username,
+        password,
+        clientMetadata: {
+          ein,
+        },
+      });
     });
 
     it("requires fields to not be empty", () => {
@@ -1442,6 +1439,77 @@ describe("useAuthLogic", () => {
       const spy = jest.spyOn(portalFlow, "goToPageFor");
       await act(async () => {
         await verifyAccount(username, verificationCode);
+      });
+
+      expect(spy).toHaveBeenCalledWith(
+        "SUBMIT",
+        {},
+        {
+          "account-verified": true,
+        }
+      );
+    });
+  });
+
+  describe("verifyEmployerAccount", () => {
+    it("calls Auth.confirmSignUp", () => {
+      act(() => {
+        verifyEmployerAccount(username, verificationCode, ein);
+      });
+      expect(Auth.confirmSignUp).toHaveBeenCalledWith(
+        username,
+        verificationCode,
+        {
+          clientMetadata: { ein },
+        }
+      );
+    });
+
+    it("tracks request", async () => {
+      await act(async () => {
+        await verifyEmployerAccount(username, verificationCode, ein);
+      });
+
+      expect(tracker.trackFetchRequest).toHaveBeenCalledTimes(1);
+    });
+
+    it("trims whitespace from code and ein", () => {
+      act(() => {
+        verifyEmployerAccount(username, `  ${verificationCode} `, ` ${ein} `);
+      });
+      expect(Auth.confirmSignUp).toHaveBeenCalledWith(
+        username,
+        verificationCode,
+        {
+          clientMetadata: { ein },
+        }
+      );
+    });
+
+    it("sets app errors ein is empty", () => {
+      ein = "";
+      act(() => {
+        verifyEmployerAccount(username, verificationCode, ein);
+      });
+      expect(appErrors.items).toHaveLength(1);
+      expect(appErrors.items[0].message).toMatchInlineSnapshot(
+        `"Enter your employer ID number"`
+      );
+      expect(Auth.confirmSignUp).not.toHaveBeenCalled();
+    });
+
+    it("clears existing errors", () => {
+      act(() => {
+        setAppErrors([{ message: "Pre-existing error" }]);
+        verifyEmployerAccount(username, verificationCode, ein);
+      });
+      expect(appErrors.items).toHaveLength(0);
+    });
+
+    it("routes to login page with account verified message", async () => {
+      const spy = jest.spyOn(portalFlow, "goToPageFor");
+      await act(async () => {
+        await verifyEmployerAccount(username, verificationCode, ein);
       });
 
       expect(spy).toHaveBeenCalledWith(

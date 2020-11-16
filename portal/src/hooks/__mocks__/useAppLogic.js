@@ -18,6 +18,7 @@ export default jest.fn(() => ({
     requireLogin: jest.fn(),
     resendVerifyAccountCode: jest.fn(),
     verifyAccount: jest.fn(),
+    verifyEmployerAccount: jest.fn(),
   },
   catchError: jest.fn(),
   claims: {

@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import Alert from "../components/Alert";
 import Button from "../components/Button";
+import ConditionalContent from "../components/ConditionalContent";
+import InputChoice from "../components/InputChoice";
 import InputText from "../components/InputText";
 import Lead from "../components/Lead";
 import Link from "next/link";
@@ -19,16 +21,28 @@ export const VerifyAccount = (props) => {
   const { t } = useTranslation();
 
   const createAccountUsername = get(auth, "authData.createAccountUsername");
-  const { formState, updateFields } = useFormState({
+  const employerIdNumber = get(auth, "authData.employerIdNumber");
+  const { formState, getField, updateFields, clearField } = useFormState({
     code: "",
     username: createAccountUsername,
+    ein: employerIdNumber,
   });
   const [codeResent, setCodeResent] = useState(false);
+  const [isEmployer, setIsEmployer] = useState(false);
 
   const handleSubmit = useThrottledHandler(async (event) => {
     event.preventDefault();
-    await auth.verifyAccount(formState.username, formState.code);
+    if (isEmployer || formState.ein) {
+      await auth.verifyEmployerAccount(
+        formState.username,
+        formState.code,
+        formState.ein
+      );
+    } else {
+      await auth.verifyAccount(formState.username, formState.code);
+    }
   });
+
   const handleResendCodeClick = useThrottledHandler(async (event) => {
     event.preventDefault();
     setCodeResent(false);
@@ -79,6 +93,35 @@ export const VerifyAccount = (props) => {
             label={t("pages.authVerifyAccount.usernameLabel")}
             smallLabel
           />
+        )}
+
+        {!employerIdNumber && (
+          <React.Fragment>
+            <ConditionalContent
+              fieldNamesClearedWhenHidden={["ein"]}
+              getField={getField}
+              clearField={clearField}
+              updateFields={updateFields}
+              visible={isEmployer}
+            >
+              <InputText
+                {...getFunctionalInputProps("ein")}
+                type="numeric"
+                label={t("pages.authVerifyAccount.einLabel")}
+                mask="fein"
+                smallLabel
+              />
+            </ConditionalContent>
+            <InputChoice
+              label={t("pages.authVerifyAccount.employerAccountLabel")}
+              name="employer-account-checkbox"
+              value={isEmployer.toString()}
+              onChange={() => {
+                setIsEmployer(!isEmployer);
+                updateFields({ ein: "" });
+              }}
+            />
+          </React.Fragment>
         )}
 
         <div>
