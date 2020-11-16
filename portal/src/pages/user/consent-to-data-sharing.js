@@ -27,6 +27,8 @@ export const ConsentToDataSharing = (props) => {
     await handleSave();
   });
 
+  const roleContext = user.hasEmployerRole ? "employer" : "user";
+
   return (
     <form onSubmit={handleSubmit} className="usa-form">
       <Title>{t("pages.userConsentToDataSharing.title")}</Title>
@@ -36,22 +38,31 @@ export const ConsentToDataSharing = (props) => {
 
       <Accordion>
         <AccordionItem
-          heading={t("pages.userConsentToDataSharing.applicationUsageHeading")}
+          heading={t("pages.userConsentToDataSharing.applicationUsageHeading", {
+            context: roleContext,
+          })}
         >
           <p>{t("pages.userConsentToDataSharing.applicationUsageIntro")}</p>
           <ul className="usa-list">
             {t("pages.userConsentToDataSharing.applicationUsageList", {
               returnObjects: true,
+              context: roleContext,
             }).map((listItemContent, index) => (
               <li key={index}>{listItemContent}</li>
             ))}
           </ul>
         </AccordionItem>
+
         <AccordionItem
           heading={t("pages.userConsentToDataSharing.dataUsageHeading")}
         >
-          <p>{t("pages.userConsentToDataSharing.dataUsageBody")}</p>
+          <p>
+            {t("pages.userConsentToDataSharing.dataUsageBody", {
+              context: roleContext,
+            })}
+          </p>
         </AccordionItem>
+
         <AccordionItem
           heading={t("pages.userConsentToDataSharing.fullUserAgreementHeading")}
         >

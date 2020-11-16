@@ -1465,15 +1465,24 @@ const pages = {
     agreementBody:
       "By continuing, I am indicating that I have read and understood the above user agreements. I give the DFML permission to collect, share, and use my information consistent with the terms of the agreements linked$t(chars.nbsp)above.",
     applicationUsage: "",
-    applicationUsageHeading: "Applying for PFML",
+    applicationUsageHeading_employer: "Reviewing paid leave applications",
+    applicationUsageHeading_user: "Applying for PFML",
     applicationUsageIntro: "We need this information to:",
-    applicationUsageList: [
+    applicationUsageList_employer: [
+      "Check eligibility for coverage",
+      "Determine your employee's leave time and benefit amount",
+      "Administer the program and meet reporting requirements",
+      "Reduce fraud",
+    ],
+    applicationUsageList_user: [
       "Check your eligibility for coverage",
       "Determine your benefit amount",
       "Give you the best service possible",
     ],
     continueButton: "Agree and continue",
-    dataUsageBody:
+    dataUsageBody_employer:
+      "We’ll keep your information private as required by law. As a part of the application process, we may check the information you give with other state agencies. We may share information related to a claim with health care providers and contracted private partners.",
+    dataUsageBody_user:
       "We’ll keep your information private as required by law. As a part of the application process, we may check the information you give with other state agencies. We may share information related to your claim with your employer, health care provider(s), and contracted private partners.",
     dataUsageHeading: "How we use your data",
     fullUserAgreementBody:

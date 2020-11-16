@@ -5,6 +5,7 @@ import { Trans } from "react-i18next";
 import UserFeedback from "../../../components/UserFeedback";
 import routes from "../../../../src/routes";
 import { useTranslation } from "../../../locales/i18n";
+import withUser from "../../../hoc/withUser";
 
 export const Success = (props) => {
   const { t } = useTranslation();
@@ -46,4 +47,4 @@ Success.propTypes = {
   }).isRequired,
 };
 
-export default Success;
+export default withUser(Success);

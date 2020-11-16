@@ -6,6 +6,7 @@ import UserFeedback from "../../../components/UserFeedback";
 import formatDateRange from "../../../utils/formatDateRange";
 import routes from "../../../../src/routes";
 import { useTranslation } from "../../../locales/i18n";
+import withUser from "../../../hoc/withUser";
 
 export const Confirmation = (props) => {
   const { t } = useTranslation();
@@ -60,4 +61,4 @@ Confirmation.propTypes = {
   }).isRequired,
 };
 
-export default Confirmation;
+export default withUser(Confirmation);

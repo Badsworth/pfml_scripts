@@ -12,6 +12,12 @@ class User extends BaseModel {
       user_id: null,
     };
   }
+
+  get hasEmployerRole() {
+    return this.roles.some(
+      (userRole) => userRole.role_description === RoleDescription.employer
+    );
+  }
 }
 
 export class UserRole extends BaseModel {
