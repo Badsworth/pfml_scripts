@@ -84,6 +84,7 @@ class FINEOSClient(client.AbstractFINEOSClient):
     customer_api_url: str
     request_count: int
     oauth_session: requests_oauthlib.OAuth2Session
+    wscomposer_session: requests.Session
 
     def __init__(
         self,
@@ -109,6 +110,7 @@ class FINEOSClient(client.AbstractFINEOSClient):
             integration_services_api_url,
         )
         self._init_oauth_session(oauth2_url, client_id, client_secret)
+        self.wscomposer_session = requests.Session()  # To use persistent connections if possible.
 
     def _init_oauth_session(self, token_url, client_id, client_secret):
         """Set up an OAuth session and get a token."""
@@ -253,7 +255,7 @@ class FINEOSClient(client.AbstractFINEOSClient):
         """Make a request to the Web Services Composer API."""
         url = urllib.parse.urljoin(self.wscomposer_url, path)
         headers = {"Content-Type": "application/xml"}
-        return self._request(requests.request, method, url, headers, data=xml_data)
+        return self._request(self.wscomposer_session.request, method, url, headers, data=xml_data)
 
     def find_employer(self, employer_fein: str) -> str:
         response = self._wscomposer_request(
