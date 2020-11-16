@@ -20,7 +20,24 @@ exports[`LeavePeriodIntermittent renders the page with bonding leave content 1`]
         },
       ]
     }
-    hint={null}
+    hint={
+      <Trans
+        components={
+          Object {
+            "li": <li />,
+            "ul": <ul
+              className="usa-list"
+            />,
+          }
+        }
+        i18nKey="pages.claimsLeavePeriodIntermittent.hasLeaveHint"
+        tOptions={
+          Object {
+            "context": "bonding",
+          }
+        }
+      />
+    }
     label="Do you need to take off work in uneven blocks of time (intermittent leave)?"
     name="has_intermittent_leave_periods"
     onChange={[Function]}
@@ -112,7 +129,24 @@ exports[`LeavePeriodIntermittent renders the page with medical leave content 1`]
         },
       ]
     }
-    hint="Refer to Question 31 in the \\"Estimate leave details\\" section of the certification form (page 6)."
+    hint={
+      <Trans
+        components={
+          Object {
+            "li": <li />,
+            "ul": <ul
+              className="usa-list"
+            />,
+          }
+        }
+        i18nKey="pages.claimsLeavePeriodIntermittent.hasLeaveHint"
+        tOptions={
+          Object {
+            "context": "medical",
+          }
+        }
+      />
+    }
     label="Do you need to take off work in uneven blocks of time (intermittent leave)?"
     name="has_intermittent_leave_periods"
     onChange={[Function]}

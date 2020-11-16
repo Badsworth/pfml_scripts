@@ -107,9 +107,11 @@ export const LeavePeriodIntermittent = (props) => {
           },
         ]}
         hint={
-          claim.isMedicalLeave
-            ? t("pages.claimsLeavePeriodIntermittent.hasLeaveHint_medical")
-            : null // could use `context` if another leave type needs hint text
+          <Trans
+            i18nKey="pages.claimsLeavePeriodIntermittent.hasLeaveHint"
+            tOptions={{ context: contentContext }}
+            components={{ ul: <ul className="usa-list" />, li: <li /> }}
+          />
         }
         label={t("pages.claimsLeavePeriodIntermittent.hasLeaveLabel")}
         type="radio"

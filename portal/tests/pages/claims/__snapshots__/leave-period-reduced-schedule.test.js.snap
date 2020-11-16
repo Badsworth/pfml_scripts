@@ -21,7 +21,7 @@ exports[`LeavePeriodReducedSchedule renders the page with bonding leave content 
       ]
     }
     hint={null}
-    label="Do you need to work a reduced schedule for a period of time (reduced leave schedule)?"
+    label="Do you need to work fewer hours than usual for a period of time (reduced leave schedule)?"
     name="has_reduced_schedule_leave_periods"
     onChange={[Function]}
     type="radio"
@@ -104,7 +104,7 @@ exports[`LeavePeriodReducedSchedule renders the page with medical leave content 
       ]
     }
     hint="Refer to Question 28 in the \\"Estimate leave details\\" section of the certification form (page 6)."
-    label="Do you need to work a reduced schedule for a period of time (reduced leave schedule)?"
+    label="Do you need to work fewer hours than usual for a period of time (reduced leave schedule)?"
     name="has_reduced_schedule_leave_periods"
     onChange={[Function]}
     type="radio"

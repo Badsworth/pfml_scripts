@@ -710,6 +710,8 @@ const pages = {
     endDateLabel: "Last day of leave",
     endDateLabel_medical:
       "Last day of leave or re$t(chars.nbhyphen)evaluation date",
+    hasLeaveHint_bonding:
+      "For example, you need to take time off for: <ul><li>Court dates for your foster child</li><li>Social worker visits</li><li>Gaps in your childcare</li></ul>",
     hasLeaveHint_medical:
       'Refer to Question 31 in the "Estimate leave details" section of the certification form (page 6).',
     hasLeaveLabel:
@@ -735,7 +737,7 @@ const pages = {
     hasLeaveHint_medical:
       'Refer to Question 28 in the "Estimate leave details" section of the certification form (page 6).',
     hasLeaveLabel:
-      "Do you need to work a reduced schedule for a period of time (reduced leave schedule)?",
+      "Do you need to work fewer hours than usual for a period of time (reduced leave schedule)?",
     medicalAlert: "$t(shared.leavePeriodMedicalAlert)",
     startDateLabel: "First day of leave",
     title: "$t(shared.claimsLeaveDetailsTitle)",
