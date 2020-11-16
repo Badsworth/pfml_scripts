@@ -751,6 +751,34 @@ def test_reduced_leave_period_required_fields(test_db_session, initialize_factor
             message="start_date is required",
             field="leave_details.reduced_schedule_leave_periods[0].start_date",
         ),
+    ] == issues
+
+
+@freeze_time("2021-01-01")
+def test_reduced_leave_period_required_minutes_fields(
+    test_db_session, initialize_factories_session
+):
+    """Minutes fields are reported as missing when at least one is not None or 0
+    """
+
+    test_leave_periods = [
+        ReducedScheduleLeavePeriodFactory.create(
+            start_date=date(2021, 2, 1),
+            end_date=date(2021, 2, 15),
+            sunday_off_minutes=15,
+            monday_off_minutes=None,
+            tuesday_off_minutes=None,
+            wednesday_off_minutes=None,
+            thursday_off_minutes=None,
+            friday_off_minutes=None,
+            saturday_off_minutes=None,
+        )
+    ]
+    test_app = ApplicationFactory.create(reduced_schedule_leave_periods=test_leave_periods)
+
+    issues = get_reduced_schedule_leave_issues(test_app)
+
+    assert [
         Issue(
             type=IssueType.required,
             message="monday_off_minutes is required",
@@ -780,11 +808,6 @@ def test_reduced_leave_period_required_fields(test_db_session, initialize_factor
             type=IssueType.required,
             message="saturday_off_minutes is required",
             field="leave_details.reduced_schedule_leave_periods[0].saturday_off_minutes",
-        ),
-        Issue(
-            type=IssueType.required,
-            message="sunday_off_minutes is required",
-            field="leave_details.reduced_schedule_leave_periods[0].sunday_off_minutes",
         ),
     ] == issues
 

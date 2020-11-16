@@ -501,13 +501,6 @@ def get_reduced_schedule_leave_issues(application: Application) -> List[Issue]:
     required_leave_period_fields = [
         "end_date",
         "start_date",
-        "monday_off_minutes",
-        "tuesday_off_minutes",
-        "wednesday_off_minutes",
-        "thursday_off_minutes",
-        "friday_off_minutes",
-        "saturday_off_minutes",
-        "sunday_off_minutes",
     ]
 
     for i, current_period in enumerate(leave_periods):
@@ -560,6 +553,24 @@ def get_reduced_schedule_leave_minutes_issues(
                 rule=IssueRule.min_reduced_leave_minutes,
             )
         )
+    else:
+        # We only check if all minute fields are set when the min_reduced_leave_minutes rule
+        # is fulfilled. If that rule is not fulfilled, it means all fields are empty or set to 0.
+        # We don't want to show the min_reduced_leave_minutes issue alongside the following issues
+        # because this is a confusing user experience when these fields are gathered through a
+        # single field, which is the user experience when someone works a variable work schedule.
+        # For that scenario, the min_reduced_leave_minutes issue is all that's needed.
+        for field in minute_fields:
+            val = getattr(leave_period, field, None)
+
+            if val is None:
+                issues.append(
+                    Issue(
+                        type=IssueType.required,
+                        message=f"{field} is required",
+                        field=f"{leave_period_path}.{field}",
+                    )
+                )
 
     if application.work_pattern:
         work_pattern_days = application.work_pattern.work_pattern_days
