@@ -6,12 +6,13 @@ data "aws_ecr_repository" "app" {
 }
 
 resource "aws_ecs_service" "app" {
-  name             = "${local.app_name}-${var.environment_name}"
-  task_definition  = aws_ecs_task_definition.app.arn
-  cluster          = var.service_ecs_cluster_arn
-  launch_type      = "FARGATE"
-  platform_version = "1.4.0"
-  desired_count    = var.service_app_count
+  name                              = "${local.app_name}-${var.environment_name}"
+  task_definition                   = aws_ecs_task_definition.app.arn
+  cluster                           = var.service_ecs_cluster_arn
+  launch_type                       = "FARGATE"
+  platform_version                  = "1.4.0"
+  desired_count                     = var.service_app_count
+  health_check_grace_period_seconds = 300 # 5 minutes
 
   network_configuration {
     assign_public_ip = false
