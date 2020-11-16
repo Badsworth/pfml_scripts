@@ -70,13 +70,27 @@ export const CreateAccount = (props) => {
       <Button type="submit" loading={handleSubmit.isThrottled}>
         {t("pages.authCreateAccount.createAccountButton")}
       </Button>
-      <div className="margin-top-2 text-base text-bold">
+      <div className="border-top-2px border-base-lighter margin-top-4" />
+      <div className="margin-top-4 text-base-darkest text-bold">
         {t("pages.authCreateAccount.haveAnAccountFooterLabel")}
         <Link href={routes.auth.login}>
           <a className="display-inline-block margin-left-1">
             {t("pages.authCreateAccount.logInFooterLink")}
           </a>
         </Link>
+      </div>
+      <div className="margin-top-2 text-base-darkest">
+        <Trans
+          i18nKey="pages.authCreateAccount.areAnEmployer"
+          components={{
+            "employer-create-account-link": (
+              <a
+                className="display-inline-block"
+                href={routes.employers.createAccount}
+              />
+            ),
+          }}
+        />
       </div>
     </form>
   );

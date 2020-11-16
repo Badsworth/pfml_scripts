@@ -439,6 +439,8 @@ const pages = {
       "<p>You can apply online if you’re currently employed in Massachusetts.</p><p>If you’re self-employed or unemployed, apply by calling the Department of Family and Medical Leave Contact Center at $t(shared.contactCenterPhoneNumber).</p><p>Learn more about the <mass-benefits-timeline-link>PFML benefit timeline on mass.gov</mass-benefits-timeline-link>.</p>",
     alertHeading:
       "You can now apply for paid family leave to bond with your$t(chars.nbsp)child.",
+    areAnEmployer:
+      "<strong>Are you a Massachusetts employer?</strong> <employer-create-account-link>Create an employer account</employer-create-account-link> to manage leave for your team.",
     createAccountButton: "Create account",
     haveAnAccountFooterLabel: "Have an account?",
     logInFooterLink: "Log in",
@@ -1640,7 +1642,7 @@ const components = {
     appTitle: "Paid Family and Medical Leave",
   },
   signUp: {
-    createAccountButton: "Create account",
+    createAccountButton: "Create an account to apply for paid leave",
     haveAnAccountFooterLabel: "Have an account?",
     passwordHint: "$t(shared.passwordHint)",
     passwordLabel: "$t(shared.passwordLabel)",
