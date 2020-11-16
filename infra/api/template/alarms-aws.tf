@@ -14,6 +14,21 @@ resource "aws_sns_topic" "api-high-priority-alerts-topic" {
   display_name = "PFML API: High Priority Alerts"
 }
 
+# Defines SNS topic subscriptions for AWS Cloudwatch
+resource "aws_sns_topic_subscription" "low-priority" {
+  topic_arn              = aws_sns_topic.api-low-priority-alerts-topic.arn
+  protocol               = "https"
+  endpoint               = "https://events.pagerduty.com/integration/${data.terraform_remote_state.pagerduty.outputs.low_priority_cloudwatch_integration_key}/enqueue"
+  endpoint_auto_confirms = true
+}
+
+resource "aws_sns_topic_subscription" "high-priority" {
+  count                  = var.environment_name == "prod" ? 1 : 0
+  topic_arn              = aws_sns_topic.api-high-priority-alerts-topic.arn
+  protocol               = "https"
+  endpoint               = "https://events.pagerduty.com/integration/${data.terraform_remote_state.pagerduty.outputs.high_priority_cloudwatch_integration_key}/enqueue"
+  endpoint_auto_confirms = true
+}
 # ----------------------------------------------------------------------------------------------------------------------
 
 resource "aws_cloudwatch_metric_alarm" "api_cpu_warn" {
@@ -97,3 +112,4 @@ resource "aws_cloudwatch_metric_alarm" "api_ram_crit" {
 }
 
 # ----------------------------------------------------------------------------------------------------------------------
+

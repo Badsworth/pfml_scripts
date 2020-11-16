@@ -43,3 +43,13 @@ locals {
 module "constants" {
   source = "../../constants"
 }
+
+data "terraform_remote_state" "pagerduty" {
+  backend = "s3"
+
+  config = {
+    bucket = "massgov-pfml-aws-account-mgmt"
+    key    = "terraform/pagerduty.tfstate"
+    region = "us-east-1"
+  }
+}
