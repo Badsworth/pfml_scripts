@@ -25,7 +25,7 @@ def load_all(db_session: db.Session, fineos: AbstractFINEOSClient) -> LoadEmploy
     start_time = utcnow()
     report = LoadEmployersReport(start=start_time.isoformat())
 
-    employers_query = db_session.query(Employer).filter(Employer.fineos_customer_nbr.is_(None))
+    employers_query = db_session.query(Employer).filter(Employer.fineos_employer_id.is_(None))
 
     employers = db.windowed_query(employers_query, Employer.employer_id, 1000)
 

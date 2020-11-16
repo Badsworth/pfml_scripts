@@ -15,7 +15,7 @@
 import datetime
 import mimetypes
 import uuid
-from typing import List, Optional, Set, Tuple
+from typing import List, Optional, Set
 
 import massgov.pfml.db
 import massgov.pfml.fineos.models
@@ -622,22 +622,16 @@ def download_document(
 
 def create_or_update_employer(
     fineos: massgov.pfml.fineos.AbstractFINEOSClient, employer: Employer,
-) -> Tuple[str, int]:
-    # Determine if operation is create or update by querying
-    # for a FINEOS customer number in the employer model.
-    #
-    # Attribute fineos_customer_nbr is a key we generate to
-    # indicate to FINEOS our concept of uniqueness. It is
-    # generated in the code below.
-    #
-    # The FINEOS API to create an employer expects this value
-    # in the Organization's CustomerNo attribute (see models).
-    is_create = employer.fineos_customer_nbr is None
+) -> int:
+    # Determine if operation is create or update by seeing if the API Employer
+    # record has a fineos_employer_id already.
+    is_create = employer.fineos_employer_id is None
 
     employer_request_body = massgov.pfml.fineos.models.CreateOrUpdateEmployer(
-        fineos_customer_nbr=(
-            f"pfml_api_{str(uuid.uuid4())}" if is_create else employer.fineos_customer_nbr
-        ),
+        # `fineos_customer_nbr` is used as the Organization's CustomerNo
+        # attribute for the request, which FINOES uses to determine if this is a
+        # create or update on their end.
+        fineos_customer_nbr=str(employer.employer_id),
         employer_fein=employer.employer_fein,
         employer_legal_name=employer.employer_name,
         employer_dba=employer.employer_dba,
@@ -657,12 +651,9 @@ def create_or_update_employer(
         },
     )
 
-    if is_create:
-        # If successful save ExternalIdentifier in the database
-        employer.fineos_customer_nbr = fineos_customer_nbr
-        employer.fineos_employer_id = fineos_employer_id
+    employer.fineos_employer_id = fineos_employer_id
 
-    return fineos_customer_nbr, fineos_employer_id
+    return fineos_employer_id
 
 
 def create_service_agreement_for_employer(

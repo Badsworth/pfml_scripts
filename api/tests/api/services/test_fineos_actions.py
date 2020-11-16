@@ -179,15 +179,10 @@ def test_create_employer_simple(test_db_session):
     test_db_session.add(employer)
     test_db_session.commit()
 
-    assert employer.fineos_customer_nbr is None
     assert employer.fineos_employer_id is None
 
-    fineos_customer_nbr, fineos_employer_id = fineos_actions.create_or_update_employer(
-        fineos_client, employer
-    )
+    fineos_employer_id = fineos_actions.create_or_update_employer(fineos_client, employer)
 
-    assert fineos_customer_nbr is not None
-    assert employer.fineos_customer_nbr == fineos_customer_nbr
     assert employer.fineos_employer_id == fineos_employer_id
 
 
@@ -198,44 +193,13 @@ def test_update_employer_simple(test_db_session):
     employer.employer_fein = "888447576"
     employer.employer_name = "Test Organization Name"
     employer.employer_dba = "Test Organization DBA"
-    employer.fineos_customer_nbr = "pfml_api_testing_update"
     employer.fineos_employer_id = 250
     test_db_session.add(employer)
     test_db_session.commit()
 
-    fineos_customer_nbr, fineos_employer_id = fineos_actions.create_or_update_employer(
-        fineos_client, employer
-    )
+    fineos_employer_id = fineos_actions.create_or_update_employer(fineos_client, employer)
 
-    assert fineos_customer_nbr is not None
-    assert employer.fineos_customer_nbr == fineos_customer_nbr
     assert employer.fineos_employer_id == fineos_employer_id
-
-
-def test_update_employer_missing_employer_id_not_populated(test_db_session):
-    fineos_client = massgov.pfml.fineos.MockFINEOSClient()
-
-    employer = Employer()
-    employer.employer_fein = "888447576"
-    employer.employer_name = "Test Organization Name"
-    employer.employer_dba = "Test Organization DBA"
-
-    # this situation of having a customer number but not employer id should
-    # never happen, but the code does not set these on updates, so testing that
-    # behavior
-    employer.fineos_customer_nbr = "pfml_api_testing_update"
-    employer.fineos_employer_id = None
-
-    test_db_session.add(employer)
-    test_db_session.commit()
-
-    fineos_customer_nbr, fineos_employer_id = fineos_actions.create_or_update_employer(
-        fineos_client, employer
-    )
-
-    assert fineos_customer_nbr is not None
-    assert employer.fineos_customer_nbr == fineos_customer_nbr
-    assert employer.fineos_employer_id is None
 
 
 def test_employer_creation_exception(test_db_session):
@@ -245,7 +209,6 @@ def test_employer_creation_exception(test_db_session):
     employer.employer_fein = "999999999"
     employer.employer_name = "Test Organization Dupe"
     employer.employer_dba = "Test Organization Dupe DBA"
-    employer.fineos_customer_nbr = "pfml_api_testing_duplicate"
     test_db_session.add(employer)
     test_db_session.commit()
 
@@ -338,9 +301,7 @@ def test_create_service_agreement_for_employer(test_db_session):
     employer.employer_dba = "Test Organization DBA"
     test_db_session.add(employer)
 
-    fineos_customer_nbr, fineos_employer_id = fineos_actions.create_or_update_employer(
-        fineos_client, employer
-    )
+    fineos_actions.create_or_update_employer(fineos_client, employer)
 
     fineos_sa_id = fineos_actions.create_service_agreement_for_employer(fineos_client, employer)
 

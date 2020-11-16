@@ -242,9 +242,7 @@ def get_latest_employer_for_updates(employer_employee_list: List) -> List:
 
 # When loading employers to FINEOS the API we use requires us to
 # generate a unique key which we pass in the attribute CustomerNo.
-# We store that value in fineos_customer_nbr in the employer model.
-# FINEOS uses this key to determine if a request is a create or an
-# update.
+#
 # The API returns the FINEOS primary key for the organization it
 # created in the response as attribute CUSTOMER_NUMBER. We store
 # this value in the fineos_employer_id field in the employer model.

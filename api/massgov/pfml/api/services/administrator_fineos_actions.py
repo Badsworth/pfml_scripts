@@ -164,7 +164,7 @@ def register_leave_admin_with_fineos(
         fineos_web_id = f"pfml_leave_admin_{str(uuid.uuid4())}"
         leave_admin_create_payload = CreateOrUpdateLeaveAdmin(
             fineos_web_id=fineos_web_id,
-            fineos_employer_id=employer.fineos_employer_id,
+            fineos_employer_id=str(employer.fineos_employer_id),
             admin_full_name=admin_full_name,
             admin_area_code=admin_area_code,
             admin_phone_number=admin_phone_number,

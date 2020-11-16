@@ -114,7 +114,6 @@ class EmployerOnlyDORDataFactory(EmployerOnlyRequiredFactory):
 
 
 class EmployerFactory(EmployerOnlyDORDataFactory):
-    fineos_customer_nbr = f"pfml_api_{str(Generators.UuidObj)}"
     fineos_employer_id = random.randint(100, 1000)
 
 

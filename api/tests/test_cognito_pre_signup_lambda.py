@@ -17,7 +17,9 @@ def event_dict(event_json):
     return json.loads(event_json)
 
 
-def test_main_success_on_existing_fein_with_fineos_nbr(test_db_session, event_dict, logging_fix):
+def test_main_success_on_existing_fein_with_fineos_employer_id(
+    test_db_session, event_dict, logging_fix
+):
     from massgov.pfml.db.models.employees import Employer
     import massgov.pfml.cognito_pre_signup_lambda.main as main
 
