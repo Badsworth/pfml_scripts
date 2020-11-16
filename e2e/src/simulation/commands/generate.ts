@@ -101,6 +101,7 @@ const cmd: CommandModule<SystemWideArgs, GenerateArgs> = {
           employeeFactory,
           employerFactory,
         });
+        console.log(`Generated ${i + 1} claims out of ${limit}`);
       }
     })();
 

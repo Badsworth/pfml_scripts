@@ -1,4 +1,5 @@
 import faker from "faker";
+import unique from "./unique";
 import { EmployerFactory, Employer } from "./types";
 
 /**
@@ -11,14 +12,29 @@ export function fromEmployersFactory(employers: Employer[]): EmployerFactory {
   };
 }
 
+const makeAccountKey = unique(() =>
+  faker.helpers.replaceSymbolWithNumber("###########")
+);
+const makeCompanyName = unique(
+  () =>
+    `${faker.company
+      .bs()
+      .replace(/(^|\s|-)\w/g, (char) =>
+        char.toUpperCase()
+      )} ${faker.company.companySuffix()}`
+);
+const makeFEIN = unique(() =>
+  faker.helpers.replaceSymbolWithNumber("##-#######")
+);
+
 /**
  * Creates brand new, random employers.
  */
 export const randomEmployer: EmployerFactory = () => {
   return {
-    accountKey: faker.helpers.replaceSymbolWithNumber("###########"),
-    name: faker.company.companyName(0),
-    fein: faker.helpers.replaceSymbolWithNumber("##-#######"),
+    accountKey: makeAccountKey(),
+    name: makeCompanyName(),
+    fein: makeFEIN(),
     street: faker.address.streetAddress(),
     city: faker.address.city(),
     state: "MA",
