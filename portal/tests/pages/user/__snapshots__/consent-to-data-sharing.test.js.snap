@@ -93,7 +93,7 @@ exports[`ConsentToDataSharing shows the correct contents for employers 1`] = `
   <p
     className="margin-bottom-2"
   >
-    The information you provide on this website will be used to administer the Department of Family and Medical Leave (DFML) program.
+    The information you provide on this website will be used to administer the Paid Family and Medical Leave (PFML) program.
   </p>
   <Accordion>
     <AccordionItem
@@ -158,7 +158,7 @@ exports[`ConsentToDataSharing shows the correct contents for employers 1`] = `
     noIcon={true}
     state="info"
   >
-    By continuing, I am indicating that I have read and understood the above user agreements. I give the DFML permission to collect, share, and use my information consistent with the terms of the agreements linked above.
+    By continuing, I am indicating that I have read and understood the above user agreements. I give the Department of Family and Medical Leave permission to collect, share, and use my information consistent with the terms of the agreements linked above.
   </Alert>
   <Button
     loading={false}
