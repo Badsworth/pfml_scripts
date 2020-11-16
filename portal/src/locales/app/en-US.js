@@ -1450,7 +1450,16 @@ const pages = {
     title: "Thanks for reviewing the application",
   },
   index: {
-    title: "Massachusetts workers can now take paid family and medical leave.",
+    claimantCreateAccountBody:
+      "Later this month, you can create an account to apply for paid family and medical leave. Learn more about the <mass-benefits-timeline-link>PFML benefit timeline on mass.gov</mass-benefits-timeline-link>.",
+    claimantCreateAccountHeading: "Workers",
+    createAccountHeading: "Create an account",
+    createAccountLink: "Create an account",
+    employerCreateAccountBody:
+      "Register now so your team is ready for December 15, 2020, when workers can start requesting leave.",
+    employerCreateAccountHeading: "Employers",
+    employerTitle:
+      "Massachusetts employers: Register now so you can manage leave for your team.",
   },
   userConsentToDataSharing: {
     agreementBody:

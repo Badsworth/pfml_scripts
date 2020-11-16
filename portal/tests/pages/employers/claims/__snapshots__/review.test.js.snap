@@ -390,6 +390,7 @@ exports[`Review renders the page 1`] = `
           "submit": [MockFunction],
         },
         "portalFlow": Object {
+          "goTo": [MockFunction],
           "goToNextPage": [MockFunction],
           "goToPageFor": [MockFunction],
           "pathname": "/mock-portalFlow-pathname",

@@ -15,12 +15,23 @@ async function launch({ waitForSelector = "#page" }) {
 }
 
 describe("E2E: Routing", () => {
+  beforeAll(async () => {
+    await launch({ waitForSelector: "h1" });
+  });
+
+  it("renders dashboard with login link", async () => {
+    expect.assertions();
+
+    const loginLink = await page.waitForSelector("a[href='/login/']");
+
+    expect(loginLink).not.toBeNull();
+
+    await loginLink.click();
+    await page.waitForNavigation();
+  });
+
   describe("when user is authenticated", () => {
     beforeAll(async () => {
-      // Load log in page
-      const signInHeaderSelector = "form";
-      await launch({ waitForSelector: signInHeaderSelector });
-
       const usernameField = await page.$('input[name="username"]');
       const passwordField = await page.$('input[name="password"]');
       const submitButton = await page.$('button[type="submit"]');

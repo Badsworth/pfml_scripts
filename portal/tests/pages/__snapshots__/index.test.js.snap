@@ -1,0 +1,100 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Index renders index content 1`] = `
+<Fragment>
+  <div
+    className="margin-y-3 measure-5"
+  >
+    <Title>
+      Massachusetts employers: Register now so you can manage leave for your team.
+    </Title>
+  </div>
+  <div
+    className="margin-top-6 measure-7"
+  >
+    <Heading
+      level="2"
+    >
+      Create an account
+    </Heading>
+    <div
+      className="grid-row grid-gap"
+    >
+      <article
+        className="tablet:grid-col margin-bottom-3"
+      >
+        <div
+          className="bg-base-lightest padding-3"
+        >
+          <Heading
+            level="3"
+          >
+            Employers
+          </Heading>
+          <p>
+            Register now so your team is ready for December 15, 2020, when workers can start requesting leave.
+          </p>
+          <ButtonLink
+            className="margin-top-3"
+            href="/employers/create-account"
+          >
+            Create an account
+          </ButtonLink>
+          <div
+            className="margin-top-2 text-base text-bold"
+          >
+            Have an account?
+            <Link
+              href="/login"
+            >
+              <a
+                className="display-inline-block margin-left-1"
+              >
+                Log in
+              </a>
+            </Link>
+          </div>
+        </div>
+      </article>
+      <article
+        className="tablet:grid-col"
+      >
+        <div
+          className="bg-base-lightest padding-3"
+        >
+          <Heading
+            level="3"
+          >
+            Workers
+          </Heading>
+          <p>
+            <Trans
+              components={
+                Object {
+                  "mass-benefits-timeline-link": <a
+                    href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-timeline#december-2,-2020-"
+                  />,
+                }
+              }
+              i18nKey="pages.index.claimantCreateAccountBody"
+            />
+          </p>
+        </div>
+      </article>
+    </div>
+  </div>
+</Fragment>
+`;
+
+exports[`Index renders index content 2`] = `
+Array [
+  "Later this month, you can create an account to apply for paid family and medical leave. Learn more about the ",
+  <a
+    href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-timeline#december-2,-2020-"
+    key="1"
+  >
+    PFML benefit timeline on mass.gov
+  </a>,
+  ".",
+]
+`;
