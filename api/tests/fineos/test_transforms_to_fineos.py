@@ -73,7 +73,7 @@ class TestTransformEformAttributes:
         assert len(result) == 6
         start, end, l_type, start2, end2, l_type2 = result
         assert start2.name == "PastLeaveStartDate2"
-        assert end2.name == "Pastleaveenddate2"
+        assert end2.name == "PastLeaveEndDate2"
         assert l_type2.name == "NatureofLeave2"
         assert start.dateValue == start2.dateValue
         assert end.dateValue == end2.dateValue

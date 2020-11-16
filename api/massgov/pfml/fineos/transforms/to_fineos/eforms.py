@@ -22,7 +22,7 @@ class TransformEmployerBenefit(TransformEformAttributes):
         "benefit_amount_dollars": {"name": "Amount", "type": "decimalValue"},
         "benefit_amount_frequency": {"name": "Frequency", "type": "stringValue"},
         "benefit_start_date": {"name": "EmployerBenefitStartDate", "type": "dateValue"},
-        "benefit_end_date": {"name": "EmployerBenefitenddate", "type": "dateValue"},
+        "benefit_end_date": {"name": "EmployerBenefitEndDate", "type": "dateValue"},
         "benefit_type": {"name": "EmployerBenefitType", "type": "stringValue"},
     }
 
@@ -30,7 +30,7 @@ class TransformEmployerBenefit(TransformEformAttributes):
 class TransformPreviousLeave(TransformEformAttributes):
     ATTRIBUTE_MAP = {
         "leave_start_date": {"name": "PastLeaveStartDate", "type": "dateValue"},
-        "leave_end_date": {"name": "Pastleaveenddate", "type": "dateValue"},
+        "leave_end_date": {"name": "PastLeaveEndDate", "type": "dateValue"},
         "leave_type": {"name": "NatureofLeave", "type": "stringValue"},
     }
 
