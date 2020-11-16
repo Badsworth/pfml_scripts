@@ -997,7 +997,7 @@ const pages = {
     pregnancyOrRecentBirth_yes: "$t(shared.choiceYes)",
     previousLeaveEntryLabel: "$t(shared.previousLeaveEntryPrefix) {{count}}",
     previousLeaveLabel: "Previous paid or unpaid leave?",
-    reducedLeaveScheduleLabel: "Reduced leave schedule",
+    reducedLeaveScheduleLabel: "Hours off per week",
     reducedLeaveScheduleWeeklyTotal: "$t(shared.displayTime)",
     reducedLeaveScheduleWeeklyTotal_noMinutes:
       "$t(shared.displayTime_noMinutes)",

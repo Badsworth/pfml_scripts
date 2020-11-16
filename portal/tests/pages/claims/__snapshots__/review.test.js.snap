@@ -585,7 +585,7 @@ exports[`PreviousLeaveList when data are missing doesn't render missing data 1`]
 
 exports[`Reduced leave renders WeeklyTimeTable for the reduced leave period when work pattern is Fixed 1`] = `
 <ReviewRow
-  label="Reduced leave schedule"
+  label="Hours off per week"
   level="4"
   noBorder={true}
 >
@@ -608,7 +608,7 @@ exports[`Reduced leave renders WeeklyTimeTable for the reduced leave period when
 
 exports[`Reduced leave renders total time for the reduced leave period when work pattern is Variable 1`] = `
 <ReviewRow
-  label="Reduced leave schedule"
+  label="Hours off per week"
   level="4"
   noBorder={false}
 >

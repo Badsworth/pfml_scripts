@@ -256,7 +256,7 @@ describe("Reduced leave", () => {
       diveLevels,
     });
 
-    expect(wrapper.find({ label: "Reduced leave schedule" })).toMatchSnapshot();
+    expect(wrapper.find({ label: "Hours off per week" })).toMatchSnapshot();
   });
 
   it("renders total time for the reduced leave period when work pattern is Variable", () => {
@@ -271,7 +271,7 @@ describe("Reduced leave", () => {
       diveLevels,
     });
 
-    expect(wrapper.find({ label: "Reduced leave schedule" })).toMatchSnapshot();
+    expect(wrapper.find({ label: "Hours off per week" })).toMatchSnapshot();
   });
 });
 
