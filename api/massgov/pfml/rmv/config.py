@@ -42,7 +42,7 @@ class RmvConfig:
         if check_behavior == RMVCheckBehavior.MOCK:
             base_url = ""
             pkcs12_pw = ""
-            pkcs12_data = ""
+            pkcs12_data = b""
         else:
             base_url = os.environ["RMV_CLIENT_BASE_URL"]
             pkcs12_pw = os.environ["RMV_CLIENT_CERTIFICATE_PASSWORD"]
