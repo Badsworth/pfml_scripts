@@ -92,13 +92,20 @@ resource "aws_lambda_function" "cognito_post_confirmation" {
 
   environment {
     variables = {
-      DB_HOST                               = aws_db_instance.default.address
-      DB_NAME                               = aws_db_instance.default.name
-      DB_USERNAME                           = "pfml_api"
-      NEW_RELIC_ACCOUNT_ID                  = local.newrelic_account_id
-      NEW_RELIC_TRUSTED_ACCOUNT_KEY         = local.newrelic_trusted_account_key
-      NEW_RELIC_LAMBDA_HANDLER              = "handler.handler" # the actual lambda entrypoint
-      NEW_RELIC_DISTRIBUTED_TRACING_ENABLED = true
+      DB_HOST                                     = aws_db_instance.default.address
+      DB_NAME                                     = aws_db_instance.default.name
+      DB_USERNAME                                 = "pfml_api"
+      NEW_RELIC_ACCOUNT_ID                        = local.newrelic_account_id
+      NEW_RELIC_TRUSTED_ACCOUNT_KEY               = local.newrelic_trusted_account_key
+      NEW_RELIC_LAMBDA_HANDLER                    = "handler.handler" # the actual lambda entrypoint
+      NEW_RELIC_DISTRIBUTED_TRACING_ENABLED       = true
+      FINEOS_CLIENT_CUSTOMER_API_URL              = var.fineos_client_customer_api_url
+      FINEOS_CLIENT_GROUP_CLIENT_API_URL          = var.fineos_client_group_client_api_url
+      FINEOS_CLIENT_INTEGRATION_SERVICES_API_URL  = var.fineos_client_integration_services_api_url
+      FINEOS_CLIENT_WSCOMPOSER_API_URL            = var.fineos_client_wscomposer_api_url
+      FINEOS_CLIENT_OAUTH2_URL                    = var.fineos_client_oauth2_url
+      FINEOS_CLIENT_OAUTH2_CLIENT_ID              = var.fineos_client_oauth2_client_id
+      FINEOS_CLIENT_OAUTH2_CLIENT_SECRET_SSM_PATH = "/service/${local.app_name}/${var.environment_name}/fineos_oauth2_client_secret"
     }
   }
 }

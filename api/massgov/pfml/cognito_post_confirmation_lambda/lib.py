@@ -40,7 +40,7 @@ def handler(
     cognito_metadata = event.request.clientMetadata
 
     if cognito_metadata is not None and "ein" in cognito_metadata:
-        logger.debug("Signup is for a leave administrator account")
+        logger.info("Signup is for a leave administrator account")
         leave_admin_create(
             db_session=db_session,
             active_directory_id=cognito_user_attrs["sub"],
@@ -50,7 +50,7 @@ def handler(
 
         return event
 
-    logger.debug("Signup is for a claimant account")
+    logger.info("Signup is for a claimant account")
 
     user = (
         db_session.query(User)
@@ -94,6 +94,8 @@ def leave_admin_create(
 
     db_session.add(user)
     db_session.add(user_role)
+
+    logger.info("Creating user in Fineos")
 
     register_leave_admin_with_fineos(
         # TODO: Set a real admin full name - https://lwd.atlassian.net/browse/EMPLOYER-540
