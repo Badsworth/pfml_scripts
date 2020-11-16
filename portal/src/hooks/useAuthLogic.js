@@ -92,8 +92,6 @@ const useAuthLogic = ({ appErrorsLogic, portalFlow }) => {
 
       setIsLoggedIn(true);
 
-      // TODO (EMPLOYER-362): Update conditional check based on login response returning user role
-      // Only redirect to `/employers` if user role is employer
       if (next) {
         portalFlow.goTo(next);
       } else {

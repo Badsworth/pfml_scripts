@@ -94,7 +94,7 @@ export const CreateAccount = (props) => {
       </Button>
       <div className="margin-top-2 text-base text-bold">
         {t("pages.employersAuthCreateAccount.haveAnAccountFooterLabel")}
-        <Link href={routes.employers.login}>
+        <Link href={routes.auth.login}>
           <a className="display-inline-block margin-left-1">
             {t("pages.employersAuthCreateAccount.logInFooterLink")}
           </a>

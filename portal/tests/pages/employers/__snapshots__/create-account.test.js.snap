@@ -82,7 +82,7 @@ exports[`CreateAccount renders the page 1`] = `
   >
     Have an account?
     <Link
-      href="/employers/login"
+      href="/login"
     >
       <a
         className="display-inline-block margin-left-1"
