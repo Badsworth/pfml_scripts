@@ -16,7 +16,9 @@ import withEmployerClaim from "../../../hoc/withEmployerClaim";
 
 export const Status = (props) => {
   const {
-    claim,
+    appLogic: {
+      employers: { claim },
+    },
     query: { absence_id: absenceId },
   } = props;
   const { t } = useTranslation();
@@ -73,7 +75,11 @@ export const Status = (props) => {
 };
 
 Status.propTypes = {
-  claim: PropTypes.instanceOf(EmployerClaim),
+  appLogic: PropTypes.shape({
+    employers: PropTypes.shape({
+      claim: PropTypes.instanceOf(EmployerClaim),
+    }).isRequired,
+  }).isRequired,
   query: PropTypes.shape({
     absence_id: PropTypes.string,
   }).isRequired,

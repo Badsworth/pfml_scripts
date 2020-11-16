@@ -22,8 +22,9 @@ const employerDueDate = "2020-10-10";
 export const NewApplication = (props) => {
   const { t } = useTranslation();
   const {
-    appLogic,
-    claim,
+    appLogic: {
+      employers: { claim },
+    },
     query: { absence_id: absenceId },
   } = props;
 
@@ -31,12 +32,9 @@ export const NewApplication = (props) => {
     event.preventDefault();
 
     if (formState.hasReviewerVerified === "true") {
-      appLogic.portalFlow.goToNextPage(
-        { retrievedClaim: claim },
-        { absence_id: absenceId }
-      );
+      props.appLogic.portalFlow.goToNextPage({}, { absence_id: absenceId });
     } else if (formState.hasReviewerVerified === "false") {
-      appLogic.portalFlow.goToPageFor(
+      props.appLogic.portalFlow.goToPageFor(
         "CONFIRMATION",
         {},
         { absence_id: absenceId, due_date: employerDueDate }
@@ -151,12 +149,14 @@ export const NewApplication = (props) => {
 
 NewApplication.propTypes = {
   appLogic: PropTypes.shape({
+    employers: PropTypes.shape({
+      claim: PropTypes.instanceOf(EmployerClaim),
+    }).isRequired,
     portalFlow: PropTypes.shape({
       goToNextPage: PropTypes.func.isRequired,
       goToPageFor: PropTypes.func.isRequired,
     }).isRequired,
   }).isRequired,
-  claim: PropTypes.instanceOf(EmployerClaim),
   query: PropTypes.shape({
     absence_id: PropTypes.string.isRequired,
   }).isRequired,

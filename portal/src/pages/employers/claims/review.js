@@ -26,8 +26,9 @@ const hoursWorkedPerWeek = 40;
 
 export const Review = (props) => {
   const {
-    appLogic,
-    claim,
+    appLogic: {
+      employers: { claim },
+    },
     query: { absence_id: absenceId },
   } = props;
   const { t } = useTranslation();
@@ -41,8 +42,7 @@ export const Review = (props) => {
     if (claim) {
       setAmendedBenefits(claim.employer_benefits);
       setAmendedLeaves(claim.previous_leaves);
-      // TODO (EMPLOYER-519): Remove `hoursWorkedPerWeek` value when BE provides value
-      setAmendedHours(claim.hours_worked_per_week || hoursWorkedPerWeek);
+      setAmendedHours(claim.hours_worked_per_week);
     }
   }, [claim]);
 
@@ -65,7 +65,7 @@ export const Review = (props) => {
   };
 
   const handleSubmit = async ({ comment }) => {
-    await appLogic.employers.submit(absenceId, {
+    await props.appLogic.employers.submit(absenceId, {
       employer_benefits: amendedBenefits,
       previous_leaves: amendedLeaves,
       hours_worked_per_week: parseInt(amendedHours),
@@ -100,7 +100,7 @@ export const Review = (props) => {
       <LeaveSchedule claim={claim} />
       <SupportingWorkDetails
         // TODO (EMPLOYER-519): Change `hoursWorkedPerWeek` to `claim.hours_worked_per_week` when BE provides value
-        hoursWorkedPerWeek={claim.hours_worked_per_week}
+        hoursWorkedPerWeek={claim.hours_worked_per_week || hoursWorkedPerWeek}
         onChange={setAmendedHours}
       />
       <EmployerBenefits
@@ -126,10 +126,10 @@ Review.propTypes = {
   appLogic: PropTypes.shape({
     appErrors: PropTypes.object.isRequired,
     employers: PropTypes.shape({
+      claim: PropTypes.instanceOf(EmployerClaim),
       submit: PropTypes.func.isRequired,
     }).isRequired,
   }).isRequired,
-  claim: PropTypes.instanceOf(EmployerClaim),
   query: PropTypes.shape({
     absence_id: PropTypes.string.isRequired,
   }).isRequired,
