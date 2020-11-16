@@ -231,11 +231,8 @@ export function answerContinuousLeaveQuestion(
   });
 
   if (application.has_continuous_leave_periods) {
-    const startDate = new Date((leave && leave[0].start_date) as string);
-    const endDate = new Date((leave && leave[0].end_date) as string);
-
     onPage("leave-period-continuous");
-    completeDateForm(startDate, endDate);
+    completeDateForm(leave?.[0]?.start_date, leave?.[0]?.end_date);
   }
   cy.contains("button", "Save and continue").click();
 }
@@ -261,10 +258,8 @@ export function answerReducedLeaveQuestion(
 
   if (application.has_reduced_schedule_leave_periods) {
     const leave = application.leave_details.reduced_schedule_leave_periods;
-    const startDate = new Date((leave && leave[0].start_date) as string);
-    const endDate = new Date((leave && leave[0].end_date) as string);
     onPage("leave-period-reduced-schedule");
-    completeDateForm(startDate, endDate);
+    completeDateForm(leave?.[0]?.start_date, leave?.[0]?.end_date);
     cy.contains("button", "Save and continue").click();
     enterReducedWorkHours(leave);
   } else {
@@ -322,10 +317,8 @@ export function answerIntermittentLeaveQuestion(
       duration_basis: "Days",
     });
 
-    const startDate = new Date((leave && leave.start_date) as string);
-    const endDate = new Date((leave && leave.end_date) as string);
     onPage("leave-period-intermittent");
-    completeDateForm(startDate, endDate);
+    completeDateForm(leave?.start_date, leave?.end_date);
     cy.contains("button", "Save and continue").click();
     completeIntermittentLeaveDetails(leave);
   } else {
@@ -608,16 +601,25 @@ export function goToCertificationUploadPage(): void {
   });
 }
 
-export function completeDateForm(startDate: Date, endDate: Date): void {
+export function completeDateForm(
+  startDate?: string | null,
+  endDate?: string | null
+): void {
+  if (!startDate || !endDate) {
+    throw new Error("Unable to fill in empty dates.");
+  }
+
+  const [startYear, startMonth, startDay] = startDate.split("-");
+  const [endYear, endMonth, endDay] = endDate.split("-");
   cy.contains("fieldset", "First day of leave").within(() => {
-    cy.contains("Month").type(String(startDate.getMonth() + 1) as string);
-    cy.contains("Day").type(String(startDate.getUTCDate()) as string);
-    cy.contains("Year").type(String(startDate.getUTCFullYear()) as string);
+    cy.contains("Month").type(startMonth);
+    cy.contains("Day").type(startDay);
+    cy.contains("Year").type(startYear);
   });
   cy.contains("fieldset", "Last day of leave").within(() => {
-    cy.contains("Month").type(String(endDate.getMonth() + 1) as string);
-    cy.contains("Day").type(String(endDate.getUTCDate()) as string);
-    cy.contains("Year").type(String(endDate.getUTCFullYear()) as string);
+    cy.contains("Month").type(endMonth);
+    cy.contains("Day").type(endDay);
+    cy.contains("Year").type(endYear);
   });
 }
 
