@@ -30,10 +30,7 @@ export const steps: StoredStep[] = [
       await denyButton.click();
 
       const reasonSelect = await labelled(browser, "Denial Reason");
-      await browser.selectByText(reasonSelect, "Fully Denied");
-
-      const notesInput = await labelled(browser, "Notes");
-      await browser.type(notesInput, "Denied by PFML for LST purposes.");
+      await browser.selectByText(reasonSelect, "Non-eligible employee");
 
       const okButton = await waitForElement(
         browser,

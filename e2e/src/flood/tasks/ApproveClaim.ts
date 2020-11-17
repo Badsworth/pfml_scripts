@@ -67,6 +67,9 @@ export const steps: StoredStep[] = [
         const avgWeeklyWage = await labelled(browser, "Average weekly wage");
         await browser.clear(avgWeeklyWage);
         await browser.type(avgWeeklyWage, "1200");
+
+        // TODO: Benefit payment waiting period - Days
+
         const okButton = await waitForElement(
           browser,
           By.css("input[type='submit'][value='OK']")

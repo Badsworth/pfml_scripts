@@ -1,28 +1,31 @@
-import { StepFunction, TestData, Browser, step, By } from "@flood/element";
+import fs from "fs";
+import { StepFunction, TestData, Browser, step, By, ENV } from "@flood/element";
 import { DocumentUploadRequest } from "../../api";
 import {
   globalElementSettings as settings,
   PortalBaseUrl,
   APIBaseUrl,
   dataBaseUrl,
+  documentUrl,
   LSTSimClaim,
   LSTScenario,
   config,
 } from "../config";
 import {
   labelled,
+  assignTasks,
   waitForElement,
   waitForRealTimeSim,
   getRequestOptions,
   getDocumentType,
   evalFetch,
 } from "../helpers";
-import fs from "fs";
 
 let authToken: string;
 let applicationId: string;
+let fineosId: string;
 
-const pdfDocument = fs.readFileSync("data/HCP.pdf");
+const pdfDocument = fs.readFileSync(documentUrl);
 
 export { settings };
 export const scenario: LSTScenario = "PortalClaimSubmit";
@@ -39,6 +42,7 @@ export const steps = [
         url: await PortalBaseUrl,
       });
       await browser.visit(await PortalBaseUrl);
+      await browser.click(await waitForElement(browser, By.linkText("Log in")));
       await (await labelled(browser, "Email address")).type(
         await config("E2E_PORTAL_USERNAME")
       );
@@ -145,6 +149,7 @@ export const steps = [
         },
         "documents",
         "complete",
+        "assignTasks",
       ];
       // Execute all claim steps in queue and in order
       for (const claimPart of claimParts) {
@@ -166,7 +171,7 @@ export const steps = [
                 );
               }
               applicationId = res.data.application_id;
-              console.info("Created application", { authToken, applicationId });
+              console.info("Created application", res.status_code);
               break;
             // request to submit application
             case "submit":
@@ -205,7 +210,7 @@ export const steps = [
                     `Unable to upload document: ${JSON.stringify(res)}`
                   );
                 }
-                console.info("Uploaded document", res);
+                console.info("Uploaded document", res.status_code);
                 await browser.wait(1000);
               }
               break;
@@ -221,7 +226,18 @@ export const steps = [
                   `Unable to complete application: ${JSON.stringify(res)}`
                 );
               }
-              console.info("Completed application", res.status_code);
+              fineosId = res.data.fineos_absence_id;
+              console.info("Completed application", {
+                application_id: res.data.application_id,
+                fineos_absence_id: res.data.fineos_absence_id,
+              });
+              break;
+            case "assignTasks":
+              if (!ENV.FLOOD_LOAD_TEST) {
+                const assignTasksStep = assignTasks(fineosId);
+                console.info(assignTasksStep.name);
+                await assignTasksStep.test(browser, data);
+              }
               break;
             default:
               break;

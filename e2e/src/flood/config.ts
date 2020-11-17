@@ -8,9 +8,9 @@ export const globalElementSettings: TestSettings = {
   actionDelay: 1,
   stepDelay: 1,
   waitUntil: "visible",
-  name: "PFML Load Test Bot",
-  userAgent: "PFML Load Test Bot",
-  description: "PFML Load Test Bot",
+  name: "PFML Load & Stress Test Bot",
+  userAgent: "PFML Load & Stress Test Bot",
+  description: "PFML Load & Stress Test Bot",
   screenshotOnFailure: true,
   disableCache: true,
   clearCache: true,
@@ -40,6 +40,7 @@ export const realUserTimings: Record<
 };
 
 export const dataBaseUrl = "data/pilot3";
+export const documentUrl = "forms/hcp-real.pdf";
 export const PortalBaseUrl = config("E2E_PORTAL_BASEURL");
 export const APIBaseUrl = config("E2E_API_BASEURL");
 

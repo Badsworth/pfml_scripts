@@ -32,6 +32,7 @@ export const steps = [
         url: await PortalBaseUrl,
       });
       await browser.visit(await PortalBaseUrl);
+      await browser.click(await waitForElement(browser, By.linkText("Log in")));
       await waitForRealTimeSim(browser, data, 1 / steps.length);
     },
   },

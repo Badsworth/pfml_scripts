@@ -7,9 +7,9 @@ import {
 } from "@flood/element";
 import {
   globalElementSettings,
+  dataBaseUrl,
   LSTScenario,
   LSTSimClaim,
-  dataBaseUrl,
 } from "./config";
 import scenarios from "./scenarios";
 
@@ -26,7 +26,6 @@ export default (): void => {
   TestData.fromJSON<LSTSimClaim>(`./${dataBaseUrl}/claims.json`);
 
   // Before moving on to next scenario, fetch and adjust data needed
-  // @flood/element@1.3.5
   beforeEach(async (browser: Browser, data?: LSTSimClaim) => {
     if (typeof data !== "object" || !data || !("scenario" in data)) {
       throw new Error("Unable to determine scenario for step");

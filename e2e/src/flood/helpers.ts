@@ -1,7 +1,9 @@
 import { Locator, Browser, By, ElementHandle, Until } from "@flood/element";
 import {
   config,
+  getFineosBaseUrl,
   TaskType,
+  StoredStep,
   LSTSimClaim,
   StandardDocumentType,
   SimulationSpeed,
@@ -9,6 +11,7 @@ import {
 } from "./config";
 import { ClaimDocument } from "../simulation/types";
 import { DocumentUploadRequest } from "../api";
+import { actions } from "./scenarios/SavilinxAgent.perf";
 
 export const formatDate = (d: string | null | undefined): string =>
   new Intl.DateTimeFormat("en-US", {
@@ -271,3 +274,87 @@ export const waitForRealTimeSim = async (
   );
   await browser.wait(realTime);
 };
+
+export const assignTasks = (
+  fineosId: string,
+  search = true,
+  agent = "SAVILINX"
+): StoredStep => ({
+  name: `Assign ${fineosId}'s tasks to ${agent} Agent`,
+  test: async (browser: Browser): Promise<void> => {
+    if (search) {
+      await browser.visit(await getFineosBaseUrl());
+      // search for particular by id
+      const casesMenu = await waitForElement(
+        browser,
+        By.css("a[aria-label='Cases']")
+      );
+      await casesMenu.click();
+      const caseTab = await waitForElement(
+        browser,
+        By.css("[keytipnumber='4']")
+      );
+      await caseTab.click();
+      const caseNumberInput = await labelled(browser, "Case Number");
+      await browser.type(caseNumberInput, fineosId);
+      const searchButton = await waitForElement(
+        browser,
+        By.css("input[type='submit'][value*='Search']")
+      );
+      await searchButton.click();
+    }
+    // go to claim tasks tab
+    const tasksTab = await waitForElement(
+      browser,
+      By.css("[class^='TabO'][keytipnumber='9']")
+    );
+    await browser.click(tasksTab);
+    // assign each task to SAVILINX
+    for (const action of actions) {
+      const claimTask = await waitForElement(
+        browser,
+        By.css(`table[id*='TasksForCaseListView'] td[title='${action}']`)
+      );
+      await browser.click(claimTask);
+      const openTask = await waitForElement(
+        browser,
+        By.css("input[type='submit'][title='Open this task']")
+      );
+      await browser.click(openTask);
+
+      const transferDropdown = await waitForElement(
+        browser,
+        By.css("a[aria-label='Transfer']")
+      );
+      await browser.click(transferDropdown);
+      const transferToUser = await waitForElement(
+        browser,
+        By.css("a[aria-label='Transfer to User']")
+      );
+      await browser.click(transferToUser);
+      // the user tasks are transferred to can be changed
+      // under the "title='SAVILINX'" replace SAVILINX with the user you want
+      const pickSavilinxAgent = await waitForElement(
+        browser,
+        By.css(`table[id*='TransferUsersRolesListView'] td[title='${agent}']`)
+      );
+      await browser.click(pickSavilinxAgent);
+      const okButton = await waitForElement(
+        browser,
+        By.css("input[type='submit'][value='OK']")
+      );
+      await browser.click(okButton);
+
+      const closePopupButton = await waitForElement(
+        browser,
+        By.css("input[id*='UserTaskTransferRecord_ok'][value='OK']")
+      );
+      await browser.click(closePopupButton);
+      const closeTaskButton = await waitForElement(
+        browser,
+        By.css("input[type='submit'][value='Close']")
+      );
+      await browser.click(closeTaskButton);
+    }
+  },
+});

@@ -1,7 +1,8 @@
-import { StepFunction, TestData, Browser, step, By } from "@flood/element";
+import { StepFunction, TestData, Browser, step, By, ENV } from "@flood/element";
 import {
   globalElementSettings as settings,
   dataBaseUrl,
+  documentUrl,
   StoredStep,
   LSTSimClaim,
   LSTScenario,
@@ -10,15 +11,14 @@ import {
 import {
   labelled,
   formatDate,
+  assignTasks,
   waitForElement,
   waitForRealTimeSim,
   getDocumentType,
 } from "../helpers";
 import assert from "assert";
 
-export { settings };
-export const scenario: LSTScenario = "FineosClaimSubmit";
-
+let fineosId: string;
 let claimType: ClaimType;
 enum ClaimType {
   ACCIDENT = 1, // "Accident or treatment required for an injury"
@@ -28,6 +28,9 @@ enum ClaimType {
   CARING = 5, // "Caring for a family member"
   OTHER = 6, // "Out of work for another reason"
 }
+
+export { settings };
+export const scenario: LSTScenario = "FineosClaimSubmit";
 export const steps: StoredStep[] = [
   {
     name: "Login into fineos",
@@ -441,6 +444,17 @@ export const steps: StoredStep[] = [
     name: "Upload documents",
     test: async (browser: Browser, data: LSTSimClaim): Promise<void> => {
       const { documents } = data;
+      fineosId = (await (
+        await waitForElement(
+          browser,
+          By.css(".sitemapNodeSelected + .sitemapNode")
+        )
+      ).getAttribute("id")) as string;
+      const gotoClaim = await waitForElement(
+        browser,
+        By.css(".sitemapNodeSelected + .sitemapNode a")
+      );
+      await browser.click(gotoClaim);
       const documentsTab = await waitForElement(
         browser,
         By.css("[class^='TabO'][keytipnumber='11']")
@@ -460,19 +474,32 @@ export const steps: StoredStep[] = [
         // search for doc type
         const docType = await labelled(browser, "Business Type");
         await browser.type(docType, getDocumentType(doc));
+        const searchButton = await waitForElement(
+          browser,
+          By.css("input[type='submit'][value='Search']")
+        );
+        await browser.click(searchButton);
         const searchOkButton = await waitForElement(
           browser,
           By.css("input[type='submit'][value='OK']")
         );
         await browser.click(searchOkButton);
         // upload pdf
-        const uploadInput = await labelled(browser, "Business Type");
-        await uploadInput.uploadFile("data/HCP.pdf");
+        const uploadInput = await waitForElement(
+          browser,
+          By.css("#uploadpath")
+        );
+        await uploadInput.uploadFile(`../../../${documentUrl}`);
         const uploadOkButton = await waitForElement(
           browser,
           By.css("input[type='submit'][value='OK']")
         );
         await browser.click(uploadOkButton);
+      }
+      if (!ENV.FLOOD_LOAD_TEST) {
+        const assignTasksStep = assignTasks(fineosId, false);
+        console.info(assignTasksStep.name);
+        await assignTasksStep.test(browser, data);
       }
     },
   },
