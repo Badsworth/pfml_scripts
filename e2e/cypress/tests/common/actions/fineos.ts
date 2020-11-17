@@ -142,10 +142,6 @@ export function onTab(label: string): void {
   cy.wait(200);
 }
 
-export function clickAdjudicate(): void {
-  cy.get('input[type="submit"][value="Adjudicate"]').click();
-}
-
 export function manageEvidence(): void {
   cy.wait(2000).get('input[type="submit"][value="Manage Evidence"]').click();
 }
