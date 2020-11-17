@@ -7,12 +7,14 @@ from pydantic import UUID4
 
 from massgov.pfml.api.models.applications.common import (
     ApplicationPaymentChequeDetails,
+    EmployerBenefit,
     EmploymentStatus,
     MaskedAddress,
     MaskedApplicationLeaveDetails,
     MaskedApplicationPaymentAccountDetails,
     MaskedPaymentPreferences,
     Occupation,
+    OtherIncome,
     PaymentAccountType,
     PaymentMethod,
     WorkPattern,
@@ -60,6 +62,11 @@ class ApplicationResponse(PydanticBaseModel):
     has_mailing_address: Optional[bool]
     mailing_address: Optional[MaskedAddress]
     residential_address: Optional[MaskedAddress]
+    has_employer_benefits: Optional[bool]
+    employer_benefits: Optional[List[EmployerBenefit]]
+    has_other_incomes: Optional[bool]
+    other_incomes_awaiting_approval: Optional[bool]
+    other_incomes: Optional[List[OtherIncome]]
 
     @classmethod
     def from_orm(cls, application: Application) -> "ApplicationResponse":

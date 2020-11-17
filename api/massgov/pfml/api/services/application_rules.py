@@ -58,6 +58,58 @@ def get_address_issues(application: Application, address_field_name: str) -> Lis
     return issues
 
 
+def get_employer_benefits_issues(application: Application) -> List[Issue]:
+    employer_benefit_fields = [
+        "benefit_amount_dollars",
+        "benefit_amount_frequency",
+        "benefit_end_date",
+        "benefit_start_date",
+        "benefit_type",
+    ]
+    issues = []
+
+    for index, benefit in enumerate(application.employer_benefits, 0):
+        for field in employer_benefit_fields:
+            val = getattr(benefit, field)
+            if val is None:
+                field_name = f"employer_benefits[{index}].{field}"
+                issues.append(
+                    Issue(
+                        type=IssueType.required,
+                        message=f"{field_name} is required",
+                        field=field_name,
+                    )
+                )
+
+    return issues
+
+
+def get_other_incomes_issues(application: Application) -> List[Issue]:
+    other_income_fields = [
+        "income_amount_dollars",
+        "income_amount_frequency",
+        "income_end_date",
+        "income_start_date",
+        "income_type",
+    ]
+    issues = []
+
+    for index, income in enumerate(application.other_incomes, 0):
+        for field in other_income_fields:
+            val = getattr(income, field)
+            if val is None:
+                field_name = f"other_incomes[{index}].{field}"
+                issues.append(
+                    Issue(
+                        type=IssueType.required,
+                        message=f"{field_name} is required",
+                        field=field_name,
+                    )
+                )
+
+    return issues
+
+
 def get_conditional_issues(application: Application) -> List[Issue]:
     issues = []
 
@@ -148,6 +200,32 @@ def get_conditional_issues(application: Application) -> List[Issue]:
                 message="employer_notified must be True if employment_status is Employed",
             )
         )
+
+    if application.other_incomes_awaiting_approval:
+        if application.has_other_incomes is None:
+            issues.append(
+                Issue(
+                    type=IssueType.required,
+                    rule=IssueRule.conditional,
+                    message="has_other_incomes must be set if other_incomes_awaiting_approval is set",
+                    field="has_other_incomes",
+                )
+            )
+        elif application.has_other_incomes:
+            issues.append(
+                Issue(
+                    type=IssueType.conflicting,
+                    rule=IssueRule.disallow_has_other_incomes_when_awaiting_approval,
+                    message="has_other_incomes must be false if other_incomes_awaiting_approval is set",
+                    field="has_other_incomes",
+                )
+            )
+
+    if application.employer_benefits:
+        issues += get_employer_benefits_issues(application)
+
+    if application.other_incomes:
+        issues += get_other_incomes_issues(application)
 
     # Fields involved in Part 2 of the progressive application
     if application.payment_preferences:

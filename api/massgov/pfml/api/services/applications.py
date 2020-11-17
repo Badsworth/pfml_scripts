@@ -2,7 +2,7 @@ from re import Pattern
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 from sqlalchemy.orm.exc import NoResultFound
-from werkzeug.exceptions import BadRequest, Forbidden
+from werkzeug.exceptions import BadRequest, Forbidden, NotFound
 
 import massgov.pfml.api.models.applications.common as apps_common_io
 import massgov.pfml.db as db
@@ -18,12 +18,17 @@ from massgov.pfml.api.services.fineos_actions import get_documents
 from massgov.pfml.api.util.response import IssueRule, IssueType
 from massgov.pfml.api.validation.exceptions import ValidationErrorDetail, ValidationException
 from massgov.pfml.db.models.applications import (
+    AmountFrequency,
     Application,
     ApplicationPaymentPreference,
     ContinuousLeavePeriod,
     DayOfWeek,
     Document,
+    EmployerBenefit,
+    EmployerBenefitType,
     IntermittentLeavePeriod,
+    OtherIncome,
+    OtherIncomeType,
     ReducedScheduleLeavePeriod,
     TaxIdentifier,
     WorkPattern,
@@ -288,6 +293,14 @@ def update_from_request(
 
         if key == "work_pattern":
             add_or_update_work_pattern(db_session, body.work_pattern, application)
+            continue
+
+        if key == "employer_benefits":
+            add_or_update_employer_benefits(db_session, body.employer_benefits, application)
+            continue
+
+        if key == "other_incomes":
+            add_or_update_other_incomes(db_session, body.other_incomes, application)
             continue
 
         if key == "application_nickname":
@@ -637,6 +650,145 @@ def add_or_update_work_pattern(
 
     db_session.add(work_pattern)
     application.work_pattern = work_pattern
+
+
+def add_or_update_employer_benefits(
+    db_session: db.Session,
+    api_employer_benefits: Optional[List[apps_common_io.EmployerBenefit]],
+    application: Application,
+) -> None:
+    assert api_employer_benefits is not None
+
+    # For any benefits in the request without an ID, create a new benefit
+    employer_benefits_to_create = filter(
+        lambda benefit: benefit.employer_benefit_id is None, api_employer_benefits
+    )
+    # For any benefits in the request with an ID, update an existing benefit
+    employer_benefits_to_update = filter(
+        lambda benefit: benefit.employer_benefit_id is not None, api_employer_benefits
+    )
+
+    for api_employer_benefit in employer_benefits_to_create:
+        # Create new benefit
+        new_employer_benefit = EmployerBenefit(
+            application_id=application.application_id,
+            benefit_start_date=api_employer_benefit.benefit_start_date,
+            benefit_end_date=api_employer_benefit.benefit_end_date,
+            benefit_amount_dollars=api_employer_benefit.benefit_amount_dollars,
+        )
+
+        if api_employer_benefit.benefit_type:
+            new_employer_benefit.benefit_type_id = EmployerBenefitType.get_id(
+                api_employer_benefit.benefit_type.value
+            )
+        if api_employer_benefit.benefit_amount_frequency:
+            new_employer_benefit.benefit_amount_frequency_id = AmountFrequency.get_id(
+                api_employer_benefit.benefit_amount_frequency.value
+            )
+
+        db_session.add(new_employer_benefit)
+
+    for api_employer_benefit in employer_benefits_to_update:
+        db_existing_employer_benefit = (
+            db_session.query(EmployerBenefit)
+            .filter(EmployerBenefit.employer_benefit_id == api_employer_benefit.employer_benefit_id)
+            .one_or_none()
+        )
+
+        if db_existing_employer_benefit is None:
+            raise NotFound(
+                f"EmployerBenefit with id {api_employer_benefit.employer_benefit_id} not found"
+            )
+
+        # Don't allow users to change benefit records for an application other than the one
+        # they're updating
+        if db_existing_employer_benefit.application_id != application.application_id:
+            # TODO: should we be throwing HTTP exceptions from services?
+            # should we provide a better, more detailed message?
+            raise Forbidden()
+
+        # Update each field
+        db_existing_employer_benefit.benefit_start_date = api_employer_benefit.benefit_start_date
+        db_existing_employer_benefit.benefit_end_date = api_employer_benefit.benefit_end_date
+        db_existing_employer_benefit.benefit_amount_dollars = (
+            api_employer_benefit.benefit_amount_dollars
+        )
+
+        if api_employer_benefit.benefit_type:
+            db_existing_employer_benefit.benefit_type_id = EmployerBenefitType.get_id(
+                api_employer_benefit.benefit_type.value
+            )
+        if api_employer_benefit.benefit_amount_frequency:
+            db_existing_employer_benefit.benefit_amount_frequency_id = AmountFrequency.get_id(
+                api_employer_benefit.benefit_amount_frequency.value
+            )
+
+
+def add_or_update_other_incomes(
+    db_session: db.Session,
+    api_other_incomes: Optional[List[apps_common_io.OtherIncome]],
+    application: Application,
+) -> None:
+    assert api_other_incomes is not None
+    # For any incomes in the request without an ID, create a new income
+    other_incomes_to_create = list(
+        filter(lambda income: income.other_income_id is None, api_other_incomes)
+    )
+    # For any incomes in the request with an ID, update an existing income
+    other_incomes_to_update = list(
+        filter(lambda income: income.other_income_id is not None, api_other_incomes)
+    )
+
+    for api_other_income in other_incomes_to_create:
+        # Create new income
+        new_other_income = OtherIncome(
+            application_id=application.application_id,
+            income_start_date=api_other_income.income_start_date,
+            income_end_date=api_other_income.income_end_date,
+            income_amount_dollars=api_other_income.income_amount_dollars,
+        )
+
+        if api_other_income.income_type:
+            new_other_income.income_type_id = OtherIncomeType.get_id(
+                api_other_income.income_type.value
+            )
+        if api_other_income.income_amount_frequency:
+            new_other_income.income_amount_frequency_id = AmountFrequency.get_id(
+                api_other_income.income_amount_frequency.value
+            )
+
+        db_session.add(new_other_income)
+
+    for api_other_income in other_incomes_to_update:
+        db_existing_other_income = (
+            db_session.query(OtherIncome)
+            .filter(OtherIncome.other_income_id == api_other_income.other_income_id)
+            .one_or_none()
+        )
+
+        if db_existing_other_income is None:
+            raise NotFound(f"OtherIncome with id {api_other_income.other_income_id} not found")
+
+        # Don't allow users to change income records for an application other than the one
+        # they're updating
+        if db_existing_other_income.application_id != application.application_id:
+            # TODO: should we be throwing HTTP exceptions from services?
+            # should we provide a better, more detailed message?
+            raise Forbidden()
+
+        # Update each field
+        db_existing_other_income.income_start_date = api_other_income.income_start_date
+        db_existing_other_income.income_end_date = api_other_income.income_end_date
+        db_existing_other_income.income_amount_dollars = api_other_income.income_amount_dollars
+
+        if api_other_income.income_type:
+            db_existing_other_income.income_type_id = OtherIncomeType.get_id(
+                api_other_income.income_type.value
+            )
+        if api_other_income.income_amount_frequency:
+            db_existing_other_income.income_amount_frequency_id = AmountFrequency.get_id(
+                api_other_income.income_amount_frequency.value
+            )
 
 
 def validate_work_pattern_days(

@@ -13,14 +13,19 @@ from massgov.pfml.api.models.applications.common import DurationBasis, Frequency
 from massgov.pfml.api.models.applications.responses import ApplicationStatus
 from massgov.pfml.api.util.response import IssueRule, IssueType
 from massgov.pfml.db.models.applications import (
+    AmountFrequency,
     Application,
     ApplicationPaymentPreference,
     ContinuousLeavePeriod,
     DocumentType,
+    EmployerBenefit,
+    EmployerBenefitType,
     EmploymentStatus,
     FINEOSWebIdExt,
     LeaveReason,
     LeaveReasonQualifier,
+    OtherIncome,
+    OtherIncomeType,
     RelationshipQualifier,
     RelationshipToCaregiver,
     WorkPattern,
@@ -1487,6 +1492,340 @@ def test_application_patch_invalid_work_pattern(client, user, auth_token, test_d
         response.get_json().get("detail")
         == "Week number 2 for provided work_pattern_days has 0 days, but you are attempting to add days for week number 3. All provided weeks should be consecutive."
     )
+
+
+def test_application_patch_has_employer_benefits(client, user, auth_token, test_db_session):
+    application = ApplicationFactory.create(user=user)
+
+    response = client.patch(
+        "/v1/applications/{}".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+        json={"has_employer_benefits": True,},
+    )
+
+    assert response.status_code == 200
+    data = response.get_json().get("data")
+
+    assert data.get("has_employer_benefits") is True
+
+
+def test_application_patch_add_employer_benefits(client, user, auth_token, test_db_session):
+    application = ApplicationFactory.create(user=user)
+
+    response = client.patch(
+        "/v1/applications/{}".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+        json={
+            "employer_benefits": [
+                {
+                    "benefit_type": "Accrued Paid Leave",
+                    "benefit_end_date": "2021-01-20",
+                    "benefit_start_date": "2021-01-10",
+                    "benefit_amount_dollars": 400,
+                    "benefit_amount_frequency": "Per Month",
+                },
+            ]
+        },
+    )
+
+    assert response.status_code == 200
+
+    response_body = response.get_json().get("data")
+    employer_benefits = response_body.get("employer_benefits")
+
+    assert len(employer_benefits) == 1
+    employer_benefit = employer_benefits[0]
+    assert employer_benefit.get("employer_benefit_id") is not None
+    assert employer_benefit.get("benefit_type") == "Accrued Paid Leave"
+    assert employer_benefit.get("benefit_start_date") == "2021-01-10"
+    assert employer_benefit.get("benefit_end_date") == "2021-01-20"
+    assert employer_benefit.get("benefit_amount_dollars") == 400
+    assert employer_benefit.get("benefit_amount_frequency") == "Per Month"
+
+
+def test_application_patch_update_employer_benefit(client, user, auth_token, test_db_session):
+    application = ApplicationFactory.create(user=user)
+
+    benefit = EmployerBenefit(
+        benefit_start_date="2021-01-07",
+        benefit_end_date="2021-01-14",
+        benefit_amount_dollars=600,
+        benefit_type_id=EmployerBenefitType.SHORT_TERM_DISABILITY.employer_benefit_type_id,
+        benefit_amount_frequency_id=AmountFrequency.PER_WEEK.amount_frequency_id,
+    )
+    application.employer_benefits = [benefit]
+    test_db_session.add(application)
+    test_db_session.commit()
+    employer_benefit_id = application.employer_benefits[0].employer_benefit_id
+
+    response = client.patch(
+        "/v1/applications/{}".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+        json={
+            "employer_benefits": [
+                {
+                    "employer_benefit_id": employer_benefit_id,
+                    "benefit_type": "Accrued Paid Leave",
+                    "benefit_end_date": "2021-01-20",
+                    "benefit_start_date": "2021-01-10",
+                    "benefit_amount_dollars": 400,
+                    "benefit_amount_frequency": "Per Month",
+                },
+            ]
+        },
+    )
+
+    assert response.status_code == 200
+
+    response_body = response.get_json().get("data")
+    employer_benefits = response_body.get("employer_benefits")
+
+    assert len(employer_benefits) == 1
+    employer_benefit = employer_benefits[0]
+    assert employer_benefit.get("employer_benefit_id") == str(employer_benefit_id)
+    assert employer_benefit.get("benefit_type") == "Accrued Paid Leave"
+    assert employer_benefit.get("benefit_start_date") == "2021-01-10"
+    assert employer_benefit.get("benefit_end_date") == "2021-01-20"
+    assert employer_benefit.get("benefit_amount_dollars") == 400
+    assert employer_benefit.get("benefit_amount_frequency") == "Per Month"
+
+
+def test_application_patch_update_non_existent_employer_benefit(
+    client, user, auth_token, test_db_session
+):
+    application = ApplicationFactory.create(user=user)
+    test_db_session.add(application)
+    test_db_session.commit()
+
+    response = client.patch(
+        "/v1/applications/{}".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+        json={
+            "employer_benefits": [
+                {
+                    "employer_benefit_id": "ad34ed9e-8a1a-4cfa-b6a1-93d2737c7a08",
+                    "benefit_type": "Accrued Paid Leave",
+                    "benefit_end_date": "2021-01-20",
+                    "benefit_start_date": "2021-01-10",
+                    "benefit_amount_dollars": 400,
+                    "benefit_amount_frequency": "Per Month",
+                },
+            ]
+        },
+    )
+
+    tests.api.validate_error_response(response, 404)
+    message = response.get_json().get("message")
+    assert message == "EmployerBenefit with id ad34ed9e-8a1a-4cfa-b6a1-93d2737c7a08 not found"
+
+
+def test_application_patch_update_other_users_employer_benefit(
+    client, user, auth_token, test_db_session
+):
+    application = ApplicationFactory.create(user=user)
+    test_db_session.add(application)
+
+    # Create a benefit which belongs to some other user and some other application
+    other_user = UserFactory.create()
+    other_application = ApplicationFactory.create(user=other_user)
+    benefit = EmployerBenefit(
+        benefit_start_date="2021-01-07",
+        benefit_end_date="2021-01-14",
+        benefit_amount_dollars=600,
+        benefit_type_id=EmployerBenefitType.SHORT_TERM_DISABILITY.employer_benefit_type_id,
+        benefit_amount_frequency_id=AmountFrequency.PER_WEEK.amount_frequency_id,
+    )
+    other_application.employer_benefits = [benefit]
+    test_db_session.add(other_application)
+
+    test_db_session.commit()
+
+    # Try to modify the other user's employer benefit
+    employer_benefit_id = other_application.employer_benefits[0].employer_benefit_id
+    response = client.patch(
+        "/v1/applications/{}".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+        json={
+            "employer_benefits": [
+                {
+                    "employer_benefit_id": employer_benefit_id,
+                    "benefit_type": "Accrued Paid Leave",
+                    "benefit_end_date": "2021-01-20",
+                    "benefit_start_date": "2021-01-10",
+                    "benefit_amount_dollars": 400,
+                    "benefit_amount_frequency": "Per Month",
+                },
+            ]
+        },
+    )
+
+    tests.api.validate_error_response(response, 403)
+
+
+def test_application_patch_has_other_incomes(client, user, auth_token, test_db_session):
+    application = ApplicationFactory.create(user=user)
+
+    response = client.patch(
+        "/v1/applications/{}".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+        json={"has_other_incomes": True,},
+    )
+
+    assert response.status_code == 200
+    data = response.get_json().get("data")
+
+    assert data.get("has_other_incomes") is True
+
+
+def test_application_patch_add_other_incomes(client, user, auth_token, test_db_session):
+    application = ApplicationFactory.create(user=user)
+
+    response = client.patch(
+        "/v1/applications/{}".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+        json={
+            "other_incomes": [
+                {
+                    "income_type": "Unemployment",
+                    "income_end_date": "2021-01-20",
+                    "income_start_date": "2021-01-10",
+                    "income_amount_dollars": 800,
+                    "income_amount_frequency": "Per Month",
+                },
+            ]
+        },
+    )
+
+    assert response.status_code == 200
+
+    response_body = response.get_json().get("data")
+    other_incomes = response_body.get("other_incomes")
+
+    assert len(other_incomes) == 1
+    other_income = other_incomes[0]
+    assert other_income.get("income_type") == "Unemployment"
+    assert other_income.get("income_start_date") == "2021-01-10"
+    assert other_income.get("income_end_date") == "2021-01-20"
+    assert other_income.get("income_amount_dollars") == 800
+    assert other_income.get("income_amount_frequency") == "Per Month"
+
+
+def test_application_patch_update_other_income(client, user, auth_token, test_db_session):
+    application = ApplicationFactory.create(user=user)
+
+    income = OtherIncome(
+        income_start_date="2021-01-07",
+        income_end_date="2021-01-14",
+        income_amount_dollars=600,
+        income_type_id=OtherIncomeType.SSDI.other_income_type_id,
+        income_amount_frequency_id=AmountFrequency.PER_WEEK.amount_frequency_id,
+    )
+    application.other_incomes = [income]
+    test_db_session.add(application)
+    test_db_session.commit()
+    other_income_id = application.other_incomes[0].other_income_id
+
+    response = client.patch(
+        "/v1/applications/{}".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+        json={
+            "other_incomes": [
+                {
+                    "other_income_id": other_income_id,
+                    "income_type": "Workers Comp",
+                    "income_end_date": "2021-01-20",
+                    "income_start_date": "2021-01-10",
+                    "income_amount_dollars": 400,
+                    "income_amount_frequency": "Per Month",
+                },
+            ]
+        },
+    )
+
+    assert response.status_code == 200
+
+    response_body = response.get_json().get("data")
+    other_incomes = response_body.get("other_incomes")
+
+    assert len(other_incomes) == 1
+    other_income = other_incomes[0]
+    assert other_income.get("other_income_id") == str(other_income_id)
+    assert other_income.get("income_type") == "Workers Comp"
+    assert other_income.get("income_start_date") == "2021-01-10"
+    assert other_income.get("income_end_date") == "2021-01-20"
+    assert other_income.get("income_amount_dollars") == 400
+    assert other_income.get("income_amount_frequency") == "Per Month"
+
+
+def test_application_patch_update_non_existent_other_income(
+    client, user, auth_token, test_db_session
+):
+    application = ApplicationFactory.create(user=user)
+    test_db_session.add(application)
+    test_db_session.commit()
+
+    response = client.patch(
+        "/v1/applications/{}".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+        json={
+            "other_incomes": [
+                {
+                    "other_income_id": "ad34ed9e-8a1a-4cfa-b6a1-93d2737c7a08",
+                    "income_type": "Workers Comp",
+                    "income_end_date": "2021-01-20",
+                    "income_start_date": "2021-01-10",
+                    "income_amount_dollars": 400,
+                    "income_amount_frequency": "Per Month",
+                },
+            ]
+        },
+    )
+
+    tests.api.validate_error_response(response, 404)
+    message = response.get_json().get("message")
+    assert message == "OtherIncome with id ad34ed9e-8a1a-4cfa-b6a1-93d2737c7a08 not found"
+
+
+def test_application_patch_update_other_users_other_income(
+    client, user, auth_token, test_db_session
+):
+    application = ApplicationFactory.create(user=user)
+    test_db_session.add(application)
+
+    # Create a benefit which belongs to some other user and some other application
+    other_user = UserFactory.create()
+    other_application = ApplicationFactory.create(user=other_user)
+    income = OtherIncome(
+        income_start_date="2021-01-07",
+        income_end_date="2021-01-14",
+        income_amount_dollars=600,
+        income_type_id=OtherIncomeType.SSDI.other_income_type_id,
+        income_amount_frequency_id=AmountFrequency.PER_WEEK.amount_frequency_id,
+    )
+    other_application.other_incomes = [income]
+
+    test_db_session.commit()
+
+    # Try to modify the other user's employer benefit
+    other_income_id = other_application.other_incomes[0].other_income_id
+    response = client.patch(
+        "/v1/applications/{}".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+        json={
+            "other_incomes": [
+                {
+                    "other_income_id": other_income_id,
+                    "income_type": "Workers Comp",
+                    "income_end_date": "2021-01-20",
+                    "income_start_date": "2021-01-10",
+                    "income_amount_dollars": 400,
+                    "income_amount_frequency": "Per Month",
+                },
+            ]
+        },
+    )
+
+    tests.api.validate_error_response(response, 403)
 
 
 def test_application_patch_null_date_of_birth(client, user, auth_token):

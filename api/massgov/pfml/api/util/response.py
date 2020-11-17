@@ -42,6 +42,10 @@ class IssueRule(str, Enum):
     )
     # Leave Period dates can't overlap
     disallow_overlapping_leave_periods = "disallow_overlapping_leave_periods"
+    # If a claimant is awaiting approval for other incomes they can't also submit other incomes
+    disallow_has_other_incomes_when_awaiting_approval = (
+        "disallow_has_other_incomes_when_awaiting_approval"
+    )
     # Employer must be notified when employment status is Employed
     require_employer_notified = "require_employer_notified"
     # Partially masked field does not match existing value

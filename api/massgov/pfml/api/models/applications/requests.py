@@ -9,8 +9,10 @@ from massgov.pfml.api.models.applications.common import (
     Address,
     ApplicationLeaveDetails,
     DocumentType,
+    EmployerBenefit,
     EmploymentStatus,
     Occupation,
+    OtherIncome,
     PaymentPreferences,
     WorkPattern,
 )
@@ -42,6 +44,11 @@ class ApplicationRequestBody(PydanticBaseModel):
     has_mailing_address: Optional[bool]
     mailing_address: Optional[Address]
     residential_address: Optional[Address]
+    has_employer_benefits: Optional[bool]
+    employer_benefits: Optional[List[EmployerBenefit]]
+    has_other_incomes: Optional[bool]
+    other_incomes_awaiting_approval: Optional[bool]
+    other_incomes: Optional[List[OtherIncome]]
 
     @validator("date_of_birth")
     def date_of_birth_in_valid_range(cls, date_of_birth):  # noqa: B902

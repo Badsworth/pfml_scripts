@@ -1092,30 +1092,6 @@ components:
       required:
         - claim_id
 
-    EmployerBenefit:
-      type: object
-      properties:
-        benefit_amount_dollars:
-          type: integer
-        benefit_amount_frequency:
-          type: string
-          enum:
-            - Per Day
-            - Per Week
-            - Per Month
-            - In Total
-        benefit_end_date:
-          $ref: "#/components/schemas/Date"
-        benefit_start_date:
-          $ref: "#/components/schemas/Date"
-        benefit_type:
-          type: string
-          enum:
-            - Accrued Paid Leave
-            - Short Term Disability
-            - Permanent Disability Insurance
-            - Family or Medical Leave Insurance
-
     PreviousLeave:
       type: object
       properties:
@@ -1183,10 +1159,22 @@ components:
               type: boolean
               nullable: true
               example: true
+            has_employer_benefits:
+              type: boolean
+              nullable: true
+              example: true
             has_intermittent_leave_periods:
               type: boolean
               nullable: true
               example: true
+            has_other_incomes:
+              type: boolean
+              nullable: true
+              example: true
+            other_incomes_awaiting_approval:
+              type: boolean
+              nullable: true
+              example: false
             has_reduced_schedule_leave_periods:
               type: boolean
               nullable: true
@@ -1224,6 +1212,14 @@ components:
             work_pattern:
               $ref: "#/components/schemas/WorkPattern"
               nullable: true
+            employer_benefits:
+              type: array
+              items:
+                $ref: "#/components/schemas/EmployerBenefit"
+            other_incomes:
+              type: array
+              items:
+                $ref: "#/components/schemas/OtherIncome"
         - type: object
           properties:
             employee_ssn:
@@ -1284,11 +1280,23 @@ components:
           type: boolean
           nullable: true
           example: true
+        has_employer_benefits:
+          type: boolean
+          nullable: true
+          example: true
         has_intermittent_leave_periods:
           type: boolean
           nullable: true
           example: true
         has_reduced_schedule_leave_periods:
+          type: boolean
+          nullable: true
+          example: true
+        has_other_incomes:
+          type: boolean
+          nullable: true
+          example: true
+        other_incomes_awaiting_approval:
           type: boolean
           nullable: true
           example: true
@@ -1341,6 +1349,16 @@ components:
           nullable: true
         work_pattern:
           $ref: "#/components/schemas/WorkPattern"
+          nullable: true
+        employer_benefits:
+          type: array
+          items:
+            $ref: "#/components/schemas/EmployerBenefit"
+          nullable: true
+        other_incomes:
+          type: array
+          items:
+            $ref: "#/components/schemas/OtherIncome"
           nullable: true
         updated_time:
           type: string
@@ -1858,6 +1876,78 @@ components:
           type: string
           nullable: true
           example: "John Doe"
+
+    EmployerBenefit:
+      type: object
+      properties:
+        employer_benefit_id:
+          type: string
+          format: uuid
+          nullable: true
+        benefit_start_date:
+          $ref: "#/components/schemas/Date"
+        benefit_end_date:
+          $ref: "#/components/schemas/Date"
+        benefit_amount_dollars:
+          type: number
+          nullable: true
+          example: 400
+        benefit_amount_frequency:
+          type: string
+          nullable: true
+          enum:
+            - Per Day 
+            - Per Week
+            - Per Month
+            - All At Once
+          example: "Per Month"
+        benefit_type:
+          type: string
+          nullable: true
+          enum:
+            - Accrued Paid Leave
+            - Short Term Disability
+            - Permanent Disability Insurance
+            - Family or Medical Leave Insurance
+          example: "Accrued Paid Leave"
+
+
+    OtherIncome:
+      type: object
+      properties:
+        other_income_id:
+          type: string
+          format: uuid
+          nullable: true
+        income_start_date:
+          $ref: "#/components/schemas/Date"
+        income_end_date:
+          $ref: "#/components/schemas/Date"
+        income_amount_dollars:
+          type: number
+          nullable: true
+          example: 700
+        income_amount_frequency:
+          type: string
+          nullable: true
+          enum:
+            - Per Day
+            - Per Week
+            - Per Month
+            - All At Once
+          example: "Per Month"
+        income_type:
+          type: string
+          nullable: true
+          enum:
+            - Workers Comp
+            - Unemployment
+            - SSDI
+            - Retirement Disability
+            - Jones Act
+            - Railroad Retirement
+            - Other Employer
+          example: "SSDI"
 
     ApplicationSearchResults:
       type: array

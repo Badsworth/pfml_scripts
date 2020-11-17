@@ -1,4 +1,5 @@
 from datetime import date
+from decimal import Decimal
 from enum import Enum
 from typing import List, Optional
 
@@ -319,6 +320,60 @@ class WorkPattern(PydanticBaseModel):
     work_week_starts: Optional[DayOfWeek]
     pattern_start_date: Optional[date]
     work_pattern_days: Optional[List[WorkPatternDay]]
+
+
+class AmountFrequency(str, LookupEnum):
+    per_day = "Per Day"
+    per_week = "Per Week"
+    per_month = "Per Month"
+    all_at_once = "All At Once"
+
+    @classmethod
+    def get_lookup_model(cls):
+        return db_application_models.LkAmountFrequency
+
+
+class EmployerBenefitType(str, LookupEnum):
+    accrued_paid_leave = "Accrued Paid Leave"
+    short_term_disability = "Short Term Disability"
+    permanent_disability_insurance = "Permanent Disability Insurance"
+    family_or_medical_leave_insurance = "Family or Medical Leave Insurance"
+
+    @classmethod
+    def get_lookup_model(cls):
+        return db_application_models.LkEmployerBenefitType
+
+
+class OtherIncomeType(str, LookupEnum):
+    workers_comp = "Workers Comp"
+    unemployment = "Unemployment"
+    ssdi = "SSDI"
+    retirement_disability = "Retirement Disability"
+    jones_act = "Jones Act"
+    railroad_retirement = "Railroad Retirement"
+    other_employer = "Other Employer"
+
+    @classmethod
+    def get_lookup_model(cls):
+        return db_application_models.LkOtherIncomeType
+
+
+class EmployerBenefit(PydanticBaseModel):
+    employer_benefit_id: Optional[UUID4]
+    benefit_type: Optional[EmployerBenefitType]
+    benefit_start_date: Optional[date]
+    benefit_end_date: Optional[date]
+    benefit_amount_dollars: Optional[Decimal]
+    benefit_amount_frequency: Optional[AmountFrequency]
+
+
+class OtherIncome(PydanticBaseModel):
+    other_income_id: Optional[UUID4]
+    income_type: Optional[OtherIncomeType]
+    income_start_date: Optional[date]
+    income_end_date: Optional[date]
+    income_amount_dollars: Optional[Decimal]
+    income_amount_frequency: Optional[AmountFrequency]
 
 
 # Document I/O Types

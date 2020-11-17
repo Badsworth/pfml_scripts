@@ -17,9 +17,11 @@ from massgov.pfml.api.services.application_rules import (
 )
 from massgov.pfml.api.util.response import Issue, IssueRule, IssueType, success_response
 from massgov.pfml.db.models.applications import (
+    EmployerBenefit,
     EmploymentStatus,
     LeaveReason,
     LeaveReasonQualifier,
+    OtherIncome,
     WorkPatternDay,
 )
 from massgov.pfml.db.models.employees import PaymentType
@@ -1312,3 +1314,101 @@ def test_employer_notification_date_not_required_when_self_employed(
     )
     issues = get_conditional_issues(test_app)
     assert [] == issues
+
+
+def test_employer_benefit_missing_fields(test_db_session, initialize_factories_session):
+    test_app = ApplicationFactory.create(employer_benefits=[EmployerBenefit()])
+    issues = get_conditional_issues(test_app)
+    assert [
+        Issue(
+            type=IssueType.required,
+            message="employer_benefits[0].benefit_amount_dollars is required",
+            field="employer_benefits[0].benefit_amount_dollars",
+        ),
+        Issue(
+            type=IssueType.required,
+            message="employer_benefits[0].benefit_amount_frequency is required",
+            field="employer_benefits[0].benefit_amount_frequency",
+        ),
+        Issue(
+            type=IssueType.required,
+            message="employer_benefits[0].benefit_end_date is required",
+            field="employer_benefits[0].benefit_end_date",
+        ),
+        Issue(
+            type=IssueType.required,
+            message="employer_benefits[0].benefit_start_date is required",
+            field="employer_benefits[0].benefit_start_date",
+        ),
+        Issue(
+            type=IssueType.required,
+            message="employer_benefits[0].benefit_type is required",
+            field="employer_benefits[0].benefit_type",
+        ),
+    ] == issues
+
+
+def test_other_income_missing_fields(test_db_session, initialize_factories_session):
+    test_app = ApplicationFactory.create(other_incomes=[OtherIncome()])
+    issues = get_conditional_issues(test_app)
+    assert [
+        Issue(
+            type=IssueType.required,
+            message="other_incomes[0].income_amount_dollars is required",
+            field="other_incomes[0].income_amount_dollars",
+        ),
+        Issue(
+            type=IssueType.required,
+            message="other_incomes[0].income_amount_frequency is required",
+            field="other_incomes[0].income_amount_frequency",
+        ),
+        Issue(
+            type=IssueType.required,
+            message="other_incomes[0].income_end_date is required",
+            field="other_incomes[0].income_end_date",
+        ),
+        Issue(
+            type=IssueType.required,
+            message="other_incomes[0].income_start_date is required",
+            field="other_incomes[0].income_start_date",
+        ),
+        Issue(
+            type=IssueType.required,
+            message="other_incomes[0].income_type is required",
+            field="other_incomes[0].income_type",
+        ),
+    ] == issues
+
+
+def test_has_other_incomes_required(test_db_session, initialize_factories_session):
+    test_app = ApplicationFactory.create(
+        other_incomes_awaiting_approval=True, has_other_incomes=False
+    )
+    issues = get_conditional_issues(test_app)
+    assert [] == issues
+
+    test_app = ApplicationFactory.create(
+        other_incomes_awaiting_approval=True, has_other_incomes=None
+    )
+    issues = get_conditional_issues(test_app)
+    assert [
+        Issue(
+            type=IssueType.required,
+            rule=IssueRule.conditional,
+            message="has_other_incomes must be set if other_incomes_awaiting_approval is set",
+            field="has_other_incomes",
+        )
+    ] == issues
+
+    test_app = ApplicationFactory.create(
+        other_incomes_awaiting_approval=True, has_other_incomes=True
+    )
+    issues = get_conditional_issues(test_app)
+    assert [
+        Issue(
+            type=IssueType.conflicting,
+            rule=IssueRule.disallow_has_other_incomes_when_awaiting_approval,
+            message="has_other_incomes must be false if other_incomes_awaiting_approval is set",
+            field="has_other_incomes",
+        )
+    ] == issues

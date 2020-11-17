@@ -122,6 +122,36 @@ class LkDayOfWeek(Base):
         self.day_of_week_description = day_of_week_description
 
 
+class LkAmountFrequency(Base):
+    __tablename__ = "lk_amount_frequency"
+    amount_frequency_id = Column(Integer, primary_key=True, autoincrement=True)
+    amount_frequency_description = Column(Text)
+
+    def __init__(self, amount_frequency_id, amount_frequency_description):
+        self.amount_frequency_id = amount_frequency_id
+        self.amount_frequency_description = amount_frequency_description
+
+
+class LkEmployerBenefitType(Base):
+    __tablename__ = "lk_employer_benefit_type"
+    employer_benefit_type_id = Column(Integer, primary_key=True, autoincrement=True)
+    employer_benefit_type_description = Column(Text)
+
+    def __init__(self, employer_benefit_type_id, employer_benefit_type_description):
+        self.employer_benefit_type_id = employer_benefit_type_id
+        self.employer_benefit_type_description = employer_benefit_type_description
+
+
+class LkOtherIncomeType(Base):
+    __tablename__ = "lk_other_income_type"
+    other_income_type_id = Column(Integer, primary_key=True, autoincrement=True)
+    other_income_type_description = Column(Text)
+
+    def __init__(self, other_income_type_id, other_income_type_description):
+        self.other_income_type_id = other_income_type_id
+        self.other_income_type_description = other_income_type_description
+
+
 class Application(Base):
     __tablename__ = "application"
     application_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
@@ -176,6 +206,9 @@ class Application(Base):
     submitted_time = Column(TIMESTAMP(timezone=True))
     fineos_absence_id = Column(Text, index=True)
     fineos_notification_case_id = Column(Text, index=True)
+    has_employer_benefits = Column(Boolean)
+    has_other_incomes = Column(Boolean)
+    other_incomes_awaiting_approval = Column(Boolean)
 
     user = relationship(User)
     employer = relationship(Employer)
@@ -210,6 +243,8 @@ class Application(Base):
     reduced_schedule_leave_periods = relationship(
         "ReducedScheduleLeavePeriod", back_populates="application", uselist=True
     )
+    employer_benefits = relationship("EmployerBenefit", back_populates="application", uselist=True)
+    other_incomes = relationship("OtherIncome", back_populates="application", uselist=True)
 
 
 class ApplicationPaymentPreference(Base):
@@ -287,6 +322,46 @@ class ReducedScheduleLeavePeriod(Base):
     wednesday_off_minutes = Column(Integer)
 
     application = relationship(Application, back_populates="reduced_schedule_leave_periods")
+
+
+class EmployerBenefit(Base):
+    __tablename__ = "employer_benefit"
+    employer_benefit_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
+    application_id = Column(
+        UUID(as_uuid=True), ForeignKey("application.application_id"), index=True, nullable=False
+    )
+    benefit_start_date = Column(Date)
+    benefit_end_date = Column(Date)
+    benefit_type_id = Column(
+        Integer, ForeignKey("lk_employer_benefit_type.employer_benefit_type_id")
+    )
+    benefit_amount_dollars = Column(Numeric(asdecimal=True))
+    benefit_amount_frequency_id = Column(
+        Integer, ForeignKey("lk_amount_frequency.amount_frequency_id")
+    )
+
+    application = relationship(Application, back_populates="employer_benefits")
+    benefit_type = relationship(LkEmployerBenefitType)
+    benefit_amount_frequency = relationship(LkAmountFrequency)
+
+
+class OtherIncome(Base):
+    __tablename__ = "other_income"
+    other_income_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
+    application_id = Column(
+        UUID(as_uuid=True), ForeignKey("application.application_id"), index=True, nullable=False
+    )
+    income_start_date = Column(Date)
+    income_end_date = Column(Date)
+    income_type_id = Column(Integer, ForeignKey("lk_other_income_type.other_income_type_id"))
+    income_amount_dollars = Column(Numeric(asdecimal=True))
+    income_amount_frequency_id = Column(
+        Integer, ForeignKey("lk_amount_frequency.amount_frequency_id")
+    )
+
+    application = relationship(Application, back_populates="other_incomes")
+    income_type = relationship(LkOtherIncomeType)
+    income_amount_frequency = relationship(LkAmountFrequency)
 
 
 class WorkPattern(Base):
@@ -432,6 +507,41 @@ class EmploymentStatus(LookupTable):
     EMPLOYED = LkEmploymentStatus(1, "Employed")
     UNEMPLOYED = LkEmploymentStatus(2, "Unemployed")
     SELF_EMPLOYED = LkEmploymentStatus(3, "Self-Employed")
+
+
+class AmountFrequency(LookupTable):
+    model = LkAmountFrequency
+    column_names = ("amount_frequency_id", "amount_frequency_description")
+
+    PER_DAY = LkAmountFrequency(1, "Per Day")
+    PER_WEEK = LkAmountFrequency(2, "Per Week")
+    PER_MONTH = LkAmountFrequency(3, "Per Month")
+    ALL_AT_ONCE = LkAmountFrequency(4, "All At Once")
+
+
+class EmployerBenefitType(LookupTable):
+    model = LkEmployerBenefitType
+    column_names = ("employer_benefit_type_id", "employer_benefit_type_description")
+
+    ACCRUED_PAID_LEAVE = LkEmployerBenefitType(1, "Accrued Paid Leave")
+    SHORT_TERM_DISABILITY = LkEmployerBenefitType(2, "Short Term Disability")
+    PERMANENT_DISABILITY_INSURANCE = LkEmployerBenefitType(3, "Permanent Disability Insurance")
+    FAMILY_OR_MEDICAL_LEAVE_INSURANCE = LkEmployerBenefitType(
+        4, "Family or Medical Leave Insurance"
+    )
+
+
+class OtherIncomeType(LookupTable):
+    model = LkOtherIncomeType
+    column_names = ("other_income_type_id", "other_income_type_description")
+
+    WORKERS_COMP = LkOtherIncomeType(1, "Workers Comp")
+    UNEMPLOYMENT = LkOtherIncomeType(2, "Unemployment")
+    SSDI = LkOtherIncomeType(3, "SSDI")
+    RETIREMENT_DISABILITY = LkOtherIncomeType(4, "Retirement Disability")
+    JONES_ACT = LkOtherIncomeType(5, "Jones Act")
+    RAILROAD_RETIREMENT = LkOtherIncomeType(6, "Railroad Retirement")
+    OTHER_EMPLOYER = LkOtherIncomeType(7, "Other Employer")
 
 
 class FINEOSWebIdExt(Base):
@@ -605,6 +715,9 @@ def sync_lookup_tables(db_session):
     NotificationMethod.sync_to_database(db_session)
     FrequencyOrDuration.sync_to_database(db_session)
     EmploymentStatus.sync_to_database(db_session)
+    AmountFrequency.sync_to_database(db_session)
+    EmployerBenefitType.sync_to_database(db_session)
+    OtherIncomeType.sync_to_database(db_session)
     DocumentType.sync_to_database(db_session)
     ContentType.sync_to_database(db_session)
     DayOfWeek.sync_to_database(db_session)
