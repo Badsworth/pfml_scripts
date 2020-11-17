@@ -4,7 +4,12 @@ import { portal, fineos } from "./actions";
 
 Given("I am an anonymous user on the portal homepage", () => {
   cy.visit("/");
-  cy.task("generateCredentials").as("credentials");
+  cy.task("generateCredentials", false).as("credentials");
+});
+
+Given("I am an anonymous employer user on the portal homepage", () => {
+  cy.visit("/");
+  cy.task("generateCredentials", true).as("credentials");
 });
 
 Given("I begin to submit a {string} claim as a {string} employee", function (

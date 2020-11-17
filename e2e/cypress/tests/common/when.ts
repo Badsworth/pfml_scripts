@@ -21,6 +21,13 @@ When("I log out", function () {
   cy.url().should("contain", "/login");
 });
 
+When("I log into the employer portal", function (this: CypressStepThis) {
+  if (!this.credentials) {
+    throw new Error("Unable to determine credentials");
+  }
+  portal.employerLogin(this.credentials);
+});
+
 When("I log into the portal", function (this: CypressStepThis) {
   if (!this.credentials) {
     throw new Error("Unable to determine credentials");
@@ -78,7 +85,22 @@ When("I select {string} for Denial Reason", function (reason: string): void {
     .find("select")
     .select(reason);
 });
-
+When("I submit the employer portal registration form", function () {
+  if (!this.credentials) {
+    throw new Error("Credentials not properly set");
+  }
+  cy.contains("a", "Create an account").click();
+  cy.labelled("Email address").type(this.credentials.username);
+  cy.labelled("Password").type(this.credentials.password);
+  cy.labelled("Employer ID number").type(this.credentials.fein);
+  cy.contains("button", "Create account").click();
+  cy.task("getAuthVerification", this.credentials.username as string).then(
+    (code: string) => {
+      cy.labelled("6-digit code").type(code as string);
+      cy.contains("button", "Submit").click();
+    }
+  );
+});
 /* Account creation */
 When("I submit the account registration form", function (
   this: CypressStepThis

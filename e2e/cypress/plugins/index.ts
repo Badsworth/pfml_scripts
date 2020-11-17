@@ -21,6 +21,7 @@ import {
   Employer,
   EmployeeRecord,
 } from "../../src/simulation/types";
+import { Credentials } from "../../src/types";
 import {
   SimulationGenerator,
   generateLeaveDates,
@@ -55,13 +56,21 @@ export default function (on: Cypress.PluginEvents): Cypress.ConfigOptions {
       );
       return client.getVerificationCodeForUser(toAddress);
     },
-    generateCredentials(): CypressStepThis["credentials"] {
+    async generateCredentials(
+      isEmployer: boolean
+    ): Promise<CypressStepThis["credentials"]> {
       const namespace = config("TESTMAIL_NAMESPACE");
       const tag = faker.random.alphaNumeric(8);
-      return {
+      const credentials: Credentials = {
         username: `${namespace}.${tag}@inbox.testmail.app`,
         password: generatePassword(),
       };
+      if (isEmployer) {
+        await getEmployee("financially eligible").then((employee) => {
+          credentials.fein = employee.employer_fein;
+        });
+      }
+      return credentials;
     },
 
     async submitClaimToAPI(

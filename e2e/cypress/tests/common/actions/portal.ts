@@ -61,6 +61,13 @@ export function login(credentials: Credentials): void {
   cy.url().should("not.include", "login");
 }
 
+export function employerLogin(credentials: Credentials): void {
+  cy.labelled("Email address").type(credentials.username);
+  cy.labelled("Password").typeMasked(credentials.password);
+  cy.contains("button", "Log in").click();
+  cy.url().should("not.include", "login");
+}
+
 export function assertLoggedIn(): void {
   cy.contains("button", "Log out").should("be.visible");
 }

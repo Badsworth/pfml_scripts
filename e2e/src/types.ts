@@ -3,6 +3,7 @@ import { ApplicationRequestBody, ApplicationLeaveDetails } from "./api";
 export type Credentials = {
   username: string;
   password: string;
+  fein?: string;
 };
 
 /**
