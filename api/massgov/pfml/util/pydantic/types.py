@@ -6,7 +6,7 @@ import massgov.pfml.util.pydantic.mask as mask
 class Regexes:
     TAX_ID = re.compile(r"^\d{9}$")
     TAX_ID_FORMATTED = re.compile(r"^\d{3}-\d{2}-\d{4}$")
-    TAX_ID_MASKED = re.compile(r"^(\*{3}-\*{2}-\d{4})|(\*{3}\*{2}\d{4})$")
+    TAX_ID_MASKED = re.compile(r"^((\*{3}-\*{2}-\d{4})|(\*{3}\*{2}\d{4}))$")
     FEIN = re.compile(r"^\d{9}$")
     FEIN_FORMATTED = re.compile(r"^\d{2}-\d{7}$")
     STREET_NUMBER = re.compile(r"^\d+")

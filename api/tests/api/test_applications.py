@@ -2070,15 +2070,74 @@ def test_application_patch_null_values(client, user, auth_token):
 
 
 def test_application_patch_invalid_values(client, user, auth_token):
+    # Assert that API returns a 400 error when the request body
+    # doesn't conform to the OpenAPI spec
     application = ApplicationFactory.create(user=user)
+
+    update_request_body = {
+        # Leave periods should be an array, not an object
+        "leave_details": {"reduced_schedule_leave_periods": {}},
+        # mass_id should conform to the pattern (e.g 123456789),
+        "mass_id": "1234567890000",
+        "payment_preferences": [
+            {
+                "account_details": {
+                    # routing_number should conform to the pattern (e.g 801234567),
+                    "routing_number": "80123456789"
+                }
+            }
+        ],
+        "residential_address": {
+            # zip should conform to the pattern (e.g 12345-1234),
+            "zip": "123456"
+        },
+        # tax_identifier should conform to the pattern (e.g 123-45-6789),
+        "tax_identifier": "123-45-67890000",
+    }
 
     response = client.patch(
         "/v1/applications/{}".format(application.application_id),
         headers={"Authorization": f"Bearer {auth_token}"},
-        json={"leave_details": {"reduced_schedule_leave_periods": {}}},
+        json=update_request_body,
     )
 
-    tests.api.validate_error_response(response, 400)
+    tests.api.validate_error_response(
+        response,
+        400,
+        message="Request Validation Error",
+        errors=[
+            {
+                "field": "tax_identifier",
+                "message": "'123-45-67890000' does not match '^[\\\\d|\\\\*]{3}-[\\\\d|\\\\*]{2}-\\\\d{4}$'",
+                "rule": "^[\\d|\\*]{3}-[\\d|\\*]{2}-\\d{4}$",
+                "type": "pattern",
+            },
+            {
+                "field": "residential_address.zip",
+                "message": "'123456' does not match '^[0-9]{5}((?:-[0-9]{4})?|(?:-\\\\*{4})?)$'",
+                "rule": "^[0-9]{5}((?:-[0-9]{4})?|(?:-\\*{4})?)$",
+                "type": "pattern",
+            },
+            {
+                "field": "mass_id",
+                "message": "'1234567890000' does not match '^(\\\\d{9}|S(\\\\d{8}|A\\\\d{7})|(\\\\*{9}))$'",
+                "rule": "^(\\d{9}|S(\\d{8}|A\\d{7})|(\\*{9}))$",
+                "type": "pattern",
+            },
+            {
+                "field": "leave_details.reduced_schedule_leave_periods",
+                "message": "{} is not of type 'array'",
+                "rule": "array",
+                "type": "type",
+            },
+            {
+                "field": "payment_preferences.0.account_details.routing_number",
+                "message": "'80123456789' does not match '^((0[0-9])|(1[0-2])|(2[1-9])|(3[0-2])|(6[1-9])|(7[0-2])|80)([0-9]{7})$|(\\\\*{9})$'",
+                "rule": "^((0[0-9])|(1[0-2])|(2[1-9])|(3[0-2])|(6[1-9])|(7[0-2])|80)([0-9]{7})$|(\\*{9})$",
+                "type": "pattern",
+            },
+        ],
+    )
 
 
 def test_application_patch_keys_not_in_body_retain_existing_value(
