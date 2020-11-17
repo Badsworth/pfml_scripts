@@ -26,7 +26,9 @@ Before({ tags: "@portal" }, () => {
 Before({ tags: "@fineos" }, () => {
   // Supress known application errors in Fineos.
   cy.on("uncaught:exception", (e) => {
-    return !e.message.includes(`#.CaseOwnershipSummaryPanelElement`);
+    return !e.message.match(
+      /#.(CaseOwnershipSummaryPanelElement|CaseParticipantsSummaryPanelElement)/
+    );
   });
   // Set up a route we can listen to wait on ajax rendering to complete.
   cy.route2(/ajax\/pagerender\.jsp/).as("ajaxRender");
