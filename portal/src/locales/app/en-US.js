@@ -511,7 +511,9 @@ const pages = {
       "We may send notices to this address. If you choose to get your payments through paper checks, we will mail the checks to this address.",
     hasMailingAddressLabel: "Do you get your mail at this address?",
     hint:
-      "If you are part of an Address Confidentiality Program, please provide your substitute address.",
+      "We will use this as your residential address for any previous claims you have submitted. If you are part of an Address Confidentiality Program, please provide your substitute address.",
+    mailingAddressHint:
+      "We will use this as your mailing address for any previous claims you have submitted.",
     mailingAddressLabel: "What is your mailing address?",
     sectionLabel: "What is your current residential address?",
     title: "$t(shared.claimsVerifyIdTitle)",

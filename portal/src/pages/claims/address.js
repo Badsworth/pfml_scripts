@@ -95,6 +95,7 @@ export const Address = (props) => {
         <FieldsetAddress
           appErrors={appLogic.appErrors}
           label={t("pages.claimsAddress.mailingAddressLabel")}
+          hint={t("pages.claimsAddress.mailingAddressHint")}
           {...mailingAddressProps}
         />
       </ConditionalContent>

@@ -12,7 +12,7 @@ exports[`Address renders the page without any address info 1`] = `
         "itemsById": Object {},
       }
     }
-    hint="If you are part of an Address Confidentiality Program, please provide your substitute address."
+    hint="We will use this as your residential address for any previous claims you have submitted. If you are part of an Address Confidentiality Program, please provide your substitute address."
     label="What is your current residential address?"
     name="residential_address"
     onChange={[Function]}
@@ -66,6 +66,7 @@ exports[`Address renders the page without any address info 1`] = `
           "itemsById": Object {},
         }
       }
+      hint="We will use this as your mailing address for any previous claims you have submitted."
       label="What is your mailing address?"
       name="mailing_address"
       onChange={[Function]}
