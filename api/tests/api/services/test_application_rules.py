@@ -612,6 +612,7 @@ def test_leave_period_end_date_before_start_date(test_db_session, initialize_fac
             IntermittentLeavePeriodFactory.create(
                 start_date=date(2021, 2, 1),
                 end_date=date(2021, 1, 1),
+                frequency_interval=1,
                 frequency_interval_basis=FrequencyIntervalBasis.months.value,
                 frequency=6,
                 duration_basis=DurationBasis.days.value,
@@ -705,6 +706,11 @@ def test_intermittent_leave_period(test_db_session, initialize_factories_session
             type=IssueType.required,
             message="frequency is required",
             field="leave_details.intermittent_leave_periods[0].frequency",
+        ),
+        Issue(
+            type=IssueType.required,
+            message="frequency_interval is required",
+            field="leave_details.intermittent_leave_periods[0].frequency_interval",
         ),
         Issue(
             type=IssueType.required,

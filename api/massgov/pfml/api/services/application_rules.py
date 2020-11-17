@@ -544,6 +544,7 @@ def get_intermittent_leave_issues(leave_periods: Iterable[IntermittentLeavePerio
         "duration_basis",
         "end_date",
         "frequency",
+        "frequency_interval",
         "frequency_interval_basis",
         "start_date",
     ]
