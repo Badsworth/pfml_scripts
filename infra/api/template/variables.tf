@@ -224,6 +224,24 @@ variable "fineos_aws_iam_role_external_id" {
   default     = null
 }
 
+variable "service_now_base_url" {
+  description = "URL for Service Now post requests"
+  type        = string
+  default     = ""
+}
+
+variable "portal_absence_leave_admin_url" {
+  description = "Link in email notification for leave admin"
+  type        = string
+  default     = ""
+}
+
+variable "portal_absence_claimant_url" {
+  description = "Link in email notification for claimant"
+  type        = string
+  default     = ""
+}
+
 variable "enable_employer_endpoints" {
   description = "Enable Employer API endpoints in this environment"
   type        = string

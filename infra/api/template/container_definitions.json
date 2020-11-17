@@ -46,12 +46,17 @@
       { "name": "FINEOS_CLIENT_WSCOMPOSER_API_URL", "value": "${fineos_client_wscomposer_api_url}" },
       { "name": "FINEOS_CLIENT_OAUTH2_URL", "value": "${fineos_client_oauth2_url}" },
       { "name": "FINEOS_CLIENT_OAUTH2_CLIENT_ID", "value": "${fineos_client_oauth2_client_id}" },
-      { "name": "ENABLE_EMPLOYER_ENDPOINTS", "value": "${enable_employer_endpoints}" }
+      { "name": "ENABLE_EMPLOYER_ENDPOINTS", "value": "${enable_employer_endpoints}" },
+      { "name": "SERVICE_NOW_BASE_URL", "value": "${service_now_base_url}" },
+      { "name": "PORTAL_ABSENCE_LEAVE_ADMIN_URL", "value": "${portal_absence_leave_admin_url}" },
+      { "name": "PORTAL_ABSENCE_CLAIMANT_URL", "value": "${portal_absence_claimant_url}" }
     ],
     "secrets": [
       { "name": "NEW_RELIC_LICENSE_KEY", "valueFrom": "/service/${app_name}/common/newrelic-license-key"},
       { "name": "RMV_CLIENT_CERTIFICATE_PASSWORD", "valueFrom": "/service/${app_name}/${environment_name}/rmv_client_certificate_password" },
-      { "name": "FINEOS_CLIENT_OAUTH2_CLIENT_SECRET" , "valueFrom": "/service/${app_name}/${environment_name}/fineos_oauth2_client_secret" }
+      { "name": "FINEOS_CLIENT_OAUTH2_CLIENT_SECRET", "valueFrom": "/service/${app_name}/${environment_name}/fineos_oauth2_client_secret" },
+      { "name": "SERVICE_NOW_USERNAME", "valueFrom": "/service/${app_name}/${environment_name}/service_now_username" },
+      { "name": "SERVICE_NOW_PASSWORD", "valueFrom": "/service/${app_name}/${environment_name}/service_now_password" }
     ]
   }
 ]

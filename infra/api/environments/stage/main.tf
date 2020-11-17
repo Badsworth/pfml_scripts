@@ -74,6 +74,9 @@ module "api" {
   fineos_client_oauth2_client_id                   = "1fa281uto9tjuqtm21jle7loam"
   fineos_eligibility_transfer_lambda_build_s3_key  = local.fineos_eligibility_transfer_lambda_build_s3_key
   fineos_eligibility_feed_output_directory_path    = "s3://fin-somdev-data-import/IDT/absence-eligibility/upload"
+  service_now_base_url                             = "https://savilinxstage.servicenowservices.com/"
+  portal_absence_leave_admin_url                   = "http://paidleave-stage.mass.gov/employers/claims/review/?absence_id="
+  portal_absence_claimant_url                      = "http://paidleave-stage.mass.gov/applications"
   fineos_aws_iam_role_arn                          = "arn:aws:iam::666444232783:role/somdev-IAMRoles-CustomerAccountAccessRole-BF05IBJSG74B"
   fineos_aws_iam_role_external_id                  = "12345"
   enable_employer_endpoints                        = "1"
