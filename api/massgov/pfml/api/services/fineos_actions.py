@@ -222,7 +222,7 @@ def build_customer_model(application):
     if application.tax_identifier is not None:
         tax_identifier = application.tax_identifier.tax_identifier
     mass_id = massgov.pfml.fineos.models.customer_api.ExtensionAttribute(
-        name="MassachusettsID", stringValue=application.mass_id
+        name="MassachusettsID", stringValue=application.mass_id or ""
     )
     confirmed = massgov.pfml.fineos.models.customer_api.ExtensionAttribute(
         name="Confirmed", booleanValue=True

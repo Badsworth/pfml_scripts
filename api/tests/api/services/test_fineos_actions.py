@@ -277,6 +277,16 @@ def test_build_bonding_date_reflexive_question_foster(user):
     assert reflexive_question.reflexiveQuestionDetails[0].dateValue == date(2021, 2, 9)
 
 
+def test_build_customer_model_no_mass_id(user):
+    application = ApplicationFactory.create(user=user)
+    customer_model = fineos_actions.build_customer_model(application)
+
+    assert application.mass_id is None
+
+    assert customer_model.classExtensionInformation[0].name == "MassachusettsID"
+    assert customer_model.classExtensionInformation[0].stringValue == ""
+
+
 def test_build_customer_address(user):
     residential_address = AddressFactory.create()
     application = ApplicationFactory.create(user=user, residential_address=residential_address)
