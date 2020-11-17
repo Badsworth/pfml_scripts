@@ -2,7 +2,6 @@
 import BaseApi from "./BaseApi";
 import Claim from "../models/Claim";
 import ClaimCollection from "../models/ClaimCollection";
-import { isFeatureEnabled } from "../services/featureFlags";
 import routes from "../routes";
 
 /**
@@ -108,16 +107,10 @@ export default class ClaimsApi extends BaseApi {
    * @returns {Promise<ClaimsApiSingleResult>} The result of the API call
    */
   updateClaim = async (application_id, patchData) => {
-    // TODO (CP-716): Send SSN in the API payload once production can accept PII
-    const { tax_identifier, ...patchDataWithoutExcludedPii } = patchData;
-    const requestData = isFeatureEnabled("sendPii")
-      ? patchData
-      : patchDataWithoutExcludedPii;
-
     const { data, errors, success, status, warnings } = await this.request(
       "PATCH",
       application_id,
-      requestData,
+      patchData,
       {
         "X-PFML-Warn-On-Missing-Required-Fields": true,
       }

@@ -41,8 +41,6 @@ const flagsConfig = {
     // update the reference to it in _app.js), but try to keep it prefixed with pfml.
     // https://lwd.atlassian.net/browse/CP-459
     pfmlTerriyay: false,
-
-    sendPii: true,
   },
   // Environments can optionally override a default feature flag below.
   // The environment keys should use the same envName defined in
@@ -50,11 +48,6 @@ const flagsConfig = {
   development: {
     example: true,
     pfmlTerriyay: true,
-  },
-  prod: {
-    // Temporarily exclude certain PII from being sent in Production user tests
-    // https://lwd.atlassian.net/browse/CP-745
-    sendPii: false,
   },
 };
 
