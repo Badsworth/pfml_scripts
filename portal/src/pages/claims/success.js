@@ -105,7 +105,7 @@ export const Success = (props) => {
           </div>
         )}
 
-        <UserFeedback />
+        <UserFeedback url={routes.external.massgov.feedbackClaimant} />
 
         <ButtonLink className="margin-top-4" href={routes.applications}>
           {t("pages.claimsSuccess.exitLink")}

@@ -1,13 +1,13 @@
 import Heading from "./Heading";
+import PropTypes from "prop-types";
 import React from "react";
 import { Trans } from "react-i18next";
-import routes from "../routes";
 import { useTranslation } from "../locales/i18n";
 
 /**
  * Global user feedback module to gather data on user's experience with the site
  */
-const UserFeedback = () => {
+const UserFeedback = (props) => {
   const { t } = useTranslation();
 
   return (
@@ -19,17 +19,18 @@ const UserFeedback = () => {
           i18nKey="components.userFeedback.surveyLink"
           components={{
             "user-feedback-link": (
-              <a
-                target="_blank"
-                rel="noopener"
-                href={routes.external.massgov.userFeedback}
-              />
+              <a target="_blank" rel="noopener" href={props.url} />
             ),
           }}
         />
       </p>
     </div>
   );
+};
+
+UserFeedback.propTypes = {
+  /** URL for the feedback survey */
+  url: PropTypes.string.isRequired,
 };
 
 export default UserFeedback;

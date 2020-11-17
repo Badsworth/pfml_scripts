@@ -84,6 +84,8 @@ const routes = {
         "https://www.mass.gov/guides/employers-guide-to-paid-family-and-medical-leave",
       federalEmployerIdNumber:
         "https://www.mass.gov/info-details/finding-your-employers-federal-employer-identification-number-fein",
+      feedbackClaimant: "https://www.mass.gov/paidleave-claimant-feedback",
+      feedbackEmployer: "https://www.mass.gov/paidleave-employer-feedback",
       healthcareProviderForm: "https://www.mass.gov/hcp-form",
       identityProof:
         "https://www.mass.gov/info-details/identity-proof-for-paid-leave",
@@ -92,7 +94,6 @@ const routes = {
       paidLeave:
         "https://www.mass.gov/topics/paid-family-and-medical-leave-in-massachusetts",
       privacyPolicy: "https://www.mass.gov/privacypolicy",
-      userFeedback: "https://www.mass.gov/paidleave-employer-feedback",
     },
     puertoRicanBirthCertificate: "https://prfaa.pr.gov/faqs",
     workVisa:

@@ -29,7 +29,9 @@ exports[`Success renders content tailored to Family (Bonding Adoption) 1`] = `
         }
       }
     />
-    <UserFeedback />
+    <UserFeedback
+      url="https://www.mass.gov/paidleave-claimant-feedback"
+    />
     <ButtonLink
       className="margin-top-4"
       href="/applications"
@@ -102,7 +104,9 @@ exports[`Success renders content tailored to Family (Bonding Future Adoption) 1`
         }
       }
     />
-    <UserFeedback />
+    <UserFeedback
+      url="https://www.mass.gov/paidleave-claimant-feedback"
+    />
     <ButtonLink
       className="margin-top-4"
       href="/applications"
@@ -192,7 +196,9 @@ exports[`Success renders content tailored to Family (Bonding Future Newborn) 1`]
         You can take up to 20 weeks of paid medical leave if you're unable to work during your pregnancy and to recover from childbirth. Your health care provider determines how much medical leave you will need. You must create a separate leave application if you need to take medical leave.
       </p>
     </div>
-    <UserFeedback />
+    <UserFeedback
+      url="https://www.mass.gov/paidleave-claimant-feedback"
+    />
     <ButtonLink
       className="margin-top-4"
       href="/applications"
@@ -276,7 +282,9 @@ exports[`Success renders content tailored to Family (Bonding Newborn) 1`] = `
         You can take up to 20 weeks of paid medical leave if you're unable to work during your pregnancy and to recover from childbirth. Your health care provider determines how much medical leave you will need. You must create a separate leave application if you need to take medical leave.
       </p>
     </div>
-    <UserFeedback />
+    <UserFeedback
+      url="https://www.mass.gov/paidleave-claimant-feedback"
+    />
     <ButtonLink
       className="margin-top-4"
       href="/applications"
@@ -343,7 +351,9 @@ exports[`Success renders content tailored to Medical (Not pregnant) 1`] = `
         }
       }
     />
-    <UserFeedback />
+    <UserFeedback
+      url="https://www.mass.gov/paidleave-claimant-feedback"
+    />
     <ButtonLink
       className="margin-top-4"
       href="/applications"
@@ -422,7 +432,9 @@ exports[`Success renders content tailored to Medical (Pregnant) 1`] = `
         You can take up to 12 weeks of paid family leave to bond with your child after your medical leave ends. You do not need to take this leave all at once. You must create a separate leave application if you want to take family leave.
       </p>
     </div>
-    <UserFeedback />
+    <UserFeedback
+      url="https://www.mass.gov/paidleave-claimant-feedback"
+    />
     <ButtonLink
       className="margin-top-4"
       href="/applications"
@@ -507,7 +519,9 @@ exports[`Success renders content tailored to Medical (Pregnant, applying in adva
         You can take up to 12 weeks of paid family leave to bond with your child after your medical leave ends. You do not need to take this leave all at once. You must create a separate leave application if you want to take family leave.
       </p>
     </div>
-    <UserFeedback />
+    <UserFeedback
+      url="https://www.mass.gov/paidleave-claimant-feedback"
+    />
     <ButtonLink
       className="margin-top-4"
       href="/applications"

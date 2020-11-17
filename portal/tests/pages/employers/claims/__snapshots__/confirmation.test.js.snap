@@ -52,6 +52,8 @@ exports[`Confirmation renders Confirmation page 1`] = `
       i18nKey="pages.employersClaimsConfirmation.instructions_benefitsGuide"
     />
   </p>
-  <UserFeedback />
+  <UserFeedback
+    url="https://www.mass.gov/paidleave-employer-feedback"
+  />
 </Fragment>
 `;

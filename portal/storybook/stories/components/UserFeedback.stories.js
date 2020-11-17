@@ -1,5 +1,6 @@
 import React from "react";
 import UserFeedback from "src/components/UserFeedback";
+import routes from "src/routes";
 
 export default {
   title: "Components/UserFeedback",
@@ -7,5 +8,5 @@ export default {
 };
 
 export const Default = () => {
-  return <UserFeedback />;
+  return <UserFeedback url={routes.external.massgov.feedbackClaimant} />;
 };
