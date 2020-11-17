@@ -363,10 +363,9 @@ class StateMetricFactory(BaseFactory):
     class Meta:
         model = application_models.StateMetric
 
-    state_metric_id = Generators.UuidObj
     effective_date = datetime(2019, 10, 1)
-    unemployment_minimum_earnings = Decimal(5000)
-    average_weekly_wage = Decimal(1331.66)
+    unemployment_minimum_earnings = Decimal("5000")
+    average_weekly_wage = Decimal("1331.66")
 
 
 class DocumentFactory(BaseFactory):

@@ -81,7 +81,7 @@ def test_fetch_state_metric(test_db_session):
     state_metric = eligibility_util.fetch_state_metric(test_db_session, effective_date)
 
     assert state_metric.unemployment_minimum_earnings == 5100
-    assert state_metric.average_weekly_wage == 1431.66
+    assert state_metric.average_weekly_wage == decimal.Decimal("1431.66")
 
 
 def test_fetch_state_metric_multiple_yrs(initialize_factories_session, test_db_session):

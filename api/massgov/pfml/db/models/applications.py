@@ -1,4 +1,4 @@
-from datetime import datetime
+import datetime
 from decimal import Decimal
 from enum import Enum
 
@@ -6,6 +6,7 @@ from sqlalchemy import JSON, TIMESTAMP, Boolean, Column, Date, ForeignKey, Integ
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 
+import massgov.pfml.util.logging
 from massgov.pfml.db.models.employees import (
     Address,
     Employee,
@@ -20,6 +21,8 @@ from massgov.pfml.rmv.models import RmvAcknowledgement
 from ..lookup import LookupTable
 from .base import Base, utc_timestamp_gen, uuid_gen
 from .common import StrEnum
+
+logger = massgov.pfml.util.logging.get_logger(__name__)
 
 
 class LkEmploymentStatus(Base):
@@ -669,30 +672,51 @@ class RMVCheck(Base):
 
 class StateMetric(Base):
     __tablename__ = "state_metric"
-    state_metric_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
-    effective_date = Column(Date, unique=True, nullable=False)
+    effective_date = Column(Date, primary_key=True, nullable=False)
     unemployment_minimum_earnings = Column(Numeric, nullable=False)
     average_weekly_wage = Column(Numeric, nullable=False)
+
+    def __init__(
+        self,
+        effective_date: datetime.date,
+        unemployment_minimum_earnings: str,
+        average_weekly_wage: str,
+    ):
+        """Constructor that takes metric values as strings.
+
+        This ensures that the decimals are precise. For example compare Decimal(1431.66) to
+        Decimal("1431.66").
+        """
+        self.effective_date = effective_date
+        self.unemployment_minimum_earnings = Decimal(unemployment_minimum_earnings)
+        self.average_weekly_wage = Decimal(average_weekly_wage)
+
+    def __repr__(self):
+        return "StateMetric(%s, %s, %s)" % (
+            self.effective_date,
+            self.unemployment_minimum_earnings,
+            self.average_weekly_wage,
+        )
 
 
 def sync_state_metrics(db_session):
     state_metrics = [
         StateMetric(
-            effective_date=datetime(2020, 10, 1),
-            unemployment_minimum_earnings=Decimal(5100),
-            average_weekly_wage=Decimal(1431.66),
-        )
+            effective_date=datetime.date(2020, 10, 1),
+            unemployment_minimum_earnings="5100.00",
+            average_weekly_wage="1431.66",
+        ),
+        StateMetric(
+            effective_date=datetime.date(2021, 1, 1),
+            unemployment_minimum_earnings="5400.00",
+            average_weekly_wage="1487.78",
+        ),
     ]
 
     for metric in state_metrics:
-        existing = (
-            db_session.query(StateMetric)
-            .filter(StateMetric.effective_date == metric.effective_date)
-            .one_or_none()
-        )
-
-        if existing is None:
-            db_session.add(metric)
+        instance = db_session.merge(metric)
+        if db_session.is_modified(instance):
+            logger.info("updating metric %r", instance)
 
     db_session.commit()
 
