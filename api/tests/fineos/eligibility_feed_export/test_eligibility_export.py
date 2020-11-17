@@ -69,7 +69,6 @@ def test_main_success_fineos_location(
         role_arn=os.getenv("FINEOS_AWS_IAM_ROLE_ARN"),
         external_id=os.getenv("FINEOS_AWS_IAM_ROLE_EXTERNAL_ID"),
         role_session_name="eligibility_feed",
-        duration_seconds=3600,
         region_name="us-east-1",
     )
 

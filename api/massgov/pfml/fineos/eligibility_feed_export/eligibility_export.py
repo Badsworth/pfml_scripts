@@ -74,7 +74,6 @@ def main_with_return():
             role_arn=config.fineos_aws_iam_role_arn,
             external_id=config.fineos_aws_iam_role_external_id,
             role_session_name="eligibility_feed",
-            duration_seconds=3600,
             region_name="us-east-1",
         )
 
