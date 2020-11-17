@@ -6,12 +6,15 @@ import Link from "next/link";
 import PropTypes from "prop-types";
 import Title from "../components/Title";
 import { Trans } from "react-i18next";
+import { isFeatureEnabled } from "../services/featureFlags";
 import routes from "../routes";
 import { useTranslation } from "../locales/i18n";
 
 export const Index = (props) => {
   const { appLogic } = props;
   const { t } = useTranslation();
+
+  const showAuth = isFeatureEnabled("claimantShowAuth");
 
   // Redirect logged-in users
   useEffect(() => {
@@ -26,24 +29,38 @@ export const Index = (props) => {
 
   return (
     <React.Fragment>
-      <div className="margin-y-3 measure-5">
-        <Title>{t("pages.index.employerTitle")}</Title>
-      </div>
+      <Title seoTitle={t("pages.index.seoTitle")}>
+        <Trans
+          i18nKey="pages.index.title"
+          components={{
+            "mass-paid-leave-link": (
+              <a
+                target="_blank"
+                rel="noopener"
+                href={routes.external.massgov.paidLeave}
+              />
+            ),
+          }}
+          tOptions={{ context: showAuth ? null : "prelaunch" }}
+        />
+      </Title>
       <div className="margin-top-6 measure-7">
         <Heading level="2">{t("pages.index.createAccountHeading")}</Heading>
 
         <div className="grid-row grid-gap">
           <article className="tablet:grid-col margin-bottom-3">
             <div className="bg-base-lightest padding-3">
-              <Heading level="3">
-                {t("pages.index.employerCreateAccountHeading")}
-              </Heading>
-              <p>{t("pages.index.employerCreateAccountBody")}</p>
+              <Heading level="3">{t("pages.index.employerHeading")}</Heading>
+              <p>
+                {t("pages.index.employerCardBody", {
+                  context: showAuth ? null : "prelaunch",
+                })}
+              </p>
               <ButtonLink
                 href={routes.employers.createAccount}
                 className="margin-top-3"
               >
-                {t("pages.index.createAccountLink")}
+                {t("pages.index.employerCreateAccountButton")}
               </ButtonLink>
               <div className="margin-top-2 text-base text-bold">
                 {t("pages.authCreateAccount.haveAnAccountFooterLabel")}
@@ -57,23 +74,44 @@ export const Index = (props) => {
           </article>
           <article className="tablet:grid-col">
             <div className="bg-base-lightest padding-3">
-              <Heading level="3">
-                {t("pages.index.claimantCreateAccountHeading")}
-              </Heading>
-              <p>
-                <Trans
-                  i18nKey="pages.index.claimantCreateAccountBody"
-                  components={{
-                    "mass-benefits-timeline-link": (
-                      <a
-                        href={
-                          routes.external.massgov.benefitsTimeline_2020December2
-                        }
-                      />
-                    ),
-                  }}
-                />
-              </p>
+              <Heading level="3">{t("pages.index.claimantHeading")}</Heading>
+              {!showAuth && (
+                <p>
+                  <Trans
+                    i18nKey="pages.index.claimantCardBodyPrelaunch"
+                    components={{
+                      "mass-benefits-timeline-link": (
+                        <a
+                          href={
+                            routes.external.massgov
+                              .benefitsTimeline_2020December2
+                          }
+                        />
+                      ),
+                    }}
+                  />
+                </p>
+              )}
+              {showAuth && (
+                <React.Fragment>
+                  <p>{t("pages.index.claimantCardBody")}</p>
+
+                  <ButtonLink
+                    href={routes.auth.createAccount}
+                    className="margin-top-3"
+                  >
+                    {t("pages.index.claimantCreateAccountButton")}
+                  </ButtonLink>
+                  <div className="margin-top-2 text-base text-bold">
+                    {t("pages.authCreateAccount.haveAnAccountFooterLabel")}
+                    <Link href={routes.auth.login}>
+                      <a className="display-inline-block margin-left-1">
+                        {t("pages.authCreateAccount.logInFooterLink")}
+                      </a>
+                    </Link>
+                  </div>
+                </React.Fragment>
+              )}
             </div>
           </article>
         </div>

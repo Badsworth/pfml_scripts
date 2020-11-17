@@ -89,6 +89,8 @@ const routes = {
         "https://www.mass.gov/info-details/identity-proof-for-paid-leave",
       informedConsent: "https://www.mass.gov/paidleave-informedconsent",
       mailFaxInstructions: "https://www.mass.gov/pfmlsubmitinfo",
+      paidLeave:
+        "https://www.mass.gov/topics/paid-family-and-medical-leave-in-massachusetts",
       privacyPolicy: "https://www.mass.gov/privacypolicy",
       userFeedback: "https://www.mass.gov/paidleave-employer-feedback",
     },

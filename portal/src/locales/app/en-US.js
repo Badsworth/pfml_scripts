@@ -1475,15 +1475,22 @@ const pages = {
     welcomeTitle: "Welcome",
   },
   index: {
-    claimantCreateAccountBody:
-      "Later this month, you can create an account to apply for paid family and medical leave. Learn more about the <mass-benefits-timeline-link>PFML benefit timeline on mass.gov</mass-benefits-timeline-link>.",
-    claimantCreateAccountHeading: "Workers",
+    claimantCardBody:
+      "You can now create an account and apply for Paid Family and Medical Leave.",
+    claimantCardBodyPrelaunch:
+      "Later this month, you can create an account to apply for Paid Family and Medical Leave. Learn more about the <mass-benefits-timeline-link>PFML benefit timeline on mass.gov</mass-benefits-timeline-link>.",
+    claimantCreateAccountButton: "Create an account",
+    claimantHeading: "Workers",
     createAccountHeading: "Create an account",
-    createAccountLink: "Create an account",
-    employerCreateAccountBody:
+    employerCardBody: "Register now so you can manage leave for your team.",
+    employerCardBody_prelaunch:
       "Register now so your team is ready for December 15, 2020, when workers can start requesting leave.",
-    employerCreateAccountHeading: "Employers",
-    employerTitle:
+    employerCreateAccountButton: "Create an employer account",
+    employerHeading: "Employers",
+    seoTitle: "Massachusetts Paid Family and Medical Leave",
+    title:
+      "Massachusetts workers can now apply for Paid Family and Medical Leave. Learn more about this <mass-paid-leave-link>new paid leave program</mass-paid-leave-link>.",
+    title_prelaunch:
       "Massachusetts employers: Register now so you can manage leave for your team.",
   },
   userConsentToDataSharing: {

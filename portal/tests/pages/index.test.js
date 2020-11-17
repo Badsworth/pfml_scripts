@@ -12,7 +12,9 @@ describe("Index", () => {
       diveLevels: 0,
     });
     expect(wrapper).toMatchSnapshot();
-    expect(wrapper.find("Trans").dive()).toMatchSnapshot();
+    wrapper
+      .find("Trans")
+      .forEach((trans) => expect(trans.dive()).toMatchSnapshot());
   });
 
   describe("when user is logged in", () => {

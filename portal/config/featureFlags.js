@@ -7,6 +7,10 @@ const flagsConfig = {
   // Define a default or all feature flags here.
   // Environments will fallback to these default values.
   defaults: {
+    // When this flag is enabled, claimant login and account creation options
+    // are visible and content reflects workers can apply for leave.
+    claimantShowAuth: false,
+
     // When this flag is enabled, the user can see the "Employment status"
     // question in the claimant flow (CP-1204)
     // TODO (CP-1281): Show employment status question when Portal supports other employment statuses
@@ -38,10 +42,6 @@ const flagsConfig = {
     // https://lwd.atlassian.net/browse/CP-459
     pfmlTerriyay: false,
 
-    // When this flag is enabled, content accessible on paidleave.mass.gov
-    // reflects functionality available and intended for use by
-    // leave admins and claimants on December 15, 2020.
-    claimantShow1215SoftLaunchFeatures: false,
     sendPii: true,
   },
   // Environments can optionally override a default feature flag below.
