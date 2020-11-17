@@ -313,8 +313,18 @@ test-coverage-report: ## Open HTML test coverage report
 	$(PY_RUN_CMD) coverage html --directory .coverage_report
 	$(OPEN_CMD) .coverage_report/index.html
 
-test-watch: ## Watch and run tests on file changes
+define run_test_watch
+	$(PY_RUN_CMD) pytest-watch -- $(1)
+endef
+
+test-watch: ## Watch and run tests on file changes, set $args to pass flags to `pytest`
+	$(call run_test_watch, $(args))
+
+test-watch-changed: ## Watch and run `make test-changed` on file changes
 	$(PY_RUN_CMD) pytest-watch --runner "make test-changed"
+
+test-watch-focus: ## Watch and run tests decorated with `@pytest.mark.dev_focus` on file changes
+	$(call run_test_watch,-m dev_focus $(args))
 
 help: ## Displays this help screen
 	@grep -Eh '^[[:print:]]+:.*?##' $(MAKEFILE_LIST) | \

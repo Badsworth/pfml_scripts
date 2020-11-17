@@ -376,8 +376,23 @@ And instead of running that command manually, you can kick off a process to
 automatically run the tests when files change with:
 
 ```sh
-make test-watch
+make test-watch-changed
 ```
+
+To run tests decorated with `@pytest.mark.dev_focus` whenever a file is saved:
+
+```sh
+make test-watch-focus
+```
+
+`test-watch-focus` is a wrapper around the more flexible `test-watch` Makefile target
+that we can use to re-run specific tests whenever a file changes, for instance.
+
+```sh
+make test-watch args=tests/api/test_users.py::test_users_get
+```
+
+Arguments for `test-watch` are the same as args for `make test` as discussed in the section above.
 
 ## Environment Configuration
 
