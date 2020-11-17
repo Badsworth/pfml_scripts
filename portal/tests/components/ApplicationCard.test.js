@@ -99,7 +99,11 @@ describe("ApplicationCard", () => {
     describe("when it's a bonding claim with no cert doc", () => {
       it("renders guidance to upload a birth cert doc for new birth", () => {
         const wrapper = render(
-          new MockClaimBuilder().completed().bondingBirthLeaveReason().create()
+          new MockClaimBuilder()
+            .completed()
+            .bondingBirthLeaveReason()
+            .hasFutureChild()
+            .create()
         );
         expect(wrapper.html()).toMatch(
           `Once your child is born, submit proof of birth so that we can make a decision.`
@@ -111,6 +115,7 @@ describe("ApplicationCard", () => {
           new MockClaimBuilder()
             .completed()
             .bondingAdoptionLeaveReason()
+            .hasFutureChild()
             .create()
         );
         expect(wrapper.html()).toMatch(

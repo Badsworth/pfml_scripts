@@ -31,57 +31,6 @@ describe("Claim", () => {
     });
   });
 
-  describe("#isChildDateInFuture", () => {
-    const past = "2020-09-30";
-    const now = "2020-10-01";
-    const future = "2020-10-02";
-    let spy;
-
-    beforeAll(() => {
-      spy = jest.spyOn(DateTime, "local").mockImplementation(() => {
-        return {
-          toISODate: () => now,
-        };
-      });
-    });
-
-    afterAll(() => {
-      spy.mockRestore();
-    });
-
-    it("returns true for future birth bonding leave", () => {
-      const claim = new MockClaimBuilder()
-        .bondingBirthLeaveReason(future)
-        .create();
-
-      expect(claim.isChildDateInFuture).toBe(true);
-    });
-
-    it("returns false for past birth bonding leave", () => {
-      const claim = new MockClaimBuilder()
-        .bondingBirthLeaveReason(past)
-        .create();
-
-      expect(claim.isChildDateInFuture).toBe(false);
-    });
-
-    it("returns true for future placement bonding leave", () => {
-      const claim = new MockClaimBuilder()
-        .bondingFosterCareLeaveReason(future)
-        .create();
-
-      expect(claim.isChildDateInFuture).toBe(true);
-    });
-
-    it("returns false for past placement bonding leave", () => {
-      const claim = new MockClaimBuilder()
-        .bondingFosterCareLeaveReason(past)
-        .create();
-
-      expect(claim.isChildDateInFuture).toBe(false);
-    });
-  });
-
   describe("#isLeaveStartDateInFuture", () => {
     const past = "2020-09-30";
     const now = "2020-10-01";

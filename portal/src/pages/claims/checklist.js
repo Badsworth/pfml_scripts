@@ -156,6 +156,10 @@ export const Checklist = (props) => {
   function getStepDescription(stepName, claim) {
     const claimReason = get(claim, "leave_details.reason");
     const claimReasonQualifier = get(claim, "leave_details.reason_qualifier");
+    const hasFutureChildDate = get(
+      claim,
+      "leave_details.has_future_child_date"
+    );
     if (stepName !== ClaimSteps.uploadCertification) {
       return stepName;
     }
@@ -175,7 +179,7 @@ export const Checklist = (props) => {
     }
 
     // Check to see if we should use the future bonding leave variant
-    if (claim.isChildDateInFuture) {
+    if (hasFutureChildDate) {
       context += "Future";
     }
 

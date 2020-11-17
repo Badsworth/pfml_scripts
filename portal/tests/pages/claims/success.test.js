@@ -30,6 +30,7 @@ describe("Success", () => {
     "Family (Bonding Future Newborn)": new MockClaimBuilder()
       .completed()
       .bondingBirthLeaveReason(futureDate)
+      .hasFutureChild()
       .create(),
     "Family (Bonding Adoption)": new MockClaimBuilder()
       .continuous({ start_date: "2020-01-01" })
@@ -38,6 +39,7 @@ describe("Success", () => {
     "Family (Bonding Future Adoption)": new MockClaimBuilder()
       .completed()
       .bondingAdoptionLeaveReason(futureDate)
+      .hasFutureChild()
       .create(),
   };
 

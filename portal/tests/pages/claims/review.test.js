@@ -189,6 +189,7 @@ describe("Upload Document", () => {
       claimAttrs: new MockClaimBuilder()
         .complete()
         .bondingBirthLeaveReason(futureDate)
+        .hasFutureChild()
         .create(),
       diveLevels,
       hasLoadedClaimDocuments: true,

@@ -23,6 +23,7 @@ class Claim extends BaseClaim {
         child_birth_date: null,
         child_placement_date: null,
         employer_notified: null,
+        has_future_child_date: null,
         pregnant_or_recent_birth: null,
         reason_qualifier: null,
       },
@@ -66,25 +67,6 @@ class Claim extends BaseClaim {
    */
   get isBondingLeave() {
     return get(this, "leave_details.reason") === LeaveReason.bonding;
-  }
-
-  /**
-   * Determine if the claim is a Bonding Leave claim where the birth or
-   * placement date is in the future.
-   * @returns {boolean}
-   */
-  get isChildDateInFuture() {
-    if (!this.isBondingLeave) return false;
-
-    const birthOrPlacementDate =
-      get(this, "leave_details.child_birth_date") ||
-      get(this, "leave_details.child_placement_date");
-    // Assumes that the birth/placement date is in the same timezone as the user's browser
-    const now = DateTime.local().toISODate();
-
-    // Compare the two dates lexicographically. This works since they're both in
-    // ISO-8601 format, eg "2020-10-13"
-    return birthOrPlacementDate > now;
   }
 
   /**

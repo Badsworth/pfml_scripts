@@ -389,6 +389,15 @@ export class MockClaimBuilder extends BaseMockClaimBuilder {
   /**
    * @returns {MockClaimBuilder}
    */
+  hasFutureChild() {
+    this.bondingLeaveReason();
+    set(this.claimAttrs, "leave_details.has_future_child_date", true);
+    return this;
+  }
+
+  /**
+   * @returns {MockClaimBuilder}
+   */
   employed() {
     set(this.claimAttrs, "employment_status", EmploymentStatus.employed);
     super.employed();

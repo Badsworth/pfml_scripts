@@ -158,20 +158,12 @@ function CompletedApplicationDocsInfo(props) {
   const { t } = useTranslation();
   const { claim, documents } = props;
 
-  const hasCertDoc =
-    findDocumentsByTypes(
-      documents,
-      // This enum is used because for MVP all certs will have the same doc type
-      [DocumentType.medicalCertification]
-    ).length > 0;
-
-  const leaveReason = get(claim, "leave_details.reason");
-
   const legalNotices = findDocumentsByTypes(documents, [
     DocumentType.approvalNotice,
     DocumentType.denialNotice,
     DocumentType.requestForInfoNotice,
   ]);
+
   const leaveReasonQualifier = get(claim, "leave_details.reason_qualifier");
 
   const contentContext = {
@@ -181,14 +173,13 @@ function CompletedApplicationDocsInfo(props) {
   };
 
   const hasLegalNotices = legalNotices.length > 0;
-  const needsBondingCertDoc =
-    leaveReason === LeaveReason.bonding && !hasCertDoc;
+  const hasFutureChildDate = get(claim, "leave_details.has_future_child_date");
 
   const containerClasses = classnames({
     // Don't render a border if we only have the Button to render,
     // which matches how the card is presented for non-Completed claims
     "border-top border-base-lighter padding-top-2":
-      hasLegalNotices || needsBondingCertDoc,
+      hasLegalNotices || hasFutureChildDate,
   });
 
   return (
@@ -211,7 +202,7 @@ function CompletedApplicationDocsInfo(props) {
         </React.Fragment>
       )}
 
-      {needsBondingCertDoc && (
+      {hasFutureChildDate && (
         // This condition is used instead of isChildDateInFuture because we want
         // to continue showing the button after the placement or birth of the child
         <p>

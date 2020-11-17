@@ -134,6 +134,7 @@ describe("LeaveReasonPage", () => {
       leave_details: {
         child_birth_date: null,
         child_placement_date: null,
+        has_future_child_date: null,
         reason: LeaveReason.medical,
         reason_qualifier: null,
       },

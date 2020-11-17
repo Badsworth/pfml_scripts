@@ -35,6 +35,7 @@ export const LeaveReason = (props) => {
     if (reason !== LeaveReasonEnum.bonding) {
       set(formState, "leave_details.child_birth_date", null);
       set(formState, "leave_details.child_placement_date", null);
+      set(formState, "leave_details.has_future_child_date", null);
     }
 
     await appLogic.claims.update(claim.application_id, formState);

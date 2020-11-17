@@ -87,6 +87,7 @@ export const Review = (props) => {
 
   const payment_method = get(claim, "payment_preferences[0].payment_method");
   const reasonQualifier = get(claim, "leave_details.reason_qualifier");
+  const hasFutureChildDate = get(claim, "leave_details.has_future_child_date");
   const reducedLeavePeriod = new ReducedScheduleLeavePeriod(
     get(claim, "leave_details.reduced_schedule_leave_periods[0]")
   );
@@ -646,7 +647,7 @@ export const Review = (props) => {
               >
                 {idDocuments.length}
               </ReviewRow>
-              {!claim.isChildDateInFuture && (
+              {!hasFutureChildDate && (
                 <React.Fragment>
                   <ReviewHeading
                     editHref={getStepEditHref(ClaimSteps.uploadCertification)}

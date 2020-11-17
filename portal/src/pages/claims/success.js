@@ -26,6 +26,10 @@ export const Success = (props) => {
     claim,
     "leave_details.pregnant_or_recent_birth"
   );
+  const has_future_child_date = get(
+    claim,
+    "leave_details.has_future_child_date"
+  );
 
   const secondaryContentContainerClasses = "padding-top-2 margin-top-2";
 
@@ -42,12 +46,12 @@ export const Success = (props) => {
   ) {
     claimContext = "medicalPregnantFuture";
   } else if (
-    claim.isChildDateInFuture &&
+    has_future_child_date &&
     reason_qualifier === ReasonQualifier.newBorn
   ) {
     claimContext = "bondingNewbornFuture";
   } else if (
-    claim.isChildDateInFuture &&
+    has_future_child_date &&
     (reason_qualifier === ReasonQualifier.adoption ||
       reason_qualifier === ReasonQualifier.fosterCare)
   ) {

@@ -1,7 +1,7 @@
 import { MockClaimBuilder, renderWithAppLogic } from "../../test-utils";
 import DateOfChild from "../../../src/pages/claims/date-of-child";
+import { DateTime } from "luxon";
 import { act } from "react-dom/test-utils";
-import pick from "lodash/pick";
 
 jest.mock("../../../src/hooks/useAppLogic");
 
@@ -42,18 +42,94 @@ describe("DateOfChild", () => {
     });
   });
 
-  describe("when the form is successfully submitted", () => {
-    it("calls claims.update for new born", () => {
-      claim = new MockClaimBuilder().bondingBirthLeaveReason().create();
+  describe("when child birth date is in the future", () => {
+    const past = "2020-09-30";
+    const now = "2020-10-01";
+    const future = "2020-10-02";
+    let spy;
+
+    beforeAll(() => {
+      spy = jest.spyOn(DateTime, "local").mockImplementation(() => {
+        return {
+          toISODate: () => now,
+        };
+      });
+    });
+
+    afterAll(() => {
+      spy.mockRestore();
+    });
+
+    it("sets has_future_child_date as true for future birth bonding leave", () => {
+      claim = new MockClaimBuilder().bondingBirthLeaveReason(future).create();
+
       render();
       act(() => {
         wrapper.find("QuestionPage").simulate("save");
       });
 
-      expect(appLogic.claims.update).toHaveBeenCalledWith(
-        expect.any(String),
-        pick(claim, [child_birth_date, child_placement_date])
-      );
+      expect(appLogic.claims.update).toHaveBeenCalledWith(expect.any(String), {
+        leave_details: {
+          child_birth_date: future,
+          child_placement_date: null,
+          has_future_child_date: true,
+        },
+      });
+    });
+
+    it("sets has_future_child_date as false for past birth bonding leave", () => {
+      claim = new MockClaimBuilder().bondingBirthLeaveReason(past).create();
+
+      render();
+      act(() => {
+        wrapper.find("QuestionPage").simulate("save");
+      });
+
+      expect(appLogic.claims.update).toHaveBeenCalledWith(expect.any(String), {
+        leave_details: {
+          child_birth_date: past,
+          child_placement_date: null,
+          has_future_child_date: false,
+        },
+      });
+    });
+
+    it("sets has_future_child_date as true for future placement bonding leave", () => {
+      claim = new MockClaimBuilder()
+        .bondingFosterCareLeaveReason(future)
+        .create();
+
+      render();
+      act(() => {
+        wrapper.find("QuestionPage").simulate("save");
+      });
+
+      expect(appLogic.claims.update).toHaveBeenCalledWith(expect.any(String), {
+        leave_details: {
+          child_birth_date: null,
+          child_placement_date: future,
+          has_future_child_date: true,
+        },
+      });
+    });
+
+    it("sets has_future_child_date as false for past placement bonding leave", () => {
+      claim = new MockClaimBuilder()
+        .bondingFosterCareLeaveReason(past)
+        .create();
+
+      render();
+      act(() => {
+        wrapper.find("QuestionPage").simulate("save");
+      });
+
+      expect(appLogic.claims.update).toHaveBeenCalledWith(expect.any(String), {
+        leave_details: {
+          child_birth_date: null,
+          child_placement_date: past,
+          has_future_child_date: false,
+        },
+      });
     });
   });
 });
