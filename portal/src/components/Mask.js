@@ -6,6 +6,7 @@ import classnames from "classnames";
 const maskDeliminatedRegex = {
   ssn: /([*\d]{3})([*\d]{1,2})?([*\d]+)?/,
   fein: /([*\d]{2})([*\d]+)?/,
+  phone: /(\d{3})(\d{1,3})?(\d+)?/,
   zip: /([*\d]{5})([*\d]+)?/,
 };
 
@@ -173,7 +174,7 @@ function Mask(props) {
   const modifiedInputText = React.cloneElement(field, {
     defaultValue: undefined,
     inputMode: "numeric",
-    type: "text",
+    type: props.mask === "phone" ? "tel" : "text",
     value: field.props.value,
     onBlur: handleBlur,
     onChange: field.props.onChange,
@@ -210,7 +211,7 @@ Mask.propTypes = {
   /**
    * The mask type to be applied.
    */
-  mask: PropTypes.oneOf(["currency", "fein", "ssn", "zip"]),
+  mask: PropTypes.oneOf(["currency", "fein", "phone", "ssn", "zip"]),
 };
 
 export default Mask;

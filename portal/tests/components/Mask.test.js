@@ -2,7 +2,7 @@ import Mask, { maskValue } from "../../src/components/Mask";
 import { mount, shallow } from "enzyme";
 import React from "react";
 
-const masks = ["currency", "fein", "ssn", "zip"];
+const masks = ["currency", "fein", "phone", "ssn", "zip"];
 
 function render(customProps = {}, inputProps = {}, mountComponent = false) {
   const component = (
@@ -29,12 +29,26 @@ describe("Mask", () => {
     });
   });
 
-  it("renders mask", () => {
+  it("renders ssn mask", () => {
     const data = render({
       mask: "ssn",
     });
 
     expect(data.wrapper).toMatchSnapshot();
+  });
+
+  it("adds `type='text'` to the ssn masked element", () => {
+    const { wrapper } = render({ mask: "ssn" }, { value: "123456789" });
+    const input = wrapper.find("input");
+
+    expect(input.prop("type")).toBe("text");
+  });
+
+  it("adds `type='tel'` to the phone masked element", () => {
+    const { wrapper } = render({ mask: "phone" }, { value: "123456789" });
+    const input = wrapper.find("input");
+
+    expect(input.prop("type")).toBe("tel");
   });
 
   it("adds `inputMode='number'` to the child element", () => {
@@ -226,6 +240,29 @@ describe("Mask", () => {
       const output = maskValue(originalValue, "currency");
 
       expect(output).toBe("12,345.56");
+    });
+  });
+
+  describe("phone", () => {
+    it("inserts dashes", () => {
+      const originalValue = "5551234567";
+      const output = maskValue(originalValue, "phone");
+
+      expect(output).toBe("555-123-4567");
+    });
+
+    it("accepts phone formatted with parenthesis", () => {
+      const originalValue = "(555) 123-4567";
+      const output = maskValue(originalValue, "phone");
+
+      expect(output).toBe("555-123-4567");
+    });
+
+    it("accepts an unexpectedly long value", () => {
+      const originalValue = "555123456790";
+      const output = maskValue(originalValue, "phone");
+
+      expect(output).toBe("555-123-456790");
     });
   });
 });

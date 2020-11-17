@@ -72,13 +72,19 @@ export const Widths = () => (
 );
 
 export const Masks = () => {
-  const [ssnValue, setSsnFieldValue] = useState("123456789");
-  const [feinValue, setFeinValue] = useState("999999999");
+  // API returns the fields formatted, so our component expects the
+  // initial values to already be formatted:
+  const [ssnValue, setSsnFieldValue] = useState("123-45-6789");
+  const [feinValue, setFeinValue] = useState("99-9999999");
+  const [phoneValue, setPhoneValue] = useState("555-123-4567");
   const [currencyValue, setCurrencyValue] = useState("100.00");
+  const [zipValue, setZipValue] = useState("12345-6789");
   const maskSetterMap = {
     ssn: setSsnFieldValue,
     fein: setFeinValue,
+    phone: setPhoneValue,
     currency: setCurrencyValue,
+    zip: setZipValue,
   };
 
   const handleOnChange = (evt) => {
@@ -103,10 +109,25 @@ export const Masks = () => {
           onChange={handleOnChange}
         />
         <InputText
+          label="Phone number"
+          name="phone"
+          mask="phone"
+          type="tel"
+          value={phoneValue}
+          onChange={handleOnChange}
+        />
+        <InputText
           label="Currency"
           name="currency"
           mask="currency"
           value={currencyValue}
+          onChange={handleOnChange}
+        />
+        <InputText
+          label="ZIP code"
+          name="zip"
+          mask="zip"
+          value={zipValue}
           onChange={handleOnChange}
         />
       </form>
@@ -115,7 +136,7 @@ export const Masks = () => {
 };
 
 export const Pii = () => {
-  const [value, setFieldValue] = useState("***-**-***");
+  const [value, setFieldValue] = useState("***-**-****");
   const handleOnChange = (evt) => {
     setFieldValue(evt.target.value);
   };
@@ -125,6 +146,7 @@ export const Pii = () => {
       <InputText
         label="SSN"
         name="ssn"
+        mask="ssn"
         value={value}
         onChange={handleOnChange}
         pii

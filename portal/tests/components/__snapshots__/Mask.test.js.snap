@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`Mask renders mask 1`] = `
+exports[`Mask renders ssn mask 1`] = `
 <div
   className=""
 >
