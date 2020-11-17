@@ -89,7 +89,7 @@ When("I submit the employer portal registration form", function () {
   if (!this.credentials) {
     throw new Error("Credentials not properly set");
   }
-  cy.contains("a", "Create an account").click();
+  cy.contains("a", "Create an employer account").click();
   cy.labelled("Email address").type(this.credentials.username);
   cy.labelled("Password").type(this.credentials.password);
   cy.labelled("Employer ID number").type(this.credentials.fein);
