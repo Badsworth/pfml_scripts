@@ -56,15 +56,17 @@ exports[`Start renders the page 1`] = `
       noIcon={true}
       state="info"
     >
-      I understand that I need to give true answers to all questions in order to receive and keep my paid leave benefits and job protections. I understand false answers may forfeit my rights to paid leave and job protections.
+      <p>
+        I understand that I need to give true answers to all questions in order to receive and keep my paid leave benefits and job protections. I understand false answers may forfeit my rights to paid leave and job protections.
+      </p>
+      <Button
+        loading={false}
+        name="new-claim"
+        type="submit"
+      >
+        I understand and agree
+      </Button>
     </Alert>
-    <Button
-      loading={false}
-      name="new-claim"
-      type="submit"
-    >
-      I understand and agree
-    </Button>
   </form>
 </Fragment>
 `;

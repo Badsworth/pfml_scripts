@@ -3,7 +3,6 @@ import Claim, {
   PaymentPreferenceMethod,
 } from "../../models/Claim";
 import { cloneDeep, get, pick, set } from "lodash";
-import Alert from "../../components/Alert";
 import ConditionalContent from "../../components/ConditionalContent";
 import Fieldset from "../../components/Fieldset";
 import FormLabel from "../../components/FormLabel";
@@ -81,7 +80,6 @@ export const PaymentMethod = (props) => {
           {
             checked: payment_method === PaymentPreferenceMethod.ach,
             label: t("pages.claimsPaymentMethod.choiceAch"),
-            hint: t("pages.claimsPaymentMethod.choiceHintAch"),
             value: PaymentPreferenceMethod.ach,
           },
           {
@@ -93,6 +91,7 @@ export const PaymentMethod = (props) => {
         ]}
         label={t("pages.claimsPaymentMethod.sectionLabel")}
         type="radio"
+        hint={t("pages.claimsPaymentMethod.sectionLabelHint")}
       />
 
       <ConditionalContent
@@ -155,14 +154,6 @@ export const PaymentMethod = (props) => {
             smallLabel
           />
         </Fieldset>
-      </ConditionalContent>
-
-      <ConditionalContent
-        visible={payment_method === PaymentPreferenceMethod.check}
-      >
-        <Alert state="info">
-          {t("pages.claimsPaymentMethod.checkDestinationInfo")}
-        </Alert>
       </ConditionalContent>
     </QuestionPage>
   );

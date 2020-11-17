@@ -27,11 +27,11 @@ export const BondingLeaveAttestation = (props) => {
           components={{ ul: <ul className="usa-list" />, li: <li /> }}
         />
         <Alert className="measure-6" state="info" noIcon>
-          {t("pages.claimsBondingLeaveAttestation.truthAttestation")}
+          <p>{t("pages.claimsBondingLeaveAttestation.truthAttestation")}</p>
+          <Button type="submit">
+            {t("pages.claimsBondingLeaveAttestation.submitApplicationButton")}
+          </Button>
         </Alert>
-        <Button type="submit">
-          {t("pages.claimsBondingLeaveAttestation.submitApplicationButton")}
-        </Button>
       </form>
     </React.Fragment>
   );

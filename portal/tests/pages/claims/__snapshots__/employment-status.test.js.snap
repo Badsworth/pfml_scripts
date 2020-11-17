@@ -6,6 +6,7 @@ exports[`EmploymentStatusPage when claimantShowEmploymentStatus feature flag is 
   title="Employment information"
 >
   <Alert
+    neutral={true}
     state="info"
   >
     <Trans

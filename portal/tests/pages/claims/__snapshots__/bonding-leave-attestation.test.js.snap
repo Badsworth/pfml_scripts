@@ -26,13 +26,15 @@ exports[`BondingLeaveAttestation renders the page 1`] = `
       noIcon={true}
       state="info"
     >
-      I agree that I am a new parent by one of the routes above and can provide certification to support this relationship.
+      <p>
+        I agree that I am a new parent by one of the routes above and can provide certification to support this relationship.
+      </p>
+      <Button
+        type="submit"
+      >
+        I understand and agree
+      </Button>
     </Alert>
-    <Button
-      type="submit"
-    >
-      I understand and agree
-    </Button>
   </form>
 </Fragment>
 `;

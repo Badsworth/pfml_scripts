@@ -36,15 +36,15 @@ export const Start = (props) => {
           }}
         />
         <Alert className="measure-6" state="info" noIcon>
-          {t("pages.claimsStart.truthAttestation")}
+          <p>{t("pages.claimsStart.truthAttestation")}</p>
+          <Button
+            type="submit"
+            name="new-claim"
+            loading={handleSubmit.isThrottled}
+          >
+            {t("pages.claimsStart.submitApplicationButton")}
+          </Button>
         </Alert>
-        <Button
-          type="submit"
-          name="new-claim"
-          loading={handleSubmit.isThrottled}
-        >
-          {t("pages.claimsStart.submitApplicationButton")}
-        </Button>
       </form>
     </React.Fragment>
   );

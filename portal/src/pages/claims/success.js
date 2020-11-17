@@ -66,7 +66,7 @@ export const Success = (props) => {
 
       <div className="measure-6">
         {claimContext !== "leaveNotInFuture" && (
-          <Alert state="warning">
+          <Alert state="warning" autoWidth>
             {t("pages.claimsSuccess.proofRequired", { context: claimContext })}
           </Alert>
         )}

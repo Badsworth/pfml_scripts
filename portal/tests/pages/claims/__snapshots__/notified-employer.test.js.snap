@@ -54,6 +54,7 @@ exports[`NotifiedEmployer renders the page 1`] = `
     visible={false}
   >
     <Alert
+      autoWidth={true}
       role="alert"
       state="warning"
     >

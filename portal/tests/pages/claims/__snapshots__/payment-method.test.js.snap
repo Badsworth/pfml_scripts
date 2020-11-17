@@ -10,18 +10,18 @@ exports[`PaymentMethod renders the page 1`] = `
       Array [
         Object {
           "checked": false,
-          "hint": "Requires a bank account",
-          "label": "Direct deposit",
+          "label": "Direct deposit into my bank account",
           "value": "ACH",
         },
         Object {
           "checked": false,
-          "hint": "Does not require a bank account",
+          "hint": "You will receive your checks at the address you listed as your mailing address.",
           "label": "Paper check",
           "value": "Check",
         },
       ]
     }
+    hint="The first payment will go out in mid-January 2021. Your choice will be applied to any previous claims you have submitted."
     label="How do you want to get your weekly benefit?"
     name="payment_preferences[0].payment_method"
     onChange={[Function]}
@@ -93,15 +93,6 @@ exports[`PaymentMethod renders the page 1`] = `
         value=""
       />
     </Fieldset>
-  </ConditionalContent>
-  <ConditionalContent
-    visible={false}
-  >
-    <Alert
-      state="info"
-    >
-      You will receive your checks in the mail at the address you listed as your mailing address. The first round of paper checks will not be mailed until mid-January 2021.
-    </Alert>
   </ConditionalContent>
 </QuestionPage>
 `;

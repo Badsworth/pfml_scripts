@@ -199,7 +199,7 @@ exports[`Final Review Page when all data is present renders Review page with fin
     label="Payment method"
     level="3"
   >
-    Direct deposit
+    Direct deposit into my bank account
   </ReviewRow>
   <ReviewRow
     label="Routing number"

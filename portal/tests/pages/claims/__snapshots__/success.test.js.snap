@@ -76,6 +76,7 @@ exports[`Success renders content tailored to Family (Bonding Future Adoption) 1`
     className="measure-6"
   >
     <Alert
+      autoWidth={true}
       state="warning"
     >
       After your child arrives in your home, you will need to upload, mail, or fax a document that shows your child’s placement date.
@@ -153,6 +154,7 @@ exports[`Success renders content tailored to Family (Bonding Future Newborn) 1`]
     className="measure-6"
   >
     <Alert
+      autoWidth={true}
       state="warning"
     >
       After your child is born, you will need to upload, mail, or fax a document that shows your child’s date of birth.
@@ -467,6 +469,7 @@ exports[`Success renders content tailored to Medical (Pregnant, applying in adva
     className="measure-6"
   >
     <Alert
+      autoWidth={true}
       state="warning"
     >
       You must call the DFML Contact Center at (833) 344‑7365 once your medical leave begins. We can’t approve your application until we hear from you.

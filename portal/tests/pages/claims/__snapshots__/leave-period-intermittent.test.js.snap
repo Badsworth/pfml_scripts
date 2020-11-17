@@ -48,6 +48,7 @@ exports[`LeavePeriodIntermittent renders the page with bonding leave content 1`]
     visible={null}
   >
     <Alert
+      autoWidth={true}
       state="warning"
     >
       You have to create a separate application for intermittent leave.
@@ -110,6 +111,7 @@ exports[`LeavePeriodIntermittent renders the page with medical leave content 1`]
   title="Leave details"
 >
   <Alert
+    neutral={true}
     state="info"
   >
     You will need a completed medical leave certification form for this section.
@@ -157,6 +159,7 @@ exports[`LeavePeriodIntermittent renders the page with medical leave content 1`]
     visible={null}
   >
     <Alert
+      autoWidth={true}
       state="warning"
     >
       You have to create a separate application for intermittent leave.

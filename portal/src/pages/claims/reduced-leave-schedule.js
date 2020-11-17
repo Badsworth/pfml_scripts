@@ -118,7 +118,7 @@ export const ReducedLeaveSchedule = (props) => {
       onSave={handleSave}
     >
       {claim.isMedicalLeave && (
-        <Alert state="info">
+        <Alert state="info" neutral>
           {t("pages.claimsReducedLeaveSchedule.medicalAlert")}
         </Alert>
       )}

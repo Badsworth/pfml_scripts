@@ -4,13 +4,26 @@ import React from "react";
 export default {
   title: "Components/Alert",
   component: Alert,
+  argTypes: {
+    state: {
+      control: "radio",
+    },
+    heading: {
+      defaultValue: "Please fix the following errors",
+      control: {
+        type: "text",
+      },
+    },
+    children: {
+      defaultValue: "Mailing address is required",
+      control: {
+        type: "text",
+      },
+    },
+  },
 };
 
-export const ErrorAlert = () => (
-  <Alert heading="Please fix the following errors">
-    Mailing address is required
-  </Alert>
-);
+export const ErrorAlert = (args) => <Alert {...args} />;
 
 export const ErrorAlertTextOnly = () => (
   <Alert>

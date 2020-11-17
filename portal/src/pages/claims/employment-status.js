@@ -53,7 +53,7 @@ export const EmploymentStatus = (props) => {
       onSave={handleSave}
     >
       {!showEmploymentStatus && (
-        <Alert state="info">
+        <Alert state="info" neutral>
           <Trans
             i18nKey="pages.claimsEmploymentStatus.alertBody"
             components={{

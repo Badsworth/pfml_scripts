@@ -39,6 +39,7 @@ export const CreateAccount = (props) => {
         state="info"
         heading={t("pages.authCreateAccount.alertHeading")}
         className="margin-bottom-3"
+        neutral
       >
         <Trans
           i18nKey="pages.authCreateAccount.alertBody"

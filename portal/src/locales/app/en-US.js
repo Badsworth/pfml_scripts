@@ -410,7 +410,7 @@ const shared = {
   passwordHint:
     "Your password must be at least 12$t(chars.nbsp)characters long and include at least 1$t(chars.nbsp)number, 1$t(chars.nbsp)symbol, and both uppercase and lowercase letters.",
   passwordLabel: "Password",
-  paymentMethodAch: "Direct deposit",
+  paymentMethodAch: "Direct deposit into my bank account",
   paymentMethodCheck: "Paper check",
   previousLeaveEntryPrefix: "Previous leave",
   qualifyingReasonDetailsLabel: "What counts as a qualifying reason?",
@@ -839,16 +839,17 @@ const pages = {
     achTypeChecking: "$t(shared.achTypeChecking)",
     achTypeLabel: "Account type",
     achTypeSavings: "$t(shared.achTypeSavings)",
-    checkDestinationInfo:
-      "You will receive your checks in the mail at the address you listed as your mailing address. The first round of paper checks will not be mailed until mid-January 2021.",
     choiceAch: "$t(shared.paymentMethodAch)",
     choiceCheck: "$t(shared.paymentMethodCheck)",
     choiceHintAch: "Requires a bank account",
-    choiceHintCheck: "Does not require a bank account",
+    choiceHintCheck:
+      "You will receive your checks at the address you listed as your mailing address.",
     routingNumberHint:
       "This is the 9-digit number found on the lower left corner of a$t(chars.nbsp)check.",
     routingNumberLabel: "Routing number",
     sectionLabel: "How do you want to get your weekly benefit?",
+    sectionLabelHint:
+      "The first payment will go out in mid-January 2021. Your choice will be applied to any previous claims you have submitted.",
     title: "Payment method",
   },
   claimsPreviousLeaves: {

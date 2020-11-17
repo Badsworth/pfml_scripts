@@ -87,7 +87,7 @@ export const LeavePeriodIntermittent = (props) => {
       onSave={handleSave}
     >
       {claim.isMedicalLeave && (
-        <Alert state="info">
+        <Alert state="info" neutral>
           {t("pages.claimsLeavePeriodIntermittent.medicalAlert")}
         </Alert>
       )}
@@ -122,7 +122,7 @@ export const LeavePeriodIntermittent = (props) => {
           formState.has_intermittent_leave_periods && hasOtherLeavePeriodTypes
         }
       >
-        <Alert state="warning">
+        <Alert state="warning" autoWidth>
           {t("pages.claimsLeavePeriodIntermittent.hybridLeaveWarning")}
         </Alert>
       </ConditionalContent>

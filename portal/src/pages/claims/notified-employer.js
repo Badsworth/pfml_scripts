@@ -84,7 +84,7 @@ export const NotifiedEmployer = (props) => {
         />
       </ConditionalContent>
       <ConditionalContent visible={employer_notified === false}>
-        <Alert state="warning" role="alert">
+        <Alert state="warning" role="alert" autoWidth>
           {t("pages.claimsNotifiedEmployer.mustNotifyEmployerWarning")}
         </Alert>
       </ConditionalContent>

@@ -6,6 +6,7 @@ exports[`LeaveReasonPage renders the page for medical leave and does not show re
   title="Leave type"
 >
   <Alert
+    neutral={true}
     state="info"
   >
     <Trans

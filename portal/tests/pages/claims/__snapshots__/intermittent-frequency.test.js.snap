@@ -2,6 +2,7 @@
 
 exports[`IntermittentFrequency displays Alert about having medical form when claim is for Medical leave 1`] = `
 <Alert
+  neutral={true}
   state="info"
 >
   You will need a completed medical leave certification form for this section.

@@ -35,13 +35,6 @@ describe("PaymentMethod", () => {
 
       expect(conditionalContent.prop("visible")).toBe(true);
     });
-
-    it("hides the paper check destination info box", () => {
-      const conditionalContent = wrapper
-        .find("Alert")
-        .parents("ConditionalContent");
-      expect(conditionalContent.prop("visible")).toBe(false);
-    });
   });
 
   describe("when Paper check is selected as the payment method", () => {
@@ -64,13 +57,6 @@ describe("PaymentMethod", () => {
       const conditionalContent = achField.parents("ConditionalContent");
 
       expect(conditionalContent.prop("visible")).toBe(false);
-    });
-
-    it("shows the paper check destination info box", () => {
-      const conditionalContent = wrapper
-        .find("Alert")
-        .parents("ConditionalContent");
-      expect(conditionalContent.prop("visible")).toBe(true);
     });
   });
 

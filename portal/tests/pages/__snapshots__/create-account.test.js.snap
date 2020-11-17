@@ -8,6 +8,7 @@ exports[`CreateAccount renders the empty page 1`] = `
   <Alert
     className="margin-bottom-3"
     heading="You can now apply for paid family leave to bond with your child."
+    neutral={true}
     state="info"
   >
     <Trans

@@ -71,14 +71,16 @@ exports[`ConsentToDataSharing shows the correct content for non-employers 1`] = 
     noIcon={true}
     state="info"
   >
-    By continuing, I am indicating that I have read and understood the above user agreements. I give the Department of Family and Medical Leave permission to collect, share, and use my information consistent with the terms of the agreements linked above.
+    <p>
+      By continuing, I am indicating that I have read and understood the above user agreements. I give the Department of Family and Medical Leave permission to collect, share, and use my information consistent with the terms of the agreements linked above.
+    </p>
+    <Button
+      loading={false}
+      type="submit"
+    >
+      Agree and continue
+    </Button>
   </Alert>
-  <Button
-    loading={false}
-    type="submit"
-  >
-    Agree and continue
-  </Button>
 </form>
 `;
 
@@ -158,13 +160,15 @@ exports[`ConsentToDataSharing shows the correct contents for employers 1`] = `
     noIcon={true}
     state="info"
   >
-    By continuing, I am indicating that I have read and understood the above user agreements. I give the Department of Family and Medical Leave permission to collect, share, and use my information consistent with the terms of the agreements linked above.
+    <p>
+      By continuing, I am indicating that I have read and understood the above user agreements. I give the Department of Family and Medical Leave permission to collect, share, and use my information consistent with the terms of the agreements linked above.
+    </p>
+    <Button
+      loading={false}
+      type="submit"
+    >
+      Agree and continue
+    </Button>
   </Alert>
-  <Button
-    loading={false}
-    type="submit"
-  >
-    Agree and continue
-  </Button>
 </form>
 `;

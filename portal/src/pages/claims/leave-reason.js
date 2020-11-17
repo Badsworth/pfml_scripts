@@ -106,7 +106,7 @@ export const LeaveReason = (props) => {
       onSave={handleSave}
     >
       {(!showMilitaryLeaveTypes || !showMedicalLeaveType) && (
-        <Alert state="info">
+        <Alert state="info" neutral>
           <Trans
             i18nKey="pages.claimsLeaveReason.alertBody"
             components={{

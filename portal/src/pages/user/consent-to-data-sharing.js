@@ -86,13 +86,12 @@ export const ConsentToDataSharing = (props) => {
         </AccordionItem>
       </Accordion>
 
-      <Alert noIcon state="info">
-        {t("pages.userConsentToDataSharing.agreementBody")}
+      <Alert state="info" noIcon>
+        <p>{t("pages.userConsentToDataSharing.agreementBody")}</p>
+        <Button type="submit" loading={handleSubmit.isThrottled}>
+          {t("pages.userConsentToDataSharing.continueButton")}
+        </Button>
       </Alert>
-
-      <Button type="submit" loading={handleSubmit.isThrottled}>
-        {t("pages.userConsentToDataSharing.continueButton")}
-      </Button>
     </form>
   );
 };
