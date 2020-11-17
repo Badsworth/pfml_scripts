@@ -36,7 +36,11 @@ import { /* scenario, */ agentScenario, chance } from "../simulate";
 /*
   LeaveAdminSelfRegistration
 */
-const LeaveAdminSelfReg = agentScenario("LeaveAdminSelfRegistration");
+const LeaveAdminSelfReg = agentScenario("LeaveAdminSelfRegistration", {
+  claim: {
+    employer_fein: "yes",
+  },
+});
 
 /* 
   SavilinxAgent

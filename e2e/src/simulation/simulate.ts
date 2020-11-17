@@ -165,14 +165,26 @@ export function agentScenario(
   name: string,
   config: AgentOpts = {}
 ): SimulationGenerator {
-  return async () => {
-    return {
+  return async (opts) => {
+    const defaultAgent = {
       id: uuid(),
       scenario: name,
       claim: {},
       documents: [],
       ...config,
     };
+    if (config.claim?.employer_fein) {
+      const _config = { ...config, ...opts };
+      const employee = opts.employeeFactory(
+        !!_config.financiallyIneligible,
+        opts.employerFactory
+      );
+      defaultAgent.claim = {
+        ..._config.claim,
+        employer_fein: employee.employer_fein,
+      };
+    }
+    return defaultAgent;
   };
 }
 

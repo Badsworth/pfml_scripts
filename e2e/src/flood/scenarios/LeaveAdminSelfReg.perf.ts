@@ -52,7 +52,10 @@ export const steps = [
       const passwordInput = await labelled(browser, "Password");
       await browser.type(passwordInput, password);
       const employerIdInput = await labelled(browser, "Employer ID number");
-      await browser.type(employerIdInput, "84-7847847");
+      await browser.type(
+        employerIdInput,
+        data.claim.employer_fein ?? "84-7847847"
+      );
 
       const createAccountButton = await waitForElement(
         browser,
