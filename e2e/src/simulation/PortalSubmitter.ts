@@ -86,8 +86,8 @@ export default class PortalSubmitter {
     await this.updateApplication(application_id, application);
     const submitResponseData = await this.submitApplication(application_id);
     const { fineos_absence_id, first_name, last_name } = submitResponseData;
-    await this.completeApplication(application_id);
     await this.uploadDocuments(application_id, fineos_absence_id, documents);
+    await this.completeApplication(application_id);
     return {
       fineos_absence_id: fineos_absence_id,
       application_id: application_id,

@@ -108,8 +108,7 @@ When("I submit the account registration form", function (
   if (!this.credentials) {
     throw new Error("Credentials not properly set");
   }
-  cy.visit("/");
-  cy.contains("a", "create an account").click();
+  cy.visit("/create-account");
   cy.labelled("Email address").type(this.credentials.username);
   cy.labelled("Password").type(this.credentials.password);
   cy.contains("button", "Create account").click();

@@ -90,9 +90,11 @@ export function searchScenario(): void {
   /* For Testing (hard coded Claim Number)
     cy.labelled("Case Number").type("NTN-528-ABS-01");
    */
-  cy.unstash("claimNumber").then((claimNumber) => {
-    cy.labelled("Case Number").type(claimNumber as string);
-  });
+  cy.unstash("claimNumber")
+    .as("claimNumber")
+    .then((claimNumber) => {
+      cy.labelled("Case Number").type(claimNumber as string);
+    });
   cy.get('input[type="submit"][value="Search"]').click();
 }
 
@@ -311,6 +313,13 @@ export function findDocument(documentType: string): void {
     case "FOSTER":
       documentCategory = "State_managed_Paid_Leave_Confirmation";
       cy.get(`a[name*=${documentCategory}]`);
+      break;
+    case "Employer Confirmation":
+      documentCategory = "Employer Confirmation of Leave Data";
+      cy.get("tr[class='ListRowSelected']").should(
+        "contain.text",
+        documentCategory
+      );
       break;
     default:
       throw new Error("Provided reason for transfer is not recognized.");
