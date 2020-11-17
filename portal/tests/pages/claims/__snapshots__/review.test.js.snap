@@ -238,6 +238,7 @@ exports[`Final Review Page when all data is present renders Review page with fin
   <Button
     className="margin-top-3"
     loading={false}
+    loadingMessage="Submitting… Do not refresh or go back."
     onClick={[Function]}
     type="button"
   >
@@ -557,6 +558,7 @@ exports[`Part 1 Review Page when all data is present renders Review page with Pa
   <Button
     className="margin-top-3"
     loading={false}
+    loadingMessage="Submitting… Do not refresh or go back."
     onClick={[Function]}
     type="button"
   >

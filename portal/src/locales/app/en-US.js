@@ -1019,6 +1019,7 @@ const pages = {
     stepHeading_verifyId: "$t(shared.claimsVerifyIdTitle)",
     submitAction_final: "Submit application",
     submitAction_part1: "Submit Part 1",
+    submitLoadingMessage: "Submitting… Do not refresh or go back.",
     title:
       "Check your answers before submitting your$t(chars.nbsp)application.",
     userDateOfBirthLabel: "Date of birth",

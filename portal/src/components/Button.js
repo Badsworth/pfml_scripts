@@ -33,7 +33,7 @@ function Button({ type = "button", ...props }) {
     }
   );
 
-  return (
+  const button = (
     // Weird eslint thing where it throws an error since we're setting `type` via a variable:
     // eslint-disable-next-line react/button-has-type
     <button
@@ -45,6 +45,17 @@ function Button({ type = "button", ...props }) {
     >
       {children}
     </button>
+  );
+
+  const loadingMessage = showLoading ? (
+    <strong>{props.loadingMessage}</strong>
+  ) : null;
+
+  return (
+    <React.Fragment>
+      {button}
+      {loadingMessage}
+    </React.Fragment>
   );
 }
 
@@ -62,6 +73,10 @@ Button.propTypes = {
    * Disable button and show loading indicator
    */
   loading: PropTypes.bool,
+  /**
+   * Display a loading message alongside the button
+   */
+  loadingMessage: PropTypes.string,
   /**
    * Apply the "inverse" style modifier
    */

@@ -24,27 +24,29 @@ describe("Button", () => {
     const { wrapper } = render();
 
     expect(wrapper).toMatchInlineSnapshot(`
-      <button
-        className="usa-button position-relative"
-        onClick={[MockFunction]}
-        type="button"
-      >
-        Button label
-      </button>
+      <Fragment>
+        <button
+          className="usa-button position-relative"
+          onClick={[MockFunction]}
+          type="button"
+        >
+          Button label
+        </button>
+      </Fragment>
     `);
   });
 
   it("accepts a variation property", () => {
     const { wrapper } = render({ variation: "outline" });
 
-    expect(wrapper.hasClass("usa-button--outline")).toBe(true);
+    expect(wrapper.find("button").hasClass("usa-button--outline")).toBe(true);
   });
 
   describe("when className is set", () => {
     it("adds the className to the button", () => {
       const { wrapper } = render({ className: "custom-class" });
 
-      expect(wrapper.hasClass("custom-class")).toBe(true);
+      expect(wrapper.find("button").hasClass("custom-class")).toBe(true);
     });
   });
 
@@ -52,7 +54,7 @@ describe("Button", () => {
     it("adds the inversed modifier class", () => {
       const { wrapper } = render({ inversed: true });
 
-      expect(wrapper.hasClass("usa-button--inverse")).toBe(true);
+      expect(wrapper.find("button").hasClass("usa-button--inverse")).toBe(true);
     });
   });
 
@@ -60,7 +62,7 @@ describe("Button", () => {
     it("adds the outline modifier class", () => {
       const { wrapper } = render({ inversed: true, variation: "unstyled" });
 
-      expect(wrapper.hasClass("usa-button--outline")).toBe(true);
+      expect(wrapper.find("button").hasClass("usa-button--outline")).toBe(true);
     });
   });
 

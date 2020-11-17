@@ -40,6 +40,16 @@ export const Loading = () => {
   );
 };
 
+export const LoadingMessage = () => {
+  const handleClick = () => alert("Clicked!");
+
+  return (
+    <Button onClick={handleClick} loading loadingMessage="Saving. Please wait.">
+      Loading
+    </Button>
+  );
+};
+
 export const Variations = () => {
   const handleClick = () => alert("Clicked!");
 

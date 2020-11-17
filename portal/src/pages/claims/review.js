@@ -676,6 +676,7 @@ export const Review = (props) => {
         onClick={handleSubmit}
         type="button"
         loading={handleSubmit.isThrottled}
+        loadingMessage={t("pages.claimsReview.submitLoadingMessage")}
       >
         {t("pages.claimsReview.submitAction", {
           context: usePartOneReview ? "part1" : "final",
