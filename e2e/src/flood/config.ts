@@ -37,6 +37,7 @@ export const realUserTimings: Record<
   PortalRegistration: 3,
   PortalClaimSubmit: 15,
   FineosClaimSubmit: 8,
+  LeaveAdminSelfRegistration: 3,
 };
 
 export const dataBaseUrl = "data/pilot3";
@@ -68,7 +69,8 @@ export type LSTScenario =
   | "DFMLOpsAgent"
   | "PortalRegistration"
   | "PortalClaimSubmit"
-  | "FineosClaimSubmit";
+  | "FineosClaimSubmit"
+  | "LeaveAdminSelfRegistration";
 
 export type TaskType =
   | "Adjudicate Absence"

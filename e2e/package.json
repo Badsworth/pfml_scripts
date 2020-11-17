@@ -28,7 +28,8 @@
     "flood:PortalClaimSubmit": "element run src/flood/scenarios/PortalClaimSubmit.perf.ts --no-headless",
     "flood:PortalRegistration": "element run src/flood/scenarios/PortalRegistration.perf.ts --no-headless",
     "flood:FineosClaimSubmit": "element run src/flood/scenarios/FineosClaimSubmit.perf.ts --no-headless",
-    "flood:SavilinxAgent": "element run src/flood/scenarios/SavilinxAgent.perf.ts --no-headless"
+    "flood:SavilinxAgent": "element run src/flood/scenarios/SavilinxAgent.perf.ts --no-headless",
+    "flood:LeaveAdminSelfReg": "element run src/flood/scenarios/LeaveAdminSelfReg.perf.ts --no-headless"
   },
   "author": "",
   "license": "ISC",
