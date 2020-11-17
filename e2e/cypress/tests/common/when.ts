@@ -85,7 +85,7 @@ When("I select {string} for Denial Reason", function (reason: string): void {
     .find("select")
     .select(reason);
 });
-When("I submit the employer portal registration form", function () {
+When("I submit the employer registration form", function () {
   if (!this.credentials) {
     throw new Error("Credentials not properly set");
   }
@@ -102,7 +102,7 @@ When("I submit the employer portal registration form", function () {
   );
 });
 /* Account creation */
-When("I submit the account registration form", function (
+When("I submit the claimant registration form", function (
   this: CypressStepThis
 ) {
   if (!this.credentials) {
@@ -112,12 +112,10 @@ When("I submit the account registration form", function (
   cy.labelled("Email address").type(this.credentials.username);
   cy.labelled("Password").type(this.credentials.password);
   cy.contains("button", "Create account").click();
-  cy.task("getAuthVerification", this.credentials.username as string).then(
-    (code: string) => {
-      cy.labelled("6-digit code").type(code as string);
-      cy.contains("button", "Submit").click();
-    }
-  );
+  cy.task("getAuthVerification", this.credentials.username).then((code) => {
+    cy.labelled("6-digit code").type(code);
+    cy.contains("button", "Submit").click();
+  });
 });
 When("I accept the terms of service", function () {
   cy.contains("Agree and continue").click();

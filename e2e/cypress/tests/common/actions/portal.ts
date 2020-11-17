@@ -137,7 +137,7 @@ export function verifyIdentity(
 
   cy.contains("button", "Save and continue").click();
 
-  cy.contains("fieldset", "What's your birthdate?").within(() => {
+  cy.contains("fieldset", "What's your date of birth?").within(() => {
     const DOB = new Date(application.date_of_birth as string);
 
     cy.contains("Month").type(String(DOB.getMonth() + 1) as string);
@@ -253,7 +253,7 @@ export function answerReducedLeaveQuestion(
 
   cy.contains(
     "fieldset",
-    "Do you need to work a reduced schedule for a period of time (reduced leave schedule)?"
+    "Do you need to work fewer hours than usual for a period of time (reduced leave schedule)?"
   ).within(() => {
     cy.get("input[type='radio']").check(
       application.has_reduced_schedule_leave_periods?.toString() as string,
@@ -312,7 +312,7 @@ export function answerIntermittentLeaveQuestion(
 
   cy.contains(
     "fieldset",
-    "Do you need to take off work at irregular intervals (intermittent leave)?"
+    "Do you need to take off work in uneven blocks of time (intermittent leave)?"
   ).within(() => {
     cy.get("input[type='radio']").check(
       application.has_intermittent_leave_periods?.toString() as string,
@@ -347,7 +347,7 @@ export function enterEmployerInfo(application: ApplicationRequestBody): void {
   //                with the label "Enter employment information"
   if (application.employment_status === "Employed") {
     cy.labelled(
-      "What is your employer's Federal Employer Identification Number (FEIN)?"
+      "What is your employer's Employer Identification Number (EIN)?"
     ).type(application.employer_fein as string);
   }
   cy.contains("button", "Save and continue").click();
