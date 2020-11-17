@@ -62,7 +62,7 @@ export const IntermittentFrequency = (props) => {
    */
   const handleFrequencyIntervalBasisChange = (event) => {
     const frequency_interval =
-      event.target.id === irregularOver6MonthsId ? 6 : null;
+      event.target.id === irregularOver6MonthsId ? 6 : 1;
 
     updateFields({
       [`${leavePeriodPath}.frequency_interval`]: frequency_interval,
@@ -115,7 +115,7 @@ export const IntermittentFrequency = (props) => {
             checked:
               leavePeriod.frequency_interval_basis ===
                 FrequencyIntervalBasis.months &&
-              leavePeriod.frequency_interval === null,
+              leavePeriod.frequency_interval === 1,
             label: t("pages.claimsIntermittentFrequency.frequencyBasisChoice", {
               context: "months",
             }),
