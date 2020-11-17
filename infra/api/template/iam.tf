@@ -101,6 +101,9 @@ resource "aws_iam_role_policy" "task_executor" {
   policy = data.aws_iam_policy_document.task_executor.json
 }
 
+# ----------------------------------------------------------------------------------------------------------------------
+# Paid Leave API ECS service
+
 # The role that the PFML API assumes to perform actions within AWS.
 resource "aws_iam_role" "api_service" {
   name               = "${local.app_name}-${var.environment_name}-api-service"
@@ -110,6 +113,24 @@ resource "aws_iam_role" "api_service" {
 resource "aws_iam_role_policy_attachment" "db_user_pfml_api_to_api_service_attachment" {
   role       = aws_iam_role.api_service.name
   policy_arn = aws_iam_policy.db_user_pfml_api.arn
+}
+
+resource "aws_iam_role_policy" "api_service" {
+  name   = "${local.app_name}-${var.environment_name}-api-service-policy"
+  role   = aws_iam_role.api_service.id
+  policy = data.aws_iam_policy_document.api_service.json
+}
+
+data "aws_iam_policy_document" "api_service" {
+  statement {
+    effect = "Allow"
+    actions = [
+      "secretsmanager:GetSecretValue",
+    ]
+    resources = [
+      var.rmv_client_certificate_binary_arn,
+    ]
+  }
 }
 
 # ----------------------------------------------------------------------------------------------------------------------
