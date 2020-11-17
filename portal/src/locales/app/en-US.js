@@ -1456,6 +1456,24 @@ const pages = {
       "We’ll begin processing this application and your employee should hear from us within 14 calendar days.",
     title: "Thanks for reviewing the application",
   },
+  employersDashboard: {
+    checkEmailBody:
+      "When an employee applies for leave, you’ll receive email updates about their application status and any steps you need to take. We’ll include everyone who has an employer account with your company in case you’re out of the office.",
+    checkEmailTitle: "Check your email regularly",
+    learnMoreLinks:
+      "<ul><li><mass-employer-role-link>Your role as a Massachusetts employer</mass-employer-role-link></li><li><application-timeline-link>Application timeline</application-timeline-link></li><li><reimbursements-link>Reimbursements</reimbursements-link></li><li><employer-pfml-guide-link>Employer's guide to Paid Family and Medical Leave (PFML)</employer-pfml-guide-link></li></ul>",
+    learnMoreTitle: "Learn more",
+    respondBody:
+      "When an application is submitted, you have 10 business days to open the direct link from your email and review it online. You can comment on the application, approve or deny it, and report fraud if needed. Reviewing takes about 10 minutes. If we don’t hear from anyone at your company before the deadline, we’ll process the application solely based on the information the employee provided.",
+    respondTitle: "Respond to applications within 10 business days",
+    // TODO (EMPLOYER-555) update with correct link to certification
+    viewFormsBody:
+      "You’ll get an email about our application decision with a direct link to download the letter your employee received. For medical leave, you can download the Certification of a serious health condition form during the review process.",
+    viewFormsTitle: "View forms and notices online",
+    welcomeBody:
+      "Thanks for joining the paid leave program. There’s no further action for you to take now, but you’ll be able to review applications online starting December 15, 2020.",
+    welcomeTitle: "Welcome",
+  },
   index: {
     claimantCreateAccountBody:
       "Later this month, you can create an account to apply for paid family and medical leave. Learn more about the <mass-benefits-timeline-link>PFML benefit timeline on mass.gov</mass-benefits-timeline-link>.",

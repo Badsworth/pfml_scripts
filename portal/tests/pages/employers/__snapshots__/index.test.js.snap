@@ -1,0 +1,99 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Employer index renders the page 1`] = `
+<div
+  className="grid-container"
+>
+  <div
+    className="grid-row"
+  >
+    <Title>
+      Welcome
+    </Title>
+  </div>
+  <div
+    className="grid-row"
+  >
+    <div
+      className="desktop:grid-col-8"
+    >
+      <p>
+        Thanks for joining the paid leave program. There’s no further action for you to take now, but you’ll be able to review applications online starting December 15, 2020.
+      </p>
+      <Heading
+        level="2"
+      >
+        <SvgIconMail
+          className="margin-right-2 text-secondary text-middle"
+          fill="currentColor"
+          height={30}
+          width={30}
+        />
+        Check your email regularly
+      </Heading>
+      <p>
+        When an employee applies for leave, you’ll receive email updates about their application status and any steps you need to take. We’ll include everyone who has an employer account with your company in case you’re out of the office.
+      </p>
+      <Heading
+        level="2"
+      >
+        <IconWait
+          className="margin-right-2 text-secondary text-middle"
+          fill="currentColor"
+          height={30}
+          width={30}
+        />
+        Respond to applications within 10 business days
+      </Heading>
+      <p>
+        When an application is submitted, you have 10 business days to open the direct link from your email and review it online. You can comment on the application, approve or deny it, and report fraud if needed. Reviewing takes about 10 minutes. If we don’t hear from anyone at your company before the deadline, we’ll process the application solely based on the information the employee provided.
+      </p>
+      <Heading
+        level="2"
+      >
+        <SvgIconPdf
+          className="margin-right-2 text-secondary text-middle"
+          fill="currentColor"
+          height={30}
+          width={30}
+        />
+        View forms and notices online
+      </Heading>
+      <p>
+        You’ll get an email about our application decision with a direct link to download the letter your employee received. For medical leave, you can download the Certification of a serious health condition form during the review process.
+      </p>
+    </div>
+    <div
+      className="desktop:grid-col-fill"
+    />
+    <div
+      className="desktop:grid-col-3 margin-top-6 desktop:margin-top-0"
+    >
+      <Heading
+        level="2"
+      >
+        Learn more
+      </Heading>
+      <Trans
+        components={
+          Object {
+            "application-timeline-link": <span />,
+            "employer-pfml-guide-link": <a
+              href="https://www.mass.gov/guides/employers-guide-to-paid-family-and-medical-leave"
+              rel="noopener"
+              target="_blank"
+            />,
+            "li": <li />,
+            "mass-employer-role-link": <span />,
+            "reimbursements-link": <span />,
+            "ul": <ul
+              className="usa-list"
+            />,
+          }
+        }
+        i18nKey="pages.employersDashboard.learnMoreLinks"
+      />
+    </div>
+  </div>
+</div>
+`;
