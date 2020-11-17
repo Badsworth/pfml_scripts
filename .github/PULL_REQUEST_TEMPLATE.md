@@ -13,3 +13,7 @@ https://lwd.atlassian.net/browse/{TICKET NUMBER}
 ## 👀 Demo
 
 > Screenshots, [GIF demos](https://www.cockos.com/licecap/), code examples or output to help show the changes working as expected. ProTip: you can drag and drop or paste images into this textbox.
+
+## 🌡 End to End testing
+
+> A note about whether end-to-end tests pass locally, or N/A if you don't think they apply to this pull request.
