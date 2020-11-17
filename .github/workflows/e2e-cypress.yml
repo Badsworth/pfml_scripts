@@ -61,7 +61,7 @@ jobs:
           record: true
           parallel: true
           working-directory: e2e
-          tag: ${{ env.cypress_tags }}
+          tag: "${{ env.cypress_tags }},Env-${{ env.E2E_ENVIRONMENT }}"
         env:
           # Setup any secret overrides that are necessary here.
           # Most other environment variables will come from /e2e/config.json,
