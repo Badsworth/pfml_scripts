@@ -14,10 +14,19 @@ from massgov.pfml.rmv.client import RmvClient
 
 
 def is_test_record(request: RMVCheckRequest) -> bool:
-    is_steve_tester = request.first_name == "Steve" and request.last_name == "Tester"
-    is_charles_presley = request.first_name == "Charles" and request.last_name == "Presley"
+    test_records = {
+        ("Steve", "Tester"),
+        ("Charles", "Presley"),
+        ("Willis", "Sierra"),
+        ("Lilibeth", "Perozo"),
+        ("Roseangela", "Leite Da Silva"),
+        ("Vida", "King"),
+        ("John", "Pinkham"),
+        ("Jonathan", "Day"),
+        ("Linda", "Bellabe"),
+    }
 
-    return is_steve_tester or is_charles_presley
+    return (request.first_name, request.last_name) in test_records
 
 
 def is_mocked(rmv_mocking_behavior: RMVCheckBehavior, request: RMVCheckRequest) -> bool:
