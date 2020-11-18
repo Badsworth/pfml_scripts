@@ -60,4 +60,5 @@ module "api" {
   fineos_aws_iam_role_arn                          = null
   fineos_aws_iam_role_external_id                  = null
   enable_employer_endpoints                        = "1"
+  enable_application_fraud_check                   = "0"
 }

@@ -84,6 +84,7 @@ services:
       # - SERVICE_NOW_PASSWORD=...
       - PORTAL_ABSENCE_LEAVE_ADMIN_URL=http://paidleave.mass.gov/employers/claims/review/?absence_id=
       - PORTAL_ABSENCE_CLAIMANT_URL=http://paidleave.mass.gov/applications
+      - ENABLE_APPLICATION_FRAUD_CHECK=0
 
     networks:
       main:

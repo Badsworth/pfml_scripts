@@ -2,6 +2,7 @@ from datetime import date
 from itertools import chain, combinations
 from typing import Iterable, List, Optional, Union
 
+import massgov.pfml.db as db
 from massgov.pfml.api.services.applications import (
     ContinuousLeavePeriod,
     IntermittentLeavePeriod,
@@ -13,8 +14,9 @@ from massgov.pfml.db.models.applications import (
     EmploymentStatus,
     LeaveReason,
     LeaveReasonQualifier,
+    TaxIdentifier,
 )
-from massgov.pfml.db.models.employees import PaymentType
+from massgov.pfml.db.models.employees import PaymentType, User
 
 PFML_PROGRAM_LAUNCH_DATE = date(2021, 1, 1)
 MAX_DAYS_IN_ADVANCE_TO_SUBMIT = 60
@@ -711,5 +713,37 @@ def get_work_pattern_issues(application: Application) -> List[Issue]:
                         field=f"work_pattern.work_pattern_days[{i}].minutes",
                     )
                 )
+
+    return issues
+
+
+def validate_application_state(
+    existing_application: Application, db_session: db.Session
+) -> List[Issue]:
+    """
+        Utility method for validating an application's state in the entire system is valid
+        Currently the only check is one to potentially catch fraud where an SSN is being used
+        with multiple email addresses.
+    """
+    issues = []
+
+    # We consider an application potentially fraudulent if another application exists that:
+    #   Has the same tax identifier
+    #   Has a different user
+    applications = (
+        db_session.query(Application).filter(
+            TaxIdentifier.tax_identifier == existing_application.tax_identifier.tax_identifier,
+            Application.application_id != existing_application.application_id,
+            User.active_directory_id != existing_application.user.active_directory_id,
+        )
+    ).all()
+
+    # This may be a case of fraud if any applications were returned.
+    # Add an issue, the portal will display information indicating
+    # the user should reach out to the contact center for additional assistance.
+    if applications:
+        issues.append(
+            Issue(message="Request by current user not allowed", rule=IssueRule.disallow_attempts,)
+        )
 
     return issues

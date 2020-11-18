@@ -81,4 +81,5 @@ module "api" {
   fineos_aws_iam_role_arn                          = "arn:aws:iam::666444232783:role/somdev-IAMRoles-CustomerAccountAccessRole-BF05IBJSG74B"
   fineos_aws_iam_role_external_id                  = "12345"
   enable_employer_endpoints                        = "1"
+  enable_application_fraud_check                   = "0"
 }

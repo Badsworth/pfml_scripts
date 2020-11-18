@@ -5,7 +5,7 @@ import connexion
 import puremagic
 from flask import Response
 from puremagic import PureError
-from werkzeug.exceptions import BadRequest, NotFound, ServiceUnavailable, Unauthorized
+from werkzeug.exceptions import BadRequest, Forbidden, NotFound, ServiceUnavailable, Unauthorized
 
 import massgov.pfml.api.app as app
 import massgov.pfml.api.services.application_rules as application_rules
@@ -137,6 +137,20 @@ def applications_submit(application_id):
                 errors=issues,
                 data=ApplicationResponse.from_orm(existing_application).dict(exclude_none=True),
             ).to_api_response()
+
+        if app.get_config().enable_application_fraud_check:
+            # Meta issues are problems with the application beyond just the model itself
+            # Includes checks for a potentially fraudulent application.
+            meta_issues = application_rules.validate_application_state(
+                existing_application, db_session
+            )
+            if meta_issues:
+                return response_util.error_response(
+                    status_code=Forbidden,
+                    message="Application unable to be submitted by current user",
+                    errors=meta_issues,
+                    data=ApplicationResponse.from_orm(existing_application).dict(exclude_none=True),
+                ).to_api_response()
 
         # Only send to fineos if fineos_absence_id isn't set. If it is set,
         # assume that just complete_intake needs to be reattempted.

@@ -129,6 +129,12 @@ def disable_employer_endpoint(monkeypatch):
 
 
 @pytest.fixture
+def enable_application_fraud_check(monkeypatch):
+    new_env = monkeypatch.setenv("ENABLE_APPLICATION_FRAUD_CHECK", "1")
+    return new_env
+
+
+@pytest.fixture
 def consented_user_claims(consented_user):
     claims = {
         "a": "b",

@@ -3,7 +3,7 @@ from enum import Enum
 from typing import Any, Dict, List, Optional, Type, Union
 
 import flask
-from werkzeug.exceptions import BadRequest, HTTPException, NotFound, ServiceUnavailable
+from werkzeug.exceptions import BadRequest, Forbidden, HTTPException, NotFound, ServiceUnavailable
 
 from massgov.pfml.api.validation.exceptions import ValidationErrorDetail
 
@@ -52,6 +52,9 @@ class IssueRule(str, Enum):
     disallow_mismatched_masked_field = "disallow_mismatched_masked_field"
     # Fully masked field present when system contains no data
     disallow_fully_masked_no_existing = "disallow_fully_masked_no_existing"
+    # Disallow suspicious attempts for potential fraud cases.
+    # Intentionally vague to avoid leaking this is for fraud prevention
+    disallow_attempts = "disallow_attempts"
 
 
 # Partial list of types currently used manually
@@ -71,7 +74,7 @@ class IssueType(str, Enum):
 
 @dataclass
 class Issue:
-    type: Union[IssueType, str]
+    type: Union[IssueType, str, None] = None
     message: str = ""
     rule: Optional[Any] = None
     field: Optional[str] = None
@@ -153,7 +156,9 @@ def success_response(
 
 
 def error_response(
-    status_code: Union[HTTPException, Type[BadRequest], Type[ServiceUnavailable], Type[NotFound]],
+    status_code: Union[
+        HTTPException, Type[BadRequest], Type[ServiceUnavailable], Type[NotFound], Type[Forbidden]
+    ],
     message: str,
     errors: List[Issue],
     data: Union[None, Dict, List[Dict]] = None,

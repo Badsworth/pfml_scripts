@@ -82,4 +82,5 @@ module "api" {
   portal_absence_leave_admin_url                   = "http://paidleave-test.mass.gov/employers/claims/review/?absence_id="
   portal_absence_claimant_url                      = "http://paidleave-test.mass.gov/applications"
   enable_employer_endpoints                        = "1"
+  enable_application_fraud_check                   = "0"
 }
