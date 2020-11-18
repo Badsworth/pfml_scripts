@@ -186,7 +186,7 @@ CHECKS_AND_THEIR_FAILURE_DESCRIPTIONS = {
     "check_mass_id_number": "ID number mismatch",
     "check_residential_address_line_1": "residential address line 1 mismatch",
     "check_residential_address_line_2": "residential address line 2 mismatch",
-    "check_residential_city": "residential city  mismatch",
+    "check_residential_city": "residential city mismatch",
     "check_residential_zip_code": "residential zip code mismatch",
 }
 
