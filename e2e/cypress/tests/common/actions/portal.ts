@@ -559,6 +559,7 @@ export function enterBondingDateInfo(
       break;
 
     case "Foster Care":
+    case "Adoption":
       cy.contains(
         "fieldset",
         "When did the child arrive in your home through foster care or adoption?"
