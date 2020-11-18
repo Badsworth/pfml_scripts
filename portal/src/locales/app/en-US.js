@@ -462,14 +462,16 @@ const pages = {
     accountVerified:
       "Thanks for verifying your email address. You may now log into your account.",
     accountVerifiedHeading: "Email successfully verified",
-    createAccountLink:
-      "Or <create-account-link>create an account</create-account-link>",
+    createClaimantAccount:
+      "Need to apply for paid leave? <create-account-link>Create an account</create-account-link>",
+    createEmployerAccount:
+      "Are you a Massachusetts employer? <create-employer-account-link>Create an employer account</create-employer-account-link>",
     forgotPasswordLink: "Forgot your password?",
     loginButton: "Log in",
     passwordLabel: "$t(shared.passwordLabel)",
     sessionTimedOut: "You were logged out due to inactivity",
     sessionTimedOutHeading: "Session timed out",
-    title: "Log in to get started",
+    title: "Log in to your paid leave account",
     usernameLabel: "$t(shared.usernameLabel)",
   },
   authResetPassword: {
@@ -1244,16 +1246,17 @@ const pages = {
   },
   employersAuthCreateAccount: {
     createAccountButton: "Create account",
+    createClaimantAccount:
+      "Need to apply for paid leave? <create-account-link>Create an account</create-account-link>",
     detailsLabel: "What you can do with this account",
     detailsList:
       "<ul><li>Review paid leave applications from your employees</li><li>Get updates about the program by email</li><li>Download documents and decision letters</li></ul>",
     einHint:
       "Your Employer Identification Number (EIN) is a <ein-link>9-digit number</ein-link> assigned by the Internal Revenue Service. It is listed on tax returns and your payroll department should have this information.",
     einLabel: "Employer ID number",
-    haveAnAccountFooterLabel: "Have an account?",
+    haveAnAccount: "Have an account? <log-in-link>Log in</log-in-link>",
     lead:
       "Welcome! If you're a Massachussetts employer and you manage leave for your team, you need to create an employer account with information from your company.",
-    logInFooterLink: "Log in",
     nextStep: "We'll send you a 6-digit code to verify your email address.",
     passwordHint: "$t(shared.passwordHint)",
     passwordLabel: "$t(shared.passwordLabel)",

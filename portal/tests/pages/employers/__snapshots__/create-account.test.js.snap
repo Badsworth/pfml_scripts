@@ -78,32 +78,48 @@ exports[`CreateAccount renders the page 1`] = `
     Create account
   </Button>
   <div
-    className="margin-top-2 text-base text-bold"
+    className="border-top-2px border-base-lighter margin-top-4 padding-top-4 text-base-dark text-bold"
   >
-    Have an account?
-    <Link
-      href="/login"
-    >
-      <a
-        className="display-inline-block margin-left-1"
-      >
-        Log in
-      </a>
-    </Link>
+    <p>
+      <Trans
+        components={
+          Object {
+            "log-in-link": <a
+              className="display-inline-block"
+              href="/login"
+            />,
+          }
+        }
+        i18nKey="pages.employersAuthCreateAccount.haveAnAccount"
+      />
+    </p>
   </div>
 </form>
 `;
 
 exports[`CreateAccount renders the page 2`] = `
-<Trans
-  components={
-    Object {
-      "li": <li />,
-      "ul": <ul
-        className="usa-list"
-      />,
+Array [
+  <Trans
+    components={
+      Object {
+        "li": <li />,
+        "ul": <ul
+          className="usa-list"
+        />,
+      }
     }
-  }
-  i18nKey="pages.employersAuthCreateAccount.detailsList"
-/>
+    i18nKey="pages.employersAuthCreateAccount.detailsList"
+  />,
+  <Trans
+    components={
+      Object {
+        "log-in-link": <a
+          className="display-inline-block"
+          href="/login"
+        />,
+      }
+    }
+    i18nKey="pages.employersAuthCreateAccount.haveAnAccount"
+  />,
+]
 `;
