@@ -143,11 +143,12 @@ const useAuthLogic = ({ appErrorsLogic, portalFlow }) => {
    * Shared logic to create an account
    * @param {string} username Email address that is used as the username
    * @param {string} password Password
-   * @param {string} ein Employer id number (if signing up through Employer Portal)
+   * @param {string} [ein] Employer id number (if signing up through Employer Portal)
    */
-  const createAccountInCognito = async (username, password, ein = "") => {
+  const createAccountInCognito = async (username, password, ein) => {
     try {
       trackAuthRequest("signUp");
+
       if (ein) {
         await Auth.signUp({
           username,
@@ -161,14 +162,12 @@ const useAuthLogic = ({ appErrorsLogic, portalFlow }) => {
       }
 
       // Store the username and/or EIN so the user doesn't need to reenter it on the Verify page
-      if (ein) {
-        setAuthData({
-          createAccountUsername: username,
-          employerIdNumber: ein,
-        });
-      } else {
-        setAuthData({ createAccountUsername: username });
-      }
+      setAuthData({
+        createAccountUsername: username,
+        createAccountFlow: ein ? "employer" : "claimant",
+        employerIdNumber: ein,
+      });
+
       portalFlow.goToPageFor("CREATE_ACCOUNT");
     } catch (error) {
       trackAuthError(error);

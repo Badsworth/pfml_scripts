@@ -21,18 +21,25 @@ export const VerifyAccount = (props) => {
   const { t } = useTranslation();
 
   const createAccountUsername = get(auth, "authData.createAccountUsername");
+  const createAccountFlow = get(auth, "authData.createAccountFlow");
   const employerIdNumber = get(auth, "authData.employerIdNumber");
+
   const { formState, getField, updateFields, clearField } = useFormState({
     code: "",
     username: createAccountUsername,
     ein: employerIdNumber,
+    isEmployer: !!employerIdNumber,
   });
   const [codeResent, setCodeResent] = useState(false);
-  const [isEmployer, setIsEmployer] = useState(false);
+
+  // If a user reloads the page, we'd lose the email and FEIN stored in authData,
+  // which we need for verifying their account
+  const showEmailField = !createAccountUsername;
+  const showEinFields = !employerIdNumber && createAccountFlow !== "claimant";
 
   const handleSubmit = useThrottledHandler(async (event) => {
     event.preventDefault();
-    if (isEmployer || formState.ein) {
+    if (formState.isEmployer) {
       await auth.verifyEmployerAccount(
         formState.username,
         formState.code,
@@ -86,7 +93,7 @@ export const VerifyAccount = (props) => {
           smallLabel
         />
 
-        {!createAccountUsername && (
+        {showEmailField && (
           <InputText
             {...getFunctionalInputProps("username")}
             type="email"
@@ -95,38 +102,35 @@ export const VerifyAccount = (props) => {
           />
         )}
 
-        {!employerIdNumber && (
+        {showEinFields && (
           <React.Fragment>
+            <div className="margin-top-4">
+              <InputChoice
+                label={t("pages.authVerifyAccount.employerAccountLabel")}
+                {...getFunctionalInputProps("isEmployer")}
+                value="true"
+              />
+            </div>
             <ConditionalContent
               fieldNamesClearedWhenHidden={["ein"]}
               getField={getField}
               clearField={clearField}
               updateFields={updateFields}
-              visible={isEmployer}
+              visible={formState.isEmployer}
             >
               <InputText
                 {...getFunctionalInputProps("ein")}
-                type="numeric"
                 label={t("pages.authVerifyAccount.einLabel")}
                 mask="fein"
                 smallLabel
               />
             </ConditionalContent>
-            <InputChoice
-              label={t("pages.authVerifyAccount.employerAccountLabel")}
-              name="employer-account-checkbox"
-              value={isEmployer.toString()}
-              onChange={() => {
-                setIsEmployer(!isEmployer);
-                updateFields({ ein: "" });
-              }}
-            />
           </React.Fragment>
         )}
 
         <div>
           <Button
-            className="margin-top-2"
+            className="margin-top-4"
             name="resend-code-button"
             onClick={handleResendCodeClick}
             variation="unstyled"

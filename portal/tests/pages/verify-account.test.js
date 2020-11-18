@@ -9,10 +9,10 @@ jest.mock("../../src/hooks/useAppLogic");
 
 describe("VerifyAccount", () => {
   let appLogic,
+    changeCheckbox,
     changeField,
     click,
     ein,
-    selectCheckbox,
     submitForm,
     username,
     verificationCode,
@@ -22,7 +22,7 @@ describe("VerifyAccount", () => {
     act(() => {
       wrapper = shallow(<VerifyAccount appLogic={appLogic} />);
     });
-    ({ changeField, click, selectCheckbox, submitForm } = simulateEvents(
+    ({ changeField, click, changeCheckbox, submitForm } = simulateEvents(
       wrapper
     ));
   }
@@ -122,15 +122,16 @@ describe("VerifyAccount", () => {
     beforeEach(() => {
       appLogic.auth.authData = {
         createAccountUsername: username,
+        createAccountFlow: "employer",
         employerIdNumber: ein,
       };
       render();
     });
 
     it("does not render a checkbox for user to state whether they're an employer", () => {
-      expect(
-        wrapper.find("InputChoice[name='employer-account-checkbox']")
-      ).toHaveLength(0);
+      expect(wrapper.find("InputChoice[name='isEmployer']").exists()).toBe(
+        false
+      );
     });
 
     it("calls verifyEmployerAccount upon form submission", () => {
@@ -144,25 +145,25 @@ describe("VerifyAccount", () => {
     });
   });
 
-  describe("when authData.employerIdNumber is not set", () => {
+  describe("when employerIdNumber and createAccountFlow are not set in authData", () => {
     it("renders a checkbox for user to state whether they're an employer", () => {
-      expect(
-        wrapper.find("InputChoice[name='employer-account-checkbox']")
-      ).toHaveLength(1);
+      expect(wrapper.find("InputChoice[name='isEmployer']").exists()).toBe(
+        true
+      );
     });
 
     it("displays an employer id number field if user selects checkbox", () => {
-      selectCheckbox("employer-account-checkbox", true);
-      expect(wrapper.find("InputText[name='ein']")).toHaveLength(1);
+      changeCheckbox("isEmployer", true);
+      expect(wrapper.find("ConditionalContent").prop("visible")).toBe(true);
     });
 
     it("hides the employer id number field is user deselects checkbox", () => {
-      selectCheckbox("employer-account-checkbox", false);
-      expect(wrapper.find("InputText[name='ein']").exists()).toEqual(true);
+      changeCheckbox("isEmployer", false);
+      expect(wrapper.find("ConditionalContent").prop("visible")).toBe(false);
     });
 
     it("calls verifyEmployerAccount upon form submission", () => {
-      click({ name: "employer-account-checkbox" });
+      changeCheckbox("isEmployer", true);
       changeField("code", verificationCode);
       changeField("username", username);
       changeField("ein", ein);
@@ -171,6 +172,22 @@ describe("VerifyAccount", () => {
         username,
         verificationCode,
         ein
+      );
+    });
+  });
+
+  describe("when authData.employerIdNumber is not set and createAccountFlow is 'claimant'", () => {
+    beforeEach(() => {
+      appLogic.auth.authData = {
+        createAccountUsername: username,
+        createAccountFlow: "claimant",
+      };
+      render();
+    });
+
+    it("does not render a checkbox for user to state whether they're an employer", () => {
+      expect(wrapper.find("InputChoice[name='isEmployer']").exists()).toBe(
+        false
       );
     });
   });

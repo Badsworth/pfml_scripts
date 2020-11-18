@@ -29,6 +29,16 @@ exports[`VerifyAccount renders the empty page 1`] = `
       type="email"
       value=""
     />
+    <div
+      className="margin-top-4"
+    >
+      <InputChoice
+        label="I need an employer account to manage leave for my team."
+        name="isEmployer"
+        onChange={[Function]}
+        value="true"
+      />
+    </div>
     <ConditionalContent
       clearField={[Function]}
       fieldNamesClearedWhenHidden={
@@ -46,19 +56,12 @@ exports[`VerifyAccount renders the empty page 1`] = `
         name="ein"
         onChange={[Function]}
         smallLabel={true}
-        type="numeric"
         value=""
       />
     </ConditionalContent>
-    <InputChoice
-      label="I need an employer account to manage leave for my team."
-      name="employer-account-checkbox"
-      onChange={[Function]}
-      value="false"
-    />
     <div>
       <Button
-        className="margin-top-2"
+        className="margin-top-4"
         loading={false}
         name="resend-code-button"
         onClick={[Function]}

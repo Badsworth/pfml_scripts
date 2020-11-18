@@ -601,12 +601,15 @@ describe("useAuthLogic", () => {
       spy.mockRestore();
     });
 
-    it("stores username in authData for Verify Account page", async () => {
+    it("sets authData for reference on Verify Account page", async () => {
       await act(async () => {
         await createAccount(username, password);
       });
 
-      expect(authData.createAccountUsername).toBe(username);
+      expect(authData).toEqual({
+        createAccountUsername: username,
+        createAccountFlow: "claimant",
+      });
     });
 
     it("trims whitespace from username", async () => {
@@ -810,13 +813,14 @@ describe("useAuthLogic", () => {
       spy.mockRestore();
     });
 
-    it("stores username and ein in authData for Verify Account page", async () => {
+    it("sets authData for reference on Verify Account page", async () => {
       await act(async () => {
         await createEmployerAccount(username, password, ein);
       });
 
       expect(authData).toEqual({
         createAccountUsername: username,
+        createAccountFlow: "employer",
         employerIdNumber: ein,
       });
     });

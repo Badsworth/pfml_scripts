@@ -5,13 +5,31 @@ import VerifyAccount from "src/pages/verify-account";
 export default {
   title: "Pages/Auth/Verify Account",
   component: VerifyAccount,
+  argTypes: {
+    scenario: {
+      defaultValue: "Claimant post-signup",
+      control: {
+        type: "radio",
+        options: [
+          "Claimant post-signup",
+          "Employer post-signup",
+          "After page reload",
+        ],
+      },
+    },
+  },
 };
 
 export const Page = (args) => {
   const authData = {};
 
-  if (args.scenario === "After signup") {
-    authData.createAccountUsername = "test@example.com";
+  if (args.scenario === "Claimant post-signup") {
+    authData.createAccountUsername = "me-claimant@gmail.com";
+    authData.createAccountFlow = "claimant";
+  } else if (args.scenario === "Employer post-signup") {
+    authData.createAccountUsername = "me-employer@acme.com";
+    authData.createAccountFlow = "employer";
+    authData.employerIdNumber = "12-3456789";
   }
 
   const appLogic = {
@@ -20,14 +38,4 @@ export const Page = (args) => {
   };
 
   return <VerifyAccount appLogic={appLogic} />;
-};
-
-Page.argTypes = {
-  scenario: {
-    defaultValue: "After signup",
-    control: {
-      type: "radio",
-      options: ["After signup", "After page refresh"],
-    },
-  },
 };
