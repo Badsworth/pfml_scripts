@@ -192,6 +192,11 @@ resource "aws_iam_role_policy_attachment" "db_user_pfml_api_to_cognito_post_conf
   policy_arn = aws_iam_policy.db_user_pfml_api.arn
 }
 
+resource "aws_iam_role_policy_attachment" "access_ssm_post_confirmation_lambda_role_attachment" {
+  role       = aws_iam_role.cognito_post_confirmation_lambda_role.name
+  policy_arn = aws_iam_policy.access_ssm_policy.arn
+}
+
 # ----------------------------------------------------------------------------------------------------------------------
 # IAM role and policies for the Formstack import Lambda
 
@@ -308,6 +313,39 @@ data "aws_iam_policy_document" "iam_policy_eligibility_feed_lambda_execution" {
       "${local.ssm_arn_prefix}/${local.app_name}/${var.environment_name}",
     ]
   }
+}
+
+
+data "aws_iam_policy_document" "iam_policy_access_ssm" {
+  statement {
+    effect = "Allow"
+
+    actions = [
+      "ssm:GetParameter",
+      "ssm:GetParameters"
+    ]
+
+    resources = [
+      "${local.ssm_arn_prefix}/${local.app_name}/${var.environment_name}/*",
+    ]
+  }
+
+  statement {
+    effect = "Allow"
+
+    actions = [
+      "ssm:GetParametersByPath"
+    ]
+
+    resources = [
+      "${local.ssm_arn_prefix}/${local.app_name}/${var.environment_name}",
+    ]
+  }
+}
+
+resource "aws_iam_policy" "access_ssm_policy" {
+  name   = "${local.app_name}-${var.environment_name}-access_ssm_policy"
+  policy = data.aws_iam_policy_document.iam_policy_access_ssm.json
 }
 
 # Normally this would be rolled into `eligibility_feed_lambda_execution` above,
