@@ -175,6 +175,15 @@ function CompletedApplicationDocsInfo(props) {
   const hasLegalNotices = legalNotices.length > 0;
   const hasFutureChildDate = get(claim, "leave_details.has_future_child_date");
 
+  const hasCertDoc =
+    findDocumentsByTypes(
+      documents,
+      // This enum is used because for MVP all certs will have the same doc type
+      [DocumentType.medicalCertification]
+    ).length > 0;
+
+  const canShowBondingCertContent = !hasCertDoc && hasFutureChildDate;
+
   const containerClasses = classnames({
     // Don't render a border if we only have the Button to render,
     // which matches how the card is presented for non-Completed claims
@@ -202,9 +211,7 @@ function CompletedApplicationDocsInfo(props) {
         </React.Fragment>
       )}
 
-      {hasFutureChildDate && (
-        // This condition is used instead of isChildDateInFuture because we want
-        // to continue showing the button after the placement or birth of the child
+      {canShowBondingCertContent && (
         <p>
           {t("components.applicationCard.futureBondingLeave", {
             context: contentContext[leaveReasonQualifier],
