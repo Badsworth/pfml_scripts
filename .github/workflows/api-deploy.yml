@@ -287,7 +287,7 @@ jobs:
     needs: [update-the-deploy-branch, api-build, formstack-import-build, cognito-post-confirmation-build, eligibility-feed-build]
 
     env:
-      TF_VAR_service_docker_tag: ${{ github.sha }}
+      TF_VAR_service_docker_tag: ${{ needs.update-the-deploy-branch.outputs.commit_hash }}
 
     steps:
       - uses: actions/checkout@v2
@@ -336,7 +336,7 @@ jobs:
     needs: [update-the-deploy-branch, api-db-migrate-up]
 
     env:
-      TF_VAR_service_docker_tag: ${{ github.sha }}
+      TF_VAR_service_docker_tag: ${{ needs.update-the-deploy-branch.outputs.commit_hash }}
 
     steps:
       - uses: actions/checkout@v2
@@ -375,7 +375,7 @@ jobs:
     needs: [update-the-deploy-branch, api-build, cognito-post-confirmation-build, cognito-pre-signup-build, eligibility-feed-build, api-db-migrate-up, formstack-import-build]
 
     env:
-      TF_VAR_service_docker_tag: ${{ github.sha }}
+      TF_VAR_service_docker_tag: ${{ needs.update-the-deploy-branch.outputs.commit_hash }}
       TF_VAR_formstack_lambda_artifact_s3_key: ${{ needs.formstack-import-build.outputs.s3_key }}
       TF_VAR_cognito_post_confirmation_lambda_artifact_s3_key: ${{ needs.cognito-post-confirmation-build.outputs.s3_key }}
       TF_VAR_cognito_pre_signup_lambda_artifact_s3_key: ${{ needs.cognito-pre-signup-build.outputs.s3_key }}
