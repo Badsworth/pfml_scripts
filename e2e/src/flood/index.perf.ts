@@ -15,7 +15,7 @@ import scenarios from "./scenarios";
 
 export const settings: TestSettings = {
   ...globalElementSettings,
-  loopCount: 1000,
+  loopCount: -1,
 };
 
 export default (): void => {
@@ -23,7 +23,7 @@ export default (): void => {
   let curr: LSTScenario;
 
   // Set up test data to control execution.
-  TestData.fromJSON<LSTSimClaim>(`./${dataBaseUrl}/claims.json`);
+  TestData.fromJSON<LSTSimClaim>(`./${dataBaseUrl}/claims.json`).circular(true);
 
   // Before moving on to next scenario, fetch and adjust data needed
   beforeEach(async (browser: Browser, data?: LSTSimClaim) => {

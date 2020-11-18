@@ -95,7 +95,6 @@ export async function getMailVerifier(
       namespace: namespace,
       tag: getTagFromAddress(address),
       livequery: true,
-      timestamp_from: new Date().getTime(),
     };
 
     const paramsString = Object.entries(params)

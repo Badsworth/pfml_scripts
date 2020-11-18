@@ -5,8 +5,8 @@ import Tasks from "./tasks";
 
 export const globalElementSettings: TestSettings = {
   loopCount: 1,
-  actionDelay: 1,
-  stepDelay: 1,
+  actionDelay: "0",
+  stepDelay: "0",
   waitUntil: "visible",
   name: "PFML Load & Stress Test Bot",
   userAgent: "PFML Load & Stress Test Bot",
@@ -37,7 +37,7 @@ export const realUserTimings: Record<
   PortalRegistration: 3,
   PortalClaimSubmit: 15,
   FineosClaimSubmit: 8,
-  LeaveAdminSelfRegistration: 3,
+  LeaveAdminSelfRegistration: 0.5,
 };
 
 export const dataBaseUrl = "data/pilot4";
