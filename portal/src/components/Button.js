@@ -47,9 +47,22 @@ function Button({ type = "button", ...props }) {
     </button>
   );
 
-  const loadingMessage = showLoading ? (
-    <strong>{props.loadingMessage}</strong>
-  ) : null;
+  const loadingMessageClasses = classnames(
+    // full-width on small screens, beside button on larger screens
+    "display-block",
+    "mobile-lg:display-inline-block",
+    // margin between button only on small screens
+    "margin-top-1",
+    "mobile-lg:margin-top-0",
+    // center text to align with spinner on small screens
+    "text-center",
+    "mobile-lg:text-left"
+  );
+
+  const loadingMessage =
+    showLoading && props.loadingMessage ? (
+      <strong className={loadingMessageClasses}>{props.loadingMessage}</strong>
+    ) : null;
 
   return (
     <React.Fragment>

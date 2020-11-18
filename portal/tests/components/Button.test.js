@@ -80,5 +80,20 @@ describe("Button", () => {
       expect(wrapper.find("Spinner").exists()).toBe(false);
       expect(wrapper.find("button").prop("disabled")).toBe(false);
     });
+
+    it("renders a message when loadingMessage is set", () => {
+      const { wrapper } = render({
+        loading: true,
+        loadingMessage: "Saving… please wait.",
+      });
+
+      expect(wrapper.find("strong")).toMatchInlineSnapshot(`
+        <strong
+          className="display-block mobile-lg:display-inline-block margin-top-1 mobile-lg:margin-top-0 text-center mobile-lg:text-left"
+        >
+          Saving… please wait.
+        </strong>
+      `);
+    });
   });
 });
