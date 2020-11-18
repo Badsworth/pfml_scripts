@@ -19,12 +19,12 @@ import EmployerBenefit, {
   EmployerBenefitType,
   IncomeFrequency,
 } from "../src/models/EmployerBenefit";
+import EmployerClaim, { FineosLeaveReason } from "../src/models/EmployerClaim";
 import { mount, shallow } from "enzyme";
 import Address from "../src/models/Address";
 import AppErrorInfo from "../src/models/AppErrorInfo";
 import AppErrorInfoCollection from "../src/models/AppErrorInfoCollection";
 import ClaimCollection from "../src/models/ClaimCollection";
-import EmployerClaim from "../src/models/EmployerClaim";
 import PreviousLeave from "../src/models/PreviousLeave";
 import React from "react";
 import User from "../src/models/User";
@@ -198,9 +198,9 @@ export class MockEmployerClaimBuilder extends BaseMockClaimBuilder {
     this.address();
     this.continuous();
     this.reducedSchedule();
-    this.medicalLeaveReason();
     this.previousLeave();
     this.employerBenefit();
+    set(this.claimAttrs, "leave_details.reason", FineosLeaveReason.medical);
     set(this.claimAttrs, "fineos_absence_id", "NTN-111-ABS-01");
     return this;
   }

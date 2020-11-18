@@ -9,7 +9,7 @@ exports[`EmployerBenefitCard renders fields for an EmployerBenefit instance 1`] 
           "checked": false,
           "hint": "For example, vacation time, sick leave, or personal time",
           "label": "Accrued paid leave",
-          "value": "Paid Leave",
+          "value": "Accrued Paid Leave",
         },
         Object {
           "checked": false,
@@ -21,13 +21,13 @@ exports[`EmployerBenefitCard renders fields for an EmployerBenefit instance 1`] 
           "checked": false,
           "hint": "Also known as a permanent disability policy",
           "label": "Permanent disability insurance",
-          "value": "Permanent Disability",
+          "value": "Permanent Disability Insurance",
         },
         Object {
           "checked": false,
           "hint": "For example, a paid maternity leave policy",
           "label": "Family or medical leave insurance",
-          "value": "Family or Medical Leave",
+          "value": "Family or Medical Leave Insurance",
         },
       ]
     }

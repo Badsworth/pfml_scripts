@@ -25,10 +25,10 @@ class EmployerBenefit extends BaseModel {
 export const EmployerBenefitType = {
   // The ordering here defines the ordering of elements on the page so we override the linter rule
   /* eslint-disable sort-keys */
-  paidLeave: "Paid Leave",
+  paidLeave: "Accrued Paid Leave",
   shortTermDisability: "Short Term Disability",
-  permanentDisability: "Permanent Disability",
-  familyOrMedicalLeave: "Family or Medical Leave",
+  permanentDisability: "Permanent Disability Insurance",
+  familyOrMedicalLeave: "Family or Medical Leave Insurance",
   /* eslint-enable sort-keys */
 };
 

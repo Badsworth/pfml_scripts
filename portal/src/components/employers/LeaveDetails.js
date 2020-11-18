@@ -1,5 +1,4 @@
-import EmployerClaim from "../../models/EmployerClaim";
-import { LeaveReason } from "../../models/Claim";
+import EmployerClaim, { FineosLeaveReason } from "../../models/EmployerClaim";
 import PropTypes from "prop-types";
 import React from "react";
 import ReviewHeading from "../ReviewHeading";
@@ -43,7 +42,7 @@ const LeaveDetails = (props) => {
         label={t("pages.employersClaimsReview.leaveDetails.natureOfLeaveLabel")}
       >
         {t("pages.employersClaimsReview.leaveDetails.leaveReasonValue", {
-          context: findKeyByValue(LeaveReason, reason),
+          context: findKeyByValue(FineosLeaveReason, reason),
         })}
       </ReviewRow>
       <ReviewRow

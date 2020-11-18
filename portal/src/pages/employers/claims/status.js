@@ -1,9 +1,10 @@
+import EmployerClaim, {
+  FineosLeaveReason,
+} from "../../../models/EmployerClaim";
 import { Trans, useTranslation } from "react-i18next";
 import BackButton from "../../../components/BackButton";
-import EmployerClaim from "../../../models/EmployerClaim";
 import Heading from "../../../components/Heading";
 import Lead from "../../../components/Lead";
-import { LeaveReason } from "../../../models/Claim";
 import PropTypes from "prop-types";
 import React from "react";
 import StatusRow from "../../../components/StatusRow";
@@ -47,7 +48,7 @@ export const Status = (props) => {
         <StatusRow label={t("pages.employersClaimsStatus.leaveReasonLabel")}>
           {t("pages.employersClaimsStatus.leaveReasonValue", {
             context: findKeyByValue(
-              LeaveReason,
+              FineosLeaveReason,
               get(claim, "leave_details.reason")
             ),
           })}
