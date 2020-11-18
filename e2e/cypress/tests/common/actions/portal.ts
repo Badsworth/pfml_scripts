@@ -321,19 +321,10 @@ export function answerIntermittentLeaveQuestion(
       }
     );
   });
-  if (application.leave_details?.intermittent_leave_periods?.[0]) {
-    const leave: IntermittentLeavePeriods | undefined =
-      application.leave_details.intermittent_leave_periods[0];
-    Object.assign(leave, {
-      frequency: 5,
-      frequency_interval: 6,
-      frequency_interval_basis: "Months",
-      duration: 2,
-      duration_basis: "Days",
-    });
-
+  const leave = application.leave_details?.intermittent_leave_periods?.[0];
+  if (leave) {
     onPage("leave-period-intermittent");
-    completeDateForm(leave?.start_date, leave?.end_date);
+    completeDateForm(leave.start_date, leave.end_date);
     cy.contains("button", "Save and continue").click();
     completeIntermittentLeaveDetails(leave);
   } else {
@@ -575,7 +566,7 @@ export function enterBondingDateInfo(
       break;
 
     default:
-      throw new Error("Unknown Reason Qualifier");
+      throw new Error(`Unknown Reason Qualifier ${dateType}`);
   }
   cy.contains("button", "Save and continue").click();
 }
@@ -646,11 +637,9 @@ export function completeIntermittentLeaveDetails(
     "fieldset",
     "How often might you need to be absent from work?"
   ).within(() => {
-    const label = "Irregular over the next 6 months";
-    if (leave.frequency_interval_basis !== "Months") {
-      throw new Error("Frequency interval should be Months");
-    }
-    cy.labelled(label).click({ force: true });
+    cy.get(
+      `input[name='leave_details.intermittent_leave_periods[0].frequency_interval_basis'][value="${leave.frequency_interval_basis}"]`
+    ).click({ force: true });
   });
   if (!leave.frequency) {
     throw new Error("Frequency must be specified");

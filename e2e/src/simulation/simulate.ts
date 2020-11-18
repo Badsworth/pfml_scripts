@@ -253,7 +253,9 @@ function generateLeavePeriods(
   | ContinuousLeavePeriods[]
   | ReducedScheduleLeavePeriods[]
   | IntermittentLeavePeriods[] {
-  const [startDate, endDate] = generateLeaveDates(shortLeave);
+  const [startDate, endDate] = generateLeaveDates(
+    shortLeave ? { days: 1 } : undefined
+  );
   switch (leaveType) {
     case "continuous":
       return [
@@ -264,13 +266,7 @@ function generateLeavePeriods(
         },
       ];
     case "intermittent":
-      return [
-        {
-          start_date: formatISO(startDate, { representation: "date" }),
-          end_date: formatISO(endDate, { representation: "date" }),
-          is_estimated: false,
-        },
-      ];
+      return generateIntermittentLeavePeriods(shortLeave);
     case "reduced":
       return [
         {
@@ -287,6 +283,25 @@ function generateLeavePeriods(
         },
       ];
   }
+}
+
+function generateIntermittentLeavePeriods(
+  shortLeave: boolean
+): IntermittentLeavePeriods[] {
+  const [startDate, endDate] = generateLeaveDates(
+    shortLeave ? { days: 7 } : undefined
+  );
+  return [
+    {
+      start_date: formatISO(startDate, { representation: "date" }),
+      end_date: formatISO(endDate, { representation: "date" }),
+      duration: 1,
+      duration_basis: "Days",
+      frequency: 1,
+      frequency_interval: 1,
+      frequency_interval_basis: "Weeks",
+    },
+  ];
 }
 
 function getEarliestStartDate(details: ApplicationLeaveDetails): Date {
@@ -406,7 +421,7 @@ function generateMassIDString(): string {
 
 // Generate start and end dates for a leave request, not to exceed 20 weeks, and with a minimum
 // start date of 2021-01-01.
-export function generateLeaveDates(shortLeave: boolean): [Date, Date] {
+export function generateLeaveDates(duration?: Duration): [Date, Date] {
   // Start date must be greater than max(2021-01-01 or today).
   const minStartDate = maxDate([parseISO("2021-01-01"), new Date()]);
   // Start date must be < 60 days from the application date (now).
@@ -415,9 +430,9 @@ export function generateLeaveDates(shortLeave: boolean): [Date, Date] {
   const startDate = faker.date.between(minStartDate, maxStartDate);
 
   // If the claim is marked as "short leave", give it a 1 day length.
-  const addition = shortLeave
-    ? { days: 1 }
-    : { weeks: faker.random.number({ min: 1, max: 11 }) };
+  const addition = duration ?? {
+    weeks: faker.random.number({ min: 1, max: 11 }),
+  };
   return [startDate, add(startDate, addition)];
 }
 

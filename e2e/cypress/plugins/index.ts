@@ -117,7 +117,7 @@ export default function (on: Cypress.PluginEvents): Cypress.ConfigOptions {
       return scenarioFunctions[claimType](opts);
     },
     async createContinuousLeaveDates(): Promise<Date[]> {
-      return generateLeaveDates(true);
+      return generateLeaveDates({ days: 1 });
     },
   });
 
