@@ -309,7 +309,7 @@ const errors = {
         minimum: "Enter the hours you work.",
         minutes: {
           maximum: "The hours entered are more than possible hours.",
-          required: "Enter the hours your work.",
+          required: "Enter the hours you work.",
         },
       },
       work_pattern_type: {
