@@ -154,12 +154,14 @@ def register_leave_admin_with_fineos(
     employer: Employer,
     user: User,
     db_session: massgov.pfml.db.Session,
+    fineos_client: Optional[massgov.pfml.fineos.AbstractFINEOSClient],
 ) -> UserLeaveAdministrator:
     """
     Given information about a Leave administrator, create a FINEOS user for that leave admin
     and associate that user to the leave admin within the PFML DB
     """
     try:
+        fineos = fineos_client if fineos_client else massgov.pfml.fineos.create_client()
         fineos = massgov.pfml.fineos.create_client()
         fineos_web_id = f"pfml_leave_admin_{str(uuid.uuid4())}"
         leave_admin_create_payload = CreateOrUpdateLeaveAdmin(

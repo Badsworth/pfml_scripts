@@ -1,13 +1,25 @@
 import re
 from typing import Any, Dict, Literal, Optional
 
-import massgov.pfml.db as db
+import boto3
+
 import massgov.pfml.util.aws_lambda as aws_lambda
+import massgov.pfml.util.config as config
 import massgov.pfml.util.logging
+from massgov.pfml import db, fineos
 from massgov.pfml.api.services.administrator_fineos_actions import register_leave_admin_with_fineos
 from massgov.pfml.db.models.employees import Employer, Role, User, UserRole
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
+
+fineos_client_config = fineos.factory.FINEOSClientConfig.from_env()
+if fineos_client_config.oauth2_client_secret is None:
+    aws_ssm = boto3.client("ssm", region_name="us-east-1")
+    fineos_client_config.oauth2_client_secret = config.get_secret_from_env(
+        aws_ssm, "FINEOS_CLIENT_OAUTH2_CLIENT_SECRET"
+    )
+
+fineos_client = fineos.create_client(fineos_client_config)
 
 
 class PostConfirmationEventRequest(aws_lambda.CognitoUserPoolEventRequest):
@@ -106,6 +118,7 @@ def leave_admin_create(
         employer=employer,
         user=user,
         db_session=db_session,
+        fineos_client=fineos_client,
     )
 
     db_session.commit()
