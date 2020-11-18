@@ -34,7 +34,7 @@ export const steps = [
       await browser.visit(await PortalBaseUrl);
       const registerEmployerButton = await waitForElement(
         browser,
-        By.linkText("Create an account")
+        By.linkText("Create an employer account")
       );
       await browser.click(registerEmployerButton);
       await waitForRealTimeSim(browser, data, 1 / steps.length);
