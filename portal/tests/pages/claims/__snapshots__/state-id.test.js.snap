@@ -38,6 +38,7 @@ exports[`StateId initially renders the page without an id field 1`] = `
     visible={false}
   >
     <InputText
+      hint="This may be a 9 digit number or begin with an S or SA followed by numbers for a total of 9 characters."
       label="Enter your license or ID number"
       name="mass_id"
       onChange={[Function]}

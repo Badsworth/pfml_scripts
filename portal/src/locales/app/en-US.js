@@ -1106,6 +1106,8 @@ const pages = {
     choiceNo: "$t(shared.choiceNo)",
     choiceYes: "$t(shared.choiceYes)",
     hasStateIdLabel: "Do you have a Massachusetts driver's license or ID card?",
+    idHint:
+      "This may be a 9 digit number or begin with an S or SA followed by numbers for a total of 9 characters.",
     idLabel: "Enter your license or ID number",
     title: "$t(shared.claimsVerifyIdTitle)",
   },

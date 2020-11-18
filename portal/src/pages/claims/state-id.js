@@ -66,6 +66,7 @@ export const StateId = (props) => {
           {...getFunctionalInputProps("mass_id")}
           pii
           label={t("pages.claimsStateId.idLabel")}
+          hint={t("pages.claimsStateId.idHint")}
         />
       </ConditionalContent>
     </QuestionPage>
