@@ -100,8 +100,8 @@ def handle_rmv_check_request(
     finally:
         rmv_check_record.request_to_rmv_completed_at = utcnow()
 
-    if license_inquiry_response.acknowledgement:
-        rmv_check_record.rmv_error_code = license_inquiry_response.acknowledgement
+    if isinstance(license_inquiry_response, RmvAcknowledgement):
+        rmv_check_record.rmv_error_code = license_inquiry_response
 
         logger.info(
             "RMV Check finished without being able to retrieve record from RMV API",

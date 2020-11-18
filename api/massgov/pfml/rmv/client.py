@@ -1,12 +1,16 @@
 from functools import cached_property
-from typing import Optional
+from typing import Optional, Union
 
 import zeep.helpers as zeep_helpers
 
 import massgov.pfml.util.logging
 from massgov.pfml.rmv.caller import ApiCaller, LazyApiCaller, LazyZeepApiCaller
 from massgov.pfml.rmv.errors import RmvUnknownError
-from massgov.pfml.rmv.models import VendorLicenseInquiryRequest, VendorLicenseInquiryResponse
+from massgov.pfml.rmv.models import (
+    RmvAcknowledgement,
+    VendorLicenseInquiryRequest,
+    VendorLicenseInquiryResponse,
+)
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
 
@@ -25,7 +29,7 @@ class RmvClient:
 
     def vendor_license_inquiry(
         self, request: VendorLicenseInquiryRequest
-    ) -> VendorLicenseInquiryResponse:
+    ) -> Union[VendorLicenseInquiryResponse, RmvAcknowledgement]:
         """
         Does a lookup for a valid license.
 
@@ -39,5 +43,10 @@ class RmvClient:
         except Exception as e:
             logger.exception("Error making RMV VendorLicenseInquiry request")
             raise RmvUnknownError(cause=e)
+
+        # If the RMV responds with an Acknowledgement value, all other fields
+        # will be None, so just return the Acknowledgement
+        if res.Acknowledgement:
+            return RmvAcknowledgement(res.Acknowledgement)
 
         return VendorLicenseInquiryResponse(**zeep_helpers.serialize_object(res))

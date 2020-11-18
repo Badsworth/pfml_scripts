@@ -618,11 +618,9 @@ def test_handle_rmv_check_request_fail(test_db_session, matching_check_data):
 
 @pytest.mark.integration
 def test_handle_rmv_check_request_fail_rmv_request(test_db_session, matching_check_data):
-    (rmv_check_request, license_inquiry_response) = matching_check_data
+    (rmv_check_request, _) = matching_check_data
 
-    license_inquiry_response.acknowledgement = RmvAcknowledgement.CUSTOMER_NOT_FOUND
-
-    caller = MockZeepCaller(make_raw_rmv_response_from_pydantic_model(license_inquiry_response))
+    caller = MockZeepCaller({"Acknowledgement": RmvAcknowledgement.CUSTOMER_NOT_FOUND.value})
     rmv_client = RmvClient(caller)
 
     rmv_check_record = handle_rmv_check_request(test_db_session, rmv_client, rmv_check_request)

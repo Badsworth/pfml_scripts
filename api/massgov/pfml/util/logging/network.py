@@ -43,10 +43,13 @@ def patch_connect(original_connect):
 
         # After successful connect: log actual peer address and SSL certificate, if there is one.
         extra = {}
+
         if hasattr(self.sock, "getpeercert"):
             extra["cert"] = self.sock.getpeercert()
-        logger.info(
-            "connected %s:%s => %s", self.host, self.port, self.sock.getpeername(), extra=extra,
-        )
+
+        if hasattr(self.sock, "getpeername"):
+            extra["peername"] = self.sock.getpeername()
+
+        logger.info("connected %s:%s", self.host, self.port, extra=extra)
 
     return connect_log

@@ -87,9 +87,7 @@ class MockZeepCaller(LazyApiCaller[dict], ApiCaller[dict]):
     requests.
     """
 
-    def __init__(
-        self, response: Optional[Dict[str, Any]] = None,
-    ):
+    def __init__(self, response: Optional[Dict[str, Any]] = None):
 
         self.args: Dict[str, List[Any]] = defaultdict(lambda: [])
         self.calls: Dict[str, int] = defaultdict(int)
@@ -111,10 +109,18 @@ class MockZeepCaller(LazyApiCaller[dict], ApiCaller[dict]):
         }
 
         if response:
-            response = {
-                **default_response,
-                **response,
-            }
+            if response.get("Acknowledgement", None) is not None:
+                # When the RMV responds with an Acknowledgement value, all other
+                # fields in the response are None
+                empty_response = dict.fromkeys(default_response, None)
+                empty_response.update(response)
+
+                response = empty_response
+            else:
+                response = {
+                    **default_response,
+                    **response,
+                }
         else:
             response = default_response
 

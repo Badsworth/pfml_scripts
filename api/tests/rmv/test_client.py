@@ -57,7 +57,6 @@ def test_rmv_client_vendor_license_inquiry_200_none_acknowledgement(inquiry_requ
     assert response.cfl_sanctions is False
     assert response.cfl_sanctions_active is False
     assert response.is_customer_inactive is False
-    assert response.acknowledgement is None
 
 
 def test_rmv_client_vendor_license_inquiry_200_empty_str_acknowledgement(inquiry_request):
@@ -91,7 +90,7 @@ def test_rmv_client_vendor_license_inquiry_200_validation_error(inquiry_request)
 
     response = rmv_client.vendor_license_inquiry(inquiry_request)
 
-    assert response.acknowledgement is RmvAcknowledgement.REQUIRED_FIELDS_MISSING
+    assert response is RmvAcknowledgement.REQUIRED_FIELDS_MISSING
 
 
 def test_rmv_client_vendor_license_inquiry_200_not_found(inquiry_request):
@@ -100,14 +99,14 @@ def test_rmv_client_vendor_license_inquiry_200_not_found(inquiry_request):
 
     response = rmv_client.vendor_license_inquiry(inquiry_request)
 
-    assert response.acknowledgement is RmvAcknowledgement.CUSTOMER_NOT_FOUND
+    assert response is RmvAcknowledgement.CUSTOMER_NOT_FOUND
 
 
 def test_rmv_client_vendor_license_inquiry_200_unexpected_acknowledgement(inquiry_request):
     caller = MockZeepCaller({"Acknowledgement": "SOMETHING_BAD"})
     rmv_client = RmvClient(caller)
 
-    with pytest.raises(pydantic.ValidationError):
+    with pytest.raises(ValueError):
         rmv_client.vendor_license_inquiry(inquiry_request)
 
 

@@ -46,8 +46,6 @@ class VendorLicenseInquiryResponse(PydanticBaseModel):
     city: str
     zip: str
 
-    acknowledgement: Optional[RmvAcknowledgement] = None
-
     _parse_license1 = validator("license1_expiration_date", pre=True, allow_reuse=True)(
         parse_date_YMD
     )
