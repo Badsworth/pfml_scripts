@@ -1,4 +1,10 @@
+import tempfile
 from datetime import datetime
+from xml.dom.minidom import Document
+
+import defusedxml.ElementTree as ET
+import pytest
+from freezegun import freeze_time
 
 import massgov.pfml.payments.gax as gax
 
@@ -10,14 +16,28 @@ def validate_elements(element, expected_elements):
     This method also checks a few other static values
     """
 
-    # len(element) returns the number of subelements
-    assert len(element) == len(expected_elements)
+    assert len(element.childNodes) == len(expected_elements)
 
     for tag, text in expected_elements.items():
-        subelement = element.find(tag)
-        assert subelement.tag == tag
-        assert subelement.text == f"<![CDATA[{text}]]>"
-        assert subelement.attrib == {"Attribute": "Y"}
+        subelements = element.getElementsByTagName(tag)
+        assert len(subelements) == 1
+
+        subelement = subelements[0]
+        assert subelement.tagName == tag
+        validate_attributes(subelement, {"Attribute": "Y"})
+        assert len(subelement.childNodes) == 1  # Should just have a CDATA
+
+        cdata = subelement.childNodes[0]
+        assert cdata.data == text
+
+
+def validate_attributes(element, expected_attributes):
+    """ Elements have an _attrs map, but its from attribute name to
+        and attrs object with a value stored within it.
+    """
+    assert len(element._attrs) == len(expected_attributes)
+    for name, value in expected_attributes.items():
+        assert element._attrs[name].value == value
 
 
 def test_get_fiscal_year():
@@ -54,35 +74,34 @@ def test_get_fiscal_month():
 
 
 def test_build_individual_gax_document():
-    document = gax.build_individual_gax_document(
-        {
-            "leave_type": "Bonding Leave",
-            "payment_date": datetime(2020, 7, 1),
-            "vendor_customer_code": "abc1234",
-            "vendor_address_id": "xyz789",
-            "amount_monamt": "1200.00",
-            "claim_number": "NTN-1234",
-            "paymentstartp": datetime(2020, 8, 1),
-            "paymentendper": datetime(2020, 12, 1),
-        }
-    )
+    data = {
+        "leave_type": "Bonding Leave",
+        "payment_date": datetime(2020, 7, 1),
+        "vendor_customer_code": "abc1234",
+        "vendor_address_id": "xyz789",
+        "amount_monamt": "1200.00",
+        "claim_number": "NTN-1234",
+        "paymentstartp": datetime(2020, 8, 1),
+        "paymentendper": datetime(2020, 12, 1),
+    }
+    document = gax.build_individual_gax_document(Document(), data)
 
     # Doc ID is generated randomly every run, but appears in many sub values.
-    doc_id = document.attrib["DOC_ID"]
+    doc_id = document._attrs["DOC_ID"].value
     assert doc_id
 
     # Verify the root of the document
-    assert document.tag == "AMS_DOCUMENT"
+    assert document.tagName == "AMS_DOCUMENT"
     expected_doc_attributes = {"DOC_ID": doc_id}
     expected_doc_attributes.update(gax.ams_doc_attributes.copy())
     expected_doc_attributes.update(gax.generic_attributes.copy())
-    assert document.attrib == expected_doc_attributes
-    assert len(document) == 3  # len of an element gives number of subelements
+    validate_attributes(document, expected_doc_attributes)
+    assert len(document.childNodes) == 3
 
     # Validate the ABS_DOC_HDR section
-    abs_doc_hdr = document[0]
-    assert abs_doc_hdr.tag == "ABS_DOC_HDR"
-    assert abs_doc_hdr.attrib == {"AMSDataObject": "Y"}
+    abs_doc_hdr = document.childNodes[0]
+    assert abs_doc_hdr.tagName == "ABS_DOC_HDR"
+    validate_attributes(abs_doc_hdr, {"AMSDataObject": "Y"})
 
     expected_hdr_subelements = {
         "DOC_ID": doc_id,
@@ -94,9 +113,9 @@ def test_build_individual_gax_document():
     validate_elements(abs_doc_hdr, expected_hdr_subelements)
 
     # Validate the ABS_DOC_VEND section
-    abs_doc_vend = document[1]
-    assert abs_doc_vend.tag == "ABS_DOC_VEND"
-    assert abs_doc_vend.attrib == {"AMSDataObject": "Y"}
+    abs_doc_vend = document.childNodes[1]
+    assert abs_doc_vend.tagName == "ABS_DOC_VEND"
+    validate_attributes(abs_doc_vend, {"AMSDataObject": "Y"})
 
     expected_vend_subelements = {"DOC_ID": doc_id, "VEND_CUST_CD": "abc1234", "AD_ID": "xyz789"}
     expected_vend_subelements.update(gax.generic_attributes.copy())
@@ -104,9 +123,9 @@ def test_build_individual_gax_document():
     validate_elements(abs_doc_vend, expected_vend_subelements)
 
     # Validate the ABS_DOC_ACTG section
-    abs_doc_actg = document[2]
-    assert abs_doc_actg.tag == "ABS_DOC_ACTG"
-    assert abs_doc_actg.attrib == {"AMSDataObject": "Y"}
+    abs_doc_actg = document.childNodes[2]
+    assert abs_doc_actg.tagName == "ABS_DOC_ACTG"
+    validate_attributes(abs_doc_actg, {"AMSDataObject": "Y"})
 
     expected_actg_subelements = {
         "DOC_ID": doc_id,
@@ -124,3 +143,93 @@ def test_build_individual_gax_document():
     expected_actg_subelements.update(gax.generic_attributes.copy())
     expected_actg_subelements.update(gax.abs_doc_actg_attributes.copy())
     validate_elements(abs_doc_actg, expected_actg_subelements)
+
+
+@freeze_time("2020-01-01")
+def test_build_gax_files():
+    data = [
+        {
+            "leave_type": "Bonding Leave",
+            "payment_date": datetime(2020, 7, 1),
+            "vendor_customer_code": "abc1234",
+            "vendor_address_id": "xyz789",
+            "amount_monamt": "1200.00",
+            "claim_number": "NTN-1234",
+            "paymentstartp": datetime(2020, 8, 1),
+            "paymentendper": datetime(2020, 12, 1),
+        },
+        {
+            "leave_type": "Medical Leave",
+            "payment_date": datetime(2020, 1, 15),
+            "vendor_customer_code": "12345678",
+            "vendor_address_id": "00000000",
+            "amount_monamt": "1300.00",
+            "claim_number": "NTN-1234",
+            "paymentstartp": datetime(2020, 2, 15),
+            "paymentendper": datetime(2020, 4, 15),
+        },
+    ]
+
+    with tempfile.TemporaryDirectory() as directory:
+        (dat_filepath, inf_filepath) = gax.build_gax_files(data, directory, 11)
+
+        with open(inf_filepath) as inf_file:
+            assert inf_filepath.split("/")[-1] == "EOL20200101GAX11.INF"
+            inf_file_contents = "".join(line for line in inf_file)
+            assert inf_file_contents == (
+                "NewMmarsBatchID = EOL0101GAX11;\n"
+                "NewMmarsBatchDeptCode = EOL;\n"
+                "NewMmarsUnitCode = 8770;\n"
+                "NewMmarsImportDate = 2020-01-01;\n"
+                "NewMmarsTransCode = GAX;\n"
+                "NewMmarsTableName = ;\n"
+                "NewMmarsTransCount = 2;\n"
+                "NewMmarsTransDollarAmount = 2500.00;\n"
+            )
+
+        with open(dat_filepath) as dat_file:
+            assert dat_filepath.split("/")[-1] == "EOL20200101GAX11.DAT"
+            dat_file_contents = "".join(line for line in dat_file)
+
+            # This bit doesn't get parsed into the XML objects
+            assert dat_file_contents.startswith('<?xml version="1.0" encoding="ISO-8859-1"?>')
+
+            # Make sure cdata fields weren't mistakenly escaped
+            assert "&lt;" not in dat_file_contents
+            assert "&gt;" not in dat_file_contents
+            # Make sure cdata fields were created properly by looking for one
+            assert '<BFY Attribute="Y"><![CDATA[2021]]></BFY>' in dat_file_contents
+
+            # We use ET for parsing instead of minidom as minidom makes odd decisions
+            # when creating objects (new lines are child nodes?) that is complex.
+            # Note that this parser removes the CDATA tags when parsing.
+            root = ET.fromstring(dat_file_contents)
+            assert len(root) == 2  # For the two documents passed in
+            for document in root:
+                # Doc ID is generated randomly every run, but appears in many sub values.
+                doc_id = document.attrib["DOC_ID"]
+                assert doc_id
+
+                assert document.tag == "AMS_DOCUMENT"
+                expected_doc_attributes = {"DOC_ID": doc_id}
+                expected_doc_attributes.update(gax.ams_doc_attributes.copy())
+                expected_doc_attributes.update(gax.generic_attributes.copy())
+                assert document.attrib == expected_doc_attributes
+                assert len(document) == 3  # len of an element gives number of subelements
+
+                abs_doc_hdr = document[0]
+                assert abs_doc_hdr.tag == "ABS_DOC_HDR"
+                assert abs_doc_hdr.attrib == {"AMSDataObject": "Y"}
+
+                abs_doc_vend = document[1]
+                assert abs_doc_vend.tag == "ABS_DOC_VEND"
+                assert abs_doc_vend.attrib == {"AMSDataObject": "Y"}
+
+                abs_doc_actg = document[2]
+                assert abs_doc_actg.tag == "ABS_DOC_ACTG"
+                assert abs_doc_actg.attrib == {"AMSDataObject": "Y"}
+
+
+def test_small_count():
+    with pytest.raises(Exception, match="Gax file count must be greater than 10"):
+        gax.build_gax_files(None, "", 1)
