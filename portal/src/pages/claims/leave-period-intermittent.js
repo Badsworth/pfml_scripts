@@ -19,6 +19,7 @@ import withClaim from "../../hoc/withClaim";
  * Convenience constant for referencing the leave period object
  * and referencing fields within it
  */
+const leavePeriodsListPath = "leave_details.intermittent_leave_periods";
 const leavePeriodPath = "leave_details.intermittent_leave_periods[0]";
 
 export const fields = [
@@ -128,8 +129,7 @@ export const LeavePeriodIntermittent = (props) => {
       </ConditionalContent>
 
       <ConditionalContent
-        // TODO (CP-933): Remove the leave period
-        fieldNamesClearedWhenHidden={[]}
+        fieldNamesClearedWhenHidden={[leavePeriodsListPath]}
         getField={getField}
         clearField={clearField}
         updateFields={updateFields}
