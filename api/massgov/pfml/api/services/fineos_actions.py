@@ -285,8 +285,6 @@ def build_absence_case(
                 status="Known",
             )
         )
-    # Temporary workaround while API appends leave periods on each edit. TODO (API-505): remove when fixed.
-    continuous_leave_periods = continuous_leave_periods[-1:]
 
     reduced_schedule_leave_periods = []
     for reduced_leave_period in application.reduced_schedule_leave_periods:

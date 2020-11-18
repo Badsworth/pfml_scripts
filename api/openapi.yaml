@@ -1551,6 +1551,9 @@ components:
 
     ApplicationLeaveDetails:
       type: object
+      description:
+        Remove existing leave periods by including the key of the relevant type of leave period
+        and an empty array or null value.
       properties:
         reason:
           type: string
@@ -1570,14 +1573,17 @@ components:
           example: "Newborn"
         reduced_schedule_leave_periods:
           type: array
+          nullable: true
           items:
             $ref: "#/components/schemas/ReducedScheduleLeavePeriods"
         continuous_leave_periods:
           type: array
+          nullable: true
           items:
             $ref: "#/components/schemas/ContinuousLeavePeriods"
         intermittent_leave_periods:
           type: array
+          nullable: true
           items:
             $ref: "#/components/schemas/IntermittentLeavePeriods"
         relationship_to_caregiver:

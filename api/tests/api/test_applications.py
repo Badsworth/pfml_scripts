@@ -2,6 +2,7 @@ import copy
 from datetime import date, datetime
 
 import factory.random
+import pytest
 from dateutil.relativedelta import relativedelta
 from freezegun import freeze_time
 from sqlalchemy import inspect
@@ -1110,6 +1111,57 @@ def test_application_patch_update_leave_period(client, user, auth_token, test_db
     updated_leave_period = updated_leave_periods[0]
     assert updated_leave_period["leave_period_id"]
     assert updated_leave_period["start_date"] == "2021-01-03"
+
+
+@pytest.mark.parametrize("new_leave_period_value", [([]), (None)])
+def test_application_patch_delete_all_leave_periods(
+    client, user, auth_token, test_db_session, new_leave_period_value
+):
+    application = ApplicationFactory.create(user=user)
+
+    leave_periods = [
+        ContinuousLeavePeriod(
+            start_date=date(2021, 1, 1),
+            end_date=date(2021, 1, 5),
+            application_id=application.application_id,
+        ),
+        ContinuousLeavePeriod(
+            start_date=date(2021, 1, 8),
+            end_date=date(2021, 1, 10),
+            application_id=application.application_id,
+        ),
+        ContinuousLeavePeriod(
+            start_date=date(2021, 1, 12),
+            end_date=date(2021, 1, 15),
+            application_id=application.application_id,
+        ),
+    ]
+    for leave_period in leave_periods:
+        test_db_session.add(leave_period)
+    test_db_session.commit()
+
+    assert len(application.continuous_leave_periods) == len(leave_periods)
+
+    response = client.patch(
+        "/v1/applications/{}".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+        json={"leave_details": {"continuous_leave_periods": new_leave_period_value}},
+    )
+
+    assert response.status_code == 200
+
+    response_body = response.get_json().get("data")
+    updated_leave_details = response_body.get("leave_details")
+    assert updated_leave_details
+
+    updated_leave_periods = updated_leave_details.get("continuous_leave_periods")
+    assert updated_leave_periods == []
+
+    # Collect the IDs of these leave periods before refreshing the database connection.
+    leave_period_ids = [leave_period.leave_period_id for leave_period in leave_periods]
+    test_db_session.expire_all()
+    for leave_period_id in leave_period_ids:
+        assert test_db_session.query(ContinuousLeavePeriod).get(leave_period_id) is None
 
 
 def test_application_patch_update_leave_period_belonging_to_other_application_blocked(

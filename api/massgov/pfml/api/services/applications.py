@@ -1,5 +1,5 @@
 from re import Pattern
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple, Type, Union
 
 from sqlalchemy.orm.exc import NoResultFound
 from werkzeug.exceptions import BadRequest, Forbidden, NotFound
@@ -343,6 +343,13 @@ def update_from_request(
     return application
 
 
+leave_period_class_for_label: Dict[str, Type[LeaveScheduleDB]] = {
+    "continuous_leave_periods": ContinuousLeavePeriod,
+    "intermittent_leave_periods": IntermittentLeavePeriod,
+    "reduced_schedule_leave_periods": ReducedScheduleLeavePeriod,
+}
+
+
 def update_leave_details(
     db_session: db.Session, body: ApplicationRequestBody, application: Application
 ) -> List[LeaveScheduleDB]:
@@ -356,12 +363,10 @@ def update_leave_details(
     for key in leave_details_json.__fields_set__:
         value = getattr(leave_details_json, key)
 
-        if (
-            key == "continuous_leave_periods"
-            or key == "intermittent_leave_periods"
-            or key == "reduced_schedule_leave_periods"
-        ):
-            leave_schedule = update_leave_schedule(db_session, value, application)
+        if key in leave_period_class_for_label:
+            leave_schedule = update_leave_schedule(
+                db_session, value, application, leave_period_class_for_label[key]
+            )
             if leave_schedule:
                 leave_schedules.append(leave_schedule)
             continue
@@ -392,12 +397,21 @@ LeaveScheduleRequest = List[
 
 
 def update_leave_schedule(
-    db_session: db.Session, leave_schedule: Optional[LeaveScheduleRequest], application: Application
+    db_session: db.Session,
+    leave_schedule: Optional[LeaveScheduleRequest],
+    application: Application,
+    leave_cls: Type[LeaveScheduleDB],
 ) -> Optional[LeaveScheduleDB]:
-    # To be improved in next iteration
     if leave_schedule is None or len(leave_schedule) == 0:
+        # Leave periods are removed by sending a PATCH request with an
+        # empty array (or null value) for that category of leave.
+        db_session.query(leave_cls).filter(
+            leave_cls.application_id == application.application_id
+        ).delete(synchronize_session="fetch")
+
         return None
 
+    # We expect only a single period of leave in the array for the time being.
     leave_schedule_item = leave_schedule[0]
 
     def update_leave_period(leave_input: Any, leave_cls: Any) -> Optional[LeaveScheduleDB]:
@@ -435,12 +449,7 @@ def update_leave_schedule(
 
         return leave_period
 
-    if isinstance(leave_schedule_item, apps_common_io.ContinuousLeavePeriods):
-        return update_leave_period(leave_schedule_item, ContinuousLeavePeriod)
-    elif isinstance(leave_schedule_item, apps_common_io.IntermittentLeavePeriods):
-        return update_leave_period(leave_schedule_item, IntermittentLeavePeriod)
-    else:
-        return update_leave_period(leave_schedule_item, ReducedScheduleLeavePeriod)
+    return update_leave_period(leave_schedule_item, leave_cls)
 
 
 def update_payment_preferences(
