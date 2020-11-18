@@ -64,6 +64,7 @@ class ImportReport:
     unmodified_employers_count: int = 0
     created_employees_count: int = 0
     updated_employees_count: int = 0
+    unmodified_employees_count: int = 0
     created_wages_and_contributions_count: int = 0
     updated_wages_and_contributions_count: int = 0
     sample_employers_line_lengths: Dict[Any, Any] = field(default_factory=dict)
@@ -236,11 +237,15 @@ class EmployeeWriter(object):
             )
 
         logger.info(
-            "** Employee Import Progress - created: %i, updated: %i, total: %i",
+            "** Employee Import Progress - created: %i, updated: %i, unmodified: %i, total: %i",
             self.report.created_employees_count,
             self.report.updated_employees_count,
-            self.report.created_employees_count + self.report.updated_employees_count,
+            self.report.unmodified_employees_count,
+            self.report.unmodified_employees_count
+            + self.report.created_employees_count
+            + self.report.updated_employees_count,
         )
+
         logger.info(
             "** Wage Import Progress: - created: %i, updated: %i, total: %i",
             self.report.created_wages_and_contributions_count,
@@ -787,6 +792,7 @@ def import_employees(
     found_employee_rows_count = len(found_employee_and_wage_info_list)
     count = 0
     updated_employees_count = 0
+    unmodified_employees_count = 0
 
     for employee_info in found_employee_and_wage_info_list:
         ssn = employee_info["employee_ssn"]
@@ -806,22 +812,28 @@ def import_employees(
         if ssn in employee_ssns_updated_in_current_loop:
             continue
 
-        existing_employee_model = ssn_to_existing_employee_model[ssn]
-        dor_persistence_util.update_employee(
-            db_session, existing_employee_model, employee_info, import_log_entry_id
-        )
-
         employee_ssns_updated_in_current_loop.add(ssn)
 
-        updated_employees_count += 1
-        report.updated_employees_count += 1
+        existing_employee_model = ssn_to_existing_employee_model[ssn]
+
+        is_updated = dor_persistence_util.check_and_update_employee(
+            db_session, existing_employee_model, employee_info, import_log_entry_id
+        )
+        if is_updated:
+            updated_employees_count += 1
+            report.updated_employees_count += 1
+        else:
+            unmodified_employees_count += 1
+            report.unmodified_employees_count += 1
 
     if updated_employees_count > 0:
         logger.info("Batch committing employee updates: %i", updated_employees_count)
         db_session.commit()
 
     logger.info(
-        "Done - Updating existing employees: %i", len(employee_ssns_updated_in_current_loop)
+        "Done - Updating existing employees: %i, unmodified: %i",
+        updated_employees_count,
+        unmodified_employees_count,
     )
 
 

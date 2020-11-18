@@ -189,6 +189,19 @@ def create_employee(db_session, employee_info, import_log_entry_id):
     return employee
 
 
+def check_and_update_employee(db_session, existing_employee, employee_info, import_log_entry_id):
+    do_update = (
+        existing_employee.first_name != employee_info["employee_first_name"]
+        or existing_employee.last_name != employee_info["employee_last_name"]
+    )
+
+    if not do_update:
+        return False
+
+    update_employee(db_session, existing_employee, employee_info, import_log_entry_id)
+    return True
+
+
 def update_employee(db_session, existing_employee, employee_info, import_log_entry_id):
     existing_employee.first_name = employee_info["employee_first_name"]
     existing_employee.last_name = employee_info["employee_last_name"]

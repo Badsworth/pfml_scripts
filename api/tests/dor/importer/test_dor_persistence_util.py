@@ -132,3 +132,23 @@ def test_update_import_log_entry(test_db_session):
     assert updated_report_log_entry.end == report_log_entry.end
     assert persisted_report["parsed_employers_count"] == report.parsed_employers_count
     assert persisted_report["parsed_employees_info_count"] == report.parsed_employees_info_count
+
+
+def test_check_and_update_employee(test_db_session, initialize_factories_session):
+    employee = EmployeeFactory.create(first_name="Jane", last_name="Smith")
+
+    unmodified_employee_info = {"employee_first_name": "Jane", "employee_last_name": "Smith"}
+    updated = util.check_and_update_employee(
+        test_db_session, employee, unmodified_employee_info, uuid.uuid4()
+    )
+
+    assert not updated
+    assert len(test_db_session.dirty) == 0
+
+    modified_employee_info = {"employee_first_name": "Jane", "employee_last_name": "Williams"}
+    updated = util.check_and_update_employee(
+        test_db_session, employee, modified_employee_info, uuid.uuid4()
+    )
+
+    assert updated
+    assert len(test_db_session.dirty) == 1

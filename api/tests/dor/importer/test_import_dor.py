@@ -322,9 +322,10 @@ def test_employee_wage_data_update(test_db_session, dor_employer_lookups):
     assert report.created_employees_count == 1
     assert report.created_wages_and_contributions_count == 1
     assert report.updated_employees_count == 0
+    assert report.unmodified_employees_count == 0
     assert report.updated_wages_and_contributions_count == 0
 
-    # confirm that existing employee info is updated even without a change
+    # confirm that existing employee info is not updated when there is no change
     report2, report_log_entry2 = get_new_import_report(test_db_session)
 
     import_dor.import_employees_and_wage_data(
@@ -340,12 +341,13 @@ def test_employee_wage_data_update(test_db_session, dor_employer_lookups):
     assert persisted_employee is not None
 
     validate_employee_persistence(
-        employee_wage_data_payload, persisted_employee, report_log_entry2.import_log_id
+        employee_wage_data_payload, persisted_employee, report_log_entry.import_log_id
     )
 
     assert report2.created_employees_count == 0
     assert report2.created_wages_and_contributions_count == 0
-    assert report2.updated_employees_count == 1
+    assert report2.updated_employees_count == 0
+    assert report2.unmodified_employees_count == 1
     assert report2.updated_wages_and_contributions_count == 1
 
     # confirm updates are persisted
@@ -383,6 +385,7 @@ def test_employee_wage_data_update(test_db_session, dor_employer_lookups):
     assert report3.created_employees_count == 0
     assert report3.created_wages_and_contributions_count == 0
     assert report3.updated_employees_count == 1
+    assert report3.unmodified_employees_count == 0
     assert report3.updated_wages_and_contributions_count == 1
 
 
