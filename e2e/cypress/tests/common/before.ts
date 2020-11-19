@@ -6,6 +6,7 @@ Before({ tags: "@portal" }, () => {
     "_ff",
     JSON.stringify({
       pfmlTerriyay: true,
+      claimantShowAuth: true,
     }),
     { log: true }
   );

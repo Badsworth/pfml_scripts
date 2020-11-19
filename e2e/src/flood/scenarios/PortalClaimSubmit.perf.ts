@@ -38,6 +38,7 @@ export const steps = [
         name: "_ff",
         value: JSON.stringify({
           pfmlTerriyay: true,
+          claimantShowAuth: true,
         }),
         url: await PortalBaseUrl,
       });

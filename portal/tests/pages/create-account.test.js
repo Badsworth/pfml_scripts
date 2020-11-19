@@ -12,6 +12,8 @@ describe("CreateAccount", () => {
 
   beforeEach(() => {
     appLogic = useAppLogic();
+    process.env.featureFlags = { claimantShowAuth: true };
+
     act(() => {
       wrapper = shallow(<CreateAccount appLogic={appLogic} />);
     });
