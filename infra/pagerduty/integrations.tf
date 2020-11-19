@@ -32,13 +32,13 @@ data "pagerduty_vendor" "newrelic" {
   name = "New Relic"
 }
 resource "pagerduty_service_integration" "newrelic_low_priority_notification" {
-  name    = "Low Priority ${var.environment_name} Notification for New Relic"
+  name    = "Low Priority Notification for New Relic"
   service = pagerduty_service.mass_pfml_api_low_priority.id
   vendor  = data.pagerduty_vendor.newrelic.id
 }
 
 resource "pagerduty_service_integration" "newrelic_high_priority_notification" {
-  name    = "High Priority ${var.environment_name} Notification for New Relic"
+  name    = "High Priority Notification for New Relic"
   service = pagerduty_service.mass_pfml_api_high_priority.id
   vendor  = data.pagerduty_vendor.newrelic.id
 }
@@ -48,13 +48,13 @@ data "pagerduty_vendor" "cloudwatch" {
 }
 
 resource "pagerduty_service_integration" "cloudwatch_high_priority_notification" {
-  name    = "High Priority ${var.environment_name} Notification for AWS Cloudwatch"
+  name    = "High Priority Notification for AWS Cloudwatch"
   service = pagerduty_service.mass_pfml_api_high_priority.id
   vendor  = data.pagerduty_vendor.cloudwatch.id
 }
 
 resource "pagerduty_service_integration" "cloudwatch_low_priority_notification" {
-  name    = "Low Priority ${var.environment_name} Notification for AWS Cloudwatch"
+  name    = "Low Priority Notification for AWS Cloudwatch"
   service = pagerduty_service.mass_pfml_api_low_priority.id
   vendor  = data.pagerduty_vendor.cloudwatch.id
 }

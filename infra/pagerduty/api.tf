@@ -20,6 +20,11 @@ resource "pagerduty_service" "mass_pfml_api_low_priority" {
   acknowledgement_timeout = 86400  # Require re-acknowledgement after 24 hours
   escalation_policy       = pagerduty_escalation_policy.mass_pfml_api_low_priority.id
   alert_creation          = "create_alerts_and_incidents"
+
+  incident_urgency_rule {
+    type    = "constant"
+    urgency = "low"
+  }
 }
 
 resource "pagerduty_service" "mass_pfml_api_high_priority" {
@@ -28,6 +33,11 @@ resource "pagerduty_service" "mass_pfml_api_high_priority" {
   acknowledgement_timeout = 7200   # Require re-acknowledgement after 2 hours
   escalation_policy       = pagerduty_escalation_policy.mass_pfml_api_high_priority.id
   alert_creation          = "create_alerts_and_incidents"
+
+  incident_urgency_rule {
+    type    = "constant"
+    urgency = "severity_based"
+  }
 }
 
 # Pagerduty Schedules (On-Call Roles)
@@ -45,6 +55,12 @@ resource "pagerduty_schedule" "mass_pfml_api_primary" {
   name      = "Mass PFML API Eng Primary"
   time_zone = "America/New_York"
 
+  // Ignore changes to users and start times, which we expect to be adjusted
+  // through the UI by delivery managers and other team members.
+  lifecycle {
+    ignore_changes = [layer[0].users, layer[0].rotation_virtual_start, layer[0].start]
+  }
+
   layer {
     name                         = "Primary Engineer"
     start                        = "2020-11-04T13:00:00-05:00"
@@ -58,6 +74,12 @@ resource "pagerduty_schedule" "mass_pfml_api_secondary" {
   name      = "Mass PFML API Eng Secondary"
   time_zone = "America/New_York"
 
+  // Ignore changes to users and start times, which we expect to be adjusted
+  // through the UI by delivery managers and other team members.
+  lifecycle {
+    ignore_changes = [layer[0].users, layer[0].rotation_virtual_start, layer[0].start]
+  }
+
   layer {
     name                         = "Secondary Engineer"
     start                        = "2020-11-04T13:00:00-05:00"
@@ -70,6 +92,12 @@ resource "pagerduty_schedule" "mass_pfml_api_secondary" {
 resource "pagerduty_schedule" "mass_pfml_api_delivery" {
   name      = "Mass PFML API Delivery Manager"
   time_zone = "America/New_York"
+
+  // Ignore changes to users and start times, which we expect to be adjusted
+  // through the UI by delivery managers and other team members.
+  lifecycle {
+    ignore_changes = [layer[0].users, layer[0].rotation_virtual_start, layer[0].start]
+  }
 
   layer {
     name                         = "Delivery Manager"
@@ -97,7 +125,7 @@ resource "pagerduty_escalation_policy" "mass_pfml_api_high_priority" {
   teams     = [pagerduty_team.mass_pfml_api.id]
 
   rule {
-    escalation_delay_in_minutes = 3
+    escalation_delay_in_minutes = 5
     target {
       type = "schedule_reference"
       id   = pagerduty_schedule.mass_pfml_api_primary.id
@@ -105,7 +133,7 @@ resource "pagerduty_escalation_policy" "mass_pfml_api_high_priority" {
   }
 
   rule {
-    escalation_delay_in_minutes = 3
+    escalation_delay_in_minutes = 5
     target {
       type = "schedule_reference"
       id   = pagerduty_schedule.mass_pfml_api_primary.id
