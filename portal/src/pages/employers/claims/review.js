@@ -25,6 +25,7 @@ const employerDueDate = "2020-10-10";
 const hoursWorkedPerWeek = 40;
 
 export const Review = (props) => {
+  // TODO (EMPLOYER-583) add frontend validation
   const {
     appLogic: {
       employers: { claim },
@@ -116,7 +117,7 @@ export const Review = (props) => {
       <EmployerDecision onChange={handleEmployerDecisionChange} fraud={fraud} />
       <Feedback
         appLogic={props.appLogic}
-        fraud={fraud}
+        employerDecision={employerDecision}
         onSubmit={handleSubmit}
       />
     </React.Fragment>

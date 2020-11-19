@@ -13,19 +13,21 @@ describe("Feedback", () => {
   let wrapper;
 
   beforeEach(() => {
-    wrapper = shallow(
-      <Feedback appLogic={appLogic} fraud="No" onSubmit={() => {}} />
-    );
+    wrapper = shallow(<Feedback appLogic={appLogic} onSubmit={() => {}} />);
   });
 
   it("renders the component", () => {
     expect(wrapper).toMatchSnapshot();
   });
 
-  describe("when fraud is 'Yes'", () => {
+  describe("when employerDecision is 'Deny'", () => {
     beforeEach(() => {
       wrapper = shallow(
-        <Feedback appLogic={appLogic} fraud="Yes" onSubmit={() => {}} />
+        <Feedback
+          appLogic={appLogic}
+          employerDecision="Deny"
+          onSubmit={() => {}}
+        />
       );
     });
 
@@ -38,16 +40,20 @@ describe("Feedback", () => {
       expect(yesOption.checked).toBe(true);
     });
 
-    describe("and is changed to 'No'", () => {
+    describe("and is changed to 'Approve'", () => {
       beforeEach(() => {
         wrapper = mount(
-          <Feedback appLogic={appLogic} fraud="Yes" onSubmit={() => {}} />
+          <Feedback
+            appLogic={appLogic}
+            employerDecision="Deny"
+            onSubmit={() => {}}
+          />
         );
       });
 
       it('re-enables the "No" option', () => {
         act(() => {
-          wrapper.setProps({ fraud: "No" });
+          wrapper.setProps({ employerDecision: "Approve" });
         });
         // for useEffect to take place
         wrapper.update();
@@ -59,7 +65,7 @@ describe("Feedback", () => {
 
       it('selects the "No" option if there is no comment typed', () => {
         act(() => {
-          wrapper.setProps({ fraud: "No" });
+          wrapper.setProps({ employerDecision: "Approve" });
         });
         // for useEffect to take place
         wrapper.update();
@@ -74,7 +80,7 @@ describe("Feedback", () => {
         changeField("comment", "some comment");
 
         act(() => {
-          wrapper.setProps({ fraud: "No" });
+          wrapper.setProps({ employerDecision: "Approve" });
         });
         // for useEffect to take place
         wrapper.update();
@@ -86,7 +92,7 @@ describe("Feedback", () => {
     });
   });
 
-  describe("when fraud is 'No'", () => {
+  describe("when employerDecision is 'Approve'", () => {
     it("no options are disabled", () => {
       const choices = wrapper.find("InputChoiceGroup").prop("choices");
       const noOption = choices.find((choice) => choice.label === "No");

@@ -14,20 +14,21 @@ import { useTranslation } from "../../locales/i18n";
  * in the Leave Admin claim review page.
  */
 
-const Feedback = ({ appLogic, fraud, onSubmit }) => {
+const Feedback = ({ appLogic, employerDecision, onSubmit }) => {
+  // TODO (EMPLOYER-583) add frontend validation
   const { t } = useTranslation();
   const [uploadedFiles, setUploadedFiles] = useState([]);
   const [formState, setFormState] = useState({
-    hasComment: fraud === "Yes" ? "true" : "false",
+    hasComment: employerDecision === "Deny" ? "true" : "false",
     comment: "",
   });
 
   useEffect(() => {
     const hasComment =
-      fraud === "Yes" || !!getField("comment") ? "true" : "false";
+      employerDecision === "Deny" || !!getField("comment") ? "true" : "false";
     updateFields({ hasComment });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [fraud]);
+  }, [employerDecision]);
 
   const getField = (fieldName) => {
     return get(formState, fieldName);
@@ -74,7 +75,7 @@ const Feedback = ({ appLogic, fraud, onSubmit }) => {
           choices={[
             {
               checked: formState.hasComment === "false",
-              disabled: fraud === "Yes",
+              disabled: employerDecision === "Deny",
               label: t("pages.employersClaimsReview.feedback.choiceNo"),
               value: "false",
             },
@@ -141,7 +142,7 @@ Feedback.propTypes = {
   appLogic: PropTypes.shape({
     setAppErrors: PropTypes.func.isRequired,
   }).isRequired,
-  fraud: PropTypes.string,
+  employerDecision: PropTypes.oneOf(["Approve", "Deny"]),
   onSubmit: PropTypes.func.isRequired,
 };
 

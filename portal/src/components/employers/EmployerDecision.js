@@ -15,9 +15,7 @@ const EmployerDecision = ({ fraud, onChange = () => {} }) => {
   };
 
   useEffect(() => {
-    if (employerDecision === "Approve" || employerDecision === "Deny") {
-      onChange(employerDecision);
-    }
+    onChange(employerDecision);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [employerDecision]);
 

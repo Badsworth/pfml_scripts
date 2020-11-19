@@ -23,9 +23,11 @@ describe("EmployerDecision", () => {
     changeRadioGroup("employerDecision", "Approve");
     changeRadioGroup("employerDecision", "Deny");
 
-    expect(onChange).toHaveBeenCalledTimes(2);
-    expect(onChange).toHaveBeenNthCalledWith(1, "Approve");
-    expect(onChange).toHaveBeenNthCalledWith(2, "Deny");
+    expect(onChange).toHaveBeenCalledTimes(3);
+    // first call is on mount
+    expect(onChange).toHaveBeenNthCalledWith(1, undefined);
+    expect(onChange).toHaveBeenNthCalledWith(2, "Approve");
+    expect(onChange).toHaveBeenNthCalledWith(3, "Deny");
   });
 
   describe("when fraud is true", () => {
