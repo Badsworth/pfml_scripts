@@ -522,12 +522,18 @@ export function addPaymentInfo(application: ApplicationRequestBody): void {
 
 export function addId(idType: string): void {
   const docName = idType.replace(" ", "_");
-  cy.labelled("Choose a file").attachFile(`${docName}.pdf`);
+  cy.labelled("Choose a file").attachFile({
+    filePath: `${docName}.pdf`,
+    encoding: "binary",
+  });
   cy.contains("button", "Save and continue").click();
 }
 
 export function addLeaveDocs(leaveType: string): void {
-  cy.labelled("Choose a file").attachFile(`${leaveType}.pdf`);
+  cy.labelled("Choose a file").attachFile({
+    filePath: `${leaveType}.pdf`,
+    encoding: "binary",
+  });
   cy.contains("button", "Save and continue").click();
 }
 
