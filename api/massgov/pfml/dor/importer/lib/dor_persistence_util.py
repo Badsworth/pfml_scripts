@@ -12,6 +12,7 @@ from massgov.pfml.db.models.employees import (
     Employee,
     Employer,
     EmployerAddress,
+    EmployerQuarterlyContribution,
     GeoState,
     ImportLog,
     TaxIdentifier,
@@ -58,6 +59,16 @@ def dict_to_wages_and_contributions(
     )
 
     return wage
+
+
+def dict_to_employer_quarter_contribution(employer_info, employer_id, import_log_entry_id):
+    return EmployerQuarterlyContribution(
+        employer_id=employer_id,
+        filing_period=employer_info["filing_period"],
+        employer_total_pfml_contribution=employer_info["total_pfml_contribution"],
+        dor_updated_date=employer_info["updated_date"],
+        latest_import_log_id=import_log_entry_id,
+    )
 
 
 def dict_to_employer(employer_info, import_log_entry_id, uuid=uuid.uuid4):
@@ -210,6 +221,19 @@ def update_employee(db_session, existing_employee, employee_info, import_log_ent
     return existing_employee
 
 
+def update_employer_quarlerly_contribution(
+    db_session, existing_employer_quarlerly_contribution, employer_info, import_log_entry_id
+):
+    existing_employer_quarlerly_contribution.filing_period = employer_info["filing_period"]
+    existing_employer_quarlerly_contribution.employer_total_pfml_contribution = employer_info[
+        "total_pfml_contribution"
+    ]
+    existing_employer_quarlerly_contribution.dor_updated_date = employer_info["updated_date"]
+    existing_employer_quarlerly_contribution.latest_import_log_id = import_log_entry_id
+
+    return existing_employer_quarlerly_contribution
+
+
 def create_wages_and_contributions(
     db_session, employee_wage_info, employee_id, employer_id, import_log_entry_id
 ):
@@ -279,6 +303,15 @@ def update_import_log_entry(db_session, existing_import_log, report):
 
 
 # == Query Helpers ==
+
+
+def get_employer_quarterly_info_by_employer_id(db_session, employer_ids):
+    employer_rows = (
+        db_session.query(EmployerQuarterlyContribution)
+        .filter(EmployerQuarterlyContribution.employer_id.in_(employer_ids))
+        .all()
+    )
+    return employer_rows
 
 
 def get_employees_by_ssn(db_session, ssns):

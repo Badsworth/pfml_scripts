@@ -25,6 +25,7 @@ from massgov.pfml.dor.importer.dor_file_formats import (
     EMPLOYEE_FORMAT,
     EMPLOYER_FILE_FORMAT,
     EMPLOYER_FILE_ROW_LENGTH,
+    EMPLOYER_QUARTER_INFO_FORMAT,
 )
 from massgov.pfml.dor.importer.paths import ImportBatch, get_files_to_process
 from massgov.pfml.util.config import get_secret_from_env
@@ -67,6 +68,8 @@ class ImportReport:
     unmodified_employees_count: int = 0
     created_wages_and_contributions_count: int = 0
     updated_wages_and_contributions_count: int = 0
+    created_employer_quarters_count: int = 0
+    updated_employer_quarters_count: int = 0
     sample_employers_line_lengths: Dict[Any, Any] = field(default_factory=dict)
     invalid_employer_lines_count: int = 0
     parsed_employers_exception_line_nums: List[Any] = field(default_factory=list)
@@ -194,6 +197,8 @@ class EmployeeWriter(object):
         self.remainder_encoded = b""
         self.lines = []
         self.parsed_employees_info_count = 0
+        self.parsed_employer_quarterly_info_count = 0
+        self.parsed_employer_quarter_exception_count = 0
         self.db_session = db_session
         self.account_key_to_employer_id_map = account_key_to_employer_id_map
         self.report = report
@@ -205,8 +210,19 @@ class EmployeeWriter(object):
         logger.info("Flushing buffer, %i lines", len(self.lines))
 
         employees_info = []
+        employers_quarterly_info = []
 
         for row in self.lines:
+            if row.startswith("A"):
+                try:
+                    employer_quarterly_info = EMPLOYER_QUARTER_INFO_FORMAT.parse_line(row)
+                    employers_quarterly_info.append(employer_quarterly_info)
+
+                    self.parsed_employer_quarterly_info_count += 1
+                except Exception:
+                    logger.exception("Parse error with employer quarterly line")
+                    self.report.parsed_employer_quarter_exception_count += 1
+
             if row.startswith("B"):
                 try:
                     employee_info = EMPLOYEE_FORMAT.parse_line(row)
@@ -226,6 +242,15 @@ class EmployeeWriter(object):
                     logger.exception("Parse error with employee line")
                     self.report.parsed_employees_exception_count += 1
 
+        if len(employers_quarterly_info) > 0:
+            import_employer_pfml_contributions(
+                self.db_session,
+                self.account_key_to_employer_id_map,
+                employers_quarterly_info,
+                self.report,
+                self.report_log_entry.import_log_id,
+            )
+
         if len(employees_info) > 0:
             import_employees_and_wage_data(
                 self.db_session,
@@ -236,6 +261,13 @@ class EmployeeWriter(object):
                 self.report_log_entry.import_log_id,
             )
 
+        logger.info(
+            "** Employer Quarterly Import Progress - created: %i, updated: %i, total: %i",
+            self.report.created_employer_quarters_count,
+            self.report.updated_employer_quarters_count,
+            self.report.created_employer_quarters_count
+            + self.report.updated_employer_quarters_count,
+        )
         logger.info(
             "** Employee Import Progress - created: %i, updated: %i, unmodified: %i, total: %i",
             self.report.created_employees_count,
@@ -837,6 +869,10 @@ def import_employees(
     )
 
 
+def get_employer_quarterly_contribution_composite_key(employer_id, filing_period):
+    return (employer_id, filing_period)
+
+
 def get_wage_composite_key(employer_id, employee_id, filing_period):
     return (employer_id, employee_id, filing_period)
 
@@ -1019,6 +1055,100 @@ def import_wage_data(
         "Done - Creating new wage information for existing employees: %i",
         len(wages_contributions_models_existing_employees_to_create),
     )
+
+
+def import_employer_pfml_contributions(
+    db_session,
+    account_key_to_employer_id_map,
+    employer_quarterly_info_list,
+    report,
+    import_log_entry_id,
+):
+    employer_ids_to_check_in_db = list(
+        map(
+            lambda emp: account_key_to_employer_id_map[emp["account_key"]],
+            employer_quarterly_info_list,
+        )
+    )
+
+    existing_employer_models_all_dates = dor_persistence_util.get_employer_quarterly_info_by_employer_id(
+        db_session, employer_ids_to_check_in_db
+    )
+
+    existing_quarterly_map: Dict[Any, Any] = {}
+    for existing_employer_model in existing_employer_models_all_dates:
+        key: str = get_employer_quarterly_contribution_composite_key(
+            existing_employer_model.employer_id, existing_employer_model.filing_period
+        )
+        existing_quarterly_map[key] = existing_employer_model
+
+    not_found_employer_quarterly_contribution_list = []
+    found_employer_quarterly_contribution_list = []
+
+    for employer_quarterly_info in employer_quarterly_info_list:
+        existing_composite_key: str = get_employer_quarterly_contribution_composite_key(
+            account_key_to_employer_id_map[employer_quarterly_info["account_key"]],
+            employer_quarterly_info["filing_period"],
+        )
+        existing_model = existing_quarterly_map.get(existing_composite_key, None)
+
+        if existing_model is not None:
+            found_employer_quarterly_contribution_list.append(employer_quarterly_info)
+        else:
+            not_found_employer_quarterly_contribution_list.append(employer_quarterly_info)
+
+    employer_quarter_models_to_create = list(
+        map(
+            lambda employer_info: dor_persistence_util.dict_to_employer_quarter_contribution(
+                employer_info,
+                account_key_to_employer_id_map[employer_info["account_key"]],
+                import_log_entry_id,
+            ),
+            not_found_employer_quarterly_contribution_list,
+        )
+    )
+
+    logger.info(
+        "Creating new employer quarterly contributions records: %i",
+        len(employer_quarter_models_to_create),
+    )
+
+    bulk_save(db_session, employer_quarter_models_to_create, "Employer Quarterly Contributions")
+
+    logger.info(
+        "Done - Creating new employer quarterly contributions: %i",
+        len(employer_quarter_models_to_create),
+    )
+
+    report.created_employer_quarters_count += len(employer_quarter_models_to_create)
+
+    count = 0
+    for employer_info in found_employer_quarterly_contribution_list:
+        count += 1
+        if count % 10000 == 0:
+            logger.info("Updating quarterly contribution info, current %i", count)
+
+        existing_composite_model_key: str = get_employer_quarterly_contribution_composite_key(
+            account_key_to_employer_id_map[employer_info["account_key"]],
+            employer_info["filing_period"],
+        )
+
+        existing_employer_quarterly_contribution_model = existing_quarterly_map.get(
+            existing_composite_model_key
+        )
+
+        dor_persistence_util.update_employer_quarlerly_contribution(
+            db_session,
+            existing_employer_quarterly_contribution_model,
+            employer_info,
+            import_log_entry_id,
+        )
+
+        report.updated_employer_quarters_count += 1
+
+    if count > 0:
+        logger.info("Batch committing quarterly contribution updates: %i", count)
+        db_session.commit()
 
 
 def import_employees_and_wage_data(

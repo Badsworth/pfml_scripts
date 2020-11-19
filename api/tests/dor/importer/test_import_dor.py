@@ -496,6 +496,8 @@ def test_e2e_parse_and_persist(test_db_session, dor_employer_lookups):
     assert report.created_employees_count == employee_count
     assert report.created_wages_and_contributions_count == wages_contributions_count
 
+    assert report.created_employer_quarters_count == len(employee_a_lines)
+
 
 @pytest.mark.timeout(25)
 def test_decryption(monkeypatch, test_db_session, dor_employer_lookups):
@@ -508,8 +510,8 @@ def test_decryption(monkeypatch, test_db_session, dor_employer_lookups):
 
     decrypter = GpgCrypt(decryption_key, passphrase, test_email)
 
-    employer_file_path = TEST_FOLDER / "encryption" / "DORDFMLEMP_20201103170806"
-    employee_file_path = TEST_FOLDER / "encryption" / "DORDFML_20201103170806"
+    employer_file_path = TEST_FOLDER / "encryption" / "DORDFMLEMP_20201118193421"
+    employee_file_path = TEST_FOLDER / "encryption" / "DORDFML_20201118193421"
 
     report = import_dor.process_daily_import(
         employer_file_path=str(employer_file_path),
@@ -518,7 +520,7 @@ def test_decryption(monkeypatch, test_db_session, dor_employer_lookups):
         db_session=test_db_session,
     )
 
-    employer_count = 20
+    employer_count = 100
     employee_count = employer_count * generator.EMPLOYER_TO_EMPLOYEE_RATIO
 
     assert report.created_employers_count == employer_count

@@ -56,6 +56,8 @@ EMPLOYER_QUARTER_INFO_FORMAT = FileFormat(
         FieldFormat("employer_name", 255),
         FieldFormat("employer_fein", 14),
         FieldFormat("amended_flag", 1, parse_boolean),
+        FieldFormat("pfm_account_id", 14),
+        FieldFormat("total_pfml_contribution", 20, parse_dollar_amount),
         FieldFormat("received_date", 8, parse_date),
         FieldFormat("updated_date", 14, parse_datetime),
     )

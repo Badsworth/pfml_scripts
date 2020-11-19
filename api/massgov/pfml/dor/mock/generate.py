@@ -170,13 +170,15 @@ def write_employee_row(row, employers_file):
 
 
 def write_employer_wage_row(employer_wage_row, employer_wage_row_file):
-    line = "{}{}{!s}{:255}{:14}{}{}{}\n".format(
+    line = "{}{}{!s}{:255}{:14}{}{:14}{:20.2f}{}{}\n".format(
         "A",
         employer_wage_row["account_key"],
         employer_wage_row["filing_period"],
         employer_wage_row["employer_name"],
         employer_wage_row["employer_fein"],
         boolean_to_str(employer_wage_row["amended_flag"]),
+        employer_wage_row["pfm_account_id"],
+        employer_wage_row["total_pfml_contribution"],
         format_date(employer_wage_row["received_date"]),
         format_datetime(employer_wage_row["updated_date"]),
     )
@@ -273,6 +275,8 @@ def generate_single_employer(employer_generate_id):
             "employer_name": employer["employer_name"],
             "employer_fein": employer["fein"],
             "amended_flag": amended_flag,
+            "pfm_account_id": employer["fein"],
+            "total_pfml_contribution": decimal.Decimal(random.randrange(6000000)) / 100,
             "received_date": received_date,
             "updated_date": updated_date,
         }
