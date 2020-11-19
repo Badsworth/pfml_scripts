@@ -1368,6 +1368,35 @@ describe("useAuthLogic", () => {
       );
     });
 
+    it("redirects to the login page when account is already verified", () => {
+      const spy = jest.spyOn(portalFlow, "goToPageFor");
+      jest.spyOn(Auth, "confirmSignUp").mockImplementation(() => {
+        // Ignore lint rule since AWS Auth class actually throws an object literal
+        // eslint-disable-next-line no-throw-literal
+        throw {
+          code: "NotAuthorizedException",
+          message: "User cannot be confirmed. Current status is CONFIRMED",
+          name: "NotAuthorizedException",
+        };
+      });
+
+      act(() => {
+        verifyAccount(username, verificationCode);
+      });
+
+      expect(tracker.trackEvent).toHaveBeenCalledWith(
+        "AuthError",
+        expect.any(Object)
+      );
+      expect(spy).toHaveBeenCalledWith(
+        "SUBMIT",
+        {},
+        {
+          "account-verified": true,
+        }
+      );
+    });
+
     it("sets app errors when Auth.confirmSignIn throws AuthError", () => {
       const authErrorMessages = [
         "Username cannot be empty",

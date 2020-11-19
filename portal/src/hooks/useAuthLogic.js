@@ -338,6 +338,23 @@ const useAuthLogic = ({ appErrorsLogic, portalFlow }) => {
       );
     } catch (error) {
       trackAuthError(error);
+      // If the error is the user trying to re-verified an already-verified account then we can redirect
+      // them to the login page. This only occurs if the user's account is already verified and the
+      // verification code they use is valid.
+      if (
+        error.code === "NotAuthorizedException" &&
+        error.message ===
+          "User cannot be confirmed. Current status is CONFIRMED"
+      ) {
+        portalFlow.goToPageFor(
+          "SUBMIT",
+          {},
+          {
+            "account-verified": true,
+          }
+        );
+      }
+
       const appErrors = getVerifyAccountErrorInfo(error, t);
       appErrorsLogic.setAppErrors(appErrors);
     }
