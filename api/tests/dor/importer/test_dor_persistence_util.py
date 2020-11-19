@@ -1,12 +1,14 @@
+import copy
 import json
 import uuid
 from datetime import date, datetime
+from decimal import Decimal
 
 import pytest
 from sqlalchemy.orm.exc import NoResultFound
 
 import massgov.pfml.dor.importer.lib.dor_persistence_util as util
-from massgov.pfml.db.models.employees import Country, GeoState
+from massgov.pfml.db.models.employees import Country, EmployerQuarterlyContribution, GeoState
 from massgov.pfml.db.models.factories import (
     EmployeeFactory,
     EmployerFactory,
@@ -148,6 +150,89 @@ def test_check_and_update_employee(test_db_session, initialize_factories_session
     modified_employee_info = {"employee_first_name": "Jane", "employee_last_name": "Williams"}
     updated = util.check_and_update_employee(
         test_db_session, employee, modified_employee_info, uuid.uuid4()
+    )
+
+    assert updated
+    assert len(test_db_session.dirty) == 1
+
+
+def test_check_and_update_wages_and_contributions(test_db_session, initialize_factories_session):
+    payload = {
+        "independent_contractor": True,
+        "opt_in": True,
+        "employee_ytd_wages": Decimal("15234.58"),
+        "employee_qtr_wages": Decimal("15234.58"),
+        "employee_medical": Decimal("456.00"),
+        "employer_medical": Decimal("1384.58"),
+        "employee_family": Decimal("0.00"),
+        "employer_family": Decimal("0.00"),
+    }
+
+    wages_row = WagesAndContributionsFactory.create(
+        is_independent_contractor=payload["independent_contractor"],
+        is_opted_in=payload["opt_in"],
+        employee_ytd_wages=payload["employee_ytd_wages"],
+        employee_qtr_wages=payload["employee_qtr_wages"],
+        employee_med_contribution=payload["employee_medical"],
+        employer_med_contribution=payload["employer_medical"],
+        employee_fam_contribution=payload["employee_family"],
+        employer_fam_contribution=payload["employer_family"],
+    )
+
+    updated = util.check_and_update_wages_and_contributions(
+        test_db_session, wages_row, payload, uuid.uuid4()
+    )
+
+    assert not updated
+    assert len(test_db_session.dirty) == 0
+
+    updated_wages_payload = copy.deepcopy(payload)
+    updated_wages_payload["employer_medical"] = Decimal("1384.64")
+
+    updated = util.check_and_update_wages_and_contributions(
+        test_db_session, wages_row, updated_wages_payload, uuid.uuid4()
+    )
+
+    assert updated
+    assert len(test_db_session.dirty) == 1
+
+
+def test_check_and_update_employer_quarlerly_contribution(
+    test_db_session, initialize_factories_session
+):
+    now = datetime.now()
+
+    employer = EmployerFactory.create()
+
+    payload = {
+        "total_pfml_contribution": Decimal("15234.58"),
+        "received_date": date(now.year, now.month, now.day),
+        "updated_date": now,
+    }
+
+    employer_contribution_row = EmployerQuarterlyContribution(
+        employer_id=employer.employer_id,
+        filing_period=date(2020, 6, 30),
+        employer_total_pfml_contribution=payload["total_pfml_contribution"],
+        dor_received_date=payload["received_date"],
+        dor_updated_date=payload["updated_date"],
+    )
+    test_db_session.add(employer_contribution_row)
+    test_db_session.commit()
+    test_db_session.refresh(employer_contribution_row)
+
+    updated = util.check_and_update_employer_quarlerly_contribution(
+        test_db_session, employer_contribution_row, payload, uuid.uuid4()
+    )
+
+    assert not updated
+    assert len(test_db_session.dirty) == 0
+
+    modified_payload = copy.deepcopy(payload)
+    modified_payload["total_pfml_contribution"] = Decimal("15234.64")
+
+    updated = util.check_and_update_employer_quarlerly_contribution(
+        test_db_session, employer_contribution_row, modified_payload, uuid.uuid4()
     )
 
     assert updated

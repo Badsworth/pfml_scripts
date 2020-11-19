@@ -68,8 +68,10 @@ class ImportReport:
     unmodified_employees_count: int = 0
     created_wages_and_contributions_count: int = 0
     updated_wages_and_contributions_count: int = 0
+    unmodified_wages_and_contributions_count: int = 0
     created_employer_quarters_count: int = 0
     updated_employer_quarters_count: int = 0
+    unmodified_employer_quarters_count: int = 0
     sample_employers_line_lengths: Dict[Any, Any] = field(default_factory=dict)
     invalid_employer_lines_count: int = 0
     parsed_employers_exception_line_nums: List[Any] = field(default_factory=list)
@@ -262,11 +264,13 @@ class EmployeeWriter(object):
             )
 
         logger.info(
-            "** Employer Quarterly Import Progress - created: %i, updated: %i, total: %i",
+            "** Employer Quarterly Import Progress - created: %i, updated: %i, unmodified: %i, total: %i",
             self.report.created_employer_quarters_count,
             self.report.updated_employer_quarters_count,
+            self.report.unmodified_employer_quarters_count,
             self.report.created_employer_quarters_count
-            + self.report.updated_employer_quarters_count,
+            + self.report.updated_employer_quarters_count
+            + self.report.unmodified_employer_quarters_count,
         )
         logger.info(
             "** Employee Import Progress - created: %i, updated: %i, unmodified: %i, total: %i",
@@ -279,11 +283,13 @@ class EmployeeWriter(object):
         )
 
         logger.info(
-            "** Wage Import Progress: - created: %i, updated: %i, total: %i",
+            "** Wage Import Progress: - created: %i, updated: %i, unmodified: %i, total: %i",
             self.report.created_wages_and_contributions_count,
             self.report.updated_wages_and_contributions_count,
+            self.report.unmodified_wages_and_contributions_count,
             self.report.created_wages_and_contributions_count
-            + self.report.updated_wages_and_contributions_count,
+            + self.report.updated_wages_and_contributions_count
+            + self.report.unmodified_wages_and_contributions_count,
         )
 
         self.lines = []
@@ -969,6 +975,7 @@ def import_wage_data(
 
     count = 0
     updated_count = 0
+    unmodified_count = 0
 
     for wage_info in wage_info_list_to_create_or_update:
         count += 1
@@ -1008,24 +1015,32 @@ def import_wage_data(
             )
             wages_contributions_models_existing_employees_to_create.append(wage_model)
         else:
-            dor_persistence_util.update_wages_and_contributions(
+            is_updated = dor_persistence_util.check_and_update_wages_and_contributions(
                 db_session, existing_wage, wage_info, import_log_entry_id
             )
-            updated_count += 1
-            report.updated_wages_and_contributions_count += 1
+
+            if is_updated:
+                updated_count += 1
+                report.updated_wages_and_contributions_count += 1
+            else:
+                unmodified_count += 1
+                report.unmodified_wages_and_contributions_count += 1
 
         if count % 10000 == 0:
             logger.info(
-                "Wage data for existing employees - count: %i/%i (%.1f%%), updated: %i , collected for creation: %i",
+                "Wage data for existing employees - count: %i/%i (%.1f%%), updated: %i , unmodified: %i, collected for creation: %i",
                 count,
                 wage_data_total,
                 100.0 * count / wage_data_total,
                 updated_count,
+                unmodified_count,
                 len(wages_contributions_models_existing_employees_to_create),
             )
 
     if updated_count > 0:
-        logger.info("Batch committing wage updates: %i", updated_count)
+        logger.info(
+            "Batch committing wage updates: %i, unmodified: %i", updated_count, unmodified_count
+        )
         db_session.commit()
 
     logger.info(
@@ -1123,6 +1138,9 @@ def import_employer_pfml_contributions(
     report.created_employer_quarters_count += len(employer_quarter_models_to_create)
 
     count = 0
+    updated_count = 0
+    unmodified_count = 0
+
     for employer_info in found_employer_quarterly_contribution_list:
         count += 1
         if count % 10000 == 0:
@@ -1137,17 +1155,26 @@ def import_employer_pfml_contributions(
             existing_composite_model_key
         )
 
-        dor_persistence_util.update_employer_quarlerly_contribution(
+        is_updated = dor_persistence_util.check_and_update_employer_quarlerly_contribution(
             db_session,
             existing_employer_quarterly_contribution_model,
             employer_info,
             import_log_entry_id,
         )
 
-        report.updated_employer_quarters_count += 1
+        if is_updated:
+            updated_count += 1
+            report.updated_employer_quarters_count += 1
+        else:
+            unmodified_count += 1
+            report.unmodified_employer_quarters_count += 1
 
-    if count > 0:
-        logger.info("Batch committing quarterly contribution updates: %i", count)
+    if updated_count > 0:
+        logger.info(
+            "Batch committing quarterly contribution updates: %i, unmodified: %i",
+            updated_count,
+            unmodified_count,
+        )
         db_session.commit()
 
 

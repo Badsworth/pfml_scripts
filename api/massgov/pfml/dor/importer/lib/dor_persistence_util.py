@@ -222,10 +222,37 @@ def update_employee(db_session, existing_employee, employee_info, import_log_ent
     return existing_employee
 
 
-def update_employer_quarlerly_contribution(
+def check_and_update_employer_quarlerly_contribution(
     db_session, existing_employer_quarlerly_contribution, employer_info, import_log_entry_id
 ):
-    existing_employer_quarlerly_contribution.filing_period = employer_info["filing_period"]
+    do_update = (
+        existing_employer_quarlerly_contribution.employer_total_pfml_contribution
+        != employer_info["total_pfml_contribution"]
+        or existing_employer_quarlerly_contribution.dor_received_date.date()
+        != employer_info["received_date"]
+        or existing_employer_quarlerly_contribution.dor_updated_date.date()
+        != employer_info["updated_date"].date()
+    )
+
+    if not do_update:
+        return False
+
+    logger.warning(
+        "compare results for update - %r ? %r",
+        existing_employer_quarlerly_contribution.employer_total_pfml_contribution,
+        employer_info["total_pfml_contribution"],
+    )
+    logger.warning(
+        "compare - %r ? %r",
+        existing_employer_quarlerly_contribution.dor_received_date,
+        employer_info["received_date"],
+    )
+    logger.warning(
+        "compare - %r ? %r",
+        existing_employer_quarlerly_contribution.dor_updated_date,
+        employer_info["updated_date"],
+    )
+
     existing_employer_quarlerly_contribution.employer_total_pfml_contribution = employer_info[
         "total_pfml_contribution"
     ]
@@ -233,7 +260,7 @@ def update_employer_quarlerly_contribution(
     existing_employer_quarlerly_contribution.dor_updated_date = employer_info["updated_date"]
     existing_employer_quarlerly_contribution.latest_import_log_id = import_log_entry_id
 
-    return existing_employer_quarlerly_contribution
+    return True
 
 
 def create_wages_and_contributions(
@@ -247,9 +274,30 @@ def create_wages_and_contributions(
     return wage
 
 
-def update_wages_and_contributions(
+def check_and_update_wages_and_contributions(
     db_session, existing_wages_and_contributions, employee_wage_info, import_log_entry_id
 ):
+    do_update = (
+        existing_wages_and_contributions.is_independent_contractor
+        != employee_wage_info["independent_contractor"]
+        or existing_wages_and_contributions.is_opted_in != employee_wage_info["opt_in"]
+        or existing_wages_and_contributions.employee_ytd_wages
+        != employee_wage_info["employee_ytd_wages"]
+        or existing_wages_and_contributions.employee_qtr_wages
+        != employee_wage_info["employee_qtr_wages"]
+        or existing_wages_and_contributions.employee_med_contribution
+        != employee_wage_info["employee_medical"]
+        or existing_wages_and_contributions.employer_med_contribution
+        != employee_wage_info["employer_medical"]
+        or existing_wages_and_contributions.employee_fam_contribution
+        != employee_wage_info["employee_family"]
+        or existing_wages_and_contributions.employer_fam_contribution
+        != employee_wage_info["employer_family"]
+    )
+
+    if not do_update:
+        return False
+
     existing_wages_and_contributions.is_independent_contractor = employee_wage_info[
         "independent_contractor"
     ]
@@ -270,7 +318,7 @@ def update_wages_and_contributions(
     ]
     existing_wages_and_contributions.latest_import_log_id = import_log_entry_id
 
-    return existing_wages_and_contributions
+    return True
 
 
 def create_import_log_entry(db_session, report):

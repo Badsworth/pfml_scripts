@@ -348,7 +348,8 @@ def test_employee_wage_data_update(test_db_session, dor_employer_lookups):
     assert report2.created_wages_and_contributions_count == 0
     assert report2.updated_employees_count == 0
     assert report2.unmodified_employees_count == 1
-    assert report2.updated_wages_and_contributions_count == 1
+    assert report2.updated_wages_and_contributions_count == 0
+    assert report2.unmodified_wages_and_contributions_count == 1
 
     # confirm updates are persisted
     report3, report_log_entry3 = get_new_import_report(test_db_session)
@@ -387,6 +388,7 @@ def test_employee_wage_data_update(test_db_session, dor_employer_lookups):
     assert report3.updated_employees_count == 1
     assert report3.unmodified_employees_count == 0
     assert report3.updated_wages_and_contributions_count == 1
+    assert report3.unmodified_wages_and_contributions_count == 0
 
 
 # == Validation Helpers ==
