@@ -13,7 +13,6 @@ from typing import TYPE_CHECKING, Optional, cast
 from sqlalchemy import TIMESTAMP, Boolean, Column, Date, ForeignKey, Integer, Numeric, Text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Query, dynamic_loader, relationship
-from sqlalchemy.schema import UniqueConstraint
 from sqlalchemy.sql.expression import func
 
 from ..lookup import LookupTable
@@ -184,18 +183,9 @@ class EmployerQuarterlyContribution(Base):
     )
     filing_period = Column(Date, primary_key=True)
     employer_total_pfml_contribution = Column(Numeric(asdecimal=True), nullable=False)
+    dor_received_date = Column(TIMESTAMP(timezone=True))
     dor_updated_date = Column(TIMESTAMP(timezone=True))
     latest_import_log_id = Column(Integer, ForeignKey("import_log.import_log_id"), index=True)
-
-    __table_args__ = (
-        (
-            UniqueConstraint(
-                "employer_id",
-                "filing_period",
-                name="uix_employer_quarterly_contribution_employer_id_filing_period",
-            )
-        ),
-    )
 
 
 class EmployerLog(Base):
