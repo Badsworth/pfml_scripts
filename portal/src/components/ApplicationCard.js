@@ -128,9 +128,17 @@ export const ApplicationCard = (props) => {
           </React.Fragment>
         )}
 
+        {hasLoadingDocumentsError && (
+          <Alert noIcon>
+            {t("components.applicationCard.documentsRequestError")}
+          </Alert>
+        )}
+
+        <DocumentsInfo {...props} />
+
         {!claim.isCompleted && (
           <ButtonLink
-            className="display-block margin-top-0"
+            className="display-block margin-top-2"
             href={routeWithParams("claims.checklist", {
               claim_id: claim.application_id,
             })}
@@ -138,62 +146,54 @@ export const ApplicationCard = (props) => {
             {t("components.applicationCard.resumeClaimButton")}
           </ButtonLink>
         )}
-
-        {hasLoadingDocumentsError && (
-          <Alert noIcon>
-            {t("components.applicationCard.documentsRequestError")}
-          </Alert>
-        )}
-
-        {claim.isCompleted && <CompletedApplicationDocsInfo {...props} />}
       </div>
     </article>
   );
 };
 
 /**
- * Document-related information only displayed for Completed applications
+ * Legal notices and functionality related to uploading additional documents
  */
-function CompletedApplicationDocsInfo(props) {
+function DocumentsInfo(props) {
   const { t } = useTranslation();
   const { claim, documents } = props;
 
+  const hasFutureChildDate = get(claim, "leave_details.has_future_child_date");
+  const leaveReasonQualifier = get(claim, "leave_details.reason_qualifier");
+
+  const certificationDocs = findDocumentsByTypes(
+    documents,
+    // This enum is used because for MVP all certs will have the same doc type
+    [DocumentType.medicalCertification]
+  );
   const legalNotices = findDocumentsByTypes(documents, [
     DocumentType.approvalNotice,
     DocumentType.denialNotice,
     DocumentType.requestForInfoNotice,
   ]);
 
-  const leaveReasonQualifier = get(claim, "leave_details.reason_qualifier");
-
-  const contentContext = {
+  const bondingContentContext = {
     [ReasonQualifier.adoption]: "adopt_foster",
     [ReasonQualifier.fosterCare]: "adopt_foster",
     [ReasonQualifier.newBorn]: "newborn",
   };
 
-  const hasLegalNotices = legalNotices.length > 0;
-  const hasFutureChildDate = get(claim, "leave_details.has_future_child_date");
-
-  const hasCertDoc =
-    findDocumentsByTypes(
-      documents,
-      // This enum is used because for MVP all certs will have the same doc type
-      [DocumentType.medicalCertification]
-    ).length > 0;
-
-  const canShowBondingCertContent = !hasCertDoc && hasFutureChildDate;
+  const showBondingLeaveDocRequirement =
+    hasFutureChildDate && certificationDocs.length === 0;
+  const showLegalNotices = legalNotices.length > 0;
+  const showUploadButton = claim.isCompleted || showLegalNotices;
+  const completeAppButtonIsShowing = !claim.isCompleted;
 
   const containerClasses = classnames({
     // Don't render a border if we only have the Button to render,
     // which matches how the card is presented for non-Completed claims
     "border-top border-base-lighter padding-top-2":
-      hasLegalNotices || hasFutureChildDate,
+      showLegalNotices || showBondingLeaveDocRequirement,
   });
 
   return (
     <div className={containerClasses}>
-      {hasLegalNotices && (
+      {showLegalNotices && (
         <React.Fragment>
           <Heading level="3" weight="normal">
             {t("components.applicationCard.noticesHeading")}
@@ -211,22 +211,25 @@ function CompletedApplicationDocsInfo(props) {
         </React.Fragment>
       )}
 
-      {canShowBondingCertContent && (
+      {showBondingLeaveDocRequirement && (
         <p>
-          {t("components.applicationCard.futureBondingLeave", {
-            context: contentContext[leaveReasonQualifier],
+          {t("components.applicationCard.bondingLeaveDocsRequired", {
+            context: bondingContentContext[leaveReasonQualifier],
           })}
         </p>
       )}
 
-      <ButtonLink
-        className="display-block"
-        href={routeWithParams("claims.uploadDocsOptions", {
-          claim_id: claim.application_id,
-        })}
-      >
-        {t("components.applicationCard.uploadDocsButton")}
-      </ButtonLink>
+      {showUploadButton && (
+        <ButtonLink
+          className="display-block"
+          href={routeWithParams("claims.uploadDocsOptions", {
+            claim_id: claim.application_id,
+          })}
+          variation={completeAppButtonIsShowing ? "outline" : null}
+        >
+          {t("components.applicationCard.uploadDocsButton")}
+        </ButtonLink>
+      )}
     </div>
   );
 }
@@ -281,7 +284,7 @@ ApplicationCard.propTypes = {
   number: PropTypes.number.isRequired,
 };
 
-CompletedApplicationDocsInfo.propTypes = {
+DocumentsInfo.propTypes = {
   claim: PropTypes.instanceOf(Claim).isRequired,
   documents: PropTypes.arrayOf(PropTypes.instanceOf(Document)),
 };

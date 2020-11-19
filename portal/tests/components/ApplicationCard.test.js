@@ -25,12 +25,6 @@ describe("ApplicationCard", () => {
     return shallow(<ApplicationCard claim={claim} number={2} {...props} />);
   };
 
-  it("renders a card for the given application", () => {
-    const wrapper = render(new MockClaimBuilder().create());
-
-    expect(wrapper).toMatchSnapshot();
-  });
-
   it("renders Continuous leave period date range", () => {
     const wrapper = render(new MockClaimBuilder().continuous().create());
 
@@ -73,10 +67,10 @@ describe("ApplicationCard", () => {
   describe("when the claim status is Submitted", () => {
     const submittedClaim = new MockClaimBuilder().submitted().create();
 
-    it("includes a link to edit the claim", () => {
+    it("includes a link to complete the claim", () => {
       const wrapper = render(submittedClaim);
 
-      expect(wrapper.find("ButtonLink")).toHaveLength(1);
+      expect(wrapper.find("ButtonLink")).toMatchSnapshot();
     });
 
     it("uses the Case ID as the main heading", () => {
@@ -91,9 +85,13 @@ describe("ApplicationCard", () => {
   describe("when the claim status is Completed", () => {
     it("includes a button to upload additional documents", () => {
       const wrapper = render(new MockClaimBuilder().completed().create());
+
+      // "Complete application" button no longer exists
+      expect(wrapper.find("ButtonLink")).toHaveLength(0);
+
       expect(
-        wrapper.find("CompletedApplicationDocsInfo").dive().find("ButtonLink")
-      ).toHaveLength(1);
+        wrapper.find("DocumentsInfo").dive().find("ButtonLink")
+      ).toMatchSnapshot();
     });
 
     describe("when it's a bonding claim with no cert doc", () => {
@@ -126,8 +124,26 @@ describe("ApplicationCard", () => {
   });
 
   describe("when there are legal notices", () => {
+    it("includes a button to upload additional documents", () => {
+      const claim = new MockClaimBuilder().submitted().create();
+      const documents = [
+        new Document({
+          application_id: claim.application_id,
+          created_at: "2021-01-01",
+          document_type: DocumentType.denialNotice,
+          fineos_document_id: "mock-document-4",
+        }),
+      ];
+
+      const wrapper = render(claim, { documents });
+
+      expect(
+        wrapper.find("DocumentsInfo").dive().find("ButtonLink")
+      ).toMatchSnapshot();
+    });
+
     it("displays legal notices", () => {
-      const claim = new MockClaimBuilder().completed().create();
+      const claim = new MockClaimBuilder().submitted().create();
       const documents = [
         new Document({
           application_id: claim.application_id,
@@ -158,7 +174,7 @@ describe("ApplicationCard", () => {
 
       const wrapper = render(claim, { documents });
       const listItems = wrapper
-        .find("CompletedApplicationDocsInfo")
+        .find("DocumentsInfo")
         .dive()
         .find("LegalNoticeListItem");
 
@@ -183,7 +199,7 @@ describe("ApplicationCard", () => {
         const wrapper = render(claim, { documents });
 
         wrapper
-          .find("CompletedApplicationDocsInfo")
+          .find("DocumentsInfo")
           .dive()
           .find("LegalNoticeListItem")
           .dive()

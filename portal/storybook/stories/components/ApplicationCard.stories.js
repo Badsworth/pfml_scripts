@@ -22,6 +22,7 @@ export default {
           "Hybrid leave",
           "Intermittent leave",
           "Submitted",
+          "Submitted + Denial notice",
           "Completed",
           "Bonding Newborn Completed With No Cert",
           "Bonding Adoption Completed With No Cert",
@@ -50,6 +51,15 @@ export const Story = ({ claim, documents, ...args }) => {
     claimAttrs = new MockClaimBuilder().intermittent().create();
   } else if (claim === "Submitted") {
     claimAttrs = new MockClaimBuilder().submitted().create();
+  } else if (claim === "Submitted + Denial notice") {
+    claimAttrs = new MockClaimBuilder().submitted().create();
+    attachedDocuments = [
+      new Document({
+        created_at: "2021-01-15",
+        document_type: DocumentType.denialNotice,
+        fineos_document_id: "a",
+      }),
+    ];
   } else if (claim === "Completed") {
     claimAttrs = new MockClaimBuilder().completed().create();
   } else if (claim === "Bonding Newborn Completed With No Cert") {

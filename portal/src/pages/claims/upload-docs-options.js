@@ -53,20 +53,18 @@ export const UploadDocsOptions = (props) => {
           }),
         ])
       );
-    } else if (upload_docs_options === UploadType.certification) {
-      return appLogic.portalFlow.goToNextPage(
-        { claim },
-        { claim_id: claim.application_id },
-        upload_docs_options
-      );
-    } else {
-      const showStateId = upload_docs_options === UploadType.mass_id;
-      return appLogic.portalFlow.goToNextPage(
-        { claim },
-        { claim_id: claim.application_id, showStateId },
-        upload_docs_options
-      );
+      return;
     }
+
+    const showStateId =
+      upload_docs_options === UploadType.certification
+        ? undefined
+        : upload_docs_options === UploadType.mass_id;
+    return appLogic.portalFlow.goToNextPage(
+      { claim },
+      { claim_id: claim.application_id, showStateId },
+      upload_docs_options
+    );
   };
 
   const getFunctionalInputProps = useFunctionalInputProps({
