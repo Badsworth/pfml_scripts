@@ -28,7 +28,8 @@ def mask_date(date_val: Optional[date]) -> Optional[str]:
 
 
 def mask_address(address: Optional[str]) -> Optional[str]:
-    if address is None:
+    # Do not attempt to mask the address if the input address is either 1) None or 2) an empty string.
+    if not address:
         return None
     return ADDRESS_MASK
 

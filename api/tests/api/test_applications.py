@@ -32,7 +32,7 @@ from massgov.pfml.db.models.applications import (
     WorkPattern,
     WorkPatternDay,
 )
-from massgov.pfml.db.models.employees import Address, TaxIdentifier
+from massgov.pfml.db.models.employees import Address, GeoState, TaxIdentifier
 from massgov.pfml.db.models.factories import (
     AddressFactory,
     ApplicationFactory,
@@ -752,6 +752,72 @@ def test_application_patch_residential_address_null_values(
     response_body = response.get_json()
     assert response.status_code == 200
     assert response_body.get("data").get("residential_address").get("state") is None
+
+
+def test_application_patch_residential_address_line_2_masked(
+    client, user, auth_token, test_db_session
+):
+    application = ApplicationFactory.create(user=user)
+    application.residential_address = Address(
+        address_line_one="Mt. Greylock",
+        address_line_two="Taconic Mountains",
+        city="Adams",
+        geo_state_id=GeoState.MA.geo_state_id,
+        zip_code="01220",
+    )
+    test_db_session.commit()
+
+    assert application.residential_address
+    assert application.residential_address.address_line_two
+
+    # 1. Update the address by removing the second line. Perhaps the applicant realized they were being too specific.
+    first_update_request_body = {
+        "residential_address": {
+            "line_1": "Mt. Greylock",
+            "line_2": "",
+            "city": "Adams",
+            "state": "MA",
+            "zip": "01220",
+        }
+    }
+
+    first_update_response = client.patch(
+        "/v1/applications/{}".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+        json=first_update_request_body,
+    )
+    assert first_update_response.status_code == 200
+
+    # 2. Get the latest fields for the application before we update the address again.
+    get_response = client.get(
+        "/v1/applications/{}".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+    )
+    get_response_body = get_response.get_json()
+    addr = get_response_body["data"]["residential_address"]
+
+    assert get_response.status_code == 200
+    assert not addr["line_2"]
+
+    # 3. Update the first address line. Use the second address line field from the response to emulate not changing it.
+    second_update_request_body = {
+        "residential_address": {
+            "line_1": "Mount Greylock",
+            "line_2": addr["line_2"],
+            "city": "Adams",
+            "state": "MA",
+            "zip": "01220",
+        }
+    }
+    second_update_response = client.patch(
+        "/v1/applications/{}".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+        json=second_update_request_body,
+    )
+    assert second_update_response.status_code == 200
+
+    errors = second_update_response.get_json().get("errors")
+    assert not errors
 
 
 def test_application_unauthorized_patch(client, user, auth_token, test_db_session):
