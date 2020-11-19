@@ -1074,12 +1074,12 @@ describe("useAuthLogic", () => {
 
       expect(appErrors.items).toHaveLength(3);
       expect(appErrors.items.map((e) => e.message)).toMatchInlineSnapshot(`
-          Array [
-            "Enter the 6-digit code sent to your email",
-            "Enter your email address",
-            "Enter your password",
-          ]
-        `);
+        Array [
+          "Enter the 6 digit code sent to your email",
+          "Enter your email address",
+          "Enter your password",
+        ]
+      `);
       expect(Auth.forgotPasswordSubmit).not.toHaveBeenCalled();
     });
 
@@ -1305,7 +1305,7 @@ describe("useAuthLogic", () => {
       });
       expect(appErrors.items).toHaveLength(1);
       expect(appErrors.items[0].message).toMatchInlineSnapshot(
-        `"Enter the 6-digit code sent to your email"`
+        `"Enter the 6 digit code sent to your email"`
       );
       expect(Auth.confirmSignUp).not.toHaveBeenCalled();
     });
@@ -1324,7 +1324,7 @@ describe("useAuthLogic", () => {
         });
         expect(appErrors.items).toHaveLength(1);
         expect(appErrors.items[0].message).toEqual(
-          "Enter the 6-digit code sent to your email and ensure it does not include any punctuation."
+          "Enter the 6 digit code sent to your email and ensure it does not include any punctuation."
         );
         expect(Auth.confirmSignUp).not.toHaveBeenCalled();
       }

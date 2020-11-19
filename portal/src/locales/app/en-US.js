@@ -33,10 +33,10 @@ const errors = {
     codeExpired:
       "Sorry, your verification code has expired or has already been used.",
     codeFormat:
-      "Enter the 6-digit code sent to your email and ensure it does not include any punctuation.",
+      "Enter the 6 digit code sent to your email and ensure it does not include any punctuation.",
     codeMismatchException:
       "Invalid verification code. Make sure the code matches the code emailed to you.",
-    codeRequired: "Enter the 6-digit code sent to your email",
+    codeRequired: "Enter the 6 digit code sent to your email",
     emailRequired: "Enter your email address",
     employerIdNumberRequired: "Enter your employer ID number",
     expiredVerificationCode:
@@ -279,7 +279,7 @@ const errors = {
         required: "Enter a state for your residential address.",
       },
       zip: {
-        pattern: "Enter a 5- or 9-digit ZIP code for your residential address.",
+        pattern: "Enter a 5 or 9 digit ZIP code for your residential address.",
         required: "Enter a ZIP code for your residential address.",
       },
     },
@@ -298,7 +298,7 @@ const errors = {
         "You must tell your employer that you’re taking leave before you can submit an application. If you’ve told your employer, update your application with the date that you notified them.",
     },
     tax_identifier: {
-      pattern: "Enter a 9-digit number formatted as XXX-XX-XXXX.",
+      pattern: "Enter a 9 digit number formatted as XXX-XX-XXXX.",
       required: "Enter a Social Security Number or ITIN.",
     },
     upload_docs_options: {
@@ -452,7 +452,7 @@ const pages = {
   authForgotPassword: {
     codeLabel: "$t(shared.verificationCodeLabel)",
     lead:
-      "If an account exists for the email you provide, we will email a 6-digit verification code to it.",
+      "If an account exists for the email you provide, we will email a 6 digit verification code to it.",
     logInLink: "$t(shared.backToLoginLink)",
     submitButton: "Send code",
     title: "Forgot your password?",
@@ -477,9 +477,9 @@ const pages = {
   authResetPassword: {
     codeLabel: "$t(shared.verificationCodeLabel)",
     lead:
-      "If an account exists for the email you provide, we emailed a 6-digit verification code to it. Enter the code below to confirm your email and reset your password.",
+      "If an account exists for the email you provide, we emailed a 6 digit verification code to it. Enter the code below to confirm your email and reset your password.",
     lead_email:
-      "If an account exists for {{emailAddress}}, we emailed a 6-digit verification code to it. Enter the code below to confirm your email and reset your password.",
+      "If an account exists for {{emailAddress}}, we emailed a 6 digit verification code to it. Enter the code below to confirm your email and reset your password.",
     logInLink: "$t(shared.backToLoginLink)",
     passwordHint: "$t(shared.passwordHint)",
     passwordLabel: "New password",
@@ -491,16 +491,16 @@ const pages = {
   authVerifyAccount: {
     codeLabel: "$t(shared.verificationCodeLabel)",
     codeResent:
-      "We sent a new 6-digit verification code to your email address. Enter the new code to verify your email.",
+      "We sent a new 6 digit verification code to your email address. Enter the new code to verify your email.",
     codeResentHeading: "New verification code sent",
     confirmButton: "Submit",
     einLabel: "Employer ID number",
     employerAccountLabel:
       "I need an employer account to manage leave for my team.",
     lead:
-      "We sent a 6-digit verification code to your email address. Enter the code to verify your email.",
+      "We sent a 6 digit verification code to your email address. Enter the code to verify your email.",
     lead_email:
-      "We sent a 6-digit verification code to {{emailAddress}}. Enter the code to verify your email.",
+      "We sent a 6 digit verification code to {{emailAddress}}. Enter the code to verify your email.",
     logInFooterLink: "$t(shared.backToLoginLink)",
     resendCodeLink: "Send a new code",
     title: "Verify your email address",
@@ -559,7 +559,7 @@ const pages = {
     stepHTMLDescription_bondingNewbornFuture:
       "After your child is born you will need to provide your child’s birth certificate or a document from a health care provider that shows the child’s date of birth.",
     stepHTMLDescription_employerInformation:
-      "You will need to know:<ul><li>Your employer’s 9-digit federal employer identification number (FEIN or EIN). <br><strong>Where to find this: </strong>on your W$t(chars.nbhyphen)2 or 1099, or ask your employer’s finance department.</li><li>The date you told your employer you were taking leave.</li></ul><p>If you are taking leave from multiple employers, you must create separate applications for each job.</p>",
+      "You will need to know:<ul><li>Your employer’s 9 digit federal employer identification number (FEIN or EIN). <br><strong>Where to find this: </strong>on your W$t(chars.nbhyphen)2 or 1099, or ask your employer’s finance department.</li><li>The date you told your employer you were taking leave.</li></ul><p>If you are taking leave from multiple employers, you must create separate applications for each job.</p>",
     stepHTMLDescription_leaveDetails:
       "<p>If you are taking medical leave due to injury, illness, or pregnancy, you need to have your health care provider fill out <healthcare-provider-form-link>the certification form</healthcare-provider-form-link>. Some of the answers you will need for the online application will come from your health care provider’s answers on the certification form.</p><p>If you are taking family leave to bond with a child, you will need to know:</p><ul><li>The child's date of birth, due date, or the date they arrived in your home for adoption or foster care.</li><li>When you want your leave to begin and end.</li></ul>",
     stepHTMLDescription_medical:

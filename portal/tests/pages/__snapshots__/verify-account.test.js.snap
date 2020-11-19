@@ -10,7 +10,7 @@ exports[`VerifyAccount renders the empty page 1`] = `
       Verify your email address
     </Title>
     <Lead>
-      We sent a 6-digit verification code to your email address. Enter the code to verify your email.
+      We sent a 6 digit verification code to your email address. Enter the code to verify your email.
     </Lead>
     <InputText
       autoComplete="off"
@@ -99,6 +99,6 @@ exports[`VerifyAccount when authData.username is set when resend code button is 
   role="alert"
   state="success"
 >
-  We sent a new 6-digit verification code to your email address. Enter the new code to verify your email.
+  We sent a new 6 digit verification code to your email address. Enter the new code to verify your email.
 </Alert>
 `;

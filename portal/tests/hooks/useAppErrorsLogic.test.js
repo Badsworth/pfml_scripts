@@ -118,7 +118,7 @@ describe("useAppErrorsLogic", () => {
         });
 
         expect(appErrorsLogic.appErrors.items[0].message).toMatchInlineSnapshot(
-          `"Enter a 9-digit number formatted as XXX-XX-XXXX."`
+          `"Enter a 9 digit number formatted as XXX-XX-XXXX."`
         );
       });
 
