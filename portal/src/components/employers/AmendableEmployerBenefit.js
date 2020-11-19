@@ -1,12 +1,10 @@
-import EmployerBenefit, {
-  EmployerBenefitType,
-  IncomeFrequency,
-} from "../../models/EmployerBenefit";
+import EmployerBenefit, { IncomeFrequency } from "../../models/EmployerBenefit";
 import React, { useState } from "react";
 import AmendButton from "./AmendButton";
 import AmendmentForm from "./AmendmentForm";
 import ConditionalContent from "../ConditionalContent";
 import Dropdown from "../Dropdown";
+import FineosEmployerBenefitType from "../../models/EmployerClaim";
 import InputDate from "../InputDate";
 import InputText from "../InputText";
 import PropTypes from "prop-types";
@@ -34,8 +32,8 @@ const AmendableEmployerBenefit = ({ benefit, onChange }) => {
     });
     onChange({ id, [field]: formattedValue });
   };
-  const benefitType = findKeyByValue(EmployerBenefitType, benefit.benefit_type);
-  const isPaidLeave = benefit.benefit_type === EmployerBenefitType.paidLeave;
+  const isPaidLeave =
+    benefit.benefit_type === FineosEmployerBenefitType.paidLeave;
   const getBenefitAmountByType = () => {
     const { benefit_amount_dollars, benefit_amount_frequency } = benefit;
     const hasBenefitAmountDetails =
@@ -70,14 +68,7 @@ const AmendableEmployerBenefit = ({ benefit, onChange }) => {
             benefit.benefit_end_date
           )}
         </th>
-        <td>
-          {t(
-            "pages.employersClaimsReview.employerBenefits.employerBenefitType",
-            {
-              context: benefitType,
-            }
-          )}
-        </td>
+        <td>{benefit.benefit_type}</td>
         <td>{getBenefitAmountByType()}</td>
         <td>
           <AmendButton onClick={() => setIsAmendmentFormDisplayed(true)} />
@@ -96,14 +87,7 @@ const AmendableEmployerBenefit = ({ benefit, onChange }) => {
                 onChange(benefit);
               }}
             >
-              <p>
-                {t(
-                  "pages.employersClaimsReview.employerBenefits.employerBenefitType",
-                  {
-                    context: benefitType,
-                  }
-                )}
-              </p>
+              <p>{benefit.benefit_type}</p>
               <InputDate
                 onChange={(e) =>
                   amendBenefit(benefit.id, "benefit_start_date", e.target.value)

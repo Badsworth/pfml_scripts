@@ -20,4 +20,16 @@ export const FineosLeaveReason = {
   serviceMemberFamily: "Military Caregiver",
 };
 
+/**
+ * TODO (EMPLOYER-580): Will remove after reconciling difference in enum values for employer benefit type
+ * Enums for the EmployerBenefit `benefit_type` field as provided by FINEOS
+ * @enum {string}
+ */
+export const FineosEmployerBenefitType = {
+  familyOrMedicalLeave: "Family or medical leave insurance",
+  paidLeave: "Accrued paid leave",
+  permanentDisability: "Permanent disability insurance",
+  shortTermDisability: "Short-term disability insurance",
+};
+
 export default EmployerClaim;

@@ -1,5 +1,4 @@
 import EmployerBenefit, {
-  EmployerBenefitType,
   IncomeFrequency,
 } from "../../../src/models/EmployerBenefit";
 import AmendButton from "../../../src/components/employers/AmendButton";
@@ -7,6 +6,7 @@ import AmendableEmployerBenefit from "../../../src/components/employers/Amendabl
 import AmendmentForm from "../../../src/components/employers/AmendmentForm";
 import Button from "../../../src/components/Button";
 import Dropdown from "../../../src/components/Dropdown";
+import { FineosEmployerBenefitType } from "../../../src/models/EmployerClaim";
 import InputDate from "../../../src/components/InputDate";
 import InputText from "../../../src/components/InputText";
 import React from "react";
@@ -18,7 +18,7 @@ describe("AmendableEmployerBenefit", () => {
     benefit_amount_frequency: IncomeFrequency.monthly,
     benefit_end_date: "2021-03-01",
     benefit_start_date: "2021-02-01",
-    benefit_type: EmployerBenefitType.shortTermDisability,
+    benefit_type: FineosEmployerBenefitType.shortTermDisability,
   });
   const props = {
     onChange: jest.fn(),
@@ -67,13 +67,13 @@ describe("AmendableEmployerBenefit", () => {
     expect(wrapper.find(InputText).prop("mask")).toEqual("currency");
   });
 
-  it("hides amount input field if the benefit is acrrued paid leave", () => {
+  it("hides amount input field if the benefit is accrued paid leave", () => {
     const paidLeave = new EmployerBenefit({
       benefit_amount_dollars: 0,
       benefit_amount_frequency: "",
       benefit_end_date: "2021-03-01",
       benefit_start_date: "2021-02-01",
-      benefit_type: EmployerBenefitType.paidLeave,
+      benefit_type: FineosEmployerBenefitType.paidLeave,
     });
     const wrapper = shallow(
       <AmendableEmployerBenefit benefit={paidLeave} onChange={() => {}} />
@@ -82,7 +82,7 @@ describe("AmendableEmployerBenefit", () => {
     wrapper.find(AmendButton).simulate("click");
 
     expect(wrapper.find(InputDate)).toHaveLength(2);
-    expect(wrapper.find(InputText)).toHaveLength(0);
+    expect(wrapper.find(InputText).exists()).toEqual(true);
   });
 
   it("updates start and end dates in the AmendmentForm", () => {

@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import EmployersApi from "../api/EmployersApi";
+import { isFeatureEnabled } from "../services/featureFlags";
 
 const useEmployersLogic = ({ appErrorsLogic, portalFlow }) => {
   const [claim, setClaim] = useState(null);
@@ -31,14 +32,27 @@ const useEmployersLogic = ({ appErrorsLogic, portalFlow }) => {
   const submit = async (absenceId, data) => {
     appErrorsLogic.clearErrors();
 
-    try {
-      const { success } = await employersApi.submitClaimReview(absenceId, data);
-      if (success) {
-        const params = { absence_id: absenceId };
-        portalFlow.goToNextPage({}, params);
+    // TODO (EMPLOYER-579): Remove this flag once unmoderated usability testing is complete
+    const isEmployerUsabilityTestEnabled = isFeatureEnabled(
+      "employerUsabilityTest"
+    );
+
+    if (isEmployerUsabilityTestEnabled) {
+      const params = { absence_id: absenceId };
+      portalFlow.goToNextPage({}, params);
+    } else {
+      try {
+        const { success } = await employersApi.submitClaimReview(
+          absenceId,
+          data
+        );
+        if (success) {
+          const params = { absence_id: absenceId };
+          portalFlow.goToNextPage({}, params);
+        }
+      } catch (error) {
+        appErrorsLogic.catchError(error);
       }
-    } catch (error) {
-      appErrorsLogic.catchError(error);
     }
   };
 

@@ -42,7 +42,7 @@ export const Review = (props) => {
     if (claim) {
       setAmendedBenefits(claim.employer_benefits);
       setAmendedLeaves(claim.previous_leaves);
-      setAmendedHours(claim.hours_worked_per_week);
+      setAmendedHours(claim.hours_worked_per_week || hoursWorkedPerWeek);
     }
   }, [claim]);
 
@@ -65,14 +65,15 @@ export const Review = (props) => {
   };
 
   const handleSubmit = async ({ comment }) => {
-    await props.appLogic.employers.submit(absenceId, {
-      employer_benefits: amendedBenefits,
-      previous_leaves: amendedLeaves,
-      hours_worked_per_week: parseInt(amendedHours),
+    const payload = {
       comment,
+      employer_benefits: amendedBenefits,
       employer_decision: employerDecision,
       fraud,
-    });
+      hours_worked_per_week: parseInt(amendedHours),
+      previous_leaves: amendedLeaves,
+    };
+    await props.appLogic.employers.submit(absenceId, payload);
   };
 
   return (
