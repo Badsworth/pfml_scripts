@@ -48,7 +48,12 @@ def list_files(path):
 
 def open_stream(path, mode="r"):
     if is_s3_path(path):
-        so_config = Config(connect_timeout=50, read_timeout=9000)
+        so_config = Config(
+            max_pool_connections=10,
+            connect_timeout=14400,
+            read_timeout=14400,
+            retries={"max_attempts": 10},
+        )
         so_transport_params = {"resource_kwargs": {"config": so_config}}
 
         return smart_open.open(path, mode, transport_params=so_transport_params)
