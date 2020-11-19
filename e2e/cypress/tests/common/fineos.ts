@@ -32,7 +32,7 @@ When("I add paid benefits to the current case", () => {
     "div[class='flex-item']",
     "Benefit payment waiting period"
   ).within(() => {
-    cy.get("input").first().type("10");
+    cy.get("input").first().type("{selectall}{backspace}10");
     cy.get("select").select("Days");
   });
   fineos.clickBottomWidgetButton("OK");
