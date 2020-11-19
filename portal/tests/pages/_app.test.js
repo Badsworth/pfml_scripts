@@ -33,10 +33,18 @@ function render(customProps = {}, mountComponent = false) {
   );
 
   const component = <App {...props} />;
+  const container = document.createElement("div");
+  container.id = "enzymeContainer";
+  document.body.appendChild(container);
 
   return {
     props,
-    wrapper: mountComponent ? mount(component) : shallow(component),
+    wrapper: mountComponent
+      ? mount(component, {
+          // attachTo the body so document.activeElement works (https://github.com/enzymejs/enzyme/issues/2337#issuecomment-608984530)
+          attachTo: container,
+        })
+      : shallow(component),
   };
 }
 
@@ -181,6 +189,40 @@ describe("App", () => {
       });
 
       expect(scrollToSpy).toHaveBeenCalled();
+    });
+
+    it("moves focus to .js-title after a route change completes", () => {
+      expect.assertions(1);
+
+      // Mount the component so that useEffect is called.
+      const mountComponent = true;
+      // Create page content that includes the h1 with expected markup
+      const TestComponent = () => (
+        <div>
+          <h1 tabIndex="-1" className="js-title">
+            Page title
+          </h1>
+        </div>
+      );
+      const { wrapper } = render(
+        {
+          Component: TestComponent,
+        },
+        mountComponent
+      );
+
+      const routeChangeComplete = mockRouterEvents.find(
+        (evt) => evt.name === "routeChangeComplete"
+      );
+
+      act(() => {
+        // Trigger routeChangeComplete
+        routeChangeComplete.callback();
+      });
+
+      const h1 = wrapper.find("h1").last().getDOMNode();
+
+      expect(document.activeElement).toBe(h1);
     });
   });
 

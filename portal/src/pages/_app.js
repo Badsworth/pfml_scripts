@@ -89,6 +89,13 @@ export const App = ({ Component, pageProps }) => {
    */
   const handleRouteChangeComplete = (url = "") => {
     handleRouteChangeEnd();
+
+    // For screen readers, we want to move their active focus towards the top
+    // of the page so they become aware of the page change and can navigate
+    // through the new page content. This relies on our pages utilizing the <Title>
+    // component, which includes the markup to support this.
+    const pageHeading = document.querySelector(".js-title");
+    if (pageHeading) pageHeading.focus();
   };
 
   /**

@@ -11,12 +11,15 @@ const Title = ({ component = "h1", small = false, ...props }) => {
   const TitleElement = component;
   const marginBottom = props.marginBottom ? props.marginBottom : "2";
 
-  const classes = classnames(`margin-top-0 margin-bottom-${marginBottom}`, {
-    "font-heading-lg line-height-sans-2": !small,
-    "font-heading-sm line-height-sans-3": small,
-    "usa-legend": component === "legend",
-    "usa-sr-only": !!props.hidden,
-  });
+  const classes = classnames(
+    `js-title margin-top-0 margin-bottom-${marginBottom}`,
+    {
+      "font-heading-lg line-height-sans-2": !small,
+      "font-heading-sm line-height-sans-3": small,
+      "usa-legend": component === "legend",
+      "usa-sr-only": !!props.hidden,
+    }
+  );
   const seoTitle = props.seoTitle ? props.seoTitle : props.children;
 
   return (
@@ -24,7 +27,9 @@ const Title = ({ component = "h1", small = false, ...props }) => {
       <Helmet>
         <title>{seoTitle}</title>
       </Helmet>
-      <TitleElement className={classes}>{props.children}</TitleElement>
+      <TitleElement tabIndex="-1" className={classes}>
+        {props.children}
+      </TitleElement>
     </React.Fragment>
   );
 };
