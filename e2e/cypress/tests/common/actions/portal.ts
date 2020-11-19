@@ -708,24 +708,17 @@ export function submitClaimPartOne(application: ApplicationRequestBody): void {
 
 export function submitClaimPortal(application: ApplicationRequestBody): void {
   submitClaimPartOne(application);
+  clickChecklistButton("Add payment information");
   addPaymentInfo(application);
   onPage("checklist");
   clickChecklistButton("Upload identity document");
   addId("MA ID");
   onPage("checklist");
   clickChecklistButton("Upload leave certification documents");
+  addId("FOSTER");
   onPage("checklist");
   reviewAndSubmit();
   onPage("review");
   confirmSubmit();
   goToDashboard();
 }
-
-// Given I am on the claims "checklist" page
-// When I click on the checklist button called "Upload leave certification documents"
-// Then I add my leave certification documents
-// Given I am on the claims "checklist" page
-// Then I should review and submit the application
-// Given I am on the claims "review" page
-// Then I should have agreed and successfully submitted the claim
-// And I should be able to return to the portal dashboard
