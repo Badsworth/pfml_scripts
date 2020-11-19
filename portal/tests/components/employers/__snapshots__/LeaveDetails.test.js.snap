@@ -23,7 +23,7 @@ exports[`LeaveDetails renders the component 1`] = `
     label="Leave duration"
     level="3"
   >
-    1/1/2021 – 6/1/2021
+    1/1/2021 – 7/1/2021
   </ReviewRow>
 </Fragment>
 `;

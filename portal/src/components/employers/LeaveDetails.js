@@ -5,7 +5,6 @@ import ReviewHeading from "../ReviewHeading";
 import ReviewRow from "../ReviewRow";
 import findKeyByValue from "../../utils/findKeyByValue";
 import formatDateRange from "../../utils/formatDateRange";
-import { get } from "lodash";
 import { useTranslation } from "../../locales/i18n";
 
 /**
@@ -21,16 +20,6 @@ const LeaveDetails = (props) => {
       leave_details: { reason },
     },
   } = props;
-
-  // TODO (CP-984): Factor in start and end dates for Reduced and Intermittent leaves
-  const start_date = get(
-    props.claim,
-    "leave_details.continuous_leave_periods[0].start_date"
-  );
-  const end_date = get(
-    props.claim,
-    "leave_details.continuous_leave_periods[0].end_date"
-  );
 
   return (
     <React.Fragment>
@@ -55,7 +44,7 @@ const LeaveDetails = (props) => {
         level="3"
         label={t("pages.employersClaimsReview.leaveDetails.leaveDurationLabel")}
       >
-        {formatDateRange(start_date, end_date)}
+        {formatDateRange(props.claim.leaveStartDate, props.claim.leaveEndDate)}
       </ReviewRow>
     </React.Fragment>
   );

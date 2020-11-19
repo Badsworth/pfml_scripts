@@ -24,7 +24,7 @@ describe("LeaveDetails", () => {
 
   it("renders formatted date range for leave duration", () => {
     expect(wrapper.find(ReviewRow).last().children().first().text()).toEqual(
-      "1/1/2021 – 6/1/2021"
+      "1/1/2021 – 7/1/2021"
     );
   });
 });
