@@ -183,6 +183,7 @@ class EmployerQuarterlyContribution(Base):
     )
     filing_period = Column(Date, primary_key=True)
     employer_total_pfml_contribution = Column(Numeric(asdecimal=True), nullable=False)
+    pfm_account_id = Column(Text, nullable=False, index=True)
     dor_received_date = Column(TIMESTAMP(timezone=True))
     dor_updated_date = Column(TIMESTAMP(timezone=True))
     latest_import_log_id = Column(Integer, ForeignKey("import_log.import_log_id"), index=True)

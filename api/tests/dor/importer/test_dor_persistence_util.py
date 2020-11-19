@@ -207,12 +207,14 @@ def test_check_and_update_employer_quarlerly_contribution(
     payload = {
         "total_pfml_contribution": Decimal("15234.58"),
         "received_date": date(now.year, now.month, now.day),
+        "pfm_account_id": "12345678912345",
         "updated_date": now,
     }
 
     employer_contribution_row = EmployerQuarterlyContribution(
         employer_id=employer.employer_id,
         filing_period=date(2020, 6, 30),
+        pfm_account_id=payload["pfm_account_id"],
         employer_total_pfml_contribution=payload["total_pfml_contribution"],
         dor_received_date=payload["received_date"],
         dor_updated_date=payload["updated_date"],

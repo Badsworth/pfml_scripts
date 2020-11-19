@@ -66,6 +66,7 @@ def dict_to_employer_quarter_contribution(employer_info, employer_id, import_log
         employer_id=employer_id,
         filing_period=employer_info["filing_period"],
         employer_total_pfml_contribution=employer_info["total_pfml_contribution"],
+        pfm_account_id=employer_info["pfm_account_id"],
         dor_received_date=employer_info["received_date"],
         dor_updated_date=employer_info["updated_date"],
         latest_import_log_id=import_log_entry_id,
@@ -232,30 +233,17 @@ def check_and_update_employer_quarlerly_contribution(
         != employer_info["received_date"]
         or existing_employer_quarlerly_contribution.dor_updated_date.date()
         != employer_info["updated_date"].date()
+        or existing_employer_quarlerly_contribution.pfm_account_id
+        != employer_info["pfm_account_id"]
     )
 
     if not do_update:
         return False
 
-    logger.warning(
-        "compare results for update - %r ? %r",
-        existing_employer_quarlerly_contribution.employer_total_pfml_contribution,
-        employer_info["total_pfml_contribution"],
-    )
-    logger.warning(
-        "compare - %r ? %r",
-        existing_employer_quarlerly_contribution.dor_received_date,
-        employer_info["received_date"],
-    )
-    logger.warning(
-        "compare - %r ? %r",
-        existing_employer_quarlerly_contribution.dor_updated_date,
-        employer_info["updated_date"],
-    )
-
     existing_employer_quarlerly_contribution.employer_total_pfml_contribution = employer_info[
         "total_pfml_contribution"
     ]
+    existing_employer_quarlerly_contribution.pfm_account_id = employer_info["pfm_account_id"]
     existing_employer_quarlerly_contribution.dor_received_date = employer_info["received_date"]
     existing_employer_quarlerly_contribution.dor_updated_date = employer_info["updated_date"]
     existing_employer_quarlerly_contribution.latest_import_log_id = import_log_entry_id

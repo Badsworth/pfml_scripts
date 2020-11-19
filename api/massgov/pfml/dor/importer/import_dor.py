@@ -71,6 +71,7 @@ class ImportReport:
     unmodified_wages_and_contributions_count: int = 0
     created_employer_quarters_count: int = 0
     updated_employer_quarters_count: int = 0
+    skipped_employer_quarterly_contribution: int = 0
     unmodified_employer_quarters_count: int = 0
     sample_employers_line_lengths: Dict[Any, Any] = field(default_factory=dict)
     invalid_employer_lines_count: int = 0
@@ -1079,12 +1080,13 @@ def import_employer_pfml_contributions(
     report,
     import_log_entry_id,
 ):
-    employer_ids_to_check_in_db = list(
-        map(
-            lambda emp: account_key_to_employer_id_map[emp["account_key"]],
-            employer_quarterly_info_list,
+    employer_ids_to_check_in_db = []
+    for employer_quarterly_info in employer_quarterly_info_list:
+        found_employer_id = account_key_to_employer_id_map.get(
+            employer_quarterly_info["account_key"], None
         )
-    )
+        if found_employer_id is not None:
+            employer_ids_to_check_in_db.append(found_employer_id)
 
     existing_employer_models_all_dates = dor_persistence_util.get_employer_quarterly_info_by_employer_id(
         db_session, employer_ids_to_check_in_db
@@ -1101,9 +1103,19 @@ def import_employer_pfml_contributions(
     found_employer_quarterly_contribution_list = []
 
     for employer_quarterly_info in employer_quarterly_info_list:
+        employer_id = account_key_to_employer_id_map.get(
+            employer_quarterly_info["account_key"], None
+        )
+        if employer_id is None:
+            logger.warning(
+                "Attempted to create a quarterly row for unknown employer: %s",
+                employer_quarterly_info["account_key"],
+            )
+            report.skipped_employer_quarterly_contribution += 1
+            continue
+
         existing_composite_key: str = get_employer_quarterly_contribution_composite_key(
-            account_key_to_employer_id_map[employer_quarterly_info["account_key"]],
-            employer_quarterly_info["filing_period"],
+            employer_id, employer_quarterly_info["filing_period"],
         )
         existing_model = existing_quarterly_map.get(existing_composite_key, None)
 
