@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 # Script to run migrations within an environment through an ECS task.
 #
 # This relies on resources and outputs created in infra/api, which should

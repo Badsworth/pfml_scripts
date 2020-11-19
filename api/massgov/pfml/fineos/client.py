@@ -123,6 +123,12 @@ class AbstractFINEOSClient(abc.ABC, metaclass=abc.ABCMeta):
         pass
 
     @abc.abstractmethod
+    def download_document_as_leave_admin(
+        self, user_id: str, absence_id: str, fineos_document_id: str
+    ) -> models.group_client_api.Base64EncodedFileData:
+        pass
+
+    @abc.abstractmethod
     def download_document(
         self, user_id: str, absence_id: str, fineos_document_id: str
     ) -> models.customer_api.Base64EncodedFileData:

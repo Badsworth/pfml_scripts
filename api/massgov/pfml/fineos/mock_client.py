@@ -312,12 +312,31 @@ class MockFINEOSClient(client.AbstractFINEOSClient):
     def group_client_get_documents(
         self, user_id: str, absence_id: str
     ) -> List[models.group_client_api.GroupClientDocument]:
-        document = mock_document(absence_id)
+        if absence_id == "leave_admin_allowable_doc_type":
+            document = mock_document(absence_id)
+        else:
+            document = mock_document(absence_id, document_type="Disallowed Doc Type")
         return [
             models.group_client_api.GroupClientDocument.parse_obj(
                 fineos_client.fineos_document_empty_dates_to_none(document)
             )
         ]
+
+    def download_document_as_leave_admin(
+        self, user_id: str, absence_id: str, fineos_document_id: str
+    ) -> models.group_client_api.Base64EncodedFileData:
+        file_bytes = open(str(TEST_IMAGE_FILE_PATH), "rb").read()
+        encoded_file_contents_str = base64.b64encode(file_bytes).decode("ascii")
+
+        return models.group_client_api.Base64EncodedFileData.parse_obj(
+            {
+                "fileName": "test.pdf",
+                "fileExtension": "pdf",
+                "contentType": "application/pdf",
+                "base64EncodedFileContents": encoded_file_contents_str,
+                "fileSizeInBytes": len(file_bytes),
+            }
+        )
 
     def download_document(
         self, user_id: str, absence_id: str, fineos_document_id: str

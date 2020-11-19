@@ -89,6 +89,21 @@ def get_documents_as_leave_admin(fineos_user_id: str, absence_id: str) -> List[D
         raise ValueError("FINEOS Client Exception")
 
 
+def download_document_as_leave_admin(
+    fineos_user_id: str, absence_id: str, fineos_document_id: str
+) -> massgov.pfml.fineos.models.group_client_api.Base64EncodedFileData:
+    try:
+        fineos = massgov.pfml.fineos.create_client()
+
+        return fineos.download_document_as_leave_admin(
+            fineos_user_id, absence_id, fineos_document_id
+        )
+
+    except massgov.pfml.fineos.FINEOSClientError:
+        logger.exception("FINEOS Client Exception")
+        raise ValueError("FINEOS Client Exception")
+
+
 def get_claim_as_leave_admin(
     fineos_user_id: str, absence_id: str, employer_fein: str
 ) -> ClaimReviewResponse:

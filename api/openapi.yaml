@@ -203,6 +203,43 @@ paths:
         "404":
           $ref: "#/components/responses/NotFound"
 
+  /employers/claims/{fineos_absence_id}/documents/{fineos_document_id}:
+    get:
+      summary: Retrieve a FINEOS documents for a specified absence ID and document ID
+      operationId: massgov.pfml.api.claims.employer_document_download
+      tags:
+        - Claims
+      parameters:
+        - name: fineos_absence_id
+          in: path
+          schema:
+            type: string
+            example: "NTN-00-ABS-00"
+          description: "FINEOS absence ID of the claim data to be retrieved"
+          required: true
+        - name: fineos_document_id
+          in: path
+          schema:
+            type: string
+            example: "1111"
+          description: "FINEOS document ID pertaining to the claim that will be retrieved"
+          required: true
+      responses:
+        "200":
+          description: The document stream.
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        "400":
+          description: An unsuccessful request returns a 400 status code if one or more errors occurred.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+
   /employers/claims/{fineos_absence_id}/documents:
     get:
       summary: Retrieve a list of FINEOS documents for a specified absence ID

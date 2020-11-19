@@ -2,6 +2,75 @@ from massgov.pfml.db.models.employees import UserLeaveAdministrator
 from massgov.pfml.db.models.factories import EmployerFactory
 
 
+def test_non_employers_cannot_download_documents(client, auth_token):
+    response = client.get(
+        "/v1/employers/claims/NTN-100-ABS-01/documents/1111",
+        headers={"Authorization": f"Bearer {auth_token}"},
+    )
+
+    assert response.status_code == 403
+
+
+def test_non_employers_cannot_download_documents_not_attached_to_absence(
+    client, employer_user, employer_auth_token, test_db_session
+):
+    employer = EmployerFactory.create()
+    link = UserLeaveAdministrator(
+        user_id=employer_user.user_id,
+        employer_id=employer.employer_id,
+        fineos_web_id="fake-fineos-web-id",
+    )
+    test_db_session.add(link)
+    test_db_session.commit()
+
+    response = client.get(
+        "/v1/employers/claims/NTN-100-ABS-01/documents/bad_doc_id",
+        headers={"Authorization": f"Bearer {employer_auth_token}"},
+    )
+
+    assert response.status_code == 403
+
+
+def test_non_employers_cannot_download_documents_of_disallowed_types(
+    client, employer_user, employer_auth_token, test_db_session
+):
+    employer = EmployerFactory.create()
+    link = UserLeaveAdministrator(
+        user_id=employer_user.user_id,
+        employer_id=employer.employer_id,
+        fineos_web_id="fake-fineos-web-id",
+    )
+    test_db_session.add(link)
+    test_db_session.commit()
+
+    response = client.get(
+        "/v1/employers/claims/NTN-100-ABS-01/documents/3011",
+        headers={"Authorization": f"Bearer {employer_auth_token}"},
+    )
+
+    assert response.status_code == 403
+
+
+def test_employers_receive_200_from_document_download(
+    client, employer_user, employer_auth_token, test_db_session
+):
+    employer = EmployerFactory.create()
+    link = UserLeaveAdministrator(
+        user_id=employer_user.user_id,
+        employer_id=employer.employer_id,
+        fineos_web_id="fake-fineos-web-id",
+    )
+    test_db_session.add(link)
+    test_db_session.commit()
+
+    response = client.get(
+        "/v1/employers/claims/leave_admin_allowable_doc_type/documents/3011",
+        headers={"Authorization": f"Bearer {employer_auth_token}"},
+    )
+
+    assert response.status_code == 200
+
+
 def test_non_employers_cannot_access_get_documents(client, auth_token):
     response = client.get(
         "/v1/employers/claims/NTN-100-ABS-01/documents",
