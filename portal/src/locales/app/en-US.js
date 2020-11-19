@@ -246,8 +246,8 @@ const errors = {
     },
     mass_id: {
       pattern:
-        "Enter your license or ID number. It should be a total of nine digits including letters and numbers.",
-      required: "Enter a your license or ID number.",
+        "License or ID number must be 9 characters, and may begin with S or SA.",
+      required: "Enter your license or ID number.",
     },
     payment_preferences: {
       account_details: {
