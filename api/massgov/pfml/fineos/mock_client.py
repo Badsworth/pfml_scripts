@@ -414,7 +414,10 @@ class MockFINEOSClient(client.AbstractFINEOSClient):
                 )
             )
 
-        return employer_create_or_update.fineos_customer_nbr, 250
+        return (
+            employer_create_or_update.fineos_customer_nbr,
+            int(employer_create_or_update.employer_fein) + 44000000,
+        )
 
     def create_or_update_leave_admin(
         self, leave_admin_create_or_update: models.CreateOrUpdateLeaveAdmin

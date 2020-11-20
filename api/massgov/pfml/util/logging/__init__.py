@@ -133,8 +133,11 @@ def log_every(
     for index, item in enumerate(items, 1):
         if count and not index % count:
             if start_time:
+                elapsed = (utcnow() - start_time).total_seconds()
                 extra["start_time"] = start_time
-                extra["elapsed_seconds"] = (utcnow() - start_time).total_seconds()
+                extra["elapsed_seconds"] = elapsed
+                if elapsed != 0:
+                    extra["rate_per_second"] = round(index / elapsed, 2)
 
             if total_count:
                 extra["total_count"] = total_count
