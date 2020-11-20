@@ -95,6 +95,10 @@ resource "aws_db_instance" "default" {
   apply_immediately           = true  # enact changes immediately instead of waiting for a "maintenance window"
   copy_tags_to_snapshot       = true  # not applicable right now, but useful in the future
 
+  # Require this flag to be manually turned off before deleting the DB;
+  # This is required by Smartronix CIS Benchmark audits, which are run via AWS Config through their CAMS Monitoring Harness.
+  deletion_protection = true
+
   db_subnet_group_name = aws_db_subnet_group.rds_postgres_dbprivate.name
   parameter_group_name = aws_db_parameter_group.postgres11.name
 
