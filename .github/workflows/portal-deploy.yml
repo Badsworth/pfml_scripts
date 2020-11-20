@@ -98,7 +98,7 @@ jobs:
           node-version: ${{ env.nodeVersion }}
 
       - name: Install
-        run: PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true npm ci --prefix portal
+        run: npm ci --prefix portal
 
       - name: Build
         run: npm run build:${{ env.portal_env }} --prefix portal

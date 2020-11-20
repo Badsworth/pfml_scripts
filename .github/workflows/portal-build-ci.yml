@@ -24,7 +24,7 @@ jobs:
           node-version: ${{ env.nodeVersion }}
 
       - name: install
-        run: PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true npm ci --prefix portal
+        run: npm ci --prefix portal
 
       - name: build
         run: npm run build:test --prefix portal
@@ -42,7 +42,7 @@ jobs:
           node-version: ${{ env.nodeVersion }}
 
       - name: install
-        run: PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true npm ci --prefix portal
+        run: npm ci --prefix portal
 
       - name: Smoke test Storybook
         run: npm run docs:smoke-test --prefix portal

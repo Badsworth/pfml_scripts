@@ -21,8 +21,6 @@ Non-secret environment configuration is stored in [config/](config/) in files by
 
 Install dependencies:
 
-> This script will install a number of large developer dependencies, so may take awhile when you first run this. Since we use `puppeteer` for headless browser tests, this downloads a recent version of Chromium (~170MB Mac, ~282MB Linux) that is guaranteed to work with the Puppeteer API. You can skip the Chromium download by setting the `PUPPETEER_SKIP_CHROMIUM_DOWNLOAD` [environment variable](https://github.com/puppeteer/puppeteer/blob/master/docs/api.md#environment-variables).
-
 ```
 npm install
 ```
