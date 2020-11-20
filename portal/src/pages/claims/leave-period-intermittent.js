@@ -119,6 +119,10 @@ export const LeavePeriodIntermittent = (props) => {
       />
 
       <ConditionalContent
+        fieldNamesClearedWhenHidden={[leavePeriodsListPath]}
+        getField={getField}
+        clearField={clearField}
+        updateFields={updateFields}
         visible={
           formState.has_intermittent_leave_periods && hasOtherLeavePeriodTypes
         }
