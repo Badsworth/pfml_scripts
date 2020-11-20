@@ -37,6 +37,18 @@ resource "pagerduty_service_integration" "newrelic_low_priority_notification" {
   vendor  = data.pagerduty_vendor.newrelic.id
 }
 
+resource "pagerduty_service_integration" "newrelic_high_priority_portal_notification" {
+  name    = "High Priority Notification for New Relic"
+  service = pagerduty_service.mass_pfml_portal_high_priority.id
+  vendor  = data.pagerduty_vendor.newrelic.id
+}
+
+resource "pagerduty_service_integration" "newrelic_low_priority_portal_notification" {
+  name    = "Low Priority Notification for New Relic"
+  service = pagerduty_service.mass_pfml_portal_low_priority.id
+  vendor  = data.pagerduty_vendor.newrelic.id
+}
+
 resource "pagerduty_service_integration" "newrelic_high_priority_notification" {
   name    = "High Priority Notification for New Relic"
   service = pagerduty_service.mass_pfml_api_high_priority.id
