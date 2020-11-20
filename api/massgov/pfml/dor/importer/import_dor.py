@@ -79,6 +79,7 @@ class ImportReport:
     invalid_employer_addresses_by_account_key: Dict[Any, Any] = field(default_factory=dict)
     invalid_employee_lines_count: int = 0
     skipped_wages_count: int = 0
+    parsed_employer_quarter_exception_count: int = 0
     parsed_employees_exception_count: int = 0
     message: str = ""
     status: Optional[str] = None
@@ -215,7 +216,9 @@ class EmployeeWriter(object):
         employees_info = []
         employers_quarterly_info = []
 
+        count = 0
         for row in self.lines:
+            count += 1
             if row.startswith("A"):
                 try:
                     employer_quarterly_info = EMPLOYER_QUARTER_INFO_FORMAT.parse_line(row)
@@ -223,7 +226,10 @@ class EmployeeWriter(object):
 
                     self.parsed_employer_quarterly_info_count += 1
                 except Exception:
-                    logger.exception("Parse error with employer quarterly line")
+                    logger.exception(
+                        "Parse error with employer quarterly line. . Line: %i",
+                        (self.line_count - len(self.lines)) + count,
+                    )
                     self.report.parsed_employer_quarter_exception_count += 1
 
             if row.startswith("B"):
@@ -242,7 +248,10 @@ class EmployeeWriter(object):
                     employees_info.append(employee_info)
                     self.parsed_employees_info_count = self.parsed_employees_info_count + 1
                 except Exception:
-                    logger.exception("Parse error with employee line")
+                    logger.exception(
+                        "Parse error with employee line. Line: %i",
+                        (self.line_count - len(self.lines)) + count,
+                    )
                     self.report.parsed_employees_exception_count += 1
 
         if len(employers_quarterly_info) > 0:
