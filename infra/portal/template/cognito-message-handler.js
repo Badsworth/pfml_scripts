@@ -19,14 +19,14 @@ exports.handler = (event, _context, callback) => {
   ) {
     messageStrings = {
       line1:
-        "To activate your account, you need to verify your email address. Return to the Portal and enter this 6-digit code:",
+        "To activate your account, you need to verify your email address. Return to the application and enter this 6-digit code:",
       line2: "This code is only valid for 24 hours.",
       subject: "Verify your Paid Family and Medical Leave account",
     };
   } else if (messageType === "CustomMessage_ForgotPassword") {
     messageStrings = {
       line1:
-        "We received a request to reset your Paid Family and Medical Leave account password. Return to the Portal and enter this 6-digit code:",
+        "We received a request to reset your Paid Family and Medical Leave account password. Return to the application and enter this 6-digit code:",
       line2:
         "This code is only valid for 24 hours. If you didn’t request a password reset, please ignore this email. Your password won’t be changed.",
       subject: "Reset your Paid Family and Medical Leave password",
