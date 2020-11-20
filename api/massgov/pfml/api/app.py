@@ -34,7 +34,7 @@ def create_app(config: Optional[AppConfig] = None) -> connexion.FlaskApp:
         config = get_config()
 
     # Initialize the db
-    db_session_factory = db.init(config.db)
+    db_session_factory = db.init(config.db, sync_lookups=True)
 
     # Enable mock responses for unimplemented paths.
     resolver = connexion.mock.MockResolver(mock_all=False)

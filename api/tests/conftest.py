@@ -303,7 +303,7 @@ def test_db_via_migrations(test_db_schema):
 def test_db_session(test_db):
     import massgov.pfml.db as db
 
-    db_session = db.init()
+    db_session = db.init(sync_lookups=True)
 
     yield db_session
 
@@ -315,7 +315,7 @@ def test_db_session(test_db):
 def test_db_other_session(test_db):
     import massgov.pfml.db as db
 
-    db_session = db.init()
+    db_session = db.init(sync_lookups=True)
 
     yield db_session
 

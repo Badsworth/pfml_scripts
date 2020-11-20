@@ -18,7 +18,7 @@ from massgov.pfml.db.config import DbConfig, get_config
 logger = massgov.pfml.util.logging.get_logger(__name__)
 
 
-def init(config: Optional[DbConfig] = None) -> scoped_session:
+def init(config: Optional[DbConfig] = None, sync_lookups: bool = False) -> scoped_session:
     logger.info("connecting to postgres db")
 
     engine = create_engine(config)
@@ -48,8 +48,10 @@ def init(config: Optional[DbConfig] = None) -> scoped_session:
         sessionmaker(autocommit=False, expire_on_commit=False, bind=engine)
     )
 
-    massgov.pfml.db.models.init_lookup_tables(session_factory)
-    massgov.pfml.db.models.applications.sync_state_metrics(session_factory)
+    if sync_lookups:
+        massgov.pfml.db.models.init_lookup_tables(session_factory)
+        massgov.pfml.db.models.applications.sync_state_metrics(session_factory)
+
     engine.dispose()
 
     return session_factory
@@ -85,9 +87,6 @@ def create_engine(config: Optional[DbConfig] = None) -> Engine:
         return psycopg2.connect(**get_connection_parameters(db_config))
 
     conn_pool = pool.QueuePool(get_conn, max_overflow=10, pool_size=5)
-
-    if db_config.hide_sql_parameter_logs:
-        logger.warning("db_config hide_parameters set to true")
 
     # The URL only needs to specify the dialect, since the connection pool
     # handles the actual connections.

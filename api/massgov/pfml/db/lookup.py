@@ -72,13 +72,19 @@ class LookupTable:
         Should be called once during process initialization.
 
         In test cases, called once per temporary database schema."""
+
+        # Optimization: read all rows into db_session's identity map. This makes the get() in
+        # sync_row_to_database() get the row from the identity map instead of making a query.
+        _cache = db_session.query(cls.model).all()  # noqa: F841
+
         row_update_count = 0
         for key, value in vars(cls).items():
             if not isinstance(value, cls.model):
                 continue
             if cls.sync_row_to_database(db_session, key, value):
                 row_update_count += 1
-        logger.info("%s: row update count %i", cls.repr(), row_update_count)
+        if row_update_count:
+            logger.info("%s: row update count %i", cls.repr(), row_update_count)
         return row_update_count
 
     @classmethod
