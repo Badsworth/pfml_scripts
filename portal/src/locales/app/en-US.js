@@ -371,8 +371,8 @@ const shared = {
   documentsRequestError:
     "An error was encountered while checking your application for documents. If this continues to happen, you may call the Paid Family Leave Contact Center at $t(shared.contactCenterPhoneNumber)",
   employerBenefitEntryPrefix: "Benefit",
+  employerBenefitFrequency_allAtOnce: "All at once",
   employerBenefitFrequency_daily: "Daily",
-  employerBenefitFrequency_inTotal: "All at once",
   employerBenefitFrequency_monthly: "Monthly",
   employerBenefitFrequency_weekly: "Weekly",
   employerBenefitType_familyOrMedicalLeave: "Family or medical leave insurance",
@@ -1316,17 +1316,17 @@ const pages = {
         "Social Security Number or Individual Taxpayer Identification Number",
     },
     employerBenefits: {
+      amountValue_allAtOnce: "{{amount, currency}} all at once",
       amountValue_daily: "{{amount, currency}} per day",
-      amountValue_inTotal: "{{amount, currency}} all at once",
       amountValue_monthly: "{{amount, currency}} per month",
       amountValue_weekly: "{{amount, currency}} per week",
       benefitTypeLabel: "Benefit type",
       dateRangeLabel: "Date range",
       detailsLabel: "Details",
+      employerBenefitFrequencyValue_allAtOnce:
+        "$t(shared.employerBenefitFrequency_allAtOnce)",
       employerBenefitFrequencyValue_daily:
         "$t(shared.employerBenefitFrequency_daily)",
-      employerBenefitFrequencyValue_inTotal:
-        "$t(shared.employerBenefitFrequency_inTotal)",
       employerBenefitFrequencyValue_monthly:
         "$t(shared.employerBenefitFrequency_monthly)",
       employerBenefitFrequencyValue_weekly:

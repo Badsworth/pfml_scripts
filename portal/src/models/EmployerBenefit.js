@@ -42,7 +42,7 @@ export const IncomeFrequency = {
   daily: "Per Day",
   weekly: "Per Week",
   monthly: "Per Month",
-  inTotal: "In Total",
+  allAtOnce: "All At Once",
 };
 
 export default EmployerBenefit;
