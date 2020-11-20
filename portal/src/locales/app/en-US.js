@@ -441,6 +441,7 @@ const pages = {
       "You can now apply for paid family leave to bond with your$t(chars.nbsp)child.",
     areAnEmployer:
       "<strong>Are you a Massachusetts employer?</strong> <employer-create-account-link>Create an employer account</employer-create-account-link> to manage leave for your team.",
+    backButton: "Back to Mass.gov",
     createAccountButton: "Create account",
     haveAnAccountFooterLabel: "Have an account?",
     logInFooterLink: "Log in",

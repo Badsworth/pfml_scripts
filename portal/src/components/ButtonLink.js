@@ -12,6 +12,12 @@ const ButtonLink = (props) => {
     "usa-button",
     props.className,
     props.variation ? `usa-button--${props.variation}` : "",
+    {
+      "usa-button--inverse": props.inversed,
+      // This is weird, but we need this so that the inversed styling
+      // kicks in when the variation is unstyled
+      "usa-button--outline": props.inversed && props.variation === "unstyled",
+    },
     { disabled: props.disabled }
   );
 
@@ -68,6 +74,10 @@ ButtonLink.propTypes = {
     "accent-cool",
     "unstyled",
   ]),
+  /**
+   * Apply the "inverse" style modifier
+   */
+  inversed: PropTypes.bool,
 };
 
 export default ButtonLink;

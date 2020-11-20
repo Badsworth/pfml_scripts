@@ -2,17 +2,36 @@
 
 exports[`AuthNav when a user is NOT authenticated doesn't render the logged-in state 1`] = `
 <div
-  className="text-right"
+  className="flex-fill margin-y-1"
 >
   <div
-    className="grid-container"
+    className="grid-row grid-gap"
   >
     <div
-      className="grid-row"
+      className="grid-col"
     >
-      <div
-        className="grid-col-fill margin-y-1"
-      />
+      <ButtonLink
+        className="width-auto"
+        data-test-auth-nav="massgov_link"
+        href="https://www.mass.gov/"
+        inversed={true}
+        variation="unstyled"
+      >
+        Back to Mass.gov
+      </ButtonLink>
+    </div>
+    <div
+      className="grid-col text-right"
+    >
+      <ButtonLink
+        className="width-auto"
+        data-test-auth-nav="login_link"
+        href="/login"
+        inversed={true}
+        variation="unstyled"
+      >
+        Log in
+      </ButtonLink>
     </div>
   </div>
 </div>
@@ -20,31 +39,29 @@ exports[`AuthNav when a user is NOT authenticated doesn't render the logged-in s
 
 exports[`AuthNav when a user is authenticated renders the logged-in state 1`] = `
 <div
-  className="text-right"
+  className="flex-fill margin-y-1"
 >
   <div
-    className="grid-container"
+    className="grid-row grid-gap"
   >
     <div
-      className="grid-row"
+      className="grid-col text-right"
     >
-      <div
-        className="grid-col-fill margin-y-1"
+      <span
+        className="display-inline-block margin-right-1"
+        data-test-auth-nav="email_address"
       >
-        <span
-          className="display-inline-block margin-right-1"
-        >
-          email@address.com
-        </span>
-        <Button
-          className="width-auto"
-          inversed={true}
-          onClick={[Function]}
-          variation="unstyled"
-        >
-          Log out
-        </Button>
-      </div>
+        email@address.com
+      </span>
+      <Button
+        className="width-auto"
+        data-test-auth-nav="logout_button"
+        inversed={true}
+        onClick={[Function]}
+        variation="unstyled"
+      >
+        Log out
+      </Button>
     </div>
   </div>
 </div>
