@@ -21,6 +21,7 @@ terraform {
     key            = "terraform/env-shared.tfstate"
     region         = "us-east-1"
     dynamodb_table = "terraform_locks"
+    kms_key_id     = "arn:aws:kms:us-east-1:498823821309:key/641eba51-98e5-4776-98b6-98ed06866ec8"
   }
 }
 
