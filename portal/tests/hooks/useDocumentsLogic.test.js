@@ -217,11 +217,17 @@ describe("useDocumentsLogic", () => {
           success: true,
           document: new Document({ fineos_document_id: uniqueId() }),
         }) // file1 - success
-        .mockRejectedValueOnce(new Error("File 2 failed")) // file2 - error
-        .mockResolvedValueOnce({
-          success: true,
-          document: new Document({ fineos_document_id: uniqueId() }),
-        }); // file3 - success
+        .mockRejectedValueOnce(new Error("File 2 failed")) // file2 - random error
+        .mockRejectedValueOnce(
+          new ValidationError([
+            {
+              field: "",
+              message: "FINEOS Client Exception",
+              rule: "",
+              type: "fineos_client",
+            },
+          ])
+        ); // file3 - fineos error
     });
 
     it("throws ValidationError when no files are included in the request", () => {
@@ -243,10 +249,14 @@ describe("useDocumentsLogic", () => {
         await documentsLogic.attach(application_id, files, mockDocumentType);
       });
       const fileErrorId = appErrorsLogic.appErrors.items[0].meta.file_id;
+      const fineosErrorMsg = appErrorsLogic.appErrors.items[1].message;
 
       expect(spy).toHaveBeenCalledWith(new DocumentsRequestError());
       expect(fileErrorId).toBe("2");
-      expect(spy).toHaveBeenCalledTimes(1);
+      expect(fineosErrorMsg).toBe(
+        `We encountered an error when uploading your file. Try uploading your file again. If you get this error again, call the Contact Center at (833) 344‑7365.`
+      );
+      expect(spy).toHaveBeenCalledTimes(2);
     });
   });
 

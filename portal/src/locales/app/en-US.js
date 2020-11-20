@@ -321,6 +321,8 @@ const errors = {
     file: {
       required: "Upload at least one file to continue.",
     },
+    fineos_client:
+      "We encountered an error when uploading your file. Try uploading your file again. If you get this error again, call the Contact Center at $t(shared.contactCenterPhoneNumber).",
   },
   invalidFile_size:
     "We could not upload: {{disallowedFileNames}}. Files must be smaller than 5 megabytes.",

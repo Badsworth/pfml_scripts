@@ -139,6 +139,22 @@ describe("useAppErrorsLogic", () => {
         );
       });
 
+      it("sets AppErrorInfo.message based on the issue's 'type' property when 'field' and 'rule' properties aren't set", () => {
+        const issues = [
+          {
+            type: "fineos_client",
+          },
+        ];
+
+        act(() => {
+          appErrorsLogic.catchError(new ValidationError(issues, "documents"));
+        });
+
+        expect(appErrorsLogic.appErrors.items[0].message).toMatchInlineSnapshot(
+          `"We encountered an error when uploading your file. Try uploading your file again. If you get this error again, call the Contact Center at (833) 344‑7365."`
+        );
+      });
+
       it("tracks when a field or rule-level error message is missing", () => {
         const issues = [
           {

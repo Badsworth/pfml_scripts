@@ -63,31 +63,33 @@ const useAppErrorsLogic = () => {
     { field, message, rule, type },
     i18nPrefix
   ) => {
-    let fieldOrRuleKey;
+    let issueMessageKey;
 
     if (field) {
       // Remove array indexes from the field since the array index is not relevant for the error message
       // i.e. convert foo[0].bar[1].cat to foo.bar.cat
-      fieldOrRuleKey = `errors.${i18nPrefix}.${field}.${type}`
+      issueMessageKey = `errors.${i18nPrefix}.${field}.${type}`
         .replace(/\[(\d+)\]/g, "")
         // Also convert foo.0.bar.1.cat to foo.bar.cat in case
         .replace(/\.(\d+)/g, "");
     } else if (rule) {
-      fieldOrRuleKey = `errors.${i18nPrefix}.rules.${rule}`;
+      issueMessageKey = `errors.${i18nPrefix}.rules.${rule}`;
+    } else if (type) {
+      issueMessageKey = `errors.${i18nPrefix}.${type}`;
     }
 
     // 1. Display a field or rule-level message if present:
     //    a. Field-level: "errors.claims.ssn.required" => "Please enter your SSN."
     //    b. Rule-level: "errors.claims.rules.min_leave_periods" => "At least one leave period is required."
-    const fieldOrRuleMessage = t(fieldOrRuleKey, { field });
+    const issueMessage = t(issueMessageKey, { field });
 
     // When a translation is missing, the key will be returned
-    if (fieldOrRuleMessage !== fieldOrRuleKey) {
-      return fieldOrRuleMessage;
+    if (issueMessage !== issueMessageKey && issueMessage) {
+      return issueMessage;
     }
 
     tracker.trackEvent("Missing i18n - issue message", {
-      i18nKey: fieldOrRuleKey,
+      i18nKey: issueMessageKey,
     });
 
     // 3. Display generic message if present: "errors.validationFallback.pattern" => "Field (ssn) is invalid format."

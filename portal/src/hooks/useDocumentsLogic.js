@@ -108,7 +108,7 @@ const useDocumentsLogic = ({ appErrorsLogic }) => {
           new DocumentsRequestError(
             application_id,
             fileWithUniqueId.id,
-            error.issues
+            error.issues ? error.issues[0] : null
           )
         );
         return { success: false };

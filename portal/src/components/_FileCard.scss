@@ -12,6 +12,13 @@
 
 .c-file-card {
   animation: showFileCard 350ms ease;
+  flex-wrap: wrap;
+}
+
+@media (min-width: units("mobile-lg")) {
+  .c-file-card {
+    flex-wrap: nowrap;
+  }
 }
 
 .c-file-card__content {
