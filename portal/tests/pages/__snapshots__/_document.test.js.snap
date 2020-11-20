@@ -1,7 +1,9 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`Document renders the Document 1`] = `
-<Html>
+<Html
+  lang="en-US"
+>
   <Head>
     <script
       src="/new-relic.js"

@@ -15,7 +15,7 @@ import React from "react";
 class MyDocument extends Document {
   render() {
     return (
-      <Html>
+      <Html lang="en-US">
         <Head>
           {/* New Relic script must be towards the top of the <head> and before our other scripts */}
           <script src="/new-relic.js" />

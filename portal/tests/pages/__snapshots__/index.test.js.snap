@@ -55,7 +55,7 @@ exports[`Index renders index content 1`] = `
             Create an employer account
           </ButtonLink>
           <div
-            className="margin-top-2 text-base text-bold"
+            className="margin-top-2 text-dark text-bold"
           >
             Have an account?
             <Link

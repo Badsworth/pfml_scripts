@@ -62,7 +62,7 @@ export const Index = (props) => {
               >
                 {t("pages.index.employerCreateAccountButton")}
               </ButtonLink>
-              <div className="margin-top-2 text-base text-bold">
+              <div className="margin-top-2 text-dark text-bold">
                 {t("pages.authCreateAccount.haveAnAccountFooterLabel")}
                 <Link href={routes.auth.login}>
                   <a className="display-inline-block margin-left-1">
@@ -102,7 +102,7 @@ export const Index = (props) => {
                   >
                     {t("pages.index.claimantCreateAccountButton")}
                   </ButtonLink>
-                  <div className="margin-top-2 text-base text-bold">
+                  <div className="margin-top-2 text-dark text-bold">
                     {t("pages.authCreateAccount.haveAnAccountFooterLabel")}
                     <Link href={routes.auth.login}>
                       <a className="display-inline-block margin-left-1">
