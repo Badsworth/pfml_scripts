@@ -47,6 +47,7 @@
       { "name": "FINEOS_CLIENT_OAUTH2_URL", "value": "${fineos_client_oauth2_url}" },
       { "name": "FINEOS_CLIENT_OAUTH2_CLIENT_ID", "value": "${fineos_client_oauth2_client_id}" },
       { "name": "ENABLE_EMPLOYER_ENDPOINTS", "value": "${enable_employer_endpoints}" },
+      { "name": "ENABLE_APPLICATION_FRAUD_CHECK", "value": "${enable_application_fraud_check}" },
       { "name": "SERVICE_NOW_BASE_URL", "value": "${service_now_base_url}" },
       { "name": "PORTAL_ABSENCE_LEAVE_ADMIN_URL", "value": "${portal_absence_leave_admin_url}" },
       { "name": "PORTAL_ABSENCE_CLAIMANT_URL", "value": "${portal_absence_claimant_url}" }
