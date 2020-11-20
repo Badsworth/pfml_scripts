@@ -7,6 +7,15 @@
 resource "aws_api_gateway_rest_api" "pfml" {
   name        = "pfml-gateway-${var.environment_name}"
   description = "API Gateway for PFML ${var.environment_name}"
+  binary_media_types = [
+    "multipart/form-data",
+    "application/pdf",
+    "image/jpg",
+    "image/jpeg",
+    "image/png",
+    "image/tiff",
+    "image/heic"
+  ]
 }
 
 resource "aws_api_gateway_deployment" "stage" {
