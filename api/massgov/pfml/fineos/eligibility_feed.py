@@ -1,13 +1,20 @@
+import concurrent.futures
 import csv
 import dataclasses
+import enum
+import itertools
+import os
+from concurrent.futures import ProcessPoolExecutor
 from dataclasses import dataclass
 from datetime import date, datetime
 from decimal import Decimal
 from enum import Enum
 from functools import cached_property
-from typing import Any, Dict, Iterable, List, Optional, TextIO, Tuple, TypeVar, Union
+from typing import Any, Callable, Dict, Iterable, List, Optional, TextIO, Tuple, TypeVar, Union
 
+import boto3
 import smart_open
+from pydantic import BaseSettings, Field
 from sqlalchemy import func
 from sqlalchemy.orm import Query
 
@@ -20,6 +27,21 @@ from massgov.pfml.fineos.exception import FINEOSNotFound
 from massgov.pfml.util.datetime import utcnow
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
+
+
+class EligibilityFeedExportMode(Enum):
+    FULL = "full"
+    UPDATES = "updates"
+
+
+class EligibilityFeedExportConfig(BaseSettings):
+    output_directory_path: str = Field(..., min_length=1)
+    fineos_aws_iam_role_arn: str = Field(..., min_length=1)
+    fineos_aws_iam_role_external_id: str = Field(..., min_length=1)
+    mode: EligibilityFeedExportMode = Field(
+        EligibilityFeedExportMode.FULL, env="ELIGIBILITY_FEED_MODE"
+    )
+
 
 DEFAULT_DATE = date(1753, 1, 1)
 DEFAULT_HIRE_DATE = date(2020, 1, 1)
@@ -365,71 +387,165 @@ def process_employee_updates(
     return report
 
 
+class TaskResultStatus(Enum):
+    SUCCESS = enum.auto()
+    SKIPPED = enum.auto()
+    ERROR = enum.auto()
+
+
+# per-process globals for concurrent runs
+db_session: Optional[db.Session] = None
+fineos: Optional[massgov.pfml.fineos.AbstractFINEOSClient] = None
+output_transport_params: Optional[Dict[str, Any]] = None
+
+
+def is_fineos_output_location(path: str) -> bool:
+    return path.startswith("s3://fin-som")
+
+
+def process_all_worker_initializer(
+    make_db_session: Callable[[], db.Session],
+    make_fineos_client: Callable[[], massgov.pfml.fineos.AbstractFINEOSClient],
+    make_fineos_boto_session: Callable[[EligibilityFeedExportConfig], boto3.Session],
+    config: EligibilityFeedExportConfig,
+) -> None:
+    global db_session, fineos, output_transport_params
+
+    db_session = make_db_session()
+    fineos = make_fineos_client()
+
+    output_transport_params = {}
+
+    if is_fineos_output_location(config.output_directory_path):
+        session = make_fineos_boto_session(config)
+        output_transport_params = dict(session=session)
+
+
+def process_all_worker(
+    config: EligibilityFeedExportConfig, employer: Employer
+) -> Tuple[TaskResultStatus, Optional[int]]:
+    global db_session, fineos, output_transport_params
+    output_dir_path = config.output_directory_path
+
+    if not db_session or not fineos:
+        logger.error("Database session and FINEOS client not initialized for task")
+        return (TaskResultStatus.ERROR, None)
+
+    try:
+        # Find FINEOS employer id using employer FEIN
+        fineos_employer_id = get_fineos_employer_id(fineos, employer)
+        if fineos_employer_id is None:
+            logger.info(
+                "FINEOS employer id not in Portal DB. Continuing.",
+                extra={"account_key": employer.account_key},
+            )
+            return (TaskResultStatus.SKIPPED, None)
+
+        number_of_employees = query_employees_for_employer(
+            db_session.query(Employee.employee_id), employer
+        ).count()
+
+        employees_and_most_recent_wages: Iterable[
+            Tuple[Employee, WagesAndContributions]
+        ] = query_employees_and_most_recent_wages_for_employer(
+            db_session.query(Employee, WagesAndContributions), employer
+        ).yield_per(
+            1000
+        )
+
+        open_and_write_to_eligibility_file(
+            output_dir_path,
+            fineos_employer_id,
+            employer,
+            number_of_employees,
+            employees_and_most_recent_wages,
+            output_transport_params,
+        )
+        return (TaskResultStatus.SUCCESS, number_of_employees)
+    except Exception:
+        logger.exception(
+            "Error creating employer export", extra={"employer_id": employer.employer_id}
+        )
+        return (TaskResultStatus.ERROR, None)
+    finally:
+        db_session.close()
+
+
 def process_all_employers(
-    db_session: db.Session,
-    fineos: massgov.pfml.fineos.AbstractFINEOSClient,
-    output_dir_path: str,
-    output_transport_params: Optional[OutputTransportParams] = None,
+    make_db_session: Callable[[], db.Session],
+    make_fineos_client: Callable[[], massgov.pfml.fineos.AbstractFINEOSClient],
+    make_fineos_boto_session: Callable[[EligibilityFeedExportConfig], boto3.Session],
+    config: EligibilityFeedExportConfig,
 ) -> EligibilityFeedExportReport:
+    db_session = make_db_session()
+
     start_time = utcnow()
     report = EligibilityFeedExportReport(started_at=start_time.isoformat())
 
     logger.info("Starting eligibility feeds generation for all employers")
 
     employers = db_session.query(Employer).yield_per(1000)
+    employers_count = db_session.query(Employer.employer_id).count()
 
     employers_with_logging = massgov.pfml.util.logging.log_every(
-        logger, employers, count=1000, start_time=start_time, item_name="Employer"
+        logger,
+        employers,
+        count=1000,
+        start_time=start_time,
+        item_name="Employer",
+        total_count=employers_count,
     )
 
-    for employer in employers_with_logging:
-        try:
-            report.employers_total_count += 1
+    max_workers: Optional[int] = None
 
-            # Find FINEOS employer id using employer FEIN
-            fineos_employer_id = get_fineos_employer_id(fineos, employer)
-            if fineos_employer_id is None:
-                logger.info(
-                    "FINEOS employer id not in API DB. Continuing.",
-                    extra={
-                        "internal_employer_id": employer.employer_id,
-                        "account_key": employer.account_key,
-                    },
-                )
-                report.employers_skipped_count += 1
-                continue
+    # this should be big enough to keep all workers fed, any more doesn't
+    # necessarily have an impact, unless the query to fetch new records is
+    # particularly costly, and the smaller keeps `log_every` more accurate
+    work_queue_size: int = 100
 
-            number_of_employees = query_employees_for_employer(
-                db_session.query(Employee.employee_id), employer
-            ).count()
+    if cpu_count := os.cpu_count():
+        max_workers = cpu_count * 2
 
-            report.employee_and_employer_pairs_total_count += number_of_employees
+    if max_workers:
+        work_queue_size = max_workers * 2
 
-            employees_and_most_recent_wages: Iterable[
-                Tuple[Employee, WagesAndContributions]
-            ] = query_employees_and_most_recent_wages_for_employer(
-                db_session.query(Employee, WagesAndContributions), employer
-            ).yield_per(
-                1000
+    with ProcessPoolExecutor(
+        max_workers=max_workers,
+        initializer=process_all_worker_initializer,
+        initargs=(make_db_session, make_fineos_client, make_fineos_boto_session, config),
+    ) as executor:
+        futures = {
+            executor.submit(process_all_worker, config, employer)
+            for employer in itertools.islice(employers_with_logging, work_queue_size)
+        }
+
+        while futures:
+            done, futures = concurrent.futures.wait(
+                futures, return_when=concurrent.futures.FIRST_COMPLETED
             )
 
-            open_and_write_to_eligibility_file(
-                output_dir_path,
-                fineos_employer_id,
-                employer,
-                number_of_employees,
-                employees_and_most_recent_wages,
-                output_transport_params,
-            )
+            for r in done:
+                report.employers_total_count += 1
+                status, count = r.result()
 
-            report.employers_success_count += 1
-        except Exception:
-            logger.exception(
-                "Error generating FINEOS Eligibility Feed for Employer",
-                extra={"internal_employer_id": employer.employer_id},
-            )
-            report.employers_error_count += 1
-            continue
+                if status is TaskResultStatus.SUCCESS:
+                    if count is None:
+                        logger.error(
+                            "Task reported success but returned no employee count, using 0"
+                        )
+                        count = 0
+
+                    report.employers_success_count += 1
+                    report.employee_and_employer_pairs_total_count += count
+                elif status is TaskResultStatus.SKIPPED:
+                    report.employers_skipped_count += 1
+                elif status is TaskResultStatus.ERROR:
+                    report.employers_error_count += 1
+
+            for employer in itertools.islice(employers_with_logging, len(done)):
+                futures.add(executor.submit(process_all_worker, config, employer))
+
+    db_session.close()
 
     end_time = utcnow()
     report.completed_at = end_time.isoformat()

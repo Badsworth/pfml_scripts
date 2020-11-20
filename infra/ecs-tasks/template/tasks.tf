@@ -75,6 +75,8 @@ locals {
       command             = ["fineos-eligibility-feed-export"]
       containers_template = "fineos_eligibility_feed_export_template.json"
       task_role           = aws_iam_role.fineos_eligibility_feed_export_task_role.arn
+      cpu                 = "4096"
+      memory              = "8912"
       vars = {
         fineos_client_integration_services_api_url = var.fineos_client_integration_services_api_url
         fineos_client_customer_api_url             = var.fineos_client_customer_api_url

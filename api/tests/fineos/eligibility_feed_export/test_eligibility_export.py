@@ -1,5 +1,3 @@
-import os
-
 import boto3
 import moto
 import pydantic
@@ -36,12 +34,7 @@ def test_main_requires_non_empty_env_vars(
 @moto.mock_sts()
 @moto.mock_s3()
 def test_main_success_fineos_location(
-    test_db_session,
-    initialize_factories_session,
-    monkeypatch,
-    logging_fix,
-    reset_aws_env_vars,
-    mocker,
+    test_db_session, initialize_factories_session, monkeypatch, logging_fix, reset_aws_env_vars,
 ):
     import massgov.pfml.fineos.eligibility_feed_export.eligibility_export as main
 
@@ -61,16 +54,7 @@ def test_main_success_fineos_location(
     )
     monkeypatch.setenv("FINEOS_AWS_IAM_ROLE_EXTERNAL_ID", "123")
 
-    sts_assume_session_spy = mocker.spy(main.aws_sts, "assume_session")
-
     response = main.handler({}, {})
-
-    sts_assume_session_spy.assert_called_once_with(
-        role_arn=os.getenv("FINEOS_AWS_IAM_ROLE_ARN"),
-        external_id=os.getenv("FINEOS_AWS_IAM_ROLE_EXTERNAL_ID"),
-        role_session_name="eligibility_feed",
-        region_name="us-east-1",
-    )
 
     assert response["started_at"]
     assert response["completed_at"]
@@ -89,7 +73,6 @@ def test_main_success_non_fineos_location(
     logging_fix,
     reset_aws_env_vars,
     tmp_path,
-    mocker,
 ):
     import massgov.pfml.fineos.eligibility_feed_export.eligibility_export as main
 
@@ -104,11 +87,7 @@ def test_main_success_non_fineos_location(
     )
     monkeypatch.setenv("FINEOS_AWS_IAM_ROLE_EXTERNAL_ID", "123")
 
-    sts_assume_session_spy = mocker.spy(main.aws_sts, "assume_session")
-
     response = main.handler({}, {})
-
-    sts_assume_session_spy.assert_not_called()
 
     assert response["started_at"]
     assert response["completed_at"]

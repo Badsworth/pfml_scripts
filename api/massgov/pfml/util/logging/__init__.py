@@ -62,7 +62,11 @@ def init(program_name):
         os.getpid(),
         os.getuid(),
         pwd.getpwuid(os.getuid()).pw_name,
-        extra={"hostname": platform.node()},
+        extra={
+            "hostname": platform.node(),
+            "cpu_count": os.cpu_count(),
+            "cpu_usable": len(os.sched_getaffinity(0)),
+        },
     )
     logger.info("invoked as: %s", " ".join(original_argv))
 
