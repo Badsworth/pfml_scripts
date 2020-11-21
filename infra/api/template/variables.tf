@@ -8,6 +8,11 @@ variable "service_app_count" {
   type        = number
 }
 
+variable "service_max_app_count" {
+  description = "Maximum number of application containers to run (under auto scaling)."
+  type        = number
+}
+
 variable "service_docker_tag" {
   description = "Tag of the docker image to run"
   type        = string

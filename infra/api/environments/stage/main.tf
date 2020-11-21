@@ -29,6 +29,7 @@ module "api" {
 
   environment_name                = "stage"
   service_app_count               = 2
+  service_max_app_count           = 10
   service_docker_tag              = local.service_docker_tag
   service_ecs_cluster_arn         = data.aws_ecs_cluster.stage.arn
   vpc_id                          = data.aws_vpc.vpc.id
