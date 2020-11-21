@@ -1,5 +1,4 @@
 import copy
-import json
 import uuid
 from datetime import date, datetime
 from decimal import Decimal
@@ -14,7 +13,6 @@ from massgov.pfml.db.models.factories import (
     EmployerFactory,
     WagesAndContributionsFactory,
 )
-from massgov.pfml.dor.importer.import_dor import ImportReport
 
 # every test in here requires real resources
 pytestmark = pytest.mark.integration
@@ -99,41 +97,6 @@ def test_get_employer_address(test_db_session):
 def test_get_address(test_db_session):
     with pytest.raises(NoResultFound):
         util.get_address(test_db_session, uuid.uuid4())
-
-
-def test_create_import_log_entry(test_db_session):
-    report = ImportReport(
-        start=datetime.now().isoformat(),
-        employee_file=sample_employee_file,
-        employer_file=sample_employer_file,
-    )
-
-    report_log_entry = util.create_import_log_entry(test_db_session, report)
-    assert report_log_entry.import_log_id is not None
-
-
-def test_update_import_log_entry(test_db_session):
-    report = ImportReport(
-        start=datetime.now().isoformat(),
-        employee_file=sample_employee_file,
-        employer_file=sample_employer_file,
-    )
-
-    report_log_entry = util.create_import_log_entry(test_db_session, report)
-
-    report.parsed_employers_info_count = 2
-    report.parsed_employees_info_count = 3
-    report.end = datetime.now().isoformat()
-
-    updated_report_log_entry = util.update_import_log_entry(
-        test_db_session, report_log_entry, report
-    )
-    persisted_report = json.loads(updated_report_log_entry.report)
-    assert updated_report_log_entry.import_log_id == report_log_entry.import_log_id
-    assert updated_report_log_entry.start == report_log_entry.start
-    assert updated_report_log_entry.end == report_log_entry.end
-    assert persisted_report["parsed_employers_count"] == report.parsed_employers_count
-    assert persisted_report["parsed_employees_info_count"] == report.parsed_employees_info_count
 
 
 def test_check_and_update_employee(test_db_session, initialize_factories_session):

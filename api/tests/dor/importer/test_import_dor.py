@@ -9,6 +9,7 @@ import massgov.pfml.dor.importer.import_dor as import_dor
 import massgov.pfml.dor.importer.lib.dor_persistence_util as dor_persistence_util
 import massgov.pfml.dor.importer.paths
 import massgov.pfml.dor.mock.generate as generator
+import massgov.pfml.util.batch.log
 from massgov.pfml.db.models.employees import AddressType, Country, Employee, Employer, GeoState
 from massgov.pfml.util.encryption import GpgCrypt, Utf8Crypt
 
@@ -234,7 +235,9 @@ def test_employer_address(test_db_session):
 
 def get_new_import_report(test_db_session):
     report = import_dor.ImportReport()
-    report_log_entry = dor_persistence_util.create_import_log_entry(test_db_session, report)
+    report_log_entry = massgov.pfml.util.batch.log.create_log_entry(
+        test_db_session, "DOR", "Initial", report
+    )
 
     return report, report_log_entry
 

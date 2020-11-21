@@ -15,6 +15,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm.session import Session
 
 import massgov.pfml.dor.importer.lib.dor_persistence_util as dor_persistence_util
+import massgov.pfml.util.batch.log
 import massgov.pfml.util.files as file_util
 import massgov.pfml.util.logging as logging
 import massgov.pfml.util.logging.audit
@@ -426,7 +427,7 @@ def handle_import_exception(
         report.status = "error"
         report.message = message
         report.end = datetime.now().isoformat()
-        dor_persistence_util.update_import_log_entry(db_session, report_log_entry, report)
+        massgov.pfml.util.batch.log.update_log_entry(db_session, report_log_entry, "error", report)
         import_exception = ImportException(message, type(exception).__name__)
     except Exception as e:
         message = f"Unexpected error while closing out import run due to original exception: {type(exception)}"
@@ -451,7 +452,9 @@ def process_daily_import(
     report.parsed_employers_exception_line_nums = []
     report.invalid_employer_addresses_by_account_key = {}
 
-    report_log_entry = dor_persistence_util.create_import_log_entry(db_session, report)
+    report_log_entry = massgov.pfml.util.batch.log.create_log_entry(
+        db_session, "DOR", "Initial", report
+    )
 
     db_session.refresh(report_log_entry)
 
@@ -481,7 +484,9 @@ def process_daily_import(
         report.parsed_employees_info_count = parsed_employees_info_count
         report.status = "success"
         report.end = datetime.now().isoformat()
-        dor_persistence_util.update_import_log_entry(db_session, report_log_entry, report)
+        massgov.pfml.util.batch.log.update_log_entry(
+            db_session, report_log_entry, "success", report
+        )
 
         logger.info(
             "Invalid employer addresses: %s", repr(report.invalid_employer_addresses_by_account_key)

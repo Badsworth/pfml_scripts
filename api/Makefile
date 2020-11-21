@@ -128,6 +128,9 @@ dor-generate: ## Generate fake DOR data
 dor-import: ## Run a DOR import using fake data (see dor-generate)
 	FOLDER_PATH=dor_mock $(PY_RUN_CMD) dor-import $(DECODE_LOG)
 
+load-employers-to-fineos: ## Send employers from our database to the FINEOS API
+	$(PY_RUN_CMD) load-employers-to-fineos $(DECODE_LOG)
+
 ecr-login: ## Login to ECR for Docker
 	@echo "Authenticating Docker with ECR"
 	ecr_login_cmd="$$(aws ecr get-login --no-include-email)" && $$ecr_login_cmd

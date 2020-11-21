@@ -1,6 +1,4 @@
-import json
 import uuid
-from dataclasses import asdict
 
 from sqlalchemy.orm.exc import MultipleResultsFound, NoResultFound
 
@@ -14,7 +12,6 @@ from massgov.pfml.db.models.employees import (
     EmployerAddress,
     EmployerQuarterlyContribution,
     GeoState,
-    ImportLog,
     TaxIdentifier,
     WagesAndContributions,
 )
@@ -307,37 +304,6 @@ def check_and_update_wages_and_contributions(
     existing_wages_and_contributions.latest_import_log_id = import_log_entry_id
 
     return True
-
-
-def create_import_log_entry(db_session, report):
-    """Creating a a report log entry in the database"""
-    logger.info("Adding report to import log")
-    import_log = ImportLog(
-        source="DOR",
-        import_type="Initial",
-        status=report.status,
-        report=json.dumps(asdict(report), indent=2),
-        start=report.start,
-        end=report.end,
-    )
-    db_session.add(import_log)
-    db_session.flush()
-    db_session.commit()
-    db_session.refresh(import_log)
-    logger.info("Added report to import log")
-    return import_log
-
-
-def update_import_log_entry(db_session, existing_import_log, report):
-    """Updating an existing import log entry with the supplied report"""
-    logger.info("Updating report in import log")
-    existing_import_log.status = report.status
-    existing_import_log.report = json.dumps(asdict(report), indent=2)
-    existing_import_log.start = report.start
-    existing_import_log.end = report.end
-    db_session.commit()
-    logger.info("Finished saving import report in log")
-    return existing_import_log
 
 
 # == Query Helpers ==
