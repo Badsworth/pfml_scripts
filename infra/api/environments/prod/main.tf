@@ -63,6 +63,12 @@ module "api" {
   rmv_client_certificate_binary_arn                = "arn:aws:secretsmanager:us-east-1:498823821309:secret:/service/pfml-api-prod/rmv_client_certificate-Mo2HJu"
   rmv_check_behavior                               = "partially_mocked"
   rmv_check_mock_success                           = "1"
+  fineos_client_customer_api_url                   = "https://prd-api.masspfml.fineos.com/customerapi/"
+  fineos_client_integration_services_api_url       = "https://prd-api.masspfml.fineos.com/integration-services/"
+  fineos_client_group_client_api_url               = "https://prd-api.masspfml.fineos.com/groupclientapi/"
+  fineos_client_wscomposer_api_url                 = "https://prd-claims-webapp.masspfml.fineos.com/wscomposer/"
+  fineos_client_oauth2_url                         = "https://prd-api.masspfml.fineos.com/oauth2/token"
+  fineos_client_oauth2_client_id                   = "5qcd2h1qlv4gpiqgugn2mrttkg"
   fineos_eligibility_transfer_lambda_build_s3_key  = local.fineos_eligibility_transfer_lambda_build_s3_key
   enable_employer_endpoints                        = "0"
   enable_application_fraud_check                   = "0"
