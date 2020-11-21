@@ -473,12 +473,6 @@ class FINEOSClient(client.AbstractFINEOSClient):
             "managedReqId": None,
         }
 
-        # ** Temporary debugging code **
-        logger.warning(
-            "File MD5 - encoded_file_contents",
-            extra={"encoded_file_contents": encoded_file_contents},
-        )
-
         response = self._customer_api(
             "POST",
             f"customer/cases/{absence_id}/documents/base64Upload/{document_type}",
