@@ -36,10 +36,6 @@ from massgov.pfml.util.datetime import convert_minutes_to_hours_minutes
 
 logger = logging.get_logger(__name__)
 
-# TODO: remove this workaround after Portal starts sending SSN in prod
-# https://lwd.atlassian.net/browse/API-497
-TEST_TAX_IDENTIFIER = "900990000"
-
 
 def register_employee(
     fineos: massgov.pfml.fineos.AbstractFINEOSClient,
@@ -105,9 +101,7 @@ def send_to_fineos(application: Application, db_session: massgov.pfml.db.Session
     fineos = massgov.pfml.fineos.create_client()
 
     try:
-        tax_identifier = TEST_TAX_IDENTIFIER
-        if application.tax_identifier is not None:
-            tax_identifier = application.tax_identifier.tax_identifier
+        tax_identifier = application.tax_identifier.tax_identifier
 
         fineos_user_id = register_employee(
             fineos, tax_identifier, application.employer_fein, db_session
@@ -154,9 +148,7 @@ def complete_intake(application: Application, db_session: massgov.pfml.db.Sessio
     fineos = massgov.pfml.fineos.create_client()
 
     try:
-        tax_identifier = TEST_TAX_IDENTIFIER
-        if application.tax_identifier is not None:
-            tax_identifier = application.tax_identifier.tax_identifier
+        tax_identifier = application.tax_identifier.tax_identifier
 
         fineos_user_id = register_employee(
             fineos, tax_identifier, application.employer_fein, db_session
@@ -218,9 +210,7 @@ def mark_documents_as_received(
 
 def build_customer_model(application):
     """Convert an application to a FINEOS API Customer model."""
-    tax_identifier = TEST_TAX_IDENTIFIER
-    if application.tax_identifier is not None:
-        tax_identifier = application.tax_identifier.tax_identifier
+    tax_identifier = application.tax_identifier.tax_identifier
     mass_id = massgov.pfml.fineos.models.customer_api.ExtensionAttribute(
         name="MassachusettsID", stringValue=application.mass_id or ""
     )
@@ -421,9 +411,7 @@ def get_or_register_employee_fineos_user_id(
     application: Application,
     db_session: massgov.pfml.db.Session,
 ) -> str:
-    tax_identifier = TEST_TAX_IDENTIFIER
-    if application.tax_identifier is not None:
-        tax_identifier = application.tax_identifier.tax_identifier
+    tax_identifier = application.tax_identifier.tax_identifier
 
     employer_fein = ""
     if application.employer_fein is None:
