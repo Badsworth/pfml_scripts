@@ -66,6 +66,7 @@ locals {
         fineos_client_customer_api_url             = var.fineos_client_customer_api_url
         fineos_client_group_client_api_url         = var.fineos_client_group_client_api_url
         fineos_client_wscomposer_api_url           = var.fineos_client_wscomposer_api_url
+        fineos_client_wscomposer_user_id           = var.fineos_client_wscomposer_user_id
         fineos_client_oauth2_url                   = var.fineos_client_oauth2_url
         fineos_client_oauth2_client_id             = var.fineos_client_oauth2_client_id
       }
@@ -82,6 +83,7 @@ locals {
         fineos_client_customer_api_url             = var.fineos_client_customer_api_url
         fineos_client_group_client_api_url         = var.fineos_client_group_client_api_url
         fineos_client_wscomposer_api_url           = var.fineos_client_wscomposer_api_url
+        fineos_client_wscomposer_user_id           = var.fineos_client_wscomposer_user_id
         fineos_client_oauth2_url                   = var.fineos_client_oauth2_url
         fineos_client_oauth2_client_id             = var.fineos_client_oauth2_client_id
 

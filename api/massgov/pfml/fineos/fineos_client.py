@@ -8,7 +8,7 @@ import json
 import os.path
 import urllib.parse
 import xml.etree.ElementTree
-from typing import Any, Callable, Dict, List, Optional, Tuple, Union
+from typing import Any, Callable, Dict, List, Mapping, Optional, Tuple, Union
 
 import defusedxml.ElementTree
 import flask
@@ -80,11 +80,11 @@ class FINEOSClient(client.AbstractFINEOSClient):
 
     integration_services_api_url: str
     wscomposer_url: str
+    wscomposer_user_id: str
     group_client_api_url: str
     customer_api_url: str
     request_count: int
     oauth_session: requests_oauthlib.OAuth2Session
-    wscomposer_session: requests.Session
 
     def __init__(
         self,
@@ -92,6 +92,7 @@ class FINEOSClient(client.AbstractFINEOSClient):
         group_client_api_url,
         customer_api_url,
         wscomposer_url,
+        wscomposer_user_id,
         oauth2_url,
         client_id,
         client_secret,
@@ -100,6 +101,7 @@ class FINEOSClient(client.AbstractFINEOSClient):
         self.group_client_api_url = group_client_api_url
         self.customer_api_url = customer_api_url
         self.wscomposer_url = wscomposer_url
+        self.wscomposer_user_id = wscomposer_user_id
         self.oauth2_url = oauth2_url
         self.request_count = 0
         logger.info(
@@ -110,7 +112,6 @@ class FINEOSClient(client.AbstractFINEOSClient):
             integration_services_api_url,
         )
         self._init_oauth_session(oauth2_url, client_id, client_secret)
-        self.wscomposer_session = requests.Session()  # To use persistent connections if possible.
 
     def _init_oauth_session(self, token_url, client_id, client_secret):
         """Set up an OAuth session and get a token."""
@@ -251,15 +252,20 @@ class FINEOSClient(client.AbstractFINEOSClient):
         response = self._request(self.oauth_session.request, method, url, headers, **args)
         return response
 
-    def _wscomposer_request(self, method: str, path: str, xml_data: str) -> requests.Response:
+    def _wscomposer_request(
+        self, method: str, path: str, query: Mapping[str, str], xml_data: str
+    ) -> requests.Response:
         """Make a request to the Web Services Composer API."""
-        url = urllib.parse.urljoin(self.wscomposer_url, path)
+        query_with_user_id = dict(query)
+        query_with_user_id["userid"] = self.wscomposer_user_id
+        path_with_query = path + "?" + urllib.parse.urlencode(query_with_user_id)
+        url = urllib.parse.urljoin(self.wscomposer_url, path_with_query)
         headers = {"Content-Type": "application/xml"}
-        return self._request(self.wscomposer_session.request, method, url, headers, data=xml_data)
+        return self._request(self.oauth_session.request, method, url, headers, data=xml_data)
 
     def find_employer(self, employer_fein: str) -> str:
         response = self._wscomposer_request(
-            "GET", "ReadEmployer?userid=CONTENT&param_str_taxId={}".format(employer_fein), ""
+            "GET", "ReadEmployer", {"param_str_taxId": employer_fein}, ""
         )
         root = defusedxml.ElementTree.fromstring(response.text)
         if len(root) > 0:
@@ -272,7 +278,7 @@ class FINEOSClient(client.AbstractFINEOSClient):
         """Create the employee account registration."""
         xml_body = self._register_api_user_payload(employee_registration)
         self._wscomposer_request(
-            "POST", "webservice?userid=CONTENT&config=EmployeeRegisterService", xml_body
+            "POST", "webservice", {"config": "EmployeeRegisterService"}, xml_body
         )
 
     @staticmethod
@@ -643,7 +649,7 @@ class FINEOSClient(client.AbstractFINEOSClient):
         """Create or update an employer in FINEOS."""
         xml_body = self._create_or_update_employer_payload(employer_create_or_update)
         response = self._wscomposer_request(
-            "POST", "webservice?userid=CONTENT&config=UpdateOrCreateParty", xml_body
+            "POST", "webservice", {"config": "UpdateOrCreateParty"}, xml_body
         )
         response_decoded = update_or_create_party_response_schema.decode(response.text)
 
@@ -760,7 +766,7 @@ class FINEOSClient(client.AbstractFINEOSClient):
         xml_body = self._create_service_agreement_payload(fineos_employer_id, leave_plans)
 
         response = self._wscomposer_request(
-            "POST", "webservice?userid=CONTENT&config=ServiceAgreementService", xml_body
+            "POST", "webservice", {"config": "ServiceAgreementService"}, xml_body
         )
         response_decoded = service_agreement_service_response_schema.decode(response.text)
 

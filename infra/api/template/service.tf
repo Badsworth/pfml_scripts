@@ -70,6 +70,7 @@ data "template_file" "container_definitions" {
     fineos_client_integration_services_api_url = var.fineos_client_integration_services_api_url
     fineos_client_group_client_api_url         = var.fineos_client_group_client_api_url
     fineos_client_wscomposer_api_url           = var.fineos_client_wscomposer_api_url
+    fineos_client_wscomposer_user_id           = var.fineos_client_wscomposer_user_id
     fineos_client_oauth2_url                   = var.fineos_client_oauth2_url
     fineos_client_oauth2_client_id             = var.fineos_client_oauth2_client_id
     service_now_base_url                       = var.service_now_base_url

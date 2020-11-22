@@ -194,6 +194,12 @@ variable "fineos_client_wscomposer_api_url" {
   default     = ""
 }
 
+variable "fineos_client_wscomposer_user_id" {
+  description = "User id for FINEOS Web Services Composer API"
+  type        = string
+  default     = "CONTENT"
+}
+
 variable "fineos_client_oauth2_url" {
   description = "URL of the FINEOS OAuth2 token endpoint."
   type        = string

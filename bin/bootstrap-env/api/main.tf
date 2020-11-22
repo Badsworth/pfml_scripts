@@ -54,6 +54,7 @@ module "api" {
   fineos_client_customer_api_url                   = ""
   fineos_client_group_client_api_url               = ""
   fineos_client_wscomposer_api_url                 = ""
+  fineos_client_wscomposer_user_id                 = ""
   fineos_client_oauth2_url                         = ""
   fineos_client_oauth2_client_id                   = ""
   fineos_eligibility_feed_output_directory_path    = null

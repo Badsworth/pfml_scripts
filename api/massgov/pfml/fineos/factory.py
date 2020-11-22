@@ -19,6 +19,7 @@ class FINEOSClientConfig:
     group_client_api_url: Optional[str]
     customer_api_url: Optional[str]
     wscomposer_api_url: Optional[str]
+    wscomposer_user_id: Optional[str]
     oauth2_url: Optional[str]
     oauth2_client_id: Optional[str]
     oauth2_client_secret: Optional[str]
@@ -32,6 +33,7 @@ class FINEOSClientConfig:
             group_client_api_url=os.environ.get("FINEOS_CLIENT_GROUP_CLIENT_API_URL", None),
             customer_api_url=os.environ.get("FINEOS_CLIENT_CUSTOMER_API_URL", None),
             wscomposer_api_url=os.environ.get("FINEOS_CLIENT_WSCOMPOSER_API_URL", None),
+            wscomposer_user_id=os.environ.get("FINEOS_CLIENT_WSCOMPOSER_USER_ID", "CONTENT"),
             oauth2_url=os.environ.get("FINEOS_CLIENT_OAUTH2_URL", None),
             oauth2_client_id=os.environ.get("FINEOS_CLIENT_OAUTH2_CLIENT_ID", None),
             oauth2_client_secret=os.environ.get("FINEOS_CLIENT_OAUTH2_CLIENT_SECRET", None),
@@ -49,6 +51,7 @@ def create_client(config: Optional[FINEOSClientConfig] = None) -> client.Abstrac
             group_client_api_url=config.group_client_api_url,
             customer_api_url=config.customer_api_url,
             wscomposer_url=config.wscomposer_api_url,
+            wscomposer_user_id=config.wscomposer_user_id,
             oauth2_url=config.oauth2_url,
             client_id=config.oauth2_client_id,
             client_secret=config.oauth2_client_secret,
