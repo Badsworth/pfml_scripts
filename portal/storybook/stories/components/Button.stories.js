@@ -72,6 +72,9 @@ export const Variations = () => {
         <Button onClick={handleClick} inversed variation="outline">
           Inversed outline
         </Button>
+        <Button onClick={handleClick} inversed variation="unstyled">
+          Inversed unstyled
+        </Button>
       </div>
     </React.Fragment>
   );
