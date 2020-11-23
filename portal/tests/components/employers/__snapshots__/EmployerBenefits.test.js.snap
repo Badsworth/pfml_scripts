@@ -35,7 +35,7 @@ exports[`EmployerBenefits renders the component 1`] = `
     </thead>
     <tbody>
       <AmendableEmployerBenefit
-        benefit={
+        employerBenefit={
           EmployerBenefit {
             "benefit_amount_dollars": 1000,
             "benefit_amount_frequency": null,

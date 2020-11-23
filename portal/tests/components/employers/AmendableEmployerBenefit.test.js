@@ -22,7 +22,7 @@ describe("AmendableEmployerBenefit", () => {
   });
   const props = {
     onChange: jest.fn(),
-    benefit: shortTermDisability,
+    employerBenefit: shortTermDisability,
   };
   let wrapper;
 
@@ -76,7 +76,10 @@ describe("AmendableEmployerBenefit", () => {
       benefit_type: FineosEmployerBenefitType.paidLeave,
     });
     const wrapper = shallow(
-      <AmendableEmployerBenefit benefit={paidLeave} onChange={() => {}} />
+      <AmendableEmployerBenefit
+        employerBenefit={paidLeave}
+        onChange={() => {}}
+      />
     );
 
     wrapper.find(AmendButton).simulate("click");
@@ -103,10 +106,10 @@ describe("AmendableEmployerBenefit", () => {
 
   it("updates amount in the AmendmentForm", () => {
     wrapper.find(AmendButton).simulate("click");
-    wrapper.find(InputText).simulate("change", { target: { value: 500 } });
+    wrapper.find(InputText).simulate("change", { target: { value: "500" } });
 
     expect(props.onChange).toHaveBeenCalled();
-    expect(wrapper.find(InputText).prop("value")).toEqual(500);
+    expect(wrapper.find(InputText).prop("value")).toEqual("500");
   });
 
   it("updates frequency in the AmendmentForm", () => {
@@ -123,9 +126,9 @@ describe("AmendableEmployerBenefit", () => {
 
   it("restores original value on cancel", () => {
     wrapper.find(AmendButton).simulate("click");
-    wrapper.find(InputText).simulate("change", { target: { value: 500 } });
+    wrapper.find(InputText).simulate("change", { target: { value: "500" } });
 
-    expect(wrapper.find(InputText).prop("value")).toEqual(500);
+    expect(wrapper.find(InputText).prop("value")).toEqual("500");
 
     wrapper.find(AmendmentForm).dive().find(Button).simulate("click");
 

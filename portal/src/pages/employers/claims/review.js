@@ -1,19 +1,26 @@
+import EmployerBenefit, {
+  EmployerBenefitType,
+} from "../../../models/EmployerBenefit";
+import EmployerClaim, {
+  FineosEmployerBenefitType,
+} from "../../../models/EmployerClaim";
 import React, { useEffect, useState } from "react";
 import Alert from "../../../components/Alert";
 import BackButton from "../../../components/BackButton";
 import EmployeeInformation from "../../../components/employers/EmployeeInformation";
 import EmployerBenefits from "../../../components/employers/EmployerBenefits";
-import EmployerClaim from "../../../models/EmployerClaim";
 import EmployerDecision from "../../../components/employers/EmployerDecision";
 import Feedback from "../../../components/employers/Feedback";
 import FraudReport from "../../../components/employers/FraudReport";
 import LeaveDetails from "../../../components/employers/LeaveDetails";
 import LeaveSchedule from "../../../components/employers/LeaveSchedule";
+import PreviousLeave from "../../../models/PreviousLeave";
 import PreviousLeaves from "../../../components/employers/PreviousLeaves";
 import PropTypes from "prop-types";
 import SupportingWorkDetails from "../../../components/employers/SupportingWorkDetails";
 import Title from "../../../components/Title";
 import { Trans } from "react-i18next";
+import findKeyByValue from "../../../utils/findKeyByValue";
 import formatDateRange from "../../../utils/formatDateRange";
 import updateAmendments from "../../../utils/updateAmendments";
 import { useTranslation } from "../../../locales/i18n";
@@ -33,6 +40,8 @@ export const Review = (props) => {
     query: { absence_id: absenceId },
   } = props;
   const { t } = useTranslation();
+  const [employerBenefits, setEmployerBenefits] = useState([]);
+  const [previousLeaves, setPreviousLeaves] = useState([]);
   const [amendedBenefits, setAmendedBenefits] = useState([]);
   const [amendedLeaves, setAmendedLeaves] = useState([]);
   const [amendedHours, setAmendedHours] = useState(0);
@@ -41,8 +50,16 @@ export const Review = (props) => {
 
   useEffect(() => {
     if (claim) {
-      setAmendedBenefits(claim.employer_benefits);
-      setAmendedLeaves(claim.previous_leaves);
+      const indexedEmployerBenefits = claim.employer_benefits.map(
+        (benefit, index) => new EmployerBenefit({ id: index, ...benefit })
+      );
+      const indexedPreviousLeaves = claim.previous_leaves.map(
+        (leave, index) => new PreviousLeave({ id: index, ...leave })
+      );
+      setAmendedBenefits(indexedEmployerBenefits);
+      setEmployerBenefits(indexedEmployerBenefits);
+      setAmendedLeaves(indexedPreviousLeaves);
+      setPreviousLeaves(indexedPreviousLeaves);
       setAmendedHours(claim.hours_worked_per_week || hoursWorkedPerWeek);
     }
   }, [claim]);
@@ -68,11 +85,25 @@ export const Review = (props) => {
   const handleSubmit = async ({ comment }) => {
     const payload = {
       comment,
-      employer_benefits: amendedBenefits,
+      employer_benefits: amendedBenefits.map((benefit) => {
+        const { benefit_type, ...rest } = benefit;
+        const benefitKey = findKeyByValue(
+          FineosEmployerBenefitType,
+          benefit_type
+        );
+        return {
+          benefit_type: EmployerBenefitType[benefitKey],
+          ...rest,
+        };
+      }),
       employer_decision: employerDecision,
       fraud,
       hours_worked_per_week: parseInt(amendedHours),
-      previous_leaves: amendedLeaves,
+      previous_leaves: amendedLeaves.map(
+        ({ leave_end_date, leave_start_date }) => {
+          return { leave_end_date, leave_start_date };
+        }
+      ),
     };
     await props.appLogic.employers.submit(absenceId, payload);
   };
@@ -106,11 +137,11 @@ export const Review = (props) => {
         onChange={setAmendedHours}
       />
       <EmployerBenefits
-        benefits={claim.employer_benefits}
+        employerBenefits={employerBenefits}
         onChange={handleBenefitInputChange}
       />
       <PreviousLeaves
-        previousLeaves={claim.previous_leaves}
+        previousLeaves={previousLeaves}
         onChange={handlePreviousLeavesChange}
       />
       <FraudReport onChange={handleFraudInputChange} />

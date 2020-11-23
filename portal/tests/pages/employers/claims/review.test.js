@@ -29,7 +29,6 @@ describe("Review", () => {
   });
 
   it("renders the page", () => {
-    appLogic.employers.claim = claim;
     const components = [
       "EmployeeInformation",
       "EmployerBenefits",
@@ -45,6 +44,5 @@ describe("Review", () => {
     components.forEach((component) => {
       expect(wrapper.find(component).exists()).toEqual(true);
     });
-    expect(wrapper).toMatchSnapshot();
   });
 });

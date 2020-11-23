@@ -17,15 +17,17 @@ import { useTranslation } from "../../locales/i18n";
  * in the Leave Admin claim review page.
  */
 
-const AmendableEmployerBenefit = ({ benefit, onChange }) => {
+const AmendableEmployerBenefit = ({ employerBenefit, onChange }) => {
   const { t } = useTranslation();
-  const [amendment, setAmendment] = useState(benefit);
+  const [amendment, setAmendment] = useState(employerBenefit);
   const [isAmendmentFormDisplayed, setIsAmendmentFormDisplayed] = useState(
     false
   );
   const amendBenefit = (id, field, value) => {
     const formattedValue =
-      field === "benefit_amount_dollars" ? parseInt(value) : value;
+      field === "benefit_amount_dollars"
+        ? parseInt(value.replace(/,/g, ""))
+        : value;
     setAmendment({
       ...amendment,
       [field]: value,
@@ -33,9 +35,12 @@ const AmendableEmployerBenefit = ({ benefit, onChange }) => {
     onChange({ id, [field]: formattedValue });
   };
   const isPaidLeave =
-    benefit.benefit_type === FineosEmployerBenefitType.paidLeave;
+    employerBenefit.benefit_type === FineosEmployerBenefitType.paidLeave;
   const getBenefitAmountByType = () => {
-    const { benefit_amount_dollars, benefit_amount_frequency } = benefit;
+    const {
+      benefit_amount_dollars,
+      benefit_amount_frequency,
+    } = employerBenefit;
     const hasBenefitAmountDetails =
       benefit_amount_dollars && benefit_amount_frequency;
     return isPaidLeave || !hasBenefitAmountDetails
@@ -64,11 +69,11 @@ const AmendableEmployerBenefit = ({ benefit, onChange }) => {
       <tr>
         <th scope="row">
           {formatDateRange(
-            benefit.benefit_start_date,
-            benefit.benefit_end_date
+            employerBenefit.benefit_start_date,
+            employerBenefit.benefit_end_date
           )}
         </th>
-        <td>{benefit.benefit_type}</td>
+        <td>{employerBenefit.benefit_type}</td>
         <td>{getBenefitAmountByType()}</td>
         <td>
           <AmendButton onClick={() => setIsAmendmentFormDisplayed(true)} />
@@ -83,14 +88,18 @@ const AmendableEmployerBenefit = ({ benefit, onChange }) => {
             <AmendmentForm
               onCancel={() => {
                 setIsAmendmentFormDisplayed(false);
-                setAmendment(benefit);
-                onChange(benefit);
+                setAmendment(employerBenefit);
+                onChange(employerBenefit);
               }}
             >
-              <p>{benefit.benefit_type}</p>
+              <p>{employerBenefit.benefit_type}</p>
               <InputDate
                 onChange={(e) =>
-                  amendBenefit(benefit.id, "benefit_start_date", e.target.value)
+                  amendBenefit(
+                    employerBenefit.id,
+                    "benefit_start_date",
+                    e.target.value
+                  )
                 }
                 value={amendment.benefit_start_date}
                 label={t("components.amendmentForm.question_benefitStartDate")}
@@ -102,7 +111,11 @@ const AmendableEmployerBenefit = ({ benefit, onChange }) => {
               />
               <InputDate
                 onChange={(e) =>
-                  amendBenefit(benefit.id, "benefit_end_date", e.target.value)
+                  amendBenefit(
+                    employerBenefit.id,
+                    "benefit_end_date",
+                    e.target.value
+                  )
                 }
                 value={amendment.benefit_end_date}
                 label={t("components.amendmentForm.question_benefitEndDate")}
@@ -117,7 +130,7 @@ const AmendableEmployerBenefit = ({ benefit, onChange }) => {
                   <InputText
                     onChange={(e) =>
                       amendBenefit(
-                        benefit.id,
+                        employerBenefit.id,
                         "benefit_amount_dollars",
                         e.target.value
                       )
@@ -139,7 +152,7 @@ const AmendableEmployerBenefit = ({ benefit, onChange }) => {
                     name="benefit-frequency-amendment"
                     onChange={(e) =>
                       amendBenefit(
-                        benefit.id,
+                        employerBenefit.id,
                         "benefit_amount_frequency",
                         e.target.value
                       )
@@ -159,7 +172,7 @@ const AmendableEmployerBenefit = ({ benefit, onChange }) => {
 };
 
 AmendableEmployerBenefit.propTypes = {
-  benefit: PropTypes.instanceOf(EmployerBenefit).isRequired,
+  employerBenefit: PropTypes.instanceOf(EmployerBenefit).isRequired,
   onChange: PropTypes.func.isRequired,
 };
 

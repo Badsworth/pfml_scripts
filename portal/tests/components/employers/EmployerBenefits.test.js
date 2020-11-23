@@ -16,7 +16,7 @@ describe("EmployerBenefits", () => {
       benefit_type: EmployerBenefitType.shortTermDisability,
     });
     const wrapper = shallow(
-      <EmployerBenefits benefits={[benefits]} onChange={() => {}} />
+      <EmployerBenefits employerBenefits={[benefits]} onChange={() => {}} />
     );
 
     expect(wrapper).toMatchSnapshot();
@@ -24,7 +24,7 @@ describe("EmployerBenefits", () => {
 
   it("displays 'None reported' if no benefits are reported", () => {
     const wrapper = shallow(
-      <EmployerBenefits benefits={[]} onChange={() => {}} />
+      <EmployerBenefits employerBenefits={[]} onChange={() => {}} />
     );
 
     expect(wrapper.find(AmendableEmployerBenefit).exists()).toEqual(false);

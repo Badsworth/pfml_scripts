@@ -13,7 +13,7 @@ import { useTranslation } from "../../locales/i18n";
 
 const EmployerBenefits = (props) => {
   const { t } = useTranslation();
-  const { benefits, onChange } = props;
+  const { employerBenefits, onChange } = props;
 
   return (
     <React.Fragment>
@@ -40,11 +40,11 @@ const EmployerBenefits = (props) => {
           </tr>
         </thead>
         <tbody>
-          {benefits.length ? (
-            benefits.map((benefit) => (
+          {employerBenefits.length ? (
+            employerBenefits.map((employerBenefit) => (
               <AmendableEmployerBenefit
-                benefit={benefit}
-                key={benefit.id}
+                employerBenefit={employerBenefit}
+                key={employerBenefit.id}
                 onChange={onChange}
               />
             ))
@@ -63,7 +63,7 @@ const EmployerBenefits = (props) => {
 };
 
 EmployerBenefits.propTypes = {
-  benefits: PropTypes.arrayOf(PropTypes.instanceOf(EmployerBenefit)),
+  employerBenefits: PropTypes.arrayOf(PropTypes.instanceOf(EmployerBenefit)),
   onChange: PropTypes.func.isRequired,
 };
 
