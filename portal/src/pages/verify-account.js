@@ -16,14 +16,13 @@ import useThrottledHandler from "../hooks/useThrottledHandler";
 import { useTranslation } from "../locales/i18n";
 
 export const VerifyAccount = (props) => {
-  const { appLogic, query } = props;
+  const { appLogic } = props;
   const { appErrors, auth } = appLogic;
   const { t } = useTranslation();
 
   const createAccountUsername = get(auth, "authData.createAccountUsername");
   const createAccountFlow = get(auth, "authData.createAccountFlow");
   const employerIdNumber = get(auth, "authData.employerIdNumber");
-  const userNotFound = query["user-not-found"] === "true";
 
   const { formState, getField, updateFields, clearField } = useFormState({
     code: "",
@@ -33,9 +32,6 @@ export const VerifyAccount = (props) => {
   });
   const [codeResent, setCodeResent] = useState(false);
 
-  // A user routed to this page when userNotFound would not have had a code
-  // automatically sent to them, so showing the code field would be confusing.
-  const showCodeField = !userNotFound || codeResent;
   // If a user reloads the page, we'd lose the email and FEIN stored in authData,
   // which we need for verifying their account
   const showEmailField = !createAccountUsername;
@@ -81,38 +77,21 @@ export const VerifyAccount = (props) => {
         </Alert>
       )}
 
-      {userNotFound && !codeResent && (
-        <Alert
-          className="margin-bottom-3"
-          heading={t("pages.authVerifyAccount.reverifyHeading")}
-          name="user-not-found-message"
-          state="info"
-        >
-          {t("pages.authVerifyAccount.reverify")}
-        </Alert>
-      )}
-
       <form className="usa-form" onSubmit={handleSubmit}>
         <Title>{t("pages.authVerifyAccount.title")}</Title>
-
-        {showCodeField && (
-          <React.Fragment>
-            <Lead>
-              {t("pages.authVerifyAccount.lead", {
-                context: createAccountUsername ? "email" : null,
-                emailAddress: createAccountUsername,
-              })}
-            </Lead>
-
-            <InputText
-              {...getFunctionalInputProps("code")}
-              autoComplete="off"
-              inputMode="numeric"
-              label={t("pages.authVerifyAccount.codeLabel")}
-              smallLabel
-            />
-          </React.Fragment>
-        )}
+        <Lead>
+          {t("pages.authVerifyAccount.lead", {
+            context: createAccountUsername ? "email" : null,
+            emailAddress: createAccountUsername,
+          })}
+        </Lead>
+        <InputText
+          {...getFunctionalInputProps("code")}
+          autoComplete="off"
+          inputMode="numeric"
+          label={t("pages.authVerifyAccount.codeLabel")}
+          smallLabel
+        />
 
         {showEmailField && (
           <InputText
@@ -154,18 +133,16 @@ export const VerifyAccount = (props) => {
             className="margin-top-4"
             name="resend-code-button"
             onClick={handleResendCodeClick}
-            variation={showCodeField ? "unstyled" : null}
+            variation="unstyled"
             loading={handleResendCodeClick.isThrottled}
           >
             {t("pages.authVerifyAccount.resendCodeLink")}
           </Button>
         </div>
 
-        {showCodeField && (
-          <Button type="submit" loading={handleSubmit.isThrottled}>
-            {t("pages.authVerifyAccount.confirmButton")}
-          </Button>
-        )}
+        <Button type="submit" loading={handleSubmit.isThrottled}>
+          {t("pages.authVerifyAccount.confirmButton")}
+        </Button>
 
         <div className="margin-top-2 text-bold">
           <Link href={routes.auth.login}>
@@ -179,9 +156,6 @@ export const VerifyAccount = (props) => {
 
 VerifyAccount.propTypes = {
   appLogic: PropTypes.object.isRequired,
-  query: PropTypes.shape({
-    "user-not-found": PropTypes.string,
-  }),
 };
 
 export default VerifyAccount;

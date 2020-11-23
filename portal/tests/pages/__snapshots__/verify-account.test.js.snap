@@ -102,14 +102,3 @@ exports[`VerifyAccount shows success message after code is resent 1`] = `
   We sent a new 6 digit verification code to your email address. Enter the new code to verify your email.
 </Alert>
 `;
-
-exports[`VerifyAccount when query includes user-not-found renders info alert 1`] = `
-<Alert
-  className="margin-bottom-3"
-  heading="Re-verify your account"
-  name="user-not-found-message"
-  state="info"
->
-  We need to re-verify your account by emailing you a confirmation code. Enter your details below.
-</Alert>
-`;

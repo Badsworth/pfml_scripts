@@ -21,9 +21,9 @@ describe("VerifyAccount", () => {
     verificationCode,
     wrapper;
 
-  function render(query = {}) {
+  function render() {
     act(() => {
-      wrapper = shallow(<VerifyAccount appLogic={appLogic} query={query} />);
+      wrapper = shallow(<VerifyAccount appLogic={appLogic} />);
     });
     ({ changeField, click, changeCheckbox, submitForm } = simulateEvents(
       wrapper
@@ -196,48 +196,6 @@ describe("VerifyAccount", () => {
       expect(wrapper.find("Alert[name='code-resent-message']").exists()).toBe(
         false
       );
-    });
-  });
-
-  describe("when query includes user-not-found", () => {
-    beforeEach(() => {
-      render({ "user-not-found": "true" });
-    });
-
-    it("renders info alert", () => {
-      expect(wrapper.find("Alert[name='user-not-found-message']")).toHaveLength(
-        1
-      );
-      expect(
-        wrapper.find("Alert[name='user-not-found-message']")
-      ).toMatchSnapshot();
-    });
-
-    it("initially hides the lead text and code field", () => {
-      expect(wrapper.find("Lead").exists()).toBe(false);
-      expect(wrapper.find("InputText[name='code']").exists()).toBe(false);
-    });
-
-    it("initially uses primary styling for resend code button", () => {
-      // no variation means it's rendered as a primary button
-      expect(
-        wrapper.find({ name: "resend-code-button" }).prop("variation")
-      ).toBeNull();
-    });
-
-    it("hides info alert when code is resent", async () => {
-      click({ name: "resend-code-button" });
-      await resolveResendVerifyAccountCodeMock();
-
-      expect(wrapper.find("Alert[name='code-resent-message']")).toHaveLength(1);
-    });
-
-    it("shows lead text and code field when code is resent", async () => {
-      click({ name: "resend-code-button" });
-      await resolveResendVerifyAccountCodeMock();
-
-      expect(wrapper.find("Lead").exists()).toBe(true);
-      expect(wrapper.find("InputText[name='code']").exists()).toBe(true);
     });
   });
 });

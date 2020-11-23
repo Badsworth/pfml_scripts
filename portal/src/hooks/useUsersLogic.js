@@ -1,12 +1,11 @@
 import {
-  UnauthorizedError,
+  NetworkError,
   UserNotFoundError,
   UserNotReceivedError,
 } from "../errors";
 import routes, { isClaimsRoute, isEmployersRoute } from "../routes";
 import { useMemo, useState } from "react";
 import UsersApi from "../api/UsersApi";
-import tracker from "../services/tracker";
 import { useRouter } from "next/router";
 
 /**
@@ -70,18 +69,14 @@ const useUsersLogic = ({ appErrorsLogic, isLoggedIn, portalFlow }) => {
 
       setUser(user);
     } catch (error) {
-      if (error instanceof UnauthorizedError) {
-        // API returns a 401 (UnauthorizedError) if they don't find a matching
-        // user in the database. This could mean our post-confirmation hook
-        // timed out or failed. We log them out, and redirect to the
-        // account verification page, which can help get them into the API.
-        tracker.noticeError(new UserNotFoundError(error.message));
-        portalFlow.goTo(routes.auth.verifyAccount, { "user-not-found": true });
+      let errorToSet;
 
-        return;
+      if (error instanceof NetworkError) {
+        errorToSet = error;
+      } else {
+        errorToSet = new UserNotFoundError(error.message);
       }
-
-      appErrorsLogic.catchError(error);
+      appErrorsLogic.catchError(errorToSet);
     }
   };
 

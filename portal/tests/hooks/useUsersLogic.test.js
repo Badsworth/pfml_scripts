@@ -149,20 +149,6 @@ describe("useUsersLogic", () => {
       await expect(usersLogic.loadUser).rejects.toThrow(/Cannot load user/);
     });
 
-    it("redirects to verify-account page when api responds with a 401 UnauthorizedError", async () => {
-      const goToSpy = jest.spyOn(portalFlow, "goTo");
-      usersApi.getCurrentUser.mockRejectedValueOnce(new UnauthorizedError());
-
-      await act(async () => {
-        await usersLogic.loadUser();
-      });
-
-      expect(appErrorsLogic.appErrors.items).toHaveLength(0);
-      expect(goToSpy).toHaveBeenCalledWith("/verify-account", {
-        "user-not-found": true,
-      });
-    });
-
     it("throws UserNotReceivedError when api resolves with no user", async () => {
       usersApi.getCurrentUser.mockResolvedValueOnce({ user: null });
 
@@ -183,6 +169,16 @@ describe("useUsersLogic", () => {
       });
 
       expect(appErrorsLogic.appErrors.items[0].name).toBe("NetworkError");
+    });
+
+    it("throws UserNotFoundError when fetch request fails with anything other than NetworkError", async () => {
+      usersApi.getCurrentUser.mockRejectedValueOnce(new UnauthorizedError());
+
+      await act(async () => {
+        await usersLogic.loadUser();
+      });
+
+      expect(appErrorsLogic.appErrors.items[0].name).toBe("UserNotFoundError");
     });
   });
 
