@@ -2,75 +2,64 @@
 
 exports[`Feedback renders the component 1`] = `
 <Fragment>
-  <form
-    id="employer-feedback-form"
-    onSubmit={[Function]}
+  <InputChoiceGroup
+    choices={
+      Array [
+        Object {
+          "checked": true,
+          "disabled": false,
+          "label": "No",
+          "value": "false",
+        },
+        Object {
+          "checked": false,
+          "label": "Yes",
+          "value": "true",
+        },
+      ]
+    }
+    label={
+      <ReviewHeading
+        level="2"
+      >
+        Do you have any additional comments or concerns?
+      </ReviewHeading>
+    }
+    name="hasComment"
+    onChange={[Function]}
+    type="radio"
+  />
+  <ConditionalContent
+    clearField={[Function]}
+    getField={[Function]}
+    updateFields={[Function]}
+    visible={false}
   >
-    <InputChoiceGroup
-      choices={
-        Array [
-          Object {
-            "checked": true,
-            "disabled": false,
-            "label": "No",
-            "value": "false",
-          },
-          Object {
-            "checked": false,
-            "label": "Yes",
-            "value": "true",
-          },
-        ]
-      }
-      label={
-        <ReviewHeading
-          level="2"
-        >
-          Do you have any additional comments or concerns?
-        </ReviewHeading>
-      }
-      name="hasComment"
+    <FormLabel
+      className="usa-label"
+      htmlFor="comment"
+      small={true}
+    >
+      Please tell us more.
+    </FormLabel>
+    <textarea
+      className="usa-textarea"
+      name="comment"
       onChange={[Function]}
-      type="radio"
     />
-    <ConditionalContent
-      clearField={[Function]}
-      getField={[Function]}
-      updateFields={[Function]}
-      visible={false}
+    <FormLabel
+      small={true}
     >
-      <FormLabel
-        className="usa-label"
-        htmlFor="comment"
-        small={true}
-      >
-        Please tell us more.
-      </FormLabel>
-      <textarea
-        className="usa-textarea"
-        name="comment"
-        onChange={[Function]}
-      />
-      <FormLabel
-        small={true}
-      >
-        If you have any supporting documentation, please attach it for review.
-      </FormLabel>
-      <FileCardList
-        addAnotherFileButtonText="Choose another file"
-        addFirstFileButtonText="Choose a file"
-        fileHeadingPrefix="File"
-        filesWithUniqueId={Array []}
-        setAppErrors={[MockFunction]}
-        setFiles={[Function]}
-      />
-    </ConditionalContent>
-    <Button
-      className="margin-top-4"
-      type="submit"
-    >
-      Submit
-    </Button>
-  </form>
+      If you have any supporting documentation, please attach it for review.
+    </FormLabel>
+    <FileCardList
+      addAnotherFileButtonText="Choose another file"
+      addFirstFileButtonText="Choose a file"
+      fileHeadingPrefix="File"
+      filesWithUniqueId={Array []}
+      setAppErrors={[MockFunction]}
+      setFiles={[Function]}
+    />
+  </ConditionalContent>
 </Fragment>
 `;

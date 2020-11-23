@@ -1,12 +1,10 @@
 import React, { useEffect, useState } from "react";
-import Button from "../Button";
 import ConditionalContent from "../ConditionalContent";
 import FileCardList from "../FileCardList";
 import FormLabel from "../FormLabel";
 import InputChoiceGroup from "../InputChoiceGroup";
 import PropTypes from "prop-types";
 import ReviewHeading from "../ReviewHeading";
-import { get } from "lodash";
 import { useTranslation } from "../../locales/i18n";
 
 /**
@@ -14,126 +12,86 @@ import { useTranslation } from "../../locales/i18n";
  * in the Leave Admin claim review page.
  */
 
-const Feedback = ({ appLogic, employerDecision, onSubmit }) => {
+const Feedback = ({ appLogic, comment, setComment, employerDecision }) => {
   // TODO (EMPLOYER-583) add frontend validation
   const { t } = useTranslation();
   const [uploadedFiles, setUploadedFiles] = useState([]);
-  const [formState, setFormState] = useState({
-    hasComment: employerDecision === "Deny" ? "true" : "false",
-    comment: "",
-  });
+  const [hasComment, setHasComment] = useState(false);
 
   useEffect(() => {
-    const hasComment =
-      employerDecision === "Deny" || !!getField("comment") ? "true" : "false";
-    updateFields({ hasComment });
+    if (!hasComment) {
+      setUploadedFiles([]);
+      setComment("");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hasComment]);
+
+  useEffect(() => {
+    setHasComment(employerDecision === "Deny" || !!comment);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [employerDecision]);
 
-  const getField = (fieldName) => {
-    return get(formState, fieldName);
-  };
-
-  const updateFields = (fields) => {
-    setFormState({ ...formState, ...fields });
-  };
-
-  const clearField = (fieldName) => {
-    setFormState({
-      ...formState,
-      [fieldName]: "",
-    });
-  };
-
-  const handleOnChange = (event) => {
-    const { name, value } = event.target;
-    const hasSelectedNoCommentOption =
-      name === "hasComment" && value === "false";
-
-    if (hasSelectedNoCommentOption) {
-      setUploadedFiles([]);
-      updateFields({
-        [name]: value,
-        comment: "",
-      });
-    } else {
-      updateFields({
-        [name]: value,
-      });
-    }
-  };
-
-  const handleSubmit = (event) => {
-    event.preventDefault();
-    onSubmit({ ...formState, uploadedFiles });
-  };
-
   return (
     <React.Fragment>
-      <form id="employer-feedback-form" onSubmit={handleSubmit}>
-        <InputChoiceGroup
-          choices={[
-            {
-              checked: formState.hasComment === "false",
-              disabled: employerDecision === "Deny",
-              label: t("pages.employersClaimsReview.feedback.choiceNo"),
-              value: "false",
-            },
-            {
-              checked: formState.hasComment === "true",
-              label: t("pages.employersClaimsReview.feedback.choiceYes"),
-              value: "true",
-            },
-          ]}
-          label={
-            <ReviewHeading level="2">
-              {t("pages.employersClaimsReview.feedback.instructionsLabel")}
-            </ReviewHeading>
-          }
-          name="hasComment"
-          onChange={handleOnChange}
-          type="radio"
-        />
-        <ConditionalContent
-          getField={getField}
-          clearField={clearField}
-          updateFields={updateFields}
-          visible={formState.hasComment === "true"}
-        >
-          <React.Fragment>
-            <FormLabel className="usa-label" htmlFor="comment" small>
-              {t("pages.employersClaimsReview.feedback.tellUsMoreLabel")}
-            </FormLabel>
-            <textarea
-              className="usa-textarea"
-              name="comment"
-              onChange={handleOnChange}
-            />
-            <FormLabel small>
-              {t(
-                "pages.employersClaimsReview.feedback.supportingDocumentationLabel"
-              )}
-            </FormLabel>
-            <FileCardList
-              filesWithUniqueId={uploadedFiles}
-              setFiles={setUploadedFiles}
-              setAppErrors={appLogic.setAppErrors}
-              fileHeadingPrefix={t(
-                "pages.employersClaimsReview.feedback.fileHeadingPrefix"
-              )}
-              addFirstFileButtonText={t(
-                "pages.employersClaimsReview.feedback.addFirstFileButton"
-              )}
-              addAnotherFileButtonText={t(
-                "pages.employersClaimsReview.feedback.addAnotherFileButton"
-              )}
-            />
-          </React.Fragment>
-        </ConditionalContent>
-        <Button className="margin-top-4" type="submit">
-          {t("pages.employersClaimsReview.submitButton")}
-        </Button>
-      </form>
+      <InputChoiceGroup
+        choices={[
+          {
+            checked: !hasComment,
+            disabled: employerDecision === "Deny",
+            label: t("pages.employersClaimsReview.feedback.choiceNo"),
+            value: "false",
+          },
+          {
+            checked: hasComment,
+            label: t("pages.employersClaimsReview.feedback.choiceYes"),
+            value: "true",
+          },
+        ]}
+        label={
+          <ReviewHeading level="2">
+            {t("pages.employersClaimsReview.feedback.instructionsLabel")}
+          </ReviewHeading>
+        }
+        name="hasComment"
+        onChange={(event) => setHasComment(event.target.value === "true")}
+        type="radio"
+      />
+      <ConditionalContent
+        getField={() => comment}
+        clearField={() => setComment("")}
+        updateFields={(event) => setComment(event.target.value)}
+        visible={hasComment}
+      >
+        <React.Fragment>
+          <FormLabel className="usa-label" htmlFor="comment" small>
+            {t("pages.employersClaimsReview.feedback.tellUsMoreLabel")}
+          </FormLabel>
+          <textarea
+            className="usa-textarea"
+            name="comment"
+            onChange={(event) => setComment(event.target.value)}
+          />
+          <FormLabel small>
+            {t(
+              "pages.employersClaimsReview.feedback.supportingDocumentationLabel"
+            )}
+          </FormLabel>
+          <FileCardList
+            filesWithUniqueId={uploadedFiles}
+            setFiles={setUploadedFiles}
+            setAppErrors={appLogic.setAppErrors}
+            fileHeadingPrefix={t(
+              "pages.employersClaimsReview.feedback.fileHeadingPrefix"
+            )}
+            addFirstFileButtonText={t(
+              "pages.employersClaimsReview.feedback.addFirstFileButton"
+            )}
+            addAnotherFileButtonText={t(
+              "pages.employersClaimsReview.feedback.addAnotherFileButton"
+            )}
+          />
+        </React.Fragment>
+      </ConditionalContent>
     </React.Fragment>
   );
 };
@@ -142,8 +100,9 @@ Feedback.propTypes = {
   appLogic: PropTypes.shape({
     setAppErrors: PropTypes.func.isRequired,
   }).isRequired,
+  comment: PropTypes.string.isRequired,
   employerDecision: PropTypes.oneOf(["Approve", "Deny"]),
-  onSubmit: PropTypes.func.isRequired,
+  setComment: PropTypes.func.isRequired,
 };
 
 export default Feedback;

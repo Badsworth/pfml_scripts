@@ -13,7 +13,9 @@ describe("Feedback", () => {
   let wrapper;
 
   beforeEach(() => {
-    wrapper = shallow(<Feedback appLogic={appLogic} onSubmit={() => {}} />);
+    wrapper = shallow(
+      <Feedback appLogic={appLogic} comment="" setComment={() => {}} />
+    );
   });
 
   it("renders the component", () => {
@@ -22,11 +24,12 @@ describe("Feedback", () => {
 
   describe("when employerDecision is 'Deny'", () => {
     beforeEach(() => {
-      wrapper = shallow(
+      wrapper = mount(
         <Feedback
           appLogic={appLogic}
+          comment=""
           employerDecision="Deny"
-          onSubmit={() => {}}
+          setComment={() => {}}
         />
       );
     });
@@ -45,8 +48,9 @@ describe("Feedback", () => {
         wrapper = mount(
           <Feedback
             appLogic={appLogic}
+            comment=""
             employerDecision="Deny"
-            onSubmit={() => {}}
+            setComment={() => {}}
           />
         );
       });
@@ -76,8 +80,14 @@ describe("Feedback", () => {
       });
 
       it('keeps "Yes" selected if there is a comment typed', () => {
-        const { changeField } = simulateEvents(wrapper);
-        changeField("comment", "some comment");
+        wrapper = mount(
+          <Feedback
+            appLogic={appLogic}
+            comment="some comment"
+            employerDecision="Deny"
+            setComment={() => {}}
+          />
+        );
 
         act(() => {
           wrapper.setProps({ employerDecision: "Approve" });

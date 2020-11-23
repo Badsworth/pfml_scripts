@@ -30,35 +30,31 @@ const EmployerDecision = ({ fraud, onChange = () => {} }) => {
 
   return (
     <React.Fragment>
-      <form id="employer-approve-or-deny-request-form">
-        <InputChoiceGroup
-          label={
-            <ReviewHeading level="2">
-              {t("pages.employersClaimsReview.employerDecision.heading")}
-            </ReviewHeading>
-          }
-          choices={[
-            {
-              checked: employerDecision === "Approve",
-              disabled: fraud === "Yes",
-              label: t(
-                "pages.employersClaimsReview.employerDecision.choiceApprove"
-              ),
-              value: "Approve",
-            },
-            {
-              checked: employerDecision === "Deny",
-              label: t(
-                "pages.employersClaimsReview.employerDecision.choiceDeny"
-              ),
-              value: "Deny",
-            },
-          ]}
-          name="employerDecision"
-          onChange={handleOnChange}
-          type="radio"
-        />
-      </form>
+      <InputChoiceGroup
+        label={
+          <ReviewHeading level="2">
+            {t("pages.employersClaimsReview.employerDecision.heading")}
+          </ReviewHeading>
+        }
+        choices={[
+          {
+            checked: employerDecision === "Approve",
+            disabled: fraud === "Yes",
+            label: t(
+              "pages.employersClaimsReview.employerDecision.choiceApprove"
+            ),
+            value: "Approve",
+          },
+          {
+            checked: employerDecision === "Deny",
+            label: t("pages.employersClaimsReview.employerDecision.choiceDeny"),
+            value: "Deny",
+          },
+        ]}
+        name="employerDecision"
+        onChange={handleOnChange}
+        type="radio"
+      />
     </React.Fragment>
   );
 };

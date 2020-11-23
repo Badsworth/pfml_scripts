@@ -7,6 +7,7 @@ import EmployerClaim, {
 import React, { useEffect, useState } from "react";
 import Alert from "../../../components/Alert";
 import BackButton from "../../../components/BackButton";
+import Button from "../../../components/Button";
 import EmployeeInformation from "../../../components/employers/EmployeeInformation";
 import EmployerBenefits from "../../../components/employers/EmployerBenefits";
 import EmployerDecision from "../../../components/employers/EmployerDecision";
@@ -22,6 +23,7 @@ import Title from "../../../components/Title";
 import { Trans } from "react-i18next";
 import findKeyByValue from "../../../utils/findKeyByValue";
 import formatDateRange from "../../../utils/formatDateRange";
+import { pick } from "lodash";
 import updateAmendments from "../../../utils/updateAmendments";
 import { useTranslation } from "../../../locales/i18n";
 import withEmployerClaim from "../../../hoc/withEmployerClaim";
@@ -40,70 +42,92 @@ export const Review = (props) => {
     query: { absence_id: absenceId },
   } = props;
   const { t } = useTranslation();
-  const [employerBenefits, setEmployerBenefits] = useState([]);
-  const [previousLeaves, setPreviousLeaves] = useState([]);
-  const [amendedBenefits, setAmendedBenefits] = useState([]);
-  const [amendedLeaves, setAmendedLeaves] = useState([]);
-  const [amendedHours, setAmendedHours] = useState(0);
-  const [fraud, setFraud] = useState();
-  const [employerDecision, setEmployerDecision] = useState();
+  const [formState, setFormState] = useState({
+    employerBenefits: [],
+    previousLeaves: [],
+    amendedBenefits: [],
+    amendedLeaves: [],
+    amendedHours: 0,
+    comment: "",
+    employerDecision: undefined,
+    fraud: undefined,
+  });
 
   useEffect(() => {
+    const indexedEmployerBenefits = claim.employer_benefits.map(
+      (benefit, index) => new EmployerBenefit({ id: index, ...benefit })
+    );
+    const indexedPreviousLeaves = claim.previous_leaves.map(
+      (leave, index) => new PreviousLeave({ id: index, ...leave })
+    );
     if (claim) {
-      const indexedEmployerBenefits = claim.employer_benefits.map(
-        (benefit, index) => new EmployerBenefit({ id: index, ...benefit })
-      );
-      const indexedPreviousLeaves = claim.previous_leaves.map(
-        (leave, index) => new PreviousLeave({ id: index, ...leave })
-      );
-      setAmendedBenefits(indexedEmployerBenefits);
-      setEmployerBenefits(indexedEmployerBenefits);
-      setAmendedLeaves(indexedPreviousLeaves);
-      setPreviousLeaves(indexedPreviousLeaves);
-      setAmendedHours(claim.hours_worked_per_week || hoursWorkedPerWeek);
+      updateFields({
+        amendedBenefits: indexedEmployerBenefits,
+        employerBenefits: indexedEmployerBenefits,
+        amendedLeaves: indexedPreviousLeaves,
+        previousLeaves: indexedPreviousLeaves,
+        amendedHours: claim.hours_worked_per_week || hoursWorkedPerWeek,
+      });
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [claim]);
 
+  const updateFields = (fields) => {
+    setFormState({ ...formState, ...fields });
+  };
+
+  const handleHoursWorkedChange = (updatedHoursWorked) => {
+    updateFields({ amendedHours: updatedHoursWorked });
+  };
+
   const handleBenefitInputChange = (updatedBenefit) => {
-    const updatedBenefits = updateAmendments(amendedBenefits, updatedBenefit);
-    setAmendedBenefits(updatedBenefits);
+    const updatedBenefits = updateAmendments(
+      formState.amendedBenefits,
+      updatedBenefit
+    );
+    updateFields({ amendedBenefits: updatedBenefits });
   };
 
   const handlePreviousLeavesChange = (updatedLeave) => {
-    const updatedPreviousLeaves = updateAmendments(amendedLeaves, updatedLeave);
-    setAmendedLeaves(updatedPreviousLeaves);
+    const updatedPreviousLeaves = updateAmendments(
+      formState.amendedLeaves,
+      updatedLeave
+    );
+    updateFields({ amendedLeaves: updatedPreviousLeaves });
   };
 
   const handleFraudInputChange = (updatedFraudInput) => {
-    setFraud(updatedFraudInput);
+    updateFields({ fraud: updatedFraudInput });
   };
 
   const handleEmployerDecisionChange = (updatedEmployerDecision) => {
-    setEmployerDecision(updatedEmployerDecision);
+    updateFields({ employerDecision: updatedEmployerDecision });
   };
 
-  const handleSubmit = async ({ comment }) => {
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+
+    const employer_benefits = formState.amendedBenefits.map((benefit) => {
+      const benefitKey = findKeyByValue(
+        FineosEmployerBenefitType,
+        benefit.benefit_type
+      );
+      return {
+        ...benefit,
+        benefit_type: EmployerBenefitType[benefitKey],
+      };
+    });
+    const previous_leaves = formState.amendedLeaves.map((leave) =>
+      pick(leave, ["leave_end_date", "leave_start_date"])
+    );
+
     const payload = {
-      comment,
-      employer_benefits: amendedBenefits.map((benefit) => {
-        const { benefit_type, ...rest } = benefit;
-        const benefitKey = findKeyByValue(
-          FineosEmployerBenefitType,
-          benefit_type
-        );
-        return {
-          benefit_type: EmployerBenefitType[benefitKey],
-          ...rest,
-        };
-      }),
-      employer_decision: employerDecision,
-      fraud,
-      hours_worked_per_week: parseInt(amendedHours),
-      previous_leaves: amendedLeaves.map(
-        ({ leave_end_date, leave_start_date }) => {
-          return { leave_end_date, leave_start_date };
-        }
-      ),
+      comment: formState.comment,
+      employer_benefits,
+      employer_decision: formState.employerDecision,
+      fraud: formState.fraud,
+      hours_worked_per_week: parseInt(formState.amendedHours),
+      previous_leaves,
     };
     await props.appLogic.employers.submit(absenceId, payload);
   };
@@ -131,26 +155,35 @@ export const Review = (props) => {
       <EmployeeInformation claim={claim} />
       <LeaveDetails claim={claim} />
       <LeaveSchedule claim={claim} />
-      <SupportingWorkDetails
-        // TODO (EMPLOYER-519): Change `hoursWorkedPerWeek` to `claim.hours_worked_per_week` when BE provides value
-        hoursWorkedPerWeek={claim.hours_worked_per_week || hoursWorkedPerWeek}
-        onChange={setAmendedHours}
-      />
-      <EmployerBenefits
-        employerBenefits={employerBenefits}
-        onChange={handleBenefitInputChange}
-      />
-      <PreviousLeaves
-        previousLeaves={previousLeaves}
-        onChange={handlePreviousLeavesChange}
-      />
-      <FraudReport onChange={handleFraudInputChange} />
-      <EmployerDecision onChange={handleEmployerDecisionChange} fraud={fraud} />
-      <Feedback
-        appLogic={props.appLogic}
-        employerDecision={employerDecision}
-        onSubmit={handleSubmit}
-      />
+      <form id="employer-review-form" onSubmit={handleSubmit}>
+        <SupportingWorkDetails
+          // TODO (EMPLOYER-519): Change `hoursWorkedPerWeek` to `claim.hours_worked_per_week` when BE provides value
+          hoursWorkedPerWeek={claim.hours_worked_per_week || hoursWorkedPerWeek}
+          onChange={handleHoursWorkedChange}
+        />
+        <EmployerBenefits
+          employerBenefits={formState.employerBenefits}
+          onChange={handleBenefitInputChange}
+        />
+        <PreviousLeaves
+          previousLeaves={formState.previousLeaves}
+          onChange={handlePreviousLeavesChange}
+        />
+        <FraudReport onChange={handleFraudInputChange} />
+        <EmployerDecision
+          onChange={handleEmployerDecisionChange}
+          fraud={formState.fraud}
+        />
+        <Feedback
+          appLogic={props.appLogic}
+          comment={formState.comment}
+          employerDecision={formState.employerDecision}
+          setComment={(comment) => updateFields({ comment })}
+        />
+        <Button className="margin-top-4" type="submit">
+          {t("pages.employersClaimsReview.submitButton")}
+        </Button>
+      </form>
     </React.Fragment>
   );
 };

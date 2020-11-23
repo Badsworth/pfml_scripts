@@ -2,36 +2,32 @@
 
 exports[`FraudReport renders just the input choices by default 1`] = `
 <Fragment>
-  <form
-    id="employer-fraud-report-form"
-  >
-    <InputChoiceGroup
-      choices={
-        Array [
-          Object {
-            "checked": false,
-            "label": "No",
-            "value": "No",
-          },
-          Object {
-            "checked": false,
-            "label": "Yes",
-            "value": "Yes",
-          },
-        ]
-      }
-      label={
-        <ReviewHeading
-          level="2"
-        >
-          Do you have any reason to suspect fraud?
-        </ReviewHeading>
-      }
-      name="isFraud"
-      onChange={[Function]}
-      type="radio"
-    />
-  </form>
+  <InputChoiceGroup
+    choices={
+      Array [
+        Object {
+          "checked": false,
+          "label": "No",
+          "value": "No",
+        },
+        Object {
+          "checked": false,
+          "label": "Yes",
+          "value": "Yes",
+        },
+      ]
+    }
+    label={
+      <ReviewHeading
+        level="2"
+      >
+        Do you have any reason to suspect fraud?
+      </ReviewHeading>
+    }
+    name="isFraud"
+    onChange={[Function]}
+    type="radio"
+  />
   <ConditionalContent
     visible={false}
   >
@@ -54,36 +50,32 @@ exports[`FraudReport renders just the input choices by default 1`] = `
 
 exports[`FraudReport renders the alert if "Yes" is selected 1`] = `
 <Fragment>
-  <form
-    id="employer-fraud-report-form"
-  >
-    <InputChoiceGroup
-      choices={
-        Array [
-          Object {
-            "checked": false,
-            "label": "No",
-            "value": "No",
-          },
-          Object {
-            "checked": true,
-            "label": "Yes",
-            "value": "Yes",
-          },
-        ]
-      }
-      label={
-        <ReviewHeading
-          level="2"
-        >
-          Do you have any reason to suspect fraud?
-        </ReviewHeading>
-      }
-      name="isFraud"
-      onChange={[Function]}
-      type="radio"
-    />
-  </form>
+  <InputChoiceGroup
+    choices={
+      Array [
+        Object {
+          "checked": false,
+          "label": "No",
+          "value": "No",
+        },
+        Object {
+          "checked": true,
+          "label": "Yes",
+          "value": "Yes",
+        },
+      ]
+    }
+    label={
+      <ReviewHeading
+        level="2"
+      >
+        Do you have any reason to suspect fraud?
+      </ReviewHeading>
+    }
+    name="isFraud"
+    onChange={[Function]}
+    type="radio"
+  />
   <ConditionalContent
     visible={true}
   >

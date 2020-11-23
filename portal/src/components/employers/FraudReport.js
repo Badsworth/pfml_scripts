@@ -24,30 +24,28 @@ const FraudReport = ({ onChange = () => {} }) => {
 
   return (
     <React.Fragment>
-      <form id="employer-fraud-report-form">
-        <InputChoiceGroup
-          label={
-            <ReviewHeading level="2">
-              {t("pages.employersClaimsReview.fraudReport.heading")}
-            </ReviewHeading>
-          }
-          choices={[
-            {
-              checked: isFraud === "No",
-              label: t("pages.employersClaimsReview.fraudReport.choiceNo"),
-              value: "No",
-            },
-            {
-              checked: isFraud === "Yes",
-              label: t("pages.employersClaimsReview.fraudReport.choiceYes"),
-              value: "Yes",
-            },
-          ]}
-          name="isFraud"
-          onChange={handleOnChange}
-          type="radio"
-        />
-      </form>
+      <InputChoiceGroup
+        label={
+          <ReviewHeading level="2">
+            {t("pages.employersClaimsReview.fraudReport.heading")}
+          </ReviewHeading>
+        }
+        choices={[
+          {
+            checked: isFraud === "No",
+            label: t("pages.employersClaimsReview.fraudReport.choiceNo"),
+            value: "No",
+          },
+          {
+            checked: isFraud === "Yes",
+            label: t("pages.employersClaimsReview.fraudReport.choiceYes"),
+            value: "Yes",
+          },
+        ]}
+        name="isFraud"
+        onChange={handleOnChange}
+        type="radio"
+      />
       <ConditionalContent visible={isFraud === "Yes"}>
         <React.Fragment>
           <Heading level="4" weight="bold" className="text-error">
