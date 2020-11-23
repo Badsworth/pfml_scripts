@@ -80,6 +80,7 @@ export const PaymentMethod = (props) => {
           {
             checked: payment_method === PaymentPreferenceMethod.ach,
             label: t("pages.claimsPaymentMethod.choiceAch"),
+            hint: t("pages.claimsPaymentMethod.choiceHintAch"),
             value: PaymentPreferenceMethod.ach,
           },
           {

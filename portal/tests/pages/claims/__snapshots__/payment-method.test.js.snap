@@ -10,6 +10,7 @@ exports[`PaymentMethod renders the page 1`] = `
       Array [
         Object {
           "checked": false,
+          "hint": "It can take us additional time to set up direct deposit with your bank. Your first payment might be a check sent to the address you listed as your mailing address.",
           "label": "Direct deposit into my bank account",
           "value": "ACH",
         },
@@ -21,7 +22,7 @@ exports[`PaymentMethod renders the page 1`] = `
         },
       ]
     }
-    hint="The first payment will go out in mid-January 2021. Your choice will be applied to any previous claims you have submitted."
+    hint="You can expect your first payment to arrive about 3 weeks after your leave starts. Your choice will be applied to any previous claims you have submitted."
     label="How do you want to get your weekly benefit?"
     name="payment_preferences[0].payment_method"
     onChange={[Function]}

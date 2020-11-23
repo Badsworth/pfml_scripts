@@ -848,7 +848,8 @@ const pages = {
     achTypeSavings: "$t(shared.achTypeSavings)",
     choiceAch: "$t(shared.paymentMethodAch)",
     choiceCheck: "$t(shared.paymentMethodCheck)",
-    choiceHintAch: "Requires a bank account",
+    choiceHintAch:
+      "It can take us additional time to set up direct deposit with your bank. Your first payment might be a check sent to the address you listed as your mailing address.",
     choiceHintCheck:
       "You will receive your checks at the address you listed as your mailing address.",
     routingNumberHint:
@@ -856,7 +857,7 @@ const pages = {
     routingNumberLabel: "Routing number",
     sectionLabel: "How do you want to get your weekly benefit?",
     sectionLabelHint:
-      "The first payment will go out in mid-January 2021. Your choice will be applied to any previous claims you have submitted.",
+      "You can expect your first payment to arrive about 3 weeks after your leave starts. Your choice will be applied to any previous claims you have submitted.",
     title: "Payment method",
   },
   claimsPreviousLeaves: {
