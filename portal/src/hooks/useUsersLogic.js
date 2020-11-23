@@ -1,11 +1,12 @@
 import {
-  NetworkError,
+  UnauthorizedError,
   UserNotFoundError,
   UserNotReceivedError,
 } from "../errors";
 import routes, { isClaimsRoute, isEmployersRoute } from "../routes";
 import { useMemo, useState } from "react";
 import UsersApi from "../api/UsersApi";
+import tracker from "../services/tracker";
 import { useRouter } from "next/router";
 
 /**
@@ -52,6 +53,8 @@ const useUsersLogic = ({ appErrorsLogic, isLoggedIn, portalFlow }) => {
    * and add user to application's state
    */
   const loadUser = async () => {
+    appErrorsLogic.clearErrors();
+
     if (!isLoggedIn) {
       throw new Error("Cannot load user before logging in to Cognito");
     }
@@ -59,26 +62,26 @@ const useUsersLogic = ({ appErrorsLogic, isLoggedIn, portalFlow }) => {
     if (user) return;
 
     try {
-      const { user, success } = await usersApi.getCurrentUser();
+      const { user } = await usersApi.getCurrentUser();
 
-      if (success && user) {
-        setUser(user);
-        appErrorsLogic.clearErrors();
-      } else {
+      if (!user) {
         throw new UserNotReceivedError("User not received in loadUser");
       }
-    } catch (error) {
-      // Show user not found error unless it's a network error
-      let errorToSet;
 
-      if (error instanceof NetworkError) {
-        errorToSet = error;
-      } else {
-        errorToSet = new UserNotFoundError();
-        // We still want to log original error
-        console.error(error);
+      setUser(user);
+    } catch (error) {
+      if (error instanceof UnauthorizedError) {
+        // API returns a 401 (UnauthorizedError) if they don't find a matching
+        // user in the database. This could mean our post-confirmation hook
+        // timed out or failed. We log them out, and redirect to the
+        // account verification page, which can help get them into the API.
+        tracker.noticeError(new UserNotFoundError(error.message));
+        portalFlow.goTo(routes.auth.verifyAccount, { "user-not-found": true });
+
+        return;
       }
-      appErrorsLogic.catchError(errorToSet);
+
+      appErrorsLogic.catchError(error);
     }
   };
 

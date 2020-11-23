@@ -58,7 +58,9 @@ export class UserNotReceivedError extends BasePortalError {
 }
 
 /**
- * There was an error when attempting to a request to the users/current api resource
+ * There was an error when attempting a request to the users/current api resource.
+ * This could happen if the Cognito user was created, but the user wasn't added
+ * in the API database.
  */
 export class UserNotFoundError extends BasePortalError {
   constructor(...params) {

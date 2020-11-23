@@ -1,4 +1,4 @@
-import { NetworkError, UserNotFoundError } from "../../src/errors";
+import { NetworkError, UnauthorizedError } from "../../src/errors";
 import User, { RoleDescription, UserRole } from "../../src/models/User";
 import AppErrorInfo from "../../src/models/AppErrorInfo";
 import AppErrorInfoCollection from "../../src/models/AppErrorInfoCollection";
@@ -16,7 +16,7 @@ jest.mock("../../src/api/UsersApi");
 jest.mock("next/router");
 
 describe("useUsersLogic", () => {
-  let appErrorsLogic, errorSpy, isLoggedIn, portalFlow, usersApi, usersLogic;
+  let appErrorsLogic, isLoggedIn, portalFlow, usersApi, usersLogic;
 
   async function preloadUser(user) {
     usersApi.getCurrentUser.mockResolvedValueOnce({
@@ -40,7 +40,7 @@ describe("useUsersLogic", () => {
     // jest.fn mocks that are used in the hook.
     usersApi = new UsersApi();
     isLoggedIn = true;
-    errorSpy = jest.spyOn(console, "error").mockImplementationOnce(jest.fn());
+    jest.spyOn(console, "error").mockImplementationOnce(jest.fn());
     renderHook();
   });
 
@@ -149,37 +149,40 @@ describe("useUsersLogic", () => {
       await expect(usersLogic.loadUser).rejects.toThrow(/Cannot load user/);
     });
 
-    describe("when api does not return success", () => {
-      beforeEach(async () => {
-        usersApi.getCurrentUser.mockResolvedValueOnce({ success: false });
-        await act(async () => {
-          await usersLogic.loadUser();
-        });
+    it("redirects to verify-account page when api responds with a 401 UnauthorizedError", async () => {
+      const goToSpy = jest.spyOn(portalFlow, "goTo");
+      usersApi.getCurrentUser.mockRejectedValueOnce(new UnauthorizedError());
+
+      await act(async () => {
+        await usersLogic.loadUser();
       });
 
-      it("logs UserNotReceivedError and UserNotFoundError", () => {
-        expect(errorSpy).toHaveBeenCalledTimes(2);
-      });
-
-      it("sets UserNotFoundError error", () => {
-        expect(appErrorsLogic.appErrors.items[0].name).toEqual(
-          UserNotFoundError.name
-        );
+      expect(appErrorsLogic.appErrors.items).toHaveLength(0);
+      expect(goToSpy).toHaveBeenCalledWith("/verify-account", {
+        "user-not-found": true,
       });
     });
 
-    describe("when api throws error", () => {
-      it("sets UserNotFoundError", async () => {
-        usersApi.getCurrentUser.mockResolvedValueOnce(new NetworkError());
+    it("throws UserNotReceivedError when api resolves with no user", async () => {
+      usersApi.getCurrentUser.mockResolvedValueOnce({ user: null });
 
-        await act(async () => {
-          await usersLogic.loadUser();
-        });
-
-        expect(appErrorsLogic.appErrors.items[0].name).toEqual(
-          UserNotFoundError.name
-        );
+      await act(async () => {
+        await usersLogic.loadUser();
       });
+
+      expect(appErrorsLogic.appErrors.items[0].message).toMatchInlineSnapshot(
+        `"Sorry, we were unable to retrieve your account. Please log out and try again. If this continues to happen, you may call the Paid Family Leave Contact Center at (833) 344‑7365"`
+      );
+    });
+
+    it("throws NetworkError when fetch request fails", async () => {
+      usersApi.getCurrentUser.mockRejectedValueOnce(new NetworkError());
+
+      await act(async () => {
+        await usersLogic.loadUser();
+      });
+
+      expect(appErrorsLogic.appErrors.items[0].name).toBe("NetworkError");
     });
   });
 

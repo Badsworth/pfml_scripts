@@ -65,7 +65,7 @@ const errors = {
   caughtError_NetworkError: "$t(shared.networkError)",
   caughtError_NotFoundError:
     "Sorry, we were unable to retrieve what you were looking for. Check that the link you are visiting is correct. If this continues to happen, please log out and try again.",
-  caughtError_UserNotFoundError:
+  caughtError_UserNotReceivedError:
     "Sorry, we were unable to retrieve your account. Please log out and try again. If this continues to happen, you may call the Paid Family Leave Contact Center at $t(shared.contactCenterPhoneNumber)",
   claims: {
     date_of_birth: {
@@ -506,6 +506,9 @@ const pages = {
       "We sent a 6 digit verification code to {{emailAddress}}. Enter the code to verify your email.",
     logInFooterLink: "$t(shared.backToLoginLink)",
     resendCodeLink: "Send a new code",
+    reverify:
+      "We need to re-verify your account by emailing you a confirmation code. Enter your details below.",
+    reverifyHeading: "Re-verify your account",
     title: "Verify your email address",
     usernameLabel: "$t(shared.usernameLabel)",
   },
