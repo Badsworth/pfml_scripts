@@ -28,4 +28,9 @@ module "tasks" {
   fineos_client_wscomposer_user_id           = "OASIS"
   fineos_client_oauth2_url                   = "https://prd-api.masspfml.fineos.com/oauth2/token"
   fineos_client_oauth2_client_id             = "5qcd2h1qlv4gpiqgugn2mrttkg"
+
+  fineos_aws_iam_role_arn         = "arn:aws:iam::133945341851:role/somprod-IAMRoles-CustomerAccountAccessRole-83KBPT56FTQP"
+  fineos_aws_iam_role_external_id = "8jFBtjr4UA@"
+
+  fineos_eligibility_feed_output_directory_path = "s3://fin-somprod-data-import/PRD/absence-eligibility/upload"
 }
