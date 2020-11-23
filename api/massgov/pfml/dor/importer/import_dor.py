@@ -1,10 +1,11 @@
 #!/usr/bin/python3
 #
-# Lambda function to import DOR data from S3 to PostgreSQL (RDS).
+# ECS task to import DOR data from S3 to PostgreSQL (RDS).
 #
 
 import os
 import resource
+import sys
 import uuid
 from dataclasses import asdict, dataclass, field
 from datetime import datetime
@@ -130,11 +131,13 @@ def handler(event=None, context=None):
         message = str(ie)
         report.message = message
         logger.error(message, extra={"report": asdict(report)})
+        sys.exit(1)
     except Exception as e:
         report.end = datetime.now().isoformat()
         message = f"Unexpected error during import run: {type(e)}"
         report.message = message
         logger.error(message, extra={"report": asdict(report)})
+        sys.exit(1)
 
 
 def filter_add_memory_usage(record):
