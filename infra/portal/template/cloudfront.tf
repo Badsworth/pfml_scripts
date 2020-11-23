@@ -104,7 +104,7 @@ resource "aws_cloudfront_distribution" "portal_web_distribution" {
     ssl_support_method = "sni-only"
 
     # If we're using cloudfront_default_certificate, TLSv1 must be specified.
-    minimum_protocol_version = "TLSv1.2_2018"
+    minimum_protocol_version = "TLSv1.2_2019"
   }
 
   restrictions {
