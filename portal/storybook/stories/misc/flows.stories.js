@@ -4,7 +4,7 @@ import Step from "src/models/Step";
 import machineConfig from "src/flows";
 
 export default {
-  title: "Flows/Portal",
+  title: "Misc/Flows",
 };
 
 /**
