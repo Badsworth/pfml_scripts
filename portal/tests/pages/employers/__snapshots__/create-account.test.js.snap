@@ -9,7 +9,7 @@ exports[`CreateAccount renders the page 1`] = `
     Create an employer account
   </Title>
   <Lead>
-    Welcome! If you're a Massachussetts employer and you manage leave for your team, you need to create an employer account with information from your company.
+    Welcome! If you’re a Massachusetts employer and you manage leave for your team, you need to create an employer account with information from your company.
   </Lead>
   <Details
     label="What you can do with this account"
@@ -27,7 +27,7 @@ exports[`CreateAccount renders the page 1`] = `
     />
   </Details>
   <InputText
-    hint="Use a work email or a shared email address so your colleagues can manage leave applications when you're out of the office."
+    hint="Use your work email address."
     label="Email address"
     name="username"
     onChange={[Function]}

@@ -455,7 +455,7 @@ const pages = {
   authForgotPassword: {
     codeLabel: "$t(shared.verificationCodeLabel)",
     lead:
-      "If an account exists for the email you provide, we will email a 6 digit verification code to it.",
+      "If an account exists for the email you provide, we will email a 6-digit verification code to it.",
     logInLink: "$t(shared.backToLoginLink)",
     submitButton: "Send code",
     title: "Forgot your password?",
@@ -480,7 +480,7 @@ const pages = {
   authResetPassword: {
     codeLabel: "$t(shared.verificationCodeLabel)",
     lead:
-      "If an account exists for the email you provide, we emailed a 6 digit verification code to it. Enter the code below to confirm your email and reset your password.",
+      "If an account exists for the email you provide, we emailed a 6-digit verification code to it. Enter the code below to confirm your email and reset your password.",
     lead_email:
       "If an account exists for {{emailAddress}}, we emailed a 6 digit verification code to it. Enter the code below to confirm your email and reset your password.",
     logInLink: "$t(shared.backToLoginLink)",
@@ -1264,13 +1264,12 @@ const pages = {
     einLabel: "Employer ID number",
     haveAnAccount: "Have an account? <log-in-link>Log in</log-in-link>",
     lead:
-      "Welcome! If you're a Massachussetts employer and you manage leave for your team, you need to create an employer account with information from your company.",
+      "Welcome! If you’re a Massachusetts employer and you manage leave for your team, you need to create an employer account with information from your company.",
     nextStep: "We'll send you a 6-digit code to verify your email address.",
     passwordHint: "$t(shared.passwordHint)",
     passwordLabel: "$t(shared.passwordLabel)",
     title: "Create an employer account",
-    usernameHint:
-      "Use a work email or a shared email address so your colleagues can manage leave applications when you're out of the office.",
+    usernameHint: "Use your work email address.",
     usernameLabel: "$t(shared.usernameLabel)",
   },
   employersAuthFinishAccountSetup: {
@@ -1448,7 +1447,7 @@ const pages = {
     applicationIdLabel: "Application ID",
     documentPostedDate: "Posted {{date}}",
     lead:
-      "A decision has been made for this application. You can download a copy of the decision notice for more details. No action is required, but your employee has the right to appeal this decision under Massachusetts regulations (458 CMR 2.14).",
+      "A decision has been made for this application. No action is required of you, but you can download a copy of the decision notice for details. Your employee has the right to appeal this decision under Massachusetts regulations (<dfml-regulations-link>458 CMR 2.14</dfml-regulations-link>).",
     leaveDetailsLabel: "$t(shared.claimsLeaveDetailsTitle)",
     leaveDurationLabel: "$t(shared.claimsLeaveDurationTitle)",
     leaveReasonLabel: "Leave type",
@@ -1479,7 +1478,7 @@ const pages = {
       "When an employee applies for leave, you’ll receive email updates about their application status and any steps you need to take. We’ll include everyone who has an employer account with your company in case you’re out of the office.",
     checkEmailTitle: "Check your email regularly",
     learnMoreLinks:
-      "<ul><li><mass-employer-role-link>Your role as a Massachusetts employer</mass-employer-role-link></li><li><application-timeline-link>Application timeline</application-timeline-link></li><li><reimbursements-link>Reimbursements</reimbursements-link></li><li><employer-pfml-guide-link>Employer's guide to Paid Family and Medical Leave (PFML)</employer-pfml-guide-link></li></ul>",
+      "<ul><li><mass-employer-role-link>Your role as a Massachusetts employer</mass-employer-role-link></li><li><application-timeline-link>Application timeline</application-timeline-link></li><li><reimbursements-link>Employer reimbursements</reimbursements-link></li><li><employer-pfml-guide-link>Employer's guide to Paid Family and Medical Leave (PFML)</employer-pfml-guide-link></li></ul>",
     learnMoreTitle: "Learn more",
     respondBody:
       "When an application is submitted, you have 10 business days to open the direct link from your email and review it online. You can comment on the application, approve or deny it, and report fraud if needed. Reviewing takes about 10 minutes. If we don’t hear from anyone at your company before the deadline, we’ll process the application solely based on the information the employee provided.",
@@ -1520,9 +1519,9 @@ const pages = {
     applicationUsageIntro: "We need this information to:",
     applicationUsageList_employer: [
       "Check eligibility for coverage",
-      "Determine your employee's leave time and benefit amount",
+      "Determine your employee’s benefit amount",
       "Administer the program and meet reporting requirements",
-      "Reduce fraud",
+      "Give you the best service possible",
     ],
     applicationUsageList_user: [
       "Check your eligibility for coverage",

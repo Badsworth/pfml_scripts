@@ -13,6 +13,7 @@ import Title from "../../../components/Title";
 import findKeyByValue from "../../../utils/findKeyByValue";
 import formatDateRange from "../../../utils/formatDateRange";
 import { get } from "lodash";
+import routes from "../../../../src/routes";
 import withEmployerClaim from "../../../hoc/withEmployerClaim";
 
 export const Status = (props) => {
@@ -33,7 +34,18 @@ export const Status = (props) => {
         {t("pages.employersClaimsStatus.title", { name: claim.fullName })}
       </Title>
       <Lead>
-        <Trans i18nKey="pages.employersClaimsStatus.lead" />
+        <Trans
+          i18nKey="pages.employersClaimsStatus.lead"
+          components={{
+            "dfml-regulations-link": (
+              <a
+                target="_blank"
+                rel="noopener"
+                href={routes.external.massgov.dfmlRegulations}
+              />
+            ),
+          }}
+        />
       </Lead>
       <Heading level="2">
         {t("pages.employersClaimsStatus.leaveDetailsLabel")}

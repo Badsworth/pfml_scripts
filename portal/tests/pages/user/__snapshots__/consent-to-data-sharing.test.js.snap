@@ -115,7 +115,7 @@ exports[`ConsentToDataSharing shows the correct contents for employers 1`] = `
         <li
           key="1"
         >
-          Determine your employee's leave time and benefit amount
+          Determine your employee’s benefit amount
         </li>
         <li
           key="2"
@@ -125,7 +125,7 @@ exports[`ConsentToDataSharing shows the correct contents for employers 1`] = `
         <li
           key="3"
         >
-          Reduce fraud
+          Give you the best service possible
         </li>
       </ul>
     </AccordionItem>

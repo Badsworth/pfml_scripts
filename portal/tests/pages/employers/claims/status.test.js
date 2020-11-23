@@ -4,6 +4,7 @@ import {
   testHook,
 } from "../../../test-utils";
 import Status from "../../../../src/pages/employers/claims/status";
+import { Trans } from "react-i18next";
 import useAppLogic from "../../../../src/hooks/useAppLogic";
 
 jest.mock("../../../../src/hooks/useAppLogic");
@@ -29,8 +30,9 @@ describe("Status", () => {
     }));
   });
 
-  it("renders the page", () => {
+  it("renders the page and correct content in Trans component", () => {
     expect(wrapper).toMatchSnapshot();
+    expect(wrapper.find(Trans)).toMatchSnapshot();
   });
 
   it("shows the claimant name as the title", () => {

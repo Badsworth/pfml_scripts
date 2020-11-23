@@ -80,6 +80,8 @@ const routes = {
       consentAgreement:
         "https://www.mass.gov/info-details/massachusetts-department-of-family-and-medical-leave-informed-consent-agreement",
       dfml: "https://mass.gov/dfml",
+      dfmlRegulations:
+        "https://www.mass.gov/regulations/458-CMR-200-department-of-family-and-medical-leave-1",
       employersGuide:
         "https://www.mass.gov/guides/employers-guide-to-paid-family-and-medical-leave",
       federalEmployerIdNumber:
