@@ -6,13 +6,22 @@ data "aws_ecr_repository" "app" {
 }
 
 resource "aws_ecs_service" "app" {
-  name                              = "${local.app_name}-${var.environment_name}"
-  task_definition                   = aws_ecs_task_definition.app.arn
-  cluster                           = var.service_ecs_cluster_arn
-  launch_type                       = "FARGATE"
-  platform_version                  = "1.4.0"
-  desired_count                     = var.service_app_count
-  health_check_grace_period_seconds = 300 # 5 minutes
+  name             = "${local.app_name}-${var.environment_name}"
+  task_definition  = aws_ecs_task_definition.app.arn
+  cluster          = var.service_ecs_cluster_arn
+  launch_type      = "FARGATE"
+  platform_version = "1.4.0"
+  desired_count    = var.service_app_count
+
+  # WORKAROUND: Increase health check grace period to 5 minutes to account for
+  # lag time in NLB starting to send requests to new tasks.
+  health_check_grace_period_seconds = 300
+
+  # Allow changes to the desired_count without differences in terraform plan.
+  # This allows autoscaling to manage the desired count for us.
+  lifecycle {
+    ignore_changes = [desired_count]
+  }
 
   network_configuration {
     assign_public_ip = false

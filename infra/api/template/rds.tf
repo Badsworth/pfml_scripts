@@ -120,7 +120,11 @@ resource "aws_db_instance" "default" {
     backup        = var.environment_name == "prod" ? "prod" : "nonprod"
     "Patch Group" = var.environment_name == "prod" ? "prod-linux1" : "nonprod-linux1"
     schedulev2    = var.environment_name == "test" ? "0700_2400_weekdays" : "na"
-    # schedulev2 is an EOTSS-required custom tag. It configures a mandatory scheduled downtime period for test only.
+    # schedulev2 is an EOTSS-required custom tag. It configures a mandatory scheduled downtime
+    # period for test only.
+    #
+    # If you change this schedule, please update the ECS autoscaling policy in app_autoscaling.tf.
+    #
     # See https://lwd.atlassian.net/wiki/spaces/DD/pages/275611773/RDS+databases.
   })
 }
