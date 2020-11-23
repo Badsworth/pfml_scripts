@@ -28,7 +28,7 @@ def load_all(db_session: db.Session, fineos: AbstractFINEOSClient) -> LoadEmploy
     employers = employers_with_no_fineos_id(db_session)
 
     employers_with_logging = massgov.pfml.util.logging.log_every(
-        logger, employers, count=1000, start_time=start_time
+        logger, employers, count=100, start_time=start_time
     )
 
     for employer in employers_with_logging:

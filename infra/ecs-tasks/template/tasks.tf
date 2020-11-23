@@ -130,6 +130,7 @@ data "template_file" "task_container_definitions" {
     db_host                    = data.aws_db_instance.default.address
     db_name                    = data.aws_db_instance.default.db_name
     db_username                = data.aws_db_instance.default.master_username
+    logging_level              = var.logging_level
     docker_image               = "${data.aws_ecr_repository.app.repository_url}:${var.service_docker_tag}"
     environment_name           = var.environment_name
     cloudwatch_logs_group_name = aws_cloudwatch_log_group.ecs_tasks.name

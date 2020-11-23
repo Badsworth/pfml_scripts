@@ -27,6 +27,7 @@
       { "name": "DB_HOST", "value": "${db_host}" },
       { "name": "DB_NAME", "value": "${db_name}" },
       { "name": "DB_USERNAME", "value": "${db_username}" },
+      { "name": "LOGGING_LEVEL", "value": "${logging_level}" },
 
       { "name": "FINEOS_CLIENT_CUSTOMER_API_URL", "value": "${fineos_client_customer_api_url}" },
       { "name": "FINEOS_CLIENT_INTEGRATION_SERVICES_API_URL", "value": "${fineos_client_integration_services_api_url}" },

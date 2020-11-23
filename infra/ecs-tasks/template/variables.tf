@@ -72,3 +72,9 @@ variable "fineos_eligibility_feed_output_directory_path" {
   type        = string
   default     = ""
 }
+
+variable "logging_level" {
+  description = "Logging level override"
+  type        = string
+  default     = ""
+}
