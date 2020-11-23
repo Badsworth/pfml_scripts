@@ -33,25 +33,6 @@ resource "aws_sns_topic_subscription" "high-priority" {
 
 resource "aws_cloudwatch_metric_alarm" "api_cpu_warn" {
   alarm_name        = "${local.app_name}-${var.environment_name}_CPU-Warning"
-  alarm_description = "P95 CPU usage by API tasks exceeds 60%"
-  namespace         = "ECS/ContainerInsights"
-  dimensions = {
-    ClusterName          = var.environment_name
-    TaskDefinitionFamily = local.app_name
-  }
-  extended_statistic  = "p95"
-  metric_name         = "CpuUtilized"
-  comparison_operator = "GreaterThanOrEqualToThreshold"
-  threshold           = "60"
-  evaluation_periods  = "5"  # look back at the last five minutes
-  datapoints_to_alarm = "3"  # any three one-minute periods
-  period              = "60" # polling on one-minute intervals
-  actions_enabled     = true
-  alarm_actions       = [aws_sns_topic.api-low-priority-alerts-topic.arn]
-}
-
-resource "aws_cloudwatch_metric_alarm" "api_cpu_crit" {
-  alarm_name        = "${local.app_name}-${var.environment_name}_CPU-Critical"
   alarm_description = "P95 CPU usage by API tasks exceeds 80%"
   namespace         = "ECS/ContainerInsights"
   dimensions = {
@@ -66,6 +47,25 @@ resource "aws_cloudwatch_metric_alarm" "api_cpu_crit" {
   datapoints_to_alarm = "3"  # any three one-minute periods
   period              = "60" # polling on one-minute intervals
   actions_enabled     = true
+  alarm_actions       = [aws_sns_topic.api-low-priority-alerts-topic.arn]
+}
+
+resource "aws_cloudwatch_metric_alarm" "api_cpu_crit" {
+  alarm_name        = "${local.app_name}-${var.environment_name}_CPU-Critical"
+  alarm_description = "P95 CPU usage by API tasks exceeds 90%"
+  namespace         = "ECS/ContainerInsights"
+  dimensions = {
+    ClusterName          = var.environment_name
+    TaskDefinitionFamily = local.app_name
+  }
+  extended_statistic  = "p95"
+  metric_name         = "CpuUtilized"
+  comparison_operator = "GreaterThanOrEqualToThreshold"
+  threshold           = "90"
+  evaluation_periods  = "5"  # look back at the last five minutes
+  datapoints_to_alarm = "3"  # any three one-minute periods
+  period              = "60" # polling on one-minute intervals
+  actions_enabled     = true
   alarm_actions       = [aws_sns_topic.api-high-priority-alerts-topic.arn]
   ok_actions          = [aws_sns_topic.api-high-priority-alerts-topic.arn]
 }
@@ -74,7 +74,7 @@ resource "aws_cloudwatch_metric_alarm" "api_cpu_crit" {
 
 resource "aws_cloudwatch_metric_alarm" "api_ram_warn" {
   alarm_name        = "${local.app_name}-${var.environment_name}_RAM-Warning"
-  alarm_description = "P95 RAM usage by API tasks exceeds 50% container allotment"
+  alarm_description = "P95 RAM usage by API tasks exceeds 90% container allotment"
   namespace         = "ECS/ContainerInsights"
   dimensions = {
     ClusterName          = var.environment_name
@@ -83,7 +83,7 @@ resource "aws_cloudwatch_metric_alarm" "api_ram_warn" {
   extended_statistic  = "p95"
   metric_name         = "MemoryUtilized" # units: MiB
   comparison_operator = "GreaterThanOrEqualToThreshold"
-  threshold           = (data.template_file.container_definitions.vars.memory * 0.50)
+  threshold           = (data.template_file.container_definitions.vars.memory * 0.90)
   evaluation_periods  = "5"  # look back at the last five minutes
   datapoints_to_alarm = "3"  # any three one-minute periods
   period              = "60" # polling on one-minute intervals
@@ -93,7 +93,7 @@ resource "aws_cloudwatch_metric_alarm" "api_ram_warn" {
 
 resource "aws_cloudwatch_metric_alarm" "api_ram_crit" {
   alarm_name        = "${local.app_name}-${var.environment_name}_RAM-Critical"
-  alarm_description = "P95 RAM usage by API tasks exceeds 75% container allotment"
+  alarm_description = "P95 RAM usage by API tasks exceeds 95% container allotment"
   namespace         = "ECS/ContainerInsights"
   dimensions = {
     ClusterName          = var.environment_name
@@ -102,7 +102,7 @@ resource "aws_cloudwatch_metric_alarm" "api_ram_crit" {
   extended_statistic  = "p95"
   metric_name         = "MemoryUtilized" # units: MiB
   comparison_operator = "GreaterThanOrEqualToThreshold"
-  threshold           = (data.template_file.container_definitions.vars.memory * 0.75)
+  threshold           = (data.template_file.container_definitions.vars.memory * 0.95)
   evaluation_periods  = "5"  # look back at the last five minutes
   datapoints_to_alarm = "3"  # any three one-minute periods
   period              = "60" # polling on one-minute intervals
