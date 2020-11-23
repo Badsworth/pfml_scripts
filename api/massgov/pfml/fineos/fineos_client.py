@@ -79,10 +79,13 @@ class FINEOSClient(client.AbstractFINEOSClient):
     """FINEOS API client."""
 
     integration_services_api_url: str
-    wscomposer_url: str
-    wscomposer_user_id: str
     group_client_api_url: str
     customer_api_url: str
+    wscomposer_url: str
+    wscomposer_user_id: str
+    oauth2_url: str
+    client_id: str
+    client_secret: str
     request_count: int
     oauth_session: requests_oauthlib.OAuth2Session
 
@@ -103,32 +106,38 @@ class FINEOSClient(client.AbstractFINEOSClient):
         self.wscomposer_url = wscomposer_url
         self.wscomposer_user_id = wscomposer_user_id
         self.oauth2_url = oauth2_url
+        self.client_id = client_id
+        self.client_secret = client_secret
         self.request_count = 0
         logger.info(
-            "customer_api_url %s, wscomposer_url %s, group_client_api_url %s, integration_services_api_url %s",
+            "customer_api_url %s, wscomposer_url %s, group_client_api_url %s, "
+            "integration_services_api_url %s",
             customer_api_url,
             wscomposer_url,
             group_client_api_url,
             integration_services_api_url,
         )
-        self._init_oauth_session(oauth2_url, client_id, client_secret)
+        self._init_oauth_session()
 
-    def _init_oauth_session(self, token_url, client_id, client_secret):
+    def _init_oauth_session(self):
         """Set up an OAuth session and get a token."""
-        backend = oauthlib.oauth2.BackendApplicationClient(client_id=client_id)
+        backend = oauthlib.oauth2.BackendApplicationClient(client_id=self.client_id)
         session = requests_oauthlib.OAuth2Session(client=backend, scope="service-gateway/all")
 
         try:
             token = session.fetch_token(
-                token_url=token_url, client_id=client_id, client_secret=client_secret, timeout=5,
+                token_url=self.oauth2_url,
+                client_id=self.client_id,
+                client_secret=self.client_secret,
+                timeout=5,
             )
         except oauthlib.oauth2.OAuth2Error as ex:
-            logger.error("POST %s => %r", token_url, ex)
+            logger.error("POST %s => %r", self.oauth2_url, ex)
             raise exception.FINEOSClientError(cause=ex)
 
         logger.info(
             "POST %s => type %s, expires %is (at %s)",
-            token_url,
+            self.oauth2_url,
             token["token_type"],
             token["expires_in"],
             datetime.datetime.utcfromtimestamp(token["expires_at"]),
@@ -145,10 +154,15 @@ class FINEOSClient(client.AbstractFINEOSClient):
     ) -> requests.Response:
         """Make a request and handle errors."""
         self.request_count += 1
+        has_flask_context = flask.has_request_context()
         logger.debug("%s %s start", method, url)
         try:
-            has_flask_context = flask.has_request_context()
-            response = request_function(method, url, timeout=(6.1, 60), headers=headers, **args)
+            try:
+                response = request_function(method, url, timeout=(6.1, 60), headers=headers, **args)
+            except oauthlib.oauth2.TokenExpiredError:
+                logger.info("token expired, starting new OAuth session")
+                self._init_oauth_session()
+                response = request_function(method, url, timeout=(6.1, 60), headers=headers, **args)
         except requests.exceptions.RequestException as ex:
             logger.error("%s %s => %r", method, url, ex)
             # Make sure New Relic records errors from FINEOS, even if the API does not ultimately
