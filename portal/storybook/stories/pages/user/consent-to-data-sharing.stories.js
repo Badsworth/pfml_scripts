@@ -7,10 +7,27 @@ export default {
   component: ConsentToDataSharing,
 };
 
-export const Page = () => {
+export const Page = (args) => {
+  let user = new User();
+  if (args.query === "Employer Portal") {
+    user = new User({ roles: [{ role_description: "Employer" }] });
+  }
+
   const appLogic = {
-    users: {},
+    users: {
+      updateUser: () => {},
+    },
   };
 
-  return <ConsentToDataSharing appLogic={appLogic} user={new User()} />;
+  return <ConsentToDataSharing appLogic={appLogic} user={user} />;
+};
+
+Page.argTypes = {
+  query: {
+    defaultValue: "Default",
+    control: {
+      type: "radio",
+      options: ["Claimant Portal", "Employer Portal"],
+    },
+  },
 };
