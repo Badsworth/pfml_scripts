@@ -72,7 +72,7 @@ RUN poetry build --format wheel && poetry run pip install dist/*.whl
 # Application only
 #-------------------------------------------------------------------------------
 # now copy over just the installed components into the final image
-FROM python:3.8-slim as app
+FROM scratch as app
 
 ARG RUN_USER
 USER ${RUN_USER}
@@ -87,6 +87,21 @@ COPY --from=app-build /usr/lib/gnupg2/* /usr/lib/gnupg2/
 COPY --from=app-build /usr/lib/x86_64-linux-gnu/* /usr/lib/x86_64-linux-gnu/
 COPY --from=app-build /usr/bin/gpg /usr/bin/gpg
 COPY --from=app-build /usr/bin/gpg-agent /usr/bin/gpg-agent
+
+COPY --from=app-build /etc/ssl/* /etc/ssl/
+COPY --from=app-build /usr/share/ca-certificates/* /usr/share/ca-certificates/
+COPY --from=app-build /usr/local/bin/python* /usr/local/bin/
+
+# Include etc files that link to /usr/local/lib/
+COPY --from=app-build /etc/ld.so.conf /etc/ld.so.cache /etc/
+COPY --from=app-build /etc/ld.so.conf.d/ /etc/ld.so.conf.d/
+
+# Include required libs
+COPY --from=app-build /lib/* /lib/
+COPY --from=app-build /usr/local/lib/ /usr/local/lib/
+COPY --from=app-build /usr/local/include/python* /usr/local/include/
+COPY --from=app-build /lib64/* /lib64/
+COPY --from=app-build --chown=${RUN_USER} /tmp/ /tmp/
 
 ENV PATH="/app/.venv/bin:$PATH"
 

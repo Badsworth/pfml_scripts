@@ -15,3 +15,5 @@ dist
 *.egg-info
 jwks.json
 lambdas/
+Dockerfile
+docker-compose*
