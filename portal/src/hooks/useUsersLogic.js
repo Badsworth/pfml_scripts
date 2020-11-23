@@ -3,7 +3,7 @@ import {
   UserNotFoundError,
   UserNotReceivedError,
 } from "../errors";
-import routes, { isClaimsRoute, isEmployersRoute } from "../routes";
+import routes, { isApplicationsRoute, isEmployersRoute } from "../routes";
 import { useMemo, useState } from "react";
 import UsersApi from "../api/UsersApi";
 import { useRouter } from "next/router";
@@ -107,11 +107,11 @@ const useUsersLogic = ({ appErrorsLogic, isLoggedIn, portalFlow }) => {
     // Portal currently does not support hybrid account (both Employer AND Claimant account)
     // If user has Employer role, they cannot access Claimant Portal regardless of multiple roles
     if (!user.hasEmployerRole && isEmployersRoute(route)) {
-      router.push(routes.claims.dashboard);
+      router.push(routes.applications.dashboard);
       return;
     }
 
-    if (user.hasEmployerRole && isClaimsRoute(route)) {
+    if (user.hasEmployerRole && isApplicationsRoute(route)) {
       router.push(routes.employers.dashboard);
     }
   };

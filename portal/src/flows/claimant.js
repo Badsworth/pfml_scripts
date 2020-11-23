@@ -13,34 +13,34 @@
  */
 import { EmploymentStatus, WorkPatternType } from "../models/Claim";
 import { ClaimSteps } from "../models/Step";
-import { fields as addressFields } from "../pages/claims/address";
-import { fields as dateOfBirthFields } from "../pages/claims/date-of-birth";
-import { fields as dateOfChildFields } from "../pages/claims/date-of-child";
-import { fields as employerBenefitDetailsFields } from "../pages/claims/employer-benefit-details";
-import { fields as employerBenefitsFields } from "../pages/claims/employer-benefits";
-import { fields as employmentStatusFields } from "../pages/claims/employment-status";
+import { fields as addressFields } from "../pages/applications/address";
+import { fields as dateOfBirthFields } from "../pages/applications/date-of-birth";
+import { fields as dateOfChildFields } from "../pages/applications/date-of-child";
+import { fields as employerBenefitDetailsFields } from "../pages/applications/employer-benefit-details";
+import { fields as employerBenefitsFields } from "../pages/applications/employer-benefits";
+import { fields as employmentStatusFields } from "../pages/applications/employment-status";
 import { get } from "lodash";
-import { fields as intermittentFrequencyFields } from "../pages/claims/intermittent-frequency";
+import { fields as intermittentFrequencyFields } from "../pages/applications/intermittent-frequency";
 import { isFeatureEnabled } from "../services/featureFlags";
-import { fields as leavePeriodContinuousFields } from "../pages/claims/leave-period-continuous";
-import { fields as leavePeriodIntermittentFields } from "../pages/claims/leave-period-intermittent";
-import { fields as leavePeriodReducedScheduleFields } from "../pages/claims/leave-period-reduced-schedule";
-import { fields as leaveReasonFields } from "../pages/claims/leave-reason";
-import { fields as nameFields } from "../pages/claims/name";
-import { fields as notifiedEmployerFields } from "../pages/claims/notified-employer";
-import { fields as otherIncomesDetailsFields } from "../pages/claims/other-incomes-details";
-import { fields as otherIncomesFields } from "../pages/claims/other-incomes";
-import { fields as paymentMethodFields } from "../pages/claims/payment-method";
-import { fields as previousLeavesDetailsFields } from "../pages/claims/previous-leaves-details";
-import { fields as previousLeavesFields } from "../pages/claims/previous-leaves";
-import { fields as reasonPregnancyFields } from "../pages/claims/reason-pregnancy";
-import { fields as reducedLeaveScheduleFields } from "../pages/claims/reduced-leave-schedule";
+import { fields as leavePeriodContinuousFields } from "../pages/applications/leave-period-continuous";
+import { fields as leavePeriodIntermittentFields } from "../pages/applications/leave-period-intermittent";
+import { fields as leavePeriodReducedScheduleFields } from "../pages/applications/leave-period-reduced-schedule";
+import { fields as leaveReasonFields } from "../pages/applications/leave-reason";
+import { fields as nameFields } from "../pages/applications/name";
+import { fields as notifiedEmployerFields } from "../pages/applications/notified-employer";
+import { fields as otherIncomesDetailsFields } from "../pages/applications/other-incomes-details";
+import { fields as otherIncomesFields } from "../pages/applications/other-incomes";
+import { fields as paymentMethodFields } from "../pages/applications/payment-method";
+import { fields as previousLeavesDetailsFields } from "../pages/applications/previous-leaves-details";
+import { fields as previousLeavesFields } from "../pages/applications/previous-leaves";
+import { fields as reasonPregnancyFields } from "../pages/applications/reason-pregnancy";
+import { fields as reducedLeaveScheduleFields } from "../pages/applications/reduced-leave-schedule";
 import routes from "../routes";
-import { fields as scheduleFixedFields } from "../pages/claims/schedule-fixed";
-import { fields as scheduleVariableFields } from "../pages/claims/schedule-variable";
-import { fields as ssnFields } from "../pages/claims/ssn";
-import { fields as stateIdFields } from "../pages/claims/state-id";
-import { fields as workPatternTypeFields } from "../pages/claims/work-pattern-type";
+import { fields as scheduleFixedFields } from "../pages/applications/schedule-fixed";
+import { fields as scheduleVariableFields } from "../pages/applications/schedule-variable";
+import { fields as ssnFields } from "../pages/applications/ssn";
+import { fields as stateIdFields } from "../pages/applications/state-id";
+import { fields as workPatternTypeFields } from "../pages/applications/work-pattern-type";
 
 /**
  * @see https://xstate.js.org/docs/guides/guards.html
@@ -69,32 +69,32 @@ export const guards = {
 
 export default {
   states: {
-    [routes.claims.dashboard]: {
+    [routes.applications.dashboard]: {
       meta: {},
       on: {
-        START: routes.claims.start,
+        START: routes.applications.start,
         CONSENT_TO_DATA_SHARING: routes.user.consentToDataSharing,
       },
     },
-    [routes.claims.start]: {
+    [routes.applications.start]: {
       meta: {},
       on: {
-        CREATE_CLAIM: routes.claims.checklist,
+        CREATE_CLAIM: routes.applications.checklist,
       },
     },
     [routes.user.consentToDataSharing]: {
       meta: {},
       on: {
-        CONTINUE: routes.claims.dashboard,
+        CONTINUE: routes.applications.dashboard,
       },
     },
-    [routes.applications]: {
+    [routes.applications.index]: {
       meta: {},
       on: {
-        CONTINUE: routes.claims.uploadDocsOptions,
+        CONTINUE: routes.applications.uploadDocsOptions,
       },
     },
-    [routes.claims.checklist]: {
+    [routes.applications.checklist]: {
       meta: {},
       on: {
         // These are aids for our unit tests to support
@@ -102,65 +102,65 @@ export default {
         // in the checklist should have a transition
         // that points to the expected route a user is
         // directed to when they enter the Step.
-        VERIFY_ID: routes.claims.name,
-        LEAVE_DETAILS: routes.claims.leaveReason,
-        OTHER_LEAVE: routes.claims.employerBenefits,
-        EMPLOYER_INFORMATION: routes.claims.employmentStatus,
-        PAYMENT: routes.claims.paymentMethod,
+        VERIFY_ID: routes.applications.name,
+        LEAVE_DETAILS: routes.applications.leaveReason,
+        OTHER_LEAVE: routes.applications.employerBenefits,
+        EMPLOYER_INFORMATION: routes.applications.employmentStatus,
+        PAYMENT: routes.applications.paymentMethod,
         REVIEW_AND_CONFIRM: [
           {
-            target: routes.claims.bondingLeaveAttestation,
+            target: routes.applications.bondingLeaveAttestation,
             cond: "isBondingLeave",
           },
-          { target: routes.claims.review },
+          { target: routes.applications.review },
         ],
-        UPLOAD_CERTIFICATION: routes.claims.uploadCertification,
-        UPLOAD_ID: routes.claims.uploadId,
+        UPLOAD_CERTIFICATION: routes.applications.uploadCertification,
+        UPLOAD_ID: routes.applications.uploadId,
       },
     },
-    [routes.claims.success]: {
+    [routes.applications.success]: {
       meta: {},
       on: {
-        CONTINUE: routes.claims.dashboard,
+        CONTINUE: routes.applications.dashboard,
       },
     },
-    [routes.claims.name]: {
+    [routes.applications.name]: {
       meta: {
         step: ClaimSteps.verifyId,
         fields: nameFields,
       },
       on: {
-        CONTINUE: routes.claims.address,
+        CONTINUE: routes.applications.address,
       },
     },
-    [routes.claims.address]: {
+    [routes.applications.address]: {
       meta: {
         step: ClaimSteps.verifyId,
         fields: addressFields,
       },
       on: {
-        CONTINUE: routes.claims.dateOfBirth,
+        CONTINUE: routes.applications.dateOfBirth,
       },
     },
-    [routes.claims.dateOfBirth]: {
+    [routes.applications.dateOfBirth]: {
       meta: {
         step: ClaimSteps.verifyId,
         fields: dateOfBirthFields,
       },
       on: {
-        CONTINUE: routes.claims.stateId,
+        CONTINUE: routes.applications.stateId,
       },
     },
-    [routes.claims.stateId]: {
+    [routes.applications.stateId]: {
       meta: {
         step: ClaimSteps.verifyId,
         fields: stateIdFields,
       },
       on: {
-        CONTINUE: routes.claims.ssn,
+        CONTINUE: routes.applications.ssn,
       },
     },
-    [routes.claims.uploadId]: {
+    [routes.applications.uploadId]: {
       meta: {
         step: ClaimSteps.uploadId,
         // user fields are not currently evaluated
@@ -170,25 +170,25 @@ export default {
       on: {
         CONTINUE: [
           {
-            target: routes.applications,
+            target: routes.applications.index,
             cond: "isCompleted",
           },
           {
-            target: routes.claims.checklist,
+            target: routes.applications.checklist,
           },
         ],
       },
     },
-    [routes.claims.ssn]: {
+    [routes.applications.ssn]: {
       meta: {
         step: ClaimSteps.verifyId,
         fields: ssnFields,
       },
       on: {
-        CONTINUE: routes.claims.checklist,
+        CONTINUE: routes.applications.checklist,
       },
     },
-    [routes.claims.leaveReason]: {
+    [routes.applications.leaveReason]: {
       meta: {
         step: ClaimSteps.leaveDetails,
         fields: leaveReasonFields,
@@ -196,39 +196,39 @@ export default {
       on: {
         CONTINUE: [
           {
-            target: routes.claims.reasonPregnancy,
+            target: routes.applications.reasonPregnancy,
             cond: "isMedicalLeave",
           },
           {
-            target: routes.claims.dateOfChild,
+            target: routes.applications.dateOfChild,
             cond: "isBondingLeave",
           },
           {
-            target: routes.claims.checklist,
+            target: routes.applications.checklist,
           },
         ],
       },
     },
-    [routes.claims.reducedLeaveSchedule]: {
+    [routes.applications.reducedLeaveSchedule]: {
       meta: {
         applicableRules: ["min_reduced_leave_minutes"],
         step: ClaimSteps.leaveDetails,
         fields: reducedLeaveScheduleFields,
       },
       on: {
-        CONTINUE: routes.claims.leavePeriodIntermittent,
+        CONTINUE: routes.applications.leavePeriodIntermittent,
       },
     },
-    [routes.claims.reasonPregnancy]: {
+    [routes.applications.reasonPregnancy]: {
       meta: {
         step: ClaimSteps.leaveDetails,
         fields: reasonPregnancyFields,
       },
       on: {
-        CONTINUE: routes.claims.leavePeriodContinuous,
+        CONTINUE: routes.applications.leavePeriodContinuous,
       },
     },
-    [routes.claims.uploadCertification]: {
+    [routes.applications.uploadCertification]: {
       meta: {
         step: ClaimSteps.uploadCertification,
         fields: [],
@@ -236,34 +236,34 @@ export default {
       on: {
         CONTINUE: [
           {
-            target: routes.applications,
+            target: routes.applications.index,
             cond: "isCompleted",
           },
           {
-            target: routes.claims.checklist,
+            target: routes.applications.checklist,
           },
         ],
       },
     },
-    [routes.claims.dateOfChild]: {
+    [routes.applications.dateOfChild]: {
       meta: {
         step: ClaimSteps.leaveDetails,
         fields: dateOfChildFields,
       },
       on: {
-        CONTINUE: routes.claims.leavePeriodContinuous,
+        CONTINUE: routes.applications.leavePeriodContinuous,
       },
     },
-    [routes.claims.leavePeriodContinuous]: {
+    [routes.applications.leavePeriodContinuous]: {
       meta: {
         step: ClaimSteps.leaveDetails,
         fields: leavePeriodContinuousFields,
       },
       on: {
-        CONTINUE: routes.claims.leavePeriodReducedSchedule,
+        CONTINUE: routes.applications.leavePeriodReducedSchedule,
       },
     },
-    [routes.claims.leavePeriodReducedSchedule]: {
+    [routes.applications.leavePeriodReducedSchedule]: {
       meta: {
         // This page is after the Continuous page, so on this page is
         // where we can surface validation issues related to the following rules:
@@ -274,16 +274,16 @@ export default {
       on: {
         CONTINUE: [
           {
-            target: routes.claims.reducedLeaveSchedule,
+            target: routes.applications.reducedLeaveSchedule,
             cond: "hasReducedScheduleLeavePeriods",
           },
           {
-            target: routes.claims.leavePeriodIntermittent,
+            target: routes.applications.leavePeriodIntermittent,
           },
         ],
       },
     },
-    [routes.claims.leavePeriodIntermittent]: {
+    [routes.applications.leavePeriodIntermittent]: {
       meta: {
         step: ClaimSteps.leaveDetails,
         fields: leavePeriodIntermittentFields,
@@ -298,25 +298,25 @@ export default {
       on: {
         CONTINUE: [
           {
-            target: routes.claims.intermittentFrequency,
+            target: routes.applications.intermittentFrequency,
             cond: "hasIntermittentLeavePeriods",
           },
           {
-            target: routes.claims.checklist,
+            target: routes.applications.checklist,
           },
         ],
       },
     },
-    [routes.claims.intermittentFrequency]: {
+    [routes.applications.intermittentFrequency]: {
       meta: {
         step: ClaimSteps.leaveDetails,
         fields: intermittentFrequencyFields,
       },
       on: {
-        CONTINUE: routes.claims.checklist,
+        CONTINUE: routes.applications.checklist,
       },
     },
-    [routes.claims.employerBenefits]: {
+    [routes.applications.employerBenefits]: {
       meta: {
         step: ClaimSteps.otherLeave,
         fields: employerBenefitsFields,
@@ -324,25 +324,25 @@ export default {
       on: {
         CONTINUE: [
           {
-            target: routes.claims.employerBenefitDetails,
+            target: routes.applications.employerBenefitDetails,
             cond: "hasEmployerBenefits",
           },
           {
-            target: routes.claims.otherIncomes,
+            target: routes.applications.otherIncomes,
           },
         ],
       },
     },
-    [routes.claims.employerBenefitDetails]: {
+    [routes.applications.employerBenefitDetails]: {
       meta: {
         step: ClaimSteps.otherLeave,
         fields: employerBenefitDetailsFields,
       },
       on: {
-        CONTINUE: routes.claims.otherIncomes,
+        CONTINUE: routes.applications.otherIncomes,
       },
     },
-    [routes.claims.otherIncomes]: {
+    [routes.applications.otherIncomes]: {
       meta: {
         step: ClaimSteps.otherLeave,
         fields: otherIncomesFields,
@@ -350,29 +350,29 @@ export default {
       on: {
         CONTINUE: [
           {
-            target: routes.claims.otherIncomesDetails,
+            target: routes.applications.otherIncomesDetails,
             cond: "hasOtherIncomes",
           },
           {
-            target: routes.claims.previousLeaves,
+            target: routes.applications.previousLeaves,
             cond: "showPreviousLeaves",
           },
           {
-            target: routes.claims.checklist,
+            target: routes.applications.checklist,
           },
         ],
       },
     },
-    [routes.claims.otherIncomesDetails]: {
+    [routes.applications.otherIncomesDetails]: {
       meta: {
         step: ClaimSteps.otherLeave,
         fields: otherIncomesDetailsFields,
       },
       on: {
-        CONTINUE: routes.claims.previousLeaves,
+        CONTINUE: routes.applications.previousLeaves,
       },
     },
-    [routes.claims.previousLeaves]: {
+    [routes.applications.previousLeaves]: {
       meta: {
         step: ClaimSteps.otherLeave,
         fields: previousLeavesFields,
@@ -380,25 +380,25 @@ export default {
       on: {
         CONTINUE: [
           {
-            target: routes.claims.previousLeavesDetails,
+            target: routes.applications.previousLeavesDetails,
             cond: "hasPreviousLeaves",
           },
           {
-            target: routes.claims.checklist,
+            target: routes.applications.checklist,
           },
         ],
       },
     },
-    [routes.claims.previousLeavesDetails]: {
+    [routes.applications.previousLeavesDetails]: {
       meta: {
         step: ClaimSteps.otherLeave,
         fields: previousLeavesDetailsFields,
       },
       on: {
-        CONTINUE: routes.claims.checklist,
+        CONTINUE: routes.applications.checklist,
       },
     },
-    [routes.claims.employmentStatus]: {
+    [routes.applications.employmentStatus]: {
       meta: {
         step: ClaimSteps.employerInformation,
         fields: employmentStatusFields,
@@ -406,43 +406,43 @@ export default {
       on: {
         CONTINUE: [
           {
-            target: routes.claims.notifiedEmployer,
+            target: routes.applications.notifiedEmployer,
             cond: "isEmployed",
           },
           {
-            target: routes.claims.checklist,
+            target: routes.applications.checklist,
           },
         ],
       },
     },
-    [routes.claims.notifiedEmployer]: {
+    [routes.applications.notifiedEmployer]: {
       meta: {
         step: ClaimSteps.employerInformation,
         fields: notifiedEmployerFields,
       },
       on: {
-        CONTINUE: routes.claims.workPatternType,
+        CONTINUE: routes.applications.workPatternType,
       },
     },
-    [routes.claims.paymentMethod]: {
+    [routes.applications.paymentMethod]: {
       meta: {
         step: ClaimSteps.payment,
         fields: paymentMethodFields,
       },
       on: {
-        CONTINUE: routes.claims.checklist,
+        CONTINUE: routes.applications.checklist,
       },
     },
-    [routes.claims.bondingLeaveAttestation]: {
+    [routes.applications.bondingLeaveAttestation]: {
       meta: {
         step: ClaimSteps.reviewAndConfirm,
         fields: [],
       },
       on: {
-        CONTINUE: routes.claims.review,
+        CONTINUE: routes.applications.review,
       },
     },
-    [routes.claims.review]: {
+    [routes.applications.review]: {
       meta: {
         step: ClaimSteps.reviewAndConfirm,
         fields: [],
@@ -450,24 +450,24 @@ export default {
       on: {
         CONTINUE: [
           {
-            target: routes.claims.success,
+            target: routes.applications.success,
             cond: "isCompleted",
           },
           {
-            target: routes.claims.checklist,
+            target: routes.applications.checklist,
           },
         ],
       },
     },
-    [routes.claims.uploadDocsOptions]: {
+    [routes.applications.uploadDocsOptions]: {
       meta: {},
       on: {
-        UPLOAD_ID: routes.claims.uploadId,
-        UPLOAD_MASS_ID: routes.claims.uploadId,
-        UPLOAD_CERTIFICATION: routes.claims.uploadCertification,
+        UPLOAD_ID: routes.applications.uploadId,
+        UPLOAD_MASS_ID: routes.applications.uploadId,
+        UPLOAD_CERTIFICATION: routes.applications.uploadCertification,
       },
     },
-    [routes.claims.workPatternType]: {
+    [routes.applications.workPatternType]: {
       meta: {
         step: ClaimSteps.employerInformation,
         fields: workPatternTypeFields,
@@ -475,32 +475,32 @@ export default {
       on: {
         CONTINUE: [
           {
-            target: routes.claims.scheduleFixed,
+            target: routes.applications.scheduleFixed,
             cond: "isFixedWorkPattern",
           },
           {
-            target: routes.claims.scheduleVariable,
+            target: routes.applications.scheduleVariable,
             cond: "isVariableWorkPattern",
           },
         ],
       },
     },
-    [routes.claims.scheduleFixed]: {
+    [routes.applications.scheduleFixed]: {
       meta: {
         step: ClaimSteps.employerInformation,
         fields: scheduleFixedFields,
       },
       on: {
-        CONTINUE: routes.claims.checklist,
+        CONTINUE: routes.applications.checklist,
       },
     },
-    [routes.claims.scheduleVariable]: {
+    [routes.applications.scheduleVariable]: {
       meta: {
         step: ClaimSteps.employerInformation,
         fields: scheduleVariableFields,
       },
       on: {
-        CONTINUE: routes.claims.checklist,
+        CONTINUE: routes.applications.checklist,
       },
     },
   },

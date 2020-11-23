@@ -155,7 +155,7 @@ describe("useClaimsLogic", () => {
           await claimsLogic.load(applicationId);
         });
 
-        expect(mockRouter.push).toHaveBeenCalledWith(routes.applications);
+        expect(mockRouter.push).toHaveBeenCalledWith(routes.applications.index);
       });
 
       it("catches exceptions thrown from the API module", async () => {
@@ -245,7 +245,7 @@ describe("useClaimsLogic", () => {
 
   describe("create", () => {
     beforeEach(() => {
-      mockRouter.pathname = routes.claims.start;
+      mockRouter.pathname = routes.applications.start;
       renderHook();
     });
 
@@ -263,7 +263,9 @@ describe("useClaimsLogic", () => {
       });
 
       expect(mockRouter.push).toHaveBeenCalledWith(
-        expect.stringContaining(`${routes.claims.checklist}?claim_id=mock`)
+        expect.stringContaining(
+          `${routes.applications.checklist}?claim_id=mock`
+        )
       );
     });
 
@@ -355,7 +357,7 @@ describe("useClaimsLogic", () => {
   describe("when claims have been loaded or a new claim was created", () => {
     describe("complete", () => {
       beforeEach(() => {
-        mockRouter.pathname = routes.claims.review;
+        mockRouter.pathname = routes.applications.review;
         renderHook();
 
         act(() => {
@@ -397,7 +399,7 @@ describe("useClaimsLogic", () => {
 
         expect(mockRouter.push).toHaveBeenCalledWith(
           expect.stringContaining(
-            `${routes.claims.success}?claim_id=${applicationId}`
+            `${routes.applications.success}?claim_id=${applicationId}`
           )
         );
       });
@@ -427,7 +429,7 @@ describe("useClaimsLogic", () => {
       };
 
       it("updates claim and redirects to nextPage when successful", async () => {
-        mockRouter.pathname = routes.claims.name;
+        mockRouter.pathname = routes.applications.name;
 
         renderHook();
 
@@ -448,13 +450,13 @@ describe("useClaimsLogic", () => {
         expect(updateClaimMock).toHaveBeenCalled();
         expect(mockRouter.push).toHaveBeenCalledWith(
           expect.stringContaining(
-            `${routes.claims.address}?claim_id=${claim.application_id}`
+            `${routes.applications.address}?claim_id=${claim.application_id}`
           )
         );
       });
 
       it("clears prior errors", async () => {
-        mockRouter.pathname = routes.claims.name;
+        mockRouter.pathname = routes.applications.name;
         renderHook();
 
         act(() => {
@@ -480,7 +482,7 @@ describe("useClaimsLogic", () => {
         });
 
         it("updates the local claim and warningsList if response only included warnings", async () => {
-          mockRouter.pathname = routes.claims.name;
+          mockRouter.pathname = routes.applications.name;
           const claimResponse = new MockClaimBuilder()
             .id(applicationId)
             .create();
@@ -517,7 +519,7 @@ describe("useClaimsLogic", () => {
         });
 
         it("does not update the local claim if response included any errors", async () => {
-          mockRouter.pathname = routes.claims.name;
+          mockRouter.pathname = routes.applications.name;
           const claimResponse = new MockClaimBuilder()
             .id(applicationId)
             .create();
@@ -551,7 +553,7 @@ describe("useClaimsLogic", () => {
         });
 
         it("reports warnings for fields on the Name page", async () => {
-          mockRouter.pathname = routes.claims.name;
+          mockRouter.pathname = routes.applications.name;
 
           renderHook();
 
@@ -588,7 +590,7 @@ describe("useClaimsLogic", () => {
         });
 
         it("reports warnings for applicable rules on the Intermittent Leave page", async () => {
-          mockRouter.pathname = routes.claims.leavePeriodIntermittent;
+          mockRouter.pathname = routes.applications.leavePeriodIntermittent;
           renderHook();
 
           act(() => {
@@ -621,7 +623,7 @@ describe("useClaimsLogic", () => {
         });
 
         it("catches exceptions thrown from the API module", async () => {
-          mockRouter.pathname = routes.claims.name;
+          mockRouter.pathname = routes.applications.name;
           renderHook();
 
           act(() => {
@@ -650,8 +652,8 @@ describe("useClaimsLogic", () => {
 
     describe("submit", () => {
       beforeEach(() => {
-        mockRouter.pathname = routes.claims.review;
-        renderHook(routes.claims);
+        mockRouter.pathname = routes.applications.review;
+        renderHook(routes.applications);
 
         act(() => {
           claimsLogic.setClaims(
@@ -692,7 +694,7 @@ describe("useClaimsLogic", () => {
 
         expect(mockRouter.push).toHaveBeenCalledWith(
           expect.stringContaining(
-            `${routes.claims.checklist}?claim_id=${applicationId}`
+            `${routes.applications.checklist}?claim_id=${applicationId}`
           )
         );
       });

@@ -959,12 +959,12 @@ describe("useAuthLogic", () => {
       });
 
       it("redirects to login page with nextUrl", async () => {
-        portalFlow.pathWithParams = routes.claims.checklist;
+        portalFlow.pathWithParams = routes.applications.checklist;
         await act(async () => {
           await requireLogin();
         });
         expect(spy).toHaveBeenCalledWith(routes.auth.login, {
-          next: routes.claims.checklist,
+          next: routes.applications.checklist,
         });
       });
     });

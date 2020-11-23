@@ -139,7 +139,7 @@ export const ApplicationCard = (props) => {
         {!claim.isCompleted && (
           <ButtonLink
             className="display-block margin-top-2"
-            href={routeWithParams("claims.checklist", {
+            href={routeWithParams("applications.checklist", {
               claim_id: claim.application_id,
             })}
           >
@@ -222,7 +222,7 @@ function DocumentsInfo(props) {
       {showUploadButton && (
         <ButtonLink
           className="display-block"
-          href={routeWithParams("claims.uploadDocsOptions", {
+          href={routeWithParams("applications.uploadDocsOptions", {
             claim_id: claim.application_id,
           })}
           variation={completeAppButtonIsShowing ? "outline" : null}

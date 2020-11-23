@@ -288,8 +288,8 @@ export default class Step extends BaseModel {
       // TODO (CP-1272): Utilize the Checklist state node's transitions instead of
       // relying on the array order or the extra `initialPageRoute` property
       initialPageRoute: claim.isBondingLeave
-        ? routes.claims.bondingLeaveAttestation
-        : routes.claims.review,
+        ? routes.applications.bondingLeaveAttestation
+        : routes.applications.review,
       dependsOn: filterOutHiddenSteps([
         verifyId,
         employerInformation,

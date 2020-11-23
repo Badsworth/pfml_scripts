@@ -15,7 +15,7 @@ import routes from "../../src/routes";
 // In order to determine level of test coverage, each route
 // needs a test function defined for meta
 const machineTests = {
-  [routes.claims.dashboard]: {
+  [routes.applications.dashboard]: {
     meta: {
       test: () => {},
     },
@@ -28,62 +28,62 @@ const machineTests = {
       test: () => {},
     },
   },
-  [routes.claims.checklist]: {
+  [routes.applications.checklist]: {
     meta: {
       test: () => {},
     },
   },
-  [routes.applications]: {
+  [routes.applications.index]: {
     meta: {
       test: () => {},
     },
   },
-  [routes.claims.start]: {
+  [routes.applications.start]: {
     meta: {
       test: () => {},
     },
   },
-  [routes.claims.success]: {
+  [routes.applications.success]: {
     meta: {
       test: () => {},
     },
   },
-  [routes.claims.name]: {
+  [routes.applications.name]: {
     meta: {
       test: () => {},
     },
   },
-  [routes.claims.address]: {
+  [routes.applications.address]: {
     meta: {
       test: () => {},
     },
   },
-  [routes.claims.dateOfBirth]: {
+  [routes.applications.dateOfBirth]: {
     meta: {
       test: () => {},
     },
   },
-  [routes.claims.stateId]: {
+  [routes.applications.stateId]: {
     meta: {
       test: () => {},
     },
   },
-  [routes.claims.uploadId]: {
+  [routes.applications.uploadId]: {
     meta: {
       test: () => {},
     },
   },
-  [routes.claims.ssn]: {
+  [routes.applications.ssn]: {
     meta: {
       test: () => {},
     },
   },
-  [routes.claims.leaveReason]: {
+  [routes.applications.leaveReason]: {
     meta: {
       test: () => {},
     },
   },
-  [routes.claims.reasonPregnancy]: {
+  [routes.applications.reasonPregnancy]: {
     meta: {
       test: (_, event) => {
         expect(get(event.context.claim, "leave_details.reason")).toEqual(
@@ -92,12 +92,12 @@ const machineTests = {
       },
     },
   },
-  [routes.claims.uploadCertification]: {
+  [routes.applications.uploadCertification]: {
     meta: {
       test: () => {},
     },
   },
-  [routes.claims.dateOfChild]: {
+  [routes.applications.dateOfChild]: {
     meta: {
       test: (_, event) => {
         expect(get(event.context.claim, "leave_details.reason")).toEqual(
@@ -106,22 +106,22 @@ const machineTests = {
       },
     },
   },
-  [routes.claims.leavePeriodContinuous]: {
+  [routes.applications.leavePeriodContinuous]: {
     meta: {
       test: () => {},
     },
   },
-  [routes.claims.leavePeriodReducedSchedule]: {
+  [routes.applications.leavePeriodReducedSchedule]: {
     meta: {
       test: () => {},
     },
   },
-  [routes.claims.leavePeriodIntermittent]: {
+  [routes.applications.leavePeriodIntermittent]: {
     meta: {
       test: () => {},
     },
   },
-  [routes.claims.intermittentFrequency]: {
+  [routes.applications.intermittentFrequency]: {
     meta: {
       test: (_, event) => {
         expect(
@@ -130,12 +130,12 @@ const machineTests = {
       },
     },
   },
-  [routes.claims.employerBenefits]: {
+  [routes.applications.employerBenefits]: {
     meta: {
       test: () => {},
     },
   },
-  [routes.claims.employerBenefitDetails]: {
+  [routes.applications.employerBenefitDetails]: {
     meta: {
       test: (_, event) => {
         expect(get(event.context.claim, "temp.has_employer_benefits")).toEqual(
@@ -144,12 +144,12 @@ const machineTests = {
       },
     },
   },
-  [routes.claims.otherIncomes]: {
+  [routes.applications.otherIncomes]: {
     meta: {
       test: () => {},
     },
   },
-  [routes.claims.otherIncomesDetails]: {
+  [routes.applications.otherIncomesDetails]: {
     meta: {
       test: (_, event) => {
         expect(get(event.context.claim, "temp.has_other_incomes")).toEqual(
@@ -158,12 +158,12 @@ const machineTests = {
       },
     },
   },
-  [routes.claims.previousLeaves]: {
+  [routes.applications.previousLeaves]: {
     meta: {
       test: () => {},
     },
   },
-  [routes.claims.previousLeavesDetails]: {
+  [routes.applications.previousLeavesDetails]: {
     meta: {
       test: (_, event) => {
         expect(get(event.context.claim, "temp.has_previous_leaves")).toEqual(
@@ -172,12 +172,12 @@ const machineTests = {
       },
     },
   },
-  [routes.claims.employmentStatus]: {
+  [routes.applications.employmentStatus]: {
     meta: {
       test: () => {},
     },
   },
-  [routes.claims.notifiedEmployer]: {
+  [routes.applications.notifiedEmployer]: {
     meta: {
       test: (_, event) => {
         expect(get(event.context.claim, "employment_status")).toEqual(
@@ -186,19 +186,19 @@ const machineTests = {
       },
     },
   },
-  [routes.claims.paymentMethod]: {
+  [routes.applications.paymentMethod]: {
     meta: {
       test: () => {},
     },
   },
-  [routes.claims.bondingLeaveAttestation]: {
+  [routes.applications.bondingLeaveAttestation]: {
     meta: {
       test: (_, event) => {
         expect(event.context.claim.isBondingLeave).toEqual(true);
       },
     },
   },
-  [routes.claims.reducedLeaveSchedule]: {
+  [routes.applications.reducedLeaveSchedule]: {
     meta: {
       test: (_, event) => {
         expect(
@@ -207,22 +207,22 @@ const machineTests = {
       },
     },
   },
-  [routes.claims.review]: {
+  [routes.applications.review]: {
     meta: {
       test: () => {},
     },
   },
-  [routes.claims.uploadDocsOptions]: {
+  [routes.applications.uploadDocsOptions]: {
     meta: {
       test: () => {},
     },
   },
-  [routes.claims.workPatternType]: {
+  [routes.applications.workPatternType]: {
     meta: {
       test: () => {},
     },
   },
-  [routes.claims.scheduleFixed]: {
+  [routes.applications.scheduleFixed]: {
     meta: {
       test: (_, event) => {
         expect(
@@ -231,7 +231,7 @@ const machineTests = {
       },
     },
   },
-  [routes.claims.scheduleVariable]: {
+  [routes.applications.scheduleVariable]: {
     meta: {
       test: (_, event) => {
         expect(
@@ -303,7 +303,7 @@ describe("claimFlowConfigs", () => {
     {
       ...machineConfigsWithTests,
       context,
-      initial: routes.claims.dashboard,
+      initial: routes.applications.dashboard,
     },
     {
       guards: {

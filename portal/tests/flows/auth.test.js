@@ -5,17 +5,17 @@ import machineConfigs from "../../src/flows";
 import { merge } from "lodash";
 import routes from "../../src/routes";
 
-// routes.claims.dashboard is not a path in flow-confings/auth.js, but it's used in the CONTINUE for routes.auth.login, so it needs to be included in the list
+// routes.applications.dashboard is not a path in flow-confings/auth.js, but it's used in the CONTINUE for routes.auth.login, so it needs to be included in the list
 const createAccountStates = [
   routes.auth.createAccount,
   routes.auth.verifyAccount,
   routes.auth.login,
-  routes.claims.dashboard,
+  routes.applications.dashboard,
 ];
 
 const forgotPasswordStates = [
   routes.auth.forgotPassword,
-  routes.claims.dashboard,
+  routes.applications.dashboard,
   routes.auth.login,
   routes.auth.verifyAccount,
   routes.auth.resetPassword,

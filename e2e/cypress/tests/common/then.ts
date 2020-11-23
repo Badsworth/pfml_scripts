@@ -6,7 +6,7 @@ import { fineos } from "./actions";
 Then("I should be logged in", () => portal.assertLoggedIn());
 
 Then("I should see a success page confirming my claim submission", function () {
-  cy.url({ timeout: 20000 }).should("include", "/claims/success");
+  cy.url({ timeout: 20000 }).should("include", "/applications/success");
 });
 
 Then("I should be able to return to the portal dashboard", function () {

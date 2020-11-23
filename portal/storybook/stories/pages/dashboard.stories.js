@@ -11,7 +11,7 @@ export const Page = () => (
   <Dashboard
     appLogic={{
       portalFlow: {
-        pathname: routes.claims.dashboard,
+        pathname: routes.applications.dashboard,
       },
     }}
   />

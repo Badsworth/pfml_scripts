@@ -8,7 +8,7 @@ import { CypressStepThis } from "../../../src/types";
 When("I return to my previous application", function () {
   cy.contains("a", "View your applications").click();
   cy.unstash("claimId").then((claimId) => {
-    cy.get(`a[href="/claims/checklist/?claim_id=${claimId}"]`).click();
+    cy.get(`a[href="/applications/checklist/?claim_id=${claimId}"]`).click();
   });
   cy.contains("a", "Resume").click();
 });

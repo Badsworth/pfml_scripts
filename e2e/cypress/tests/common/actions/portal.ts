@@ -9,7 +9,7 @@ import {
 import { inFieldset } from "../actions";
 
 export function onPage(page: string): void {
-  cy.url().should("include", `/claims/${page}`);
+  cy.url().should("include", `/applications/${page}`);
 }
 
 export function submittingClaimType(
@@ -73,7 +73,7 @@ export function assertLoggedIn(): void {
 }
 
 export function startClaim(): void {
-  cy.get('[href="/claims/start/"]').click();
+  cy.get('[href="/applications/start/"]').click();
 }
 
 export function agreeToStart(): void {
@@ -584,7 +584,7 @@ export function reviewAndSubmit(): void {
 export function confirmSubmit(): void {
   // Usually preceeded by - "I am on the claims Confirm page"
   cy.contains("Submit application").click();
-  cy.url({ timeout: 20000 }).should("include", "/claims/success");
+  cy.url({ timeout: 20000 }).should("include", "/applications/success");
 }
 
 export function goToDashboard(): void {
@@ -592,25 +592,28 @@ export function goToDashboard(): void {
 }
 
 export function confirmClaimSubmissionSucces(): void {
-  cy.url().should("include", "/claims/success");
+  cy.url().should("include", "/applications/success");
 }
 
 export function viewClaim(): void {
   cy.unstash("applicationId").then((applicationId) => {
-    cy.visit(`/claims/checklist/?claim_id=${applicationId}`);
-    cy.url().should("include", `/claims/checklist/?claim_id=${applicationId}`);
+    cy.visit(`/applications/checklist/?claim_id=${applicationId}`);
+    cy.url().should(
+      "include",
+      `/applications/checklist/?claim_id=${applicationId}`
+    );
   });
 }
 
 export function goToIdUploadPage(): void {
   cy.unstash("applicationId").then((applicationId) => {
-    cy.visit(`/claims/upload-id/?claim_id=${applicationId}`);
+    cy.visit(`/applications/upload-id/?claim_id=${applicationId}`);
   });
 }
 
 export function goToCertificationUploadPage(): void {
   cy.unstash("applicationId").then((applicationId) => {
-    cy.visit(`/claims/certification-id/?claim_id=${applicationId}`);
+    cy.visit(`/applications/certification-id/?claim_id=${applicationId}`);
   });
 }
 

@@ -1,7 +1,7 @@
-import routes, { isClaimsRoute, isEmployersRoute } from "../src/routes";
+import routes, { isApplicationsRoute, isEmployersRoute } from "../src/routes";
 
 describe("routes", () => {
-  const claimsRoute = `${routes.claims.stateId}?claim_id=123`;
+  const claimsRoute = `${routes.applications.stateId}?claim_id=123`;
   const employersRoute = `${routes.employers.review}/?absence_id=123`;
   const fakeClaimsRoute = "/claims/test-page";
   const fakeEmployersRoute = "/employers/test-page";
@@ -20,17 +20,17 @@ describe("routes", () => {
     });
   });
 
-  describe("isClaimsRoute", () => {
+  describe("isApplicationsRoute", () => {
     it("returns true if route is in Claimant Portal", () => {
-      expect(isClaimsRoute(claimsRoute)).toEqual(true);
-      expect(isClaimsRoute("/dashboard")).toEqual(true);
+      expect(isApplicationsRoute(claimsRoute)).toEqual(true);
+      expect(isApplicationsRoute("/dashboard")).toEqual(true);
     });
 
     it("returns false if route is not in Claimant Portal", () => {
-      expect(isClaimsRoute(employersRoute)).toEqual(false);
-      expect(isClaimsRoute(fakeClaimsRoute)).toEqual(false);
-      expect(isClaimsRoute(rootRoute)).toEqual(false);
-      expect(isClaimsRoute("")).toEqual(false);
+      expect(isApplicationsRoute(employersRoute)).toEqual(false);
+      expect(isApplicationsRoute(fakeClaimsRoute)).toEqual(false);
+      expect(isApplicationsRoute(rootRoute)).toEqual(false);
+      expect(isApplicationsRoute("")).toEqual(false);
     });
   });
 });

@@ -130,7 +130,7 @@ export const Dashboard = (props) => {
 
         <ButtonLink
           className="margin-top-3 margin-bottom-8"
-          href={routes.claims.start}
+          href={routes.applications.start}
         >
           {t("pages.dashboard.createClaimButton")}
         </ButtonLink>

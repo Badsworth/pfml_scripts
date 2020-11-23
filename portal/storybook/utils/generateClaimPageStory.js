@@ -29,14 +29,14 @@ export default function generateClaimPageStory(
   claimsPageSubpath,
   mockClaims = null
 ) {
-  // e.g. claims/leave-duration --> LeaveDuration
+  // e.g. applications/leave-duration --> LeaveDuration
   const componentName = _.chain(claimsPageSubpath)
     .split("/")
     .last()
     .camelCase()
     .upperFirst()
     .value();
-  const module = require(`src/pages/claims/${claimsPageSubpath}`);
+  const module = require(`src/pages/applications/${claimsPageSubpath}`);
   const Component = module[componentName];
   const fields = module.fields || [];
 
@@ -57,7 +57,7 @@ function generateConfig(claimsPageSubpath, Component) {
     .map(kebabCaseToTitleCase)
     .join("/");
   return {
-    title: `Pages/Claims/${title}`, // we could capitalize the path parts if we wanted to
+    title: `Pages/Applications/${title}`, // we could capitalize the path parts if we wanted to
     component: Component,
   };
 }

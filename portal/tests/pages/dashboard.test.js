@@ -5,7 +5,7 @@ import routes from "../../src/routes";
 
 describe("Dashboard", () => {
   it("renders dashboard content", () => {
-    mockRouter.pathname = routes.claims.dashboard;
+    mockRouter.pathname = routes.applications.dashboard;
 
     const { wrapper } = renderWithAppLogic(Dashboard, {
       diveLevels: 1,

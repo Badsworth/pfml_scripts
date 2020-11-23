@@ -235,7 +235,7 @@ describe("useUsersLogic", () => {
       await preloadUser(
         new User({ roles: employerRole, consented_to_data_sharing: true })
       );
-      mockRouter.pathname = routes.claims.dashboard;
+      mockRouter.pathname = routes.applications.dashboard;
       usersLogic.requireUserRole();
       expect(mockRouter.push).toHaveBeenCalledWith("/employers");
     });
@@ -261,7 +261,7 @@ describe("useUsersLogic", () => {
       await preloadUser(
         new User({ roles: multipleRoles, consented_to_data_sharing: true })
       );
-      mockRouter.pathname = routes.claims.dashboard;
+      mockRouter.pathname = routes.applications.dashboard;
       usersLogic.requireUserRole();
 
       expect(mockRouter.push).toHaveBeenCalledWith("/employers");
