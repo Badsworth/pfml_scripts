@@ -70,6 +70,7 @@ module "api" {
   fineos_eligibility_feed_output_directory_path    = "s3://fin-somdev-data-import/PERF/absence-eligibility/upload"
   fineos_aws_iam_role_arn                          = "arn:aws:iam::666444232783:role/somdev-IAMRoles-CustomerAccountAccessRole-BF05IBJSG74B"
   fineos_aws_iam_role_external_id                  = "12345"
+  service_now_base_url                             = "https://savilinxstage.servicenowservices.com"
   enable_employer_endpoints                        = "1"
   enable_application_fraud_check                   = "0"
 }
