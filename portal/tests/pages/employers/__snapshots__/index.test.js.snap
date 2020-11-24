@@ -7,16 +7,12 @@ exports[`Employer index renders the page 1`] = `
   <div
     className="grid-row"
   >
-    <Title>
-      Welcome
-    </Title>
-  </div>
-  <div
-    className="grid-row"
-  >
     <div
       className="desktop:grid-col-8"
     >
+      <Title>
+        Welcome
+      </Title>
       <p>
         Thanks for joining the paid leave program. There’s no further action for you to take now, but you’ll be able to review applications online starting December 15, 2020.
       </p>
@@ -64,10 +60,10 @@ exports[`Employer index renders the page 1`] = `
       </p>
     </div>
     <div
-      className="desktop:grid-col-fill"
+      className="grid-col-fill"
     />
-    <div
-      className="desktop:grid-col-3 margin-top-6 desktop:margin-top-0"
+    <aside
+      className="desktop:grid-col-3 margin-top-7 desktop:margin-top-1"
     >
       <Heading
         level="2"
@@ -77,23 +73,30 @@ exports[`Employer index renders the page 1`] = `
       <Trans
         components={
           Object {
-            "application-timeline-link": <span />,
             "employer-pfml-guide-link": <a
               href="https://www.mass.gov/guides/employers-guide-to-paid-family-and-medical-leave"
               rel="noopener"
               target="_blank"
             />,
             "li": <li />,
-            "mass-employer-role-link": <span />,
-            "reimbursements-link": <span />,
+            "mass-employer-role-link": <a
+              href="https://www.mass.gov/pmfl-leave-administrators"
+              rel="noopener"
+              target="_blank"
+            />,
+            "reimbursements-link": <a
+              href="https://www.mass.gov/pfml-reimbursements"
+              rel="noopener"
+              target="_blank"
+            />,
             "ul": <ul
-              className="usa-list"
+              className="usa-list desktop:font-body-2xs desktop:padding-top-05"
             />,
           }
         }
         i18nKey="pages.employersDashboard.learnMoreLinks"
       />
-    </div>
+    </aside>
   </div>
 </div>
 `;

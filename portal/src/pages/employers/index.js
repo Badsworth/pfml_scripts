@@ -25,10 +25,8 @@ export const Index = () => {
   return (
     <div className="grid-container">
       <div className="grid-row">
-        <Title>{t("pages.employersDashboard.welcomeTitle")}</Title>
-      </div>
-      <div className="grid-row">
         <div className="desktop:grid-col-8">
+          <Title>{t("pages.employersDashboard.welcomeTitle")}</Title>
           <p>{t("pages.employersDashboard.welcomeBody")}</p>
 
           <Heading level="2">
@@ -49,20 +47,33 @@ export const Index = () => {
           </Heading>
           <p>{t("pages.employersDashboard.viewFormsBody")}</p>
         </div>
-        <div className="desktop:grid-col-fill" />
-        <div className="desktop:grid-col-3 margin-top-6 desktop:margin-top-0">
+        <div className="grid-col-fill" />
+        <aside className="desktop:grid-col-3 margin-top-7 desktop:margin-top-1">
           <Heading level="2">
             {t("pages.employersDashboard.learnMoreTitle")}
           </Heading>
           <Trans
             i18nKey="pages.employersDashboard.learnMoreLinks"
             components={{
-              ul: <ul className="usa-list" />,
+              ul: (
+                <ul className="usa-list desktop:font-body-2xs desktop:padding-top-05" />
+              ),
               li: <li />,
               // TODO (EMPLOYER-555) Add links
-              "mass-employer-role-link": <span />,
-              "application-timeline-link": <span />,
-              "reimbursements-link": <span />,
+              "mass-employer-role-link": (
+                <a
+                  href={routes.external.massgov.employerOverview}
+                  target="_blank"
+                  rel="noopener"
+                />
+              ),
+              "reimbursements-link": (
+                <a
+                  href={routes.external.massgov.employerReimbursements}
+                  target="_blank"
+                  rel="noopener"
+                />
+              ),
               "employer-pfml-guide-link": (
                 <a
                   href={routes.external.massgov.employersGuide}
@@ -72,7 +83,7 @@ export const Index = () => {
               ),
             }}
           />
-        </div>
+        </aside>
       </div>
     </div>
   );
