@@ -8,7 +8,7 @@ import json
 import os.path
 import urllib.parse
 import xml.etree.ElementTree
-from typing import Any, Callable, Dict, List, Mapping, Optional, Tuple, Union
+from typing import Any, Dict, List, Mapping, Optional, Tuple, Union
 
 import defusedxml.ElementTree
 import flask
@@ -109,6 +109,7 @@ class FINEOSClient(client.AbstractFINEOSClient):
         self.client_id = client_id
         self.client_secret = client_secret
         self.request_count = 0
+        self.oauth_session = None
         logger.info(
             "customer_api_url %s, wscomposer_url %s, group_client_api_url %s, "
             "integration_services_api_url %s",
@@ -121,11 +122,14 @@ class FINEOSClient(client.AbstractFINEOSClient):
 
     def _init_oauth_session(self):
         """Set up an OAuth session and get a token."""
-        backend = oauthlib.oauth2.BackendApplicationClient(client_id=self.client_id)
-        session = requests_oauthlib.OAuth2Session(client=backend, scope="service-gateway/all")
+        if self.oauth_session is None:
+            backend = oauthlib.oauth2.BackendApplicationClient(client_id=self.client_id)
+            self.oauth_session = requests_oauthlib.OAuth2Session(
+                client=backend, scope="service-gateway/all"
+            )
 
         try:
-            token = session.fetch_token(
+            token = self.oauth_session.fetch_token(
                 token_url=self.oauth2_url,
                 client_id=self.client_id,
                 client_secret=self.client_secret,
@@ -142,15 +146,9 @@ class FINEOSClient(client.AbstractFINEOSClient):
             token["expires_in"],
             datetime.datetime.utcfromtimestamp(token["expires_at"]),
         )
-        self.oauth_session = session
 
     def _request(
-        self,
-        request_function: Callable[..., requests.Response],
-        method: str,
-        url: str,
-        headers: Dict[str, str],
-        **args: Any,
+        self, method: str, url: str, headers: Dict[str, str], **args: Any,
     ) -> requests.Response:
         """Make a request and handle errors."""
         self.request_count += 1
@@ -158,11 +156,15 @@ class FINEOSClient(client.AbstractFINEOSClient):
         logger.debug("%s %s start", method, url)
         try:
             try:
-                response = request_function(method, url, timeout=(6.1, 60), headers=headers, **args)
+                response = self.oauth_session.request(
+                    method, url, timeout=(6.1, 60), headers=headers, **args
+                )
             except oauthlib.oauth2.TokenExpiredError:
                 logger.info("token expired, starting new OAuth session")
                 self._init_oauth_session()
-                response = request_function(method, url, timeout=(6.1, 60), headers=headers, **args)
+                response = self.oauth_session.request(
+                    method, url, timeout=(6.1, 60), headers=headers, **args
+                )
         except requests.exceptions.RequestException as ex:
             logger.error("%s %s => %r", method, url, ex)
             # Make sure New Relic records errors from FINEOS, even if the API does not ultimately
@@ -233,7 +235,7 @@ class FINEOSClient(client.AbstractFINEOSClient):
         url = urllib.parse.urljoin(self.customer_api_url, path)
         content_type_header = {"Content-Type": header_content_type} if header_content_type else {}
         headers = dict({"userid": user_id}, **content_type_header)
-        response = self._request(self.oauth_session.request, method, url, headers, **args)
+        response = self._request(method, url, headers, **args)
         return response
 
     def _group_client_api(
@@ -248,7 +250,7 @@ class FINEOSClient(client.AbstractFINEOSClient):
         url = urllib.parse.urljoin(self.group_client_api_url, path)
         content_type_header = {"Content-Type": header_content_type} if header_content_type else {}
         headers = dict({"userid": user_id}, **content_type_header)
-        response = self._request(self.oauth_session.request, method, url, headers, **args)
+        response = self._request(method, url, headers, **args)
         return response
 
     def _integration_services_api(
@@ -263,7 +265,7 @@ class FINEOSClient(client.AbstractFINEOSClient):
         url = urllib.parse.urljoin(self.integration_services_api_url, path)
         content_type_header = {"Content-Type": header_content_type} if header_content_type else {}
         headers = dict({"userid": user_id}, **content_type_header)
-        response = self._request(self.oauth_session.request, method, url, headers, **args)
+        response = self._request(method, url, headers, **args)
         return response
 
     def _wscomposer_request(
@@ -275,7 +277,7 @@ class FINEOSClient(client.AbstractFINEOSClient):
         path_with_query = path + "?" + urllib.parse.urlencode(query_with_user_id)
         url = urllib.parse.urljoin(self.wscomposer_url, path_with_query)
         headers = {"Content-Type": "application/xml"}
-        return self._request(self.oauth_session.request, method, url, headers, data=xml_data)
+        return self._request(method, url, headers, data=xml_data)
 
     def find_employer(self, employer_fein: str) -> str:
         response = self._wscomposer_request(
