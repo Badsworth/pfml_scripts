@@ -301,6 +301,42 @@ def test_documents_download_matches_document_id(
     assert response.data.startswith(b"\x89PNG\r\n")
 
 
+def test_documents_download_mismatch_case(
+    client, consented_user, consented_user_token, test_db_session, monkeypatch
+):
+    # Regression test to ensure that get_document_by_id searches through all documents from FINEOS
+    absence_case_id = "NTN-111-ABS-01"
+    document_id = "3012"
+
+    def mock_get_documents(self, user_id, absence_id):
+        # mock the response to return multiple documents
+        document_type = "approval notice"
+        document1 = copy.copy(massgov.pfml.fineos.mock_client.MOCK_DOCUMENT_DATA)
+        document1.update({"caseId": absence_id, "name": document_type, "documentId": document_id})
+
+        return [
+            models.customer_api.Document.parse_obj(
+                fineos_client.fineos_document_empty_dates_to_none(document1)
+            ),
+        ]
+
+    monkeypatch.setattr(
+        massgov.pfml.fineos.mock_client.MockFINEOSClient, "get_documents", mock_get_documents
+    )
+
+    application = ApplicationFactory.create(user=consented_user, fineos_absence_id=absence_case_id)
+
+    response = client.get(
+        "/v1/applications/{}/documents/{}".format(application.application_id, document_id),
+        headers={"Authorization": f"Bearer {consented_user_token}"},
+    )
+
+    assert response.status_code == 200
+    assert response.content_type == "application/pdf"
+    assert response.headers.get("Content-Disposition") == "attachment; filename=test.pdf"
+    assert response.data.startswith(b"\x89PNG\r\n")
+
+
 def test_documents_download_forbidden(client, fineos_user, fineos_user_token, test_db_session):
     absence_case_id = "NTN-111-ABS-01"
     document_id = "3011"

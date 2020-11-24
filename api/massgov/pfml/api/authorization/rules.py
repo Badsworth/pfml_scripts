@@ -65,21 +65,25 @@ def can_download(user: User, doc: Union[Document, DocumentResponse]) -> bool:
     # Regular users can download a limited number of doc types.
     if not user.roles:
         regular_user_allowed_doc_types = [
-            DocumentType.APPROVAL_NOTICE.document_type_description,
-            DocumentType.REQUEST_FOR_MORE_INFORMATION.document_type_description,
-            DocumentType.DENIAL_NOTICE.document_type_description,
+            d.lower()
+            for d in [
+                DocumentType.APPROVAL_NOTICE.document_type_description,
+                DocumentType.REQUEST_FOR_MORE_INFORMATION.document_type_description,
+                DocumentType.DENIAL_NOTICE.document_type_description,
+            ]
         ]
 
         if (
             isinstance(doc, Document)
-            and doc.document_type_instance.document_type_description
+            and doc.document_type_instance.document_type_description.lower()
             in regular_user_allowed_doc_types
         ):
             return True
 
         if (
             isinstance(doc, DocumentResponse)
-            and doc.document_type in regular_user_allowed_doc_types
+            and doc.document_type
+            and doc.document_type.lower() in regular_user_allowed_doc_types
         ):
             return True
 
