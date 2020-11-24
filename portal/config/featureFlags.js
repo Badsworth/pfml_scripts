@@ -35,11 +35,6 @@ const flagsConfig = {
     // TODO (CP-1346): Show this step once it's been integrated w/ the API.
     claimantShowOtherLeaveStep: false,
 
-    // When this flag is enabled, the Leave Admin user will directly navigate to
-    // the Success page upon info request submission
-    // TODO (EMPLOYER-579): Remove this flag once unmoderated usability testing is complete
-    employerUsabilityTest: false,
-
     // When this flag is enabled, the user can see the site.
     // To immediately hide the site from people who previously overrode this
     // flag in a cookie, you can rename this flag to something else (and also
