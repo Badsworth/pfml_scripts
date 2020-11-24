@@ -37,8 +37,10 @@ describe("withEmployerClaim", () => {
   it("loads the claim", () => {
     render();
 
-    expect(appLogic.employers.load).toHaveBeenCalledTimes(1);
-    expect(appLogic.employers.load).toHaveBeenCalledWith("mock-absence-id");
+    expect(appLogic.employers.loadClaim).toHaveBeenCalledTimes(1);
+    expect(appLogic.employers.loadClaim).toHaveBeenCalledWith(
+      "mock-absence-id"
+    );
   });
 
   it("does not load claim if user has not yet loaded", () => {
@@ -47,7 +49,7 @@ describe("withEmployerClaim", () => {
     render();
     wrapper.update();
 
-    expect(appLogic.employers.load).not.toHaveBeenCalled();
+    expect(appLogic.employers.loadClaim).not.toHaveBeenCalled();
   });
 
   describe("when claim is loaded", () => {

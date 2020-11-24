@@ -47,9 +47,11 @@ export default jest.fn(() => ({
     loadAll: jest.fn(),
   },
   employers: {
-    load: jest.fn(
+    downloadDocument: jest.fn(() => new Blob()),
+    loadClaim: jest.fn(
       () => new EmployerClaim({ fineos_absence_id: "NTN-111-ABS-01" })
     ),
+    loadDocuments: jest.fn(() => new DocumentCollection()),
     submit: jest.fn(),
   },
   portalFlow: {

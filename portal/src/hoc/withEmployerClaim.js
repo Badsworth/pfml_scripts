@@ -28,7 +28,7 @@ const withEmployerClaim = (Component) => {
 
     useEffect(() => {
       if (!claim) {
-        appLogic.employers.load(absenceId);
+        appLogic.employers.loadClaim(absenceId);
       }
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [claim]);
@@ -51,7 +51,7 @@ const withEmployerClaim = (Component) => {
       appErrors: PropTypes.object.isRequired,
       employers: PropTypes.shape({
         claim: PropTypes.instanceOf(EmployerClaim),
-        load: PropTypes.func.isRequired,
+        loadClaim: PropTypes.func.isRequired,
       }).isRequired,
       users: PropTypes.shape({
         user: PropTypes.instanceOf(User).isRequired,

@@ -3,13 +3,14 @@ import EmployersApi from "../api/EmployersApi";
 
 const useEmployersLogic = ({ appErrorsLogic, portalFlow }) => {
   const [claim, setClaim] = useState(null);
+  const [documents, setDocuments] = useState(null);
   const employersApi = useMemo(() => new EmployersApi(), []);
 
   /**
    * Retrieve claim from the API and set application errors if any
    * @param {string} absenceId - FINEOS absence id
    */
-  const load = async (absenceId) => {
+  const loadClaim = async (absenceId) => {
     if (claim) return;
     appErrorsLogic.clearErrors();
 
@@ -18,6 +19,40 @@ const useEmployersLogic = ({ appErrorsLogic, portalFlow }) => {
       if (success) {
         setClaim(claim);
       }
+    } catch (error) {
+      appErrorsLogic.catchError(error);
+    }
+  };
+
+  /**
+   * Retrieve documents from the API and set application errors if any
+   * @param {string} absenceId - FINEOS absence id
+   */
+  const loadDocuments = async (absenceId) => {
+    if (documents) return;
+    appErrorsLogic.clearErrors();
+
+    try {
+      const { documents, success } = await employersApi.getDocuments(absenceId);
+      if (success) {
+        setDocuments(documents);
+      }
+    } catch (error) {
+      appErrorsLogic.catchError(error);
+    }
+  };
+
+  /**
+   * Download document from the API and set app errors if any.
+   *
+   * @param {string} absenceId ID of the Claim
+   * @param {Document} document - Document instasnce to download
+   * @returns {Blob} file data
+   */
+  const downloadDocument = async (absenceId, document) => {
+    appErrorsLogic.clearErrors();
+    try {
+      return await employersApi.downloadDocument(absenceId, document);
     } catch (error) {
       appErrorsLogic.catchError(error);
     }
@@ -42,7 +77,10 @@ const useEmployersLogic = ({ appErrorsLogic, portalFlow }) => {
 
   return {
     claim,
-    load,
+    documents,
+    downloadDocument,
+    loadClaim,
+    loadDocuments,
     submit,
   };
 };

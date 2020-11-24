@@ -399,6 +399,11 @@ const shared = {
   minutesLabel: "Minutes",
   networkError:
     "Sorry, an error was encountered. This may occur for a variety of reasons, including temporarily losing an internet connection or an unexpected error in our system. If this continues to happen, you may call the Paid Family Leave Contact Center at $t(shared.contactCenterPhoneNumber)",
+  noticeDate: "Posted {{date}}",
+  noticeName: "Other notice (PDF)", // it should fallback to this if we receive an unexpected or undefined enum
+  noticeName_approvalNotice: "Approval notice (PDF)",
+  noticeName_denialNotice: "Denial notice (PDF)",
+  noticeName_requestForInfoNotice: "Request for more information (PDF)",
   otherIncomeEntryPrefix: "Income",
   otherIncomeType_jonesAct: "Jones Act benefits",
   otherIncomeType_otherEmployer: "Earnings from another employer",
@@ -1443,7 +1448,6 @@ const pages = {
   },
   employersClaimsStatus: {
     applicationIdLabel: "Application ID",
-    documentPostedDate: "Posted {{date}}",
     lead:
       "A decision has been made for this application. No action is required of you, but you can download a copy of the decision notice for details. Your employee has the right to appeal this decision under Massachusetts regulations (<dfml-regulations-link>458 CMR 2.14</dfml-regulations-link>).",
     leaveDetailsLabel: "$t(shared.claimsLeaveDetailsTitle)",
@@ -1456,7 +1460,12 @@ const pages = {
     leaveReasonValue_pregnancy: "$t(shared.leaveReasonBonding)",
     leaveReasonValue_serviceMemberFamily:
       "$t(shared.leaveReasonServiceMemberFamily)",
-    medicalLeave: "$t(shared.leaveReasonMedical)",
+    noticeDate: "$t(shared.noticeDate)",
+    noticeName: "$t(shared.noticeName)",
+    noticeName_approvalNotice: "$t(shared.noticeName_approvalNotice)",
+    noticeName_denialNotice: "$t(shared.noticeName_denialNotice)",
+    noticeName_requestForInfoNotice:
+      "$t(shared.noticeName_requestForInfoNotice)",
     noticesLabel: "Notices",
     statusLabel: "Status",
     title: "Notices for {{name}}",
@@ -1574,11 +1583,12 @@ const components = {
     leaveReasonValue_medical: "$t(shared.leaveReasonMedical)",
     leaveReasonValue_serviceMemberFamily:
       "$t(shared.leaveReasonServiceMemberFamily)",
-    noticeDate: "Posted {{date}}",
-    noticeName: "Other notice (PDF)", // it should fallback to this if we receive an unexpected or undefined enum
-    noticeName_approvalNotice: "Approval notice (PDF)",
-    noticeName_denialNotice: "Denial notice (PDF)",
-    noticeName_requestForInfoNotice: "Request for more information (PDF)",
+    noticeDate: "$t(shared.noticeDate)",
+    noticeName: "$t(shared.noticeName)",
+    noticeName_approvalNotice: "$t(shared.noticeName_approvalNotice)",
+    noticeName_denialNotice: "$t(shared.noticeName_denialNotice)",
+    noticeName_requestForInfoNotice:
+      "$t(shared.noticeName_requestForInfoNotice)",
     noticesHeading: "View your notices",
     resumeClaimButton: "Complete your application",
     uploadDocsButton: "Upload additional documents",

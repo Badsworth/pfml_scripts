@@ -1,6 +1,8 @@
 import Address from "../../src/models/Address";
 import { Auth } from "@aws-amplify/auth";
-import EmployerClaim from "../../src/models/EmployerClaim";
+import Document from "../../src/models/Document";
+import DocumentCollection from "../../src/models/DocumentCollection";
+import EmployerClaim from "../../src/models/Claim";
 import EmployersApi from "../../src/api/EmployersApi";
 
 jest.mock("@aws-amplify/auth");
@@ -15,6 +17,7 @@ const mockFetch = ({
     json: jest.fn().mockResolvedValueOnce(response),
     ok,
     status,
+    blob: jest.fn().mockResolvedValueOnce(new Blob()),
   });
 };
 const accessTokenJwt =
@@ -53,6 +56,24 @@ const mockClaim = new EmployerClaim({
   }),
   tax_identifier: "6161",
 });
+const mockDocumentCollection = [
+  {
+    created_at: "1943-03-02",
+    document_type: "Driver's License Mass",
+    content_type: "image/png",
+    fineos_document_id: "some-unique-id",
+    name: "license.png",
+    description: "Mickey Mouse license",
+  },
+  {
+    created_at: "1943-03-02",
+    document_type: "Passport",
+    content_type: "image/png",
+    fineos_document_id: "a-unique-id",
+    name: "passport.png",
+    description: "Mickey Mouse passport",
+  },
+];
 const mockClaimReview = {
   comment: "No comment",
   employer_benefits: [],
@@ -106,6 +127,87 @@ describe("EmployersApi", () => {
 
         expect(response.claim).toBeInstanceOf(EmployerClaim);
         expect(response.claim).toEqual(mockClaim);
+      });
+    });
+  });
+
+  describe("downloadDocument", () => {
+    describe("successful request", () => {
+      beforeEach(() => {
+        global.fetch = mockFetch({
+          response: {
+            response: {},
+            status: 200,
+            ok: true,
+          },
+        });
+      });
+
+      it("sends GET request to /employers/claims/{absence_id}/documents/{document_id}", async () => {
+        const document = new Document({
+          fineos_document_id: 1234,
+          content_type: "image/png",
+        });
+
+        await employersApi.downloadDocument(absenceId, document);
+
+        expect(fetch).toHaveBeenCalledWith(
+          `${process.env.apiUrl}/employers/claims/${absenceId}/documents/${document.fineos_document_id}`,
+          {
+            headers: { ...headers, "Content-Type": "image/png" },
+            method: "GET",
+          }
+        );
+      });
+
+      it("returns a Blob object", async () => {
+        const document = new Document({
+          fineos_document_id: 1234,
+          content_type: "image/png",
+        });
+
+        const response = await employersApi.downloadDocument(
+          absenceId,
+          document
+        );
+
+        expect(response).toBeInstanceOf(Blob);
+      });
+    });
+  });
+
+  describe("getDocuments", () => {
+    describe("successful request", () => {
+      beforeEach(() => {
+        global.fetch = mockFetch({
+          response: {
+            data: mockDocumentCollection,
+            status: 200,
+          },
+        });
+      });
+
+      it("sends GET request to /employers/claims/{absenceId}/documents", async () => {
+        await employersApi.getDocuments(absenceId);
+
+        expect(fetch).toHaveBeenCalledWith(
+          `${process.env.apiUrl}/employers/claims/${absenceId}/documents`,
+          expect.objectContaining({
+            headers,
+            method: "GET",
+          })
+        );
+      });
+
+      it("resolves with success and status", async () => {
+        const expectedDocuments = mockDocumentCollection.map(
+          (documentInfo) => new Document(documentInfo)
+        );
+
+        const response = await employersApi.getDocuments(absenceId);
+
+        expect(response.documents).toBeInstanceOf(DocumentCollection);
+        expect(response.documents.items).toEqual(expectedDocuments);
       });
     });
   });

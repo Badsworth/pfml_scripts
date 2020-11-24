@@ -1,5 +1,12 @@
-import BaseApi from "./BaseApi";
-import EmployerClaim from "../models/EmployerClaim";
+import BaseApi, {
+  createRequestUrl,
+  getAuthorizationHeader,
+  handleError,
+  handleNotOkResponse,
+} from "./BaseApi";
+import Document from "../models/Document";
+import DocumentCollection from "../models/DocumentCollection";
+import EmployerClaim from "../models/Claim";
 import routes from "../routes";
 
 /**
@@ -7,6 +14,13 @@ import routes from "../routes";
  * @property {number} status - Status code
  * @property {boolean} success - Returns true if 2xx status code
  * @property {EmployerClaim} [claim] - If the request succeeded, this will contain a claim
+ */
+
+/**
+ * @typedef {object} DocumentApiListResult
+ * @property {DocumentCollection} [documents] - If the request succeeded, this will contain a list of documents
+ * @property {number} status - Status code
+ * @property {boolean} success - Did the request succeed or fail?
  */
 
 export default class EmployersApi extends BaseApi {
@@ -32,6 +46,64 @@ export default class EmployersApi extends BaseApi {
 
     return {
       claim: success ? new EmployerClaim(data) : null,
+      status,
+      success,
+    };
+  };
+
+  /**
+   * Download document
+   *
+   * @param {string} absenceId of the Claim
+   * @param {Document} document instance of Document to download
+   * @returns {Blob} file data
+   */
+  downloadDocument = async (absenceId, document) => {
+    const { content_type, fineos_document_id } = document;
+    const subPath = `/claims/${absenceId}/documents/${fineos_document_id}`;
+    const url = createRequestUrl(this.basePath, subPath);
+    const authHeader = await getAuthorizationHeader();
+
+    const headers = {
+      ...authHeader,
+      "Content-Type": content_type,
+    };
+
+    let blob, response;
+    try {
+      response = await fetch(url, { headers, method: "GET" });
+      blob = await response.blob();
+    } catch (error) {
+      handleError(error);
+    }
+
+    if (!response.ok) {
+      handleNotOkResponse(url, response);
+    }
+
+    return blob;
+  };
+
+  /**
+   * Loads all documents for the provided FINEOS Absence ID
+   *
+   * Corresponds to this API endpoint: /employers/claims/{fineos_absence_id}/documents
+   * @param {string} absenceId ID of the Claim
+   * @returns {DocumentApiListResult} The result of the API call
+   */
+  getDocuments = async (absenceId) => {
+    const { data, success, status } = await this.request(
+      "GET",
+      `claims/${absenceId}/documents`
+    );
+    let documents = null;
+    if (success) {
+      documents = data.map((documentData) => new Document(documentData));
+      documents = new DocumentCollection(documents);
+    }
+
+    return {
+      documents,
       status,
       success,
     };
