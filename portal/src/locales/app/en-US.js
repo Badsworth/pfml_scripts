@@ -1384,7 +1384,7 @@ const pages = {
       leaveReasonValue_bonding: "$t(shared.leaveReasonBonding)",
       leaveReasonValue_care: "$t(shared.leaveReasonMedical)",
       leaveReasonValue_medical: "$t(shared.leaveReasonMedical)",
-      leaveReasonValue_pregnancy: "$t(shared.leaveReasonBonding)",
+      leaveReasonValue_pregnancy: "$t(shared.leaveReasonMedical)",
       leaveReasonValue_serviceMemberFamily:
         "$t(shared.leaveReasonServiceMemberFamily)",
       leaveTypeLabel: "Leave type",
