@@ -21,6 +21,7 @@ const config = {
   env: {
     ...envVariables,
     featureFlags,
+    buildEnv,
   },
   sassOptions: {
     // Mayflowers requires us to expose its includePaths so its imports work

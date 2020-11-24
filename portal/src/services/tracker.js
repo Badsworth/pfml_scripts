@@ -46,7 +46,10 @@ function newrelicReady() {
  */
 function noticeError(error, customAttributes) {
   if (newrelicReady()) {
-    newrelic.noticeError(error, customAttributes);
+    newrelic.noticeError(error, {
+      ...customAttributes,
+      environment: process.env.buildEnv,
+    });
   }
 }
 
@@ -74,7 +77,10 @@ function startPageView(routeName) {
  */
 function trackEvent(name, customAttributes) {
   if (newrelicReady()) {
-    newrelic.addPageAction(name, customAttributes);
+    newrelic.addPageAction(name, {
+      ...customAttributes,
+      environment: process.env.buildEnv,
+    });
   }
 }
 
