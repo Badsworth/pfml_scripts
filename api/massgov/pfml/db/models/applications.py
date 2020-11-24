@@ -159,7 +159,9 @@ class Application(Base):
     __tablename__ = "application"
     application_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
     user_id = Column(UUID(as_uuid=True), ForeignKey("user.user_id"), nullable=False, index=True)
-    tax_identifier_id = Column(UUID(as_uuid=True), ForeignKey("tax_identifier.tax_identifier_id"))
+    tax_identifier_id = Column(
+        UUID(as_uuid=True), ForeignKey("tax_identifier.tax_identifier_id"), index=True
+    )
     nickname = Column(Text)
     requestor = Column(Integer)
     employee_id = Column(UUID(as_uuid=True), ForeignKey("employee.employee_id"), index=True)

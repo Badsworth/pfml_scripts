@@ -2438,7 +2438,13 @@ def test_application_post_submit_fineos_forbidden(client, fineos_user, fineos_us
 
 
 def test_application_post_submit_ssn_fraud_error(
-    client, user, consented_user, auth_token, test_db_session, enable_application_fraud_check
+    client,
+    user,
+    consented_user,
+    employer_user,
+    auth_token,
+    test_db_session,
+    enable_application_fraud_check,
 ):
     # This tests the case where an application is submitted, but another application
     # with the same SSN but different user ids exists. These need to be handled
@@ -2449,6 +2455,10 @@ def test_application_post_submit_ssn_fraud_error(
     tax_identifier = TaxIdentifier(tax_identifier="123456789")
     other_app = ApplicationFactory.create(user=consented_user)
     other_app.tax_identifier = tax_identifier
+
+    assert user.active_directory_id != employer_user.active_directory_id
+    another_app = ApplicationFactory.create(user=employer_user)
+    another_app.tax_identifier = tax_identifier
 
     application = ApplicationFactory.create(user=user)
     application.continuous_leave_periods = [

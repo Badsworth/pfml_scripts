@@ -14,9 +14,8 @@ from massgov.pfml.db.models.applications import (
     EmploymentStatus,
     LeaveReason,
     LeaveReasonQualifier,
-    TaxIdentifier,
 )
-from massgov.pfml.db.models.employees import PaymentType, User
+from massgov.pfml.db.models.employees import PaymentType
 
 PFML_PROGRAM_LAUNCH_DATE = date(2021, 1, 1)
 MAX_DAYS_IN_ADVANCE_TO_SUBMIT = 60
@@ -730,18 +729,18 @@ def validate_application_state(
     # We consider an application potentially fraudulent if another application exists that:
     #   Has the same tax identifier
     #   Has a different user
-    applications = (
+    application = (
         db_session.query(Application).filter(
-            TaxIdentifier.tax_identifier == existing_application.tax_identifier.tax_identifier,
+            Application.tax_identifier_id == existing_application.tax_identifier_id,
             Application.application_id != existing_application.application_id,
-            User.active_directory_id != existing_application.user.active_directory_id,
+            Application.user_id != existing_application.user_id,
         )
-    ).all()
+    ).first()
 
-    # This may be a case of fraud if any applications were returned.
+    # This may be a case of fraud if any application was returned.
     # Add an issue, the portal will display information indicating
     # the user should reach out to the contact center for additional assistance.
-    if applications:
+    if application:
         issues.append(
             Issue(message="Request by current user not allowed", rule=IssueRule.disallow_attempts,)
         )
