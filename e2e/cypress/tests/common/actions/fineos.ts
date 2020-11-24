@@ -87,9 +87,9 @@ export function searchScenario(): void {
   cy.get('a[aria-label="Cases"]').click();
   cy.get('td[keytipnumber="4"]').contains("Case").click();
 
-  /* For Testing (hard coded Claim Number)
-    cy.labelled("Case Number").type("NTN-528-ABS-01");
-   */
+  // For Testing (hard coded Claim Number)
+  // cy.labelled("Case Number").type("NTN-5390-ABS-01");
+
   cy.unstash("claimNumber")
     .as("claimNumber")
     .then((claimNumber) => {
@@ -111,9 +111,9 @@ export function searchClaimant(): void {
 }
 
 export function findClaim(): void {
-  /* For Testing (hard coded Claim Number)
-    cy.get("h2 > span").should("contain.text", "NTN-528-ABS-01");
-   */
+  // For Testing (hard coded Claim Number)
+  // cy.get("h2 > span").should("contain.text", "NTN-5390-ABS-01");
+
   cy.unstash("claimNumber").then((claimNumber) => {
     cy.get("h2 > span").should("contain.text", claimNumber);
   });
