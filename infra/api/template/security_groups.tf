@@ -104,6 +104,17 @@ resource "aws_security_group_rule" "rds_postgresql_ingress_lambda" {
   security_group_id        = aws_security_group.rds_postgresql.id
 }
 
+# Allow RDS access from the Smartronix Nessus scanners.
+resource "aws_security_group_rule" "rds_postgresql_ingress_nessus" {
+  type              = "ingress"
+  description       = "PostgreSQL from Smartronix Nessus"
+  from_port         = 5432
+  to_port           = 5432
+  protocol          = "tcp"
+  cidr_blocks       = ["172.21.1.0/27"]
+  security_group_id = aws_security_group.rds_postgresql.id
+}
+
 # Allow outgoing network traffic to RDS databases from data import lambdas
 resource "aws_security_group" "data_import" {
   name        = "${local.app_name}-data-import-${var.environment_name}"
