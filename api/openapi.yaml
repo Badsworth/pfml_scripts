@@ -326,7 +326,7 @@ paths:
                   - $ref: "#/components/schemas/SuccessfulResponse"
                   - properties:
                       data:
-                        $ref: "#/components/schemas/ClaimReviewResponse"
+                        $ref: "#/components/schemas/UpdateClaimReviewResponse"
         "404":
           $ref: "#/components/responses/NotFound"
       requestBody:
@@ -1120,7 +1120,7 @@ components:
         - previous_leaves
         - hours_worked_per_week
 
-    ClaimReviewResponse:
+    UpdateClaimReviewResponse:
       type: object
       properties:
         claim_id:
@@ -1128,6 +1128,40 @@ components:
       additionalProperties: false
       required:
         - claim_id
+
+    ClaimReviewResponse:
+      type: object
+      properties:
+        date_of_birth:
+          $ref: "#/components/schemas/Date"
+        employer_benefits:
+          type: array
+          items:
+            $ref: "#/components/schemas/EmployerBenefit"
+        employer_fein:
+          $ref: "#/components/schemas/Fein"
+        fineos_absence_id:
+          type: string
+          example: "NTN-111-ABS-01"
+        first_name:
+          type: string
+        last_name:
+          type: string
+        leave_details:
+          $ref: "#/components/schemas/EmployerLeaveDetails"
+        middle_name:
+          type: string
+        previous_leaves:
+          type: array
+          items:
+            $ref: "#/components/schemas/PreviousLeave"  
+        residential_address:
+          $ref: "#/components/schemas/Address"
+        tax_identifier:
+          $ref: "#/components/schemas/SsnItin"
+        follow_up_date:
+          $ref: "#/components/schemas/Date"
+      additionalProperties: false
 
     PreviousLeave:
       type: object
@@ -1585,6 +1619,72 @@ components:
       required:
         - financially_eligible
         - description
+
+    EmployerLeaveDetails:
+      type: object
+      properties:
+        reason:
+          type: string
+          nullable: true
+        continuous_leave_periods:
+          $ref: "#/components/schemas/EmployerContinuousLeavePeriods"
+        intermittent_leave_periods:
+          $ref: "#/components/schemas/EmployerIntermittentLeavePeriods"
+        reduced_schedule_leave_periods:
+          $ref: "#/components/schemas/EmployerReducedScheduleLeavePeriods"
+
+    EmployerContinuousLeavePeriods:
+      type: object
+      properties:
+        start_date:
+          $ref: "#/components/schemas/Date"
+        end_date:
+          $ref: "#/components/schemas/Date"
+
+    EmployerIntermittentLeavePeriods:
+      type: object
+      properties:
+        start_date:
+          $ref: "#/components/schemas/Date"
+        end_date:
+          $ref: "#/components/schemas/Date"
+        frequency:
+          type: integer
+          nullable: true
+          example: 4
+        frequency_interval:
+          type: integer
+          nullable: true
+          example: 2
+        frequency_interval_basis:
+          type: string
+          nullable: true
+          enum:
+            - Days
+            - Weeks
+            - Months
+          example: "Weeks"
+        duration:
+          type: integer
+          nullable: true
+          example: 2
+        duration_basis:
+          type: string
+          nullable: true
+          enum:
+            - Minutes
+            - Hours
+            - Days
+          example: "Days"
+
+    EmployerReducedScheduleLeavePeriods:
+      type: object
+      properties:
+        start_date:
+          $ref: "#/components/schemas/Date"
+        end_date:
+          $ref: "#/components/schemas/Date"
+
 
     ApplicationLeaveDetails:
       type: object

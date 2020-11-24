@@ -529,6 +529,38 @@ class FINEOSClient(client.AbstractFINEOSClient):
             for doc in documents
         ]
 
+    def get_managed_requirements(
+        self, user_id: str, absence_id: str
+    ) -> List[models.group_client_api.ManagedRequirementDetails]:
+        header_content_type = None
+
+        response = self._group_client_api(
+            "GET",
+            f"groupClient/cases/{absence_id}/managedRequirements",
+            user_id,
+            header_content_type=header_content_type,
+        )
+
+        managed_reqs = response.json()
+
+        return [
+            models.group_client_api.ManagedRequirementDetails.parse_obj(
+                set_empty_dates_to_none(
+                    managed_reqs,
+                    [
+                        "dateRequested",
+                        "notProceedingWithDate",
+                        "dateLastFollowedUp",
+                        "followUpDate",
+                        "dateCompleted",
+                        "creationDate",
+                        "dateSuppressed",
+                    ],
+                )
+            )
+            for req in managed_reqs
+        ]
+
     def get_documents(self, user_id: str, absence_id: str) -> List[models.customer_api.Document]:
         header_content_type = None
 

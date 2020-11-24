@@ -117,6 +117,12 @@ class AbstractFINEOSClient(abc.ABC, metaclass=abc.ABCMeta):
         pass
 
     @abc.abstractmethod
+    def get_managed_requirements(
+        self, user_id: str, absence_id: str
+    ) -> typing.List[models.group_client_api.ManagedRequirementDetails]:
+        pass
+
+    @abc.abstractmethod
     def get_documents(
         self, user_id: str, absence_id: str
     ) -> typing.List[models.customer_api.Document]:

@@ -127,6 +127,7 @@ def test_employers_receive_200_from_get_claim_review(
     )
 
     assert response.status_code == 200
+    assert response.get_json()["data"]["follow_up_date"] == "2021-02-01"
 
 
 def test_non_employees_cannot_access_employer_update_claim_review(client, auth_token):

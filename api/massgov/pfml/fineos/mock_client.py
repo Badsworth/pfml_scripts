@@ -309,6 +309,41 @@ class MockFINEOSClient(client.AbstractFINEOSClient):
             )
         ]
 
+    def get_managed_requirements(
+        self, user_id: str, absence_id: str
+    ) -> List[models.group_client_api.ManagedRequirementDetails]:
+
+        return [
+            models.group_client_api.ManagedRequirementDetails.parse_obj(
+                {
+                    "managedReqId": 123,
+                    "category": "Fake Category",
+                    "type": "Leave Admin Info Request",
+                    "followUpDate": datetime.date(2021, 2, 1),
+                    "documentReceived": True,
+                    "creator": "Fake Creator",
+                    "subjectPartyName": "Fake Name",
+                    "sourceOfInfoPartyName": "Fake Sourcee",
+                    "creationDate": datetime.date(2020, 1, 1),
+                    "dateSuppressed": datetime.date(2020, 3, 1),
+                }
+            ),
+            models.group_client_api.ManagedRequirementDetails.parse_obj(
+                {
+                    "managedReqId": 123,
+                    "category": "Fake Category",
+                    "type": "Fake Type",
+                    "followUpDate": datetime.date(2021, 2, 1),
+                    "documentReceived": True,
+                    "creator": "Fake Creator",
+                    "subjectPartyName": "Fake Name",
+                    "sourceOfInfoPartyName": "Fake Sourcee",
+                    "creationDate": datetime.date(2020, 1, 1),
+                    "dateSuppressed": datetime.date(2020, 3, 1),
+                }
+            ),
+        ]
+
     def group_client_get_documents(
         self, user_id: str, absence_id: str
     ) -> List[models.group_client_api.GroupClientDocument]:

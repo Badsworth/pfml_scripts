@@ -21,6 +21,8 @@ from massgov.pfml.fineos.transforms.from_fineos.eforms import (
 )
 from massgov.pfml.fineos.transforms.to_fineos.eforms import EFormBody
 
+LEAVE_ADMIN_INFO_REQUEST_TYPE = "Leave Admin Info Request"
+
 logger = logging.get_logger(__name__)
 
 
@@ -116,8 +118,15 @@ def get_claim_as_leave_admin(
         customer_id = absence_periods["decisions"][0]["employee"]["id"]
         customer_info = fineos.get_customer_info(fineos_user_id, customer_id).dict()
         eform_summaries = fineos.get_eform_summary(fineos_user_id, absence_id)
+        managed_reqs = fineos.get_managed_requirements(fineos_user_id, absence_id)
         other_leaves: List[PreviousLeave] = []
         other_incomes: List[EmployerBenefit] = []
+        follow_up_date = None
+
+        for req in managed_reqs:
+            if req.type == LEAVE_ADMIN_INFO_REQUEST_TYPE:
+                follow_up_date = req.followUpDate
+                break
 
         for eform_summary_obj in eform_summaries:
             eform_summary = eform_summary_obj.dict()
@@ -155,6 +164,7 @@ def get_claim_as_leave_admin(
             tax_identifier=customer_info["idNumber"][-4:]
             if customer_info["idNumber"] is not None
             else "",
+            follow_up_date=follow_up_date,
         )
     except massgov.pfml.fineos.FINEOSClientError as error:
         logger.exception("FINEOS Client Exception", extra={"error": error})
