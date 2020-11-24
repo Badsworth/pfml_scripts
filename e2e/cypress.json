@@ -1,5 +1,5 @@
 {
-  "integrationFolder": "cypress/tests",
+  "integrationFolder": "cypress/specs",
   "watchForFileChanges": false,
   "defaultCommandTimeout": 20000,
   "video": true,
@@ -8,10 +8,15 @@
   "env": {
     "TAGS": "not @ignore"
   },
-  "retries": 1,
-  "testFiles": "**/*.feature",
+  "retries": {
+    "openMode": 0,
+    "runMode": 1
+  },
+  "testFiles": [
+    "**/*.feature"
+  ],
   "viewportWidth": 2000,
   "viewportHeight": 1320,
-  "ignoreTestFiles": ["**/medical/*.feature"],
+  "ignoreTestFiles": ["1.2/**"],
   "experimentalNetworkStubbing": true
 }

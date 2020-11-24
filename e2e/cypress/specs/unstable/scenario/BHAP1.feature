@@ -1,3 +1,4 @@
+
 Feature: Submit a bonding claim and adjucation approval - BHAP1
 
   @portal
@@ -15,7 +16,7 @@ Feature: Submit a bonding claim and adjucation approval - BHAP1
     And I answer the continuous leave question
     And I answer the reduced leave question
     And I answer the intermittent leave question
-    # Note: 
+    # Note:
     # Feature has been removed until soft launch (2nd Dec 2020)
     # Given I am on the claims "checklist" page
     # When I click on the checklist button called "Report other leave, income, and benefits"
@@ -38,7 +39,7 @@ Feature: Submit a bonding claim and adjucation approval - BHAP1
     Given I am on the claims "review" page
     Then I should have agreed and successfully submitted the claim
     And I should be able to confirm claim was submitted successfully
-    
+
   @fineos
   Scenario: As a CSR (Savilinx), I should be able to Approve a BHAP1 claim submission
     Given I am logged into Fineos as a Savilinx user
