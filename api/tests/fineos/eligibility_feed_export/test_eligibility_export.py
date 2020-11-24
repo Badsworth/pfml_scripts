@@ -80,6 +80,9 @@ def test_main_success_non_fineos_location(
 
     WagesAndContributionsFactory.create()
 
+    batch_output_dir = tmp_path / "batch1"
+    batch_output_dir.mkdir()
+
     monkeypatch.setenv("OUTPUT_DIRECTORY_PATH", str(tmp_path))
     monkeypatch.setenv(
         "FINEOS_AWS_IAM_ROLE_ARN",

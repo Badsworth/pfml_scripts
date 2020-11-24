@@ -3,6 +3,7 @@ import csv
 import dataclasses
 import enum
 import itertools
+import math
 import os
 from concurrent.futures import ProcessPoolExecutor
 from dataclasses import dataclass
@@ -422,7 +423,7 @@ def process_all_worker_initializer(
 
 
 def process_all_worker(
-    config: EligibilityFeedExportConfig, employer: Employer
+    config: EligibilityFeedExportConfig, employer: Employer, index: int, total_employers_count: int
 ) -> Tuple[TaskResultStatus, Optional[int]]:
     global db_session, fineos, output_transport_params
     output_dir_path = config.output_directory_path
@@ -453,8 +454,12 @@ def process_all_worker(
             1000
         )
 
+        output_bundle_dir_path = determine_bundle_path(
+            output_dir_path, index, total_employers_count
+        )
+
         open_and_write_to_eligibility_file(
-            output_dir_path,
+            output_bundle_dir_path,
             fineos_employer_id,
             employer,
             number_of_employees,
@@ -496,6 +501,8 @@ def process_all_employers(
         total_count=employers_count,
     )
 
+    employers_with_logging_and_index = enumerate(employers_with_logging, 0)
+
     max_workers: Optional[int] = None
 
     # this should be big enough to keep all workers fed, any more doesn't
@@ -515,8 +522,10 @@ def process_all_employers(
         initargs=(make_db_session, make_fineos_client, make_fineos_boto_session, config),
     ) as executor:
         futures = {
-            executor.submit(process_all_worker, config, employer)
-            for employer in itertools.islice(employers_with_logging, work_queue_size)
+            executor.submit(process_all_worker, config, employer, index, employers_count)
+            for index, employer in itertools.islice(
+                employers_with_logging_and_index, work_queue_size
+            )
         }
 
         while futures:
@@ -542,8 +551,10 @@ def process_all_employers(
                 elif status is TaskResultStatus.ERROR:
                     report.employers_error_count += 1
 
-            for employer in itertools.islice(employers_with_logging, len(done)):
-                futures.add(executor.submit(process_all_worker, config, employer))
+            for index, employer in itertools.islice(employers_with_logging_and_index, len(done)):
+                futures.add(
+                    executor.submit(process_all_worker, config, employer, index, employers_count)
+                )
 
     db_session.close()
 
@@ -557,6 +568,28 @@ ELIGIBILITY_FEED_CSV_ENCODERS: csv_util.Encoders = {
     date: lambda d: d.strftime("%m/%d/%Y"),
     Decimal: lambda n: str(round(n, 6)),
 }
+
+
+def determine_bundle_path(
+    output_dir_path: str, index: int, total: int, total_bundles: int = 12
+) -> str:
+    bundle_size_initial = 1000
+    bundle_size_after_initial = math.ceil((total - bundle_size_initial) / (total_bundles - 1))
+
+    if index >= total:
+        raise ValueError("Item count is greater than expected total")
+
+    if index < bundle_size_initial:
+        bundle_num = 1
+    else:
+        minus_initial = index - bundle_size_initial
+        bundle_num_calculated = (minus_initial // bundle_size_after_initial) + 2
+        # just in case something is off in the calculation, clamp it to a valid
+        # batch number, i.e., after the initial one and no more than the
+        # total_bundles limit
+        bundle_num = max(min(bundle_num_calculated, 12), 2)
+
+    return f"{output_dir_path}/batch{bundle_num}"
 
 
 def open_and_write_to_eligibility_file(

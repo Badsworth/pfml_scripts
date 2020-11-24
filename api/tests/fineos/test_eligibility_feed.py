@@ -19,6 +19,9 @@ from massgov.pfml.db.models.factories import (
 )
 from massgov.pfml.util.pydantic.types import TaxIdUnformattedStr
 
+# almost every test in here requires real resources
+pytestmark = pytest.mark.integration
+
 
 class SpecialTestException(Exception):
     """Exception only defined here for ensure mocked exception is bubbled up"""
@@ -424,6 +427,9 @@ def test_process_all_employers_simple(
 ):
     WagesAndContributionsFactory.create()
 
+    batch_output_dir = tmp_path / "batch1"
+    batch_output_dir.mkdir()
+
     process_results = call_process_all_employers(monkeypatch, tmp_path)
 
     assert process_results.started_at
@@ -434,7 +440,7 @@ def test_process_all_employers_simple(
     assert process_results.employers_skipped_count == 0
     assert process_results.employee_and_employer_pairs_total_count == 1
 
-    assert_number_of_data_lines_in_each_file(tmp_path, 1)
+    assert_number_of_data_lines_in_each_file(batch_output_dir, 1)
 
 
 def test_process_all_employers_no_records(
@@ -499,6 +505,9 @@ def test_process_all_employers_for_single_employee_different_employers(
     # wages_for_single_employee_different_employers
     WagesAndContributionsFactory.create_batch(size=5, employee=EmployeeFactory.create())
 
+    batch_output_dir = tmp_path / "batch1"
+    batch_output_dir.mkdir()
+
     process_results = call_process_all_employers(monkeypatch, tmp_path)
 
     assert process_results.started_at
@@ -509,7 +518,7 @@ def test_process_all_employers_for_single_employee_different_employers(
     assert process_results.employers_skipped_count == 0
     assert process_results.employee_and_employer_pairs_total_count == 5
 
-    assert_number_of_data_lines_in_each_file(tmp_path, 1)
+    assert_number_of_data_lines_in_each_file(batch_output_dir, 1)
 
 
 def test_process_all_employers_for_single_employer_different_employees(
@@ -517,6 +526,9 @@ def test_process_all_employers_for_single_employer_different_employees(
 ):
     # wages_for_single_employer_different_employees
     WagesAndContributionsFactory.create_batch(size=5, employer=EmployerFactory.create())
+
+    batch_output_dir = tmp_path / "batch1"
+    batch_output_dir.mkdir()
 
     process_results = call_process_all_employers(monkeypatch, tmp_path)
 
@@ -528,7 +540,7 @@ def test_process_all_employers_for_single_employer_different_employees(
     assert process_results.employers_skipped_count == 0
     assert process_results.employee_and_employer_pairs_total_count == 5
 
-    assert_number_of_data_lines_in_each_file(tmp_path, 5)
+    assert_number_of_data_lines_in_each_file(batch_output_dir, 5)
 
 
 def test_process_all_employers_for_multiple_wages_for_single_employee_employer_pair(
@@ -538,6 +550,9 @@ def test_process_all_employers_for_multiple_wages_for_single_employee_employer_p
     WagesAndContributionsFactory.create_batch(
         size=5, employee=EmployeeFactory.create(), employer=EmployerFactory.create()
     )
+
+    batch_output_dir = tmp_path / "batch1"
+    batch_output_dir.mkdir()
 
     process_results = call_process_all_employers(monkeypatch, tmp_path)
 
@@ -549,7 +564,7 @@ def test_process_all_employers_for_multiple_wages_for_single_employee_employer_p
     assert process_results.employers_skipped_count == 0
     assert process_results.employee_and_employer_pairs_total_count == 1
 
-    assert_number_of_data_lines_in_each_file(tmp_path, 1)
+    assert_number_of_data_lines_in_each_file(batch_output_dir, 1)
 
 
 def test_process_all_employers_skips_nonexistent_employer(
@@ -567,6 +582,9 @@ def test_process_all_employers_skips_nonexistent_employer(
     employer = EmployerFactory.create()
     WagesAndContributionsFactory.create_batch(size=5, employer=employer)
 
+    batch_output_dir = tmp_path / "batch1"
+    batch_output_dir.mkdir()
+
     process_results = call_process_all_employers(monkeypatch, tmp_path)
 
     assert process_results.started_at
@@ -577,8 +595,8 @@ def test_process_all_employers_skips_nonexistent_employer(
     assert process_results.employers_skipped_count == 1
     assert process_results.employee_and_employer_pairs_total_count == 5
 
-    assert_employer_file_exists(tmp_path, employer.fineos_employer_id)
-    assert_number_of_data_lines_in_each_file(tmp_path, 5)
+    assert_employer_file_exists(batch_output_dir, employer.fineos_employer_id)
+    assert_number_of_data_lines_in_each_file(batch_output_dir, 5)
 
 
 def test_get_latest_employer_for_updates():
@@ -791,3 +809,47 @@ def test_open_and_write_to_eligibility_file_delete_on_exception_on_create(
     s3 = boto3.resource("s3")
     s3_bucket = s3.Bucket(mock_s3_bucket)
     assert list(s3_bucket.objects.all()) == []
+
+
+def test_determine_bundle_path():
+    total = 500
+    assert ef.determine_bundle_path("foo", 0, total) == "foo/batch1"
+    assert ef.determine_bundle_path("foo", 1, total) == "foo/batch1"
+    with pytest.raises(ValueError):
+        assert ef.determine_bundle_path("foo", 501, total) == "foo/batch1"
+
+    total = 12000
+    assert ef.determine_bundle_path("foo", 0, total) == "foo/batch1"
+    assert ef.determine_bundle_path("foo", 1, total) == "foo/batch1"
+    assert ef.determine_bundle_path("foo", 1000, total) == "foo/batch2"
+    assert ef.determine_bundle_path("foo", 2000, total) == "foo/batch3"
+    assert ef.determine_bundle_path("foo", 3000, total) == "foo/batch4"
+    assert ef.determine_bundle_path("foo", 4000, total) == "foo/batch5"
+    assert ef.determine_bundle_path("foo", 5000, total) == "foo/batch6"
+    assert ef.determine_bundle_path("foo", 6000, total) == "foo/batch7"
+    assert ef.determine_bundle_path("foo", 7000, total) == "foo/batch8"
+    assert ef.determine_bundle_path("foo", 8000, total) == "foo/batch9"
+    assert ef.determine_bundle_path("foo", 9000, total) == "foo/batch10"
+    assert ef.determine_bundle_path("foo", 10000, total) == "foo/batch11"
+    assert ef.determine_bundle_path("foo", 11000, total) == "foo/batch12"
+    assert ef.determine_bundle_path("foo", 11999, total) == "foo/batch12"
+
+    total = 250000
+    assert ef.determine_bundle_path("foo", 0, total) == "foo/batch1"
+    assert ef.determine_bundle_path("foo", 1, total) == "foo/batch1"
+    assert ef.determine_bundle_path("foo", 999, total) == "foo/batch1"
+    assert ef.determine_bundle_path("foo", 1000, total) == "foo/batch2"
+    assert ef.determine_bundle_path("foo", 1001, total) == "foo/batch2"
+    assert ef.determine_bundle_path("foo", 23636, total) == "foo/batch2"
+    assert ef.determine_bundle_path("foo", 23637, total) == "foo/batch3"
+    assert ef.determine_bundle_path("foo", 46273, total) == "foo/batch3"
+    assert ef.determine_bundle_path("foo", 46274, total) == "foo/batch4"
+    assert ef.determine_bundle_path("foo", 68911, total) == "foo/batch5"
+    assert ef.determine_bundle_path("foo", 91548, total) == "foo/batch6"
+    assert ef.determine_bundle_path("foo", 114185, total) == "foo/batch7"
+    assert ef.determine_bundle_path("foo", 136822, total) == "foo/batch8"
+    assert ef.determine_bundle_path("foo", 159459, total) == "foo/batch9"
+    assert ef.determine_bundle_path("foo", 182096, total) == "foo/batch10"
+    assert ef.determine_bundle_path("foo", 204733, total) == "foo/batch11"
+    assert ef.determine_bundle_path("foo", 227370, total) == "foo/batch12"
+    assert ef.determine_bundle_path("foo", 249999, total) == "foo/batch12"
