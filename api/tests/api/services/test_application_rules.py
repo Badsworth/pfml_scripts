@@ -161,6 +161,27 @@ def test_employment_status_required(test_db_session, initialize_factories_sessio
     ] == issues
 
 
+def test_employer_notified_required(test_db_session, initialize_factories_session):
+    test_app = ApplicationFactory.create(
+        employer_notified=None,
+        employment_status=EmploymentStatus.get_instance(
+            test_db_session, template=EmploymentStatus.EMPLOYED
+        ),
+        hours_worked_per_week=70,
+        has_state_id=True,
+        residential_address=AddressFactory.create(),
+        work_pattern=WorkPatternFixedFactory.create(),
+    )
+    issues = get_always_required_issues(test_app)
+    assert [
+        Issue(
+            type=IssueType.required,
+            message="employer_notified is required",
+            field="employer_notified",
+        )
+    ] == issues
+
+
 def test_hours_worked_per_week_required(test_db_session, initialize_factories_session):
     test_app = ApplicationFactory.create(
         employment_status=EmploymentStatus.get_instance(

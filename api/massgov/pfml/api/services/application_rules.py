@@ -358,6 +358,7 @@ ALWAYS_REQUIRED_FIELDS_DB_NAME_TO_API_NAME_MAP = {
     "date_of_birth": "date_of_birth",
     "first_name": "first_name",
     "employment_status": "employment_status",
+    "employer_notified": "employer_notified",
     "has_continuous_leave_periods": "has_continuous_leave_periods",
     "has_intermittent_leave_periods": "has_intermittent_leave_periods",
     "has_mailing_address": "has_mailing_address",

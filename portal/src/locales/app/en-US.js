@@ -80,6 +80,10 @@ const errors = {
       pattern: "Enter a 9-digit number formatted as XX-XXXXXXX.",
       required: "Enter your employer's Employer Identification Number.",
     },
+    employer_notified: {
+      required:
+        "Select yes if you told your employer that you are taking leave.",
+    },
     employment_status: {
       required: "Enter your employment status.",
     },
