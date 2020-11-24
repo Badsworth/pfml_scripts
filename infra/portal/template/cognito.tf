@@ -64,6 +64,10 @@ resource "aws_cognito_user_pool" "claimants_pool" {
       min_length = 0
     }
   }
+
+  tags = merge(module.constants.common_tags, {
+    environment = module.constants.environment_tags[var.environment_name]
+  })
 }
 
 resource "aws_cognito_user_pool_client" "massgov_pfml_client" {
@@ -153,6 +157,10 @@ resource "aws_lambda_function" "cognito_custom_message" {
       NEW_RELIC_DISTRIBUTED_TRACING_ENABLED = true
     }
   }
+
+  tags = merge(module.constants.common_tags, {
+    environment = module.constants.environment_tags[var.environment_name]
+  })
 }
 
 data "archive_file" "cognito_custom_message" {
@@ -167,6 +175,10 @@ data "archive_file" "cognito_custom_message" {
 
 resource "aws_cloudwatch_log_group" "lambda_cognito_custom_message" {
   name = "/aws/lambda/${aws_lambda_function.cognito_custom_message.function_name}"
+
+  tags = merge(module.constants.common_tags, {
+    environment = module.constants.environment_tags[var.environment_name]
+  })
 }
 
 # Allow the Lambda to be invoked by our user pool

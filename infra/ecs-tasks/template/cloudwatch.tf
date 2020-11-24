@@ -1,6 +1,10 @@
 # Cloudwatch log group to for streaming ECS application logs.
 resource "aws_cloudwatch_log_group" "ecs_tasks" {
   name = "service/${local.app_name}-${var.environment_name}/ecs-tasks"
+
+  tags = merge(module.constants.common_tags, {
+    environment = module.constants.environment_tags[var.environment_name]
+  })
 }
 
 locals {

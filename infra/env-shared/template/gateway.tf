@@ -16,6 +16,10 @@ resource "aws_api_gateway_rest_api" "pfml" {
     "image/tiff",
     "image/heic"
   ]
+
+  tags = merge(module.constants.common_tags, {
+    environment = module.constants.environment_tags[var.environment_name]
+  })
 }
 
 resource "aws_api_gateway_deployment" "stage" {

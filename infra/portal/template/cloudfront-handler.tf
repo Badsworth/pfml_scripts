@@ -17,6 +17,9 @@ resource "aws_lambda_function" "cloudfront_handler" {
   source_code_hash = data.archive_file.cloudfront_handler.output_base64sha256
   runtime          = "nodejs12.x"
   publish          = true
+  tags = merge(module.constants.common_tags, {
+    environment = module.constants.environment_tags[var.environment_name]
+  })
 }
 
 resource "aws_lambda_permission" "allow_cloudwatch" {
@@ -28,6 +31,10 @@ resource "aws_lambda_permission" "allow_cloudwatch" {
 
 resource "aws_cloudwatch_log_group" "lambda_cloudfront_handler" {
   name = "/aws/lambda/${aws_lambda_function.cloudfront_handler.function_name}"
+
+  tags = merge(module.constants.common_tags, {
+    environment = module.constants.environment_tags[var.environment_name]
+  })
 }
 
 resource "aws_cloudwatch_log_subscription_filter" "nr_lambda_cloudfront_handler" {

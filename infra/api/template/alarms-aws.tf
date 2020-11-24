@@ -6,12 +6,20 @@
 resource "aws_sns_topic" "api-low-priority-alerts-topic" {
   name         = "api-low-priority-alerts-topic"
   display_name = "PFML API: Low Priority Alerts"
+  tags = merge(module.constants.common_tags, {
+    environment = module.constants.environment_tags[var.environment_name]
+    public      = "no"
+  })
 }
 
 # Defines an SNS topic for high-priority alerts.
 resource "aws_sns_topic" "api-high-priority-alerts-topic" {
   name         = "api-high-priority-alerts-topic"
   display_name = "PFML API: High Priority Alerts"
+  tags = merge(module.constants.common_tags, {
+    environment = module.constants.environment_tags[var.environment_name]
+    public      = "no"
+  })
 }
 
 # Defines SNS topic subscriptions for AWS Cloudwatch
@@ -48,6 +56,10 @@ resource "aws_cloudwatch_metric_alarm" "api_cpu_warn" {
   period              = "60" # polling on one-minute intervals
   actions_enabled     = true
   alarm_actions       = [aws_sns_topic.api-low-priority-alerts-topic.arn]
+
+  tags = merge(module.constants.common_tags, {
+    environment = module.constants.environment_tags[var.environment_name]
+  })
 }
 
 resource "aws_cloudwatch_metric_alarm" "api_cpu_crit" {
@@ -68,6 +80,10 @@ resource "aws_cloudwatch_metric_alarm" "api_cpu_crit" {
   actions_enabled     = true
   alarm_actions       = [aws_sns_topic.api-high-priority-alerts-topic.arn]
   ok_actions          = [aws_sns_topic.api-high-priority-alerts-topic.arn]
+
+  tags = merge(module.constants.common_tags, {
+    environment = module.constants.environment_tags[var.environment_name]
+  })
 }
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -89,6 +105,10 @@ resource "aws_cloudwatch_metric_alarm" "api_ram_warn" {
   period              = "60" # polling on one-minute intervals
   actions_enabled     = true
   alarm_actions       = [aws_sns_topic.api-low-priority-alerts-topic.arn]
+
+  tags = merge(module.constants.common_tags, {
+    environment = module.constants.environment_tags[var.environment_name]
+  })
 }
 
 resource "aws_cloudwatch_metric_alarm" "api_ram_crit" {
@@ -109,6 +129,10 @@ resource "aws_cloudwatch_metric_alarm" "api_ram_crit" {
   actions_enabled     = true
   alarm_actions       = [aws_sns_topic.api-high-priority-alerts-topic.arn]
   ok_actions          = [aws_sns_topic.api-high-priority-alerts-topic.arn]
+
+  tags = merge(module.constants.common_tags, {
+    environment = module.constants.environment_tags[var.environment_name]
+  })
 }
 
 # ----------------------------------------------------------------------------------------------------------------------

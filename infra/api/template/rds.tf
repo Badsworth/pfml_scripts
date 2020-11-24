@@ -20,6 +20,9 @@ resource "aws_ssm_parameter" "db_password" {
   name  = "/service/${local.app_name}/${var.environment_name}/db-password"
   type  = "SecureString"
   value = random_password.rds_super_password.result
+  tags = merge(module.constants.common_tags, {
+    environment = module.constants.environment_tags[var.environment_name]
+  })
 }
 
 resource "aws_db_subnet_group" "rds_postgres_dbprivate" {

@@ -37,6 +37,7 @@ resource "aws_cloudfront_distribution" "portal_web_distribution" {
     }
   }
 
+  comment             = "PFML Claimant Portal (${var.environment_name})"
   enabled             = true
   is_ipv6_enabled     = true
   http_version        = "http2"
@@ -48,6 +49,9 @@ resource "aws_cloudfront_distribution" "portal_web_distribution" {
   # to AWS API objects and won’t poll for the distribution to become ready,
   # which can take 15 to 20 minutes
   wait_for_deployment = false
+  tags = merge(module.constants.common_tags, {
+    environment = module.constants.environment_tags[var.environment_name]
+  })
 
   default_cache_behavior {
     allowed_methods  = ["GET", "HEAD", "OPTIONS"]

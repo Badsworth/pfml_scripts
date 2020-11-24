@@ -51,6 +51,10 @@ resource "aws_ecs_task_definition" "app" {
   memory                   = "2048"
   requires_compatibilities = ["FARGATE"]
   network_mode             = "awsvpc"
+
+  tags = merge(module.constants.common_tags, {
+    environment = module.constants.environment_tags[var.environment_name]
+  })
 }
 
 data "template_file" "container_definitions" {

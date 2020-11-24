@@ -52,6 +52,10 @@ resource "aws_lambda_function" "cognito_pre_signup" {
       NEW_RELIC_DISTRIBUTED_TRACING_ENABLED = true
     }
   }
+
+  tags = merge(module.constants.common_tags, {
+    environment = module.constants.environment_tags[var.environment_name]
+  })
 }
 
 resource "aws_lambda_permission" "allow_cognito_pre_signup" {
@@ -108,6 +112,10 @@ resource "aws_lambda_function" "cognito_post_confirmation" {
       FINEOS_CLIENT_OAUTH2_CLIENT_SECRET_SSM_PATH = "/service/${local.app_name}/${var.environment_name}/fineos_oauth2_client_secret"
     }
   }
+
+  tags = merge(module.constants.common_tags, {
+    environment = module.constants.environment_tags[var.environment_name]
+  })
 }
 
 resource "aws_lambda_permission" "allow_cognito_post_confirmation" {
@@ -155,6 +163,10 @@ resource "aws_lambda_function" "formstack_import" {
       NEW_RELIC_DISTRIBUTED_TRACING_ENABLED = true
     }
   }
+
+  tags = merge(module.constants.common_tags, {
+    environment = module.constants.environment_tags[var.environment_name]
+  })
 }
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -201,6 +213,10 @@ resource "aws_lambda_function" "eligibility_feed" {
       FINEOS_AWS_IAM_ROLE_EXTERNAL_ID             = var.fineos_aws_iam_role_external_id
     }
   }
+
+  tags = merge(module.constants.common_tags, {
+    environment = module.constants.environment_tags[var.environment_name]
+  })
 }
 
 # ----------------------------------------------------------------------------------------------------------------------

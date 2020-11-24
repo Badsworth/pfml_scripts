@@ -13,7 +13,7 @@ output "newrelic_log_ingestion_arn" {
   value = "arn:aws:lambda:us-east-1:498823821309:function:newrelic-log-ingestion"
 }
 
-# Mapping of different environments/VPCs to resource tags
+# Mapping of different environments/VPC names to EOTSS-mandated AWS tags
 output "environment_tags" {
   value = {
     "test"        = "test"
