@@ -44,7 +44,7 @@ resource "aws_appautoscaling_scheduled_action" "ecs_api_stop" {
 
   # Stop API service at the end of every weekday at midnight (5AM UTC on the next day)
   # This is an hour off during daylight savings time but it works well enough.
-  schedule = "cron(00 5 * * TUE-SAT)"
+  schedule = "cron(00 5 ? * TUE-SAT *)"
 }
 
 # Start API service each weekday at 7am ET.
@@ -63,5 +63,5 @@ resource "aws_appautoscaling_scheduled_action" "ecs_api_start" {
 
   # Start API service every weekday at 7AM Eastern, 12PM UTC
   # This is an hour off during daylight savings time but it works well enough.
-  schedule = "cron(00 12 * * MON-FRI)"
+  schedule = "cron(00 12 ? * MON-FRI *)"
 }
