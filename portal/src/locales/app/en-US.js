@@ -284,6 +284,8 @@ const errors = {
       },
     },
     rules: {
+      disallow_attempts:
+        "We already have an account set up for you. Please sign in with that account. If that doesn't look familiar to you, call the Contact Center at $t(shared.contactCenterPhoneNumber).",
       disallow_hybrid_intermittent_leave:
         "You cannot request intermittent leave in the same application as your continuous or reduced schedule leave. Create a separate application for your intermittent leave dates.",
       disallow_overlapping_leave_periods:
