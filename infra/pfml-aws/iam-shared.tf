@@ -26,6 +26,7 @@ data "aws_iam_policy_document" "developers_and_ci_deploy_access_policy" {
       "acm:Describe*",
       "acm:Get*",
       "acm:List*",
+      "acm:AddTagsToCertificate",
 
       # Allow teams to configure logging and monitoring.
       "cloudtrail:*",
