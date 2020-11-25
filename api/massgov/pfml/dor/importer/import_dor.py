@@ -160,7 +160,7 @@ def process_import_batches(
         # Initialize the database
         db_session_raw = optional_db_session
         if not db_session_raw:
-            db_session_raw = db.init()
+            db_session_raw = db.init(sync_lookups=True)
 
         with db.session_scope(db_session_raw) as db_session:
 
