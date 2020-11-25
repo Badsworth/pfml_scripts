@@ -6,11 +6,11 @@ import xml.dom.minidom as minidom
 from datetime import datetime
 from typing import Any, Dict, List
 
+import massgov.pfml.payments.payments_util as payments_util
 import massgov.pfml.util.datetime as datetime_util
+from massgov.pfml.payments.payments_util import Constants
 
 TWOPLACES = decimal.Decimal(10) ** -2
-COMPTROLLER_UNIT_CODE = "8770"
-COMPTROLLER_DEPT_CODE = "EOL"
 
 
 # Mappings of attributes to their static values
@@ -19,8 +19,8 @@ generic_attributes = {
     "DOC_CAT": "ABS",
     "DOC_TYP": "ABS",
     "DOC_CD": "GAX",
-    "DOC_DEPT_CD": COMPTROLLER_DEPT_CODE,
-    "DOC_UNIT_CD": COMPTROLLER_UNIT_CODE,
+    "DOC_DEPT_CD": Constants.COMPTROLLER_DEPT_CODE,
+    "DOC_UNIT_CD": Constants.COMPTROLLER_UNIT_CODE,
     "DOC_VERS_NO": "1",
 }
 
@@ -33,16 +33,11 @@ abs_doc_actg_attributes = {
     "DOC_ACTG_LN_NO": "1",
     "VEND_INV_LN_NO": "1",
     "RFED_DOC_CD": "GAE",
-    "RFED_DOC_DEPT_CD": COMPTROLLER_DEPT_CODE,
+    "RFED_DOC_DEPT_CD": Constants.COMPTROLLER_DEPT_CODE,
     "RFED_VEND_LN_NO": "1",
     "RFED_ACTG_LN_NO": "1",
     "RF_TYP": "1",
 }
-
-
-def add_attributes(element: minidom.Element, attributes: Dict[str, str]) -> None:
-    for k, v in attributes.items():
-        element.setAttribute(k, v)
 
 
 def get_fiscal_year(date_value: datetime) -> int:
@@ -82,17 +77,8 @@ def get_rfed_doc_id(leave_type: str) -> str:
     raise Exception(f"Leave type {leave_type} not found")
 
 
-def add_cdata_elements(
-    parent: minidom.Element, xml_document: minidom.Document, elements: Dict[str, Any]
-) -> None:
-    for key, val in elements.items():
-        elem = xml_document.createElement(key)
-        add_attributes(elem, {"Attribute": "Y"})
-        parent.appendChild(elem)
-
-        # Anything in the CDATA tag is passed directly and markup ignored
-        cdata = xml_document.createCDATASection(str(val))
-        elem.appendChild(cdata)
+def get_doc_id() -> str:
+    return "INTF" + "".join(random.choices(string.ascii_letters + string.digits, k=16))
 
 
 # Note, doc_data is going to be replaced with an actual db model object(s?).
@@ -114,7 +100,7 @@ def build_individual_gax_document(
     start_date = doc_data["paymentstartp"]
     end_date = doc_data["paymentendper"]
 
-    doc_id = "INTF" + "".join(random.choices(string.ascii_letters + string.digits, k=16))
+    doc_id = get_doc_id()
     event_type_id = get_event_type_id(leave_type)
     rfed_doc_id = get_rfed_doc_id(leave_type)
 
@@ -128,11 +114,11 @@ def build_individual_gax_document(
     ams_document_attributes.update(ams_doc_attributes.copy())
     ams_document_attributes.update(generic_attributes.copy())
     root = xml_document.createElement("AMS_DOCUMENT")
-    add_attributes(root, ams_document_attributes)
+    payments_util.add_attributes(root, ams_document_attributes)
 
     # Add the ABS_DOC_HDR
     abs_doc_hdr = xml_document.createElement("ABS_DOC_HDR")
-    add_attributes(abs_doc_hdr, {"AMSDataObject": "Y"})
+    payments_util.add_attributes(abs_doc_hdr, {"AMSDataObject": "Y"})
     root.appendChild(abs_doc_hdr)
 
     # Add the individual ABS_DOC_HDR values
@@ -143,11 +129,11 @@ def build_individual_gax_document(
         "DOC_PER_DC": doc_period,
     }
     abs_doc_hdr_elements.update(generic_attributes.copy())
-    add_cdata_elements(abs_doc_hdr, xml_document, abs_doc_hdr_elements)
+    payments_util.add_cdata_elements(abs_doc_hdr, xml_document, abs_doc_hdr_elements)
 
     # Add the ABS_DOC_VEND
     abs_doc_vend = xml_document.createElement("ABS_DOC_VEND")
-    add_attributes(abs_doc_vend, {"AMSDataObject": "Y"})
+    payments_util.add_attributes(abs_doc_vend, {"AMSDataObject": "Y"})
     root.appendChild(abs_doc_vend)
     # Add the individual ABS_DOC_VEND values
     abs_doc_vend_elements = {
@@ -157,11 +143,11 @@ def build_individual_gax_document(
     }
     abs_doc_vend_elements.update(abs_doc_vend_attributes.copy())
     abs_doc_vend_elements.update(generic_attributes.copy())
-    add_cdata_elements(abs_doc_vend, xml_document, abs_doc_vend_elements)
+    payments_util.add_cdata_elements(abs_doc_vend, xml_document, abs_doc_vend_elements)
 
     # Add the ABS_DOC_ACTG
     abs_doc_actg = xml_document.createElement("ABS_DOC_ACTG")
-    add_attributes(abs_doc_actg, {"AMSDataObject": "Y"})
+    payments_util.add_attributes(abs_doc_actg, {"AMSDataObject": "Y"})
     root.appendChild(abs_doc_actg)
 
     # Add the individual ABS_DOC_ACTG values
@@ -180,7 +166,7 @@ def build_individual_gax_document(
     }
     abs_doc_actg_elements.update(abs_doc_actg_attributes.copy())
     abs_doc_actg_elements.update(generic_attributes.copy())
-    add_cdata_elements(abs_doc_actg, xml_document, abs_doc_actg_elements)
+    payments_util.add_cdata_elements(abs_doc_actg, xml_document, abs_doc_actg_elements)
 
     return root
 
@@ -191,7 +177,7 @@ def build_gax_dat(doc_data: List[Dict[str, Any]]) -> minidom.Document:
 
     # Document root contains all of the GAX documents
     document_root = xml_document.createElement("AMS_DOC_XML_IMPORT_FILE")
-    add_attributes(document_root, {"VERSION": "1.0"})
+    payments_util.add_attributes(document_root, {"VERSION": "1.0"})
     xml_document.appendChild(document_root)
 
     for data in doc_data:
@@ -206,9 +192,9 @@ def build_gax_inf(doc_data: List[Dict[str, Any]], now: datetime, count: int) -> 
     total_dollar_amount = sum(decimal.Decimal(data["amount_monamt"]) for data in doc_data)
 
     return {
-        "NewMmarsBatchID": f"{COMPTROLLER_DEPT_CODE}{now.strftime('%m%d')}GAX{count}",  # eg. EOL0101GAX24
-        "NewMmarsBatchDeptCode": COMPTROLLER_DEPT_CODE,
-        "NewMmarsUnitCode": COMPTROLLER_UNIT_CODE,
+        "NewMmarsBatchID": f"{Constants.COMPTROLLER_DEPT_CODE}{now.strftime('%m%d')}GAX{count}",  # eg. EOL0101GAX24
+        "NewMmarsBatchDeptCode": Constants.COMPTROLLER_DEPT_CODE,
+        "NewMmarsUnitCode": Constants.COMPTROLLER_UNIT_CODE,
         "NewMmarsImportDate": now.strftime("%Y-%m-%d"),
         "NewMmarsTransCode": "GAX",
         "NewMmarsTableName": "",
@@ -222,7 +208,7 @@ def build_gax_files(doc_data: List[Dict[str, Any]], directory: str, count: int) 
         raise Exception("Gax file count must be greater than 10")
     now = datetime_util.utcnow()
 
-    filename = f"{COMPTROLLER_DEPT_CODE}{now.strftime('%Y%m%d')}GAX{count}"
+    filename = f"{Constants.COMPTROLLER_DEPT_CODE}{now.strftime('%Y%m%d')}GAX{count}"
     dat_filepath = os.path.join(directory, f"{filename}.DAT")
     inf_filepath = os.path.join(directory, f"{filename}.INF")
 
