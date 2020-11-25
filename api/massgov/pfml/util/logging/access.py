@@ -47,6 +47,7 @@ def access_log_error(request, response, full_data=False):
         "response_type": response.content_type,
         "status_code": response.status_code,
     }
+
     if full_data:
         extra["request_data"] = request.data
         extra["request_form"] = request.form.to_dict(flat=False)

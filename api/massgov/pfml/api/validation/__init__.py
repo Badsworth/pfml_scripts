@@ -1,7 +1,9 @@
 #
 # Utility functions to support custom validation handlers on connexion
 #
+import connexion.apps.flask_app
 import pydantic
+from connexion.exceptions import BadRequestProblem, ExtraParameterProblem, ProblemException
 from flask.wrappers import Response
 from werkzeug.exceptions import (
     BadRequest,
@@ -29,12 +31,27 @@ def validation_request_handler(validation_exception: ValidationException) -> Res
     for error in validation_exception.errors:
         errors.append(response_util.validation_issue(error))
 
+    logger.info(
+        validation_exception.message, extra={"type": "ValidationException", "errors": errors}
+    )
+
     return response_util.error_response(
         status_code=BadRequest,
         message=validation_exception.message,
         errors=errors,
         data=validation_exception.data,
     ).to_api_response()
+
+
+def connexion_400_handler(exception: ProblemException) -> Response:
+    # Ensure that we are still logging 400 info, since
+    # we are now ignoring most of these errors in New Relic.
+    #
+    # _do not log response data_, only the machine-readable errors and
+    # messages which should definitely not have sensitive info.
+    logger.info(exception.title, extra={"type": exception.type, "detail": exception.detail})
+
+    return connexion.apps.flask_app.FlaskApp.common_error_handler(exception)
 
 
 def http_exception_handler(http_exception: HTTPException) -> Response:
@@ -45,6 +62,8 @@ def http_exception_handler(http_exception: HTTPException) -> Response:
 
 def add_error_handlers_to_app(connexion_app):
     connexion_app.add_error_handler(ValidationException, validation_request_handler)
+    connexion_app.add_error_handler(BadRequestProblem, connexion_400_handler)
+    connexion_app.add_error_handler(ExtraParameterProblem, connexion_400_handler)
     # These are all handled with the same generic exception handler to make them uniform in structure.
     connexion_app.add_error_handler(NotFound, http_exception_handler)
     connexion_app.add_error_handler(Forbidden, http_exception_handler)
@@ -70,6 +89,8 @@ def handle_pydantic_validation_error(exception: pydantic.ValidationError) -> Res
 pydantic_error_type_map = {"value_error.date": "date"}
 
 
+# Note that pydantic errors are reported in New Relic
+# before being converted into validation exception responses.
 def convert_pydantic_error_to_validation_exception(
     exception: pydantic.ValidationError,
 ) -> ValidationException:
