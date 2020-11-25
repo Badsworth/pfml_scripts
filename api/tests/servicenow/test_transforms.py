@@ -13,6 +13,8 @@ from massgov.pfml.servicenow.transforms.notifications import TransformNotificati
 def leave_admin_notification_request():
     return NotificationRequest(
         absence_case_id="NTN-110-ABS-01",
+        fein="00-0000000",
+        organization_name="Wayne Enterprises",
         claimant_info=ClaimantInfo(
             customer_id="1234", date_of_birth="1970-01-01", first_name="John", last_name="Smith"
         ),
@@ -32,6 +34,8 @@ def leave_admin_notification_request():
 def leave_admin_notification_request_empty_doctype():
     return NotificationRequest(
         absence_case_id="NTN-110-ABS-01",
+        fein="00-0000000",
+        organization_name="Wayne Enterprises",
         claimant_info=ClaimantInfo(
             customer_id="1234", date_of_birth="1970-01-01", first_name="John", last_name="Smith"
         ),
@@ -51,6 +55,8 @@ def leave_admin_notification_request_empty_doctype():
 def leave_admin_notification_request_no_doctype():
     return NotificationRequest(
         absence_case_id="NTN-110-ABS-01",
+        fein="00-0000000",
+        organization_name="Wayne Enterprises",
         claimant_info=ClaimantInfo(
             customer_id="1234", date_of_birth="1970-01-01", first_name="John", last_name="Smith"
         ),
@@ -69,6 +75,8 @@ def leave_admin_notification_request_no_doctype():
 def claimant_notification_request():
     return NotificationRequest(
         absence_case_id="NTN-110-ABS-01",
+        fein="00-0000000",
+        organization_name="Wayne Enterprises",
         claimant_info=ClaimantInfo(
             customer_id="1234", date_of_birth="1970-01-01", first_name="John", last_name="Smith"
         ),
@@ -86,6 +94,8 @@ def claimant_notification_request():
 def multiple_recipients_notification_request():
     return NotificationRequest(
         absence_case_id="NTN-110-ABS-01",
+        fein="00-0000000",
+        organization_name="Wayne Enterprises",
         claimant_info=ClaimantInfo(
             customer_id="1234", date_of_birth="1970-01-01", first_name="John", last_name="Smith"
         ),
@@ -112,6 +122,7 @@ class TestTransformNotificationRequest:
         assert type(result) == OutboundMessage
         assert result.u_absence_id == "NTN-110-ABS-01"
         assert result.u_document_type == "legal_notice"
+        assert result.u_organization_name == "Wayne Enterprises"
         assert result.u_source == "portal"
         assert result.u_user_type == "leave_administrator"
         assert result.u_trigger == "claim.approved"
@@ -135,6 +146,7 @@ class TestTransformNotificationRequest:
         )
         assert type(result) == OutboundMessage
         assert result.u_absence_id == "NTN-110-ABS-01"
+        assert result.u_organization_name == "Wayne Enterprises"
         assert result.u_document_type == ""
         assert result.u_source == "portal"
         assert result.u_user_type == "leave_administrator"
@@ -159,6 +171,7 @@ class TestTransformNotificationRequest:
         )
         assert type(result) == OutboundMessage
         assert result.u_absence_id == "NTN-110-ABS-01"
+        assert result.u_organization_name == "Wayne Enterprises"
         assert result.u_document_type == ""
         assert result.u_source == "portal"
         assert result.u_user_type == "leave_administrator"
@@ -179,6 +192,7 @@ class TestTransformNotificationRequest:
         result = TransformNotificationRequest.to_service_now(claimant_notification_request)
         assert type(result) == OutboundMessage
         assert result.u_absence_id == "NTN-110-ABS-01"
+        assert result.u_organization_name == "Wayne Enterprises"
         assert result.u_document_type == "legal_notice"
         assert result.u_source == "portal"
         assert result.u_user_type == "claimant"
@@ -200,6 +214,7 @@ class TestTransformNotificationRequest:
         )
         assert type(result) == OutboundMessage
         assert result.u_absence_id == "NTN-110-ABS-01"
+        assert result.u_organization_name == "Wayne Enterprises"
         assert result.u_document_type == "legal_notice"
         assert result.u_source == "call_center"
         assert result.u_user_type == "leave_administrator"

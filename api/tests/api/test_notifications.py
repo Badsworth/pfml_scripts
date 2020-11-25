@@ -7,6 +7,8 @@ from massgov.pfml.db.models.applications import Notification
 leave_admin_body = {
     "absence_case_id": "NTN-111-ABS-01",
     "document_type": "Approval Notice",
+    "fein": "00-0000000",
+    "organization_name": "Wayne Enterprises",
     "trigger": "claim.approved",
     "source": "Self-Service",
     "recipient_type": "Leave Administrator",
@@ -24,6 +26,8 @@ leave_admin_body = {
 claimant_body = {
     "absence_case_id": "NTN-111-ABS-01",
     "document_type": "Legal Notice",
+    "fein": "00-0000000",
+    "organization_name": "Wayne Enterprises",
     "trigger": "claim.approved",
     "source": "Self-Service",
     "recipient_type": "Claimant",

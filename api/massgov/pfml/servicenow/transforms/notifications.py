@@ -76,6 +76,7 @@ class TransformNotificationRequest(BaseModel):
             u_trigger=notification_request.trigger,
             u_link=format_link(notification_request),
             u_recipients=format_recipients(notification_request),
+            u_organization_name=notification_request.organization_name,
             u_claimant_info=Claimant(
                 first_name=notification_request.claimant_info.first_name,
                 last_name=notification_request.claimant_info.last_name,

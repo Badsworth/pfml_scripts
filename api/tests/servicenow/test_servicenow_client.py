@@ -39,6 +39,7 @@ def test_claimant():
 def test_message(test_recipient, test_claimant):
     return OutboundMessage(
         u_absence_id="NTN-ABS-FAK-001",
+        u_organization_name="Wayne Enterprises",
         u_claimant_info=test_claimant,
         u_document_type="Legal Notice",
         u_recipients=[test_recipient],

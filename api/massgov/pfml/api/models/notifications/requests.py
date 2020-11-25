@@ -25,6 +25,8 @@ class ClaimantInfo(PydanticBaseModel):
 class NotificationRequest(PydanticBaseModel):
     absence_case_id: str
     document_type: Optional[str]
+    fein: str
+    organization_name: str
     trigger: str
     source: str
     recipient_type: str

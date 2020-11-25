@@ -25,6 +25,7 @@ class OutboundMessage(BaseModel):
     """ Outbound message model """
 
     u_absence_id: str = Field(..., description="Absence ID")
+    u_organization_name: str = Field(..., description="Organization name")
     u_claimant_info: str = Field(..., description="Encoded JSON of a Claimant object")
     u_document_type: str = Field(..., description="Type of available document")
     u_recipients: List[str] = Field(..., description="List of encoded JSON of Recipient objects")

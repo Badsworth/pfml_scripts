@@ -2213,6 +2213,12 @@ components:
           type: string
           example: NTN-111-ABS-01
           minLength: 1
+        fein:
+          type: string
+          example: "41-9904348"
+        organization_name:
+          type: string
+          example: "Wayne Enterprises"
         document_type:
           title: Document Type
           description: The type of document that is available to view.
@@ -2254,6 +2260,8 @@ components:
         - recipient_type
         - recipients
         - claimant_info
+        - fein
+        - organization_name
 
     SsnItin:
       type: string
