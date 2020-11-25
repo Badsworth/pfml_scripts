@@ -5,6 +5,12 @@ exports[`PaymentMethod renders the page 1`] = `
   onSave={[Function]}
   title="Payment method"
 >
+  <Alert
+    autoWidth={true}
+    state="info"
+  >
+    If your application is approved prior to your leave, you can expect your first payment to arrive about 3 weeks after your leave starts. Otherwise, you can expect your first payment 2-3 weeks after your leave is approved. You will be notified by email when your application is approved.
+  </Alert>
   <InputChoiceGroup
     choices={
       Array [
@@ -22,7 +28,7 @@ exports[`PaymentMethod renders the page 1`] = `
         },
       ]
     }
-    hint="You can expect your first payment to arrive about 3 weeks after your leave starts. Your choice will be applied to any previous claims you have submitted."
+    hint="Your choice will be applied to any previous claims you have submitted."
     label="How do you want to get your weekly benefit?"
     name="payment_preferences[0].payment_method"
     onChange={[Function]}

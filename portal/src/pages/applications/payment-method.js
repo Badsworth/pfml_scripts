@@ -3,6 +3,7 @@ import Claim, {
   PaymentPreferenceMethod,
 } from "../../models/Claim";
 import { cloneDeep, get, pick, set } from "lodash";
+import Alert from "../../components/Alert";
 import ConditionalContent from "../../components/ConditionalContent";
 import Fieldset from "../../components/Fieldset";
 import FormLabel from "../../components/FormLabel";
@@ -74,6 +75,9 @@ export const PaymentMethod = (props) => {
       title={t("pages.claimsPaymentMethod.title")}
       onSave={handleSave}
     >
+      <Alert state="info" autoWidth>
+        {t("pages.claimsPaymentMethod.paymentTimelineAlert")}
+      </Alert>
       <InputChoiceGroup
         {...getFunctionalInputProps("payment_preferences[0].payment_method")}
         choices={[

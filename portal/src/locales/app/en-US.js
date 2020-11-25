@@ -874,12 +874,14 @@ const pages = {
       "It can take us additional time to set up direct deposit with your bank. Your first payment might be a check sent to the address you listed as your mailing address.",
     choiceHintCheck:
       "You will receive your checks at the address you listed as your mailing address.",
+    paymentTimelineAlert:
+      "If your application is approved prior to your leave, you can expect your first payment to arrive about 3 weeks after your leave starts. Otherwise, you can expect your first payment 2-3 weeks after your leave is approved. You will be notified by email when your application is approved.",
     routingNumberHint:
       "This is the 9-digit number found on the lower left corner of a$t(chars.nbsp)check.",
     routingNumberLabel: "Routing number",
     sectionLabel: "How do you want to get your weekly benefit?",
     sectionLabelHint:
-      "You can expect your first payment to arrive about 3 weeks after your leave starts. Your choice will be applied to any previous claims you have submitted.",
+      "Your choice will be applied to any previous claims you have submitted.",
     title: "Payment method",
   },
   claimsPreviousLeaves: {
