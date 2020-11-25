@@ -83,6 +83,10 @@ export async function getMailVerifier(
   const apiKey = await config("E2E_TESTMAIL_APIKEY");
   const namespace = await config("E2E_TESTMAIL_NAMESPACE");
   const endpoint = "https://api.testmail.app/api/json";
+  let tag: string;
+  let username: string;
+  let password: string;
+
   if (!apiKey || !namespace) {
     throw new Error(
       "Unable to create Test Mail API client due to missing environment variables."
@@ -101,27 +105,46 @@ export async function getMailVerifier(
       .map(([key, val]) => `${key}=${val}`)
       .join("&");
 
-    // Stop trying to find email after 60 seconds
-    const body = await browser.evaluate(
-      (baseUrl, query) =>
-        new Promise((resolve, reject) => {
-          const controller = new AbortController();
-          setTimeout(() => controller.abort(), 60000);
-          fetch(`${baseUrl}?${query}`, { signal: controller.signal })
-            .then((r) => {
-              resolve(r.json());
-            })
-            .catch(reject);
-        }),
-      endpoint,
-      paramsString
-    );
+    let body;
+    // Stop trying to find email after 90 seconds
+    const getBody = async () =>
+      browser.evaluate(
+        (baseUrl, query) =>
+          new Promise((resolve, reject) => {
+            const controller = new AbortController();
+            setTimeout(() => controller.abort(), 90000);
+            fetch(`${baseUrl}?${query}`, { signal: controller.signal })
+              .then((r) => {
+                resolve(r.json());
+              })
+              .catch(reject);
+          }),
+        endpoint,
+        paramsString
+      );
+
+    const startTimer = new Date().getTime();
+    let endTimer;
+    try {
+      body = await getBody();
+      endTimer = new Date().getTime();
+      console.info(`\n\n\nTestmail API: ${endTimer - startTimer}ms\n\n\n`);
+    } catch (e) {
+      endTimer = new Date().getTime();
+      console.info(
+        `\n\n\nTestmail API: ${endTimer - startTimer}ms\n${
+          e.message
+        }\n\n${address}\n${password}\n\n\n`
+      );
+      throw e;
+    }
 
     if (body.result !== "success") {
       throw new Error(
         `There was an error fetching the verification code: ${body.message}`
       );
     }
+
     if (!Array.isArray(body.emails) || !(body.emails.length > 0)) {
       throw new Error(`No emails found for this user.`);
     }
@@ -148,17 +171,38 @@ export async function getMailVerifier(
     return match[1];
   }
 
-  function rStr(length: number) {
-    const symbols = "!#$%&|_-?";
-    return (
-      Array(length - 1)
-        .fill("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz")
-        .map((x) => x[Math.floor(Math.random() * x.length)])
-        .join("") + symbols[Math.floor(Math.random() * symbols.length)]
-    );
+  const randomOf = (charset: string) =>
+    charset[Math.floor(Math.random() * charset.length)];
+
+  function rPassword(length: number) {
+    const symbolsSet = "@#$%^&*";
+    const lowercaseSet = "abcdefghijklmnopqrstuvwxyz";
+    const uppercaseSet = lowercaseSet.toUpperCase();
+    const pChars = [];
+    for (let i = 0; i < length; i++) {
+      pChars.push(
+        i % 2 === 0 ? randomOf(uppercaseSet) : randomOf(lowercaseSet)
+      );
+    }
+    pChars.push(randomOf(symbolsSet));
+    pChars.push(rNum(999));
+    shuffleArray(pChars);
+    return pChars.join("");
   }
 
-  function rStrWithNums(length: number) {
+  /**
+   * Durstenfeld shuffle.
+   *
+   * @see https://stackoverflow.com/a/12646864
+   */
+  function shuffleArray(array: (string | number)[]) {
+    for (let i = array.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [array[i], array[j]] = [array[j], array[i]];
+    }
+  }
+
+  function rTag(length: number) {
     return Math.random().toString(36).substr(2, length);
   }
 
@@ -167,10 +211,12 @@ export async function getMailVerifier(
   }
 
   function getCredentials() {
-    const tag = rStrWithNums(8);
+    tag = rTag(8);
+    username = `${namespace}.${tag}@inbox.testmail.app`;
+    password = rPassword(12);
     return {
-      username: `${namespace}.${tag}@inbox.testmail.app`,
-      password: rStr(10) + rNum(999),
+      username,
+      password,
     };
   }
 

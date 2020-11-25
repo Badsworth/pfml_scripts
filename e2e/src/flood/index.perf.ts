@@ -15,16 +15,17 @@ import scenarios from "./scenarios";
 
 export const settings: TestSettings = {
   ...globalElementSettings,
+  // These overrides are essential to any Flood.io deployment
   loopCount: -1,
+  actionDelay: 1,
+  stepDelay: 1,
 };
 
 export default (): void => {
   // Define variable that will control which scenario we're going to execute here.
   let curr: LSTScenario;
-
   // Set up test data to control execution.
-  TestData.fromJSON<LSTSimClaim>(`./${dataBaseUrl}/claims.json`).circular(true);
-
+  TestData.fromJSON<LSTSimClaim>(`./${dataBaseUrl}/claims.json`);
   // Before moving on to next scenario, fetch and adjust data needed
   beforeEach(async (browser: Browser, data?: LSTSimClaim) => {
     if (typeof data !== "object" || !data || !("scenario" in data)) {

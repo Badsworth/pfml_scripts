@@ -6,7 +6,7 @@ import * as LeaveAdminSelfRegistration from "./LeaveAdminSelfReg.perf";
 import * as SavilinxAgent from "./SavilinxAgent.perf";
 import * as DFMLOpsAgent from "./DFMLOpsAgent.perf";
 
-export default [
+const allScenarios = [
   FineosClaimSubmit,
   PortalClaimSubmit,
   PortalRegistration,
@@ -22,3 +22,5 @@ export default [
 ) as {
   [k: string]: StoredStep[];
 };
+
+export default allScenarios;
