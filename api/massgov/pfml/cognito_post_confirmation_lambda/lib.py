@@ -43,34 +43,40 @@ def handler(
 
     cognito_user_attrs = event.request.userAttributes
     cognito_metadata = event.request.clientMetadata
+    auth_id = cognito_user_attrs["sub"]
+    is_employer = cognito_metadata is not None and "ein" in cognito_metadata
 
-    logger.info(
-        "handle post confirmation event",
-        extra={
-            "triggerSource": event.triggerSource,
-            "isEmployer": cognito_metadata is not None and "ein" in cognito_metadata,
-        },
-    )
-    user = (
-        db_session.query(User)
-        .filter(User.active_directory_id == cognito_user_attrs["sub"])
-        .one_or_none()
-    )
+    log_attributes = {
+        "triggerSource": event.triggerSource,
+        "auth_id": cognito_user_attrs["sub"],
+        "isEmployer": str(is_employer),
+    }
+
+    logger.info("Handle post confirmation event", extra=log_attributes)
+    user = db_session.query(User).filter(User.active_directory_id == auth_id).one_or_none()
 
     if user is not None:
         logger.info(
-            "active_directory_id already exists",
-            extra={"active_directory_id": user.active_directory_id},
+            "User already already exists", extra={**log_attributes, "user_id": user.user_id,},
         )
         return event
 
-    if cognito_metadata is not None and "ein" in cognito_metadata:
-        logger.info("Creating a leave administrator account")
-        leave_admin_create(
+    if is_employer:
+        assert cognito_metadata is not None
+        assert "ein" in cognito_metadata
+
+        logger.info("Creating a leave administrator account", extra=log_attributes)
+        user = leave_admin_create(
             db_session=db_session,
-            active_directory_id=cognito_user_attrs["sub"],
+            auth_id=cognito_user_attrs["sub"],
             email=cognito_user_attrs["email"],
             employer_fein=re.sub("-", "", cognito_metadata["ein"]),
+            log_attributes=log_attributes,
+        )
+
+        logger.info(
+            "Successfully created leave administrator account",
+            extra={**log_attributes, "user_id": user.user_id,},
         )
 
         return event
@@ -78,20 +84,20 @@ def handler(
     user = User(
         active_directory_id=cognito_user_attrs["sub"], email_address=cognito_user_attrs["email"],
     )
-    logger.info(
-        "Creating a claimant account", extra={"active_directory_id": user.active_directory_id}
-    )
+    logger.info("Creating a claimant account", extra=log_attributes)
 
     db_session.add(user)
     db_session.commit()
 
-    logger.info("successfully created user", extra={"user_id": user.user_id})
+    logger.info(
+        "Successfully created claimant account", extra={**log_attributes, "user_id": user.user_id,}
+    )
 
     return event
 
 
 def leave_admin_create(
-    db_session: db.Session, active_directory_id: str, email: str, employer_fein: str,
+    db_session: db.Session, auth_id: str, email: str, employer_fein: str, log_attributes: dict
 ) -> User:
     fineos_client_config = fineos.factory.FINEOSClientConfig.from_env()
     if fineos_client_config.oauth2_client_secret is None:
@@ -109,14 +115,14 @@ def leave_admin_create(
     if employer is None:
         raise ValueError("Invalid employer_fein")
 
-    user = User(active_directory_id=active_directory_id, email_address=email,)
+    user = User(active_directory_id=auth_id, email_address=email,)
 
     user_role = UserRole(user=user, role_id=Role.EMPLOYER.role_id)
 
     db_session.add(user)
     db_session.add(user_role)
 
-    logger.info("Creating user in Fineos")
+    logger.info("Creating user in Fineos", extra=log_attributes)
 
     register_leave_admin_with_fineos(
         # TODO: Set a real admin full name - https://lwd.atlassian.net/browse/EMPLOYER-540
@@ -129,6 +135,8 @@ def leave_admin_create(
         db_session=db_session,
         fineos_client=fineos_client,
     )
+
+    logger.info("Successfully created user in Fineos", extra=log_attributes)
 
     db_session.commit()
 

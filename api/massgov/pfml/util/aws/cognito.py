@@ -42,4 +42,7 @@ def create_cognito_leave_admin_account(email: str, fein: str, cognito_user_pool_
         if active_directory_id is None:
             raise Exception("Cognito did not return an ID for the user!")
 
-        leave_admin_create(db_session, active_directory_id, email, fein)
+        log_attributes = {
+            "auth_id": active_directory_id,
+        }
+        leave_admin_create(db_session, active_directory_id, email, fein, log_attributes)

@@ -201,7 +201,7 @@ def test_leave_admin_create(test_db_session):
     test_db_session.add(employer)
     test_db_session.commit()
 
-    lib.leave_admin_create(test_db_session, "UUID", "fake@fake.com", employer.employer_fein)
+    lib.leave_admin_create(test_db_session, "UUID", "fake@fake.com", employer.employer_fein, {})
 
     created_user = test_db_session.query(User).filter(User.active_directory_id == "UUID").one()
 
