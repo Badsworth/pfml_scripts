@@ -174,8 +174,8 @@ def test_employer_notified_required(test_db_session, initialize_factories_sessio
     assert [
         Issue(
             type=IssueType.required,
-            message="employer_notified is required",
-            field="employer_notified",
+            message="leave_details.employer_notified is required",
+            field="leave_details.employer_notified",
         )
     ] == issues
 
