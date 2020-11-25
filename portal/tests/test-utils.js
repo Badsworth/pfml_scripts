@@ -187,6 +187,7 @@ export class MockEmployerClaimBuilder extends BaseMockClaimBuilder {
       last_name: "Doe",
       date_of_birth: "1980-07-17",
       tax_identifier: "1234",
+      follow_up_date: "2020-10-10",
     };
   }
 

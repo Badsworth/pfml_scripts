@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`Confirmation renders Confirmation page 1`] = `
+exports[`Confirmation renders the page 1`] = `
 <Fragment>
   <Title>
     Help us find the right person to review the application
@@ -19,10 +19,10 @@ exports[`Confirmation renders Confirmation page 1`] = `
         "div": <div />,
       }
     }
-    i18nKey="pages.employersClaimsConfirmation.reviewByLabel"
+    i18nKey="pages.employersClaimsConfirmation.instructionsFollowUpDateLabel"
     values={
       Object {
-        "employerDueDate": "1/1/2022",
+        "date": "1/1/2022",
       }
     }
   />

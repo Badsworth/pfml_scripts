@@ -10,8 +10,7 @@ import withUser from "../../../hoc/withUser";
 
 export const Confirmation = (props) => {
   const { t } = useTranslation();
-  // TODO (EMPLOYER-363) - utilize withEmployerClaim HOC when due_date is available in Claim model
-  const { absence_id, due_date } = props.query;
+  const { absence_id, follow_up_date } = props.query;
 
   return (
     <React.Fragment>
@@ -20,13 +19,15 @@ export const Confirmation = (props) => {
         i18nKey="pages.employersClaimsConfirmation.applicationIdLabel"
         values={{ absenceId: absence_id }}
       />
-      <Trans
-        i18nKey="pages.employersClaimsConfirmation.reviewByLabel"
-        values={{ employerDueDate: formatDateRange(due_date) }}
-        components={{
-          div: <div />,
-        }}
-      />
+      {follow_up_date && (
+        <Trans
+          i18nKey="pages.employersClaimsConfirmation.instructionsFollowUpDateLabel"
+          values={{ date: formatDateRange(follow_up_date) }}
+          components={{
+            div: <div />,
+          }}
+        />
+      )}
       <Trans
         i18nKey="pages.employersClaimsConfirmation.instructions"
         components={{
@@ -57,7 +58,7 @@ export const Confirmation = (props) => {
 Confirmation.propTypes = {
   query: PropTypes.shape({
     absence_id: PropTypes.string.isRequired,
-    due_date: PropTypes.string.isRequired,
+    follow_up_date: PropTypes.string,
   }).isRequired,
 };
 

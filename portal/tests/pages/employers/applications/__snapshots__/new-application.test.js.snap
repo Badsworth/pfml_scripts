@@ -10,7 +10,7 @@ exports[`NewApplication renders the page 1`] = `
     state="warning"
   >
     <Trans
-      i18nKey="pages.employersClaimsNewApplication.instructionsDueDate"
+      i18nKey="pages.employersClaimsNewApplication.instructionsFollowUpDate"
       values={
         Object {
           "date": "10/10/2020",

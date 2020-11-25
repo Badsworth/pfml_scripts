@@ -16,9 +16,6 @@ import { get } from "lodash";
 import { useTranslation } from "../../../locales/i18n";
 import withEmployerClaim from "../../../hoc/withEmployerClaim";
 
-// TODO (EMPLOYER-363): Update respond by date
-const employerDueDate = "2020-10-10";
-
 export const NewApplication = (props) => {
   const { t } = useTranslation();
   const {
@@ -37,7 +34,7 @@ export const NewApplication = (props) => {
       props.appLogic.portalFlow.goToPageFor(
         "CONFIRMATION",
         {},
-        { absence_id: absenceId, due_date: employerDueDate }
+        { absence_id: absenceId, follow_up_date: claim.follow_up_date }
       );
     }
   };
@@ -76,8 +73,8 @@ export const NewApplication = (props) => {
       </Title>
       <Alert state="warning">
         <Trans
-          i18nKey="pages.employersClaimsNewApplication.instructionsDueDate"
-          values={{ date: formatDateRange(employerDueDate) }}
+          i18nKey="pages.employersClaimsNewApplication.instructionsFollowUpDate"
+          values={{ date: formatDateRange(claim.follow_up_date) }}
         />
       </Alert>
       <form

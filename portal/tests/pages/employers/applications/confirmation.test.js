@@ -2,13 +2,30 @@ import Confirmation from "../../../../src/pages/employers/applications/confirmat
 import { renderWithAppLogic } from "../../../test-utils";
 
 describe("Confirmation", () => {
-  it("renders Confirmation page", () => {
-    const query = { absence_id: "test-absence-id", due_date: "2022-01-01" };
-    const { wrapper } = renderWithAppLogic(Confirmation, {
+  let wrapper;
+
+  const renderPage = (query) => {
+    ({ wrapper } = renderWithAppLogic(Confirmation, {
       diveLevels: 1,
       props: { query },
-    });
+    }));
+  };
+
+  it("renders the page", () => {
+    const query = {
+      absence_id: "test-absence-id",
+      follow_up_date: "2022-01-01",
+    };
+    renderPage(query);
 
     expect(wrapper).toMatchSnapshot();
+    expect(wrapper.find("Trans")).toHaveLength(4);
+  });
+
+  it("does not display due date if not provided", () => {
+    const query = { absence_id: "test-absence-id", follow_up_date: null };
+    renderPage(query);
+
+    expect(wrapper.find("Trans")).toHaveLength(3);
   });
 });

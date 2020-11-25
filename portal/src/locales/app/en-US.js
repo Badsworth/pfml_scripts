@@ -392,6 +392,8 @@ const shared = {
   fileUpload_fileHeadingPrefix: "File",
   filesUploaded: "Number of files uploaded",
   hoursLabel: "Hours",
+  instructionsFollowUpDate:
+    "Review and respond by: <strong>{{date}}</strong> at 11:59 p.m. Eastern time",
   leavePeriodMedicalAlert:
     "You will need a completed medical leave certification form for this section.",
   leaveReasonActiveDutyFamily: "Active duty",
@@ -1296,11 +1298,12 @@ const pages = {
     applicationIdLabel: "<strong>Application ID:</strong> {{absenceId}}",
     instructions:
       "<p>Thanks for letting us know that you’re not the right person to review this.</p><ul><li>Please check with your human resources team and your colleagues to see who should respond.</li><li>If the right person already has an employer account with your company info, you can forward them the email you received so they can respond directly.</li><li>Otherwise, please ask them to call us at $t(shared.contactCenterPhoneNumber).</li></ul>",
+    instructionsFollowUpDateLabel:
+      "<div><strong>Review by:</strong> {{date}} at 11:59 p.m. Eastern time</div>",
     instructions_benefitsGuide:
       "To learn more about how benefits are calculated, visit our <benefits-guide-link>PFML Benefits Guide</benefits-guide-link>.",
     instructions_processingApplication:
       "If we do not hear from anyone at your company before the deadline, we will process the application solely based on the information the employee provided.",
-    reviewByLabel: "<div><strong>Review by:</strong> {{employerDueDate}}</div>",
     title: "Help us find the right person to review the application",
   },
   employersClaimsNewApplication: {
@@ -1313,7 +1316,7 @@ const pages = {
     employerIdNumberLabel: "Employer ID number",
     instructions:
       "We need true answers to every question so that we can manage this program the way the law requires. Please confirm that you will answer as truthfully as you can.",
-    instructionsDueDate: "Review and respond by: <strong>{{date}}</strong>",
+    instructionsFollowUpDate: "$t(shared.instructionsFollowUpDate)",
     instructionsLabel:
       "Are you the right person to respond to this leave application?",
     submitButton: "Agree and submit",
@@ -1388,7 +1391,7 @@ const pages = {
       "Please review the details of this application carefully. If anything seems incorrect, you can add an amendment within each section or include general comments at the end.",
     instructionsComment:
       "If you have not been notified of this, please include a comment at the end.",
-    instructionsDueDate: "Review and respond by: <strong>{{date}}</strong>",
+    instructionsFollowUpDate: "$t(shared.instructionsFollowUpDate)",
     leaveDetails: {
       applicationIdLabel: "Application ID",
       header: "Leave details",

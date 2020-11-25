@@ -28,8 +28,6 @@ import updateAmendments from "../../../utils/updateAmendments";
 import { useTranslation } from "../../../locales/i18n";
 import withEmployerClaim from "../../../hoc/withEmployerClaim";
 
-// TODO (EMPLOYER-363): Update respond by date
-const employerDueDate = "2020-10-10";
 // TODO (EMPLOYER-519): Remove `hoursWorkedPerWeek` when BE provides value
 const hoursWorkedPerWeek = 40;
 
@@ -142,8 +140,8 @@ export const Review = (props) => {
       </Title>
       <Alert state="warning" noIcon>
         <Trans
-          i18nKey="pages.employersClaimsReview.instructionsDueDate"
-          values={{ date: formatDateRange(employerDueDate) }}
+          i18nKey="pages.employersClaimsReview.instructionsFollowUpDate"
+          values={{ date: formatDateRange(claim.follow_up_date) }}
         />
       </Alert>
       <p>{t("pages.employersClaimsReview.instructionsAmendment")}</p>

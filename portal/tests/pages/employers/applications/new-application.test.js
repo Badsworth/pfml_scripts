@@ -66,7 +66,7 @@ describe("NewApplication", () => {
         {},
         {
           absence_id: "mock-absence-id",
-          due_date: "2020-10-10",
+          follow_up_date: "2020-10-10",
         }
       );
     });

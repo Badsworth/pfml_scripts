@@ -9,7 +9,7 @@ export default {
 export const Default = () => {
   const query = {
     absence_id: "NTN-1315-ABS-01",
-    due_date: "2022-01-01",
+    follow_up_date: "2022-01-01",
   };
   return <Confirmation query={query} />;
 };
