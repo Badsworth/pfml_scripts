@@ -155,6 +155,25 @@ class LkOtherIncomeType(Base):
         self.other_income_type_description = other_income_type_description
 
 
+class LkPhoneType(Base):
+    __tablename__ = "lk_phone_type"
+    phone_type_id = Column(Integer, primary_key=True, autoincrement=True)
+    phone_type_description = Column(Text, nullable=False)
+
+    def __init__(self, phone_type_id, phone_type_description):
+        self.phone_type_id = phone_type_id
+        self.phone_type_description = phone_type_description
+
+
+class Phone(Base):
+    __tablename__ = "phone"
+    application = relationship("Application", back_populates="phone")
+    fineos_phone_id = Column(Integer)
+    phone_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
+    phone_number = Column(Text)  # Formatted in E.164
+    phone_type_id = Column(Integer, ForeignKey("lk_phone_type.phone_type_id"), nullable=False)
+
+
 class Application(Base):
     __tablename__ = "application"
     application_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
@@ -171,6 +190,7 @@ class Application(Base):
     residential_address_id = Column(
         UUID(as_uuid=True), ForeignKey("address.address_id"), nullable=True
     )
+    phone_id = Column(UUID(as_uuid=True), ForeignKey("phone.phone_id"), nullable=True)
     employer_fein = Column(Text)
     first_name = Column(Text)
     last_name = Column(Text)
@@ -229,6 +249,7 @@ class Application(Base):
     tax_identifier = relationship(TaxIdentifier)
     mailing_address = relationship(Address, foreign_keys=[mailing_address_id])
     residential_address = relationship(Address, foreign_keys=[residential_address_id])
+    phone = relationship("Phone", back_populates="application", uselist=False)
 
     work_pattern = relationship("WorkPattern", back_populates="applications", uselist=False)
 
@@ -731,6 +752,15 @@ class Notification(Base):
     updated_at = Column(TIMESTAMP(timezone=True), nullable=False)
 
 
+class PhoneType(LookupTable):
+    model = LkPhoneType
+    column_names = ("phone_type_id", "phone_type_description")
+
+    CELL = LkPhoneType(1, "Cell")
+    FAX = LkPhoneType(2, "Fax")
+    PHONE = LkPhoneType(3, "Phone")
+
+
 def sync_lookup_tables(db_session):
     """Synchronize lookup tables to the database."""
     LeaveReason.sync_to_database(db_session)
@@ -748,4 +778,5 @@ def sync_lookup_tables(db_session):
     ContentType.sync_to_database(db_session)
     DayOfWeek.sync_to_database(db_session)
     WorkPatternType.sync_to_database(db_session)
+    PhoneType.sync_to_database(db_session)
     db_session.commit()
