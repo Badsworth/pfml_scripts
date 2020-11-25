@@ -28,5 +28,8 @@ lambda-s3-package.json
 # generated mock DOR files
 dor_mock/
 
+# eligibility export files
+eligibility_export/
+
 # local authentication generated file
 jwks.json

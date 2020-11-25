@@ -7,6 +7,7 @@ import boto3
 
 import massgov.pfml.fineos.eligibility_feed as eligibility_feed
 import massgov.pfml.util.aws.sts as aws_sts
+import massgov.pfml.util.batch.log
 import massgov.pfml.util.config as config
 import massgov.pfml.util.logging as logging
 from massgov.pfml import db, fineos
@@ -61,6 +62,11 @@ def main_with_return():
     config = eligibility_feed.EligibilityFeedExportConfig()
     output_transport_params = None
 
+    with db.session_scope(make_db_session(), close=True) as db_session:
+        report_log_entry = massgov.pfml.util.batch.log.create_log_entry(
+            db_session, "Eligibility export", config.mode.name.lower()
+        )
+
     if config.mode is eligibility_feed.EligibilityFeedExportMode.UPDATES:
         # Note that the IAM role for the Eligibility Feed Export Lambda/ECS Task
         # does not have access to any S3 bucket in the PFML account by default. So
@@ -78,6 +84,11 @@ def main_with_return():
     else:
         process_result = eligibility_feed.process_all_employers(
             make_db_session, make_fineos_client, make_fineos_boto_session, config
+        )
+
+    with db.session_scope(make_db_session(), close=True) as db_session:
+        massgov.pfml.util.batch.log.update_log_entry(
+            db_session, report_log_entry, "success", process_result
         )
 
     logger.info(

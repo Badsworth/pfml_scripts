@@ -120,7 +120,7 @@ deps-check:
 distclean: ## Remove all artifacts that can be regenerated
 distclean: clean clean-node clean-venv
 	rm -f jwks.json
-	rm -rf dor_mock/
+	rm -rf dor_mock/ eligibility_export/
 
 dor-generate: ## Generate fake DOR data
 	$(PY_RUN_CMD) dor-generate --folder dor_mock --count 1000 $(DECODE_LOG)
@@ -130,6 +130,9 @@ dor-import: ## Run a DOR import using fake data (see dor-generate)
 
 load-employers-to-fineos: ## Send employers from our database to the FINEOS API
 	$(PY_RUN_CMD) load-employers-to-fineos $(DECODE_LOG)
+
+fineos-eligibility-feed-export: ## Run an eligibility feed export
+	OUTPUT_DIRECTORY_PATH=eligibility_export FINEOS_AWS_IAM_ROLE_ARN="arn" FINEOS_AWS_IAM_ROLE_EXTERNAL_ID="1" $(PY_RUN_CMD) fineos-eligibility-feed-export $(DECODE_LOG)
 
 ecr-login: ## Login to ECR for Docker
 	@echo "Authenticating Docker with ECR"

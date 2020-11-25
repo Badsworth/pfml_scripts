@@ -36,5 +36,6 @@ def update_log_entry(db_session, existing_import_log, status, report):
     existing_import_log.status = status
     existing_import_log.report = json.dumps(asdict(report), indent=2)
     existing_import_log.end = massgov.pfml.util.datetime.utcnow()
+    db_session.merge(existing_import_log)
     db_session.commit()
     logger.info("Finished saving import report in log")
