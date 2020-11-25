@@ -76,6 +76,14 @@ export const Success = (props) => {
         )}
 
         <Heading level="2">
+          {t("pages.claimsSuccess.reportReductionsHeading")}
+        </Heading>
+        <Trans
+          i18nKey="pages.claimsSuccess.reportReductionsProcess"
+          components={{ ul: <ul className="usa-list" />, li: <li /> }}
+        />
+
+        <Heading level="2">
           {t("pages.claimsSuccess.adjudicationProcessHeading")}
         </Heading>
 

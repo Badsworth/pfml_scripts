@@ -3,11 +3,27 @@
 exports[`Success renders content tailored to Family (Bonding Adoption) 1`] = `
 <Fragment>
   <Title>
-    Your family leave application was submitted successfully
+    You submitted your family leave application
   </Title>
   <div
     className="measure-6"
   >
+    <Heading
+      level="2"
+    >
+      We may need more information from you
+    </Heading>
+    <Trans
+      components={
+        Object {
+          "li": <li />,
+          "ul": <ul
+            className="usa-list"
+          />,
+        }
+      }
+      i18nKey="pages.claimsSuccess.reportReductionsProcess"
+    />
     <Heading
       level="2"
     >
@@ -43,6 +59,36 @@ exports[`Success renders content tailored to Family (Bonding Adoption) 1`] = `
 `;
 
 exports[`Success renders content tailored to Family (Bonding Adoption) 2`] = `
+Array [
+  <p
+    key="p-0"
+  >
+    Call the Contact Center at (833) 344‑7365 if you'll receive:
+  </p>,
+  <ul
+    className="usa-list"
+    key="1"
+  >
+    <li
+      key="0"
+    >
+      Any benefits from your employer that you’ll be using in addition to Massachusetts paid leave (for example, maternity leave, or paid sick time)
+    </li>
+  </ul>,
+  <ul
+    className="usa-list"
+    key="2"
+  >
+    <li
+      key="0"
+    >
+      Income from any other sources during your leave
+    </li>
+  </ul>,
+]
+`;
+
+exports[`Success renders content tailored to Family (Bonding Adoption) 3`] = `
 <ul
   className="usa-list"
   key="0"
@@ -51,13 +97,13 @@ exports[`Success renders content tailored to Family (Bonding Adoption) 2`] = `
   <li
     key="1"
   >
-    Your leave application will be sent to your employer for review. They have 10 days to provide feedback.
+    Your employer has 10 days to provide feedback on your application.
   </li>
    
   <li
     key="3"
   >
-    Once your employer has reviewed your application, we’ll confirm your eligibility and make sure that your documents are valid.
+    We’ll confirm your eligibility and make sure that your documents are valid.
   </li>
    
   <li
@@ -72,7 +118,7 @@ exports[`Success renders content tailored to Family (Bonding Adoption) 2`] = `
 exports[`Success renders content tailored to Family (Bonding Future Adoption) 1`] = `
 <Fragment>
   <Title>
-    Your family leave application was submitted successfully
+    You submitted your family leave application
   </Title>
   <div
     className="measure-6"
@@ -83,6 +129,22 @@ exports[`Success renders content tailored to Family (Bonding Future Adoption) 1`
     >
       After your child arrives in your home, you will need to upload, mail, or fax a document that shows your child’s placement date.
     </Alert>
+    <Heading
+      level="2"
+    >
+      We may need more information from you
+    </Heading>
+    <Trans
+      components={
+        Object {
+          "li": <li />,
+          "ul": <ul
+            className="usa-list"
+          />,
+        }
+      }
+      i18nKey="pages.claimsSuccess.reportReductionsProcess"
+    />
     <Heading
       level="2"
     >
@@ -118,6 +180,36 @@ exports[`Success renders content tailored to Family (Bonding Future Adoption) 1`
 `;
 
 exports[`Success renders content tailored to Family (Bonding Future Adoption) 2`] = `
+Array [
+  <p
+    key="p-0"
+  >
+    Call the Contact Center at (833) 344‑7365 if you'll receive:
+  </p>,
+  <ul
+    className="usa-list"
+    key="1"
+  >
+    <li
+      key="0"
+    >
+      Any benefits from your employer that you’ll be using in addition to Massachusetts paid leave (for example, maternity leave, or paid sick time)
+    </li>
+  </ul>,
+  <ul
+    className="usa-list"
+    key="2"
+  >
+    <li
+      key="0"
+    >
+      Income from any other sources during your leave
+    </li>
+  </ul>,
+]
+`;
+
+exports[`Success renders content tailored to Family (Bonding Future Adoption) 3`] = `
 <ul
   className="usa-list"
   key="0"
@@ -126,7 +218,7 @@ exports[`Success renders content tailored to Family (Bonding Future Adoption) 2`
   <li
     key="1"
   >
-    Your leave application will be sent to your employer for review. They have 10 days to provide feedback.
+    Your employer has 10 days to provide feedback on your application.
   </li>
    
   <li
@@ -152,7 +244,7 @@ exports[`Success renders content tailored to Family (Bonding Future Adoption) 2`
 exports[`Success renders content tailored to Family (Bonding Future Newborn) 1`] = `
 <Fragment>
   <Title>
-    Your family leave application was submitted successfully
+    You submitted your family leave application
   </Title>
   <div
     className="measure-6"
@@ -163,6 +255,22 @@ exports[`Success renders content tailored to Family (Bonding Future Newborn) 1`]
     >
       After your child is born, you will need to upload, mail, or fax a document that shows your child’s date of birth.
     </Alert>
+    <Heading
+      level="2"
+    >
+      We may need more information from you
+    </Heading>
+    <Trans
+      components={
+        Object {
+          "li": <li />,
+          "ul": <ul
+            className="usa-list"
+          />,
+        }
+      }
+      i18nKey="pages.claimsSuccess.reportReductionsProcess"
+    />
     <Heading
       level="2"
     >
@@ -193,7 +301,7 @@ exports[`Success renders content tailored to Family (Bonding Future Newborn) 1`]
         If you gave birth, you may also be eligible for paid medical leave.
       </Heading>
       <p>
-        You can take up to 20 weeks of paid medical leave if you're unable to work during your pregnancy and to recover from childbirth. Your health care provider determines how much medical leave you will need. You must create a separate leave application if you need to take medical leave.
+        You can take up to 20 weeks of paid medical leave if you're unable to work during your pregnancy and to recover from childbirth. Your health care provider determines how much medical leave you will need. You'll need to fill out a separate application to take medical leave in addition to your family leave.
       </p>
     </div>
     <UserFeedback
@@ -210,6 +318,36 @@ exports[`Success renders content tailored to Family (Bonding Future Newborn) 1`]
 `;
 
 exports[`Success renders content tailored to Family (Bonding Future Newborn) 2`] = `
+Array [
+  <p
+    key="p-0"
+  >
+    Call the Contact Center at (833) 344‑7365 if you'll receive:
+  </p>,
+  <ul
+    className="usa-list"
+    key="1"
+  >
+    <li
+      key="0"
+    >
+      Any benefits from your employer that you’ll be using in addition to Massachusetts paid leave (for example, maternity leave, or paid sick time)
+    </li>
+  </ul>,
+  <ul
+    className="usa-list"
+    key="2"
+  >
+    <li
+      key="0"
+    >
+      Income from any other sources during your leave
+    </li>
+  </ul>,
+]
+`;
+
+exports[`Success renders content tailored to Family (Bonding Future Newborn) 3`] = `
 <ul
   className="usa-list"
   key="0"
@@ -218,7 +356,7 @@ exports[`Success renders content tailored to Family (Bonding Future Newborn) 2`]
   <li
     key="1"
   >
-    Your leave application will be sent to your employer for review. They have 10 days to provide feedback.
+    Your employer has 10 days to provide feedback on your application.
   </li>
    
   <li
@@ -244,11 +382,27 @@ exports[`Success renders content tailored to Family (Bonding Future Newborn) 2`]
 exports[`Success renders content tailored to Family (Bonding Newborn) 1`] = `
 <Fragment>
   <Title>
-    Your family leave application was submitted successfully
+    You submitted your family leave application
   </Title>
   <div
     className="measure-6"
   >
+    <Heading
+      level="2"
+    >
+      We may need more information from you
+    </Heading>
+    <Trans
+      components={
+        Object {
+          "li": <li />,
+          "ul": <ul
+            className="usa-list"
+          />,
+        }
+      }
+      i18nKey="pages.claimsSuccess.reportReductionsProcess"
+    />
     <Heading
       level="2"
     >
@@ -279,7 +433,7 @@ exports[`Success renders content tailored to Family (Bonding Newborn) 1`] = `
         If you gave birth, you may also be eligible for paid medical leave.
       </Heading>
       <p>
-        You can take up to 20 weeks of paid medical leave if you're unable to work during your pregnancy and to recover from childbirth. Your health care provider determines how much medical leave you will need. You must create a separate leave application if you need to take medical leave.
+        You can take up to 20 weeks of paid medical leave if you're unable to work during your pregnancy and to recover from childbirth. Your health care provider determines how much medical leave you will need. You'll need to fill out a separate application to take medical leave in addition to your family leave.
       </p>
     </div>
     <UserFeedback
@@ -296,6 +450,36 @@ exports[`Success renders content tailored to Family (Bonding Newborn) 1`] = `
 `;
 
 exports[`Success renders content tailored to Family (Bonding Newborn) 2`] = `
+Array [
+  <p
+    key="p-0"
+  >
+    Call the Contact Center at (833) 344‑7365 if you'll receive:
+  </p>,
+  <ul
+    className="usa-list"
+    key="1"
+  >
+    <li
+      key="0"
+    >
+      Any benefits from your employer that you’ll be using in addition to Massachusetts paid leave (for example, maternity leave, or paid sick time)
+    </li>
+  </ul>,
+  <ul
+    className="usa-list"
+    key="2"
+  >
+    <li
+      key="0"
+    >
+      Income from any other sources during your leave
+    </li>
+  </ul>,
+]
+`;
+
+exports[`Success renders content tailored to Family (Bonding Newborn) 3`] = `
 <ul
   className="usa-list"
   key="0"
@@ -304,13 +488,13 @@ exports[`Success renders content tailored to Family (Bonding Newborn) 2`] = `
   <li
     key="1"
   >
-    Your leave application will be sent to your employer for review. They have 10 days to provide feedback.
+    Your employer has 10 days to provide feedback on your application.
   </li>
    
   <li
     key="3"
   >
-    Once your employer has reviewed your application, we’ll confirm your eligibility and make sure that your documents are valid.
+    We’ll confirm your eligibility and make sure that your documents are valid.
   </li>
    
   <li
@@ -325,11 +509,27 @@ exports[`Success renders content tailored to Family (Bonding Newborn) 2`] = `
 exports[`Success renders content tailored to Medical (Not pregnant) 1`] = `
 <Fragment>
   <Title>
-    Your medical leave application was submitted successfully
+    You submitted your medical leave application
   </Title>
   <div
     className="measure-6"
   >
+    <Heading
+      level="2"
+    >
+      We may need more information from you
+    </Heading>
+    <Trans
+      components={
+        Object {
+          "li": <li />,
+          "ul": <ul
+            className="usa-list"
+          />,
+        }
+      }
+      i18nKey="pages.claimsSuccess.reportReductionsProcess"
+    />
     <Heading
       level="2"
     >
@@ -365,6 +565,36 @@ exports[`Success renders content tailored to Medical (Not pregnant) 1`] = `
 `;
 
 exports[`Success renders content tailored to Medical (Not pregnant) 2`] = `
+Array [
+  <p
+    key="p-0"
+  >
+    Call the Contact Center at (833) 344‑7365 if you'll receive:
+  </p>,
+  <ul
+    className="usa-list"
+    key="1"
+  >
+    <li
+      key="0"
+    >
+      Any benefits from your employer that you’ll be using in addition to Massachusetts paid leave (for example, maternity leave, or paid sick time)
+    </li>
+  </ul>,
+  <ul
+    className="usa-list"
+    key="2"
+  >
+    <li
+      key="0"
+    >
+      Income from any other sources during your leave
+    </li>
+  </ul>,
+]
+`;
+
+exports[`Success renders content tailored to Medical (Not pregnant) 3`] = `
 <ul
   className="usa-list"
   key="0"
@@ -373,13 +603,13 @@ exports[`Success renders content tailored to Medical (Not pregnant) 2`] = `
   <li
     key="1"
   >
-    Your leave application will be sent to your employer for review. They have 10 days to provide feedback.
+    Your employer has 10 days to provide feedback on your application.
   </li>
    
   <li
     key="3"
   >
-    Once your employer has reviewed your application, we’ll confirm your eligibility and make sure that your documents are valid.
+    We’ll confirm your eligibility and make sure that your documents are valid.
   </li>
    
   <li
@@ -394,11 +624,27 @@ exports[`Success renders content tailored to Medical (Not pregnant) 2`] = `
 exports[`Success renders content tailored to Medical (Pregnant) 1`] = `
 <Fragment>
   <Title>
-    Your medical leave application was submitted successfully
+    You submitted your medical leave application
   </Title>
   <div
     className="measure-6"
   >
+    <Heading
+      level="2"
+    >
+      We may need more information from you
+    </Heading>
+    <Trans
+      components={
+        Object {
+          "li": <li />,
+          "ul": <ul
+            className="usa-list"
+          />,
+        }
+      }
+      i18nKey="pages.claimsSuccess.reportReductionsProcess"
+    />
     <Heading
       level="2"
     >
@@ -446,6 +692,36 @@ exports[`Success renders content tailored to Medical (Pregnant) 1`] = `
 `;
 
 exports[`Success renders content tailored to Medical (Pregnant) 2`] = `
+Array [
+  <p
+    key="p-0"
+  >
+    Call the Contact Center at (833) 344‑7365 if you'll receive:
+  </p>,
+  <ul
+    className="usa-list"
+    key="1"
+  >
+    <li
+      key="0"
+    >
+      Any benefits from your employer that you’ll be using in addition to Massachusetts paid leave (for example, maternity leave, or paid sick time)
+    </li>
+  </ul>,
+  <ul
+    className="usa-list"
+    key="2"
+  >
+    <li
+      key="0"
+    >
+      Income from any other sources during your leave
+    </li>
+  </ul>,
+]
+`;
+
+exports[`Success renders content tailored to Medical (Pregnant) 3`] = `
 <ul
   className="usa-list"
   key="0"
@@ -454,13 +730,13 @@ exports[`Success renders content tailored to Medical (Pregnant) 2`] = `
   <li
     key="1"
   >
-    Your leave application will be sent to your employer for review. They have 10 days to provide feedback.
+    Your employer has 10 days to provide feedback on your application.
   </li>
    
   <li
     key="3"
   >
-    Once your employer has reviewed your application, we’ll confirm your eligibility and make sure that your documents are valid.
+    We’ll confirm your eligibility and make sure that your documents are valid.
   </li>
    
   <li
@@ -475,7 +751,7 @@ exports[`Success renders content tailored to Medical (Pregnant) 2`] = `
 exports[`Success renders content tailored to Medical (Pregnant, applying in advance) 1`] = `
 <Fragment>
   <Title>
-    Your medical leave application was submitted successfully
+    You submitted your medical leave application
   </Title>
   <div
     className="measure-6"
@@ -486,6 +762,22 @@ exports[`Success renders content tailored to Medical (Pregnant, applying in adva
     >
       You must call the DFML Contact Center at (833) 344‑7365 once your medical leave begins. We can’t approve your application until we hear from you.
     </Alert>
+    <Heading
+      level="2"
+    >
+      We may need more information from you
+    </Heading>
+    <Trans
+      components={
+        Object {
+          "li": <li />,
+          "ul": <ul
+            className="usa-list"
+          />,
+        }
+      }
+      i18nKey="pages.claimsSuccess.reportReductionsProcess"
+    />
     <Heading
       level="2"
     >
@@ -533,6 +825,36 @@ exports[`Success renders content tailored to Medical (Pregnant, applying in adva
 `;
 
 exports[`Success renders content tailored to Medical (Pregnant, applying in advance) 2`] = `
+Array [
+  <p
+    key="p-0"
+  >
+    Call the Contact Center at (833) 344‑7365 if you'll receive:
+  </p>,
+  <ul
+    className="usa-list"
+    key="1"
+  >
+    <li
+      key="0"
+    >
+      Any benefits from your employer that you’ll be using in addition to Massachusetts paid leave (for example, maternity leave, or paid sick time)
+    </li>
+  </ul>,
+  <ul
+    className="usa-list"
+    key="2"
+  >
+    <li
+      key="0"
+    >
+      Income from any other sources during your leave
+    </li>
+  </ul>,
+]
+`;
+
+exports[`Success renders content tailored to Medical (Pregnant, applying in advance) 3`] = `
 <ul
   className="usa-list"
   key="0"
@@ -541,7 +863,7 @@ exports[`Success renders content tailored to Medical (Pregnant, applying in adva
   <li
     key="1"
   >
-    Your leave application will be sent to your employer for review. They have 10 days to provide feedback.
+    Your employer has 10 days to provide feedback on your application.
   </li>
    
   <li
