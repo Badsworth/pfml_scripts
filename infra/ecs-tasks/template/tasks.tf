@@ -31,7 +31,8 @@ locals {
     },
 
     "db-admin-create-db-users" = {
-      command = ["db-admin-create-db-users"]
+      command             = ["db-admin-create-db-users"],
+      containers_template = "db_admin_create_db_users.json"
     },
 
     "db-create-fineos-user" = {

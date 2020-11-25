@@ -57,6 +57,7 @@ services:
       - DB_ADMIN_PASSWORD=secret123
       - DB_USERNAME=pfml_api
       - DB_PASSWORD=secret123
+      - DB_NESSUS_PASSWORD=nessussecret123
       - CORS_ORIGINS=http://localhost:3000
       - COGNITO_USER_POOL_KEYS_URL=file:///app/jwks.json
       - LOGGING_LEVEL=massgov.pfml.fineos.fineos_client=DEBUG
