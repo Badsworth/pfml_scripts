@@ -8,6 +8,9 @@ data "aws_iam_role" "developers" {
 data "aws_iam_policy_document" "developers_access_policy" {
   statement {
     actions = [
+      # Allow individuals to view AWS health statuses affecting our resources.
+      "health:*",
+
       # Allow individuals to manage secrets in SSM Parameter Store.
       "ssm:*",
 
