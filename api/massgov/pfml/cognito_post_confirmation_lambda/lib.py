@@ -12,15 +12,6 @@ from massgov.pfml.db.models.employees import Employer, Role, User, UserRole
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
 
-fineos_client_config = fineos.factory.FINEOSClientConfig.from_env()
-if fineos_client_config.oauth2_client_secret is None:
-    aws_ssm = boto3.client("ssm", region_name="us-east-1")
-    fineos_client_config.oauth2_client_secret = config.get_secret_from_env(
-        aws_ssm, "FINEOS_CLIENT_OAUTH2_CLIENT_SECRET"
-    )
-
-fineos_client = fineos.create_client(fineos_client_config)
-
 
 class PostConfirmationEventRequest(aws_lambda.CognitoUserPoolEventRequest):
     clientMetadata: Optional[Dict[str, Any]] = None
@@ -102,6 +93,15 @@ def handler(
 def leave_admin_create(
     db_session: db.Session, active_directory_id: str, email: str, employer_fein: str,
 ) -> User:
+    fineos_client_config = fineos.factory.FINEOSClientConfig.from_env()
+    if fineos_client_config.oauth2_client_secret is None:
+        aws_ssm = boto3.client("ssm", region_name="us-east-1")
+        fineos_client_config.oauth2_client_secret = config.get_secret_from_env(
+            aws_ssm, "FINEOS_CLIENT_OAUTH2_CLIENT_SECRET"
+        )
+
+    fineos_client = fineos.create_client(fineos_client_config)
+
     employer = (
         db_session.query(Employer).filter(Employer.employer_fein == employer_fein).one_or_none()
     )
