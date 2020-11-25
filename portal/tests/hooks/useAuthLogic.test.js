@@ -23,7 +23,9 @@ describe("useAuthLogic", () => {
     password,
     portalFlow,
     requireLogin,
+    resendForgotPasswordCode,
     resendVerifyAccountCode,
+    resetEmployerPasswordAndCreateEmployerApiAccount,
     resetPassword,
     setAppErrors,
     username,
@@ -51,6 +53,8 @@ describe("useAuthLogic", () => {
         createEmployerAccount,
         requireLogin,
         resendVerifyAccountCode,
+        resendForgotPasswordCode,
+        resetEmployerPasswordAndCreateEmployerApiAccount,
         resetPassword,
         verifyAccount,
         verifyEmployerAccount,
@@ -67,14 +71,6 @@ describe("useAuthLogic", () => {
         await forgotPassword(username);
       });
       expect(Auth.forgotPassword).toHaveBeenCalledWith(username);
-    });
-
-    it("tracks request", async () => {
-      await act(async () => {
-        await forgotPassword(username);
-      });
-
-      expect(tracker.trackFetchRequest).toHaveBeenCalledTimes(1);
     });
 
     it("routes to next page when successful", async () => {
@@ -107,13 +103,6 @@ describe("useAuthLogic", () => {
       expect(spy).not.toHaveBeenCalled();
     });
 
-    it("trims whitespace from username", async () => {
-      await act(async () => {
-        await forgotPassword(`  ${username} `);
-      });
-      expect(Auth.forgotPassword).toHaveBeenCalledWith(username);
-    });
-
     it("stores username in authData for Reset Password page", async () => {
       await act(async () => {
         await forgotPassword(username);
@@ -121,11 +110,28 @@ describe("useAuthLogic", () => {
 
       expect(authData.resetPasswordUsername).toBe(username);
     });
+  });
+
+  describe("resendForgotPasswordCode", () => {
+    it("calls forgotPassword with whitespace trimmed from username", async () => {
+      await act(async () => {
+        await resendForgotPasswordCode(`  ${username} `);
+      });
+      expect(Auth.forgotPassword).toHaveBeenCalledWith(username);
+    });
+
+    it("tracks request", async () => {
+      await act(async () => {
+        await resendForgotPasswordCode(username);
+      });
+
+      expect(tracker.trackFetchRequest).toHaveBeenCalledTimes(1);
+    });
 
     it("sets app errors when username is empty", () => {
       username = "";
       act(() => {
-        forgotPassword(username);
+        resendForgotPasswordCode(username);
       });
       expect(appErrors.items).toHaveLength(1);
       expect(appErrors.items[0].message).toMatchInlineSnapshot(
@@ -145,7 +151,7 @@ describe("useAuthLogic", () => {
         };
       });
       act(() => {
-        forgotPassword(username);
+        resendForgotPasswordCode(username);
       });
       expect(appErrors.items).toHaveLength(1);
       expect(appErrors.items[0].message).toMatchInlineSnapshot(
@@ -165,7 +171,7 @@ describe("useAuthLogic", () => {
         };
       });
       act(() => {
-        forgotPassword(username);
+        resendForgotPasswordCode(username);
       });
       expect(appErrors.items).toHaveLength(1);
       expect(appErrors.items[0].message).toMatchInlineSnapshot(
@@ -184,7 +190,7 @@ describe("useAuthLogic", () => {
         };
       });
       act(() => {
-        forgotPassword(username);
+        resendForgotPasswordCode(username);
       });
       expect(appErrors.items).toHaveLength(1);
       expect(appErrors.items[0].message).toMatchInlineSnapshot(
@@ -203,7 +209,7 @@ describe("useAuthLogic", () => {
         };
       });
       act(() => {
-        forgotPassword(username);
+        resendForgotPasswordCode(username);
       });
       expect(appErrors.items).toHaveLength(1);
       expect(appErrors.items[0].message).toMatchInlineSnapshot(
@@ -216,7 +222,7 @@ describe("useAuthLogic", () => {
         throw new Error("Some unknown error");
       });
       act(() => {
-        forgotPassword(username);
+        resendForgotPasswordCode(username);
       });
       expect(appErrors.items).toHaveLength(1);
       expect(appErrors.items[0].message).toMatchInlineSnapshot(
@@ -231,7 +237,7 @@ describe("useAuthLogic", () => {
       });
 
       await act(async () => {
-        await forgotPassword(username);
+        await resendForgotPasswordCode(username);
       });
 
       expect(tracker.trackEvent).toHaveBeenCalledWith("AuthError", {
@@ -244,7 +250,7 @@ describe("useAuthLogic", () => {
     it("clears existing errors", async () => {
       await act(async () => {
         setAppErrors([{ message: "Pre-existing error" }]);
-        await forgotPassword(username);
+        await resendForgotPasswordCode(username);
       });
       expect(appErrors.items).toHaveLength(0);
     });
@@ -1046,7 +1052,8 @@ describe("useAuthLogic", () => {
       expect(Auth.forgotPasswordSubmit).toHaveBeenCalledWith(
         username,
         verificationCode,
-        password
+        password,
+        {}
       );
     });
 
@@ -1252,6 +1259,56 @@ describe("useAuthLogic", () => {
       act(() => {
         setAppErrors([{ message: "Pre-existing error" }]);
         resetPassword(username, verificationCode, password);
+      });
+      expect(appErrors.items).toHaveLength(0);
+    });
+  });
+
+  describe("resetEmployerPasswordAndCreateEmployerApiAccount", () => {
+    it("requires all fields to not be empty", () => {
+      act(() => {
+        resetEmployerPasswordAndCreateEmployerApiAccount();
+      });
+
+      expect(appErrors.items).toHaveLength(4);
+      expect(appErrors.items.map((e) => e.message)).toMatchInlineSnapshot(`
+        Array [
+          "Enter the 6 digit code sent to your email",
+          "Enter your email address",
+          "Enter your password",
+          "Enter your employer ID number",
+        ]
+      `);
+      expect(Auth.forgotPasswordSubmit).not.toHaveBeenCalled();
+    });
+
+    it("calls Auth.forgotPasswordSubmit with EIN", () => {
+      act(() => {
+        resetEmployerPasswordAndCreateEmployerApiAccount(
+          username,
+          verificationCode,
+          password,
+          "123456789"
+        );
+      });
+
+      expect(Auth.forgotPasswordSubmit).toHaveBeenCalledWith(
+        username,
+        verificationCode,
+        password,
+        { ein: "123456789" }
+      );
+    });
+
+    it("clears existing errors", () => {
+      act(() => {
+        setAppErrors([{ message: "Pre-existing error" }]);
+        resetEmployerPasswordAndCreateEmployerApiAccount(
+          username,
+          verificationCode,
+          password,
+          "123456789"
+        );
       });
       expect(appErrors.items).toHaveLength(0);
     });

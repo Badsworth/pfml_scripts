@@ -1,11 +1,12 @@
 import {
-  NetworkError,
+  UnauthorizedError,
   UserNotFoundError,
   UserNotReceivedError,
 } from "../errors";
 import routes, { isApplicationsRoute, isEmployersRoute } from "../routes";
 import { useMemo, useState } from "react";
 import UsersApi from "../api/UsersApi";
+import tracker from "../services/tracker";
 import { useRouter } from "next/router";
 
 /**
@@ -69,14 +70,18 @@ const useUsersLogic = ({ appErrorsLogic, isLoggedIn, portalFlow }) => {
 
       setUser(user);
     } catch (error) {
-      let errorToSet;
+      if (error instanceof UnauthorizedError) {
+        // API returns a 401 (UnauthorizedError) if they don't find a matching
+        // user in the database. This could mean our post-confirmation hook
+        // timed out or failed. We redirect the user to the password reset
+        // page, which triggers the post confirmation hook again upon a reset.
+        tracker.noticeError(new UserNotFoundError(error.message));
+        portalFlow.goTo(routes.auth.resetPassword, { "user-not-found": true });
 
-      if (error instanceof NetworkError) {
-        errorToSet = error;
-      } else {
-        errorToSet = new UserNotFoundError(error.message);
+        return;
       }
-      appErrorsLogic.catchError(errorToSet);
+
+      appErrorsLogic.catchError(error);
     }
   };
 

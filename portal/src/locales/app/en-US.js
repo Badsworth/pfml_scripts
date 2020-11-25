@@ -65,7 +65,7 @@ const errors = {
   caughtError_NetworkError: "$t(shared.networkError)",
   caughtError_NotFoundError:
     "Sorry, we were unable to retrieve what you were looking for. Check that the link you are visiting is correct. If this continues to happen, please log out and try again.",
-  caughtError_UserNotFoundError:
+  caughtError_UserNotReceivedError:
     "Sorry, we were unable to retrieve your account. Please log out and try again. If this continues to happen, you may call the Paid Family Leave Contact Center at $t(shared.contactCenterPhoneNumber)",
   claims: {
     date_of_birth: {
@@ -492,6 +492,15 @@ const pages = {
   },
   authResetPassword: {
     codeLabel: "$t(shared.verificationCodeLabel)",
+    codeResent:
+      "We sent a new 6 digit verification code to your email address. Enter the new code to reset your password.",
+    codeResentHeading: "New verification code sent",
+    einLabel: "Employer ID number",
+    employerAccountLabel:
+      "I need an employer account to manage leave for my team.",
+    fixUserNotFound:
+      "Your account needs to be reconfirmed. Enter your details below to receive a code, and then reset your$t(chars.nbsp)password.",
+    fixUserNotFoundHeading: "Reconfirm your account",
     lead:
       "If an account exists for the email you provide, we emailed a 6-digit verification code to it. Enter the code below to confirm your email and reset your password.",
     lead_email:

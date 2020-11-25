@@ -40,7 +40,31 @@ const useAuthLogic = ({ appErrorsLogic, portalFlow }) => {
    * If there are any errors, sets app errors on the page.
    * @param {string} username Email address that is used as the username
    */
-  const forgotPassword = async (username = "") => {
+  const forgotPassword = async (username) => {
+    const success = await sendForgotPasswordConfirmation(username);
+
+    if (success) {
+      // Store the username so the user doesn't need to reenter it on the Reset page
+      setAuthData({ resetPasswordUsername: username });
+      portalFlow.goToPageFor("SEND_CODE");
+    }
+  };
+
+  /**
+   * Initiate the Forgot Password flow, sending a verification code when user exists.
+   * @param {string} username Email address that is used as the username
+   */
+  const resendForgotPasswordCode = async (username) => {
+    await sendForgotPasswordConfirmation(username);
+  };
+
+  /**
+   * Initiate the Forgot Password flow, sending a verification code when user exists.
+   * @param {string} username Email address that is used as the username
+   * @returns {boolean} Whether the code was sent successfully or not
+   * @private
+   */
+  const sendForgotPasswordConfirmation = async (username = "") => {
     appErrorsLogic.clearErrors();
     username = username.trim();
 
@@ -49,19 +73,18 @@ const useAuthLogic = ({ appErrorsLogic, portalFlow }) => {
         new AppErrorInfo({ message: t("errors.auth.emailRequired") }),
       ];
       appErrorsLogic.setAppErrors(new AppErrorInfoCollection(validationErrors));
-      return;
+      return false;
     }
 
     try {
       trackAuthRequest("forgotPassword");
       await Auth.forgotPassword(username);
-      // Store the username so the user doesn't need to reenter it on the Reset page
-      setAuthData({ resetPasswordUsername: username });
-      portalFlow.goToPageFor("SEND_CODE");
+      return true;
     } catch (error) {
       trackAuthError(error);
       const appErrors = getForgotPasswordErrorInfo(error, t);
       appErrorsLogic.setAppErrors(appErrors);
+      return false;
     }
   };
 
@@ -144,6 +167,7 @@ const useAuthLogic = ({ appErrorsLogic, portalFlow }) => {
    * @param {string} username Email address that is used as the username
    * @param {string} password Password
    * @param {string} [ein] Employer id number (if signing up through Employer Portal)
+   * @private
    */
   const createAccountInCognito = async (username, password, ein) => {
     try {
@@ -302,9 +326,65 @@ const useAuthLogic = ({ appErrorsLogic, portalFlow }) => {
       return;
     }
 
+    await resetPasswordInCognito(username, code, password);
+  };
+
+  /**
+   * Use the post-confirmation hook workaround to create an API user for
+   * Employers through the Cognito Reset Password flow.
+   * @param {string} username - Email address that is used as the username
+   * @param {string} code - verification code
+   * @param {string} password - new password
+   * @param {string} ein Employer id number (if signing up through Employer Portal)
+   */
+  const resetEmployerPasswordAndCreateEmployerApiAccount = async (
+    username = "",
+    code = "",
+    password = "",
+    ein = ""
+  ) => {
+    appErrorsLogic.clearErrors();
+
+    username = username.trim();
+    code = code.trim();
+    ein = ein.trim();
+
+    const validationErrors = combineErrorCollections([
+      validateVerificationCode(code, t),
+      validateUsername(username, t),
+      validatePassword(password, t),
+      validateEmployerIdNumber(ein, t),
+    ]);
+
+    if (validationErrors) {
+      appErrorsLogic.setAppErrors(validationErrors);
+      return;
+    }
+
+    await resetPasswordInCognito(username, code, password, ein);
+  };
+
+  /**
+   * Use a verification code to confirm the user is who they say they are
+   * and allow them to reset their password
+   * @param {string} username - Email address that is used as the username
+   * @param {string} code - verification code
+   * @param {string} password - new password
+   * @param {string} [ein] Employer id number (if signing up through Employer Portal)
+   * @private
+   */
+  const resetPasswordInCognito = async (
+    username = "",
+    code = "",
+    password = "",
+    ein
+  ) => {
     try {
+      const clientMetadata = ein ? { ein } : {};
+
       trackAuthRequest("forgotPasswordSubmit");
-      await Auth.forgotPasswordSubmit(username, code, password);
+      await Auth.forgotPasswordSubmit(username, code, password, clientMetadata);
+
       portalFlow.goToPageFor("SET_NEW_PASSWORD");
     } catch (error) {
       trackAuthError(error);
@@ -318,6 +398,7 @@ const useAuthLogic = ({ appErrorsLogic, portalFlow }) => {
    * @param {string} username Email address that is used as the username
    * @param {string} code Verification code that is emailed to the user
    * @param {string} ein Employer id number (if signing up through Employer Portal)
+   * @private
    */
   const verifyAccountInCognito = async (username = "", code = "", ein = "") => {
     try {
@@ -425,7 +506,9 @@ const useAuthLogic = ({ appErrorsLogic, portalFlow }) => {
     isLoggedIn,
     requireLogin,
     resendVerifyAccountCode,
+    resetEmployerPasswordAndCreateEmployerApiAccount,
     resetPassword,
+    resendForgotPasswordCode,
     verifyAccount,
     verifyEmployerAccount,
   };
