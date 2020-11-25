@@ -30,7 +30,7 @@ exports[`PaymentMethod renders the page 1`] = `
     }
     hint="Your choice will be applied to any previous claims you have submitted."
     label="How do you want to get your weekly benefit?"
-    name="payment_preferences[0].payment_method"
+    name="payment_preference.payment_method"
     onChange={[Function]}
     type="radio"
     value=""
@@ -39,9 +39,9 @@ exports[`PaymentMethod renders the page 1`] = `
     clearField={[Function]}
     fieldNamesClearedWhenHidden={
       Array [
-        "payment_preferences[0].account_details.account_number",
-        "payment_preferences[0].account_details.account_type",
-        "payment_preferences[0].account_details.routing_number",
+        "payment_preference.account_number",
+        "payment_preference.bank_account_type",
+        "payment_preference.routing_number",
       ]
     }
     getField={[Function]}
@@ -61,7 +61,7 @@ exports[`PaymentMethod renders the page 1`] = `
         hint="This is the 9-digit number found on the lower left corner of a check."
         inputMode="numeric"
         label="Routing number"
-        name="payment_preferences[0].account_details.routing_number"
+        name="payment_preference.routing_number"
         onChange={[Function]}
         pii={true}
         smallLabel={true}
@@ -71,7 +71,7 @@ exports[`PaymentMethod renders the page 1`] = `
       <InputText
         inputMode="numeric"
         label="Account number"
-        name="payment_preferences[0].account_details.account_number"
+        name="payment_preference.account_number"
         onChange={[Function]}
         pii={true}
         smallLabel={true}
@@ -93,7 +93,7 @@ exports[`PaymentMethod renders the page 1`] = `
           ]
         }
         label="Account type"
-        name="payment_preferences[0].account_details.account_type"
+        name="payment_preference.bank_account_type"
         onChange={[Function]}
         smallLabel={true}
         type="radio"

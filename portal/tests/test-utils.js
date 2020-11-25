@@ -1,4 +1,5 @@
 import Claim, {
+  BankAccountType,
   ClaimStatus,
   ContinuousLeavePeriod,
   DurationBasis,
@@ -6,7 +7,6 @@ import Claim, {
   FrequencyIntervalBasis,
   IntermittentLeavePeriod,
   LeaveReason,
-  PaymentAccountType,
   PaymentPreferenceMethod,
   ReasonQualifier,
   ReducedScheduleLeavePeriod,
@@ -259,7 +259,7 @@ export class MockClaimBuilder extends BaseMockClaimBuilder {
   check() {
     set(
       this.claimAttrs,
-      "payment_preferences[0].payment_method",
+      "payment_preference.payment_method",
       PaymentPreferenceMethod.check
     );
     return this;
@@ -272,29 +272,16 @@ export class MockClaimBuilder extends BaseMockClaimBuilder {
   directDeposit() {
     set(
       this.claimAttrs,
-      "payment_preferences[0].payment_method",
+      "payment_preference.payment_method",
       PaymentPreferenceMethod.ach
     );
+    set(this.claimAttrs, "payment_preference.account_number", "091000022");
     set(
       this.claimAttrs,
-      "payment_preferences[0].account_details.account_number",
-      "091000022"
+      "payment_preference.bank_account_type",
+      BankAccountType.checking
     );
-    set(
-      this.claimAttrs,
-      "payment_preferences[0].account_details.account_type",
-      PaymentAccountType.checking
-    );
-    set(
-      this.claimAttrs,
-      "payment_preferences[0].account_details.routing_number",
-      "1234567890"
-    );
-    set(
-      this.claimAttrs,
-      "payment_preferences[0].payment_preference_id",
-      "mock-payment-preference-id"
-    );
+    set(this.claimAttrs, "payment_preference.routing_number", "1234567890");
     return this;
   }
 

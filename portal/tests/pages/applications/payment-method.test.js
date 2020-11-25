@@ -18,18 +18,16 @@ describe("PaymentMethod", () => {
     beforeEach(() => {
       ({ appLogic, claim, wrapper } = renderWithAppLogic(PaymentMethod, {
         claimAttrs: {
-          payment_preferences: [
-            {
-              payment_method: PaymentPreferenceMethod.ach,
-            },
-          ],
+          payment_preference: {
+            payment_method: PaymentPreferenceMethod.ach,
+          },
         },
       }));
     });
 
     it("displays the ACH fieldset", () => {
       const achField = wrapper.find(
-        "[name='payment_preferences[0].account_details.routing_number']"
+        "[name='payment_preference.routing_number']"
       );
       const conditionalContent = achField.parents("ConditionalContent");
 
@@ -41,18 +39,16 @@ describe("PaymentMethod", () => {
     beforeEach(() => {
       ({ appLogic, claim, wrapper } = renderWithAppLogic(PaymentMethod, {
         claimAttrs: {
-          payment_preferences: [
-            {
-              payment_method: PaymentPreferenceMethod.check,
-            },
-          ],
+          payment_preference: {
+            payment_method: PaymentPreferenceMethod.check,
+          },
         },
       }));
     });
 
     it("does not show the ACH fieldset", () => {
       const achField = wrapper.find(
-        "[name='payment_preferences[0].account_details.routing_number']"
+        "[name='payment_preference.routing_number']"
       );
       const conditionalContent = achField.parents("ConditionalContent");
 
@@ -73,17 +69,12 @@ describe("PaymentMethod", () => {
       expect(appLogic.claims.update).toHaveBeenCalledWith(
         claim.application_id,
         {
-          payment_preferences: [
-            {
-              account_details: {
-                account_number: "091000022",
-                account_type: "Checking",
-                routing_number: "1234567890",
-              },
-              payment_method: "ACH",
-              payment_preference_id: "mock-payment-preference-id",
-            },
-          ],
+          payment_preference: {
+            account_number: "091000022",
+            bank_account_type: "Checking",
+            routing_number: "1234567890",
+            payment_method: "ACH",
+          },
         }
       );
     });

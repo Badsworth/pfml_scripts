@@ -253,22 +253,20 @@ const errors = {
         "License or ID number must be 9 characters, and may begin with S or SA.",
       required: "Enter your license or ID number.",
     },
-    payment_preferences: {
-      account_details: {
-        account_number: {
-          maxLength:
-            "Account number too long: Account number must be 17 digits or fewer.",
-          minLength:
-            "Account number too short: Account number must be at least 6 digits.",
-          required: "Enter an account number.",
-        },
-        account_type: {
-          required: "Enter an account type.",
-        },
-        routing_number: {
-          pattern: "Enter a 9 digit routing number.",
-          required: "Enter a routing number.",
-        },
+    payment_preference: {
+      account_number: {
+        maxLength:
+          "Account number too long: Account number must be 17 digits or fewer.",
+        minLength:
+          "Account number too short: Account number must be at least 6 digits.",
+        required: "Enter an account number.",
+      },
+      bank_account_type: {
+        required: "Enter an account type.",
+      },
+      routing_number: {
+        pattern: "Enter a 9 digit routing number.",
+        required: "Enter a routing number.",
       },
     },
     residential_address: {

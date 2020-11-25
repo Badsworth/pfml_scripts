@@ -1,7 +1,7 @@
 import Claim, {
+  BankAccountType,
   EmploymentStatus,
   LeaveReason,
-  PaymentAccountType,
   PaymentPreferenceMethod,
   ReasonQualifier,
   ReducedScheduleLeavePeriod,
@@ -85,7 +85,7 @@ export const Review = (props) => {
     DocumentType.identityVerification,
   ]);
 
-  const payment_method = get(claim, "payment_preferences[0].payment_method");
+  const payment_method = get(claim, "payment_preference.payment_method");
   const reasonQualifier = get(claim, "leave_details.reason_qualifier");
   const hasFutureChildDate = get(claim, "leave_details.has_future_child_date");
   const reducedLeavePeriod = new ReducedScheduleLeavePeriod(
@@ -584,19 +584,13 @@ export const Review = (props) => {
                 label={t("pages.claimsReview.paymentRoutingNumLabel")}
                 level={reviewRowLevel}
               >
-                {get(
-                  claim,
-                  "payment_preferences[0].account_details.routing_number"
-                )}
+                {get(claim, "payment_preference.routing_number")}
               </ReviewRow>
               <ReviewRow
                 label={t("pages.claimsReview.paymentAccountNumLabel")}
                 level={reviewRowLevel}
               >
-                {get(
-                  claim,
-                  "payment_preferences[0].account_details.account_number"
-                )}
+                {get(claim, "payment_preference.account_number")}
               </ReviewRow>
               <ReviewRow
                 label={t("pages.claimsReview.achTypeLabel")}
@@ -604,11 +598,8 @@ export const Review = (props) => {
               >
                 {t("pages.claimsReview.achType", {
                   context: findKeyByValue(
-                    PaymentAccountType,
-                    get(
-                      claim,
-                      "payment_preferences[0].account_details.account_type"
-                    )
+                    BankAccountType,
+                    get(claim, "payment_preference.bank_account_type")
                   ),
                 })}
               </ReviewRow>

@@ -32,18 +32,13 @@ class Claim extends BaseClaim {
       mass_id: null,
       // array of OtherIncome objects. See the OtherIncome model
       other_incomes: [],
-      payment_preferences: [
-        {
-          // Fields for ACH details
-          account_details: {
-            account_number: null,
-            account_type: null, // PaymentAccountType
-            routing_number: null,
-          },
-          payment_method: null, // PaymentPreferenceMethod
-          payment_preference_id: null,
-        },
-      ],
+      payment_preference: {
+        // Fields for ACH details
+        account_number: null,
+        bank_account_type: null, // BankAccountType
+        payment_method: null, // PaymentPreferenceMethod
+        routing_number: null,
+      },
       /**
        * Fields within the `temp` object haven't been connected to the API yet, and
        * should have a ticket in Jira related to eventually moving them out of
@@ -340,16 +335,16 @@ export class ReducedScheduleLeavePeriod extends BaseModel {
 }
 
 /**
- * Enums for the Application's `payment_preferences[].account_details.account_type` field
+ * Enums for the Application's `payment_preference.bank_account_type` field
  * @enum {string}
  */
-export const PaymentAccountType = {
+export const BankAccountType = {
   checking: "Checking",
   savings: "Savings",
 };
 
 /**
- * Enums for the Application's `payment_preferences[].payment_method` field
+ * Enums for the Application's `payment_preference.payment_method` field
  * @enum {string}
  */
 export const PaymentPreferenceMethod = {

@@ -44,7 +44,7 @@ describe("useFormState", () => {
           application_nickname: "Hip replacement",
           "leave_details.employer_notification_method": "In writing",
           "leave_details.employer_notified": true,
-          "payment_preferences[0].payment_method": "ACH",
+          "payment_preference.payment_method": "ACH",
         });
       });
 
@@ -55,11 +55,9 @@ describe("useFormState", () => {
             "employer_notification_method": "In writing",
             "employer_notified": true,
           },
-          "payment_preferences": Array [
-            Object {
-              "payment_method": "ACH",
-            },
-          ],
+          "payment_preference": Object {
+            "payment_method": "ACH",
+          },
         }
       `);
     });
