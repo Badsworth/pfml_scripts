@@ -441,6 +441,8 @@ const pages = {
     siteTitle: "Paid Family and Medical Leave (PFML) | Mass.gov",
   },
   applications: {
+    claimsReflectPortal:
+      "Your applications only reflect what you entered using this website. Any changes you made through the Contact Center will not be shown here.",
     inProgressHeading: "In-progress applications",
     noClaims: "You don't have any applications yet.",
     submittedHeading: "Submitted applications",

@@ -3,6 +3,7 @@ import ApplicationCard from "../../components/ApplicationCard";
 import ClaimCollection from "../../models/ClaimCollection";
 import DashboardNavigation from "../../components/DashboardNavigation";
 import Heading from "../../components/Heading";
+import Lead from "../../components/Lead";
 import PropTypes from "prop-types";
 import React from "react";
 import Title from "../../components/Title";
@@ -42,6 +43,9 @@ const Applications = (props) => {
 
       {hasInProgressClaims && (
         <React.Fragment>
+          <div className="measure-6">
+            <Lead>{t("pages.applications.claimsReflectPortal")}</Lead>
+          </div>
           <Heading level="2" size="1">
             {t("pages.applications.inProgressHeading")}
           </Heading>
