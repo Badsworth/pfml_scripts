@@ -50,7 +50,7 @@ resource "aws_cloudwatch_metric_alarm" "api_cpu_warn" {
   extended_statistic  = "p95"
   metric_name         = "CpuUtilized"
   comparison_operator = "GreaterThanOrEqualToThreshold"
-  threshold           = "80"
+  threshold           = (data.template_file.container_definitions.vars.cpu * 0.80)
   evaluation_periods  = "5"  # look back at the last five minutes
   datapoints_to_alarm = "3"  # any three one-minute periods
   period              = "60" # polling on one-minute intervals
@@ -73,7 +73,7 @@ resource "aws_cloudwatch_metric_alarm" "api_cpu_crit" {
   extended_statistic  = "p95"
   metric_name         = "CpuUtilized"
   comparison_operator = "GreaterThanOrEqualToThreshold"
-  threshold           = "90"
+  threshold           = (data.template_file.container_definitions.vars.cpu * 0.90)
   evaluation_periods  = "5"  # look back at the last five minutes
   datapoints_to_alarm = "3"  # any three one-minute periods
   period              = "60" # polling on one-minute intervals
