@@ -126,14 +126,24 @@ class LkRole(Base):
         self.role_description = role_description
 
 
-class LkPaymentType(Base):
-    __tablename__ = "lk_payment_type"
-    payment_type_id = Column(Integer, primary_key=True, autoincrement=True)
-    payment_type_description = Column(Text)
+class LkPaymentMethod(Base):
+    __tablename__ = "lk_payment_method"
+    payment_method_id = Column(Integer, primary_key=True, autoincrement=True)
+    payment_method_description = Column(Text)
 
-    def __init__(self, payment_type_id, payment_type_description):
-        self.payment_type_id = payment_type_id
-        self.payment_type_description = payment_type_description
+    def __init__(self, payment_method_id, payment_method_description):
+        self.payment_method_id = payment_method_id
+        self.payment_method_description = payment_method_description
+
+
+class LkBankAccountType(Base):
+    __tablename__ = "lk_bank_account_type"
+    bank_account_type_id = Column(Integer, primary_key=True, autoincrement=True)
+    bank_account_type_description = Column(Text)
+
+    def __init__(self, bank_account_type_id, bank_account_type_description):
+        self.bank_account_type_id = bank_account_type_id
+        self.bank_account_type_description = bank_account_type_description
 
 
 class AuthorizedRepresentative(Base):
@@ -200,7 +210,7 @@ class EmployerLog(Base):
 class PaymentInformation(Base):
     __tablename__ = "payment_information"
     payment_info_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
-    payment_type_id = Column(Integer, ForeignKey("lk_payment_type.payment_type_id"))
+    payment_method_id = Column(Integer, ForeignKey("lk_payment_method.payment_method_id"))
     bank_routing_nbr = Column(Integer)
     bank_account_nbr = Column(Integer)
     gift_card_nbr = Column(Integer)
@@ -811,13 +821,21 @@ class Role(LookupTable):
     EMPLOYER = LkRole(3, "Employer")
 
 
-class PaymentType(LookupTable):
-    model = LkPaymentType
-    column_names = ("payment_type_id", "payment_type_description")
+class PaymentMethod(LookupTable):
+    model = LkPaymentMethod
+    column_names = ("payment_method_id", "payment_method_description")
 
-    ACH = LkPaymentType(1, "ACH")
-    CHECK = LkPaymentType(2, "Check")
-    DEBIT = LkPaymentType(3, "Debit")
+    ACH = LkPaymentMethod(1, "ACH")
+    CHECK = LkPaymentMethod(2, "Check")
+    DEBIT = LkPaymentMethod(3, "Debit")
+
+
+class BankAccountType(LookupTable):
+    model = LkBankAccountType
+    column_names = ("bank_account_type_id", "bank_account_type_description")
+
+    SAVINGS = LkBankAccountType(1, "Savings")
+    CHECKING = LkBankAccountType(2, "Checking")
 
 
 def sync_lookup_tables(db_session):
@@ -831,5 +849,6 @@ def sync_lookup_tables(db_session):
     Gender.sync_to_database(db_session)
     Occupation.sync_to_database(db_session)
     Role.sync_to_database(db_session)
-    PaymentType.sync_to_database(db_session)
+    PaymentMethod.sync_to_database(db_session)
+    BankAccountType.sync_to_database(db_session)
     db_session.commit()

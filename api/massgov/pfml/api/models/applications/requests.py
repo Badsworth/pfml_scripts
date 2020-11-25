@@ -13,7 +13,7 @@ from massgov.pfml.api.models.applications.common import (
     EmploymentStatus,
     Occupation,
     OtherIncome,
-    PaymentPreferences,
+    PaymentPreference,
     WorkPattern,
 )
 from massgov.pfml.api.validation.exceptions import ValidationErrorDetail, ValidationException
@@ -40,7 +40,7 @@ class ApplicationRequestBody(PydanticBaseModel):
     employment_status: Optional[EmploymentStatus]
     leave_details: Optional[ApplicationLeaveDetails]
     work_pattern: Optional[WorkPattern]
-    payment_preferences: Optional[List[PaymentPreferences]]
+    payment_preference: Optional[PaymentPreference]
     has_mailing_address: Optional[bool]
     mailing_address: Optional[Address]
     residential_address: Optional[Address]

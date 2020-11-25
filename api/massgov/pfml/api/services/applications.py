@@ -11,6 +11,7 @@ import massgov.pfml.util.datetime as datetime_util
 import massgov.pfml.util.logging
 import massgov.pfml.util.pydantic.mask as mask
 from massgov.pfml.api.models.applications.common import Address as ApiAddress
+from massgov.pfml.api.models.applications.common import PaymentPreference
 from massgov.pfml.api.models.applications.requests import ApplicationRequestBody
 from massgov.pfml.api.models.applications.responses import DocumentResponse
 from massgov.pfml.api.models.common import LookupEnum
@@ -220,45 +221,33 @@ def remove_masked_fields_from_request(
         "residential_address", body, existing_application.residential_address
     )
 
-    payment_preferences = body.get("payment_preferences")
-    if payment_preferences:
-        existing_payment_preferences = existing_application.payment_preferences
-        for index, payment_preference in enumerate(payment_preferences):
-            # All masked fields are in the account details, if not present, skip this record.
-            account_details = payment_preference.get("account_details")
-            if not account_details:
-                continue
-            # If the new payment preference does not have an ID, it's a new one
-            # If there are no existing payment preferences, it can't be a (valid) update
-            # Let these through and don't try to compare, if it's masked/invalid, later validation will error.
-            payment_preference_id = payment_preference.get("payment_preference_id")
-            if not payment_preference_id or not existing_payment_preferences:
-                continue
+    payment_preference = body.get("payment_preference")
+    if payment_preference:
+        existing_payment_preference = existing_application.payment_preference
 
-            # Find the existing payment preference
-            # If it doesn't match or doesn't belong to the application, it'll error later in validation.
-            for existing_payment_preference in existing_payment_preferences:
-                if str(existing_payment_preference.payment_pref_id) == payment_preference_id:
-                    # routing number - fully masked
-                    errors += process_fully_masked_field(
-                        field_key="routing_number",
-                        body=account_details,
-                        existing_field=existing_payment_preference.routing_number,
-                        expected_masked_value=mask.ROUTING_NUMBER_MASK,
-                        path=f"payment_preferences[{index}].account_details.routing_number",
-                    )
+        # If there is no existing payment preference,
+        # this is a new payment preference and should not be masked.
+        if existing_payment_preference is not None:
+            # routing number - fully masked
+            errors += process_fully_masked_field(
+                field_key="routing_number",
+                body=payment_preference,
+                existing_field=existing_payment_preference.routing_number,
+                expected_masked_value=mask.ROUTING_NUMBER_MASK,
+                path="payment_preference.routing_number",
+            )
 
-                    # account number - partially masked
-                    masked_existing_acct_num = mask.mask_financial_account_number(
-                        existing_payment_preference.account_number
-                    )
-                    errors += process_partially_masked_field(
-                        field_key="account_number",
-                        body=account_details,
-                        existing_masked_field=masked_existing_acct_num,
-                        masked_regex=Regexes.MASKED_ACCOUNT_NUMBER,
-                        path=f"payment_preferences[{index}].account_details.account_number",
-                    )
+            # account number - partially masked
+            masked_existing_acct_num = mask.mask_financial_account_number(
+                existing_payment_preference.account_number
+            )
+            errors += process_partially_masked_field(
+                field_key="account_number",
+                body=payment_preference,
+                existing_masked_field=masked_existing_acct_num,
+                masked_regex=Regexes.MASKED_ACCOUNT_NUMBER,
+                path="payment_preference.account_number",
+            )
 
     if errors:
         raise ValidationException(
@@ -276,7 +265,11 @@ def update_from_request(
     for key in body.__fields_set__:
         value = getattr(body, key)
 
-        if key in ("leave_details", "payment_preferences", "employee_ssn", "tax_identifier"):
+        if key in ("leave_details", "employee_ssn", "tax_identifier"):
+            continue
+
+        if key == "payment_preference":
+            add_or_update_payment_preference(db_session, body.payment_preference, application)
             continue
 
         if key == "mailing_address":
@@ -321,7 +314,6 @@ def update_from_request(
         setattr(application, key, value)
 
     leave_schedules = update_leave_details(db_session, body, application)
-    payment_preferences = update_payment_preferences(db_session, body, application)
 
     tax_id = get_or_add_tax_identifier(db_session, body)
     if tax_id is not None:
@@ -334,8 +326,6 @@ def update_from_request(
     for leave_schedule in leave_schedules:
         db_session.add(leave_schedule)
 
-    if payment_preferences:
-        db_session.add(payment_preferences)
     db_session.flush()
     db_session.commit()
     db_session.refresh(application)
@@ -452,80 +442,33 @@ def update_leave_schedule(
     return update_leave_period(leave_schedule_item, leave_cls)
 
 
-def update_payment_preferences(
-    db_session: db.Session, body: ApplicationRequestBody, application: Application
-) -> Optional[ApplicationPaymentPreference]:
-    payment_preferences_json = body.payment_preferences
-    if payment_preferences_json is None or len(payment_preferences_json) == 0:
+def add_or_update_payment_preference(
+    db_session: db.Session,
+    payment_preference_json: Optional[PaymentPreference],
+    application: Application,
+) -> None:
+    if payment_preference_json is None:
+        db_session.delete(application.payment_preference)
+        db_session.commit()
+        del application.payment_preference
         return None
 
-    # To be improved to deal with array
-    payment_preferences_item = payment_preferences_json[0]
-
-    if payment_preferences_item.payment_preference_id:
-        # look up existing payment preference to update if pointed to one
-        payment_preference = db_session.query(ApplicationPaymentPreference).get(
-            payment_preferences_item.payment_preference_id
-        )
-
-        # if we don't find it, client messed up
-        if payment_preference is None:
-            raise BadRequest(
-                f"Referenced payment preference with id {payment_preferences_item.payment_preference_id} does not exist or you do not have access to edit it."
-            )
-
-        # but ensure it actually belongs to this application
-        if payment_preference.application_id != application.application_id:
-            logger.info(
-                "Attempted to update a payment preference that did not belong to Application being updated.",
-                extra={
-                    "application_id": application.application_id,
-                    "payment_preference_id": payment_preference.payment_pref_id,
-                    "payment_preference_application_id": payment_preference.application_id,
-                },
-            )
-            # TODO: should we be throwing HTTP exceptions from services?
-            # should we provide a better, more detailed message?
-            raise Forbidden()
-    else:
+    if application.payment_preference_id is None:
         payment_preference = ApplicationPaymentPreference()
-        payment_preference.application_id = application.application_id
+    else:
+        payment_preference = application.payment_preference
 
-    for key in payment_preferences_item.__fields_set__:
-        value = getattr(payment_preferences_item, key)
-
-        if key == "account_details" or key == "cheque_details":
-            continue
+    for key in payment_preference_json.__fields_set__:
+        value = getattr(payment_preference_json, key)
 
         if isinstance(value, LookupEnum):
             lookup_model = db_lookups.by_value(db_session, value.get_lookup_model(), value)
-            if lookup_model:
-                if key == "payment_method":
-                    key = "payment_type"
-
-                value = lookup_model
+            value = lookup_model
 
         setattr(payment_preference, key, value)
 
-    if payment_preferences_item.account_details is not None:
-        for key in payment_preferences_item.account_details.__fields_set__:
-            value = getattr(payment_preferences_item.account_details, key)
-
-            if key == "account_type":
-                key = "type_of_account"
-
-            setattr(payment_preference, key, value)
-
-    if payment_preferences_item.cheque_details is not None:
-        for key in payment_preferences_item.cheque_details.__fields_set__:
-            value = getattr(payment_preferences_item.cheque_details, key)
-
-            if key == "name_to_print_on_check":
-                key = "name_in_check"
-
-            setattr(payment_preference, key, value)
-
-    return payment_preference
+    application.payment_preference = payment_preference
+    return None
 
 
 def add_or_update_address(

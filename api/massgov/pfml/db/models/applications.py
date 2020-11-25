@@ -11,8 +11,9 @@ from massgov.pfml.db.models.employees import (
     Address,
     Employee,
     Employer,
+    LkBankAccountType,
     LkOccupation,
-    LkPaymentType,
+    LkPaymentMethod,
     TaxIdentifier,
     User,
 )
@@ -225,6 +226,9 @@ class Application(Base):
     )
     employment_status_id = Column(Integer, ForeignKey("lk_employment_status.employment_status_id"))
     work_pattern_id = Column(UUID(as_uuid=True), ForeignKey("work_pattern.work_pattern_id"))
+    payment_preference_id = Column(
+        UUID(as_uuid=True), ForeignKey("application_payment_preference.payment_pref_id")
+    )
     start_time = Column(TIMESTAMP(timezone=True))
     updated_time = Column(TIMESTAMP(timezone=True))
     completed_time = Column(TIMESTAMP(timezone=True))
@@ -249,6 +253,7 @@ class Application(Base):
     tax_identifier = relationship(TaxIdentifier)
     mailing_address = relationship(Address, foreign_keys=[mailing_address_id])
     residential_address = relationship(Address, foreign_keys=[residential_address_id])
+    payment_preference = relationship("ApplicationPaymentPreference", back_populates="application")
     phone = relationship("Phone", back_populates="application", uselist=False)
 
     work_pattern = relationship("WorkPattern", back_populates="applications", uselist=False)
@@ -257,9 +262,6 @@ class Application(Base):
     # detects the relationship as many-to-one
     #
     # https://github.com/dropbox/sqlalchemy-stubs/issues/152
-    payment_preferences = relationship(
-        "ApplicationPaymentPreference", back_populates="application", uselist=True
-    )
     continuous_leave_periods = relationship(
         "ContinuousLeavePeriod", back_populates="application", uselist=True
     )
@@ -276,20 +278,16 @@ class Application(Base):
 class ApplicationPaymentPreference(Base):
     __tablename__ = "application_payment_preference"
     payment_pref_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
-    application_id = Column(
-        UUID(as_uuid=True), ForeignKey("application.application_id"), index=True
-    )
-    description = Column(Text)
-    payment_type_id = Column(Integer, ForeignKey("lk_payment_type.payment_type_id"))
-    is_default = Column(Boolean)
-    account_name = Column(Text)
+    payment_method_id = Column(Integer, ForeignKey("lk_payment_method.payment_method_id"))
     account_number = Column(Text)
     routing_number = Column(Text)
-    type_of_account = Column(Text)
-    name_in_check = Column(Text)
+    bank_account_type_id = Column(
+        Integer, ForeignKey("lk_bank_account_type.bank_account_type_id"), nullable=True
+    )
 
-    application = relationship(Application, back_populates="payment_preferences")
-    payment_type = relationship(LkPaymentType)
+    application = relationship("Application", back_populates="payment_preference", uselist=False)
+    payment_method = relationship(LkPaymentMethod)
+    bank_account_type = relationship(LkBankAccountType)
 
 
 class ContinuousLeavePeriod(Base):

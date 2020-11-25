@@ -288,14 +288,10 @@ class PaymentPreferenceFactory(BaseFactory):
         model = application_models.ApplicationPaymentPreference
 
     payment_pref_id = Generators.UuidObj
-    description = "My checking account"
-    payment_type_id = employee_models.PaymentType.ACH.payment_type_id
-    is_default = True
-    account_name = ""
+    payment_method_id = employee_models.PaymentMethod.ACH.payment_method_id
     account_number = "123456789"
     routing_number = "234567890"
-    type_of_account = "Checking"
-    name_in_check = None
+    bank_account_type_id = employee_models.BankAccountType.CHECKING.bank_account_type_id
 
 
 class ContinuousLeavePeriodFactory(BaseFactory):

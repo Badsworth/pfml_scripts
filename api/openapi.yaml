@@ -2,7 +2,7 @@ openapi: 3.0.2
 info:
   title: Paid Leave API
   description: An API for managing leave within Massachusetts Paid Family and Medical Leave.
-  version: "2020-09-10"
+  version: "2020-11-23"
 
 servers:
   - url: /v1
@@ -1276,10 +1276,10 @@ components:
               example: "Sales Clerk"
             leave_details:
               $ref: "#/components/schemas/ApplicationLeaveDetails"
-            payment_preferences:
-              type: array
-              items:
-                $ref: "#/components/schemas/PaymentPreferences"
+            payment_preference:
+              type: object
+              $ref: "#/components/schemas/PaymentPreference"
+              nullable: true
             work_pattern:
               $ref: "#/components/schemas/WorkPattern"
               nullable: true
@@ -1413,10 +1413,10 @@ components:
         leave_details:
           $ref: "#/components/schemas/ApplicationLeaveDetails"
           nullable: true
-        payment_preferences:
-          type: array
+        payment_preference:
+          type: object
           items:
-            $ref: "#/components/schemas/PaymentPreferences"
+            $ref: "#/components/schemas/PaymentPreference"
           nullable: true
         work_pattern:
           $ref: "#/components/schemas/WorkPattern"
@@ -1925,16 +1925,9 @@ components:
             - Days
           example: "Days"
 
-    PaymentPreferences:
+    PaymentPreference:
       type: object
       properties:
-        payment_preference_id:
-          type: string
-          format: uuid
-          nullable: true
-        description:
-          type: string
-          nullable: true
         payment_method:
           type: string
           nullable: true
@@ -1943,13 +1936,22 @@ components:
             - Check
             - Debit
           example: "ACH"
-        is_default:
-          type: boolean
+        account_number:
+          type: string
           nullable: true
-        account_details:
-          $ref: "#/components/schemas/ApplicationPaymentAccountDetails"
-        cheque_details:
-          $ref: "#/components/schemas/ApplicationPaymentChequeDetails"
+          minLength: 6
+          maxLength: 17
+          example: "1234567"
+        routing_number:
+          nullable: true
+          $ref: "#/components/schemas/RoutingNbr"
+        bank_account_type:
+          type: string
+          nullable: true
+          enum:
+            - Checking
+            - Savings
+          example: "Checking"
 
     WorkPattern:
       type: object
@@ -1987,38 +1989,6 @@ components:
           type: integer
           minimum: 0
           nullable: true
-
-    ApplicationPaymentAccountDetails:
-      type: object
-      properties:
-        account_number:
-          type: string
-          nullable: true
-          minLength: 6
-          maxLength: 17
-          example: "1234567"
-        routing_number:
-          nullable: true
-          $ref: "#/components/schemas/RoutingNbr"
-        account_name:
-          type: string
-          nullable: true
-          example: "My Checking"
-        account_type:
-          type: string
-          nullable: true
-          enum:
-            - Checking
-            - Savings
-          example: "Checking"
-
-    ApplicationPaymentChequeDetails:
-      type: object
-      properties:
-        name_to_print_on_check:
-          type: string
-          nullable: true
-          example: "John Doe"
 
     EmployerBenefit:
       type: object

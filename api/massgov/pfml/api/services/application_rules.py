@@ -15,7 +15,7 @@ from massgov.pfml.db.models.applications import (
     LeaveReason,
     LeaveReasonQualifier,
 )
-from massgov.pfml.db.models.employees import PaymentType
+from massgov.pfml.db.models.employees import PaymentMethod
 
 PFML_PROGRAM_LAUNCH_DATE = date(2021, 1, 1)
 MAX_DAYS_IN_ADVANCE_TO_SUBMIT = 60
@@ -229,7 +229,7 @@ def get_conditional_issues(application: Application) -> List[Issue]:
         issues += get_other_incomes_issues(application)
 
     # Fields involved in Part 2 of the progressive application
-    if application.payment_preferences:
+    if application.payment_preference:
         issues += get_payments_issues(application)
 
     # Fields involved in Part 3 of the progressive application
@@ -304,35 +304,34 @@ def get_bonding_leave_issues(application: Application) -> List[Issue]:
 
 def get_payments_issues(application: Application) -> List[Issue]:
     issues = []
-    for i, preference in enumerate(application.payment_preferences):
-        if preference.payment_type_id == PaymentType.ACH.payment_type_id:
-            if not preference.account_number:
-                issues.append(
-                    Issue(
-                        type=IssueType.required,
-                        rule=IssueRule.conditional,
-                        message="Account number is required for direct deposit",
-                        field=f"payment_preferences[{i}].account_details.account_number",
-                    )
+    if application.payment_preference.payment_method_id == PaymentMethod.ACH.payment_method_id:
+        if not application.payment_preference.account_number:
+            issues.append(
+                Issue(
+                    type=IssueType.required,
+                    rule=IssueRule.conditional,
+                    message="Account number is required for direct deposit",
+                    field="payment_preference.account_number",
                 )
-            if not preference.routing_number:
-                issues.append(
-                    Issue(
-                        type=IssueType.required,
-                        rule=IssueRule.conditional,
-                        message="Routing number is required for direct deposit",
-                        field=f"payment_preferences[{i}].account_details.routing_number",
-                    )
+            )
+        if not application.payment_preference.routing_number:
+            issues.append(
+                Issue(
+                    type=IssueType.required,
+                    rule=IssueRule.conditional,
+                    message="Routing number is required for direct deposit",
+                    field="payment_preference.routing_number",
                 )
-            if not preference.type_of_account:
-                issues.append(
-                    Issue(
-                        type=IssueType.required,
-                        rule=IssueRule.conditional,
-                        message="Account type is required for direct deposit",
-                        field=f"payment_preferences[{i}].account_details.account_type",
-                    )
+            )
+        if not application.payment_preference.bank_account_type:
+            issues.append(
+                Issue(
+                    type=IssueType.required,
+                    rule=IssueRule.conditional,
+                    message="Account type is required for direct deposit",
+                    field="payment_preference.bank_account_type",
                 )
+            )
 
     return issues
 

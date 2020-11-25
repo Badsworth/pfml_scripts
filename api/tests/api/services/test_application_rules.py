@@ -3,10 +3,8 @@ from datetime import date
 from freezegun import freeze_time
 
 from massgov.pfml.api.models.applications.common import DurationBasis, FrequencyIntervalBasis
-from massgov.pfml.api.models.applications.responses import ApplicationResponse
 from massgov.pfml.api.services.application_rules import (
     get_always_required_issues,
-    get_application_issues,
     get_conditional_issues,
     get_continuous_leave_issues,
     get_intermittent_leave_issues,
@@ -15,7 +13,7 @@ from massgov.pfml.api.services.application_rules import (
     get_reduced_schedule_leave_issues,
     get_work_pattern_issues,
 )
-from massgov.pfml.api.util.response import Issue, IssueRule, IssueType, success_response
+from massgov.pfml.api.util.response import Issue, IssueRule, IssueType
 from massgov.pfml.db.models.applications import (
     EmployerBenefit,
     EmploymentStatus,
@@ -24,7 +22,7 @@ from massgov.pfml.db.models.applications import (
     OtherIncome,
     WorkPatternDay,
 )
-from massgov.pfml.db.models.employees import PaymentType
+from massgov.pfml.db.models.employees import PaymentMethod
 from massgov.pfml.db.models.factories import (
     AddressFactory,
     ApplicationFactory,
@@ -1075,11 +1073,9 @@ def test_child_placement_date_required_for_fostercare_bonding(
 
 def test_account_number_required_for_ACH(test_db_session, initialize_factories_session):
     test_app = ApplicationFactory.create(
-        payment_preferences=[
-            PaymentPreferenceFactory.create(
-                payment_type_id=PaymentType.ACH.payment_type_id, account_number=None
-            )
-        ]
+        payment_preference=PaymentPreferenceFactory.create(
+            payment_method_id=PaymentMethod.ACH.payment_method_id, account_number=None
+        )
     )
     issues = get_payments_issues(test_app)
     assert [
@@ -1087,18 +1083,16 @@ def test_account_number_required_for_ACH(test_db_session, initialize_factories_s
             type=IssueType.required,
             rule="conditional",
             message="Account number is required for direct deposit",
-            field="payment_preferences[0].account_details.account_number",
+            field="payment_preference.account_number",
         )
     ] == issues
 
 
 def test_routing_number_required_for_ACH(test_db_session, initialize_factories_session):
     test_app = ApplicationFactory.create(
-        payment_preferences=[
-            PaymentPreferenceFactory.create(
-                payment_type_id=PaymentType.ACH.payment_type_id, routing_number=None
-            )
-        ]
+        payment_preference=PaymentPreferenceFactory.create(
+            payment_method_id=PaymentMethod.ACH.payment_method_id, routing_number=None
+        )
     )
     issues = get_payments_issues(test_app)
     assert [
@@ -1106,18 +1100,16 @@ def test_routing_number_required_for_ACH(test_db_session, initialize_factories_s
             type=IssueType.required,
             rule="conditional",
             message="Routing number is required for direct deposit",
-            field="payment_preferences[0].account_details.routing_number",
+            field="payment_preference.routing_number",
         )
     ] == issues
 
 
-def test_account_type_required_for_ACH(test_db_session, initialize_factories_session):
+def test_bank_account_type_required_for_ACH(test_db_session, initialize_factories_session):
     test_app = ApplicationFactory.create(
-        payment_preferences=[
-            PaymentPreferenceFactory.create(
-                payment_type_id=PaymentType.ACH.payment_type_id, type_of_account=None
-            )
-        ]
+        payment_preference=PaymentPreferenceFactory.create(
+            payment_method_id=PaymentMethod.ACH.payment_method_id, bank_account_type_id=None
+        )
     )
     issues = get_payments_issues(test_app)
     assert [
@@ -1125,55 +1117,9 @@ def test_account_type_required_for_ACH(test_db_session, initialize_factories_ses
             type=IssueType.required,
             rule="conditional",
             message="Account type is required for direct deposit",
-            field="payment_preferences[0].account_details.account_type",
+            field="payment_preference.bank_account_type",
         )
     ] == issues
-
-
-@freeze_time("2021-01-01")
-def test_payment_preferences_same_order(test_db_session, initialize_factories_session, app):
-    test_app = ApplicationFactory.create(
-        employment_status=EmploymentStatus.get_instance(
-            test_db_session, template=EmploymentStatus.EMPLOYED
-        ),
-        employer_notification_date="2021-01-03",
-        employer_notified=True,
-        hours_worked_per_week=70,
-        has_continuous_leave_periods=True,
-        continuous_leave_periods=[ContinuousLeavePeriodFactory.create(start_date=date(2021, 1, 1))],
-        payment_preferences=[
-            PaymentPreferenceFactory.create(payment_type_id=PaymentType.DEBIT.payment_type_id),
-            PaymentPreferenceFactory.create(
-                payment_type_id=PaymentType.ACH.payment_type_id, account_number=None
-            ),
-        ],
-        mailing_address=None,
-        residential_address=None,
-        work_pattern=WorkPatternFixedFactory.create(),
-    )
-    issues = get_application_issues(test_app)
-
-    with app.app.test_request_context(
-        path=f"/v1/applications/{test_app.application_id}", method="PATCH"
-    ):
-        response = success_response(
-            message="Application updated without errors.",
-            data=ApplicationResponse.from_orm(test_app).dict(exclude_none=True),
-            warnings=issues,
-        ).to_api_response()
-    assert response.json["warnings"] == [
-        {
-            "field": "residential_address",
-            "message": "residential_address is required",
-            "type": "required",
-        },
-        {
-            "field": "payment_preferences[1].account_details.account_number",
-            "message": "Account number is required for direct deposit",
-            "rule": "conditional",
-            "type": "required",
-        },
-    ]
 
 
 def test_min_work_pattern_total_minutes_worked(test_db_session, initialize_factories_session):

@@ -6,16 +6,13 @@ from typing import List, Optional
 from pydantic import UUID4
 
 from massgov.pfml.api.models.applications.common import (
-    ApplicationPaymentChequeDetails,
     EmployerBenefit,
     EmploymentStatus,
     MaskedAddress,
     MaskedApplicationLeaveDetails,
-    MaskedApplicationPaymentAccountDetails,
-    MaskedPaymentPreferences,
+    MaskedPaymentPreference,
     Occupation,
     OtherIncome,
-    PaymentAccountType,
     PaymentMethod,
     WorkPattern,
 )
@@ -55,7 +52,7 @@ class ApplicationResponse(PydanticBaseModel):
     hours_worked_per_week: Optional[Decimal]
     employment_status: Optional[EmploymentStatus]
     leave_details: Optional[MaskedApplicationLeaveDetails]
-    payment_preferences: Optional[List[MaskedPaymentPreferences]]
+    payment_preference: Optional[MaskedPaymentPreference]
     work_pattern: Optional[WorkPattern]
     updated_time: datetime
     status: Optional[ApplicationStatus]
@@ -81,9 +78,10 @@ class ApplicationResponse(PydanticBaseModel):
                 application.residential_address
             )
         application_response.leave_details = MaskedApplicationLeaveDetails.from_orm(application)
-        application_response.payment_preferences = list(
-            map(build_payment_preference, application.payment_preferences)
-        )
+        if application.payment_preference is not None:
+            application_response.payment_preference = build_payment_preference(
+                application.payment_preference
+            )
 
         if application.completed_time:
             application_response.status = ApplicationStatus.Completed
@@ -97,35 +95,13 @@ class ApplicationResponse(PydanticBaseModel):
 
 def build_payment_preference(
     db_payment_preference: ApplicationPaymentPreference,
-) -> MaskedPaymentPreferences:
-    payment_preference = MaskedPaymentPreferences.from_orm(db_payment_preference)
+) -> MaskedPaymentPreference:
+    payment_preference = MaskedPaymentPreference.from_orm(db_payment_preference)
 
-    # some renames
-    payment_preference.payment_preference_id = db_payment_preference.payment_pref_id  # type: ignore
-
-    if db_payment_preference.payment_type is not None:
+    if db_payment_preference.payment_method is not None:
         payment_preference.payment_method = PaymentMethod(
-            db_payment_preference.payment_type.payment_type_description
+            db_payment_preference.payment_method.payment_method_description
         )
-
-    # the data for this comes from columns on ApplicationPaymentPreference, but
-    # the response collects some of them under this `account_details` key, so
-    # have to pull them out here manually since pydantic doesn't know how to do
-    # that automatically
-    payment_preference.account_details = MaskedApplicationPaymentAccountDetails.from_orm(
-        db_payment_preference
-    )
-
-    # another rename
-    if db_payment_preference.type_of_account is not None:
-        payment_preference.account_details.account_type = PaymentAccountType(
-            db_payment_preference.type_of_account
-        )
-
-    # similar as above, with a rename as well
-    payment_preference.cheque_details = ApplicationPaymentChequeDetails(
-        name_to_print_on_check=db_payment_preference.name_in_check
-    )
 
     return payment_preference
 

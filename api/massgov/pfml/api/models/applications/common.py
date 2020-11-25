@@ -242,12 +242,16 @@ class PaymentMethod(str, LookupEnum):
 
     @classmethod
     def get_lookup_model(cls):
-        return db_employee_models.LkPaymentType
+        return db_employee_models.LkPaymentMethod
 
 
-class PaymentAccountType(str, Enum):
-    checking = "Checking"
+class BankAccountType(str, LookupEnum):
     savings = "Savings"
+    checking = "Checking"
+
+    @classmethod
+    def get_lookup_model(cls):
+        return db_employee_models.LkBankAccountType
 
 
 class WorkPatternType(str, LookupEnum):
@@ -274,39 +278,19 @@ class DayOfWeek(str, LookupEnum):
         return db_application_models.LkDayOfWeek
 
 
-class BaseApplicationPaymentAccountDetails(PydanticBaseModel):
-    account_name: Optional[str]
-    account_type: Optional[PaymentAccountType]
+class BasePaymentPreference(PydanticBaseModel):
+    payment_method: Optional[PaymentMethod]
+    bank_account_type: Optional[BankAccountType]
 
 
-class ApplicationPaymentAccountDetails(BaseApplicationPaymentAccountDetails):
+class PaymentPreference(BasePaymentPreference):
     account_number: Optional[str]
     routing_number: Optional[FinancialRoutingNumber]
 
 
-class MaskedApplicationPaymentAccountDetails(BaseApplicationPaymentAccountDetails):
+class MaskedPaymentPreference(BasePaymentPreference):
     account_number: Optional[MaskedFinancialAcctNum]
     routing_number: Optional[MaskedFinancialRoutingNumber]
-
-
-class ApplicationPaymentChequeDetails(PydanticBaseModel):
-    name_to_print_on_check: Optional[str]
-
-
-class BasePaymentPreferences(PydanticBaseModel):
-    payment_preference_id: Optional[UUID4]
-    description: Optional[str]
-    payment_method: Optional[PaymentMethod]
-    is_default: Optional[bool]
-    cheque_details: Optional[ApplicationPaymentChequeDetails]
-
-
-class PaymentPreferences(BasePaymentPreferences):
-    account_details: Optional[ApplicationPaymentAccountDetails]
-
-
-class MaskedPaymentPreferences(BasePaymentPreferences):
-    account_details: Optional[MaskedApplicationPaymentAccountDetails]
 
 
 class WorkPatternDay(PydanticBaseModel):

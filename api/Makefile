@@ -249,7 +249,7 @@ release-tag: ## Tag release image for registry
 	docker tag $(APP_NAME):$(RELEASE_TAG) $(DOCKER_REGISTRY)/$(DOCKER_REPO):$(RELEASE_TAG)
 	docker tag $(APP_NAME):$(RELEASE_TAG) $(DOCKER_REGISTRY)/$(DOCKER_REPO):$(INFO_TAG)
 
-run-test: # The second parameter is the number of retries (each followed by 
+run-test: # The second parameter is the number of retries (each followed by
 		  # a second of wait) until a state is determined by the docker daemon
 	./bin/check_container_health.sh 60
 
@@ -260,10 +260,10 @@ db-create-users: ## Create database users
 	$(PY_RUN_CMD) db-admin-create-db-users $(DECODE_LOG)
 
 db-upgrade: ## Apply pending migrations to db
-	$(PY_RUN_CMD) db-migrate-up $(DECODE_LOG)
+	$(PY_RUN_CMD) db-migrate-up  $(DECODE_LOG)
 
 db-downgrade: ## Rollback last migration in db
-	$(PY_RUN_CMD) db-migrate-down $(DECODE_LOG)
+	$(PY_RUN_CMD) db-migrate-down  $(DECODE_LOG)
 
 db-downgrade-all: ## Rollback all migrations
 	$(PY_RUN_CMD) db-migrate-down-all $(DECODE_LOG)
