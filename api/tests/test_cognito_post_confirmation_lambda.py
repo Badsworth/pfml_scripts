@@ -37,6 +37,21 @@ def leave_admin_event_dict(leave_admin_event_json):
     return json.loads(leave_admin_event_json)
 
 
+@pytest.fixture
+def forgot_password_event_json():
+    with open(
+        f"{os.path.dirname(__file__)}/../lambdas/cognito_post_confirmation/test_forgot_password_event.json"
+    ) as fp:
+        event = fp.read()
+
+    return event
+
+
+@pytest.fixture
+def forgot_password_event_dict(forgot_password_event_json):
+    return json.loads(forgot_password_event_json)
+
+
 def test_main_success(test_db_session, claimant_event_dict, logging_fix):
     import massgov.pfml.cognito_post_confirmation_lambda.main as main
 
@@ -202,3 +217,28 @@ def test_leave_admin_create(test_db_session):
 
     assert created_leave_admin.fineos_web_id is not None
     assert created_leave_admin.employer_id == employer.employer_id
+
+
+def test_forgot_password_handler(test_db_session, forgot_password_event_dict):
+    from massgov.pfml.db.models.employees import User
+
+    event = lib.PostConfirmationEvent(**forgot_password_event_dict)
+
+    app_user = (
+        test_db_session.query(User)
+        .filter(User.active_directory_id == event.request.userAttributes["sub"])
+        .one_or_none()
+    )
+
+    assert app_user is None
+
+    response = lib.handler(test_db_session, event, {})
+
+    created_app_user = (
+        test_db_session.query(User)
+        .filter(User.active_directory_id == event.request.userAttributes["sub"])
+        .one()
+    )
+
+    assert created_app_user.email_address == event.request.userAttributes["email"]
+    assert response == event

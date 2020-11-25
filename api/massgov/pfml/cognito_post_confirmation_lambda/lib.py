@@ -43,27 +43,23 @@ class PostConfirmationEvent(aws_lambda.CognitoUserPoolEvent):
 def handler(
     db_session: db.Session, event: PostConfirmationEvent, context: aws_lambda.LambdaContext,
 ) -> PostConfirmationEvent:
-    # the Post Confirmation trigger also happens during password resets, we only
-    # care about the sign up event
-    if event.triggerSource != "PostConfirmation_ConfirmSignUp":
+
+    if event.triggerSource not in (
+        "PostConfirmation_ConfirmForgotPassword",
+        "PostConfirmation_ConfirmSignUp",
+    ):
         return event
 
     cognito_user_attrs = event.request.userAttributes
     cognito_metadata = event.request.clientMetadata
 
-    if cognito_metadata is not None and "ein" in cognito_metadata:
-        logger.info("Signup is for a leave administrator account")
-        leave_admin_create(
-            db_session=db_session,
-            active_directory_id=cognito_user_attrs["sub"],
-            email=cognito_user_attrs["email"],
-            employer_fein=re.sub("-", "", cognito_metadata["ein"]),
-        )
-
-        return event
-
-    logger.info("Signup is for a claimant account")
-
+    logger.info(
+        "handle post confirmation event",
+        extra={
+            "triggerSource": event.triggerSource,
+            "isEmployer": cognito_metadata is not None and "ein" in cognito_metadata,
+        },
+    )
     user = (
         db_session.query(User)
         .filter(User.active_directory_id == cognito_user_attrs["sub"])
@@ -75,17 +71,30 @@ def handler(
             "active_directory_id already exists",
             extra={"active_directory_id": user.active_directory_id},
         )
-    else:
-        user = User(
+        return event
+
+    if cognito_metadata is not None and "ein" in cognito_metadata:
+        logger.info("Creating a leave administrator account")
+        leave_admin_create(
+            db_session=db_session,
             active_directory_id=cognito_user_attrs["sub"],
-            email_address=cognito_user_attrs["email"],
+            email=cognito_user_attrs["email"],
+            employer_fein=re.sub("-", "", cognito_metadata["ein"]),
         )
-        logger.info("creating user", extra={"active_directory_id": user.active_directory_id})
 
-        db_session.add(user)
-        db_session.commit()
+        return event
 
-        logger.info("successfully created user", extra={"user_id": user.user_id})
+    user = User(
+        active_directory_id=cognito_user_attrs["sub"], email_address=cognito_user_attrs["email"],
+    )
+    logger.info(
+        "Creating a claimant account", extra={"active_directory_id": user.active_directory_id}
+    )
+
+    db_session.add(user)
+    db_session.commit()
+
+    logger.info("successfully created user", extra={"user_id": user.user_id})
 
     return event
 
