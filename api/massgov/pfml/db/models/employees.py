@@ -292,6 +292,7 @@ class Claim(Base):
     claim_type_id = Column(UUID(as_uuid=True))
     benefit_amount = Column(Numeric(asdecimal=True))
     benefit_days = Column(Integer)
+    fineos_absence_id = Column(Text, index=True)
 
 
 class AuthorizedRepEmployee(Base):
