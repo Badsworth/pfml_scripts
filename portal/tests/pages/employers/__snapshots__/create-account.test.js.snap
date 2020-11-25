@@ -9,7 +9,7 @@ exports[`CreateAccount renders the page 1`] = `
     Create an employer account
   </Title>
   <Lead>
-    Welcome! If you’re a Massachusetts employer and you manage leave for your team, you need to create an employer account with information from your company.
+    &lt;p&gt;Welcome! Please take a few minutes to create an account for your company so you can manage leave for your team. Massachusetts workers will be able to apply for family leave for bonding with a child starting on December 15, 2020, with more benefits available in 2021.&lt;/p&gt;&lt;p&gt;If you manage leave for multiple companies, please create an account for each Employer ID number (EIN). You’ll be able to add more companies to an existing account in the future.&lt;/p&gt;
   </Lead>
   <Details
     label="What you can do with this account"
@@ -27,7 +27,7 @@ exports[`CreateAccount renders the page 1`] = `
     />
   </Details>
   <InputText
-    hint="Use your work email address."
+    hint="Use a secure work address. An email address can only be associated with one account."
     label="Email address"
     name="username"
     onChange={[Function]}
@@ -60,7 +60,7 @@ exports[`CreateAccount renders the page 1`] = `
         i18nKey="pages.employersAuthCreateAccount.einHint"
       />
     }
-    label="Employer ID number"
+    label="Employer ID number (EIN)"
     mask="fein"
     name="ein"
     onChange={[Function]}
