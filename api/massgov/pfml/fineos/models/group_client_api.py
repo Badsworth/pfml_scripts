@@ -3225,8 +3225,12 @@ class ManagedRequirementDetails(BaseModel):
     sourceOfInfoPartyName: str = Field(
         ..., description="The source of info party name of the managed requirement."
     )
-    creationDate: date = Field(..., description="ISO 8601 date format", example="1999-12-31")
-    dateSuppressed: date = Field(..., description="ISO 8601 date format", example="1999-12-31")
+    creationDate: Optional[date] = Field(
+        ..., description="ISO 8601 date format", example="1999-12-31"
+    )
+    dateSuppressed: Optional[date] = Field(
+        ..., description="ISO 8601 date format", example="1999-12-31"
+    )
 
 
 class Payment(BaseModel):

@@ -21,7 +21,7 @@ from massgov.pfml.fineos.transforms.from_fineos.eforms import (
 )
 from massgov.pfml.fineos.transforms.to_fineos.eforms import EFormBody
 
-LEAVE_ADMIN_INFO_REQUEST_TYPE = "Leave Admin Info Request"
+LEAVE_ADMIN_INFO_REQUEST_TYPE = "Employer Confirmation of Leave Data"
 
 logger = logging.get_logger(__name__)
 

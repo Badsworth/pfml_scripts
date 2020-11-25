@@ -318,7 +318,7 @@ class MockFINEOSClient(client.AbstractFINEOSClient):
                 {
                     "managedReqId": 123,
                     "category": "Fake Category",
-                    "type": "Leave Admin Info Request",
+                    "type": "Employer Confirmation of Leave Data",
                     "followUpDate": datetime.date(2021, 2, 1),
                     "documentReceived": True,
                     "creator": "Fake Creator",

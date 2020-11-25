@@ -546,7 +546,7 @@ class FINEOSClient(client.AbstractFINEOSClient):
         return [
             models.group_client_api.ManagedRequirementDetails.parse_obj(
                 set_empty_dates_to_none(
-                    managed_reqs,
+                    req,
                     [
                         "dateRequested",
                         "notProceedingWithDate",
