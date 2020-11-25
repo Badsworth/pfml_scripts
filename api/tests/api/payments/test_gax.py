@@ -115,7 +115,7 @@ def test_build_individual_gax_document():
     validate_elements(abs_doc_actg, expected_actg_subelements)
 
 
-@freeze_time("2020-01-01")
+@freeze_time("2020-01-01 12:00:00")
 def test_build_gax_files():
     data = [
         {

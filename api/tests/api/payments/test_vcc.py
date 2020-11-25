@@ -1,5 +1,8 @@
+import tempfile
+from datetime import datetime
 from xml.dom.minidom import Document
 
+import defusedxml.ElementTree as ET
 import pytest
 from freezegun import freeze_time
 
@@ -23,9 +26,9 @@ base_data = {
 }
 
 
-@freeze_time("2020-01-01")
+@freeze_time("2020-01-01 12:00:00")
 def test_build_individual_vcc_document():
-    document = vcc.build_individual_vcc_document(Document(), base_data.copy(), 1)
+    document = vcc.build_individual_vcc_document(Document(), base_data.copy(), datetime.now(), 1)
 
     # Doc ID is generated randomly every run, but appears in many sub values.
     doc_id = document._attrs["DOC_ID"].value
@@ -155,14 +158,14 @@ def test_build_individual_vcc_document():
     validate_elements(vcc_doc_cert, expected_cert_subelements)
 
 
-@freeze_time("2020-01-01")
+@freeze_time("2020-01-01 12:00:00")
 def test_build_individual_vcc_document_no_eft():
     data = base_data.copy()
     del data["payee_aba_number"]
     del data["payee_account_type"]
     del data["payee_account_number"]
     data["payee_payment_method"] = "Check"
-    document = vcc.build_individual_vcc_document(Document(), data, 45)
+    document = vcc.build_individual_vcc_document(Document(), data, datetime.now(), 45)
     # Doc ID is generated randomly every run, but appears in many sub values.
     doc_id = document._attrs["DOC_ID"].value
     assert doc_id == "INTFDFML010120200045"
@@ -202,7 +205,7 @@ def test_build_individual_vcc_document_truncated_values():
     data["payment_address_2"] = "e" * 80  # Address 2
     data["payment_address_4"] = "f" * 65  # City
 
-    document = vcc.build_individual_vcc_document(Document(), data, 1)
+    document = vcc.build_individual_vcc_document(Document(), data, datetime.now(), 1)
     doc_id = document._attrs["DOC_ID"].value
     # Just checking that the above values were properly truncated
 
@@ -258,51 +261,143 @@ def test_build_individual_vcc_document_truncated_values():
     validate_elements(vcc_doc_1099, expected_1099_subelements)
 
 
+@freeze_time("2020-01-01 12:00:00")
+def test_build_vcc_files():
+    data = [base_data, base_data]
+
+    with tempfile.TemporaryDirectory() as directory:
+        (dat_filepath, inf_filepath) = vcc.build_vcc_files(data, directory, 11)
+
+        with open(inf_filepath) as inf_file:
+            assert inf_filepath.split("/")[-1] == "EOL20200101VCC11.INF"
+            inf_file_contents = "".join(line for line in inf_file)
+            assert inf_file_contents == (
+                "NewMmarsBatchID = EOL0101VCC11;\n"
+                "NewMmarsBatchDeptCode = EOL;\n"
+                "NewMmarsUnitCode = 8770;\n"
+                "NewMmarsImportDate = 2020-01-01;\n"
+                "NewMmarsTransCode = VCC;\n"
+                "NewMmarsTableName = ;\n"
+                "NewMmarsTransCount = 2;\n"
+                "NewMmarsTransDollarAmount = ;\n"
+            )
+
+        with open(dat_filepath) as dat_file:
+            assert dat_filepath.split("/")[-1] == "EOL20200101VCC11.DAT"
+            dat_file_contents = "".join(line for line in dat_file)
+
+            # This bit doesn't get parsed into the XML objects
+            assert dat_file_contents.startswith('<?xml version="1.0" encoding="ISO-8859-1"?>')
+
+            # Make sure cdata fields weren't mistakenly escaped
+            assert "&lt;" not in dat_file_contents
+            assert "&gt;" not in dat_file_contents
+            # Make sure cdata fields were created properly by looking for one
+            assert (
+                '<ACCT_NO_VIEW Attribute="Y"><![CDATA[000111222333]]></ACCT_NO_VIEW>'
+                in dat_file_contents
+            )
+
+            # We use ET for parsing instead of minidom as minidom makes odd decisions
+            # when creating objects (new lines are child nodes?) that is complex.
+            # Note that this parser removes the CDATA tags when parsing.
+            root = ET.fromstring(dat_file_contents)
+            assert len(root) == 2  # For the two documents passed in
+            for document in root:
+                # Doc ID is generated randomly every run, but appears in many sub values.
+                doc_id = document.attrib["DOC_ID"]
+                assert doc_id
+
+                assert document.tag == "AMS_DOCUMENT"
+                expected_doc_attributes = {"DOC_ID": doc_id}
+                expected_doc_attributes.update(vcc.ams_doc_attributes.copy())
+                expected_doc_attributes.update(vcc.generic_attributes.copy())
+                assert document.attrib == expected_doc_attributes
+                assert len(document) == 8  # len of an element gives number of subelements
+
+                vcc_doc_hdr = document[0]
+                assert vcc_doc_hdr.tag == "VCC_DOC_HDR"
+                assert vcc_doc_hdr.attrib == {"AMSDataObject": "Y"}
+
+                vcc_doc_vcust = document[1]
+                assert vcc_doc_vcust.tag == "VCC_DOC_VCUST"
+                assert vcc_doc_vcust.attrib == {"AMSDataObject": "Y"}
+
+                vcc_doc_ad1 = document[2]
+                assert vcc_doc_ad1.tag == "VCC_DOC_AD"
+                assert vcc_doc_ad1.attrib == {"AMSDataObject": "Y"}
+
+                vcc_doc_ad2 = document[3]
+                assert vcc_doc_ad2.tag == "VCC_DOC_AD"
+                assert vcc_doc_ad2.attrib == {"AMSDataObject": "Y"}
+
+                vcc_doc_1099 = document[4]
+                assert vcc_doc_1099.tag == "VCC_DOC_1099"
+                assert vcc_doc_1099.attrib == {"AMSDataObject": "Y"}
+
+                vcc_doc_bus1 = document[5]
+                assert vcc_doc_bus1.tag == "VCC_DOC_BUS"
+                assert vcc_doc_bus1.attrib == {"AMSDataObject": "Y"}
+
+                vcc_doc_bus2 = document[6]
+                assert vcc_doc_bus2.tag == "VCC_DOC_BUS"
+                assert vcc_doc_bus2.attrib == {"AMSDataObject": "Y"}
+
+                vcc_doc_cert = document[7]
+                assert vcc_doc_cert.tag == "VCC_DOC_CERT"
+                assert vcc_doc_cert.attrib == {"AMSDataObject": "Y"}
+
+
+def test_small_count():
+    with pytest.raises(Exception, match="VCC file count must be greater than 10"):
+        vcc.build_vcc_files(None, "", 1)
+
+
 def test_build_individual_vcc_document_missing_required_values():
     no_first_name_data = base_data.copy()
     del no_first_name_data["first_name"]
     with pytest.raises(Exception, match="Value for first_name is required to generate document."):
-        vcc.build_individual_vcc_document(Document(), no_first_name_data, 1)
+        vcc.build_individual_vcc_document(Document(), no_first_name_data, datetime.now(), 1)
 
     no_last_name_data = base_data.copy()
     del no_last_name_data["last_name"]
     with pytest.raises(Exception, match="Value for last_name is required to generate document."):
-        vcc.build_individual_vcc_document(Document(), no_last_name_data, 1)
+        vcc.build_individual_vcc_document(Document(), no_last_name_data, datetime.now(), 1)
 
     no_ssn_data = base_data.copy()
     del no_ssn_data["payee_soc_number"]
     with pytest.raises(
         Exception, match="Value for payee_soc_number is required to generate document."
     ):
-        vcc.build_individual_vcc_document(Document(), no_ssn_data, 1)
+        vcc.build_individual_vcc_document(Document(), no_ssn_data, datetime.now(), 1)
 
     no_address1_data = base_data.copy()
     del no_address1_data["payment_address_1"]
     with pytest.raises(
         Exception, match="Value for payment_address_1 is required to generate document."
     ):
-        vcc.build_individual_vcc_document(Document(), no_address1_data, 1)
+        vcc.build_individual_vcc_document(Document(), no_address1_data, datetime.now(), 1)
 
     no_city_data = base_data.copy()
     del no_city_data["payment_address_4"]
     with pytest.raises(
         Exception, match="Value for payment_address_4 is required to generate document."
     ):
-        vcc.build_individual_vcc_document(Document(), no_city_data, 1)
+        vcc.build_individual_vcc_document(Document(), no_city_data, datetime.now(), 1)
 
     no_state_data = base_data.copy()
     del no_state_data["payment_address_6"]
     with pytest.raises(
         Exception, match="Value for payment_address_6 is required to generate document."
     ):
-        vcc.build_individual_vcc_document(Document(), no_state_data, 1)
+        vcc.build_individual_vcc_document(Document(), no_state_data, datetime.now(), 1)
 
     no_zip_data = base_data.copy()
     del no_zip_data["payment_post_code"]
     with pytest.raises(
         Exception, match="Value for payment_post_code is required to generate document."
     ):
-        vcc.build_individual_vcc_document(Document(), no_zip_data, 1)
+        vcc.build_individual_vcc_document(Document(), no_zip_data, datetime.now(), 1)
 
 
 def test_build_individual_vcc_document_too_long_values():
@@ -311,42 +406,42 @@ def test_build_individual_vcc_document_too_long_values():
     with pytest.raises(
         Exception, match="Value for payee_soc_number is longer than allowed length of 9."
     ):
-        vcc.build_individual_vcc_document(Document(), long_ssn_data, 1)
+        vcc.build_individual_vcc_document(Document(), long_ssn_data, datetime.now(), 1)
 
     long_aba_num_data = base_data.copy()
     long_aba_num_data["payee_aba_number"] = "0" * 25
     with pytest.raises(
         Exception, match="Value for payee_aba_number is longer than allowed length of 9."
     ):
-        vcc.build_individual_vcc_document(Document(), long_aba_num_data, 1)
+        vcc.build_individual_vcc_document(Document(), long_aba_num_data, datetime.now(), 1)
 
     long_acct_num_data = base_data.copy()
     long_acct_num_data["payee_account_number"] = "0" * 45
     with pytest.raises(
         Exception, match="Value for payee_account_number is longer than allowed length of 40."
     ):
-        vcc.build_individual_vcc_document(Document(), long_acct_num_data, 1)
+        vcc.build_individual_vcc_document(Document(), long_acct_num_data, datetime.now(), 1)
 
     long_state_data = base_data.copy()
     long_state_data["payment_address_6"] = "abc"
     with pytest.raises(
         Exception, match="Value for payment_address_6 is longer than allowed length of 2."
     ):
-        vcc.build_individual_vcc_document(Document(), long_state_data, 1)
+        vcc.build_individual_vcc_document(Document(), long_state_data, datetime.now(), 1)
 
     long_zip_data = base_data.copy()
     long_zip_data["payment_post_code"] = "01234-56789"
     with pytest.raises(
         Exception, match="Value for payment_post_code is longer than allowed length of 10."
     ):
-        vcc.build_individual_vcc_document(Document(), long_zip_data, 1)
+        vcc.build_individual_vcc_document(Document(), long_zip_data, datetime.now(), 1)
 
 
 def test_build_individual_vcc_document_invalid_acct_type():
     bad_acct_type_data = base_data.copy()
     bad_acct_type_data["payee_account_type"] = "NotReal"
     with pytest.raises(Exception, match="Account type NotReal not found"):
-        vcc.build_individual_vcc_document(Document(), bad_acct_type_data, 1)
+        vcc.build_individual_vcc_document(Document(), bad_acct_type_data, datetime.now(), 1)
 
 
 def test_build_individual_vcc_document_missing_eft():
@@ -355,4 +450,4 @@ def test_build_individual_vcc_document_missing_eft():
     del data["payee_account_type"]
     del data["payee_account_number"]
     with pytest.raises(Exception, match="ACH parameters missing when payment method is ACH"):
-        vcc.build_individual_vcc_document(Document(), data, 1)
+        vcc.build_individual_vcc_document(Document(), data, datetime.now(), 1)

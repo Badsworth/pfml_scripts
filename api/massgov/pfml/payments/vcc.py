@@ -1,9 +1,8 @@
 import xml.dom.minidom as minidom
 from datetime import datetime
-from typing import Any, Dict
+from typing import Any, Dict, List
 
 import massgov.pfml.payments.payments_util as payments_util
-import massgov.pfml.util.datetime as datetime_util
 from massgov.pfml.payments.payments_util import Constants
 
 generic_attributes = {
@@ -64,7 +63,7 @@ def get_acct_type_num(acct_type: str) -> str:
 
 
 def build_individual_vcc_document(
-    document: minidom.Document, doc_data: Dict[str, Any], document_count: int
+    document: minidom.Document, doc_data: Dict[str, Any], now: datetime, document_count: int
 ) -> minidom.Element:
     # Everything in this block will need to pull from the actual object models
     # They have been conveniently sectioned together to make the switch easier.
@@ -111,7 +110,6 @@ def build_individual_vcc_document(
     )
     payment_method = doc_data.get("payee_payment_method")
 
-    now = datetime_util.utcnow()
     doc_id = get_doc_id(now, document_count)
 
     has_eft = payee_aba_num and payee_acct_type and payee_acct_num
@@ -263,3 +261,45 @@ def build_individual_vcc_document(
     payments_util.add_cdata_elements(vcc_doc_cert, document, vcc_doc_cert_elements)
 
     return root
+
+
+def build_vcc_dat(doc_data: List[Dict[str, Any]], now: datetime) -> minidom.Document:
+    # xml_document represents the overall XML object
+    xml_document = minidom.Document()
+
+    # Document root contains all of the VCC documents
+    document_root = xml_document.createElement("AMS_DOC_XML_IMPORT_FILE")
+    payments_util.add_attributes(document_root, {"VERSION": "1.0"})
+    xml_document.appendChild(document_root)
+
+    for count, data in enumerate(doc_data):
+        # vcc_document refers to individual documents which contain payment data
+        vcc_document = build_individual_vcc_document(xml_document, data, now, count)
+        document_root.appendChild(vcc_document)
+
+    return xml_document
+
+
+def build_vcc_inf(doc_data: List[Dict[str, Any]], now: datetime, count: int) -> Dict[str, str]:
+    return {
+        "NewMmarsBatchID": f"{Constants.COMPTROLLER_DEPT_CODE}{now.strftime('%m%d')}VCC{count}",  # eg. EOL0101VCC24
+        "NewMmarsBatchDeptCode": Constants.COMPTROLLER_DEPT_CODE,
+        "NewMmarsUnitCode": Constants.COMPTROLLER_UNIT_CODE,
+        "NewMmarsImportDate": now.strftime("%Y-%m-%d"),
+        "NewMmarsTransCode": "VCC",
+        "NewMmarsTableName": "",
+        "NewMmarsTransCount": str(len(doc_data)),
+        "NewMmarsTransDollarAmount": "",
+    }
+
+
+def build_vcc_files(doc_data: List[Dict[str, Any]], directory: str, count: int) -> (str, str):
+    if count < 10:
+        raise Exception("VCC file count must be greater than 10")
+    now = payments_util.get_now()
+
+    filename = f"{Constants.COMPTROLLER_DEPT_CODE}{now.strftime('%Y%m%d')}VCC{count}"
+    dat_xml_document = build_vcc_dat(doc_data, now)
+    inf_dict = build_vcc_inf(doc_data, now, count)
+
+    return payments_util.create_files(directory, filename, dat_xml_document, inf_dict)

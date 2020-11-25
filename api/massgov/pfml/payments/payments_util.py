@@ -1,10 +1,20 @@
+import os
 import xml.dom.minidom as minidom
+from datetime import datetime
 from typing import Any, Callable, Dict, Optional
+
+import pytz
 
 
 class Constants:
     COMPTROLLER_UNIT_CODE = "8770"
     COMPTROLLER_DEPT_CODE = "EOL"
+
+
+def get_now() -> datetime:
+    # Note that this uses Eastern time (not UTC)
+    tz = pytz.timezone("America/New_York")
+    return datetime.now(tz)
 
 
 def validate_input(
@@ -57,3 +67,19 @@ def add_cdata_elements(
             # Anything in the CDATA tag is passed directly and markup ignored
             cdata = document.createCDATASection(str(val))
         elem.appendChild(cdata)
+
+
+def create_files(
+    directory: str, filename: str, dat_xml_document: minidom.Document, inf_dict: Dict[str, str]
+) -> str:
+    dat_filepath = os.path.join(directory, f"{filename}.DAT")
+    inf_filepath = os.path.join(directory, f"{filename}.INF")
+
+    with open(dat_filepath, "wb") as dat_file:
+        dat_file.write(dat_xml_document.toprettyxml(indent="   ", encoding="ISO-8859-1"))
+
+    with open(inf_filepath, "w") as inf_file:
+        for k, v in inf_dict.items():
+            inf_file.write(f"{k} = {v};\n")
+
+    return (dat_filepath, inf_filepath)

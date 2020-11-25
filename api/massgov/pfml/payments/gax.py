@@ -1,5 +1,4 @@
 import decimal
-import os
 import random
 import string
 import xml.dom.minidom as minidom
@@ -7,7 +6,6 @@ from datetime import datetime
 from typing import Any, Dict, List
 
 import massgov.pfml.payments.payments_util as payments_util
-import massgov.pfml.util.datetime as datetime_util
 from massgov.pfml.payments.payments_util import Constants
 
 TWOPLACES = decimal.Decimal(10) ** -2
@@ -206,20 +204,10 @@ def build_gax_inf(doc_data: List[Dict[str, Any]], now: datetime, count: int) -> 
 def build_gax_files(doc_data: List[Dict[str, Any]], directory: str, count: int) -> (str, str):
     if count < 10:
         raise Exception("Gax file count must be greater than 10")
-    now = datetime_util.utcnow()
+    now = payments_util.get_now()
 
     filename = f"{Constants.COMPTROLLER_DEPT_CODE}{now.strftime('%Y%m%d')}GAX{count}"
-    dat_filepath = os.path.join(directory, f"{filename}.DAT")
-    inf_filepath = os.path.join(directory, f"{filename}.INF")
-
     dat_xml_document = build_gax_dat(doc_data)
-
-    with open(dat_filepath, "wb") as dat_file:
-        dat_file.write(dat_xml_document.toprettyxml(indent="   ", encoding="ISO-8859-1"))
-
     inf_dict = build_gax_inf(doc_data, now, count)
-    with open(inf_filepath, "w") as inf_file:
-        for k, v in inf_dict.items():
-            inf_file.write(f"{k} = {v};\n")
 
-    return (dat_filepath, inf_filepath)
+    return payments_util.create_files(directory, filename, dat_xml_document, inf_dict)
