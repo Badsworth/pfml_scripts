@@ -30,6 +30,7 @@ const routes = {
     otherIncomes: "/applications/other-incomes",
     otherIncomesDetails: "/applications/other-incomes-details",
     paymentMethod: "/applications/payment-method",
+    phoneNumber: "/applications/phone-number",
     previousLeaves: "/applications/previous-leaves",
     previousLeavesDetails: "/applications/previous-leaves-details",
     reasonPregnancy: "/applications/reason-pregnancy",

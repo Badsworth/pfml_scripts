@@ -429,7 +429,7 @@ describe("useClaimsLogic", () => {
       };
 
       it("updates claim and redirects to nextPage when successful", async () => {
-        mockRouter.pathname = routes.applications.name;
+        mockRouter.pathname = routes.applications.ssn;
 
         renderHook();
 
@@ -450,7 +450,7 @@ describe("useClaimsLogic", () => {
         expect(updateClaimMock).toHaveBeenCalled();
         expect(mockRouter.push).toHaveBeenCalledWith(
           expect.stringContaining(
-            `${routes.applications.address}?claim_id=${claim.application_id}`
+            `${routes.applications.checklist}?claim_id=${claim.application_id}`
           )
         );
       });

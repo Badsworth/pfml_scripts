@@ -56,7 +56,7 @@ describe("usePortalFlow", () => {
     let nextPageRoute, portalFlow;
 
     beforeEach(() => {
-      mockRouter.pathname = routes.applications.name;
+      mockRouter.pathname = routes.applications.ssn;
       nextPageRoute = machineConfigs.states[mockRouter.pathname].on.CONTINUE;
       testHook(() => {
         portalFlow = usePortalFlow();
@@ -99,7 +99,7 @@ describe("usePortalFlow", () => {
   describe("page", () => {
     it("returns the active page's state node", () => {
       let portalFlow;
-      mockRouter.pathname = routes.applications.name;
+      mockRouter.pathname = routes.applications.ssn;
 
       testHook(() => {
         portalFlow = usePortalFlow();
@@ -109,14 +109,12 @@ describe("usePortalFlow", () => {
         Object {
           "meta": Object {
             "fields": Array [
-              "claim.first_name",
-              "claim.middle_name",
-              "claim.last_name",
+              "claim.tax_identifier",
             ],
             "step": "verifyId",
           },
           "on": Object {
-            "CONTINUE": "/applications/address",
+            "CONTINUE": "/applications/checklist",
           },
         }
       `);

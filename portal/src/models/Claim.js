@@ -39,6 +39,11 @@ class Claim extends BaseClaim {
         payment_method: null, // PaymentPreferenceMethod
         routing_number: null,
       },
+      phone: {
+        int_code: null,
+        phone_number: null,
+        phone_type: null, // PhoneType
+      },
       /**
        * Fields within the `temp` object haven't been connected to the API yet, and
        * should have a ticket in Jira related to eventually moving them out of
@@ -350,6 +355,15 @@ export const BankAccountType = {
 export const PaymentPreferenceMethod = {
   ach: "ACH",
   check: "Check",
+};
+
+/**
+ * Enums for the Application's `phone.phone_type` field
+ * @enum {string}
+ */
+export const PhoneType = {
+  cell: "Cell",
+  phone: "Phone",
 };
 
 /**

@@ -31,6 +31,7 @@ import { fields as notifiedEmployerFields } from "../pages/applications/notified
 import { fields as otherIncomesDetailsFields } from "../pages/applications/other-incomes-details";
 import { fields as otherIncomesFields } from "../pages/applications/other-incomes";
 import { fields as paymentMethodFields } from "../pages/applications/payment-method";
+import { fields as phoneNumberFields } from "../pages/applications/phone-number";
 import { fields as previousLeavesDetailsFields } from "../pages/applications/previous-leaves-details";
 import { fields as previousLeavesFields } from "../pages/applications/previous-leaves";
 import { fields as reasonPregnancyFields } from "../pages/applications/reason-pregnancy";
@@ -59,6 +60,8 @@ export const guards = {
     claim.has_reduced_schedule_leave_periods === true,
   hasOtherIncomes: ({ claim }) => claim.temp.has_other_incomes === true,
   hasPreviousLeaves: ({ claim }) => claim.temp.has_previous_leaves === true,
+  // TODO (CP-1447): Remove this guard once the feature flag is obsolete
+  showPhone: () => isFeatureEnabled("claimantShowPhone"),
   // TODO (CP-1247): Show previous leaves related questions
   showPreviousLeaves: () => isFeatureEnabled("claimantShowPreviousLeaves"),
   isFixedWorkPattern: ({ claim }) =>
@@ -128,6 +131,23 @@ export default {
       meta: {
         step: ClaimSteps.verifyId,
         fields: nameFields,
+      },
+      on: {
+        CONTINUE: [
+          {
+            target: routes.applications.phoneNumber,
+            cond: "showPhone",
+          },
+          {
+            target: routes.applications.address,
+          },
+        ],
+      },
+    },
+    [routes.applications.phoneNumber]: {
+      meta: {
+        step: ClaimSteps.verifyId,
+        fields: phoneNumberFields,
       },
       on: {
         CONTINUE: routes.applications.address,

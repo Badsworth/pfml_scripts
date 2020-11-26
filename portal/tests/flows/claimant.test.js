@@ -53,6 +53,11 @@ const machineTests = {
       test: () => {},
     },
   },
+  [routes.applications.phoneNumber]: {
+    meta: {
+      test: () => {},
+    },
+  },
   [routes.applications.address]: {
     meta: {
       test: () => {},
@@ -308,6 +313,8 @@ describe("claimFlowConfigs", () => {
     {
       guards: {
         ...guards,
+        // TODO (CP-1447): Remove this guard once the feature flag is obsolete
+        showPhone: () => true,
         // TODO (CP-1247): Show previous leaves related questions
         showPreviousLeaves: () => true,
       },

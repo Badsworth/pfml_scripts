@@ -269,6 +269,13 @@ const errors = {
         required: "Enter a routing number.",
       },
     },
+    phone_number: {
+      pattern: "Enter a valid phone number.",
+      required: "Enter a phone number.",
+    },
+    phone_type: {
+      required: "Select a number type.",
+    },
     residential_address: {
       city: {
         required: "Enter a city for your residential address.",
@@ -884,6 +891,18 @@ const pages = {
       "Your choice will be applied to any previous claims you have submitted.",
     title: "Payment method",
   },
+  claimsPhoneNumber: {
+    choiceCell: "Mobile",
+    choicePhone: "Landline",
+    lead:
+      "If we need to contact you, we will reach out by phone or mail. We will also use this number for any previous applications you have submitted.",
+    phoneNumberHint:
+      "Don't have a personal phone number? Enter a number where we might be able to reach you (for example, a work phone number, or a friend's phone number).",
+    phoneNumberLabel: "Phone number",
+    phoneTypeLabel: "Number type",
+    sectionLabel: "What's your phone number?",
+    title: "$t(shared.claimsVerifyIdTitle)",
+  },
   claimsPreviousLeaves: {
     choiceNo: "$t(shared.choiceNo)",
     choiceYes: "$t(shared.choiceYes)",
@@ -1030,6 +1049,9 @@ const pages = {
     paymentMethodValue_ach: "$t(shared.paymentMethodAch)",
     paymentMethodValue_check: "$t(shared.paymentMethodCheck)",
     paymentRoutingNumLabel: "Routing number",
+    phoneLabel: "Phone number",
+    phoneType_cell: "Mobile",
+    phoneType_phone: "Landline",
     pregnancyOrRecentBirthLabel: "Medical leave for pregnancy or birth",
     pregnancyOrRecentBirth_no: "$t(shared.choiceNo)",
     pregnancyOrRecentBirth_yes: "$t(shared.choiceYes)",
@@ -1294,7 +1316,8 @@ const pages = {
     passwordHint: "$t(shared.passwordHint)",
     passwordLabel: "$t(shared.passwordLabel)",
     title: "Create an employer account",
-    usernameHint: "Use a secure work address. An email address can only be associated with one account.",
+    usernameHint:
+      "Use a secure work address. An email address can only be associated with one account.",
     usernameLabel: "$t(shared.usernameLabel)",
   },
   employersAuthFinishAccountSetup: {

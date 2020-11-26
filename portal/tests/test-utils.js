@@ -8,6 +8,7 @@ import Claim, {
   IntermittentLeavePeriod,
   LeaveReason,
   PaymentPreferenceMethod,
+  PhoneType,
   ReasonQualifier,
   ReducedScheduleLeavePeriod,
   WorkPattern,
@@ -523,6 +524,10 @@ export class MockClaimBuilder extends BaseMockClaimBuilder {
     set(this.claimAttrs, "first_name", "Jane");
     set(this.claimAttrs, "middle_name", middleName || "");
     set(this.claimAttrs, "last_name", "Doe");
+    set(this.claimAttrs, "phone", {
+      phone_number: "123-456-****",
+      phone_type: PhoneType.cell,
+    });
     set(this.claimAttrs, "date_of_birth", "****-07-17");
     set(this.claimAttrs, "tax_identifier", "***-**-****");
     this.address();

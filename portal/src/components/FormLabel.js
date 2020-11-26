@@ -21,8 +21,7 @@ function FormLabel({
   const labelClasses = classnames(`usa-label text-${weight}`, {
     "usa-label--error": hasError,
     "usa-legend": component === "legend",
-    "font-heading-sm": component === "legend" && small,
-    "measure-5": small,
+    "font-heading-xs measure-5": small,
     "font-heading-lg line-height-sans-3 margin-bottom-1 maxw-tablet": !small,
   });
 

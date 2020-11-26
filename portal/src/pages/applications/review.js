@@ -3,6 +3,7 @@ import Claim, {
   EmploymentStatus,
   LeaveReason,
   PaymentPreferenceMethod,
+  PhoneType,
   ReasonQualifier,
   ReducedScheduleLeavePeriod,
   WorkPattern,
@@ -165,6 +166,19 @@ export const Review = (props) => {
           get(claim, "last_name"),
         ].join(" ")}
       </ReviewRow>
+
+      {isFeatureEnabled("claimantShowPhone") && (
+        <ReviewRow
+          level={reviewRowLevel}
+          label={t("pages.claimsReview.phoneLabel")}
+        >
+          {t("pages.claimsReview.phoneType", {
+            context: findKeyByValue(PhoneType, get(claim, "phone.phone_type")),
+          })}
+          <br />
+          {get(claim, "phone.phone_number")}
+        </ReviewRow>
+      )}
 
       <ReviewRow
         level={reviewRowLevel}

@@ -144,7 +144,7 @@ describe("FormLabel", () => {
       const label = wrapper.find(".usa-label");
 
       expect(label.prop("className")).toMatchInlineSnapshot(
-        `"usa-label text-bold measure-5"`
+        `"usa-label text-bold font-heading-xs measure-5"`
       );
     });
 
@@ -154,7 +154,7 @@ describe("FormLabel", () => {
       const label = wrapper.find(".usa-label");
 
       expect(label.prop("className")).toMatchInlineSnapshot(
-        `"usa-label text-bold usa-legend font-heading-sm measure-5"`
+        `"usa-label text-bold usa-legend font-heading-xs measure-5"`
       );
     });
   });
