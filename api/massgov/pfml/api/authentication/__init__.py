@@ -64,13 +64,11 @@ def decode_cognito_token(token):
             flask.g.current_user = user
 
         logger.info(
-            "auth token decode succeeded:",
+            "auth token decode succeeded",
             extra={
-                "current_user": {
-                    "user_id": user.user_id,
-                    "auth_id": user.active_directory_id,
-                    "role_ids": [role.role_id for role in user.roles],
-                }
+                "current_user.user_id": str(user.user_id),
+                "current_user.auth_id": user.active_directory_id,
+                "current_user.role_ids": [role.role_id for role in user.roles],
             },
         )
         return decoded_token

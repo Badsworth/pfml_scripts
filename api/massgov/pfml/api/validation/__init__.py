@@ -29,11 +29,17 @@ logger = logging.get_logger(__name__)
 def validation_request_handler(validation_exception: ValidationException) -> Response:
     errors = []
     for error in validation_exception.errors:
-        errors.append(response_util.validation_issue(error))
+        logger.info(
+            validation_exception.message,
+            extra={
+                "error.class": "ValidationException",
+                "error.type": error.type,
+                "error.rule": error.rule,
+                "error.field": error.field,
+            },
+        )
 
-    logger.info(
-        validation_exception.message, extra={"type": "ValidationException", "errors": errors}
-    )
+        errors.append(response_util.validation_issue(error))
 
     return response_util.error_response(
         status_code=BadRequest,
@@ -49,7 +55,7 @@ def connexion_400_handler(exception: ProblemException) -> Response:
     #
     # _do not log response data_, only the machine-readable errors and
     # messages which should definitely not have sensitive info.
-    logger.info(exception.title, extra={"type": exception.type, "detail": exception.detail})
+    logger.info(exception.detail, extra={"error.class": exception.type})
 
     return connexion.apps.flask_app.FlaskApp.common_error_handler(exception)
 
