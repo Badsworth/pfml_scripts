@@ -1,5 +1,15 @@
 # Terraform configuration for infrastructure-layer alarms. (host-specific metrics, e.g. CPU and RAM usage)
 
+locals {
+  critical_sns_topic = {
+    "test"        = aws_sns_topic.api-low-priority-alerts-topic.arn,
+    "stage"       = aws_sns_topic.api-low-priority-alerts-topic.arn
+    "performance" = aws_sns_topic.api-low-priority-alerts-topic.arn
+    "training"    = aws_sns_topic.api-low-priority-alerts-topic.arn
+    "prod"        = aws_sns_topic.api-high-priority-alerts-topic.arn
+  }
+}
+
 # ----------------------------------------------------------------------------------------------------------------------
 
 # Defines an SNS topic for low-priority alerts.
@@ -31,7 +41,6 @@ resource "aws_sns_topic_subscription" "low-priority" {
 }
 
 resource "aws_sns_topic_subscription" "high-priority" {
-  count                  = var.environment_name == "prod" ? 1 : 0
   topic_arn              = aws_sns_topic.api-high-priority-alerts-topic.arn
   protocol               = "https"
   endpoint               = "https://events.pagerduty.com/integration/${data.terraform_remote_state.pagerduty.outputs.high_priority_cloudwatch_integration_key}/enqueue"
@@ -56,6 +65,7 @@ resource "aws_cloudwatch_metric_alarm" "api_cpu_warn" {
   period              = "60" # polling on one-minute intervals
   actions_enabled     = true
   alarm_actions       = [aws_sns_topic.api-low-priority-alerts-topic.arn]
+  ok_actions          = [aws_sns_topic.api-low-priority-alerts-topic.arn]
 
   tags = merge(module.constants.common_tags, {
     environment = module.constants.environment_tags[var.environment_name]
@@ -78,8 +88,8 @@ resource "aws_cloudwatch_metric_alarm" "api_cpu_crit" {
   datapoints_to_alarm = "3"  # any three one-minute periods
   period              = "60" # polling on one-minute intervals
   actions_enabled     = true
-  alarm_actions       = [aws_sns_topic.api-high-priority-alerts-topic.arn]
-  ok_actions          = [aws_sns_topic.api-high-priority-alerts-topic.arn]
+  alarm_actions       = [local.critical_sns_topic[var.environment_name]]
+  ok_actions          = [local.critical_sns_topic[var.environment_name]]
 
   tags = merge(module.constants.common_tags, {
     environment = module.constants.environment_tags[var.environment_name]
@@ -105,6 +115,7 @@ resource "aws_cloudwatch_metric_alarm" "api_ram_warn" {
   period              = "60" # polling on one-minute intervals
   actions_enabled     = true
   alarm_actions       = [aws_sns_topic.api-low-priority-alerts-topic.arn]
+  ok_actions          = [aws_sns_topic.api-low-priority-alerts-topic.arn]
 
   tags = merge(module.constants.common_tags, {
     environment = module.constants.environment_tags[var.environment_name]
@@ -127,8 +138,8 @@ resource "aws_cloudwatch_metric_alarm" "api_ram_crit" {
   datapoints_to_alarm = "3"  # any three one-minute periods
   period              = "60" # polling on one-minute intervals
   actions_enabled     = true
-  alarm_actions       = [aws_sns_topic.api-high-priority-alerts-topic.arn]
-  ok_actions          = [aws_sns_topic.api-high-priority-alerts-topic.arn]
+  alarm_actions       = [local.critical_sns_topic[var.environment_name]]
+  ok_actions          = [local.critical_sns_topic[var.environment_name]]
 
   tags = merge(module.constants.common_tags, {
     environment = module.constants.environment_tags[var.environment_name]
