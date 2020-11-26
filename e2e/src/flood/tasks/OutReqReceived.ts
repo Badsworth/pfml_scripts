@@ -95,7 +95,7 @@ export default async (browser: Browser, data: LSTSimClaim): Promise<void> => {
   const isEligible = await isFinanciallyEligible(browser);
   if (isEligible) {
     for (const step of steps) {
-      console.log(`Outstanding Requirement Received - ${step.name}`);
+      console.info(`Outstanding Requirement Received - ${step.name}`);
       await step.test(browser, data);
     }
   } else {

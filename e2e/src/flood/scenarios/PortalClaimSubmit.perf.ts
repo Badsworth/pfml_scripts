@@ -1,4 +1,3 @@
-import fs from "fs";
 import { StepFunction, TestData, Browser, step, By, ENV } from "@flood/element";
 import { DocumentUploadRequest } from "../../api";
 import {
@@ -25,10 +24,22 @@ let authToken: string;
 let applicationId: string;
 let fineosId: string;
 
-const pdfDocument = fs.readFileSync(documentUrl);
+const isNode = !!(typeof process !== "undefined" && process.version);
+async function importFSModule(): Promise<typeof import("fs")> {
+  if (!isNode) {
+    throw new Error("Cannot load the fs module API outside of Node.");
+  }
+
+  const fs = await import("fs");
+  if (fs.promises) {
+    return fs;
+  }
+  return fs.default;
+}
 
 export { settings };
 export const scenario: LSTScenario = "PortalClaimSubmit";
+console.log({ scenario, isNode });
 export const steps = [
   {
     name: "Login in Portal",
@@ -194,10 +205,12 @@ export const steps = [
               for (const document of documents) {
                 // important: body & headers need to be empty objects
                 reqOptions = getRequestOptions(authToken, "POST", {}, {});
+                const fs = await importFSModule();
+
                 const docBody: DocumentUploadRequest = {
                   document_type: getDocumentType(document),
                   description: "LST - Direct to API",
-                  file: pdfDocument,
+                  file: fs.readFileSync(documentUrl),
                   name: `${document.type}.pdf`,
                 };
                 res = await evalFetch(

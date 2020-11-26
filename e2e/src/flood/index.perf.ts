@@ -1,8 +1,9 @@
 import {
+  StepFunction,
   TestSettings,
-  TestData,
   Browser,
   beforeEach,
+  TestData,
   step,
 } from "@flood/element";
 import {
@@ -16,7 +17,7 @@ import scenarios from "./scenarios";
 export const settings: TestSettings = {
   ...globalElementSettings,
   // These overrides are essential to any Flood.io deployment
-  loopCount: -1,
+  loopCount: 1000,
   actionDelay: 1,
   stepDelay: 1,
 };
@@ -42,7 +43,7 @@ export default (): void => {
       step.if(
         () => curr === scenario,
         `${scenario}: ${stepDef.name}`,
-        stepDef.test
+        stepDef.test as StepFunction<unknown>
       );
     });
   });

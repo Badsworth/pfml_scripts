@@ -13,7 +13,7 @@ export const PreRequestAdditionalInfo = async (
 
 export default async (browser: Browser, data: LSTSimClaim): Promise<void> => {
   for (const step of steps) {
-    console.log(`Request Additional Info - ${step.name} - ${missingDocument}`);
+    console.info(`Request Additional Info - ${step.name} - ${missingDocument}`);
     await step.test(browser, data);
   }
 };

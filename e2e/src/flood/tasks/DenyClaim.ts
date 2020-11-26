@@ -45,7 +45,7 @@ export const steps: StoredStep[] = [
 
 export default async (browser: Browser, data: LSTSimClaim): Promise<void> => {
   for (const step of steps) {
-    console.log(`Deny - ${step.name}`);
+    console.info(`Deny - ${step.name}`);
     await step.test(browser, data);
     await waitForRealTimeSim(browser, data, 1 / steps.length);
   }
