@@ -3,6 +3,7 @@
 #
 
 import os
+import time
 from contextlib import contextmanager
 from typing import Generator, List, Optional, Union
 
@@ -73,6 +74,8 @@ def create_app(config: Optional[AppConfig] = None) -> connexion.FlaskApp:
     @flask_app.before_request
     def push_db():
         g.db = db_session_factory
+        g.start_time = time.monotonic()
+        massgov.pfml.util.logging.access.access_log_start(flask.request)
 
     @flask_app.teardown_request
     def close_db(exception=None):
@@ -87,9 +90,10 @@ def create_app(config: Optional[AppConfig] = None) -> connexion.FlaskApp:
             pass
 
     @flask_app.after_request
-    def access_log(response):
-        massgov.pfml.util.logging.access.access_log(
-            flask.request, response, get_app_config().enable_full_error_logs
+    def access_log_end(response):
+        response_time_ms = 1000 * (time.monotonic() - g.get("start_time"))
+        massgov.pfml.util.logging.access.access_log_end(
+            flask.request, response, response_time_ms, get_app_config().enable_full_error_logs
         )
         return response
 
