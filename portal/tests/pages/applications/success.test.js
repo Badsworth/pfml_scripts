@@ -12,34 +12,41 @@ describe("Success", () => {
     "Medical (Not pregnant)": new MockClaimBuilder()
       .continuous({ start_date: "2020-01-01" })
       .medicalLeaveReason()
+      .absenceId()
       .create(),
     "Medical (Pregnant)": new MockClaimBuilder()
       .continuous({ start_date: "2020-01-01" })
       .medicalLeaveReason()
       .pregnant()
+      .absenceId()
       .create(),
     "Medical (Pregnant, applying in advance)": new MockClaimBuilder()
       .continuous({ start_date: futureDate })
       .medicalLeaveReason()
       .pregnant()
+      .absenceId()
       .create(),
     "Family (Bonding Newborn)": new MockClaimBuilder()
       .continuous({ start_date: "2020-01-01" })
       .bondingBirthLeaveReason()
+      .absenceId()
       .create(),
     "Family (Bonding Future Newborn)": new MockClaimBuilder()
       .completed()
       .bondingBirthLeaveReason(futureDate)
       .hasFutureChild()
+      .absenceId()
       .create(),
     "Family (Bonding Adoption)": new MockClaimBuilder()
       .continuous({ start_date: "2020-01-01" })
       .bondingAdoptionLeaveReason()
+      .absenceId()
       .create(),
     "Family (Bonding Future Adoption)": new MockClaimBuilder()
       .completed()
       .bondingAdoptionLeaveReason(futureDate)
       .hasFutureChild()
+      .absenceId()
       .create(),
   };
 

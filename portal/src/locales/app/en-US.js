@@ -1171,14 +1171,16 @@ const pages = {
       "<ul> <li>Your employer has 10 days to provide feedback on your application.</li> <li>Once you’ve provided proof of birth, we’ll confirm your eligibility and make sure that your documents are valid.</li> <li>After we’ve made a decision, you’ll receive an email notification with a link to details about the decision.</li> <li>If you need to change your leave dates because your child was born earlier or later than expected, you must call the DFML Contact Center at $t(shared.contactCenterPhoneNumber).</li></ul>",
     adjudicationProcess_medicalPregnantFuture:
       "<ul> <li>Your employer has 10 days to provide feedback on your application.</li> <li>When your leave begins, call the DFML Contact Center at $t(shared.contactCenterPhoneNumber) to tell us. Then we’ll confirm your eligibility and make sure that your documents are valid.</li> <li>After we’ve made a decision, you’ll receive an email notification with a link to details about the decision.</li> </ul>",
+    claimantApplicationId:
+      "Your application ID is <strong>{{absence_id}}</strong>",
     exitLink: "Return to applications",
     familyLeaveToBond:
       "You can take up to 12 weeks of paid family leave to bond with your child after your medical leave ends. You do not need to take this leave all at once. You must create a separate leave application if you want to take family leave.",
-    familyLeaveToBondHeading: "You can also apply for paid family leave.",
+    familyLeaveToBondHeading: "You can also apply for paid family leave",
     medicalLeaveAfterBirth:
       "You can take up to 20 weeks of paid medical leave if you're unable to work during your pregnancy and to recover from childbirth. Your health care provider determines how much medical leave you will need. You'll need to fill out a separate application to take medical leave in addition to your family leave.",
     medicalLeaveAfterBirthHeading:
-      "If you gave birth, you may also be eligible for paid medical leave.",
+      "If you gave birth, you may also be eligible for paid medical leave",
     proofRequired_bondingAdoptFosterFuture:
       "After your child arrives in your home, you will need to upload, mail, or fax a document that shows your child’s placement date.",
     proofRequired_bondingNewbornFuture:
@@ -1187,7 +1189,7 @@ const pages = {
       "You must call the DFML Contact Center at $t(shared.contactCenterPhoneNumber) once your medical leave begins. We can’t approve your application until we hear from you.",
     reportReductionsHeading: "We may need more information from you",
     reportReductionsProcess:
-      "<p>Call the Contact Center at $t(shared.contactCenterPhoneNumber) if you'll receive:</p><ul><li>Any benefits from your employer that you’ll be using in addition to Massachusetts paid leave (for example, maternity leave, or paid sick time)</li></ul><ul><li>Income from any other sources during your leave</li></ul>",
+      "<p>Call the Contact Center at $t(shared.contactCenterPhoneNumber) if you'll receive:</p><ul><li>Any <reductions-employer-benefits-link>benefits from your employer</reductions-employer-benefits-link> that you’ll be using in addition to Massachusetts paid leave (for example, maternity leave, or paid sick time)</li><li>Income from <reductions-overview-link>any other sources</reductions-overview-link> during your leave</li></ul>",
     title: "You submitted your leave application",
     title_bonding: "You submitted your family leave application",
     title_medical: "You submitted your medical leave application",

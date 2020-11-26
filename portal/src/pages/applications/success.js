@@ -1,4 +1,9 @@
 import Claim, { LeaveReason, ReasonQualifier } from "../../models/Claim";
+import {
+  IconCalendar,
+  IconCopy,
+  IconPhone,
+} from "@massds/mayflower-react/dist/Icon";
 import Alert from "../../components/Alert";
 import ButtonLink from "../../components/ButtonLink";
 import Heading from "../../components/Heading";
@@ -19,6 +24,12 @@ import withClaim from "../../hoc/withClaim";
 export const Success = (props) => {
   const { claim } = props;
   const { t } = useTranslation();
+  const iconProps = {
+    className: "margin-right-2 text-secondary text-middle",
+    height: 30,
+    width: 30,
+    fill: "currentColor",
+  };
 
   const reason = get(claim, "leave_details.reason");
   const reason_qualifier = get(claim, "leave_details.reason_qualifier");
@@ -68,6 +79,13 @@ export const Success = (props) => {
         })}
       </Title>
 
+      <p className="margin-bottom-5">
+        <Trans
+          i18nKey="pages.claimsSuccess.claimantApplicationId"
+          values={{ absence_id: claim.fineos_absence_id }}
+        />
+      </p>
+
       <div className="measure-6">
         {claimContext !== "leaveNotInFuture" && (
           <Alert state="warning" autoWidth>
@@ -76,14 +94,25 @@ export const Success = (props) => {
         )}
 
         <Heading level="2">
+          <IconPhone {...iconProps} />
           {t("pages.claimsSuccess.reportReductionsHeading")}
         </Heading>
         <Trans
           i18nKey="pages.claimsSuccess.reportReductionsProcess"
-          components={{ ul: <ul className="usa-list" />, li: <li /> }}
+          components={{
+            ul: <ul className="usa-list" />,
+            li: <li />,
+            "reductions-employer-benefits-link": (
+              <a href={routes.external.reductionsEmployerBenefits} />
+            ),
+            "reductions-overview-link": (
+              <a href={routes.external.reductionsOverview} />
+            ),
+          }}
         />
 
         <Heading level="2">
+          <IconCalendar {...iconProps} />
           {t("pages.claimsSuccess.adjudicationProcessHeading")}
         </Heading>
 
@@ -98,6 +127,7 @@ export const Success = (props) => {
         {claim.isMedicalLeave && pregnant_or_recent_birth && (
           <div className={secondaryContentContainerClasses}>
             <Heading level="2">
+              <IconCopy {...iconProps} />
               {t("pages.claimsSuccess.familyLeaveToBondHeading")}
             </Heading>
             <p>{t("pages.claimsSuccess.familyLeaveToBond")}</p>
@@ -107,6 +137,7 @@ export const Success = (props) => {
         {claim.isBondingLeave && reason_qualifier === ReasonQualifier.newBorn && (
           <div className={secondaryContentContainerClasses}>
             <Heading level="2">
+              <IconCopy {...iconProps} />
               {t("pages.claimsSuccess.medicalLeaveAfterBirthHeading")}
             </Heading>
             <p>{t("pages.claimsSuccess.medicalLeaveAfterBirth")}</p>

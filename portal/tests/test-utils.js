@@ -48,6 +48,14 @@ export class BaseMockClaimBuilder {
     return this;
   }
 
+  /**
+   * @returns {BaseMockClaimBuilder}
+   */
+  absenceId() {
+    set(this.claimAttrs, "fineos_absence_id", "NTN-111-ABS-01");
+    return this;
+  }
+
   address(attrs) {
     set(
       this.claimAttrs,
@@ -202,8 +210,8 @@ export class MockEmployerClaimBuilder extends BaseMockClaimBuilder {
     this.reducedSchedule();
     this.previousLeave();
     this.employerBenefit();
+    this.absenceId();
     set(this.claimAttrs, "leave_details.reason", FineosLeaveReason.medical);
-    set(this.claimAttrs, "fineos_absence_id", "NTN-111-ABS-01");
     return this;
   }
 
@@ -479,7 +487,7 @@ export class MockClaimBuilder extends BaseMockClaimBuilder {
    */
   submitted() {
     this.part1Complete();
-    set(this.claimAttrs, "fineos_absence_id", "NTN-111-ABS-01");
+    this.absenceId();
     set(this.claimAttrs, "status", ClaimStatus.submitted);
 
     return this;

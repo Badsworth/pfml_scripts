@@ -102,6 +102,10 @@ const routes = {
       privacyPolicy: "https://www.mass.gov/privacypolicy",
     },
     puertoRicanBirthCertificate: "https://prfaa.pr.gov/faqs",
+    reductionsEmployerBenefits:
+      "https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefit-reductions#earned-time-off-through-your-employer-",
+    reductionsOverview:
+      "https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefit-reductions",
     workVisa:
       "https://travel.state.gov/content/travel/en/us-visas/employment/temporary-worker-visas.html",
   },

@@ -5,18 +5,42 @@ exports[`Success renders content tailored to Family (Bonding Adoption) 1`] = `
   <Title>
     You submitted your family leave application
   </Title>
+  <p
+    className="margin-bottom-5"
+  >
+    <Trans
+      i18nKey="pages.claimsSuccess.claimantApplicationId"
+      values={
+        Object {
+          "absence_id": "NTN-111-ABS-01",
+        }
+      }
+    />
+  </p>
   <div
     className="measure-6"
   >
     <Heading
       level="2"
     >
+      <SvgIconPhone
+        className="margin-right-2 text-secondary text-middle"
+        fill="currentColor"
+        height={30}
+        width={30}
+      />
       We may need more information from you
     </Heading>
     <Trans
       components={
         Object {
           "li": <li />,
+          "reductions-employer-benefits-link": <a
+            href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefit-reductions#earned-time-off-through-your-employer-"
+          />,
+          "reductions-overview-link": <a
+            href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefit-reductions"
+          />,
           "ul": <ul
             className="usa-list"
           />,
@@ -27,6 +51,12 @@ exports[`Success renders content tailored to Family (Bonding Adoption) 1`] = `
     <Heading
       level="2"
     >
+      <SvgIconCalendar
+        className="margin-right-2 text-secondary text-middle"
+        fill="currentColor"
+        height={30}
+        width={30}
+      />
       What happens next
     </Heading>
     <Trans
@@ -60,6 +90,17 @@ exports[`Success renders content tailored to Family (Bonding Adoption) 1`] = `
 
 exports[`Success renders content tailored to Family (Bonding Adoption) 2`] = `
 Array [
+  "Your application ID is ",
+  <strong
+    key="strong-1"
+  >
+    NTN-111-ABS-01
+  </strong>,
+]
+`;
+
+exports[`Success renders content tailored to Family (Bonding Adoption) 3`] = `
+Array [
   <p
     key="p-0"
   >
@@ -72,23 +113,32 @@ Array [
     <li
       key="0"
     >
-      Any benefits from your employer that you’ll be using in addition to Massachusetts paid leave (for example, maternity leave, or paid sick time)
+      Any 
+      <a
+        href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefit-reductions#earned-time-off-through-your-employer-"
+        key="1"
+      >
+        benefits from your employer
+      </a>
+       that you’ll be using in addition to Massachusetts paid leave (for example, maternity leave, or paid sick time)
     </li>
-  </ul>,
-  <ul
-    className="usa-list"
-    key="2"
-  >
     <li
-      key="0"
+      key="1"
     >
-      Income from any other sources during your leave
+      Income from 
+      <a
+        href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefit-reductions"
+        key="1"
+      >
+        any other sources
+      </a>
+       during your leave
     </li>
   </ul>,
 ]
 `;
 
-exports[`Success renders content tailored to Family (Bonding Adoption) 3`] = `
+exports[`Success renders content tailored to Family (Bonding Adoption) 4`] = `
 <ul
   className="usa-list"
   key="0"
@@ -120,6 +170,18 @@ exports[`Success renders content tailored to Family (Bonding Future Adoption) 1`
   <Title>
     You submitted your family leave application
   </Title>
+  <p
+    className="margin-bottom-5"
+  >
+    <Trans
+      i18nKey="pages.claimsSuccess.claimantApplicationId"
+      values={
+        Object {
+          "absence_id": "NTN-111-ABS-01",
+        }
+      }
+    />
+  </p>
   <div
     className="measure-6"
   >
@@ -132,12 +194,24 @@ exports[`Success renders content tailored to Family (Bonding Future Adoption) 1`
     <Heading
       level="2"
     >
+      <SvgIconPhone
+        className="margin-right-2 text-secondary text-middle"
+        fill="currentColor"
+        height={30}
+        width={30}
+      />
       We may need more information from you
     </Heading>
     <Trans
       components={
         Object {
           "li": <li />,
+          "reductions-employer-benefits-link": <a
+            href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefit-reductions#earned-time-off-through-your-employer-"
+          />,
+          "reductions-overview-link": <a
+            href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefit-reductions"
+          />,
           "ul": <ul
             className="usa-list"
           />,
@@ -148,6 +222,12 @@ exports[`Success renders content tailored to Family (Bonding Future Adoption) 1`
     <Heading
       level="2"
     >
+      <SvgIconCalendar
+        className="margin-right-2 text-secondary text-middle"
+        fill="currentColor"
+        height={30}
+        width={30}
+      />
       What happens next
     </Heading>
     <Trans
@@ -181,6 +261,17 @@ exports[`Success renders content tailored to Family (Bonding Future Adoption) 1`
 
 exports[`Success renders content tailored to Family (Bonding Future Adoption) 2`] = `
 Array [
+  "Your application ID is ",
+  <strong
+    key="strong-1"
+  >
+    NTN-111-ABS-01
+  </strong>,
+]
+`;
+
+exports[`Success renders content tailored to Family (Bonding Future Adoption) 3`] = `
+Array [
   <p
     key="p-0"
   >
@@ -193,23 +284,32 @@ Array [
     <li
       key="0"
     >
-      Any benefits from your employer that you’ll be using in addition to Massachusetts paid leave (for example, maternity leave, or paid sick time)
+      Any 
+      <a
+        href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefit-reductions#earned-time-off-through-your-employer-"
+        key="1"
+      >
+        benefits from your employer
+      </a>
+       that you’ll be using in addition to Massachusetts paid leave (for example, maternity leave, or paid sick time)
     </li>
-  </ul>,
-  <ul
-    className="usa-list"
-    key="2"
-  >
     <li
-      key="0"
+      key="1"
     >
-      Income from any other sources during your leave
+      Income from 
+      <a
+        href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefit-reductions"
+        key="1"
+      >
+        any other sources
+      </a>
+       during your leave
     </li>
   </ul>,
 ]
 `;
 
-exports[`Success renders content tailored to Family (Bonding Future Adoption) 3`] = `
+exports[`Success renders content tailored to Family (Bonding Future Adoption) 4`] = `
 <ul
   className="usa-list"
   key="0"
@@ -246,6 +346,18 @@ exports[`Success renders content tailored to Family (Bonding Future Newborn) 1`]
   <Title>
     You submitted your family leave application
   </Title>
+  <p
+    className="margin-bottom-5"
+  >
+    <Trans
+      i18nKey="pages.claimsSuccess.claimantApplicationId"
+      values={
+        Object {
+          "absence_id": "NTN-111-ABS-01",
+        }
+      }
+    />
+  </p>
   <div
     className="measure-6"
   >
@@ -258,12 +370,24 @@ exports[`Success renders content tailored to Family (Bonding Future Newborn) 1`]
     <Heading
       level="2"
     >
+      <SvgIconPhone
+        className="margin-right-2 text-secondary text-middle"
+        fill="currentColor"
+        height={30}
+        width={30}
+      />
       We may need more information from you
     </Heading>
     <Trans
       components={
         Object {
           "li": <li />,
+          "reductions-employer-benefits-link": <a
+            href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefit-reductions#earned-time-off-through-your-employer-"
+          />,
+          "reductions-overview-link": <a
+            href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefit-reductions"
+          />,
           "ul": <ul
             className="usa-list"
           />,
@@ -274,6 +398,12 @@ exports[`Success renders content tailored to Family (Bonding Future Newborn) 1`]
     <Heading
       level="2"
     >
+      <SvgIconCalendar
+        className="margin-right-2 text-secondary text-middle"
+        fill="currentColor"
+        height={30}
+        width={30}
+      />
       What happens next
     </Heading>
     <Trans
@@ -298,7 +428,13 @@ exports[`Success renders content tailored to Family (Bonding Future Newborn) 1`]
       <Heading
         level="2"
       >
-        If you gave birth, you may also be eligible for paid medical leave.
+        <SvgIconCopy
+          className="margin-right-2 text-secondary text-middle"
+          fill="currentColor"
+          height={30}
+          width={30}
+        />
+        If you gave birth, you may also be eligible for paid medical leave
       </Heading>
       <p>
         You can take up to 20 weeks of paid medical leave if you're unable to work during your pregnancy and to recover from childbirth. Your health care provider determines how much medical leave you will need. You'll need to fill out a separate application to take medical leave in addition to your family leave.
@@ -319,6 +455,17 @@ exports[`Success renders content tailored to Family (Bonding Future Newborn) 1`]
 
 exports[`Success renders content tailored to Family (Bonding Future Newborn) 2`] = `
 Array [
+  "Your application ID is ",
+  <strong
+    key="strong-1"
+  >
+    NTN-111-ABS-01
+  </strong>,
+]
+`;
+
+exports[`Success renders content tailored to Family (Bonding Future Newborn) 3`] = `
+Array [
   <p
     key="p-0"
   >
@@ -331,23 +478,32 @@ Array [
     <li
       key="0"
     >
-      Any benefits from your employer that you’ll be using in addition to Massachusetts paid leave (for example, maternity leave, or paid sick time)
+      Any 
+      <a
+        href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefit-reductions#earned-time-off-through-your-employer-"
+        key="1"
+      >
+        benefits from your employer
+      </a>
+       that you’ll be using in addition to Massachusetts paid leave (for example, maternity leave, or paid sick time)
     </li>
-  </ul>,
-  <ul
-    className="usa-list"
-    key="2"
-  >
     <li
-      key="0"
+      key="1"
     >
-      Income from any other sources during your leave
+      Income from 
+      <a
+        href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefit-reductions"
+        key="1"
+      >
+        any other sources
+      </a>
+       during your leave
     </li>
   </ul>,
 ]
 `;
 
-exports[`Success renders content tailored to Family (Bonding Future Newborn) 3`] = `
+exports[`Success renders content tailored to Family (Bonding Future Newborn) 4`] = `
 <ul
   className="usa-list"
   key="0"
@@ -384,18 +540,42 @@ exports[`Success renders content tailored to Family (Bonding Newborn) 1`] = `
   <Title>
     You submitted your family leave application
   </Title>
+  <p
+    className="margin-bottom-5"
+  >
+    <Trans
+      i18nKey="pages.claimsSuccess.claimantApplicationId"
+      values={
+        Object {
+          "absence_id": "NTN-111-ABS-01",
+        }
+      }
+    />
+  </p>
   <div
     className="measure-6"
   >
     <Heading
       level="2"
     >
+      <SvgIconPhone
+        className="margin-right-2 text-secondary text-middle"
+        fill="currentColor"
+        height={30}
+        width={30}
+      />
       We may need more information from you
     </Heading>
     <Trans
       components={
         Object {
           "li": <li />,
+          "reductions-employer-benefits-link": <a
+            href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefit-reductions#earned-time-off-through-your-employer-"
+          />,
+          "reductions-overview-link": <a
+            href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefit-reductions"
+          />,
           "ul": <ul
             className="usa-list"
           />,
@@ -406,6 +586,12 @@ exports[`Success renders content tailored to Family (Bonding Newborn) 1`] = `
     <Heading
       level="2"
     >
+      <SvgIconCalendar
+        className="margin-right-2 text-secondary text-middle"
+        fill="currentColor"
+        height={30}
+        width={30}
+      />
       What happens next
     </Heading>
     <Trans
@@ -430,7 +616,13 @@ exports[`Success renders content tailored to Family (Bonding Newborn) 1`] = `
       <Heading
         level="2"
       >
-        If you gave birth, you may also be eligible for paid medical leave.
+        <SvgIconCopy
+          className="margin-right-2 text-secondary text-middle"
+          fill="currentColor"
+          height={30}
+          width={30}
+        />
+        If you gave birth, you may also be eligible for paid medical leave
       </Heading>
       <p>
         You can take up to 20 weeks of paid medical leave if you're unable to work during your pregnancy and to recover from childbirth. Your health care provider determines how much medical leave you will need. You'll need to fill out a separate application to take medical leave in addition to your family leave.
@@ -451,6 +643,17 @@ exports[`Success renders content tailored to Family (Bonding Newborn) 1`] = `
 
 exports[`Success renders content tailored to Family (Bonding Newborn) 2`] = `
 Array [
+  "Your application ID is ",
+  <strong
+    key="strong-1"
+  >
+    NTN-111-ABS-01
+  </strong>,
+]
+`;
+
+exports[`Success renders content tailored to Family (Bonding Newborn) 3`] = `
+Array [
   <p
     key="p-0"
   >
@@ -463,23 +666,32 @@ Array [
     <li
       key="0"
     >
-      Any benefits from your employer that you’ll be using in addition to Massachusetts paid leave (for example, maternity leave, or paid sick time)
+      Any 
+      <a
+        href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefit-reductions#earned-time-off-through-your-employer-"
+        key="1"
+      >
+        benefits from your employer
+      </a>
+       that you’ll be using in addition to Massachusetts paid leave (for example, maternity leave, or paid sick time)
     </li>
-  </ul>,
-  <ul
-    className="usa-list"
-    key="2"
-  >
     <li
-      key="0"
+      key="1"
     >
-      Income from any other sources during your leave
+      Income from 
+      <a
+        href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefit-reductions"
+        key="1"
+      >
+        any other sources
+      </a>
+       during your leave
     </li>
   </ul>,
 ]
 `;
 
-exports[`Success renders content tailored to Family (Bonding Newborn) 3`] = `
+exports[`Success renders content tailored to Family (Bonding Newborn) 4`] = `
 <ul
   className="usa-list"
   key="0"
@@ -511,18 +723,42 @@ exports[`Success renders content tailored to Medical (Not pregnant) 1`] = `
   <Title>
     You submitted your medical leave application
   </Title>
+  <p
+    className="margin-bottom-5"
+  >
+    <Trans
+      i18nKey="pages.claimsSuccess.claimantApplicationId"
+      values={
+        Object {
+          "absence_id": "NTN-111-ABS-01",
+        }
+      }
+    />
+  </p>
   <div
     className="measure-6"
   >
     <Heading
       level="2"
     >
+      <SvgIconPhone
+        className="margin-right-2 text-secondary text-middle"
+        fill="currentColor"
+        height={30}
+        width={30}
+      />
       We may need more information from you
     </Heading>
     <Trans
       components={
         Object {
           "li": <li />,
+          "reductions-employer-benefits-link": <a
+            href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefit-reductions#earned-time-off-through-your-employer-"
+          />,
+          "reductions-overview-link": <a
+            href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefit-reductions"
+          />,
           "ul": <ul
             className="usa-list"
           />,
@@ -533,6 +769,12 @@ exports[`Success renders content tailored to Medical (Not pregnant) 1`] = `
     <Heading
       level="2"
     >
+      <SvgIconCalendar
+        className="margin-right-2 text-secondary text-middle"
+        fill="currentColor"
+        height={30}
+        width={30}
+      />
       What happens next
     </Heading>
     <Trans
@@ -566,6 +808,17 @@ exports[`Success renders content tailored to Medical (Not pregnant) 1`] = `
 
 exports[`Success renders content tailored to Medical (Not pregnant) 2`] = `
 Array [
+  "Your application ID is ",
+  <strong
+    key="strong-1"
+  >
+    NTN-111-ABS-01
+  </strong>,
+]
+`;
+
+exports[`Success renders content tailored to Medical (Not pregnant) 3`] = `
+Array [
   <p
     key="p-0"
   >
@@ -578,23 +831,32 @@ Array [
     <li
       key="0"
     >
-      Any benefits from your employer that you’ll be using in addition to Massachusetts paid leave (for example, maternity leave, or paid sick time)
+      Any 
+      <a
+        href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefit-reductions#earned-time-off-through-your-employer-"
+        key="1"
+      >
+        benefits from your employer
+      </a>
+       that you’ll be using in addition to Massachusetts paid leave (for example, maternity leave, or paid sick time)
     </li>
-  </ul>,
-  <ul
-    className="usa-list"
-    key="2"
-  >
     <li
-      key="0"
+      key="1"
     >
-      Income from any other sources during your leave
+      Income from 
+      <a
+        href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefit-reductions"
+        key="1"
+      >
+        any other sources
+      </a>
+       during your leave
     </li>
   </ul>,
 ]
 `;
 
-exports[`Success renders content tailored to Medical (Not pregnant) 3`] = `
+exports[`Success renders content tailored to Medical (Not pregnant) 4`] = `
 <ul
   className="usa-list"
   key="0"
@@ -626,18 +888,42 @@ exports[`Success renders content tailored to Medical (Pregnant) 1`] = `
   <Title>
     You submitted your medical leave application
   </Title>
+  <p
+    className="margin-bottom-5"
+  >
+    <Trans
+      i18nKey="pages.claimsSuccess.claimantApplicationId"
+      values={
+        Object {
+          "absence_id": "NTN-111-ABS-01",
+        }
+      }
+    />
+  </p>
   <div
     className="measure-6"
   >
     <Heading
       level="2"
     >
+      <SvgIconPhone
+        className="margin-right-2 text-secondary text-middle"
+        fill="currentColor"
+        height={30}
+        width={30}
+      />
       We may need more information from you
     </Heading>
     <Trans
       components={
         Object {
           "li": <li />,
+          "reductions-employer-benefits-link": <a
+            href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefit-reductions#earned-time-off-through-your-employer-"
+          />,
+          "reductions-overview-link": <a
+            href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefit-reductions"
+          />,
           "ul": <ul
             className="usa-list"
           />,
@@ -648,6 +934,12 @@ exports[`Success renders content tailored to Medical (Pregnant) 1`] = `
     <Heading
       level="2"
     >
+      <SvgIconCalendar
+        className="margin-right-2 text-secondary text-middle"
+        fill="currentColor"
+        height={30}
+        width={30}
+      />
       What happens next
     </Heading>
     <Trans
@@ -672,7 +964,13 @@ exports[`Success renders content tailored to Medical (Pregnant) 1`] = `
       <Heading
         level="2"
       >
-        You can also apply for paid family leave.
+        <SvgIconCopy
+          className="margin-right-2 text-secondary text-middle"
+          fill="currentColor"
+          height={30}
+          width={30}
+        />
+        You can also apply for paid family leave
       </Heading>
       <p>
         You can take up to 12 weeks of paid family leave to bond with your child after your medical leave ends. You do not need to take this leave all at once. You must create a separate leave application if you want to take family leave.
@@ -693,6 +991,17 @@ exports[`Success renders content tailored to Medical (Pregnant) 1`] = `
 
 exports[`Success renders content tailored to Medical (Pregnant) 2`] = `
 Array [
+  "Your application ID is ",
+  <strong
+    key="strong-1"
+  >
+    NTN-111-ABS-01
+  </strong>,
+]
+`;
+
+exports[`Success renders content tailored to Medical (Pregnant) 3`] = `
+Array [
   <p
     key="p-0"
   >
@@ -705,23 +1014,32 @@ Array [
     <li
       key="0"
     >
-      Any benefits from your employer that you’ll be using in addition to Massachusetts paid leave (for example, maternity leave, or paid sick time)
+      Any 
+      <a
+        href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefit-reductions#earned-time-off-through-your-employer-"
+        key="1"
+      >
+        benefits from your employer
+      </a>
+       that you’ll be using in addition to Massachusetts paid leave (for example, maternity leave, or paid sick time)
     </li>
-  </ul>,
-  <ul
-    className="usa-list"
-    key="2"
-  >
     <li
-      key="0"
+      key="1"
     >
-      Income from any other sources during your leave
+      Income from 
+      <a
+        href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefit-reductions"
+        key="1"
+      >
+        any other sources
+      </a>
+       during your leave
     </li>
   </ul>,
 ]
 `;
 
-exports[`Success renders content tailored to Medical (Pregnant) 3`] = `
+exports[`Success renders content tailored to Medical (Pregnant) 4`] = `
 <ul
   className="usa-list"
   key="0"
@@ -753,6 +1071,18 @@ exports[`Success renders content tailored to Medical (Pregnant, applying in adva
   <Title>
     You submitted your medical leave application
   </Title>
+  <p
+    className="margin-bottom-5"
+  >
+    <Trans
+      i18nKey="pages.claimsSuccess.claimantApplicationId"
+      values={
+        Object {
+          "absence_id": "NTN-111-ABS-01",
+        }
+      }
+    />
+  </p>
   <div
     className="measure-6"
   >
@@ -765,12 +1095,24 @@ exports[`Success renders content tailored to Medical (Pregnant, applying in adva
     <Heading
       level="2"
     >
+      <SvgIconPhone
+        className="margin-right-2 text-secondary text-middle"
+        fill="currentColor"
+        height={30}
+        width={30}
+      />
       We may need more information from you
     </Heading>
     <Trans
       components={
         Object {
           "li": <li />,
+          "reductions-employer-benefits-link": <a
+            href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefit-reductions#earned-time-off-through-your-employer-"
+          />,
+          "reductions-overview-link": <a
+            href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefit-reductions"
+          />,
           "ul": <ul
             className="usa-list"
           />,
@@ -781,6 +1123,12 @@ exports[`Success renders content tailored to Medical (Pregnant, applying in adva
     <Heading
       level="2"
     >
+      <SvgIconCalendar
+        className="margin-right-2 text-secondary text-middle"
+        fill="currentColor"
+        height={30}
+        width={30}
+      />
       What happens next
     </Heading>
     <Trans
@@ -805,7 +1153,13 @@ exports[`Success renders content tailored to Medical (Pregnant, applying in adva
       <Heading
         level="2"
       >
-        You can also apply for paid family leave.
+        <SvgIconCopy
+          className="margin-right-2 text-secondary text-middle"
+          fill="currentColor"
+          height={30}
+          width={30}
+        />
+        You can also apply for paid family leave
       </Heading>
       <p>
         You can take up to 12 weeks of paid family leave to bond with your child after your medical leave ends. You do not need to take this leave all at once. You must create a separate leave application if you want to take family leave.
@@ -826,6 +1180,17 @@ exports[`Success renders content tailored to Medical (Pregnant, applying in adva
 
 exports[`Success renders content tailored to Medical (Pregnant, applying in advance) 2`] = `
 Array [
+  "Your application ID is ",
+  <strong
+    key="strong-1"
+  >
+    NTN-111-ABS-01
+  </strong>,
+]
+`;
+
+exports[`Success renders content tailored to Medical (Pregnant, applying in advance) 3`] = `
+Array [
   <p
     key="p-0"
   >
@@ -838,23 +1203,32 @@ Array [
     <li
       key="0"
     >
-      Any benefits from your employer that you’ll be using in addition to Massachusetts paid leave (for example, maternity leave, or paid sick time)
+      Any 
+      <a
+        href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefit-reductions#earned-time-off-through-your-employer-"
+        key="1"
+      >
+        benefits from your employer
+      </a>
+       that you’ll be using in addition to Massachusetts paid leave (for example, maternity leave, or paid sick time)
     </li>
-  </ul>,
-  <ul
-    className="usa-list"
-    key="2"
-  >
     <li
-      key="0"
+      key="1"
     >
-      Income from any other sources during your leave
+      Income from 
+      <a
+        href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefit-reductions"
+        key="1"
+      >
+        any other sources
+      </a>
+       during your leave
     </li>
   </ul>,
 ]
 `;
 
-exports[`Success renders content tailored to Medical (Pregnant, applying in advance) 3`] = `
+exports[`Success renders content tailored to Medical (Pregnant, applying in advance) 4`] = `
 <ul
   className="usa-list"
   key="0"
