@@ -95,6 +95,7 @@ def test_log_message_with_extra(capsys):
         "process",
         "request_id",
         "message",
+        "entity.type",
     }
     assert last_line["name"] == "massgov.pfml.test.logging"
     assert last_line["levelname"] == "INFO"
@@ -125,6 +126,7 @@ def test_log_message_with_circular_extra(capsys):
         "process",
         "cd",
         "message",
+        "entity.type",
     }
     assert last_line["name"] == "massgov.pfml.test.logging"
     assert last_line["levelname"] == "INFO"
@@ -157,6 +159,7 @@ def test_log_message_with_exception(capsys):
         "threadName",
         "process",
         "message",
+        "entity.type",
     }
     assert last_line["name"] == "massgov.pfml.test.logging"
     assert last_line["levelname"] == "ERROR"
@@ -199,6 +202,7 @@ def test_log_message_with_flask_request_context(capsys, monkeypatch):
         "path",
         "request_id",
         "message",
+        "entity.type",
     }
     assert last_line["name"] == "massgov.pfml.test.logging"
     assert last_line["levelname"] == "INFO"
@@ -234,6 +238,7 @@ def test_log_message_with_exception_and_pii(capsys):
         "process",
         "message",
         "a",
+        "entity.type",
     }
     assert last_line["name"] == "massgov.pfml.test.logging"
     assert last_line["levelname"] == "ERROR"

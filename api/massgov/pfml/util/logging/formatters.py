@@ -7,6 +7,7 @@ import logging  # noqa: B1
 import re
 
 import flask
+import newrelic.api.time_trace
 
 # Attributes of LogRecord to exclude from the JSON formatted lines. An exclusion list approach is
 # used so that all "extra" attributes can be included in a line.
@@ -44,11 +45,24 @@ class JsonFormatter(logging.Formatter):  # noqa: B1
             record.path = flask.request.path
             record.request_id = flask.request.headers.get("x-amzn-requestid", "")
         super(JsonFormatter, self).format(record)
+
         output = {
             key: str_mask_pii(key, value)
             for key, value in record.__dict__.items()
             if key not in EXCLUDE_ATTRIBUTES and value is not None
         }
+
+        # Inject New Relic tracing metadata for Logs in Context features.
+        # This is not the suggested way to implement it, but the NewRelicContextFormatter
+        # has a bunch of stuff we probably don't want, some of which we explicitly exclude
+        # in our own formatter.
+        #
+        # Instead, just grab the linking metadata and pop it into our output.
+        #
+        # Reference:
+        # https://github.com/newrelic/newrelic-python-agent/blob/main/newrelic/api/log.py
+        #
+        output.update(newrelic.api.time_trace.get_linking_metadata())
         return json.dumps(output, separators=MOST_COMPACT_JSON_SEPARATORS)
 
 
