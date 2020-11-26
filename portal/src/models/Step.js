@@ -152,7 +152,7 @@ export default class Step extends BaseModel {
           "claim.other_incomes",
           "claim.previous_leaves",
           // TODO (CP-1264): Remove payment fields from here once the Payment step utilizes the warnings
-          "claim.payment_preferences[0].account_details",
+          "claim.payment_preference",
           // TODO (CP-1247): Show previous leaves related questions
           "claim.temp.has_previous_leaves",
         ].some((ignoredFieldName) => field.includes(ignoredFieldName));
