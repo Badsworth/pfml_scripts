@@ -1,6 +1,8 @@
 #
 # Utility functions to support custom validation handlers on connexion
 #
+import traceback
+
 import connexion.apps.flask_app
 import pydantic
 from connexion.exceptions import BadRequestProblem, ExtraParameterProblem, ProblemException
@@ -66,6 +68,23 @@ def http_exception_handler(http_exception: HTTPException) -> Response:
     ).to_api_response()
 
 
+def internal_server_error_handler(error: InternalServerError) -> Response:
+    # Use the original exception if it exists.
+    #
+    # Ignore the mypy type error because it hasn't caught up to werkzeug 1.0.0.
+    #
+    # see: https://github.com/python/typeshed/pull/4210
+    #
+    exception = error.original_exception or error  # type: ignore
+    stacktrace = "".join(traceback.TracebackException.from_exception(exception).format())
+
+    logger.error(
+        str(exception), extras={"error.class": type(error).__name__, "exc_text": stacktrace}
+    )
+
+    return http_exception_handler(error)
+
+
 def add_error_handlers_to_app(connexion_app):
     connexion_app.add_error_handler(ValidationException, validation_request_handler)
     connexion_app.add_error_handler(BadRequestProblem, connexion_400_handler)
@@ -74,7 +93,7 @@ def add_error_handlers_to_app(connexion_app):
     connexion_app.add_error_handler(NotFound, http_exception_handler)
     connexion_app.add_error_handler(Forbidden, http_exception_handler)
     connexion_app.add_error_handler(Unauthorized, http_exception_handler)
-    connexion_app.add_error_handler(InternalServerError, http_exception_handler)
+    connexion_app.add_error_handler(InternalServerError, internal_server_error_handler)
     connexion_app.add_error_handler(pydantic.ValidationError, handle_pydantic_validation_error)
 
 
