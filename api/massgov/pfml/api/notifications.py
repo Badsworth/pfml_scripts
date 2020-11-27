@@ -5,10 +5,14 @@ import connexion
 import massgov.pfml.api.app as app
 import massgov.pfml.api.util.response as response_util
 import massgov.pfml.util.datetime as datetime_util
+import massgov.pfml.util.logging
 from massgov.pfml.api.authorization.flask import CREATE, ensure
 from massgov.pfml.api.models.notifications.requests import NotificationRequest
 from massgov.pfml.api.services.service_now_actions import send_notification_to_service_now
 from massgov.pfml.db.models.applications import Notification
+from massgov.pfml.db.models.employees import Claim, Employer
+
+logger = massgov.pfml.util.logging.get_logger(__name__)
 
 
 def notifications_post():
@@ -22,8 +26,8 @@ def notifications_post():
     # Send the request to Service Now
     send_notification_to_service_now(notification_request)
 
-    # Persist the notification to the DB
     with app.db_session() as db_session:
+        # Persist the notification to the DB
         notification = Notification()
 
         now = datetime_util.utcnow()
@@ -33,6 +37,34 @@ def notifications_post():
         notification.request_json = json.dumps(body)  # type: ignore
 
         db_session.add(notification)
+
+        # Find or create an associated claim
+        claim = (
+            db_session.query(Claim)
+            .filter(Claim.fineos_absence_id == notification_request.absence_case_id)
+            .one_or_none()
+        )
+
+        if claim is None:
+            employer = (
+                db_session.query(Employer)
+                .filter(Employer.employer_fein == notification_request.fein.replace("-", ""))
+                .one_or_none()
+            )
+
+            if employer is not None:
+                new_claim = Claim(
+                    employer_id=employer.employer_id,
+                    fineos_absence_id=notification_request.absence_case_id,
+                )
+
+                db_session.add(new_claim)
+                db_session.commit()
+            else:
+                logger.error(
+                    "Failed to lookup the following FEIN to add Claim record on Notification POST request",
+                    extra={"FEIN": notification_request.fein},
+                )
 
     return response_util.success_response(
         message="Successfully started notification process.", status_code=201, data={}

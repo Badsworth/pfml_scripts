@@ -1,13 +1,17 @@
 import copy
 import json
 
+import pytest
+
 import tests.api
 from massgov.pfml.db.models.applications import Notification
+from massgov.pfml.db.models.employees import Claim
+from massgov.pfml.db.models.factories import EmployerFactory
 
 leave_admin_body = {
     "absence_case_id": "NTN-111-ABS-01",
     "document_type": "Approval Notice",
-    "fein": "00-0000000",
+    "fein": "71-6779225",
     "organization_name": "Wayne Enterprises",
     "trigger": "claim.approved",
     "source": "Self-Service",
@@ -43,7 +47,12 @@ claimant_body = {
 }
 
 
-def test_notifications_post_leave_admin(client, test_db_session, fineos_user_token):
+@pytest.fixture
+def employer():
+    return EmployerFactory.create(employer_fein="716779225")
+
+
+def test_notifications_post_leave_admin(client, test_db_session, fineos_user_token, employer):
     response = client.post(
         "/v1/notifications",
         headers={"Authorization": f"Bearer {fineos_user_token}"},
@@ -57,6 +66,16 @@ def test_notifications_post_leave_admin(client, test_db_session, fineos_user_tok
     assert notification.updated_at
     request_json = json.loads(notification.request_json)
     assert request_json == leave_admin_body
+
+    associated_claim = (
+        test_db_session.query(Claim)
+        .filter(Claim.fineos_absence_id == leave_admin_body["absence_case_id"])
+        .one_or_none()
+    )
+
+    assert associated_claim is not None
+    assert associated_claim.employer_id is not None
+    assert associated_claim.fineos_absence_id == "NTN-111-ABS-01"
 
 
 def test_notifications_post_leave_admin_no_document_type(
