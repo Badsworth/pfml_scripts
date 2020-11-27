@@ -30,7 +30,7 @@ module "tasks" {
   fineos_aws_iam_role_arn         = "arn:aws:iam::666444232783:role/somdev-IAMRoles-CustomerAccountAccessRole-BF05IBJSG74B"
   fineos_aws_iam_role_external_id = "12345"
 
-  fineos_eligibility_feed_output_directory_path = "s3://fin-somdev-data-import/DT2/absence-eligibility/upload"
+  fineos_eligibility_feed_output_directory_path = "s3://fin-somdev-data-import/DT2"
 
   logging_level = "massgov.pfml.fineos.fineos_client=DEBUG"
 }

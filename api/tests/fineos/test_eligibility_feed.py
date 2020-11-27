@@ -427,8 +427,8 @@ def test_process_all_employers_simple(
 ):
     WagesAndContributionsFactory.create()
 
-    batch_output_dir = tmp_path / "batch1"
-    batch_output_dir.mkdir()
+    batch_output_dir = tmp_path / "absence-eligibility" / "upload"
+    batch_output_dir.mkdir(parents=True)
 
     process_results = call_process_all_employers(monkeypatch, tmp_path)
 
@@ -505,8 +505,8 @@ def test_process_all_employers_for_single_employee_different_employers(
     # wages_for_single_employee_different_employers
     WagesAndContributionsFactory.create_batch(size=5, employee=EmployeeFactory.create())
 
-    batch_output_dir = tmp_path / "batch1"
-    batch_output_dir.mkdir()
+    batch_output_dir = tmp_path / "absence-eligibility" / "upload"
+    batch_output_dir.mkdir(parents=True)
 
     process_results = call_process_all_employers(monkeypatch, tmp_path)
 
@@ -527,8 +527,8 @@ def test_process_all_employers_for_single_employer_different_employees(
     # wages_for_single_employer_different_employees
     WagesAndContributionsFactory.create_batch(size=5, employer=EmployerFactory.create())
 
-    batch_output_dir = tmp_path / "batch1"
-    batch_output_dir.mkdir()
+    batch_output_dir = tmp_path / "absence-eligibility" / "upload"
+    batch_output_dir.mkdir(parents=True)
 
     process_results = call_process_all_employers(monkeypatch, tmp_path)
 
@@ -551,8 +551,8 @@ def test_process_all_employers_for_multiple_wages_for_single_employee_employer_p
         size=5, employee=EmployeeFactory.create(), employer=EmployerFactory.create()
     )
 
-    batch_output_dir = tmp_path / "batch1"
-    batch_output_dir.mkdir()
+    batch_output_dir = tmp_path / "absence-eligibility" / "upload"
+    batch_output_dir.mkdir(parents=True)
 
     process_results = call_process_all_employers(monkeypatch, tmp_path)
 
@@ -582,8 +582,8 @@ def test_process_all_employers_skips_nonexistent_employer(
     employer = EmployerFactory.create()
     WagesAndContributionsFactory.create_batch(size=5, employer=employer)
 
-    batch_output_dir = tmp_path / "batch1"
-    batch_output_dir.mkdir()
+    batch_output_dir = tmp_path / "absence-eligibility" / "upload"
+    batch_output_dir.mkdir(parents=True)
 
     process_results = call_process_all_employers(monkeypatch, tmp_path)
 
@@ -813,43 +813,43 @@ def test_open_and_write_to_eligibility_file_delete_on_exception_on_create(
 
 def test_determine_bundle_path():
     total = 500
-    assert ef.determine_bundle_path("foo", 0, total) == "foo/batch1"
-    assert ef.determine_bundle_path("foo", 1, total) == "foo/batch1"
+    assert ef.determine_bundle_path("foo", 0, total) == "foo/absence-eligibility/upload"
+    assert ef.determine_bundle_path("foo", 1, total) == "foo/absence-eligibility/upload"
     with pytest.raises(ValueError):
-        assert ef.determine_bundle_path("foo", 501, total) == "foo/batch1"
+        assert ef.determine_bundle_path("foo", 501, total) == "foo/absence-eligibility/upload"
 
     total = 12000
-    assert ef.determine_bundle_path("foo", 0, total) == "foo/batch1"
-    assert ef.determine_bundle_path("foo", 1, total) == "foo/batch1"
-    assert ef.determine_bundle_path("foo", 1000, total) == "foo/batch2"
-    assert ef.determine_bundle_path("foo", 2000, total) == "foo/batch3"
-    assert ef.determine_bundle_path("foo", 3000, total) == "foo/batch4"
-    assert ef.determine_bundle_path("foo", 4000, total) == "foo/batch5"
-    assert ef.determine_bundle_path("foo", 5000, total) == "foo/batch6"
-    assert ef.determine_bundle_path("foo", 6000, total) == "foo/batch7"
-    assert ef.determine_bundle_path("foo", 7000, total) == "foo/batch8"
-    assert ef.determine_bundle_path("foo", 8000, total) == "foo/batch9"
-    assert ef.determine_bundle_path("foo", 9000, total) == "foo/batch10"
-    assert ef.determine_bundle_path("foo", 10000, total) == "foo/batch11"
-    assert ef.determine_bundle_path("foo", 11000, total) == "foo/batch12"
-    assert ef.determine_bundle_path("foo", 11999, total) == "foo/batch12"
+    assert ef.determine_bundle_path("foo", 0, total) == "foo/absence-eligibility/upload"
+    assert ef.determine_bundle_path("foo", 1, total) == "foo/absence-eligibility/upload"
+    assert ef.determine_bundle_path("foo", 1000, total) == "foo/absence-eligibility2/upload"
+    assert ef.determine_bundle_path("foo", 2000, total) == "foo/absence-eligibility3/upload"
+    assert ef.determine_bundle_path("foo", 3000, total) == "foo/absence-eligibility4/upload"
+    assert ef.determine_bundle_path("foo", 4000, total) == "foo/absence-eligibility5/upload"
+    assert ef.determine_bundle_path("foo", 5000, total) == "foo/absence-eligibility6/upload"
+    assert ef.determine_bundle_path("foo", 6000, total) == "foo/absence-eligibility7/upload"
+    assert ef.determine_bundle_path("foo", 7000, total) == "foo/absence-eligibility8/upload"
+    assert ef.determine_bundle_path("foo", 8000, total) == "foo/absence-eligibility9/upload"
+    assert ef.determine_bundle_path("foo", 9000, total) == "foo/absence-eligibility10/upload"
+    assert ef.determine_bundle_path("foo", 10000, total) == "foo/absence-eligibility11/upload"
+    assert ef.determine_bundle_path("foo", 11000, total) == "foo/absence-eligibility12/upload"
+    assert ef.determine_bundle_path("foo", 11999, total) == "foo/absence-eligibility12/upload"
 
     total = 250000
-    assert ef.determine_bundle_path("foo", 0, total) == "foo/batch1"
-    assert ef.determine_bundle_path("foo", 1, total) == "foo/batch1"
-    assert ef.determine_bundle_path("foo", 999, total) == "foo/batch1"
-    assert ef.determine_bundle_path("foo", 1000, total) == "foo/batch2"
-    assert ef.determine_bundle_path("foo", 1001, total) == "foo/batch2"
-    assert ef.determine_bundle_path("foo", 23636, total) == "foo/batch2"
-    assert ef.determine_bundle_path("foo", 23637, total) == "foo/batch3"
-    assert ef.determine_bundle_path("foo", 46273, total) == "foo/batch3"
-    assert ef.determine_bundle_path("foo", 46274, total) == "foo/batch4"
-    assert ef.determine_bundle_path("foo", 68911, total) == "foo/batch5"
-    assert ef.determine_bundle_path("foo", 91548, total) == "foo/batch6"
-    assert ef.determine_bundle_path("foo", 114185, total) == "foo/batch7"
-    assert ef.determine_bundle_path("foo", 136822, total) == "foo/batch8"
-    assert ef.determine_bundle_path("foo", 159459, total) == "foo/batch9"
-    assert ef.determine_bundle_path("foo", 182096, total) == "foo/batch10"
-    assert ef.determine_bundle_path("foo", 204733, total) == "foo/batch11"
-    assert ef.determine_bundle_path("foo", 227370, total) == "foo/batch12"
-    assert ef.determine_bundle_path("foo", 249999, total) == "foo/batch12"
+    assert ef.determine_bundle_path("foo", 0, total) == "foo/absence-eligibility/upload"
+    assert ef.determine_bundle_path("foo", 1, total) == "foo/absence-eligibility/upload"
+    assert ef.determine_bundle_path("foo", 999, total) == "foo/absence-eligibility/upload"
+    assert ef.determine_bundle_path("foo", 1000, total) == "foo/absence-eligibility2/upload"
+    assert ef.determine_bundle_path("foo", 1001, total) == "foo/absence-eligibility2/upload"
+    assert ef.determine_bundle_path("foo", 23636, total) == "foo/absence-eligibility2/upload"
+    assert ef.determine_bundle_path("foo", 23637, total) == "foo/absence-eligibility3/upload"
+    assert ef.determine_bundle_path("foo", 46273, total) == "foo/absence-eligibility3/upload"
+    assert ef.determine_bundle_path("foo", 46274, total) == "foo/absence-eligibility4/upload"
+    assert ef.determine_bundle_path("foo", 68911, total) == "foo/absence-eligibility5/upload"
+    assert ef.determine_bundle_path("foo", 91548, total) == "foo/absence-eligibility6/upload"
+    assert ef.determine_bundle_path("foo", 114185, total) == "foo/absence-eligibility7/upload"
+    assert ef.determine_bundle_path("foo", 136822, total) == "foo/absence-eligibility8/upload"
+    assert ef.determine_bundle_path("foo", 159459, total) == "foo/absence-eligibility9/upload"
+    assert ef.determine_bundle_path("foo", 182096, total) == "foo/absence-eligibility10/upload"
+    assert ef.determine_bundle_path("foo", 204733, total) == "foo/absence-eligibility11/upload"
+    assert ef.determine_bundle_path("foo", 227370, total) == "foo/absence-eligibility12/upload"
+    assert ef.determine_bundle_path("foo", 249999, total) == "foo/absence-eligibility12/upload"

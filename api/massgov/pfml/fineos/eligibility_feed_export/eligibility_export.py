@@ -60,7 +60,6 @@ def main_with_return():
     logger.info("Starting FINEOS eligibility feed export run")
 
     config = eligibility_feed.EligibilityFeedExportConfig()
-    output_transport_params = None
 
     with db.session_scope(make_db_session(), close=True) as db_session:
         report_log_entry = massgov.pfml.util.batch.log.create_log_entry(
@@ -68,19 +67,23 @@ def main_with_return():
         )
 
     if config.mode is eligibility_feed.EligibilityFeedExportMode.UPDATES:
-        # Note that the IAM role for the Eligibility Feed Export Lambda/ECS Task
-        # does not have access to any S3 bucket in the PFML account by default. So
-        # in order to test the functionality by writing to a non-FINEOS S3 location,
-        # the IAM role needs updated for the test as well.
-        if eligibility_feed.is_fineos_output_location(config.output_directory_path):
-            session = make_fineos_boto_session(config)
-            output_transport_params = dict(session=session)
+        raise Exception("Eligibility Feed generation in 'updates' mode is currently broken.")
 
-        fineos_client = make_fineos_client()
-        with db.session_scope(make_db_session(), close=True) as db_session:
-            process_result = eligibility_feed.process_employee_updates(
-                db_session, fineos_client, config.output_directory_path, output_transport_params
-            )
+        # output_transport_params = None
+        #
+        # # Note that the IAM role for the Eligibility Feed Export Lambda/ECS Task
+        # # does not have access to any S3 bucket in the PFML account by default. So
+        # # in order to test the functionality by writing to a non-FINEOS S3 location,
+        # # the IAM role needs updated for the test as well.
+        # if eligibility_feed.is_fineos_output_location(config.output_directory_path):
+        #     session = make_fineos_boto_session(config)
+        #     output_transport_params = dict(session=session)
+
+        # fineos_client = make_fineos_client()
+        # with db.session_scope(make_db_session(), close=True) as db_session:
+        #     process_result = eligibility_feed.process_employee_updates(
+        #         db_session, fineos_client, config.output_directory_path, output_transport_params
+        #     )
     else:
         process_result = eligibility_feed.process_all_employers(
             make_db_session, make_fineos_client, make_fineos_boto_session, config

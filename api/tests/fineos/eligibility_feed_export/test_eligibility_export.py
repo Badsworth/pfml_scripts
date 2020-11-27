@@ -80,8 +80,8 @@ def test_main_success_non_fineos_location(
 
     WagesAndContributionsFactory.create()
 
-    batch_output_dir = tmp_path / "batch1"
-    batch_output_dir.mkdir()
+    batch_output_dir = tmp_path / "absence-eligibility" / "upload"
+    batch_output_dir.mkdir(parents=True)
 
     monkeypatch.setenv("OUTPUT_DIRECTORY_PATH", str(tmp_path))
     monkeypatch.setenv(

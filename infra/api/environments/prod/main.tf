@@ -77,5 +77,5 @@ module "api" {
   fineos_aws_iam_role_arn         = "arn:aws:iam::133945341851:role/somprod-IAMRoles-CustomerAccountAccessRole-83KBPT56FTQP"
   fineos_aws_iam_role_external_id = "8jFBtjr4UA@"
 
-  fineos_eligibility_feed_output_directory_path = "s3://fin-somprod-data-import/PRD/absence-eligibility/upload"
+  fineos_eligibility_feed_output_directory_path = "s3://fin-somprod-data-import/PRD"
 }

@@ -589,7 +589,10 @@ def determine_bundle_path(
         # total_bundles limit
         bundle_num = max(min(bundle_num_calculated, 12), 2)
 
-    return f"{output_dir_path}/batch{bundle_num}"
+    # the first bundle directory is not numbered
+    bundle_num_path_part = "" if bundle_num == 1 else str(bundle_num)
+
+    return f"{output_dir_path}/absence-eligibility{bundle_num_path_part}/upload"
 
 
 def open_and_write_to_eligibility_file(
