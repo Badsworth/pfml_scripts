@@ -42,8 +42,8 @@ resource "aws_cloudwatch_event_target" "trigger_formstack_import_lambda_daily_at
 }
 
 resource "aws_cloudwatch_event_rule" "formstack_lambda_daily_11pm_et" {
-  name        = "formstack-lambda-daily-at-11-pm"
-  description = "Fires Formstack Lambda once daily at 11pm US EDT/3am UTC"
+  name        = "${var.environment_name}-formstack-lambda-daily-at-11-pm"
+  description = "Fires the ${var.environment_name} Formstack Import lambda daily at 11pm US EDT/3am UTC"
   # The time of day can only be specified in UTC and will need to be updated when daylight savings changes occur, if the 2300 US ET is desired to be consistent.
   schedule_expression = "cron(0 03 * * ? *)"
   tags = merge(module.constants.common_tags, {
