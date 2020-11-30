@@ -30,7 +30,8 @@ resource "aws_lambda_permission" "allow_cloudwatch" {
 }
 
 resource "aws_cloudwatch_log_group" "lambda_cloudfront_handler" {
-  name = "/aws/lambda/${aws_lambda_function.cloudfront_handler.function_name}"
+  // Edge functions have a us-east-1 region prefix.
+  name = "/aws/lambda/us-east-1.${aws_lambda_function.cloudfront_handler.function_name}"
 
   tags = merge(module.constants.common_tags, {
     environment = module.constants.environment_tags[var.environment_name]
