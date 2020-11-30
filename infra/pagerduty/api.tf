@@ -114,9 +114,9 @@ resource "pagerduty_schedule" "mass_pfml_api_delivery" {
 # High Priority:
 #
 #  Primary Engineer
-#  --> no acknowledgement after 3 min --> Primary Engineer (re-ping)
-#  --> no acknowledgement after 3 min --> Secondary Engineer
-#  --> no acknowledgement after 5 min --> Delivery Manager
+#  --> no acknowledgement after 5 min --> Primary Engineer (re-ping)
+#  --> no acknowledgement after 5 min --> Secondary Engineer
+#  --> no acknowledgement after 10 min --> Delivery Manager
 #  --> no acknowledgement after 10 min --> repeat
 #
 resource "pagerduty_escalation_policy" "mass_pfml_api_high_priority" {
@@ -141,7 +141,7 @@ resource "pagerduty_escalation_policy" "mass_pfml_api_high_priority" {
   }
 
   rule {
-    escalation_delay_in_minutes = 5
+    escalation_delay_in_minutes = 10
     target {
       type = "schedule_reference"
       id   = pagerduty_schedule.mass_pfml_api_secondary.id
