@@ -1312,8 +1312,10 @@ const pages = {
       "Your Employer Identification Number is a <ein-link>9-digit number</ein-link> assigned by the Internal Revenue Service. It is listed on tax returns and your payroll department should have this information.",
     einLabel: "Employer ID number (EIN)",
     haveAnAccount: "Have an account? <log-in-link>Log in</log-in-link>",
-    lead:
-      "<p>Welcome! Please take a few minutes to create an account for your company so you can manage leave for your team. Massachusetts workers will be able to apply for family leave for bonding with a child starting on December 15, 2020, with more benefits available in 2021.</p><p>If you manage leave for multiple companies, please create an account for each Employer ID number (EIN). You’ll be able to add more companies to an existing account in the future.</p>",
+    lead_background:
+      "Welcome! Please take a few minutes to create an account for your company so you can manage leave for your team. Massachusetts workers will be able to apply for family leave for bonding with a child starting on December 15, 2020, with more benefits available in 2021.",
+    lead_multipleCompanies:
+      "If you manage leave for multiple companies, please create an account for each Employer ID number (EIN). You’ll be able to add more companies to an existing account in the future.",
     nextStep: "We'll send you a 6-digit code to verify your email address.",
     passwordHint: "$t(shared.passwordHint)",
     passwordLabel: "$t(shared.passwordLabel)",

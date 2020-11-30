@@ -44,7 +44,10 @@ export const CreateAccount = (props) => {
   return (
     <form className="usa-form" onSubmit={handleSubmit}>
       <Title>{t("pages.employersAuthCreateAccount.title")}</Title>
-      <Lead>{t("pages.employersAuthCreateAccount.lead")}</Lead>
+      <Lead>{t("pages.employersAuthCreateAccount.lead_background")}</Lead>
+      <Lead>
+        {t("pages.employersAuthCreateAccount.lead_multipleCompanies")}
+      </Lead>
       <Details label={t("pages.employersAuthCreateAccount.detailsLabel")}>
         <Trans
           i18nKey="pages.employersAuthCreateAccount.detailsList"
