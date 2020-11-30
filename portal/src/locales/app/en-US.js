@@ -398,7 +398,7 @@ const shared = {
   filesUploaded: "Number of files uploaded",
   hoursLabel: "Hours",
   instructionsFollowUpDate:
-    "Review and respond by: <strong>{{date}}</strong> at 11:59 p.m. Eastern time",
+    "<strong>Review and respond by:</strong> {{date}} at 11:59 p.m. Eastern time",
   leavePeriodMedicalAlert:
     "You will need a completed medical leave certification form for this section.",
   leaveReasonActiveDutyFamily: "Active duty",

@@ -6,7 +6,7 @@ import BaseApi, {
 } from "./BaseApi";
 import Document from "../models/Document";
 import DocumentCollection from "../models/DocumentCollection";
-import EmployerClaim from "../models/Claim";
+import EmployerClaim from "../models/EmployerClaim";
 import routes from "../routes";
 
 /**
