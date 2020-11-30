@@ -57,7 +57,7 @@ def get_fiscal_month(date_value: datetime) -> int:
 
 def get_event_type_id(leave_type: str) -> str:
     # TODO: The type on the leave type object here will probably be changed when we have the models.
-    if leave_type == "Bonding Leave":
+    if leave_type == "Bonding Leave" or leave_type == "Military Leave":
         return "7246"
     if leave_type == "Medical Leave":
         return "7247"
@@ -67,16 +67,28 @@ def get_event_type_id(leave_type: str) -> str:
 
 def get_rfed_doc_id(leave_type: str) -> str:
     # TODO: The type on the leave type object here will probably be changed when we have the models.
-    if leave_type == "Bonding Leave":
-        return "PFML0000000070030632"
+    # Note: the RFED_DOC_ID changes at the beginning of each fiscal year
+    if leave_type == "Bonding Leave" or leave_type == "Military Leave":
+        return "PFMLFAMFY2170030632"
     if leave_type == "Medical Leave":
-        return "PFML1000000070030632"
+        return "PFMLMEDFY2170030632"
 
     raise Exception(f"Leave type {leave_type} not found")
 
 
+def get_disbursement_format(payment_method: str) -> str:
+    # ACH is coded as "EFT" in MMARS
+    if payment_method == "ACH":
+        return "EFT"
+    # Check is coded as "REGW" in MMARS
+    if payment_method == "Check":
+        return "REGW"
+
+    raise Exception(f"Payment method {payment_method} not found")
+
+
 def get_doc_id() -> str:
-    return "INTF" + "".join(random.choices(string.ascii_letters + string.digits, k=16))
+    return "INTFDFML" + "".join(random.choices(string.ascii_letters + string.digits, k=12))
 
 
 # Note, doc_data is going to be replaced with an actual db model object(s?).
@@ -94,9 +106,10 @@ def build_individual_gax_document(
     vendor_customer_code = doc_data["vendor_customer_code"]
     vendor_address_id = doc_data["vendor_address_id"]
     monetary_amount = doc_data["amount_monamt"]
-    claim_number = doc_data["claim_number"]
+    absence_case_id = doc_data["absence_case_id"]
     start_date = doc_data["paymentstartp"]
     end_date = doc_data["paymentendper"]
+    disbursement_format = get_disbursement_format(doc_data["payment_method"])
 
     doc_id = get_doc_id()
     event_type_id = get_event_type_id(leave_type)
@@ -105,7 +118,7 @@ def build_individual_gax_document(
     payment_date_str = payment_date.strftime("%Y-%m-%d")
     start_date_str = start_date.strftime("%Y-%m-%d")
     end_date_str = end_date.strftime("%Y-%m-%d")
-    vendor_invoice_number = f"{claim_number}_{payment_date_str}"
+    vendor_invoice_number = f"{absence_case_id}_{payment_date_str}"
 
     # Create the root of the document
     ams_document_attributes = {"DOC_ID": doc_id}
@@ -138,6 +151,7 @@ def build_individual_gax_document(
         "DOC_ID": doc_id,
         "VEND_CUST_CD": vendor_customer_code,
         "AD_ID": vendor_address_id,
+        "DFLT_DISB_FRMT": disbursement_format,
     }
     abs_doc_vend_elements.update(abs_doc_vend_attributes.copy())
     abs_doc_vend_elements.update(generic_attributes.copy())

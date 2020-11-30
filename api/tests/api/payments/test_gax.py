@@ -43,6 +43,17 @@ def test_get_fiscal_month():
     assert gax.get_fiscal_month(datetime(2020, 12, 1)) == 6
 
 
+def test_get_disbursement_format():
+    assert gax.get_disbursement_format("ACH") == "EFT"
+    assert gax.get_disbursement_format("Check") == "REGW"
+
+
+def test_gax_doc_id():
+    doc_id = gax.get_doc_id()
+    assert doc_id[:8] == "INTFDFML"
+    assert len(doc_id) == 20
+
+
 def test_build_individual_gax_document():
     data = {
         "leave_type": "Bonding Leave",
@@ -50,9 +61,10 @@ def test_build_individual_gax_document():
         "vendor_customer_code": "abc1234",
         "vendor_address_id": "xyz789",
         "amount_monamt": "1200.00",
-        "claim_number": "NTN-1234",
+        "absence_case_id": "NTN-1234-ABS-01",
         "paymentstartp": datetime(2020, 8, 1),
         "paymentendper": datetime(2020, 12, 1),
+        "payment_method": "ACH",
     }
     document = gax.build_individual_gax_document(Document(), data)
 
@@ -87,7 +99,12 @@ def test_build_individual_gax_document():
     assert abs_doc_vend.tagName == "ABS_DOC_VEND"
     validate_attributes(abs_doc_vend, {"AMSDataObject": "Y"})
 
-    expected_vend_subelements = {"DOC_ID": doc_id, "VEND_CUST_CD": "abc1234", "AD_ID": "xyz789"}
+    expected_vend_subelements = {
+        "DOC_ID": doc_id,
+        "VEND_CUST_CD": "abc1234",
+        "AD_ID": "xyz789",
+        "DFLT_DISB_FRMT": "EFT",
+    }
     expected_vend_subelements.update(gax.generic_attributes.copy())
     expected_vend_subelements.update(gax.abs_doc_vend_attributes.copy())
     validate_elements(abs_doc_vend, expected_vend_subelements)
@@ -104,9 +121,9 @@ def test_build_individual_gax_document():
         "BFY": "2021",
         "FY_DC": "2021",
         "PER_DC": "1",
-        "VEND_INV_NO": "NTN-1234_2020-07-01",
+        "VEND_INV_NO": "NTN-1234-ABS-01_2020-07-01",
         "VEND_INV_DT": "2020-07-01",
-        "RFED_DOC_ID": "PFML0000000070030632",
+        "RFED_DOC_ID": "PFMLFAMFY2170030632",
         "SVC_FRM_DT": "2020-08-01",
         "SVC_TO_DT": "2020-12-01",
     }
@@ -124,9 +141,10 @@ def test_build_gax_files():
             "vendor_customer_code": "abc1234",
             "vendor_address_id": "xyz789",
             "amount_monamt": "1200.00",
-            "claim_number": "NTN-1234",
+            "absence_case_id": "NTN-1234-ABS-01",
             "paymentstartp": datetime(2020, 8, 1),
             "paymentendper": datetime(2020, 12, 1),
+            "payment_method": "ACH",
         },
         {
             "leave_type": "Medical Leave",
@@ -134,9 +152,10 @@ def test_build_gax_files():
             "vendor_customer_code": "12345678",
             "vendor_address_id": "00000000",
             "amount_monamt": "1300.00",
-            "claim_number": "NTN-1234",
+            "absence_case_id": "NTN-1234-ABS-01",
             "paymentstartp": datetime(2020, 2, 15),
             "paymentendper": datetime(2020, 4, 15),
+            "payment_method": "Check",
         },
     ]
 
