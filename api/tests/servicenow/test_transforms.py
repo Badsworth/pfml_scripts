@@ -128,7 +128,7 @@ class TestTransformNotificationRequest:
         assert result.u_trigger == "claim.approved"
         assert (
             result.u_link
-            == "http://paidleave.mass.gov/employers/claims/review/?absence_id=NTN-110-ABS-01"
+            == "https://paidleave.mass.gov/employers/applications/new-application/?absence_id=NTN-110-ABS-01"
         )
         assert result.u_recipients == [
             '{"first_name": "Jane", "last_name": "Doe", "id": "11", "email": "j.a.doe@gmail.com"}'
@@ -153,7 +153,7 @@ class TestTransformNotificationRequest:
         assert result.u_trigger == "claim.approved"
         assert (
             result.u_link
-            == "http://paidleave.mass.gov/employers/claims/review/?absence_id=NTN-110-ABS-01"
+            == "https://paidleave.mass.gov/employers/applications/new-application/?absence_id=NTN-110-ABS-01"
         )
         assert result.u_recipients == [
             '{"first_name": "Jane", "last_name": "Doe", "id": "11", "email": "j.a.doe@gmail.com"}'
@@ -178,7 +178,7 @@ class TestTransformNotificationRequest:
         assert result.u_trigger == "claim.approved"
         assert (
             result.u_link
-            == "http://paidleave.mass.gov/employers/claims/review/?absence_id=NTN-110-ABS-01"
+            == "https://paidleave.mass.gov/employers/applications/new-application/?absence_id=NTN-110-ABS-01"
         )
         assert result.u_recipients == [
             '{"first_name": "Jane", "last_name": "Doe", "id": "11", "email": "j.a.doe@gmail.com"}'
@@ -197,7 +197,7 @@ class TestTransformNotificationRequest:
         assert result.u_source == "portal"
         assert result.u_user_type == "claimant"
         assert result.u_trigger == "claim.approved"
-        assert result.u_link == "http://paidleave.mass.gov/applications"
+        assert result.u_link == "https://paidleave.mass.gov/applications"
         assert result.u_recipients == [
             '{"first_name": "Jane", "last_name": "Doe", "id": "1234", "email": "j.a.doe@gmail.com"}'
         ]
@@ -221,7 +221,7 @@ class TestTransformNotificationRequest:
         assert result.u_trigger == "claim.approved"
         assert (
             result.u_link
-            == "http://paidleave.mass.gov/employers/claims/review/?absence_id=NTN-110-ABS-01"
+            == "https://paidleave.mass.gov/employers/applications/new-application/?absence_id=NTN-110-ABS-01"
         )
         assert result.u_recipients == [
             '{"first_name": "Ihave", "last_name": "Three Names", "id": "11", "email": "ihavethreenames@gmail.com"}',
