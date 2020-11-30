@@ -66,24 +66,15 @@ def main_with_return():
             db_session, "Eligibility export", config.mode.name.lower()
         )
 
+    # Note that the IAM role for the Eligibility Feed Export Lambda/ECS Task
+    # does not have access to any S3 bucket in the PFML account by default. So
+    # in order to test the functionality by writing to a non-FINEOS S3 location,
+    # the IAM role needs updated for the test as well.
+
     if config.mode is eligibility_feed.EligibilityFeedExportMode.UPDATES:
-        raise Exception("Eligibility Feed generation in 'updates' mode is currently broken.")
-
-        # output_transport_params = None
-        #
-        # # Note that the IAM role for the Eligibility Feed Export Lambda/ECS Task
-        # # does not have access to any S3 bucket in the PFML account by default. So
-        # # in order to test the functionality by writing to a non-FINEOS S3 location,
-        # # the IAM role needs updated for the test as well.
-        # if eligibility_feed.is_fineos_output_location(config.output_directory_path):
-        #     session = make_fineos_boto_session(config)
-        #     output_transport_params = dict(session=session)
-
-        # fineos_client = make_fineos_client()
-        # with db.session_scope(make_db_session(), close=True) as db_session:
-        #     process_result = eligibility_feed.process_employee_updates(
-        #         db_session, fineos_client, config.output_directory_path, output_transport_params
-        #     )
+        process_result = eligibility_feed.process_employee_updates(
+            make_db_session, make_fineos_client, make_fineos_boto_session, config
+        )
     else:
         process_result = eligibility_feed.process_all_employers(
             make_db_session, make_fineos_client, make_fineos_boto_session, config

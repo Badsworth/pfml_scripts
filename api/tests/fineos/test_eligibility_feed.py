@@ -630,6 +630,16 @@ def test_get_latest_employer_for_updates():
     assert latest_employer_for_employee[0].maxdate == date(2020, 9, 30)
 
 
+def call_process_employee_updates(monkeypatch, output_path):
+    monkeypatch.setenv("OUTPUT_DIRECTORY_PATH", str(output_path))
+    monkeypatch.setenv("FINEOS_AWS_IAM_ROLE_ARN", "foo")
+    monkeypatch.setenv("FINEOS_AWS_IAM_ROLE_EXTERNAL_ID", "bar")
+
+    return ef.process_all_employers(
+        make_test_db, make_fineos_client, make_s3_session, ef.EligibilityFeedExportConfig()
+    )
+
+
 def test_process_employee_updates_simple(
     test_db_session, tmp_path, initialize_factories_session, create_triggers
 ):
