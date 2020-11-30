@@ -62,8 +62,7 @@ def notifications_post():
                 db_session.commit()
             else:
                 logger.error(
-                    "Failed to lookup the following FEIN to add Claim record on Notification POST request",
-                    extra={"FEIN": notification_request.fein},
+                    "Failed to lookup the specified FEIN to add Claim record on Notification POST request"
                 )
 
     return response_util.success_response(
