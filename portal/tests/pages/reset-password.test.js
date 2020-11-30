@@ -23,6 +23,8 @@ describe("ResetPassword", () => {
   }
 
   beforeEach(() => {
+    process.env.featureFlags = { claimantShowAuth: true };
+
     testHook(() => {
       appLogic = useAppLogic();
     });
@@ -205,6 +207,22 @@ describe("ResetPassword", () => {
         code,
         password
       );
+    });
+  });
+
+  describe("when claimantShowAuth flag is disabled", () => {
+    let wrapper;
+
+    beforeEach(() => {
+      process.env.featureFlags = { claimantShowAuth: false };
+      wrapper = render({ query: { "user-not-found": "true" } });
+    });
+
+    it("render EIN field by default", () => {
+      expect(wrapper.find("InputChoice[name='isEmployer']").exists()).toBe(
+        false
+      );
+      expect(wrapper.find("ConditionalContent").prop("visible")).toBe(true);
     });
   });
 });

@@ -9,6 +9,7 @@ import Link from "next/link";
 import PropTypes from "prop-types";
 import Title from "../components/Title";
 import get from "lodash/get";
+import { isFeatureEnabled } from "../services/featureFlags";
 import routes from "../routes";
 import useFormState from "../hooks/useFormState";
 import useFunctionalInputProps from "../hooks/useFunctionalInputProps";
@@ -28,7 +29,8 @@ export const VerifyAccount = (props) => {
     code: "",
     username: createAccountUsername,
     ein: employerIdNumber,
-    isEmployer: !!employerIdNumber,
+    // TODO (CP-1407): Remove feature flag condition once claimants can also have accounts
+    isEmployer: !isFeatureEnabled("claimantShowAuth") || !!employerIdNumber,
   });
   const [codeResent, setCodeResent] = useState(false);
 
@@ -36,6 +38,9 @@ export const VerifyAccount = (props) => {
   // which we need for verifying their account
   const showEmailField = !createAccountUsername;
   const showEinFields = !employerIdNumber && createAccountFlow !== "claimant";
+  // Temporarily hide the EIN toggle when only Employers can have accounts
+  // TODO (CP-1407): Remove this condition once claimants can also have accounts
+  const showEinToggle = isFeatureEnabled("claimantShowAuth");
 
   const handleSubmit = useThrottledHandler(async (event) => {
     event.preventDefault();
@@ -104,13 +109,16 @@ export const VerifyAccount = (props) => {
 
         {showEinFields && (
           <React.Fragment>
-            <div className="margin-top-4">
-              <InputChoice
-                label={t("pages.authVerifyAccount.employerAccountLabel")}
-                {...getFunctionalInputProps("isEmployer")}
-                value="true"
-              />
-            </div>
+            {/* TODO (CP-1407): Remove showEinToggle condition once claimants can also have accounts */}
+            {showEinToggle && (
+              <div className="margin-top-4">
+                <InputChoice
+                  label={t("pages.authVerifyAccount.employerAccountLabel")}
+                  {...getFunctionalInputProps("isEmployer")}
+                  value="true"
+                />
+              </div>
+            )}
             <ConditionalContent
               fieldNamesClearedWhenHidden={["ein"]}
               getField={getField}
