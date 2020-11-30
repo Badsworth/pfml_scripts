@@ -39,7 +39,8 @@
     "FINEOS_USERNAME": "CONTENT",
     "COGNITO_POOL": "us-east-1_0jv6SlemT",
     "COGNITO_CLIENTID": "1ps8bs9s5ns4f6qamj6qn6qd3",
-    "TESTMAIL_NAMESPACE": "gqzap"
+    "TESTMAIL_NAMESPACE": "gqzap",
+    "EMPLOYEES_FILE": "./employees/performance.json"
   },
   "local": {
     "PORTAL_BASEURL": "http://localhost:3000",
