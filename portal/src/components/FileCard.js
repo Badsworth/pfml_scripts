@@ -4,6 +4,7 @@ import PropTypes from "prop-types";
 import React from "react";
 import Thumbnail from "./Thumbnail";
 import classnames from "classnames";
+import formatDateRange from "../utils/formatDateRange";
 import { useTranslation } from "../locales/i18n";
 
 /**
@@ -39,7 +40,7 @@ const FileCard = (props) => {
           <React.Fragment>
             <div className={filenameClasses}>
               {t("components.fileCard.uploadDate", {
-                date: new Date(document.created_at).toLocaleDateString(),
+                date: formatDateRange(document.created_at),
               })}
             </div>
             <div className="text-italic">

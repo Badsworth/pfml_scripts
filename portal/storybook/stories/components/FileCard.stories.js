@@ -1,3 +1,4 @@
+import Document, { DocumentType } from "src/models/Document";
 import React, { useEffect, useState } from "react";
 import FileCard from "src/components/FileCard";
 
@@ -22,6 +23,22 @@ export const PdfFileCard = () => {
     console.error(err.message);
     return "Unable to render this story because the File constructor failed. This usually happens when you're using Internet Explorer which doesn't support the File constructor. You can see the FileCardList component to select your own files to view FileCards with.";
   }
+};
+
+export const DocumentCard = () => {
+  return (
+    <FileCard
+      heading="Document 1"
+      document={
+        new Document({
+          application_id: "mock-application-id",
+          created_at: "2021-01-01",
+          document_type: DocumentType.identityVerification,
+          fineos_document_id: "mock-document-4",
+        })
+      }
+    />
+  );
 };
 
 export const ImageFileCard = () => {

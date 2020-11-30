@@ -554,13 +554,13 @@ describe("FileCardList", () => {
         document_type: DocumentType.medicalCertification,
         application_id: mock_application_id,
         fineos_document_id: "testId1",
-        created_at: "10/10/2020",
+        created_at: "2020-11-26",
       });
       newDoc2 = new Document({
         document_type: DocumentType.medicalCertification,
         application_id: mock_application_id,
         fineos_document_id: "testId2",
-        created_at: "10/10/2020",
+        created_at: "2020-11-26",
       });
     });
 

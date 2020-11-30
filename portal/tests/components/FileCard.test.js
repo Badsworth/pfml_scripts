@@ -30,7 +30,7 @@ describe("FileCard", () => {
 
   describe("when the FileCard receives a Document", () => {
     const props = {
-      document: new Document({ created_at: "10/10/2020" }),
+      document: new Document({ created_at: "2020-11-26" }),
       heading: "Document 1",
     };
     it("renders a FileCard component without a Button", () => {
@@ -42,7 +42,7 @@ describe("FileCard", () => {
     it("displays the date uploaded", () => {
       const wrapper = render(props);
       expect(wrapper.find(".c-file-card__name").text()).toBe(
-        "Date of upload: 10/10/2020"
+        "Date of upload: 11/26/2020"
       );
     });
   });

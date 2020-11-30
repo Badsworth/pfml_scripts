@@ -18,7 +18,7 @@ exports[`FileCard when the FileCard receives a Document renders a FileCard compo
     <div
       className="c-file-card__name padding-bottom-1 margin-bottom-1 margin-top-0 border-bottom-2px border-base-lighter font-heading-xs"
     >
-      Date of upload: 10/10/2020
+      Date of upload: 11/26/2020
     </div>
     <div
       className="text-italic"
