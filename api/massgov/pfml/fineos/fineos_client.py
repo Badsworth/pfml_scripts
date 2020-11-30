@@ -687,7 +687,7 @@ class FINEOSClient(client.AbstractFINEOSClient):
         self._integration_services_api(
             "POST",
             "rest/externalUserProvisioningService/createOrUpdateEmployerViewpointUser",
-            "CONTENT",
+            self.wscomposer_user_id,
             data=xml_body,
         )
 
