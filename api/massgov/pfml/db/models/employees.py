@@ -514,7 +514,6 @@ class Country(LookupTable):
     model = LkCountry
     column_names = ("country_id", "country_description")
 
-    USA = LkCountry(1, "USA")
     ABW = LkCountry(2, "ABW")
     AFG = LkCountry(3, "AFG")
     AGO = LkCountry(4, "AGO")
