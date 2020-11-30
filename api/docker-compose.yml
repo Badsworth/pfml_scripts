@@ -60,6 +60,7 @@ services:
       - DB_NESSUS_PASSWORD=nessussecret123
       - CORS_ORIGINS=http://localhost:3000
       - COGNITO_USER_POOL_KEYS_URL=file:///app/jwks.json
+      - DASHBOARD_PASSWORD=secret123
       - LOGGING_LEVEL=massgov.pfml.fineos.fineos_client=DEBUG
       - ENABLE_EMPLOYEE_ENDPOINTS=1
       - ENABLE_EMPLOYER_ENDPOINTS=1

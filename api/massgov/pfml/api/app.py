@@ -11,15 +11,15 @@ import connexion
 import connexion.mock
 import flask
 import flask_cors
-from flask import Flask, current_app, g, render_template
+from flask import Flask, current_app, g
 
 import massgov.pfml.api.authorization.flask
 import massgov.pfml.api.authorization.rules
+import massgov.pfml.api.dashboards
 import massgov.pfml.util.logging
 import massgov.pfml.util.logging.access
 from massgov.pfml import db
 from massgov.pfml.api.config import AppConfig, get_config
-from massgov.pfml.api.dashboards import import_jobs_get
 from massgov.pfml.api.validation import add_error_handlers_to_app, get_custom_validator_map
 from massgov.pfml.db.models.employees import User
 
@@ -97,10 +97,7 @@ def create_app(config: Optional[AppConfig] = None) -> connexion.FlaskApp:
         )
         return response
 
-    @app.route("/dashboards", methods=["GET"])
-    def serve_dashboard():
-        entries = import_jobs_get()
-        return render_template("dashboards.html", data=entries)
+    massgov.pfml.api.dashboards.init(app, config.dashboard_password)
 
     return app
 

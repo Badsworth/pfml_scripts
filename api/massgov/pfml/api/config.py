@@ -29,6 +29,7 @@ class AppConfig:
     rmv_check_behavior: RMVCheckBehavior
     rmv_check_mock_success: bool
     enable_application_fraud_check: bool
+    dashboard_password: str
 
 
 def get_config() -> AppConfig:
@@ -47,4 +48,5 @@ def get_config() -> AppConfig:
         # "1" always passes id proofing, "0" always fails id proofing
         rmv_check_mock_success=os.environ.get("RMV_CHECK_MOCK_SUCCESS", "1") == "1",
         enable_application_fraud_check=os.environ.get("ENABLE_APPLICATION_FRAUD_CHECK", "0") == "1",
+        dashboard_password=os.environ.get("DASHBOARD_PASSWORD", ""),
     )

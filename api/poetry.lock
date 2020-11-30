@@ -577,6 +577,17 @@ Flask = ">=0.9"
 Six = "*"
 
 [[package]]
+category = "main"
+description = "Basic and Digest HTTP authentication for Flask routes"
+name = "flask-httpauth"
+optional = false
+python-versions = "*"
+version = "4.2.0"
+
+[package.dependencies]
+Flask = "*"
+
+[[package]]
 category = "dev"
 description = "Let your Python tests travel through time"
 name = "freezegun"
@@ -1754,7 +1765,7 @@ docs = ["sphinx", "jaraco.packaging (>=3.2)", "rst.linker (>=1.9)"]
 testing = ["jaraco.itertools", "func-timeout"]
 
 [metadata]
-content-hash = "c25da2408db5f2ec3522c3a3ee00ac3c2c5204fecbac2db27d7704f0c045f806"
+content-hash = "0965672dd16b33f633d70c7b259f0def6dfb1f217dc220fa8e12b2aa4a4d391c"
 python-versions = "^3.8"
 
 [metadata.files]
@@ -2013,6 +2024,10 @@ flask-bouncer = [
 flask-cors = [
     {file = "Flask-Cors-3.0.9.tar.gz", hash = "sha256:6bcfc100288c5d1bcb1dbb854babd59beee622ffd321e444b05f24d6d58466b8"},
     {file = "Flask_Cors-3.0.9-py2.py3-none-any.whl", hash = "sha256:cee4480aaee421ed029eaa788f4049e3e26d15b5affb6a880dade6bafad38324"},
+]
+flask-httpauth = [
+    {file = "Flask-HTTPAuth-4.2.0.tar.gz", hash = "sha256:8c7e49e53ce7dc14e66fe39b9334e4b7ceb8d0b99a6ba1c3562bb528ef9da84a"},
+    {file = "Flask_HTTPAuth-4.2.0-py2.py3-none-any.whl", hash = "sha256:3fcedb99a03985915335a38c35bfee6765cbd66d7f46440fa3b42ae94a90fac7"},
 ]
 freezegun = [
     {file = "freezegun-0.3.15-py2.py3-none-any.whl", hash = "sha256:82c757a05b7c7ca3e176bfebd7d6779fd9139c7cb4ef969c38a28d74deef89b2"},
