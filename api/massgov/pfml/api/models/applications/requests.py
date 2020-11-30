@@ -88,3 +88,4 @@ class DocumentRequestBody(PydanticBaseModel):
     document_type: DocumentType
     name: Optional[str]
     description: Optional[str]
+    mark_evidence_received: Optional[bool]

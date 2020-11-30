@@ -298,6 +298,17 @@ class MockFINEOSClient(client.AbstractFINEOSClient):
         content_type: str,
         description: str,
     ) -> models.customer_api.Document:
+        _capture_call(
+            "upload_document",
+            user_id,
+            absence_id=absence_id,
+            document_type=document_type,
+            file_content=file_content,
+            file_name=file_name,
+            content_type=content_type,
+            description=description,
+        )
+
         document = mock_document(absence_id, document_type, file_name, description)
         return models.customer_api.Document.parse_obj(document)
 

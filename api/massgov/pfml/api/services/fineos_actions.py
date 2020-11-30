@@ -168,6 +168,12 @@ def complete_intake(application: Application, db_session: massgov.pfml.db.Sessio
     return True
 
 
+DOCUMENT_TYPES_ASSOCIATED_WITH_EVIDENCE = (
+    DocumentType.IDENTIFICATION_PROOF.document_type_id,
+    DocumentType.STATE_MANAGED_PAID_LEAVE_CONFIRMATION.document_type_id,
+)
+
+
 def mark_documents_as_received(
     application: Application, db_session: massgov.pfml.db.Session
 ) -> bool:
@@ -180,15 +186,10 @@ def mark_documents_as_received(
         fineos = massgov.pfml.fineos.create_client()
         fineos_user_id = get_or_register_employee_fineos_user_id(fineos, application, db_session)
 
-        doc_types = (
-            DocumentType.IDENTIFICATION_PROOF.document_type_id,
-            DocumentType.STATE_MANAGED_PAID_LEAVE_CONFIRMATION.document_type_id,
-        )
-
         documents = (
             db_session.query(Document)
             .filter(Document.application_id == application.application_id)
-            .filter(Document.document_type_id.in_(doc_types))
+            .filter(Document.document_type_id.in_(DOCUMENT_TYPES_ASSOCIATED_WITH_EVIDENCE))
         )
         for document in documents:
             if document.fineos_id is None:
@@ -206,6 +207,29 @@ def mark_documents_as_received(
         return False
 
     return True
+
+
+def mark_single_document_as_received(
+    application: Application, document: Document, db_session: massgov.pfml.db.Session
+) -> None:
+    if document.document_type_id not in DOCUMENT_TYPES_ASSOCIATED_WITH_EVIDENCE:
+        return None
+
+    if application.fineos_absence_id is None:
+        raise ValueError("application.fineos_absence_id is None")
+
+    if document.fineos_id is None:
+        raise ValueError("document.fineos_id is None")
+
+    try:
+        fineos = massgov.pfml.fineos.create_client()
+        fineos_user_id = get_or_register_employee_fineos_user_id(fineos, application, db_session)
+        fineos.mark_document_as_received(
+            fineos_user_id, str(application.fineos_absence_id), str(document.fineos_id)
+        )
+    except Exception:
+        logger.exception("FINEOS API error")
+        raise ValueError("FINEOS API error")
 
 
 def build_customer_model(application):

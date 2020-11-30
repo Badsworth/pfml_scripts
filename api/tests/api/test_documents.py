@@ -1,8 +1,11 @@
 import copy
 import io
 
+import pytest
+
 import massgov.pfml.fineos.mock_client
 from massgov.pfml.api.models.applications.common import ContentType as AllowedContentTypes
+from massgov.pfml.db.models.applications import DocumentType
 from massgov.pfml.db.models.factories import ApplicationFactory
 from massgov.pfml.fineos import fineos_client, models
 
@@ -165,6 +168,60 @@ def test_document_upload_defaults_for_name(
 
     assert response["status_code"] == 200
     assert response["data"]["name"] == "test.png"
+
+
+@pytest.mark.parametrize(
+    "mark_evidence_received_flag,document_type,expected_client_function_calls",
+    (
+        # Expect to make call because flag is set and document type is associated with evidence.
+        (
+            True,
+            DocumentType.IDENTIFICATION_PROOF.document_type_description,
+            ("find_employer", "register_api_user", "upload_document", "mark_document_as_received"),
+        ),
+        # DO NOT expect to make call because flag is set but document type is not associated with evidence.
+        (
+            True,
+            DocumentType.PASSPORT.document_type_description,
+            ("find_employer", "register_api_user", "upload_document"),
+        ),
+        # DO NOT expect to make call because flag is not set.
+        (
+            False,
+            DocumentType.IDENTIFICATION_PROOF.document_type_description,
+            ("find_employer", "register_api_user", "upload_document"),
+        ),
+    ),
+)
+def test_document_upload_and_mark_evidence_received(
+    client,
+    consented_user,
+    consented_user_token,
+    test_db_session,
+    mark_evidence_received_flag,
+    document_type,
+    expected_client_function_calls,
+):
+    form_data = VALID_FORM_DATA
+    form_data["mark_evidence_received"] = mark_evidence_received_flag
+    form_data["document_type"] = document_type
+
+    massgov.pfml.fineos.mock_client.start_capture()
+    response = document_upload_helper(
+        client=client,
+        user=consented_user,
+        auth_token=consented_user_token,
+        form_data=document_upload_payload_helper(form_data, valid_file()),
+    )
+    assert response["status_code"] == 200
+
+    capture = massgov.pfml.fineos.mock_client.get_capture()
+
+    assert len(capture) == len(expected_client_function_calls)
+
+    for i in range(len(capture)):
+        print(capture[i][0])
+        assert capture[i][0] == expected_client_function_calls[i]
 
 
 def test_documents_get(client, consented_user, consented_user_token, test_db_session):

@@ -25,6 +25,7 @@ from massgov.pfml.api.services.fineos_actions import (
     download_document,
     get_documents,
     mark_documents_as_received,
+    mark_single_document_as_received,
     send_to_fineos,
     upload_document,
 )
@@ -283,6 +284,12 @@ def document_upload(application_id, body, file):
         # Check if user can edit application
         ensure(EDIT, existing_application)
 
+        # Check if user can create a document associated with this application before making any API calls or
+        # persisting the document to the database.
+        document = Document()
+        document.user_id = existing_application.user_id
+        ensure(CREATE, document)
+
         # Parse the document details from the form body
         document_details: DocumentRequestBody = DocumentRequestBody.parse_obj(body)
 
@@ -331,8 +338,6 @@ def document_upload(application_id, body, file):
             ).to_api_response()
 
         # Insert a document metadata row
-        document = Document()
-        document.user_id = existing_application.user_id
         document.application_id = existing_application.application_id
         now = datetime_util.utcnow()
         document.created_at = now
@@ -345,10 +350,24 @@ def document_upload(application_id, body, file):
         document.name = file_name
         document.description = file_description
 
-        # Check if user can create this document, then persistence
-        ensure(CREATE, document)
-
         db_session.add(document)
+
+        try:
+            if document_details.mark_evidence_received:
+                mark_single_document_as_received(existing_application, document, db_session)
+        except ValueError as ve:
+            # Do not save the document in the database if we failed to mark the associated evidence as received in
+            # FINEOS because we want the claimant to have the opportunity to try again. This behaviour will create
+            # mutliple documents in FINEOS but will also ensure that the evidence can eventually be marked as received.
+            db_session.rollback()
+
+            return response_util.error_response(
+                status_code=BadRequest,
+                message=str(ve),
+                errors=[response_util.custom_issue("fineos_client", str(ve))],
+                data=document_details.dict(),
+            ).to_api_response()
+
         db_session.commit()
 
         # Return response
