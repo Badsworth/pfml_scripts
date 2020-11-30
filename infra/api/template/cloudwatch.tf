@@ -52,7 +52,7 @@ resource "aws_cloudwatch_event_rule" "formstack_lambda_daily_11pm_et" {
 }
 
 resource "aws_lambda_permission" "allow_cloudwatch_to_call_formstack_import" {
-  statement_id  = "AllowExecutionFromCloudWatch"
+  statement_id  = "Allow${title(var.environment_name)}ExecutionFromCloudWatch"
   action        = "lambda:InvokeFunction"
   function_name = aws_lambda_function.formstack_import.arn
   principal     = "events.amazonaws.com"
