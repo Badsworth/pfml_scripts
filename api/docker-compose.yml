@@ -72,9 +72,9 @@ services:
       - RMV_CHECK_MOCK_SUCCESS=1
       # Enable these variables to use a real FINEOS API instead of a mock:
       # - FINEOS_CLIENT_CUSTOMER_API_URL=https://idt-api.masspfml.fineos.com/customerapi/
-      # - FINEOS_CLIENT_WSCOMPOSER_API_URL=https://idt-claims-webapp.masspfml.fineos.com/wscomposer/
-      # - FINEOS_CLIENT_GROUP_CLIENT_API_URL=https://dt2-api.masspfml.fineos.com/groupclientapi/
-      # - FINEOS_CLIENT_INTEGRATION_SERVICES_API_URL=https://dt2-api.masspfml.fineos.com/integration-services/
+      # - FINEOS_CLIENT_WSCOMPOSER_API_URL=https://idt-api.masspfml.fineos.com/integration-services/wscomposer/
+      # - FINEOS_CLIENT_GROUP_CLIENT_API_URL=https://idt-api.masspfml.fineos.com/groupclientapi/
+      # - FINEOS_CLIENT_INTEGRATION_SERVICES_API_URL=https://idt-api.masspfml.fineos.com/integration-services/
       # - FINEOS_CLIENT_OAUTH2_URL=https://idt-api.masspfml.fineos.com/oauth2/token
       # - FINEOS_CLIENT_OAUTH2_CLIENT_ID=...
       # - FINEOS_CLIENT_OAUTH2_CLIENT_SECRET=...
