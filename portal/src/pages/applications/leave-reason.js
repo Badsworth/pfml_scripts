@@ -151,9 +151,18 @@ export const LeaveReason = (props) => {
                 "pages.claimsLeaveReason.bondingTypeMultipleBirthsDetailsLabel"
               )}
             >
-              {t(
-                "pages.claimsLeaveReason.bondingTypeMultipleBirthsDetailsSummary"
-              )}
+              <Trans
+                i18nKey="pages.claimsLeaveReason.bondingTypeMultipleBirthsDetailsSummary"
+                components={{
+                  "multiple-births-link": (
+                    <a
+                      target="_blank"
+                      rel="noopener"
+                      href={routes.external.massgov.multipleBirths}
+                    />
+                  ),
+                }}
+              />
             </Details>
           }
           choices={[
