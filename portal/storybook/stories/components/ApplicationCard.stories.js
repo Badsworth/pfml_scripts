@@ -24,8 +24,8 @@ export default {
           "Submitted",
           "Submitted + Denial notice",
           "Completed",
-          "Bonding Newborn Completed With No Cert",
-          "Bonding Adoption Completed With No Cert",
+          "Future Newborn + No cert",
+          "Future Adoption + No cert",
           "Approved",
           "Denied",
         ],
@@ -46,9 +46,13 @@ export const Story = ({ claim, documents, ...args }) => {
   if (claim === "Empty") {
     claimAttrs = new MockClaimBuilder().create();
   } else if (claim === "Hybrid leave") {
-    claimAttrs = new MockClaimBuilder().continuous().reducedSchedule().create();
+    claimAttrs = new MockClaimBuilder()
+      .employed()
+      .continuous()
+      .reducedSchedule()
+      .create();
   } else if (claim === "Intermittent leave") {
-    claimAttrs = new MockClaimBuilder().intermittent().create();
+    claimAttrs = new MockClaimBuilder().employed().intermittent().create();
   } else if (claim === "Submitted") {
     claimAttrs = new MockClaimBuilder().submitted().create();
   } else if (claim === "Submitted + Denial notice") {
@@ -62,10 +66,11 @@ export const Story = ({ claim, documents, ...args }) => {
     ];
   } else if (claim === "Completed") {
     claimAttrs = new MockClaimBuilder().completed().create();
-  } else if (claim === "Bonding Newborn Completed With No Cert") {
+  } else if (claim === "Future Newborn + No cert") {
     claimAttrs = new MockClaimBuilder()
       .completed()
       .bondingBirthLeaveReason()
+      .hasFutureChild()
       .create();
     attachedDocuments = [
       new Document({
@@ -74,10 +79,11 @@ export const Story = ({ claim, documents, ...args }) => {
         fineos_document_id: "a",
       }),
     ];
-  } else if (claim === "Bonding Adoption Completed With No Cert") {
+  } else if (claim === "Future Adoption + No cert") {
     claimAttrs = new MockClaimBuilder()
       .completed()
       .bondingAdoptionLeaveReason()
+      .hasFutureChild()
       .create();
     attachedDocuments = [
       new Document({

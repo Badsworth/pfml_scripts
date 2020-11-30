@@ -1617,6 +1617,7 @@ const components = {
       "When did the employee tell you about their expected leave?",
   },
   applicationCard: {
+    actionsHeading: "Actions",
     bondingLeaveDocsRequired_adopt_foster:
       "Once your child arrives, submit proof of placement so that we can make a decision.",
     bondingLeaveDocsRequired_newborn:
@@ -1638,7 +1639,14 @@ const components = {
     noticeName_denialNotice: "$t(shared.noticeName_denialNotice)",
     noticeName_requestForInfoNotice:
       "$t(shared.noticeName_requestForInfoNotice)",
+    noticesFallback:
+      "Once we’ve made a decision, you can download the decision notice here. You’ll also get an email notification.",
     noticesHeading: "View your notices",
+    reductionsInstruction_1:
+      "Any benefits from your employer that you’ll be using in addition to Massachusetts paid leave (for example, maternity leave, or paid sick time)",
+    reductionsInstruction_2: "Income from any other sources during your leave",
+    reductionsInstructionsIntro:
+      "If you’ll receive <reductions-overview-link>other benefits or income</reductions-overview-link>, call the Contact Center at $t(shared.contactCenterPhoneNumber). This includes:",
     resumeClaimButton: "Complete your application",
     uploadDocsButton: "Upload additional documents",
   },

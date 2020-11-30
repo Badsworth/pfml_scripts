@@ -5,7 +5,7 @@ import ButtonLink from "../components/ButtonLink";
 import Heading from "../components/Heading";
 import PropTypes from "prop-types";
 import React from "react";
-import classnames from "classnames";
+import { Trans } from "react-i18next";
 import download from "downloadjs";
 import findDocumentsByTypes from "../utils/findDocumentsByTypes";
 import findKeyByValue from "../utils/findKeyByValue";
@@ -13,41 +13,31 @@ import formatDateRange from "../utils/formatDateRange";
 import get from "lodash/get";
 import hasDocumentsLoadError from "../utils/hasDocumentsLoadError";
 import routeWithParams from "../utils/routeWithParams";
+import routes from "../routes";
 import { useTranslation } from "../locales/i18n";
 import withClaimDocuments from "../hoc/withClaimDocuments";
 
 /**
- * Preview of an existing benefits Application
+ * Main entry point for an existing benefits Application, allowing
+ * claimants to continue an in progress application, view what
+ * they've submitted, view notices and instructions, or upload
+ * additional docs.
  */
 export const ApplicationCard = (props) => {
-  const { appLogic, claim, number } = props;
+  const { claim, number } = props;
   const { t } = useTranslation();
-  const { appErrors } = appLogic;
 
-  const hasLoadingDocumentsError = hasDocumentsLoadError(
-    appErrors,
-    claim.application_id
-  );
   const leaveReason = get(claim, "leave_details.reason");
-
-  const metadataHeadingProps = {
-    className: "margin-top-0 margin-bottom-05 text-base-dark",
-    level: "4",
-    size: "6",
-  };
-  const metadataValueProps = {
-    className: "margin-top-0 margin-bottom-2 font-body-2xs text-medium",
-  };
 
   return (
     <article className="maxw-mobile-lg border border-base-lighter margin-bottom-3">
-      <div className="bg-base-lightest padding-3">
+      <header className="bg-base-lightest padding-3">
         {claim.fineos_absence_id ? (
-          <Heading className="margin-bottom-1 margin-top-0" level="2">
+          <Heading className="margin-bottom-1" level="2">
             {claim.fineos_absence_id}
           </Heading>
         ) : (
-          <Heading className="margin-bottom-05 margin-top-0" level="2">
+          <Heading className="margin-bottom-05" level="2">
             {t("components.applicationCard.heading", { number })}
           </Heading>
         )}
@@ -59,180 +49,188 @@ export const ApplicationCard = (props) => {
             })}
           </Heading>
         )}
-      </div>
+      </header>
 
       <div className="padding-3">
-        {claim.employer_fein && (
-          <React.Fragment>
-            <Heading {...metadataHeadingProps}>
-              {t("components.applicationCard.feinHeading")}
-            </Heading>
-            <p {...metadataValueProps}>{claim.employer_fein}</p>
-          </React.Fragment>
-        )}
-
-        {claim.isContinuous && (
-          <React.Fragment>
-            <Heading {...metadataHeadingProps}>
-              {t("components.applicationCard.leavePeriodLabel_continuous")}
-            </Heading>
-            <p {...metadataValueProps}>
-              {formatDateRange(
-                get(
-                  claim,
-                  "leave_details.continuous_leave_periods[0].start_date"
-                ),
-                get(claim, "leave_details.continuous_leave_periods[0].end_date")
-              )}
-            </p>
-          </React.Fragment>
-        )}
-
-        {claim.isReducedSchedule && (
-          <React.Fragment>
-            <Heading {...metadataHeadingProps}>
-              {t("components.applicationCard.leavePeriodLabel_reduced")}
-            </Heading>
-            <p {...metadataValueProps}>
-              {formatDateRange(
-                get(
-                  claim,
-                  "leave_details.reduced_schedule_leave_periods[0].start_date"
-                ),
-                get(
-                  claim,
-                  "leave_details.reduced_schedule_leave_periods[0].end_date"
-                )
-              )}
-            </p>
-          </React.Fragment>
-        )}
-
-        {claim.isIntermittent && (
-          <React.Fragment>
-            <Heading {...metadataHeadingProps}>
-              {t("components.applicationCard.leavePeriodLabel_intermittent")}
-            </Heading>
-            <p {...metadataValueProps}>
-              {formatDateRange(
-                get(
-                  claim,
-                  "leave_details.intermittent_leave_periods[0].start_date"
-                ),
-                get(
-                  claim,
-                  "leave_details.intermittent_leave_periods[0].end_date"
-                )
-              )}
-            </p>
-          </React.Fragment>
-        )}
-
-        {hasLoadingDocumentsError && (
-          <Alert noIcon>
-            {t("components.applicationCard.documentsRequestError")}
-          </Alert>
-        )}
-
-        <DocumentsInfo {...props} />
-
-        {!claim.isCompleted && (
-          <ButtonLink
-            className="display-block margin-top-2"
-            href={routeWithParams("applications.checklist", {
-              claim_id: claim.application_id,
-            })}
-          >
-            {t("components.applicationCard.resumeClaimButton")}
-          </ButtonLink>
-        )}
+        <ApplicationDetails {...props} />
+        <LegalNotices {...props} />
+        <ApplicationActions {...props} />
       </div>
     </article>
   );
 };
 
+ApplicationCard.propTypes = {
+  appLogic: PropTypes.shape({
+    appErrors: PropTypes.object.isRequired,
+    documents: PropTypes.shape({
+      download: PropTypes.func.isRequired,
+    }),
+  }).isRequired,
+  claim: PropTypes.instanceOf(Claim).isRequired,
+  documents: PropTypes.arrayOf(PropTypes.instanceOf(Document)),
+  /**
+   * Cards are displayed in a list. What position is this card?
+   */
+  number: PropTypes.number.isRequired,
+};
+
 /**
- * Legal notices and functionality related to uploading additional documents
+ * Details about the application, entered by the Claimant,
+ * like Employer EIN and leave periods
  */
-function DocumentsInfo(props) {
+function ApplicationDetails(props) {
   const { t } = useTranslation();
-  const { claim, documents } = props;
+  const { claim } = props;
 
-  const hasFutureChildDate = get(claim, "leave_details.has_future_child_date");
-  const leaveReasonQualifier = get(claim, "leave_details.reason_qualifier");
+  const headingProps = {
+    className: "margin-top-0 margin-bottom-05 text-base-dark",
+    level: "4",
+    size: "6",
+  };
+  const valueProps = {
+    className: "margin-top-0 margin-bottom-2 font-body-2xs text-medium",
+  };
 
-  const certificationDocs = findDocumentsByTypes(
-    documents,
-    // This enum is used because for MVP all certs will have the same doc type
-    [DocumentType.medicalCertification]
+  // If an EIN isn't present yet, then this entire component is going to
+  // be empty, so we don't want to include a border
+  const containerClassName = claim.employer_fein
+    ? "border-bottom border-base-lighter margin-bottom-2"
+    : undefined;
+
+  return (
+    <div className={containerClassName}>
+      {claim.employer_fein && (
+        <React.Fragment>
+          <Heading {...headingProps}>
+            {t("components.applicationCard.feinHeading")}
+          </Heading>
+          <p {...valueProps}>{claim.employer_fein}</p>
+        </React.Fragment>
+      )}
+
+      {claim.isContinuous && (
+        <React.Fragment>
+          <Heading {...headingProps}>
+            {t("components.applicationCard.leavePeriodLabel_continuous")}
+          </Heading>
+          <p {...valueProps}>
+            {formatDateRange(
+              get(
+                claim,
+                "leave_details.continuous_leave_periods[0].start_date"
+              ),
+              get(claim, "leave_details.continuous_leave_periods[0].end_date")
+            )}
+          </p>
+        </React.Fragment>
+      )}
+
+      {claim.isReducedSchedule && (
+        <React.Fragment>
+          <Heading {...headingProps}>
+            {t("components.applicationCard.leavePeriodLabel_reduced")}
+          </Heading>
+          <p {...valueProps}>
+            {formatDateRange(
+              get(
+                claim,
+                "leave_details.reduced_schedule_leave_periods[0].start_date"
+              ),
+              get(
+                claim,
+                "leave_details.reduced_schedule_leave_periods[0].end_date"
+              )
+            )}
+          </p>
+        </React.Fragment>
+      )}
+
+      {claim.isIntermittent && (
+        <React.Fragment>
+          <Heading {...headingProps}>
+            {t("components.applicationCard.leavePeriodLabel_intermittent")}
+          </Heading>
+          <p {...valueProps}>
+            {formatDateRange(
+              get(
+                claim,
+                "leave_details.intermittent_leave_periods[0].start_date"
+              ),
+              get(claim, "leave_details.intermittent_leave_periods[0].end_date")
+            )}
+          </p>
+        </React.Fragment>
+      )}
+    </div>
   );
+}
+
+ApplicationDetails.propTypes = {
+  claim: PropTypes.instanceOf(Claim).isRequired,
+};
+
+/**
+ * Legal notices list and content
+ */
+function LegalNotices(props) {
+  const { t } = useTranslation();
+  const { appLogic, claim, documents } = props;
+
+  const hasLoadingDocumentsError = hasDocumentsLoadError(
+    appLogic.appErrors,
+    claim.application_id
+  );
+
   const legalNotices = findDocumentsByTypes(documents, [
     DocumentType.approvalNotice,
     DocumentType.denialNotice,
     DocumentType.requestForInfoNotice,
   ]);
 
-  const bondingContentContext = {
-    [ReasonQualifier.adoption]: "adopt_foster",
-    [ReasonQualifier.fosterCare]: "adopt_foster",
-    [ReasonQualifier.newBorn]: "newborn",
-  };
+  // If a claim doesn't have a corresponding FINEOS ID, then
+  // it's not yet in a state where it could have a legal notice
+  return !claim.fineos_absence_id ? null : (
+    <div
+      className="border-bottom border-base-lighter padding-bottom-2 margin-bottom-2"
+      data-test="legal-notices"
+    >
+      <Heading level="3" weight="normal">
+        {t("components.applicationCard.noticesHeading")}
+      </Heading>
 
-  const showBondingLeaveDocRequirement =
-    hasFutureChildDate && certificationDocs.length === 0;
-  const showLegalNotices = legalNotices.length > 0;
-  const showUploadButton = claim.isCompleted || showLegalNotices;
-  const completeAppButtonIsShowing = !claim.isCompleted;
-
-  const containerClasses = classnames({
-    // Don't render a border if we only have the Button to render,
-    // which matches how the card is presented for non-Completed claims
-    "border-top border-base-lighter padding-top-2":
-      showLegalNotices || showBondingLeaveDocRequirement,
-  });
-
-  return (
-    <div className={containerClasses}>
-      {showLegalNotices && (
-        <React.Fragment>
-          <Heading level="3" weight="normal">
-            {t("components.applicationCard.noticesHeading")}
-          </Heading>
-
-          <ul className="usa-list margin-top-1">
-            {legalNotices.map((notice) => (
-              <LegalNoticeListItem
-                key={notice.fineos_document_id}
-                document={notice}
-                {...props}
-              />
-            ))}
-          </ul>
-        </React.Fragment>
+      {hasLoadingDocumentsError && (
+        <Alert noIcon>
+          {t("components.applicationCard.documentsRequestError")}
+        </Alert>
       )}
 
-      {showBondingLeaveDocRequirement && (
-        <p>
-          {t("components.applicationCard.bondingLeaveDocsRequired", {
-            context: bondingContentContext[leaveReasonQualifier],
-          })}
-        </p>
+      {legalNotices.length === 0 && (
+        <p>{t("components.applicationCard.noticesFallback")}</p>
       )}
 
-      {showUploadButton && (
-        <ButtonLink
-          className="display-block"
-          href={routeWithParams("applications.uploadDocsOptions", {
-            claim_id: claim.application_id,
-          })}
-          variation={completeAppButtonIsShowing ? "outline" : null}
-        >
-          {t("components.applicationCard.uploadDocsButton")}
-        </ButtonLink>
+      {legalNotices.length > 0 && (
+        <ul className="usa-list">
+          {legalNotices.map((notice) => (
+            <LegalNoticeListItem
+              key={notice.fineos_document_id}
+              document={notice}
+              {...props}
+            />
+          ))}
+        </ul>
       )}
     </div>
   );
 }
+
+LegalNotices.propTypes = {
+  appLogic: PropTypes.shape({
+    appErrors: PropTypes.object.isRequired,
+  }).isRequired,
+  claim: PropTypes.instanceOf(Claim).isRequired,
+  documents: PropTypes.arrayOf(PropTypes.instanceOf(Document)),
+};
 
 /**
  * Link and metadata for a Legal notice
@@ -269,26 +267,6 @@ function LegalNoticeListItem(props) {
   );
 }
 
-ApplicationCard.propTypes = {
-  appLogic: PropTypes.shape({
-    appErrors: PropTypes.object.isRequired,
-    documents: PropTypes.shape({
-      download: PropTypes.func.isRequired,
-    }),
-  }).isRequired,
-  claim: PropTypes.instanceOf(Claim).isRequired,
-  documents: PropTypes.arrayOf(PropTypes.instanceOf(Document)),
-  /**
-   * Cards are displayed in a list. What position is this card?
-   */
-  number: PropTypes.number.isRequired,
-};
-
-DocumentsInfo.propTypes = {
-  claim: PropTypes.instanceOf(Claim).isRequired,
-  documents: PropTypes.arrayOf(PropTypes.instanceOf(Document)),
-};
-
 LegalNoticeListItem.propTypes = {
   appLogic: PropTypes.shape({
     appErrors: PropTypes.object.isRequired,
@@ -297,6 +275,100 @@ LegalNoticeListItem.propTypes = {
     }),
   }).isRequired,
   document: PropTypes.instanceOf(Document),
+};
+
+/**
+ * Actions the user can take or will need to take, like calling for
+ * reductions, uploading docs, or completing their claim.
+ */
+function ApplicationActions(props) {
+  const { t } = useTranslation();
+  const { claim, documents } = props;
+
+  const certificationDocs = findDocumentsByTypes(
+    documents,
+    // This enum is used because for MVP all certs will have the same doc type
+    [DocumentType.medicalCertification]
+  );
+  const hasDenialNotice =
+    findDocumentsByTypes(documents, [DocumentType.denialNotice]).length > 0;
+
+  const hasFutureChildDate = get(claim, "leave_details.has_future_child_date");
+  const leaveReasonQualifier = get(claim, "leave_details.reason_qualifier");
+
+  const bondingContentContext = {
+    [ReasonQualifier.adoption]: "adopt_foster",
+    [ReasonQualifier.fosterCare]: "adopt_foster",
+    [ReasonQualifier.newBorn]: "newborn",
+  };
+
+  const showBondingLeaveDocRequirement =
+    hasFutureChildDate && certificationDocs.length === 0;
+  const showResumeButton = !claim.isCompleted && !hasDenialNotice;
+  const showUploadButton = claim.isCompleted || hasDenialNotice;
+
+  return (
+    <div>
+      <Heading level="3" weight="normal">
+        {t("components.applicationCard.actionsHeading")}
+      </Heading>
+
+      {claim.isCompleted && (
+        <React.Fragment>
+          <Trans
+            i18nKey="components.applicationCard.reductionsInstructionsIntro"
+            components={{
+              "reductions-overview-link": (
+                <a href={routes.external.reductionsOverview} />
+              ),
+            }}
+          />
+
+          <ul className="usa-list">
+            <li>{t("components.applicationCard.reductionsInstruction_1")}</li>
+            <li>{t("components.applicationCard.reductionsInstruction_2")}</li>
+          </ul>
+        </React.Fragment>
+      )}
+
+      {showBondingLeaveDocRequirement && (
+        <p>
+          {t("components.applicationCard.bondingLeaveDocsRequired", {
+            context: bondingContentContext[leaveReasonQualifier],
+          })}
+        </p>
+      )}
+
+      {showUploadButton && (
+        <ButtonLink
+          className="display-block"
+          href={routeWithParams("applications.uploadDocsOptions", {
+            claim_id: claim.application_id,
+          })}
+          variation={showResumeButton ? "outline" : null}
+        >
+          {t("components.applicationCard.uploadDocsButton")}
+        </ButtonLink>
+      )}
+
+      {showResumeButton && (
+        <ButtonLink
+          data-test="resume-button"
+          className="display-block margin-top-2"
+          href={routeWithParams("applications.checklist", {
+            claim_id: claim.application_id,
+          })}
+        >
+          {t("components.applicationCard.resumeClaimButton")}
+        </ButtonLink>
+      )}
+    </div>
+  );
+}
+
+ApplicationActions.propTypes = {
+  claim: PropTypes.instanceOf(Claim).isRequired,
+  documents: PropTypes.arrayOf(PropTypes.instanceOf(Document)),
 };
 
 export default withClaimDocuments(ApplicationCard);

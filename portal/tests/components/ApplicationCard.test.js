@@ -25,43 +25,44 @@ describe("ApplicationCard", () => {
     return shallow(<ApplicationCard claim={claim} number={2} {...props} />);
   };
 
-  it("renders Continuous leave period date range", () => {
-    const wrapper = render(new MockClaimBuilder().continuous().create());
+  it("uses generic text as the main heading", () => {
+    const wrapper = render(new MockClaimBuilder().create());
 
-    const leavePeriodHeading = wrapper
-      .find("Heading")
-      .filterWhere(
-        (heading) => heading.children().text() === "Continuous leave"
-      );
-
-    expect(leavePeriodHeading.exists()).toBe(true);
-    expect(wrapper.html()).toMatch("1/1/2021 – 6/1/2021");
+    expect(wrapper.find("header")).toMatchSnapshot();
   });
 
-  it("renders Reduced Schedule leave period date range", () => {
-    const wrapper = render(new MockClaimBuilder().reducedSchedule().create());
+  it("renders empty div for details section when claim is empty", () => {
+    const wrapper = render(new MockClaimBuilder().create());
 
-    const leavePeriodHeading = wrapper
-      .find("Heading")
-      .filterWhere(
-        (heading) => heading.children().text() === "Reduced leave schedule"
-      );
+    expect(wrapper.find("ApplicationDetails").dive()).toMatchInlineSnapshot(
+      `<div />`
+    );
+  });
 
-    expect(leavePeriodHeading.exists()).toBe(true);
-    expect(wrapper.html()).toMatch("2/1/2021 – 7/1/2021");
+  it("renders EIN", () => {
+    const wrapper = render(new MockClaimBuilder().employed().create());
+
+    expect(wrapper.find("ApplicationDetails").dive()).toMatchSnapshot();
+  });
+
+  it("renders continuous and reduced schedule leave period date ranges", () => {
+    const wrapper = render(
+      new MockClaimBuilder().reducedSchedule().continuous().create()
+    );
+
+    expect(wrapper.find("ApplicationDetails").dive()).toMatchSnapshot();
   });
 
   it("renders Intermittent leave period date range", () => {
     const wrapper = render(new MockClaimBuilder().intermittent().create());
 
-    const leavePeriodHeading = wrapper
-      .find("Heading")
-      .filterWhere(
-        (heading) => heading.children().text() === "Intermittent leave"
-      );
+    expect(wrapper.find("ApplicationDetails").dive()).toMatchSnapshot();
+  });
 
-    expect(leavePeriodHeading.exists()).toBe(true);
-    expect(wrapper.html()).toMatch("2/1/2021 – 7/1/2021");
+  it("does not render legal notices section when claim is not submitted", () => {
+    const wrapper = render(new MockClaimBuilder().create());
+
+    expect(wrapper.find("LegalNotices").dive().isEmptyRender()).toBe(true);
   });
 
   describe("when the claim status is Submitted", () => {
@@ -69,29 +70,44 @@ describe("ApplicationCard", () => {
 
     it("includes a link to complete the claim", () => {
       const wrapper = render(submittedClaim);
+      const actions = wrapper.find("ApplicationActions").dive();
 
-      expect(wrapper.find("ButtonLink")).toMatchSnapshot();
+      expect(actions.find("ButtonLink")).toMatchSnapshot();
     });
 
-    it("uses the Case ID as the main heading", () => {
+    it("uses the Case ID as the main heading and includes leave reason", () => {
       const wrapper = render(submittedClaim);
 
-      expect(wrapper.find("Heading[level='2']").children().text()).toBe(
-        submittedClaim.fineos_absence_id
-      );
+      expect(wrapper.find("header")).toMatchSnapshot();
+    });
+
+    it("renders legal notices text", () => {
+      const wrapper = render(new MockClaimBuilder().completed().create());
+
+      expect(wrapper.find("LegalNotices").dive()).toMatchSnapshot();
     });
   });
 
   describe("when the claim status is Completed", () => {
     it("includes a button to upload additional documents", () => {
       const wrapper = render(new MockClaimBuilder().completed().create());
+      const actions = wrapper.find("ApplicationActions").dive();
 
-      // "Complete application" button no longer exists
-      expect(wrapper.find("ButtonLink")).toHaveLength(0);
+      expect(actions.find("ButtonLink")).toMatchSnapshot();
+    });
 
-      expect(
-        wrapper.find("DocumentsInfo").dive().find("ButtonLink")
-      ).toMatchSnapshot();
+    it("renders instructions about reductions", () => {
+      const wrapper = render(
+        new MockClaimBuilder()
+          .completed()
+          .bondingBirthLeaveReason()
+          .hasFutureChild()
+          .create()
+      );
+      const actions = wrapper.find("ApplicationActions").dive();
+
+      expect(actions.find("Trans").dive()).toMatchSnapshot();
+      expect(actions.find("ul")).toMatchSnapshot();
     });
 
     describe("when it's a bonding claim with no cert doc", () => {
@@ -103,7 +119,9 @@ describe("ApplicationCard", () => {
             .hasFutureChild()
             .create()
         );
-        expect(wrapper.html()).toMatch(
+        const actions = wrapper.find("ApplicationActions").dive();
+
+        expect(actions.html()).toMatch(
           `Once your child is born, submit proof of birth so that we can make a decision.`
         );
       });
@@ -116,14 +134,16 @@ describe("ApplicationCard", () => {
             .hasFutureChild()
             .create()
         );
-        expect(wrapper.html()).toMatch(
+        const actions = wrapper.find("ApplicationActions").dive();
+
+        expect(actions.html()).toMatch(
           `Once your child arrives, submit proof of placement so that we can make a decision.`
         );
       });
     });
   });
 
-  describe("when there are legal notices", () => {
+  describe("when there is a denial notice", () => {
     it("includes a button to upload additional documents", () => {
       const claim = new MockClaimBuilder().submitted().create();
       const documents = [
@@ -136,12 +156,32 @@ describe("ApplicationCard", () => {
       ];
 
       const wrapper = render(claim, { documents });
+      const actions = wrapper.find("ApplicationActions").dive();
 
-      expect(
-        wrapper.find("DocumentsInfo").dive().find("ButtonLink")
-      ).toMatchSnapshot();
+      expect(actions.find("ButtonLink")).toMatchSnapshot();
     });
 
+    it("does not include a link to complete the claim", () => {
+      const claim = new MockClaimBuilder().create();
+      const documents = [
+        new Document({
+          application_id: claim.application_id,
+          created_at: "2021-01-01",
+          document_type: DocumentType.denialNotice,
+          fineos_document_id: "mock-document-4",
+        }),
+      ];
+
+      const wrapper = render(claim, { documents });
+      const actions = wrapper.find("ApplicationActions").dive();
+
+      expect(actions.find({ "data-test": "resume-button" }).exists()).toBe(
+        false
+      );
+    });
+  });
+
+  describe("when there are legal notices", () => {
     it("displays legal notices", () => {
       const claim = new MockClaimBuilder().submitted().create();
       const documents = [
@@ -173,10 +213,9 @@ describe("ApplicationCard", () => {
       ];
 
       const wrapper = render(claim, { documents });
-      const listItems = wrapper
-        .find("DocumentsInfo")
-        .dive()
-        .find("LegalNoticeListItem");
+      const legalNotices = wrapper.find("LegalNotices").dive();
+
+      const listItems = legalNotices.find("LegalNoticeListItem");
 
       expect.assertions(3);
       listItems.forEach((listItem) =>
@@ -197,10 +236,9 @@ describe("ApplicationCard", () => {
         ];
 
         const wrapper = render(claim, { documents });
+        const legalNotices = wrapper.find("LegalNotices").dive();
 
-        wrapper
-          .find("DocumentsInfo")
-          .dive()
+        legalNotices
           .find("LegalNoticeListItem")
           .dive()
           .find("a")
@@ -226,8 +264,8 @@ describe("ApplicationCard", () => {
       ]),
     };
     const wrapper = render(claim, { appLogic });
+    const legalNotices = wrapper.find("LegalNotices").dive();
 
-    expect(wrapper.exists("Alert")).toBe(true);
-    expect(wrapper.find("Alert")).toMatchSnapshot();
+    expect(legalNotices.find("Alert")).toMatchSnapshot();
   });
 });
