@@ -13,6 +13,24 @@ Then("I should be able to find claim in Adjudication", () => {
   cy.get<string>("@claimNumber").then(fineos.visitClaim);
 });
 
+Then("I should be able to find employer page", () => {
+  cy.unstash("employerFEIN").then((employerFEIN) => {
+    if (typeof employerFEIN !== "string") {
+      throw new Error("FEIN must be a string");
+    }
+    fineos.visitEmployer(employerFEIN);
+  });
+});
+
+Then("I should be able to find the POC", () => {
+  cy.unstash("leaveAdminEmail").then((leaveAdminEmail) => {
+    if (typeof leaveAdminEmail !== "string") {
+      throw new Error("Email must be a string");
+    }
+    fineos.confirmPOC(leaveAdminEmail);
+  });
+});
+
 // Initial step to use a previously submitted claim by ID.
 Given("I am viewing claim {string}", (claimId: string) => {
   cy.wrap(claimId).as("claimNumber");

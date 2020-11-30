@@ -13,6 +13,25 @@ export function visitClaim(claimId: string): void {
   assertOnClaimPage();
 }
 
+export function visitEmployer(fein: string): void {
+  fein = fein.replace("-", "");
+  cy.get('a[aria-label="Parties"]').click();
+  cy.get("input[value*='Organisation']").click();
+  cy.contains("td", "Identification Number")
+    .next()
+    .within(($td) => cy.get("input").type(fein));
+
+  cy.get('input[type="submit"][value="Search"]').click();
+  // cy.get('td[title="Adjudication"]').first().click();
+  cy.get('input[value="OK"]').last().click();
+}
+
+export function confirmPOC(email: string): void {
+  cy.get('td[keytipnumber="6"]').contains("Party History").click();
+  cy.wait("@ajaxRender");
+  cy.contains("span", email);
+}
+
 export function commenceIntake(claimId: string): void {
   cy.get('a[aria-label="Cases"]').click();
   cy.get('td[keytipnumber="4"]').contains("Case").click();

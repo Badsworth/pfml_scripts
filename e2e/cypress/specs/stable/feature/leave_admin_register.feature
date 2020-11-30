@@ -7,3 +7,9 @@ Feature: Register new paid leave admin account from the employer portal.
     And I log into the employer portal
     And I accept the terms of service
     Then I should be logged in
+
+  @fineos
+  Scenario: As a CSR (Savilinx), I should be able to locate the point of contact on the employer page
+    Given I am logged into Fineos as a Savilinx user
+    Then I should be able to find employer page
+    And I should be able to find the POC

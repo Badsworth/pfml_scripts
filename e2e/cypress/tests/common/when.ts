@@ -93,6 +93,8 @@ When("I submit the employer registration form", function () {
   cy.labelled("Email address").type(this.credentials.username);
   cy.labelled("Password").type(this.credentials.password);
   cy.labelled("Employer ID number").type(this.credentials.fein);
+  cy.stashLog("leaveAdminEmail", this.credentials.username);
+  cy.stashLog("employerFEIN", this.credentials.fein);
   cy.contains("button", "Create account").click();
   cy.task("getAuthVerification", this.credentials.username as string).then(
     (code: string) => {
@@ -118,7 +120,8 @@ When("I submit the claimant registration form", function (
   });
 });
 When("I accept the terms of service", function () {
-  cy.contains("Agree and continue").click();
+  // this action is forced because of trivial error: "this element is detached from the DOM"
+  cy.contains("Agree and continue").click({ force: true });
 });
 
 When("I finish managing evidence", function () {
