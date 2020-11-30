@@ -130,7 +130,18 @@ export const Success = (props) => {
               <IconCopy {...iconProps} />
               {t("pages.claimsSuccess.familyLeaveToBondHeading")}
             </Heading>
-            <p>{t("pages.claimsSuccess.familyLeaveToBond")}</p>
+            <p>
+              <Trans
+                i18nKey="pages.claimsSuccess.familyLeaveToBond"
+                components={{
+                  "gestational-parents-overview-link": (
+                    <a
+                      href={routes.external.massgov.gestationalParentOverview}
+                    />
+                  ),
+                }}
+              />
+            </p>
           </div>
         )}
 
@@ -140,7 +151,18 @@ export const Success = (props) => {
               <IconCopy {...iconProps} />
               {t("pages.claimsSuccess.medicalLeaveAfterBirthHeading")}
             </Heading>
-            <p>{t("pages.claimsSuccess.medicalLeaveAfterBirth")}</p>
+            <p>
+              <Trans
+                i18nKey="pages.claimsSuccess.medicalLeaveAfterBirth"
+                components={{
+                  "gestational-parents-overview-link": (
+                    <a
+                      href={routes.external.massgov.gestationalParentOverview}
+                    />
+                  ),
+                }}
+              />
+            </p>
           </div>
         )}
 

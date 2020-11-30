@@ -121,7 +121,16 @@ export const Dashboard = (props) => {
         <p>{t("pages.dashboard.stepThreeLead")}</p>
         <p>{t("pages.dashboard.multipleApplicationsListIntro")}</p>
         <ul className="usa-list">
-          <li>{t("pages.dashboard.multipleApplicationsList_pregnancy")}</li>
+          <li>
+            <Trans
+              i18nKey="pages.dashboard.multipleApplicationsList_pregnancy"
+              components={{
+                "gestational-parents-overview-link": (
+                  <a href={routes.external.massgov.gestationalParentOverview} />
+                ),
+              }}
+            />
+          </li>
           <li>
             {t("pages.dashboard.multipleApplicationsList_multipleEmployers")}
           </li>

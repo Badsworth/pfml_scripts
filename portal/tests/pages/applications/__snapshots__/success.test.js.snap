@@ -437,7 +437,16 @@ exports[`Success renders content tailored to Family (Bonding Future Newborn) 1`]
         If you gave birth, you may also be eligible for paid medical leave
       </Heading>
       <p>
-        You can take up to 20 weeks of paid medical leave if you're unable to work during your pregnancy and to recover from childbirth. Your health care provider determines how much medical leave you will need. You'll need to fill out a separate application to take medical leave in addition to your family leave.
+        <Trans
+          components={
+            Object {
+              "gestational-parents-overview-link": <a
+                href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-guide#about-family-leave-to-bond-with-a-child-"
+              />,
+            }
+          }
+          i18nKey="pages.claimsSuccess.medicalLeaveAfterBirth"
+        />
       </p>
     </div>
     <UserFeedback
@@ -535,6 +544,19 @@ exports[`Success renders content tailored to Family (Bonding Future Newborn) 4`]
 </ul>
 `;
 
+exports[`Success renders content tailored to Family (Bonding Future Newborn) 5`] = `
+Array [
+  "You can take up to 20 weeks of paid medical leave if you're unable to work during your pregnancy and to recover from childbirth. Your health care provider determines how much medical leave you will need. You'll need to fill out a ",
+  <a
+    href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-guide#about-family-leave-to-bond-with-a-child-"
+    key="1"
+  >
+    separate leave application
+  </a>,
+  " to take medical leave in addition to your family leave.",
+]
+`;
+
 exports[`Success renders content tailored to Family (Bonding Newborn) 1`] = `
 <Fragment>
   <Title>
@@ -625,7 +647,16 @@ exports[`Success renders content tailored to Family (Bonding Newborn) 1`] = `
         If you gave birth, you may also be eligible for paid medical leave
       </Heading>
       <p>
-        You can take up to 20 weeks of paid medical leave if you're unable to work during your pregnancy and to recover from childbirth. Your health care provider determines how much medical leave you will need. You'll need to fill out a separate application to take medical leave in addition to your family leave.
+        <Trans
+          components={
+            Object {
+              "gestational-parents-overview-link": <a
+                href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-guide#about-family-leave-to-bond-with-a-child-"
+              />,
+            }
+          }
+          i18nKey="pages.claimsSuccess.medicalLeaveAfterBirth"
+        />
       </p>
     </div>
     <UserFeedback
@@ -716,6 +747,19 @@ exports[`Success renders content tailored to Family (Bonding Newborn) 4`] = `
   </li>
    
 </ul>
+`;
+
+exports[`Success renders content tailored to Family (Bonding Newborn) 5`] = `
+Array [
+  "You can take up to 20 weeks of paid medical leave if you're unable to work during your pregnancy and to recover from childbirth. Your health care provider determines how much medical leave you will need. You'll need to fill out a ",
+  <a
+    href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-guide#about-family-leave-to-bond-with-a-child-"
+    key="1"
+  >
+    separate leave application
+  </a>,
+  " to take medical leave in addition to your family leave.",
+]
 `;
 
 exports[`Success renders content tailored to Medical (Not pregnant) 1`] = `
@@ -973,7 +1017,16 @@ exports[`Success renders content tailored to Medical (Pregnant) 1`] = `
         You can also apply for paid family leave
       </Heading>
       <p>
-        You can take up to 12 weeks of paid family leave to bond with your child after your medical leave ends. You do not need to take this leave all at once. You must create a separate leave application if you want to take family leave.
+        <Trans
+          components={
+            Object {
+              "gestational-parents-overview-link": <a
+                href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-guide#about-family-leave-to-bond-with-a-child-"
+              />,
+            }
+          }
+          i18nKey="pages.claimsSuccess.familyLeaveToBond"
+        />
       </p>
     </div>
     <UserFeedback
@@ -1064,6 +1117,19 @@ exports[`Success renders content tailored to Medical (Pregnant) 4`] = `
   </li>
    
 </ul>
+`;
+
+exports[`Success renders content tailored to Medical (Pregnant) 5`] = `
+Array [
+  "You can take up to 12 weeks of paid family leave to bond with your child after your medical leave ends. You do not need to take this leave all at once. You must create a ",
+  <a
+    href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-guide#about-family-leave-to-bond-with-a-child-"
+    key="1"
+  >
+    separate leave application
+  </a>,
+  " if you want to take family leave.",
+]
 `;
 
 exports[`Success renders content tailored to Medical (Pregnant, applying in advance) 1`] = `
@@ -1162,7 +1228,16 @@ exports[`Success renders content tailored to Medical (Pregnant, applying in adva
         You can also apply for paid family leave
       </Heading>
       <p>
-        You can take up to 12 weeks of paid family leave to bond with your child after your medical leave ends. You do not need to take this leave all at once. You must create a separate leave application if you want to take family leave.
+        <Trans
+          components={
+            Object {
+              "gestational-parents-overview-link": <a
+                href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-guide#about-family-leave-to-bond-with-a-child-"
+              />,
+            }
+          }
+          i18nKey="pages.claimsSuccess.familyLeaveToBond"
+        />
       </p>
     </div>
     <UserFeedback
@@ -1253,4 +1328,17 @@ exports[`Success renders content tailored to Medical (Pregnant, applying in adva
   </li>
    
 </ul>
+`;
+
+exports[`Success renders content tailored to Medical (Pregnant, applying in advance) 5`] = `
+Array [
+  "You can take up to 12 weeks of paid family leave to bond with your child after your medical leave ends. You do not need to take this leave all at once. You must create a ",
+  <a
+    href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-guide#about-family-leave-to-bond-with-a-child-"
+    key="1"
+  >
+    separate leave application
+  </a>,
+  " if you want to take family leave.",
+]
 `;

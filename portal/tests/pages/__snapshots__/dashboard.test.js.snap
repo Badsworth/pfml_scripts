@@ -149,7 +149,16 @@ exports[`Dashboard renders dashboard content 1`] = `
       className="usa-list"
     >
       <li>
-        You can take paid medical leave if you're unable to work during your pregnancy and to recover from childbirth. You can also take paid family leave to bond with your child after your medical leave ends. You must create separate applications for your paid medical leave and family leave.
+        <Trans
+          components={
+            Object {
+              "gestational-parents-overview-link": <a
+                href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-guide#about-family-leave-to-bond-with-a-child-"
+              />,
+            }
+          }
+          i18nKey="pages.dashboard.multipleApplicationsList_pregnancy"
+        />
       </li>
       <li>
         If you are taking leave from multiple employers, you must create separate applications for each job.

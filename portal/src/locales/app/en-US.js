@@ -1175,10 +1175,10 @@ const pages = {
       "Your application ID is <strong>{{absence_id}}</strong>",
     exitLink: "Return to applications",
     familyLeaveToBond:
-      "You can take up to 12 weeks of paid family leave to bond with your child after your medical leave ends. You do not need to take this leave all at once. You must create a separate leave application if you want to take family leave.",
+      "You can take up to 12 weeks of paid family leave to bond with your child after your medical leave ends. You do not need to take this leave all at once. You must create a <gestational-parents-overview-link>separate leave application</gestational-parents-overview-link> if you want to take family leave.",
     familyLeaveToBondHeading: "You can also apply for paid family leave",
     medicalLeaveAfterBirth:
-      "You can take up to 20 weeks of paid medical leave if you're unable to work during your pregnancy and to recover from childbirth. Your health care provider determines how much medical leave you will need. You'll need to fill out a separate application to take medical leave in addition to your family leave.",
+      "You can take up to 20 weeks of paid medical leave if you're unable to work during your pregnancy and to recover from childbirth. Your health care provider determines how much medical leave you will need. You'll need to fill out a <gestational-parents-overview-link>separate leave application</gestational-parents-overview-link> to take medical leave in addition to your family leave.",
     medicalLeaveAfterBirthHeading:
       "If you gave birth, you may also be eligible for paid medical leave",
     proofRequired_bondingAdoptFosterFuture:
@@ -1286,7 +1286,7 @@ const pages = {
     multipleApplicationsList_multipleEmployers:
       "If you are taking leave from multiple employers, you must create separate applications for each job.",
     multipleApplicationsList_pregnancy:
-      "You can take paid medical leave if you're unable to work during your pregnancy and to recover from childbirth. You can also take paid family leave to bond with your child after your medical leave ends. You must create separate applications for your paid medical leave and family leave.",
+      "You can take paid medical leave if you're unable to work during your pregnancy and to recover from childbirth. You can also take paid family leave to bond with your child after your medical leave ends. You must create <gestational-parents-overview-link>separate leave applications</gestational-parents-overview-link> for your paid medical leave and family leave.",
     stepOneHeading:
       "Step one: Tell your employer that you need to take Paid Family and Medical Leave. ",
     stepOneLeadLine1:
