@@ -44,6 +44,7 @@ class JsonFormatter(logging.Formatter):  # noqa: B1
             record.method = flask.request.method
             record.path = flask.request.path
             record.request_id = flask.request.headers.get("x-amzn-requestid", "")
+
         super(JsonFormatter, self).format(record)
 
         output = {
@@ -51,6 +52,18 @@ class JsonFormatter(logging.Formatter):  # noqa: B1
             for key, value in record.__dict__.items()
             if key not in EXCLUDE_ATTRIBUTES and value is not None
         }
+
+        # Inject user metadata without PII masking
+        if flask.has_request_context():
+            user = flask.g.get("current_user")
+            if user:
+                output.update(
+                    {
+                        "current_user.user_id": str(user.user_id),
+                        "current_user.auth_id": user.active_directory_id,
+                        "current_user.role_ids": [role.role_id for role in user.roles],
+                    }
+                )
 
         # Inject New Relic tracing metadata for Logs in Context features.
         # This is not the suggested way to implement it, but the NewRelicContextFormatter

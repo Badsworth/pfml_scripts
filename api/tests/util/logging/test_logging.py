@@ -12,6 +12,7 @@ import flask
 import pytest
 
 import massgov.pfml.util.logging
+from massgov.pfml.db.models.factories import UserFactory
 
 
 @pytest.fixture(autouse=True)
@@ -185,6 +186,9 @@ def test_log_message_with_flask_request_context(capsys, monkeypatch):
         flask, "request", FakeRequest("POST", "/test/path", headers={"x-amzn-requestid": "123"})
     )
 
+    user = UserFactory.build()
+    monkeypatch.setattr(flask, "g", {"current_user": user})
+
     logger = massgov.pfml.util.logging.get_logger("massgov.pfml.test.logging")
     logger.info("test request context")
     stderr = capsys.readouterr().err
@@ -203,6 +207,9 @@ def test_log_message_with_flask_request_context(capsys, monkeypatch):
         "request_id",
         "message",
         "entity.type",
+        "current_user.user_id",
+        "current_user.auth_id",
+        "current_user.role_ids",
     }
     assert last_line["name"] == "massgov.pfml.test.logging"
     assert last_line["levelname"] == "INFO"
@@ -212,6 +219,8 @@ def test_log_message_with_flask_request_context(capsys, monkeypatch):
     assert last_line["path"] == "/test/path"
     assert last_line["request_id"] == "123"
     assert last_line["message"] == "test request context"
+    assert last_line["current_user.user_id"] == str(user.user_id)
+    assert last_line["current_user.auth_id"] == user.active_directory_id
 
 
 def test_log_message_with_exception_and_pii(capsys):

@@ -63,18 +63,16 @@ def decode_cognito_token(token):
 
             flask.g.current_user = user
 
-        logger.info(
-            "auth token decode succeeded",
-            extra={
-                "current_user.user_id": str(user.user_id),
-                "current_user.auth_id": user.active_directory_id,
-                "current_user.role_ids": [role.role_id for role in user.roles],
-            },
-        )
+        logger.info("auth token decode succeeded")
         return decoded_token
     except jose.JOSEError as e:
         logger.error("auth token decode failed: %s %s", type(e), str(e), extra={"error": e})
         raise Unauthorized
     except (NoResultFound, MultipleResultsFound) as e:
-        logger.error("user query failed: %s", type(e), extra={"error": e})
+        logger.error(
+            "user query failed for auth_id %s: %s",
+            decoded_token.get("sub"),
+            type(e),
+            extra={"error": e},
+        )
         raise Unauthorized
