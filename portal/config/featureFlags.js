@@ -9,6 +9,7 @@ const flagsConfig = {
   defaults: {
     // When this flag is enabled, claimant login and account creation options
     // are visible and content reflects workers can apply for leave.
+    // TODO (CP-1407): Enable claimant auth once Portal is open for claims
     claimantShowAuth: false,
 
     // When this flag is enabled, the user can see the "Employment status"
