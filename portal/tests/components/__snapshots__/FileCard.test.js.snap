@@ -2,7 +2,7 @@
 
 exports[`FileCard when the FileCard receives a Document renders a FileCard component without a Button 1`] = `
 <div
-  className="c-file-card padding-2 margin-bottom-3  display-flex border-1px border-base-lighter"
+  className="c-file-card padding-2 margin-bottom-3 display-flex flex-wrap border-1px border-base-lighter"
 >
   <Thumbnail />
   <div
@@ -31,7 +31,7 @@ exports[`FileCard when the FileCard receives a Document renders a FileCard compo
 
 exports[`FileCard when the FileCard receives a File renders 1`] = `
 <div
-  className="c-file-card padding-2 margin-bottom-3  display-flex border-1px border-base-lighter"
+  className="c-file-card padding-2 margin-bottom-3 display-flex flex-wrap border-1px border-base-lighter"
 >
   <Thumbnail
     file={File {}}
