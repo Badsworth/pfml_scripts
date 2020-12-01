@@ -248,6 +248,7 @@ const errors = {
         required: "Enter a state for your mailing address.",
       },
       zip: {
+        invalid_masked_field: "Enter the full ZIP code to make a change.",
         pattern: "Mailing address ZIP code must be 5 or 9 digits.",
         required: "Enter a ZIP code for your mailing address.",
       },
@@ -259,6 +260,7 @@ const errors = {
     },
     payment_preference: {
       account_number: {
+        invalid_masked_field: "Enter the full account number to make a change.",
         maxLength: "Account number must be 17 digits or fewer.",
         minLength: "Account number must be at least 6 digits.",
         required: "Enter an account number.",
@@ -272,6 +274,7 @@ const errors = {
       },
     },
     phone_number: {
+      invalid_masked_field: "Enter the full phone number to make a change.",
       pattern: "Enter a valid phone number.",
       required: "Enter a phone number.",
     },
@@ -290,6 +293,7 @@ const errors = {
         required: "Enter a state for your residential address.",
       },
       zip: {
+        invalid_masked_field: "Enter the full ZIP code to make a change.",
         pattern: "Residential address ZIP code must be 5 or 9 digits.",
         required: "Enter a ZIP code for your residential address.",
       },
@@ -311,6 +315,8 @@ const errors = {
         "You must tell your employer that you’re taking leave before you can submit an application. If you’ve told your employer, update your application with the date that you notified them.",
     },
     tax_identifier: {
+      invalid_masked_field:
+        "Enter the full Social Security Number or ITIN to make a change.",
       pattern: "Your Social Security Number or ITIN must be 9 digits.",
       required: "Enter a Social Security Number or ITIN.",
     },
@@ -349,6 +355,7 @@ const errors = {
   // field is introduced and we don't add a custom field-level error message for it.
   validationFallback: {
     invalid: "Field ({{field}}) has invalid value.",
+    invalid_masked_field: "Re-enter the full value to make a change.",
     // Field's value didn't match an expected regex pattern:
     pattern: "Field ({{field}}) didn't match expected format.",
   },

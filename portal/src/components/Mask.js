@@ -6,7 +6,7 @@ import classnames from "classnames";
 const maskDeliminatedRegex = {
   ssn: /([*\d]{3})([*\d]{1,2})?([*\d]+)?/,
   fein: /([*\d]{2})([*\d]+)?/,
-  phone: /(\d{3})(\d{1,3})?(\d+)?/,
+  phone: /([*\d]{3})([*\d]{1,3})?([*\d]+)?/,
   zip: /([*\d]{5})([*\d]+)?/,
 };
 
@@ -34,12 +34,12 @@ function deliminateRegexGroups(value, rx) {
 }
 
 /**
- * Remove all non-digits
+ * Remove all non-digits, except masking character (*)
  * @param {string} value
  * @returns {string}
  */
 function toDigits(value) {
-  return value.replace(/[^\d]/g, "");
+  return value.replace(/[^\d*]/g, "");
 }
 
 /**

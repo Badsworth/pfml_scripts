@@ -187,6 +187,13 @@ describe("Mask", () => {
 
         expect(output).toBe("123-45-6789");
       });
+
+      it("accepts partially masked value", () => {
+        const originalValue = "123-45-****";
+        const output = maskValue(originalValue, "ssn");
+
+        expect(output).toBe("123-45-****");
+      });
     });
   });
 
@@ -217,6 +224,13 @@ describe("Mask", () => {
       const output = maskValue(originalValue, "fein");
 
       expect(output).toBe("12-1234567");
+    });
+
+    it("accepts partially masked value", () => {
+      const originalValue = "**-***1234";
+      const output = maskValue(originalValue, "fein");
+
+      expect(output).toBe("**-***1234");
     });
   });
 
@@ -263,6 +277,43 @@ describe("Mask", () => {
       const output = maskValue(originalValue, "phone");
 
       expect(output).toBe("555-123-456790");
+    });
+
+    it("accepts partially masked value", () => {
+      const originalValue = "555-123-****";
+      const output = maskValue(originalValue, "phone");
+
+      expect(output).toBe("555-123-****");
+    });
+  });
+
+  describe("zip", () => {
+    it("accepts 5-digit ZIP code", () => {
+      const originalValue = "12345";
+      const output = maskValue(originalValue, "zip");
+
+      expect(output).toBe("12345");
+    });
+
+    it("accepts 9-digit ZIP code", () => {
+      const originalValue = "12345-6789";
+      const output = maskValue(originalValue, "zip");
+
+      expect(output).toBe("12345-6789");
+    });
+
+    it("accepts 9-digit ZIP code without dash", () => {
+      const originalValue = "123456789";
+      const output = maskValue(originalValue, "zip");
+
+      expect(output).toBe("12345-6789");
+    });
+
+    it("accepts partially masked 9-digit ZIP code", () => {
+      const originalValue = "12345-****";
+      const output = maskValue(originalValue, "zip");
+
+      expect(output).toBe("12345-****");
     });
   });
 });

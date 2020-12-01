@@ -21,7 +21,7 @@ exports[`ScheduleVariable renders the form 1`] = `
   </p>
   <InputHours
     hoursLabel="Hours"
-    label="Average Weekly Hours"
+    label="Average weekly hours"
     minutesIncrement={15}
     minutesLabel="Minutes"
     name="work_pattern.work_pattern_days[0].minutes"
