@@ -794,7 +794,7 @@ const pages = {
     bondingTypeMultipleBirthsDetailsLabel:
       "What if I've had multiple births or placements within one year?",
     bondingTypeMultipleBirthsDetailsSummary:
-      "Leave is determined based on benefit year (365 days from the first day you take leave), not based on number of children. You have 1 year to take your family leave from the date of the birth/placement of the child (whichever is later). <multiple-births-link>Learn more about taking leave if you have multiple childbirths or placements</multiple-births-link>.",
+      "Leave is determined based on benefit year (365 days from the first day you take leave), not based on number of children. You have 1 year to take your family leave from the date of the birth/placement of the child (whichever is later). <multiple-births-link>Learn more about taking leave for multiple childbirths or placements</multiple-births-link>.",
     bondingTypeNewbornLabel: "Birth",
     medicalLeaveHint: "Medical leave",
     medicalLeaveLabel: "I can’t work due to an illness, injury, or pregnancy.",
