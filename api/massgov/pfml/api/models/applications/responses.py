@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import date, datetime
 from decimal import Decimal
 from enum import Enum
 from typing import List, Optional
@@ -109,7 +109,7 @@ def build_payment_preference(
 class DocumentResponse(PydanticBaseModel):
     user_id: UUID4
     application_id: UUID4
-    created_at: Optional[datetime]
+    created_at: Optional[date]
     document_type: Optional[str]
     content_type: Optional[str]
     fineos_document_id: Optional[str]

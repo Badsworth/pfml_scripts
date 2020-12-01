@@ -278,7 +278,7 @@ def test_documents_get_date_created(
     assert response["status_code"] == 200
     response_data = response["data"][0]
 
-    assert response_data["created_at"] == "2020-09-01T00:00:00Z"
+    assert response_data["created_at"] == "2020-09-01"
 
 
 def test_documents_download(client, consented_user, consented_user_token, test_db_session):

@@ -614,9 +614,7 @@ def fineos_document_response_to_document_response(
     application_id = application.application_id
     created_at = None
     if fineos_document_response.receivedDate:
-        created_at = datetime.datetime.combine(
-            fineos_document_response.receivedDate, datetime.time.min
-        )
+        created_at = fineos_document_response.receivedDate
     content_type, encoding = mimetypes.guess_type(fineos_document_response.originalFilename or "")
 
     document_response = DocumentResponse(
