@@ -70,7 +70,8 @@ export const Default = ({ document }) => {
     employers: {
       claim,
       documents,
-      load: () => {},
+      downloadDocument: () => {},
+      loadClaim: () => {},
       loadDocuments: () => {},
     },
     setAppErrors: () => {},

@@ -16,7 +16,8 @@ export const Default = () => {
     appErrors: new AppErrorInfoCollection(),
     employers: {
       claim: new MockEmployerClaimBuilder().completed().create(),
-      load: () => {},
+      loadClaim: () => {},
+      loadDocuments: () => {},
       submit: () => {},
     },
     setAppErrors: () => {},
