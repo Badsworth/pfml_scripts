@@ -58,13 +58,13 @@ def compute_financial_eligibility(
 
     # Check various financial eligibility thresholds, set the description accordingly
     if not unemployment_min_met:
-        description = "Unemployment minimum not met"
+        description = "Claimant wages under minimum"
 
     elif not gte_thirty_times_wba:
-        description = "Total wages below 30x weekly benefit"
+        description = "Claimant wages failed 30x rule"
 
     elif employment_status == EmploymentStatus.self_employed and len(quarterly_wages) < 2:
-        description = "Does not meet the self-employment requirement to contribute in at least 2 of the last 4 quarters"
+        description = "Opt-in quarterly contributions not met"
 
     else:
         description = "Financially eligible"

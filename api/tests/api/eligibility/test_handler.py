@@ -218,7 +218,7 @@ def test_self_employed_one_quarter(
     assert response.get_json().get("data").get("financially_eligible") is False
     assert (
         response.get_json().get("data").get("description")
-        == "Does not meet the self-employment requirement to contribute in at least 2 of the last 4 quarters"
+        == "Opt-in quarterly contributions not met"
     )
     assert response.get_json().get("data").get("total_wages") == float(
         round(
@@ -551,9 +551,7 @@ def test_claimant_C(
         )
     )
 
-    assert (
-        response.get_json().get("data").get("description") == "Total wages below 30x weekly benefit"
-    )
+    assert response.get_json().get("data").get("description") == "Claimant wages failed 30x rule"
     assert response.get_json().get("data").get("financially_eligible") is False
 
 

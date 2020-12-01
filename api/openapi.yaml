@@ -1606,7 +1606,7 @@ components:
           example: false
         description:
           type: string
-          example: "Unemployment minimum not met"
+          example: "Claimant wages under minimum"
         total_wages:
           type: number
           example: 75000
