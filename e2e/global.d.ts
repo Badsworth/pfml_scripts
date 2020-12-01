@@ -19,7 +19,6 @@ declare namespace Cypress {
     // We use it in stash/unstash to grab a unique ID for the run.
     runner: Cypress.Runner;
   }
-  interface cy {}
   interface Chainable<Subject = any> {
     labelled(label: string): Chainable<Element>;
     typeMasked(

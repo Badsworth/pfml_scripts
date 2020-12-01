@@ -16,7 +16,5 @@
     "**/*.feature"
   ],
   "viewportWidth": 2000,
-  "viewportHeight": 1320,
-  "ignoreTestFiles": ["1.2/**"],
-  "experimentalNetworkStubbing": true
+  "viewportHeight": 1320
 }

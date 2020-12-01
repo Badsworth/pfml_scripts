@@ -62,14 +62,14 @@ jobs:
           echo "E2E_ENVIRONMENT=${{ github.event.inputs.target_environment }}" >> $GITHUB_ENV
 
       # Run Cypress tests.
-      - name: Cypress Tests (1.0 Launch)
+      - name: Cypress Tests (Stable)
         uses: cypress-io/github-action@v2
         with:
           spec: "cypress/specs/stable/**"
           record: true
           parallel: true
           working-directory: e2e
-          group: 1.0 Launch
+          group: Stable
           tag: "${{ env.cypress_tags }},Env-${{ env.E2E_ENVIRONMENT }}"
         env:
           # Setup any secret overrides that are necessary here.
@@ -81,14 +81,14 @@ jobs:
           CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
 
       # Run Cypress tests.
-      - name: Cypress Tests (1.1 Launch)
+      - name: Cypress Tests (Unstable)
         uses: cypress-io/github-action@v2
         with:
           spec: "cypress/specs/unstable/**"
           record: true
           parallel: true
           working-directory: e2e
-          group: 1.1 Launch
+          group: Unstable
           install: false # Skip install on second run.
           tag: "${{ env.cypress_tags }},Env-${{ env.E2E_ENVIRONMENT }}"
         env:

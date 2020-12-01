@@ -446,6 +446,9 @@ export function confirmInfo(): void {
   cy.contains("Submit Part 1").click();
 
   cy.wait("@submitClaimResponse").then((xhr) => {
+    if (!xhr.response || !xhr.response.body) {
+      throw new Error("No response body detected");
+    }
     const body =
       typeof xhr.response.body === "string"
         ? JSON.parse(xhr.response.body)

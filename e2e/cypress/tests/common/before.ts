@@ -7,19 +7,20 @@ Before({ tags: "@portal" }, () => {
     JSON.stringify({
       pfmlTerriyay: true,
       claimantShowAuth: true,
+      claimantShowMedicalLeaveType: true,
     }),
     { log: true }
   );
 
   // Setup a route for application submission so we can extract claim ID later.
-  cy.route2({
+  cy.intercept({
     method: "POST",
     url: "**/api/v1/applications/*/submit_application",
   }).as("submitClaimResponse");
 
   // Block new-relic.js outright due to issues with Cypress networking code.
   // Without this block, test retries on the portal error out due to fetch() errors.
-  cy.route2("**/new-relic.js", (req) => {
+  cy.intercept("**/new-relic.js", (req) => {
     req.reply("console.log('Fake New Relic script loaded');");
   });
 });
@@ -32,5 +33,5 @@ Before({ tags: "@fineos" }, () => {
     );
   });
   // Set up a route we can listen to wait on ajax rendering to complete.
-  cy.route2(/ajax\/pagerender\.jsp/).as("ajaxRender");
+  cy.intercept(/ajax\/pagerender\.jsp/).as("ajaxRender");
 });

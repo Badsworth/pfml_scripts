@@ -8,7 +8,7 @@
     "FINEOS_BASEURL": "https://dt2-claims-webapp.masspfml.fineos.com",
     "FINEOS_USERNAME": "CONTENT",
     "TESTMAIL_NAMESPACE": "gqzap",
-    "EMPLOYEES_FILE": "./employees/test.json"
+    "EMPLOYEES_FILE": "./employees/test-stage-2020-11-30.json"
   },
   "stage": {
     "PORTAL_BASEURL": "https://paidleave-stage.mass.gov",
@@ -19,7 +19,7 @@
     "FINEOS_BASEURL": "https://idt-claims-webapp.masspfml.fineos.com",
     "FINEOS_USERNAME": "CONTENT",
     "TESTMAIL_NAMESPACE": "gqzap",
-    "EMPLOYEES_FILE": "./employees/stage.json"
+    "EMPLOYEES_FILE": "./employees/test-stage-2020-11-30.json"
   },
   "training": {
     "PORTAL_BASEURL": "https://dist3ws941qq9.cloudfront.net",

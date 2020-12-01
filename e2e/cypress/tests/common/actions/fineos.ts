@@ -19,7 +19,7 @@ export function visitEmployer(fein: string): void {
   cy.get("input[value*='Organisation']").click();
   cy.contains("td", "Identification Number")
     .next()
-    .within(($td) => cy.get("input").type(fein));
+    .within(() => cy.get("input").type(fein));
 
   cy.get('input[type="submit"][value="Search"]').click();
   // cy.get('td[title="Adjudication"]').first().click();
