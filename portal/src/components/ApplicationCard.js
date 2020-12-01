@@ -315,14 +315,16 @@ function ApplicationActions(props) {
 
       {claim.isCompleted && (
         <React.Fragment>
-          <Trans
-            i18nKey="components.applicationCard.reductionsInstructionsIntro"
-            components={{
-              "reductions-overview-link": (
-                <a href={routes.external.reductionsOverview} />
-              ),
-            }}
-          />
+          <p>
+            <Trans
+              i18nKey="components.applicationCard.reductionsInstructionsIntro"
+              components={{
+                "reductions-overview-link": (
+                  <a href={routes.external.reductionsOverview} />
+                ),
+              }}
+            />
+          </p>
 
           <ul className="usa-list">
             <li>{t("components.applicationCard.reductionsInstruction_1")}</li>
