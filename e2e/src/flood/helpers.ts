@@ -313,6 +313,10 @@ export const waitForRealTimeSim = async (
     realTime = realUserTimings[data.scenario] as number;
   }
   realTime = realTime * 60 * 1000 * waitFor * speedFactor;
+  // prevent Flood.io node's memory overflow
+  if (realTime < 1000 && speedFactor > 0) {
+    realTime = 1000;
+  }
   const seconds = (realTime / 1000).toFixed(3);
   console.info(
     `[${speedSetting}] Wait ${seconds} seconds - real time simulation`
@@ -403,3 +407,21 @@ export const assignTasks = (
     }
   },
 });
+
+const isNode = !!(typeof process !== "undefined" && process.version);
+export async function readFile(
+  filename: string,
+  isMain = false
+): Promise<Buffer> {
+  if (!isNode) {
+    throw new Error("Cannot load the fs module API outside of Node.");
+  }
+  let fs;
+  fs = await import("fs");
+  if (!fs.promises) {
+    fs = fs.default;
+  }
+  const filepath = `${!isMain ? "../" : ""}${filename}`;
+  console.info(`\n\n\nreadFile in "${filepath}"\n\n\n`);
+  return fs.readFileSync(filepath);
+}

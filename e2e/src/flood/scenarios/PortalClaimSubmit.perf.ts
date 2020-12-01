@@ -12,34 +12,22 @@ import {
 } from "../config";
 import {
   labelled,
+  readFile,
+  evalFetch,
   assignTasks,
   waitForElement,
   waitForRealTimeSim,
-  getRequestOptions,
   getDocumentType,
-  evalFetch,
+  getRequestOptions,
 } from "../helpers";
 
 let authToken: string;
 let applicationId: string;
 let fineosId: string;
-
-const isNode = !!(typeof process !== "undefined" && process.version);
-async function importFSModule(): Promise<typeof import("fs")> {
-  if (!isNode) {
-    throw new Error("Cannot load the fs module API outside of Node.");
-  }
-
-  const fs = await import("fs");
-  if (fs.promises) {
-    return fs;
-  }
-  return fs.default;
-}
+const isMain = require.main === module;
 
 export { settings };
 export const scenario: LSTScenario = "PortalClaimSubmit";
-console.log({ scenario, isNode });
 export const steps = [
   {
     name: "Login in Portal",
@@ -205,12 +193,10 @@ export const steps = [
               for (const document of documents) {
                 // important: body & headers need to be empty objects
                 reqOptions = getRequestOptions(authToken, "POST", {}, {});
-                const fs = await importFSModule();
-
                 const docBody: DocumentUploadRequest = {
                   document_type: getDocumentType(document),
                   description: "LST - Direct to API",
-                  file: fs.readFileSync(documentUrl),
+                  file: await readFile(documentUrl, isMain),
                   name: `${document.type}.pdf`,
                 };
                 res = await evalFetch(
@@ -270,7 +256,7 @@ export const steps = [
           }
           console.info("Updated application", res.status_code);
         }
-        await waitForRealTimeSim(browser, data, 1 / steps.length);
+        await waitForRealTimeSim(browser, data, 1 / claimParts.length);
       }
     },
   },

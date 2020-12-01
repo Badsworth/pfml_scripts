@@ -1,11 +1,11 @@
-import { Browser, By } from "@flood/element";
+import { Browser, By, ElementHandle, Key } from "@flood/element";
+import { StoredStep, LSTSimClaim, StandardDocumentType } from "../config";
 import {
   labelled,
   waitForElement,
   waitForRealTimeSim,
   isFinanciallyEligible,
 } from "../helpers";
-import { StoredStep, LSTSimClaim } from "../config";
 import Tasks from "./index";
 
 let evidenceApproved: boolean;
@@ -30,7 +30,7 @@ export const steps: StoredStep[] = [
       await browser.click(adjudicateButton);
 
       if (evidenceIcon === "icon-unverified") {
-        await approveEvidence.test(browser, data);
+        await approveEvidence().test(browser, data);
         await certifyEvidence.test(browser, data);
         evidenceApproved = true;
       }
@@ -68,6 +68,11 @@ export const steps: StoredStep[] = [
         await browser.type(avgWeeklyWage, "1200");
 
         // TODO: Benefit payment waiting period - Days
+        const benefitPeriodSelect = await waitForElement(
+          browser,
+          By.css("select[id*='benefitWaitingPeriodBasis']")
+        );
+        await browser.selectByText(benefitPeriodSelect, "Days");
 
         const okButton = await waitForElement(
           browser,
@@ -152,7 +157,9 @@ export const steps: StoredStep[] = [
   },
 ];
 
-export const approveEvidence: StoredStep = {
+export const approveEvidence = (
+  specificDoc?: StandardDocumentType
+): StoredStep => ({
   name: "Evidence Review",
   test: async (browser: Browser): Promise<void> => {
     console.info("Approve - Evidence Review");
@@ -167,45 +174,69 @@ export const approveEvidence: StoredStep = {
     );
     // if we have no documents to review, do nothing
     if (documents.length === 0) return;
-    // approve pending documents
-    for (let i = 0; i < documents.length; i++) {
-      // search for this documents' review decision
-      const evidence = await waitForElement(
-        browser,
-        By.css(
-          `table[id*='evidenceResultListviewWidget'] tr:nth-child(${
-            i + 1
-          }) td:nth-child(5)`
-        )
-      );
-      // if document decision is not pending, ignore
-      if ((await evidence.text()) !== "Pending") continue;
-      // confirmed it is pending, so we continue with approval
-      await browser.doubleClick(evidence);
-
-      await browser.wait(1000);
-      const manageButton = await waitForElement(
-        browser,
-        By.css("input[type='submit'][value='Manage Evidence']")
-      );
-      await manageButton.click();
-
-      const receiptSelect = await labelled(browser, "Evidence Receipt");
-      await browser.selectByText(receiptSelect, "Received");
-
-      const decisionSelect = await labelled(browser, "Evidence Decision");
-      await browser.selectByText(decisionSelect, "Satisfied");
-
-      const reasonInput = await labelled(browser, "Evidence Decision Reason");
-      await browser.type(reasonInput, "PFML - Approved for LST purposes");
-
-      const okButton = await waitForElement(
-        browser,
-        By.css("table[id*='Popup'] input[type='button'][value='OK']")
-      );
-      await okButton.click();
+    if (specificDoc) {
+      await approveDocumentEvidence(browser, specificDoc);
+    } else {
+      // approve pending documents
+      for (let i = 0; i < documents.length; i++) {
+        await approveDocumentEvidence(browser, i);
+      }
     }
   },
+});
+
+export const approveDocumentEvidence = async (
+  browser: Browser,
+  doc: number | StandardDocumentType
+): Promise<boolean> => {
+  // search for this documents' review decision
+  let evidence: ElementHandle;
+
+  if (typeof doc === "number") {
+    evidence = await waitForElement(
+      browser,
+      By.css(
+        `table[id*='evidenceResultListviewWidget'] tr:nth-child(${
+          doc + 1
+        }) td:nth-child(5)`
+      )
+    );
+  } else {
+    evidence = await waitForElement(
+      browser,
+      By.css(`td[title*="${doc}"] ~ td:nth-child(5)`)
+    );
+  }
+  // if document decision is not pending, ignore
+  if ((await evidence.text()) !== "Pending") return false;
+  // confirmed it is pending, so we continue with approval
+  await browser.doubleClick(evidence);
+
+  await browser.wait(1000);
+  const manageButton = await waitForElement(
+    browser,
+    By.css("input[type='submit'][value='Manage Evidence']")
+  );
+  await manageButton.click();
+
+  const receiptSelect = await labelled(browser, "Evidence Receipt");
+  await browser.selectByText(receiptSelect, "Received");
+
+  const decisionSelect = await labelled(browser, "Evidence Decision");
+  await browser.selectByText(decisionSelect, "Satisfied");
+
+  const reasonInput = await labelled(browser, "Evidence Decision Reason");
+  await browser.sendKeyCombinations(Key.SHIFT, Key.END);
+  await browser.sendKeys(Key.BACK_SPACE);
+  await browser.type(reasonInput, "PFML - Approved for LST purposes");
+
+  const okButton = await waitForElement(
+    browser,
+    By.css("table[id*='Popup'] input[type='button'][value='OK']")
+  );
+  await okButton.click();
+  await browser.wait(1000);
+  return true;
 };
 
 export const certifyEvidence: StoredStep = {

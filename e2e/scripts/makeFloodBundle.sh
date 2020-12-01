@@ -21,7 +21,6 @@ sed -i '' -e 's|"\.\./api"|"\./api"|g' flood/simulation/types.ts
 for ff in flood/*/*.ts; do
   sed -i '' -e 's|"\.\./\.\./simulation/types"|"\.\./simulation/types"|g' $ff
   sed -i '' -e 's|"\.\./\.\./api"|"\.\./simulation/api"|g' $ff
-  sed -i '' -e 's|uploadFile(`\.\./\.\./\.\./|uploadFile(`\.\./|g' $ff
 done
 for f in flood/*.ts; do
   sed -i '' -e 's|"\.\./simulation/types"|"\./simulation/types"|g' $f
@@ -29,8 +28,8 @@ for f in flood/*.ts; do
 done
 
 # clear previous builds
-rm -rf ../../scripts/floodBundle.zip
-rm -rf ../../scripts/index.perf.ts
+rm -rf ../scripts/floodBundle.zip
+rm -rf ../scripts/index.perf.ts
 
 # build `.zip` flood bundle
 cd flood/
@@ -44,7 +43,6 @@ cp flood/index.perf.ts ../scripts
 for ff in flood/*/*.ts; do
   sed -i '' -e 's|"\.\./simulation/types"|"\.\./\.\./simulation/types"|g' $ff
   sed -i '' -e 's|"\.\./simulation/api"|"\.\./\.\./api"|g' $ff
-  sed -i '' -e 's|uploadFile(`\.\./|uploadFile(`\.\./\.\./\.\./|g' $ff
 done
 for f in flood/*.ts; do
   sed -i '' -e 's|"\./simulation/types"|"\.\./simulation/types"|g' $f

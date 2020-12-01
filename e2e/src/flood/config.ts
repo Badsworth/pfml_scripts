@@ -31,7 +31,8 @@ export const realUserTimings: Record<
 > = {
   SavilinxAgent: {
     "Adjudicate Absence": 15,
-    "Outstanding Requirement Received": 5,
+    "ID Review": 5,
+    "Certification Review": 5,
   },
   DFMLOpsAgent: 0,
   PortalRegistration: 3,
@@ -74,7 +75,8 @@ export type LSTScenario =
 
 export type TaskType =
   | "Adjudicate Absence"
-  | "Outstanding Requirement Received";
+  | "ID Review"
+  | "Certification Review";
 
 export type TaskHook = "" | "Before" | "After";
 
@@ -83,9 +85,11 @@ export const agentActions: AgentActions = {
   "Before Adjudicate Absence": Tasks.PreAdjudicateAbsence,
   "Adjudicate Absence": Tasks.AdjudicateAbsence,
   "After Adjudicate Absence": Tasks.PostAdjudicateAbsence,
-  // ORR checks if certain Requirement was added to the claim
-  "Before Outstanding Requirement Received": Tasks.PreORR,
-  "Outstanding Requirement Received": Tasks.OutstandingRequirementReceived,
+  // checks if certain Requirement was added to the claim
+  "Before ID Review": Tasks.PreDocumentReview,
+  "ID Review": Tasks.DocumentReview,
+  "Before Certification Review": Tasks.PreDocumentReview,
+  "Certification Review": Tasks.DocumentReview,
 };
 
 export type StandardDocumentType = DocumentUploadRequest["document_type"];
@@ -93,6 +97,15 @@ export const standardDocuments: StandardDocumentType[] = [
   "State managed Paid Leave Confirmation",
   "Identification Proof",
 ];
+
+export enum ClaimType {
+  ACCIDENT = 1, // "Accident or treatment required for an injury"
+  SICKNESS = 2, // "Sickness, treatment required for a medical condition"
+  PREGNANCY = 3, // "Pregnancy, birth or related medical treatment"
+  BONDING = 4, // "Bonding with a new child (adoption/ foster care/ newborn)"
+  CARING = 5, // "Caring for a family member"
+  OTHER = 6, // "Out of work for another reason"
+}
 
 export type LSTSimClaim = SimulationClaim & {
   scenario: LSTScenario;

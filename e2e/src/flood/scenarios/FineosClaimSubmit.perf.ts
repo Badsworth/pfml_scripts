@@ -3,6 +3,7 @@ import {
   globalElementSettings as settings,
   dataBaseUrl,
   documentUrl,
+  ClaimType,
   StoredStep,
   LSTSimClaim,
   LSTScenario,
@@ -20,14 +21,7 @@ import assert from "assert";
 
 let fineosId: string;
 let claimType: ClaimType;
-enum ClaimType {
-  ACCIDENT = 1, // "Accident or treatment required for an injury"
-  SICKNESS = 2, // "Sickness, treatment required for a medical condition"
-  PREGNANCY = 3, // "Pregnancy, birth or related medical treatment"
-  BONDING = 4, // "Bonding with a new child (adoption/ foster care/ newborn)"
-  CARING = 5, // "Caring for a family member"
-  OTHER = 6, // "Out of work for another reason"
-}
+const isMain = require.main === module;
 
 export { settings };
 export const scenario: LSTScenario = "FineosClaimSubmit";
@@ -489,7 +483,9 @@ export const steps: StoredStep[] = [
           browser,
           By.css("#uploadpath")
         );
-        await uploadInput.uploadFile(`../../../${documentUrl}`);
+        await uploadInput.uploadFile(
+          `${isMain ? "../../" : ""}../${documentUrl}`
+        );
         const uploadOkButton = await waitForElement(
           browser,
           By.css("input[type='submit'][value='OK']")

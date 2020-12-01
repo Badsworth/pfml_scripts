@@ -1,19 +1,12 @@
 import { Browser, By } from "@flood/element";
-import { StoredStep, LSTSimClaim, StandardDocumentType } from "../config";
+import { StoredStep, LSTSimClaim } from "../config";
 import { waitForElement, labelled } from "../helpers";
-
-let missingDocument: StandardDocumentType | undefined;
-
-export const PreRequestAdditionalInfo = async (
-  browser: Browser,
-  data: LSTSimClaim
-): Promise<void> => {
-  missingDocument = data.missingDocument;
-};
 
 export default async (browser: Browser, data: LSTSimClaim): Promise<void> => {
   for (const step of steps) {
-    console.info(`Request Additional Info - ${step.name} - ${missingDocument}`);
+    console.info(
+      `Request Additional Info - ${step.name} - ${data.missingDocument}`
+    );
     await step.test(browser, data);
   }
 };
@@ -21,7 +14,7 @@ export default async (browser: Browser, data: LSTSimClaim): Promise<void> => {
 export const steps: StoredStep[] = [
   {
     name: "Add info for missing document",
-    test: async (browser: Browser): Promise<void> => {
+    test: async (browser: Browser, data: LSTSimClaim): Promise<void> => {
       // go to evidence and approve
       const evidenceTab = await waitForElement(
         browser,
@@ -35,10 +28,16 @@ export const steps: StoredStep[] = [
       );
       await browser.click(additionalInfoButton);
 
-      // default matches the "Identification Proof" document type
-      let documentCheckbox = "supportingDocumentationNotProvided";
-      if (missingDocument === "State managed Paid Leave Confirmation") {
-        documentCheckbox = "healthcareProviderInformationIncomplete";
+      let documentCheckbox;
+      switch (data.missingDocument) {
+        case "Identification Proof":
+          documentCheckbox = "supportingDocumentationNotProvided";
+          break;
+        case "State managed Paid Leave Confirmation":
+          documentCheckbox = "healthcareProviderInformationIncomplete";
+          break;
+        default:
+          throw new Error(`Unknown document type: '${data.missingDocument}'.`);
       }
 
       const docCheckbox = await waitForElement(
@@ -53,7 +52,7 @@ export const steps: StoredStep[] = [
       );
       await browser.type(
         notesTextarea,
-        `PFML LST - missing ${missingDocument}`
+        `PFML LST missing '${data.missingDocument}'`
       );
 
       const okEvidenceButton = await waitForElement(
@@ -71,7 +70,7 @@ export const steps: StoredStep[] = [
   },
   {
     name: "Add Leave Request Review notes",
-    test: async (browser: Browser): Promise<void> => {
+    test: async (browser: Browser, data: LSTSimClaim): Promise<void> => {
       // go to the absence hub tab
       const absenceHubTab = await waitForElement(
         browser,
@@ -101,7 +100,7 @@ export const steps: StoredStep[] = [
       const reviewNotesTextarea = await labelled(browser, "Review note");
       await browser.type(
         reviewNotesTextarea,
-        `PFML LST - reviewed ${missingDocument}`
+        `PFML LST reviewed '${data.missingDocument}'`
       );
 
       const okButton = await waitForElement(

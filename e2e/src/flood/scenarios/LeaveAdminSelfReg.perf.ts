@@ -52,7 +52,10 @@ export const steps = [
       await browser.type(emailInput, username);
       const passwordInput = await labelled(browser, "Password");
       await browser.type(passwordInput, password);
-      const employerIdInput = await labelled(browser, "Employer ID number");
+      const employerIdInput = await labelled(
+        browser,
+        "Employer ID number (EIN)"
+      );
       await browser.type(
         employerIdInput,
         data.claim.employer_fein ?? "84-7847847"

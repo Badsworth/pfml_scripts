@@ -9,7 +9,8 @@ export const scenario: LSTScenario = "SavilinxAgent";
 export const tasksToDo = 1;
 export const actions: TaskType[] = [
   "Adjudicate Absence",
-  "Outstanding Requirement Received",
+  "ID Review",
+  "Certification Review",
 ];
 
 const { default: SavilinxAgent, steps } = Agent(scenario, actions, tasksToDo);

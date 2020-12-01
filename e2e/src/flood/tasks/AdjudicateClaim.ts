@@ -1,18 +1,12 @@
 import { Page } from "puppeteer";
 import { Browser, By } from "@flood/element";
-import { LSTSimClaim } from "../config";
 import { waitForElement } from "../helpers";
 import Approve from "./ApproveClaim";
-import Deny from "./DenyClaim";
 
 let mainWindow: Page;
 let popupWindow: Page;
 
-export default async (browser: Browser, data: LSTSimClaim): Promise<void> => {
-  const decideStep = Math.random() > 0.5 ? Approve : Deny;
-  await decideStep(browser, data);
-};
-
+export default Approve;
 export const PreAdjudicateAbsence = async (browser: Browser): Promise<void> => {
   // Click 'Do task' button opens a popup window
   mainWindow = await browser.page;

@@ -5,34 +5,43 @@ import {
   isFinanciallyEligible,
 } from "../helpers";
 import {
-  TaskType,
   StoredStep,
   LSTSimClaim,
   StandardDocumentType,
-  standardDocuments,
+  TaskType,
 } from "../config";
 import Tasks from "./index";
 import { approveEvidence } from "./ApproveClaim";
 
+let breakStepFlow = false;
+let taskName: TaskType;
+let docType: StandardDocumentType;
 let taskDescription: string;
-const attachedDocuments: StandardDocumentType[] = [];
-const missingDocuments: StandardDocumentType[] = [];
 
-export const taskName: TaskType = "Outstanding Requirement Received";
-
-export const PreORR = async (browser: Browser): Promise<void> => {
-  const description = await waitForElement(
-    browser,
-    By.css(".ListRowSelected td[id*='workqueuelistviewDescription']")
-  );
-  taskDescription = await description.text();
-
+export const PreDocumentReview = async (browser: Browser): Promise<void> => {
   const openTask = await waitForElement(
     browser,
     By.css('a[aria-label="Open Task"]')
   );
   await browser.click(openTask);
 
+  const name = await waitForElement(browser, By.css("[id*='WorkTypeName']"));
+  const description = await waitForElement(
+    browser,
+    By.css("span[id$='Description']")
+  );
+  taskName = (await name.text()) as TaskType;
+  taskDescription = await description.text();
+  switch (taskName) {
+    case "ID Review":
+      docType = "Identification Proof";
+      break;
+    case "Certification Review":
+      docType = "State managed Paid Leave Confirmation";
+      break;
+    default:
+      throw new Error(`Unknown document type for task: '${taskName}'.`);
+  }
   const openClaim = await waitForElement(
     browser,
     By.css('a[title="Navigate to case details"]')
@@ -67,24 +76,16 @@ export default async (browser: Browser, data: LSTSimClaim): Promise<void> => {
       By.css("[class^='TabO'][keytipnumber='11']")
     );
     await browser.click(documentsTab);
-    for (const docType of standardDocuments) {
-      // check if the document is there and keep track
-      try {
-        const document: Locator = By.css(`a[title='${docType}' i]`);
-        await waitForElement(browser, document);
-        attachedDocuments.push(docType);
-      } catch (e) {
-        missingDocuments.push(docType);
-      }
-    }
+    // check if the document is there and keep track
+    const document: Locator = By.css(`a[title='${docType}' i]`);
+    await waitForElement(browser, document);
   }
   // if claim is not in adjudication,
   // or evidence is not valid
   // or there are no documents to review
   if (
     !claimStatus.includes("Adjudication") ||
-    evidenceStatus.includes("Not Satisfied") ||
-    attachedDocuments.length === 0
+    evidenceStatus.includes("Not Satisfied")
   ) {
     // close task
     console.info("Claim or Evidence is not reviewable. Closing task...");
@@ -95,7 +96,15 @@ export default async (browser: Browser, data: LSTSimClaim): Promise<void> => {
   const isEligible = await isFinanciallyEligible(browser);
   if (isEligible) {
     for (const step of steps) {
-      console.info(`Outstanding Requirement Received - ${step.name}`);
+      if (breakStepFlow) {
+        console.info(
+          `A breaking condition was found therefore steps after '${
+            steps[steps.indexOf(step) - 1].name
+          }' were not executed.`
+        );
+        break;
+      }
+      console.info(`${taskName} - ${step.name}`);
       await step.test(browser, data);
     }
   } else {
@@ -115,7 +124,7 @@ export const steps: StoredStep[] = [
       );
       await browser.click(documentsTab);
       // open documents & review
-      for (const docType of attachedDocuments) {
+      try {
         const document: Locator = By.css(`a[title='${docType}' i]`);
         const popupPage = await browser.page;
         await browser.click(document);
@@ -123,6 +132,10 @@ export const steps: StoredStep[] = [
         await browser.wait(5000);
         documentPage.close({ runBeforeUnload: true });
         await browser.switchTo().page(popupPage);
+      } catch (e) {
+        breakStepFlow = true;
+        data.missingDocument = docType;
+        await Tasks.RequestAdditionalInformation(browser, data);
       }
       await waitForRealTimeSim(browser, data, 1 / steps.length);
     },
@@ -142,16 +155,8 @@ export const steps: StoredStep[] = [
         By.css("input[type='submit'][value='Adjudicate']")
       );
       await browser.click(adjudicateButton);
-      if (missingDocuments.length > 0) {
-        // if documents are missing
-        for (const missingDocument of missingDocuments) {
-          data.missingDocument = missingDocument;
-          await Tasks.PreRequestAdditionalInfo(browser, data);
-          await Tasks.RequestAdditionalInformation(browser, data);
-        }
-      }
       // if documents exist, approve evidence
-      await approveEvidence.test(browser, data);
+      await approveEvidence(docType).test(browser, data);
 
       const okButton = await waitForElement(
         browser,
@@ -162,7 +167,7 @@ export const steps: StoredStep[] = [
     },
   },
   {
-    name: "Close ORR Task",
+    name: "Close document review task",
     test: async (browser: Browser, data: LSTSimClaim): Promise<void> => {
       // go to the tasks tab
       const tasksTab = await waitForElement(
