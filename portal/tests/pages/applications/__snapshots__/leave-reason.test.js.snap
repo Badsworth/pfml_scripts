@@ -3,7 +3,7 @@
 exports[`LeaveReasonPage renders the page for medical leave and does not show reason qualifier followup 1`] = `
 <QuestionPage
   onSave={[Function]}
-  title="Leave type"
+  title="Leave details"
 >
   <Alert
     neutral={true}

@@ -56,7 +56,7 @@ exports[`Employer index renders the page 1`] = `
         View forms and notices online
       </Heading>
       <p>
-        You’ll get an email about our application decision with a direct link to download the letter your employee received. For medical leave, you can download the Certification of a serious health condition form during the review process.
+        You’ll get an email about our application decision with a direct link to download the letter your employee received. For medical leave, you can download the Certification of a Serious Health Condition form during the review process.
       </p>
     </div>
     <div

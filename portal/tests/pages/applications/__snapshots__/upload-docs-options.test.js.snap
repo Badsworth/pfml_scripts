@@ -54,7 +54,7 @@ Array [
   },
   Object {
     "checked": false,
-    "label": "Health Care Provider Certification",
+    "label": "Certification of a Serious Health Condition",
     "value": "UPLOAD_CERTIFICATION",
   },
 ]

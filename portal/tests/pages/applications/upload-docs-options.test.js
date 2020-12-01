@@ -22,7 +22,9 @@ describe("UploadDocsOptions", () => {
     }));
     expect(wrapper.find("InputChoiceGroup").prop("choices")).toMatchSnapshot();
     expect(wrapper.html()).not.toMatch("Proof of placement");
-    expect(wrapper.html()).toMatch("Health Care Provider Certification");
+    expect(wrapper.html()).toMatch(
+      "Certification of a Serious Health Condition"
+    );
   });
 
   it("renders the appropriate cert option for newborn bonding leave", () => {

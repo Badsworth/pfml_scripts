@@ -59,7 +59,6 @@ export const NotifiedEmployer = (props) => {
           },
         ]}
         label={t("pages.claimsNotifiedEmployer.sectionLabel")}
-        hint={t("pages.claimsNotifiedEmployer.hint")}
         type="radio"
       />
       <ConditionalContent

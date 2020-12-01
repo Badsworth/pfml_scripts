@@ -121,7 +121,7 @@ exports[`Dashboard renders dashboard content 1`] = `
             You need a document that confirms your child’s date of birth, such as a birth certificate or statement from a health care provider stating your child's birth date.
           </p>
           <p>
-            You can apply before your child is born. You will need to provide proof of birth in order for your application to be approved.
+            You can apply before your child is born. Once the child is born, you will need to provide proof of birth in order for your application to be approved.
           </p>
         </AccordionItem>
         <AccordionItem

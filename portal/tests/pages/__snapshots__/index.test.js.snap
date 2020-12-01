@@ -104,13 +104,12 @@ exports[`Index renders index content 2`] = `"Massachusetts employers: Register n
 
 exports[`Index renders index content 3`] = `
 Array [
-  "Later this month, you can create an account to apply for Paid Family and Medical Leave. Learn more about the ",
+  "Later this month, you can create an account to apply for Paid Family and Medical Leave. ",
   <a
     href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-timeline#december-2,-2020-"
     key="1"
   >
-    PFML benefit timeline on mass.gov
+    Learn more about the paid leave benefit timeline.
   </a>,
-  ".",
 ]
 `;

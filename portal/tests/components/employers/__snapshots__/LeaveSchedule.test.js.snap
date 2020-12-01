@@ -59,7 +59,7 @@ exports[`LeaveSchedule renders intermittent schedule 1`] = `
       className="text-normal"
       href="example-hcp-link.pdf"
     >
-      Health care provider form
+      Certification of a Serious Health Condition
     </a>
   </ReviewRow>
 </Fragment>
@@ -121,7 +121,7 @@ exports[`LeaveSchedule renders reduced schedule 1`] = `
       className="text-normal"
       href="example-hcp-link.pdf"
     >
-      Health care provider form
+      Certification of a Serious Health Condition
     </a>
   </ReviewRow>
 </Fragment>

@@ -58,7 +58,7 @@ exports[`PaymentMethod renders the page 1`] = `
         We need this information so you can receive your weekly benefit through Direct Deposit. Contact your bank if you are having trouble finding this information.
       </Lead>
       <InputText
-        hint="This is the 9-digit number found on the lower left corner of a check."
+        hint="This is the 9-digit number found on the lower left corner of a check or deposit slip."
         inputMode="numeric"
         label="Routing number"
         name="payment_preference.routing_number"

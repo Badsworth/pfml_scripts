@@ -10,14 +10,14 @@ Array [
   <p
     key="p-1"
   >
-    We need true answers to every question so that we can manage the program the way the law requires. You can read more about the requirement to answer truthfully at 
+    We need true answers to every question so that we can manage the program the way the law requires. You can read more about the 
     <a
       href="https://www.mass.gov/info-details/massachusetts-department-of-family-and-medical-leave-informed-consent-agreement"
       key="1"
       rel="noopener"
       target="_blank"
     >
-      Mass.gov
+      requirement to answer truthfully
     </a>
     .
   </p>,
@@ -57,7 +57,7 @@ exports[`Start renders the page 1`] = `
       state="info"
     >
       <p>
-        I understand that I need to give true answers to all questions in order to receive and keep my paid leave benefits and job protections. I understand false answers may forfeit my rights to paid leave and job protections.
+        I understand that I need to give true answers to all questions in order to receive and keep my paid leave benefits and job protections. I understand false answers may forfeit my rights to paid leave and may result in other penalties.
       </p>
       <Button
         loading={false}

@@ -14,14 +14,14 @@ Array [
   <p
     key="p-0"
   >
-    It's faster to upload your documents online, but you can fax or mail your documents if you prefer. Follow the instructions on 
+    It's faster to upload your documents online, but you can fax or mail color copies of your documents if you prefer. Follow the 
     <a
       href="https://www.mass.gov/pfmlsubmitinfo"
       key="1"
       rel="noopener"
       target="_blank"
     >
-      Mass.gov
+      fax and mail instructions
     </a>
     .
   </p>,
@@ -60,28 +60,28 @@ Array [
   <p
     key="p-0"
   >
-    It's faster to upload your documents online, but you can fax or mail your documents if you prefer. Follow the instructions on 
+    It's faster to upload your documents online, but you can fax or mail color copies of your documents if you prefer. Follow the 
     <a
       href="https://www.mass.gov/pfmlsubmitinfo"
       key="1"
       rel="noopener"
       target="_blank"
     >
-      Mass.gov
+      fax and mail instructions
     </a>
     .
   </p>,
   <p
     key="p-1"
   >
-    You need to upload a copy of the 
+    You need to upload a completed 
     <a
       href="https://www.mass.gov/hcp-form"
       key="1"
       rel="noopener"
       target="_blank"
     >
-      PFML Healthcare Provider Form
+      PFML Certification of a Serious Health Condition
     </a>
      to prove that you need to take medical leave. You can upload a completed Family and Medical Leave Act (FMLA) form instead if your provider filled one out.
   </p>,

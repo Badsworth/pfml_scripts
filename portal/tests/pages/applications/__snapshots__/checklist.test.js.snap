@@ -11,7 +11,7 @@ Array [
     rel="noopener"
     target="_blank"
   >
-    Health Care Provider Certification
+    Certification of a Serious Health Condition
   </a>,
   ". ",
 ]
@@ -96,14 +96,14 @@ Array [
   <p
     key="p-0"
   >
-    If you are taking medical leave due to injury, illness, or pregnancy, you need to have your health care provider fill out 
+    If you are taking medical leave due to injury, illness, or pregnancy, you need to have your health care provider complete a 
     <a
       href="https://www.mass.gov/hcp-form"
       key="1"
       rel="noopener"
       target="_blank"
     >
-      the certification form
+      Certification of a Serious Health Condition
     </a>
     . Some of the answers you will need for the online application will come from your health care provider’s answers on the certification form.
   </p>,
@@ -135,7 +135,7 @@ Array [
   <p
     key="p-0"
   >
-    Once you confirm your leave information, we’ll notify your employer. Your job will be protected. To complete your application, you will need to finish steps 6-8 and submit.
+    Once you confirm your leave information, we’ll notify your employer. Your job will be protected. To complete your application, you will need to finish the following three steps and submit.
   </p>,
   <p
     key="p-1"
@@ -160,7 +160,20 @@ Array [
 ]
 `;
 
-exports[`Checklist renders description for Step 6`] = `"Upload proof of identity. If you entered a Massachusetts driver’s license or Mass ID number in step 1, upload the same ID."`;
+exports[`Checklist renders description for Step 6`] = `
+Array [
+  <p
+    key="p-0"
+  >
+    Upload proof of identity. If you entered a Massachusetts driver’s license or Mass ID number in step 1, upload the same ID.
+  </p>,
+  <p
+    key="p-1"
+  >
+    For other IDs, follow the instructions for acceptable proof of identity on the upload page.
+  </p>,
+]
+`;
 
 exports[`Checklist renders description for Step 7`] = `"You need to provide your child's birth certificate or a document from a health care provider that shows the child’s date of birth."`;
 
@@ -496,14 +509,14 @@ exports[`Checklist when Part 1 is submitted renders descriptions for Part 2 and 
 
 exports[`Checklist when Part 1 is submitted renders descriptions for Part 2 and 3 2`] = `
 Array [
-  "Uploading documents online leads to faster processing, but you can also fax or mail documents. Follow the instructions on ",
+  "Uploading documents online leads to faster processing, but you can also ",
   <a
     href="https://www.mass.gov/pfmlsubmitinfo"
     key="1"
     rel="noopener"
     target="_blank"
   >
-    Mass.gov
+    fax or mail documents
   </a>,
   ".",
 ]

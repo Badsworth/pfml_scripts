@@ -100,14 +100,12 @@ Array [
   <p
     key="2"
   >
-    Learn more about the 
     <a
       href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-timeline#december-2,-2020-"
-      key="1"
+      key="0"
     >
-      PFML benefit timeline on mass.gov
+      Learn more about the paid leave benefit timeline.
     </a>
-    .
   </p>,
 ]
 `;
