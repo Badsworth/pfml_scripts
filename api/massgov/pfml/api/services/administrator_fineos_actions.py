@@ -203,9 +203,20 @@ def register_leave_admin_with_fineos(
         raise ValueError("FINEOS Client Exception")
 
     try:
-        leave_admin_record = UserLeaveAdministrator(
-            user=user, employer=employer, fineos_web_id=fineos_web_id,
+        leave_admin_record = (
+            db_session.query(UserLeaveAdministrator)
+            .filter(
+                UserLeaveAdministrator.user_id == user.user_id,
+                UserLeaveAdministrator.employer_id == employer.employer_id,
+            )
+            .one_or_none()
         )
+        if leave_admin_record:
+            leave_admin_record.fineos_web_id = fineos_web_id
+        else:
+            leave_admin_record = UserLeaveAdministrator(
+                user=user, employer=employer, fineos_web_id=fineos_web_id
+            )
         db_session.add(leave_admin_record)
 
         return leave_admin_record

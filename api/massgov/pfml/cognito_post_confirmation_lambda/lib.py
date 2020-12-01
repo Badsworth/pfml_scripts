@@ -1,14 +1,10 @@
 import re
 from typing import Any, Dict, Literal, Optional
 
-import boto3
-
 import massgov.pfml.util.aws_lambda as aws_lambda
-import massgov.pfml.util.config as config
 import massgov.pfml.util.logging
-from massgov.pfml import db, fineos
-from massgov.pfml.api.services.administrator_fineos_actions import register_leave_admin_with_fineos
-from massgov.pfml.db.models.employees import Employer, Role, User, UserRole
+from massgov.pfml import db
+from massgov.pfml.db.models.employees import Employer, Role, User, UserLeaveAdministrator, UserRole
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
 
@@ -99,14 +95,6 @@ def handler(
 def leave_admin_create(
     db_session: db.Session, auth_id: str, email: str, employer_fein: str, log_attributes: dict
 ) -> User:
-    fineos_client_config = fineos.factory.FINEOSClientConfig.from_env()
-    if fineos_client_config.oauth2_client_secret is None:
-        aws_ssm = boto3.client("ssm", region_name="us-east-1")
-        fineos_client_config.oauth2_client_secret = config.get_secret_from_env(
-            aws_ssm, "FINEOS_CLIENT_OAUTH2_CLIENT_SECRET"
-        )
-
-    fineos_client = fineos.create_client(fineos_client_config)
 
     employer = (
         db_session.query(Employer).filter(Employer.employer_fein == employer_fein).one_or_none()
@@ -118,26 +106,10 @@ def leave_admin_create(
     user = User(active_directory_id=auth_id, email_address=email,)
 
     user_role = UserRole(user=user, role_id=Role.EMPLOYER.role_id)
-
+    user_leave_admin = UserLeaveAdministrator(user=user, employer=employer, fineos_web_id=None,)
     db_session.add(user)
     db_session.add(user_role)
-
-    logger.info("Creating user in Fineos", extra=log_attributes)
-
-    register_leave_admin_with_fineos(
-        # TODO: Set a real admin full name - https://lwd.atlassian.net/browse/EMPLOYER-540
-        admin_full_name="Leave Administrator",
-        admin_email=email,
-        admin_area_code=None,
-        admin_phone_number=None,
-        employer=employer,
-        user=user,
-        db_session=db_session,
-        fineos_client=fineos_client,
-    )
-
-    logger.info("Successfully created user in Fineos", extra=log_attributes)
-
+    db_session.add(user_leave_admin)
     db_session.commit()
 
     return user
