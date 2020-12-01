@@ -79,7 +79,7 @@ def internal_server_error_handler(error: InternalServerError) -> Response:
     stacktrace = "".join(traceback.TracebackException.from_exception(exception).format())
 
     logger.error(
-        str(exception), extras={"error.class": type(error).__name__, "exc_text": stacktrace}
+        str(exception), extra={"error.class": type(error).__name__, "traceback": stacktrace}
     )
 
     return http_exception_handler(error)
