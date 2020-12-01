@@ -116,7 +116,7 @@ def employer_get_claim_review(fineos_absence_id: str) -> flask.Response:
         ensure(READ, employer)
 
         claim = get_claim_as_leave_admin(
-            user_leave_admin.fineos_web_id, fineos_absence_id, employer.employer_fein   # type: ignore
+            user_leave_admin.fineos_web_id, fineos_absence_id, employer.employer_fein  # type: ignore
         )
         return response_util.success_response(
             message="Successfully retrieved claim", data=claim.dict(), status_code=200
