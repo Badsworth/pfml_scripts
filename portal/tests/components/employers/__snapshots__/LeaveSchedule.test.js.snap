@@ -1,5 +1,56 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`LeaveSchedule renders continuous schedule 1`] = `
+<Fragment>
+  <ReviewHeading
+    level="2"
+  >
+    Leave schedule
+  </ReviewHeading>
+  <Table
+    className="width-full"
+  >
+    <caption>
+      Leave schedule details table
+    </caption>
+    <thead>
+      <tr>
+        <th
+          scope="col"
+        >
+          Date range
+        </th>
+        <th
+          scope="col"
+        >
+          Leave frequency
+        </th>
+        <th
+          scope="col"
+        >
+          Details
+        </th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <th
+          scope="row"
+        >
+          1/1/2021 – 6/1/2021
+        </th>
+        <td
+          colSpan="2"
+        >
+          Continuous leave
+        </td>
+      </tr>
+    </tbody>
+  </Table>
+  0
+</Fragment>
+`;
+
 exports[`LeaveSchedule renders intermittent schedule 1`] = `
 <Fragment>
   <ReviewHeading
@@ -51,17 +102,7 @@ exports[`LeaveSchedule renders intermittent schedule 1`] = `
       />
     </tbody>
   </Table>
-  <ReviewRow
-    label="Documentation"
-    level="3"
-  >
-    <a
-      className="text-normal"
-      href="example-hcp-link.pdf"
-    >
-      Certification of a Serious Health Condition
-    </a>
-  </ReviewRow>
+  0
 </Fragment>
 `;
 
@@ -113,16 +154,6 @@ exports[`LeaveSchedule renders reduced schedule 1`] = `
       </tr>
     </tbody>
   </Table>
-  <ReviewRow
-    label="Documentation"
-    level="3"
-  >
-    <a
-      className="text-normal"
-      href="example-hcp-link.pdf"
-    >
-      Certification of a Serious Health Condition
-    </a>
-  </ReviewRow>
+  0
 </Fragment>
 `;

@@ -1,22 +1,207 @@
-import IntermittentLeaveSchedule from "../../../src/components/employers/IntermittentLeaveSchedule";
+import Document, { DocumentType } from "../../../src/models/Document";
+import { MockEmployerClaimBuilder, renderWithAppLogic } from "../../test-utils";
+import DocumentCollection from "../../../src/models/DocumentCollection";
 import LeaveSchedule from "../../../src/components/employers/LeaveSchedule";
-import { MockEmployerClaimBuilder } from "../../test-utils";
-import React from "react";
-import { shallow } from "enzyme";
+
+jest.mock("../../../src/hooks/useAppLogic");
+
+const COMPLETED_CLAIM = new MockEmployerClaimBuilder().completed().create();
+const DOCUMENTS = new DocumentCollection([
+  new Document({
+    content_type: "image/png",
+    created_at: "2020-04-05",
+    document_type: DocumentType.medicalCertification,
+    fineos_document_id: "fineos-id-4",
+    name: "Medical cert doc",
+  }),
+  new Document({
+    content_type: "application/pdf",
+    created_at: "2020-01-02",
+    document_type: DocumentType.approvalNotice,
+    fineos_document_id: "fineos-id-1",
+    name: "Approval notice doc",
+  }),
+  new Document({
+    content_type: "application/pdf",
+    created_at: "2020-02-01",
+    document_type: DocumentType.medicalCertification,
+    fineos_document_id: "fineos-id-9",
+    // intentionally omit name
+  }),
+]);
+const DOCUMENTATION_HEADING_SELECTOR = 'ReviewRow[level="3"]';
 
 describe("LeaveSchedule", () => {
-  it("renders reduced schedule", () => {
-    const claim = new MockEmployerClaimBuilder().reducedSchedule().create();
-    const wrapper = shallow(<LeaveSchedule claim={claim} />);
+  let appLogic;
+  let wrapper;
 
+  const renderWithClaim = (claim, render = "shallow") => {
+    ({ appLogic, wrapper } = renderWithAppLogic(LeaveSchedule, {
+      diveLevels: 0,
+      employerClaimAttrs: claim,
+      props: {
+        absenceId: "NTN-111-ABS-01",
+        claim,
+      },
+      render,
+    }));
+  };
+
+  beforeEach(() => {
+    renderWithClaim(COMPLETED_CLAIM);
+  });
+
+  it("renders continuous schedule", () => {
+    const continuousClaim = new MockEmployerClaimBuilder()
+      .continuous()
+      .absenceId()
+      .create();
+    renderWithClaim(continuousClaim);
+    const cellValues = wrapper
+      .find("tbody")
+      .find("tr")
+      .children()
+      .map((cell) => cell.text());
+
+    expect(cellValues).toEqual(["1/1/2021 – 6/1/2021", "Continuous leave"]);
     expect(wrapper).toMatchSnapshot();
   });
 
   it("renders intermittent schedule", () => {
-    const claim = new MockEmployerClaimBuilder().intermittent().create();
-    const wrapper = shallow(<LeaveSchedule claim={claim} />);
-
+    const intermittentClaim = new MockEmployerClaimBuilder()
+      .intermittent()
+      .absenceId()
+      .create();
+    renderWithClaim(intermittentClaim);
+    expect(wrapper.find("IntermittentLeaveSchedule").exists()).toEqual(true);
     expect(wrapper).toMatchSnapshot();
-    expect(wrapper.find(IntermittentLeaveSchedule).exists()).toEqual(true);
+  });
+
+  it("renders reduced schedule", () => {
+    const reducedScheduleClaim = new MockEmployerClaimBuilder()
+      .reducedSchedule()
+      .absenceId()
+      .create();
+    renderWithClaim(reducedScheduleClaim);
+    const cellValues = wrapper
+      .find("tbody")
+      .find("tr")
+      .children()
+      .map((cell) => cell.text());
+
+    expect(cellValues).toEqual([
+      "2/1/2021 – 7/1/2021",
+      "Reduced leave schedule",
+      "Reduced by 10 hours per week",
+    ]);
+    expect(wrapper).toMatchSnapshot();
+  });
+
+  it("renders multiple schedule types", () => {
+    const multipleSchedulesClaim = new MockEmployerClaimBuilder()
+      .continuous()
+      .intermittent()
+      .reducedSchedule()
+      .absenceId()
+      .create();
+
+    renderWithClaim(multipleSchedulesClaim, "mount");
+    const rows = wrapper.find("tbody").find("tr");
+    // if previous three tests pass, assume that the three rows correspond to the three types
+    expect(rows.length).toEqual(3);
+  });
+
+  describe("when there are documents", () => {
+    let downloadDocumentSpy;
+
+    beforeEach(() => {
+      appLogic.employers.documents = DOCUMENTS;
+      appLogic.employers.downloadDocument = jest.fn();
+      downloadDocumentSpy = jest
+        .spyOn(appLogic.employers, "downloadDocument")
+        .mockImplementation(() => Promise.resolve(new Blob()));
+
+      ({ appLogic, wrapper } = renderWithAppLogic(LeaveSchedule, {
+        diveLevels: 0,
+        employerClaimAttrs: COMPLETED_CLAIM,
+        props: {
+          appLogic,
+          absenceId: "NTN-111-ABS-01",
+          claim: COMPLETED_CLAIM,
+        },
+      }));
+    });
+
+    it("shows the documents heading", () => {
+      expect(
+        wrapper.find(DOCUMENTATION_HEADING_SELECTOR).prop("label")
+      ).toEqual("Documentation");
+    });
+
+    it("only shows medical certification documents", () => {
+      const medicalDocuments = wrapper.find("HcpDocumentItem");
+      expect(medicalDocuments.length).toBe(2);
+      expect(medicalDocuments.map((node) => node.dive().text())).toEqual([
+        "Medical cert doc",
+        "Certification of a Serious Health Condition",
+      ]);
+    });
+
+    it("makes a call to download documents on click", async () => {
+      await wrapper
+        .find("HcpDocumentItem")
+        .at(0)
+        .dive()
+        .find("a")
+        .simulate("click", {
+          preventDefault: jest.fn(),
+        });
+
+      expect(downloadDocumentSpy).toHaveBeenCalledWith(
+        "NTN-111-ABS-01",
+        expect.objectContaining({
+          content_type: "image/png",
+          created_at: "2020-04-05",
+          document_type: "State managed Paid Leave Confirmation",
+          fineos_document_id: "fineos-id-4",
+          name: "Medical cert doc",
+        })
+      );
+    });
+  });
+
+  describe("while documents are undefined", () => {
+    beforeEach(() => {
+      renderWithClaim(COMPLETED_CLAIM, "mount");
+    });
+
+    it("loads the documents", () => {
+      expect(appLogic.employers.loadDocuments).toHaveBeenCalledWith(
+        "NTN-111-ABS-01"
+      );
+    });
+
+    it("does not show the document section", () => {
+      expect(wrapper.find(DOCUMENTATION_HEADING_SELECTOR).exists()).toBe(false);
+    });
+  });
+
+  describe("when there are no documents", () => {
+    beforeEach(() => {
+      appLogic.employers.documents = new DocumentCollection([]);
+      ({ wrapper } = renderWithAppLogic(LeaveSchedule, {
+        diveLevels: 0,
+        employerClaimAttrs: COMPLETED_CLAIM,
+        props: {
+          appLogic,
+          absenceId: "NTN-111-ABS-01",
+          claim: COMPLETED_CLAIM,
+        },
+      }));
+    });
+
+    it("does not show the document section", () => {
+      expect(wrapper.find(DOCUMENTATION_HEADING_SELECTOR).exists()).toBe(false);
+    });
   });
 });

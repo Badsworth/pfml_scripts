@@ -35,11 +35,12 @@ const hoursWorkedPerWeek = 40;
 export const Review = (props) => {
   // TODO (EMPLOYER-583) add frontend validation
   const {
-    appLogic: {
-      employers: { claim },
-    },
+    appLogic,
     query: { absence_id: absenceId },
   } = props;
+  const {
+    employers: { claim },
+  } = appLogic;
   const { t } = useTranslation();
   const [formState, setFormState] = useState({
     employerBenefits: [],
@@ -162,7 +163,7 @@ export const Review = (props) => {
       <p className="margin-top-0">{claim.employer_fein}</p>
       <EmployeeInformation claim={claim} />
       <LeaveDetails claim={claim} />
-      <LeaveSchedule claim={claim} />
+      <LeaveSchedule appLogic={appLogic} claim={claim} />
       <form id="employer-review-form" onSubmit={handleSubmit}>
         <SupportingWorkDetails
           // TODO (EMPLOYER-519): Change `hoursWorkedPerWeek` to `claim.hours_worked_per_week` when BE provides value
