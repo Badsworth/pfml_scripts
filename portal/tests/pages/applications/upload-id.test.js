@@ -145,7 +145,8 @@ describe("UploadId", () => {
           expect(appLogic.documents.attach).toHaveBeenCalledWith(
             claim.application_id,
             filesWithUniqueId,
-            expect.any(String)
+            expect.any(String),
+            false
           );
         });
 
@@ -453,7 +454,8 @@ describe("UploadId", () => {
           expect(appLogic.documents.attach).toHaveBeenCalledWith(
             claim.application_id,
             filesWithUniqueId,
-            expect.any(String)
+            expect.any(String),
+            false
           );
         });
 
@@ -489,5 +491,26 @@ describe("UploadId", () => {
       }));
       expect(wrapper.exists("Alert")).toBe(true);
     });
+  });
+
+  it("When uploading additional docs", async () => {
+    ({ appLogic, wrapper } = renderWithAppLogic(UploadId, {
+      claimAttrs: new MockClaimBuilder().create(),
+      diveLevels,
+      props: {
+        query: { claim_id: claim.application_id, additionalDoc: "true" },
+      },
+    }));
+
+    await act(async () => {
+      await wrapper.find("QuestionPage").simulate("save");
+    });
+
+    expect(appLogic.documents.attach).toHaveBeenCalledWith(
+      claim.application_id,
+      [],
+      "Identification Proof",
+      true
+    );
   });
 });

@@ -62,7 +62,7 @@ export const UploadDocsOptions = (props) => {
         : upload_docs_options === UploadType.mass_id;
     return appLogic.portalFlow.goToNextPage(
       { claim },
-      { claim_id: claim.application_id, showStateId },
+      { claim_id: claim.application_id, showStateId, additionalDoc: "true" },
       upload_docs_options
     );
   };

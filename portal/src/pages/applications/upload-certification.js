@@ -22,7 +22,7 @@ import withClaim from "../../hoc/withClaim";
 import withClaimDocuments from "../../hoc/withClaimDocuments";
 
 export const UploadCertification = (props) => {
-  const { appLogic, claim, documents, isLoadingDocuments } = props;
+  const { appLogic, claim, documents, isLoadingDocuments, query } = props;
   const { t } = useTranslation();
   const [files, setFiles] = useState([]);
   const claimReason = claim.leave_details.reason;
@@ -67,7 +67,8 @@ export const UploadCertification = (props) => {
       const uploadPromises = appLogic.documents.attach(
         claim.application_id,
         files,
-        DocumentType.medicalCertification // TODO (CP-962): set based on leave reason
+        DocumentType.medicalCertification, // TODO (CP-962): set based on leave reason
+        query.additionalDoc === "true"
       );
 
       await uploadDocumentsHelper(uploadPromises, files, setFiles);
@@ -179,6 +180,7 @@ UploadCertification.propTypes = {
   isLoadingDocuments: PropTypes.bool,
   query: PropTypes.shape({
     claim_id: PropTypes.string,
+    additionalDoc: PropTypes.string,
   }),
 };
 

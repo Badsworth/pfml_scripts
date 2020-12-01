@@ -59,7 +59,12 @@ describe("DocumentsApi", () => {
       it("sends POST request to /applications/{application_id}/documents", async () => {
         const file = makeFile();
 
-        await documentsApi.attachDocument(applicationId, file, "Mock Category");
+        await documentsApi.attachDocument(
+          applicationId,
+          file,
+          "Mock Category",
+          false
+        );
 
         expect(fetch).toHaveBeenCalledTimes(1);
 
@@ -72,6 +77,7 @@ describe("DocumentsApi", () => {
         expect(request.body.get("file")).toBeInstanceOf(File);
         expect(request.body.get("name")).toBe(file.name);
         expect(request.body.get("document_type")).toBe("Mock Category");
+        expect(request.body.get("mark_evidence_received")).toBe("false");
       });
 
       it("resolves with success, status, and document instance", async () => {
@@ -83,7 +89,8 @@ describe("DocumentsApi", () => {
         } = await documentsApi.attachDocument(
           applicationId,
           file,
-          "Mock Category"
+          "Mock Category",
+          false
         );
         expect(documentResponse).toBeInstanceOf(Document);
         expect(rest).toMatchInlineSnapshot(`
@@ -92,6 +99,20 @@ describe("DocumentsApi", () => {
             "success": true,
           }
         `);
+      });
+
+      it("sends POST request with the mark_evidence_received flag", async () => {
+        const file = makeFile();
+
+        await documentsApi.attachDocument(
+          applicationId,
+          file,
+          "Mock Category",
+          true
+        );
+
+        const request = fetch.mock.calls[0][1];
+        expect(request.body.get("mark_evidence_received")).toBe("true");
       });
     });
   });

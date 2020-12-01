@@ -65,7 +65,7 @@ describe("UploadDocsOptions", () => {
       const claim_id = claim.application_id;
       expect(appLogic.portalFlow.goToNextPage).toHaveBeenCalledWith(
         { claim },
-        { claim_id, showStateId: true },
+        { claim_id, showStateId: true, additionalDoc: "true" },
         "UPLOAD_MASS_ID"
       );
     });
@@ -87,7 +87,7 @@ describe("UploadDocsOptions", () => {
       const claim_id = claim.application_id;
       expect(appLogic.portalFlow.goToNextPage).toHaveBeenCalledWith(
         { claim },
-        { claim_id, showStateId: false },
+        { claim_id, showStateId: false, additionalDoc: "true" },
         "UPLOAD_ID"
       );
     });
@@ -109,7 +109,7 @@ describe("UploadDocsOptions", () => {
       const claim_id = claim.application_id;
       expect(appLogic.portalFlow.goToNextPage).toHaveBeenCalledWith(
         { claim },
-        { claim_id },
+        { claim_id, additionalDoc: "true" },
         "UPLOAD_CERTIFICATION"
       );
     });

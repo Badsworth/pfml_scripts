@@ -72,9 +72,17 @@ const useDocumentsLogic = ({ appErrorsLogic }) => {
    * @param {string} application_id - application id for claim
    * @param {{id:string, file:File}[]} filesWithUniqueId - array of objects including unique Id and File to upload and attach to the application
    * @param {string} documentType - category of documents
+   * @param {boolean} mark_evidence_received - Set the flag used to indicate whether
+   * the doc is ready for review or not. Docs added to a claim that was completed
+   * through a channel other than the Portal require this flag being set to `true`.
    * @returns {Promise[]}
    */
-  const attach = (application_id, filesWithUniqueId = [], documentType) => {
+  const attach = (
+    application_id,
+    filesWithUniqueId = [],
+    documentType,
+    mark_evidence_received
+  ) => {
     assert(application_id);
     appErrorsLogic.clearErrors();
 
@@ -97,7 +105,8 @@ const useDocumentsLogic = ({ appErrorsLogic }) => {
         const { success, document } = await documentsApi.attachDocument(
           application_id,
           fileWithUniqueId.file,
-          documentType
+          documentType,
+          mark_evidence_received
         );
         if (success) {
           addDocument(document);

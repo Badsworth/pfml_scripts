@@ -24,10 +24,11 @@ export const UploadId = (props) => {
   const { t } = useTranslation();
   const [stateIdFiles, setStateIdFiles] = useState([]);
   const { appLogic, claim, documents, isLoadingDocuments, query } = props;
+  const { additionalDoc, showStateId } = query;
   let hasStateId;
-  if (query.showStateId === "true") {
+  if (showStateId === "true") {
     hasStateId = true;
-  } else if (query.showStateId === "false") {
+  } else if (showStateId === "false") {
     hasStateId = false;
   } else {
     hasStateId = claim.has_state_id;
@@ -57,7 +58,8 @@ export const UploadId = (props) => {
       const uploadPromises = appLogic.documents.attach(
         claim.application_id,
         stateIdFiles,
-        DocumentType.identityVerification // TODO (CP-962): set based on leave reason
+        DocumentType.identityVerification, // TODO (CP-962): set based on leave reason
+        additionalDoc === "true"
       );
 
       const { success } = await uploadDocumentsHelper(
@@ -188,6 +190,7 @@ UploadId.propTypes = {
   query: PropTypes.shape({
     claim_id: PropTypes.string,
     showStateId: PropTypes.string,
+    additionalDoc: PropTypes.string,
   }),
 };
 

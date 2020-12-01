@@ -44,9 +44,17 @@ export default class DocumentsApi extends BaseApi {
    * @param {string} application_id ID of the Claim
    * @param {File} file - The File object to upload
    * @param {string} document_type type of documents
+   * @param {boolean} mark_evidence_received - Set the flag used to indicate whether
+   * the doc is ready for review or not. Docs added to a claim that was completed
+   * through a channel other than the Portal require this flag being set to `true`.
    * @returns {DocumentApiSingleResult} The result of the API call
    */
-  attachDocument = async (application_id, file, document_type) => {
+  attachDocument = async (
+    application_id,
+    file,
+    document_type,
+    mark_evidence_received
+  ) => {
     const formData = new FormData();
     formData.append("document_type", document_type);
     formData.append("description", "Placeholder");
@@ -54,6 +62,7 @@ export default class DocumentsApi extends BaseApi {
     assert(file);
     formData.set("file", file);
     formData.set("name", file.name);
+    formData.set("mark_evidence_received", mark_evidence_received);
 
     const { data, status, success } = await this.request(
       "POST",

@@ -62,7 +62,8 @@ describe("useDocumentsLogic", () => {
         uploadPromises = await documentsLogic.attach(
           application_id,
           files,
-          mockDocumentType
+          mockDocumentType,
+          false
         );
       });
 
@@ -82,7 +83,8 @@ describe("useDocumentsLogic", () => {
         uploadPromises = await documentsLogic.attach(
           application_id,
           files,
-          mockDocumentType
+          mockDocumentType,
+          false
         );
       });
 
@@ -100,7 +102,8 @@ describe("useDocumentsLogic", () => {
         uploadPromises = await documentsLogic.attach(
           application_id,
           files,
-          mockDocumentType
+          mockDocumentType,
+          false
         );
       });
 
@@ -114,14 +117,41 @@ describe("useDocumentsLogic", () => {
         { id: "3", file: makeFile({ name: "file3" }) },
       ];
       await act(async () => {
-        await documentsLogic.attach(application_id, files, mockDocumentType);
+        await documentsLogic.attach(
+          application_id,
+          files,
+          mockDocumentType,
+          false
+        );
       });
 
       files.forEach((fileWithUniqueId) => {
         expect(attachDocumentMock).toHaveBeenCalledWith(
           application_id,
           fileWithUniqueId.file,
-          mockDocumentType
+          mockDocumentType,
+          false
+        );
+      });
+    });
+
+    it("submits documents with mark_evidence_received is true", async () => {
+      const files = [{ id: "1", file: makeFile({ name: "file1" }) }];
+      await act(async () => {
+        await documentsLogic.attach(
+          application_id,
+          files,
+          mockDocumentType,
+          true
+        );
+      });
+
+      files.forEach((fileWithUniqueId) => {
+        expect(attachDocumentMock).toHaveBeenCalledWith(
+          application_id,
+          fileWithUniqueId.file,
+          mockDocumentType,
+          true
         );
       });
     });
@@ -177,7 +207,7 @@ describe("useDocumentsLogic", () => {
             application_id,
             files,
             mockDocumentType,
-            jest.fn()
+            false
           );
         });
 
@@ -195,7 +225,7 @@ describe("useDocumentsLogic", () => {
             application_id,
             files,
             mockDocumentType,
-            jest.fn()
+            false
           );
         });
 
@@ -234,7 +264,7 @@ describe("useDocumentsLogic", () => {
       const files = [];
 
       expect(() =>
-        documentsLogic.attach(application_id, files, mockDocumentType)
+        documentsLogic.attach(application_id, files, mockDocumentType, false)
       ).toThrow(ValidationError);
     });
 
@@ -246,7 +276,12 @@ describe("useDocumentsLogic", () => {
       ];
       const spy = jest.spyOn(appErrorsLogic, "catchError");
       await act(async () => {
-        await documentsLogic.attach(application_id, files, mockDocumentType);
+        await documentsLogic.attach(
+          application_id,
+          files,
+          mockDocumentType,
+          false
+        );
       });
       const fileErrorId = appErrorsLogic.appErrors.items[0].meta.file_id;
       const fineosErrorMsg = appErrorsLogic.appErrors.items[1].message;
@@ -282,7 +317,7 @@ describe("useDocumentsLogic", () => {
         application_id,
         files,
         mockDocumentType,
-        jest.fn()
+        false
       );
 
       await Promise.all(uploadPromises);
