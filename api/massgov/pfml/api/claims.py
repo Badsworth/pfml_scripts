@@ -1,4 +1,5 @@
 import base64
+from typing import Optional
 
 import connexion
 import flask
@@ -14,7 +15,8 @@ from massgov.pfml.api.services.administrator_fineos_actions import (
     get_claim_as_leave_admin,
     get_documents_as_leave_admin,
 )
-from massgov.pfml.db.models.employees import Employer, UserLeaveAdministrator
+from massgov.pfml.db.models.applications import Application
+from massgov.pfml.db.models.employees import Claim, Employer, UserLeaveAdministrator
 from massgov.pfml.fineos.models.group_client_api import Base64EncodedFileData
 from massgov.pfml.fineos.transforms.to_fineos.eforms import TransformEmployerClaimReview
 from massgov.pfml.util.sqlalchemy import get_or_404
@@ -29,19 +31,45 @@ DOWNLOADABLE_DOC_TYPES = [
 ]
 
 
-def get_current_user_leave_admin_record():
+def get_current_user_leave_admin_record(fineos_absence_id: str) -> UserLeaveAdministrator:
     with app.db_session() as db_session:
-        # TODO EMPLOYER-458
-        # Eventually will need to check for the existence of an Employer
-        # in the context of this user as well aka
-        # UserLeaveAdministrator.employer_id == selected_employer_id
+        associated_employer_id: Optional[str] = None
+
         current_user = app.current_user()
         if current_user is None:
             raise Unauthorized()
 
+        claim = (
+            db_session.query(Claim)
+            .filter(Claim.fineos_absence_id == fineos_absence_id)
+            .one_or_none()
+        )
+
+        if claim is not None:
+            associated_employer_id = claim.employer_id
+        else:
+            # Backstopping the Claim lookup with an Application lookup for
+            # purposes of E2E testing.  This will no longer be needed when Claims
+            # is properly populated.
+            # Tech debt to be taken care of in EMPLOYER-626
+            application = (
+                db_session.query(Application)
+                .filter(Application.fineos_absence_id == fineos_absence_id)
+                .one_or_none()
+            )
+
+            if application is not None:
+                associated_employer_id = application.employer_id
+
+        if associated_employer_id is None:
+            raise Forbidden(description="Claim does not exist for given absence ID")
+
         user_leave_admin = (
             db_session.query(UserLeaveAdministrator)
-            .filter(UserLeaveAdministrator.user_id == current_user.user_id)
+            .filter(
+                (UserLeaveAdministrator.user_id == current_user.user_id)
+                & (UserLeaveAdministrator.employer_id == associated_employer_id)
+            )
             .one_or_none()
         )
 
@@ -62,9 +90,9 @@ def employer_update_claim_review(fineos_absence_id: str) -> flask.Response:
 
     transformed_eform = TransformEmployerClaimReview.to_fineos(claim_request)
 
-    user_leave_admin = get_current_user_leave_admin_record()
+    user_leave_admin = get_current_user_leave_admin_record(fineos_absence_id)
 
-    create_eform(user_leave_admin.fineos_web_id, fineos_absence_id, transformed_eform)
+    create_eform(user_leave_admin.fineos_web_id, fineos_absence_id, transformed_eform)  # type: ignore
 
     claim_response = {"claim_id": fineos_absence_id}
 
@@ -80,7 +108,7 @@ def employer_get_claim_review(fineos_absence_id: str) -> flask.Response:
     The requesting user must be of the EMPLOYER role.
     """
 
-    user_leave_admin = get_current_user_leave_admin_record()
+    user_leave_admin = get_current_user_leave_admin_record(fineos_absence_id)
 
     with app.db_session() as db_session:
 
@@ -88,7 +116,7 @@ def employer_get_claim_review(fineos_absence_id: str) -> flask.Response:
         ensure(READ, employer)
 
         claim = get_claim_as_leave_admin(
-            user_leave_admin.fineos_web_id, fineos_absence_id, employer.employer_fein
+            user_leave_admin.fineos_web_id, fineos_absence_id, employer.employer_fein   # type: ignore
         )
         return response_util.success_response(
             message="Successfully retrieved claim", data=claim.dict(), status_code=200
@@ -102,9 +130,9 @@ def employer_get_claim_documents(fineos_absence_id: str) -> flask.Response:
     The requesting user must be of the EMPLOYER role.
     """
 
-    user_leave_admin = get_current_user_leave_admin_record()
+    user_leave_admin = get_current_user_leave_admin_record(fineos_absence_id)
 
-    documents = get_documents_as_leave_admin(user_leave_admin.fineos_web_id, fineos_absence_id)
+    documents = get_documents_as_leave_admin(user_leave_admin.fineos_web_id, fineos_absence_id)  # type: ignore
     documents_list = [doc.dict() for doc in documents]
     return response_util.success_response(
         message="Successfully retrieved documents", data=documents_list, status_code=200
@@ -118,9 +146,9 @@ def employer_document_download(fineos_absence_id: str, fineos_document_id: str) 
     The requesting user must be of the EMPLOYER role.
     """
 
-    user_leave_admin = get_current_user_leave_admin_record()
+    user_leave_admin = get_current_user_leave_admin_record(fineos_absence_id)
 
-    documents = get_documents_as_leave_admin(user_leave_admin.fineos_web_id, fineos_absence_id)
+    documents = get_documents_as_leave_admin(user_leave_admin.fineos_web_id, fineos_absence_id)  # type: ignore
     document = next(
         (doc for doc in documents if doc.fineos_document_id == fineos_document_id), None
     )
@@ -132,7 +160,7 @@ def employer_document_download(fineos_absence_id: str, fineos_document_id: str) 
         raise Forbidden(description="User does not have access to this document")
 
     document_data: Base64EncodedFileData = download_document_as_leave_admin(
-        user_leave_admin.fineos_web_id, fineos_absence_id, fineos_document_id
+        user_leave_admin.fineos_web_id, fineos_absence_id, fineos_document_id  # type: ignore
     )
     file_bytes = base64.b64decode(document_data.base64EncodedFileContents.encode("ascii"))
 

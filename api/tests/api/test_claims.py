@@ -1,5 +1,5 @@
 from massgov.pfml.db.models.employees import UserLeaveAdministrator
-from massgov.pfml.db.models.factories import EmployerFactory
+from massgov.pfml.db.models.factories import ClaimFactory, EmployerFactory
 
 
 def test_non_employers_cannot_download_documents(client, auth_token):
@@ -55,6 +55,9 @@ def test_employers_receive_200_from_document_download(
     client, employer_user, employer_auth_token, test_db_session
 ):
     employer = EmployerFactory.create()
+    ClaimFactory.create(
+        employer_id=employer.employer_id, fineos_absence_id="leave_admin_allowable_doc_type"
+    )
     link = UserLeaveAdministrator(
         user_id=employer_user.user_id,
         employer_id=employer.employer_id,
@@ -84,6 +87,7 @@ def test_employers_receive_200_from_get_documents(
     client, employer_user, employer_auth_token, test_db_session
 ):
     employer = EmployerFactory.create()
+    ClaimFactory.create(employer_id=employer.employer_id, fineos_absence_id="NTN-100-ABS-01")
     link = UserLeaveAdministrator(
         user_id=employer_user.user_id,
         employer_id=employer.employer_id,
@@ -113,6 +117,8 @@ def test_employers_receive_200_from_get_claim_review(
     client, employer_user, employer_auth_token, test_db_session
 ):
     employer = EmployerFactory.create()
+    ClaimFactory.create(employer_id=employer.employer_id, fineos_absence_id="NTN-100-ABS-01")
+
     link = UserLeaveAdministrator(
         user_id=employer_user.user_id,
         employer_id=employer.employer_id,
@@ -167,6 +173,7 @@ def test_employees_receive_200_from_employer_update_claim_review(
     client, employer_user, employer_auth_token, test_db_session
 ):
     employer = EmployerFactory.create()
+    ClaimFactory.create(employer_id=employer.employer_id, fineos_absence_id="NTN-100-ABS-01")
     link = UserLeaveAdministrator(
         user_id=employer_user.user_id,
         employer_id=employer.employer_id,

@@ -210,6 +210,20 @@ class WagesAndContributionsFactory(BaseFactory):
     employee_id = factory.LazyAttribute(lambda w: w.employee.employee_id)
 
 
+class ClaimFactory(BaseFactory):
+    class Meta:
+        model = employee_models.Claim
+
+    claim_id = Generators.UuidObj
+
+    employer_id = factory.LazyAttribute(lambda a: a.employer.employer_id)
+    authorized_representative_id = None
+    claim_type_id = None
+    benefit_amount = 100
+    benefit_days = 60
+    fineos_absence_id = "NTN-01-ABS-01"
+
+
 class ApplicationFactory(BaseFactory):
     class Meta:
         model = application_models.Application
