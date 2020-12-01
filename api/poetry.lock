@@ -1063,6 +1063,14 @@ python-versions = ">=2.6"
 version = "5.5.0"
 
 [[package]]
+category = "main"
+description = "Python version of Google's common library for parsing, formatting, storing and validating international phone numbers."
+name = "phonenumbers"
+optional = false
+python-versions = "*"
+version = "8.12.13"
+
+[[package]]
 category = "dev"
 description = "plugin and hook calling mechanisms for python"
 name = "pluggy"
@@ -1765,7 +1773,7 @@ docs = ["sphinx", "jaraco.packaging (>=3.2)", "rst.linker (>=1.9)"]
 testing = ["jaraco.itertools", "func-timeout"]
 
 [metadata]
-content-hash = "0965672dd16b33f633d70c7b259f0def6dfb1f217dc220fa8e12b2aa4a4d391c"
+content-hash = "97dcef71984857427b6a3efd19c04ba9d6235684e3742c4743dd5853691bbc27"
 python-versions = "^3.8"
 
 [metadata.files]
@@ -2267,6 +2275,10 @@ pathtools = [
 pbr = [
     {file = "pbr-5.5.0-py2.py3-none-any.whl", hash = "sha256:5adc0f9fc64319d8df5ca1e4e06eea674c26b80e6f00c530b18ce6a6592ead15"},
     {file = "pbr-5.5.0.tar.gz", hash = "sha256:14bfd98f51c78a3dd22a1ef45cf194ad79eee4a19e8e1a0d5c7f8e81ffe182ea"},
+]
+phonenumbers = [
+    {file = "phonenumbers-8.12.13-py2.py3-none-any.whl", hash = "sha256:9de2937034deb040eb9ac56519b0887e0fe89811e57f6f5c88359e3be20ae3b5"},
+    {file = "phonenumbers-8.12.13.tar.gz", hash = "sha256:96d02120a3481e22d8a8eb5e4595ceec1930855749f6e4a06ef931881f59f562"},
 ]
 pluggy = [
     {file = "pluggy-0.13.1-py2.py3-none-any.whl", hash = "sha256:966c145cd83c96502c3c3868f50408687b38434af77734af1e9ca461a4081d2d"},

@@ -27,6 +27,7 @@ from massgov.pfml.db.models.applications import (
     LeaveReasonQualifier,
     OtherIncome,
     OtherIncomeType,
+    Phone,
     RelationshipQualifier,
     RelationshipToCaregiver,
     WorkPattern,
@@ -2661,6 +2662,7 @@ def test_application_post_submit_to_fineos(client, user, auth_token, test_db_ses
     application.employer_fein = "770000001"
     application.hours_worked_per_week = 70
     application.employer_notified = True
+    application.phone = Phone(phone_number="+15552223333", phone_type_id=1, fineos_phone_id=111)
     application.employer_notification_date = date(2021, 1, 7)
     application.employment_status_id = EmploymentStatus.UNEMPLOYED.employment_status_id
     application.residential_address = AddressFactory.create()
@@ -2766,6 +2768,26 @@ def test_application_post_submit_to_fineos(client, user, auth_token, test_db_ses
                     employerNotified=True,
                     employerNotificationDate=date(2021, 1, 7),
                     employerNotificationMethod=None,
+                )
+            },
+        ),
+        (
+            "update_customer_contact_details",
+            fineos_user_id,
+            {
+                "contact_details": massgov.pfml.fineos.models.customer_api.ContactDetails(
+                    phoneNumbers=[
+                        massgov.pfml.fineos.models.customer_api.PhoneNumber(
+                            id=111,
+                            preferred=None,
+                            phoneNumberType="Cell",
+                            intCode="1",
+                            areaCode=None,
+                            telephoneNo="5552223333",
+                            classExtensionInformation=None,
+                        )
+                    ],
+                    emailAddresses=None,
                 )
             },
         ),

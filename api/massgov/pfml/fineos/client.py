@@ -39,6 +39,18 @@ class AbstractFINEOSClient(abc.ABC, metaclass=abc.ABCMeta):
         pass
 
     @abc.abstractmethod
+    def read_customer_contact_details(self, user_id: str) -> models.customer_api.ContactDetails:
+        """Read customer contact details."""
+        pass
+
+    @abc.abstractmethod
+    def update_customer_contact_details(
+        self, user_id: str, contact_details: models.customer_api.ContactDetails
+    ) -> models.customer_api.ContactDetails:
+        """Update customer contact details."""
+        pass
+
+    @abc.abstractmethod
     def start_absence(
         self, user_id: str, absence_case: models.customer_api.AbsenceCase
     ) -> models.customer_api.AbsenceCaseSummary:

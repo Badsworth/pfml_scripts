@@ -173,6 +173,7 @@ class Phone(Base):
     phone_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
     phone_number = Column(Text)  # Formatted in E.164
     phone_type_id = Column(Integer, ForeignKey("lk_phone_type.phone_type_id"), nullable=False)
+    phone_type = relationship(LkPhoneType)
 
 
 class Application(Base):

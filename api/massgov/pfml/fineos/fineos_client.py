@@ -336,6 +336,25 @@ class FINEOSClient(client.AbstractFINEOSClient):
             "POST", "customer/updateCustomerDetails", user_id, data=customer.json(exclude_none=True)
         )
 
+    def read_customer_contact_details(self, user_id: str) -> models.customer_api.ContactDetails:
+        """Update customer contact details."""
+        response = self._customer_api("GET", "customer/readCustomerContactDetails", user_id,)
+
+        return models.customer_api.ContactDetails.parse_obj(response.json())
+
+    def update_customer_contact_details(
+        self, user_id: str, contact_details: models.customer_api.ContactDetails
+    ) -> models.customer_api.ContactDetails:
+        """Update customer contact details."""
+        response = self._customer_api(
+            "POST",
+            "customer/updateCustomerContactDetails",
+            user_id,
+            data=contact_details.json(exclude_none=True),
+        )
+
+        return models.customer_api.ContactDetails.parse_obj(response.json())
+
     def start_absence(
         self, user_id: str, absence_case: models.customer_api.AbsenceCase
     ) -> models.customer_api.AbsenceCaseSummary:

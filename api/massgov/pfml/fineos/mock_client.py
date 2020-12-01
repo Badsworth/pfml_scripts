@@ -212,6 +212,28 @@ class MockFINEOSClient(client.AbstractFINEOSClient):
     def update_customer_details(self, user_id: str, customer: models.customer_api.Customer) -> None:
         _capture_call("update_customer_details", user_id, customer=customer)
 
+    def read_customer_contact_details(self, user_id: str) -> models.customer_api.ContactDetails:
+        _capture_call("update_customer_contact_details", user_id)
+
+        return models.customer_api.ContactDetails(
+            phoneNumbers=[
+                models.customer_api.PhoneNumber(
+                    id=1, intCode=None, telephoneNo=None, phoneNumberType=None
+                )
+            ]
+        )
+
+    def update_customer_contact_details(
+        self, user_id: str, contact_details: models.customer_api.ContactDetails
+    ) -> models.customer_api.ContactDetails:
+        _capture_call("update_customer_contact_details", user_id, contact_details=contact_details)
+
+        if contact_details.phoneNumbers is not None and len(contact_details.phoneNumbers) > 0:
+            if contact_details.phoneNumbers[0].id is None:
+                contact_details.phoneNumbers[0].id = 1
+
+        return contact_details
+
     def start_absence(
         self, user_id: str, absence_case: models.customer_api.AbsenceCase
     ) -> models.customer_api.AbsenceCaseSummary:
