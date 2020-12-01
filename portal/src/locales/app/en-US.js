@@ -402,7 +402,7 @@ const shared = {
   instructionsFollowUpDate:
     "<strong>Review and respond by:</strong> {{date}} at 11:59 p.m. Eastern time",
   leavePeriodMedicalAlert:
-    "You will need a completed medical leave certification form for this section.",
+    "You will need a completed Certification of a Serious Health Condition form for this section.",
   leaveReasonActiveDutyFamily: "Active duty",
   leaveReasonBonding: "Family leave",
   leaveReasonMedical: "Medical leave",
@@ -695,20 +695,20 @@ const pages = {
     durationBasisChoice_days: "At least a day",
     durationBasisChoice_hours: "Less than a full work day",
     durationBasisHint_medical:
-      'Refer to Question 32 in the "Estimate leave details" section of the certification form (page 6).',
+      "Refer to Question 36 in the Certification of a Serious Health Condition form (page 8).",
     durationBasisLabel: "How long will an absence typically last?",
     durationHint_medical:
-      'Refer to Question 32 in the "Estimate leave details" section of the certification form (page 6).',
+      "Refer to Question 36 in the Certification of a Serious Health Condition form (page 8).",
     durationLabel_days: "How many days of work will you miss per absence?",
     durationLabel_hours: "How many hours of work will you miss per absence?",
     frequencyBasisChoice_irregular: "Irregular over the next 6 months",
     frequencyBasisChoice_months: "At least once a month",
     frequencyBasisChoice_weeks: "At least once a week",
     frequencyBasisHint_medical:
-      'Refer to Question 31 in the "Estimate leave details" section of the certification form (page 6).',
+      "Refer to Question 35 in the Certification of a Serious Health Condition form (page 8).",
     frequencyBasisLabel: "How often might you need to be absent from work?",
     frequencyHint_medical:
-      'Refer to Question 31 in the "Estimate leave details" section of the certification form (page 6).',
+      "Refer to Question 35 in the Certification of a Serious Health Condition form (page 8).",
     frequencyLabel_irregular:
       "Estimate how many absences over the next 6 months.",
     frequencyLabel_months: "Estimate how many absences per month.",
@@ -724,12 +724,12 @@ const pages = {
     datesLead_bonding:
       "If you have already taken some or all of your family leave, tell us when you first missed work and your last day of leave.",
     datesLead_medical:
-      'If you have already taken some or all of your leave for this condition, tell us when you first missed work and your last day of leave.<br /><br />Refer to Question 27 in the "Estimate leave details" section of the certification form (page$t(chars.nbsp)6).',
+      "If you have already taken some or all of your leave for this condition, tell us when you first missed work and your last day of leave.<br /><br />Refer to Question 29 in the Certification of a Serious Health Condition form (page 7).",
     datesSectionLabel:
       "Enter the start and end dates for your continuous leave.",
     endDateLabel: "Last day of leave",
     hasLeaveHint_medical:
-      'Refer to Question 26 in the "Estimate leave details" section of the certification form (page 6).',
+      "Refer to Question 26 in the Certification of a Serious Health Condition form (page 7).",
     hasLeaveLabel:
       "Do you need to take off work completely for a period of time (continuous leave)?",
     medicalAlert: "$t(shared.leavePeriodMedicalAlert)",
@@ -742,7 +742,7 @@ const pages = {
     datesLead_bonding:
       "If you have already taken some or all of your family leave, tell us when you first missed work and your last day of leave.",
     datesLead_medical:
-      'If you have already taken some or all of your leave for this condition, tell us when you first missed work and your last day of leave.<br /><br />Refer to Question 33 in the "Estimate leave details" section of the certification form (page 6).',
+      "If you have already taken some or all of your leave for this condition, tell us when you first missed work and your last day of leave.<br /><br />Refer to Question 34 in the Certification of a Serious Health Condition form (page 8).",
     datesSectionLabel:
       "Enter the start and end dates for your intermittent leave.",
     endDateLabel: "Last day of leave",
@@ -751,7 +751,7 @@ const pages = {
     hasLeaveHint_bonding:
       "For example, you need to take time off for: <ul><li>Court dates for your foster child</li><li>Social worker visits</li><li>Gaps in your childcare</li></ul>",
     hasLeaveHint_medical:
-      'Refer to Question 31 in the "Estimate leave details" section of the certification form (page 6).',
+      "Refer to Question 26 in the Certification of a Serious Health Condition form (page 7).",
     hasLeaveLabel:
       "Do you need to take off work in uneven blocks of time (intermittent leave)?",
     hybridLeaveWarning:
@@ -766,14 +766,14 @@ const pages = {
     datesLead_bonding:
       "If you have already taken some or all of your family leave, tell us when you first missed work and your last day of leave.",
     datesLead_medical:
-      'If you have already taken some or all of your leave for this condition, tell us when you first missed work and your last day of leave.<br /><br />Refer to Question 30 in the "Estimate leave details" section of the certification form (page 6).',
+      "If you have already taken some or all of your leave for this condition, tell us when you first missed work and your last day of leave.<br /><br />Refer to Question 32 in the Certification of a Serious Health Condition form (page 8).",
     datesSectionLabel:
       "Enter the start and end dates for your reduced leave schedule.",
     endDateLabel: "Last day of leave",
     endDateLabel_medical:
       "Last day of leave or re$t(chars.nbhyphen)evaluation date",
     hasLeaveHint_medical:
-      'Refer to Question 28 in the "Estimate leave details" section of the certification form (page 6).',
+      "Refer to Question 26 in the Certification of a Serious Health Condition form (page 7).",
     hasLeaveLabel:
       "Do you need to work fewer hours than usual for a period of time (reduced leave schedule)?",
     medicalAlert: "$t(shared.leavePeriodMedicalAlert)",
@@ -950,7 +950,7 @@ const pages = {
     inputHoursLabel_weekly: "Hours off per week",
     lead_bonding: "You can enter time in 15-minute increments if needed.",
     lead_medical:
-      'You can enter time in 15-minute increments if needed.<br /><br />Refer to Question 31 in the "Estimate leave details" section of the certification form (page 8).',
+      "You can enter time in 15-minute increments if needed.<br /><br />Refer to Question 33 in the Certification of a Serious Health Condition form (page 8).",
     medicalAlert: "$t(shared.leavePeriodMedicalAlert)",
     minutesLabel: "$t(shared.minutesLabel)",
     sectionLabel:
