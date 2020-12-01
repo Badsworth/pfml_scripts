@@ -85,7 +85,7 @@ exports[`Employer index renders the page 1`] = `
               target="_blank"
             />,
             "reimbursements-link": <a
-              href="https://www.mass.gov/pfml-reimbursements"
+              href="https://www.mass.gov/forms/request-reimbursement-for-your-employees-paid-leave-benefits"
               rel="noopener"
               target="_blank"
             />,

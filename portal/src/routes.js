@@ -84,7 +84,7 @@ const routes = {
       dfmlRegulations:
         "https://www.mass.gov/regulations/458-CMR-200-department-of-family-and-medical-leave-1",
       employerOverview: "https://www.mass.gov/pmfl-leave-administrators",
-      employerReimbursements: "https://www.mass.gov/pfml-reimbursements",
+      employerReimbursements: "https://www.mass.gov/forms/request-reimbursement-for-your-employees-paid-leave-benefits",
       employersGuide:
         "https://www.mass.gov/guides/employers-guide-to-paid-family-and-medical-leave",
       federalEmployerIdNumber:
