@@ -38,6 +38,11 @@ resource "newrelic_alert_channel" "newrelic_portal_notifications" {
   }
 }
 
+resource "newrelic_alert_policy_channel" "pfml_portal_alerts" {
+  policy_id   = newrelic_alert_policy.portal_alerts.id
+  channel_ids = [newrelic_alert_channel.newrelic_portal_notifications.id]
+}
+
 resource "newrelic_alert_condition" "portal_ajax_response_time" {
   # WARN: Average response time above 3 seconds for at least 5 minutes
   # CRIT: Average response time above 5 seconds for at least 5 minutes
