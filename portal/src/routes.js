@@ -100,6 +100,7 @@ const routes = {
       index: "https://www.mass.gov/",
       informedConsent: "https://www.mass.gov/paidleave-informedconsent",
       mailFaxInstructions: "https://www.mass.gov/pfmlsubmitinfo",
+      medicalBonding: "https://www.mass.gov/pfml-medical-bonding",
       multipleBirths: "https://www.mass.gov/pfml-multiple-births",
       paidLeave:
         "https://www.mass.gov/topics/paid-family-and-medical-leave-in-massachusetts",

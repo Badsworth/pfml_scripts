@@ -1264,49 +1264,24 @@ const pages = {
     title: "$t(shared.claimsEmploymentInfoTitle)",
   },
   dashboard: {
-    applyByPhone:
-      "<p>Apply by calling the Department of Family and Medical Leave Contact Center at $t(shared.contactCenterPhoneNumber) if you meet the following criteria:</p><ul><li>Self-employed or unemployed</li><li>Applying for paid family leave to bond with your child after birth, adoption, or foster placement — whether you are applying before or after the child arrives</li></ul>",
-    applyByPhoneTitle: "Apply by phone",
-    applyMore:
-      '<p>More benefits will be available starting January$t(chars.nbsp)1, 2021. See the <a href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-timeline#december-2,-2020-">paid leave benefit timeline</a> for a complete list.</p>',
-    applyOnline:
-      "<p>You can apply online if you meet all of the following criteria:</p><ul><li>Currently employed in$t(chars.nbsp)Massachusetts</li><li>Not self-employed</li><li>Applying for paid family leave to bond with your child after birth, adoption, or foster placement — whether you are applying before or after the child arrives</li></ul>",
-    applyOnlineTitle: "Apply online",
+    alertHeading: "Only some people can apply online for now",
+    alertOnline:
+      "<p>You can apply online if you meet all of the following criteria:</p><ul><li>Currently employed in$t(chars.nbsp)Massachusetts</li><li>Not self-employed</li><li>Applying for paid family leave to bond with your child after birth, adoption, or foster$t(chars.nbsp)placement</li></ul>",
+    alertOnlineHeading: "Apply online",
+    alertPhone:
+      "<p>Apply by calling the Department of Family and Medical Leave Contact Center at $t(shared.contactCenterPhoneNumber) if you meet all of the following criteria:</p><ul><li>Self-employed or unemployed</li><li>Applying for paid family leave to bond with your child after birth, adoption, or foster$t(chars.nbsp)placement</li></ul><p>More benefits will be available starting January$t(chars.nbsp)1, 2021. Learn more at <benefits-timeline-link>mass.gov</benefits-timeline-link>.</p>",
+    alertPhoneHeading: "Apply by phone",
     createClaimButton: "Create an application",
-    familyLeaveAfterAdoptionBody:
-      "You need to provide a statement that confirms the placement and the date of placement. This can come from the child's health care provider, the adoption or foster agency, or the Massachusetts Department of Children and Families.",
-    familyLeaveAfterAdoptionHeading:
-      "Family leave to bond with your child after adoption or foster$t(chars.nbsp)placement",
-    familyLeaveAfterBirthBodyLine1:
-      "You need a document that confirms your child’s date of birth, such as a birth certificate or statement from a health care provider stating your child's birth date.",
-    familyLeaveAfterBirthBodyLine2:
-      "You can apply before your child is born. Once the child is born, you will need to provide proof of birth in order for your application to be approved.",
-    familyLeaveAfterBirthHeading:
-      "Family leave to bond with your child after birth",
-    medicalLeaveBody:
-      "Your health care provider must complete the <healthcare-provider-form-link>Certification of a Serious Health Condition</healthcare-provider-form-link>",
-    medicalLeaveHeading: "Medical leave due to injury, illness, or pregnancy",
-    multipleApplicationsListIntro:
-      "There are some cases where you might need to create multiple leave applications:",
-    multipleApplicationsList_intermittent:
-      "If you need to take time off at irregular intervals (intermittent leave), you must create an application for the irregular time off you will need. If you also need to take off work completely or work a reduced schedule, you must create a separate application for that time period.",
-    multipleApplicationsList_multipleEmployers:
-      "If you are taking leave from multiple employers, you must create separate applications for each job.",
-    multipleApplicationsList_pregnancy:
-      "You can take paid medical leave if you're unable to work during your pregnancy and to recover from childbirth. You can also take paid family leave to bond with your child after your medical leave ends. You must create <gestational-parents-overview-link>separate leave applications</gestational-parents-overview-link> for your paid medical leave and family leave.",
-    stepOneHeading:
-      "Step one: Tell your employer that you need to take Paid Family and Medical Leave. ",
-    stepOneLeadLine1:
-      "If you can, tell your employer at least 30 days before your leave begins. If you need to take leave right away, tell your employer as soon as possible.",
-    stepOneLeadLine2:
-      " Once you tell your employer, you have the right to apply and your job is protected. Keep a record of what date you notified your employer. You will need to provide this date in your leave application.",
-    stepThreeHeading: "Step three: Create an application",
-    stepThreeLead:
-      "Applying takes around 15 minutes. Your information will save as you go, so you can finish your application later if you need to.",
-    stepTwoHeading:
-      "Step two: Get documentation that supports your leave request",
-    stepsTitle: "Getting started",
-    title: "Only some people can apply online for now",
+    stepOne:
+      "<p>If you can, tell your employer at least 30 days before your leave begins. If you need to take leave right away, tell your employer as soon as possible.</p><p>Once you tell your employer, you have the right to apply and your job is protected. Make a note of when you notified your employer. You will need to provide this date in your leave application.</p>",
+    stepOneHeading: "1. Tell your employer that you need to take paid leave",
+    stepThree:
+      "<p>Applying takes around 15 minutes. Your information will save as you go, so you can finish your application later if you need to.</p><p>You need to create multiple leave applications if you are:</p><ul><li>Taking medical leave for pregnancy or to recover from birth, <strong>and</strong> family leave to bond with your child. <medical-bonding-link>Learn more about taking paid leave if you are going to give birth</medical-bonding-link>.</li><li>Taking leave from multiple employers.</li><li>Taking time off in uneven blocks of time (intermittent leave), <strong>and</strong> taking time off completely or on a reduced schedule. You'll need a separate application for the intermittent leave.</li></ul>",
+    stepThreeHeading: "3. Apply",
+    stepTwo:
+      "<p>For medical leave your health care provider must complete the <healthcare-provider-form-link>PFML Certification of a Serious Health Condition</healthcare-provider-form-link>.</p><p>For family leave to bond with your child after birth, foster placement, or adoption you need a document that confirms your child's date of birth, or placement.</p><p>You can apply before your child is born or arrives in your home. You will need to provide proof of birth or placement for your application to be approved.</p>",
+    stepTwoHeading: "2. Get documentation that supports your leave request",
+    title: "Get ready to apply",
   },
   employersAuthCreateAccount: {
     createAccountButton: "Create account",

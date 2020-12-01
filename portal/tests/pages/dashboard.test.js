@@ -10,6 +10,10 @@ describe("Dashboard", () => {
     const { wrapper } = renderWithAppLogic(Dashboard, {
       diveLevels: 1,
     });
+
     expect(wrapper).toMatchSnapshot();
+    wrapper.find("Trans").forEach((trans) => {
+      expect(trans.dive()).toMatchSnapshot();
+    });
   });
 });

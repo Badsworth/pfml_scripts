@@ -1,8 +1,13 @@
 import { IconLaptop, IconPhone } from "@massds/mayflower-react/dist/Icon";
-import Accordion from "../components/Accordion";
-import AccordionItem from "../components/AccordionItem";
+import {
+  faComments,
+  faEdit,
+  faFile,
+} from "@fortawesome/free-regular-svg-icons";
+import Alert from "../components/Alert";
 import ButtonLink from "../components/ButtonLink";
 import DashboardNavigation from "../components/DashboardNavigation";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import Heading from "../components/Heading";
 import PropTypes from "prop-types";
 import React from "react";
@@ -18,124 +23,98 @@ import withUser from "../hoc/withUser";
 export const Dashboard = (props) => {
   const { appLogic } = props;
   const { t } = useTranslation();
-  const iconProps = {
-    className: "margin-right-2 text-secondary text-middle",
-    height: 30,
-    width: 30,
+
+  const alertIconProps = {
+    className: "margin-right-1 text-secondary text-middle",
+    height: 20,
+    width: 20,
     fill: "currentColor",
+  };
+
+  const iconProps = {
+    className: "margin-right-1 text-secondary",
+    size: "lg",
+    fixedWidth: true,
   };
 
   return (
     <React.Fragment>
       <DashboardNavigation activeHref={appLogic.portalFlow.pathname} />
+
+      <Alert
+        heading={t("pages.dashboard.alertHeading")}
+        state="info"
+        neutral
+        className="margin-bottom-3"
+      >
+        <Heading level="3" className="margin-top-3">
+          <IconLaptop {...alertIconProps} />
+          {t("pages.dashboard.alertOnlineHeading")}
+        </Heading>
+
+        <Trans
+          i18nKey="pages.dashboard.alertOnline"
+          components={{
+            ul: <ul className="usa-list" />,
+            li: <li />,
+          }}
+        />
+
+        <Heading level="3">
+          <IconPhone {...alertIconProps} />
+          {t("pages.dashboard.alertPhoneHeading")}
+        </Heading>
+
+        <Trans
+          i18nKey="pages.dashboard.alertPhone"
+          components={{
+            "benefits-timeline-link": (
+              <a
+                href={routes.external.massgov.benefitsTimeline_2020December2}
+              />
+            ),
+            ul: <ul className="usa-list" />,
+            li: <li />,
+          }}
+        />
+      </Alert>
+
       <div className="measure-6">
         <Title>{t("pages.dashboard.title")}</Title>
 
         <Heading level="2">
-          <IconLaptop {...iconProps} />
-          {t("pages.dashboard.applyOnlineTitle")}
+          <FontAwesomeIcon icon={faComments} {...iconProps} />
+          {t("pages.dashboard.stepOneHeading")}
         </Heading>
+        <Trans i18nKey="pages.dashboard.stepOne" />
 
+        <Heading level="2">
+          <FontAwesomeIcon icon={faFile} {...iconProps} />
+          {t("pages.dashboard.stepTwoHeading")}
+        </Heading>
         <Trans
-          i18nKey="pages.dashboard.applyOnline"
+          i18nKey="pages.dashboard.stepTwo"
           components={{
-            p: <p />,
-            ul: <ul className="usa-list" />,
-            li: <li />,
+            "healthcare-provider-form-link": (
+              <a href={routes.external.massgov.healthcareProviderForm} />
+            ),
           }}
         />
 
         <Heading level="2">
-          <IconPhone {...iconProps} />
-          {t("pages.dashboard.applyByPhoneTitle")}
+          <FontAwesomeIcon icon={faEdit} {...iconProps} />
+          {t("pages.dashboard.stepThreeHeading")}
         </Heading>
-
         <Trans
-          i18nKey="pages.dashboard.applyByPhone"
+          i18nKey="pages.dashboard.stepThree"
           components={{
-            p: <p />,
+            "medical-bonding-link": (
+              <a href={routes.external.massgov.medicalBonding} />
+            ),
             ul: <ul className="usa-list" />,
             li: <li />,
           }}
         />
-
-        <Trans
-          i18nKey="pages.dashboard.applyMore"
-          components={{
-            p: <p />,
-            a: <a />,
-          }}
-        />
-
-        <hr className="margin-top-4" />
-
-        <Heading level="2" size="1" className="margin-top-4">
-          {t("pages.dashboard.stepsTitle")}
-        </Heading>
-
-        <Heading level="3" size="2">
-          {t("pages.dashboard.stepOneHeading")}
-        </Heading>
-
-        <p>{t("pages.dashboard.stepOneLeadLine1")}</p>
-        <p>{t("pages.dashboard.stepOneLeadLine2")}</p>
-
-        <Heading level="3" size="2">
-          {t("pages.dashboard.stepTwoHeading")}
-        </Heading>
-
-        <div className="measure-4">
-          <Accordion>
-            <AccordionItem heading={t("pages.dashboard.medicalLeaveHeading")}>
-              <p>
-                <Trans
-                  i18nKey="pages.dashboard.medicalLeaveBody"
-                  components={{
-                    "healthcare-provider-form-link": (
-                      <a
-                        href={routes.external.massgov.healthcareProviderForm}
-                      />
-                    ),
-                  }}
-                />
-              </p>
-            </AccordionItem>
-            <AccordionItem
-              heading={t("pages.dashboard.familyLeaveAfterBirthHeading")}
-            >
-              <p>{t("pages.dashboard.familyLeaveAfterBirthBodyLine1")}</p>
-              <p>{t("pages.dashboard.familyLeaveAfterBirthBodyLine2")}</p>
-            </AccordionItem>
-            <AccordionItem
-              heading={t("pages.dashboard.familyLeaveAfterAdoptionHeading")}
-            >
-              <p>{t("pages.dashboard.familyLeaveAfterAdoptionBody")}</p>
-            </AccordionItem>
-          </Accordion>
-        </div>
-
-        <Heading level="3" size="2">
-          {t("pages.dashboard.stepThreeHeading")}
-        </Heading>
-
-        <p>{t("pages.dashboard.stepThreeLead")}</p>
-        <p>{t("pages.dashboard.multipleApplicationsListIntro")}</p>
-        <ul className="usa-list">
-          <li>
-            <Trans
-              i18nKey="pages.dashboard.multipleApplicationsList_pregnancy"
-              components={{
-                "gestational-parents-overview-link": (
-                  <a href={routes.external.massgov.gestationalParentOverview} />
-                ),
-              }}
-            />
-          </li>
-          <li>
-            {t("pages.dashboard.multipleApplicationsList_multipleEmployers")}
-          </li>
-          <li>{t("pages.dashboard.multipleApplicationsList_intermittent")}</li>
-        </ul>
 
         <ButtonLink
           className="margin-top-3 margin-bottom-8"
