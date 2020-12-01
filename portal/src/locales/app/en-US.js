@@ -69,15 +69,16 @@ const errors = {
     "Sorry, we were unable to retrieve your account. Please log out and try again. If this continues to happen, you may call the Paid Family Leave Contact Center at $t(shared.contactCenterPhoneNumber)",
   claims: {
     date_of_birth: {
-      date: "Date of birth must include a valid month, day, and year.",
+      date: "Date of birth must include a month, day, and year.",
       invalid_age: "The person taking leave must be at least 14 years old.",
-      invalid_year_range: `Date of birth year is not in a valid range (on or after ${
+      invalid_year_range: `Date of birth year must be on or after ${
         new Date().getFullYear() - 100
-      }).`,
+      }.`,
       required: "Enter a date of birth.",
     },
     employer_fein: {
-      pattern: "Enter a 9-digit number formatted as XX-XXXXXXX.",
+      pattern:
+        "Enter the Employer Identification Number in the correct format.",
       required: "Enter your employer's Employer Identification Number.",
     },
     employer_notified: {
@@ -97,14 +98,14 @@ const errors = {
       required: "Select Yes if you are taking intermittent leave.",
     },
     has_mailing_address: {
-      required: "Please indicate whether you get mail at this address.",
+      required: "Select yes if you get your mail at this address.",
     },
     has_reduced_schedule_leave_periods: {
       required: "Select Yes if you are working a reduced schedule.",
     },
     has_state_id: {
       required:
-        "Enter whether or not you have a Massachusetts driver's license or ID.",
+        "Select yes if you have a Massachusetts driver's license or ID card.",
     },
     hours_worked_per_week: {
       maximum: "The average hours you work each week must be less than 168.",
@@ -117,29 +118,30 @@ const errors = {
     },
     leave_details: {
       child_birth_date: {
-        date: "Date of birth must include a valid month, day, and year.",
-        required: "Enter a date of birth for the child.",
+        date: "Date of birth must include a month, day, and year.",
+        required: "Enter your child's date of birth or due date.",
       },
       child_placement_date: {
-        date: "Placement date must include a valid month, day, and year.",
-        required: "Enter a date of placement for the child.",
+        date: "Placement date must include a month, day, and year.",
+        required: "Enter the date your child arrived in your home.",
       },
       continuous_leave_periods: {
         end_date: {
-          date: "End date must include a valid month, day, and year.",
+          date: "End date must include a month, day, and year.",
           minimum:
             "Last day of leave must be on or after the first day of leave.",
-          required: "Enter an end date for this continuous leave period.",
+          required: "Enter the last day of your continuous leave.",
         },
         start_date: {
-          date: "Start date must include a valid month, day, and year.",
+          date: "Start date must include a month, day, and year.",
           minimum:
             "Paid Family and Medical Leave cannot be taken before Jan 1, 2021. Enter a date after December$t(chars.nbsp)31,$t(chars.nbsp)2020.",
-          required: "Enter a start date for this continuous leave period.",
+          required: "Enter the first day of your continuous leave.",
         },
       },
       employer_notification_date: {
-        date: "Notification date must include a valid month, day, and year.",
+        date:
+          "Date you notified your employer must include a day, month, and year.",
         required: "Enter the date you notified your employer.",
       },
       employer_notified: {
@@ -148,28 +150,29 @@ const errors = {
       },
       intermittent_leave_periods: {
         duration: {
-          required: "Enter a duration.",
+          required: "Enter how long each absence may last.",
         },
         duration_basis: {
-          required: "Select a duration option.",
+          required:
+            "Select if absences may last at least a day or less than a full workday.",
         },
         end_date: {
-          date: "End date must include a valid month, day, and year.",
+          date: "End date must include a month, day, and year.",
           minimum:
             "Last day of leave must be on or after the first day of leave.",
-          required: "Enter an end date for this intermittent leave period.",
+          required: "Enter the last day of your intermittent leave.",
         },
         frequency: {
-          required: "Enter a frequency.",
+          required: "Enter how often absences may occur.",
         },
         frequency_interval_basis: {
-          required: "Select a frequency option.",
+          required: "Select how often absences may occur.",
         },
         start_date: {
-          date: "Start date must include a valid month, day, and year.",
+          date: "Start date must include a month, day, and year.",
           minimum:
             "Paid Family and Medical Leave cannot be taken before Jan 1, 2021. Enter a date after December$t(chars.nbsp)31,$t(chars.nbsp)2020.",
-          required: "Enter a start date for this intermittent leave period.",
+          required: "Enter the first day of your intermittent leave.",
         },
       },
       pregnant_or_recent_birth: {
@@ -177,17 +180,18 @@ const errors = {
           "Select yes if are you taking medical leave because you are pregnant or recently gave birth.",
       },
       reason: {
-        required: "Enter a reason for taking time off.",
+        required: "Select the reason for taking paid leave.",
       },
       reason_qualifier: {
-        required: "Enter why you are taking leave.",
+        required:
+          "Select the reason for taking family leave to bond with a child.",
       },
       reduced_schedule_leave_periods: {
         end_date: {
-          date: "End date must include a valid month, day, and year.",
+          date: "End date must include a month, day, and year.",
           minimum:
             "Last day of leave must be on or after the first day of leave.",
-          required: "Enter an end date for this reduced leave period.",
+          required: "Enter the last day of your reduced leave schedule.",
         },
         friday_off_minutes: {
           maximum: "$t(shared.maximumReducedLeaveMinutes)",
@@ -205,10 +209,10 @@ const errors = {
           required: "Enter your hours off for Saturday.",
         },
         start_date: {
-          date: "Start date must include a valid month, day, and year.",
+          date: "Start date must include a month, day, and year.",
           minimum:
             "Paid Family and Medical Leave cannot be taken before Jan 1, 2021. Enter a date after December$t(chars.nbsp)31,$t(chars.nbsp)2020.",
-          required: "Enter a start date for this reduced leave period.",
+          required: "Enter the first day of your reduced leave schedule.",
         },
         sunday_off_minutes: {
           maximum: "$t(shared.maximumReducedLeaveMinutes)",
@@ -244,7 +248,7 @@ const errors = {
         required: "Enter a state for your mailing address.",
       },
       zip: {
-        pattern: "Enter a 5- or 9-digit ZIP code for your mailing address.",
+        pattern: "Mailing address ZIP code must be 5 or 9 digits.",
         required: "Enter a ZIP code for your mailing address.",
       },
     },
@@ -255,17 +259,15 @@ const errors = {
     },
     payment_preference: {
       account_number: {
-        maxLength:
-          "Account number too long: Account number must be 17 digits or fewer.",
-        minLength:
-          "Account number too short: Account number must be at least 6 digits.",
+        maxLength: "Account number must be 17 digits or fewer.",
+        minLength: "Account number must be at least 6 digits.",
         required: "Enter an account number.",
       },
       bank_account_type: {
-        required: "Enter an account type.",
+        required: "Select if this is a savings or checking account.",
       },
       routing_number: {
-        pattern: "Enter a 9 digit routing number.",
+        pattern: "Enter your routing number in the correct format.",
         required: "Enter a routing number.",
       },
     },
@@ -288,7 +290,7 @@ const errors = {
         required: "Enter a state for your residential address.",
       },
       zip: {
-        pattern: "Enter a 5 or 9 digit ZIP code for your residential address.",
+        pattern: "Residential address ZIP code must be 5 or 9 digits.",
         required: "Enter a ZIP code for your residential address.",
       },
     },
@@ -309,7 +311,7 @@ const errors = {
         "You must tell your employer that you’re taking leave before you can submit an application. If you’ve told your employer, update your application with the date that you notified them.",
     },
     tax_identifier: {
-      pattern: "Enter a 9 digit number formatted as XXX-XX-XXXX.",
+      pattern: "Your Social Security Number or ITIN must be 9 digits.",
       required: "Enter a Social Security Number or ITIN.",
     },
     upload_docs_options: {
@@ -324,7 +326,7 @@ const errors = {
         },
       },
       work_pattern_type: {
-        required: "Select a work schedule type.",
+        required: "Select your work schedule.",
       },
     },
   },
