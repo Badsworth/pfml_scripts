@@ -9,6 +9,7 @@ import Alert from "../../../components/Alert";
 import BackButton from "../../../components/BackButton";
 import Button from "../../../components/Button";
 import EmployeeInformation from "../../../components/employers/EmployeeInformation";
+import EmployeeNotice from "../../../components/employers/EmployeeNotice";
 import EmployerBenefits from "../../../components/employers/EmployerBenefits";
 import EmployerDecision from "../../../components/employers/EmployerDecision";
 import Feedback from "../../../components/employers/Feedback";
@@ -49,7 +50,12 @@ export const Review = (props) => {
     comment: "",
     employerDecision: undefined,
     fraud: undefined,
+    employeeNotice: undefined,
   });
+  const isCommentRequired =
+    formState.fraud === "Yes" ||
+    formState.employerDecision === "Deny" ||
+    formState.employeeNotice === "No";
 
   useEffect(() => {
     const indexedEmployerBenefits = claim.employer_benefits.map(
@@ -96,6 +102,10 @@ export const Review = (props) => {
 
   const handleFraudInputChange = (updatedFraudInput) => {
     updateFields({ fraud: updatedFraudInput });
+  };
+
+  const handleEmployeeNoticeChange = (updatedEmployeeNotice) => {
+    updateFields({ employeeNotice: updatedEmployeeNotice });
   };
 
   const handleEmployerDecisionChange = (updatedEmployerDecision) => {
@@ -168,17 +178,27 @@ export const Review = (props) => {
           onChange={handlePreviousLeavesChange}
         />
         <FraudReport onChange={handleFraudInputChange} />
-        <EmployerDecision
-          onChange={handleEmployerDecisionChange}
+        <EmployeeNotice
           fraud={formState.fraud}
+          onChange={handleEmployeeNoticeChange}
+        />
+        <EmployerDecision
+          fraud={formState.fraud}
+          onChange={handleEmployerDecisionChange}
         />
         <Feedback
           appLogic={props.appLogic}
+          isReportingFraud={formState.fraud === "Yes"}
+          isDenyingRequest={formState.employerDecision === "Deny"}
+          isEmployeeNoticeInsufficient={formState.employeeNotice === "No"}
           comment={formState.comment}
-          employerDecision={formState.employerDecision}
           setComment={(comment) => updateFields({ comment })}
         />
-        <Button className="margin-top-4" type="submit">
+        <Button
+          className="margin-top-4"
+          type="submit"
+          disabled={isCommentRequired && formState.comment === ""}
+        >
           {t("pages.employersClaimsReview.submitButton")}
         </Button>
       </form>

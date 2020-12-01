@@ -1,0 +1,34 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`EmployeeNotice renders the component 1`] = `
+<Fragment>
+  <InputChoiceGroup
+    choices={
+      Array [
+        Object {
+          "checked": false,
+          "disabled": false,
+          "label": "Yes",
+          "value": "Yes",
+        },
+        Object {
+          "checked": false,
+          "disabled": false,
+          "label": "No",
+          "value": "No",
+        },
+      ]
+    }
+    label={
+      <ReviewHeading
+        level="2"
+      >
+        Did the employee give you at least 30 days notice about their leave?
+      </ReviewHeading>
+    }
+    name="employeeNotice"
+    onChange={[Function]}
+    type="radio"
+  />
+</Fragment>
+`;

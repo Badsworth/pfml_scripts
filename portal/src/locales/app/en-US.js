@@ -1375,6 +1375,12 @@ const pages = {
       ssnOrItinLabel:
         "Social Security Number or Individual Taxpayer Identification Number",
     },
+    employeeNotice: {
+      choiceNo: "$t(shared.choiceNo)",
+      choiceYes: "$t(shared.choiceYes)",
+      heading:
+        "Did the employee give you at least 30 days notice about their leave?",
+    },
     employerBenefits: {
       amountValue_allAtOnce: "{{amount, currency}} all at once",
       amountValue_daily: "{{amount, currency}} per day",
@@ -1412,6 +1418,12 @@ const pages = {
       addFirstFileButton: "$t(shared.fileUpload_addFirstFileButton)",
       choiceNo: "$t(shared.choiceNo)",
       choiceYes: "$t(shared.choiceYes)",
+      commentSolicitation_employeeNotice:
+        "Please tell us when your employee notified you about their leave.",
+      commentSolicitation_employerDecision:
+        "Please tell us why you denied this leave request.",
+      commentSolicitation_fraud:
+        "Please tell us why you believe this is fraudulent.",
       fileHeadingPrefix: "$t(shared.fileUpload_fileHeadingPrefix)",
       instructionsLabel: "Do you have any additional comments or concerns?",
       supportingDocumentationLabel:

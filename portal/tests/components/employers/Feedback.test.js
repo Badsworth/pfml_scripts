@@ -14,7 +14,14 @@ describe("Feedback", () => {
 
   beforeEach(() => {
     wrapper = shallow(
-      <Feedback appLogic={appLogic} comment="" setComment={() => {}} />
+      <Feedback
+        appLogic={appLogic}
+        isReportingFraud={false}
+        isDenyingRequest={false}
+        isEmployeeNoticeInsufficient={false}
+        comment=""
+        setComment={() => {}}
+      />
     );
   });
 
@@ -22,13 +29,79 @@ describe("Feedback", () => {
     expect(wrapper).toMatchSnapshot();
   });
 
-  describe("when employerDecision is 'Deny'", () => {
+  describe("when fraud is reported", () => {
+    beforeEach(() => {
+      wrapper = mount(
+        <Feedback
+          appLogic={appLogic}
+          isReportingFraud
+          isDenyingRequest
+          isEmployeeNoticeInsufficient={false}
+          comment=""
+          setComment={() => {}}
+        />
+      );
+    });
+
+    it("disables the 'no' option and selects 'yes'", () => {
+      const choices = wrapper.find("InputChoiceGroup").prop("choices");
+      const noOption = choices.find((choice) => choice.label === "No");
+      const yesOption = choices.find((choice) => choice.label === "Yes");
+
+      expect(noOption.disabled).toBe(true);
+      expect(yesOption.checked).toBe(true);
+    });
+
+    it("displays a message prompting user to leave a comment about fraud", () => {
+      const message = wrapper.find(".text-error").text();
+
+      expect(message).toEqual(
+        "Please tell us why you believe this is fraudulent."
+      );
+    });
+  });
+
+  describe("when employee notice is within less than a month timeframe", () => {
+    beforeEach(() => {
+      wrapper = mount(
+        <Feedback
+          appLogic={appLogic}
+          isReportingFraud={false}
+          isDenyingRequest={false}
+          isEmployeeNoticeInsufficient
+          comment=""
+          setComment={() => {}}
+        />
+      );
+    });
+
+    it("disables the 'no' option and selects 'yes'", () => {
+      const choices = wrapper.find("InputChoiceGroup").prop("choices");
+      const noOption = choices.find((choice) => choice.label === "No");
+      const yesOption = choices.find((choice) => choice.label === "Yes");
+
+      expect(noOption.disabled).toBe(true);
+      expect(yesOption.checked).toBe(true);
+    });
+
+    it("displays a message prompting user to leave a comment", () => {
+      const message = wrapper.find(".text-error").text();
+
+      expect(message).toEqual(
+        "Please tell us when your employee notified you about their leave."
+      );
+    });
+  });
+
+  describe("when leave request is denied", () => {
     beforeEach(() => {
       wrapper = mount(
         <Feedback
           appLogic={appLogic}
           comment=""
-          employerDecision="Deny"
+          isReportingFraud={false}
+          isDenyingRequest
+          isEmployeeNoticeInsufficient={false}
           setComment={() => {}}
         />
       );
@@ -43,37 +116,41 @@ describe("Feedback", () => {
       expect(yesOption.checked).toBe(true);
     });
 
-    describe("and is changed to 'Approve'", () => {
+    it("displays a message prompting user to leave a comment about denial", () => {
+      const message = wrapper.find(".text-error").text();
+
+      expect(message).toEqual(
+        "Please tell us why you denied this leave request."
+      );
+    });
+
+    describe("and is then approved", () => {
       beforeEach(() => {
         wrapper = mount(
           <Feedback
             appLogic={appLogic}
             comment=""
-            employerDecision="Deny"
+            isReportingFraud={false}
+            isDenyingRequest
+            isEmployeeNoticeInsufficient={false}
             setComment={() => {}}
           />
         );
-      });
 
-      it('re-enables the "No" option', () => {
         act(() => {
-          wrapper.setProps({ employerDecision: "Approve" });
+          wrapper.setProps({ isDenyingRequest: false });
         });
         // for useEffect to take place
         wrapper.update();
+      });
 
+      it('re-enables the "No" option', () => {
         const choices = wrapper.find("InputChoiceGroup").prop("choices");
         const noOption = choices.find((choice) => choice.label === "No");
         expect(noOption.disabled).toBe(false);
       });
 
       it('selects the "No" option if there is no comment typed', () => {
-        act(() => {
-          wrapper.setProps({ employerDecision: "Approve" });
-        });
-        // for useEffect to take place
-        wrapper.update();
-
         const choices = wrapper.find("InputChoiceGroup").prop("choices");
         const noOption = choices.find((choice) => choice.label === "No");
         expect(noOption.checked).toBe(true);
@@ -84,13 +161,13 @@ describe("Feedback", () => {
           <Feedback
             appLogic={appLogic}
             comment="some comment"
-            employerDecision="Deny"
+            isDenyingRequest
             setComment={() => {}}
           />
         );
 
         act(() => {
-          wrapper.setProps({ employerDecision: "Approve" });
+          wrapper.setProps({ isDenyingRequest: false });
         });
         // for useEffect to take place
         wrapper.update();
@@ -102,7 +179,7 @@ describe("Feedback", () => {
     });
   });
 
-  describe("when employerDecision is 'Approve'", () => {
+  describe("when comments are not required", () => {
     it("no options are disabled", () => {
       const choices = wrapper.find("InputChoiceGroup").prop("choices");
       const noOption = choices.find((choice) => choice.label === "No");
@@ -116,7 +193,7 @@ describe("Feedback", () => {
   describe("when user selects option to leave additional comments", () => {
     it("shows comment box and file upload button", () => {
       const { changeRadioGroup } = simulateEvents(wrapper);
-      changeRadioGroup("hasComment", "true");
+      changeRadioGroup("shouldShowCommentBox", "true");
 
       expect(wrapper.find("textarea").exists()).toEqual(true);
       expect(wrapper.find(FileCardList).exists()).toEqual(true);

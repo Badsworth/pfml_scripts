@@ -12,37 +12,46 @@ import { useTranslation } from "../../locales/i18n";
  * in the Leave Admin claim review page.
  */
 
-const Feedback = ({ appLogic, comment, setComment, employerDecision }) => {
+const Feedback = ({
+  appLogic,
+  isReportingFraud,
+  isDenyingRequest,
+  isEmployeeNoticeInsufficient,
+  comment,
+  setComment,
+}) => {
   // TODO (EMPLOYER-583) add frontend validation
   const { t } = useTranslation();
   const [uploadedFiles, setUploadedFiles] = useState([]);
-  const [hasComment, setHasComment] = useState(false);
+  const [shouldShowCommentBox, setShouldShowCommentBox] = useState(false);
 
   useEffect(() => {
-    if (!hasComment) {
+    if (!shouldShowCommentBox) {
       setUploadedFiles([]);
       setComment("");
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [hasComment]);
+  }, [shouldShowCommentBox]);
 
   useEffect(() => {
-    setHasComment(employerDecision === "Deny" || !!comment);
+    setShouldShowCommentBox(
+      isDenyingRequest || isEmployeeNoticeInsufficient || !!comment
+    );
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [employerDecision]);
+  }, [isDenyingRequest, isEmployeeNoticeInsufficient]);
 
   return (
     <React.Fragment>
       <InputChoiceGroup
         choices={[
           {
-            checked: !hasComment,
-            disabled: employerDecision === "Deny",
+            checked: !shouldShowCommentBox,
+            disabled: isDenyingRequest || isEmployeeNoticeInsufficient,
             label: t("pages.employersClaimsReview.feedback.choiceNo"),
             value: "false",
           },
           {
-            checked: hasComment,
+            checked: shouldShowCommentBox,
             label: t("pages.employersClaimsReview.feedback.choiceYes"),
             value: "true",
           },
@@ -52,22 +61,47 @@ const Feedback = ({ appLogic, comment, setComment, employerDecision }) => {
             {t("pages.employersClaimsReview.feedback.instructionsLabel")}
           </ReviewHeading>
         }
-        name="hasComment"
-        onChange={(event) => setHasComment(event.target.value === "true")}
+        name="shouldShowCommentBox"
+        onChange={(event) => {
+          const hasSelectedYes = event.target.value === "true";
+          setShouldShowCommentBox(hasSelectedYes);
+          if (!hasSelectedYes) setComment("");
+        }}
         type="radio"
       />
       <ConditionalContent
         getField={() => comment}
         clearField={() => setComment("")}
         updateFields={(event) => setComment(event.target.value)}
-        visible={hasComment}
+        visible={shouldShowCommentBox}
       >
         <React.Fragment>
           <FormLabel className="usa-label" htmlFor="comment" small>
             {t("pages.employersClaimsReview.feedback.tellUsMoreLabel")}
           </FormLabel>
+          {isReportingFraud && (
+            <p level="4" className="text-error">
+              {t(
+                "pages.employersClaimsReview.feedback.commentSolicitation_fraud"
+              )}
+            </p>
+          )}
+          {isEmployeeNoticeInsufficient && (
+            <p level="4" className="text-error">
+              {t(
+                "pages.employersClaimsReview.feedback.commentSolicitation_employeeNotice"
+              )}
+            </p>
+          )}
+          {!isReportingFraud && isDenyingRequest && (
+            <p level="4" className="text-error">
+              {t(
+                "pages.employersClaimsReview.feedback.commentSolicitation_employerDecision"
+              )}
+            </p>
+          )}
           <textarea
-            className="usa-textarea"
+            className="usa-textarea margin-top-3"
             name="comment"
             onChange={(event) => setComment(event.target.value)}
           />
@@ -100,8 +134,10 @@ Feedback.propTypes = {
   appLogic: PropTypes.shape({
     setAppErrors: PropTypes.func.isRequired,
   }).isRequired,
+  isReportingFraud: PropTypes.bool,
+  isDenyingRequest: PropTypes.bool,
+  isEmployeeNoticeInsufficient: PropTypes.bool,
   comment: PropTypes.string.isRequired,
-  employerDecision: PropTypes.oneOf(["Approve", "Deny"]),
   setComment: PropTypes.func.isRequired,
 };
 

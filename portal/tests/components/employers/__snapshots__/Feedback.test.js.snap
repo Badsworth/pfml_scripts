@@ -25,7 +25,7 @@ exports[`Feedback renders the component 1`] = `
         Do you have any additional comments or concerns?
       </ReviewHeading>
     }
-    name="hasComment"
+    name="shouldShowCommentBox"
     onChange={[Function]}
     type="radio"
   />
@@ -43,7 +43,7 @@ exports[`Feedback renders the component 1`] = `
       Please tell us more.
     </FormLabel>
     <textarea
-      className="usa-textarea"
+      className="usa-textarea margin-top-3"
       name="comment"
       onChange={[Function]}
     />
