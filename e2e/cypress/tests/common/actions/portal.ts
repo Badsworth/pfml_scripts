@@ -720,8 +720,10 @@ export function submitClaimPartOne(application: ApplicationRequestBody): void {
 
 export function submitClaimPortal(application: ApplicationRequestBody): void {
   submitClaimPartOne(application);
-  clickChecklistButton("Add payment information");
-  addPaymentInfo(application);
+  // Note:
+  // Feature currently being updated - https://lwd.atlassian.net/browse/CP-1259
+  // clickChecklistButton("Add payment information");
+  // addPaymentInfo(application);
   onPage("checklist");
   clickChecklistButton("Upload identity document");
   addId("MA ID");

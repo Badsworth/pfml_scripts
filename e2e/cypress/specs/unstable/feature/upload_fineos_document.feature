@@ -4,7 +4,9 @@ Feature: Upload a document in FINEOS and see it has been uploaded in the portal
   Scenario: I upload Part One and Payment information of a HAP1 claim
     Given I begin to submit a "BHAP1" claim as a "financially eligible" employee
     And Part One of the claim has been submitted
-    And I have added payment information
+    # Note: 
+    # Feature currently being updated - https://lwd.atlassian.net/browse/CP-1259
+    # And I have added payment information
 
   @fineos
   Scenario: As a CSR (Savilinx), I upload an MA ID document to a claim

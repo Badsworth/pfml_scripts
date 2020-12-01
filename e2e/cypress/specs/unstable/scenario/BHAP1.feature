@@ -26,9 +26,11 @@ Feature: Submit a bonding claim and adjucation approval - BHAP1
     And I confirm that I am an eligible parent
     Given I am on the claims "review" page
     Then I should have confirmed that information is correct
-    Given I am on the claims "checklist" page
-    When I click on the checklist button called "Add payment information"
-    Then I add payment info
+    # Note: 
+    # Feature currently being updated - https://lwd.atlassian.net/browse/CP-1259
+    # Given I am on the claims "checklist" page
+    # When I click on the checklist button called "Add payment information"
+    # Then I add payment info
     Given I am on the claims "checklist" page
     When I click on the checklist button called "Upload identity document"
     Then I add my identity document "MA ID"
@@ -39,7 +41,7 @@ Feature: Submit a bonding claim and adjucation approval - BHAP1
     Given I am on the claims "review" page
     Then I should have agreed and successfully submitted the claim
     And I should be able to confirm claim was submitted successfully
-
+  
   @fineos
   Scenario: As a CSR (Savilinx), I should be able to Approve a BHAP1 claim submission
     Given I am logged into Fineos as a Savilinx user

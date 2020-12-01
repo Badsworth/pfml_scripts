@@ -4,7 +4,9 @@ Feature: Submit a bonding (Out of State) claim and assert adjucation
   Scenario: As an OUT OF STATE claimant, I should be able to submit a BONDING claim (BHAP2) through the portal
     Given I begin to submit a "BHAP2" claim as a "financially eligible" employee
     And Part One of the claim has been submitted
-    And I have added payment information
+    # Note: 
+    # Feature currently being updated - https://lwd.atlassian.net/browse/CP-1259
+    # And I have added payment information
     And I am on the claims "checklist" page
     When I click on the checklist button called "Upload identity document"
     Then I add my identity document "MA ID"
