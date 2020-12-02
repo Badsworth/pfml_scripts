@@ -90,6 +90,7 @@ data "aws_iam_policy_document" "developers_and_ci_deploy_access_policy" {
       # - Docker container management on ECR + ECS
       # - RDS data storage
       # - Lambdas for data pipelining.
+      # - Web Application Firewall (WAF)
       "apigateway:*",
       "ecr:*",
       "ecs:*",
@@ -97,6 +98,7 @@ data "aws_iam_policy_document" "developers_and_ci_deploy_access_policy" {
       "rds:*",
       "lambda:*",
       "application-autoscaling:*",
+      "wafv2:*",
 
       # Allow API team to deploy Step Functions, such as the DOR Import.
       "states:*"
