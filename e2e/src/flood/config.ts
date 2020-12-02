@@ -25,16 +25,21 @@ export const SimulationSpeed: Record<string, number> = {
 };
 
 // real time simulation in minutes
+// todo: deny claim real timing?
 export const realUserTimings: Record<
   LSTScenario,
   Record<TaskType, number> | number
 > = {
   SavilinxAgent: {
-    "Adjudicate Absence": 15,
-    "ID Review": 5,
-    "Certification Review": 5,
+    "Adjudicate Absence": 3,
+    "ID Review": 1.5,
+    "Certification Review": 4.5,
   },
-  DFMLOpsAgent: 0,
+  DFMLOpsAgent: {
+    "Adjudicate Absence": 0,
+    "ID Review": 10,
+    "Certification Review": 10,
+  },
   PortalRegistration: 3,
   PortalClaimSubmit: 15,
   FineosClaimSubmit: 8,

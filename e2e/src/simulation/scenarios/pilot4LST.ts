@@ -1,4 +1,4 @@
-import { /* scenario, */ agentScenario, chance } from "../simulate";
+import { scenario, /* agentScenario, */ chance } from "../simulate";
 
 /**
  * This file contains the business simulation for Pilot 3.
@@ -35,19 +35,19 @@ import { /* scenario, */ agentScenario, chance } from "../simulate";
 
 /*
   LeaveAdminSelfRegistration
-*/
+
 const LeaveAdminSelfReg = agentScenario("LeaveAdminSelfRegistration", {
   claim: {
     employer_fein: "yes",
   },
 });
-
+*/
 /* 
   SavilinxAgent
 */
 // const SavilinxAgent = agentScenario("SavilinxAgent");
 
-/* Will be used on LST Soft/Full Launch
+/* Will be used on LST Soft/Full Launch */
 // Happy Path Foster
 const BHAP1 = scenario("PortalClaimSubmit", {
   reason: "Child Bonding",
@@ -131,15 +131,13 @@ const _BGBM1 = chance([
   [1, FBGBM1],
 ]);
 
-*/
-
 // Flood 1st Stream's Dataset
 // 11 concurrent claim submissions
-// export default chance([
-//   [17, _BHAP1], // 85%, eligible
-//   [2, _BHAP4], // 10%, not
-//   [1, _BGBM1], // 5%, eligible but missing doc
-// ]);
+export default chance([
+  [17, _BHAP1], // 85%, eligible
+  [2, _BHAP4], // 10%, not
+  [1, _BGBM1], // 5%, eligible but missing doc
+]);
 
 // Flood 2nd Stream's Dataset
 // 180 concurrent Savilinx Agents
@@ -147,4 +145,4 @@ const _BGBM1 = chance([
 // export default chance([[1, SavilinxAgent]]);
 
 // Flood Leave Admin run
-export default chance([[1, LeaveAdminSelfReg]]);
+// export default chance([[1, LeaveAdminSelfReg]]);

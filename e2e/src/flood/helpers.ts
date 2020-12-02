@@ -409,10 +409,7 @@ export const assignTasks = (
 });
 
 const isNode = !!(typeof process !== "undefined" && process.version);
-export async function readFile(
-  filename: string,
-  isMain = false
-): Promise<Buffer> {
+export async function readFile(filename: string): Promise<Buffer> {
   if (!isNode) {
     throw new Error("Cannot load the fs module API outside of Node.");
   }
@@ -421,7 +418,6 @@ export async function readFile(
   if (!fs.promises) {
     fs = fs.default;
   }
-  const filepath = `${!isMain ? "../" : ""}${filename}`;
-  console.info(`\n\n\nreadFile in "${filepath}"\n\n\n`);
-  return fs.readFileSync(filepath);
+  console.info(`\n\n\nreadFile in "${filename}"\n\n\n`);
+  return fs.readFileSync(filename);
 }

@@ -24,7 +24,6 @@ import {
 let authToken: string;
 let applicationId: string;
 let fineosId: string;
-const isMain = require.main === module;
 
 export { settings };
 export const scenario: LSTScenario = "PortalClaimSubmit";
@@ -196,7 +195,7 @@ export const steps = [
                 const docBody: DocumentUploadRequest = {
                   document_type: getDocumentType(document),
                   description: "LST - Direct to API",
-                  file: await readFile(documentUrl, isMain),
+                  file: await readFile(documentUrl),
                   name: `${document.type}.pdf`,
                 };
                 res = await evalFetch(

@@ -1,6 +1,6 @@
 import { StepFunction, TestData, Browser, step, By, ENV } from "@flood/element";
 import {
-  globalElementSettings as settings,
+  globalElementSettings,
   dataBaseUrl,
   documentUrl,
   ClaimType,
@@ -23,7 +23,11 @@ let fineosId: string;
 let claimType: ClaimType;
 const isMain = require.main === module;
 
-export { settings };
+export const settings = {
+  ...globalElementSettings,
+  stepDelay: 1,
+  actionDelay: 1,
+};
 export const scenario: LSTScenario = "FineosClaimSubmit";
 export const steps: StoredStep[] = [
   {
@@ -484,7 +488,7 @@ export const steps: StoredStep[] = [
           By.css("#uploadpath")
         );
         await uploadInput.uploadFile(
-          `${isMain ? "../../" : ""}../${documentUrl}`
+          `${isMain ? "../../../" : ""}${documentUrl}`
         );
         const uploadOkButton = await waitForElement(
           browser,
