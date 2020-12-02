@@ -43,6 +43,7 @@ env:
   refs/heads/deploy/api/stage: stage
   refs/heads/deploy/api/prod: prod
   refs/heads/deploy/api/performance: performance
+  refs/heads/deploy/api/training: training
 
 jobs:
   prod-check:
