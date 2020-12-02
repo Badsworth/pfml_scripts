@@ -276,6 +276,7 @@ class MockFINEOSClient(client.AbstractFINEOSClient):
     def get_absence_period_decisions(
         self, user_id: str, absence_id: str
     ) -> models.group_client_api.PeriodDecisions:
+        _capture_call("get_absence_period_decisions", user_id, absence_id=absence_id)
         return models.group_client_api.PeriodDecisions.parse_obj(mock_absence_periods())
 
     def get_customer_info(
