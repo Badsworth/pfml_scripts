@@ -2253,8 +2253,6 @@ components:
         - recipient_type
         - recipients
         - claimant_info
-        - fein
-        - organization_name
 
     SsnItin:
       type: string
