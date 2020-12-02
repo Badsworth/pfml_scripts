@@ -146,6 +146,36 @@ class LkBankAccountType(Base):
         self.bank_account_type_description = bank_account_type_description
 
 
+class LkFlow(Base):
+    __tablename__ = "lk_flow"
+    flow_id = Column(Integer, primary_key=True, autoincrement=True)
+    flow_description = Column(Text)
+
+    def __init__(self, flow_id, flow_description):
+        self.flow_id = flow_id
+        self.flow_description = flow_description
+
+
+class LkState(Base):
+    __tablename__ = "lk_state"
+    state_id = Column(Integer, primary_key=True, autoincrement=True)
+    state_description = Column(Text)
+
+    def __init__(self, state_id, state_description):
+        self.state_id = state_id
+        self.state_description = state_description
+
+
+class LkReferenceFileType(Base):
+    __tablename__ = "lk_reference_file_type"
+    reference_file_type_id = Column(Integer, primary_key=True, autoincrement=True)
+    reference_file_type_description = Column(Text)
+
+    def __init__(self, reference_file_type_id, reference_file_type_description):
+        self.reference_file_type_id = reference_file_type_id
+        self.reference_file_type_description = reference_file_type_description
+
+
 class AuthorizedRepresentative(Base):
     __tablename__ = "authorized_representative"
     authorized_representative_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
@@ -207,13 +237,18 @@ class EmployerLog(Base):
     modified_at = Column(TIMESTAMP(timezone=True), default=utc_timestamp_gen)
 
 
-class PaymentInformation(Base):
-    __tablename__ = "payment_information"
-    payment_info_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
-    payment_method_id = Column(Integer, ForeignKey("lk_payment_method.payment_method_id"))
-    bank_routing_nbr = Column(Integer)
-    bank_account_nbr = Column(Integer)
-    gift_card_nbr = Column(Integer)
+class EFT(Base):
+    __tablename__ = "eft"
+    eft_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
+    routing_nbr = Column(Integer, nullable=False)
+    account_nbr = Column(Integer, nullable=False)
+    bank_account_type_id = Column(
+        Integer, ForeignKey("lk_bank_account_type.bank_account_type_id"), nullable=False
+    )
+    employee_id = Column(UUID(as_uuid=True), ForeignKey("employee.employee_id"), index=True)
+
+    bank_account_type = relationship(LkBankAccountType)
+    employee = relationship("Employee", back_populates="eft")
 
 
 class TaxIdentifier(Base):
@@ -245,7 +280,6 @@ class Employee(Base):
     email_address = Column(Text)
     phone_number = Column(Text)
     preferred_comm_method_type = Column(Text)
-    payment_info_id = Column(UUID(as_uuid=True), ForeignKey("payment_information.payment_info_id"))
     date_of_birth = Column(Date)
     race_id = Column(Integer, ForeignKey("lk_race.race_id"))
     marital_status_id = Column(Integer, ForeignKey("lk_marital_status.marital_status_id"))
@@ -253,14 +287,20 @@ class Employee(Base):
     occupation_id = Column(Integer, ForeignKey("lk_occupation.occupation_id"))
     education_level_id = Column(Integer, ForeignKey("lk_education_level.education_level_id"))
     latest_import_log_id = Column(Integer, ForeignKey("import_log.import_log_id"), index=True)
+    mailing_address_id = Column(UUID(as_uuid=True), ForeignKey("address.address_id"), index=True)
+    ctr_vendor_customer_code = Column(Text)
 
-    payment_info = relationship(PaymentInformation)
     race = relationship(LkRace)
     marital_status = relationship(LkMaritalStatus)
     gender = relationship(LkGender)
     occupation = relationship(LkOccupation)
     education_level = relationship(LkEducationLevel)
     latest_import_log = relationship("ImportLog")
+    claims = relationship("Claim", back_populates="employee")
+    state_logs = relationship("StateLog", back_populates="employee")
+    mailing_address = relationship("Address")
+    eft = relationship("EFT", back_populates="employee", uselist=False)
+    reference_files = relationship("EmployeeReferenceFile", back_populates="employee")
     tax_identifier = cast(
         Optional[TaxIdentifier], relationship("TaxIdentifier", back_populates="employee")
     )
@@ -288,11 +328,43 @@ class Claim(Base):
     __tablename__ = "claim"
     claim_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
     employer_id = Column(UUID(as_uuid=True), index=True)
+    employee_id = Column(UUID(as_uuid=True), ForeignKey("employee.employee_id"), index=True)
+    fineos_absence_id = Column(Text, index=True)
+    fineos_claim_number = Column(Text)
+    claim_type_id = Column(Integer, ForeignKey("lk_claim_type.claim_type_id"))
+
+    # Not sure if these are currently used.
     authorized_representative_id = Column(UUID(as_uuid=True))
-    claim_type_id = Column(UUID(as_uuid=True))
     benefit_amount = Column(Numeric(asdecimal=True))
     benefit_days = Column(Integer)
-    fineos_absence_id = Column(Text, index=True)
+
+    claim_type = relationship(LkClaimType)
+    employee = relationship("Employee", back_populates="claims")
+
+
+class Payment(Base):
+    __tablename__ = "payment"
+    payment_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
+    claim_id = Column(UUID(as_uuid=True), ForeignKey("claim.claim_id"), index=True, nullable=False)
+    payment_method_id = Column(
+        Integer, ForeignKey("lk_payment_method.payment_method_id"), nullable=False
+    )
+    period_start_date = Column(Date)
+    period_end_date = Column(Date)
+    payment_date = Column(Date)
+    amount = Column(Numeric(asdecimal=True), nullable=False)
+    fineos_pei_c_value = Column(Text)
+    fineos_pei_i_value = Column(Text)
+    disb_check_eft_number = Column(Text)
+    disb_check_eft_issue_date = Column(Date)
+    disb_method_id = Column(Integer, ForeignKey("lk_payment_method.payment_method_id"))
+    disb_amount = Column(Numeric(asdecimal=True))
+
+    claim = relationship(Claim)
+    payment_method = relationship(LkPaymentMethod, foreign_keys=payment_method_id)
+    disb_method = relationship(LkPaymentMethod, foreign_keys=disb_method_id)
+    reference_files = relationship("PaymentReferenceFile", back_populates="payment")
+    state_logs = relationship("StateLog", back_populates="payment")
 
 
 class AuthorizedRepEmployee(Base):
@@ -433,6 +505,66 @@ class ImportLog(Base):
     report = Column(Text)
     start = Column(TIMESTAMP(timezone=True), index=True)
     end = Column(TIMESTAMP(timezone=True))
+
+
+class ReferenceFile(Base):
+    __tablename__ = "reference_file"
+    reference_file_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
+    file_location = Column(Text, nullable=False)
+    reference_file_type_id = Column(
+        Integer, ForeignKey("lk_reference_file_type.reference_file_type_id"), nullable=False
+    )
+
+    reference_file_type = relationship(LkReferenceFileType)
+    payments = relationship("PaymentReferenceFile", back_populates="reference_file")
+    employees = relationship("EmployeeReferenceFile", back_populates="reference_file")
+    state_logs = relationship("StateLog", back_populates="reference_file")
+
+
+class PaymentReferenceFile(Base):
+    __tablename__ = "link_payment_reference_file"
+    payment_id = Column(UUID(as_uuid=True), ForeignKey("payment.payment_id"), primary_key=True)
+    reference_file_id = Column(
+        UUID(as_uuid=True), ForeignKey("reference_file.reference_file_id"), primary_key=True
+    )
+    ctr_document_id = Column(Text, index=True)
+    ctr_batch_id = Column(Text)
+
+    payment = relationship("Payment", back_populates="reference_files")
+    reference_file = relationship("ReferenceFile", back_populates="payments")
+
+
+class EmployeeReferenceFile(Base):
+    __tablename__ = "link_employee_reference_file"
+    employee_id = Column(UUID(as_uuid=True), ForeignKey("employee.employee_id"), primary_key=True)
+    reference_file_id = Column(
+        UUID(as_uuid=True), ForeignKey("reference_file.reference_file_id"), primary_key=True
+    )
+    ctr_document_id = Column(Text, index=True)
+    ctr_batch_id = Column(Text)
+
+    employee = relationship("Employee", back_populates="reference_files")
+    reference_file = relationship("ReferenceFile", back_populates="employees")
+
+
+class StateLog(Base):
+    __tablename__ = "state_log"
+    state_log_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
+    flow_id = Column(Integer, ForeignKey("lk_flow.flow_id"))
+    state_id = Column(Integer, ForeignKey("lk_state.state_id"), nullable=False)
+    started_at = Column(TIMESTAMP(timezone=True))
+    ended_at = Column(TIMESTAMP(timezone=True), index=True)
+    outcome = Column(Text)
+    success = Column(Boolean, index=True)
+    payment_id = Column(UUID(as_uuid=True), ForeignKey("payment.payment_id"), index=True)
+    reference_file_id = Column(
+        UUID(as_uuid=True), ForeignKey("reference_file.reference_file_id"), index=True
+    )
+    employee_id = Column(UUID(as_uuid=True), ForeignKey("employee.employee_id"), index=True)
+
+    payment = relationship("Payment", back_populates="state_logs")
+    reference_file = relationship("ReferenceFile", back_populates="state_logs")
+    employee = relationship("Employee", back_populates="state_logs")
 
 
 class AddressType(LookupTable):
@@ -767,6 +899,7 @@ class ClaimType(LookupTable):
     column_names = ("claim_type_id", "claim_type_description")
 
     FAMILY_LEAVE = LkClaimType(1, "Family Leave")
+    MEDICAL_LEAVE = LkClaimType(2, "Medical Leave")
 
 
 class Race(LookupTable):
@@ -836,6 +969,30 @@ class BankAccountType(LookupTable):
 
     SAVINGS = LkBankAccountType(1, "Savings")
     CHECKING = LkBankAccountType(2, "Checking")
+
+
+class Flow(LookupTable):
+    model = LkFlow
+    column_names = ("flow_id", "flow_description")
+
+    PAYMENT = LkFlow(1, "Payment")
+
+
+class State(LookupTable):
+    model = LkState
+    column_names = ("state_id", "state_description")
+
+    VERIFY_VENDOR_STATUS = LkFlow(1, "Verify vendor status")
+
+
+class ReferenceFileType(LookupTable):
+    model = LkReferenceFileType
+    column_names = ("reference_file_type_id", "reference_file_type_description")
+
+    GAX = LkReferenceFileType(1, "GAX")
+    VCC = LkReferenceFileType(2, "VCC")
+    PAYMENT_EXTRACT = LkReferenceFileType(3, "Payment extract")
+    VENDOR_CLAIM_EXTRACT = LkReferenceFileType(4, "Vendor claim extract")
 
 
 def sync_lookup_tables(db_session):
