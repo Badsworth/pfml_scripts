@@ -635,19 +635,20 @@ def call_process_employee_updates(monkeypatch, output_path):
     monkeypatch.setenv("FINEOS_AWS_IAM_ROLE_ARN", "foo")
     monkeypatch.setenv("FINEOS_AWS_IAM_ROLE_EXTERNAL_ID", "bar")
 
-    return ef.process_all_employers(
+    return ef.process_employee_updates(
         make_test_db, make_fineos_client, make_s3_session, ef.EligibilityFeedExportConfig()
     )
 
 
 def test_process_employee_updates_simple(
-    test_db_session, tmp_path, initialize_factories_session, create_triggers
+    test_db_session, tmp_path, initialize_factories_session, create_triggers, monkeypatch
 ):
     WagesAndContributionsFactory.create()
 
-    process_results = ef.process_employee_updates(
-        test_db_session, massgov.pfml.fineos.MockFINEOSClient(), tmp_path
-    )
+    batch_output_dir = tmp_path / "absence-eligibility" / "upload"
+    batch_output_dir.mkdir(parents=True)
+
+    process_results = call_process_employee_updates(monkeypatch, tmp_path)
 
     assert process_results.started_at
     assert process_results.completed_at
@@ -657,18 +658,19 @@ def test_process_employee_updates_simple(
     assert process_results.employers_skipped_count == 0
     assert process_results.employee_and_employer_pairs_total_count == 1
 
-    assert_number_of_data_lines_in_each_file(tmp_path, 1)
+    assert_number_of_data_lines_in_each_file(batch_output_dir, 1)
 
 
 def test_process_employee_updates_for_single_employer_different_employees(
-    test_db_session, tmp_path, initialize_factories_session, create_triggers
+    test_db_session, tmp_path, initialize_factories_session, create_triggers, monkeypatch
 ):
     # wages_for_single_employer_different_employees
     WagesAndContributionsFactory.create_batch(size=5, employer=EmployerFactory.create())
 
-    process_results = ef.process_employee_updates(
-        test_db_session, massgov.pfml.fineos.MockFINEOSClient(), tmp_path
-    )
+    batch_output_dir = tmp_path / "absence-eligibility" / "upload"
+    batch_output_dir.mkdir(parents=True)
+
+    process_results = call_process_employee_updates(monkeypatch, tmp_path)
 
     assert process_results.started_at
     assert process_results.completed_at
@@ -678,20 +680,21 @@ def test_process_employee_updates_for_single_employer_different_employees(
     assert process_results.employers_skipped_count == 0
     assert process_results.employee_and_employer_pairs_total_count == 5
 
-    assert_number_of_data_lines_in_each_file(tmp_path, 5)
+    assert_number_of_data_lines_in_each_file(batch_output_dir, 5)
 
 
 def test_process_employee_updates_for_multiple_wages_for_single_employee_employer_pair(
-    test_db_session, tmp_path, initialize_factories_session, create_triggers
+    test_db_session, tmp_path, initialize_factories_session, create_triggers, monkeypatch
 ):
     # multiple_wages_for_single_employee_employer_pair
     WagesAndContributionsFactory.create_batch(
         size=5, employee=EmployeeFactory.create(), employer=EmployerFactory.create()
     )
 
-    process_results = ef.process_employee_updates(
-        test_db_session, massgov.pfml.fineos.MockFINEOSClient(), tmp_path
-    )
+    batch_output_dir = tmp_path / "absence-eligibility" / "upload"
+    batch_output_dir.mkdir(parents=True)
+
+    process_results = call_process_employee_updates(monkeypatch, tmp_path)
 
     assert process_results.started_at
     assert process_results.completed_at
@@ -701,11 +704,11 @@ def test_process_employee_updates_for_multiple_wages_for_single_employee_employe
     assert process_results.employers_skipped_count == 0
     assert process_results.employee_and_employer_pairs_total_count == 1
 
-    assert_number_of_data_lines_in_each_file(tmp_path, 1)
+    assert_number_of_data_lines_in_each_file(batch_output_dir, 1)
 
 
 def test_process_employee_updates_skips_nonexistent_employer(
-    test_db_session, tmp_path, initialize_factories_session, create_triggers
+    test_db_session, tmp_path, initialize_factories_session, create_triggers, monkeypatch
 ):
     # Set fineos_employer_id to None for 'missing' employer to skip employer.
     missing_employer_fein = "999999999"
@@ -719,8 +722,10 @@ def test_process_employee_updates_skips_nonexistent_employer(
     employer = EmployerFactory.create()
     WagesAndContributionsFactory.create_batch(size=5, employer=employer)
 
-    fineos_client = massgov.pfml.fineos.MockFINEOSClient()
-    process_results = ef.process_employee_updates(test_db_session, fineos_client, tmp_path)
+    batch_output_dir = tmp_path / "absence-eligibility" / "upload"
+    batch_output_dir.mkdir(parents=True)
+
+    process_results = call_process_employee_updates(monkeypatch, tmp_path)
 
     assert process_results.started_at
     assert process_results.completed_at
@@ -730,8 +735,8 @@ def test_process_employee_updates_skips_nonexistent_employer(
     assert process_results.employers_skipped_count == 1
     assert process_results.employee_and_employer_pairs_total_count == 5
 
-    assert_employer_file_exists(tmp_path, employer.fineos_employer_id)
-    assert_number_of_data_lines_in_each_file(tmp_path, 5)
+    assert_employer_file_exists(batch_output_dir, employer.fineos_employer_id)
+    assert_number_of_data_lines_in_each_file(batch_output_dir, 5)
 
 
 def test_process_employee_updates_with_error(
@@ -744,9 +749,10 @@ def test_process_employee_updates_with_error(
 
     monkeypatch.setattr(ef, "get_fineos_employer_id", mock)
 
-    process_results = ef.process_employee_updates(
-        test_db_session, massgov.pfml.fineos.MockFINEOSClient(), tmp_path
-    )
+    batch_output_dir = tmp_path / "absence-eligibility" / "upload"
+    batch_output_dir.mkdir(parents=True)
+
+    process_results = call_process_employee_updates(monkeypatch, tmp_path)
 
     assert process_results.started_at
     assert process_results.completed_at
