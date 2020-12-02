@@ -148,6 +148,7 @@ resource "aws_lambda_function" "cognito_custom_message" {
   role             = aws_iam_role.lambda_basic_executor.arn
   layers           = [local.newrelic_log_ingestion_layer]
   runtime          = "nodejs12.x"
+  publish          = "false"
 
   environment {
     variables = {

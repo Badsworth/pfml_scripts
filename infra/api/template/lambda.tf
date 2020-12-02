@@ -27,7 +27,7 @@ resource "aws_lambda_function" "cognito_pre_signup" {
   function_name = "massgov-pfml-${var.environment_name}-cognito_pre_signup"
   handler       = "newrelic_lambda_wrapper.handler" # the entrypoint of the newrelic instrumentation layer
   runtime       = var.runtime_py
-  publish       = "true"
+  publish       = "false"
 
   # Cognito will only wait 5 seconds, so match that timeout here for
   # consistency.
@@ -80,7 +80,7 @@ resource "aws_lambda_function" "cognito_post_confirmation" {
   function_name = "massgov-pfml-${var.environment_name}-cognito_post_confirmation"
   handler       = "newrelic_lambda_wrapper.handler" # the entrypoint of the newrelic instrumentation layer
   runtime       = var.runtime_py
-  publish       = "true"
+  publish       = "false"
 
   # Cognito will only wait 5 seconds, so match that timeout here for
   # consistency.
@@ -135,7 +135,7 @@ resource "aws_lambda_function" "formstack_import" {
   function_name = "massgov-pfml-${var.environment_name}-formstack-import"
   handler       = "newrelic_lambda_wrapper.handler" # the entrypoint of the newrelic instrumentation layer
   runtime       = var.runtime_py
-  publish       = "true"
+  publish       = "false"
 
   timeout = 900
 
@@ -179,7 +179,7 @@ resource "aws_lambda_function" "eligibility_feed" {
   handler       = "newrelic_lambda_wrapper.handler" # the entrypoint of the newrelic instrumentation layer
 
   runtime = var.runtime_py
-  publish = "true"
+  publish = "false"
 
   memory_size = 1024
   timeout     = 900
