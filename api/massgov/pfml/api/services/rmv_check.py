@@ -1,8 +1,10 @@
+import json
 from datetime import date
-from typing import Optional
+from typing import Any, Dict, Optional
 
 import pydantic
 import requests
+from pydantic.json import pydantic_encoder
 from werkzeug.exceptions import InternalServerError, ServiceUnavailable
 
 import massgov.pfml.db as db
@@ -15,6 +17,7 @@ from massgov.pfml.rmv.models import (
     VendorLicenseInquiryRequest,
     VendorLicenseInquiryResponse,
 )
+from massgov.pfml.util.converters.json_to_obj import get_json_from_object
 from massgov.pfml.util.datetime import utcnow
 from massgov.pfml.util.pydantic import PydanticBaseModel
 from massgov.pfml.util.pydantic.types import MassIdStr
@@ -51,7 +54,7 @@ def handle_rmv_check_request(
     db_session.add(rmv_check_record)
     db_session.commit()
 
-    logger.info("RMV Check started", extra={"rmv_check": rmv_check_record})
+    logger.info("RMV Check started", extra=rmv_check_for_log(rmv_check_record))
 
     try:
         vendor_license_inquiry_request = VendorLicenseInquiryRequest(
@@ -64,7 +67,7 @@ def handle_rmv_check_request(
         rmv_check_record.api_error_code = RMVCheckApiErrorCode.FAILED_TO_BUILD_REQUEST
 
         logger.info(
-            "Could not construct RMV API request object", extra={"rmv_check": rmv_check_record},
+            "Could not construct RMV API request object", extra=rmv_check_for_log(rmv_check_record),
         )
 
         return rmv_check_record
@@ -76,7 +79,7 @@ def handle_rmv_check_request(
         rmv_check_record.api_error_code = RMVCheckApiErrorCode.UNKNOWN_RMV_ISSUE
 
         logger.exception(
-            "RMV Check failed due to unknown error", extra={"rmv_check": rmv_check_record},
+            "RMV Check failed due to unknown error", extra=rmv_check_for_log(rmv_check_record),
         )
 
         return rmv_check_record
@@ -84,7 +87,7 @@ def handle_rmv_check_request(
         rmv_check_record.api_error_code = RMVCheckApiErrorCode.FAILED_TO_PARSE_RESPONSE
 
         logger.exception(
-            "Could not parse response from the RMV API", extra={"rmv_check": rmv_check_record},
+            "Could not parse response from the RMV API", extra=rmv_check_for_log(rmv_check_record),
         )
 
         return rmv_check_record
@@ -93,7 +96,7 @@ def handle_rmv_check_request(
 
         logger.exception(
             "RMV Check had networking issues connecting to RMV API",
-            extra={"rmv_check": rmv_check_record},
+            extra=rmv_check_for_log(rmv_check_record),
         )
 
         return rmv_check_record
@@ -105,7 +108,7 @@ def handle_rmv_check_request(
 
         logger.info(
             "RMV Check finished without being able to retrieve record from RMV API",
-            extra={"rmv_check": rmv_check_record},
+            extra=rmv_check_for_log(rmv_check_record),
         )
 
         return rmv_check_record
@@ -114,7 +117,7 @@ def handle_rmv_check_request(
 
     result = do_checks(request_body, license_inquiry_response, rmv_check_record)
 
-    logger.info("RMV Check finished", extra={"rmv_check": result})
+    logger.info("RMV Check finished", extra=rmv_check_for_log(result))
 
     return result
 
@@ -250,3 +253,41 @@ def make_response_from_rmv_check(rmv_check_record: RMVCheck) -> RMVCheckResponse
         return RMVCheckResponse(verified=False, description=description)
 
     return RMVCheckResponse(verified=True, description="Verification check passed.")
+
+
+def rmv_check_for_log(rmv_check_record: RMVCheck) -> Dict[str, Any]:
+    dict_version = get_json_from_object(rmv_check_record)
+
+    # this is due to imprecise typing on `get_json_from_object`, it only returns
+    # None if None is provided as input, otherwise it's always a dictionary
+    if dict_version is None:
+        raise ValueError("Got back None for a non-None input. Should not happen.")
+
+    keys_to_log = {
+        "rmv_check_id",
+        "created_at",
+        "updated_at",
+        "request_to_rmv_started_at",
+        "request_to_rmv_completed_at",
+        "check_expiration",
+        "check_customer_inactive",
+        "check_active_fraudulent_activity",
+        "check_mass_id_number",
+        "check_residential_address_line_1",
+        "check_residential_address_line_2",
+        "check_residential_city",
+        "check_residential_zip_code",
+        "rmv_error_code",
+        "api_error_code",
+        "absence_case_id",
+        "rmv_customer_key",
+    }
+
+    # silly dance to serialize record into dictionary with basic types using
+    # better encoders than the default (e.g., Enums are represented by their
+    # values), before it gets processed by our JSON log formatter, which just
+    # uses the default string representation for all types
+    json_version = json.loads(json.dumps(dict_version, default=pydantic_encoder))
+
+    # filter to just keys we will log and prefix keys with `rmv_check.` for the extra logging attributes
+    return {f"rmv_check.{key}": value for key, value in json_version.items() if key in keys_to_log}
