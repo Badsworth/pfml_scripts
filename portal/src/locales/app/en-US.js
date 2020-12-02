@@ -299,6 +299,7 @@ const errors = {
       },
     },
     rules: {
+      disallow_12mo_leave_period: "Your leave cannot be longer than 12 months.",
       disallow_attempts:
         "We already have an account set up for you. Please sign in with that account. If that doesn’t sound familiar to you, call the Contact Center at $t(shared.contactCenterPhoneNumber).",
       disallow_hybrid_intermittent_leave:

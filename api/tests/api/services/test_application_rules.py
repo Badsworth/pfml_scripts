@@ -561,7 +561,6 @@ def test_disallow_submit_over_60_days_before_start_date(
 
     disallow_submission_issue = Issue(
         message="Can't submit application more than 60 days in advance of the earliest leave period",
-        type=IssueType.maximum,
         rule=IssueRule.disallow_submit_over_60_days_before_start_date,
     )
 
@@ -673,6 +672,36 @@ def test_leave_period_end_date_before_start_date(test_db_session, initialize_fac
             field="leave_details.reduced_schedule_leave_periods[0].end_date",
         ),
     ] == reduced_schedule_leave_issues
+
+
+@freeze_time("2021-01-01")
+def test_leave_period_disallow_12mo_leave_period(test_db_session, initialize_factories_session):
+    test_app = ApplicationFactory.create(
+        employment_status=EmploymentStatus.get_instance(
+            test_db_session, template=EmploymentStatus.EMPLOYED
+        ),
+        work_pattern=WorkPatternFixedFactory.create(),
+        has_continuous_leave_periods=True,
+        has_intermittent_leave_periods=False,
+        has_reduced_schedule_leave_periods=True,
+        continuous_leave_periods=[
+            ContinuousLeavePeriodFactory.create(
+                start_date=date(2021, 1, 1), end_date=date(2021, 6, 1)
+            )
+        ],
+        reduced_schedule_leave_periods=[
+            # End date is 1 year from the continuous leave period start date
+            ReducedScheduleLeavePeriodFactory.create(
+                start_date=date(2021, 6, 2), end_date=date(2022, 1, 1)
+            )
+        ],
+    )
+
+    issues = get_leave_periods_issues(test_app)
+
+    assert [
+        Issue(rule=IssueRule.disallow_12mo_leave_period, message="Leave cannot exceed 364 days",),
+    ] == issues
 
 
 def test_leave_period_allows_same_start_end_date(test_db_session, initialize_factories_session):

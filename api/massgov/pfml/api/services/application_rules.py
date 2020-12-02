@@ -19,6 +19,7 @@ from massgov.pfml.db.models.employees import PaymentMethod
 
 PFML_PROGRAM_LAUNCH_DATE = date(2021, 1, 1)
 MAX_DAYS_IN_ADVANCE_TO_SUBMIT = 60
+MAX_DAYS_IN_LEAVE_PERIOD_RANGE = 364
 
 
 def get_application_issues(application: Application) -> Optional[List[Issue]]:
@@ -442,6 +443,9 @@ def get_leave_period_ranges_issues(application: Application) -> List[Issue]:
     leave_period_start_dates = [
         leave_period.start_date for leave_period in all_leave_periods if leave_period.start_date
     ]
+    leave_period_end_dates = [
+        leave_period.end_date for leave_period in all_leave_periods if leave_period.end_date
+    ]
 
     leave_period_ranges = [
         (leave_period.start_date, leave_period.end_date)
@@ -453,16 +457,29 @@ def get_leave_period_ranges_issues(application: Application) -> List[Issue]:
 
     # Prevent submission too far in advance
     earliest_start_date = min(leave_period_start_dates, default=None)
+    latest_end_date = max(leave_period_end_dates, default=None)
 
     if (
-        earliest_start_date
+        earliest_start_date is not None
         and (earliest_start_date - date.today()).days > MAX_DAYS_IN_ADVANCE_TO_SUBMIT
     ):
         issues.append(
             Issue(
-                type=IssueType.maximum,
                 message=f"Can't submit application more than {MAX_DAYS_IN_ADVANCE_TO_SUBMIT} days in advance of the earliest leave period",
                 rule=IssueRule.disallow_submit_over_60_days_before_start_date,
+            )
+        )
+
+    # Prevent leave that exceed 12 months
+    if (
+        earliest_start_date is not None
+        and latest_end_date is not None
+        and (latest_end_date - earliest_start_date).days > MAX_DAYS_IN_LEAVE_PERIOD_RANGE
+    ):
+        issues.append(
+            Issue(
+                message=f"Leave cannot exceed {MAX_DAYS_IN_LEAVE_PERIOD_RANGE} days",
+                rule=IssueRule.disallow_12mo_leave_period,
             )
         )
 
