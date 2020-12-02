@@ -128,7 +128,7 @@ const LeaveSchedule = ({ appLogic, claim }) => {
           )}
         </tbody>
       </Table>
-      {medicalDocuments.length && (
+      {!!medicalDocuments.length && (
         <ReviewRow
           level="3"
           label={t("pages.employersClaimsReview.documentationLabel")}

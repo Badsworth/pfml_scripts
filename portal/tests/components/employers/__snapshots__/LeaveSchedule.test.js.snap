@@ -51,7 +51,6 @@ exports[`LeaveSchedule renders continuous schedule 1`] = `
       </tr>
     </tbody>
   </Table>
-  0
 </Fragment>
 `;
 
@@ -110,7 +109,6 @@ exports[`LeaveSchedule renders intermittent schedule 1`] = `
       />
     </tbody>
   </Table>
-  0
 </Fragment>
 `;
 
@@ -166,6 +164,5 @@ exports[`LeaveSchedule renders reduced schedule 1`] = `
       </tr>
     </tbody>
   </Table>
-  0
 </Fragment>
 `;

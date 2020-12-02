@@ -1,15 +1,16 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Trans, useTranslation } from "react-i18next";
 import InputChoiceGroup from "../InputChoiceGroup";
 import PropTypes from "prop-types";
 import ReviewHeading from "../ReviewHeading";
 import routes from "../../routes";
+import usePreviousValue from "../../hooks/usePreviousValue";
 
 const EmployerDecision = ({ fraud, onChange = () => {} }) => {
   const { t } = useTranslation();
   const [employerDecision, setEmployerDecision] = useState();
   // keep track of previous value for fraud prop to know when to clear employer decision
-  const prevFraud = useRef(false);
+  const previouslyFraud = usePreviousValue(fraud);
 
   const handleOnChange = (event) => {
     setEmployerDecision(event.target.value);
@@ -23,10 +24,10 @@ const EmployerDecision = ({ fraud, onChange = () => {} }) => {
   useEffect(() => {
     if (fraud === "Yes") {
       setEmployerDecision("Deny");
-    } else if (fraud === "No" && prevFraud.current) {
+    } else if (fraud === "No" && previouslyFraud === "Yes") {
       setEmployerDecision(undefined);
     }
-    prevFraud.current = fraud;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fraud]);
 
   return (
