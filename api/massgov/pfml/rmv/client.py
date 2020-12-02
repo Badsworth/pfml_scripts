@@ -1,6 +1,8 @@
 from functools import cached_property
 from typing import Optional, Union
 
+import flask
+import newrelic.agent
 import zeep.helpers as zeep_helpers
 
 import massgov.pfml.util.logging
@@ -42,6 +44,23 @@ class RmvClient:
             res = self._caller.VendorLicenseInquiry(**req_body)
         except Exception as e:
             logger.exception("Error making RMV VendorLicenseInquiry request")
+
+            has_flask_context = flask.has_request_context()
+            newrelic.agent.record_custom_event(
+                "RmvError",
+                {
+                    "error.class": type(e).__name__,
+                    "error.message": str(e),
+                    "request.method": flask.request.method if has_flask_context else None,
+                    "request.uri": flask.request.path if has_flask_context else None,
+                    "request.headers.x-amzn-requestid": flask.request.headers.get(
+                        "x-amzn-requestid", None
+                    )
+                    if has_flask_context
+                    else None,
+                },
+            )
+
             raise RmvUnknownError(cause=e)
 
         # If the RMV responds with an Acknowledgement value, all other fields
