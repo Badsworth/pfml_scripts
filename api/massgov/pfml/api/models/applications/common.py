@@ -113,7 +113,6 @@ class ReducedScheduleLeavePeriods(PydanticBaseModel):
     monday_off_minutes: Optional[int]
     tuesday_off_minutes: Optional[int]
     wednesday_off_minutes: Optional[int]
-    is_estimated: Optional[bool] = True
 
 
 class ContinuousLeavePeriods(PydanticBaseModel):
@@ -128,7 +127,6 @@ class ContinuousLeavePeriods(PydanticBaseModel):
     end_date_full_day: Optional[bool]
     end_date_off_hours: Optional[int]
     end_date_off_minutes: Optional[int]
-    is_estimated: Optional[bool] = True
 
 
 class FrequencyIntervalBasis(str, Enum):

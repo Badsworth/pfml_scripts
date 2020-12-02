@@ -322,12 +322,42 @@ def build_customer_address(
     return customer_address
 
 
+def determine_absence_period_status(application: Application) -> str:
+    absence_period_status = ""
+    known = massgov.pfml.fineos.models.customer_api.AbsencePeriodStatus.KNOWN.value
+    estimated = massgov.pfml.fineos.models.customer_api.AbsencePeriodStatus.ESTIMATED.value
+
+    pregnancy_maternity_reason_id = LeaveReason.PREGNANCY_MATERNITY.leave_reason_id
+    serious_health_condition_reason_id = (
+        LeaveReason.SERIOUS_HEALTH_CONDITION_EMPLOYEE.leave_reason_id
+    )
+
+    if application.leave_reason.leave_reason_id in [
+        pregnancy_maternity_reason_id,
+        serious_health_condition_reason_id,
+    ]:
+
+        return known
+
+    elif application.leave_reason.leave_reason_id == LeaveReason.CHILD_BONDING.leave_reason_id:
+        if application.has_future_child_date:
+            absence_period_status = estimated
+        else:
+            absence_period_status = known
+
+    return absence_period_status
+
+
 def build_absence_case(
     application: Application,
 ) -> massgov.pfml.fineos.models.customer_api.AbsenceCase:
     """Convert an Application to a FINEOS API AbsenceCase model."""
     continuous_leave_periods = []
+
     for leave_period in application.continuous_leave_periods:
+        # determine the status of the absence period
+        absence_period_status = determine_absence_period_status(application)
+
         continuous_leave_periods.append(
             massgov.pfml.fineos.models.customer_api.TimeOffLeavePeriod(
                 startDate=leave_period.start_date,
@@ -336,7 +366,7 @@ def build_absence_case(
                 expectedReturnToWorkDate=leave_period.end_date,
                 startDateFullDay=True,
                 endDateFullDay=True,
-                status="Known",
+                status=absence_period_status,
             )
         )
 
@@ -362,11 +392,15 @@ def build_absence_case(
                 reduced_leave_period.sunday_off_minutes,
             ],
         )
+
+        # determine the status of the absence period
+        absence_period_status = determine_absence_period_status(application)
+
         reduced_schedule_leave_periods.append(
             massgov.pfml.fineos.models.customer_api.ReducedScheduleLeavePeriod(
                 startDate=reduced_leave_period.start_date,
                 endDate=reduced_leave_period.end_date,
-                status="Known",  # API-711 will set this properly.
+                status=absence_period_status,
                 mondayOffHours=monday_hours_minutes.hours,
                 mondayOffMinutes=monday_hours_minutes.minutes,
                 tuesdayOffHours=tuesday_hours_minutes.hours,

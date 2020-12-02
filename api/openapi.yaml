@@ -1796,11 +1796,6 @@ components:
         end_date:
           nullable: true
           $ref: "#/components/schemas/Date"
-        is_estimated:
-          type: boolean
-          nullable: true
-          default: true
-          example: true
         thursday_off_minutes:
           type: integer
           minimum: 0
@@ -1879,11 +1874,6 @@ components:
         end_date_full_day:
           type: boolean
           nullable: true
-          example: true
-        is_estimated:
-          type: boolean
-          nullable: true
-          default: true
           example: true
 
     IntermittentLeavePeriods:

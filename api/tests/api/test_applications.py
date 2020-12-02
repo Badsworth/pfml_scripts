@@ -2762,7 +2762,7 @@ def test_application_post_submit_to_fineos(client, user, auth_token, test_db_ses
                             expectedReturnToWorkDate=date(2021, 2, 9),
                             startDateFullDay=True,
                             endDateFullDay=True,
-                            status="Known",
+                            status="known",
                         )
                     ],
                     employerNotified=True,
@@ -2952,7 +2952,7 @@ def test_application_post_submit_to_fineos_reduced_schedule_leave(
         massgov.pfml.fineos.models.customer_api.ReducedScheduleLeavePeriod(
             startDate=date(2021, 1, 1),
             endDate=date(2021, 2, 9),
-            status="Known",
+            status="known",
             mondayOffHours=4,
             mondayOffMinutes=15,
             tuesdayOffHours=1,

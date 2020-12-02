@@ -26,6 +26,11 @@ class Direction(Enum):
     DESC = "DESC"
 
 
+class AbsencePeriodStatus(Enum):
+    KNOWN = "known"
+    ESTIMATED = "estimated"
+
+
 class SortOrderItem(BaseModel):
     columnName: Optional[str] = None
     direction: Optional[Direction] = None

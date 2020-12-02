@@ -1,15 +1,22 @@
 import io
-from datetime import date
+from datetime import date, timedelta
 
 import pytest
 
 import massgov.pfml.fineos
 from massgov.pfml.api.services import fineos_actions
-from massgov.pfml.db.models.applications import Application, LeaveReasonQualifier, LkDayOfWeek
+from massgov.pfml.db.models.applications import (
+    Application,
+    LeaveReason,
+    LeaveReasonQualifier,
+    LkDayOfWeek,
+)
 from massgov.pfml.db.models.employees import Country, Employer
 from massgov.pfml.db.models.factories import (
     AddressFactory,
     ApplicationFactory,
+    ContinuousLeavePeriodFactory,
+    ReducedScheduleLeavePeriodFactory,
     WorkPatternFixedFactory,
 )
 from massgov.pfml.fineos import FINEOSClient
@@ -93,12 +100,42 @@ def test_register_employee_bad_ssn(test_db_session):
         assert True
 
 
+def test_determine_absence_period_status_cont(user, test_db_session):
+    application = ApplicationFactory.create(user=user)
+    continuous_leave_period = ContinuousLeavePeriodFactory.create()
+    application.continuous_leave_periods.append(continuous_leave_period)
+
+    status = fineos_actions.determine_absence_period_status(application)
+    assert status == "known"
+
+
+def test_determine_absence_period_status_reduced(user, test_db_session):
+    today = date.today()
+    tomorrow = today + timedelta(days=1)
+
+    application = ApplicationFactory.create(
+        user=user,
+        child_birth_date=tomorrow,
+        has_future_child_date=True,
+        leave_reason_id=LeaveReason.CHILD_BONDING.leave_reason_id,
+    )
+    reduced_schedule_leave_period = ReducedScheduleLeavePeriodFactory.create()
+    application.reduced_schedule_leave_periods.append(reduced_schedule_leave_period)
+
+    status = fineos_actions.determine_absence_period_status(application)
+    assert status == "estimated"
+
+
 def test_send_to_fineos(user, test_db_session):
     application = ApplicationFactory.create(
         user=user, work_pattern=WorkPatternFixedFactory.create()
     )
     application.employer_fein = "179892886"
     application.tax_identifier.tax_identifier = "784569632"
+
+    # create leave period to ensure the code that sets the "status" for the absence period is triggered
+    continuous_leave_period = ContinuousLeavePeriodFactory.create()
+    application.continuous_leave_periods.append(continuous_leave_period)
 
     assert application.fineos_absence_id is None
     assert application.fineos_notification_case_id is None
