@@ -74,6 +74,8 @@
     "dotenv": "^8.2.0",
     "faker": "^4.1.0",
     "form-data": "^3.0.0",
+    "graphql": "^15.4.0",
+    "graphql-request": "^3.3.0",
     "merge2": "^1.4.1",
     "multipipe": "^4.0.0",
     "node-fetch": "^2.6.1",
