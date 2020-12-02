@@ -126,11 +126,6 @@ class EligibilityFeedRecord(NoneMeansDefault):
     employeeIdentifier: str
     employeeFirstName: str
     employeeLastName: str
-    employeeEffectiveFromDate: date
-    # FINEOS DB type is DECIMAL(28,6)
-    # 28 digits of precision overall, up to 6 digits past the decimal
-    employeeSalary: Decimal
-    employeeEarningFrequency: EarningFrequency
 
     # FINEOS required fields, but with an agreed upon default
     employeeDateOfBirth: Union[date, None] = DEFAULT_DATE
@@ -200,10 +195,16 @@ class EligibilityFeedRecord(NoneMeansDefault):
     employee50EmployeesWithin75Miles: Optional[bool] = None
     employmentWorkState: Optional[str] = DEFAULT_EMPLOYMENT_WORK_STATE
     managerIdentifier: Optional[str] = None
-    # TODO: there can be multiple of these starting with occupationQualifier*
+    # note, there can be multiple of these starting with occupationQualifier*,
+    # which we don't support in this data structure
     occupationQualifier: Optional[str] = None
     employeeWorkSiteId: Optional[str] = None
+    employeeEffectiveFromDate: Optional[date] = None
     employeeEffectiveToDate: Optional[date] = None
+    # FINEOS DB type is DECIMAL(28,6)
+    # 28 digits of precision overall, up to 6 digits past the decimal
+    employeeSalary: Optional[Decimal] = None
+    employeeEarningFrequency: Optional[EarningFrequency] = None
 
 
 @dataclass
@@ -757,9 +758,6 @@ def employee_to_eligibility_feed_record(
         employeeIdentifier=employee.employee_id,
         employeeFirstName=employee.first_name,
         employeeLastName=employee.last_name,
-        employeeEffectiveFromDate=most_recent_wages.filing_period,
-        employeeSalary=most_recent_wages.employee_ytd_wages,
-        employeeEarningFrequency=EarningFrequency.yearly,
         # FINEOS required fields, but with an agreed upon default we can fall
         # back on
         employeeDateOfBirth=employee.date_of_birth,

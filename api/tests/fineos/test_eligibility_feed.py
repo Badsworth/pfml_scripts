@@ -55,13 +55,10 @@ def test_employee_to_eligibility_feed_record(initialize_factories_session):
         employee, most_recent_wages, employer
     )
 
-    # TODO: assert other fields?
+    # fields that should be set
     assert eligibility_feed_record.employeeIdentifier == employee.employee_id
     assert eligibility_feed_record.employeeFirstName == employee.first_name
     assert eligibility_feed_record.employeeLastName == employee.last_name
-    assert eligibility_feed_record.employeeEffectiveFromDate == most_recent_wages.filing_period
-    assert eligibility_feed_record.employeeSalary == most_recent_wages.employee_ytd_wages
-    assert eligibility_feed_record.employeeEarningFrequency == ef.EarningFrequency.yearly
     assert eligibility_feed_record.employeeDateOfBirth == ef.DEFAULT_DATE
 
     assert eligibility_feed_record.employeeNationalID == employee.tax_identifier.tax_identifier
@@ -72,6 +69,11 @@ def test_employee_to_eligibility_feed_record(initialize_factories_session):
         assert eligibility_feed_record.telephoneIntCode == "1"
         assert eligibility_feed_record.telephoneAreaCode == employee.phone_number[:3]
         assert eligibility_feed_record.telephoneNumber == employee.phone_number[4:].replace("-", "")
+
+    # fields that *should not* be set
+    assert eligibility_feed_record.employeeEffectiveFromDate is None
+    assert eligibility_feed_record.employeeSalary is None
+    assert eligibility_feed_record.employeeEarningFrequency is None
 
 
 def test_employee_to_eligibility_feed_record_with_itin(
@@ -151,9 +153,6 @@ def create_csv_dict(updates=None):
         "employeeIdentifier": "",
         "employeeFirstName": "",
         "employeeLastName": "",
-        "employeeEffectiveFromDate": "",
-        "employeeSalary": "",
-        "employeeEarningFrequency": ef.EarningFrequency.yearly.value,
         # required fields: with defaults though
         "employeeDateOfBirth": ef.DEFAULT_DATE.strftime("%m/%d/%Y"),  # employee.date_of_birth,
         "employeeJobTitle": "DEFAULT",
@@ -216,7 +215,10 @@ def create_csv_dict(updates=None):
         "managerIdentifier": "",
         "occupationQualifier": "",
         "employeeWorkSiteId": "",
+        "employeeEffectiveFromDate": "",
         "employeeEffectiveToDate": "",
+        "employeeSalary": "",
+        "employeeEarningFrequency": "",
     }
 
     if updates:
@@ -232,11 +234,6 @@ def test_default_state(test_db_session, initialize_factories_session):
         employeeIdentifier=employee.employee_id,
         employeeFirstName=employee.first_name,
         employeeLastName=employee.last_name,
-        employeeEffectiveFromDate=(
-            employee.wages_and_contributions[0].filing_period.strftime("%m/%d/%Y")
-        ),
-        employeeSalary=round(employee.wages_and_contributions[0].employee_ytd_wages, 6),
-        employeeEarningFrequency=ef.EarningFrequency.yearly.value,
     )
     assert efr.employmentWorkState == "MA"
 
@@ -293,13 +290,6 @@ def test_write_employees_to_csv(
                 "employeeIdentifier": str(employees[0].employee_id),
                 "employeeFirstName": employees[0].first_name,
                 "employeeLastName": employees[0].last_name,
-                "employeeEffectiveFromDate": (
-                    employees[0].wages_and_contributions[0].filing_period.strftime("%m/%d/%Y")
-                ),
-                "employeeSalary": str(
-                    round(employees[0].wages_and_contributions[0].employee_ytd_wages, 6)
-                ),
-                "employeeEarningFrequency": ef.EarningFrequency.yearly.value,
                 # required fields: with defaults though
                 "employeeDateOfBirth": ef.DEFAULT_DATE.strftime(
                     "%m/%d/%Y"
@@ -322,13 +312,6 @@ def test_write_employees_to_csv(
                 "employeeIdentifier": str(employees[1].employee_id),
                 "employeeFirstName": employees[1].first_name,
                 "employeeLastName": employees[1].last_name,
-                "employeeEffectiveFromDate": (
-                    employees[1].wages_and_contributions[0].filing_period.strftime("%m/%d/%Y")
-                ),
-                "employeeSalary": str(
-                    round(employees[1].wages_and_contributions[0].employee_ytd_wages, 6)
-                ),
-                "employeeEarningFrequency": ef.EarningFrequency.yearly.value,
                 # required fields: with defaults though
                 "employeeDateOfBirth": ef.DEFAULT_DATE.strftime(
                     "%m/%d/%Y"
