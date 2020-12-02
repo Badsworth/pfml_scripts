@@ -7,25 +7,45 @@ exports[`FraudReport renders just the input choices by default 1`] = `
       Array [
         Object {
           "checked": false,
-          "label": "No",
-          "value": "No",
+          "label": "Yes (explain below)",
+          "value": "Yes",
         },
         Object {
           "checked": false,
-          "label": "Yes",
-          "value": "Yes",
+          "label": "No",
+          "value": "No",
         },
       ]
+    }
+    hint={
+      <Details
+        label="What counts as paid leave fraud?"
+      >
+        <ul
+          className="usa-list"
+        >
+          <li>
+            Using someone’s personal information to fraudulently collect benefits
+          </li>
+          <li>
+            Providing forged or falsified documents
+          </li>
+          <li>
+            Withholding information or providing false information to the Department of Family and Medical Leave
+          </li>
+        </ul>
+      </Details>
     }
     label={
       <ReviewHeading
         level="2"
       >
-        Do you have any reason to suspect fraud?
+        Do you have any reason to suspect this is fraud?
       </ReviewHeading>
     }
     name="isFraud"
     onChange={[Function]}
+    smallLabel={true}
     type="radio"
   />
   <ConditionalContent
@@ -54,26 +74,46 @@ exports[`FraudReport renders the alert if "Yes" is selected 1`] = `
     choices={
       Array [
         Object {
+          "checked": true,
+          "label": "Yes (explain below)",
+          "value": "Yes",
+        },
+        Object {
           "checked": false,
           "label": "No",
           "value": "No",
         },
-        Object {
-          "checked": true,
-          "label": "Yes",
-          "value": "Yes",
-        },
       ]
+    }
+    hint={
+      <Details
+        label="What counts as paid leave fraud?"
+      >
+        <ul
+          className="usa-list"
+        >
+          <li>
+            Using someone’s personal information to fraudulently collect benefits
+          </li>
+          <li>
+            Providing forged or falsified documents
+          </li>
+          <li>
+            Withholding information or providing false information to the Department of Family and Medical Leave
+          </li>
+        </ul>
+      </Details>
     }
     label={
       <ReviewHeading
         level="2"
       >
-        Do you have any reason to suspect fraud?
+        Do you have any reason to suspect this is fraud?
       </ReviewHeading>
     }
     name="isFraud"
     onChange={[Function]}
+    smallLabel={true}
     type="radio"
   />
   <ConditionalContent

@@ -30,7 +30,7 @@ import { useTranslation } from "../../../locales/i18n";
 import withEmployerClaim from "../../../hoc/withEmployerClaim";
 
 // TODO (EMPLOYER-519): Remove `hoursWorkedPerWeek` when BE provides value
-const hoursWorkedPerWeek = 40;
+const hoursWorkedPerWeek = 0;
 
 export const Review = (props) => {
   // TODO (EMPLOYER-583) add frontend validation

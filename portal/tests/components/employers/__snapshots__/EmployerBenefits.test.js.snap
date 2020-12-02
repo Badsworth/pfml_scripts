@@ -10,8 +10,23 @@ exports[`EmployerBenefits renders the component 1`] = `
   <Table
     className="width-full"
   >
-    <caption>
-      Employer-sponsored benefit details
+    <caption
+      className="text-normal"
+    >
+      <p>
+        <Trans
+          components={
+            Object {
+              "reductions-overview-link": <a
+                href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefit-reductions"
+                rel="noopener"
+                target="_blank"
+              />,
+            }
+          }
+          i18nKey="pages.employersClaimsReview.employerBenefits.caption"
+        />
+      </p>
     </caption>
     <thead>
       <tr>

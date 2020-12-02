@@ -52,8 +52,10 @@ export const FinishAccountSetup = (props) => {
       </Button>
 
       <div className="margin-top-2 text-bold">
-        <Link href={routes.auth.login}>
-          <a>{t("pages.employersAuthFinishAccountSetup.logInFooterLink")}</a>
+        <Link href={routes.employers.createAccount}>
+          <a>
+            {t("pages.employersAuthFinishAccountSetup.createAccountFooterLink")}
+          </a>
         </Link>
       </div>
     </form>

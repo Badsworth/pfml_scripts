@@ -43,17 +43,18 @@ const Feedback = ({
   return (
     <React.Fragment>
       <InputChoiceGroup
+        smallLabel
         choices={[
+          {
+            checked: shouldShowCommentBox,
+            label: t("pages.employersClaimsReview.feedback.choiceYes"),
+            value: "true",
+          },
           {
             checked: !shouldShowCommentBox,
             disabled: isDenyingRequest || isEmployeeNoticeInsufficient,
             label: t("pages.employersClaimsReview.feedback.choiceNo"),
             value: "false",
-          },
-          {
-            checked: shouldShowCommentBox,
-            label: t("pages.employersClaimsReview.feedback.choiceYes"),
-            value: "true",
           },
         ]}
         label={

@@ -13,20 +13,37 @@ exports[`EmployerDecision renders the component 1`] = `
         },
         Object {
           "checked": false,
-          "label": "Deny",
+          "label": "Deny (explain below)",
           "value": "Deny",
         },
       ]
+    }
+    hint={
+      <Trans
+        className="font-heading-xs text-normal"
+        components={
+          Object {
+            "employer-pfml-guide-link": <a
+              href="https://www.mass.gov/info-details/employer-paid-leave-application-review-guide"
+              rel="noopener"
+              target="_blank"
+            />,
+          }
+        }
+        i18nKey="pages.employersClaimsReview.employerDecision.explanation"
+      />
     }
     label={
       <ReviewHeading
         level="2"
       >
-        What would be your decision on this leave request?
+        Have you approved or denied this leave request?
       </ReviewHeading>
     }
     name="employerDecision"
     onChange={[Function]}
+    smallLabel={true}
+    smallabel={true}
     type="radio"
   />
 </Fragment>

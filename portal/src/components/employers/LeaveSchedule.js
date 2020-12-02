@@ -48,8 +48,8 @@ const LeaveSchedule = ({ appLogic, claim }) => {
         {t("pages.employersClaimsReview.leaveSchedule.header")}
       </ReviewHeading>
       <Table className="width-full">
-        <caption>
-          {t("pages.employersClaimsReview.leaveSchedule.tableName")}
+        <caption className="text-normal">
+          <p>{t("pages.employersClaimsReview.leaveSchedule.caption")}</p>
         </caption>
         <thead>
           <tr>

@@ -74,7 +74,7 @@ exports[`Employer index renders the page 1`] = `
         components={
           Object {
             "employer-pfml-guide-link": <a
-              href="https://www.mass.gov/guides/employers-guide-to-paid-family-and-medical-leave"
+              href="https://www.mass.gov/info-details/employer-paid-leave-application-review-guide"
               rel="noopener"
               target="_blank"
             />,

@@ -37,18 +37,9 @@ export const Confirmation = (props) => {
         }}
       />
       <p>
-        <Trans
-          i18nKey="pages.employersClaimsConfirmation.instructions_benefitsGuide"
-          components={{
-            "benefits-guide-link": (
-              <a
-                target="_blank"
-                rel="noopener"
-                href={routes.external.massgov.benefitsGuide}
-              />
-            ),
-          }}
-        />
+        {t(
+          "pages.employersClaimsConfirmation.instructions_processingApplication"
+        )}
       </p>
       <UserFeedback url={routes.external.massgov.feedbackEmployer} />
     </React.Fragment>

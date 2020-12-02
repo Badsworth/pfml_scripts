@@ -103,10 +103,10 @@ export const Success = (props) => {
             ul: <ul className="usa-list" />,
             li: <li />,
             "reductions-employer-benefits-link": (
-              <a href={routes.external.reductionsEmployerBenefits} />
+              <a href={routes.external.massgov.reductionsEmployerBenefits} />
             ),
             "reductions-overview-link": (
-              <a href={routes.external.reductionsOverview} />
+              <a href={routes.external.massgov.reductionsOverview} />
             ),
           }}
         />

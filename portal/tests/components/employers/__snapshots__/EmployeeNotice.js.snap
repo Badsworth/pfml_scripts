@@ -14,7 +14,7 @@ exports[`EmployeeNotice renders the component 1`] = `
         Object {
           "checked": false,
           "disabled": false,
-          "label": "No",
+          "label": "No (explain below)",
           "value": "No",
         },
       ]
@@ -28,6 +28,7 @@ exports[`EmployeeNotice renders the component 1`] = `
     }
     name="employeeNotice"
     onChange={[Function]}
+    smallLabel={true}
     type="radio"
   />
 </Fragment>

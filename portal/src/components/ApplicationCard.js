@@ -320,7 +320,7 @@ function ApplicationActions(props) {
               i18nKey="components.applicationCard.reductionsInstructionsIntro"
               components={{
                 "reductions-overview-link": (
-                  <a href={routes.external.reductionsOverview} />
+                  <a href={routes.external.massgov.reductionsOverview} />
                 ),
               }}
             />

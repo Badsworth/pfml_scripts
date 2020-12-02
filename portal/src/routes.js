@@ -78,6 +78,8 @@ const routes = {
         "https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-guide#what-is-a-serious-health-condition?-",
       benefitsTimeline_2020December2:
         "https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-timeline#december-2,-2020-",
+      calculateReductions:
+        "https://www.mass.gov/guides/what-to-expect-when-you-apply-for-paid-family-and-medical-leave-benefits#-calculate-any-reductions-",
       consentAgreement:
         "https://www.mass.gov/info-details/massachusetts-department-of-family-and-medical-leave-informed-consent-agreement",
       dfml: "https://mass.gov/dfml",
@@ -87,7 +89,7 @@ const routes = {
       employerReimbursements:
         "https://www.mass.gov/forms/request-reimbursement-for-your-employees-paid-leave-benefits",
       employersGuide:
-        "https://www.mass.gov/guides/employers-guide-to-paid-family-and-medical-leave",
+        "https://www.mass.gov/info-details/employer-paid-leave-application-review-guide",
       federalEmployerIdNumber:
         "https://www.mass.gov/info-details/finding-your-employers-federal-employer-identification-number-fein",
       feedbackClaimant: "https://www.mass.gov/paidleave-claimant-feedback",
@@ -105,12 +107,12 @@ const routes = {
       paidLeave:
         "https://www.mass.gov/topics/paid-family-and-medical-leave-in-massachusetts",
       privacyPolicy: "https://www.mass.gov/privacypolicy",
+      reductionsEmployerBenefits:
+        "https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefit-reductions#earned-time-off-through-your-employer-",
+      reductionsOverview:
+        "https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefit-reductions",
     },
     puertoRicanBirthCertificate: "https://prfaa.pr.gov/faqs",
-    reductionsEmployerBenefits:
-      "https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefit-reductions#earned-time-off-through-your-employer-",
-    reductionsOverview:
-      "https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefit-reductions",
     workVisa:
       "https://travel.state.gov/content/travel/en/us-visas/employment/temporary-worker-visas.html",
   },

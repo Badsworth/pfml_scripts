@@ -29,6 +29,7 @@ const EmployeeNotice = ({ fraud, onChange = () => {} }) => {
   return (
     <React.Fragment>
       <InputChoiceGroup
+        smallLabel
         label={
           <ReviewHeading level="2">
             {t("pages.employersClaimsReview.employeeNotice.heading")}

@@ -1,8 +1,9 @@
 import React, { useEffect, useRef, useState } from "react";
+import { Trans, useTranslation } from "react-i18next";
 import InputChoiceGroup from "../InputChoiceGroup";
 import PropTypes from "prop-types";
 import ReviewHeading from "../ReviewHeading";
-import { useTranslation } from "react-i18next";
+import routes from "../../routes";
 
 const EmployerDecision = ({ fraud, onChange = () => {} }) => {
   const { t } = useTranslation();
@@ -31,11 +32,28 @@ const EmployerDecision = ({ fraud, onChange = () => {} }) => {
   return (
     <React.Fragment>
       <InputChoiceGroup
+        smallLabel
         label={
           <ReviewHeading level="2">
             {t("pages.employersClaimsReview.employerDecision.heading")}
           </ReviewHeading>
         }
+        hint={
+          <Trans
+            i18nKey="pages.employersClaimsReview.employerDecision.explanation"
+            className="font-heading-xs text-normal"
+            components={{
+              "employer-pfml-guide-link": (
+                <a
+                  href={routes.external.massgov.employersGuide}
+                  target="_blank"
+                  rel="noopener"
+                />
+              ),
+            }}
+          />
+        }
+        smallabel
         choices={[
           {
             checked: employerDecision === "Approve",

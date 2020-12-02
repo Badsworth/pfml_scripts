@@ -19,13 +19,13 @@ describe("Confirmation", () => {
     renderPage(query);
 
     expect(wrapper).toMatchSnapshot();
-    expect(wrapper.find("Trans")).toHaveLength(4);
+    expect(wrapper.find("Trans")).toHaveLength(3);
   });
 
   it("does not display due date if not provided", () => {
     const query = { absence_id: "test-absence-id", follow_up_date: null };
     renderPage(query);
 
-    expect(wrapper.find("Trans")).toHaveLength(3);
+    expect(wrapper.find("Trans")).toHaveLength(2);
   });
 });

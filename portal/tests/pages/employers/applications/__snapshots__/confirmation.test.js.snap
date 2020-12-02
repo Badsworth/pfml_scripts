@@ -39,18 +39,7 @@ exports[`Confirmation renders the page 1`] = `
     i18nKey="pages.employersClaimsConfirmation.instructions"
   />
   <p>
-    <Trans
-      components={
-        Object {
-          "benefits-guide-link": <a
-            href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-guide"
-            rel="noopener"
-            target="_blank"
-          />,
-        }
-      }
-      i18nKey="pages.employersClaimsConfirmation.instructions_benefitsGuide"
-    />
+    If we do not hear from anyone at your company before the deadline, we will process the application solely based on the information the employee provided.
   </p>
   <UserFeedback
     url="https://www.mass.gov/paidleave-employer-feedback"

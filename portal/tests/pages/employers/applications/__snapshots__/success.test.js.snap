@@ -14,23 +14,20 @@ exports[`Success renders Success page 1`] = `
     }
   />
   <p>
-    We’ll begin processing this application and your employee should hear from us within 14 calendar days.
-  </p>
-  <p>
-    Once we’ve made a decision, you’ll receive an email notification with a link to details about the decision.
+    We’ll begin processing this application and your employee should hear from us within 14 calendar days. Once we’ve made a decision, you’ll receive an email notification with a link to details about the decision.
   </p>
   <p>
     <Trans
       components={
         Object {
-          "benefits-guide-link": <a
-            href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-guide"
+          "reimbursements-link": <a
+            href="https://www.mass.gov/forms/request-reimbursement-for-your-employees-paid-leave-benefits"
             rel="noopener"
             target="_blank"
           />,
         }
       }
-      i18nKey="pages.employersClaimsSuccess.instructions_benefitsGuide"
+      i18nKey="pages.employersClaimsSuccess.instructions_reimbursement"
     />
   </p>
   <UserFeedback

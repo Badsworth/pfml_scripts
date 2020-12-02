@@ -21,16 +21,15 @@ export const Success = (props) => {
       <p>
         {t("pages.employersClaimsSuccess.instructions_processingApplication")}
       </p>
-      <p>{t("pages.employersClaimsSuccess.instructions_emailNotification")}</p>
       <p>
         <Trans
-          i18nKey="pages.employersClaimsSuccess.instructions_benefitsGuide"
+          i18nKey="pages.employersClaimsSuccess.instructions_reimbursement"
           components={{
-            "benefits-guide-link": (
+            "reimbursements-link": (
               <a
+                href={routes.external.massgov.employerReimbursements}
                 target="_blank"
                 rel="noopener"
-                href={routes.external.massgov.benefitsGuide}
               />
             ),
           }}

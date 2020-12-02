@@ -29,10 +29,10 @@ exports[`FinishAccountSetup renders the page 1`] = `
     className="margin-top-2 text-bold"
   >
     <Link
-      href="/login"
+      href="/employers/create-account"
     >
       <a>
-        Back to log in
+        Create a new account
       </a>
     </Link>
   </div>

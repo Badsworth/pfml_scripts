@@ -5,6 +5,8 @@ import PropTypes from "prop-types";
 import React from "react";
 import ReviewHeading from "../ReviewHeading";
 import Table from "../Table";
+import { Trans } from "react-i18next";
+import routes from "../../routes";
 import { useTranslation } from "../../locales/i18n";
 
 /**
@@ -21,9 +23,23 @@ const PreviousLeaves = (props) => {
       <ReviewHeading level="2">
         {t("pages.employersClaimsReview.previousLeaves.header")}
       </ReviewHeading>
-      <p>{t("pages.employersClaimsReview.previousLeaves.explanation")}</p>
+      <p>
+        <Trans
+          i18nKey="pages.employersClaimsReview.previousLeaves.explanation"
+          components={{
+            "calculate-reductions-link": (
+              <a
+                href={routes.external.massgov.calculateReductions}
+                target="_blank"
+                rel="noopener"
+              />
+            ),
+          }}
+        />
+      </p>
       <Details
         label={t("pages.employersClaimsReview.previousLeaves.detailsLabel")}
+        className="text-bold"
       >
         <p>
           {t(
@@ -32,14 +48,21 @@ const PreviousLeaves = (props) => {
         </p>
         <ul className="usa-list">
           <li>
-            {t(
-              "pages.employersClaimsReview.previousLeaves.qualifyingReason_manageHealth"
-            )}
-          </li>
-          <li>
-            {t(
-              "pages.employersClaimsReview.previousLeaves.qualifyingReason_careForFamily"
-            )}
+            <Trans
+              i18nKey="pages.employersClaimsReview.previousLeaves.qualifyingReason_manageHealth"
+              components={{
+                "mass-benefits-guide-serious-health-condition": (
+                  <a
+                    target="_blank"
+                    rel="noopener"
+                    href={
+                      routes.external.massgov
+                        .benefitsGuide_seriousHealthCondition
+                    }
+                  />
+                ),
+              }}
+            />
           </li>
           <li>
             {t(
@@ -50,6 +73,28 @@ const PreviousLeaves = (props) => {
             {t(
               "pages.employersClaimsReview.previousLeaves.qualifyingReason_activeDuty"
             )}
+          </li>
+          <li>
+            {t(
+              "pages.employersClaimsReview.previousLeaves.qualifyingReason_careForFamilyMilitary"
+            )}
+          </li>
+          <li>
+            <Trans
+              i18nKey="pages.employersClaimsReview.previousLeaves.qualifyingReason_careForFamilyMedical"
+              components={{
+                "mass-benefits-guide-serious-health-condition": (
+                  <a
+                    target="_blank"
+                    rel="noopener"
+                    href={
+                      routes.external.massgov
+                        .benefitsGuide_seriousHealthCondition
+                    }
+                  />
+                ),
+              }}
+            />
           </li>
         </ul>
       </Details>

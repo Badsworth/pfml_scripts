@@ -1307,9 +1307,9 @@ const pages = {
     usernameLabel: "$t(shared.usernameLabel)",
   },
   employersAuthFinishAccountSetup: {
+    createAccountFooterLink: "Create a new account",
     lead:
       "Please verify your email address. If an account exists for the email you provide, you’ll receive a 6-digit verification code. After that, you’ll be prompted to create a new password.",
-    logInFooterLink: "$t(shared.backToLoginLink)",
     submitButton: "Submit",
     title: "Finish setting up your account",
     usernameLabel: "$t(shared.usernameLabel)",
@@ -1317,11 +1317,9 @@ const pages = {
   employersClaimsConfirmation: {
     applicationIdLabel: "<strong>Application ID:</strong> {{absenceId}}",
     instructions:
-      "<p>Thanks for letting us know that you’re not the right person to review this.</p><ul><li>Please check with your human resources team and your colleagues to see who should respond.</li><li>If the right person already has an employer account with your company info, you can forward them the email you received so they can respond directly.</li><li>Otherwise, please ask them to call us at $t(shared.contactCenterPhoneNumber).</li></ul>",
+      "<p>Thanks for letting us know that you’re not the right person to review this.</p><ul><li>Please check with your human resources team and your colleagues to see who should respond.</li><li>If the right person at your company already has an employer account, they received the same email you did and can respond directly.</li><li>Otherwise, please ask them to call us at $t(shared.contactCenterPhoneNumber).</li></ul>",
     instructionsFollowUpDateLabel:
       "<div><strong>Review by:</strong> {{date}} at 11:59 p.m. Eastern time</div>",
-    instructions_benefitsGuide:
-      "To learn more about how benefits are calculated, visit our <benefits-guide-link>PFML Benefits Guide</benefits-guide-link>.",
     instructions_processingApplication:
       "If we do not hear from anyone at your company before the deadline, we will process the application solely based on the information the employee provided.",
     title: "Help us find the right person to review the application",
@@ -1356,7 +1354,7 @@ const pages = {
         "Social Security Number or Individual Taxpayer Identification Number",
     },
     employeeNotice: {
-      choiceNo: "$t(shared.choiceNo)",
+      choiceNo: "$t(shared.choiceNo) (explain below)",
       choiceYes: "$t(shared.choiceYes)",
       heading:
         "Did the employee give you at least 30 days notice about their leave?",
@@ -1367,6 +1365,8 @@ const pages = {
       amountValue_monthly: "{{amount, currency}} per month",
       amountValue_weekly: "{{amount, currency}} per week",
       benefitTypeLabel: "Benefit type",
+      caption:
+        "Your employee is planning to use these benefits during their leave. Learn more about how paid leave works with <reductions-overview-link>other government and private benefit programs</reductions-overview-link>.",
       dateRangeLabel: "Date range",
       detailsLabel: "Details",
       employerBenefitFrequencyValue_allAtOnce:
@@ -1385,12 +1385,13 @@ const pages = {
       employerBenefitType_shortTermDisability:
         "$t(shared.employerBenefitType_shortTermDisability)",
       header: "Employer benefits",
-      tableName: "Employer-sponsored benefit details",
     },
     employerDecision: {
       choiceApprove: "Approve",
-      choiceDeny: "Deny",
-      heading: "What would be your decision on this leave request?",
+      choiceDeny: "Deny (explain below)",
+      explanation:
+        "Answer based on your company policies and our <employer-pfml-guide-link>guidelines for employers</employer-pfml-guide-link>. Your recommendation is helpful to the Department in making its determination.",
+      heading: "Have you approved or denied this leave request?",
     },
     employerIdentifierLabel: "Employer ID number (EIN)",
     feedback: {
@@ -1415,9 +1416,15 @@ const pages = {
         "We take allegations about fraud seriously. Selecting this will begin further investigation. Please only select if you are convinced this is fraudulent. If you have questions, feel free to call us at $t(shared.contactCenterPhoneNumber) from 8am$t(chars.nbhyphen)5pm ET.",
       alertHeading: "You are reporting fraud.",
       choiceNo: "$t(shared.choiceNo)",
-      choiceYes: "$t(shared.choiceYes)",
+      choiceYes: "$t(shared.choiceYes) (explain below)",
       commentSolicitation: "Please provide a comment below",
-      heading: "Do you have any reason to suspect fraud?",
+      detailsLabel: "What counts as paid leave fraud?",
+      fraudContent_falseDocuments: "Providing forged or falsified documents",
+      fraudContent_falseInfo:
+        "Withholding information or providing false information to the Department of Family and Medical Leave",
+      fraudContent_personalInfo:
+        "Using someone’s personal information to fraudulently collect benefits",
+      heading: "Do you have any reason to suspect this is fraud?",
     },
     instructionsAmendment:
       "Please review the details of this application carefully. If anything seems incorrect, you can add an amendment within each section or include general comments at the end.",
@@ -1437,9 +1444,9 @@ const pages = {
       leaveReasonValue_serviceMemberFamily:
         "$t(shared.leaveReasonServiceMemberFamily)",
       leaveTypeLabel: "Leave type",
-      natureOfLeaveLabel: "Nature of leave",
     },
     leaveSchedule: {
+      caption: "This is your employee’s expected leave schedule.",
       frequencyBasis_irregular: "Irregular over the next 6 months",
       frequencyBasis_months: "At least once a month",
       frequencyBasis_weeks: "At least once a week",
@@ -1461,7 +1468,6 @@ const pages = {
       tableHeader_dateRange: "Date range",
       tableHeader_details: "Details",
       tableHeader_leaveFrequency: "Leave frequency",
-      tableName: "Leave schedule details table",
       type_continuous: "$t(shared.claimDurationTypeContinuous)",
       type_intermittent: "$t(shared.claimDurationTypeIntermittent)",
       type_reducedSchedule: "$t(shared.claimDurationTypeReducedSchedule)",
@@ -1471,16 +1477,20 @@ const pages = {
     previousLeaves: {
       detailsLabel: "$t(shared.qualifyingReasonDetailsLabel)",
       explanation:
-        "Employees have listed when they took leave for qualifying reasons.",
+        "If your employee took any paid or unpaid leave for a qualifying reason since January 1, 2021, it may <calculate-reductions-link>affect their benefit amount</calculate-reductions-link>.",
       header: "Past leave",
-      qualifyingReasonContent: "An employee can take paid or unpaid leave to:",
+      qualifyingReasonContent:
+        "An employee or contractor can take paid or unpaid leave to:",
       qualifyingReason_activeDuty:
         "Manage family affairs when a family member is on active duty in the armed forces",
       qualifyingReason_bondWithChild:
         "Bond with a child after birth or placement",
-      qualifyingReason_careForFamily:
-        "Care for a family member with a serious health condition",
-      qualifyingReason_manageHealth: "Manage a serious health condition",
+      qualifyingReason_careForFamilyMedical:
+        "Care for a family member with a <mass-benefits-guide-serious-health-condition>serious health condition</mass-benefits-guide-serious-health-condition>",
+      qualifyingReason_careForFamilyMilitary:
+        "Care for a family member who serves in the armed forces",
+      qualifyingReason_manageHealth:
+        "Manage a <mass-benefits-guide-serious-health-condition>serious health condition</mass-benefits-guide-serious-health-condition>, including illness, injury, or pregnancy",
       tableHeader_dateRange: "Date range",
     },
     submitButton: "Submit",
@@ -1488,7 +1498,7 @@ const pages = {
       header: "Supporting work details",
       hoursWorkedLabel: "Weekly hours worked",
     },
-    title: "Review application for {{name}}",
+    title: "Review application from {{name}}",
   },
   employersClaimsStatus: {
     applicationIdLabel: "Application ID",
@@ -1516,12 +1526,10 @@ const pages = {
   },
   employersClaimsSuccess: {
     applicationIdLabel: "<strong>Application ID:</strong> {{absenceId}}",
-    instructions_benefitsGuide:
-      "To learn more about how benefits are calculated, visit our <benefits-guide-link>PFML Benefits Guide</benefits-guide-link>.",
-    instructions_emailNotification:
-      "Once we’ve made a decision, you’ll receive an email notification with a link to details about the decision.",
     instructions_processingApplication:
-      "We’ll begin processing this application and your employee should hear from us within 14 calendar days.",
+      "We’ll begin processing this application and your employee should hear from us within 14 calendar days. Once we’ve made a decision, you’ll receive an email notification with a link to details about the decision.",
+    instructions_reimbursement:
+      "If your company has a paid disability, family, or medical leave policy for employees, you may qualify for <reimbursements-link>reimbursements for payments made during this leave<reimbursements-link>.",
     title: "Thanks for reviewing the application",
   },
   employersDashboard: {

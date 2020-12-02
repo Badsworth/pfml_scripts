@@ -4,6 +4,8 @@ import PropTypes from "prop-types";
 import React from "react";
 import ReviewHeading from "../ReviewHeading";
 import Table from "../Table";
+import { Trans } from "react-i18next";
+import routes from "../../routes";
 import { useTranslation } from "../../locales/i18n";
 
 /**
@@ -21,8 +23,21 @@ const EmployerBenefits = (props) => {
         {t("pages.employersClaimsReview.employerBenefits.header")}
       </ReviewHeading>
       <Table className="width-full">
-        <caption>
-          {t("pages.employersClaimsReview.employerBenefits.tableName")}
+        <caption className="text-normal">
+          <p>
+            <Trans
+              i18nKey="pages.employersClaimsReview.employerBenefits.caption"
+              components={{
+                "reductions-overview-link": (
+                  <a
+                    href={routes.external.massgov.reductionsOverview}
+                    target="_blank"
+                    rel="noopener"
+                  />
+                ),
+              }}
+            />
+          </p>
         </caption>
         <thead>
           <tr>

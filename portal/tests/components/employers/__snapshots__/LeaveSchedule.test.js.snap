@@ -10,8 +10,12 @@ exports[`LeaveSchedule renders continuous schedule 1`] = `
   <Table
     className="width-full"
   >
-    <caption>
-      Leave schedule details table
+    <caption
+      className="text-normal"
+    >
+      <p>
+        This is your employee’s expected leave schedule.
+      </p>
     </caption>
     <thead>
       <tr>
@@ -61,8 +65,12 @@ exports[`LeaveSchedule renders intermittent schedule 1`] = `
   <Table
     className="width-full"
   >
-    <caption>
-      Leave schedule details table
+    <caption
+      className="text-normal"
+    >
+      <p>
+        This is your employee’s expected leave schedule.
+      </p>
     </caption>
     <thead>
       <tr>
@@ -116,8 +124,12 @@ exports[`LeaveSchedule renders reduced schedule 1`] = `
   <Table
     className="width-full"
   >
-    <caption>
-      Leave schedule details table
+    <caption
+      className="text-normal"
+    >
+      <p>
+        This is your employee’s expected leave schedule.
+      </p>
     </caption>
     <thead>
       <tr>

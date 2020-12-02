@@ -28,7 +28,7 @@ const LeaveDetails = (props) => {
       </ReviewHeading>
       <ReviewRow
         level="3"
-        label={t("pages.employersClaimsReview.leaveDetails.natureOfLeaveLabel")}
+        label={t("pages.employersClaimsReview.leaveDetails.leaveTypeLabel")}
       >
         {t("pages.employersClaimsReview.leaveDetails.leaveReasonValue", {
           context: findKeyByValue(FineosLeaveReason, reason),

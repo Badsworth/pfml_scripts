@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import Alert from "../Alert";
 import ConditionalContent from "../ConditionalContent";
+import Details from "../Details";
 import Heading from "../Heading";
 import InputChoiceGroup from "../InputChoiceGroup";
 import PropTypes from "prop-types";
@@ -25,21 +26,45 @@ const FraudReport = ({ onChange = () => {} }) => {
   return (
     <React.Fragment>
       <InputChoiceGroup
+        smallLabel
         label={
           <ReviewHeading level="2">
             {t("pages.employersClaimsReview.fraudReport.heading")}
           </ReviewHeading>
         }
+        hint={
+          <Details
+            label={t("pages.employersClaimsReview.fraudReport.detailsLabel")}
+          >
+            <ul className="usa-list">
+              <li>
+                {t(
+                  "pages.employersClaimsReview.fraudReport.fraudContent_personalInfo"
+                )}
+              </li>
+              <li>
+                {t(
+                  "pages.employersClaimsReview.fraudReport.fraudContent_falseDocuments"
+                )}
+              </li>
+              <li>
+                {t(
+                  "pages.employersClaimsReview.fraudReport.fraudContent_falseInfo"
+                )}
+              </li>
+            </ul>
+          </Details>
+        }
         choices={[
-          {
-            checked: isFraud === "No",
-            label: t("pages.employersClaimsReview.fraudReport.choiceNo"),
-            value: "No",
-          },
           {
             checked: isFraud === "Yes",
             label: t("pages.employersClaimsReview.fraudReport.choiceYes"),
             value: "Yes",
+          },
+          {
+            checked: isFraud === "No",
+            label: t("pages.employersClaimsReview.fraudReport.choiceNo"),
+            value: "No",
           },
         ]}
         name="isFraud"
