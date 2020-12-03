@@ -90,19 +90,20 @@ describe("Simulation Generator", () => {
     });
   });
 
-  it("Should have payment information", async () => {
-    const claim = await scenario("TEST", medical)(opts);
-    const { payment_preferences } = claim.claim;
-    expect(payment_preferences).toHaveLength(1);
-    expect(payment_preferences).toContainEqual(
-      expect.objectContaining({
-        payment_method: "Check",
-        cheque_details: expect.objectContaining({
-          name_to_print_on_check: `${claim.claim.first_name} ${claim.claim.last_name}`,
-        }),
-      })
-    );
-  });
+  // Test removed until payment feature becomes available
+  // it("Should have payment information", async () => {
+  //   const claim = await scenario("TEST", medical)(opts);
+  //   const { payment_preferences } = claim.claim;
+  //   expect(payment_preferences).toHaveLength(1);
+  //   expect(payment_preferences).toContainEqual(
+  //     expect.objectContaining({
+  //       payment_method: "Check",
+  //       cheque_details: expect.objectContaining({
+  //         name_to_print_on_check: `${claim.claim.first_name} ${claim.claim.last_name}`,
+  //       }),
+  //     })
+  //   );
+  // });
 
   it("Should pass arguments to the employee factory", async () => {
     await scenario("TEST", { ...medical })(opts);

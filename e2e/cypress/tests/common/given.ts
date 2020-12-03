@@ -108,10 +108,10 @@ Given("I have added payment information", function (
   if (!this.application) {
     throw new Error("Application has not been set");
   }
-  const { application } = this;
+  // const { application } = this;
   portal.onPage("checklist");
   portal.clickChecklistButton("Add payment information");
-  portal.addPaymentInfo(application);
+  // portal.addPaymentInfo(application);
 });
 
 Given("I return to the portal", function () {

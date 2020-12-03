@@ -331,24 +331,68 @@ export interface ClaimDocumentResponse {
 export interface GETEmployersClaimsByFineosAbsenceIdDocumentsResponse extends SuccessfulResponse {
     data?: ClaimDocumentResponse;
 }
-export interface ClaimReviewResponse {
-    claim_id: string;
-}
-export interface GETEmployersClaimsByFineosAbsenceIdReviewResponse extends SuccessfulResponse {
-    data?: ClaimReviewResponse;
-}
 export type Date = string;
 export interface EmployerBenefit {
-    benefit_amount_dollars?: number;
-    benefit_amount_frequency?: "Per Day" | "Per Week" | "Per Month" | "In Total";
-    benefit_end_date?: Date;
+    employer_benefit_id?: string | null;
     benefit_start_date?: Date;
-    benefit_type?: "Accrued Paid Leave" | "Short Term Disability" | "Permanent Disability Insurance" | "Family or Medical Leave Insurance";
+    benefit_end_date?: Date;
+    benefit_amount_dollars?: number | null;
+    benefit_amount_frequency?: ("Per Day" | "Per Week" | "Per Month" | "All At Once") | null;
+    benefit_type?: ("Accrued Paid Leave" | "Short Term Disability" | "Permanent Disability Insurance" | "Family or Medical Leave Insurance") | null;
+}
+export type Fein = string;
+export interface EmployerContinuousLeavePeriods {
+    start_date?: Date;
+    end_date?: Date;
+}
+export interface EmployerIntermittentLeavePeriods {
+    start_date?: Date;
+    end_date?: Date;
+    frequency?: number | null;
+    frequency_interval?: number | null;
+    frequency_interval_basis?: ("Days" | "Weeks" | "Months") | null;
+    duration?: number | null;
+    duration_basis?: ("Minutes" | "Hours" | "Days") | null;
+}
+export interface EmployerReducedScheduleLeavePeriods {
+    start_date?: Date;
+    end_date?: Date;
+}
+export interface EmployerLeaveDetails {
+    reason?: string | null;
+    continuous_leave_periods?: EmployerContinuousLeavePeriods;
+    intermittent_leave_periods?: EmployerIntermittentLeavePeriods;
+    reduced_schedule_leave_periods?: EmployerReducedScheduleLeavePeriods;
 }
 export interface PreviousLeave {
     leave_end_date?: Date;
     leave_start_date?: Date;
     leave_type?: "Pregnancy/Maternity" | "Serious Health Condition" | "Care of Family Member" | "Child Bonding" | "Military Caregiver" | "Military Exigency Family";
+}
+export interface Address {
+    city?: string | null;
+    line_1?: string | null;
+    line_2?: string | null;
+    state?: string | null;
+    zip?: string | null;
+}
+export type SsnItin = string;
+export interface ClaimReviewResponse {
+    date_of_birth?: Date;
+    employer_benefits?: EmployerBenefit[];
+    employer_fein?: Fein;
+    fineos_absence_id?: string;
+    first_name?: string;
+    last_name?: string;
+    leave_details?: EmployerLeaveDetails;
+    middle_name?: string;
+    previous_leaves?: PreviousLeave[];
+    residential_address?: Address;
+    tax_identifier?: SsnItin;
+    follow_up_date?: Date;
+}
+export interface GETEmployersClaimsByFineosAbsenceIdReviewResponse extends SuccessfulResponse {
+    data?: ClaimReviewResponse;
 }
 export interface EmployerClaimRequestBody {
     employer_benefits: EmployerBenefit[];
@@ -358,22 +402,17 @@ export interface EmployerClaimRequestBody {
     fraud?: "Yes" | "No";
     comment?: string;
 }
+export interface UpdateClaimReviewResponse {
+    claim_id: string;
+}
 export interface PATCHEmployersClaimsByFineosAbsenceIdReviewResponse extends SuccessfulResponse {
-    data?: ClaimReviewResponse;
+    data?: UpdateClaimReviewResponse;
 }
 export type MaskedSsnItin = string;
-export interface Address {
-    city?: string | null;
-    line_1?: string | null;
-    line_2?: string | null;
-    state?: string | null;
-    zip?: string | null;
-}
 export interface ReducedScheduleLeavePeriods {
     leave_period_id?: string | null;
     start_date?: Date | null;
     end_date?: Date | null;
-    is_estimated?: boolean | null;
     thursday_off_minutes?: number | null;
     friday_off_minutes?: number | null;
     saturday_off_minutes?: number | null;
@@ -394,7 +433,6 @@ export interface ContinuousLeavePeriods {
     end_date_off_hours?: number | null;
     end_date_off_minutes?: number | null;
     end_date_full_day?: boolean | null;
-    is_estimated?: boolean | null;
 }
 export interface IntermittentLeavePeriods {
     leave_period_id?: string | null;
@@ -409,35 +447,25 @@ export interface IntermittentLeavePeriods {
 export interface ApplicationLeaveDetails {
     reason?: ("Pregnancy/Maternity" | "Child Bonding" | "Serious Health Condition - Employee") | null;
     reason_qualifier?: ("Newborn" | "Adoption" | "Foster Care") | null;
-    reduced_schedule_leave_periods?: ReducedScheduleLeavePeriods[];
-    continuous_leave_periods?: ContinuousLeavePeriods[];
-    intermittent_leave_periods?: IntermittentLeavePeriods[];
+    reduced_schedule_leave_periods?: ReducedScheduleLeavePeriods[] | null;
+    continuous_leave_periods?: ContinuousLeavePeriods[] | null;
+    intermittent_leave_periods?: IntermittentLeavePeriods[] | null;
     relationship_to_caregiver?: ("Parent" | "Child" | "Grandparent" | "Grandchild" | "Other Family Member" | "Service Member" | "Inlaw" | "Sibling" | "Other" | "Employee") | null;
     relationship_qualifier?: ("Adoptive" | "Biological" | "Foster" | "Custodial Parent" | "Legal Guardian" | "Step Parent") | null;
     pregnant_or_recent_birth?: boolean | null;
     child_birth_date?: Date | null;
     child_placement_date?: Date | null;
+    has_future_child_date?: boolean | null;
     employer_notified?: boolean | null;
     employer_notification_date?: Date | null;
     employer_notification_method?: ("In Writing" | "In Person" | "By Telephone" | "Other") | null;
 }
 export type RoutingNbr = string;
-export interface ApplicationPaymentAccountDetails {
+export interface PaymentPreference {
+    payment_method?: ("Elec Funds Transfer" | "Check" | "Debit") | null;
     account_number?: string | null;
     routing_number?: RoutingNbr | null;
-    account_name?: string | null;
-    account_type?: ("Checking" | "Savings") | null;
-}
-export interface ApplicationPaymentChequeDetails {
-    name_to_print_on_check?: string | null;
-}
-export interface PaymentPreferences {
-    payment_preference_id?: string | null;
-    description?: string | null;
-    payment_method?: ("ACH" | "Check" | "Debit") | null;
-    is_default?: boolean | null;
-    account_details?: ApplicationPaymentAccountDetails;
-    cheque_details?: ApplicationPaymentChequeDetails;
+    bank_account_type?: ("Checking" | "Savings") | null;
 }
 export type DayOfWeek = "Sunday" | "Monday" | "Tuesday" | "Wednesday" | "Thursday" | "Friday" | "Saturday";
 export interface WorkPatternDay {
@@ -451,6 +479,19 @@ export interface WorkPattern {
     pattern_start_date?: Date | null;
     work_pattern_days?: WorkPatternDay[] | null;
 }
+export interface OtherIncome {
+    other_income_id?: string | null;
+    income_start_date?: Date;
+    income_end_date?: Date;
+    income_amount_dollars?: number | null;
+    income_amount_frequency?: ("Per Day" | "Per Week" | "Per Month" | "All At Once") | null;
+    income_type?: ("Workers Comp" | "Unemployment" | "SSDI" | "Retirement Disability" | "Jones Act" | "Railroad Retirement" | "Other Employer") | null;
+}
+export interface MaskedPhone {
+    int_code?: string;
+    phone_number?: string;
+    phone_type?: "Cell" | "Fax" | "Phone";
+}
 export interface ApplicationResponse {
     application_nickname?: string | null;
     application_id?: string;
@@ -463,8 +504,12 @@ export interface ApplicationResponse {
     last_name?: string | null;
     date_of_birth?: Date | null;
     has_continuous_leave_periods?: boolean | null;
+    has_employer_benefits?: boolean | null;
     has_intermittent_leave_periods?: boolean | null;
     has_reduced_schedule_leave_periods?: boolean | null;
+    has_other_incomes?: boolean | null;
+    has_submitted_payment_preference?: boolean | null;
+    other_incomes_awaiting_approval?: boolean | null;
     has_state_id?: boolean | null;
     has_mailing_address?: boolean | null;
     mailing_address?: Address | null;
@@ -474,10 +519,13 @@ export interface ApplicationResponse {
     occupation?: ("Sales Clerk" | "Administrative" | "Engineer" | "Health Care") | null;
     hours_worked_per_week?: number | null;
     leave_details?: ApplicationLeaveDetails | null;
-    payment_preferences?: PaymentPreferences[] | null;
+    payment_preference?: PaymentPreference[] | null;
     work_pattern?: WorkPattern | null;
+    employer_benefits?: EmployerBenefit[] | null;
+    other_incomes?: OtherIncome[] | null;
     updated_time?: string;
     status?: "Started" | "Submitted" | "Completed";
+    phone?: MaskedPhone;
 }
 export interface POSTApplicationsResponse extends SuccessfulResponse {
     data?: ApplicationResponse;
@@ -486,9 +534,12 @@ export type ApplicationSearchResults = ApplicationResponse[];
 export interface GETApplicationsResponse extends SuccessfulResponse {
     data?: ApplicationSearchResults;
 }
-export type SsnItin = string;
-export type Fein = string;
 export type MassId = string;
+export interface Phone {
+    int_code?: string;
+    phone_number?: string;
+    phone_type?: "Cell" | "Fax" | "Phone";
+}
 export interface ApplicationRequestBody {
     application_nickname?: string | null;
     employee_ssn?: SsnItin | null;
@@ -503,15 +554,20 @@ export interface ApplicationRequestBody {
     mailing_address?: Address | null;
     residential_address?: Address | null;
     has_continuous_leave_periods?: boolean | null;
+    has_employer_benefits?: boolean | null;
     has_intermittent_leave_periods?: boolean | null;
+    has_other_incomes?: boolean | null;
+    other_incomes_awaiting_approval?: boolean | null;
     has_reduced_schedule_leave_periods?: boolean | null;
     has_state_id?: boolean | null;
     mass_id?: MassId | null;
     employment_status?: ("Employed" | "Unemployed" | "Self-Employed") | null;
     occupation?: ("Sales Clerk" | "Administrative" | "Engineer" | "Health Care") | null;
     leave_details?: ApplicationLeaveDetails;
-    payment_preferences?: PaymentPreferences[];
     work_pattern?: WorkPattern | null;
+    employer_benefits?: EmployerBenefit[];
+    other_incomes?: OtherIncome[];
+    phone?: Phone;
 }
 export interface PATCHApplicationsByApplicationIdResponse extends SuccessfulResponse {
     data?: ApplicationResponse;
@@ -545,10 +601,18 @@ export interface DocumentUploadRequest {
     document_type: "Passport" | "Driver's License Mass" | "Driver's License Other State" | "Identification Proof" | "State managed Paid Leave Confirmation" | "Approval Notice" | "Request for More information" | "Denial Notice";
     name?: string;
     description?: string;
-    file: unknown;
+    mark_evidence_received?: boolean;
+    // This type has been changed from Blob to unknown to facilitate uploading documents
+    file: unknown; 
 }
 export interface POSTApplicationsByApplicationIdDocumentsResponse extends SuccessfulResponse {
     data?: DocumentResponse;
+}
+export interface PaymentPreferenceRequestBody {
+    payment_preference?: PaymentPreference;
+}
+export interface POSTApplicationsByApplicationIdSubmitPaymentPreferenceResponse extends SuccessfulResponse {
+    data?: ApplicationResponse;
 }
 export interface EligibilityRequest {
     tax_identifier: SsnItin;
@@ -602,6 +666,8 @@ export interface NotificationClaimant {
 }
 export interface NotificationRequest {
     absence_case_id: string;
+    fein?: string;
+    organization_name?: string;
     document_type?: string;
     trigger: string;
     source: "Self-Service" | "Call Center";
@@ -689,6 +755,17 @@ export async function getEmployersByEmployerId({ employerId }: {
     employerId: string;
 }, options?: RequestOptions): Promise<ApiResponse<GETEmployersByEmployerIdResponse>> {
     return await http.fetchJson(`/employers/${employerId}`, {
+        ...options
+    });
+}
+/**
+ * Retrieve a FINEOS documents for a specified absence ID and document ID
+ */
+export async function getEmployersClaimsByFineosAbsenceIdDocumentsAndFineosDocumentId({ fineosAbsenceId, fineosDocumentId }: {
+    fineosAbsenceId: string;
+    fineosDocumentId: string;
+}, options?: RequestOptions): Promise<ApiResponse<string | undefined>> {
+    return await http.fetch(`/employers/claims/${fineosAbsenceId}/documents/${fineosDocumentId}`, {
         ...options
     });
 }
@@ -793,7 +870,7 @@ export async function postApplicationsByApplicationIdCompleteApplication({ appli
 export async function getApplicationsByApplicationIdDocumentsAndDocumentId({ applicationId, documentId }: {
     applicationId: string;
     documentId: string;
-}, options?: RequestOptions): Promise<ApiResponse<string|undefined>> {
+}, options?: RequestOptions): Promise<ApiResponse<string | undefined>> {
     return await http.fetch(`/applications/${applicationId}/documents/${documentId}`, {
         ...options
     });
@@ -818,6 +895,18 @@ export async function postApplicationsByApplicationIdDocuments({ applicationId }
         ...options,
         method: "POST",
         body: documentUploadRequest
+    }));
+}
+/**
+ * Submit Payment Preference
+ */
+export async function postApplicationsByApplicationIdSubmitPaymentPreference({ applicationId }: {
+    applicationId: string;
+}, paymentPreferenceRequestBody: PaymentPreferenceRequestBody, options?: RequestOptions): Promise<ApiResponse<POSTApplicationsByApplicationIdSubmitPaymentPreferenceResponse>> {
+    return await http.fetchJson(`/applications/${applicationId}/submit_payment_preference`, http.json({
+        ...options,
+        method: "POST",
+        body: paymentPreferenceRequestBody
     }));
 }
 /**

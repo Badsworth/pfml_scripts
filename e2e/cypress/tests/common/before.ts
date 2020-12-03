@@ -8,6 +8,7 @@ Before({ tags: "@portal" }, () => {
       pfmlTerriyay: true,
       claimantShowAuth: true,
       claimantShowMedicalLeaveType: true,
+      claimantShowPhone: true, // feature flag for entering phone number
     }),
     { log: true }
   );

@@ -159,8 +159,8 @@ Then("I add payment info", function (this: CypressStepThis): void {
   if (!this.application) {
     throw new Error("Application has not been set");
   }
-  const { application } = this;
-  portal.addPaymentInfo(application);
+  // const { application } = this;
+  // portal.addPaymentInfo(application);
 });
 
 Then("I add my identity document {string}", function (

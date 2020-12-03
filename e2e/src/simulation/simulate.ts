@@ -126,15 +126,11 @@ export function scenario(
       residential_address: address,
       hours_worked_per_week: 40,
       work_pattern: generateWorkPattern(),
-      payment_preferences: [
-        {
-          payment_method: "Check",
-          is_default: true,
-          cheque_details: {
-            name_to_print_on_check: `${employee.first_name} ${employee.last_name}`,
-          },
-        },
-      ],
+      phone: {
+        int_code: "1",
+        phone_number: faker.phone.phoneNumberFormat(0),
+        phone_type: "Cell",
+      },
     };
     claim.leave_details = generateLeaveDetails(_config);
     claim.has_continuous_leave_periods =
@@ -262,7 +258,6 @@ function generateLeavePeriods(
         {
           start_date: formatISO(startDate, { representation: "date" }),
           end_date: formatISO(endDate, { representation: "date" }),
-          is_estimated: true,
         },
       ];
     case "intermittent":
@@ -272,7 +267,6 @@ function generateLeavePeriods(
         {
           start_date: formatISO(startDate, { representation: "date" }),
           end_date: formatISO(endDate, { representation: "date" }),
-          is_estimated: true,
           sunday_off_minutes: 0,
           monday_off_minutes: 4 * 60,
           tuesday_off_minutes: 0,
@@ -308,9 +302,9 @@ function getEarliestStartDate(details: ApplicationLeaveDetails): Date {
   const leaveDates: Date[] = [];
 
   const leavePeriods = [
-    details.continuous_leave_periods,
-    details.reduced_schedule_leave_periods,
-    details.intermittent_leave_periods,
+    details.continuous_leave_periods as ContinuousLeavePeriods[],
+    details.reduced_schedule_leave_periods as ReducedScheduleLeavePeriods[],
+    details.intermittent_leave_periods as IntermittentLeavePeriods[],
   ];
   leavePeriods.forEach((period) => {
     if (period === undefined || period.length < 1) {

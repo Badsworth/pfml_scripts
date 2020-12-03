@@ -516,10 +516,7 @@ async function fillContinuousLeavePeriods(
   if (period < continuousPeriods.length) {
     const leavePeriod = continuousPeriods[period];
     const absenceStatusSelect = await labelled(browser, "Absence status");
-    await browser.selectByText(
-      absenceStatusSelect,
-      leavePeriod.is_estimated ? "Estimated" : "Known"
-    );
+    await browser.selectByText(absenceStatusSelect, "Estimated");
 
     const startDateInput = await labelled(browser, "Absence start date");
     await browser.type(startDateInput, formatDate(leavePeriod.start_date));

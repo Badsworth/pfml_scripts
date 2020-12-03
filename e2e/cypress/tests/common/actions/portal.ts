@@ -6,7 +6,7 @@ import {
   WorkPatternDay,
   ReducedScheduleLeavePeriods,
 } from "../../../../src/api";
-import { inFieldset } from "../actions";
+// import { inFieldset } from "../actions"; // not used
 
 export function onPage(page: string): void {
   cy.url().should("include", `/applications/${page}`);
@@ -114,6 +114,12 @@ export function verifyIdentity(
     cy.labelled("Last name").type(application.last_name as string);
     cy.contains("button", "Save and continue").click();
   }
+
+  // Added Phone Section behind Feature Flag
+  cy.labelled("Phone number").type(application.phone?.phone_number as string);
+  // Answers Number Type
+  cy.get(":nth-child(2) > .usa-radio__label").click();
+  cy.contains("button", "Save and continue").click();
 
   cy.labelled("Street address 1").type(
     (application.mailing_address &&
@@ -268,7 +274,7 @@ export function answerReducedLeaveQuestion(
     onPage("leave-period-reduced-schedule");
     completeDateForm(leave?.[0]?.start_date, leave?.[0]?.end_date);
     cy.contains("button", "Save and continue").click();
-    enterReducedWorkHours(leave);
+    enterReducedWorkHours(leave as ReducedScheduleLeavePeriods[]);
   } else {
     cy.contains("button", "Save and continue").click();
   }
@@ -460,68 +466,71 @@ export function confirmInfo(): void {
   });
 }
 
-export function addPaymentInfo(application: ApplicationRequestBody): void {
-  // Preceeded by - "I am on the claims Checklist page";
-  // Preceeded by - "I click on the checklist button called {string}"
-  //                with the label "Add payment information"
-  const payMethod =
-    application.payment_preferences &&
-    application.payment_preferences[0].payment_method;
-  const accountDetails =
-    application.payment_preferences &&
-    application.payment_preferences[0].account_details;
+// Payment Section Currently Removed
+// @Todo: Once this prop has been added back to ApplicationRequestBody
 
-  cy.contains("fieldset", "How do you want to get your weekly benefit?").within(
-    () => {
-      const paymentInfoLabel = {
-        ACH: "Direct deposit",
-        Check: "Paper check",
-        "Gift Card": "Gift Card",
-      };
-      cy.contains(
-        paymentInfoLabel[payMethod as "ACH" | "Check" | "Gift Card"]
-      ).click();
-    }
-  );
-  switch (payMethod) {
-    case "ACH":
-      cy.labelled("Routing number").type(
-        accountDetails?.routing_number as string
-      );
-      cy.labelled("Account number").type(
-        accountDetails?.account_number as string
-      );
-      inFieldset("Account type", () => {
-        cy.get("input[type='radio']").check(
-          accountDetails?.account_type as string,
-          {
-            force: true,
-          }
-        );
-      });
-      break;
+// export function addPaymentInfo(application: ApplicationRequestBody): void {
+//   // Preceeded by - "I am on the claims Checklist page";
+//   // Preceeded by - "I click on the checklist button called {string}"
+//   //                with the label "Add payment information"
+//   const payMethod =
+//     application.payment_preferences &&
+//     application.payment_preferences[0].payment_method;
+//   const accountDetails =
+//     application.payment_preferences &&
+//     application.payment_preferences[0].account_details;
 
-    case "Check":
-      /* Currently has been removed from Portal (may return)
+//   cy.contains("fieldset", "How do you want to get your weekly benefit?").within(
+//     () => {
+//       const paymentInfoLabel = {
+//         ACH: "Direct deposit",
+//         Check: "Paper check",
+//         "Gift Card": "Gift Card",
+//       };
+//       cy.contains(
+//         paymentInfoLabel[payMethod as "ACH" | "Check" | "Gift Card"]
+//       ).click();
+//     }
+//   );
+//   switch (payMethod) {
+//     case "ACH":
+//       cy.labelled("Routing number").type(
+//         accountDetails?.routing_number as string
+//       );
+//       cy.labelled("Account number").type(
+//         accountDetails?.account_number as string
+//       );
+//       inFieldset("Account type", () => {
+//         cy.get("input[type='radio']").check(
+//           accountDetails?.account_type as string,
+//           {
+//             force: true,
+//           }
+//         );
+//       });
+//       break;
 
-        cy.labelled("Street address 1").type(
-          application.residential_address?.line_1 as string
-        );
-        cy.labelled("City").type(application.residential_address?.city as string);
-        cy.labelled("State").type(
-          application.residential_address?.state as string
-        );
-        cy.labelled("ZIP Code").type(
-          application.residential_address?.zip as string
-        );
-      */
-      break;
+//     case "Check":
+//       /* Currently has been removed from Portal (may return)
 
-    default:
-      throw new Error("Unknown payment method");
-  }
-  cy.contains("button", "Save and continue").click();
-}
+//         cy.labelled("Street address 1").type(
+//           application.residential_address?.line_1 as string
+//         );
+//         cy.labelled("City").type(application.residential_address?.city as string);
+//         cy.labelled("State").type(
+//           application.residential_address?.state as string
+//         );
+//         cy.labelled("ZIP Code").type(
+//           application.residential_address?.zip as string
+//         );
+//       */
+//       break;
+
+//     default:
+//       throw new Error("Unknown payment method");
+//   }
+//   cy.contains("button", "Save and continue").click();
+// }
 
 export function addId(idType: string): void {
   const docName = idType.replace(" ", "_");

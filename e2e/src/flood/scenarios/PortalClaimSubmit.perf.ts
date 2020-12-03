@@ -143,9 +143,9 @@ export const steps = [
         // { temp: { has_other_incomes: false } },
         // { temp: { has_previous_leaves: false } },
         "submit",
-        {
-          payment_preferences: claim.payment_preferences,
-        },
+        // {
+        //   payment_preferences: claim.payment_preferences,
+        // },
         "documents",
         "complete",
         "assignTasks",
@@ -196,6 +196,7 @@ export const steps = [
                   document_type: getDocumentType(document),
                   description: "LST - Direct to API",
                   file: await readFile(documentUrl),
+                  mark_evidence_received: true,
                   name: `${document.type}.pdf`,
                 };
                 res = await evalFetch(
