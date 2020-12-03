@@ -128,7 +128,7 @@ export function scenario(
       work_pattern: generateWorkPattern(),
       phone: {
         int_code: "1",
-        phone_number: faker.phone.phoneNumberFormat(0),
+        phone_number: "844-781-3163",
         phone_type: "Cell",
       },
     };
