@@ -1,4 +1,11 @@
-import { Locator, Browser, By, ElementHandle, Until } from "@flood/element";
+import {
+  Locator,
+  Browser,
+  By,
+  ElementHandle,
+  Until,
+  ENV,
+} from "@flood/element";
 import {
   config,
   getFineosBaseUrl,
@@ -417,6 +424,9 @@ export async function readFile(filename: string): Promise<Buffer> {
   fs = await import("fs");
   if (!fs.promises) {
     fs = fs.default;
+  }
+  if (ENV.FLOOD_LOAD_TEST) {
+    filename = `/data/flood/files/${filename}`;
   }
   console.info(`\n\n\nreadFile in "${filename}"\n\n\n`);
   return fs.readFileSync(filename);
