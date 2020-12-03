@@ -958,7 +958,7 @@ class PaymentMethod(LookupTable):
     model = LkPaymentMethod
     column_names = ("payment_method_id", "payment_method_description")
 
-    ACH = LkPaymentMethod(1, "ACH")
+    ACH = LkPaymentMethod(1, "Elec Funds Transfer")
     CHECK = LkPaymentMethod(2, "Check")
     DEBIT = LkPaymentMethod(3, "Debit")
 

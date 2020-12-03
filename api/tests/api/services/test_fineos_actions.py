@@ -4,6 +4,7 @@ from datetime import date, timedelta
 import pytest
 
 import massgov.pfml.fineos
+import massgov.pfml.fineos.mock_client as fineos_mock
 from massgov.pfml.api.services import fineos_actions
 from massgov.pfml.db.models.applications import (
     Application,
@@ -11,17 +12,26 @@ from massgov.pfml.db.models.applications import (
     LeaveReasonQualifier,
     LkDayOfWeek,
 )
-from massgov.pfml.db.models.employees import Country, Employer
+from massgov.pfml.db.models.employees import (
+    AddressType,
+    BankAccountType,
+    Country,
+    Employer,
+    PaymentMethod,
+)
 from massgov.pfml.db.models.factories import (
     AddressFactory,
     ApplicationFactory,
     ContinuousLeavePeriodFactory,
+    PaymentPreferenceFactory,
     ReducedScheduleLeavePeriodFactory,
     WorkPatternFixedFactory,
 )
 from massgov.pfml.fineos import FINEOSClient
 from massgov.pfml.fineos.exception import FINEOSClientBadResponse, FINEOSClientError, FINEOSNotFound
 from massgov.pfml.fineos.models import CreateOrUpdateEmployer
+from massgov.pfml.fineos.models.customer_api import Address as FineosAddress
+from massgov.pfml.fineos.models.customer_api import CustomerAddress
 
 # almost every test in here requires real resources
 pytestmark = pytest.mark.integration
@@ -187,6 +197,190 @@ def test_document_upload(user, test_db_session):
     assert fineos_document["fileExtension"] == ".png"
     assert fineos_document["originalFilename"] == file_name
     assert fineos_document["description"] == description
+
+
+def test_submit_direct_deposit_payment_preference(user, test_db_session):
+    payment_pref = PaymentPreferenceFactory.create(
+        payment_method_id=PaymentMethod.ACH.payment_method_id,
+        account_number="123456789",
+        routing_number="234567890",
+        bank_account_type_id=BankAccountType.CHECKING.bank_account_type_id,
+    )
+    application = ApplicationFactory.create(user=user, payment_preference=payment_pref)
+    fineos_response = fineos_actions.submit_payment_preference(application, test_db_session)
+    test_db_session.refresh(application)
+    assert fineos_response is not None
+    assert fineos_response.paymentMethod == PaymentMethod.ACH.payment_method_description
+    assert fineos_response.accountDetails.accountNo == payment_pref.account_number
+    assert fineos_response.accountDetails.routingNumber == payment_pref.routing_number
+    assert (
+        fineos_response.accountDetails.accountType
+        == BankAccountType.CHECKING.bank_account_type_description
+    )
+    assert fineos_response.chequeDetails is None
+
+
+def test_submit_direct_deposit_payment_pref_with_mailing_addr(user, test_db_session):
+    payment_pref = PaymentPreferenceFactory.create(
+        payment_method_id=PaymentMethod.ACH.payment_method_id,
+        account_number="123456789",
+        routing_number="234567890",
+        bank_account_type_id=BankAccountType.CHECKING.bank_account_type_id,
+    )
+    mailing_address = AddressFactory.create(
+        address_type_id=AddressType.MAILING.address_type_id,
+        address_line_one="123 Main St",
+        city="Cambridge",
+        geo_state_id=1,  # Massachusetts
+        zip_code="02139",
+    )
+    residential_address = AddressFactory.create(
+        address_type_id=AddressType.RESIDENTIAL.address_type_id,
+        address_line_one="321 South St",
+        city="Somerville",
+        geo_state_id=1,
+        zip_code="02138",
+    )
+    application = ApplicationFactory.create(
+        user=user,
+        payment_preference=payment_pref,
+        has_mailing_address=True,
+        mailing_address=mailing_address,
+        residential_address=residential_address,
+    )
+    fineos_mock.start_capture()
+    fineos_response = fineos_actions.submit_payment_preference(application, test_db_session)
+    assert fineos_response is not None
+    assert fineos_response.paymentMethod == PaymentMethod.ACH.payment_method_description
+
+    capture = fineos_mock.get_capture()
+    fineos_payment_calls = [
+        method_call for method_call in capture if method_call[0] == "add_payment_preference"
+    ]
+    assert len(fineos_payment_calls) == 1
+    sent_new_payment_pref = fineos_payment_calls[0][2]["payment_preference"]
+    assert sent_new_payment_pref.customerAddress == CustomerAddress(
+        address=FineosAddress(
+            addressLine1=mailing_address.address_line_one,
+            addressLine4=mailing_address.city,
+            addressLine6="MA",
+            country="USA",
+            postCode="02139",
+        )
+    )
+    assert sent_new_payment_pref.overridePostalAddress is True
+
+
+def test_submit_direct_deposit_payment_pref_without_mailing_addr(user, test_db_session):
+    payment_pref = PaymentPreferenceFactory.create(
+        payment_method_id=PaymentMethod.ACH.payment_method_id,
+        account_number="123456789",
+        routing_number="234567890",
+        bank_account_type_id=BankAccountType.CHECKING.bank_account_type_id,
+    )
+    residential_address = AddressFactory.create(
+        address_type_id=AddressType.RESIDENTIAL.address_type_id,
+        address_line_one="321 South St",
+        city="Somerville",
+        geo_state_id=1,  # Massachusetts
+        zip_code="02139",
+    )
+    application = ApplicationFactory.create(
+        user=user, payment_preference=payment_pref, residential_address=residential_address
+    )
+    fineos_mock.start_capture()
+    fineos_response = fineos_actions.submit_payment_preference(application, test_db_session)
+    test_db_session.refresh(application)
+    assert fineos_response is not None
+    assert fineos_response.paymentMethod == PaymentMethod.ACH.payment_method_description
+
+    capture = fineos_mock.get_capture()
+    fineos_payment_calls = [
+        method_call for method_call in capture if method_call[0] == "add_payment_preference"
+    ]
+    assert len(fineos_payment_calls) == 1
+    sent_new_payment_pref = fineos_payment_calls[0][2]["payment_preference"]
+    assert sent_new_payment_pref.customerAddress is None
+    assert sent_new_payment_pref.overridePostalAddress is None
+
+
+def test_submit_check_payment_pref_with_mailing_addr(user, test_db_session):
+    payment_pref = PaymentPreferenceFactory.create(
+        payment_method_id=PaymentMethod.CHECK.payment_method_id,
+    )
+    mailing_address = AddressFactory.create(
+        address_type_id=AddressType.MAILING.address_type_id,
+        address_line_one="123 Main St",
+        city="Cambridge",
+        geo_state_id=1,  # Massachusetts
+        zip_code="02138",
+    )
+    residential_address = AddressFactory.create(
+        address_type_id=AddressType.RESIDENTIAL.address_type_id,
+        address_line_one="321 South St",
+        city="Somerville",
+        geo_state_id=1,
+        zip_code="02138",
+    )
+    application = ApplicationFactory.create(
+        user=user,
+        payment_preference=payment_pref,
+        has_mailing_address=True,
+        mailing_address=mailing_address,
+        residential_address=residential_address,
+    )
+    fineos_mock.start_capture()
+    fineos_response = fineos_actions.submit_payment_preference(application, test_db_session)
+    test_db_session.refresh(application)
+    assert fineos_response is not None
+    assert fineos_response.paymentMethod == PaymentMethod.CHECK.payment_method_description
+
+    capture = fineos_mock.get_capture()
+    fineos_payment_calls = [
+        method_call for method_call in capture if method_call[0] == "add_payment_preference"
+    ]
+    assert len(fineos_payment_calls) == 1
+    sent_new_payment_pref = fineos_payment_calls[0][2]["payment_preference"]
+    assert sent_new_payment_pref.customerAddress == CustomerAddress(
+        address=FineosAddress(
+            addressLine1=mailing_address.address_line_one,
+            addressLine4=mailing_address.city,
+            addressLine6="MA",
+            country="USA",
+            postCode="02138",
+        )
+    )
+    assert sent_new_payment_pref.overridePostalAddress is True
+
+
+def test_submit_check_payment_pref_without_mailing_addr(user, test_db_session):
+    payment_pref = PaymentPreferenceFactory.create(
+        payment_method_id=PaymentMethod.CHECK.payment_method_id,
+    )
+    residential_address = AddressFactory.create(
+        address_type_id=AddressType.RESIDENTIAL.address_type_id,
+        address_line_one="321 South St",
+        city="Somerville",
+        geo_state_id=1,
+        zip_code="02138",
+    )
+    application = ApplicationFactory.create(
+        user=user, payment_preference=payment_pref, residential_address=residential_address
+    )
+    fineos_mock.start_capture()
+    fineos_response = fineos_actions.submit_payment_preference(application, test_db_session)
+    test_db_session.refresh(application)
+    assert fineos_response is not None
+    assert fineos_response.paymentMethod == PaymentMethod.CHECK.payment_method_description
+
+    capture = fineos_mock.get_capture()
+    fineos_payment_calls = [
+        method_call for method_call in capture if method_call[0] == "add_payment_preference"
+    ]
+    assert len(fineos_payment_calls) == 1
+    sent_new_payment_pref = fineos_payment_calls[0][2]["payment_preference"]
+    assert sent_new_payment_pref.customerAddress is None
+    assert sent_new_payment_pref.overridePostalAddress is None
 
 
 def test_build_week_based_work_pattern(user, test_db_session):

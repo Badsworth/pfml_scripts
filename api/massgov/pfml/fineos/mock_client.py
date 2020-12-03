@@ -307,8 +307,14 @@ class MockFINEOSClient(client.AbstractFINEOSClient):
     def add_payment_preference(
         self, user_id: str, payment_preference: models.customer_api.NewPaymentPreference
     ) -> models.customer_api.PaymentPreferenceResponse:
+        _capture_call(
+            "add_payment_preference", user_id=user_id, payment_preference=payment_preference
+        )
         return models.customer_api.PaymentPreferenceResponse(
-            paymentMethod="Elec Funds Transfer", paymentPreferenceId="1201"
+            paymentMethod=payment_preference.paymentMethod,
+            paymentPreferenceId="1201",
+            accountDetails=payment_preference.accountDetails,
+            chequeDetails=payment_preference.chequeDetails,
         )
 
     def upload_document(

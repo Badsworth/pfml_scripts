@@ -33,7 +33,7 @@ from massgov.pfml.db.models.applications import (
     RelationshipQualifier,
     RelationshipToCaregiver,
 )
-from massgov.pfml.db.models.employees import Address, Country, Employer
+from massgov.pfml.db.models.employees import Address, Country, Employer, PaymentMethod
 from massgov.pfml.util.datetime import convert_minutes_to_hours_minutes
 
 logger = logging.get_logger(__name__)
@@ -683,6 +683,58 @@ def get_documents(
         return document_responses
     except massgov.pfml.fineos.FINEOSClientError:
         logger.exception("FINEOS Client Exception")
+        raise ValueError("FINEOS Client Exception")
+
+
+def build_payment_preference(
+    application: Application,
+    payment_address: Optional[massgov.pfml.fineos.models.customer_api.CustomerAddress],
+) -> massgov.pfml.fineos.models.customer_api.NewPaymentPreference:
+    payment_preference = application.payment_preference
+    override_postal_addr = True if payment_address else None
+    if payment_preference.payment_method_id == PaymentMethod.ACH.payment_method_id:
+        account_details = massgov.pfml.fineos.models.customer_api.AccountDetails(
+            accountName=f"{application.first_name} {application.last_name}",
+            accountNo=payment_preference.account_number,
+            routingNumber=payment_preference.routing_number,
+            accountType=payment_preference.bank_account_type.bank_account_type_description,
+        )
+        fineos_payment_preference = massgov.pfml.fineos.models.customer_api.NewPaymentPreference(
+            paymentMethod=PaymentMethod.ACH.payment_method_description,
+            isDefault=True,
+            customerAddress=payment_address,
+            accountDetails=account_details,
+            overridePostalAddress=override_postal_addr,
+        )
+    elif payment_preference.payment_method_id == PaymentMethod.CHECK.payment_method_id:
+        fineos_payment_preference = massgov.pfml.fineos.models.customer_api.NewPaymentPreference(
+            paymentMethod=PaymentMethod.CHECK.payment_method_description,
+            isDefault=True,
+            customerAddress=payment_address,
+            chequeDetails=massgov.pfml.fineos.models.customer_api.ChequeDetails(),
+            overridePostalAddress=override_postal_addr,
+        )
+    else:
+        raise ValueError("Invalid application.payment_preference.payment_method")
+    return fineos_payment_preference
+
+
+def submit_payment_preference(
+    application: Application, db_session: massgov.pfml.db.Session
+) -> massgov.pfml.fineos.models.customer_api.PaymentPreferenceResponse:
+    try:
+        fineos = massgov.pfml.fineos.create_client()
+        fineos_user_id = get_or_register_employee_fineos_user_id(fineos, application, db_session)
+        if application.has_mailing_address and application.mailing_address:
+            fineos_payment_addr: Optional[
+                massgov.pfml.fineos.models.customer_api.CustomerAddress
+            ] = build_customer_address(application.mailing_address)
+        else:
+            fineos_payment_addr = None
+        fineos_payment_preference = build_payment_preference(application, fineos_payment_addr)
+        return fineos.add_payment_preference(fineos_user_id, fineos_payment_preference)
+
+    except massgov.pfml.fineos.FINEOSClientError:
         raise ValueError("FINEOS Client Exception")
 
 

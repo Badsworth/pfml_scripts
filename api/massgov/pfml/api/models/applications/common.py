@@ -237,7 +237,7 @@ class ApplicationLeaveDetails(BaseApplicationLeaveDetails):
 
 
 class PaymentMethod(str, LookupEnum):
-    ach = "ACH"
+    ach = "Elec Funds Transfer"
     check = "Check"
     debit = "Debit"
 

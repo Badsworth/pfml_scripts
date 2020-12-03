@@ -489,7 +489,10 @@ class FINEOSClient(client.AbstractFINEOSClient):
             user_id,
             data=payment_preference.json(exclude_none=True),
         )
-        return models.customer_api.PaymentPreferenceResponse.parse_obj(response.json())
+        json = response.json()
+        # Workaround empty strings in response instead of null. These cause parse_obj to fail.
+        set_empty_dates_to_none(json, ["effectiveFrom", "effectiveTo"])
+        return models.customer_api.PaymentPreferenceResponse.parse_obj(json)
 
     def upload_document(
         self,

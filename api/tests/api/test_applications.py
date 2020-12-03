@@ -289,12 +289,6 @@ def test_application_patch_masking(client, user, auth_token, test_db_session):
             "zip": "12345-1234",
         },
         "leave_details": {"child_birth_date": "2021-09-21", "child_placement_date": "2021-05-13"},
-        "payment_preference": {
-            "payment_method": "ACH",
-            "bank_account_type": "Checking",
-            "routing_number": "000000000",
-            "account_number": "123456789",
-        },
         "phone": {"int_code": "1", "phone_number": "240-487-9945", "phone_type": "Cell",},
     }
 
@@ -318,8 +312,6 @@ def test_application_patch_masking(client, user, auth_token, test_db_session):
     assert application.mailing_address.zip_code == "12345-1234"
     assert application.child_placement_date.isoformat() == "2021-05-13"
     assert application.child_birth_date.isoformat() == "2021-09-21"
-    assert application.payment_preference.account_number == "123456789"
-    assert application.payment_preference.routing_number == "000000000"
     assert application.phone.phone_number == "+12404879945"
 
     # Verify values returned by the API are properly masked
@@ -334,9 +326,6 @@ def test_application_patch_masking(client, user, auth_token, test_db_session):
     )
     assert response_body.get("data").get("leave_details").get("child_birth_date") == "****-09-21"
     assert response_body.get("data").get("phone")["phone_number"] == "240-487-****"
-    payment_preference = response_body.get("data").get("payment_preference")
-    assert payment_preference["account_number"] == "*****6789"
-    assert payment_preference["routing_number"] == "*********"
 
 
 def test_application_patch_masked_inputs_ignored(client, user, auth_token, test_db_session):
@@ -387,7 +376,6 @@ def test_application_patch_masked_inputs_ignored(client, user, auth_token, test_
             "line_2": "*******",
             "zip": "12345-****",
         },
-        "payment_preference": {"routing_number": "*********", "account_number": "*****6789",},
         "phone": {"int_code": "1", "phone_number": "240-487-****", "phone_type": "Cell"},
     }
 
@@ -412,8 +400,6 @@ def test_application_patch_masked_inputs_ignored(client, user, auth_token, test_
     assert application.residential_address.zip_code == "12345-6789"
     assert application.child_placement_date.isoformat() == "2021-05-13"
     assert application.child_birth_date.isoformat() == "2021-09-21"
-    assert application.payment_preference.routing_number == "000000000"
-    assert application.payment_preference.account_number == "123456789"
     assert application.phone.phone_number == "+12404879945"
 
 
@@ -425,9 +411,7 @@ def test_application_patch_masked_mismatch_fields(client, user, auth_token, test
     application.date_of_birth = date(1970, 1, 1)
     application.child_birth_date = date(2021, 9, 21)
     application.child_placement_date = date(2021, 5, 13)
-    application.payment_preference = ApplicationPaymentPreference(
-        routing_number=None, account_number="123456789",
-    )
+
     application.mailing_address = Address(
         address_line_one=None,
         address_line_two=None,
@@ -465,7 +449,6 @@ def test_application_patch_masked_mismatch_fields(client, user, auth_token, test
             "line_2": "*******",
             "zip": "55555-****",
         },
-        "payment_preference": {"routing_number": "*********", "account_number": "*****0000",},
         "phone": {"int_code": "1", "phone_number": "240-123-****", "phone_type": "Cell",},
     }
 
@@ -487,7 +470,6 @@ def test_application_patch_masked_mismatch_fields(client, user, auth_token, test
             "leave_details.child_placement_date",
             "mailing_address.zip",
             "residential_address.zip",
-            "payment_preference.account_number",
             "phone.phone_number",
         ]
     )
@@ -498,7 +480,6 @@ def test_application_patch_masked_mismatch_fields(client, user, auth_token, test
             "mailing_address.line_2",
             "residential_address.line_1",
             "residential_address.line_2",
-            "payment_preference.routing_number",
         ]
     )
     assert fields == partially_masked_errors.union(fully_masked_errors)
@@ -1336,94 +1317,6 @@ def test_application_patch_update_leave_period_belonging_to_other_application_bl
     assert len(updated_leave_periods) == 0
 
 
-def test_application_patch_add_payment_preference(client, user, auth_token, test_db_session):
-    application = ApplicationFactory.create(user=user)
-
-    response = client.patch(
-        "/v1/applications/{}".format(application.application_id),
-        headers={"Authorization": f"Bearer {auth_token}"},
-        json={
-            "payment_preference": {
-                "payment_method": "ACH",
-                "bank_account_type": "Checking",
-                "routing_number": "000000000",
-            }
-        },
-    )
-
-    assert response.status_code == 200
-
-    response_body = response.get_json().get("data")
-    payment_preference_response = response_body.get("payment_preference")
-
-    payment_preference = payment_preference_response
-    assert payment_preference.get("payment_method") == "ACH"
-    assert payment_preference.get("bank_account_type") == "Checking"
-    assert payment_preference.get("routing_number") == "*********"
-
-
-def test_application_patch_update_payment_preference(client, user, auth_token, test_db_session):
-    application = ApplicationFactory.create(user=user)
-
-    payment_preference = ApplicationPaymentPreference(
-        payment_method_id=PaymentMethod.ACH.payment_method_id
-    )
-    test_db_session.add(payment_preference)
-    application.payment_preference = payment_preference
-    test_db_session.commit()
-
-    response = client.patch(
-        "/v1/applications/{}".format(application.application_id),
-        headers={"Authorization": f"Bearer {auth_token}"},
-        json={"payment_preference": {"payment_method": "Check", "routing_number": "121234567"}},
-    )
-
-    assert response.status_code == 200
-
-    response_body = response.get_json().get("data")
-    payment_preference_response = response_body.get("payment_preference")
-
-    assert payment_preference_response["payment_method"] == "Check"
-    assert payment_preference_response["routing_number"] == "*********"
-
-    test_db_session.refresh(payment_preference)
-    assert payment_preference.payment_method_id == PaymentMethod.CHECK.payment_method_id
-
-
-def test_application_patch_delete_payment_preference(client, user, auth_token, test_db_session):
-    application = ApplicationFactory.create(user=user)
-
-    payment_preference = ApplicationPaymentPreference(
-        payment_method_id=PaymentMethod.ACH.payment_method_id,
-        account_number="123456789",
-        routing_number="123456789",
-    )
-    old_payment_pref_id = payment_preference.payment_pref_id
-    test_db_session.add(payment_preference)
-    application.payment_preference = payment_preference
-    test_db_session.commit()
-    assert application.payment_preference is not None
-
-    response = response = client.patch(
-        "/v1/applications/{}".format(application.application_id),
-        headers={"Authorization": f"Bearer {auth_token}"},
-        json={"payment_preference": None},
-    )
-    assert response.status_code == 200
-    response_body = response.get_json().get("data")
-    updated_payment_preference = response_body.get("payment_preference")
-    assert updated_payment_preference is None
-
-    test_db_session.expire_all()
-    assert application.payment_preference is None
-    assert (
-        test_db_session.query(ApplicationPaymentPreference)
-        .filter(ApplicationPaymentPreference.payment_pref_id == old_payment_pref_id)
-        .first()
-        is None
-    )
-
-
 def test_application_patch_add_work_pattern(client, user, auth_token, test_db_session):
     application = ApplicationFactory.create(user=user)
 
@@ -2198,12 +2091,6 @@ def test_application_patch_null_values(client, user, auth_token):
             "relationship_to_caregiver": None,
         },
         "occupation": None,
-        "payment_preference": {
-            "account_number": None,
-            "bank_account_type": None,
-            "routing_number": None,
-            "payment_method": None,
-        },
     }
 
     response = client.patch(
@@ -2226,10 +2113,6 @@ def test_application_patch_invalid_values(client, user, auth_token):
         "leave_details": {"reduced_schedule_leave_periods": {}},
         # mass_id should conform to the pattern (e.g 123456789),
         "mass_id": "1234567890000",
-        "payment_preference": {
-            # routing_number should conform to the pattern (e.g 801234567),
-            "routing_number": "80123456789"
-        },
         "residential_address": {
             # zip should conform to the pattern (e.g 12345-1234),
             "zip": "123456"
@@ -2278,12 +2161,6 @@ def test_application_patch_invalid_values(client, user, auth_token):
                 "message": "{} is not of type 'array'",
                 "rule": "array",
                 "type": "type",
-            },
-            {
-                "field": "payment_preference.routing_number",
-                "message": "'80123456789' does not match '^((0[0-9])|(1[0-2])|(2[1-9])|(3[0-2])|(6[1-9])|(7[0-2])|80)([0-9]{7})$|(\\\\*{9})$'",
-                "rule": "^((0[0-9])|(1[0-2])|(2[1-9])|(3[0-2])|(6[1-9])|(7[0-2])|80)([0-9]{7})$|(\\*{9})$",
-                "type": "pattern",
             },
             {
                 "field": "phone.phone_number",

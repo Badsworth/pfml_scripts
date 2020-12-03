@@ -41,7 +41,6 @@ class ApplicationRequestBody(PydanticBaseModel):
     employment_status: Optional[EmploymentStatus]
     leave_details: Optional[ApplicationLeaveDetails]
     work_pattern: Optional[WorkPattern]
-    payment_preference: Optional[PaymentPreference]
     has_mailing_address: Optional[bool]
     mailing_address: Optional[Address]
     residential_address: Optional[Address]
@@ -91,3 +90,7 @@ class DocumentRequestBody(PydanticBaseModel):
     name: Optional[str]
     description: Optional[str]
     mark_evidence_received: Optional[bool]
+
+
+class PaymentPreferenceRequestBody(PydanticBaseModel):
+    payment_preference: Optional[PaymentPreference]

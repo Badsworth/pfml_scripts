@@ -302,10 +302,6 @@ def update_from_request(
         if key in ("leave_details", "employee_ssn", "tax_identifier"):
             continue
 
-        if key == "payment_preference":
-            add_or_update_payment_preference(db_session, body.payment_preference, application)
-            continue
-
         if key == "mailing_address":
             add_or_update_address(
                 db_session, body.mailing_address, AddressType.MAILING, application

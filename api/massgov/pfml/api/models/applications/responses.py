@@ -48,6 +48,7 @@ class ApplicationResponse(PydanticBaseModel):
     has_intermittent_leave_periods: Optional[bool]
     has_reduced_schedule_leave_periods: Optional[bool]
     has_state_id: Optional[bool]
+    has_submitted_payment_preference: Optional[bool]
     mass_id: Optional[MaskedMassIdStr]
     occupation: Optional[Occupation]
     hours_worked_per_week: Optional[Decimal]

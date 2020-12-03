@@ -17,6 +17,7 @@ from massgov.pfml.api.models.applications.common import ContentType as AllowedCo
 from massgov.pfml.api.models.applications.requests import (
     ApplicationRequestBody,
     DocumentRequestBody,
+    PaymentPreferenceRequestBody,
 )
 from massgov.pfml.api.models.applications.responses import ApplicationResponse, DocumentResponse
 from massgov.pfml.api.services.applications import get_document_by_id
@@ -27,6 +28,7 @@ from massgov.pfml.api.services.fineos_actions import (
     mark_documents_as_received,
     mark_single_document_as_received,
     send_to_fineos,
+    submit_payment_preference,
     upload_document,
 )
 from massgov.pfml.api.validation.exceptions import ValidationErrorDetail, ValidationException
@@ -427,3 +429,78 @@ def document_download(application_id: str, document_id: str) -> Response:
             content_type=content_type,
             headers={"Content-Disposition": f"attachment; filename={document_data.fileName}"},
         )
+
+
+def payment_preference_submit(application_id: str) -> Response:
+    body = connexion.request.json
+    with app.db_session() as db_session:
+        existing_application = get_or_404(db_session, Application, application_id)
+
+        ensure(EDIT, existing_application)
+
+        updated_body = applications_service.remove_masked_fields_from_request(
+            body, existing_application
+        )
+
+        payment_pref_request = PaymentPreferenceRequestBody.parse_obj(updated_body)
+
+        if not payment_pref_request.payment_preference:
+            return response_util.error_response(
+                status_code=BadRequest,
+                message="Payment Preference cannot be null",
+                data=ApplicationResponse.from_orm(existing_application).dict(exclude_none=True),
+                errors=[],
+            ).to_api_response()
+
+        # TODO (CP-1263): Add call to application_rules here for validation
+
+        if not existing_application.has_submitted_payment_preference:
+            applications_service.add_or_update_payment_preference(
+                db_session, payment_pref_request.payment_preference, existing_application
+            )
+            existing_application.updated_time = datetime_util.utcnow()
+            db_session.add(existing_application)
+            db_session.commit()
+            db_session.refresh(existing_application)
+
+            if existing_application.payment_preference:
+                try:
+                    submit_payment_preference(existing_application, db_session)
+                    existing_application.has_submitted_payment_preference = True
+                    db_session.add(existing_application)
+                    db_session.commit()
+                    db_session.refresh(existing_application)
+                    logger.warning(existing_application.has_submitted_payment_preference)
+                    return response_util.success_response(
+                        message="Payment Preference for application {} submitted without errors".format(
+                            existing_application.application_id
+                        ),
+                        data=ApplicationResponse.from_orm(existing_application).dict(
+                            exclude_none=True
+                        ),
+                        status_code=201,
+                    ).to_api_response()
+                except ValueError as ve:
+                    return response_util.error_response(
+                        status_code=BadRequest,
+                        message=str(ve),
+                        errors=[response_util.custom_issue("fineos_client", str(ve))],
+                        data=ApplicationResponse.from_orm(existing_application).dict(
+                            exclude_none=True
+                        ),
+                    ).to_api_response()
+            else:
+                return response_util.error_response(
+                    status_code=ServiceUnavailable,
+                    message="Payment Preference failed to save. Please try again.",
+                    data=ApplicationResponse.from_orm(existing_application).dict(exclude_none=True),
+                    errors=[],
+                ).to_api_response()
+        return response_util.error_response(
+            status_code=Forbidden,
+            message="Application {} could not be updated. Payment preference already submitted".format(
+                existing_application.application_id
+            ),
+            data=ApplicationResponse.from_orm(existing_application).dict(exclude_none=True),
+            errors=[],
+        ).to_api_response()

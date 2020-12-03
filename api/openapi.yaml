@@ -604,6 +604,54 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
 
+  /applications/{application_id}/submit_payment_preference:
+    post:
+      summary: Submit Payment Preference
+      operationId: massgov.pfml.api.applications.payment_preference_submit
+      tags:
+        - Applications
+        - PaymentPreference
+      parameters:
+        - name: application_id
+          in: path
+          schema:
+            type: string
+            format: uuid
+            example: 5f91c12b-4d49-4eb0-b5d9-7fa0ce13eb32
+          description: ID of Application to update
+          required: true
+      requestBody:
+        $ref: '#/components/requestBodies/PaymentPreferenceRequestBody'
+      responses:
+        "201":
+          description: Successful payment submission returns a 201 status code.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessfulResponse'
+                  - properties:
+                      data:
+                        $ref: '#/components/schemas/ApplicationResponse'
+        "400":
+          description: Invalid payment preference when attempting to submit to FINEOS.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Application with requested application_id was not found.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "503":
+          description: Payment preference failed to save.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
   /financial-eligibility:
     post:
       security:
@@ -783,6 +831,12 @@ components:
         application/json:
           schema:
             $ref: "#/components/schemas/NotificationRequest"
+      required: true
+    PaymentPreferenceRequestBody:
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/PaymentPreferenceRequestBody"
       required: true
 
   responses:
@@ -1276,10 +1330,6 @@ components:
               example: "Sales Clerk"
             leave_details:
               $ref: "#/components/schemas/ApplicationLeaveDetails"
-            payment_preference:
-              type: object
-              $ref: "#/components/schemas/PaymentPreference"
-              nullable: true
             work_pattern:
               $ref: "#/components/schemas/WorkPattern"
               nullable: true
@@ -1366,6 +1416,10 @@ components:
           nullable: true
           example: true
         has_other_incomes:
+          type: boolean
+          nullable: true
+          example: true
+        has_submitted_payment_preference:
           type: boolean
           nullable: true
           example: true
@@ -1570,6 +1624,13 @@ components:
         - name
         - description
       additionalProperties: false
+
+    PaymentPreferenceRequestBody:
+      type: object
+      properties:
+        payment_preference:
+          nullable: false
+          $ref: "#/components/schemas/PaymentPreference"
 
     EligibilityRequest:
       type: object
@@ -1929,10 +1990,10 @@ components:
           type: string
           nullable: true
           enum:
-            - ACH
+            - Elec Funds Transfer
             - Check
             - Debit
-          example: "ACH"
+          example: "Elec Funds Transfer"
         account_number:
           type: string
           nullable: true

@@ -239,6 +239,7 @@ class Application(Base):
     has_employer_benefits = Column(Boolean)
     has_other_incomes = Column(Boolean)
     other_incomes_awaiting_approval = Column(Boolean)
+    has_submitted_payment_preference = Column(Boolean)
 
     user = relationship(User)
     employer = relationship(Employer)
