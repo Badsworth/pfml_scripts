@@ -53,7 +53,7 @@ const scenarios = {
       "part-one-submitted": "true",
     },
   },
-  "Payment step not started": {
+  "Payment preference not started": {
     claim: new MockClaimBuilder().submitted().create(),
     warnings: generateWarningsForStep(ClaimSteps.payment),
   },

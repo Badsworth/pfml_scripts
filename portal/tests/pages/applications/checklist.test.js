@@ -90,8 +90,29 @@ describe("Checklist", () => {
     const partOneSubmittedMessage = wrapper.find({
       name: "part-one-submitted-message",
     });
+
     expect(partOneSubmittedMessage).toHaveLength(1);
     expect(partOneSubmittedMessage).toMatchSnapshot();
+  });
+
+  it("renders success message after submitting part 2", () => {
+    const claim = new MockClaimBuilder().submitted().directDeposit().create();
+    const { wrapper } = renderWithAppLogic(Checklist, {
+      claimAttrs: claim,
+      diveLevels,
+      props: {
+        query: {
+          "payment-pref-submitted": "true",
+          claim_id: claim.application_id,
+        },
+      },
+    });
+
+    const partTwoSubmittedMessage = wrapper.find({
+      name: "part-two-submitted-message",
+    });
+    expect(partTwoSubmittedMessage).toHaveLength(1);
+    expect(partTwoSubmittedMessage).toMatchSnapshot();
   });
 
   it("enables Review and Submit button when all Parts are completed", () => {

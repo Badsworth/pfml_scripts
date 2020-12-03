@@ -46,6 +46,7 @@ export const Checklist = (props) => {
   );
 
   const partOneSubmitted = query["part-one-submitted"];
+  const paymentPrefSubmitted = query["payment-pref-submitted"];
   const warnings = appLogic.claims.warningsLists[claim.application_id];
 
   /**
@@ -232,6 +233,16 @@ export const Checklist = (props) => {
           {t("pages.claimsChecklist.partOneSubmittedDescription")}
         </Alert>
       )}
+      {paymentPrefSubmitted && (
+        <Alert
+          className="margin-bottom-3"
+          heading={t("pages.claimsChecklist.partTwoSubmittedHeading")}
+          name="part-two-submitted-message"
+          state="success"
+        >
+          {t("pages.claimsChecklist.partTwoSubmittedDescription")}
+        </Alert>
+      )}
       <BackButton
         label={t("pages.claimsChecklist.backButtonLabel")}
         href={routes.applications.dashboard}
@@ -293,6 +304,7 @@ Checklist.propTypes = {
   isLoadingDocuments: PropTypes.bool,
   query: PropTypes.shape({
     "part-one-submitted": PropTypes.string,
+    "payment-pref-submitted": PropTypes.string,
   }),
 };
 

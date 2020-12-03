@@ -87,6 +87,21 @@ export const submitClaimMock = jest.fn((application_id) =>
   })
 );
 
+export const submitPaymentPreferenceMock = jest.fn(
+  (application_id, paymentPreferenceData) =>
+    Promise.resolve({
+      success: true,
+      status: 201,
+      claim: new Claim({
+        application_id,
+        // TODO (CP-1264): Send back the has_submitted_payment_preference flag here
+        payment_preference: paymentPreferenceData,
+      }),
+      warnings: [],
+      errors: [],
+    })
+);
+
 const claimsApi = jest.fn().mockImplementation(({ user }) => ({
   completeClaim: completeClaimMock,
   createClaim: createClaimMock,
@@ -94,6 +109,7 @@ const claimsApi = jest.fn().mockImplementation(({ user }) => ({
   getClaims: getClaimsMock,
   updateClaim: updateClaimMock,
   submitClaim: submitClaimMock,
+  submitPaymentPreference: submitPaymentPreferenceMock,
 }));
 
 export default claimsApi;

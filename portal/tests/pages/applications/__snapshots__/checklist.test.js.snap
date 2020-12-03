@@ -494,6 +494,17 @@ exports[`Checklist renders multiple StepList components with list of Steps 1`] =
 </div>
 `;
 
+exports[`Checklist renders success message after submitting part 2 1`] = `
+<Alert
+  className="margin-bottom-3"
+  heading="Part 2 of your application was confirmed."
+  name="part-two-submitted-message"
+  state="success"
+>
+  Now, you can work on Part 3, and submit your application.
+</Alert>
+`;
+
 exports[`Checklist renders success message after submitting part one 1`] = `
 <Alert
   className="margin-bottom-3"

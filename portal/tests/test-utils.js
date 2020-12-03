@@ -1,5 +1,8 @@
-import Claim, {
+import {
   BankAccountType,
+  PaymentPreferenceMethod,
+} from "../src/models/PaymentPreference";
+import Claim, {
   ClaimStatus,
   ContinuousLeavePeriod,
   DurationBasis,
@@ -7,7 +10,6 @@ import Claim, {
   FrequencyIntervalBasis,
   IntermittentLeavePeriod,
   LeaveReason,
-  PaymentPreferenceMethod,
   PhoneType,
   ReasonQualifier,
   ReducedScheduleLeavePeriod,

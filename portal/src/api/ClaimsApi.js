@@ -144,4 +144,20 @@ export default class ClaimsApi extends BaseApi {
       success,
     };
   };
+
+  submitPaymentPreference = async (application_id, paymentPreferenceData) => {
+    const { data, errors, success, status, warnings } = await this.request(
+      "POST",
+      `${application_id}/submit_payment_preference`,
+      paymentPreferenceData
+    );
+
+    return {
+      claim: success ? new Claim(data) : null,
+      errors,
+      success,
+      status,
+      warnings,
+    };
+  };
 }

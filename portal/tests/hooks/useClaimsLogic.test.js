@@ -709,6 +709,20 @@ describe("useClaimsLogic", () => {
         );
       });
 
+      it("passes payment-pref-submitted into the route when the request succeeds", async () => {
+        const paymentPref = {
+          payment_preference: new MockClaimBuilder().directDeposit().create()
+            .payment_preference,
+        };
+        await act(async () => {
+          await claimsLogic.submitPaymentPreference(applicationId, paymentPref);
+        });
+
+        expect(mockRouter.push).toHaveBeenCalledWith(
+          expect.stringContaining(`&payment-pref-submitted=true`)
+        );
+      });
+
       it("catches exceptions thrown from the API module", async () => {
         jest.spyOn(console, "error").mockImplementationOnce(jest.fn());
         submitClaimMock.mockImplementationOnce(() => {

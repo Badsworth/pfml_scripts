@@ -34,6 +34,7 @@ export default jest.fn(() => ({
     load: jest.fn(),
     loadAll: jest.fn(),
     submit: jest.fn(),
+    submitPaymentPreference: jest.fn(),
     update: jest.fn(),
     warningsLists: {},
   },

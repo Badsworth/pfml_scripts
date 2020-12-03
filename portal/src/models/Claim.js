@@ -32,13 +32,8 @@ class Claim extends BaseClaim {
       mass_id: null,
       // array of OtherIncome objects. See the OtherIncome model
       other_incomes: [],
-      payment_preference: {
-        // Fields for ACH details
-        account_number: null,
-        bank_account_type: null, // BankAccountType
-        payment_method: null, // PaymentPreferenceMethod
-        routing_number: null,
-      },
+      // See PaymentPreference model
+      payment_preference: null,
       phone: {
         int_code: null,
         phone_number: null,
@@ -338,24 +333,6 @@ export class ReducedScheduleLeavePeriod extends BaseModel {
     return null;
   }
 }
-
-/**
- * Enums for the Application's `payment_preference.bank_account_type` field
- * @enum {string}
- */
-export const BankAccountType = {
-  checking: "Checking",
-  savings: "Savings",
-};
-
-/**
- * Enums for the Application's `payment_preference.payment_method` field
- * @enum {string}
- */
-export const PaymentPreferenceMethod = {
-  ach: "ACH",
-  check: "Check",
-};
 
 /**
  * Enums for the Application's `phone.phone_type` field

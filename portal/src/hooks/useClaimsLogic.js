@@ -229,6 +229,48 @@ const useClaimsLogic = ({ appErrorsLogic, portalFlow, user }) => {
     }
   };
 
+  const submitPaymentPreference = async (
+    application_id,
+    paymentPreferenceData
+  ) => {
+    if (!user) return;
+    appErrorsLogic.clearErrors();
+
+    try {
+      const {
+        claim,
+        errors,
+        warnings,
+      } = await claimsApi.submitPaymentPreference(
+        application_id,
+        paymentPreferenceData
+      );
+
+      // This endpoint should only return errors relevant to this page so no need to filter
+      const issues = getRelevantIssues(errors, warnings, []);
+
+      if (errors && errors.length) {
+        throw new ValidationError(issues, "claims");
+      }
+
+      setClaim(claim);
+      setClaimWarnings(application_id, warnings);
+
+      if (issues && issues.length) {
+        throw new ValidationError(issues, "claims");
+      }
+
+      const context = { claim, user };
+      const params = {
+        claim_id: claim.application_id,
+        "payment-pref-submitted": "true",
+      };
+      portalFlow.goToNextPage(context, params);
+    } catch (error) {
+      appErrorsLogic.catchError(error);
+    }
+  };
+
   return {
     claims,
     complete,
@@ -239,6 +281,7 @@ const useClaimsLogic = ({ appErrorsLogic, portalFlow, user }) => {
     loadAll,
     update,
     submit,
+    submitPaymentPreference,
     setClaims,
     warningsLists,
   };

@@ -587,6 +587,9 @@ const pages = {
     partOneSubmittedDescription:
       "Your in-progress application will be viewable by our Contact Center staff. If you need to make edits to Part 1, you'll need to call our Contact Center at $t(shared.contactCenterPhoneNumber). Now, you can work on Parts 2 and 3, and submit your application.",
     partOneSubmittedHeading: "Part 1 of your application was confirmed.",
+    partTwoSubmittedDescription:
+      "Now, you can work on Part 3, and submit your application.",
+    partTwoSubmittedHeading: "Part 2 of your application was confirmed.",
     resume: "Resume",
     // Resume button aria-label for screen readers, since VoiceOver reads "résumé":
     resumeScreenReader: "Continue with",
@@ -897,6 +900,7 @@ const pages = {
     sectionLabel: "How do you want to get your weekly benefit?",
     sectionLabelHint:
       "Your choice will be applied to any previous claims you have submitted.",
+    submitPart2Button: "Submit Part 2",
     title: "Payment method",
   },
   claimsPhoneNumber: {
@@ -1052,6 +1056,10 @@ const pages = {
       "We’ll also notify your employer that you’ve started an application for paid family and medical leave.",
     partOneNextStepsLine3:
       "Next, you’ll be able to work on Parts 2 and 3, and submit your application.",
+    partTwoNextStepsLine1:
+      "Once you confirm Part 2, your payment information will be viewable by our Contact Center staff. To make edits to Part 2, you’ll need to call the Contact Center at $t(shared.contactCenterPhoneNumber).",
+    partTwoNextStepsLine2:
+      "Next, you’ll work on Part 3, and submit your application.",
     paymentAccountNumLabel: "Account number",
     paymentMethodLabel: "Payment method",
     paymentMethodValue_ach: "$t(shared.paymentMethodAch)",
