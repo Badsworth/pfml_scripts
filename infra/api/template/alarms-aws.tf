@@ -50,7 +50,7 @@ resource "aws_sns_topic_subscription" "high-priority" {
 
 resource "aws_cloudwatch_metric_alarm" "api_cpu_warn" {
   alarm_name        = "${local.app_name}-${var.environment_name}_CPU-Warning"
-  alarm_description = "P95 CPU usage by API tasks exceeds 80%"
+  alarm_description = "(${upper(var.environment_name)} API WARN) P95 CPU usage by API tasks exceeds 80%"
   namespace         = "ECS/ContainerInsights"
   dimensions = {
     ClusterName          = var.environment_name
@@ -74,7 +74,7 @@ resource "aws_cloudwatch_metric_alarm" "api_cpu_warn" {
 
 resource "aws_cloudwatch_metric_alarm" "api_cpu_crit" {
   alarm_name        = "${local.app_name}-${var.environment_name}_CPU-Critical"
-  alarm_description = "P95 CPU usage by API tasks exceeds 90%"
+  alarm_description = "(${upper(var.environment_name)} API CRIT) P95 CPU usage by API tasks exceeds 90%"
   namespace         = "ECS/ContainerInsights"
   dimensions = {
     ClusterName          = var.environment_name
@@ -100,7 +100,7 @@ resource "aws_cloudwatch_metric_alarm" "api_cpu_crit" {
 
 resource "aws_cloudwatch_metric_alarm" "api_ram_warn" {
   alarm_name        = "${local.app_name}-${var.environment_name}_RAM-Warning"
-  alarm_description = "P95 RAM usage by API tasks exceeds 90% container allotment"
+  alarm_description = "(${upper(var.environment_name)} API WARN) P95 RAM usage by API tasks exceeds 90% container allotment"
   namespace         = "ECS/ContainerInsights"
   dimensions = {
     ClusterName          = var.environment_name
@@ -124,7 +124,7 @@ resource "aws_cloudwatch_metric_alarm" "api_ram_warn" {
 
 resource "aws_cloudwatch_metric_alarm" "api_ram_crit" {
   alarm_name        = "${local.app_name}-${var.environment_name}_RAM-Critical"
-  alarm_description = "P95 RAM usage by API tasks exceeds 95% container allotment"
+  alarm_description = "(${upper(var.environment_name)} API CRIT) P95 RAM usage by API tasks exceeds 95% container allotment"
   namespace         = "ECS/ContainerInsights"
   dimensions = {
     ClusterName          = var.environment_name
