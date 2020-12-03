@@ -160,18 +160,17 @@ const useAppErrorsLogic = () => {
       addError(appError);
     });
 
-    const trackerCustomAttrs = {
-      // Reduce issues down to properties we know for a fact shouldn't have PII
-      issues: error.issues.map(({ field, rule, type, ...ignored }) => ({
-        field,
-        rule,
-        type,
-      })),
-    };
-
     // ValidationError can be expected, so to avoid adding noise to the
     // "Errors" section in New Relic, we track these as custom events instead
-    tracker.trackEvent(error.name, trackerCustomAttrs);
+    error.issues.forEach(({ field, rule, type, ...ignored }) => {
+      tracker.trackEvent(error.name, {
+        // Do not log the error message, since it's not guaranteed that it won't include PII.
+        // For example, issues thrown from OpenAPI validation logic sometimes includes the field value.
+        issueField: field,
+        issueRule: rule,
+        issueType: type,
+      });
+    });
   };
 
   return {

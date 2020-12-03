@@ -272,6 +272,37 @@ describe("useAppErrorsLogic", () => {
         expect(appErrorsLogic.appErrors.items[0].name).toBe("ValidationError");
         expect(appErrorsLogic.appErrors.items[1].rule).toBe(issues[1].rule);
       });
+
+      it("tracks each issue in New Relic", () => {
+        const issues = [
+          {
+            field: "tax_identifier",
+            type: "pattern",
+            message: "123123123 is invalid",
+            rule: "/d{9}",
+          },
+          {
+            field: "first_name",
+            type: "required",
+            message: "First name is required",
+          },
+        ];
+
+        act(() => {
+          appErrorsLogic.catchError(new ValidationError(issues, "claims"));
+        });
+
+        expect(tracker.trackEvent).toHaveBeenCalledWith("ValidationError", {
+          issueField: "tax_identifier",
+          issueRule: "/d{9}",
+          issueType: "pattern",
+        });
+
+        expect(tracker.trackEvent).toHaveBeenCalledWith("ValidationError", {
+          issueField: "first_name",
+          issueType: "required",
+        });
+      });
     });
 
     describe("when multiple errors are caught", () => {
