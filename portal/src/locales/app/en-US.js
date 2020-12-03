@@ -1766,6 +1766,9 @@ const components = {
     skipToContent: "Skip to main content",
     appTitle: "Paid Family and Medical Leave",
   },
+  leaveDatesAlert: {
+    heading: "Your leave dates for paid leave",
+  },
   signUp: {
     createAccountButton: "Create an account to apply for paid leave",
     haveAnAccountFooterLabel: "Have an account?",

@@ -46,6 +46,20 @@ describe("Alert", () => {
     `);
   });
 
+  it("renders an h3 when headingLevel is set to 3", () => {
+    const { wrapper } = render({ heading: "Alert heading", headingLevel: "3" });
+
+    expect(wrapper.find("Heading").prop("level")).toBe("3");
+    expect(wrapper.find("Heading").prop("size")).toBeUndefined();
+  });
+
+  it("renders overrides the Heading size when headingSize is set to 3", () => {
+    const { wrapper } = render({ heading: "Alert heading", headingSize: "3" });
+
+    expect(wrapper.find("Heading").prop("level")).toBe("2");
+    expect(wrapper.find("Heading").prop("size")).toBe("3");
+  });
+
   it("renders the 'error' state by default", () => {
     const { wrapper } = render();
 
