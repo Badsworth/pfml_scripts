@@ -102,6 +102,11 @@ exports[`PreviousLeavesDetails when the user's claim has previous leaves renders
   >
     Tell us about previous paid or unpaid leave
   </Heading>
+  <LeaveDatesAlert
+    endDate="2021-06-01"
+    headingLevel="3"
+    startDate="2021-01-01"
+  />
   <RepeatableFieldset
     addButtonLabel="Add another leave"
     entries={

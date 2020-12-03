@@ -2,6 +2,7 @@ import AppErrorInfo from "src/models/AppErrorInfo";
 import AppErrorInfoCollection from "src/models/AppErrorInfoCollection";
 import Claim from "src/models/Claim";
 import DocumentCollection from "src/models/DocumentCollection";
+import { MockClaimBuilder } from "tests/test-utils";
 import React from "react";
 import User from "../../src/models/User";
 import _ from "lodash";
@@ -74,6 +75,7 @@ function generateDefaultStory(Component, mockClaims, possibleErrors) {
   if (!mockClaims) {
     mockClaims = {
       empty: new Claim(),
+      "continuous leave": new MockClaimBuilder().continuous().create(),
     };
   }
 

@@ -21,10 +21,14 @@ exports[`PreviousLeaves renders the page 1`] = `
       ]
     }
     hint={
-      <Details
-        label="What counts as a qualifying reason?"
-      >
-        <React.Fragment>
+      <div>
+        <LeaveDatesAlert
+          endDate="2021-06-01"
+          startDate="2021-01-01"
+        />
+        <Details
+          label="What counts as a qualifying reason?"
+        >
           <p>
             The following are qualifying reasons for taking paid or unpaid leave:
           </p>
@@ -45,8 +49,8 @@ exports[`PreviousLeaves renders the page 1`] = `
               i18nKey="pages.claimsPreviousLeaves.hintList"
             />
           </ul>
-        </React.Fragment>
-      </Details>
+        </Details>
+      </div>
     }
     label="Have you taken paid or unpaid leave since January 1, 2021 for a qualifying reason?"
     name="temp.has_previous_leaves"

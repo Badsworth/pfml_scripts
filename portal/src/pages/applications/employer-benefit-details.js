@@ -7,6 +7,7 @@ import Heading from "../../components/Heading";
 import InputChoiceGroup from "../../components/InputChoiceGroup";
 import InputDate from "../../components/InputDate";
 import InputText from "../../components/InputText";
+import LeaveDatesAlert from "../../components/LeaveDatesAlert";
 import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
@@ -72,6 +73,13 @@ export const EmployerBenefitDetails = (props) => {
       <Heading level="2" size="1">
         {t("pages.claimsEmployerBenefitDetails.sectionLabel")}
       </Heading>
+
+      <LeaveDatesAlert
+        startDate={claim.leaveStartDate}
+        endDate={claim.leaveEndDate}
+        headingLevel="3"
+      />
+
       <RepeatableFieldset
         addButtonLabel={t("pages.claimsEmployerBenefitDetails.addButton")}
         entries={employer_benefits}

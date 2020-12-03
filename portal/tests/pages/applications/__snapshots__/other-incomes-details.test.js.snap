@@ -100,6 +100,11 @@ exports[`OtherIncomesDetails when the user's claim has other income sources rend
   >
     Tell us about your other sources of income.
   </Heading>
+  <LeaveDatesAlert
+    endDate="2021-06-01"
+    headingLevel="3"
+    startDate="2021-01-01"
+  />
   <RepeatableFieldset
     addButtonLabel="Add another income"
     entries={

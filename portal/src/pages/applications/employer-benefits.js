@@ -1,6 +1,7 @@
 import Claim from "../../models/Claim";
 import InputChoiceGroup from "../../components/InputChoiceGroup";
 import Lead from "../../components/Lead";
+import LeaveDatesAlert from "../../components/LeaveDatesAlert";
 import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
@@ -53,6 +54,10 @@ export const EmployerBenefits = (props) => {
         type="radio"
         hint={
           <React.Fragment>
+            <LeaveDatesAlert
+              startDate={claim.leaveStartDate}
+              endDate={claim.leaveEndDate}
+            />
             <Lead>
               {t("pages.claimsEmployerBenefits.hintHeader")}
               <ul className="usa-list">

@@ -88,6 +88,11 @@ exports[`EmployerBenefitDetails when the user's claim has employer benefits rend
   >
     Tell us about benefits you will receive from your employer.
   </Heading>
+  <LeaveDatesAlert
+    endDate="2021-06-01"
+    headingLevel="3"
+    startDate="2021-01-01"
+  />
   <RepeatableFieldset
     addButtonLabel="Add another benefit"
     entries={

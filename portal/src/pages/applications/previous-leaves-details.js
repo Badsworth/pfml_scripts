@@ -4,6 +4,7 @@ import Claim from "../../models/Claim";
 import Heading from "../../components/Heading";
 import InputChoiceGroup from "../../components/InputChoiceGroup";
 import InputDate from "../../components/InputDate";
+import LeaveDatesAlert from "../../components/LeaveDatesAlert";
 import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
@@ -73,6 +74,13 @@ export const PreviousLeavesDetails = (props) => {
       <Heading level="2" size="1">
         {t("pages.claimsPreviousLeavesDetails.sectionLabel")}
       </Heading>
+
+      <LeaveDatesAlert
+        startDate={claim.leaveStartDate}
+        endDate={claim.leaveEndDate}
+        headingLevel="3"
+      />
+
       <RepeatableFieldset
         addButtonLabel={t("pages.claimsPreviousLeavesDetails.addButton")}
         entries={previous_leaves}

@@ -22,6 +22,10 @@ exports[`EmployerBenefits renders the page 1`] = `
     }
     hint={
       <React.Fragment>
+        <LeaveDatesAlert
+          endDate="2021-06-01"
+          startDate="2021-01-01"
+        />
         <Lead>
           Employer-sponsored benefits you must report are:
           <ul
