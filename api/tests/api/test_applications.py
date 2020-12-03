@@ -9,6 +9,7 @@ from sqlalchemy import inspect
 
 import massgov.pfml.fineos.mock_client
 import massgov.pfml.fineos.models
+import massgov.pfml.util.datetime as datetime_util
 import tests.api
 from massgov.pfml.api.models.applications.common import DurationBasis, FrequencyIntervalBasis
 from massgov.pfml.api.models.applications.responses import ApplicationStatus
@@ -2243,6 +2244,33 @@ def test_application_patch_key_set_to_null_does_null_field(
     assert response_body.get("first_name") is None
 
 
+def test_application_patch_failure_after_absence_case_creation(
+    client, user, auth_token, test_db_session
+):
+    application = ApplicationFactory.create(user=user)
+
+    # Attach absence case information application so it appears as if this application has already been submitted.
+    application.fineos_notification_case_id = "NTN-1989"
+    application.fineos_absence_id = application.fineos_notification_case_id + "-ABS-01"
+    application.submitted_time = datetime_util.utcnow()
+    test_db_session.commit()
+
+    update_request_body = sqlalchemy_object_as_dict(application)
+    response = client.patch(
+        "/v1/applications/{}".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+        json=update_request_body,
+    )
+
+    tests.api.validate_error_response(
+        response,
+        403,
+        message="Application {} could not be updated. Application already submitted on {}".format(
+            application.application_id, datetime_util.utcnow().strftime("%x")
+        ),
+    )
+
+
 def test_application_post_submit_app(client, user, auth_token, test_db_session):
     factory.random.reseed_random(1)
     application = ApplicationFactory.create(user=user)
@@ -3259,6 +3287,36 @@ def test_application_post_submit_to_fineos_pregnant(client, user, auth_token, te
     assert captured_absence_case.primaryRelationship is None
     assert captured_absence_case.primaryRelQualifier1 is None
     assert captured_absence_case.primaryRelQualifier2 is None
+
+
+def test_application_post_submit_app_failure_after_absence_case_creation(
+    client, user, auth_token, test_db_session
+):
+    application = ApplicationFactory.create(user=user)
+
+    # Fill in required fields so this is an valid application apart from the fact it's already been submitted.
+    application.continuous_leave_periods = [
+        ContinuousLeavePeriodFactory.create(start_date=date(2021, 1, 1))
+    ]
+    application.date_of_birth = "1997-06-06"
+    application.employment_status_id = EmploymentStatus.UNEMPLOYED.employment_status_id
+    application.hours_worked_per_week = 70
+    application.has_continuous_leave_periods = True
+    application.residential_address = AddressFactory.create()
+    application.work_pattern = WorkPatternFixedFactory.create()
+
+    # Attach absence case information application so it appears as if this application has already been submitted.
+    application.fineos_notification_case_id = "NTN-1989"
+    application.fineos_absence_id = application.fineos_notification_case_id + "-ABS-01"
+    application.submitted_time = datetime_util.utcnow()
+    test_db_session.commit()
+
+    response = client.post(
+        "/v1/applications/{}/submit_application".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+    )
+
+    assert response.status_code == 403
 
 
 def test_application_post_complete_app(client, user, auth_token, test_db_session):

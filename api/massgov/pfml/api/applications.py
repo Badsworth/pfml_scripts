@@ -105,6 +105,18 @@ def applications_update(application_id):
 
     ensure(EDIT, existing_application)
 
+    # The presence of a submitted_time indicates that the application has already been submitted.
+    if existing_application.submitted_time:
+        return response_util.error_response(
+            status_code=Forbidden,
+            message="Application {} could not be updated. Application already submitted on {}".format(
+                existing_application.application_id,
+                existing_application.submitted_time.strftime("%x"),
+            ),
+            errors=[],
+            data=ApplicationResponse.from_orm(existing_application).dict(exclude_none=True),
+        ).to_api_response()
+
     updated_body = applications_service.remove_masked_fields_from_request(
         body, existing_application
     )
@@ -153,6 +165,18 @@ def applications_submit(application_id):
                     errors=meta_issues,
                     data=ApplicationResponse.from_orm(existing_application).dict(exclude_none=True),
                 ).to_api_response()
+
+        # The presence of a submitted_time indicates that the application has already been submitted.
+        if existing_application.submitted_time:
+            return response_util.error_response(
+                status_code=Forbidden,
+                message="Application {} could not be submitted. Application already submitted on {}".format(
+                    existing_application.application_id,
+                    existing_application.submitted_time.strftime("%x"),
+                ),
+                errors=[],
+                data=ApplicationResponse.from_orm(existing_application).dict(exclude_none=True),
+            ).to_api_response()
 
         # Only send to fineos if fineos_absence_id isn't set. If it is set,
         # assume that just complete_intake needs to be reattempted.
