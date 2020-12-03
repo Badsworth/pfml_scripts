@@ -41,7 +41,14 @@ exports[`Feedback renders the component 1`] = `
       htmlFor="comment"
       small={true}
     >
-      Please tell us more.
+      <Trans
+        i18nKey="pages.employersClaimsReview.feedback.commentSolicitation"
+        tOptions={
+          Object {
+            "context": "",
+          }
+        }
+      />
     </FormLabel>
     <textarea
       className="usa-textarea margin-top-3"

@@ -1422,6 +1422,7 @@ const pages = {
       addFirstFileButton: "$t(shared.fileUpload_addFirstFileButton)",
       choiceNo: "$t(shared.choiceNo)",
       choiceYes: "$t(shared.choiceYes)",
+      commentSolicitation: "Please tell us more.",
       commentSolicitation_employeeNotice:
         "Please tell us when your employee notified you about their leave.",
       commentSolicitation_employerDecision:
@@ -1432,7 +1433,6 @@ const pages = {
       instructionsLabel: "Do you have any additional comments or concerns?",
       supportingDocumentationLabel:
         "If you have any supporting documentation, please attach it for review.",
-      tellUsMoreLabel: "Please tell us more.",
     },
     fraudReport: {
       alertBody:

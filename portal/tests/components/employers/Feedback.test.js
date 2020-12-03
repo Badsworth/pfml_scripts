@@ -53,7 +53,7 @@ describe("Feedback", () => {
     });
 
     it("displays a message prompting user to leave a comment about fraud", () => {
-      const message = wrapper.find(".text-error").text();
+      const message = wrapper.find("Trans").text();
 
       expect(message).toEqual(
         "Please tell us why you believe this is fraudulent."
@@ -85,7 +85,7 @@ describe("Feedback", () => {
     });
 
     it("displays a message prompting user to leave a comment", () => {
-      const message = wrapper.find(".text-error").text();
+      const message = wrapper.find("Trans").text();
 
       expect(message).toEqual(
         "Please tell us when your employee notified you about their leave."
@@ -117,7 +117,7 @@ describe("Feedback", () => {
     });
 
     it("displays a message prompting user to leave a comment about denial", () => {
-      const message = wrapper.find(".text-error").text();
+      const message = wrapper.find("Trans").text();
 
       expect(message).toEqual(
         "Please tell us why you denied this leave request."

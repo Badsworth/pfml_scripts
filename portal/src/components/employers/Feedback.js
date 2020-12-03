@@ -5,6 +5,7 @@ import FormLabel from "../FormLabel";
 import InputChoiceGroup from "../InputChoiceGroup";
 import PropTypes from "prop-types";
 import ReviewHeading from "../ReviewHeading";
+import { Trans } from "react-i18next";
 import { useTranslation } from "../../locales/i18n";
 
 /**
@@ -39,6 +40,13 @@ const Feedback = ({
     );
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isDenyingRequest, isEmployeeNoticeInsufficient]);
+
+  const buildContext = () => {
+    if (isReportingFraud) return "fraud";
+    if (!isReportingFraud && isDenyingRequest) return "employerDecision";
+    if (!isDenyingRequest && isEmployeeNoticeInsufficient)
+      return "employeeNotice";
+  };
 
   return (
     <React.Fragment>
@@ -78,29 +86,13 @@ const Feedback = ({
       >
         <React.Fragment>
           <FormLabel className="usa-label" htmlFor="comment" small>
-            {t("pages.employersClaimsReview.feedback.tellUsMoreLabel")}
+            <Trans
+              i18nKey="pages.employersClaimsReview.feedback.commentSolicitation"
+              tOptions={{
+                context: buildContext() || "",
+              }}
+            />
           </FormLabel>
-          {isReportingFraud && (
-            <p level="4" className="text-error">
-              {t(
-                "pages.employersClaimsReview.feedback.commentSolicitation_fraud"
-              )}
-            </p>
-          )}
-          {isEmployeeNoticeInsufficient && (
-            <p level="4" className="text-error">
-              {t(
-                "pages.employersClaimsReview.feedback.commentSolicitation_employeeNotice"
-              )}
-            </p>
-          )}
-          {!isReportingFraud && isDenyingRequest && (
-            <p level="4" className="text-error">
-              {t(
-                "pages.employersClaimsReview.feedback.commentSolicitation_employerDecision"
-              )}
-            </p>
-          )}
           <textarea
             className="usa-textarea margin-top-3"
             name="comment"

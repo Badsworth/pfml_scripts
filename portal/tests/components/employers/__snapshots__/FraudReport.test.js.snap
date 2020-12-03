@@ -51,13 +51,6 @@ exports[`FraudReport renders just the input choices by default 1`] = `
   <ConditionalContent
     visible={false}
   >
-    <Heading
-      className="text-error"
-      level="4"
-      weight="bold"
-    >
-      Please provide a comment below
-    </Heading>
     <Alert
       heading="You are reporting fraud."
       state="warning"
@@ -119,13 +112,6 @@ exports[`FraudReport renders the alert if "Yes" is selected 1`] = `
   <ConditionalContent
     visible={true}
   >
-    <Heading
-      className="text-error"
-      level="4"
-      weight="bold"
-    >
-      Please provide a comment below
-    </Heading>
     <Alert
       heading="You are reporting fraud."
       state="warning"

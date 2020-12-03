@@ -2,7 +2,6 @@ import React, { useEffect, useState } from "react";
 import Alert from "../Alert";
 import ConditionalContent from "../ConditionalContent";
 import Details from "../Details";
-import Heading from "../Heading";
 import InputChoiceGroup from "../InputChoiceGroup";
 import PropTypes from "prop-types";
 import ReviewHeading from "../ReviewHeading";
@@ -73,9 +72,6 @@ const FraudReport = ({ onChange = () => {} }) => {
       />
       <ConditionalContent visible={isFraud === "Yes"}>
         <React.Fragment>
-          <Heading level="4" weight="bold" className="text-error">
-            {t("pages.employersClaimsReview.fraudReport.commentSolicitation")}
-          </Heading>
           <Alert
             state="warning"
             heading={t("pages.employersClaimsReview.fraudReport.alertHeading")}
