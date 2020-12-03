@@ -466,7 +466,7 @@ export class MockClaimBuilder extends BaseMockClaimBuilder {
    */
   complete() {
     this.submitted();
-    this.directDeposit();
+    this.paymentPrefSubmitted();
     return this;
   }
 
@@ -508,6 +508,18 @@ export class MockClaimBuilder extends BaseMockClaimBuilder {
     this.part1Complete();
     this.absenceId();
     set(this.claimAttrs, "status", ClaimStatus.submitted);
+
+    return this;
+  }
+
+  /**
+   * Part 2 step is completed and submitted to API
+   * @returns {MockClaimBuilder}
+   */
+  paymentPrefSubmitted() {
+    this.submitted();
+    this.directDeposit();
+    set(this.claimAttrs, "has_submitted_payment_preference", true);
 
     return this;
   }

@@ -1,7 +1,10 @@
-import { MockClaimBuilder, renderWithAppLogic } from "../../test-utils";
+import {
+  MockClaimBuilder,
+  renderWithAppLogic,
+  simulateEvents,
+} from "../../test-utils";
 import PaymentMethod from "../../../src/pages/applications/payment-method";
 import { PaymentPreferenceMethod } from "../../../src/models/PaymentPreference";
-import { act } from "react-dom/test-utils";
 
 jest.mock("../../../src/hooks/useAppLogic");
 
@@ -62,9 +65,8 @@ describe("PaymentMethod", () => {
         claimAttrs: new MockClaimBuilder().directDeposit().create(),
       }));
 
-      act(() => {
-        wrapper.find("Button").simulate("click");
-      });
+      const { submitForm } = simulateEvents(wrapper);
+      submitForm();
 
       expect(appLogic.claims.submitPaymentPreference).toHaveBeenCalledWith(
         claim.application_id,

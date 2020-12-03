@@ -516,9 +516,21 @@ exports[`Checklist renders success message after submitting part one 1`] = `
 </Alert>
 `;
 
-exports[`Checklist when Part 1 is submitted renders descriptions for Part 2 and 3 1`] = `"Entering payment information here leads to faster processing, but you can also call (833) 344‑7365."`;
+exports[`Checklist when Part 1 is submitted renders descriptions for Part 2 1`] = `"Entering payment information here leads to faster processing, but you can also call (833) 344‑7365."`;
 
-exports[`Checklist when Part 1 is submitted renders descriptions for Part 2 and 3 2`] = `
+exports[`Checklist when Part 1 is submitted renders different description for Part 1 1`] = `
+Array [
+  "If you need to edit your information in Part 1, you’ll need to call the Contact Center at (833) 344‑7365. Your application ID is ",
+  <strong
+    key="strong-1"
+  >
+    NTN-111-ABS-01
+  </strong>,
+  ".",
+]
+`;
+
+exports[`Checklist when Part 2 is submitted renders descriptions for Part 3 1`] = `
 Array [
   "Uploading documents online leads to faster processing, but you can also ",
   <a
@@ -533,9 +545,9 @@ Array [
 ]
 `;
 
-exports[`Checklist when Part 1 is submitted renders different description for Part 1 1`] = `
+exports[`Checklist when Part 2 is submitted renders submitted descriptions for Part 2 1`] = `
 Array [
-  "If you need to edit your information in Part 1, you’ll need to call the Contact Center at (833) 344‑7365. Your application ID is ",
+  "If you need to edit your information in Part 2, you’ll need to call the Contact Center at (833) 344‑7365. Your application ID is ",
   <strong
     key="strong-1"
   >

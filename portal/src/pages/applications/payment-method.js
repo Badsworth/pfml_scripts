@@ -46,7 +46,8 @@ export const PaymentMethod = (props) => {
   const payment_method = get(formState, paymentMethodField);
   const requestData = cloneDeep(formState);
 
-  const handleSubmit = useThrottledHandler(async () => {
+  const handleSubmit = useThrottledHandler(async (event) => {
+    event.preventDefault();
     if (payment_method !== PaymentPreferenceMethod.ach) {
       set(requestData, routingNumberField, null);
       set(requestData, bankAccountTypeField, null);

@@ -151,8 +151,6 @@ export default class Step extends BaseModel {
           "claim.employer_benefits",
           "claim.other_incomes",
           "claim.previous_leaves",
-          // TODO (CP-1264): Remove payment fields from here once the Payment step utilizes the warnings
-          "claim.payment_preference",
           // TODO (CP-1247): Show previous leaves related questions
           "claim.temp.has_previous_leaves",
         ].some((ignoredFieldName) => field.includes(ignoredFieldName));
@@ -301,6 +299,8 @@ export default class Step extends BaseModel {
 
     const payment = new Step({
       name: ClaimSteps.payment,
+      completeCond: (context) => context.claim.has_submitted_payment_preference,
+      editable: !claim.has_submitted_payment_preference,
       group: 2,
       pages: pagesByStep[ClaimSteps.payment],
       dependsOn: filterOutHiddenSteps([
@@ -311,8 +311,7 @@ export default class Step extends BaseModel {
         reviewAndConfirm,
       ]),
       context,
-      // TODO (CP-1264): Pass in warnings while when API validation rule exists to require a payment method
-      // warnings,
+      warnings,
     });
 
     const uploadId = new Step({
@@ -326,6 +325,7 @@ export default class Step extends BaseModel {
         leaveDetails,
         otherLeave,
         reviewAndConfirm,
+        payment,
       ]),
       context,
     });
@@ -343,6 +343,7 @@ export default class Step extends BaseModel {
         leaveDetails,
         otherLeave,
         reviewAndConfirm,
+        payment,
       ]),
       context,
     });

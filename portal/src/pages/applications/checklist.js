@@ -203,6 +203,14 @@ export const Checklist = (props) => {
       context += "_submitted";
     }
 
+    if (
+      stepGroup.number === 2 &&
+      claim.has_submitted_payment_preference === true
+    ) {
+      // Description for the second part changes after it's been submitted
+      context += "_submitted";
+    }
+
     return (
       <Trans
         i18nKey="pages.claimsChecklist.stepListDescription"

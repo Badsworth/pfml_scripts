@@ -84,6 +84,9 @@ const scenarios = {
       .bondingAdoptionLeaveReason()
       .create(),
   },
+  "Part 2 submitted": {
+    claim: new MockClaimBuilder().paymentPrefSubmitted().create(),
+  },
   "Ready for completion": {
     claim: new MockClaimBuilder().complete().create(),
     documents: [

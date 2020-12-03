@@ -573,11 +573,7 @@ export const Review = (props) => {
           </Heading>
 
           {/* PAYMENT METHOD */}
-          <ReviewHeading
-            editHref={getStepEditHref(ClaimSteps.payment)}
-            editText={t("pages.claimsReview.editLink")}
-            level={reviewHeadingLevel}
-          >
+          <ReviewHeading level={reviewHeadingLevel}>
             {t("pages.claimsReview.stepHeading", { context: "payment" })}
           </ReviewHeading>
 

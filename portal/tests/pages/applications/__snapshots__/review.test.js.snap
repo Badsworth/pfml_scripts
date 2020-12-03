@@ -189,8 +189,6 @@ exports[`Final Review Page when all data is present renders Review page with fin
     Review: Your payment information
   </Heading>
   <ReviewHeading
-    editHref="/applications/payment-method?claim_id=mock_application_id"
-    editText="Edit"
     level="2"
   >
     Payment information

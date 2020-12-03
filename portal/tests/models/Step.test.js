@@ -398,5 +398,18 @@ describe("Step Model", () => {
         expect(step.editable).toBe(expectedEditableValue);
       });
     });
+
+    it("marks group 2 steps as uneditable when payment is submitted", () => {
+      const steps = Step.createClaimStepsFromMachine(
+        claimantConfig,
+        { claim: new MockClaimBuilder().paymentPrefSubmitted().create() },
+        []
+      );
+
+      steps.forEach((step) => {
+        const expectedEditableValue = step.group === 3;
+        expect(step.editable).toBe(expectedEditableValue);
+      });
+    });
   });
 });

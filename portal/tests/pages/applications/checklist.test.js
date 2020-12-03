@@ -68,11 +68,53 @@ describe("Checklist", () => {
       expect(renderStepListDescription(part1List)).toMatchSnapshot();
     });
 
-    it("renders descriptions for Part 2 and 3", () => {
+    it("renders descriptions for Part 2", () => {
       const part2List = wrapper.find("StepList").at(1);
-      const part3List = wrapper.find("StepList").at(2);
 
       expect(renderStepListDescription(part2List)).toMatchSnapshot();
+    });
+
+    it("does not render descriptions for Part 3", () => {
+      const part3List = wrapper.find("StepList").at(2);
+
+      expect(
+        part3List.exists(
+          `Trans[i18nKey="pages.claimsChecklist.stepListDescription"]`
+        )
+      ).toBe(false);
+    });
+  });
+
+  describe("when Part 2 is submitted", () => {
+    let wrapper;
+
+    beforeEach(() => {
+      const claim = new MockClaimBuilder().paymentPrefSubmitted().create();
+
+      ({ wrapper } = renderWithAppLogic(Checklist, {
+        claimAttrs: claim,
+        diveLevels,
+        warningsLists: {
+          [claim.application_id]: [],
+        },
+      }));
+    });
+
+    it("Payment pref step is not editable", () => {
+      const paymentPrefStep = wrapper.find("Step").at(4);
+
+      expect(paymentPrefStep.prop("editable")).toBe(false);
+    });
+
+    it("renders submitted descriptions for Part 2", () => {
+      const part2List = wrapper.find("StepList").at(1);
+
+      expect(renderStepListDescription(part2List)).toMatchSnapshot();
+    });
+
+    it("renders descriptions for Part 3", () => {
+      const part3List = wrapper.find("StepList").at(2);
+
       expect(renderStepListDescription(part3List)).toMatchSnapshot();
     });
   });

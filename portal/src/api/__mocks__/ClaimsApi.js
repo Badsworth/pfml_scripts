@@ -94,7 +94,7 @@ export const submitPaymentPreferenceMock = jest.fn(
       status: 201,
       claim: new Claim({
         application_id,
-        // TODO (CP-1264): Send back the has_submitted_payment_preference flag here
+        has_submitted_payment_preference: true,
         payment_preference: paymentPreferenceData,
       }),
       warnings: [],

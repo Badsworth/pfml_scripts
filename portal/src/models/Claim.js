@@ -19,6 +19,7 @@ class Claim extends BaseClaim {
       has_mailing_address: null,
       has_reduced_schedule_leave_periods: null,
       has_state_id: null,
+      has_submitted_payment_preference: null,
       leave_details: {
         child_birth_date: null,
         child_placement_date: null,

@@ -627,6 +627,8 @@ const pages = {
       "If you need to edit your information in Part 1, you’ll need to call the Contact Center at $t(shared.contactCenterPhoneNumber). Your application ID is <strong>{{absence_id}}</strong>.",
     stepListDescription_2:
       "Entering payment information here leads to faster processing, but you can also call$t(chars.nbsp)$t(shared.contactCenterPhoneNumber).",
+    stepListDescription_2_submitted:
+      "If you need to edit your information in Part 2, you’ll need to call the Contact Center at $t(shared.contactCenterPhoneNumber). Your application ID is <strong>{{absence_id}}</strong>.",
     stepListDescription_3:
       "Uploading documents online leads to faster processing, but you can also <mail-fax-instructions-link>fax or mail documents</mail-fax-instructions-link>.",
     stepListTitlePrefix: "Part {{number}}",

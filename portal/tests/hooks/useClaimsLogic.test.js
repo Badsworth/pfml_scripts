@@ -8,6 +8,7 @@ import {
   getClaimMockApplicationId,
   getClaimsMock,
   submitClaimMock,
+  submitPaymentPreferenceMock,
   updateClaimMock,
 } from "../../src/api/ClaimsApi";
 import AppErrorInfo from "../../src/models/AppErrorInfo";
@@ -709,13 +710,82 @@ describe("useClaimsLogic", () => {
         );
       });
 
-      it("passes payment-pref-submitted into the route when the request succeeds", async () => {
-        const paymentPref = {
-          payment_preference: new MockClaimBuilder().directDeposit().create()
-            .payment_preference,
-        };
+      it("catches exceptions thrown from the API module", async () => {
+        jest.spyOn(console, "error").mockImplementationOnce(jest.fn());
+        submitClaimMock.mockImplementationOnce(() => {
+          throw new BadRequestError();
+        });
+
         await act(async () => {
-          await claimsLogic.submitPaymentPreference(applicationId, paymentPref);
+          await claimsLogic.submit(applicationId);
+        });
+
+        expect(appErrorsLogic.appErrors.items[0].name).toEqual(
+          "BadRequestError"
+        );
+        expect(mockRouter.push).not.toHaveBeenCalled();
+      });
+    });
+
+    describe("submitPaymentPreference", () => {
+      const paymentData = {
+        payment_preference: new MockClaimBuilder().directDeposit().create()
+          .payment_preference,
+      };
+      beforeEach(() => {
+        mockRouter.pathname = routes.applications.paymentMethod;
+        renderHook(routes.applications);
+
+        act(() => {
+          claimsLogic.setClaims(
+            new ClaimCollection([new Claim({ application_id: applicationId })])
+          );
+        });
+      });
+
+      it("submits the payment preference", async () => {
+        await act(async () => {
+          await claimsLogic.submitPaymentPreference(applicationId, paymentData);
+        });
+
+        const claim = claimsLogic.claims.get(applicationId);
+
+        expect(submitPaymentPreferenceMock).toHaveBeenCalledWith(
+          applicationId,
+          paymentData
+        );
+        expect(claim.has_submitted_payment_preference).toBe(true);
+      });
+
+      it("clears prior errors", async () => {
+        act(() => {
+          appErrorsLogic.setAppErrors(
+            new AppErrorInfoCollection([new AppErrorInfo()])
+          );
+        });
+
+        await act(async () => {
+          await claimsLogic.submitPaymentPreference(applicationId);
+        });
+
+        expect(appErrorsLogic.appErrors.items).toHaveLength(0);
+      });
+
+      it("routes to claim checklist page when the request succeeds", async () => {
+        await act(async () => {
+          await claimsLogic.submitPaymentPreference(applicationId);
+        });
+
+        expect(mockRouter.push).toHaveBeenCalledWith(
+          expect.stringContaining(
+            `${routes.applications.checklist}?claim_id=${applicationId}`
+          )
+        );
+      });
+
+      it("passes payment-pref-submitted into the route when the request succeeds", async () => {
+        await act(async () => {
+          await claimsLogic.submitPaymentPreference(applicationId, paymentData);
         });
 
         expect(mockRouter.push).toHaveBeenCalledWith(
@@ -725,12 +795,12 @@ describe("useClaimsLogic", () => {
 
       it("catches exceptions thrown from the API module", async () => {
         jest.spyOn(console, "error").mockImplementationOnce(jest.fn());
-        submitClaimMock.mockImplementationOnce(() => {
+        submitPaymentPreferenceMock.mockImplementationOnce(() => {
           throw new BadRequestError();
         });
 
         await act(async () => {
-          await claimsLogic.submit(applicationId);
+          await claimsLogic.submitPaymentPreference(applicationId);
         });
 
         expect(appErrorsLogic.appErrors.items[0].name).toEqual(
