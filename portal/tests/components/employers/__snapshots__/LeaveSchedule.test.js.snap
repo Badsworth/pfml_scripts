@@ -10,11 +10,21 @@ exports[`LeaveSchedule renders continuous schedule 1`] = `
   <Table
     className="width-full"
   >
-    <caption
-      className="text-normal"
-    >
+    <caption>
+      <p
+        className="text-normal"
+      >
+        <Trans
+          i18nKey="pages.employersClaimsReview.leaveSchedule.caption"
+          tOptions={
+            Object {
+              "context": "",
+            }
+          }
+        />
+      </p>
       <p>
-        This is your employee’s expected leave schedule.
+        Leave schedule details table
       </p>
     </caption>
     <thead>
@@ -64,11 +74,21 @@ exports[`LeaveSchedule renders intermittent schedule 1`] = `
   <Table
     className="width-full"
   >
-    <caption
-      className="text-normal"
-    >
+    <caption>
+      <p
+        className="text-normal"
+      >
+        <Trans
+          i18nKey="pages.employersClaimsReview.leaveSchedule.caption"
+          tOptions={
+            Object {
+              "context": "",
+            }
+          }
+        />
+      </p>
       <p>
-        This is your employee’s expected leave schedule.
+        Leave schedule details table
       </p>
     </caption>
     <thead>
@@ -122,11 +142,21 @@ exports[`LeaveSchedule renders reduced schedule 1`] = `
   <Table
     className="width-full"
   >
-    <caption
-      className="text-normal"
-    >
+    <caption>
+      <p
+        className="text-normal"
+      >
+        <Trans
+          i18nKey="pages.employersClaimsReview.leaveSchedule.caption"
+          tOptions={
+            Object {
+              "context": "",
+            }
+          }
+        />
+      </p>
       <p>
-        This is your employee’s expected leave schedule.
+        Leave schedule details table
       </p>
     </caption>
     <thead>

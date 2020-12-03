@@ -2,7 +2,6 @@ import Claim, {
   LeaveReason as LeaveReasonEnum,
   ReasonQualifier as ReasonQualifierEnum,
 } from "../../models/Claim";
-import { Trans, useTranslation } from "react-i18next";
 import { get, pick, set } from "lodash";
 import Alert from "../../components/Alert";
 import ConditionalContent from "../../components/ConditionalContent";
@@ -11,10 +10,12 @@ import InputChoiceGroup from "../../components/InputChoiceGroup";
 import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
+import { Trans } from "react-i18next";
 import { isFeatureEnabled } from "../../services/featureFlags";
 import routes from "../../routes";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
+import { useTranslation } from "../../locales/i18n";
 import withClaim from "../../hoc/withClaim";
 
 export const fields = [

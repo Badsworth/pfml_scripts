@@ -1,9 +1,10 @@
 import { IconMail, IconPdf } from "@massds/mayflower-react/dist/Icon";
-import { Trans, useTranslation } from "react-i18next";
 import Heading from "../../components/Heading";
 import React from "react";
 import Title from "../../components/Title";
+import { Trans } from "react-i18next";
 import routes from "../../routes";
+import { useTranslation } from "../../locales/i18n";
 import withUser from "../../hoc/withUser";
 
 // TODO (EMPLOYER-555) import from @massds when available

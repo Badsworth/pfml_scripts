@@ -6,6 +6,10 @@ import LeaveSchedule from "../../../src/components/employers/LeaveSchedule";
 jest.mock("../../../src/hooks/useAppLogic");
 
 const COMPLETED_CLAIM = new MockEmployerClaimBuilder().completed().create();
+const INTERMITTENT_CLAIM = new MockEmployerClaimBuilder()
+  .intermittent()
+  .absenceId()
+  .create();
 const DOCUMENTS = new DocumentCollection([
   new Document({
     content_type: "image/png",
@@ -68,11 +72,7 @@ describe("LeaveSchedule", () => {
   });
 
   it("renders intermittent schedule", () => {
-    const intermittentClaim = new MockEmployerClaimBuilder()
-      .intermittent()
-      .absenceId()
-      .create();
-    renderWithClaim(intermittentClaim);
+    renderWithClaim(INTERMITTENT_CLAIM);
     expect(wrapper.find("IntermittentLeaveSchedule").exists()).toEqual(true);
     expect(wrapper).toMatchSnapshot();
   });
@@ -138,6 +138,12 @@ describe("LeaveSchedule", () => {
       ).toEqual("Documentation");
     });
 
+    it("displays caption for a non-intermittent schedule with documents", () => {
+      expect(wrapper.find("caption").find("Trans").dive().text()).toEqual(
+        "This is your employee’s expected leave schedule. Download the attached documentation for more details."
+      );
+    });
+
     it("only shows medical certification documents", () => {
       const medicalDocuments = wrapper.find("HcpDocumentItem");
       expect(medicalDocuments.length).toBe(2);
@@ -170,6 +176,27 @@ describe("LeaveSchedule", () => {
     });
   });
 
+  describe("when there are documents for intermittent schedule", () => {
+    beforeEach(() => {
+      appLogic.employers.documents = DOCUMENTS;
+      ({ appLogic, wrapper } = renderWithAppLogic(LeaveSchedule, {
+        diveLevels: 0,
+        employerClaimAttrs: INTERMITTENT_CLAIM,
+        props: {
+          appLogic,
+          absenceId: "NTN-111-ABS-01",
+          claim: INTERMITTENT_CLAIM,
+        },
+      }));
+
+      it("displays caption for an intermittent schedule with documents", () => {
+        expect(wrapper.find("caption").find("Trans").dive().text()).toEqual(
+          "Download the attached documentation for details about the employee’s intermittent leave schedule."
+        );
+      });
+    });
+  });
+
   describe("while documents are undefined", () => {
     beforeEach(() => {
       renderWithClaim(COMPLETED_CLAIM, "mount");
@@ -198,6 +225,12 @@ describe("LeaveSchedule", () => {
           claim: COMPLETED_CLAIM,
         },
       }));
+    });
+
+    it("displays caption for a schedule without documents", () => {
+      expect(wrapper.find("caption").find("Trans").dive().text()).toEqual(
+        "This is your employee’s expected leave schedule."
+      );
     });
 
     it("does not show the document section", () => {

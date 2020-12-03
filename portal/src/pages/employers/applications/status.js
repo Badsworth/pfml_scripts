@@ -3,7 +3,6 @@ import EmployerClaim, {
   FineosLeaveReason,
 } from "../../../models/EmployerClaim";
 import React, { useEffect } from "react";
-import { Trans, useTranslation } from "react-i18next";
 import BackButton from "../../../components/BackButton";
 import DocumentCollection from "../../../models/DocumentCollection";
 import Heading from "../../../components/Heading";
@@ -12,11 +11,13 @@ import PropTypes from "prop-types";
 import StatusRow from "../../../components/StatusRow";
 import StatusTag from "../../../components/StatusTag";
 import Title from "../../../components/Title";
+import { Trans } from "react-i18next";
 import download from "downloadjs";
 import findKeyByValue from "../../../utils/findKeyByValue";
 import formatDateRange from "../../../utils/formatDateRange";
 import { get } from "lodash";
 import routes from "../../../../src/routes";
+import { useTranslation } from "../../../locales/i18n";
 import withEmployerClaim from "../../../hoc/withEmployerClaim";
 
 export const Status = (props) => {

@@ -131,6 +131,9 @@ const PreviousLeaves = (props) => {
           )}
         </tbody>
       </Table>
+      <p>
+        {t("pages.employersClaimsReview.employerBenefits.commentInstructions")}
+      </p>
     </React.Fragment>
   );
 };

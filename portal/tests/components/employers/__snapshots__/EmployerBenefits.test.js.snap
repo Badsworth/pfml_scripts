@@ -10,10 +10,10 @@ exports[`EmployerBenefits renders the component 1`] = `
   <Table
     className="width-full"
   >
-    <caption
-      className="text-normal"
-    >
-      <p>
+    <caption>
+      <p
+        className="text-normal"
+      >
         <Trans
           components={
             Object {
@@ -26,6 +26,9 @@ exports[`EmployerBenefits renders the component 1`] = `
           }
           i18nKey="pages.employersClaimsReview.employerBenefits.caption"
         />
+      </p>
+      <p>
+        Employer-sponsored benefit details
       </p>
     </caption>
     <thead>
@@ -65,5 +68,8 @@ exports[`EmployerBenefits renders the component 1`] = `
       />
     </tbody>
   </Table>
+  <p>
+    If something is incomplete, add a comment at the end of the page.
+  </p>
 </Fragment>
 `;

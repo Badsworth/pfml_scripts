@@ -402,13 +402,15 @@ const shared = {
   employerBenefitType_paidLeave: "Accrued paid leave",
   employerBenefitType_permanentDisability: "Permanent disability insurance",
   employerBenefitType_shortTermDisability: "Short-term disability insurance",
+  employerInstructions_addComment:
+    "If something is incomplete, add a comment at the end of the page.",
+  employerInstructions_followUpDate:
+    "<strong>Review and respond by:</strong> {{date}} at 11:59 p.m. Eastern time",
   fileUpload_addAnotherFileButton: "Choose another file",
   fileUpload_addFirstFileButton: "Choose a file",
   fileUpload_fileHeadingPrefix: "File",
   filesUploaded: "Number of files uploaded",
   hoursLabel: "Hours",
-  instructionsFollowUpDate:
-    "<strong>Review and respond by:</strong> {{date}} at 11:59 p.m. Eastern time",
   leavePeriodMedicalAlert:
     "You will need a completed Certification of a Serious Health Condition form for this section.",
   leaveReasonActiveDutyFamily: "Active duty",
@@ -1338,7 +1340,7 @@ const pages = {
     employerIdNumberLabel: "Employer ID number",
     instructions:
       "We need true answers to every question so that we can manage this program the way the law requires. Please confirm that you will answer as truthfully as you can.",
-    instructionsFollowUpDate: "$t(shared.instructionsFollowUpDate)",
+    instructionsFollowUpDate: "$t(shared.employerInstructions_followUpDate)",
     instructionsLabel:
       "Are you the right person to respond to this leave application?",
     submitButton: "Agree and submit",
@@ -1371,6 +1373,7 @@ const pages = {
       benefitTypeLabel: "Benefit type",
       caption:
         "Your employee is planning to use these benefits during their leave. Learn more about how paid leave works with <reductions-overview-link>other government and private benefit programs</reductions-overview-link>.",
+      commentInstructions: "$t(shared.employerInstructions_addComment)",
       dateRangeLabel: "Date range",
       detailsLabel: "Details",
       employerBenefitFrequencyValue_allAtOnce:
@@ -1389,6 +1392,7 @@ const pages = {
       employerBenefitType_shortTermDisability:
         "$t(shared.employerBenefitType_shortTermDisability)",
       header: "Employer benefits",
+      tableName: "Employer-sponsored benefit details",
     },
     employerDecision: {
       choiceApprove: "Approve",
@@ -1431,10 +1435,8 @@ const pages = {
       heading: "Do you have any reason to suspect this is fraud?",
     },
     instructionsAmendment:
-      "Please review the details of this application carefully. If anything seems incorrect, you can add an amendment within each section or include general comments at the end.",
-    instructionsComment:
-      "If you have not been notified of this, please include a comment at the end.",
-    instructionsFollowUpDate: "$t(shared.instructionsFollowUpDate)",
+      "Please review the details of this application carefully. If anything is incorrect or incomplete, you can add an amendment or include specific comments at the end.",
+    instructionsFollowUpDate: "$t(shared.employerInstructions_followUpDate)",
     leaveDetails: {
       applicationIdLabel: "Application ID",
       header: "Leave details",
@@ -1451,6 +1453,10 @@ const pages = {
     },
     leaveSchedule: {
       caption: "This is your employee’s expected leave schedule.",
+      caption_hasDocuments:
+        "This is your employee’s expected leave schedule. Download the attached documentation for more details.",
+      caption_intermittent_hasDocuments:
+        "Download the attached documentation for details about the employee’s intermittent leave schedule.",
       frequencyBasis_irregular: "Irregular over the next 6 months",
       frequencyBasis_months: "At least once a month",
       frequencyBasis_weeks: "At least once a week",
@@ -1472,6 +1478,7 @@ const pages = {
       tableHeader_dateRange: "Date range",
       tableHeader_details: "Details",
       tableHeader_leaveFrequency: "Leave frequency",
+      tableName: "Leave schedule details table",
       type_continuous: "$t(shared.claimDurationTypeContinuous)",
       type_intermittent: "$t(shared.claimDurationTypeIntermittent)",
       type_reducedSchedule: "$t(shared.claimDurationTypeReducedSchedule)",
@@ -1479,6 +1486,7 @@ const pages = {
     noneReported: "None reported",
     notApplicable: "-",
     previousLeaves: {
+      commentInstructions: "$t(shared.employerInstructions_addComment)",
       detailsLabel: "$t(shared.qualifyingReasonDetailsLabel)",
       explanation:
         "If your employee took any paid or unpaid leave for a qualifying reason since January 1, 2021, it may <calculate-reductions-link>affect their benefit amount</calculate-reductions-link>.",

@@ -7,6 +7,7 @@ import PropTypes from "prop-types";
 import ReviewHeading from "../ReviewHeading";
 import ReviewRow from "../ReviewRow";
 import Table from "../Table";
+import { Trans } from "react-i18next";
 import download from "downloadjs";
 import formatDateRange from "../../utils/formatDateRange";
 import { get } from "lodash";
@@ -42,14 +43,28 @@ const LeaveSchedule = ({ appLogic, claim }) => {
     (document) => document.document_type === DocumentType.medicalCertification
   );
 
+  const buildContext = () => {
+    const hasDocuments = !!medicalDocuments.length;
+    if (isIntermittent && hasDocuments) return "intermittent_hasDocuments";
+    if (!isIntermittent && hasDocuments) return "hasDocuments";
+  };
+
   return (
     <React.Fragment>
       <ReviewHeading level="2">
         {t("pages.employersClaimsReview.leaveSchedule.header")}
       </ReviewHeading>
       <Table className="width-full">
-        <caption className="text-normal">
-          <p>{t("pages.employersClaimsReview.leaveSchedule.caption")}</p>
+        <caption>
+          <p className="text-normal">
+            <Trans
+              i18nKey="pages.employersClaimsReview.leaveSchedule.caption"
+              tOptions={{
+                context: buildContext() || "",
+              }}
+            />
+          </p>
+          <p>{t("pages.employersClaimsReview.leaveSchedule.tableName")}</p>
         </caption>
         <thead>
           <tr>

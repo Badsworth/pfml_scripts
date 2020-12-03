@@ -156,7 +156,6 @@ export const Review = (props) => {
         />
       </Alert>
       <p>{t("pages.employersClaimsReview.instructionsAmendment")}</p>
-      <p>{t("pages.employersClaimsReview.instructionsComment")}</p>
       <p className="text-bold" aria-labelledby="employerIdentifierNumber">
         {t("pages.employersClaimsReview.employerIdentifierLabel")}
       </p>

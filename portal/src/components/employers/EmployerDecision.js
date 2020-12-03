@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from "react";
-import { Trans, useTranslation } from "react-i18next";
 import InputChoiceGroup from "../InputChoiceGroup";
 import PropTypes from "prop-types";
 import ReviewHeading from "../ReviewHeading";
+import { Trans } from "react-i18next";
 import routes from "../../routes";
 import usePreviousValue from "../../hooks/usePreviousValue";
+import { useTranslation } from "../../locales/i18n";
 
 const EmployerDecision = ({ fraud, onChange = () => {} }) => {
   const { t } = useTranslation();

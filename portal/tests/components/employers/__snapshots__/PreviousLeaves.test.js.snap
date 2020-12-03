@@ -106,5 +106,8 @@ exports[`PreviousLeaves renders the component 1`] = `
       />
     </tbody>
   </Table>
+  <p>
+    If something is incomplete, add a comment at the end of the page.
+  </p>
 </Fragment>
 `;

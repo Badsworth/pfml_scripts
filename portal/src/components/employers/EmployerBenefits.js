@@ -23,8 +23,8 @@ const EmployerBenefits = (props) => {
         {t("pages.employersClaimsReview.employerBenefits.header")}
       </ReviewHeading>
       <Table className="width-full">
-        <caption className="text-normal">
-          <p>
+        <caption>
+          <p className="text-normal">
             <Trans
               i18nKey="pages.employersClaimsReview.employerBenefits.caption"
               components={{
@@ -38,6 +38,7 @@ const EmployerBenefits = (props) => {
               }}
             />
           </p>
+          <p>{t("pages.employersClaimsReview.employerBenefits.tableName")}</p>
         </caption>
         <thead>
           <tr>
@@ -73,6 +74,9 @@ const EmployerBenefits = (props) => {
           )}
         </tbody>
       </Table>
+      <p>
+        {t("pages.employersClaimsReview.employerBenefits.commentInstructions")}
+      </p>
     </React.Fragment>
   );
 };
