@@ -1,11 +1,12 @@
 import Claim from "../../models/Claim";
 import Details from "../../components/Details";
 import InputChoiceGroup from "../../components/InputChoiceGroup";
-import Lead from "../../components/Lead";
 import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
+import { Trans } from "react-i18next";
 import pick from "lodash/pick";
+import routes from "../../routes";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "../../locales/i18n";
@@ -26,9 +27,6 @@ export const PreviousLeaves = (props) => {
     appErrors: appLogic.appErrors,
     formState,
     updateFields,
-  });
-  const hintList = t("pages.claimsPreviousLeaves.hintList", {
-    returnObjects: true,
   });
 
   return (
@@ -55,11 +53,24 @@ export const PreviousLeaves = (props) => {
         hint={
           <Details label={t("pages.claimsPreviousLeaves.detailsLabel")}>
             <React.Fragment>
-              <Lead>{t("pages.claimsPreviousLeaves.hintHeader")}</Lead>
+              <p>{t("pages.claimsPreviousLeaves.hintHeader")}</p>
               <ul className="usa-list">
-                {hintList.map((listItem, index) => (
-                  <li key={index}>{listItem}</li>
-                ))}
+                <Trans
+                  i18nKey="pages.claimsPreviousLeaves.hintList"
+                  components={{
+                    "mass-benefits-guide-serious-health-condition-link": (
+                      <a
+                        target="_blank"
+                        rel="noopener"
+                        href={
+                          routes.external.massgov
+                            .benefitsGuide_seriousHealthCondition
+                        }
+                      />
+                    ),
+                    li: <li />,
+                  }}
+                />
               </ul>
             </React.Fragment>
           </Details>

@@ -1,6 +1,7 @@
 import { MockClaimBuilder, renderWithAppLogic } from "../../test-utils";
 import PreviousLeaves from "../../../src/pages/applications/previous-leaves";
 import { act } from "react-dom/test-utils";
+import { shallow } from "enzyme";
 
 jest.mock("../../../src/hooks/useAppLogic");
 
@@ -16,7 +17,10 @@ describe("PreviousLeaves", () => {
   });
 
   it("renders the page", () => {
+    const hintWrapper = shallow(wrapper.find("InputChoiceGroup").prop("hint"));
+
     expect(wrapper).toMatchSnapshot();
+    expect(hintWrapper.find("Trans").dive()).toMatchSnapshot();
   });
 
   describe("when user clicks continue", () => {

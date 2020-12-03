@@ -25,27 +25,25 @@ exports[`PreviousLeaves renders the page 1`] = `
         label="What counts as a qualifying reason?"
       >
         <React.Fragment>
-          <Lead>
+          <p>
             The following are qualifying reasons for taking paid or unpaid leave:
-          </Lead>
+          </p>
           <ul
             className="usa-list"
           >
-            <li>
-              You couldn’t work due to an illness, injury, or pregnancy.
-            </li>
-            <li>
-              You bonded with your child after birth or placement.
-            </li>
-            <li>
-              You needed to manage family affairs while a family member is on active duty in the armed forces.
-            </li>
-            <li>
-              You needed to care for a family member who serves in the armed forces.
-            </li>
-            <li>
-              You needed to care for a sick family member.
-            </li>
+            <Trans
+              components={
+                Object {
+                  "li": <li />,
+                  "mass-benefits-guide-serious-health-condition-link": <a
+                    href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-guide#what-is-a-serious-health-condition?-"
+                    rel="noopener"
+                    target="_blank"
+                  />,
+                }
+              }
+              i18nKey="pages.claimsPreviousLeaves.hintList"
+            />
           </ul>
         </React.Fragment>
       </Details>
@@ -57,4 +55,52 @@ exports[`PreviousLeaves renders the page 1`] = `
     value=""
   />
 </QuestionPage>
+`;
+
+exports[`PreviousLeaves renders the page 2`] = `
+Array [
+  <li
+    key="0"
+  >
+    You had a 
+    <a
+      href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-guide#what-is-a-serious-health-condition?-"
+      key="1"
+      rel="noopener"
+      target="_blank"
+    >
+      serious health condition
+    </a>
+    , including illness, injury, or pregnancy. If you were sick, you were out of work for at least 3 days and needed continuing care from your healthcare provider or needed inpatient care.
+  </li>,
+  <li
+    key="1"
+  >
+    You bonded with your child after birth or placement.
+  </li>,
+  <li
+    key="2"
+  >
+    You needed to manage family affairs while a family member is on active duty in the armed forces.
+  </li>,
+  <li
+    key="3"
+  >
+    You needed to care for a family member who serves in the armed forces.
+  </li>,
+  <li
+    key="4"
+  >
+    You needed to care for a family member with a 
+    <a
+      href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-guide#what-is-a-serious-health-condition?-"
+      key="1"
+      rel="noopener"
+      target="_blank"
+    >
+      serious health condition
+    </a>
+    .
+  </li>,
+]
 `;

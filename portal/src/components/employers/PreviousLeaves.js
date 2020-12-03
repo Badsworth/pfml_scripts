@@ -51,7 +51,7 @@ const PreviousLeaves = (props) => {
             <Trans
               i18nKey="pages.employersClaimsReview.previousLeaves.qualifyingReason_manageHealth"
               components={{
-                "mass-benefits-guide-serious-health-condition": (
+                "mass-benefits-guide-serious-health-condition-link": (
                   <a
                     target="_blank"
                     rel="noopener"
@@ -83,7 +83,7 @@ const PreviousLeaves = (props) => {
             <Trans
               i18nKey="pages.employersClaimsReview.previousLeaves.qualifyingReason_careForFamilyMedical"
               components={{
-                "mass-benefits-guide-serious-health-condition": (
+                "mass-benefits-guide-serious-health-condition-link": (
                   <a
                     target="_blank"
                     rel="noopener"

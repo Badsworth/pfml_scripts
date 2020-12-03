@@ -111,7 +111,7 @@ export const LeaveReason = (props) => {
           <Trans
             i18nKey="pages.claimsLeaveReason.alertBody"
             components={{
-              "mass-benefits-guide-serious-health-condition": (
+              "mass-benefits-guide-serious-health-condition-link": (
                 <a
                   target="_blank"
                   rel="noopener"

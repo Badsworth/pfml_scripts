@@ -796,7 +796,7 @@ const pages = {
     activeDutyFamilyLeaveLabel:
       "I need to manage family affairs while a family member is on active duty in the armed forces.",
     alertBody:
-      "<p>Starting January$t(chars.nbsp)1, 2021, you can also apply for the following paid$t(chars.nbsp)benefits:</p><ul><li>Medical leave to manage your own <mass-benefits-guide-serious-health-condition>serious health$t(chars.nbsp)condition</mass-benefits-guide-serious-health-condition></li><li>Family leave to manage family affairs while a family member is on active duty$t(chars.nbsp)overseas</li><li>Family leave to care for a family member who serves in the armed$t(chars.nbsp)forces</li></ul>",
+      "<p>Starting January$t(chars.nbsp)1, 2021, you can also apply for the following paid$t(chars.nbsp)benefits:</p><ul><li>Medical leave to manage your own <mass-benefits-guide-serious-health-condition-link>serious health$t(chars.nbsp)condition</mass-benefits-guide-serious-health-condition-link></li><li>Family leave to manage family affairs while a family member is on active duty$t(chars.nbsp)overseas</li><li>Family leave to care for a family member who serves in the armed$t(chars.nbsp)forces</li></ul>",
     bondingLeaveHint: "Family leave",
     bondingLeaveLabel:
       "I need to bond with my child after birth, adoption, or foster placement.",
@@ -921,13 +921,8 @@ const pages = {
     detailsLabel: "$t(shared.qualifyingReasonDetailsLabel)",
     hintHeader:
       "The following are qualifying reasons for taking paid or unpaid leave:",
-    hintList: [
-      "You couldn’t work due to an illness, injury, or pregnancy.",
-      "You bonded with your child after birth or placement.",
-      "You needed to manage family affairs while a family member is on active duty in the armed forces.",
-      "You needed to care for a family member who serves in the armed forces.",
-      "You needed to care for a sick family member.",
-    ],
+    hintList:
+      "<li>You had a <mass-benefits-guide-serious-health-condition-link>serious health condition</mass-benefits-guide-serious-health-condition-link>, including illness, injury, or pregnancy. If you were sick, you were out of work for at least 3 days and needed continuing care from your healthcare provider or needed inpatient care.</li><li>You bonded with your child after birth or placement.</li><li>You needed to manage family affairs while a family member is on active duty in the armed forces.</li><li>You needed to care for a family member who serves in the armed forces.</li><li>You needed to care for a family member with a <mass-benefits-guide-serious-health-condition-link>serious health condition</mass-benefits-guide-serious-health-condition-link>.</li>",
     sectionLabel:
       "Have you taken paid or unpaid leave since January 1, 2021 for a qualifying reason?",
     title: "$t(shared.claimsOtherLeaveTitle)",
@@ -1495,11 +1490,11 @@ const pages = {
       qualifyingReason_bondWithChild:
         "Bond with a child after birth or placement",
       qualifyingReason_careForFamilyMedical:
-        "Care for a family member with a <mass-benefits-guide-serious-health-condition>serious health condition</mass-benefits-guide-serious-health-condition>",
+        "Care for a family member with a <mass-benefits-guide-serious-health-condition-link>serious health condition</mass-benefits-guide-serious-health-condition-link>",
       qualifyingReason_careForFamilyMilitary:
         "Care for a family member who serves in the armed forces",
       qualifyingReason_manageHealth:
-        "Manage a <mass-benefits-guide-serious-health-condition>serious health condition</mass-benefits-guide-serious-health-condition>, including illness, injury, or pregnancy",
+        "Manage a <mass-benefits-guide-serious-health-condition-link>serious health condition</mass-benefits-guide-serious-health-condition-link>, including illness, injury, or pregnancy",
       tableHeader_dateRange: "Date range",
     },
     submitButton: "Submit",
