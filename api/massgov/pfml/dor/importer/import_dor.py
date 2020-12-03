@@ -192,12 +192,7 @@ def process_import_batches(
 
 class EmployeeWriter(object):
     def __init__(
-        self,
-        line_buffer_length,
-        db_session,
-        account_key_to_employer_id_map,
-        report,
-        report_log_entry,
+        self, line_buffer_length, db_session, report, report_log_entry,
     ):
         self.line_count = 0
         self.line_buffer_length = line_buffer_length
@@ -208,7 +203,6 @@ class EmployeeWriter(object):
         self.parsed_employer_quarterly_info_count = 0
         self.parsed_employer_quarter_exception_count = 0
         self.db_session = db_session
-        self.account_key_to_employer_id_map = account_key_to_employer_id_map
         self.report = report
         self.report_log_entry = report_log_entry
         self.employee_ssns_created_in_current_import_run = {}
@@ -261,7 +255,6 @@ class EmployeeWriter(object):
         if len(employers_quarterly_info) > 0:
             import_employer_pfml_contributions(
                 self.db_session,
-                self.account_key_to_employer_id_map,
                 employers_quarterly_info,
                 self.report,
                 self.report_log_entry.import_log_id,
@@ -270,7 +263,6 @@ class EmployeeWriter(object):
         if len(employees_info) > 0:
             import_employees_and_wage_data(
                 self.db_session,
-                self.account_key_to_employer_id_map,
                 employees_info,
                 self.employee_ssns_created_in_current_import_run,
                 self.report,
@@ -462,25 +454,28 @@ def process_daily_import(
     db_session.refresh(report_log_entry)
 
     try:
-        employers = parse_employer_file(employer_file_path, decrypter, report)
+        parsed_employers_count = 0
 
-        parsed_employers_count = len(employers)
+        # If an employer file is given, parse and import
+        if employer_file_path:
+            employers = parse_employer_file(employer_file_path, decrypter, report)
 
-        account_key_to_employer_id_map = import_employers(
-            db_session, employers, report, report_log_entry.import_log_id
-        )
+            parsed_employers_count = len(employers)
 
-        writer = EmployeeWriter(
-            line_buffer_length=EMPLOYEE_LINE_LIMIT,
-            db_session=db_session,
-            account_key_to_employer_id_map=account_key_to_employer_id_map,
-            report=report,
-            report_log_entry=report_log_entry,
-        )
-        decrypter.set_on_data(writer)
-        file_stream = file_util.open_stream(employee_file_path, "rb")
-        decrypter.decrypt_stream(file_stream)
-        parsed_employees_info_count = writer.parsed_employees_info_count
+            import_employers(db_session, employers, report, report_log_entry.import_log_id)
+
+        parsed_employees_info_count = 0
+        if employee_file_path:
+            writer = EmployeeWriter(
+                line_buffer_length=EMPLOYEE_LINE_LIMIT,
+                db_session=db_session,
+                report=report,
+                report_log_entry=report_log_entry,
+            )
+            decrypter.set_on_data(writer)
+            file_stream = file_util.open_stream(employee_file_path, "rb")
+            decrypter.decrypt_stream(file_stream)
+            parsed_employees_info_count = writer.parsed_employees_info_count
 
         # finalize report
         report.parsed_employers_count = parsed_employers_count
@@ -496,8 +491,12 @@ def process_daily_import(
         )
         logger.info("Sample Employer line lengths: %s", repr(report.sample_employers_line_lengths))
 
-        # move file to processed folder
-        # move_file_to_processed(bucket, file_for_import) # TODO turn this on with invoke flag
+        # move file to processed folder unless explicitly told not to.
+        if os.getenv("RETAIN_RECEIVED_FILES") is None and file_util.is_s3_path(employer_file_path):
+            move_file_to_processed(employer_file_path, s3)
+
+        if os.getenv("RETAIN_RECEIVED_FILES") is None and file_util.is_s3_path(employee_file_path):
+            move_file_to_processed(employee_file_path, s3)
 
     except Exception as e:
         handle_import_exception(e, db_session, report_log_entry, report)
@@ -667,11 +666,6 @@ def import_employers(db_session, employers, report, import_log_entry_id):
         len(employer_address_relationship_models_to_create),
     )
 
-    # 5 - Create map of new employer account keys
-    account_key_to_employer_id_map = {}
-    for e in employer_models_to_create:
-        account_key_to_employer_id_map[e.account_key] = fein_to_new_employer_id[e.employer_fein]
-
     # 6 - Update existing employers
     found_employer_info_to_update_list = []
     found_employer_info_to_not_update_list = []
@@ -717,9 +711,6 @@ def import_employers(db_session, employers, report, import_log_entry_id):
             db_session, existing_employer_model, employer_info, import_log_entry_id
         )
 
-        account_key = employer_info["account_key"]
-        account_key_to_employer_id_map[account_key] = existing_employer_model.employer_id
-
     if len(found_employer_info_to_update_list) > 0:
         logger.info(
             "Batch committing employer updates: %i", len(found_employer_info_to_update_list)
@@ -730,13 +721,6 @@ def import_employers(db_session, employers, report, import_log_entry_id):
     logger.info("Done - Updating employers: %i", len(found_employer_info_to_update_list))
 
     # 7 - Track and report not updated employers
-    for employer_info in found_employer_info_to_not_update_list:
-        existing_employer_reference_model = fein_to_existing_employer_reference_models[
-            employer_info["fein"]
-        ]
-        account_key = employer_info["account_key"]
-        account_key_to_employer_id_map[account_key] = existing_employer_reference_model.employer_id
-
     report.unmodified_employers_count += len(found_employer_info_to_not_update_list)
     logger.info("Employers not updated: %i", len(found_employer_info_to_not_update_list))
 
@@ -750,13 +734,10 @@ def import_employers(db_session, employers, report, import_log_entry_id):
         },
     )
 
-    return account_key_to_employer_id_map
-
 
 def import_employees(
     db_session,
     employee_info_list,
-    account_key_to_employer_id_map,
     employee_ssns_to_id_created_in_current_import_run,
     ssn_to_existing_employee_model,
     report,
@@ -904,12 +885,21 @@ def get_wage_composite_key(employer_id, employee_id, filing_period):
 def import_wage_data(
     db_session,
     wage_info_list,
-    account_key_to_employer_id_map,
     employee_ssns_to_id_created_in_current_import_run,
     ssn_to_existing_employee_model,
     report,
     import_log_entry_id,
 ):
+
+    account_key_to_employer_id_map = {}
+    account_keys = []
+    for employee_info in wage_info_list:
+        account_keys.append(employee_info["account_key"])
+
+    employer_models = dor_persistence_util.get_employers_account_key(db_session, account_keys)
+    for employer in employer_models:
+        account_key_to_employer_id_map[employer.account_key] = employer.employer_id
+
     # 1 - Create new wage data
     # For employees just created in the current run, we can avoid checking for existing wage rows
     wage_info_list_for_creation = list(
@@ -1091,12 +1081,17 @@ def import_wage_data(
 
 
 def import_employer_pfml_contributions(
-    db_session,
-    account_key_to_employer_id_map,
-    employer_quarterly_info_list,
-    report,
-    import_log_entry_id,
+    db_session, employer_quarterly_info_list, report, import_log_entry_id,
 ):
+    account_key_to_employer_id_map = {}
+    account_keys = []
+    for employee_info in employer_quarterly_info_list:
+        account_keys.append(employee_info["account_key"])
+
+    employer_models = dor_persistence_util.get_employers_account_key(db_session, account_keys)
+    for employer in employer_models:
+        account_key_to_employer_id_map[employer.account_key] = employer.employer_id
+
     employer_ids_to_check_in_db = []
     for employer_quarterly_info in employer_quarterly_info_list:
         found_employer_id = account_key_to_employer_id_map.get(
@@ -1209,7 +1204,6 @@ def import_employer_pfml_contributions(
 
 def import_employees_and_wage_data(
     db_session,
-    account_key_to_employer_id_map,
     employee_and_wage_info_list,
     employee_ssns_created_in_current_import_run,
     report,
@@ -1247,7 +1241,6 @@ def import_employees_and_wage_data(
     import_employees(
         db_session,
         employee_and_wage_info_list,
-        account_key_to_employer_id_map,
         employee_ssns_created_in_current_import_run,
         ssn_to_existing_employee_model,
         report,
@@ -1258,7 +1251,6 @@ def import_employees_and_wage_data(
     import_wage_data(
         db_session,
         employee_and_wage_info_list,
-        account_key_to_employer_id_map,
         employee_ssns_created_in_current_import_run,
         ssn_to_existing_employee_model,
         report,
@@ -1349,20 +1341,19 @@ def parse_employer_file(employer_file_path, decrypter, report):
     return employers
 
 
-def move_file_to_processed(bucket, file_to_copy):
+def move_file_to_processed(file_path, s3_client):
     """Move file from recieved to processed folder"""
-    # TODO make this a move instead of copy in real implementation
-    bucket_name = bucket.name
-    copy_source = "/" + bucket_name + "/" + file_to_copy
+    file_name = file_util.get_file_name(file_path)
+    file_key = file_util.get_s3_file_key(file_path)
 
-    file_name = get_file_name(file_to_copy)
-    copy_destination = (
-        PROCESSED_FOLDER + file_name + "_" + datetime.now().strftime("%Y%m%d%H%M%S") + ".txt"
-    )
+    bucket_name = file_util.get_s3_bucket(file_path)
 
-    s3.copy_object(
-        Bucket=bucket_name, CopySource=copy_source, Key=copy_destination,
-    )
+    logger.info("Moving file to processed folder. Bucket: %s, file: %s", bucket_name, file_key)
+
+    file_dest_key = PROCESSED_FOLDER + file_name
+
+    s3_client.copy({"Bucket": bucket_name, "Key": file_key}, bucket_name, file_dest_key)
+    s3_client.delete_object(Bucket=bucket_name, Key=file_key)
 
 
 def get_file_name(s3_file_key):

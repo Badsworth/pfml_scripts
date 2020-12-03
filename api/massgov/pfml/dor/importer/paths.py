@@ -4,7 +4,7 @@
 
 import re
 from dataclasses import dataclass
-from typing import Dict, List
+from typing import Any, Dict, Iterator, List, Tuple
 
 import massgov.pfml.util.files
 import massgov.pfml.util.logging
@@ -24,27 +24,66 @@ class ImportBatch:
 
 
 def get_files_to_process(path: str) -> List[ImportBatch]:
-    files_by_date = get_files_for_import_grouped_by_date(path)
-    file_date_keys = sorted(files_by_date.keys())
-
+    employer_files, employee_files = get_files_for_import(path)
     import_batches: List[ImportBatch] = []
 
-    for file_date_key in file_date_keys:
-        files = files_by_date[file_date_key]
+    for employer_file in employer_files:
+        match = re.match(r"(DORDFML.*_)(\d+)", employer_file)
 
-        if EMPLOYER_FILE_PREFIX not in files or EMPLOYEE_FILE_PREFIX not in files:
-            logger.warning("incomplete files for %s: %s", file_date_key, files)
-            continue
+        if match is not None:
+            file_date = match[2]
 
-        import_batches.append(
-            ImportBatch(
-                upload_date=file_date_key,
-                employer_file=files[EMPLOYER_FILE_PREFIX],
-                employee_file=files[EMPLOYEE_FILE_PREFIX],
+            import_batches.append(
+                ImportBatch(
+                    upload_date=file_date,
+                    employer_file="{}/{}".format(path, employer_file),
+                    employee_file="",
+                )
             )
-        )
+
+    for employee_file in employee_files:
+        match = re.match(r"(DORDFML.*_)(\d+)", employee_file)
+
+        if match is not None:
+            file_date = match[2]
+
+            import_batches.append(
+                ImportBatch(
+                    upload_date=file_date,
+                    employer_file="",
+                    employee_file="{}/{}".format(path, employee_file),
+                )
+            )
 
     return import_batches
+
+
+def get_files_for_import(path: str) -> Tuple[Iterator[Any], Iterator[Any]]:
+    files_for_import = massgov.pfml.util.files.list_files(str(path))
+    files_for_import.sort()
+
+    def employer_filter(filename):
+        match = re.match(r"(DORDFML.*_)(\d+)", filename)
+
+        if not match:
+            return False
+
+        prefix = match[1]
+        return prefix == EMPLOYER_FILE_PREFIX
+
+    def employee_filter(filename):
+        match = re.match(r"(DORDFML.*_)(\d+)", filename)
+
+        if not match:
+            return False
+
+        prefix = match[1]
+        return prefix == EMPLOYEE_FILE_PREFIX
+
+    employer_files = filter(employer_filter, files_for_import)
+    employee_files = filter(employee_filter, files_for_import)
+
+    return employer_files, employee_files
 
 
 def get_files_for_import_grouped_by_date(path: str,) -> Dict[str, Dict[str, str]]:

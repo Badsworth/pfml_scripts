@@ -17,6 +17,14 @@ def is_s3_path(path):
     return path.startswith("s3://")
 
 
+def get_s3_bucket(path):
+    return urlparse(path).hostname
+
+
+def get_s3_file_key(path):
+    return urlparse(path).path[1:]
+
+
 def get_file_name(path: str) -> str:
     # TODO when the DOR importer is updated to use the file system in upcoming tickets,
     # this function should replace get_file_name() that exists there

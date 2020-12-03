@@ -2,6 +2,8 @@ import pathlib
 import tempfile
 from datetime import datetime
 
+import boto3
+import botocore
 import pytest
 from sqlalchemy.exc import SQLAlchemyError
 
@@ -11,6 +13,11 @@ import massgov.pfml.dor.importer.paths
 import massgov.pfml.dor.mock.generate as generator
 import massgov.pfml.util.batch.log
 from massgov.pfml.db.models.employees import AddressType, Country, Employee, Employer, GeoState
+from massgov.pfml.dor.importer.import_dor import (
+    PROCESSED_FOLDER,
+    RECEIVED_FOLDER,
+    move_file_to_processed,
+)
 from massgov.pfml.util.encryption import GpgCrypt, Utf8Crypt
 
 from . import dor_test_data as test_data
@@ -66,13 +73,16 @@ def test_employer_import(test_db_session, dor_employer_lookups):
     report, report_log_entry = get_new_import_report(test_db_session)
     assert report_log_entry.import_log_id is not None
 
-    account_key_to_employer_id_map = import_dor.import_employers(
-        test_db_session, employers, report, report_log_entry.import_log_id
-    )
+    import_dor.import_employers(test_db_session, employers, report, report_log_entry.import_log_id)
 
     # confirm expected columns are persisted
-    employer_id = account_key_to_employer_id_map[employer_payload["account_key"]]
-    persisted_employer = test_db_session.query(Employer).get(employer_id)
+    persisted_employer = (
+        test_db_session.query(Employer)
+        .filter(Employer.account_key == employer_payload["account_key"])
+        .one_or_none()
+    )
+    employer_id = persisted_employer.employer_id
+
     assert persisted_employer is not None
 
     validate_employer_persistence(
@@ -104,10 +114,15 @@ def test_employer_update(test_db_session, dor_employer_lookups):
     new_employer_payload = test_data.get_new_employer()
     report, report_log_entry = get_new_import_report(test_db_session)
 
-    account_key_to_employer_id_map = import_dor.import_employers(
+    import_dor.import_employers(
         test_db_session, [new_employer_payload], report, report_log_entry.import_log_id
     )
-    employer_id = account_key_to_employer_id_map[new_employer_payload["account_key"]]
+    persisted_employer = (
+        test_db_session.query(Employer)
+        .filter(Employer.account_key == new_employer_payload["account_key"])
+        .one_or_none()
+    )
+    employer_id = persisted_employer.employer_id
 
     assert report.created_employers_count == 1
     assert report.updated_employers_count == 0
@@ -168,13 +183,18 @@ def test_employer_create_and_update_in_same_run(test_db_session):
     updated_employer_payload = test_data.get_updated_employer()
     report, report_log_entry = get_new_import_report(test_db_session)
 
-    account_key_to_employer_id_map = import_dor.import_employers(
+    import_dor.import_employers(
         test_db_session,
         [new_employer_payload, updated_employer_payload],
         report,
         report_log_entry.import_log_id,
     )
-    employer_id = account_key_to_employer_id_map[new_employer_payload["account_key"]]
+    persisted_employer = (
+        test_db_session.query(Employer)
+        .filter(Employer.account_key == new_employer_payload["account_key"])
+        .one_or_none()
+    )
+    employer_id = persisted_employer.employer_id
 
     assert report.created_employers_count == 1
     assert report.updated_employers_count == 1
@@ -195,7 +215,7 @@ def test_employer_address(test_db_session):
 
     report, report_log_entry = get_new_import_report(test_db_session)
 
-    account_key_to_employer_id_map = import_dor.import_employers(
+    import_dor.import_employers(
         test_db_session,
         [employer_international_address, employer_invalid_country],
         report,
@@ -204,10 +224,14 @@ def test_employer_address(test_db_session):
 
     assert report.created_employers_count == 2
 
+    invalid_country_employer = (
+        test_db_session.query(Employer)
+        .filter(Employer.account_key == employer_invalid_country["account_key"])
+        .one_or_none()
+    )
+    invalid_country_employer_id = invalid_country_employer.employer_id
+
     # confirm invald employer has a NULL country id
-    invalid_country_employer_id = account_key_to_employer_id_map[
-        employer_invalid_country["account_key"]
-    ]
     persisted_employer_address_invalid_country = dor_persistence_util.get_employer_address(
         test_db_session, invalid_country_employer_id
     )
@@ -217,7 +241,13 @@ def test_employer_address(test_db_session):
     assert persisted_address_invalid_country.country_id is None
 
     # confirm expected columns are now updated
-    employer_id = account_key_to_employer_id_map[employer_international_address["account_key"]]
+    invalid_country_employer = (
+        test_db_session.query(Employer)
+        .filter(Employer.account_key == employer_international_address["account_key"])
+        .one_or_none()
+    )
+    employer_id = invalid_country_employer.employer_id
+
     persisted_employer_address = dor_persistence_util.get_employer_address(
         test_db_session, employer_id
     )
@@ -251,9 +281,7 @@ def test_employee_wage_data_create(test_db_session, dor_employer_lookups):
     employer_payload = test_data.get_new_employer()
     account_key = employer_payload["account_key"]
     employers = [employer_payload]
-    account_key_to_employer_id_map = import_dor.import_employers(
-        test_db_session, employers, report, report_log_entry.import_log_id
-    )
+    import_dor.import_employers(test_db_session, employers, report, report_log_entry.import_log_id)
 
     # perform employee and wage import
     employee_wage_data_payload = test_data.get_new_employee_wage_data()
@@ -261,7 +289,6 @@ def test_employee_wage_data_create(test_db_session, dor_employer_lookups):
     employee_id_by_ssn = {}
     import_dor.import_employees_and_wage_data(
         test_db_session,
-        account_key_to_employer_id_map,
         [employee_wage_data_payload],
         employee_id_by_ssn,
         report,
@@ -276,11 +303,13 @@ def test_employee_wage_data_create(test_db_session, dor_employer_lookups):
         employee_wage_data_payload, persisted_employee, report_log_entry.import_log_id
     )
 
+    persisted_employer = (
+        test_db_session.query(Employer).filter(Employer.account_key == account_key).one_or_none()
+    )
+    employer_id = persisted_employer.employer_id
+
     persisted_wage_info = dor_persistence_util.get_wages_and_contributions_by_employee_id_and_filling_period(
-        test_db_session,
-        employee_id,
-        account_key_to_employer_id_map[account_key],
-        employee_wage_data_payload["filing_period"],
+        test_db_session, employee_id, employer_id, employee_wage_data_payload["filing_period"],
     )
 
     assert persisted_wage_info is not None
@@ -304,9 +333,7 @@ def test_employee_wage_data_update(test_db_session, dor_employer_lookups):
     employer_payload = test_data.get_new_employer()
     account_key = employer_payload["account_key"]
     employers = [employer_payload]
-    account_key_to_employer_id_map = import_dor.import_employers(
-        test_db_session, employers, report, report_log_entry.import_log_id
-    )
+    import_dor.import_employers(test_db_session, employers, report, report_log_entry.import_log_id)
 
     # perform initial employee and wage import
     employee_wage_data_payload = test_data.get_new_employee_wage_data()
@@ -314,7 +341,6 @@ def test_employee_wage_data_update(test_db_session, dor_employer_lookups):
     employee_id_by_ssn = {}
     import_dor.import_employees_and_wage_data(
         test_db_session,
-        account_key_to_employer_id_map,
         [employee_wage_data_payload],
         employee_id_by_ssn,
         report,
@@ -333,7 +359,6 @@ def test_employee_wage_data_update(test_db_session, dor_employer_lookups):
 
     import_dor.import_employees_and_wage_data(
         test_db_session,
-        account_key_to_employer_id_map,
         [employee_wage_data_payload],
         EMPTY_SSN_TO_EMPLOYEE_ID_MAP,
         report2,
@@ -360,7 +385,6 @@ def test_employee_wage_data_update(test_db_session, dor_employer_lookups):
     updated_employee_wage_data_payload = test_data.get_updated_employee_wage_data()
     import_dor.import_employees_and_wage_data(
         test_db_session,
-        account_key_to_employer_id_map,
         [updated_employee_wage_data_payload],
         EMPTY_SSN_TO_EMPLOYEE_ID_MAP,
         report3,
@@ -374,10 +398,15 @@ def test_employee_wage_data_update(test_db_session, dor_employer_lookups):
         updated_employee_wage_data_payload, persisted_employee, report_log_entry3.import_log_id
     )
 
+    persisted_employer = (
+        test_db_session.query(Employer).filter(Employer.account_key == account_key).one_or_none()
+    )
+    employer_id = persisted_employer.employer_id
+
     persisted_wage_info = dor_persistence_util.get_wages_and_contributions_by_employee_id_and_filling_period(
         test_db_session,
         employee_id,
-        account_key_to_employer_id_map[account_key],
+        employer_id,
         updated_employee_wage_data_payload["filing_period"],
     )
 
@@ -486,22 +515,25 @@ def test_e2e_parse_and_persist(test_db_session, dor_employer_lookups):
     # import
     import_batches = [
         massgov.pfml.dor.importer.paths.ImportBatch(
-            upload_date="20200805",
-            employer_file=employer_file_path,
-            employee_file=employee_file_path,
-        )
+            upload_date="20200805", employer_file=employer_file_path, employee_file="",
+        ),
+        massgov.pfml.dor.importer.paths.ImportBatch(
+            upload_date="20200805", employer_file="", employee_file=employee_file_path,
+        ),
     ]
 
     reports = import_dor.process_import_batches(
         import_batches=import_batches, decrypt_files=False, optional_db_session=test_db_session
     )
 
-    report = reports[0]
-    assert report.created_employers_count == employer_count
-    assert report.created_employees_count == employee_count
-    assert report.created_wages_and_contributions_count == wages_contributions_count
+    report_one = reports[0]
+    assert report_one.created_employers_count == employer_count
 
-    assert report.created_employer_quarters_count == len(employee_a_lines)
+    report_two = reports[1]
+    assert report_two.created_employees_count == employee_count
+    assert report_two.created_wages_and_contributions_count == wages_contributions_count
+
+    assert report_two.created_employer_quarters_count == len(employee_a_lines)
 
 
 @pytest.mark.timeout(25)
@@ -540,6 +572,31 @@ def test_get_discreet_db_exception_message():
     discreet_message = import_dor.get_discreet_db_exception_message(exception)
     assert "123456789" not in discreet_message
     assert expected_discreet_message == discreet_message
+
+
+def test_move_file_to_processed(mock_s3_bucket):
+    file_name = "test.txt"
+
+    key = "{}{}".format(RECEIVED_FOLDER, file_name)
+    moved_key = "{}{}".format(PROCESSED_FOLDER, file_name)
+    full_path = "s3://{}/{}".format(mock_s3_bucket, key)
+
+    s3 = boto3.client("s3")
+    s3.put_object(Bucket=mock_s3_bucket, Key=key, Body="line 1 text\nline 2 text\nline 3 text")
+
+    should_exist_1 = s3.head_object(Bucket=mock_s3_bucket, Key=key)
+    assert should_exist_1 is not None
+
+    move_file_to_processed(full_path, s3)
+
+    try:
+        s3.head_object(Bucket=mock_s3_bucket, Key=key)
+        raise AssertionError("This file should have been deleted.")
+    except botocore.exceptions.ClientError:
+        """No Op"""
+
+    should_exist_1 = s3.head_object(Bucket=mock_s3_bucket, Key=moved_key)
+    assert should_exist_1 is not None
 
 
 def get_temp_file_path():

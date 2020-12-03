@@ -370,6 +370,16 @@ def get_all_employers_fein(db_session):
     return employer_rows
 
 
+def get_employers_account_key(db_session, account_keys):
+    employer_rows = (
+        db_session.query(Employer)
+        .filter(Employer.account_key.in_(account_keys))
+        .with_entities(Employer.employer_id, Employer.account_key, Employer.dor_updated_date)
+        .all()
+    )
+    return employer_rows
+
+
 def get_employer_by_fein(db_session, fein):
     employer_row = db_session.query(Employer).filter(Employer.employer_fein == fein).one_or_none()
     return employer_row
