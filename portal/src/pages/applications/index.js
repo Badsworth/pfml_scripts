@@ -13,7 +13,7 @@ import withClaims from "../../hoc/withClaims";
 /**
  * List of all applications associated with the authenticated user
  */
-const Applications = (props) => {
+export const Index = (props) => {
   const { appLogic, claims, query } = props;
   const { t } = useTranslation();
 
@@ -83,7 +83,7 @@ const Applications = (props) => {
   );
 };
 
-Applications.propTypes = {
+Index.propTypes = {
   appLogic: PropTypes.object.isRequired,
   claims: PropTypes.instanceOf(ClaimCollection).isRequired,
   query: PropTypes.shape({
@@ -91,4 +91,4 @@ Applications.propTypes = {
   }),
 };
 
-export default withClaims(Applications);
+export default withClaims(Index);
