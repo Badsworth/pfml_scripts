@@ -932,7 +932,20 @@ const pages = {
   claimsPreviousLeavesDetails: {
     addButton: "Add another leave",
     cardHeadingPrefix: "$t(shared.previousLeaveEntryPrefix)",
+    currentEmployerChoice_no: "$t(shared.choiceNo)",
+    currentEmployerChoice_yes: "$t(shared.choiceYes)",
+    currentEmployerLabel:
+      "Did you take leave from this employer ({{employer_fein}})?",
     endDateLabel: "When did your leave end?",
+    leaveReasonChoice_activeDutyFamily:
+      "Managing family affairs while a family member was on active duty in the armed forces",
+    leaveReasonChoice_bonding: "Bonding with my child after birth or placement",
+    leaveReasonChoice_care: "Caring for a family member",
+    leaveReasonChoice_medical: "An illness or injury",
+    leaveReasonChoice_pregnancy: "Pregnancy",
+    leaveReasonChoice_serviceMemberFamily:
+      "Caring for a family member who serves in the armed forces",
+    leaveReasonLabel: "What was the qualifying reason for your leave?",
     removeButton: "Remove leave",
     sectionLabel: "Tell us about previous paid or unpaid leave",
     startDateLabel: "When did your leave begin?",

@@ -23,7 +23,11 @@ describe("PreviousLeavesDetails", () => {
 
   describe("when the user's claim has previous leaves", () => {
     beforeEach(() => {
-      claim = new MockClaimBuilder().continuous().previousLeave().create();
+      claim = new MockClaimBuilder()
+        .employed()
+        .continuous()
+        .previousLeave()
+        .create();
 
       ({ appLogic, wrapper } = renderWithAppLogic(PreviousLeaveDetails, {
         claimAttrs: claim,
@@ -86,7 +90,7 @@ describe("PreviousLeavesDetails", () => {
 
     describe("when the user's claim does not have previous leaves", () => {
       beforeEach(() => {
-        claim = new MockClaimBuilder().continuous().create();
+        claim = new MockClaimBuilder().employed().continuous().create();
 
         ({ appLogic, wrapper } = renderWithAppLogic(PreviousLeaveDetails, {
           claimAttrs: claim,
@@ -115,6 +119,8 @@ describe("PreviousLeavesDetails", () => {
 
         const wrapper = shallow(
           <PreviousLeaveCard
+            employer_fein="12-3456789"
+            entry={new PreviousLeave()}
             index={0}
             getFunctionalInputProps={getFunctionalInputProps}
           />

@@ -87,7 +87,9 @@ exports[`PreviousLeaves renders the component 1`] = `
         leavePeriod={
           PreviousLeave {
             "id": 1,
+            "is_for_current_employer": null,
             "leave_end_date": "2020-03-06",
+            "leave_reason": null,
             "leave_start_date": "2020-03-01",
           }
         }
@@ -98,7 +100,9 @@ exports[`PreviousLeaves renders the component 1`] = `
         leavePeriod={
           PreviousLeave {
             "id": 2,
+            "is_for_current_employer": null,
             "leave_end_date": "2020-05-10",
+            "leave_reason": null,
             "leave_start_date": "2020-05-01",
           }
         }

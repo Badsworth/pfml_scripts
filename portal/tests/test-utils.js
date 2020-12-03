@@ -24,12 +24,14 @@ import EmployerBenefit, {
 } from "../src/models/EmployerBenefit";
 import EmployerClaim, { FineosLeaveReason } from "../src/models/EmployerClaim";
 import OtherIncome, { OtherIncomeType } from "../src/models/OtherIncome";
+import PreviousLeave, {
+  PreviousLeaveReason,
+} from "../src/models/PreviousLeave";
 import { mount, shallow } from "enzyme";
 import Address from "../src/models/Address";
 import AppErrorInfo from "../src/models/AppErrorInfo";
 import AppErrorInfoCollection from "../src/models/AppErrorInfoCollection";
 import ClaimCollection from "../src/models/ClaimCollection";
-import PreviousLeave from "../src/models/PreviousLeave";
 import React from "react";
 import User from "../src/models/User";
 import { act } from "react-dom/test-utils";
@@ -166,7 +168,9 @@ export class BaseMockClaimBuilder {
         : [
             new PreviousLeave({
               id: 1,
+              is_for_current_employer: false,
               leave_end_date: "2020-02-01",
+              leave_reason: PreviousLeaveReason.medical,
               leave_start_date: "2020-01-01",
             }),
           ]

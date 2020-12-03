@@ -1,19 +1,25 @@
+import PreviousLeave, { PreviousLeaveReason } from "../../models/PreviousLeave";
+import { get, pick } from "lodash";
 import Claim from "../../models/Claim";
 import Heading from "../../components/Heading";
+import InputChoiceGroup from "../../components/InputChoiceGroup";
 import InputDate from "../../components/InputDate";
-import PreviousLeave from "../../models/PreviousLeave";
 import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
 import RepeatableFieldset from "../../components/RepeatableFieldset";
-import get from "lodash/get";
-import pick from "lodash/pick";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "react-i18next";
 import withClaim from "../../hoc/withClaim";
 
-export const fields = ["claim.previous_leaves"];
+export const fields = [
+  "claim.previous_leaves",
+  "claim.previous_leaves[*].is_for_current_employer",
+  "claim.previous_leaves[*].leave_end_date",
+  "claim.previous_leaves[*].leave_reason",
+  "claim.previous_leaves[*].leave_start_date",
+];
 
 export const PreviousLeavesDetails = (props) => {
   const { appLogic, claim } = props;
@@ -27,6 +33,7 @@ export const PreviousLeavesDetails = (props) => {
   }
   const { formState, updateFields } = useFormState(initialEntries);
   const previous_leaves = get(formState, "previous_leaves");
+  const employer_fein = get(claim, "employer_fein");
 
   const handleSave = () =>
     appLogic.claims.update(claim.application_id, formState);
@@ -50,6 +57,8 @@ export const PreviousLeavesDetails = (props) => {
   const render = (entry, index) => {
     return (
       <PreviousLeaveCard
+        employer_fein={employer_fein}
+        entry={entry}
         getFunctionalInputProps={getFunctionalInputProps}
         index={index}
       />
@@ -90,10 +99,62 @@ PreviousLeavesDetails.propTypes = {
  */
 export const PreviousLeaveCard = (props) => {
   const { t } = useTranslation();
-  const { index, getFunctionalInputProps } = props;
+  const { employer_fein, entry, index, getFunctionalInputProps } = props;
+
+  // Get field values from entry, which represents what's in the form state
+  const is_for_current_employer = entry.is_for_current_employer;
+  const leave_reason = entry.leave_reason;
 
   return (
     <React.Fragment>
+      <InputChoiceGroup
+        {...getFunctionalInputProps(
+          `previous_leaves[${index}].is_for_current_employer`
+        )}
+        choices={[
+          {
+            checked: is_for_current_employer === true,
+            label: t(
+              "pages.claimsPreviousLeavesDetails.currentEmployerChoice_yes"
+            ),
+            value: "true",
+          },
+          {
+            checked: is_for_current_employer === false,
+            label: t(
+              "pages.claimsPreviousLeavesDetails.currentEmployerChoice_no"
+            ),
+            value: "false",
+          },
+        ]}
+        label={t("pages.claimsPreviousLeavesDetails.currentEmployerLabel", {
+          employer_fein,
+        })}
+        type="radio"
+        smallLabel
+      />
+
+      <InputChoiceGroup
+        {...getFunctionalInputProps(`previous_leaves[${index}].leave_reason`)}
+        choices={[
+          "medical",
+          "pregnancy",
+          "bonding",
+          "care",
+          "activeDutyFamily",
+          "serviceMemberFamily",
+        ].map((reasonKey) => ({
+          checked: leave_reason === PreviousLeaveReason[reasonKey],
+          label: t("pages.claimsPreviousLeavesDetails.leaveReasonChoice", {
+            context: reasonKey,
+          }),
+          value: PreviousLeaveReason[reasonKey],
+        }))}
+        label={t("pages.claimsPreviousLeavesDetails.leaveReasonLabel")}
+        type="radio"
+        smallLabel
+      />
+
       <InputDate
         {...getFunctionalInputProps(
           `previous_leaves[${index}].leave_start_date`
@@ -119,6 +180,8 @@ export const PreviousLeaveCard = (props) => {
 };
 
 PreviousLeaveCard.propTypes = {
+  employer_fein: PropTypes.string.isRequired,
+  entry: PropTypes.instanceOf(PreviousLeave).isRequired,
   index: PropTypes.number.isRequired,
   getFunctionalInputProps: PropTypes.func.isRequired,
 };

@@ -2,6 +2,70 @@
 
 exports[`PreviousLeavesDetails when the user's claim has previous leaves PreviousLeaveCard renders fields for a PreviousLeave instance 1`] = `
 <Fragment>
+  <InputChoiceGroup
+    choices={
+      Array [
+        Object {
+          "checked": false,
+          "label": "Yes",
+          "value": "true",
+        },
+        Object {
+          "checked": false,
+          "label": "No",
+          "value": "false",
+        },
+      ]
+    }
+    label="Did you take leave from this employer (12-3456789)?"
+    name="previous_leaves[0].is_for_current_employer"
+    onChange={[Function]}
+    smallLabel={true}
+    type="radio"
+    value=""
+  />
+  <InputChoiceGroup
+    choices={
+      Array [
+        Object {
+          "checked": false,
+          "label": "An illness or injury",
+          "value": "Serious Health Condition - Employee",
+        },
+        Object {
+          "checked": false,
+          "label": "Pregnancy",
+          "value": "Pregnancy/Maternity",
+        },
+        Object {
+          "checked": false,
+          "label": "Bonding with my child after birth or placement",
+          "value": "Child Bonding",
+        },
+        Object {
+          "checked": false,
+          "label": "Caring for a family member",
+          "value": "Care For A Family Member",
+        },
+        Object {
+          "checked": false,
+          "label": "Managing family affairs while a family member was on active duty in the armed forces",
+          "value": "Military Exigency Family",
+        },
+        Object {
+          "checked": false,
+          "label": "Caring for a family member who serves in the armed forces",
+          "value": "Military Caregiver",
+        },
+      ]
+    }
+    label="What was the qualifying reason for your leave?"
+    name="previous_leaves[0].leave_reason"
+    onChange={[Function]}
+    smallLabel={true}
+    type="radio"
+    value=""
+  />
   <InputDate
     dayLabel="Day"
     example="mm / dd / yyyy"
@@ -44,7 +108,9 @@ exports[`PreviousLeavesDetails when the user's claim has previous leaves renders
       Array [
         PreviousLeave {
           "id": 1,
+          "is_for_current_employer": false,
           "leave_end_date": "2020-02-01",
+          "leave_reason": "Serious Health Condition - Employee",
           "leave_start_date": "2020-01-01",
         },
       ]
