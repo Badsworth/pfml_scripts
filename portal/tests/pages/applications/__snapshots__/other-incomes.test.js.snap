@@ -9,14 +9,19 @@ exports[`OtherIncomes renders the page 1`] = `
     choices={
       Array [
         Object {
-          "checked": false,
+          "checked": true,
           "label": "Yes",
-          "value": "true",
+          "value": "yes",
         },
         Object {
           "checked": false,
           "label": "No",
-          "value": "false",
+          "value": "no",
+        },
+        Object {
+          "checked": false,
+          "label": "I've applied for another benefit that hasn’t been approved yet.",
+          "value": "pending",
         },
       ]
     }
@@ -26,41 +31,41 @@ exports[`OtherIncomes renders the page 1`] = `
           endDate="2021-06-01"
           startDate="2021-01-01"
         />
-        <Lead>
+        <p>
           Other sources of income you must report are:
-          <ul
-            className="usa-list"
-          >
-            <li>
-              Workers Compensation
-            </li>
-            <li>
-              Unemployment Insurance
-            </li>
-            <li>
-              Social Security Disability Insurance
-            </li>
-            <li>
-              Disability benefits under a governmental retirement plan such as STRS or PERS
-            </li>
-            <li>
-              Jones Act benefits
-            </li>
-            <li>
-              Railroad Retirement benefits
-            </li>
-            <li>
-              Earnings from another employer or through self-employment
-            </li>
-          </ul>
-        </Lead>
+        </p>
+        <ul
+          className="usa-list"
+        >
+          <li>
+            Workers Compensation
+          </li>
+          <li>
+            Unemployment Insurance
+          </li>
+          <li>
+            Social Security Disability Insurance
+          </li>
+          <li>
+            Disability benefits under a governmental retirement plan such as STRS or PERS
+          </li>
+          <li>
+            Jones Act benefits
+          </li>
+          <li>
+            Railroad Retirement benefits
+          </li>
+          <li>
+            Earnings from another employer or through self-employment
+          </li>
+        </ul>
       </React.Fragment>
     }
     label="Will you receive income from any other sources during your leave?"
     name="temp.has_other_incomes"
     onChange={[Function]}
     type="radio"
-    value=""
+    value={true}
   />
 </QuestionPage>
 `;

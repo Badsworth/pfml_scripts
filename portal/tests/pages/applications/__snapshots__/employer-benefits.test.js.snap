@@ -26,25 +26,25 @@ exports[`EmployerBenefits renders the page 1`] = `
           endDate="2021-06-01"
           startDate="2021-01-01"
         />
-        <Lead>
+        <p>
           Employer-sponsored benefits you must report are:
-          <ul
-            className="usa-list"
-          >
-            <li>
-              Accrued paid leave, such as vacation time, sick time, personal time, or other paid time off
-            </li>
-            <li>
-              Short-term disability insurance
-            </li>
-            <li>
-              Permanent disability insurance
-            </li>
-            <li>
-              Family or medical leave insurance, such as a maternity leave policy
-            </li>
-          </ul>
-        </Lead>
+        </p>
+        <ul
+          className="usa-list"
+        >
+          <li>
+            Accrued paid leave, such as vacation time, sick time, personal time, or other paid time off
+          </li>
+          <li>
+            Short-term disability insurance
+          </li>
+          <li>
+            Permanent disability insurance
+          </li>
+          <li>
+            Family or medical leave insurance, such as a maternity leave policy
+          </li>
+        </ul>
       </React.Fragment>
     }
     label="Will you use any employer-sponsored benefits during your leave?"

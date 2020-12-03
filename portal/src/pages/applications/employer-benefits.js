@@ -1,6 +1,5 @@
 import Claim from "../../models/Claim";
 import InputChoiceGroup from "../../components/InputChoiceGroup";
-import Lead from "../../components/Lead";
 import LeaveDatesAlert from "../../components/LeaveDatesAlert";
 import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
@@ -58,14 +57,12 @@ export const EmployerBenefits = (props) => {
               startDate={claim.leaveStartDate}
               endDate={claim.leaveEndDate}
             />
-            <Lead>
-              {t("pages.claimsEmployerBenefits.hintHeader")}
-              <ul className="usa-list">
-                {hintList.map((listItem, index) => (
-                  <li key={index}>{listItem}</li>
-                ))}
-              </ul>
-            </Lead>
+            <p>{t("pages.claimsEmployerBenefits.hintHeader")}</p>
+            <ul className="usa-list">
+              {hintList.map((listItem, index) => (
+                <li key={index}>{listItem}</li>
+              ))}
+            </ul>
           </React.Fragment>
         }
       />

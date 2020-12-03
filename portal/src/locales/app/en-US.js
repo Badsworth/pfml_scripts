@@ -367,6 +367,8 @@ const shared = {
   achTypeSavings: "Savings",
   backToLoginLink: "Back to log in",
   choiceNo: "No",
+  choicePendingOtherIncomes:
+    "I've applied for another benefit that hasn’t been approved$t(chars.nbsp)yet.",
   choiceYes: "Yes",
   claimDurationTypeContinuous: "Continuous leave",
   claimDurationTypeIntermittent: "Intermittent leave",
@@ -844,6 +846,7 @@ const pages = {
   },
   claimsOtherIncomes: {
     choiceNo: "$t(shared.choiceNo)",
+    choicePendingOtherIncomes: "$t(shared.choicePendingOtherIncomes)",
     choiceYes: "$t(shared.choiceYes)",
     hintHeader: "Other sources of income you must report are:",
     hintList: [
@@ -1050,6 +1053,7 @@ const pages = {
     otherIncomeType_workersCompensation:
       "$t(shared.otherIncomeType_workersCompensation)",
     otherLeaveChoiceNo: "$t(shared.choiceNo)",
+    otherLeaveChoicePendingOtherIncomes: "$t(shared.choicePendingOtherIncomes)",
     otherLeaveChoiceYes: "$t(shared.choiceYes)",
     // eslint-disable-next-line no-template-curly-in-string
     otherLeaveDollarAmount: "${{amount}} every month",

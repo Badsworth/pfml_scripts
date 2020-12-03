@@ -522,9 +522,15 @@ export const Review = (props) => {
             level={reviewRowLevel}
             label={t("pages.claimsReview.otherIncomeLabel")}
           >
-            {get(claim, "temp.has_other_incomes") === true
-              ? t("pages.claimsReview.otherLeaveChoiceYes")
-              : t("pages.claimsReview.otherLeaveChoiceNo")}
+            {get(claim, "temp.has_other_incomes") === true &&
+              get(claim, "other_incomes_awaiting_approval") === false &&
+              t("pages.claimsReview.otherLeaveChoiceYes")}
+            {get(claim, "temp.has_other_incomes") === false &&
+              get(claim, "other_incomes_awaiting_approval") === false &&
+              t("pages.claimsReview.otherLeaveChoiceNo")}
+            {get(claim, "temp.has_other_incomes") === false &&
+              get(claim, "other_incomes_awaiting_approval") === true &&
+              t("pages.claimsReview.otherLeaveChoicePendingOtherIncomes")}
           </ReviewRow>
 
           {get(claim, "temp.has_other_incomes") && (

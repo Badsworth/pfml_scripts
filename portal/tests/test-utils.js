@@ -156,6 +156,8 @@ export class BaseMockClaimBuilder {
         income_type: OtherIncomeType.otherEmployer,
       }),
     ]);
+    set(this.claimAttrs, "temp.has_other_incomes", true);
+    set(this.claimAttrs, "other_incomes_awaiting_approval", false);
     return this;
   }
 
