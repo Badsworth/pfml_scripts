@@ -120,7 +120,7 @@ def send_to_fineos(application: Application, db_session: massgov.pfml.db.Session
         application.fineos_absence_id = new_case.absenceId
         application.fineos_notification_case_id = new_case.notificationCaseId
 
-        # TODO (CP-1415): Remove guard once phone number is no longer optional
+        # TODO (CP-1447): Remove guard once phone number is no longer optional
         if contact_details is not None:
             updated_contact_details = fineos.update_customer_contact_details(
                 fineos_user_id, contact_details
@@ -277,13 +277,13 @@ def build_contact_details(
     application: Application,
 ) -> Optional[massgov.pfml.fineos.models.customer_api.ContactDetails]:
     """Convert an application's phone number to FINEOS API ContactDetails model."""
-    # TODO (CP-1415): Remove guard once phone number is no longer optional
+    # TODO (CP-1447): Remove guard once phone number is no longer optional
     if application.phone_id is None:
         return None
 
     phone_number = phonenumbers.parse(application.phone.phone_number)
 
-    phone_number_type = application.phone.phone_type.phone_type_description
+    phone_number_type = application.phone.phone_type_instance.phone_type_description
     int_code = phone_number.country_code
     telephone_no = phone_number.national_number
 

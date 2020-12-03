@@ -1,6 +1,8 @@
 from re import Pattern
 from typing import Any, Dict, List, Optional, Tuple, Type, Union
 
+import phonenumbers
+from phonenumbers.phonenumberutil import region_code_for_number
 from sqlalchemy.orm.exc import NoResultFound
 from werkzeug.exceptions import BadRequest, Forbidden, NotFound
 
@@ -30,6 +32,8 @@ from massgov.pfml.db.models.applications import (
     IntermittentLeavePeriod,
     OtherIncome,
     OtherIncomeType,
+    Phone,
+    PhoneType,
     ReducedScheduleLeavePeriod,
     TaxIdentifier,
     WorkPattern,
@@ -143,6 +147,33 @@ def process_masked_address(
     return errors
 
 
+def process_masked_phone_number(
+    field_key: str, body: Dict[str, Any], existing_phone: Phone
+) -> List[ValidationErrorDetail]:
+    """ Handle masked phone number """
+    phone = body.get(field_key)
+    errors = []
+
+    if phone:
+        masked_existing_phone_number = None
+        if existing_phone and existing_phone.phone_number:
+            # convert existing phone (in E.164) to masked version of front-end format (###-###-****) to compare masked values
+            parsed_existing_phone_number = phonenumbers.parse(existing_phone.phone_number)
+            locally_formatted_existing_number = phonenumbers.format_number(
+                parsed_existing_phone_number, region_code_for_number(parsed_existing_phone_number)
+            )
+            masked_existing_phone_number = mask.mask_phone(locally_formatted_existing_number)
+
+            errors += process_partially_masked_field(
+                field_key="phone_number",
+                body=phone,
+                existing_masked_field=masked_existing_phone_number,
+                masked_regex=Regexes.MASKED_PHONE,
+                path=f"{field_key}.phone_number",
+            )
+    return errors
+
+
 def remove_masked_fields_from_request(
     body: Dict[str, Any], existing_application: Application
 ) -> Dict[str, Any]:
@@ -180,6 +211,9 @@ def remove_masked_fields_from_request(
         existing_field=existing_application.mass_id,
         expected_masked_value=mask.MASS_ID_MASK,
     )
+
+    # Phone
+    errors += process_masked_phone_number("phone", body, existing_application.phone)
 
     # date of birth - partially masked
     masked_existing_date_of_birth = mask.mask_date(existing_application.date_of_birth)
@@ -298,6 +332,10 @@ def update_from_request(
 
         if key == "application_nickname":
             key = "nickname"
+
+        if key == "phone":
+            add_or_update_phone(db_session, body.phone, application)
+            continue
 
         if isinstance(value, LookupEnum):
             lookup_model = db_lookups.by_value(db_session, value.get_lookup_model(), value)
@@ -741,6 +779,38 @@ def add_or_update_other_incomes(
             db_existing_other_income.income_amount_frequency_id = AmountFrequency.get_id(
                 api_other_income.income_amount_frequency.value
             )
+
+
+def add_or_update_phone(
+    db_session: db.Session, phone: Optional[apps_common_io.Phone], application: Application,
+) -> None:
+    if not phone:
+        return
+
+    int_code = phone.int_code
+    phone_number = phone.phone_number
+    internationalized_phone_number = None
+
+    # If the phone number wasn't removed during the masked value check, convert it to E.164
+    if phone_number:
+        parsed_phone_number = phonenumbers.parse(f"+{int_code}{phone_number}")
+        internationalized_phone_number = phonenumbers.format_number(
+            parsed_phone_number, phonenumbers.PhoneNumberFormat.E164
+        )
+
+    # If Phone exists, update with what we have, otherwise, create a new Phone
+    # if process_masked_phone_number did not remove the phone_number field, update the db
+    if application.phone:
+        application.phone.phone_type_id = PhoneType.get_id(phone.phone_type)
+        if internationalized_phone_number:
+            application.phone.phone_number = internationalized_phone_number
+    else:
+        new_phone = Phone(
+            phone_number=internationalized_phone_number,
+            phone_type_id=PhoneType.get_id(phone.phone_type),
+        )
+        db_session.add(new_phone)
+        application.phone = new_phone
 
 
 def validate_work_pattern_days(

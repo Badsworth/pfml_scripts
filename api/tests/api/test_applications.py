@@ -231,6 +231,12 @@ def test_application_patch(client, user, auth_token, test_db_session):
         "zip": "12345-1234",
     }
 
+    update_request_body["phone"] = {
+        "int_code": "1",
+        "phone_number": "240-487-9945",
+        "phone_type": "Cell",
+    }
+
     response = client.patch(
         "/v1/applications/{}".format(application.application_id),
         headers={"Authorization": f"Bearer {auth_token}"},
@@ -248,11 +254,15 @@ def test_application_patch(client, user, auth_token, test_db_session):
     assert application.tax_identifier.tax_identifier == "123456789"
     assert application.employer_fein == "227777777"
 
+    # Phone number is saved as E.164
+    assert application.phone.phone_number == "+12404879945"
+
     assert response_body.get("data").get("last_name") == "Perez"
     assert response_body.get("data").get("updated_time") == "2020-01-01T00:00:00+00:00"
     assert response_body.get("data").get("middle_name") == "Mike"
     assert response_body.get("data").get("occupation") == "Engineer"
     assert response_body.get("data").get("mailing_address")["city"] == "Springfield"
+    assert response_body.get("data").get("phone")["phone_type"] == "Cell"
 
     assert (
         response_body.get("data").get("leave_details").get("relationship_to_caregiver") == "Parent"
@@ -261,6 +271,7 @@ def test_application_patch(client, user, auth_token, test_db_session):
     # Formatted / masked fields:
     assert response_body.get("data").get("employer_fein") == "22-7777777"
     assert response_body.get("data").get("tax_identifier") == "***-**-6789"
+    assert response_body.get("data").get("phone")["phone_number"] == "240-487-****"
 
 
 def test_application_patch_masking(client, user, auth_token, test_db_session):
@@ -284,6 +295,7 @@ def test_application_patch_masking(client, user, auth_token, test_db_session):
             "routing_number": "000000000",
             "account_number": "123456789",
         },
+        "phone": {"int_code": "1", "phone_number": "240-487-9945", "phone_type": "Cell",},
     }
 
     response = client.patch(
@@ -308,6 +320,7 @@ def test_application_patch_masking(client, user, auth_token, test_db_session):
     assert application.child_birth_date.isoformat() == "2021-09-21"
     assert application.payment_preference.account_number == "123456789"
     assert application.payment_preference.routing_number == "000000000"
+    assert application.phone.phone_number == "+12404879945"
 
     # Verify values returned by the API are properly masked
     assert response_body.get("data").get("tax_identifier") == "***-**-6789"
@@ -320,6 +333,7 @@ def test_application_patch_masking(client, user, auth_token, test_db_session):
         response_body.get("data").get("leave_details").get("child_placement_date") == "****-05-13"
     )
     assert response_body.get("data").get("leave_details").get("child_birth_date") == "****-09-21"
+    assert response_body.get("data").get("phone")["phone_number"] == "240-487-****"
     payment_preference = response_body.get("data").get("payment_preference")
     assert payment_preference["account_number"] == "*****6789"
     assert payment_preference["routing_number"] == "*********"
@@ -350,6 +364,7 @@ def test_application_patch_masked_inputs_ignored(client, user, auth_token, test_
         geo_state_id=17,  # Illinois
         zip_code="12345-6789",
     )
+    application.phone = Phone(phone_number="+12404879945", phone_type_id=1)  # Cell
 
     test_db_session.commit()
 
@@ -373,6 +388,7 @@ def test_application_patch_masked_inputs_ignored(client, user, auth_token, test_
             "zip": "12345-****",
         },
         "payment_preference": {"routing_number": "*********", "account_number": "*****6789",},
+        "phone": {"int_code": "1", "phone_number": "240-487-****", "phone_type": "Cell"},
     }
 
     response = client.patch(
@@ -398,6 +414,7 @@ def test_application_patch_masked_inputs_ignored(client, user, auth_token, test_
     assert application.child_birth_date.isoformat() == "2021-09-21"
     assert application.payment_preference.routing_number == "000000000"
     assert application.payment_preference.account_number == "123456789"
+    assert application.phone.phone_number == "+12404879945"
 
 
 def test_application_patch_masked_mismatch_fields(client, user, auth_token, test_db_session):
@@ -425,6 +442,8 @@ def test_application_patch_masked_mismatch_fields(client, user, auth_token, test
         geo_state_id=17,  # Illinois
         zip_code="12345-6789",
     )
+    application.phone = Phone(phone_number="+2404879945", phone_type_id=1)  # Cell
+
     test_db_session.commit()
 
     update_request_body = {
@@ -447,6 +466,7 @@ def test_application_patch_masked_mismatch_fields(client, user, auth_token, test
             "zip": "55555-****",
         },
         "payment_preference": {"routing_number": "*********", "account_number": "*****0000",},
+        "phone": {"int_code": "1", "phone_number": "240-123-****", "phone_type": "Cell",},
     }
 
     response = client.patch(
@@ -468,6 +488,7 @@ def test_application_patch_masked_mismatch_fields(client, user, auth_token, test
             "mailing_address.zip",
             "residential_address.zip",
             "payment_preference.account_number",
+            "phone.phone_number",
         ]
     )
     fully_masked_errors = set(
@@ -775,6 +796,89 @@ def test_application_patch_residential_address_line_2_masked(
 
     errors = second_update_response.get_json().get("errors")
     assert not errors
+
+
+def test_application_patch_phone(client, user, auth_token, test_db_session):
+    application = ApplicationFactory.create(user=user, phone=None)
+    assert application.phone is None
+
+    # adding phone
+    update_request_body = {
+        "phone": {"phone_number": "240-487-9945", "phone_type": "Cell", "int_code": "1"}
+    }
+
+    response = client.patch(
+        "/v1/applications/{}".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+        json=update_request_body,
+    )
+
+    test_db_session.refresh(application)
+    response_body = response.get_json()
+    assert response.status_code == 200
+    response_phone = response_body.get("data").get("phone")
+    assert application.phone.phone_number == "+12404879945"
+    assert application.phone.phone_type_id == 1  # Cell
+    assert response_phone["phone_number"] == "240-487-****"
+    assert response_phone["phone_type"] == update_request_body["phone"]["phone_type"]
+    assert response_phone["int_code"] == update_request_body["phone"]["int_code"]
+
+    # updating phone
+    update_request_body = {
+        "phone": {"phone_number": "240-487-1234", "phone_type": "Phone", "int_code": "1"}
+    }
+
+    response = client.patch(
+        "/v1/applications/{}".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+        json=update_request_body,
+    )
+
+    test_db_session.refresh(application)
+    assert application.phone.phone_number == "+12404871234"
+    assert application.phone.phone_type_id == 3  # Phone
+    response_body = response.get_json()
+    assert response.status_code == 200
+    response_phone = response_body.get("data").get("phone")
+    assert response_phone["phone_number"] == "240-487-****"
+    assert response_phone["phone_type"] == update_request_body["phone"]["phone_type"]
+
+    update_request_body_dob = {"date_of_birth": "1970-01-01"}
+
+    # patching another field and confirming phone still persists
+    response_new_update = client.patch(
+        "/v1/applications/{}".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+        json=update_request_body_dob,
+    )
+
+    test_db_session.refresh(application)
+    assert application.phone.phone_number == "+12404871234"
+    assert application.phone.phone_type_id == 3  # Phone
+    response_body_new_update = response_new_update.get_json()
+    response_phone = response_body_new_update.get("data").get("phone")
+    assert response_phone["phone_number"] == "240-487-****"
+    assert response_phone["phone_type"] == update_request_body["phone"]["phone_type"]
+
+    # patching with a masked value doesn't change the existing database value
+
+    update_request_masked_phone_number = {
+        "phone": {"phone_number": "240-487-****", "int_code": "1", "phone_type": "Cell"}
+    }
+
+    response_new_update = client.patch(
+        "/v1/applications/{}".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+        json=update_request_masked_phone_number,
+    )
+
+    test_db_session.refresh(application)
+    assert application.phone.phone_number == "+12404871234"
+    assert application.phone.phone_type_id == 1  # Cell
+    response_body_new_update = response_new_update.get_json()
+    response_phone = response_body_new_update.get("data").get("phone")
+    assert response_phone["phone_number"] == "240-487-****"
+    assert response_phone["phone_type"] == update_request_masked_phone_number["phone"]["phone_type"]
 
 
 def test_application_unauthorized_patch(client, user, auth_token, test_db_session):
@@ -2132,6 +2236,12 @@ def test_application_patch_invalid_values(client, user, auth_token):
         },
         # tax_identifier should conform to the pattern (e.g 123-45-6789),
         "tax_identifier": "123-45-67890000",
+        "phone": {
+            # phone number should conform to the pattern (e.g. 555-123-4567)
+            "phone_number": "(555) 123-4567",
+            "phone_type": "Cell",
+            "int_code": "1",
+        },
     }
 
     response = client.patch(
@@ -2173,6 +2283,12 @@ def test_application_patch_invalid_values(client, user, auth_token):
                 "field": "payment_preference.routing_number",
                 "message": "'80123456789' does not match '^((0[0-9])|(1[0-2])|(2[1-9])|(3[0-2])|(6[1-9])|(7[0-2])|80)([0-9]{7})$|(\\\\*{9})$'",
                 "rule": "^((0[0-9])|(1[0-2])|(2[1-9])|(3[0-2])|(6[1-9])|(7[0-2])|80)([0-9]{7})$|(\\*{9})$",
+                "type": "pattern",
+            },
+            {
+                "field": "phone.phone_number",
+                "message": "'(555) 123-4567' does not match '^[0-9]{3}\\\\-?[0-9]{3}\\\\-?([0-9]|\\\\*){4}$'",
+                "rule": "^[0-9]{3}\\-?[0-9]{3}\\-?([0-9]|\\*){4}$",
                 "type": "pattern",
             },
         ],
@@ -2662,7 +2778,7 @@ def test_application_post_submit_to_fineos(client, user, auth_token, test_db_ses
     application.employer_fein = "770000001"
     application.hours_worked_per_week = 70
     application.employer_notified = True
-    application.phone = Phone(phone_number="+15552223333", phone_type_id=1, fineos_phone_id=111)
+    application.phone = Phone(phone_number="+12404879945", phone_type_id=1, fineos_phone_id=111)
     application.employer_notification_date = date(2021, 1, 7)
     application.employment_status_id = EmploymentStatus.UNEMPLOYED.employment_status_id
     application.residential_address = AddressFactory.create()
@@ -2783,7 +2899,7 @@ def test_application_post_submit_to_fineos(client, user, auth_token, test_db_ses
                             phoneNumberType="Cell",
                             intCode="1",
                             areaCode=None,
-                            telephoneNo="5552223333",
+                            telephoneNo="2404879945",
                             classExtensionInformation=None,
                         )
                     ],

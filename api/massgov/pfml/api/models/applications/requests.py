@@ -14,6 +14,7 @@ from massgov.pfml.api.models.applications.common import (
     Occupation,
     OtherIncome,
     PaymentPreference,
+    Phone,
     WorkPattern,
 )
 from massgov.pfml.api.validation.exceptions import ValidationErrorDetail, ValidationException
@@ -49,6 +50,7 @@ class ApplicationRequestBody(PydanticBaseModel):
     has_other_incomes: Optional[bool]
     other_incomes_awaiting_approval: Optional[bool]
     other_incomes: Optional[List[OtherIncome]]
+    phone: Optional[Phone]
 
     @validator("date_of_birth")
     def date_of_birth_in_valid_range(cls, date_of_birth):  # noqa: B902

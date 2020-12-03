@@ -11,6 +11,7 @@ from massgov.pfml.api.models.applications.common import (
     MaskedAddress,
     MaskedApplicationLeaveDetails,
     MaskedPaymentPreference,
+    MaskedPhone,
     Occupation,
     OtherIncome,
     PaymentMethod,
@@ -64,6 +65,7 @@ class ApplicationResponse(PydanticBaseModel):
     has_other_incomes: Optional[bool]
     other_incomes_awaiting_approval: Optional[bool]
     other_incomes: Optional[List[OtherIncome]]
+    phone: Optional[MaskedPhone]
 
     @classmethod
     def from_orm(cls, application: Application) -> "ApplicationResponse":
@@ -82,6 +84,9 @@ class ApplicationResponse(PydanticBaseModel):
             application_response.payment_preference = build_payment_preference(
                 application.payment_preference
             )
+
+        if application.phone is not None:
+            application_response.phone = MaskedPhone.from_orm(application.phone)
 
         if application.completed_time:
             application_response.status = ApplicationStatus.Completed

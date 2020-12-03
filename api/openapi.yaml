@@ -1291,6 +1291,8 @@ components:
               type: array
               items:
                 $ref: "#/components/schemas/OtherIncome"
+            phone:
+              $ref: "#/components/schemas/Phone"
         - type: object
           properties:
             employee_ssn:
@@ -1448,6 +1450,8 @@ components:
             - Submitted
             - Completed
           example: "Started"
+        phone:
+          $ref: "#/components/schemas/MaskedPhone"
 
     DocumentUploadRequest:
       type: object
@@ -2299,3 +2303,39 @@ components:
         - Thursday
         - Friday
         - Saturday
+
+    Phone:
+      type: object
+      properties:
+        int_code:
+          type: string
+          example: "1"
+          pattern: "^[0-9]{1,3}"
+        phone_number:
+          type: string
+          example: "224-705-2345"
+          pattern: '^[0-9]{3}\-?[0-9]{3}\-?([0-9]|\*){4}$'
+        phone_type:
+          type: string
+          enum:
+            - Cell
+            - Fax
+            - Phone
+
+    MaskedPhone:
+      type: object
+      properties:
+        int_code:
+          type: string
+          example: "1"
+          pattern: "^[0-9]{1,3}"
+        phone_number:
+          type: string
+          example: "224-705-****"
+          pattern: '^[0-9]{3}\-?[0-9]{3}\-?\*{4}$'
+        phone_type:
+          type: string
+          enum:
+            - Cell
+            - Fax
+            - Phone

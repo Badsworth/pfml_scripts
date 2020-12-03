@@ -53,3 +53,9 @@ def mask_routing_number(routing_number: Optional[str]) -> Optional[str]:
     if routing_number is None:
         return None
     return ROUTING_NUMBER_MASK
+
+
+def mask_phone(phone_number: Optional[str]) -> Optional[str]:
+    if phone_number is None:
+        return None
+    return f"{phone_number[:-4]}****"

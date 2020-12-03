@@ -224,6 +224,16 @@ class ClaimFactory(BaseFactory):
     fineos_absence_id = "NTN-01-ABS-01"
 
 
+class PhoneFactory(BaseFactory):
+    """A working Cell phone number"""
+
+    class Meta:
+        model = application_models.Phone
+
+    phone_number = "+12404879945"
+    phone_type_id = application_models.PhoneType.CELL.phone_type_id
+
+
 class ApplicationFactory(BaseFactory):
     class Meta:
         model = application_models.Application
@@ -269,6 +279,8 @@ class ApplicationFactory(BaseFactory):
     employee_id = factory.LazyAttribute(lambda a: a.employee.employee_id)
 
     employer_fein = "22-7777777"
+
+    phone = factory.SubFactory(PhoneFactory)
 
     # Lookups
     occupation_id = None
