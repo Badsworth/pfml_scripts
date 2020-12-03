@@ -131,3 +131,13 @@ resource "aws_db_instance" "default" {
     # See https://lwd.atlassian.net/wiki/spaces/DD/pages/275611773/RDS+databases.
   })
 }
+# ------------------------------------
+# Cloudwatch log group for RDS
+resource "aws_cloudwatch_log_group" "postgresql" {
+  name = "/aws/rds/instance/massgov_pfml_${var.environment_name}/postgresql"
+  tags = merge(module.constants.common_tags, {
+    environment = module.constants.environment_tags[var.environment_name]
+  })
+  # number of days to keep log events. Default is 0, which is forever
+  retention_in_days = 0
+}
