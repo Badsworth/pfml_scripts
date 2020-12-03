@@ -105,11 +105,11 @@ exports[`OtherIncomesDetails when the user's claim has other income sources rend
     entries={
       Array [
         OtherIncome {
-          "income_amount_dollars": null,
+          "income_amount_dollars": 125,
           "income_amount_frequency": null,
-          "income_end_date": null,
-          "income_start_date": null,
-          "income_type": null,
+          "income_end_date": "2021-01-01",
+          "income_start_date": "2021-01-30",
+          "income_type": "Other Employer",
         },
       ]
     }

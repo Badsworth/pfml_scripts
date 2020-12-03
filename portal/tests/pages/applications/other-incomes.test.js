@@ -1,6 +1,6 @@
+import { MockClaimBuilder, renderWithAppLogic } from "../../test-utils";
 import OtherIncomes from "../../../src/pages/applications/other-incomes";
 import { act } from "react-dom/test-utils";
-import { renderWithAppLogic } from "../../test-utils";
 
 jest.mock("../../../src/hooks/useAppLogic");
 
@@ -8,8 +8,10 @@ describe("OtherIncomes", () => {
   let appLogic, claim, wrapper;
 
   beforeEach(() => {
-    ({ appLogic, claim, wrapper } = renderWithAppLogic(OtherIncomes, {
-      claimAttrs: { temp: { has_other_incomes: true } },
+    claim = new MockClaimBuilder().continuous().create();
+
+    ({ appLogic, wrapper } = renderWithAppLogic(OtherIncomes, {
+      claimAttrs: claim,
     }));
   });
 

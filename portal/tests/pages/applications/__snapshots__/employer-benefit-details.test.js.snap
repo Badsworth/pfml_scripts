@@ -93,12 +93,12 @@ exports[`EmployerBenefitDetails when the user's claim has employer benefits rend
     entries={
       Array [
         EmployerBenefit {
-          "benefit_amount_dollars": null,
-          "benefit_amount_frequency": null,
-          "benefit_end_date": null,
-          "benefit_start_date": null,
-          "benefit_type": "paidLeave",
-          "id": null,
+          "benefit_amount_dollars": 500,
+          "benefit_amount_frequency": "Per Week",
+          "benefit_end_date": "2021-02-01",
+          "benefit_start_date": "2021-01-01",
+          "benefit_type": "Family or Medical Leave Insurance",
+          "id": 1,
         },
       ]
     }

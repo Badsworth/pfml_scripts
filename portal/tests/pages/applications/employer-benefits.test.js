@@ -1,6 +1,6 @@
+import { MockClaimBuilder, renderWithAppLogic } from "../../test-utils";
 import EmployerBenefits from "../../../src/pages/applications/employer-benefits";
 import { act } from "react-dom/test-utils";
-import { renderWithAppLogic } from "../../test-utils";
 
 jest.mock("../../../src/hooks/useAppLogic");
 
@@ -8,7 +8,11 @@ describe("EmployerBenefits", () => {
   let appLogic, claim, wrapper;
 
   beforeEach(() => {
-    ({ appLogic, claim, wrapper } = renderWithAppLogic(EmployerBenefits));
+    claim = new MockClaimBuilder().continuous().create();
+
+    ({ appLogic, wrapper } = renderWithAppLogic(EmployerBenefits, {
+      claimAttrs: claim,
+    }));
   });
 
   it("renders the page", () => {

@@ -1,7 +1,11 @@
+import {
+  MockClaimBuilder,
+  renderWithAppLogic,
+  testHook,
+} from "../../test-utils";
 import PreviousLeaveDetails, {
   PreviousLeaveCard,
 } from "../../../src/pages/applications/previous-leaves-details";
-import { renderWithAppLogic, testHook } from "../../test-utils";
 import AppErrorInfoCollection from "../../../src/models/AppErrorInfoCollection";
 import PreviousLeave from "../../../src/models/PreviousLeave";
 import QuestionPage from "../../../src/components/QuestionPage";
@@ -19,8 +23,10 @@ describe("PreviousLeavesDetails", () => {
 
   describe("when the user's claim has previous leaves", () => {
     beforeEach(() => {
-      ({ appLogic, claim, wrapper } = renderWithAppLogic(PreviousLeaveDetails, {
-        claimAttrs: { previous_leaves: [new PreviousLeave()] },
+      claim = new MockClaimBuilder().continuous().previousLeave().create();
+
+      ({ appLogic, wrapper } = renderWithAppLogic(PreviousLeaveDetails, {
+        claimAttrs: claim,
       }));
     });
 
@@ -80,12 +86,11 @@ describe("PreviousLeavesDetails", () => {
 
     describe("when the user's claim does not have previous leaves", () => {
       beforeEach(() => {
-        ({ appLogic, claim, wrapper } = renderWithAppLogic(
-          PreviousLeaveDetails,
-          {
-            claimAttrs: { previous_leaves: [new PreviousLeave()] },
-          }
-        ));
+        claim = new MockClaimBuilder().continuous().create();
+
+        ({ appLogic, wrapper } = renderWithAppLogic(PreviousLeaveDetails, {
+          claimAttrs: claim,
+        }));
       });
 
       it("adds a blank entry so a card is rendered", () => {

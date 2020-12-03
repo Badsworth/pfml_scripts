@@ -1,6 +1,6 @@
+import { MockClaimBuilder, renderWithAppLogic } from "../../test-utils";
 import PreviousLeaves from "../../../src/pages/applications/previous-leaves";
 import { act } from "react-dom/test-utils";
-import { renderWithAppLogic } from "../../test-utils";
 
 jest.mock("../../../src/hooks/useAppLogic");
 
@@ -8,7 +8,11 @@ describe("PreviousLeaves", () => {
   let appLogic, claim, wrapper;
 
   beforeEach(() => {
-    ({ appLogic, claim, wrapper } = renderWithAppLogic(PreviousLeaves));
+    claim = new MockClaimBuilder().continuous().create();
+
+    ({ appLogic, wrapper } = renderWithAppLogic(PreviousLeaves, {
+      claimAttrs: claim,
+    }));
   });
 
   it("renders the page", () => {

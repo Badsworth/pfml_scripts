@@ -4,7 +4,11 @@ import EmployerBenefit, {
 import EmployerBenefitDetails, {
   EmployerBenefitCard,
 } from "../../../src/pages/applications/employer-benefit-details";
-import { renderWithAppLogic, testHook } from "../../test-utils";
+import {
+  MockClaimBuilder,
+  renderWithAppLogic,
+  testHook,
+} from "../../test-utils";
 import AppErrorInfoCollection from "../../../src/models/AppErrorInfoCollection";
 import React from "react";
 import { act } from "react-dom/test-utils";
@@ -18,16 +22,11 @@ describe("EmployerBenefitDetails", () => {
 
   describe("when the user's claim has employer benefits", () => {
     beforeEach(() => {
-      ({ appLogic, claim, wrapper } = renderWithAppLogic(
-        EmployerBenefitDetails,
-        {
-          claimAttrs: {
-            employer_benefits: [
-              new EmployerBenefit({ benefit_type: "paidLeave" }),
-            ],
-          },
-        }
-      ));
+      claim = new MockClaimBuilder().continuous().employerBenefit().create();
+
+      ({ appLogic, wrapper } = renderWithAppLogic(EmployerBenefitDetails, {
+        claimAttrs: claim,
+      }));
     });
 
     it("renders the page", () => {

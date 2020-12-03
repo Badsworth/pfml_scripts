@@ -1,7 +1,11 @@
+import {
+  MockClaimBuilder,
+  renderWithAppLogic,
+  testHook,
+} from "../../test-utils";
 import OtherIncomesDetails, {
   OtherIncomeCard,
 } from "../../../src/pages/applications/other-incomes-details";
-import { renderWithAppLogic, testHook } from "../../test-utils";
 import AppErrorInfoCollection from "../../../src/models/AppErrorInfoCollection";
 import OtherIncome from "../../../src/models/OtherIncome";
 import QuestionPage from "../../../src/components/QuestionPage";
@@ -19,8 +23,10 @@ describe("OtherIncomesDetails", () => {
 
   describe("when the user's claim has other income sources", () => {
     beforeEach(() => {
+      claim = new MockClaimBuilder().continuous().otherIncome().create();
+
       ({ appLogic, claim, wrapper } = renderWithAppLogic(OtherIncomesDetails, {
-        claimAttrs: { other_incomes: [new OtherIncome()] },
+        claimAttrs: claim,
       }));
     });
 
@@ -81,8 +87,10 @@ describe("OtherIncomesDetails", () => {
 
   describe("when the user's claim does not have employer benefits", () => {
     beforeEach(() => {
+      claim = new MockClaimBuilder().continuous().create();
+
       ({ appLogic, claim, wrapper } = renderWithAppLogic(OtherIncomesDetails, {
-        claimAttrs: { other_incomes: [new OtherIncome()] },
+        claimAttrs: claim,
       }));
     });
 

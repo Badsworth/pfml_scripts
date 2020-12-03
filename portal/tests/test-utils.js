@@ -23,6 +23,7 @@ import EmployerBenefit, {
   IncomeFrequency,
 } from "../src/models/EmployerBenefit";
 import EmployerClaim, { FineosLeaveReason } from "../src/models/EmployerClaim";
+import OtherIncome, { OtherIncomeType } from "../src/models/OtherIncome";
 import { mount, shallow } from "enzyme";
 import Address from "../src/models/Address";
 import AppErrorInfo from "../src/models/AppErrorInfo";
@@ -141,6 +142,18 @@ export class BaseMockClaimBuilder {
 
   medicalLeaveReason() {
     set(this.claimAttrs, "leave_details.reason", LeaveReason.medical);
+    return this;
+  }
+
+  otherIncome() {
+    set(this.claimAttrs, "other_incomes", [
+      new OtherIncome({
+        income_amount_dollars: 125,
+        income_end_date: "2021-01-01",
+        income_start_date: "2021-01-30",
+        income_type: OtherIncomeType.otherEmployer,
+      }),
+    ]);
     return this;
   }
 
