@@ -54,25 +54,19 @@ def decode_cognito_token(token):
     """
     try:
         decoded_token = _decode_cognito_token(token)
+        auth_id = decoded_token.get("sub")
         with app.db_session() as db_session:
-            user = (
-                db_session.query(User)
-                .filter(User.active_directory_id == decoded_token.get("sub"))
-                .one()
-            )
+            user = db_session.query(User).filter(User.active_directory_id == auth_id).one()
 
             flask.g.current_user = user
 
-        logger.info("auth token decode succeeded")
+        logger.info("auth token decode succeeded", extra={"current_user.auth_id": auth_id})
         return decoded_token
     except jose.JOSEError as e:
         logger.error("auth token decode failed: %s %s", type(e), str(e), extra={"error": e})
         raise Unauthorized
     except (NoResultFound, MultipleResultsFound) as e:
         logger.error(
-            "user query failed for auth_id %s: %s",
-            decoded_token.get("sub"),
-            type(e),
-            extra={"error": e},
+            "user query failed: %s", type(e), extra={"current_user.auth_id": auth_id, "error": e,}
         )
         raise Unauthorized
