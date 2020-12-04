@@ -9,13 +9,11 @@ import decimal
 
 
 def calculate_weekly_benefit_amount(
-    individual_average_weekly_wage: int,
+    individual_average_weekly_wage: decimal.Decimal,
     state_average_weekly_wage: decimal.Decimal,
     effective_date: datetime.date,
 ) -> decimal.Decimal:
     # Terminology note: aww = average weekly wage
-
-    individual_aww = decimal.Decimal(individual_average_weekly_wage)
 
     if effective_date.year == 2021:
         # Maximum benefit for the 1st yr of the program is $850
@@ -30,8 +28,8 @@ def calculate_weekly_benefit_amount(
     # - when the individual aww is below 50% state aww, portion below is the entire wage, and
     #   portion above is 0
     # - otherwise the individual aww is split into 50% state aww and the rest
-    portion_below_half_state_aww = min(individual_aww, half_state_aww)
-    portion_above_half_state_aww = individual_aww - portion_below_half_state_aww
+    portion_below_half_state_aww = min(individual_average_weekly_wage, half_state_aww)
+    portion_above_half_state_aww = individual_average_weekly_wage - portion_below_half_state_aww
 
     # 80% wage replacement for the portion below
     #                    and

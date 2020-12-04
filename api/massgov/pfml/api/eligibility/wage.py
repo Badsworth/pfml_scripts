@@ -107,7 +107,7 @@ class WageCalculator:
         employer_average_weekly_wage = self.employer_average_weekly_wage.get(employer_id)
         return employer_average_weekly_wage
 
-    def compute_average_weekly_wage(self) -> int:
+    def compute_average_weekly_wage(self) -> decimal.Decimal:
         """Compute the average weekly wage, summed across all employers."""
         logger.info(
             "employers %i, total data rows %i",
@@ -117,7 +117,11 @@ class WageCalculator:
         for employer_id in self.employer_quarter_wage:
             self.compute_employer_average_weekly_wage(employer_id)
 
-        return math.ceil(sum(self.employer_average_weekly_wage.values()))
+        # M.G.L. c. 151A, §1(w) reads, "If such weekly wage includes a fractional part of a dollar it shall be raised
+        # to the next highest dollar."
+        # https://malegislature.gov/Laws/GeneralLaws/PartI/TitleXXI/Chapter151A/Section1
+        next_highest_dollar = math.ceil(sum(self.employer_average_weekly_wage.values()))
+        return decimal.Decimal(f"{next_highest_dollar}.00")
 
     def compute_employer_average_weekly_wage(self, employer_id: uuid.UUID) -> decimal.Decimal:
         """Compute average weekly wage for one employer."""

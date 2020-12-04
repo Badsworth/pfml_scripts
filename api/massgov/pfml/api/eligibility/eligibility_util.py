@@ -44,7 +44,7 @@ def wages_gte_unemployment_min(
 
 def wages_gte_thirty_times_wba(
     total_wages: decimal.Decimal,
-    individual_average_weekly_wage: int,
+    individual_average_weekly_wage: decimal.Decimal,
     state_average_weekly_wage: decimal.Decimal,
     effective_date: datetime.date,
 ) -> bool:

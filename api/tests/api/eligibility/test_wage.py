@@ -116,7 +116,9 @@ def test_average_weekly_wage_calculator_one_employer_current_quarter_only():
     calculator.set_quarter_wage(EMPL1, quarter.Quarter(2022, 3), decimal.Decimal(20000))  # Base p
 
     average_weekly_wage = calculator.compute_average_weekly_wage()
-    assert average_weekly_wage == 1539  # 20000 / 13, rounded up to next dollar
+    assert average_weekly_wage == decimal.Decimal(
+        "1539.00"
+    )  # 20000 / 13, rounded up to next dollar
 
 
 def test_average_weekly_wage_calculator_one_employer_next_quarter():
