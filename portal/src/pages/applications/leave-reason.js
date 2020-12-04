@@ -80,6 +80,10 @@ export const LeaveReason = (props) => {
     value: LeaveReasonEnum.serviceMemberFamily,
   };
 
+  const showJan1ApplicationInstructions = isFeatureEnabled(
+    "claimantShowJan1ApplicationInstructions"
+  );
+
   // Medical leave type is disabled for soft launch (CP-1245)
   // TODO (CP-1246): Remove this feature flag when the portal supports medical
   const showMedicalLeaveType = isFeatureEnabled("claimantShowMedicalLeaveType");
@@ -107,27 +111,28 @@ export const LeaveReason = (props) => {
       title={t("pages.claimsLeaveReason.title")}
       onSave={handleSave}
     >
-      {(!showMilitaryLeaveTypes || !showMedicalLeaveType) && (
-        <Alert state="info" neutral>
-          <Trans
-            i18nKey="pages.claimsLeaveReason.alertBody"
-            components={{
-              "mass-benefits-guide-serious-health-condition-link": (
-                <a
-                  target="_blank"
-                  rel="noopener"
-                  href={
-                    routes.external.massgov.benefitsGuide_seriousHealthCondition
-                  }
-                />
-              ),
-              p: <p />,
-              ul: <ul className="usa-list" />,
-              li: <li />,
-            }}
-          />
-        </Alert>
-      )}
+      <Alert state="info" neutral>
+        <Trans
+          i18nKey="pages.claimsLeaveReason.alertBody"
+          components={{
+            "mass-benefits-guide-serious-health-condition": (
+              <a
+                target="_blank"
+                rel="noopener"
+                href={
+                  routes.external.massgov.benefitsGuide_seriousHealthCondition
+                }
+              />
+            ),
+            p: <p />,
+            ul: <ul className="usa-list" />,
+            li: <li />,
+          }}
+          tOptions={{
+            context: showJan1ApplicationInstructions ? null : "prelaunch",
+          }}
+        />
+      </Alert>
 
       <InputChoiceGroup
         {...getFunctionalInputProps("leave_details.reason")}

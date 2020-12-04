@@ -422,33 +422,6 @@ exports[`Success renders content tailored to Family (Bonding Future Newborn) 1`]
         }
       }
     />
-    <div
-      className="padding-top-2 margin-top-2"
-    >
-      <Heading
-        level="2"
-      >
-        <SvgIconCopy
-          className="margin-right-2 text-secondary text-middle"
-          fill="currentColor"
-          height={30}
-          width={30}
-        />
-        If you gave birth, you may also be eligible for paid medical leave
-      </Heading>
-      <p>
-        <Trans
-          components={
-            Object {
-              "gestational-parents-overview-link": <a
-                href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-guide#about-family-leave-to-bond-with-a-child-"
-              />,
-            }
-          }
-          i18nKey="pages.claimsSuccess.medicalLeaveAfterBirth"
-        />
-      </p>
-    </div>
     <UserFeedback
       url="https://www.mass.gov/paidleave-claimant-feedback"
     />
@@ -544,19 +517,6 @@ exports[`Success renders content tailored to Family (Bonding Future Newborn) 4`]
 </ul>
 `;
 
-exports[`Success renders content tailored to Family (Bonding Future Newborn) 5`] = `
-Array [
-  "You can take up to 20 weeks of paid medical leave if you're unable to work during your pregnancy and to recover from childbirth. Your health care provider determines how much medical leave you will need. You'll need to fill out a ",
-  <a
-    href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-guide#about-family-leave-to-bond-with-a-child-"
-    key="1"
-  >
-    separate leave application
-  </a>,
-  " to take medical leave in addition to your family leave.",
-]
-`;
-
 exports[`Success renders content tailored to Family (Bonding Newborn) 1`] = `
 <Fragment>
   <Title>
@@ -632,33 +592,6 @@ exports[`Success renders content tailored to Family (Bonding Newborn) 1`] = `
         }
       }
     />
-    <div
-      className="padding-top-2 margin-top-2"
-    >
-      <Heading
-        level="2"
-      >
-        <SvgIconCopy
-          className="margin-right-2 text-secondary text-middle"
-          fill="currentColor"
-          height={30}
-          width={30}
-        />
-        If you gave birth, you may also be eligible for paid medical leave
-      </Heading>
-      <p>
-        <Trans
-          components={
-            Object {
-              "gestational-parents-overview-link": <a
-                href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-guide#about-family-leave-to-bond-with-a-child-"
-              />,
-            }
-          }
-          i18nKey="pages.claimsSuccess.medicalLeaveAfterBirth"
-        />
-      </p>
-    </div>
     <UserFeedback
       url="https://www.mass.gov/paidleave-claimant-feedback"
     />
@@ -747,19 +680,6 @@ exports[`Success renders content tailored to Family (Bonding Newborn) 4`] = `
   </li>
    
 </ul>
-`;
-
-exports[`Success renders content tailored to Family (Bonding Newborn) 5`] = `
-Array [
-  "You can take up to 20 weeks of paid medical leave if you're unable to work during your pregnancy and to recover from childbirth. Your health care provider determines how much medical leave you will need. You'll need to fill out a ",
-  <a
-    href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-guide#about-family-leave-to-bond-with-a-child-"
-    key="1"
-  >
-    separate leave application
-  </a>,
-  " to take medical leave in addition to your family leave.",
-]
 `;
 
 exports[`Success renders content tailored to Medical (Not pregnant) 1`] = `

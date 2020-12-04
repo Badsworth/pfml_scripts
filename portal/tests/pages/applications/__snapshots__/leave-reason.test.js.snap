@@ -13,7 +13,7 @@ exports[`LeaveReasonPage renders the page for medical leave and does not show re
       components={
         Object {
           "li": <li />,
-          "mass-benefits-guide-serious-health-condition-link": <a
+          "mass-benefits-guide-serious-health-condition": <a
             href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-guide#what-is-a-serious-health-condition?-"
             rel="noopener"
             target="_blank"
@@ -25,6 +25,11 @@ exports[`LeaveReasonPage renders the page for medical leave and does not show re
         }
       }
       i18nKey="pages.claimsLeaveReason.alertBody"
+      tOptions={
+        Object {
+          "context": "prelaunch",
+        }
+      }
     />
   </Alert>
   <InputChoiceGroup
@@ -131,10 +136,15 @@ Array [
     <li
       key="1"
     >
-      Family leave to manage family affairs while a family member is on active duty overseas
+      Family leave to bond with your child prior to birth, adoption, or foster placement
     </li>
     <li
       key="2"
+    >
+      Family leave to manage family affairs while a family member is on active duty overseas
+    </li>
+    <li
+      key="3"
     >
       Family leave to care for a family member who serves in the armed forces
     </li>

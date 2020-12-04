@@ -14,6 +14,7 @@ import { Trans } from "react-i18next";
 import UserFeedback from "../../components/UserFeedback";
 import findKeyByValue from "../../utils/findKeyByValue";
 import { get } from "lodash";
+import { isFeatureEnabled } from "../../services/featureFlags";
 import routes from "../../routes";
 import { useTranslation } from "../../locales/i18n";
 import withClaim from "../../hoc/withClaim";
@@ -145,26 +146,28 @@ export const Success = (props) => {
           </div>
         )}
 
-        {claim.isBondingLeave && reason_qualifier === ReasonQualifier.newBorn && (
-          <div className={secondaryContentContainerClasses}>
-            <Heading level="2">
-              <IconCopy {...iconProps} />
-              {t("pages.claimsSuccess.medicalLeaveAfterBirthHeading")}
-            </Heading>
-            <p>
-              <Trans
-                i18nKey="pages.claimsSuccess.medicalLeaveAfterBirth"
-                components={{
-                  "gestational-parents-overview-link": (
-                    <a
-                      href={routes.external.massgov.gestationalParentOverview}
-                    />
-                  ),
-                }}
-              />
-            </p>
-          </div>
-        )}
+        {isFeatureEnabled("claimantShowJan1ApplicationInstructions") &&
+          claim.isBondingLeave &&
+          reason_qualifier === ReasonQualifier.newBorn && (
+            <div className={secondaryContentContainerClasses}>
+              <Heading level="2">
+                <IconCopy {...iconProps} />
+                {t("pages.claimsSuccess.medicalLeaveAfterBirthHeading")}
+              </Heading>
+              <p>
+                <Trans
+                  i18nKey="pages.claimsSuccess.medicalLeaveAfterBirth"
+                  components={{
+                    "gestational-parents-overview-link": (
+                      <a
+                        href={routes.external.massgov.gestationalParentOverview}
+                      />
+                    ),
+                  }}
+                />
+              </p>
+            </div>
+          )}
 
         <UserFeedback url={routes.external.massgov.feedbackClaimant} />
 

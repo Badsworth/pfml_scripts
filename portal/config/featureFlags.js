@@ -17,6 +17,11 @@ const flagsConfig = {
     // TODO (CP-1281): Show employment status question when Portal supports other employment statuses
     claimantShowEmploymentStatus: false,
 
+    // When this flag is enabled, claimant can see the leave types available to them on Jan 1.
+    // TODO (CP-1496): Show Jan 1 application instructions when portal supports
+    // bonding pre/post birth/placement and medical leave
+    claimantShowJan1ApplicationInstructions: false,
+
     // When this flag is enabled, the medical leave option is selectable on
     // the Leave Reason page in the claimant flow (CP-1245)
     // TODO (CP-1246): Show this option when portal supports medical leave

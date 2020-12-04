@@ -13,6 +13,7 @@ import PropTypes from "prop-types";
 import React from "react";
 import Title from "../components/Title";
 import { Trans } from "react-i18next";
+import { isFeatureEnabled } from "../services/featureFlags";
 import routes from "../routes";
 import { useTranslation } from "../locales/i18n";
 import withUser from "../hoc/withUser";
@@ -23,6 +24,10 @@ import withUser from "../hoc/withUser";
 export const Dashboard = (props) => {
   const { appLogic } = props;
   const { t } = useTranslation();
+
+  const showJan1ApplicationInstructions = isFeatureEnabled(
+    "claimantShowJan1ApplicationInstructions"
+  );
 
   const alertIconProps = {
     className: "margin-right-1 text-secondary text-middle",
@@ -58,6 +63,9 @@ export const Dashboard = (props) => {
             ul: <ul className="usa-list" />,
             li: <li />,
           }}
+          tOptions={{
+            context: showJan1ApplicationInstructions ? null : "prelaunch",
+          }}
         />
 
         <Heading level="3">
@@ -75,6 +83,9 @@ export const Dashboard = (props) => {
             ),
             ul: <ul className="usa-list" />,
             li: <li />,
+          }}
+          tOptions={{
+            context: showJan1ApplicationInstructions ? null : "prelaunch",
           }}
         />
       </Alert>
@@ -98,6 +109,9 @@ export const Dashboard = (props) => {
             "healthcare-provider-form-link": (
               <a href={routes.external.massgov.healthcareProviderForm} />
             ),
+          }}
+          tOptions={{
+            context: showJan1ApplicationInstructions ? null : "prelaunch",
           }}
         />
 

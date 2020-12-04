@@ -33,6 +33,11 @@ exports[`Dashboard renders dashboard content 1`] = `
         }
       }
       i18nKey="pages.dashboard.alertOnline"
+      tOptions={
+        Object {
+          "context": "prelaunch",
+        }
+      }
     />
     <Heading
       level="3"
@@ -58,6 +63,11 @@ exports[`Dashboard renders dashboard content 1`] = `
         }
       }
       i18nKey="pages.dashboard.alertPhone"
+      tOptions={
+        Object {
+          "context": "prelaunch",
+        }
+      }
     />
   </Alert>
   <div
@@ -150,6 +160,11 @@ exports[`Dashboard renders dashboard content 1`] = `
         }
       }
       i18nKey="pages.dashboard.stepTwo"
+      tOptions={
+        Object {
+          "context": "prelaunch",
+        }
+      }
     />
     <Heading
       level="2"
@@ -216,7 +231,7 @@ Array [
   <p
     key="p-0"
   >
-    You can apply online if you meet all of the following criteria:
+    You can apply online or by phone if you meet all of the following criteria:
   </p>,
   <ul
     className="usa-list"
@@ -235,7 +250,7 @@ Array [
     <li
       key="2"
     >
-      Applying for paid family leave to bond with your child after birth, adoption, or foster placement
+      Applying for paid family leave to bond with your child after a 2020 birth, adoption, or foster placement
     </li>
   </ul>,
 ]
@@ -260,7 +275,7 @@ Array [
     <li
       key="1"
     >
-      Applying for paid family leave to bond with your child after birth, adoption, or foster placement
+      Applying for paid family leave to bond with your child after a 2020 birth, adoption, or foster placement
     </li>
   </ul>,
   <p
@@ -294,30 +309,11 @@ Array [
 `;
 
 exports[`Dashboard renders dashboard content 5`] = `
-Array [
-  <p
-    key="p-0"
-  >
-    For medical leave your health care provider must complete the 
-    <a
-      href="https://www.mass.gov/hcp-form"
-      key="1"
-    >
-      PFML Certification of a Serious Health Condition
-    </a>
-    .
-  </p>,
-  <p
-    key="p-1"
-  >
-    For family leave to bond with your child after birth, foster placement, or adoption you need a document that confirms your child's date of birth, or placement.
-  </p>,
-  <p
-    key="p-2"
-  >
-    You can apply before your child is born or arrives in your home. You will need to provide proof of birth or placement for your application to be approved.
-  </p>,
-]
+<p
+  key="p-0"
+>
+  For family leave to bond with your child after birth, foster placement, or adoption you need a document that confirms your child's date of birth or placement.
+</p>
 `;
 
 exports[`Dashboard renders dashboard content 6`] = `

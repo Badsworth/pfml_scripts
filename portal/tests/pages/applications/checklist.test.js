@@ -12,6 +12,13 @@ function renderStepListDescription(stepListWrapper) {
 const diveLevels = 4;
 
 describe("Checklist", () => {
+  beforeEach(() => {
+    process.env.featureFlags = {
+      // TODO (CP-1496): Remove this once the flag becomes obsolete
+      claimantShowJan1ApplicationInstructions: true,
+    };
+  });
+
   it("renders multiple StepList components with list of Steps", () => {
     const { wrapper } = renderWithAppLogic(Checklist, {
       diveLevels,
