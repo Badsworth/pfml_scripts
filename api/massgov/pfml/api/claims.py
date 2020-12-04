@@ -7,7 +7,7 @@ from werkzeug.exceptions import Forbidden, Unauthorized
 
 import massgov.pfml.api.app as app
 import massgov.pfml.api.util.response as response_util
-from massgov.pfml.api.authorization.flask import READ, ensure, requires
+from massgov.pfml.api.authorization.flask import READ, requires
 from massgov.pfml.api.models.claims.common import EmployerClaimReview
 from massgov.pfml.api.services.administrator_fineos_actions import (
     create_eform,
@@ -113,7 +113,6 @@ def employer_get_claim_review(fineos_absence_id: str) -> flask.Response:
     with app.db_session() as db_session:
 
         employer = get_or_404(db_session, Employer, user_leave_admin.employer_id)
-        ensure(READ, employer)
 
         claim = get_claim_as_leave_admin(
             user_leave_admin.fineos_web_id, fineos_absence_id, employer.employer_fein  # type: ignore

@@ -18,9 +18,7 @@ def has_role_in(user: User, accepted_roles: List[LkRole]) -> bool:
     return False
 
 
-def create_authorization(
-    enable_employees: bool, enable_employers: bool
-) -> Callable[[User, Any], None]:
+def create_authorization(enable_employees: bool) -> Callable[[User, Any], None]:
     def define_authorization(user: User, they: RuleList) -> None:
         # FINEOS endpoint auth
         if has_role_in(user, [Role.FINEOS]):
@@ -34,8 +32,6 @@ def create_authorization(
             leave_admins(user, they)
             if enable_employees:
                 employees(user, they)
-            if enable_employers:
-                employers(user, they)
 
     return define_authorization
 
@@ -92,10 +88,6 @@ def can_download(user: User, doc: Union[Document, DocumentResponse]) -> bool:
 
 def users(user: User, they: RuleList) -> None:
     they.can((EDIT, READ), "User", user_id=user.user_id)
-
-
-def employers(user: User, they: RuleList) -> None:
-    they.can((EDIT, READ), "Employer")
 
 
 def employees(user: User, they: RuleList) -> None:

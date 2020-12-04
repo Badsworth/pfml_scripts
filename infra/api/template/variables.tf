@@ -253,11 +253,6 @@ variable "portal_absence_claimant_url" {
   default     = ""
 }
 
-variable "enable_employer_endpoints" {
-  description = "Enable Employer API endpoints in this environment"
-  type        = string
-}
-
 variable "enable_application_fraud_check" {
   description = "Enable the fraud check for application submission"
   type        = string

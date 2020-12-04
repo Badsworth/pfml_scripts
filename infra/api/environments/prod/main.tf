@@ -73,7 +73,6 @@ module "api" {
   fineos_eligibility_transfer_lambda_build_s3_key  = local.fineos_eligibility_transfer_lambda_build_s3_key
   portal_absence_leave_admin_url                   = "https://paidleave.mass.gov/employers/applications/new-application/?absence_id="
   portal_absence_claimant_url                      = "https://paidleave.mass.gov/applications"
-  enable_employer_endpoints                        = "0"
   enable_application_fraud_check                   = "1"
 
   fineos_aws_iam_role_arn         = "arn:aws:iam::133945341851:role/somprod-IAMRoles-CustomerAccountAccessRole-83KBPT56FTQP"

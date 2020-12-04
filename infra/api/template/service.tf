@@ -89,7 +89,6 @@ data "template_file" "container_definitions" {
     service_now_base_url                       = var.service_now_base_url
     portal_absence_leave_admin_url             = var.portal_absence_leave_admin_url
     portal_absence_claimant_url                = var.portal_absence_claimant_url
-    enable_employer_endpoints                  = var.enable_employer_endpoints
     enable_application_fraud_check             = var.enable_application_fraud_check
   }
 }

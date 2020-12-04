@@ -65,6 +65,5 @@ module "api" {
   fineos_aws_iam_role_arn                          = null // TODO if needed
   fineos_aws_iam_role_external_id                  = null // TODO if needed
   service_now_base_url                             = "https://savilinxstage.servicenowservices.com"
-  enable_employer_endpoints                        = "1"
   enable_application_fraud_check                   = "0"
 }

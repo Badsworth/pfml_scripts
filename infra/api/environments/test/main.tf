@@ -82,6 +82,5 @@ module "api" {
   service_now_base_url                             = "https://savilinxtest.servicenowservices.com"
   portal_absence_leave_admin_url                   = "https://paidleave-test.mass.gov/employers/applications/new-application/?absence_id="
   portal_absence_claimant_url                      = "https://paidleave-test.mass.gov/applications"
-  enable_employer_endpoints                        = "1"
   enable_application_fraud_check                   = "0"
 }

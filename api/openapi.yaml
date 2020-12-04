@@ -175,33 +175,6 @@ paths:
       requestBody:
         $ref: "#/components/requestBodies/EmployeeSearchRequest"
 
-  /employers/{employer_id}:
-    get:
-      tags:
-        - Employers
-      summary: Retrieve an Employer record
-      operationId: massgov.pfml.api.employers.employers_get
-      parameters:
-        - name: employer_id
-          in: path
-          schema:
-            type: string
-            format: uuid
-          description: ID of Employer to retrieve
-          required: true
-      responses:
-        "200":
-          description: A successful request returns a 200 status code and an employer object.
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: "#/components/schemas/SuccessfulResponse"
-                  - properties:
-                      data:
-                        $ref: "#/components/schemas/EmployerResponse"
-        "404":
-          $ref: "#/components/responses/NotFound"
 
   /employers/claims/{fineos_absence_id}/documents/{fineos_document_id}:
     get:
