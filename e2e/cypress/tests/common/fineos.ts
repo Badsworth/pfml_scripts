@@ -224,6 +224,7 @@ Then(
         cy.wait(200);
       });
     });
+    cy.get("#editAbsencePeriodPopupWidget_un29_okButtonBean").click();
     fineos.clickBottomWidgetButton("OK");
     cy.wait("@ajaxRender");
     cy.wait(200);
