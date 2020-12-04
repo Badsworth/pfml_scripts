@@ -114,4 +114,21 @@ describe("UploadDocsOptions", () => {
       );
     });
   });
+
+  describe("when a user does not choose an doc type option", () => {
+    beforeEach(() => {
+      ({ appLogic, claim, wrapper } = renderWithAppLogic(UploadDocsOptions, {
+        claimAttrs: new MockClaimBuilder().completed().create(),
+      }));
+    });
+
+    it("shows a validation error to require a doc type", () => {
+      act(() => {
+        wrapper.find("QuestionPage").simulate("save");
+      });
+
+      expect(appLogic.setAppErrors).toHaveBeenCalledTimes(1);
+      expect(appLogic.portalFlow.goToNextPage).not.toHaveBeenCalled();
+    });
+  });
 });

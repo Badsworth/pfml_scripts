@@ -494,7 +494,7 @@ def payment_preference_submit(application_id: str) -> Response:
                     db_session.add(existing_application)
                     db_session.commit()
                     db_session.refresh(existing_application)
-                    logger.warning(existing_application.has_submitted_payment_preference)
+
                     return response_util.success_response(
                         message="Payment Preference for application {} submitted without errors".format(
                             existing_application.application_id

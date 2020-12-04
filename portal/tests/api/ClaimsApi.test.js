@@ -1,3 +1,6 @@
+import PaymentPreference, {
+  PaymentPreferenceMethod,
+} from "../../src/models/PaymentPreference";
 import { Auth } from "@aws-amplify/auth";
 import Claim from "../../src/models/Claim";
 import ClaimCollection from "../../src/models/ClaimCollection";
@@ -328,6 +331,59 @@ describe("ClaimsApi", () => {
         Object {
           "status": 201,
           "success": true,
+        }
+      `);
+    });
+  });
+
+  describe("submitPaymentPreference", () => {
+    let claim, payment_preference;
+
+    beforeEach(() => {
+      payment_preference = new PaymentPreference({
+        payment_method: PaymentPreferenceMethod.check,
+      });
+
+      claim = new Claim({ payment_preference });
+
+      global.fetch = mockFetch({
+        response: { data: { ...claim } },
+        status: 201,
+      });
+    });
+
+    it("sends POST request to /applications/:application_id/submit_payment_preference", async () => {
+      await claimsApi.submitPaymentPreference(
+        claim.application_id,
+        payment_preference
+      );
+      expect(fetch).toHaveBeenCalledWith(
+        `${process.env.apiUrl}/applications/${claim.application_id}/submit_payment_preference`,
+        {
+          body: JSON.stringify(payment_preference),
+          headers,
+          method: "POST",
+        }
+      );
+    });
+
+    it("resolves with claim, success, status properties", async () => {
+      const {
+        claim: claimResponse,
+        ...rest
+      } = await claimsApi.submitPaymentPreference(
+        claim.application_id,
+        payment_preference
+      );
+
+      expect(claimResponse).toBeInstanceOf(Claim);
+      expect(claimResponse).toEqual(claim);
+      expect(rest).toMatchInlineSnapshot(`
+        Object {
+          "errors": undefined,
+          "status": 201,
+          "success": true,
+          "warnings": Array [],
         }
       `);
     });
