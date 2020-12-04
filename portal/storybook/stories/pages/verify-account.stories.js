@@ -14,7 +14,6 @@ export default {
           "Claimant post-signup",
           "Employer post-signup",
           "After page reload",
-          "UserNotFoundError",
         ],
       },
     },
@@ -32,8 +31,6 @@ export const Page = (args) => {
     authData.createAccountUsername = "me-employer@acme.com";
     authData.createAccountFlow = "employer";
     authData.employerIdNumber = "12-3456789";
-  } else if (args.scenario === "UserNotFoundError") {
-    query["user-not-found"] = "true";
   }
 
   const appLogic = {

@@ -8,8 +8,8 @@ import classnames from "classnames";
  * [USWDS Reference ↗](https://designsystem.digital.gov/components/button/)
  */
 function Button({ type = "button", ...props }) {
-  const showLoading = props.loading && props.variation !== "unstyled";
-  // Maintain button width when in loading stae by hiding content
+  const showLoading = props.loading;
+  // Maintain button width when in loading state by hiding content
   const children = showLoading ? (
     <React.Fragment>
       <span className="position-absolute width-full height-full left-0 top-1">
@@ -30,6 +30,7 @@ function Button({ type = "button", ...props }) {
       // This is weird, but we need this so that the inversed styling
       // kicks in when the variation is unstyled
       "usa-button--outline": props.inversed && props.variation === "unstyled",
+      "minh-5 text-center": showLoading && props.variation === "unstyled",
     }
   );
 

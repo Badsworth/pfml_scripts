@@ -38,7 +38,8 @@ const errors = {
       "Invalid verification code. Make sure the code matches the code emailed to you.",
     codeRequired: "Enter the 6 digit code sent to your email",
     emailRequired: "Enter your email address",
-    employerIdNumberRequired: "Enter your employer ID number",
+    employerIdNumberRequired:
+      "Enter your 9-digit Employer Identification Number.",
     expiredVerificationCode:
       "Invalid verification code. Please request a new code.",
     incorrectEmailOrPassword: "Incorrect email or password",
@@ -49,6 +50,10 @@ const errors = {
     invalidParametersIncludingMaybePassword:
       "Check the requirements and try again. Ensure all required information is entered and the password meets the requirements.",
     invalidPhoneFormat: "Invalid phone number",
+    isEmployer: {
+      required:
+        "Select Yes if you are you creating an employer account to manage leave for your company.",
+    },
     passwordErrors:
       "Your password does not meet the requirements. Please check the requirements and try again.",
     passwordRequired: "Enter your password",
@@ -540,9 +545,11 @@ const pages = {
       "We sent a new 6 digit verification code to your email address. Enter the new code to verify your email.",
     codeResentHeading: "New verification code sent",
     confirmButton: "Submit",
-    einLabel: "Employer ID number",
+    einLabel: "Employer ID number (EIN)",
     employerAccountLabel:
-      "I need an employer account to manage leave for my team.",
+      "Are you creating an employer account to manage leave for your company?",
+    employerChoiceNo: "$t(shared.choiceNo)",
+    employerChoiceYes: "$t(shared.choiceYes)",
     lead:
       "We sent a 6 digit verification code to your email address. Enter the code to verify your email.",
     lead_email:

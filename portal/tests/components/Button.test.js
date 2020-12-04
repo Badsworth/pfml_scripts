@@ -74,11 +74,10 @@ describe("Button", () => {
       expect(wrapper.find("button").prop("disabled")).toBe(true);
     });
 
-    it("does not disable button or add a spinner when variation is unstyled", () => {
+    it("sets minimum height when variation is unstyled", () => {
       const { wrapper } = render({ loading: true, variation: "unstyled" });
 
-      expect(wrapper.find("Spinner").exists()).toBe(false);
-      expect(wrapper.find("button").prop("disabled")).toBe(false);
+      expect(wrapper.find("button").hasClass("minh-5")).toBe(true);
     });
 
     it("renders a message when loadingMessage is set", () => {

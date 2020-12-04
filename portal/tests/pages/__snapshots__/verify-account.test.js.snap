@@ -13,6 +13,14 @@ exports[`VerifyAccount renders the empty page 1`] = `
       We sent a 6 digit verification code to your email address. Enter the code to verify your email.
     </Lead>
     <InputText
+      label="Email address"
+      name="username"
+      onChange={[Function]}
+      smallLabel={true}
+      type="email"
+      value=""
+    />
+    <InputText
       autoComplete="off"
       inputMode="numeric"
       label="6-digit code"
@@ -21,24 +29,39 @@ exports[`VerifyAccount renders the empty page 1`] = `
       smallLabel={true}
       value=""
     />
-    <InputText
-      label="Email address"
-      name="username"
+    <div>
+      <Button
+        className="margin-top-1"
+        loading={false}
+        name="resend-code-button"
+        onClick={[Function]}
+        variation="unstyled"
+      >
+        Send a new code
+      </Button>
+    </div>
+    <InputChoiceGroup
+      choices={
+        Array [
+          Object {
+            "checked": false,
+            "label": "Yes",
+            "value": "true",
+          },
+          Object {
+            "checked": false,
+            "label": "No",
+            "value": "false",
+          },
+        ]
+      }
+      label="Are you creating an employer account to manage leave for your company?"
+      name="isEmployer"
       onChange={[Function]}
       smallLabel={true}
-      type="email"
+      type="radio"
       value=""
     />
-    <div
-      className="margin-top-4"
-    >
-      <InputChoice
-        label="I need an employer account to manage leave for my team."
-        name="isEmployer"
-        onChange={[Function]}
-        value="true"
-      />
-    </div>
     <ConditionalContent
       clearField={[Function]}
       fieldNamesClearedWhenHidden={
@@ -48,10 +71,10 @@ exports[`VerifyAccount renders the empty page 1`] = `
       }
       getField={[Function]}
       updateFields={[Function]}
-      visible={false}
+      visible={null}
     >
       <InputText
-        label="Employer ID number"
+        label="Employer ID number (EIN)"
         mask="fein"
         name="ein"
         onChange={[Function]}
@@ -59,17 +82,6 @@ exports[`VerifyAccount renders the empty page 1`] = `
         value=""
       />
     </ConditionalContent>
-    <div>
-      <Button
-        className="margin-top-4"
-        loading={false}
-        name="resend-code-button"
-        onClick={[Function]}
-        variation="unstyled"
-      >
-        Send a new code
-      </Button>
-    </div>
     <Button
       loading={false}
       type="submit"

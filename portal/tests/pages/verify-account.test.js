@@ -11,8 +11,8 @@ jest.mock("../../src/hooks/useAppLogic");
 
 describe("VerifyAccount", () => {
   let appLogic,
-    changeCheckbox,
     changeField,
+    changeRadioGroup,
     click,
     ein,
     resolveResendVerifyAccountCodeMock,
@@ -25,7 +25,7 @@ describe("VerifyAccount", () => {
     act(() => {
       wrapper = shallow(<VerifyAccount appLogic={appLogic} />);
     });
-    ({ changeField, click, changeCheckbox, submitForm } = simulateEvents(
+    ({ changeField, click, changeRadioGroup, submitForm } = simulateEvents(
       wrapper
     ));
   }
@@ -49,6 +49,30 @@ describe("VerifyAccount", () => {
     expect(wrapper).toMatchSnapshot();
   });
 
+  it("prevents submission when isEmployer isn't set", () => {
+    submitForm();
+
+    expect(appLogic.setAppErrors).toHaveBeenCalledTimes(1);
+    expect(appLogic.auth.verifyAccount).not.toHaveBeenCalled();
+    expect(appLogic.auth.verifyEmployerAccount).not.toHaveBeenCalled();
+
+    changeRadioGroup("isEmployer", "false");
+    submitForm();
+
+    expect(appLogic.auth.verifyAccount).not.toHaveBeenCalled();
+  });
+
+  it("submits empty strings if user has not entered values yet", () => {
+    changeRadioGroup("isEmployer", "true");
+    submitForm();
+
+    expect(appLogic.auth.verifyEmployerAccount).toHaveBeenCalledWith(
+      "",
+      "",
+      ""
+    );
+  });
+
   describe("when authData.username is set", () => {
     beforeEach(() => {
       appLogic.auth.authData = { createAccountUsername: username };
@@ -66,9 +90,11 @@ describe("VerifyAccount", () => {
       );
     });
 
-    describe("when the form is submitted", () => {
+    describe("when user is not an employer and the form is submitted", () => {
       it("calls verifyAccount", () => {
         changeField("code", verificationCode);
+        changeRadioGroup("isEmployer", "false");
+
         submitForm();
         expect(appLogic.auth.verifyAccount).toHaveBeenCalledWith(
           username,
@@ -91,10 +117,11 @@ describe("VerifyAccount", () => {
       );
     });
 
-    describe("when the form is submitted", () => {
+    describe("when user is not an employer and the form is submitted", () => {
       it("calls verifyAccount", () => {
         changeField("username", username);
         changeField("code", verificationCode);
+        changeRadioGroup("isEmployer", "false");
         submitForm();
         expect(appLogic.auth.verifyAccount).toHaveBeenCalledWith(
           username,
@@ -115,7 +142,7 @@ describe("VerifyAccount", () => {
     });
 
     it("does not render a checkbox for user to state whether they're an employer", () => {
-      expect(wrapper.find("InputChoice[name='isEmployer']").exists()).toBe(
+      expect(wrapper.find("InputChoiceGroup[name='isEmployer']").exists()).toBe(
         false
       );
     });
@@ -133,23 +160,23 @@ describe("VerifyAccount", () => {
 
   describe("when employerIdNumber and createAccountFlow are not set in authData", () => {
     it("renders a checkbox for user to state whether they're an employer", () => {
-      expect(wrapper.find("InputChoice[name='isEmployer']").exists()).toBe(
+      expect(wrapper.find("InputChoiceGroup[name='isEmployer']").exists()).toBe(
         true
       );
     });
 
     it("displays an employer id number field if user selects checkbox", () => {
-      changeCheckbox("isEmployer", true);
+      changeRadioGroup("isEmployer", "true");
       expect(wrapper.find("ConditionalContent").prop("visible")).toBe(true);
     });
 
     it("hides the employer id number field is user deselects checkbox", () => {
-      changeCheckbox("isEmployer", false);
+      changeRadioGroup("isEmployer", "false");
       expect(wrapper.find("ConditionalContent").prop("visible")).toBe(false);
     });
 
     it("calls verifyEmployerAccount upon form submission", () => {
-      changeCheckbox("isEmployer", true);
+      changeRadioGroup("isEmployer", "true");
       changeField("code", verificationCode);
       changeField("username", username);
       changeField("ein", ein);
@@ -172,7 +199,7 @@ describe("VerifyAccount", () => {
     });
 
     it("does not render a checkbox for user to state whether they're an employer", () => {
-      expect(wrapper.find("InputChoice[name='isEmployer']").exists()).toBe(
+      expect(wrapper.find("InputChoiceGroup[name='isEmployer']").exists()).toBe(
         false
       );
     });
@@ -207,7 +234,7 @@ describe("VerifyAccount", () => {
     });
 
     it("render EIN field by default", () => {
-      expect(wrapper.find("InputChoice[name='isEmployer']").exists()).toBe(
+      expect(wrapper.find("InputChoiceGroup[name='isEmployer']").exists()).toBe(
         false
       );
       expect(wrapper.find("ConditionalContent").prop("visible")).toBe(true);

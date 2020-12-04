@@ -1,8 +1,10 @@
 import React, { useState } from "react";
 import Alert from "../components/Alert";
+import AppErrorInfo from "../models/AppErrorInfo";
+import AppErrorInfoCollection from "../models/AppErrorInfoCollection";
 import Button from "../components/Button";
 import ConditionalContent from "../components/ConditionalContent";
-import InputChoice from "../components/InputChoice";
+import InputChoiceGroup from "../components/InputChoiceGroup";
 import InputText from "../components/InputText";
 import Lead from "../components/Lead";
 import Link from "next/link";
@@ -21,18 +23,9 @@ export const VerifyAccount = (props) => {
   const { appErrors, auth } = appLogic;
   const { t } = useTranslation();
 
-  const createAccountUsername = get(auth, "authData.createAccountUsername");
+  const createAccountUsername = get(auth, "authData.createAccountUsername", "");
   const createAccountFlow = get(auth, "authData.createAccountFlow");
-  const employerIdNumber = get(auth, "authData.employerIdNumber");
-
-  const { formState, getField, updateFields, clearField } = useFormState({
-    code: "",
-    username: createAccountUsername,
-    ein: employerIdNumber,
-    // TODO (CP-1407): Remove feature flag condition once claimants can also have accounts
-    isEmployer: !isFeatureEnabled("claimantShowAuth") || !!employerIdNumber,
-  });
-  const [codeResent, setCodeResent] = useState(false);
+  const employerIdNumber = get(auth, "authData.employerIdNumber", "");
 
   // If a user reloads the page, we'd lose the email and FEIN stored in authData,
   // which we need for verifying their account
@@ -42,8 +35,43 @@ export const VerifyAccount = (props) => {
   // TODO (CP-1407): Remove this condition once claimants can also have accounts
   const showEinToggle = isFeatureEnabled("claimantShowAuth");
 
+  /**
+   * Get the initial value for the "Are you creating an employer account?" option
+   * @returns {boolean|null}
+   */
+  const getInitialIsEmployerValue = () => {
+    // TODO (CP-1407): Remove showEinToggle portion of the condition once claimants can also have accounts
+    if (!showEinToggle || employerIdNumber) return true;
+
+    // We don't know if the user is a claimant or an employer, so don't want to
+    // set the default value and require the user to select an option
+    return null;
+  };
+
+  const { formState, getField, updateFields, clearField } = useFormState({
+    code: "",
+    username: createAccountUsername,
+    ein: employerIdNumber,
+    isEmployer: getInitialIsEmployerValue(),
+  });
+  const [codeResent, setCodeResent] = useState(false);
+
   const handleSubmit = useThrottledHandler(async (event) => {
     event.preventDefault();
+
+    if (formState.isEmployer === null) {
+      appLogic.setAppErrors(
+        new AppErrorInfoCollection([
+          new AppErrorInfo({
+            field: "isEmployer",
+            message: t("errors.auth.isEmployer.required"),
+          }),
+        ])
+      );
+
+      return;
+    }
+
     if (formState.isEmployer) {
       await auth.verifyEmployerAccount(
         formState.username,
@@ -90,13 +118,6 @@ export const VerifyAccount = (props) => {
             emailAddress: createAccountUsername,
           })}
         </Lead>
-        <InputText
-          {...getFunctionalInputProps("code")}
-          autoComplete="off"
-          inputMode="numeric"
-          label={t("pages.authVerifyAccount.codeLabel")}
-          smallLabel
-        />
 
         {showEmailField && (
           <InputText
@@ -107,17 +128,48 @@ export const VerifyAccount = (props) => {
           />
         )}
 
+        <InputText
+          {...getFunctionalInputProps("code")}
+          autoComplete="off"
+          inputMode="numeric"
+          label={t("pages.authVerifyAccount.codeLabel")}
+          smallLabel
+        />
+
+        <div>
+          <Button
+            className="margin-top-1"
+            name="resend-code-button"
+            onClick={handleResendCodeClick}
+            variation="unstyled"
+            loading={handleResendCodeClick.isThrottled}
+          >
+            {t("pages.authVerifyAccount.resendCodeLink")}
+          </Button>
+        </div>
+
         {showEinFields && (
           <React.Fragment>
             {/* TODO (CP-1407): Remove showEinToggle condition once claimants can also have accounts */}
             {showEinToggle && (
-              <div className="margin-top-4">
-                <InputChoice
-                  label={t("pages.authVerifyAccount.employerAccountLabel")}
-                  {...getFunctionalInputProps("isEmployer")}
-                  value="true"
-                />
-              </div>
+              <InputChoiceGroup
+                {...getFunctionalInputProps("isEmployer")}
+                choices={[
+                  {
+                    checked: formState.isEmployer === true,
+                    label: t("pages.authVerifyAccount.employerChoiceYes"),
+                    value: "true",
+                  },
+                  {
+                    checked: formState.isEmployer === false,
+                    label: t("pages.authVerifyAccount.employerChoiceNo"),
+                    value: "false",
+                  },
+                ]}
+                label={t("pages.authVerifyAccount.employerAccountLabel")}
+                type="radio"
+                smallLabel
+              />
             )}
             <ConditionalContent
               fieldNamesClearedWhenHidden={["ein"]}
@@ -135,18 +187,6 @@ export const VerifyAccount = (props) => {
             </ConditionalContent>
           </React.Fragment>
         )}
-
-        <div>
-          <Button
-            className="margin-top-4"
-            name="resend-code-button"
-            onClick={handleResendCodeClick}
-            variation="unstyled"
-            loading={handleResendCodeClick.isThrottled}
-          >
-            {t("pages.authVerifyAccount.resendCodeLink")}
-          </Button>
-        </div>
 
         <Button type="submit" loading={handleSubmit.isThrottled}>
           {t("pages.authVerifyAccount.confirmButton")}

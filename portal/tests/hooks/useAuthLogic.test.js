@@ -851,12 +851,12 @@ describe("useAuthLogic", () => {
 
       expect(appErrors.items).toHaveLength(3);
       expect(appErrors.items.map((e) => e.message)).toMatchInlineSnapshot(`
-          Array [
-            "Enter your email address",
-            "Enter your password",
-            "Enter your employer ID number",
-          ]
-        `);
+        Array [
+          "Enter your email address",
+          "Enter your password",
+          "Enter your 9-digit Employer Identification Number.",
+        ]
+      `);
       expect(Auth.signUp).not.toHaveBeenCalled();
     });
 
@@ -1276,7 +1276,7 @@ describe("useAuthLogic", () => {
           "Enter the 6 digit code sent to your email",
           "Enter your email address",
           "Enter your password",
-          "Enter your employer ID number",
+          "Enter your 9-digit Employer Identification Number.",
         ]
       `);
       expect(Auth.forgotPasswordSubmit).not.toHaveBeenCalled();
@@ -1583,7 +1583,7 @@ describe("useAuthLogic", () => {
       });
       expect(appErrors.items).toHaveLength(1);
       expect(appErrors.items[0].message).toMatchInlineSnapshot(
-        `"Enter your employer ID number"`
+        `"Enter your 9-digit Employer Identification Number."`
       );
       expect(Auth.confirmSignUp).not.toHaveBeenCalled();
     });
