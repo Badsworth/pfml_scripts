@@ -44,3 +44,20 @@ output "smartronix_environment_tags" {
     "training"    = "Sandbox"
   }
 }
+
+output "prod_admin_roles" {
+  value = [
+    "arn:aws:iam::498823821309:role/AWS-498823821309-CloudOps-Engineer",
+    "arn:aws:iam::498823821309:role/AWS-498823821309-Infrastructure-Admin",
+    "arn:aws:iam::498823821309:role/ci-run-deploys",
+  ]
+}
+
+output "nonprod_admin_roles" {
+  value = [
+    "arn:aws:iam::498823821309:role/AWS-498823821309-CloudOps-Engineer",
+    "arn:aws:iam::498823821309:role/AWS-498823821309-Infrastructure-Admin",
+    "arn:aws:iam::498823821309:role/ci-run-deploys",
+    "arn:aws:iam::498823821309:role/AWS-498823821309-NonPROD-Admins",
+  ]
+}
