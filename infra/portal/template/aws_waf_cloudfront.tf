@@ -5,6 +5,10 @@
 resource "aws_wafv2_web_acl" "cloudfront_rate_based_acl" {
   name  = "cloudfront-rate-based-acl"
   scope = "CLOUDFRONT"
+
+  # No rate limiting in performance environment for now (4 Dec 2020)
+  count = var.environment_name == "performance" ? 0 : 1
+
   tags = merge(module.constants.common_tags, {
     environment = module.constants.environment_tags[var.environment_name]
   })

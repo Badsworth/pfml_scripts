@@ -15,7 +15,10 @@ resource "random_password" "s3_user_agent_password" {
 
 resource "aws_cloudfront_distribution" "portal_web_distribution" {
   # AWS Web Application Firewall
-  web_acl_id = aws_wafv2_web_acl.cloudfront_rate_based_acl.arn
+  # If environment is performance, do nothing; else connect the rate-limit firewall
+  web_acl_id = var.environment_name == "performance" ? (null) : (
+    aws_wafv2_web_acl.cloudfront_rate_based_acl[0].arn
+  )
 
   origin {
     domain_name = aws_s3_bucket.portal_web.website_endpoint

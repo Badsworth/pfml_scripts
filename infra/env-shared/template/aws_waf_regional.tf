@@ -11,6 +11,10 @@ locals {
 resource "aws_wafv2_web_acl" "regional_rate_based_acl" {
   name  = "regional-rate-based-acl"
   scope = "REGIONAL"
+
+  # No rate limiting in performance environment for now (4 Dec 2020)
+  count = var.environment_name == "performance" ? 0 : 1
+
   tags = merge(module.constants.common_tags, {
     environment = module.constants.environment_tags[var.environment_name]
   })
@@ -49,9 +53,12 @@ resource "aws_wafv2_web_acl" "regional_rate_based_acl" {
 }
 
 resource "aws_wafv2_web_acl_association" "rate_based_acl" {
+  # No rate limiting in performance environment for now (4 Dec 2020)
+  count = var.environment_name == "performance" ? 0 : 1
+
   depends_on = [local.api_gateway_deployment]
   # must be an must be an ARN of an Application Load Balancer or an Amazon API Gateway stage.
   # resource_arn will need to be manually entered prior to 
   resource_arn = local.api_gateway_arn
-  web_acl_arn  = aws_wafv2_web_acl.regional_rate_based_acl.arn
+  web_acl_arn  = aws_wafv2_web_acl.regional_rate_based_acl[0].arn
 }
