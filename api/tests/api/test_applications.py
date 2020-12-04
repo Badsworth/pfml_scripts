@@ -2808,7 +2808,11 @@ def test_application_post_submit_to_fineos(client, user, auth_token, test_db_ses
                             classExtensionInformation=None,
                         )
                     ],
-                    emailAddresses=None,
+                    emailAddresses=[
+                        massgov.pfml.fineos.models.customer_api.EmailAddress(
+                            emailAddress=application.user.email_address
+                        )
+                    ],
                 )
             },
         ),

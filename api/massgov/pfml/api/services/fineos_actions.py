@@ -120,14 +120,12 @@ def send_to_fineos(application: Application, db_session: massgov.pfml.db.Session
         application.fineos_absence_id = new_case.absenceId
         application.fineos_notification_case_id = new_case.notificationCaseId
 
-        # TODO (CP-1447): Remove guard once phone number is no longer optional
-        if contact_details is not None:
-            updated_contact_details = fineos.update_customer_contact_details(
-                fineos_user_id, contact_details
-            )
-            phone_numbers = updated_contact_details.phoneNumbers
-            if phone_numbers is not None and len(phone_numbers) > 0:
-                application.phone.fineos_phone_id = phone_numbers[0].id
+        updated_contact_details = fineos.update_customer_contact_details(
+            fineos_user_id, contact_details
+        )
+        phone_numbers = updated_contact_details.phoneNumbers
+        if phone_numbers is not None and len(phone_numbers) > 0:
+            application.phone.fineos_phone_id = phone_numbers[0].id
 
         db_session.commit()
 
@@ -275,11 +273,20 @@ def build_customer_model(application):
 
 def build_contact_details(
     application: Application,
-) -> Optional[massgov.pfml.fineos.models.customer_api.ContactDetails]:
-    """Convert an application's phone number to FINEOS API ContactDetails model."""
+) -> massgov.pfml.fineos.models.customer_api.ContactDetails:
+    """Convert an application's email and phone number to FINEOS API ContactDetails model."""
+
+    contact_details = massgov.pfml.fineos.models.customer_api.ContactDetails(
+        emailAddresses=[
+            massgov.pfml.fineos.models.customer_api.EmailAddress(
+                emailAddress=application.user.email_address
+            )
+        ]
+    )
+
     # TODO (CP-1447): Remove guard once phone number is no longer optional
     if application.phone_id is None:
-        return None
+        return contact_details
 
     phone_number = phonenumbers.parse(application.phone.phone_number)
 
@@ -287,7 +294,7 @@ def build_contact_details(
     int_code = phone_number.country_code
     telephone_no = phone_number.national_number
 
-    phone_numbers = [
+    contact_details.phoneNumbers = [
         massgov.pfml.fineos.models.customer_api.PhoneNumber(
             id=application.phone.fineos_phone_id,
             intCode=int_code,
@@ -296,7 +303,7 @@ def build_contact_details(
         )
     ]
 
-    return massgov.pfml.fineos.models.customer_api.ContactDetails(phoneNumbers=phone_numbers)
+    return contact_details
 
 
 def build_customer_address(

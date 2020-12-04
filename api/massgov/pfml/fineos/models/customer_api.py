@@ -2396,11 +2396,8 @@ class Payment(BaseModel):
 
 
 class EmailAddress(BaseModel):
-    id: int = Field(
-        ...,
-        description="The id of the contact method (e.g. phone / mobile / emailAddress) ",
-        ge=0.0,
-        le=10.0,
+    id: Optional[int] = Field(
+        None, description="The id of the contact method (e.g. phone / mobile / emailAddress) ",
     )
     preferred: Optional[bool] = None
     emailAddress: Optional[str] = Field(
@@ -2414,7 +2411,7 @@ class EmailAddress(BaseModel):
 
 class PhoneNumber(BaseModel):
     id: Optional[int] = Field(
-        ..., description="The id of the contact method (e.g. phone / mobile / emailAddress) ",
+        None, description="The id of the contact method (e.g. phone / mobile / emailAddress) ",
     )
     preferred: Optional[bool] = None
     phoneNumberType: str = Field(
