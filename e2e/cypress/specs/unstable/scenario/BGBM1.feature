@@ -4,9 +4,7 @@ Feature: Submit a Bonding Claim in which the claimant mails their HCP form at la
   Scenario: As a claimant, I should be able to start submitting a BGBM1 claim through the portal
     Given I begin to submit a "BGBM1" claim as a "financially eligible" employee
     And Part One of the claim has been submitted
-    # Note: 
-    # Feature currently being updated - https://lwd.atlassian.net/browse/CP-1259
-    # And I have added payment information
+    And I have added payment information
     And I am on the claims "checklist" page
     When I click on the checklist button called "Upload identity document"
     Then I add my identity document "MA ID"
@@ -20,9 +18,8 @@ Feature: Submit a Bonding Claim in which the claimant mails their HCP form at la
     Then I should find the "HCP" document
     Given I am on the tab "Absence Hub"
     When I click Adjudicate
-    And I add paid benefits to the current case
-    When I mark "State managed Paid Leave Confirmation" documentation as satisfactory
-    And I mark "Identification Proof" documentation as satisfactory
+    When I mark "BGBM1" "State managed Paid Leave Confirmation" documentation as satisfactory
+    And I mark "BGBM1" "Identification Proof" documentation as satisfactory
     Then I should see that the claim's "Evidence" is "Satisfied"
     When I fill in the requested absence periods
     Then I should see that the claim's "Availability" is "Time Available"

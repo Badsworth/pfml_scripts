@@ -31,6 +31,7 @@ describe("Employee pool generator", () => {
     },
     scenario: "TEST",
     documents: [],
+    paymentPreference: {},
     financiallyIneligible: false,
   };
   const claimB = {
@@ -43,6 +44,7 @@ describe("Employee pool generator", () => {
     },
     scenario: "TEST",
     documents: [],
+    paymentPreference: {},
     financiallyIneligible: true,
   };
 

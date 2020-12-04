@@ -1,4 +1,8 @@
-import { ApplicationRequestBody, ApplicationLeaveDetails } from "./api";
+import {
+  ApplicationRequestBody,
+  ApplicationLeaveDetails,
+  PaymentPreference,
+} from "./api";
 
 export type Credentials = {
   username: string;
@@ -18,6 +22,7 @@ export type Credentials = {
 export type CypressStepThis = {
   credentials?: Credentials;
   application?: ApplicationRequestBody;
+  paymentPreference: PaymentPreference;
 };
 
 export type LeavePeriods = Pick<

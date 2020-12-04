@@ -7,9 +7,7 @@ Feature: Find a started claim in the portal and upload a document to it
     When I log out
     And I log into the portal
     Given I am on the page for that claim
-    # Note: 
-    # Feature currently being updated - https://lwd.atlassian.net/browse/CP-1259
-    # And I have added payment information
+    And I have added payment information
     When I click on the checklist button called "Upload identity document"
     Then I add my identity document "MA ID"
 

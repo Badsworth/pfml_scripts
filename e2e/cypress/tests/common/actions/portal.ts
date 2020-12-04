@@ -5,8 +5,9 @@ import {
   IntermittentLeavePeriods,
   WorkPatternDay,
   ReducedScheduleLeavePeriods,
+  PaymentPreference,
 } from "../../../../src/api";
-// import { inFieldset } from "../actions"; // not used
+import { inFieldset } from "../actions"; // not used
 
 export function onPage(page: string): void {
   cy.url().should("include", `/applications/${page}`);
@@ -25,6 +26,7 @@ export function submittingClaimType(
     }
     cy.log("generated claim", claim.claim);
     cy.wrap(claim.claim).as("application");
+    cy.wrap(claim.paymentPreference).as("paymentPreference");
   });
 }
 
@@ -469,68 +471,48 @@ export function confirmInfo(): void {
 // Payment Section Currently Removed
 // @Todo: Once this prop has been added back to ApplicationRequestBody
 
-// export function addPaymentInfo(application: ApplicationRequestBody): void {
-//   // Preceeded by - "I am on the claims Checklist page";
-//   // Preceeded by - "I click on the checklist button called {string}"
-//   //                with the label "Add payment information"
-//   const payMethod =
-//     application.payment_preferences &&
-//     application.payment_preferences[0].payment_method;
-//   const accountDetails =
-//     application.payment_preferences &&
-//     application.payment_preferences[0].account_details;
+export function addPaymentInfo(paymentPreference: PaymentPreference): void {
+  // Preceeded by - "I am on the claims Checklist page";
+  // Preceeded by - "I click on the checklist button called {string}"
+  //                with the label "Add payment information"
+  const {
+    payment_method,
+    account_number,
+    routing_number,
+    bank_account_type,
+  } = paymentPreference;
 
-//   cy.contains("fieldset", "How do you want to get your weekly benefit?").within(
-//     () => {
-//       const paymentInfoLabel = {
-//         ACH: "Direct deposit",
-//         Check: "Paper check",
-//         "Gift Card": "Gift Card",
-//       };
-//       cy.contains(
-//         paymentInfoLabel[payMethod as "ACH" | "Check" | "Gift Card"]
-//       ).click();
-//     }
-//   );
-//   switch (payMethod) {
-//     case "ACH":
-//       cy.labelled("Routing number").type(
-//         accountDetails?.routing_number as string
-//       );
-//       cy.labelled("Account number").type(
-//         accountDetails?.account_number as string
-//       );
-//       inFieldset("Account type", () => {
-//         cy.get("input[type='radio']").check(
-//           accountDetails?.account_type as string,
-//           {
-//             force: true,
-//           }
-//         );
-//       });
-//       break;
+  cy.contains("fieldset", "How do you want to get your weekly benefit?").within(
+    () => {
+      const paymentInfoLabel = {
+        Debit: "Direct deposit",
+        Check: "Paper check",
+        "Elec Funds Transfer": "Direct deposit",
+      };
+      cy.contains(
+        paymentInfoLabel[
+          payment_method as "Debit" | "Check" | "Elec Funds Transfer"
+        ]
+      ).click();
+    }
+  );
+  switch (payment_method) {
+    case "Debit":
+    case "Elec Funds Transfer":
+      cy.labelled("Routing number").type(routing_number as string);
+      cy.labelled("Account number").type(account_number as string);
+      inFieldset("Account type", () => {
+        cy.get("input[type='radio']").check(bank_account_type as string, {
+          force: true,
+        });
+      });
+      break;
 
-//     case "Check":
-//       /* Currently has been removed from Portal (may return)
-
-//         cy.labelled("Street address 1").type(
-//           application.residential_address?.line_1 as string
-//         );
-//         cy.labelled("City").type(application.residential_address?.city as string);
-//         cy.labelled("State").type(
-//           application.residential_address?.state as string
-//         );
-//         cy.labelled("ZIP Code").type(
-//           application.residential_address?.zip as string
-//         );
-//       */
-//       break;
-
-//     default:
-//       throw new Error("Unknown payment method");
-//   }
-//   cy.contains("button", "Save and continue").click();
-// }
+    default:
+      throw new Error("Unknown payment method");
+  }
+  cy.contains("button", "Submit Part 2").click();
+}
 
 export function addId(idType: string): void {
   const docName = idType.replace(" ", "_");
@@ -727,12 +709,13 @@ export function submitClaimPartOne(application: ApplicationRequestBody): void {
   onPage("checklist");
 }
 
-export function submitClaimPortal(application: ApplicationRequestBody): void {
+export function submitClaimPortal(
+  application: ApplicationRequestBody,
+  paymentPreference: PaymentPreference
+): void {
   submitClaimPartOne(application);
-  // Note:
-  // Feature currently being updated - https://lwd.atlassian.net/browse/CP-1259
-  // clickChecklistButton("Add payment information");
-  // addPaymentInfo(application);
+  clickChecklistButton("Add payment information");
+  addPaymentInfo(paymentPreference);
   onPage("checklist");
   clickChecklistButton("Upload identity document");
   addId("MA ID");

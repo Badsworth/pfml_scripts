@@ -12,6 +12,7 @@ import {
   ReducedScheduleLeavePeriods,
   IntermittentLeavePeriods,
   WorkPattern,
+  PaymentPreference,
 } from "../api";
 import generators from "./documents";
 import path from "path";
@@ -140,10 +141,18 @@ export function scenario(
     claim.has_intermittent_leave_periods =
       (claim.leave_details?.intermittent_leave_periods?.length ?? 0) > 0;
 
+    const paymentPreference: PaymentPreference = {
+      payment_method: "Debit",
+      account_number: "5555555555",
+      routing_number: "011401533",
+      bank_account_type: "Savings",
+    };
+
     return {
       id: uuid(),
       scenario: name,
       claim,
+      paymentPreference: paymentPreference,
       documents: await generateDocuments(claim, _config, opts),
       financiallyIneligible: !!_config.financiallyIneligible,
       // Flag for skipSubmitClaim.
@@ -166,6 +175,7 @@ export function agentScenario(
       id: uuid(),
       scenario: name,
       claim: {},
+      paymentPreference: {},
       documents: [],
       ...config,
     };
@@ -250,7 +260,7 @@ function generateLeavePeriods(
   | ReducedScheduleLeavePeriods[]
   | IntermittentLeavePeriods[] {
   const [startDate, endDate] = generateLeaveDates(
-    shortLeave ? { days: 1 } : undefined
+    shortLeave ? { days: 7 } : undefined
   );
   switch (leaveType) {
     case "continuous":

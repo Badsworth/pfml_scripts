@@ -58,15 +58,17 @@ When("I add paid benefits to the current case", () => {
 });
 
 When(
-  "I mark {string} documentation as satisfactory",
-  (evidenceType: string) => {
+  "I mark {string} {string} documentation as satisfactory",
+  (claimType: string, evidenceType: string) => {
     cy.get<string>("@claimNumber").then(fineos.assertAdjudicatingClaim);
     fineos.onTab("Evidence");
     cy.contains(".ListTable td", evidenceType).click();
     cy.get("input[type='submit'][value='Manage Evidence']").click();
     // Focus inside popup.
     cy.get(".WidgetPanel_PopupWidget").within(() => {
-      cy.labelled("Evidence Receipt").select("Received");
+      if (claimType === "BGBM1") {
+        cy.labelled("Evidence Receipt").select("Received");
+      }
       cy.labelled("Evidence Decision").select("Satisfied");
       cy.labelled("Evidence Decision Reason").type(
         "{selectall}{backspace}Evidence has been reviewed and approved"
@@ -244,3 +246,16 @@ Then(
     });
   }
 );
+
+Then("I should confirm proper tasks have been created", function (): void {
+  fineos.onTab("Task");
+  cy.get(`.divListviewGrid .ListTable td[title='Certification Review']`).should(
+    "have.text",
+    "Certification Review"
+  );
+  cy.get(`.divListviewGrid .ListTable td[title='ID Review']`).should(
+    "have.text",
+    "ID Review"
+  );
+  fineos.onTab("Absence Hub");
+});

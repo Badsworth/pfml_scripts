@@ -156,11 +156,11 @@ Then("I report other benefits", function (this: CypressStepThis): void {
 
 // addPaymentInfo
 Then("I add payment info", function (this: CypressStepThis): void {
-  if (!this.application) {
-    throw new Error("Application has not been set");
+  if (!this.paymentPreference) {
+    throw new Error("Payment Preferences has not been set");
   }
-  // const { application } = this;
-  // portal.addPaymentInfo(application);
+  const { paymentPreference } = this;
+  portal.addPaymentInfo(paymentPreference);
 });
 
 Then("I add my identity document {string}", function (

@@ -105,13 +105,13 @@ Given("I go directly to the ID upload page", function (): void {
 Given("I have added payment information", function (
   this: CypressStepThis
 ): void {
-  if (!this.application) {
-    throw new Error("Application has not been set");
+  if (!this.paymentPreference) {
+    throw new Error("Payment Preferences has not been set");
   }
-  // const { application } = this;
+  const { paymentPreference } = this;
   portal.onPage("checklist");
   portal.clickChecklistButton("Add payment information");
-  // portal.addPaymentInfo(application);
+  portal.addPaymentInfo(paymentPreference);
 });
 
 Given("I return to the portal", function () {

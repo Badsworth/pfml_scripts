@@ -1,4 +1,4 @@
-import { ApplicationRequestBody } from "../api";
+import { ApplicationRequestBody, PaymentPreference } from "../api";
 import { DocumentTypes } from "./documents";
 
 export const fineosUserTypeNames = ["SAVILINX", "DFMLOPS"] as const;
@@ -18,6 +18,7 @@ export type SimulationClaim = {
   // Flag to control whether the claim is submitted to the API. Used to provide claims
   // that have accompanying documents, but aren't actually in the system yet.
   skipSubmitClaim?: boolean;
+  paymentPreference: PaymentPreference;
 };
 
 // Represents a document that may be uploaded during final submission, or may

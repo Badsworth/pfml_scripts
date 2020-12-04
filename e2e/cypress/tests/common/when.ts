@@ -135,5 +135,6 @@ When("I have submitted all parts of the claim", function (
     throw new Error("Can't find application");
   }
   const { application } = this;
-  portal.submitClaimPortal(application);
+  const { paymentPreference } = this;
+  portal.submitClaimPortal(application, paymentPreference);
 });

@@ -1,6 +1,6 @@
 
 Feature: Submit a bonding claim and adjucation approval - BHAP1
-
+  
   @portal
   Scenario: As a claimant, I should be able to submit a claim (BHAP1) through the portal
     Given I begin to submit a "BHAP1" claim as a "financially eligible" employee
@@ -26,11 +26,9 @@ Feature: Submit a bonding claim and adjucation approval - BHAP1
     And I confirm that I am an eligible parent
     Given I am on the claims "review" page
     Then I should have confirmed that information is correct
-    # Note: 
-    # Feature currently being updated - https://lwd.atlassian.net/browse/CP-1259
-    # Given I am on the claims "checklist" page
-    # When I click on the checklist button called "Add payment information"
-    # Then I add payment info
+    Given I am on the claims "checklist" page
+    When I click on the checklist button called "Add payment information"
+    Then I add payment info
     Given I am on the claims "checklist" page
     When I click on the checklist button called "Upload identity document"
     Then I add my identity document "MA ID"
@@ -46,11 +44,11 @@ Feature: Submit a bonding claim and adjucation approval - BHAP1
   Scenario: As a CSR (Savilinx), I should be able to Approve a BHAP1 claim submission
     Given I am logged into Fineos as a Savilinx user
     Then I should be able to find claim in Adjudication
+    And I should confirm proper tasks have been created
     When I start adjudication for the claim
-    And I add paid benefits to the current case
     Then I should see that the claim's "Eligibility" is "Met"
-    When I mark "State managed Paid Leave Confirmation" documentation as satisfactory
-    And I mark "Identification Proof" documentation as satisfactory
+    When I mark "BHAP1" "State managed Paid Leave Confirmation" documentation as satisfactory
+    And I mark "BHAP1" "Identification Proof" documentation as satisfactory
     Then I should see that the claim's "Evidence" is "Satisfied"
     When I fill in the requested absence periods
     Then I should see that the claim's "Availability" is "Time Available"
