@@ -73,7 +73,7 @@ When(
       );
       cy.get("input[type='button'][value='OK']").click();
       // Wait till modal has fully closed before moving on.
-      cy.get("#disablingLayer").should("not.be.visible");
+      cy.get("#disablingLayer").should("not.exist");
     });
   }
 );
