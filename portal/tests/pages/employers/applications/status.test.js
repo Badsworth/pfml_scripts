@@ -27,17 +27,17 @@ const DOCUMENTS = new DocumentCollection([
   }),
   new Document({
     content_type: "image/png",
-    created_at: "2020-03-04",
-    document_type: DocumentType.requestForInfoNotice,
-    fineos_document_id: "fineos-id-3",
-    name: "Request for info doc",
-  }),
-  new Document({
-    content_type: "image/png",
     created_at: "2020-04-05",
     document_type: DocumentType.medicalCertification,
     fineos_document_id: "fineos-id-4",
     name: "Medical cert doc",
+  }),
+  new Document({
+    content_type: "image/png",
+    created_at: "2020-03-04",
+    document_type: DocumentType.requestForInfoNotice,
+    fineos_document_id: "fineos-id-3",
+    name: "Request for info doc",
   }),
 ]);
 
@@ -154,7 +154,7 @@ describe("Status", () => {
       expect(sectionTitles).toEqual(["Leave details", "Notices"]);
     });
 
-    it("shows the relevant documents", () => {
+    it("shows only legal documents", () => {
       const documentDivs = wrapper.find("DocumentListItem");
       const entries = documentDivs.map((div) => {
         const title = div.dive().find("p").at(0).text();
@@ -166,7 +166,6 @@ describe("Status", () => {
         ["Approval notice (PDF)", "Posted 1/2/2020"],
         ["Denial notice (PDF)", "Posted 2/3/2020"],
         ["Request for more information (PDF)", "Posted 3/4/2020"],
-        ["Other notice (PDF)", "Posted 4/5/2020"],
       ]);
     });
 

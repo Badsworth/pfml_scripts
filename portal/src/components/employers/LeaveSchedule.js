@@ -9,6 +9,7 @@ import ReviewRow from "../ReviewRow";
 import Table from "../Table";
 import { Trans } from "react-i18next";
 import download from "downloadjs";
+import findDocumentsByTypes from "../../utils/findDocumentsByTypes";
 import formatDateRange from "../../utils/formatDateRange";
 import { get } from "lodash";
 import { useTranslation } from "../../locales/i18n";
@@ -39,9 +40,10 @@ const LeaveSchedule = ({ appLogic, claim }) => {
   }, [documents, absenceId]);
 
   // only HCP forms should be shown
-  const medicalDocuments = (documents?.items || []).filter(
-    (document) => document.document_type === DocumentType.medicalCertification
-  );
+  const allDocuments = documents ? documents.items : [];
+  const medicalDocuments = findDocumentsByTypes(allDocuments, [
+    DocumentType.medicalCertification,
+  ]);
 
   const buildContext = () => {
     const hasDocuments = !!medicalDocuments.length;

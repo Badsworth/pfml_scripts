@@ -13,6 +13,7 @@ import StatusTag from "../../../components/StatusTag";
 import Title from "../../../components/Title";
 import { Trans } from "react-i18next";
 import download from "downloadjs";
+import findDocumentsByTypes from "../../../utils/findDocumentsByTypes";
 import findKeyByValue from "../../../utils/findKeyByValue";
 import formatDateRange from "../../../utils/formatDateRange";
 import { get } from "lodash";
@@ -37,6 +38,13 @@ export const Status = (props) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [documents, absenceId]);
 
+  const allDocuments = documents ? documents.items : [];
+  const legalNotices = findDocumentsByTypes(allDocuments, [
+    DocumentType.approvalNotice,
+    DocumentType.denialNotice,
+    DocumentType.requestForInfoNotice,
+  ]);
+
   return (
     <React.Fragment>
       <BackButton />
@@ -60,32 +68,30 @@ export const Status = (props) => {
       <Heading level="2">
         {t("pages.employersClaimsStatus.leaveDetailsLabel")}
       </Heading>
-      <div className="border-bottom-2px border-base-lighter">
-        <StatusRow label={t("pages.employersClaimsStatus.applicationIdLabel")}>
-          {absenceId}
-        </StatusRow>
-        <StatusRow label={t("pages.employersClaimsStatus.statusLabel")}>
-          <StatusTag state="approved" />
-        </StatusRow>
-        <StatusRow label={t("pages.employersClaimsStatus.leaveReasonLabel")}>
-          {t("pages.employersClaimsStatus.leaveReasonValue", {
-            context: findKeyByValue(
-              FineosLeaveReason,
-              get(claim, "leave_details.reason")
-            ),
-          })}
-        </StatusRow>
-        <StatusRow label={t("pages.employersClaimsStatus.leaveDurationLabel")}>
-          {formatDateRange(claim.leaveStartDate, claim.leaveEndDate)}
-        </StatusRow>
-      </div>
-      {documents && !documents.isEmpty && (
+      <StatusRow label={t("pages.employersClaimsStatus.applicationIdLabel")}>
+        {absenceId}
+      </StatusRow>
+      <StatusRow label={t("pages.employersClaimsStatus.statusLabel")}>
+        <StatusTag state="approved" />
+      </StatusRow>
+      <StatusRow label={t("pages.employersClaimsStatus.leaveReasonLabel")}>
+        {t("pages.employersClaimsStatus.leaveReasonValue", {
+          context: findKeyByValue(
+            FineosLeaveReason,
+            get(claim, "leave_details.reason")
+          ),
+        })}
+      </StatusRow>
+      <StatusRow label={t("pages.employersClaimsStatus.leaveDurationLabel")}>
+        {formatDateRange(claim.leaveStartDate, claim.leaveEndDate)}
+      </StatusRow>
+      {legalNotices.length > 0 && (
         <div className="border-top-2px border-base-lighter padding-top-2">
           <Heading level="2">
             {t("pages.employersClaimsStatus.noticesLabel")}
           </Heading>
           <ul className="usa-list usa-list--unstyled margin-top-2">
-            {documents.items.map((document) => (
+            {legalNotices.map((document) => (
               <DocumentListItem
                 absenceId={absenceId}
                 appLogic={appLogic}

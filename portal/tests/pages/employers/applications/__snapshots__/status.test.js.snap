@@ -25,32 +25,28 @@ exports[`Status renders the page and correct content in Trans component 1`] = `
   >
     Leave details
   </Heading>
-  <div
-    className="border-bottom-2px border-base-lighter"
+  <StatusRow
+    label="Application ID"
   >
-    <StatusRow
-      label="Application ID"
-    >
-      NTN-111-ABS-01
-    </StatusRow>
-    <StatusRow
-      label="Status"
-    >
-      <StatusTag
-        state="approved"
-      />
-    </StatusRow>
-    <StatusRow
-      label="Leave type"
-    >
-      Medical leave
-    </StatusRow>
-    <StatusRow
-      label="Leave duration"
-    >
-      1/1/2021 – 7/1/2021
-    </StatusRow>
-  </div>
+    NTN-111-ABS-01
+  </StatusRow>
+  <StatusRow
+    label="Status"
+  >
+    <StatusTag
+      state="approved"
+    />
+  </StatusRow>
+  <StatusRow
+    label="Leave type"
+  >
+    Medical leave
+  </StatusRow>
+  <StatusRow
+    label="Leave duration"
+  >
+    1/1/2021 – 7/1/2021
+  </StatusRow>
 </Fragment>
 `;
 
