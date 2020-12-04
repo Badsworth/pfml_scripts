@@ -91,6 +91,7 @@ data "aws_iam_policy_document" "developers_and_ci_deploy_access_policy" {
       # - RDS data storage
       # - Lambdas for data pipelining.
       # - Web Application Firewall (WAF)
+      # - Firehose (for WAF logs)
       "apigateway:*",
       "ecr:*",
       "ecs:*",
@@ -99,6 +100,7 @@ data "aws_iam_policy_document" "developers_and_ci_deploy_access_policy" {
       "lambda:*",
       "application-autoscaling:*",
       "wafv2:*",
+      "firehose:*",
 
       # Allow API team to deploy Step Functions, such as the DOR Import.
       "states:*"
