@@ -59,6 +59,20 @@ locals {
       containers_template = "dor_import_template.json"
     },
 
+    "register-leave-admins-with-fineos" = {
+      command             = ["register-leave-admins-with-fineos"]
+      containers_template = "register_leave_admins_with_fineos.json"
+      vars = {
+        fineos_client_integration_services_api_url = var.fineos_client_integration_services_api_url
+        fineos_client_customer_api_url             = var.fineos_client_customer_api_url
+        fineos_client_group_client_api_url         = var.fineos_client_group_client_api_url
+        fineos_client_wscomposer_api_url           = var.fineos_client_wscomposer_api_url
+        fineos_client_wscomposer_user_id           = var.fineos_client_wscomposer_user_id
+        fineos_client_oauth2_url                   = var.fineos_client_oauth2_url
+        fineos_client_oauth2_client_id             = var.fineos_client_oauth2_client_id
+      }
+    }
+
     "load-employers-to-fineos" = {
       command             = ["load-employers-to-fineos"]
       containers_template = "load_employers_to_fineos_template.json"
