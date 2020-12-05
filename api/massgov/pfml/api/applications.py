@@ -476,8 +476,6 @@ def payment_preference_submit(application_id: str) -> Response:
                 errors=[],
             ).to_api_response()
 
-        # TODO (CP-1263): Add call to application_rules here for validation
-
         if not existing_application.has_submitted_payment_preference:
             applications_service.add_or_update_payment_preference(
                 db_session, payment_pref_request.payment_preference, existing_application
@@ -486,6 +484,15 @@ def payment_preference_submit(application_id: str) -> Response:
             db_session.add(existing_application)
             db_session.commit()
             db_session.refresh(existing_application)
+
+            issues = application_rules.get_payments_issues(existing_application)
+            if issues:
+                return response_util.error_response(
+                    status_code=BadRequest,
+                    message="Payment info is not valid for submission",
+                    errors=issues,
+                    data=ApplicationResponse.from_orm(existing_application).dict(exclude_none=True),
+                ).to_api_response()
 
             if existing_application.payment_preference:
                 try:

@@ -273,6 +273,9 @@ const errors = {
       bank_account_type: {
         required: "Select if this is a savings or checking account.",
       },
+      payment_method: {
+        required: "Select how you want to get your weekly benefit.",
+      },
       routing_number: {
         pattern: "Enter your routing number in the correct format.",
         required: "Enter a routing number.",

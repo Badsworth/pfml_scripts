@@ -189,6 +189,25 @@ def test_submit_null_payment_preference_error(client, user, auth_token, test_db_
     tests.api.validate_error_response(response, 400, message="Request Validation Error")
 
 
+def test_submit_payment_preference_no_payment_method_error(
+    client, user, auth_token, test_db_session
+):
+    application = ApplicationFactory.create(user=user)
+    update_request_body = {
+        "payment_preference": {},
+    }
+    response = submit_payment_pref_helper(
+        client=client,
+        user=user,
+        auth_token=auth_token,
+        post_data=update_request_body,
+        application=application,
+    )
+    assert response.status_code == 400
+    assert len(response.get_json()["errors"]) == 1
+    assert response.get_json()["errors"][0]["field"] == "payment_preference.payment_method"
+
+
 def test_submit_payments_pref_masked_inputs_ignored(client, user, auth_token, test_db_session):
     application = ApplicationFactory.create(user=user)
     application.payment_preference = ApplicationPaymentPreference(

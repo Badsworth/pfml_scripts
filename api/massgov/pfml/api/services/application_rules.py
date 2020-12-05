@@ -229,10 +229,6 @@ def get_conditional_issues(application: Application) -> List[Issue]:
     if application.other_incomes:
         issues += get_other_incomes_issues(application)
 
-    # Fields involved in Part 2 of the progressive application
-    if application.payment_preference:
-        issues += get_payments_issues(application)
-
     # Fields involved in Part 3 of the progressive application
     # TODO: (API-515) Document and certification validations can be called here
 
@@ -305,6 +301,17 @@ def get_bonding_leave_issues(application: Application) -> List[Issue]:
 
 def get_payments_issues(application: Application) -> List[Issue]:
     issues = []
+
+    if not application.payment_preference.payment_method_id:
+        issues.append(
+            Issue(
+                type=IssueType.required,
+                message="Payment method is required",
+                field="payment_preference.payment_method",
+            )
+        )
+        return issues
+
     if application.payment_preference.payment_method_id == PaymentMethod.ACH.payment_method_id:
         if not application.payment_preference.account_number:
             issues.append(

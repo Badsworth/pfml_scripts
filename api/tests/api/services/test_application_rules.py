@@ -1151,6 +1151,22 @@ def test_bank_account_type_required_for_ACH(test_db_session, initialize_factorie
     ] == issues
 
 
+def test_payment_method_required_for_payment_preference(
+    test_db_session, initialize_factories_session
+):
+    test_app = ApplicationFactory.create(
+        payment_preference=PaymentPreferenceFactory.create(payment_method_id=None)
+    )
+    issues = get_payments_issues(test_app)
+    assert [
+        Issue(
+            type=IssueType.required,
+            message="Payment method is required",
+            field="payment_preference.payment_method",
+        )
+    ] == issues
+
+
 def test_min_work_pattern_total_minutes_worked(test_db_session, initialize_factories_session):
     test_app = ApplicationFactory.create(
         work_pattern=WorkPatternFixedFactory(
