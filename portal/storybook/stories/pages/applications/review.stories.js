@@ -1,35 +1,51 @@
-import { MockClaimBuilder } from "tests/test-utils";
-import generateClaimPageStory from "storybook/utils/generateClaimPageStory";
+import Document, { DocumentType } from "src/models/Document";
+import {
+  claimArgTypes,
+  createClaimFromArgs,
+} from "storybook/utils/claimArgTypes";
+import AppErrorInfoCollection from "src/models/AppErrorInfoCollection";
+import DocumentCollection from "src/models/DocumentCollection";
+import React from "react";
+import { Review } from "src/pages/applications/review";
 
-const mockClaims = {
-  "Part 1 (Medical - Continuous)": new MockClaimBuilder()
-    .part1Complete({ excludeLeavePeriod: true })
-    .continuous()
-    .fixedWorkPattern()
-    .create(),
-  "Part 1 (Medical - Reduced Schedule)": new MockClaimBuilder()
-    .part1Complete({ excludeLeavePeriod: true })
-    .reducedSchedule()
-    .fixedWorkPattern()
-    .create(),
-  "Part 1 (Adoption - Intermittent)": new MockClaimBuilder()
-    .part1Complete({ excludeLeavePeriod: true })
-    .bondingAdoptionLeaveReason()
-    .variableWorkPattern()
-    .intermittent()
-    .create(),
-  "Part 1 (Newborn)": new MockClaimBuilder()
-    .part1Complete()
-    .bondingBirthLeaveReason()
-    .create(),
-  "Part 1 (Foster care)": new MockClaimBuilder()
-    .part1Complete()
-    .bondingFosterCareLeaveReason()
-    .create(),
-  "Final (Deposit)": new MockClaimBuilder().complete().create(),
-  "Final (Paper check)": new MockClaimBuilder().complete().check().create(),
+export default {
+  title: `Pages/Applications/Review`,
+  component: Review,
+  argTypes: {
+    ...claimArgTypes,
+    isLoadingDocuments: {
+      defaultValue: false,
+      control: {
+        type: "boolean",
+      },
+    },
+  },
 };
 
-const { config, DefaultStory } = generateClaimPageStory("review", mockClaims);
-export default config;
-export const Default = DefaultStory;
+export const DefaultStory = (args) => {
+  const claim = createClaimFromArgs(args);
+
+  const appLogic = {
+    appErrors: new AppErrorInfoCollection(),
+    claims: {},
+    documents: {
+      documents: new DocumentCollection([
+        new Document({
+          document_type: DocumentType.identityVerification,
+        }),
+        new Document({
+          document_type: DocumentType.medicalCertification,
+        }),
+      ]),
+    },
+  };
+
+  return (
+    <Review
+      appLogic={appLogic}
+      claim={claim}
+      documents={appLogic.documents.documents.items}
+      isLoadingDocuments={args.isLoadingDocuments}
+    />
+  );
+};

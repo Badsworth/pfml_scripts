@@ -450,6 +450,7 @@ export class MockClaimBuilder extends BaseMockClaimBuilder {
    */
   notNotifiedEmployer() {
     set(this.claimAttrs, "leave_details.employer_notified", false);
+    set(this.claimAttrs, "leave_details.employer_notification_date", null);
     return this;
   }
 
