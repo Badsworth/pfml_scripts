@@ -48,8 +48,8 @@ describe("EmployeeInformation", () => {
   });
 
   it("renders formatted date of birth", () => {
-    expect(wrapper.find(ReviewRow).last().children().first().text()).toMatch(
-      "7/17/1980"
-    );
+    expect(
+      wrapper.find(ReviewRow).last().children().first().text()
+    ).toMatchInlineSnapshot(`"7/17/****"`);
   });
 });

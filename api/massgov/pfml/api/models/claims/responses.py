@@ -8,12 +8,17 @@ from massgov.pfml.api.models.claims.common import (
     PreviousLeave,
 )
 from massgov.pfml.util.pydantic import PydanticBaseModel
+from massgov.pfml.util.pydantic.types import (
+    FEINFormattedStr,
+    MaskedDateStr,
+    MaskedTaxIdFormattedStr,
+)
 
 
 class ClaimReviewResponse(PydanticBaseModel):
-    date_of_birth: Optional[date]
+    date_of_birth: Optional[MaskedDateStr]
     employer_benefits: Optional[List[EmployerBenefit]]
-    employer_fein: Optional[str]
+    employer_fein: Optional[FEINFormattedStr]
     fineos_absence_id: Optional[str]
     first_name: Optional[str]
     last_name: Optional[str]
@@ -21,7 +26,7 @@ class ClaimReviewResponse(PydanticBaseModel):
     middle_name: Optional[str]
     previous_leaves: Optional[List[PreviousLeave]]
     residential_address: Optional[Address]
-    tax_identifier: Optional[str]
+    tax_identifier: Optional[MaskedTaxIdFormattedStr]
     follow_up_date: Optional[date]
 
 

@@ -117,8 +117,10 @@ def test_non_employers_cannot_access_get_claim_review(client, auth_token):
 def test_employers_receive_200_from_get_claim_review(
     client, employer_user, employer_auth_token, test_db_session
 ):
-    employer = EmployerFactory.create()
-    ClaimFactory.create(employer_id=employer.employer_id, fineos_absence_id="NTN-100-ABS-01")
+    employer = EmployerFactory.create(employer_fein="999999999")
+    ClaimFactory.create(
+        employer_id=employer.employer_id, fineos_absence_id="NTN-100-ABS-01",
+    )
 
     link = UserLeaveAdministrator(
         user_id=employer_user.user_id,
@@ -132,9 +134,20 @@ def test_employers_receive_200_from_get_claim_review(
         "/v1/employers/claims/NTN-100-ABS-01/review",
         headers={"Authorization": f"Bearer {employer_auth_token}"},
     )
+    response_data = response.get_json()["data"]
 
     assert response.status_code == 200
-    assert response.get_json()["data"]["follow_up_date"] == "2021-02-01"
+
+    assert response_data["follow_up_date"] == "2021-02-01"
+    assert response_data["employer_fein"] == "99-9999999"
+    # The fields below are set in mock_client.py::mock_customer_info
+    assert response_data["date_of_birth"] == "****-12-25"
+    assert response_data["tax_identifier"] == "***-**-1234"
+    assert response_data["residential_address"]["city"] == "Atlanta"
+    assert response_data["residential_address"]["line_1"] == "55 Trinity Ave."
+    assert response_data["residential_address"]["line_2"] == "Suite 3450"
+    assert response_data["residential_address"]["state"] == "GA"
+    assert response_data["residential_address"]["zip"] == "30303"
 
 
 def test_employers_receive_proper_claim_using_correct_fineos_web_id(

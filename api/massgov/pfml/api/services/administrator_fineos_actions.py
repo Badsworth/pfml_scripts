@@ -161,7 +161,7 @@ def get_claim_as_leave_admin(
             middle_name=customer_info["secondName"],
             previous_leaves=other_leaves,
             residential_address=claimant_address,
-            tax_identifier=customer_info["idNumber"][-4:]
+            tax_identifier=customer_info["idNumber"]
             if customer_info["idNumber"] is not None
             else "",
             follow_up_date=follow_up_date,

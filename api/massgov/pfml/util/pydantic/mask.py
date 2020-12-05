@@ -1,18 +1,17 @@
 from datetime import date
 from typing import Optional
 
-from massgov.pfml.db.models.employees import TaxIdentifier
-
 # Throw some static values up here for comparison elsewhere.
 MASS_ID_MASK = "*********"
 ADDRESS_MASK = "*******"
 ROUTING_NUMBER_MASK = "*********"
 
 
-def mask_tax_identifier(tax_id: Optional[TaxIdentifier]) -> Optional[str]:
+def mask_tax_identifier(tax_id: Optional[str]) -> Optional[str]:
     if tax_id is None:
         return None
-    return f"***-**-{tax_id.tax_identifier_last4}"
+
+    return f"***-**-{tax_id[-4:]}"
 
 
 def mask_mass_id(mass_id: Optional[str]) -> Optional[str]:

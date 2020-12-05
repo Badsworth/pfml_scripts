@@ -1160,7 +1160,7 @@ components:
       type: object
       properties:
         date_of_birth:
-          $ref: "#/components/schemas/Date"
+          $ref: "#/components/schemas/MaskedDate"
         employer_benefits:
           type: array
           items:
@@ -1185,7 +1185,7 @@ components:
         residential_address:
           $ref: "#/components/schemas/Address"
         tax_identifier:
-          $ref: "#/components/schemas/SsnItin"
+          $ref: "#/components/schemas/MaskedSsnItin"
         follow_up_date:
           $ref: "#/components/schemas/Date"
       additionalProperties: false
@@ -1371,7 +1371,7 @@ components:
           nullable: true
         date_of_birth:
           nullable: true
-          $ref: "#/components/schemas/Date"
+          $ref: "#/components/schemas/MaskedDate"
         has_continuous_leave_periods:
           type: boolean
           nullable: true
@@ -2326,6 +2326,10 @@ components:
       type: string
       example: '1970-01-01'
       format: date
+
+    MaskedDate:
+      type: string
+      example: '****-01-01'
 
     DayOfWeek:
       type: string

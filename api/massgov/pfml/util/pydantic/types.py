@@ -1,6 +1,8 @@
 import re
+from typing import Optional, Union
 
 import massgov.pfml.util.pydantic.mask as mask
+from massgov.pfml.db.models.employees import TaxIdentifier
 
 
 class Regexes:
@@ -68,9 +70,12 @@ class MaskedTaxIdFormattedStr(str):
         yield cls.validate_type
 
     @classmethod
-    def validate_type(cls, val):
+    def validate_type(cls, val: Optional[Union[TaxIdentifier, str]]) -> Optional[str]:
         if val is None:
             return None
+
+        if isinstance(val, TaxIdentifier):
+            return mask.mask_tax_identifier(val.tax_identifier)
 
         return mask.mask_tax_identifier(val)
 

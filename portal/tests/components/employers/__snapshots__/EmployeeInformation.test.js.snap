@@ -36,13 +36,13 @@ exports[`EmployeeInformation renders the component 1`] = `
     label="Social Security Number or Individual Taxpayer Identification Number"
     level="3"
   >
-    1234
+    ***-**-1234
   </ReviewRow>
   <ReviewRow
     label="Date of birth"
     level="3"
   >
-    7/17/1980
+    7/17/****
   </ReviewRow>
 </Fragment>
 `;

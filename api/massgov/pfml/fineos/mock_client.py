@@ -176,6 +176,32 @@ def mock_absence_periods():
     }
 
 
+def mock_customer_info():
+    # The FINEOS response includes more fields than this,
+    # but I've only included what is currently relevant to us
+    return {
+        "firstName": "Bud",
+        "lastName": "Baxter",
+        "secondName": "",
+        "initials": "",
+        "dateOfBirth": "1970-12-25",
+        "idNumber": "123121234",
+        "address": {
+            "premiseNo": "",
+            "addressLine1": "55 Trinity Ave.",
+            "addressLine2": "Suite 3450",
+            "addressLine3": "",
+            "addressLine4": "Atlanta",
+            "addressLine5": "",
+            "addressLine6": "GA",
+            "addressLine7": "",
+            "postCode": "30303",
+            "country": {"name": "USA", "domainName": "Country",},
+            "extensions": {},
+        },
+    }
+
+
 class MockFINEOSClient(client.AbstractFINEOSClient):
     """Mock FINEOS API client that returns fake responses."""
 
@@ -282,7 +308,7 @@ class MockFINEOSClient(client.AbstractFINEOSClient):
     def get_customer_info(
         self, user_id: str, customer_id: str
     ) -> models.group_client_api.CustomerInfo:
-        return models.group_client_api.CustomerInfo()
+        return models.group_client_api.CustomerInfo.parse_obj(mock_customer_info())
 
     def get_eform_summary(
         self, user_id: str, absence_id: str

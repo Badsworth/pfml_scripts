@@ -59,12 +59,12 @@ exports[`NewApplication renders the page 1`] = `
     <StatusRow
       label="Employer ID number"
     >
-      1234
+      ***-**-1234
     </StatusRow>
     <StatusRow
       label="Date of birth"
     >
-      7/17/1980
+      7/17/****
     </StatusRow>
     <ConditionalContent
       clearField={[Function]}
