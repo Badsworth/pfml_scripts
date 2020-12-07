@@ -281,13 +281,17 @@ const errors = {
         required: "Enter a routing number.",
       },
     },
-    phone_number: {
-      invalid_masked_field: "Enter the full phone number to make a change.",
-      pattern: "Enter a valid phone number.",
-      required: "Enter a phone number.",
-    },
-    phone_type: {
-      required: "Select a number type.",
+    phone: {
+      phone_number: {
+        invalid_masked_field: "Enter the full phone number to make a change.",
+        invalid_phone_number:
+          "That phone number is invalid. Check the number and try again.",
+        pattern: "Enter your 10 digit phone number, with the area code first.",
+        required: "Enter a phone number.",
+      },
+      phone_type: {
+        required: "Select a number type.",
+      },
     },
     residential_address: {
       city: {

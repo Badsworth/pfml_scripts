@@ -434,7 +434,7 @@ class Phone(PydanticBaseModel):
                     message="Phone number must be a valid number",
                     type="invalid_phone_number",
                     rule="phone_number_must_be_valid_number",
-                    field="phone_number",
+                    field="phone.phone_number",
                 )
             )
 
@@ -444,7 +444,7 @@ class Phone(PydanticBaseModel):
                     message="Phone number must be a valid number",
                     type="invalid_phone_number",
                     rule="phone_number_must_be_valid_number",
-                    field="phone_number",
+                    field="phone.phone_number",
                 )
             )
 

@@ -863,6 +863,29 @@ def test_application_patch_phone(client, user, auth_token, test_db_session):
     assert response_phone["phone_type"] == update_request_masked_phone_number["phone"]["phone_type"]
 
 
+def test_application_patch_phone_validation(client, user, auth_token, test_db_session):
+    application = ApplicationFactory.create(user=user, phone=None)
+    assert application.phone is None
+
+    # adding an invalid phone number (fake area code)
+    update_request_body = {
+        "phone": {"phone_number": "123-456-7890", "phone_type": "Cell", "int_code": "1"}
+    }
+
+    response = client.patch(
+        "/v1/applications/{}".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+        json=update_request_body,
+    )
+
+    test_db_session.refresh(application)
+    response_body = response.get_json()
+    error = response_body.get("errors")[0]
+    assert response.status_code == 400
+    assert error["field"] == "phone.phone_number"
+    assert error["message"] == "Phone number must be a valid number"
+
+
 def test_application_unauthorized_patch(client, user, auth_token, test_db_session):
     # create application not associated with user
     application = ApplicationFactory.create(last_name="Smith")
