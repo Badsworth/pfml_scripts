@@ -4,6 +4,7 @@
 
 import abc
 import typing
+from decimal import Decimal
 
 from massgov.pfml.fineos.transforms.to_fineos.eforms import EFormBody
 
@@ -107,6 +108,15 @@ class AbstractFINEOSClient(abc.ABC, metaclass=abc.ABCMeta):
     def add_payment_preference(
         self, user_id: str, payment_preference: models.customer_api.NewPaymentPreference
     ) -> models.customer_api.PaymentPreferenceResponse:
+        pass
+
+    @abc.abstractmethod
+    def update_occupation(
+        self,
+        occupation_id: int,
+        employment_status: typing.Optional[str],
+        hours_worked_per_week: typing.Optional[Decimal],
+    ) -> None:
         pass
 
     @abc.abstractmethod

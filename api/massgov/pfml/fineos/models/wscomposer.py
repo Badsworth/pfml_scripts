@@ -279,7 +279,7 @@ class UpdateOrCreatePartyRequest(pydantic.BaseModel):
     update_data: UpdateData = pydantic.Field(None, alias="update-data")
 
 
-# Classes to model ServiceAgreementService request XML
+# Classes common to FINEOS XML interfaces
 class AdditionalData(pydantic.BaseModel):
     name: str
     value: str
@@ -289,6 +289,25 @@ class AdditionalDataSet(pydantic.BaseModel):
     additional_data: List[AdditionalData] = pydantic.Field([], alias="additional-data")
 
 
+# Classes to model OccupationDetailUpdateService request XML
+class OccupationDetailUpdateData(pydantic.BaseModel):
+    additional_data_set: AdditionalDataSet = pydantic.Field(None, alias="additional-data-set")
+
+
+class OccupationDetailUpdateRequest(pydantic.BaseModel):
+    xmlns_p: str = pydantic.Field(
+        "http://www.fineos.com/wscomposer/OccupationDetailUpdateService", alias="@xmlns:p"
+    )
+    xmlns_xsi: str = pydantic.Field("http://www.w3.org/2001/XMLSchema-instance", alias="@xmlns:xsi")
+    xsi_schemaLocation: str = pydantic.Field(
+        "http://www.fineos.com/wscomposer/OccupationDetailUpdateService OccupationDetailUpdateService.xsd",
+        alias="@xsi:schemaLocation",
+    )
+    config_name: str = pydantic.Field("OccupationDetailUpdateService", alias="config-name")
+    update_data: OccupationDetailUpdateData = pydantic.Field(None, alias="update-data")
+
+
+# Classes to model ServiceAgreementService request XML
 class ServiceAgreementData(pydantic.BaseModel):
     additional_data_set: AdditionalDataSet = pydantic.Field(None, alias="additional-data-set")
 

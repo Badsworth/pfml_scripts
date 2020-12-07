@@ -8,6 +8,7 @@ import json
 import os.path
 import urllib.parse
 import xml.etree.ElementTree
+from decimal import Decimal
 from typing import Any, Dict, List, Mapping, Optional, Tuple, Union
 
 import defusedxml.ElementTree
@@ -52,6 +53,12 @@ service_agreement_service_request_schema = xmlschema.XMLSchema(
 
 service_agreement_service_response_schema = xmlschema.XMLSchema(
     os.path.join(os.path.dirname(__file__), "wscomposer", "ServiceAgreementService.Response.xsd")
+)
+
+occupation_detail_update_service_request_schema = xmlschema.XMLSchema(
+    os.path.join(
+        os.path.dirname(__file__), "wscomposer", "OccupationDetailUpdateService.Request.xsd"
+    )
 )
 
 
@@ -493,6 +500,55 @@ class FINEOSClient(client.AbstractFINEOSClient):
         # Workaround empty strings in response instead of null. These cause parse_obj to fail.
         set_empty_dates_to_none(json, ["effectiveFrom", "effectiveTo"])
         return models.customer_api.PaymentPreferenceResponse.parse_obj(json)
+
+    def update_occupation(
+        self,
+        occupation_id: int,
+        employment_status: Optional[str],
+        hours_worked_per_week: Optional[Decimal],
+    ) -> None:
+        xml_body = self._create_update_occupation_payload(
+            occupation_id, employment_status, hours_worked_per_week
+        )
+        self._wscomposer_request(
+            "POST", "webservice", {"config": "OccupationDetailUpdateService"}, xml_body
+        )
+
+    @staticmethod
+    def _create_update_occupation_payload(
+        occupation_id: int,
+        employment_status: Optional[str],
+        hours_worked_per_week: Optional[Decimal],
+    ) -> str:
+        additional_data_set = models.AdditionalDataSet()
+
+        # Occupation ID is the only identifier we use to specify which occupation record we want to update in FINEOS.
+        additional_data_set.additional_data.append(
+            models.AdditionalData(name="OccupationId", value=occupation_id)
+        )
+
+        # Application's hours_worked_per_week field is optional so we only update this value in FINEOS
+        # if we've set it on the Application object in our database.
+        if hours_worked_per_week:
+            additional_data_set.additional_data.append(
+                models.AdditionalData(name="HoursPerWeek", value=hours_worked_per_week)
+            )
+
+        if employment_status:
+            additional_data_set.additional_data.append(
+                models.AdditionalData(name="EmploymentStatus", value=employment_status)
+            )
+
+        # Put the XML object together properly.
+        service_data = models.OccupationDetailUpdateData()
+        service_data.additional_data_set = additional_data_set
+
+        service_request = models.OccupationDetailUpdateRequest()
+        service_request.update_data = service_data
+
+        payload_as_dict = service_request.dict(by_alias=True)
+        xml_element = occupation_detail_update_service_request_schema.encode(payload_as_dict)
+        return xml.etree.ElementTree.tostring(xml_element, encoding="unicode", xml_declaration=True)
 
     def upload_document(
         self,

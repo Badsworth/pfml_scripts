@@ -30,10 +30,12 @@ class LkEmploymentStatus(Base):
     __tablename__ = "lk_employment_status"
     employment_status_id = Column(Integer, primary_key=True, autoincrement=True)
     employment_status_description = Column(Text)
+    fineos_label = Column(Text)
 
-    def __init__(self, employment_status_id, employment_status_description):
+    def __init__(self, employment_status_id, employment_status_description, fineos_label):
         self.employment_status_id = employment_status_id
         self.employment_status_description = employment_status_description
+        self.fineos_label = fineos_label
 
 
 class LkLeaveReason(Base):
@@ -528,11 +530,11 @@ class FrequencyOrDuration(LookupTable):
 
 class EmploymentStatus(LookupTable):
     model = LkEmploymentStatus
-    column_names = ("employment_status_id", "employment_status_description")
+    column_names = ("employment_status_id", "employment_status_description", "fineos_label")
 
-    EMPLOYED = LkEmploymentStatus(1, "Employed")
-    UNEMPLOYED = LkEmploymentStatus(2, "Unemployed")
-    SELF_EMPLOYED = LkEmploymentStatus(3, "Self-Employed")
+    EMPLOYED = LkEmploymentStatus(1, "Employed", "Active")
+    UNEMPLOYED = LkEmploymentStatus(2, "Unemployed", "Terminated")
+    SELF_EMPLOYED = LkEmploymentStatus(3, "Self-Employed", "Self-Employed")
 
 
 class AmountFrequency(LookupTable):

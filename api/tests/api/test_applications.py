@@ -2607,7 +2607,7 @@ def test_application_post_submit_existing_work_pattern(client, user, auth_token,
     # it attempts to add work pattern then updates work pattern
     # causing two queries to fineos in send_to_fineos
     # Then has an additional fineos query in complete_intake
-    assert capture[-3:] == [
+    assert capture[-4:] == [
         (
             "add_week_based_work_pattern",
             fineos_user_id,
@@ -2676,6 +2676,15 @@ def test_application_post_submit_existing_work_pattern(client, user, auth_token,
                         ),
                     ],
                 )
+            },
+        ),
+        (
+            "update_occupation",
+            None,
+            {
+                "employment_status": EmploymentStatus.UNEMPLOYED.fineos_label,
+                "hours_worked_per_week": 70,
+                "occupation_id": 12345,
             },
         ),
         ("complete_intake", "USER_WITH_EXISTING_WORK_PATTERN", {"notification_case_id": "NTN-259"}),
@@ -2861,6 +2870,15 @@ def test_application_post_submit_to_fineos(client, user, auth_token, test_db_ses
                         ),
                     ],
                 )
+            },
+        ),
+        (
+            "update_occupation",
+            None,
+            {
+                "employment_status": EmploymentStatus.UNEMPLOYED.fineos_label,
+                "hours_worked_per_week": 70,
+                "occupation_id": 12345,
             },
         ),
         ("complete_intake", fineos_user_id, {"notification_case_id": "NTN-259"}),

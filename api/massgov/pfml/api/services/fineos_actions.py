@@ -149,7 +149,9 @@ def send_to_fineos(application: Application, db_session: massgov.pfml.db.Session
                 fineos_user_id, application.fineos_absence_id, reflexive_question
             )
 
-        upsert_week_based_work_pattern(fineos, fineos_user_id, application)
+        occupation = get_occupation(fineos, fineos_user_id, application)
+        upsert_week_based_work_pattern(fineos, fineos_user_id, application, occupation.occupationId)
+        update_occupation_details(fineos, application, occupation.occupationId)
 
     except massgov.pfml.fineos.FINEOSClientError:
         logger.exception("FINEOS API error")
@@ -578,19 +580,21 @@ def build_bonding_date_reflexive_question(
     return reflexive_question
 
 
-def upsert_week_based_work_pattern(fineos_client, user_id, application):
-    """Add or update work pattern on an in progress absence case"""
-
-    week_based_work_pattern = build_week_based_work_pattern(application)
-    occupation = fineos_client.get_case_occupations(
-        user_id, application.fineos_notification_case_id
+def get_occupation(
+    fineos_client: massgov.pfml.fineos.AbstractFINEOSClient, user_id: str, application: Application
+) -> massgov.pfml.fineos.models.customer_api.ReadCustomerOccupation:
+    return fineos_client.get_case_occupations(
+        user_id, str(application.fineos_notification_case_id)
     )[0]
-    occupation_id = occupation.occupationId
 
+
+def upsert_week_based_work_pattern(fineos_client, user_id, application, occupation_id):
+    """Add or update work pattern on an in progress absence case"""
     if occupation_id is None:
         raise ValueError
 
     try:
+        week_based_work_pattern = build_week_based_work_pattern(application)
         fineos_client.add_week_based_work_pattern(user_id, occupation_id, week_based_work_pattern)
     except massgov.pfml.fineos.exception.FINEOSClientBadResponse as error:
         # FINEOS returns 403 when attempting to add a work pattern for an occupation when one already exists.
@@ -600,6 +604,23 @@ def upsert_week_based_work_pattern(fineos_client, user_id, application):
             )
         else:
             raise error
+
+
+def update_occupation_details(
+    fineos_client: massgov.pfml.fineos.AbstractFINEOSClient,
+    application: Application,
+    occupation_id: Optional[int],
+) -> None:
+    if occupation_id is None:
+        raise ValueError("occupation_id is None")
+
+    employment_status_label = None
+    if application.employment_status:
+        employment_status_label = application.employment_status.fineos_label
+
+    fineos_client.update_occupation(
+        occupation_id, employment_status_label, application.hours_worked_per_week,
+    )
 
 
 def build_week_based_work_pattern(

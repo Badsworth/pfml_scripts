@@ -10,7 +10,8 @@ import copy
 import datetime
 import pathlib
 import typing
-from typing import List, Union
+from decimal import Decimal
+from typing import List, Optional, Union
 
 import faker
 import requests
@@ -341,6 +342,20 @@ class MockFINEOSClient(client.AbstractFINEOSClient):
             paymentPreferenceId="1201",
             accountDetails=payment_preference.accountDetails,
             chequeDetails=payment_preference.chequeDetails,
+        )
+
+    def update_occupation(
+        self,
+        occupation_id: int,
+        employment_status: Optional[str],
+        hours_worked_per_week: Optional[Decimal],
+    ) -> None:
+        _capture_call(
+            "update_occupation",
+            None,
+            employment_status=employment_status,
+            hours_worked_per_week=hours_worked_per_week,
+            occupation_id=occupation_id,
         )
 
     def upload_document(

@@ -15,6 +15,8 @@ from .wscomposer import (  # noqa: F401
     CreateOrUpdateEmployer,
     EmployeeRegistration,
     InstanceDomainAndFullId,
+    OccupationDetailUpdateData,
+    OccupationDetailUpdateRequest,
     OCOrganisation,
     OCOrganisationDefaultItem,
     OCOrganisationItem,
