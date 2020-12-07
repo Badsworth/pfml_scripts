@@ -1,3 +1,6 @@
+import json
+import pathlib
+
 import pytest
 import requests
 
@@ -85,6 +88,52 @@ def test_get_forms_bad_resp(monkeypatch):
 
     with pytest.raises(FormstackBadResponse, match="expected 200, but got 500"):
         assert client.get_forms()
+
+
+def test_get_form_fields(monkeypatch):
+    """ Asserts a 200 is returned when get is called for get_fields_for_form"""
+
+    mock_data = json.load(open(pathlib.Path(__file__).parent / "3969371_form_field_raw.json"))
+
+    def mock_request(*args, **kwargs):
+        return MockResponse(mock_data, requests.codes.ok)  # pylint: disable=no-member
+
+    def mock_session(*args, **kwargs):
+        return MockSession(mock_request)
+
+    monkeypatch.setattr("massgov.pfml.formstack.formstack_client.OAuth2Session", mock_session)
+    monkeypatch.setattr(
+        "massgov.pfml.formstack.formstack_client.get_secret_from_env", mock_get_secret_from_env
+    )
+    client = FormstackClient()
+    result = client.get_fields_for_form("3969371")
+    assert type(result) is dict
+    for v in result.values():
+        assert set(v.keys()) == set(["label", "name", "type"])
+    assert len(result.keys()) == 10
+
+
+def test_get_form_fields_key_filter(monkeypatch):
+    """ Filter the keys for form fields differently """
+
+    mock_data = json.load(open(pathlib.Path(__file__).parent / "3969371_form_field_raw.json"))
+
+    def mock_request(*args, **kwargs):
+        return MockResponse(mock_data, requests.codes.ok)  # pylint: disable=no-member
+
+    def mock_session(*args, **kwargs):
+        return MockSession(mock_request)
+
+    monkeypatch.setattr("massgov.pfml.formstack.formstack_client.OAuth2Session", mock_session)
+    monkeypatch.setattr(
+        "massgov.pfml.formstack.formstack_client.get_secret_from_env", mock_get_secret_from_env
+    )
+    client = FormstackClient()
+    result = client.get_fields_for_form("3969371", keys=["name"])
+    assert type(result) is dict
+    for v in result.values():
+        assert set(v.keys()) == set(["name"])
+    assert len(result.keys()) == 10
 
 
 def test_get_submissions_success(monkeypatch):

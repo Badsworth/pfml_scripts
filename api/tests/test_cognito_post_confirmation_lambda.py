@@ -1,4 +1,5 @@
 import json
+import logging  # noqa: B1
 import os
 
 import pytest
@@ -273,6 +274,30 @@ def test_register_fineos_updates_ula_record(test_db_session):
     assert (
         updated_leave_admin.user_leave_administrator_id == ula_updated.user_leave_administrator_id
     )
+
+
+def test_leave_admin_create_existing_user(test_db_session, caplog, leave_admin_event_dict):
+    """ Tests that the branch to create a user is skipped if exists """
+
+    employer = Employer(
+        employer_fein="133701337", employer_dba="Acme Corp", fineos_employer_id="93"
+    )
+    existing_user = User(
+        active_directory_id="604fd58c-adda-4dbf-ad9e-ee4952c11866", email_address="user@example.com"
+    )
+
+    test_db_session.add(employer)
+    test_db_session.add(existing_user)
+    test_db_session.commit()
+
+    pre_leave_admin_create_user_count = test_db_session.query(User).count()
+    caplog.set_level(logging.DEBUG)  # noqa: B1
+    lib.handler(test_db_session, lib.PostConfirmationEvent(**leave_admin_event_dict), {})
+
+    post_leave_admin_create_user_count = test_db_session.query(User).count()
+
+    assert pre_leave_admin_create_user_count == post_leave_admin_create_user_count
+    assert "User already already exists" in caplog.text
 
 
 def test_forgot_password_handler(test_db_session, forgot_password_event_dict):

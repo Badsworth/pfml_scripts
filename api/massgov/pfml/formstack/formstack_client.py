@@ -106,6 +106,22 @@ class FormstackClient:
         response = self._request("GET", forms_url)
         return response.json()["forms"]
 
+    def get_fields_for_form(
+        self, form_id: str, keys: Optional[List[str]] = None
+    ) -> Dict[str, Dict[str, str]]:
+        """ Sifts the field data for a Form ID and returns a lookup
+            map of Field ID to metadata about that Field
+
+            Params:
+            form_id (required): The form to look up field data for
+            keys (optional): A list of metadata to return about the field.
+        """
+        if not keys:
+            keys = ["label", "name", "type"]
+        response = self._request("GET", f"/form/{form_id}/field")
+        field_data = {x["id"]: {k: v for k, v in x.items() if k in keys} for x in response.json()}
+        return field_data
+
     def get_submissions(
         self,
         form_id: str,
