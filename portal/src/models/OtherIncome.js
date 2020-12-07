@@ -19,7 +19,6 @@ class OtherIncome extends BaseModel {
 /**
  * Enums for the OtherIncome `income_type` field
  * @enum {string}
- * TODO (CP-567): make sure these enum strings match the API's values
  */
 export const OtherIncomeType = {
   /* eslint-disable sort-keys */
