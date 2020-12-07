@@ -16,7 +16,7 @@ from typing import Any, Callable, Dict, Iterable, List, Optional, TextIO, Tuple,
 import boto3
 import smart_open
 from pydantic import BaseSettings, Field
-from sqlalchemy import func
+from sqlalchemy import and_, func
 from sqlalchemy.orm import Query
 
 import massgov.pfml.db as db
@@ -291,25 +291,75 @@ def process_employee_updates(
     output_dir_path: str,
     output_transport_params: Optional[OutputTransportParams] = None,
 ) -> EligibilityFeedExportReport:
-    start_time = utcnow()
-    report = EligibilityFeedExportReport(started_at=start_time.isoformat())
+    report = EligibilityFeedExportReport(started_at=utcnow().isoformat())
 
     logger.info("Starting eligibility feeds generation for employee updates.")
-    # Get employee changes from log table in batches
-    # TODO Add a process date to process only items since last run.
-    # https://lwd.atlassian.net/browse/API-710
-    updated_employees_query = (
+
+    # We may modify this code to spawn more than one process to consume the
+    # updates similar to what has been done for all employers process.
+    # When doing so we should use the same sequence of process identifiers
+    # so that at recovery the process knows what incomplete rows to pick from
+    # EmployeeLog.
+    process_id = 1
+
+    # Recovery. Check for unprocessed rows. There should never be more than
+    # the batch size in normal processing.
+    unprocessed_employees = (
         db_session.query(EmployeeLog.employee_id)
-        .filter(EmployeeLog.action.in_(["INSERT", "UPDATE"]))
+        .filter(EmployeeLog.process_id == process_id)
         .distinct(EmployeeLog.employee_id)
-        .yield_per(1000)
+        .all()
     )
 
-    if updated_employees_query.count() == 0:
-        logger.info("Eligibility Feed: No updates to process.")
-        report.completed_at = utcnow().isoformat()
-        return report
+    if len(unprocessed_employees) > 0:
+        recovery_employee_ids = process_employee_batch(
+            db_session, fineos, output_dir_path, unprocessed_employees, report
+        )
 
+        db_session.begin_nested()
+        delete_processed_batch(db_session, recovery_employee_ids, process_id)
+        db_session.commit()
+
+    # After recovery proceed with normal flow.
+    while "batch not empty":
+        updated_employee_ids = (
+            db_session.query(EmployeeLog.employee_id)
+            .filter(
+                and_(EmployeeLog.action.in_(["INSERT", "UPDATE"]), EmployeeLog.process_id.is_(None))
+            )
+            .distinct(EmployeeLog.employee_id)
+            .limit(1000)
+            .all()
+        )
+
+        if not updated_employee_ids or len(updated_employee_ids) == 0:
+            break
+
+        with db_session.begin_nested():
+            update_batch_to_processing(db_session, updated_employee_ids, process_id)
+
+        successfully_processed_employee_ids = process_employee_batch(
+            db_session, fineos, output_dir_path, updated_employee_ids, report
+        )
+
+        with db_session.begin_nested():
+            delete_processed_batch(db_session, successfully_processed_employee_ids, process_id)
+
+    if report.employers_total_count == 0:
+        logger.info("Eligibility Feed: No updates found to process.")
+
+    report.completed_at = utcnow().isoformat()
+
+    return report
+
+
+def process_employee_batch(
+    db_session: db.Session,
+    fineos: massgov.pfml.fineos.AbstractFINEOSClient,
+    output_dir_path: str,
+    batch_of_employee_ids: Iterable,
+    report: EligibilityFeedExportReport,
+) -> List:
     # Get the latest wages record for modified employee to get
     # employer associated with it.
     employer_employee_pairs = (
@@ -318,7 +368,7 @@ def process_employee_updates(
             WagesAndContributions.employee_id,
             func.max(WagesAndContributions.filing_period).label("maxdate"),
         )
-        .filter(WagesAndContributions.employee_id.in_(updated_employees_query))
+        .filter(WagesAndContributions.employee_id.in_(batch_of_employee_ids))
         .group_by(WagesAndContributions.employer_id, WagesAndContributions.employee_id)
         .order_by(WagesAndContributions.employee_id, WagesAndContributions.employer_id)
         .all()
@@ -334,6 +384,7 @@ def process_employee_updates(
         )
 
     # Process list of employers
+    successfully_processed_employee_ids: List = []
     for employer_id, employee_ids in employer_id_to_employee_ids.items():
         try:
             report.employers_total_count += 1
@@ -375,6 +426,7 @@ def process_employee_updates(
             )
 
             report.employers_success_count += 1
+            successfully_processed_employee_ids.extend(employee_ids)
         except Exception:
             logger.exception(
                 "Error generating FINEOS Eligibility Feed for Employer",
@@ -383,10 +435,19 @@ def process_employee_updates(
             report.employers_error_count += 1
             continue
 
-    end_time = utcnow()
-    report.completed_at = end_time.isoformat()
+    return successfully_processed_employee_ids
 
-    return report
+
+def update_batch_to_processing(db_session, employee_ids, process_id):
+    db_session.query(EmployeeLog).filter(EmployeeLog.employee_id.in_(employee_ids)).update(
+        {EmployeeLog.process_id: process_id}, synchronize_session=False
+    )
+
+
+def delete_processed_batch(db_session, employee_ids, process_id):
+    db_session.query(EmployeeLog).filter(
+        EmployeeLog.employee_id.in_(employee_ids), EmployeeLog.process_id == process_id
+    ).delete(synchronize_session=False)
 
 
 class TaskResultStatus(Enum):
