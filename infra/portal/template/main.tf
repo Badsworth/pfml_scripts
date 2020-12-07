@@ -10,7 +10,7 @@ terraform {
 }
 
 provider "newrelic" {
-  version       = "~> 2.7.1"
+  version       = "~> 2.13.5"
   region        = "US"
   account_id    = local.newrelic_account_id
   api_key       = data.aws_ssm_parameter.newrelic-api-key.value

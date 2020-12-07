@@ -138,7 +138,7 @@ resource "newrelic_nrql_alert_condition" "javascripterror_surge" {
   enabled        = true
 
   nrql {
-    query             = "SELECT count(errorMessage) / count(pageUrl) from JavaScriptError, PageView WHERE appName = 'PFML-Portal-${upper(var.environment_name)}'"
+    query             = "SELECT count(errorMessage) / count(pageUrl) from JavaScriptError, PageView WHERE environment = '${var.environment_name}'"
     evaluation_offset = 1
   }
 
@@ -156,5 +156,29 @@ resource "newrelic_nrql_alert_condition" "javascripterror_surge" {
     threshold             = 0.05
     operator              = "above"
     threshold_occurrences = "ALL"
+  }
+}
+
+resource "newrelic_nrql_alert_condition" "unexpected_openapi_violations" {
+  # CRIT: ValidationError with matching issueType, above 0, for at least 5 minutes
+  enabled   = true
+  name      = "Unexpected OpenAPI violations"
+  policy_id = newrelic_alert_policy.portal_alerts.id
+
+  aggregation_window   = 120 # 2 minutes, should match threshold_duration
+  type                 = "static"
+  value_function       = "single_value"
+  violation_time_limit = "THIRTY_DAYS"
+
+  nrql {
+    query             = "SELECT count(*) FROM PageAction WHERE actionName = 'ValidationError' AND issueType IN ('enum', 'type') AND environment = '${var.environment_name}'"
+    evaluation_offset = 3 # recommended offset from the Terraform docs for this resource
+  }
+
+  critical {
+    threshold             = 0
+    threshold_duration    = 120 # 2 minutes, should match aggregation_window
+    operator              = "above"
+    threshold_occurrences = "at_least_once"
   }
 }
