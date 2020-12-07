@@ -332,15 +332,7 @@ Array [
     key="6"
     label="Income 7"
     reviewRowLevel="4"
-    type="Earnings from another employer"
-  />,
-  <OtherLeaveEntry
-    amount="$250 every month"
-    dates="8/12/2021 – 12/30/2021"
-    key="7"
-    label="Income 8"
-    reviewRowLevel="4"
-    type="Earnings from self-employment"
+    type="Earnings from another employer or through self-employment"
   />,
 ]
 `;

@@ -86,7 +86,7 @@ exports[`EmployerBenefitDetails when the user's claim has employer benefits rend
     level="2"
     size="1"
   >
-    Tell us about benefits you will receive from your employer.
+    Tell us about employer-sponsored benefits you will use during your leave dates for paid leave.
   </Heading>
   <LeaveDatesAlert
     endDate="2021-06-01"

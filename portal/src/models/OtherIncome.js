@@ -23,14 +23,13 @@ class OtherIncome extends BaseModel {
  */
 export const OtherIncomeType = {
   /* eslint-disable sort-keys */
-  workersCompensation: "Workers Comp",
-  unemployment: "Unemployment",
+  workersCompensation: "Workers Compensation",
+  unemployment: "Unemployment Insurance",
   ssdi: "SSDI",
-  retirementDisability: "Retirement Disability",
-  jonesAct: "Jones Act",
-  railroadRetirement: "Railroad Retirement",
-  otherEmployer: "Other Employer",
-  selfEmployment: "Self-Employment",
+  retirementDisability: "Disability benefits under Gov't retirement plan",
+  jonesAct: "Jones Act benefits",
+  railroadRetirement: "Railroad Retirement benefits",
+  otherEmployer: "Earnings from another employment/self-employment",
   // Unknown may be displayed to Leave Admins, but isn't
   // an option we display to Claimants
   unknown: "Unknown",

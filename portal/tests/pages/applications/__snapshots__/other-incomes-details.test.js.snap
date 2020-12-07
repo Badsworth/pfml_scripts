@@ -8,12 +8,12 @@ exports[`OtherIncomeCard renders fields for an OtherIncome instance 1`] = `
         Object {
           "checked": false,
           "label": "Workers Compensation",
-          "value": "Workers Comp",
+          "value": "Workers Compensation",
         },
         Object {
           "checked": false,
           "label": "Unemployment Insurance",
-          "value": "Unemployment",
+          "value": "Unemployment Insurance",
         },
         Object {
           "checked": false,
@@ -23,27 +23,22 @@ exports[`OtherIncomeCard renders fields for an OtherIncome instance 1`] = `
         Object {
           "checked": false,
           "label": "Disability benefits under a governmental retirement plan",
-          "value": "Retirement Disability",
+          "value": "Disability benefits under Gov't retirement plan",
         },
         Object {
           "checked": false,
           "label": "Jones Act benefits",
-          "value": "Jones Act",
+          "value": "Jones Act benefits",
         },
         Object {
           "checked": false,
           "label": "Railroad Retirement benefits",
-          "value": "Railroad Retirement",
+          "value": "Railroad Retirement benefits",
         },
         Object {
           "checked": false,
-          "label": "Earnings from another employer",
-          "value": "Other Employer",
-        },
-        Object {
-          "checked": false,
-          "label": "Earnings from self-employment",
-          "value": "Self-Employment",
+          "label": "Earnings from another employer or through self-employment",
+          "value": "Earnings from another employment/self-employment",
         },
       ]
     }
@@ -98,7 +93,7 @@ exports[`OtherIncomesDetails when the user's claim has other income sources rend
     level="2"
     size="1"
   >
-    Tell us about your other sources of income.
+    Tell us about your other sources of income during your leave dates for paid leave.
   </Heading>
   <LeaveDatesAlert
     endDate="2021-06-01"
@@ -114,7 +109,7 @@ exports[`OtherIncomesDetails when the user's claim has other income sources rend
           "income_amount_frequency": null,
           "income_end_date": "2021-01-01",
           "income_start_date": "2021-01-30",
-          "income_type": "Other Employer",
+          "income_type": "Earnings from another employment/self-employment",
         },
       ]
     }

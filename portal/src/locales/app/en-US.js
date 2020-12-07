@@ -450,11 +450,11 @@ const shared = {
   noticeName_requestForInfoNotice: "Request for more information",
   otherIncomeEntryPrefix: "Income",
   otherIncomeType_jonesAct: "Jones Act benefits",
-  otherIncomeType_otherEmployer: "Earnings from another employer",
+  otherIncomeType_otherEmployer:
+    "Earnings from another employer or through self-employment",
   otherIncomeType_railroadRetirement: "Railroad Retirement benefits",
   otherIncomeType_retirementDisability:
     "Disability benefits under a governmental retirement$t(chars.nbsp)plan",
-  otherIncomeType_selfEmployment: "Earnings from self-employment",
   otherIncomeType_ssdi: "Social Security Disability Insurance",
   otherIncomeType_unemployment: "Unemployment Insurance",
   otherIncomeType_workersCompensation: "Workers Compensation",
@@ -694,7 +694,8 @@ const pages = {
       "$t(shared.employerBenefitType_shortTermDisability)",
     endDateLabel: "When will you stop using the benefit?",
     removeButton: "Remove benefit",
-    sectionLabel: "Tell us about benefits you will receive from your employer.",
+    sectionLabel:
+      "Tell us about employer-sponsored benefits you will use during your leave dates for paid leave.",
     startDateLabel: "When will you start using the benefit?",
     title: "$t(shared.claimsOtherLeaveTitle)",
     typeLabel: "What kind of benefit is it?",
@@ -710,7 +711,7 @@ const pages = {
       "Family or medical leave insurance, such as a maternity leave policy",
     ],
     sectionLabel:
-      "Will you use any employer-sponsored benefits during your leave?",
+      "Will you use any employer-sponsored benefits during your leave dates for paid leave?",
     title: "$t(shared.claimsOtherLeaveTitle)",
   },
   claimsEmploymentStatus: {
@@ -882,7 +883,7 @@ const pages = {
       "Earnings from another employer or through self-employment",
     ],
     sectionLabel:
-      "Will you receive income from any other sources during your leave?",
+      "Will you receive income from any other sources during your leave dates for paid$t(chars.nbsp)leave?",
     title: "$t(shared.claimsOtherLeaveTitle)",
   },
   claimsOtherIncomesDetails: {
@@ -892,7 +893,8 @@ const pages = {
     cardHeadingPrefix: "$t(shared.otherIncomeEntryPrefix)",
     endDateLabel: "When will you stop receiving this income?",
     removeButton: "Remove income",
-    sectionLabel: "Tell us about your other sources of$t(chars.nbsp)income.",
+    sectionLabel:
+      "Tell us about your other sources of income$t(chars.nbsp)during your leave dates for paid$t(chars.nbsp)leave.",
     startDateLabel: "When will you start receiving this income?",
     title: "$t(shared.claimsOtherLeaveTitle)",
     typeChoiceLabel_jonesAct: "$t(shared.otherIncomeType_jonesAct)",
@@ -901,7 +903,6 @@ const pages = {
       "$t(shared.otherIncomeType_railroadRetirement)",
     typeChoiceLabel_retirementDisability:
       "$t(shared.otherIncomeType_retirementDisability)",
-    typeChoiceLabel_selfEmployment: "$t(shared.otherIncomeType_selfEmployment)",
     typeChoiceLabel_ssdi: "$t(shared.otherIncomeType_ssdi)",
     typeChoiceLabel_unemployment: "$t(shared.otherIncomeType_unemployment)",
     typeChoiceLabel_workersCompensation:
@@ -1070,7 +1071,6 @@ const pages = {
       "$t(shared.otherIncomeType_railroadRetirement)",
     otherIncomeType_retirementDisability:
       "$t(shared.otherIncomeType_retirementDisability)",
-    otherIncomeType_selfEmployment: "$t(shared.otherIncomeType_selfEmployment)",
     otherIncomeType_ssdi: "$t(shared.otherIncomeType_ssdi)",
     otherIncomeType_unemployment: "$t(shared.otherIncomeType_unemployment)",
     otherIncomeType_workersCompensation:

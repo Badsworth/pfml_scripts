@@ -117,7 +117,6 @@ export const OtherIncomeCard = (props) => {
           "jonesAct",
           "railroadRetirement",
           "otherEmployer",
-          "selfEmployment",
         ].map((otherIncomeTypeKey) => {
           return {
             checked: entry.income_type === OtherIncomeType[otherIncomeTypeKey],

@@ -47,7 +47,7 @@ exports[`EmployerBenefits renders the page 1`] = `
         </ul>
       </React.Fragment>
     }
-    label="Will you use any employer-sponsored benefits during your leave?"
+    label="Will you use any employer-sponsored benefits during your leave dates for paid leave?"
     name="temp.has_employer_benefits"
     onChange={[Function]}
     type="radio"

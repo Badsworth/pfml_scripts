@@ -437,12 +437,6 @@ describe("OtherIncomeList", () => {
           income_start_date: "2021-08-12",
           income_type: OtherIncomeType.otherEmployer,
         }),
-        new OtherIncome({
-          income_amount_dollars: "250",
-          income_end_date: "2021-12-30",
-          income_start_date: "2021-08-12",
-          income_type: OtherIncomeType.selfEmployment,
-        }),
       ];
       const wrapper = shallow(
         <OtherIncomeList entries={entries} reviewRowLevel="4" />

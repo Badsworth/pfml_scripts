@@ -61,7 +61,7 @@ exports[`OtherIncomes renders the page 1`] = `
         </ul>
       </React.Fragment>
     }
-    label="Will you receive income from any other sources during your leave?"
+    label="Will you receive income from any other sources during your leave dates for paid leave?"
     name="temp.has_other_incomes"
     onChange={[Function]}
     type="radio"
