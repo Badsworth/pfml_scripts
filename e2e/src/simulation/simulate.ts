@@ -260,7 +260,7 @@ function generateLeavePeriods(
   | ReducedScheduleLeavePeriods[]
   | IntermittentLeavePeriods[] {
   const [startDate, endDate] = generateLeaveDates(
-    shortLeave ? { days: 7 } : undefined
+    shortLeave ? { days: 1 } : undefined
   );
   switch (leaveType) {
     case "continuous":

@@ -247,7 +247,7 @@ describe("Simulation Generator", () => {
     );
     const [start, end] = extractLeavePeriod(claim);
     // End - start should = 7 days worth of seconds.
-    expect(end.getTime() - start.getTime()).toEqual(24 * 60 * 60 * 1000 * 7);
+    expect(end.getTime() - start.getTime()).toEqual(24 * 60 * 60 * 1000);
   });
 
   it("Should allow for arbitrary scenario configuration to be overridden by options", async () => {
@@ -257,7 +257,7 @@ describe("Simulation Generator", () => {
     )({ ...opts, shortClaim: true });
     const [start, end] = extractLeavePeriod(claim);
     // End - start should = 7 days worth of seconds.
-    expect(end.getTime() - start.getTime()).toEqual(24 * 60 * 60 * 1000 * 7);
+    expect(end.getTime() - start.getTime()).toEqual(24 * 60 * 60 * 1000);
   });
 
   it("Should have an application end date within 20 weeks of the start date", async () => {
